@@ -1,0 +1,81 @@
+{
+  "createdAtUtc": "2026-10-16T03:16:46.675352+00:00",
+  "baseDocsCommit": "696197ebfc4d0234eca9aafc9e633318212de424",
+  "baseIndexKind": "Authorized uncommitted working index69 appended to committed68; pinned by exactSHA.",
+  "rootHeadObservedBefore": "696197ebfc4d0234eca9aafc9e633318212de424",
+  "rootHeadObservedAfter": "696197ebfc4d0234eca9aafc9e633318212de424",
+  "oldIndexSHA256": "a561d110d9ff1a937a0ba0b5df262b919d7b8f42589aea1bb6aabec89350a04e",
+  "candidateIndexSHA256": "9f6ea837f41ae2cbcddc25d63f686942d9752c15b47fd1443eda27f577db7c16",
+  "oldPackages": 69,
+  "newPackages": 70,
+  "old69EachValueAndRawPackageTextExact": true,
+  "allExistingMetadataValueAndRawTextExact": true,
+  "unchangedMetadataKeys": [
+    "productionHead",
+    "strategyBaseline",
+    "productionDelta",
+    "productionValidation",
+    "unmergedObservationStatus",
+    "observationHistory",
+    "productionOrdinary0",
+    "currentCombinedOrdinary0"
+  ],
+  "intentionalExistingMetadataChanges": [],
+  "addedMetadataKeys": [],
+  "productionHeadRetained": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4",
+  "strategyBaselineRetained": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
+  "old0fProductionOrdinary0ValueAndRawTextExact": true,
+  "e566CurrentCombinedOrdinary0ValueAndRawTextExact": true,
+  "rootCanonicalIndexSHA256Before": "a561d110d9ff1a937a0ba0b5df262b919d7b8f42589aea1bb6aabec89350a04e",
+  "rootCanonicalIndexSHA256After": "a561d110d9ff1a937a0ba0b5df262b919d7b8f42589aea1bb6aabec89350a04e",
+  "rootWritesCopiesExtractionNativeTestsStagesCommits": false,
+  "onlyNewPackageStreamVerified": true,
+  "earlier69PackagesNotReverifiedOrRepacked": true,
+  "activeCandidate": "bootstrap-complete-games-20261015-index.70.candidate.json",
+  "archive": {
+    "file": "bootstrap-e566-medical-and-stop-ownership-evidence-20261016.tar.gz",
+    "bytes": 5886640,
+    "sha256": "0e1f8c7c0a1c85a75f4bddbb78f342bdd61ef5cc3cffe4b11fc15018c47c8c89",
+    "payloads": 112,
+    "regularFilesIncludingIndex": 113
+  },
+  "scriptUsage": "python3 /workspace/.playtest/root-next-evidence-index70-20261016/verify-and-prepare70.py",
+  "originalUncommittedRecoveryGapRetained": true,
+  "files": {
+    "bootstrap-complete-games-20261015-index.70.candidate.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index70-20261016/bootstrap-complete-games-20261015-index.70.candidate.json",
+      "bytes": 41993,
+      "sha256": "9f6ea837f41ae2cbcddc25d63f686942d9752c15b47fd1443eda27f577db7c16"
+    },
+    "canonical-working-index-69.original.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index70-20261016/canonical-working-index-69.original.json",
+      "bytes": 40442,
+      "sha256": "a561d110d9ff1a937a0ba0b5df262b919d7b8f42589aea1bb6aabec89350a04e"
+    },
+    "new-entry-70.verified.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index70-20261016/new-entry-70.verified.json",
+      "bytes": 1506,
+      "sha256": "b95bee92bdc7de400275b96c0b384e7ce08ea5488aba8930fdb6093956e28d05"
+    },
+    "unmerged-a90c-medical-negative-case.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index70-20261016/unmerged-a90c-medical-negative-case.json",
+      "bytes": 8307,
+      "sha256": "7f51a1656f2678bbf2419b1636e092bd84ba0a9453b1aaeacd6d8450e9e0c1a2"
+    },
+    "new-archive-stream-verification.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index70-20261016/new-archive-stream-verification.json",
+      "bytes": 19401,
+      "sha256": "0ae040cfcea436504b16a7c809d757fe0c57127288748eaed328bc57b76b57c6"
+    },
+    "README-append70.candidate.zh.md": {
+      "path": "/workspace/.playtest/root-next-evidence-index70-20261016/README-append70.candidate.zh.md",
+      "bytes": 1937,
+      "sha256": "65488241fb7335fa476cedea93264a03b079a5e89c1c429464fc1ba5ba37402d"
+    },
+    "verify-and-prepare70.py": {
+      "path": "/workspace/.playtest/root-next-evidence-index70-20261016/verify-and-prepare70.py",
+      "bytes": 22676,
+      "sha256": "2cf437d172e9ab494faccba9c46ead74a13a4cc2b2ad96229fb11a1f38a463de"
+    }
+  }
+}

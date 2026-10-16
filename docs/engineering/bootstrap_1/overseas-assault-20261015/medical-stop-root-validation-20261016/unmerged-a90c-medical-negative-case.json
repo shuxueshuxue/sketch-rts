@@ -1,0 +1,262 @@
+{
+  "classification": "Independent streaming/archived-record and raw shortwindow consistency audit only. No native/planner/test run or production integration.",
+  "base": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4",
+  "candidate": "a90c0119d7166baad1c9222781baab107deedbcb",
+  "integrated": false,
+  "from": 13800,
+  "to": 13964,
+  "nativeTicks": 164,
+  "fresh0": false,
+  "completeMatch": false,
+  "initialWorldIdAll3MemSetupFieldsEqual": {
+    "snapshot": true,
+    "nextId": true,
+    "memories": true,
+    "setup": true
+  },
+  "baselineTerminalWorldIdAll3MemSetupFieldsEqualOriginal": {
+    "snapshot": true,
+    "nextId": true,
+    "memories": true,
+    "setup": true
+  },
+  "baselineArchivedChecks": {
+    "restoreExact": true,
+    "terminalWorldExact": true,
+    "terminalNextIdExact": true,
+    "terminalAll3memExact": true,
+    "terminalSetupExact": true,
+    "commandsExact": true,
+    "hitsExact": true,
+    "sourceExact": true,
+    "frozenExact": true
+  },
+  "candidateArchivedChecks": {
+    "restoreExact": true,
+    "terminalWorldExact": false,
+    "terminalNextIdExact": true,
+    "terminalAll3memExact": false,
+    "terminalSetupExact": true,
+    "commandsExact": false,
+    "hitsExact": false,
+    "sourceExact": true,
+    "frozenExact": true
+  },
+  "rawRowCountsIndependentlyRead": {
+    "baseline/baseline13800-13964-commands.jsonl": 157,
+    "candidate/candidate13800-13964-commands.jsonl": 164,
+    "baseline/baseline13800-13964-native-hits.jsonl": 14,
+    "candidate/candidate13800-13964-native-hits.jsonl": 11,
+    "baseline/baseline13800-13964-native-deaths.jsonl": 1,
+    "candidate/candidate13800-13964-native-deaths.jsonl": 1
+  },
+  "actualFirstCommandSequenceDifference": {
+    "position": 80,
+    "baseline": {
+      "index": 5143,
+      "tick": 13875,
+      "owner": "p0",
+      "source": "external-agent",
+      "scriptId": "v6Backline",
+      "command": {
+        "type": "stop",
+        "unitIds": [
+          "unit-p0-fieldMedic-2255"
+        ]
+      }
+    },
+    "candidate": {
+      "index": 5143,
+      "tick": 13875,
+      "owner": "p0",
+      "source": "external-agent",
+      "scriptId": "v6Backline",
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "unit-p0-priest-3733"
+        ],
+        "x": 1873.5049602555796,
+        "y": 3240.411356330827
+      }
+    }
+  },
+  "actualExactRawCommandPrefixCount": 80,
+  "single13875PureQueryOnlyStopRemoved": true,
+  "single13875PureQueryP0MemorySame": true,
+  "entireWindowOnlyOneCommandRemoved": false,
+  "doctor": "unit-p0-fieldMedic-2255",
+  "deathFactsIndependentlyReadFromRawAndTerminalCorpses": {
+    "baseline": {
+      "tick": 13964,
+      "fatalHit": {
+        "tick": 13964,
+        "attacker": "unit-p2-knight-2670",
+        "target": "unit-p0-fieldMedic-2255",
+        "damage": 28,
+        "hpBefore": 21,
+        "hpAfter": -7
+      },
+      "corpseTick": 13964,
+      "removed": true,
+      "outgoing": [
+        {
+          "tick": 13882,
+          "target": "unit-p2-knight-2670",
+          "damage": 4
+        },
+        {
+          "tick": 13916,
+          "target": "unit-p2-knight-2670",
+          "damage": 4
+        },
+        {
+          "tick": 13950,
+          "target": "unit-p2-knight-2670",
+          "damage": 4
+        }
+      ]
+    },
+    "candidate": {
+      "tick": 13942,
+      "fatalHit": {
+        "tick": 13942,
+        "attacker": "unit-p2-knight-2670",
+        "target": "unit-p0-fieldMedic-2255",
+        "damage": 28,
+        "hpBefore": 10,
+        "hpAfter": -18
+      },
+      "corpseTick": 13942,
+      "removed": true,
+      "outgoing": []
+    }
+  },
+  "candidateExtraGolemHit": {
+    "tick": 13918,
+    "attacker": "unit-p2-golem-2491",
+    "target": "unit-p0-fieldMedic-2255",
+    "damage": 39,
+    "hpBefore": 49,
+    "hpAfter": 10
+  },
+  "candidateDeathEarlierTicks": 22,
+  "sourceAsArchived": {
+    "base": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4",
+    "candidate": "a90c0119d7166baad1c9222781baab107deedbcb",
+    "inheritedFilesEach": 1462,
+    "candidateAdditionalTestFiles": 1,
+    "historicalFrozenFilesCheckedEach": 497,
+    "rulesVersion": 2,
+    "validatedFrozenManifestFiles": 184
+  },
+  "validationAsArchived": {
+    "base": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4",
+    "candidate": "a90c0119d7166baad1c9222781baab107deedbcb",
+    "checks": [
+      {
+        "command": "node_modules/.bin/vitest run src/ai/policy/script-runner.test.ts src/ai/policy/script-runner-stop.test.ts --maxWorkers=1 --minWorkers=1",
+        "exitCode": 0,
+        "testsPassed": 25,
+        "oldRunnerTests": 15,
+        "newStopTests": 10,
+        "log": "vitest.log"
+      },
+      {
+        "command": "node_modules/.bin/tsc --noEmit",
+        "exitCode": 0,
+        "log": "tsc.log"
+      }
+    ],
+    "scope": "One singleworker relatedtest invocation, followedby one tsc invocation; no broad matrix/new0. Both run before committing sameunchanged source/test bytes."
+  },
+  "roadQueriesAsArchived": [
+    {
+      "tick": 13800,
+      "goals": [
+        {
+          "hall": "building-p0-townhall",
+          "safeLandTravelTicks": 694,
+          "retreatRoadTicks": 680,
+          "endpointGapToHallCenter": 64
+        },
+        {
+          "hall": "building-p0-townHall-1639",
+          "safeLandTravelTicks": 438,
+          "retreatRoadTicks": 419,
+          "endpointGapToHallCenter": 64
+        },
+        {
+          "hall": "building-p0-townHall-4969",
+          "safeLandTravelTicks": null,
+          "retreatRoadTicks": null,
+          "endpointGapToHallCenter": 64
+        }
+      ]
+    },
+    {
+      "tick": 13860,
+      "goals": [
+        {
+          "hall": "building-p0-townhall",
+          "safeLandTravelTicks": null,
+          "retreatRoadTicks": 741,
+          "endpointGapToHallCenter": 64
+        },
+        {
+          "hall": "building-p0-townHall-1639",
+          "safeLandTravelTicks": null,
+          "retreatRoadTicks": 486,
+          "endpointGapToHallCenter": 64
+        },
+        {
+          "hall": "building-p0-townHall-4969",
+          "safeLandTravelTicks": null,
+          "retreatRoadTicks": null,
+          "endpointGapToHallCenter": 64
+        }
+      ]
+    },
+    {
+      "tick": 13875,
+      "goals": [
+        {
+          "hall": "building-p0-townhall",
+          "safeLandTravelTicks": null,
+          "retreatRoadTicks": 749,
+          "endpointGapToHallCenter": 64
+        },
+        {
+          "hall": "building-p0-townHall-1639",
+          "safeLandTravelTicks": null,
+          "retreatRoadTicks": 490,
+          "endpointGapToHallCenter": 64
+        },
+        {
+          "hall": "building-p0-townHall-4969",
+          "safeLandTravelTicks": null,
+          "retreatRoadTicks": null,
+          "endpointGapToHallCenter": 64
+        }
+      ]
+    }
+  ],
+  "roadScope": "Native static current known-threat geometry, hall building-body endpoint64 away from hall center; no guarantee of future survival against faster pursuer. Candidate did not change return goal.",
+  "derivedComparisonSerialization": {
+    "originalDerivedSHA256": "5f62183736e8c6861d36122a7ad6bab816dffd84b3e72e8c1cff46b24090e9e2",
+    "finalDerivedSHA256": "f1e135acddbd604227a594a12b1b1030ea412d92cf7cad5201162f128a2489ff",
+    "previousSerializationRecoveredByteExact": true,
+    "sameParsedJSONValues": true,
+    "note": "The earlier packagingassert correctly stopped when it used the earlier-derived SHA. No raw/source/native data changed; finalreview now explicitly names finalSHA."
+  },
+  "scopeLimits": [
+    "Original natural43714win/56permanentlosses stays attributed solely to fixede566 ordinary0.",
+    "Loss survey of8healers/veterans is a subset of original56 losses; fieldMedic2255/1907 are not priests; not all deaths shown preventable.",
+    "25local protocol tests and tsc0 establish neither rescue nor improved complete match.",
+    "Candidate terminalworld/mem/command/hit differences are real behavior, not failed initial restore; all recordedfalsechecks retained.",
+    "Actual13875 first public divergence is not equivalent to all later commands remaining same.",
+    "Snapshot drawWorld uses fresh static facing, not reconstructed historical animation.",
+    "Later destination/return-owner candidates and harbor work excluded.",
+    "Original broken-container uncommitted workspace gap remains unrecovered."
+  ]
+}

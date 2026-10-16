@@ -1,0 +1,210 @@
+{
+  "classification": "Archived-record attribution and independent streaming/JSONL consistency only; no native/planner/test rerun and no production integration.",
+  "source": "07802649972cee4ccde66ec735d733917d931967",
+  "base": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4",
+  "integrated": false,
+  "ordinary0": false,
+  "changedCodeContinuation": true,
+  "inputOriginalSource": "0f5bf01a05046169d4fb42322376f767b97bcc83",
+  "inputTick": 193200,
+  "inputSHA256": "c5f7cf10ee7c8d391b8295c23d18f91537de1865673ceb176e50015d2bc60525",
+  "result": {
+    "tick": 238516,
+    "winner": null,
+    "naturalComplete": false,
+    "observationStopped": true
+  },
+  "process": {
+    "pid": 291726,
+    "startedAtUtc": "2026-10-16T02:35:45.172Z",
+    "endedAtUtc": "2026-10-16T02:46:51.276Z"
+  },
+  "fullRestore": {
+    "world": true,
+    "nextId": true,
+    "all3Memories": true
+  },
+  "counts": {
+    "commands": 40184,
+    "hits": 8,
+    "events": 4777,
+    "plannerFrames": 3022
+  },
+  "rawJSONLRowCountsIndependentlyRead": {
+    "closure-237600-238516/commands.jsonl": 721,
+    "closure-237600-238516/events.jsonl": 114,
+    "closure-237600-238516/hits.jsonl": 0,
+    "native-193200/native-events.jsonl": 4777,
+    "native-193200/native-hits.jsonl": 8,
+    "native-193200/public-commands.jsonl": 40184
+  },
+  "rawEventTypesIndependentlyRead": {
+    "native-unit-terminal": 1520,
+    "unit-removal": 1520,
+    "unit-birth-observed": 1520,
+    "observed-parent-change": 104,
+    "observed-disembark": 113
+  },
+  "allEightHitRowsSameOwner": true,
+  "maximumOwnCollisionHitDamage": 11.297212030904962,
+  "permanentTerminalRowsIndependentlyRead": 0,
+  "terminalOwnersIndependentlyRead": {
+    "temporary:p2": 840,
+    "temporary:p0": 680
+  },
+  "nativeStatsUnchangedAsArchived": true,
+  "sourceFilesPrePost": 1468,
+  "frozenFilesPrePost": 184,
+  "rulesVersion": 2,
+  "terminalReplay": {
+    "from": 237600,
+    "to": 238516,
+    "nativeTicks": 916,
+    "restore": {
+      "world": true,
+      "nextId": true,
+      "all3Memories": true
+    },
+    "checks": {
+      "allCommands": true,
+      "allHits": true,
+      "allEvents": true,
+      "allThinkWorldId3MemoryHashes": true,
+      "finalWorld": true,
+      "finalNextId": true,
+      "finalAll3Memories": true
+    },
+    "counts": {
+      "commands": 721,
+      "hits": 0,
+      "events": 114,
+      "thinks": 62
+    }
+  },
+  "packingSamplesAsArchived": [
+    {
+      "tick": 194400,
+      "ship": "unit-p0-carrier-25442",
+      "required": 20.115569375546702,
+      "selectedPower": 21.548189175497683,
+      "actualPermanentPayloadPower": 11.055814645032301,
+      "actualPayloadCount": 11,
+      "actualTemporaryPayloadCount": 0,
+      "actualAdditionalPermanentFitsCount": 0,
+      "withoutTemporaryShapesSingleAdditionalFitsCount": 0,
+      "selectedWholeCrewFitsActualDeck": false,
+      "selectedWholeCrewFitsEmptyDeck": false,
+      "selectedWholeCrewFitsWithoutTemporaryShapes": false
+    },
+    {
+      "tick": 198000,
+      "ship": "unit-p0-carrier-25442",
+      "required": 20.115569375546702,
+      "selectedPower": 21.548189175497683,
+      "actualPermanentPayloadPower": 9.49571591547157,
+      "actualPayloadCount": 12,
+      "actualTemporaryPayloadCount": 2,
+      "actualAdditionalPermanentFitsCount": 0,
+      "withoutTemporaryShapesSingleAdditionalFitsCount": 19,
+      "selectedWholeCrewFitsActualDeck": false,
+      "selectedWholeCrewFitsEmptyDeck": false,
+      "selectedWholeCrewFitsWithoutTemporaryShapes": false
+    },
+    {
+      "tick": 202800,
+      "ship": "unit-p0-carrier-25442",
+      "required": 38.248537644228506,
+      "selectedPower": 29.680147062801563,
+      "actualPermanentPayloadPower": 0,
+      "actualPayloadCount": 0,
+      "actualTemporaryPayloadCount": 0,
+      "actualAdditionalPermanentFitsCount": 34,
+      "withoutTemporaryShapesSingleAdditionalFitsCount": 34,
+      "selectedWholeCrewFitsActualDeck": false,
+      "selectedWholeCrewFitsEmptyDeck": false,
+      "selectedWholeCrewFitsWithoutTemporaryShapes": false
+    }
+  ],
+  "packingScope": "At198000 removing both temporary body shapes permits each of19 single extra-candidate queries, individually, not19 simultaneously. Selected whole crew still fails on empty deck in all3 recorded component inputs. Not an exhaustive search of alternate crew, actual disembark, or invasion proof.",
+  "capitalAsArchived": {
+    "tick": 223200,
+    "gold": 383.33,
+    "hallCost": 400,
+    "actualLaunch": null,
+    "queuedJob": [
+      {
+        "id": "training-51467",
+        "unitKind": "cutter",
+        "remaining": 0,
+        "paidGold": 160
+      }
+    ],
+    "nativeRefundCommand": {
+      "type": "cancelTraining",
+      "buildingId": "building-p0-shipyard-1022",
+      "jobId": "training-51467"
+    },
+    "nativeRefundQuote": 160,
+    "quotedGoldAfterRefund": 543.3299999999999,
+    "unitQuotes": [
+      {
+        "kind": "carrier",
+        "cost": 420,
+        "raceAllows": true,
+        "affordableNow": false,
+        "affordableAfterQuote": true,
+        "projectedSupplyRequired": 3
+      },
+      {
+        "kind": "transport",
+        "cost": 240,
+        "raceAllows": true,
+        "affordableNow": true,
+        "affordableAfterQuote": true,
+        "projectedSupplyRequired": 1
+      },
+      {
+        "kind": "cutter",
+        "cost": 160,
+        "raceAllows": true,
+        "affordableNow": true,
+        "affordableAfterQuote": true,
+        "projectedSupplyRequired": 2
+      }
+    ],
+    "singleBodyRemovalWithLegalLaunch": {
+      "removed": [
+        "unit-p0-bombardShip-50739"
+      ],
+      "launch": {
+        "x": 2010.136095167642,
+        "y": 5120,
+        "heading": 2.356194490192345
+      }
+    }
+  },
+  "capitalScope": "Body-set removal only; no demonstrated executable public move, real launch, refund, purchase, worker delivery, build survival or neutral camp win. Current cash is insufficient for400hall, but valid refund/bounty paths mean funds are not mathematically closed.",
+  "fleetGeometryScope": "Shore station can fit/fire while half-turn sweep samples fail; synthetic admission true/false components both return no goal for selected two warships. This does not establish actual full sailing/native FIFO execution or attainable combat position.",
+  "validationAsArchived": {
+    "changedTestsPassed": 39,
+    "typecheckExitCode": 0,
+    "inheritedDeploymentFailures": 4,
+    "fullSuiteGreen": false,
+    "sourceCapsule": {
+      "path": "/workspace/.playtest/macro-choice-recovery-e566-20261016/fixed-source-capsule.tar.gz",
+      "sha256": "50fe26bb8b9cbbc13fbf91aad3251390bf25ff50e2da7f892aaad46d22df65fb",
+      "bytes": 4543730,
+      "payloadCount": 1468,
+      "regularCount": 1469,
+      "allSHABytesCoverageVerified": true
+    }
+  },
+  "scopeLimits": [
+    "Not a fresh0, new holdout score, natural win/loss or bootstrap acceptance.",
+    "Only916terminal ticks have this exact native replay closure, not all45316ticks re-simulated by this review.",
+    "Temporary expiry rows are not combat casualties;8selfcollisionhits include actual damage, maximum11.297212030904962.",
+    "Observer polling and last-hit causal limits remain as sealed; onlyrecent summaries are bounded.",
+    "Later harbor-transfer/medical work belongs to new unclosed sources and is excluded.",
+    "Original broken-container uncommitted changes remain unavailable and unrecovered."
+  ]
+}

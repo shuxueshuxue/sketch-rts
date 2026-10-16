@@ -1,0 +1,22 @@
+{
+  "atUTC": "2026-10-16T03:12:09.566903+00:00",
+  "rootHead": "696197ebfc4d0234eca9aafc9e633318212de424",
+  "productionSourceUnchanged": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4",
+  "archive": {
+    "source": "/workspace/.playtest/macro-choice-recovery-e566-20261016-evidence.tar.gz",
+    "copy": "/workspace/sketch-rts-bootstrap-resume/docs/engineering/bootstrap_1/overseas-assault-20261015/macro-choice-recovery-e566-20261016-evidence.tar.gz",
+    "bytes": 19379175,
+    "sha256": "67fe8db45b9872ef7566fd3c3be96cd29f793538699749db6c8d79139f584e0a",
+    "copyEqualsSource": true
+  },
+  "oldIndexSHA256": "c1adb4cabafe013012224c0741ec3ae0ab23f9f40a1f660fa5fd774a2c5c1868",
+  "candidateIndexSHA256": "a561d110d9ff1a937a0ba0b5df262b919d7b8f42589aea1bb6aabec89350a04e",
+  "old68ValuesExact": true,
+  "metadataValuesExact": true,
+  "old68RawTextExactIndependentlyVerified": true,
+  "sourceIntegration": false,
+  "ordinary0": false,
+  "winner": null,
+  "observationStoppedAt": 238516,
+  "originalUncommittedGapUnrecovered": true
+}

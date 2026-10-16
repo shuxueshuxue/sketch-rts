@@ -518,6 +518,28 @@
       "payloadHashesVerified": true,
       "source": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4 actual fresh0 Grove v9_archer physicalside1 versus normal frozenv8 Ember+Grove; developed generated pineshade case",
       "classification": "Actual independently attributed e566 ordinary0 naturally43714p0win, both enemies0units/0buildings; own41units/29buildings/4halls and56permanent native losses incl1neutral.1462source/497historical/184manifest exact. Whole219confirmed deaths/corpses match all-owner stats;226death rows include7cleanup confirmations. Only43200..43714 terminal514native steps replay closed(world/id/3mem/setup/163commands/27hits), no unitdeath there.74savedworld/id/setup and73available3mem equal old5f; old0memory missing, newfreshnull separately verified. Known developed seed, not new tactical superiority/holdout/acceptance. Separate7905Ember summoner case is not this archer10200prefix; postseal erratum included."
+    },
+    {
+      "file": "macro-choice-recovery-e566-20261016-evidence.tar.gz",
+      "bytes": 19379175,
+      "sha256": "67fe8db45b9872ef7566fd3c3be96cd29f793538699749db6c8d79139f584e0a",
+      "indexedPayloadFiles": 174,
+      "archiveRegularFiles": 175,
+      "payloadManifest": "INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "07802649972cee4ccde66ec735d733917d931967 independent unmerged e566 macro-choice/functional-transport candidate; changed-code193200 continuation of original0f summoner-v5+v7 ordinary case",
+      "classification": "Supported observation stop238516 exit0/winnernull/naturalCompletefalse, not newordinary0 or natural defeat/win.193200..23851640184commands/8own collisionhits/4777events,0enemyhits/0permanent terminal and native stats unchanged;1520temporary expiry observations are not combat losses.11permanent units actually boarded and left home, but194400/198000 actual permanent payload11.0558/9.4957 below required20.1156. Empty-deck/temporary-shape-removal packing and223200bombard-shape-removal launch are pure counterfactuals, not actual transfer/travel/spawn.383.33gold<400hall;160native refund quote exists, not executed. Last237600..238516916tick same-source coldclosure721commands/0hits/114events/62pre-p0 hashes plus finalworld/id/3mem exact.1468source/frozen184/rules2 fixed;39changedtests+tsc0,4inherited deployment failures retained, no fullsuitegreen. Unmerged negative case, no new production score/acceptance; later harbor-transfer/medical work excluded."
+    },
+    {
+      "file": "bootstrap-e566-medical-and-stop-ownership-evidence-20261016.tar.gz",
+      "bytes": 5886640,
+      "sha256": "0e1f8c7c0a1c85a75f4bddbb78f342bdd61ef5cc3cffe4b11fc15018c47c8c89",
+      "indexedPayloadFiles": 112,
+      "archiveRegularFiles": 113,
+      "payloadManifest": "INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "Actuale566 developed archer-v8+v8 ordinary0 loss diagnosis; independent unmergeda90c0119 stop-ownership candidate from identical13800 fullworld/id/3mem input",
+      "classification": "Only13800..13964 native164tick full3AI pair, not newordinary0/fullmatch/generalization. Samee566 baseline closes actualworld/id/3mem/setup/157commands/14hits; a90c restore/source/frozen exact but actualoutput diverges164commands/11hits. First sequence divergence13875 removes2255claim-violating v6Backline stop; all other entries/memory same only in that single13875purequery, not the entire window. Candidate retains unsafe northhall return, takes extra13918golem39damage, loses baseline3x4 outgoing damage and dies13942 versus original13964,22ticks earlier; each window has only this one new permanent death, fatalhit/corpse/removal closed.25protocol tests+tsc0 do not show rescue/tactical benefit; not integrated.1462inherited source/497frozen files prepost exact; newcandidate adds1test. Loss survey and static road/drawWorld evidence do not prove other deaths preventable or future route survival. Productione56643714/56loss and old0f record unchanged; later medical destination work excluded."
     }
   ],
   "strategyBaseline": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",

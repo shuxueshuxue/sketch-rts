@@ -1,0 +1,21 @@
+{
+  "atUTC": "2026-10-16T03:18:23.002849+00:00",
+  "archiveChecks": [
+    {
+      "file": "macro-choice-recovery-e566-20261016-evidence.tar.gz",
+      "stagedSHA256": "67fe8db45b9872ef7566fd3c3be96cd29f793538699749db6c8d79139f584e0a",
+      "stagedBytes": 19379175,
+      "originalRootCopyStagedEqual": true
+    },
+    {
+      "file": "bootstrap-e566-medical-and-stop-ownership-evidence-20261016.tar.gz",
+      "stagedSHA256": "0e1f8c7c0a1c85a75f4bddbb78f342bdd61ef5cc3cffe4b11fc15018c47c8c89",
+      "stagedBytes": 5886640,
+      "originalRootCopyStagedEqual": true
+    }
+  ],
+  "rootRuntimeSelectedSourcesExactE566": true,
+  "index70SHA256": "9f6ea837f41ae2cbcddc25d63f686942d9752c15b47fd1443eda27f577db7c16",
+  "noCandidateSourceIntegrated": true,
+  "originalUncommittedGapUnrecovered": true
+}

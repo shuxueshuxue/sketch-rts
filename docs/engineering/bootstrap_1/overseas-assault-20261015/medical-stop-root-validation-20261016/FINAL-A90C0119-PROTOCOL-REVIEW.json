@@ -1,0 +1,220 @@
+{
+  "reviewer": "/root/order_ownership_review",
+  "kind": "Independent read-only static protocol review plus byte and recorded-evidence audit; no new native execution or tests",
+  "source": {
+    "control": "/workspace/sketch-rts-stop-ownership-e566-control",
+    "baseline": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4",
+    "candidate": "a90c0119d7166baad1c9222781baab107deedbcb",
+    "clean": true,
+    "candidateParentExactBaseline": true,
+    "changedPaths": [
+      "src/ai/policy/script-runner-stop.test.ts",
+      "src/ai/policy/script-runner.ts"
+    ],
+    "diffCheckPassed": true
+  },
+  "decision": {
+    "protocolBlockers": [],
+    "protocolConclusion": "No blocking protocol defect found. stop must participate in the current runner ownership, conflict and order-reservation contract because it cancels/replaces the native unit order. This is independent of whether the owning task makes a good tactical decision.",
+    "tacticalConclusion": "This candidate is a negative medical outcome in the observed window: the same doctor dies 22 ticks earlier. Do not advertise rescue, survival, lower losses, overall strength, or bootstrap acceptance.",
+    "integrationScope": "If integrated, describe it as order ownership consistency only. No whole-game improvement or cross-route stability has been demonstrated."
+  },
+  "semanticFindings": [
+    {
+      "reference": "src/shared/sim.ts:544,565,1569",
+      "finding": "An immediate stop cancels ship crew rendezvous when applicable, assigns idle and clears the order queue, ship route/pursuit/planning state and gangway. During an existing charge, assignUnitOrder instead queues idle behind the dash. It is neither a read-only posture hint nor a guaranteed instantaneous freeze."
+    },
+    {
+      "reference": "src/ai/policy/script-runner.ts:93",
+      "finding": "The added stop branch filters unitIds against the precomputed first-script claims map. Mixed commands retain free/self-owned IDs in their original order; foreign IDs are removed without mutating the input command. Explicit conflict bypass is downstream and does not bypass ownership."
+    },
+    {
+      "reference": "src/ai/policy/script-runner.ts:112",
+      "finding": "The added stop branch filters units reserved by earlier accepted script commands, including existing native board orders whose assignment is not owned by this script. The actual boarding owner remains able to cancel its own approach. Existing explicit conflict-bypass scripts retain their established ability to override order reservations and unclaimed boarding exclusion."
+    },
+    {
+      "reference": "src/ai/policy/script-runner.ts:136",
+      "finding": "Accepted stop commands now reserve their selected units against subsequent unrelated script orders, from either an economy or tactics result. This reservation is per planner call; no new TTL or persistent owner was introduced."
+    },
+    {
+      "reference": "src/ai/policy/script-runner.ts:127,140",
+      "finding": "Instant in-range casts and equipment before stop do not become movement reservations; charge and walk-to-cast retain the old reservation behavior. A preceding stop now filters later cast commands through the existing all-cast conflict rule, just as an earlier move/hold already does. This candidate does not change that existing asymmetry."
+    },
+    {
+      "reference": "src/ai/policy/claims.ts:310",
+      "finding": "Persistent memory unitClaims are not newly cleared by stop; the existing memory-clearing helper only handles move/attackMove/attack. Claim evaluation order and script-internal command bundles are unchanged. Do not describe this patch as a complete persistent-claim redesign."
+    }
+  ],
+  "testAssessment": {
+    "readExistingLogsOnly": true,
+    "ranTests": false,
+    "ranNative": false,
+    "recordedNewTests": 10,
+    "recordedExistingTests": 15,
+    "recordedSingleInvocationTotal": 25,
+    "recordedTscExit": 0,
+    "meaningfulCoverage": [
+      "mixed claimed/free IDs plus input immutability",
+      "self-owned stop remains allowed",
+      "first accepted stop reserves before later move/attack/stop in economy and tactics",
+      "later stop cannot override an earlier move",
+      "existing boarding owner versus unrelated stop",
+      "explicit conflict bypass retains claim filtering",
+      "instant heal and equipment coexist while charge remains reserved"
+    ],
+    "limits": [
+      "The boarding fixture assigns a synthetic board order without a physical transport, so it verifies runner filtering, not native docking geometry or transfer completion.",
+      "The added tests compare public runner outputs; they do not apply emitted stop commands to a live Game. Existing sim stop and ship planning-state tests support native semantics, and the recorded actual window proves a real suppressed stop, but this is not a whole-game benefit test."
+    ],
+    "requiredAdditionalProtocolTestBlockers": [],
+    "optionalFutureBoundary": "If runner/native order semantics change again, a small integration assertion that an accepted stop clears an existing queued move while a filtered foreign stop leaves it intact would connect the present output tests with native state. This is not required to repeat existing runs for this unchanged minimal patch."
+  },
+  "frozenIsolation": {
+    "rulesVersion": 2,
+    "manifestSHA256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
+    "revision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+    "manifestFilesIndependentlyHashed": 184,
+    "archiveFilesIndependentlyHashed": 497,
+    "allManifestBytesMatchFrozenGitArchive": true,
+    "recordedFrozenPrePostExact": true,
+    "all497RecordedFrozenHashesIndependentlyMatchGitArchive": true,
+    "liveRunnerChangedButFrozenArchiveNotChanged": true,
+    "loader": "scripts/bootstrap_1-planner.ts archives the fixed revision and routes v5/v7/v8 to historical.planAiOwnerCommandEntries. It does not use the changed live runner for those acceptance opponents."
+  },
+  "evidenceAudit": {
+    "recordedSourcePrePostExact": true,
+    "all1462RecordedSelectedLiveFilesStillExact": true,
+    "newTestOutsideInheritedCapsuleHash": "4a3ad0032a2dc5007f0fabc8af299258dc0747c801b682c9228a58a11188d7b0",
+    "baselineWindow": [
+      13800,
+      13964
+    ],
+    "baselineReplayAllChecksExact": true,
+    "candidateRestoreSourceFrozenMandatoryExact": true,
+    "candidateOutputDifferentExpected": true,
+    "actual13875ReadOnlyQueryAllFiveChecksTrue": true,
+    "baselineDoctorDeathTick": 13964,
+    "candidateDoctorDeathTick": 13942,
+    "candidateEarlierDeathTicks": 22,
+    "samePermanentDoctorRemoved": true,
+    "sourceOfDeathFacts": "Independently read both raw native-deaths.jsonl rows and their fatal native hit/corpse/removal confirmations, rather than inferring loss from missing sample bodies.",
+    "reportedWindowCounts": {
+      "baselineCommands": 157,
+      "candidateCommands": 164,
+      "baselineHits": 14,
+      "candidateHits": 11
+    },
+    "limits": "Both are 164-tick continuations from a real ordinary0 full checkpoint with full three-player memory. Only baseline reproduces old terminal state; candidate changed output is expected. No fresh ordinary0, full match, unseen generalization, or causal claim that the old stop caused the death."
+  },
+  "inputEvidence": [
+    {
+      "path": "/workspace/.playtest/bootstrap-stop-ownership-e566-20261016/validation.json",
+      "bytes": 705,
+      "sha256": "728911ae6c5ac9495f8f1a1f7a456ab941f56bb3d0ccf89868f574721806ea3d"
+    },
+    {
+      "path": "/workspace/.playtest/bootstrap-stop-ownership-e566-20261016/vitest.log",
+      "bytes": 369,
+      "sha256": "e5eb67cd657a3991cc2b8d8eceabff8f89cc8a1ee9fc4e558c4d8ab12c63f0bb"
+    },
+    {
+      "path": "/workspace/.playtest/bootstrap-stop-ownership-e566-20261016/tsc.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/workspace/.playtest/bootstrap-stop-ownership-e566-20261016/stop-ownership.patch",
+      "bytes": 9844,
+      "sha256": "2905a13661aa0ec71451f56e8d9016ec7c2160dc4667c0ceafc8a8bc9e9e2d3b"
+    },
+    {
+      "path": "/workspace/.playtest/bootstrap-stop-ownership-e566-20261016/query-actual13875.json",
+      "bytes": 10325,
+      "sha256": "39e15f745183d9d1d270d9fb3d0fff94a7dc68db9ad0f5f0d49339869ad1a4fe"
+    },
+    {
+      "path": "/workspace/.playtest/bootstrap-stop-ownership-e566-20261016/comparison.json",
+      "bytes": 48942,
+      "sha256": "f1e135acddbd604227a594a12b1b1030ea412d92cf7cad5201162f128a2489ff"
+    },
+    {
+      "path": "/workspace/.playtest/bootstrap-stop-ownership-e566-20261016/candidate13800-13964.json",
+      "bytes": 2745,
+      "sha256": "fdf645c2acddd238836da78e18e148ca8623ebde7dcb7c6655ace04ea2d34a21"
+    },
+    {
+      "path": "/workspace/.playtest/bootstrap-stop-ownership-e566-20261016/candidate13800-13964-source-preflight.json",
+      "bytes": 302959,
+      "sha256": "1975a5305c69a5d473ce02a489db2cb088a4f90054d713490a309998a9cc3253"
+    },
+    {
+      "path": "/workspace/.playtest/bootstrap-stop-ownership-e566-20261016/candidate13800-13964-source-postflight.json",
+      "bytes": 461432,
+      "sha256": "32fd670656d58275a64cd878d8eaf06299f8ec84e14c23d08a4ec460b529f39c"
+    },
+    {
+      "path": "/workspace/.playtest/bootstrap-stop-ownership-e566-20261016/candidate13800-13964-native-deaths.jsonl",
+      "bytes": 3097,
+      "sha256": "3212b53a32360f88edac9c46d2f6d608288413f62f44efad8ce7bef50187f054"
+    },
+    {
+      "path": "/workspace/.playtest/bootstrap-e566-medical-baseline2255-20261016/baseline13800-13964.json",
+      "bytes": 2242,
+      "sha256": "ed3ffbed290c29c85c3bc1de14a5b95a6553d0b048d970ad32f577ee0417d0cf"
+    },
+    {
+      "path": "/workspace/.playtest/bootstrap-e566-medical-baseline2255-20261016/baseline13800-13964-native-deaths.jsonl",
+      "bytes": 3564,
+      "sha256": "8eec43e5f28bf6507ac7a8aa7d28ba9d4945c17fce226ae95b40e87cdc810636"
+    }
+  ],
+  "readSourceEvidence": [
+    {
+      "path": "/workspace/sketch-rts-stop-ownership-e566-control/src/ai/policy/script-runner.ts",
+      "bytes": 10725,
+      "sha256": "183390a1ad977817a69c0de574bb3da3fb6abd2b7b7bd35625b64b4f2afec8e1"
+    },
+    {
+      "path": "/workspace/sketch-rts-stop-ownership-e566-control/src/ai/policy/script-runner-stop.test.ts",
+      "bytes": 6207,
+      "sha256": "4a3ad0032a2dc5007f0fabc8af299258dc0747c801b682c9228a58a11188d7b0"
+    },
+    {
+      "path": "/workspace/sketch-rts-stop-ownership-e566-control/src/ai/policy/script-runner.test.ts",
+      "bytes": 16092,
+      "sha256": "d139ad8df3561876f1579b3847422b5d1eb52205aa9a304e44d9470edbdb641d"
+    },
+    {
+      "path": "/workspace/sketch-rts-stop-ownership-e566-control/src/ai/policy/claims.ts",
+      "bytes": 14604,
+      "sha256": "045fdd30dab87f14370c7b024e1f822b5c5028e7842b2d77f2ccdb6055bf2e4e"
+    },
+    {
+      "path": "/workspace/sketch-rts-stop-ownership-e566-control/src/ai/policy/core.ts",
+      "bytes": 301701,
+      "sha256": "1e26e8e5857e68c7dad1eb4877edc97168de5ce933e7bafbe36068b1504775ea"
+    },
+    {
+      "path": "/workspace/sketch-rts-stop-ownership-e566-control/src/shared/sim.ts",
+      "bytes": 271190,
+      "sha256": "3583c4b712694c32492ede779af095d357c282bab43073b6bac696194aeb8504"
+    },
+    {
+      "path": "/workspace/sketch-rts-stop-ownership-e566-control/src/shared/rules-version.ts",
+      "bytes": 898,
+      "sha256": "edcc961c60cbf630dafa01d167b2662303d8562a618861a1b0577755ea7b1a57"
+    },
+    {
+      "path": "/workspace/sketch-rts-stop-ownership-e566-control/scripts/bootstrap_1-planner.ts",
+      "bytes": 4207,
+      "sha256": "56097e902c77caa450176ba3ce4f363f7ae1767afd2c5bfa8cb7b964f875988d"
+    },
+    {
+      "path": "/workspace/sketch-rts-stop-ownership-e566-control/docs/engineering/bootstrap_1/frozen-policy.json",
+      "bytes": 26805,
+      "sha256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774"
+    }
+  ],
+  "noWritesToSourceOrOriginalEvidence": true,
+  "rootProductionNotIntegratedByReviewer": true
+}

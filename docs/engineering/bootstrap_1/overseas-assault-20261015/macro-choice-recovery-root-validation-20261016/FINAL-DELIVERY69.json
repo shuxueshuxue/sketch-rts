@@ -1,0 +1,80 @@
+{
+  "createdAtUtc": "2026-10-16T03:10:59.794160+00:00",
+  "baseDocsCommit": "696197ebfc4d0234eca9aafc9e633318212de424",
+  "rootHeadObservedBefore": "696197ebfc4d0234eca9aafc9e633318212de424",
+  "rootHeadObservedAfter": "696197ebfc4d0234eca9aafc9e633318212de424",
+  "oldIndexSHA256": "c1adb4cabafe013012224c0741ec3ae0ab23f9f40a1f660fa5fd774a2c5c1868",
+  "candidateIndexSHA256": "a561d110d9ff1a937a0ba0b5df262b919d7b8f42589aea1bb6aabec89350a04e",
+  "oldPackages": 68,
+  "newPackages": 69,
+  "old68EachValueAndRawPackageTextExact": true,
+  "allExistingMetadataValueAndRawTextExact": true,
+  "unchangedMetadataKeys": [
+    "productionHead",
+    "strategyBaseline",
+    "productionDelta",
+    "productionValidation",
+    "unmergedObservationStatus",
+    "observationHistory",
+    "productionOrdinary0",
+    "currentCombinedOrdinary0"
+  ],
+  "intentionalExistingMetadataChanges": [],
+  "addedMetadataKeys": [],
+  "productionHeadRetained": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4",
+  "strategyBaselineRetained": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
+  "old0fProductionOrdinary0ValueAndRawTextExact": true,
+  "e566CurrentCombinedOrdinary0ValueAndRawTextExact": true,
+  "rootCanonicalIndexSHA256Before": "c1adb4cabafe013012224c0741ec3ae0ab23f9f40a1f660fa5fd774a2c5c1868",
+  "rootCanonicalIndexSHA256After": "c1adb4cabafe013012224c0741ec3ae0ab23f9f40a1f660fa5fd774a2c5c1868",
+  "rootWritesCopiesExtractionNativeTestsStagesCommits": false,
+  "onlyNewPackageStreamVerified": true,
+  "earlier68PackagesNotReverifiedOrRepacked": true,
+  "activeCandidate": "bootstrap-complete-games-20261015-index.69.candidate.json",
+  "archive": {
+    "file": "macro-choice-recovery-e566-20261016-evidence.tar.gz",
+    "bytes": 19379175,
+    "sha256": "67fe8db45b9872ef7566fd3c3be96cd29f793538699749db6c8d79139f584e0a",
+    "payloads": 174,
+    "regularFilesIncludingIndex": 175
+  },
+  "scriptUsage": "python3 /workspace/.playtest/root-next-evidence-index69-20261016/verify-and-prepare69.py",
+  "originalUncommittedRecoveryGapRetained": true,
+  "files": {
+    "bootstrap-complete-games-20261015-index.69.candidate.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index69-20261016/bootstrap-complete-games-20261015-index.69.candidate.json",
+      "bytes": 40442,
+      "sha256": "a561d110d9ff1a937a0ba0b5df262b919d7b8f42589aea1bb6aabec89350a04e"
+    },
+    "canonical-index-68.original.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index69-20261016/canonical-index-68.original.json",
+      "bytes": 38917,
+      "sha256": "c1adb4cabafe013012224c0741ec3ae0ab23f9f40a1f660fa5fd774a2c5c1868"
+    },
+    "new-entry-69.verified.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index69-20261016/new-entry-69.verified.json",
+      "bytes": 1480,
+      "sha256": "5394aa2d79aa09594aac77b42e1199f5eb39c89b6fa945dc32268ee5b017a69d"
+    },
+    "unmerged-078026-negative-case.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index69-20261016/unmerged-078026-negative-case.json",
+      "bytes": 7357,
+      "sha256": "9110dd12c2b2460c3d809af2610da05dcd176b55dac4a36f845f1b1c6be4358e"
+    },
+    "new-archive-stream-verification.json": {
+      "path": "/workspace/.playtest/root-next-evidence-index69-20261016/new-archive-stream-verification.json",
+      "bytes": 28884,
+      "sha256": "fa06aed3b91d3435225da4fb29882c315ffe6f505496ffbea8fbc0d5e42a828c"
+    },
+    "README-append69.candidate.zh.md": {
+      "path": "/workspace/.playtest/root-next-evidence-index69-20261016/README-append69.candidate.zh.md",
+      "bytes": 1963,
+      "sha256": "dada9261c1c6630883502794c15d90eeff9c17481dbb8084a2cd5bfd9984397e"
+    },
+    "verify-and-prepare69.py": {
+      "path": "/workspace/.playtest/root-next-evidence-index69-20261016/verify-and-prepare69.py",
+      "bytes": 21216,
+      "sha256": "9230f5d999894ab7dcc87ff99bcdf2eebf6f1926edc74273636d0957f4ccfe5e"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "atUTC": "2026-10-16T03:17:51.105352+00:00",
+  "rootHead": "696197ebfc4d0234eca9aafc9e633318212de424",
+  "productionSourceUnchanged": "e5663c338f9c544a5e65a66a6ed278d35f74a8f4",
+  "archive": {
+    "source": "/workspace/.playtest/bootstrap-e566-medical-and-stop-ownership-evidence-20261016.tar.gz",
+    "copy": "/workspace/sketch-rts-bootstrap-resume/docs/engineering/bootstrap_1/overseas-assault-20261015/bootstrap-e566-medical-and-stop-ownership-evidence-20261016.tar.gz",
+    "bytes": 5886640,
+    "sha256": "0e1f8c7c0a1c85a75f4bddbb78f342bdd61ef5cc3cffe4b11fc15018c47c8c89",
+    "copyEqualsSource": true
+  },
+  "oldIndexSHA256": "a561d110d9ff1a937a0ba0b5df262b919d7b8f42589aea1bb6aabec89350a04e",
+  "candidateIndexSHA256": "9f6ea837f41ae2cbcddc25d63f686942d9752c15b47fd1443eda27f577db7c16",
+  "old69ValuesExact": true,
+  "allMetadataValuesExact": true,
+  "old69RawTextExactIndependentlyVerified": true,
+  "sourceIntegration": false,
+  "ordinary0": false,
+  "doctorDeathBaseline": 13964,
+  "doctorDeathCandidate": 13942,
+  "rootPersonallyViewedBothNativeSaved13935Images": true,
+  "originalUncommittedGapUnrecovered": true
+}
