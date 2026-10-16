@@ -73,7 +73,7 @@ export class PerfOverlay {
     this.element.className = 'perf-overlay';
     Object.assign(this.element.style, {
       position: 'fixed', left: '4px', top: '4px', zIndex: '2147483647', margin: '0', padding: '6px 8px',
-      font: '11px/1.35 ui-monospace, Menlo, monospace', color: '#e8f0e0', background: 'rgba(16,20,18,.82)',
+      font: '10.5px/1.2 ui-monospace, Menlo, monospace', color: '#e8f0e0', background: 'rgba(16,20,18,.82)',
       pointerEvents: 'none', whiteSpace: 'pre', borderRadius: '4px',
     });
     parent.append(this.element);
@@ -171,16 +171,17 @@ export class PerfOverlay {
     if (this.longFrames.length > 6) this.longFrames.splice(0, this.longFrames.length - 6);
     const seconds = (now - this.windowStart) / 1000;
     const programs = this.renderer?.info.programs?.length;
+    // Short, tight lines keep the readout clear of the status line centred at the top and of the chat below it (34vh).
     const lines = [
-      `fps ${(this.frames / seconds).toFixed(1)}   frame gap avg/max ${this.interval.text()} ms   ${innerWidth}×${innerHeight} @${devicePixelRatio}x`,
-      `main-thread frame JS ${this.frameJs.text()}`,
+      `fps ${(this.frames / seconds).toFixed(1)}  gap avg/max ${this.interval.text()} ms`,
+      `view ${innerWidth}×${innerHeight} @${devicePixelRatio}x${programs === undefined ? '' : `  programs ${programs}`}`,
+      `frame JS ${this.frameJs.text()} ms`,
       ...SEGMENTS.map(name => `  ${name.padEnd(8)}${this.segments.get(name)!.text()}`),
-      `GPU 3D ${!this.renderer ? 'no 3D renderer' : this.timer ? `${this.gpu.text()} ms` : 'unsupported'}${programs === undefined ? '' : `   programs ${programs}`}`,
-      `>${LONG_MS}ms gaps: CPU ${this.longCounts.CPU}  GPU/compositor ${this.longCounts.GPU}`,
+      `GPU 3D ${!this.renderer ? 'no 3D renderer' : this.timer ? `${this.gpu.text()} ms` : 'unsupported'}`,
+      `>${LONG_MS}ms gaps: CPU ${this.longCounts.CPU}  GPU/comp ${this.longCounts.GPU}`,
       `  recent ${this.longFrames.map(frame => `${Math.round(frame.end - frame.start)}${frame.cause ? frame.cause[0] : '?'}`).join(' ') || '–'}`,
-      this.loafSupported
-        ? `long-animation-frame ${this.loafCount}  recent ${this.loafs.slice(-3).map(loaf => `${Math.round(loaf.end - loaf.start)}(js ${Math.round(loaf.script)} render ${Math.round(loaf.render)} layout ${Math.round(loaf.layout)})`).join(' ') || '–'}`
-        : 'long-animation-frame unsupported',
+      this.loafSupported ? `long-animation-frame ${this.loafCount}` : 'long-animation-frame unsupported',
+      ...this.loafs.slice(-3).map(loaf => `  ${Math.round(loaf.end - loaf.start)} ms: js ${Math.round(loaf.script)} render ${Math.round(loaf.render)} layout ${Math.round(loaf.layout)}`),
     ];
     this.element.textContent = lines.join('\n');
     this.windowStart = now; this.frames = 0;
