@@ -47,6 +47,12 @@ export function projectDeckPoint(ship: Unit, passenger: Unit, preferred: Point, 
   if(nearest && deckPointFits(ship,passenger,nearest,units))return nearest;
   return deckPlacement(ship,passenger,units,preferred,true,2);
 }
+/** Shore admission and attachment must find the same free physical floor.
+ * Enter along the aft port edge, preserving the open center for later crew. */
+function shoreBoardingPlacement(ship: Unit, passenger: Unit, units: readonly Unit[]) {
+  const profile=shipProfile(ship);
+  return profile && deckPlacement(ship,passenger,units,{x:-profile.length/2,y:-profile.beam/2},true,2);
+}
 export function canBoard(ship: Unit, passenger: Unit, units: readonly Unit[]) {
   const profile=shipProfile(ship);
   if(!profile || shipProfile(passenger) || isInCabin(passenger))return false;
@@ -54,13 +60,13 @@ export function canBoard(ship: Unit, passenger: Unit, units: readonly Unit[]) {
     const source=units.find(unit=>unit.id===passenger.deck!.shipId),sourceProfile=source && shipProfile(source);
     if(!sourceProfile || source!.id===ship.id || Math.abs(profile.deckHeight-sourceProfile.deckHeight)>passenger.radius*2 && !gangwayBetween(source!,ship,passenger))return false;
   } else if(ship.owner!==passenger.owner)return false;
-  return deckLoad(units,ship)+bodyMass(passenger)<=profile.loadCapacity && !!deckPlacement(ship,passenger,units);
+  return deckLoad(units,ship)+bodyMass(passenger)<=profile.loadCapacity
+    && !!(passenger.deck ? deckPlacement(ship,passenger,units) : shoreBoardingPlacement(ship,passenger,units));
 }
 export function boardUnit(ship: Unit, passenger: Unit, units: readonly Unit[]) {
   const profile=shipProfile(ship);
   if(!profile || passenger.deck || deckLoad(units,ship)+bodyMass(passenger)>profile.loadCapacity)return false;
-  // Enter along the aft port edge, preserving the open center for later passengers.
-  const point=deckPlacement(ship,passenger,units,{x:-profile.length/2,y:-profile.beam/2},true,2);
+  const point=shoreBoardingPlacement(ship,passenger,units);
   if(!point)return false;
   passenger.deck={shipId:ship.id,...point};
   passenger.aim=undefined;
