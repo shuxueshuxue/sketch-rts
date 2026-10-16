@@ -18,6 +18,11 @@ function mountedRoadFoes(snapshot: GameSnapshot, towers: readonly Building[], de
     ...snapshot.buildings.filter(building => building.owner === 'neutral' && building.complete && building.attackDamage > 0)];
 }
 
+/** The roads a firing station is admitted on; a rider sent to that station follows the same one. */
+export function mountedFiringRouter(snapshot: GameSnapshot, rider: Unit, towers: readonly Building[], defenders: readonly Unit[]) {
+  return threatLandRouter(snapshot, rider, mountedRoadFoes(snapshot, towers, defenders));
+}
+
 export function mountedFiringPoint(snapshot: GameSnapshot, rider: Unit, worker: Point, towers: readonly Building[], defenders: readonly Unit[]): Point | undefined {
   const angles = [Math.atan2(rider.y - worker.y, rider.x - worker.x),
     ...towers.map(tower => Math.atan2(worker.y - tower.y, worker.x - tower.x)),
@@ -31,7 +36,7 @@ export function mountedFiringPoint(snapshot: GameSnapshot, rider: Unit, worker: 
         return gap >= THREAT_RANGE || gap > mountedThreatReach(snapshot, foe, { ...point, radius: rider.radius }, THINK_TICKS + rider.cooldown)
           + foe.speed * THINK_TICKS / SIM_TICKS_PER_SECOND;
       }));
-  const route = threatLandRouter(snapshot, rider, mountedRoadFoes(snapshot, towers, defenders));
+  const route = mountedFiringRouter(snapshot, rider, towers, defenders);
   return points.flatMap(point => {
     const road = route(point);
     return road === undefined ? [] : [{ point, ticks: road.ticks }];
@@ -162,7 +167,7 @@ export const mountedTasks: AiScript = {
         if (choice) {
           if (objective.kind === 'raid' && distance(rider, choice.target) > rider.attackRange
             && !pursuers.some(pursuer => pursuer.target === choice.target)) {
-            const road = threatLandRouter(snapshot, rider, mountedRoadFoes(snapshot, towers, defenders))(choice.point)!;
+            const road = mountedFiringRouter(snapshot, rider, towers, defenders)(choice.point)!;
             return threatRoadCommands(rider, road);
           }
           return [mountedMicro(snapshot, rider, choice.target, [...local, ...towers], objective.kind === 'camp' ? { kind: 'camp' } : { kind: 'raid', station: choice.point })];
