@@ -1,0 +1,54 @@
+{
+  "productionHead": "0f5bf01a05046169d4fb42322376f767b97bcc83",
+  "strategyBaseline": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
+  "newArchives": [
+    {
+      "file": "native-auto-disembark-mechanism-evidence.tar.gz",
+      "bytes": 5017567,
+      "sha256": "7fdef2702e12814b857459ec131af4278e4b421bdc114856327597c1fc4e7231",
+      "indexedPayloadFiles": 39,
+      "archiveRegularFiles": 40,
+      "payloadManifest": "native-auto-disembark-audit-20261015/INDEX.sha256",
+      "payloadHashesVerified": true,
+      "source": "Fixed oldV2 6f80 + exact loading/transfer",
+      "classification": "Read-only native auto-acquisition and connected-surface disembark cause from actual56400→56626; exact full closure, no public unload; not currentroot ordinary0 or candidate."
+    },
+    {
+      "file": "knight-unified-care-36ae-216000-incomplete-evidence.tar.gz",
+      "bytes": 20158835,
+      "sha256": "ef016a96e16f66a20a2ad9c8b27bf6d1192450028104ddf57db7090c006db02d",
+      "indexedPayloadFiles": 110,
+      "archiveRegularFiles": 111,
+      "payloadManifest": "INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "Fixed36ae + unified finite care (1430 live files)",
+      "classification": "Changed-code complete64800→68400→144000→216000 without winner; proved last72000tick strategic stagnation, preserved failed actual deck army. Unmerged negative; shared timeout predicate is component evidence only."
+    },
+    {
+      "file": "bootstrap-mining-capital-8041-complete-evidence.tar.gz",
+      "bytes": 11897263,
+      "sha256": "a9a9ae161232a831219981e24b57176da17601412f87382706fb5b76ff6cc8b9",
+      "indexedPayloadFiles": 139,
+      "archiveRegularFiles": 140,
+      "payloadManifest": "INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "8041e163c5ef43f67c5a5ff51fa3fdc9ef9748c5 (e7 base)",
+      "classification": "Changed-code originale7 complete57600→104669 naturalp0win/0enemy units0buildings; whole permanent9 vs originale7 6, later16934tick. Real economic recovery, no demonstrated whole-game net gain; consumer unmerged."
+    },
+    {
+      "file": "bootstrap-knight-integrated-0f5bf-ordinary0-44441-evidence.tar.gz",
+      "bytes": 15172739,
+      "sha256": "596da59a9a7496945b75e4c75c59272b356b0e5ba549cfaa8d2b9b4ca225f8ba",
+      "indexedPayloadFiles": 259,
+      "archiveRegularFiles": 260,
+      "payloadManifest": "INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "0f5bf01a05046169d4fb42322376f767b97bcc83",
+      "classification": "Single actual standard0 officialknight vs normal frozenv5 known sapphire seed; natural44441p0win/0enemy units0buildings,1own permanent neutral loss. Integrated combination result, no per-hunk attribution or final three-route acceptance."
+    }
+  ],
+  "original45PackagesUnchanged": true,
+  "sourceMutation": false,
+  "oldArchiveCopiesRestored": 0,
+  "currentRootOrdinary0Closure": "Sealed original0→44441 natural p0win; exact3keywindows and40fullframes/source/frozen verified in separate complete archive."
+}
