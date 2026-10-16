@@ -22,6 +22,9 @@ type Berths = {
   ranked?: ShipPose[];
   bodies?: string;
   result?: ShipPose | undefined;
+  // Each berth's verdict against each nearby body, under the body's description in `bodies`: a blocked yard re-tests
+  // only the bodies that moved, not every berth against every body (see shipLaunchPose).
+  verdicts: Map<ShipPose, Map<string, { key: string; clear: boolean }>>;
 };
 const berths = new WeakMap<object, WeakMap<Building, Berths>>();
 const prototypes = new WeakMap<Building, Map<UnitKind, { definition:typeof UNIT_DEFS[UnitKind]; radius:number; physicalRadius:number; unit:Unit }>>();
@@ -63,7 +66,7 @@ export function shipLaunchPose(snapshot: Harbor, dock: Building, ship: Unit): Sh
     const {poses,entries} = harborPoses(snapshot, dock, ship);
     const radius = polygonRadius(profile.hull);
     const range = poses.reduce((maximum, pose) => Math.max(maximum, Math.hypot(pose.x - dock.x, pose.y - dock.y) + radius), 0);
-    cached = { geometry, terrain, cells: terrain?.cells, poses, entries, range };
+    cached = { geometry, terrain, cells: terrain?.cells, poses, entries, range, verdicts: new Map() };
     yards.set(dock, cached);
   }
   if (!cached.poses.length) return undefined;
@@ -76,7 +79,8 @@ export function shipLaunchPose(snapshot: Harbor, dock: Building, ship: Unit): Sh
     bodies.push(body);
   }
   const aim=productionRallyPoint(snapshot,dock);
-  const signature = `${aim.x}:${aim.y}:${bodies.map(body => `${body.id}:${body.kind}:${body.x}:${body.y}:${body.radius}:${'order' in body ? `${body.bodyRadius}:${shipProfile(body) ? shipScale(body) : ''}:${body.sailing?.heading ?? 0}` : ''}`).join('|')}`;
+  const keys = bodies.map(body => `${body.id}:${body.kind}:${body.x}:${body.y}:${body.radius}:${'order' in body ? `${body.bodyRadius}:${shipProfile(body) ? shipScale(body) : ''}:${body.sailing?.heading ?? 0}` : ''}`);
+  const signature = `${aim.x}:${aim.y}:${keys.join('|')}`;
   if (cached.bodies !== signature) {
     cached.bodies = signature;
     const goal=walkableGoal(snapshot.map,aim.x,aim.y,'sea');
@@ -98,8 +102,25 @@ export function shipLaunchPose(snapshot: Harbor, dock: Building, ship: Unit): Sh
       const reachable=ordered.some(candidate=>candidate.reachable);
       cached.ranked=ordered.filter(candidate=>!reachable || candidate.reachable).map(candidate=>candidate.pose);
     }
-    cached.result = cached.ranked.find(pose=>shipBodyClearAtPose(snapshot.map,ship,pose,bodies)
-      && launchPathClear(snapshot,ship,cached!.entries.get(pose)!,pose,bodies));
+    // A berth is clear of the bodies exactly when it is clear of each one; a body described as before keeps its verdict.
+    const berths = cached;
+    const clearOf = (pose: ShipPose, body: Body, key: string) => {
+      let verdicts = berths.verdicts.get(pose);
+      if (!verdicts) { verdicts = new Map(); berths.verdicts.set(pose, verdicts); }
+      const known = verdicts.get(body.id);
+      if (known?.key === key) return known.clear;
+      const clear = shipBodyClearAtPose(snapshot.map, ship, pose, [body]);
+      verdicts.set(body.id, { key, clear });
+      return clear;
+    };
+    berths.result = berths.ranked!.find(pose=>bodies.every((body, index) => clearOf(pose, body, keys[index]!))
+      && launchPathClear(snapshot,ship,berths.entries.get(pose)!,pose,bodies));
+    // Bodies that left the harbor keep no verdicts beyond a bounded slack.
+    const near = new Set(bodies.map(body => body.id));
+    for (const verdicts of berths.verdicts.values()) {
+      if (verdicts.size <= 2 * near.size + 16) continue;
+      for (const id of verdicts.keys()) if (!near.has(id)) verdicts.delete(id);
+    }
   }
   return cached.result ? { ...cached.result } : undefined;
 }

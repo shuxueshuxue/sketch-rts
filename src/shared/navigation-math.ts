@@ -20,12 +20,18 @@ type PlaneState = {
 };
 const planes = new WeakMap<readonly Point[], PlaneState>();
 const supportCandidates = new WeakSet<readonly Point[]>();
+// Below SUPPORT_WALK_MIN vertices supportScale never walks, member or not; generated rings are never changed after they
+// are made, so a short one is left out of the set instead of paying for a weak entry per hull.
+const SUPPORT_WALK_MIN = 12;
+function markSupportCandidate(polygon: readonly Point[]) {
+  if (polygon.length >= SUPPORT_WALK_MIN) supportCandidates.add(polygon);
+}
 
 /** Only generated, numerically strict convex rings use support walking. The
  * robust turns and one angular wrap exclude flat, concave and winding rings.
  * Difficult scales keep the original complete projection scan. */
 function supportScale(polygon: readonly Point[]) {
-  if (!supportCandidates.has(polygon) || polygon.length < 12) return;
+  if (!supportCandidates.has(polygon) || polygon.length < SUPPORT_WALK_MIN) return;
   let scale = 0;
   for (const p of polygon) {
     if (!Number.isFinite(p.x) || !Number.isFinite(p.y)) return;
@@ -133,6 +139,16 @@ export function polygonSupportingPlanes(polygon: readonly Point[]): readonly Rea
   while (state.result.length < polygon.length) appendSupportingPlane(polygon, state);
   return state.result;
 }
+/** Whether the point is more than 1e-6 inside every supporting line, the configuration-space contact test. Only the
+ * prefix of supporting lines up to the first that leaves the point outside is computed, the same lines as above. */
+export function insideSupportingPlanes(polygon: readonly Point[], x: number, y: number) {
+  const state = polygonPlaneState(polygon);
+  for (let i = 0; i < polygon.length; i++) {
+    const p = state.result[i] ?? appendSupportingPlane(polygon, state);
+    if (!(x * p.x + y * p.y > p.min + 1e-6)) return false;
+  }
+  return true;
+}
 export function polygonPlanes(polygon: readonly Point[]) {
   const state = polygonPlaneState(polygon);
   polygonSupportingPlanes(polygon);
@@ -209,42 +225,90 @@ export function capsuleClearsBodies(a: Point, b: Point, radius: number, bodies: 
 export function diskInConvex(p: Point, radius: number, polygon: readonly Point[]) {
   return polygonPlanes(polygon).every(axis => p.x * axis.x + p.y * axis.y >= axis.min + radius * Math.hypot(axis.x, axis.y) - 1e-6);
 }
-export function convexHull(points: readonly Point[]) {
-  const sorted = [...points].sort((a, b) => a.x - b.x || a.y - b.y);
-  const cross = (a: Point, b: Point, c: Point) => (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
-  const half = (first: number, limit: number, step: number) => { const out: Point[] = []; for (let i=first;i!==limit;i+=step) {
-    const p=sorted[i]!;
-    const last=out[out.length-1];
-    if(last && (p.x-last.x)**2+(p.y-last.y)**2<1e-16)continue;
-    while (out.length > 1) {
-      const a=out[out.length-2]!,b=out[out.length-1]!;
+// @@@hull-insertion-sort - A stable sort with one consistent comparator has a single result, so these sorts reproduce
+// the built-in sort's order exactly, without its calls back into the comparator or its scratch arrays: an insertion
+// sort for the usual few dozen points, and for a swept hull's hundreds a merge of insertion-sorted runs that takes the
+// left run's point on a tie.
+const INSERTION_SORT_LIMIT = 64;
+const after = (a: Point, b: Point) => (a.x - b.x || a.y - b.y) > 0;
+function insertionSort(sorted: Point[], start: number, end: number) {
+  for (let i = start + 1; i < end; i++) {
+    const p = sorted[i]!;
+    let j = i - 1;
+    for (; j >= start; j--) {
+      const q = sorted[j]!;
+      if (!after(q, p)) break;
+      sorted[j + 1] = q;
+    }
+    sorted[j + 1] = p;
+  }
+}
+function sortByXThenY(points: readonly Point[]): Point[] {
+  const n = points.length;
+  let from = points.slice();
+  if (n <= INSERTION_SORT_LIMIT) { insertionSort(from, 0, n); return from; }
+  const RUN = 32;
+  for (let start = 0; start < n; start += RUN) insertionSort(from, start, Math.min(start + RUN, n));
+  let to = points.slice();
+  for (let width = RUN; width < n; width *= 2) {
+    for (let left = 0; left < n; left += 2 * width) {
+      const middle = Math.min(left + width, n), right = Math.min(left + 2 * width, n);
+      let i = left, j = middle, k = left;
+      while (i < middle && j < right) to[k++] = after(from[i]!, from[j]!) ? from[j++]! : from[i++]!;
+      while (i < middle) to[k++] = from[i++]!;
+      while (j < right) to[k++] = from[j++]!;
+    }
+    const swap = from; from = to; to = swap;
+  }
+  return from;
+}
+// One monotone chain of Andrew's hull over sorted[first..limit) in the given direction.
+// The chain is a stack kept in `out` up to `size`: entries past it are overwritten, and the array is cut to size once.
+function hullChain(sorted: readonly Point[], first: number, limit: number, step: number): Point[] {
+  const out: Point[] = [];
+  let size = 0;
+  for (let i = first; i !== limit; i += step) {
+    const p = sorted[i]!;
+    if (size) { const last = out[size - 1]!; if ((p.x - last.x) ** 2 + (p.y - last.y) ** 2 < 1e-16) continue; }
+    while (size > 1) {
+      const a = out[size - 2]!, b = out[size - 1]!;
       // Nearly identical rotated endpoints can leave a zero-length edge or
       // parallel offset planes. Remove numerical corners before offsetting.
-      const turn=cross(a,b,p),abX=b.x-a.x,abY=b.y-a.y,bpX=p.x-b.x,bpY=p.y-b.y;
-      if(turn>0 && turn*turn>1e-20*(abX*abX+abY*abY)*(bpX*bpX+bpY*bpY))break;
-      out.pop();
+      const turn = (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x), abX = b.x - a.x, abY = b.y - a.y, bpX = p.x - b.x, bpY = p.y - b.y;
+      if (turn > 0 && turn * turn > 1e-20 * (abX * abX + abY * abY) * (bpX * bpX + bpY * bpY)) break;
+      size--;
     }
-    out.push(p);
-  } return out; };
-  const lower = half(0,sorted.length,1), upper = half(sorted.length-1,-1,-1);
+    if (size === out.length) out.push(p); else out[size] = p;
+    size++;
+  }
+  out.length = size;
+  return out;
+}
+export function convexHull(points: readonly Point[]) {
+  const sorted = sortByXThenY(points);
+  const lower = hullChain(sorted, 0, sorted.length, 1), upper = hullChain(sorted, sorted.length - 1, -1, -1);
   lower.pop();
   upper.pop();
-  const result=lower;
-  for(const point of upper)result.push(point);
-  if(result.length>1 && (result[0]!.x-result[result.length-1]!.x)**2+(result[0]!.y-result[result.length-1]!.y)**2<1e-16)result.pop();
-  supportCandidates.add(result);
+  const result = lower;
+  for (const point of upper) result.push(point);
+  if (result.length > 1 && (result[0]!.x - result[result.length - 1]!.x) ** 2 + (result[0]!.y - result[result.length - 1]!.y) ** 2 < 1e-16) result.pop();
+  markSupportCandidate(result);
   return result;
 }
 /** Merge CCW edge directions, then remove numerical corners. This avoids
  * generating and sorting every pair of vertices for a convex Minkowski sum. */
+function lowestVertex(p:readonly Point[]){
+  let best=0;
+  for(let i=0;i<p.length;i++){const point=p[i]!;if(point.y<p[best]!.y || point.y===p[best]!.y && point.x<p[best]!.x)best=i;}
+  return best;
+}
 export function minkowskiSum(a:readonly Point[],b:readonly Point[]):Point[] {
   if(!a.length || !b.length)return[];
-  const first=(p:readonly Point[])=>p.reduce((best,point,i)=>point.y<p[best]!.y || point.y===p[best]!.y && point.x<p[best]!.x ? i:best,0);
-  const ai=first(a),bi=first(b),at=(p:readonly Point[],start:number,i:number)=>p[(start+i)%p.length]!;
+  const ai=lowestVertex(a),bi=lowestVertex(b);
   let i=0,j=0;const out:Point[]=[];
   while(i<a.length || j<b.length){
-    const aa=at(a,ai,i),bb=at(b,bi,j);out.push({x:aa.x+bb.x,y:aa.y+bb.y});
-    const an=at(a,ai,i+1),bn=at(b,bi,j+1),cross=(an.x-aa.x)*(bn.y-bb.y)-(an.y-aa.y)*(bn.x-bb.x);
+    const aa=a[(ai+i)%a.length]!,bb=b[(bi+j)%b.length]!;out.push({x:aa.x+bb.x,y:aa.y+bb.y});
+    const an=a[(ai+i+1)%a.length]!,bn=b[(bi+j+1)%b.length]!,cross=(an.x-aa.x)*(bn.y-bb.y)-(an.y-aa.y)*(bn.x-bb.x);
     if(!Number.isFinite(cross))throw new Error('Convex sums require finite polygon vertices');
     const takeA=i<a.length && (j===b.length || cross>=-1e-9),takeB=j<b.length && (i===a.length || cross<=1e-9);
     if(takeA)i++;if(takeB)j++;
@@ -296,6 +360,6 @@ export function expandConvex(polygon: readonly Point[], amount: number) {
     result.push({ x: (am * b.y - a.y * bm) / det, y: (a.x * bm - am * b.x) / det });
     a = b; am = bm;
   }
-  if (amount >= 0 && Number.isFinite(amount)) supportCandidates.add(result);
+  if (amount >= 0 && Number.isFinite(amount)) markSupportCandidate(result);
   return result;
 }

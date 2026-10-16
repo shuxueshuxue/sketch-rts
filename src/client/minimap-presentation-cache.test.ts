@@ -15,7 +15,7 @@ function pixels(snapshot: GameSnapshot, marks: ReturnType<typeof createMapPresen
 }
 
 describe('minimap publication cache', () => {
-  it('reuses local adapter publications between renders and sees a command before the next render-time step', () => {
+  it('reuses local adapter publications between renders and sees a command at the next render-time step', () => {
     let now = 0;
     const game = createGame('bareDuel', { aiPlayers: [] });
     const adapter = new LocalGameAdapter(game, 'player', { now: () => now });
@@ -25,15 +25,17 @@ describe('minimap publication cache', () => {
     expect(adapter.updateToRenderTime()).toBe(false);
     const repeat = adapter.currentSnapshot();
     expect(cache.read(repeat, repeat)).toBe(marks);
+    // The command waits for the next tick, so the publication still stands until then.
     adapter.sendCommand({ type: 'move', unitIds: [worker.id], x: worker.x + 200, y: worker.y });
+    expect(adapter.currentSnapshot()).toBe(repeat);
+    expect(cache.read(repeat, repeat)).toBe(marks);
+    now = 50;
+    expect(adapter.updateToRenderTime()).toBe(true);
     const commanded = adapter.currentSnapshot(), next = cache.read(commanded, commanded);
+    expect(commanded.units.find(unit => unit.id === worker.id)!.order.type).toBe('move');
     expect(next).not.toBe(marks);
     expect(next).toEqual(createMapPresentation(commanded));
     expect(cache.read(commanded, commanded)).toBe(next);
-    now = 50;
-    expect(adapter.updateToRenderTime()).toBe(true);
-    const advanced = adapter.currentSnapshot();
-    expect(cache.read(advanced, advanced)).toEqual(createMapPresentation(advanced));
   });
 
   it('does not mistake a same-tick checkpoint or new scene for the prior publication', () => {

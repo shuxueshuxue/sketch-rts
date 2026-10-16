@@ -1,11 +1,12 @@
 import { createRoomLifecycleHost } from "../shared/room-lifecycle";
 import type { CreateRoomInput, GrandStressRoomOptions, SlotPatch } from "../shared/rooms";
 import { createSaveGameRecord, restoreGameFromSave, type SaveGameInput, type SaveGameRecord } from "../shared/savegame";
-import { createAiRuntime, createPresetAiRuntimeFramePlanner, type AiRuntimeFramePlannerState, type AiRuntimeState } from "../ai/runtime";
+import { createAiRuntime, createPresetAiRuntimeFramePlanner, type AiRuntimeFramePlannerState, type AiRuntimeState, type AiThinkExecutor, type AiThinkExecutorFactory } from "../ai/runtime";
 import type { AiScript, AiScriptVersion } from "../ai/policy";
-import { createGame, snapshotGame, type Game } from "../shared/sim";
+import { createGame, snapshotGame, warmGameCaches, type Game } from "../shared/sim";
 import { CommandFrameRuntime } from "../shared/sim/command-frame-runtime";
 import { checksumGame } from "../shared/sim/checksum";
+import { LOCKSTEP_CHECKSUM_EVERY_TICKS } from "../shared/net/cadence";
 import { prepareShipPlanningJobs } from "../shared/ship-planning-job";
 import { extractReplayFrameSave, replaySnapshotToTick, type DebugReplayTrace, type ReplayCommandSource } from "../shared/replay";
 import type { CheckpointFrame, CommandEnvelope, CommandFrame } from "../shared/net/types";
@@ -33,8 +34,11 @@ export type HostedRoomFrameEvent = {
   frame: CommandFrame;
   source: ReplayCommandSource;
   room: RoomState;
-  snapshot: GameSnapshot;
-  checksum: string;
+  // The world's tick after the frame.
+  tick: number;
+  // The world's checksum after the frame, on the ticks lockstep clients report theirs and on the last one (see
+  // @@@lockstep-cadence).
+  checksum?: string;
 };
 
 export type HostedRoomFrameListener = (event: HostedRoomFrameEvent) => void;
@@ -58,6 +62,9 @@ type HostedRoom = {
   game?: Game;
   aiRuntime?: AiRuntimeState;
   frameRuntime?: CommandFrameRuntime<AiRuntimeFramePlannerState>;
+  // Where the frame runtime's AI thinks; it belongs to that runtime and is closed with it.
+  thinkExecutor?: AiThinkExecutor;
+  thinkExecutors?: AiThinkExecutorFactory;
   debugReplay?: { id: string; label?: string; initialSave: SaveGameRecord };
   frameListeners: Set<HostedRoomFrameListener>;
   lifecycleListeners: Set<HostedRoomLifecycleListener>;
@@ -67,6 +74,8 @@ export type RoomHostOptions = {
   autoTick?: boolean;
   aiScripts?: AiScript[];
   frameHistoryLimit?: number;
+  // Where hosted matches' AI thinks (see @@@think-thread); on the room host's thread when absent.
+  aiThinkExecutor?: AiThinkExecutorFactory;
 };
 
 export function createRoomHost(options: RoomHostOptions = {}) {
@@ -90,6 +99,9 @@ export function createRoomHost(options: RoomHostOptions = {}) {
     return { hosted, game: hosted.game, frameRuntime: hosted.frameRuntime };
   }
 
+  // Scripts given as functions cannot cross to another thread; a host given them thinks on its own.
+  const thinkExecutors = options.aiScripts ? undefined : options.aiThinkExecutor;
+
   function putHostedRoom(room: RoomState, game?: Game, aiRuntime?: AiRuntimeState): RoomState {
     const hosted: HostedRoom = {
       room,
@@ -97,6 +109,7 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       finishRoom: (snapshot) => lifecycle.finishRoom(room.id, snapshot),
       frameListeners: frameListenerSet(room.id),
       lifecycleListeners: lifecycleListenerSet(room.id),
+      ...(thinkExecutors ? { thinkExecutors } : {}),
     };
     if (game) {
       hosted.game = game;
@@ -136,6 +149,7 @@ export function createRoomHost(options: RoomHostOptions = {}) {
     const hosted = getHosted(roomId);
     const closed = lifecycle.closeRoom(roomId, userId);
     notifyHostedRoomLifecycle(hosted, { room: closed });
+    releaseThinkExecutor(hosted);
     hostedRooms.delete(roomId);
     lastAttended.delete(roomId);
     dropEmptyListenerSets(roomId);
@@ -270,7 +284,7 @@ export function createRoomHost(options: RoomHostOptions = {}) {
     startRoom(roomId: string): RoomState {
       const hosted = getHosted(roomId);
       const setup = lifecycle.prepareStartRoom(roomId);
-      const game = createGame(setup.mapId, setup.options);
+      const game = warmedGame(createGame(setup.mapId, setup.options));
       const aiRuntime = createHostedAiRuntime(setup.options.aiPlayers ?? [], setup.options.aiVersions);
       const { room } = lifecycle.startRoom(roomId);
       hosted.room = room;
@@ -297,7 +311,7 @@ export function createRoomHost(options: RoomHostOptions = {}) {
         ...(options.races ?? setup.options.races ? { races: options.races ?? setup.options.races } : {}),
         ...(options.layout ?? setup.options.layout ? { layout: options.layout ?? setup.options.layout } : {}),
       };
-      const game = createGame(mapId, mergedOptions);
+      const game = warmedGame(createGame(mapId, mergedOptions));
       const aiRuntime = createHostedAiRuntime(mergedOptions.aiPlayers ?? [], mergedOptions.aiVersions);
       const { room } = lifecycle.resetRoom(roomId, mapId);
       hosted.room = room;
@@ -353,14 +367,25 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       return tickHostedRoom(hosted, game, ticks);
     },
 
+    // Whether the room can tick now: its restored ship graphs are rebuilt and its AI's due thinks have landed.
     prepareRoomTick(roomId: string, maxSlices = 1): boolean {
-      return prepareShipPlanningJobs(getLiveGame(roomId).game, maxSlices);
+      const { game, frameRuntime } = getLiveGame(roomId);
+      return prepareShipPlanningJobs(game, maxSlices) && frameRuntime.ready();
     },
 
     tickRoomFrame(roomId: string, frame: CommandFrame, source: ReplayCommandSource = "browser"): RoomFrameTickResult {
       const { hosted, game } = getLiveGame(roomId);
       if (frame.roomId !== roomId) throw new Error(`Command frame room ${frame.roomId} does not match ${roomId}`);
       return tickHostedFrame(hosted, game, frame, source);
+    },
+
+    // The live ticker's step: the completed frame only, without the public snapshot and usage figures of tickRoomFrame.
+    advanceRoomFrame(roomId: string, frame: CommandFrame, source: ReplayCommandSource = "browser"): CommandFrame {
+      const { hosted, game } = getLiveGame(roomId);
+      if (frame.roomId !== roomId) throw new Error(`Command frame room ${frame.roomId} does not match ${roomId}`);
+      const completed = advanceHostedRoomTick(hosted, game, { frame, source });
+      if (!completed) throw new Error(`Hosted room ${roomId} advanced without a command frame`);
+      return completed;
     },
 
     checkpointRoom(roomId: string): CheckpointFrame {
@@ -416,7 +441,7 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       const save = saveInput ?? this.readSave(saveId);
       saves.set(save.id, save);
       const room = lifecycle.adoptRoom({ ...save.room, id: options.roomId ?? save.room.id, status: "inMatch" as const });
-      const game = restoreGameFromSave(save);
+      const game = warmedGame(restoreGameFromSave(save));
       const hosted: HostedRoom = {
         room,
         history: createRoomHistory(),
@@ -425,8 +450,11 @@ export function createRoomHost(options: RoomHostOptions = {}) {
         aiRuntime: createHostedAiRuntime(save.runtime.aiPlayers, save.runtime.aiVersions),
         frameListeners: frameListenerSet(room.id),
         lifecycleListeners: lifecycleListenerSet(room.id),
+        ...(thinkExecutors ? { thinkExecutors } : {}),
       };
       hosted.frameRuntime = createHostedFrameRuntime(hosted, game);
+      const replaced = hostedRooms.get(room.id);
+      if (replaced) releaseThinkExecutor(replaced);
       hostedRooms.set(room.id, hosted);
       const checkpoint = createHostedCheckpoint(hosted, game);
       hosted.history.recordCheckpoint(checkpoint);
@@ -444,6 +472,8 @@ export function createRoomHost(options: RoomHostOptions = {}) {
         // A continued save may need its disposable navigation graph rebuilt.
         // Reconstruct one prior slice per ticker turn before advancing truth.
         if (!prepareShipPlanningJobs(game, 1)) continue;
+        // A think still running on its thread holds the room until it lands (see @@@planner-schedule).
+        if (!(hosted.frameRuntime ??= createHostedFrameRuntime(hosted, game)).ready()) continue;
         for (let i = 0; i < ticks; i += 1) {
           advanceHostedRoomTick(hosted, game, { source: "internal-ai" });
           if (game.match.winner) break;
@@ -520,17 +550,19 @@ function advanceHostedRoomTick(hosted: HostedRoom, game: Game, input: { commands
   hosted.frameRuntime ??= createHostedFrameRuntime(hosted, game);
   const commands = input.commands ?? input.frame?.commands ?? [];
   const frameOptions = input.frame ? { frame: input.frame } : {};
-  hosted.history.recordCheckpoint(createHostedCheckpoint(hosted, game));
+  // A whole copy of the world is kept only where the history wants one (see ROOM_CHECKPOINT_INTERVAL_TICKS), and the
+  // whole world is hashed only on the ticks lockstep clients compare (see @@@lockstep-cadence), not on every tick.
+  if (hosted.history.wantsCheckpoint(game.tick)) hosted.history.recordCheckpoint(createHostedCheckpoint(hosted, game));
   const completedFrame = hosted.frameRuntime.tick(commands, { ...frameOptions, onFrame: (frame) => hosted.history.recordFrame(input.source, frame) });
   const matchEnded = Boolean(game.match.winner);
-  // History and public tick results keep their independent snapshots. The
-  // internal event copy is only consumed by a listener or match cleanup.
-  const snapshot = matchEnded || completedFrame && hosted.frameListeners.size > 0 ? snapshotGame(game) : undefined;
   if (matchEnded) {
     hosted.history.recordCheckpoint(createHostedCheckpoint(hosted, game));
-    finishHostedRoom(hosted, snapshot!);
+    finishHostedRoom(hosted, snapshotGame(game));
   }
-  if (completedFrame && snapshot) notifyHostedFrameListeners(hosted, { frame: completedFrame, source: input.source, room: hosted.room, snapshot, checksum: checksumGame(game) });
+  if (completedFrame && hosted.frameListeners.size > 0) {
+    const checksum = matchEnded || game.tick % LOCKSTEP_CHECKSUM_EVERY_TICKS === 0 ? checksumGame(game) : undefined;
+    notifyHostedFrameListeners(hosted, { frame: completedFrame, source: input.source, room: hosted.room, tick: game.tick, ...(checksum === undefined ? {} : { checksum }) });
+  }
   if (matchEnded) notifyHostedRoomLifecycle(hosted, { room: hosted.room });
   return completedFrame;
 }
@@ -544,6 +576,18 @@ function finishHostedRoom(hosted: HostedRoom, snapshot: GameSnapshot) {
   delete hosted.game;
   delete hosted.aiRuntime;
   delete hosted.frameRuntime;
+  releaseThinkExecutor(hosted);
+}
+
+// A hosted match's derived navigation is built before its first tick, off the room ticker's clock.
+function warmedGame(game: Game): Game {
+  warmGameCaches(game);
+  return game;
+}
+
+function releaseThinkExecutor(hosted: HostedRoom) {
+  hosted.thinkExecutor?.close?.();
+  delete hosted.thinkExecutor;
 }
 
 function notifyHostedFrameListeners(hosted: HostedRoom, event: HostedRoomFrameEvent) {
@@ -555,10 +599,13 @@ function notifyHostedRoomLifecycle(hosted: HostedRoom, event: HostedRoomLifecycl
 }
 
 function createHostedFrameRuntime(hosted: HostedRoom, game: Game): CommandFrameRuntime<AiRuntimeFramePlannerState> {
+  // A new frame runtime starts a new AI (memory and all); the old one's thinking session goes with it.
+  releaseThinkExecutor(hosted);
+  if (hosted.aiRuntime && hosted.thinkExecutors) hosted.thinkExecutor = hosted.thinkExecutors(hosted.aiRuntime, game);
   return new CommandFrameRuntime({
     game,
     roomId: hosted.room.id,
     rejectionLabel: "Hosted command rejected",
-    ...(hosted.aiRuntime ? { aiPlanner: createPresetAiRuntimeFramePlanner(game, hosted.aiRuntime) } : {}),
+    ...(hosted.aiRuntime ? { aiPlanner: createPresetAiRuntimeFramePlanner(game, hosted.aiRuntime, hosted.thinkExecutor ? { executor: hosted.thinkExecutor } : {}) } : {}),
   });
 }

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { runBenchmark } from "../../sdk/benchmark";
 import { LADDER_MAP_ID, LADDER_SLOT_IDS } from "../../shared/map";
 import { runAiGame } from "../game-runner";
+import { PLANNER_COMMAND_DELAY_TICKS } from "../../shared/sim/planner-schedule";
 import { createAiVersionBenchmarkInput, gauntletMapOf, runAiVersionBenchmarkParallel, selectGauntletMaps, summarizeCombatEvaluation, summarizeMeleeControlEvaluation, summarizePairedScoreEvaluation } from "./presets";
 
 const MAPS = Array.from({ length: 24 }, (_, index) => `map${index + 1}`);
@@ -293,7 +294,8 @@ describe("AI benchmark presets", () => {
     const match = combatEvaluation.matches[0]!;
 
     const report = runAiGame({ ...match, trace: { commands: true } });
-    const attackWaveCommands = report.commands.filter((entry) => entry.tick === 0 && entry.owner === "v2" && entry.scriptId === "attackWave");
+    // v2's tick-0 think lands its first wave PLANNER_COMMAND_DELAY_TICKS later.
+    const attackWaveCommands = report.commands.filter((entry) => entry.tick === PLANNER_COMMAND_DELAY_TICKS && entry.owner === "v2" && entry.scriptId === "attackWave");
 
     expect(attackWaveCommands.map((entry) => entry.command)).toEqual([
       expect.objectContaining({ type: "attackMove", x: expect.any(Number), y: expect.any(Number) }),

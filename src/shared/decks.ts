@@ -26,18 +26,34 @@ export function deckPlacement(ship: Unit, passenger: Unit, units: readonly Unit[
   // reached by the original point checks; live crew fields remain per-point.
   const axes=polygonPlanes(profile.deck), radius=passenger.radius+1, thresholds:number[]=[];
   let crew:Unit[]|undefined;
+  // Reached for every grid point that would improve on the best so far, many times a tick (a deck attacker's reach,
+  // walks on deck): plain loops over one probe point, so a scan allocates only the points it keeps.
   const fits=(point:Point)=>{
-    if(!axes.every((axis,index)=>{
+    for(let index=0;index<axes.length;index++){
+      const axis=axes[index]!;
       const threshold=index<thresholds.length ? thresholds[index]! : (thresholds[index]=axis.min+radius*Math.hypot(axis.x,axis.y)-1e-6);
-      return point.x*axis.x+point.y*axis.y>=threshold;
-    }))return false;
-    if(profile.obstacles.some(o=>Math.hypot(point.x-o.x,point.y-o.y)<o.radius+passenger.radius+1-1e-6))return false;
-    return !occupied || !(crew ??= shipPassengers(units,ship)).some(other=>other.hp>0 && !isInCabin(other) && other.id!==passenger.id && Math.hypot(point.x-other.deck!.x,point.y-other.deck!.y)<passenger.radius+other.radius+1-1e-6);
+      if(!(point.x*axis.x+point.y*axis.y>=threshold))return false;
+    }
+    const obstacles=profile.obstacles;
+    for(let index=0;index<obstacles.length;index++){
+      const o=obstacles[index]!;
+      if(Math.hypot(point.x-o.x,point.y-o.y)<o.radius+passenger.radius+1-1e-6)return false;
+    }
+    if(!occupied)return true;
+    crew ??= shipPassengers(units,ship);
+    for(let index=0;index<crew.length;index++){
+      const other=crew[index]!;
+      if(other.hp>0 && !isInCabin(other) && other.id!==passenger.id && Math.hypot(point.x-other.deck!.x,point.y-other.deck!.y)<passenger.radius+other.radius+1-1e-6)return false;
+    }
+    return true;
   };
+  const probe={x:0,y:0};
   let best:Point|undefined, score=Infinity;
   for(let y=-profile.beam/2;y<=profile.beam/2;y+=spacing) for(let x=-profile.length/2;x<=profile.length/2;x+=spacing) {
-    const point={x,y}, value=(x-preferred.x)**2+(y-preferred.y)**2;
-    if(value<score && fits(point)){best=point;score=value;}
+    const value=(x-preferred.x)**2+(y-preferred.y)**2;
+    if(!(value<score))continue;
+    probe.x=x;probe.y=y;
+    if(fits(probe)){best={x,y};score=value;}
   }
   return best;
 }
@@ -83,8 +99,11 @@ export function boardUnit(ship: Unit, passenger: Unit, units: readonly Unit[]) {
 export function syncDecks(units: readonly Unit[]) {
   const vessels=shipsIn(units);if(!vessels.length)return;
   const ships=new Map(vessels.map(ship=>[ship.id,ship]));
+  // Each hull's crew in unit order, as shipPassengers lists it, gathered in one pass instead of one pass per hull.
+  const crews=new Map<string,Unit[]>();
+  for(const unit of units)if(unit.deck){const crew=crews.get(unit.deck.shipId);if(crew)crew.push(unit);else crews.set(unit.deck.shipId,[unit]);}
   for(const ship of ships.values()) {
-    const profile=shipProfile(ship)!, crew=shipPassengers(units,ship);
+    const profile=shipProfile(ship)!, crew=crews.get(ship.id)??[];
     const cabin=profile.obstacles.find(obstacle=>obstacle.type==='cabin');
     const load=(ship.holdMass ?? 0)+crew.reduce((sum,unit)=>sum+bodyMass(unit),0);
     const offset=load ? Math.hypot(crew.reduce((s,u)=>s+(isInCabin(u)?cabin?.x??u.deck!.x:u.deck!.x)*bodyMass(u),0),crew.reduce((s,u)=>s+(isInCabin(u)?cabin?.y??u.deck!.y:u.deck!.y)*bodyMass(u),0))/load : 0;

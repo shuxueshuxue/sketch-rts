@@ -1,6 +1,6 @@
 import { unitMover } from "./catalog";
 import { detCos, detSin } from "./det-math";
-import { isOpenGround, isWalkable, sameGround, walkableGoal, walkDestination } from "./terrain";
+import { groundRevision, isOpenGround, isWalkable, sameGround, walkableGoal, walkDestination } from "./terrain";
 import type { Building, GameMap, Obstacle, Unit } from "./types";
 import { deckPlacement } from "./decks";
 import { shipPassengers, shipProfile, localToWorld, worldToLocal, distanceToHull } from "./ship-geometry";
@@ -88,21 +88,55 @@ export function landingSpot(map: Pick<GameMap, "terrain" | "width" | "height">, 
   const edge=localToWorld(transport,{x:detCos(angle)*((profile?.length ?? transport.radius*2)/2+radius+2),y:detSin(angle)*((profile?.beam ?? transport.radius*2)/2+radius+2)});
   const shore=transport.order.type==="unload"?walkableGoal(map,transport.order.x,transport.order.y):undefined;
   const preferred=shore??edge;
-  const clear=(p:{x:number;y:number})=>p.x>=0&&p.y>=0&&p.x<=map.width&&p.y<=map.height
-    && isOpenGround(map,p.x,p.y) && (!shore || sameGround(map,shore,p))
-    && distanceToHull(transport,p)>=radius+1 && distanceToHull(transport,p)<=LANDING_REACH
-    && !units.some(u=>u!==passenger&&!u.deck&&unitMover(u.kind)==="land"&&Math.hypot(p.x-u.x,p.y-u.y)<radius+u.radius+1);
+  // Land on the shore's ground beside the hull: the ground and the hull pose alone decide it, not who stands there.
+  const open=(p:{x:number;y:number})=>{
+    if(!(p.x>=0&&p.y>=0&&p.x<=map.width&&p.y<=map.height && isOpenGround(map,p.x,p.y) && (!shore || sameGround(map,shore,p))))return false;
+    const gap=distanceToHull(transport,p);
+    return gap>=radius+1 && gap<=LANDING_REACH;
+  };
+  const free=(standing:readonly Unit[],p:{x:number;y:number})=>!standing.some(u=>Math.hypot(p.x-u.x,p.y-u.y)<radius+u.radius+1);
+  const ashore=units.filter(u=>u!==passenger&&!u.deck&&unitMover(u.kind)==="land");
   const nearest=walkableGoal(map,preferred.x,preferred.y);
-  if(clear(nearest))return nearest;
+  if(open(nearest)&&free(ashore,nearest))return nearest;
   const span=(profile?.length??transport.radius*2)/2+LANDING_REACH;
   const step=map.terrain?map.terrain.cell/4:Math.max(8,radius);
-  let best:{x:number;y:number}|undefined,score=Infinity;
+  // The square below starts at most half a step before its span; a unit farther out than that plus both radii cannot
+  // stand on any of its points.
+  const standing=ashore.filter(u=>Math.abs(u.x-transport.x)<span+step+radius+u.radius+1 && Math.abs(u.y-transport.y)<span+step+radius+u.radius+1);
+  // Unloading asks this for every passenger, every tick a ship waits at a shore: each point's ground verdict is kept for
+  // this hull pose, one probe point serves the whole square, and only an improvement is tested.
+  const verdicts=profile?landingVerdicts(map,profile,`${transport.x}:${transport.y}:${transport.sailing?.heading ?? 0}:${radius}:${shore?`${shore.x}:${shore.y}`:""}`):[];
+  const probe={x:0,y:0};
+  let best:{x:number;y:number}|undefined,score=Infinity,point=0;
   for(let y=Math.max(step/2,Math.floor((transport.y-span)/step)*step+step/2);y<Math.min(map.height,transport.y+span);y+=step)
-    for(let x=Math.max(step/2,Math.floor((transport.x-span)/step)*step+step/2);x<Math.min(map.width,transport.x+span);x+=step) {
-      const p={x,y},value=Math.hypot(x-preferred.x,y-preferred.y);
-      if(value<score && clear(p)){best=p;score=value;}
+    for(let x=Math.max(step/2,Math.floor((transport.x-span)/step)*step+step/2);x<Math.min(map.width,transport.x+span);x+=step,point++) {
+      const value=Math.hypot(x-preferred.x,y-preferred.y);
+      if(!(value<score))continue;
+      probe.x=x;probe.y=y;
+      let ground=verdicts[point];
+      if(ground===undefined)ground=verdicts[point]=open(probe);
+      if(ground&&free(standing,probe)){best={x,y};score=value;}
     }
   return best;
+}
+
+// Ground verdicts of landing squares (see landingSpot), by map ground, hull and pose. A square is the same points in the
+// same order for the same pose, hull and passenger radius; a sailing ship asks from a new pose each tick, so few are kept.
+const LANDING_SQUARES = 64;
+const landingGrounds = new WeakMap<object, { terrain: unknown; cells: string | undefined; revision: number; size: number;
+  squares: Map<NonNullable<ReturnType<typeof shipProfile>>, Map<string, boolean[]>> }>();
+function landingVerdicts(map: Pick<GameMap, "terrain">, profile: NonNullable<ReturnType<typeof shipProfile>>, pose: string) {
+  const revision=groundRevision(map);
+  let ground=landingGrounds.get(map);
+  if(!ground || ground.terrain!==map.terrain || ground.cells!==map.terrain?.cells || ground.revision!==revision || ground.size>=LANDING_SQUARES){
+    ground={terrain:map.terrain,cells:map.terrain?.cells,revision,size:0,squares:new Map()};
+    landingGrounds.set(map,ground);
+  }
+  let poses=ground.squares.get(profile);
+  if(!poses){poses=new Map();ground.squares.set(profile,poses);}
+  let verdicts=poses.get(pose);
+  if(!verdicts){verdicts=[];poses.set(pose,verdicts);ground.size++;}
+  return verdicts;
 }
 
 export function passengerLandingSpot(map: Pick<GameMap, "terrain" | "width" | "height">, transport: Unit, passengerId: string, units: readonly Unit[] = []) {

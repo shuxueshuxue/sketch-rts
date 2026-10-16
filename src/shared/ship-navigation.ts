@@ -10,7 +10,7 @@ import preparedMasks from './generated/ship-navigation-masks.json';
 import preparedMasks64 from './generated/ship-navigation-masks-64.json';
 import { buildNavigationMasks, type OccupancyMask } from './navigation-masks';
 import { shipScale, DEFAULT_SHIP_SCALE } from './ship-geometry';
-import { buildSeaPotential, seaPotentialAt, type SeaPotential } from './ship-navigation-potential';
+import { beginSeaPotential, buildSeaPotential, seaPotentialAt, type SeaPotential } from './ship-navigation-potential';
 export type ShipPose = Point & {
   heading: number;
   pivot?: Point;
@@ -80,8 +80,51 @@ function outline(hull: readonly Point[], pose: ShipPose) {
   const c = detCos(pose.heading), s = detSin(pose.heading);
   return hull.map(p => ({ x: pose.x + p.x * c - p.y * s, y: pose.y + p.x * s + p.y * c }));
 }
+/** Terrain-only answers are pure functions of the hull's local vertices, the
+ * map bounds, the terrain cells and the exact poses. Replans toward the same
+ * goal and continued searches repeat most coastal sweeps; a remembered answer
+ * is the boolean the sweep computes, so a hit never changes a decision. */
+type HullMemo = { cells: string; cell: number; cols: number; rows: number; width: number; height: number; passages: Map<string, boolean>; fits: Map<string, boolean> };
+const hullMemos = new WeakMap<object, HullMemo>();
+const hullIds = new WeakMap<readonly Point[], string>(), hullShapes = new Map<string, string>();
+const PASSAGE_MEMO_LIMIT = 32768, FIT_MEMO_LIMIT = 16384;
+/** Number keys must keep every distinct value apart; template text merges -0 with 0. */
+export const exactKey = (value: number) => value === 0 && 1 / value < 0 ? '-0' : `${value}`;
+// @@@bits-key - The sweep and fit memos are asked hundreds of thousands of times a game, and printing each pose in
+// decimal was most of a query's own cost. Their keys carry each double's raw bits instead (four UTF-16 units apiece):
+// equal keys still mean bit-equal inputs, -0 stays apart from 0, and nothing is printed.
+const keyBits = new Float64Array(9), keyUnits = new Uint16Array(keyBits.buffer);
+function bitsKey(prefix: string, doubles: number): string {
+  return prefix + String.fromCharCode.apply(null, keyUnits.subarray(0, doubles * 4) as unknown as number[]);
+}
+export function hullId(hull: readonly Point[]) {
+  let id = hullIds.get(hull);
+  if (id === undefined) {
+    // Profiles are recomputed per unit; equal vertex lists share one short id.
+    const shape = hull.map(point => `${exactKey(point.x)},${exactKey(point.y)}`).join(';');
+    id = hullShapes.get(shape);
+    if (id === undefined) { id = `${hullShapes.size}`; hullShapes.set(shape, id); }
+    hullIds.set(hull, id);
+  }
+  return id;
+}
+function hullMemo(map: SeaMap) {
+  const t = map.terrain!;
+  let memo = hullMemos.get(t);
+  if (!memo || memo.cells !== t.cells || memo.cell !== t.cell || memo.cols !== t.cols || memo.rows !== t.rows
+    || memo.width !== map.width || memo.height !== map.height) {
+    memo = { cells: t.cells, cell: t.cell, cols: t.cols, rows: t.rows, width: map.width, height: map.height, passages: new Map(), fits: new Map() };
+    hullMemos.set(t, memo);
+  }
+  return memo;
+}
+function remember(memo: Map<string, boolean>, key: string, value: boolean, limit: number) {
+  if (memo.size >= limit) memo.delete(memo.keys().next().value!);
+  memo.set(key, value);
+  return value;
+}
 /** Exact convex polygon / cell intersection, including edges crossing a cell without a vertex inside it. */
-function clearOutline(map: SeaMap, polygon: readonly Point[]) {
+function clearOutline(map: SeaMap, polygon: readonly Point[], fitKey?: () => string) {
   let left = Infinity, right = -Infinity, top = Infinity, bottom = -Infinity;
   for (const point of polygon) {
     left = Math.min(left, point.x); right = Math.max(right, point.x);
@@ -94,6 +137,14 @@ function clearOutline(map: SeaMap, polygon: readonly Point[]) {
     return true;
   if (openWaterBox(map, left, top, right, bottom))
     return true;
+  if (fitKey) {
+    const memo = hullMemo(map), key = fitKey(), known = memo.fits.get(key);
+    return known ?? remember(memo.fits, key, coastOutlineClear(map, polygon, left, top, right, bottom), FIT_MEMO_LIMIT);
+  }
+  return coastOutlineClear(map, polygon, left, top, right, bottom);
+}
+function coastOutlineClear(map: SeaMap, polygon: readonly Point[], left: number, top: number, right: number, bottom: number) {
+  const terrain = map.terrain!;
   const cell = terrain.cell;
   for (let row = Math.floor(top / cell); row <= Math.floor((bottom - 1e-7) / cell); row++)
     for (let col = Math.floor(left / cell); col <= Math.floor((right - 1e-7) / cell); col++) {
@@ -105,7 +156,8 @@ function clearOutline(map: SeaMap, polygon: readonly Point[]) {
 }
 export function hullFits(map: SeaMap, ship: Unit, pose: ShipPose = { x: ship.x, y: ship.y, heading: ship.sailing?.heading ?? 0 }) {
   const profile = shipProfile(ship);
-  return Boolean(profile && clearOutline(map, outline(profile.hull, pose)));
+  return Boolean(profile && clearOutline(map, outline(profile.hull, pose),
+    () => { keyBits[0] = pose.x; keyBits[1] = pose.y; keyBits[2] = pose.heading; return bitsKey(`${hullId(profile.hull)}|`, 3); }));
 }
 /** Continuous sweep: bounded rotational curvature expands each endpoint envelope. */
 export function hullPassageClear(map: SeaMap, ship: Unit, from: ShipPose, to: ShipPose) {
@@ -125,6 +177,19 @@ export function hullPassageClear(map: SeaMap, ship: Unit, from: ShipPose, to: Sh
   const corridorRadius = pivotArc ? hullRadius + lever*turn*turn/8 + (lever ? 1e-5 : 0) : radius;
   if (openWaterBox(map, Math.min(from.x, to.x) - corridorRadius, Math.min(from.y, to.y) - corridorRadius, Math.max(from.x, to.x) + corridorRadius, Math.max(from.y, to.y) + corridorRadius))
     return true;
+  if (!map.terrain)
+    return coastPassageClear(map, ship, hull, from, to, turn, radius);
+  // Every input of the sweep below: the hull, both poses, the incoming
+  // curvature and pivot (other waypoint metadata never reaches the geometry).
+  keyBits[0] = from.x; keyBits[1] = from.y; keyBits[2] = from.heading; keyBits[3] = to.x; keyBits[4] = to.y; keyBits[5] = to.heading;
+  let doubles = 6, present = 0;
+  if (to.curvature !== undefined) { keyBits[doubles++] = to.curvature; present |= 1; }
+  if (to.pivot) { keyBits[doubles++] = to.pivot.x; keyBits[doubles++] = to.pivot.y; present |= 2; }
+  const memo = hullMemo(map), key = bitsKey(`${hullId(hull)}|${present}|`, doubles);
+  const known = memo.passages.get(key);
+  return known ?? remember(memo.passages, key, coastPassageClear(map, ship, hull, from, to, turn, radius), PASSAGE_MEMO_LIMIT);
+}
+function coastPassageClear(map: SeaMap, ship: Unit, hull: readonly Point[], from: ShipPose, to: ShipPose, turn: number, radius: number) {
   if(turn && (!hullFits(map,ship,from) || !hullFits(map,ship,to)))return false;
   // Subdivide by a geometric error bound, rather than vertex travel. Every
   // envelope still contains the whole arc, with at most 0.025 units padding.
@@ -132,12 +197,14 @@ export function hullPassageClear(map: SeaMap, ship: Unit, from: ShipPose, to: Sh
   // Linear interpolation error of a rotating vertex is at most R Δθ² / 8.
   // The expanded convex envelope contains the entire intermediate hull.
   const error = turn ? radius * (turn / steps) ** 2 / 8 + 1e-7 : 0;
+  // A step's end pose is the next step's start pose (the same fraction), so its outline is computed once.
+  let start = outline(hull, shipPoseAt(from,to,0/steps));
   for (let i = 0; i < steps; i++) {
-    const a = shipPoseAt(from,to,i/steps);
-    const b = shipPoseAt(from,to,(i+1)/steps);
-    const envelope = convexHull([...outline(hull, a), ...outline(hull, b)]);
+    const end = outline(hull, shipPoseAt(from,to,(i+1)/steps));
+    const envelope = convexHull(start.concat(end));
     if (!clearOutline(map, error ? expandConvex(envelope, error) : envelope))
       return false;
+    start = end;
   }
   return true;
 }
@@ -366,14 +433,16 @@ const seaDistances = new WeakMap<object, Map<string, SeaDistances>>();
  * potential. Hull clearance and rudder costs can only make the actual route
  * longer. This field never approves an edge.
  */
-function terrainDistances(map: SeaMap, grid: NavGrid, start:Point,target: Point, directionCosts: readonly number[]): SeaPotential | undefined {
+type SeaDistancePlan = { key: string; group: Map<string, SeaDistances>; cells: string; field?: SeaPotential;
+  bounds?: { left: number; top: number; right: number; bottom: number }; seed?: Point };
+function seaDistancePlan(map: SeaMap, grid: NavGrid, start:Point,target: Point, directionCosts: readonly number[]): SeaDistancePlan {
   const terrain = map.terrain!, span = 16, blockX = Math.floor(target.x / (grid.cell * span)), blockY = Math.floor(target.y / (grid.cell * span));
   const fromX=Math.floor(start.x/(grid.cell*span)),fromY=Math.floor(start.y/(grid.cell*span));
   const key = `${map.width}:${map.height}:${grid.cell}:${grid.cols}:${grid.rows}:${fromX}:${fromY}:${blockX}:${blockY}:${directionCosts.join(':')}`;
   let group = seaDistances.get(terrain);
   if (!group) { group = new Map(); seaDistances.set(terrain, group); }
-  const cached = group.get(key);
-  if (cached?.cells === terrain.cells) return cached.field;
+  // The box and landmark come from the terrain alone, cached field or not:
+  // a continued search prices the field's build by its box.
   const open = (x: number, y: number) => x >= 0 && y >= 0 && x < grid.cols && y < grid.rows && grid.water[y*grid.cols+x] === 1;
   // Choose the same nearby water landmark for all goals in this block.
   // Including two extra cells also covers a goal on a coastal block edge.
@@ -385,16 +454,49 @@ function terrainDistances(map: SeaMap, grid: NavGrid, start:Point,target: Point,
       const id = y * grid.cols + x, gap = (x + .5 - centerX) ** 2 + (y + .5 - centerY) ** 2;
       if (gap < seedGap) { seed = id; seedGap = gap; }
     }
-  if(seed<0)return undefined;
+  if(seed<0)return { key, group, cells: terrain.cells };
   const bounds={left:Math.max(0,(Math.min(fromX,blockX)-2)*span),top:Math.max(0,(Math.min(fromY,blockY)-2)*span),
     right:Math.min(grid.cols,(Math.max(fromX,blockX)+3)*span),bottom:Math.min(grid.rows,(Math.max(fromY,blockY)+3)*span)};
-  const field=buildSeaPotential(grid.water,grid.cols,grid.rows,grid.cell,bounds,
-    {x:seed%grid.cols,y:Math.floor(seed/grid.cols)},directionCosts,distanceFrontier);
+  const cached = group.get(key);
+  return { key, group, cells: terrain.cells, bounds, seed: {x:seed%grid.cols,y:Math.floor(seed/grid.cols)},
+    ...(cached?.cells === terrain.cells ? { field: cached.field } : {}) };
+}
+function rememberSeaDistances(plan: SeaDistancePlan, field: SeaPotential) {
   // Terrain objects are weakly held, and moving targets retain only a small
   // bounded set of destination regions. Entries contain no units or orders.
-  if (group.size >= 8 && !group.has(key)) group.delete(group.keys().next().value!);
-  group.set(key, { cells: terrain.cells, field });
+  if (plan.group.size >= 8 && !plan.group.has(plan.key)) plan.group.delete(plan.group.keys().next().value!);
+  plan.group.set(plan.key, { cells: plan.cells, field });
   return field;
+}
+function terrainDistances(map: SeaMap, grid: NavGrid, start:Point,target: Point, directionCosts: readonly number[]): SeaPotential | undefined {
+  const plan = seaDistancePlan(map, grid, start, target, directionCosts);
+  if (plan.field || !plan.bounds) return plan.field;
+  return rememberSeaDistances(plan, buildSeaPotential(grid.water,grid.cols,grid.rows,grid.cell,plan.bounds,plan.seed!,directionCosts,distanceFrontier));
+}
+/** A field still being built for a continued search, by terrain and key. */
+const seaDistanceBuilds = new WeakMap<object, Map<string, { cells: string; build: ReturnType<typeof beginSeaPotential> }>>();
+/** Logical work of building a potential field: a fixed price per cell of its box, whatever the cache holds, so every
+ * machine spends the same slices on it (see @@@ship-search-work). One unit advances the build by POTENTIAL_POPS cells. */
+const POTENTIAL_WORK_PER_CELL = .25, POTENTIAL_POPS = 4;
+function seaDistanceWork(plan: SeaDistancePlan) {
+  return plan.bounds ? (plan.bounds.right - plan.bounds.left) * (plan.bounds.bottom - plan.bounds.top) * POTENTIAL_WORK_PER_CELL : 0;
+}
+/** Spend `work` on a pending field; `finish` completes and remembers it. */
+function advanceSeaDistances(map: SeaMap, grid: NavGrid, plan: SeaDistancePlan, directionCosts: readonly number[], work: number, finish: boolean) {
+  if (plan.field || !plan.bounds) return;
+  const terrain = map.terrain!;
+  let builds = seaDistanceBuilds.get(terrain);
+  if (!builds) seaDistanceBuilds.set(terrain, builds = new Map());
+  let pending = builds.get(plan.key);
+  if (!pending || pending.cells !== terrain.cells) {
+    pending = { cells: terrain.cells, build: beginSeaPotential(grid.water,grid.cols,grid.rows,grid.cell,plan.bounds,plan.seed!,directionCosts,new Frontier()) };
+    if (builds.size >= 8) builds.delete(builds.keys().next().value!);
+    builds.set(plan.key, pending);
+  }
+  if (pending.build.advance(finish ? Infinity : Math.ceil(work * POTENTIAL_POPS)) || finish) {
+    builds.delete(plan.key);
+    rememberSeaDistances(plan, pending.build.field);
+  }
 }
 /** Straight travel is forward or astern along the keel. All connectors obey
  * the same constraint as route edges; grid alignment is never a side-slip. */
@@ -464,7 +566,7 @@ export function shipTackRoute(map:SeaMap,ship:Unit,goal:ShipPose,traffic:(a:Ship
   for(const {distance,side} of choices){
     const end={x:start.x+dx*distance/gap,y:start.y+dy*distance/gap};
     const other=1-side,a=directions[side]!,b=directions[other]!,det=cross(a,b);
-    let best:ShipPose[]|undefined,bestCost=Infinity;
+    const candidates:{points:ShipPose[];cost:number}[]=[];
     const startingTurn=Math.abs(headingDifference(start.heading,angles[side]!))>1e-7;
     for(const startupRadius of startingTurn?departureRadii(map,ship):[voyageTurnRadius(ship)])for(const radius of voyageRadii(ship)){
       const speedLimit=curveSpeedLimit(ship,radius),startupSpeed=curveSpeedLimit(ship,startupRadius);
@@ -482,12 +584,29 @@ export function shipTackRoute(map:SeaMap,ship:Unit,goal:ShipPose,traffic:(a:Ship
       const tack=circleArc(entry,angles[other]!,radius,speedLimit);
       const finish:ShipPose={...end,heading:angles[other]!,curvature:0};
       const points=[...lead,...startup,entry,...tack,finish].map(point=>({...point,tack:true}));
-      const cost=voyageTime(map,ship,start,points);
-      if(cost>=bestCost || !voyageCorridorClear(map,ship,start,points,traffic))continue;
-      best=points;bestCost=cost;
+      candidates.push({points,cost:voyageTime(map,ship,start,points)});
     }
+    const best=cheapestClear(candidates,points=>voyageCorridorClear(map,ship,start,points,traffic));
     if(best)return best;
   }
+}
+/** What scanning candidates in order, keeping each strictly cheaper one whose
+ * corridor is clear, ends with: the least-cost clear candidate, ties to the
+ * earlier. Corridors are tested from the cheapest up, so the first clear one
+ * ends the scan. A NaN or -Infinity cost keeps the original scan. */
+function cheapestClear(candidates:readonly {points:ShipPose[];cost:number}[],clear:(points:ShipPose[])=>boolean):ShipPose[]|undefined {
+  if(candidates.some(candidate=>Number.isNaN(candidate.cost) || candidate.cost===-Infinity)){
+    let best:ShipPose[]|undefined,bestCost=Infinity;
+    for(const {points,cost} of candidates){
+      if(cost>=bestCost || !clear(points))continue;
+      best=points;bestCost=cost;
+    }
+    return best;
+  }
+  const order=candidates.map((_,index)=>index).filter(index=>candidates[index]!.cost<Infinity)
+    .sort((a,b)=>candidates[a]!.cost-candidates[b]!.cost || a-b);
+  for(const index of order)if(clear(candidates[index]!.points))return candidates[index]!.points;
+  return undefined;
 }
 /** A moving interception point is not a berth. When a complete rounded tack
  * cannot fit before that near point, establish useful close-hauled headway on
@@ -505,15 +624,15 @@ export function planBeatDeparture(map:SeaMap,ship:Unit,goal:ShipPose,traffic:(a:
   useful.sort((a,b)=>Math.abs(headingDifference(preferred,a))-Math.abs(headingDifference(preferred,b)));
   const length=shipProfile(ship)!.length*2;
   for(const heading of useful){
-    let best:ShipPose[]|undefined,bestCost=Infinity;
+    const candidates:{points:ShipPose[];cost:number}[]=[];
     for(const radius of departureRadii(map,ship)){
       const speedLimit=curveSpeedLimit(ship,radius),lead=Math.abs(headingDifference(start.heading,heading))>1e-7?brakingEntry(ship,start,speedLimit):[];
       const arc=circleArc(lead.at(-1) ?? start,heading,radius,speedLimit),entry=arc.at(-1) ?? lead.at(-1) ?? start;
       const finish:ShipPose={x:entry.x+length*detCos(heading),y:entry.y+length*detSin(heading),heading,curvature:0};
-      const points=[...lead,...arc,finish].map(point=>({...point,tack:true})),cost=voyageTime(map,ship,start,points);
-      if(cost>=bestCost || !voyageCorridorClear(map,ship,start,points,traffic))continue;
-      best=points;bestCost=cost;
+      const points=[...lead,...arc,finish].map(point=>({...point,tack:true}));
+      candidates.push({points,cost:voyageTime(map,ship,start,points)});
     }
+    const best=cheapestClear(candidates,points=>voyageCorridorClear(map,ship,start,points,traffic));
     if(best)return best;
   }
 }
@@ -551,16 +670,24 @@ function departureRoute(map:SeaMap,ship:Unit,goal:Point,traffic:(a:ShipPose,b:Sh
 /** A berth can be reached with a turning arc even when a straight final leg
  * would point its bow through the coast. Stage in open water, then swing the
  * bow/stern around a fixed point on the keel. No sideways docking shortcut. */
+type ArrivalArc={stage:ShipPose;end:ShipPose;angle:number};
+const ARRIVAL_ARCS=8;
+/** One of the eight swing arcs into a berth, in a fixed order, when its
+ * staging pose and swept swing are clear. */
+function arrivalArc(map:SeaMap,ship:Unit,goal:ShipPose,traffic:(a:ShipPose,b:ShipPose)=>boolean,index:number):ArrivalArc|undefined {
+  const length=shipProfile(ship)!.length,angle=[Math.PI/4,-Math.PI/4,Math.PI/2,-Math.PI/2][index>>1]!,lever=index&1?-length/2:length/2;
+  const pivot={x:goal.x-lever*detCos(goal.heading),y:goal.y-lever*detSin(goal.heading)},heading=goal.heading-angle;
+  const stage={x:pivot.x+lever*detCos(heading),y:pivot.y+lever*detSin(heading),heading},end={...goal,pivot};
+  if(!hullFits(map,ship,stage) || !traffic(stage,stage))return;
+  if(!hullPassageClear(map,ship,stage,end) || !traffic(stage,end))return;
+  return {stage,end,angle};
+}
 function arrivalConnectorFor(map:SeaMap,ship:Unit,goal:ShipPose,traffic:(a:ShipPose,b:ShipPose)=>boolean) {
-  const length=shipProfile(ship)!.length;
-  const arcs:{stage:ShipPose;end:ShipPose;angle:number}[]=[];
-  for(const angle of [Math.PI/4,-Math.PI/4,Math.PI/2,-Math.PI/2])for(const lever of [length/2,-length/2]){
-    const pivot={x:goal.x-lever*detCos(goal.heading),y:goal.y-lever*detSin(goal.heading)},heading=goal.heading-angle;
-    const stage={x:pivot.x+lever*detCos(heading),y:pivot.y+lever*detSin(heading),heading},end={...goal,pivot};
-    if(!hullFits(map,ship,stage) || !traffic(stage,stage))continue;
-    if(!hullPassageClear(map,ship,stage,end) || !traffic(stage,end))continue;
-    arcs.push({stage,end,angle});
-  }
+  const arcs:ArrivalArc[]=[];
+  for(let index=0;index<ARRIVAL_ARCS;index++){const arc=arrivalArc(map,ship,goal,traffic,index);if(arc)arcs.push(arc);}
+  return arrivalConnector(map,ship,arcs,traffic);
+}
+function arrivalConnector(map:SeaMap,ship:Unit,arcs:readonly ArrivalArc[],traffic:(a:ShipPose,b:ShipPose)=>boolean) {
   // These swept arrival arcs depend only on the berth. Validate them once
   // per search, then reuse them at every nearby lattice state.
   return (from:ShipPose):ShipPose[]|undefined=>{
@@ -731,6 +858,12 @@ function forwardConnector(map:SeaMap,ship:Unit,from:ShipPose,goal:Point,traffic:
   }
   return best;
 }
+/** Logical work of one refinement trial (see @@@ship-search-work): a few units
+ * when every arc its connector can sweep lies in open water, else a slice. */
+function connectorTrialWork(map:SeaMap,ship:Unit,from:Point,goal:Point):number {
+  const reach=2*Math.max(...queuedVoyageRadii(ship),...voyageRadii(ship))+polygonRadius(shipProfile(ship)!.hull)+shipProfile(ship)!.length*.1+2;
+  return openWaterBox(map,Math.min(from.x,goal.x)-reach,Math.min(from.y,goal.y)-reach,Math.max(from.x,goal.x)+reach,Math.max(from.y,goal.y)+reach) ? SEARCH_WORK.open : SLICE_WORK;
+}
 export type VoyageRefinementState = { cursor:ShipPose; corners:ShipPose[]; result:ShipPose[]; index:number; candidate:number };
 export function beginVoyageRefinement(from:ShipPose,points:ShipPose[]):VoyageRefinementState {
   const result:ShipPose[]=[];
@@ -767,8 +900,8 @@ export function beginVoyageRefinement(from:ShipPose,points:ShipPose[]):VoyageRef
 }
 /** A fixed number of complete connector trials; every accepted curve retains
  * the original centre and both tracking-margin sweeps. */
-export function advanceVoyageRefinement(map:SeaMap,ship:Unit,state:VoyageRefinementState,traffic:(a:ShipPose,b:ShipPose)=>boolean,attempts=Infinity):boolean {
-  let tried=0;
+export function advanceVoyageRefinement(map:SeaMap,ship:Unit,state:VoyageRefinementState,traffic:(a:ShipPose,b:ShipPose)=>boolean,budget=Infinity):boolean {
+  let spent=0;
   while(state.index<state.corners.length){
     if(state.candidate<state.index){
       state.cursor=state.corners[state.index++]!;state.result.push({...state.cursor,exact:true});
@@ -776,7 +909,8 @@ export function advanceVoyageRefinement(map:SeaMap,ship:Unit,state:VoyageRefinem
     }
     const goal=state.corners[state.candidate]!;
     if(Math.hypot(goal.x-state.cursor.x,goal.y-state.cursor.y)<shipProfile(ship)!.length*.5){state.candidate--;continue;}
-    if(tried++>=attempts)return false;
+    if(spent>=budget)return false;
+    if(Number.isFinite(budget))spent+=connectorTrialWork(map,ship,state.cursor,goal);
     const lengthLimit=voyageLength(state.cursor,state.corners.slice(state.index,state.candidate+1))*1.1;
     const candidate=forwardConnector(map,ship,state.cursor,goal,traffic,undefined,lengthLimit);
     const following=state.corners[state.candidate+1];
@@ -827,11 +961,26 @@ type RouteResult={points:ShipPose[];partial:boolean};
  * reached costs, exact heap order and deterministic loop cursors are saved. */
 export type ShipRouteSearchState={
   phase:'prepare'|'entrance'|'search'|'fallback'|'done'; target?:ShipPose; deferred?:boolean; trafficBlocked?:boolean;
+  prepare?:'direct'|'arcs'|'arrival'|'departure'|'potential'; arcs?:ArrivalArc[]; arcCursor?:number; potentialWork?:number;
   nodes?:{id:number;cost:number;parent:number}[]; trafficFits?:{id:number;clear:boolean}[];
   heap?:{id:number;cost:number;score:number}[]; prefixes?:{id:number;points:ShipPose[]}[];
   entrances?:{cell:number;points:ShipPose[][]}[]; entranceCursor?:number;
   best?:number; bestGap?:number; visited?:number; path?:ShipPose[]; fallback?:ShipRouteSearchState; result?:RouteResult;
 };
+// @@@ship-search-work - A continued search is cut into slices by logical work, never by clock time, so every machine
+// pauses it after the same operations and finishes it on the same tick. Weights are each operation's typical coastal
+// cost in plain lattice expansions (about a microsecond each on the six-player probe): an expansion against frozen
+// traffic tests every nearby hull; a connector sweeps keel or arrival legs; an entrance tests one lattice pose beside the
+// hull; an arc validates one berth swing; a target finds the nearest clear berth.
+const SLICE_WORK=700;
+/** One continued slice of ship planning work, shared by every phase of a job. */
+export const SHIP_PLANNING_SLICE_WORK=SLICE_WORK;
+const SEARCH_WORK={expansion:1,trafficExpansion:4,connector:300,entrance:1,entranceFit:300,entranceCell:400,arc:500,target:300,open:10};
+type LiveSearch={reached:Map<number,{id:number;cost:number;parent:number}>;traffic:Map<number,boolean>;frontier:Frontier;
+  potentials:Map<number,number>;prefixes:Map<number,ShipPose[]>;entrances:Map<number,ShipPose[][]>};
+/** A continued search this process owns keeps its graph here between slices,
+ * instead of copying every reached record into and out of its state. */
+const liveSearches=new WeakMap<ShipRouteSearchState,LiveSearch>();
 const livePlanningSearches=new WeakSet<ShipRouteSearchState>();
 /** Internal planner-only fresh state; decoded jobs never acquire this identity. */
 export function beginLiveShipRouteSearch():ShipRouteSearchState {
@@ -853,7 +1002,8 @@ function advanceShipRouteSearchImpl(map:SeaMap,ship:Unit,goal:Point & {heading?:
   // Fallback owns no active workspace. Resume it at this caller's depth,
   // retaining nested isolation only for a real reentrant traffic callback.
   if(state.phase==='fallback'){
-    const unobstructed=advanceShipRouteSearch(map,ship,goal,emptyTraffic,Infinity,voyage,state.fallback!);
+    const fallback=state.fallback!;
+    const unobstructed=advanceShipRouteSearchImpl(map,ship,goal,emptyTraffic,Infinity,voyage,fallback,livePlanningSearches.has(fallback));
     if(!unobstructed)return;
     const end=state.path!.at(-1) ?? ship,possible=unobstructed.points.at(-1) ?? ship;
     state.result={points:state.path!,partial:!!state.deferred || unobstructed.partial || Math.hypot(end.x-possible.x,end.y-possible.y)>1e-7};
@@ -862,7 +1012,7 @@ function advanceShipRouteSearchImpl(map:SeaMap,ship:Unit,goal:Point & {heading?:
   routeSearchDepth++;
   try {
     const result=planShipRouteImpl(map,ship,goal,trafficClear,budget,voyage,routeSearchDepth>1,state,owned);
-    if(result){state.result=result;state.phase='done';}return result;
+    if(result){state.result=result;state.phase='done';liveSearches.delete(state);}return result;
   }finally{routeSearchDepth--;}
 }
 function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:number}, trafficClear: (from:ShipPose,to:ShipPose)=>boolean, budget:number, voyage:boolean, nested:boolean,state?:ShipRouteSearchState,owned=false): RouteResult|undefined {
@@ -885,6 +1035,14 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
     return {forward:distance/Math.max(1e-6,performance.forward),reverse:distance/Math.max(1e-6,performance.reverse)};
   });
   const lattice = grid;
+  const directionCosts = courseSpeeds.map((performance, h) => cruise / Math.max(1e-6, performance.forward, courseSpeeds[(h + 4) % DIRECTIONS]!.reverse));
+  // A local traffic budget and a short berth search should stay local. The
+  // reusable map field pays for itself on long, unbounded coastal voyages;
+  // cap its map size as well as its retained destination count.
+  const usesDistances = (start: Point, target: Point) => voyage && !Number.isFinite(budget) && lattice.cols * lattice.rows <= 262144
+    && Math.hypot(target.x - start.x, target.y - start.y) > lattice.cell * 24
+    && !openWaterBox(map, Math.min(start.x, target.x) - lattice.cell / 2, Math.min(start.y, target.y) - lattice.cell / 2,
+      Math.max(start.x, target.x) + lattice.cell / 2, Math.max(start.y, target.y) + lattice.cell / 2);
   const pose = (id: number): ShipPose => { const cell = Math.floor(id / DIRECTIONS); return { x: (cell % lattice.cols + .5) * lattice.cell, y: (Math.floor(cell / lattice.cols) + .5) * lattice.cell, heading: (id % DIRECTIONS) * ANGLE }; };
   const savedTraffic=new Map(state?.trafficFits?.map(entry=>[entry.id,entry.clear]));
   const fits = (id: number) => {
@@ -892,6 +1050,11 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
       grid.fits[id] = maskFits(map, grid, id, grid.masks[id % DIRECTIONS]![0]!) ? 1 : -1;
     if(grid.fits[id]!==1)return false;
     if(noTraffic)return true;
+    if(live){
+      let clear=live.traffic.get(id);
+      if(clear===undefined){const at=pose(id);clear=trafficClear(at,at);live.traffic.set(id,clear);}
+      return clear;
+    }
     // Traffic changes between searches even on unchanged terrain. Signed
     // generations retain no stale result, and avoid a map-sized allocation
     // for every replan (or any traffic array on the direct-connector path).
@@ -902,40 +1065,104 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
   let preparedTarget=state?.target,deferred=state?.deferred??false;
   const length = shipProfile(ship)!.length;
   const start = { x: ship.x, y: ship.y, heading: ship.sailing?.heading ?? 0 };
-  if(!preparedTarget){
-    const terrainTarget=requested && hullFits(map,ship,requested) ? requested : nearestShipPose(map,ship,goal);
-    preparedTarget=terrainTarget && trafficClear(terrainTarget,terrainTarget) ? terrainTarget : nearestShipPose(map,ship,goal,ship,pose=>trafficClear(pose,pose));
-    const target=preparedTarget;
-    deferred=!!terrainTarget && (!target || Math.hypot(target.x-terrainTarget.x,target.y-terrainTarget.y)>1e-7
-      || goal.heading!==undefined && Math.abs(headingDifference(target.heading,terrainTarget.heading))>1e-7);
-    if(!target)return {points:[],partial:deferred};
-    const destination=requested?target:{x:target.x,y:target.y};
-    const direct=keelConnector(map,ship,start,destination,trafficClear);
-    if(direct)return {points:direct.filter((point,i)=>i!==0 || Math.hypot(point.x-start.x,point.y-start.y)>1e-7
-      || Math.abs(headingDifference(start.heading,point.heading))>1e-7 || direct.length===1),partial:deferred};
-    const arrival=arrivalConnectorFor(map,ship,target,trafficClear)(start);
-    if(arrival)return {points:arrival,partial:deferred};
-    const direction=Math.atan2(target.y-start.y,target.x-start.x);
-    if([direction,direction+Math.PI].every(heading=>!hullPassageClear(map,ship,start,{...start,heading}) || !trafficClear(start,{...start,heading}))){
-      const departure=departureRoute(map,ship,target,trafficClear);
-      if(departure)return {points:departure,partial:true};
+  // Logical work done in this call; a continued search pauses at the first
+  // operation boundary past SLICE_WORK (see @@@ship-search-work).
+  let work=0;
+  // A step whose whole region is open water sweeps only through the integral
+  // field's fast path; it is priced as such. The test reads the terrain alone,
+  // so every machine prices every step alike.
+  const hullRadius=polygonRadius(shipProfile(ship)!.hull),near=2*t.cell+length+hullRadius+2;
+  const openAround=(at:Point,pad:number)=>openWaterBox(map,at.x-pad,at.y-pad,at.x+pad,at.y+pad);
+  const openBetween=(a:Point,b:Point,pad:number)=>openWaterBox(map,Math.min(a.x,b.x)-pad,Math.min(a.y,b.y)-pad,Math.max(a.x,b.x)+pad,Math.max(a.y,b.y)+pad);
+  const priced=(open:boolean,weight:number)=>open?SEARCH_WORK.open:weight;
+  // One berth's validated arrival arcs serve the whole call: the target and
+  // traffic callback are the same objects, so validating them again repeats
+  // identical checks. A continued search keeps them in its state.
+  let arrive:ReturnType<typeof arrivalConnectorFor>|undefined;
+  if(!preparedTarget || state?.phase==='prepare'){
+    let step:'target'|NonNullable<ShipRouteSearchState['prepare']>=state?.prepare ?? 'target';
+    const yieldAt=(next:NonNullable<ShipRouteSearchState['prepare']>)=>{
+      if(!state || work<SLICE_WORK)return false;
+      state.prepare=next;state.trafficBlocked=trafficBlocked;return true;
+    };
+    if(step==='target'){
+      const terrainTarget=requested && hullFits(map,ship,requested) ? requested : nearestShipPose(map,ship,goal);
+      preparedTarget=terrainTarget && trafficClear(terrainTarget,terrainTarget) ? terrainTarget : nearestShipPose(map,ship,goal,ship,pose=>trafficClear(pose,pose));
+      const target=preparedTarget;
+      deferred=!!terrainTarget && (!target || Math.hypot(target.x-terrainTarget.x,target.y-terrainTarget.y)>1e-7
+        || goal.heading!==undefined && Math.abs(headingDifference(target.heading,terrainTarget.heading))>1e-7);
+      if(!target)return {points:[],partial:deferred};
+      if(state){state.target=target;state.deferred=deferred;}
+      work+=priced(openAround(goal,near),SEARCH_WORK.target);step='direct';
+      if(yieldAt(step))return;
     }
-    if(state){state.target=target;state.deferred=deferred;state.trafficBlocked=trafficBlocked;state.phase='entrance';return;}
+    const target=preparedTarget!;
+    const destination=requested?target:{x:target.x,y:target.y};
+    if(step==='direct'){
+      const direct=keelConnector(map,ship,start,destination,trafficClear);
+      if(direct)return {points:direct.filter((point,i)=>i!==0 || Math.hypot(point.x-start.x,point.y-start.y)>1e-7
+        || Math.abs(headingDifference(start.heading,point.heading))>1e-7 || direct.length===1),partial:deferred};
+      work+=priced(openBetween(start,destination,hullRadius+2),SEARCH_WORK.connector);step='arcs';
+      if(yieldAt(step))return;
+    }
+    if(step==='arcs'){
+      const arcs=state?.arcs ?? [];
+      for(let index=state?.arcCursor ?? 0;index<ARRIVAL_ARCS;index++){
+        if(state && work>=SLICE_WORK){state.arcs=arcs;state.arcCursor=index;state.prepare='arcs';state.trafficBlocked=trafficBlocked;return;}
+        const arc=arrivalArc(map,ship,target,trafficClear,index);if(arc)arcs.push(arc);
+        work+=priced(openAround(target,near),SEARCH_WORK.arc);
+      }
+      if(state){state.arcs=arcs;delete state.arcCursor;}
+      arrive=arrivalConnector(map,ship,arcs,trafficClear);step='arrival';
+      if(yieldAt(step))return;
+    }
+    arrive??=arrivalConnector(map,ship,state!.arcs!,trafficClear);
+    if(step==='arrival'){
+      const arrival=arrive(start);
+      if(arrival)return {points:arrival,partial:deferred};
+      work+=priced(openBetween(start,target,near),SEARCH_WORK.connector);step='departure';
+      if(yieldAt(step))return;
+    }
+    if(step==='departure'){
+      const direction=Math.atan2(target.y-start.y,target.x-start.x);
+      if([direction,direction+Math.PI].every(heading=>!hullPassageClear(map,ship,start,{...start,heading}) || !trafficClear(start,{...start,heading}))){
+        const departure=departureRoute(map,ship,target,trafficClear);
+        if(departure)return {points:departure,partial:true};
+      }
+      work+=priced(openAround(start,near),SEARCH_WORK.connector);step='potential';
+      if(yieldAt(step))return;
+    }
+    if(state){
+      // A long coastal voyage's landmark field is built here, at a fixed price
+      // per cell of its box, before any heuristic reads it.
+      if(usesDistances(start,target)){
+        const plan=seaDistancePlan(map,grid,start,target,directionCosts),total=seaDistanceWork(plan);
+        let charged=state.potentialWork ?? 0;
+        while(charged<total){
+          if(work>=SLICE_WORK){state.potentialWork=charged;state.prepare='potential';state.trafficBlocked=trafficBlocked;return;}
+          const spend=Math.min(total-charged,Math.max(1,SLICE_WORK-work));
+          advanceSeaDistances(map,grid,plan,directionCosts,spend,false);
+          charged+=spend;work+=spend;
+        }
+        advanceSeaDistances(map,grid,plan,directionCosts,0,true);
+        delete state.potentialWork;
+      }
+      state.target=target;state.deferred=deferred;state.trafficBlocked=trafficBlocked;state.phase='entrance';delete state.prepare;return;
+    }
   }
   const target=preparedTarget!;
   const destination=requested?target:{x:target.x,y:target.y};
-  const arrive=arrivalConnectorFor(map,ship,target,trafficClear);
-  const workspace = searchWorkspace(size,nested), { costs, parents: previous, stamps, trafficFits,
-    basePotentials,baseStamps,generation } = workspace, frontier = nested ? new Frontier() : routeFrontier.reset();
-  // A local traffic budget and a short berth search should stay local. The
-  // reusable map field pays for itself on long, unbounded coastal voyages;
-  // cap its map size as well as its retained destination count.
-  const useDistances = voyage && !Number.isFinite(budget) && lattice.cols * lattice.rows <= 262144
-    && Math.hypot(target.x - start.x, target.y - start.y) > lattice.cell * 24
-    && !openWaterBox(map, Math.min(start.x, target.x) - lattice.cell / 2, Math.min(start.y, target.y) - lattice.cell / 2,
-      Math.max(start.x, target.x) + lattice.cell / 2, Math.max(start.y, target.y) + lattice.cell / 2);
-  const directionCosts = courseSpeeds.map((performance, h) => cruise / Math.max(1e-6, performance.forward, courseSpeeds[(h + 4) % DIRECTIONS]!.reverse));
-  const distances = useDistances ? terrainDistances(map, grid, start,target, directionCosts) : undefined;
+  const arriveNear=arrive ?? (state?.arcs ? arrivalConnector(map,ship,state.arcs,trafficClear) : arrivalConnectorFor(map,ship,target,trafficClear));
+  // A search this process owns keeps its graph in memory between slices; a
+  // decoded or caller-built state rebuilds it from its saved records.
+  let live=state && owned ? liveSearches.get(state) : undefined;
+  if(state && owned && !live){
+    live={reached:new Map(),traffic:new Map(),frontier:new Frontier(),potentials:new Map(),prefixes:new Map(),entrances:new Map()};
+    liveSearches.set(state,live);
+  }
+  const workspace = searchWorkspace(live ? 0 : size,nested), { costs, parents: previous, stamps, trafficFits,
+    basePotentials,baseStamps,generation } = workspace, frontier = live ? live.frontier : nested ? new Frontier() : routeFrontier.reset();
+  const distances = usesDistances(start, target) ? terrainDistances(map, grid, start,target, directionCosts) : undefined;
   // Directed shortest paths obey d(p, landmark) - d(q, landmark) <= d(p, q).
   // Taking the largest potential of every possible final-connector state
   // therefore remains a lower bound even with an asymmetric wind polar.
@@ -946,50 +1173,64 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
       if (grid.water[y * grid.cols + x] === 1
         && Math.hypot((x + .5) * lattice.cell - target.x, (y + .5) * lattice.cell - target.y) <= lattice.cell * 1.5)
         terminalPotential = Math.max(terminalPotential, seaPotentialAt(distances,x,y));
-  const basePotential = (tile:number,x:number,y:number) => {
-    if(baseStamps[tile]===generation)return basePotentials[tile]!;
+  const potential = (tile:number,x:number,y:number) => {
     const distance = distances ? seaPotentialAt(distances,tile%lattice.cols,Math.floor(tile/lattice.cols)) : 0;
     const lowerBound = distance - terminalPotential;
+    return Math.max(Math.hypot(x - target.x, y - target.y), Number.isFinite(lowerBound) ? lowerBound : 0) / cruise;
+  };
+  const basePotential = live ? (tile:number,x:number,y:number) => {
+    let value=live!.potentials.get(tile);
+    if(value===undefined)live!.potentials.set(tile,value=potential(tile,x,y));
+    return value;
+  } : (tile:number,x:number,y:number) => {
+    if(baseStamps[tile]===generation)return basePotentials[tile]!;
     baseStamps[tile]=generation;
-    return basePotentials[tile]=Math.max(Math.hypot(x - target.x, y - target.y), Number.isFinite(lowerBound) ? lowerBound : 0) / cruise;
+    return basePotentials[tile]=potential(tile,x,y);
   };
   const heuristic = (id: number, x: number, y: number) => basePotential(Math.floor(id/DIRECTIONS),x,y);
-  const cost = (id: number) => stamps[id] === generation ? costs[id]! : Infinity;
   let reached:Map<number,NonNullable<ShipRouteSearchState['nodes']>[number]>;
-  if(owned){
-    reached=new Map();
-    // Only ordinary packed arrays of local plain records reach this branch.
-    // Preserve the separate, subsequent values() replay below.
-    for(const entry of state?.nodes ?? [])reached.set(entry.id,entry);
-  }else reached=new Map(state?.nodes?.map(entry=>[entry.id,entry]));
-  for(const entry of reached.values()){stamps[entry.id]=generation;costs[entry.id]=entry.cost;previous[entry.id]=entry.parent;}
-  for(const [id,clear] of savedTraffic)trafficFits[id]=clear?generation:-generation;
-  if(state?.heap)frontier.restore(state.heap);
-  const setCost = (id: number, value: number, parent: number) => {
+  if(live)reached=live.reached;
+  else {
+    reached=new Map(state?.nodes?.map(entry=>[entry.id,entry]));
+    for(const entry of reached.values()){stamps[entry.id]=generation;costs[entry.id]=entry.cost;previous[entry.id]=entry.parent;}
+    for(const [id,clear] of savedTraffic)trafficFits[id]=clear?generation:-generation;
+    if(state?.heap)frontier.restore(state.heap);
+  }
+  const cost = live ? (id: number) => reached.get(id)?.cost ?? Infinity : (id: number) => stamps[id] === generation ? costs[id]! : Infinity;
+  const parentOf = live ? (id: number) => reached.get(id)!.parent : (id: number) => previous[id]!;
+  const setCost = live ? (id: number, value: number, parent: number) => { reached.set(id,{id,cost:value,parent}); } : (id: number, value: number, parent: number) => {
     stamps[id] = generation; costs[id] = value; previous[id] = parent;
     if(state)reached.set(id,{id,cost:value,parent});
   };
-  const prefixes=new Map<number,ShipPose[]>(state?.prefixes?.map(entry=>[entry.id,entry.points])),
-    entrances=new Map<number,ShipPose[][]>(state?.entrances?.map(entry=>[entry.cell,entry.points]));
+  const prefixes=live ? live.prefixes : new Map<number,ShipPose[]>(state?.prefixes?.map(entry=>[entry.id,entry.points])),
+    entrances=live ? live.entrances : new Map<number,ShipPose[][]>(state?.entrances?.map(entry=>[entry.cell,entry.points]));
   const pause=()=>{
+    state!.trafficBlocked=trafficBlocked;
+    if(live)return;
     state!.nodes=Array.from(reached.values());state!.trafficFits=Array.from(savedTraffic,([id,clear])=>({id,clear}));
     state!.heap=frontier.save();state!.prefixes=Array.from(prefixes,([id,points])=>({id,points}));
-    state!.entrances=Array.from(entrances,([cell,points])=>({cell,points}));state!.trafficBlocked=trafficBlocked;
+    state!.entrances=Array.from(entrances,([cell,points])=>({cell,points}));
   };
   const col = Math.floor(ship.x / lattice.cell), row = Math.floor(ship.y / lattice.cell);
-  let entranceCursor=0,entranceWork=0;
+  const startOpen=openAround(start,near),targetOpen=openAround(target,near);
+  let entranceCursor=0;
   if(!state || state.phase==='entrance')for (let y = Math.max(0, row - 1); y <= Math.min(lattice.rows - 1, row + 1); y++)
     for (let x = Math.max(0, col - 1); x <= Math.min(lattice.cols - 1, col + 1); x++)
       for (let h = 0; h < DIRECTIONS; h++) {
         if(state && entranceCursor++<(state.entranceCursor??0))continue;
-        if(state && entranceWork++>=16){state.entranceCursor=entranceCursor-1;pause();return;}
+        if(state && work>=SLICE_WORK){state.entranceCursor=entranceCursor-1;pause();return;}
         const id = (y * lattice.cols + x) * DIRECTIONS + h, p = pose(id);
+        work+=SEARCH_WORK.entrance;
         if (!fits(id))
           continue;
         // The eight headings at one cell share the same ahead/astern entrance.
         // Validate those continuous sweeps once, then test each final yaw.
         const cell=y*lattice.cols+x;
-        if(!entrances.has(cell))entrances.set(cell,keelCandidates(ship,start,{x:p.x,y:p.y}).filter(points=>connectorClear(map,ship,start,points,trafficClear)));
+        work+=priced(startOpen,SEARCH_WORK.entranceFit);
+        if(!entrances.has(cell)){
+          entrances.set(cell,keelCandidates(ship,start,{x:p.x,y:p.y}).filter(points=>connectorClear(map,ship,start,points,trafficClear)));
+          work+=priced(startOpen,SEARCH_WORK.entranceCell);
+        }
         let prefix:ShipPose[]|undefined,g=Infinity;
         for(const entrance of entrances.get(cell)!){
           const end=entrance.at(-1) ?? start;
@@ -1003,7 +1244,7 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
       }
   if(state && state.phase==='entrance'){state.phase='search';pause();return;}
   if(!frontier.length){const departure=departureRoute(map,ship,target,trafficClear,true);return{points:departure ?? [],partial:!!departure || deferred || trafficBlocked};}
-  let best = state?.best??-1, bestGap = state?.bestGap??Infinity,visited=state?.visited??0,partial=false,terminal:ShipPose[]|undefined,expanded=0;
+  let best = state?.best??-1, bestGap = state?.bestGap??Infinity,visited=state?.visited??0,partial=false,terminal:ShipPose[]|undefined;
   // This helper belongs to the search, rather than each expanded state.
   // Keeping one closure avoids allocating and naming it hundreds of
   // thousands of times during a long coastal order.
@@ -1021,8 +1262,9 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
     setCost(to, value, id);
     frontier.push(to, value, value + heuristic(to, px, py));
   };
+  const expansionWork = noTraffic ? SEARCH_WORK.expansion : SEARCH_WORK.trafficExpansion;
   while (frontier.length) {
-    if(state && expanded>=(noTraffic?4096:128)){state.best=best;if(Number.isFinite(bestGap))state.bestGap=bestGap;state.visited=visited;pause();return;}
+    if(state && work>=SLICE_WORK){state.best=best;if(Number.isFinite(bestGap))state.bestGap=bestGap;state.visited=visited;pause();return;}
     const id = frontier.pop();
     const nodeCost = cost(id);
     if (frontier.poppedCost !== nodeCost)
@@ -1030,16 +1272,21 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
     const h = id % DIRECTIONS, cell = Math.floor(id / DIRECTIONS), x = cell % lattice.cols, y = Math.floor(cell / lattice.cols);
     const px = (x+.5)*lattice.cell, py = (y+.5)*lattice.cell;
     const p = noTraffic ? undefined : {x:px,y:py,heading:h*ANGLE};
-    expanded++;
-    if(++visited>budget){best=id;partial=true;break;}
+    work+=expansionWork;
+    // An exhausted budget ends the journey at the reached state nearest the
+    // target, not at whatever state the frontier offers next: that one may lie
+    // astern of the start behind several turns on the spot. A journey that
+    // would gain nothing on the start keeps the frontier's state instead.
+    if(++visited>budget){if(best<0 || bestGap>=Math.hypot(start.x-target.x,start.y-target.y)-1e-7)best=id;partial=true;break;}
     const gap = Math.hypot(px - target.x, py - target.y);
     if (gap < bestGap || (gap === bestGap && cost(id) < (best < 0 ? Infinity : cost(best)))) {
       best = id;
       bestGap = gap;
     }
     if(gap<=lattice.cell*1.5){
+      work+=priced(targetOpen,SEARCH_WORK.connector);
       const at = p ?? {x:px,y:py,heading:h*ANGLE};
-      const connection=keelConnector(map,ship,at,destination,trafficClear) ?? arrive(at);
+      const connection=keelConnector(map,ship,at,destination,trafficClear) ?? arriveNear(at);
       if(connection){best=id;terminal=connection;break;}
     }
     visit(id, nodeCost, p, cell * DIRECTIONS + (h + 1) % DIRECTIONS, ANGLE / turnSpeed, grid.turns, id * 2, grid.masks[h]![1]!);
@@ -1061,7 +1308,7 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
   if (best < 0)
     return {points:[],partial:false};
   const path: ShipPose[] = [];
-  for (let at = best; at >= 0; at = previous[at]!)
+  for (let at = best; at >= 0; at = parentOf(at))
     path.push(pose(at));
   path.reverse();
   const root=path[0]!;
@@ -1074,9 +1321,10 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
     // terrain-only endpoint so a genuinely unreachable island/pond still
     // retains its ordinary nearest-reachable completion semantics.
     if(state){
-      state.phase='fallback';state.path=path;state.fallback={phase:'prepare'};state.deferred=deferred;
+      state.phase='fallback';state.path=path;state.fallback=live ? beginLiveShipRouteSearch() : {phase:'prepare'};state.deferred=deferred;
       delete state.nodes;delete state.trafficFits;delete state.heap;delete state.prefixes;delete state.entrances;
-      delete state.best;delete state.bestGap;delete state.visited;delete state.entranceCursor;
+      delete state.best;delete state.bestGap;delete state.visited;delete state.entranceCursor;delete state.arcs;
+      liveSearches.delete(state);
       return;
     }
     const unobstructed=planShipRoute(map,ship,goal,undefined,Infinity,voyage),end=path.at(-1) ?? start,possible=unobstructed.points.at(-1) ?? start;

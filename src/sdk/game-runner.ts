@@ -2,6 +2,7 @@ import { createSdkCommandFrameRuntime, type CommandFrameEntry, type SdkCommandFr
 import { summarizeMatchState, summarizeTimelineSample, type MatchStateSummary, type MatchTimelineSample } from "./match-report";
 import { normalizeWinnerForMode, type SdkWinnerMode } from "./winner-mode";
 import { createGame, snapshotGame, type CreateGameOptions, type Game } from "../shared/sim";
+import { PLANNER_COMMAND_DELAY_TICKS, partitionDeliveredPlannerCommands, plannerPhase, plannerThinksAt } from "../shared/sim/planner-schedule";
 import type { GameCommand, GameSnapshot, MapId, PlayerId, RaceId } from "../shared/types";
 
 export type SdkAgentController = "internal-ai" | "external-agent";
@@ -36,6 +37,8 @@ export type SdkGameRunInput<TAgent extends SdkGameAgent = SdkGameAgent> = {
   options?: CreateGameOptions;
   maxTicks: number;
   thinkInterval: number;
+  // Ticks between an agent's think and its commands (see @@@planner-schedule); the live game's delay by default.
+  commandDelayTicks?: number;
   commandPlanner?: SdkGameCommandPlanner<TAgent>;
   sampleInterval?: number;
   trace?: SdkGameRunTraceOptions;
@@ -223,9 +226,20 @@ export function runGameLoop<TAgent extends SdkGameAgent = SdkGameAgent>(input: S
   // the benchmark's trackers only read them. `current` is a copy of the game as it stands, while nothing has changed it
   // since. Without an afterStep hook no step is copied at all, without an afterCommand hook no command.
   let current: GameSnapshot | undefined;
+  // Agents think on their own phases and their commands land a fixed delay later, as the internal AI's do in a live
+  // match (see @@@planner-schedule), so a benchmark measures the AI players face.
+  const delay = input.commandDelayTicks ?? PLANNER_COMMAND_DELAY_TICKS;
+  const planned = new Map<number, CommandFrameEntry<SdkCommandSource>[]>();
   while (game.tick < input.maxTicks && !game.match.winner) {
-    if (game.tick % input.thinkInterval === 0) {
-      current = issueDueAgentCommands(frameRuntime, game, input, loopContext, hooks, current);
+    const thinking = players.filter((_, index) => plannerThinksAt(game.tick, plannerPhase(index, players.length, input.thinkInterval), input.thinkInterval));
+    if (thinking.length > 0) {
+      const commands = planDueAgentCommands(frameRuntime, game, input, loopContext, thinking);
+      if (commands.length > 0) planned.set(game.tick + delay, [...(planned.get(game.tick + delay) ?? []), ...commands]);
+    }
+    const delivered = planned.get(game.tick);
+    if (delivered) {
+      planned.delete(game.tick);
+      current = issueAgentCommands(frameRuntime, game, partitionDeliveredPlannerCommands(game, delivered).deliverable, loopContext, hooks, current);
     }
     hooks.beforeStep?.(loopContext);
     if (!hooks.afterStep) {
@@ -306,19 +320,17 @@ function distance(a: { x: number; y: number }, b: { x: number; y: number }) {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
-// Plans and issues this tick's commands; returns a copy of the game as it stands afterwards when one was made on the way
-// (the last command's `after`, or `current` when nothing was issued), else undefined (see @@@snapshot-reuse).
-function issueDueAgentCommands<TAgent extends SdkGameAgent>(
+// Plans the thinking agents' commands from the world as it stands, checking each as issuing it now would.
+function planDueAgentCommands<TAgent extends SdkGameAgent>(
   frameRuntime: SdkCommandFrameRuntime,
   game: Game,
   input: SdkGameRunInput<TAgent>,
   loopContext: SdkGameLoopContext,
-  hooks: SdkGameLoopHooks,
-  current: GameSnapshot | undefined,
-): GameSnapshot | undefined {
-  if (!input.commandPlanner) return current;
+  thinking: PlayerId[],
+): CommandFrameEntry<SdkCommandSource>[] {
+  if (!input.commandPlanner || game.match.winner) return [];
   const snapshot = plannerView(game);
-  const planned = playersOf(input).flatMap((owner) => {
+  const planned = thinking.flatMap((owner) => {
     const agent = input.agents[owner];
     if (!agent) return [];
     const plannerOrigin: SdkPlannerOrigin = "local-command-planner";
@@ -332,6 +344,20 @@ function issueDueAgentCommands<TAgent extends SdkGameAgent>(
       teams: loopContext.teams,
     });
   });
+  frameRuntime.check(planned);
+  return planned;
+}
+
+// Issues the commands due on this tick; returns a copy of the game as it stands afterwards when one was made on the way
+// (the last command's `after`, or `current` when nothing was issued), else undefined (see @@@snapshot-reuse).
+function issueAgentCommands(
+  frameRuntime: SdkCommandFrameRuntime,
+  game: Game,
+  planned: CommandFrameEntry<SdkCommandSource>[],
+  loopContext: SdkGameLoopContext,
+  hooks: SdkGameLoopHooks,
+  current: GameSnapshot | undefined,
+): GameSnapshot | undefined {
   const { afterCommand, onCommand } = hooks;
   if (!afterCommand && !onCommand) {
     const { commands } = frameRuntime.issue(planned, {}, { checksum: false });

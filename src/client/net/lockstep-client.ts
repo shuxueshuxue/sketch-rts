@@ -1,5 +1,6 @@
 import { RULES_VERSION, assertCurrentRulesVersion } from "../../shared/rules-version";
 import { CommandFrameBuffer } from "../../shared/net/frame-buffer";
+import { LOCKSTEP_CHECKSUM_EVERY_TICKS } from "../../shared/net/cadence";
 import type { CheckpointFrame, CheckpointRequestReason, CommandFrame, RoomSyncEvent, ServerNetMessage } from "../../shared/net/types";
 import { restoreSnapshotIntoGame } from "../../shared/sim";
 import { prepareShipPlanningJobs } from "../../shared/ship-planning-job";
@@ -189,7 +190,7 @@ export class LockstepClient {
   }
 
   private emitChecksumIfDue(): void {
-    const cadence = Math.max(1, this.options.checksumEveryTicks ?? 20);
+    const cadence = Math.max(1, this.options.checksumEveryTicks ?? LOCKSTEP_CHECKSUM_EVERY_TICKS);
     const tick = this.options.engine.game.tick;
     if (tick === this.lastChecksumTick || tick % cadence !== 0) return;
     this.options.transport.send({ type: "checksum", roomId: this.options.roomId, playerId: this.options.playerId, tick, hash: this.currentChecksum(), epoch: this.epoch });

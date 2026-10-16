@@ -126,16 +126,24 @@ export function circleInPolygon(point: Point, radius: number, polygon: readonly 
 export function shipPassengers(units: readonly Unit[], ship: Unit) {
   return units.filter(unit=>unit.deck?.shipId===ship.id);
 }
+// Called for every candidate landing point, shot and transfer: worldToLocal and circleInPolygon (radius 0) are written
+// out here with the same arithmetic, so a query allocates no point.
 export function distanceToHull(ship:Unit,world:Point) {
   const profile=shipProfile(ship);
   if(!profile)return Math.hypot(world.x-ship.x,world.y-ship.y);
-  const point=worldToLocal(ship,world);
-  if(circleInPolygon(point,0,profile.hull))return 0;
+  const angle=ship.sailing?.heading ?? 0, c=detCos(angle), s=detSin(angle), wx=world.x-ship.x, wy=world.y-ship.y;
+  const px=wx*c+wy*s, py=-wx*s+wy*c, hull=profile.hull;
+  let inside=true;
+  for (let i=0;i<hull.length;i++) {
+    const a=hull[i]!, b=hull[(i+1)%hull.length]!, dx=b.x-a.x, dy=b.y-a.y;
+    if ((dx*(py-a.y)-dy*(px-a.x))/Math.hypot(dx,dy) < 0-1e-6) { inside=false; break; }
+  }
+  if(inside)return 0;
   let gap=Infinity;
-  for(let i=0;i<profile.hull.length;i++) {
-    const a=profile.hull[i]!,b=profile.hull[(i+1)%profile.hull.length]!,dx=b.x-a.x,dy=b.y-a.y;
-    const t=Math.max(0,Math.min(1,((point.x-a.x)*dx+(point.y-a.y)*dy)/(dx*dx+dy*dy)));
-    gap=Math.min(gap,Math.hypot(point.x-a.x-dx*t,point.y-a.y-dy*t));
+  for(let i=0;i<hull.length;i++) {
+    const a=hull[i]!,b=hull[(i+1)%hull.length]!,dx=b.x-a.x,dy=b.y-a.y;
+    const t=Math.max(0,Math.min(1,((px-a.x)*dx+(py-a.y)*dy)/(dx*dx+dy*dy)));
+    gap=Math.min(gap,Math.hypot(px-a.x-dx*t,py-a.y-dy*t));
   }
   return gap;
 }

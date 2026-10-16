@@ -1,5 +1,7 @@
-import { createGame } from "../../shared/sim";
+import { createGame, snapshotGame, warmGameCaches } from "../../shared/sim";
 import { SimulationEngine } from "../../shared/sim/engine";
+import { MatchThreadGameAdapter } from "../match-worker/adapter";
+import type { MatchThreadFactory } from "../match-worker/browser";
 import { prepareChatPayload } from "../../shared/chat";
 import { joinPublicPath, normalizePublicBasePath } from "../../shared/deployment-base";
 import type { ChatMessage, ServerNetMessage } from "../../shared/net/types";
@@ -28,6 +30,8 @@ export type ServerDeploymentRuntimeOptions = {
   createRoomTransport?: (roomId: string) => RoomTransport;
   createRoomEventSource?: (path: string) => RoomEventSource;
   onRuntimeError?: (message: string) => void;
+  // A thread for a hosted match's lockstep simulation (see @@@match-thread); without it it runs on the page's thread.
+  matchThreads?: MatchThreadFactory;
 };
 
 export class ServerDeploymentRuntime implements DeploymentRuntime {
@@ -36,10 +40,12 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
   private readonly createRoomTransport: (roomId: string) => RoomTransport;
   private readonly createRoomEventSource: (path: string) => RoomEventSource;
   private readonly onRuntimeError: ((message: string) => void) | undefined;
+  private readonly matchThreads: MatchThreadFactory | undefined;
   private readonly publicBasePath: string;
   private readonly emptyAdapter = new EmptyGameAdapter();
 
   constructor(options: ServerDeploymentRuntimeOptions = {}) {
+    this.matchThreads = options.matchThreads;
     this.publicBasePath = normalizePublicBasePath(options.publicBasePath ?? import.meta.env.BASE_URL);
     this.fetchJson = options.fetchJson ?? requestJson;
     this.createRoomTransport = options.createRoomTransport ?? ((roomId) => createDefaultRoomTransport(roomId, this.publicBasePath));
@@ -111,19 +117,37 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
     const setup = liveRoomToGameSetup(room);
     const game = createGame(setup.mapId, setup.options);
     const transport = this.createRoomTransport(room.id);
-    const client = new LockstepClient({
-      roomId: room.id,
-      playerId,
-      engine: new SimulationEngine(game),
-      transport,
-      ...(this.onRuntimeError ? { onError: this.onRuntimeError } : {}),
-    });
-    const adapter = new LockstepRoomGameAdapter(client, { spectating });
+    let adapter: LockstepRoomGameAdapter | MatchThreadGameAdapter;
+    let join: () => void;
+    if (this.matchThreads) {
+      // The lockstep simulation runs on its own thread; the socket, chat and room events stay on the page.
+      const threads = this.matchThreads({ ai: false });
+      const threaded = new MatchThreadGameAdapter(threads.port, { type: "lockstep", roomId: room.id, playerId, mapId: setup.mapId, options: setup.options }, snapshotGame(game), {
+        playerId,
+        spectating,
+        ...(this.onRuntimeError ? { onError: this.onRuntimeError } : {}),
+        onNet: (message) => transport.send(message),
+        onClose: () => { transport.close(); threads.terminate(); },
+      });
+      transport.onMessage((message: ServerNetMessage) => threaded.forward(message));
+      adapter = threaded;
+      join = () => threaded.join();
+    } else {
+      warmGameCaches(game);
+      const client = new LockstepClient({
+        roomId: room.id,
+        playerId,
+        engine: new SimulationEngine(game),
+        transport,
+        ...(this.onRuntimeError ? { onError: this.onRuntimeError } : {}),
+      });
+      adapter = new LockstepRoomGameAdapter(client, { spectating });
+      join = () => client.join();
+    }
     const chat = createTransportChat(transport, room.id, playerId);
     transport.onMessage((message: ServerNetMessage) => {
       if (message.type === "room") onRoom(message.room);
     });
-    const join = () => client.join();
     if (transport.onOpen) transport.onOpen(join);
     else join();
     return { room, playerId, adapter, chat, snapshot: adapter.currentSnapshot() };

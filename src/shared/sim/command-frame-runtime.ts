@@ -2,12 +2,17 @@ import type { CommandEnvelope, CommandFrame } from "../net/types";
 import { stepGame, type Game } from "../sim";
 import { checkCommandLegality, narrowFrameCommandToLiveOperands } from "./command-validation";
 import { applyCommandFrame, type CommandFrameApplyHooks } from "./frame";
-import type { GameCommand } from "../types";
+import { partitionDeliveredPlannerCommands } from "./planner-schedule";
+import type { GameCommand, GameSnapshot } from "../types";
 
 export type CommandFrameRuntimeAiPlanner<State = unknown> = {
   checkpoint: () => State;
   restore: (state: State) => void;
-  plan: () => CommandEnvelope[];
+  // Whether the commands due on the current tick are planned: a think may still run beside the simulation (see
+  // @@@planner-schedule). A runtime is ticked only when it is ready.
+  ready?: () => boolean;
+  // Plans the owners due on this tick, checking each fresh plan with `check`, and returns the commands due on it.
+  plan: (check: (commands: CommandEnvelope[]) => void) => CommandEnvelope[];
 };
 
 export type CommandFrameRuntimeOptions<State = unknown> = {
@@ -29,7 +34,7 @@ export type RuntimeAdmissionOptions = {
   rejectionLabel?: RuntimeFrameOptions["rejectionLabel"];
 };
 
-type ValidationPurpose = "admission" | "apply";
+export type ValidationPurpose = "admission" | "apply";
 
 export function normalizeCommandFrameEntries<Entry extends { command: GameCommand }>(entries: Entry[]): Entry[] {
   const normalized: Entry[] = [];
@@ -60,8 +65,14 @@ export function advanceCommandFrameTick(game: Game, frames?: CommandFrame | Comm
 
 export class CommandFrameRuntime<State = unknown> {
   private nextSequence = 0;
+  // Planned AI commands the world outgrew during their delay (see partitionDeliveredPlannerCommands).
+  staleAiCommands = 0;
 
   constructor(private readonly options: CommandFrameRuntimeOptions<State>) {}
+
+  ready(): boolean {
+    return this.options.aiPlanner?.ready?.() ?? true;
+  }
 
   completeAndApply(commands: CommandEnvelope[], options: RuntimeFrameOptions = {}): CommandFrame | undefined {
     const frame = this.completeFrame(commands, options);
@@ -80,6 +91,11 @@ export class CommandFrameRuntime<State = unknown> {
 
   admit(commands: CommandEnvelope[], options: RuntimeAdmissionOptions = {}): void {
     this.validate(normalizeCommandFrameEntries(commands), { purpose: "admission", rejectionLabel: options.rejectionLabel });
+  }
+
+  // A planner's fresh commands, checked as a frame would apply them now (transient rejections pass).
+  check(commands: CommandEnvelope[], options: RuntimeAdmissionOptions = {}): void {
+    this.validate(normalizeCommandFrameEntries(commands), { purpose: "apply", rejectionLabel: options.rejectionLabel });
   }
 
   private completeFrame(commands: CommandEnvelope[], options: RuntimeFrameOptions): CommandFrame | undefined {
@@ -103,9 +119,10 @@ export class CommandFrameRuntime<State = unknown> {
     if (!this.options.aiPlanner) return [];
     const checkpoint = this.options.aiPlanner.checkpoint();
     try {
-      const commands = this.options.aiPlanner.plan();
-      this.validate(commands, { purpose: "apply" });
-      return commands;
+      const delivered = this.options.aiPlanner.plan((commands) => this.validate(commands, { purpose: "apply" }));
+      const { deliverable, stale } = partitionDeliveredPlannerCommands(this.options.game, delivered);
+      this.staleAiCommands += stale.length;
+      return deliverable;
     } catch (error) {
       this.options.aiPlanner.restore(checkpoint);
       throw error;
@@ -115,12 +132,22 @@ export class CommandFrameRuntime<State = unknown> {
   private validate(commands: CommandEnvelope[], options: { purpose: ValidationPurpose; rejectionLabel?: RuntimeFrameOptions["rejectionLabel"] }): void {
     if (commands.length === 0) return;
     // Validation changes nothing, so every command reads the game itself (see @@@legality-reads-live-game in frame.ts).
-    const game = this.options.game;
     for (const [index, entry] of commands.entries()) {
-      const currentCommand = narrowFrameCommandToLiveOperands(game, entry.playerId, entry.command);
-      if (!currentCommand) continue;
-      const legality = checkCommandLegality(game, entry.playerId, currentCommand);
-      if (legality && (options.purpose === "admission" || !legality.transient)) throw new Error(`${options.rejectionLabel?.(entry, index) ?? this.options.rejectionLabel}: ${legality.message}`);
+      const rejection = commandRejection(this.options.game, entry, options.purpose);
+      if (rejection) throw new Error(`${options.rejectionLabel?.(entry, index) ?? this.options.rejectionLabel}: ${rejection}`);
     }
   }
+}
+
+/**
+ * Why the world would refuse this command now, if it would: on admission any refusal counts, on apply only one that
+ * cannot pass later. The world may be a snapshot of the game, which carries every list these checks read (a page checks
+ * a command against its latest snapshot before the match on its own thread checks it again).
+ */
+export function commandRejection(world: Game | GameSnapshot, entry: CommandEnvelope, purpose: ValidationPurpose): string | undefined {
+  const game = world as Game;
+  const currentCommand = narrowFrameCommandToLiveOperands(game, entry.playerId, entry.command);
+  if (!currentCommand) return undefined;
+  const legality = checkCommandLegality(game, entry.playerId, currentCommand);
+  return legality && (purpose === "admission" || !legality.transient) ? legality.message : undefined;
 }

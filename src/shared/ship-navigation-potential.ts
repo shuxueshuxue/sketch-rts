@@ -51,6 +51,15 @@ export function seaPotentialAt(field:SeaPotential,x:number,y:number):number {
 export function buildSeaPotential(water:Uint8Array,mapCols:number,mapRows:number,cell:number,
   bounds:{left:number;top:number;right:number;bottom:number},seed:Point,
   directionCosts:readonly number[],frontier:Frontier):SeaPotential {
+  const build=beginSeaPotential(water,mapCols,mapRows,cell,bounds,seed,directionCosts,frontier);
+  build.advance(Infinity);
+  return build.field;
+}
+/** The same reverse Dijkstra, resumable: the frontier's (cost, id) order
+ * makes every pause point yield the identical field. */
+export function beginSeaPotential(water:Uint8Array,mapCols:number,mapRows:number,cell:number,
+  bounds:{left:number;top:number;right:number;bottom:number},seed:Point,
+  directionCosts:readonly number[],frontier:Frontier):{field:SeaPotential;advance(pops:number):boolean} {
   const cols=bounds.right-bounds.left,rows=bounds.bottom-bounds.top;
   const planes=seaCostPlanes(directionCosts),values=new Float64Array(cols*rows);values.fill(Infinity);
   const field={left:bounds.left,top:bounds.top,cols,rows,cell,seedX:seed.x,seedY:seed.y,planes,values};
@@ -75,17 +84,20 @@ export function buildSeaPotential(water:Uint8Array,mapCols:number,mapRows:number
     border(bounds.left,y);
     if(cols>1)border(bounds.right-1,y);
   }
-  while(frontier.length){
-    const id=frontier.pop(),cost=frontier.poppedCost;
-    if(cost!==values[id])continue;
-    const x=id%cols+bounds.left,y=Math.floor(id/cols)+bounds.top;
-    for(let h=0;h<SEA_STEPS.length;h++){
-      const [dx,dy]=SEA_STEPS[h]!,nx=x+dx,ny=y+dy;
-      if(nx<bounds.left || ny<bounds.top || nx>=bounds.right || ny>=bounds.bottom || !open(nx,ny))continue;
-      const to=(ny-bounds.top)*cols+nx-bounds.left,distance=cost+weights[(h+4)%SEA_STEPS.length]!;
-      if(distance>=values[to]!)continue;
-      values[to]=distance;frontier.push(to,distance,distance);
+  const advance=(pops:number)=>{
+    for(let popped=0;frontier.length && popped<pops;popped++){
+      const id=frontier.pop(),cost=frontier.poppedCost;
+      if(cost!==values[id])continue;
+      const x=id%cols+bounds.left,y=Math.floor(id/cols)+bounds.top;
+      for(let h=0;h<SEA_STEPS.length;h++){
+        const [dx,dy]=SEA_STEPS[h]!,nx=x+dx,ny=y+dy;
+        if(nx<bounds.left || ny<bounds.top || nx>=bounds.right || ny>=bounds.bottom || !open(nx,ny))continue;
+        const to=(ny-bounds.top)*cols+nx-bounds.left,distance=cost+weights[(h+4)%SEA_STEPS.length]!;
+        if(distance>=values[to]!)continue;
+        values[to]=distance;frontier.push(to,distance,distance);
+      }
     }
-  }
-  return field;
+    return !frontier.length;
+  };
+  return {field,advance};
 }
