@@ -309,6 +309,116 @@
       "payloadHashesVerified": true,
       "source": "0f5bf01a05046169d4fb42322376f767b97bcc83",
       "classification": "Single actual standard0 officialknight vs normal frozenv5 known sapphire seed; natural44441p0win/0enemy units0buildings,1own permanent neutral loss. Integrated combination result, no per-hunk attribution or final three-route acceptance."
+    },
+    {
+      "file": "timeout-witness-0f5bf-220800-incomplete-evidence.tar.gz",
+      "bytes": 25788560,
+      "sha256": "3fe242fc0a44d95e9336bc2c0eb5b3685618611b17a90aa15cadce4468a0c0e5",
+      "indexedPayloadFiles": 603,
+      "archiveRegularFiles": 604,
+      "payloadManifest": "INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "0f5bf01a + unmerged donor-witness predicate; old unified36ae216000 input",
+      "classification": "Changed-code216000 planner/native1200 window and same fixed candidate through220800: actual unload/reboard cycle, no winner/effective new attack; required unchanged. Unmerged, not ordinary0 or demonstrated whole-match benefit. Old derived miningWorkers field invalid; see separate erratum."
+    },
+    {
+      "file": "bootstrap-land-income-reserve40968-evidence.tar.gz",
+      "bytes": 28655169,
+      "sha256": "12259092407c46563bb8ffaa6627d4fc55e280af323b261c4c80093d21cabc13",
+      "indexedPayloadFiles": 687,
+      "archiveRegularFiles": 688,
+      "payloadManifest": "income-reserve40968-index.json",
+      "payloadHashesVerified": true,
+      "source": "40968d8412205831d1f2a75c29a21ee908062eb0; base3bdb3749",
+      "classification": "Changed-code17400 continuation of historical archer-v8+v8 ordinary0; natural31331 p1win and p0 eliminated. Research-cash reserve led to real early hall but hall destroyed; actual research delay separately recorded. Unmerged failed candidate, no current production result."
+    },
+    {
+      "file": "historical-landing-force-metrics-evidence.tar.gz",
+      "bytes": 9240011,
+      "sha256": "b22f47694ed5e7a40fe98ffa3a91e8efa0ca84c1a4c41e40f43bdfda9084dbee",
+      "indexedPayloadFiles": 17,
+      "archiveRegularFiles": 18,
+      "payloadManifest": "INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "Read-only oldV2 55200/56626 and unified36ae88800 actual snapshots",
+      "classification": "Historical landing-force metrics only; no game/order/AI change. Actual decks, current native landing permits and island force distinguished; no continuous-geometric impossibility proof or new victory."
+    },
+    {
+      "file": "land-expansion-army-ownership-evidence.tar.gz",
+      "bytes": 13206828,
+      "sha256": "5eacb106dc0a8c52d01c6a45108c43bb77b82274ea50c4e0a2771630172c58ef",
+      "indexedPayloadFiles": 33,
+      "archiveRegularFiles": 34,
+      "payloadManifest": "INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "Read-only40968 19035/20370/20430 complete planner and after-memory",
+      "classification": "Historical colony-defense ownership/road-distance audit: real escort plan existed, nearby available strength and remote road travel insufficient at specific times. Original commands/memory closed; no new game or strategy patch."
+    },
+    {
+      "file": "bootstrap-care-native-intent-evidence.tar.gz",
+      "bytes": 5251610,
+      "sha256": "4fe30e9ad88ceb6f220b803d06b007d0c8f4c06b219b911f175a4ef789eb8eae",
+      "indexedPayloadFiles": 161,
+      "archiveRegularFiles": 162,
+      "payloadManifest": "native-intent-index.json",
+      "payloadHashesVerified": true,
+      "source": "Read-only historical183/5f recovery inputs7905/10425/16245",
+      "classification": "Native arrival/acquire/retaliation/pursuit causality audit only. Must read postseal7905 walkDestination attribution erratum; no new game, AI consumer or primitive implementation result."
+    },
+    {
+      "file": "bootstrap-knight-sole-loss-0f5bf-evidence.tar.gz",
+      "bytes": 6237256,
+      "sha256": "e06508c8a9d5782592bc3ad784a8f7431482068f1730474225abd0f7aa7020c3",
+      "indexedPayloadFiles": 242,
+      "archiveRegularFiles": 243,
+      "payloadManifest": "INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "0f5bf01a ordinary0 knight-v5 original44441win; same-source/manual branches",
+      "classification": "Sole permanent loss2245@35616 causality, exact34800→36000 replay and four explicit manual public-command branches. Single-passenger preservation examples plus whole-crew hold counterexample; not new AI ordinary0/acceptance."
+    },
+    {
+      "file": "bootstrap-evacuation-owner-independent-review-evidence.tar.gz",
+      "bytes": 22690,
+      "sha256": "bbff5cd45e2b6c44a07a5f7309eb30c72a939e49fc12ac7fda9ab7c3df60284a",
+      "indexedPayloadFiles": 9,
+      "archiveRegularFiles": 10,
+      "payloadManifest": "INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "Independent review of actual0f5bf holdout22530/22656 deaths",
+      "classification": "Read-only geometry/owner/current-locomotion review; no reviewer game/tests. Original review INDEX preserved. Full21885 preinput was missing at review time; later reconstruction does not rewrite that limit."
+    },
+    {
+      "file": "bootstrap-passenger-boarding-independent-review-evidence.tar.gz",
+      "bytes": 11352,
+      "sha256": "388828bff41a055e08be57d432ac1eff721d60a6d9d389be84c90c3584d1fbc7",
+      "indexedPayloadFiles": 3,
+      "archiveRegularFiles": 4,
+      "payloadManifest": "INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "Independent review of fixed1430 uncommitted0f5bf passenger-boarding candidate",
+      "classification": "Read-only production/worker-equivalence/entry-point and22200→23400 numeric-closure review. No reviewer game/tests or whole-match acceptance; actual candidate first releases22365/22410 and both original ravagers still die."
+    },
+    {
+      "file": "bootstrap-postseal-clarifications-20261016-evidence.tar.gz",
+      "bytes": 10279,
+      "sha256": "7719d9b74cb22a88903f4cb64304c4d39d5268083f37782af39f4a8698fcd252",
+      "indexedPayloadFiles": 5,
+      "archiveRegularFiles": 6,
+      "payloadManifest": "INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "Postseal cost/design/attribution/deck-boundary clarifications to unchanged original packages",
+      "classification": "Research-cost supplement, design-only primitive proposal plus7905 destination-first erratum, and old0f5bf deck-boundary-v2 read-only review. Excludes active primitive/deck implementation and all new ordinary0 results."
+    },
+    {
+      "file": "bootstrap-interruption-and-finite-diagnostics-20261016-evidence.tar.gz",
+      "bytes": 6496734,
+      "sha256": "a1b1d7747d914718b6cfe2f9ee1fd99c3d8e7d8b8b98322d29c4b9cf86faf19b",
+      "indexedPayloadFiles": 65,
+      "archiveRegularFiles": 66,
+      "payloadManifest": "INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "Original0f5bf ordinary0 interrupted79800; separate1430 passenger candidate interrupted34800; finite34875 diagnostics",
+      "classification": "Closed137 interruption and retained tails/checkpoints, fixed uncommitted candidate capsule, one finite75tick restore and pure34875 instrumented query, resource relocation records. No natural result/new ordinary0 or routing/OOM causation proof; cold event ledger requires explicit +69 recorder mapping and raw literal comparison remains false."
     }
   ],
   "strategyBaseline": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",

@@ -1,0 +1,88 @@
+{
+  "rootHeadDuringVerification": "19ef6d0dbc1f9775475810db5a2fd0b663effb75",
+  "authorReceiptSHA256": "667b7c3d127cebc68876fc42e884dba768c2dc6ed0c907d055eb66e20eea66aa",
+  "old49Exact": true,
+  "otherMetadataExact": true,
+  "packages": [
+    {
+      "file": "timeout-witness-0f5bf-220800-incomplete-evidence.tar.gz",
+      "bytes": 25788560,
+      "sha256": "3fe242fc0a44d95e9336bc2c0eb5b3685618611b17a90aa15cadce4468a0c0e5",
+      "workingOriginalAndStagedEqual": true
+    },
+    {
+      "file": "bootstrap-land-income-reserve40968-evidence.tar.gz",
+      "bytes": 28655169,
+      "sha256": "12259092407c46563bb8ffaa6627d4fc55e280af323b261c4c80093d21cabc13",
+      "workingOriginalAndStagedEqual": true
+    },
+    {
+      "file": "historical-landing-force-metrics-evidence.tar.gz",
+      "bytes": 9240011,
+      "sha256": "b22f47694ed5e7a40fe98ffa3a91e8efa0ca84c1a4c41e40f43bdfda9084dbee",
+      "workingOriginalAndStagedEqual": true
+    },
+    {
+      "file": "land-expansion-army-ownership-evidence.tar.gz",
+      "bytes": 13206828,
+      "sha256": "5eacb106dc0a8c52d01c6a45108c43bb77b82274ea50c4e0a2771630172c58ef",
+      "workingOriginalAndStagedEqual": true
+    },
+    {
+      "file": "bootstrap-care-native-intent-evidence.tar.gz",
+      "bytes": 5251610,
+      "sha256": "4fe30e9ad88ceb6f220b803d06b007d0c8f4c06b219b911f175a4ef789eb8eae",
+      "workingOriginalAndStagedEqual": true
+    },
+    {
+      "file": "bootstrap-knight-sole-loss-0f5bf-evidence.tar.gz",
+      "bytes": 6237256,
+      "sha256": "e06508c8a9d5782592bc3ad784a8f7431482068f1730474225abd0f7aa7020c3",
+      "workingOriginalAndStagedEqual": true
+    },
+    {
+      "file": "bootstrap-evacuation-owner-independent-review-evidence.tar.gz",
+      "bytes": 22690,
+      "sha256": "bbff5cd45e2b6c44a07a5f7309eb30c72a939e49fc12ac7fda9ab7c3df60284a",
+      "workingOriginalAndStagedEqual": true
+    },
+    {
+      "file": "bootstrap-passenger-boarding-independent-review-evidence.tar.gz",
+      "bytes": 11352,
+      "sha256": "388828bff41a055e08be57d432ac1eff721d60a6d9d389be84c90c3584d1fbc7",
+      "workingOriginalAndStagedEqual": true
+    },
+    {
+      "file": "bootstrap-postseal-clarifications-20261016-evidence.tar.gz",
+      "bytes": 10279,
+      "sha256": "7719d9b74cb22a88903f4cb64304c4d39d5268083f37782af39f4a8698fcd252",
+      "workingOriginalAndStagedEqual": true
+    },
+    {
+      "file": "bootstrap-interruption-and-finite-diagnostics-20261016-evidence.tar.gz",
+      "bytes": 6496734,
+      "sha256": "a1b1d7747d914718b6cfe2f9ee1fd99c3d8e7d8b8b98322d29c4b9cf86faf19b",
+      "workingOriginalAndStagedEqual": true
+    }
+  ],
+  "totalArchiveBytes": 94920489,
+  "all14StagedWorkingEqual": true,
+  "paths": [
+    "docs/engineering/bootstrap_1/overseas-assault-20261015/bootstrap-complete-games-20261015-index.json",
+    "docs/engineering/bootstrap_1/overseas-assault-20261015/closed-evidence-supplement-20261016.zh.md",
+    "docs/engineering/bootstrap_1/overseas-assault-20261015/closed-evidence-integration-20261016.json",
+    "docs/engineering/bootstrap_1/overseas-assault-20261015/README.zh.md",
+    "docs/engineering/bootstrap_1/overseas-assault-20261015/timeout-witness-0f5bf-220800-incomplete-evidence.tar.gz",
+    "docs/engineering/bootstrap_1/overseas-assault-20261015/bootstrap-land-income-reserve40968-evidence.tar.gz",
+    "docs/engineering/bootstrap_1/overseas-assault-20261015/historical-landing-force-metrics-evidence.tar.gz",
+    "docs/engineering/bootstrap_1/overseas-assault-20261015/land-expansion-army-ownership-evidence.tar.gz",
+    "docs/engineering/bootstrap_1/overseas-assault-20261015/bootstrap-care-native-intent-evidence.tar.gz",
+    "docs/engineering/bootstrap_1/overseas-assault-20261015/bootstrap-knight-sole-loss-0f5bf-evidence.tar.gz",
+    "docs/engineering/bootstrap_1/overseas-assault-20261015/bootstrap-evacuation-owner-independent-review-evidence.tar.gz",
+    "docs/engineering/bootstrap_1/overseas-assault-20261015/bootstrap-passenger-boarding-independent-review-evidence.tar.gz",
+    "docs/engineering/bootstrap_1/overseas-assault-20261015/bootstrap-postseal-clarifications-20261016-evidence.tar.gz",
+    "docs/engineering/bootstrap_1/overseas-assault-20261015/bootstrap-interruption-and-finite-diagnostics-20261016-evidence.tar.gz"
+  ],
+  "reviewSHA256": "adb4cd1da5d8f0011fabb90a5113f491407f33c92c85fadda5ec43cdc5b2c99e",
+  "scope": "Root validates archive SHA/bytes, original and staged equality; author previously streamed all payloads and independent reviewer checked four small packages. No new simulation/test/source change; failures remain failures and interrupted trajectories not natural results."
+}

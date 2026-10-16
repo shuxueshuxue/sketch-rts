@@ -1,0 +1,134 @@
+{
+  "classification": "Independent read-only document/index/four small package review. No game, native replay, planner query, tests, root file edits, staging, commit or push by this reviewer.",
+  "index": {
+    "oldPackageCount": 49,
+    "newPackageCount": 59,
+    "old49EachValueAndOrderExact": true,
+    "allOtherMetadataExact": true,
+    "productionHead": "0f5bf01a05046169d4fb42322376f767b97bcc83",
+    "oldIndexSHA256": "b495a563ca195a0871c33ebad163efb30136fa0436d6e531a916ff397fb98291",
+    "newIndexSHA256": "00ea6a9916262304f5df308ae842b4aa2e113e0c66fac287e8069f987f21be91"
+  },
+  "smallPackages": [
+    {
+      "file": "bootstrap-evacuation-owner-independent-review-evidence.tar.gz",
+      "bytes": 22690,
+      "sha256": "bbff5cd45e2b6c44a07a5f7309eb30c72a939e49fc12ac7fda9ab7c3df60284a",
+      "manifestSHA256": "91bdb1c3a242ff0432570f83a1ef68331a1339aacb3c223882cf46e0c0095c22",
+      "indexedPayloadFiles": 9,
+      "regularFiles": 10,
+      "allPayloadsExactlyCoveredAndHashVerified": true,
+      "sourceAndRepositoryCopyByteIdentical": true,
+      "classification": "Independent read-only static/numeric review; no newgame/test execution by reviewer. Original reviewer INDEX bytes preserved."
+    },
+    {
+      "file": "bootstrap-passenger-boarding-independent-review-evidence.tar.gz",
+      "bytes": 11352,
+      "sha256": "388828bff41a055e08be57d432ac1eff721d60a6d9d389be84c90c3584d1fbc7",
+      "manifestSHA256": "cd1a5dfa939f764e276eb1c76fe1bb3fe490e264595c49a445f66cbb26e1fdab",
+      "indexedPayloadFiles": 3,
+      "regularFiles": 4,
+      "allPayloadsExactlyCoveredAndHashVerified": true,
+      "sourceAndRepositoryCopyByteIdentical": true,
+      "classification": "Independent read-only static/numeric review; no newgame/test execution by reviewer. Original reviewer INDEX bytes preserved."
+    },
+    {
+      "file": "bootstrap-postseal-clarifications-20261016-evidence.tar.gz",
+      "bytes": 10279,
+      "sha256": "7719d9b74cb22a88903f4cb64304c4d39d5268083f37782af39f4a8698fcd252",
+      "manifestSHA256": "a2bb89da5be6596d11d9a10c2f7524751f27035914d77c3002a0755196701563",
+      "indexedPayloadFiles": 5,
+      "regularFiles": 6,
+      "allPayloadsExactlyCoveredAndHashVerified": true,
+      "sourceAndRepositoryCopyByteIdentical": true,
+      "classification": "Postseal design/attribution/cost/boundary clarifications only; no originalarchive mutation or newgame/productioncandidate result."
+    },
+    {
+      "file": "bootstrap-interruption-and-finite-diagnostics-20261016-evidence.tar.gz",
+      "bytes": 6496734,
+      "sha256": "a1b1d7747d914718b6cfe2f9ee1fd99c3d8e7d8b8b98322d29c4b9cf86faf19b",
+      "manifestSHA256": "625b16df0e6214747a0457bf843e08c1eb7879e019dcac6b5e78f1255cbaf7a1",
+      "indexedPayloadFiles": 65,
+      "regularFiles": 66,
+      "allPayloadsExactlyCoveredAndHashVerified": true,
+      "sourceAndRepositoryCopyByteIdentical": true,
+      "classification": "Closed137 interruption/tail provenance, unchanged1430 source capsule and singlefinite34800→34875 diagnostics; no naturalresult/newordinary0, no routingOOMcausation claim."
+    }
+  ],
+  "staging": {
+    "independentlyVerifiedPaths": [
+      {
+        "path": "docs/engineering/bootstrap_1/overseas-assault-20261015/bootstrap-complete-games-20261015-index.json",
+        "bytes": 24479,
+        "sha256": "00ea6a9916262304f5df308ae842b4aa2e113e0c66fac287e8069f987f21be91",
+        "stagedExactlyWorkingBytes": true
+      },
+      {
+        "path": "docs/engineering/bootstrap_1/overseas-assault-20261015/closed-evidence-supplement-20261016.zh.md",
+        "bytes": 7754,
+        "sha256": "c8d1499e2197ddd448a0034631da3587151e4d0d957c32cf96592610ee702e17",
+        "stagedExactlyWorkingBytes": true
+      },
+      {
+        "path": "docs/engineering/bootstrap_1/overseas-assault-20261015/closed-evidence-integration-20261016.json",
+        "bytes": 15151,
+        "sha256": "667b7c3d127cebc68876fc42e884dba768c2dc6ed0c907d055eb66e20eea66aa",
+        "stagedExactlyWorkingBytes": true
+      },
+      {
+        "path": "docs/engineering/bootstrap_1/overseas-assault-20261015/README.zh.md",
+        "bytes": 122563,
+        "sha256": "8d2a005d98477d1ac0b69a61b1530aa95bbe1304f5a3f598c7aebec45447be5d",
+        "stagedExactlyWorkingBytes": true
+      },
+      {
+        "path": "docs/engineering/bootstrap_1/overseas-assault-20261015/bootstrap-evacuation-owner-independent-review-evidence.tar.gz",
+        "bytes": 22690,
+        "sha256": "bbff5cd45e2b6c44a07a5f7309eb30c72a939e49fc12ac7fda9ab7c3df60284a",
+        "stagedExactlyWorkingBytes": true
+      },
+      {
+        "path": "docs/engineering/bootstrap_1/overseas-assault-20261015/bootstrap-passenger-boarding-independent-review-evidence.tar.gz",
+        "bytes": 11352,
+        "sha256": "388828bff41a055e08be57d432ac1eff721d60a6d9d389be84c90c3584d1fbc7",
+        "stagedExactlyWorkingBytes": true
+      },
+      {
+        "path": "docs/engineering/bootstrap_1/overseas-assault-20261015/bootstrap-postseal-clarifications-20261016-evidence.tar.gz",
+        "bytes": 10279,
+        "sha256": "7719d9b74cb22a88903f4cb64304c4d39d5268083f37782af39f4a8698fcd252",
+        "stagedExactlyWorkingBytes": true
+      },
+      {
+        "path": "docs/engineering/bootstrap_1/overseas-assault-20261015/bootstrap-interruption-and-finite-diagnostics-20261016-evidence.tar.gz",
+        "bytes": 6496734,
+        "sha256": "a1b1d7747d914718b6cfe2f9ee1fd99c3d8e7d8b8b98322d29c4b9cf86faf19b",
+        "stagedExactlyWorkingBytes": true
+      }
+    ],
+    "scope": "Four docs plus four small packages only; six large packages were not reopened or independently restaged/rehashed."
+  },
+  "readme": {
+    "existingLinesRetainedInOrder": true,
+    "onlyChange": "Two-line insertion linking closed evidence supplement, with original content retained.",
+    "beforeSHA256": "ea4387451173f71c7d7d7d37a5da4c58e1e8e9fe96153025ceb200d769dbbc1a",
+    "afterSHA256": "8d2a005d98477d1ac0b69a61b1530aa95bbe1304f5a3f598c7aebec45447be5d"
+  },
+  "scopeReview": [
+    "Historical ordinary0, changed-code continuation, pure query, manual command branches and static review remain separately attributed; productionHead is unchanged0f5bf.",
+    "Original evacuation review genuinely lacked21885 preinput then; later supported reconstruction is explicitly separate and does not overwrite that evidence limit.",
+    "Candidate true first stops22365/22410 are separated from22515 counterfactual; both original ravagers still die. Local permanent loss9→3 and enemy1→3 are bounded1200 results, not acceptance.",
+    "Cold JSON901 states/world/id/three memories242commands73hits are distinguished from raw event literal false;56events require including22500after-command and explicit+69 commandIndex mapping.",
+    "Two original exit137 interruptions retain raw tails/checkpoints and are not natural endings. Finite75tick diagnostics and cumulative cgroup OOM values do not prove routing/OOM cause.",
+    "Old gather/miningWorkers observer mistake remains recorded as invalid derived field with erratum, not silently corrected into historical strategy results.",
+    "Old deck-boundary-v2 review/design-only proposals are not represented as currentd251 deck implementation/native results.",
+    "Rules2/frozen migration equivalence/normal opponents/three routes/final official+unseen full-game requirements and original uncommitted recovery gap remain explicit."
+  ],
+  "findings": [],
+  "limits": [
+    "Did not reopen or repeat integrity verification of six large historical packages; their existing verification records are author evidence only in this review.",
+    "Did not rerun any gameplay or independently verify every historical claim anew. Original two review packages match this reviewer own immutable manifests; other small-package payload checks establish packaging integrity and stated scope, not new gameplay truth.",
+    "Staged state is as read now; another author may later change it. No approval or assertion of commit/push is implied."
+  ],
+  "conclusion": "No concrete metadata, attribution or small-package coverage issue found within this read-only scope."
+}
