@@ -859,6 +859,17 @@
       "classification": "Unmerged original normal202800→2070004200step observerstop,winnernull,not defeat/fresh0/humanclinical. Six actually inside but dynamic fresh roster excluded validowned4085 at204645,cleared task and unloaded.1559source+497frozen184 exact. Two real captured P0 postmission closures. Old related130tests125pass5fail,14retargetedpass and clean68cad defaultescort red retained; not allgreen. Future65d9/v3 activity is separate, no retroactive edit.",
       "file": "bootstrap-cabin-auto9ffc-roster-negative-20261016-evidence.tar.gz",
       "payloadHashesVerified": true
+    },
+    {
+      "file": "bootstrap-hurt-hull-dock-760-20261016.tar.gz",
+      "bytes": 6649570,
+      "sha256": "7213474109f18bb06275d9ccbaa6a278835b2b11fc6cedd36b55ae8abb86eaaf",
+      "indexedPayloadFiles": 91,
+      "archiveRegularFiles": 92,
+      "payloadManifest": "bootstrap-hurt-hull-dock-760-20261016/INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "a53eee411c6950bafffc69c2c950a6fbbc825876 exactly equals rootf7 selected1477runtime/config/tests/manifest Git+live bytes and nested source capsule.",
+      "classification": "Originalactual229800 fullworld/id/3mem restore,persistedJSON allvalues exact (2541native explicitundefined keys independently enumerated). Dockleaf885actualnative/twopubliccommands,37realpaid repairs each+3HP/-1gold,19.916→130.916 and original40percent release;3permanentcrew alive/HPunchanged,1originaltemporaryspirit expiry distinct. Nohits. Two canonical fullP0 queries760/a53 publish onlyone different naval coordinate,other11entries/all3postmem exact.20distinct candidatecontracts+tsc0; root full1477source and91outer/1477inner payloads independently verified, no redundant test count. APIcomponent has noAIthinkers, not fullnormal match/guaranteedlatercargo survival. Original failednativeObjectvsJSON restore/schema-audit attempt/coneENOSPC incident and source recovery gap retained."
     }
   ],
   "strategyBaseline": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
@@ -1482,6 +1493,50 @@
     "originalUncommittedRecoveryGapRetained": true
   },
   "activeRuntime": {
+    "source": "f7f8747ba280edc2c467a42b51694dedfe54a5ab",
+    "byteEquivalentCandidate": "a53eee411c6950bafffc69c2c950a6fbbc825876",
+    "parentRuntimeSource": "760ef777eeaf0eb13a67bef5b2221fbf777126a9",
+    "selectedSourceConfigTestManifestFilesExact": 1477,
+    "sourceScope": "Sparse tracked runtime source/config/test + frozen manifest only; historical archive docs not expanded.",
+    "onlyProductionFile": "src/ai/policy/naval.ts",
+    "rulesVersion": 2,
+    "frozenManifestSHA256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
+    "candidateValidation": {
+      "distinctContractsPassed": 20,
+      "tsc1024Exit": 0
+    },
+    "rootValidation": {
+      "all1477GitAndLiveFilesExact": true,
+      "allGitSrcScriptsToolsFileSetExact": true,
+      "all91OuterPayloadSHA256AndCoverage": true,
+      "all1477InnerSourcePayloadGitBlobExact": true,
+      "duplicateTestsNotRerunBecauseEntireCodeConfigIdentical": true
+    },
+    "nativeComponent": {
+      "inputTick": 229800,
+      "steps": 885,
+      "publicCommands": 2,
+      "realPaidRepairs": 37,
+      "hpBefore": 19.916386205336835,
+      "hpAfter": 130.91638620533683,
+      "goldSpent": 37,
+      "original40PercentGateRelease": true,
+      "noAIThinkers": true,
+      "notFullMatch": true
+    },
+    "fullP0Integration": {
+      "oneBaselineOneCandidateQuery": true,
+      "same12EntriesExceptOneNavalMove": true,
+      "all3PostMemoriesExact": true,
+      "nativeComponentFirstCommandPubliclyPublished": true
+    },
+    "ordinary0": null,
+    "pendingFullMatchEvidence": "No natural complete normal match yet on rootf7/a53; full ordinary0 and generalization still required. Prior38f/root760 byteequivalent archer82182defeat65loss remains previousRuntimeBeforeDock, not rewritten as a newf7 result.",
+    "currentEvidenceReference": "dock-repair-admission-20261016.zh.md",
+    "originalUncommittedRecoveryGapRetained": true
+  }
+,
+  "previousRuntimeBeforeDock": {
     "source": "760ef777eeaf0eb13a67bef5b2221fbf777126a9",
     "byteEquivalentCandidate": "38f5dd79ae588d578dce15b9baa2cd41f20f2a4b",
     "parentRuntimeSource": "97cecc14cc0e3a1e670f451b574e59057e1c83fa",

@@ -1,0 +1,26 @@
+{
+  "atUTC": "2026-10-16T09:47:43.132580+00:00",
+  "classification": "Root1477 entire selected runtime/config/test/manifest Git blobs AND livefiles exactly equal fixeda53, including allGit src/scripts/tools file-set coverage; docs ancestry differs. Root independently streams all91 outer archive payloads/fullgzipCRC/exactcoverage plus every1477 inner source capsule payload matches root actual Git blobs. No Game/query/native/test.",
+  "rootRuntimeSource": "f7f8747ba280edc2c467a42b51694dedfe54a5ab",
+  "candidate": "a53eee411c6950bafffc69c2c950a6fbbc825876",
+  "sourceScope": "Sparse tracked runtime source/config/test + frozen manifest only; historical archive docs not expanded.",
+  "selectedFiles": 1477,
+  "allSelectedRootGitCandidateGitAndWorkingBytesEqual": true,
+  "srcScriptsToolsFileSetExact": true,
+  "nestedSourceCapsuleEveryPayloadGitExact": 1477,
+  "rootNoRulesOrFrozenChange": true,
+  "archive": "/tmp/bootstrap-hurt-hull-dock-760-20261016.tar.gz",
+  "bytes": 6649570,
+  "sha256": "7213474109f18bb06275d9ccbaa6a278835b2b11fc6cedd36b55ae8abb86eaaf",
+  "payloadFiles": 91,
+  "archiveRegular": 92,
+  "payloadManifest": "bootstrap-hurt-hull-dock-760-20261016/INDEX.json",
+  "validationReuse": {
+    "candidateDistinctTests": 20,
+    "candidateTsc1024Exit": 0,
+    "rootDuplicateTestsRun": false,
+    "reason": "No integration code/config difference: entire selected1477Git+live byte equality, no conflicts or additional production edits. Candidate tests/typecheck reused with explicit attribution."
+  },
+  "normalFullGameOutcomeNotProven": true,
+  "originalUncommittedGapRetained": true
+}

@@ -1,0 +1,123 @@
+{
+  "utc": "2026-10-16T09:37:27.270012+00:00",
+  "scope": "Each baseline760/candidatea53 full canonical P0 exactlyonce, no Game/step, same original actual229800 world/nextId/all3mem/teams; not oldc8-as-counterfactual. Public published entry proves existingnaval owner emits exact production leaf/native component command.",
+  "inputSHA256": "b341a48763ff4693e26f8ba876bd2aaccd68d2233755a46bc8452a3bb47aa1f6",
+  "baseline": {
+    "scope": "One full canonical public planAiOwnerCommandEntries P0; exact nonfrozen branch of createBootstrapCommandPlanner, same version/source/teams/memoryProvider. No Game, steps, normal opponents think, public commands issued or expected memory backfill.",
+    "inputSHA256": "b341a48763ff4693e26f8ba876bd2aaccd68d2233755a46bc8452a3bb47aa1f6",
+    "sourcePre": {
+      "head": "760ef777eeaf0eb13a67bef5b2221fbf777126a9",
+      "status": "",
+      "files": 1476
+    },
+    "tick": 229800,
+    "nextId": 145670,
+    "all3memInitialExact": true,
+    "worldBefore": "785a359c04cf87ab2b0ff423331053cd33d56c33e1309364bb0d4dcf4b7326f6",
+    "agent": {
+      "version": "v9_summoner",
+      "versionLabel": "v9_summoner",
+      "race": "ember",
+      "controller": "external-agent",
+      "team": "a"
+    },
+    "teams": {
+      "p0": "a",
+      "p1": "b",
+      "p2": "b"
+    },
+    "sourcePost": {
+      "head": "760ef777eeaf0eb13a67bef5b2221fbf777126a9",
+      "status": "",
+      "files": 1476
+    },
+    "wallMs": 866.0413010000002,
+    "cpuMs": 1288.472,
+    "entries": 12,
+    "targetEntries": [
+      {
+        "playerId": "p0",
+        "source": "external-agent",
+        "scriptId": "naval",
+        "command": {
+          "type": "move",
+          "unitIds": [
+            "unit-p0-warship-31227"
+          ],
+          "x": 1936,
+          "y": 5104,
+          "avoidCombat": true
+        }
+      }
+    ],
+    "worldAfter": "785a359c04cf87ab2b0ff423331053cd33d56c33e1309364bb0d4dcf4b7326f6",
+    "worldUnchanged": true,
+    "inputUnchanged": true,
+    "p1p2MemoryUnchanged": true
+  },
+  "candidate": {
+    "scope": "One full canonical public planAiOwnerCommandEntries P0; exact nonfrozen branch of createBootstrapCommandPlanner, same version/source/teams/memoryProvider. No Game, steps, normal opponents think, public commands issued or expected memory backfill.",
+    "inputSHA256": "b341a48763ff4693e26f8ba876bd2aaccd68d2233755a46bc8452a3bb47aa1f6",
+    "sourcePre": {
+      "head": "a53eee411c6950bafffc69c2c950a6fbbc825876",
+      "status": "",
+      "files": 1477
+    },
+    "tick": 229800,
+    "nextId": 145670,
+    "all3memInitialExact": true,
+    "worldBefore": "785a359c04cf87ab2b0ff423331053cd33d56c33e1309364bb0d4dcf4b7326f6",
+    "agent": {
+      "version": "v9_summoner",
+      "versionLabel": "v9_summoner",
+      "race": "ember",
+      "controller": "external-agent",
+      "team": "a"
+    },
+    "teams": {
+      "p0": "a",
+      "p1": "b",
+      "p2": "b"
+    },
+    "sourcePost": {
+      "head": "a53eee411c6950bafffc69c2c950a6fbbc825876",
+      "status": "",
+      "files": 1477
+    },
+    "wallMs": 2161.829467,
+    "cpuMs": 2289.37,
+    "entries": 12,
+    "targetEntries": [
+      {
+        "playerId": "p0",
+        "source": "external-agent",
+        "scriptId": "naval",
+        "command": {
+          "type": "move",
+          "unitIds": [
+            "unit-p0-warship-31227"
+          ],
+          "x": 2122.7951796002008,
+          "y": 5142.913111507788,
+          "avoidCombat": true
+        }
+      }
+    ],
+    "worldAfter": "785a359c04cf87ab2b0ff423331053cd33d56c33e1309364bb0d4dcf4b7326f6",
+    "worldUnchanged": true,
+    "inputUnchanged": true,
+    "p1p2MemoryUnchanged": true
+  },
+  "candidatePublishedCommandEqualsActualNativeComponentFirstCommand": true,
+  "allOther11EntriesExact": true,
+  "all3PostMemoriesExactBetweenSources": true,
+  "p0PostMemoryExactBetweenSources": true,
+  "sourceDifference": "Exactly one productionfile naval.ts plus newtest, same760native.",
+  "performanceLimit": "One query each, cold/runtime/concurrent workloads; raw timings recorded, no performance conclusion.",
+  "rawArtifacts": {
+    "p0-baseline/all-entries.json": "07d092f58870e414e17c95ceb0fd40ed5a627e3f151e9ff69e5553a5fd5ddf01",
+    "p0-candidate/all-entries.json": "d59a4856fccbbe6c9d93086cb580564fbf3aea275d27ca58f3cd3b140b273bac",
+    "p0-baseline/post-p0-all3mem.json.gz": "b7721f5a133ebff80851dff1054e4660d5b35ebe50aa5dd357df6a8f78bfda25",
+    "p0-candidate/post-p0-all3mem.json.gz": "b7721f5a133ebff80851dff1054e4660d5b35ebe50aa5dd357df6a8f78bfda25"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "classification": "Read-only first root audit exited1 at archive manifest schema: actual payloads map contains relative paths, script assumed files/entries. Full1477Git/live equivalence checks had already passed but no final artifact was written. No Game/query/step/data/source mutation. Corrected v2 uses exact actual schema and explicit archive prefix.",
+  "error": "KeyError: 'entries'",
+  "runtimeFailure": false
+}

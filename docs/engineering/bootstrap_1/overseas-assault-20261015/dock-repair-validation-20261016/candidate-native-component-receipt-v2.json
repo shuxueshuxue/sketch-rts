@@ -1,0 +1,81 @@
+{
+  "scope": "Actual short task component receipt, no normal3AI/fullmatch claim; surviving original3cargo only through230685, not proof later234653 loss avoided",
+  "start": 229800,
+  "end": 230685,
+  "steps": 885,
+  "firstInside": 229959,
+  "firstHeal": 229960,
+  "lastHeal": 230680,
+  "initialHP": 19.916386205336835,
+  "finalHP": 130.91638620533683,
+  "healingEvents": 37,
+  "totalObservedHPGain": 111,
+  "totalObservedGoldChangeAtRepairSteps": -37,
+  "everyRepairStepNative3HP1Gold": true,
+  "release": {
+    "tick": 230685,
+    "hp": 130.91638620533683,
+    "maxHp": 320,
+    "qualifies": true
+  },
+  "commands": 2,
+  "hits": 0,
+  "cargo": [
+    {
+      "id": "unit-p0-emberRavager-24230",
+      "kind": "emberRavager",
+      "alive": true,
+      "hp": 110,
+      "deck": {
+        "shipId": "unit-p0-warship-31227",
+        "x": 3.507750851436662,
+        "y": 12.908834838421235
+      }
+    },
+    {
+      "id": "unit-p0-summoner-31259",
+      "kind": "summoner",
+      "alive": true,
+      "hp": 95,
+      "deck": {
+        "shipId": "unit-p0-warship-31227",
+        "x": -31.87300746765638,
+        "y": -18.722370756628592
+      }
+    },
+    {
+      "id": "unit-p0-summoner-39390",
+      "kind": "summoner",
+      "alive": true,
+      "hp": 95,
+      "deck": {
+        "shipId": "unit-p0-warship-31227",
+        "x": -32.13878428723046,
+        "y": 20.63566583574243
+      }
+    }
+  ],
+  "sourcePre": {
+    "head": "a53eee411c6950bafffc69c2c950a6fbbc825876",
+    "status": "",
+    "files": 1477
+  },
+  "sourcePost": {
+    "head": "a53eee411c6950bafffc69c2c950a6fbbc825876",
+    "status": "",
+    "files": 1477
+  },
+  "inputUnchanged": true,
+  "all3memUnchanged": true,
+  "firstFailedRestoreRetained": "native-component.log/native-component-exit.json",
+  "persistentValueRestoreProof": "RESTORE-DIFF-CLASSIFICATION.json",
+  "temporaryCargo": [
+    {
+      "id": "unit-p0-spirit-145056",
+      "expiresTick": 230085,
+      "existsFinal": false,
+      "scope": "Recorded original temporary summons; expiry removal is not classified as permanent cargo death."
+    }
+  ],
+  "corrects": "NATIVE-COMPONENT-RECEIPT.json used guessed wrong unit-p0-ravager-24230 ID for one lookup. This v2 derives complete exact IDs from original initial snapshot (emberRavager-24230); raw native simulation/report/frames unchanged."
+}

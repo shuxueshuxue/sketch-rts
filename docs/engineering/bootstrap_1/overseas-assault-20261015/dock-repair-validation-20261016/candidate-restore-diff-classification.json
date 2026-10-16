@@ -1,0 +1,32 @@
+{
+  "scope": "Complete restore difference classification; zero native steps/commands. Standard persisted JSON equality follows explicit proof; no expected state or memory backfill.",
+  "head": "a53eee411c6950bafffc69c2c950a6fbbc825876",
+  "inputSHA256": "b341a48763ff4693e26f8ba876bd2aaccd68d2233755a46bc8452a3bb47aa1f6",
+  "rawNativeObjectExact": false,
+  "persistedJSONExact": true,
+  "differences": 2541,
+  "allDifferences": "Original absent property becomes explicit undefined; no coordinate, owner, hp, parts, order, inventory, or other persisted value difference.",
+  "countsByField": {
+    "variant": 163,
+    "abilityCooldowns": 138,
+    "autocast": 163,
+    "stance": 163,
+    "pushX": 163,
+    "pushY": 163,
+    "arrivedAt": 39,
+    "aim": 162,
+    "hands": 16,
+    "holdMass": 156,
+    "shipParts": 156,
+    "fittings": 156,
+    "bodyRadius": 4,
+    "mineSlot": 163,
+    "veteranSkill": 162,
+    "veteranSkillChoices": 162,
+    "expiresTick": 127,
+    "shipSizeVersion": 156,
+    "facing": 129
+  },
+  "diffSHA256": "79665c8fc216f13bcc67599aedbe4e05ff89da84d4cf99f6beb452c4fbed342d",
+  "memoryEventsUnchanged": true
+}
