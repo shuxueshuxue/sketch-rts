@@ -1,0 +1,153 @@
+[
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "mobileCare",
+    "command": {
+      "type": "move",
+      "unitIds": [
+        "unit-p0-knight-9866"
+      ],
+      "x": 1058.7012213012645,
+      "y": 3754.497073289137,
+      "avoidCombat": true
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "mobileCare",
+    "command": {
+      "type": "move",
+      "unitIds": [
+        "unit-p0-raider-11967"
+      ],
+      "x": 1174.4510198334704,
+      "y": 3661.441570278269,
+      "avoidCombat": true
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "mobileCare",
+    "command": {
+      "type": "move",
+      "unitIds": [
+        "unit-p0-knight-28998"
+      ],
+      "x": 1190.9051926265586,
+      "y": 3679.8268281868886,
+      "avoidCombat": true
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "mobileCare",
+    "command": {
+      "type": "holdPosition",
+      "unitIds": [
+        "unit-p0-ballista-24596"
+      ]
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "medicalRecovery",
+    "command": {
+      "type": "move",
+      "unitIds": [
+        "unit-p0-priest-32289"
+      ],
+      "x": 1126.5080021622618,
+      "y": 3679.2252799302214
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "medicalRecovery",
+    "command": {
+      "type": "move",
+      "unitIds": [
+        "unit-p0-fieldMedic-34930"
+      ],
+      "x": 1126.5080021622618,
+      "y": 3679.2252799302214
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "abilities",
+    "command": {
+      "type": "cast",
+      "unitId": "unit-p0-ballista-27366",
+      "ability": "pinningBolt",
+      "targetId": "unit-p2-witch-6336"
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "battlefield",
+    "command": {
+      "type": "attack",
+      "unitIds": [
+        "unit-p0-lancer-1075"
+      ],
+      "targetId": "unit-p1-emberRavager-26400"
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "battlefield",
+    "command": {
+      "type": "attack",
+      "unitIds": [
+        "unit-p0-raider-25755"
+      ],
+      "targetId": "unit-p1-emberRavager-26400"
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "battlefield",
+    "command": {
+      "type": "attack",
+      "unitIds": [
+        "unit-p0-ballista-27366"
+      ],
+      "targetId": "unit-p1-emberRavager-26400"
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "v6General",
+    "command": {
+      "type": "attackMove",
+      "unitIds": [
+        "unit-p0-horseArcher-3224"
+      ],
+      "x": 1176.2271745841751,
+      "y": 3470.667028439614
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "focusFire",
+    "command": {
+      "type": "attack",
+      "unitIds": [
+        "unit-p0-knight-4468"
+      ],
+      "targetId": "unit-p2-priest-1792"
+    }
+  }
+]

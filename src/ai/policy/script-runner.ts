@@ -1,5 +1,7 @@
-import { ABILITY_DEFS, BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS } from "../../shared/catalog";
-import type { GameCommand, GameSnapshot, PlayerId } from "../../shared/types";
+import { ABILITY_DEFS, BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS, unitRules } from "../../shared/catalog";
+import { aimingProfile } from "../../shared/aiming";
+import { isShipKind } from "../../shared/ship-geometry";
+import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../shared/types";
 import { createAiPolicyMemory } from "../memory";
 import { pruneAiPolicyMemory, recordAiMemoryForCommands } from "./claims";
 import type { AiCommandEntry, AiPolicyContext, AiScript, PresetAiPolicyOptions } from "./types";
@@ -42,7 +44,7 @@ export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: Pl
   for (const script of economyScripts) {
     const reserve = script.id === "v6Economy" || script.id === "economy" && isV6Policy(policyOptions) ? 0 : script.id === "economy" || script.id === "navalEconomy" ? shopReserve : navalReserve + shopReserve;
     const budget = budgetAfter(reserve);
-    const scriptCommands = withoutUnitsClaimedElsewhere(asCommands(script.run(budget, owner, policyOptions)), claims, script.id);
+    const scriptCommands = withoutUnitsClaimedElsewhere(asCommands(script.run(budget, owner, policyOptions)), claims, script.id, snapshot);
     if (scriptCommands.length > 0) {
       recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams, preserveHireCampClaims, preserveSkirmishRetreatClaims });
       commands.push(...scriptCommands.map((command) => ({ scriptId: script.id, command })));
@@ -54,7 +56,7 @@ export function runAiCommandEntriesFromScripts(snapshot: GameSnapshot, owner: Pl
   }
 
   for (const script of scripts.filter((candidate) => candidate.phase === "tactics")) {
-    const rawScriptCommands = withoutUnitsClaimedElsewhere(asCommands(script.run(script.id === "shopping" ? budgetAfter(0) : snapshot, owner, policyOptions)), claims, script.id);
+    const rawScriptCommands = withoutUnitsClaimedElsewhere(asCommands(script.run(script.id === "shopping" ? budgetAfter(0) : snapshot, owner, policyOptions)), claims, script.id, snapshot);
     // The script still runs: it may update its memory even without issuing a
     // command. Empty results need no conflict copies or command bookkeeping.
     if (rawScriptCommands.length === 0) continue;
@@ -90,7 +92,19 @@ function unitClaims(snapshot: GameSnapshot, owner: PlayerId, scripts: AiScript[]
   return claims;
 }
 
-function withoutUnitsClaimedElsewhere(commands: GameCommand[], claims: ReadonlyMap<string, string>, scriptId: string): GameCommand[] {
+function sustainedWeaponCast(snapshot: GameSnapshot, command: Extract<GameCommand, { type: "cast" }>, caster?: Unit): boolean {
+  const def = ABILITY_DEFS[command.ability];
+  if (def.behavior !== "weapon") return false;
+  caster ??= snapshot.units.find(unit => unit.id === command.unitId);
+  if (!caster) return false;
+  if (command.queued || isShipKind(caster.kind) || aimingProfile(unitRules(snapshot, caster))) return true;
+  const target = command.targetId ? [...snapshot.units, ...snapshot.buildings].find(entity => entity.id === command.targetId) : command;
+  const radius = target && !("order" in target) && "radius" in target ? target.radius : 0;
+  return !!target && target.x !== undefined && target.y !== undefined
+    && Math.hypot(caster.x - target.x, caster.y - target.y) > def.range + radius;
+}
+
+function withoutUnitsClaimedElsewhere(commands: GameCommand[], claims: ReadonlyMap<string, string>, scriptId: string, snapshot: GameSnapshot): GameCommand[] {
   if (claims.size === 0) return commands;
   const free = (unitId: string) => (claims.get(unitId) ?? scriptId) === scriptId;
   return commands.flatMap((command): GameCommand[] => {
@@ -99,7 +113,7 @@ function withoutUnitsClaimedElsewhere(commands: GameCommand[], claims: ReadonlyM
       return unitIds.length > 0 ? [{ ...command, unitIds }] : [];
     }
     if (command.type === "pickupItem" || command.type === "build") return free(command.unitId) ? [command] : [];
-    if (command.type === "cast" && ABILITY_DEFS[command.ability].behavior === "charge") return free(command.unitId) ? [command] : [];
+    if (command.type === "cast" && (ABILITY_DEFS[command.ability].behavior === "charge" || sustainedWeaponCast(snapshot, command))) return free(command.unitId) ? [command] : [];
     return [command];
   });
 }
@@ -141,8 +155,10 @@ function reserveOrderedUnits(commands: GameCommand[], movedUnitIds: Set<string>,
     const def = ABILITY_DEFS[command.ability];
     const caster = snapshot.units.find((unit) => unit.id === command.unitId);
     const target = command.targetId ? [...snapshot.units, ...snapshot.buildings].find((entity) => entity.id === command.targetId) : command;
-    // Instant spells leave movement alone. A charge or a walk-to-cast owns the order until it finishes.
+    // Native weapon casts keep an order while turning or aiming, even in range.
+    // Instant spells leave movement alone; reserve this frame for sustained casts.
     const radius = target && !("order" in target) && "radius" in target ? target.radius : 0;
-    if (def.behavior === "charge" || (caster && target && target.x !== undefined && target.y !== undefined && Math.hypot(caster.x - target.x, caster.y - target.y) > def.range + radius)) movedUnitIds.add(command.unitId);
+    if (def.behavior === "charge" || sustainedWeaponCast(snapshot, command, caster)
+      || (caster && target && target.x !== undefined && target.y !== undefined && Math.hypot(caster.x - target.x, caster.y - target.y) > def.range + radius)) movedUnitIds.add(command.unitId);
   }
 }

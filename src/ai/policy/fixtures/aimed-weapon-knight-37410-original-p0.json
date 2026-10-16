@@ -1,0 +1,103 @@
+[
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "mobileCare",
+    "command": {
+      "type": "move",
+      "unitIds": [
+        "unit-p0-knight-9866"
+      ],
+      "x": 1170.2876691631566,
+      "y": 3668.188399268666,
+      "avoidCombat": true
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "mobileCare",
+    "command": {
+      "type": "move",
+      "unitIds": [
+        "unit-p0-knight-28998"
+      ],
+      "x": 1202.5416377757003,
+      "y": 3696,
+      "avoidCombat": true
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "mobileCare",
+    "command": {
+      "type": "holdPosition",
+      "unitIds": [
+        "unit-p0-ballista-24596"
+      ]
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "medicalRecovery",
+    "command": {
+      "type": "move",
+      "unitIds": [
+        "unit-p0-priest-32289"
+      ],
+      "x": 1140.247442879107,
+      "y": 3679.9972222852693
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "medicalRecovery",
+    "command": {
+      "type": "move",
+      "unitIds": [
+        "unit-p0-fieldMedic-34930"
+      ],
+      "x": 1140.247442879107,
+      "y": 3679.9972222852693
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "abilities",
+    "command": {
+      "type": "cast",
+      "unitId": "unit-p0-ballista-27366",
+      "ability": "pinningBolt",
+      "targetId": "unit-p2-witch-6336"
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "battlefield",
+    "command": {
+      "type": "attack",
+      "unitIds": [
+        "unit-p0-raider-11967"
+      ],
+      "targetId": "unit-p2-priest-1792"
+    }
+  },
+  {
+    "playerId": "p0",
+    "source": "external-agent",
+    "scriptId": "v6General",
+    "command": {
+      "type": "attackMove",
+      "unitIds": [
+        "unit-p0-ballista-27366"
+      ],
+      "x": 1024,
+      "y": 3520
+    }
+  }
+]
