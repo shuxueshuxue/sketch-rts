@@ -1,6 +1,6 @@
 import { clipToConvex, convexHull, minkowskiSum, expandConvex, pointSegmentDistanceSquared, polygonSupportingPlanes, polygonRadius } from "./navigation-math";
 import { circleInPolygon, hullGap, localToWorld, shipProfile, shipsIn, worldToLocal, type Point } from "./ship-geometry";
-import { hullPassageClear } from "./ship-navigation";
+import { exactKey, hullId, hullPassageClear } from "./ship-navigation";
 import type { GameMap, Unit } from "./types";
 import { detCos, detSin } from "./det-math";
 import { headingDifference, shipPoseAt, type ShipPose } from "./ship-navigation";
@@ -17,6 +17,17 @@ const TRAFFIC_BASE_POINTS=16_384;
 // scratch storage without retaining units, poses or collision decisions.
 const trafficSweepScratch:Point[]=[];
 const TRAFFIC_SWEEP_SCRATCH_POINTS=2_048;
+const trafficSweeps=new Map<string,Point[]>();
+const TRAFFIC_SWEEPS=2_048;
+
+// @@@folded-bits-key - Configuration keys used to print each double in decimal, which folds -0 into 0 and every NaN
+// into one. These keys carry raw bits after the same folding, so exactly the same calls share an entry as before,
+// without printing anything.
+const keyBits=new Float64Array(6),keyUnits=new Uint16Array(keyBits.buffer);
+const fold=(value:number)=>value===0?0:value!==value?NaN:value;
+function foldedKey(prefix:string,doubles:number){
+  return prefix+String.fromCharCode.apply(null,keyUnits.subarray(0,doubles*4) as unknown as number[]);
+}
 
 function cacheTrafficBase(key:string,polygon:Point[]) {
   if(polygon.length>TRAFFIC_BASE_POINTS)return;
@@ -288,27 +299,37 @@ export function shipTraffic(ship:Unit,units:readonly Unit[],range=600) {
   }
   const configurations=new Map<string,Point[]>(),sweeps=new Map<string,Point[]>();
   const configuration=(from:number,to:number,body:typeof bodies[number],padding:number)=>{
-    const key=`${from}:${to}:${body.other.id}:${padding}`,known=configurations.get(key);if(known)return known;
+    keyBits[0]=fold(from);keyBits[1]=fold(to);keyBits[2]=fold(padding);
+    const key=foldedKey(`${body.other.id}:`,3),known=configurations.get(key);if(known)return known;
     const profile=body.profile,angle=body.heading;
-    const baseKey=`${ship.kind}:${ownProfile.length}:${from}:${to}:${body.other.kind}:${profile.length}:${angle}`;
-    const shapeKey=`${baseKey}:${padding}`;
+    keyBits[0]=fold(ownProfile.length);keyBits[1]=fold(from);keyBits[2]=fold(to);keyBits[3]=fold(profile.length);keyBits[4]=fold(angle);keyBits[5]=fold(padding);
+    const kinds=`${ship.kind}:${body.other.kind}:`,baseKey=foldedKey(kinds,5),shapeKey=foldedKey(kinds,6);
     let polygon=trafficShapes.get(shapeKey);
     if(!polygon){
       let base=trafficBases.get(baseKey);
       if(!base){
         const sweepKey=`${from}:${to}`;let negative=sweeps.get(sweepKey);
-        if(!negative){const turn=headingDifference(from,to),steps=Math.max(1,Math.ceil(Math.abs(turn)*radius/4)),points:Point[]=[];
-          for(let i=0;i<=steps;i++){
-            const heading=from+turn*i/steps,c=detCos(heading),s=detSin(heading);
-            for(const p of hull){
-              const index=points.length;
-              const point=index<TRAFFIC_SWEEP_SCRATCH_POINTS
-                ? trafficSweepScratch[index]??(trafficSweepScratch[index]={x:0,y:0}) : {x:0,y:0};
-              point.x=p.x*c-p.y*s;point.y=p.x*s+p.y*c;points.push(point);
+        if(!negative){
+          // The negated own sweep depends on the hull and both exact headings
+          // alone; lattice turns recur across every search and traffic view.
+          const exactSweepKey=`${hullId(hull)}|${exactKey(from)}|${exactKey(to)}`;
+          negative=trafficSweeps.get(exactSweepKey);
+          if(!negative){const turn=headingDifference(from,to),steps=Math.max(1,Math.ceil(Math.abs(turn)*radius/4)),points:Point[]=[];
+            for(let i=0;i<=steps;i++){
+              const heading=from+turn*i/steps,c=detCos(heading),s=detSin(heading);
+              for(const p of hull){
+                const index=points.length;
+                const point=index<TRAFFIC_SWEEP_SCRATCH_POINTS
+                  ? trafficSweepScratch[index]??(trafficSweepScratch[index]={x:0,y:0}) : {x:0,y:0};
+                point.x=p.x*c-p.y*s;point.y=p.x*s+p.y*c;points.push(point);
+              }
             }
+            let shape=convexHull(points);if(turn)shape=expandConvex(shape,radius*(turn/steps)**2/8+1e-7);
+            negative=shape.map(p=>({x:-p.x,y:-p.y}));
+            if(trafficSweeps.size>=TRAFFIC_SWEEPS)trafficSweeps.delete(trafficSweeps.keys().next().value!);
+            trafficSweeps.set(exactSweepKey,negative);
           }
-          let shape=convexHull(points);if(turn)shape=expandConvex(shape,radius*(turn/steps)**2/8+1e-7);
-          negative=shape.map(p=>({x:-p.x,y:-p.y}));sweeps.set(sweepKey,negative);
+          sweeps.set(sweepKey,negative);
         }
         // This search freezes each body's heading and local profile. Rotate
         // its outline once and negate each completed own sweep once; neither
@@ -369,17 +390,20 @@ export function shipTraffic(ship:Unit,units:readonly Unit[],range=600) {
  * during strategic planning. Actual helm and motion checks always call
  * shipTraffic against the live hull, so this cannot permit a ship crossing. */
 export function reservationTraffic(ship:Unit,units:readonly Unit[],range=600) {
+  return shipTraffic(ship,reservedUnits(ship,units),range);
+}
+/** The hulls a reservation view sees: a reciprocal partner stands at its appointed pose. */
+export function reservedUnits(ship:Unit,units:readonly Unit[]):readonly Unit[] {
   const rendezvousFor=ship.order.type==='move'?ship.order.rendezvousFor:undefined;
   const crew=rendezvousFor?units.find(unit=>unit.id===rendezvousFor):undefined;
   const boarding=crew?.order.type==='board'?crew.order:undefined,plan=boarding?.rendezvous;
-  if(!plan?.reciprocal || !boarding || ship.id!==plan.sourceId && ship.id!==boarding.transportId)return shipTraffic(ship,units,range);
+  if(!plan?.reciprocal || !boarding || ship.id!==plan.sourceId && ship.id!==boarding.transportId)return units;
   const partnerId=ship.id===plan.sourceId?boarding.transportId:plan.sourceId;
-  const reserved=units.map(other=>{
+  return units.map(other=>{
     if(other.id!==partnerId || other.order.type!=='move' || other.order.rendezvousFor!==rendezvousFor || !other.sailing)return other;
     const x=other.id===plan.sourceId?plan.sourceX:plan.targetX,y=other.id===plan.sourceId?plan.sourceY:plan.targetY;
     return{...other,x,y,sailing:{...other.sailing,heading:plan.heading}};
   });
-  return shipTraffic(ship,reserved,range);
 }
 
 export function shipTrafficKey(ship:Unit,units:readonly Unit[]) {

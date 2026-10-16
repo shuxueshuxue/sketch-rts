@@ -4,8 +4,9 @@ import { createHash } from "node:crypto";
 import { createUnit, withUnitShape } from "./map";
 import { boardUnit, deckPointFits } from "./decks";
 import { bodyMass } from "./physical-body";
-import { DEFAULT_SHIP_SCALE, SHIP_KINDS, SHIP_SIZE_MULTIPLIER, localToWorld, worldToLocal, hullContact, migrateShipSizes, shipProfile, shipScale } from "./ship-geometry";
+import { DEFAULT_SHIP_SCALE, SHIP_KINDS, SHIP_SIZE_MULTIPLIER, circleInPolygon, distanceToHull, localToWorld, worldToLocal, hullContact, migrateShipSizes, shipProfile, shipScale, type Point } from "./ship-geometry";
 import { UNIT_DEFS } from "./catalog";
+import type { Unit } from "./types";
 import { buildNavigationMasks } from "./navigation-masks";
 import { mountedWeaponPose, shipMounts, SHIP_WEAPONS } from "./ship-equipment";
 import { createGame, restoreSnapshotIntoGame, snapshotGame } from "./sim";
@@ -138,5 +139,40 @@ describe("shared ship model geometry", () => {
     const scaled = shipProfile({ ...ship, deckScale: 2 })!;
     expect(scaled.loadCapacity).toBe(shipProfile(ship)!.loadCapacity*4);
     expect(scaled.hullMass).toBe(shipProfile(ship)!.hullMass*8);
+  });
+});
+
+// Reference: distanceToHull as it was before it wrote out worldToLocal and circleInPolygon (27bc6188), verbatim.
+function referenceDistanceToHull(ship: Unit, world: Point) {
+  const profile=shipProfile(ship);
+  if(!profile)return Math.hypot(world.x-ship.x,world.y-ship.y);
+  const point=worldToLocal(ship,world);
+  if(circleInPolygon(point,0,profile.hull))return 0;
+  let gap=Infinity;
+  for(let i=0;i<profile.hull.length;i++) {
+    const a=profile.hull[i]!,b=profile.hull[(i+1)%profile.hull.length]!,dx=b.x-a.x,dy=b.y-a.y;
+    const t=Math.max(0,Math.min(1,((point.x-a.x)*dx+(point.y-a.y)*dy)/(dx*dx+dy*dy)));
+    gap=Math.min(gap,Math.hypot(point.x-a.x-dx*t,point.y-a.y-dy*t));
+  }
+  return gap;
+}
+
+describe("distance to a hull", () => {
+  it("gives the same bits as the point-by-point version, inside, on and outside every kind of hull", () => {
+    let state = 7;
+    const next = () => { state = (Math.imul(state, 1664525) + 1013904223) >>> 0; return state / 2 ** 32; };
+    for (const kind of SHIP_KINDS) for (let round = 0; round < 60; round++) {
+      const ship = createUnit(`d-${kind}-${round}`, "player", kind, 1000 + next() * 2000, 1000 + next() * 2000);
+      ship.sailing = { heading: (next() - 0.5) * 8, speed: 0, load: 0, balance: 0 };
+      const profile = shipProfile(ship)!;
+      for (let probe = 0; probe < 20; probe++) {
+        // Hull vertices themselves sit on the inside test's boundary.
+        const local = probe % 5 === 0 ? profile.hull[Math.floor(next() * profile.hull.length)]! : { x: (next() - 0.5) * profile.length * 2, y: (next() - 0.5) * profile.beam * 3 };
+        const world = localToWorld(ship, local);
+        expect(Object.is(distanceToHull(ship, world), referenceDistanceToHull(ship, world))).toBe(true);
+      }
+    }
+    const raft = createUnit("not-a-ship", "player", "footman", 10, 20);
+    expect(distanceToHull(raft, { x: 13, y: 24 })).toBe(referenceDistanceToHull(raft, { x: 13, y: 24 }));
   });
 });

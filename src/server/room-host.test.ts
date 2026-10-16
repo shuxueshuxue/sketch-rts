@@ -4,6 +4,7 @@ import { createRoomHost } from "./room-host";
 import type { LocalUserProfile } from "../shared/types";
 import { createAiRuntime } from "../ai/runtime";
 import { createGame } from "../shared/sim";
+import { PLANNER_COMMAND_DELAY_TICKS } from "../shared/sim/planner-schedule";
 import { seconds } from "../shared/time";
 import { LocalGameAdapter } from "../client/net/local-adapter";
 
@@ -236,19 +237,20 @@ describe("server room host", () => {
     };
 
     const result = host.tickRoomFrame(room.id, frame, "browser");
+    // The AI's tick-0 think lands its commands PLANNER_COMMAND_DELAY_TICKS later, in that tick's frame.
+    const later = Array.from({ length: PLANNER_COMMAND_DELAY_TICKS }, (_, index) =>
+      host.tickRoomFrame(room.id, { roomId: room.id, tick: before.tick + 1 + index, sequence: 43 + index, commands: [] }, "browser"));
     const recorded = host.readDebugReplay(room.id);
 
     expect(result.ticks).toBe(1);
     expect(result.snapshot.tick).toBe(1);
     expect(result.snapshot.units.find((unit) => unit.id === worker!.id)?.order).toMatchObject({ type: "move" });
-    expect(result.frame.commands).toEqual(
-      expect.arrayContaining([
-        frame.commands[0],
-        expect.objectContaining({ playerId: "enemy", command: expect.objectContaining({ type: "mine" }) }),
-      ]),
-    );
+    expect(result.frame.commands).toEqual([frame.commands[0]]);
+    expect(later.at(-1)!.frame).toMatchObject({ tick: before.tick + PLANNER_COMMAND_DELAY_TICKS });
+    expect(later.at(-1)!.frame.commands).toEqual(expect.arrayContaining([expect.objectContaining({ playerId: "enemy", command: expect.objectContaining({ type: "mine" }) })]));
     expect(recorded.frames[0]).toMatchObject({ roomId: frame.roomId, tick: frame.tick, sequence: frame.sequence, source: "browser" });
     expect(recorded.frames[0]?.commands).toEqual(result.frame.commands);
+    expect(recorded.frames.at(-1)?.commands).toEqual(later.at(-1)!.frame.commands);
   });
 
   it("keeps SDK command-tick frames equivalent to the local authoritative frame runtime", () => {
@@ -256,7 +258,8 @@ describe("server room host", () => {
     const localGame = createGame("bareDuel", { aiPlayers: ["enemy"] });
     const localWorker = localGame.units.find((unit) => unit.owner === "player" && unit.kind === "worker");
     expect(localWorker).toBeDefined();
-    const local = new LocalGameAdapter(localGame, "player", { aiRuntime: createAiRuntime(["enemy"], { scripts: aiScripts }) });
+    let now = 0;
+    const local = new LocalGameAdapter(localGame, "player", { aiRuntime: createAiRuntime(["enemy"], { scripts: aiScripts }), now: () => now, tickMs: 50 });
 
     const host = createRoomHost({ autoTick: false, aiScripts });
     const room = host.createRoom({ id: "room-command-tick-equivalence", host: hostUser, mapId: "bareDuel" });
@@ -269,7 +272,12 @@ describe("server room host", () => {
 
     const playerCommand = { type: "move" as const, unitIds: [hostedWorker!.id], x: hostedWorker!.x + 80, y: hostedWorker!.y };
     local.sendCommand({ ...playerCommand, unitIds: [localWorker!.id] });
-    const hosted = host.commandTickRoom(room.id, [{ playerId: "player", command: playerCommand }], 1);
+    // Both run on until the AI's tick-0 think has landed; the local command rides the first tick.
+    for (let tick = 0; tick <= PLANNER_COMMAND_DELAY_TICKS; tick += 1) {
+      now += 50;
+      local.updateToRenderTime();
+    }
+    const hosted = host.commandTickRoom(room.id, [{ playerId: "player", command: playerCommand }], 1 + PLANNER_COMMAND_DELAY_TICKS);
     const localSnapshot = local.currentSnapshot();
     const hostedEnemyWorker = hosted.snapshot.units.find((unit) => unit.owner === "enemy" && unit.kind === "worker");
     const localEnemyWorker = localSnapshot.units.find((unit) => unit.owner === "enemy" && unit.kind === "worker");
@@ -279,10 +287,10 @@ describe("server room host", () => {
     expect(hosted.snapshot.units).toEqual(localSnapshot.units);
     expect(hostedEnemyWorker?.order).toEqual(localEnemyWorker?.order);
     if (!hostedEnemyWorker || hostedEnemyWorker.order.type !== "move") throw new Error("expected hosted enemy worker to keep its AI move order");
-    expect(recorded.frames).toHaveLength(1);
+    expect(recorded.frames.map((frame) => frame.tick)).toEqual([0, PLANNER_COMMAND_DELAY_TICKS]);
     expect(recorded.frames[0]?.source).toBe("sdk-agent");
-    expect(recorded.frames[0]?.commands).toEqual([
-      { playerId: "player", command: playerCommand },
+    expect(recorded.frames[0]?.commands).toEqual([{ playerId: "player", command: playerCommand }]);
+    expect(recorded.frames[1]?.commands).toEqual([
       { playerId: "enemy", command: { type: "move", unitIds: [hostedEnemyWorker!.id], x: hostedEnemyWorker!.order.x, y: hostedEnemyWorker!.order.y } },
     ]);
   });

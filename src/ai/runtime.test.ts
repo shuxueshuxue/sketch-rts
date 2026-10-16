@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { createBuilding } from "../shared/map";
 import { createGame, snapshotGame, stepGame } from "../shared/sim";
-import { DEFAULT_AI_THINK_INTERVAL, createAiRuntime, planAiCommandFrameFromSnapshot, planPresetAiRuntimeCommands } from "./runtime";
+import { CommandFrameRuntime } from "../shared/sim/command-frame-runtime";
+import { PLANNER_COMMAND_DELAY_TICKS } from "../shared/sim/planner-schedule";
+import type { CommandEnvelope } from "../shared/net/types";
+import { DEFAULT_AI_THINK_INTERVAL, createAiRuntime, createPresetAiRuntimeFramePlanner, planAiCommandFrameFromSnapshot, planPresetAiRuntimeCommands, type AiThinkExecutor } from "./runtime";
 import { issueAiCommandFrameForTest, runPresetAiRuntimeForTest } from "./runtime-test-helpers";
 import type { AiPolicyMemory, AiScript } from "./policy";
 import { sketchScene } from "../sdk/scene";
@@ -67,7 +70,8 @@ describe("shared AI runtime", () => {
 
   it("lets one runtime select AI script versions per controlled player", () => {
     const game = createGame("bareDuel", { aiPlayers: ["player", "enemy"] });
-    const runtime = createAiRuntime(["player", "enemy"], { versions: { player: "v2", enemy: "v1" } });
+    // Interval 1 puts both players on the same think phase.
+    const runtime = createAiRuntime(["player", "enemy"], { thinkInterval: 1, versions: { player: "v2", enemy: "v1" } });
 
     const result = runPresetAiRuntimeForTest(game, runtime);
 
@@ -123,6 +127,7 @@ describe("shared AI runtime", () => {
       },
     ];
     const runtime = createAiRuntime(["player", "enemy"], {
+      thinkInterval: 1,
       scripts,
       disabledBehaviorsByPlayer: { player: ["workerHarassment"] },
     });
@@ -165,7 +170,8 @@ describe("shared AI runtime", () => {
         },
       },
     ];
-    const runtime = createAiRuntime(["player", "enemy"], { scripts });
+    // Interval 1 puts both players on the same think phase, so they share one frame.
+    const runtime = createAiRuntime(["player", "enemy"], { thinkInterval: 1, scripts });
 
     const result = runPresetAiRuntimeForTest(game, runtime);
 
@@ -173,6 +179,55 @@ describe("shared AI runtime", () => {
     expect(result.commands[0]?.playerId).toBe("player");
     expect(game.units.some(unit => unit.owner === "player" && unit.order.type === "build" && unit.order.buildingKind === "farm")).toBe(true);
     expect(game.units.filter((unit) => unit.owner === "enemy").every((unit) => unit.order.type === "idle")).toBe(true);
+  });
+
+  it("spreads controlled players over the shared think interval", () => {
+    const game = createGame("bareDuel", { aiPlayers: ["player", "enemy"] });
+    const thinks: string[] = [];
+    const scripts: AiScript[] = [{ id: "think-probe", phase: "economy", run(snapshot, owner) { thinks.push(`${owner}@${snapshot.tick}`); return undefined; } }];
+    const runtime = createAiRuntime(["player", "enemy"], { scripts });
+
+    for (let tick = 0; tick < 2 * DEFAULT_AI_THINK_INTERVAL; tick += 1) {
+      game.tick = tick;
+      planPresetAiRuntimeCommands(game, runtime);
+    }
+
+    const half = Math.floor(DEFAULT_AI_THINK_INTERVAL / 2);
+    expect(thinks).toEqual(["player@0", `enemy@${half}`, `player@${DEFAULT_AI_THINK_INTERVAL}`, `enemy@${DEFAULT_AI_THINK_INTERVAL + half}`]);
+  });
+
+  it("lands frame-planner commands a fixed delay after their think", () => {
+    const game = createGame("bareDuel", { aiPlayers: ["enemy"] });
+    const worker = game.units.find((unit) => unit.owner === "enemy" && unit.kind === "worker")!;
+    const scripts: AiScript[] = [{ id: "delayed-move", phase: "tactics", run: (snapshot) => snapshot.tick === 0 ? { type: "move", unitIds: [worker.id], x: worker.x - 80, y: worker.y } : undefined }];
+    const runtime = new CommandFrameRuntime({ game, roomId: "delayed-ai", rejectionLabel: "Delayed AI rejected", aiPlanner: createPresetAiRuntimeFramePlanner(game, createAiRuntime(["enemy"], { scripts })) });
+
+    const frames = Array.from({ length: PLANNER_COMMAND_DELAY_TICKS + 1 }, () => runtime.tick());
+
+    expect(frames.slice(0, PLANNER_COMMAND_DELAY_TICKS)).toEqual(Array(PLANNER_COMMAND_DELAY_TICKS).fill(undefined));
+    expect(frames[PLANNER_COMMAND_DELAY_TICKS]).toMatchObject({ tick: PLANNER_COMMAND_DELAY_TICKS, commands: [{ playerId: "enemy", command: { type: "move", unitIds: [worker.id] } }] });
+    expect(game.units.find((unit) => unit.id === worker.id)?.order.type).toBe("move");
+  });
+
+  it("holds the frame runtime until a think running elsewhere has delivered its commands", () => {
+    const game = createGame("bareDuel", { aiPlayers: ["enemy"] });
+    const worker = game.units.find((unit) => unit.owner === "enemy" && unit.kind === "worker")!;
+    const running = new Set<number>(), arrived = new Map<number, CommandEnvelope[]>();
+    const executor: AiThinkExecutor = {
+      submit: (_game, job) => { running.add(job.deliveryTick); },
+      ready: (tick) => ![...running].some((delivery) => delivery <= tick),
+      take: (tick) => { const commands = arrived.get(tick) ?? []; arrived.delete(tick); return commands; },
+    };
+    const runtime = new CommandFrameRuntime({ game, roomId: "elsewhere-ai", rejectionLabel: "Elsewhere AI rejected", aiPlanner: createPresetAiRuntimeFramePlanner(game, createAiRuntime(["enemy"]), { executor }) });
+
+    while (runtime.ready()) runtime.tick();
+    expect(game.tick).toBe(PLANNER_COMMAND_DELAY_TICKS);
+
+    const move: CommandEnvelope = { playerId: "enemy", command: { type: "move", unitIds: [worker.id], x: worker.x - 80, y: worker.y } };
+    running.delete(PLANNER_COMMAND_DELAY_TICKS);
+    arrived.set(PLANNER_COMMAND_DELAY_TICKS, [move]);
+    expect(runtime.ready()).toBe(true);
+    expect(runtime.tick()?.commands).toEqual([move]);
   });
 
   it("issues a reusable mixed-source command frame from one snapshot", () => {

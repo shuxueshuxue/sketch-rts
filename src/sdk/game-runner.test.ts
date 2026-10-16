@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { runGame, runGameLoop, type SdkGameCommandPlanner } from "./game-runner";
+import { PLANNER_COMMAND_DELAY_TICKS } from "../shared/sim/planner-schedule";
 import { sketchScene } from "./scene";
 import { createGame, issuePlayerCommand, snapshotGame, stepGame } from '../shared/sim';
 
@@ -67,7 +68,8 @@ describe("SDK game runner", () => {
         enemy: { controller: "external-agent", team: "south", race: "ember", versionLabel: "manual" },
       },
       commandPlanner,
-      maxTicks: 1,
+      // The tick-0 think lands its command on the last tick.
+      maxTicks: 1 + PLANNER_COMMAND_DELAY_TICKS,
       thinkInterval: 1,
       trace: { commands: true },
     });

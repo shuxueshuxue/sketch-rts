@@ -2,6 +2,9 @@ import { RULES_VERSION } from "../shared/rules-version";
 import { describe, expect, it } from "vitest";
 import type { AiScript } from "../ai/policy";
 import { decodeServerNetMessage, encodeNetMessage } from "../shared/net/codec";
+import { PLANNER_COMMAND_DELAY_TICKS } from "../shared/sim/planner-schedule";
+import { LOCKSTEP_CHECKSUM_EVERY_TICKS } from "../shared/net/cadence";
+import { ROOM_CHECKPOINT_INTERVAL_TICKS } from "./room-history";
 import { createRoomHost } from "./room-host";
 import { RoomNetHub, type RoomNetSocket } from "./room-net";
 import type { ServerNetMessage } from "../shared/net/types";
@@ -54,22 +57,18 @@ describe("room net hub", () => {
     hub.connect(room.id, socket);
     socket.emit(encodeNetMessage({ type: "join", rulesVersion: RULES_VERSION, roomId: room.id, playerId: "player" }));
     socket.emit(encodeNetMessage({ type: "command", roomId: room.id, playerId: "player", clientSeq: 0, epoch: 0, command: { type: "move", unitIds: [worker!.id], x: worker!.x + 80, y: worker!.y } }));
-    hub.tickRoom(room.id);
-    hub.tickRoom(room.id);
-    hub.tickRoom(room.id);
+    const ticks = Math.max(3, PLANNER_COMMAND_DELAY_TICKS + 1);
+    for (let tick = 0; tick < ticks; tick += 1) hub.tickRoom(room.id);
 
     const messages = socket.sent.map((raw) => decodeServerNetMessage(raw));
     expect(messages[0]).toEqual({ type: "hello", rulesVersion: RULES_VERSION, roomId: room.id, playerId: "player", tick: 0, epoch: 0 });
     const frames = messages.filter((message): message is Extract<ServerNetMessage, { type: "frame" }> => message.type === "frame").map((message) => message.frame);
-    expect(frames.map((frame) => ({ tick: frame.tick, sequence: frame.sequence }))).toEqual([
-      { tick: 0, sequence: 0 },
-      { tick: 1, sequence: 1 },
-      { tick: 2, sequence: 2 },
-    ]);
-    expect(frames[0]?.commands.some((entry) => entry.playerId === "enemy" && entry.command.type === "mine")).toBe(true);
+    expect(frames.map((frame) => ({ tick: frame.tick, sequence: frame.sequence }))).toEqual(Array.from({ length: ticks }, (_, tick) => ({ tick, sequence: tick })));
+    // The AI's tick-0 think lands PLANNER_COMMAND_DELAY_TICKS later; the client command lands commandDelayTicks later.
+    expect(frames[PLANNER_COMMAND_DELAY_TICKS]?.commands.some((entry) => entry.playerId === "enemy" && entry.command.type === "mine")).toBe(true);
     expect(frames[2]?.commands).toContainEqual({ playerId: "player", clientSeq: 0, command: { type: "move", unitIds: [worker!.id], x: worker!.x + 80, y: worker!.y } });
     const after = roomHost.snapshot(room.id);
-    expect(after.tick).toBe(3);
+    expect(after.tick).toBe(ticks);
     expect(after.units.find((unit) => unit.id === worker!.id)?.order).toMatchObject({ type: "move" });
   });
 
@@ -81,10 +80,11 @@ describe("room net hub", () => {
     const socket = new FakeSocket();
 
     connectCurrent(hub, room.id, socket);
-    hub.tickRoom(room.id);
+    for (let tick = 0; tick <= PLANNER_COMMAND_DELAY_TICKS; tick += 1) hub.tickRoom(room.id);
 
-    const frame = socket.sent.map((raw) => decodeServerNetMessage(raw)).find((message): message is Extract<ServerNetMessage, { type: "frame" }> => message.type === "frame")?.frame;
+    const frame = socket.sent.map((raw) => decodeServerNetMessage(raw)).filter((message): message is Extract<ServerNetMessage, { type: "frame" }> => message.type === "frame").at(-1)?.frame;
     const after = roomHost.snapshot(room.id);
+    expect(frame?.tick).toBe(PLANNER_COMMAND_DELAY_TICKS);
     const enemyWorker = after.units.find((unit) => unit.owner === "enemy" && unit.kind === "worker");
     expect(frame?.commands.some((entry) => entry.playerId === "enemy" && entry.command.type === "mine")).toBe(true);
     expect(enemyWorker?.order.type).not.toBe("idle");
@@ -101,12 +101,12 @@ describe("room net hub", () => {
     const socket = new FakeSocket();
 
     connectCurrent(hub, room.id, socket);
-    roomHost.commandTickRoom(room.id, [{ playerId: "player", command: { type: "move", unitIds: [worker!.id], x: worker!.x + 80, y: worker!.y } }], 1);
+    roomHost.commandTickRoom(room.id, [{ playerId: "player", command: { type: "move", unitIds: [worker!.id], x: worker!.x + 80, y: worker!.y } }], 1 + PLANNER_COMMAND_DELAY_TICKS);
 
     const frames = socket.sent.map((raw) => decodeServerNetMessage(raw)).filter((message): message is Extract<ServerNetMessage, { type: "frame" }> => message.type === "frame");
-    expect(frames).toHaveLength(1);
+    expect(frames.map((message) => message.frame.tick)).toEqual([0, PLANNER_COMMAND_DELAY_TICKS]);
     expect(frames[0]?.frame.commands).toContainEqual({ playerId: "player", command: { type: "move", unitIds: [worker!.id], x: worker!.x + 80, y: worker!.y } });
-    expect(frames[0]?.frame.commands.some((entry) => entry.playerId === "enemy" && entry.command.type === "mine")).toBe(true);
+    expect(frames[1]?.frame.commands.some((entry) => entry.playerId === "enemy" && entry.command.type === "mine")).toBe(true);
   });
 
   it("publishes single room commands as one connected room frame tick", () => {
@@ -242,13 +242,15 @@ describe("room net hub", () => {
 
     connectCurrent(hub, room.id, playerSocket);
     connectCurrent(hub, room.id, observerSocket);
-    hub.tickRoom(room.id);
-    playerSocket.emit(encodeNetMessage({ type: "checksum", roomId: room.id, playerId: "player", tick: 1, hash: "wrong-hash", epoch: 0 }));
+    // Both sides hash the world on the same cadence ticks (see @@@lockstep-cadence).
+    const tick = LOCKSTEP_CHECKSUM_EVERY_TICKS;
+    for (let index = 0; index < tick; index += 1) hub.tickRoom(room.id);
+    playerSocket.emit(encodeNetMessage({ type: "checksum", roomId: room.id, playerId: "player", tick, hash: "wrong-hash", epoch: 0 }));
 
     const playerMessages = playerSocket.sent.map((raw) => decodeServerNetMessage(raw));
     const observerMessages = observerSocket.sent.map((raw) => decodeServerNetMessage(raw));
     const desync = playerMessages.find((message): message is Extract<ServerNetMessage, { type: "desync" }> => message.type === "desync");
-    expect(desync).toMatchObject({ type: "desync", rulesVersion: RULES_VERSION, roomId: room.id, tick: 1, checksums: { player: "wrong-hash" } });
+    expect(desync).toMatchObject({ type: "desync", rulesVersion: RULES_VERSION, roomId: room.id, tick, checksums: { player: "wrong-hash" } });
     expect(desync?.checksums.server).toMatch(/^[0-9a-f]{8}$/);
     expect(observerMessages).toContainEqual(desync);
     expect(hub.syncEventsForRoom(room.id)).toContainEqual(
@@ -256,8 +258,8 @@ describe("room net hub", () => {
         kind: "checksum-mismatch",
         roomId: room.id,
         playerId: "player",
-        localTick: 1,
-        serverTick: 1,
+        localTick: tick,
+        serverTick: tick,
         checksums: expect.objectContaining({ player: "wrong-hash", server: expect.stringMatching(/^[0-9a-f]{8}$/) }),
       }),
     );
@@ -271,18 +273,18 @@ describe("room net hub", () => {
     const socket = new FakeSocket();
 
     connectCurrent(hub, room.id, socket);
-    hub.tickRoom(room.id);
-    hub.tickRoom(room.id);
-    hub.tickRoom(room.id);
-    socket.emit(encodeNetMessage({ type: "checksum", roomId: room.id, playerId: "player", tick: 1, hash: "old-wrong-hash", epoch: 0 }));
-    socket.emit(encodeNetMessage({ type: "checksum", roomId: room.id, playerId: "player", tick: 99, hash: "future-wrong-hash", epoch: 0 }));
-    socket.emit(encodeNetMessage({ type: "checksum", roomId: room.id, playerId: "player", tick: 3, hash: "new-wrong-hash", epoch: 0 }));
+    // Server checksums on three cadence ticks; the two-frame horizon keeps only the last.
+    const [old, recent] = [2 * LOCKSTEP_CHECKSUM_EVERY_TICKS, 3 * LOCKSTEP_CHECKSUM_EVERY_TICKS];
+    for (let index = 0; index < recent; index += 1) hub.tickRoom(room.id);
+    socket.emit(encodeNetMessage({ type: "checksum", roomId: room.id, playerId: "player", tick: old, hash: "old-wrong-hash", epoch: 0 }));
+    socket.emit(encodeNetMessage({ type: "checksum", roomId: room.id, playerId: "player", tick: 99 * LOCKSTEP_CHECKSUM_EVERY_TICKS, hash: "future-wrong-hash", epoch: 0 }));
+    socket.emit(encodeNetMessage({ type: "checksum", roomId: room.id, playerId: "player", tick: recent, hash: "new-wrong-hash", epoch: 0 }));
 
     const desyncs = socket.sent.map((raw) => decodeServerNetMessage(raw)).filter((message): message is Extract<ServerNetMessage, { type: "desync" }> => message.type === "desync");
-    expect(desyncs.map((message) => message.tick)).toEqual([3]);
-    expect(hub.checksumsForTick(room.id, 1)).toEqual({});
-    expect(hub.checksumsForTick(room.id, 99)).toEqual({});
-    expect(hub.checksumsForTick(room.id, 3)).toEqual({ player: "new-wrong-hash" });
+    expect(desyncs.map((message) => message.tick)).toEqual([recent]);
+    expect(hub.checksumsForTick(room.id, old)).toEqual({});
+    expect(hub.checksumsForTick(room.id, 99 * LOCKSTEP_CHECKSUM_EVERY_TICKS)).toEqual({});
+    expect(hub.checksumsForTick(room.id, recent)).toEqual({ player: "new-wrong-hash" });
   });
 
   it("records bounded client sync diagnostic events", () => {
@@ -377,20 +379,22 @@ describe("room net hub", () => {
     const roomHost = createRoomHost({ autoTick: false });
     const room = roomHost.createRoom({ id: "room-catchup", host: hostUser, mapId: "bareDuel" });
     roomHost.startRoom(room.id);
-    const hub = new RoomNetHub({ roomHost, frameHistoryLimit: 16 });
+    const hub = new RoomNetHub({ roomHost, frameHistoryLimit: 64 });
     const liveSocket = new FakeSocket();
     connectCurrent(hub, room.id, liveSocket);
-    for (let i = 0; i < 5; i += 1) hub.tickRoom(room.id);
+    const interval = ROOM_CHECKPOINT_INTERVAL_TICKS;
+    for (let i = 0; i < interval + 5; i += 1) hub.tickRoom(room.id);
     const observer = new FakeSocket();
     connectCurrent(hub, room.id, observer);
 
-    observer.emit(encodeNetMessage({ type: "requestCheckpoint", roomId: room.id, playerId: "observer", tick: 2, clientTick: 5, clientChecksum: "eeee1234", epoch: 0 }));
+    // The room keeps a checkpoint every interval: a catch-up from inside one replays from its start.
+    observer.emit(encodeNetMessage({ type: "requestCheckpoint", roomId: room.id, playerId: "observer", tick: interval + 2, clientTick: interval + 5, clientChecksum: "eeee1234", epoch: 0 }));
 
     const messages = observer.sent.map((raw) => decodeServerNetMessage(raw));
     const checkpoint = messages.find((message) => message.type === "checkpoint");
     const frames = messages.filter((message): message is Extract<ServerNetMessage, { type: "frame" }> => message.type === "frame").map((message) => message.frame);
-    expect(checkpoint).toMatchObject({ type: "checkpoint", rulesVersion: RULES_VERSION, checkpoint: { roomId: room.id, tick: 2, snapshot: { tick: 2 } } });
-    expect(frames.map((frame) => frame.tick)).toEqual([2, 3, 4]);
+    expect(checkpoint).toMatchObject({ type: "checkpoint", rulesVersion: RULES_VERSION, checkpoint: { roomId: room.id, tick: interval, snapshot: { tick: interval } } });
+    expect(frames.map((frame) => frame.tick)).toEqual([0, 1, 2, 3, 4].map((offset) => interval + offset));
   });
 
   it("uses hosted room history for both late observer catch-up and debug replay", () => {
@@ -398,22 +402,23 @@ describe("room net hub", () => {
     const room = roomHost.createRoom({ id: "room-shared-history", host: hostUser, mapId: "bareDuel" });
     roomHost.startRoom(room.id);
     roomHost.enableDebugReplay(room.id, { id: "trace-shared-history" });
-    const hub = new RoomNetHub({ roomHost, frameHistoryLimit: 16 });
+    const hub = new RoomNetHub({ roomHost, frameHistoryLimit: 64 });
     const liveSocket = new FakeSocket();
     connectCurrent(hub, room.id, liveSocket);
 
-    for (let i = 0; i < 5; i += 1) hub.tickRoom(room.id);
+    const interval = ROOM_CHECKPOINT_INTERVAL_TICKS;
+    for (let i = 0; i < interval + 5; i += 1) hub.tickRoom(room.id);
 
     const observer = new FakeSocket();
     connectCurrent(hub, room.id, observer);
-    observer.emit(encodeNetMessage({ type: "requestCheckpoint", roomId: room.id, playerId: "observer", tick: 2, clientTick: 5, epoch: 0 }));
+    observer.emit(encodeNetMessage({ type: "requestCheckpoint", roomId: room.id, playerId: "observer", tick: interval + 2, clientTick: interval + 5, epoch: 0 }));
 
     const messages = observer.sent.map((raw) => decodeServerNetMessage(raw));
     const catchupFrames = messages.filter((message): message is Extract<ServerNetMessage, { type: "frame" }> => message.type === "frame").map((message) => message.frame);
     const replay = roomHost.readDebugReplay(room.id);
 
-    expect(catchupFrames.map((frame) => frame.tick)).toEqual([2, 3, 4]);
-    expect(replay.frames.map((frame) => frame.tick)).toEqual([0, 1, 2, 3, 4]);
+    expect(catchupFrames.map((frame) => frame.tick)).toEqual([0, 1, 2, 3, 4].map((offset) => interval + offset));
+    expect(replay.frames.map((frame) => frame.tick)).toEqual(Array.from({ length: interval + 5 }, (_, tick) => tick));
     expect(replay.frames.map((frame) => ({ tick: frame.tick, sequence: frame.sequence, commands: frame.commands }))).toEqual(
       expect.arrayContaining(catchupFrames.map((frame) => ({ tick: frame.tick, sequence: frame.sequence, commands: frame.commands }))),
     );

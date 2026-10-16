@@ -1,0 +1,64 @@
+import { afterAll, describe, expect, it } from "vitest";
+import { createGame } from "../../shared/sim";
+import { checksumGame } from "../../shared/sim/checksum";
+import { CommandFrameRuntime } from "../../shared/sim/command-frame-runtime";
+import type { CommandFrame } from "../../shared/net/types";
+import { createAiRuntime, createPresetAiRuntimeFramePlanner, type AiThinkExecutorFactory } from "../runtime";
+import { createAiThinkClientExecutor } from "./client";
+import { createAiThinkHost } from "./host";
+import { createAiThinkPool } from "./node-pool";
+import type { AiThinkReply } from "./protocol";
+
+const TICKS = 600;
+
+function playMatch(executor?: AiThinkExecutorFactory) {
+  const game = createGame("bareDuel", { aiPlayers: ["player", "enemy"], races: { player: "grove", enemy: "ember" } });
+  const ai = createAiRuntime(["player", "enemy"]);
+  const thinking = executor?.(ai, game);
+  const runtime = new CommandFrameRuntime({ game, roomId: "think-thread", rejectionLabel: "Think thread rejected", aiPlanner: createPresetAiRuntimeFramePlanner(game, ai, thinking ? { executor: thinking } : {}) });
+  const frames: CommandFrame[] = [];
+  for (let tick = 0; tick < TICKS && !game.match.winner; tick += 1) {
+    const frame = runtime.tick();
+    if (frame) frames.push(frame);
+  }
+  thinking?.close?.();
+  return { frames, checksum: checksumGame(game), tick: game.tick };
+}
+
+// A thread of its own in all but the thread: every message is copied as postMessage copies it.
+const copiedHost: AiThinkExecutorFactory = (runtime, game) => {
+  const host = createAiThinkHost();
+  const inbox: AiThinkReply[] = [];
+  return createAiThinkClientExecutor(runtime, game, {
+    send(message) {
+      const copy = structuredClone(message);
+      if (copy.type === "open") host.open(copy, (reply) => inbox.push(structuredClone(reply)));
+      else if (copy.type === "close") host.close(copy);
+      else host.think(copy);
+    },
+    drain: () => inbox.splice(0),
+    close() {},
+  }, "copied");
+};
+
+const pool = createAiThinkPool({ workerUrl: new URL("./node-entry.ts", import.meta.url), execArgv: ["--import", "tsx"] });
+afterAll(() => pool.close());
+
+describe("AI think thread", () => {
+  const inline = playMatch();
+
+  it("plays the same match when every think crosses as a copied message", () => {
+    expect(inline.frames.length).toBeGreaterThan(10);
+    expect(playMatch(copiedHost)).toEqual(inline);
+  });
+
+  it("plays the same match with its thinks on a worker thread", () => {
+    expect(playMatch(pool.executor)).toEqual(inline);
+  }, 60_000);
+
+  it("refuses scripts given as functions instead of thinking without them", () => {
+    const game = createGame("bareDuel", { aiPlayers: ["enemy"] });
+    const ai = createAiRuntime(["enemy"], { scripts: [{ id: "local-only", phase: "economy", run: () => undefined }] });
+    expect(() => copiedHost(ai, game)).toThrow(/scripts given as functions/);
+  });
+});

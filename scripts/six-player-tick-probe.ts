@@ -45,7 +45,7 @@ type Hooks = {
 export function instrumentProbeSource(file: string, text: string): { contents: string; hooks: string[] } {
   const targetNames: Record<string, string> = file.endsWith("/src/shared/sim.ts")
     ? { stepGame: "sim", snapshotGame: "snapshot" }
-    : file.endsWith("/src/ai/runtime.ts") ? { planPresetAiRuntimeCommands: "ai" }
+    : file.endsWith("/src/ai/runtime.ts") ? { planAiCommandFrame: "ai" }
       : file.endsWith("/src/ai/planner-context.ts") ? { planAiOwnerCommandEntries: "owner" } : {};
   const ast = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
   const insertions: { at: number; text: string }[] = [];
@@ -372,7 +372,7 @@ export async function runProbe(options: ProbeOptions) {
       method: { execution: "StaticSoloDeploymentRuntime.startRoom → LocalGameAdapter.updateToRenderTime → CommandFrameRuntime.tick",
         clockAdvanceMsPerCall: 50, renderSnapshotCallsPerTick: 1, plainSource: !!options.plain, cpuProfileFrom: options.cpuProfFrom ?? null,
         wholeTickExcludes: ["currentSnapshot (separately timed)", "command serialization/hash observer", "disk output"],
-        aiIncludes: "planPresetAiRuntimeCommands including shared snapshot and all due owners; no-owner calls also timed",
+        aiIncludes: "planAiCommandFrame: one think's shared snapshot and every owner due on that tick, wherever the think runs on this thread",
         simIncludes: "stepGame; frameMs additionally includes admission/planning/apply",
         otherSnapshotIncludes: "All snapshotGame calls outside AI, including the separately timed render currentSnapshot; these are overlapping diagnostics, not additive costs.", hooks: hookManifest,
         incompleteAttachmentReproduction: "Attachment omitted room id/races; this fixed real room resolves the reported owner/preset order, with its complete initial state archived. It is a controlled scenario, not proof of the attachment's exact original match.",

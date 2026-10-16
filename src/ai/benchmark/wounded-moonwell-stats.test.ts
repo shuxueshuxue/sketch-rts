@@ -3,6 +3,7 @@ import { runBenchmark, type BenchmarkTracker } from "../../sdk/benchmark/core";
 import { sketchScene } from "../../sdk/scene";
 import type { AiGameAgent } from "../game-runner";
 import { createWoundedMoonWellStatsTracker, type WoundedMoonWellStats } from "./wounded-moonwell-stats";
+import { PLANNER_COMMAND_DELAY_TICKS } from "../../shared/sim/planner-schedule";
 
 describe("wounded moon well stats tracker", () => {
   it("separates low-health combat samples in healing range from safe far-away samples", () => {
@@ -85,7 +86,8 @@ describe("wounded moon well stats tracker", () => {
               name: "objective claimed wounded unit",
               game: scene.createGame(),
               agents,
-              maxTicks: 1,
+              // Steps before the tick-0 command lands sample the unit with no recent command; the last one with it.
+              maxTicks: 1 + PLANNER_COMMAND_DELAY_TICKS,
               thinkInterval: 1,
               commandPlanner: ({ owner, source }) =>
                 owner === "v2"
@@ -107,7 +109,7 @@ describe("wounded moon well stats tracker", () => {
     const stats = report.evaluations[0]!.matches[0]!.result.trackers.woundedMoonWellStats as WoundedMoonWellStats;
 
     expect(stats.owners.v2).toMatchObject({
-      lowHpSafeFarFromMoonWellSamples: 1,
+      lowHpSafeFarFromMoonWellSamples: 1 + PLANNER_COMMAND_DELAY_TICKS,
       lowHpSafeFarByRecentCommandScript: { objectiveControl: 1 },
       lowHpSafeFarByRecentCommandType: { attackMove: 1 },
       lowHpSafeFarByRecentCommandScriptAndType: { "objectiveControl:attackMove": 1 },

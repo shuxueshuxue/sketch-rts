@@ -3,7 +3,9 @@ import { createServer, type IncomingMessage } from "node:http";
 import { randomUUID } from "node:crypto";
 import { watch } from "node:fs";
 import { mkdir } from "node:fs/promises";
+import { availableParallelism } from "node:os";
 import path from "node:path";
+import { createAiThinkPool } from "../ai/think-worker/node-pool";
 import { WebSocketServer, type RawData, type WebSocket } from "ws";
 import { BUILDING_DEFS, RACE_DEFS, UNIT_DEFS } from "../shared/catalog";
 import { expressMountPath, publicBasePathFromEnv } from "../shared/deployment-base";
@@ -30,7 +32,13 @@ const router = express.Router();
 const server = createServer(app);
 const roomWss = new WebSocketServer({ noServer: true });
 const benchmarkDashboardClients = new Set<Response>();
-const roomHost = createRoomHost({ autoTick: roomAutoTick });
+// Hosted matches' AI thinks on worker threads beside the room ticker (see @@@think-thread). The bundled server ships
+// the worker entry next to itself; tsx runs it from source.
+const aiThinkPool = createAiThinkPool({
+  workerUrl: import.meta.url.endsWith(".ts") ? new URL("../ai/think-worker/node-entry.ts", import.meta.url) : new URL("./ai-think-worker.mjs", import.meta.url),
+  threads: Number(process.env.SKETCH_RTS_AI_THREADS ?? Math.max(1, Math.min(4, availableParallelism() - 1))),
+});
+const roomHost = createRoomHost({ autoTick: roomAutoTick, aiThinkExecutor: aiThinkPool.executor });
 // Lobby pages watching each room through its event stream (see @@@idle-room-reaper).
 const lobbyWatchers = new Map<string, number>();
 const roomNetHub = new RoomNetHub({ roomHost });

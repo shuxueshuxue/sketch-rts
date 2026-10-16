@@ -150,6 +150,16 @@ export function tryConsumeShipPlan(ship: Unit, slices = 8): boolean {
   return true;
 }
 
+/** A maneuver or berth plan that finished within the call that requested it
+ * spends the whole frame, as its former synchronous search did: no other hull
+ * starts planning behind it on the same tick. */
+export function spendShipPlanningFrame(ship: Unit): void {
+  const frame = frames.get(ship);
+  if (!frame) return;
+  frame.consumed = true;
+  frame.slices = 8;
+}
+
 export function hasShipPlanningFrame(ship: Unit): boolean {
   return frames.has(ship);
 }

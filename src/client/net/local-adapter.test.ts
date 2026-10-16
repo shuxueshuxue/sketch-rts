@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { AiScript } from "../../ai/policy";
 import { createAiRuntime } from "../../ai/runtime";
 import { createGame } from "../../shared/sim";
+import { PLANNER_COMMAND_DELAY_TICKS } from "../../shared/sim/planner-schedule";
 import { createRoom } from '../../shared/rooms';
 import { LocalGameAdapter } from "./local-adapter";
 
@@ -12,12 +13,16 @@ describe("local game adapter", () => {
     const initial = adapter.currentSnapshot(), worker = initial.units.find(unit => unit.owner === 'player' && unit.kind === 'worker')!;
     expect(adapter.currentSnapshot()).toBe(initial);expect(adapter.updateToRenderTime()).toBe(false);
     expect(adapter.currentSnapshot()).toBe(initial);
+    // A command waits for the next tick; until then frames keep sharing the same view.
     adapter.sendCommand({type: 'move', unitIds: [worker.id], x: worker.x + 100, y: worker.y});
+    expect(adapter.currentSnapshot()).toBe(initial);
+    now = 50;expect(adapter.updateToRenderTime()).toBe(true);
     const commanded = adapter.currentSnapshot();
     expect(commanded).not.toBe(initial);expect(commanded.tick).toBe(1);expect(initial.tick).toBe(0);
     expect(initial.units.find(unit => unit.id === worker.id)!.order.type).toBe('idle');
+    expect(commanded.units.find(unit => unit.id === worker.id)!.order.type).toBe('move');
     expect(adapter.currentSnapshot()).toBe(commanded);
-    now = 50;expect(adapter.updateToRenderTime()).toBe(true);
+    now = 100;expect(adapter.updateToRenderTime()).toBe(true);
     const advanced = adapter.currentSnapshot();expect(advanced).not.toBe(commanded);
     expect(advanced.tick).toBe(2);expect(commanded.tick).toBe(1);
   });
@@ -57,16 +62,38 @@ describe("local game adapter", () => {
     adapter.updateToRenderTime();
     expect(game.tick - resumed).toBeLessThanOrEqual(4);
   });
-  it("applies local commands through command frames before stepping simulation", () => {
+  it("applies local commands through the next tick's command frame before stepping simulation", () => {
+    let now = 0;
     const game = createGame("bareDuel", { aiPlayers: [] });
     const worker = game.units.find((unit) => unit.owner === "player" && unit.kind === "worker");
     expect(worker).toBeDefined();
-    const adapter = new LocalGameAdapter(game, "player");
+    const adapter = new LocalGameAdapter(game, "player", { now: () => now, tickMs: 50 });
 
     adapter.sendCommand({ type: "move", unitIds: [worker!.id], x: worker!.x + 80, y: worker!.y });
+    expect(game.tick).toBe(0);
+    expect(game.units.find((unit) => unit.id === worker!.id)?.order).toMatchObject({ type: "idle" });
+    now = 50;
+    adapter.updateToRenderTime();
 
     expect(adapter.currentSnapshot().tick).toBe(1);
     expect(game.units.find((unit) => unit.id === worker!.id)?.order).toMatchObject({ type: "move" });
+  });
+
+  it("holds render-time ticks while the AI's think has not landed from its thread", () => {
+    let now = 0;
+    const game = createGame("bareDuel", { aiPlayers: ["enemy"] });
+    let delivered = false;
+    const adapter = new LocalGameAdapter(game, "player", {
+      now: () => now, tickMs: 50, aiRuntime: createAiRuntime(["enemy"]),
+      aiThinkExecutor: () => ({ submit() {}, ready: (tick) => delivered || tick < PLANNER_COMMAND_DELAY_TICKS, take: () => [] }),
+    });
+
+    now = 50 * (PLANNER_COMMAND_DELAY_TICKS + 2);
+    adapter.updateToRenderTime();
+    expect(game.tick).toBe(PLANNER_COMMAND_DELAY_TICKS);
+    delivered = true;
+    adapter.updateToRenderTime();
+    expect(game.tick).toBeGreaterThan(PLANNER_COMMAND_DELAY_TICKS);
   });
 
   it("advances render-time ticks even when no player command is sent", () => {
@@ -133,9 +160,12 @@ describe("local game adapter", () => {
     const workers = game.units.filter((unit) => unit.owner === "player" && unit.kind === "worker").slice(0, 2);
     expect(workers).toHaveLength(2);
     game.units = game.units.filter((unit) => unit.id !== workers[1]!.id);
-    const adapter = new LocalGameAdapter(game, "player");
+    let now = 0;
+    const adapter = new LocalGameAdapter(game, "player", { now: () => now, tickMs: 50 });
 
     expect(() => adapter.sendCommand({ type: "move", unitIds: workers.map((worker) => worker.id), x: workers[0]!.x + 80, y: workers[0]!.y })).not.toThrow();
+    now = 50;
+    adapter.updateToRenderTime();
 
     expect(adapter.currentSnapshot().tick).toBe(1);
     expect(game.units.find((unit) => unit.id === workers[0]!.id)?.order).toMatchObject({ type: "move" });

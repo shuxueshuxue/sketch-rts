@@ -7,9 +7,11 @@ const outdir = path.join(root, "dist-server");
 
 await rm(outdir, { recursive: true, force: true });
 
+// The server and the worker thread its hosted AI thinks on (src/server/index.ts loads ./ai-think-worker.mjs).
 await build({
-  entryPoints: [path.join(root, "src/server/index.ts")],
-  outfile: path.join(outdir, "index.mjs"),
+  entryPoints: { index: path.join(root, "src/server/index.ts"), "ai-think-worker": path.join(root, "src/ai/think-worker/node-entry.ts") },
+  outdir,
+  outExtension: { ".js": ".mjs" },
   bundle: true,
   platform: "node",
   format: "esm",

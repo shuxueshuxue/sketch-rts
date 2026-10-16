@@ -60,8 +60,7 @@ export class RoomNetHub {
     // ready; building a frame earlier would consume its queue and sequence.
     if (!this.options.roomHost.prepareRoomTick(roomId, 1)) return undefined;
     const frame = state.coordinator.buildFrame(this.options.roomHost.currentTick(roomId));
-    const result = this.options.roomHost.tickRoomFrame(roomId, frame, "browser");
-    return result.frame;
+    return this.options.roomHost.advanceRoomFrame(roomId, frame, "browser");
   }
 
   tickConnectedRooms(): Set<string> {
@@ -207,7 +206,7 @@ export class RoomNetHub {
   private publishFrameEvent(roomId: string, event: HostedRoomFrameEvent): void {
     const state = this.rooms.get(roomId);
     if (!state) return;
-    this.recordAuthoritativeChecksum(roomId, event.snapshot.tick, event.checksum);
+    if (event.checksum !== undefined) this.recordAuthoritativeChecksum(roomId, event.tick, event.checksum);
     this.broadcast(roomId, { type: "frame", rulesVersion: RULES_VERSION, frame: event.frame, epoch: state.epoch });
   }
 

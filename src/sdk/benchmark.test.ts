@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { BUILDING_DEFS, UNIT_DEFS } from "../shared/catalog";
 import { issuePlayerCommand } from "../shared/sim";
 import { runBenchmark, runBenchmarkParallel } from "./benchmark";
+import { PLANNER_COMMAND_DELAY_TICKS } from "../shared/sim/planner-schedule";
 import type { SdkGameCommandPlannerContext } from "./game-runner";
 import { sketchScene } from "./scene";
 
@@ -374,7 +375,8 @@ describe("SDK benchmark", () => {
                 v1: { controller: "external-agent", team: "south", race: "ember", versionLabel: "v1" },
               },
               commandPlanner,
-              maxTicks: 3,
+              // Room for the pickup to land, and for the use planned after it to land too.
+              maxTicks: 3 + 2 * PLANNER_COMMAND_DELAY_TICKS,
               thinkInterval: 1,
             },
           ],
@@ -420,7 +422,8 @@ describe("SDK benchmark", () => {
                 v1: { controller: "external-agent", team: "south", race: "ember", versionLabel: "v1" },
               },
               commandPlanner,
-              maxTicks: 1,
+              // Only the tick-0 think lands before the run ends.
+              maxTicks: 1 + PLANNER_COMMAND_DELAY_TICKS,
               thinkInterval: 1,
             },
           ],

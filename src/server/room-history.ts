@@ -4,6 +4,9 @@ import type { CheckpointFrame, CommandFrame } from "../shared/net/types";
 
 export const DEFAULT_ROOM_FRAME_HISTORY_LIMIT = 240;
 const DEBUG_REPLAY_CHECKPOINT_INTERVAL_TICKS = 120;
+// A live room keeps a checkpoint every this many ticks: a catch-up replays at most this many frames from the one before
+// its tick. A checkpoint is a whole copy of the world, too dear to keep on every tick.
+export const ROOM_CHECKPOINT_INTERVAL_TICKS = 20;
 
 export type RoomHistoryLogOptions = {
   frameHistoryLimit?: number;
@@ -27,6 +30,13 @@ export class RoomHistoryLog {
   retainFramesFrom(tick: number) {
     this.retainFromTick = this.retainFromTick === undefined ? tick : Math.min(this.retainFromTick, tick);
     this.trim();
+  }
+
+  // Whether the world before this tick's frame is worth a checkpoint: the recent window's interval, or a debug replay's
+  // sparse checkpoint (see @@@room-history-checkpoint-policy).
+  wantsCheckpoint(tick: number): boolean {
+    if (tick % ROOM_CHECKPOINT_INTERVAL_TICKS === 0) return true;
+    return this.retainFromTick !== undefined && tick >= this.retainFromTick && (tick - this.retainFromTick) % DEBUG_REPLAY_CHECKPOINT_INTERVAL_TICKS === 0;
   }
 
   recordCheckpoint(checkpoint: CheckpointFrame) {
