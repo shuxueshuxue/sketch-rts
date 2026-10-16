@@ -2,9 +2,9 @@ import { sameGround } from './terrain';
 import { detCos, detSin } from './det-math';
 import { decksAllowCrossing,decksCanTransfer,decksSupportCrossing } from './connected-decks';
 import { gangwaySurface } from './ship-gangway';
-import { shipContactGoal } from './ship-avoidance';
-import { shipBodyClearAtPose } from './ship-collisions';
-import { headingDifference, hullFits, type ShipPose } from './ship-navigation';
+import { reservationTraffic, shipContactGoal } from './ship-avoidance';
+import { shipBodyClearAtPose, shipSolidTraffic } from './ship-collisions';
+import { headingDifference, hullFits, planShipRoute, SHIP_LOCAL_ROUTE_BUDGET, type ShipPose } from './ship-navigation';
 import { shipProfile, shipsIn } from './ship-geometry';
 import { RANGED_ATTACK_RANGE_THRESHOLD } from './aiming';
 import type { GameMap, Unit, UnitOrder } from './types';
@@ -21,13 +21,53 @@ function contactPose(source:Unit,target:Unit,heading:number,side:number,along:nu
   return shipContactGoal(probe,goal,[target]);
 }
 
+/** A contact-preserving terminal pose is not a route out of this quay.
+ * Use the same local planner/traffic as the precise native move. One hull may
+ * wait while its partner leaves; a finite safe prefix is not arrival proof. */
+function atRendezvousPose(ship:Unit,x:number,y:number,heading:number) {
+  const yaw=Math.abs(headingDifference(ship.sailing!.heading,heading));
+  return yaw<=1e-6 && (ship.order.type==='idle' && ship.arrivedAt?.x===x && ship.arrivedAt.y===y
+    || yaw<1e-7 && Math.hypot(ship.x-x,ship.y-y)<=1e-5);
+}
+function rendezvousCanStart(map:GameMap,units:readonly Unit[],source:Unit,target:Unit,crew:Unit,plan:CrewRendezvous,
+  solidViews:ReadonlyMap<string,ReturnType<typeof shipSolidTraffic>>) {
+  const order=(x:number,y:number):UnitOrder=>({type:'move',x,y,heading:plan.heading,rendezvousFor:crew.id});
+  const a={...source,order:order(plan.sourceX,plan.sourceY)},b={...target,order:order(plan.targetX,plan.targetY)};
+  const pending=units.map(unit=>unit===source?a:unit===target?b:unit===crew?{...crew,order:{type:'board' as const,transportId:target.id,rendezvous:plan}}:unit);
+  return (plan.reciprocal?[a,b]:[a]).some(ship=>{
+    const goal=ship.order as Extract<UnitOrder,{type:'move'}>;
+    if(atRendezvousPose(ship,goal.x,goal.y,plan.heading))return false;
+    // Only hypothetical helm orders use pending. Solids belong to the original
+    // live collision frame, including its registered buildings and obstacles.
+    const hull=reservationTraffic(ship,pending),solids=solidViews.get(ship.id)!;
+    const traffic=Object.assign((from:ShipPose,to:ShipPose,padding?:number)=>hull(from,to,padding)&&solids(from,to),{hasTraffic:hull.hasTraffic||solids.hasTraffic});
+    return planShipRoute(map,ship,goal,traffic,traffic.hasTraffic?SHIP_LOCAL_ROUTE_BUDGET:Infinity).points
+      .some(point=>!atRendezvousPose(ship,point.x,point.y,point.heading));
+  });
+}
+
+/** Reassess a known empty native result only when neither hull is still
+ * approaching. Missing/stale route state is not evidence of a blocked task. */
+function rendezvousCannotAdvance(source:Unit,target:Unit,crew:Unit,plan:CrewRendezvous) {
+  const state=(ship:Unit,x:number,y:number)=>{
+    if(atRendezvousPose(ship,x,y,plan.heading))return 'arrived';
+    const route=ship.sailing?.route,order=ship.order;
+    return order.type==='move' && order.rendezvousFor===crew.id && order.x===x && order.y===y && order.heading===plan.heading
+      && route?.goalX===x && route.goalY===y && route.partial && !route.points.length
+      && route.startX===ship.x && route.startY===ship.y && route.startHeading===ship.sailing!.heading ? 'blocked':'approaching';
+  };
+  const a=state(source,plan.sourceX,plan.sourceY),b=plan.reciprocal?state(target,plan.targetX,plan.targetY):'arrived';
+  return a!=='approaching' && b!=='approaching' && (a==='blocked'||b==='blocked');
+}
+
 function rendezvous(map:GameMap,units:readonly Unit[],source:Unit,target:Unit,crew:Unit):CrewRendezvous|undefined {
   const direction=Math.atan2(target.y-source.y,target.x-source.x);
   const reciprocal=source.owner===target.owner && ['idle','hold'].includes(target.order.type) && !target.orderQueue?.length;
   const headings=(reciprocal ? [direction-Math.PI/2,direction+Math.PI/2,source.sailing!.heading,target.sailing!.heading] : [target.sailing!.heading])
     .sort((a,b)=>Math.abs(headingDifference(source.sailing!.heading,a))+(reciprocal?Math.abs(headingDifference(target.sailing!.heading,a)):0)
       -Math.abs(headingDifference(source.sailing!.heading,b))-(reciprocal?Math.abs(headingDifference(target.sailing!.heading,b)):0));
-  let best:CrewRendezvous|undefined,bestScore=Infinity;
+  const candidates:{plan:CrewRendezvous;score:number}[]=[];
+  const solidViews=new Map([source,target].map(ship=>[ship.id,shipSolidTraffic(map,ship,units)]));
   // Nearby parallel stations avoid forcing a large hull around the far end
   // of its partner just to match both centers. The usable seam remains proven.
   const offset=Math.min(shipProfile(source)!.length,shipProfile(target)!.length)*.1;
@@ -54,10 +94,16 @@ function rendezvous(map:GameMap,units:readonly Unit[],source:Unit,target:Unit,cr
         ||!shipBodyClearAtPose(map,a,sourceAt,traffic)||!shipBodyClearAtPose(map,b,targetAt,traffic))continue;
       const score=Math.hypot(sourceAt.x-source.x,sourceAt.y-source.y)+Math.abs(headingDifference(source.sailing!.heading,heading))*shipProfile(source)!.length/2
         +(reciprocal?Math.hypot(targetAt.x-target.x,targetAt.y-target.y)+Math.abs(headingDifference(target.sailing!.heading,heading))*shipProfile(target)!.length/2:0);
-      if(score<bestScore-1e-6){bestScore=score;best={sourceId:source.id,sourceX:sourceAt.x,sourceY:sourceAt.y,heading,targetX:targetAt.x,targetY:targetAt.y,reciprocal};}
+      candidates.push({score,plan:{sourceId:source.id,sourceX:sourceAt.x,sourceY:sourceAt.y,heading,targetX:targetAt.x,targetY:targetAt.y,reciprocal}});
     }
   }
-  return best;
+  while(candidates.length) {
+    let best=0;
+    for(let i=1;i<candidates.length;i++)if(candidates[i]!.score<candidates[best]!.score-1e-6)best=i;
+    const {plan}=candidates.splice(best,1)[0]!;
+    if(rendezvousCanStart(map,units,source,target,crew,plan,solidViews))return plan;
+  }
+  return undefined;
 }
 
 /** Recomputed from ordinary saved orders: crew can finish their crossing or
@@ -148,7 +194,7 @@ export function prepareCrewRendezvous(map:GameMap,units:readonly Unit[]) {
     if(!participating(source))continue;
     let plan=order.rendezvous;
     if(!plan || plan.sourceId!==source.id || !plan.reciprocal && (Math.hypot(target.x-plan.targetX,target.y-plan.targetY)>4 || Math.abs(headingDifference(target.sailing!.heading,plan.heading))>.01)
-      || plan.reciprocal && !participating(target))plan=rendezvous(map,units,source,target,crew);
+      || plan.reciprocal && !participating(target) || rendezvousCannotAdvance(source,target,crew,plan))plan=rendezvous(map,units,source,target,crew);
     if(!plan)continue;
     order.rendezvous=plan;
     const navigate=(ship:Unit,x:number,y:number)=>{

@@ -3,7 +3,7 @@ import { shipSolidTraffic } from './ship-collisions';
 import { reservationTraffic, shipContactGoal, shipRouteTraffic, shipTrafficKey } from "./ship-avoidance";
 import { detCos, detSin } from "./det-math";
 import { shipsIn, shipProfile, type Point } from "./ship-geometry";
-import { headingDifference, hullFits, hullPassageClear, nearestShipPose, planShipRoute, planVoyageRoute, shipPoseAt } from "./ship-navigation";
+import { headingDifference, hullFits, hullPassageClear, nearestShipPose, planShipRoute, SHIP_LOCAL_ROUTE_BUDGET, planVoyageRoute, shipPoseAt } from "./ship-navigation";
 import { planVoyageWindLeg, voyageCompanion as nativeVoyageCompanion } from './ship-voyage-wind';
 import { perTick, SIM_TICKS_PER_SECOND } from "./time";
 import type { GameMap, Unit } from "./types";
@@ -250,7 +250,7 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
     // tack. Leave the actual wind planner its stage on this same tick.
     if(!planned && !fireCourse && !aligned && !(straight ? tryAdmitShipPlan(ship) : tryConsumeShipPlan(ship)))return false;
     const {points,partial}=planned ?? (fireCourse ? {points:[{x:point.x,y:point.y,heading:point.fireHeading!}],partial:false}
-      : planner(map,ship,contact ?? point,traffic,traffic.hasTraffic?1024:Infinity));
+      : planner(map,ship,contact ?? point,traffic,traffic.hasTraffic?SHIP_LOCAL_ROUTE_BUDGET:Infinity));
     if(!allowCruise)for(const point of points)point.exact=true;
     motion.route={goalX:point.x,goalY:point.y,points,end:points.at(-1)??{x:ship.x,y:ship.y},trafficKey:shipTrafficKey(ship,units),partial,
       startX:ship.x,startY:ship.y,startHeading:motion.heading,windKey:wind.key,age:0,blockedTicks:0,
@@ -410,7 +410,7 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
           motion.speed=0;return;
         }
       }else if(tryConsumeShipPlan(ship)){
-        const recovery=planVoyageRoute(map,ship,point,traffic,traffic.hasTraffic?1024:Infinity);
+        const recovery=planVoyageRoute(map,ship,point,traffic,traffic.hasTraffic?SHIP_LOCAL_ROUTE_BUDGET:Infinity);
         delete motion.planningRequestedAtTick;delete motion.planningLastRequestedAtTick;
         if(!recovery.partial && recovery.points.length && recovery.points.every(point=>!point.exact && !point.pivot)){
           replan(true,recovery);route=motion.route!;

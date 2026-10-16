@@ -818,6 +818,9 @@ export function planDirectVoyage(map:SeaMap,ship:Unit,goal:Point,traffic:(a:Ship
 /** A deterministic expansion budget bounds temporary traffic searches. Partial
  * routes remain journeys, never arrivals at the requested destination. */
 let routeSearchDepth = 0;
+/** Existing local traffic search allowance used by precise hull maneuvers. */
+export const SHIP_LOCAL_ROUTE_BUDGET = 1024;
+
 export function planShipRoute(map: SeaMap, ship: Unit, goal: Point & {heading?:number}, trafficClear: (from:ShipPose,to:ShipPose)=>boolean = emptyTraffic, budget=Infinity, voyage=false): {points:ShipPose[];partial:boolean} {
   routeSearchDepth++;
   try { return planShipRouteImpl(map,ship,goal,trafficClear,budget,voyage,routeSearchDepth>1)!; }
