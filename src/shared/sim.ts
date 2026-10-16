@@ -157,6 +157,44 @@ type SpatialIndex<T extends SpatialEntity> = {
   bottom: number;
 };
 
+/** The world and derived indexes read by native land attack/arrival queries.
+ * A live Game already supplies this shape; no factory, clock or mutation API is needed.
+ */
+export type NativeQueryWorld = Pick<GameSnapshot, "map" | "units" | "buildings" | "items" | "projectiles" | "variants" | "obstacles"> & {
+  teams: Readonly<Partial<Record<PlayerId, string>>>;
+};
+export type NativeQueryFrame = NativeQueryWorld & {
+  unitSpatial?: SpatialIndex<Unit>;
+  unitSpatialByTeam?: Map<string, SpatialIndex<Unit>>;
+  shipReachPadding?: number;
+  buildingSpatial?: SpatialIndex<Building>;
+  buildingSpatialByTeam?: Map<string, SpatialIndex<Building>>;
+  entityById?: Map<string, Unit | Building>;
+};
+
+/** Rebuild a snapshot's canonical native query order, without touching a live
+ * frame's index membership certificates or its map's building overlay. Team
+ * insertion order, x-then-y cells and bucket insertion order are native's.
+ * A live unit pass keeps its earlier buckets as bodies move: pass that live
+ * frame directly when querying that instant, rather than rebuilding it here.
+ * Units retain their identity (the native self-threat test uses ===).
+ */
+export function createNativeQueryFrame(world: NativeQueryWorld): NativeQueryFrame {
+  const map = { ...world.map };
+  setBuildingBodies(map, [...world.buildings, ...world.obstacles ?? []]);
+  return {
+    map, teams: world.teams, units: world.units, buildings: world.buildings,
+    items: world.items, projectiles: world.projectiles,
+    ...(world.variants ? { variants: world.variants } : {}),
+    ...(world.obstacles ? { obstacles: world.obstacles } : {}),
+    unitSpatial: createSpatialIndex(world.units, 320),
+    unitSpatialByTeam: createTeamSpatialIndexes(world, world.units, 230),
+    buildingSpatial: createSpatialIndex(world.buildings, 420),
+    buildingSpatialByTeam: createTeamSpatialIndexes(world, world.buildings, 260),
+    entityById: new Map<string, Unit | Building>([...world.units, ...world.buildings].map(entity => [entity.id, entity])),
+  };
+}
+
 const MINE_RANGE = GOLD_MINE_RULES.entryRange;
 const TOWN_HALL_DROP_RANGE = GOLD_MINE_RULES.dropRange;
 const GOLD_PER_TRIP = GOLD_MINE_RULES.goldPerTrip;
@@ -1689,7 +1727,7 @@ function updateAttackOrder(game: Game, unit: Unit, navalFrame = true) {
   if (!navalFrame && isUnit(target) && (target.deck || target.cabin || isShipKind(target.kind))) navalFrame = true;
   if (navalFrame && !isObstacle(target)) target = navalCombatTarget(game, unit, target);
   // A target that is as good as dead, or out of reach from the attacker's ground (see @@@reach), gives way to the next.
-  if (projectedHpAfterPendingProjectiles(game, unit.owner, target) <= 0 || (navalFrame || game.map.terrain) && !canReach(game.map, unit, target, game.units)) {
+  if (attackTargetNeedsReplacement(game, unit, target, navalFrame)) {
     const replacement = nearestEnemyTarget(game, unit, Math.max(AUTO_ACQUIRE_RANGE, unit.attackRange), navalFrame);
     if (!replacement) {
       unit.order = { type: "idle" };
@@ -1701,8 +1739,9 @@ function updateAttackOrder(game: Game, unit: Unit, navalFrame = true) {
   }
   // Only automatic orders reconsider living targets here. Explicit player attacks keep their target.
   if (!isObstacle(target) && (unit.owner === "neutral" || order.leashX !== undefined)) {
-    if(navalFrame && !automaticTargetAllowed(game.units,unit.owner,target)){unit.order={type:'idle'};return;}
-    target = automaticCombatTarget(game, unit, target, navalFrame);
+    const automatic = automaticOrderTarget(game, unit, target, navalFrame);
+    if (!automatic) { unit.order = { type: 'idle' }; return; }
+    target = automatic;
     if (target.id !== order.targetId) unit.order = { ...order, targetId: target.id };
   }
   const gap = targetGap(unit, target, navalFrame);
@@ -3085,15 +3124,20 @@ function applyWeaponAbility(game:Game,caster:Unit,ability:AbilityKind,at:{x:numb
   const mounted=ability==='incendiaryFlume' ? installedWeapons(game,caster).find(item=>item.kind==='flameProjector' && (item.durability ?? 1)>0 && shipGunCanAim(caster,item,at)) : undefined;
   fireWeapon(game,caster,at,def.damage*outgoingDamageMultiplier(game, caster),def.weapon,def.range,{...(def.rootTicks ? {rootTicks:def.rootTicks}:{}),...(def.burnTicks ? {burnTicks:def.burnTicks}:{})},targetId,mounted?{item:mounted,pose:mountedWeaponPose(caster,mounted)!}:undefined,"cast");
 }
-function backOutOfDeadZone(game:Game,unit:Unit,target:{x:number;y:number},navalFrame=true){
+function deadZoneRetreatGoal(game:NativeQueryFrame,unit:Unit,target:{x:number;y:number},navalFrame=true){
   let minimum=weaponRules(game,unit).weapon?.minRange;
   if(navalFrame && isShipKind(unit.kind)){
     const weapons=installedWeapons(game,unit).filter(item=>(item.durability ?? 1)>0);
     if(weapons.length)minimum=Math.min(...weapons.map(item=>SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].weapon.minRange ?? 0));
   }
-  if(!minimum||distance(unit,target)>=minimum)return false;
+  if(!minimum||distance(unit,target)>=minimum)return undefined;
   const dx=unit.x-target.x,dy=unit.y-target.y,length=Math.hypot(dx,dy)||1;
-  moveToward(unit,unit.x+(dx||1)/length*(minimum+32),unit.y+dy/length*(minimum+32),game.map,game.units);return true;
+  return { x:unit.x+(dx||1)/length*(minimum+32), y:unit.y+dy/length*(minimum+32) };
+}
+function backOutOfDeadZone(game:Game,unit:Unit,target:{x:number;y:number},navalFrame=true){
+  const goal = deadZoneRetreatGoal(game, unit, target, navalFrame);
+  if (!goal) return false;
+  moveToward(unit,goal.x,goal.y,game.map,game.units);return true;
 }
 function weaponOrigin(attacker: Unit | Building) {
   const pose = isUnit(attacker) && shipWeaponPose(attacker);
@@ -3371,7 +3415,7 @@ function withDeckDamageBatch(game: Game, body: () => void) {
 }
 
 /** Ship orders address the fighting deck and remain on the hull after its last passenger dies. */
-function navalCombatTarget(game: Game, attacker: Unit | Building, target: Unit | Building, crewRange=Infinity): Unit | Building {
+function navalCombatTarget(game: NativeQueryFrame, attacker: Unit | Building, target: Unit | Building, crewRange=Infinity): Unit | Building {
   if (!isUnit(target) || !shipProfile(target)) return target;
   const home=isUnit(attacker) && attacker.deck && unitRules(game,attacker).attackRange<=RANGED_ATTACK_RANGE_THRESHOLD
     ? game.units.find(ship=>ship.id===attacker.deck!.shipId) : undefined;
@@ -3443,13 +3487,82 @@ function incomingThreatOutranks(game: Game, unit: Unit, targetId: string, attack
   return shouldSwitchCombatTarget(targetPriorityScore(game, unit.owner, current, targetGap(unit, current) ** 2, unit), incoming);
 }
 
-function automaticCombatTarget(game: Game, unit: Unit, current: Unit | Building, navalFrame = true): Unit | Building {
+function automaticCombatTarget(game: NativeQueryFrame, unit: Unit, current: Unit | Building, navalFrame = true): Unit | Building {
   // Incoming damage reacts immediately; ordinary reconsideration happens as the next shot becomes available.
   if (unit.cooldown > 0) return current;
   const next = nearestEnemyTarget(game, unit, Math.max(AUTO_ACQUIRE_RANGE, unit.attackRange), navalFrame);
   if (!next || next.id === current.id) return current;
   return shouldSwitchCombatTarget(targetPriorityScore(game, unit.owner, current, targetGap(unit, current, navalFrame) ** 2, unit),
     targetPriorityScore(game, unit.owner, next, targetGap(unit, next, navalFrame) ** 2, unit)) ? next : current;
+}
+
+function attackTargetNeedsReplacement(game: NativeQueryFrame, unit: Unit, target: Unit | Building | Obstacle, navalFrame: boolean) {
+  return projectedHpAfterPendingProjectiles(game, unit.owner, target) <= 0
+    || (navalFrame || game.map.terrain) && !canReach(game.map, unit, target, game.units);
+}
+
+function automaticOrderTarget(game: NativeQueryFrame, unit: Unit, target: Unit | Building, navalFrame: boolean) {
+  if (navalFrame && !automaticTargetAllowed(game.units, unit.owner, target)) return undefined;
+  return automaticCombatTarget(game, unit, target, navalFrame);
+}
+
+export type NativeAutomaticAttackIntent = {
+  action: "none" | "acquire" | "pursue" | "engage" | "return" | "backOut" | "unsupported";
+  targetId?: string;
+  gap?: number;
+  weaponRange: number;
+};
+
+/** Read a living unit's native idle-acquisition or automatic-attack branch at this instant.
+ * Cooldown is the value AT that branch, after the unit's normal clock update.
+ * This does not run autocasts, queues, neutral leash cleanup, future help calls,
+ * movement or attacks. `engage` means no pursuit, not that aim/fire is ready.
+ * Supply the world's actual unit object: cloning it changes native self-threat
+ * identity. A projected position must belong to an explicitly projected world.
+ * A snapshot query uses the complete rules (default true); only a native caller
+ * with its existing grounded-frame certificate may pass false.
+ * World state is unchanged; native derived geometry/item/projectile memos can fill.
+ */
+export function nativeAutomaticAttackIntent(game: NativeQueryFrame, unit: Unit, navalFrame = true): NativeAutomaticAttackIntent {
+  if (!(game.entityById?.get(unit.id) ?? game.units.find(candidate => candidate.id === unit.id)) || !game.units.includes(unit)) {
+    throw new Error("Native attack query requires the world's unit object");
+  }
+  const none: NativeAutomaticAttackIntent = { action: "none", weaponRange: unit.attackRange };
+  if (unit.hp <= 0 || isInCabin(unit)) return none;
+  if (shipProfile(unit)) return { ...none, action: "unsupported" };
+  const order = unit.order;
+  if (order.type === "idle") {
+    if (unit.kind === "worker") return none;
+    const target = nearestEnemyTarget(game, unit, unit.owner === "neutral" ? 150 : AUTO_ACQUIRE_RANGE, navalFrame);
+    return target ? { ...none, action: "acquire", targetId: target.id, gap: targetGap(unit, target, navalFrame) } : none;
+  }
+  if (order.type !== "attack" || unit.owner !== "neutral" && order.leashX === undefined) return none;
+  let target = findStrikeTarget(game, order.targetId);
+  if (!target) return none; // Native attack ends here; it does not reacquire a missing ID this tick.
+  // Retain the native recursive replacement sequence without writing an order.
+  while (true) {
+    if (!navalFrame && isUnit(target) && (target.deck || target.cabin || isShipKind(target.kind))) navalFrame = true;
+    if (navalFrame && !isObstacle(target)) target = navalCombatTarget(game, unit, target);
+    if (!attackTargetNeedsReplacement(game, unit, target, navalFrame)) break;
+    const replacement = nearestEnemyTarget(game, unit, Math.max(AUTO_ACQUIRE_RANGE, unit.attackRange), navalFrame);
+    if (!replacement) return none;
+    // Native writes the ID, then recursively resolves it through the existing
+    // entity lookup; that can retain an older body after same-ID replacement.
+    target = findStrikeTarget(game, replacement.id);
+    if (!target) return none;
+  }
+  if (!isObstacle(target)) {
+    const automatic = automaticOrderTarget(game, unit, target, navalFrame);
+    if (!automatic) return none;
+    target = automatic;
+  }
+  const gap = targetGap(unit, target, navalFrame);
+  const result = { ...none, targetId: target.id, gap };
+  if (deadZoneRetreatGoal(game, unit, target, false)) return { ...result, action: "backOut" };
+  if (gap <= unit.attackRange) return { ...result, action: "engage" };
+  if (isPlayerId(unit.owner) && order.leashX !== undefined && order.leashY !== undefined
+    && distance(unit, { x: order.leashX, y: order.leashY }) > GUARD_LEASH_RANGE) return { ...result, action: "return" };
+  return { ...result, action: "pursue" };
 }
 
 function neutralHasValidAttackTarget(game: Game, unit: Unit) {
@@ -3693,7 +3806,7 @@ function nearestEnemyUnit(game: Game, owner: PlayerId, x: number, y: number, ran
 
 // The best enemy for a unit to strike within the range: none for a unit without a weapon, and only what it can reach
 // (see @@@reach).
-function nearestEnemyTarget(game: Game, unit: Unit, range: number, navalFrame = true): Unit | Building | undefined {
+function nearestEnemyTarget(game: NativeQueryFrame, unit: Unit, range: number, navalFrame = true): Unit | Building | undefined {
   if (unit.attackDamage <= 0) return undefined;
   return nearestEnemyTargetFromPoint(game, unit.owner, unit, range, unit, undefined, navalFrame);
 }
@@ -3705,7 +3818,7 @@ function targetGap(from: { x: number; y: number }, target: Unit | Building | Obs
   return strikeGap(from,target);
 }
 
-function nearestEnemyTargetFromPoint(game: Game, owner: Owner, point: { x: number; y: number }, range: number, attacker?: Unit, accepts?: (target:Unit|Building)=>boolean, navalFrame = true): Unit | Building | undefined {
+function nearestEnemyTargetFromPoint(game: NativeQueryFrame, owner: Owner, point: { x: number; y: number }, range: number, attacker?: Unit, accepts?: (target:Unit|Building)=>boolean, navalFrame = true): Unit | Building | undefined {
   const limit = range * range;
   let best: Unit | Building | undefined;
   let bestScore = Number.NEGATIVE_INFINITY;
@@ -3748,7 +3861,7 @@ function shipReachPadding(units: readonly Unit[]) {
   return padding;
 }
 
-function automaticCandidateReachable(game: Game, unit: Unit, candidate: Unit | Building, navalFrame = true): boolean {
+function automaticCandidateReachable(game: NativeQueryFrame, unit: Unit, candidate: Unit | Building, navalFrame = true): boolean {
   if ((navalFrame || game.map.terrain) && !canReach(game.map, unit, candidate, game.units)) return false;
   if (navalFrame && !automaticShoreTargetReachable(game,unit,candidate)) return false;
   if (unit.owner !== "neutral") return true;
@@ -3756,14 +3869,14 @@ function automaticCandidateReachable(game: Game, unit: Unit, candidate: Unit | B
   return !origin || distance(candidate, origin) <= NEUTRAL_DAMAGE_RESPONSE_RANGE;
 }
 
-function targetPriorityScore(game: Game, owner: Owner, target: Unit | Building, distanceSq: number, attacker?: Unit) {
+function targetPriorityScore(game: NativeQueryFrame, owner: Owner, target: Unit | Building, distanceSq: number, attacker?: Unit) {
   const victimId = combatVictimId(target);
   const victim = victimId ? findTarget(game, victimId) : undefined;
   const threat: TargetThreat = victim && !areEnemyOwners(game, owner, victim.owner) ? victim === attacker ? "self" : "ally" : "none";
   return combatTargetScore(target, Math.sqrt(distanceSq), threat, projectedHpAfterPendingProjectiles(game, owner, target));
 }
 
-function projectedHpAfterPendingProjectiles(game: Game, attackerOwner: Owner, target: Unit | Building | Obstacle) {
+function projectedHpAfterPendingProjectiles(game: NativeQueryFrame, attackerOwner: Owner, target: Unit | Building | Obstacle) {
   let pendingDamage = 0;
   // Physical bolts and shells can miss or hit intervening crew. Only tracking shots guarantee their target's damage.
   for (const projectile of projectilesAt(game, target.id)) if (projectile.owner === attackerOwner && !projectile.weapon) pendingDamage += projectile.damage;
@@ -3778,7 +3891,7 @@ function projectedHpAfterPendingProjectiles(game: Game, attackerOwner: Owner, ta
 const projectilesByTarget = new WeakMap<Projectile[], { indexed: number; byTarget: Map<string, Projectile[]> }>();
 const NO_PROJECTILES: Projectile[] = [];
 
-function projectilesAt(game: Game, targetId: string): Projectile[] {
+function projectilesAt(game: NativeQueryFrame, targetId: string): Projectile[] {
   const projectiles = game.projectiles;
   let index = projectilesByTarget.get(projectiles);
   if (!index || index.indexed > projectiles.length) projectilesByTarget.set(projectiles, (index = { indexed: 0, byTarget: new Map() }));
@@ -3792,14 +3905,14 @@ function projectilesAt(game: Game, targetId: string): Projectile[] {
 }
 
 
-function findTarget(game: Game, targetId: string): Unit | Building | undefined {
+function findTarget(game: NativeQueryFrame, targetId: string): Unit | Building | undefined {
   const target = game.entityById?.get(targetId) ?? game.units.find((unit) => unit.id === targetId) ?? game.buildings.find((building) => building.id === targetId);
   return target && isUnit(target) && isInCabin(target) ? undefined : target;
 }
 
 // What an attack order or a shot may strike: a unit, a building, or rocks or a gate (see @@@obstacle), which nothing else
 // looks for.
-function findStrikeTarget(game: Game, targetId: string): Unit | Building | Obstacle | undefined {
+function findStrikeTarget(game: NativeQueryFrame, targetId: string): Unit | Building | Obstacle | undefined {
   return findTarget(game, targetId) ?? game.obstacles?.find((obstacle) => obstacle.id === targetId);
 }
 
@@ -3976,13 +4089,13 @@ function isPlayerId(owner: Unit["owner"]): owner is PlayerId {
   return owner !== "neutral";
 }
 
-function areEnemyOwners(game: Game, a: Owner, b: Owner) {
+function areEnemyOwners(game: Pick<NativeQueryWorld, "teams">, a: Owner, b: Owner) {
   if (a === b) return false;
   if (a === "neutral" || b === "neutral") return a !== "neutral" || b !== "neutral";
   return game.teams[a] !== game.teams[b];
 }
 
-function teamKey(game: Game, owner: Owner) {
+function teamKey(game: Pick<NativeQueryWorld, "teams">, owner: Owner) {
   return owner === "neutral" ? "neutral" : game.teams[owner] ?? owner;
 }
 
@@ -4030,15 +4143,64 @@ function arrive(unit: Unit, goal: { x: number; y: number }) {
 // A walk whose goal lies within a building's reach, or `within` of it, ends where the unit stands pressed against that
 // building: it can come no nearer. A goal just past the reach (a rally point beside a sanctum) kept four lancers pressed
 // at 15 from it for good.
-function restsAgainstGoalBody(game: Game, unit: Unit, goal: { x: number; y: number }, within: number) {
+function restsAgainstGoalBody(game: NativeQueryFrame, unit: Unit, goal: { x: number; y: number }, within: number) {
+  return goalBuildingContact(game, unit, goal, within) !== undefined;
+}
+
+function goalBuildingContact(game: NativeQueryFrame, unit: Pick<Unit, "x" | "y" | "radius">, goal: { x: number; y: number }, within: number) {
   // Only a unit within a building's reach of its goal can be pressed against one that covers it.
-  if (distance(unit, goal) > 2 * (MAX_BUILDING_RADIUS + MAX_UNIT_RADIUS) + within + 2) return false;
-  let resting = false;
+  if (distance(unit, goal) > 2 * (MAX_BUILDING_RADIUS + MAX_UNIT_RADIUS) + within + 2) return undefined;
+  let resting: Building | undefined;
   forEachNearbyBuilding(game, goal, MAX_BUILDING_RADIUS + unit.radius + within, (building) => {
     const reach = building.radius + unit.radius;
-    if (!resting && distance(goal, building) < reach + within && distance(unit, building) <= reach + 2) resting = true;
+    if (!resting && goalTouchesBuilding(goal, unit.radius, building, within) && distance(unit, building) <= reach + 2) resting = building;
   });
   return resting;
+}
+
+function goalTouchesBuilding(goal: { x: number; y: number }, radius: number, building: Building, within: number) {
+  return distance(goal, building) < building.radius + radius + within;
+}
+
+export type BuildingMoveArrival = {
+  buildingId: string;
+  point: { x: number; y: number };
+  movementTick: number;
+  reason: "destination" | "buildingContact";
+};
+
+/** Static land movement to an early arrival beside a goal-overlapping building within
+ * `ticks` normal movement steps. Uses the same terrain steering, pace and
+ * circle-contact test as native move orders; a contact is tested AFTER a step,
+ * including when the unit already touches the body. Native walkDestination
+ * arrival takes precedence over circle contact, as in walkEnded. Its building
+ * ID identifies the goal's envelope, not proof that this body alone caused the
+ * route endpoint. Arrival within `within` of the nominal goal is not early.
+ * No crowd arrival, hull collision, future
+ * status changes, push/separation or other bodies' movement is forecast.
+ * The returned point is a geometric estimate, not a safety/healing guarantee.
+ */
+export function buildingMoveArrival(game: NativeQueryFrame, unit: Unit, goal: { x: number; y: number }, ticks: number, within = MOVE_ORDER_ARRIVAL_RANGE): BuildingMoveArrival | undefined {
+  if (!game.map.terrain || unitMover(unit.kind) !== "land" || unit.deck || isInCabin(unit)) return undefined;
+  const mover = unitMover(unit.kind), map = game.map;
+  const point = isWalkable(map, goal.x, goal.y, mover) ? goal : walkableGoal(map, goal.x, goal.y, mover);
+  let goalBuilding: Building | undefined;
+  forEachNearbyBuilding(game, point, MAX_BUILDING_RADIUS + unit.radius + within, building => {
+    if (!goalBuilding && goalTouchesBuilding(point, unit.radius, building, within)) goalBuilding = building;
+  });
+  if (!goalBuilding) return undefined;
+  // Only the local pose changes. The original unit/order and native frame stay intact.
+  const probe = { ...unit };
+  const pace = statusPace(unit);
+  for (let tick = 1; tick <= ticks; tick += 1) {
+    walkToward(probe, goal.x, goal.y, map, pace);
+    const end = walkDestination(map, probe, point, mover);
+    if (distance(probe, end) < within) return distance(probe, goal) < within ? undefined
+      : { buildingId: goalBuilding.id, point: { x: probe.x, y: probe.y }, movementTick: tick, reason: "destination" };
+    const building = goalBuildingContact(game, probe, point, within);
+    if (building) return { buildingId: building.id, point: { x: probe.x, y: probe.y }, movementTick: tick, reason: "buildingContact" };
+  }
+  return undefined;
 }
 
 // @@@group-arrival - A group sent to one point gathers round it, as in StarCraft II: a unit's walk ends where it stands
@@ -4389,7 +4551,7 @@ const teamSpatialMembership = new WeakMap<object, {
   y: number[];
 }>();
 
-function createTeamSpatialIndexes<T extends SpatialEntity & { owner: Owner }>(game: Game, entities: T[], cellSize: number, previous?: Map<string, SpatialIndex<T>>): Map<string, SpatialIndex<T>> {
+function createTeamSpatialIndexes<T extends SpatialEntity & { owner: Owner }>(game: Pick<NativeQueryWorld, "teams">, entities: T[], cellSize: number, previous?: Map<string, SpatialIndex<T>>): Map<string, SpatialIndex<T>> {
   const cached = previous ? teamSpatialMembership.get(previous) : undefined;
   let prefix = 0;
   if (cached && Object.is(cached.cellSize, cellSize) && cached.members.length === entities.length) {
@@ -4448,7 +4610,7 @@ function createEntityIndex(game: Game) {
   return index;
 }
 
-function forEachNearbyUnit(game: Game, point: { x: number; y: number }, range: number, visit: (unit: Unit) => void) {
+function forEachNearbyUnit(game: NativeQueryFrame, point: { x: number; y: number }, range: number, visit: (unit: Unit) => void) {
   forEachNearbyEntity(game.unitSpatial, game.units, point, range, unit => { if (!isInCabin(unit)) visit(unit); });
 }
 
@@ -4472,11 +4634,11 @@ function firstNearbyUnit(game: Game, point: { x: number; y: number }, range: num
   return undefined;
 }
 
-function forEachNearbyBuilding(game: Game, point: { x: number; y: number }, range: number, visit: (building: Building) => void) {
+function forEachNearbyBuilding(game: NativeQueryFrame, point: { x: number; y: number }, range: number, visit: (building: Building) => void) {
   forEachNearbyEntity(game.buildingSpatial, game.buildings, point, range, visit);
 }
 
-function forEachNearbyEnemyUnit(game: Game, owner: Owner, point: { x: number; y: number }, range: number, visit: (unit: Unit) => void) {
+function forEachNearbyEnemyUnit(game: NativeQueryFrame, owner: Owner, point: { x: number; y: number }, range: number, visit: (unit: Unit) => void) {
   const indexes = game.unitSpatialByTeam;
   if (!indexes) {
     forEachNearbyUnit(game, point, range, (unit) => {
@@ -4488,7 +4650,7 @@ function forEachNearbyEnemyUnit(game: Game, owner: Owner, point: { x: number; y:
   for (const index of indexes.values()) if (index.team !== ownTeam) forEachNearbyEntity(index, game.units, point, range, visit);
 }
 
-function forEachNearbyEnemyBuilding(game: Game, owner: Owner, point: { x: number; y: number }, range: number, visit: (building: Building) => void) {
+function forEachNearbyEnemyBuilding(game: NativeQueryFrame, owner: Owner, point: { x: number; y: number }, range: number, visit: (building: Building) => void) {
   const indexes = game.buildingSpatialByTeam;
   if (!indexes) {
     forEachNearbyBuilding(game, point, range, (building) => {

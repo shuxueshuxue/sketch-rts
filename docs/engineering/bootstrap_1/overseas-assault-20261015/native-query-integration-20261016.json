@@ -1,0 +1,107 @@
+{
+  "rootBasis": "63bde9e75fbccfb7a9ae9b92c132e93dda01a111",
+  "productionSourceBefore": "0f5bf01a05046169d4fb42322376f767b97bcc83",
+  "integratedSourceEquivalentTo": "9119feec0dd4b4933d5f8940b80df98abba80259",
+  "scope": "Pure native readonly land-arrival and automatic-target queries. No AI use or rule/balance change in this integration. No new ordinary0 or whole-game acceptance claim. Existing 44441 knight result remains attributed to0f5bf.",
+  "source": [
+    {
+      "path": "src/shared/sim.ts",
+      "bytes": 271057,
+      "sha256": "b07c0434127cf5a1cf063dcc104d240a412983f0493a0e009c34efd03493b48e",
+      "equalToFixed9119": true
+    },
+    {
+      "path": "src/shared/sim/native-query.test.ts",
+      "bytes": 12097,
+      "sha256": "333e0ee962ce85733e842dcd2f2987cd61710c698208affa73136abdc4ee14db",
+      "equalToFixed9119": true
+    },
+    {
+      "path": "src/shared/sim/building-move-arrival.test.ts",
+      "bytes": 4356,
+      "sha256": "b562c1a497f1d462c5254aea51db3a4c7dc5ac41a05c8b108a8681615993f363",
+      "equalToFixed9119": true
+    }
+  ],
+  "packages": [
+    {
+      "file": "bootstrap-native-primitives-evidence.tar.gz",
+      "sha256": "eb156369ea8bd73b061815b811540be80e15a49d26bf6174b8669f4b5a40f5b4",
+      "bytes": 6687114,
+      "sourceHead": "5db730d574bf6dc20e29b1874e442c043d24f122",
+      "index": "native-primitives-index.json",
+      "payloadFiles": 231,
+      "regularFilesIncludingIndex": 232,
+      "completePayloadsVerified": true,
+      "deliveryCountNote": "Original delivery field payload counted regular files including index; original archive/delivery preserved unchanged."
+    },
+    {
+      "file": "bootstrap-native-primitives-v2-evidence.tar.gz",
+      "sha256": "f7f23e132d711dd14a124fd87407514b88a6d486a2225b7798fd9508820c1f4e",
+      "bytes": 4387986,
+      "sourceHead": "9119feec0dd4b4933d5f8940b80df98abba80259",
+      "index": "index.json",
+      "payloadFiles": 20,
+      "regularFilesIncludingIndex": 21,
+      "completePayloadsVerified": true,
+      "deliveryCountNote": "Original delivery field payload counted regular files including index; original archive/delivery preserved unchanged."
+    }
+  ],
+  "frozen": {
+    "revision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+    "manifestSHA256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
+    "manifestFiles": 184,
+    "archivedRevisionFileHashesAllEqual": true,
+    "rulesVersion": 2
+  },
+  "validation": {
+    "root": {
+      "tests": 53,
+      "files": 7,
+      "singleWorker": true,
+      "tscExitCode": 0
+    },
+    "upstream5db": {
+      "tests": 73,
+      "tscExitCode": 0,
+      "actualNativeComponentWindows": [
+        7905,
+        10425,
+        16245
+      ],
+      "worldAndNextIdCheckpoints": 65,
+      "scope": "Components replay recorded public commands, not new strategy full-pipeline games. All three stored memories readonly."
+    },
+    "upstream9119": {
+      "targetQueryTests": 12,
+      "change": "Only query replacement re-resolves native entity IDs; runtime/arrival unchanged from5db. Stale-index native witness preserved."
+    }
+  },
+  "logs": [
+    {
+      "path": "native-query-root-validation-20261016/root-native-query-integration-tests-20261016.log",
+      "sha256": "9ffece4374645e02ed2d2858f25c2a5162e5c6f53ebc754c0835ace45050a46c",
+      "bytes": 673
+    },
+    {
+      "path": "native-query-root-validation-20261016/root-native-query-integration-tsc-20261016.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  ],
+  "unrecoveredOriginalWorkspaceGap": true,
+  "independentFinalReview": {
+    "agent": "/root/land_army/native_query_review",
+    "head": "9119feec0dd4b4933d5f8940b80df98abba80259",
+    "staticOnly": true,
+    "blockers": [],
+    "closedFinding": "Replacement query now re-resolves native ID lookup, preserving stale live-index behavior; runtime remains unchanged.",
+    "simSHA256": "b07c0434127cf5a1cf063dcc104d240a412983f0493a0e009c34efd03493b48e",
+    "limits": [
+      "No future damage, control, healing or safety prediction",
+      "Canonical reconstruction is distinct from live mid-pass buckets",
+      "Arrival buildingId is an envelope witness, not sole route-cause proof",
+      "Reviewer did not rerun tests/tsc/native; root53 tests/tsc are separate"
+    ]
+  }
+}
