@@ -4,7 +4,7 @@ import type { AbilityKind, BootstrapAiVersion, GameCommand, GameSnapshot, Player
 import { AI_SCRIPT_LIBRARY, V9_AI_STACK, V7_AI_STACK, V8_AI_STACK, planAiCommandEntriesFromScripts, planEconomy } from '../policy/core';
 import { isOpponentOwner } from '../policy/ownership';
 import type { AiCommandEntry, AiPolicyContext, AiScript } from '../policy/types';
-import { combatDeckRecovery } from './deck-recovery';
+import { combatDeckRecovery, preserveLateCrewCharge } from './deck-recovery';
 import { V6_STRATEGIES, v7Phases, type V6Strategy, type V6Want } from '../policy/v6/doctrine';
 import { V8_STRATEGIES } from '../policy/v8/doctrine';
 import { ARCHER_DOCTRINES } from './archer-doctrine';
@@ -134,7 +134,7 @@ export function planBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, v
 /** Local deck micro sees every accepted task, including later items and abilities. */
 export function planBootstrapScriptEntries(snapshot: GameSnapshot, owner: PlayerId, scripts: AiScript[], options: AiPolicyContext): AiCommandEntry[] {
   const healed = new Map<string, Set<AbilityKind>>();
-  const entries = planAiCommandEntriesFromScripts(snapshot, owner, scripts, options).filter(({ command }) => {
+  const entries = preserveLateCrewCharge(snapshot, owner, planAiCommandEntriesFromScripts(snapshot, owner, scripts, options).filter(({ command }) => {
     if (command.type !== 'cast' || command.queued || ABILITY_DEFS[command.ability].behavior !== 'heal') return true;
     const caster = snapshot.units.find(unit => unit.id === command.unitId);
     const target = snapshot.units.find(unit => unit.id === command.targetId);
@@ -145,7 +145,7 @@ export function planBootstrapScriptEntries(snapshot: GameSnapshot, owner: Player
     if (spells?.has(command.ability)) return false;
     if (spells) spells.add(command.ability); else healed.set(caster.id, new Set([command.ability]));
     return true;
-  });
+  }));
   if (!scripts.some(script => script.id === AI_SCRIPT_LIBRARY.naval.id)) return entries;
   const planned = entries.map(entry => entry.command);
   const final = combatDeckRecovery(snapshot, owner, options, planned);
