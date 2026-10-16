@@ -330,8 +330,10 @@ async page => {
         mapId: "bareDuel",
         options: {
           aiPlayers: ["enemy"],
+          // The reset keeps the room's races, and the host plays ember (the slot edits above): its weapon and plating
+          // research is at the Ember Forge.
           scenario: {
-            addBuildings: [{ id: "ui-research-barracks", owner: "player", kind: "barracks", x: 1200, y: 960, complete: true }],
+            addBuildings: [{ id: "ui-research-forge", owner: "player", kind: "emberForge", x: 1200, y: 960, complete: true }],
           },
         },
       }),
@@ -339,19 +341,19 @@ async page => {
     if (!reset.ok) throw new Error(await reset.text());
     return (await reset.json()).snapshot;
   }, roomSetupId);
-  must(researchProof.buildings.some((building) => building.id === "ui-research-barracks"), "research proof did not seed a selectable barracks");
+  must(researchProof.buildings.some((building) => building.id === "ui-research-forge"), "research proof did not seed a selectable ember forge");
   await page.waitForFunction(async (roomId) => {
     const snapshot = await (await fetch("/api/rooms/" + roomId + "/snapshot")).json();
-    return snapshot.buildings.some((building) => building.id === "ui-research-barracks");
+    return snapshot.buildings.some((building) => building.id === "ui-research-forge");
   }, roomSetupId, { timeout: 5000 });
   // A reload during the match comes straight back into it (the room's route).
   await page.reload();
   await page.waitForFunction(() => document.querySelector("[data-main-menu]")?.classList.contains("hidden"), null, { timeout: 5000 });
   await page.waitForFunction(async (roomId) => {
     const snapshot = await (await fetch("/api/rooms/" + roomId + "/snapshot")).json();
-    return snapshot.buildings.some((building) => building.id === "ui-research-barracks");
+    return snapshot.buildings.some((building) => building.id === "ui-research-forge");
   }, roomSetupId, { timeout: 5000 });
-  await page.waitForFunction(() => window.__sketchRtsView?.buildingIds.includes("ui-research-barracks"), null, { timeout: 5000 });
+  await page.waitForFunction(() => window.__sketchRtsView?.buildingIds.includes("ui-research-forge"), null, { timeout: 5000 });
   const authoritativeReloadProof = await page.evaluate(() => ({ tick: window.__sketchRtsView?.tick, buildingIds: window.__sketchRtsView?.buildingIds }));
   await page.evaluate(() => {
     const gate = document.querySelector("[data-pointer-lock-gate]");
@@ -364,15 +366,15 @@ async page => {
   // actual minimap to bring the research fixture into the screen center.
   const researchNavigation = await page.evaluate(async (roomId) => {
     const snapshot = await (await fetch("/api/rooms/" + roomId + "/snapshot")).json();
-    const barracks = snapshot.buildings.find(building => building.id === "ui-research-barracks");
+    const forge = snapshot.buildings.find(building => building.id === "ui-research-forge");
     const frame = document.querySelector("[data-minimap-frame]");
     const canvas = document.querySelector(".game-canvas");
-    if (!barracks || !frame || !canvas) throw new Error("Research navigation fixture missing");
+    if (!forge || !frame || !canvas) throw new Error("Research navigation fixture missing");
     const transform = new DOMMatrixReadOnly(getComputedStyle(frame).transform);
     const bounds = canvas.getBoundingClientRect();
     return {
-      minimap: { x: bounds.x + transform.m41 + parseFloat(frame.style.width) * barracks.x / snapshot.map.width,
-        y: bounds.y + transform.m42 + parseFloat(frame.style.height) * barracks.y / snapshot.map.height },
+      minimap: { x: bounds.x + transform.m41 + parseFloat(frame.style.width) * forge.x / snapshot.map.width,
+        y: bounds.y + transform.m42 + parseFloat(frame.style.height) * forge.y / snapshot.map.height },
       center: { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 },
     };
   }, roomSetupId);
@@ -386,7 +388,7 @@ async page => {
     selectionLabels: [...document.querySelectorAll("[data-selection] [aria-label]")].map((element) => element.getAttribute("aria-label") ?? ""),
     status: document.querySelector("[data-status]")?.textContent ?? "",
   }));
-  must(researchSelectionProof.focusedId === "ui-research-barracks" && researchSelectionProof.selectionLabels.some((label) => label.includes("Barracks")), "research proof did not select the barracks: " + JSON.stringify(researchSelectionProof));
+  must(researchSelectionProof.focusedId === "ui-research-forge" && researchSelectionProof.selectionLabels.some((label) => label.includes("Ember Forge")), "research proof did not select the ember forge: " + JSON.stringify(researchSelectionProof));
   const researchDockProof = await page.evaluate(() => {
     const buttons = [...document.querySelectorAll("[data-command-dock] button")].filter((button) => !button.hidden);
     return {
@@ -399,12 +401,12 @@ async page => {
       researchDockProof.labels.includes("Research Reinforced Plating") &&
       researchDockProof.hotkeys.includes("W") &&
       researchDockProof.hotkeys.includes("P"),
-    "selected barracks did not expose research buttons: " + JSON.stringify(researchDockProof),
+    "selected ember forge did not expose research buttons: " + JSON.stringify(researchDockProof),
   );
   await page.locator("[data-command-label='Research Weapon Training']").click();
   await page.waitForFunction(async (roomId) => {
     const snapshot = await (await fetch("/api/rooms/" + roomId + "/snapshot")).json();
-    return snapshot.buildings.find((building) => building.id === "ui-research-barracks")?.researchQueue?.[0]?.upgradeKind === "weaponTraining";
+    return snapshot.buildings.find((building) => building.id === "ui-research-forge")?.researchQueue?.[0]?.upgradeKind === "weaponTraining";
   }, roomSetupId, { timeout: 5000 });
   const researchProgressProof = await page.waitForFunction(() => {
     const button = document.querySelector("[data-research-progress='weaponTraining']");
