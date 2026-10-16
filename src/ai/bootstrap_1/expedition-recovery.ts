@@ -7,13 +7,14 @@ import { cancelFerry, planNavalTacticsWithAssignments } from '../policy/naval';
 import { units } from '../policy/snapshot';
 import { mountedMinePlan } from '../policy/mounted-mine-plan';
 import type { AiPolicyContext } from '../policy/types';
-import { planMedicalRecovery } from './medical-recovery';
+import { medicalRecoveryReleasedUnitIds, planMedicalRecoveryTasks } from './medical-recovery';
 import { planSettlerBoarding } from './ferry-preparation';
 import { planRiderCrossing, riderFerryCrew } from './rider-crossing';
 import { transportNeedsRecovery, transportRecovery } from './transport-recovery';
 import { postRecoveryCommands } from './front-recovery';
 import { expeditionDeparture } from './expedition-departure';
 import { landRecoveryAssignments, mainlandCareAssignments, patientRendezvousCommands } from './land-recovery';
+import { continuingPatientRendezvous, rememberPatientRendezvous } from './medical-rendezvous';
 import { planLandedCombat } from './landed-combat';
 import { workerBoardingSafe } from './worker-boarding';
 
@@ -21,13 +22,16 @@ function recoveryAssignments(snapshot: GameSnapshot, owner: PlayerId, options: A
   const home = snapshot.buildings.find(building => building.owner === owner && building.kind === 'townHall');
   const landed = snapshot.units.filter(unit => unit.owner === owner && !unit.deck && unitMover(unit.kind) === 'land'
     && unit.kind !== 'worker' && unit.order.type !== 'board' && home && !sameGround(snapshot.map, unit, home));
-  return landRecoveryAssignments(snapshot, owner, options, landed);
+  const care = landRecoveryAssignments(snapshot, owner, options, landed);
+  const assigned = new Set([...care.recovering.map(({ patient }) => patient.id), ...care.posts.map(({ patient }) => patient.id)]);
+  return { ...care, continuing: continuingPatientRendezvous(snapshot, owner, landed, options)
+    .filter(({ patient }) => !assigned.has(patient.id)) };
 }
 
 export function expeditionRecoveryUnitIds(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
-  const { recovering, unmedicated, posts } = recoveryAssignments(snapshot, owner, options);
+  const { recovering, continuing, unmedicated, posts } = recoveryAssignments(snapshot, owner, options);
   return new Set([...recovering.flatMap(({ patient, healer }) => [patient.id, healer.id]), ...unmedicated.map(({ patient }) => patient.id),
-    ...posts.map(({ patient }) => patient.id), ...transportRecovery(snapshot, owner, options).ids]);
+    ...continuing.map(({ patient }) => patient.id), ...posts.map(({ patient }) => patient.id), ...transportRecovery(snapshot, owner, options).ids]);
 }
 
 /** An expedition's naval ownership also owns its land recovery orders. */
@@ -56,13 +60,14 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
   }
   const mines = mountedMinePlan(snapshot, options.memory);
   const ports = transportRecovery(snapshot, owner, options);
-  const { recovering, unmedicated, foes, posts } = recoveryAssignments(snapshot, owner, options);
+  const { recovering, continuing, unmedicated, foes, posts } = recoveryAssignments(snapshot, owner, options);
+  const pendingPatients = continuing.map(({ patient }) => patient.id);
   const medics = new Set(recovering.map(({ healer }) => healer.id));
   const departing = expeditionDeparture(snapshot, owner, options, ports.ids,
     new Set([...recovering.map(({ patient }) => patient.id), ...unmedicated.map(({ patient }) => patient.id),
-      ...posts.map(({ patient }) => patient.id), ...medics]));
+      ...pendingPatients, ...posts.map(({ patient }) => patient.id), ...medics]));
   const reserved = new Set([...recovering.map(({ patient }) => patient.id), ...unmedicated.map(({ patient }) => patient.id),
-    ...posts.map(({ patient }) => patient.id), ...medics, ...ports.ids, ...departing.ids]);
+    ...pendingPatients, ...posts.map(({ patient }) => patient.id), ...medics, ...ports.ids, ...departing.ids]);
   const mounted = new Set(options.memory.mounted?.flatMap(job => job.unitIds));
   const mainland = mainlandCareAssignments(snapshot, owner, options);
   // Recruitment must use the same care query as mobileCare before a new
@@ -81,14 +86,24 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
 
   // The same naval owner runs local combat; a new boarding/care/departure
   // assignment takes precedence over micro, including one made this think.
-  const local = planLandedCombat(snapshot, owner, options, new Set([...reserved, ...mounted,
-    ...commands.flatMap(command => command.type === 'board' ? command.unitIds : [])]));
+  const medical = medics.size ? planMedicalRecoveryTasks(snapshot, owner, recovering.map(({ patient }) => patient), options) : undefined;
+  const healing = medical ? medical.commands.filter(command =>
+    'unitId' in command ? medics.has(command.unitId) : 'unitIds' in command && command.unitIds.some(id => medics.has(id))) : [];
+  const workingMedics = medical?.occupied ?? new Set<string>();
+  const releasedMedics = new Set([...medicalRecoveryReleasedUnitIds(snapshot, owner, options),
+    ...[...medics].filter(id => !workingMedics.has(id))]);
+  // Keep every care/ferry/departure reservation for recruitment. Only local
+  // backline execution may take over a healer without an actual medical task.
+  const retreat = patientRendezvousCommands(snapshot, recovering, foes, medics);
+  // A medic can also be a predicted patient; medics have no rendezvous
+  // command of their own. Preserve actual patient moves, not that empty job.
+  const patients = new Set([...retreat.flatMap(command => 'unitIds' in command ? command.unitIds : []), ...pendingPatients, ...unmedicated.map(({ patient }) => patient.id),
+    ...posts.map(({ patient }) => patient.id), ...ports.ids, ...departing.ids]);
+  const local = planLandedCombat(snapshot, owner, options, new Set([...reserved].filter(id => !releasedMedics.has(id) || patients.has(id))
+    .concat([...mounted, ...commands.flatMap(command => command.type === 'board' ? command.unitIds : [])])), releasedMedics);
   const tactical = new Set(local.flatMap(command => 'unitIds' in command ? command.unitIds : []));
 
-  const healing = medics.size ? planMedicalRecovery(snapshot, owner, recovering.map(({ patient }) => patient)).filter(command =>
-    'unitId' in command ? medics.has(command.unitId) : 'unitIds' in command && command.unitIds.some(id => medics.has(id))) : [];
-  const retreat = patientRendezvousCommands(snapshot, recovering, foes, medics);
-  return [...commands.flatMap((command): GameCommand[] => {
+  const published: GameCommand[] = [...commands.flatMap((command): GameCommand[] => {
     if ('unitId' in command) return reserved.has(command.unitId) ? [] : [command];
     if (!('unitIds' in command)) return [command];
     const unitIds = command.unitIds.filter(id => !reserved.has(id) && !tactical.has(id));
@@ -100,4 +115,6 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
       const unitIds = command.unitIds.filter(id => !departing.ids.has(id));
       return unitIds.length ? [{ ...command, unitIds }] : [];
     }), ...departing.commands];
+  rememberPatientRendezvous(options, recovering, retreat, published, continuing);
+  return published;
 }

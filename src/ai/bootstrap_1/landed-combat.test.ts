@@ -6,6 +6,12 @@ import { sameGround, walkingDistance } from '../../shared/terrain';
 import { ABILITY_DEFS, UNIT_DEFS } from '../../shared/catalog';
 import { planAiOwnerCommandEntries } from '../planner-context';
 import { BOOTSTRAP_VERSIONS } from './policy';
+import { planMedicalRecoveryTasks } from './medical-recovery';
+import { armedFoes } from './safe-land-route';
+import { medicalEscapeRoadAllows, medicalRoadIsSafe } from './medical-task-safety';
+import { groundSteeringRoute } from '../../shared/route-selection';
+import { distance } from '../policy/spatial';
+import { MOVE_ORDER_ARRIVAL_RANGE } from '../../shared/movement-rules';
 
 function checkpoint(tick: number) {
   const saved = JSON.parse(gunzipSync(readFileSync(new URL(`./fixtures/archer-landed-before-think-${tick}.json.gz`, import.meta.url))).toString());
@@ -45,17 +51,38 @@ it.each(BOOTSTRAP_VERSIONS)('%s keeps landed tactical moves on an actual ground 
 });
 
 it.each(BOOTSTRAP_VERSIONS)('%s keeps the real wounded pair and their medics out of local focus', version => {
-  const { game, saved } = checkpoint(100650), snapshot = snapshotGame(game);
+  const { game, saved } = checkpoint(100650), snapshot = snapshotGame(game), before = JSON.stringify(snapshot);
   const entries = planAiOwnerCommandEntries(snapshot, { playerId: 'p0', version, memory: structuredClone(saved.memories.p0) }, { teams: game.teams });
-  for (const id of ['unit-p0-archer-2384', 'unit-p0-archer-2849']) {
+  const patientIds = ['unit-p0-archer-2384', 'unit-p0-archer-2849'];
+  for (const id of patientIds) {
     expect(entries.some(({ scriptId, command }) => scriptId === 'naval' && command.type === 'move'
       && command.avoidCombat && command.unitIds.includes(id))).toBe(true);
     expect(entries.some(({ command }) => command.type === 'attack' && command.unitIds.includes(id))).toBe(false);
   }
+  const medical = planMedicalRecoveryTasks(snapshot, 'p0', snapshot.units.filter(unit => patientIds.includes(unit.id)), { teams: game.teams });
+  const foes = armedFoes(snapshot, 'p0', { teams: game.teams });
   for (const id of ['unit-p0-priest-2370', 'unit-p0-priest-7778']) {
-    expect(entries.some(({ scriptId, command }) => scriptId === 'naval' && command.type === 'holdPosition'
-      && command.unitIds.includes(id))).toBe(true);
+    const medic = snapshot.units.find(unit => unit.id === id)!;
+    // Both actual medics are still reloading (82/104). The old mandatory hold
+    // leaves them in live enemy fire; care must release its physical claim.
+    expect(medic.abilityCooldowns?.heal).toBeGreaterThan(0);
+    expect(medical.occupied.has(id)).toBe(false);
+    expect(medical.released.has(id)).toBe(true);
+    expect(medicalRoadIsSafe(snapshot, medic, medic, 0, foes)).toBe(false);
+    const physical = entries.filter(({ command }) => 'unitIds' in command && command.unitIds.includes(id));
+    expect(physical).toHaveLength(1);
+    expect(physical[0]?.scriptId).toBe('naval');
+    const command = physical[0]!.command;
+    expect(command.type).toBe('move');
+    if (command.type !== 'move') throw Error('The current naval backline must replace the unsafe cooldown hold');
+    expect(command.avoidCombat).toBe(true);
+    const road = groundSteeringRoute(snapshot.map, medic, command);
+    expect(distance(medic, command)).toBeGreaterThan(MOVE_ORDER_ARRIVAL_RANGE);
+    expect(distance(road[road.length - 1]!, command)).toBeLessThanOrEqual(MOVE_ORDER_ARRIVAL_RANGE);
+    expect(medicalEscapeRoadAllows(snapshot, medic, foes)(command)).toBe(true);
+    expect(entries.some(({ command }) => command.type === 'cast' && command.unitId === id)).toBe(false);
   }
+  expect(JSON.stringify(snapshot)).toBe(before);
 });
 
 it.each(BOOTSTRAP_VERSIONS)('%s screens the real landed priests locally before they have a care assignment', version => {

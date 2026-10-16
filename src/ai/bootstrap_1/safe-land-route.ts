@@ -8,7 +8,7 @@ import type { AiPolicyContext } from '../policy/types';
 import { isEnemyOwner } from '../policy/ownership';
 import { castThreatReach, mountedThreatReach, THINK_TICKS } from './mounted-micro';
 
-export function armedFoes(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
+export function armedFoes(snapshot: GameSnapshot, owner: PlayerId, options: Pick<AiPolicyContext, 'teams'>) {
   return [...snapshot.units, ...snapshot.buildings].filter(foe => foe.hp > 0 && foe.attackDamage > 0
     && isEnemyOwner(snapshot, owner, foe.owner, options));
 }

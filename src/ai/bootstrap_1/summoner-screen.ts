@@ -1,4 +1,5 @@
-import { casterMeleeMicro } from './caster-screen';
+import { medicalRecoveryReleasedUnitIds } from './medical-recovery';
+import { casterMeleeMicro, releaseMedicalBackline } from './caster-screen';
 import type { GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { sameGround } from '../../shared/terrain';
 import { averagePoint, distance, type Point } from '../policy/spatial';
@@ -18,7 +19,7 @@ function advancingScreen(front: Unit[], center: Point, target: Point) {
 }
 
 /** A defended tower keeps the host together between summon waves at the contested mine. */
-export function planSummonerScreen(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
+function planSummonerFormation(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const intel = readV6Intel(snapshot, owner, options), general = v6Memory(options).general;
   const front = intel.army.filter(unit => !isBacklineKind(unit));
   const casters = intel.army.filter(unit => SUMMONING_UNIT_KINDS.has(unit.kind));
@@ -74,4 +75,13 @@ export function planSummonerScreen(snapshot: GameSnapshot, owner: PlayerId, opti
       .sort((a, b) => distance(a, general.target!) - distance(b, general.target!))[0]
     : undefined;
   return screenRoles(tower ?? v6CasterPost(general, intel.home), front);
+}
+
+
+/** Healers keep the same backline release contract inside the spirit host. */
+export function planSummonerScreen(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
+  const commands = planSummonerFormation(snapshot, owner, options);
+  const released = medicalRecoveryReleasedUnitIds(snapshot, owner, options);
+  return releaseMedicalBackline(snapshot, owner, options, readV6Intel(snapshot, owner, options).home,
+    units(snapshot, owner).filter(unit => released.has(unit.id)), commands);
 }

@@ -6,7 +6,7 @@ import { weaponDamageProfile } from '../../shared/damage-types';
 import { boltIntersection, crewBeforeHulls, weaponDamage } from '../../shared/weapons';
 import { clusteredWeaponScore, planAbilityCommandsWithWeaponScore, type WeaponTargetScore } from '../policy/spell-tactics';
 import type { AiScript } from '../policy/types';
-import { medicalRecoveryUnitIds } from './medical-recovery';
+import { medicalRecoveryCastingUnitIds } from './medical-recovery';
 
 const scoreWeaponTarget: WeaponTargetScore = (snapshot, caster, def, targets, target) => {
   // The other authored weapon skill is an area shell; a piercing bolt scores its ordered ray instead.
@@ -26,7 +26,7 @@ const scoreWeaponTarget: WeaponTargetScore = (snapshot, caster, def, targets, ta
 };
 
 export const planBootstrapAbilities: typeof import('../policy/spell-tactics').planAbilityCommands = (snapshot, owner, options) => {
-  const recovering = medicalRecoveryUnitIds(snapshot, owner);
+  const recovering = medicalRecoveryCastingUnitIds(snapshot, owner, options);
   // Immediate heals execute during command issue; recovery's allocated spell must be the only heal from this caster.
   return planAbilityCommandsWithWeaponScore(snapshot, owner, options, scoreWeaponTarget).filter(command =>
     command.type !== 'cast' || ABILITY_DEFS[command.ability].behavior !== 'heal' || !recovering.has(command.unitId));

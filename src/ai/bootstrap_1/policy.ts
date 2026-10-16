@@ -1,6 +1,6 @@
-import { canResearchAt, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap, trainingBuildingFor } from '../../shared/catalog';
+import { ABILITY_DEFS, canResearchAt, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap, trainingBuildingFor } from '../../shared/catalog';
 import { shopping } from './shopping';
-import type { BootstrapAiVersion, GameCommand, GameSnapshot, PlayerId, PlayerState } from '../../shared/types';
+import type { AbilityKind, BootstrapAiVersion, GameCommand, GameSnapshot, PlayerId, PlayerState } from '../../shared/types';
 import { AI_SCRIPT_LIBRARY, V9_AI_STACK, V7_AI_STACK, V8_AI_STACK, planAiCommandEntriesFromScripts } from '../policy/core';
 import { isOpponentOwner } from '../policy/ownership';
 import type { AiCommandEntry, AiPolicyContext, AiScript } from '../policy/types';
@@ -129,7 +129,19 @@ export function planBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, v
 
 /** Local deck micro sees every accepted task, including later items and abilities. */
 export function planBootstrapScriptEntries(snapshot: GameSnapshot, owner: PlayerId, scripts: AiScript[], options: AiPolicyContext): AiCommandEntry[] {
-  const entries = planAiCommandEntriesFromScripts(snapshot, owner, scripts, options);
+  const healed = new Map<string, Set<AbilityKind>>();
+  const entries = planAiCommandEntriesFromScripts(snapshot, owner, scripts, options).filter(({ command }) => {
+    if (command.type !== 'cast' || command.queued || ABILITY_DEFS[command.ability].behavior !== 'heal') return true;
+    const caster = snapshot.units.find(unit => unit.id === command.unitId);
+    const target = snapshot.units.find(unit => unit.id === command.targetId);
+    if (!caster || !target || Math.hypot(caster.x - target.x, caster.y - target.y) > ABILITY_DEFS[command.ability].range) return true;
+    // Naval and medical work share one immediate spell publication. Keep the
+    // earlier accepted assignment; queued and walk-to-cast orders stay intact.
+    const spells = healed.get(caster.id);
+    if (spells?.has(command.ability)) return false;
+    if (spells) spells.add(command.ability); else healed.set(caster.id, new Set([command.ability]));
+    return true;
+  });
   if (!scripts.some(script => script.id === AI_SCRIPT_LIBRARY.naval.id)) return entries;
   const planned = entries.map(entry => entry.command);
   const final = combatDeckRecovery(snapshot, owner, options, planned);
