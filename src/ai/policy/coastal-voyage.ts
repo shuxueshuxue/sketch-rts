@@ -8,7 +8,9 @@ import { beginShipCollisionFrame } from '../../shared/ship-collisions';
 import { isInCabin } from '../../shared/ship-cabin';
 import { shipProfile, type Point } from '../../shared/ship-geometry';
 import { headingDifference, hullPassageClear, planVoyageRoute, shipPoseAt, type ShipPose } from '../../shared/ship-navigation';
+import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { GameSnapshot, Unit } from '../../shared/types';
+import { THINK_TICKS } from '../bootstrap_1/mounted-micro';
 import { isEnemyOwner, type TeamPolicyOptions } from './ownership';
 
 export type CoastalFireDisk = Point & { radius: number; id: string };
@@ -22,6 +24,12 @@ export type CoastalVoyage = {
   /** Complete hazard-aware reference to the strategic goal. This is a
    * tactical query proof, not a route installed in the engine. */
   reference: ShipPose[];
+} | {
+  /** A complete ordinary move to this intermediate coordinate only. No
+   * complete reference or arrival proof exists for the strategic goal. */
+  proof: 'leg';
+  waypoint: Point;
+  legs: { goal: Point; points: ShipPose[] }[];
 } | {
   proof: 'prefix';
   /** The public ordinary move requests this strategic coordinate. Only the
@@ -93,6 +101,47 @@ function ordinaryHull(ship: Unit, pose: ShipPose, goal: Point, speed: number): U
 function fullRoute(route: Route, goal: Point): boolean {
   const end = route.points.at(-1);
   return route.partial === false && !!end && Math.hypot(end.x - goal.x, end.y - goal.y) <= MOVE_ORDER_ARRIVAL_RANGE;
+}
+
+/** Keep a completed leg's destination outside observed fire coverage even
+ * after one think of current enemy locomotion. This is not a forecast of
+ * future spells, purchases or moving physical traffic. */
+export function coastalLegArrivalSafe(snapshot: GameSnapshot, ship: Unit, goal: Point, options: TeamPolicyOptions): boolean {
+  const speeds = new Map(snapshot.units.map(unit => [unit.id, unit.speed]));
+  const disks = coastalFireDisks(snapshot, ship, options).map(disk => ({ ...disk,
+    radius: disk.radius + (speeds.get(disk.id) ?? 0) * THINK_TICKS / SIM_TICKS_PER_SECOND }));
+  const pose = { ...goal, heading: 0 };
+  return coastalFireSegmentClear(pose, pose, disks);
+}
+
+/** An installed strategic route may have a safe departure and a hazardous
+ * distant suffix. Query an ordinary move to its last safe vertex instead of
+ * repeatedly stopping and reissuing the same strategic coordinate. */
+export function planCoastalIntermediateLeg(snapshot: GameSnapshot, ship: Unit, goal: Point, options: TeamPolicyOptions, budget = 100_000): Extract<CoastalVoyage, { proof: 'leg' }> | undefined {
+  const profile = shipProfile(ship), route = ship.sailing?.route;
+  if (!profile || !route?.points.length || ship.order.type !== 'move' || ship.order.rendezvousFor !== undefined
+    || ship.order.heading !== undefined || ship.orderQueue?.length
+    || Math.hypot(ship.order.x - goal.x, ship.order.y - goal.y) >= 1
+    || Math.hypot(route.goalX - goal.x, route.goalY - goal.y) >= 1) return;
+  const start = { x: ship.x, y: ship.y, heading: ship.sailing!.heading }, disks = coastalFireDisks(snapshot, ship, options);
+  let previous: ShipPose = start, mark: ShipPose | undefined;
+  for (const point of route.points) {
+    if (!coastalFireSegmentClear(previous, point, disks)) { mark = previous; break; }
+    previous = point;
+  }
+  if (!mark || Math.hypot(mark.x - start.x, mark.y - start.y) < profile.length * .5
+    || !coastalLegArrivalSafe(snapshot, ship, mark, options)) return;
+  const waypoint = { x: mark.x, y: mark.y }, hull = ordinaryHull(ship, start, waypoint, ship.sailing!.speed);
+  const units = snapshot.units.map(unit => unit.id === ship.id ? hull : unit);
+  beginShipCollisionFrame(units, snapshot.map, [...snapshot.buildings, ...snapshot.obstacles ?? []]);
+  const leg = planVoyageRoute(snapshot.map, hull, waypoint, shipRouteTraffic(snapshot.map, hull, units), budget);
+  if (!fullRoute(leg, waypoint)) return;
+  previous = start;
+  for (const point of leg.points) {
+    if (!coastalFireSegmentClear(previous, point, disks) || !hullPassageClear(snapshot.map, hull, previous, point)) return;
+    previous = point;
+  }
+  return { proof: 'leg', waypoint, legs: [{ goal: waypoint, points: leg.points }] };
 }
 
 /** Find a safe ordinary-move mark without changing terrain or installing a

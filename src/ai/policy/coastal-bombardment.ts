@@ -1,4 +1,5 @@
-import {coastalFireDisks,coastalFireSegmentClear,coastalVoyagePrefixSafe,planCoastalVoyage,type CoastalVoyage} from './coastal-voyage';
+import {coastalFireDisks,coastalFireSegmentClear,coastalLegArrivalSafe,coastalVoyagePrefixSafe,planCoastalIntermediateLeg,planCoastalVoyage,type CoastalVoyage} from './coastal-voyage';
+import {MOVE_ORDER_ARRIVAL_RANGE} from '../../shared/movement-rules';
 import {distance} from './spatial';
 import {shoreFiringStation} from '../../shared/shore-fire';
 import {walkingDistance} from '../../shared/terrain';
@@ -17,6 +18,8 @@ export function continuingCoastalVoyage(snapshot:GameSnapshot,ship:Unit,options:
  if(!current || ship.order.type!=='move' || distance(ship.order,current.waypoint)>=1)return;
  if(!snapshot.units.some(target=>target.id===current.targetId && target.hp>0)
   && !snapshot.buildings.some(target=>target.id===current.targetId && target.hp>0))return;
+ if(current.proof==='leg' && (distance(ship,current.waypoint)<=MOVE_ORDER_ARRIVAL_RANGE
+  || !coastalLegArrivalSafe(snapshot,ship,current.waypoint,options)))return;
  const motion=ship.sailing;
  if(motion?.route?.points.length)return coastalVoyagePrefixSafe(snapshot,ship,motion.route,options) ? current : undefined;
  const validTick=(tick:number|undefined):tick is number=>tick!==undefined && Number.isSafeInteger(tick) && tick>=0 && tick<=snapshot.tick;
@@ -43,7 +46,10 @@ export function coastalBombardment(snapshot:GameSnapshot,ship:Unit,targets:reado
  };
  const reachable=(plan:CoastalPlan):CoastalPlan|undefined=>{
   if(distance(ship,plan)<1e-5 || continuingWaypoint(snapshot,ship,plan,options))return plan;
-  const voyage=planCoastalVoyage(snapshot,ship,plan,options);
+  const current=options.memory.naval?.coastalVoyages?.[ship.id];
+  const leg=current && current.proof!=='complete' && current.targetId===plan.target.id && distance(current.goal,plan)<70
+   ? planCoastalIntermediateLeg(snapshot,ship,current.waypoint,options) : undefined;
+  const voyage=leg ?? planCoastalVoyage(snapshot,ship,plan,options);
   return voyage ? {...plan,voyage} : undefined;
  };
  const continuingTarget=continuingCoastalVoyage(snapshot,ship,options)?.targetId;
