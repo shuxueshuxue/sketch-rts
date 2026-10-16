@@ -3,8 +3,8 @@ import {strikeUnit} from '../../shared/sim';
 import {describe,it,expect,vi,afterEach} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {createCanvas} from '@napi-rs/canvas';
-import type {Scene} from 'three';
-const gpu=vi.hoisted(()=>({scene:undefined as Scene|undefined,sizes:0,ratios:0}));
+import type {Scene,Material} from 'three';
+const gpu=vi.hoisted(()=>({scene:undefined as Scene|undefined,sizes:0,ratios:0,compiled:[] as Mesh[]}));
 vi.mock('three',async importOriginal=>{
   const actual=await importOriginal<typeof import('three')>();
   return{...actual,WebGLRenderer:class{
@@ -12,6 +12,8 @@ vi.mock('three',async importOriginal=>{
     setClearColor(){}setPixelRatio(){gpu.ratios++;}setSize(){gpu.sizes++;}dispose(){}forceContextLoss(){}
     initTexture(){}copyTextureToTexture(){}getRenderTarget(){return null;}getActiveCubeFace(){return 0;}getActiveMipmapLevel(){return 0;}setRenderTarget(){}
     render(scene:Scene){scene.updateMatrixWorld(true);gpu.scene=scene;}
+    compileAsync(scene:Scene){gpu.compiled=[];scene.traverseVisible(object=>{if((object as Mesh).isMesh)gpu.compiled.push(object as Mesh);});return Promise.resolve();}
+    clear(){}getContext(){return{RGBA:0,UNSIGNED_BYTE:0,readPixels(){}};}
   }};
 });
 import {World3DLayer} from './world-layer';
@@ -325,6 +327,23 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
       expect(paintedMeshes().some(mesh=>mesh.userData.ids.includes(future.id))).toBe(true);
     }
     layer.dispose();
+  });
+
+  it('compiles every match variant while the match loads, and keeps those programs through resets',async()=>{
+    const {frame,layer}=setup();await layer.prepare(frame.snapshot,'match');
+    const compiled=gpu.compiled,materials=new Set<Material>(compiled.flatMap(mesh=>Array.isArray(mesh.material)?mesh.material:[mesh.material]));
+    // The variants first drawn minutes into a match: a building under construction, a selected ship's see-through sail,
+    // the troop and deck remains cards, combat ink.
+    expect([...materials].some(material=>material.transparent&&material.opacity===.48)).toBe(true);
+    expect([...materials].some(material=>material.name.startsWith('unbleached sail')&&material.opacity===.22)).toBe(true);
+    expect(compiled.filter(mesh=>mesh.name==='PaintedCards')).toHaveLength(2);
+    expect(compiled.some(mesh=>mesh.name==='CombatInk')).toBe(true);
+    // Nothing of the warm-up stays in the drawn scene.
+    expect(gpu.scene!.getObjectsByProperty('name','PaintedCards').filter(object=>object.visible)).toHaveLength(0);
+    const disposed=vi.fn();for(const material of materials)material.addEventListener('dispose',disposed);
+    layer.reset();layer.draw(frame);layer.reset();
+    expect(disposed).not.toHaveBeenCalled();
+    layer.dispose();expect(disposed).toHaveBeenCalled();
   });
 
   it('uses actual model geometry, painted alpha picking and deck coordinate inversion without mutating simulation',async()=>{
