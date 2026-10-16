@@ -1,0 +1,70 @@
+{
+  "atUTC": "2026-10-16T22:25:28.639544+00:00",
+  "rootBranch": "codex/bootstrap-1-resume-20261015",
+  "rootBefore": "f710ce5df67d9f4b24431c6a664112575cfc1805",
+  "adoptedRuntimeSource": "afda48c685f56548e2106cf5ed892d4622219fca",
+  "rulesVersion": 2,
+  "frozenRevision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "frozenManifest184SHA256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
+  "copiedEvidence": {
+    "consequential.json": {
+      "originalPath": "/tmp/bootstrap-caster-fixed-fire-c3-readonly-cp-review-20261016/C4-CONSEQUENTIAL-COMPACT-159600-265800.json",
+      "bytes": 7369,
+      "sha256": "f9bc37498ec05d0fe1b23ccfa8271c66e56cad663b1fea7c6cd3a6f9668a7629"
+    },
+    "actual-tests.json": {
+      "originalPath": "/tmp/bootstrap-caster-fixed-fire-afda48-validation-20261016/tests-exit-1.json",
+      "bytes": 3136,
+      "sha256": "bc78bc227061d9b92cd9811c735bc0da8e080aa152877d110a72bc2f046944ac"
+    },
+    "actual-typecheck.json": {
+      "originalPath": "/tmp/bootstrap-caster-fixed-fire-afda48-validation-20261016/typecheck-exit-1.json",
+      "bytes": 2315,
+      "sha256": "82e38b1ee19af359daf40ec92b10b71441d45353d938f93014b8abdbb8b81b29"
+    },
+    "personal-visual-observation.json": {
+      "originalPath": "/tmp/root-c4-tower-battle-native-visuals-20261016/ROOT-PERSONAL-VISUAL-OBSERVATION.json",
+      "bytes": 1378,
+      "sha256": "36c637bd15d4a0fc3d352ab98475900baa559cba0dc4cf8be68aed3386749277"
+    },
+    "strict600-proof.json": {
+      "originalPath": "/tmp/strict600-c4-retreat-221340-20261016/strict600-c4-strict600-proof.json",
+      "bytes": 1551,
+      "sha256": "e4b5acf5017bda79bcd4db8c9b5d5279513f9b9872531c22d041a7e961517823"
+    },
+    "actual-native-process-exit.json": {
+      "originalPath": "/tmp/bootstrap-caster-fixed-fire-c3-prepared-20261016/finalafda48c6-v4/native-process-exit-1.json",
+      "bytes": 5796,
+      "sha256": "75b0e6177dabaa0ae4d8f140c6b35e21fb3a7fb0ae7906ceb7a5bf58aae20527"
+    },
+    "runtime-source1565.json.gz": {
+      "originalCapPath": "/tmp/bootstrap-caster-fixed-fire-afda48-validation-20261016/runtime-source-cap.json",
+      "originalCapSHA256": "a3511a29f8992707e39bb8e036e701cb21024a4be9218b3c27252ebebae0ba6c",
+      "bytes": 81609,
+      "sha256": "97a9142132cfcc05cef304d86e2507ea01b26e4f9a0ab73956c9a308dd8de152",
+      "files": 1565,
+      "allWorkingRuntimeBytesExactToTestedAfda": true
+    },
+    "actual-retreat-query-summary.json": {
+      "originalPath": "/tmp/c4-v6general-retreat-221340-pure-20261016/ACTUAL-V6GENERAL-RETREAT.json",
+      "bytes": 6192,
+      "sha256": "27a4fce7b6e3a7b61443c21d81986f006db19cdbcbed2d5dc902988a40498665",
+      "derivedCompactSummary": true
+    }
+  },
+  "fullLocalRawOutput": "/tmp/bootstrap-caster-fixed-fire-c3-native159600-20261016-v4",
+  "fullLocalRawSourceCap": "/tmp/bootstrap-caster-fixed-fire-afda48-validation-20261016/runtime-source-cap.json",
+  "fullStrict600Closure": "/tmp/strict600-c4-retreat-221340-prepared-20261016/ACTUAL-STRICT600-CLOSED.json",
+  "fullLocalVisuals": "/tmp/root-c4-tower-battle-native-visuals-20261016",
+  "currentBranchOutcome": {
+    "startTick": 159600,
+    "endTick": 265800,
+    "winner": null,
+    "naturalComplete": false,
+    "engineeringObservationStop": true,
+    "sameSourceFullHealthResumeStillPending": true
+  },
+  "allBootstrapGoalsComplete": false,
+  "originalBrokenContainerUncommittedGapStillUnrecovered": true,
+  "scope": "Small durable evidence index only; full raw games/checkpoints/streams/images retained locally, not claimed fully copied into this commit. Actual91 tests/full tsc belong to exact afda source, inherited by byte-equivalent1565 integration; not rerun under root merge HEAD."
+}

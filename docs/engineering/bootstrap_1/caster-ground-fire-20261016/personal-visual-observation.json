@@ -1,0 +1,24 @@
+{
+  "atUTC": "2026-10-16T22:05:11.359092+00:00",
+  "rootPersonallyViewed": true,
+  "rendererPID": 551692,
+  "rendererActualExit": 0,
+  "sourceHead": "afda48c685f56548e2106cf5ed892d4622219fca",
+  "sameNative123ClientBytesAsC3": true,
+  "fullActualSavedFrames": [
+    160200,
+    160800
+  ],
+  "sourceMode": "changed-code C4 from actual C3 saved159600; original ordinary0 remains5b5; C4 later265800 engineering pause no winner",
+  "observations": [
+    "160200 same camera shows seven selected permanent casters grouped north of two damaged enemy halls, with temporary spirits at halls; a lower defended hall and towers remain farther south.",
+    "160800 same seven selected casters remain visible with HP bars, shifted north toward/into tree edge, while the eastern damaged hall is gone and spirits remain farther south.",
+    "Images support formation/position observations. They alone do not establish command ownership, fatal attribution, exact tower margin or natural outcome; those use actual full-state and command/hit/removal evidence."
+  ],
+  "imageSHA256": {
+    "native-160800-c4-tower-battle.png": "948b8dfa36e62c9200ef80c96f363d426dfd222ca866ea991e21b71e17597fc7",
+    "native-160200-c4-tower-battle.png": "7494c699d0c79f4002cb18d170d29193e5134b4f10cc749be243e25b31c6588f"
+  },
+  "nativeSourceAndFullInputsUnchangedBeforeAfter": true,
+  "noGameDuringRender": true
+}

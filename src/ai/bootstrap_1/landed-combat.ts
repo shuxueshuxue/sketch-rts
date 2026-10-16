@@ -19,6 +19,7 @@ import { mountedMicro, mountedTargetOrder, mountedThreatReach, THINK_TICKS } fro
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { capsuleClearsBodies } from '../../shared/navigation-math';
 import { constrainGroundShipStep } from '../../shared/ship-collisions';
+import { casterScreenOutsideFixedFire } from './caster-fixed-fire';
 
 function healer(unit: Unit) {
   return UNIT_DEFS[unit.kind].abilities.some(ability => ABILITY_DEFS[ability].behavior === 'heal');
@@ -57,7 +58,7 @@ export function planLandedCombat(snapshot: GameSnapshot, owner: PlayerId, option
     })
       .sort((a, b) => distance(b, threat) - distance(a, threat))[0]!;
     const occupied = new Set<string>();
-    const accept = (candidates: GameCommand[]) => {
+    const accept = (candidates: GameCommand[], screen = false) => {
       for (const command of candidates) {
         if (!('unitIds' in command)) continue;
         const unitIds = command.unitIds.filter(id => army.some(unit => unit.id === id) && !occupied.has(id)
@@ -72,7 +73,8 @@ export function planLandedCombat(snapshot: GameSnapshot, owner: PlayerId, option
             if (!sameGround(snapshot.map, unit, goal) || walkingDistance(snapshot.map, unit, goal, 'land') === undefined) continue;
             const road = groundSteeringRoute(snapshot.map, unit, goal);
             if (distance(road[road.length - 1]!, goal) > MOVE_ORDER_ARRIVAL_RANGE) continue;
-            commands.push({ ...command, unitIds: [id], ...goal });
+            const selected = { ...command, unitIds: [id], ...goal };
+            commands.push(...(screen ? casterScreenOutsideFixedFire(snapshot, owner, options, [selected], medicalReleases) : [selected]));
             occupied.add(id);
           }
         } else {
@@ -92,7 +94,7 @@ export function planLandedCombat(snapshot: GameSnapshot, owner: PlayerId, option
     const screen: GameCommand[] = [];
     for (const close of [false, true]) screen.push(...planCasterScreen(snapshot, owner, options, cover, cover, front,
       casters.filter(unit => SUMMONING_UNIT_KINDS.has(unit.kind) !== close), close, true, micro, caster => !healer(caster), towers));
-    accept(releaseMedicalBackline(snapshot, owner, options, cover, casters.filter(unit => medicalReleases.has(unit.id)), screen));
+    accept(releaseMedicalBackline(snapshot, owner, options, cover, casters.filter(unit => medicalReleases.has(unit.id)), screen), true);
     // Preserve each executable ordinary stutter/shot. Repair only a missing
     // action inside native melee coverage or a kite cut off by live bodies.
     const ordinary = planRangedKiting(snapshot, owner, options, army.filter(unit => !occupied.has(unit.id) && !healer(unit)), enemies, cover);

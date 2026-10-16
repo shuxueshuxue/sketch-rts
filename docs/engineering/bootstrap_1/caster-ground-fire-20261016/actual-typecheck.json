@@ -1,0 +1,77 @@
+{
+  "job": "typecheck",
+  "attempt": 1,
+  "launcherPID": 546581,
+  "sourceHead": "afda48c685f56548e2106cf5ed892d4622219fca",
+  "sourceManifestFiles": 1565,
+  "nodeSpawned": true,
+  "noGame": true,
+  "heapMiB": 1024,
+  "startedAtUTC": "2026-10-16T21:34:33.726894+00:00",
+  "preflight": {
+    "sources": [
+      {
+        "root": "/tmp/sketch-rts-caster-fixed-fire-c3-control",
+        "head": "afda48c685f56548e2106cf5ed892d4622219fca",
+        "count": 1565,
+        "status": "",
+        "exact": true
+      }
+    ],
+    "frozen497Exact": true,
+    "manifest184Exact": true,
+    "rulesVersion": 2
+  },
+  "before": {
+    "atUTC": "2026-10-16T21:34:34.092463+00:00",
+    "memoryMaxBytes": 17179869184,
+    "memoryCurrentBytes": 14947958784,
+    "rawHeadroomBeforeSpawn": 2231910400,
+    "regularFreeBytes": 71573504,
+    "outputFreeBytes": 1910624256,
+    "oom": "low 0\nhigh 0\nmax 346832\noom 43\noom_kill 2\noom_group_kill 0\n",
+    "requiredHeadroom": 2147483648,
+    "requiredRegularFree": 67108864,
+    "requiredOutputFree": 268435456,
+    "allPassed": true
+  },
+  "pid": 546684,
+  "args": [
+    "node",
+    "--max-old-space-size=1024",
+    "/tmp/sketch-rts-caster-fixed-fire-c3-control/node_modules/typescript/bin/tsc",
+    "--noEmit"
+  ],
+  "exitCode": 0,
+  "cpuUserSeconds": 70.244684,
+  "cpuSystemSeconds": 4.901777,
+  "maxRSSKiB": 1144108,
+  "after": {
+    "atUTC": "2026-10-16T21:35:15.033290+00:00",
+    "memoryMaxBytes": 17179869184,
+    "memoryCurrentBytes": 14979579904,
+    "rawHeadroomBeforeSpawn": 2200289280,
+    "regularFreeBytes": 71573504,
+    "outputFreeBytes": 1910616064,
+    "oom": "low 0\nhigh 0\nmax 346832\noom 43\noom_kill 2\noom_group_kill 0\n"
+  },
+  "postflight": {
+    "sources": [
+      {
+        "root": "/tmp/sketch-rts-caster-fixed-fire-c3-control",
+        "head": "afda48c685f56548e2106cf5ed892d4622219fca",
+        "count": 1565,
+        "status": "",
+        "exact": true
+      }
+    ],
+    "frozen497Exact": true,
+    "manifest184Exact": true,
+    "rulesVersion": 2
+  },
+  "sourceFrozenPrePostExact": true,
+  "endedAtUTC": "2026-10-16T21:35:15.472110+00:00",
+  "elapsedSeconds": 41.74526965801488,
+  "stdoutSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderrSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

@@ -1,0 +1,115 @@
+{
+  "enteredAtUTC": "2026-10-16T21:58:29.396899+00:00",
+  "launcherPid": 550660,
+  "sourceHead": "afda48c685f56548e2106cf5ed892d4622219fca",
+  "sourceManifestFiles": 1565,
+  "runtimeSourceCapSHA256": "a3511a29f8992707e39bb8e036e701cb21024a4be9218b3c27252ebebae0ba6c",
+  "outputPrefix": "/tmp/bootstrap-caster-fixed-fire-c3-native159600-20261016-v4/natural-from-159600",
+  "nodeSpawned": true,
+  "ordinary0": false,
+  "changedCodeContinuation": true,
+  "classification": "C4 changed-AI saved159600 normal-all3 continuation; no result before actual native play.",
+  "guard": {
+    "atUTC": "2026-10-16T21:58:29.634389+00:00",
+    "sourceHead": "afda48c685f56548e2106cf5ed892d4622219fca",
+    "sourceManifestFiles": 1565,
+    "driverSHA256": "89dcc9742d25945bb16f05a2cf75934dfc25997f55e722af2fb2605d1eee7a04",
+    "driverPreflightSHA256": "70c361e9be9acebe967f851a14f972e53066093134bec595187947ce4f0f3cb5",
+    "runtimeSourceCapSHA256": "a3511a29f8992707e39bb8e036e701cb21024a4be9218b3c27252ebebae0ba6c",
+    "parentSlotTransferSHA256": "5eb34dccb0e998882018718086cfcdfd046b5e0869489dce16112a5a536b7ecd",
+    "resourcePolicySHA256": "3b3e3e2bfb39b3ea10d81126d767a55e28c7acad81c7290c5c438b49fc1f6abc",
+    "memoryCurrentBytes": 14802345984,
+    "memoryMaxBytes": 17179869184,
+    "rawHeadroomBeforeSpawn": 2377523200,
+    "requiredHeadroom": 2147483648,
+    "headroomAboveHardGateBytes": 230039552,
+    "advisoryImportReserveBytes": 134217728,
+    "recommendedBeforeSpawnHeadroomBytes": 2281701376,
+    "advisoryReserveAvailable": true,
+    "advisoryIsNotHardGate": true,
+    "heapMiB": 768,
+    "outputRoot": "/tmp/bootstrap-caster-fixed-fire-c3-native159600-20261016-v4",
+    "outputFreeBytes": 2021511168,
+    "requiredOutputFreeBytes": 268435456,
+    "temporaryFreeBytes": 2021511168,
+    "requiredTemporaryFreeBytes": 134217728,
+    "regularWorkspaceFreeBytes": 70303744,
+    "regularWorkspaceReserveBytes": 67108864,
+    "oomBefore": "low 0\nhigh 0\nmax 346832\noom 43\noom_kill 2\noom_group_kill 0\n",
+    "competingProcesses": [],
+    "gameNotYetCreated": true,
+    "declaredSeedFactoryWillNotBeCalled": true,
+    "TSX_DISABLE_CACHE": "1",
+    "tsxModuleSHA256": "128dc5756da9bec342781ee30127611c958f921e15016b06dd866de28d906245",
+    "nativeDriverPersistsEveryInitialAndFinal2GiBPreGameNumericGate": true
+  },
+  "guardReference": {
+    "path": "/tmp/bootstrap-caster-fixed-fire-c3-prepared-20261016/finalafda48c6-v4/native-launch-guard-1.json",
+    "sha256": "4b06f638efca3601eb4c021bd204dc629cb5ff5c62f4efda38e7ff96b2236f39",
+    "bytes": 1675
+  },
+  "driverPreflightSHA256": "70c361e9be9acebe967f851a14f972e53066093134bec595187947ce4f0f3cb5",
+  "parentSlotReference": {
+    "path": "/tmp/bootstrap-caster-fixed-fire-c3-prepared-20261016/finalafda48c6-v4/PARENT-SLOT-TRANSFER.json",
+    "sha256": "5eb34dccb0e998882018718086cfcdfd046b5e0869489dce16112a5a536b7ecd",
+    "bytes": 1223
+  },
+  "actualValidationReference": {
+    "path": "/tmp/bootstrap-caster-fixed-fire-c3-prepared-20261016/finalafda48c6-v4/NATIVE-LAUNCH-VALIDATION.json",
+    "sha256": "3409fe62b82c512745cfa37bf28daaf3e789c6f8e27bc772489f5a37a4cf40d2",
+    "bytes": 1810
+  },
+  "nodePid": 550673,
+  "args": [
+    "node",
+    "--expose-gc",
+    "--max-old-space-size=768",
+    "--import",
+    "tsx",
+    "/tmp/bootstrap-caster-fixed-fire-c3-prepared-20261016/finalafda48c6-v4/candidate-ground-screen-tail.mts",
+    "/tmp/sketch-rts-caster-fixed-fire-c3-control",
+    "afda48c685f56548e2106cf5ed892d4622219fca",
+    "/tmp/bootstrap-caster-fixed-fire-c3-native159600-20261016-v4/natural-from-159600"
+  ],
+  "nodeStdout": "/tmp/bootstrap-caster-fixed-fire-c3-native159600-20261016-v4/node-stdout.log",
+  "nodeStderr": "/tmp/bootstrap-caster-fixed-fire-c3-native159600-20261016-v4/node-stderr.log",
+  "stdoutStderrArePersistent": true,
+  "exitCode": 0,
+  "endedAtUTC": "2026-10-16T22:04:12.421170+00:00",
+  "elapsedSeconds": 343.0245943390182,
+  "nodeStdoutSHA256": "2959df24f392a76463a17505104720f63dbb9077fe7bbd24df91628af0761bec",
+  "nodeStderrSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "oomAfter": "low 0\nhigh 0\nmax 346832\noom 43\noom_kill 2\noom_group_kill 0\n",
+  "nativeGuardReferences": {
+    "-pre-game-resource-guard-initial.json": {
+      "path": "/tmp/bootstrap-caster-fixed-fire-c3-native159600-20261016-v4/natural-from-159600-pre-game-resource-guard-initial.json",
+      "sha256": "27b2cfc8e9f5ec569a3b4f629dbf5895cca53d014e468834f3965b74c61be571",
+      "bytes": 1209
+    },
+    "-pre-game-resource-guard-final.json": {
+      "path": "/tmp/bootstrap-caster-fixed-fire-c3-native159600-20261016-v4/natural-from-159600-pre-game-resource-guard-final.json",
+      "sha256": "52ff188643d874dc451ef4b2d224232c020c17a5bb56b10f4df9cf4e52082ba8",
+      "bytes": 1207
+    },
+    "-restore.json": {
+      "path": "/tmp/bootstrap-caster-fixed-fire-c3-native159600-20261016-v4/natural-from-159600-restore.json",
+      "sha256": "7a8e7ae71e5d9b9aff75a121fa3f7d0edf777d99f1f6286e225b1d4f8cbf1a3f",
+      "bytes": 281
+    },
+    "-native-zero-proof.json": {
+      "path": "/tmp/bootstrap-caster-fixed-fire-c3-native159600-20261016-v4/natural-from-159600-native-zero-proof.json",
+      "sha256": "db86b278e4df4c2b5d7f48586d4eb3c282323b099944af797e230a822974dab4",
+      "bytes": 533
+    },
+    "-launch.json": {
+      "path": "/tmp/bootstrap-caster-fixed-fire-c3-native159600-20261016-v4/natural-from-159600-launch.json",
+      "sha256": "5daecd1f728a8a67941525c5d8fb2bb118f8389ee60e7b243547ec9a03c62e9a",
+      "bytes": 681372
+    },
+    "-postflight.json": {
+      "path": "/tmp/bootstrap-caster-fixed-fire-c3-native159600-20261016-v4/natural-from-159600-postflight.json",
+      "sha256": "497cd82ea7b6e68d74689d75eefd5dcd82986dfde981da15ab8e6b4b847e5b98",
+      "bytes": 644258
+    }
+  }
+}

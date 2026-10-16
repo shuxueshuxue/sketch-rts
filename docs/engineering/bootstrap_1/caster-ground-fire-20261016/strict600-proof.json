@@ -1,0 +1,79 @@
+{
+  "sourceHead": "afda48c685f56548e2106cf5ed892d4622219fca",
+  "inputTick": 220800,
+  "endTick": 221400,
+  "actualTick": 221400,
+  "fields": {
+    "snapshot": true,
+    "nextId": true,
+    "memories": true,
+    "setup": true,
+    "factoryMatch": true
+  },
+  "streams": {
+    "commands": {
+      "expected": 575,
+      "actual": 575,
+      "exact": true
+    },
+    "plans": {
+      "expected": 120,
+      "actual": 120,
+      "exact": true
+    },
+    "native-hits": {
+      "expected": 6,
+      "actual": 6,
+      "exact": true
+    },
+    "native-events": {
+      "expected": 32,
+      "actual": 32,
+      "exact": true
+    },
+    "native-deaths": {
+      "expected": 11,
+      "actual": 11,
+      "exact": true
+    },
+    "corpse-events": {
+      "expected": 1,
+      "actual": 1,
+      "exact": true
+    },
+    "ship-losses": {
+      "expected": 0,
+      "actual": 0,
+      "exact": true
+    },
+    "planner-inputs": {
+      "expected": 120,
+      "actual": 120,
+      "exact": true
+    }
+  },
+  "telemetryExact": {
+    "counts": true,
+    "hitCount": true,
+    "terminalEntityIds": true,
+    "pendingCleanup": true
+  },
+  "fullEventStates": {
+    "expected": 0,
+    "actual": 0,
+    "exact": true
+  },
+  "fullP0Contexts": {
+    "expected": 40,
+    "before": 40,
+    "after": 40,
+    "exact": true
+  },
+  "nativeZeroVerified": true,
+  "originalOwnerWorldHashesAvailable": true,
+  "comparedOriginalOwnerHashStream": "planner-inputs",
+  "exact": true,
+  "originalOrdinary0History": false,
+  "sameSourceReconstruction": true,
+  "notNewOpening": true
+}

@@ -1,0 +1,174 @@
+{
+  "atUTC": "2026-10-16T22:27:47.758114+00:00",
+  "actualNodePID": 554833,
+  "actualExitCode": 0,
+  "noGame": true,
+  "sourceHead": "afda48c685f56548e2106cf5ed892d4622219fca",
+  "rulesVersion": 2,
+  "sourceFrozenPrePostExact": true,
+  "fullResultPath": "/tmp/c4-v6general-retreat-221340-pure-20261016/ACTUAL-V6GENERAL-RETREAT.json",
+  "fullResultSHA256": "53ed0d4f6b6858ec148cad8b8e168dcc4194faea70ce71661a873b5458e04171",
+  "exitPath": "/tmp/c4-v6general-retreat-221340-pure-20261016/EXIT.json",
+  "exitSHA256": "336a6d8730d674fe9b280dd42ea5acd5f312561555669ebadb8ff0669633eaaf",
+  "rows": [
+    {
+      "tick": 221325,
+      "actualFullP0Query": {
+        "elapsedMs": 143.45248100000003,
+        "entriesExact": true,
+        "all3PostmemExact": true,
+        "worldUnchanged": true,
+        "worldMatchesActualAfter": true,
+        "actualSnapshotIdSetupFactoryUnchanged": true
+      },
+      "actualRequestedVersion": "v7",
+      "facing": {
+        "armyIds": [
+          "unit-p1-summoner-51903",
+          "unit-p1-spirit-293595",
+          "unit-p1-spirit-293597",
+          "unit-p1-spirit-293629",
+          "unit-p1-spirit-294332",
+          "unit-p1-spirit-294334",
+          "unit-p1-spirit-294336",
+          "unit-p1-spirit-294369"
+        ],
+        "armyPower": 5.023205381892706,
+        "towerIds": [
+          "building-p1-defenseTower-3103",
+          "building-p1-defenseTower-3492"
+        ],
+        "towerPower": 2.6,
+        "total": 7.623205381892706,
+        "publicAndDerivedExact": true
+      },
+      "incoming": {
+        "armyIds": [
+          "unit-p1-summoner-19873",
+          "unit-p1-summoner-27244",
+          "unit-p1-summoner-42301",
+          "unit-p1-summoner-51903",
+          "unit-p1-spirit-293595",
+          "unit-p1-spirit-293597",
+          "unit-p1-spirit-293599",
+          "unit-p1-spirit-293629",
+          "unit-p1-spirit-294332",
+          "unit-p1-spirit-294336",
+          "unit-p1-spirit-294369"
+        ],
+        "total": 6.602152750313759,
+        "formula": "Derived exact private approachingPower formula, not direct call; no TTL weighting or per-unit-motion substitution"
+      },
+      "overlap": {
+        "ids": [
+          "unit-p1-summoner-51903",
+          "unit-p1-spirit-293595",
+          "unit-p1-spirit-293597",
+          "unit-p1-spirit-293629",
+          "unit-p1-spirit-294332",
+          "unit-p1-spirit-294336",
+          "unit-p1-spirit-294369"
+        ],
+        "power": 4.3624467183140485,
+        "uniqueThreat": 9.862911413892418
+      },
+      "retreatComparison": {
+        "groupPower": 11.819630278733356,
+        "marchPower": 9.837354287997387,
+        "groupStart": 9.837354287997387,
+        "wornThreshold": 4.918677143998694,
+        "worn": false,
+        "ownAdjustedPower": 11.819630278733356,
+        "facingThreshold": 6.098564305514166,
+        "incomingThreshold": 11.380286505765174,
+        "holds": true,
+        "outrun": false,
+        "wouldContinue": true,
+        "derivedLabel": "continue-attack",
+        "withoutOverlapThreshold": 7.890329131113934,
+        "withoutOverlapOutrun": false,
+        "note": "Counter is arithmetic diagnosis, not a tested policy change or proof attack is safe."
+      }
+    },
+    {
+      "tick": 221340,
+      "actualFullP0Query": {
+        "elapsedMs": 56.18947400000002,
+        "entriesExact": true,
+        "all3PostmemExact": true,
+        "worldUnchanged": true,
+        "worldMatchesActualAfter": true,
+        "actualSnapshotIdSetupFactoryUnchanged": true
+      },
+      "actualRequestedVersion": "v7",
+      "facing": {
+        "armyIds": [
+          "unit-p1-summoner-51903",
+          "unit-p1-spirit-293595",
+          "unit-p1-spirit-293597",
+          "unit-p1-spirit-293599",
+          "unit-p1-spirit-293629",
+          "unit-p1-spirit-294332",
+          "unit-p1-spirit-294334",
+          "unit-p1-spirit-294336",
+          "unit-p1-spirit-294369"
+        ],
+        "armyPower": 5.683964045471363,
+        "towerIds": [
+          "building-p1-defenseTower-2817",
+          "building-p1-defenseTower-3103",
+          "building-p1-defenseTower-3492"
+        ],
+        "towerPower": 3.9000000000000004,
+        "total": 9.583964045471363,
+        "publicAndDerivedExact": true
+      },
+      "incoming": {
+        "armyIds": [
+          "unit-p1-summoner-19873",
+          "unit-p1-summoner-27244",
+          "unit-p1-summoner-42301",
+          "unit-p1-summoner-51903",
+          "unit-p1-spirit-293595",
+          "unit-p1-spirit-293597",
+          "unit-p1-spirit-293599",
+          "unit-p1-spirit-294332",
+          "unit-p1-spirit-294369"
+        ],
+        "total": 5.280635423156444,
+        "formula": "Derived exact private approachingPower formula, not direct call; no TTL weighting or per-unit-motion substitution"
+      },
+      "overlap": {
+        "ids": [
+          "unit-p1-summoner-51903",
+          "unit-p1-spirit-293595",
+          "unit-p1-spirit-293597",
+          "unit-p1-spirit-293599",
+          "unit-p1-spirit-294332",
+          "unit-p1-spirit-294369"
+        ],
+        "power": 3.701688054735391,
+        "uniqueThreat": 11.162911413892417
+      },
+      "retreatComparison": {
+        "groupPower": 11.819630278733356,
+        "marchPower": 9.837354287997387,
+        "groupStart": 9.837354287997387,
+        "wornThreshold": 4.918677143998694,
+        "worn": false,
+        "ownAdjustedPower": 11.819630278733356,
+        "facingThreshold": 7.667171236377091,
+        "incomingThreshold": 11.891679574902248,
+        "holds": true,
+        "outrun": true,
+        "wouldContinue": false,
+        "derivedLabel": "general:retreat:incoming",
+        "withoutOverlapThreshold": 8.930329131113934,
+        "withoutOverlapOutrun": false,
+        "note": "Counter is arithmetic diagnosis, not a tested policy change or proof attack is safe."
+      }
+    }
+  ],
+  "capturedArgsAndWorldsUnchanged": true,
+  "interpretation": "Real221340 duplicated six enemy IDs between the road-aware facing set and center-based incoming set. Enemy movement was real, with no births/expiry in this15tick pair. Arithmetic removal of overlap avoids this retreat; no production fix or simulation benefit claimed yet."
+}

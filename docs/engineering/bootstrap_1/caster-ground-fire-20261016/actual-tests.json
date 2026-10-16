@@ -1,0 +1,95 @@
+{
+  "job": "tests",
+  "attempt": 1,
+  "launcherPID": 546595,
+  "sourceHead": "afda48c685f56548e2106cf5ed892d4622219fca",
+  "sourceManifestFiles": 1565,
+  "nodeSpawned": true,
+  "noGame": false,
+  "heapMiB": 768,
+  "startedAtUTC": "2026-10-16T21:34:18.758449+00:00",
+  "preflight": {
+    "sources": [
+      {
+        "root": "/tmp/sketch-rts-caster-fixed-fire-c3-control",
+        "head": "afda48c685f56548e2106cf5ed892d4622219fca",
+        "count": 1565,
+        "status": "",
+        "exact": true
+      }
+    ],
+    "frozen497Exact": true,
+    "manifest184Exact": true,
+    "rulesVersion": 2
+  },
+  "before": {
+    "atUTC": "2026-10-16T21:34:19.122544+00:00",
+    "memoryMaxBytes": 17179869184,
+    "memoryCurrentBytes": 14947864576,
+    "rawHeadroomBeforeSpawn": 2232004608,
+    "regularFreeBytes": 71573504,
+    "outputFreeBytes": 1910640640,
+    "oom": "low 0\nhigh 0\nmax 346832\noom 43\noom_kill 2\noom_group_kill 0\n",
+    "requiredHeadroom": 2147483648,
+    "requiredRegularFree": 67108864,
+    "requiredOutputFree": 268435456,
+    "allPassed": true
+  },
+  "singleFork": true,
+  "fileParallelism": false,
+  "scope": "New20 native/pure contracts plus relevant original screen/medical/shore/shared regressions; counterfactual tests are not full matches.",
+  "pid": 546607,
+  "args": [
+    "node",
+    "--max-old-space-size=768",
+    "/tmp/sketch-rts-caster-fixed-fire-c3-control/node_modules/vitest/vitest.mjs",
+    "run",
+    "--cache=false",
+    "src/ai/bootstrap_1/caster-fixed-fire.test.ts",
+    "src/ai/bootstrap_1/ground-hull-detour.test.ts",
+    "src/ai/bootstrap_1/ground-screen-goal.test.ts",
+    "src/ai/bootstrap_1/summoner-support-reach.test.ts",
+    "src/ai/bootstrap_1/summoner-melee-stand.test.ts",
+    "src/ai/bootstrap_1/summoner-staging.test.ts",
+    "src/ai/bootstrap_1/landed-caster-tower.test.ts",
+    "src/ai/bootstrap_1/medical-task-safety.test.ts",
+    "src/ai/policy/v6/backline.test.ts",
+    "--pool=forks",
+    "--poolOptions.forks.singleFork",
+    "--maxWorkers=1",
+    "--minWorkers=1",
+    "--fileParallelism=false"
+  ],
+  "exitCode": 0,
+  "cpuUserSeconds": 16.648198999999998,
+  "cpuSystemSeconds": 2.520671,
+  "maxRSSKiB": 540396,
+  "after": {
+    "atUTC": "2026-10-16T21:34:33.266317+00:00",
+    "memoryMaxBytes": 17179869184,
+    "memoryCurrentBytes": 14954811392,
+    "rawHeadroomBeforeSpawn": 2225057792,
+    "regularFreeBytes": 71573504,
+    "outputFreeBytes": 1910628352,
+    "oom": "low 0\nhigh 0\nmax 346832\noom 43\noom_kill 2\noom_group_kill 0\n"
+  },
+  "postflight": {
+    "sources": [
+      {
+        "root": "/tmp/sketch-rts-caster-fixed-fire-c3-control",
+        "head": "afda48c685f56548e2106cf5ed892d4622219fca",
+        "count": 1565,
+        "status": "",
+        "exact": true
+      }
+    ],
+    "frozen497Exact": true,
+    "manifest184Exact": true,
+    "rulesVersion": 2
+  },
+  "sourceFrozenPrePostExact": true,
+  "endedAtUTC": "2026-10-16T21:34:33.680275+00:00",
+  "elapsedSeconds": 14.921842095995089,
+  "stdoutSHA256": "8cb562dbb9691fa5de3355f166115ba4bb0a0463ff2c063d198898d4bace5af2",
+  "stderrSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}
