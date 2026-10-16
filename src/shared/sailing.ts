@@ -489,6 +489,14 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
         && (active.trafficKey!==shipTrafficKey(ship,units) || active.partial && (Math.hypot(ship.x-active.startX!,ship.y-active.startY!)>1 || Math.abs(headingDifference(active.startHeading!,motion.heading))>.001)))motion.route=undefined;
       return;
     }
+    // A published exact corridor can outlive the nearby traffic view that
+    // admitted it. Recheck the actual next maneuver before spending headway
+    // or yaw against a hull which has since entered that local view.
+    const liveTraffic=shipRouteTraffic(map,ship,units);
+    const turned={...start,heading:next.heading};
+    const clear=next.pivot ? liveTraffic(start,next)
+      : liveTraffic(start,turned) && liveTraffic(turned,next);
+    if(!clear){waitForTraffic();return;}
     if(next.pivot){
       const difference=headingDifference(start.heading,next.heading),lever=Math.hypot(ship.x-next.pivot.x,ship.y-next.pivot.y);
       const targetSpeed=Math.min(performance.auxiliarySpeed*pace,lever*turn*SIM_TICKS_PER_SECOND);
