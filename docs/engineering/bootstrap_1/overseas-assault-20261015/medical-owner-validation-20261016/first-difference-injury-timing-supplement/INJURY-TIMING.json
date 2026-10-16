@@ -1,0 +1,88 @@
+{
+  "classification": "Postseal timing clarification only. Original20-payload directory/index unchanged; no new game/query/step. Original shared8400units already correctly recorded81HP.",
+  "atUTC": "2026-10-16T12:04:56.207850+00:00",
+  "originalFollowupSHA256": "53e1de0136713291b6f211956e70c76c22bb9ed5585870da138e6079b5dd48bd",
+  "originalIndexSHA256": "0cfdfc1e68576addb385f4cc9573a1cfb694c5c115c3b73264a86c8d648c096d",
+  "unit": "unit-p0-lancer-1979",
+  "actualShared8400": {
+    "id": "unit-p0-lancer-1979",
+    "owner": "p0",
+    "kind": "lancer",
+    "x": 1669.8638263872692,
+    "y": 1108.561545379051,
+    "homeX": 3254,
+    "homeY": 910,
+    "hp": 81,
+    "maxHp": 130,
+    "speed": 68,
+    "attackDamage": 18,
+    "attackRange": 74,
+    "attackCooldown": 28,
+    "cooldown": 0,
+    "radius": 18,
+    "carryingGold": 0,
+    "kills": 0,
+    "xp": 0,
+    "level": 0,
+    "effects": [],
+    "order": {
+      "type": "attack",
+      "targetId": "creep-gen-5-1"
+    },
+    "orderQueue": [],
+    "hands": {},
+    "gearMass": 0,
+    "bodyRadius": 18
+  },
+  "actualHits": {
+    "old38f": [
+      {
+        "tick": 8417,
+        "attacker": "creep-gen-5-2",
+        "target": "unit-p0-lancer-1979",
+        "damage": 15,
+        "hpBefore": 81,
+        "hpAfter": 66
+      },
+      {
+        "tick": 8477,
+        "attacker": "creep-gen-5-1",
+        "target": "unit-p0-lancer-1979",
+        "damage": 34,
+        "hpBefore": 66,
+        "hpAfter": 32
+      }
+    ],
+    "new8da": [
+      {
+        "tick": 8417,
+        "attacker": "creep-gen-5-2",
+        "target": "unit-p0-lancer-1979",
+        "damage": 15,
+        "hpBefore": 81,
+        "hpAfter": 66
+      },
+      {
+        "tick": 8477,
+        "attacker": "creep-gen-5-1",
+        "target": "unit-p0-lancer-1979",
+        "damage": 34,
+        "hpBefore": 66,
+        "hpAfter": 32
+      },
+      {
+        "tick": 8504,
+        "attacker": "creep-gen-5-1",
+        "target": "unit-p0-lancer-1979",
+        "damage": 34,
+        "hpBefore": 32,
+        "hpAfter": -2
+      }
+    ]
+  },
+  "exactInterpretation": [
+    "At shared8400 HP81/130. Both8417 take15 to66, both8477 take34 to32. The32HP value belongs after8477 and before new8504 lethal hit, not the8400 starting state.",
+    "New8504 takes34:32->-2. Old8520 receives55:32->87. This supplements injury timing without changing any original raw or full-state inputs.",
+    "The two-source8400->9000 physical replay is owned by crew_repair_baseline, not performed here; whole-game causation remains unresolved."
+  ]
+}

@@ -10,8 +10,8 @@ cf147的162个不同file+caseID通过，复用部分需以c948到最终版本的
 
 整局1497运行源与497冻结源前后核对相同。37200→37789唯一589 tick冷恢复中，925次公开尝试、120次owner规划及其全部三方后置记忆、419命中、44事件、10死亡与终态world/id/三方记忆/setup全部逐项相同。这个闭合复现不是第二场普通开局。
 
-首次实际分歧已定位在8400：此前两边每600 tick完整存档相同，8400输入gzip本身也相同。改变的是医者物理计划；旧超距cast不是立即回血。新局骑兵1979于8504阵亡，旧局存活并于8520获治疗；目标步兵1070在两局都于8760获得治疗。因此继续沿真实道路、接敌和医疗会合做聚焦因果验证，不能把全部69损失直接归为省去两条cast。
+首次实际分歧已定位在8400：此前两边每600 tick完整存档相同，8400输入gzip本身也相同。改变的是医者物理计划；旧超距cast不是立即回血。新局骑兵1979于8504阵亡，旧局存活并于8520获治疗；目标步兵1070在两局都于8760获得治疗。后续两源各600 tick正常恢复与原始流、9000完整终态分别全闭合，进一步确认旧局先于8500击杀野怪，早于8520治疗；新局于8507才击杀，8504已让骑兵多吃一击。8400骑兵实际81生命，32是两次后续受击后值，原初审时点用词与[勘误](medical-owner-validation-20261016/first-difference-injury-timing-supplement/)分开保留。继续查射击、瞄准、站位与来弹分配，不能把迟到治疗说成直接免死原因，也不能把全部69损失归为省去两条cast。
 
-第102包保存1209份医疗载荷与完整负面版本历史，root独立核对外层及最终1491+497内层全部SHA256、字节数和覆盖。包内INDEX及报告有封包前“尚未封包”时态，原字节保留，实际封存事实由[时态勘误](medical-owner-validation-20261016/SEAL-ERRATUM.zh.md)与[root归档核对](medical-owner-validation-20261016/ROOT-MASTER-ARCHIVE-AUDIT.json)说明。[组合源码核对](medical-owner-validation-20261016/ROOT-COMBINED-SOURCE-EQUIVALENCE.json)、[组合检查](medical-owner-validation-20261016/ROOT-STRICT-COMBINED-VALIDATION.json)、[完整败局原生账本](medical-owner-validation-20261016/ROOT-NATURAL-NEGATIVE-AUDIT.json)及[589冷窗闭合](medical-owner-validation-20261016/EXACT-COLD-FINAL589-CLOSURE.json)分开保存；整局原始流另行封包，不混入cf组件成绩。
+第102包保存1209份医疗载荷与完整负面版本历史，root独立核对外层及最终1491+497内层全部SHA256、字节数和覆盖。包内INDEX及报告有封包前“尚未封包”时态，原字节保留，实际封存事实由[时态勘误](medical-owner-validation-20261016/SEAL-ERRATUM.zh.md)与[root归档核对](medical-owner-validation-20261016/ROOT-MASTER-ARCHIVE-AUDIT.json)说明。[组合源码核对](medical-owner-validation-20261016/ROOT-COMBINED-SOURCE-EQUIVALENCE.json)、[组合检查](medical-owner-validation-20261016/ROOT-STRICT-COMBINED-VALIDATION.json)、[完整败局原生账本](medical-owner-validation-20261016/ROOT-NATURAL-NEGATIVE-AUDIT.json)及[589冷窗闭合](medical-owner-validation-20261016/EXACT-COLD-FINAL589-CLOSURE.json)分开保存。[第103包](bootstrap-known-archer-8da5-full-negative-20261016-evidence.tar.gz)独立封存整局原始流、三方全部规划后记忆、完整存档、589冷窗、三张实际原生图及只读首差证据，459载荷逐SHA256/字节/覆盖/gzip CRC全验，不混入cf组件成绩。
 
 三路线对正常v5/v7/v8单敌与六种配对、官方地图和未见种子的完整比赛与泛化要求仍未完成。原故障容器未提交改动仍未恢复。

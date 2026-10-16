@@ -1,0 +1,15 @@
+{
+  "atUTC": "2026-10-16T12:10:21.215716+00:00",
+  "archive": "/tmp/bootstrap-known-archer-8da5-full-negative-20261016-evidence.tar.gz",
+  "bytes": 28836656,
+  "sha256": "61b09f79253dbbd9ffa36fa897c547dd998eb203600dd8034a57e7ff6d478873",
+  "payloadFiles": 459,
+  "regularFiles": 460,
+  "payloadBytes": 34156379,
+  "indexSHA256": "ba4e1a9adb094c6d64dc02c3da127f8a546aaec79c398324fc6142ab06a14c4d",
+  "strictEachPayloadBytesSHA256AndCoverageAndGzipCRC": true,
+  "allOriginalSourceFilesUnchangedAfterSealing": true,
+  "fullNaturalMatch": "37789P1WIN/69ownpermanentstrict0",
+  "notBootstrapAcceptance": true,
+  "originalUncommittedRecoveryGapRetained": true
+}
