@@ -29,6 +29,12 @@ function roadClips(snapshot: GameSnapshot, unit: Unit, road: readonly Point[], v
   });
 }
 
+/** Current live ground bodies used to admit a short backline road. */
+export function groundScreenBodies(snapshot: GameSnapshot, unit: Unit) {
+  return snapshot.units.filter(other => other.id !== unit.id && other.hp > 0 && !other.deck
+    && !shipProfile(other) && unitMover(other.kind) === 'land' && isWalkable(snapshot.map, other.x, other.y));
+}
+
 function hullCandidates(snapshot: GameSnapshot, unit: Unit, ships: readonly Unit[], desired: Point) {
   const { map } = snapshot, candidates: Point[] = [];
   for (const ship of ships) {
@@ -70,8 +76,7 @@ function groundHullDetour(snapshot: GameSnapshot, unit: Unit, desired: Point): P
   const aim = steerPoint(map, unit, desired);
   const blocked = nearby.filter(ship => roadClips(snapshot, unit, [unit, aim], [ship]));
   if (!blocked.length) return desired;
-  const bodies = units.filter(other => other.id !== unit.id && other.hp > 0 && !other.deck
-    && !shipProfile(other) && unitMover(other.kind) === 'land' && isWalkable(map, other.x, other.y));
+  const bodies = groundScreenBodies(snapshot, unit);
   let best: Point | undefined, shortest = Infinity;
   const seen = new Set<string>();
   for (const point of hullCandidates(snapshot, unit, blocked, desired)) {

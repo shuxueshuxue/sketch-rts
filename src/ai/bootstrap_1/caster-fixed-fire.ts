@@ -1,6 +1,8 @@
 import { unitMover } from '../../shared/catalog';
 import { MOVE_ORDER_ARRIVAL_RANGE } from '../../shared/movement-rules';
+import { capsuleClearsBodies } from '../../shared/navigation-math';
 import { groundSteeringRoute, routeClearsDisks } from '../../shared/route-selection';
+import { constrainGroundShipStep } from '../../shared/ship-collisions';
 import type { GameCommand, GameSnapshot, PlayerId } from '../../shared/types';
 import { isEnemyOwner } from '../policy/ownership';
 import { distance } from '../policy/spatial';
@@ -11,6 +13,7 @@ import { mountedEscape, THINK_TICKS } from './mounted-micro';
 import { recoveryArrivalFilter } from './recovery-arrival';
 import { armedFoes } from './safe-land-route';
 import { threatLandDisks } from './threat-roads';
+import { groundScreenBodies, groundScreenGoal } from './ground-screen-goal';
 
 /** Admit this backline owner's chosen moves against fixed fire on their actual
  * native roads. A moving screen does not make an enemy tower stop shooting.
@@ -37,9 +40,24 @@ export function casterScreenOutsideFixedFire(snapshot: GameSnapshot, owner: Play
       if (disks.every(disk => distance(caster, disk) > disk.radius) && routeClearsDisks(road, disks)) return undefined;
       foes ??= armedFoes(snapshot, owner, options).filter(foe => 'order' in foe || foe.complete);
       const roadAllows = medicalEscapeRoadAllows(snapshot, caster, foes);
+      // A nearby mobile attacker must not grant permission to enter a tower's
+      // previously clear coverage. Preserve each fixed source's own margin.
+      const fixedRoads = fixed.map(tower => medicalEscapeRoadAllows(snapshot, caster, [tower]));
+      const bodies = groundScreenBodies(snapshot, caster);
       const arrivalAllows = recoveryArrivalFilter(snapshot, caster, THINK_TICKS);
       const escape = mountedEscape(snapshot, caster, foes, 0, command, true,
-        point => roadAllows(point) && arrivalAllows(point));
+        point => {
+          const ground = groundScreenGoal(snapshot, caster, point, false);
+          if (!ground || ground.x !== point.x || ground.y !== point.y) return false;
+          const approach = groundSteeringRoute(snapshot.map, caster, point);
+          if (distance(approach.at(-1)!, point) > MOVE_ORDER_ARRIVAL_RANGE
+            || approach.slice(1).some((end, index) => {
+              const step = constrainGroundShipStep(snapshot.map, caster, approach[index]!, end, snapshot.units);
+              return !capsuleClearsBodies(approach[index]!, end, caster.radius, bodies)
+                || step.x !== end.x || step.y !== end.y;
+            })) return false;
+          return fixedRoads.every(allows => allows(point)) && roadAllows(point) && arrivalAllows(point);
+        });
       changed = true;
       // A completed short move would idle and can immediately pursue again.
       // Hold only when the bounded escape has no usable movement to publish.

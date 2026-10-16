@@ -73,13 +73,15 @@ function expectOutsideTowerRoad(snapshot: GameSnapshot, actor: Unit, move: Move)
 
 /** Counterfactual component field, with ordinary native stats and real commands.
  * It is not a new ordinary0 match or evidence of complete-game success. */
-function field(casterX = 1100, towerOwner: 'us' | 'foe' | 'ally' = 'foe') {
-  const game = sketchScene('caster-fixed-fire-component').map('bareDuel').replaceDefaults()
+function field(casterX = 1100, towerOwner: 'us' | 'foe' | 'ally' = 'foe', pressured = false) {
+  let scene = sketchScene('caster-fixed-fire-component').map('bareDuel').replaceDefaults()
     .player('us', { race: 'grove', team: 'a' }).player('ally', { race: 'grove', team: 'a' })
     .player('foe', { race: 'ember', team: 'b' })
     .townHall('us', 400, 400).townHall('ally', 400, 3500).townHall('foe', 3500, 3500)
     .unit('us', 'summoner', casterX, 2000, { id: 'caster' })
-    .tower(towerOwner, 2000, 2000, { id: 'tower' }).build().createGame();
+    .tower(towerOwner, 2000, 2000, { id: 'tower' });
+  if (pressured) scene = scene.unit('foe', 'archer', casterX - 250, 2000, { id: 'rear-shooter' });
+  const game = scene.build().createGame();
   game.scriptedVictory = true;
   game.map.terrain = { cell: 32, cols: 128, rows: 128, cells: '.'.repeat(128 * 128) };
   for (const building of game.buildings) Object.assign(building, snapToFootprint(game.map, building.radius, building));
@@ -104,14 +106,17 @@ describe('bootstrap chosen caster moves outside fixed fire', () => {
     expect({ pair, options, selected }).toEqual(before);
   });
 
-  it('replaces the actual first159660 unsafe screen goal with short forward ground actions', () => {
+  it('admits clear forward actions at actual159660 and holds bodies with no selected clear step', () => {
     const { pair, snapshot, options, selected } = actual(159660);
     const before = structuredClone({ pair, options, selected });
     const result = casterScreenOutsideFixedFire(snapshot, 'p0', options, selected);
     expect(result).toHaveLength(7);
+    let advancing = 0;
     for (let i = 0; i < result.length; i++) {
       const replacement = result[i]!, original = selected[i]!;
       expect(replacement).not.toEqual(original);
+      expect('unitIds' in replacement && replacement.unitIds).toEqual('unitIds' in original && original.unitIds);
+      if (replacement.type === 'holdPosition') continue;
       expect(replacement.type).toBe('move');
       if (replacement.type !== 'move' || original.type !== 'move') throw Error('This actual early front has short progress');
       const caster = snapshot.units.find(unit => unit.id === replacement.unitIds[0])!;
@@ -119,6 +124,7 @@ describe('bootstrap chosen caster moves outside fixed fire', () => {
       expect(replacement.avoidCombat).toBe(true);
       expect(distance(caster, replacement)).toBeGreaterThan(MOVE_ORDER_ARRIVAL_RANGE);
       expect(distance(replacement, original)).toBeLessThan(distance(caster, original));
+      advancing++;
       expectOutsideTowerRoad(snapshot, caster, replacement);
       const road = groundSteeringRoute(snapshot.map, caster, replacement);
       const bodies = snapshot.units.filter(unit => unit.id !== caster.id && !unit.deck
@@ -130,6 +136,15 @@ describe('bootstrap chosen caster moves outside fixed fire', () => {
       }
       expect(recoveryArrivalFilter(snapshot, caster, 15)(replacement)).toBe(true);
     }
+    expect(advancing).toBeGreaterThan(0);
+    // The first candidate really published this blocked step for15312. It is
+    // a retained negative physical witness, not permission to walk through it.
+    const crowded = snapshot.units.find(unit => unit.id === 'unit-p0-summoner-15312')!;
+    const blockedPoint = { x: 2533.9868230898333, y: 4707.436775755676 };
+    const neighbors = snapshot.units.filter(unit => unit.id !== crowded.id && unit.hp > 0 && !unit.deck
+      && unitMover(unit.kind) === 'land');
+    expect(capsuleClearsBodies(crowded, blockedPoint, crowded.radius, neighbors)).toBe(false);
+    expect(result.find(command => 'unitIds' in command && command.unitIds.includes(crowded.id))?.type).toBe('holdPosition');
     expect(planSummonerScreen(snapshot, 'p0', options)).toEqual(result);
     expect({ pair, options, selected }).toEqual(before);
   });
@@ -172,6 +187,30 @@ describe('bootstrap chosen caster moves outside fixed fire', () => {
     for (let tick = 0; tick < 15; tick++) stepGame(game);
     expect(distance(caster, tower)).toBeGreaterThan(distance(start, tower));
     expect(game.units.some(unit => unit.id === caster.id)).toBe(true);
+  });
+
+  it('does not trade a mobile attacker margin for entering previously clear tower fire', () => {
+    const { snapshot, caster, tower, options } = field(1500, 'foe', true);
+    const shooter = snapshot.units.find(unit => unit.id === 'rear-shooter')!;
+    expect(distance(caster, shooter)).toBeLessThan(shooter.attackRange);
+    expect(distance(caster, tower)).toBeGreaterThan(tower.attackRange + caster.radius);
+    const result = casterScreenOutsideFixedFire(snapshot, 'us', options,
+      [{ type: 'move', unitIds: [caster.id], x: tower.x, y: tower.y }]);
+    for (const command of result) if (command.type === 'move') expectOutsideTowerRoad(snapshot, caster, command);
+  });
+
+  it('does not bind a new escape goal to a dead hull still awaiting native cleanup', () => {
+    const { snapshot, caster, tower, options } = field();
+    const saved = JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/backline-ground-5b5-123600.json.gz', import.meta.url))).toString()) as Saved;
+    const model = saved.snapshot.units.find(unit => shipProfile(unit))!;
+    snapshot.units.push({ ...structuredClone(model), id: 'dead-hull-before-cleanup', hp: 0,
+      x: caster.x + 48, y: caster.y, heading: 0, order: { type: 'idle' } });
+    const result = casterScreenOutsideFixedFire(snapshot, 'us', options,
+      [{ type: 'move', unitIds: [caster.id], x: tower.x, y: tower.y }]);
+    for (const command of result) if (command.type === 'move') expect(snapshot.units.some(ship => {
+      const profile = shipProfile(ship);
+      return profile && circleInPolygon(worldToLocal(ship, command), 0, profile.hull);
+    })).toBe(false);
   });
 
   it.each(['far', 'ally', 'friendly', 'unarmed', 'incomplete', 'dead'] as const)(
