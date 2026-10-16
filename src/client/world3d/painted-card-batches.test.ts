@@ -82,13 +82,16 @@ describe('painted card array batches',()=>{
     const hits=new THREE.Raycaster(new THREE.Vector3(0,17/Math.tan(SHIP_CAMERA.tilt),300),new THREE.Vector3(0,0,-1)).intersectObject(mesh);
     expect(hits.length).toBeGreaterThan(0);expect(hits[0]!.uv!.y).toBeCloseTo(.5);cards.dispose();
   });
-  it('does not rerasterize a warm card and releases page textures, geometry and shadow materials',()=>{
+  it('does not rerasterize a warm card, releases idle page textures and keeps its draw chunk until dispose',()=>{
     const {cards,scene}=setup(),painter=vi.fn(paint);cards.begin();cards.add('pose',4,painter,matrix,'one',17);cards.finish(renderer);
-    const mesh=cards.objects()[0]!,material=mesh.material as THREE.MeshBasicMaterial;
-    const releases=[material,material.map!,mesh.geometry,mesh.customDepthMaterial!,mesh.customDistanceMaterial!,mesh].map(resource=>vi.spyOn(resource,'dispose'));
+    const mesh=cards.objects()[0]!,material=mesh.material as THREE.MeshBasicMaterial,page=vi.spyOn(material.map!,'dispose');
+    const releases=[material,mesh.geometry,mesh.customDepthMaterial!,mesh.customDistanceMaterial!,mesh].map(resource=>vi.spyOn(resource,'dispose'));
     cards.begin();cards.add('pose',4,painter,matrix,'two',17);cards.finish(renderer);expect(painter).toHaveBeenCalledTimes(1);
     for(let i=0;i<121;i++){cards.begin();cards.finish(renderer);}
-    expect(cards.stats()).toMatchObject({pages:0,cards:0,maskBytes:0,arrayCpuBytes:0,pendingRgbaBytes:0});expect(scene.children).toHaveLength(0);for(const release of releases)expect(release).toHaveBeenCalledTimes(1);cards.dispose();
+    expect(cards.stats()).toMatchObject({pages:0,cards:0,maskBytes:0,arrayCpuBytes:0,pendingRgbaBytes:0});expect(cards.objects()).toHaveLength(0);expect(page).toHaveBeenCalledTimes(1);
+    // Its materials keep their shader programs for the next card drawn.
+    for(const release of releases)expect(release).not.toHaveBeenCalled();
+    cards.dispose();expect(scene.children).toHaveLength(0);for(const release of releases)expect(release).toHaveBeenCalledTimes(1);
   });
   it('protects later visible warm cards from an early cache miss at the soft budget',()=>{
     const {cards}=setup(),painter=vi.fn(fullPaint);cards.begin();

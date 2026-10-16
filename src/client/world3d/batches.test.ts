@@ -103,8 +103,20 @@ describe('actor batches',()=>{
     frame(5);const second=batches.objects()[0]!;expect(second).not.toBe(first);expect(second.morphTexture!.image.height).toBe(8);expect(weights(second,4)).toEqual([1]);
     expect(textureDispose).toHaveBeenCalledOnce();expect(batchMaterialDispose).not.toHaveBeenCalled();expect(scene.children).toEqual([second]);
     const secondTextureDispose=vi.spyOn(second.morphTexture!,'dispose');batches.forget('ship');
-    expect(secondTextureDispose).toHaveBeenCalledOnce();expect(batchMaterialDispose).toHaveBeenCalledOnce();
-    expect(geometryDispose).not.toHaveBeenCalled();expect(materialDispose).not.toHaveBeenCalled();expect(scene.children).toHaveLength(0);
+    expect(secondTextureDispose).toHaveBeenCalledOnce();expect(batchMaterialDispose).not.toHaveBeenCalled();expect(scene.children).toHaveLength(0);
+    batches.dispose();expect(batchMaterialDispose).toHaveBeenCalledOnce();
+    expect(geometryDispose).not.toHaveBeenCalled();expect(materialDispose).not.toHaveBeenCalled();
+  });
+
+  it('keeps a retired batch\'s materials, so the batch coming back draws with the shader programs it had',()=>{
+    const scene=new THREE.Scene(),batches=new ActorBatches(scene),source=new THREE.Mesh(new THREE.BoxGeometry(),new THREE.MeshStandardMaterial());
+    batches.begin();batches.add('arrow',source,translate(),'a');batches.finish();
+    const first=batches.objects()[0]!.material as THREE.Material,dispose=vi.spyOn(first,'dispose');
+    for(let i=0;i<121;i++){batches.begin();batches.finish();}
+    expect(scene.children).toHaveLength(0);expect(dispose).not.toHaveBeenCalled();
+    batches.begin();batches.add('arrow',source,translate(),'b');batches.finish();
+    expect(batches.objects()[0]!.material).toBe(first);
+    batches.dispose();expect(dispose).toHaveBeenCalledOnce();
   });
 
   it('preserves material groups, construction opacity and sail-only deck reveal',()=>{

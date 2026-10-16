@@ -359,11 +359,9 @@ export class PaintedCardBatches {
     for(let i=0;i<this.chunks.length;i++)this.drawGroup.children[i]=this.chunks[i]!.mesh;
     this.drawGroup.children.length=this.chunks.length;
     if(index){if(this.drawGroup.parent!==this.scene)this.scene.add(this.drawGroup);}
-    for(let i=this.chunks.length-1;i>=index;i--){
-      const chunk=this.chunks[i]!;this.hideChunk(chunk);
-      if(!this.pages.length||this.frame-chunk.used>120){this.removeChunk(chunk);this.chunks.splice(i,1);}
-    }
-    if(!this.chunks.length)this.scene.remove(this.drawGroup);
+    // Idle chunks stay pooled, hidden, until dispose: disposing their materials would free the card shader programs, and
+    // the first card drawn after a quiet spell (a corpse on a deck) would compile them again inside a frame.
+    for(let i=index;i<this.chunks.length;i++)this.hideChunk(this.chunks[i]!);
   }
   private removeChunk(chunk:DrawChunk){
     this.hideChunk(chunk);this.drawGroup.remove(chunk.mesh);chunk.mesh.dispose();chunk.geometry.dispose();chunk.material.dispose();chunk.depth.dispose();chunk.distance.dispose();

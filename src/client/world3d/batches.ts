@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 export type BatchAnimation=ReadonlyMap<string,{matrix?:THREE.Matrix4;morph?:readonly number[]}>;
 type Part={name:string;geometry:THREE.BufferGeometry;material:THREE.Material|THREE.Material[];local:THREE.Matrix4;morph:readonly number[]};
-type Batch={parts:Part[];meshes:THREE.InstancedMesh[];matrices:THREE.Matrix4[];animations:(BatchAnimation|undefined)[];ids:string[];capacity:number;last:number;geometries:Set<THREE.BufferGeometry>;textures:Set<THREE.Texture>};
+type Batch={parts:Part[];meshes:THREE.InstancedMesh[];matrices:THREE.Matrix4[];animations:(BatchAnimation|undefined)[];ids:string[];capacity:number;last:number};
 
 /** Three's default instanced raycast does not read the per-instance morph texture.
  * This scratch mesh shares the model's buffers, but owns its animated bounds. */
@@ -83,65 +83,70 @@ class MorphInstancedMesh extends THREE.InstancedMesh {
  * No GPU object is created per soldier, and dead/offscreen batches are retired. */
 export class ActorBatches {
   private batches=new Map<string,Batch>();
-  private geometries=new Map<THREE.BufferGeometry,{view:THREE.BufferGeometry;refs:number}>();
-  private textures=new Map<THREE.Texture,{view:THREE.Texture;refs:number}>();
+  // A batch's geometry, texture and material views are this layer's for its whole life, not the batch's: a batch is
+  // retired a couple of seconds after its last draw (an arrow's, a ship's), and disposing its materials then would free
+  // their shader programs, so the next arrow or ship would compile them again inside a frame.
+  private geometries=new Map<THREE.BufferGeometry,THREE.BufferGeometry>();
+  private textures=new Map<THREE.Texture,THREE.Texture>();
+  private materials=new Map<string,THREE.Material>();
   private frame=0;
   private matrix=new THREE.Matrix4();
   constructor(private scene:THREE.Scene){}
   begin(){this.frame++;for(const batch of this.batches.values()){batch.matrices.length=0;batch.animations.length=0;batch.ids.length=0;}}
-  private geometry(source:THREE.BufferGeometry,held:Set<THREE.BufferGeometry>){
-    let resource=this.geometries.get(source);
-    if(!resource){
+  private geometry(source:THREE.BufferGeometry){
+    let view=this.geometries.get(source);
+    if(!view){
       // Each renderer owns its GPU allocations and dispose listeners. Views
       // share decoded typed arrays without attaching a renderer to the global
       // model geometry or destroying another layer's buffers on teardown.
-      const view=new THREE.BufferGeometry();view.name=source.name;
+      view=new THREE.BufferGeometry();view.name=source.name;
       view.index=source.index;view.attributes=source.attributes;view.morphAttributes=source.morphAttributes;
       view.morphTargetsRelative=source.morphTargetsRelative;view.groups=source.groups.map(group=>({...group}));view.drawRange={...source.drawRange};
       view.boundingBox=source.boundingBox?.clone()??null;view.boundingSphere=source.boundingSphere?.clone()??null;
-      resource={view,refs:0};this.geometries.set(source,resource);
+      this.geometries.set(source,view);
     }
-    if(!held.has(source)){held.add(source);resource.refs++;}return resource.view;
+    return view;
   }
-  private texture(source:THREE.Texture,held:Set<THREE.Texture>){
-    let resource=this.textures.get(source);
-    if(!resource){
+  private texture(source:THREE.Texture){
+    let view=this.textures.get(source);
+    if(!view){
       // Texture.copy JSON-clones userData by default. Painted alpha masks are
       // immutable typed arrays; preserve them without expanding into objects.
       const clean=Object.create(source) as THREE.Texture;clean.userData={};
-      const view=new (source.constructor as new()=>THREE.Texture)().copy(clean);view.userData=source.userData;
-      resource={view,refs:0};this.textures.set(source,resource);
+      view=new (source.constructor as new()=>THREE.Texture)().copy(clean);view.userData=source.userData;
+      this.textures.set(source,view);
     }
-    if(!held.has(source)){held.add(source);resource.refs++;}return resource.view;
+    return view;
   }
-  private material(source:THREE.Material,held:Set<THREE.Texture>){
-    const material=source.clone();
-    for(const [key,value] of Object.entries(source))if(value instanceof THREE.Texture)(material as unknown as Record<string,unknown>)[key]=this.texture(value,held);
-    if(source instanceof THREE.ShaderMaterial && material instanceof THREE.ShaderMaterial)for(const [key,uniform] of Object.entries(source.uniforms)){
+  private material(source:THREE.Material,color:string|undefined,constructing:boolean,revealDeck:boolean){
+    const team=source.name==='TeamColor',cloth=revealDeck&&source.name.startsWith('unbleached sail');
+    const key=`${source.uuid}:${team?color??'':''}:${constructing}:${cloth}`;
+    let material=this.materials.get(key);
+    if(material)return material;
+    material=source.clone();
+    for(const [name,value] of Object.entries(source))if(value instanceof THREE.Texture)(material as unknown as Record<string,unknown>)[name]=this.texture(value);
+    if(source instanceof THREE.ShaderMaterial && material instanceof THREE.ShaderMaterial)for(const [name,uniform] of Object.entries(source.uniforms)){
       const value=uniform.value;
-      if(value instanceof THREE.Texture)material.uniforms[key]!.value=this.texture(value,held);
-      else if(Array.isArray(value))material.uniforms[key]!.value=value.map(item=>item instanceof THREE.Texture?this.texture(item,held):item);
+      if(value instanceof THREE.Texture)material.uniforms[name]!.value=this.texture(value);
+      else if(Array.isArray(value))material.uniforms[name]!.value=value.map(item=>item instanceof THREE.Texture?this.texture(item):item);
     }
-    return material;
+    if(team && 'color' in material)(material as THREE.MeshStandardMaterial).color.set(color??'#88977c');
+    if(constructing){material.transparent=true;material.opacity=.48;}
+    // Cloth alone becomes translucent. The hull still occludes, collides
+    // and casts shadows normally; selection never mutates shared assets.
+    if(cloth){material.transparent=true;material.opacity=.22;material.depthWrite=false;}
+    this.materials.set(key,material);return material;
   }
   add(key:string,template:THREE.Object3D,matrix:THREE.Matrix4,id:string,color?:string,constructing=false,revealDeck=false,animation?:BatchAnimation){
     let batch=this.batches.get(key);
     if(!batch){
-      const parts:Part[]=[],geometries=new Set<THREE.BufferGeometry>(),textures=new Set<THREE.Texture>();template.updateMatrixWorld(true);
+      const parts:Part[]=[];template.updateMatrixWorld(true);
       template.traverse(object=>{if(!(object instanceof THREE.Mesh))return;
-        const map=(source:THREE.Material)=>{
-          const material=this.material(source,textures);
-          if(source.name==='TeamColor' && 'color' in material)(material as THREE.MeshStandardMaterial).color.set(color??'#88977c');
-          if(constructing){material.transparent=true;material.opacity=.48;}
-          // Cloth alone becomes translucent. The hull still occludes, collides
-          // and casts shadows normally; selection never mutates shared assets.
-          if(revealDeck && source.name.startsWith('unbleached sail')){material.transparent=true;material.opacity=.22;material.depthWrite=false;}
-          return material;
-        };
-        const geometry=this.geometry(object.geometry,geometries),morphCount=Object.values(geometry.morphAttributes)[0]?.length??0;
+        const map=(source:THREE.Material)=>this.material(source,color,constructing,revealDeck);
+        const geometry=this.geometry(object.geometry),morphCount=Object.values(geometry.morphAttributes)[0]?.length??0;
         parts.push({name:object.name,geometry,material:Array.isArray(object.material)?object.material.map(map):map(object.material),local:object.matrixWorld.clone(),morph:Array.from({length:morphCount},(_,i)=>object.morphTargetInfluences?.[i]??0)});
       });
-      batch={parts,meshes:[],matrices:[],animations:[],ids:[],capacity:0,last:this.frame,geometries,textures};this.batches.set(key,batch);
+      batch={parts,meshes:[],matrices:[],animations:[],ids:[],capacity:0,last:this.frame};this.batches.set(key,batch);
     }
     batch.matrices.push(matrix);batch.animations.push(animation);batch.ids.push(id);batch.last=this.frame;
   }
@@ -172,10 +177,13 @@ export class ActorBatches {
   forget(key:string){const batch=this.batches.get(key);if(batch)this.remove(key,batch);}
   remove(key:string,batch:Batch){
     for(const mesh of batch.meshes){this.scene.remove(mesh);mesh.dispose();}
-    for(const part of batch.parts)for(const mat of Array.isArray(part.material)?part.material:[part.material])mat.dispose();
-    for(const source of batch.geometries){const resource=this.geometries.get(source)!;if(--resource.refs===0){resource.view.dispose();this.geometries.delete(source);}}
-    for(const source of batch.textures){const resource=this.textures.get(source)!;if(--resource.refs===0){resource.view.dispose();this.textures.delete(source);}}
     this.batches.delete(key);
   }
-  dispose(){for(const [key,batch] of this.batches)this.remove(key,batch);}
+  dispose(){
+    for(const [key,batch] of this.batches)this.remove(key,batch);
+    for(const material of this.materials.values())material.dispose();
+    for(const view of this.geometries.values())view.dispose();
+    for(const view of this.textures.values())view.dispose();
+    this.materials.clear();this.geometries.clear();this.textures.clear();
+  }
 }
