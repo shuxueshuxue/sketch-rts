@@ -8,6 +8,8 @@ import { isInCabin } from '../../shared/ship-cabin';
 import { shipProfile, type Point } from '../../shared/ship-geometry';
 import { headingDifference, hullPassageClear, planVoyageRoute, shipPoseAt, type ShipPose } from '../../shared/ship-navigation';
 import type { GameSnapshot, Unit } from '../../shared/types';
+import { SIM_TICKS_PER_SECOND } from '../../shared/time';
+import { THINK_TICKS } from '../bootstrap_1/mounted-micro';
 import { isEnemyOwner, type TeamPolicyOptions } from './ownership';
 
 export type CoastalFireDisk = Point & { radius: number; id: string };
@@ -81,6 +83,17 @@ export function coastalVoyagePrefixSafe(snapshot: GameSnapshot, ship: Unit, rout
 /** Strict complete-route fire safety; a partial prefix is never arrival. */
 export function coastalVoyageRouteSafe(snapshot: GameSnapshot, ship: Unit, route: Route | undefined, options: TeamPolicyOptions): boolean {
   return route?.partial === false && coastalVoyagePrefixSafe(snapshot, ship, route, options);
+}
+
+/** Keep a completed leg's destination outside observed fire coverage even
+ * after one think of current enemy locomotion. This is not a forecast of
+ * future spells, purchases or moving physical traffic. */
+export function coastalLegArrivalSafe(snapshot: GameSnapshot, ship: Unit, goal: Point, options: TeamPolicyOptions): boolean {
+  const speeds = new Map(snapshot.units.map(unit => [unit.id, unit.speed]));
+  const disks = coastalFireDisks(snapshot, ship, options).map(disk => ({ ...disk,
+    radius: disk.radius + (speeds.get(disk.id) ?? 0) * THINK_TICKS / SIM_TICKS_PER_SECOND }));
+  const pose = { ...goal, heading: 0 };
+  return coastalFireSegmentClear(pose, pose, disks);
 }
 
 function ordinaryHull(ship: Unit, pose: ShipPose, goal: Point, speed: number): Unit {

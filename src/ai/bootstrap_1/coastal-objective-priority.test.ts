@@ -8,6 +8,7 @@ import {shipPassengers} from '../../shared/ship-geometry';
 import {boardUnit} from '../../shared/decks';
 import {coastalBatteryWaypoint,coastalBombardment} from '../policy/coastal-bombardment';
 import {coastalVoyagePrefixSafe} from '../policy/coastal-voyage';
+import {coastalAsternPassageClear,coastalWithdrawalPrefixSafe} from '../policy/coastal-risk';
 import type {BootstrapAiVersion,GameCommand} from '../../shared/types';
 import {planBootstrapNaval} from './expedition-recovery';
 import {bootstrapPolicyContext} from './policy';
@@ -56,14 +57,20 @@ it.each(['v9_archer','v9_summoner','v9_knight'] as const)('%s keeps the observed
  expect(ship.order).toMatchObject({type:'move',...voyage.waypoint,avoidCombat:true});
 });
 
-it('keeps the actual escape under live enemy fire instead of holding for the coastal objective',()=>{
+it('replaces the actual fire-crossing escape road before returning to a coastal objective',()=>{
  const {snapshot,ship,options}=observed('coastal-live-retreat');
  expect(snapshot.tick).toBe(165600);
  expect(snapshot.units.filter(u=>u.owner==='p1'&&'targetId'in u.order&&u.order.targetId===id).length).toBeGreaterThan(10);
  const retreat=structuredClone(options.memory.naval!.coastalRetreat![id]);
  expect(ship.order).toMatchObject({type:'move',...retreat,avoidCombat:true});
- expect(forBattery(planBootstrapNaval(snapshot,'p0',options))).toEqual([]);
- expect(options.memory.naval!.coastalRetreat![id]).toEqual(retreat);
+ expect(coastalWithdrawalPrefixSafe(snapshot,ship,ship.sailing!.route,options)).toBe(false);
+ const commands=forBattery(planBootstrapNaval(snapshot,'p0',options));
+ expect(commands[0]).toEqual({type:'stop',unitIds:[id]});
+ const replacement=options.memory.naval!.coastalRetreat![id]!;
+ expect(replacement.astern).toBe(true);
+ expect(coastalAsternPassageClear(snapshot,ship,replacement,options)).toBe(true);
+ expect(commands).toContainEqual({type:'move',unitIds:[id],x:replacement.x,y:replacement.y});
+ expect(replacement).not.toEqual(retreat);
 });
 
 it('retains the real locally fireable enemy engagement instead of forcing the remote coastal mission',()=>{
