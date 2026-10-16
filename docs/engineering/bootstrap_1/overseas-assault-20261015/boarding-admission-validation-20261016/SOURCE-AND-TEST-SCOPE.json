@@ -1,0 +1,32 @@
+{
+  "source": "97cecc14cc0e3a1e670f451b574e59057e1c83fa",
+  "parentRuntimeSource": "1e955c0c5f1114812f873f9c3ba06fe7cb19cb1e",
+  "nativeCandidate": "e7cdb8d67f8070a6548b527a25a38f62e18f0a0a",
+  "rulesVersion": 2,
+  "frozenManifestSHA256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
+  "onlyProductionFile": "src/shared/decks.ts",
+  "nativeSdk341FilesEqualCandidateAndLive": true,
+  "rootRegression": {
+    "scopedLog": "root-native-scoped.log",
+    "passed": 139,
+    "failed": 2,
+    "files": 14,
+    "knownBaselineFailure": "Both crew-rendezvous-coast sourceHP314.97705695148625 expected320 exactly reproduced on unmodifieda7, unchangedtransferdomain. Preserved failures, not allgreen.",
+    "tscExit": 0,
+    "wrongScopeAttempt": "Initialroot-native-related.log matched historical.playtestcopies because missing--dir; interrupted only ownVitest367419 exit130. Correct scoped log alone supplies counts."
+  },
+  "manualClinical": {
+    "from": 208201,
+    "to": 208416,
+    "nativeTicks": 215,
+    "manualPublicP0Commands": 1,
+    "cargo": 26,
+    "zeroHits": true,
+    "allOld25HPOwnerHullPreserved": true
+  },
+  "ordinary0": null,
+  "historicalAttribution": "All earlier productionValidation/currentRuntimeOrdinary0 and other ordinary0 records remain exact, historical and source-bound. In particular1e82963win59permanentloss is not assigned to97. No bootstrap_1 final acceptance.",
+  "reference": "boarding-admission-20261016.zh.md",
+  "validationDirectory": "boarding-admission-validation-20261016/",
+  "originalUncommittedRecoveryGapRetained": true
+}

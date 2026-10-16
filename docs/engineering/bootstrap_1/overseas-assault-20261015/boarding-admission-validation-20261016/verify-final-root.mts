@@ -1,0 +1,13 @@
+import { readFileSync, writeFileSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
+import { createHash } from 'node:crypto';
+import { pathToFileURL } from 'node:url';
+const D='/tmp/boarding-placement-clinical-e7-20261016',S='/workspace/sketch-rts-bootstrap-resume',sha=(v:any)=>createHash('sha256').update(v).digest('hex'),load=(p:string)=>import(pathToFileURL(S+'/'+p).href);
+const raw=readFileSync(D+'/final.json.gz'),saved=JSON.parse(gunzipSync(raw).toString()),before=JSON.stringify(saved),s=saved.snapshot;
+const [deck,geo,cabin,strength]=await Promise.all([load('src/shared/decks.ts'),load('src/shared/ship-geometry.ts'),load('src/shared/ship-cabin.ts'),load('src/ai/policy/v6/strength.ts')]);
+const hull=s.units.find((u:any)=>u.id==='unit-p0-carrier-25442'),cargo=geo.shipPassengers(s.units,hull),open=cargo.filter((u:any)=>!cabin.isInCabin(u));
+const points=open.map((u:any)=>({id:u.id,hp:u.hp,radius:u.radius,deck:u.deck,nativeDeckPointFits:deck.deckPointFits(hull,u,u.deck,s.units,true)}));
+const result={classification:'Read-only native geometry/body/mass/quota verification of the actually saved final208416, no Game/step/commands or hypothetical attachment.',inputSHA256:sha(raw),tick:s.tick,cargo:cargo.length,inside:cargo.filter(cabin.isInCabin).length,open:open.length,points,allActualOpenPointsFit:points.every((p:any)=>p.nativeDeckPointFits),load:deck.deckLoad(s.units,hull),capacity:geo.shipProfile(hull).loadCapacity,usage:cabin.shipCabinUsage(s,hull),power:cargo.reduce((n:number,u:any)=>n+strength.effectiveCombatRating(s,u),0),required:20.115569375546702};
+if(!result.allActualOpenPointsFit||result.load>result.capacity||result.usage.overCapacity||cargo.length!==26)throw Error('Actual final geometry mismatch');
+if(JSON.stringify(saved)!==before)throw Error('Pure query modified actual input');
+writeFileSync('/workspace/.playtest/root-boarding-placement-integration-20261016/ROOT-FINAL-NATIVE-GEOMETRY.json',JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify(result,null,2));

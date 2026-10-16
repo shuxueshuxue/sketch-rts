@@ -1,0 +1,76 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-bootstrap-resume
+
+ ✓ src/shared/ship-cabin.test.ts (30 tests) 9529ms
+   ✓ real cabin shelter and evacuation > rejects a warm cached cabin route during real bridge crossing and restores admission after physically walking back 2224ms
+   ✓ real cabin shelter and evacuation > rechecks a positive cabin cache when the same hull receives crew in a disconnected deck region 438ms
+   ✓ real cabin shelter and evacuation > lets an idle default-boarded companion walk aside while a priest reaches the cabin on a moving eight-gun ship 1955ms
+   ✓ real cabin shelter and evacuation > queues all four crew from $0 under one command without clipping their bodies or spending twice their movement allowance 2293ms
+   ✓ real cabin shelter and evacuation > walks four crew from the foredeck through a fully fitted eight-gun battery to its real cabin door 1826ms
+ ✓ src/shared/ship-gangway-integration.test.ts (18 tests) 36027ms
+   ✓ boarding balance through real simulation commands > sails an actual approach, then spends three seconds setting up without instant capture 1413ms
+   ✓ boarding balance through real simulation commands > lets a moving enemy escape without taking over its course or holding it for the boarder 1053ms
+   ✓ boarding balance through real simulation commands > walks infantry across the real water gap and captures only after counterdamage from the foredeck defender 5935ms
+   ✓ boarding balance through real simulation commands > walks infantry across the real water gap and captures only after counterdamage from the aft port entrance defender 3102ms
+   ✓ boarding balance through real simulation commands > lets explicit attack-move infantry fight across a ready bridge, then physically board 1452ms
+   ✓ boarding balance through real simulation commands > strikes a reachable entrance blocker while a rear archer fires, preserving the boarders queued orders 416ms
+   ✓ boarding balance through real simulation commands > keeps sheltered crew out of the automatic infantry assault 411ms
+   ✓ boarding balance through real simulation commands > breaks the 60-HP passage from real hull damage, retreats its walker and enforces the twenty-second cooldown 534ms
+   ✓ boarding balance through real simulation commands > honors a queued helm departure after setup and cancels the passage before leaving 1218ms
+   ✓ boarding balance through real simulation commands > replaces stale crew boarding on an immediate bridge command, while a queued bridge waits for its helm 19286ms
+   ✓ boarding balance through real simulation commands > continues a JSON save taken in the water gap with identical anchors, attachment and every checksum 462ms
+ ✓ src/shared/boarding-control.test.ts (13 tests) 5123ms
+   ✓ boarding control at hull contact > routes around stationary crew on a large usable deck 758ms
+   ✓ boarding control at hull contact > finishes a large-to-small crew transfer and its saved continuation identically 2937ms
+   ✓ boarding control at hull contact > keeps a large-to-small melee battle alongside, then honors a helm departure 641ms
+ ✓ src/shared/ship-cabin-quota.test.ts (26 tests) 1180ms
+   ✓ cabin capacity by population and physical body > rejects a permanently disconnected heavy passenger without starving a reachable companion 566ms
+ ✓ src/shared/ship-gangway.test.ts (12 tests) 925ms
+ ✓ src/shared/sim/command-validation.test.ts (8 tests) 110ms
+ ✓ src/shared/decks.test.ts (10 tests) 1222ms
+   ✓ physical decks > keeps embarked soldiers live, targetable and counted once 400ms
+ ✓ src/shared/crew-rendezvous.test.ts (7 tests) 4981ms
+   ✓ right-click crew rendezvous > approaches, walks across and transfers crew to a separated player deck 2007ms
+   ✓ right-click crew rendezvous > approaches, walks across and transfers crew to a separated enemy deck 1163ms
+   ✓ right-click crew rendezvous > uses the same arrival geometry on an authored scene without a terrain grid 646ms
+   ✓ right-click crew rendezvous > resumes a mid-rendezvous save deterministically 926ms
+ ✓ src/shared/ship-cabin-movement-frame.test.ts (2 tests) 123ms
+ ✓ src/shared/shore-boarding-placement.test.ts (7 tests) 282ms
+ ✓ src/shared/sim/command-contract.test.ts (3 tests) 199ms
+ ✓ src/shared/connected-decks.test.ts (2 tests) 563ms
+   ✓ connected deck geometry caches > keeps an unrelated shore army out of the crossing's geometry and route 476ms
+ ❯ src/shared/crew-rendezvous-coast.test.ts (2 tests | 2 failed) 4628ms
+   × meets beside a headland when the midpoint is land, with repeated service planning=false 3252ms
+     → expected 314.97705695148625 to be 320 // Object.is equality
+   × meets beside a headland when the midpoint is land, with repeated service planning=true 1375ms
+     → expected 314.97705695148625 to be 320 // Object.is equality
+ ✓ src/shared/crew-shore-start.test.ts (1 test) 58881ms
+   ✓ walks a shore-supported foredeck start toward another hull in the real outfitted fleet 58881ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/shared/crew-rendezvous-coast.test.ts > meets beside a headland when the midpoint is land, with repeated service planning=false
+ FAIL  src/shared/crew-rendezvous-coast.test.ts > meets beside a headland when the midpoint is land, with repeated service planning=true
+AssertionError: expected 314.97705695148625 to be 320 // Object.is equality
+
+- Expected
++ Received
+
+- 320
++ 314.97705695148625
+
+ ❯ src/shared/crew-rendezvous-coast.test.ts:30:20
+     28|  expect(worker.deck?.shipId,JSON.stringify({source,target,worker})).to…
+     29|  expect(target.hp).toBeGreaterThan(before);
+     30|  expect(source.hp).toBe(source.maxHp);
+       |                    ^
+     31|  expect(snapshotGame(game).match.stats.unitsLost.player).toBe(0);
+     32| },60000);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ Test Files  1 failed | 13 passed (14)
+      Tests  2 failed | 139 passed (141)
+   Start at  07:33:32
+   Duration  150.52s (transform 5.59s, setup 0ms, collect 16.28s, tests 123.77s, environment 3ms, prepare 2.77s)
+

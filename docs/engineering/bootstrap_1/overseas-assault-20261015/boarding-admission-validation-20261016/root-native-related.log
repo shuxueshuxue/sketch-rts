@@ -1,0 +1,72 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-bootstrap-resume
+
+ ✓ src/shared/ship-cabin.test.ts (30 tests) 2940ms
+   ✓ real cabin shelter and evacuation > rejects a warm cached cabin route during real bridge crossing and restores admission after physically walking back 441ms
+   ✓ real cabin shelter and evacuation > queues all four crew from $0 under one command without clipping their bodies or spending twice their movement allowance 913ms
+   ✓ real cabin shelter and evacuation > walks four crew from the foredeck through a fully fitted eight-gun battery to its real cabin door 733ms
+ ✓ .playtest/carrier-threat-source/src/shared/ship-cabin.test.ts (30 tests) 5191ms
+   ✓ real cabin shelter and evacuation > rejects a warm cached cabin route during real bridge crossing and restores admission after physically walking back 579ms
+   ✓ real cabin shelter and evacuation > queues all four crew from $0 under one command without clipping their bodies or spending twice their movement allowance 2538ms
+   ✓ real cabin shelter and evacuation > walks four crew from the foredeck through a fully fitted eight-gun battery to its real cabin door 1000ms
+ ✓ .playtest/overseas-assault-20261015/archer-assault-altshore-helper-source/src/shared/ship-cabin.test.ts (30 tests) 5216ms
+   ✓ real cabin shelter and evacuation > rejects a warm cached cabin route during real bridge crossing and restores admission after physically walking back 682ms
+   ✓ real cabin shelter and evacuation > lets an idle default-boarded companion walk aside while a priest reaches the cabin on a moving eight-gun ship 348ms
+   ✓ real cabin shelter and evacuation > queues all four crew from $0 under one command without clipping their bodies or spending twice their movement allowance 1536ms
+   ✓ real cabin shelter and evacuation > walks four crew from the foredeck through a fully fitted eight-gun battery to its real cabin door 1468ms
+ ✓ .playtest/overseas-assault-20261015/archer-assault-commonshore-helper-source/src/shared/ship-cabin.test.ts (30 tests) 4079ms
+   ✓ real cabin shelter and evacuation > rejects a warm cached cabin route during real bridge crossing and restores admission after physically walking back 315ms
+   ✓ real cabin shelter and evacuation > queues all four crew from $0 under one command without clipping their bodies or spending twice their movement allowance 1106ms
+   ✓ real cabin shelter and evacuation > walks four crew from the foredeck through a fully fitted eight-gun battery to its real cabin door 1542ms
+ ✓ src/shared/boarding-control.test.ts (13 tests) 3838ms
+   ✓ boarding control at hull contact > finishes a large-to-small crew transfer and its saved continuation identically 2389ms
+   ✓ boarding control at hull contact > keeps a large-to-small melee battle alongside, then honors a helm departure 969ms
+ ✓ .playtest/carrier-threat-source/src/shared/boarding-control.test.ts (13 tests) 2896ms
+   ✓ boarding control at hull contact > finishes a large-to-small crew transfer and its saved continuation identically 1975ms
+   ✓ boarding control at hull contact > keeps a large-to-small melee battle alongside, then honors a helm departure 484ms
+ ✓ .playtest/overseas-assault-20261015/archer-assault-altshore-helper-source/src/shared/boarding-control.test.ts (13 tests) 4054ms
+   ✓ boarding control at hull contact > finishes a large-to-small crew transfer and its saved continuation identically 2680ms
+   ✓ boarding control at hull contact > keeps a large-to-small melee battle alongside, then honors a helm departure 1084ms
+ ✓ .playtest/overseas-assault-20261015/archer-assault-commonshore-helper-source/src/shared/boarding-control.test.ts (13 tests) 3009ms
+   ✓ boarding control at hull contact > finishes a large-to-small crew transfer and its saved continuation identically 1919ms
+   ✓ boarding control at hull contact > keeps a large-to-small melee battle alongside, then honors a helm departure 468ms
+ ✓ src/shared/ship-cabin-quota.test.ts (26 tests) 693ms
+ ✓ .playtest/carrier-threat-source/src/shared/ship-cabin-quota.test.ts (26 tests) 613ms
+   ✓ cabin capacity by population and physical body > rejects a permanently disconnected heavy passenger without starving a reachable companion 314ms
+ ✓ .playtest/overseas-assault-20261015/archer-assault-altshore-helper-source/src/shared/ship-cabin-quota.test.ts (26 tests) 647ms
+ ✓ .playtest/overseas-assault-20261015/archer-assault-commonshore-helper-source/src/shared/ship-cabin-quota.test.ts (26 tests) 632ms
+ ✓ src/shared/decks.test.ts (10 tests) 554ms
+ ✓ .playtest/carrier-threat-source/src/shared/decks.test.ts (10 tests) 677ms
+ ✓ .playtest/overseas-assault-20261015/archer-assault-altshore-helper-source/src/shared/decks.test.ts (10 tests) 690ms
+   ✓ physical decks > summons onto free deck floor and preserves cooldown if nothing fits 334ms
+ ✓ .playtest/overseas-assault-20261015/archer-assault-commonshore-helper-source/src/shared/decks.test.ts (10 tests) 543ms
+ ✓ src/shared/crew-rendezvous-reachable.test.ts (7 tests) 1975ms
+   ✓ replans the actual empty blocked appointment into a real safe departure for the partner 947ms
+   ✓ keeps the registered building frame while checking a hypothetical reciprocal departure 561ms
+   ✓ recognizes the native numerical endpoint residual instead of restarting that hull forever 419ms
+ ✓ src/shared/crew-rendezvous.test.ts (7 tests) 2660ms
+   ✓ right-click crew rendezvous > approaches, walks across and transfers crew to a separated player deck 1181ms
+   ✓ right-click crew rendezvous > approaches, walks across and transfers crew to a separated enemy deck 362ms
+   ✓ right-click crew rendezvous > resumes a mid-rendezvous save deterministically 692ms
+ ✓ .playtest/carrier-threat-source/src/shared/crew-rendezvous.test.ts (7 tests) 2701ms
+   ✓ right-click crew rendezvous > approaches, walks across and transfers crew to a separated player deck 844ms
+   ✓ right-click crew rendezvous > approaches, walks across and transfers crew to a separated enemy deck 357ms
+   ✓ right-click crew rendezvous > resumes a mid-rendezvous save deterministically 942ms
+ ❯ .playtest/overseas-assault-20261015/archer-assault-altshore-helper-source/src/shared/crew-rendezvous.test.ts (0 test)
+ ❯ .playtest/overseas-assault-20261015/archer-assault-commonshore-helper-source/src/shared/crew-rendezvous.test.ts (0 test)
+ ✓ src/shared/ship-cabin-movement-frame.test.ts (2 tests) 381ms
+ ✓ .playtest/carrier-threat-source/src/shared/ship-cabin-movement-frame.test.ts (2 tests) 127ms
+ ✓ .playtest/overseas-assault-20261015/archer-assault-altshore-helper-source/src/shared/ship-cabin-movement-frame.test.ts (2 tests) 266ms
+ ✓ .playtest/overseas-assault-20261015/archer-assault-commonshore-helper-source/src/shared/ship-cabin-movement-frame.test.ts (2 tests) 279ms
+ ✓ src/shared/shore-boarding-placement.test.ts (7 tests) 297ms
+ ✓ src/shared/boarding-berth-reach.test.ts (2 tests) 418ms
+ ✓ .playtest/overseas-assault-20261015/archer-assault-altshore-helper-source/src/shared/boarding-berth-reach.test.ts (2 tests) 437ms
+   ✓ automatically boards the original shore workers using a reachable hull pose and survives JSON restoration 329ms
+ ✓ .playtest/overseas-assault-20261015/archer-assault-commonshore-helper-source/src/shared/boarding-berth-reach.test.ts (2 tests) 807ms
+   ✓ automatically boards the original shore workers using a reachable hull pose and survives JSON restoration 385ms
+   ✓ does not invent a boarding berth across an inaccessible rock coast 420ms
+ ✓ src/shared/crew-rendezvous-origin.test.ts (6 tests) 282ms
+ ✓ src/shared/connected-decks.test.ts (2 tests) 204ms
+ ✓ .playtest/carrier-threat-source/src/shared/connected-decks.test.ts (2 tests) 245ms
+ ✓ .playtest/overseas-assault-20261015/archer-assault-altshore-helper-source/src/shared/connected-decks.test.ts (2 tests) 97ms
+ ✓ .playtest/overseas-assault-20261015/archer-assault-commonshore-helper-source/src/shared/connected-decks.test.ts (2 tests) 205ms

@@ -1,0 +1,77 @@
+{
+  "classification": "Root independent sealed-payload verification and native raw effect audit. True215step single-public-board clinical, not autonomousAI or fullmatch. Source97 shared/SDK Git trees and live blobs exactly equal fixede7; no old1e ordinary0 score transfer.",
+  "atUTC": "2026-10-16T07:42:23.998816+00:00",
+  "rootHead": "97cecc14cc0e3a1e670f451b574e59057e1c83fa",
+  "runtimeBefore": "1e955c0c5f1114812f873f9c3ba06fe7cb19cb1e",
+  "candidate": "e7cdb8d67f8070a6548b527a25a38f62e18f0a0a",
+  "nativeSdkFilesRootGitE7AndLiveExact": 341,
+  "frozenManifestSHA256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
+  "packages": [
+    {
+      "file": "bootstrap-boarding-admission-readonly-review-20261016.tar.gz",
+      "sourcePath": "/tmp/bootstrap-boarding-admission-readonly-review-20261016.tar.gz",
+      "bytes": 8480,
+      "sha256": "659e68804c147b44948c155197ef9b77d5725a5fbc7cc98150e1297b05db1444",
+      "payloadManifest": "boarding-admission-independent-review-20261016/INDEX.json",
+      "indexedPayloadFiles": 3,
+      "archiveRegularFiles": 4,
+      "allPayloadHashesBytesExactCoverageRootVerified": true
+    },
+    {
+      "file": "bootstrap-boarding-placement-e7-native-contracts-20261016.tar.gz",
+      "sourcePath": "/tmp/bootstrap-boarding-placement-e7-native-contracts-20261016.tar.gz",
+      "bytes": 5989572,
+      "sha256": "9d4181e39756dc72f8dcd690711d959f00fe8d7b593e00c8284d0a0103ed241c",
+      "payloadManifest": "boarding-placement-a7-20261016/INDEX.json",
+      "indexedPayloadFiles": 20,
+      "archiveRegularFiles": 21,
+      "allPayloadHashesBytesExactCoverageRootVerified": true
+    },
+    {
+      "file": "bootstrap-boarding-placement-e7-single-board-clinical-20261016.tar.gz",
+      "sourcePath": "/tmp/bootstrap-boarding-placement-e7-single-board-clinical-20261016.tar.gz",
+      "bytes": 8389817,
+      "sha256": "e587e8d29b1cbe233c17edfac3212c3bd7898c2cc18cc48552816f8329319ede",
+      "payloadManifest": "boarding-placement-clinical-e7-20261016/INDEX.json",
+      "indexedPayloadFiles": 48,
+      "archiveRegularFiles": 49,
+      "allPayloadHashesBytesExactCoverageRootVerified": true
+    },
+    {
+      "file": "bootstrap-cabin-three-segment-public-clinical-20261016-evidence.tar.gz",
+      "sourcePath": "/workspace/.playtest/bootstrap-cabin-three-segment-public-clinical-20261016-evidence.tar.gz",
+      "bytes": 43342139,
+      "sha256": "b0b8a40bd5878a0da0e1d987c75cdf405528045e8de6764c6bbb2e7ea9c88a4c",
+      "payloadManifest": "cabin-clinical-three-segment-evidence-20261016/INDEX.json",
+      "indexedPayloadFiles": 1023,
+      "archiveRegularFiles": 1024,
+      "allPayloadHashesBytesExactCoverageRootVerified": true
+    }
+  ],
+  "actualClinical": {
+    "start": 208201,
+    "end": 208416,
+    "afterStepRows": 215,
+    "all215TicksOld25HPAndOwnerAndHullUnchanged": true,
+    "initial25Final26ExactIds": true,
+    "inside10Open16": true,
+    "manualP0Commands": 1,
+    "normalEnemyCommands": 91,
+    "emptyP0Plans": 14,
+    "normalEnemyPlans": 28,
+    "hits": 0,
+    "p0MemoryUnchanged": true,
+    "finalSHA256": "85a181af55d4c375899ade046dfb9e066949a6f842290879b4355dbb5318e6ee",
+    "winner": null,
+    "nativeGeometryPendingSeparatePureReview": true
+  },
+  "rootTests": {
+    "scopedLog": "root-native-scoped.log",
+    "passed": 139,
+    "failed": 2,
+    "files": 14,
+    "knownBaselineFailure": "Both crew-rendezvous-coast sourceHP314.97705695148625 expected320 exactly reproduced on unmodifieda7, unchangedtransferdomain. Preserved failures, not allgreen.",
+    "tscExit": 0,
+    "wrongScopeAttempt": "Initialroot-native-related.log matched historical.playtestcopies because missing--dir; interrupted only ownVitest367419 exit130. Correct scoped log alone supplies counts."
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "classification": "Root streamed complete source capsule and independently compared every1476live and497frozen payload to exact Git blob, not only trust top archive SHA or184 subset. Live e7 is candidate/clinical provenance, root97 shares its entire341file native+SDK tree exactly; differentAI ancestry is explicit.",
+  "capsuleSHA256": "80de87bffc84a6c0b3593d1661958b7a717fb03008d19959ff9f938cfa214aa5",
+  "counts": {
+    "live": 1476,
+    "frozen": 497
+  },
+  "liveRevision": "e7cdb8d67f8070a6548b527a25a38f62e18f0a0a",
+  "frozenRevision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "all1973PayloadGitBlobsExact": true
+}

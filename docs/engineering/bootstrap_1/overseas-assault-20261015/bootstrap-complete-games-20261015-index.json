@@ -1,5 +1,5 @@
 {
-  "productionHead": "1e955c0c5f1114812f873f9c3ba06fe7cb19cb1e",
+  "productionHead": "97cecc14cc0e3a1e670f451b574e59057e1c83fa",
   "packages": [
     {
       "file": "bootstrap-root-retarget-3bdb-40860-win-evidence.tar.gz",
@@ -738,6 +738,50 @@
       "payloadHashesVerified": true,
       "source": "Five additionalpublicP0commands nativecapabilitydiagnostic overfixeda7/actual202800,notautonomouspolicy/fullgame.",
       "classification": "Strictoriginal202800world/id3mem rules2/frozen184,1474source prepostexact. Normal3AIplans then5explicitadditionallegalpubliccommands:unload7408,6576/portrait8114/stop/leave37753/enter18621;afterwardnormal3AIonly180ticks→202980,92attempts0hits16events12P0. Each5legalitynull andactualsnapshotchange;202801 rav18621trueinside,37753trueopen,8114trueshore95HP. End22cargo/10inside20of21,doesnotproveforce>=20.11557/fullpacking/assaultwin. Includesactualinput/source1474/frozen497/driver/allraw/pertickstate/nativeimages/preliminary48staticcases;staticfuturearrivals/slotsnotcredited. No subjectAI suppression/enemyweakening/worldeditor shiprulechange."
+    },
+    {
+      "file": "bootstrap-boarding-admission-readonly-review-20261016.tar.gz",
+      "bytes": 8480,
+      "sha256": "659e68804c147b44948c155197ef9b77d5725a5fbc7cc98150e1297b05db1444",
+      "indexedPayloadFiles": 3,
+      "archiveRegularFiles": 4,
+      "payloadManifest": "boarding-admission-independent-review-20261016/INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "Rules2; exact native/manual source attribution in boarding-admission-20261016.zh.md",
+      "classification": "Read-only independent discovery of mismatched canBoard versus actual shore attachment placement. No new Game or score."
+    },
+    {
+      "file": "bootstrap-boarding-placement-e7-native-contracts-20261016.tar.gz",
+      "bytes": 5989572,
+      "sha256": "9d4181e39756dc72f8dcd690711d959f00fe8d7b593e00c8284d0a0103ed241c",
+      "indexedPayloadFiles": 20,
+      "archiveRegularFiles": 21,
+      "payloadManifest": "boarding-placement-a7-20261016/INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "Rules2; exact native/manual source attribution in boarding-admission-20261016.zh.md",
+      "classification": "Fixed e7 native shore-only placement parity; seven meaningful new contracts. Original two crew-rendezvous-coast failures independently reproduce on unchanged a7. Complete1476live+497frozen capsule independently Git-blob verified; root97 entire341file native+SDK tree equals e7, AI ancestry differs. Not autonomous AI or ordinary0."
+    },
+    {
+      "file": "bootstrap-boarding-placement-e7-single-board-clinical-20261016.tar.gz",
+      "bytes": 8389817,
+      "sha256": "e587e8d29b1cbe233c17edfac3212c3bd7898c2cc18cc48552816f8329319ede",
+      "indexedPayloadFiles": 48,
+      "archiveRegularFiles": 49,
+      "payloadManifest": "boarding-placement-clinical-e7-20261016/INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "Rules2; exact native/manual source attribution in boarding-admission-20261016.zh.md",
+      "classification": "Actual208201 complete world/id/3memory restore; exactly one manual public P0 board, thereafter empty P0 with unchanged memory and normal frozen v5/v7 every15tick. Native215steps to208416 truly attach26th passenger. Old25 HP/owner/hull preserved,0hits,26cargo10inside16open; mass4853/9060.48, original loaded-force20.348>20.115. Manual capability only, not autonomous loading, crew firepower or victory."
+    },
+    {
+      "file": "bootstrap-cabin-three-segment-public-clinical-20261016-evidence.tar.gz",
+      "bytes": 43342139,
+      "sha256": "b0b8a40bd5878a0da0e1d987c75cdf405528045e8de6764c6bbb2e7ea9c88a4c",
+      "indexedPayloadFiles": 1023,
+      "archiveRegularFiles": 1024,
+      "payloadManifest": "cabin-clinical-three-segment-evidence-20261016/INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "Rules2; exact native/manual source attribution in boarding-admission-20261016.zh.md",
+      "classification": "Original a7 public human-intent clinical, three separate contiguous source-bound segments202801→206401→208201→208741,5940native steps/3443public attempts. Final26 truly attached,10inside16open,0permanent losses; two friendly ship collision hits and transient expiry separately retained. Whole raw and exact recovery of losslessly compressed segment1 included. No autonomousAI, ordinary0 or whole-game win claim."
     }
   ],
   "strategyBaseline": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
@@ -1327,5 +1371,37 @@
     },
     "notGeneratedSeedGeneralization": true,
     "threeFamilyAcceptance": false
+  },
+  "activeRuntime": {
+    "source": "97cecc14cc0e3a1e670f451b574e59057e1c83fa",
+    "parentRuntimeSource": "1e955c0c5f1114812f873f9c3ba06fe7cb19cb1e",
+    "nativeCandidate": "e7cdb8d67f8070a6548b527a25a38f62e18f0a0a",
+    "rulesVersion": 2,
+    "frozenManifestSHA256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
+    "onlyProductionFile": "src/shared/decks.ts",
+    "nativeSdk341FilesEqualCandidateAndLive": true,
+    "rootRegression": {
+      "scopedLog": "root-native-scoped.log",
+      "passed": 139,
+      "failed": 2,
+      "files": 14,
+      "knownBaselineFailure": "Both crew-rendezvous-coast sourceHP314.97705695148625 expected320 exactly reproduced on unmodifieda7, unchangedtransferdomain. Preserved failures, not allgreen.",
+      "tscExit": 0,
+      "wrongScopeAttempt": "Initialroot-native-related.log matched historical.playtestcopies because missing--dir; interrupted only ownVitest367419 exit130. Correct scoped log alone supplies counts."
+    },
+    "manualClinical": {
+      "from": 208201,
+      "to": 208416,
+      "nativeTicks": 215,
+      "manualPublicP0Commands": 1,
+      "cargo": 26,
+      "zeroHits": true,
+      "allOld25HPOwnerHullPreserved": true
+    },
+    "ordinary0": null,
+    "historicalAttribution": "All earlier productionValidation/currentRuntimeOrdinary0 and other ordinary0 records remain exact, historical and source-bound. In particular1e82963win59permanentloss is not assigned to97. No bootstrap_1 final acceptance.",
+    "reference": "boarding-admission-20261016.zh.md",
+    "validationDirectory": "boarding-admission-validation-20261016/",
+    "originalUncommittedRecoveryGapRetained": true
   }
 }
