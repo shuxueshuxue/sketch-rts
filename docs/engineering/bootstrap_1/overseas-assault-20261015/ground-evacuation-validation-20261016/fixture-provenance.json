@@ -1,0 +1,16 @@
+[
+  {
+    "tick": 279885,
+    "original": "/tmp/coastal-corner-priority-58e-20261016/actual-deck-crew-evacuation/279885-before-p0-every-think.json.gz",
+    "fixture": "/tmp/sketch-rts-ground-evacuation-945f-control/src/ai/bootstrap_1/fixtures/ground-evacuation-279885.json.gz",
+    "sha256": "80315d7f876687b87109747533ffee1511b4366386dcc9a6002f8d8807814fee",
+    "exactOriginalGzip": true
+  },
+  {
+    "tick": 281190,
+    "original": "/tmp/coastal-corner-priority-58e-20261016/actual-deck-crew-evacuation/281190-before-p0-every-think.json.gz",
+    "fixture": "/tmp/sketch-rts-ground-evacuation-945f-control/src/ai/bootstrap_1/fixtures/ground-evacuation-281190.json.gz",
+    "sha256": "19c0c730fe547b381103e1014672f8a4a7b15bbefa7b2583c823a7580edc8e48",
+    "exactOriginalGzip": true
+  }
+]

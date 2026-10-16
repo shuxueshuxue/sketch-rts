@@ -1493,46 +1493,46 @@
     "originalUncommittedRecoveryGapRetained": true
   },
   "activeRuntime": {
-    "source": "f7f8747ba280edc2c467a42b51694dedfe54a5ab",
-    "byteEquivalentCandidate": "a53eee411c6950bafffc69c2c950a6fbbc825876",
-    "parentRuntimeSource": "760ef777eeaf0eb13a67bef5b2221fbf777126a9",
-    "selectedSourceConfigTestManifestFilesExact": 1477,
-    "sourceScope": "Sparse tracked runtime source/config/test + frozen manifest only; historical archive docs not expanded.",
+    "source": "17bc9facfb59e5b540badcf35c4b987ae648072c",
+    "byteEquivalentCandidate": "5457ee17cfeb13c9bf35031b7122abd25e7ab1d8",
+    "parentRuntimeSource": "f7f8747ba280edc2c467a42b51694dedfe54a5ab",
+    "selectedSourceConfigTestManifestFilesExact": 1480,
+    "sourceScope": "Complete tracked src/scripts/tools plus selected root configs/test and frozen manifest; old archive docs are outside the runtime equivalence scope.",
     "onlyProductionFile": "src/ai/policy/naval.ts",
+    "onlyProductionChange": "Exclude actual deck occupants from new ground evacuation candidates; preserve existing ferry task memory and timeout.",
     "rulesVersion": 2,
     "frozenManifestSHA256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
     "candidateValidation": {
-      "distinctContractsPassed": 20,
+      "newActualContractsPassed": 6,
+      "sameContractsOldBaselineFailed": 6,
+      "relevantOriginalContractsPassed": 11,
+      "relevantOriginalSkipped": 46,
       "tsc1024Exit": 0
     },
     "rootValidation": {
-      "all1477GitAndLiveFilesExact": true,
+      "all1480GitAndLiveFilesExact": true,
       "allGitSrcScriptsToolsFileSetExact": true,
-      "all91OuterPayloadSHA256AndCoverage": true,
-      "all1477InnerSourcePayloadGitBlobExact": true,
       "duplicateTestsNotRerunBecauseEntireCodeConfigIdentical": true
     },
-    "nativeComponent": {
-      "inputTick": 229800,
-      "steps": 885,
-      "publicCommands": 2,
-      "realPaidRepairs": 37,
-      "hpBefore": 19.916386205336835,
-      "hpAfter": 130.91638620533683,
-      "goldSpent": 37,
-      "original40PercentGateRelease": true,
-      "noAIThinkers": true,
-      "notFullMatch": true
-    },
     "fullP0Integration": {
-      "oneBaselineOneCandidateQuery": true,
-      "same12EntriesExceptOneNavalMove": true,
-      "all3PostMemoriesExact": true,
-      "nativeComponentFirstCommandPubliclyPublished": true
+      "completeActualInputTicks": [
+        279885,
+        281190
+      ],
+      "firstPhantomEvacuationPrevented": true,
+      "secondNewPhantomEvacuationPrevented": true,
+      "inheritedFirstTaskAt281190Preserved": true,
+      "normalAssaultBoardRequestsInstead": {
+        "279885": 12,
+        "281190": 7
+      },
+      "notActualBoardingOrVictory": true,
+      "inputWorldNextIdMemoriesUnchanged": true,
+      "opponentMemoriesUnchanged": true
     },
     "ordinary0": null,
-    "pendingFullMatchEvidence": "No natural complete normal match yet on rootf7/a53; full ordinary0 and generalization still required. Prior38f/root760 byteequivalent archer82182defeat65loss remains previousRuntimeBeforeDock, not rewritten as a newf7 result.",
-    "currentEvidenceReference": "dock-repair-admission-20261016.zh.md",
+    "pendingFullMatchEvidence": "No complete normal match yet on root17bc/5457. Planned focused 279885→286800 normal3AI comparisons are causal windows, not whole-match results or bootstrap acceptance. Historical D352 loss286628 is not a root945f baseline result.",
+    "currentEvidenceReference": "ground-evacuation-20261016.zh.md",
     "originalUncommittedRecoveryGapRetained": true
   }
 ,
@@ -1589,5 +1589,48 @@
     "reference": "live-maneuver-20261016.zh.md",
     "originalUncommittedRecoveryGapRetained": true,
     "currentEvidenceReference": "ordinary0-archer-38f-negative-20261016.zh.md"
+  },
+  "previousRuntimeBeforeGroundEvacuation": {
+    "source": "f7f8747ba280edc2c467a42b51694dedfe54a5ab",
+    "byteEquivalentCandidate": "a53eee411c6950bafffc69c2c950a6fbbc825876",
+    "parentRuntimeSource": "760ef777eeaf0eb13a67bef5b2221fbf777126a9",
+    "selectedSourceConfigTestManifestFilesExact": 1477,
+    "sourceScope": "Sparse tracked runtime source/config/test + frozen manifest only; historical archive docs not expanded.",
+    "onlyProductionFile": "src/ai/policy/naval.ts",
+    "rulesVersion": 2,
+    "frozenManifestSHA256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
+    "candidateValidation": {
+      "distinctContractsPassed": 20,
+      "tsc1024Exit": 0
+    },
+    "rootValidation": {
+      "all1477GitAndLiveFilesExact": true,
+      "allGitSrcScriptsToolsFileSetExact": true,
+      "all91OuterPayloadSHA256AndCoverage": true,
+      "all1477InnerSourcePayloadGitBlobExact": true,
+      "duplicateTestsNotRerunBecauseEntireCodeConfigIdentical": true
+    },
+    "nativeComponent": {
+      "inputTick": 229800,
+      "steps": 885,
+      "publicCommands": 2,
+      "realPaidRepairs": 37,
+      "hpBefore": 19.916386205336835,
+      "hpAfter": 130.91638620533683,
+      "goldSpent": 37,
+      "original40PercentGateRelease": true,
+      "noAIThinkers": true,
+      "notFullMatch": true
+    },
+    "fullP0Integration": {
+      "oneBaselineOneCandidateQuery": true,
+      "same12EntriesExceptOneNavalMove": true,
+      "all3PostMemoriesExact": true,
+      "nativeComponentFirstCommandPubliclyPublished": true
+    },
+    "ordinary0": null,
+    "pendingFullMatchEvidence": "No natural complete normal match yet on rootf7/a53; full ordinary0 and generalization still required. Prior38f/root760 byteequivalent archer82182defeat65loss remains previousRuntimeBeforeDock, not rewritten as a newf7 result.",
+    "currentEvidenceReference": "dock-repair-admission-20261016.zh.md",
+    "originalUncommittedRecoveryGapRetained": true
   }
 }

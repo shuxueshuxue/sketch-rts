@@ -1,0 +1,52 @@
+
+ RUN  v2.1.9 /tmp/sketch-rts-ground-evacuation-945f-control
+
+ ❯ src/ai/bootstrap_1/ground-evacuation.test.ts (6 tests | 6 failed) 3821ms
+   × v9_archer does not create a ground evacuation pickup for healthy embarked priests 991ms
+     → expected 'evacuate' not to be 'evacuate' // Object.is equality
+   × v9_summoner does not create a ground evacuation pickup for healthy embarked priests 698ms
+     → expected 'evacuate' not to be 'evacuate' // Object.is equality
+   × v9_knight does not create a ground evacuation pickup for healthy embarked priests 946ms
+     → expected 'evacuate' not to be 'evacuate' // Object.is equality
+   × v9_archer does not dispatch another empty ferry to already embarked priests 504ms
+     → expected 'evacuate' not to be 'evacuate' // Object.is equality
+   × v9_summoner does not dispatch another empty ferry to already embarked priests 424ms
+     → expected 'evacuate' not to be 'evacuate' // Object.is equality
+   × v9_knight does not dispatch another empty ferry to already embarked priests 257ms
+     → expected 'evacuate' not to be 'evacuate' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/ai/bootstrap_1/ground-evacuation.test.ts > v9_archer does not create a ground evacuation pickup for healthy embarked priests
+ FAIL  src/ai/bootstrap_1/ground-evacuation.test.ts > v9_summoner does not create a ground evacuation pickup for healthy embarked priests
+ FAIL  src/ai/bootstrap_1/ground-evacuation.test.ts > v9_knight does not create a ground evacuation pickup for healthy embarked priests
+AssertionError: expected 'evacuate' not to be 'evacuate' // Object.is equality
+ ❯ src/ai/bootstrap_1/ground-evacuation.test.ts:25:61
+     23|     teams: snapshot.teams, memoryProvider: createAiMemoryProvider(memo…
+     24|   });
+     25|   expect(memories.p0.naval.ferries[carrierId]?.purpose).not.toBe('evac…
+       |                                                             ^
+     26|   expect(entries.some(entry => entry.command.type === 'move' && entry.…
+     27|     && entry.command.x === 5973.267490678202 && entry.command.y === 79…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/ai/bootstrap_1/ground-evacuation.test.ts > v9_archer does not dispatch another empty ferry to already embarked priests
+ FAIL  src/ai/bootstrap_1/ground-evacuation.test.ts > v9_summoner does not dispatch another empty ferry to already embarked priests
+ FAIL  src/ai/bootstrap_1/ground-evacuation.test.ts > v9_knight does not dispatch another empty ferry to already embarked priests
+AssertionError: expected 'evacuate' not to be 'evacuate' // Object.is equality
+ ❯ src/ai/bootstrap_1/ground-evacuation.test.ts:41:63
+     39|     teams: snapshot.teams, memoryProvider: createAiMemoryProvider(memo…
+     40|   });
+     41|   expect(memories.p0.naval.ferries[transportId]?.purpose).not.toBe('ev…
+       |                                                               ^
+     42|   // This candidate admission change preserves the real input's alread…
+     43|   // mission; it does not claim to repair historical ferry memory.
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ Test Files  1 failed (1)
+      Tests  6 failed (6)
+   Start at  10:25:09
+   Duration  7.96s (transform 2.92s, setup 0ms, collect 3.82s, tests 3.82s, environment 0ms, prepare 70ms)
+

@@ -1,0 +1,16 @@
+
+ RUN  v2.1.9 /tmp/sketch-rts-ground-evacuation-945f-control
+
+ ✓ src/ai/bootstrap_1/ground-evacuation.test.ts (6 tests) 4182ms
+   ✓ v9_archer does not create a ground evacuation pickup for healthy embarked priests 955ms
+   ✓ v9_summoner does not create a ground evacuation pickup for healthy embarked priests 714ms
+   ✓ v9_knight does not create a ground evacuation pickup for healthy embarked priests 767ms
+   ✓ v9_archer does not dispatch another empty ferry to already embarked priests 575ms
+   ✓ v9_summoner does not dispatch another empty ferry to already embarked priests 670ms
+   ✓ v9_knight does not dispatch another empty ferry to already embarked priests 500ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  10:25:28
+   Duration  8.04s (transform 2.70s, setup 0ms, collect 3.49s, tests 4.18s, environment 0ms, prepare 76ms)
+

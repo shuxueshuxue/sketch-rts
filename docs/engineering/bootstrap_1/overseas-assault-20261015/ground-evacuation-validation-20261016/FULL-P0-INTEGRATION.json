@@ -1,0 +1,454 @@
+[
+  {
+    "tick": 279885,
+    "baselineOnlyEntries": [
+      {
+        "playerId": "p0",
+        "source": "external-agent",
+        "scriptId": "naval",
+        "command": {
+          "type": "move",
+          "unitIds": [
+            "unit-p0-carrier-25442"
+          ],
+          "x": 5973.267490678202,
+          "y": 7937.418812846293,
+          "avoidCombat": true
+        }
+      },
+      {
+        "playerId": "p0",
+        "source": "external-agent",
+        "scriptId": "v6Backline",
+        "command": {
+          "type": "move",
+          "unitIds": [
+            "unit-p0-summoner-4085"
+          ],
+          "x": 1456,
+          "y": 4624
+        }
+      },
+      {
+        "playerId": "p0",
+        "source": "external-agent",
+        "scriptId": "v6Backline",
+        "command": {
+          "type": "move",
+          "unitIds": [
+            "unit-p0-summoner-8114"
+          ],
+          "x": 1456,
+          "y": 4624
+        }
+      },
+      {
+        "playerId": "p0",
+        "source": "external-agent",
+        "scriptId": "v6Backline",
+        "command": {
+          "type": "move",
+          "unitIds": [
+            "unit-p0-summoner-38054"
+          ],
+          "x": 1456,
+          "y": 4624
+        }
+      },
+      {
+        "playerId": "p0",
+        "source": "external-agent",
+        "scriptId": "v6Backline",
+        "command": {
+          "type": "move",
+          "unitIds": [
+            "unit-p0-summoner-40241"
+          ],
+          "x": 1456,
+          "y": 4624
+        }
+      },
+      {
+        "playerId": "p0",
+        "source": "external-agent",
+        "scriptId": "v6Backline",
+        "command": {
+          "type": "move",
+          "unitIds": [
+            "unit-p0-summoner-41089"
+          ],
+          "x": 1456,
+          "y": 4624
+        }
+      },
+      {
+        "playerId": "p0",
+        "source": "external-agent",
+        "scriptId": "v6Backline",
+        "command": {
+          "type": "move",
+          "unitIds": [
+            "unit-p0-ashHexer-4268"
+          ],
+          "x": 1456,
+          "y": 4624
+        }
+      },
+      {
+        "playerId": "p0",
+        "source": "external-agent",
+        "scriptId": "v6Backline",
+        "command": {
+          "type": "move",
+          "unitIds": [
+            "unit-p0-ashHexer-4420"
+          ],
+          "x": 1456,
+          "y": 4624
+        }
+      },
+      {
+        "playerId": "p0",
+        "source": "external-agent",
+        "scriptId": "v6Backline",
+        "command": {
+          "type": "move",
+          "unitIds": [
+            "unit-p0-ashHexer-23349"
+          ],
+          "x": 1456,
+          "y": 4624
+        }
+      }
+    ],
+    "candidateOnlyEntries": [
+      {
+        "playerId": "p0",
+        "source": "external-agent",
+        "scriptId": "naval",
+        "command": {
+          "type": "board",
+          "unitIds": [
+            "unit-p0-emberRavager-1180",
+            "unit-p0-emberRavager-19088",
+            "unit-p0-emberRavager-23904",
+            "unit-p0-emberRavager-22372",
+            "unit-p0-ashHexer-4420",
+            "unit-p0-ashHexer-23349",
+            "unit-p0-ashHexer-4268",
+            "unit-p0-summoner-41089",
+            "unit-p0-summoner-40241",
+            "unit-p0-summoner-8114",
+            "unit-p0-summoner-4085",
+            "unit-p0-summoner-38054"
+          ],
+          "transportId": "unit-p0-carrier-25442"
+        }
+      }
+    ],
+    "candidatePostFerries": {
+      "unit-p0-carrier-25442": {
+        "purpose": "assault",
+        "targetId": "building-p2-farm-1409",
+        "from": {
+          "x": 1898.2133255764954,
+          "y": 5240.78398094729
+        },
+        "to": {
+          "x": 6032,
+          "y": 8016
+        },
+        "phase": "loading",
+        "crewIds": [
+          "unit-p0-emberRavager-1180",
+          "unit-p0-emberRavager-19088",
+          "unit-p0-emberRavager-23904",
+          "unit-p0-emberRavager-22372",
+          "unit-p0-ashHexer-4420",
+          "unit-p0-ashHexer-23349",
+          "unit-p0-ashHexer-4268",
+          "unit-p0-summoner-41089",
+          "unit-p0-summoner-40241",
+          "unit-p0-summoner-8114",
+          "unit-p0-summoner-4085",
+          "unit-p0-summoner-38054"
+        ],
+        "sinceTick": 279885,
+        "targetGround": {
+          "x": 6336,
+          "y": 8256
+        },
+        "progress": {
+          "tick": 279885,
+          "x": 2032,
+          "y": 5200.000000000114,
+          "heading": 47.106496771113754,
+          "phase": "loading",
+          "crew": ""
+        }
+      }
+    },
+    "memoryDifferences": [
+      {
+        "path": "p0.naval.ferries.unit-p0-carrier-25442.purpose",
+        "before": "evacuate",
+        "after": "assault"
+      },
+      {
+        "path": "p0.naval.ferries.unit-p0-carrier-25442.crewIds",
+        "before": [],
+        "after": [
+          "unit-p0-emberRavager-1180",
+          "unit-p0-emberRavager-19088",
+          "unit-p0-emberRavager-23904",
+          "unit-p0-emberRavager-22372",
+          "unit-p0-ashHexer-4420",
+          "unit-p0-ashHexer-23349",
+          "unit-p0-ashHexer-4268",
+          "unit-p0-summoner-41089",
+          "unit-p0-summoner-40241",
+          "unit-p0-summoner-8114",
+          "unit-p0-summoner-4085",
+          "unit-p0-summoner-38054"
+        ]
+      },
+      {
+        "path": "p0.naval.ferries.unit-p0-carrier-25442.targetGround",
+        "before": "<absent>",
+        "after": {
+          "x": 6336,
+          "y": 8256
+        }
+      },
+      {
+        "path": "p0.naval.ferries.unit-p0-carrier-25442.targetId",
+        "before": "building-p0-townhall",
+        "after": "building-p2-farm-1409"
+      },
+      {
+        "path": "p0.naval.ferries.unit-p0-carrier-25442.to.x",
+        "before": 2128,
+        "after": 6032
+      },
+      {
+        "path": "p0.naval.ferries.unit-p0-carrier-25442.to.y",
+        "before": 4624,
+        "after": 8016
+      },
+      {
+        "path": "p0.naval.ferries.unit-p0-carrier-25442.from.x",
+        "before": 5973.267490678202,
+        "after": 1898.2133255764954
+      },
+      {
+        "path": "p0.naval.ferries.unit-p0-carrier-25442.from.y",
+        "before": 7937.418812846293,
+        "after": 5240.78398094729
+      }
+    ],
+    "worldUnchanged": true,
+    "inputUnchanged": true,
+    "p1p2MemoryUnchanged": true,
+    "sourcePre": {
+      "head": "5457ee17cfeb13c9bf35031b7122abd25e7ab1d8",
+      "status": "",
+      "files": 1480
+    },
+    "sourcePost": {
+      "head": "5457ee17cfeb13c9bf35031b7122abd25e7ab1d8",
+      "status": "",
+      "files": 1480
+    }
+  },
+  {
+    "tick": 281190,
+    "baselineOnlyEntries": [
+      {
+        "playerId": "p0",
+        "source": "external-agent",
+        "scriptId": "naval",
+        "command": {
+          "type": "move",
+          "unitIds": [
+            "unit-p0-transport-157929"
+          ],
+          "x": 5973.267490678202,
+          "y": 7937.418812846293,
+          "avoidCombat": true
+        }
+      },
+      {
+        "playerId": "p0",
+        "source": "external-agent",
+        "scriptId": "v6Backline",
+        "command": {
+          "type": "move",
+          "unitIds": [
+            "unit-p0-ashHexer-4420"
+          ],
+          "x": 1456,
+          "y": 4624
+        }
+      },
+      {
+        "playerId": "p0",
+        "source": "external-agent",
+        "scriptId": "v6Backline",
+        "command": {
+          "type": "move",
+          "unitIds": [
+            "unit-p0-ashHexer-23349"
+          ],
+          "x": 1456,
+          "y": 4624
+        }
+      }
+    ],
+    "candidateOnlyEntries": [
+      {
+        "playerId": "p0",
+        "source": "external-agent",
+        "scriptId": "naval",
+        "command": {
+          "type": "board",
+          "unitIds": [
+            "unit-p0-emberRavager-1180",
+            "unit-p0-emberRavager-23904",
+            "unit-p0-emberRavager-19088",
+            "unit-p0-emberRavager-22372",
+            "unit-p0-ashHexer-23349",
+            "unit-p0-ashHexer-4420",
+            "unit-p0-ashHexer-4268"
+          ],
+          "transportId": "unit-p0-transport-157929"
+        }
+      }
+    ],
+    "candidatePostFerries": {
+      "unit-p0-carrier-25442": {
+        "purpose": "evacuate",
+        "targetId": "building-p0-townhall",
+        "from": {
+          "x": 5973.267490678202,
+          "y": 7937.418812846293
+        },
+        "to": {
+          "x": 2128,
+          "y": 4624
+        },
+        "phase": "loading",
+        "crewIds": [],
+        "sinceTick": 279885,
+        "progress": {
+          "tick": 281175,
+          "x": 2319.999999999999,
+          "y": 6091.472872259745,
+          "heading": 45.553093477052,
+          "phase": "loading",
+          "crew": ""
+        }
+      },
+      "unit-p0-transport-157929": {
+        "purpose": "assault",
+        "targetId": "building-p2-farm-1409",
+        "from": {
+          "x": 1936,
+          "y": 5104
+        },
+        "to": {
+          "x": 6032,
+          "y": 8016
+        },
+        "phase": "loading",
+        "crewIds": [
+          "unit-p0-emberRavager-1180",
+          "unit-p0-emberRavager-23904",
+          "unit-p0-emberRavager-19088",
+          "unit-p0-emberRavager-22372",
+          "unit-p0-ashHexer-23349",
+          "unit-p0-ashHexer-4420",
+          "unit-p0-ashHexer-4268"
+        ],
+        "sinceTick": 281190,
+        "targetGround": {
+          "x": 6336,
+          "y": 8256
+        },
+        "progress": {
+          "tick": 281190,
+          "x": 1928.8381364179606,
+          "y": 5288.696839111104,
+          "heading": 5.145353247094684,
+          "phase": "loading",
+          "crew": ""
+        }
+      }
+    },
+    "memoryDifferences": [
+      {
+        "path": "p0.naval.ferries.unit-p0-transport-157929.purpose",
+        "before": "evacuate",
+        "after": "assault"
+      },
+      {
+        "path": "p0.naval.ferries.unit-p0-transport-157929.crewIds",
+        "before": [],
+        "after": [
+          "unit-p0-emberRavager-1180",
+          "unit-p0-emberRavager-23904",
+          "unit-p0-emberRavager-19088",
+          "unit-p0-emberRavager-22372",
+          "unit-p0-ashHexer-23349",
+          "unit-p0-ashHexer-4420",
+          "unit-p0-ashHexer-4268"
+        ]
+      },
+      {
+        "path": "p0.naval.ferries.unit-p0-transport-157929.targetGround",
+        "before": "<absent>",
+        "after": {
+          "x": 6336,
+          "y": 8256
+        }
+      },
+      {
+        "path": "p0.naval.ferries.unit-p0-transport-157929.targetId",
+        "before": "building-p0-townhall",
+        "after": "building-p2-farm-1409"
+      },
+      {
+        "path": "p0.naval.ferries.unit-p0-transport-157929.to.x",
+        "before": 2128,
+        "after": 6032
+      },
+      {
+        "path": "p0.naval.ferries.unit-p0-transport-157929.to.y",
+        "before": 4624,
+        "after": 8016
+      },
+      {
+        "path": "p0.naval.ferries.unit-p0-transport-157929.from.x",
+        "before": 5973.267490678202,
+        "after": 1936
+      },
+      {
+        "path": "p0.naval.ferries.unit-p0-transport-157929.from.y",
+        "before": 7937.418812846293,
+        "after": 5104
+      }
+    ],
+    "worldUnchanged": true,
+    "inputUnchanged": true,
+    "p1p2MemoryUnchanged": true,
+    "sourcePre": {
+      "head": "5457ee17cfeb13c9bf35031b7122abd25e7ab1d8",
+      "status": "",
+      "files": 1480
+    },
+    "sourcePost": {
+      "head": "5457ee17cfeb13c9bf35031b7122abd25e7ab1d8",
+      "status": "",
+      "files": 1480
+    }
+  }
+]

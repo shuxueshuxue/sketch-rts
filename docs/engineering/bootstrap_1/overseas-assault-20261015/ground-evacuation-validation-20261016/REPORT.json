@@ -1,0 +1,80 @@
+{
+  "atUTC": "2026-10-16T10:29:24.944179+00:00",
+  "state": "Fixed candidate and focused validation complete; normal three-AI comparison pending coordinated Game slot and parent review.",
+  "commit": "5457ee17cfeb13c9bf35031b7122abd25e7ab1d8",
+  "branch": "codex/bootstrap-ground-evacuation-20261016",
+  "base": "945f963a152bf46cf8560fd70fd25bba724ba33a",
+  "sourceRoot": "/tmp/sketch-rts-ground-evacuation-945f-control",
+  "productionChange": "Only !unit.deck in evacuationRoute permanent own land pool. Matches actual ground loader exclusion; no in-flight ferry-memory rewrite, new commander, threshold, TTL or compatibility layer.",
+  "rulesVersion": 2,
+  "frozenManifestUnchanged": true,
+  "source": {
+    "head": "5457ee17cfeb13c9bf35031b7122abd25e7ab1d8",
+    "committedGitBlobFiles": 1480,
+    "workingBytesMatchCommittedGitBlobs": true,
+    "capsuleFullReadbackFiles": 1480,
+    "capsuleReadbackExact": true
+  },
+  "tests": {
+    "newActualContracts": {
+      "old945f": {
+        "failed": 6,
+        "passed": 0,
+        "log": "contracts-old945f.log"
+      },
+      "candidate": {
+        "passed": 6,
+        "failed": 0,
+        "log": "contracts-candidate.log"
+      },
+      "scope": "All three bootstrap routes on exact original279885 and281190 complete snapshots/all3mem."
+    },
+    "existingRelevant": {
+      "passed": 11,
+      "skipped": 46,
+      "files": 2,
+      "log": "contracts-ground-boarding.log",
+      "scope": "Real ground critical patient+healer, existing board priority, isolated soldier+engineers, loaded ferry return; no skipped case claimed passed."
+    },
+    "tsc": {
+      "exitCode": 0,
+      "log": "tsc.log"
+    }
+  },
+  "pureFullP0": {
+    "sameActualInputs": [
+      279885,
+      281190
+    ],
+    "eachSourceEachInputOnce": true,
+    "baseline": "945f963a152bf46cf8560fd70fd25bba724ba33a",
+    "candidate": "5457ee17cfeb13c9bf35031b7122abd25e7ab1d8",
+    "noGameOrStep": true,
+    "proof": "FULL-P0-INTEGRATION.json",
+    "actual279885": "Fake empty evacuation replaced by ordinary assault to farm1409 with12 real ground soldiers publicly requested to board carrier25442. Eight old backline moves naturally yield to naval ownership.",
+    "actual281190": "Inherited empty carrier evacuation remains byte-for-byte. Second transport fake task replaced by ordinary assault with7 real ground soldiers publicly requested to board157929;two backline moves yield.",
+    "worldInputP1P2Unchanged": true,
+    "postMemoryDifferencesOnlyNewFerry": true,
+    "warning": "Published board requests are not native boarding, landing, damage or whole-match success."
+  },
+  "historicalD352Loss": {
+    "tick": 286628,
+    "pointer": "actual-286628-terminal-pointer.json",
+    "emptyTransport": "unit-p0-transport-157929",
+    "lastNativeHit": {
+      "attacker": "unit-p1-archer-1146",
+      "damage": 12,
+      "hpBefore": 6,
+      "hpAfter": -6
+    },
+    "worldAvailable": "Only neighboring286620/286635 complete worlds known; no exact286628 fullworld asserted.",
+    "rootDifference": "Root945f includes dock fix absentD352; actual281190 root P0 has one additional31227 dock move. D352 historical death is not a root945f counterfactual."
+  },
+  "pending": [
+    "Parent static review of fixed5457.",
+    "Prepare/review bound normal driver and run same actual279885 fullworld/id/all3mem with945f baseline and candidate sequentially, ordinary frozenv5+v7, to native result or actual diagnosed obstruction.",
+    "Visual observation and native board/strategic effects; surviving historical deathTick alone is not acceptance."
+  ],
+  "originalRecoveryGap": "Original failed container uncommitted changes remain inaccessible/unrecovered.",
+  "acceptance": "No fresh ordinary-opening/full-match/generalization/bootstrap_1 completion claim."
+}

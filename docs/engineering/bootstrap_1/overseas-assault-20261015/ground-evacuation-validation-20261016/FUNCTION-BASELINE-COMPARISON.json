@@ -1,0 +1,10 @@
+{
+  "root": "945f963a152bf46cf8560fd70fd25bba724ba33a",
+  "actualSource": "d352756f975a6b6f6fe8f8488dc3356d743af4c7",
+  "path": "src/ai/policy/naval.ts",
+  "rootFileSha256": "62bb3f33429d29d663d83308c9644683291d5f5565c9d3c02c12c441be9fd614",
+  "actualFileSha256": "84ffb28d7ef15ea9da0634c20f568d5e9010b2ddb51147c7fe0b80e1ca2e225f",
+  "evacuationFunctionByteEqual": true,
+  "rootFunctionSha256": "b3c53fbc6412de8765dcb7a3a9b81b818cf4e9f8707b0130a68f04b8b82d9a4b",
+  "actualFunctionSha256": "b3c53fbc6412de8765dcb7a3a9b81b818cf4e9f8707b0130a68f04b8b82d9a4b"
+}

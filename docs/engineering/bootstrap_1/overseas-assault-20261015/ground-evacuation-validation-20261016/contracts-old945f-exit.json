@@ -1,0 +1,7 @@
+{
+  "startedAtUTC": "2026-10-16T10:25:09.170924+00:00",
+  "finishedAtUTC": "2026-10-16T10:25:17.667903+00:00",
+  "exitCode": 1,
+  "memoryEventsAfter": "low 0\nhigh 0\nmax 344703\noom 43\noom_kill 2\noom_group_kill 0\n",
+  "log": "/tmp/bootstrap-ground-evacuation-945f-20261016/contracts-old945f.log"
+}

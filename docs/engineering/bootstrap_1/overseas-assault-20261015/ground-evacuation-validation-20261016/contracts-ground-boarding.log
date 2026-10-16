@@ -1,0 +1,20 @@
+
+ RUN  v2.1.9 /tmp/sketch-rts-ground-evacuation-945f-control
+
+ ✓ src/ai/policy/naval.test.ts (48 tests | 46 skipped) 369ms
+   ✓ the AI on the water > brings passengers home when an assault target disappears instead of leaving a loaded boat idle 348ms
+ ✓ src/ai/bootstrap_1/assault-care-ownership.test.ts (9 tests) 7699ms
+   ✓ v9_archer does not recruit a mainland critical-care patient into a new assault 1229ms
+   ✓ v9_summoner does not recruit a mainland critical-care patient into a new assault 973ms
+   ✓ v9_knight does not recruit a mainland critical-care patient into a new assault 910ms
+   ✓ v9_archer keeps the existing healer with its mainland critical-care patient 880ms
+   ✓ v9_summoner keeps the existing healer with its mainland critical-care patient 951ms
+   ✓ v9_knight keeps the existing healer with its mainland critical-care patient 966ms
+   ✓ keeps an already requested boarding task when its passenger becomes critical 904ms
+   ✓ allows an existing evacuation mission to take a critical survivor and its healer 688ms
+
+ Test Files  2 passed (2)
+      Tests  11 passed | 46 skipped (57)
+   Start at  10:26:03
+   Duration  13.73s (transform 3.25s, setup 0ms, collect 5.04s, tests 8.07s, environment 0ms, prepare 142ms)
+
