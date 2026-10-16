@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
+import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { issueCommandFrame } from '../../sdk/commands/frame';
 import { sketchScene } from '../../sdk/scene';
@@ -182,7 +183,13 @@ describe('native sustained cast order ownership', () => {
 
   it.each([37410, 37455])('respects the actual%d full-P0 cast or existing engagement owner through its public frame', tick => {
     const saved = JSON.parse(gunzipSync(readFileSync(new URL(`./fixtures/aimed-weapon-knight-${tick}.json.gz`, import.meta.url))).toString());
-    const original = JSON.parse(readFileSync(new URL(`./fixtures/aimed-weapon-knight-${tick}-original-p0.json`, import.meta.url), 'utf8'));
+    // The historical1905 public trace remains unchanged. This integrated
+    // contract compares unrelated orders with the medical8da parent policy.
+    const reference = JSON.parse(readFileSync(new URL(`./fixtures/aimed-weapon-knight-${tick}-parent8da-p0.json`, import.meta.url), 'utf8'));
+    expect(reference.referenceSource).toBe('8da5b0e4d65c0a5d355ecd9bdcbdb9c4ae23051d');
+    expect(reference.originalInputSHA256).toBe(createHash('sha256')
+      .update(readFileSync(new URL(`./fixtures/aimed-weapon-knight-${tick}.json.gz`, import.meta.url))).digest('hex'));
+    const original = reference.entries;
     const game = createGame('bareDuel');
     restoreSnapshotIntoGame(game, saved.snapshot, saved.nextId);
     const memories = structuredClone(saved.memories), memoryProvider = createAiMemoryProvider(memories);

@@ -1,0 +1,151 @@
+{
+  "classification": "Pure same-input parent8da P0 reference for the integrated ownership contract. Original1905 public trace is preserved separately. No Game, native step or command issue.",
+  "referenceSource": "8da5b0e4d65c0a5d355ecd9bdcbdb9c4ae23051d",
+  "originalInputSHA256": "c292c63b108e121321d2ffdcbdb97b9d3a85287183bbe1e94efa1fd07c5ea2c7",
+  "tick": 37455,
+  "entries": [
+    {
+      "playerId": "p0",
+      "source": "external-agent",
+      "scriptId": "mobileCare",
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "unit-p0-knight-9866"
+        ],
+        "x": 1058.7012213012645,
+        "y": 3754.497073289137,
+        "avoidCombat": true
+      }
+    },
+    {
+      "playerId": "p0",
+      "source": "external-agent",
+      "scriptId": "mobileCare",
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "unit-p0-raider-11967"
+        ],
+        "x": 1174.4510198334704,
+        "y": 3661.441570278269,
+        "avoidCombat": true
+      }
+    },
+    {
+      "playerId": "p0",
+      "source": "external-agent",
+      "scriptId": "mobileCare",
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "unit-p0-knight-28998"
+        ],
+        "x": 1190.9051926265586,
+        "y": 3679.8268281868886,
+        "avoidCombat": true
+      }
+    },
+    {
+      "playerId": "p0",
+      "source": "external-agent",
+      "scriptId": "mobileCare",
+      "command": {
+        "type": "holdPosition",
+        "unitIds": [
+          "unit-p0-ballista-24596"
+        ]
+      }
+    },
+    {
+      "playerId": "p0",
+      "source": "external-agent",
+      "scriptId": "abilities",
+      "command": {
+        "type": "cast",
+        "unitId": "unit-p0-ballista-27366",
+        "ability": "pinningBolt",
+        "targetId": "unit-p2-witch-6336"
+      }
+    },
+    {
+      "playerId": "p0",
+      "source": "external-agent",
+      "scriptId": "battlefield",
+      "command": {
+        "type": "attack",
+        "unitIds": [
+          "unit-p0-lancer-1075"
+        ],
+        "targetId": "unit-p1-emberRavager-26400"
+      }
+    },
+    {
+      "playerId": "p0",
+      "source": "external-agent",
+      "scriptId": "battlefield",
+      "command": {
+        "type": "attack",
+        "unitIds": [
+          "unit-p0-raider-25755"
+        ],
+        "targetId": "unit-p1-emberRavager-26400"
+      }
+    },
+    {
+      "playerId": "p0",
+      "source": "external-agent",
+      "scriptId": "battlefield",
+      "command": {
+        "type": "attack",
+        "unitIds": [
+          "unit-p0-ballista-27366"
+        ],
+        "targetId": "unit-p1-emberRavager-26400"
+      }
+    },
+    {
+      "playerId": "p0",
+      "source": "external-agent",
+      "scriptId": "v6Backline",
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "unit-p0-priest-32289"
+        ],
+        "x": 1467.8819907207899,
+        "y": 3674.528005690923,
+        "avoidCombat": true
+      }
+    },
+    {
+      "playerId": "p0",
+      "source": "external-agent",
+      "scriptId": "v6Backline",
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "unit-p0-fieldMedic-34930"
+        ],
+        "x": 1465.0421157858043,
+        "y": 3606.0775178051117,
+        "avoidCombat": true
+      }
+    },
+    {
+      "playerId": "p0",
+      "source": "external-agent",
+      "scriptId": "v6General",
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "unit-p0-horseArcher-3224",
+          "unit-p0-knight-3742",
+          "unit-p0-knight-4468"
+        ],
+        "x": 1421.7227027435117,
+        "y": 1885.8399884510848
+      }
+    }
+  ]
+}

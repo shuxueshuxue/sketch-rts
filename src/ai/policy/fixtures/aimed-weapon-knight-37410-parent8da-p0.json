@@ -1,0 +1,110 @@
+{
+  "classification": "Pure same-input parent8da P0 reference for the integrated ownership contract. Original1905 public trace is preserved separately. No Game, native step or command issue.",
+  "referenceSource": "8da5b0e4d65c0a5d355ecd9bdcbdb9c4ae23051d",
+  "originalInputSHA256": "2288ecd9932ede811c450a65420324f368453f47a3f31d78999fe057c77a3939",
+  "tick": 37410,
+  "entries": [
+    {
+      "playerId": "p0",
+      "source": "external-agent",
+      "scriptId": "mobileCare",
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "unit-p0-knight-9866"
+        ],
+        "x": 1170.2876691631566,
+        "y": 3668.188399268666,
+        "avoidCombat": true
+      }
+    },
+    {
+      "playerId": "p0",
+      "source": "external-agent",
+      "scriptId": "mobileCare",
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "unit-p0-knight-28998"
+        ],
+        "x": 1202.5416377757003,
+        "y": 3696,
+        "avoidCombat": true
+      }
+    },
+    {
+      "playerId": "p0",
+      "source": "external-agent",
+      "scriptId": "mobileCare",
+      "command": {
+        "type": "holdPosition",
+        "unitIds": [
+          "unit-p0-ballista-24596"
+        ]
+      }
+    },
+    {
+      "playerId": "p0",
+      "source": "external-agent",
+      "scriptId": "abilities",
+      "command": {
+        "type": "cast",
+        "unitId": "unit-p0-ballista-27366",
+        "ability": "pinningBolt",
+        "targetId": "unit-p2-witch-6336"
+      }
+    },
+    {
+      "playerId": "p0",
+      "source": "external-agent",
+      "scriptId": "battlefield",
+      "command": {
+        "type": "attack",
+        "unitIds": [
+          "unit-p0-raider-11967"
+        ],
+        "targetId": "unit-p2-priest-1792"
+      }
+    },
+    {
+      "playerId": "p0",
+      "source": "external-agent",
+      "scriptId": "battlefield",
+      "command": {
+        "type": "attack",
+        "unitIds": [
+          "unit-p0-priest-32289"
+        ],
+        "targetId": "unit-p2-witch-6336"
+      }
+    },
+    {
+      "playerId": "p0",
+      "source": "external-agent",
+      "scriptId": "v6Backline",
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "unit-p0-fieldMedic-34930"
+        ],
+        "x": 1530.4068164969908,
+        "y": 3498.474560520819,
+        "avoidCombat": true
+      }
+    },
+    {
+      "playerId": "p0",
+      "source": "external-agent",
+      "scriptId": "v6General",
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "unit-p0-knight-4468",
+          "unit-p0-ballista-27366"
+        ],
+        "x": 1421.7227027435117,
+        "y": 1885.8399884510848
+      }
+    }
+  ]
+}
