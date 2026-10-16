@@ -8,6 +8,7 @@ import { retreatV6Front, V7_WOUNDED_SHARE } from '../policy/v6/general';
 import { armedFoes, retreatLandTravelTicks, retreatThreatReach } from './safe-land-route';
 import { incomingItemDamage } from './damage-footprints';
 import { THINK_TICKS } from './mounted-micro';
+import { groundScreenMoves } from './ground-screen-goal';
 
 function safeHealingPosts(snapshot: GameSnapshot, owner: PlayerId, threats: readonly (Unit | Building)[]) {
   return snapshot.buildings.filter(building => building.owner === owner && building.hp > 0 && building.complete
@@ -61,7 +62,8 @@ export function postRecoveryAssignments(snapshot: GameSnapshot, owner: PlayerId,
 export const frontRecovery: AiScript = {
   id: 'frontRecovery', phase: 'tactics',
   claimsUnits: (snapshot, owner, options) => new Set(postRecoveryAssignments(snapshot, owner, options).map(({ patient }) => patient.id)),
-  run: (snapshot, owner, options) => postRecoveryCommands(postRecoveryAssignments(snapshot, owner, options)),
+  run: (snapshot, owner, options) => groundScreenMoves(snapshot, owner, options,
+    postRecoveryCommands(postRecoveryAssignments(snapshot, owner, options))),
 };
 
 export function postRecoveryCommands(assignments: ReturnType<typeof postRecoveryAssignments>): GameCommand[] {
