@@ -1,0 +1,57 @@
+{
+  "classification": "One cold normal3AI582tick replay of the sealed ordinary0 terminal. Not a second ordinary0 or extra win.",
+  "head": "38f5dd79ae588d578dce15b9baa2cd41f20f2a4b",
+  "inputTick": 81600,
+  "result": {
+    "tick": 82182,
+    "winner": "p1"
+  },
+  "checks": {
+    "restoreExact": true,
+    "source1474": true,
+    "frozen497": true,
+    "commands": true,
+    "hits": true,
+    "finalWorld": true,
+    "finalNextId": true,
+    "final3mem": true,
+    "finalSetup": true,
+    "finalWholeSavedObject": true,
+    "actual582Steps": true
+  },
+  "allExact": true,
+  "counts": {
+    "steps": 582,
+    "commands": 619,
+    "hits": 75,
+    "plans": 117,
+    "sourceFiles": 1474,
+    "frozenFiles": 497,
+    "manifestFiles": 184
+  },
+  "firstCommandDifference": null,
+  "firstHitDifference": null,
+  "elapsedMs": 1878.064,
+  "cpuMs": 2902.724,
+  "telemetry": {
+    "counts": {
+      "p1": {
+        "lifetime-expiry-eligible-removal": 4
+      }
+    },
+    "nativeUnitsLost": {
+      "p0": 65,
+      "p1": 1162,
+      "p2": 1,
+      "player": 0,
+      "enemy": 0,
+      "enemy2": 0,
+      "neutral": 17
+    },
+    "hitCount": 8337,
+    "terminalEntityIds": 4,
+    "pendingNativeCleanup": [],
+    "caution": "DeathObservations are nonpositive/fatal observations, not irrevocable loss totals; positive returns and later removal confirmations are separate. Native unitsLost includes temporary deaths, and expiry runs before death cleanup. Compare counters/corpses/fatal hits/full states; do not equate every missing body with a permanent death. Event frames after public commands are mid-think observations, not automatically resumable before-think checkpoints."
+  },
+  "limits": "No source/strategy/manual command/seed change. Exact original window and input only, not generalized restore or gameplay acceptance."
+}

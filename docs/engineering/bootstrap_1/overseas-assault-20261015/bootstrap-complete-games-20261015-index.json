@@ -793,6 +793,72 @@
       "payloadHashesVerified": true,
       "source": "Native38f source1474 exactly matches root760 entire selected Git tree+working bytes; normal fixture component only, no frozen opponent gameplay.",
       "classification": "Exact originalfixture native2809steps/2friendlycollisionhits vs fixed2520steps/0impacts, actualworker transfer2472 and firstrepair2520 with oldsourcewarship320HP preserved. Candidate143/15+tsc0; root11/3green. Full2946payload candidate1474/old1472 capsules independently Git-blob verified; old97 fullcapsule explicitly posthoc, runtime7directfiles prepost separate. Earlier mixed published-route proof replaced by actualtick2 entire41point query; original1942 collision-step proof valid. All raw/early setup failures/512tscOOM preserved. Not AI loading/wholematch/win/general liveness or speedup claim."
+    },
+    {
+      "file": "bootstrap-archer-38f-ordinary0-82182-defeat-20261016-evidence.tar.gz",
+      "bytes": 33187262,
+      "sha256": "c2561e1806e3bea4eead6a75083e4b29f2fefefcf97ab0d8048cc278a24dfd55",
+      "indexedPayloadFiles": 376,
+      "archiveRegularFiles": 377,
+      "payloadManifest": "INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "38f5dd79ae588d578dce15b9baa2cd41f20f2a4b",
+      "classification": "Unique normal ordinary0 0→82182 natural p1 win/p0 defeat65 permanent, actual fixed38f source exactly byte-equal to root760; first-use unseen declared seed. Full raw/source/factory/terminal/loss ledger and visual erratum, no second scored match."
+    },
+    {
+      "file": "bootstrap-archer-38f-terminal582-20261016-evidence.tar.gz",
+      "bytes": 7993033,
+      "sha256": "f7d69d244669ef62c9577f8a2bbfbd6645c01fe83797b9a209a2299907cd080f",
+      "indexedPayloadFiles": 31,
+      "archiveRegularFiles": 32,
+      "payloadManifest": "INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "38f5dd79ae588d578dce15b9baa2cd41f20f2a4b",
+      "classification": "Exact original ordinary0 defeat terminal81600→82182 cold normal3AI582step closure,619commands75hits117plans whole final object exact; no new ordinary0/match."
+    },
+    {
+      "bytes": 18875630,
+      "sha256": "98ebe70149989caca8da74c08dd85c854d0d4167c1d1461b5c805e16ac5f4f0f",
+      "payloadManifest": "archer38f-losses-27000-33600-20261016/INDEX.json",
+      "indexedPayloadFiles": 153,
+      "archiveRegularFiles": 154,
+      "source": "38f5dd79ae588d578dce15b9baa2cd41f20f2a4b",
+      "classification": "Read-only original27000→33600 loss/medical/mining/first-assault diagnostics plus exact29400→30000 normal3AI600step cold closure1499commands41hits120plans. Same unique ordinary0, not extra game. First archer received32actualheal but tower/projectile/road risk and cooldown matter; original queued worker mining safety exists, no invented uncommanded workers.23permanent losses in window and actual3tower/3worker kills retained. No medical candidate outcome claimed.",
+      "file": "bootstrap-archer-38f-losses-27000-33600-20261016-evidence.tar.gz",
+      "payloadHashesVerified": true
+    },
+    {
+      "bytes": 24552823,
+      "sha256": "9b5767cbb37d994e89bd3f642b717ff9220599bcc011d6c7d3d646389b0798b7",
+      "payloadManifest": "INDEX.json",
+      "indexedPayloadFiles": 779,
+      "archiveRegularFiles": 780,
+      "source": "fb881165b0638099ff7a8d6437f87cd510be24f1",
+      "classification": "Unmerged normal3AI same original f50811400 full saved input→44624 natural p0WIN/strictzeroenemy,19permanent ownloss vs original30778WIN/25:6fewer but13846later. Basiccatalogloss2215vs2525; military15vs11,medical5vs3,veteran6vs4 so not blanket improvement. Truefatal vs lateroverkill separate; original failed last-hit assumption retained. Exact44400→44624 normal224step26commands13hits wholefinal closure,1481source/497frozen184. Not freshordinary0 or acceptance.",
+      "file": "bootstrap-local-defense-562-20261016-evidence.tar.gz",
+      "payloadHashesVerified": true
+    },
+    {
+      "bytes": 30030233,
+      "sha256": "63fac0068c2f29073273adbc506507abe08a7a66f42fa231f5f650fd104923eb",
+      "payloadManifest": "INDEX.json",
+      "indexedPayloadFiles": 867,
+      "archiveRegularFiles": 868,
+      "source": "56237b17ae40f4b9aacc16164a61c41a2a3dd103",
+      "classification": "Unmerged normal3AI commonoriginal11400→38673WIN30 vs original30778WIN25,7895later+5moreloss; complete negative tradeoff retained. Original17325 shortwindow0newloss vs8 doesnottransfer wholematch benefit.1479source preserved;713main+57component frames. Independent review and hypothetical minrange counterfactual are explicitly not actualcatapultcause/noGame.",
+      "file": "bootstrap-field-response-v2-20261016-evidence.tar.gz",
+      "payloadHashesVerified": true
+    },
+    {
+      "bytes": 34953130,
+      "sha256": "8bffaebb39a34baf4360471e5d247a9a89aac03fe22440db0f12f5683ac4f246",
+      "payloadManifest": "INDEX.json",
+      "indexedPayloadFiles": 452,
+      "archiveRegularFiles": 453,
+      "source": "9ffc75b9b3a4d3e42c4b941776bf5f87ad43448d",
+      "classification": "Unmerged original normal202800→2070004200step observerstop,winnernull,not defeat/fresh0/humanclinical. Six actually inside but dynamic fresh roster excluded validowned4085 at204645,cleared task and unloaded.1559source+497frozen184 exact. Two real captured P0 postmission closures. Old related130tests125pass5fail,14retargetedpass and clean68cad defaultescort red retained; not allgreen. Future65d9/v3 activity is separate, no retroactive edit.",
+      "file": "bootstrap-cabin-auto9ffc-roster-negative-20261016-evidence.tar.gz",
+      "payloadHashesVerified": true
     }
   ],
   "strategyBaseline": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
@@ -1434,10 +1500,39 @@
       "failed": 0,
       "files": 3
     },
-    "ordinary0": null,
-    "pendingSourceBoundOrdinary0": "Predeclared first-use generatedpineshade v9_archerGrove side0 vs normalfrozenv7Ember+v8Grove, fixed38f entire1474source byteequalroot760, normal500/3/8/nullmem fromfactory. Running not a score.",
+    "ordinary0": {
+      "actualSource": "38f5dd79ae588d578dce15b9baa2cd41f20f2a4b",
+      "rootSource1474GitTreeAndWorkingBytesExactlyEqual": "760ef777eeaf0eb13a67bef5b2221fbf777126a9",
+      "subject": "v9_archer",
+      "race": "grove",
+      "side": 0,
+      "generatedTemplate": "pineshade",
+      "actualMapId": "ladder",
+      "seed": "bootstrap_1-first-use-archer-v7-v8-20261016-0808z-a",
+      "predeclaredFirstUseUnseen": true,
+      "opponents": [
+        "v7",
+        "v8"
+      ],
+      "complete": true,
+      "naturalWinner": "p1",
+      "naturalEndTick": 82182,
+      "p0Defeat": true,
+      "p0FinalUnits": 0,
+      "p0FinalBuildings": 0,
+      "ownPermanentLosses": 65,
+      "ownTemporaryDeaths": 0,
+      "originalCompleteFrames": 138,
+      "allOwnerLedgerClosed": true,
+      "archive": "bootstrap-archer-38f-ordinary0-82182-defeat-20261016-evidence.tar.gz",
+      "terminalCold582WholeFinalExact": true,
+      "isAnotherRoot760Game": false,
+      "threeFamilyAcceptance": false
+    },
+    "pendingSourceBoundOrdinary0": null,
     "historicalScoreAttribution": "All historical ordinary0 records remain exact with their old source.1e82963win/59permanentloss is not a760score. Component2520 not a match.",
     "reference": "live-maneuver-20261016.zh.md",
-    "originalUncommittedRecoveryGapRetained": true
+    "originalUncommittedRecoveryGapRetained": true,
+    "currentEvidenceReference": "ordinary0-archer-38f-negative-20261016.zh.md"
   }
 }

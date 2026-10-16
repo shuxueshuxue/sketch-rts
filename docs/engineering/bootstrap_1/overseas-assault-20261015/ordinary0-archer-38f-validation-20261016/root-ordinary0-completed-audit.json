@@ -1,0 +1,162 @@
+{
+  "classification": "Completed unique true ordinary0; offline source/state/raw ledger audit, no second game or policy query.",
+  "head": "38f5dd79ae588d578dce15b9baa2cd41f20f2a4b",
+  "source1474AndFrozen497PrePostExact": true,
+  "frozenManifest184Rules2": true,
+  "setup": {
+    "map": "pineshade",
+    "seed": "bootstrap_1-first-use-archer-v7-v8-20261016-0808z-a",
+    "unseen": true,
+    "side": 0,
+    "agents": {
+      "p0": {
+        "version": "v9_archer",
+        "versionLabel": "v9_archer",
+        "race": "grove",
+        "controller": "external-agent",
+        "team": "a"
+      },
+      "p1": {
+        "version": "v7",
+        "versionLabel": "v7",
+        "race": "ember",
+        "controller": "external-agent",
+        "team": "b"
+      },
+      "p2": {
+        "version": "v8",
+        "versionLabel": "v8",
+        "race": "grove",
+        "controller": "external-agent",
+        "team": "b"
+      }
+    },
+    "thinkInterval": 15,
+    "rulesVersion": 2,
+    "frozenRevision": "d1ae110f2edd99f9c7d899ed61557891ab587639"
+  },
+  "factory0FullFrameExactAndNormal500_3workers_3of8_Null3mem": true,
+  "result": {
+    "tick": 82182,
+    "winner": "p1",
+    "completed": true,
+    "naturalComplete": true,
+    "observationStopped": false
+  },
+  "complete600FrameCount": 138,
+  "initialSHA256": "87a42f7c1cd5cd9c818e7ffc6ca8832a2ac93af74c88ffb239cdf341cd47e390",
+  "finalSHA256": "386e42966f910e8243992d0421aae3a8b5c1941a03ec8049f65d0d520051bd23",
+  "lossClosure": {
+    "p0": {
+      "initial": 0,
+      "nativeUnitsLost": 65,
+      "confirmedPermanent": 65,
+      "confirmedTemporary": 0,
+      "lifetimeExpiryWithoutNativeLoss": 0
+    },
+    "p1": {
+      "initial": 0,
+      "nativeUnitsLost": 1162,
+      "confirmedPermanent": 73,
+      "confirmedTemporary": 1089,
+      "lifetimeExpiryWithoutNativeLoss": 205
+    },
+    "p2": {
+      "initial": 0,
+      "nativeUnitsLost": 1,
+      "confirmedPermanent": 1,
+      "confirmedTemporary": 0,
+      "lifetimeExpiryWithoutNativeLoss": 0
+    },
+    "player": {
+      "initial": 0,
+      "nativeUnitsLost": 0,
+      "confirmedPermanent": 0,
+      "confirmedTemporary": 0,
+      "lifetimeExpiryWithoutNativeLoss": 0
+    },
+    "enemy": {
+      "initial": 0,
+      "nativeUnitsLost": 0,
+      "confirmedPermanent": 0,
+      "confirmedTemporary": 0,
+      "lifetimeExpiryWithoutNativeLoss": 0
+    },
+    "enemy2": {
+      "initial": 0,
+      "nativeUnitsLost": 0,
+      "confirmedPermanent": 0,
+      "confirmedTemporary": 0,
+      "lifetimeExpiryWithoutNativeLoss": 0
+    },
+    "neutral": {
+      "initial": 0,
+      "nativeUnitsLost": 17,
+      "confirmedPermanent": 17,
+      "confirmedTemporary": 0,
+      "lifetimeExpiryWithoutNativeLoss": 0
+    }
+  },
+  "provisionalNotDoubleCounted": 60,
+  "returnedPositive": 0,
+  "pendingUnknown": [],
+  "terminalNonpositiveUnits": 0,
+  "actualHitCount": 8337,
+  "streams": {
+    "commands": 118388,
+    "plans": 16437,
+    "native-events": 4520,
+    "native-deaths": 1510,
+    "ship-losses": 0,
+    "corpse-events": 1245,
+    "samples": 138,
+    "plan-costs": 16437,
+    "step-costs": 82182,
+    "health-transitions": 5869,
+    "healing-effects": 172
+  },
+  "ownerChanges": [],
+  "observedDeckParentChanges": 0,
+  "remaining": {
+    "p0": {
+      "units": 0,
+      "permanentUnits": 0,
+      "unitKinds": {},
+      "buildings": 0,
+      "halls": 0
+    },
+    "p1": {
+      "units": 46,
+      "permanentUnits": 21,
+      "unitKinds": {
+        "emberRavager": 1,
+        "summoner": 14,
+        "worker": 6,
+        "spirit": 25
+      },
+      "buildings": 20,
+      "halls": 3
+    },
+    "p2": {
+      "units": 12,
+      "permanentUnits": 12,
+      "unitKinds": {
+        "worker": 6,
+        "lancer": 6
+      },
+      "buildings": 10,
+      "halls": 2
+    }
+  },
+  "elapsedMs": 883953.950042,
+  "cpuMs": 805487.244,
+  "maxRSSKiB": 571336,
+  "limits": [
+    "This first-use generated seed is observed after this game; a full defeat is negative generalization evidence for this exact source, not acceptance.",
+    "This archer-v7+v8 defeat does not complete any family; all normal singles/pairs/maps and independent future unseen seeds remain required.",
+    "SDK onCommand records public attempts including transient skips; it is not blanket execution or healing proof.",
+    "Event fullstates may be mid-command;600 after-step checkpoints preserve world/id/all3memory at resumable before-think boundaries.",
+    "Native unitsLost includes temporary unit deaths; expiry removals are reported separately and not counted as deaths."
+  ],
+  "scriptSHA256": "d0ab9de704c3164ab18a6f300a329d5aaba7b5b795c78850cc50126ed7f725f3"
+}

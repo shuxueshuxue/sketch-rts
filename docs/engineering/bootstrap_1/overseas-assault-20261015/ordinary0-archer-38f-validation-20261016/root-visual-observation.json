@@ -1,0 +1,27 @@
+{
+  "atUTC": "2026-10-16T09:10:20.223039+00:00",
+  "classification": "Root personally viewed actual native client rendered snapshots; read-only observation, no additional Game/step/AI or strategy change.",
+  "images": [
+    "actual9000-native38f.png",
+    "actual27000-front-native38f.png",
+    "actual82182-terminal-native38f.png"
+  ],
+  "terminalInputSHA256": "386e42966f910e8243992d0421aae3a8b5c1941a03ec8049f65d0d520051bd23",
+  "terminalPNG_SHA256": "53a1f59f86b198c02a9e363ac89bacb23422fdb4a50667e439895b023a4e9c91",
+  "negativeResult": {
+    "tick": 82182,
+    "winner": "p1",
+    "completed": true,
+    "naturalComplete": true,
+    "observationStopped": false
+  },
+  "ownStrictFinal": {
+    "units": 0,
+    "permanentUnits": 0,
+    "unitKinds": {},
+    "buildings": 0,
+    "halls": 0
+  },
+  "oldWrongTemplateRenderRetainedAndExcluded": true,
+  "originalUncommittedContainerGapStillUnrecovered": true
+}
