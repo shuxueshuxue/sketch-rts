@@ -1035,6 +1035,18 @@
       "payloadHashesVerified": true,
       "source": "febb9951ef6639963ac2dde925bccc0e14eb0ac5",
       "classification": "Root046 plus only86143 14file delta, all1517source/config/test/manifest complete payloads and Git/live equivalence.40 distinct actual combined cases plus single1024 tsc actual0; original3 repeated timing cases not double-counted. Whole046 medical,d93,native retained. No ordinary0 for febb; fixed046 official match remains separately attributed."
+    },
+    {
+      "file": "bootstrap-febb-first-knight21351-complete-recovery-20261016-evidence.tar.gz",
+      "bytes": 13381723,
+      "sha256": "668013d8761b9dc528dfb736846cb26965277d942f8be0d7f6821545b80e1ac0",
+      "indexedPayloadFiles": 229,
+      "archiveRegularFiles": 230,
+      "payloadManifest": "INDEX.json",
+      "payloadManifestSHA256": "fbb11973c0f7d1cb93cbf1e208c5300160e2380e2a2e6977a1bd955060ebf80b",
+      "payloadHashesVerified": true,
+      "source": "febb9951ef6639963ac2dde925bccc0e14eb0ac5",
+      "classification": "True ordinary0, first-use generatedpineshade v9_knight Grove side0 vs normal frozenv5 Ember. NaturalP0win21351, enemy0units0buildings; own49permanent/5fullhalls/15permanentdeaths. Complete97terminal plus1cleanup-not-death and111counter checks. source1517/frozen497/manifest184/rules2 prepost exact, actualexit0. Full170raw/all2mem/world/id/setup/drivers plus nested1517+497, actualroot-viewed13800PNG. Selectedsource/offline-save recovery, not complete Git object repository; exact Gitarchive stderr retained. Seed nowdeveloped; no threefamily/fullmap/sixpair acceptance."
     }
   ],
   "strategyBaseline": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
@@ -1586,40 +1598,49 @@
     "threeFamilyAcceptance": false
   },
   "currentRuntimeOrdinary0": {
-    "source": "1e955c0c5f1114812f873f9c3ba06fe7cb19cb1e",
-    "complete": true,
-    "archive": "bootstrap-summoner-1e955-official-v5v7-20261016-evidence.tar.gz",
-    "subject": "v9_summoner",
-    "race": "ember",
-    "side": 1,
-    "map": "greystonePass",
-    "unseen": false,
+    "source": "febb9951ef6639963ac2dde925bccc0e14eb0ac5",
+    "selectedFiles": 1517,
+    "archive": "bootstrap-febb-first-knight21351-complete-recovery-20261016-evidence.tar.gz",
+    "ordinary0": true,
+    "family": "v9_knight",
+    "race": "grove",
+    "side": 0,
+    "factory": "pineshade",
+    "mapScope": "Official map-family unseen generated variant, not fixed named-layout result",
+    "seed": "bootstrap_1-first-use-knight-v5-20261016-1517z-a",
+    "seedFirstUseUnseenAtFactory": true,
+    "seedNowDeveloped": true,
     "opponents": [
-      "v5",
-      "v7"
+      "normal frozenv5 Ember"
     ],
-    "winner": "p0",
-    "tick": 82963,
-    "enemyUnitsBuildingsStrictZero": true,
-    "ownNativeLosses": 562,
-    "ownPermanentLosses": 59,
-    "ownTemporaryDeaths": 503,
-    "ownLifetimeExpiryWithoutNativeLoss": 567,
-    "allOwnerLedgerClosed": true,
-    "rootReference": "knight-and-remote-labor-validation-20261016/root-summoner-source-terminal-ledger-review.json",
-    "terminalColdClosure": {
-      "archive": "bootstrap-summoner-1e955-terminal-restore-20261016-evidence.tar.gz",
-      "from": 82800,
-      "to": 82963,
-      "nativeTicks": 163,
-      "commands": 22,
-      "hits": 40,
-      "allWorldId3MemSetupAndWholeFinalExact": true,
-      "rootReference": "knight-and-remote-labor-validation-20261016/root-summoner-terminal163-review.json",
-      "notAnotherWinSample": true
+    "startingEach": {
+      "gold": 500,
+      "workers": 3,
+      "supplyCap": 8,
+      "memory": null
     },
-    "notGeneratedSeedGeneralization": true,
-    "threeFamilyAcceptance": false
+    "activeOwnerMemories": [
+      "p0",
+      "p1"
+    ],
+    "startTick": 0,
+    "endTick": 21351,
+    "winner": "p0",
+    "naturalComplete": true,
+    "actualProcessExitCode": 0,
+    "enemyUnits": 0,
+    "enemyBuildings": 0,
+    "ownPermanentSurvivors": 49,
+    "ownFullHalls": 5,
+    "ownPermanentDeaths": 15,
+    "ownNeutralDeaths": 3,
+    "allOwnerTerminalDeaths": 97,
+    "separateDelayedCleanupUpdates": 1,
+    "counterChecksExact": 111,
+    "source1517Frozen497184Exact": true,
+    "rulesVersion": 2,
+    "completeAcceptance": false,
+    "sourceRecoveryScope": "Fullselected1517/frozen497 and fullsave; excluded Git objects require existing/fetched exact repository, not fabricated complete GitDB."
   },
   "previousRuntimeBeforeLiveManeuver": {
     "source": "97cecc14cc0e3a1e670f451b574e59057e1c83fa",
@@ -1667,9 +1688,54 @@
       "selectedSource1517PrePostExact": true
     },
     "ordinary0": {
-      "status": "Not yet run on this new combined source. The prior knownseed48225 win belongs to046; current officialbrokenSea summoner also stays fixed046."
+      "source": "febb9951ef6639963ac2dde925bccc0e14eb0ac5",
+      "selectedFiles": 1517,
+      "archive": "bootstrap-febb-first-knight21351-complete-recovery-20261016-evidence.tar.gz",
+      "ordinary0": true,
+      "family": "v9_knight",
+      "race": "grove",
+      "side": 0,
+      "factory": "pineshade",
+      "mapScope": "Official map-family unseen generated variant, not fixed named-layout result",
+      "seed": "bootstrap_1-first-use-knight-v5-20261016-1517z-a",
+      "seedFirstUseUnseenAtFactory": true,
+      "seedNowDeveloped": true,
+      "opponents": [
+        "normal frozenv5 Ember"
+      ],
+      "startingEach": {
+        "gold": 500,
+        "workers": 3,
+        "supplyCap": 8,
+        "memory": null
+      },
+      "activeOwnerMemories": [
+        "p0",
+        "p1"
+      ],
+      "startTick": 0,
+      "endTick": 21351,
+      "winner": "p0",
+      "naturalComplete": true,
+      "actualProcessExitCode": 0,
+      "enemyUnits": 0,
+      "enemyBuildings": 0,
+      "ownPermanentSurvivors": 49,
+      "ownFullHalls": 5,
+      "ownPermanentDeaths": 15,
+      "ownNeutralDeaths": 3,
+      "allOwnerTerminalDeaths": 97,
+      "separateDelayedCleanupUpdates": 1,
+      "counterChecksExact": 111,
+      "source1517Frozen497184Exact": true,
+      "rulesVersion": 2,
+      "completeAcceptance": false,
+      "sourceRecoveryScope": "Fullselected1517/frozen497 and fullsave; excluded Git objects require existing/fetched exact repository, not fabricated complete GitDB."
     },
-    "bootstrapComplete": false
+    "bootstrapComplete": false,
+    "ordinary0AtIndex114": {
+      "status": "Not yet run on this new combined source. The prior knownseed48225 win belongs to046; current officialbrokenSea summoner also stays fixed046."
+    }
   },
   "previousRuntimeBeforeDock": {
     "source": "760ef777eeaf0eb13a67bef5b2221fbf777126a9",
@@ -2068,6 +2134,97 @@
     "remainingWork": "Three families/all singles and six pairs, official maps and truly unseen seeds full matches still incomplete. Preserve normal economy/population and approved terrain rules. No expensive full-matrix repetition.",
     "originalContainerUncommittedRecoveryGapRemains": true,
     "mainOtherRules3PerformanceAndSeparatelyMergedRules4ShipBalanceUntouched": true,
+    "bootstrapComplete": false
+  },
+  "previousIndexedRuntimeOrdinary0BeforeFebbKnight": {
+    "source": "1e955c0c5f1114812f873f9c3ba06fe7cb19cb1e",
+    "complete": true,
+    "archive": "bootstrap-summoner-1e955-official-v5v7-20261016-evidence.tar.gz",
+    "subject": "v9_summoner",
+    "race": "ember",
+    "side": 1,
+    "map": "greystonePass",
+    "unseen": false,
+    "opponents": [
+      "v5",
+      "v7"
+    ],
+    "winner": "p0",
+    "tick": 82963,
+    "enemyUnitsBuildingsStrictZero": true,
+    "ownNativeLosses": 562,
+    "ownPermanentLosses": 59,
+    "ownTemporaryDeaths": 503,
+    "ownLifetimeExpiryWithoutNativeLoss": 567,
+    "allOwnerLedgerClosed": true,
+    "rootReference": "knight-and-remote-labor-validation-20261016/root-summoner-source-terminal-ledger-review.json",
+    "terminalColdClosure": {
+      "archive": "bootstrap-summoner-1e955-terminal-restore-20261016-evidence.tar.gz",
+      "from": 82800,
+      "to": 82963,
+      "nativeTicks": 163,
+      "commands": 22,
+      "hits": 40,
+      "allWorldId3MemSetupAndWholeFinalExact": true,
+      "rootReference": "knight-and-remote-labor-validation-20261016/root-summoner-terminal163-review.json",
+      "notAnotherWinSample": true
+    },
+    "notGeneratedSeedGeneralization": true,
+    "threeFamilyAcceptance": false
+  },
+  "latestEvidenceCheckpoint115": {
+    "atUTC": "2026-10-16T17:10:09.063993+00:00",
+    "packages": 115,
+    "first114PackagesPreservedExactly": true,
+    "runtimeSourceUnchanged": "febb9951ef6639963ac2dde925bccc0e14eb0ac5",
+    "newOrdinary0": {
+      "source": "febb9951ef6639963ac2dde925bccc0e14eb0ac5",
+      "selectedFiles": 1517,
+      "archive": "bootstrap-febb-first-knight21351-complete-recovery-20261016-evidence.tar.gz",
+      "ordinary0": true,
+      "family": "v9_knight",
+      "race": "grove",
+      "side": 0,
+      "factory": "pineshade",
+      "mapScope": "Official map-family unseen generated variant, not fixed named-layout result",
+      "seed": "bootstrap_1-first-use-knight-v5-20261016-1517z-a",
+      "seedFirstUseUnseenAtFactory": true,
+      "seedNowDeveloped": true,
+      "opponents": [
+        "normal frozenv5 Ember"
+      ],
+      "startingEach": {
+        "gold": 500,
+        "workers": 3,
+        "supplyCap": 8,
+        "memory": null
+      },
+      "activeOwnerMemories": [
+        "p0",
+        "p1"
+      ],
+      "startTick": 0,
+      "endTick": 21351,
+      "winner": "p0",
+      "naturalComplete": true,
+      "actualProcessExitCode": 0,
+      "enemyUnits": 0,
+      "enemyBuildings": 0,
+      "ownPermanentSurvivors": 49,
+      "ownFullHalls": 5,
+      "ownPermanentDeaths": 15,
+      "ownNeutralDeaths": 3,
+      "allOwnerTerminalDeaths": 97,
+      "separateDelayedCleanupUpdates": 1,
+      "counterChecksExact": 111,
+      "source1517Frozen497184Exact": true,
+      "rulesVersion": 2,
+      "completeAcceptance": false,
+      "sourceRecoveryScope": "Fullselected1517/frozen497 and fullsave; excluded Git objects require existing/fetched exact repository, not fabricated complete GitDB."
+    },
+    "unmergedCandidate": "a53fa0ff5cd5979c55e09a25d18ead200fc53392 source1553 virtual integration only; no newsource ordinary0/tests/tsc claim",
+    "uncompletedSixCeTail": "6ce source1486 256200→285600 supportedmemoryCP actualexit0, two paid newhalls/newore but12newperm+3temporary deaths, enemy2hall still900; not ordinary0 or win",
+    "originalContainerUncommittedGapUnrecovered": true,
     "bootstrapComplete": false
   }
 }
