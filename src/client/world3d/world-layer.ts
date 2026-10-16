@@ -293,6 +293,9 @@ export class World3DLayer {
     this.frame++;this.transformCount=0;this.view=frame.view;this.currentFrame=frame;this.posed=0;this.cardMipBases.fill(0);
     const {snapshot,now}=frame;const zoom=frame.view.zoom??1;
     const pixelRatio=Math.min(devicePixelRatio,2),viewport=`${frame.view.width}:${frame.view.height}:${pixelRatio}`;
+    // @@@card-density - Cards are painted at the texels per world unit the screen shows (zoom times pixel ratio): 2, or 4
+    // past that. Denser cards are four times the pixels to paint and read back, and fill the card cache four times sooner.
+    const density=zoom*pixelRatio<=2?2:4;
     if(viewport!==this.viewport){renderer.setPixelRatio(pixelRatio);renderer.setSize(frame.view.width,frame.view.height,false);this.viewport=viewport;}
     this.colorMipPass.physicalWidth=Math.floor(frame.view.width*pixelRatio);this.colorMipPass.physicalHeight=Math.floor(frame.view.height*pixelRatio);
     configureWorldCamera(this.camera,frame.view);
@@ -465,7 +468,7 @@ export class World3DLayer {
         this.selection.ellipse(marker,radius,radius*.55,this.markerInk(frame,unit.owner),selected);
       }
       const appearance=appearanceFor(snapshot,unit);
-      const density=zoom<.65?2:4,key=`${unitPaintKey(unit.kind,ownerInk(unit.owner,snapshot),animation,unit.variant)}:${facing}:${density}:${appearanceKey(appearance)}`;
+      const key=`${unitPaintKey(unit.kind,ownerInk(unit.owner,snapshot),animation,unit.variant)}:${facing}:${density}:${appearanceKey(appearance)}`;
       const transform=this.pose(at.x,at.y,height,0,scale,rotation);
       const tileSize=model?.paint.paintSize?.(animation)??actionPaintSize(animation,unit.kind),baseMip=this.residentMip(tileSize,density,transform,foot);
       this.cards.add(key,density,ctx=>{
@@ -482,7 +485,7 @@ export class World3DLayer {
       const recipe=paintedRemainsRecipe(snapshot,corpse,frame.models),model=recipe.model;
       const scale=model?Math.max(.72,corpse.radius/18):unitGlyphScale(corpse.radius);
       const transform=deckRemainsMatrix(this.pose(0,0,0),pose,scale);
-      const density=zoom<.65?2:4,baseMip=this.residentMip(128,density,transform,0,false);
+      const baseMip=this.residentMip(128,density,transform,0,false);
       this.remainsCards.add(recipe.key,density,recipe.paint,transform,corpse.id,0,128,remainsOpacity(snapshot.tick,corpse.diedAtTick),baseMip);
       }
     }

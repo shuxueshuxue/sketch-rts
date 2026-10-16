@@ -56,6 +56,8 @@ function setup(){
   // Every card a frame needs is painted in that frame: what these tests read must not depend on the machine's speed.
   return{game,ship,frame,canvas,layer:World3DLayer.create(canvas,{} as WebGL2RenderingContext,Infinity)};
 }
+// setup's devicePixelRatio 2 at zoom 1: cards are painted at 2 texels per world unit (see @@@card-density).
+const CARD_DENSITY=2;
 function paintedMeshes(){return gpu.scene!.getObjectsByProperty('name','PaintedCards').filter(object=>object instanceof InstancedMesh&&object.visible) as InstancedMesh[];}
 function paintedBinding(mesh:InstancedMesh,index:number){
  const card=mesh.userData.cards[index] as {sourceSize:number;baseMip:number;page:{texture:DataArrayTexture}},bank=mesh.geometry.getAttribute('cardBank').getX(index);
@@ -375,10 +377,10 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
         const unit=game.units.find(unit=>unit.id===mesh.userData.ids[i])!,matrix=new Matrix4();mesh.getMatrixAt(i,matrix);
         const {card}=paintedBinding(mesh,i);
         // The shader expands cardRect before applying the instance matrix;
-        // one original source texel still covers a quarter authored unit on both axes.
+        // one original source texel still covers 1/CARD_DENSITY authored unit on both axes.
         const rect=mesh.geometry.getAttribute('cardRect');
-        expect(new Vector3().setFromMatrixColumn(matrix,0).length()*(rect.getZ(i)-rect.getX(i))/card.sourceSize).toBeCloseTo(unitGlyphScale(unit.radius)/4,5);
-        expect(new Vector3().setFromMatrixColumn(matrix,1).length()*(rect.getW(i)-rect.getY(i))/card.sourceSize).toBeCloseTo(unitGlyphScale(unit.radius)/(4*Math.tan(SHIP_CAMERA.tilt)),5);
+        expect(new Vector3().setFromMatrixColumn(matrix,0).length()*(rect.getZ(i)-rect.getX(i))/card.sourceSize).toBeCloseTo(unitGlyphScale(unit.radius)/CARD_DENSITY,5);
+        expect(new Vector3().setFromMatrixColumn(matrix,1).length()*(rect.getW(i)-rect.getY(i))/card.sourceSize).toBeCloseTo(unitGlyphScale(unit.radius)/(CARD_DENSITY*Math.tan(SHIP_CAMERA.tilt)),5);
       }
     }
     frame.now+=16;layer.draw(frame);expect(gpu.sizes).toBe(1);expect(gpu.ratios).toBe(1);
@@ -402,8 +404,8 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
       const {card}=paintedBinding(mesh,i),width=card.sourceSize,height=card.sourceSize;
       const right=new Vector3().setFromMatrixColumn(matrix,0).normalize();
       const rect=mesh.geometry.getAttribute('cardRect');
-      expect(new Vector3().setFromMatrixColumn(matrix,0).length()*(rect.getZ(i)-rect.getX(i))/width).toBeCloseTo(2/4,5);
-      expect(new Vector3().setFromMatrixColumn(matrix,1).length()*(rect.getW(i)-rect.getY(i))/height).toBeCloseTo(2/(4*Math.tan(SHIP_CAMERA.tilt)),5);
+      expect(new Vector3().setFromMatrixColumn(matrix,0).length()*(rect.getZ(i)-rect.getX(i))/width).toBeCloseTo(2/CARD_DENSITY,5);
+      expect(new Vector3().setFromMatrixColumn(matrix,1).length()*(rect.getW(i)-rect.getY(i))/height).toBeCloseTo(2/(CARD_DENSITY*Math.tan(SHIP_CAMERA.tilt)),5);
       let ink=0,minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
       for(let y=0;y<height;y++)for(let x=0;x<width;x++)if(mesh.userData.paintedHit(i,{x:(x+.5)/width,y:(y+.5)/height})){
         const world=new Vector3(rect.getX(i)+(x+.5)/width*(rect.getZ(i)-rect.getX(i)),rect.getY(i)+(y+.5)/height*(rect.getW(i)-rect.getY(i)),0).applyMatrix4(matrix);
@@ -412,8 +414,10 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
       }
       // Every opaque source texel survives, with the same doubled rectangle
       // and its bottom precisely at the world foot plane (pixel centers inset).
-      expect(ink).toBe(16*47*4*4);expect(minX).toBeCloseTo(-16+.25,4);expect(maxX).toBeCloseTo(16-.25,4);
-      expect(minY).toBeCloseTo(.25/Math.tan(SHIP_CAMERA.tilt),4);expect(maxY).toBeCloseTo((94-.25)/Math.tan(SHIP_CAMERA.tilt),4);
+      // A texel center sits half a texel, 2/(2*CARD_DENSITY) world units at scale 2, inside the rectangle.
+      const inset=1/CARD_DENSITY;
+      expect(ink).toBe(16*47*CARD_DENSITY*CARD_DENSITY);expect(minX).toBeCloseTo(-16+inset,4);expect(maxX).toBeCloseTo(16-inset,4);
+      expect(minY).toBeCloseTo(inset/Math.tan(SHIP_CAMERA.tilt),4);expect(maxY).toBeCloseTo((94-inset)/Math.tan(SHIP_CAMERA.tilt),4);
     }
     expect(layer.positions.get(first.id)!.bodyY).toBeCloseTo(first.y-34);layer.dispose();
   });
