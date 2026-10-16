@@ -7,6 +7,7 @@ import type { PaintedRemainsPreparation } from './world3d/painted-remains';
 import './world-presentation.css';
 import { ShipWakeTracker } from './ship-wakes';
 import {PresentationViewIndex} from './presentation-view';
+import { perf } from './perf-overlay';
 
 type ScenePreparation={snapshot:GameSnapshot;phase:ResourcePhase;sites:readonly string[];artPreparation?:PaintedRemainsPreparation};
 
@@ -122,7 +123,8 @@ export class WorldPresentation {
     this.stack.hidden=false;
     const dimensions=`${width}:${height}:${dpr}`;
     if(dimensions!==this.dimensions){this.ground.width=Math.round(width*dpr);this.ground.height=Math.round(height*dpr);this.dimensions=dimensions;}
-    try{this.layer.draw(frame);}catch(error){
+    perf?.lap('rest');
+    try{this.layer.draw(frame);perf?.lap('3d');}catch(error){
       // A graphics/context failure cannot stop the game loop or authoritative
       // simulation. The authored Canvas path remains usable while assets warm.
       console.error('GPU presentation failed; using Canvas',error);this.failed=true;this.revision++;this.enabled=false;this.stack.hidden=true;
@@ -131,9 +133,9 @@ export class WorldPresentation {
     }
     const ground=this.ground.getContext('2d')!;ground.setTransform(1,0,0,1,0,0);ground.clearRect(0,0,this.ground.width,this.ground.height);ground.setTransform(dpr,0,0,dpr,0,0);
     const common={actorPositions:this.layer.positions,physicalEffects:this.effectTypes!,physicalCombat:true,depthSelection:true};
-    drawWorld({...frame,...common,ctx:ground,pass:'ground'});
+    drawWorld({...frame,...common,ctx:ground,pass:'ground'});perf?.lap('ground');
     frame.ctx.save();frame.ctx.setTransform(1,0,0,1,0,0);frame.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);frame.ctx.restore();
-    drawWorld({...frame,...common,pass:'overlay'});
+    drawWorld({...frame,...common,pass:'overlay'});perf?.lap('overlay');
   }
   pick(point:{x:number;y:number}){return this.enabled?this.layer?.pick(point):undefined;}
   plane(point:{x:number;y:number},height:number){return this.enabled?this.layer?.plane(point,height):undefined;}

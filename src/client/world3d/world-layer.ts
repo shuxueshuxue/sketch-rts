@@ -8,6 +8,7 @@ import {projectActionFrame,actionPaintSize} from '../art/action-direction';
 import {unitPaintKey} from '../art/paint-identity';
 import {CombatInk,type CombatAnchor} from './combat-ink';
 import * as THREE from 'three';
+import { perf } from '../perf-overlay';
 import { worldModels,matchModelKeys,snapshotModelKeys } from './model-library';
 import { activateModelPortraits } from './model-portraits';
 import { ActorBatches } from './batches';
@@ -169,7 +170,7 @@ export class World3DLayer {
     const renderer=new THREE.WebGLRenderer({canvas,context,alpha:true,antialias:true});
     renderer.setClearColor(0,0);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
     renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.9;
-    const layer=new World3DLayer(renderer,rasterBudgetMs);layer.eventCanvas=canvas;
+    const layer=new World3DLayer(renderer,rasterBudgetMs);layer.eventCanvas=canvas;perf?.attach(renderer);
     canvas.addEventListener('webglcontextlost',layer.onContextLost);canvas.addEventListener('webglcontextrestored',layer.onContextRestored);
     return layer;
   }
@@ -437,7 +438,7 @@ export class World3DLayer {
     this.batches.finish();this.cards.finish(renderer);this.remainsCards.finish(renderer);this.selection.finish();
     if(frame.combat)this.combatInk.update(frame.combat.frame(now),this.combatAnchors,frame.reducedMotion,frame.view);else this.combatInk.clear();
     this.transforms.length=this.transformCount;
-    renderer.render(this.scene,this.camera);
+    perf?.gpuBegin();renderer.render(this.scene,this.camera);perf?.gpuEnd();
   }
   pick(point:{x:number;y:number}){if(!this.view)return undefined;const ray=new THREE.Raycaster();ray.setFromCamera(new THREE.Vector2(point.x/this.view.width*2-1,1-point.y/this.view.height*2),this.camera);
     for(const hit of ray.intersectObjects([...this.batches.objects(),...this.cards.objects()],false)){

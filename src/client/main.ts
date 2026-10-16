@@ -113,6 +113,7 @@ import { MAP_POOL, poolMap, poolSeatsFit, type PoolMapId } from "../shared/map-p
 import type { MapPresentationMark } from "../shared/presentation";
 import { canStartRoom, createRoom, DEFAULT_INTERNAL_AI_VERSION, ROOM_AI_RACES, ROOM_TEAMS, roomAiVersionsFor, roomConfiguration, roomTeam, seatTeam, winningResultSlots, type SlotPatch, type RoomConfiguration } from "../shared/rooms";
 import { snapToFootprint } from "../shared/terrain";
+import { perf, startPerfOverlay } from "./perf-overlay";
 import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MeleeStance, PlayerId, RoomState, TrainableUnitKind, Unit, UpgradeKind, WorldItem } from "../shared/types";
 import type { MapId, RaceChoice, RoomAiChoice } from "../shared/types";
 
@@ -499,6 +500,7 @@ document.addEventListener("mousemove", (event) => {
 });
 canvas.addEventListener("mouseup", onMouseUp);
 
+startPerfOverlay();
 renderMainMenu();
 resizeCanvas();
 animationFrame=requestAnimationFrame(frame);
@@ -1606,18 +1608,22 @@ function releasePointerLockForMenu() {
   virtualMouse = undefined;
 }
 
-function frame() {
+function frame(timestamp: number) {
   if(applicationClosed)return;
   animationFrame=requestAnimationFrame(frame);
+  perf?.frameStart(timestamp);
   framePointerHit = null;
   try {
     syncActiveGameAdapterSnapshot();
+    perf?.lap('sync');
     updateCamera();
+    perf?.lap('camera');
     draw();
     syncVirtualPointerOverlay();
     syncPointerLockGate();
   } finally {
     framePointerHit = undefined;
+    perf?.frameEnd();
   }
 }
 
