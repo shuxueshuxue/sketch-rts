@@ -13,6 +13,9 @@ import type { AiPolicyContext } from '../policy';
 import { attackMargin } from './v6/general';
 import { effectiveCombatRating } from './v6/strength';
 import { coastalFireDisks, coastalFireSegmentClear } from './coastal-voyage';
+import { workingWeaponGeometry } from '../../shared/combat-fire-geometry';
+import { beginShipCollisionFrame } from '../../shared/ship-collisions';
+import { strikeGap } from '../../shared/combat-geometry';
 
 /** Query the same coordinate-only move that the public command will execute.
  * A short straight reverse avoids the inward arc of a full forward turn.
@@ -25,7 +28,9 @@ export function coastalAsternPassageClear(snapshot: GameSnapshot, ship: Unit, go
   if (dx*Math.cos(heading)+dy*Math.sin(heading)>=0 || Math.abs(-dx*Math.sin(heading)+dy*Math.cos(heading))>1e-5) return false;
   const hull:Unit={...ship,order:{type:'move',x:goal.x,y:goal.y},orderQueue:[],sailing:{...ship.sailing}};
   delete hull.sailing!.route;
-  const traffic=shipRouteTraffic(snapshot.map,hull,snapshot.units.map(unit=>unit.id===ship.id?hull:unit));
+  const units=snapshot.units.map(unit=>unit.id===ship.id?hull:unit);
+  beginShipCollisionFrame(units,snapshot.map,[...snapshot.buildings,...(snapshot.obstacles ?? [])]);
+  const traffic=shipRouteTraffic(snapshot.map,hull,units);
   const route=planVoyageRoute(snapshot.map,hull,goal,traffic,1024),end=route.points.at(-1);
   if (route.partial!==false || !end || distance(end,goal)>MOVE_ORDER_ARRIVAL_RANGE) return false;
   const disks=coastalFireDisks(snapshot,ship,options,0);
@@ -72,6 +77,23 @@ export function outmatchingCoast(snapshot: GameSnapshot, owner: PlayerId, ship: 
   const ours=support.reduce((sum,unit)=>sum+effectiveCombatRating(snapshot,unit),0);
   const theirs=threats.reduce((sum,unit)=>sum+effectiveCombatRating(snapshot,unit),0);
   return theirs*attackMargin(options)>ours ? threats : [];
+}
+
+/** Nearby fleet strength cannot make a mortar fire inside its dead zone.
+ * Keep this local range control separate from the commander's original odds:
+ * a shore attacker already covering this hull needs room even when other
+ * enemies farther away are still legal shots. Cooldown and aim are not loss
+ * of a working weapon, and a cannon/intrinsic weapon covering close range
+ * keeps the original engagement. Boarding/capture remains a separate task. */
+export function coastalDeadZoneThreats(snapshot: GameSnapshot, owner: PlayerId, ship: Unit, options: AiPolicyContext): Unit[] {
+  return snapshot.units.filter(foe => foe.hp > 0 && unitMover(foe.kind) === 'land' && !foe.deck && !isInCabin(foe)
+    && isEnemyOwner(snapshot, owner, foe.owner, options)
+    && strikeGap(foe, ship) <= combatCapability(snapshot, foe).range
+    && workingWeaponGeometry(snapshot, foe, ship).some(weapon => weapon.covers))
+    .filter(foe => {
+      const weapons = workingWeaponGeometry(snapshot, ship, foe);
+      return weapons.length > 0 && weapons.every(weapon => weapon.gap < weapon.minimum);
+    });
 }
 
 /** A heading-compatible escape, rather than a point directly opposite the

@@ -4,7 +4,7 @@ import {coastalVoyagePrefixSafe} from './coastal-voyage';
 import { coastalBatteryWaypoint, coastalBombardment, continuingCoastalVoyage } from './coastal-bombardment';
 import { miningHallSite } from "../../shared/mining-site";
 import { automaticShoreTargetReachable, shoreFiringStation } from '../../shared/shore-fire';
-import { coastalAsternPassageClear, coastalAsternStep, coastalRefuge, outmatchingCoast } from './coastal-risk';
+import { coastalAsternPassageClear, coastalAsternStep, coastalDeadZoneThreats, coastalRefuge, outmatchingCoast } from './coastal-risk';
 import { MOVE_ORDER_ARRIVAL_RANGE } from '../../shared/movement-rules';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { nearestByRoute, routeArrivals, routeTravelTicks } from '../../shared/route-selection';
@@ -492,7 +492,10 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
         if (waiting.length && safe) { if (ship.order.type !== "idle") commands.push({type:"stop",unitIds:[ship.id]}); continue; }
         available.push(ship);
     }
-    const immediateCoasts=new Map(available.map(ship=>[ship.id,outmatchingCoast(snapshot,owner,ship,ship,options)]));
+    const immediateCoasts=new Map(available.map(ship=>[ship.id,[...new Map([
+        ...outmatchingCoast(snapshot,owner,ship,ship,options),
+        ...coastalDeadZoneThreats(snapshot,owner,ship,options),
+    ].map(foe=>[foe.id,foe])).values()]]));
     const priorityEngagement=new Set(available.filter(ship=>foesForCombat().some(target=>{
         if(!targetAvailable(target) || distance(ship,target)>=Math.max(900,combatCapability(snapshot,ship).range+150)
             || !canReach(snapshot.map,ship,target,snapshot.units,combatCapability(snapshot,ship).range)
