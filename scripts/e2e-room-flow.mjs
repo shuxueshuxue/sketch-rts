@@ -206,7 +206,9 @@ async page => {
   try {
     const guest = await guestContext.newPage();
     await guest.goto(page.url());
-    await guest.waitForSelector("[data-room-setup='" + roomSetupId + "']", { timeout: 5000 });
+    // A fresh context loads the whole client from the dev server before it can show the room: 1.6 to 6.5 s measured
+    // on a loaded machine, so 5 s failed main as often as a branch.
+    await guest.waitForSelector("[data-room-setup='" + roomSetupId + "']", { timeout: 30000 });
     await guest.locator("[data-slot-id='slot-2'] [data-slot-ready]").check();
     await page.waitForFunction(async (roomId) => {
       const room = await (await fetch("/api/rooms/" + roomId)).json();
