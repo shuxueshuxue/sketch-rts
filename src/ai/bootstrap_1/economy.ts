@@ -1,4 +1,4 @@
-import { missingMiningWorkers } from './workforce';
+import { missingMiningWorkers, needsRemoteLaborInvestment, planMiningWorkforcePurchase } from './workforce';
 import { BUILDING_DEFS, UNIT_DEFS, canTrainAt, requiredSupplyCap, trainableUnitsAt } from '../../shared/catalog';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import type { BuildingKind, GameCommand, GameSnapshot, PlayerId, TrainableUnitKind, Unit } from '../../shared/types';
@@ -163,6 +163,10 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
     && halls.some(hall => Math.hypot(hall.x - unit.x, hall.y - unit.y) <= BUILDING_DEFS.defenseTower.attackRange + GOLD_MINE_RULES.baseRange
       || ((unit.order.type === 'attackMove' || unit.order.type === 'move')
         && Math.hypot(hall.x - unit.order.x, hall.y - unit.order.y) <= BUILDING_DEFS.defenseTower.attackRange)));
+  const crew = towerRushConstructionCrew(snapshot, owner, options);
+  const remoteWorkerProducers = needsRemoteLaborInvestment(snapshot, owner, crew)
+    ? new Set(planMiningWorkforcePurchase(snapshot, owner, crew, options).flatMap(command => command.type === 'train' ? [command.buildingId] : []))
+    : undefined;
   const purchases = new Set<string>();
   return ranked.flatMap(goal => {
     let productionReserve = 0;
@@ -182,7 +186,8 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
     return [{ ...goal, productionReserve: Math.max(productionReserve, goal.id === `unit:${healer}` ? 0 : recoveryReserve) }];
   }).filter(goal => {
     // Being near an outlying farm or a forward tower does not itself threaten a mining hall.
-    if (goal.id.startsWith('worker@') && missingMiningWorkers(snapshot, owner, towerRushConstructionCrew(snapshot, owner, options), options) <= 0) return false;
+    if (goal.id.startsWith('worker@') && (missingMiningWorkers(snapshot, owner, crew, options) <= 0
+      || remoteWorkerProducers !== undefined && !remoteWorkerProducers.has(goal.id.slice('worker@'.length)))) return false;
     if (goal.id === 'tower:ahead' && !threatenedHome) return false;
     if (goal.id === 'farm' && player.supplyCap - projectedSupplyUsed(snapshot, owner) > wave) return false;
     if (goal.id.startsWith('unit:')) return wanted.has(goal.id.slice(5) as TrainableUnitKind);

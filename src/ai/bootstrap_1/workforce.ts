@@ -21,9 +21,27 @@ export const miningWorkforce: AiScript = {
   phase: 'economy',
   run(snapshot, owner, options) {
     const crew = towerRushConstructionCrew(snapshot, owner, options);
-    return [...planMiningWorkforce(snapshot, owner, crew, options), ...longHaulInvestment(snapshot, owner, options, crew)];
+    return planMiningWorkforcePurchase(snapshot, owner, crew, options);
   },
 };
+
+/** Without an owned mining hall, more distant labor competes with buying one.
+ * A native construction already present in buildings has paid for its hall.
+ * Keep the first worker and existing construction crew on the ordinary path. */
+export function needsRemoteLaborInvestment(snapshot: GameSnapshot, owner: PlayerId, constructionCrew: number) {
+  const workers = snapshot.units.filter(unit => unit.owner === owner && unit.kind === 'worker');
+  return workers.length > 0 && workers.length >= constructionCrew
+    && !snapshot.buildings.some(hall => hall.owner === owner && hall.kind === 'townHall' && hall.hp > 0
+      && snapshot.resources.some(mine => mine.amount > 0
+        && Math.hypot(mine.x - hall.x, mine.y - hall.y) <= GOLD_MINE_RULES.baseRange));
+}
+
+/** One purchase planner is shared by early workforce and later worker goals. */
+export function planMiningWorkforcePurchase(snapshot: GameSnapshot, owner: PlayerId, constructionCrew: number, options: AiPolicyContext): GameCommand[] {
+  return needsRemoteLaborInvestment(snapshot, owner, constructionCrew)
+    ? longHaulInvestment(snapshot, owner, options, constructionCrew)
+    : planMiningWorkforce(snapshot, owner, constructionCrew, options);
+}
 
 export function planMiningWorkforce(snapshot: GameSnapshot, owner: PlayerId, constructionCrew: number, options: MiningWorkforceOptions): GameCommand[] {
   const demand = miningWorkerDemand(snapshot, owner, constructionCrew, options);
