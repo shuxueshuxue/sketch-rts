@@ -93,9 +93,10 @@ it('retains a safe installed leg through JSON memory without stopping or re-quer
   expect(query).not.toHaveBeenCalled();
 });
 
-it('releases a completed intermediate leg for strategic replanning even before a new native order is chosen', () => {
+it('releases a natively completed empty intermediate route for strategic replanning', () => {
   const f = installQueriedLeg();
   f.ship.x = f.leg.waypoint.x; f.ship.y = f.leg.waypoint.y;
+  f.ship.sailing!.route!.points = [];
   expect(continuingCoastalVoyage(f.s, f.ship, f.options)).toBeUndefined();
   expect(f.options.memory.naval!.coastalVoyages![battery]!.goal).toEqual(f.current.goal);
 });

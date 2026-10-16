@@ -18,9 +18,13 @@ export function continuingCoastalVoyage(snapshot:GameSnapshot,ship:Unit,options:
  if(!current || ship.order.type!=='move' || distance(ship.order,current.waypoint)>=1)return;
  if(!snapshot.units.some(target=>target.id===current.targetId && target.hp>0)
   && !snapshot.buildings.some(target=>target.id===current.targetId && target.hp>0))return;
- if(current.proof==='leg' && (distance(ship,current.waypoint)<=MOVE_ORDER_ARRIVAL_RANGE
-  || !coastalLegArrivalSafe(snapshot,ship,current.waypoint,options)))return;
  const motion=ship.sailing;
+ if(current.proof==='leg'){
+  if(!coastalLegArrivalSafe(snapshot,ship,current.waypoint,options))return;
+  const route=motion?.route;
+  if(route?.partial===false && !route.points.length && route.goalX===current.waypoint.x && route.goalY===current.waypoint.y
+   && distance(route.end,current.waypoint)<MOVE_ORDER_ARRIVAL_RANGE && distance(ship,current.waypoint)<MOVE_ORDER_ARRIVAL_RANGE)return;
+ }
  if(motion?.route?.points.length)return coastalVoyagePrefixSafe(snapshot,ship,motion.route,options) ? current : undefined;
  const validTick=(tick:number|undefined):tick is number=>tick!==undefined && Number.isSafeInteger(tick) && tick>=0 && tick<=snapshot.tick;
  if(motion?.planningJob){
