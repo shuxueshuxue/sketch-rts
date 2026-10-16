@@ -203,8 +203,11 @@ describe('bootstrap chosen caster moves outside fixed fire', () => {
     const { snapshot, caster, tower, options } = field();
     const saved = JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/backline-ground-5b5-123600.json.gz', import.meta.url))).toString()) as Saved;
     const model = saved.snapshot.units.find(unit => shipProfile(unit))!;
-    snapshot.units.push({ ...structuredClone(model), id: 'dead-hull-before-cleanup', hp: 0,
-      x: caster.x + 48, y: caster.y, heading: 0, order: { type: 'idle' } });
+    const wreck: Unit = { ...structuredClone(model), id: 'dead-hull-before-cleanup', hp: 0,
+      x: caster.x + 48, y: caster.y, sailing: model.sailing ? { ...model.sailing, heading: 0 } : undefined,
+      order: { type: 'idle' } };
+    snapshot.units.push(wreck);
+    expect(circleInPolygon(worldToLocal(wreck, { x: caster.x + 50, y: caster.y }), 0, shipProfile(wreck)!.hull)).toBe(true);
     const result = casterScreenOutsideFixedFire(snapshot, 'us', options,
       [{ type: 'move', unitIds: [caster.id], x: tower.x, y: tower.y }]);
     for (const command of result) if (command.type === 'move') expect(snapshot.units.some(ship => {
