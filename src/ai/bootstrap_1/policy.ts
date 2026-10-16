@@ -1,7 +1,7 @@
 import { ABILITY_DEFS, canResearchAt, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap, trainingBuildingFor } from '../../shared/catalog';
 import { shopping } from './shopping';
 import type { AbilityKind, BootstrapAiVersion, GameCommand, GameSnapshot, PlayerId, PlayerState } from '../../shared/types';
-import { AI_SCRIPT_LIBRARY, V9_AI_STACK, V7_AI_STACK, V8_AI_STACK, planAiCommandEntriesFromScripts } from '../policy/core';
+import { AI_SCRIPT_LIBRARY, V9_AI_STACK, V7_AI_STACK, V8_AI_STACK, planAiCommandEntriesFromScripts, planEconomy } from '../policy/core';
 import { isOpponentOwner } from '../policy/ownership';
 import type { AiCommandEntry, AiPolicyContext, AiScript } from '../policy/types';
 import { combatDeckRecovery } from './deck-recovery';
@@ -12,6 +12,7 @@ import { archerMicro } from './archer-micro';
 import { battleRepair } from './repair';
 import { miningWorkforce } from './workforce';
 import { miningAssignments } from './mining-assignments';
+import { miningApproachOutsideFire } from './mining-fire';
 import { mineDefense, planBootstrapCloseout, planBootstrapGeneral } from './mine-defense';
 import { miningJobSafety } from './mining-job-defense';
 import { bootstrapEconomy } from './economy';
@@ -97,6 +98,9 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: Bootstra
 export function bootstrapScripts(version: BootstrapAiVersion) {
   const family = version === 'v9_archer' ? V9_AI_STACK : version === 'v9_knight' ? V8_AI_STACK : V7_AI_STACK;
   return family.filter(script => script !== AI_SCRIPT_LIBRARY.v6Closeout).flatMap(script => {
+    if (script === AI_SCRIPT_LIBRARY.economy) return [{ ...script,
+      run: (snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) => planEconomy(snapshot, owner, options,
+        (worker, mine) => miningApproachOutsideFire(snapshot, owner, worker, mine, options)) }];
     if (script === AI_SCRIPT_LIBRARY.items) return [{ ...script, run: planLootItemCommands }];
     if (script === AI_SCRIPT_LIBRARY.shopping) return [shopping];
     if (script === AI_SCRIPT_LIBRARY.battlefield) return [campRecovery, frontRecovery, mountedField, script];

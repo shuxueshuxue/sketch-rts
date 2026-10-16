@@ -399,7 +399,8 @@ function livePolicyBehaviorVersion(version: Exclude<AiScriptVersion, "v2-prod">)
 
 // A hall's mine takes only workers that can walk to it: a hall on an island is mined by the workers ferried there (see
 // @@@ai-home-ground, @@@ai-naval).
-function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand | undefined {
+export function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions,
+  admitsMine: (worker: Unit, mine: ResourceNode) => boolean = () => true): GameCommand | undefined {
   // Recover duplicated intentions from an older save without cancelling the first builder.
   const seen = new Set<string>();
   const duplicates: Unit[] = [];
@@ -410,7 +411,8 @@ function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiP
   }
   if (duplicates.length) {
     const mine = activeResources(snapshot).find(resource => sameGroundAs(snapshot, duplicates[0]!, resource) && completeBuildings(snapshot, owner, "townHall").some(base => distance(base, resource) < GOLD_MINE_RULES.baseRange));
-    if (mine) return { type: "mine", unitIds: duplicates.filter(worker => sameGroundAs(snapshot, worker, mine)).map(worker => worker.id), resourceId: mine.id };
+    const admitted = mine ? duplicates.filter(worker => sameGroundAs(snapshot, worker, mine) && admitsMine(worker, mine)) : [];
+    if (mine && admitted.length) return { type: "mine", unitIds: admitted.map(worker => worker.id), resourceId: mine.id };
   }
   const workers = units(snapshot, owner).filter((unit) => !unit.deck && unit.kind === "worker" && !isReservedBuilder(snapshot, owner, unit) && !towerMercWorkerHoldingPurchasableCamp(snapshot, owner, unit, options));
   if (workers.length === 0) return undefined;
@@ -435,7 +437,7 @@ function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiP
     const mine = localActiveMineForBase(snapshot, base);
     if (!mine || (assignmentCounts.get(mine.id) ?? 0) > 0) continue;
     const worker = nearestEntity(
-      assignableWorkers.filter((candidate) => (candidate.order.type !== "mine" || candidate.order.resourceId !== mine.id) && sameGroundAs(snapshot, candidate, mine)),
+      assignableWorkers.filter((candidate) => (candidate.order.type !== "mine" || candidate.order.resourceId !== mine.id) && sameGroundAs(snapshot, candidate, mine) && admitsMine(candidate, mine)),
       base,
     );
     if (worker) return resolveAiCommandIntent(snapshot, owner, { type: "mine", unitIds: [worker.id], resourceId: mine.id }, options);
@@ -447,7 +449,7 @@ function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiP
     const assigned = assignmentCounts.get(mine.id) ?? 0;
     if (assigned >= GOLD_MINE_RULES.workstations) continue;
     const candidates = nearestEntities(
-      assignableWorkers.filter((worker) => (worker.order.type !== "mine" || worker.order.resourceId !== mine.id) && sameGroundAs(snapshot, worker, mine)),
+      assignableWorkers.filter((worker) => (worker.order.type !== "mine" || worker.order.resourceId !== mine.id) && sameGroundAs(snapshot, worker, mine) && admitsMine(worker, mine)),
       base,
     );
     const selected = candidates.slice(0, GOLD_MINE_RULES.workstations - assigned);
@@ -456,9 +458,12 @@ function planEconomy(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiP
 
   if (idleWorkers.length === 0) return undefined;
   const remoteMine = depletedEconomyRemoteMine(snapshot, owner, bases, options);
-  if (remoteMine) return resolveAiCommandIntent(snapshot, owner, { type: "mine", unitIds: idleWorkers.map((worker) => worker.id), resourceId: remoteMine.id }, options);
+  if (remoteMine) {
+    const admitted = idleWorkers.filter(worker => admitsMine(worker, remoteMine));
+    if (admitted.length) return resolveAiCommandIntent(snapshot, owner, { type: "mine", unitIds: admitted.map((worker) => worker.id), resourceId: remoteMine.id }, options);
+  }
   const mine = localActiveMineForBase(snapshot, mainBase(snapshot, owner));
-  const walkers = mine ? idleWorkers.filter((worker) => sameGroundAs(snapshot, worker, mine)) : [];
+  const walkers = mine ? idleWorkers.filter((worker) => sameGroundAs(snapshot, worker, mine) && admitsMine(worker, mine)) : [];
   if (!mine || walkers.length === 0) return undefined;
   return resolveAiCommandIntent(snapshot, owner, { type: "mine", unitIds: walkers.map((worker) => worker.id), resourceId: mine.id }, options);
 }

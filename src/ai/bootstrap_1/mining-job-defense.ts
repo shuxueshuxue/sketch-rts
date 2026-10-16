@@ -13,8 +13,9 @@ import { readV6Intel, type V6Intel } from '../policy/v6/intel';
 import { strengthOf, TOWER_STRENGTH } from '../policy/v6/strength';
 import type { AiPolicyContext, AiScript } from '../policy/types';
 import { isBacklineKind } from '../policy/v6/backline';
-import { armedFoes, earliestThreatContactTicks, retreatLandRoad } from './safe-land-route';
+import { armedFoes, earliestThreatContactTicks, retreatLandRoad, retreatLandTravelTicks } from './safe-land-route';
 import { miningJobOrder } from './mining-jobs';
+import { miningApproachOutsideFire, miningPointOutsideFire } from './mining-fire';
 
 /** A hauling job remains real income after its mine's hall has fallen. */
 export function miningJobDefenseTarget(snapshot: GameSnapshot, owner: PlayerId, intel: V6Intel, options: AiPolicyContext): ArmyDefense | undefined {
@@ -87,14 +88,38 @@ function exposedMiners(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     });
 }
 
+function buildingFireMiners(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
+  const halls = snapshot.buildings.filter(hall => hall.owner === owner && hall.kind === 'townHall' && hall.complete && hall.hp > 0);
+  const foes = armedFoes(snapshot, owner, options).filter(foe => 'order' in foe || foe.complete);
+  return snapshot.units.filter(worker => worker.owner === owner && worker.hp > 0 && worker.kind === 'worker' && !worker.deck)
+    .flatMap(worker => {
+      const job = miningJobOrder(worker);
+      const mine = job && snapshot.resources.find(resource => resource.id === job.resourceId && resource.amount > 0);
+      if (!mine || mineClaimedByAlly(snapshot, owner, mine, options)
+        || miningApproachOutsideFire(snapshot, owner, worker, mine, options)) return [];
+      const shelter = halls.filter(hall => sameGround(snapshot.map, worker, hall)).flatMap(hall => {
+        const road = retreatLandRoad(snapshot, worker, hall, foes), point = road?.points.at(-1);
+        if (!point || !miningPointOutsideFire(snapshot, owner, worker, point, options)) return [];
+        // Publish the actual safe endpoint, not the blocked building centre.
+        // Its public coordinate move must itself have a complete safe road.
+        const ticks = retreatLandTravelTicks(snapshot, worker, point, foes);
+        return ticks === undefined ? [] : [{ point, ticks }];
+      }).sort((a, b) => a.ticks - b.ticks)[0];
+      return shelter ? [{ worker, shelter }] : [];
+    });
+}
+
 export const miningJobSafety: AiScript = {
   id: 'miningJobSafety', phase: 'tactics',
-  claimsUnits: (snapshot, owner, options) => new Set(exposedMiners(snapshot, owner, options).map(task => task.worker.id)),
+  claimsUnits: (snapshot, owner, options) => new Set([...exposedMiners(snapshot, owner, options),
+    ...buildingFireMiners(snapshot, owner, options)].map(task => task.worker.id)),
   run(snapshot, owner, options): GameCommand[] {
-    return exposedMiners(snapshot, owner, options).flatMap(({ worker, job, shelter }): GameCommand[] => {
+    const fire = buildingFireMiners(snapshot, owner, options), withdrawn = new Set(fire.map(task => task.worker.id));
+    return [...fire.map(({ worker, shelter }): GameCommand => ({ type: 'move', unitIds: [worker.id], ...shelter.point, avoidCombat: true })),
+      ...exposedMiners(snapshot, owner, options).filter(task => !withdrawn.has(task.worker.id)).flatMap(({ worker, job, shelter }): GameCommand[] => {
       if (worker.order.type === 'move' && worker.order.avoidCombat && worker.orderQueue?.some(order => order.type === 'mine')) return [];
       return [{ type: 'move', unitIds: [worker.id], ...shelter.point, avoidCombat: true },
         { type: 'mine', unitIds: [worker.id], resourceId: job.resourceId, queued: true }];
-    });
+    })];
   },
 };
