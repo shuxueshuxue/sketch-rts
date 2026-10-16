@@ -14,15 +14,17 @@ it.each([30660,30705])('native actual%i ready heal increases HP immediately and 
   const id = tick === 30660 ? 'unit-p0-fieldMedic-1602' : 'unit-p0-fieldMedic-1418';
   const targetId = tick === 30660 ? 'unit-p0-priest-15352' : 'unit-p0-fieldMedic-1602';
   const caster = game.units.find(unit => unit.id === id)!, target = game.units.find(unit => unit.id === targetId)!;
+  const definition = ABILITY_DEFS.heal;
+  if (definition.behavior !== 'heal') throw Error('heal definition changed');
   const beforeHP = target.hp, beforeTick = game.tick;
   issuePlayerCommand(game, 'p0', { type: 'holdPosition', unitIds: [id] });
   const held = structuredClone({ order: caster.order, orderQueue: caster.orderQueue,
     x: caster.x, y: caster.y, deck: caster.deck, cabin: caster.cabin, gangway: caster.gangway });
   expect(held.order.type).toBe('hold'); expect(abilityCooldown(caster, 'heal')).toBe(0);
   issuePlayerCommand(game, 'p0', { type: 'cast', unitId: id, ability: 'heal', targetId });
-  expect(target.hp).toBe(Math.min(target.maxHp, beforeHP + ABILITY_DEFS.heal.healAmount));
+  expect(target.hp).toBe(Math.min(target.maxHp, beforeHP + definition.healAmount));
   expect(target.hp).toBeGreaterThan(beforeHP);
-  expect(abilityCooldown(caster, 'heal')).toBe(ABILITY_DEFS.heal.cooldown);
+  expect(abilityCooldown(caster, 'heal')).toBe(definition.cooldown);
   expect({ order: caster.order, orderQueue: caster.orderQueue, x: caster.x, y: caster.y,
     deck: caster.deck, cabin: caster.cabin, gangway: caster.gangway }).toEqual(held);
   expect(game.tick).toBe(beforeTick);

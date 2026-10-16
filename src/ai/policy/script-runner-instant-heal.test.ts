@@ -2,17 +2,17 @@ import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { expect, it } from 'vitest';
 import type { AiPolicyMemory } from '../memory';
-import type { AiScript } from 'types';
+import type { AiScript } from './types';
 import type { BootstrapAiVersion, GameCommand, GameSnapshot } from '../../shared/types';
 import { abilityCooldown } from '../../shared/ability-cooldowns';
 import { ABILITY_DEFS } from '../../shared/catalog';
 import { canReceiveHealing } from '../../shared/healing';
 import { matchesUnitTarget } from '../../shared/unit-targeting';
 import { setBuildingBodies } from '../../shared/terrain';
-import { coastalWithdrawalCrewCommands } from 'coastal-boarding';
+import { coastalWithdrawalCrewCommands } from './coastal-boarding';
 import { bootstrapPolicyContext, planBootstrapScriptEntries } from '../bootstrap_1/policy';
 import { medicalRecovery, planMedicalRecovery, recoveryPatients } from '../bootstrap_1/medical-recovery';
-import { runAiCommandEntriesFromScripts } from 'script-runner';
+import { runAiCommandEntriesFromScripts } from './script-runner';
 
 const C = new URL('../../../', import.meta.url);
 type Saved = { snapshot: GameSnapshot; memories: Record<string, AiPolicyMemory>; nextId: number };
@@ -114,9 +114,11 @@ it('keeps a real30660 in-window charge behind an earlier hold', () => {
   const { saved, snapshot } = actual(30660);
   const caster = snapshot.units.find(unit => unit.id === 'unit-p0-lancer-11127')!;
   const target = snapshot.units.find(unit => unit.id === 'unit-p1-spirit-38062')!;
+  const definition = ABILITY_DEFS.charge;
+  if (definition.behavior !== 'charge') throw Error('charge definition changed');
   const gap = Math.hypot(caster.x-target.x, caster.y-target.y);
   expect(abilityCooldown(caster, 'charge')).toBe(0);
-  expect(gap).toBeGreaterThan(ABILITY_DEFS.charge.minRange); expect(gap).toBeLessThan(ABILITY_DEFS.charge.range);
+  expect(gap).toBeGreaterThan(definition.minRange); expect(gap).toBeLessThan(definition.range);
   const hold: GameCommand = { type: 'holdPosition', unitIds: [caster.id] };
   const charge: GameCommand = { type: 'cast', unitId: caster.id, ability: 'charge', targetId: target.id };
   expect(runAiCommandEntriesFromScripts(snapshot, 'p0', [{ id: 'naval', phase: 'tactics', run: () => hold },
