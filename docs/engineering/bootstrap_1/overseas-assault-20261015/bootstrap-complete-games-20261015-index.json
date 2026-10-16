@@ -975,6 +975,66 @@
       "payloadHashesVerified": true,
       "source": "0466914857bd7b185a66ec42edb0202b5a884ca5",
       "classification": "Root046 early15fullframes0..8400 equal8da, firstmedicaldifference8400 andexact641clinical600suffix. Wholematch46permanent/723deathcorpse/37expiry ledger inclstaletargetcallbackcaveat;3doctors/9veterans loss limits. Native35400visual. Unique48000→48225 terminal225 all97commands/45ownerplans-all3mem/18hits/4events/finalwholeexact. OfficialbrokenSea summoner prepared-driver staticreview only, no newmatch claimed."
+    },
+    {
+      "file": "bootstrap-mining-fire-safety-86143-focused-evidence-20261016.tar.gz",
+      "bytes": 23319053,
+      "sha256": "9ff00613ef42b5f2fa8ae67be1e8b1111f8d8b97547ecb2e38ab396458990646",
+      "indexedPayloadFiles": 426,
+      "archiveRegularFiles": 427,
+      "payloadManifest": "INDEX.json",
+      "payloadManifestSHA256": "c7723b3b239d157a218ae1ccfed326029d056199ea3442c848305ee2ae9cd93a",
+      "payloadHashesVerified": true,
+      "source": "86143dafab28180e5ff055639dd4f5561f96081d",
+      "classification": "Changed-code actual8da11400 input normal1200 to12600, original900 exact reconstruction, first42plans equal and full same-input firstdifference11610.5 vs14 permanent new deaths; four workers truly gather then deposit, not six same-ID saves.1379 still hit by in-flight arrow before heal.19 new+3original checks and1024. No ordinary0, economic acceptance, or full-game victory."
+    },
+    {
+      "file": "bootstrap-landed-screen-quiet-c2c4-finite-pair-20261016-evidence.tar.gz",
+      "bytes": 48315200,
+      "sha256": "a888d10961f9024aff23a66ed4e520dd26d88b14609a93210e2a4990ef5b2a42",
+      "indexedPayloadFiles": 300,
+      "archiveRegularFiles": 301,
+      "payloadManifest": "INDEX.json",
+      "payloadManifestSHA256": "d7fe5479d697655fce96a1f522aeaf4928996d918c0e8d8851d08b19abc68fa6",
+      "payloadHashesVerified": true,
+      "source": "c2c4df13ec35d49daa3edae10122ee9f005945f9",
+      "classification": "Same218040 already-landed actual normal1200 pair: baseline19of27 original permanent cohort dead/8alive aboard versus candidate12dead/15alive ashore. All9original ravagers dead, no destroyed building or winner.69 distinct checks/1024. Quiet ownership and instant abilities, includes pure native hull predicate extraction; not solelyAI or antecedent packing proof. Natural tail only prepared."
+    },
+    {
+      "file": "bootstrap-assault-economy-return-6ce-normal-pair-20261016-evidence.tar.gz",
+      "bytes": 46380324,
+      "sha256": "9278ac136f1378822615e0e080ab0d172b7ae160da4c7281697a9f0b6eb9973c",
+      "indexedPayloadFiles": 937,
+      "archiveRegularFiles": 938,
+      "payloadManifest": "INDEX.json",
+      "payloadManifestSHA256": "d86d2072013bc480c1bfa7ee678465405e4895d9a7a50d05dc45c6e299e6c2d3",
+      "payloadHashesVerified": true,
+      "source": "6cebe7323baa188f57c4c866ed6cef4009bc0194",
+      "classification": "Same250185 two normal6015 through256200: candidate original10 permanent army all alive ashore253410 and original owner reused carrier for settle253440; final carrier empty, live workers boarding,480HP. Baseline also naturally returns252705, final13deck11permanent2spirit.420.33 gold preserved but no new hall/income/combat/winner. Natural continuation prepared, not run; prior243180 carrier actually had12deck10permanent, not empty."
+    },
+    {
+      "file": "root046-medic1602-preservation-diagnosis-20261016-evidence.tar.gz",
+      "bytes": 7389278,
+      "sha256": "8c4ce368139f3deb7fb9a3cf61d933d351b583ac7f3c4f4c00e4450ce65d4d61",
+      "indexedPayloadFiles": 201,
+      "archiveRegularFiles": 202,
+      "payloadManifest": "INDEX.json",
+      "payloadManifestSHA256": "7ecd8b8f71f76a35d9775953eef90b83ec31ba225ff229e8c9de50dab1641ade",
+      "payloadHashesVerified": true,
+      "source": "0466914857bd7b185a66ec42edb0202b5a884ca5",
+      "classification": "Actual046 medic1602 diagnosis and unique strict24600→25200 600 reconstruction, all1022commands120ownerplans160hits71events31deaths17corpses134health7heal effects and final four fields exact.24945 first heal fills74→120, second1602 spendsCD240 for0HP. Later real spirit hits kill1602 despite accepted moves/hold; no saved-CD survival claim. Wholeknownseed46permanent/9veteranloss unchanged, allocation fix not in this archive."
+    },
+    {
+      "file": "root-febb-mining-integration-20261016-evidence.tar.gz",
+      "bytes": 5532094,
+      "sha256": "0a576f56e9aad660ccd2d8ffcc4537f2a94ea497ccc005bb1d70bc607a13f733",
+      "indexedPayloadFiles": 17,
+      "archiveRegularFiles": 18,
+      "payloadManifest": "INDEX.json",
+      "payloadManifestSHA256": "e8238364462f3a2372cc387dd8bafe45cd3bf172fe09bde4a84ad9e00d3107a1",
+      "payloadHashesVerified": true,
+      "source": "febb9951ef6639963ac2dde925bccc0e14eb0ac5",
+      "classification": "Root046 plus only86143 14file delta, all1517source/config/test/manifest complete payloads and Git/live equivalence.40 distinct actual combined cases plus single1024 tsc actual0; original3 repeated timing cases not double-counted. Whole046 medical,d93,native retained. No ordinary0 for febb; fixed046 official match remains separately attributed."
     }
   ],
   "strategyBaseline": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
@@ -1594,75 +1654,22 @@
     "originalUncommittedRecoveryGapRetained": true
   },
   "activeRuntime": {
-    "source": "0466914857bd7b185a66ec42edb0202b5a884ca5",
-    "intermediateRuntime": "c64d70c91a1ba8027a5b64c1af651537f41563ed",
-    "intermediateTestReferences": "c423ac73853bb39ea31e1780dc194c65783a5819",
-    "parentRuntimeSource": "8da5b0e4d65c0a5d355ecd9bdcbdb9c4ae23051d",
-    "componentCandidates": [
-      "d93f2c574bfa38451dedccbd5611671e7c669690",
-      "641b7b3ca68ed03fcc83969dbac15222ec00ef92"
-    ],
-    "selectedSourceConfigTestManifestFiles": 1507,
+    "source": "febb9951ef6639963ac2dde925bccc0e14eb0ac5",
+    "parentRuntimeSource": "0466914857bd7b185a66ec42edb0202b5a884ca5",
+    "componentCandidate": "86143dafab28180e5ff055639dd4f5561f96081d",
+    "selectedSourceConfigTestManifestFiles": 1517,
     "rulesVersion": 2,
     "frozenManifestSHA256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
-    "integrationScope": "Every1507Git/live selectedfile equals c423 plusonly641fivefiledelta; c423 testreferences basedonactual8da, c64isolatedd93sixfiledelta. Priorrootsailing/decks retained. Not entire d93/641 equivalence.",
+    "integrationScope": "Only86143 14-file delta, allother1503root source files retained, whole641medical/d93/native preserved. Every1517Git/live file equals actually combined-tested source.",
     "rootValidation": {
-      "currentHeadActualRelevantCases": 21,
-      "uniqueCoverageIncludingUnchangedPriorCases": 55,
+      "actualDistinctCases": 40,
       "tsc1024Exit": 0,
-      "source1507PrePostExact": true,
-      "olderInitialCombinedResult": "46passed/2old1905referencefails preserved; actualparent8da nongunP0 equal before correctingonlyreference fixtures;2affectedactualcasespass,notduplicated48."
+      "selectedSource1517PrePostExact": true
     },
     "ordinary0": {
-      "source": "0466914857bd7b185a66ec42edb0202b5a884ca5",
-      "map": "pineshade generated",
-      "seed": "bootstrap_1-first-use-archer-v7-v8-20261016-0808z-a",
-      "casePreviouslyObserved": true,
-      "newUnseenEvidence": false,
-      "subject": "v9_archer Grove side0",
-      "opponents": "normal frozenv7Ember+v8Grove teamB",
-      "normalOpeningGoldWorkersSupplyCap": [
-        500,
-        3,
-        8
-      ],
-      "thinkTicks": 15,
-      "sameFactoryFullWorldNextIdNull3MemoriesSetupAs38f": true,
-      "factoryGzipByteEqualityClaimed": false,
-      "naturalWinner": "p0",
-      "naturalTick": 48225,
-      "observationStopped": false,
-      "enemyStrictLivingUnitsAndBuildingsZero": true,
-      "ownLivingUnits": 50,
-      "ownLivingBuildings": 29,
-      "permanentOwnLosses": 46,
-      "nativeFatalCorpseRemovalByIDReconciled": true,
-      "nativeStaleFatalCallbackCaveat": "Spirit17983expired19065 then stale-targetfatalcallback19066 withoutnewcorpse/death; oneextra killcallback not countedasnewdeath.",
-      "commands": 60297,
-      "ownerPlansAll3PostMemories": 9645,
-      "runtime1507Frozen497Manifest184Rules2PrePostExact": true,
-      "terminal225ColdStatus": "Completed actual14:03:08exit0;97commands45ownerplans-all3mem18hits4events/finalworld-id3mem-setupexact. Not secondordinary0.",
-      "comparisonOldKnownSeed": {
-        "38fNaturalDefeatTick": 82182,
-        "38fPermanentOwnLosses": 65,
-        "8daNaturalDefeatTick": 37789,
-        "8daPermanentOwnLosses": 69
-      },
-      "attribution": "Completecombined-source success foronealreadyobservedseed. Not uniquely attributable toonecomponent; no acceptance ornewholdout claim.",
-      "terminal225Cold": {
-        "start": 48000,
-        "end": 48225,
-        "steps": 225,
-        "commands": 97,
-        "ownerPlans": 45,
-        "hits": 18,
-        "events": 4,
-        "allRawAndFinalWholeExact": true
-      }
+      "status": "Not yet run on this new combined source. The prior knownseed48225 win belongs to046; current officialbrokenSea summoner also stays fixed046."
     },
-    "currentEvidenceReference": "combined-aimed-medical-knownseed-win-20261016.zh.md",
-    "originalUncommittedRecoveryGapRetained": true,
-    "pendingFullMatchEvidence": "Allthreefamilies v5/v7/v8 singles,sixpairings,officialmaps andgenuinelyunseengeneratedseeds remain incomplete. Original96000ordinary vs144000changedcode continuation remain distinct."
+    "bootstrapComplete": false
   },
   "previousRuntimeBeforeDock": {
     "source": "760ef777eeaf0eb13a67bef5b2221fbf777126a9",
@@ -1969,5 +1976,98 @@
     "rootRuntimeSource": "0466914857bd7b185a66ec42edb0202b5a884ca5",
     "bootstrapComplete": false,
     "nextOfficialOrdinary0": "Prepared/noGameatthischeckpoint: v9_summonerGrove vsnormalv5Ember+v8Grove, officialbrokenSea/unseenfalse, source046; no knownseedworldequalityclaim."
+  },
+  "previousRuntimeBeforeMiningFire": {
+    "source": "0466914857bd7b185a66ec42edb0202b5a884ca5",
+    "intermediateRuntime": "c64d70c91a1ba8027a5b64c1af651537f41563ed",
+    "intermediateTestReferences": "c423ac73853bb39ea31e1780dc194c65783a5819",
+    "parentRuntimeSource": "8da5b0e4d65c0a5d355ecd9bdcbdb9c4ae23051d",
+    "componentCandidates": [
+      "d93f2c574bfa38451dedccbd5611671e7c669690",
+      "641b7b3ca68ed03fcc83969dbac15222ec00ef92"
+    ],
+    "selectedSourceConfigTestManifestFiles": 1507,
+    "rulesVersion": 2,
+    "frozenManifestSHA256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
+    "integrationScope": "Every1507Git/live selectedfile equals c423 plusonly641fivefiledelta; c423 testreferences basedonactual8da, c64isolatedd93sixfiledelta. Priorrootsailing/decks retained. Not entire d93/641 equivalence.",
+    "rootValidation": {
+      "currentHeadActualRelevantCases": 21,
+      "uniqueCoverageIncludingUnchangedPriorCases": 55,
+      "tsc1024Exit": 0,
+      "source1507PrePostExact": true,
+      "olderInitialCombinedResult": "46passed/2old1905referencefails preserved; actualparent8da nongunP0 equal before correctingonlyreference fixtures;2affectedactualcasespass,notduplicated48."
+    },
+    "ordinary0": {
+      "source": "0466914857bd7b185a66ec42edb0202b5a884ca5",
+      "map": "pineshade generated",
+      "seed": "bootstrap_1-first-use-archer-v7-v8-20261016-0808z-a",
+      "casePreviouslyObserved": true,
+      "newUnseenEvidence": false,
+      "subject": "v9_archer Grove side0",
+      "opponents": "normal frozenv7Ember+v8Grove teamB",
+      "normalOpeningGoldWorkersSupplyCap": [
+        500,
+        3,
+        8
+      ],
+      "thinkTicks": 15,
+      "sameFactoryFullWorldNextIdNull3MemoriesSetupAs38f": true,
+      "factoryGzipByteEqualityClaimed": false,
+      "naturalWinner": "p0",
+      "naturalTick": 48225,
+      "observationStopped": false,
+      "enemyStrictLivingUnitsAndBuildingsZero": true,
+      "ownLivingUnits": 50,
+      "ownLivingBuildings": 29,
+      "permanentOwnLosses": 46,
+      "nativeFatalCorpseRemovalByIDReconciled": true,
+      "nativeStaleFatalCallbackCaveat": "Spirit17983expired19065 then stale-targetfatalcallback19066 withoutnewcorpse/death; oneextra killcallback not countedasnewdeath.",
+      "commands": 60297,
+      "ownerPlansAll3PostMemories": 9645,
+      "runtime1507Frozen497Manifest184Rules2PrePostExact": true,
+      "terminal225ColdStatus": "Completed actual14:03:08exit0;97commands45ownerplans-all3mem18hits4events/finalworld-id3mem-setupexact. Not secondordinary0.",
+      "comparisonOldKnownSeed": {
+        "38fNaturalDefeatTick": 82182,
+        "38fPermanentOwnLosses": 65,
+        "8daNaturalDefeatTick": 37789,
+        "8daPermanentOwnLosses": 69
+      },
+      "attribution": "Completecombined-source success foronealreadyobservedseed. Not uniquely attributable toonecomponent; no acceptance ornewholdout claim.",
+      "terminal225Cold": {
+        "start": 48000,
+        "end": 48225,
+        "steps": 225,
+        "commands": 97,
+        "ownerPlans": 45,
+        "hits": 18,
+        "events": 4,
+        "allRawAndFinalWholeExact": true
+      }
+    },
+    "currentEvidenceReference": "combined-aimed-medical-knownseed-win-20261016.zh.md",
+    "originalUncommittedRecoveryGapRetained": true,
+    "pendingFullMatchEvidence": "Allthreefamilies v5/v7/v8 singles,sixpairings,officialmaps andgenuinelyunseengeneratedseeds remain incomplete. Original96000ordinary vs144000changedcode continuation remain distinct."
+  },
+  "latestEvidenceCheckpoint114": {
+    "atUTC": "2026-10-16T15:06:29.142050+00:00",
+    "packages": 114,
+    "first109PackagesPreservedExactly": true,
+    "currentOfficialOrdinary0": {
+      "source": "0466914857bd7b185a66ec42edb0202b5a884ca5",
+      "subject": "v9_summoner Grove",
+      "opponents": "normal frozenv5Ember+v8Grove",
+      "map": "official brokenSea side0/unseenfalse",
+      "knownThroughTick": 88200,
+      "naturalComplete": false,
+      "winner": null,
+      "permanentOwnLosses": 38,
+      "temporaryCombatDeaths": 5,
+      "notFebbScore": true
+    },
+    "coastalEbd": "Actual267120 changed-code continuation. Originalfirst15/full267135 exact; native ordinary station complete267299, but native attackMove acquires idle spirit from267315 and has0hit through268800. Not yet root ported, no victory claimed.",
+    "remainingWork": "Three families/all singles and six pairs, official maps and truly unseen seeds full matches still incomplete. Preserve normal economy/population and approved terrain rules. No expensive full-matrix repetition.",
+    "originalContainerUncommittedRecoveryGapRemains": true,
+    "mainOtherRules3PerformanceAndSeparatelyMergedRules4ShipBalanceUntouched": true,
+    "bootstrapComplete": false
   }
 }
