@@ -708,27 +708,42 @@ function drawCommandPortrait(element: HTMLElement, portrait: CommandPortrait) {
   });
 }
 
+// The HUD is refreshed for every snapshot: write a value only when it differs, since every DOM write dirties the page's
+// style and layout, and the frame's drawing then reads layout back (canvas size, hit tests) at the cost of a reflow.
+function setData(element: HTMLElement, key: string, value: string) {
+  if (element.dataset[key] !== value) element.dataset[key] = value;
+}
+function setAttribute(element: Element, name: string, value: string) {
+  if (element.getAttribute(name) !== value) element.setAttribute(name, value);
+}
+function setText(element: Element, value: string) {
+  if (element.textContent !== value) element.textContent = value;
+}
+function setHidden(element: HTMLElement, hidden: boolean) {
+  if (element.hidden !== hidden) element.hidden = hidden;
+}
+
 function applyTooltip(element: HTMLElement, tooltip: GameplayTooltip) {
   const dataset = formatTooltipDataset(tooltip);
-  element.dataset.tooltipTitle = dataset.title;
-  element.dataset.tooltipBody = dataset.body;
-  element.dataset.tooltipStats = dataset.stats;
-  element.dataset.tooltipRequirements = dataset.requirements;
-  element.dataset.tooltipNotes = dataset.notes;
-  element.dataset.tooltipHotkey = dataset.hotkey;
+  setData(element, "tooltipTitle", dataset.title);
+  setData(element, "tooltipBody", dataset.body);
+  setData(element, "tooltipStats", dataset.stats);
+  setData(element, "tooltipRequirements", dataset.requirements);
+  setData(element, "tooltipNotes", dataset.notes);
+  setData(element, "tooltipHotkey", dataset.hotkey);
 }
 
 function renderCommandButtonState(element: HTMLButtonElement, state: CommandButtonState) {
-  if (state.cooldownTicks !== undefined) element.dataset.cooldownTicks = String(state.cooldownTicks);
+  if (state.cooldownTicks !== undefined) setData(element, "cooldownTicks", String(state.cooldownTicks));
   else delete element.dataset.cooldownTicks;
   const label = commandButtonStateLabel(state);
-  if (label) element.dataset.disabledLabel = label;
+  if (label) setData(element, "disabledLabel", label);
   else delete element.dataset.disabledLabel;
-  if (state.reason) element.dataset.disabledReason = state.reason;
+  if (state.reason) setData(element, "disabledReason", state.reason);
   else delete element.dataset.disabledReason;
-  if (state.autocast) element.dataset.autocast = state.autocast;
+  if (state.autocast) setData(element, "autocast", state.autocast);
   else delete element.dataset.autocast;
-  if (state.pressed) element.dataset.pressed = state.pressed;
+  if (state.pressed) setData(element, "pressed", state.pressed);
   else delete element.dataset.pressed;
 }
 
@@ -2937,9 +2952,9 @@ function updateHud() {
     if (!unit || unit.veteranSkill || snapshot.tick < tick || snapshot.tick - tick > 100) pendingVeteranChoices.delete(id);
   }
   const player = currentPlayerState();
-  goldLabel.textContent = goldReadout(player?.gold);
-  supplyLabel.textContent = player ? `${player.supplyUsed}/${player.supplyCap}` : "?";
-  mapReadout.textContent = poolMap(snapshot.map.id) ? mapName(snapshot.map.id) : snapshot.map.name;
+  setText(goldLabel, goldReadout(player?.gold));
+  setText(supplyLabel, player ? `${player.supplyUsed}/${player.supplyCap}` : "?");
+  setText(mapReadout, poolMap(snapshot.map.id) ? mapName(snapshot.map.id) : snapshot.map.name);
   const focusedBuildings = focusedPlayerBuildings();
   const camp = selectedMercenaryCamp();
   const groups = buildSelectionGroups(snapshot, selectedIds, focusedSelectionId, localPlayerId);
@@ -2975,25 +2990,28 @@ function updateHud() {
     if (virtualTooltipTarget === statusTooltip) virtualTooltipTarget = undefined;
   } else if (statusTooltip && !tooltipLayer.classList.contains('hidden') && statusTooltipBefore !== `${statusTooltip.dataset.tooltipTitle}:${statusTooltip.dataset.tooltipBody}:${statusTooltip.dataset.tooltipStats}`) renderTooltip(statusTooltip);
   let visibleCount = 0;
+  // This runs for every snapshot. A hidden button shows nothing and no pointer reaches its tooltip, so it is drawn in
+  // full again the update it shows; a shown one writes only what changed, leaving style and layout clean for the frame.
   for (const button of commandButtons) {
     const state = button.state();
-    if (state.visible) renderVeteranCommand(button);
-    if (state.visible && button.element.dataset.abilityId) renderAbilityArtwork(button.element, button.element.dataset.abilityId as AbilityIconId);
-    if(state.visible && button.portrait)drawCommandPortrait(button.element,button.portrait);
-    if(button.element.dataset.purchaseRecipient){const caption=purchaseRecipientCaption();button.element.querySelector(".command-label")!.textContent=caption;button.element.setAttribute("aria-label",`${i18n.locale==="zh"?"指定接收者":"Choose recipient"} · ${caption} (O)`);}
+    setHidden(button.element, !state.visible);
+    if (!state.visible) continue;
+    renderVeteranCommand(button);
+    if (button.element.dataset.abilityId) renderAbilityArtwork(button.element, button.element.dataset.abilityId as AbilityIconId);
+    if(button.portrait)drawCommandPortrait(button.element,button.portrait);
+    if(button.element.dataset.purchaseRecipient){const caption=purchaseRecipientCaption();setText(button.element.querySelector(".command-label")!,caption);setAttribute(button.element,"aria-label",`${i18n.locale==="zh"?"指定接收者":"Choose recipient"} · ${caption} (O)`);}
     if (button.element.dataset.shipBoarding) {
       const label = shipBoardingLabel();
-      button.element.querySelector('.command-label')!.textContent = label;
-      button.element.dataset.commandLabel = label; button.element.setAttribute('aria-label', label);
+      setText(button.element.querySelector('.command-label')!, label);
+      setData(button.element, "commandLabel", label); setAttribute(button.element, 'aria-label', label);
     }
-    button.element.hidden = !state.visible;
-    button.element.disabled = false;
-    button.element.setAttribute("aria-disabled", String(!state.enabled));
-    button.element.classList.toggle("command-button-disabled", state.visible && !state.enabled);
+    if (button.element.disabled) button.element.disabled = false;
+    setAttribute(button.element, "aria-disabled", String(!state.enabled));
+    button.element.classList.toggle("command-button-disabled", !state.enabled);
     button.element.classList.toggle("command-button-cooldown", state.cooldownTicks !== undefined);
     renderCommandButtonState(button.element, state);
     applyTooltip(button.element, commandButtonTooltip(button.tooltip(), state));
-    if (state.visible) visibleCount += 1;
+    visibleCount += 1;
   }
   commandDock.querySelectorAll("[data-research-progress]").forEach((element) => element.remove());
   const previousTraining = new Map(Array.from(commandDock.querySelectorAll<HTMLButtonElement>("[data-training-progress]"), button => [button.dataset.jobId, button]));
@@ -3009,10 +3027,10 @@ function updateHud() {
     commandDock.append(renderResearchProgressButton(progress));
     visibleCount += 1;
   }
-  commandDock.hidden = visibleCount === 0;
+  setHidden(commandDock, visibleCount === 0);
   renderItemDock();
-  hudActions.hidden = commandDock.hidden && itemDock.hidden;
-  controlDeck.hidden = selectionLabel.hidden && hudActions.hidden;
+  setHidden(hudActions, commandDock.hidden && itemDock.hidden);
+  setHidden(controlDeck, selectionLabel.hidden && hudActions.hidden);
 }
 
 function renderSelectionGroups(groups: SelectionGroup[]) {
