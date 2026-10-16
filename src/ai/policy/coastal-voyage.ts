@@ -129,7 +129,7 @@ export function planCoastalIntermediateLeg(snapshot: GameSnapshot, ship: Unit, g
     if (!coastalFireSegmentClear(previous, point, disks)) { mark = previous; break; }
     previous = point;
   }
-  if (!mark || Math.hypot(mark.x - start.x, mark.y - start.y) < profile.length * .5
+  if (!mark || Math.hypot(mark.x - start.x, mark.y - start.y) <= MOVE_ORDER_ARRIVAL_RANGE
     || !coastalLegArrivalSafe(snapshot, ship, mark, options)) return;
   const waypoint = { x: mark.x, y: mark.y }, hull = ordinaryHull(ship, start, waypoint, ship.sailing!.speed);
   const units = snapshot.units.map(unit => unit.id === ship.id ? hull : unit);

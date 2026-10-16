@@ -106,3 +106,29 @@ it('rejects a newly unsafe installed leg rather than retaining a stale proof', (
   enemy.x = f.leg.waypoint.x; enemy.y = f.leg.waypoint.y;
   expect(continuingCoastalVoyage(f.s, f.ship, f.options)).toBeUndefined();
 });
+
+it('checks the real 106px safe installed vertex with a complete ordinary query instead of requiring half a hull', () => {
+  const f = JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/coastal-short-safe-vertex-1a-226905.json.gz', import.meta.url))).toString()) as {
+    snapshot: GameSnapshot; memories: Record<string, AiPolicyMemory>;
+  };
+  const s = f.snapshot, ship = s.units.find(u => u.id === battery)!, options = { memory: f.memories.p0!, teams: s.teams! }, current = options.memory.naval!.coastalVoyages![battery]!;
+  setBuildingBodies(s.map, [...s.buildings, ...s.obstacles ?? []]);
+  const before = JSON.stringify(f), leg = planCoastalIntermediateLeg(s, ship, current.waypoint, options)!;
+  expect(leg.proof).toBe('leg');
+  const distance = Math.hypot(leg.waypoint.x - ship.x, leg.waypoint.y - ship.y);
+  expect(distance).toBeGreaterThan(5); expect(distance).toBeLessThan(121.44);
+  expect(leg.legs[0]!.points.at(-1)).toMatchObject(leg.waypoint);
+  expect(coastalVoyagePrefixSafe(s, ship, { points: leg.legs[0]!.points, partial: false }, options)).toBe(true);
+  expect(coastalLegArrivalSafe(s, ship, leg.waypoint, options)).toBe(true);
+  expect(JSON.stringify(f)).toBe(before);
+});
+
+it('does not publish an already-arrived tiny vertex as progress or run a native search for it', () => {
+  const { s, ship, options, goal } = actual(), enemy = s.units.find(u => u.id === 'unit-p1-archer-1263')!;
+  // Counterfactual installed route on the actual world: a 0.223px safe point
+  // before an enemy-centred hazardous suffix is not an executable new leg.
+  ship.sailing!.route!.points = [{ x: ship.x + .223, y: ship.y, heading: ship.sailing!.heading }, { x: enemy.x, y: enemy.y, heading: ship.sailing!.heading }];
+  const query = vi.spyOn(navigation, 'planVoyageRoute');
+  expect(planCoastalIntermediateLeg(s, ship, goal, options)).toBeUndefined();
+  expect(query).not.toHaveBeenCalled();
+});
