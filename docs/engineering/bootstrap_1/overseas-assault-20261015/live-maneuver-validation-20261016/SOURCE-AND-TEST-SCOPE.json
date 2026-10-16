@@ -1,0 +1,25 @@
+{
+  "source": "760ef777eeaf0eb13a67bef5b2221fbf777126a9",
+  "byteEquivalentCandidate": "38f5dd79ae588d578dce15b9baa2cd41f20f2a4b",
+  "parentRuntimeSource": "97cecc14cc0e3a1e670f451b574e59057e1c83fa",
+  "sourceFilesExact": 1474,
+  "onlyProductionFile": "src/shared/sailing.ts",
+  "rulesVersion": 2,
+  "frozenManifestSHA256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
+  "candidateRegression": {
+    "passed": 143,
+    "failed": 0,
+    "files": 15,
+    "tsc1024Exit": 0
+  },
+  "rootRegression": {
+    "passed": 11,
+    "failed": 0,
+    "files": 3
+  },
+  "ordinary0": null,
+  "pendingSourceBoundOrdinary0": "Predeclared first-use generatedpineshade v9_archerGrove side0 vs normalfrozenv7Ember+v8Grove, fixed38f entire1474source byteequalroot760, normal500/3/8/nullmem fromfactory. Running not a score.",
+  "historicalScoreAttribution": "All historical ordinary0 records remain exact with their old source.1e82963win/59permanentloss is not a760score. Component2520 not a match.",
+  "reference": "live-maneuver-20261016.zh.md",
+  "originalUncommittedRecoveryGapRetained": true
+}

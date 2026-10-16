@@ -1,0 +1,23 @@
+{
+  "atUTC": "2026-10-16T08:15:19.990989+00:00",
+  "capsules": [
+    {
+      "capsule": "candidate-38f5/source-capsule.tar.gz",
+      "sha256": "0873f3481048ee16d664d0329fbaef633c5999b9a1ff7db20b92ffd94a577352",
+      "liveFiles": 1474,
+      "revision": "38f5dd79ae588d578dce15b9baa2cd41f20f2a4b",
+      "allPayloadGitBlobsHashesBytesCoverageExact": true,
+      "captureScope": "candidate fixed full-source capsule before diagnostic"
+    },
+    {
+      "capsule": "original97-source-capsule.tar.gz",
+      "sha256": "ead420efcf27fa784a4380dcf8d4716e2c7ad88a0b7b4dff1814c775ad416f47",
+      "liveFiles": 1472,
+      "revision": "97cecc14cc0e3a1e670f451b574e59057e1c83fa",
+      "allPayloadGitBlobsHashesBytesCoverageExact": true,
+      "captureScope": "old97 is explicitly posthoc full-capture; its actual fixture runtime direct7-file prepost proof is separate"
+    }
+  ],
+  "all2946SourcePayloadsExactGit": true,
+  "earlierReaderAttempt": "INDEX.json assumption raisedKeyError before source processing; actual SOURCE-CAPSULE-INDEX.json now explicitly selected, no Game/query/source changes."
+}

@@ -1,0 +1,13 @@
+{
+  "classification": "Root independent top archive46 payload SHA/bytes/exactcoverage and1474 entire selected source Git tree+working blobs equal fixed38f; source files are the same, no historical score transfer. Nested full-source Git audits pending below in separate artifact.",
+  "atUTC": "2026-10-16T08:11:58.489801+00:00",
+  "head": "760ef777eeaf0eb13a67bef5b2221fbf777126a9",
+  "candidate": "38f5dd79ae588d578dce15b9baa2cd41f20f2a4b",
+  "entireSourceExact": 1474,
+  "archive": "/tmp/bootstrap-crew-rendezvous-live-maneuver-38f5-20261016-evidence.tar.gz",
+  "archiveBytes": 10269377,
+  "archiveSHA256": "404156c84f4815916322393e24da2b7444e25b351c8a80c96ccb50546c64f078",
+  "payloads": 46,
+  "archiveRegular": 47,
+  "originalUncommittedRecoveryGapRetained": true
+}

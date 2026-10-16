@@ -1,0 +1,31 @@
+{
+  "atUTC": "2026-10-16T08:22:27.526077+00:00",
+  "classification": "Root independently parsed all5329selected per-step native rows, original2rawhits, identical original complete input and saved candidatefinalworld; no extra Game/query. Not an autonomousAI or fullmatch win.",
+  "oldSteps": 2809,
+  "candidateSteps": 2520,
+  "samePrefixSelectedRows": 1876,
+  "firstDifferenceTick": 1877,
+  "oldImpactTick": 1943,
+  "oldRawHits": 2,
+  "newAll3HPNeverDecreasesBeforeFirstRepair": true,
+  "newSource320AllTicks": true,
+  "newFinalWorkerActuallyOnReceiver": true,
+  "newFinalReceiverHP": 138.21428571428572,
+  "newFinalReceiverActualArrivedAt": {
+    "x": 1522.44,
+    "y": 1900.37
+  },
+  "oldSourceFinalHP": 314.97705695148625,
+  "terrainHullFitsAllBoth": true,
+  "oldRecordedCollisionPairTicks": [
+    1943
+  ],
+  "newRecordedCollisionPairTicks": [],
+  "earlierAuditAssertion": "Initial reader wrongly conflated collisionPairCount event records with geometric overlap; raw old1943 has1record, corrected here. No native run/source affected.",
+  "rootThreeFiles": {
+    "passed": 11,
+    "failed": 0,
+    "log": "root-three-related.log"
+  },
+  "noSyntheticBalanceOrDamageChange": true
+}

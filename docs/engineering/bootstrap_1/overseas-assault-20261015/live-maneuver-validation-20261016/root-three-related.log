@@ -1,0 +1,15 @@
+
+ RUN  v2.1.9 /workspace/sketch-rts-bootstrap-resume
+
+ ✓ src/shared/shore-boarding-placement.test.ts (7 tests) 829ms
+   ✓ shore boarding uses actual attachment placement > passes public validation and issues a board order without attaching the distant walker 515ms
+ ✓ src/shared/ship-live-maneuver.test.ts (2 tests) 103ms
+ ✓ src/shared/crew-rendezvous-coast.test.ts (2 tests) 4444ms
+   ✓ meets beside a headland when the midpoint is land, with repeated service planning=false 2561ms
+   ✓ meets beside a headland when the midpoint is land, with repeated service planning=true 1881ms
+
+ Test Files  3 passed (3)
+      Tests  11 passed (11)
+   Start at  08:11:57
+   Duration  12.10s (transform 3.41s, setup 0ms, collect 5.20s, tests 5.38s, environment 1ms, prepare 362ms)
+

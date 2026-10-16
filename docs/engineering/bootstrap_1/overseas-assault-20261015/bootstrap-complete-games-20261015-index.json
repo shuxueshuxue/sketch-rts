@@ -1,5 +1,5 @@
 {
-  "productionHead": "97cecc14cc0e3a1e670f451b574e59057e1c83fa",
+  "productionHead": "760ef777eeaf0eb13a67bef5b2221fbf777126a9",
   "packages": [
     {
       "file": "bootstrap-root-retarget-3bdb-40860-win-evidence.tar.gz",
@@ -782,6 +782,17 @@
       "payloadHashesVerified": true,
       "source": "Rules2; exact native/manual source attribution in boarding-admission-20261016.zh.md",
       "classification": "Original a7 public human-intent clinical, three separate contiguous source-bound segments202801→206401→208201→208741,5940native steps/3443public attempts. Final26 truly attached,10inside16open,0permanent losses; two friendly ship collision hits and transient expiry separately retained. Whole raw and exact recovery of losslessly compressed segment1 included. No autonomousAI, ordinary0 or whole-game win claim."
+    },
+    {
+      "file": "bootstrap-crew-rendezvous-live-maneuver-38f5-20261016-evidence.tar.gz",
+      "bytes": 10269377,
+      "sha256": "404156c84f4815916322393e24da2b7444e25b351c8a80c96ccb50546c64f078",
+      "indexedPayloadFiles": 46,
+      "archiveRegularFiles": 47,
+      "payloadManifest": "crew-rendezvous-live-maneuver-20261016/INDEX.json",
+      "payloadHashesVerified": true,
+      "source": "Native38f source1474 exactly matches root760 entire selected Git tree+working bytes; normal fixture component only, no frozen opponent gameplay.",
+      "classification": "Exact originalfixture native2809steps/2friendlycollisionhits vs fixed2520steps/0impacts, actualworker transfer2472 and firstrepair2520 with oldsourcewarship320HP preserved. Candidate143/15+tsc0; root11/3green. Full2946payload candidate1474/old1472 capsules independently Git-blob verified; old97 fullcapsule explicitly posthoc, runtime7directfiles prepost separate. Earlier mixed published-route proof replaced by actualtick2 entire41point query; original1942 collision-step proof valid. All raw/early setup failures/512tscOOM preserved. Not AI loading/wholematch/win/general liveness or speedup claim."
     }
   ],
   "strategyBaseline": "3bdb3749bea4d3c415a8709d7a7f86b0ed1dcb71",
@@ -1372,7 +1383,7 @@
     "notGeneratedSeedGeneralization": true,
     "threeFamilyAcceptance": false
   },
-  "activeRuntime": {
+  "previousRuntimeBeforeLiveManeuver": {
     "source": "97cecc14cc0e3a1e670f451b574e59057e1c83fa",
     "parentRuntimeSource": "1e955c0c5f1114812f873f9c3ba06fe7cb19cb1e",
     "nativeCandidate": "e7cdb8d67f8070a6548b527a25a38f62e18f0a0a",
@@ -1402,6 +1413,31 @@
     "historicalAttribution": "All earlier productionValidation/currentRuntimeOrdinary0 and other ordinary0 records remain exact, historical and source-bound. In particular1e82963win59permanentloss is not assigned to97. No bootstrap_1 final acceptance.",
     "reference": "boarding-admission-20261016.zh.md",
     "validationDirectory": "boarding-admission-validation-20261016/",
+    "originalUncommittedRecoveryGapRetained": true
+  },
+  "activeRuntime": {
+    "source": "760ef777eeaf0eb13a67bef5b2221fbf777126a9",
+    "byteEquivalentCandidate": "38f5dd79ae588d578dce15b9baa2cd41f20f2a4b",
+    "parentRuntimeSource": "97cecc14cc0e3a1e670f451b574e59057e1c83fa",
+    "sourceFilesExact": 1474,
+    "onlyProductionFile": "src/shared/sailing.ts",
+    "rulesVersion": 2,
+    "frozenManifestSHA256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
+    "candidateRegression": {
+      "passed": 143,
+      "failed": 0,
+      "files": 15,
+      "tsc1024Exit": 0
+    },
+    "rootRegression": {
+      "passed": 11,
+      "failed": 0,
+      "files": 3
+    },
+    "ordinary0": null,
+    "pendingSourceBoundOrdinary0": "Predeclared first-use generatedpineshade v9_archerGrove side0 vs normalfrozenv7Ember+v8Grove, fixed38f entire1474source byteequalroot760, normal500/3/8/nullmem fromfactory. Running not a score.",
+    "historicalScoreAttribution": "All historical ordinary0 records remain exact with their old source.1e82963win/59permanentloss is not a760score. Component2520 not a match.",
+    "reference": "live-maneuver-20261016.zh.md",
     "originalUncommittedRecoveryGapRetained": true
   }
 }

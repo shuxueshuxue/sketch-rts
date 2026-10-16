@@ -1,0 +1,69 @@
+{
+  "classification": "Independent narrow static review and existing-artifact byte audit only. No Game, native query, P0/planner, test, renderer or production edit by this reviewer.",
+  "head": "38f5dd79ae588d578dce15b9baa2cd41f20f2a4b",
+  "base": "97cecc14cc0e3a1e670f451b574e59057e1c83fa",
+  "control": "/tmp/sketch-rts-crew-rendezvous-live-maneuver-control",
+  "verdict": "No concrete blocking defect found in the8-line exact-executor live-traffic guard. Does not establish general deadlock freedom, all collisions prevented, full-match benefit or bootstrap completion.",
+  "contracts": [
+    {
+      "source": "src/shared/sailing.ts:492-499; src/shared/ship-avoidance.ts:281-287,368-395",
+      "finding": "Fresh per-call shipRouteTraffic uses current units and current live hull poses plus solid footprints. No reciprocal future-position reservation is used by this guard; reservationTraffic planning bytes unchanged. Bounded local ship range remains600, shared shape caches key local geometry while body centers/headings are freshly captured."
+    },
+    {
+      "source": "src/shared/sailing.ts:496-507; src/shared/ship-navigation.ts:35-40,521-530; src/shared/ship-motion.ts:43-69",
+      "finding": "Valid native pivot keeps its original pivot metadata and signed lever. Guard samples the original shipPoseAt pivot arc, not a chord. Native bow/stern lever is within half hull length; actual executor applies rate/budget-limited prefix of that same arc and retains native collision sweep. Invalid external pivot metadata is outside newly established guarantees."
+    },
+    {
+      "source": "src/shared/sailing.ts:496-499,512-552; src/shared/ship-avoidance.ts:335-363",
+      "finding": "Nonpivot guard checks full in-place shortest turn at current center followed by straight translation at next.heading, matching exact executor turn then keel surge. Rejected maneuver returns before adding headway/yaw. The later collinear waypoint skipping still has physical per-step collision checks; this guard is not certification of the whole skipped suffix."
+    },
+    {
+      "source": "src/shared/sailing.ts:272-278,364-378,499-510",
+      "finding": "Failure reuses existing waitForTraffic: speed0, blockedTicks increments, replan(false) only after>=10 blocked and age>=20. Successful physical advance resets blocked count; arrived exact points are removed by unchanged tolerances. No new per-frame replan/TTL/backoff layer or executor alternation added."
+    },
+    {
+      "source": "src/shared/ship-motion.ts:63-86; src/shared/ship-collisions.ts:259-296",
+      "finding": "Collision sweep/energy/damage and native motion bytes identical to parent97cecc14. Change avoids an unsafe helm command rather than reducing/suppressing collision damage or replacing physical movement."
+    }
+  ],
+  "evidenceReviewed": {
+    "component": "/tmp/bootstrap-crew-rendezvous-coast-baseline-20261016/COMPONENT-COMPARISON.json",
+    "old97": "Unique originalfixture native component: impact1943, receiver-8.288636500181452/source-5.02294304851368, source314.97705695148625; first true repair2809.",
+    "candidate38f5": "Same initialcomponent: first difference1877 rejects old turn before impact, zero hits; first transfer2472, first idleworker2519, first true repair2520; source320. No full AI match.",
+    "pureCause": "/tmp/bootstrap-crew-rendezvous-coast-baseline-20261016/PURE-CAUSE.json",
+    "publishedRouteClarification": "/tmp/bootstrap-crew-rendezvous-coast-baseline-20261016/PURE-PUBLISHED-ROUTE.json",
+    "importantCorrection": "Earlier PURE-CAUSE publishedRemainingSegmentsAtLiveWorld first row joins original route.start to a current remaining point and is not an actual published segment. Correct full actual tick2 route has41 points, local hull view empty at1081.665px distance; all-ships query rejects only last3 actual segments38,39,40. Use corrected full-route artifact and exact1942 nativeStep as cause evidence.",
+    "authorValidation": "Existing15files143passed log and empty tsc log with postflight record reviewed; not rerun. Existing newcontracts old1red1green→candidate2green plus original coast2green are component contracts, not bootstrap acceptance."
+  },
+  "boundaries": [
+    "Guard freezes nearby live hulls for the entire next maneuver, so it can conservatively wait for a moving partner to clear a later portion even when the immediate rate-limited step would be safe. Existing wait/replan can seek another route; no general bilateral rendezvous liveness proof or new actual deadlock counterexample established here.",
+    "600px local ship view excludes farther hulls and skips hp<=0 ships; solid traffic and native physical sweep remain responsible for their original scopes. Fresh guard is not a global future collision forecast.",
+    "Additional per-step full maneuver hull/solid geometry cost is bounded by existing local query/sample semantics but not profiled here.143 scoped contracts confirm exercised correctness, not fleet-scale CPU bound.",
+    "One repaired headland component with zero hits does not establish three-route AI match benefit or final bootstrap milestones."
+  ],
+  "identityAudit": {
+    "liveGitAndCapsuleExact": 1474,
+    "capsuleRegularMembers": 1475,
+    "capsuleSHA256": "0873f3481048ee16d664d0329fbaef633c5999b9a1ff7db20b92ffd94a577352",
+    "rulesVersion": 2,
+    "frozenManifestSHA256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
+    "scope": "No independent497-file frozen bundle audit repeated in this crew-only task; manifest/rules unchanged from parent and live bytes fixed.",
+    "unchangedNativeRulesAndMotion": [
+      "src/shared/ship-avoidance.ts",
+      "src/shared/ship-motion.ts",
+      "src/shared/ship-collisions.ts",
+      "src/shared/ship-navigation.ts",
+      "src/shared/crew-rendezvous.ts",
+      "src/shared/sim.ts",
+      "src/shared/rules-version.ts",
+      "docs/engineering/bootstrap_1/frozen-policy.json"
+    ],
+    "onlyChangedFiles": [
+      "src/shared/fixtures/crew-rendezvous-headland-first-impact-1942.json.gz",
+      "src/shared/sailing.ts",
+      "src/shared/ship-live-maneuver.test.ts"
+    ]
+  },
+  "readsetSHA256": "e47ca6672466fcabc55eb0e70b036b2774c65d316d3336fecc8a761b32958803",
+  "productionStatusAtReview": "clean"
+}
