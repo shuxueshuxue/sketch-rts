@@ -1016,7 +1016,7 @@ export function cancelFerry(snapshot: GameSnapshot, boat: Unit, mission: NonNull
 
 function evacuationRoute(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, boat: Unit, halls: Building[]) {
     if (shipPassengers(snapshot.units,boat).length) return undefined;
-    const own = units(snapshot, owner).filter(unit => unitMover(unit.kind) === "land" && !unit.expiresTick && unit.order.type !== "board");
+    const own = units(snapshot, owner).filter(unit => !unit.deck && unitMover(unit.kind) === "land" && !unit.expiresTick && unit.order.type !== "board");
     const enemies = snapshot.units.filter(unit => isOpponentOwner(snapshot, owner, unit.owner, options) && combatCapability(snapshot,unit).armed && unitMover(unit.kind) === "land");
     const home = halls[0]!;
     for (const source of own.filter(unit => !sameGround(snapshot.map, unit, home))) {
