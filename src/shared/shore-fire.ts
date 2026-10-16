@@ -15,9 +15,11 @@ const cache = new WeakMap<Unit, Map<string, CachedStation>>();
 
 /** A bounded tactical search, not a proof of physical impossibility. Explicit
  * attacks remain available; automatic engagements need an actual firing pose.
- * Only terrain is considered here: passing traffic must not blacklist a coast.
+ * The optional admission query can reject a pose and continue the same search.
+ * Its dynamic result is never retained in the terrain-only geometric cache.
+ * Passing traffic must not blacklist a coast.
  */
-export function shoreFiringStation(world: World, ship: Unit, target: Target): ShipPose | undefined {
+export function shoreFiringStation(world: World, ship: Unit, target: Target, admit?: (pose: ShipPose) => boolean): ShipPose | undefined {
   const profile = shipProfile(ship);
   if (!profile) return undefined;
   const weapons = installedWeapons(world, ship).filter(item => (item.durability ?? 1) > 0);
@@ -36,11 +38,17 @@ export function shoreFiringStation(world: World, ship: Unit, target: Target): Sh
         const gap=strikeGap(pose.pivot,target);
         return gap<=veteranWeaponRange(ship,def.range) && gap>=(def.weapon.minRange ?? 0) && shipGunCanAim(posed,item,target);
       });
-      if (fires && hullFits(world.map,ship,{x,y,heading})) return {x,y,heading};
+      if (fires && hullFits(world.map,ship,{x,y,heading})) {
+        const pose={x,y,heading};
+        if (!admit || admit(pose)) return pose;
+      }
     }
     if (intrinsic && strikeGap(station, target) <= ship.attackRange) {
       const heading = Math.atan2(target.y-y, target.x-x);
-      if (hullFits(world.map, ship, { x, y, heading })) return { x, y, heading };
+      if (hullFits(world.map, ship, { x, y, heading })) {
+        const pose={x,y,heading};
+        if (!admit || admit(pose)) return pose;
+      }
     }
     return undefined;
   };
@@ -52,7 +60,7 @@ export function shoreFiringStation(world: World, ship: Unit, target: Target): Sh
     profile.length, profile.beam, ship.attackRange, ship.veteranSkill,
     ...weapons.map(item => `${item.kind}:${item.mountId}`)].join(':');
   const previous = cache.get(ship)?.get(target.id);
-  if (terrain && previous?.terrain === terrain && previous.cells === terrain.cells && previous.key === key
+  if (!admit && terrain && previous?.terrain === terrain && previous.cells === terrain.cells && previous.key === key
     && (!previous.station || sameGround(world.map,ship,previous.station,'sea'))) return previous.station;
   const reach = Math.max(intrinsic ? ship.attackRange : 0,
     ...weapons.map(item => veteranWeaponRange(ship, SHIP_WEAPONS[item.kind as ShipEquipmentKind].range)));
@@ -73,7 +81,7 @@ export function shoreFiringStation(world: World, ship: Unit, target: Target): Sh
     }
     if (station) break;
   }
-  if (terrain) {
+  if (!admit && terrain) {
     let entries=cache.get(ship);
     if (!entries) { entries=new Map();cache.set(ship,entries); }
     if (!entries.has(target.id) && entries.size>=16) entries.delete(entries.keys().next().value!);

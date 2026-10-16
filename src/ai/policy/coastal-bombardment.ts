@@ -45,8 +45,9 @@ function continuingWaypoint(snapshot:GameSnapshot,ship:Unit,plan:CoastalPlan,opt
 export function coastalBombardment(snapshot:GameSnapshot,ship:Unit,targets:readonly (Building|Unit)[],options:AiPolicyContext):CoastalPlan|undefined {
  const disks=coastalFireDisks(snapshot,ship,options);
  const firingPlan=(target:Building|Unit):CoastalPlan|undefined=>{
-  const station=shoreFiringStation(snapshot,ship,target);
-  return station && coastalFireSegmentClear(station,station,disks) && !outmatchingCoast(snapshot,ship.owner,ship,station,options).length ? {...station,target} : undefined;
+  const station=shoreFiringStation(snapshot,ship,target,pose=>coastalFireSegmentClear(pose,pose,disks)
+   && !outmatchingCoast(snapshot,ship.owner,ship,pose,options).length);
+  return station ? {...station,target} : undefined;
  };
  const reachable=(plan:CoastalPlan):CoastalPlan|undefined=>{
   if(distance(ship,plan)<1e-5 || continuingWaypoint(snapshot,ship,plan,options))return plan;
