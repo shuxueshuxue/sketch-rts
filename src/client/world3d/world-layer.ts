@@ -74,6 +74,12 @@ export class World3DLayer {
   private bounds=new Map<string,THREE.Box3>();
   private cards:PaintedCardBatches;
   private remainsCards:PaintedCardBatches;
+  // @@@program-keepers - A shader program is compiled the first time a material variant is drawn, and freed when the last
+  // material using it is disposed: a reset (every match start) disposes the drawn batches' materials, and a building
+  // under construction, a ship's revealed deck or a first arrow is first drawn minutes into a match. Either way a frame
+  // waits for the link (150 ms on an M2). While a match loads, warmPrograms draws one of every variant once; these
+  // never-drawn copies then hold every program for the renderer's life.
+  private keepers:{batches:ActorBatches;cards:readonly PaintedCardBatches[]}|undefined;
   remainsStats(){return this.remainsCards.stats();}
   cardStats(){return this.cards.stats();}
   private transforms:THREE.Matrix4[]=[];
@@ -109,7 +115,7 @@ export class World3DLayer {
   private disposed=false;
   private contextLost=false;
   private eventCanvas:HTMLCanvasElement|undefined;
-  private onContextLost=(event:Event)=>{event.preventDefault();this.contextLost=true;this.releaseContextResources();this.cards.invalidateGPU();this.remainsCards.invalidateGPU();};
+  private onContextLost=(event:Event)=>{event.preventDefault();this.contextLost=true;this.releaseContextResources();this.cards.invalidateGPU();this.remainsCards.invalidateGPU();this.releaseKeepers();};
   private onContextRestored=()=>{this.contextLost=false;};
   private sun=new THREE.DirectionalLight('#f1dcc0',2.5);
   private colorMipPass:CardMipPass={camera:this.camera,physicalWidth:0,physicalHeight:0};
@@ -129,15 +135,20 @@ export class World3DLayer {
   private bridgeAcross=new THREE.Vector3();
   private bridgeUp=new THREE.Vector3();
   private constructor(private renderer:THREE.WebGLRenderer|undefined,rasterBudgetMs:number){
-    const maxTextureBanks=Math.min(DEFAULT_CARD_BANKS,Math.max(1,(renderer?.capabilities.maxTextures??16)-4));
-    this.cards=new PaintedCardBatches(this.scene,Math.min(8,renderer?.capabilities.getMaxAnisotropy()??1),{maxTextureBanks,rasterBudgetMs});
-    this.remainsCards=new PaintedCardBatches(this.scene,Math.min(8,renderer?.capabilities.getMaxAnisotropy()??1),{transparent:true,depthWrite:false,alphaTest:.01,castShadow:false,pickable:false,renderOrder:-1,maxTextureBanks,rasterBudgetMs});
+    [this.cards,this.remainsCards]=this.cardBatches(this.scene,rasterBudgetMs);
     this.flag.material.name='TeamColor';
     this.magic.name='SpellOrb';this.magic.material.name='TeamColor';
     this.gangway.name='ShipGangway';
     this.scene.add(new THREE.HemisphereLight('#ddd7c5','#263c3a',1.25));
     this.sun.castShadow=true;this.sun.shadow.mapSize.set(2048,2048);this.sun.shadow.bias=-.0004;this.sun.shadow.normalBias=.35;
     this.scene.add(this.sun,this.sun.target);this.shadow.rotation.x=-Math.PI/2;this.shadow.receiveShadow=true;this.scene.add(this.shadow);
+  }
+  /** Troop cards and deck remains cards: the same policies for the drawn world and for the program keepers. */
+  private cardBatches(scene:THREE.Scene,rasterBudgetMs:number){
+    const renderer=this.renderer,maxTextureBanks=Math.min(DEFAULT_CARD_BANKS,Math.max(1,(renderer?.capabilities.maxTextures??16)-4));
+    const anisotropy=Math.min(8,renderer?.capabilities.getMaxAnisotropy()??1);
+    return [new PaintedCardBatches(scene,anisotropy,{maxTextureBanks,rasterBudgetMs}),
+      new PaintedCardBatches(scene,anisotropy,{transparent:true,depthWrite:false,alphaTest:.01,castShadow:false,pickable:false,renderOrder:-1,maxTextureBanks,rasterBudgetMs})] as const;
   }
   /** Detach the old renderer's public dispose listeners while its context is
    * lost. Otherwise later reset/dispose attempts to delete pre-loss VAOs and
@@ -174,7 +185,57 @@ export class World3DLayer {
     canvas.addEventListener('webglcontextlost',layer.onContextLost);canvas.addEventListener('webglcontextrestored',layer.onContextRestored);
     return layer;
   }
-  async prepare(snapshot:GameSnapshot,phase:ResourcePhase,sites:readonly string[]=[]){if(this.disposed)return;await this.library.prepare(phase==='match'?matchModelKeys:[...snapshotModelKeys(snapshot),...sites.map(kind=>`buildings/${kind}`)],phase);if(!this.disposed)activateModelPortraits();}
+  async prepare(snapshot:GameSnapshot,phase:ResourcePhase,sites:readonly string[]=[]){
+    if(this.disposed)return;await this.library.prepare(phase==='match'?matchModelKeys:[...snapshotModelKeys(snapshot),...sites.map(kind=>`buildings/${kind}`)],phase);
+    if(this.disposed)return;activateModelPortraits();
+    if(phase==='match')await this.warmPrograms();
+  }
+  /** See @@@program-keepers. Colour programs compile in parallel where KHR_parallel_shader_compile allows; shadow
+   * programs compile only in a shadow pass, so the variants are then drawn once, through the same canvas and passes as a
+   * match frame (unseen: the presentation is hidden while it prepares, and the canvas is cleared after). */
+  private async warmPrograms(){
+    const renderer=this.renderer;if(!renderer||this.keepers||this.contextLost)return;
+    const root=new THREE.Scene(),batches=new ActorBatches(root),cards=this.cardBatches(root,Infinity),at=new THREE.Matrix4();
+    const add=(key:string,template:THREE.Object3D,constructing=false,reveal=false)=>batches.add(`${key}:${constructing}:${reveal}`,template,at,key,undefined,constructing,reveal);
+    batches.begin();
+    for(const key of matchModelKeys){
+      const building=this.template(key,'Building'),hull=this.template(key,'Hull'),ensign=this.template(key,'OwnerFlag'),gun=this.template(key,'Gun');
+      if(building)for(const constructing of [false,true])add(key,building,constructing);
+      if(hull){
+        if(!this.rigModels.has(key))this.rigModels.set(key,shipRigModel(hull));
+        for(const reveal of [false,true]){add(`${key}:hull`,hull,false,reveal);for(const rope of this.rigModels.get(key)?.ropes??[])add(`${key}:rope:${rope.id}`,rope.template,false,reveal);}
+      }
+      if(ensign)add(`${key}:ensign`,ensign);
+      if(gun)for(const broken of [false,true])add(`${key}:gun`,gun,broken);
+    }
+    for(const [key,model] of Object.entries({ball:this.ball,bolt:this.bolt,magic:this.magic,fire:this.fire,flag:this.flag,flash:this.flash}))add(key,model);
+    for(const deploying of [false,true])add('gangway',this.gangway,deploying);
+    batches.finish();
+    for(const set of cards){set.begin();set.add('warm',2,ctx=>ctx.fillRect(0,0,1,1),at,'warm',0,16,.5);set.finish(renderer);}
+    // Selection marks and combat ink keep their one material for the layer's life; drawing them once is enough.
+    this.selection.begin();this.selection.ellipse(at,8,4,'#ffffff',true);this.selection.finish();
+    this.combatInk.update({droplets:[{x:0,y:0,height:1,vx:0,vy:0,vz:0,radius:2,alpha:1}],ground:[],body:[],speedLines:[]},new Map());
+    this.scene.add(root);
+    const culled:THREE.Object3D[]=[];
+    this.scene.traverse(object=>{if(object.frustumCulled){object.frustumCulled=false;culled.push(object);}});
+    try{
+      // Without the extension three warns and compiles in place; the draw below compiles everything then.
+      if(renderer.extensions.has('KHR_parallel_shader_compile'))await renderer.compileAsync(this.scene,this.camera);
+      if(!this.disposed&&!this.contextLost){
+        renderer.render(this.scene,this.camera);
+        // The GPU process links a program and builds its pipeline state only when its first draw runs there; reading a
+        // pixel back waits for these draws, so that work also lands in the loading screen and not in a match frame.
+        const gl=renderer.getContext();gl.readPixels(0,0,1,1,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array(4));
+      }
+    }finally{
+      this.scene.remove(root);for(const object of culled)object.frustumCulled=true;
+      this.selection.begin();this.selection.finish();this.combatInk.clear();
+      if(!this.contextLost)renderer.clear();
+    }
+    if(this.disposed||this.contextLost){batches.dispose();for(const set of cards)set.dispose();return;}
+    this.keepers={batches,cards};
+  }
+  private releaseKeepers(){if(!this.keepers)return;this.keepers.batches.dispose();for(const set of this.keepers.cards)set.dispose();this.keepers=undefined;}
   prepareRemains(snapshot:GameSnapshot,preparation:PaintedRemainsPreparation){
     if(this.disposed||this.contextLost)return;
     const prepared=new Set<string>();
@@ -463,7 +524,7 @@ export class World3DLayer {
   dispose(){
     if(this.disposed)return;this.disposed=true;
     this.eventCanvas?.removeEventListener('webglcontextlost',this.onContextLost);this.eventCanvas?.removeEventListener('webglcontextrestored',this.onContextRestored);this.eventCanvas=undefined;this.reset();
-    this.selection.dispose();this.combatInk.dispose();
+    this.selection.dispose();this.combatInk.dispose();this.releaseKeepers();
     this.water.dispose();for(const rig of this.rigModels.values())rig?.dispose();this.rigModels.clear();
     // Decoded models are the application cache shared by other layers and UI
     // portraits. This layer owns only instances, rigs, cards and render targets.
