@@ -1605,11 +1605,27 @@ function releasePointerLockForMenu() {
 function frame() {
   if(applicationClosed)return;
   animationFrame=requestAnimationFrame(frame);
-  syncActiveGameAdapterSnapshot();
-  updateCamera();
-  draw();
-  syncVirtualPointerOverlay();
-  syncPointerLockGate();
+  framePointerHit = null;
+  try {
+    syncActiveGameAdapterSnapshot();
+    updateCamera();
+    draw();
+    syncVirtualPointerOverlay();
+    syncPointerLockGate();
+  } finally {
+    framePointerHit = undefined;
+  }
+}
+
+// Edge scrolling, the hover target and the wind probe each ask a frame whether the battlefield is under the pointer.
+// Within a frame they share one hit test per pointer position (a hit test lays out the page first); input handlers,
+// outside a frame, always test afresh.
+let framePointerHit: { x: number; y: number; onCanvas: boolean } | null | undefined;
+function pointerOnCanvas(point: Point) {
+  if (framePointerHit && framePointerHit.x === point.x && framePointerHit.y === point.y) return framePointerHit.onCanvas;
+  const onCanvas = document.elementFromPoint(point.x, point.y) === canvas;
+  if (framePointerHit !== undefined) framePointerHit = { x: point.x, y: point.y, onCanvas };
+  return onCanvas;
 }
 
 function openSelectedEquipment() {
@@ -1621,7 +1637,10 @@ function openSelectedEquipment() {
 }
 
 function syncDebugView() {
-  window.__sketchRtsView = createSketchRtsDebugView({ roomId: currentRoomId, localPlayerId, snapshot, selectedIds, focusedSelectionId });
+  // Built when read (tests, the SDK's browser driver), from the state as it is now: a frame never pays for it.
+  const input = { roomId: currentRoomId, localPlayerId, snapshot, selectedIds: new Set(selectedIds), focusedSelectionId };
+  let view: SketchRtsDebugView | undefined;
+  Object.defineProperty(window, "__sketchRtsView", { configurable: true, enumerable: true, get: () => (view ??= createSketchRtsDebugView(input)) });
 }
 
 function isEdgeBrowser() {
@@ -1656,12 +1675,14 @@ function syncPointerLockGate() {
   showPointerLockGate(shouldShowPointerLockGuide() ? "guide" : "required");
 }
 
+// The gate's wording as last written: syncPointerLockGate asks every frame, and rewriting unchanged text dirties layout.
+let pointerLockGateWording: string | undefined;
 function showPointerLockGate(kind: "guide" | "required") {
   pointerLockGateKind = kind;
   const edge = isEdgeBrowser();
   pointerLockGate.classList.remove("hidden");
-  pointerLockGateTitle.textContent = kind === "guide" ? t("pointerLock.title.guide") : t("pointerLock.title.required");
-  pointerLockGateBody.innerHTML =
+  const title = kind === "guide" ? t("pointerLock.title.guide") : t("pointerLock.title.required");
+  const body =
     kind === "guide"
       ? [
           t("pointerLock.body.credit"),
@@ -1671,7 +1692,13 @@ function showPointerLockGate(kind: "guide" | "required") {
           .filter(Boolean)
           .join("<br>")
       : t("pointerLock.body.required");
-  pointerLockGateAction.textContent = kind === "guide" ? (edge ? t("pointerLock.action.edge") : t("pointerLock.action.guide")) : t("common.continue");
+  const action = kind === "guide" ? (edge ? t("pointerLock.action.edge") : t("pointerLock.action.guide")) : t("common.continue");
+  const wording = `${title}\n${body}\n${action}`;
+  if (wording === pointerLockGateWording) return;
+  pointerLockGateWording = wording;
+  pointerLockGateTitle.textContent = title;
+  pointerLockGateBody.innerHTML = body;
+  pointerLockGateAction.textContent = action;
 }
 
 function hidePointerLockGate() {
@@ -3580,7 +3607,7 @@ function drawMinimap(marks: MapPresentationMark[]) {
   const now = performance.now();
   windMapDisplay.setReducedMotion(reducedUnitMotion.matches);
   windMapDisplay.update(snapshot, now);
-  const pointer = lastMouse && document.elementFromPoint(lastMouse.x, lastMouse.y) === canvas ? lastMouse : undefined;
+  const pointer = lastMouse && pointerOnCanvas(lastMouse) ? lastMouse : undefined;
   windProbe = windProbePoint(pointer, { minimap: rect, world: snapshot.map, camera,
     viewport: { width: canvas.clientWidth, height: canvas.clientHeight }, zoom: worldZoom }, windProbe);
   updateWindIndicator(rect, now);
@@ -3602,7 +3629,7 @@ function matchViewer() {
 
 // The unit or building under the pointer on the battlefield, not over the interface or the minimap.
 function hoveredTarget() {
-  if (!snapshot || !lastMouse || isInsideRect(lastMouse, minimapRect()) || document.elementFromPoint(lastMouse.x, lastMouse.y) !== canvas) return undefined;
+  if (!snapshot || !lastMouse || isInsideRect(lastMouse, minimapRect()) || !pointerOnCanvas(lastMouse)) return undefined;
   const world = screenToWorld(lastMouse);
   return unitHoverTarget(snapshot, world, () => visualHit(world));
 }
@@ -3644,7 +3671,7 @@ function updateCamera() {
 // without the camera drifting.
 function edgeScrollAim() {
   if (!lastMouse || draggingMinimapViewport || isInsideRect(lastMouse, minimapRect())) return undefined;
-  return { point: lastMouse, overInterface: document.elementFromPoint(lastMouse.x, lastMouse.y) !== canvas };
+  return { point: lastMouse, overInterface: !pointerOnCanvas(lastMouse) };
 }
 
 function clampCamera() {
