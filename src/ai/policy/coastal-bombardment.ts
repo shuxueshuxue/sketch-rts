@@ -15,6 +15,8 @@ type CoastalPlan=ShipPose & {target:Building|Unit;voyage?:CoastalVoyage};
 export function continuingCoastalVoyage(snapshot:GameSnapshot,ship:Unit,options:AiPolicyContext) {
  const current=options.memory.naval?.coastalVoyages?.[ship.id];
  if(!current || ship.order.type!=='move' || distance(ship.order,current.waypoint)>=1)return;
+ if(!snapshot.units.some(target=>target.id===current.targetId && target.hp>0)
+  && !snapshot.buildings.some(target=>target.id===current.targetId && target.hp>0))return;
  const motion=ship.sailing;
  if(motion?.route?.points.length)return coastalVoyagePrefixSafe(snapshot,ship,motion.route,options) ? current : undefined;
  const validTick=(tick:number|undefined):tick is number=>tick!==undefined && Number.isSafeInteger(tick) && tick>=0 && tick<=snapshot.tick;
