@@ -154,9 +154,9 @@ describe('deterministic blood physics',()=>{
     expect(landed.length).toBeGreaterThan(0);expect(tracker.frame(2000).droplets).toHaveLength(0);
     tracker.update(snapshot(80,[]),4000);
     expect(copy(tracker.frame(4000).ground)).toEqual(landed);
-    tracker.update(snapshot(160,[]),8000);
-    expect(tracker.frame(8000).ground[0]!.alpha).toBeLessThan(landed[0]!.alpha);
-    tracker.update(snapshot(181,[]),9050);expect(tracker.frame(9050).ground).toHaveLength(0);
+    tracker.update(snapshot(560,[]),28000);
+    expect(tracker.frame(28000).ground[0]!.alpha).toBeLessThan(landed[0]!.alpha);
+    tracker.update(snapshot(601,[]),30050);expect(tracker.frame(30050).ground).toHaveLength(0);
   });
 
   it('keeps marks in body-local coordinates while a living unit moves, removing them on death',()=>{
@@ -249,10 +249,10 @@ describe('deck blood surface and crowded persistence',()=>{
     expect(after.ground).toHaveLength(0);expect(after.droplets).toHaveLength(0);
     expect(after.body).toHaveLength(1);expect(after.body[0]).toMatchObject({unitId:target.id,x:1200,y:1100});
     const alpha=after.body[0]!.alpha;
-    game.tick=80;target.x+=25;tracker.update(game,4000);
-    expect(tracker.frame(4000).body[0]!.x).toBe(target.x);
-    expect(tracker.frame(4000).body[0]!.alpha).toBeLessThan(alpha);
-    game.tick=120;tracker.update(game,6000);expect(tracker.frame(6000).body).toHaveLength(0);
+    game.tick=360;target.x+=25;tracker.update(game,18000);
+    expect(tracker.frame(18000).body[0]!.x).toBe(target.x);
+    expect(tracker.frame(18000).body[0]!.alpha).toBeLessThan(alpha);
+    game.tick=400;tracker.update(game,20000);expect(tracker.frame(20000).body).toHaveLength(0);
   });
 
   it('retains landed stains when a new burst exceeds the active particle budget',()=>{
