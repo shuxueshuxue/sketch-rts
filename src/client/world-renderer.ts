@@ -23,7 +23,7 @@ import { drawAtlasCorpse, drawAtlasBuilding, drawAtlasCamp, drawAtlasGround, dra
 import { renderWorldEffects } from "./effect-renderer";
 import { drawScorchedUnitFlames } from "./art/canvas-effects";
 import { battlefieldEffectFrame, drawUnitStatusEffects } from './ability-effects';
-import { footprintSquare } from "./footprint-view";
+import { footprintCentre, footprintSquare } from "./footprint-view";
 import { creatureShadow } from "./art/painted-creatures";
 import { unitGlyphScale } from "./glyphs";
 import type { createI18n } from "./i18n";
@@ -31,7 +31,8 @@ import { drawLevelStar } from "./level-star";
 import { shouldRenderBuildingRally } from "./rally-visual";
 import { RELATION_INK, relationTo } from "./relations";
 import { drawTerrain } from "./terrain-art";
-import { paintRoads } from "./art/environment";
+import { mineStage, paintRoads } from "./art/environment";
+import { GOLD_MINE_RULES } from "../shared/mining";
 import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
 import { isAwaitingShipLaunch, trainingQueueCountText } from "./training-queue";
 import type { UnitFacingTracker } from "./unit-facing";
@@ -374,14 +375,18 @@ function drawLandmarks(painter: Painter, landmarks: TerrainLandmark[]) {
 function drawResources(painter: Painter, resources: ResourceNode[]) {
   const { ctx } = painter;
   for (const resource of resources) {
-    const point = worldToScreen(painter, resource);
+    const square = footprintSquare(painter.snapshot, resource, GOLD_MINE_RULES.radius);
+    const point = worldToScreen(painter, square ? footprintCentre(square) : resource);
     if (!nearScreen(painter, point, 80)) continue;
-    drawAtlasMine(ctx, point);
-    if (painter.still) continue;
+    // The hill stands on its two-cell body (see @@@structure-body), its rocks a little past the edge; what is left in it
+    // shows in the art (see @@@mine-stages).
+    const size = square ? (square.right - square.left + 1) * square.cell * 1.1 / 84 : 1, stage = mineStage(resource);
+    drawAtlasMine(ctx, point, stage, size);
+    if (painter.still || stage === "collapsed") continue;
     ctx.font = "600 11px ui-monospace, monospace";
     ctx.textAlign = "center";
     ctx.fillStyle = "#776443";
-    ctx.fillText(Math.ceil(resource.amount).toLocaleString(), point.x, point.y + 45);
+    ctx.fillText(Math.ceil(resource.amount).toLocaleString(), point.x, point.y + 45 * size);
     ctx.textAlign = "start";
   }
 }
@@ -396,10 +401,12 @@ function drawMercenaryCamps(painter: Painter, camps: MercenaryCamp[],overlayOnly
     ctx.font = "11px ui-monospace, monospace";
     ctx.fillStyle = "#796644";
     ctx.textAlign = "center";
-    // What the camp sells and how many are left (see @@@camp-text).
-    ctx.fillText(`${painter.labels.unitKind(camp.hireKind)} ×${camp.stock}`, point.x, point.y + 48);
+    // What the camp sells and how many are left (see @@@camp-text), under its footprint.
+    const square = footprintSquare(painter.snapshot, camp, camp.radius);
+    const below = square ? (square.bottom + 1) * square.cell - painter.camera.y + 13 : point.y + 48;
+    ctx.fillText(`${painter.labels.unitKind(camp.hireKind)} ×${camp.stock}`, point.x, below);
     ctx.textAlign = "start";
-    if (camp.cooldownRemaining > 0) drawProgress(ctx, point.x, point.y + 60, 1 - camp.cooldownRemaining / camp.cooldown);
+    if (camp.cooldownRemaining > 0) drawProgress(ctx, point.x, below + 12, 1 - camp.cooldownRemaining / camp.cooldown);
   }
 }
 
@@ -665,7 +672,13 @@ function drawGroundSelectionMarkers(painter:Painter) {
     if((selected || painter.hoveredId===site.id) && nearScreen(painter,worldToScreen(painter,site),site.radius+80))
       drawFoundationBoundary(painter,site,'#96774a',selected);
   }
+  for(const mine of painter.snapshot.resources)
+    if(painter.hoveredId===mine.id && nearScreen(painter,worldToScreen(painter,mine),GOLD_MINE_RULES.radius+80))
+      drawFoundationBoundary(painter,{x:mine.x,y:mine.y,radius:GOLD_MINE_RULES.radius},mineRingInk(mine),false);
 }
+
+/** A neutral site's ring, greyed once a mine is worked out (see @@@mine-stages). */
+export function mineRingInk(mine:{amount:number;startAmount:number}){return mineStage(mine)==='collapsed'?'#8d8c86':'#96774a';}
 
 function drawUnitSelectionMarker(painter:Painter,unit:Unit) {
   const selected=painter.selectedIds.has(unit.id);

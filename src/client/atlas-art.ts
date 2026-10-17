@@ -3,7 +3,7 @@ import { unitPaintKey } from './art/paint-identity';
 import type { UnitModel } from "../story/cast";
 import { appearanceKey, isCatalogPresentation } from "./art/unit-appearance";
 import type { FigurePresentation } from "./art/rig";
-import { paintMine } from "./art/environment";
+import { paintMine, type MineStage } from "./art/environment";
 import { drawModelPortrait } from './model-portraits';
 import { drawFittedPortrait, clearFittedPortraits } from './art/portrait-fit';
 import { isShipKind,shipProfile } from "../shared/ship-geometry";
@@ -111,8 +111,8 @@ export function drawAtlasProp(c: Brush, key: string, paint: (b: Brush) => void, 
 
 export { paintTree as drawAtlasTree, paintLandmark as drawAtlasLandmark, paintObstacle as drawAtlasObstacle, obstacleArtTop } from "./art/environment";
 
-export function drawAtlasMine(c: Brush, point: Point) {
-  sprite(c, "gold-mine", point, 1, paintMine);
+export function drawAtlasMine(c: Brush, point: Point, stage: MineStage = "rich", size = 1) {
+  sprite(c, `gold-mine:${stage}`, point, size, b => paintMine(b, stage));
 }
 
 export function drawAtlasCamp(c: Brush, point: Point, size = 1) {
