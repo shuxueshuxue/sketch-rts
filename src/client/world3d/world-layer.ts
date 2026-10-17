@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import { perf } from '../perf-overlay';
 import { worldModels,matchModelKeys,snapshotModelKeys } from './model-library';
 import { activateModelPortraits } from './model-portraits';
-import { ActorBatches } from './batches';
+import { ActorBatches, setInkZoom } from './batches';
 import { PaintedCardBatches,DEFAULT_CARD_BANKS } from './painted-card-batches';
 import {cardBaseMip,type CardMipPass,type CardMipResidencyInput} from './card-mip-residency';
 import { SelectionMarkers } from './selection-markers';
@@ -42,6 +42,13 @@ import type { GameSnapshot,Owner,Unit } from '../../shared/types';
 export type ActorPosition={x:number;y:number;bodyY:number;topY:number;facing?:1|-1};
 export const PHYSICAL_EFFECTS=new Set<GameSnapshot['effects'][number]['type']>(['shellFlight','siegeBolt','projectile','muzzleFlash']);
 const TILT=Math.tan(SHIP_CAMERA.tilt),UP=new THREE.Vector3(0,1,0);
+// @@@building-rise - A building stands taller than its footprint's model would make it (docs/art-direction.zh.md, 比例):
+// the town hall about four workers high, production buildings about three, so a base reads by its buildings. Only the
+// drawing is stretched upward; the footprint, and so every rule, is untouched. Walls, towers and small works keep theirs.
+const BUILDING_RISE:Readonly<Record<string,number>>={townHall:1.5,farm:1.1,well:1,statue:1,beacon:1,camp:1,defenseTower:1.15};
+const buildingRise=(kind:string)=>kind.startsWith('fort')?1:BUILDING_RISE[kind]??1.3;
+const rises=new Map<number,THREE.Matrix4>();
+const riseMatrix=(rise:number)=>{let matrix=rises.get(rise);if(!matrix)rises.set(rise,matrix=new THREE.Matrix4().makeScale(1,rise,1));return matrix;};
 // A frame's painting of new troop and remains cards: a few at most on a fast core. A match opening on its armies, or a
 // battle bringing many new poses at once, fills in over the next frames instead of holding one (see PaintedCardBatches).
 const CARD_RASTER_BUDGET_MS=6;
@@ -291,7 +298,7 @@ export class World3DLayer {
   draw(frame:WorldFrame){
     const renderer=this.renderer;if(this.disposed||this.contextLost||!renderer)return;
     this.frame++;this.transformCount=0;this.view=frame.view;this.currentFrame=frame;this.posed=0;this.cardMipBases.fill(0);
-    const {snapshot,now}=frame;const zoom=frame.view.zoom??1;
+    const {snapshot,now}=frame;const zoom=frame.view.zoom??1;setInkZoom(zoom);
     const pixelRatio=Math.min(devicePixelRatio,2),viewport=`${frame.view.width}:${frame.view.height}:${pixelRatio}`;
     // @@@card-density - Cards are painted at the texels per world unit the screen shows (zoom times pixel ratio): 2, or 4
     // past that. Denser cards are four times the pixels to paint and read back, and fill the card cache four times sooner.
@@ -363,12 +370,12 @@ export class World3DLayer {
       let bounds=this.bounds.get(modelKey);if(!bounds){bounds=new THREE.Box3().setFromObject(model);this.bounds.set(modelKey,bounds);}
       const size=bounds.getSize(new THREE.Vector3()),square=footprintSquare(snapshot,building,building.radius);
       const extent=square?(square.right-square.left+1)*square.cell*.88:building.radius*2;
-      const scale=extent/Math.max(size.x,size.z),height=size.y*scale;
+      const rise=buildingRise(building.kind),scale=extent/Math.max(size.x,size.z),height=size.y*scale*rise;
       this.positions.set(building.id,{x:building.x,y:building.y,bodyY:building.y,topY:building.y-height*TILT});
       if(!visible(building.x,building.y,height*TILT+180))continue;
       const selected=frame.selectedIds?.has(building.id)??false;
       if(building.hp>0 && (selected || frame.hoveredId===building.id))this.foundationMarker(frame,building,this.markerInk(frame,building.owner),selected);
-      this.batches.add(`building:${modelKey}:${ownerInk(building.owner, snapshot)}:${building.complete}`,model,this.pose(building.x,building.y,-bounds.min.y*scale,0,scale),building.id,ownerInk(building.owner, snapshot),!building.complete);
+      this.batches.add(`building:${modelKey}:${ownerInk(building.owner, snapshot)}:${building.complete}`,model,this.pose(building.x,building.y,-bounds.min.y*scale*rise,0,scale).multiply(riseMatrix(rise)),building.id,ownerInk(building.owner, snapshot),!building.complete);
     }
     const revealedShips=new Set<string>();
     for(const id of frame.selectedIds??[]){const unit=entities.get(id);if(!unit||!('order' in unit))continue;if(unit.deck)revealedShips.add(unit.deck.shipId);else if(ships.has(unit.id))revealedShips.add(unit.id);}
