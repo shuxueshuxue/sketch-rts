@@ -122,6 +122,20 @@ describe('bounded home scenes using the world presentation', () => {
     expect(started.at(-1)).toBe('terminated');
   });
 
+  it.each(battles)('ends battle %i and its thread when the page leaves the menu, and opens it afresh on return', (index) => {
+    const started: string[] = [], backdrop = new MenuBackdrop(labels, index, inProcessThreads(started)), frames: WorldFrame[] = [], ctx = context();
+    backdrop.prepare(0);
+    for (let now = 0; now <= 3_000; now += 50) backdrop.draw(ctx, 320, 180, now, false, frame => frames.push(frame));
+    backdrop.stop();
+    expect(started.at(-1)).toBe('terminated');
+    // Nothing is fought while the page is away: no thread, nothing asked of one.
+    const away = started.length;
+    backdrop.startPresentation(60_000);
+    backdrop.draw(ctx, 320, 180, 60_000, false, frame => frames.push(frame));
+    expect(started.slice(away, away + 1)).toEqual(['scene']);
+    expect(frames.at(-1)!.snapshot.tick).toBe(0);
+  });
+
   it.each(battles)('fades out a decided battle %i after its aftermath and opens a fresh one', (index) => {
     const scene = MENU_SCENES[index]!, original = scene.create;
     // A battle already all but over: one side down to its last fighter.

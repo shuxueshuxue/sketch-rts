@@ -105,6 +105,9 @@ export class MenuBackdrop {
     this.combat.reset();this.projectiles.reset();
     this.started=now;this.clock=now;this.lastPaint=-Infinity;this.motes=[];
   }
+  /** The page left the menu: the battle and the thread that fights it end, not merely idle. Back on the menu,
+   * startPresentation opens the scene again. */
+  stop(){this.endBattle();}
   get artPreparation():PaintedRemainsPreparation|undefined{
     const run=this.run;
     if(!run?.warmCorpses?.length)return;
