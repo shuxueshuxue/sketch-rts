@@ -3716,9 +3716,11 @@ function updateCamera() {
 
 // @@@edge-scroll-ui - The window's edge scrolls the camera whatever covers it (the top bar runs along the whole top);
 // over the interface only the last few pixels do (see edgeScrollDelta), so a panel near an edge can be read and used
-// without the camera drifting.
+// without the camera drifting. A free mouse (paused, unlocked, gone to another window) is not aiming at the battlefield:
+// the edge scrolls only while the pointer is locked, or where no lock can be had at all.
 function edgeScrollAim() {
   if (!lastMouse || draggingMinimapViewport || isInsideRect(lastMouse, minimapRect())) return undefined;
+  if (document.pointerLockElement !== canvas && !pointerLockUnavailable && hasMouse()) return undefined;
   return { point: lastMouse, overInterface: !pointerOnCanvas(lastMouse) };
 }
 

@@ -23,9 +23,12 @@ type TransferredBlood={tick:number;mark:BodyBlood;weapon?:{key:string;segment:nu
 type Position = { x:number; y:number; deck?:{x:number;y:number;shipId:string} };
 const TICK_MS=1000/SIM_TICKS_PER_SECOND;
 const GRAVITY=180;
-const LIFE=9;
-const BODY_LIFE=6;
-export const COMBAT_PRESENTATION_LIMITS=Object.freeze({ bursts:48, residueBursts:96, dropletsPerBurst:10, speedLines:128, seenEvents:2048, transferredMarks:192 });
+// Blood stays on the ground half a minute and on a body twenty seconds, fading only at the end: at 9 and 6 seconds a
+// fight's marks were gone before the eye went back to look at it.
+const LIFE=30;
+const BODY_LIFE=20;
+const FADE=4;
+export const COMBAT_PRESENTATION_LIMITS=Object.freeze({ bursts:48, residueBursts:320, dropletsPerBurst:10, speedLines:128, seenEvents:6144, transferredMarks:640 });
 
 /** Physical non-mechanical targets bleed only on a lethal or genuinely close-
  * to-lethal hit. Spirits have no blood; their combat class remains unchanged.
@@ -221,7 +224,7 @@ export class CombatPresentationTracker {
       // surface on which the hit happened (they may since have disembarked).
       const unit=this.units.get(burst.unitId);
       if(active&&unit&&unit.hp>0&&age<BODY_LIFE) {
-        const p=burst.mark;p.x=unit.x;p.y=unit.y;p.alpha=.65*fade(age,3,BODY_LIFE);out.body.push(p);
+        const p=burst.mark;p.x=unit.x;p.y=unit.y;p.alpha=.65*fade(age,BODY_LIFE-FADE,BODY_LIFE);out.body.push(p);
       }
       const hull=burst.deck?this.units.get(burst.deck.shipId):undefined;
       const profile=hull&&hull.hp>0?shipProfile(hull):undefined;
@@ -245,7 +248,7 @@ export class CombatPresentationTracker {
           out.droplets.push(p);
         }else{
           const p=drop.ground;p.x=x;p.y=y;p.height=profile?.deckHeight??burst.floor;p.angle=drop.angle+(hull?.sailing?.heading??0);
-          p.alpha=.58*fade(age,5,LIFE);
+          p.alpha=.58*fade(age,LIFE-FADE,LIFE);
           out.ground.push(p);
         }
       }
@@ -263,7 +266,7 @@ export class CombatPresentationTracker {
         mark.angle=Math.atan2(segment.b[1]-segment.a[1],segment.b[0]-segment.a[0])+Math.PI/2;
         mark.width=segment.width*.8;
       }
-      mark.x=unit.x;mark.y=unit.y;mark.alpha=.8*fade(age,3,BODY_LIFE);out.body.push(mark);
+      mark.x=unit.x;mark.y=unit.y;mark.alpha=.8*fade(age,BODY_LIFE-FADE,BODY_LIFE);out.body.push(mark);
     }
     for(const line of this.lines)out.speedLines.push(line);
     return out;
