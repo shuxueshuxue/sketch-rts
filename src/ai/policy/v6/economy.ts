@@ -19,6 +19,7 @@ import { canSupply, expansionOffset, isCoreProductionBuilding, isReservedBuilder
 import type { V6Phase, V6Strategy, V6Want } from "./doctrine";
 import { mineGuards, nextExpansionMine, readV6Intel, v9ExpansionMine, type V6Intel } from "./intel";
 import { recordPlay, v6Memory } from "./memory";
+import { EXPANSION_GUARD_RANGE } from "../v7/creep";
 import { v6Doctrine } from "./select";
 import { navalWant, navalBudgetReserve, navalReservePurchase } from "../naval";
 import { SHOP_PRIORITY, shopErrandCost } from "../v9/shop";
@@ -378,10 +379,22 @@ export function baseGoal(economy: Economy, target: number, priority: number): Go
   // V9 expands under a threat elsewhere (see v9-bases-first); only one near the mine holds it back.
   const mine = economy.chooseMine(economy.snapshot, economy.intel);
   if (economy.threatened && mine && distance(economy.threatened.hall, mine) < V9_THREAT_CLEARANCE) return [];
-  if (!mine || mineGuards(economy.snapshot, mine).length > 0) return [];
+  if (!mine) return [];
+  // @@@save-while-creeping - The hall's gold is saved while the general clears the mine's guard: saved only after the camp
+  // fell, the room AIs spent a minute between the cleared camp and the third hall gathering its 400 gold (v5-final-1,
+  // against V9, 40 games each).
+  if (mineGuards(economy.snapshot, mine).length > 0) {
+    const creep = v6Memory(economy.options).creep;
+    return creep && distance(creep.center, mine) <= EXPANSION_GUARD_RANGE ? [expansionCapital(target, priority)] : [];
+  }
   // V9 raises a hall only with its army or a tower by the mine (see v9-front).
   if (isV9Policy(economy.options) && !v9ExpansionCovered(economy.snapshot, economy.owner, economy.intel, mine)) return economy.prepareExpansion(economy, mine, priority, target);
   return [v6ExpansionGoal(economy, mine, priority, target)];
+}
+
+/** The next hall's gold, kept for it while the hall cannot be placed yet. */
+export function expansionCapital(target: number, priority: number): Goal {
+  return { ...goal(`bases:${target}`, priority, BUILDING_DEFS.townHall.cost, true, () => undefined), hold: true };
 }
 
 /** One ordinary expansion purchase, with the shared mine spacing and construction selector. */
