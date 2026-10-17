@@ -1,6 +1,13 @@
 import { canResearchAt, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap, trainingBuildingFor } from '../../shared/catalog';
 import { shopping } from './shopping';
-import type { BootstrapAiVersion, GameSnapshot, PlayerId, PlayerState } from '../../shared/types';
+import type { BootstrapAiVersion, GameSnapshot, PlayerId, PlayerState, Unit } from '../../shared/types';
+import { readV6Intel } from '../policy/v6/intel';
+import { isBacklineKind } from '../policy/v6/backline';
+import { combatRating } from '../policy/v6/strength';
+import { creepForce, EXPANSION_GUARD_RANGE, forceFor, neutralCamps } from '../policy/v7/creep';
+import { distance } from '../policy/spatial';
+import { bootstrapExpansionMine } from './expansion-target';
+import { activeMiningBaseCount } from '../policy/expansion-model';
 import { AI_SCRIPT_LIBRARY, V9_AI_STACK, V7_AI_STACK, V8_AI_STACK, planAiCommandEntriesFromScripts } from '../policy/core';
 import { isOpponentOwner } from '../policy/ownership';
 import type { AiPolicyContext } from '../policy/types';
@@ -56,6 +63,31 @@ export const BOOTSTRAP_DOCTRINES: Record<BootstrapAiVersion, V6Strategy[]> = {
   })),
 };
 
+// @@@expansion-guard-force - The next base waits on its mine's camp, the camp on a group that can take it, and a phase that
+// waits on that base never asks for more soldiers: six ravagers stood at 4.97 of the 5.01 an ogre camp needs and the knight
+// AI banked 1600 gold on one base until 8:00 (ladder-12 v9_knight ember, v5-final-1). While the mine it takes next is
+// guarded beyond its front and the phase it waits in has every soldier it lists, the AI trains its line's soldier until the
+// front can take the camp.
+function expansionGuardWant(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion, options: AiPolicyContext): V6Want[] {
+  const race = snapshot.players[owner]!.race, chosen = options.memory.v6?.doctrine?.strategyId;
+  const strategies = BOOTSTRAP_DOCTRINES[version].filter(strategy => strategy.race === race);
+  const strategy = strategies.find(candidate => candidate.id === chosen) ?? strategies[0]!;
+  const phase = strategy.phases[Math.min(options.memory.v6?.phase ?? 0, strategy.phases.length - 1)]!;
+  const count = (kind: string) => snapshot.units.filter(unit => unit.owner === owner && unit.kind === kind).length;
+  if (activeMiningBaseCount(snapshot, owner) >= (phase.advanceBases ?? 0)
+    || phase.wants.some(want => 'unit' in want && count(want.unit) < want.count)) return [];
+  const intel = readV6Intel(snapshot, owner, options);
+  const mine = bootstrapExpansionMine(snapshot, owner, intel, options);
+  const guard = mine && neutralCamps(snapshot).find(camp => distance(camp.center, mine) <= EXPANSION_GUARD_RANGE);
+  if (!guard) return [];
+  const front = intel.army.filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0);
+  const missing = forceFor(guard) - creepForce(front);
+  if (missing <= 0) return [];
+  const unit = strategy.standIn, def = UNIT_DEFS[unit];
+  const rating = combatRating({ kind: unit, hp: def.hp, maxHp: def.hp, attackDamage: def.attackDamage, attackCooldown: def.attackCooldown } as Unit);
+  return [{ unit, count: count(unit) + Math.ceil(missing / rating), priority: 67 }];
+}
+
 function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion, options: AiPolicyContext): V6Want[] {
   const army = snapshot.units.filter(unit => unit.owner === owner && unit.kind !== 'worker' && unit.expiresTick === undefined);
   const grove = snapshot.players[owner]!.race === 'grove';
@@ -72,7 +104,8 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: Bootstra
   if (foes.filter(unit => UNIT_DEFS[unit.kind].abilities.includes('charge')).length >= 4
     || version === 'v9_summoner' && foes.some(unit => UNIT_DEFS[unit.kind].weapon?.delivery === 'shell'
       || UNIT_DEFS[unit.kind].weapon?.maxHits! > 1)) counters.push({ unit: grove ? 'lancer' : 'ashWarden', count: 4, priority: 64 });
-  if (army.length < 10) return [...counters, ...medical, ...mounted];
+  const guard = expansionGuardWant(snapshot, owner, version, options);
+  if (army.length < 10) return [...guard, ...counters, ...medical, ...mounted];
   const main = version === 'v9_knight' ? (grove ? 'knight' : 'ashChieftain')
     : version === 'v9_summoner' ? 'summoner' : (grove ? 'horseArcher' : 'sparkArcher');
   const producer = trainingBuildingFor(snapshot.players[owner]!.race, main)!;
@@ -89,7 +122,7 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: Bootstra
     { upgrade: 'reinforcedPlating', level: 3, priority: 58 },
   );
   // Dispel and healing share a production queue in Grove; counter the incoming wave before queuing recovery.
-  wants.push(...counters, ...medical, ...mounted);
+  wants.push(...guard, ...counters, ...medical, ...mounted);
   return wants;
 }
 
