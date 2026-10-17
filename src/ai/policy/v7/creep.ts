@@ -1,4 +1,5 @@
 import { detCos, detSin } from "../../../shared/det-math";
+import { SIM_TICKS_PER_SECOND } from "../../../shared/time";
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../../shared/types";
 import type { V6PolicyMemory } from "../../memory";
 import { resolveAiCommandIntent } from "../commands";
@@ -93,8 +94,27 @@ export function neutralCamps(snapshot: GameSnapshot): Camp[] {
   return camps;
 }
 
-export function creepForce(units: readonly Unit[]) {
-  return units.reduce((total, unit) => total + combatRating(unit), 0);
+// @@@creep-free-volleys - A fighter that outranges a camp's creeps fires while they walk into its reach: against two ogre
+// warriors and a mage (3.02), six archers rated 3.50 cleared the camp unhurt and five (2.92) lost one, where three footmen
+// (3.00) failed and four lancers (3.56) only just won (one camp, the room AI's own creep, the opponent's army at home). So
+// against a camp each fighter counts its free seconds against the camp as a share of the time the group needs to kill it:
+// per creep (its share of the camp's hit points) the gap between the reaches over the creep's speed, and the camp's hit
+// points over the group's damage per second. A camp that outranges the group gives it nothing.
+export function creepForce(units: readonly Unit[], camp?: Camp) {
+  const rated = (unit: Unit) => combatRating(unit) * (camp ? 1 + freeSeconds(unit, camp) / killSeconds(units, camp) : 1);
+  return units.reduce((total, unit) => total + rated(unit), 0);
+}
+
+const dps = (unit: Unit) => unit.attackDamage / Math.max(1, unit.attackCooldown / SIM_TICKS_PER_SECOND);
+
+function killSeconds(units: readonly Unit[], camp: Camp) {
+  return camp.creeps.reduce((total, creep) => total + creep.hp, 0) / Math.max(1e-6, units.reduce((total, unit) => total + dps(unit), 0));
+}
+
+function freeSeconds(unit: Unit, camp: Camp) {
+  const hp = camp.creeps.reduce((total, creep) => total + creep.hp, 0);
+  return camp.creeps.reduce((total, creep) => total + creep.hp / hp
+    * Math.max(0, unit.attackRange - creep.attackRange) / Math.max(1, creep.speed), 0);
 }
 
 export function forceFor(camp: Camp) {
@@ -158,7 +178,7 @@ export function continueV7Creep(snapshot: GameSnapshot, owner: PlayerId, front: 
     if (!camp) recordPlay(memory, "creep:cleared");
     return undefined;
   }
-  const force = creepForce(group);
+  const force = creepForce(group, camp);
   const giveUp = (why: string) => {
     memory.creepRetry = { center: camp.center, until: snapshot.tick + RETRY_TICKS };
     delete memory.creep;
@@ -209,9 +229,8 @@ export function chooseCreepCamp(snapshot: GameSnapshot, front: Unit[], camps: Ca
   const from = averagePoint(front);
   // Scattered units walk their own routes: the group assembles first (the general holds it at the rally point).
   if (front.some((unit) => distance(unit, from) > CREEP_ASSEMBLED_RANGE)) return undefined;
-  const force = creepForce(front);
   const retry = memory.creepRetry && memory.creepRetry.until > snapshot.tick ? memory.creepRetry : undefined;
-  const open = candidates.filter((camp) => forceFor(camp) <= force && (!retry || distance(camp.center, retry.center) > CAMP_LINK))
+  const open = candidates.filter((camp) => forceFor(camp) <= creepForce(front, camp) && (!retry || distance(camp.center, retry.center) > CAMP_LINK))
     .flatMap(camp => {
       const geometry = approach(camp, from, camps);
       return geometry ? [{ camp, ...geometry }] : [];
@@ -223,7 +242,7 @@ export function chooseCreepCamp(snapshot: GameSnapshot, front: Unit[], camps: Ca
   // @@@v7-creep-voluntary-margin - A camp taken for its own sake (stars, gold, items) is only worth it without losses: it
   // asks a wider margin than the expansion's guard, which the economy waits on. Every soldier a camp costs before 5:00 is
   // missing from the first pushes. Over 1900 games V7 won 1617 with 3.5 against 1563 with the guard's 1.5 (2.5: +2).
-  const easy = open.filter(({ camp }) => camp.strength + VOLUNTARY_MARGIN <= force);
+  const easy = open.filter(({ camp }) => camp.strength + VOLUNTARY_MARGIN <= creepForce(front, camp));
   // The strongest camp the group beats, nearer ones first (V6's order).
   const best = easy.sort((a, b) => b.camp.strength - b.travelDistance / 500 - (a.camp.strength - a.travelDistance / 500))[0];
   return best ? { camp: best.camp, staging: best.staging, group: front, why: "creep" } : undefined;
