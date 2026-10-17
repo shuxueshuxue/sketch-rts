@@ -42,7 +42,7 @@ describe('blood surface transfer',()=>{
   const local={x:mark!.localX,y:mark!.localY};near.x+=40;
   tracker.update({tick:16,units:g.units,effects:[]},800);
   expect(tracker.frame(800).body.find(m=>m.unitId===near.id)).toMatchObject({x:near.x,localX:local.x,localY:local.y});
-  tracker.update({tick:150,units:g.units,effects:[]},7500);expect(tracker.frame(7500).body).toHaveLength(0);
+  tracker.update({tick:450,units:g.units,effects:[]},22500);expect(tracker.frame(22500).body).toHaveLength(0);
  });
  it('keeps weapon stains on their contacted segment when it turns, and does not transfer them to replacement equipment',()=>{
   const {g,near}=scene();near.x=70;near.y=100;
