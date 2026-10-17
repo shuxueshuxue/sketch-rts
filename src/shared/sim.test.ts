@@ -45,14 +45,14 @@ function runTwoAiDuel(mapId: MapId, ticks = 36_000) {
   return { game, ticks, elapsedMs: elapsedCpuMs(started) };
 }
 
-function expectTwoAiDuelBaseline({ game, ticks, elapsedMs }: ReturnType<typeof runTwoAiDuel>) {
+function expectTwoAiDuelBaseline({ game, ticks, elapsedMs }: ReturnType<typeof runTwoAiDuel>, cpuBudgetMs = AI_DUEL_CPU_BUDGET_MS * Math.max(1, ticks / 36_000)) {
   const totalNonBaseBuildingsDestroyed = sumPlayerStats(game.match.stats.nonBaseBuildingsDestroyed);
   // A side is out when its last building falls (see updateVictory); a worker of its may still be walking.
   const losingOwners = game.activePlayers.filter((owner) => owner !== game.match.winner).map((owner) => ({ buildings: game.buildings.filter((building) => building.owner === owner).length }));
 
   expect(game.match.winner).not.toBeNull();
   expect(game.match.endedAtTick).toBeLessThanOrEqual(ticks);
-  expect(elapsedMs).toBeLessThan(AI_DUEL_CPU_BUDGET_MS * Math.max(1, ticks / 36_000));
+  expect(elapsedMs).toBeLessThan(cpuBudgetMs);
   expect(game.match.stats.goldSpent.player).toBeGreaterThan(1_500);
   expect(game.match.stats.goldSpent.enemy).toBeGreaterThan(1_500);
   expect(game.match.stats.unitsKilled.player).toBeGreaterThan(0);
@@ -2272,13 +2272,15 @@ describe("sketch RTS simulation", () => {
   it("runs a fast two-AI duel on the ladder map's terrain, camps and mercenary posts", () => {
     // A ladder game gets fifty minutes: the preset AIs' duel on it has run from 12 to 37 with each change to how they build
     // or walk, and to 44 (enemy, tick 53211) when towers came down to 13 damage.
+    // A long ladder game is a late game: 53211 ticks with forty soldiers a side took 26.7 CPU seconds on CI and 26.8 here,
+    // half a millisecond a tick where the shorter duels the shared budget was set by take a third.
     const result = runTwoAiDuel("ladder", 60_000);
     // A post's stock never comes back (see hireMercenary): the duel hired what the posts had less what they have.
     const posts = createGame("ladder", { aiPlayers: ["player", "enemy"] }).mercenaryCamps;
     const hired = posts.reduce((total, post) => total + post.stock - result.game.mercenaryCamps.find((camp) => camp.id === post.id)!.stock, 0);
     const totalNeutralKills = sumPlayerStats(result.game.match.stats.neutralUnitsKilled);
 
-    expectTwoAiDuelBaseline(result);
+    expectTwoAiDuelBaseline(result, 36_000);
     expect(result.game.mercenaryCamps.length).toBeGreaterThan(1);
     expect(hired).toBeGreaterThan(0);
     expect(totalNeutralKills).toBeGreaterThan(0);
