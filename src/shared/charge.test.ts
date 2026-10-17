@@ -141,3 +141,27 @@ describe("cavalry charge", () => {
     expect(footman.hp).toBeLessThan(footman.maxHp);
   });
 });
+
+describe("one weapon clock", () => {
+  // A unit beside one foe with a second foe inside the charge window: whether the first falls to the opening blow or
+  // stands, every two blows the unit lands, on either foe and by any path (blow, charge impact), are its cooldown apart.
+  it.each(["knight", "raider", "footman", "archer", "horseArcher"] as const)("keeps a %s's blows a cooldown apart across two targets", kind => {
+    for (const firstHp of [20, 300]) {
+      const game = duel();
+      const unit = game.spawnUnit("player", kind, 500, 500);
+      const first = game.spawnUnit("enemy", "footman", 500 + unit.radius + UNIT_DEFS.footman.radius + 2, 500);
+      const second = game.spawnUnit("enemy", "footman", 500, INSIDE);
+      first.hp = Math.min(firstHp, first.maxHp);
+      for (const foe of [first, second]) foe.attackDamage = 0;
+      const blows: number[] = [];
+      for (let tick = 0; tick < 300; tick += 1) {
+        const before = [first.hp, second.hp];
+        stepGame(game);
+        if (first.hp < before[0]! || second.hp < before[1]!) blows.push(game.tick);
+      }
+      expect(blows.length).toBeGreaterThan(1);
+      const gaps = blows.slice(1).map((tick, index) => tick - blows[index]!);
+      expect(Math.min(...gaps)).toBeGreaterThanOrEqual(UNIT_DEFS[kind].attackCooldown);
+    }
+  });
+});
