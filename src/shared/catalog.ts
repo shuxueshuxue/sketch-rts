@@ -368,7 +368,7 @@ export const BUILDING_RULES = {
   stables: { race: "grove", hp: 560, radius: 42, cost: 175, buildTime: seconds(11.5), researches: ["speedTraining"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   sanctum: { race: "grove", hp: 500, radius: 38, cost: 175, buildTime: seconds(11.25), researches: ["leadership"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   workshop: { hp: 580, radius: 42, cost: 205, buildTime: seconds(12.5), researches: ["rangeTraining"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
-  defenseTower: { neutralDamageMultiplier: 0.5, hp: 200, radius: 30, cost: 125, buildTime: seconds(6.5), researches: [], attackDamage: 16, attackRange: 480, attackCooldown: seconds(1.5), supplyProvided: 0 },
+  defenseTower: { neutralDamageMultiplier: 0.5, hp: 200, radius: 30, cost: 125, buildTime: seconds(6.5), researches: [], attackDamage: 13, attackRange: 480, attackCooldown: seconds(1.5), supplyProvided: 0 },
   moonWell: { race: "grove", hp: 300, radius: 30, cost: 115, buildTime: seconds(8.5), researches: [], attackDamage: 0, attackRange: 210, attackCooldown: seconds(1.5), supplyProvided: 0 },
   emberForge: { race: "ember", hp: 560, radius: 40, cost: 165, buildTime: seconds(10.5), researches: ["weaponTraining", "reinforcedPlating"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   cinderSpire: { race: "ember", hp: 500, radius: 38, cost: 170, buildTime: seconds(10.75), researches: ["speedTraining", "rangeTraining", "leadership"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },

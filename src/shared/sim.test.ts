@@ -164,7 +164,7 @@ describe("sketch RTS simulation", () => {
     expect(UNIT_DEFS.summoner).toMatchObject({ attackDamage: 8, attackRange: 218.4, cost: 180 });
     expect(UNIT_DEFS.witch).toMatchObject({ attackDamage: 8, attackRange: 252, cost: 145 });
     expect(UNIT_DEFS.fieldMedic).toMatchObject({ attackDamage: 8, attackRange: 210.4, cost: 155 });
-    expect(BUILDING_DEFS.defenseTower).toMatchObject({ hp: 200, attackDamage: 16, attackRange: 480, cost: 125 });
+    expect(BUILDING_DEFS.defenseTower).toMatchObject({ hp: 200, attackDamage: 13, attackRange: 480, cost: 125 });
     expect(BUILDING_DEFS.moonWell).toMatchObject({ attackDamage: 0, attackRange: 210, cost: 115 });
 
     expect((UNIT_DEFS.archer.attackDamage * UNIT_DEFS.archer.hp) / UNIT_DEFS.archer.cost).toBeLessThan((UNIT_DEFS.footman.attackDamage * UNIT_DEFS.footman.hp) / UNIT_DEFS.footman.cost);
@@ -2413,7 +2413,7 @@ describe("sketch RTS simulation", () => {
   });
 
   it("keeps defense towers as static control instead of army-melting artillery", () => {
-    expect(BUILDING_DEFS.defenseTower.attackDamage).toBe(16);
+    expect(BUILDING_DEFS.defenseTower.attackDamage).toBe(13);
     expect(BUILDING_DEFS.defenseTower.attackDamage).toBeLessThan(UNIT_DEFS.contractArcher.attackDamage);
     expect(BUILDING_DEFS.defenseTower.attackRange).toBe(480);
     expect(BUILDING_DEFS.defenseTower.attackRange).toBeGreaterThan(UNIT_DEFS.contractArcher.attackRange);
