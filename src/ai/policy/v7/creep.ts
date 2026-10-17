@@ -57,6 +57,14 @@ const ARRIVAL_SHARE = 0.8;
 // An enemy army near the camp worth more than this share of the group ends the creep.
 const ENEMY_SHARE = 0.5;
 const ENEMY_RANGE = 900;
+
+// @@@no-creep-in-a-fight - An enemy army near the group itself ends a creep as one near the camp does: called back from an
+// attack at 15:18 with V9's army on its heels, the summoner AI set out for a camp 1200 away and its thirty units fell to
+// four on the way, turning between the camp and the defense twice in 25 s (ladder-63 v9_summoner ember, v5-final-1).
+// Judged on any one unit in reach instead, the same AI dropped 650 creeps, 240 of them for a tower and 221 for one unit.
+export function campContested(intel: V6Intel, at: Point, group: readonly Unit[]) {
+  return enemyPowerNear(intel, at, ENEMY_RANGE) > strengthOf(group) * ENEMY_SHARE;
+}
 // The fight spills around the staging point (creeps chase and leash, the wounded step back): no other camp's creep may
 // stand this near it. An ember group whose staging point stood 360 from a 6.9 camp lost three of three there. The point
 // is looked for around the camp, facing the group first: facing it only, two camps 700 apart blocked each other and V7
@@ -185,7 +193,7 @@ export function continueV7Creep(snapshot: GameSnapshot, owner: PlayerId, front: 
     recordPlay(memory, `creep:${why}`);
     return undefined;
   };
-  if (enemyPowerNear(intel, camp.center, ENEMY_RANGE) > strengthOf(group) * ENEMY_SHARE) return giveUp("enemy");
+  if (campContested(intel, camp.center, group) || campContested(intel, averagePoint(group), group)) return giveUp("enemy");
   if (state.stage === "engage" && force < camp.strength * ABORT_SHARE) return giveUp("abort");
   const staging = state.staging;
   if (state.stage === "gather") {
