@@ -110,13 +110,17 @@ export function isOpenGround(map: Pick<GameMap, "terrain">, x: number, y: number
 }
 
 // Where a unit's step from `from` toward `to` ends: there when it is open ground (see isOpenGround), else as far along one
-// axis as is, sliding along the wall, else where it stands; a unit standing where nothing is open steps anywhere (it is
-// walking out). Walking, parting and slides all step so: parted all at once or not at all, a unit by a wall never gave
-// way to a friend walking down a passage one cell wide, and the friend stood behind it for good.
+// axis as is, sliding along the wall, else where it stands. A unit a footprint has come down on (a site laid where it
+// stood) steps the same way across its mover's ground, footprints aside, so it can walk out; a unit standing on no
+// ground of its mover at all (only a seeded scenario puts it there) steps anywhere (see @@@terrain-walk). Walking,
+// parting and slides all step so: parted all at once or not at all, a unit by a wall never gave way to a friend walking
+// down a passage one cell wide, and the friend stood behind it for good. A unit under a fresh foundation used to step
+// anywhere too, and a crowd parting by a wood pushed a summoner into the trees, where nothing ever moved it again.
 export function openStep(map: Pick<GameMap, "terrain">, from: Point, to: Point, mover: Mover = "land"): Point {
-  if (isOpenGround(map, to.x, to.y, mover) || !isOpenGround(map, from.x, from.y, mover)) return to;
-  if (isOpenGround(map, to.x, from.y, mover)) return { x: to.x, y: from.y };
-  if (isOpenGround(map, from.x, to.y, mover)) return { x: from.x, y: to.y };
+  const stands = isOpenGround(map, from.x, from.y, mover) ? isOpenGround : isWalkable(map, from.x, from.y, mover) ? isWalkable : undefined;
+  if (!stands || stands(map, to.x, to.y, mover)) return to;
+  if (stands(map, to.x, from.y, mover)) return { x: to.x, y: from.y };
+  if (stands(map, from.x, to.y, mover)) return { x: from.x, y: to.y };
   return { x: from.x, y: from.y };
 }
 

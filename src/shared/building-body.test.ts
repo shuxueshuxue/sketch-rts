@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { shove } from "./push";
 import { createGame, issueCommand, issuePlayerCommand, stepGame } from "./sim";
-import { footprintCells, walkingDistance, type Terrain } from "./terrain";
+import { footprintCells, isOpenGround, isWalkable, walkingDistance, type Terrain } from "./terrain";
 import type { Building, Unit } from "./types";
 
 // An open 40 by 40 grid of 32-unit cells: terrain everywhere walkable, so only buildings stand in the way.
@@ -162,5 +162,23 @@ describe("buildings as bodies", () => {
     steps(game, 120);
     expect(Math.hypot(footman.x - 780, footman.y - 600)).toBeLessThan(10);
     expect(Math.abs(footman.y - 600)).toBeLessThan(1);
+  });
+});
+
+// A foundation laid on a crowd by a wood: the units under it part and walk out of it, but never into the trees.
+describe("walking out of a footprint", () => {
+  it("parts a crowd under a fresh foundation onto open ground, never into the wood beside it", () => {
+    const game = field();
+    const terrain = game.map.terrain!;
+    // Row 20 is forest; the farm's footprint is rows 18-19, cols 10-11, so its south wall is the wood's edge.
+    terrain.cells = terrain.cells.slice(0, 20 * 40) + "T".repeat(40) + terrain.cells.slice(21 * 40);
+    wall(game, "player", 352, [608]);
+    const pressed = game.spawnUnit("player", "summoner", 352, 639.5);
+    const crowd = game.spawnUnit("player", "summoner", 352, 630);
+    steps(game, 3);
+    for (const unit of [pressed, crowd]) {
+      expect(isWalkable(game.map, unit.x, unit.y), `${unit.id} at ${unit.x},${unit.y}`).toBe(true);
+      expect(isOpenGround(game.map, unit.x, unit.y), `${unit.id} at ${unit.x},${unit.y}`).toBe(true);
+    }
   });
 });
