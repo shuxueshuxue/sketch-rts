@@ -25,7 +25,7 @@ function fixture() {
       const [, id, action, slotId] = path.match(/^\/api\/rooms\/([^/]+)(?:\/(join|close|slots))?(?:\/([^/]+))?$/)!;
       if (action === 'close') return server.closeRoom(id!, (body as { userId: string }).userId) as T;
       if (action === 'join') return server.joinRoom(id!, (body as { user: LocalUserProfile }).user) as T;
-      if (action === 'slots') return server.updateSlot(id!, slotId!, body as SlotPatch) as T;
+      if (action === 'slots') return server.updateSlot(id!, slotId!, (body as { patch: SlotPatch }).patch) as T;
       return server.getRoom(id!) as T;
     },
   });
@@ -95,7 +95,9 @@ describe('automatic room setup lifecycle', () => {
     const entered = await f.runtime.enterRoom(multi.id, { id: 'guest', name: 'Guest' });
     expect(entered.spectating).toBe(false); expect(entered.playerId).toBe('enemy');
     f.session.accept(entered.room);
-    const ready = (await f.session.updateSlot('slot-2', { ready: true }))!;
+    // The guest gets ready in their own browser; the host's session hears of it (see @@@seat-ownership).
+    const ready = await f.runtime.updateRoomSlot(multi.id, 'slot-2', { ready: true }, { id: 'guest', name: 'Guest' });
+    f.session.accept(ready);
     expect(canStartRoom(ready)).toBe(true); expect(ready.status).toBe('open');
     f.runtime.close();
   });

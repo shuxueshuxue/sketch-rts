@@ -30,9 +30,9 @@ describe("room lifecycle deployment equivalence", () => {
 
     await runtime.enterRoom(input.id, guestUser);
     host.joinRoom(input.id, guestUser);
-    await runtime.updateRoomSlot(input.id, "slot-2", { ready: true, team: "south" });
+    await runtime.updateRoomSlot(input.id, "slot-2", { ready: true, team: "south" }, guestUser);
     host.updateSlot(input.id, "slot-2", { ready: true, team: "south" });
-    await runtime.updateRoomSlot(input.id, "slot-3", { team: "south" });
+    await runtime.updateRoomSlot(input.id, "slot-3", { team: "south" }, hostUser);
     host.updateSlot(input.id, "slot-3", { team: "south" });
 
     const staticStarted = await runtime.startRoom(input.id, hostUser);

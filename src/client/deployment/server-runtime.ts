@@ -80,16 +80,16 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
     return { room, spectating, playerId: joinedSlot?.playerId ?? (spectating ? `spectator-${user.id}` : "player") };
   }
 
-  async updateRoomMap(roomId: string, mapId: MapId): Promise<RoomState> {
-    return this.fetchJson<RoomState>(this.path(`/api/rooms/${encodeURIComponent(roomId)}/map`), { mapId });
+  async updateRoomMap(roomId: string, mapId: MapId, user: LocalUserProfile): Promise<RoomState> {
+    return this.fetchJson<RoomState>(this.path(`/api/rooms/${encodeURIComponent(roomId)}/map`), { mapId, userId: user.id });
   }
 
-  async updateRoomSlot(roomId: string, slotId: string, patch: SlotPatch): Promise<RoomState> {
-    return this.fetchJson<RoomState>(this.path(`/api/rooms/${encodeURIComponent(roomId)}/slots/${encodeURIComponent(slotId)}`), patch);
+  async updateRoomSlot(roomId: string, slotId: string, patch: SlotPatch, user: LocalUserProfile): Promise<RoomState> {
+    return this.fetchJson<RoomState>(this.path(`/api/rooms/${encodeURIComponent(roomId)}/slots/${encodeURIComponent(slotId)}`), { patch, userId: user.id });
   }
 
-  async updateRoomSlotCounts(roomId: string, humanCount: number, aiCount: number): Promise<RoomState> {
-    return this.fetchJson<RoomState>(this.path(`/api/rooms/${encodeURIComponent(roomId)}/slot-counts`), { humanCount, aiCount });
+  async updateRoomSlotCounts(roomId: string, humanCount: number, aiCount: number, user: LocalUserProfile): Promise<RoomState> {
+    return this.fetchJson<RoomState>(this.path(`/api/rooms/${encodeURIComponent(roomId)}/slot-counts`), { humanCount, aiCount, userId: user.id });
   }
 
   watchRoom(roomId: string, onRoom: (room: RoomState) => void): () => void {
@@ -103,12 +103,12 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
     return () => source.close();
   }
 
-  async closeRoom(roomId: string, userId: string): Promise<RoomState> {
-    return this.fetchJson<RoomState>(this.path(`/api/rooms/${encodeURIComponent(roomId)}/close`), { userId });
+  async closeRoom(roomId: string, user: LocalUserProfile): Promise<RoomState> {
+    return this.fetchJson<RoomState>(this.path(`/api/rooms/${encodeURIComponent(roomId)}/close`), { userId: user.id });
   }
 
   async startRoom(roomId: string, user: LocalUserProfile, onRoom: (room: RoomState) => void = () => {}): Promise<StartedMatch> {
-    const room = await this.fetchJson<RoomState>(this.path(`/api/rooms/${encodeURIComponent(roomId)}/start`), {});
+    const room = await this.fetchJson<RoomState>(this.path(`/api/rooms/${encodeURIComponent(roomId)}/start`), { userId: user.id });
     const playerId = slotForUser(room, user.id)?.playerId ?? "player";
     return this.connectRoom(room, playerId, false, onRoom);
   }

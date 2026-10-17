@@ -52,9 +52,11 @@ describe("static solo deployment runtime", () => {
     const runtime = new StaticSoloDeploymentRuntime();
     await runtime.createRoom({ id: "room-setup", host, humanCount: 1, aiCount: 1 });
 
-    await runtime.updateRoomMap("room-setup", "ladder");
-    await runtime.updateRoomSlotCounts("room-setup", 1, 2);
-    const room = await runtime.updateRoomSlot("room-setup", "slot-2", { controller: "ai", team: "team-2" });
+    await runtime.updateRoomMap("room-setup", "ladder", host);
+    await runtime.updateRoomSlotCounts("room-setup", 1, 2, host);
+    const room = await runtime.updateRoomSlot("room-setup", "slot-2", { controller: "ai", team: "team-2" }, host);
+    // Another user is refused, as a room's server refuses them (see @@@seat-ownership).
+    await expect(runtime.updateRoomSlot("room-setup", "slot-2", { team: "team-1" }, { id: "user-other", name: "Other" })).rejects.toThrow("Only the seat's player or the room's host");
 
     expect(room).toMatchObject({ mapId: "ladder" });
     expect(room.slots).toHaveLength(3);

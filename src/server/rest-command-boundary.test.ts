@@ -39,7 +39,7 @@ describe.each(["/", "/sketch-rts/"])("server REST and WebSocket command ingress 
         humanCount: 1,
         aiCount: 1,
       });
-      await postJson(`http://127.0.0.1:${port}${basePath}api/rooms/${room.id}/start`, {});
+      await postJson(`http://127.0.0.1:${port}${basePath}api/rooms/${room.id}/start`, { userId: "host" });
 
       const rest = await fetch(`http://127.0.0.1:${port}${basePath}api/rooms/${room.id}/command`, {
         method: "POST",
@@ -70,7 +70,7 @@ describe.each(["/", "/sketch-rts/"])("server REST and WebSocket command ingress 
         humanCount: 1,
         aiCount: 1,
       });
-      await postJson(`http://127.0.0.1:${port}${basePath}api/rooms/${room.id}/start`, {});
+      await postJson(`http://127.0.0.1:${port}${basePath}api/rooms/${room.id}/start`, { userId: "host" });
 
       await expect(
         postRawJson(`http://127.0.0.1:${port}${basePath}api/rooms/${room.id}/reset`, {

@@ -13,7 +13,8 @@ import { MAP_SCENARIOS } from "../shared/map";
 import { benchmarkDashboardRunsDir, listBenchmarkDashboardRunsPage, readBenchmarkDashboardRunPage, recordAiVersionBenchmarkDashboardRun } from "../ai/benchmark/dashboard-store";
 import { isCommandEnvelope } from "../shared/command-schema";
 import type { CommandEnvelope } from "../shared/net/types";
-import { isLocalUserProfile, parseContinueSaveRequest, parseGrandStressRoomRequest, parseMapUpdateRequest, parseResetRoomRequest, parseSlotCountsRequest, parseSlotPatch, roomCreateInputFromRequest } from "../shared/room-schema";
+import { isLocalUserProfile, parseContinueSaveRequest, parseGrandStressRoomRequest, parseMapUpdateRequest, parseResetRoomRequest, requestUserId, parseSlotCountsRequest, parseSlotPatch, roomCreateInputFromRequest } from "../shared/room-schema";
+import { hostActionRefusal, seatEditRefusal } from "../shared/rooms";
 import { parseSaveGameInput } from "../shared/savegame";
 import { bindHostFromEnv, publicListenUrl, viteHmrPort } from "./network";
 import { benchmarkDashboardPageOptionsFromQuery } from "./benchmark-dashboard-api";
@@ -126,6 +127,12 @@ router.post("/api/benchmark-dashboard/runs", async (request, response) => {
   }
 });
 
+// A lobby change only the room's host may make (see @@@seat-ownership).
+function hostOnly(roomId: string, userId: string) {
+  const refusal = hostActionRefusal(roomHost.getRoom(roomId), userId);
+  if (refusal) throw new Error(refusal);
+}
+
 router.get("/api/rooms", (request, response) => {
   const viewerUserId = typeof request.query.userId === "string" ? request.query.userId : undefined;
   response.json({ rooms: roomHost.listRooms(viewerUserId) });
@@ -211,51 +218,56 @@ router.post("/api/rooms/:roomId/join", (request, response) => {
 });
 
 router.post("/api/rooms/:roomId/leave", (request, response) => {
-  const body = request.body as Record<string, unknown>;
-  if (typeof body.userId !== "string") {
+  const userId = requestUserId(request.body);
+  if (!userId) {
     response.status(400).json({ error: "Malformed user id" });
     return;
   }
   try {
-    response.json(roomHost.leaveRoom(request.params.roomId, body.userId));
+    response.json(roomHost.leaveRoom(request.params.roomId, userId));
   } catch (error) {
     response.status(400).json({ error: errorMessage(error) });
   }
 });
 
 router.post("/api/rooms/:roomId/close", (request, response) => {
-  const body = request.body as Record<string, unknown>;
-  if (typeof body.userId !== "string") {
+  const userId = requestUserId(request.body);
+  if (!userId) {
     response.status(400).json({ error: "Malformed user id" });
     return;
   }
   try {
-    response.json(roomHost.closeRoom(request.params.roomId, body.userId));
+    response.json(roomHost.closeRoom(request.params.roomId, userId));
   } catch (error) {
     response.status(400).json({ error: errorMessage(error) });
   }
 });
 
 router.post("/api/rooms/:roomId/slots/:slotId", (request, response) => {
-  const patch = parseSlotPatch(request.body);
-  if (!patch) {
+  const body = request.body as Record<string, unknown>;
+  const patch = parseSlotPatch(body.patch), userId = requestUserId(body);
+  if (!patch || !userId) {
     response.status(400).json({ error: "Malformed slot patch" });
     return;
   }
   try {
-    response.json(roomHost.updateSlot(request.params.roomId, request.params.slotId, patch));
+    const { roomId, slotId } = request.params;
+    const refusal = seatEditRefusal(roomHost.getRoom(roomId), userId, slotId, patch);
+    if (refusal) throw new Error(refusal);
+    response.json(roomHost.updateSlot(roomId, slotId, patch));
   } catch (error) {
     response.status(400).json({ error: errorMessage(error) });
   }
 });
 
 router.post("/api/rooms/:roomId/map", (request, response) => {
-  const body = parseMapUpdateRequest(request.body);
-  if (!body) {
+  const body = parseMapUpdateRequest(request.body), userId = requestUserId(request.body);
+  if (!body || !userId) {
     response.status(400).json({ error: "Malformed room map input" });
     return;
   }
   try {
+    hostOnly(request.params.roomId, userId);
     response.json(roomHost.updateMap(request.params.roomId, body.mapId));
   } catch (error) {
     response.status(400).json({ error: errorMessage(error) });
@@ -263,12 +275,13 @@ router.post("/api/rooms/:roomId/map", (request, response) => {
 });
 
 router.post("/api/rooms/:roomId/slot-counts", (request, response) => {
-  const body = parseSlotCountsRequest(request.body);
-  if (!body) {
+  const body = parseSlotCountsRequest(request.body), userId = requestUserId(request.body);
+  if (!body || !userId) {
     response.status(400).json({ error: "Malformed room slot count input" });
     return;
   }
   try {
+    hostOnly(request.params.roomId, userId);
     response.json(roomHost.resizeSlots(request.params.roomId, body.humanCount, body.aiCount));
   } catch (error) {
     response.status(400).json({ error: errorMessage(error) });
@@ -276,7 +289,13 @@ router.post("/api/rooms/:roomId/slot-counts", (request, response) => {
 });
 
 router.post("/api/rooms/:roomId/start", (request, response) => {
+  const userId = requestUserId(request.body);
+  if (!userId) {
+    response.status(400).json({ error: "Malformed user id" });
+    return;
+  }
   try {
+    hostOnly(request.params.roomId, userId);
     response.json(roomHost.startRoom(request.params.roomId));
   } catch (error) {
     response.status(400).json({ error: errorMessage(error) });

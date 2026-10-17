@@ -85,7 +85,7 @@ export class RoomSetupSession {
     return this.enqueue(async () => {
       if (generation !== this.generation || !this.room) return;
       const roomId = this.room.id;
-      const room = await this.options.runtime.updateRoomSlot(roomId, slotId, patch);
+      const room = await this.options.runtime.updateRoomSlot(roomId, slotId, patch, this.options.user());
       if (generation !== this.generation || this.room?.id !== roomId) return;
       this.room = room; this.draft = roomConfiguration(room); this.options.changed(room, true);
       return room;
@@ -110,13 +110,13 @@ export class RoomSetupSession {
     try { room = await this.options.runtime.createRoom({ ...configuration, id, host: user, humanCount, aiCount: configuration.seatSetup.length - humanCount }); }
     catch (error) {
       // A server may have committed creation before its response was lost.
-      try { await this.options.runtime.closeRoom(id, user.id); } catch {}
+      try { await this.options.runtime.closeRoom(id, user); } catch {}
       throw error;
     }
-    const discard = () => this.options.runtime.closeRoom(room.id, user.id);
+    const discard = () => this.options.runtime.closeRoom(room.id, user);
     if (!current()) { await discard(); return; }
     if (previous?.status === 'open' && previous.hostUserId === user.id) {
-      try { await this.options.runtime.closeRoom(previous.id, user.id); }
+      try { await this.options.runtime.closeRoom(previous.id, user); }
       catch (error) { await discard(); throw error; }
       if (this.room?.id === previous.id) this.room = undefined;
       if (!current()) { await discard(); return; }

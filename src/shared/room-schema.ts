@@ -268,6 +268,11 @@ export function isLocalUserProfile(value: unknown): value is LocalUserProfile {
   return isRecord(value) && typeof value.id === "string" && value.id.length > 0 && typeof value.name === "string" && value.name.length > 0;
 }
 
+// The user a lobby request says it comes from (see @@@seat-ownership).
+export function requestUserId(value: unknown): string | undefined {
+  return isRecord(value) && typeof value.userId === "string" && value.userId.length > 0 ? value.userId : undefined;
+}
+
 function isPlayerArray(value: unknown): value is PlayerId[] {
   return Array.isArray(value) && value.every(isPlayerId);
 }
