@@ -60,7 +60,11 @@ export function strikeGap(from: Point, target: StrikeTarget) {
 // RANGED_ATTACK_RANGE_THRESHOLD) reaches a unit at least as far as their two bodies touching, and a little more; aimed
 // weapons, buildings and hulls keep their reach. Every range test of a strike reads this.
 export const CONTACT_SLACK = 4;
-export function strikeReach(attacker: { radius: number; attackRange: number }, target: StrikeTarget, range = attacker.attackRange) {
+// A melee blow never crosses between a fortified tower's top and anything off it, either way (see @@@tower-garrison): such a
+// target is out of reach at any distance, whatever range a search asks with, so neither a strike, a chase nor a target
+// search ever takes it up.
+export function strikeReach(attacker: { radius: number; attackRange: number; garrison?: { buildingId: string } | undefined }, target: StrikeTarget, range = attacker.attackRange) {
+  if (attacker.attackRange <= RANGED_ATTACK_RANGE_THRESHOLD && attacker.garrison?.buildingId !== ("order" in target ? target.garrison?.buildingId : undefined)) return -Infinity;
   if (range > RANGED_ATTACK_RANGE_THRESHOLD || !("order" in target) || shipProfile(target)) return range;
   return Math.max(range, attacker.radius + target.radius + CONTACT_SLACK);
 }

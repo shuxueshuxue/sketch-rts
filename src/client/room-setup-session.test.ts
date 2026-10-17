@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { createRoomLifecycleHost } from '../shared/room-lifecycle';
-import { canStartRoom, type CreateRoomInput, type SlotPatch } from '../shared/rooms';
+import { canStartRoom, roomConfiguration, type CreateRoomInput, type SlotPatch } from '../shared/rooms';
 import type { LocalUserProfile, RoomState } from '../shared/types';
 import { createDeploymentRuntime } from './deployment/runtime';
-import { defaultRoomConfiguration, formatRoomRoute, parseRoomRoute } from './room-route';
-import { RoomSetupSession } from './room-setup-session';
+import { configurationOnMap, defaultRoomConfiguration, formatRoomRoute, parseRoomRoute } from './room-route';
+import { configurationForRoomMode, RoomSetupSession } from './room-setup-session';
 
 function deferred() {
   let resolve!: () => void;
@@ -77,26 +77,24 @@ describe('automatic room setup lifecycle', () => {
   it('returns to the same local setup through history without creating another room', async () => {
     const f = fixture(), configuration = defaultRoomConfiguration('stillwater');
     const room = (await f.session.create(configuration))!;
-    const { roomConfiguration } = await import('../shared/rooms');
     f.session.adopt(room);
     expect((await f.session.create(roomConfiguration(room), true))?.id).toBe(room.id);
     expect(f.created).toEqual([room.id]); expect((await f.runtime.listRooms(f.user.id)).map(room => room.id)).toEqual([room.id]); f.runtime.close();
   });
 
-  it('moves solo to a joinable server room, preserves setup, and waits for the invited player to be ready', async () => {
-    const f = fixture(), configuration = defaultRoomConfiguration('stillwater');
-    const solo = (await f.session.create(configuration))!;
+  it('opens a room for others as a joinable server room that waits for the invited player to be ready', async () => {
+    const f = fixture();
+    const room = (await f.session.create(configurationForRoomMode(defaultRoomConfiguration('stillwater'), 'public')))!;
     await f.session.updateSlot('slot-1', { race: 'ember' });
-    const multi = (await f.session.switchMode('public'))!;
-    expect(f.runtime.isLocalRoom(solo.id)).toBe(false);
-    expect(multi.slots[0]?.race).toBe('ember'); expect(multi.layoutSeed).toBe(solo.layoutSeed);
-    expect(multi.slots.filter(slot => slot.controller === 'open')).toHaveLength(1);
-    expect(canStartRoom(multi)).toBe(false);
-    const entered = await f.runtime.enterRoom(multi.id, { id: 'guest', name: 'Guest' });
+    expect(f.runtime.isLocalRoom(room.id)).toBe(false);
+    expect(f.session.currentRoom?.slots[0]?.race).toBe('ember');
+    expect(room.slots.filter(slot => slot.controller === 'open')).toHaveLength(1);
+    expect(canStartRoom(room)).toBe(false);
+    const entered = await f.runtime.enterRoom(room.id, { id: 'guest', name: 'Guest' });
     expect(entered.spectating).toBe(false); expect(entered.playerId).toBe('enemy');
     f.session.accept(entered.room);
     // The guest gets ready in their own browser; the host's session hears of it (see @@@seat-ownership).
-    const ready = await f.runtime.updateRoomSlot(multi.id, 'slot-2', { ready: true }, { id: 'guest', name: 'Guest' });
+    const ready = await f.runtime.updateRoomSlot(room.id, 'slot-2', { ready: true }, { id: 'guest', name: 'Guest' });
     f.session.accept(ready);
     expect(canStartRoom(ready)).toBe(true); expect(ready.status).toBe('open');
     f.runtime.close();
@@ -109,61 +107,50 @@ describe('automatic room setup lifecycle', () => {
     expect(room.status).toBe('open'); f.runtime.close();
   });
 
-  it('moves multiplayer back to local solo, removes invitation seats and does not copy guest identity', async () => {
-    const f = fixture(); await f.session.create(defaultRoomConfiguration('stillwater'));
-    const multi = (await f.session.switchMode('public'))!;
-    const entered = await f.runtime.enterRoom(multi.id, { id: 'guest', name: 'Guest' }); f.session.accept(entered.room);
-    const solo = (await f.session.switchMode('private'))!;
-    expect(f.runtime.isLocalRoom(solo.id)).toBe(true);
-    expect(solo.slots.slice(1).every(slot => slot.controller === 'ai' && !slot.userId)).toBe(true);
-    expect(canStartRoom(solo)).toBe(true);
-    expect((await f.runtime.listRooms(f.user.id)).map(room => room.id)).toEqual([solo.id]); f.runtime.close();
-  });
-
-  it('keeps the final mode when toggled while the first room is still being created', async () => {
+  it('keeps the last map chosen while the first room is still being created', async () => {
     const f = fixture(), gate = f.holdCreate();
     const first = f.session.create(defaultRoomConfiguration('stillwater')); await gate.entered.promise;
-    const last = f.session.switchMode('public'); gate.release.resolve();
+    const last = f.session.create(defaultRoomConfiguration('grandEstuary'), true); gate.release.resolve();
     expect(await first).toBeUndefined();
     const room = (await last)!;
-    expect(room.visibility).toBe('public'); expect(f.changed).toEqual([room]);
+    expect(room.mapId).toBe('grandEstuary'); expect(f.changed).toEqual([room]);
     expect((await f.runtime.listRooms(f.user.id)).map(room => room.id)).toEqual([room.id]); f.runtime.close();
   });
 
-  it('discards a delayed obsolete public creation and publishes only the last quick toggle', async () => {
+  it('discards a delayed obsolete rebuild and publishes only the last of quick map clicks', async () => {
     const f = fixture(); await f.session.create(defaultRoomConfiguration('stillwater'));
-    const gate = f.holdCreate(), first = f.session.switchMode('public'); await gate.entered.promise;
-    const middle = f.session.switchMode('private'), last = f.session.switchMode('public'); gate.release.resolve();
+    const gate = f.holdCreate(), first = f.session.create(defaultRoomConfiguration('grandEstuary'), true); await gate.entered.promise;
+    const middle = f.session.create(defaultRoomConfiguration('stillwater'), true), last = f.session.create(defaultRoomConfiguration('grandEstuary'), true); gate.release.resolve();
     expect(await first).toBeUndefined(); expect(await middle).toBeUndefined();
     const room = (await last)!;
-    expect(f.changed.map(room => room.visibility)).toEqual(['private', 'public']);
+    expect(f.changed.map(room => room.mapId)).toEqual(['stillwater', 'grandEstuary']);
     expect((await f.runtime.listRooms(f.user.id)).map(room => room.id)).toEqual([room.id]); f.runtime.close();
   });
 
-  it('rebuilds the requested mode rather than reusing a room already closed during migration', async () => {
+  it('rebuilds the requested setup rather than reusing a room already closed during a rebuild', async () => {
     const f = fixture(); const firstRoom = (await f.session.create(defaultRoomConfiguration('stillwater')))!;
-    const gate = f.holdClose(), first = f.session.switchMode('public'); await gate.entered.promise;
-    const last = f.session.switchMode('private'); gate.release.resolve();
+    const gate = f.holdClose(), first = f.session.create(defaultRoomConfiguration('grandEstuary'), true); await gate.entered.promise;
+    const last = f.session.create(roomConfiguration(firstRoom), true); gate.release.resolve();
     expect(await first).toBeUndefined(); const room = (await last)!;
-    expect(room.id).not.toBe(firstRoom.id); expect(room.visibility).toBe('private');
+    expect(room.id).not.toBe(firstRoom.id); expect(room.mapId).toBe('stillwater');
     expect((await f.runtime.listRooms(f.user.id)).map(room => room.id)).toEqual([room.id]); f.runtime.close();
   });
 
   it('cleans a delayed newly created room after route cancellation without switching the visible room', async () => {
-    const f = fixture(); await f.session.create(defaultRoomConfiguration('stillwater'));
-    const gate = f.holdCreate(), request = f.session.switchMode('public'); await gate.entered.promise;
+    const f = fixture(); const original = (await f.session.create(defaultRoomConfiguration('stillwater')))!;
+    const gate = f.holdCreate(), request = f.session.create(defaultRoomConfiguration('grandEstuary'), true); await gate.entered.promise;
     f.session.cancel(); gate.release.resolve(); expect(await request).toBeUndefined();
     expect(f.changed).toHaveLength(1);
-    expect((await f.runtime.listRooms(f.user.id)).every(room => room.visibility === 'private')).toBe(true); f.runtime.close();
+    expect((await f.runtime.listRooms(f.user.id)).map(room => room.id)).toEqual([original.id]); f.runtime.close();
   });
 
-  it('rolls a failed migration back to the usable old room and closes the new room', async () => {
+  it('rolls a failed rebuild back to the usable old room and closes the new room', async () => {
     const f = fixture(), original = (await f.session.create(defaultRoomConfiguration('stillwater')))!;
     f.failClose(original.id);
-    await expect(f.session.switchMode('public')).rejects.toThrow('Cannot close previous room');
+    await expect(f.session.create(defaultRoomConfiguration('grandEstuary'), true)).rejects.toThrow('Cannot close previous room');
     expect(f.changed).toEqual([original]); expect(f.session.busy).toBe(false);
     expect((await f.runtime.listRooms(f.user.id)).map(room => room.id)).toEqual([original.id]);
-    const same = await f.session.switchMode('private'); expect(same?.id).toBe(original.id); f.runtime.close();
+    const same = await f.session.create(roomConfiguration(original), true); expect(same?.id).toBe(original.id); f.runtime.close();
   });
 
   it('cleans a room committed by the server when its creation response is lost', async () => {
@@ -173,13 +160,15 @@ describe('automatic room setup lifecycle', () => {
     expect(f.session.busy).toBe(false); f.runtime.close();
   });
 
-  it('serializes race edits on both sides of migration and restores local configuration from its URL', async () => {
+  it('serializes seat edits around a map change and restores local configuration from its URL', async () => {
     const f = fixture(); await f.session.create(defaultRoomConfiguration('stillwater'));
-    const before = f.session.updateSlot('slot-1', { race: 'ember' }), migration = f.session.switchMode('public'), after = f.session.updateSlot('slot-3', { race: 'grove', aiVersion: 'v9_knight' });
-    await Promise.all([before, migration, after]);
-    const solo = (await f.session.switchMode('private'))!;
-    const { roomConfiguration } = await import('../shared/rooms');
-    const configuration = roomConfiguration(solo), route = parseRoomRoute(formatRoomRoute({ screen: 'setup', configuration }));
+    await f.session.updateSlot('slot-1', { race: 'ember' });
+    const moved = f.session.create(configurationOnMap(roomConfiguration(f.session.currentRoom!), 'grandEstuary'), true);
+    const after = f.session.updateSlot('slot-3', { race: 'grove', aiVersion: 'v9_knight' });
+    await Promise.all([moved, after]);
+    const room = f.session.currentRoom!;
+    expect(room.mapId).toBe('grandEstuary'); expect(room.slots[0]?.race).toBe('ember'); expect(room.slots[2]?.race).toBe('grove');
+    const configuration = roomConfiguration(room), route = parseRoomRoute(formatRoomRoute({ screen: 'setup', configuration }));
     expect(route).toEqual({ screen: 'setup', configuration });
     f.session.cancel();
     const restored = (await f.session.create(route.screen === 'setup' ? route.configuration! : defaultRoomConfiguration()))!;

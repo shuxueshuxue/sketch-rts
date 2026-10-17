@@ -28,6 +28,8 @@ export function canReach(map: Pick<GameMap, "terrain" | "width" | "height">, att
     const at = ship && stand ? localToWorld(ship,stand) : attacker;
     return ("order" in target && shipProfile(target)?distanceToHull(target,at):Math.hypot(at.x-target.x,at.y-target.y)-("order" in target ? 0 : target.radius)) <= attackRange;
   }
+  // A troop on a tower's top strikes from where it stands, as it never walks (see @@@tower-garrison).
+  if (attacker.garrison) return ("order" in target && shipProfile(target) ? distanceToHull(target, attacker) : Math.hypot(attacker.x - target.x, attacker.y - target.y) - ("order" in target ? 0 : target.radius)) <= attackRange;
   if (!map.terrain) return true;
   if(targetDeck && unitMover(attacker.kind)==="land" && shipShorePoints(targetDeck,map).some(point=>sameGround(map,attacker,point,"land")))return true;
   const mover = unitMover(attacker.kind);

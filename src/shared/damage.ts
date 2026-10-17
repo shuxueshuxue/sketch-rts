@@ -5,6 +5,7 @@ import { unitRules } from "./catalog";
 import { SHOCK_DAMAGE_TAKEN } from "./push";
 import type { GameSnapshot, Unit } from "./types";
 import { isTransportKind, TRANSPORT_COMBAT } from './transport-role';
+import { garrisonCover } from "./tower-garrison";
 
 export { resolveDamage, reductionForGroup, DAMAGE_REDUCTION_RULES, HEAVY_ARMOR_DAMAGE } from "./damage-reduction";
 export type { DamageReductionGroup, DamageReductionSource, DamageResolution } from "./damage-reduction";
@@ -71,6 +72,7 @@ export function resolveUnitDamage(snapshot: Pick<GameSnapshot, "items" | "varian
       ...(context.armorAlreadyApplied ? [] : [...armorDamageProtection(rules.armor), ...rangedDamageProtection(rules.rangedDamageTaken ?? (isTransportKind(target.kind) ? TRANSPORT_COMBAT.rangedDamageTaken : undefined))]),
       { group: "equipment", amount: equipmentProtection(snapshot, target), filter: { school: "physical" } },
       ...status.reductions,
+      ...garrisonCover(target),
       ...extraSources,
     ],
     invulnerable: Boolean(target.invulnerable || status.invulnerable),

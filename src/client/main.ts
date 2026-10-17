@@ -81,10 +81,11 @@ import {
   shouldSuppressPointerLockMouseDefault,
   virtualPointerTransform,
 } from "./pointer-lock";
+import { TOWER_GARRISON, garrisonUsed } from "../shared/tower-garrison";
 import { RESEARCH_COMMANDS, researchCommandButtonsForSelection, researchProgressButtonsForSelection, type ResearchProgressButton } from "./research-controls";
 import { buildingAt, deckMovePoint, hasAlly, pointerTarget, relationTo, targetCommand, unitAt,unitPointerPosition, type PointerTarget } from "./relations";
-import { defaultRoomConfiguration, formatRoomRoute, parseRoomRoute, type RoomRoute } from "./room-route";
-import { RoomSetupSession } from './room-setup-session';
+import { configurationOnMap, defaultRoomConfiguration, formatRoomRoute, parseRoomRoute, type RoomRoute } from "./room-route";
+import { configurationForRoomMode, RoomSetupSession } from './room-setup-session';
 import { unitHoverCursor } from './unit-hover-cursor';
 import { unitHoverTarget } from './unit-hover-target';
 import { roomBrowserEntries } from "./room-browser-model";
@@ -124,7 +125,7 @@ type ScreenRect = { x: number; y: number; width: number; height: number };
 type SpellTargeting = { casterId: string; ability: AbilityKind };
 type ItemTargeting = { unitId: string; itemId: string; kind: WorldItem["kind"] };
 type CommandMode = { type: "attackMove" } | { type: "aim" } | { type: "unload" } | { type: 'boardShip'; sourceIds: string[] } | { type:"purchaseRecipient";sellerId:string } | { type: "build"; placement: BuildPlacement } | { type: "spell"; targeting: SpellTargeting } | { type: "item"; targeting: ItemTargeting };
-type MenuView = "maps" | "home" | "profile" | "rooms" | "setup" | "results";
+type MenuView = "home" | "profile" | "rooms" | "setup" | "results";
 
 declare global {
   interface Window {
@@ -282,10 +283,9 @@ let rightPointerGestureActive = false;
 let ignoreNextRightMouseUp = false;
 let menuOpen = true;
 let menuView: MenuView = "home";
-// @@@map-chooser - The create screen is Warcraft III's custom game screen: the pool's maps listed on the left (see
-// @@@map-pool), the chosen one's picture and facts on the right (see @@@map-preview).
-let chosenMapId: PoolMapId = MAP_POOL[0].id;
-let pendingRoomConfiguration = defaultRoomConfiguration(chosenMapId);
+// @@@map-chooser - The setup screen is Warcraft III's custom game screen: the pool's maps listed on the left (see
+// @@@map-pool), the chosen one's picture and facts beside them (see @@@map-preview), then the seats (see @@@solo-setup).
+let pendingRoomConfiguration = defaultRoomConfiguration();
 let routeRequest = 0;
 let setupError: string | undefined;
 let setupOperation = 0;
@@ -317,11 +317,12 @@ const roomSetupSession = new RoomSetupSession({
     setupError = undefined;
     localPlayerId = slotForUser(room, localUser.id)?.playerId ?? 'player';
     pendingRoomConfiguration = roomConfiguration(room);
+    if (room.visibility === 'private') rememberSoloSetup(pendingRoomConfiguration);
     openRoomSetup(room, replace); renderMainMenu();
   },
   busyChanged() {
     if (applicationClosed) return;
-    if (menuView === 'setup' || menuView === 'maps') renderMainMenu();
+    if (menuView === 'setup') renderMainMenu();
     if (!roomSetupSession.busy && menuView === 'setup' && currentRoom?.status === 'open') watchRoomSetup(currentRoom.id);
   },
 });
@@ -371,6 +372,23 @@ const commandButtons: CommandButton[] = [
   ...RESEARCH_COMMANDS.map((command) =>
     createCommandButton(t("command.researchSpecific", { upgrade: labelKind(command.upgradeKind) }), command.icon, command.hotkey, () => researchButtonState(command.upgradeKind), () => research(command.upgradeKind), () => upgradeTooltip(command.upgradeKind, command.hotkey, currentPlayerState()?.upgrades[command.upgradeKind] ?? 0, i18n)),
   ),
+  createCommandButton(t("command.fortifyTower.title"), "▲", "f", fortifyButtonState, fortifyFocusedTower, () => ({
+    title: t("command.fortifyTower.title"),
+    body: t("command.fortifyTower.body"),
+    stats: [t("command.fortifyTower.stats", { cost: TOWER_GARRISON.cost, seconds: TOWER_GARRISON.time / SIM_TICKS_PER_SECOND })],
+    requirements: [t("command.fortifyTower.requirements")],
+    hotkey: "F",
+  })),
+  createCommandButton(t("command.ungarrison.title"), "⤓", "u", ungarrisonButtonState, ungarrisonFocusedTower, () => {
+    const tower = focusedTower();
+    return {
+      title: t("command.ungarrison.title"),
+      body: t("command.ungarrison.body"),
+      stats: tower && snapshot ? [t("command.ungarrison.stats", { used: garrisonUsed(snapshot, tower), capacity: TOWER_GARRISON.supply })] : [],
+      requirements: [t("command.ungarrison.requirements")],
+      hotkey: "U",
+    };
+  }),
   ...SPELL_COMMANDS.map((command) =>
     withAbilityArtwork(withAutocastRing(createCommandButton(
       t("command.castSpecific", { ability: labelKind(command.ability) }),
@@ -853,7 +871,7 @@ function splitTooltipList(value: string | undefined) {
 
 function openMenuRoute(route: Exclude<RoomRoute, { screen: "room" }>, replace = false) {
   const previous = currentRoom ?? roomSetupSession.currentRoom;
-  const previousSetup = (route.screen === 'maps' || route.screen === 'setup') && !closingRoom && previous?.status === 'open' && previous.hostUserId === localUser.id ? previous : undefined;
+  const previousSetup = route.screen === 'setup' && !closingRoom && previous?.status === 'open' && previous.hostUserId === localUser.id ? previous : undefined;
   routeRequest++;
   roomSetupSession.cancel(); setupOperation++; setupError = undefined;
   if (previousSetup) roomSetupSession.adopt(previousSetup);
@@ -868,9 +886,8 @@ function openMenuRoute(route: Exclude<RoomRoute, { screen: "room" }>, replace = 
   menuOpen = true;
   releasePointerLockForMenu();
   shell.classList.add("menu-open"); mainMenu.classList.remove("hidden");
-  if (route.screen === "maps" || route.screen === "setup") {
+  if (route.screen === "setup") {
     pendingRoomConfiguration = route.configuration ?? pendingRoomConfiguration;
-    chosenMapId = pendingRoomConfiguration.mapId as PoolMapId;
     route = { screen: route.screen, configuration: pendingRoomConfiguration };
   }
   menuView = route.screen;
@@ -944,18 +961,15 @@ function renderMainMenu() {
     void renderRoomBrowser();
     return;
   }
-  if (menuView === "maps") {
-    renderMapSelectionMenu();
-    return;
-  }
   if (menuView === "setup") {
     renderRoomSetup();
     return;
   }
   menuStatus.textContent = "";
   mapList.replaceChildren(
+    // A solo game opens on the map and seats played last (see @@@solo-setup).
     menuButton(t("home.play"), "", "data-open-create", () => {
-      openMenuRoute({ screen: "maps" });
+      openMenuRoute({ screen: "setup", configuration: rememberedSoloSetup() });
     }),
     menuButton(t("home.rooms.label"), "", "data-open-room-browser", () => {
       openMenuRoute({ screen: "rooms" });
@@ -964,53 +978,6 @@ function renderMainMenu() {
       openMenuRoute({ screen: "profile" });
     }),
   );
-}
-
-// Map clicks only preview the draft; the footer confirms entry to room setup.
-function renderMapSelectionMenu() {
-  menuTitle.textContent = t("roomCreate.chooseMap");
-  menuStatus.textContent = setupError ?? (roomSetupSession.busy ? t('roomSetup.preparing') : '');
-  const panel = document.createElement("div");
-  panel.className = "map-select menu-page";
-  panel.innerHTML = menuPageMarkup(`
-    <div class="map-chooser">
-      <section class="map-browser" aria-label="${escapeHtml(t("roomCreate.map.label"))}">
-        <div class="room-section-title">${escapeHtml(t("roomCreate.map.label"))}</div>
-        <div class="map-entries" data-map-entries></div>
-      </section>
-      ${mapDetailMarkup()}
-    </div>
-`, `
-      <button type="button" data-map-next ${roomSetupSession.busy ? 'disabled' : ''}>${escapeHtml(t("common.continue"))}</button>
-      <button type="button" data-back-home>${escapeHtml(t("common.back"))}</button>
-`);
-  const renderMaps = () => {
-    panel.querySelector("[data-map-entries]")!.replaceChildren(...MAP_POOL.map(map => {
-      const entry = menuButton(mapEntryLabel(map.id), "", "data-map-id", () => {
-        if (roomSetupSession.busy) return;
-        if (chosenMapId !== map.id) pendingRoomConfiguration = { ...defaultRoomConfiguration(map.id), name: pendingRoomConfiguration.name, visibility: 'private' };
-        chosenMapId = map.id;
-        setRoomRoute({ screen: "maps", configuration: pendingRoomConfiguration }, true);
-        renderMaps();
-      }, map.id);
-      entry.disabled = roomSetupSession.busy;
-      entry.className = `map-entry ${map.id === chosenMapId ? "selected" : ""}`;
-      entry.setAttribute("aria-pressed", String(map.id === chosenMapId));
-      return entry;
-    }));
-    showMapDetail(panel, chosenMapId, previewSeatsForRoom(draftRoom()), pendingRoomConfiguration.layoutSeed);
-  };
-  renderMaps();
-  panel.querySelector("[data-map-next]")!.addEventListener("click", () => {
-    if (!roomSetupSession.busy) void createConfiguredRoom(pendingRoomConfiguration);
-  });
-  panel.querySelector("[data-back-home]")!.addEventListener("click", () => openMenuRoute({ screen: "home" }));
-  mapList.replaceChildren(panel);
-}
-
-function draftRoom() {
-  const humanCount = pendingRoomConfiguration.seatSetup.filter(seat => seat.controller !== "ai").length;
-  return createRoom({ id: "preview", host: localUser, ...pendingRoomConfiguration, humanCount, aiCount: pendingRoomConfiguration.seatSetup.length - humanCount });
 }
 
 function previewSeatsForRoom(room: RoomState) {
@@ -1115,7 +1082,9 @@ async function renderRoomBrowser() {
   browser.innerHTML = menuPageMarkup(`<div class="room-browser-list" data-room-browser-list></div>`, `
     <button type="button" data-create-room>${escapeHtml(t("roomBrowser.create.title"))}</button>
     <button type="button" data-back-home>${escapeHtml(t("common.back"))}</button>`);
-  browser.querySelector("[data-create-room]")!.addEventListener("click", () => openMenuRoute({ screen: "maps" }));
+  // A room made here is for others to join: the same setup as a solo game, open to players (see @@@solo-setup).
+  browser.querySelector("[data-create-room]")!.addEventListener("click", () => openMenuRoute({ screen: "setup",
+    configuration: configurationForRoomMode(defaultRoomConfiguration(), deploymentRuntime.kind === "server" ? "public" : "private") }));
   browser.querySelector("[data-back-home]")!.addEventListener("click", () => openMenuRoute({ screen: "home" }));
   const list = browser.querySelector<HTMLDivElement>("[data-room-browser-list]")!;
   list.replaceChildren(roomListNote(t("roomBrowser.loading"), "loading"));
@@ -1145,9 +1114,7 @@ function renderRoomSetup() {
   const setupAction = roomSetupViewAction(currentRoom);
   if (setupAction === "empty") {
     menuStatus.textContent = setupError ?? (roomSetupSession.busy ? t('roomSetup.preparing') : t("roomSetup.empty"));
-    mapList.replaceChildren(menuButton(t('roomCreate.backMaps'), "", "data-choose-map", () => {
-      openMenuRoute({ screen: "maps" });
-    }));
+    mapList.replaceChildren(menuButton(t("common.back"), "", "data-back-home", () => openMenuRoute({ screen: "home" })));
     return;
   }
   if (setupAction === "results") {
@@ -1160,56 +1127,65 @@ function renderRoomSetup() {
     return;
   }
   const room = currentRoom!;
-  menuStatus.textContent = setupError ?? (roomSetupSession.busy ? t('roomSetup.preparing') : t("roomSetup.status", { name: room.name, visibility: labelKind(room.visibility), status: labelKind(room.status) }));
-  const host = room.hostUserId === localUser.id;
-  const visibility = roomSetupSession.requestedVisibility ?? room.visibility;
+  // @@@solo-setup - One screen for a game's map and seats; a click takes effect at once. A solo game (a private room) has
+  // only the controls a solo game uses; a room for others adds readiness, closing it and its way back to the room list.
+  const solo = room.visibility === "private", host = room.hostUserId === localUser.id, busy = closingRoom || roomSetupSession.busy;
+  menuTitle.textContent = solo ? t("home.solo.title") : t("home.roomSetup.title");
+  menuStatus.textContent = setupError ?? (roomSetupSession.busy ? t('roomSetup.preparing') : solo ? "" : t("roomSetup.status", { name: room.name, visibility: labelKind(room.visibility), status: labelKind(room.status) }));
   const setup = document.createElement("div");
-  setup.className = "room-setup menu-page";
+  setup.className = `room-setup menu-page${host ? " with-maps" : ""}`;
   setup.dataset.roomSetup = room.id;
   setup.innerHTML = menuPageMarkup(`
-    <aside class="match-dossier">${mapDetailMarkup()}
-      <fieldset class="game-mode-switch">
-        <legend>${escapeHtml(t('roomCreate.mode.label'))}</legend>
-        <label><input name="gameMode" type="radio" value="singlePlayer" ${visibility === 'private' ? 'checked' : ''} ${host && !closingRoom ? '' : 'disabled'} /><span>${escapeHtml(t('roomCreate.mode.singlePlayer'))}</span></label>
-        <label title="${deploymentRuntime.kind === 'static' ? escapeHtml(t('roomSetup.staticOnly')) : ''}"><input name="gameMode" type="radio" value="multiplayer" ${visibility === 'public' ? 'checked' : ''} ${host && !closingRoom && deploymentRuntime.kind === 'server' ? '' : 'disabled'} /><span>${escapeHtml(t('roomCreate.mode.multiplayer'))}</span></label>
-      </fieldset>
-      ${deploymentRuntime.kind === 'static' ? `<p class="room-mode-note">${escapeHtml(t('roomSetup.staticOnly'))}</p>` : ''}
-    </aside>
+    ${host ? `<section class="map-browser" aria-label="${escapeHtml(t("roomCreate.map.label"))}">
+      <div class="room-section-title">${escapeHtml(t("roomCreate.map.label"))}</div>
+      <div class="map-entries" data-map-entries></div>
+    </section>` : ""}
+    <aside class="match-dossier">${mapDetailMarkup()}</aside>
     <div class="room-setup-layout">
       <section class="room-slot-pane" aria-label="Player slots">
         <div class="slot-pane-head">
-          <div>
-            <div class="room-section-title">${escapeHtml(t("roomSetup.slots"))}</div>
-          </div>
+          <div class="room-section-title">${escapeHtml(t("roomSetup.slots"))}</div>
           <div class="slot-actions">
-            ${host ? `<button type="button" class="danger-button" data-close-room ${!closingRoom && !roomSetupSession.busy ? "" : "disabled"}>${escapeHtml(t("roomSetup.close"))}</button>` : ""}
+            ${host && !solo ? `<button type="button" class="danger-button" data-close-room ${busy ? "disabled" : ""}>${escapeHtml(t("roomSetup.close"))}</button>` : ""}
           </div>
         </div>
-        ${slotColumnsMarkup(true)}
+        ${slotColumnsMarkup(!solo)}
         <div class="slot-list"></div>
       </section>
-
     </div>
 `, `
       <span class="room-start-reason" data-start-reason>${escapeHtml(startReason(room, host))}</span>
-      ${host ? `<button type="button" data-start-room>${escapeHtml(t("roomSetup.start"))}</button>
-      <button type="button" data-choose-map>${escapeHtml(t('roomCreate.backMaps'))}</button>` : ""}
-      <button type="button" data-back-room-browser>${escapeHtml(t("roomSetup.backRooms"))}</button>
+      ${host ? `<button type="button" data-start-room>${escapeHtml(t("roomSetup.start"))}</button>` : ""}
+      ${solo ? `<button type="button" data-back-home>${escapeHtml(t("common.back"))}</button>`
+        : `<button type="button" data-back-room-browser>${escapeHtml(t("roomSetup.backRooms"))}</button>`}
 `);
   const startButton = setup.querySelector<HTMLButtonElement>("[data-start-room]");
   if (startButton) {
-    startButton.disabled = closingRoom || roomSetupSession.busy || !canStartRoom(room);
+    startButton.disabled = busy || !canStartRoom(room);
     startButton.title = t("roomSetup.startTitle");
   }
+  // Another map rebuilds the room on it, keeping each seat's settings where the new map has that seat.
+  setup.querySelector("[data-map-entries]")?.replaceChildren(...MAP_POOL.map(map => {
+    const entry = menuButton(mapEntryLabel(map.id), "", "data-map-id", () => {
+      if (busy || map.id === room.mapId) return;
+      // The old room closes as the new one opens; this page is not sent away by hearing it close (the session watches
+      // the room it ends up with again).
+      clearRoomWatch();
+      void createConfiguredRoom(configurationOnMap(roomConfiguration(room), map.id), true);
+    }, map.id);
+    entry.disabled = busy;
+    entry.className = `map-entry ${map.id === room.mapId ? "selected" : ""}`;
+    entry.setAttribute("aria-pressed", String(map.id === room.mapId));
+    return entry;
+  }));
   showMapDetail(setup, room.mapId, previewSeatsForRoom(room), room.layoutSeed);
   const slotList = setup.querySelector<HTMLDivElement>(".slot-list")!;
   const local = deploymentRuntime.isLocalRoom(room.id);
   slotList.replaceChildren(...room.slots.map((slot, index) => slotRow(room, slot, index, local)));
-  if (closingRoom || roomSetupSession.busy) slotList.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input,select').forEach(input => input.disabled = true);
-  setup.querySelectorAll<HTMLInputElement>('[name=gameMode]').forEach(input => input.addEventListener('change', () => void switchCurrentRoomMode(input.value === 'singlePlayer' ? 'private' : 'public')));
-  setup.querySelector('[data-choose-map]')?.addEventListener('click', () => openMenuRoute({ screen: 'maps', configuration: roomConfiguration(room) }));
+  if (busy) slotList.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input,select').forEach(input => input.disabled = true);
   setup.querySelector("[data-close-room]")?.addEventListener("click", () => void closeCurrentRoom());
   setup.querySelector("[data-start-room]")?.addEventListener("click", () => void startCurrentRoom());
+  setup.querySelector("[data-back-home]")?.addEventListener("click", () => openMenuRoute({ screen: "home" }));
   setup.querySelector("[data-back-room-browser]")?.addEventListener("click", () => {
     openMenuRoute({ screen: "rooms" });
   });
@@ -1271,14 +1247,6 @@ async function createConfiguredRoom(configuration: RoomConfiguration, replace = 
   catch (error) { if (!applicationClosed && request === routeRequest && operation === setupOperation) showRoomSetupError(error); }
 }
 
-async function switchCurrentRoomMode(visibility: RoomState['visibility']) {
-  if (closingRoom || !currentRoom || currentRoom.hostUserId !== localUser.id || deploymentRuntime.kind === 'static' && visibility === 'public') return;
-  const request = routeRequest, operation = ++setupOperation;
-  setupError = undefined; clearRoomWatch();
-  try { await roomSetupSession.switchMode(visibility); }
-  catch (error) { if (!applicationClosed && request === routeRequest && operation === setupOperation) showRoomSetupError(error); }
-}
-
 function showRoomSetupError(error: unknown) {
   setupError = t('roomSetup.failed', { message: error instanceof Error ? error.message : String(error) });
   renderMainMenu();
@@ -1319,10 +1287,25 @@ async function startCurrentRoom() {
   }
 }
 
-// A rematch: a private room on the same map, computers in the other seats.
+// A rematch is a solo game: one played solo comes back with its settings unchanged; after a game with others, the same
+// map with computers in the other seats.
 async function createReplayRoom(room: RoomState) {
   roomSetupSession.cancel();
-  await createConfiguredRoom({ ...defaultRoomConfiguration(room.mapId as PoolMapId), name: t("roomCreate.defaultName", { name: localUser.name }) });
+  await createConfiguredRoom(room.visibility === "private" ? roomConfiguration(room)
+    : { ...defaultRoomConfiguration(room.mapId as PoolMapId), name: t("roomCreate.defaultName", { name: localUser.name }) });
+}
+
+// @@@solo-setup - The last solo game's map and seats, kept in this browser in the form its address takes, so what is read
+// back is checked as a shared link is.
+const SOLO_SETUP_STORAGE_KEY = "sketch-rts-solo-setup";
+function rememberSoloSetup(configuration: RoomConfiguration) {
+  try { localStorage.setItem(SOLO_SETUP_STORAGE_KEY, formatRoomRoute({ screen: "setup", configuration })); } catch { /* Storage blocked: nothing kept. */ }
+}
+function rememberedSoloSetup(): RoomConfiguration {
+  let stored: string | null = null;
+  try { stored = localStorage.getItem(SOLO_SETUP_STORAGE_KEY); } catch { /* Storage blocked: the first map. */ }
+  const route = stored ? parseRoomRoute(stored) : undefined;
+  return route?.screen === "setup" && route.configuration ? { ...route.configuration, visibility: "private" } : defaultRoomConfiguration();
 }
 
 function menuButton(label: string, note: string, dataName: string, onClick: () => void, dataValue = "true") {
@@ -1389,7 +1372,7 @@ function slotRow(room: RoomState, slot: RoomState["slots"][number], index: numbe
     </select>
     <select data-slot-race aria-label="${escapeHtml(t("roomSetup.slotRace"))}" ${seat ? "" : "disabled"}>${raceOptions}</select>
     ${slot.controller === "ai" ? `<select data-slot-ai aria-label="${escapeHtml(t("roomSetup.slotAi"))}" ${slot.race === "random" || !seat ? "disabled" : ""}>${aiOptions}</select>` : ""}
-    <label class="slot-ready"><input data-slot-ready type="checkbox" ${slot.ready ? "checked" : ""} ${ready ? "" : "disabled"} /> ${escapeHtml(t("roomSetup.slotReady"))}</label>
+    ${room.visibility === "private" ? "" : `<label class="slot-ready"><input data-slot-ready type="checkbox" ${slot.ready ? "checked" : ""} ${ready ? "" : "disabled"} /> ${escapeHtml(t("roomSetup.slotReady"))}</label>`}
   `;
   row.querySelector<HTMLSelectElement>("[data-slot-controller]")?.addEventListener("change", (event) => {
     const controller = (event.currentTarget as HTMLSelectElement).value;
@@ -1427,7 +1410,7 @@ async function closeCurrentRoom() {
   closingRoom = true; clearRoomWatch(); renderMainMenu();
   try { await deploymentRuntime.closeRoom(id, localUser); }
   catch (error) { if (request === routeRequest && operation === setupOperation) { watchRoomSetup(id); showRoomSetupError(error); } return; }
-  finally { closingRoom = false; if (!applicationClosed && (menuView === 'setup' || menuView === 'maps')) renderMainMenu(); }
+  finally { closingRoom = false; if (!applicationClosed && menuView === 'setup') renderMainMenu(); }
   if (request !== routeRequest || currentRoom?.id !== id) return;
   roomSetupSession.cancel();
   clearRoomWatch();
@@ -2153,6 +2136,7 @@ function contextOrderStatus(command: GameCommand, target: Exclude<PointerTarget,
   if (command.type === "repair" && target.kind === "building") return t("status.repairOrdered", { building: labelBuilding(target.building) });
   if ((command.type === "repairUnit" || command.type === "repairShip") && target.kind === "unit") return t("status.repairOrdered", { building: labelKind(target.unit.kind) });
   if (command.type === "board") return t("status.boardOrdered");
+  if (command.type === "garrison") return t("status.garrisonOrdered");
   if (command.type === "follow" && target.kind === "unit") return t("status.followOrdered", { target: labelAnyKind(target.unit.kind) });
   if (target.kind === "obstacle") return t("status.breakObstacleOrdered");
   const owner = target.kind === "unit" ? target.unit.owner : target.kind === "building" ? target.building.owner : undefined;
@@ -2399,6 +2383,36 @@ function orderButtonState(command: GameCommand): CommandButtonState {
 function trainButtonState(unitKind: TrainableUnitKind): CommandButtonState {
   const building = canTrain(unitKind) ? focusedTrainingBuilding(unitKind) : undefined;
   return building ? orderButtonState({ type: "train", buildingId: building.id, unitKind }) : HIDDEN_COMMAND_STATE;
+}
+
+// A defense tower's own card (see @@@tower-garrison): fortify it once, then call its troops down.
+function focusedTower() {
+  return !commandMode && !openPalette ? focusedPlayerBuildings().find((building) => building.kind === "defenseTower" && building.complete) : undefined;
+}
+
+function fortifyButtonState(): CommandButtonState {
+  const tower = focusedTower();
+  if (!tower || tower.fortified) return HIDDEN_COMMAND_STATE;
+  if (tower.fortify) return { visible: true, enabled: false, reason: "position", detail: t("command.fortifyTower.progress", { percent: Math.floor((1 - tower.fortify.remaining / TOWER_GARRISON.time) * 100) }) };
+  return orderButtonState({ type: "fortifyTower", buildingId: tower.id });
+}
+
+function fortifyFocusedTower() {
+  const tower = focusedTower();
+  if (!tower) return;
+  const state = fortifyButtonState();
+  if (!state.enabled) { showInvalidCommand(state.detail ?? t("command.fortifyTower.title")); return; }
+  if (sendCommand({ type: "fortifyTower", buildingId: tower.id })) statusLabel.textContent = t("status.fortifyStarted");
+}
+
+function ungarrisonButtonState(): CommandButtonState {
+  const tower = focusedTower();
+  return tower?.fortified ? orderButtonState({ type: "ungarrison", buildingId: tower.id }) : HIDDEN_COMMAND_STATE;
+}
+
+function ungarrisonFocusedTower() {
+  const tower = focusedTower();
+  if (tower && sendCommand({ type: "ungarrison", buildingId: tower.id })) statusLabel.textContent = t("status.ungarrisonOrdered");
 }
 
 function researchButtonState(upgradeKind: UpgradeKind): CommandButtonState {
@@ -2844,7 +2858,7 @@ function hireMercenary() {
 
 function selectUnitsInBox(start: Point, end: Point, additive = false) {
   if (!snapshot) return;
-  const result = selectInScreenBox(snapshot, localPlayerId, selectionRect(start, end), worldToScreen, { selectedIds, focusedSelectionId }, additive,unit=>{const at=worldPresentation.position(unit.id);return at?{x:at.x,y:at.bodyY}:unitPointerPosition(snapshot!.units,unit);});
+  const result = selectInScreenBox(snapshot, localPlayerId, selectionRect(start, end), worldToScreen, { selectedIds, focusedSelectionId }, additive,unit=>{const at=worldPresentation.position(unit.id);return at?{x:at.x,y:at.bodyY}:unitPointerPosition(snapshot!.units,unit,false,snapshot!.buildings);});
   selectedIds = result.selectedIds;
   focusedSelectionId = result.focusedSelectionId;
   if (selectedIds.size > 0 || !additive) selectedCampId = undefined;

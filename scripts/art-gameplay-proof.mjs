@@ -39,12 +39,13 @@ try{
  read=async expression=>{const result=await command('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true},sessionId);if(result.exceptionDetails)throw new Error(result.exceptionDetails.exception?.description??result.exceptionDetails.text);return result.result.value;};
  evidence.browser=await command('Browser.getVersion');await command('Page.navigate',{url:origin},sessionId);
  await until(()=>read(`document.readyState==='complete'`),'page module startup');await delay(500);
- await click('[data-open-create]');await click('[data-map-entries] [data-map-id="pineshade"]');await screenshot('map-selection');
+ // A room for others opens from the room list on the setup screen; another map there rebuilds the room on it.
+ await click('[data-open-room-browser]');await click('[data-create-room]');
+ const createdId=await until(()=>read(`(()=>{const id=document.querySelector('[data-room-setup]')?.dataset.roomSetup;return id&&new URLSearchParams(location.search).get('room')===id?id:null})()`),'authoritative room setup');
+ await click('[data-map-entries] [data-map-id="pineshade"]');
+ const roomId=await until(()=>read(`(()=>{const id=document.querySelector('[data-room-setup]')?.dataset.roomSetup,entry=document.querySelector('[data-map-entries] [aria-pressed="true"]');return id&&id!==${JSON.stringify(createdId)}&&entry?.dataset.mapId==='pineshade'&&!entry.disabled&&new URLSearchParams(location.search).get('room')===id?id:null})()`),'room on the chosen map');evidence.roomId=roomId;
+ await screenshot('map-selection');
  evidence.steps.push({step:'select-map',state:await read(`({url:location.href,selected:document.querySelector('[data-map-entries] [aria-pressed="true"]')?.dataset.mapId})`)});
- await click('[data-map-next]');await until(()=>read(`!!document.querySelector('[data-room-setup]')`),'room setup');
- const localId=await read(`document.querySelector('[data-room-setup]').dataset.roomSetup`);
- await click('.game-mode-switch label:has(input[value="multiplayer"])');
- const roomId=await until(()=>read(`(()=>{const id=document.querySelector('[data-room-setup]')?.dataset.roomSetup;return id&&id!==${JSON.stringify(localId)}&&new URLSearchParams(location.search).get('room')===id?id:null})()`),'authoritative room setup');evidence.roomId=roomId;
  const openSlots=await read(`[...document.querySelectorAll('[data-slot-id]')].filter(row=>row.querySelector('[data-slot-controller]')?.value==='open').map(row=>row.dataset.slotId)`);
  for(const slotId of openSlots){await read(`(()=>{const select=document.querySelector(${JSON.stringify(`[data-slot-id="${slotId}"] [data-slot-controller]`)});select.value='ai';select.dispatchEvent(new Event('change',{bubbles:true}));})()`);await until(()=>read(`(()=>{const el=document.querySelector(${JSON.stringify(`[data-slot-id="${slotId}"] [data-slot-controller]`)});return el?.value==='ai'&&!el.disabled})()`),'AI slot');}
  await screenshot('room-setup');await click('[data-start-room]');

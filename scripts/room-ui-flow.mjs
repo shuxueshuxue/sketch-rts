@@ -9,49 +9,59 @@ export const roomUiFlowCode = String.raw`
     return { x: bounds.x + transform.m41, y: bounds.y + transform.m42,
       width: parseFloat(frame.style.width), height: parseFloat(frame.style.height) };
   });
-  const confirmedSoloSetup = async (poolMapId) => {
-    await page.waitForSelector("[data-map-entries] [data-map-id]", { timeout: 5000 });
-    const entry = poolMapId ? page.locator("[data-map-entries] [data-map-id='" + poolMapId + "']") : page.locator("[data-map-entries] [data-map-id]").first();
-    const selectedMapId = await entry.getAttribute("data-map-id");
-    must(selectedMapId, "map chooser did not expose a selected map");
-    await entry.click();
-    const draft = await page.evaluate(() => ({
-      mapId: new URLSearchParams(location.search).get("map"),
-      view: new URLSearchParams(location.search).get("view"),
-      selected: document.querySelector("[data-map-entries] [aria-pressed='true']")?.getAttribute("data-map-id"),
-      rooms: document.querySelectorAll("[data-room-setup]").length,
-      confirms: document.querySelectorAll("[data-map-next]").length,
-    }));
-    must(draft.mapId === selectedMapId && draft.selected === selectedMapId && draft.view === "maps" && draft.rooms === 0 && draft.confirms === 1,
-      "map click must only select and preview the map: " + JSON.stringify(draft));
-    await page.locator("[data-map-next]").click();
-    await page.waitForSelector("[data-room-setup]", { timeout: 5000 });
+  const setupRoomId = () => page.locator("[data-room-setup]").getAttribute("data-room-setup");
+  // Another map on the setup screen rebuilds the room on it at once (see @@@solo-setup).
+  const chooseSetupMap = async (mapId) => {
+    if ((await page.locator("[data-map-entries] [aria-pressed='true']").getAttribute("data-map-id")) === mapId) return;
+    const before = await setupRoomId();
+    await page.locator("[data-map-entries] [data-map-id='" + mapId + "']").click();
+    await page.waitForFunction(({ before, mapId }) => {
+      const id = document.querySelector("[data-room-setup]")?.getAttribute("data-room-setup");
+      const entry = document.querySelector("[data-map-entries] [aria-pressed='true']");
+      return id && id !== before && entry?.getAttribute("data-map-id") === mapId && !entry.disabled;
+    }, { before, mapId }, { timeout: 5000 });
+  };
+  const setupControls = () => page.evaluate(() => ({
+    modeSwitch: document.querySelectorAll("input[name='gameMode']").length, close: document.querySelectorAll("[data-close-room]").length,
+    ready: document.querySelectorAll("[data-slot-ready]").length, mapStep: document.querySelectorAll("[data-map-next], [data-choose-map]").length,
+    maps: document.querySelectorAll("[data-map-entries] [data-map-id]").length,
+    backHome: document.querySelectorAll("[data-back-home]").length, backRooms: document.querySelectorAll("[data-back-room-browser]").length,
+  }));
+  // A solo game: the home's play entry opens the map and seats on one screen, with only what a solo game uses.
+  const soloSetup = async (poolMapId) => {
+    await page.waitForSelector("[data-open-create]", { timeout: 5000 });
+    await page.click("[data-open-create]");
+    await page.waitForSelector("[data-room-setup] [data-map-entries] [data-map-id]", { timeout: 5000 });
+    if (poolMapId) await chooseSetupMap(poolMapId);
     await page.waitForFunction(() => document.querySelector("[data-start-room]")?.disabled === false, null, { timeout: 5000 });
     const setup = await page.evaluate(() => {
       const query = new URLSearchParams(location.search);
-      return {
-        id: document.querySelector("[data-room-setup]")?.getAttribute("data-room-setup"),
-        mapId: query.get("map"), seed: query.get("seed"), name: query.get("name"), seats: query.get("seats"),
-        visibility: query.get("visibility"), solo: document.querySelector("input[name='gameMode'][value='singlePlayer']")?.checked,
-        createButtons: document.querySelectorAll("[data-submit-create-game], [data-map-next]").length,
-      };
+      return { id: document.querySelector("[data-room-setup]")?.getAttribute("data-room-setup"),
+        mapId: query.get("map"), seed: query.get("seed"), seats: query.get("seats"), visibility: query.get("visibility"),
+        selected: document.querySelector("[data-map-entries] [aria-pressed='true']")?.getAttribute("data-map-id") };
     });
-    must(setup.id && setup.mapId === selectedMapId && setup.seed && setup.seats && setup.visibility === "private" && setup.solo && setup.createButtons === 0,
-      "confirming the map must enter the configured solo setup: " + JSON.stringify(setup));
+    const controls = await setupControls();
+    must(setup.id && setup.mapId && setup.mapId === setup.selected && (!poolMapId || setup.mapId === poolMapId) && setup.seed && setup.seats && setup.visibility === "private" &&
+      controls.modeSwitch === 0 && controls.close === 0 && controls.ready === 0 && controls.mapStep === 0 && controls.maps > 1 && controls.backHome === 1 && controls.backRooms === 0,
+      "the play entry must open a solo setup of map and seats on one screen, with no lobby controls: " + JSON.stringify({ setup, controls }));
     return setup.id;
   };
-  // Gameplay proofs use authoritative HTTP/WS fixtures. Move the real solo
-  // setup to multiplayer, then restore its AI seats before starting.
-  const serverSetupFromSolo = async (restoreAi = true) => {
-    const previousId = await page.locator("[data-room-setup]").getAttribute("data-room-setup");
-    await page.locator(".game-mode-switch label").filter({ has: page.locator("input[name='gameMode'][value='multiplayer']") }).click();
-    await page.waitForFunction((oldId) => {
+  // A room for others: the room list's create button opens the same screen, open to a player, with readiness and closing.
+  // Gameplay proofs use such an authoritative room, its open seat given back to a computer.
+  const onlineSetup = async (poolMapId, restoreAi = true) => {
+    await page.waitForSelector("[data-create-room]", { timeout: 5000 });
+    await page.click("[data-create-room]");
+    await page.waitForFunction(() => {
       const id = document.querySelector("[data-room-setup]")?.getAttribute("data-room-setup");
-      return id && id !== oldId && new URLSearchParams(location.search).get("room") === id && document.querySelector("input[name='gameMode'][value='multiplayer']")?.checked;
-    }, previousId, { timeout: 5000 });
-    const id = await page.locator("[data-room-setup]").getAttribute("data-room-setup");
+      return id && new URLSearchParams(location.search).get("room") === id && document.querySelector("[data-map-entries] [data-map-id]");
+    }, null, { timeout: 5000 });
+    if (poolMapId) await chooseSetupMap(poolMapId);
+    const id = await setupRoomId();
+    const controls = await setupControls();
+    must(controls.modeSwitch === 0 && controls.close === 1 && controls.ready > 0 && controls.mapStep === 0 && controls.maps > 1 && controls.backRooms === 1 && controls.backHome === 0,
+      "the room list's create button must open a room for others on the same screen: " + JSON.stringify(controls));
     const openSlots = await page.locator("[data-slot-id]").evaluateAll(rows => rows.filter(row => row.querySelector("[data-slot-controller]")?.value === "open").map(row => row.getAttribute("data-slot-id")));
-    must(openSlots.length > 0, "multiplayer mode must expose an invitation seat");
+    must(openSlots.length > 0, "a room for others must offer an invitation seat");
     for (const slotId of restoreAi ? openSlots : []) {
       await page.locator("[data-slot-id='" + slotId + "'] [data-slot-controller]").selectOption("ai");
       await page.waitForFunction((slotId) => {
@@ -65,8 +75,8 @@ export const roomUiFlowCode = String.raw`
       if (!response.ok) throw new Error(await response.text());
       return response.json();
     }, id);
-    must(room.id === id && room.visibility === "public" && room.status === "open" && (!restoreAi || room.slots.slice(1).every(slot => slot.controller === "ai")),
-      "authoritative fixture must preserve the solo AI army: " + JSON.stringify(room));
+    must(room.id === id && room.visibility === "public" && room.status === "open" && (!poolMapId || room.mapId === poolMapId) && (!restoreAi || room.slots.slice(1).every(slot => slot.controller === "ai")),
+      "a room for others must be the server's, with computers in the other seats: " + JSON.stringify(room));
     return id;
   };
   const serverFixtureMap = async (roomId, mapId) => {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createGame, snapshotGame } from "../shared/sim";
+import { createBuilding } from "../shared/map";
 import { deckMovePoint, hasAlly, pointerTarget, relationTo, targetCommand, unitAt, unitPointerPosition } from "./relations";
 import { boardUnit, syncDecks } from '../shared/decks';
 import { deckVisualHeight } from './art/canvas-ships';
@@ -143,4 +144,21 @@ describe("gold mine click boundaries", () => {
     expect(pointerTarget(snapshotGame(game),mine)?.kind).toBe("resource");
     for(const dx of [-83,-55,55,83])expect(pointerTarget(snapshotGame(game),{x:mine.x+dx,y:mine.y})).toBeUndefined();
   });
+});
+
+// @@@tower-garrison - A right-click on an own fortified tower sends the selection up; its troops are pointed at on its top.
+it('sends troops up an own fortified tower and points at them on its top', () => {
+  const game = createGame('bareDuel', { aiPlayers: [] }); game.units = [];
+  const tower = createBuilding('tower', 'player', 'defenseTower', 1500, 1500, true);
+  game.buildings.push(tower);
+  const archer = game.spawnUnit('player', 'archer', 1500, 1700), worker = game.spawnUnit('player', 'worker', 1540, 1700);
+  expect(targetCommand(snapshotGame(game), 'player', [archer], { kind: 'building', building: tower })).toBeUndefined();
+  tower.fortified = true;
+  expect(targetCommand(snapshotGame(game), 'player', [archer, worker], { kind: 'building', building: tower })).toEqual({ type: 'garrison', unitIds: [archer.id, worker.id], buildingId: tower.id, queued: false });
+  tower.hp -= 50;
+  expect(targetCommand(snapshotGame(game), 'player', [archer, worker], { kind: 'building', building: tower })).toMatchObject({ type: 'repair', unitIds: [worker.id] });
+  archer.garrison = { buildingId: tower.id }; archer.x = tower.x - 14; archer.y = tower.y - 14;
+  const snapshot = snapshotGame(game), point = unitPointerPosition(snapshot.units, archer, false, snapshot.buildings);
+  expect(point.y).toBeLessThan(archer.y - 30);
+  expect(pointerTarget(snapshot, point)).toMatchObject({ kind: 'unit', unit: { id: archer.id } });
 });

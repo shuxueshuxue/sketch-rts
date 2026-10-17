@@ -49,9 +49,9 @@ function brushZoom(c: Brush) {
   return Math.hypot(transform.a, transform.b);
 }
 
-export function drawAtlasBuilding(c: Brush, kind: BuildingKind | SiteModelKind, point: Point, size: number, color: string) {
-  sprite(c, `b:${kind}:${color}`, point, size / 64, (b) => {
-    paintBuildingModel(b, kind, color);
+export function drawAtlasBuilding(c: Brush, kind: BuildingKind | SiteModelKind, point: Point, size: number, color: string, openRoof = false) {
+  sprite(c, `b:${kind}:${color}${openRoof ? ":open" : ""}`, point, size / 64, (b) => {
+    paintBuildingModel(b, kind, color, openRoof);
   });
 }
 
