@@ -146,7 +146,12 @@ describe('bootstrap_1 production budget', () => {
     for (let index = 0; index < 6; index++) scene = scene.unit('us', basic, 1300 + index * 30, 900);
     const game = scene.build().createGame(), memory = createAiPolicyMemory();
     memory.v6 = { phase: 1 };
-    for (let tick = 0; tick < 6000 && game.units.filter(unit => unit.owner === 'us' && unit.kind === heavy).length < 4; tick++) {
+    // The budget is the ember timeline's since mines became two-cell bodies (see @@@structure-body): workers enter from
+    // beside the mine, and a natural haul lands a little later (560 gold mined there by 2000, 570 before). At 2355 the
+    // second chieftain is 5 gold short, so the builder waiting at the workshop site lays it first (before, the chieftains
+    // won every such frame and the workshop waited past the fourth). The fourth comes at 7015 (5155 before), grove's at
+    // 4190 (3695 before).
+    for (let tick = 0; tick < 8000 && game.units.filter(unit => unit.owner === 'us' && unit.kind === heavy).length < 4; tick++) {
       if (tick % 15 === 0) {
         const snapshot = snapshotGame(game), options = bootstrapPolicyContext(snapshot, 'us', 'v9_knight', { memory, teams: game.teams });
         for (const command of planBootstrapEconomy(snapshot, 'us', options)) issuePlayerCommand(game, 'us', command);

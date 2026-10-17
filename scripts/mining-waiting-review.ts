@@ -3,7 +3,7 @@ import { writeFileSync } from 'node:fs';
 import { createGame, issuePlayerCommand, stepGame } from '../src/shared/sim.ts';
 import { createUnit } from '../src/shared/map.ts';
 import { MAP_POOL } from '../src/shared/map-pool.ts';
-import { GOLD_MINE_RULES } from '../src/shared/mining.ts';
+import { GOLD_MINE_RULES, atMineEntrance } from '../src/shared/mining.ts';
 import { seconds } from '../src/shared/time.ts';
 import type { MapId } from '../src/shared/types.ts';
 
@@ -34,7 +34,7 @@ for (const scenario of scenarios) for (let count=1;count<=6;count++) {
     for(let i=0;i<workers.length;i++) {
       const worker=workers[i]!,old=before[i]!,stat=stats[i]!;
       const stationary=Math.hypot(worker.x-old.x,worker.y-old.y)<.01;
-      const queued=stationary&&worker.order.type==='mine'&&worker.order.phase==='toMine'&&Math.hypot(worker.x-mine.x,worker.y-mine.y)<=GOLD_MINE_RULES.entryRange;
+      const queued=stationary&&worker.order.type==='mine'&&worker.order.phase==='toMine'&&atMineEntrance(game.map,worker,mine);
       stat.waiting=queued?stat.waiting+1:0;
       if(measured){stat.waitTicks+=+queued;stat.maxWaitTicks=Math.max(stat.maxWaitTicks,stat.waiting);if(old.load>0&&worker.carryingGold===0)stat.delivered+=old.load;}
       else stat.initialMaxWaitTicks=Math.max(stat.initialMaxWaitTicks,stat.waiting);

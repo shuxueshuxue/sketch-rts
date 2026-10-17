@@ -4,8 +4,8 @@ import { dropItemCommand, inventorySlots, pickupItemCommand, useItemCommand } fr
 import type { Unit, WorldItem } from "../shared/types";
 
 describe("item controls", () => {
-  // @@@item-slots - The bar is the carrier's four carrying positions: worn gear stays off it, and each item keeps its slot.
-  it("shows a carrier's four carrying positions in place, worn gear aside", () => {
+  // @@@item-slots - The bar is what the carrier carries: one button an item, keyed by its slot, worn gear aside.
+  it("shows only a carrier's carried items, each keyed by its slot, worn gear aside", () => {
     const game = createGame();
     const carrier = unit("carrier", 100, 100);
     const items: WorldItem[] = [
@@ -16,9 +16,12 @@ describe("item controls", () => {
     ];
     game.units = [carrier];
     game.items = items;
-    expect(inventorySlots(game, carrier).map(({ slot, digit, item }) => [slot, digit, item?.id])).toEqual([
-      ["carry0", 1, "rod"], ["carry1", 2, undefined], ["carry2", 3, "scroll"], ["carry3", 4, undefined],
+    expect(inventorySlots(game, carrier).map(({ slot, digit, item }) => [slot, digit, item.id])).toEqual([
+      ["carry0", 1, "rod"], ["carry2", 3, "scroll"],
     ]);
+    // Nothing carried, no bar.
+    game.items = items.filter(item => item.carrierId !== carrier.id || item.slot === "feet");
+    expect(inventorySlots(game, carrier)).toEqual([]);
     expect(inventorySlots(game, undefined)).toEqual([]);
   });
 

@@ -1,13 +1,15 @@
 import { UNIT_DEFS } from './catalog';
 import { createUnit } from './map';
-import { GOLD_MINE_RULES } from './mining';
+import { standingBodies, type StructureBody } from './structure-bodies';
 import { segmentDistanceSquared, type Point } from './navigation-math';
 import { distanceToHull, shipProfile } from './ship-geometry';
 import { footprintHalf, groundRevision, isOpenGround, segmentWalkable, walkableGoal, walkDestination } from './terrain';
 import type { Building, GameMap, GameSnapshot, Obstacle, Unit, UnitKind } from './types';
 
-type World = Pick<GameSnapshot, 'map' | 'units' | 'buildings' | 'obstacles'> & Partial<Pick<GameSnapshot, 'resources'>>;
-type Solid = Building | Obstacle;
+type World = Pick<GameSnapshot, 'map' | 'units' | 'buildings' | 'obstacles'> & Partial<Pick<GameSnapshot, 'resources' | 'shops' | 'mercenaryCamps'>>;
+// Every body standing on the map (see @@@structure-body): a building, a rock pile or gate, a mine, a shop or a camp.
+type Solid = Building | Obstacle | StructureBody;
+const standing = (body: Solid) => !('hp' in body) || body.hp > 0;
 type Exits = {
   geometry: string;
   terrain: GameMap['terrain'];
@@ -64,13 +66,13 @@ export function landSpawnPoint(world: World, building: Building, unit: Unit): Po
   // Only nearby solid footprints can intersect an exit or its slideway.
   // Keep an extra cell for authored bodies not snapped exactly to the grid.
   const halo = solidHalf(world.map, building) + 2 * radius + 2 * GAP + OUTWARD[OUTWARD.length - 1]! + (terrain?.cell ?? 0);
-  const nearbySolids = [...world.buildings, ...(world.obstacles ?? [])].filter(body => Math.abs(body.x - building.x) <= halo + solidHalf(world.map, body)
+  const nearbySolids = standingBodies(world).filter(body => Math.abs(body.x - building.x) <= halo + solidHalf(world.map, body)
     && Math.abs(body.y - building.y) <= halo + solidHalf(world.map, body));
-  const solids = nearbySolids.filter(body => body.hp > 0);
+  const solids = nearbySolids.filter(standing);
   const navigation = groundRevision(world.map);
   // Keep the global routing revision here: a remote gate can change rally
   // reachability, and the overlay may remove a dead local body a tick later.
-  const geometry = `${building.x}:${building.y}:${building.radius}:${radius}:${world.map.width}:${world.map.height}:${terrain?.cell}:${terrain?.cols}:${terrain?.rows}:${navigation}:${nearbySolids.map(s => `${s.id}:${s.x}:${s.y}:${s.radius}:${s.hp > 0}`).join('|')}`;
+  const geometry = `${building.x}:${building.y}:${building.radius}:${radius}:${world.map.width}:${world.map.height}:${terrain?.cell}:${terrain?.cols}:${terrain?.rows}:${navigation}:${nearbySolids.map(s => `${s.id}:${s.x}:${s.y}:${s.radius}:${standing(s)}`).join('|')}`;
   let buildings = exits.get(world.map);
   if (!buildings) { buildings = new WeakMap(); exits.set(world.map, buildings); }
   let cached = buildings.get(building);
@@ -82,9 +84,8 @@ export function landSpawnPoint(world: World, building: Building, unit: Unit): Po
   if (!cached.points.length) return undefined;
   const bodies = world.units.filter(body => body !== unit && body.hp > 0 && !body.deck
     && (shipProfile(body) ? distanceToHull(body, building) : Math.hypot(body.x - building.x, body.y - building.y) - Math.max(body.radius, body.bodyRadius ?? 0)) <= cached!.range);
-  const mines = world.resources?.filter(resource => resource.amount > 0 && Math.hypot(resource.x - building.x, resource.y - building.y) <= cached!.range + GOLD_MINE_RULES.radius) ?? [];
   const aim = productionRallyPoint(world, building);
-  const selection = `${aim.x}:${aim.y}:${bodies.map(body => `${body.id}:${body.kind}:${body.x}:${body.y}:${body.radius}:${body.bodyRadius}:${body.sailing?.heading ?? 0}`).join('|')}:${mines.map(mine => `${mine.id}:${mine.x}:${mine.y}`).join('|')}`;
+  const selection = `${aim.x}:${aim.y}:${bodies.map(body => `${body.id}:${body.kind}:${body.x}:${body.y}:${body.radius}:${body.bodyRadius}:${body.sailing?.heading ?? 0}`).join('|')}`;
   if (cached.selection !== selection) {
     cached.selection = selection;
     const goal = walkableGoal(world.map, aim.x, aim.y);
@@ -112,8 +113,7 @@ export function landSpawnPoint(world: World, building: Building, unit: Unit): Po
       }
       reachableExit ||= reachable;
       if (!bodies.every(body => shipProfile(body) ? distanceToHull(body, point) >= radius + GAP
-        : Math.hypot(point.x - body.x, point.y - body.y) >= radius + Math.max(body.radius, body.bodyRadius ?? 0) + GAP)
-        || !mines.every(mine => Math.hypot(point.x - mine.x, point.y - mine.y) >= radius + GOLD_MINE_RULES.radius + GAP)) continue;
+        : Math.hypot(point.x - body.x, point.y - body.y) >= radius + Math.max(body.radius, body.bodyRadius ?? 0) + GAP)) continue;
       fallback ??= point;
       if (!reachable) continue;
       cached.result = point; break;

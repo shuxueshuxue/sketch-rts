@@ -1,6 +1,5 @@
 import { unitNeedsRepair } from "../shared/unit-repair";
 import { isInCabin } from '../shared/ship-cabin';
-import { GOLD_MINE_RULES } from "../shared/mining";
 import { distanceToHull, isShipKind } from "../shared/ship-geometry";
 import { UNIT_DEFS } from "../shared/catalog";
 import { deckVisualHeight } from "./art/canvas-ships";
@@ -70,6 +69,8 @@ export type PointerTarget =
 
 // @@@pointer-target - Choose the nearest visible body under the pointer. Resource reach is its actual body,
 // so ground beside a mine stays a move target and nearby workers remain individually selectable.
+const GOLD_MINE_ART_REACH = 44;
+
 export function pointerTarget(snapshot: Pick<GameSnapshot, "items" | "resources" | "units" | "buildings" | "obstacles">, world: Point): PointerTarget | undefined {
   let nearest: { target: PointerTarget; gap: number } | undefined;
   const consider = (at: Point, reach: number, target: PointerTarget) => {
@@ -77,7 +78,8 @@ export function pointerTarget(snapshot: Pick<GameSnapshot, "items" | "resources"
     if (gap < reach && (!nearest || gap < nearest.gap)) nearest = { target, gap };
   };
   for (const item of snapshot.items) if (!item.carrierId && !item.shipId) {const ship=item.deck && snapshot.units.find(ship=>ship.id===item.deck!.shipId);consider({x:item.x,y:item.y-(ship?deckVisualHeight(ship):0)}, 34, { kind: "item", item });}
-  for (const resource of snapshot.resources) consider(resource, GOLD_MINE_RULES.radius, { kind: "resource", resource });
+  // A mine is pointed at across its art, which is drawn past its two-cell body (see @@@structure-body).
+  for (const resource of snapshot.resources) consider(resource, GOLD_MINE_ART_REACH, { kind: "resource", resource });
   for (const unit of snapshot.units) if (!isInCabin(unit) && !isShipKind(unit.kind)) consider(unitPointerPosition(snapshot.units, unit, false, snapshot.buildings), UNIT_REACH, { kind: "unit", unit });
   if (nearest?.target.kind !== "unit") for (const unit of snapshot.units) if (isShipKind(unit.kind) && (distanceToHull(unit, world) < 8 || distanceToHull(unit,{x:world.x,y:world.y+deckVisualHeight(unit)}) < 8)) consider(unit, Infinity, { kind: "unit", unit });
   for (const building of snapshot.buildings) consider(building, buildingReach(building), { kind: "building", building });

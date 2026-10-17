@@ -2987,11 +2987,11 @@ function handleGameplayKeyIntent(event: KeyboardEvent) {
   if (!snapshot) return false;
   const intent = gameplayKeyIntent(event, {
     controlGroups: new Set(Object.keys(controlGroups).map(Number)),
-    inventorySlots: inventorySlots(snapshot, inventoryCarrier(inventoryCarriers())).length,
+    inventoryDigits: new Set(inventorySlots(snapshot, inventoryCarrier(inventoryCarriers())).map(({ digit }) => digit)),
     commandHotkeys: new Set(commandButtons.filter((button) => button.state().visible).map((button) => button.hotkey)),
   });
   if (intent.type === "none") return false;
-  if (intent.type === "inventoryUse") return useInventoryItem(intent.index);
+  if (intent.type === "inventoryUse") return useInventoryItem(intent.digit);
   if (intent.type === "commandHotkey") {
     const command = commandButtons.find((button) => button.hotkey === intent.hotkey && button.state().visible);
     command?.run();
@@ -3327,22 +3327,22 @@ function renderTrainingProgressButton(progress: TrainingProgressButton, previous
 // with what lay there), onto a unit of yours it is handed over, onto open ground it is set down there; the carrier walks
 // to do so when it stands too far (see @@@item-errand). A press that never moves is a click: it uses the item.
 const ITEM_DRAG_THRESHOLD = 6;
-let itemDrag: { index: number; itemId: string; carrierId: string; from: Point; moved: boolean } | undefined;
+let itemDrag: { digit: number; itemId: string; carrierId: string; from: Point; moved: boolean } | undefined;
 let suppressItemClickUntil = 0;
 
 function beginItemDrag(point: Point, element: Element | null) {
   const button = element?.closest<HTMLElement>(".item-button[data-item-id]");
   if (!button || !itemDock.contains(button)) return false;
-  const item = inventorySlotItem(Number(button.dataset.itemSlot));
+  const item = inventorySlotItem(Number(button.dataset.itemDigit));
   if (!item?.carrierId) return false;
-  itemDrag = { index: Number(button.dataset.itemSlot), itemId: item.id, carrierId: item.carrierId, from: point, moved: false };
+  itemDrag = { digit: Number(button.dataset.itemDigit), itemId: item.id, carrierId: item.carrierId, from: point, moved: false };
   return true;
 }
 
 function moveItemDrag(point: Point) {
   if (!itemDrag || itemDrag.moved || Math.hypot(point.x - itemDrag.from.x, point.y - itemDrag.from.y) < ITEM_DRAG_THRESHOLD) return;
   itemDrag.moved = true;
-  itemDock.dataset.dragging = String(itemDrag.index);
+  itemDock.dataset.dragging = String(itemDrag.digit);
   const item = snapshot?.items.find(candidate => candidate.id === itemDrag!.itemId);
   if (item) statusLabel.textContent = t("status.itemDragging", { item: labelKind(item.kind) });
 }
@@ -3358,11 +3358,11 @@ function endItemDrag(point: Point) {
   const item = snapshot.items.find(candidate => candidate.id === drag.itemId && candidate.carrierId === drag.carrierId);
   if (!item) return true;
   const under = document.elementFromPoint(point.x, point.y);
-  const slot = under?.closest<HTMLElement>(".item-button[data-item-slot]");
+  const slot = under?.closest<HTMLElement>(".item-button[data-item-digit]");
   if (slot && itemDock.contains(slot)) {
-    const index = Number(slot.dataset.itemSlot);
-    if (index !== drag.index && sendCommand({ type: "transferItem", itemId: item.id, destination: { unitId: drag.carrierId, slot: CARRY_SLOTS[index]! } }))
-      statusLabel.textContent = t("status.itemMoved", { item: labelKind(item.kind), slot: index + 1 });
+    const digit = Number(slot.dataset.itemDigit);
+    if (digit !== drag.digit && sendCommand({ type: "transferItem", itemId: item.id, destination: { unitId: drag.carrierId, slot: CARRY_SLOTS[digit - 1]! } }))
+      statusLabel.textContent = t("status.itemMoved", { item: labelKind(item.kind), slot: digit });
     return true;
   }
   if (under !== canvas) return true;
@@ -3383,14 +3383,14 @@ function renderItemDock() {
   const slots = snapshot && !menuOpen ? inventorySlots(snapshot, inventoryCarrier(inventoryCarriers())) : [];
   setHidden(itemDock, slots.length === 0);
   if (slots.length === 0) return;
-  // The four slots are built once and keep their place (see @@@item-slots).
-  if (itemDock.children.length !== slots.length) itemDock.replaceChildren(...slots.map((_, index) => {
+  // One button an occupied slot, rebuilt only when which slots hold items changes (see @@@item-slots).
+  if ([...itemDock.children].map(button => (button as HTMLElement).dataset.itemDigit).join() !== slots.map(({ digit }) => digit).join()) itemDock.replaceChildren(...slots.map(({ digit }) => {
     const button = document.createElement("button");
-    button.type = "button"; button.className = "item-button"; button.dataset.itemSlot = String(index);
+    button.type = "button"; button.className = "item-button"; button.dataset.itemDigit = String(digit);
     button.innerHTML = '<span class="item-icon"></span><span class="hotkey"></span><span class="item-cooldown" hidden></span>';
-    button.addEventListener("click", () => { if (performance.now() >= suppressItemClickUntil) useInventoryItem(index); });
+    button.addEventListener("click", () => { if (performance.now() >= suppressItemClickUntil) useInventoryItem(digit); });
     button.addEventListener("mousedown", event => { if (event.button === 0 && document.pointerLockElement !== canvas) beginItemDrag(inputPoint(event), button); });
-    button.addEventListener("contextmenu", event => { event.preventDefault(); dropInventoryItem(index); });
+    button.addEventListener("contextmenu", event => { event.preventDefault(); dropInventoryItem(digit); });
     return button;
   }));
   const groups = new Set(Object.keys(controlGroups).map(Number));
@@ -3399,16 +3399,7 @@ function renderItemDock() {
     const hotkey = groups.has(digit) ? "" : String(digit);
     setText(button.querySelector(".hotkey")!, hotkey);
     const cooldown = button.querySelector<HTMLElement>(".item-cooldown")!;
-    if (!item) {
-      if (button.dataset.itemId === undefined && button.dataset.empty === "true") return;
-      delete button.dataset.itemId; button.dataset.empty = "true";
-      button.querySelector(".item-icon")!.replaceChildren();
-      cooldown.hidden = true;
-      button.setAttribute("aria-label", t("hud.itemSlotEmpty", { slot: digit }));
-      applyTooltip(button, { title: t("hud.itemSlotEmpty", { slot: digit }), body: t("hud.itemSlotEmptyBody", { slot: digit }), stats: [], requirements: [], hotkey });
-      return;
-    }
-    delete button.dataset.empty; button.dataset.itemId = item.id;
+    button.dataset.itemId = item.id;
     drawCommandPortrait(button, {type:"item",kind:item.kind,...(item.weaponKind?{weaponKind:item.weaponKind}:{})});
     const cooldownText = item.cooldownRemaining > 0 ? t("hud.itemRecharging", { ticks:item.cooldownRemaining }) : "";
     button.setAttribute("aria-label", `${labelKind(item.kind)}${hotkey ? ` (${hotkey})` : ""}${cooldownText}`);
@@ -3418,20 +3409,20 @@ function renderItemDock() {
   });
 }
 
-function inventorySlotItem(index: number) {
-  return snapshot ? inventorySlots(snapshot, inventoryCarrier(inventoryCarriers()))[index]?.item : undefined;
+function inventorySlotItem(digit: number) {
+  return snapshot ? inventorySlots(snapshot, inventoryCarrier(inventoryCarriers())).find(slot => slot.digit === digit)?.item : undefined;
 }
 
-function useInventoryItem(index: number) {
+function useInventoryItem(digit: number) {
   if (!syncBeforeCommandProjection()) return false;
-  const item = inventorySlotItem(index);
+  const item = inventorySlotItem(digit);
   if (!item) return false;
   useCarriedItem(item.id);
   return true;
 }
 
-function dropInventoryItem(index: number) {
-  const item = inventorySlotItem(index);
+function dropInventoryItem(digit: number) {
+  const item = inventorySlotItem(digit);
   if (item?.carrierId) dropCarriedItem(item.id, item.carrierId);
 }
 
