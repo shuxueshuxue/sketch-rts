@@ -119,6 +119,18 @@ describe('actor batches',()=>{
     batches.dispose();expect(dispose).toHaveBeenCalledOnce();
   });
 
+  it("takes a fortified tower's roof off while troops stand under it, in colour and in shadow",()=>{
+    const scene=new THREE.Scene(),batches=new ActorBatches(scene),source=sail();
+    const slate=new THREE.MeshStandardMaterial();slate.name='#71928f';
+    const wood=new THREE.MeshStandardMaterial();wood.name='#8b7054';source.material=[wood,slate];
+    source.geometry.addGroup(0,3,0);
+    batches.begin();batches.add('open',source,translate(),'a',undefined,'solid',false,undefined,true);batches.add('shut',source,translate(),'b');batches.finish();
+    const [open,shut]=batches.objects().map(mesh=>mesh.material as THREE.Material[]);
+    expect(open!.map(material=>material.visible)).toEqual([true,false]);expect(shut!.map(material=>material.visible)).toEqual([true,true]);
+    expect(slate.visible).toBe(true);
+    batches.dispose();
+  });
+
   it('preserves material groups, construction and plan opacity and sail-only deck reveal',()=>{
     const scene=new THREE.Scene(),batches=new ActorBatches(scene),source=sail();
     const cloth=new THREE.MeshStandardMaterial();cloth.name='unbleached sail cloth';
