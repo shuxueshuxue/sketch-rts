@@ -8,9 +8,9 @@
 }
 .menu-open :is(.control-deck,.minimap-tab,.minimap-relations,.minimap-wind,.match-menu-button,.match-menu,.chat-overlay,.status-line,.minimap-frame) { display:none; }
 .control-deck {
-  --hud-card-width:232px;
-  --hud-button-width:52px;
-  --hud-button-height:55px;
+  --hud-card-width:244px;
+  --hud-button-width:58px;
+  --hud-button-height:58px;
   --hud-button-gap:3px;
   --hud-dock-padding:5px;
   --hud-dock-frame:7px;
@@ -19,7 +19,7 @@
   --hud-item-rows:1;
   position:absolute; left:16px; bottom:16px;
   display:grid; grid-template-columns:var(--hud-card-width) minmax(0,max-content); align-items:end;
-  gap:6px 10px; width:fit-content; max-width:min(715px,calc(100vw - 224px)); max-height:calc(100dvh - 80px);
+  gap:6px 8px; width:fit-content; max-width:min(780px,calc(100vw - 224px)); max-height:calc(100dvh - 80px);
   color:var(--battle-ink); font-family:var(--font-ui); font-variant-numeric:tabular-nums;
 }
 .control-deck,.control-deck * { box-sizing:border-box; }
@@ -28,7 +28,8 @@
 /* A unit keeps its inventory space when a subpage temporarily hides its items. */
 .hud-actions[data-has-items] { gap:6px; min-height:calc(var(--hud-command-height) + var(--hud-item-rows) * 42px + (var(--hud-item-rows) - 1) * var(--hud-button-gap) + 2 * var(--hud-dock-padding) + 2 * var(--hud-dock-frame) + 6px); }
 .selection-chip {
-  grid-column:1; grid-row:1; padding:8px;
+  /* As tall as the command card at least, so the two frames make one bar along the bottom. */
+  grid-column:1; grid-row:1; padding:8px; min-height:var(--hud-command-height);
   background:var(--battle-surface); border:var(--hud-dock-frame) solid var(--battle-edge); border-radius:8px;
   box-shadow:0 4px 18px #0c161a38;
 }
@@ -90,9 +91,10 @@
   box-shadow:0 4px 18px #0c161a38; overflow-x:hidden; overflow-y:auto;
 }
 .command-dock {
-  /* Reserve room in the transparent layout, while the visible frame grows up from the bottom. */
+  /* @@@command-card - One fixed card, two rows of eight slots, whatever is selected: buttons fill it from the bottom
+     left, and the card never jumps in size or place between a worker, a squad and a building. */
   grid-row:2; align-self:end; flex-wrap:wrap-reverse;
-  max-height:min(var(--hud-command-height),45dvh); align-content:flex-start;
+  width:var(--hud-dock-width); max-width:100%; height:min(var(--hud-command-height),45dvh); align-content:flex-start;
 }
 .item-dock { grid-row:1; }
 .command-button,.item-button {
@@ -101,14 +103,24 @@
   color:var(--battle-ink); text-align:center; cursor:pointer;
 }
 .command-button:hover,.item-button:hover { background:#d3e1e617; border-color:#d1b78266; }
-.command-button[data-veteran-learn] { border-color:var(--battle-accent); }
-.command-button[data-veteran-learn] .command-icon { color:var(--battle-accent); font-size:30px; }
+/* @@@learn-ready - A soldier ready to learn a skill must not be missed: the button only shows while one is, and then
+   it is a lit brass medallion that breathes, the first slot of the card. */
+.control-deck .command-button[data-veteran-learn] {
+  border-color:#f3d27a; background:radial-gradient(circle at 50% 42%,#f6dc8c 0 34%,#b8862f 72%,#6e4a17 100%);
+  box-shadow:0 0 0 1px #3a2408,0 0 10px #f3d27a99; animation:learn-ready 1.6s ease-in-out infinite;
+}
+.control-deck .command-button[data-veteran-learn] .command-icon { color:#3a2408; font:700 40px/1 var(--font-display); text-shadow:0 1px #fff3c4; }
+@keyframes learn-ready { 50% { box-shadow:0 0 0 1px #3a2408,0 0 18px #f3d27a; } }
 .command-button[data-veteran-choice] { border-color:#d1b78266; }
-.command-icon,.item-icon { display:grid; place-items:center; height:39px; color:#d9d2ba; font:22px/1 sans-serif; }
-.command-portrait { display:block; width:38px; height:38px; background:transparent; }
-.command-symbol { width:29px; height:29px; fill:none; stroke:currentColor; stroke-width:1.65; stroke-linecap:round; stroke-linejoin:round; }
-.ability-symbol { display:block; width:38px; height:38px; object-fit:contain; border-radius:3px; }
-.command-label { display:block; position:absolute; bottom:3px; left:2px; right:2px; font:9px/12px var(--font-ui); overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+/* A button is its picture and its key; its name and what it does are in its tooltip (and its aria-label), never a
+   word cut short under the picture. */
+.command-icon,.item-icon { display:grid; place-items:center; height:100%; color:#d9d2ba; font:26px/1 sans-serif; }
+.command-portrait { display:block; width:48px; height:48px; background:transparent; }
+.command-symbol { width:34px; height:34px; fill:none; stroke:currentColor; stroke-width:1.65; stroke-linecap:round; stroke-linejoin:round; }
+.ability-symbol { display:block; width:48px; height:48px; object-fit:contain; border-radius:3px; }
+.command-label { display:none; }
+/* Except where the words are the state itself: who a purchase will be handed to. */
+.command-button[data-purchase-recipient] .command-label { display:block; position:absolute; bottom:2px; left:2px; right:2px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font:10px/12px var(--font-ui); text-shadow:0 1px #24140d; }
 .hotkey { position:absolute; right:2px; top:1px; padding:0 2px; border-radius:2px; background:#182127d9; color:#bdbba9; font:8px/11px var(--font-ui); }
 .item-button { height:42px; }
 .item-button .item-icon { height:40px; }
@@ -199,6 +211,8 @@
     background: linear-gradient(135deg, #fffbe0, #ffd76a 45%, #b9861b);
     animation: none;
   }
+  /* The learn-ready medallion keeps its glow, still (see @@@learn-ready). */
+  .control-deck .command-button[data-veteran-learn] { animation: none; }
 }
 
 :is(.command-button,.item-button,.hud-roster-unit,.hud-roster,.match-menu-button,.minimap-relations,.minimap-wind):focus-visible { outline:2px solid var(--battle-accent); outline-offset:2px; }
