@@ -432,7 +432,8 @@ export class EquipmentPanel {
                 const held = item?.id === unit.hands?.right ? this.text('主手', 'Main') : item?.id === unit.hands?.left ? this.text('副手', 'Off') : this.text('背挂', 'Stowed');
                 arms.append(this.cell(`${Number(slot.slice(5)) + 1} · ${item ? held : this.text('空位', 'Empty')}`, item, { unitId: unit.id, slot }));
             }
-            const hands = document.createElement('div'); hands.className = 'equipment-hands'; character.append(hands);
+            // The hands stand beside the figure (see @@@paper-doll).
+            const hands = document.createElement('div'); hands.className = 'equipment-hands'; positions.append(hands);
             for (const hand of ['right', 'left'] as const) {
                 const item = snapshot.items.find(item => item.id === unit.hands?.[hand]);
                 const main = snapshot.items.find(item => item.id === unit.hands?.right);
