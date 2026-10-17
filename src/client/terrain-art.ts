@@ -288,12 +288,31 @@ function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): 
       line(b, [[x, y], [x - 1, y + size * .45]], CLIFF.dark, 1);
     }
     patch(b, rock, size, -5, 130, 3, 4); fill(SHADOW, .18);
-    for (const [col, row] of rock) for (let k = 0; k < 2; k++) {
-      if (k && cellJitter(col, row, 144) < .4) continue;
-      const x = (col + .5 + (cellJitter(col, row, 141 + k * 9) - .5) * .7) * size, y = (row + .45 + (cellJitter(col, row, 142 + k * 9) - .5) * .5) * size;
-      const r = size * (.3 + cellJitter(col, row, 143 + k * 9) * .2);
+    // A rock field's inside is one massif: a stony floor with a few big crags strewn across cell lines. A boulder or two
+    // a cell only at its rim; a boulder in every inner cell lined up in rows, each row a stripe across the field.
+    const deep = (col: number, row: number) => [-1, 0, 1].every((dy) => [-1, 0, 1].every((dx) => at(col + dx, row + dy) === "#"));
+    const inner = rock.filter(([col, row]) => deep(col, row));
+    // Darker than open ground, so the eye reads it as a mass no one walks.
+    if (inner.length) { patch(b, inner, size, 2, 135); fill(texture("rock", ROCK)); fill(CLIFF.dark, .28); }
+    const stones: { x: number; y: number; r: number; seed: number }[] = [];
+    for (const [col, row] of rock) {
+      if (deep(col, row)) {
+        if (cellJitter(col, row, 146) > .55) continue;
+        stones.push({ x: (col + .5 + (cellJitter(col, row, 147) - .5) * 1.6) * size, y: (row + .5 + (cellJitter(col, row, 148) - .5) * 1.6) * size,
+          r: size * (.55 + cellJitter(col, row, 149) * .35), seed: col * 131 + row });
+        continue;
+      }
+      for (let k = 0; k < 2; k++) {
+        if (k && cellJitter(col, row, 144) < .4) continue;
+        stones.push({ x: (col + .5 + (cellJitter(col, row, 141 + k * 9) - .5) * .7) * size, y: (row + .45 + (cellJitter(col, row, 142 + k * 9) - .5) * .5) * size,
+          r: size * (.3 + cellJitter(col, row, 143 + k * 9) * .2), seed: col * 131 + row + k * 7 });
+      }
+    }
+    // Back to front, so a nearer stone overlaps the one behind it.
+    stones.sort((a, z) => a.y - z.y);
+    for (const { x, y, r, seed } of stones) {
       const points = Array.from({ length: 6 }, (_, i) => {
-        const a = i / 6 * Math.PI * 2 + (cellJitter(col, row, 150 + i + k * 20) - .5) * .7, q = r * (.75 + cellJitter(col, row, 160 + i + k * 20) * .35);
+        const a = i / 6 * Math.PI * 2 + (cellJitter(seed, i, 150) - .5) * .7, q = r * (.75 + cellJitter(seed, i, 160) * .35);
         return [x + Math.cos(a) * q, y + Math.sin(a) * q * .8];
       });
       polygon(b, points.map(([px, py]) => [px! + 1, py! + r * .45]), CLIFF.dark, "transparent", 0);

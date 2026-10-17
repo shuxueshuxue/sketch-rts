@@ -160,7 +160,7 @@ const HIRE_COMMAND = { icon: "⚔", hotkey: "m" } as const;
 const SHOP_HOTKEYS = ["q", "w", "e", "r", "t", "y", "u", "i", "o"];
 // Pinyin initials: Z 姿态 opens the stances, then Z 追击 (pursue), J 坚阵 (brace), X 陷阵 (shock); the open stance card
 // hides every other button, so X does not meet a hexer's curse.
-const STANCE_MENU_COMMAND = { icon: "⇄", hotkey: "z" } as const;
+const STANCE_MENU_COMMAND = { icon: "⛨", hotkey: "z" } as const;
 const STANCE_COMMANDS = [
   { stance: "pursue", icon: "»", hotkey: "z", title: "command.stance.pursue.title", body: "command.stance.pursue.body", stats: "command.stance.pursue.stats" },
   { stance: "brace", icon: "▥", hotkey: "j", title: "command.stance.brace.title", body: "command.stance.brace.body", stats: "command.stance.brace.stats" },
