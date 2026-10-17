@@ -2,26 +2,49 @@ import type { Obstacle, TerrainLandmark } from "../../shared/types";
 import { type Brush, type Point, ellipse, line, polygon } from "./kit";
 
 /** Static scenery painters: geometry and detail, independent of atlas caching. */
-/** One tree of the atlas, its foot at (x, y). */
-export function paintTree(c: Brush, x: number, y: number, size: number, tone = 0) {
-  tree(c, x, y, size, tone);
-}
-
-function tree(c: Brush, x: number, y: number, size: number, tone = 0) {
+// @@@tree-art - A tree of the inked atlas, its foot at (x, y): a pine (tiered, drooping boughs) or a broadleaf (a cloud of
+// lobes), one ink line round the whole crown, the lit side toward the upper left and a soft contact shadow to the lower
+// right (docs/art-direction-variants.zh.md, rules 5, 6 and 9). `rim` trees stand at a wood's edge: bigger and lighter
+// than the ones inside, so a forest reads as a mass with a drawn edge rather than a carpet of one tree.
+export type TreeKind = "pine" | "broadleaf";
+const TREE_INK = "#293c35";
+const CROWN = { pine: { base: "#526c4a", dark: "#3c5239", light: "#7a9466" }, broadleaf: { base: "#5f7a49", dark: "#45603a", light: "#8ea468" } };
+export function paintTree(c: Brush, x: number, y: number, size: number, tone = 0, kind: TreeKind = tone % 3 === 2 ? "broadleaf" : "pine", rim = true) {
+  const crown = CROWN[kind];
+  const base = rim ? crown.base : crown.dark, lit = rim ? crown.light : crown.base;
   c.save(); c.translate(x, y); c.scale(size, size);
-  const shade = tone % 3;
-  const dark = ["#394940", "#424d40", "#3b4947"][shade < 0 ? 0 : shade]!;
-  polygon(c, [[-8,3],[6,-2],[23,7],[12,10]], "#29372d20", "transparent", 0);
-  line(c, [[0,5],[-1,-53]], "#625a44", 2.7);
-  line(c, [[-1,3],[-1,-47]], "#a19068", .65);
-  for (let tier=5;tier>=0;tier--) {
-    const y=-59+tier*9, span=3+tier*4.6;
-    const sway=Math.sin(tone*2.1+tier)*1.5;
-    polygon(c, [[sway,y-10],[-span*.38,y-1],[-span*.75,y+1],[-span*.55,y+2],[-span,y+5],[-span*.62,y+5],[-span*.91,y+8],[-span*.25,y+6],[sway,y+8],[span*.43,y+6],[span,y+7],[span*.75,y+3],[span*.95,y+4],[span*.45,y-1]], dark, "#2d3b342b", .5);
-    polygon(c, [[sway,y-8],[-span*.33,y],[-span*.62,y+2],[-span*.44,y+3],[-span*.82,y+5],[-span*.27,y+4],[sway+1,y+6],[sway-1,y]], tier%2?"#6c7557":"#77806a", "transparent",0);
-    line(c, [[-span*.5,y+3],[-span*.22,y+2],[sway,y-2]], "#a5a27a55", .65);
-    line(c, [[span*.25,y+3],[span*.68,y+5]], "#88907855", .6);
-  }
+  c.fillStyle = "#1d261b"; c.globalAlpha = .22; c.beginPath(); c.ellipse(10, 1, 19, 6.5, -.15, 0, Math.PI * 2); c.fill(); c.globalAlpha = 1;
+  c.fillStyle = "#6b5a40"; c.fillRect(-1.8, -9, 3.6, 10); c.strokeStyle = TREE_INK; c.lineWidth = .9 / size; c.strokeRect(-1.8, -9, 3.6, 10);
+  const sway = Math.sin(tone * 2.3) * 1.2;
+  // The crown's silhouette: stroked wide in ink, then filled, so only its outer edge keeps a line.
+  // (A path rebuilt per use, not a Path2D: the headless recorder's canvas has none.)
+  const silhouette = () => {
+    c.beginPath();
+    if (kind === "pine") {
+      for (let tier = 0; tier < 4; tier++) {
+        const yy = -6 - tier * 10, span = 15 - tier * 3.2, top = yy - 17;
+        c.moveTo(sway * tier / 3, top);
+        c.lineTo(-span * .55, yy - 5); c.lineTo(-span, yy + 1); c.lineTo(-span * .5, yy - 1);
+        c.lineTo(-span * .15, yy + 2); c.lineTo(span * .3, yy - 1); c.lineTo(span, yy + 1);
+        c.lineTo(span * .55, yy - 5); c.closePath();
+      }
+    } else {
+      const lobes: [number, number, number][] = [[-8, -17, 9], [8, -18, 9.5], [0, -27, 10], [-4, -11, 8], [6, -10, 7.5], [-10, -26, 6.5], [9, -28, 6.5]];
+      for (const [bx, by, r] of lobes) { c.moveTo(bx + r, by); c.arc(bx, by, r, 0, Math.PI * 2); }
+    }
+  };
+  silhouette(); c.strokeStyle = TREE_INK; c.lineWidth = 2.5 / size; c.lineJoin = "round"; c.stroke();
+  c.fillStyle = base; c.fill("nonzero");
+  c.save(); silhouette(); c.clip("nonzero");
+  // Shade: the lower right of the crown a step darker; light: the upper left a step lighter.
+  c.fillStyle = crown.dark; c.globalAlpha = rim ? .55 : .35;
+  c.beginPath(); c.ellipse(9, -6, 15, 20, -.5, 0, Math.PI * 2); c.fill();
+  c.fillStyle = lit; c.globalAlpha = .9;
+  if (kind === "pine") for (let tier = 0; tier < 4; tier++) {
+    const yy = -6 - tier * 10, span = 15 - tier * 3.2;
+    c.beginPath(); c.moveTo(sway * tier / 3, yy - 16); c.lineTo(-span * .8, yy); c.lineTo(-span * .2, yy - 2); c.closePath(); c.fill();
+  } else for (const [bx, by, r] of [[-9, -19, 5], [-2, -30, 5.5], [6, -21, 4], [-5, -12, 3.5]] as const) { c.beginPath(); c.arc(bx, by, r, 0, Math.PI * 2); c.fill(); }
+  c.restore();
   c.restore();
 }
 
@@ -34,7 +57,7 @@ export function paintLandmark(c: Brush, landmark: TerrainLandmark, point: Point)
     for (let i = 0; i < 11; i++) {
       const a = i * 2.4 + landmark.rotation;
       const r = Math.sqrt((i + 1) / 11);
-      tree(c, Math.cos(a) * size * 0.32 * r, -size * 0.17 + i * size * 0.032, 0.65 + (i % 3) * 0.15, i);
+      paintTree(c, Math.cos(a) * size * 0.32 * r, -size * 0.17 + i * size * 0.032, 0.65 + (i % 3) * 0.15, i);
     }
   } else if (landmark.kind === "ridge") {
     for (let i = 0; i < 5; i++) {
@@ -50,15 +73,16 @@ export function paintLandmark(c: Brush, landmark: TerrainLandmark, point: Point)
       polygon(c, [[x, y], [x, y - h], [x + 11, y - h - 4], [x + 19, y - h], [x + 19, y], [x + 10, y + 5]], "#b3b69a", "#7f8c74");
       polygon(c, [[x, y - h], [x + 10, y - h + 4], [x + 10, y + 5], [x, y]], "#d4d0b0", "#8f9c7f", 0.5);
     }
-  } else if (landmark.kind === "road" || landmark.kind === "ditch") {
+  } else if (landmark.kind === "road") {
+    // Drawn with the others it joins (see @@@road-art).
+  } else if (landmark.kind === "ditch") {
     c.rotate(landmark.rotation);
-    const river = landmark.kind === "ditch";
     c.beginPath(); c.moveTo(-size / 2, 0);
     if(landmark.straight)c.lineTo(size/2,0);
-    else c.bezierCurveTo(-size / 4, river ? 42 : -20, size / 4, river ? -42 : -20, size / 2, 0);
-    c.lineWidth = river ? 17 : 13; c.strokeStyle = river ? "#799c912c" : "#ac99772a"; c.stroke();
-    c.lineWidth = river ? 9 : 7; c.strokeStyle = river ? "#7caca169" : "#d0be9970"; c.stroke();
-    c.lineWidth = 1; c.strokeStyle = river ? "#e0e4c9a6" : "#a7967433"; c.stroke();
+    else c.bezierCurveTo(-size / 4, 42, size / 4, -42, size / 2, 0);
+    c.lineWidth = 17; c.strokeStyle = "#799c912c"; c.stroke();
+    c.lineWidth = 9; c.strokeStyle = "#7caca169"; c.stroke();
+    c.lineWidth = 1; c.strokeStyle = "#e0e4c9a6"; c.stroke();
   } else if (landmark.kind === "mineScar") {
     for (let i = 0; i < 6; i++) { const x = (i - 2.5) * 14; polygon(c, [[x, 8], [x + 5, -8 - (i % 3) * 5], [x + 12, 5]], "#c3b78c", "#a79f7d", 0.7); }
   } else if (isDecor(landmark.kind)) {
@@ -68,6 +92,64 @@ export function paintLandmark(c: Brush, landmark: TerrainLandmark, point: Point)
     ellipse(c, 0, 0, size * 0.26, size * 0.12, "#a18b5c12", "#9d987d55");
     line(c, [[-9, 4], [0, -9], [9, 4]], "#8b8b6c66", 1);
   }
+  c.restore();
+}
+
+// @@@road-art - Roads (docs/art-direction-variants.zh.md, rule 8): a generated map lays a path as a run of short road
+// marks end to end. Drawn one by one, each mark's own curve and caps showed as a chain of beads; joined back into the
+// path they came from and drawn layer by layer (worn edge, packed bed, two ruts), a road reads as one road.
+type RoadPath = { points: Point[]; bounds: { minX: number; minY: number; maxX: number; maxY: number } };
+const roadPaths = new WeakMap<readonly TerrainLandmark[], RoadPath[]>();
+const ROAD = { ink: "#293c35", edge: "#9b8865", bed: "#d3c39e", rut: "#9b8865" };
+function joinRoads(landmarks: readonly TerrainLandmark[]): RoadPath[] {
+  const cached = roadPaths.get(landmarks);
+  if (cached) return cached;
+  const key = (p: Point) => `${Math.round(p.x / 4)},${Math.round(p.y / 4)}`;
+  const segments = landmarks.filter((mark) => mark.kind === "road").map((mark) => {
+    const half = Math.max(0, mark.size - 40) / 2, dx = Math.cos(mark.rotation) * half, dy = Math.sin(mark.rotation) * half;
+    return { mark, a: { x: mark.x - dx, y: mark.y - dy }, b: { x: mark.x + dx, y: mark.y + dy }, used: false };
+  });
+  const starts = new Map<string, typeof segments>();
+  for (const segment of segments) for (const end of [segment.a, segment.b]) (starts.get(key(end)) ?? starts.set(key(end), []).get(key(end))!).push(segment);
+  const next = (at: Point) => starts.get(key(at))?.find((segment) => !segment.used);
+  const paths: RoadPath[] = [];
+  for (const first of segments) {
+    if (first.used) continue;
+    first.used = true;
+    const points = [first.a, first.b];
+    for (let tail = next(points.at(-1)!); tail; tail = next(points.at(-1)!)) { tail.used = true; points.push(key(tail.a) === key(points.at(-1)!) ? tail.b : tail.a); }
+    for (let head = next(points[0]!); head; head = next(points[0]!)) { head.used = true; points.unshift(key(head.a) === key(points[0]!) ? head.b : head.a); }
+    // A lone authored road keeps the gentle bow it was always drawn with.
+    if (points.length === 2 && !first.mark.straight) points.splice(1, 0, { x: first.mark.x + Math.sin(first.mark.rotation) * 15, y: first.mark.y - Math.cos(first.mark.rotation) * 15 });
+    const xs = points.map((p) => p.x), ys = points.map((p) => p.y);
+    paths.push({ points, bounds: { minX: Math.min(...xs), minY: Math.min(...ys), maxX: Math.max(...xs), maxY: Math.max(...ys) } });
+  }
+  roadPaths.set(landmarks, paths);
+  return paths;
+}
+
+/** Every road among the landmarks, in screen points (`toScreen`), skipping the ones wholly outside `view`. */
+export function paintRoads(c: Brush, landmarks: readonly TerrainLandmark[], toScreen: (p: Point) => Point, view: { x: number; y: number; width: number; height: number }) {
+  const visible = joinRoads(landmarks).filter(({ bounds }) => bounds.maxX > view.x - 40 && bounds.minX < view.x + view.width + 40 && bounds.maxY > view.y - 40 && bounds.minY < view.y + view.height + 40);
+  if (!visible.length) return;
+  // A smooth line through the path's points: straight to the first midpoint, then curves through each point to the next midpoint.
+  const trace = (points: Point[], offset: number) => {
+    const at = points.map((p, i) => {
+      const before = points[Math.max(0, i - 1)]!, after = points[Math.min(points.length - 1, i + 1)]!;
+      const dx = after.x - before.x, dy = after.y - before.y, length = Math.hypot(dx, dy) || 1;
+      return toScreen({ x: p.x - dy / length * offset, y: p.y + dx / length * offset });
+    });
+    c.beginPath(); c.moveTo(at[0]!.x, at[0]!.y);
+    for (let i = 1; i < at.length - 1; i++) c.quadraticCurveTo(at[i]!.x, at[i]!.y, (at[i]!.x + at[i + 1]!.x) / 2, (at[i]!.y + at[i + 1]!.y) / 2);
+    c.lineTo(at.at(-1)!.x, at.at(-1)!.y);
+  };
+  c.save(); c.lineCap = c.lineJoin = "round";
+  for (const [width, color, alpha] of [[26, ROAD.ink, .3], [23, ROAD.edge, 1], [18, ROAD.bed, 1]] as const) {
+    c.lineWidth = width; c.strokeStyle = color; c.globalAlpha = alpha;
+    for (const { points } of visible) { trace(points, 0); c.stroke(); }
+  }
+  c.lineWidth = 1.6; c.strokeStyle = ROAD.rut; c.globalAlpha = .5;
+  for (const { points } of visible) for (const offset of [-4.5, 4.5]) { trace(points, offset); c.stroke(); }
   c.restore();
 }
 
