@@ -35,7 +35,8 @@ export type DeploymentRuntime = {
   startRoom(roomId: string, user: LocalUserProfile, onRoom?: (room: RoomState) => void): Promise<StartedMatch>;
   connectRoom(room: RoomState, playerId: PlayerId, spectating: boolean, onRoom: (room: RoomState) => void): StartedMatch;
   canForfeitMatch(roomId: string): boolean;
-  forfeitMatch(roomId: string, user: LocalUserProfile): Promise<RoomState>;
+  /** Concedes the match; its end reaches the page through the room's own updates. */
+  forfeitMatch(roomId: string, user: LocalUserProfile): Promise<void>;
   // Whether the room is played in this browser (see @@@private-rooms-local): nobody else can come into it.
   isLocalRoom(roomId: string): boolean;
   close(): void;

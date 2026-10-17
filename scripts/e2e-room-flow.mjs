@@ -560,6 +560,29 @@ async page => {
   must((await page.locator("[data-rematch]").count()) === 1, "results screen missing rematch action");
   must((await page.locator("[data-return-home]").count()) === 1, "results screen missing home action");
 
+  // An online player concedes from the match menu (see @@@forfeit): the other side wins, and the results say how long
+  // the match took and name the computer by how it plays.
+  await page.locator("[data-return-home]").click();
+  await page.locator("[data-open-room-browser]").click();
+  const concedeId = await onlineSetup("pineshade");
+  await page.locator("[data-start-room]").click();
+  await page.waitForFunction(() => document.querySelector("[data-main-menu]")?.classList.contains("hidden"), null, { timeout: 30000 });
+  await page.evaluate(() => {
+    const gate = document.querySelector("[data-pointer-lock-gate]");
+    if (gate) { gate.classList.add("hidden"); gate.style.pointerEvents = "none"; }
+  });
+  await page.locator("[data-match-menu-button]").click();
+  await page.locator("[data-forfeit-match]").click();
+  await page.waitForSelector("[data-results-screen='" + concedeId + "']", { timeout: 30000 });
+  const concedeProof = await page.evaluate(async (roomId) => {
+    const room = await (await fetch("/api/rooms/" + roomId)).json();
+    return { status: room.status, winner: room.result?.winner, finished: document.querySelector("[data-menu-status]")?.textContent ?? "",
+      controllers: [...document.querySelectorAll("[data-result-slot] span:nth-child(2)")].map(cell => cell.textContent), details: !!document.querySelector("[data-result-details]") };
+  }, concedeId);
+  must(concedeProof.status === "ended" && concedeProof.winner === "enemy" && /\d+:\d\d/.test(concedeProof.finished) && !/tick/i.test(concedeProof.finished)
+    && concedeProof.controllers.some(text => /AI · (Archers|Summoners|Knights)/.test(text)) && concedeProof.details,
+    "conceding an online match did not end it for the other side with readable results: " + JSON.stringify(concedeProof));
+
   await page.locator("[data-return-home]").click();
   await page.evaluate(() => localStorage.removeItem("sketch-rts-current-room"));
   await page.locator("[data-open-room-browser]").click();

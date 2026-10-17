@@ -53,6 +53,7 @@ export function isGameCommand(value: unknown): value is GameCommand {
   if (command.type === "pickupItem") return typeof command.unitId === "string" && typeof command.itemId === "string";
   if (command.type === "giveItem") return typeof command.unitId === "string" && typeof command.itemId === "string" && typeof command.targetId === "string";
   if (command.type === "dropItem") return typeof command.unitId === "string" && typeof command.itemId === "string" && isNumber(command.x) && isNumber(command.y);
+  if (command.type === "forfeit") return Object.keys(command).length === 1;
   if (command.type === "useItem") {
     return (
       typeof command.unitId === "string" &&
