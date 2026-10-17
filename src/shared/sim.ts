@@ -1,4 +1,4 @@
-import { standingBodies, type StructureBody } from "./structure-bodies";
+import { standingBodies, standsAsSeen, type StructureBody } from "./structure-bodies";
 import { addGold, roundGold } from "./gold";
 import { unitControlsMercenaryCamp } from './mercenary-camp';
 import { boardingHoldShips, cancelCrewRendezvous, prepareCrewRendezvous } from './crew-rendezvous';
@@ -905,8 +905,8 @@ export function stepGame(game: Game) {
 // is current.
 function syncBuildingBodies(game: Game) {
   const seen = game.buildingBodiesSeen;
+  if (seen && standsAsSeen(game, seen)) return;
   const bodies = standingBodies(game);
-  if (seen && seen.length === bodies.length && bodies.every((body, index) => body === seen[index])) return;
   game.buildingBodiesSeen = bodies;
   setBuildingBodies(game.map, bodies);
 }
