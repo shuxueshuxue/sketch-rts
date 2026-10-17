@@ -1869,8 +1869,6 @@ function updateMineOrder(game: Game, unit: Unit) {
 // What a troop does on a tower's top without coming down (see @@@tower-garrison): any other order is a walk, and takes it to
 // the tower's foot first.
 const TOWER_TOP_ORDERS = new Set<UnitOrder["type"]>(["idle", "hold", "attack", "cast", "aim"]);
-// A troop this near a tower's wall climbs on.
-const TOWER_CLIMB_GAP = 12;
 
 function updateGarrisonOrder(game: Game, unit: Unit) {
   const order = unit.order;
@@ -1880,9 +1878,10 @@ function updateGarrisonOrder(game: Game, unit: Unit) {
     unit.order = { type: "idle" };
     return;
   }
-  if (distance(unit, tower) - tower.radius - unit.radius > TOWER_CLIMB_GAP) {
+  // A troop climbs on from beside the tower's walls, as a worker builds and mends from there (see buildingWorkGap).
+  if (buildingWorkGap(unit, tower) > BUILDING_WORK_REACH) {
     moveToward(unit, tower.x, tower.y, game.map, game.units);
-    if (walkEnded(game, unit, tower, 5) && distance(unit, tower) - tower.radius - unit.radius > TOWER_CLIMB_GAP) unit.order = { type: "idle" };
+    if (walkEnded(game, unit, tower, 5) && buildingWorkGap(unit, tower) > BUILDING_WORK_REACH) unit.order = { type: "idle" };
     return;
   }
   unit.order = { type: "idle" };
