@@ -499,7 +499,7 @@ describe("sketch RTS simulation", () => {
     const contractArcher = UNIT_DEFS.contractArcher;
 
     expect(tower.hp).toBe(200);
-    expect(tower.attackDamage).toBe(16);
+    expect(tower.attackDamage).toBe(13);
     expect(tower.attackDamage).toBeLessThan(contractArcher.attackDamage);
     expect(tower.attackRange).toBe(480);
     expect(tower.attackRange).toBeGreaterThan(contractArcher.attackRange);
@@ -2270,9 +2270,9 @@ describe("sketch RTS simulation", () => {
   });
 
   it("runs a fast two-AI duel on the ladder map's terrain, camps and mercenary posts", () => {
-    // A ladder game gets the pool batches' forty minutes: the preset AIs' duel on it has run from 12 to 37 with each change
-    // to how they build or walk.
-    const result = runTwoAiDuel("ladder", 48_000);
+    // A ladder game gets fifty minutes: the preset AIs' duel on it has run from 12 to 37 with each change to how they build
+    // or walk, and to 44 (enemy, tick 53211) when towers came down to 13 damage.
+    const result = runTwoAiDuel("ladder", 60_000);
     // A post's stock never comes back (see hireMercenary): the duel hired what the posts had less what they have.
     const posts = createGame("ladder", { aiPlayers: ["player", "enemy"] }).mercenaryCamps;
     const hired = posts.reduce((total, post) => total + post.stock - result.game.mercenaryCamps.find((camp) => camp.id === post.id)!.stock, 0);
