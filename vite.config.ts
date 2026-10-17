@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { configDefaults, defineConfig } from "vitest/config";
 import { resolve } from "node:path";
 import { parseDeploymentMode } from "./src/client/deployment/mode";
 import { publicBasePathFromEnv } from "./src/shared/deployment-base";
@@ -22,6 +22,8 @@ export default defineConfig({
     configureServer(server){server.middlewares.use(async(req,res,next)=>{if(!req.url?.split('?')[0]?.endsWith('/resource-manifest.json')){next();return;}try{res.setHeader('Content-Type','application/json');res.end(JSON.stringify(await resourceManifest(resolve(__dirname,'public'))));}catch(error){next(error);}});},
     async closeBundle(){await writeResourceManifest(resourceOutput);},
   }],
+  // Lane worktrees live under .worktrees/ (git-ignored): a run from the main checkout tests this tree, not ~50 copies of it.
+  test: { exclude: [...configDefaults.exclude, ".worktrees/**"] },
   base: publicBasePath,
   server: {
     host: "127.0.0.1",
