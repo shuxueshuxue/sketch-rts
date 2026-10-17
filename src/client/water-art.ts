@@ -40,7 +40,8 @@ export function shoreMask(terrain: Terrain, threshold: number): HTMLCanvasElemen
     const at = (c: number, r: number) => field.coverage[r * terrain.cols + c]!;
     const coverage = (at(c0, r0) + (at(c1, r0) - at(c0, r0)) * (px - c0)) * (1 - py + r0) + (at(c0, r1) + (at(c1, r1) - at(c0, r1)) * (px - c0)) * (py - r0);
     const wobble = (spatialNoise(seed, x, y, 90, 81) - .5) * .12;
-    const t = Math.max(0, Math.min(1, (coverage + wobble - threshold) / .05 + .5));
+    // A ramp a few world units wide, so the band edge stays smooth when the mask is scaled up to the world.
+    const t = Math.max(0, Math.min(1, (coverage + wobble - threshold) / .2 + .5));
     const i = (row * width + col) * 4;
     image.data[i] = image.data[i + 1] = image.data[i + 2] = 255; image.data[i + 3] = Math.round(t * 255);
   }

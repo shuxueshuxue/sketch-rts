@@ -318,7 +318,7 @@ function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): 
     const pick = cellJitter(col, row, 200);
     if (pick > .12) continue;
     const x = (col + cellJitter(col, row, 201)) * size, y = (row + cellJitter(col, row, 202)) * size;
-    if (pick < .04) {
+    if (pick < .02) {
       ellipse(b, x + 1, y + 1.5, 3.4, 2.2, ROCK.dark);
       ellipse(b, x, y, 3.2, 2, ROCK.light, INK);
     } else for (const dx of [-3, -1, 1, 3]) line(b, [[x + dx, y], [x + dx * 1.5, y - 5 - Math.abs(dx)]], GROUND.grass.dark, 1);
