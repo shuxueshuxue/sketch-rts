@@ -26,10 +26,11 @@ import { spellOrbPalette } from '../art/effect-presentation';
 import { paintFigure } from '../art/painted-units';
 import { appearanceFor,appearanceKey } from '../art/unit-appearance';
 import { unitGlyphScale } from '../glyphs';
-import { footprintSquare } from '../footprint-view';
+import { footprintCentre,footprintSquare } from '../footprint-view';
 import { relationTo,RELATION_INK } from '../relations';
-import { ownerInk,trackUnitFacing,type WorldFrame } from '../world-renderer';
+import { mineRingInk,ownerInk,trackUnitFacing,type WorldFrame } from '../world-renderer';
 import { BUILDING_DEFS } from '../../shared/catalog';
+import { GOLD_MINE_RULES } from '../../shared/mining';
 import { interactionTargetId } from '../unit-facing';
 import { installedWeapons,mountedWeaponPose } from '../../shared/ship-equipment';
 import { shipProfile,shareShipProfile,shipScale,localToWorld,SHIP_CAMERA } from '../../shared/ship-geometry';
@@ -362,12 +363,25 @@ export class World3DLayer {
     this.positions.clear();this.combatAnchors.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.batches.begin();this.cards.begin();this.remainsCards.begin();this.selection.begin();
     for(const site of [...snapshot.mercenaryCamps.map(site=>({...site,model:'camp',scale:site.radius/32})),...(snapshot.shops??[]).map(site=>({...site,model:'shop',scale:site.radius/32})),...(frame.story?.props??[]).filter(site=>['statue','well','beacon','citadel'].includes(site.kind)).map(site=>({...site,id:`prop:${site.id}`,model:site.kind}))]){
       const model=this.template(`buildings/${site.model}`,'Building');if(!model)continue;
-      this.positions.set(site.id,{x:site.x,y:site.y,bodyY:site.y,topY:site.y-90*site.scale});
+      // A shop or camp is a body like a building (see @@@structure-body) and stands on its footprint the way a building
+      // does; a story's prop keeps its own scale.
+      let scale=site.scale,lift=0,dx=0,dy=0;
+      const square='radius' in site?footprintSquare(snapshot,site,site.radius):undefined;
+      if(square){
+        const key=`buildings/${site.model}`;let bounds=this.bounds.get(key);if(!bounds){bounds=new THREE.Box3().setFromObject(model);this.bounds.set(key,bounds);}
+        const size=bounds.getSize(new THREE.Vector3()),centre=bounds.getCenter(new THREE.Vector3());
+        scale=(square.right-square.left+1)*square.cell*.88/Math.max(size.x,size.z);lift=-bounds.min.y*scale;
+        // Centred on its cells, whatever the model's own origin (the shop's lies off its middle).
+        const middle=footprintCentre(square);dx=middle.x-site.x-centre.x*scale;dy=middle.y-site.y-centre.z*scale;
+      }
+      this.positions.set(site.id,{x:site.x,y:site.y,bodyY:site.y,topY:site.y-90*scale});
       if(visible(site.x,site.y)){
         if(frame.selectedCampId===site.id || frame.hoveredId===site.id)this.foundationMarker(frame,{...site,radius:'radius' in site?site.radius:32*site.scale},'#96774a',frame.selectedCampId===site.id);
-        this.batches.add(`site:${site.model}`,model,this.pose(site.x,site.y,0,0,site.scale),site.id,'#a79b7f');
+        this.batches.add(`site:${site.model}`,model,this.pose(site.x+dx,site.y+dy,lift,0,scale),site.id,'#a79b7f');
       }
     }
+    // A mine is painted on the ground (see @@@mine-stages); its ring is the same footprint square as every other body's.
+    for(const mine of snapshot.resources)if(frame.hoveredId===mine.id && visible(mine.x,mine.y))this.foundationMarker(frame,{x:mine.x,y:mine.y,radius:GOLD_MINE_RULES.radius},mineRingInk(mine),false);
     const towerTops=new Map<string,number>();
     // One way a building model stands on its footprint, whether built, going up, or still a plan (see @@@build-ghost).
     const standBuilding=(modelKind:string,kind:string,x:number,y:number,radius:number,color:string,look:ModelLook,id:string,openRoof=false)=>{

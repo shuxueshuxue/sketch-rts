@@ -241,25 +241,70 @@ function drawDecor(c: Brush, kind: DecorKind, size: number, rotation: number) {
   }
 }
 
-export function paintMine(b: Brush) {
+// @@@mine-stages - A gold mine shows what is left in it, read from its amount against the gold it started with: rich
+// (more than half), worked (half or less), failing (the last tenth) and, once empty, collapsed into a pit. Only the
+// amounts decide it, so every mine on every map reads the same way.
+export type MineStage = "rich" | "worked" | "failing" | "collapsed";
+export function mineStage(mine: { amount: number; startAmount: number }): MineStage {
+  if (mine.amount <= 0) return "collapsed";
+  const left = mine.amount / Math.max(1, mine.startAmount);
+  return left > .5 ? "rich" : left > .1 ? "worked" : "failing";
+}
+
+/** The art spans about 84 across (x -42 to 42), round the mine's centre. */
+export function paintMine(b: Brush, stage: MineStage = "rich") {
+    const spent = stage === "collapsed";
     ellipse(b, 4, 22, 42, 12, "#38302920");
     ellipse(b, 1, 22, 32, 7, "#38302935");
+    // A worked-out hill loses its warmth: the same rocks, greyed.
+    const tone = (color: string, grey: string) => spent ? grey : color;
     const rock = (p:number[][], color:string) => { polygon(b,p,color,"#55554d",.65); line(b,p.slice(0,3),"#c5bfab",.75); };
-    rock([[-40,16],[-34,-5],[-21,-23],[-7,-19],[0,7],[-14,25]],"#8f9083");
-    rock([[-25,-7],[-16,-31],[4,-36],[16,-20],[7,7]],"#a3a293");
-    rock([[4,-27],[21,-34],[38,-12],[42,17],[24,25],[12,7]],"#85897f");
-    rock([[21,-34],[35,-22],[38,-12],[21,-16]],"#b9b4a0");
+    const ore = (x: number, y: number, size = 1) => {
+      polygon(b,[[x-3*size,y],[x,y-4*size],[x+4*size,y-1*size],[x+2*size,y+2*size]],"#d6b04f","#7a5d24",.6);
+      line(b,[[x-1*size,y-1*size],[x+1*size,y-3*size]],"#f6e3a0",.7);
+    };
+    rock([[-40,16],[-34,-5],[-21,-23],[-7,-19],[0,7],[-14,25]],tone("#8f9083","#8d8c86"));
+    rock([[-25,-7],[-16,-31],[4,-36],[16,-20],[7,7]],tone("#a3a293","#9c9b95"));
+    rock([[4,-27],[21,-34],[38,-12],[42,17],[24,25],[12,7]],tone("#85897f","#86857f"));
+    rock([[21,-34],[35,-22],[38,-12],[21,-16]],tone("#b9b4a0","#adaba3"));
+    if (spent) {
+      // The adit has fallen in: its mouth choked with rubble, the frame snapped, and the ground before it sunk into a pit.
+      ellipse(b, 2, 26, 24, 9, "#2e2b26", "#5d5a50");
+      ellipse(b, 2, 24, 18, 5.5, "#1f1e1b");
+      polygon(b,[[-13,22],[-12,-4],[0,-11],[14,-4],[16,22]],"#3b3934","#57564a",.8);
+      for (const [x, y, s] of [[-8,10,1.4],[4,6,1.6],[10,16,1.2],[-2,18,1.3],[-10,-1,1],[7,-4,1.1]] as const)
+        rock([[x-5*s,y+2*s],[x-2*s,y-4*s],[x+4*s,y-3*s],[x+5*s,y+2*s],[x,y+4*s]],"#8d8a80");
+      line(b,[[-15,23],[-15,2]],"#554735",5); line(b,[[-16,21],[-16,2]],"#9a8a6e",1.2);
+      line(b,[[-15,2],[-10,-6]],"#554735",4.5);
+      line(b,[[-21,-7],[17,3]],"#6b5843",5.5); line(b,[[-21,-9],[17,1]],"#a08c6c",1);
+      line(b,[[15,23],[19,8]],"#554735",4.5);
+      // The cart left on its side, empty.
+      polygon(b,[[22,22],[33,19],[35,27],[25,30]],"#5b5043","#3e3a32",.7);
+      ellipse(b,31,17,2.6,2.6,"#373a37","#8d8a80");
+      return;
+    }
     polygon(b,[[-13,22],[-12,-8],[0,-15],[14,-8],[16,22]],"#242825","#57564a",.8);
     for(const x of [-15,15]) { line(b,[[x,23],[x,-10]],"#554735",5); line(b,[[x-1,21],[x-1,-10]],"#ad936c",1.2); }
-    line(b,[[-19,-11],[18,-11]],"#766047",6); line(b,[[-19,-13],[18,-13]],"#b09a74",1);
-    line(b,[[-15,-3],[-5,-11]],"#8c7656",2); line(b,[[15,-3],[5,-11]],"#8c7656",2);
+    if (stage === "failing") {
+      // The lintel sags and a stone has come down in the mouth.
+      line(b,[[-19,-11],[18,-6]],"#766047",6); line(b,[[-19,-13],[18,-8]],"#b09a74",1);
+      rock([[-4,22],[-1,13],[7,12],[10,22]],"#8a8b80");
+    } else {
+      line(b,[[-19,-11],[18,-11]],"#766047",6); line(b,[[-19,-13],[18,-13]],"#b09a74",1);
+      line(b,[[-15,-3],[-5,-11]],"#8c7656",2); line(b,[[15,-3],[5,-11]],"#8c7656",2);
+    }
     for(let i=0;i<5;i++) line(b,[[-10-i*1.8,22+i*3],[12+i,22+i*3]],"#6c5c47",2);
     line(b,[[-4,14],[-13,39]],"#8d9490",1.5); line(b,[[7,14],[12,39]],"#8d9490",1.5);
     polygon(b,[[21,17],[34,17],[32,28],[22,28]],"#655846","#3e3a32",.7);
+    // What the cart holds and the ore lying about: heaped, then a little, then none.
+    if (stage === "rich") polygon(b,[[21,17],[23,11],[27,9],[31,11],[34,17]],"#d6b04f","#7a5d24",.7);
+    if (stage === "worked") polygon(b,[[22,17],[25,14],[30,14],[33,17]],"#c9a64c","#7a5d24",.6);
     for(const x of [23,30]) ellipse(b,x,29,2.8,2.8,"#373a37","#9a9787");
-    for(const [x,y] of [[-29,8],[-20,20],[30,15],[24,16],[28,16]]) rock([[x!-3,y!],[x!,y!-4],[x!+4,y!-1],[x!+2,y!+2]],"#bdab73");
+    const lying = stage === "rich" ? [[-29,8,1.2],[-20,20,1.1],[-34,18,1],[37,22,1.1],[-25,27,.9]] : stage === "worked" ? [[-29,8,1],[-20,20,.9]] : [];
+    for(const [x,y,size] of lying) ore(x!,y!,size!);
     line(b,[[20,-10],[27,-10],[27,1]],"#61513e",1.3);
-    polygon(b,[[24,-1],[30,-1],[30,5],[24,5]],"#d9b777","#4e4536",.6);
+    // The lamp burns while there is gold to dig.
+    polygon(b,[[24,-1],[30,-1],[30,5],[24,5]],stage === "failing" ? "#8f8162" : "#d9b777","#4e4536",.6);
 }
 
 // @@@obstacle-art - Rocks or a stone gate across a way (see @@@obstacle): a heap of boulders the width of the way, or two

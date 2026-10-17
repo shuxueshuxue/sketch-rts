@@ -44,6 +44,12 @@ describe("unit hover body resolution", () => {
     expect(unitHoverTarget(snapshotGame(game), { x: 1000, y: 1000 }, () => undefined)).toBeUndefined();
   });
 
+  it('hovers a gold mine across its art, so its footprint ring shows', () => {
+    const mine = { id: 'mine', kind: 'goldMine' as const, x: 400, y: 400, amount: 300, startAmount: 1500 };
+    const snapshot = { units: [], buildings: [], mercenaryCamps: [], shops: [], items: [], obstacles: [], resources: [mine] };
+    expect(unitHoverTarget(snapshot, { x: 420, y: 410 }, () => undefined)).toMatchObject({ id: 'mine', owner: 'neutral' });
+  });
+
   it("keeps a ground building ahead of an overlapping neutral site", () => {
     const { game, unit } = fixture(), building = game.buildings[0]!;
     game.units = []; building.x = unit.x; building.y = unit.y;

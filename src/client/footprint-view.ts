@@ -14,6 +14,12 @@ export function footprintSquare(snapshot: Pick<GameSnapshot, "map">, at: Point, 
   return cell === undefined ? undefined : { cell, ...footprintCells(cell, at.x, at.y, radius) };
 }
 
+// The middle of a footprint's cells, where its art stands: a body laid off the grid (a generated shop or camp) has its
+// cells round its point, not centred on it.
+export function footprintCentre(square: FootprintSquare): Point {
+  return { x: (square.left + square.right + 1) / 2 * square.cell, y: (square.top + square.bottom + 1) / 2 * square.cell };
+}
+
 // Draws a footprint's cells as squares in their ink, faintly filled and edged, on a canvas showing the world from `camera`.
 export function drawFootprint(ctx: CanvasRenderingContext2D, square: FootprintSquare, camera: Point, inkOf: (col: number, row: number) => string) {
   const { cell } = square;
