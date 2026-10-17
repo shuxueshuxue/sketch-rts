@@ -40,16 +40,28 @@ function lootAssignments(snapshot: GameSnapshot, owner: PlayerId, options: AiPol
     && !options.memory.mounted?.some(task => task.unitIds.includes(unit.id))
     && ['idle', 'hold', 'move', 'attackMove'].includes(unit.order.type));
   const foes = armedFoes(snapshot, owner, options);
-  return snapshot.items.filter(item => !item.carrierId && !item.shipId).flatMap(item => own.flatMap(unit => {
+  const candidates = snapshot.items.filter(item => !item.carrierId && !item.shipId).flatMap(item => own.flatMap(unit => {
     if (!freeItemSlot(snapshot, unit, item.kind)) return [];
     const score = itemCarrierScore(unit, item, options);
-    if (score <= 0) return [];
-    const home = nearestByRoute(snapshot.map, halls, unit, 'land');
-    if (!home) return [];
-    const ticks = retreatLandTravelTicks(snapshot, unit, item, foes);
-    const veteran = item.kind === 'experienceBook' ? unit.level : 0;
-    return ticks === undefined ? [] : [{ unit, item, home, ticks, score, veteran }];
-  })).sort((a, b) => b.veteran - a.veteran || b.score - a.score || a.ticks - b.ticks || a.unit.id.localeCompare(b.unit.id)).slice(0, 1);
+    return score > 0 ? [{ unit, item, score, veteran: item.kind === 'experienceBook' ? unit.level : 0 }] : [];
+  })).sort((a, b) => b.veteran - a.veteran || b.score - a.score);
+  // The best errand: the highest veteran and score first, and among equals the shortest covered road. Roads are walked
+  // only for the best group that has one, not for every fighter and every item on the field.
+  const homes = new Map<string, (typeof halls)[number] | undefined>();
+  for (let start = 0; start < candidates.length;) {
+    let end = start;
+    while (end < candidates.length && candidates[end]!.veteran === candidates[start]!.veteran && candidates[end]!.score === candidates[start]!.score) end += 1;
+    const errands = candidates.slice(start, end).flatMap(({ unit, item, score, veteran }) => {
+      if (!homes.has(unit.id)) homes.set(unit.id, nearestByRoute(snapshot.map, halls, unit, 'land'));
+      const home = homes.get(unit.id);
+      if (!home) return [];
+      const ticks = retreatLandTravelTicks(snapshot, unit, item, foes);
+      return ticks === undefined ? [] : [{ unit, item, home, ticks, score, veteran }];
+    }).sort((a, b) => a.ticks - b.ticks || a.unit.id.localeCompare(b.unit.id));
+    if (errands.length) return errands.slice(0, 1);
+    start = end;
+  }
+  return [];
 }
 
 export function lootRecoveryUnitIds(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {

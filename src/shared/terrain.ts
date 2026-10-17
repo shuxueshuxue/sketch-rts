@@ -971,6 +971,135 @@ export function walkingDistance(map: Pick<GameMap, "terrain">, from: Point, goal
   return cost >= UNREACHED ? undefined : (cost * terrain.cell) / STRAIGHT;
 }
 
+// @@@guarded-field - The land walk from one point to every cell that stays out of guarded disks (an enemy's reach), on the
+// building-aware land (see @@@building-pathing) with each cell's ground cost (see GROUND_WEIGHT): Dial's algorithm over
+// eight neighbours, as the flow fields grow. A step is the straight segment between two cell centers, taken only when it
+// keeps out of every disk; a walker that starts inside disks may leave them, each step moving away from the center of
+// every disk it is in (as routeLeavesDisks admits a road). One field answers the cost of every goal a planner weighs; only
+// the road it takes is traced (cells).
+export type GuardDisk = Point & { radius: number };
+export type GuardedField = {
+  // Bare-ground units of walking to the goal, or undefined when no guarded walk reaches it.
+  cost(goal: Point): number | undefined;
+  // The centers of the cells walked, from the walker's cell to the one the goal is reached from.
+  cells(goal: Point): Point[] | undefined;
+};
+
+// A map without terrain is open ground all over: its guarded walks run on an open grid of its size.
+const openGrounds = new Map<string, Terrain>();
+function openGround(width: number, height: number): Terrain {
+  const cell = 32, cols = Math.ceil(width / cell), rows = Math.ceil(height / cell), key = `${cols}x${rows}`;
+  let terrain = openGrounds.get(key);
+  if (!terrain) openGrounds.set(key, terrain = { cell, cols, rows, cells: ".".repeat(cols * rows) });
+  return terrain;
+}
+
+export function guardedField(map: Pick<GameMap, "terrain" | "width" | "height">, from: Point, disks: readonly GuardDisk[]): GuardedField | undefined {
+  const terrain = map.terrain ?? openGround(map.width, map.height);
+  const state = routing(map, terrain, "land");
+  const { walk, weight, offsets } = state;
+  const cell = terrain.cell, margin = cell * Math.SQRT1_2;
+  let start = padAt(state, from.x, from.y);
+  if (start < 0) return undefined;
+  if (walk[start] !== 1) start = nearestWalkable(state, start);
+  if (start < 0) return undefined;
+  // Cells whose center is within a disk's reach and half a cell's diagonal: only a step touching one can meet a disk, so
+  // only those steps are measured against the disks over their coarse square of the map.
+  const SQUARE = 8;
+  const squareCols = Math.ceil(terrain.cols / SQUARE);
+  const squares = new Map<number, GuardDisk[]>();
+  const near = new Uint8Array(walk.length);
+  for (const disk of disks) {
+    const reach = disk.radius + margin;
+    const left = Math.max(0, Math.floor((disk.x - reach) / cell)), right = Math.min(terrain.cols - 1, Math.floor((disk.x + reach) / cell));
+    const top = Math.max(0, Math.floor((disk.y - reach) / cell)), bottom = Math.min(terrain.rows - 1, Math.floor((disk.y + reach) / cell));
+    for (let row = top; row <= bottom; row += 1) for (let col = left; col <= right; col += 1) {
+      const dx = (col + 0.5) * cell - disk.x, dy = (row + 0.5) * cell - disk.y;
+      if (dx * dx + dy * dy <= reach * reach) near[pad(state, col, row)] = 1;
+    }
+    for (let row = Math.floor(top / SQUARE); row <= Math.floor(bottom / SQUARE); row += 1) for (let col = Math.floor(left / SQUARE); col <= Math.floor(right / SQUARE); col += 1) {
+      const key = row * squareCols + col, list = squares.get(key);
+      if (list) list.push(disk); else squares.set(key, [disk]);
+    }
+  }
+  const disksAt = (point: Point) => squares.get(Math.floor(point.y / cell / SQUARE) * squareCols + Math.floor(point.x / cell / SQUARE)) ?? [];
+  // The straight segment keeps out of every disk, or, from inside a disk, moves away from its center.
+  const segmentClear = (a: Point, b: Point) => {
+    const listed = disksAt(a), other = disksAt(b);
+    return (other === listed ? listed : [...listed, ...other]).every((disk) => {
+      const dx = b.x - a.x, dy = b.y - a.y, inside = (a.x - disk.x) ** 2 + (a.y - disk.y) ** 2 <= disk.radius * disk.radius;
+      if (inside) return (a.x - disk.x) * dx + (a.y - disk.y) * dy >= 0;
+      const length = dx * dx + dy * dy;
+      const t = length === 0 ? 0 : Math.max(0, Math.min(1, ((disk.x - a.x) * dx + (disk.y - a.y) * dy) / length));
+      return (a.x + t * dx - disk.x) ** 2 + (a.y + t * dy - disk.y) ** 2 > disk.radius * disk.radius;
+    });
+  };
+  const dist = new Int32Array(walk.length).fill(UNREACHED);
+  // The direction of the step each cell was reached by.
+  const came = new Uint8Array(walk.length);
+  const buckets: number[][] = Array.from({ length: BUCKETS }, () => []);
+  dist[start] = 0;
+  buckets[0]!.push(start);
+  let pending = 1;
+  for (let cost = 0; pending > 0; cost += 1) {
+    const bucket = buckets[cost % BUCKETS]!;
+    while (bucket.length > 0) {
+      const at = bucket.pop()!;
+      pending -= 1;
+      if (dist[at] !== cost) continue;
+      let sides = 0;
+      for (let direction = 0; direction < 8; direction += 1) {
+        const next = at + offsets[direction]!;
+        if (walk[next] !== 1) continue;
+        if (direction < 4) sides |= 1 << direction;
+        else {
+          const corner = direction === 4 ? 3 : direction === 5 ? 6 : direction === 6 ? 12 : 9;
+          if ((sides & corner) !== corner) continue;
+        }
+        const reached = cost + (direction < 4 ? STRAIGHT : DIAGONAL) * weight[next]!;
+        if (reached >= dist[next]!) continue;
+        if ((near[at] === 1 || near[next] === 1) && !segmentClear(centerOf(state, at), centerOf(state, next))) continue;
+        dist[next] = reached;
+        came[next] = direction;
+        buckets[reached % BUCKETS]!.push(next);
+        pending += 1;
+      }
+    }
+  }
+  // The cell a walk to the goal ends on and what the last stretch to the goal adds: the goal's own cell or a neighbour of
+  // it the field reaches, whose straight way to the goal is walkable and keeps out of the disks, the cheapest.
+  const entry = (goal: Point): { at: number; extra: number } | undefined => {
+    const at = padAt(state, goal.x, goal.y);
+    if (at < 0 || walk[at] !== 1) return undefined;
+    let best: { at: number; extra: number } | undefined;
+    for (let direction = -1; direction < 8; direction += 1) {
+      const beside = direction < 0 ? at : at + offsets[direction]!;
+      if (walk[beside] !== 1 || dist[beside]! >= UNREACHED) continue;
+      const center = centerOf(state, beside);
+      if (!segmentClear(center, goal) || !clearSegment(state, center.x, center.y, goal.x, goal.y)) continue;
+      const extra = Math.round((Math.hypot(goal.x - center.x, goal.y - center.y) / cell) * STRAIGHT * weight[at]!);
+      if (!best || dist[beside]! + extra < dist[best.at]! + best.extra) best = { at: beside, extra };
+    }
+    return best;
+  };
+  return {
+    cost(goal) {
+      const end = entry(goal);
+      return end === undefined ? undefined : ((dist[end.at]! + end.extra) * cell) / (STRAIGHT * GROUND_WEIGHT);
+    },
+    cells(goal) {
+      let at = entry(goal)?.at;
+      if (at === undefined) return undefined;
+      const cells = [centerOf(state, at)];
+      while (at !== start) {
+        at -= offsets[came[at]!]!;
+        cells.push(centerOf(state, at));
+      }
+      return cells.reverse();
+    },
+  };
+}
+
 /** Continuous travel cost of a clear land segment, in equivalent bare-ground units.
  * The caller supplies walkable terrain; status, arrival tolerance and per-tick
  * boundary rounding belong to actual movement. */
