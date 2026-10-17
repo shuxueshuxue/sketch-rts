@@ -100,6 +100,10 @@ export function supportSurface(polygons: readonly (readonly Point[])[], ground: 
   };
   return {
     boundary,
+    // Whether a point stands on the surface, and whether a capsule crosses its boundary: the two halves of capsuleFits,
+    // for a caller that tests one point against many others.
+    supported,
+    capsuleClear,
     diskFits: (p: Point, r: number) => supported(p) && diskClear(p, r, boundary),
     diskOnLand: (p: Point, r: number) => land(p) && diskClear(p, r, landBoundary),
     capsuleFits: (a: Point, b: Point, r: number) => supported(a) && supported(b) && capsuleClear(a, b, r),

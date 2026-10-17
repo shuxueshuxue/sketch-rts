@@ -17,7 +17,12 @@ export function deckPointFits(ship: Unit, passenger: Unit, point: Point, units: 
   return !occupied || !shipPassengers(units,ship).some(other=>other.hp>0 && !isInCabin(other) && other.id!==passenger.id && Math.hypot(point.x-other.deck!.x,point.y-other.deck!.y)<passenger.radius+other.radius+1-1e-6);
 }
 /** Find actual free ground on a deck; neither supply nor a fixed slot count is consulted. */
-export function deckPlacement(ship: Unit, passenger: Unit, units: readonly Unit[], preferred: Point={x:0,y:0}, occupied=true, spacing=4) {
+/** Whether a deck has free ground for this passenger anywhere: the answer of deckPlacement, without looking for the
+ * closest spot once one is found. */
+export function deckHasRoom(ship: Unit, passenger: Unit, units: readonly Unit[]) {
+  return !!deckPlacement(ship, passenger, units, {x:0,y:0}, true, 4, true);
+}
+export function deckPlacement(ship: Unit, passenger: Unit, units: readonly Unit[], preferred: Point={x:0,y:0}, occupied=true, spacing=4, anywhere=false) {
   const profile=shipProfile(ship);
   if(!profile)return undefined;
   if(deckPointFits(ship,passenger,preferred,units,occupied))return preferred;
@@ -47,15 +52,54 @@ export function deckPlacement(ship: Unit, passenger: Unit, units: readonly Unit[
     }
     return true;
   };
-  const probe={x:0,y:0};
-  let best:Point|undefined, score=Infinity;
-  for(let y=-profile.beam/2;y<=profile.beam/2;y+=spacing) for(let x=-profile.length/2;x<=profile.length/2;x+=spacing) {
-    const value=(x-preferred.x)**2+(y-preferred.y)**2;
-    if(!(value<score))continue;
+  // @@@deck-placement-rings - The closest free grid point to the preferred one, the first in row order among equally close
+  // ones. The grid is searched in rings outward from the preferred point, and stops once no farther ring can come closer
+  // than the best point found: a free spot near the preferred one is found after a few probes, not a scan of the deck.
+  const {xs,ys}=deckGrid(profile,spacing), probe={x:0,y:0};
+  const nearest=(values:readonly number[],value:number)=>{
+    let index=0;
+    for(let i=1;i<values.length;i++)if(Math.abs(values[i]!-value)<Math.abs(values[index]!-value))index=i;
+    return index;
+  };
+  const ci=nearest(xs,preferred.x), cj=nearest(ys,preferred.y);
+  // How far the preferred point lies from the ring centre's grid point, along either axis.
+  const offset=Math.max(Math.abs(xs[ci]!-preferred.x),Math.abs(ys[cj]!-preferred.y));
+  let best:Point|undefined, score=Infinity, bi=0, bj=0;
+  const visit=(i:number,j:number)=>{
+    if(i<0||j<0||i>=xs.length||j>=ys.length)return;
+    const x=xs[i]!,y=ys[j]!,value=(x-preferred.x)**2+(y-preferred.y)**2;
+    if(!(value<score || value===score && (j<bj || j===bj && i<bi)))return;
     probe.x=x;probe.y=y;
-    if(fits(probe)){best={x,y};score=value;}
+    if(fits(probe)){best={x,y};score=value;bi=i;bj=j;}
+  };
+  if(anywhere){
+    for(let j=0;j<ys.length && !best;j++)for(let i=0;i<xs.length && !best;i++)visit(i,j);
+    return best;
+  }
+  const rings=Math.max(ci,cj,xs.length-1-ci,ys.length-1-cj);
+  for(let r=0;r<=rings;r++) {
+    // Every point of this ring is at least this far away; no farther ring can do better than the best already found.
+    const reach=Math.max(0,r*spacing*(1-1e-9)-offset-1e-9);
+    if(reach*reach>score)break;
+    if(r===0){visit(ci,cj);continue;}
+    for(let i=ci-r;i<=ci+r;i++){visit(i,cj-r);visit(i,cj+r);}
+    for(let j=cj-r+1;j<=cj+r-1;j++){visit(ci-r,j);visit(ci+r,j);}
   }
   return best;
+}
+// A deck's grid at a spacing: the same coordinates, accumulated step by step from the corner, that a row-by-row scan visits.
+const deckGrids=new WeakMap<object,Map<number,{xs:number[];ys:number[]}>>();
+function deckGrid(profile:NonNullable<ReturnType<typeof shipProfile>>,spacing:number) {
+  let grids=deckGrids.get(profile);
+  if(!grids)deckGrids.set(profile,grids=new Map());
+  let grid=grids.get(spacing);
+  if(!grid){
+    const xs:number[]=[],ys:number[]=[];
+    for(let y=-profile.beam/2;y<=profile.beam/2;y+=spacing)ys.push(y);
+    for(let x=-profile.length/2;x<=profile.length/2;x+=spacing)xs.push(x);
+    grids.set(spacing,grid={xs,ys});
+  }
+  return grid;
 }
 /** Project a pointer onto the usable floor, including the passenger's footprint.
  * Dragging past a railing stays at the railing; fittings and crew choose the
@@ -83,7 +127,7 @@ export function canBoard(ship: Unit, passenger: Unit, units: readonly Unit[]) {
     const source=units.find(unit=>unit.id===passenger.deck!.shipId),sourceProfile=source && shipProfile(source);
     if(!sourceProfile || source!.id===ship.id || Math.abs(profile.deckHeight-sourceProfile.deckHeight)>passenger.radius*2 && !gangwayBetween(source!,ship,passenger))return false;
   } else if(ship.owner!==passenger.owner)return false;
-  return deckLoad(units,ship)+bodyMass(passenger)<=profile.loadCapacity && !!deckPlacement(ship,passenger,units);
+  return deckLoad(units,ship)+bodyMass(passenger)<=profile.loadCapacity && deckHasRoom(ship,passenger,units);
 }
 export function boardUnit(ship: Unit, passenger: Unit, units: readonly Unit[]) {
   const profile=shipProfile(ship);
@@ -140,22 +184,29 @@ export function settleGangwayCrossings(units:readonly Unit[]) {
   }
 }
 
-function clearPath(ship: Unit, passenger: Unit, a:Point, b:Point, units:readonly Unit[], avoidCrew=false) {
+type Body=Point&{radius:number};
+// The other crew standing on this deck, as bodies in its frame: what a walk on the deck must not pass through.
+function deckBodies(ship:Unit,passenger:Unit,units:readonly Unit[]):Body[] {
+  return shipPassengers(units,ship).filter(other=>other.id!==passenger.id&&other.hp>0&&!isInCabin(other)).map(other=>({...other.deck!,radius:other.radius}));
+}
+function clearPath(ship: Unit, passenger: Unit, a:Point, b:Point, bodies?:readonly Body[]) {
   const profile=shipProfile(ship)!;
   return diskInConvex(a,passenger.radius+1,profile.deck) && diskInConvex(b,passenger.radius+1,profile.deck)
     && capsuleClearsCircles(a,b,passenger.radius+1,profile.obstacles)
-    && (!avoidCrew || capsuleClearsBodies(a,b,passenger.radius+1,shipPassengers(units,ship).filter(other=>other.id!==passenger.id&&other.hp>0&&!isInCabin(other)).map(other=>({...other.deck!,radius:other.radius}))));
+    && (!bodies || capsuleClearsBodies(a,b,passenger.radius+1,bodies));
 }
 /** Small visibility graph around fixed deck fittings; moving crew are physical bodies. */
 function deckWaypoint(ship:Unit,passenger:Unit,goal:Point,units:readonly Unit[],avoidCrew=false) {
   const start=passenger.deck!, profile=shipProfile(ship)!;
-  if(clearPath(ship,passenger,start,goal,units,avoidCrew))return goal;
+  // The crew is gathered once for the whole search, not once for every edge it tries.
+  const bodies=avoidCrew?deckBodies(ship,passenger,units):undefined;
+  if(clearPath(ship,passenger,start,goal,bodies))return goal;
   const nodes:Point[]=[start,goal];
   // Deck corners connect narrow passages between the cabin and the railing.
   // Fitting-ring nodes alone can leave these routes disconnected on large hulls.
   for(const point of expandConvex(profile.deck,-passenger.radius-1-1e-4))
     if(deckPointFits(ship,passenger,point,units,false))nodes.push(point);
-  const obstacles=[...profile.obstacles,...(avoidCrew?shipPassengers(units,ship).filter(other=>other.id!==passenger.id&&other.hp>0&&!isInCabin(other)).map(other=>({...other.deck!,radius:other.radius})):[])];
+  const obstacles=[...profile.obstacles,...(bodies??[])];
   for(const o of obstacles)for(let i=0;i<12;i++) {
     const angle=i*Math.PI/6,r=(o.radius+passenger.radius+3)/detCos(Math.PI/12);
     const point={x:o.x+detCos(angle)*r,y:o.y+detSin(angle)*r};
@@ -170,7 +221,7 @@ function deckWaypoint(ship:Unit,passenger:Unit,goal:Point,units:readonly Unit[],
     seen.add(current);
     for(let i=0;i<nodes.length;i++) {
       const candidate=cost[current]!+Math.hypot(nodes[i]!.x-nodes[current]!.x,nodes[i]!.y-nodes[current]!.y);
-      if(seen.has(i)||candidate>=cost[i]!||!clearPath(ship,passenger,nodes[current]!,nodes[i]!,units,avoidCrew))continue;
+      if(seen.has(i)||candidate>=cost[i]!||!clearPath(ship,passenger,nodes[current]!,nodes[i]!,bodies))continue;
       if(candidate<cost[i]!){cost[i]=candidate;previous[i]=current;}
     }
   }

@@ -223,7 +223,8 @@ export function capsuleClearsBodies(a: Point, b: Point, radius: number, bodies: 
 }
 /** Convex erosion: endpoints in P ⊖ disk(r) imply the entire segment is in it. */
 export function diskInConvex(p: Point, radius: number, polygon: readonly Point[]) {
-  return polygonPlanes(polygon).every(axis => p.x * axis.x + p.y * axis.y >= axis.min + radius * Math.hypot(axis.x, axis.y) - 1e-6);
+  // A point (radius 0) needs no axis lengths: the margin is exactly zero either way.
+  return polygonPlanes(polygon).every(axis => p.x * axis.x + p.y * axis.y >= axis.min + (radius ? radius * Math.hypot(axis.x, axis.y) : 0) - 1e-6);
 }
 // @@@hull-insertion-sort - A stable sort with one consistent comparator has a single result, so these sorts reproduce
 // the built-in sort's order exactly, without its calls back into the comparator or its scratch arrays: an insertion
