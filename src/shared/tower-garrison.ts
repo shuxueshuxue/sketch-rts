@@ -1,7 +1,8 @@
+import { buildingPlacementBlocker, terrainBlocksPlacement } from "./build-placement";
 import { unitMover, unitRules } from "./catalog";
 import { seconds } from "./time";
 import type { DamageReductionSource } from "./damage-reduction";
-import type { Building, GameSnapshot, Unit } from "./types";
+import type { Building, GameMap, GameSnapshot, Unit } from "./types";
 
 // @@@tower-garrison - A defense tower may be fortified, each tower on its own: it grows broader, its health doubles, and
 // it strikes no more; instead its owner's troops climb onto its top, up to TOWER_GARRISON.supply of supply (a troop with no
@@ -27,6 +28,19 @@ type Snapshot = Pick<GameSnapshot, "units"> & Partial<Pick<GameSnapshot, "varian
 
 export function canFortify(building: Building) {
   return building.kind === "defenseTower" && building.complete && !building.fortified && !building.fortify;
+}
+
+// Where a fortified tower stands: it is laid down again, broader, round the plain one, by the same rules as any building
+// (see @@@building-footprint). A plain tower's footprint is two cells across, centred on a cell corner; the fortified
+// one's is three, centred on a cell centre, so it stands half a cell off along each axis, on the first side, in a fixed
+// order, where its footprint is clear ground clear of every other building. Without a grid it broadens where it stands.
+type SiteSnapshot = Pick<GameSnapshot, "buildings" | "obstacles"> & Partial<Pick<GameSnapshot, "resources">> & { map: Pick<GameMap, "terrain"> };
+export function fortifiedSite(snapshot: SiteSnapshot, tower: Building) {
+  const cell = snapshot.map.terrain?.cell;
+  const others = { ...snapshot, buildings: snapshot.buildings.filter(building => building !== tower) };
+  const sites = cell === undefined ? [{ x: tower.x, y: tower.y }]
+    : [[1, 1], [-1, 1], [1, -1], [-1, -1]].map(([dx, dy]) => ({ x: tower.x + dx! * cell / 2, y: tower.y + dy! * cell / 2 }));
+  return sites.find(site => !terrainBlocksPlacement(snapshot.map, tower.kind, site, TOWER_GARRISON.radius) && !buildingPlacementBlocker(others, tower.kind, site, TOWER_GARRISON.radius));
 }
 
 export function garrisonSupply(snapshot: Partial<Pick<GameSnapshot, "variants">>, unit: Unit) {

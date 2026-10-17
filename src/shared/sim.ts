@@ -81,7 +81,7 @@ import { BOOTS_SPEED, HEALING_SCROLL_HEAL, HEALING_SCROLL_RADIUS, IVORY_TOWER_RE
 import { poolMap } from "./map-pool";
 import { perTick, seconds, SIM_TICKS_PER_SECOND } from "./time";
 import { ownUnitLookup } from "./unit-lookup";
-import { TOWER_GARRISON, canStandOnTower, garrisonRoomFor, towerFoot, towerGarrison, towerTopSpot } from "./tower-garrison";
+import { TOWER_GARRISON, canStandOnTower, fortifiedSite, garrisonRoomFor, towerFoot, towerGarrison, towerTopSpot } from "./tower-garrison";
 import type { AbilityKind, Building, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Obstacle, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, Projectile, RallyTarget, ScenarioOverride, ScenarioPlayerSeed, SettledUnitOrder, TrainableUnitKind, Unit, UnitKind, UnitOrder, UnitStatusEffect, UpgradeKind, WorldEffect, WorldItem } from "./types";
 
 export type CreateGameOptions = GameSetupOptions;
@@ -1149,11 +1149,17 @@ function updateResearch(game: Game) {
   for (const building of game.buildings) {
     if (building.fortify && --building.fortify.remaining <= 0) {
       delete building.fortify;
+      // Something built since against the tower can leave no room to broaden it: the gold comes back (see fortifiedSite).
+      const site = fortifiedSite(game, building);
+      if (!site) { playerState(game, building.owner).gold += TOWER_GARRISON.cost; continue; }
+      building.x = site.x;
+      building.y = site.y;
       building.fortified = true;
       applyDerivedBuildingStats(game, building);
       // The broader body stands in the way from now on: the routing takes it up, and whoever stood where it grew is
       // set outside it as anyone in a building is (see keepUnitsOutOfBuildings).
       delete game.buildingBodiesSeen;
+      delete game.buildingSpatial;
       syncBuildingBodies(game);
     }
     if (!building.complete || building.researchQueue.length === 0) continue;

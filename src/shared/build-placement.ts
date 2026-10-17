@@ -10,8 +10,7 @@ export const BUILDING_PLACEMENT_GAP = 4;
 // as in Warcraft III (see @@@building-footprint); on a map without, it keeps its gap from their round bodies.
 type PlacementSnapshot = Pick<GameSnapshot, "buildings" | "obstacles"> & Partial<Pick<GameSnapshot, "resources">> & { map?: Pick<GameMap, "terrain"> };
 
-export function buildingPlacementBlocker(snapshot: PlacementSnapshot, kind: BuildingKind, point: { x: number; y: number }): Building | Obstacle | ResourceNode | undefined {
-  const radius = BUILDING_DEFS[kind].radius;
+export function buildingPlacementBlocker(snapshot: PlacementSnapshot, kind: BuildingKind, point: { x: number; y: number }, radius = BUILDING_DEFS[kind].radius): Building | Obstacle | ResourceNode | undefined {
   const map = snapshot.map;
   let near = (body: Building | Obstacle) => distance(point, body) < radius + body.radius + BUILDING_PLACEMENT_GAP;
   if (map?.terrain) {
@@ -25,11 +24,10 @@ export function buildingPlacementBlocker(snapshot: PlacementSnapshot, kind: Buil
   }
   const blocker = snapshot.buildings.find(near) ?? snapshot.obstacles?.find(near);
   if (blocker) return blocker;
-  return snapshot.resources?.find(resource => resourceBlocksPlacement(map, kind, point, resource));
+  return snapshot.resources?.find(resource => resourceBlocksPlacement(map, kind, point, resource, radius));
 }
 
-export function resourceBlocksPlacement(map: Pick<GameMap, "terrain"> | undefined, kind: BuildingKind, point: { x: number; y: number }, resource: { x: number; y: number }) {
-  const radius = BUILDING_DEFS[kind].radius;
+export function resourceBlocksPlacement(map: Pick<GameMap, "terrain"> | undefined, kind: BuildingKind, point: { x: number; y: number }, resource: { x: number; y: number }, radius = BUILDING_DEFS[kind].radius) {
   const at = map ? snapToFootprint(map, radius, point) : point;
   if (kind === "townHall" && distance(at, resource) < GOLD_MINE_RULES.townHallDistance) return true;
   const half = map?.terrain ? footprintHalf(radius, map.terrain.cell) : radius;
@@ -40,9 +38,9 @@ export function resourceBlocksPlacement(map: Pick<GameMap, "terrain"> | undefine
 
 // A building stands on dry ground only (see @@@terrain): no part of it in a forest, on rock, in water or on a
 // ramp; a shipyard stands on the shore (see @@@shore-footprint).
-export function terrainBlocksPlacement(map: Pick<GameMap, "terrain"> | undefined, kind: BuildingKind, point: { x: number; y: number }) {
+export function terrainBlocksPlacement(map: Pick<GameMap, "terrain"> | undefined, kind: BuildingKind, point: { x: number; y: number }, radius = BUILDING_DEFS[kind].radius) {
   if (map === undefined) return false;
-  const { radius, shore } = BUILDING_DEFS[kind];
+  const { shore } = BUILDING_DEFS[kind];
   const at = snapToFootprint(map, radius, point);
   return shore ? !isShoreFootprint(map, at.x, at.y, radius) : !isFootprintBuildable(map, at.x, at.y, radius);
 }

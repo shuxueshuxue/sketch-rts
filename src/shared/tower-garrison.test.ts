@@ -4,7 +4,7 @@ import { createBuilding } from "./map";
 import { createGame, issuePlayerCommand, restoreSnapshotIntoGame, snapshotGame, stepGame, strikeUnit, type Game } from "./sim";
 import { checksumGame } from "./sim/checksum";
 import { checkCommandLegality } from "./sim/command-validation";
-import { isOpenGround, openGroundNear } from "./terrain";
+import { footprintCells, isOpenGround, openGroundNear, snapToFootprint } from "./terrain";
 import { TOWER_GARRISON, towerGarrison } from "./tower-garrison";
 import type { Building, Unit, UnitKind } from "./types";
 
@@ -17,7 +17,9 @@ function field(mapId: "bareDuel" | "ladder" = "bareDuel") {
 }
 
 function tower(game: Game, x = 1500, y = 1500, fortified = true) {
-  const building = createBuilding(`tower-${game.buildings.length}`, "player", "defenseTower", x, y, true);
+  // Laid on the grid as a worker lays one (see snapToFootprint).
+  const at = snapToFootprint(game.map, BUILDING_DEFS.defenseTower.radius, { x, y });
+  const building = createBuilding(`tower-${game.buildings.length}`, "player", "defenseTower", at.x, at.y, true);
   game.buildings.push(building);
   if (fortified) {
     issuePlayerCommand(game, "player", { type: "fortifyTower", buildingId: building.id });
@@ -75,6 +77,55 @@ describe("tower fortification", () => {
     expect(building.fortified).toBe(true);
     expect(isOpenGround(game.map, worker.x, worker.y)).toBe(true);
     expect(Math.hypot(worker.x - building.x, worker.y - building.y)).toBeGreaterThan(TOWER_GARRISON.radius);
+  });
+});
+
+describe("fortified footprint", () => {
+  it("lays the broader tower on the grid like any building: three cells across, centred on its own cell", () => {
+    const game = field("ladder");
+    const site = openGroundNear(game.map, { x: 2600, y: 1500 })!;
+    const plain = tower(game, site.x, site.y, false);
+    const at = { x: plain.x, y: plain.y };
+    issuePlayerCommand(game, "player", { type: "fortifyTower", buildingId: plain.id });
+    for (let tick = 0; tick < TOWER_GARRISON.time; tick++) stepGame(game);
+    const cell = game.map.terrain!.cell, cells = footprintCells(cell, plain.x, plain.y, plain.radius);
+    expect([cells.right - cells.left + 1, cells.bottom - cells.top + 1]).toEqual([3, 3]);
+    expect(((cells.left + cells.right + 1) / 2) * cell).toBe(plain.x);
+    expect(((cells.top + cells.bottom + 1) / 2) * cell).toBe(plain.y);
+    expect(Math.abs(plain.x - at.x)).toBe(cell / 2);
+  });
+
+  // A real map's troops come at a tower from one side, one behind the other (the browser proof found the second
+  // stopping a cell short, against a footprint that sat half a cell off the tower's centre).
+  it("takes up two archers walking up from the same side on pineshade", () => {
+    const probe = createGame("pineshade", { players: ["player", "enemy"], aiPlayers: [] });
+    const hall = probe.buildings.find(building => building.owner === "player" && building.kind === "townHall")!;
+    const cx = hall.x, cy = hall.y + 300;
+    const game = createGame("pineshade", { players: ["player", "enemy"], aiPlayers: [], scenario: {
+      addBuildings: [{ id: "t", owner: "player", kind: "defenseTower", x: cx, y: cy, complete: true }],
+      addUnits: [{ id: "a", owner: "player", kind: "archer", x: cx - 160, y: cy + 120 }, { id: "b", owner: "player", kind: "archer", x: cx - 120, y: cy + 120 }],
+    } });
+    game.players.player!.gold = 1000;
+    issuePlayerCommand(game, "player", { type: "fortifyTower", buildingId: "t" });
+    for (let tick = 0; tick < TOWER_GARRISON.time; tick++) stepGame(game);
+    issuePlayerCommand(game, "player", { type: "garrison", unitIds: ["a", "b"], buildingId: "t" });
+    for (let tick = 0; tick < 300; tick++) stepGame(game);
+    expect(game.units.filter(unit => unit.garrison?.buildingId === "t").map(unit => unit.id).sort()).toEqual(["a", "b"]);
+  });
+
+  it("refuses to fortify a tower walled in on every side, and refunds one walled in while it was being fortified", () => {
+    const game = field("ladder");
+    const site = openGroundNear(game.map, { x: 2600, y: 1500 })!;
+    const plain = tower(game, site.x, site.y, false);
+    const cell = game.map.terrain!.cell;
+    const wall = (dx: number, dy: number) => game.buildings.push(createBuilding(`wall-${dx}-${dy}`, "player", "defenseTower", plain.x + dx * cell * 2, plain.y + dy * cell * 2, true));
+    issuePlayerCommand(game, "player", { type: "fortifyTower", buildingId: plain.id });
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) wall(dx!, dy!);
+    for (let tick = 0; tick < TOWER_GARRISON.time; tick++) stepGame(game);
+    expect(plain.fortified).toBeUndefined();
+    expect(plain.fortify).toBeUndefined();
+    expect(game.players.player!.gold).toBe(5000);
+    expect(checkCommandLegality(game, "player", { type: "fortifyTower", buildingId: plain.id })?.message).toMatch(/No room/);
   });
 });
 

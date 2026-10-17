@@ -23,7 +23,7 @@ import { ownUnitLookup } from "../unit-lookup";
 import { purchasePlacement } from "../purchase";
 import { isStunned, unitAbilities } from "../unit-abilities";
 import { canEnterCabin, isInCabin, cabinExitPoint } from '../ship-cabin';
-import { TOWER_GARRISON, canFortify, canStandOnTower, garrisonSupply, garrisonUsed, towerGarrison } from "../tower-garrison";
+import { TOWER_GARRISON, canFortify, fortifiedSite, canStandOnTower, garrisonSupply, garrisonUsed, towerGarrison } from "../tower-garrison";
 
 // @@@command-refusal - Why an order the player may give is refused right now, in the player's terms: the command card
 // greys a button with exactly this (see legalityCommandState), so the card and the sim cannot disagree on what an order
@@ -229,6 +229,7 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     if (command.type === "fortifyTower") {
       if (tower.fortified || tower.fortify) return commandError("Tower is already fortified", true);
       if (!canFortify(tower)) return commandError("Cannot fortify an incomplete tower");
+      if (!fortifiedSite(snapshot, tower)) return refusal("No room round the tower to broaden it", "position");
       return goldRefusal(snapshot, owner, TOWER_GARRISON.cost);
     }
     if (!tower.fortified) return commandError("Only a fortified tower holds troops", true);
