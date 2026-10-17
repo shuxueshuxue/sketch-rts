@@ -3,7 +3,7 @@ import { decksAllowCrossing,decksCanTransfer,decksSupportCrossing } from './conn
 import { gangwaySurface } from './ship-gangway';
 import { shipContactGoal, shipTraffic } from './ship-avoidance';
 import { headingDifference, hullFits, type ShipPose } from './ship-navigation';
-import { shipProfile, shipsIn } from './ship-geometry';
+import { hullGap, shipProfile, shipsIn } from './ship-geometry';
 import { RANGED_ATTACK_RANGE_THRESHOLD } from './aiming';
 import type { GameMap, Unit, UnitOrder } from './types';
 
@@ -63,9 +63,16 @@ export function boardingHoldShips(units:readonly Unit[]) {
   };
   // A deployed passage belongs to its source helm. The target may escape on
   // its own voyage; the bridge contributes floor without commanding that helm.
+  // @@@boarding-grapple - A boarder closing alongside, and then its bridge, grapple an idle or holding quarry: it stops
+  // swinging in place to aim. Its berth and its bridge are laid along that hull, and a hull turning on the spot can
+  // neither be come alongside nor keep a bridge. A quarry under any order of its own (sailing, attacking) is not held.
   for(const source of ships) {
     const target=byId.get(source.sailing?.gangway?.targetId??'');
-    if(target && gangwaySurface(source,target) && !['move','follow','unload'].includes(source.order.type))holds.add(source.id);
+    if(!target)continue;
+    const surface=gangwaySurface(source,target);
+    if(surface && !['move','follow','unload'].includes(source.order.type))holds.add(source.id);
+    if((surface || source.sailing!.gangway!.phase==='approach' && hullGap(source,target)<=shipProfile(source)!.length)
+      && (target.order.type==='idle' || target.order.type==='hold') && !target.orderQueue?.length)holds.add(target.id);
   }
   for(const crew of units) {
     if(crew.hp<=0 || !crew.deck || crew.cabin)continue;
@@ -108,10 +115,12 @@ export function cancelCrewRendezvous(units:readonly Unit[],shipIds:ReadonlySet<s
 export function prepareCrewRendezvous(map:GameMap,units:readonly Unit[]) {
   let active:Set<string>|undefined;
   let boarders:Unit[]|undefined,pending:Unit[]|undefined;
+  // Only the living steer a hull: a boarder killed this tick still holds its order until it is removed, and it can
+  // no longer use the bridge it was walking to, so it would sail its ship off its own deployed gangway.
   for(const unit of units){
-    if(unit.deck && unit.order.type==='board'){
+    if(unit.deck && unit.order.type==='board' && unit.hp>0){
       (boarders??=[]).push(unit);
-      if(unit.hp>0)(active??=new Set()).add(unit.id);
+      (active??=new Set()).add(unit.id);
     }
     if(unit.order.type==='move' && unit.order.rendezvousFor)(pending??=[]).push(unit);
   }
