@@ -2,7 +2,7 @@ import { writeFileSync } from 'node:fs';
 import { createGame, issuePlayerCommand, stepGame } from '../src/shared/sim';
 import { MAP_POOL } from '../src/shared/map-pool';
 import { createBuilding } from '../src/shared/map';
-import { GOLD_MINE_RULES } from '../src/shared/mining';
+import { GOLD_MINE_RULES, atMineEntrance } from '../src/shared/mining';
 import { miningHallSite } from '../src/shared/mining-site';
 import { seconds } from '../src/shared/time';
 import type { MapId } from '../src/shared/types';
@@ -75,7 +75,7 @@ for (const mapId of scenarios) {
         gathering += +(worker.order.type === 'mine' && worker.order.phase === 'gather');
         returning += +(worker.order.type === 'mine' && worker.order.phase === 'return');
         queued += +(worker.order.type === 'mine' && worker.order.phase === 'toMine'
-          && Math.hypot(worker.x - mine.x, worker.y - mine.y) <= GOLD_MINE_RULES.entryRange);
+          && atMineEntrance(game.map, worker, mine));
       });
       conserved &&= mine.amount + workers.reduce((sum, worker) => sum + worker.carryingGold, 0) + game.players[owner]!.gold === 100000;
     }

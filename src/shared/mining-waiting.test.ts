@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createGame, issuePlayerCommand, snapshotGame, restoreSnapshotIntoGame, stepGame } from "./sim";
 import { createUnit } from "./map";
 import { MAP_POOL } from "./map-pool";
-import { GOLD_MINE_RULES } from "./mining";
+import { GOLD_MINE_RULES, atMineEntrance } from "./mining";
 import { seconds } from "./time";
 import { shove, isStaggered } from "./push";
 import { isStunned } from "./unit-abilities";
@@ -68,7 +68,7 @@ describe("mining progress and undersaturated queues", () => {
           const worker = workers[i]!, old = before[i]!;
           const queued = worker.order.type === "mine" && worker.order.phase === "toMine"
             && Math.hypot(worker.x - old.x, worker.y - old.y) < .01
-            && Math.hypot(worker.x - mine.x, worker.y - mine.y) <= GOLD_MINE_RULES.entryRange;
+            && atMineEntrance(game.map, worker, mine);
           waiting[i] = queued ? waiting[i]! + 1 : 0;
           if (tick >= seconds(30)) {
             maxSteadyWait = Math.max(maxSteadyWait, waiting[i]!);

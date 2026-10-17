@@ -35,7 +35,9 @@ it.each(BOOTSTRAP_VERSIONS.flatMap(version => (['grove', 'ember'] as const)
     let returned = false;
     const minedLoads = new Set<string>();
     const sites: { x: number; y: number }[] = [];
-    for (let tick = 0; tick < 6000 && !returned && !game.match.winner; tick++) {
+    // The first haul from the natural comes 100-250 ticks later since mines became bodies (see @@@structure-body):
+    // v9_archer's ember at 6071 and 6160, against 5872 and 5942 before.
+    for (let tick = 0; tick < 6500 && !returned && !game.match.winner; tick++) {
       if (tick % 15 === 0) {
         const entries = planAiOwnerCommandEntries(snapshotGame(game), { playerId: 'us', version, memory }, { teams: game.teams });
         for (const { command } of entries) if (command.type === 'build' && command.buildingKind === 'townHall') sites.push(command);

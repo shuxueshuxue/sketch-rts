@@ -1,3 +1,4 @@
+import { standingBodies, type StructureBody } from "./structure-bodies";
 import { addGold, roundGold } from "./gold";
 import { unitControlsMercenaryCamp } from './mercenary-camp';
 import { boardingHoldShips, cancelCrewRendezvous, prepareCrewRendezvous } from './crew-rendezvous';
@@ -9,7 +10,7 @@ import { shipFireLaneClear } from './ship-fire-control';
 import { beginShipBoarding, cancelShipBoarding, shipBoardingGoal, updateShipGangways, damageShipGangway, gangwayCrewEligible, bindGangwayCrewRules } from './ship-gangway';
 import { assignPlayerColors } from './player-colors';
 import { BUILDING_WORK_REACH, buildingWorkGap, constructionWorkers } from './construction';
-import { GOLD_MINE_RULES, prepareMiningFrame, upkeepGoldIncome, type MiningFrame } from "./mining";
+import { GOLD_MINE_RULES, atMineEntrance, mineEntrance, prepareMiningFrame, upkeepGoldIncome, type MiningFrame } from "./mining";
 import { canReceiveHealing } from './healing';
 import { SPARK_FIRE, sparkIgnites } from './spark-fire';
 import { unitNeedsRepair, unitRepairHpPerGold } from './unit-repair';
@@ -103,7 +104,7 @@ export type Game = GameSnapshot & {
   buildingSpatialByTeam?: Map<string, SpatialIndex<Building>>;
   buildingSpatialCount?: number;
   // The buildings and obstacles the map's routing last took in (see @@@building-pathing).
-  buildingBodiesSeen?: (Building | Obstacle)[];
+  buildingBodiesSeen?: (Building | Obstacle | StructureBody)[];
   entityById?: Map<string, Unit | Building>;
   spawnUnit(owner: Unit["owner"], kind: UnitKind, x: number, y: number, pose?: ShipPose): Unit;
   // Campaign games only (see story/); a standard match has neither (nor `variants`) and takes none of their paths.
@@ -156,7 +157,6 @@ type SpatialIndex<T extends SpatialEntity> = {
   bottom: number;
 };
 
-const MINE_RANGE = GOLD_MINE_RULES.entryRange;
 const TOWN_HALL_DROP_RANGE = GOLD_MINE_RULES.dropRange;
 const GOLD_PER_TRIP = GOLD_MINE_RULES.goldPerTrip;
 const GATHER_DURATION = seconds(GOLD_MINE_RULES.gatherSeconds);
@@ -823,7 +823,8 @@ export function stepGame(game: Game) {
   const starts = vessels.length ? new Map(vessels.map(ship => [ship.id, { x: ship.x, y: ship.y, heading: ship.sailing!.heading }])) : EMPTY_SHIP_STARTS;
   // The empty collision frame still clears prior hull impacts and binds ground
   // movement to this tick's no-hull geometry.
-  beginShipMotionFrame(game.units,game.map,game.buildingBodiesSeen ?? game.buildings,vessels);
+  // Hulls meet the buildings, rocks and gates; the neutral sites stand inland, out of every hull's way.
+  beginShipMotionFrame(game.units,game.map,vessels.length ? [...game.buildings,...(game.obstacles ?? [])] : game.buildings,vessels);
   let defenses: ShipDefenseFrame;
   if (navalFrame) {
     beginShipPlanningFrame(game.units,game.tick,vessels);
@@ -898,22 +899,22 @@ export function stepGame(game: Game) {
   updateVictory(game);
 }
 
-// Hands the map's routing the buildings standing now, and the rocks and gates (see @@@obstacle), whenever one was laid
-// down or fell (see @@@building-pathing): at the step's start, for the sites laid by the commands before it, and after the
-// dead are gone, so what a planner reads between steps is current.
+// Hands the map's routing every body standing now (see @@@structure-body): the buildings, the rocks and gates (see
+// @@@obstacle) and the mines, shops and camps, whenever one was laid down or fell (see @@@building-pathing): at the step's
+// start, for the sites laid by the commands before it, and after the dead are gone, so what a planner reads between steps
+// is current.
 function syncBuildingBodies(game: Game) {
   const seen = game.buildingBodiesSeen;
-  const obstacles = game.obstacles ?? [];
-  const count = game.buildings.length;
-  if (seen && seen.length === count + obstacles.length && game.buildings.every((building, index) => building === seen[index]) && obstacles.every((obstacle, index) => obstacle === seen[count + index])) return;
-  game.buildingBodiesSeen = [...game.buildings, ...obstacles];
-  setBuildingBodies(game.map, game.buildingBodiesSeen);
+  const bodies = standingBodies(game);
+  if (seen && seen.length === bodies.length && bodies.every((body, index) => body === seen[index])) return;
+  game.buildingBodiesSeen = bodies;
+  setBuildingBodies(game.map, bodies);
 }
 
 /** A runtime loading a game calls this before its first tick: the routing its first walks and launches would build cold
  * from the map and the buildings standing now (see @@@terrain-warmup). Only caches change, never the game. */
 export function warmGameCaches(game: Game) {
-  warmTerrainRouting(game.map, [...game.buildings, ...(game.obstacles ?? [])], [BUILDING_DEFS.shipyard.radius]);
+  warmTerrainRouting(game.map, standingBodies(game), [BUILDING_DEFS.shipyard.radius]);
 }
 
 function copyUnitOrder(order:UnitOrder):UnitOrder {
@@ -1830,8 +1831,9 @@ function updateMineOrder(game: Game, unit: Unit) {
   }
 
   if (order.phase === "toMine") {
-    if (distance(unit, resource!) > MINE_RANGE) {
-      moveToward(unit, resource!.x, resource!.y, game.map, game.units);
+    if (!atMineEntrance(game.map, unit, resource!)) {
+      const entrance = mineEntrance(game.map, resource!, unit, unit.radius);
+      moveToward(unit, entrance.x, entrance.y, game.map, game.units);
       return;
     }
     order.timer += 1;
