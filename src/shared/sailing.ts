@@ -208,8 +208,19 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
         const singleForwardExact=completed.recovery && !completed.anchor && !completed.partial && completed.points.length===1
           && !!forward.exact && !forward.pivot && Math.hypot(forward.x-point.x,forward.y-point.y)<=1e-7
           && Math.abs(headingDifference(forward.heading,Math.atan2(point.y-ship.y,point.x-ship.x)))<=1e-7;
+        // @@@departure-turn - The same maneuver may come already split: an exact turn on the spot (the exact planner's lead
+        // where the hull cannot turn on its way), then a forward leg.
+        const turnThenForward=completed.recovery && !completed.anchor && !completed.partial && completed.points.length>1
+          && !!forward.exact && !forward.pivot && Math.hypot(forward.x-start.x,forward.y-start.y)<=1e-7
+          && completed.points.slice(1).every(candidate=>!candidate.exact && !candidate.pivot);
         if(completed.recovery && (completed.partial || !completed.points.length || completed.points.some(candidate=>candidate.pivot)
-          || completed.points.some(candidate=>candidate.exact) && !singleForwardExact))return false;
+          || completed.points.some(candidate=>candidate.exact) && !singleForwardExact && !turnThenForward))return false;
+        if(turnThenForward){
+          // Certified as the single forward leg's turn is, below.
+          const turned={...start,heading:forward.heading},liveTraffic=reservationTraffic(ship,units),onward=completed.points[1]!;
+          if(!hullPassageClear(map,ship,start,turned) || !hullPassageClear(map,ship,turned,onward)
+            || !liveTraffic(start,turned) || !liveTraffic(turned,onward))return false;
+        }
         if(singleForwardExact){
           // A clear forward corridor can need a finite turn on the spot
           // before there is room for a sailing circle. Certify that turn

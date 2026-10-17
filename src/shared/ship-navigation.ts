@@ -933,7 +933,11 @@ export function planVoyageRoute(map:SeaMap,ship:Unit,goal:Point & {heading?:numb
   const direct=planDirectVoyage(map,ship,goal,trafficClear);
   if(direct)return{points:direct,partial:false};
   const reference=planShipRoute(map,ship,goal,trafficClear,budget,true);
-  return{points:simplifyVoyageReference(map,ship,from,reference.points,trafficClear),partial:reference.partial};
+  // @@@departure-turn - The exact planner leads with a turn on the spot where the hull cannot turn on its way. A voyage
+  // reference's first leg is exact, and an exact leg's executor turns the hull on the spot itself (see sailing's exact
+  // executor), so the reference starts at that leg.
+  const first=reference.points[0],turnFirst=!!first && reference.points.length>1 && Math.hypot(first.x-from.x,first.y-from.y)<=1e-7;
+  return{points:simplifyVoyageReference(map,ship,from,turnFirst?reference.points.slice(1):reference.points,trafficClear),partial:reference.partial};
 }
 
 /** A voyage's direct stage, separated from its heading-lattice reference. */
