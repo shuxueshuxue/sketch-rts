@@ -38,3 +38,15 @@ export function siteBodies(world: Sites): StructureBody[] {
 export function standingBodies(world: Pick<GameSnapshot, "buildings"> & Partial<Pick<GameSnapshot, "obstacles">> & Sites): (Building | Obstacle | StructureBody)[] {
   return [...world.buildings, ...(world.obstacles ?? []), ...siteBodies(world)];
 }
+
+// Whether `seen` is still the world's standing bodies, the same objects in standingBodies' order, read without building
+// that list: a step asks twice (see syncBuildingBodies), and on nearly every step nothing was laid down or fell.
+export function standsAsSeen(world: Pick<GameSnapshot, "buildings"> & Partial<Pick<GameSnapshot, "obstacles">> & Sites, seen: readonly object[]) {
+  let index = 0;
+  for (const building of world.buildings) if (seen[index++] !== building) return false;
+  for (const obstacle of world.obstacles ?? []) if (seen[index++] !== obstacle) return false;
+  for (const mine of world.resources ?? []) if (seen[index++] !== siteBody(mine, "goldMine", GOLD_MINE_RULES.radius)) return false;
+  for (const shop of world.shops ?? []) if (seen[index++] !== siteBody(shop, "shop", shop.radius)) return false;
+  for (const camp of world.mercenaryCamps ?? []) if (seen[index++] !== siteBody(camp, "mercenaryCamp", camp.radius)) return false;
+  return index === seen.length;
+}

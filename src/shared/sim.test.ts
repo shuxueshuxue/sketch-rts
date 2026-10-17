@@ -11,10 +11,25 @@ import { seconds, perTick } from "./time";
 import { sketchScene } from "../sdk/scene";
 import type { MapId, PlayerId, PlayerNumberMap, Unit, UnitKind } from "./types";
 
-// The whole duel's CPU, AI and sim together. With spells on their own cooldowns a duel on a map with camps ran 32k ticks
-// (18k before). Stronger veterans and higher camp bounties now keep larger armies alive; the three-way case measures
-// about 9.4 CPU seconds locally. Retain a bounded 12-second budget while keeping winner/army/economy checks intact.
-const AI_DUEL_CPU_BUDGET_MS = 12_000;
+// @@@match-cpu-budget - An AI match's CPU is held to the work it did, not to how long it ran. A whole-match budget
+// broke with every balance change: towers at 13 damage made the ladder duel longer, mines as bodies (see
+// @@@structure-body) kept 14% more soldiers alive in bareDuel, and each time a match within its per-unit cost failed. A
+// match's work is its AIs' thinking for every tick of live play and its sim's for every soldier (a unit that is not a
+// worker, creeps included) standing on such a tick; what each costs is that match's own, since a map's terrain, towers
+// and posts make its soldiers dearer (the ladder's cost 2.7 times bareDuel's). Rates in microseconds, measured on mac1
+// at b845eaa3 (the median of three runs, rounded up). CI's runners took 3.5 times mac1 on the same bareDuel (12.0-12.3
+// s against 3.4-3.6 s); a match fails past 1.3 times that, so a regression in what a tick or a soldier costs shows
+// whoever wins and however long it lasts.
+const CI_OVER_MAC1 = 3.5;
+const CPU_HEADROOM = 1.3;
+type MatchRates = { aiUsPerAiTick: number; simUsPerSoldierTick: number };
+const MATCH_RATES = {
+  bareDuel: { aiUsPerAiTick: 17, simUsPerSoldierTick: 2.1 },
+  verdantDuel: { aiUsPerAiTick: 25, simUsPerSoldierTick: 1.4 },
+  ladder: { aiUsPerAiTick: 35, simUsPerSoldierTick: 5.6 },
+  freeForAll: { aiUsPerAiTick: 22, simUsPerSoldierTick: 1.5 },
+  v7Allied: { aiUsPerAiTick: 57, simUsPerSoldierTick: 1.9 },
+} satisfies Record<string, MatchRates>;
 const FREE_FOR_ALL_TICKS = 42_000;
 
 function elapsedCpuMs(started: NodeJS.CpuUsage) {
@@ -37,22 +52,45 @@ function stepUntil(game: ReturnType<typeof createGame>, maxTicks: number, predic
   return predicate();
 }
 
+type MatchWork = { elapsedMs: number; ais: number; liveTicks: number; liveSoldierTicks: number };
+
+// Steps an AI match `ticks` ticks (or until it is won), counting its work (see @@@match-cpu-budget) as it goes.
+function stepMatch(game: ReturnType<typeof createGame>, runtime: AiRuntimeState, ais: number, ticks: number, untilWon = false, work: MatchWork = { elapsedMs: 0, ais, liveTicks: 0, liveSoldierTicks: 0 }) {
+  const started = process.cpuUsage();
+  for (let i = 0; i < ticks && !(untilWon && game.match.winner); i += 1) {
+    runPresetAiRuntimeForTest(game, runtime);
+    stepGame(game);
+    if (game.match.winner) continue;
+    work.liveTicks += 1;
+    for (const unit of game.units) if (unit.kind !== "worker") work.liveSoldierTicks += 1;
+  }
+  work.elapsedMs += elapsedCpuMs(started);
+  return work;
+}
+
+function cpuBudgetMs(work: MatchWork, rates: MatchRates) {
+  const mac1Us = rates.aiUsPerAiTick * work.ais * work.liveTicks + rates.simUsPerSoldierTick * work.liveSoldierTicks;
+  return (mac1Us / 1_000) * CI_OVER_MAC1 * CPU_HEADROOM;
+}
+
+function expectWithinCpu(work: MatchWork, rates: MatchRates) {
+  expect(work.elapsedMs, JSON.stringify({ ...work, budgetMs: Math.round(cpuBudgetMs(work, rates)) })).toBeLessThan(cpuBudgetMs(work, rates));
+}
+
 function runTwoAiDuel(mapId: MapId, ticks = 36_000) {
   const game = createGame(mapId, { aiPlayers: ["player", "enemy"] });
   const runtime = createAiRuntime(["player", "enemy"]);
-  const started = process.cpuUsage();
-  stepMany(game, ticks, runtime);
-  return { game, ticks, elapsedMs: elapsedCpuMs(started) };
+  return { game, ticks, work: stepMatch(game, runtime, 2, ticks) };
 }
 
-function expectTwoAiDuelBaseline({ game, ticks, elapsedMs }: ReturnType<typeof runTwoAiDuel>, cpuBudgetMs = AI_DUEL_CPU_BUDGET_MS * Math.max(1, ticks / 36_000)) {
+function expectTwoAiDuelBaseline({ game, ticks, work }: ReturnType<typeof runTwoAiDuel>, rates: MatchRates) {
   const totalNonBaseBuildingsDestroyed = sumPlayerStats(game.match.stats.nonBaseBuildingsDestroyed);
   // A side is out when its last building falls (see updateVictory); a worker of its may still be walking.
   const losingOwners = game.activePlayers.filter((owner) => owner !== game.match.winner).map((owner) => ({ buildings: game.buildings.filter((building) => building.owner === owner).length }));
 
   expect(game.match.winner).not.toBeNull();
   expect(game.match.endedAtTick).toBeLessThanOrEqual(ticks);
-  expect(elapsedMs).toBeLessThan(cpuBudgetMs);
+  expectWithinCpu(work, rates);
   expect(game.match.stats.goldSpent.player).toBeGreaterThan(1_500);
   expect(game.match.stats.goldSpent.enemy).toBeGreaterThan(1_500);
   expect(game.match.stats.unitsKilled.player).toBeGreaterThan(0);
@@ -2240,12 +2278,11 @@ describe("sketch RTS simulation", () => {
 
   it("runs a fast two-AI duel with no neutral camps or mercenary camps", () => {
     // Continuous upkeep slows the mirror: 6 kills at 30 minutes, 12 at 40.
-    // Keep the combat assertion and the same total CPU ceiling.
     const result = runTwoAiDuel("bareDuel", 48_000);
     const totalMercenaryKills = sumPlayerStats(result.game.match.stats.mercenaryKills);
     const totalNeutralKills = sumPlayerStats(result.game.match.stats.neutralUnitsKilled);
 
-    expect(result.elapsedMs).toBeLessThan(AI_DUEL_CPU_BUDGET_MS);
+    expectWithinCpu(result.work, MATCH_RATES.bareDuel);
     expect(result.game.match.stats.goldSpent.player).toBeGreaterThan(1_500);
     expect(result.game.match.stats.goldSpent.enemy).toBeGreaterThan(1_500);
     // Whether a building falls in 30 minutes depends on the balance of the day (the 85% shooter and 60s/40s summon patch
@@ -2258,12 +2295,11 @@ describe("sketch RTS simulation", () => {
   });
 
   it("runs a fast two-AI duel with neutral camp clearing and mercenary combat", () => {
-    // With shorter ranged weapons this duel takes longer to resolve; retain the same CPU allowance per simulated tick.
     const result = runTwoAiDuel("verdantCrossroads", 48_000);
     const totalMercenaryKills = sumPlayerStats(result.game.match.stats.mercenaryKills);
     const totalNeutralKills = sumPlayerStats(result.game.match.stats.neutralUnitsKilled);
 
-    expectTwoAiDuelBaseline(result);
+    expectTwoAiDuelBaseline(result, MATCH_RATES.verdantDuel);
     expect(result.game.mercenaryCamps.length).toBeGreaterThan(0);
     expect(totalMercenaryKills).toBeGreaterThan(0);
     expect(totalNeutralKills).toBeGreaterThan(0);
@@ -2274,15 +2310,13 @@ describe("sketch RTS simulation", () => {
     // or walk, and to 44 (enemy, tick 53211) when towers came down to 13 damage. Melee blows landing on contact left it
     // without a winner at 66000 (armies swinging between attack-moves and recalls across the middle) until mines, shops
     // and camps became bodies (see @@@structure-body): the player wins at 42237.
-    // A long ladder game is a late game: 53211 ticks with forty soldiers a side took 26.7 CPU seconds on CI and 26.8 here,
-    // half a millisecond a tick where the shorter duels the shared budget was set by take a third.
     const result = runTwoAiDuel("ladder", 60_000);
     // A post's stock never comes back (see hireMercenary): the duel hired what the posts had less what they have.
     const posts = createGame("ladder", { aiPlayers: ["player", "enemy"] }).mercenaryCamps;
     const hired = posts.reduce((total, post) => total + post.stock - result.game.mercenaryCamps.find((camp) => camp.id === post.id)!.stock, 0);
     const totalNeutralKills = sumPlayerStats(result.game.match.stats.neutralUnitsKilled);
 
-    expectTwoAiDuelBaseline(result, 36_000);
+    expectTwoAiDuelBaseline(result, MATCH_RATES.ladder);
     expect(result.game.mercenaryCamps.length).toBeGreaterThan(1);
     expect(hired).toBeGreaterThan(0);
     expect(totalNeutralKills).toBeGreaterThan(0);
@@ -2291,12 +2325,10 @@ describe("sketch RTS simulation", () => {
   it("runs a fast three-AI free-for-all with a real third faction economy and winner", () => {
     const game = createGame("verdantCrossroads", { players: ["player", "enemy", "enemy2"], aiPlayers: ["player", "enemy", "enemy2"] });
     const runtime = createAiRuntime(["player", "enemy", "enemy2"]);
-    const started = process.cpuUsage();
 
     // Three ways take longer than two: since a shot flies at one speed this one is settled in 31 minutes.
-    stepMany(game, FREE_FOR_ALL_TICKS, runtime);
+    const work = stepMatch(game, runtime, 3, FREE_FOR_ALL_TICKS);
 
-    const elapsedMs = elapsedCpuMs(started);
     const totalNeutralKills = sumPlayerStats(game.match.stats.neutralUnitsKilled);
     const totalNonBaseBuildingsDestroyed = sumPlayerStats(game.match.stats.nonBaseBuildingsDestroyed);
     const survivingTownHallOwners = game.activePlayers.filter((owner) => game.buildings.some((building) => building.owner === owner && building.kind === "townHall"));
@@ -2318,7 +2350,7 @@ describe("sketch RTS simulation", () => {
     expect(survivingContenders).toEqual([game.match.winner]);
     expect(Math.max(...loserArmies)).toBeLessThanOrEqual(maxAcceptableLoserCombat);
     expect(game.match.endedAtTick).toBeLessThanOrEqual(FREE_FOR_ALL_TICKS);
-    expect(elapsedMs).toBeLessThan(AI_DUEL_CPU_BUDGET_MS);
+    expectWithinCpu(work, MATCH_RATES.freeForAll);
     expectWinnerSpentAndLosersDiedCleanly(game, 1_500, 600, maxAcceptableLoserCombat);
     expect(game.match.stats.unitsKilled.player + game.match.stats.unitsKilled.enemy + game.match.stats.unitsKilled.enemy2).toBeGreaterThan(20);
     expect(game.match.stats.unitsLost.player + game.match.stats.unitsLost.enemy + game.match.stats.unitsLost.enemy2).toBeGreaterThan(20);
@@ -2333,22 +2365,17 @@ describe("sketch RTS simulation", () => {
       teams: { player: "north", enemy: "south", enemy2: "south" },
     });
     const runtime = createAiRuntime(["player", "enemy", "enemy2"], { version: "v7" });
-    const started = process.cpuUsage();
     const enemyBase = game.buildings.find((building) => building.owner === "enemy" && building.kind === "townHall")!;
     const enemy2Base = game.buildings.find((building) => building.owner === "enemy2" && building.kind === "townHall")!;
     const enemyFootman = game.spawnUnit("enemy", "footman", enemyBase.x - 60, enemyBase.y - 20);
     const enemy2Footman = game.spawnUnit("enemy2", "footman", enemy2Base.x - 60, enemy2Base.y - 20);
 
-    stepMany(game, 20, runtime);
+    const work = stepMatch(game, runtime, 3, 20);
 
     expect(enemyFootman.order.type === "attack" ? enemyFootman.order.targetId : "").not.toBe(enemy2Footman.id);
     expect(enemy2Footman.order.type === "attack" ? enemy2Footman.order.targetId : "").not.toBe(enemyFootman.id);
 
-    while (!game.match.winner && game.tick < 48_000) {
-      runPresetAiRuntimeForTest(game, runtime);
-      stepGame(game);
-    }
-    const elapsedMs = elapsedCpuMs(started);
+    stepMatch(game, runtime, 3, 48_000 - game.tick, true, work);
     const survivingTeams = new Set(
       game.activePlayers
         .filter((owner) => game.buildings.some((building) => building.owner === owner && building.kind === "townHall") || game.units.filter((unit) => unit.owner === owner && unit.kind !== "worker").length > 3)
@@ -2360,7 +2387,7 @@ describe("sketch RTS simulation", () => {
 
     expect(game.match.winner).not.toBeNull();
     expect(game.match.endedAtTick).toBeLessThanOrEqual(48_000);
-    expect(elapsedMs).toBeLessThan(AI_DUEL_CPU_BUDGET_MS);
+    expectWithinCpu(work, MATCH_RATES.v7Allied);
     expect(survivingTeams.size).toBe(1);
     expect(Math.max(...losingArmies)).toBeLessThanOrEqual(3);
     expect(game.match.stats.goldSpent.player).toBeGreaterThan(1_000);
