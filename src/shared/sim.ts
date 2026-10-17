@@ -19,8 +19,8 @@ import { settleGroundItems } from './item-surfaces';
 import { strikePoint, strikeGap, bodyGap } from "./combat-geometry";
 import { purchasePlacement, type PurchasePlacement } from "./purchase";
 import { SHIP_WEAPONS, PREVIOUS_SHIP_TRAIN_COST, damageShipParts, initializeShipEquipment, installedWeapons, isShipEquipment, mountedWeaponPose, mountedTargetPoint, mountedFireLaneClear, rebuildShipFittings, repairShipParts, shipPartMax, shipGunCanAim, shipMounts, bestFiringHeading, type MountedShotClear } from "./ship-equipment";
-import { ITEM_DEFS, activeItem, canEquip, dropRefusal, freeItemSlot, itemEquipped, normalizeEquipment, removeFromHands, transferRefusal, weaponRules, wieldRefusal, itemHands, unitItemMass, shipItemMass, itemsFor } from "./equipment";
-import { BREACH_CHARGE, FLAME_CLOAK, GUARDIAN_SCROLL, IVORY_TOWER_HP_SHARE, LIGHTNING_ROD, STORM_STAFF, NEUTRAL_ITEM_TARGET_RANGE, NEUTRAL_STORM_TARGET_RANGE } from "./item-rules";
+import { ITEM_DEFS, ITEM_TRANSFER_REACH, activeItem, canEquip, dropRefusal, freeItemSlot, giveRefusal, itemEquipped, type ItemDestination, normalizeEquipment, removeFromHands, transferRefusal, weaponRules, wieldRefusal, itemHands, unitItemMass, shipItemMass, itemsFor } from "./equipment";
+import { BREACH_CHARGE, FLAME_CLOAK, GUARDIAN_SCROLL, ITEM_DROP_REACH, IVORY_TOWER_HP_SHARE, LIGHTNING_ROD, STORM_STAFF, NEUTRAL_ITEM_TARGET_RANGE, NEUTRAL_STORM_TARGET_RANGE } from "./item-rules";
 import { EXPERIENCE_BOOK_XP, VETERANCY_GAIN_PER_STAR, killXpReward, xpStarThresholds } from "./unit-value";
 import { automaticTargetAllowed, combatTargetScore, combatVictimId, shouldSwitchCombatTarget, type TargetThreat } from "./combat-target";
 import { crewBeforeHulls, boltIntersection, inWeaponCone, weaponDamage } from "./weapons";
@@ -720,12 +720,12 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     if(delivery && "placement" in delivery)deliverPurchase(game,item,delivery.placement);else addEffect(game,"summon",at.x,at.y,seconds(.8));return;
   }
   if (command.type === "transferItem") {
-    const refusal=transferRefusal(game,owner,command.itemId,command.destination);if(refusal)throw new Error(refusal);
-    const item=game.items.find(item=>item.id===command.itemId)!;const originalShip=item.shipId;const source=game.units.find(unit=>unit.id===item.carrierId);if(source)removeFromHands(source,item.id);
-    delete item.carrierId;delete item.slot;delete item.shipId;delete item.holdSlot;delete item.mountId;delete item.aim;
-    if("unitId" in command.destination){item.carrierId=command.destination.unitId;item.slot=command.destination.slot;}else{item.shipId=command.destination.shipId;if("mountId" in command.destination){item.mountId=command.destination.mountId;item.durability??=SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].hp;}else item.holdSlot=command.destination.slot;}
-    invalidateItemIndex(game.items);
-    for(const unit of game.units){if(shipProfile(unit) && (unit.id===originalShip || unit.id===item.shipId))rebuildShipFittings(game,unit);if(unit.id===source?.id || unit.id===item.carrierId || unit.id===originalShip || unit.id===item.shipId)applyDerivedUnitStats(game,unit);}refreshEquipmentMass(game);return;
+    transferItem(game, owner, command.itemId, command.destination);
+    return;
+  }
+  if (command.type === "giveItem") {
+    giveItem(game, owner, command.unitId, command.itemId, command.targetId);
+    return;
   }
   if(command.type === "wieldItem"){
     const refusal=wieldRefusal(game,owner,command.unitId,command.itemId,command.hand);if(refusal)throw new Error(refusal);
@@ -1454,6 +1454,9 @@ function updateUnits(game: Game, defenses: ShipDefenseFrame, navalFrame: boolean
         continue;
       case "pickupItem":
         updatePickupItemOrder(game, unit);
+        continue;
+      case "itemErrand":
+        updateItemErrandOrder(game, unit);
         continue;
       case "board":
         updateBoardOrder(game, unit);
@@ -2323,6 +2326,71 @@ function updatePickupItemOrder(game: Game, unit: Unit) {
   unit.order = { type: "idle" };
 }
 
+// Moves an item to a unit's position or a ship's hold or fitting (see transferRefusal). Onto an occupied carrying position
+// of the unit already carrying it, the two items trade places, as dragging one Warcraft III slot onto another does.
+function transferItem(game: Game, owner: PlayerId, itemId: string, destination: ItemDestination) {
+  const refusal=transferRefusal(game,owner,itemId,destination);if(refusal)throw new Error(refusal);
+  const item=game.items.find(item=>item.id===itemId)!;const originalShip=item.shipId;const source=game.units.find(unit=>unit.id===item.carrierId);if(source)removeFromHands(source,item.id);
+  const swapped="unitId" in destination && item.carrierId===destination.unitId ? game.items.find(other=>other.id!==item.id && other.carrierId===destination.unitId && other.slot===destination.slot) : undefined;
+  if(swapped && item.slot)swapped.slot=item.slot;
+  delete item.carrierId;delete item.slot;delete item.shipId;delete item.holdSlot;delete item.mountId;delete item.aim;
+  if("unitId" in destination){item.carrierId=destination.unitId;item.slot=destination.slot;}else{item.shipId=destination.shipId;if("mountId" in destination){item.mountId=destination.mountId;item.durability??=SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].hp;}else item.holdSlot=destination.slot;}
+  invalidateItemIndex(game.items);
+  for(const unit of game.units){if(shipProfile(unit) && (unit.id===originalShip || unit.id===item.shipId))rebuildShipFittings(game,unit);if(unit.id===source?.id || unit.id===item.carrierId || unit.id===originalShip || unit.id===item.shipId)applyDerivedUnitStats(game,unit);}refreshEquipmentMass(game);
+}
+
+// @@@item-errand - An item used on a unit or point out of its reach, handed to a unit too far off, or set down away from its
+// carrier is walked to, as a Warcraft III hero walks to give or drop: the carrier heads for the target, the friend or the
+// point, and acts once within reach (the rules as when it stood there: see useItem, giveItem, dropItem). A use out of
+// reach used to do nothing at all and say nothing; a drop fell wherever the order named, anywhere on the map.
+function itemUseReach(kind: WorldItem["kind"]) {
+  return kind === "lightningRod" ? LIGHTNING_ROD.range : kind === "stormStaff" ? STORM_STAFF.range : kind === "breachCharge" ? BREACH_CHARGE.range : kind === "ivoryTower" ? IVORY_TOWER_REACH : undefined;
+}
+
+// Where a use aims, for an item used at reach (undefined for one used where its carrier stands).
+function itemUsePoint(game: Game, item: WorldItem, targetId: string | undefined, x: number | undefined, y: number | undefined) {
+  if (itemUseReach(item.kind) === undefined) return undefined;
+  const target = targetId === undefined ? undefined : findTarget(game, targetId);
+  return target ?? (isNumber(x) && isNumber(y) ? { x, y } : undefined);
+}
+
+function giveItem(game: Game, owner: PlayerId, unitId: string, itemId: string, targetId: string) {
+  const refusal = giveRefusal(game, owner, unitId, itemId, targetId);
+  if (refusal) throw new Error(refusal);
+  const unit = game.units.find(candidate => candidate.id === unitId)!, target = game.units.find(candidate => candidate.id === targetId)!;
+  if (distance(unit, target) > ITEM_TRANSFER_REACH) {
+    assignUnitOrder(unit, { type: "itemErrand", itemId, action: "give", targetId });
+    return;
+  }
+  transferItem(game, owner, itemId, { unitId: target.id, slot: freeItemSlot(game, target, game.items.find(item => item.id === itemId)!.kind)! });
+}
+
+function updateItemErrandOrder(game: Game, unit: Unit) {
+  const order = unit.order;
+  if (order.type !== "itemErrand" || !isPlayerId(unit.owner)) return;
+  const owner = unit.owner;
+  const end = () => { unit.order = { type: "idle" }; };
+  const item = game.items.find(candidate => candidate.id === order.itemId);
+  if (!item || item.carrierId !== unit.id) return end();
+  const at = order.action === "use" ? itemUsePoint(game, item, order.targetId, order.x, order.y)
+    : order.action === "give" ? game.units.find(candidate => candidate.id === order.targetId && candidate.hp > 0)
+    : isNumber(order.x) && isNumber(order.y) ? { x: order.x, y: order.y } : undefined;
+  if (!at) return end();
+  const reach = order.action === "use" ? itemUseReach(item.kind)! : order.action === "give" ? ITEM_TRANSFER_REACH : ITEM_DROP_REACH;
+  if (distance(unit, at) > reach) {
+    moveToward(unit, at.x, at.y, game.map, game.units);
+    // As near as it can come and still out of reach: nothing done (see @@@cast-order).
+    if (walkEnded(game, unit, at, 5)) end();
+    return;
+  }
+  end();
+  // Within reach the errand is the order as given there; one its rules refuse now (a friend's slots filled meanwhile)
+  // ends with the item still carried.
+  if (order.action === "use") useItem(game, owner, unit.id, item.id, order.targetId, order.x, order.y);
+  else if (order.action === "give") { if (!giveRefusal(game, owner, unit.id, item.id, order.targetId!)) giveItem(game, owner, unit.id, item.id, order.targetId!); }
+  else if (!dropRefusal(game, owner, unit.id, item.id)) dropItem(game, owner, unit.id, item.id, order.x!, order.y!);
+}
+
 function pickupItem(game: Game, owner: PlayerId, unitId: string, itemId: string, queued = false) {
   const unit = game.units.find((candidate) => candidate.id === unitId && candidate.owner === owner);
   if (!unit) throw new Error(`Unknown ${owner} item carrier ${unitId}`);
@@ -2357,6 +2425,10 @@ function dropItem(game: Game, owner: PlayerId, unitId: string, itemId: string, x
   const refusal = dropRefusal(game, owner, unitId, itemId);
   if (refusal) throw new Error(refusal);
   const item = game.items.find(item => item.id === itemId)!;
+  if (item.carrierId === unit.id && !unit.deck && !shipProfile(unit) && Math.hypot(unit.x - x, unit.y - y) > ITEM_DROP_REACH) {
+    assignUnitOrder(unit, { type: "itemErrand", itemId, action: "drop", x, y });
+    return;
+  }
   const ship = game.units.find(ship => ship.id === item.shipId);
   delete item.carrierId;delete item.slot;delete item.shipId;delete item.holdSlot;delete item.mountId;removeFromHands(unit,item.id);
   if (ship) rebuildShipFittings(game, ship);
@@ -2380,6 +2452,11 @@ function useItem(
   const unit = game.units.find((candidate) => candidate.id === unitId && candidate.owner === owner);
   if (!unit) throw new Error(`Unknown ${owner} item user ${unitId}`);
   const item = carriedItem(game, unit, itemId);
+  const at = itemUsePoint(game, item, targetId, x, y);
+  if (at && distance(unit, at) > itemUseReach(item.kind)!) {
+    assignUnitOrder(unit, { type: "itemErrand", itemId, action: "use", ...(targetId !== undefined ? { targetId } : {}), ...(isNumber(x) && isNumber(y) ? { x, y } : {}) });
+    return;
+  }
   const previousHands=unit.hands ? {...unit.hands} : undefined;
   if(!ITEM_DEFS[item.kind].passive && !itemEquipped(game,unit,item)){unit.hands??={};removeFromHands(unit,item.id);unit.hands.right=item.id;if(itemHands(item)===2)delete unit.hands.left;unit.aim=undefined;applyDerivedUnitStats(game,unit);}
   activateItem(game, unit, item, targetId, x, y);

@@ -161,6 +161,8 @@ export type UnitOrder =
   | { type: "repairUnit"; targetId: string }
   | { type: "repairShip"; targetId: string }
   | { type: "pickupItem"; itemId: string }
+  // Walking within reach to use a carried item on a unit or point, hand it to a friend, or set it down (see @@@item-errand).
+  | { type: "itemErrand"; itemId: string; action: "use" | "give" | "drop"; targetId?: string; x?: number; y?: number }
   // Holding its ground (see hold-position): strikes what comes within its reach, never walks.
   | { type: "hold"; x: number; y: number }
   // Walk into weapon range, then prepare a reticle at a point and engage enemies entering range.
@@ -616,6 +618,7 @@ export type GameCommand =
   | { type: "cast"; unitId: string; ability: AbilityKind; targetId?: string; x?: number; y?: number; queued?: boolean }
   | { type: "pickupItem"; unitId: string; itemId: string; queued?: boolean }
   | { type: "dropItem"; unitId: string; itemId: string; x: number; y: number }
+  | { type: "giveItem"; unitId: string; itemId: string; targetId: string }
   | { type: "transferItem"; itemId: string; destination: { unitId: string; slot: EquipmentSlot } | { shipId: string; slot: number } | { shipId:string; mountId:string; installerId?:string } }
   | { type: "wieldItem"; unitId: string; itemId?: string; hand: "right" | "left" }
   | { type: "useItem"; unitId: string; itemId: string; targetId?: string; x?: number; y?: number };

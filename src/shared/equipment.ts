@@ -166,8 +166,11 @@ export function transferRefusal(snapshot: GameSnapshot, owner: PlayerId, itemId:
         const carried = itemsFor(snapshot, target).filter(other => other.id !== item.id);
         if (ITEM_DEFS[item.kind].span === 4 && (destination.slot !== 'carry0' || carried.some(other => isCarrySlot(itemSlot(snapshot, target, other)!))))
             return 'A heavy weapon needs all four carrying positions';
-        const occupied = carried.some(other => ITEM_DEFS[other.kind].span === 4 && isCarrySlot(destination.slot) || itemSlot(snapshot, target, other) === destination.slot);
-        if (occupied)
+        const occupant = carried.find(other => ITEM_DEFS[other.kind].span === 4 && isCarrySlot(destination.slot) || itemSlot(snapshot, target, other) === destination.slot);
+        // Two items a unit carries trade carrying positions (see transferItem); anything else needs the position empty.
+        const from = item.carrierId === target.id ? itemSlot(snapshot, target, item) : undefined;
+        const swap = occupant && from && isCarrySlot(from) && isCarrySlot(destination.slot) && !ITEM_DEFS[occupant.kind].span && !ITEM_DEFS[item.kind].span;
+        if (occupant && !swap)
             return 'That position is occupied; move its item first';
     }
     else {
@@ -196,6 +199,20 @@ export function transferRefusal(snapshot: GameSnapshot, owner: PlayerId, itemId:
         if (load + (alreadyAboard ? 0 : ITEM_DEFS[item.kind].mass) > profile.loadCapacity)
             return 'The ship cannot carry more weight';
     }
+}
+// Whether a carrier may hand a carried item to another unit of its owner's, one that can carry it and has room for it.
+export function giveRefusal(snapshot: Pick<GameSnapshot, 'units' | 'items'>, owner: PlayerId, unitId: string, itemId: string, targetId: string): string | undefined {
+    const unit = snapshot.units.find(unit => unit.id === unitId && unit.owner === owner && unit.hp > 0);
+    const item = snapshot.items.find(item => item.id === itemId);
+    if (!unit || !item || item.carrierId !== unit.id)
+        return 'Item or carrier is no longer available';
+    const target = snapshot.units.find(unit => unit.id === targetId && unit.owner === owner && unit.hp > 0);
+    if (!target || target.id === unit.id)
+        return 'Choose another unit of yours';
+    if (!canEquip(target) || shipProfile(target))
+        return 'This unit cannot carry equipment';
+    if (!freeItemSlot(snapshot, target, item.kind))
+        return 'That unit has no free position for it';
 }
 export function dropRefusal(snapshot: Pick<GameSnapshot,'units'|'items'>, owner: PlayerId, unitId: string, itemId: string): string | undefined {
     const unit = snapshot.units.find(unit => unit.id === unitId && unit.owner === owner && unit.hp > 0);
