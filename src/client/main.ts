@@ -3220,16 +3220,12 @@ function updateWindIndicator(rect: ScreenRect, now: number) {
   const label = strength === 0 ? level : `${level} · ${zh ? '吹向' : 'toward '}${direction}`;
   const remaining = Math.ceil((WIND_CHANGE_INTERVAL_TICKS - snapshot.tick % WIND_CHANGE_INTERVAL_TICKS) / SIM_TICKS_PER_SECOND);
   const countdown = `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}`;
-  const key = `${label}:${countdown}:${minimapWind}`;
+  const key = `${label}:${countdown}`;
   if (windTooltipKey === key) return;
   windTooltipKey = key;
   minimapWindButton.setAttribute('aria-label', `${t('hud.minimapWind')} · ${label}`);
-  applyTooltip(minimapWindButton, {
-    title: `${zh ? '光标处' : 'At cursor'}：${label}`,
-    hotkey: 'Alt+W',
-    body: zh ? `点击${minimapWind ? '收起' : '显示'}风向图。当前全图同风。` : `Click to ${minimapWind ? 'hide' : 'show'} the wind map. Wind is currently uniform across the map.`,
-    stats: [zh ? `下次换风 ${countdown}` : `Wind changes in ${countdown}`], requirements: [],
-  });
+  // The tooltip says only when the wind next changes: the arrow already shows where it blows.
+  applyTooltip(minimapWindButton, { title: zh ? `下次换风 ${countdown}` : `Wind changes in ${countdown}`, body: '', stats: [], requirements: [] });
   if (!tooltipLayer.classList.contains('hidden') && shownTooltipTarget === minimapWindButton) renderTooltip(minimapWindButton);
 }
 
@@ -3736,12 +3732,16 @@ function drawMinimap(marks: MapPresentationMark[]) {
   const relations = minimapRelationsOn();
   if (minimapRelationsButton.getAttribute("aria-pressed") !== String(relations)) minimapRelationsButton.setAttribute("aria-pressed", String(relations));
   const viewer = matchViewer();
-  drawMinimapMap(ctx, snapshot, rect, marks, relations && viewer ? viewer : undefined,
-    minimapWind ? () => windMapDisplay.draw(ctx, rect, now) : undefined);
-  ctx.strokeStyle = "#243126";
-  ctx.lineWidth = 1;
+  drawMinimapMap(ctx, snapshot, rect, marks, relations && viewer ? viewer : undefined, { self: viewer, selected: selectedIds });
+  // The camera's box in white on a dark rim, as Warcraft III draws it, then the wind map over everything (see @@@minimap-art).
   const viewport = minimapViewportRect(rect);
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "rgba(20, 17, 12, 0.7)";
   ctx.strokeRect(viewport.x, viewport.y, viewport.width, viewport.height);
+  ctx.lineWidth = 1.2;
+  ctx.strokeStyle = "#f6efdc";
+  ctx.strokeRect(viewport.x, viewport.y, viewport.width, viewport.height);
+  if (minimapWind) windMapDisplay.draw(ctx, rect, now);
 }
 
 // The player the match is seen as: none for a spectator.
