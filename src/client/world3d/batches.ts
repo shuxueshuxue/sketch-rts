@@ -24,6 +24,7 @@ const ROOFS=new Map<string,{base?:string;team:number}>([
   ...['#71928f','#7ca1a4','#709c97','#647b77'].map(name=>[name,{base:WARM_SLATE,team:.5}] as const),
   ...['#cf9054','#cc9154'].map(name=>[name,{team:.35}] as const),
 ]);
+const INKED=new Set(['Building','Hull','Gun']);
 const hulls=new WeakMap<THREE.BufferGeometry,THREE.BufferGeometry>();
 function hullGeometry(source:THREE.BufferGeometry){
   let hull=hulls.get(source);
@@ -198,8 +199,9 @@ export class ActorBatches {
   add(key:string,template:THREE.Object3D,matrix:THREE.Matrix4,id:string,color?:string,constructing=false,revealDeck=false,animation?:BatchAnimation){
     let batch=this.batches.get(key);
     if(!batch){
-      // A building's own model, finished, is drawn inked (see @@@model-ink); a site going up keeps its ghost look.
-      const inked=template.name==='Building'&&!constructing,parts:Part[]=[];template.updateMatrixWorld(true);
+      // A finished building, a ship's hull and its guns are drawn inked (see @@@model-ink); a site going up and a broken gun keep
+      // their own looks.
+      const inked=INKED.has(template.name)&&!constructing,parts:Part[]=[];template.updateMatrixWorld(true);
       template.traverse(object=>{if(!(object instanceof THREE.Mesh))return;
         const map=(source:THREE.Material)=>this.material(source,color,constructing,revealDeck,inked);
         const geometry=this.geometry(object.geometry),morphCount=Object.values(geometry.morphAttributes)[0]?.length??0;
