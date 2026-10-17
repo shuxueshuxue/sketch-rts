@@ -144,8 +144,10 @@ async page => {
     };
   });
   must(roomBrowserLayoutProof.hasCreate && roomBrowserLayoutProof.hasList && roomBrowserLayoutProof.actionsBelow, "rooms browser should show the room list with its actions below: " + JSON.stringify(roomBrowserLayoutProof));
-  await page.locator("[data-create-room]").click();
-  const firstSoloId = await confirmedSoloSetup("pineshade");
+  // A solo game opens from the home's play entry (see @@@solo-setup).
+  await page.locator("[data-back-home]").click();
+  await page.waitForSelector("[data-main-menu]:not(.hidden) [data-open-create]", { timeout: 5000 });
+  const firstSoloId = await soloSetup("pineshade");
   must((await page.locator("[data-map-name]").textContent()) === "Pineshade", "confirmed map did not show the chosen pool map");
   const privateRoomProof = await page.evaluate(() => {
     const query = new URLSearchParams(location.search);
@@ -164,7 +166,8 @@ async page => {
     };
   }, firstSoloId);
   must(!privateLobbyProof.listedPublicly && !privateLobbyProof.listedOnServerForOwner, "browser-local solo room leaked into server lists: " + JSON.stringify(privateLobbyProof));
-  await page.locator("[data-back-room-browser]").click();
+  await page.locator("[data-back-home]").click();
+  await page.locator("[data-open-room-browser]").click();
   await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
   privateLobbyProof.listedForOwner = (await page.locator("[data-room-id='" + firstSoloId + "']").count()) === 1;
   must(privateLobbyProof.listedForOwner, "owned solo room was not visible after backing to Rooms UI");
@@ -193,14 +196,52 @@ async page => {
     aiRace: document.querySelector("[data-slot-id='slot-2'] [data-slot-race]")?.value,
     aiTeam: document.querySelector("[data-slot-id='slot-2'] [data-slot-team]")?.value,
     aiController: document.querySelector("[data-slot-id='slot-2'] [data-slot-controller-status]")?.textContent?.trim(),
-    title: document.querySelector("[data-menu-status]")?.textContent ?? "",
   }));
   must(soloReloadProof.id !== beforeSoloReloadId && page.url() === beforeSoloReloadUrl && soloReloadProof.query.map === "pineshade" &&
     soloReloadProof.query.seed === "room-flow-config-seed" && soloReloadProof.query.name === "Room Flow Fleet" && soloReloadProof.query.visibility === "private" &&
     soloReloadProof.hostRace === "ember" && soloReloadProof.hostTeam === "team-1" && soloReloadProof.aiRace === "grove" && soloReloadProof.aiTeam === "team-2" &&
-    soloReloadProof.aiController === "AI" && soloReloadProof.title.includes("Room Flow Fleet"), "solo reload did not rebuild exactly the configured map/seed/name/teams/races/controllers: " + JSON.stringify(soloReloadProof));
+    soloReloadProof.aiController === "AI", "solo reload did not rebuild exactly the configured map/seed/name/teams/races/controllers: " + JSON.stringify(soloReloadProof));
 
-  const roomSetupId = await serverSetupFromSolo(false);
+  // The play entry opens the last solo game's map and seats again.
+  const soloSeats = "human:team-1:ember:,ai:team-2:grove:random";
+  await page.locator("[data-back-home]").click();
+  await page.waitForSelector("[data-main-menu]:not(.hidden) [data-open-create]", { timeout: 5000 });
+  await soloSetup();
+  const rememberedProof = await page.evaluate(() => Object.fromEntries(new URLSearchParams(location.search)));
+  must(rememberedProof.map === "pineshade" && rememberedProof.seats === soloSeats && rememberedProof.seed === "room-flow-config-seed",
+    "the play entry did not open the last solo setup: " + JSON.stringify(rememberedProof));
+  // Another map keeps the seats it has; coming back keeps them again.
+  await chooseSetupMap("stillwater");
+  const movedSeats = await page.evaluate(() => new URLSearchParams(location.search).get("seats").split(",").map(seat => seat.split(":")));
+  must(movedSeats.length === 4 && movedSeats[0][2] === "ember" && movedSeats[1][2] === "grove" && movedSeats[1][0] === "ai",
+    "a map change did not keep the seats the new map has: " + JSON.stringify(movedSeats));
+  await chooseSetupMap("pineshade");
+  must((await page.evaluate(() => new URLSearchParams(location.search).get("seats").split(",").map(seat => seat.split(":")[2]).join(","))) === "ember,grove",
+    "returning to the first map did not keep the seats' races");
+  // A solo rematch comes back to this screen with the settings unchanged.
+  await page.locator("[data-slot-id='slot-2'] [data-slot-team]").selectOption("team-2");
+  await page.waitForFunction(() => document.querySelector("[data-start-room]")?.disabled === false, null, { timeout: 5000 });
+  const soloBeforeMatch = await page.evaluate(() => Object.fromEntries(new URLSearchParams(location.search)));
+  await page.locator("[data-start-room]").click();
+  await page.waitForFunction(() => document.querySelector("[data-main-menu]")?.classList.contains("hidden"), null, { timeout: 60000 });
+  // Headless Chromium cannot take the pointer lock its gate asks for; set the gate aside as the match proof below does.
+  await page.evaluate(() => {
+    const gate = document.querySelector("[data-pointer-lock-gate]");
+    if (gate) { gate.classList.add("hidden"); gate.style.pointerEvents = "none"; }
+  });
+  await page.locator("[data-match-menu-button]").click();
+  await page.locator("[data-forfeit-match]").click();
+  await page.waitForSelector("[data-results-screen] [data-rematch]", { timeout: 10000 });
+  await page.locator("[data-rematch]").click();
+  await page.waitForFunction(() => document.querySelector("[data-start-room]")?.disabled === false && new URLSearchParams(location.search).get("visibility") === "private", null, { timeout: 10000 });
+  const soloRematch = await page.evaluate(() => Object.fromEntries(new URLSearchParams(location.search)));
+  must(soloRematch.map === soloBeforeMatch.map && soloRematch.seats === soloBeforeMatch.seats && soloRematch.seed === soloBeforeMatch.seed,
+    "a solo rematch did not keep the settings: " + JSON.stringify({ soloBeforeMatch, soloRematch }));
+
+  // A room for others opens from the room list's create button on the same screen.
+  await page.locator("[data-back-home]").click();
+  await page.locator("[data-open-room-browser]").click();
+  const roomSetupId = await onlineSetup("pineshade", false);
   const guestContext = await page.context().browser().newContext();
   let guestJoinProof;
   try {
@@ -219,7 +260,7 @@ async page => {
       const user = JSON.parse(localStorage.getItem("sketch-rts-user"));
       // A guest has no start or host controls; the footer says what the start waits on (see @@@seat-ownership).
       return { status: room.status, owner: room.hostUserId, userId: user.id, slots: room.slots.filter(slot => slot.userId === user.id),
-        hostControls: document.querySelectorAll("[data-start-room], [data-close-room], [data-choose-map]").length,
+        hostControls: document.querySelectorAll("[data-start-room], [data-close-room], [data-map-entries]").length,
         reason: document.querySelector("[data-start-reason]")?.textContent ?? "",
         hostSeatLocked: [...document.querySelectorAll("[data-slot-id='slot-1'] select, [data-slot-id='slot-1'] input")].every(control => control.disabled),
         ownSeatOpen: !document.querySelector("[data-slot-id='slot-2'] [data-slot-race]")?.disabled };
@@ -523,9 +564,7 @@ async page => {
   await page.evaluate(() => localStorage.removeItem("sketch-rts-current-room"));
   await page.locator("[data-open-room-browser]").click();
   await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
-  await page.locator("[data-create-room]").click();
-  await confirmedSoloSetup("twoShores");
-  const sidesSetupId = await serverSetupFromSolo();
+  const sidesSetupId = await onlineSetup("twoShores");
   const seatsReady = () => page.evaluate(() => !document.querySelector("[data-start-room]")?.disabled);
   const sidesBefore = await seatsReady();
   const waitForSeatEdit = (field, value, ready) => page.waitForFunction(({ field, value, ready }) => {
