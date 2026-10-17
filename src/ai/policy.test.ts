@@ -13466,7 +13466,7 @@ describe("SDK preset AI policy", () => {
     expect(commands.find((candidate) => candidate.type === "research")).toMatchObject({ type: "research", upgradeKind: "weaponTraining" });
   });
 
-  it("v2 protects catch-up expansions with towers after core army plans exist", () => {
+  it.each([false, true])("v2 protects catch-up expansions with towers after core army plans exist only against approaching enemies (approaching=%s)", (approaching) => {
     const scene = sketchScene("v2-economic-tower")
       .map("openClaims")
       .player("v2", { team: "north", race: "grove" })
@@ -13481,6 +13481,7 @@ describe("SDK preset AI policy", () => {
       .townHall("v1", 2800, 3000, { id: "v1-natural" })
       .townHall("v1", 2450, 2550, { id: "v1-third" })
       .worker("v1", 3350, 3300)
+      .unit("v1", "raider", approaching ? 1900 : 3200, approaching ? 1500 : 3150)
       .goldMine("v2-main-mine", 560, 540, 3000)
       .goldMine("v2-natural-mine", 1420, 650, 3000)
       .goldMine("v2-third-mine", 2050, 980, 3000)
@@ -13503,9 +13504,15 @@ describe("SDK preset AI policy", () => {
       (candidate) => candidate.type === "build" && candidate.buildingKind === "defenseTower" && candidate.x > 1200,
     );
 
+    expect(disabled).toBeUndefined();
+    // @@@catch-up-tower-threat: a natural no enemy is near needs no tower.
+    if (!approaching) {
+      expect(enabled?.type === "build" && enabled.buildingKind === "defenseTower").toBe(false);
+      expect(telemetry.behaviors.economicCatchUp.catchUpTowers).toBe(0);
+      return;
+    }
     expect(enabled).toMatchObject({ type: "build", buildingKind: "defenseTower" });
     expect(enabled?.type === "build" ? enabled.x : 0).toBeGreaterThan(1200);
-    expect(disabled).toBeUndefined();
     expect(telemetry.behaviors.economicCatchUp.catchUpTowers).toBe(1);
   });
 

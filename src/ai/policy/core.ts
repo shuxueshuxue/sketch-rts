@@ -22,7 +22,7 @@ import {
   shouldReserveForEmergencyTower,
   shouldReserveForHealingWell,
 } from "./base-defense-model";
-import { ownedBaseNeedsObjectivePause } from "./base-pressure";
+import { expansionApproachers, ownedBaseNeedsObjectivePause } from "./base-pressure";
 import { defensiveRallyPoint, healingWellPointFor, legalBuildPointNear, safeMainBuildPoint, towerPointFor } from "./build-layout";
 import { activeUnitClaim } from "./claims";
 import { resolveAiCommandIntent } from "./commands";
@@ -774,10 +774,14 @@ function planEconomicCatchUp(snapshot: GameSnapshot, owner: PlayerId, options: P
   if (missingProduction && !mainThreat) return undefined;
   if (missingProduction) return undefined;
 
+  // @@@catch-up-tower-threat - A tower guards an outlying base against enemy fighters on their way to it (the same
+  // approach base-pressure watches), not every base without one: raised at a fresh third no enemy was near, it took the
+  // gold a two-v2 ladder duel needed elsewhere.
   const exposedExpansion = unguardedExpansion(snapshot, owner);
   if (
     opponentPlayerIds(snapshot, owner, options).length < 2 &&
     exposedExpansion &&
+    expansionApproachers(snapshot, owner, exposedExpansion, options).length > 0 &&
     playerState(snapshot, owner).gold >= BUILDING_DEFS.defenseTower.cost &&
     !shouldHoldClearedExpansionBank(snapshot, owner, options, BUILDING_DEFS.defenseTower.cost)
   ) {

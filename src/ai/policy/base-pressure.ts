@@ -34,13 +34,20 @@ export function ownedBaseObjectivePauseThreat(snapshot: GameSnapshot, owner: Pla
     if (armyPower(enemies) >= armyPower(defenders) * 0.35) return { base, enemies, defenders };
   }
   for (const base of fragileMiningExpansions(snapshot, owner)) {
-    const approaching = enemyCombatUnitsNear(snapshot, owner, base, 1_500, options.teams);
+    const approaching = expansionApproachers(snapshot, owner, base, options);
     if (approaching.length >= 2 && armyPower(approaching) >= 1.8) {
       const defenders = combatUnits(snapshot, owner).filter((unit) => distance(unit, base) <= 820);
       return { base, enemies: approaching, defenders };
     }
   }
   return undefined;
+}
+
+// Enemy fighters within this range of an outlying base are on their way to it.
+const EXPANSION_APPROACH_RANGE = 1_500;
+
+export function expansionApproachers(snapshot: GameSnapshot, owner: PlayerId, base: Building, options: { teams?: Partial<Record<PlayerId, string>> }) {
+  return enemyCombatUnitsNear(snapshot, owner, base, EXPANSION_APPROACH_RANGE, options.teams);
 }
 
 function fragileMiningExpansions(snapshot: GameSnapshot, owner: PlayerId) {
