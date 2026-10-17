@@ -1,13 +1,25 @@
 import { describe, expect, it } from "vitest";
 import { createGame, issueCommand, stepGame } from "../shared/sim";
-import { dropItemCommand, itemHotkey, itemHotkeys, pickupItemCommand, useItemCommand } from "./item-controls";
+import { dropItemCommand, inventorySlots, pickupItemCommand, useItemCommand } from "./item-controls";
 import type { Unit, WorldItem } from "../shared/types";
 
 describe("item controls", () => {
-  it("maps item slots to compact labels and number hotkeys", () => {
-    expect(itemHotkey(0)).toBe("1");
-    expect(itemHotkey(5)).toBe("6");
-    expect(itemHotkeys(3, new Set([1, 3]))).toEqual(["2", "4", "5"]);
+  // @@@item-slots - The bar is the carrier's four carrying positions: worn gear stays off it, and each item keeps its slot.
+  it("shows a carrier's four carrying positions in place, worn gear aside", () => {
+    const game = createGame();
+    const carrier = unit("carrier", 100, 100);
+    const items: WorldItem[] = [
+      { id: "boots", kind: "speedBoots", x: 0, y: 0, carrierId: carrier.id, slot: "feet", cooldownRemaining: 0 },
+      { id: "rod", kind: "lightningRod", x: 0, y: 0, carrierId: carrier.id, slot: "carry0", cooldownRemaining: 0 },
+      { id: "scroll", kind: "healingScroll", x: 0, y: 0, carrierId: carrier.id, slot: "carry2", cooldownRemaining: 0 },
+      { id: "theirs", kind: "healingScroll", x: 0, y: 0, carrierId: "someone-else", slot: "carry1", cooldownRemaining: 0 },
+    ];
+    game.units = [carrier];
+    game.items = items;
+    expect(inventorySlots(game, carrier).map(({ slot, digit, item }) => [slot, digit, item?.id])).toEqual([
+      ["carry0", 1, "rod"], ["carry1", 2, undefined], ["carry2", 3, "scroll"], ["carry3", 4, undefined],
+    ]);
+    expect(inventorySlots(game, undefined)).toEqual([]);
   });
 
   it("uses and drops carried items through ordinary player commands", () => {

@@ -46,13 +46,16 @@ function hullGeometry(source:THREE.BufferGeometry){
   }
   return hull;
 }
+// A ship's masts and yards (the parts under its Rig_ nodes) stay unlined: drawn round every spar, the ink turned a
+// rigged ship into a thicket of dark lines in a firefight. The hull's line already gives the ship its outline.
+function underRig(object:THREE.Object3D){for(let at:THREE.Object3D|null=object;at;at=at.parent)if(at.name.startsWith('Rig_'))return true;return false;}
 // Poles, rails and banner staves are too thin to carry a line of their own.
 function thin(geometry:THREE.BufferGeometry){
   geometry.computeBoundingBox();const size=geometry.boundingBox!.getSize(new THREE.Vector3());const [,middle,largest]=[size.x,size.y,size.z].sort((a,z)=>a-z);
   return middle!<largest!*.12;
 }
 export type BatchAnimation=ReadonlyMap<string,{matrix?:THREE.Matrix4;morph?:readonly number[]}>;
-type Part={name:string;geometry:THREE.BufferGeometry;material:THREE.Material|THREE.Material[];local:THREE.Matrix4;morph:readonly number[]};
+type Part={name:string;geometry:THREE.BufferGeometry;material:THREE.Material|THREE.Material[];local:THREE.Matrix4;morph:readonly number[];rig:boolean};
 type Batch={inked:boolean;hulls:THREE.InstancedMesh[];parts:Part[];meshes:THREE.InstancedMesh[];matrices:THREE.Matrix4[];animations:(BatchAnimation|undefined)[];ids:string[];capacity:number;last:number};
 
 /** Three's default instanced raycast does not read the per-instance morph texture.
@@ -205,7 +208,7 @@ export class ActorBatches {
       template.traverse(object=>{if(!(object instanceof THREE.Mesh))return;
         const map=(source:THREE.Material)=>this.material(source,color,constructing,revealDeck,inked);
         const geometry=this.geometry(object.geometry),morphCount=Object.values(geometry.morphAttributes)[0]?.length??0;
-        parts.push({name:object.name,geometry,material:Array.isArray(object.material)?object.material.map(map):map(object.material),local:object.matrixWorld.clone(),morph:Array.from({length:morphCount},(_,i)=>object.morphTargetInfluences?.[i]??0)});
+        parts.push({name:object.name,geometry,material:Array.isArray(object.material)?object.material.map(map):map(object.material),local:object.matrixWorld.clone(),morph:Array.from({length:morphCount},(_,i)=>object.morphTargetInfluences?.[i]??0),rig:underRig(object)});
       });
       batch={inked,hulls:[],parts,meshes:[],matrices:[],animations:[],ids:[],capacity:0,last:this.frame};this.batches.set(key,batch);
     }
@@ -221,7 +224,7 @@ export class ActorBatches {
       if(batch.matrices.length>batch.capacity){
         for(const mesh of [...batch.meshes,...batch.hulls]){this.scene.remove(mesh);mesh.dispose();}
         batch.capacity=2**Math.ceil(Math.log2(Math.max(1,batch.matrices.length)));
-        batch.hulls=batch.inked?batch.parts.filter(part=>!part.morph.length&&!thin(part.geometry)).map(part=>{
+        batch.hulls=batch.inked?batch.parts.filter(part=>!part.morph.length&&!part.rig&&!thin(part.geometry)).map(part=>{
           const hull=new THREE.InstancedMesh(hullGeometry(part.geometry),INK_HULL,batch!.capacity);hull.name=part.name;hull.userData.local=part.local;
           hull.instanceMatrix.setUsage(THREE.DynamicDrawUsage);this.scene.add(hull);return hull;
         }):[];

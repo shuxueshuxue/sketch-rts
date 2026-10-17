@@ -1,6 +1,6 @@
 import { LADDER_MAP_ID } from "../../shared/map";
 import { SIM_TICKS_PER_SECOND } from "../../shared/time";
-import type { RaceId, UnitKind } from "../../shared/types";
+import type { RaceId, RoomAiVersion, UnitKind } from "../../shared/types";
 import type { BenchmarkInput, BenchmarkMatchInput, BenchmarkMatchReport, BenchmarkReport } from "../../sdk/benchmark/core";
 import { runBenchmarkParallel } from "../../sdk/benchmark/parallel";
 import { createAiGameCommandPlanner, type AiGameAgent } from "../game-runner";
@@ -22,8 +22,9 @@ import type { V6DoctrineStats } from "./v6-doctrine-stats";
 // gauntlet and V8's are the same procedure with a different subject and pool; every draw is keyed by the subject's name,
 // so a gauntlet's games never change when another subject is added.
 
-export type SubjectVersion = "v7" | "v8" | "v9";
-export type OpponentVersion = "v3" | "v5" | "v6" | "v7" | "v8";
+// The room AIs (the versions a room seats, see ROOM_AI_RACES) are subjects too: the presets are not what players meet.
+export type SubjectVersion = "v7" | "v8" | "v9" | RoomAiVersion;
+export type OpponentVersion = "v3" | "v5" | "v6" | "v7" | "v8" | "v9";
 
 export type SubjectGauntlet = {
   subject: SubjectVersion;

@@ -7,9 +7,11 @@ describe("gameplay keybindings", () => {
     expect(gameplayKeyIntent(key("1", "Digit1", { ctrlKey: true }), context())).toEqual({ type: "none" });
     expect(gameplayKeyIntent(key("1", "Digit1"), context({ controlGroups: new Set([1]), inventorySlots: 1 }))).toEqual({ type: "controlGroupRecall", slot: 1 });
     expect(gameplayKeyIntent(key("1", "Digit1"), context({ inventorySlots: 1 }))).toEqual({ type: "inventoryUse", index: 0 });
-    expect(gameplayKeyIntent(key("2", "Digit2"), context({ controlGroups: new Set([1, 3]), inventoryHotkeys: [2, 4, 5] }))).toEqual({ type: "inventoryUse", index: 0 });
-    expect(gameplayKeyIntent(key("3", "Digit3"), context({ controlGroups: new Set([1, 3]), inventoryHotkeys: [2, 4, 5] }))).toEqual({ type: "controlGroupRecall", slot: 3 });
-    expect(gameplayKeyIntent(key("4", "Digit4"), context({ controlGroups: new Set([1, 3]), inventoryHotkeys: [2, 4, 5] }))).toEqual({ type: "inventoryUse", index: 1 });
+    // Slot n answers to digit n whatever groups exist (see @@@item-slots): a group only takes its own digit.
+    expect(gameplayKeyIntent(key("2", "Digit2"), context({ controlGroups: new Set([1, 3]), inventorySlots: 4 }))).toEqual({ type: "inventoryUse", index: 1 });
+    expect(gameplayKeyIntent(key("3", "Digit3"), context({ controlGroups: new Set([1, 3]), inventorySlots: 4 }))).toEqual({ type: "controlGroupRecall", slot: 3 });
+    expect(gameplayKeyIntent(key("4", "Digit4"), context({ controlGroups: new Set([1, 3]), inventorySlots: 4 }))).toEqual({ type: "inventoryUse", index: 3 });
+    expect(gameplayKeyIntent(key("5", "Digit5"), context({ inventorySlots: 4 }))).toEqual({ type: "none" });
   });
 
   it("routes ordinary command-card hotkeys through the same resolver", () => {

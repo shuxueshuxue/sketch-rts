@@ -1,4 +1,4 @@
-import { deckLoad, deckPlacement, deckPointFits } from "./decks";
+import { deckHasRoom, deckLoad, deckPlacement, deckPointFits } from "./decks";
 import { capsuleClearsBodies, capsuleClearsCircles, clipToConvex, expandConvex } from './navigation-math';
 import { supportSurface } from './support-surface';
 import { bodyMass } from "./physical-body";
@@ -24,6 +24,8 @@ type CrossingGeometry = {
   })[];
   nodes: Point[];
   links: Int8Array;
+  // The walk between each two fixed nodes, measured once (NaN until first asked).
+  distances: Float64Array;
   bridges: GangwaySurface[];
 };
 const crossings = new WeakMap<GameMap, {
@@ -112,7 +114,7 @@ function crossingGeometry(ships: Unit[], passenger: Unit, map: GameMap, land: bo
       if (fits(point))
         nodes.push(point);
     }
-  const result = { surface, floor, obstacles, nodes, links: new Int8Array(nodes.length ** 2), bridges:gangways.map(connection=>connection.surface) };
+  const result = { surface, floor, obstacles, nodes, links: new Int8Array(nodes.length ** 2), distances: new Float64Array(nodes.length ** 2).fill(NaN), bridges:gangways.map(connection=>connection.surface) };
   if (cache.entries.size >= 32)
     cache.entries.delete(cache.entries.keys().next().value!);
   cache.entries.set(key, result);
@@ -138,7 +140,26 @@ export function decksTouch(a: Unit, b: Unit, passenger: Unit) {
   return Boolean(a.hp > 0 && b.hp > 0 && aa && bb && Math.abs(aa.deckHeight - bb.deckHeight) <= passenger.radius * 2
     && Math.hypot(a.x - b.x, a.y - b.y) < (aa.length + bb.length) / 2 && hullGap(a, b) <= CONTACT_CLEARANCE);
 }
+// The usable seam between two touching hulls for a body of this size. Every walker asks it of every pair of hulls each
+// tick, and it depends only on the two hulls' poses: the answer is kept until either moves.
+const seams = new Map<string, Point[]>();
 function supportedSeamPoints(a:Unit,b:Unit,passenger:Unit) {
+  const key = `${poseKey(a)}/${poseKey(b)}/${passenger.radius}`;
+  let points = seams.get(key);
+  if (!points) {
+    if (seams.size >= 64) seams.delete(seams.keys().next().value!);
+    seams.set(key, points = seamPointsBetween(a, b, passenger));
+  }
+  return points;
+}
+function poseKey(ship: Unit) {
+  const profile = shipProfile(ship);
+  if (!profile) return `${ship.id}:none`;
+  let id = profileIds.get(profile);
+  if (id === undefined) profileIds.set(profile, id = nextProfileId++);
+  return `${id}:${ship.hp > 0}:${ship.x}:${ship.y}:${ship.sailing?.heading ?? 0}`;
+}
+function seamPointsBetween(a:Unit,b:Unit,passenger:Unit) {
   if (!decksTouch(a, b, passenger)) return [];
   const hulls = [a,b].map(ship => expandConvex(shipProfile(ship)!.hull.map(point => localToWorld(ship,point)), CONTACT_CLEARANCE / 2));
   const floor = supportSurface(hulls, undefined, {left:0,top:0,right:0,bottom:0});
@@ -233,7 +254,7 @@ export function walkConnectedSurfaces(passenger: Unit, world: Point, units: read
     return false;
   let destination: Point | undefined;
   if (target) {
-    if (deckLoad(units, target) + (passenger.deck?.shipId===target.id?0:bodyMass(passenger)) > shipProfile(target)!.loadCapacity || !deckPlacement(target, passenger, units))
+    if (deckLoad(units, target) + (passenger.deck?.shipId===target.id?0:bodyMass(passenger)) > shipProfile(target)!.loadCapacity || !deckHasRoom(target, passenger, units))
       return false;
     if (!source && !ships.some(ship => Math.hypot(passenger.x - ship.x, passenger.y - ship.y) < shipProfile(ship)!.length / 2 + passenger.radius * 3))
       return false;
@@ -273,18 +294,23 @@ export function walkConnectedSurfaces(passenger: Unit, world: Point, units: read
       return false;
     return !occupied || capsuleClearsBodies(passenger, point, passenger.radius + 1, bodies);
   };
-  const staticClear = (a: Point, b: Point) => floor.capsuleFits(a, b, passenger.radius + 1) && capsuleClearsCircles(a, b, passenger.radius + 1, obstacles);
+  // The fittings are the cheap test and the usual refusal; the floor's boundary is walked only for a passage clear of them.
+  // Whether each node stands on the floor is asked once per node, not once per edge (floor.capsuleFits, in halves).
+  const standing: boolean[] = [];
+  const stands = (point: Point, index: number) => index < 0 ? floor.supported(point) : (standing[index] ??= floor.supported(point));
+  const staticClear = (a: Point, b: Point, ai = -1, bi = -1) => capsuleClearsCircles(a, b, passenger.radius + 1, obstacles)
+    && stands(a, ai) && stands(b, bi) && floor.capsuleClear(a, b, passenger.radius + 1);
   const clear = (a: Point, b: Point, ai = -1, bi = -1, occupied=true) => {
     const count = geometry.nodes.length, cacheable = ai >= 2 && bi >= 2 && ai < count + 2 && bi < count + 2;
     let valid: boolean;
     if (cacheable) {
       const index = (ai - 2) * count + bi - 2;
       if (!geometry.links[index])
-        geometry.links[index] = staticClear(a, b) ? 1 : -1;
+        geometry.links[index] = staticClear(a, b, ai, bi) ? 1 : -1;
       valid = geometry.links[index] === 1;
     }
     else
-      valid = staticClear(a, b);
+      valid = staticClear(a, b, ai, bi);
     return valid && (!occupied || capsuleClearsBodies(a, b, passenger.radius + 1, bodies));
   };
   const nodes: Point[] = [passenger, destination];
@@ -311,33 +337,43 @@ export function walkConnectedSurfaces(passenger: Unit, world: Point, units: read
       }
     }
   }
-  const costs = nodes.map(() => Infinity), parents = nodes.map(() => -1), seen = new Set<number>();
+  // Every walker searches a graph of a few hundred nodes each tick: flat arrays, not a Set, hold its frontier, and the
+  // walk between two fixed nodes is the geometry's, measured once for all walkers.
+  const fixed = nodes.length > 2 ? geometry.nodes.length : 0, distances = geometry.distances;
+  const between = (i: number, j: number) => {
+    if (i < 2 || j < 2 || i >= fixed + 2 || j >= fixed + 2) return Math.hypot(nodes[i]!.x - nodes[j]!.x, nodes[i]!.y - nodes[j]!.y);
+    const index = (i - 2) * fixed + j - 2;
+    let value = distances[index]!;
+    if (value !== value) distances[index] = distances[(j - 2) * fixed + i - 2] = value = Math.hypot(nodes[i]!.x - nodes[j]!.x, nodes[i]!.y - nodes[j]!.y);
+    return value;
+  };
+  const count = nodes.length, costs = new Float64Array(count).fill(Infinity), parents = new Int32Array(count).fill(-1), seen = new Uint8Array(count);
   costs[0] = 0;
-  let destinationNode=1;
-  while (seen.size < nodes.length) {
+  let destinationNode=1, settled = 0;
+  while (settled < count) {
     let current = -1;
-    for (let i = 0; i < nodes.length; i++)
-      if (!seen.has(i) && (current < 0 || costs[i]! < costs[current]!))
+    for (let i = 0; i < count; i++)
+      if (!seen[i] && (current < 0 || costs[i]! < costs[current]!))
         current = i;
     if (current < 0 || !Number.isFinite(costs[current]!)) {
       // A defender may seal the far end of a one-person bridge. Walk to the
       // closest reachable floor first, so melee can meet it at the entrance.
       // Every candidate still has a proven, body-clear path from the start.
-      const remaining=nodes.map(()=>Infinity),visited=new Set<number>();remaining[1]=0;
-      for(let pass=0;pass<nodes.length;pass++) {
+      const remaining=new Float64Array(count).fill(Infinity),visited=new Uint8Array(count);remaining[1]=0;
+      for(let pass=0;pass<count;pass++) {
         let closest=-1;
-        for(let i=0;i<nodes.length;i++)if(!visited.has(i)&&(closest<0||remaining[i]!<remaining[closest]!))closest=i;
+        for(let i=0;i<count;i++)if(!visited[i]&&(closest<0||remaining[i]!<remaining[closest]!))closest=i;
         if(closest<0||!Number.isFinite(remaining[closest]!))break;
-        visited.add(closest);
-        for(let i=0;i<nodes.length;i++)if(!visited.has(i)) {
-          const distance=remaining[closest]!+Math.hypot(nodes[i]!.x-nodes[closest]!.x,nodes[i]!.y-nodes[closest]!.y);
+        visited[closest]=1;
+        for(let i=0;i<count;i++)if(!visited[i]) {
+          const distance=remaining[closest]!+between(i,closest);
           if(distance<remaining[i]!&&clear(nodes[closest]!,nodes[i]!,closest,i,false))remaining[i]=distance;
         }
       }
       const estimate=(i:number)=>Number.isFinite(remaining[0]!)?remaining[i]!:Math.hypot(nodes[i]!.x-destination.x,nodes[i]!.y-destination.y);
       let best=estimate(0);
       destinationNode=0;
-      for(let i=2;i<nodes.length;i++)if(Number.isFinite(costs[i]!)) {
+      for(let i=2;i<count;i++)if(Number.isFinite(costs[i]!)) {
         const distance=estimate(i);
         if(distance<best-1e-6){best=distance;destinationNode=i;}
       }
@@ -346,10 +382,10 @@ export function walkConnectedSurfaces(passenger: Unit, world: Point, units: read
     }
     if (current === 1)
       break;
-    seen.add(current);
-    for (let i = 0; i < nodes.length; i++) {
-      const value = costs[current]! + Math.hypot(nodes[i]!.x - nodes[current]!.x, nodes[i]!.y - nodes[current]!.y);
-      if (!seen.has(i) && value < costs[i]! && clear(nodes[current]!, nodes[i]!, current, i)) {
+    seen[current] = 1; settled++;
+    for (let i = 0; i < count; i++) {
+      const value = costs[current]! + between(i, current);
+      if (!seen[i] && value < costs[i]! && clear(nodes[current]!, nodes[i]!, current, i)) {
         if (value < costs[i]!) {
           costs[i] = value;
           parents[i] = current;

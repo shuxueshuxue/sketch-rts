@@ -1,17 +1,27 @@
-import { ITEM_DEFS } from "../shared/equipment";
+import { CARRY_SLOTS, ITEM_DEFS, canEquip, itemSlot } from "../shared/equipment";
+import { isInCabin } from "../shared/ship-cabin";
 import { localToWorld, shipProfile } from '../shared/ship-geometry';
 import type { GameCommand, GameSnapshot, PlayerId, Unit, WorldItem } from "../shared/types";
 
-export function itemHotkey(index: number) {
-  return itemHotkeys(index + 1)[index] ?? "";
+// @@@item-slots - The item bar is the focused unit's four carrying positions (see CARRY_SLOTS), as Warcraft III's bar is
+// its hero's six slots: slot n always shows what lies in that position and answers to digit n (unless digit n recalls a
+// control group), an empty slot is an empty well, and worn gear (boots, armor) stays on the equipment panel. The bar used
+// to list every item of every selected unit in a row, worn gear included, so a slot's number moved whenever an item came
+// or went, or a control group took a digit.
+export type InventorySlot = { slot: (typeof CARRY_SLOTS)[number]; digit: number; item?: WorldItem };
+
+export function inventorySlots(snapshot: Pick<GameSnapshot, "items">, carrier: Unit | undefined): InventorySlot[] {
+  if (!carrier || !canEquip(carrier) || shipProfile(carrier)) return [];
+  const carried = snapshot.items.filter(item => item.carrierId === carrier.id && item.kind !== "issuedWeapon");
+  return CARRY_SLOTS.map((slot, index) => {
+    const item = carried.find(candidate => itemSlot(snapshot, carrier, candidate) === slot);
+    return { slot, digit: index + 1, ...(item ? { item } : {}) };
+  });
 }
 
-export function itemHotkeys(count: number, reservedDigits = new Set<number>()) {
-  const keys: string[] = [];
-  for (let digit = 1; digit <= 9 && keys.length < count; digit += 1) {
-    if (!reservedDigits.has(digit)) keys.push(String(digit));
-  }
-  return keys;
+// Whose slots the bar shows: the first unit of the focused selection that carries items.
+export function inventoryCarrier(units: readonly Unit[]) {
+  return units.find(unit => canEquip(unit) && !shipProfile(unit) && !isInCabin(unit));
 }
 
 export function carriedItemsForSelection(snapshot: GameSnapshot, selectedUnits: Unit[]) {
