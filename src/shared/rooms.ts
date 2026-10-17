@@ -245,6 +245,17 @@ export function roomToGameSetup(room: RoomState): { mapId: MapId; options: GameS
   };
 }
 
+// @@@rematch - An ended room played again by the same people: open once more on its map with its seats as they were and
+// its result gone; every player but the host gets ready again. Anyone who played in it may ask; a room already open
+// again is left as it is, so the second to ask simply comes back in.
+export function reopenRoom(room: RoomState, userId: string): RoomState {
+  if (!room.slots.some((slot) => slot.userId === userId)) throw new Error("Only a player of this room can play it again");
+  if (room.status === "open") return room;
+  if (room.status !== "ended") throw new Error("Only an ended room can be played again");
+  const { result: _result, ...rest } = room;
+  return { ...rest, status: "open", slots: room.slots.map((slot) => slot.controller === "human" ? { ...slot, ready: slot.userId === room.hostUserId } : slot) };
+}
+
 export function finishRoom(room: RoomState, snapshot: GameSnapshot): RoomState {
   const result: RoomResult = {
     winner: snapshot.match.winner,

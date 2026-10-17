@@ -219,6 +219,14 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       return closeHostedRoom(roomId, userId);
     },
 
+    // The same people play the room again (see @@@rematch); its next start builds a fresh game, as any start does.
+    reopenRoom(roomId: string, userId: string): RoomState {
+      const hosted = getHosted(roomId);
+      hosted.room = lifecycle.reopenRoom(roomId, userId);
+      notifyHostedRoomLifecycle(hosted, { room: hosted.room });
+      return hosted.room;
+    },
+
     // @@@idle-room-reaper - A room nobody attends (no browser in it, no lobby watching it) for `idleMs` is closed as its
     // host would close it, and freed. Rooms used to stay for good, every abandoned game in memory, and when the game went
     // public the server ran out of heap within hours (10-02 22:08).

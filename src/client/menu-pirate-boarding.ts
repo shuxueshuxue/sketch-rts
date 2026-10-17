@@ -15,6 +15,8 @@ import { cast, seeded, stage, terrainOf, type MenuSceneRun } from './menu-scene-
 
 const PIRATES = 'corsairs', GUARD = 'admiralty';
 const CX = 2280, CY = 1430, HEADING = -1.42;
+// How far astern of its berth the pirate hull opens, sailing up into it (see the opening below).
+const ASTERN = 360;
 const presentationHeight = (ship: Unit) => shipProfile(ship)!.deckHeight * Math.tan(SHIP_CAMERA.tilt);
 
 /** Scene-local costume: shared authored body, contact poses and weapon sockets. */
@@ -69,14 +71,16 @@ const painters: Readonly<Record<string, PropPainter>> = {
 
 type DeckProp = { view: PropView; shipId: string; at: Point; mast?: boolean; shows?: (ship: Unit) => boolean };
 
-/** Pirates board an admiralty ship of the line (see @@@menu-battles). Only the opening is authored: both hulls drawn up
- * side by side with their own guns, the crews on deck, the pirate helm ordered to grapple and board. The match
- * simulation fights the rest: broadsides, the bridge, the melee on deck and the prize. */
+/** Pirates board an admiralty ship of the line (see @@@menu-battles). Only the opening is authored: the pirate hull
+ * astern of its berth and closing under sail, both with their own guns, the crews on deck, the pirate helm ordered to
+ * grapple and board. The match simulation fights the rest: the broadsides as it comes up, the bridge, the melee on deck
+ * and the prize. */
 export function createPirateBoarding(seed = 1): MenuSceneRun {
   const random = seeded(seed);
   const pieces = cast();
   const game = stage(4300, 2900, terrainOf(4300, 2900, () => '~'), [[PIRATES,'grove'],[GUARD,'grove']], pieces);
-  game.map.wind = { direction: Math.PI / 2, speed: 36 };
+  // A wind on the beam: both hulls sail at their best, so the chase is short enough for the home screen.
+  game.map.wind = { direction: HEADING + Math.PI / 2, speed: 36 };
   game.players[PIRATES]!.color = '#856144'; game.players[GUARD]!.color = '#4f8581';
   // Hulls come in as the game launches them, under sail and ready to steer.
   const a = game.spawnUnit(PIRATES, 'shipOfTheLine', CX, CY), b = game.spawnUnit(GUARD, 'shipOfTheLine', CX, CY);
@@ -86,11 +90,8 @@ export function createPirateBoarding(seed = 1): MenuSceneRun {
   b.x = CX - normal.x * half; b.y = CY - normal.y * half;
   for (const ship of [a, b]) { ship.sailing!.heading = HEADING; delete ship.fittings; ship.order = { type: 'hold', x: ship.x, y: ship.y }; }
   game.items = [];
-  // Each hull carries a ship of the line's own four guns. The scene's opening, not a rule of the game: the admiralty
-  // ship was caught with the guns on the boarders' side not run out, so its broadside does not sweep the bridge and the
-  // boarders off it before the fight on deck.
+  // Each hull carries a ship of the line's own four guns, and both broadsides answer as the pirates come up.
   initializeShipEquipment(game);
-  game.items = game.items.filter(item => !(item.shipId === b.id && item.mountId?.startsWith('starboard')));
   for (const ship of [a, b]) rebuildShipFittings(game, ship);
   const models = new Map<string, UnitModel>([
     ['menu/pirate', pirateModel()], ['menu/pirate-captain', pirateModel(true)], ['menu/marine', guardModel()],
@@ -105,22 +106,26 @@ export function createPirateBoarding(seed = 1): MenuSceneRun {
   // Four a side, one more boarder some visits: a fight on deck costs the simulation far more than one on land, and the
   // home screen keeps it small.
   crew(a, 'menu/pirate', 4 + Math.floor(random() * 2));
-  const marines = crew(b, 'menu/marine', 4);
+  crew(b, 'menu/marine', 4);
   syncDecks(game.units);
   for (const unit of game.units) if (unit.deck) unit.order = { type: 'hold', x: unit.x, y: unit.y };
-  // The scene opens with the pirates already alongside, grappled at the berth the simulation itself would choose: coming
-  // alongside under sail is a slow manoeuvre the home screen does not wait for. From here the bridge goes out on its own
-  // time, under the defenders' guns.
+  // The scene opens with the pirates in the admiralty ship's wake, on the line of the berth the simulation itself would
+  // choose and already on its heading: the helm sails straight up into it, trading broadsides as the guns come to bear,
+  // and the bridge goes out once it lies alongside.
   const berth = shipBoardingGoal(game.map, game.units, a, b);
   if (!berth) throw new Error('The pirates have no berth alongside the admiralty ship');
-  Object.assign(a, { x: berth.x, y: berth.y }); a.sailing!.heading = berth.heading;
-  // The camera frames the two hulls as they lie: across both beams, and a hull's length along them.
-  const across = Math.hypot(a.x - b.x, a.y - b.y) + shipProfile(a)!.beam, along = shipProfile(a)!.length;
+  Object.assign(a, { x: berth.x - Math.cos(berth.heading) * ASTERN, y: berth.y - Math.sin(berth.heading) * ASTERN }); a.sailing!.heading = berth.heading;
+  // The camera frames the two hulls where they lie: across both beams and along both lengths, as the gap closes.
+  const length = shipProfile(a)!.length, beam = shipProfile(a)!.beam, axis = { x: Math.cos(HEADING), y: Math.sin(HEADING) };
+  const spread = (ships: readonly Unit[]) => {
+    const [p, q] = ships; if (!p || !q) return { across: beam, along: length };
+    const dx = p.x - q.x, dy = p.y - q.y, along = Math.abs(dx * axis.x + dy * axis.y);
+    return { across: Math.abs(dx * axis.y - dy * axis.x) + beam, along: along + length };
+  };
   // The opening orders. The pirate helm grapples and boards; once the bridge is out it sends its own crew across.
   issuePlayerCommand(game, PIRATES, { type: 'boardShip', unitIds: [a.id], targetId: b.id });
-  // Scene setup like the guns, not a rule: the marines rush the rail the boarders come over, so they meet them together
-  // instead of one at a time at their posts.
-  issuePlayerCommand(game, GUARD, { type: 'attackMove', unitIds: marines.map(unit => unit.id), x: b.x + (a.x - b.x) * .35, y: b.y + (a.y - b.y) * .35 });
+  // The marines hold their posts (set with the crews above) and meet the boarders where they come aboard. Sent to the
+  // rail instead, they cut at the pirate hull alongside, and a hull's damage takes the bridge down before it is out.
   const deckProps: DeckProp[] = [];
   const prop = (kind: string, ship: Unit, at: Point, mast = false, shows?: DeckProp['shows']) => {
     deckProps.push({ view: pieces.prop(kind, 0, 0, 1), shipId: ship.id, at, mast, ...(shows ? { shows } : {}) });
@@ -141,10 +146,11 @@ export function createPirateBoarding(seed = 1): MenuSceneRun {
       const x = ships.reduce((sum, ship) => sum + ship.x, 0) / Math.max(1, ships.length), y = ships.reduce((sum, ship) => sum + ship.y, 0) / Math.max(1, ships.length);
       // The camera eases in once the bridge is across and the fight is on the quarry's deck.
       const boarding = ships.some(ship => ship.sailing?.gangway?.phase === 'ready');
-      const target = { x, y: y - along * .2, zoom: 1 + (boarding ? .12 : 0) };
+      const { across, along } = spread(ships), narrow = width < 700;
+      const fit = narrow ? Math.min(width * .78 / across, height * .34 / along) : Math.min(width * .37 / across, height * .58 / along);
+      const target = { x, y: y - length * .2, zoom: fit * (1 + (boarding ? .12 : 0)) };
       held = held ? { x: held.x + (target.x - held.x) * .05, y: held.y + (target.y - held.y) * .05, zoom: held.zoom + (target.zoom - held.zoom) * .03 } : target;
-      if (width < 700) return { focus: held, zoom: Math.min(width * .78 / across, height * .34 / along) * held.zoom, anchorX: .5, anchorY: .31 };
-      return { focus: held, zoom: Math.min(width * .37 / across, height * .58 / along) * held.zoom, anchorX: .74, anchorY: .51 };
+      return narrow ? { focus: held, zoom: held.zoom, anchorX: .5, anchorY: .31 } : { focus: held, zoom: held.zoom, anchorX: .74, anchorY: .51 };
     },
     foreground(ctx, view, _second, snapshot) {
       const ships = new Map(snapshot.units.map(unit => [unit.id, unit]));
