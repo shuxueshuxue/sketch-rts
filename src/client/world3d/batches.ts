@@ -55,11 +55,11 @@ function thin(geometry:THREE.BufferGeometry){
   return middle!<largest!*.12;
 }
 /** A model stands finished, going up as a site, or as a not-yet-begun plan (see @@@build-ghost): the finished look,
- * see-through, without its ink line or shadow. */
+ * see-through, without its ink line or shadow, and not picked by the pointer. */
 export type ModelLook='solid'|'site'|'ghost';
 export type BatchAnimation=ReadonlyMap<string,{matrix?:THREE.Matrix4;morph?:readonly number[]}>;
 type Part={name:string;geometry:THREE.BufferGeometry;material:THREE.Material|THREE.Material[];local:THREE.Matrix4;morph:readonly number[];rig:boolean};
-type Batch={inked:boolean;outlined:boolean;shadow:boolean;hulls:THREE.InstancedMesh[];parts:Part[];meshes:THREE.InstancedMesh[];matrices:THREE.Matrix4[];animations:(BatchAnimation|undefined)[];ids:string[];capacity:number;last:number};
+type Batch={inked:boolean;outlined:boolean;plan:boolean;hulls:THREE.InstancedMesh[];parts:Part[];meshes:THREE.InstancedMesh[];matrices:THREE.Matrix4[];animations:(BatchAnimation|undefined)[];ids:string[];capacity:number;last:number};
 
 /** Three's default instanced raycast does not read the per-instance morph texture.
  * This scratch mesh shares the model's buffers, but owns its animated bounds. */
@@ -217,7 +217,7 @@ export class ActorBatches {
         parts.push({name:object.name,geometry,material:Array.isArray(object.material)?object.material.map(map):map(object.material),local:object.matrixWorld.clone(),morph:Array.from({length:morphCount},(_,i)=>object.morphTargetInfluences?.[i]??0),rig:underRig(object)});
       });
       // The ink outline is drawn from the mesh's back: under a see-through roof or a plan it would show as dark mass.
-      batch={inked,outlined:inked&&look==='solid'&&!openRoof,shadow:look!=='ghost',hulls:[],parts,meshes:[],matrices:[],animations:[],ids:[],capacity:0,last:this.frame};this.batches.set(key,batch);
+      batch={inked,outlined:inked&&look==='solid'&&!openRoof,plan:look==='ghost',hulls:[],parts,meshes:[],matrices:[],animations:[],ids:[],capacity:0,last:this.frame};this.batches.set(key,batch);
     }
     batch.matrices.push(matrix);batch.animations.push(animation);batch.ids.push(id);batch.last=this.frame;
   }
@@ -235,7 +235,7 @@ export class ActorBatches {
           const hull=new THREE.InstancedMesh(hullGeometry(part.geometry),INK_HULL,batch!.capacity);hull.name=part.name;hull.userData.local=part.local;
           hull.instanceMatrix.setUsage(THREE.DynamicDrawUsage);this.scene.add(hull);return hull;
         }):[];
-        batch.meshes=batch.parts.map(part=>{const mesh=part.morph.length?new MorphInstancedMesh(part,batch.capacity):new THREE.InstancedMesh(part.geometry,part.material,batch.capacity);mesh.name=part.name;mesh.castShadow=batch!.shadow;mesh.receiveShadow=true;mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);mesh.userData.ids=batch.ids;this.scene.add(mesh);return mesh;});
+        batch.meshes=batch.parts.map(part=>{const mesh=part.morph.length?new MorphInstancedMesh(part,batch.capacity):new THREE.InstancedMesh(part.geometry,part.material,batch.capacity);mesh.name=part.name;mesh.castShadow=!batch!.plan;mesh.receiveShadow=true;mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);mesh.userData.ids=batch.ids;this.scene.add(mesh);return mesh;});
       }
       for(const hull of batch.hulls){
         hull.count=batch.matrices.length;hull.visible=true;
@@ -253,7 +253,8 @@ export class ActorBatches {
       }
     }
   }
-  objects(){return [...this.batches.values()].flatMap(batch=>batch.meshes).filter(mesh=>mesh.visible);}
+  /** What the pointer can pick: a plan is not a thing in the world yet. */
+  objects(){return [...this.batches.values()].filter(batch=>!batch.plan).flatMap(batch=>batch.meshes).filter(mesh=>mesh.visible);}
   forget(key:string){const batch=this.batches.get(key);if(batch)this.remove(key,batch);}
   remove(key:string,batch:Batch){
     for(const mesh of [...batch.meshes,...batch.hulls]){this.scene.remove(mesh);mesh.dispose();}

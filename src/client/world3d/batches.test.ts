@@ -126,12 +126,12 @@ describe('actor batches',()=>{
     source.geometry.addGroup(0,3,0);
     batches.begin();batches.add('reveal',source,translate(),'a',undefined,'solid',true,pose([.5]));
     batches.add('construction',source,translate(),'b',undefined,'site');batches.add('ghost',source,translate(),'c',undefined,'ghost');batches.finish();
-    const [reveal,construction,ghost]=batches.objects(),revealMaterials=reveal!.material as THREE.Material[],constructionMaterials=construction!.material as THREE.Material[];
+    const [reveal,construction]=batches.objects(),ghost=scene.children.find((mesh):mesh is THREE.InstancedMesh=>mesh instanceof THREE.InstancedMesh&&(mesh.userData.ids as string[])?.[0]==='c'),revealMaterials=reveal!.material as THREE.Material[],constructionMaterials=construction!.material as THREE.Material[];
     expect(reveal!.geometry.groups).toEqual([{start:0,count:3,materialIndex:0}]);
     expect(revealMaterials[0]!.opacity).toBe(.22);expect(revealMaterials[0]!.depthWrite).toBe(false);expect(revealMaterials[0]!.transparent).toBe(true);
     expect(revealMaterials[1]!.opacity).toBe(1);expect(revealMaterials[1]!.depthWrite).toBe(true);expect(revealMaterials[1]!.transparent).toBe(false);
     expect(constructionMaterials.map(material=>material.opacity)).toEqual([.48,.48]);
-    expect((ghost!.material as THREE.Material[]).map(material=>material.opacity)).toEqual([.55,.55]);expect(ghost!.castShadow).toBe(false);expect(construction!.castShadow).toBe(true);expect(cloth.opacity).toBe(1);expect(hull.opacity).toBe(1);
+    expect((ghost!.material as THREE.Material[]).map(material=>material.opacity)).toEqual([.55,.55]);expect(ghost!.castShadow).toBe(false);expect(batches.objects()).toHaveLength(2);expect(construction!.castShadow).toBe(true);expect(cloth.opacity).toBe(1);expect(hull.opacity).toBe(1);
     batches.dispose();
   });
 
