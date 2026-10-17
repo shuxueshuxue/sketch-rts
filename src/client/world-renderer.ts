@@ -17,6 +17,7 @@ import { gangwayCrewVisualPose } from './ship-gangway-visual';
 import { healthBarColor, shouldShowHealthBar } from "./health-bars";
 import { drawPaintedItem } from "./art/items";
 import type { SiteModelKind } from "./art/building-models";
+import { buildingSpriteSize, garrisonTower, towerRoofOpen, towerTopLift } from "./tower-presentation";
 import { SIM_TICKS_PER_SECOND } from "../shared/time";
 import { drawAtlasCorpse, drawAtlasBuilding, drawAtlasCamp, drawAtlasGround, drawAtlasLandmark, drawAtlasMine, drawAtlasModel, drawAtlasObstacle, drawAtlasShop, drawAtlasUnit, obstacleArtTop } from "./atlas-art";
 import { renderWorldEffects } from "./effect-renderer";
@@ -264,7 +265,9 @@ export function drawWorld(frame: WorldFrame) {
   const candidateUnits=viewIndex.query(frame.view);
   if(frame.pass==='overlay'){drawBuildings(painter,snapshot.buildings,true);drawUnits(painter,candidateUnits,true);}
   else {
-    const actors=[...snapshot.buildings,...candidateUnits.filter(unit=>!unit.deck)].filter(a=>nearScreen(painter,worldToScreen(painter,a),Math.max(150,a.radius*3))).sort((a,b)=>a.y-b.y);
+    // A troop on a tower's top is drawn over its tower, front spots last (see @@@tower-garrison).
+    const depth=(a:Unit|Building)=>{const tower='order' in a?garrisonTower(snapshot.buildings,a):undefined;return tower?tower.y+1+(a.y-tower.y+50)/100:a.y;};
+    const actors=[...snapshot.buildings,...candidateUnits.filter(unit=>!unit.deck)].filter(a=>nearScreen(painter,worldToScreen(painter,a),Math.max(150,a.radius*3))).sort((a,b)=>depth(a)-depth(b));
     for(const actor of actors)if('order' in actor){if(shipProfile(actor))drawShipGroup(painter,actor);else drawUnits(painter,[actor]);}else drawBuildings(painter,[actor]);
   }
   if (!painter.still && painter.viewer) drawAimLines(painter);
@@ -278,7 +281,8 @@ export function drawWorld(frame: WorldFrame) {
     const ship=unit.deck?painter.ships.get(unit.deck.shipId):undefined;
     const model=unit.variant?painter.models?.(unit.variant):undefined;
     const floor=model?17*Math.max(.72,unit.radius/18):(creatureShadow(unit.kind)?.y??17)*unitGlyphScale(unit.radius);
-    return worldToScreen(painter,{x:at.x+position.x-unit.x,y:at.y+position.y-unit.y+floor-(anchor?0:ship?deckVisualHeight(ship)+18*unitGlyphScale(unit.radius):0)-height*Math.tan(SHIP_CAMERA.tilt)});
+    const lift=anchor||ship?0:towerTopLift(snapshot.buildings,unit);
+    return worldToScreen(painter,{x:at.x+position.x-unit.x,y:at.y+position.y-unit.y+floor-(anchor?0:ship?deckVisualHeight(ship)+18*unitGlyphScale(unit.radius):lift?lift+18*unitGlyphScale(unit.radius):0)-height*Math.tan(SHIP_CAMERA.tilt)});
   },painter.reducedMotion);
   renderWorldEffects({
     ctx,
@@ -296,8 +300,8 @@ export function drawWorld(frame: WorldFrame) {
       if(!unit || isInCabin(unit))return undefined;
       const anchor=painter.actorPositions?.get(id);
       if(anchor)return{x:anchor.x,y:anchor.bodyY};
-      const at=drawnPosition(painter,unit),parent=unit.deck?painter.ships.get(unit.deck.shipId):undefined;
-      return parent?{x:at.x,y:at.y-deckVisualHeight(parent)-18*unitGlyphScale(unit.radius)}:at;
+      const at=drawnPosition(painter,unit),parent=unit.deck?painter.ships.get(unit.deck.shipId):undefined,lift=towerTopLift(snapshot.buildings,unit);
+      return parent?{x:at.x,y:at.y-deckVisualHeight(parent)-18*unitGlyphScale(unit.radius)}:lift?{x:at.x,y:at.y-lift-18*unitGlyphScale(unit.radius)}:at;
     },
   });
   ctx.restore();
@@ -343,7 +347,7 @@ export function drawPaperMap(ctx: Brush, mapId: MapId, camera: Point, width: num
 export function ownerInk(owner: Owner | undefined, snapshot?: Pick<GameSnapshot, 'players'>) { return playerColor(owner, snapshot); }
 
 export function buildingGlyphSize(kind: BuildingKind) {
-  return Math.round(BUILDING_DEFS[kind].radius * 2.12);
+  return buildingSpriteSize(BUILDING_DEFS[kind]);
 }
 
 function drawTextureStroke(ctx: Brush, stroke: TextureStroke) {
@@ -433,10 +437,10 @@ function drawBuildings(painter: Painter, buildings: Building[],overlayOnly=false
     ctx.strokeStyle = ownerInk(building.owner, painter.snapshot);
     ctx.fillStyle = building.complete ? "rgba(255, 250, 226, 0.72)" : "rgba(255, 250, 226, 0.42)";
     ctx.lineWidth = selected ? 4 : 2;
-    const size = buildingGlyphSize(building.kind);
+    const size = buildingSpriteSize(building);
     ctx.save();
     ctx.globalAlpha = building.complete ? 1 : 0.48;
-    if(!overlayOnly)drawAtlasBuilding(ctx, painter.buildingModels?.[building.id] ?? building.kind, point, size, ownerInk(building.owner, painter.snapshot));
+    if(!overlayOnly)drawAtlasBuilding(ctx, painter.buildingModels?.[building.id] ?? building.kind, point, size, ownerInk(building.owner, painter.snapshot), towerRoofOpen(painter.snapshot.units, building));
     ctx.restore();
     if (showRally) drawBuildingRally(ctx, building, point, rallyPoint, ownerInk(building.owner, painter.snapshot));
     if (shouldShowHealthBar({ hp: building.hp, maxHp: building.maxHp, selected, hovered: painter.hoveredId === building.id, engaged: engaged.has(building.id), constructing: !building.complete, still: painter.still })) drawHp(ctx, point.x, painter.actorPositions?.get(building.id)?.topY!==undefined?painter.actorPositions.get(building.id)!.topY-painter.camera.y-7:point.y - size * 0.78 - 5, building.hp, building.maxHp, 48);
@@ -540,7 +544,8 @@ function drawUnits(painter: Painter, units: readonly Unit[], overlayOnly=false) 
     const ship=unit.deck ? painter.ships.get(unit.deck.shipId) : undefined;
     const bridge = !anchor && gangwayCrewVisualPose(unit, painter.ships, painter.gangways);
     const bodyHeight = 18*unitGlyphScale(unit.radius)*(painter.models && !unit.variant ? .8 : 1);
-    const height=anchor?0:bridge ? bridge.height * Math.tan(SHIP_CAMERA.tilt) + bodyHeight : ship ? deckVisualHeight(ship)+bodyHeight : 0;
+    const lift=anchor||bridge||ship?0:towerTopLift(painter.snapshot.buildings,unit);
+    const height=anchor?0:bridge ? bridge.height * Math.tan(SHIP_CAMERA.tilt) + bodyHeight : ship ? deckVisualHeight(ship)+bodyHeight : lift ? lift+bodyHeight : 0;
     const point = worldToScreen(painter, { x: at.x + shake.x, y: at.y + shake.y-height });
     const scale = unitGlyphScale(unit.radius) * (painter.models && !unit.variant ? .8 : 1);
     if (!nearScreen(painter, point, Math.max(60, unit.radius * 3))) continue;
@@ -665,7 +670,8 @@ function drawUnitSelectionMarker(painter:Painter,unit:Unit) {
   const {ctx}=painter,at=drawnPosition(painter,unit),profile=shipProfile(unit);
   const parent=unit.deck && painter.ships.get(unit.deck.shipId),bridge=gangwayCrewVisualPose(unit,painter.ships,painter.gangways);
   const scale=unitGlyphScale(unit.radius)*(painter.models && !unit.variant ? .8:1);
-  const height=bridge?bridge.height*Math.tan(SHIP_CAMERA.tilt):parent?deckVisualHeight(parent):0;
+  const lift=bridge||parent?0:towerTopLift(painter.snapshot.buildings,unit);
+  const height=bridge?bridge.height*Math.tan(SHIP_CAMERA.tilt):parent?deckVisualHeight(parent):lift;
   const point=worldToScreen(painter,{x:at.x,y:at.y-height});
   if(!nearScreen(painter,point,Math.max(60,unit.radius*3)))return;
   ctx.save();ctx.strokeStyle=ringInk(painter,unit.owner);ctx.lineWidth=selected?3:2;ctx.beginPath();
@@ -676,7 +682,7 @@ function drawUnitSelectionMarker(painter:Painter,unit:Unit) {
   }else {
     // Land sprites use a body-origin; elevated crew use a feet-origin after
     // their deck/gangway lift. Keep both existing poses while changing layer.
-    const bodyHeight=parent || bridge?18*scale:0,feet=point.y-bodyHeight+(creatureShadow(unit.kind)?.y??17)*scale;
+    const bodyHeight=parent || bridge || lift?18*scale:0,feet=point.y-bodyHeight+(creatureShadow(unit.kind)?.y??17)*scale;
     const radius=(unit.bodyRadius??unit.radius)+3;ctx.ellipse(point.x,feet,radius,radius*.55,0,0,Math.PI*2);
   }
   ctx.stroke();ctx.restore();

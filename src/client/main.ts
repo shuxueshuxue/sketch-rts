@@ -81,6 +81,7 @@ import {
   shouldSuppressPointerLockMouseDefault,
   virtualPointerTransform,
 } from "./pointer-lock";
+import { TOWER_GARRISON, garrisonUsed } from "../shared/tower-garrison";
 import { RESEARCH_COMMANDS, researchCommandButtonsForSelection, researchProgressButtonsForSelection, type ResearchProgressButton } from "./research-controls";
 import { buildingAt, deckMovePoint, hasAlly, pointerTarget, relationTo, targetCommand, unitAt,unitPointerPosition, type PointerTarget } from "./relations";
 import { defaultRoomConfiguration, formatRoomRoute, parseRoomRoute, type RoomRoute } from "./room-route";
@@ -371,6 +372,23 @@ const commandButtons: CommandButton[] = [
   ...RESEARCH_COMMANDS.map((command) =>
     createCommandButton(t("command.researchSpecific", { upgrade: labelKind(command.upgradeKind) }), command.icon, command.hotkey, () => researchButtonState(command.upgradeKind), () => research(command.upgradeKind), () => upgradeTooltip(command.upgradeKind, command.hotkey, currentPlayerState()?.upgrades[command.upgradeKind] ?? 0, i18n)),
   ),
+  createCommandButton(t("command.fortifyTower.title"), "▲", "f", fortifyButtonState, fortifyFocusedTower, () => ({
+    title: t("command.fortifyTower.title"),
+    body: t("command.fortifyTower.body"),
+    stats: [t("command.fortifyTower.stats", { cost: TOWER_GARRISON.cost, seconds: TOWER_GARRISON.time / SIM_TICKS_PER_SECOND })],
+    requirements: [t("command.fortifyTower.requirements")],
+    hotkey: "F",
+  })),
+  createCommandButton(t("command.ungarrison.title"), "⤓", "u", ungarrisonButtonState, ungarrisonFocusedTower, () => {
+    const tower = focusedTower();
+    return {
+      title: t("command.ungarrison.title"),
+      body: t("command.ungarrison.body"),
+      stats: tower && snapshot ? [t("command.ungarrison.stats", { used: garrisonUsed(snapshot, tower), capacity: TOWER_GARRISON.supply })] : [],
+      requirements: [t("command.ungarrison.requirements")],
+      hotkey: "U",
+    };
+  }),
   ...SPELL_COMMANDS.map((command) =>
     withAbilityArtwork(withAutocastRing(createCommandButton(
       t("command.castSpecific", { ability: labelKind(command.ability) }),
@@ -2153,6 +2171,7 @@ function contextOrderStatus(command: GameCommand, target: Exclude<PointerTarget,
   if (command.type === "repair" && target.kind === "building") return t("status.repairOrdered", { building: labelBuilding(target.building) });
   if ((command.type === "repairUnit" || command.type === "repairShip") && target.kind === "unit") return t("status.repairOrdered", { building: labelKind(target.unit.kind) });
   if (command.type === "board") return t("status.boardOrdered");
+  if (command.type === "garrison") return t("status.garrisonOrdered");
   if (command.type === "follow" && target.kind === "unit") return t("status.followOrdered", { target: labelAnyKind(target.unit.kind) });
   if (target.kind === "obstacle") return t("status.breakObstacleOrdered");
   const owner = target.kind === "unit" ? target.unit.owner : target.kind === "building" ? target.building.owner : undefined;
@@ -2399,6 +2418,36 @@ function orderButtonState(command: GameCommand): CommandButtonState {
 function trainButtonState(unitKind: TrainableUnitKind): CommandButtonState {
   const building = canTrain(unitKind) ? focusedTrainingBuilding(unitKind) : undefined;
   return building ? orderButtonState({ type: "train", buildingId: building.id, unitKind }) : HIDDEN_COMMAND_STATE;
+}
+
+// A defense tower's own card (see @@@tower-garrison): fortify it once, then call its troops down.
+function focusedTower() {
+  return !commandMode && !openPalette ? focusedPlayerBuildings().find((building) => building.kind === "defenseTower" && building.complete) : undefined;
+}
+
+function fortifyButtonState(): CommandButtonState {
+  const tower = focusedTower();
+  if (!tower || tower.fortified) return HIDDEN_COMMAND_STATE;
+  if (tower.fortify) return { visible: true, enabled: false, reason: "position", detail: t("command.fortifyTower.progress", { percent: Math.floor((1 - tower.fortify.remaining / TOWER_GARRISON.time) * 100) }) };
+  return orderButtonState({ type: "fortifyTower", buildingId: tower.id });
+}
+
+function fortifyFocusedTower() {
+  const tower = focusedTower();
+  if (!tower) return;
+  const state = fortifyButtonState();
+  if (!state.enabled) { showInvalidCommand(state.detail ?? t("command.fortifyTower.title")); return; }
+  if (sendCommand({ type: "fortifyTower", buildingId: tower.id })) statusLabel.textContent = t("status.fortifyStarted");
+}
+
+function ungarrisonButtonState(): CommandButtonState {
+  const tower = focusedTower();
+  return tower?.fortified ? orderButtonState({ type: "ungarrison", buildingId: tower.id }) : HIDDEN_COMMAND_STATE;
+}
+
+function ungarrisonFocusedTower() {
+  const tower = focusedTower();
+  if (tower && sendCommand({ type: "ungarrison", buildingId: tower.id })) statusLabel.textContent = t("status.ungarrisonOrdered");
 }
 
 function researchButtonState(upgradeKind: UpgradeKind): CommandButtonState {
@@ -2844,7 +2893,7 @@ function hireMercenary() {
 
 function selectUnitsInBox(start: Point, end: Point, additive = false) {
   if (!snapshot) return;
-  const result = selectInScreenBox(snapshot, localPlayerId, selectionRect(start, end), worldToScreen, { selectedIds, focusedSelectionId }, additive,unit=>{const at=worldPresentation.position(unit.id);return at?{x:at.x,y:at.bodyY}:unitPointerPosition(snapshot!.units,unit);});
+  const result = selectInScreenBox(snapshot, localPlayerId, selectionRect(start, end), worldToScreen, { selectedIds, focusedSelectionId }, additive,unit=>{const at=worldPresentation.position(unit.id);return at?{x:at.x,y:at.bodyY}:unitPointerPosition(snapshot!.units,unit,false,snapshot!.buildings);});
   selectedIds = result.selectedIds;
   focusedSelectionId = result.focusedSelectionId;
   if (selectedIds.size > 0 || !additive) selectedCampId = undefined;
