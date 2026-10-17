@@ -154,7 +154,9 @@ export type UnitOrder =
   | { type: "move"; x: number; y: number; heading?: number; rendezvousFor?: string; avoidCombat?: boolean; deckPoint?: { x: number; y: number }; deckShipId?: string }
   | { type: "follow"; targetId: string }
   | { type: "attackMove"; x: number; y: number; targetId?: string; deckPoint?: { x: number; y: number }; deckShipId?: string }
-  | { type: "attack"; targetId: string; leashX?: number; leashY?: number }
+  // frontRank: a boarding crew answering the defender at the front of its way, chosen again every tick by its boarding
+  // order; the order lives only within that tick's update (see @@@explicit-route).
+  | { type: "attack"; targetId: string; leashX?: number; leashY?: number; frontRank?: true }
   // Mining timer counts waiting ticks at the entrance, then remaining ticks while gathering.
   | { type: "mine"; resourceId: string; phase: "toMine" | "gather" | "return"; timer: number }
   | { type: "repair"; buildingId: string }

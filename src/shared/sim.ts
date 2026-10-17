@@ -1985,7 +1985,7 @@ function updateBoardOrder(game: Game, unit: Unit) {
       const defender=nearby!==transport ? nearby : navalCombatTarget(game,unit,transport);
       if(defender!==transport && isUnit(defender)) {
         const boardingOrder=unit.order;
-        unit.order={type:'attack',targetId:defender.id};
+        unit.order={type:'attack',targetId:defender.id,frontRank:true};
         try { updateAttackOrder(game,unit); }
         finally { unit.order=boardingOrder; }
         return;
