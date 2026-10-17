@@ -27,6 +27,7 @@ const SLOT_SHAPES: Record<string, string> = {
     body: 'M16 11l8 4 8-4 8 9-7 5v13H15V25l-7-5z',
     feet: 'M15 10h10v16l9 5v7H12v-7l3-5z',
     hand: 'M16 32l17-20 3 3-18 20M12 31l9 8M12 39l5-5',
+    offHand: 'M24 9l12 4v10c0 8-6 13-12 16-6-3-12-8-12-16V13zM24 9v30',
     carry: 'M14 14h20v22H14zM14 20h20M21 14v22M27 14v22',
     mount: 'M9 22h27v8H9zM31 22l6-3v14l-6-3M15 30v5M30 30v5M12 38h22',
 };
@@ -341,7 +342,7 @@ export class EquipmentPanel {
         cell.tabIndex = 0;
         cell.setAttribute('aria-label', label);
         cell.classList.toggle('empty', !item);
-        const shape = hand ? 'hand' : destination && 'mountId' in destination ? 'mount' : destination && 'slot' in destination && typeof destination.slot === 'string' ? destination.slot : 'carry';
+        const shape = hand ? (hand === 'left' ? 'offHand' : 'hand') : destination && 'mountId' in destination ? 'mount' : destination && 'slot' in destination && typeof destination.slot === 'string' ? destination.slot : 'carry';
         cell.style.setProperty('--equipment-slot-icon', slotIcon(shape));
         const title = document.createElement('small');
         title.textContent = label;

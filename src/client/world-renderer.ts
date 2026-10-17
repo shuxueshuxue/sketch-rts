@@ -73,6 +73,8 @@ export function worldLabelsFor(i18n: ReturnType<typeof createI18n>): WorldLabels
 }
 
 export type WorldFrame = {
+  /** The building being placed, drawn by the 3D layer as its own see-through model (see @@@build-ghost). */
+  buildGhost?: { kind: BuildingKind; x: number; y: number; valid: boolean };
   /** Shared snapshot index across the GPU, ground and annotation passes. */
   viewIndex?:PresentationViewIndex;
   /** Terrain and annotations flank the shared GPU depth layer. Recorder/fallback
@@ -252,9 +254,10 @@ export function drawWorld(frame: WorldFrame) {
     if (isInCabin(worker) || worker.owner !== frame.viewer || worker.order.type !== "build") continue;
     const order = worker.order, point = worldToScreen(painter, order);
     if (!nearScreen(painter, point, 120)) continue;
-    ctx.save(); ctx.globalAlpha = .24;
+    // Over the 3D world the plan is its model (see @@@build-ghost); this Canvas sprite is the fallback's.
+    if (frame.pass !== 'overlay') { ctx.save(); ctx.globalAlpha = .24;
     drawAtlasBuilding(ctx, order.buildingKind, point, buildingGlyphSize(order.buildingKind), "#bca577");
-    ctx.restore();
+    ctx.restore(); }
     if ((snapshot.players[frame.viewer]?.gold ?? 0) < BUILDING_DEFS[order.buildingKind].cost) {
       ctx.save(); ctx.fillStyle="#e1c28c"; ctx.font="12px sans-serif"; ctx.textAlign="center";
       ctx.fillText(frame.locale === "zh" ? "等待金币" : "Waiting for gold", point.x, point.y+40); ctx.restore();

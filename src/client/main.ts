@@ -3527,6 +3527,7 @@ function draw() {
   const viewer = matchViewer();
   const hovered = hoveredTarget();
   updateHoverCursor(hovered?.id);
+  const placement = buildPlacement();
   worldPresentation.draw({
     ctx,
     snapshot,
@@ -3544,8 +3545,9 @@ function draw() {
     ...(selectedCampId ? { selectedCampId } : {}),
     ...(viewer ? { viewer } : {}),
     ...(hovered ? { hoveredId: hovered.id } : {}),
+    ...(worldPresentation.is3D && placement ? { buildGhost: placement } : {}),
   },'match');
-  drawBuildPlacementPreview();
+  drawBuildPlacementPreview(placement);
   drawPurchaseRecipientFlash();
   drawAttackMovePreview();
   drawSpellPreview();
@@ -3563,15 +3565,22 @@ function draw() {
 // on the ground is in the way (gold short, a shipyard off the shore).
 const PLACEMENT_INK = { clear: "#4f9a52", blocked: "#b2483c" } as const;
 
-function drawBuildPlacementPreview() {
-  if (!commandMode || commandMode.type !== "build" || !lastMouse || !snapshot) return;
-  const kind = commandMode.placement.buildingKind;
+// Where the building in hand would stand, and whether it can: for the 3D layer's ghost model and the footprint below.
+function buildPlacement() {
+  if (!commandMode || commandMode.type !== "build" || !lastMouse || !snapshot) return undefined;
+  const kind = commandMode.placement.buildingKind, world = screenToWorld(lastMouse);
+  const at = snapToFootprint(snapshot.map, BUILDING_DEFS[kind].radius, world);
+  return { kind, x: at.x, y: at.y, valid: "command" in buildPlacementCommand(snapshot, commandMode.placement, world, localPlayerId) };
+}
+
+function drawBuildPlacementPreview(placement: ReturnType<typeof buildPlacement>) {
+  if (!placement || !commandMode || commandMode.type !== "build" || !snapshot) return;
+  const kind = placement.kind;
   const def = BUILDING_DEFS[kind];
   const size = buildingGlyphSize(kind)*worldZoom;
-  const world = screenToWorld(lastMouse);
-  const at = snapToFootprint(snapshot.map, def.radius, world);
+  const at = { x: placement.x, y: placement.y };
   const point = worldToScreen(at);
-  const validPlacement = "command" in buildPlacementCommand(snapshot, commandMode.placement, world, localPlayerId);
+  const validPlacement = placement.valid;
   const ink = validPlacement ? PLACEMENT_INK.clear : PLACEMENT_INK.blocked;
   const square = footprintSquare(snapshot, at, def.radius);
   if (square) {
@@ -3581,9 +3590,8 @@ function drawBuildPlacementPreview() {
     drawFootprint(ctx, square, camera, (col, row) => (everyCell || blocked.has(`${col},${row}`) ? PLACEMENT_INK.blocked : PLACEMENT_INK.clear));ctx.restore();
   }
   ctx.save();
-  ctx.globalAlpha = 0.62;
-  drawAtlasBuilding(ctx, kind, point, size, ink);
-  ctx.globalAlpha = 1;
+  // Over the 3D world the ghost is the building's own model (see @@@build-ghost); the Canvas sprite is the fallback's.
+  if (!worldPresentation.is3D) { ctx.globalAlpha = 0.62; drawAtlasBuilding(ctx, kind, point, size, ink); ctx.globalAlpha = 1; }
   ctx.fillStyle = ink;
   ctx.font = "11px ui-monospace, monospace";
   ctx.fillText(t("canvas.buildPreview", { building: labelKind(kind), cost: def.cost }), point.x - 34, point.y + size / 2 + 22);

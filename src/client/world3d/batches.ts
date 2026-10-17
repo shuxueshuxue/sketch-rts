@@ -54,9 +54,12 @@ function thin(geometry:THREE.BufferGeometry){
   geometry.computeBoundingBox();const size=geometry.boundingBox!.getSize(new THREE.Vector3());const [,middle,largest]=[size.x,size.y,size.z].sort((a,z)=>a-z);
   return middle!<largest!*.12;
 }
+/** A model stands finished, going up as a site, or as a not-yet-begun plan (see @@@build-ghost): the finished look,
+ * see-through, without its ink line or shadow, and not picked by the pointer. */
+export type ModelLook='solid'|'site'|'ghost';
 export type BatchAnimation=ReadonlyMap<string,{matrix?:THREE.Matrix4;morph?:readonly number[]}>;
 type Part={name:string;geometry:THREE.BufferGeometry;material:THREE.Material|THREE.Material[];local:THREE.Matrix4;morph:readonly number[];rig:boolean};
-type Batch={inked:boolean;outlined:boolean;hulls:THREE.InstancedMesh[];parts:Part[];meshes:THREE.InstancedMesh[];matrices:THREE.Matrix4[];animations:(BatchAnimation|undefined)[];ids:string[];capacity:number;last:number};
+type Batch={inked:boolean;outlined:boolean;plan:boolean;hulls:THREE.InstancedMesh[];parts:Part[];meshes:THREE.InstancedMesh[];matrices:THREE.Matrix4[];animations:(BatchAnimation|undefined)[];ids:string[];capacity:number;last:number};
 
 /** Three's default instanced raycast does not read the per-instance morph texture.
  * This scratch mesh shares the model's buffers, but owns its animated bounds. */
@@ -173,9 +176,9 @@ export class ActorBatches {
     }
     return view;
   }
-  private material(source:THREE.Material,color:string|undefined,constructing:boolean,revealDeck:boolean,inked:boolean,openRoof:boolean){
+  private material(source:THREE.Material,color:string|undefined,look:ModelLook,revealDeck:boolean,inked:boolean,openRoof:boolean){
     const team=source.name==='TeamColor',cloth=revealDeck&&source.name.startsWith('unbleached sail'),roof=inked&&ROOFS.has(source.name),open=openRoof&&ROOFS.has(source.name);
-    const key=`${source.uuid}:${team||roof?color??'':''}:${constructing}:${cloth}:${inked}:${open}`;
+    const key=`${source.uuid}:${team||roof?color??'':''}:${look}:${cloth}:${inked}:${open}`;
     let material=this.materials.get(key);
     if(material)return material;
     material=source.clone();
@@ -193,7 +196,8 @@ export class ActorBatches {
       material=new THREE.MeshToonMaterial({name:smooth.name,color:smooth.color,map:smooth.map,gradientMap:TONES,vertexColors:smooth.vertexColors,side:smooth.side,alphaTest:smooth.alphaTest});
       smooth.dispose();
     }
-    if(constructing){material.transparent=true;material.opacity=.48;}
+    if(look==='site'){material.transparent=true;material.opacity=.48;}
+    if(look==='ghost'){material.transparent=true;material.opacity=.55;}
     // Cloth alone becomes translucent. The hull still occludes, collides
     // and casts shadows normally; selection never mutates shared assets.
     if(cloth){material.transparent=true;material.opacity=.22;material.depthWrite=false;}
@@ -201,19 +205,19 @@ export class ActorBatches {
     if(open){material.transparent=true;material.opacity=.22;material.depthWrite=false;}
     this.materials.set(key,material);return material;
   }
-  add(key:string,template:THREE.Object3D,matrix:THREE.Matrix4,id:string,color?:string,constructing=false,revealDeck=false,animation?:BatchAnimation,openRoof=false){
+  add(key:string,template:THREE.Object3D,matrix:THREE.Matrix4,id:string,color?:string,look:ModelLook='solid',revealDeck=false,animation?:BatchAnimation,openRoof=false){
     let batch=this.batches.get(key);
     if(!batch){
       // A finished building, a ship's hull and its guns are drawn inked (see @@@model-ink); a site going up and a broken gun keep
       // their own looks.
-      const inked=INKED.has(template.name)&&!constructing,parts:Part[]=[];template.updateMatrixWorld(true);
+      const inked=INKED.has(template.name)&&look!=='site',parts:Part[]=[];template.updateMatrixWorld(true);
       template.traverse(object=>{if(!(object instanceof THREE.Mesh))return;
-        const map=(source:THREE.Material)=>this.material(source,color,constructing,revealDeck,inked,openRoof);
+        const map=(source:THREE.Material)=>this.material(source,color,look,revealDeck,inked,openRoof);
         const geometry=this.geometry(object.geometry),morphCount=Object.values(geometry.morphAttributes)[0]?.length??0;
         parts.push({name:object.name,geometry,material:Array.isArray(object.material)?object.material.map(map):map(object.material),local:object.matrixWorld.clone(),morph:Array.from({length:morphCount},(_,i)=>object.morphTargetInfluences?.[i]??0),rig:underRig(object)});
       });
-      // The ink outline is drawn from the mesh's back: under a see-through roof it would show as a dark roof.
-      batch={inked,outlined:inked&&!openRoof,hulls:[],parts,meshes:[],matrices:[],animations:[],ids:[],capacity:0,last:this.frame};this.batches.set(key,batch);
+      // The ink outline is drawn from the mesh's back: under a see-through roof or a plan it would show as dark mass.
+      batch={inked,outlined:inked&&look==='solid'&&!openRoof,plan:look==='ghost',hulls:[],parts,meshes:[],matrices:[],animations:[],ids:[],capacity:0,last:this.frame};this.batches.set(key,batch);
     }
     batch.matrices.push(matrix);batch.animations.push(animation);batch.ids.push(id);batch.last=this.frame;
   }
@@ -231,7 +235,7 @@ export class ActorBatches {
           const hull=new THREE.InstancedMesh(hullGeometry(part.geometry),INK_HULL,batch!.capacity);hull.name=part.name;hull.userData.local=part.local;
           hull.instanceMatrix.setUsage(THREE.DynamicDrawUsage);this.scene.add(hull);return hull;
         }):[];
-        batch.meshes=batch.parts.map(part=>{const mesh=part.morph.length?new MorphInstancedMesh(part,batch.capacity):new THREE.InstancedMesh(part.geometry,part.material,batch.capacity);mesh.name=part.name;mesh.castShadow=true;mesh.receiveShadow=true;mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);mesh.userData.ids=batch.ids;this.scene.add(mesh);return mesh;});
+        batch.meshes=batch.parts.map(part=>{const mesh=part.morph.length?new MorphInstancedMesh(part,batch.capacity):new THREE.InstancedMesh(part.geometry,part.material,batch.capacity);mesh.name=part.name;mesh.castShadow=!batch!.plan;mesh.receiveShadow=true;mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);mesh.userData.ids=batch.ids;this.scene.add(mesh);return mesh;});
       }
       for(const hull of batch.hulls){
         hull.count=batch.matrices.length;hull.visible=true;
@@ -249,7 +253,8 @@ export class ActorBatches {
       }
     }
   }
-  objects(){return [...this.batches.values()].flatMap(batch=>batch.meshes).filter(mesh=>mesh.visible);}
+  /** What the pointer can pick: a plan is not a thing in the world yet. */
+  objects(){return [...this.batches.values()].filter(batch=>!batch.plan).flatMap(batch=>batch.meshes).filter(mesh=>mesh.visible);}
   forget(key:string){const batch=this.batches.get(key);if(batch)this.remove(key,batch);}
   remove(key:string,batch:Batch){
     for(const mesh of [...batch.meshes,...batch.hulls]){this.scene.remove(mesh);mesh.dispose();}

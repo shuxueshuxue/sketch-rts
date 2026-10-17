@@ -45,7 +45,7 @@ describe('actor batches',()=>{
     const cloth=sail(),hull=new THREE.Mesh(new THREE.BoxGeometry());hull.name='Hull';cloth.position.y=3;hull.position.z=7;template.add(cloth,hull);
     const actor=new THREE.Matrix4().makeRotationZ(Math.PI/2);actor.setPosition(10,20,30);
     const override=translate(1,2,3),originalOverride=override.clone();
-    batches.begin();batches.add('ship',template,actor,'animated',undefined,false,false,pose([.5],override));
+    batches.begin();batches.add('ship',template,actor,'animated',undefined,'solid',false,pose([.5],override));
     batches.add('ship',template,translate(),'rest');batches.finish();
     const meshes=batches.objects(),clothBatch=meshes.find(mesh=>mesh.name==='Sail')!,hullBatch=meshes.find(mesh=>mesh.name==='Hull')!;
     expectMatrix(clothBatch,0,actor.clone().multiply(override));expectMatrix(clothBatch,1,cloth.matrixWorld);
@@ -58,8 +58,8 @@ describe('actor batches',()=>{
     const scene=new THREE.Scene(),batches=new ActorBatches(scene),source=sail(relative),geometry=source.geometry;
     geometry.setIndex([0,1,2]);geometry.addGroup(0,3,1);source.material=[new THREE.MeshBasicMaterial(),new THREE.MeshBasicMaterial({side:THREE.DoubleSide})];
     const originalBox=geometry.boundingBox!.clone(),originalSphere=geometry.boundingSphere!.clone(),positions=geometry.getAttribute('position').array.slice();
-    batches.begin();batches.add('ship',source,translate(),'rest',undefined,false,false,pose([0]));
-    batches.add('ship',source,translate(10),'moving',undefined,false,false,pose([1.5],translate(0,2)));batches.finish();scene.updateMatrixWorld(true);
+    batches.begin();batches.add('ship',source,translate(),'rest',undefined,'solid',false,pose([0]));
+    batches.add('ship',source,translate(10),'moving',undefined,'solid',false,pose([1.5],translate(0,2)));batches.finish();scene.updateMatrixWorld(true);
     const mesh=batches.objects()[0]!,restHit=hits(mesh,0),movingHit=hits(mesh,16,2);
     expect(restHit).toHaveLength(1);expect(restHit[0]!.instanceId).toBe(0);
     expect(movingHit).toHaveLength(1);expect(movingHit[0]!.instanceId).toBe(1);expect(movingHit[0]!.object).toBe(mesh);
@@ -74,7 +74,7 @@ describe('actor batches',()=>{
   it('bounds combined and negative morph weights and respects the scene world transform',()=>{
     const scene=new THREE.Scene();scene.position.set(100,20,0);
     const source=sail();source.geometry.morphAttributes.position!.push(new THREE.Float32BufferAttribute([0,6,0,0,6,0,0,6,0],3));source.updateMorphTargets();
-    const batches=new ActorBatches(scene);batches.begin();batches.add('ship',source,translate(),'a',undefined,false,false,pose([-2,2]));batches.finish();scene.updateMatrixWorld(true);
+    const batches=new ActorBatches(scene);batches.begin();batches.add('ship',source,translate(),'a',undefined,'solid',false,pose([-2,2]));batches.finish();scene.updateMatrixWorld(true);
     const mesh=batches.objects()[0]!;
     expect(hits(mesh,92,32)).toHaveLength(1);expect(hits(mesh,100,20)).toHaveLength(0);
     expect(mesh.boundingSphere!.containsPoint(new THREE.Vector3(-8,12,0))).toBe(true);
@@ -85,9 +85,9 @@ describe('actor batches',()=>{
   it('restores source default morph weights when animations disappear or instances reorder',()=>{
     const source=sail();source.morphTargetInfluences![0]=.25;
     const batches=new ActorBatches(new THREE.Scene());
-    batches.begin();batches.add('ship',source,translate(),'animated',undefined,false,false,pose([1]));batches.add('ship',source,translate(10),'default');batches.finish();
+    batches.begin();batches.add('ship',source,translate(),'animated',undefined,'solid',false,pose([1]));batches.add('ship',source,translate(10),'default');batches.finish();
     const mesh=batches.objects()[0]!;expect(weights(mesh,0)).toEqual([1]);expect(weights(mesh,1)).toEqual([.25]);
-    batches.begin();batches.add('ship',source,translate(10),'default');batches.add('ship',source,translate(),'animated',undefined,false,false,new Map([['Sail',{matrix:translate()}]]));batches.finish();
+    batches.begin();batches.add('ship',source,translate(10),'default');batches.add('ship',source,translate(),'animated',undefined,'solid',false,new Map([['Sail',{matrix:translate()}]]));batches.finish();
     expect(batches.objects()[0]).toBe(mesh);expect(mesh.userData.ids).toEqual(['default','animated']);
     expect(weights(mesh,0)).toEqual([.25]);expect(weights(mesh,1)).toEqual([.25]);expect(source.morphTargetInfluences).toEqual([.25]);
     batches.dispose();
@@ -96,7 +96,7 @@ describe('actor batches',()=>{
   it('allocates morph textures at capacity and disposes old textures when growing without disposing source buffers',()=>{
     const scene=new THREE.Scene(),batches=new ActorBatches(scene),source=sail();
     const geometryDispose=vi.spyOn(source.geometry,'dispose'),materialDispose=vi.spyOn(source.material as THREE.Material,'dispose');
-    function frame(count:number){batches.begin();for(let i=0;i<count;i++)batches.add('ship',source,translate(i*10),String(i),undefined,false,false,pose([i/4]));batches.finish();}
+    function frame(count:number){batches.begin();for(let i=0;i<count;i++)batches.add('ship',source,translate(i*10),String(i),undefined,'solid',false,pose([i/4]));batches.finish();}
     frame(3);const first=batches.objects()[0]!,texture=first.morphTexture!,textureDispose=vi.spyOn(texture,'dispose'),batchMaterialDispose=vi.spyOn(first.material as THREE.Material,'dispose');
     expect(texture.image.height).toBe(4);
     frame(4);expect(batches.objects()[0]).toBe(first);expect(weights(first,3)).toEqual([.75]);expect(hits(first,33)).toHaveLength(1);
@@ -119,18 +119,19 @@ describe('actor batches',()=>{
     batches.dispose();expect(dispose).toHaveBeenCalledOnce();
   });
 
-  it('preserves material groups, construction opacity and sail-only deck reveal',()=>{
+  it('preserves material groups, construction and plan opacity and sail-only deck reveal',()=>{
     const scene=new THREE.Scene(),batches=new ActorBatches(scene),source=sail();
     const cloth=new THREE.MeshStandardMaterial();cloth.name='unbleached sail cloth';
     const hull=new THREE.MeshStandardMaterial();hull.name='Hull';source.material=[cloth,hull];
     source.geometry.addGroup(0,3,0);
-    batches.begin();batches.add('reveal',source,translate(),'a',undefined,false,true,pose([.5]));
-    batches.add('construction',source,translate(),'b',undefined,true);batches.finish();
-    const [reveal,construction]=batches.objects(),revealMaterials=reveal!.material as THREE.Material[],constructionMaterials=construction!.material as THREE.Material[];
+    batches.begin();batches.add('reveal',source,translate(),'a',undefined,'solid',true,pose([.5]));
+    batches.add('construction',source,translate(),'b',undefined,'site');batches.add('ghost',source,translate(),'c',undefined,'ghost');batches.finish();
+    const [reveal,construction]=batches.objects(),ghost=scene.children.find((mesh):mesh is THREE.InstancedMesh=>mesh instanceof THREE.InstancedMesh&&(mesh.userData.ids as string[])?.[0]==='c'),revealMaterials=reveal!.material as THREE.Material[],constructionMaterials=construction!.material as THREE.Material[];
     expect(reveal!.geometry.groups).toEqual([{start:0,count:3,materialIndex:0}]);
     expect(revealMaterials[0]!.opacity).toBe(.22);expect(revealMaterials[0]!.depthWrite).toBe(false);expect(revealMaterials[0]!.transparent).toBe(true);
     expect(revealMaterials[1]!.opacity).toBe(1);expect(revealMaterials[1]!.depthWrite).toBe(true);expect(revealMaterials[1]!.transparent).toBe(false);
-    expect(constructionMaterials.map(material=>material.opacity)).toEqual([.48,.48]);expect(cloth.opacity).toBe(1);expect(hull.opacity).toBe(1);
+    expect(constructionMaterials.map(material=>material.opacity)).toEqual([.48,.48]);
+    expect((ghost!.material as THREE.Material[]).map(material=>material.opacity)).toEqual([.55,.55]);expect(ghost!.castShadow).toBe(false);expect(batches.objects()).toHaveLength(2);expect(construction!.castShadow).toBe(true);expect(cloth.opacity).toBe(1);expect(hull.opacity).toBe(1);
     batches.dispose();
   });
 
