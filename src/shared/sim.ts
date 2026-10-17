@@ -81,6 +81,7 @@ import { BOOTS_SPEED, HEALING_SCROLL_HEAL, HEALING_SCROLL_RADIUS, IVORY_TOWER_RE
 import { poolMap } from "./map-pool";
 import { perTick, seconds, SIM_TICKS_PER_SECOND } from "./time";
 import { ownUnitLookup } from "./unit-lookup";
+import { TOWER_GARRISON, canStandOnTower, garrisonRoomFor, towerFoot, towerGarrison, towerTopSpot } from "./tower-garrison";
 import type { AbilityKind, Building, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Obstacle, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, Projectile, RallyTarget, ScenarioOverride, ScenarioPlayerSeed, SettledUnitOrder, TrainableUnitKind, Unit, UnitKind, UnitOrder, UnitStatusEffect, UpgradeKind, WorldEffect, WorldItem } from "./types";
 
 export type CreateGameOptions = GameSetupOptions;
@@ -711,6 +712,22 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     return;
   }
 
+  if (command.type === "fortifyTower" || command.type === "garrison" || command.type === "ungarrison") {
+    const error = checkCommandLegality(game, owner, command);
+    if (error) throw new Error(error.message);
+    const tower = game.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner)!;
+    if (command.type === "fortifyTower") {
+      spendGold(game, owner, TOWER_GARRISON.cost);
+      tower.fortify = { remaining: TOWER_GARRISON.time };
+    } else if (command.type === "garrison") {
+      for (const unit of unitsByIds(game, command.unitIds, owner)) if (canStandOnTower(unit) && unit.garrison?.buildingId !== tower.id) assignUnitOrder(unit, { type: "garrison", buildingId: tower.id }, command.queued);
+    } else for (const unit of towerGarrison(game.units, tower)) {
+      leaveTower(game, unit, unit);
+      assignUnitOrder(unit, { type: "idle" });
+    }
+    return;
+  }
+
   if(command.type==="buyShipEquipment"){
     const dock=game.buildings.find(building=>building.id===command.buildingId && building.owner===owner && building.kind==="shipyard" && building.complete);if(!dock)throw new Error("A completed shipyard is required");
     const delivery=command.recipientId!==undefined ? purchasePlacement(game,owner,dock,command.item,command.recipientId) : undefined;
@@ -771,6 +788,7 @@ export function stepGame(game: Game) {
   game.unitSpatial = createSpatialIndex(game.units, 320, game.unitSpatial);
   refreshVeteranFrame(game, emptyVeteranFrame);
   syncBuildingBodies(game);
+  settleGarrisons(game);
   updateWorldEffects(game);
   updateProjectiles(game);
   updateUnitStatusEffects(game);
@@ -870,6 +888,7 @@ export function stepGame(game: Game) {
   for (const unit of game.units) if(unit.aim)invalidateMovedAim(unit, weaponRules(game, unit));
   removeExpiredUnits(game);
   removeDead(game);
+  settleGarrisons(game);
   if(settleGroundItems(game.items,game.units,game.map))refreshEquipmentMass(game);
   if (navalFrame) updateShipOwnership(game);
   syncBuildingBodies(game);
@@ -938,6 +957,7 @@ export function snapshotGame(game: Game): GameSnapshot {
       if (unit.aim) copy.aim = { ...unit.aim };
       if (unit.deck) copy.deck = { ...unit.deck };
       if (unit.cabin) copy.cabin = { ...unit.cabin };
+      if (unit.garrison) copy.garrison = { ...unit.garrison };
       if (unit.hands) copy.hands = { ...unit.hands };
       if (unit.shipParts) copy.shipParts = { ...unit.shipParts };
       if (unit.fittings) copy.fittings = unit.fittings.map(fitting => ({ ...fitting, accepts: [...fitting.accepts] }));
@@ -964,6 +984,7 @@ export function snapshotGame(game: Game): GameSnapshot {
       if (rallyTarget) copy.rallyTarget = { ...rallyTarget };
       copy.queue = building.queue.map((job) => ({ ...job }));
       copy.researchQueue = building.researchQueue.map((job) => ({ ...job }));
+      if (building.fortify) copy.fortify = { ...building.fortify };
       return copy;
     }),
     resources: game.resources.map((resource) => ({ ...resource })),
@@ -1126,6 +1147,15 @@ function updateTraining(game: Game) {
 
 function updateResearch(game: Game) {
   for (const building of game.buildings) {
+    if (building.fortify && --building.fortify.remaining <= 0) {
+      delete building.fortify;
+      building.fortified = true;
+      applyDerivedBuildingStats(game, building);
+      // The broader body stands in the way from now on: the routing takes it up, and whoever stood where it grew is
+      // set outside it as anyone in a building is (see keepUnitsOutOfBuildings).
+      delete game.buildingBodiesSeen;
+      syncBuildingBodies(game);
+    }
     if (!building.complete || building.researchQueue.length === 0) continue;
     const job = building.researchQueue[0];
     if (!job) continue;
@@ -1395,6 +1425,7 @@ function updateUnits(game: Game, defenses: ShipDefenseFrame, navalFrame: boolean
     }
     if (navalUnitFrame && isInCabin(unit)
       || (navalUnitFrame || cabinMovementFrame) && cabinCrewMovedThisTick(game,unit)) continue;
+    if (unit.garrison && !TOWER_TOP_ORDERS.has(unit.order.type)) leaveTower(game, unit, "x" in unit.order && unit.order.x !== undefined && unit.order.y !== undefined ? { x: unit.order.x, y: unit.order.y } : unit);
     if (unit.order.type === 'enterCabin') {
       if (!isStaggered(unit) && !isStunned(unit)) enterCabinStep(game,unit,statusPace(unit),other=>isStaggered(other)||isStunned(other)?0:statusPace(other));
       continue;
@@ -1458,6 +1489,9 @@ function updateUnits(game: Game, defenses: ShipDefenseFrame, navalFrame: boolean
       case "itemErrand":
         updateItemErrandOrder(game, unit);
         continue;
+      case "garrison":
+        updateGarrisonOrder(game, unit);
+        continue;
       case "board":
         updateBoardOrder(game, unit);
         (ferry ??= { boarding: [], unloading: [] }).boarding.push(unit);
@@ -1488,7 +1522,8 @@ function updateUnits(game: Game, defenses: ShipDefenseFrame, navalFrame: boolean
     }
     if(navalUnitFrame && shipProfile(unit))continue;
     if (unit.kind !== "worker") {
-      const target = nearestEnemyTarget(game, unit, unit.owner === "neutral" ? 150 : AUTO_ACQUIRE_RANGE, navalUnitFrame);
+      // A troop on a tower's top takes up only what it can strike from there (see @@@tower-garrison).
+      const target = nearestEnemyTarget(game, unit, unit.owner === "neutral" ? 150 : unit.garrison ? unit.attackRange : AUTO_ACQUIRE_RANGE, navalUnitFrame);
       if (target) unit.order = { type: "attack", targetId: target.id, leashX: unit.x, leashY: unit.y };
     }
 
@@ -1695,7 +1730,7 @@ function updateAttackOrder(game: Game, unit: Unit, navalFrame = true) {
   if (!navalFrame && isUnit(target) && (target.deck || target.cabin || isShipKind(target.kind))) navalFrame = true;
   if (navalFrame && !isObstacle(target)) target = navalCombatTarget(game, unit, target);
   // A target that is as good as dead, or out of reach from the attacker's ground (see @@@reach), gives way to the next.
-  if (projectedHpAfterPendingProjectiles(game, unit.owner, target) <= 0 || (navalFrame || game.map.terrain) && !canReach(game.map, unit, target, game.units)) {
+  if (projectedHpAfterPendingProjectiles(game, unit.owner, target) <= 0 || strikeReach(unit, target) < 0 || (navalFrame || game.map.terrain) && !canReach(game.map, unit, target, game.units)) {
     const replacement = nearestEnemyTarget(game, unit, Math.max(AUTO_ACQUIRE_RANGE, unit.attackRange), navalFrame);
     if (!replacement) {
       unit.order = { type: "idle" };
@@ -1831,6 +1866,65 @@ function updateMineOrder(game: Game, unit: Unit) {
 
 // A soldier told to board walks to its transport (see @@@transport); it goes aboard in ferryUnits. An idle transport
 // sails in to the water nearest it, so the two meet at the shore wherever each stopped.
+// What a troop does on a tower's top without coming down (see @@@tower-garrison): any other order is a walk, and takes it to
+// the tower's foot first.
+const TOWER_TOP_ORDERS = new Set<UnitOrder["type"]>(["idle", "hold", "attack", "cast", "aim"]);
+// A troop this near a tower's wall climbs on.
+const TOWER_CLIMB_GAP = 12;
+
+function updateGarrisonOrder(game: Game, unit: Unit) {
+  const order = unit.order;
+  if (order.type !== "garrison") return;
+  const tower = game.buildings.find((building) => building.id === order.buildingId);
+  if (!tower || !tower.fortified || tower.hp <= 0 || tower.owner !== unit.owner || unit.garrison) {
+    unit.order = { type: "idle" };
+    return;
+  }
+  if (distance(unit, tower) - tower.radius - unit.radius > TOWER_CLIMB_GAP) {
+    moveToward(unit, tower.x, tower.y, game.map, game.units);
+    if (walkEnded(game, unit, tower, 5) && distance(unit, tower) - tower.radius - unit.radius > TOWER_CLIMB_GAP) unit.order = { type: "idle" };
+    return;
+  }
+  unit.order = { type: "idle" };
+  if (!garrisonRoomFor(game, tower, unit)) return;
+  unit.garrison = { buildingId: tower.id };
+  unit.pushX = undefined;
+  unit.pushY = undefined;
+  invalidateSeparationFrame(game);
+  settleGarrisons(game);
+}
+
+/** Sets a troop down at its tower's foot toward a point (see @@@tower-garrison). */
+function leaveTower(game: Game, unit: Unit, toward: { x: number; y: number }) {
+  const tower = game.buildings.find((building) => building.id === unit.garrison!.buildingId);
+  delete unit.garrison;
+  invalidateSeparationFrame(game);
+  if (tower) Object.assign(unit, towerFoot(tower, unit, toward));
+}
+
+/** Stands every troop on its spot of its tower's top; a troop whose tower fell, or is no longer its owner's fortified tower,
+ * stays standing where it was, on the ground (see @@@tower-garrison). */
+function settleGarrisons(game: Game) {
+  let towers: Map<string, Unit[]> | undefined;
+  for (const unit of game.units) {
+    if (!unit.garrison) continue;
+    const tower = game.buildings.find((building) => building.id === unit.garrison!.buildingId);
+    if (!tower || tower.hp <= 0 || !tower.fortified || tower.owner !== unit.owner || unit.hp <= 0) {
+      delete unit.garrison;
+      invalidateSeparationFrame(game);
+      continue;
+    }
+    const troops = (towers ??= new Map()).get(tower.id);
+    if (troops) troops.push(unit); else towers.set(tower.id, [unit]);
+  }
+  if (!towers) return;
+  for (const [id, troops] of towers) {
+    const tower = game.buildings.find((building) => building.id === id)!;
+    troops.sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+    troops.forEach((unit, index) => Object.assign(unit, towerTopSpot(tower, index)));
+  }
+}
+
 function updateBoardShipOrder(game:Game,ship:Unit) {
   if(ship.order.type!=='boardShip')return;
   const order=ship.order;
@@ -2247,9 +2341,11 @@ function applyDerivedBuildingStats(game: Game, building: Building) {
     const multiplier = currentUpgradeLevel(game, building.owner, upgradeKind)?.buildingMaxHpMultiplier;
     if (multiplier) maxHp = Math.round(maxHp * multiplier);
   }
+  if (building.fortified) maxHp = Math.round(maxHp * TOWER_GARRISON.maxHpMultiplier);
   building.maxHp = maxHp;
   building.hp = Math.min(building.maxHp, Math.max(1, building.hp + building.maxHp - previousMaxHp));
-  building.attackDamage = def.attackDamage;
+  building.radius = building.fortified ? TOWER_GARRISON.radius : def.radius;
+  building.attackDamage = building.fortified ? 0 : def.attackDamage;
   building.attackRange = def.attackRange;
   building.attackCooldown = def.attackCooldown;
 }
@@ -2737,7 +2833,7 @@ function autocastStep(game: Game, unit: Unit) {
       if (applyBloodlust(game, unit, ability, def)) return;
     } else if (def.behavior === "web") {
       if (applyWeb(game, unit, ability, def)) return;
-    } else if (def.behavior === "charge" && unit.order.type !== "hold") {
+    } else if (def.behavior === "charge" && unit.order.type !== "hold" && !unit.garrison) {
       const target = autocastChargeTarget(game, unit, def);
       if (target) return startCharge(game, unit, ability, target, def, false);
     }
@@ -2792,6 +2888,8 @@ function setStatus(unit: Unit, status: UnitStatusEffect) {
 
 // The share of its pace a unit keeps under its statuses: none rooted or stunned, a net's share slowed.
 function statusPace(unit: Unit) {
+  // A troop on a tower's top does not walk (see @@@tower-garrison).
+  if (unit.garrison) return 0;
   if (unit.effects.length === 0) return 1;
   let pace = 1;
   for (const effect of unit.effects) {
@@ -3370,7 +3468,8 @@ function applyAttackStatusEffects(game: Game, attacker: Unit | Building, target:
     const share = Math.max(1, Math.round(attacker.attackDamage * SPLASH_SHARE));
     const burned: Unit[] = [];
     forEachNearbyUnit(game, target, SPLASH_RADIUS, (unit) => {
-      if (unit !== target && unit.hp > 0 && distance(unit, target) <= SPLASH_RADIUS && areEnemyOwners(game, attacker.owner, unit.owner)) burned.push(unit);
+      // A melee striker's fire stays on its own level, as its blow does (see strikeReach).
+      if (unit !== target && unit.hp > 0 && distance(unit, target) <= SPLASH_RADIUS && areEnemyOwners(game, attacker.owner, unit.owner) && strikeReach(attacker, unit) >= 0) burned.push(unit);
     });
     for (const unit of burned) applyDamage(game, attacker, unit, share, undefined, undefined, 0, unitAttackDamageProfile(game, attacker));
     addEffect(game, "flameBurn", target.x, target.y, 20);
@@ -3494,7 +3593,7 @@ function triggerPlayerAggro(game: Game, victim: Unit | Building, attacker: Unit 
 }
 
 function takeUpAttacker(game: Game, unit: Unit, attacker: Unit | Building, victim: Unit | Building) {
-  if (unit.hp <= 0 || unit.kind === "worker" || unit.attackDamage <= 0 || !canReach(game.map, unit, attacker, game.units)) return;
+  if (unit.hp <= 0 || unit.kind === "worker" || unit.attackDamage <= 0 || strikeReach(unit, attacker) < 0 || !canReach(game.map, unit, attacker, game.units)) return;
   const order = unit.order;
   if(shipProfile(unit) && order.type==='idle')return;
   if (order.type === "idle") {
@@ -3797,7 +3896,7 @@ function nearestEnemyTargetFromPoint(game: Game, owner: Owner, point: { x: numbe
     if(accepts && !accepts(candidate))return;
     const candidateDistance = navalFrame && isShipKind(candidate.kind) ? distanceToHull(candidate, point) ** 2 : distanceSquared(point, candidate);
     const reach = attacker ? strikeReach(attacker, candidate, range) : range;
-    if (candidateDistance > reach * reach) return;
+    if (reach < 0 || candidateDistance > reach * reach) return;
     if (attacker && !automaticCandidateReachable(game, attacker, candidate, navalFrame)) return;
     const score = targetPriorityScore(game, owner, candidate, candidateDistance, attacker);
     if (score > bestScore) {
@@ -3808,7 +3907,7 @@ function nearestEnemyTargetFromPoint(game: Game, owner: Owner, point: { x: numbe
   forEachNearbyEnemyBuilding(game, owner, point, range + MAX_BUILDING_RADIUS, (building) => {
     if(accepts && !accepts(building))return;
     const gap = targetGap(point, building);
-    if (gap > range) return;
+    if (gap > (attacker ? strikeReach(attacker, building, range) : range)) return;
     if (attacker && !automaticCandidateReachable(game, attacker, building, navalFrame)) return;
     const score = targetPriorityScore(game, owner, building, gap * gap, attacker);
     if (score > bestScore) {
@@ -4149,7 +4248,7 @@ function restsAgainstArrivedFriend(game: Game, unit: Unit, goal: { x: number; y:
 function keepUnitsOutOfBuildings(game: Game) {
   const map = game.map;
   for (const unit of game.units) {
-    if(unit.deck)continue;
+    if(unit.deck || unit.garrison)continue;
     if (unitMover(unit.kind) !== "land" || isOpenGround(map, unit.x, unit.y) || !isWalkable(map, unit.x, unit.y)) continue;
     const out = openGroundNear(map, unit);
     if (!out) continue;
@@ -4160,6 +4259,7 @@ function keepUnitsOutOfBuildings(game: Game) {
 
 function slideUnits(game: Game) {
   for (const unit of game.units) if (!isInCabin(unit) && unit.pushX !== undefined) {
+    if (unit.garrison) { unit.pushX = undefined; unit.pushY = undefined; continue; }
     if(!unit.deck){
       const from={x:unit.x,y:unit.y};slide(unit,game.map,game.units);
       const at=constrainGroundShipStep(game.map,unit,from,unit,game.units);
@@ -4236,7 +4336,7 @@ function separationMembershipMatches(game: Game, frame: SeparationFrame, cellSiz
     const unit = game.units[i]!;
     // Orders, cabin state and unit kind can change without replacing the array.
     // The native grounded frame already checked every body, including births.
-    if (navalFrame && (isInCabin(unit) || isShipKind(unit.kind)) || minerGhost(unit)) continue;
+    if (navalFrame && (isInCabin(unit) || isShipKind(unit.kind)) || minerGhost(unit) || unit.garrison) continue;
     if (frame.members[member] !== unit
       || !Object.is(frame.x[member], unit.x) && !Object.is(frame.cellX[member], Math.floor(unit.x / cellSize))
       || !Object.is(frame.y[member], unit.y) && !Object.is(frame.cellY[member], Math.floor(unit.y / cellSize))) {
@@ -4300,7 +4400,7 @@ function separateUnits(game: Game, navalFrame: boolean) {
     for (let i = sourceStart; i < game.units.length; i += 1) {
       const unit = game.units[i]!;
       // Hulls use swept navigation contact; mining workers pass through bodies.
-      if (navalFrame && (isInCabin(unit) || isShipKind(unit.kind)) || minerGhost(unit)) continue;
+      if (navalFrame && (isInCabin(unit) || isShipKind(unit.kind)) || minerGhost(unit) || unit.garrison) continue;
       insert(unit, Math.floor(unit.x / cellSize), Math.floor(unit.y / cellSize));
     }
     frame.members.length = frame.cellX.length = frame.cellY.length = frame.x.length = frame.y.length = member;

@@ -172,6 +172,8 @@ export type UnitOrder =
   | { type: "boardShip"; targetId: string }
   | { type: "unload"; x: number; y: number; avoidCombat?: boolean }
   | { type: "enterCabin"; shipId: string }
+  // Walking to an own fortified tower to stand on its top (see @@@tower-garrison).
+  | { type: "garrison"; buildingId: string }
   // Dashing at a unit (see charge): `ticks` the dash has run, `resume` the order the unit takes up once it lands.
   | { type: "charge"; targetId: string; resume: SettledUnitOrder }
   // Walking within reach of a spell's unit or point to cast it there (see @@@cast-order).
@@ -250,6 +252,8 @@ export type Unit = {
   deck?: { shipId: string; x: number; y: number } | undefined;
   /** Sheltered crew remain ordinary passengers; a breach removes protection until a clear exit opens. */
   cabin?: { shipId:string; breached?:true } | undefined;
+  /** Standing on top of a fortified tower (see @@@tower-garrison); its spot is derived from the tower and its garrison. */
+  garrison?: { buildingId: string } | undefined;
   /** Continuous heading and rates, shared by physical motion and real-time rendering. */
   sailing?: { heading: number; speed: number; load: number; balance: number;
     /** Actual signed world velocity, used to calculate apparent wind on the next tick. */
@@ -323,6 +327,10 @@ export type Building = {
   rallyTarget?: RallyTarget;
   queue: TrainingJob[];
   researchQueue: ResearchJob[];
+  /** A defense tower being fortified, ticks left (see @@@tower-garrison). */
+  fortify?: { remaining: number };
+  /** A fortified defense tower: broader, twice the health, no weapon, and units stand on its top. */
+  fortified?: true;
 };
 
 export type TrainingJob = {
@@ -603,6 +611,9 @@ export type GameCommand =
   | { type: "setRally"; buildingIds: string[]; x: number; y: number; target?: RallyTarget }
   | { type: "train"; buildingId: string; unitKind: TrainableUnitKind }
   | { type: "research"; buildingId: string; upgradeKind: UpgradeKind }
+  | { type: "fortifyTower"; buildingId: string }
+  | { type: "garrison"; unitIds: string[]; buildingId: string; queued?: boolean }
+  | { type: "ungarrison"; buildingId: string }
   | { type: "hire"; campId: string }
   | { type: "buyShipEquipment"; buildingId:string; item:ShipEquipmentKind; recipientId?:string }
   | { type: "buy"; shopId: string; item: ItemKind; recipientId?:string }
