@@ -1,6 +1,7 @@
 import { detCos, detSin } from "./det-math";
 import { hypot2 } from "./hypot";
 import { shipProfile, type Point } from "./ship-geometry";
+import { RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
 import type { Building, Obstacle, Unit } from "./types";
 
 export type StrikeTarget = Unit | Building | Obstacle | Point;
@@ -52,6 +53,18 @@ export function strikeGap(from: Point, target: StrikeTarget) {
   const point = strikePoint(from, target);
   return Math.hypot(point.x - from.x, point.y - from.y);
 }
+// @@@contact-reach - A melee blow lands on any unit its striker stands pressed against, as in Warcraft III, where melee
+// range is counted between the two bodies' edges. Range here counts between centers (troops are aimed at their centers),
+// and bodies never overlap, so a short reach could never touch a broad body: a worker (reach 36, body 15) pushed an
+// ogre (body 22) across the map without one blow. A melee striker (a reach the sim does not aim: see
+// RANGED_ATTACK_RANGE_THRESHOLD) reaches a unit at least as far as their two bodies touching, and a little more; aimed
+// weapons, buildings and hulls keep their reach. Every range test of a strike reads this.
+export const CONTACT_SLACK = 4;
+export function strikeReach(attacker: { radius: number; attackRange: number }, target: StrikeTarget, range = attacker.attackRange) {
+  if (range > RANGED_ATTACK_RANGE_THRESHOLD || !("order" in target) || shipProfile(target)) return range;
+  return Math.max(range, attacker.radius + target.radius + CONTACT_SLACK);
+}
+
 /** Blast overlap uses the whole body, while troops aim at another troop's center. */
 export function bodyGap(from:Point,target:Unit|Building|Obstacle) {
   return 'order' in target && !shipProfile(target) ? Math.max(0,Math.hypot(from.x-target.x,from.y-target.y)-target.radius) : strikeGap(from,target);

@@ -16,7 +16,7 @@ import { unitNeedsRepair, unitRepairHpPerGold } from './unit-repair';
 import { innateMissile, type AttackKind } from "./attack-presentation";
 import { invalidateItemIndex } from "./item-index";
 import { settleGroundItems } from './item-surfaces';
-import { strikePoint, strikeGap, bodyGap } from "./combat-geometry";
+import { strikePoint, strikeGap, bodyGap, strikeReach, CONTACT_SLACK } from "./combat-geometry";
 import { purchasePlacement, type PurchasePlacement } from "./purchase";
 import { SHIP_WEAPONS, PREVIOUS_SHIP_TRAIN_COST, damageShipParts, initializeShipEquipment, installedWeapons, isShipEquipment, mountedWeaponPose, mountedTargetPoint, mountedFireLaneClear, rebuildShipFittings, repairShipParts, shipPartMax, shipGunCanAim, shipMounts, bestFiringHeading, type MountedShotClear } from "./ship-equipment";
 import { ITEM_DEFS, ITEM_TRANSFER_REACH, activeItem, canEquip, dropRefusal, freeItemSlot, giveRefusal, itemEquipped, type ItemDestination, normalizeEquipment, removeFromHands, transferRefusal, weaponRules, wieldRefusal, itemHands, unitItemMass, shipItemMass, itemsFor } from "./equipment";
@@ -1476,7 +1476,7 @@ function updateUnits(game: Game, defenses: ShipDefenseFrame, navalFrame: boolean
       if(defense?.target){
         const target=navalCombatTarget(game,unit,defense.target);
         navigateShipAttack(game,unit,target);
-        if(unitRules(game,unit).intrinsicAttack && unit.cooldown===0 && targetGap(unit,target)<=unit.attackRange
+        if(unitRules(game,unit).intrinsicAttack && unit.cooldown===0 && targetGap(unit,target)<=strikeReach(unit,target)
           && aimAt(unit,weaponRules(game,unit),strikePoint(unit,target),game.tick,veteranAimSpeed(game,unit))){
           applyWeaponAttack(game,unit,target,Math.max(1,Math.round(unit.attackDamage*outgoingDamageMultiplier(game,unit))),unit.attackRange);
           markAimShot(unit);unit.cooldown=attackCooldownOf(game,unit);
@@ -1672,7 +1672,7 @@ function attackMoveTowardTarget(game: Game, unit: Unit, target: Unit | Building,
   const ship = navalFrame && Boolean(shipProfile(unit));
   if (ship) navigateShipAttack(game, unit, target);
   else if (backOutOfDeadZone(game, unit, target, false)) return;
-  if (gap > unit.attackRange) {
+  if (gap > strikeReach(unit, target)) {
     if (!ship) moveToward(unit, target.x, target.y, game.map, game.units, navalFrame);
     return;
   }
@@ -1714,7 +1714,7 @@ function updateAttackOrder(game: Game, unit: Unit, navalFrame = true) {
   const gap = targetGap(unit, target, navalFrame);
   const ship = navalFrame && Boolean(shipProfile(unit));
   if (!ship && backOutOfDeadZone(game, unit, target, false)) return;
-  if (gap > unit.attackRange) {
+  if (gap > strikeReach(unit, target)) {
     if (isPlayerId(unit.owner) && order.leashX !== undefined && order.leashY !== undefined && distance(unit, { x: order.leashX, y: order.leashY }) > GUARD_LEASH_RANGE) {
       unit.order = { type: "move", x: order.leashX, y: order.leashY };
       return;
@@ -2678,7 +2678,7 @@ function updateChargeOrder(game: Game, unit: Unit) {
     endCharge(unit, order.resume);
     return;
   }
-  if (distance(unit, target) <= unit.attackRange) {
+  if (distance(unit, target) <= strikeReach(unit, target)) {
     // The impact is a blow of the rider's weapon: like every strike it waits on the weapon's one clock.
     if (unit.cooldown > 0) return;
     const damage = Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(game, unit) * def.damageMultiplier));
@@ -3784,18 +3784,20 @@ function targetGap(from: { x: number; y: number }, target: Unit | Building | Obs
 }
 
 function nearestEnemyTargetFromPoint(game: Game, owner: Owner, point: { x: number; y: number }, range: number, attacker?: Unit, accepts?: (target:Unit|Building)=>boolean, navalFrame = true): Unit | Building | undefined {
-  const limit = range * range;
   let best: Unit | Building | undefined;
   let bestScore = Number.NEGATIVE_INFINITY;
+  // A melee striker reaches a unit its body touches (see @@@contact-reach): the search reaches as far as the broadest.
+  const contact = attacker && range <= RANGED_ATTACK_RANGE_THRESHOLD ? attacker.radius + MAX_UNIT_RADIUS + CONTACT_SLACK : 0;
   // Only the native frame certificate supplies false. Births, cabins, hulls,
   // observers and custom factories retain the complete target rules.
-  forEachNearbyEnemyUnit(game, owner, point, range + (navalFrame ? game.shipReachPadding ?? shipReachPadding(game.units) : 0), (candidate) => {
+  forEachNearbyEnemyUnit(game, owner, point, Math.max(range, contact) + (navalFrame ? game.shipReachPadding ?? shipReachPadding(game.units) : 0), (candidate) => {
     if (navalFrame && isInCabin(candidate)) return;
     if(navalFrame && !automaticTargetAllowed(game.units,owner,candidate))return;
     if (navalFrame && shipProfile(candidate) && shipPassengers(game.units, candidate).some(unit => unit.hp > 0 && !isInCabin(unit) && (!attacker || canReach(game.map, attacker, unit, game.units)))) return;
     if(accepts && !accepts(candidate))return;
     const candidateDistance = navalFrame && isShipKind(candidate.kind) ? distanceToHull(candidate, point) ** 2 : distanceSquared(point, candidate);
-    if (candidateDistance > limit) return;
+    const reach = attacker ? strikeReach(attacker, candidate, range) : range;
+    if (candidateDistance > reach * reach) return;
     if (attacker && !automaticCandidateReachable(game, attacker, candidate, navalFrame)) return;
     const score = targetPriorityScore(game, owner, candidate, candidateDistance, attacker);
     if (score > bestScore) {

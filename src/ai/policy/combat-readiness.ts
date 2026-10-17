@@ -1,4 +1,5 @@
 import { UNIT_DEFS, unitMover } from "../../shared/catalog";
+import { strikeReach } from "../../shared/combat-geometry";
 import { canReach } from "../../shared/naval";
 import { canTakeStance } from "../../shared/push";
 import type { GameCommand, GameSnapshot, MeleeStance, PlayerId } from "../../shared/types";
@@ -82,10 +83,10 @@ function computeReadinessPlan(snapshot: GameSnapshot, owner: PlayerId, options: 
     }
     if (!(SHOOTER_UNIT_KINDS.has(unit.kind) || UNIT_DEFS[unit.kind].weapon) || unit.attackRange <= 100 || unit.hp < unit.maxHp * .6) continue;
     if (!general?.target || !["guard", "hold", "defend"].includes(general.mode) || distance(unit, general.target) > 200) continue;
-    if (!["idle", "hold", "aim"].includes(unit.order.type) || nearby.some(enemy => distance(unit, enemy) <= unit.attackRange)) continue;
+    if (!["idle", "hold", "aim"].includes(unit.order.type) || nearby.some(enemy => distance(unit, enemy) <= strikeReach(unit, enemy))) continue;
     const approaching = foes.filter(enemy => {
       const gap = distance(unit, enemy);
-      return gap > unit.attackRange && gap <= Math.min(900, unit.attackRange + enemy.speed * 4) && canReach(snapshot.map, unit, enemy);
+      return gap > strikeReach(unit, enemy) && gap <= Math.min(900, unit.attackRange + enemy.speed * 4) && canReach(snapshot.map, unit, enemy);
     }).sort((a, b) => distance(unit, a) - distance(unit, b))[0];
     if (!approaching) continue;
     const gap = distance(unit, approaching);

@@ -1,4 +1,4 @@
-import { strikeGap } from '../../shared/combat-geometry';
+import { strikeGap, strikeReach } from '../../shared/combat-geometry';
 import { abilityCooldown } from '../../shared/ability-cooldowns';
 import { resolveUnitDamage, unitAttackDamageProfile } from '../../shared/damage';
 import { routeArrivals } from '../../shared/route-selection';
@@ -16,7 +16,7 @@ export function summonedMiningRaids(snapshot: GameSnapshot, owner: PlayerId, opt
   const casters = snapshot.units.filter(unit => unit.owner === owner && SUMMONING_UNIT_KINDS.has(unit.kind) && !unit.deck);
   const attackers = snapshot.units.filter(unit => unit.kind !== 'worker' && unit.attackDamage > 0
     && isOpponentOwner(snapshot, owner, unit.owner, options));
-  if (casters.some(caster => attackers.some(foe => strikeGap(foe, caster) <= foe.attackRange)
+  if (casters.some(caster => attackers.some(foe => strikeGap(foe, caster) <= strikeReach(foe, caster))
     || routeArrivals(snapshot.map, attackers, caster, 'land').some(({ ticks }) => ticks <= abilityCooldown(caster, 'summon')))) return [];
   const workers = snapshot.units.filter(unit => unit.kind === 'worker' && !unit.deck
     && isOpponentOwner(snapshot, owner, unit.owner, options) && ['mine', 'idle'].includes(unit.order.type));
@@ -31,7 +31,7 @@ export function summonedMiningRaids(snapshot: GameSnapshot, owner: PlayerId, opt
       const damage = resolveUnitDamage(snapshot, worker, spirit.attackDamage, unitAttackDamageProfile(snapshot, spirit)).damage;
       if (!road || damage === 0 || snapshot.tick + road.ticks
         + Math.ceil(worker.hp / damage) * spirit.attackCooldown >= spirit.expiresTick!) return [];
-      if (strikeGap({ ...spirit, ...road.points[road.points.length - 1]! }, worker) > spirit.attackRange) return [];
+      if (strikeGap({ ...spirit, ...road.points[road.points.length - 1]! }, worker) > strikeReach(spirit, worker)) return [];
       return [{ worker, travel: road.ticks }];
     }).sort((a, b) => a.travel - b.travel)[0];
     if (target && towers.every(tower => strikeGap(tower, target.worker) > tower.attackRange + spirit.radius))
