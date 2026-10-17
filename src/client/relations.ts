@@ -5,6 +5,8 @@ import { distanceToHull, isShipKind } from "../shared/ship-geometry";
 import { UNIT_DEFS } from "../shared/catalog";
 import { deckVisualHeight } from "./art/canvas-ships";
 import { unitGlyphScale } from "./glyphs";
+import { towerTopLift } from "./tower-presentation";
+import { canStandOnTower } from "../shared/tower-garrison";
 import { circleInPolygon, worldToLocal, shipProfile } from "../shared/ship-geometry";
 import { areEnemyOwners } from "../shared/sim/command-validation";
 import type { Building, GameCommand, GameSnapshot, Obstacle, Owner, PlayerId, ResourceNode, Unit, WorldItem } from "../shared/types";
@@ -37,10 +39,11 @@ const near = (a: Point, b: Point, reach: number) => Math.hypot(a.x - b.x, a.y - 
 const UNIT_REACH = 34;
 const buildingReach = (building: Building) => (building.kind === "townHall" ? 58 : 46);
 
-/** Match the rendered feet on a raised deck, rather than the hidden hull plane. */
-export function unitPointerPosition(units: readonly Unit[], unit: Unit, modeled = false): Point {
+/** Match the rendered feet on a raised deck or a tower's top, rather than the hidden plane under them. */
+export function unitPointerPosition(units: readonly Unit[], unit: Unit, modeled = false, buildings: readonly Building[] = []): Point {
   const ship = unit.deck && units.find(candidate => candidate.id === unit.deck!.shipId);
-  return { x: unit.x, y: unit.y - (ship ? deckVisualHeight(ship) + 18 * unitGlyphScale(unit.radius) * (modeled && !unit.variant ? .8 : 1) : 0) };
+  const lift = ship ? deckVisualHeight(ship) : towerTopLift(buildings, unit);
+  return { x: unit.x, y: unit.y - (lift ? lift + 18 * unitGlyphScale(unit.radius) * (modeled && !unit.variant ? .8 : 1) : 0) };
 }
 
 export function deckMovePoint(units: readonly Unit[], selected: readonly Unit[], point: Point): Point {
@@ -75,7 +78,7 @@ export function pointerTarget(snapshot: Pick<GameSnapshot, "items" | "resources"
   };
   for (const item of snapshot.items) if (!item.carrierId && !item.shipId) {const ship=item.deck && snapshot.units.find(ship=>ship.id===item.deck!.shipId);consider({x:item.x,y:item.y-(ship?deckVisualHeight(ship):0)}, 34, { kind: "item", item });}
   for (const resource of snapshot.resources) consider(resource, GOLD_MINE_RULES.radius, { kind: "resource", resource });
-  for (const unit of snapshot.units) if (!isInCabin(unit) && !isShipKind(unit.kind)) consider(unitPointerPosition(snapshot.units, unit), UNIT_REACH, { kind: "unit", unit });
+  for (const unit of snapshot.units) if (!isInCabin(unit) && !isShipKind(unit.kind)) consider(unitPointerPosition(snapshot.units, unit, false, snapshot.buildings), UNIT_REACH, { kind: "unit", unit });
   if (nearest?.target.kind !== "unit") for (const unit of snapshot.units) if (isShipKind(unit.kind) && (distanceToHull(unit, world) < 8 || distanceToHull(unit,{x:world.x,y:world.y+deckVisualHeight(unit)}) < 8)) consider(unit, Infinity, { kind: "unit", unit });
   for (const building of snapshot.buildings) consider(building, buildingReach(building), { kind: "building", building });
   for (const obstacle of snapshot.obstacles ?? []) consider(obstacle, obstacle.radius + 8, { kind: "obstacle", obstacle });
@@ -84,7 +87,7 @@ export function pointerTarget(snapshot: Pick<GameSnapshot, "items" | "resources"
 
 // @@@context-target - What a right-click on what the pointer is on (see @@@pointer-target) orders the selected units, as
 // in Warcraft III: workers mine a mine and repair own damaged buildings or mechanical units; soldiers board an own transport (see
-// @@@transport); an enemy's or the creeps' unit or building, or rocks or a gate, is attacked; an ally's unit is followed
+// @@@transport) and climb onto an own fortified tower (see @@@tower-garrison); an enemy's or the creeps' unit or building, or rocks or a gate, is attacked; an ally's unit is followed
 // (see @@@follow). Anything else (an own unit or building, an ally's building, a mine for soldiers) is a move there.
 export function targetCommand(
   snapshot: Pick<GameSnapshot, "teams"> & Partial<Pick<GameSnapshot,"items" | "variants">>,
@@ -109,7 +112,10 @@ export function targetCommand(
   if (relation === "enemy" || relation === "creep") return { type: "attack", unitIds: ids(selected), targetId: thing.id, queued };
   if (target.kind === "building") {
     const damaged = relation === "own" && target.building.hp < target.building.maxHp;
-    return damaged && workers.length > 0 ? { type: "repair", unitIds: ids(workers), buildingId: target.building.id, queued } : undefined;
+    if (damaged && workers.length > 0) return { type: "repair", unitIds: ids(workers), buildingId: target.building.id, queued };
+    // An own fortified tower takes up the troops that can stand on its top (see @@@tower-garrison).
+    const climbers = relation === "own" && target.building.fortified ? selected.filter(unit => canStandOnTower(unit) && unit.garrison?.buildingId !== target.building.id) : [];
+    return climbers.length ? { type: "garrison", unitIds: ids(climbers), buildingId: target.building.id, queued } : undefined;
   }
   if (relation === "ally") return { type: "follow", unitIds: ids(selected), targetId: thing.id, queued };
   if (isShipKind(target.unit.kind) && selected.length && selected.every(unit => unit.deck?.shipId === target.unit.id)) return undefined;

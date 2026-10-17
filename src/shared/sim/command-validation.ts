@@ -23,6 +23,7 @@ import { ownUnitLookup } from "../unit-lookup";
 import { purchasePlacement } from "../purchase";
 import { isStunned, unitAbilities } from "../unit-abilities";
 import { canEnterCabin, isInCabin, cabinExitPoint } from '../ship-cabin';
+import { TOWER_GARRISON, canFortify, fortifiedSite, canStandOnTower, garrisonSupply, garrisonUsed, towerGarrison } from "../tower-garrison";
 
 // @@@command-refusal - Why an order the player may give is refused right now, in the player's terms: the command card
 // greys a button with exactly this (see legalityCommandState), so the card and the sim cannot disagree on what an order
@@ -222,6 +223,23 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     if (!item) return commandError(`Unknown item ${command.itemId}`, true);
     return item.carrierId === command.unitId ? undefined : commandError(`${command.unitId} is not carrying ${item.id}`, true);
   }
+  if (command.type === "fortifyTower" || command.type === "garrison" || command.type === "ungarrison") {
+    const tower = snapshot.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner);
+    if (!tower || tower.kind !== "defenseTower") return commandError(`Unknown ${owner} defense tower ${command.buildingId}`, true);
+    if (command.type === "fortifyTower") {
+      if (tower.fortified || tower.fortify) return commandError("Tower is already fortified", true);
+      if (!canFortify(tower)) return commandError("Cannot fortify an incomplete tower");
+      if (!fortifiedSite(snapshot, tower)) return refusal("No room round the tower to broaden it", "position");
+      return goldRefusal(snapshot, owner, TOWER_GARRISON.cost);
+    }
+    if (!tower.fortified) return commandError("Only a fortified tower holds troops", true);
+    if (command.type === "ungarrison") return towerGarrison(snapshot.units, tower).length ? undefined : commandError("No troops on this tower", true);
+    const missing = missingUnitError(snapshot, owner, command.unitIds);
+    if (missing) return missing;
+    const troops = snapshot.units.filter((unit) => command.unitIds.includes(unit.id) && unit.owner === owner && canStandOnTower(unit) && unit.garrison?.buildingId !== tower.id);
+    if (!troops.length) return commandError("No troops that can stand on this tower", true);
+    return troops.some((unit) => garrisonUsed(snapshot, tower) + garrisonSupply(snapshot, unit) <= TOWER_GARRISON.supply) ? undefined : refusal("The tower's top is full", "position");
+  }
   return command satisfies never;
 }
 
@@ -337,6 +355,11 @@ export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, co
   if(command.type === "wieldItem")return hasCurrentUnit(game,owner,command.unitId) ? command : undefined;
   if (command.type === "hire" || command.type === "buy" || command.type==="buyShipEquipment") {
     return command;
+  }
+  if (command.type === "fortifyTower" || command.type === "ungarrison") return currentBuilding(game, owner, command.buildingId) ? command : undefined;
+  if (command.type === "garrison") {
+    const unitIds = currentUnitIds(game, owner, command.unitIds);
+    return unitIds.length && currentBuilding(game, owner, command.buildingId) ? { ...command, unitIds } : undefined;
   }
   return command satisfies never;
 }

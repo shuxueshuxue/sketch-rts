@@ -56,7 +56,7 @@ function thin(geometry:THREE.BufferGeometry){
 }
 export type BatchAnimation=ReadonlyMap<string,{matrix?:THREE.Matrix4;morph?:readonly number[]}>;
 type Part={name:string;geometry:THREE.BufferGeometry;material:THREE.Material|THREE.Material[];local:THREE.Matrix4;morph:readonly number[];rig:boolean};
-type Batch={inked:boolean;hulls:THREE.InstancedMesh[];parts:Part[];meshes:THREE.InstancedMesh[];matrices:THREE.Matrix4[];animations:(BatchAnimation|undefined)[];ids:string[];capacity:number;last:number};
+type Batch={inked:boolean;outlined:boolean;hulls:THREE.InstancedMesh[];parts:Part[];meshes:THREE.InstancedMesh[];matrices:THREE.Matrix4[];animations:(BatchAnimation|undefined)[];ids:string[];capacity:number;last:number};
 
 /** Three's default instanced raycast does not read the per-instance morph texture.
  * This scratch mesh shares the model's buffers, but owns its animated bounds. */
@@ -173,9 +173,9 @@ export class ActorBatches {
     }
     return view;
   }
-  private material(source:THREE.Material,color:string|undefined,constructing:boolean,revealDeck:boolean,inked:boolean){
-    const team=source.name==='TeamColor',cloth=revealDeck&&source.name.startsWith('unbleached sail'),roof=inked&&ROOFS.has(source.name);
-    const key=`${source.uuid}:${team||roof?color??'':''}:${constructing}:${cloth}:${inked}`;
+  private material(source:THREE.Material,color:string|undefined,constructing:boolean,revealDeck:boolean,inked:boolean,openRoof:boolean){
+    const team=source.name==='TeamColor',cloth=revealDeck&&source.name.startsWith('unbleached sail'),roof=inked&&ROOFS.has(source.name),open=openRoof&&ROOFS.has(source.name);
+    const key=`${source.uuid}:${team||roof?color??'':''}:${constructing}:${cloth}:${inked}:${open}`;
     let material=this.materials.get(key);
     if(material)return material;
     material=source.clone();
@@ -197,20 +197,23 @@ export class ActorBatches {
     // Cloth alone becomes translucent. The hull still occludes, collides
     // and casts shadows normally; selection never mutates shared assets.
     if(cloth){material.transparent=true;material.opacity=.22;material.depthWrite=false;}
+    // A fortified tower's roof, while troops stand under it (see @@@tower-top).
+    if(open){material.transparent=true;material.opacity=.22;material.depthWrite=false;}
     this.materials.set(key,material);return material;
   }
-  add(key:string,template:THREE.Object3D,matrix:THREE.Matrix4,id:string,color?:string,constructing=false,revealDeck=false,animation?:BatchAnimation){
+  add(key:string,template:THREE.Object3D,matrix:THREE.Matrix4,id:string,color?:string,constructing=false,revealDeck=false,animation?:BatchAnimation,openRoof=false){
     let batch=this.batches.get(key);
     if(!batch){
       // A finished building, a ship's hull and its guns are drawn inked (see @@@model-ink); a site going up and a broken gun keep
       // their own looks.
       const inked=INKED.has(template.name)&&!constructing,parts:Part[]=[];template.updateMatrixWorld(true);
       template.traverse(object=>{if(!(object instanceof THREE.Mesh))return;
-        const map=(source:THREE.Material)=>this.material(source,color,constructing,revealDeck,inked);
+        const map=(source:THREE.Material)=>this.material(source,color,constructing,revealDeck,inked,openRoof);
         const geometry=this.geometry(object.geometry),morphCount=Object.values(geometry.morphAttributes)[0]?.length??0;
         parts.push({name:object.name,geometry,material:Array.isArray(object.material)?object.material.map(map):map(object.material),local:object.matrixWorld.clone(),morph:Array.from({length:morphCount},(_,i)=>object.morphTargetInfluences?.[i]??0),rig:underRig(object)});
       });
-      batch={inked,hulls:[],parts,meshes:[],matrices:[],animations:[],ids:[],capacity:0,last:this.frame};this.batches.set(key,batch);
+      // The ink outline is drawn from the mesh's back: under a see-through roof it would show as a dark roof.
+      batch={inked,outlined:inked&&!openRoof,hulls:[],parts,meshes:[],matrices:[],animations:[],ids:[],capacity:0,last:this.frame};this.batches.set(key,batch);
     }
     batch.matrices.push(matrix);batch.animations.push(animation);batch.ids.push(id);batch.last=this.frame;
   }
@@ -224,7 +227,7 @@ export class ActorBatches {
       if(batch.matrices.length>batch.capacity){
         for(const mesh of [...batch.meshes,...batch.hulls]){this.scene.remove(mesh);mesh.dispose();}
         batch.capacity=2**Math.ceil(Math.log2(Math.max(1,batch.matrices.length)));
-        batch.hulls=batch.inked?batch.parts.filter(part=>!part.morph.length&&!part.rig&&!thin(part.geometry)).map(part=>{
+        batch.hulls=batch.outlined?batch.parts.filter(part=>!part.morph.length&&!part.rig&&!thin(part.geometry)).map(part=>{
           const hull=new THREE.InstancedMesh(hullGeometry(part.geometry),INK_HULL,batch!.capacity);hull.name=part.name;hull.userData.local=part.local;
           hull.instanceMatrix.setUsage(THREE.DynamicDrawUsage);this.scene.add(hull);return hull;
         }):[];

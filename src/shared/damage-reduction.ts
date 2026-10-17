@@ -10,6 +10,8 @@ export const DAMAGE_REDUCTION_RULES = {
   passive: { stacking: "highest", cap: 1 },
   aura: { stacking: "highest", cap: 1 },
   ward: { stacking: "highest", cap: 1 },
+  // A fortified tower's top (see @@@tower-garrison).
+  cover: { stacking: "highest", cap: 1 },
 } as const;
 
 export type DamageReductionGroup = keyof typeof DAMAGE_REDUCTION_RULES;
@@ -67,7 +69,7 @@ export function resolveDamage(damage: number, options: {
   vulnerability = Math.max(0, vulnerability);
   let multiplier = vulnerability;
   let taken = Number.isFinite(damage) ? Math.max(0, damage) : 0;
-  const combined: Record<DamageReductionGroup, number> = { armor: 0, equipment: 0, passive: 0, aura: 0, ward: 0 };
+  const combined: Record<DamageReductionGroup, number> = { armor: 0, equipment: 0, passive: 0, aura: 0, ward: 0, cover: 0 };
   for (const source of sources) if (matchesDamageProfile(options.profile, source.filter)) {
     combined[source.group] = stackReduction(source.group, combined[source.group], source.amount);
   }

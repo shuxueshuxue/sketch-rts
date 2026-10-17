@@ -35,6 +35,8 @@ import { shipProfile,shareShipProfile,shipScale,localToWorld,SHIP_CAMERA } from 
 import { isInCabin } from '../../shared/ship-cabin';
 import { gangwaySurface, type GangwaySurface } from '../../shared/ship-gangway';
 import { gangwayCrewVisualPose } from '../ship-gangway-visual';
+import { TOWER_MODEL_HEIGHT, TOWER_TOP_Z } from '../art/building-models';
+import { towerRoofOpen } from '../tower-presentation';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { ResourcePhase } from '../resources';
 import type { GameSnapshot,Owner,Unit } from '../../shared/types';
@@ -365,6 +367,7 @@ export class World3DLayer {
         this.batches.add(`site:${site.model}`,model,this.pose(site.x,site.y,0,0,site.scale),site.id,'#a79b7f');
       }
     }
+    const towerTops=new Map<string,number>();
     for(const building of snapshot.buildings){
       const modelKey=`buildings/${frame.buildingModels?.[building.id]??building.kind}`,model=this.template(modelKey,'Building');if(!model)continue;
       let bounds=this.bounds.get(modelKey);if(!bounds){bounds=new THREE.Box3().setFromObject(model);this.bounds.set(modelKey,bounds);}
@@ -375,7 +378,9 @@ export class World3DLayer {
       if(!visible(building.x,building.y,height*TILT+180))continue;
       const selected=frame.selectedIds?.has(building.id)??false;
       if(building.hp>0 && (selected || frame.hoveredId===building.id))this.foundationMarker(frame,building,this.markerInk(frame,building.owner),selected);
-      this.batches.add(`building:${modelKey}:${ownerInk(building.owner, snapshot)}:${building.complete}`,model,this.pose(building.x,building.y,-bounds.min.y*scale*rise,0,scale).multiply(riseMatrix(rise)),building.id,ownerInk(building.owner, snapshot),!building.complete);
+      if(building.fortified)towerTops.set(building.id,height*TOWER_TOP_Z/TOWER_MODEL_HEIGHT);
+      const openRoof=towerRoofOpen(snapshot.units,building);
+      this.batches.add(`building:${modelKey}:${ownerInk(building.owner, snapshot)}:${building.complete}:${openRoof}`,model,this.pose(building.x,building.y,-bounds.min.y*scale*rise,0,scale).multiply(riseMatrix(rise)),building.id,ownerInk(building.owner, snapshot),!building.complete,false,undefined,openRoof);
     }
     const revealedShips=new Set<string>();
     for(const id of frame.selectedIds??[]){const unit=entities.get(id);if(!unit||!('order' in unit))continue;if(unit.deck)revealedShips.add(unit.deck.shipId);else if(ships.has(unit.id))revealedShips.add(unit.id);}
@@ -444,7 +449,7 @@ export class World3DLayer {
         else{const deck=this.deckPosition(unit,now),c=Math.cos(heading),s=Math.sin(heading);at={x:parent.x+deck.x*c-deck.y*s,y:parent.y+deck.x*s+deck.y*c};height=shipProfile(ship)!.deckHeight;}
         const id=interactionTargetId(unit.order),aiming=unit.aim&&['attack','attackMove','hold','aim','cast'].includes(unit.order.type);
         facing=this.facing.facing(unit,heading,right,aiming?unit.aim:id?entities.get(id):undefined);
-      }
+      }else if(unit.garrison)height=towerTops.get(unit.garrison.buildingId)??0;
       const model=unit.variant===undefined?undefined:frame.models?.(unit.variant);
       let rawAnimation:UnitAnimationFrame|undefined;
       if(unit.deck){

@@ -72,6 +72,10 @@ class Construction {
     for(const z of [3,6])this.box(x,y,z,w,1,1,WOOD);
   }
 }
+// @@@tower-top - A defense tower's platform stands TOWER_TOP_Z up a model TOWER_MODEL_HEIGHT tall (see 'defenseTower'
+// below): troops on a fortified tower's top are drawn standing there, and its slate cap is the roof drawn see-through
+// while they do (see @@@tower-garrison).
+export const TOWER_TOP_Z=32, TOWER_MODEL_HEIGHT=55, TOWER_ROOF=SLATE;
 const BASALT='#898b7c', COPPER='#b3825d', BRASS='#d2b779';
 export type { SiteModelKind } from './model-manifest';
 import type { SiteModelKind } from './model-manifest';
@@ -298,7 +302,7 @@ function build(kind:BuildingKind | SiteModelKind,team:string):Construction{
 }
 export function buildingGeometry(kind:BuildingKind | SiteModelKind,team="#ff00ff"){return build(kind,team).faces;}
 
-export function paintBuildingModel(b:Brush,kind:BuildingKind | SiteModelKind,team:string){
+export function paintBuildingModel(b:Brush,kind:BuildingKind | SiteModelKind,team:string,openRoof=false){
   const m=build(kind,team);
   m.faces=m.faces.filter(f=>f.normal[0]*.57+f.normal[1]*.82+f.normal[2]*.8>-.01);
   b.save();b.lineJoin='round';
@@ -327,7 +331,11 @@ export function paintBuildingModel(b:Brush,kind:BuildingKind | SiteModelKind,tea
     // ambient fill. Geometry and texture density are unchanged.
     const light=.66+Math.max(0,-f.normal[0]*.35+f.normal[1]*.45+f.normal[2]*.82)*.39;
     const fill=tint(f.color,light);
+    const ghost=openRoof&&f.color===TOWER_ROOF;
+    const alpha=b.globalAlpha;
+    if(ghost)b.globalAlpha=alpha*.22;
     polygon(b,p,fill,darker(f.color,.18),.38);
+    if(ghost){b.globalAlpha=alpha;continue;}
     // Narrow highlights on dressed edges; broad stone/wood faces remain matte.
     if (light > 1 && (f.color === IRON || f.color === SLATE || f.color === CUT)) {
       let edge = 0;
