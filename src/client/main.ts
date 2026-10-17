@@ -92,7 +92,7 @@ import { roomSetupViewAction } from "./room-view-state";
 import { UnitFacingTracker } from "./unit-facing";
 import { UnitMotionSmoother } from "./unit-motion";
 import { UnitAnimationTracker } from "./unit-animation";
-import { abilityTooltip, buildingTooltip, formatTooltipDataset, itemTooltip, unitSelectionTooltip, unitTooltip, upgradeTooltip, veteranSkillTooltip, withTooltipRequirement, type GameplayTooltip } from "./tooltips";
+import { abilityTooltip, buildingTooltip, campDetail, formatTooltipDataset, itemTooltip, mercenaryHireTooltip, unitSelectionTooltip, unitTooltip, upgradeTooltip, veteranSkillTooltip, withTooltipRequirement, type GameplayTooltip } from "./tooltips";
 import { canLearnVeteranSkill, learnVeteranSkillCommand, nextVeteranStudent, veteranPeers, veteranStudent } from "./veteran-controls";
 import { VETERAN_SKILLS } from "../shared/veteran-skills";
 import { trainingProgressButtonsForSelection, trainingProgressText, type TrainingProgressButton } from "./training-queue";
@@ -407,18 +407,15 @@ const commandButtons: CommandButton[] = [
       return {
         ...tooltip,
         title: t("command.buy.title", { item: tooltip.title }),
-        stats: [t("command.buy.cost", { cost: good.cost }), t("command.buy.stock", { stock: good.maxStock, seconds: good.restock / 20 }), ...tooltip.stats],
+        stats: [t("command.buy.cost", { cost: good.cost }), t("command.buy.stock", { stock: good.maxStock, seconds: good.restock / SIM_TICKS_PER_SECOND }), ...tooltip.stats],
         requirements: [purchaseProblem(good.kind)??purchaseRecipientCaption()],
       };
     }, { type: "item", kind: good.kind }),
   ),
-  createCommandButton(t("command.hire.title"), HIRE_COMMAND.icon, HIRE_COMMAND.hotkey, hireMercenaryButtonState, hireMercenary, () => ({
-    title: t("command.hire.title"),
-    body: t("command.hire.body"),
-    stats: [t("command.hire.stock"), t("command.hire.instant")],
-    requirements: [t("command.hire.requirements")],
-    hotkey: HIRE_COMMAND.hotkey.toUpperCase(),
-  })),
+  createCommandButton(t("command.hire.title"), HIRE_COMMAND.icon, HIRE_COMMAND.hotkey, hireMercenaryButtonState, hireMercenary, () => {
+    const camp = selectedMercenaryCamp();
+    return camp ? mercenaryHireTooltip(camp, HIRE_COMMAND.hotkey, i18n) : { title: t("command.hire.title"), body: "", stats: [], requirements: [], hotkey: HIRE_COMMAND.hotkey.toUpperCase() };
+  }),
   createCommandButton(t("common.back"), "←", "escape", () => booleanCommandState(!commandMode && Boolean(openPalette)), closeCommandPalette, () => ({
     title: t("common.back"), body: t("command.back.body"), stats: [], requirements: [], hotkey: "Esc",
   })),
@@ -760,7 +757,7 @@ function commandButtonTooltip(tooltip: GameplayTooltip, state: CommandButtonStat
 }
 
 function commandButtonStateLabel(state: CommandButtonState) {
-  if (state.cooldownTicks !== undefined) return `${Math.ceil(state.cooldownTicks / 20)}s`;
+  if (state.cooldownTicks !== undefined) return `${Math.ceil(state.cooldownTicks / SIM_TICKS_PER_SECOND)}s`;
   if (state.reason === "stock") return t("hud.commandNoStockShort");
   if (state.reason === "gold") return t("hud.commandNoGoldShort");
   if (state.reason === "supply") return t("hud.commandNoSupplyShort");
@@ -771,7 +768,7 @@ function commandButtonStateLabel(state: CommandButtonState) {
 
 function commandButtonStateRequirement(state: CommandButtonState) {
   if(state.detail)return state.detail;
-  if (state.cooldownTicks !== undefined) return t("hud.commandCooldown", { ticks: state.cooldownTicks });
+  if (state.cooldownTicks !== undefined) return t("hud.commandCooldown", { seconds: Math.ceil(state.cooldownTicks / SIM_TICKS_PER_SECOND) });
   if (state.reason === "stock") return t("hud.commandNoStock");
   if (state.reason === "gold") return t("hud.commandNoGold");
   if (state.reason === "supply") return t("hud.commandNoSupply");
@@ -3056,7 +3053,7 @@ function updateHud() {
   } else if (camp) {
     hudSelection.render({
       key:camp.id, name:t("hud.campName"), caption:t("hud.neutral"),
-      detail:t("hud.campStock", { stock:camp.stock }) + (camp.cooldownRemaining > 0 ? t("hud.restocking") : ""),
+      detail:campDetail(camp, i18n),
       art:{ key:"camp", paint:canvas => drawAtlasBuildingPortrait(requireCanvasContext(canvas), "camp", canvas.clientWidth, "#8b7355") },
     }, [], t("hud.nothingSelected"));
   } else hudSelection.render(undefined, [], t("hud.nothingSelected"));
@@ -3336,7 +3333,7 @@ function renderItemDock() {
     button.querySelector(".hotkey")!.textContent = hotkey;
     const cooldown = button.querySelector<HTMLElement>(".item-cooldown")!;
     cooldown.hidden = item.cooldownRemaining <= 0;
-    cooldown.textContent = `${Math.ceil(item.cooldownRemaining / 20)}s`;
+    cooldown.textContent = `${Math.ceil(item.cooldownRemaining / SIM_TICKS_PER_SECOND)}s`;
     if (itemDock.children[index] !== button) itemDock.insertBefore(button, itemDock.children[index] ?? null);
     previous.delete(item.id);
   });

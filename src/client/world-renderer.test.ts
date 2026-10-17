@@ -91,7 +91,7 @@ function frame(snapshot: GameSnapshot, overrides: Partial<WorldFrame> = {}): Wor
     view: { x: 0, y: 0, width: 800, height: 600 },
     now: 1000,
     facing: new UnitFacingTracker(),
-    labels: { mercenaryStock: (stock) => `stock:${stock}`, unitKind: (kind) => `kind:${kind}` },
+    labels: { unitKind: (kind) => `kind:${kind}` },
     ...overrides,
   };
 }
@@ -316,7 +316,7 @@ describe("world renderer", () => {
   it("paints the caller's words into the world", () => {
     const view = frame(duelSnapshot({ campStock: 3 }));
     drawWorld(view);
-    expect(view.calls.some((call) => call.name === "fillText" && call.args[0] === "stock:3")).toBe(true);
+    expect(view.calls.some((call) => call.name === "fillText" && call.args[0] === "kind:mercenary ×3")).toBe(true);
   });
 
   it('paints an amber waiting-launch bar and localized state on an unselected visible shipyard in both render paths',()=>{

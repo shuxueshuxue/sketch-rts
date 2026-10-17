@@ -41,7 +41,7 @@ import { drawStoryAir, drawStoryGround, drawStoryProps, drawStoryScreen } from "
 import type { PropPainter, UnitModel } from "../story/cast";
 import type { StageView } from "../story/stage";
 import { BUILDING_DEFS, UNIT_DEFS, unitMover } from "../shared/catalog";
-import type { Building, BuildingKind, GameSnapshot, MapId, MercenaryCamp, Obstacle, Owner, PlayerId, ResourceNode, Shop, TerrainLandmark, TrainableUnitKind, Unit, WorldItem,WorldEffect } from "../shared/types";
+import type { Building, BuildingKind, GameSnapshot, MapId, MercenaryCamp, MercenaryUnitKind, Obstacle, Owner, PlayerId, ResourceNode, Shop, TerrainLandmark, TrainableUnitKind, Unit, WorldItem,WorldEffect } from "../shared/types";
 
 type Point = { x: number; y: number };
 type Brush = CanvasRenderingContext2D;
@@ -60,14 +60,12 @@ export type WorldView = {
 
 /** The few words painted into the world, in the viewer's language. */
 export type WorldLabels = {
-  mercenaryStock: (stock: number) => string;
-  unitKind: (kind: TrainableUnitKind) => string;
+  unitKind: (kind: TrainableUnitKind | MercenaryUnitKind) => string;
   awaitingShipLaunch?: () => string;
 };
 
 export function worldLabelsFor(i18n: ReturnType<typeof createI18n>): WorldLabels {
   return {
-    mercenaryStock: (stock) => i18n.t("canvas.mercenaryStock", { stock }),
     unitKind: (kind) => i18n.label(kind),
     awaitingShipLaunch: () => i18n.t("canvas.shipAwaitingLaunch"),
   };
@@ -391,7 +389,8 @@ function drawMercenaryCamps(painter: Painter, camps: MercenaryCamp[],overlayOnly
     ctx.font = "11px ui-monospace, monospace";
     ctx.fillStyle = "#796644";
     ctx.textAlign = "center";
-    ctx.fillText(painter.labels.mercenaryStock(camp.stock), point.x, point.y + 48);
+    // What the camp sells and how many are left (see @@@camp-text).
+    ctx.fillText(`${painter.labels.unitKind(camp.hireKind)} ×${camp.stock}`, point.x, point.y + 48);
     ctx.textAlign = "start";
     if (camp.cooldownRemaining > 0) drawProgress(ctx, point.x, point.y + 60, 1 - camp.cooldownRemaining / camp.cooldown);
   }
