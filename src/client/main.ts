@@ -376,7 +376,8 @@ const commandButtons: CommandButton[] = [
     title: t("command.fortifyTower.title"),
     body: t("command.fortifyTower.body"),
     stats: [t("command.fortifyTower.stats", { cost: TOWER_GARRISON.cost, seconds: TOWER_GARRISON.time / SIM_TICKS_PER_SECOND })],
-    requirements: [t("command.fortifyTower.requirements")],
+    requirements: [],
+    notes: [t("command.fortifyTower.notes")],
     hotkey: "F",
   })),
   createCommandButton(t("command.ungarrison.title"), "⤓", "u", ungarrisonButtonState, ungarrisonFocusedTower, () => {
@@ -385,7 +386,8 @@ const commandButtons: CommandButton[] = [
       title: t("command.ungarrison.title"),
       body: t("command.ungarrison.body"),
       stats: tower && snapshot ? [t("command.ungarrison.stats", { used: garrisonUsed(snapshot, tower), capacity: TOWER_GARRISON.supply })] : [],
-      requirements: [t("command.ungarrison.requirements")],
+      requirements: [],
+      notes: [t("command.ungarrison.notes")],
       hotkey: "U",
     };
   }),
