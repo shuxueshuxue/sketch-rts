@@ -16,7 +16,7 @@
 .equipment-panel::after { inset:9px; border-color:#090b09; }
 .equipment-panel header { flex:none; display:flex; align-items:center; gap:8px; min-width:0; border-bottom:2px ridge #86704e; padding:0 0 6px; }
 .equipment-panel h2 { min-width:0; margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font:600 18px/1.3 var(--game-serif); letter-spacing:1px; color:var(--game-title); text-shadow:0 1px #fff4d5; }
-.equipment-close { flex:none; margin-left:auto; width:30px; height:30px; padding:0; font:24px var(--game-serif); }
+.equipment-close { flex:none; margin-left:auto; width:32px; height:32px; padding:0; font-size:0; }
 .equipment-panel button { color:var(--game-ink); cursor:pointer; }
 .equipment-panel .equipment-close,.equipment-context button,.equipment-pages button,.equipment-panel .equipment-action,.equipment-pane-tabs button {
   border:1px solid #9b8354; border-radius:0; background:var(--game-button); color:var(--game-button-ink);
@@ -62,8 +62,10 @@
 .equipment-positions h3 { margin:0; color:var(--game-title); font:11px/18px var(--game-serif); letter-spacing:1px; text-align:center; }
 .equipment-panel[data-mode=character] .equipment-positions { grid-template-columns:100px minmax(0,1fr)100px; gap:12px; }
 .equipment-cell { position:relative; display:flex; flex-direction:column; min-width:0; min-height:0; overflow:clip; border:1px solid #9b7b50; background:var(--game-slot); box-shadow:inset 0 2px 5px #67472535,0 1px #fff6d5; }
-.equipment-cell > small { z-index:1; flex:none; padding:3px 5px; color:var(--game-muted); font-size:10px; pointer-events:none; }
-.equipment-cell.empty::after { content:''; position:absolute; inset:22px 12px 9px; opacity:.17; background:#bdb595; mask:var(--equipment-slot-icon) center/contain no-repeat; pointer-events:none; }
+.equipment-cell > small { z-index:1; flex:none; padding:3px 6px; color:var(--game-muted); font-size:11px; pointer-events:none; }
+/* An empty position is a well pressed into the paper; a filled one is a raised card (the command card's rule). */
+.equipment-cell.empty { border-color:#9b7b5070; background:#4a321c1c; box-shadow:inset 0 2px 6px #4a321c40; }
+.equipment-cell.empty::after { content:''; position:absolute; inset:22px 12px 9px; opacity:.28; background:#bdb595; mask:var(--equipment-slot-icon) center/contain no-repeat; pointer-events:none; }
 .equipment-cell.drop-ready { border-color:#e3c184; background:#ebd69e; outline:1px solid #e3c184; }
 .equipment-item { position:relative; display:flex; flex:1; min-height:0; flex-direction:column; align-items:center; justify-content:center; width:100%; padding:0 3px 3px; border:0; background:transparent; font:10px/1.3 var(--game-text); cursor:grab!important; touch-action:none; user-select:none; }
 .equipment-item canvas { width:54px; height:54px; min-height:0; max-width:90%; max-height:calc(100% - 14px); object-fit:contain; filter:drop-shadow(0 3px 2px #0009); }
@@ -182,3 +184,5 @@
 .equipment-panel :is(.equipment-close,.equipment-context button,.equipment-pages button,.equipment-action):hover { color:var(--game-button-ink); background:var(--game-button-hover); }
 .equipment-panel .equipment-cell.empty::after { background:#735833; opacity:.2; }
 .equipment-panel .equipment-crew { background:#c9b184; border-color:#87603a; }
+/* The close mark is drawn, two inked strokes, not a font's multiplication sign sitting off centre. */
+.equipment-panel .equipment-close { background:linear-gradient(45deg,transparent 46%,currentColor 46% 54%,transparent 54%) center/16px 16px no-repeat,linear-gradient(-45deg,transparent 46%,currentColor 46% 54%,transparent 54%) center/16px 16px no-repeat,var(--game-button); }
