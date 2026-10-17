@@ -201,8 +201,10 @@ export class ActorBatches {
     // Cloth alone becomes translucent. The hull still occludes, collides
     // and casts shadows normally; selection never mutates shared assets.
     if(cloth){material.transparent=true;material.opacity=.22;material.depthWrite=false;}
-    // A fortified tower's roof, while troops stand under it (see @@@tower-top).
-    if(open){material.transparent=true;material.opacity=.22;material.depthWrite=false;}
+    // A fortified tower's roof is off while troops stand under it (see @@@tower-top): an open, lit fighting top. Drawn
+    // see-through it hung over them as a ghost and still shadowed the platform into a dark box; an invisible group is
+    // skipped by the shadow pass too.
+    if(open)material.visible=false;
     this.materials.set(key,material);return material;
   }
   add(key:string,template:THREE.Object3D,matrix:THREE.Matrix4,id:string,color?:string,look:ModelLook='solid',revealDeck=false,animation?:BatchAnimation,openRoof=false){
