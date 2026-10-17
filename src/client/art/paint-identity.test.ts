@@ -6,7 +6,7 @@ import type {UnitAnimationFrame} from '../unit-animation';
 import {actionPaintSize} from './action-direction';
 import {creatures,figures} from './appearance';
 import {paintFigure} from './painted-units';
-import {unitPaintKey} from './paint-identity';
+import {TEAM_CREATURES,unitPaintKey} from './paint-identity';
 import {appearanceForKind,appearanceKey} from './unit-appearance';
 import type {FigurePresentation} from './rig';
 
@@ -106,7 +106,8 @@ describe('authored unit paint identities',()=>{
     expect(unitPaintKey('wildling',TEAMS[0],IDLE,'story:a')).not.toBe(unitPaintKey('wildling',TEAMS[0],IDLE,'story:b'));
   });
   it('proves exact whole-domain RGBA for every stock creature across three owner colors',async()=>{
-    const kinds=Object.keys(creatures) as UnitKind[],poses=creaturePoses();let comparisons=0,pixels=0;
+    const kinds=(Object.keys(creatures) as UnitKind[]).filter(kind=>!TEAM_CREATURES.has(kind)),poses=creaturePoses();let comparisons=0,pixels=0;
+    for(const kind of TEAM_CREATURES)expect(unitPaintKey(kind,TEAMS[0],IDLE)).not.toBe(unitPaintKey(kind,TEAMS[1],IDLE));
     for(const kind of kinds)for(const density of [2,4])for(const facing of [-1,1] as const)for(const pose of poses){
       const original=raster(kind,TEAMS[0],pose,density,facing),key=unitPaintKey(kind,TEAMS[0],pose);
       expect(visible(original),JSON.stringify({kind,density,facing,pose})).toBe(true);

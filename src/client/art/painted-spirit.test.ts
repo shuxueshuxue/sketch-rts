@@ -34,10 +34,10 @@ it('gives all three attack variants and up/level/down gestures distinct drawings
   expect(same(image({ mode: 'cast', frame: 0, aim: 4 }), image({ mode: 'attack', frame: 0, aim: 4 }))).toBe(false);
 });
 
-it('retains actual idle sharing and exact ready endpoints without team recolouring', () => {
+it('retains actual idle sharing and exact ready endpoints, and burns in its owner\'s colour', () => {
   for (const [a, z] of [[0, 4], [1, 3], [5, 7]]) expect(same(image({ mode: 'idle', frame: a! }), image({ mode: 'idle', frame: z! }))).toBe(true);
   const idle = image({ mode: 'idle', frame: 0 });
-  expect(same(image({ mode: 'idle', frame: 0 }, '#b8614b'), idle)).toBe(true);
+  expect(same(image({ mode: 'idle', frame: 0 }, '#b8614b'), idle)).toBe(false);
   for (const mode of ['attack', 'cast'] as const) for (const aim of [-6, -4, 0, 4, 6]) {
     expect(same(image({ mode, frame: 5, aim, variant: 2 }), idle)).toBe(true);
   }

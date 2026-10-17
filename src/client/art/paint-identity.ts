@@ -11,6 +11,9 @@ const IDLE_KEY='idle:0:0:0';
 
 /** Density, authored domain, facing and equipment remain separate identities.
  * Story variants are opaque painters and retain every original input. */
+/** Stock creatures whose painting reads the owner's colour, so their cards differ per owner. */
+export const TEAM_CREATURES:ReadonlySet<UnitKind>=new Set<UnitKind>(['spirit']);
+
 export function unitPaintKey(kind:UnitKind,team:string,pose:UnitAnimationFrame,variant?:string):string {
   let color=team,action=animationKey(pose);
   if(variant===undefined){
@@ -23,8 +26,9 @@ export function unitPaintKey(kind:UnitKind,team:string,pose:UnitAnimationFrame,v
       if(frame!==pose.frame)action=action.replace(`idle:${pose.frame}:`,`idle:${frame}:`);
     }
     // CreatureLook carries team for the public composer contract, but the
-    // stock creature bodies and equipment use their authored material colors.
-    if(creatures[kind]&&!figures[kind]&&!hasWarfareUnit(kind))color='intrinsic';
+    // stock creature bodies and equipment use their authored material colors,
+    // except a summoned spirit, which burns in its owner's colour (see @@@spirit-team).
+    if(creatures[kind]&&!figures[kind]&&!hasWarfareUnit(kind)&&!TEAM_CREATURES.has(kind))color='intrinsic';
     // paintSiege reads recoil and walking wheel phase. It does not read idle
     // breathing, action variant, aim or carried-weapon directions. Retain the
     // original action frame and wheel phase rather than changing animation.
