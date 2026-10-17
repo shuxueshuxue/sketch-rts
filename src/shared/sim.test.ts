@@ -182,7 +182,11 @@ describe("sketch RTS simulation", () => {
       { cost: 210, researchTime: seconds(52.5), maxHpMultiplier: 1.3 },
       { cost: 240, researchTime: seconds(66), maxHpMultiplier: 1.45 },
     ]);
-    expect(UPGRADE_DEFS.buildingDurability.levels).toEqual([{ cost: 200, researchTime: seconds(54), buildingMaxHpMultiplier: 1.2 }]);
+    expect(UPGRADE_DEFS.buildingDurability.levels).toEqual([
+      { cost: 200, researchTime: seconds(54), buildingMaxHpMultiplier: 1.2, healingBuildingHealMultiplier: 4 / 3 },
+      { cost: 275, researchTime: seconds(66), buildingMaxHpMultiplier: 1.4, healingBuildingHealMultiplier: 5 / 3 },
+      { cost: 350, researchTime: seconds(80), buildingMaxHpMultiplier: 1.6, healingBuildingHealMultiplier: 2 },
+    ]);
   });
 
   it("researches late mobility and range tech as derived unit stats without touching attack speed or towers", () => {
@@ -1700,6 +1704,30 @@ describe("sketch RTS simulation", () => {
     expect(farm.complete).toBe(true);
     expect(farm.maxHp).toBe(Math.round(BUILDING_DEFS.farm.hp * 1.2));
     expect(farm.hp).toBe(farm.maxHp);
+  });
+
+  it("researches building durability to its third level: health relative to the base, a third more moon-well healing a level", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    game.players.player.gold = 5_000;
+    const townHall = game.buildings.find((building) => building.owner === "player" && building.kind === "townHall")!;
+    const well = createBuilding("building-player-durability-well", "player", "moonWell", 500, 500, true);
+    game.buildings.push(well);
+    const footman = game.spawnUnit("player", "footman", 560, 500);
+    const pulse = () => {
+      footman.hp = 20;
+      well.cooldown = 0;
+      stepMany(game, 1);
+      return footman.hp - 20;
+    };
+    expect(pulse()).toBe(5);
+    for (const [level, health, heal] of [[1, 1.2, 4 / 3], [2, 1.4, 5 / 3], [3, 1.6, 2]] as const) {
+      issueCommand(game, { type: "research", buildingId: townHall.id, upgradeKind: "buildingDurability" });
+      stepMany(game, UPGRADE_DEFS.buildingDurability.levels[level - 1]!.researchTime + 1);
+      expect(game.players.player.upgrades.buildingDurability).toBe(level);
+      expect(well.maxHp).toBe(Math.round(BUILDING_DEFS.moonWell.hp * health));
+      expect(pulse()).toBeCloseTo(5 * heal);
+    }
+    expect(() => issueCommand(game, { type: "research", buildingId: townHall.id, upgradeKind: "buildingDurability" })).toThrow("already at max level");
   });
 
   it("keeps mercenaries and buildings out of barracks combat upgrades", () => {

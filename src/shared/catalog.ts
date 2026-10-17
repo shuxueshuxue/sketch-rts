@@ -163,6 +163,8 @@ export type UpgradeLevelDef = {
   attackMultiplier?: number;
   maxHpMultiplier?: number;
   buildingMaxHpMultiplier?: number;
+  // A healing building's heal per pulse, relative to SUPPORT_BUILDING_HEAL.
+  healingBuildingHealMultiplier?: number;
   speedMultiplier?: number;
   attackRangeMultiplier?: number;
   // Health a second for a veteran of one, two and three stars.
@@ -483,10 +485,14 @@ const UPGRADE_RULES: Record<UpgradeKind, Omit<UpgradeDef, "researchBuildingKinds
       { cost: 240, researchTime: seconds(66), maxHpMultiplier: 1.45 },
     ],
   },
+  // Three levels like every other technology, cumulative relative to the base: a fifth more health a level, and a third
+  // more healing a level for moon wells and their kin.
   buildingDurability: {
     affectedUnitKinds: [],
     levels: [
-      { cost: 200, researchTime: seconds(54), buildingMaxHpMultiplier: 1.2 },
+      { cost: 200, researchTime: seconds(54), buildingMaxHpMultiplier: 1.2, healingBuildingHealMultiplier: 4 / 3 },
+      { cost: 275, researchTime: seconds(66), buildingMaxHpMultiplier: 1.4, healingBuildingHealMultiplier: 5 / 3 },
+      { cost: 350, researchTime: seconds(80), buildingMaxHpMultiplier: 1.6, healingBuildingHealMultiplier: 2 },
     ],
   },
   // A tenth faster a level: at a quarter a level (1.25, 1.38, 1.5) a footman at the third outran a raider untrained (4.5

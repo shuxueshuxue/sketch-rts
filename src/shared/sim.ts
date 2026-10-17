@@ -1155,7 +1155,7 @@ function updateMoonWellHealing(game: Game) {
     if (building.cooldown > 0) continue;
     const target = mostWoundedSoldierNear(game, building);
     if (!target) continue;
-    target.hp = Math.min(target.maxHp, target.hp + SUPPORT_BUILDING_HEAL);
+    target.hp = Math.min(target.maxHp, target.hp + healingBuildingHeal(game, building));
     building.cooldown = building.attackCooldown;
     addEffect(game, "heal", target.x, target.y, MOON_WELL_HEAL_EFFECT_DURATION, { fromX: building.x, fromY: building.y, toX: target.x, toY: target.y });
   }
@@ -2224,17 +2224,25 @@ function applyUpgradeLevelToBuilding(game: Game, building: Building, upgradeKind
   applyDerivedBuildingStats(game, building);
 }
 
+function currentUpgradeLevel(game: Game, owner: Owner, upgradeKind: UpgradeKind) {
+  if (!isPlayerId(owner)) return undefined;
+  const level = playerState(game, owner).upgrades[upgradeKind] ?? 0;
+  return level > 0 ? UPGRADE_DEFS[upgradeKind].levels[level - 1] : undefined;
+}
+
+function healingBuildingHeal(game: Game, building: Building) {
+  return UPGRADE_KINDS.reduce((heal, upgradeKind) =>
+    heal * (currentUpgradeLevel(game, building.owner, upgradeKind)?.healingBuildingHealMultiplier ?? 1), SUPPORT_BUILDING_HEAL);
+}
+
 function applyDerivedBuildingStats(game: Game, building: Building) {
   const previousMaxHp = building.maxHp;
   const def = BUILDING_DEFS[building.kind];
   let maxHp = def.hp;
+  // Levels are cumulative relative to the base, as for units.
   for (const upgradeKind of UPGRADE_KINDS) {
-    const upgradeLevel = playerState(game, building.owner).upgrades[upgradeKind] ?? 0;
-    for (let level = 0; level < upgradeLevel; level += 1) {
-      const levelDef = UPGRADE_DEFS[upgradeKind].levels[level];
-      if (!levelDef?.buildingMaxHpMultiplier) continue;
-      maxHp = Math.round(maxHp * levelDef.buildingMaxHpMultiplier);
-    }
+    const multiplier = currentUpgradeLevel(game, building.owner, upgradeKind)?.buildingMaxHpMultiplier;
+    if (multiplier) maxHp = Math.round(maxHp * multiplier);
   }
   building.maxHp = maxHp;
   building.hp = Math.min(building.maxHp, Math.max(1, building.hp + building.maxHp - previousMaxHp));
