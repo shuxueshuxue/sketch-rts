@@ -1,21 +1,22 @@
 import { createGame, type Game } from "../shared/sim";
 import type { Terrain } from "../shared/terrain";
-import type { Corpse, PlayerId, RaceId, ResourceNode, ScenarioBuildingSeed, ScenarioUnitSeed, UnitKind } from "../shared/types";
+import type { Corpse, GameSnapshot, PlayerId, RaceId, ResourceNode, ScenarioBuildingSeed, ScenarioUnitSeed, UnitKind } from "../shared/types";
 import type { PropPainter } from "../story/cast";
 import type { PropView, StageView } from "../story/stage";
 import type { WorldFrame, WorldView } from "./world-renderer";
 
 type Point = { x: number; y: number };
+/** The home battles the match simulation fights (see @@@menu-battles). */
+export type MenuBattleId = "woods";
+/** An authored scene's script: poses its cast for any second of the scene. */
+export type MenuScript = (game: Game, second: number) => void;
 export type MenuSceneRun = {
   game: Game;
   props: PropView[];
   focus: Point;
   zoom: number;
-  script: (game: Game, second: number) => void;
-  /** Bounded scene presentation advances its authored cast without match simulation. */
-  presentation: true;
   stillSecond?: number;
-  frameAt?: (second: number, width: number, height: number) => { focus: Point; zoom: number; anchorX: number; anchorY: number };
+  frameAt?: (second: number, width: number, height: number, snapshot: GameSnapshot) => { focus: Point; zoom: number; anchorX: number; anchorY: number };
   models?: WorldFrame["models"];
   /** Finite authored casualties to prepare as assets without spawning them. */
   warmCorpses?: readonly Corpse[];
@@ -28,8 +29,31 @@ export type MenuSceneRun = {
   embers: Point[];
   glows: Point[];
   air: { dusk: number; mist: string; mistAlpha: number; rays: string; rayAngle: number; motes: "embers" | "fireflies" | "glints" };
-};
+} & (
+  /** An authored presentation: its script poses the cast for any second, without match simulation. */
+  | { presentation: true; script: MenuScript }
+  /** A battle: `game` is its opening, and the match simulation fights it on from there (see @@@menu-battles). */
+  | { battle: { scene: MenuBattleId; seed: number } }
+);
 const CELL = 32;
+
+export function seeded(seed: number) {
+  let state = seed >>> 0;
+  return () => {
+    state = (state + 0x6d2b79f5) >>> 0;
+    let t = state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+export type AuthoredMenuSceneRun = Extract<MenuSceneRun, { script: MenuScript }>;
+
+/** A battle is decided once one side has nobody left who can fight; a healer alone is no army. */
+export function battleDecided(snapshot: Pick<GameSnapshot, "units">) {
+  return new Set(snapshot.units.filter((unit) => unit.hp > 0 && unit.attackDamage > 0).map((unit) => unit.owner)).size < 2;
+}
 
 export function terrainOf(width: number, height: number, kindAt: (x: number, y: number) => string): Terrain {
   const cols = Math.ceil(width / CELL);

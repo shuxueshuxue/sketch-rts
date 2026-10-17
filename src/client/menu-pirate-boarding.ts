@@ -10,7 +10,7 @@ import { storyFigure } from './art/story-rig';
 import { ellipse, line, polygon, type Point } from './art/kit';
 import { projectWorld } from './world-projection';
 import { drawWarfareEffect } from './warfare-effects';
-import { cast, stage, terrainOf, type MenuSceneRun } from './menu-scene-world';
+import { cast, stage, terrainOf, type AuthoredMenuSceneRun, type MenuScript } from './menu-scene-world';
 
 const PIRATES = 'corsairs', GUARD = 'admiralty';
 const CX = 2280, CY = 1430, HEADING = -1.42;
@@ -120,7 +120,7 @@ type DeckProp = { view: PropView; ship: Unit; at: Point; mast?: boolean };
 
 /** An authored menu tableau, with a finite cast and event list. It never asks
  * match navigation, AI, ship production or combat to advance in the background. */
-export function createPirateBoarding(): MenuSceneRun {
+export function createPirateBoarding(): AuthoredMenuSceneRun {
   const pieces = cast();
   const aId = pieces.unit(PIRATES, 'shipOfTheLine', CX, CY + 340);
   const bId = pieces.unit(GUARD, 'shipOfTheLine', CX, CY - 340);
@@ -226,7 +226,7 @@ export function createPirateBoarding(): MenuSceneRun {
     unit.deck!.shipId = ship.id; unit.deck!.x = local.x; unit.deck!.y = local.y;
     Object.assign(unit,localToWorld(ship,local));
   };
-  const script: MenuSceneRun['script'] = (_game, second) => {
+  const script: MenuScript = (_game, second) => {
     const time = Math.max(0,second % LENGTH);
     game.tick = Math.floor(time * SIM_TICKS_PER_SECOND);
     const closure = eased((time-18)/6);

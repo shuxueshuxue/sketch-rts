@@ -1,6 +1,7 @@
 import type { AiScriptVersion } from "../../ai/policy";
 import type { AiThinkReport } from "../../ai/runtime";
 import type { ClientNetMessage, ServerNetMessage } from "../../shared/net/types";
+import type { MenuBattleId } from "../menu-scene-world";
 import type { GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, PlayerId, RoomState } from "../../shared/types";
 
 // @@@match-thread - A browser match runs on a Web Worker; the page only draws its snapshots and sends its commands.
@@ -22,7 +23,9 @@ export type MatchThreadInit =
       // The port of the match's AI thread (see @@@think-thread); the AI thinks on the match thread without it.
       aiPort?: MessagePort;
     }
-  | { type: "lockstep"; roomId: string; playerId: PlayerId; mapId: MapId; options: GameSetupOptions };
+  | { type: "lockstep"; roomId: string; playerId: PlayerId; mapId: MapId; options: GameSetupOptions }
+  // A home screen battle (see @@@menu-battles): built from its scene's opening, fought with nobody's commands.
+  | { type: "scene"; scene: MenuBattleId; seed: number; now: number };
 
 export type MatchThreadMessage =
   | MatchThreadInit

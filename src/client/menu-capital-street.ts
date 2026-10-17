@@ -3,7 +3,7 @@ import type { PropPainter, UnitModel } from '../story/cast';
 import { storyFigure } from './art/story-rig';
 import { INK, darker, ellipse, line, polygon, type Brush } from './art/kit';
 import type { FigurePresentation } from './art/rig';
-import { cast, stage, terrainOf, type MenuSceneRun } from './menu-scene-world';
+import { cast, stage, terrainOf, type AuthoredMenuSceneRun } from './menu-scene-world';
 
 // A small, authored street scene. Costumes and architecture belong to this
 // presentation; its inhabitants do not enlist new match units or run city AI.
@@ -326,7 +326,7 @@ function poseOnRoute(unit: Unit, route: Route, second: number) {
 
 /** City daily life is a fixed cast of 24, a static street and a slow camera.
  * All route updates are bounded linear arithmetic, independent of map size. */
-export function createCapitalStreet(): MenuSceneRun {
+export function createCapitalStreet(): AuthoredMenuSceneRun {
   const p = cast();
   const width = 2800, height = 1900;
   const terrain = terrainOf(width, height, (x, y) => {
@@ -445,7 +445,7 @@ export function createCapitalStreet(): MenuSceneRun {
     unit.order = { type: 'hold', ...route.face };
     unit.aim = { ...route.face, anchorX: unit.x, anchorY: unit.y, tracking: false, updatedTick: 0 };
   }
-  const scene: MenuSceneRun = {
+  const scene: AuthoredMenuSceneRun = {
     game, props: p.props, presentation: true, stillSecond: 15,
     focus: { x: 1620, y: 1210 }, zoom: 1.15,
     length: 90,

@@ -219,7 +219,8 @@ let matchAssets:Promise<void>|undefined;
 const hudSelection = new BattleHudSelection(selectionLabel, t("hud.selectionTypes"));
 // The home screen's scene (see @@@menu-scenes): the one the player last picked, or one drawn at random for this visit.
 const MENU_SCENE_STORAGE_KEY = "sketch-rts-menu-scene";
-const menuBackdrop = new MenuBackdrop(worldLabels, initialMenuScene());
+// Its battles are fought on a match thread of their own (see @@@menu-battles).
+const menuBackdrop = new MenuBackdrop(worldLabels, initialMenuScene(), () => createBrowserMatchThreads({ ai: false }));
 // The game's sounds (see @@@sound): the packs found with the game (see @@@sound-packs) and those the server offers (see
 // @@@served-sound-packs); until the player chooses one, the one a build names in VITE_SOUND_PACK, else the server's, else none.
 const soundboard = new Soundboard(SOUND_PACKS, import.meta.env.VITE_SOUND_PACK);
