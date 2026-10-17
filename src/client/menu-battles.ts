@@ -1,5 +1,6 @@
 import type { Game } from "../shared/sim";
 import { createForestHorde } from "./menu-forest-horde";
+import { createPirateBoarding } from "./menu-pirate-boarding";
 import type { MenuBattleId } from "./menu-scene-world";
 
 // @@@menu-battles - A home battle is fought by the match simulation, not drawn from a script: the scene authors only
@@ -8,4 +9,5 @@ import type { MenuBattleId } from "./menu-scene-world";
 // never holds the home screen's frame; the page keeps its copy for the ground and the first picture.
 export const MENU_BATTLES: Record<MenuBattleId, (seed: number) => Game> = {
   woods: (seed) => createForestHorde(seed).game,
+  fleet: (seed) => createPirateBoarding(seed).game,
 };

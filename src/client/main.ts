@@ -864,6 +864,7 @@ function openMenuRoute(route: Exclude<RoomRoute, { screen: "room" }>, replace = 
   spectatingRoom = false;
   selectedIds = new Set(); focusedSelectionId = undefined; selectedCampId = undefined;
   commandMode = undefined; openPalette = undefined;
+  if (!menuOpen) menuBackdrop.startPresentation(performance.now());
   menuOpen = true;
   releasePointerLockForMenu();
   shell.classList.add("menu-open"); mainMenu.classList.remove("hidden");
@@ -1511,6 +1512,7 @@ async function enterRoom(roomId: string, replace = false) {
 }
 
 function activateStartedMatch(adapter: GameAdapter, nextSnapshot: GameSnapshot, chat: MatchChat) {
+  menuBackdrop.stop();
   worldPresentation.reset();
   disconnectActiveMatch();
   purchaseRecipients.clear();
@@ -1595,6 +1597,7 @@ function openResults(room: RoomState) {
   selectedCampId = undefined;
   commandMode = undefined;
   openPalette = undefined;
+  if (!menuOpen) menuBackdrop.startPresentation(performance.now());
   menuOpen = true;
   shell.classList.add("menu-open");
   mainMenu.classList.remove("hidden");

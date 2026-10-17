@@ -105,6 +105,9 @@ export class MenuBackdrop {
     this.combat.reset();this.projectiles.reset();
     this.started=now;this.clock=now;this.lastPaint=-Infinity;this.motes=[];
   }
+  /** The page left the menu: the battle and the thread that fights it end, not merely idle. Back on the menu,
+   * startPresentation opens the scene again. */
+  stop(){this.endBattle();}
   get artPreparation():PaintedRemainsPreparation|undefined{
     const run=this.run;
     if(!run?.warmCorpses?.length)return;
@@ -171,7 +174,7 @@ export class MenuBackdrop {
       props: (kind) => run.painters?.[kind] ?? PROPS[kind] ?? CORE_SCENERY[kind],
       story: stageView(run, snapshot.tick),
     });
-    run.foreground?.(ctx, { ...camera, width, height, zoom }, sceneSecond);
+    run.foreground?.(ctx, { ...camera, width, height, zoom }, sceneSecond, snapshot);
     const toScreen = (point: Point) => ({ x: (point.x - camera.x) * zoom, y: (point.y - camera.y) * zoom });
     const waterAt = (point: Point) => {
       const terrain = map.terrain;
