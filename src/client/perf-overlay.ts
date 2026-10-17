@@ -1,4 +1,5 @@
 import type * as THREE from 'three';
+import type { AiThinkReport } from '../ai/runtime';
 
 /** `?perf=1`: a corner readout of how each frame spends its time, so a slow machine can show, in one screenshot, whether
  * the main thread (CPU) or the GPU/compositor is holding frames back. Otherwise `perf` stays undefined and every hook
@@ -36,6 +37,9 @@ export function longFrameCause(frame: LongFrame, loafs: readonly Loaf[]): 'CPU' 
   return busy > (frame.end - frame.start) / 2 ? 'CPU' : 'GPU';
 }
 
+// The overlay is on the page, which never loads the AI: only its report's type is shared.
+const noThinking = (): AiThinkReport => ({ thinks: 0, thinkMs: 0, slowestMs: 0, late: 0, lateTicks: 0, skipped: 0 });
+
 class Stat {
   count = 0; total = 0; max = 0;
   add(value: number) { this.count++; this.total += value; if (value > this.max) this.max = value; }
@@ -68,6 +72,8 @@ export class PerfOverlay {
   private queries: WebGLQuery[] = [];
   private active: WebGLQuery | undefined;
   private renderer: THREE.WebGLRenderer | undefined;
+  // The match's AI thread over this window (see AiThinkReport); undefined until a match with AI reports.
+  private ai: AiThinkReport | undefined;
 
   constructor(parent: HTMLElement) {
     this.element.className = 'perf-overlay';
@@ -134,6 +140,14 @@ export class PerfOverlay {
     this.frameJs.add(this.lastFrameJs);
   }
 
+  /** What the match's AI thread did since its last report: a match waits for no think, so a slow AI shows here as late
+   * landings and skipped turns, not as frame gaps. */
+  aiThinking(report: AiThinkReport) {
+    const ai = this.ai ??= noThinking();
+    ai.thinks += report.thinks; ai.thinkMs += report.thinkMs; ai.slowestMs = Math.max(ai.slowestMs, report.slowestMs);
+    ai.late += report.late; ai.lateTicks = Math.max(ai.lateTicks, report.lateTicks); ai.skipped += report.skipped;
+  }
+
   gpuBegin() {
     const gl = this.gl, timer = this.timer;
     if (!gl || !timer || this.active || this.queries.length > 8) return;
@@ -178,6 +192,7 @@ export class PerfOverlay {
       `frame JS ${this.frameJs.text()} ms`,
       ...SEGMENTS.map(name => `  ${name.padEnd(8)}${this.segments.get(name)!.text()}`),
       `GPU 3D ${!this.renderer ? 'no 3D renderer' : this.timer ? `${this.gpu.text()} ms` : 'unsupported'}`,
+      ...(this.ai ? [`AI think ${this.ai.thinks ? (this.ai.thinkMs / this.ai.thinks).toFixed(0) : '–'} / ${this.ai.slowestMs.toFixed(0)} ms  late ${this.ai.late}${this.ai.late ? ` (≤${this.ai.lateTicks}t)` : ''}  skip ${this.ai.skipped}`] : []),
       `>${LONG_MS}ms gaps: CPU ${this.longCounts.CPU}  GPU/comp ${this.longCounts.GPU}`,
       `  recent ${this.longFrames.map(frame => `${Math.round(frame.end - frame.start)}${frame.cause ? frame.cause[0] : '?'}`).join(' ') || '–'}`,
       this.loafSupported ? `long-animation-frame ${this.loafCount}` : 'long-animation-frame unsupported',
@@ -186,6 +201,7 @@ export class PerfOverlay {
     this.element.textContent = lines.join('\n');
     this.windowStart = now; this.frames = 0;
     this.interval.reset(); this.frameJs.reset(); this.gpu.reset();
+    if (this.ai) this.ai = noThinking();
     for (const stat of this.segments.values()) stat.reset();
   }
 }
