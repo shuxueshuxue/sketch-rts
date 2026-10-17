@@ -4,7 +4,7 @@ import { SHIP_WEAPONS, installedWeapons } from "../ship-equipment";
 import { isMechanicalUnit, matchesUnitTarget, unitClassOf } from "../unit-targeting";
 import { unitNeedsRepair } from "../unit-repair";
 import { veteranSkillFitsUnitClass } from "../veteran-skills";
-import { canEquip, dropRefusal, freeItemSlot, transferRefusal, weaponRules, wieldRefusal } from "../equipment";
+import { canEquip, dropRefusal, freeItemSlot, giveRefusal, transferRefusal, weaponRules, wieldRefusal } from "../equipment";
 import { shipPassengers, shipProfile } from "../ship-geometry";
 import { shipBoardingRefusal, shipBoardingTargetRefusal } from "../ship-gangway";
 import { sameGround } from "../terrain";
@@ -214,6 +214,7 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     if (item.carrierId || item.shipId) return commandError(`${item.id} is already carried`, true);
     const unit=snapshot.units.find(unit=>unit.id===command.unitId)!;return canEquip(unit) && freeItemSlot(snapshot,unit,item.kind) ? undefined : commandError(`${command.unitId} has no free equipment position`,true);
   }
+  if (command.type === "giveItem") { const message = giveRefusal(snapshot, owner, command.unitId, command.itemId, command.targetId); return message ? commandError(message, true) : undefined; }
   if (command.type === "dropItem" || command.type === "useItem") {
     if (command.type === "dropItem") { const message = dropRefusal(snapshot, owner, command.unitId, command.itemId); return message ? commandError(message, true) : undefined; }
     if (!snapshot.units.some((unit) => unit.id === command.unitId && unit.owner === owner)) return commandError(`Unknown ${owner} item carrier ${command.unitId}`, true);
@@ -328,7 +329,7 @@ export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, co
     const item = game.items.find((candidate) => candidate.id === command.itemId);
     return item ? command : undefined;
   }
-  if (command.type === "dropItem" || command.type === "useItem") {
+  if (command.type === "dropItem" || command.type === "useItem" || command.type === "giveItem") {
     if (!hasCurrentUnit(game, owner, command.unitId)) return undefined;
     return game.items.some((item) => item.id === command.itemId) ? command : undefined;
   }

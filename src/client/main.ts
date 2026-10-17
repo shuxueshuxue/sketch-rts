@@ -20,7 +20,7 @@ import { boardingTargetHull, shipBoardingAction, shipBoardingProblem, shipBoardi
 import { GANGWAY_COOLDOWN_TICKS, GANGWAY_SETUP_TICKS } from '../shared/ship-gangway';
 import { isInCabin } from '../shared/ship-cabin';
 import { formatMass } from "./format-mass";
-import { canEquip, ITEM_DEFS } from "../shared/equipment";
+import { CARRY_SLOTS, canEquip, ITEM_DEFS } from "../shared/equipment";
 import { shipPassengers, shipProfile, localToWorld } from "../shared/ship-geometry";
 import { DEFAULT_WIND, windAt, WIND_CHANGE_INTERVAL_TICKS } from '../shared/wind-field';
 import { SIM_TICKS_PER_SECOND } from '../shared/time';
@@ -495,8 +495,10 @@ canvas.addEventListener("mousemove", onMouseMove);
 // Off pointer lock the canvas hears no move over the interface, so the cursor is followed across the whole page too,
 // after the canvas's own handler (which reads the point before), for edge scrolling over the top bar and the docks.
 document.addEventListener("mousemove", (event) => {
-  if (document.pointerLockElement !== canvas) lastMouse = mousePoint(event);
+  if (document.pointerLockElement !== canvas) { lastMouse = mousePoint(event); moveItemDrag(inputPoint(event)); }
 });
+// A drag out of the item bar ends wherever it is released; over the battlefield the canvas's own mouseup sees it first.
+document.addEventListener("mouseup", (event) => { if (event.button === 0 && itemDrag && event.target !== canvas) endItemDrag(inputPoint(event)); });
 canvas.addEventListener("mouseup", onMouseUp);
 
 startPerfOverlay();
@@ -1994,6 +1996,7 @@ function onMouseDown(event: MouseEvent) {
   if (event.button === 0 && document.pointerLockElement === canvas) {
     const target = virtualClickableTargetAt(point);
     if (target) {
+      beginItemDrag(point, target);
       virtualUiMouseDownTarget = target;
       target.focus({ preventScroll: true });
       return;
@@ -2029,6 +2032,7 @@ function onMouseMove(event: MouseEvent) {
   if (draggingMinimapViewport) {
     centerCameraFromMinimap(point);
   }
+  moveItemDrag(point);
   lastMouse = point;
   if (selectionStart) selectionEnd = point;
 }
@@ -2042,6 +2046,10 @@ function onMouseUp(event: MouseEvent) {
   const point = inputPoint(event);
   if(equipmentPanel.isOpen()){if(document.pointerLockElement===canvas && event.button===0)equipmentPanel.virtualPointer('pointerup',point,event.buttons,event);return;}
   draggingMinimapViewport = false;
+  if (event.button === 0 && endItemDrag(point)) {
+    virtualUiMouseDownTarget = undefined;
+    return;
+  }
   if (event.button === 0 && document.pointerLockElement === canvas) {
     const target = virtualClickableTargetAt(point);
     if (target) {
@@ -3296,6 +3304,61 @@ function renderTrainingProgressButton(progress: TrainingProgressButton, previous
   return button;
 }
 
+// @@@item-drag - An item is dragged out of its slot as in Warcraft III: onto another slot it moves there (trading places
+// with what lay there), onto a unit of yours it is handed over, onto open ground it is set down there; the carrier walks
+// to do so when it stands too far (see @@@item-errand). A press that never moves is a click: it uses the item.
+const ITEM_DRAG_THRESHOLD = 6;
+let itemDrag: { index: number; itemId: string; carrierId: string; from: Point; moved: boolean } | undefined;
+let suppressItemClickUntil = 0;
+
+function beginItemDrag(point: Point, element: Element | null) {
+  const button = element?.closest<HTMLElement>(".item-button[data-item-id]");
+  if (!button || !itemDock.contains(button)) return false;
+  const item = inventorySlotItem(Number(button.dataset.itemSlot));
+  if (!item?.carrierId) return false;
+  itemDrag = { index: Number(button.dataset.itemSlot), itemId: item.id, carrierId: item.carrierId, from: point, moved: false };
+  return true;
+}
+
+function moveItemDrag(point: Point) {
+  if (!itemDrag || itemDrag.moved || Math.hypot(point.x - itemDrag.from.x, point.y - itemDrag.from.y) < ITEM_DRAG_THRESHOLD) return;
+  itemDrag.moved = true;
+  itemDock.dataset.dragging = String(itemDrag.index);
+  const item = snapshot?.items.find(candidate => candidate.id === itemDrag!.itemId);
+  if (item) statusLabel.textContent = t("status.itemDragging", { item: labelKind(item.kind) });
+}
+
+// Ends a drag at the point; whether it was one (a press that moved), so the release is no click.
+function endItemDrag(point: Point) {
+  const drag = itemDrag;
+  itemDrag = undefined;
+  delete itemDock.dataset.dragging;
+  if (!drag?.moved) return false;
+  suppressItemClickUntil = performance.now() + 250;
+  if (!syncBeforeCommandProjection() || !snapshot) return true;
+  const item = snapshot.items.find(candidate => candidate.id === drag.itemId && candidate.carrierId === drag.carrierId);
+  if (!item) return true;
+  const under = document.elementFromPoint(point.x, point.y);
+  const slot = under?.closest<HTMLElement>(".item-button[data-item-slot]");
+  if (slot && itemDock.contains(slot)) {
+    const index = Number(slot.dataset.itemSlot);
+    if (index !== drag.index && sendCommand({ type: "transferItem", itemId: item.id, destination: { unitId: drag.carrierId, slot: CARRY_SLOTS[index]! } }))
+      statusLabel.textContent = t("status.itemMoved", { item: labelKind(item.kind), slot: index + 1 });
+    return true;
+  }
+  if (under !== canvas) return true;
+  const world = screenToWorld(point);
+  const friend = hitUnit(world, unit => unit.owner === localPlayerId && unit.id !== drag.carrierId && unit.hp > 0 && canEquip(unit) && !shipProfile(unit));
+  if (friend) {
+    if (sendCommand({ type: "giveItem", unitId: drag.carrierId, itemId: item.id, targetId: friend.id }))
+      statusLabel.textContent = t("status.itemGiven", { item: labelKind(item.kind), unit: labelKind(friend.kind) });
+    return true;
+  }
+  if (sendCommand({ type: "dropItem", unitId: drag.carrierId, itemId: item.id, x: world.x, y: world.y }))
+    statusLabel.textContent = t("status.itemDropped", { item: labelKind(item.kind) });
+  return true;
+}
+
 function renderItemDock() {
   equipmentPanel.update(menuOpen?undefined:snapshot,localPlayerId);
   const slots = snapshot && !menuOpen ? inventorySlots(snapshot, inventoryCarrier(inventoryCarriers())) : [];
@@ -3306,7 +3369,8 @@ function renderItemDock() {
     const button = document.createElement("button");
     button.type = "button"; button.className = "item-button"; button.dataset.itemSlot = String(index);
     button.innerHTML = '<span class="item-icon"></span><span class="hotkey"></span><span class="item-cooldown" hidden></span>';
-    button.addEventListener("click", () => useInventoryItem(index));
+    button.addEventListener("click", () => { if (performance.now() >= suppressItemClickUntil) useInventoryItem(index); });
+    button.addEventListener("mousedown", event => { if (event.button === 0 && document.pointerLockElement !== canvas) beginItemDrag(inputPoint(event), button); });
     button.addEventListener("contextmenu", event => { event.preventDefault(); dropInventoryItem(index); });
     return button;
   }));
