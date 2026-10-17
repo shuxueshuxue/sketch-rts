@@ -33,9 +33,11 @@ describe("server deployment runtime", () => {
 
     await runtime.listRooms("user-1");
     await runtime.createRoom({ id: "room-1", host: { id: "user-1", name: "User" } });
-    await runtime.updateRoomMap("room-1", "bareDuel");
+    await runtime.updateRoomMap("room-1", "bareDuel", { id: "user-1", name: "User" });
 
     expect(calls.map((call) => call.path)).toEqual(["/api/rooms?userId=user-1", "/api/rooms", "/api/rooms/room-1/map"]);
+    // A lobby change says whose it is (see @@@seat-ownership).
+    expect(calls[2]!.body).toEqual({ mapId: "bareDuel", userId: "user-1" });
   });
 
   it("routes room API and websocket URLs through the deployment base path", async () => {

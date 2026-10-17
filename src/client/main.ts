@@ -112,7 +112,7 @@ import { TRAINED_UNIT_CARDS } from "./content/units";
 import { LADDER_MAP_ID } from "../shared/map-ids";
 import { MAP_POOL, poolMap, poolSeatsFit, type PoolMapId } from "../shared/map-pool";
 import type { MapPresentationMark } from "../shared/presentation";
-import { canStartRoom, createRoom, DEFAULT_INTERNAL_AI_VERSION, ROOM_AI_RACES, ROOM_TEAMS, roomAiVersionsFor, roomConfiguration, roomTeam, seatTeam, winningResultSlots, type SlotPatch, type RoomConfiguration } from "../shared/rooms";
+import { canStartRoom, roomStartBlocker, seatEditRefusal, createRoom, DEFAULT_INTERNAL_AI_VERSION, ROOM_AI_RACES, ROOM_TEAMS, roomAiVersionsFor, roomConfiguration, roomTeam, seatTeam, winningResultSlots, type SlotPatch, type RoomConfiguration } from "../shared/rooms";
 import { snapToFootprint } from "../shared/terrain";
 import { perf, startPerfOverlay } from "./perf-overlay";
 import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MeleeStance, PlayerId, RoomState, TrainableUnitKind, Unit, UpgradeKind, WorldItem } from "../shared/types";
@@ -1182,7 +1182,7 @@ function renderRoomSetup() {
             <div class="room-section-title">${escapeHtml(t("roomSetup.slots"))}</div>
           </div>
           <div class="slot-actions">
-            <button type="button" class="danger-button" data-close-room ${host && !closingRoom && !roomSetupSession.busy ? "" : "disabled"}>${escapeHtml(t("roomSetup.close"))}</button>
+            ${host ? `<button type="button" class="danger-button" data-close-room ${!closingRoom && !roomSetupSession.busy ? "" : "disabled"}>${escapeHtml(t("roomSetup.close"))}</button>` : ""}
           </div>
         </div>
         ${slotColumnsMarkup(true)}
@@ -1191,20 +1191,23 @@ function renderRoomSetup() {
 
     </div>
 `, `
-      <button type="button" data-start-room>${escapeHtml(t("roomSetup.start"))}</button>
-      <button type="button" data-choose-map>${escapeHtml(t('roomCreate.backMaps'))}</button>
+      <span class="room-start-reason" data-start-reason>${escapeHtml(startReason(room, host))}</span>
+      ${host ? `<button type="button" data-start-room>${escapeHtml(t("roomSetup.start"))}</button>
+      <button type="button" data-choose-map>${escapeHtml(t('roomCreate.backMaps'))}</button>` : ""}
       <button type="button" data-back-room-browser>${escapeHtml(t("roomSetup.backRooms"))}</button>
 `);
-  const startButton = setup.querySelector<HTMLButtonElement>("[data-start-room]")!;
-  startButton.disabled = !host || closingRoom || roomSetupSession.busy || !canStartRoom(room);
-  startButton.title = startButton.disabled ? t("roomSetup.startDisabled") : t("roomSetup.startTitle");
+  const startButton = setup.querySelector<HTMLButtonElement>("[data-start-room]");
+  if (startButton) {
+    startButton.disabled = closingRoom || roomSetupSession.busy || !canStartRoom(room);
+    startButton.title = t("roomSetup.startTitle");
+  }
   showMapDetail(setup, room.mapId, previewSeatsForRoom(room), room.layoutSeed);
   const slotList = setup.querySelector<HTMLDivElement>(".slot-list")!;
   const local = deploymentRuntime.isLocalRoom(room.id);
-  slotList.replaceChildren(...room.slots.map((slot, index) => slotRow(slot, index, local)));
+  slotList.replaceChildren(...room.slots.map((slot, index) => slotRow(room, slot, index, local)));
   if (closingRoom || roomSetupSession.busy) slotList.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input,select').forEach(input => input.disabled = true);
   setup.querySelectorAll<HTMLInputElement>('[name=gameMode]').forEach(input => input.addEventListener('change', () => void switchCurrentRoomMode(input.value === 'singlePlayer' ? 'private' : 'public')));
-  setup.querySelector('[data-choose-map]')!.addEventListener('click', () => openMenuRoute({ screen: 'maps', configuration: roomConfiguration(room) }));
+  setup.querySelector('[data-choose-map]')?.addEventListener('click', () => openMenuRoute({ screen: 'maps', configuration: roomConfiguration(room) }));
   setup.querySelector("[data-close-room]")?.addEventListener("click", () => void closeCurrentRoom());
   setup.querySelector("[data-start-room]")?.addEventListener("click", () => void startCurrentRoom());
   setup.querySelector("[data-back-room-browser]")?.addEventListener("click", () => {
@@ -1341,8 +1344,24 @@ function slotColumnsMarkup(ready = false) {
   </div>`;
 }
 
-function slotRow(slot: RoomState["slots"][number], index: number, local: boolean, onPatch?: (patch: Record<string, unknown>) => void) {
-  const commitPatch = onPatch ?? ((patch: Record<string, unknown>) => void updateCurrentRoomSlot(slot.id, patch));
+// What the room's start waits on, said beside the start button rather than in a tooltip; a guest waits on the host.
+function startReason(room: RoomState, host: boolean) {
+  const blocker = roomStartBlocker(room);
+  if (!blocker) return host ? "" : t("roomSetup.waitHost");
+  if (blocker.kind === "notReady") return t("roomSetup.waitReady", { names: blocker.names.join(i18n.locale === "zh" ? "、" : ", ") });
+  if (blocker.kind === "openSeats") return t("roomSetup.waitOpenSeats");
+  if (blocker.kind === "teams") return t("roomSetup.waitTeams");
+  if (blocker.kind === "seats") return t("roomSetup.waitSeats");
+  return "";
+}
+
+function slotRow(room: RoomState, slot: RoomState["slots"][number], index: number, local: boolean) {
+  const commitPatch = (patch: Record<string, unknown>) => void updateCurrentRoomSlot(slot.id, patch);
+  // What this player may change here is what the room would accept from them (see @@@seat-ownership); the rest is shown,
+  // not offered.
+  const may = (patch: SlotPatch) => !seatEditRefusal(room, localUser.id, slot.id, patch);
+  const seat = may({ team: slot.team }), controller = !local && slot.controller !== "human" && may({ controller: slot.controller });
+  const ready = slot.controller === "human" && may({ ready: !slot.ready });
   const row = document.createElement("div");
   row.className = "slot-row";
   row.dataset.slotId = slot.id;
@@ -1361,16 +1380,16 @@ function slotRow(slot: RoomState["slots"][number], index: number, local: boolean
     <span class="slot-index">${index + 1}</span>
     <span class="slot-name">${escapeHtml(slot.name)}</span>
     ${
-      slot.controller === "human" || local
+      !controller
         ? `<span class="slot-controller-badge" data-slot-controller-status>${escapeHtml(labelKind(slot.controller))}</span>`
         : `<select data-slot-controller aria-label="${escapeHtml(t("roomSetup.slotController"))}">${controllerOptions}</select>`
     }
-    <select data-slot-team aria-label="${escapeHtml(t("roomSetup.slotTeam"))}">
+    <select data-slot-team aria-label="${escapeHtml(t("roomSetup.slotTeam"))}" ${seat ? "" : "disabled"}>
       ${ROOM_TEAMS.map((team) => `<option value="${team}" ${slot.team === team ? "selected" : ""}>${escapeHtml(labelKind(team))}</option>`).join("")}
     </select>
-    <select data-slot-race aria-label="${escapeHtml(t("roomSetup.slotRace"))}">${raceOptions}</select>
-    ${slot.controller === "ai" ? `<select data-slot-ai aria-label="${escapeHtml(t("roomSetup.slotAi"))}" ${slot.race === "random" ? "disabled" : ""}>${aiOptions}</select>` : ""}
-    ${onPatch ? "" : `<label class="slot-ready"><input data-slot-ready type="checkbox" ${slot.ready ? "checked" : ""} ${slot.controller !== "human" ? "disabled" : ""} /> ${escapeHtml(t("roomSetup.slotReady"))}</label>`}
+    <select data-slot-race aria-label="${escapeHtml(t("roomSetup.slotRace"))}" ${seat ? "" : "disabled"}>${raceOptions}</select>
+    ${slot.controller === "ai" ? `<select data-slot-ai aria-label="${escapeHtml(t("roomSetup.slotAi"))}" ${slot.race === "random" || !seat ? "disabled" : ""}>${aiOptions}</select>` : ""}
+    <label class="slot-ready"><input data-slot-ready type="checkbox" ${slot.ready ? "checked" : ""} ${ready ? "" : "disabled"} /> ${escapeHtml(t("roomSetup.slotReady"))}</label>
   `;
   row.querySelector<HTMLSelectElement>("[data-slot-controller]")?.addEventListener("change", (event) => {
     const controller = (event.currentTarget as HTMLSelectElement).value;
@@ -1406,7 +1425,7 @@ async function closeCurrentRoom() {
   if (closingRoom || !currentRoom || roomSetupSession.busy) return;
   const request = routeRequest, operation = ++setupOperation, id = currentRoom.id;
   closingRoom = true; clearRoomWatch(); renderMainMenu();
-  try { await deploymentRuntime.closeRoom(id, localUser.id); }
+  try { await deploymentRuntime.closeRoom(id, localUser); }
   catch (error) { if (request === routeRequest && operation === setupOperation) { watchRoomSetup(id); showRoomSetupError(error); } return; }
   finally { closingRoom = false; if (!applicationClosed && (menuView === 'setup' || menuView === 'maps')) renderMainMenu(); }
   if (request !== routeRequest || currentRoom?.id !== id) return;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createGame, snapshotGame } from "./sim";
-import { canStartRoom, createGrandThirtyRoom, createRoom, finishRoom, joinFirstOpenSlot, lobbyVisibleRooms, resizeRoomSlots, ROOM_AI_RACES, ROOM_AI_VERSIONS, roomAiVersionsFor, roomToGameSetup, updateRoomMap, updateRoomSlot, winningResultSlots } from "./rooms";
+import { canStartRoom, hostActionRefusal, roomStartBlocker, seatEditRefusal, createGrandThirtyRoom, createRoom, finishRoom, joinFirstOpenSlot, lobbyVisibleRooms, resizeRoomSlots, ROOM_AI_RACES, ROOM_AI_VERSIONS, roomAiVersionsFor, roomToGameSetup, updateRoomMap, updateRoomSlot, winningResultSlots } from "./rooms";
 import { createRoomLifecycleHost } from "./room-lifecycle";
 import { parseSlotPatch } from "./room-schema";
 import type { LocalUserProfile } from "./types";
@@ -205,6 +205,35 @@ describe("room model", () => {
     expect(room.slots[1]?.name).toBe("Closed");
     room = updateRoomSlot(room, "slot-2", { controller: "ai" });
     expect(room.slots[1]).toMatchObject({ controller: "ai", name: "AI", ready: true });
+  });
+
+  it("lets a player change only their own seat, and the host the computer and open seats (see @@@seat-ownership)", () => {
+    const room = joinFirstOpenSlot(createRoom({ id: "room-seats", host, humanCount: 2, aiCount: 2 }), guest);
+    const [hostSeat, guestSeat, aiSeat] = room.slots;
+    // Each player sets up their own seat; neither changes the other's.
+    expect(seatEditRefusal(room, guest.id, guestSeat!.id, { team: "team-2", race: "ember", ready: true })).toBeUndefined();
+    expect(seatEditRefusal(room, host.id, hostSeat!.id, { race: "ember" })).toBeUndefined();
+    expect(seatEditRefusal(room, guest.id, hostSeat!.id, { race: "random" })).toBeDefined();
+    expect(seatEditRefusal(room, guest.id, hostSeat!.id, { ready: false })).toBeDefined();
+    expect(seatEditRefusal(room, host.id, guestSeat!.id, { team: "team-1" })).toBeDefined();
+    // The host sets up the computers; a guest does not.
+    expect(seatEditRefusal(room, host.id, aiSeat!.id, { team: "team-2", race: "grove", aiVersion: "v9_knight" })).toBeUndefined();
+    expect(seatEditRefusal(room, guest.id, aiSeat!.id, { controller: "open" })).toBeDefined();
+    // The host may clear a player out of a seat, but nobody puts a person into one but by joining.
+    expect(seatEditRefusal(room, host.id, guestSeat!.id, { controller: "open" })).toBeUndefined();
+    expect(seatEditRefusal(room, host.id, aiSeat!.id, { controller: "human" })).toBeDefined();
+    expect(seatEditRefusal(room, host.id, aiSeat!.id, { userId: guest.id })).toBeDefined();
+    expect(seatEditRefusal(room, guest.id, guestSeat!.id, { controller: "open" })).toBeDefined();
+    expect(hostActionRefusal(room, host.id)).toBeUndefined();
+    expect(hostActionRefusal(room, guest.id)).toBeDefined();
+  });
+
+  it("says what a start waits on, a player not ready first", () => {
+    let room = joinFirstOpenSlot(createRoom({ id: "room-wait", host, humanCount: 2, aiCount: 0 }), guest);
+    expect(roomStartBlocker(room)).toEqual({ kind: "notReady", names: ["Guest"] });
+    room = updateRoomSlot(room, "slot-2", { ready: true });
+    expect(roomStartBlocker(room)).toBeUndefined();
+    expect(roomStartBlocker(updateRoomSlot(room, "slot-2", { controller: "open" }))).toEqual({ kind: "openSeats" });
   });
 
   it("keeps 15 SDK-driven human slots distinct from 15 internal AI slots", () => {

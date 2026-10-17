@@ -217,14 +217,29 @@ async page => {
     guestJoinProof = await guest.evaluate(async (roomId) => {
       const room = await (await fetch("/api/rooms/" + roomId)).json();
       const user = JSON.parse(localStorage.getItem("sketch-rts-user"));
-      return { status: room.status, owner: room.hostUserId, userId: user.id, slots: room.slots.filter(slot => slot.userId === user.id), startDisabled: document.querySelector("[data-start-room]")?.disabled };
+      // A guest has no start or host controls; the footer says what the start waits on (see @@@seat-ownership).
+      return { status: room.status, owner: room.hostUserId, userId: user.id, slots: room.slots.filter(slot => slot.userId === user.id),
+        hostControls: document.querySelectorAll("[data-start-room], [data-close-room], [data-choose-map]").length,
+        reason: document.querySelector("[data-start-reason]")?.textContent ?? "",
+        hostSeatLocked: [...document.querySelectorAll("[data-slot-id='slot-1'] select, [data-slot-id='slot-1'] input")].every(control => control.disabled),
+        ownSeatOpen: !document.querySelector("[data-slot-id='slot-2'] [data-slot-race]")?.disabled };
     }, roomSetupId);
     must(guestJoinProof.owner !== guestJoinProof.userId && guestJoinProof.slots.length === 1 && guestJoinProof.slots[0].id === "slot-2" &&
-      guestJoinProof.status === "open" && guestJoinProof.startDisabled, "public invitation did not join one guest seat and wait for the host: " + JSON.stringify(guestJoinProof));
+      guestJoinProof.status === "open" && guestJoinProof.hostControls === 0 && guestJoinProof.reason.length > 0 &&
+      guestJoinProof.hostSeatLocked && guestJoinProof.ownSeatOpen, "public invitation did not join one guest seat and wait for the host: " + JSON.stringify(guestJoinProof));
+    // Asked straight at the server, the guest still cannot change the host's seat.
+    const guestRefused = await guest.evaluate(async (roomId) => {
+      const userId = JSON.parse(localStorage.getItem("sketch-rts-user")).id;
+      const response = await fetch("/api/rooms/" + roomId + "/slots/slot-1", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ patch: { race: "random" }, userId }) });
+      return { status: response.status, body: await response.text() };
+    }, roomSetupId);
+    must(guestRefused.status === 400 && guestRefused.body.includes("Only the seat's player"), "the server let a guest change the host's seat: " + JSON.stringify(guestRefused));
   } finally { await guestContext.close(); }
   // Restore the authoritative AI fixture after testing the real invitation.
   await page.evaluate(async (roomId) => {
-    const response = await fetch("/api/rooms/" + roomId + "/slots/slot-2", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ controller: "ai" }) });
+    // Asked as this browser's player, the room's host (see @@@seat-ownership).
+    const userId = JSON.parse(localStorage.getItem("sketch-rts-user")).id;
+    const response = await fetch("/api/rooms/" + roomId + "/slots/slot-2", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ patch: { controller: "ai" }, userId }) });
     if (!response.ok) throw new Error(await response.text());
   }, roomSetupId);
   await page.waitForFunction(() => document.querySelector("[data-slot-id='slot-2'] [data-slot-controller]")?.value === "ai" && document.querySelector("[data-start-room]")?.disabled === false, null, { timeout: 5000 });
