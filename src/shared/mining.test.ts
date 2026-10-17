@@ -2,12 +2,13 @@ import { describe, expect, it } from "vitest";
 import { createGame, issuePlayerCommand, snapshotGame, restoreSnapshotIntoGame, stepGame } from "./sim";
 import { buildingPlacementBlocker } from "./build-placement";
 import { miningHallSite } from "./mining-site";
-import { GOLD_MINE_RULES, prepareMiningFrame } from "./mining";
+import { GOLD_MINE_RULES, mineEntranceDistance, prepareMiningFrame } from "./mining";
+import { UNIT_DEFS } from "./catalog";
 import { createBuilding, createUnit } from "./map";
 import { MAP_POOL } from "./map-pool";
 import { groundUnder } from "./terrain";
 import { seconds } from "./time";
-import type { MapId, ResourceNode } from "./types";
+import type { GameSnapshot, MapId, ResourceNode } from "./types";
 
 function miningGame(map: MapId, count: number) {
   const seats = MAP_POOL.find(spec => spec.id === map)?.players ?? 2;
@@ -27,12 +28,12 @@ describe("gold haul cycles", () => {
   it("admits the longest-waiting worker first and resolves equal waits by id without changing orders", () => {
     const mine: ResourceNode = { id: "queue-mine", kind: "goldMine", x: 0, y: 0, amount: 1000, startAmount: 1000 };
     const workers = ([["worker-a", 3], ["worker-z", 9], ["worker-b", 9]] as const).map(([id, timer]) => {
-      const worker = createUnit(id, "player", "worker", GOLD_MINE_RULES.entryRange, 0);
+      const worker = createUnit(id, "player", "worker", mineEntranceDistance({}, UNIT_DEFS.worker.radius), 0);
       worker.order = { type: "mine", resourceId: mine.id, phase: "toMine", timer };
       return worker;
     });
     const orders = workers.map(worker => structuredClone(worker.order));
-    const frame = prepareMiningFrame({ resources: [mine], units: workers, buildings: [] });
+    const frame = prepareMiningFrame({ map: {} as GameSnapshot["map"], resources: [mine], units: workers, buildings: [] });
     expect(frame.nextWorker.get(mine.id)).toBe("worker-b");
     expect(workers.map(worker => worker.order)).toEqual(orders);
   });
@@ -45,7 +46,7 @@ describe("gold haul cycles", () => {
     const unfinished = createBuilding("unfinished", "player", "townHall", 1000, 0, false);
     const destroyed = createBuilding("destroyed", "enemy", "townHall", 1000, 500, true);
     destroyed.hp = 0;
-    const snapshot = { resources: [second, first], units: [], buildings: [hallB, unfinished, hallA, destroyed] };
+    const snapshot = { map: {} as GameSnapshot["map"], resources: [second, first], units: [], buildings: [hallB, unfinished, hallA, destroyed] };
     const before = prepareMiningFrame(snapshot);
     expect([...before.resources.keys()]).toEqual([second.id, first.id]);
     expect(before.resources.get(first.id)).toBe(first);
@@ -159,11 +160,11 @@ describe("gold haul cycles", () => {
   it("keeps the mine body clear and reserves a hauling lane around new town halls", () => {
     const {game,mine}=miningGame("bareDuel",0);
     game.buildings=[];
-    expect(buildingPlacementBlocker(game,"townHall",{x:mine.x+100,y:mine.y})).toBe(mine);
-    expect(buildingPlacementBlocker(game,"townHall",{x:mine.x+180,y:mine.y})).toBe(mine);
-    expect(buildingPlacementBlocker(game,"townHall",{x:mine.x+209,y:mine.y})).toBe(mine);
+    expect(buildingPlacementBlocker(game,"townHall",{x:mine.x+100,y:mine.y})?.id).toBe(mine.id);
+    expect(buildingPlacementBlocker(game,"townHall",{x:mine.x+180,y:mine.y})?.id).toBe(mine.id);
+    expect(buildingPlacementBlocker(game,"townHall",{x:mine.x+209,y:mine.y})?.id).toBe(mine.id);
     expect(buildingPlacementBlocker(game,"townHall",{x:mine.x+210,y:mine.y})).toBeUndefined();
-    expect(buildingPlacementBlocker(game,"farm",mine)).toBe(mine);
+    expect(buildingPlacementBlocker(game,"farm",mine)?.id).toBe(mine.id);
   });
   it("enforces the hauling distance on actual town hall build commands", () => {
     const {game, mine, workers} = miningGame("bareDuel", 1);

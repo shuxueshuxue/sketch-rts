@@ -4,6 +4,7 @@ import type { CommandFrameEntry } from "../sdk/commands/frame";
 import type { GameSnapshot, PlayerId } from "../shared/types";
 import { bootstrapPolicyContext, bootstrapScripts, isBootstrapVersion } from "./bootstrap_1/policy";
 import { planVeteranSkillCommands } from "./veteran-skills";
+import { standingBodies } from "../shared/structure-bodies";
 import { setBuildingBodies } from "../shared/terrain";
 
 export const DEFAULT_AI_PLANNER_VERSION: AiScriptVersion = "v2";
@@ -40,7 +41,9 @@ export function createAiMemoryProvider(memories: Record<PlayerId, AiPolicyMemory
 export function planAiOwnerCommandEntries<Source extends string = string>(snapshot: GameSnapshot, request: AiOwnerPlannerRequest<Source>, options: AiOwnerPlannerOptions = {}): CommandFrameEntry<Source>[] {
   const owner = request.playerId;
   if (!snapshot.players[owner]) return [];
-  setBuildingBodies(snapshot.map, [...snapshot.buildings, ...(snapshot.obstacles ?? [])]);
+  // The same bodies the sim stands on its map (see @@@structure-body): any other list restamps the shared overlay, and
+  // every think redid the pathing it was handed.
+  setBuildingBodies(snapshot.map, standingBodies(snapshot));
   const { memoryProvider, ...policyOptions } = options;
   const version = request.version ?? options.version ?? DEFAULT_AI_PLANNER_VERSION;
   const memory = request.memory ?? options.memory ?? memoryForOwner(owner, memoryProvider);

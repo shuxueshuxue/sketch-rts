@@ -86,6 +86,9 @@ const CAMP_MINE_SPACING = 520;
 // Contested ground (mines between players, route camps, mercenary posts) keeps this far from every start.
 const CONTESTED_START_SPACING = 900;
 const MERC_SPACING = 380;
+// A shop is a body (see @@@structure-body): mines, camps and mercenary posts stand clear of it with a cell between, for a
+// unit to walk through (its body three cells across, a post's four). A mercenary post used to be laid half over a shop.
+const SHOP_SPACING = 150;
 const TRIES = 60;
 const ATTEMPTS = 30;
 // Every path keeps this far outside every plateau (a plateau's own ways up are carved apart).
@@ -297,7 +300,7 @@ class Field {
   // A mine's copies: apart from every mine and from one another, at least `fromMains` from every main mine and
   // `fromStarts` from every start.
   mineFits(copies: Point[], fromStarts: number, fromMains = MINE_SPACING) {
-    return this.inside(copies, 300) && apart(copies, MINE_SPACING) && copies.every((mine) => nearest(mine, this.mines) >= MINE_SPACING && nearest(mine, this.mains) >= fromMains && nearest(mine, this.bases) >= fromStarts && this.dry(mine, 230));
+    return this.inside(copies, 300) && apart(copies, MINE_SPACING) && copies.every((mine) => nearest(mine, this.mines) >= MINE_SPACING && nearest(mine, this.mains) >= fromMains && nearest(mine, this.bases) >= fromStarts && nearest(mine, this.shops()) >= SHOP_SPACING && this.dry(mine, 230));
   }
 
   // A camp's copies: apart from every camp and from one another, off every mine but the one it guards, clear of the starts.
@@ -305,17 +308,21 @@ class Field {
     return (
       this.inside(copies, 200) &&
       apart(copies, CAMP_SPACING) &&
-      copies.every((camp) => nearest(camp, this.camps.map((other) => other.at)) >= CAMP_SPACING && nearest(camp, this.bases) >= fromStarts && nearest(camp, this.mercs.map((merc) => merc.at)) >= MERC_SPACING) &&
+      copies.every((camp) => nearest(camp, this.camps.map((other) => other.at)) >= CAMP_SPACING && nearest(camp, this.bases) >= fromStarts && nearest(camp, this.mercs.map((merc) => merc.at)) >= MERC_SPACING && nearest(camp, this.shops()) >= SHOP_SPACING) &&
       copies.every((camp) => [...this.mains, ...this.mines].every((mine) => guarded.some((own) => own === mine) || distance(camp, mine) >= CAMP_MINE_SPACING)) &&
       copies.every((camp) => this.offPlateaus(camp, 150) && this.dry(camp, CAMP_SPREAD + 30))
     );
+  }
+
+  shops() {
+    return this.sites.map((site) => site.at);
   }
 
   mercFits(copies: Point[]) {
     return (
       this.inside(copies, 200) &&
       apart(copies, MERC_SPACING) &&
-      copies.every((merc) => nearest(merc, [...this.mains, ...this.mines]) >= MERC_SPACING && nearest(merc, this.camps.map((camp) => camp.at)) >= MERC_SPACING && nearest(merc, this.bases) >= CONTESTED_START_SPACING) &&
+      copies.every((merc) => nearest(merc, [...this.mains, ...this.mines]) >= MERC_SPACING && nearest(merc, this.camps.map((camp) => camp.at)) >= MERC_SPACING && nearest(merc, this.bases) >= CONTESTED_START_SPACING && nearest(merc, this.shops()) >= SHOP_SPACING) &&
       copies.every((merc) => this.offPlateaus(merc, 150) && this.dry(merc, 150))
     );
   }

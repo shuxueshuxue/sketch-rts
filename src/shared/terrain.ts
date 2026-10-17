@@ -273,6 +273,20 @@ export function footprintCells(cell: number, x: number, y: number, radius: numbe
   return { left: first(x - half), right: first(x + half) - 1, top: first(y - half), bottom: first(y + half) - 1 };
 }
 
+// How far a point stands from a body's footprint, the cells it covers (see footprintCells): 0 on or inside them. On a map
+// without terrain the body is its round radius.
+export function footprintGap(map: Pick<GameMap, "terrain">, point: Point, body: Point & { radius: number }) {
+  if (!map.terrain) return Math.max(0, Math.hypot(point.x - body.x, point.y - body.y) - body.radius);
+  const bounds = footprintBounds(map.terrain.cell, body);
+  return Math.hypot(Math.max(0, bounds.left - point.x, point.x - bounds.right), Math.max(0, bounds.top - point.y, point.y - bounds.bottom));
+}
+
+// The edges of the cells a body's footprint covers (see footprintCells), in map units.
+export function footprintBounds(cell: number, body: Point & { radius: number }) {
+  const cells = footprintCells(cell, body.x, body.y, body.radius);
+  return { left: cells.left * cell, right: (cells.right + 1) * cell, top: cells.top * cell, bottom: (cells.bottom + 1) * cell };
+}
+
 // Whether every cell of a footprint passes the test (by its padded index and its index in the terrain); a cell off the map
 // never does.
 function everyFootprintCell(terrain: Terrain, x: number, y: number, radius: number, passes: (at: number, cell: number) => boolean) {

@@ -2,7 +2,7 @@ import { detCos, detSin } from '../../shared/det-math';
 import { isOpenGround, isWalkable, sameGround, walkingDistance } from '../../shared/terrain';
 import { nearestByRoute } from '../../shared/route-selection';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
-import { GOLD_MINE_RULES } from '../../shared/mining';
+import { GOLD_MINE_RULES, mineEntranceDistance } from '../../shared/mining';
 import type { Building, GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { isOpponentOwner } from '../policy/ownership';
 import { distance, type Point } from '../policy/spatial';
@@ -63,10 +63,10 @@ function exposedMiningLine(snapshot: GameSnapshot, rider: Unit, worker: Unit, ha
   const resourceId = worker.order.resourceId;
   const mine = snapshot.resources.find(resource => resource.id === resourceId && resource.amount > 0);
   if (!mine) return false;
-  const gap = distance(hall, mine);
-  if (gap > GOLD_MINE_RULES.baseRange || gap <= GOLD_MINE_RULES.entryRange) return false;
-  const entry = { x: mine.x + (hall.x - mine.x) * GOLD_MINE_RULES.entryRange / gap,
-    y: mine.y + (hall.y - mine.y) * GOLD_MINE_RULES.entryRange / gap };
+  const gap = distance(hall, mine), entrance = mineEntranceDistance(snapshot.map, worker.radius);
+  if (gap > GOLD_MINE_RULES.baseRange || gap <= entrance) return false;
+  const entry = { x: mine.x + (hall.x - mine.x) * entrance / gap,
+    y: mine.y + (hall.y - mine.y) * entrance / gap };
   return isWalkable(snapshot.map, entry.x, entry.y) && sameGround(snapshot.map, worker, entry)
     && mountedFiringPoint(snapshot, rider, entry, towers, defenders) !== undefined;
 }

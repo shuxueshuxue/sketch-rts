@@ -1,3 +1,4 @@
+import { standingBodies } from "../shared/structure-bodies";
 import { BUILDING_DEFS } from "../shared/catalog";
 import { footprintCells, isFootprintBuildable, isWalkable } from "../shared/terrain";
 import type { BuildingKind, GameSnapshot } from "../shared/types";
@@ -33,15 +34,16 @@ export function drawFootprint(ctx: CanvasRenderingContext2D, square: FootprintSq
 }
 
 // @@@footprint-preview - Which cells of a building's footprint (see footprintSquare) stop it, as Warcraft III marks them
-// red: a cell off the map, under another building, rock pile or gate's footprint, or ground the building cannot take. A
+// red: a cell off the map, under the footprint of any body standing there (a building, a rock pile or gate, a mine, a shop
+// or a camp: see @@@structure-body), or ground the building cannot take. A
 // building on dry ground takes only buildable ground; a shipyard (see @@@shore-footprint) takes ground a worker walks or
 // water, but no forest, rock or ramp. Whether a shipyard's footprint as a whole holds a dry cell and open water is no one
 // cell's fault, so it marks none.
-export function blockedFootprintCells(snapshot: Pick<GameSnapshot, "map" | "buildings" | "obstacles">, kind: BuildingKind, square: FootprintSquare) {
+export function blockedFootprintCells(snapshot: Pick<GameSnapshot, "map" | "buildings" | "obstacles"> & Partial<Pick<GameSnapshot, "resources" | "shops" | "mercenaryCamps">>, kind: BuildingKind, square: FootprintSquare) {
   const { cell } = square;
   const map = snapshot.map;
   const terrain = map.terrain;
-  const others = [...snapshot.buildings, ...(snapshot.obstacles ?? [])].map((body) => footprintCells(cell, body.x, body.y, body.radius));
+  const others = standingBodies(snapshot).map((body) => footprintCells(cell, body.x, body.y, body.radius));
   const blocked = new Set<string>();
   for (let row = square.top; row <= square.bottom; row += 1) {
     for (let col = square.left; col <= square.right; col += 1) {

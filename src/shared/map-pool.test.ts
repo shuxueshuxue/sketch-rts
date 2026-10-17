@@ -27,7 +27,7 @@ const HASHES: Record<PoolMapId, string> = {
   sapphireArchipelago:'b6703a780998228c',
   grandEstuary:'f61173bfe2528d83',
   brokenSea: "ccf2b2d83de2b3e1",
-  templeSpring: "573bc1e6dd39e87f",
+  templeSpring: "f1852bf289626b67",
   turtleLake: "57468c4991eaf724",
   elderwood: "2421b993970b6212",
   ringwater: "8ea4e0320581a02b",
