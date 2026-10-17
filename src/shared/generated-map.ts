@@ -1881,11 +1881,12 @@ function assemble(kind: GeneratedLayoutKind, idea: MapIdea, field: Field, player
       createUnit(`unit-${player}-worker-2`, player, "worker", base.x - 10, base.y + 65),
       createUnit(`unit-${player}-worker-3`, player, "worker", base.x + 55, base.y + 40),
     );
-    resources.push({ id: `gold-${player}-main`, kind: "goldMine", x: mine.x, y: mine.y, amount: MINE_GOLD });
+    resources.push({ id: `gold-${player}-main`, kind: "goldMine", x: mine.x, y: mine.y, amount: MINE_GOLD, startAmount: MINE_GOLD });
   }
   field.mines.forEach((mine, index) => {
     const at = clampPoint(mine, field.size);
-    resources.push({ id: `gold-gen-${index + 1}`, kind: "goldMine", x: at.x, y: at.y, amount: field.rich.some((rich) => distance(rich, mine) < 1) ? RICH_GOLD : MINE_GOLD });
+    const amount = field.rich.some((rich) => distance(rich, mine) < 1) ? RICH_GOLD : MINE_GOLD;
+    resources.push({ id: `gold-gen-${index + 1}`, kind: "goldMine", x: at.x, y: at.y, amount, startAmount: amount });
   });
   const items: WorldItem[] = [];
   const camps: GeneratedMap["camps"] = [];

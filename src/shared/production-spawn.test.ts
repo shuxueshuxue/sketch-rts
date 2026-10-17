@@ -60,7 +60,7 @@ describe('rally-directed production exits', () => {
     target.x = 100;
     expect(landSpawnPoint(game, building, unit)!.x).toBeLessThan(building.x);
     expect(probe(context)).toBe(unit);
-    game.resources.push({ id: 'gold', kind: 'goldMine', x: building.x, y: 1100, amount: 100 });
+    game.resources.push({ id: 'gold', kind: 'goldMine', x: building.x, y: 1100, amount: 100, startAmount: 100 });
     building.rallyTarget = { type: 'resource', resourceId: 'gold' };
     expect(productionRallyPoint(game, building)).toEqual({ x: building.x, y: 1100 });
     expect(landSpawnPoint(game, building, unit)!.y).toBeGreaterThan(building.y);
@@ -82,7 +82,7 @@ describe('rally-directed production exits', () => {
     const { game, building } = scene();
     Object.assign(building, createBuilding(building.id, 'player', 'townHall', 656, 656, true));
     setBuildingBodies(game.map, game.buildings);
-    const mine = { id: 'close-mine', kind: 'goldMine' as const, x: building.x + 88, y: building.y, amount: 1000 };
+    const mine = { id: 'close-mine', kind: 'goldMine' as const, x: building.x + 88, y: building.y, amount: 1000, startAmount: 1000 };
     game.resources.push(mine);
     issuePlayerCommand(game, 'player', { type: 'setRally', buildingIds: [building.id], x: mine.x, y: mine.y, target: { type: 'resource', resourceId: mine.id } });
     issuePlayerCommand(game, 'player', { type: 'train', buildingId: building.id, unitKind: 'worker' });

@@ -345,6 +345,8 @@ export type ResourceNode = {
   x: number;
   y: number;
   amount: number;
+  // The gold the mine was laid with, so a view can tell a full mine from one worked down or out.
+  startAmount: number;
   harvestCooldownRemaining?: number;
 };
 
@@ -506,7 +508,8 @@ export type ScenarioOverride = {
   replaceDefaultResources?: boolean;
   replaceDefaultMercenaryCamps?: boolean;
   replaceDefaultLandmarks?: boolean;
-  addResources?: ResourceNode[];
+  // A mine a scenario lays: its start amount is what it holds when laid.
+  addResources?: Omit<ResourceNode, "startAmount">[];
   addMercenaryCamps?: MercenaryCamp[];
   addShops?: Shop[];
   addItems?: WorldItem[];

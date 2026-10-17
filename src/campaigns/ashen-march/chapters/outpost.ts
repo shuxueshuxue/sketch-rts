@@ -59,8 +59,8 @@ export const outpost: Chapter<Vars> = {
     // The outpost as the wardens find it: a hall still standing, a mine, and a handful of fen folk willing to work.
     world.building("townHall", PLAYER, OUTPOST_SPOTS.hall, { id: "outpost-hall" });
     for (const spot of OUTPOST_SPOTS.farms) world.building("farm", PLAYER, spot);
-    world.game.resources.push({ id: "outpost-mine", kind: "goldMine", x: OUTPOST_SPOTS.mine.x, y: OUTPOST_SPOTS.mine.y, amount: 9000 });
-    world.game.resources.push({ id: "outpost-mine-2", kind: "goldMine", x: 2600, y: 7550, amount: 6000 });
+    world.game.resources.push({ id: "outpost-mine", kind: "goldMine", x: OUTPOST_SPOTS.mine.x, y: OUTPOST_SPOTS.mine.y, amount: 9000, startAmount: 9000 });
+    world.game.resources.push({ id: "outpost-mine-2", kind: "goldMine", x: 2600, y: 7550, amount: 6000, startAmount: 6000 });
     const workers = world.spawnGroup("worker", PLAYER, { x: 2800, y: 6900 }, 5, { spread: 60 });
     world.gold(PLAYER, 520 - (world.game.players[PLAYER]?.gold ?? 0));
     world.order(workers, (unitIds) => ({ type: "mine", unitIds, resourceId: "outpost-mine" }));

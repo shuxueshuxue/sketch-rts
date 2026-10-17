@@ -103,19 +103,19 @@ export function createInitialResources(mapId: MapId = DEFAULT_MAP_ID, players: P
     return [
       ...players.map((owner, index) => {
         const start = startPositionFor(owner, index, players.length, STANDARD_MAP_SIZE * 3, players, teams);
-        return { id: `gold-${owner}-main`, kind: "goldMine" as const, x: start.mineX, y: start.mineY, amount: 6_000 };
+        return { id: `gold-${owner}-main`, kind: "goldMine" as const, x: start.mineX, y: start.mineY, amount: 6_000, startAmount: 6_000 };
       }),
       ...grandThirtyExpansionMines(),
     ];
   }
   const mainMines: ResourceNode[] = players.map((owner, index) => {
     const start = startPositionFor(owner, index, players.length, STANDARD_MAP_SIZE, players, teams);
-    return { id: `gold-${owner}-main`, kind: "goldMine" as const, x: start.mineX, y: start.mineY, amount: 6_000 };
+    return { id: `gold-${owner}-main`, kind: "goldMine" as const, x: start.mineX, y: start.mineY, amount: 6_000, startAmount: 6_000 };
   });
   const expansionMines: ResourceNode[] = [
-    { id: "gold-north-ridge", kind: "goldMine", x: 4060, y: 1320, amount: 6_000 },
-    { id: "gold-south-grove", kind: "goldMine", x: 3720, y: 6260, amount: 6_000 },
-    { id: "gold-center-scar", kind: "goldMine", x: 4096, y: 4200, amount: 6_000 },
+    { id: "gold-north-ridge", kind: "goldMine", x: 4060, y: 1320, amount: 6_000, startAmount: 6_000 },
+    { id: "gold-south-grove", kind: "goldMine", x: 3720, y: 6260, amount: 6_000, startAmount: 6_000 },
+    { id: "gold-center-scar", kind: "goldMine", x: 4096, y: 4200, amount: 6_000, startAmount: 6_000 },
   ];
   if (mapId === "bareDuel" || mapId === "campRush") return mainMines;
   return [...mainMines, ...expansionMines.map(scaleResource)];
@@ -384,7 +384,7 @@ function goldGridMines(): ResourceNode[] {
     kind: "goldMine" as const,
     x: point.x,
     y: point.y,
-    amount: 6_000,
+    amount: 6_000, startAmount: 6_000,
   }));
 }
 
@@ -499,6 +499,7 @@ function grandThirtyExpansionMines(): ResourceNode[] {
       x: mapSize * (row === 0 ? 0.37 : 0.63),
       y: mapSize * (lane / 10),
       amount: 6_000,
+      startAmount: 6_000,
     };
   });
 }
