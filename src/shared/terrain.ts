@@ -1100,6 +1100,79 @@ export function guardedField(map: Pick<GameMap, "terrain" | "width" | "height">,
   };
 }
 
+// @@@nearest-field - Which of several points is the nearest walk from a goal: one field grown from all of them at once,
+// each cell keeping its walking cost to the nearest and that one's index (the lower index among equals), as many goals
+// ask of the same few points (each injured fighter its nearest healer, each worker its nearest hall). A walk is as long
+// either way (the steps and their costs are the same both ways), so the answer is the one a field grown from each goal
+// gives, without a field per goal: goals move every think, and their fields were grown afresh each time; a set of
+// points that stays (halls, posts) keeps its one field from think to think. It reads the terrain alone, as
+// walkingDistance does.
+const NEAREST_FIELD_CACHE = 16;
+
+export function nearestByWalk(map: Pick<GameMap, "terrain">, candidates: readonly Point[], goal: Point, mover: Mover = "land"): number | undefined {
+  const terrain = map.terrain!;
+  const state = runtime(terrain, mover);
+  const target = padAt(state, goal.x, goal.y);
+  if (target < 0 || state.walk[target] !== 1) return undefined;
+  const cells = candidates.map((candidate) => padAt(state, candidate.x, candidate.y));
+  const key = cells.join(",");
+  const fields = state.nearestFields ??= new Map();
+  let field = fields.get(key);
+  if (field) fields.delete(key);
+  else {
+    if (fields.size >= NEAREST_FIELD_CACHE) fields.delete(fields.keys().next().value!);
+    field = growNearest(state, cells);
+  }
+  fields.set(key, field);
+  return field.dist[target]! >= UNREACHED ? undefined : field.label[target]!;
+}
+
+// Dial's algorithm from every candidate's cell, as grow, ordering (cost, candidate index): an equal cost from a lower index
+// takes a cell over and passes on through it.
+function growNearest(state: TerrainRuntime, cells: readonly number[]) {
+  const { walk, offsets } = state;
+  const dist = new Int32Array(walk.length).fill(UNREACHED), label = new Int32Array(walk.length).fill(-1);
+  const buckets: number[][] = Array.from({ length: 8 }, () => []);
+  let pending = 0;
+  cells.forEach((cell, index) => {
+    if (cell < 0 || walk[cell] !== 1 || dist[cell] === 0) return;
+    dist[cell] = 0;
+    label[cell] = index;
+    buckets[0]!.push(cell);
+    pending += 1;
+  });
+  const reach = (next: number, reached: number, from: number) => {
+    if (reached > dist[next]! || (reached === dist[next] && label[from]! >= label[next]!)) return;
+    dist[next] = reached;
+    label[next] = label[from]!;
+    buckets[reached & 7]!.push(next);
+    pending += 1;
+  };
+  for (let cost = 0; pending > 0; cost += 1) {
+    const bucket = buckets[cost & 7]!;
+    while (bucket.length > 0) {
+      const at = bucket.pop()!;
+      pending -= 1;
+      if (dist[at] !== cost) continue;
+      let sides = 0;
+      for (let direction = 0; direction < 4; direction += 1) {
+        const next = at + offsets[direction]!;
+        if (walk[next] !== 1) continue;
+        sides |= 1 << direction;
+        reach(next, cost + STRAIGHT, at);
+      }
+      for (let direction = 4; direction < 8; direction += 1) {
+        const next = at + offsets[direction]!;
+        if (walk[next] !== 1) continue;
+        const corner = direction === 4 ? 3 : direction === 5 ? 6 : direction === 6 ? 12 : 9;
+        if ((sides & corner) !== corner) continue;
+        reach(next, cost + DIAGONAL, at);
+      }
+    }
+  }
+  return { dist, label };
+}
+
 /** Continuous travel cost of a clear land segment, in equivalent bare-ground units.
  * The caller supplies walkable terrain; status, arrival tolerance and per-tick
  * boundary rounding belong to actual movement. */
@@ -1387,6 +1460,8 @@ type TerrainRuntime = {
   wholes?: { labels: Int32Array; count: number; deep: Int32Array };
   // The sea's shore spots by a shipyard's radius (see shoreSpots), worked out the first time each is asked.
   shores?: Map<number, Point[]>;
+  // Nearest-of fields by their candidates' cells, the least recently used first (see @@@nearest-field).
+  nearestFields?: Map<string, { dist: Int32Array; label: Int32Array }>;
 };
 
 // @@@terrain-runtime - What the terrain's queries need, built once per terrain and mover and kept beside the terrain (never
