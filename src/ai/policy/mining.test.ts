@@ -15,7 +15,7 @@ describe('mining workforce after admission', () => {
     for (let tick = 0; tick < seconds(30); tick++) stepGame(game);
     expect(workers.every(worker => worker.mineSlot === main.id)).toBe(true);
     game.buildings.push(createBuilding('natural-hall', 'player', 'townHall', 1700, 500, true));
-    game.resources.push({id: 'natural-mine', kind: 'goldMine', x: 1988, y: 500, amount: 6000});
+    game.resources.push({id: 'natural-mine', kind: 'goldMine', x: 1988, y: 500, amount: 6000, startAmount: 6000});
     for (let turn = 0; turn < 2; turn++) {
       const command = AI_SCRIPT_LIBRARY.economy.run(snapshotGame(game), 'player', {version: 'v2', requestedVersion: version});
       expect(command).toMatchObject({type: 'mine', resourceId: 'natural-mine'});

@@ -141,7 +141,7 @@ export function estuaryMap(
       id: `gold-${home.owner}-main`,
       kind: "goldMine",
       ...mine,
-      amount: 6000,
+      amount: 6000, startAmount: 6000,
     });
     for (const [rank, offset, dy] of [
       [1, 760, 110],
@@ -152,7 +152,7 @@ export function estuaryMap(
         id: `gold-${home.owner}-${rank}`,
         kind: "goldMine",
         ...at,
-        amount: rank === 1 ? 7500 : 9500,
+        amount: rank === 1 ? 7500 : 9500, startAmount: rank === 1 ? 7500 : 9500,
       });
       const center = project(home.x + home.side * (offset! + 85), home.y + dy! + 90);
       result.units.push(...campMembers(rank === 1 ? naturalRoster : frontierRoster, center).map((member, i) => createUnit(`guard-${index}-${rank}-${i}`, "neutral", member.kind, member.x, member.y)));

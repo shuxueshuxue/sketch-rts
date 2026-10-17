@@ -118,7 +118,7 @@ describe("buildings as bodies", () => {
   it("keeps workers mining round their hall", () => {
     const game = field();
     const hall = game.buildings.find((building) => building.owner === "player")!;
-    game.resources = [{ id: "mine", kind: "goldMine", x: hall.x + 200, y: hall.y + 60, amount: 5000 }];
+    game.resources = [{ id: "mine", kind: "goldMine", x: hall.x + 200, y: hall.y + 60, amount: 5000, startAmount: 5000 }];
     const workers = [0, 1, 2].map((index) => game.spawnUnit("player", "worker", hall.x + 80, hall.y + 60 + index * 30));
     issuePlayerCommand(game, "player", { type: "mine", unitIds: workers.map((worker) => worker.id), resourceId: "mine" });
     const gold = game.players.player!.gold;
@@ -146,7 +146,7 @@ describe("buildings as bodies", () => {
   it("lets a worker on a mining run pass through other units", () => {
     const game = field();
     const hall = game.buildings.find((building) => building.owner === "player")!;
-    game.resources = [{ id: "mine", kind: "goldMine", x: hall.x + 400, y: hall.y + 200, amount: 5000 }];
+    game.resources = [{ id: "mine", kind: "goldMine", x: hall.x + 400, y: hall.y + 200, amount: 5000, startAmount: 5000 }];
     const worker = game.spawnUnit("player", "worker", 600, 600);
     const footman = game.spawnUnit("player", "footman", 605, 600);
     issuePlayerCommand(game, "player", { type: "mine", unitIds: [worker.id], resourceId: "mine" });

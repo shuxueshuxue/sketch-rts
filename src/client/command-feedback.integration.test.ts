@@ -18,7 +18,7 @@ function field() {
 
 describe("private order feedback from actual commands", () => {
   it("keeps both players’ queued, follow, mine, attack and rally receipts private, including between allies", () => {
-    const game = field(), mine = { id: "gold", kind: "goldMine" as const, x: 1600, y: 1200, amount: 10000 };
+    const game = field(), mine = { id: "gold", kind: "goldMine" as const, x: 1600, y: 1200, amount: 10000, startAmount: 10000 };
     game.resources.push(mine);
     const actors = ["us", "ally", "enemy"].map((owner, i) => ({
       owner,

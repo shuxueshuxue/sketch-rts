@@ -25,7 +25,7 @@ function miningGame(map: MapId, count: number) {
 
 describe("gold haul cycles", () => {
   it("admits the longest-waiting worker first and resolves equal waits by id without changing orders", () => {
-    const mine: ResourceNode = { id: "queue-mine", kind: "goldMine", x: 0, y: 0, amount: 1000 };
+    const mine: ResourceNode = { id: "queue-mine", kind: "goldMine", x: 0, y: 0, amount: 1000, startAmount: 1000 };
     const workers = ([["worker-a", 3], ["worker-z", 9], ["worker-b", 9]] as const).map(([id, timer]) => {
       const worker = createUnit(id, "player", "worker", GOLD_MINE_RULES.entryRange, 0);
       worker.order = { type: "mine", resourceId: mine.id, phase: "toMine", timer };
@@ -38,7 +38,7 @@ describe("gold haul cycles", () => {
   });
 
   it("rebuilds resource and completed hall indexes in source order without retaining an old frame", () => {
-    const first: ResourceNode = { id: "mine-a", kind: "goldMine", x: 0, y: 0, amount: 1000 };
+    const first: ResourceNode = { id: "mine-a", kind: "goldMine", x: 0, y: 0, amount: 1000, startAmount: 1000 };
     const second: ResourceNode = { ...first, id: "mine-b", x: 500 };
     const hallA = createBuilding("hall-a", "player", "townHall", 210, 0, true);
     const hallB = createBuilding("hall-b", "player", "townHall", 710, 0, true);

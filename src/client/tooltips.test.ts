@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createI18n } from "./i18n";
+import { ITEM_DEFS } from "../shared/equipment";
 import { abilityTooltip, buildingTooltip, campDetail, itemTooltip, mercenaryHireTooltip, tooltipText, unitSelectionTooltip, unitTooltip, upgradeTooltip, veteranSkillTooltip, withTooltipRequirement } from "./tooltips";
 import { ABILITY_DEFS, MERCENARY_HIRE_RANGE, resolveVariant } from "../shared/catalog";
 import { TRANSPORT_COMBAT } from "../shared/transport-role";
@@ -156,9 +157,20 @@ describe("gameplay tooltips", () => {
       title: "Lightning Rod",
       body: expect.stringContaining("enemy"),
       stats: expect.arrayContaining(["84 initial damage", "Up to 3 targets", "Range 280", "Cooldown 18.0s"]),
-      requirements: ["Needs a visible enemy unit in range."],
+      requirements: [],
+      notes: ["Needs a visible enemy unit in range."],
       hotkey: "1",
     });
+  });
+
+  // An item's tooltip tells what it is and how it is used; a requirement (drawn as unmet) never stands there on its own,
+  // and nothing about neutral carriers reaches a player: a player's carrier never is one.
+  it("never shows an item's standing rules as unmet requirements", () => {
+    for (const locale of ["en", "zh"] as const) for (const kind of Object.keys(ITEM_DEFS) as (keyof typeof ITEM_DEFS)[]) {
+      const tooltip = itemTooltip(kind, undefined, createI18n(locale));
+      expect(tooltip.requirements, `${locale} ${kind}`).toEqual([]);
+      expect(tooltipText(tooltip), `${locale} ${kind}`).not.toMatch(/neutral|中立单位/);
+    }
   });
 
   it("describes upgrades with affected units and per-level changes", () => {
@@ -229,7 +241,7 @@ describe("gameplay tooltips", () => {
       stats: expect.arrayContaining(["恢复 55 生命", "射程 240", `冷却 ${HEAL_COOLDOWN_SECONDS}s`]),
       requirements: [],
     });
-    expect(itemTooltip("lightningRod", "1", zh).requirements).toEqual(["需要射程内可见的敌方单位。"]);
+    expect(itemTooltip("lightningRod", "1", zh).notes).toEqual(["需要射程内可见的敌方单位。"]);
     expect(upgradeTooltip("buildingDurability", "d", 0, zh).requirements).toEqual(["在城镇大厅研究。", "影响建筑。"]);
     expect(upgradeTooltip("leadership", "l", 2, zh)).toMatchObject({
       stats: expect.arrayContaining(["1/2/3 星 +3/7/12 生命/秒"]),
