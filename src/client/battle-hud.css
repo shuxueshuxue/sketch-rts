@@ -16,17 +16,14 @@
   --hud-dock-frame:7px;
   --hud-dock-width:calc(8 * var(--hud-button-width) + 7 * var(--hud-button-gap) + 2 * var(--hud-dock-padding) + 2 * var(--hud-dock-frame));
   --hud-command-height:calc(2 * var(--hud-button-height) + var(--hud-button-gap) + 2 * var(--hud-dock-padding) + 2 * var(--hud-dock-frame));
-  --hud-item-rows:1;
   position:absolute; left:16px; bottom:16px;
   display:grid; grid-template-columns:var(--hud-card-width) minmax(0,max-content); align-items:end;
-  gap:6px 8px; width:fit-content; max-width:min(780px,calc(100vw - 224px)); max-height:calc(100dvh - 80px);
+  gap:6px 8px; width:fit-content; max-width:min(940px,calc(100vw - 224px)); max-height:calc(100dvh - 80px);
   color:var(--battle-ink); font-family:var(--font-ui); font-variant-numeric:tabular-nums;
 }
 .control-deck,.control-deck * { box-sizing:border-box; }
 .control-deck > div { box-sizing:border-box; min-width:0; }
-.hud-actions { grid-column:2; grid-row:1; display:grid; grid-template-rows:max-content minmax(var(--hud-command-height),max-content); align-content:end; align-self:end; justify-items:start; gap:0; width:var(--hud-dock-width); max-width:100%; }
-/* A unit keeps its inventory space when a subpage temporarily hides its items. */
-.hud-actions[data-has-items] { gap:6px; min-height:calc(var(--hud-command-height) + var(--hud-item-rows) * 42px + (var(--hud-item-rows) - 1) * var(--hud-button-gap) + 2 * var(--hud-dock-padding) + 2 * var(--hud-dock-frame) + 6px); }
+.hud-actions { grid-column:2; grid-row:1; display:grid; grid-template-columns:max-content max-content; align-items:end; align-self:end; justify-items:start; gap:6px 8px; max-width:100%; }
 .selection-chip {
   /* As tall as the command card at least, so the two frames make one bar along the bottom. */
   grid-column:1; grid-row:1; padding:8px; min-height:var(--hud-command-height);
@@ -93,10 +90,17 @@
 .command-dock {
   /* @@@command-card - One fixed card, two rows of eight slots, whatever is selected: buttons fill it from the bottom
      left, and the card never jumps in size or place between a worker, a squad and a building. */
-  grid-row:2; align-self:end; flex-wrap:wrap-reverse;
+  align-self:end; flex-wrap:wrap-reverse;
   width:var(--hud-dock-width); max-width:100%; height:min(var(--hud-command-height),45dvh); align-content:flex-start;
 }
-.item-dock { grid-row:1; }
+.command-dock { grid-column:1; grid-row:1; }
+/* @@@item-slots - The focused unit's four carrying positions, two by two beside the command card and as tall as it, in
+   the bar along the bottom: slot n is always the same well, filled or empty. */
+.item-dock {
+  grid-column:2; grid-row:1; display:grid; grid-template-columns:repeat(2,var(--hud-button-width)); grid-auto-rows:var(--hud-button-height);
+  align-content:end; height:min(var(--hud-command-height),45dvh); width:auto; overflow:hidden;
+}
+.item-button[data-empty] { background:transparent; cursor:default; }
 .command-button,.item-button {
   position:relative; flex:0 0 var(--hud-button-width); width:var(--hud-button-width); height:var(--hud-button-height); padding:0;
   border:1px solid transparent; border-radius:5px; background:#d3e1e608;
@@ -122,8 +126,6 @@
 /* Except where the words are the state itself: who a purchase will be handed to. */
 .command-button[data-purchase-recipient] .command-label { display:block; position:absolute; bottom:2px; left:2px; right:2px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font:10px/12px var(--font-ui); text-shadow:0 1px #24140d; }
 .hotkey { position:absolute; right:2px; top:1px; padding:0 2px; border-radius:2px; background:#182127d9; color:#bdbba9; font:8px/11px var(--font-ui); }
-.item-button { height:42px; }
-.item-button .item-icon { height:40px; }
 .command-button-disabled { opacity:.48; cursor:help; }
 .command-button-disabled:hover { opacity:.85; }
 .command-button[data-disabled-label]::after { content:attr(data-disabled-label); position:absolute; top:17px; left:2px; right:2px; color:#fff3d1; background:#302014f2; padding:1px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font:10px/12px var(--font-ui); }
@@ -256,14 +258,12 @@
 @media (max-width:650px) {
   .control-deck { --hud-button-width:46px; --hud-button-height:50px; grid-template-columns:minmax(0,1fr); min-width:min(calc(var(--hud-card-width) + 24px),calc(100vw - 210px)); max-width:min(calc(var(--hud-dock-width) + 24px),calc(100vw - 210px)); left:8px; bottom:8px; }
   .selection-chip { grid-row:1; width:100%; }
-  .hud-actions { grid-column:1; grid-row:2; }
+  .hud-actions { grid-column:1; grid-row:2; grid-template-columns:max-content; }
+  .item-dock { grid-column:1; grid-row:1; grid-template-columns:repeat(4,var(--hud-button-width)); height:auto; }
+  .command-dock { grid-row:2; }
   .hud-subject { grid-template-columns:72px minmax(0,1fr); min-height:72px; }
   .hud-subject-art { width:72px; height:72px; }
   .hud-roster { max-height:74px; }
-}
-
-@media (max-width:524px) {
-  .control-deck { --hud-item-rows:2; }
 }
 
 /* Hidden action groups must release their layout space, including empty selections. */
