@@ -1,0 +1,76 @@
+{
+  "job": "old-red",
+  "attempt": 1,
+  "nodeSpawned": true,
+  "noGame": false,
+  "heapMiB": 768,
+  "startedAtUTC": "2026-10-16T23:38:18.071213+00:00",
+  "preflight": {
+    "capSHA256": "62adff8394ca151a4f2f3ba919f7c6974dd3dd78caf796578346cabb16cae784",
+    "sourceCount": 1569,
+    "sourceExact": true,
+    "frozen497Manifest184R2Exact": true,
+    "head": "accc6bd7e9e8f1cb5319addebbe8987a901b8683",
+    "status": " M src/ai/bootstrap_1/mine-defense.ts\n M src/ai/policy/ground-threat.ts\n M src/ai/policy/v6/general.ts\n?? src/ai/bootstrap_1/ferry-loading-escape.test.ts\n?? src/ai/bootstrap_1/fixtures/archer-ferry-loading-11565.json.gz\n?? src/ai/bootstrap_1/fixtures/incoming-overlap-221325-221340.json.gz\n?? src/ai/bootstrap_1/incoming-overlap.test.ts\n"
+  },
+  "before": {
+    "rawHeadroomBytes": 2518310912,
+    "regularFreeBytes": 73703424,
+    "outputFreeBytes": 2183000064,
+    "temporaryFreeBytes": 2183000064,
+    "oom": "low 0\nhigh 0\nmax 346832\noom 43\noom_kill 2\noom_group_kill 0\n"
+  },
+  "pid": 564137,
+  "args": [
+    "node",
+    "--max-old-space-size=768",
+    "/tmp/sketch-rts-ferry-loading-fire-c6-control/node_modules/vitest/vitest.mjs",
+    "run",
+    "--config",
+    "/tmp/bootstrap-ferry-loading-fire-c6-prepared-20261016/vitest-old.config.mts",
+    "--reporter=json",
+    "--outputFile",
+    "/tmp/bootstrap-ferry-loading-fire-c6-prepared-20261016/old-red-vitest-1.json"
+  ],
+  "exitCode": 1,
+  "cpuUserSeconds": 4.202582,
+  "cpuSystemSeconds": 0.7978569999999999,
+  "maxRSSKiB": 272992,
+  "after": {
+    "rawHeadroomBytes": 2511024128,
+    "regularFreeBytes": 73703424,
+    "outputFreeBytes": 2182975488,
+    "temporaryFreeBytes": 2182975488,
+    "oom": "low 0\nhigh 0\nmax 346832\noom 43\noom_kill 2\noom_group_kill 0\n"
+  },
+  "postflight": {
+    "capSHA256": "62adff8394ca151a4f2f3ba919f7c6974dd3dd78caf796578346cabb16cae784",
+    "sourceCount": 1569,
+    "sourceExact": true,
+    "frozen497Manifest184R2Exact": true,
+    "head": "accc6bd7e9e8f1cb5319addebbe8987a901b8683",
+    "status": " M src/ai/bootstrap_1/mine-defense.ts\n M src/ai/policy/ground-threat.ts\n M src/ai/policy/v6/general.ts\n?? src/ai/bootstrap_1/ferry-loading-escape.test.ts\n?? src/ai/bootstrap_1/fixtures/archer-ferry-loading-11565.json.gz\n?? src/ai/bootstrap_1/fixtures/incoming-overlap-221325-221340.json.gz\n?? src/ai/bootstrap_1/incoming-overlap.test.ts\n"
+  },
+  "sourceFrozenPrePostExact": true,
+  "semanticRedVerified": false,
+  "actualControl": {
+    "apiReached": true,
+    "tick": 11565,
+    "fullOwnerEntriesExact": true,
+    "p0PostmemoryExact": true,
+    "nativeSnapshotUnchanged": true,
+    "workerOriginallyMining": true,
+    "workerOriginallyAboard": false,
+    "workerPreviouslyAssigned": false,
+    "oldBoatOrder": {
+      "type": "move",
+      "x": 4368,
+      "y": 6032,
+      "avoidCombat": true
+    },
+    "boatHp": 31
+  },
+  "validationExitCode": 1,
+  "endedAtUTC": "2026-10-16T23:38:23.346006+00:00",
+  "elapsedSeconds": 5.274860500008799
+}

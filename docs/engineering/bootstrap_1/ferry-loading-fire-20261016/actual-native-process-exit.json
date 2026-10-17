@@ -1,0 +1,50 @@
+{
+  "enteredAtUTC": "2026-10-16T23:43:26.348924+00:00",
+  "launcherPid": 564923,
+  "sourceHead": "accc6bd7e9e8f1cb5319addebbe8987a901b8683",
+  "sourceManifestFiles": 1569,
+  "runtimeSourceCapSHA256": "05249901c114371ad64f86a802d7acdbd67d80e79296040d2d89fd803c3ebeae",
+  "outputPrefix": "/tmp/bootstrap-ferry-loading-fire-candidate-native11400-20261016/natural-from-11400",
+  "ordinary0": false,
+  "changedCodeContinuation": true,
+  "changedAiContinuation": true,
+  "sameSourceResume": false,
+  "inputIsAtomicCheckpoint": true,
+  "inputTick": 11400,
+  "nativeGuard": {
+    "path": "/tmp/bootstrap-ferry-loading-fire-candidate-native11400-prepared-20261016/native-launch-guard-1.json",
+    "sha256": "5cc3c8a01038e4d7d5054574aa4697bc415c7dac7e9e17d0d96363db2c67267c",
+    "bytes": 1266
+  },
+  "parentSlot": {
+    "path": "/tmp/bootstrap-ferry-loading-fire-candidate-native11400-prepared-20261016/PARENT-SLOT-TRANSFER.json",
+    "sha256": "1ad6b4b91b5ef6334c49adca98cb309f59b46ad21919c2bf23048b0c382f8950",
+    "bytes": 1222
+  },
+  "actualPrerequisites": {
+    "path": "/tmp/bootstrap-ferry-loading-fire-candidate-native11400-prepared-20261016/NATIVE-LAUNCH-VALIDATION.json",
+    "sha256": "08fa232be3e325810d0874212002af7c8796f6faf4b6593c967e9e70dac65227",
+    "bytes": 2844
+  },
+  "nodeSpawned": true,
+  "nodePid": 564937,
+  "args": [
+    "node",
+    "--expose-gc",
+    "--max-old-space-size=768",
+    "--import",
+    "tsx",
+    "/tmp/bootstrap-ferry-loading-fire-candidate-native11400-prepared-20261016/candidate-ferry-loading-tail.mts",
+    "/tmp/sketch-rts-ferry-loading-fire-c6-control",
+    "accc6bd7e9e8f1cb5319addebbe8987a901b8683",
+    "/tmp/bootstrap-ferry-loading-fire-candidate-native11400-20261016/natural-from-11400"
+  ],
+  "nodeStdout": "/tmp/bootstrap-ferry-loading-fire-candidate-native11400-20261016/node-stdout.log",
+  "nodeStderr": "/tmp/bootstrap-ferry-loading-fire-candidate-native11400-20261016/node-stderr.log",
+  "exitCode": 0,
+  "endedAtUTC": "2026-10-16T23:56:22.977389+00:00",
+  "elapsedSeconds": 776.4463921269926,
+  "nodeStdoutSHA256": "26e6b3da9bfc4c619c34292e967e99c63afb0e22d56d589a215d4eb0f78d93df",
+  "nodeStderrSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "oomAfter": "low 0\nhigh 0\nmax 346832\noom 43\noom_kill 2\noom_group_kill 0\n"
+}

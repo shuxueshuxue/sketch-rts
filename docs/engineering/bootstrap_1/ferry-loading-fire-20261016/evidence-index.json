@@ -1,0 +1,214 @@
+{
+  "classification": "C7 narrow new-worker rendezvous command correction with a fully closed natural loss. Limited correctness adoption is not survival/economy/counterattack or bootstrap acceptance.",
+  "atUTC": "2026-10-17T00:04:35.818155+00:00",
+  "sourceValidationProofKind": "uncommitted-virtual-tree",
+  "candidateSourceFiles": 1569,
+  "candidateCapSHA256": "05249901c114371ad64f86a802d7acdbd67d80e79296040d2d89fd803c3ebeae",
+  "candidateCapPath": "/tmp/bootstrap-ferry-loading-fire-c6-prepared-20261016/candidate-source-cap.json",
+  "sourceControlHead": "accc6bd7e9e8f1cb5319addebbe8987a901b8683",
+  "committedC6PayloadEquivalentBase": "afc218c2565a6dcf68efbe58fcbf41b036104676",
+  "thisCommitSavesByteIdenticalTested1569Implementation": true,
+  "noValidationRerunUnderNewCommitClaimed": true,
+  "productionFiles": [
+    "src/ai/bootstrap_1/worker-boarding.ts",
+    "src/ai/bootstrap_1/expedition-recovery.ts"
+  ],
+  "newWorkerAvailableInjectionOnly": true,
+  "independentPlanSettlerBoardingCovered": false,
+  "nativeSharedNavalFrozenRulesChanged": false,
+  "rulesVersion": 2,
+  "frozenFullFiles": 497,
+  "frozenManifestEntries": 184,
+  "sourceFrozenPrePostExact": true,
+  "copiedEvidence": {
+    "causal-and-local-validation.json": {
+      "originalPath": "/tmp/bootstrap-ferry-loading-fire-c6-prepared-20261016/IMPLEMENTED-CANDIDATE-CAUSAL-AND-LOCAL-VALIDATION.json",
+      "bytes": 7733,
+      "sha256": "3cd3dc302431703147c3ad9cd26b552715efbac304671d4cd9e00f0e98f5bf0f",
+      "copiedExactBytes": true,
+      "historicalLocalValidationStage": true
+    },
+    "strict600-original-proof.json": {
+      "originalPath": "/tmp/strict600-official-archer-ferry11565-20261016/strict600-official-archer-strict600-proof.json",
+      "bytes": 2369,
+      "sha256": "01d55c289769546cd030f22a2be252ed9eaac796f283319af06a4047e576573d",
+      "copiedExactBytes": true,
+      "historicalLocalValidationStage": true
+    },
+    "old-red-original-exit.json": {
+      "originalPath": "/tmp/bootstrap-ferry-loading-fire-c6-prepared-20261016/old-red-exit-1.json",
+      "bytes": 2974,
+      "sha256": "9efb30ff52e0dd7854abfcf68901cc77a38d03e3c4e7fd2df5096bf030fe2aad",
+      "copiedExactBytes": true,
+      "historicalLocalValidationStage": true
+    },
+    "old-red-readback-correction.json": {
+      "originalPath": "/tmp/bootstrap-ferry-loading-fire-c6-prepared-20261016/OLD-RED-ACTUAL-READBACK-CORRECTION.json",
+      "bytes": 3587,
+      "sha256": "7f50e4b5155f87f4b25973a1bf95065430166fcc1ab7889ee26195b8ebee763a",
+      "copiedExactBytes": true,
+      "historicalLocalValidationStage": true
+    },
+    "personal-11565-visual-observation.json": {
+      "originalPath": "/tmp/official-archer-11565-before-context-nativeview-prepared-20261016/ROOT-PERSONAL-VISUAL-OBSERVATION.json",
+      "bytes": 1249,
+      "sha256": "15b21fff5b926d49e9e1dcf538cf2d8772619b77971598514102d0896a7087b5",
+      "copiedExactBytes": true,
+      "historicalLocalValidationStage": true
+    },
+    "native-complete-loss54426-compact-v2.json": {
+      "originalPath": "/tmp/bootstrap-ferry-loading-fire-candidate-native11400-review-20261016/COMPACT-CLOSED-CANDIDATE-11400-RESULT-v2.json",
+      "bytes": 9528,
+      "sha256": "f5fc383c892ebd98f8b22cdf3985af4885020f185feb3b5303df51949074d86f",
+      "copiedExactBytes": true,
+      "fullNativeClosedStage": true
+    },
+    "actual-native-process-exit.json": {
+      "originalPath": "/tmp/bootstrap-ferry-loading-fire-candidate-native11400-prepared-20261016/native-process-exit-1.json",
+      "bytes": 2306,
+      "sha256": "adee9be7cada72ad46343bf4a8d3c3ef5e0ff600219f24081a3bf77108dae164",
+      "copiedExactBytes": true,
+      "fullNativeClosedStage": true
+    }
+  },
+  "actualOriginalStrict600": {
+    "PID": 563533,
+    "exitCode": 0,
+    "fromTick": 11400,
+    "toTick": 12000,
+    "eightOriginalStreamsCounts": [
+      78,
+      120,
+      15,
+      19,
+      1,
+      1,
+      1,
+      120
+    ],
+    "allExact": true,
+    "all40BeforeAfterAnd3MemoryAndEndFiveFieldsExact": true
+  },
+  "oldRed": {
+    "PID": 564137,
+    "actualNodeExit": 1,
+    "originalLauncherValidationExit": 1,
+    "correctedSemanticReadbackValidationExit": 0,
+    "originalFailureAndLauncherPreserved": true,
+    "oldRedRerun": false,
+    "correctionNoNode": true
+  },
+  "actualLocalValidation": {
+    "greenPID": 564447,
+    "passed": 33,
+    "failed": 0,
+    "skipped": 0,
+    "typecheckPID": 564530,
+    "typecheckExit": 0,
+    "typecheckHeapMiB": 1024,
+    "source": "05249901c114371ad64f86a802d7acdbd67d80e79296040d2d89fd803c3ebeae"
+  },
+  "fullNaturalChangedCodeResult": {
+    "PID": 564937,
+    "exitCode": 0,
+    "inputAtomicTick": 11400,
+    "winner": "p1",
+    "endTick": 54426,
+    "naturalComplete": true,
+    "resourcePaused": false,
+    "observationStopped": false,
+    "ordinary0": false,
+    "unseen": false,
+    "newP0PermanentDeaths": 17,
+    "inheritedP0PermanentDeaths": 12,
+    "cumulativeP0PermanentDeaths": 29,
+    "inputLivePermanent": 7,
+    "newBirths": 10,
+    "finalLive": 0,
+    "finalBuildings": 0,
+    "newTemporaryDeaths": 0,
+    "newExpiry": 0,
+    "full13OriginalStreamsCRCAndEOFExact": true,
+    "fullLocalRawPrefix": "/tmp/bootstrap-ferry-loading-fire-candidate-native11400-20261016/natural-from-11400",
+    "fullLocalClosure": {
+      "path": "/tmp/bootstrap-ferry-loading-fire-candidate-native11400-review-20261016/FULL-CLOSED-CANDIDATE-11400-RESULT.json",
+      "sha256": "4d01bba38aef7517222347f1b09092241f483f6e74f795bcdb67c499b311f613",
+      "bytes": 4408989
+    }
+  },
+  "originalC6TrueOrdinary0": {
+    "relativeCompact": "../official-brokenSea-archer-20261016/ordinary0-loss37485-compact.json",
+    "sourceSavedInCommit": "afc218c2565a6dcf68efbe58fcbf41b036104676",
+    "winner": "p1",
+    "endTick": 37485,
+    "ordinary0": true,
+    "inputLiveAt11400": 7,
+    "inheritedDeadAt11400": 12,
+    "birthsAfter11400": 12,
+    "deathsAfter11400": 19,
+    "cumulativeP0Deaths": 31,
+    "bothFinalAlive": 0
+  },
+  "native11565CommandCorrection": {
+    "tick": 11565,
+    "actualP0Entries": [],
+    "actualAfterContext": {
+      "path": "/tmp/bootstrap-ferry-loading-fire-candidate-native11400-20261016/natural-from-11400.contexts/11565-p0-after.json.gz",
+      "sha256": "15319047425001519c733206dd11fb0b427de8a1371ab748fa7e123da0ab6471",
+      "bytes": 22880
+    },
+    "transport1930NativeDeath": 11647,
+    "oldDeath": 11642,
+    "survivalDifferenceTicks": 5,
+    "limit": "Stop/recruit override removed, but hull still died. Subsequent ferry cycle lost worker1045+transport2269 in place of oldworker1634+transport2273; identity swap is not an extra casualty."
+  },
+  "smallerDeathCountMeansFewerBirthsNotSavedSurvivors": true,
+  "repairWorkerAndFollowingHullRoleComparison": {
+    "throughTick": 13800,
+    "bothCumulativeP0PermanentDeaths": 15,
+    "oldWorker": [
+      "unit-p0-worker-1634",
+      13139,
+      "unit-p0-transport-2273"
+    ],
+    "newWorker": [
+      "unit-p0-worker-1045",
+      13120,
+      "unit-p0-transport-2269"
+    ],
+    "oldFollowingHullFatal": 13707,
+    "newFollowingHullFatal": 13687,
+    "sameTerminalAttacker": "unit-p2-warship-1129",
+    "identityTimingSwapNotExtraCasualty": true
+  },
+  "enemy1129ActualDeath": {
+    "tick": 27770,
+    "attacker": "building-p0-defenseTower-4928",
+    "damage": 16,
+    "hpBefore": 10.700000000000045,
+    "hpAfter": -5.2999999999999545,
+    "sameTickCorpseAndNativeRemoval": true,
+    "limit": "Enemy gunship elimination did not restore economy or establish victory."
+  },
+  "P0EnemyBuildingsDestroyedCounter": 0,
+  "newP0TownHallBirths": 0,
+  "economyScope": {
+    "gold750AndSixIdleWorkersAt": [
+      19200,
+      19800,
+      20400
+    ],
+    "noShipsOrShipyardAtTheseTicks": true,
+    "laterSpendingDelta675To21000Leaves75": true,
+    "later75NotEarliestCause": true,
+    "exactRepairGold": null,
+    "exactColonyIncome": null,
+    "perSpendCategoryObserverPresent": false
+  },
+  "allThreeBootstrapFamiliesAcceptance": false,
+  "allRequiredSingleSixPairOfficialUnseenAcceptance": false,
+  "fullRawCheckpointsPNGCopied": false,
+  "sourceCapsuleIsRawGameArchive": false,
+  "portableRawArchiveGapRetained": true,
+  "originalFailedContainerUncommittedRecoveryGapUnrecovered": true
+}

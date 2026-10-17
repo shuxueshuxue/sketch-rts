@@ -1,0 +1,88 @@
+{
+  "classification": "Derived0Node readback correction of actual original old-red process. No rerun, no old green, no original receipt or log overwritten.",
+  "actualNodePID": 564137,
+  "exitCode": 1,
+  "originalValidationExitCode": 1,
+  "validationExitCode": 0,
+  "semanticRedVerified": true,
+  "actualControl": {
+    "apiReached": true,
+    "tick": 11565,
+    "fullOwnerEntriesExact": true,
+    "p0PostmemoryExact": true,
+    "nativeSnapshotUnchanged": true,
+    "workerOriginallyMining": true,
+    "workerOriginallyAboard": false,
+    "workerPreviouslyAssigned": false,
+    "oldBoatOrder": {
+      "type": "move",
+      "x": 4368,
+      "y": 6032,
+      "avoidCombat": true
+    },
+    "boatHp": 31
+  },
+  "sourceFrozenPrePostExact": true,
+  "actualAssertions": {
+    "failed": 1,
+    "skipped": 13,
+    "passed": 0,
+    "total": 14
+  },
+  "reason": "Original launcher excluded pending but not actual Vitest skipped statuses. Consequently it miscounted14 active assertions. Actual one selected case fails specifically on original board command still being true, after whole owner entries/p0memory/nativeworld exact. Missing newexport helper cases were13skipped and never executed.",
+  "originalLauncherSHA256": "47f141cee8c8e98d5e2fd53fe63814ab72f4658ecd8bd624f9552a2637a577c1",
+  "boundFiles": [
+    {
+      "path": "/tmp/bootstrap-ferry-loading-fire-c6-prepared-20261016/old-red-exit-1.json",
+      "sha256": "9efb30ff52e0dd7854abfcf68901cc77a38d03e3c4e7fd2df5096bf030fe2aad",
+      "bytes": 2974
+    },
+    {
+      "path": "/tmp/bootstrap-ferry-loading-fire-c6-prepared-20261016/old-red-vitest-1.json",
+      "sha256": "fbdd0e7169a6a1df904bb6aab4ce75573674350af720a021a7a2b779aeb8310e",
+      "bytes": 5074
+    },
+    {
+      "path": "/tmp/bootstrap-ferry-loading-fire-c6-prepared-20261016/old-actual-control-1.json",
+      "sha256": "4304c50c76589f7dadd02b49d9bc1cc5af2447c13b3cb09c64f9cf1fac19f14c",
+      "bytes": 360
+    },
+    {
+      "path": "/tmp/bootstrap-ferry-loading-fire-c6-prepared-20261016/old-red-stdout-1.log",
+      "sha256": "0287a5cfdc81343e6f293837852a187c6be9abd354bdb59a55a4d3c3d29c8381",
+      "bytes": 100
+    },
+    {
+      "path": "/tmp/bootstrap-ferry-loading-fire-c6-prepared-20261016/old-red-stderr-1.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/tmp/bootstrap-ferry-loading-fire-c6-prepared-20261016/vitest-old.config.mts",
+      "sha256": "2b5db5ad3ac8aaad4601323e3c3e989f5d6238107e15d2db95aa2bf7ab8b30be",
+      "bytes": 812
+    },
+    {
+      "path": "/tmp/bootstrap-ferry-loading-fire-c6-prepared-20261016/baseline-source-cap.json",
+      "sha256": "62adff8394ca151a4f2f3ba919f7c6974dd3dd78caf796578346cabb16cae784",
+      "bytes": 637643
+    },
+    {
+      "path": "/tmp/bootstrap-ferry-loading-fire-c6-prepared-20261016/old-red-launcher-used-47f141ce.py",
+      "sha256": "47f141cee8c8e98d5e2fd53fe63814ab72f4658ecd8bd624f9552a2637a577c1",
+      "bytes": 7077
+    },
+    {
+      "path": "/tmp/sketch-rts-ferry-loading-fire-c6-control/src/ai/bootstrap_1/ferry-loading-escape.test.ts",
+      "sha256": "3136e43001c6a3b675e2edc164b11b6624b972fad892ee86634bfafa83582218",
+      "bytes": 7160
+    },
+    {
+      "path": "/tmp/sketch-rts-ferry-loading-fire-c6-control/src/ai/bootstrap_1/fixtures/archer-ferry-loading-11565.json.gz",
+      "sha256": "2fd6562501a82472e923aa5c764080928f4a3330115adc4e54388d675c3511f9",
+      "bytes": 45355
+    }
+  ],
+  "originalReceiptUnchanged": true,
+  "sourceAfterOldRed": "unmodified baseline1569 before candidate staging"
+}

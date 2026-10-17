@@ -1,0 +1,94 @@
+{
+  "sourceHead": "accc6bd7e9e8f1cb5319addebbe8987a901b8683",
+  "inputTick": 11400,
+  "endTick": 12000,
+  "actualTick": 12000,
+  "fields": {
+    "snapshot": true,
+    "nextId": true,
+    "memories": true,
+    "setup": true,
+    "factoryMatch": true
+  },
+  "streams": {
+    "commands": {
+      "expected": 78,
+      "actual": 78,
+      "exact": true
+    },
+    "plans": {
+      "expected": 120,
+      "actual": 120,
+      "exact": true
+    },
+    "native-hits": {
+      "expected": 15,
+      "actual": 15,
+      "exact": true
+    },
+    "native-events": {
+      "expected": 19,
+      "actual": 19,
+      "exact": true
+    },
+    "native-deaths": {
+      "expected": 1,
+      "actual": 1,
+      "exact": true
+    },
+    "corpse-events": {
+      "expected": 1,
+      "actual": 1,
+      "exact": true
+    },
+    "ship-losses": {
+      "expected": 1,
+      "actual": 1,
+      "exact": true
+    },
+    "planner-inputs": {
+      "expected": 120,
+      "actual": 120,
+      "exact": true
+    }
+  },
+  "telemetryExact": {
+    "counts": true,
+    "hitCount": true,
+    "terminalEntityIds": true,
+    "pendingCleanup": true
+  },
+  "fullEventStates": {
+    "expected": 1,
+    "actual": 1,
+    "exact": true
+  },
+  "fullP0Contexts": {
+    "expected": 40,
+    "before": 40,
+    "after": 40,
+    "exact": true
+  },
+  "targetGeneralCapture": {
+    "tick": 11565,
+    "owner": "p0",
+    "p0PlannerCallbacks": 1,
+    "generalRunCalls": 1,
+    "paths": [
+      "/tmp/strict600-official-archer-ferry11565-20261016/strict600-official-archer.contexts/11565-p0-v6General-run-1-before.json.gz",
+      "/tmp/strict600-official-archer-ferry11565-20261016/strict600-official-archer.contexts/11565-p0-v6General-run-1-naval-readonly-probe.json.gz",
+      "/tmp/strict600-official-archer-ferry11565-20261016/strict600-official-archer.contexts/11565-p0-v6General-run-1-after.json.gz",
+      "/tmp/strict600-official-archer-ferry11565-20261016/strict600-official-archer.contexts/11565-p0-v6General-publication.json.gz"
+    ],
+    "exactTargetCallback": true,
+    "status": "actual-general-run-captured",
+    "runNotPublicationOrOwnershipProof": true
+  },
+  "nativeZeroVerified": true,
+  "originalOwnerWorldHashesAvailable": true,
+  "comparedOriginalOwnerHashStream": "planner-inputs",
+  "exact": true,
+  "originalOrdinary0History": false,
+  "sameSourceReconstruction": true,
+  "notNewOpening": true
+}

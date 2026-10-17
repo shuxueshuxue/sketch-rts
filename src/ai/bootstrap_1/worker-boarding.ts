@@ -1,4 +1,5 @@
 import { weaponRules } from '../../shared/equipment';
+import { workingWeaponGeometry } from '../../shared/combat-fire-geometry';
 import { canBoard } from '../../shared/decks';
 import { alongside, boardingBerth, canReach } from '../../shared/naval';
 import { groundSteeringRoute } from '../../shared/route-selection';
@@ -71,4 +72,19 @@ export function workerBoardingSafe(snapshot: GameSnapshot, owner: PlayerId, opti
     && isEnemyOwner(snapshot, owner, foe.owner, options));
   return !foes.some(foe => weaponCoverage(snapshot, foe, worker).some(coverage =>
     road.some((point, index) => entersCoverage(road[Math.max(0, index - 1)]!, point, coverage))));
+}
+
+/** A new worker rendezvous stops a moving ferry. Preserve an existing escape
+ * while a hostile working weapon covers its current target or a shot is
+ * already flying at the hull. This does not promise the old road is safe. */
+export function canPauseFerryForWorker(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, boat: Unit) {
+  if (boat.order.type !== 'move' || !boat.order.avoidCombat) return true;
+  if (snapshot.projectiles.some(projectile => projectile.targetId === boat.id && projectile.damage > 0
+    && isEnemyOwner(snapshot, owner, projectile.owner, options))) return false;
+  return !snapshot.units.some(foe => {
+    if (foe.hp <= 0 || !isEnemyOwner(snapshot, owner, foe.owner, options)) return false;
+    const targeting = (foe.order.type === 'attack' || foe.order.type === 'attackMove') && foe.order.targetId === boat.id
+      || foe.sailing?.pursuit?.targetId === boat.id;
+    return targeting && workingWeaponGeometry(snapshot, foe, boat).some(weapon => weapon.covers);
+  });
 }

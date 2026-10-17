@@ -16,7 +16,7 @@ import { expeditionDeparture } from './expedition-departure';
 import { landRecoveryAssignments, mainlandCareAssignments, patientRendezvousCommands } from './land-recovery';
 import { continuingPatientRendezvous, rememberPatientRendezvous } from './medical-rendezvous';
 import { planLandedCombat } from './landed-combat';
-import { workerBoardingSafe } from './worker-boarding';
+import { canPauseFerryForWorker, workerBoardingSafe } from './worker-boarding';
 
 function recoveryAssignments(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const home = snapshot.buildings.find(building => building.owner === owner && building.kind === 'townHall');
@@ -80,7 +80,8 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
     mineEligible: mines.eligible, targetAvailable: mines.targetAvailable,
     transportReady: boat => !transportNeedsRecovery(snapshot, boat),
     troopAvailable: unit => !mounted.has(unit.id) && !reserved.has(unit.id) && !mainlandCare.has(unit.id),
-    workerAvailable: (unit, boat) => !released.has(unit.id) && workerBoardingSafe(snapshot, owner, options, unit, boat),
+    workerAvailable: (unit, boat) => !released.has(unit.id) && canPauseFerryForWorker(snapshot, owner, options, boat)
+      && workerBoardingSafe(snapshot, owner, options, unit, boat),
   })];
   commands.push(...planSettlerBoarding(snapshot, owner, options, commands));
 

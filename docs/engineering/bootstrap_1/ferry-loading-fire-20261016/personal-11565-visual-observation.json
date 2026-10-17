@@ -1,0 +1,20 @@
+{
+  "atUTC": "2026-10-16T23:39:26.526427+00:00",
+  "observer": "root personally viewed actual native client PNG using view_image",
+  "png": "/tmp/official-archer-11565-before-context-nativeview-prepared-20261016/native-11565-official-archer-before-p0-ferry1930-worker1045-enemy1129.png",
+  "pngSHA256": "7ce12fe1416defaadd882eea84b287f333264a546b57cc3c4cc0d27039e48421",
+  "nativeRendererPID": 564325,
+  "nativeRendererExit": 0,
+  "sourceHead": "afc218c2565a6dcf68efbe58fcbf41b036104676",
+  "input": "actual strict600 11565 before-p0-planner full context, not original atomic checkpoint",
+  "visible": [
+    "The two live ships are close together immediately offshore of the home dock; the enemy ship is to the upper right of the transport.",
+    "The selected land worker is still near the home mine well inland from both ships.",
+    "Several earlier wrecks are visible around and beyond the dock approaches."
+  ],
+  "limits": [
+    "Image alone does not establish cannon arcs, command ownership, worker assignment or safe escape. Those conclusions use complete recorded planner and native data.",
+    "This static render is not a live normal game or survival/victory proof."
+  ],
+  "originalBrokenContainerUncommittedGapStillUnrecovered": true
+}

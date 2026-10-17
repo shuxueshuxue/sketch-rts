@@ -111,7 +111,8 @@
     "externalOnly": true,
     "includedInCommit": false,
     "strictNativeCounterfactualRun": false,
-    "shipRescueClaimed": false
+    "shipRescueClaimed": false,
+    "scope": "Historical status when this original C6 ordinary0 report was sealed; subsequent implemented/strict-tested/full-negative C7 is referenced in followUpC7Evidence."
   },
   "fullC6WinEvidenceIndex": "../incoming-threat-overlap-20261016/evidence-index.json",
   "sourceCapIsRawGameArchive": false,
@@ -120,5 +121,17 @@
   "originalContainerUncommittedRecoveryGapUnrecovered": true,
   "allBootstrapGoalsComplete": false,
   "ordinary0ArcherAccepted": false,
-  "threeFamilyOfficialSingleSixPairUnseenAcceptanceComplete": false
+  "threeFamilyOfficialSingleSixPairUnseenAcceptanceComplete": false,
+  "followUpC7Evidence": {
+    "relativeIndex": "../ferry-loading-fire-20261016/evidence-index.json",
+    "compactSHA256": "f5fc383c892ebd98f8b22cdf3985af4885020f185feb3b5303df51949074d86f",
+    "changedAtomicInputTick": 11400,
+    "candidateFiles": 1569,
+    "candidateSourceCapSHA256": "05249901c114371ad64f86a802d7acdbd67d80e79296040d2d89fd803c3ebeae",
+    "winner": "p1",
+    "endTick": 54426,
+    "ordinary0": false,
+    "originalC6ResultAndSourceNotReclassified": true,
+    "onlyNarrowCommandCorrectnessClaimed": true
+  }
 }

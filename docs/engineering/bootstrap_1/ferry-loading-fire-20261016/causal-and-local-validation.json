@@ -1,0 +1,185 @@
+{
+  "classification": "Real11565 causal reconstruction and implemented isolated loading-fire candidate; local validation complete, native outcome remains pending. Not an ordinary0 win or bootstrap acceptance.",
+  "originalOrdinary0": {
+    "tick": 37485,
+    "winner": "p1",
+    "p0PermanentLosses": 31,
+    "allTemporaryDeathAndExpiry": 0,
+    "fatalPartition": {
+      "p2warship1129": 21,
+      "p1sparkArchers": 2,
+      "p2lancers": 8
+    },
+    "fullClosedCompact": {
+      "path": "/tmp/official-brokenSea-archer-fullclosed-loss37485-review-20261016/COMPACT-CLOSED-ORDINARY0-LOSS37485.json",
+      "sha256": "63dc0af13411bd61ac8f57190acfdfc5dfd5ff1514ae75165e84365a33df17c3",
+      "bytes": 8921
+    },
+    "first13WereFixedSizePrefixEvidence": {
+      "path": "/tmp/official-brokenSea-archer-early12000-review-20261016/EARLY12000-FIRST13-COMPACT.json",
+      "sha256": "34d581b479e7086d6fe611e596aee40c24694772eabafdbc38455542e4bf568b",
+      "bytes": 8319
+    }
+  },
+  "source": {
+    "root": "/tmp/sketch-rts-ferry-loading-fire-c6-control",
+    "controlHead": "accc6bd7e9e8f1cb5319addebbe8987a901b8683",
+    "rootC6LaterCommit": "afc218c2565a6dcf68efbe58fcbf41b036104676",
+    "basePayloadEquivalentToCommittedRootC6": true,
+    "baseCapSHA256": "6590c6622d29971be83e76a92e7dc44643e885fcf1e66aae31f2dce6793d4815",
+    "candidateProofKind": "uncommitted-virtual-tree",
+    "candidateFiles": 1569,
+    "candidateCap": {
+      "path": "/tmp/bootstrap-ferry-loading-fire-c6-prepared-20261016/candidate-source-cap.json",
+      "sha256": "05249901c114371ad64f86a802d7acdbd67d80e79296040d2d89fd803c3ebeae",
+      "bytes": 638893
+    },
+    "independentSelectedPhysicalAndGitBlobs": {
+      "path": "/tmp/bootstrap-ferry-loading-fire-c6-prepared-20261016/CANDIDATE-1569-UNIVERSE-AND-BLOBS.json",
+      "sha256": "37cb281ce9fba021dd8947138d19c79328a814d2cf1c88b63b46f253d9cb3679",
+      "bytes": 1090
+    },
+    "productionDelta": [
+      "bootstrap worker-boarding exports canPauseFerryForWorker using live hostile projectile or explicit hull target/pursuit plus native workingWeaponGeometry.covers, and current hull move+avoidCombat only.",
+      "bootstrap expedition-recovery injects the predicate into new shared ferry workerAvailable recruitment."
+    ],
+    "scope": [
+      "No shared naval/native/frozen change. No new road, HP threshold, timeout or observer-hit dependency.",
+      "Existing deck workers, existing board ownership, normal fighter/boarding/service tasks unchanged.",
+      "Independent planSettlerBoarding path does not pass workerAvailable and is not claimed fixed.",
+      "All threebootstrap families use the same injected call path; actual causal case here is v9archer assault-loading, not allfamily acceptance."
+    ]
+  },
+  "actualStrict600": {
+    "nodePID": 563533,
+    "exitCode": 0,
+    "proof": {
+      "path": "/tmp/strict600-official-archer-ferry11565-20261016/strict600-official-archer-strict600-proof.json",
+      "sha256": "01d55c289769546cd030f22a2be252ed9eaac796f283319af06a4047e576573d",
+      "bytes": 2369
+    },
+    "allOriginalEightStreamsExact": true,
+    "fullEndFiveFieldsExact": true,
+    "original40BeforeAnd40AfterWorldMemEntryComparisonExact": true,
+    "allOwnersNormal": true,
+    "startTick": 11400,
+    "endTick": 12000,
+    "before11565": {
+      "path": "/tmp/strict600-official-archer-ferry11565-20261016/strict600-official-archer.contexts/11565-p0-before.json.gz",
+      "sha256": "6c6a537e07acf1f5b41c8000a616be08edd44bec2f473375360cf803d33d3aa2",
+      "bytes": 22736
+    },
+    "after11565": {
+      "path": "/tmp/strict600-official-archer-ferry11565-20261016/strict600-official-archer.contexts/11565-p0-after.json.gz",
+      "sha256": "14bf52c253387eef528c75edfc9ba12ab8b7f4dda4fe33ab6f4908e7a8ea6720",
+      "bytes": 22841
+    },
+    "nativeProbe": {
+      "path": "/tmp/strict600-official-archer-ferry11565-20261016/strict600-official-archer.contexts/11565-p0-v6General-run-1-naval-readonly-probe.json.gz",
+      "sha256": "e4d134c8b72601399c18817a9186e55dc7101a0cabd820757208d569d51fe8b0",
+      "bytes": 1890
+    },
+    "fixture": {
+      "path": "/tmp/sketch-rts-ferry-loading-fire-c6-control/src/ai/bootstrap_1/fixtures/archer-ferry-loading-11565.json.gz",
+      "sha256": "2fd6562501a82472e923aa5c764080928f4a3330115adc4e54388d675c3511f9",
+      "bytes": 45355
+    },
+    "contextIsOriginalAtomicCheckpoint": false
+  },
+  "actual11565": {
+    "worker1045": {
+      "order": "mine/return",
+      "deck": null,
+      "alreadyMissionCrew": false,
+      "missionBeforeCrewIds": []
+    },
+    "boat1930": {
+      "hp": 31,
+      "maxHp": 270,
+      "move": [
+        4368,
+        6032
+      ],
+      "avoidCombat": true,
+      "nativeSpeed": 7.981351398684207,
+      "nativeMode": "maneuver"
+    },
+    "foe1129": {
+      "explicitTarget": "1930",
+      "nativePursuitPhase": "engage",
+      "gun": "shipCannon",
+      "gunGap": 166.33563471660653,
+      "gunRange": 312,
+      "withinArc": true,
+      "clearLane": true,
+      "covers": true
+    },
+    "targetingProjectiles": [],
+    "oldWorkerBoardingSafe": true,
+    "actualP0Publication": [
+      "naval board1045->1930",
+      "naval stop1930"
+    ],
+    "actualGeneralRun": {
+      "calls": 1,
+      "raw": [],
+      "published": []
+    },
+    "causalBoundary": "Current native gun geometry is not a guaranteed next shot. Preserving current native maneuver road is not proof it is safe, completed or survivable."
+  },
+  "actualLocalValidation": {
+    "oldRed": {
+      "pid": 564137,
+      "actualExit": 1,
+      "originalLauncherValidationExit": 1,
+      "semanticReadbackValidationExit": 0,
+      "failedCases": 1,
+      "skippedCases": 13,
+      "noRerun": true,
+      "apiFullOwnerEntriesP0MemoryWorldExact": true,
+      "correction": {
+        "path": "/tmp/bootstrap-ferry-loading-fire-c6-prepared-20261016/OLD-RED-ACTUAL-READBACK-CORRECTION.json",
+        "sha256": "7f50e4b5155f87f4b25973a1bf95065430166fcc1ab7889ee26195b8ebee763a",
+        "bytes": 3587
+      },
+      "originalReceipt": {
+        "path": "/tmp/bootstrap-ferry-loading-fire-c6-prepared-20261016/old-red-exit-1.json",
+        "sha256": "9efb30ff52e0dd7854abfcf68901cc77a38d03e3c4e7fd2df5096bf030fe2aad",
+        "bytes": 2974
+      },
+      "oldLauncherPreserved": {
+        "path": "/tmp/bootstrap-ferry-loading-fire-c6-prepared-20261016/old-red-launcher-used-47f141ce.py",
+        "sha256": "47f141cee8c8e98d5e2fd53fe63814ab72f4658ecd8bd624f9552a2637a577c1",
+        "bytes": 7077
+      }
+    },
+    "green": {
+      "pid": 564447,
+      "actualExit": 0,
+      "validatedExit": 0,
+      "passed": 33,
+      "failed": 0,
+      "skipped": 0,
+      "receipt": {
+        "path": "/tmp/bootstrap-ferry-loading-fire-c6-prepared-20261016/new-green-exit-1.json",
+        "sha256": "3e3640d1b82f731b8560bdda67443afb3b3cd5407709c722ced673feb4c32032",
+        "bytes": 2849
+      }
+    },
+    "typecheck": {
+      "pid": 564530,
+      "actualExit": 0,
+      "validatedExit": 0,
+      "heapMiB": 1024,
+      "noGame": true,
+      "receipt": {
+        "path": "/tmp/bootstrap-ferry-loading-fire-c6-prepared-20261016/typecheck-exit-1.json",
+        "sha256": "a0f77ec3a55a188981bceacd8c8ee5ee9278be512247b530171e8d1102261dd2",
+        "bytes": 2598
+      }
+    }
+  },
+  "nextActualNative": "Prepared separate changed-code all3normal full continuation from real atomic11400 with original full observer seed/offsets, first600capture then samePIDnatural continuation. Driver final binding/rootsole slot is separate. No native candidate match result claimed here.",
+  "originalFailedContainerUncommittedGap": "unrecovered",
+  "ourExecution": "Python/read-only preparation/source staging only; every actual Node job was run by root sole slot."
+}

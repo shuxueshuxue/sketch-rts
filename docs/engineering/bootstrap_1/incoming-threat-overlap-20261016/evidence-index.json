@@ -132,5 +132,17 @@
     "sha256": "75763c2dd427e308fbd5f33577d4295863981fab22b440d96c0a484080a1f20c",
     "finiteSteps": 2400,
     "noNewHallOrIslandMineIncome": true
+  },
+  "followUpC7Evidence": {
+    "relativeIndex": "../ferry-loading-fire-20261016/evidence-index.json",
+    "compactSHA256": "f5fc383c892ebd98f8b22cdf3985af4885020f185feb3b5303df51949074d86f",
+    "changedAtomicInputTick": 11400,
+    "candidateFiles": 1569,
+    "candidateSourceCapSHA256": "05249901c114371ad64f86a802d7acdbd67d80e79296040d2d89fd803c3ebeae",
+    "winner": "p1",
+    "endTick": 54426,
+    "ordinary0": false,
+    "originalC6ResultAndSourceNotReclassified": true,
+    "onlyNarrowCommandCorrectnessClaimed": true
   }
 }
