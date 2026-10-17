@@ -164,7 +164,7 @@ describe("sketch RTS simulation", () => {
     expect(UNIT_DEFS.summoner).toMatchObject({ attackDamage: 8, attackRange: 218.4, cost: 180 });
     expect(UNIT_DEFS.witch).toMatchObject({ attackDamage: 8, attackRange: 252, cost: 145 });
     expect(UNIT_DEFS.fieldMedic).toMatchObject({ attackDamage: 8, attackRange: 210.4, cost: 155 });
-    expect(BUILDING_DEFS.defenseTower).toMatchObject({ hp: 200, attackDamage: 16, attackRange: 480, cost: 125 });
+    expect(BUILDING_DEFS.defenseTower).toMatchObject({ hp: 200, attackDamage: 13, attackRange: 480, cost: 125 });
     expect(BUILDING_DEFS.moonWell).toMatchObject({ attackDamage: 0, attackRange: 210, cost: 115 });
 
     expect((UNIT_DEFS.archer.attackDamage * UNIT_DEFS.archer.hp) / UNIT_DEFS.archer.cost).toBeLessThan((UNIT_DEFS.footman.attackDamage * UNIT_DEFS.footman.hp) / UNIT_DEFS.footman.cost);
@@ -182,7 +182,11 @@ describe("sketch RTS simulation", () => {
       { cost: 210, researchTime: seconds(52.5), maxHpMultiplier: 1.3 },
       { cost: 240, researchTime: seconds(66), maxHpMultiplier: 1.45 },
     ]);
-    expect(UPGRADE_DEFS.buildingDurability.levels).toEqual([{ cost: 200, researchTime: seconds(54), buildingMaxHpMultiplier: 1.2 }]);
+    expect(UPGRADE_DEFS.buildingDurability.levels).toEqual([
+      { cost: 200, researchTime: seconds(54), buildingMaxHpMultiplier: 1.2, healingBuildingHealMultiplier: 4 / 3 },
+      { cost: 275, researchTime: seconds(66), buildingMaxHpMultiplier: 1.4, healingBuildingHealMultiplier: 5 / 3 },
+      { cost: 350, researchTime: seconds(80), buildingMaxHpMultiplier: 1.6, healingBuildingHealMultiplier: 2 },
+    ]);
   });
 
   it("researches late mobility and range tech as derived unit stats without touching attack speed or towers", () => {
@@ -495,7 +499,7 @@ describe("sketch RTS simulation", () => {
     const contractArcher = UNIT_DEFS.contractArcher;
 
     expect(tower.hp).toBe(200);
-    expect(tower.attackDamage).toBe(16);
+    expect(tower.attackDamage).toBe(13);
     expect(tower.attackDamage).toBeLessThan(contractArcher.attackDamage);
     expect(tower.attackRange).toBe(480);
     expect(tower.attackRange).toBeGreaterThan(contractArcher.attackRange);
@@ -1702,6 +1706,30 @@ describe("sketch RTS simulation", () => {
     expect(farm.hp).toBe(farm.maxHp);
   });
 
+  it("researches building durability to its third level: health relative to the base, a third more moon-well healing a level", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    game.players.player.gold = 5_000;
+    const townHall = game.buildings.find((building) => building.owner === "player" && building.kind === "townHall")!;
+    const well = createBuilding("building-player-durability-well", "player", "moonWell", 500, 500, true);
+    game.buildings.push(well);
+    const footman = game.spawnUnit("player", "footman", 560, 500);
+    const pulse = () => {
+      footman.hp = 20;
+      well.cooldown = 0;
+      stepMany(game, 1);
+      return footman.hp - 20;
+    };
+    expect(pulse()).toBe(5);
+    for (const [level, health, heal] of [[1, 1.2, 4 / 3], [2, 1.4, 5 / 3], [3, 1.6, 2]] as const) {
+      issueCommand(game, { type: "research", buildingId: townHall.id, upgradeKind: "buildingDurability" });
+      stepMany(game, UPGRADE_DEFS.buildingDurability.levels[level - 1]!.researchTime + 1);
+      expect(game.players.player.upgrades.buildingDurability).toBe(level);
+      expect(well.maxHp).toBe(Math.round(BUILDING_DEFS.moonWell.hp * health));
+      expect(pulse()).toBeCloseTo(5 * heal);
+    }
+    expect(() => issueCommand(game, { type: "research", buildingId: townHall.id, upgradeKind: "buildingDurability" })).toThrow("already at max level");
+  });
+
   it("keeps mercenaries and buildings out of barracks combat upgrades", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     game.players.player.gold = 2_000;
@@ -2242,9 +2270,9 @@ describe("sketch RTS simulation", () => {
   });
 
   it("runs a fast two-AI duel on the ladder map's terrain, camps and mercenary posts", () => {
-    // A ladder game gets the pool batches' forty minutes: the preset AIs' duel on it has run from 12 to 37 with each change
-    // to how they build or walk.
-    const result = runTwoAiDuel("ladder", 48_000);
+    // A ladder game gets fifty minutes: the preset AIs' duel on it has run from 12 to 37 with each change to how they build
+    // or walk, and to 44 (enemy, tick 53211) when towers came down to 13 damage.
+    const result = runTwoAiDuel("ladder", 60_000);
     // A post's stock never comes back (see hireMercenary): the duel hired what the posts had less what they have.
     const posts = createGame("ladder", { aiPlayers: ["player", "enemy"] }).mercenaryCamps;
     const hired = posts.reduce((total, post) => total + post.stock - result.game.mercenaryCamps.find((camp) => camp.id === post.id)!.stock, 0);
@@ -2385,7 +2413,7 @@ describe("sketch RTS simulation", () => {
   });
 
   it("keeps defense towers as static control instead of army-melting artillery", () => {
-    expect(BUILDING_DEFS.defenseTower.attackDamage).toBe(16);
+    expect(BUILDING_DEFS.defenseTower.attackDamage).toBe(13);
     expect(BUILDING_DEFS.defenseTower.attackDamage).toBeLessThan(UNIT_DEFS.contractArcher.attackDamage);
     expect(BUILDING_DEFS.defenseTower.attackRange).toBe(480);
     expect(BUILDING_DEFS.defenseTower.attackRange).toBeGreaterThan(UNIT_DEFS.contractArcher.attackRange);

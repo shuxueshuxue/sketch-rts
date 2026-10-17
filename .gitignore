@@ -25,3 +25,4 @@ audio-packs/*
 
 # Python admin toolkit caches
 __pycache__/
+.claude/settings.local.json
