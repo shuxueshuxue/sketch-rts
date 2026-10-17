@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createI18n } from "./i18n";
-import { abilityTooltip, buildingTooltip, itemTooltip, tooltipText, unitSelectionTooltip, unitTooltip, upgradeTooltip, veteranSkillTooltip, withTooltipRequirement } from "./tooltips";
-import { ABILITY_DEFS, resolveVariant } from "../shared/catalog";
+import { abilityTooltip, buildingTooltip, campDetail, itemTooltip, mercenaryHireTooltip, tooltipText, unitSelectionTooltip, unitTooltip, upgradeTooltip, veteranSkillTooltip, withTooltipRequirement } from "./tooltips";
+import { ABILITY_DEFS, MERCENARY_HIRE_RANGE, resolveVariant } from "../shared/catalog";
 import { TRANSPORT_COMBAT } from "../shared/transport-role";
 import { SIM_TICKS_PER_SECOND } from "../shared/time";
 import type { GameSnapshot, PlayerState, Unit } from "../shared/types";
@@ -324,6 +324,31 @@ describe("rule-generated current descriptions", () => {
       expect(tooltipText(itemTooltip("stormStaff", undefined, i18n))).toContain("1.2s");
       expect(tooltipText(itemTooltip("stormStaff", undefined, i18n))).not.toContain("tick");
       expect(tooltipText(itemTooltip("guardianScroll", undefined, i18n))).not.toContain("45.0s");
+    }
+  });
+});
+
+// @@@camp-text - Every camp's words come from that camp: the unit it sells, its price, what is left, and no restocking.
+describe("mercenary camp text", () => {
+  it.each(["mercenary", "contractArcher", "fieldMedic"] as const)("tells a %s camp's own unit, price, stock and wait", hireKind => {
+    const camp = { id: "camp", x: 0, y: 0, radius: 50, hireKind, cost: 177, stock: 2, cooldown: 320, cooldownRemaining: 40 };
+    for (const locale of ["en", "zh"] as const) {
+      const i18n = createI18n(locale);
+      const name = i18n.label(hireKind);
+      const tooltip = mercenaryHireTooltip(camp, "m", i18n);
+      expect(tooltip.title).toContain(name);
+      expect(tooltip.stats.join(" ")).toContain("177");
+      expect(tooltip.stats.join(" ")).toContain("2");
+      expect(tooltip.stats.join(" ")).toContain("16.0s");
+      expect(tooltip.stats.join(" ")).toContain(String(MERCENARY_HIRE_RANGE));
+      const detail = campDetail(camp, i18n);
+      expect(detail).toContain(name);
+      expect(detail).toContain("177");
+      expect(detail).toContain("2.0s");
+      for (const other of ["mercenary", "contractArcher", "fieldMedic"] as const) if (other !== hireKind && !name.includes(i18n.label(other))) {
+        expect(`${tooltip.title} ${tooltip.body} ${detail}`).not.toContain(i18n.label(other));
+      }
+      expect(`${tooltip.stats.join(" ")} ${detail}`).toMatch(locale === "en" ? /never restocked/ : /卖完不补/);
     }
   });
 });
