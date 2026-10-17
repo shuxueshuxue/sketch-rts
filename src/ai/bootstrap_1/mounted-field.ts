@@ -1,4 +1,4 @@
-import { strikeGap } from '../../shared/combat-geometry';
+import { strikeGap, strikeReach } from '../../shared/combat-geometry';
 import { routeWithinDistance } from '../../shared/route-selection';
 import { walkingDistance } from '../../shared/terrain';
 import type { GameSnapshot, PlayerId, Unit } from '../../shared/types';
@@ -35,14 +35,14 @@ function fieldCover(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
  * rider that takes the first never weighs the rest. */
 export function* mountedFieldTargets(snapshot: GameSnapshot, owner: PlayerId, rider: Unit, crew: ReadonlySet<string>, options: AiPolicyContext) {
   const { towers, enemies } = fieldCover(snapshot, owner, options);
-  const engaged = (target: Unit) => strikeGap(rider, target) <= rider.attackRange
+  const engaged = (target: Unit) => strikeGap(rider, target) <= strikeReach(rider, target)
     || (target.order.type === 'attack' || target.order.type === 'attackMove') && target.order.targetId !== undefined
       && crew.has(target.order.targetId);
   // A walk is as long either way, and the terrain grows one field per goal it is asked for: measured to the rider, every
   // enemy reads the rider's one field instead of growing its own.
   const local = enemies.filter(target => engaged(target)
     || routeWithinDistance(snapshot.map, target, rider, 'land', LOCAL_RANGE));
-  const admitted = (target: Unit) => strikeGap(rider, target) <= rider.attackRange
+  const admitted = (target: Unit) => strikeGap(rider, target) <= strikeReach(rider, target)
     || (target.order.type === 'attack' || target.order.type === 'attackMove') && target.order.targetId === rider.id
     || mountedFiringPoint(snapshot, rider, target, towers, enemies) !== undefined;
   const order = (a: Unit, b: Unit) => Number(engaged(b)) - Number(engaged(a))
@@ -79,7 +79,7 @@ export const mountedField: AiScript = {
     else frame.set(owner, new Set(plans.map(plan => plan.rider.id)));
     const foes = armedFoes(snapshot, owner, options), { towers, enemies } = fieldCover(snapshot, owner, options);
     return plans.flatMap(({ rider, target }) => {
-      if (strikeGap(rider, target) > rider.attackRange
+      if (strikeGap(rider, target) > strikeReach(rider, target)
         && !foes.some(foe => 'order' in foe && (foe.order.type === 'attack' || foe.order.type === 'attackMove')
           && foe.order.targetId === rider.id)) {
         // The station and road the admission found, against the same cover.
