@@ -7,7 +7,6 @@ import type { CreatureLook } from './creature-painters';
 
 type Contour = readonly (readonly number[])[];
 const INK = '#48534c';
-const VOID = '#35453f';
 const LIGHT = '#e0dcc4';
 
 function path(b: Brush, points: Contour) {
@@ -46,8 +45,11 @@ function sleeve(b: Brush, root: XY, cuff: XY, sweep: number, color: string, far:
   fold(b, [[tx + 2, ty - 3], [tx - 2, ty - 1, tx, ty + 2, tx - 2, ty + 4]], LIGHT, .8);
 }
 
+// @@@spirit-team - A pale shade looked the same whoever summoned it. Its owner now burns through it: a glow of the
+// team's colour round the mantle, a coloured core in its chest, the hood's hollow and its eye slit lit in that colour,
+// and the trailing shroud tinted by it. The cloth itself stays pale, so it still reads as a spirit, not a soldier.
 export function paintSpirit(b: Brush, look: CreatureLook, p: CreatureDrawing) {
-  const c = look.color;
+  const c = look.color, team = look.team;
   const strike = Math.max(0, p.strike), cast = p.casting;
   const surge = strike * 3, sway = p.walk * 2.6 + p.motion.breathe * 1.4;
   const trail = -5 - Math.abs(p.walk) * 5 + sway;
@@ -62,7 +64,7 @@ export function paintSpirit(b: Brush, look: CreatureLook, p: CreatureDrawing) {
   veil(b, [[-9 + chestX, -31 + chestY], [-21, -25, -18, -13, -17 + sway, -4],
     [-15 + trail, 3, -23 + trail, 6, -24 + trail, 12],
     [-17 + trail, 8, -13 + trail, 14, -23 + trail, 18],
-    [-7 + trail, 15, -6 + trail, 4, 2, -2], [5 + chestX, -22 + chestY]], darker(c, .23), .4, false);
+    [-7 + trail, 15, -6 + trail, 4, 2, -2], [5 + chestX, -22 + chestY]], darker(team, .1), .55, false);
   fold(b, [[-15, -16], [-22, -4, -12 + trail, 6, -22 + trail, 15]], '#879b8980', .8);
 
   const farCuff: XY = cast ? [p.release[0] - 7, p.release[1] + 4]
@@ -76,8 +78,12 @@ export function paintSpirit(b: Brush, look: CreatureLook, p: CreatureDrawing) {
     [8 + sway, 5, 1 + sway, 11, 6 + trail, 16], [0 + trail, 13],
     [-3 + trail, 8, -6 + trail, 12, -11 + trail, 17],
     [-9 + trail, 8, -15 + sway, 5, -12 + sway, -5], [-12 + chestX, -17 + chestY]];
+  b.save(); path(b, body); b.closePath(); b.strokeStyle = team; b.globalAlpha *= .5; b.lineWidth = 4.5; b.stroke(); b.restore();
   veil(b, body, c, .88);
   b.save(); path(b, body); b.closePath(); b.clip();
+  const core = b.createRadialGradient(chestX, -18 + chestY, 1, chestX, -18 + chestY, 15);
+  core.addColorStop(0, team); core.addColorStop(1, /^#[0-9a-f]{6}$/i.test(team) ? `${team}00` : "transparent");
+  b.globalAlpha *= .75; b.fillStyle = core; b.fillRect(-35, -40, 65, 60); b.globalAlpha /= .75;
   const wash = b.createLinearGradient(-13, -32, 14, 13);
   wash.addColorStop(0, '#ebe5c855'); wash.addColorStop(.4, '#dae0c900'); wash.addColorStop(1, '#36595366');
   b.fillStyle = wash; b.fillRect(-35, -34, 65, 54); b.restore();
@@ -102,11 +108,11 @@ export function paintSpirit(b: Brush, look: CreatureLook, p: CreatureDrawing) {
     [hx + 8, hy - 42, hx + 11, hy - 35, hx + 9, hy - 28],
     [hx + 4, hy - 25], [hx - 3, hy - 27]], darker(c, .08), .97);
   veil(b, [[hx + 1, hy - 40], [hx + 6, hy - 38], [hx + 8, hy - 33],
-    [hx + 6, hy - 27], [hx + 1, hy - 28], [hx - 1, hy - 33]], VOID, .92, false);
+    [hx + 6, hy - 27], [hx + 1, hy - 28], [hx - 1, hy - 33]], darker(team, .55), .92, false);
   veil(b, [[hx - 8, hy - 32], [hx - 7, hy - 39, hx - 4, hy - 42, hx + 1, hy - 44],
     [hx - 3, hy - 36, hx - 1, hy - 31, hx - 3, hy - 27]], lighter(c, .13), .9, false);
   fold(b, [[hx - 6, hy - 39], [hx - 2, hy - 44, hx + 4, hy - 42, hx + 7, hy - 37]], '#e4e0c799', .9);
-  fold(b, [[hx + 1.5, hy - 34], [hx + 4.7, hy - 34.6], [hx + 6, hy - 34]], '#c1cbb6', .6);
+  fold(b, [[hx + 1.5, hy - 34], [hx + 4.7, hy - 34.6], [hx + 6, hy - 34]], lighter(team, .45), 1.1);
   fold(b, [[hx + 8, hy - 34], [hx + 8, hy - 30], [hx + 5, hy - 27]], '#a9b8a490', .6);
   fold(b, [[hx - 6, hy - 28], [hx - 1, hy - 26], [hx + 5, hy - 26]], '#6e82718c', .75);
 
