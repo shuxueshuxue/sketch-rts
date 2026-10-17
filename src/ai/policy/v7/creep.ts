@@ -49,6 +49,8 @@ const ORDER_SLACK = 140;
 const RETRY_TICKS = 30 * 20;
 // A group sets out together: every fighter within this of the group's middle (routes are checked from there).
 export const CREEP_ASSEMBLED_RANGE = 450;
+// A camp this near the mine the economy takes next is that expansion's guard.
+export const EXPANSION_GUARD_RANGE = 450;
 // A group that reaches the staging point worn below this share of the force the camp calls for does not go in.
 const ARRIVAL_SHARE = 0.8;
 // An enemy army near the camp worth more than this share of the group ends the creep.
@@ -215,7 +217,7 @@ export function chooseCreepCamp(snapshot: GameSnapshot, front: Unit[], camps: Ca
       return geometry ? [{ camp, ...geometry }] : [];
     });
   if (expansionMine) {
-    const guard = open.find(({ camp }) => distance(camp.center, expansionMine) <= 450);
+    const guard = open.find(({ camp }) => distance(camp.center, expansionMine) <= EXPANSION_GUARD_RANGE);
     return guard ? { camp: guard.camp, staging: guard.staging, group: front, why: "expansion" } : undefined;
   }
   // @@@v7-creep-voluntary-margin - A camp taken for its own sake (stars, gold, items) is only worth it without losses: it
