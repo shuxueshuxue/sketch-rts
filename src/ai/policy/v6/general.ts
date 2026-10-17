@@ -15,7 +15,7 @@ import { isBacklineKind } from "./backline";
 import { enemyPowerNear, mineGuards, nextExpansionMine, readV6Intel, v9ExpansionMine, v9ExpansionTolerance, v9Fleeing, type V6BaseIntel, type V6Intel } from "./intel";
 import { activeMiningBaseCount } from "../expansion-model";
 import { recordPlay, v6Memory } from "./memory";
-import { chooseV7Camp, continueV7Creep, neutralCamps, startV7Creep, V7_HOME_REACH } from "../v7/creep";
+import { campContested, chooseV7Camp, continueV7Creep, neutralCamps, startV7Creep, V7_HOME_REACH } from "../v7/creep";
 import { v6Doctrine } from "./select";
 import { v9FrontPoint } from "../v9/front";
 import { marchArrived, marchHeading } from "../v9/march";
@@ -266,7 +266,9 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
   // Its towers standing (see v9-fortress), V9 leaves home to them and creeps on (see v9-fortress-creep).
   const fortified = isV9Policy(options) && intel.ownTowers.length >= V9_FORTRESS_TOWERS;
   const pushed = isV9Policy(options) && !fortified && intel.enemies.some((enemy) => enemy.state === "pushing" && enemy.power >= strength * V9_PUSHED_SHARE);
-  if (isV7Policy(options) && !pushed) {
+  // A front an enemy army presses takes on no camp (see @@@no-creep-in-a-fight).
+  const pressed = campContested(intel, averagePoint(front), front);
+  if (isV7Policy(options) && !pushed && !pressed) {
     const under = continueV7Creep(snapshot, owner, front, v7Camps, intel, options);
     if (under) return creepOrders(memory, under);
     const mine = v7WantsBase(snapshot, owner, options, expansionBasis) ? chooseMine(snapshot, intel) : undefined;
@@ -320,7 +322,7 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
   if (isV7Policy(options)) {
     const dominant = strength >= intel.enemies.reduce((total, enemy) => total + enemy.power, 0);
     const territory = campTerritory === 'ground' ? v7Uncontested : v7NearHome;
-    const choice = pushed ? undefined : chooseCamp(snapshot, front, v7Camps, territory.filter((candidate) => dominant || plan.campOnOwnSide(intel, candidate.center)), options);
+    const choice = pushed || pressed ? undefined : chooseCamp(snapshot, front, v7Camps, territory.filter((candidate) => dominant || plan.campOnOwnSide(intel, candidate.center)), options);
     if (choice) {
       startCamp(snapshot, front, choice, options);
       const started = continueV7Creep(snapshot, owner, front, v7Camps, intel, options);
