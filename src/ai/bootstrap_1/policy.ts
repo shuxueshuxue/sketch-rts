@@ -81,7 +81,7 @@ function expansionGuardWant(snapshot: GameSnapshot, owner: PlayerId, version: Bo
   const guard = mine && neutralCamps(snapshot).find(camp => distance(camp.center, mine) <= EXPANSION_GUARD_RANGE);
   if (!guard) return [];
   const front = intel.army.filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0);
-  const missing = forceFor(guard) - creepForce(front);
+  const missing = forceFor(guard) - creepForce(front, guard);
   if (missing <= 0) return [];
   const unit = strategy.standIn, def = UNIT_DEFS[unit];
   const rating = combatRating({ kind: unit, hp: def.hp, maxHp: def.hp, attackDamage: def.attackDamage, attackCooldown: def.attackCooldown } as Unit);
