@@ -43,14 +43,14 @@ describe("canonical game state", () => {
 
   it("gives the recorded checksums for fresh games, on any machine and in any locale", () => {
     // Version 18 adds death equipment facts; fresh games have no corpses.
-    // Fresh-game goldens also include the closer 216-unit initial mine layout.
+    // Fresh-game goldens also include the closer 216-unit initial mine layout, and each mine's start amount.
     expect(CHECKSUM_VERSION).toBe(18);
     // Repeat creation to catch accidental dependence on a process-global random stream.
     for (let repeat = 0; repeat < 2; repeat += 1) {
-      expect(checksumGame(createGame("bareDuel", { aiPlayers: [] }))).toBe("0b81e7c4");
+      expect(checksumGame(createGame("bareDuel", { aiPlayers: [] }))).toBe("a22ffc6e");
       const ladder = createGame("ladder", { players: ["v8", "p1", "p2"], teams: { v8: "a", p1: "b", p2: "b" }, races: { v8: "ember", p1: "grove", p2: "ember" }, layout: { seed: "canonical" } });
       // The seeded map carries an environment recipe and habitat-scored scenery.
-      expect(checksumGame(ladder)).toBe("9d81a34c");
+      expect(checksumGame(ladder)).toBe("bda0e2e0");
     }
   });
 

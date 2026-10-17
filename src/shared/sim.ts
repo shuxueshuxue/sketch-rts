@@ -352,7 +352,7 @@ function addThirdPlayerStart(game: Game) {
     createUnit("unit-enemy2-worker-2", "enemy2", "worker", game.map.width - 540, 545),
     createUnit("unit-enemy2-worker-3", "enemy2", "worker", game.map.width - 450, 520),
   );
-  game.resources.push({ id: "gold-enemy2-main", kind: "goldMine", x: game.map.width - 590, y: 460, amount: 8000 });
+  game.resources.push({ id: "gold-enemy2-main", kind: "goldMine", x: game.map.width - 590, y: 460, amount: 8000, startAmount: 8000 });
 }
 
 function applyScenarioOverride(game: Game, scenario: ScenarioOverride) {
@@ -390,7 +390,7 @@ function applyScenarioOverride(game: Game, scenario: ScenarioOverride) {
 
   for (const resource of scenario.addResources ?? []) {
     claimId(resource.id);
-    game.resources.push({ ...resource });
+    game.resources.push({ ...resource, startAmount: resource.amount });
   }
   for (const camp of scenario.addMercenaryCamps ?? []) {
     claimId(camp.id);

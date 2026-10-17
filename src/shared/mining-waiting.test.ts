@@ -168,7 +168,7 @@ describe("mining progress and undersaturated queues", () => {
     const worker = workers[0]!;
     for (let tick = 0; tick < seconds(15) && worker.carryingGold === 0; tick++) stepGame(game);
     expect(worker.carryingGold).toBe(10);
-    const next = { id: "new-mine", kind: "goldMine" as const, x: hall.x + 350, y: hall.y + 120, amount: 1000 };
+    const next = { id: "new-mine", kind: "goldMine" as const, x: hall.x + 350, y: hall.y + 120, amount: 1000, startAmount: 1000 };
     game.resources.push(next);
     issuePlayerCommand(game, "player", { type: "mine", resourceId: next.id, unitIds: [worker.id] });
     expect(worker.order).toMatchObject({ type: "mine", resourceId: next.id, phase: "return" });
@@ -184,7 +184,7 @@ describe("mining progress and undersaturated queues", () => {
     for (let tick = 0; tick < seconds(10) && !(worker.order.type === "mine" && worker.order.phase === "gather"); tick++) stepGame(game);
     for (let tick = 0; tick < 7; tick++) stepGame(game);
     expect(worker.order).toMatchObject({ type: "mine", phase: "gather", timer: seconds(GOLD_MINE_RULES.gatherSeconds) - 7 });
-    const next = { id: "next-mine", kind: "goldMine" as const, x: hall.x + 330, y: hall.y + 120, amount: 1000 };
+    const next = { id: "next-mine", kind: "goldMine" as const, x: hall.x + 330, y: hall.y + 120, amount: 1000, startAmount: 1000 };
     game.resources.push(next);
     issuePlayerCommand(game, "player", { type: "mine", resourceId: next.id, unitIds: [worker.id] });
     expect(worker.order).toEqual({ type: "mine", resourceId: next.id, phase: "toMine", timer: 0 });
