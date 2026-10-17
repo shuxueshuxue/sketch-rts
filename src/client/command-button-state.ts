@@ -1,13 +1,13 @@
 import { abilityCooldown } from "../shared/ability-cooldowns";
 import { autocastEnabled, canAutocast } from "../shared/autocast";
-import { UNIT_DEFS, requiredSupplyCap } from "../shared/catalog";
 import { unitAbilities } from "../shared/unit-abilities";
 import { canTakeStance } from "../shared/push";
-import type { AbilityKind, MeleeStance, MercenaryCamp, PlayerState, TrainableUnitKind, Unit } from "../shared/types";
+import type { AbilityKind, MeleeStance, Unit } from "../shared/types";
+import type { CommandLegalityError, CommandRefusalReason } from "../shared/sim/command-validation";
 import { readyAbilityCasters, type CastCommand } from "./ability-targeting";
 import { isInCabin } from '../shared/ship-cabin';
 
-export type CommandButtonDisabledReason = "cooldown" | "stock" | "gold" | "supply" | "position" | "missing" | "tier";
+export type CommandButtonDisabledReason = CommandRefusalReason | "missing";
 
 // An ability's autocast switch across the selected units that have it: all on, all off, or some of each.
 export type AutocastSwitch = "on" | "off" | "mixed";
@@ -94,29 +94,13 @@ export function stanceFighters(units: readonly Unit[]) {
   return units.filter((unit) => !isInCabin(unit) && canTakeStance(unit.kind));
 }
 
-// A unit the player could train but whose tier is still locked stays on the card, greyed, with the supply cap it waits for.
-export function trainCommandState(unitKind: TrainableUnitKind, player: PlayerState | undefined, trainable: boolean): CommandButtonState {
-  if (!trainable) return HIDDEN_COMMAND_STATE;
-  const supplyCap = requiredSupplyCap(unitKind);
-  if (player && player.supplyCap < supplyCap) return { visible: true, enabled: false, reason: "tier", supplyCap };
-  if (!player) return { visible: true, enabled: false, reason: "missing" };
-  if (player.supplyUsed + UNIT_DEFS[unitKind].supplyUsed > player.supplyCap) return { visible: true, enabled: false, reason: "supply" };
-  if (player.gold < UNIT_DEFS[unitKind].cost) return { visible: true, enabled: false, reason: "gold" };
-  return ENABLED_COMMAND_STATE;
-}
-
-export function mercenaryHireCommandState(input: {
-  camp: MercenaryCamp | undefined;
-  player: PlayerState | undefined;
-  hasFriendlyUnitAtCamp: boolean;
-}): CommandButtonState {
-  const { camp, player, hasFriendlyUnitAtCamp } = input;
-  if (!camp) return HIDDEN_COMMAND_STATE;
-  if (!player) return { visible: true, enabled: false, reason: "missing" };
-  if (camp.stock <= 0) return { visible: true, enabled: false, reason: "stock" };
-  if (camp.cooldownRemaining > 0) return { visible: true, enabled: false, cooldownTicks: camp.cooldownRemaining, reason: "cooldown" };
-  if (player.gold < camp.cost) return { visible: true, enabled: false, reason: "gold" };
-  if (player.supplyUsed + UNIT_DEFS[camp.hireKind].supplyUsed > player.supplyCap) return { visible: true, enabled: false, reason: "supply" };
-  if (!hasFriendlyUnitAtCamp) return { visible: true, enabled: false, reason: "position" };
-  return ENABLED_COMMAND_STATE;
+// An order the card offers (train, research, hire, buy), greyed exactly when the sim would refuse it, for the reason the
+// sim gives (see @@@command-refusal). A unit whose tier is still locked stays on the card with the supply cap it waits for.
+export function legalityCommandState(refusal: CommandLegalityError | undefined): CommandButtonState {
+  if (!refusal) return ENABLED_COMMAND_STATE;
+  return {
+    visible: true, enabled: false, reason: refusal.reason ?? "missing",
+    ...(refusal.cooldownTicks !== undefined ? { cooldownTicks: refusal.cooldownTicks } : {}),
+    ...(refusal.supplyCap !== undefined ? { supplyCap: refusal.supplyCap } : {}),
+  };
 }

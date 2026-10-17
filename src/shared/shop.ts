@@ -5,6 +5,7 @@ import { PURCHASE_REACH, purchasePlacement } from "./purchase";
 import { distanceToHull, shipProfile } from "./ship-geometry";
 import { isInCabin } from "./ship-cabin";
 import type { GameSnapshot, ItemKind, PlayerId, Shop, Unit } from "./types";
+import type { CommandLegalityError } from "./sim/command-validation";
 
 // @@@shop-goods - What a shop sells, at the owner's prices (10-01): each a little worse for its gold than what it stands in
 // for, so a shop is worth a walk and never the whole plan. Boots take one unit a fifth faster (mobility training takes
@@ -67,15 +68,15 @@ export function shopBuyer(snapshot: Pick<GameSnapshot, "units" | "items">, owner
 }
 
 // Why the owner may not buy the good at the shop now (transient when only waiting fixes it), or undefined.
-export function buyRefusal(snapshot: Pick<GameSnapshot, "shops" | "units" | "players" | "items">, owner: PlayerId, shopId: string, kind: ItemKind, recipientId?:string): { message: string; transient: boolean } | undefined {
+export function buyRefusal(snapshot: Pick<GameSnapshot, "shops" | "units" | "players" | "items">, owner: PlayerId, shopId: string, kind: ItemKind, recipientId?:string): CommandLegalityError | undefined {
   const shop = snapshot.shops?.find((candidate) => candidate.id === shopId);
   if (!shop) return { message: `Unknown shop ${shopId}`, transient: false };
   const good = shop.goods.find((candidate) => candidate.kind === kind);
   if (!good) return { message: `${shop.id} sells no ${kind}`, transient: false };
-  if (good.stock <= 0) return { message: `${shop.id} is out of ${kind}`, transient: true };
-  if(recipientId!==undefined){const result=purchasePlacement(snapshot,owner,shop,kind,recipientId);if("refusal" in result)return {message:result.refusal,transient:true};}
-  if (!snapshot.units.some((unit) => unit.owner === owner && standsAtShop(unit, shop))) return { message: `${shop.id} needs a unit of yours beside it`, transient: true };
-  if ((snapshot.players[owner]?.gold ?? 0) < good.cost) return { message: `Need ${good.cost} gold`, transient: true };
+  if (good.stock <= 0) return { message: `${shop.id} is out of ${kind}`, transient: true, reason: "cooldown", cooldownTicks: good.restockRemaining };
+  if(recipientId!==undefined){const result=purchasePlacement(snapshot,owner,shop,kind,recipientId);if("refusal" in result)return {message:result.refusal,transient:true,reason:"position"};}
+  if (!snapshot.units.some((unit) => unit.owner === owner && standsAtShop(unit, shop))) return { message: `${shop.id} needs a unit of yours beside it`, transient: true, reason: "position" };
+  if ((snapshot.players[owner]?.gold ?? 0) < good.cost) return { message: `Need ${good.cost} gold`, transient: true, reason: "gold" };
   return undefined;
 }
 

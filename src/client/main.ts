@@ -38,7 +38,8 @@ import { blockedFootprintCells, drawFootprint, footprintSquare } from "./footpri
 import { chatKeyIntent, normalizeChatText } from "./chat-controller";
 import { chargeRiderFor, chargeWindow, type ChargeWindow } from "./charge-targeting";
 import { abilityUnitTargetMatches, castCommandForSelection, preferredAbilityCaster, readyAbilityCasters } from "./ability-targeting";
-import { abilityCommandState, autocastToggle, booleanCommandState, ENABLED_COMMAND_STATE, HIDDEN_COMMAND_STATE, mercenaryHireCommandState, sharedStance, stanceCommandState, stanceFighters, stanceMenuCommandState, trainCommandState, type CommandButtonState } from "./command-button-state";
+import { abilityCommandState, autocastToggle, booleanCommandState, ENABLED_COMMAND_STATE, HIDDEN_COMMAND_STATE, legalityCommandState, sharedStance, stanceCommandState, stanceFighters, stanceMenuCommandState, type CommandButtonState } from "./command-button-state";
+import { checkCommandLegality } from "../shared/sim/command-validation";
 import { BRACE_DAMAGE_SHARE, KNOCKBACK, LUNGE_PACE, MAX_SHOVE, SHOCK_DAMAGE_TAKEN } from "../shared/push";
 import {
   controlGroupCenter,
@@ -364,10 +365,10 @@ const commandButtons: CommandButton[] = [
     createCommandButton(t("command.buildSpecific", { building: labelKind(command.kind) }), command.icon, command.hotkey, () => booleanCommandState(canBuild(command.kind)), () => beginBuildPlacement(command.kind), () => buildingTooltip(command.kind, command.hotkey, i18n, snapshot?.players[localPlayerId]?.race), { type: "building", kind: command.kind }),
   ),
   ...TRAIN_COMMANDS.map((command) =>
-    createCommandButton(t("command.trainSpecific", { unit: labelKind(command.kind) }), command.icon, command.hotkey, () => trainCommandState(command.kind, currentPlayerState(), canTrain(command.kind)), () => train(command.kind), () => unitTooltip(command.kind, command.hotkey, i18n, currentPlayerState()?.race), { type: "unit", kind: command.kind }),
+    createCommandButton(t("command.trainSpecific", { unit: labelKind(command.kind) }), command.icon, command.hotkey, () => trainButtonState(command.kind), () => train(command.kind), () => unitTooltip(command.kind, command.hotkey, i18n, currentPlayerState()?.race), { type: "unit", kind: command.kind }),
   ),
   ...RESEARCH_COMMANDS.map((command) =>
-    createCommandButton(t("command.researchSpecific", { upgrade: labelKind(command.upgradeKind) }), command.icon, command.hotkey, () => booleanCommandState(canResearch(command.upgradeKind)), () => research(command.upgradeKind), () => upgradeTooltip(command.upgradeKind, command.hotkey, currentPlayerState()?.upgrades[command.upgradeKind] ?? 0, i18n)),
+    createCommandButton(t("command.researchSpecific", { upgrade: labelKind(command.upgradeKind) }), command.icon, command.hotkey, () => researchButtonState(command.upgradeKind), () => research(command.upgradeKind), () => upgradeTooltip(command.upgradeKind, command.hotkey, currentPlayerState()?.upgrades[command.upgradeKind] ?? 0, i18n)),
   ),
   ...SPELL_COMMANDS.map((command) =>
     withAbilityArtwork(withAutocastRing(createCommandButton(
@@ -2362,14 +2363,25 @@ function toggleAutocast(ability: AbilityKind) {
   statusLabel.textContent = t(toggle.enabled ? "status.autocastOn" : "status.autocastOff", { ability: labelKind(ability) });
 }
 
+// The card's orders ask the sim's own check whether they would be taken (see @@@command-refusal).
+function orderButtonState(command: GameCommand): CommandButtonState {
+  return snapshot ? legalityCommandState(checkCommandLegality(snapshot, localPlayerId, command)) : { visible: true, enabled: false, reason: "missing" };
+}
+
+function trainButtonState(unitKind: TrainableUnitKind): CommandButtonState {
+  const building = canTrain(unitKind) ? focusedTrainingBuilding(unitKind) : undefined;
+  return building ? orderButtonState({ type: "train", buildingId: building.id, unitKind }) : HIDDEN_COMMAND_STATE;
+}
+
+function researchButtonState(upgradeKind: UpgradeKind): CommandButtonState {
+  const command = canResearch(upgradeKind) ? focusedResearch(upgradeKind) : undefined;
+  return command ? orderButtonState({ type: "research", buildingId: command.buildingId, upgradeKind }) : HIDDEN_COMMAND_STATE;
+}
+
 function hireMercenaryButtonState(): CommandButtonState {
   const camp = selectedMercenaryCamp();
-  if (commandMode || openPalette) return HIDDEN_COMMAND_STATE;
-  return mercenaryHireCommandState({
-    camp,
-    player: currentPlayerState(),
-    hasFriendlyUnitAtCamp: camp ? friendlyUnitAtMercenaryCamp(camp) : false,
-  });
+  if (!camp || commandMode || openPalette) return HIDDEN_COMMAND_STATE;
+  return orderButtonState({ type: "hire", campId: camp.id });
 }
 
 function openBuildPalette() {
@@ -2640,40 +2652,45 @@ function train(unitKind: TrainableUnitKind) {
     showInvalidCommand(t("status.trainNeedsBuilding", { unit: labelKind(unitKind) }));
     return;
   }
-  const building = focusedPlayerBuildings().find((candidate) => candidate.complete && canTrainAt(player.race, candidate.kind, unitKind));
+  const building = focusedTrainingBuilding(unitKind);
   if (!building) {
     showInvalidCommand(t("status.trainNeedsBuilding", { unit: labelKind(unitKind) }));
     return;
   }
-  const state = trainCommandState(unitKind, player, true);
+  const state = trainButtonState(unitKind);
   if (!state.enabled) { showCommandUnavailable(state, labelKind(unitKind)); return; }
   if (!sendCommand({ type: "train", buildingId: building.id, unitKind })) return;
   statusLabel.textContent = t("status.trainQueued", { unit: labelKind(unitKind) });
 }
 
+function focusedTrainingBuilding(unitKind: TrainableUnitKind) {
+  const player = currentPlayerState();
+  return player && focusedPlayerBuildings().find((candidate) => candidate.complete && canTrainAt(player.race, candidate.kind, unitKind));
+}
+
+function focusedResearch(upgradeKind: UpgradeKind) {
+  return researchCommandButtonsForSelection(focusedPlayerBuildings(), currentPlayerState()).find((candidate) => candidate.upgradeKind === upgradeKind);
+}
+
 function research(upgradeKind: UpgradeKind) {
   if (!syncBeforeCommandProjection()) return;
-  const command = researchCommandButtonsForSelection(focusedPlayerBuildings(), currentPlayerState()).find((candidate) => candidate.upgradeKind === upgradeKind);
+  const command = focusedResearch(upgradeKind);
   if (!command) {
     showInvalidCommand(t("status.researchNeedsBuilding", { upgrade: labelKind(upgradeKind) }));
     return;
   }
-  sendCommand({ type: "research", buildingId: command.buildingId, upgradeKind });
+  const state = researchButtonState(upgradeKind);
+  if (!state.enabled) { showCommandUnavailable(state, labelKind(upgradeKind)); return; }
+  if (!sendCommand({ type: "research", buildingId: command.buildingId, upgradeKind })) return;
   statusLabel.textContent = t("status.researchStarted", { upgrade: labelKind(command.upgradeKind) });
 }
 
 function shopGoodButtonState(kind: WorldItem["kind"]): CommandButtonState {
   const shop = selectedShop();
   if (!shop || commandMode || openPalette) return HIDDEN_COMMAND_STATE;
-  const good = shop.goods.find((candidate) => candidate.kind === kind);
-  const player = currentPlayerState();
-  if (!good) return HIDDEN_COMMAND_STATE;
-  if (!player) return { visible: true, enabled: false, reason: "missing" };
-  if (good.stock <= 0) return { visible: true, enabled: false, cooldownTicks: good.restockRemaining, reason: "cooldown" };
-  if (player.gold < good.cost) return { visible: true, enabled: false, reason: "gold" };
-  const problem=purchaseProblem(kind);
-  if (problem) return { visible: true, enabled: false, reason: "position",detail:problem };
-  return ENABLED_COMMAND_STATE;
+  if (!shop.goods.some((candidate) => candidate.kind === kind)) return HIDDEN_COMMAND_STATE;
+  const recipient = purchaseRecipient(shop);
+  return withPurchaseProblem(orderButtonState({ type: "buy", shopId: shop.id, item: kind, ...(recipient ? { recipientId: recipient.id } : {}) }), kind, recipient);
 }
 
 function purchaseSeller(){return selectedShop() ?? focusedPlayerBuildings().find(building=>building.kind==="shipyard" && building.complete);}
@@ -2726,9 +2743,14 @@ function choosePurchaseRecipientAt(point:Point){
 function dockGoodButtonState(kind:keyof typeof SHIP_WEAPONS):CommandButtonState{
   const dock=focusedPlayerBuildings().find(building=>building.kind==="shipyard" && building.complete);
   if(!dock || commandMode || openPalette)return HIDDEN_COMMAND_STATE;
-  if((currentPlayerState()?.gold??0)<SHIP_WEAPONS[kind].cost)return {visible:true,enabled:false,reason:"gold"};
-  const problem=purchaseProblem(kind);
-  return problem ? {visible:true,enabled:false,reason:"position",detail:problem} : ENABLED_COMMAND_STATE;
+  const recipient=purchaseRecipient(dock);
+  return withPurchaseProblem(orderButtonState({type:"buyShipEquipment",buildingId:dock.id,item:kind,...(recipient?{recipientId:recipient.id}:{})}),kind,recipient);
+}
+// A purchase goes to a chosen recipient: without one it waits for the player to choose, and a recipient's refusal is told in its words.
+function withPurchaseProblem(state:CommandButtonState,kind:WorldItem['kind'],recipient:Unit|undefined):CommandButtonState{
+  if(state.enabled && !recipient)return {visible:true,enabled:false,reason:"position",detail:purchaseFeedback("Choose a living unit or ship of yours")};
+  const problem=state.reason==="position" ? purchaseProblem(kind) : undefined;
+  return problem ? {...state,detail:problem} : state;
 }
 function buyDockGood(kind:keyof typeof SHIP_WEAPONS){
   if(!syncBeforeCommandProjection())return;
@@ -2736,7 +2758,7 @@ function buyDockGood(kind:keyof typeof SHIP_WEAPONS){
   if(!dock)return;
   const state=dockGoodButtonState(kind);if(!state.enabled){showCommandUnavailable(state,purchaseProblem(kind)??"");return;}
   const recipient=purchaseRecipient(dock);if(!recipient)return;
-  sendCommand({type:"buyShipEquipment",buildingId:dock.id,item:kind,recipientId:recipient.id});
+  if(!sendCommand({type:"buyShipEquipment",buildingId:dock.id,item:kind,recipientId:recipient.id}))return;
   statusLabel.textContent=t("status.itemBought",{item:labelKind(kind)});
 }
 function drawPurchaseRecipientFlash(){
@@ -2767,7 +2789,7 @@ function buyGood(kind: WorldItem["kind"]) {
     return;
   }
   const recipient=purchaseRecipient(shop);if(!recipient)return;
-  sendCommand({ type: "buy", shopId: shop.id, item: kind,recipientId:recipient.id });
+  if (!sendCommand({ type: "buy", shopId: shop.id, item: kind,recipientId:recipient.id })) return;
   inspectedShopItem = kind;
   selectedIds = new Set();
   focusedSelectionId = undefined;
@@ -2788,7 +2810,7 @@ function hireMercenary() {
     showCommandUnavailable(state, t("status.hireNeedsUnitAtCamp"));
     return;
   }
-  sendCommand({ type: "hire", campId: camp.id });
+  if (!sendCommand({ type: "hire", campId: camp.id })) return;
   statusLabel.textContent = t("status.mercenaryHired");
 }
 
@@ -2877,10 +2899,6 @@ function commandCardContext() {
 
 function inventoryCarriers() {
   return snapshot ? inventoryUnitsForCommandCard(snapshot, focusedSelectionId, localPlayerId, commandCardContext()) : [];
-}
-
-function friendlyUnitAtMercenaryCamp(camp: NonNullable<ReturnType<typeof selectedMercenaryCamp>>) {
-  return Boolean(snapshot?.units.some((unit) => unit.owner === localPlayerId && distance(unit, camp) <= camp.radius + unit.radius + 100));
 }
 
 function currentPlayerState() {

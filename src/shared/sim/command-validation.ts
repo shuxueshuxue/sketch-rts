@@ -24,9 +24,18 @@ import { purchasePlacement } from "../purchase";
 import { isStunned, unitAbilities } from "../unit-abilities";
 import { canEnterCabin, isInCabin, cabinExitPoint } from '../ship-cabin';
 
+// @@@command-refusal - Why an order the player may give is refused right now, in the player's terms: the command card
+// greys a button with exactly this (see legalityCommandState), so the card and the sim cannot disagree on what an order
+// costs, how near a unit must stand, or when a camp has stock again.
+export type CommandRefusalReason = "gold" | "supply" | "tier" | "stock" | "cooldown" | "position";
+
 export type CommandLegalityError = {
   message: string;
   transient: boolean;
+  reason?: CommandRefusalReason;
+  // reason "cooldown": ticks until it is ready; reason "tier": the supply cap the unit waits for.
+  cooldownTicks?: number;
+  supplyCap?: number;
 };
 
 export function commandValidationError(snapshot: GameSnapshot, owner: PlayerId, command: GameCommand): string | undefined {
@@ -142,9 +151,9 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     if (!building.complete) return commandError(`Cannot train from incomplete ${building.kind}`);
     if (!canTrainAt(player.race, building.kind, command.unitKind)) return commandError(`${building.kind} cannot train ${command.unitKind} for ${player.race}`);
     const cap = requiredSupplyCap(command.unitKind);
-    if (player.supplyCap < cap) return commandError(`Need a supply cap of ${cap} to train ${command.unitKind}`, true);
-    if (!canSupply(snapshot, owner, command.unitKind)) return commandError(`Need more supply to train ${command.unitKind}`, true);
-    return canSpendGold(snapshot, owner, UNIT_DEFS[command.unitKind].cost) ? undefined : commandError(`Need ${UNIT_DEFS[command.unitKind].cost} gold`, true);
+    if (player.supplyCap < cap) return refusal(`Need a supply cap of ${cap} to train ${command.unitKind}`, "tier", { supplyCap: cap });
+    if (!canSupply(snapshot, owner, command.unitKind)) return refusal(`Need more supply to train ${command.unitKind}`, "supply");
+    return goldRefusal(snapshot, owner, UNIT_DEFS[command.unitKind].cost);
   }
   if (command.type === "research") {
     const building = snapshot.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner);
@@ -159,18 +168,18 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     if (building.researchQueue.some((job) => job.upgradeKind === command.upgradeKind)) return commandError(`${command.upgradeKind} is already queued`, true);
     const nextLevel = upgrade.levels[currentLevel];
     if (!nextLevel) return commandError(`${command.upgradeKind} missing level ${currentLevel + 1}`);
-    return canSpendGold(snapshot, owner, nextLevel.cost) ? undefined : commandError(`Need ${nextLevel.cost} gold`, true);
+    return goldRefusal(snapshot, owner, nextLevel.cost);
   }
   if (command.type === "hire") {
     const camp = snapshot.mercenaryCamps.find((candidate) => candidate.id === command.campId);
     if (!camp) return commandError(`Unknown mercenary camp ${command.campId}`);
-    if (camp.stock <= 0) return commandError(`${camp.id} has no mercenary stock`, true);
-    if (camp.cooldownRemaining > 0) return commandError(`${camp.id} is restocking`, true);
-    if (!hasFriendlyUnitAtCamp(snapshot, owner, camp)) return commandError(`${camp.id} needs a friendly unit nearby before hiring`, true);
-    if (!canSupply(snapshot, owner, camp.hireKind)) return commandError(`Need more supply to hire ${camp.hireKind}`, true);
-    return canSpendGold(snapshot, owner, camp.cost) ? undefined : commandError(`Need ${camp.cost} gold`, true);
+    if (camp.stock <= 0) return refusal(`${camp.id} has no mercenary stock`, "stock");
+    if (camp.cooldownRemaining > 0) return refusal(`${camp.id} is between hires`, "cooldown", { cooldownTicks: camp.cooldownRemaining });
+    if (!hasFriendlyUnitAtCamp(snapshot, owner, camp)) return refusal(`${camp.id} needs a friendly unit nearby before hiring`, "position");
+    if (!canSupply(snapshot, owner, camp.hireKind)) return refusal(`Need more supply to hire ${camp.hireKind}`, "supply");
+    return goldRefusal(snapshot, owner, camp.cost);
   }
-  if(command.type==="buyShipEquipment"){const dock=snapshot.buildings.find(building=>building.id===command.buildingId && building.owner===owner && building.complete && building.kind==="shipyard");if(!dock)return commandError("A completed shipyard is required",true);if(command.recipientId!==undefined){const delivery=purchasePlacement(snapshot,owner,dock,command.item,command.recipientId);if("refusal" in delivery)return commandError(delivery.refusal,true);}return canSpendGold(snapshot,owner,SHIP_WEAPONS[command.item].cost)?undefined:commandError(`Need ${SHIP_WEAPONS[command.item].cost} gold`,true);}
+  if(command.type==="buyShipEquipment"){const dock=snapshot.buildings.find(building=>building.id===command.buildingId && building.owner===owner && building.complete && building.kind==="shipyard");if(!dock)return commandError("A completed shipyard is required",true);if(command.recipientId!==undefined){const delivery=purchasePlacement(snapshot,owner,dock,command.item,command.recipientId);if("refusal" in delivery)return refusal(delivery.refusal,"position");}return goldRefusal(snapshot,owner,SHIP_WEAPONS[command.item].cost);}
   if (command.type === "buy") return buyRefusal(snapshot, owner, command.shopId, command.item, command.recipientId);
   if (command.type === "learnVeteranSkill") {
     const unit = snapshot.units.find(candidate => candidate.id === command.unitId && candidate.owner === owner && candidate.hp > 0);
@@ -217,6 +226,14 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
 
 function commandError(message: string, transient = false): CommandLegalityError {
   return { message, transient };
+}
+
+function refusal(message: string, reason: CommandRefusalReason, extra: Pick<CommandLegalityError, "cooldownTicks" | "supplyCap"> = {}): CommandLegalityError {
+  return { message, transient: true, reason, ...extra };
+}
+
+function goldRefusal(snapshot: GameSnapshot, owner: PlayerId, cost: number) {
+  return canSpendGold(snapshot, owner, cost) ? undefined : refusal(`Need ${cost} gold`, "gold");
 }
 
 export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, command: GameCommand): GameCommand | undefined {
