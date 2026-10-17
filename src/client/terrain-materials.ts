@@ -17,7 +17,20 @@ export const GROUND: Record<GroundMaterial, Tone> = {
 /** The order patches are laid: each over the ones before it. */
 export const GROUND_LAYERS: readonly GroundMaterial[] = ['rough', 'sand', 'grass'];
 
+const MATERIALS: readonly GroundMaterial[] = ['dirt', 'sand', 'rough', 'grass'];
+const materials = new WeakMap<Terrain, Uint8Array>();
+/** The cover a cell is painted as, worked out once per map (a chunk asks for each of its cells several times). */
 export function groundMaterial(terrain: Terrain, col: number, row: number): GroundMaterial {
+  let cells = materials.get(terrain);
+  if (!cells) {
+    cells = new Uint8Array(terrain.cols * terrain.rows);
+    for (let r = 0; r < terrain.rows; r++) for (let c = 0; c < terrain.cols; c++) cells[r * terrain.cols + c] = MATERIALS.indexOf(cellMaterial(terrain, c, r));
+    materials.set(terrain, cells);
+  }
+  return MATERIALS[cells[row * terrain.cols + col]!]!;
+}
+
+function cellMaterial(terrain: Terrain, col: number, row: number): GroundMaterial {
   if (terrain.ecology) {
     const w = groundCover(sampleEnvironment(environmentField(terrain), (col + .5) * terrain.cell, (row + .5) * terrain.cell));
     // Thresholds, not the largest weight: open ground stays dirt unless another cover clearly wins.

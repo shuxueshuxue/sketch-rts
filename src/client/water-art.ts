@@ -30,8 +30,24 @@ export function shoreMask(terrain: Terrain, threshold: number): HTMLCanvasElemen
   let masks = shoreMasks.get(terrain);
   if (!masks) shoreMasks.set(terrain, masks = new Map());
   const old = masks.get(threshold); if (old) return old;
-  const { width, height } = waterCoverPixels(terrain), field = waterField(terrain), seed = environmentField(terrain).seed;
+  const { width, height } = waterCoverPixels(terrain), wobbled = shoreLevels(terrain);
   const canvas = createScratchCanvas(width, height), ctx = canvas.getContext('2d')!, image = ctx.createImageData(width, height);
+  for (let i = 0; i < wobbled.length; i++) {
+    // A ramp a few world units wide, so the band edge stays smooth when the mask is scaled up to the world.
+    const t = Math.max(0, Math.min(1, (wobbled[i]! - threshold) / .1 + .5));
+    image.data[i * 4] = image.data[i * 4 + 1] = image.data[i * 4 + 2] = 255; image.data[i * 4 + 3] = Math.round(t * 255);
+  }
+  ctx.putImageData(image, 0, 0); masks.set(threshold, canvas);
+  return canvas;
+}
+
+// The shore coverage at the seabed's resolution, the noise that makes its lines wander already added: one pass shared by
+// every band's mask.
+const levels = new WeakMap<Terrain, Float32Array>();
+function shoreLevels(terrain: Terrain): Float32Array {
+  const old = levels.get(terrain); if (old) return old;
+  const { width, height } = waterCoverPixels(terrain), field = waterField(terrain), seed = environmentField(terrain).seed;
+  const out = new Float32Array(width * height);
   const worldWidth = terrain.cols * terrain.cell, worldHeight = terrain.rows * terrain.cell;
   for (let row = 0; row < height; row++) for (let col = 0; col < width; col++) {
     const x = (col + .5) * worldWidth / width, y = (row + .5) * worldHeight / height;
@@ -39,14 +55,11 @@ export function shoreMask(terrain: Terrain, threshold: number): HTMLCanvasElemen
     const c0 = Math.floor(px), r0 = Math.floor(py), c1 = Math.min(c0 + 1, terrain.cols - 1), r1 = Math.min(r0 + 1, terrain.rows - 1);
     const at = (c: number, r: number) => field.coverage[r * terrain.cols + c]!;
     const coverage = (at(c0, r0) + (at(c1, r0) - at(c0, r0)) * (px - c0)) * (1 - py + r0) + (at(c0, r1) + (at(c1, r1) - at(c0, r1)) * (px - c0)) * (py - r0);
-    const wobble = (spatialNoise(seed, x, y, 90, 81) - .5) * .12;
-    // A ramp a few world units wide, so the band edge stays smooth when the mask is scaled up to the world.
-    const t = Math.max(0, Math.min(1, (coverage + wobble - threshold) / .2 + .5));
-    const i = (row * width + col) * 4;
-    image.data[i] = image.data[i + 1] = image.data[i + 2] = 255; image.data[i + 3] = Math.round(t * 255);
+    // Dry land far from any water skips the noise: no band reaches it.
+    out[row * width + col] = coverage <= 0 ? 0 : coverage + (spatialNoise(seed, x, y, 90, 81) - .5) * .12;
   }
-  ctx.putImageData(image, 0, 0); masks.set(threshold, canvas);
-  return canvas;
+  levels.set(terrain, out);
+  return out;
 }
 
 const lightMasks = new WeakMap<Terrain, HTMLCanvasElement>();

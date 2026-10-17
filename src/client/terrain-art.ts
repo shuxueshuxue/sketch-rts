@@ -1,7 +1,7 @@
 import { type Brush, type Point, ellipse, line, polygon } from "./art/kit";
 import { createScratchCanvas } from "./art/scratch-canvas";
 // The atlas's tree, from its own module: a chunk painter thread (see @@@terrain-chunk-thread) loads no other art.
-import { paintTree as drawAtlasTree } from "./art/environment";
+import { paintTree as drawAtlasTree, type TreeKind } from "./art/environment";
 import { GROUND, GROUND_LAYERS, cellJitter, groundMaterial, groundTexture, terrainCover, type Tone } from './terrain-materials';
 import type { Terrain } from "../shared/terrain";
 import { environmentField, sampleEnvironment } from "../shared/environment/fields";
@@ -229,15 +229,22 @@ function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): 
     if (cells.length) { patch(b, cells, size, 0, ramp ? 105 : 100); fill(GROUND.dirt.light, alpha); }
   }
 
-  // The coast in drawn bands over one continuous seabed (see @@@shore-bands): beach, ink line, foam, water.
-  if (waterField(terrain).hasWater) {
+  // The coast in drawn bands over one continuous seabed (see @@@shore-bands): beach, ink line, foam, water. Only a chunk
+  // with water in or near it pays for them.
+  if (waterField(terrain).hasWater && collect(wet).length) {
+    // The bands are soft-edged washes: painted at one pixel a world unit even into a denser chunk, at a quarter the cost.
+    const layer = createScratchCanvas(CHUNK, CHUNK), l = layer.getContext("2d")!;
     const band = (threshold: number, style: string | CanvasPattern, alpha = 1) => {
-      const layer = createScratchCanvas(CHUNK * density, CHUNK * density), l = layer.getContext("2d")!;
-      l.setTransform(b.getTransform());
+      l.setTransform(1, 0, 0, 1, 0, 0); l.globalCompositeOperation = "source-over"; l.clearRect(0, 0, CHUNK, CHUNK);
+      l.translate(-cx * CHUNK, -cy * CHUNK);
       l.imageSmoothingEnabled = true;
-      l.drawImage(shoreMask(terrain, threshold), 0, 0, terrain.cols * size, terrain.rows * size);
+      // Only the mask's pixels under this chunk (and one beyond, for smoothing), not the whole map's.
+      const mask = shoreMask(terrain, threshold), sx = mask.width / (terrain.cols * size), sy = mask.height / (terrain.rows * size);
+      const left = Math.max(0, Math.floor(cx * CHUNK * sx) - 1), top = Math.max(0, Math.floor(cy * CHUNK * sy) - 1);
+      const right = Math.min(mask.width, Math.ceil((cx + 1) * CHUNK * sx) + 1), bottom = Math.min(mask.height, Math.ceil((cy + 1) * CHUNK * sy) + 1);
+      l.drawImage(mask, left, top, right - left, bottom - top, left / sx, top / sy, (right - left) / sx, (bottom - top) / sy);
       l.globalCompositeOperation = "source-in"; l.fillStyle = style; l.fillRect(x0, y0, w, h);
-      b.save(); b.setTransform(1, 0, 0, 1, 0, 0); b.globalAlpha = alpha; b.drawImage(layer, 0, 0); b.restore();
+      b.save(); b.globalAlpha = alpha; b.drawImage(layer, cx * CHUNK, cy * CHUNK); b.restore();
     };
     band(.06, GROUND.sand.dark, .9);
     band(.09, texture("sand", GROUND.sand));
@@ -308,7 +315,7 @@ function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): 
       const rim = edge(col, row);
       for (let k = 0; k < (rim ? 1 : 2); k++) {
         const x = (col + .5 + (cellJitter(col, row, 181 + k) - .5) * .7) * size, y = (row + .65 + (cellJitter(col, row, 183 + k) - .5) * .5) * size;
-        drawAtlasTree(b, x, y, (rim ? 1.05 : .82) * (.85 + cellJitter(col, row, 185 + k) * .3), col + row, cellJitter(col, row, 187 + k) < .25 + cold * .5 ? "pine" : "broadleaf", rim);
+        forestTree(b, x, y, (rim ? 1.05 : .82) * (.85 + cellJitter(col, row, 185 + k) * .3), (col + row) % 3, cellJitter(col, row, 187 + k) < .25 + cold * .5 ? "pine" : "broadleaf", rim, density);
       }
     }
   }
@@ -326,16 +333,54 @@ function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): 
   return { ground: canvas, ...(waterMask ? { water: waterMask } : {}) };
 }
 
+// A forest paints hundreds of trees a chunk; each look (kind, edge or inside, one of three sways, the chunk's density) is
+// painted once into a sprite and stamped from there.
+const TREE_BOX = { left: 24, top: 64, width: 56, height: 73 }, TREE_SPRITE_SCALE = 1.2;
+const treeSprites = new Map<string, HTMLCanvasElement>();
+function forestTree(b: Brush, x: number, y: number, size: number, tone: number, kind: TreeKind, rim: boolean, density: number) {
+  const key = `${kind}:${rim}:${tone}:${density}`;
+  let sprite = treeSprites.get(key);
+  if (!sprite) {
+    const scale = TREE_SPRITE_SCALE * density;
+    sprite = createScratchCanvas(Math.ceil(TREE_BOX.width * scale), Math.ceil(TREE_BOX.height * scale));
+    const s = sprite.getContext("2d")!;
+    s.scale(scale, scale);
+    drawAtlasTree(s, TREE_BOX.left, TREE_BOX.top, 1, tone, kind, rim);
+    treeSprites.set(key, sprite);
+  }
+  b.drawImage(sprite, x - TREE_BOX.left * size, y - TREE_BOX.top * size, TREE_BOX.width * size, TREE_BOX.height * size);
+}
+
 type Cells = [number, number][];
 // A union of jittered discs over the cells: an organic patch whose edge wanders like a drawn line, the same in every
-// chunk (the jitter is per cell, not per chunk).
+// chunk (the jitter is per cell, not per chunk). Only cells on the patch's edge need discs; a cell whose four neighbours
+// are all in the patch is covered whatever its discs do, so runs of those are laid as plain rectangles, a few path
+// commands for what would be hundreds of arcs.
 function patch(b: Brush, cells: Cells, size: number, grow: number, salt: number, dx = 0, dy = 0) {
+  const inside = new Set(cells.map(([col, row]) => col * 65536 + row));
+  const has = (col: number, row: number) => inside.has(col * 65536 + row);
   b.beginPath();
-  for (const [col, row] of cells) for (let k = 0; k < 3; k++) {
-    const x = (col + .5 + (cellJitter(col, row, salt + k) - .5) * .55) * size + dx, y = (row + .5 + (cellJitter(col, row, salt + 7 + k) - .5) * .55) * size + dy;
-    const r = size * (.5 + cellJitter(col, row, salt + 13 + k) * .2) + grow;
-    if (r <= 0) continue;
-    b.moveTo(x + r, y); b.arc(x, y, r, 0, Math.PI * 2);
+  const rows = new Map<number, number[]>();
+  for (const [col, row] of cells) (rows.get(row) ?? rows.set(row, []).get(row)!).push(col);
+  for (const [row, cols] of rows) {
+    cols.sort((a, z) => a - z);
+    let start: number | undefined, last = -2;
+    const flush = () => { if (start !== undefined) b.rect(start * size + dx - grow, row * size + dy - grow, (last - start + 1) * size + grow * 2, size + grow * 2); start = undefined; };
+    for (const col of cols) {
+      if (!(has(col + 1, row) && has(col - 1, row) && has(col, row + 1) && has(col, row - 1))) { flush(); continue; }
+      if (start === undefined || col !== last + 1) { flush(); start = col; }
+      last = col;
+    }
+    flush();
+  }
+  for (const [col, row] of cells) {
+    if (has(col + 1, row) && has(col - 1, row) && has(col, row + 1) && has(col, row - 1)) continue;
+    for (let k = 0; k < 3; k++) {
+      const x = (col + .5 + (cellJitter(col, row, salt + k) - .5) * .55) * size + dx, y = (row + .5 + (cellJitter(col, row, salt + 7 + k) - .5) * .55) * size + dy;
+      const r = size * (.5 + cellJitter(col, row, salt + 13 + k) * .2) + grow;
+      if (r <= 0) continue;
+      b.moveTo(x + r, y); b.arc(x, y, r, 0, Math.PI * 2);
+    }
   }
 }
 
