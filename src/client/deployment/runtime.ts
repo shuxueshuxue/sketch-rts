@@ -35,6 +35,8 @@ export type DeploymentRuntime = {
   /** Watches a room's lobby as this user: the server lists an open room only while its host watches it. */
   watchRoom(roomId: string, user: LocalUserProfile, onRoom: (room: RoomState) => void): () => void;
   closeRoom(roomId: string, user: LocalUserProfile): Promise<RoomState>;
+  /** Opens an ended room again for the same players (see @@@rematch). */
+  reopenRoom(roomId: string, user: LocalUserProfile): Promise<RoomState>;
   startRoom(roomId: string, user: LocalUserProfile, onRoom?: (room: RoomState) => void): Promise<StartedMatch>;
   connectRoom(room: RoomState, playerId: PlayerId, spectating: boolean, onRoom: (room: RoomState) => void): StartedMatch;
   canForfeitMatch(roomId: string): boolean;
@@ -106,6 +108,10 @@ export class SplitDeploymentRuntime implements DeploymentRuntime {
 
   closeRoom(roomId: string, user: LocalUserProfile) {
     return this.at(roomId).closeRoom(roomId, user);
+  }
+
+  reopenRoom(roomId: string, user: LocalUserProfile) {
+    return this.at(roomId).reopenRoom(roomId, user);
   }
 
   startRoom(roomId: string, user: LocalUserProfile, onRoom?: (room: RoomState) => void) {

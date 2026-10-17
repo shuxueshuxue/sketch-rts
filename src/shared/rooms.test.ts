@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createGame, snapshotGame } from "./sim";
-import { canStartRoom, hostActionRefusal, roomStartBlocker, seatEditRefusal, createGrandThirtyRoom, createRoom, finishRoom, joinFirstOpenSlot, lobbyVisibleRooms, resizeRoomSlots, ROOM_AI_RACES, ROOM_AI_VERSIONS, roomAiVersionsFor, roomToGameSetup, updateRoomMap, updateRoomSlot, winningResultSlots } from "./rooms";
+import { canStartRoom, hostActionRefusal, roomStartBlocker, seatEditRefusal, createGrandThirtyRoom, createRoom, finishRoom, joinFirstOpenSlot, lobbyVisibleRooms, resizeRoomSlots, ROOM_AI_RACES, ROOM_AI_VERSIONS, roomAiVersionsFor, roomToGameSetup, reopenRoom, updateRoomMap, updateRoomSlot, winningResultSlots } from "./rooms";
 import { createRoomLifecycleHost } from "./room-lifecycle";
 import { parseSlotPatch } from "./room-schema";
 import type { LocalUserProfile } from "./types";
@@ -308,3 +308,26 @@ describe("room model", () => {
     expect(ended.result?.slots.map((slot) => slot.id)).toEqual(["slot-1", "slot-2"]);
   });
 });
+
+describe("playing a room again (@@@rematch)", () => {
+  const host: LocalUserProfile = { id: "host", name: "Host" }, guest: LocalUserProfile = { id: "guest", name: "Guest" };
+  const played = () => {
+    const room = joinFirstOpenSlot(createRoom({ id: "again", host, visibility: "public", mapId: "bareDuel", humanCount: 2, aiCount: 0 }), guest);
+    const ready = updateRoomSlot(room, "slot-2", { ready: true });
+    return finishRoom({ ...ready, status: "inMatch" }, snapshotGame(createGame("bareDuel")));
+  };
+  it("opens an ended room again with its seats as they were, its result gone, the guests to get ready again", () => {
+    const ended = played(), again = reopenRoom(ended, guest.id);
+    expect(ended.status).toBe("ended"); expect(again.status).toBe("open"); expect(again.result).toBeUndefined();
+    expect(again.mapId).toBe(ended.mapId);
+    expect(again.slots.map(slot => [slot.userId, slot.controller, slot.team, slot.race])).toEqual(ended.slots.map(slot => [slot.userId, slot.controller, slot.team, slot.race]));
+    expect(again.slots.map(slot => slot.ready)).toEqual([true, false]);
+    expect(canStartRoom(again)).toBe(false);
+  });
+  it("leaves a room already open again as it is, and refuses anyone who did not play in it", () => {
+    const again = reopenRoom(played(), host.id);
+    expect(reopenRoom(again, guest.id)).toBe(again);
+    expect(() => reopenRoom(played(), "stranger")).toThrow("Only a player of this room");
+  });
+});
+
