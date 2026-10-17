@@ -71,9 +71,10 @@ function polygonFor(a:Point,b:Point,width:number) {
 function floorSupports(source:Unit,target:Unit,a:Point,b:Point,width:number) {
   const polygon=polygonFor(a,b,width);if(!polygon.length)return false;
   const hulls=[source,target].map(ship=>shipProfile(ship)!.hull.map(p=>localToWorld(ship,p)));
-  const floor=supportSurface([...hulls,polygon],undefined,{left:0,top:0,right:0,bottom:0});
   const obstacles=[source,target].flatMap(ship=>shipProfile(ship)!.obstacles.map(o=>({...localToWorld(ship,o),radius:o.radius})));
-  return floor.capsuleFits(a,b,GANGWAY_MAX_RADIUS+1) && capsuleClearsCircles(a,b,GANGWAY_MAX_RADIUS+1,obstacles);
+  // The fittings are the cheap test and the usual refusal; the support floor is built only for a clear passage.
+  if(!capsuleClearsCircles(a,b,GANGWAY_MAX_RADIUS+1,obstacles))return false;
+  return supportSurface([...hulls,polygon],undefined,{left:0,top:0,right:0,bottom:0}).capsuleFits(a,b,GANGWAY_MAX_RADIUS+1);
 }
 /** A fixed local anchor inside each usable deck; the rectangle overlaps both
  * floors so the body's disk has support throughout the railing transition. */
@@ -85,18 +86,25 @@ function deploymentAnchors(source:Unit,target:Unit) {
   if(Math.abs(relative.y)<(a.beam+b.beam)/4)return undefined;
   const shorter=Math.min(a.length,b.length);
   let best:{sourceAnchor:Point;targetAnchor:Point;span:number}|undefined;
+  const floors=new Map([source,target].map(ship=>[ship,expandConvex(shipProfile(ship)!.deck,-GANGWAY_MAX_RADIUS-2)]));
   const onSide=(ship:Unit,station:Point,toward:Unit)=>{
-    const profile=shipProfile(ship)!,floor=expandConvex(profile.deck,-GANGWAY_MAX_RADIUS-2),x=worldToLocal(ship,station).x;
+    const profile=shipProfile(ship)!,floor=floors.get(ship)!,x=worldToLocal(ship,station).x;
     const from={x,y:-profile.beam},to={x,y:profile.beam},interval=clipToConvex(from,to,floor);if(!interval)return undefined;
     const side=worldToLocal(ship,toward).y>=0?interval[1]:interval[0];
     return {x,y:from.y+(to.y-from.y)*side};
   };
-  for(const along of [0,-shorter*.1,shorter*.1,-shorter*.25,shorter*.25]) {
+  // @@@gangway-station - The bridge takes the shortest span among stations along the shared side that clear both decks'
+  // fittings. Guns stand along a broadside's rail, and the five fixed stations alone all fell on a gun when both hulls
+  // were fully armed, which then could never board; the whole shared side is walked a quarter bridge-width at a time.
+  // The five come first, so where one of them serves, an equal span keeps the station it always gave.
+  const step=GANGWAY_WIDTH/4,stations=[0,-shorter*.1,shorter*.1,-shorter*.25,shorter*.25];
+  for(let along=step;along<shorter/2;along+=step)stations.push(-along,along);
+  for(const along of stations) {
     const station={x:(source.x+target.x)/2+along*detCos(heading),y:(source.y+target.y)/2+along*detSin(heading)};
     const sourceAnchor=onSide(source,station,target),targetAnchor=onSide(target,station,source);if(!sourceAnchor||!targetAnchor)continue;
     const aw=localToWorld(source,sourceAnchor),bw=localToWorld(target,targetAnchor),span=Math.hypot(aw.x-bw.x,aw.y-bw.y);
-    if(!floorSupports(source,target,aw,bw,GANGWAY_WIDTH))continue;
-    if(!best || span<best.span)best={sourceAnchor,targetAnchor,span};
+    if(best && span>=best.span || !floorSupports(source,target,aw,bw,GANGWAY_WIDTH))continue;
+    best={sourceAnchor,targetAnchor,span};
   }
   return best;
 }
