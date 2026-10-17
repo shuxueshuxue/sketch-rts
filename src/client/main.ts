@@ -61,7 +61,7 @@ import type { GameAdapter } from "./game-adapter";
 import { gameShellMarkup } from "./game-shell";
 import { buildSelectionGroups, cycleFocusedSelectionId, focusedSelectionEntities, inventoryUnitsForCommandCard, isUnitCommandPage, resolveFocusedSelectionId, selectedCargoTransports, type SelectionGroup } from "./hud-model";
 import { createBrowserI18n, type LabelKey } from "./i18n";
-import { carriedItemsForSelection, dropItemCommand, itemHotkeys, pickupItemCommand, useItemCommand } from "./item-controls";
+import { carriedItemsForSelection, dropItemCommand, inventoryCarrier, inventorySlots, pickupItemCommand, useItemCommand } from "./item-controls";
 import { gameplayKeyIntent } from "./keybindings";
 import { isInsideRect, minimapPointToWorld, minimapViewportRectFor, shouldDragMinimap, windProbePoint } from "./minimap";
 import { WindMapDisplay, projectWindDirection } from './minimap-wind';
@@ -2958,12 +2958,9 @@ function pruneSelection(projectedLiveIds?: ReadonlySet<string>) {
 function handleGameplayKeyIntent(event: KeyboardEvent) {
   if(equipmentPanel.isOpen())return true;
   if (!snapshot) return false;
-  const inventoryEntries = carriedItemsForSelection(snapshot, inventoryCarriers()).slice(0, 6);
-  const reservedGroupDigits = new Set(Object.keys(controlGroups).map(Number));
   const intent = gameplayKeyIntent(event, {
-    controlGroups: reservedGroupDigits,
-    inventorySlots: inventoryEntries.length,
-    inventoryHotkeys: itemHotkeys(inventoryEntries.length, reservedGroupDigits).map(Number),
+    controlGroups: new Set(Object.keys(controlGroups).map(Number)),
+    inventorySlots: inventorySlots(snapshot, inventoryCarrier(inventoryCarriers())).length,
     commandHotkeys: new Set(commandButtons.filter((button) => button.state().visible).map((button) => button.hotkey)),
   });
   if (intent.type === "none") return false;
@@ -3301,52 +3298,58 @@ function renderTrainingProgressButton(progress: TrainingProgressButton, previous
 
 function renderItemDock() {
   equipmentPanel.update(menuOpen?undefined:snapshot,localPlayerId);
-
-  if (!snapshot || menuOpen) {
-    hudActions.removeAttribute("data-has-items");
-    itemDock.hidden = true;
-    itemDock.replaceChildren();
-    return;
-  }
-  const inventory = carriedItemsForSelection(snapshot, focusedSelectionEntities(snapshot, focusedSelectionId, localPlayerId).units.filter(unit=>!isInCabin(unit))).slice(0, 6);
-  hudActions.toggleAttribute("data-has-items", inventory.length > 0 && !selectedCampId);
-  const entries = isUnitCommandPage(commandCardContext()) ? inventory : [];
-  const hotkeys = itemHotkeys(entries.length, new Set(Object.keys(controlGroups).map(Number)));
-  itemDock.hidden = entries.length === 0;
-  const previous = new Map(Array.from(itemDock.querySelectorAll<HTMLButtonElement>("[data-item-id]"), button => [button.dataset.itemId, button]));
-  entries.forEach(({ item, carrier }, index) => {
-    const hotkey = hotkeys[index] ?? "";
-    let button = previous.get(item.id);
-    if (!button) {
-      button = document.createElement("button");
-      button.type = "button"; button.className = "item-button"; button.dataset.itemId = item.id;
-      button.innerHTML = '<span class="item-icon"></span><span class="hotkey"></span><span class="item-cooldown" hidden></span>';
-      const liveButton = button;
-      button.addEventListener("click", () => useCarriedItem(liveButton.dataset.itemId!));
-      button.addEventListener("contextmenu", event => { event.preventDefault(); dropCarriedItem(liveButton.dataset.itemId!, liveButton.dataset.carrierId!); });
-    }
-    drawCommandPortrait(button, {type:"item",kind:item.kind,...(item.weaponKind?{weaponKind:item.weaponKind}:{})});
-    button.dataset.carrierId = carrier.id;
-    const cooldownText = item.cooldownRemaining > 0 ? t("hud.itemRecharging", { ticks:item.cooldownRemaining }) : "";
-    button.setAttribute("aria-label", `${labelKind(item.kind)} (${hotkey})${cooldownText}`);
-    applyTooltip(button, itemTooltip(item.kind, hotkey, i18n));
-    button.querySelector(".hotkey")!.textContent = hotkey;
+  const slots = snapshot && !menuOpen ? inventorySlots(snapshot, inventoryCarrier(inventoryCarriers())) : [];
+  setHidden(itemDock, slots.length === 0);
+  if (slots.length === 0) return;
+  // The four slots are built once and keep their place (see @@@item-slots).
+  if (itemDock.children.length !== slots.length) itemDock.replaceChildren(...slots.map((_, index) => {
+    const button = document.createElement("button");
+    button.type = "button"; button.className = "item-button"; button.dataset.itemSlot = String(index);
+    button.innerHTML = '<span class="item-icon"></span><span class="hotkey"></span><span class="item-cooldown" hidden></span>';
+    button.addEventListener("click", () => useInventoryItem(index));
+    button.addEventListener("contextmenu", event => { event.preventDefault(); dropInventoryItem(index); });
+    return button;
+  }));
+  const groups = new Set(Object.keys(controlGroups).map(Number));
+  slots.forEach(({ item, digit }, index) => {
+    const button = itemDock.children[index] as HTMLButtonElement;
+    const hotkey = groups.has(digit) ? "" : String(digit);
+    setText(button.querySelector(".hotkey")!, hotkey);
     const cooldown = button.querySelector<HTMLElement>(".item-cooldown")!;
+    if (!item) {
+      if (button.dataset.itemId === undefined && button.dataset.empty === "true") return;
+      delete button.dataset.itemId; button.dataset.empty = "true";
+      button.querySelector(".item-icon")!.replaceChildren();
+      cooldown.hidden = true;
+      button.setAttribute("aria-label", t("hud.itemSlotEmpty", { slot: digit }));
+      applyTooltip(button, { title: t("hud.itemSlotEmpty", { slot: digit }), body: t("hud.itemSlotEmptyBody", { slot: digit }), stats: [], requirements: [], hotkey });
+      return;
+    }
+    delete button.dataset.empty; button.dataset.itemId = item.id;
+    drawCommandPortrait(button, {type:"item",kind:item.kind,...(item.weaponKind?{weaponKind:item.weaponKind}:{})});
+    const cooldownText = item.cooldownRemaining > 0 ? t("hud.itemRecharging", { ticks:item.cooldownRemaining }) : "";
+    button.setAttribute("aria-label", `${labelKind(item.kind)}${hotkey ? ` (${hotkey})` : ""}${cooldownText}`);
+    applyTooltip(button, itemTooltip(item.kind, hotkey || undefined, i18n));
     cooldown.hidden = item.cooldownRemaining <= 0;
-    cooldown.textContent = `${Math.ceil(item.cooldownRemaining / SIM_TICKS_PER_SECOND)}s`;
-    if (itemDock.children[index] !== button) itemDock.insertBefore(button, itemDock.children[index] ?? null);
-    previous.delete(item.id);
+    setText(cooldown, `${Math.ceil(item.cooldownRemaining / SIM_TICKS_PER_SECOND)}s`);
   });
-  for (const button of previous.values()) button.remove();
+}
+
+function inventorySlotItem(index: number) {
+  return snapshot ? inventorySlots(snapshot, inventoryCarrier(inventoryCarriers()))[index]?.item : undefined;
 }
 
 function useInventoryItem(index: number) {
   if (!syncBeforeCommandProjection()) return false;
-  if (!snapshot) return false;
-  const entry = carriedItemsForSelection(snapshot, inventoryCarriers())[index];
-  if (!entry) return false;
-  useCarriedItem(entry.item.id);
+  const item = inventorySlotItem(index);
+  if (!item) return false;
+  useCarriedItem(item.id);
   return true;
+}
+
+function dropInventoryItem(index: number) {
+  const item = inventorySlotItem(index);
+  if (item?.carrierId) dropCarriedItem(item.id, item.carrierId);
 }
 
 function useCarriedItem(itemId: string) {
