@@ -1,0 +1,54 @@
+{
+  "sealed": true,
+  "classification": "Root explicitly selected final committed C7 payload for the declared new knight ordinary0 after real changed-code defeat. Complete1569 archive readback and committed/live/tested executable-mode equality verified; existing33/full1024tsc inherited, no new tests or match result.",
+  "sourceProof": {
+    "kind": "committed-archive",
+    "root": "/workspace/sketch-rts-bootstrap-resume",
+    "head": "601a5f950353e098b2404bf8c23f82b9fa12118e",
+    "count": 1569,
+    "cap": {
+      "path": "/tmp/bootstrap-knight-c7-committed-source1569-20261017/runtime-source-cap.json",
+      "sha256": "f954674e316f69bfa5d23c7a826dc1bbc0526f195030dd79a89d738407baf1ac"
+    },
+    "expectedGitStatus": "",
+    "sourceArchive": {
+      "path": "/tmp/bootstrap-knight-c7-committed-source1569-20261017/candidate-source-full1569-601a5f950353.tar.gz",
+      "sha256": "c9b6b6788e5eb4706b3e87563d7433cef21e2d418c9ec9345a4e26ce9a821712"
+    },
+    "frozenArchive": {
+      "path": "/workspace/.playtest/bootstrap-next-root-known-archer0-20261016/known-archer0-8da5-frozen-source.tar.gz",
+      "sha256": "34be8981d6eb475173ebd75a787b2776584040ae7fe7e5c909540b478e00a8e5"
+    }
+  },
+  "outputPrefix": "/tmp/bootstrap-unseen-twoShores-knight-v5v7-c7-ordinary0-20261017/ordinary0-c7",
+  "actualValidation": {
+    "recipe": "c7-ferry33",
+    "availableExplicitRecipes": [
+      "c6-incoming14",
+      "c7-ferry33"
+    ],
+    "rule": "Root selects exactly one source-corresponding actual evidence recipe; full selected payloads/executable modes must equal that tested cap. No rerun or HEAD-equality shortcut."
+  },
+  "caseDeclarationSHA256": "325fae293c08d5a8434f78dc9e0fc4e0808cf70b449b9240f1980127abbaacce",
+  "seedUseStatus": "unconsumed-confirmed-by-root-at-selection",
+  "selectedAtUTC": "2026-10-17T00:06:41.278634+00:00",
+  "rootSeedConfirmation": "Root explicitly confirmed in delegated task: this declared knight seed has never been passed to a generator in this thread; this prep/builder called no generator.",
+  "sourceAdoptionEvidence": [
+    {
+      "path": "/tmp/root-c7-adoption-20261017/COMMITTED-SOURCE1569-EQUIVALENCE.json",
+      "sha256": "c73779b9c4a1c16f734194867e09b5677db8a85b6eb3339eb8aae811f20bdacb"
+    },
+    {
+      "path": "/tmp/bootstrap-knight-c7-committed-source1569-20261017/COMMITTED-SOURCE1569-EQUIVALENCE.json",
+      "sha256": "c096fd23cee9f23705a5dd084e826ceb52a24ba821c8adb3b78fc93b3c105348"
+    }
+  ],
+  "actualFullChangedCodeResult": {
+    "winner": "p1",
+    "fromTick": 11400,
+    "finalTick": 54426,
+    "ordinary0": false,
+    "notBootstrapAcceptance": true
+  },
+  "originalUncommittedContainerGapStillUnrecovered": true
+}

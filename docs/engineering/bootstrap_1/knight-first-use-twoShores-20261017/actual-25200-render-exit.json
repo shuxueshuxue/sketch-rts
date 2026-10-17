@@ -1,0 +1,42 @@
+{
+  "atUTC": "2026-10-17T00:21:58.650109+00:00",
+  "handoffNote": "ROOT_ACTUAL_EXCLUSIVE_RENDERER_SLOT_AFTER_NATIVE567502_EXIT",
+  "launcherPID": 568572,
+  "classification": "Separate native client static renderer; no Game/AI/issue/step/restore.",
+  "sourceHead": "601a5f950353e098b2404bf8c23f82b9fa12118e",
+  "source123ExactBefore": true,
+  "freshBefore": 2423046144,
+  "requiredFresh": 2147483648,
+  "outputRoot": "/tmp/knight-c7-25200-world-front-nativevisual-prepared-20261017",
+  "outputFreeBefore": 2093645824,
+  "requiredOutputFree": 71871008,
+  "regularReserveRoot": "/workspace",
+  "regularFreeBefore": 72302592,
+  "requiredRegularFree": 67108864,
+  "heapMiB": 256,
+  "driverSHA256": "3741cc9de051fbf183ccdeea76b6c5a05e2a21c0cf511e736455679f4513c0a9",
+  "sealSHA256": "35cc641d44414b84a180b8f21493183d5939b2d29b9e53538a1e5666f706fd1e",
+  "oomBefore": "low 0\nhigh 0\nmax 346832\noom 43\noom_kill 2\noom_group_kill 0\n",
+  "parentEnvironment": {
+    "TSX_DISABLE_CACHE": "1"
+  },
+  "tsxModuleSHA256": "128dc5756da9bec342781ee30127611c958f921e15016b06dd866de28d906245",
+  "tsxEnvScope": "Parent option inherited, no performance causal assertion.",
+  "args": [
+    "node",
+    "--max-old-space-size=256",
+    "--import",
+    "tsx",
+    "/tmp/knight-c7-25200-world-front-nativevisual-prepared-20261017/render-native-three.mts"
+  ],
+  "startedAtUTC": "2026-10-17T00:21:58.650289+00:00",
+  "actualNodePID": 568585,
+  "actualExit": 0,
+  "endedAtUTC": "2026-10-17T00:22:10.362715+00:00",
+  "elapsedSeconds": 11.712361515994417,
+  "oomAfter": "low 0\nhigh 0\nmax 346832\noom 43\noom_kill 2\noom_group_kill 0\n",
+  "logSHA256": "08fd54d4be8dba9b1749c4ce7a6979bc53a57bd350b7ac17e1ffe60936d9091a",
+  "source123ExactAfter": true,
+  "inputGzipUnchangedAfter": true,
+  "validationExit": 0
+}

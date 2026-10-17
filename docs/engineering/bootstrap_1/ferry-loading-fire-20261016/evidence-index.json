@@ -210,5 +210,17 @@
   "fullRawCheckpointsPNGCopied": false,
   "sourceCapsuleIsRawGameArchive": false,
   "portableRawArchiveGapRetained": true,
-  "originalFailedContainerUncommittedRecoveryGapUnrecovered": true
+  "originalFailedContainerUncommittedRecoveryGapUnrecovered": true,
+  "subsequentIndependentKnightOrdinary0": {
+    "relativeIndex": "../knight-first-use-twoShores-20261017/evidence-index.json",
+    "sourceHead": "601a5f950353e098b2404bf8c23f82b9fa12118e",
+    "runtimeSourceCapSHA256": "f954674e316f69bfa5d23c7a826dc1bbc0526f195030dd79a89d738407baf1ac",
+    "ordinary0": true,
+    "unseenAtFirstUse": true,
+    "seedNowConsumed": true,
+    "winner": "p0",
+    "endTick": 56477,
+    "singleC7CausalProof": false,
+    "thisArcher54426LossNotReclassified": true
+  }
 }

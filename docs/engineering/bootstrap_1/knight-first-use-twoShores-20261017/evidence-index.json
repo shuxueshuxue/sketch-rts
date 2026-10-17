@@ -1,0 +1,224 @@
+{
+  "classification": "One fully closed genuine first-use generated ordinary0 knight win by whole committed1569 source; not single-C7 causality or full bootstrap acceptance.",
+  "atUTC": "2026-10-17T00:28:49.888420+00:00",
+  "runSourceHead": "601a5f950353e098b2404bf8c23f82b9fa12118e",
+  "runSourceProofKind": "committed-archive",
+  "runtimeSourceFiles": 1569,
+  "runtimeSourceCapSHA256": "f954674e316f69bfa5d23c7a826dc1bbc0526f195030dd79a89d738407baf1ac",
+  "runtimeSourceCapPath": "/tmp/bootstrap-knight-c7-committed-source1569-20261017/runtime-source-cap.json",
+  "runtimeSourceArchivePath": "/tmp/bootstrap-knight-c7-committed-source1569-20261017/candidate-source-full1569-601a5f950353.tar.gz",
+  "runtimeSourceArchiveSHA256": "c9b6b6788e5eb4706b3e87563d7433cef21e2d418c9ec9345a4e26ce9a821712",
+  "rulesVersion": 2,
+  "frozenRevision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "frozenFullFiles": 497,
+  "frozenManifestEntries": 184,
+  "sourceFrozenR2PrePostExact": true,
+  "productionAPIMigrationBaselineUnchanged": true,
+  "copiedEvidence": {
+    "closed-ordinary0-win56477-compact-v2.json": {
+      "originalPath": "/tmp/bootstrap-knight-unseen-twoShores-c7-review-20261017/COMPACT-CLOSED-KNIGHT-ORDINARY0-v2.json",
+      "bytes": 8148,
+      "sha256": "9f67c116847843c4c0bd2f3860e7e41c28d8f802263826b290af289bfc179532",
+      "copiedExactBytes": true
+    },
+    "actual-native-process-exit.json": {
+      "originalPath": "/tmp/bootstrap-next-knight-unseen-ordinary0-source-unbound-prepared-20261016/native-process-exit-1.json",
+      "bytes": 3076,
+      "sha256": "f67d82dfae23917a4c0091372f1bebb5ef023f713740e701ae97c0aae1745fc2",
+      "copiedExactBytes": true
+    },
+    "actual-source-selection.json": {
+      "originalPath": "/tmp/bootstrap-next-knight-unseen-ordinary0-source-unbound-prepared-20261016/selection.actual-c7-601a5f95.json",
+      "bytes": 2680,
+      "sha256": "b614c11d8e17718c2c6d53c32bf88a903f2aafd099930457840163acad47b8ce",
+      "copiedExactBytes": true
+    },
+    "actual-25200-render-exit.json": {
+      "originalPath": "/tmp/knight-c7-25200-world-front-nativevisual-prepared-20261017/EXIT.json",
+      "bytes": 1785,
+      "sha256": "8ccd044b8809c9abf73708b99e14ceeb74390092da155cd1e7b2fd3527fd6078",
+      "copiedExactBytes": true
+    },
+    "personal-25200-visual-observation.json": {
+      "originalPath": "/tmp/knight-c7-25200-world-front-nativevisual-prepared-20261017/ROOT-PERSONAL-VISUAL-OBSERVATION.json",
+      "bytes": 3188,
+      "sha256": "af9b953dc8b42de2ce49968db00ec87ea20c5d8b93c821a366c45c75cd49db7b",
+      "copiedExactBytes": true
+    },
+    "actual-final56477-render-exit.json": {
+      "originalPath": "/tmp/knight-c7-final56477-nativevisual-prepared-20261017/EXIT.json",
+      "bytes": 1776,
+      "sha256": "c5ba28ff82f6b3c4d37f2418d13c3467ca3e0e383ceecbe8c837497e399b8a17",
+      "copiedExactBytes": true
+    },
+    "personal-final56477-visual-observation.json": {
+      "originalPath": "/tmp/knight-c7-final56477-nativevisual-prepared-20261017/ROOT-PERSONAL-VISUAL-OBSERVATION.json",
+      "bytes": 2745,
+      "sha256": "c64db8e633128929b86bfb0c0159d9bc67f3b37f9e166fb56b23d4021597bdcc",
+      "copiedExactBytes": true
+    }
+  },
+  "setup": {
+    "map": "twoShores",
+    "seed": "bootstrap_1-first-use-knight-v5-v7-twoShores-20261016-2257z-9d3d16a7",
+    "unseen": true,
+    "side": 1,
+    "agents": {
+      "p0": {
+        "version": "v9_knight",
+        "versionLabel": "v9_knight",
+        "race": "grove",
+        "controller": "external-agent",
+        "team": "a"
+      },
+      "p1": {
+        "version": "v5",
+        "versionLabel": "v5",
+        "race": "ember",
+        "controller": "external-agent",
+        "team": "b"
+      },
+      "p2": {
+        "version": "v7",
+        "versionLabel": "v7",
+        "race": "grove",
+        "controller": "external-agent",
+        "team": "b"
+      }
+    },
+    "thinkInterval": 15,
+    "rulesVersion": 2,
+    "frozenRevision": "d1ae110f2edd99f9c7d899ed61557891ab587639"
+  },
+  "nativeMap": {
+    "id": "ladder",
+    "width": 7168,
+    "height": 7168
+  },
+  "trueOrdinary0": true,
+  "inputTick": 0,
+  "inheritedLosses": 0,
+  "all3Initial500Gold3Workers8CapNullMemory": true,
+  "actualNativePID": 567502,
+  "actualExitCode": 0,
+  "actualEndedAtUTC": "2026-10-17T00:16:33.357169+00:00",
+  "actualElapsedSeconds": 543.4276112859952,
+  "winner": "p0",
+  "endTick": 56477,
+  "naturalComplete": true,
+  "observationStopped": false,
+  "resourcePaused": false,
+  "seedFirstActuallyUsedDateUTC": "2026-10-17",
+  "seedNameDateIsNotFirstUseDate": true,
+  "seedNowConsumed": true,
+  "futureReplayCannotBeNewUnseenCredit": true,
+  "P0PresenceEquation": [
+    3,
+    78,
+    0,
+    0,
+    29,
+    52
+  ],
+  "P0PermanentLosses": 29,
+  "P0TemporaryLosses": 0,
+  "P0Expiry": 0,
+  "P0FinalPermanent": 52,
+  "P0FinalBuildings": 35,
+  "P0FinalCompletedHalls": 6,
+  "bothEnemiesAllPermanentTemporaryUnitsAndBuildingsZero": true,
+  "enemyBuildingFatalAndSameTickRemovalCount": 58,
+  "P2ObserverAndNativeCleanupBoundary": {
+    "overlap": {
+      "id": "unit-p2-spirit-13731",
+      "tick": 23355,
+      "nativeFatalHit": true,
+      "nativeRemoval": true,
+      "corpse": false,
+      "counterIncrement": false,
+      "observerDeathLabelRetained": true,
+      "explanation": "Expiry cleanup runs before dead cleanup; 76perm+77temp deaths=lost153;604 temporary births=77 deaths+527 expiry."
+    },
+    "observerTemporaryDeathLabels": 78,
+    "observerExpiryIds": 526,
+    "nativeCleanupPermanentDeath": 76,
+    "nativeCleanupTemporaryDeath": 77,
+    "nativeCleanupExpiry": 527,
+    "nativeUnitsLost": 153,
+    "temporaryBirths": 604,
+    "rawObserverLabelsPreserved": true
+  },
+  "GoldGen11": {
+    "firstP0CP": 22800,
+    "firstAmount": 5980,
+    "firstCarry": 10,
+    "lastP0ActiveCP": 41400,
+    "depletedByCP": 42000,
+    "lastPositiveCP": [
+      41400,
+      150
+    ],
+    "nearHallCompleteFirstCP": 22800,
+    "exactDeliveredIncome": null,
+    "limit": "CP slots, returning carried gold and depletion prove mining activity; no per-deposit source ledger isolates delivered income."
+  },
+  "exactRepairGoldAndPerSourceColonyIncome": null,
+  "netBankInflowIsGlobalBalanceNotIsolatedMineIncome": true,
+  "veteran1301LateRestoration": {
+    "fixedMaxHP": 314,
+    "level": 2,
+    "HPSequence": [
+      50,
+      105,
+      160,
+      215,
+      270,
+      314
+    ],
+    "reachedFullAtTick": 50730,
+    "finalHP": 275,
+    "survived": true,
+    "notFinalFullHPClaim": true,
+    "spellRecipientAndExactPerCasterAttributionExplicitlyKnown": false
+  },
+  "visualSourceHead": "601a5f950353e098b2404bf8c23f82b9fa12118e",
+  "visualRendererPID": 568585,
+  "visualRendererExit": 0,
+  "rootPersonallyViewed25200": true,
+  "terminalImageClaimed": true,
+  "fullLocalRawPrefix": "/tmp/bootstrap-unseen-twoShores-knight-v5v7-c7-ordinary0-20261017/ordinary0-c7",
+  "fullLocalClosure": {
+    "path": "/tmp/bootstrap-knight-unseen-twoShores-c7-review-20261017/FULL-CLOSED-KNIGHT-ORDINARY0-v2.json",
+    "sha256": "c440b1cb94c2032a270ce39039a3607a9e878ee0387f05dc44b82469f806c946",
+    "bytes": 12806296
+  },
+  "factory0SHA256": "c3ed617fdfc53315db0a2e00c03d0ff6caa3065904758195038ff9ad98569a1e",
+  "all13ClosedMemberCRCAndEOFVerified": true,
+  "oneOriginalRawReadPassByClosureReader": true,
+  "wholeSourceResultNotSingleC7CausalProof": true,
+  "C7Archer11400NaturalLossAndOriginalArcherOrdinary0NotReclassified": true,
+  "C5IndependentCandidateValidationClaimed": false,
+  "allThreeRoutesAllSingleSixPairOfficialAndMoreUnseenAccepted": false,
+  "fullMatrixRerun": false,
+  "fullRawCheckpointsPNGsCopied": false,
+  "sourceArchiveIsRawGameArchive": false,
+  "portableRawArchiveGapRetained": true,
+  "originalBrokenContainerUncommittedRecoveryGapUnrecovered": true,
+  "visual25200IsTerminal": false,
+  "finalTerminalVisual": {
+    "rendererPID": 569971,
+    "actualExitCode": 0,
+    "rootPersonallyViewed": true,
+    "tick": 56477,
+    "inputActualAtomicCP": {
+      "path": "/tmp/bootstrap-unseen-twoShores-knight-v5v7-c7-ordinary0-20261017/ordinary0-c7.frames/56477.json.gz",
+      "sha256": "4f193034bd271228badf4e4aeda8150326dbf80896eb0e1a39075de0e78dc982"
+    },
+    "PNGPath": "/tmp/knight-c7-final56477-nativevisual-prepared-20261017/native-56477-knight-c7-natural-victory-whole-world.png",
+    "PNGBytes": 1001366,
+    "PNGSHA256": "240a119d13c58ad59a86164c5c8f2176f9201832a698062f1c9ba20cd2d1001f",
+    "PNGCopied": false,
+    "threeCentralIslandNeutralCampsStillPresent": true,
+    "fullNeutralCampClearanceClaimed": false
+  }
+}

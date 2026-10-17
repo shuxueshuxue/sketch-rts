@@ -1,0 +1,68 @@
+{
+  "enteredAtUTC": "2026-10-17T00:07:29.929954+00:00",
+  "launcherPid": 567484,
+  "nodeSpawned": true,
+  "ordinary0": true,
+  "officialFixedLayout": false,
+  "unseen": true,
+  "classification": "Prepared generated twoShores knight side1 vs normal frozen v5+v7; source deliberately requires explicit final root selection.",
+  "sourceHead": "601a5f950353e098b2404bf8c23f82b9fa12118e",
+  "sourceManifestFiles": 1569,
+  "sourceProofKind": "committed-archive",
+  "runtimeSourceCapSHA256": "f954674e316f69bfa5d23c7a826dc1bbc0526f195030dd79a89d738407baf1ac",
+  "outputPrefix": "/tmp/bootstrap-unseen-twoShores-knight-v5v7-c7-ordinary0-20261017/ordinary0-c7",
+  "guard": {
+    "atUTC": "2026-10-17T00:07:30.457369+00:00",
+    "memoryMaxBytes": 17179869184,
+    "memoryCurrentBytes": 14695403520,
+    "rawHeadroomBeforeSpawn": 2484465664,
+    "outputFreeBytes": 2152689664,
+    "temporaryFreeBytes": 2152689664,
+    "regularFreeBytes": 73388032,
+    "oom": "low 0\nhigh 0\nmax 346832\noom 43\noom_kill 2\noom_group_kill 0\n",
+    "requiredHeadroom": 2147483648,
+    "requiredOutputFree": 268435456,
+    "requiredTemporaryFree": 134217728,
+    "requiredRegularFree": 67108864,
+    "competingProcesses": [],
+    "gameNotYetCreated": true,
+    "seedAndFactoryNotCreated": true,
+    "advisoryImportReserveBytes": 134217728,
+    "advisoryIsNotHardGate": true
+  },
+  "driverPreflight": {
+    "path": "/tmp/bootstrap-next-knight-unseen-ordinary0-source-unbound-prepared-20261016/driver-preflight.json",
+    "sha256": "bae2d62fd212a0b7472cd5061327d120a7e79eac16c46877f0dbdafce7a27732",
+    "bytes": 7998
+  },
+  "selection": {
+    "path": "/tmp/bootstrap-next-knight-unseen-ordinary0-source-unbound-prepared-20261016/selection.actual-c7-601a5f95.json",
+    "sha256": "b614c11d8e17718c2c6d53c32bf88a903f2aafd099930457840163acad47b8ce",
+    "bytes": 2680
+  },
+  "parentSlot": {
+    "path": "/tmp/bootstrap-next-knight-unseen-ordinary0-source-unbound-prepared-20261016/ACTUAL-ROOT-SLOT.json",
+    "sha256": "fadbad17a076fc667b719f8868c033c6f83c8f03154ec7255439e77e2448ab3a",
+    "bytes": 1008
+  },
+  "nodePid": 567502,
+  "args": [
+    "node",
+    "--expose-gc",
+    "--max-old-space-size=768",
+    "--import",
+    "tsx",
+    "/tmp/bootstrap-next-knight-unseen-ordinary0-source-unbound-prepared-20261016/ordinary0-knight-v5v7-unseen.mts",
+    "/workspace/sketch-rts-bootstrap-resume",
+    "601a5f950353e098b2404bf8c23f82b9fa12118e",
+    "/tmp/bootstrap-unseen-twoShores-knight-v5v7-c7-ordinary0-20261017/ordinary0-c7"
+  ],
+  "nodeStdout": "/tmp/bootstrap-unseen-twoShores-knight-v5v7-c7-ordinary0-20261017/node-stdout.log",
+  "nodeStderr": "/tmp/bootstrap-unseen-twoShores-knight-v5v7-c7-ordinary0-20261017/node-stderr.log",
+  "exitCode": 0,
+  "endedAtUTC": "2026-10-17T00:16:33.357169+00:00",
+  "elapsedSeconds": 543.4276112859952,
+  "nodeStdoutSHA256": "76f57e8b9662ecb1b53eab502670e05c8346f2ae8351331a069098ef3ce463fc",
+  "nodeStderrSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "oomAfter": "low 0\nhigh 0\nmax 346832\noom 43\noom_kill 2\noom_group_kill 0\n"
+}
