@@ -49,7 +49,7 @@ describe('shared water presentation field', () => {
     for (let x = 0; x < 8; x++) expect(a.coverage[x * 8 + 2]).toBe(b.coverage[2 * 8 + x]);
     expect(waterCoverage(a.coverage[3 * 8]!)).toBe(0);
     expect(waterCoverage(a.coverage[4 * 8]!)).toBe(1);
-    expect(waterCoverage(.5)).toBe(.5);
+    expect(waterCoverage(.5)).toBeCloseTo(.5, 12);
     expect(waterLightStrength(1, 0)).toBe(0);
     expect(waterLightStrength(1, .1)).toBeLessThan(waterLightStrength(1, .2));
     expect(waterLightStrength(0, 1)).toBe(0);

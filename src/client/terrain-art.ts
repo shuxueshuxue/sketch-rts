@@ -2,35 +2,37 @@ import { type Brush, type Point, ellipse, line, polygon } from "./art/kit";
 import { createScratchCanvas } from "./art/scratch-canvas";
 // The atlas's tree, from its own module: a chunk painter thread (see @@@terrain-chunk-thread) loads no other art.
 import { paintTree as drawAtlasTree } from "./art/environment";
-import { terrainCover, paintGroundTextures } from './terrain-materials';
+import { GROUND, GROUND_LAYERS, cellJitter, groundMaterial, groundTexture, terrainCover, type Tone } from './terrain-materials';
 import type { Terrain } from "../shared/terrain";
-import { waterCover, waterLightMask, paintWaterRipples } from './water-art';
-import { waterField } from './water-field';
+import { environmentField, sampleEnvironment } from "../shared/environment/fields";
+import { waterCover, waterLightMask, paintWaterRipples, shoreMask } from './water-art';
+import { WATER_DEEP, waterField } from './water-field';
 
-// @@@terrain-art - The ground a unit cannot cross or crosses slowly (see @@@terrain), painted in the atlas's ink over its
-// paper: forest as tree crowns packed on a dark floor, rock as inked stones with a shaded face where a plateau drops away,
-// deep water as a wash inside a sandy shore, mud as a brown wash flecked darker, a bridge as planked deck over the water
-// laid across its way, a plateau a shade lighter than the ground below with steps on its ramp. The map is painted in
-// square chunks once (a few hundred trees each) and kept, so a frame only lays down the chunks in view.
+// @@@terrain-art - The ground as an inked atlas after HoMM3's adventure map (docs/art-direction-variants.zh.md, part
+// one): dirt under everything with grass, sand and gravel laid over it in patches with drawn edges; the coast in bands of
+// beach, foam and water; rock as boulders with a cliff face to the south; forest as a mass of trees with bigger ones at its
+// edge; open ground carrying only small, low things. Nothing here changes what a unit may cross (see @@@terrain). The map
+// is painted in square chunks once and kept, so a frame only lays down the chunks in view.
 
 const CHUNK = 512;
 const MAX_CHUNKS = 48;
-const FOREST_FLOOR = "#6e805b";
-const ROCK = "#bfc0ac";
-const ROCK_INK = "#989f89";
-const CLIFF_FACE = "#a0a58f";
-const WATER = "#91b5b7";
-const PLATEAU = "#e4ddc2";
-const RAMP = "#d0c4a4";
-const MUD = "#958d6b";
-const MUD_DARK = "#b79e74";
+const INK = "#293c35";
+const SHADOW = "#1d261b";
+const FOREST_FLOOR: Tone = { base: "#5d6c4a", dark: "#41573a", light: "#5a7449" };
+const FOREST_FLOOR_DARK = "#41573a";
+const ROCK: Tone = { base: "#bdb6a0", dark: "#8c856f", light: "#dcd5bd" };
+const CLIFF: Tone = { base: "#94866a", dark: "#6d614b", light: "#b3a585" };
+const MUD: Tone = { base: "#8f8462", dark: "#6f6549", light: "#a99d79" };
+const SHALLOWS = "#93b7ae";
+const DEEP = `rgb(${WATER_DEEP.join(",")})`;
+const FOAM = "#ece6cf";
 const DECK = "#c7a472";
 const DECK_INK = "#916e44";
 
 // A chunk's pictures: canvases painted here, or bitmaps a chunk painter thread sent.
 export type PaintedTerrainChunk = { ground: HTMLCanvasElement | ImageBitmap; water?: HTMLCanvasElement | ImageBitmap };
 type TerrainChunk = PaintedTerrainChunk & { ripples?: HTMLCanvasElement; waterPhase?: number };
-type Cache = { chunks: Map<string, TerrainChunk>; requested?: Set<string>; minimap?: HTMLCanvasElement; surfaces?:HTMLCanvasElement;
+type Cache = { chunks: Map<string, TerrainChunk>; requested?: Set<string>; minimap?: HTMLCanvasElement;
   waterView?: { canvas:HTMLCanvasElement; x:number; y:number; width:number; height:number; phase:number } };
 
 // @@@terrain-chunk-thread - Painting one chunk takes tens of milliseconds, four times that at a Retina density, and a
@@ -42,7 +44,6 @@ let chunkPainter: TerrainChunkPainter | undefined;
 export function setTerrainChunkPainter(painter: TerrainChunkPainter | undefined) {
   chunkPainter = painter;
 }
-const SURFACE_COLORS:Record<string,string>={g:'#7c94674a',d:'#af936445',s:'#d3bd8f60',r:'#87958650'};
 const caches = new WeakMap<Terrain, Cache>();
 
 function cacheFor(terrain: Terrain): Cache {
@@ -156,22 +157,20 @@ export function paintTerrainChunk(terrain: Terrain, cx: number, cy: number, dens
 }
 
 
-/** The terrain at one pixel a cell, for the minimap: walkable ground left clear, the rest in its colour. */
+/** The terrain at one pixel a cell, for the minimap, in the colours the world is drawn in (rule 10). */
 export function terrainMinimap(terrain: Terrain): HTMLCanvasElement {
   const cache = cacheFor(terrain);
   if (cache.minimap) return cache.minimap;
   const canvas = createScratchCanvas(terrain.cols, terrain.rows);
   const b = canvas.getContext("2d")!;
-  if (terrain.ecology) b.drawImage(terrainCover(terrain), 0, 0);
+  b.drawImage(terrainCover(terrain), 0, 0);
   for (let row = 0; row < terrain.rows; row += 1) {
     let start = 0;
     for (let col = 1; col <= terrain.cols; col += 1) {
       const kind = terrain.cells[row * terrain.cols + start];
       const next = col < terrain.cols ? terrain.cells[row * terrain.cols + col] : undefined;
-      const level = terrain.levels?.[row * terrain.cols + start];
-      const nextLevel = col < terrain.cols ? terrain.levels?.[row * terrain.cols + col] : undefined;
-      if (next === kind && nextLevel === level) continue;
-      const color = kind === "T" ? "#46574b" : kind === "#" ? "#939688" : kind === "~" ? "#678487" : kind === "," ? "#a9c6bd" : kind === "m" ? "#c4ad86" : kind === "=" ? "#a8835a" : !terrain.ecology && level === "1" ? "#e4ddc2" : terrain.ecology ? undefined : terrain.palette==='coastal'?'#a5ab91':undefined;
+      if (next === kind) continue;
+      const color = kind === "T" ? FOREST_FLOOR.light : kind === "#" ? ROCK.base : kind === "~" ? DEEP : kind === "," ? SHALLOWS : kind === "m" ? MUD.base : kind === "=" ? DECK : undefined;
       if (color) {
         b.fillStyle = color;
         b.fillRect(start, row, col - start, 1);
@@ -194,61 +193,56 @@ function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): 
   const margin = 3;
   const low = { col: Math.max(0, Math.floor((cx * CHUNK) / size) - margin), row: Math.max(0, Math.floor((cy * CHUNK) / size) - margin) };
   const high = { col: Math.min(terrain.cols - 1, Math.floor(((cx + 1) * CHUNK) / size) + margin), row: Math.min(terrain.rows - 1, Math.floor(((cy + 1) * CHUNK) / size) + margin) };
-  const kindAt = (col: number, row: number) => terrain.cells[Math.max(0, Math.min(terrain.rows - 1, row)) * terrain.cols + Math.max(0, Math.min(terrain.cols - 1, col))]!;
-  const levelAt = (col: number, row: number) => (col < 0 || row < 0 || col >= terrain.cols || row >= terrain.rows ? "0" : terrain.levels?.[row * terrain.cols + col] ?? "0");
-  const walkable = (col: number, row: number) => {
-    const kind = kindAt(col, row);
-    return kind === "." || kind === "," || kind === "m" || kind === "=";
+  const at = (col: number, row: number) => terrain.cells[Math.max(0, Math.min(terrain.rows - 1, row)) * terrain.cols + Math.max(0, Math.min(terrain.cols - 1, col))]!;
+  const level = (col: number, row: number) => (col < 0 || row < 0 || col >= terrain.cols || row >= terrain.rows ? "0" : terrain.levels?.[row * terrain.cols + col] ?? "0");
+  const wet = (col: number, row: number) => at(col, row) === "~" || at(col, row) === ",";
+  const collect = (keep: (col: number, row: number) => boolean) => {
+    const out: Cells = [];
+    for (let row = low.row; row <= high.row; row++) for (let col = low.col; col <= high.col; col++) if (keep(col, row)) out.push([col, row]);
+    return out;
   };
-  const wet = (col: number, row: number) => {
-    const kind = kindAt(col, row);
-    return kind === "~" || kind === ",";
-  };
-  const cells = (visit: (col: number, row: number, x: number, y: number) => void) => {
-    for (let row = low.row; row <= high.row; row += 1) for (let col = low.col; col <= high.col; col += 1) visit(col, row, (col + 0.5) * size, (row + 0.5) * size);
-  };
-  if (terrain.ecology) {
-    const cache = cacheFor(terrain);
-    cache.surfaces ??= terrainCover(terrain);
-    b.imageSmoothingEnabled = true;
-    b.drawImage(cache.surfaces, 0, 0, terrain.cols * size, terrain.rows * size);
-    paintGroundTextures(b, terrain, low, high);
-  } else if (terrain.surfaces) {
-    const cache = cacheFor(terrain);
-    if (!cache.surfaces) {
-      const cover = createScratchCanvas(terrain.cols, terrain.rows), brush = cover.getContext('2d')!;
-      [...terrain.surfaces].forEach((kind, index) => { const colour = SURFACE_COLORS[kind]; if (colour) { brush.fillStyle = colour; brush.fillRect(index % terrain.cols, Math.floor(index / terrain.cols), 1, 1); } });
-      cache.surfaces = cover;
-    }
-    b.imageSmoothingEnabled = true;
-    b.drawImage(cache.surfaces, 0, 0, terrain.cols * size, terrain.rows * size);
-  }
-  // Plateaus: a lighter ground flecked with grass, the ramp paved, and steps where the ramp meets the plateau.
-  cells((col, row, x, y) => {
-    if (!walkable(col, row) || levelAt(col, row) === "0") return;
-    b.fillStyle = terrain.ecology ? (levelAt(col, row) === "2" ? "#c5bda443" : "#f7e8bc12") : levelAt(col, row) === "2" ? RAMP : PLATEAU;
-    b.fillRect(col * size - 1, row * size - 1, size + 2, size + 2);
-    for(let i=0;i<7;i++) {
-      const px=x+(jitter(col,row,110+i)-.5)*size, py=y+(jitter(col,row,130+i)-.5)*size;
-      line(b,[[px,py],[px+2+jitter(col,row,140+i)*3,py-.5]],i%2?"#e4dec221":"#72785f15",.7);
-    }
-    if (levelAt(col, row) === "1" && jitter(col, row, 5) < 0.35) line(b, [[x - 3, y + 2], [x - 1, y - 3], [x + 1, y + 2], [x + 3, y - 2]], "#78806244", 0.65);
-    if (levelAt(col, row) === "2") line(b, [[x - size * 0.4, y - size * 0.2], [x + size * 0.4, y - size * 0.2]], "#b8a98266", 1);
-  });
-  cells((col, row, x, y) => {
-    if (!walkable(col, row) || levelAt(col, row) !== "1") return;
-    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
-      if (!walkable(col + dx, row + dy) || levelAt(col + dx, row + dy) === "1") continue;
-      // A step, drawn across the way down.
-      const ex = x + dx * size * 0.5;
-      const ey = y + dy * size * 0.5;
-      for (const offset of [-0.3, 0, 0.3]) line(b, [[ex - dy * size * 0.45 + dx * offset * size, ey - dx * size * 0.45 + dy * offset * size], [ex + dy * size * 0.45 + dx * offset * size, ey + dx * size * 0.45 + dy * offset * size]], "#a99d7a88", 1.2);
-    }
-  });
+  const fill = (style: string | CanvasPattern, alpha = 1) => { b.globalAlpha = alpha; b.fillStyle = style; b.fill("nonzero"); b.globalAlpha = 1; };
+  const texture = (kind: Parameters<typeof groundTexture>[0], tone: Tone) => b.createPattern(groundTexture(kind, tone), "repeat")!;
+  const x0 = low.col * size, y0 = low.row * size, w = (high.col - low.col + 1) * size, h = (high.row - low.row + 1) * size;
 
-  // The bed, bank transition and animated surface share a world-sized field.
-  // Chunk boundaries and world edges never introduce their own shore outline.
+  // Ground: dirt under everything, then rough, sand and grass in patches, each over a fringe a step darker and a faint
+  // ink line (see @@@ground-materials).
+  b.fillStyle = texture("dirt", GROUND.dirt); b.fillRect(x0, y0, w, h);
+  for (const material of GROUND_LAYERS) {
+    const cells = collect((col, row) => !wet(col, row) && at(col, row) !== "m" && groundMaterial(terrain, col, row) === material);
+    if (!cells.length) continue;
+    patch(b, cells, size, 2.4, 40); fill(INK, .28);
+    patch(b, cells, size, 1.4, 40); fill(GROUND[material].dark, .85);
+    patch(b, cells, size, 0, 40); fill(texture(material, GROUND[material]));
+  }
+  // Mud: a dark wet patch, puddles in it.
+  const mud = collect((col, row) => at(col, row) === "m");
+  if (mud.length) {
+    patch(b, mud, size, 1.5, 60); fill(MUD.dark);
+    patch(b, mud, size, 0, 60); fill(texture("mud", MUD));
+    for (const [col, row] of mud) if (cellJitter(col, row, 61) < .35) { b.beginPath(); b.ellipse((col + cellJitter(col, row, 62)) * size, (row + cellJitter(col, row, 63)) * size, 7, 3.5, 0, 0, Math.PI * 2); fill(SHALLOWS, .8); }
+  }
+  // Plateau tops a shade lighter, ramps lighter still; painted as one patch each, never cell by cell (cells overlapping
+  // at their edges once drew the plateaus as a grid).
+  for (const [ramp, alpha] of [[false, .16], [true, .1]] as const) {
+    const cells = collect((col, row) => (ramp ? level(col, row) === "2" : level(col, row) === "1") && !wet(col, row) && at(col, row) !== "#" && at(col, row) !== "T");
+    if (cells.length) { patch(b, cells, size, 0, ramp ? 105 : 100); fill(GROUND.dirt.light, alpha); }
+  }
+
+  // The coast in drawn bands over one continuous seabed (see @@@shore-bands): beach, ink line, foam, water.
   if (waterField(terrain).hasWater) {
+    const band = (threshold: number, style: string | CanvasPattern, alpha = 1) => {
+      const layer = createScratchCanvas(CHUNK * density, CHUNK * density), l = layer.getContext("2d")!;
+      l.setTransform(b.getTransform());
+      l.imageSmoothingEnabled = true;
+      l.drawImage(shoreMask(terrain, threshold), 0, 0, terrain.cols * size, terrain.rows * size);
+      l.globalCompositeOperation = "source-in"; l.fillStyle = style; l.fillRect(x0, y0, w, h);
+      b.save(); b.setTransform(1, 0, 0, 1, 0, 0); b.globalAlpha = alpha; b.drawImage(layer, 0, 0); b.restore();
+    };
+    band(.06, GROUND.sand.dark, .9);
+    band(.09, texture("sand", GROUND.sand));
+    band(.33, INK, .3);
+    band(.35, FOAM, .95);
     b.imageSmoothingEnabled = true;
     b.drawImage(waterCover(terrain), 0, 0, terrain.cols * size, terrain.rows * size);
     waterMask = createScratchCanvas(CHUNK / 2, CHUNK / 2);
@@ -257,101 +251,95 @@ function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): 
     mask.drawImage(waterLightMask(terrain), 0, 0, terrain.cols * size, terrain.rows * size);
   }
 
-  // Connected contours remain useful for dry ground materials.
-  const contours:number[][][]=[[],[[0,4,7]],[[1,5,4]],[[0,1,5,7]],[[2,6,5]],[[0,4,7],[2,6,5]],[[1,2,6,4]],[[0,1,2,6,7]],[[3,7,6]],[[0,4,6,3]],[[1,5,4],[3,7,6]],[[0,1,5,6,3]],[[2,3,7,5]],[[0,4,5,2,3]],[[4,1,2,3,7]],[[0,1,2,3]]];
-  const contourLayer=(inside:(col:number,row:number)=>boolean,color:string)=>{
-    for(let row=low.row-1;row<=high.row;row++)for(let col=low.col-1;col<=high.col;col++){
-      const mask=(inside(col,row)?1:0)|(inside(col+1,row)?2:0)|(inside(col+1,row+1)?4:0)|(inside(col,row+1)?8:0);
-      if(!mask)continue;const x=(col+.5)*size,y=(row+.5)*size;
-      const points=[[x,y],[x+size,y],[x+size,y+size],[x,y+size],[x+size*.5,y],[x+size,y+size*.5],[x+size*.5,y+size],[x,y+size*.5]];
-      for(const shape of contours[mask]!)polygon(b,shape.map(i=>points[i]!),color,'transparent',0);
-    }
-  };
-  // Marshes form connected contours; individual cells must not leave circular stamps.
-  contourLayer((col, row) => kindAt(col, row) === 'm', MUD);
-  cells((col, row, x, y) => {
-    if (kindAt(col, row) !== "m") return;
-    for (let fleck = 0; fleck < 3; fleck += 1) {
-      if (jitter(col, row, 30 + fleck) < 0.4) continue;
-      ellipse(b, x + (jitter(col, row, 40 + fleck) - 0.5) * size * 0.8, y + (jitter(col, row, 50 + fleck) - 0.5) * size * 0.8, size * 0.14, size * 0.08, MUD_DARK);
-    }
-  });
-
-  // A bridge: water under it, then its deck, the planks laid across the way it carries (the way runs where its neighbours
-  // are dry, not over the water either side).
-  cells((col, row, x, y) => {
-    if (kindAt(col, row) !== "=") return;
-    ellipse(b, x, y, size * 0.8, size * 0.8, WATER);
-  });
-  cells((col, row, x, y) => {
-    if (kindAt(col, row) !== "=") return;
-    let wayX = 0;
-    let wayY = 0;
+  // A bridge: planks laid across the way it carries (the way runs where its neighbours are dry).
+  for (const [col, row] of collect((col, row) => at(col, row) === "=")) {
+    const x = (col + .5) * size, y = (row + .5) * size;
+    let wayX = 0, wayY = 0;
     for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]] as const) {
       if (wet(col + dx, row + dy)) continue;
       // Folded onto one half, so the neighbours either end of the way add up instead of cancelling.
       const flip = dx < 0 || (dx === 0 && dy < 0) ? -1 : 1;
-      wayX += dx * flip;
-      wayY += dy * flip;
+      wayX += dx * flip; wayY += dy * flip;
     }
-    const length = Math.hypot(wayX, wayY) || 1;
-    const ux = wayX / length;
-    const uy = wayY / length;
-    const half = size * 0.56;
-    polygon(b, [[x - half, y - half], [x + half, y - half], [x + half, y + half], [x - half, y + half]], DECK, "transparent", 0);
-    for (const offset of [-0.33, 0, 0.33]) {
-      const cx = x + ux * offset * size;
-      const cy = y + uy * offset * size;
-      line(b, [[cx - uy * half, cy + ux * half], [cx + uy * half, cy - ux * half]], DECK_INK, 1);
+    const length = Math.hypot(wayX, wayY) || 1, ux = wayX / length, uy = wayY / length, half = size * .56;
+    polygon(b, [[x - half, y - half], [x + half, y - half], [x + half, y + half], [x - half, y + half]], DECK, INK, 1);
+    for (const offset of [-.33, 0, .33]) {
+      const px = x + ux * offset * size, py = y + uy * offset * size;
+      line(b, [[px - uy * half, py + ux * half], [px + uy * half, py - ux * half]], DECK_INK, 1);
     }
-  });
+  }
 
-  // Rock: stones, with a shaded face on the side a plateau drops away (and on the south side of any outcrop).
-  cells((col, row, x, y) => {
-    if (kindAt(col, row) !== "#") return;
-    const faces = walkable(col, row + 1) && levelAt(col, row + 1) !== "1";
-    if (faces) polygon(b, [[x - size * 0.62, y], [x + size * 0.62, y], [x + size * 0.55, y + size * 0.72], [x - size * 0.58, y + size * 0.7]], CLIFF_FACE, ROCK_INK, 1);
-  });
-  cells((col, row, x, y) => {
-    if (kindAt(col, row) !== "#") return;
-    const r = size * .52;
-    const exposed = walkable(col,row+1);
-    b.fillStyle=ROCK;b.fillRect(x-size*.51,y-size*.51,size*1.02,size*1.02);
-    const h=3+jitter(col,row,1)*4;
-    const skew=(jitter(col,row,9)-.5)*r;
-    if(jitter(col,row,2)<.6) polygon(b, [[x-r*.8,y-r*.8],[x+skew,y-r-h],[x+r*.7,y+skew],[x+skew,y+r*.4]], "#b3b19f55", "transparent", 0);
-    if(exposed) {
-      polygon(b,[[x-r,y+r*.25],[x-r*.4,y+r*.7],[x+r*.9,y+r*.35],[x+r*.85,y+r*.7+8],[x-r*.3,y+r+8],[x-r,y+r*.7]],CLIFF_FACE,ROCK_INK,.55);
-      line(b,[[x-r*.3,y+r*.65],[x-r*.25,y+r+6]],"#626d6266",.8);
+  // Rock (see docs/art-direction-variants.zh.md, rule 7): a cliff face below each rock cell whose southern neighbour is
+  // not rock, its contact shadow, then boulders with a lit top, a dark side and an ink line.
+  const rock = collect((col, row) => at(col, row) === "#");
+  if (rock.length) {
+    const faces = rock.filter(([col, row]) => at(col, row + 1) !== "#");
+    patch(b, faces, size, 1, 110, 0, size * .55); fill(CLIFF.dark);
+    patch(b, faces, size, -1, 110, 0, size * .45); fill(CLIFF.base);
+    for (const [col, row] of faces) for (let i = 0; i < 3; i++) {
+      const x = (col + .2 + i * .3 + (cellJitter(col, row, 120 + i) - .5) * .1) * size, y = (row + .75) * size;
+      line(b, [[x, y], [x - 1, y + size * .45]], CLIFF.dark, 1);
     }
-    if(jitter(col,row,7)<.55) line(b,[[x-r*.8,y-r*.7],[x-r*.3,y-r*.1],[x+r*.3,y+r*.15]],"#777f714d",.6);
-    for(let i=0;i<5;i++){
-      const px=x+(jitter(col,row,80+i)-.5)*size,py=y+(jitter(col,row,90+i)-.5)*size;
-      line(b,[[px,py],[px+2,py-.6]],i%2?"#efe4c533":"#72786626",.6);
+    patch(b, rock, size, -5, 130, 3, 4); fill(SHADOW, .18);
+    for (const [col, row] of rock) for (let k = 0; k < 2; k++) {
+      if (k && cellJitter(col, row, 144) < .4) continue;
+      const x = (col + .5 + (cellJitter(col, row, 141 + k * 9) - .5) * .7) * size, y = (row + .45 + (cellJitter(col, row, 142 + k * 9) - .5) * .5) * size;
+      const r = size * (.3 + cellJitter(col, row, 143 + k * 9) * .2);
+      const points = Array.from({ length: 6 }, (_, i) => {
+        const a = i / 6 * Math.PI * 2 + (cellJitter(col, row, 150 + i + k * 20) - .5) * .7, q = r * (.75 + cellJitter(col, row, 160 + i + k * 20) * .35);
+        return [x + Math.cos(a) * q, y + Math.sin(a) * q * .8];
+      });
+      polygon(b, points.map(([px, py]) => [px! + 1, py! + r * .45]), CLIFF.dark, "transparent", 0);
+      polygon(b, points, ROCK.base, INK, 1);
+      polygon(b, [points[3]!, points[4]!, points[5]!, [x, y]], ROCK.light, "transparent", 0);
     }
-  });
+  }
 
-  // Connected woodland floor, with a forest edge rather than overlapping circular stamps.
-  contourLayer((col, row) => kindAt(col, row) === 'T', FOREST_FLOOR);
-  cells((col, row, x, y) => {
-    if (kindAt(col, row) !== "T") return;
-    // Deep inside a forest one tree a cell; at its edge the trees stand a little apart.
-    const tx = x + (jitter(col, row, 21) - 0.5) * size * 0.5;
-    const ty = y + (jitter(col, row, 22) - 0.5) * size * 0.45 + size * 0.35;
-    drawAtlasTree(b, tx, ty, 0.72 + jitter(col, row, 23) * 0.25, col + row);
-  });
+  // Forest (rules 5 and 6): a dark floor, then trees from the back row forward. Trees on a wood's edge stand bigger and
+  // lighter; inside they crowd darker. Pines and broadleaves mix, pines more where the ground is colder.
+  const forest = collect((col, row) => at(col, row) === "T");
+  if (forest.length) {
+    patch(b, forest, size, 5, 170); fill(FOREST_FLOOR_DARK, .55);
+    patch(b, forest, size, 2, 170); fill(texture("floor", FOREST_FLOOR));
+    const edge = (col: number, row: number) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => at(col + dx!, row + dy!) !== "T");
+    const field = terrain.ecology ? environmentField(terrain) : undefined;
+    for (const [col, row] of forest) {
+      const cold = field ? Math.max(0, Math.min(1, (20 - sampleEnvironment(field, (col + .5) * size, (row + .5) * size).temperatureC) / 12)) : .55;
+      const rim = edge(col, row);
+      for (let k = 0; k < (rim ? 1 : 2); k++) {
+        const x = (col + .5 + (cellJitter(col, row, 181 + k) - .5) * .7) * size, y = (row + .65 + (cellJitter(col, row, 183 + k) - .5) * .5) * size;
+        drawAtlasTree(b, x, y, (rim ? 1.05 : .82) * (.85 + cellJitter(col, row, 185 + k) * .3), col + row, cellJitter(col, row, 187 + k) < .25 + cold * .5 ? "pine" : "broadleaf", rim);
+      }
+    }
+  }
+
+  // Small things on open ground (rule 4): grass tufts and stones on no more than one cell in eight, all low.
+  for (const [col, row] of collect((col, row) => at(col, row) === "." && level(col, row) !== "2")) {
+    const pick = cellJitter(col, row, 200);
+    if (pick > .12) continue;
+    const x = (col + cellJitter(col, row, 201)) * size, y = (row + cellJitter(col, row, 202)) * size;
+    if (pick < .04) {
+      ellipse(b, x + 1, y + 1.5, 3.4, 2.2, ROCK.dark);
+      ellipse(b, x, y, 3.2, 2, ROCK.light, INK);
+    } else for (const dx of [-3, -1, 1, 3]) line(b, [[x + dx, y], [x + dx * 1.5, y - 5 - Math.abs(dx)]], GROUND.grass.dark, 1);
+  }
   return { ground: canvas, ...(waterMask ? { water: waterMask } : {}) };
+}
+
+type Cells = [number, number][];
+// A union of jittered discs over the cells: an organic patch whose edge wanders like a drawn line, the same in every
+// chunk (the jitter is per cell, not per chunk).
+function patch(b: Brush, cells: Cells, size: number, grow: number, salt: number, dx = 0, dy = 0) {
+  b.beginPath();
+  for (const [col, row] of cells) for (let k = 0; k < 3; k++) {
+    const x = (col + .5 + (cellJitter(col, row, salt + k) - .5) * .55) * size + dx, y = (row + .5 + (cellJitter(col, row, salt + 7 + k) - .5) * .55) * size + dy;
+    const r = size * (.5 + cellJitter(col, row, salt + 13 + k) * .2) + grow;
+    if (r <= 0) continue;
+    b.moveTo(x + r, y); b.arc(x, y, r, 0, Math.PI * 2);
+  }
 }
 
 function brushZoom(c: Brush) {
   const transform = c.getTransform();
   return Math.hypot(transform.a, transform.b);
-}
-
-// A fixed draw per cell and salt, between 0 and 1: the same trees and stones in every chunk and every frame.
-function jitter(col: number, row: number, salt: number) {
-  let hash = Math.imul(col, 374_761_393) ^ Math.imul(row, 668_265_263) ^ Math.imul(salt, 2_246_822_519);
-  hash = Math.imul(hash ^ (hash >>> 13), 1_274_126_177);
-  hash ^= hash >>> 16;
-  return (hash >>> 0) / 4_294_967_296;
 }
