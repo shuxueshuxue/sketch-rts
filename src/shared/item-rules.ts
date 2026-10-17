@@ -9,3 +9,5 @@ export const FLAME_CLOAK = { radius: 90, damage: 12, interval: seconds(2) };
 export const GUARDIAN_SCROLL = { radius: 180, duration: seconds(7) };
 export const BREACH_CHARGE = { range: 280, damage: 260 };
 export const IVORY_TOWER_HP_SHARE = 0.5;
+// How near a carrier stands to set an item down where it was told to (see @@@item-errand); pickup reaches as far.
+export const ITEM_DROP_REACH = 72;
