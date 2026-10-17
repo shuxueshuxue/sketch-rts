@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defaultRoomConfiguration, formatRoomRoute, parseRoomRoute } from "./room-route";
+import { configurationOnMap, defaultRoomConfiguration, formatRoomRoute, parseRoomRoute } from "./room-route";
 import { createRoom, roomToGameSetup } from "../shared/rooms";
 import { createGame } from "../shared/sim";
 
@@ -25,14 +25,30 @@ describe("address-bar routes", () => {
     const route = parseRoomRoute("?map=grandEstuary");
     expect(route).toEqual({ screen: "setup", configuration: defaultRoomConfiguration("grandEstuary") });
   });
-  it("keeps map selection and automatic setup as distinct history entries with the same configuration", () => {
+  it("opens an address from the former map step on the setup, with the same configuration", () => {
     const configuration = defaultRoomConfiguration("grandEstuary");
     configuration.seatSetup[1] = { controller: "ai", race: "ember", team: "team-2", aiVersion: "v9_summoner" };
-    const selection = formatRoomRoute({ screen: "maps", configuration });
     const setup = formatRoomRoute({ screen: "setup", configuration });
-    expect(selection).not.toEqual(setup);
-    expect(parseRoomRoute(selection)).toEqual({ screen: "maps", configuration });
-    expect(parseRoomRoute(setup)).toEqual({ screen: "setup", configuration });
+    expect(parseRoomRoute(`${setup}&view=maps`)).toEqual({ screen: "setup", configuration });
+  });
+  it("moves a configuration to another map keeping each seat the map has, and its teams only on a map laid out the same way", () => {
+    const configuration = defaultRoomConfiguration("stillwater");
+    configuration.seatSetup[0] = { ...configuration.seatSetup[0]!, race: "ember" };
+    configuration.seatSetup[1] = { controller: "ai", race: "grove", team: configuration.seatSetup[1]!.team, aiVersion: "v9_knight" };
+    const larger = configurationOnMap(configuration, "grandEstuary"), fresh = defaultRoomConfiguration("grandEstuary");
+    expect(larger.mapId).toBe("grandEstuary"); expect(larger.layoutSeed).toBe(fresh.layoutSeed);
+    expect(larger.seatSetup).toHaveLength(8);
+    expect(larger.seatSetup[0]).toMatchObject({ controller: "human", race: "ember" });
+    expect(larger.seatSetup[1]).toMatchObject({ controller: "ai", race: "grove", aiVersion: "v9_knight" });
+    expect(larger.seatSetup.slice(4)).toEqual(fresh.seatSetup.slice(4));
+    expect(parseRoomRoute(formatRoomRoute({ screen: "setup", configuration: larger }))).toEqual({ screen: "setup", configuration: larger });
+    const back = configurationOnMap(larger, "stillwater");
+    expect(back.seatSetup).toHaveLength(4); expect(back.seatSetup[1]).toMatchObject({ race: "grove", aiVersion: "v9_knight" });
+    // From two sides to a ring of free-for-all starts and back: the ring's teams, then the sides' own again.
+    const ring = configurationOnMap(back, "brokenSea"), sides = configurationOnMap(ring, "stillwater");
+    expect(ring.seatSetup.map(seat => seat.team)).toEqual(defaultRoomConfiguration("brokenSea").seatSetup.map(seat => seat.team));
+    expect(ring.seatSetup[1]).toMatchObject({ race: "grove", aiVersion: "v9_knight" });
+    expect(sides.seatSetup.map(seat => seat.team)).toEqual(defaultRoomConfiguration("stillwater").seatSetup.map(seat => seat.team));
   });
   it("rejects invalid or oversized setups without a partial configuration", () => {
     for (const search of ["?map=missing", "?map=stillwater&seats=ai:ffa:grove:v9_knight", "?map=stillwater&seed=", "?map=stillwater&visibility=bad", "?map=stillwater&seats=human:ffa:unknown:"]) {

@@ -1,6 +1,4 @@
-/* Map selection and the match lobby use the common menu page, with their own content layouts. */
-.main-menu[data-menu-view="maps"] .menu-window { width:min(1160px,calc(100vw - 32px)); }
-.map-select .map-chooser { display:grid; grid-template-columns:minmax(180px,.55fr) minmax(0,1fr); min-height:0; gap:24px; }
+/* The match setup uses the common menu page with its own content layout: maps, the chosen map, then the seats. */
 .map-browser { display:grid; grid-template-rows:auto minmax(0,1fr); min-height:0; min-width:0; padding:14px; gap:10px; }
 .map-entries { display:grid; align-content:start; min-height:0; overflow-y:auto; overflow-x:hidden; gap:2px; }
 .map-entry { position:relative; border:0; background:transparent; color:var(--inset-ink); padding:8px 10px 8px 16px; text-align:left; min-width:0; }
@@ -8,9 +6,7 @@
 .map-entry:hover,.map-entry.selected { background:var(--selected); }
 .map-entry.selected { font-weight:700; }
 .map-entry.selected::before { content:""; position:absolute; left:4px; top:50%; transform:translateY(-50%); border:4px solid transparent; border-left:5px solid var(--selected-mark); }
-.map-select .map-detail { display:grid; grid-template-columns:minmax(0,1fr) minmax(140px,.5fr); align-items:center; min-height:0; min-width:0; gap:16px; }
 .map-preview-frame { box-sizing:border-box; min-width:0; line-height:0; border-width:8px; border-image-width:8px; background:#1a0e05; box-shadow:0 4px 12px #0005; aspect-ratio:1; }
-.map-select .map-preview-frame { width:min(100%,calc(100dvh - 210px)); margin:auto; }
 .map-preview { display:block; width:100%; height:auto; aspect-ratio:1; }
 .map-preview-space { display:grid; min-width:0; min-height:0; }
 .map-info { min-width:0; display:grid; align-content:start; padding:12px; gap:10px; }
@@ -20,6 +16,12 @@
 .map-facts dd { margin:0; font-weight:700; font-variant-numeric:tabular-nums; }
 /* A map dossier on the left; the roster owns the full height on the right. */
 :is(.create-game-form,.room-setup) > .menu-page-body { grid-template-columns:240px minmax(0,1fr); gap:26px; }
+.room-setup.with-maps > .menu-page-body { grid-template-columns:170px 220px minmax(0,1fr); gap:20px; }
+.room-setup .map-browser { padding:4px 0; }
+/* Beside the map list the dossier is narrow: the picture takes its width and the facts follow right under it. */
+.room-setup.with-maps .match-dossier .map-detail { grid-template-rows:auto auto; align-content:start; }
+.room-setup.with-maps .match-dossier .map-preview-space { container-type:inline-size; }
+.room-setup.with-maps .match-dossier .map-preview-frame { width:100cqw; }
 .match-dossier { display:grid; min-width:0; min-height:0; gap:22px; padding:4px 16px 8px 4px; border-right:1px solid var(--rule); }
 .create-game-form .match-dossier { grid-template-rows:minmax(0,1fr) auto; }
 .selected-map-summary { display:grid; grid-template-rows:auto minmax(0,1fr); min-width:0; min-height:0; gap:16px; }
@@ -31,15 +33,6 @@
 .selected-map-summary [data-map-summary] { color:var(--ink-soft); font-size:12px; margin-top:6px; }
 .create-options { display:grid; gap:16px; padding-top:16px; border-top:1px solid var(--rule); }
 .create-options input[type=text],.create-options input:not([type]) { box-sizing:border-box; width:100%; min-width:0; height:34px; }
-.game-mode-switch { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; min-width:0; margin:0; padding:0; border:0; }
-.game-mode-switch legend { padding:0 0 6px; }
-.game-mode-switch label { position:relative; min-width:0; cursor:pointer; }
-.game-mode-switch input { position:absolute; width:1px; height:1px; opacity:0; }
-.game-mode-switch span { display:grid; place-items:center; min-height:34px; padding:0 8px; border:1px solid var(--game-edge); background:var(--game-field); color:var(--game-muted); white-space:nowrap; }
-.game-mode-switch input:checked + span { background:var(--game-button); color:var(--game-button-ink); border-color:var(--game-brass); box-shadow:var(--game-inset); }
-.game-mode-switch input:focus-visible + span { outline:2px solid var(--game-brass-lit); outline-offset:2px; }
-.game-mode-switch input:disabled + span { opacity:.45; cursor:default; }
-.room-mode-note { margin:0; color:var(--game-muted); font-size:12px; line-height:1.4; }
 .match-dossier .map-detail { display:grid; grid-template-rows:minmax(0,1fr) auto; min-height:0; gap:16px; }
 .match-dossier .map-info { padding:0; border:0; background:none; box-shadow:none; gap:16px; }
 .match-dossier .map-info-name { font-size:22px; }
@@ -66,16 +59,17 @@
 :is(.create-game-form,.room-setup) .slot-row select { box-sizing:border-box; width:100%; min-width:0; min-height:30px; padding:4px 6px; font-size:12px; }
 :is(.create-game-form,.room-setup) .slot-controller-badge { min-height:30px; border:0; background:none; box-shadow:none; color:var(--ink-soft); padding:0; }
 @media(max-width:1100px) {
- .map-select .map-detail { grid-template-columns:minmax(0,1fr); grid-template-rows:minmax(0,1fr) auto; gap:10px; }
- .map-select .map-preview-frame { width:min(100%,calc(100dvh - 360px),400px); }
- .map-select .map-facts { grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto; }
- .map-select .map-info-name { font-size:18px; }
  :is(.create-game-form,.room-setup) > .menu-page-body { grid-template-columns:200px minmax(0,1fr); gap:18px; }
+ .room-setup.with-maps > .menu-page-body { grid-template-columns:150px 180px minmax(0,1fr); gap:14px; }
  :is(.create-game-form,.room-setup) .room-slot-pane { padding:12px; }
  .room-setup .room-slot-pane { --seat-tracks:22px minmax(70px,1fr) 70px 80px 88px 82px 42px; }
 }
 @media(max-width:960px) {
  :is(.create-game-form,.room-setup) > .menu-page-body { grid-template-columns:minmax(0,1fr); grid-template-rows:auto minmax(0,1fr); gap:14px; }
+ .room-setup.with-maps > .menu-page-body { grid-template-columns:minmax(0,1fr); grid-template-rows:auto auto minmax(0,1fr); }
+ .room-setup .map-browser { grid-template-rows:auto; }
+ .room-setup .map-browser .room-section-title { display:none; }
+ .room-setup .map-entries { grid-auto-flow:column; grid-auto-columns:max-content; overflow-x:auto; overflow-y:hidden; }
  .match-dossier { display:grid; grid-template-columns:160px minmax(0,1fr); gap:18px; border-right:0; border-bottom:1px solid var(--rule); padding:4px 4px 12px; }
  .create-game-form .match-dossier { grid-template-rows:auto; }
  .selected-map-summary { display:flex; align-items:center; gap:12px; padding:0; border:0; grid-column:1; }
@@ -92,9 +86,7 @@
  .slot-row > .slot-name { font-size:13px; }
 }
 @media(max-width:720px) {
- .map-select .map-chooser { grid-template-columns:minmax(130px,.55fr) minmax(0,1fr); gap:10px; }
  .map-browser,.map-info { padding:8px; }
- .map-select .map-facts { grid-template-columns:minmax(0,1fr) auto; gap:3px 8px; font-size:11px; }
  .map-entry { padding-right:3px; }
  .map-entry .map-button-name { font-size:12px; }
  .create-game-form .match-dossier { grid-template-columns:140px minmax(0,1fr); gap:12px; }
@@ -111,7 +103,6 @@
  .slot-row > .slot-ready { grid-column:5; grid-row:2; }
 }
 @media(max-height:600px) {
- .map-select .map-preview-frame { width:min(100%,max(80px,calc(100dvh - 350px))); }
  .match-dossier { gap:12px; }
  .selected-map-summary { gap:10px; }
  .create-options { gap:8px; }
@@ -122,10 +113,6 @@
  .create-game-form .match-dossier { grid-template-columns:minmax(0,1fr); gap:10px; }
 }
 @media(max-width:420px) {
- .map-select .map-chooser { grid-template-columns:120px minmax(0,1fr); }
- .map-select .map-info-name { font-size:14px; }
- .map-select .map-facts { font-size:10px; }
- .map-select .map-info { padding:5px; }
  .match-dossier .map-preview-space { width:48px; height:48px; flex-basis:48px; }
  .create-options { grid-template-columns:minmax(0,1fr); }
 }

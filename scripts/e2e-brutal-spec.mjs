@@ -137,14 +137,11 @@ async page => {
     await page.waitForSelector("[data-open-room-browser]", { timeout: 5000 });
   };
   ${roomUiFlowCode}
-  // Pick a pool map through the real automatic solo flow, then use an
-  // authoritative multiplayer room for the gameplay fixture API.
+  // Pick a pool map on the setup of a room for others: an authoritative room for the gameplay fixture API.
   const enterRoomSetup = async (poolMapId) => {
     await page.click("[data-open-room-browser]");
     await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
-    await page.click("[data-create-room]");
-    await confirmedSoloSetup(poolMapId);
-    activeRoomId = await serverSetupFromSolo();
+    activeRoomId = await onlineSetup(poolMapId);
     must(activeRoomId, "room setup did not expose room id");
   };
   const startLocalRoom = async (mapId, pool = false) => {

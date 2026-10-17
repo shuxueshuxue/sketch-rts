@@ -100,9 +100,7 @@ async page => {
   await page.waitForSelector("[data-open-room-browser]", { timeout: 5000 });
   await page.click("[data-open-room-browser]");
   await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
-  await page.click("[data-create-room]");
-  await confirmedSoloSetup();
-  const roomId = await serverSetupFromSolo();
+  const roomId = await onlineSetup();
   must(roomId, "room setup did not expose room id");
   await serverFixtureMap(roomId, "bareDuel");
   await page.click("[data-start-room]");

@@ -17,15 +17,13 @@ export function configurationForRoomMode(room: RoomState | RoomConfiguration, vi
   return configuration;
 }
 
-/** Serialize edits with room migration; only the latest requested setup can become visible. */
+/** Serialize edits with room rebuilds (another map is another room); only the latest requested setup can become visible. */
 export class RoomSetupSession {
   private room: RoomState | undefined;
-  private draft: RoomConfiguration | undefined;
   private generation = 0;
   private intent = 0;
   private tail: Promise<unknown> = Promise.resolve();
   private pending = 0;
-  requestedVisibility: RoomVisibility | undefined;
 
   constructor(private readonly options: {
     runtime: SetupRuntime;
@@ -40,22 +38,20 @@ export class RoomSetupSession {
 
   cancel() {
     this.generation++; this.intent++;
-    this.room = undefined; this.draft = undefined; this.requestedVisibility = undefined;
+    this.room = undefined;
   }
 
   adopt(room: RoomState) {
-    this.cancel(); this.room = room; this.draft = roomConfiguration(room);
+    this.cancel(); this.room = room;
   }
 
   accept(room: RoomState) {
-    if (this.room?.id === room.id) { this.room = room; this.draft = roomConfiguration(room); }
+    if (this.room?.id === room.id) this.room = room;
   }
 
   create(configuration: RoomConfiguration, replace = false): Promise<RoomState | undefined> {
     const generation = this.generation, intent = ++this.intent;
     const requested = configurationForRoomMode(configuration, configuration.visibility);
-    this.draft = requested;
-    this.requestedVisibility = configuration.visibility;
     return this.enqueue(async () => {
       const current = () => generation === this.generation && intent === this.intent;
       if (!current()) return;
@@ -66,20 +62,6 @@ export class RoomSetupSession {
     });
   }
 
-  switchMode(visibility: RoomVisibility): Promise<RoomState | undefined> {
-    const generation = this.generation, intent = ++this.intent;
-    this.requestedVisibility = visibility;
-    return this.enqueue(async () => {
-      const current = () => generation === this.generation && intent === this.intent;
-      if (!current()) return;
-      if (this.room?.visibility === visibility) return this.room;
-      if (this.room && (this.room.status !== 'open' || this.room.hostUserId !== this.options.user().id)) throw new Error('Only the host can change an open room mode');
-      const source = this.room ?? this.draft;
-      if (!source) return;
-      return this.replaceRoom(configurationForRoomMode(source, visibility), current, true);
-    });
-  }
-
   updateSlot(slotId: string, patch: SlotPatch): Promise<RoomState | undefined> {
     const generation = this.generation;
     return this.enqueue(async () => {
@@ -87,7 +69,7 @@ export class RoomSetupSession {
       const roomId = this.room.id;
       const room = await this.options.runtime.updateRoomSlot(roomId, slotId, patch, this.options.user());
       if (generation !== this.generation || this.room?.id !== roomId) return;
-      this.room = room; this.draft = roomConfiguration(room); this.options.changed(room, true);
+      this.room = room; this.options.changed(room, true);
       return room;
     });
   }
@@ -97,7 +79,7 @@ export class RoomSetupSession {
     const result = this.tail.then(operation);
     this.tail = result.catch(() => {});
     return result.finally(() => {
-      if (--this.pending === 0) this.requestedVisibility = undefined;
+      this.pending--;
       this.options.busyChanged();
     });
   }
@@ -121,7 +103,7 @@ export class RoomSetupSession {
       if (this.room?.id === previous.id) this.room = undefined;
       if (!current()) { await discard(); return; }
     }
-    this.room = room; this.draft = roomConfiguration(room); this.options.changed(room, replace);
+    this.room = room; this.options.changed(room, replace);
     return room;
   }
 }

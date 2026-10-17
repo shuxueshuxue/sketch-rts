@@ -2,7 +2,7 @@ import { MAP_POOL, poolMap, type PoolMapId } from "../shared/map-pool";
 import { createRoom, roomConfiguration, type RoomConfiguration } from "../shared/rooms";
 import { parseCreateRoomRequest } from "../shared/room-schema";
 
-export type RoomRoute = { screen: "home" | "profile" | "rooms" } | { screen: "maps" | "setup"; configuration?: RoomConfiguration } | { screen: "room"; roomId: string };
+export type RoomRoute = { screen: "home" | "profile" | "rooms" } | { screen: "setup"; configuration?: RoomConfiguration } | { screen: "room"; roomId: string };
 const previewHost = { id: "preview", name: "Preview" };
 
 export function defaultRoomConfiguration(mapId: PoolMapId = MAP_POOL[0].id): RoomConfiguration {
@@ -10,14 +10,23 @@ export function defaultRoomConfiguration(mapId: PoolMapId = MAP_POOL[0].id): Roo
   return roomConfiguration(createRoom({ id: "preview", host: previewHost, name: "", mapId, humanCount: 1, aiCount: map.players - 1, visibility: "private" }));
 }
 
+// A configuration moved to another map: each seat the map has keeps its player, race and computer. Teams belong to a
+// layout (two sides, or a ring of free-for-all starts), so they carry over only to a map laid out the same way.
+export function configurationOnMap(configuration: RoomConfiguration, mapId: PoolMapId): RoomConfiguration {
+  const fresh = defaultRoomConfiguration(mapId), sameLayout = poolMap(configuration.mapId)?.layout.kind === poolMap(mapId)!.layout.kind;
+  return { ...configuration, mapId, layoutSeed: fresh.layoutSeed, seatSetup: fresh.seatSetup.map((seat, index) => {
+    const kept = configuration.seatSetup[index];
+    return kept ? { ...kept, controller: index === 0 ? "human" : kept.controller, team: sameLayout ? kept.team : seat.team } : seat;
+  }) };
+}
+
 // One query-based route works at every deployment mount, without a second hash router.
 export function formatRoomRoute(route: RoomRoute): string {
   const query = new URLSearchParams();
   if (route.screen === "room") query.set("room", route.roomId);
-  else if (route.screen === "maps" || route.screen === "setup") {
+  else if (route.screen === "setup") {
     const config = route.configuration ?? defaultRoomConfiguration();
     query.set("map", config.mapId);
-    if (route.screen === "maps") query.set("view", "maps");
     query.set("seed", config.layoutSeed);
     if (config.name) query.set("name", config.name);
     query.set("visibility", config.visibility);
@@ -45,7 +54,7 @@ export function parseRoomRoute(search: string): RoomRoute {
       humanCount: seats.filter(seat => seat.controller !== "ai").length,
       aiCount: seats.filter(seat => seat.controller === "ai").length, seatSetup: seats });
     if (!input || seats.length !== map.players) return { screen: "home" };
-    return { screen: query.get("view") === "maps" ? "maps" : "setup", configuration: roomConfiguration(createRoom({ ...input, id: "preview" })) };
+    return { screen: "setup", configuration: roomConfiguration(createRoom({ ...input, id: "preview" })) };
   }
   const view = query.get("view");
   return { screen: view === "profile" || view === "rooms" ? view : "home" };
