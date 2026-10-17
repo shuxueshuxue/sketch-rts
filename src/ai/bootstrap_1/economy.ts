@@ -5,7 +5,7 @@ import type { BuildingKind, GameCommand, GameSnapshot, PlayerId, TrainableUnitKi
 import { colonyNavalWantWithMineEligibility, navalBudgetReserve, navalReservePurchase } from '../policy/naval';
 import { mountedMinePlan } from '../policy/mounted-mine-plan';
 import type { AiPolicyContext, AiScript } from '../policy/types';
-import { ageV6Goals, availableV6ConstructionWorkers, collectV6Goals, healingPostGoals, issueV6Construction, v6ExpansionGoal, type rankV6Goals } from '../policy/v6/economy';
+import { ageV6Goals, availableV6ConstructionWorkers, collectV6Goals, expansionCapital, healingPostGoals, issueV6Construction, v6ExpansionGoal, type rankV6Goals } from '../policy/v6/economy';
 import { v6Memory } from '../policy/v6/memory';
 import { readV6Intel } from '../policy/v6/intel';
 import { v6Doctrine } from '../policy/v6/select';
@@ -101,8 +101,7 @@ const prepareMiningCover: Parameters<typeof collectV6Goals>[5] = (economy, mine,
   const cover = own.some(building => building.kind === 'defenseTower' && distance(building, mine) <= building.attackRange);
   if (incomes === 0 && !cover) return [];
   // The hall is the same purchase before and after cover arrives; keep its existing aging and ordinary price.
-  const capital = { id: `bases:${target}`, priority, cost: BUILDING_DEFS.townHall.cost, save: true, hold: true as const,
-    issue: () => undefined };
+  const capital = expansionCapital(target, priority);
   if (enemyExpansionPower(snapshot, intel, mine, BUILDING_DEFS.defenseTower.attackRange + GOLD_MINE_RULES.baseRange) > 0
     || cover) return [capital];
   const point = towerPointFor(snapshot, owner, mine, intel.home);
