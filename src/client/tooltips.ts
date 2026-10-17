@@ -13,15 +13,16 @@ import { unitAttackDamageProfile } from "../shared/damage";
 import { unitClassOf, type UnitClass } from "../shared/unit-targeting";
 import { BREACH_CHARGE, FLAME_CLOAK, GUARDIAN_SCROLL, IVORY_TOWER_HP_SHARE, LIGHTNING_ROD, STORM_STAFF } from "../shared/item-rules";
 import { BOOTS_SPEED, RING_REGEN_PER_SECOND, HEALING_SCROLL_RADIUS, HEALING_SCROLL_HEAL, IVORY_TOWER_REACH, SHOP_GOODS } from "../shared/shop";
-import { ABILITY_DEFS, BUILDING_DEFS, UNIT_DEFS, trainingBuildingFor, trainableUnitsAt, canResearchAt, UPGRADE_DEFS, requiredSupplyCap, unitRules, DOCK_REPAIR, SUPPORT_BUILDING_HEAL, isHealingBuildingKind, HEAVY_ARMOR_DAMAGE, SLOW_PACE, SLOW_TICKS, POISON_DAMAGE, POISON_TICKS, SPLASH_RADIUS, SPLASH_SHARE } from "../shared/catalog";
+import { ABILITY_DEFS, BUILDING_DEFS, MERCENARY_HIRE_RANGE, UNIT_DEFS, trainingBuildingFor, trainableUnitsAt, canResearchAt, UPGRADE_DEFS, requiredSupplyCap, unitRules, DOCK_REPAIR, SUPPORT_BUILDING_HEAL, isHealingBuildingKind, HEAVY_ARMOR_DAMAGE, SLOW_PACE, SLOW_TICKS, POISON_DAMAGE, POISON_TICKS, SPLASH_RADIUS, SPLASH_SHARE } from "../shared/catalog";
 import { aimingProfile } from "../shared/aiming";
 import { unitRegenPerSecond } from "../shared/sim";
 import { SIM_TICKS_PER_SECOND } from "../shared/time";
-import type { AbilityKind, BuildingKind, GameSnapshot, ItemKind, RaceId, TrainableUnitKind, Unit, UnitKind, UpgradeKind } from "../shared/types";
+import type { AbilityKind, BuildingKind, GameSnapshot, ItemKind, MercenaryCamp, RaceId, TrainableUnitKind, Unit, UnitKind, UpgradeKind } from "../shared/types";
 import type { AutocastSwitch } from "./command-button-state";
 import { ABILITY_CARDS } from "./content/abilities";
 import { BUILDING_CARDS } from "./content/buildings";
 import { TRAINED_UNIT_CARDS } from "./content/units";
+import { NEUTRAL_UNITS } from "./content/units-neutral";
 import { createI18n, type LabelKey, type Locale } from "./i18n";
 
 export type GameplayTooltip = {
@@ -620,7 +621,43 @@ function localized(locale: Locale, zh: string, en: string) { return locale === "
 
 function unitDescription(kind: UnitKind, i18n: I18n) {
   if (kind in TRAINED_UNIT_CARDS) return TRAINED_UNIT_CARDS[kind as TrainableUnitKind].description[i18n.locale];
-  return localized(i18n.locale, UNIT_DEFS[kind].creepFoodPower ? "中立营地守卫；受攻击会呼叫附近同伴，追击受营地范围限制。" : "雇佣兵提供即时支援；临时召唤物会在持续时间结束后消失。", UNIT_DEFS[kind].creepFoodPower ? "Neutral camp guardian. Calls nearby allies when attacked and remains within its camp leash." : "Hired troops provide immediate support; temporary summons expire after their duration.");
+  const neutral = NEUTRAL_UNITS[kind as keyof typeof NEUTRAL_UNITS];
+  if (neutral && "description" in neutral) return neutral.description[i18n.locale];
+  return localized(i18n.locale, UNIT_DEFS[kind].creepFoodPower ? "中立营地守卫；受攻击会呼叫附近同伴，追击受营地范围限制。" : "临时召唤物，会在持续时间结束后消失。", UNIT_DEFS[kind].creepFoodPower ? "Neutral camp guardian. Calls nearby allies when attacked and remains within its camp leash." : "A summoned unit; it expires after its duration.");
+}
+
+// @@@camp-text - What a mercenary camp tells the player is read off that camp: the unit it sells, the price, how many are
+// left, the wait between hires and how near a unit of yours must stand (the rules: see hireMercenary and
+// unitControlsMercenaryCamp). It used to be one sentence written for a contract-archer camp that restocked, shown at
+// every camp: camps sell mercenaries, contract archers or field medics, and none ever restocks.
+export function mercenaryHireTooltip(camp: MercenaryCamp, hotkey: string, i18n: I18n = DEFAULT_I18N): GameplayTooltip {
+  const unit = UNIT_DEFS[camp.hireKind], name = labelKind(camp.hireKind, i18n), locale = i18n.locale;
+  return {
+    title: localized(locale, `雇佣${name}`, `Hire ${name}`),
+    body: unitDescription(camp.hireKind, i18n),
+    stats: [
+      tooltipLine(locale, "cost", camp.cost),
+      tooltipLine(locale, "supply", unit.supplyUsed),
+      tooltipLine(locale, "hp", unit.hp),
+      tooltipLine(locale, "attack", unit.attackDamage),
+      tooltipLine(locale, "range", unit.attackRange),
+      campStockLine(camp, i18n),
+      localized(locale, `每次雇佣后营地等待 ${formatSeconds(camp.cooldown)}`, `The camp waits ${formatSeconds(camp.cooldown)} between hires`),
+      localized(locale, `己方单位在营地 ${MERCENARY_HIRE_RANGE} 内即可雇佣`, `Hire with a unit of yours within ${MERCENARY_HIRE_RANGE} of the camp`),
+    ],
+    requirements: [],
+    hotkey: formatHotkey(hotkey),
+  };
+}
+
+export function campStockLine(camp: Pick<MercenaryCamp, "stock">, i18n: I18n = DEFAULT_I18N) {
+  return localized(i18n.locale, `剩 ${camp.stock} 个，卖完不补`, `${camp.stock} left; never restocked`);
+}
+
+// The camp as its selection panel names it: the unit it sells at what price, what is left, and the wait for the next hire.
+export function campDetail(camp: MercenaryCamp, i18n: I18n = DEFAULT_I18N) {
+  const wait = camp.cooldownRemaining > 0 ? localized(i18n.locale, ` · ${formatSeconds(camp.cooldownRemaining)} 后可再雇`, ` · next hire in ${formatSeconds(camp.cooldownRemaining)}`) : "";
+  return `${labelKind(camp.hireKind, i18n)} · ${tooltipLine(i18n.locale, "cost", camp.cost)} · ${campStockLine(camp, i18n)}${wait}`;
 }
 
 function unitRuleLines(def: typeof UNIT_DEFS[UnitKind], locale: Locale, level = 0, showStarProgression = true, classification = def.unitClass) {
