@@ -1,3 +1,4 @@
+import { UNIT_DEFS } from "../shared/catalog";
 import { createGame, type Game } from "../shared/sim";
 import type { Terrain } from "../shared/terrain";
 import type { Corpse, GameSnapshot, PlayerId, RaceId, ResourceNode, ScenarioBuildingSeed, ScenarioUnitSeed, UnitKind } from "../shared/types";
@@ -7,7 +8,7 @@ import type { WorldFrame, WorldView } from "./world-renderer";
 
 type Point = { x: number; y: number };
 /** The home battles the match simulation fights (see @@@menu-battles). */
-export type MenuBattleId = "woods";
+export type MenuBattleId = "woods" | "fleet";
 /** An authored scene's script: poses its cast for any second of the scene. */
 export type MenuScript = (game: Game, second: number) => void;
 export type MenuSceneRun = {
@@ -24,7 +25,7 @@ export type MenuSceneRun = {
   painters?: Readonly<Record<string, PropPainter>>;
   actions?: () => StageView["unitActions"];
   /** Scene-local deck signs and impact accents that must appear above the ship layer. */
-  foreground?: (ctx: CanvasRenderingContext2D, view: WorldView, second: number) => void;
+  foreground?: (ctx: CanvasRenderingContext2D, view: WorldView, second: number, snapshot: GameSnapshot) => void;
   length?: number;
   embers: Point[];
   glows: Point[];
@@ -50,9 +51,10 @@ export function seeded(seed: number) {
 
 export type AuthoredMenuSceneRun = Extract<MenuSceneRun, { script: MenuScript }>;
 
-/** A battle is decided once one side has nobody left who can fight; a healer alone is no army. */
+/** A battle is decided once one side has nobody left who can fight: a healer alone is no army, and neither is a hull
+ * whose crew is gone. */
 export function battleDecided(snapshot: Pick<GameSnapshot, "units">) {
-  return new Set(snapshot.units.filter((unit) => unit.hp > 0 && unit.attackDamage > 0).map((unit) => unit.owner)).size < 2;
+  return new Set(snapshot.units.filter((unit) => unit.hp > 0 && unit.attackDamage > 0 && !UNIT_DEFS[unit.kind].naval).map((unit) => unit.owner)).size < 2;
 }
 
 export function terrainOf(width: number, height: number, kindAt: (x: number, y: number) => string): Terrain {

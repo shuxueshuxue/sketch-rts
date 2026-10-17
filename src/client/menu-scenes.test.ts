@@ -40,7 +40,7 @@ describe('bounded home scenes using the world presentation', () => {
       expect(current.corpses??[]).toHaveLength(0);expect(current.tick).toBe(0);
       const preparation=backdrop.artPreparation;
       if(MENU_SCENES[index]!.id==='fleet'){
-        expect(preparation?.corpses).toHaveLength(7);
+        expect(preparation?.corpses).toHaveLength(3);
         expect(preparation?.models?.('menu/marine')).toBeDefined();
       }else expect(preparation).toBeUndefined();
       expect(backdrop.prepare(0)).toBe(current);expect(current.corpses??[]).toHaveLength(0);
@@ -49,26 +49,26 @@ describe('bounded home scenes using the world presentation', () => {
   it('starts the opening at the first visible frame after slow preparation while retaining the same prepared cast',()=>{
     const scene=MENU_SCENES[2]!,run=scene.create(),create=vi.spyOn(scene,'create').mockReturnValue(run);
     try{
-      const backdrop=new MenuBackdrop(labels,2),frames:WorldFrame[]=[],ctx=context();
+      const backdrop=new MenuBackdrop(labels,2,inProcessThreads([])),frames:WorldFrame[]=[],ctx=context();
       backdrop.prepare(9000);
       const corpses=backdrop.artPreparation!.corpses,models=backdrop.artPreparation!.models;
       const game=run.game;
       backdrop.startPresentation(12000);
       backdrop.draw(ctx,320,180,12000,false,frame=>frames.push(frame));
-      expect(frames[0]!.snapshot.tick).toBe(0);expect(frames[0]!.snapshot.corpses).toHaveLength(0);
+      expect(frames[0]!.snapshot.tick).toBe(0);expect(frames[0]!.snapshot.corpses??[]).toHaveLength(0);
       expect(run.game).toBe(game);expect(backdrop.artPreparation!.corpses).toBe(corpses);
       expect(backdrop.artPreparation!.models).toBe(models);expect(create).toHaveBeenCalledOnce();
       backdrop.draw(ctx,320,180,40000,false,frame=>frames.push(frame));
       backdrop.startPresentation(43000);
       backdrop.draw(ctx,320,180,43000,false,frame=>frames.push(frame));
-      expect(frames[2]!.snapshot.tick).toBe(0);expect(frames[2]!.snapshot.corpses).toHaveLength(0);
+      expect(frames[2]!.snapshot.tick).toBe(0);expect(frames[2]!.snapshot.corpses??[]).toHaveLength(0);
       expect(frames[2]!.facing).not.toBe(frames[1]!.facing);expect(frames[2]!.animation).not.toBe(frames[1]!.animation);
       expect(frames[2]!.motion).not.toBe(frames[1]!.motion);expect(create).toHaveBeenCalledOnce();
     }finally{create.mockRestore();}
   });
   it('keeps the three independent scenes and spawns each cast on its support domain', () => {
     expect(MENU_SCENES.map(scene => scene.id)).toEqual(['capital', 'woods', 'fleet']);
-    expect(battles.map(index => MENU_SCENES[index]!.id)).toEqual(['woods']);
+    expect(battles.map(index => MENU_SCENES[index]!.id)).toEqual(['woods', 'fleet']);
     for (const scene of MENU_SCENES) {
       const run = scene.create(), terrain = run.game.map.terrain!;
       if ('presentation' in run) {
@@ -120,6 +120,20 @@ describe('bounded home scenes using the world presentation', () => {
     // Another scene ends this battle's thread.
     backdrop.next();
     expect(started.at(-1)).toBe('terminated');
+  });
+
+  it.each(battles)('ends battle %i and its thread when the page leaves the menu, and opens it afresh on return', (index) => {
+    const started: string[] = [], backdrop = new MenuBackdrop(labels, index, inProcessThreads(started)), frames: WorldFrame[] = [], ctx = context();
+    backdrop.prepare(0);
+    for (let now = 0; now <= 3_000; now += 50) backdrop.draw(ctx, 320, 180, now, false, frame => frames.push(frame));
+    backdrop.stop();
+    expect(started.at(-1)).toBe('terminated');
+    // Nothing is fought while the page is away: no thread, nothing asked of one.
+    const away = started.length;
+    backdrop.startPresentation(60_000);
+    backdrop.draw(ctx, 320, 180, 60_000, false, frame => frames.push(frame));
+    expect(started.slice(away, away + 1)).toEqual(['scene']);
+    expect(frames.at(-1)!.snapshot.tick).toBe(0);
   });
 
   it.each(battles)('fades out a decided battle %i after its aftermath and opens a fresh one', (index) => {
