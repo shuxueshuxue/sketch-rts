@@ -17,8 +17,10 @@
 :is(.resource-card,.game-settings) button:hover,.equipment-panel button:hover { background:var(--game-button-hover); border-color:var(--game-brass-lit); color:var(--game-button-ink); }
 :is(.resource-card,.game-settings,.equipment-panel) button:focus-visible { outline:2px solid var(--game-brass-lit); outline-offset:2px; }
 .hud-subject-art { height:90px; object-fit:fill; }
+.minimap-tab { height:34px; }
+.minimap-tab :is(.resource-readout,.supply-readout) { font:600 15px var(--game-text); }
 .command-icon { justify-items:center; }
-.command-portrait { width:39px; height:39px; max-width:100%; object-fit:contain; }
+.command-portrait { width:48px; height:48px; max-width:100%; object-fit:contain; }
 .hud-roster-art { width:min(48px,100%); height:auto; aspect-ratio:1; max-height:48px; object-fit:contain; }
 .equipment-cargo { background:var(--game-surface); }
 .game-settings { width:min(460px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); box-sizing:border-box; padding:18px; overflow:auto; font:13px/1.5 var(--game-text); }
@@ -40,6 +42,9 @@
 .game-shell { --battle-surface:var(--game-surface); --battle-edge:var(--game-edge); --battle-ink:var(--game-ink); --battle-muted:var(--game-muted); --battle-accent:var(--game-title); }
 .control-deck[hidden] { display:none; }
 .control-deck .selection-chip,.control-deck :is(.command-dock,.item-dock) { border-image:var(--frame-walnut) 16 / var(--hud-dock-frame) stretch; border-radius:0; background:var(--game-paper); box-shadow:var(--game-frame); }
+/* The command card's sixteen slots show as faint wells, so a card with three commands still reads as the same card
+   (see @@@command-card): one well tile a button in size, spread over the card's content box. */
+.control-deck .command-dock { background:linear-gradient(#4a321c24,#4a321c24) content-box 0 0 / var(--hud-button-width) var(--hud-button-height) space, var(--game-paper); }
 .control-deck :is(.command-button,.item-button) { border:1px solid #69421f; color:var(--game-button-ink); border-radius:0; background:var(--game-button); box-shadow:var(--game-inset); }
 .control-deck :is(.command-button,.item-button):hover { border-color:var(--game-brass-lit); background:var(--game-button-hover); }
 .control-deck .hud-subject-art { background:radial-gradient(ellipse at 50% 65%,#8a997c35,transparent 72%); }
@@ -48,7 +53,6 @@
 .control-deck .hud-health > span:first-child { background:linear-gradient(#9cad78,#5c714d); border-right-color:#c4d6a9; }
 .control-deck .hud-health-text { line-height:14px; color:#fff; text-shadow:0 1px #000; }
 .control-deck .hud-roster-unit { border-radius:0; }
-.control-deck .command-label { font:11px/14px var(--game-text); text-shadow:0 1px #24140d; }
 .control-deck .hotkey { top:2px; bottom:auto; right:2px; z-index:2; min-width:14px; padding:0 2px; background:#302014f2; color:#fff3d1; font:600 11px/14px var(--game-text); text-shadow:0 1px #000; pointer-events:none; }
 :is(.minimap-tab,.match-menu-button,.minimap-relations,.minimap-wind,.match-menu,.status-line,.tooltip-layer) { border-radius:0; background:var(--game-surface); border-color:var(--game-brass); }
 .minimap-frame { background:none; border:7px solid transparent; border-image:var(--frame-walnut) 16 / 7px stretch; box-shadow:var(--game-frame); }
