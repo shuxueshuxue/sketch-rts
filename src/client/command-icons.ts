@@ -8,6 +8,8 @@ const COMMAND_PATHS: Record<string, string> = {
     '⤓': 'M6 27h30l-5 8H12zM21 4v19m-6-6l6 6 6-6M7 38l6 2 8-2 8 2 7-2',
     '⌖': 'M21 4v8m0 18v8M4 21h8m18 0h8M21 11a10 10 0 1 1 0 20 10 10 0 0 1 0-20M21 18v6m-3-3h6',
     '⇄': 'M8 13h26l-6-6m6 6-6 6M34 29H8l6-6m-6 6 6 6',
+    // The stances: a shield with a sword across it, not the arrows of "next".
+    '⛨': 'M13 10h16v11c0 7-8 12-8 12s-8-5-8-12zM7 35L35 7m-5 0h5v5M9 29l4 4',
     '⇔': 'M4 13h9v18H4zm25 0h9v18h-9zM13 19h16v7H13m4-7v7m4-7v7m4-7v7M4 35h9m16 0h9',
     '»': 'M8 10l10 11L8 32m15-22 10 11-10 11',
     '▥': 'M9 8h24v18L21 36 9 26zM15 11v17m6-17v20m6-20v17',
