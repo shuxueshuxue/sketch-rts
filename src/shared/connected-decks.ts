@@ -1,6 +1,7 @@
 import { deckHasRoom, deckLoad, deckPlacement, deckPointFits } from "./decks";
 import { capsuleClearsBodies, capsuleClearsCircles, clipToConvex, expandConvex } from './navigation-math';
 import { supportSurface } from './support-surface';
+import { walkField, walkGraph, walkLeg, type WalkGraph } from './walk-field';
 import { bodyMass } from "./physical-body";
 import { shipsIn, circleInPolygon, hullGap, localToWorld, shipPassengers, shipProfile, worldToLocal, type Point } from "./ship-geometry";
 import { detCos, detSin } from "./det-math";
@@ -22,10 +23,8 @@ type CrossingGeometry = {
   obstacles: (Point & {
     radius: number;
   })[];
-  nodes: Point[];
-  links: Int8Array;
-  // The walk between each two fixed nodes, measured once (NaN until first asked).
-  distances: Float64Array;
+  // The fixed waypoints of the crossing and what is known between them (see @@@walk-field).
+  graph: WalkGraph;
   bridges: GangwaySurface[];
 };
 const crossings = new WeakMap<GameMap, {
@@ -70,7 +69,9 @@ function crossingGeometry(ships: Unit[], passenger: Unit, map: GameMap, land: bo
   const top = Math.floor((Math.min(passenger.y, ...ships.map(s => s.y - shipProfile(s)!.length)) - padding) / cell) * cell;
   const bottom = Math.ceil((Math.max(passenger.y, ...ships.map(s => s.y + shipProfile(s)!.length)) + padding) / cell) * cell;
   const bridgeKey=gangways.map(({source,target,surface})=>`${source.id}:${target.id}:${surface.width}:${surface.source.x},${surface.source.y}:${surface.target.x},${surface.target.y}`).join(';');
-  const key = `${poses.join(';')}/${bridgeKey}/${radius}/${land}/${groundRevision(map)}/${left},${top},${right},${bottom}`;
+  // The local bounds only frame the ground's edges; a crossing between decks alone has none, and is one geometry for
+  // every walker on it.
+  const key = `${poses.join(';')}/${bridgeKey}/${radius}/${land}/${groundRevision(map)}/${land ? `${left},${top},${right},${bottom}` : ''}`;
   let cache = crossings.get(map);
   if (!cache || cache.terrain !== terrain || cache.cells !== terrain?.cells) {
     cache = { terrain, cells: terrain?.cells, entries: new Map() };
@@ -114,7 +115,7 @@ function crossingGeometry(ships: Unit[], passenger: Unit, map: GameMap, land: bo
       if (fits(point))
         nodes.push(point);
     }
-  const result = { surface, floor, obstacles, nodes, links: new Int8Array(nodes.length ** 2), distances: new Float64Array(nodes.length ** 2).fill(NaN), bridges:gangways.map(connection=>connection.surface) };
+  const result = { surface, floor, obstacles, graph: walkGraph(nodes), bridges: gangways.map(connection => connection.surface) };
   if (cache.entries.size >= 32)
     cache.entries.delete(cache.entries.keys().next().value!);
   cache.entries.set(key, result);
@@ -252,13 +253,17 @@ export function walkConnectedSurfaces(passenger: Unit, world: Point, units: read
   // Ground routing owns an approach until the whole body fits the crossing floor.
   if (!source && !floor.diskFits(passenger, passenger.radius + 1))
     return false;
-  let destination: Point | undefined;
+  let destination: Point | undefined, aim: Point | undefined;
   if (target) {
     if (deckLoad(units, target) + (passenger.deck?.shipId===target.id?0:bodyMass(passenger)) > shipProfile(target)!.loadCapacity || !deckHasRoom(target, passenger, units))
       return false;
     if (!source && !ships.some(ship => Math.hypot(passenger.x - ship.x, passenger.y - ship.y) < shipProfile(ship)!.length / 2 + passenger.radius * 3))
       return false;
-    const goal = deckPlacement(target, passenger, units, worldToLocal(target, source ? world : passenger), true);
+    const local = worldToLocal(target, source ? world : passenger), goal = deckPlacement(target, passenger, units, local, true);
+    // The walk is laid toward where this body would stand on an empty deck, the same for every walker sent there; the
+    // spot it takes among the crew is its last, direct step.
+    const free = deckPlacement(target, passenger, units, local, false);
+    if (free) aim = localToWorld(target, free);
     if (goal)
       destination = localToWorld(target, goal);
   }
@@ -295,108 +300,127 @@ export function walkConnectedSurfaces(passenger: Unit, world: Point, units: read
     return !occupied || capsuleClearsBodies(passenger, point, passenger.radius + 1, bodies);
   };
   // The fittings are the cheap test and the usual refusal; the floor's boundary is walked only for a passage clear of them.
-  // Whether each node stands on the floor is asked once per node, not once per edge (floor.capsuleFits, in halves).
-  const standing: boolean[] = [];
-  const stands = (point: Point, index: number) => index < 0 ? floor.supported(point) : (standing[index] ??= floor.supported(point));
-  const staticClear = (a: Point, b: Point, ai = -1, bi = -1) => capsuleClearsCircles(a, b, passenger.radius + 1, obstacles)
-    && stands(a, ai) && stands(b, bi) && floor.capsuleClear(a, b, passenger.radius + 1);
-  const clear = (a: Point, b: Point, ai = -1, bi = -1, occupied=true) => {
-    const count = geometry.nodes.length, cacheable = ai >= 2 && bi >= 2 && ai < count + 2 && bi < count + 2;
-    let valid: boolean;
-    if (cacheable) {
-      const index = (ai - 2) * count + bi - 2;
-      if (!geometry.links[index])
-        geometry.links[index] = staticClear(a, b, ai, bi) ? 1 : -1;
-      valid = geometry.links[index] === 1;
+  const staticClear = (a: Point, b: Point) => capsuleClearsCircles(a, b, passenger.radius + 1, obstacles)
+    && floor.supported(a) && floor.supported(b) && floor.capsuleClear(a, b, passenger.radius + 1);
+  // A walker heads straight for its destination when nothing stands between; otherwise it walks the crossing's field
+  // toward where it would stand on an empty deck (see @@@walk-field).
+  const open = (a: Point, b: Point) => capsuleClearsBodies(a, b, passenger.radius + 1, bodies);
+  // On a one-person bridge, which has too little side room for a ring of points round a body, the safe front of the body
+  // on the bridge's centerline.
+  const bridgeFronts = (other: Unit) => {
+    const points: Point[] = [];
+    for (const bridge of geometry.bridges) {
+      const a = bridge.source, b = bridge.target, dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy), radius = other.radius + passenger.radius + 2;
+      const along = ((other.x - a.x) * dx + (other.y - a.y) * dy) / len, across = ((other.y - a.y) * dx - (other.x - a.x) * dy) / len;
+      if (Math.abs(across) >= radius) continue;
+      const offset = Math.sqrt(radius * radius - across * across);
+      for (const distance of [along - offset, along + offset]) if (distance >= 0 && distance <= len) {
+        const point = { x: a.x + dx / len * distance, y: a.y + dy / len * distance };
+        if (fits(point, true)) points.push(point);
+      }
     }
-    else
-      valid = staticClear(a, b, ai, bi);
-    return valid && (!occupied || capsuleClearsBodies(a, b, passenger.radius + 1, bodies));
+    return points;
   };
-  const nodes: Point[] = [passenger, destination];
-  if (!clear(passenger, destination)) {
-    nodes.push(...geometry.nodes);
+  // Points to step round a body standing in the way: a ring about it, and its fronts on a bridge.
+  const around = (from: Point, toward: Point) => {
+    const points: Point[] = [];
     for (const other of bodies) {
+      if (capsuleClearsBodies(from, toward, passenger.radius + 1, [other])) continue;
       for (let i = 0; i < 12; i++) {
         const angle = i * Math.PI / 6, r = (other.radius + passenger.radius + 3) / detCos(Math.PI / 12);
         const point = { x: other.x + detCos(angle) * r, y: other.y + detSin(angle) * r };
-        if (fits(point, true))
-          nodes.push(point);
+        if (fits(point, true)) points.push(point);
       }
-      // A one-person bridge has too little side room for the usual circular
-      // detour nodes. Sample the safe front of a body on its actual centerline.
-      for(const bridge of geometry.bridges) {
-        const a=bridge.source,b=bridge.target,dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy),radius=other.radius+passenger.radius+2;
-        const along=((other.x-a.x)*dx+(other.y-a.y)*dy)/len,across=((other.y-a.y)*dx-(other.x-a.x)*dy)/len;
-        if(Math.abs(across)>=radius)continue;
-        const offset=Math.sqrt(radius*radius-across*across);
-        for(const distance of [along-offset,along+offset])if(distance>=0 && distance<=len) {
-          const point={x:a.x+dx/len*distance,y:a.y+dy/len*distance};
-          if(fits(point,true))nodes.push(point);
-        }
-      }
+      points.push(...bridgeFronts(other));
     }
-  }
-  // Every walker searches a graph of a few hundred nodes each tick: flat arrays, not a Set, hold its frontier, and the
-  // walk between two fixed nodes is the geometry's, measured once for all walkers.
-  const fixed = nodes.length > 2 ? geometry.nodes.length : 0, distances = geometry.distances;
-  const between = (i: number, j: number) => {
-    if (i < 2 || j < 2 || i >= fixed + 2 || j >= fixed + 2) return Math.hypot(nodes[i]!.x - nodes[j]!.x, nodes[i]!.y - nodes[j]!.y);
-    const index = (i - 2) * fixed + j - 2;
-    let value = distances[index]!;
-    if (value !== value) distances[index] = distances[(j - 2) * fixed + i - 2] = value = Math.hypot(nodes[i]!.x - nodes[j]!.x, nodes[i]!.y - nodes[j]!.y);
-    return value;
+    return points;
   };
-  const count = nodes.length, costs = new Float64Array(count).fill(Infinity), parents = new Int32Array(count).fill(-1), seen = new Uint8Array(count);
-  costs[0] = 0;
-  let destinationNode=1, settled = 0;
-  while (settled < count) {
-    let current = -1;
-    for (let i = 0; i < count; i++)
-      if (!seen[i] && (current < 0 || costs[i]! < costs[current]!))
-        current = i;
-    if (current < 0 || !Number.isFinite(costs[current]!)) {
-      // A defender may seal the far end of a one-person bridge. Walk to the
-      // closest reachable floor first, so melee can meet it at the entrance.
-      // Every candidate still has a proven, body-clear path from the start.
-      const remaining=new Float64Array(count).fill(Infinity),visited=new Uint8Array(count);remaining[1]=0;
-      for(let pass=0;pass<count;pass++) {
-        let closest=-1;
-        for(let i=0;i<count;i++)if(!visited[i]&&(closest<0||remaining[i]!<remaining[closest]!))closest=i;
-        if(closest<0||!Number.isFinite(remaining[closest]!))break;
-        visited[closest]=1;
-        for(let i=0;i<count;i++)if(!visited[i]) {
-          const distance=remaining[closest]!+between(i,closest);
-          if(distance<remaining[i]!&&clear(nodes[closest]!,nodes[i]!,closest,i,false))remaining[i]=distance;
-        }
+  // @@@explicit-route - A walker sent at one body cannot take on another in its way instead (an explicit attack keeps its
+  // target), so a body between them must not hold it: it plans its whole route round every body, as each walker did
+  // before the shared field. The rest walk the field; a body in their way is one they may fight.
+  const searchedLeg = (): Point | undefined => {
+    const graph = geometry.graph, fixedNodes = graph.nodes;
+    const clear = (a: Point, b: Point, ai = -1, bi = -1, occupied = true) => {
+      const count = fixedNodes.length, cacheable = ai >= 2 && bi >= 2 && ai < count + 2 && bi < count + 2;
+      let valid: boolean;
+      if (cacheable) {
+        const index = (ai - 2) * count + bi - 2;
+        if (!graph.links[index]) graph.links[index] = graph.links[(bi - 2) * count + ai - 2] = staticClear(a, b) ? 1 : -1;
+        valid = graph.links[index] === 1;
       }
-      const estimate=(i:number)=>Number.isFinite(remaining[0]!)?remaining[i]!:Math.hypot(nodes[i]!.x-destination.x,nodes[i]!.y-destination.y);
-      let best=estimate(0);
-      destinationNode=0;
-      for(let i=2;i<count;i++)if(Number.isFinite(costs[i]!)) {
-        const distance=estimate(i);
-        if(distance<best-1e-6){best=distance;destinationNode=i;}
-      }
-      if(destinationNode===0)return true;
-      break;
-    }
-    if (current === 1)
-      break;
-    seen[current] = 1; settled++;
-    for (let i = 0; i < count; i++) {
-      const value = costs[current]! + between(i, current);
-      if (!seen[i] && value < costs[i]! && clear(nodes[current]!, nodes[i]!, current, i)) {
-        if (value < costs[i]!) {
-          costs[i] = value;
-          parents[i] = current;
+      else valid = staticClear(a, b);
+      return valid && (!occupied || open(a, b));
+    };
+    const nodes: Point[] = [passenger, destination];
+    if (!clear(passenger, destination)) {
+      nodes.push(...fixedNodes);
+      for (const other of bodies) {
+        for (let i = 0; i < 12; i++) {
+          const angle = i * Math.PI / 6, r = (other.radius + passenger.radius + 3) / detCos(Math.PI / 12);
+          const point = { x: other.x + detCos(angle) * r, y: other.y + detSin(angle) * r };
+          if (fits(point, true)) nodes.push(point);
         }
+        nodes.push(...bridgeFronts(other));
       }
     }
-  }
-  let next = destinationNode;
-  while (parents[next]! > 0)
-    next = parents[next]!;
-  const waypoint = nodes[next]!, gap = Math.hypot(waypoint.x - passenger.x, waypoint.y - passenger.y);
+    const fixed = nodes.length > 2 ? fixedNodes.length : 0, distances = graph.distances;
+    const between = (i: number, j: number) => {
+      if (i < 2 || j < 2 || i >= fixed + 2 || j >= fixed + 2) return Math.hypot(nodes[i]!.x - nodes[j]!.x, nodes[i]!.y - nodes[j]!.y);
+      const index = (i - 2) * fixed + j - 2;
+      let value = distances[index]!;
+      if (value !== value) distances[index] = distances[(j - 2) * fixed + i - 2] = value = Math.hypot(nodes[i]!.x - nodes[j]!.x, nodes[i]!.y - nodes[j]!.y);
+      return value;
+    };
+    const count = nodes.length, costs = new Float64Array(count).fill(Infinity), parents = new Int32Array(count).fill(-1), seen = new Uint8Array(count);
+    costs[0] = 0;
+    let destinationNode = 1, settled = 0;
+    while (settled < count) {
+      let current = -1;
+      for (let i = 0; i < count; i++) if (!seen[i] && (current < 0 || costs[i]! < costs[current]!)) current = i;
+      if (current < 0 || !Number.isFinite(costs[current]!)) {
+        // A defender may seal the far end of a one-person bridge: walk to the closest floor reachable, so melee can meet
+        // it at the entrance. Every candidate still has a proven, body-clear path from the start.
+        const remaining = new Float64Array(count).fill(Infinity), visited = new Uint8Array(count); remaining[1] = 0;
+        for (let pass = 0; pass < count; pass++) {
+          let closest = -1;
+          for (let i = 0; i < count; i++) if (!visited[i] && (closest < 0 || remaining[i]! < remaining[closest]!)) closest = i;
+          if (closest < 0 || !Number.isFinite(remaining[closest]!)) break;
+          visited[closest] = 1;
+          for (let i = 0; i < count; i++) if (!visited[i]) {
+            const distance = remaining[closest]! + between(i, closest);
+            if (distance < remaining[i]! && clear(nodes[closest]!, nodes[i]!, closest, i, false)) remaining[i] = distance;
+          }
+        }
+        const estimate = (i: number) => Number.isFinite(remaining[0]!) ? remaining[i]! : Math.hypot(nodes[i]!.x - destination.x, nodes[i]!.y - destination.y);
+        let best = estimate(0);
+        destinationNode = 0;
+        for (let i = 2; i < count; i++) if (Number.isFinite(costs[i]!)) {
+          const distance = estimate(i);
+          if (distance < best - 1e-6) { best = distance; destinationNode = i; }
+        }
+        if (destinationNode === 0) return undefined;
+        break;
+      }
+      if (current === 1) break;
+      seen[current] = 1; settled++;
+      for (let i = 0; i < count; i++) {
+        const value = costs[current]! + between(i, current);
+        if (!seen[i] && value < costs[i]! && clear(nodes[current]!, nodes[i]!, current, i)) { costs[i] = value; parents[i] = current; }
+      }
+    }
+    let next = destinationNode;
+    while (parents[next]! > 0) next = parents[next]!;
+    return nodes[next];
+  };
+  // A boarding crew's attack on the front rank is chosen again every tick: a body in its way becomes its target.
+  const order = passenger.order, explicit = order.type === 'attack' && order.leashX === undefined && !order.frontRank;
+  const goal = aim ?? destination;
+  const waypoint = explicit ? searchedLeg()
+    : staticClear(passenger, destination) && open(passenger, destination) ? destination
+    : walkLeg(geometry.graph, walkField(geometry.graph, goal, staticClear), goal, passenger, staticClear, open, around);
+  if (!waypoint)
+    return true;
+  const gap = Math.hypot(waypoint.x - passenger.x, waypoint.y - passenger.y);
   if (!gap)
     return true;
   const step = Math.min(gap, perTick(passenger.speed) * pace), at = { x: passenger.x + (waypoint.x - passenger.x) * step / gap, y: passenger.y + (waypoint.y - passenger.y) * step / gap };
