@@ -16,7 +16,9 @@ import { isV5HybridPolicy, isV6Policy } from "./versions";
 import { veteranRecoveryHpRatio } from "./veterancy";
 import { mainBase, playerState } from "./world-model";
 
-export function planSkirmishPreservation(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): GameCommand[] {
+// groupFallback: false leaves walking a locally outnumbered group home to a general that owns the army's position (see
+// @@@v8-one-voice); the script still kites, pulls its wounded back and takes a critical pick-off.
+export function planSkirmishPreservation(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions, groupFallback = true): GameCommand[] {
   if (behaviorDisabled(options, "skirmishPreservation")) {
     recordBehavior(options, "skirmishPreservation", "disabledSkips");
     return [];
@@ -72,6 +74,7 @@ export function planSkirmishPreservation(snapshot: GameSnapshot, owner: PlayerId
   if (!skirmish) return commands;
   const criticalPickoff = localSkirmishCriticalPickoff(snapshot, owner, skirmish, options);
   if (criticalPickoff) return [...commands, criticalPickoff];
+  if (!groupFallback) return commands;
   recordBehavior(options, "skirmishPreservation", "attempts");
   recordBehavior(options, "skirmishPreservation", "disadvantagedRetreats");
   // Healthy groups can return fire while falling back. They must disengage
