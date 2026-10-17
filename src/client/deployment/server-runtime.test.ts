@@ -73,11 +73,11 @@ describe("server deployment runtime", () => {
     });
     const updates: string[] = [];
 
-    const unsubscribe = runtime.watchRoom(room.id, (nextRoom) => updates.push(nextRoom.slots.map((slot) => slot.name).join(",")));
+    const unsubscribe = runtime.watchRoom(room.id, host, (nextRoom) => updates.push(nextRoom.slots.map((slot) => slot.name).join(",")));
     sources[0]!.emit(joined);
     unsubscribe();
 
-    expect(sources[0]!.path).toBe("/sketch-rts/api/rooms/room%20watch/events");
+    expect(sources[0]!.path).toBe("/sketch-rts/api/rooms/room%20watch/events?userId=host");
     expect(updates).toEqual(["Host,Guest"]);
     expect(sources[0]!.closed).toBe(true);
   });

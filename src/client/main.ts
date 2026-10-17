@@ -88,7 +88,7 @@ import { configurationOnMap, defaultRoomConfiguration, formatRoomRoute, parseRoo
 import { configurationForRoomMode, RoomSetupSession } from './room-setup-session';
 import { unitHoverCursor } from './unit-hover-cursor';
 import { unitHoverTarget } from './unit-hover-target';
-import { roomBrowserEntries } from "./room-browser-model";
+import { roomBrowserEntries, roomEntry, type RoomBrowserAction } from "./room-browser-model";
 import { roomSetupViewAction } from "./room-view-state";
 import { UnitFacingTracker } from "./unit-facing";
 import { UnitMotionSmoother } from "./unit-motion";
@@ -903,7 +903,7 @@ async function openRouteFromUrl() {
   const route = parseRoomRoute(window.location.search);
   if (route.screen === "room") {
     if (currentRoom?.id === route.roomId) return;
-    await enterRoom(route.roomId, true);
+    await enterRoom(route.roomId, true, true);
     return;
   }
   if (route.screen === 'setup' && currentRoom && deploymentRuntime.isLocalRoom(currentRoom.id) && formatRoomRoute({ screen: 'setup', configuration: roomConfiguration(currentRoom) }) === window.location.search) return;
@@ -922,7 +922,7 @@ function watchRoomSetup(roomId: string) {
   if (activeRoomWatchId === roomId) return;
   clearRoomWatch();
   activeRoomWatchId = roomId;
-  activeRoomUnwatch = deploymentRuntime.watchRoom(roomId, handleRuntimeRoomUpdate);
+  activeRoomUnwatch = deploymentRuntime.watchRoom(roomId, localUser, handleRuntimeRoomUpdate);
 }
 
 function clearRoomWatch() {
@@ -1077,6 +1077,7 @@ function renderProfileMenu() {
 }
 
 // The footer stays mounted while only the room list changes between loading, empty and populated states.
+const ROOM_LIST_REFRESH_MS = 3000;
 async function renderRoomBrowser() {
   menuStatus.textContent = "";
   const browser = document.createElement("div");
@@ -1091,25 +1092,36 @@ async function renderRoomBrowser() {
   const list = browser.querySelector<HTMLDivElement>("[data-room-browser-list]")!;
   list.replaceChildren(roomListNote(t("roomBrowser.loading"), "loading"));
   mapList.replaceChildren(browser);
-  let rooms: RoomState[];
-  try {
-    rooms = await deploymentRuntime.listRooms(localUser.id);
-  } catch {
-    if (browser.isConnected) list.replaceChildren(roomListNote(t("roomBrowser.failed"), "error"));
-    return;
+  // The list keeps itself current while it is shown: rooms open, fill and start without a reload.
+  for (let first = true; browser.isConnected; first = false) {
+    if (!first) await new Promise(resolve => setTimeout(resolve, ROOM_LIST_REFRESH_MS));
+    let rooms: RoomState[];
+    try {
+      rooms = await deploymentRuntime.listRooms(localUser.id);
+    } catch {
+      if (browser.isConnected) list.replaceChildren(roomListNote(t("roomBrowser.failed"), "error"));
+      return;
+    }
+    // Left, or laid out again, while they loaded.
+    if (!browser.isConnected) return;
+    const entries = roomBrowserEntries(rooms, localUser.id, roomId => deploymentRuntime.isLocalRoom(roomId));
+    const group = (playing: boolean) => {
+      const members = entries.filter(entry => entry.playing === playing);
+      if (!members.length) return [];
+      const title = document.createElement("div");
+      title.className = "room-section-title room-browser-group";
+      title.textContent = t(playing ? "roomBrowser.group.playing" : "roomBrowser.group.open");
+      return [title, ...members.map(entry => {
+        const button = menuButton(entry.room.name, roomBrowserNote(entry.room, entry.action), "data-room-id", () => void enterRoom(entry.room.id), entry.room.id);
+        button.dataset.roomAction = entry.action;
+        button.disabled = entry.action === "full";
+        return button;
+      })];
+    };
+    list.replaceChildren(...(entries.length ? [...group(false), ...group(true)] : [roomListNote(t("roomBrowser.noVisible"), "empty")]));
+    // Marked once its rooms are in: what a script waits on.
+    browser.dataset.roomBrowser = "true";
   }
-  // Left, or laid out again, while they loaded.
-  if (!browser.isConnected) return;
-  const visibleRooms = roomBrowserEntries(rooms, localUser.id);
-  list.replaceChildren(
-    ...(visibleRooms.length > 0
-      ? visibleRooms.map((entry) =>
-          menuButton(entry.room.name, roomBrowserNote(entry.room, entry.action), "data-room-id", () => void enterRoom(entry.room.id), entry.room.id),
-        )
-      : [roomListNote(t("roomBrowser.noVisible"), "empty")]),
-  );
-  // Marked once its rooms are in: what a script waits on.
-  browser.dataset.roomBrowser = "true";
 }
 
 function renderRoomSetup() {
@@ -1148,6 +1160,7 @@ function renderRoomSetup() {
         <div class="slot-pane-head">
           <div class="room-section-title">${escapeHtml(t("roomSetup.slots"))}</div>
           <div class="slot-actions">
+            ${solo ? "" : `<button type="button" data-copy-invite>${escapeHtml(t("roomSetup.copyInvite"))}</button>`}
             ${host && !solo ? `<button type="button" class="danger-button" data-close-room ${busy ? "disabled" : ""}>${escapeHtml(t("roomSetup.close"))}</button>` : ""}
           </div>
         </div>
@@ -1185,6 +1198,13 @@ function renderRoomSetup() {
   const local = deploymentRuntime.isLocalRoom(room.id);
   slotList.replaceChildren(...room.slots.map((slot, index) => slotRow(room, slot, index, local)));
   if (busy) slotList.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input,select').forEach(input => input.disabled = true);
+  // An invitation is the room's own address: opened, it seats the friend in an open seat (see @@@room-entry).
+  setup.querySelector("[data-copy-invite]")?.addEventListener("click", () => {
+    const link = new URL(formatRoomRoute({ screen: "room", roomId: room.id }), window.location.href).href;
+    navigator.clipboard.writeText(link).then(
+      () => { menuStatus.textContent = t("roomSetup.inviteCopied"); },
+      () => { menuStatus.textContent = t("roomSetup.inviteLink", { link }); });
+  });
   setup.querySelector("[data-close-room]")?.addEventListener("click", () => void closeCurrentRoom());
   setup.querySelector("[data-start-room]")?.addEventListener("click", () => void startCurrentRoom());
   setup.querySelector("[data-back-home]")?.addEventListener("click", () => openMenuRoute({ screen: "home" }));
@@ -1429,14 +1449,10 @@ async function closeCurrentRoom() {
   renderMainMenu();
 }
 
-function activeSlotCount(room: RoomState) {
-  return room.slots.filter((slot) => slot.controller === "human" || slot.controller === "ai").length;
-}
-
-function roomBrowserNote(room: RoomState, action: "join" | "rejoin" | "watch" = slotForUser(room, localUser.id) ? "rejoin" : "join") {
-  const ownedSlot = slotForUser(room, localUser.id);
-  const access = ownedSlot ? t("roomCard.access.youAre", { playerId: ownedSlot.playerId }) : action === "watch" ? t("roomCard.access.watch") : room.status === "open" ? t("roomCard.access.open") : t("roomCard.access.alreadyStarted");
-  return `${mapName(room.mapId)} · ${labelKind(room.status)} · ${t("roomCard.activeSlots", { count: activeSlotCount(room) })} · ${access}`;
+// A room's line in the list: its map, its players against the seats open to players, and what a click does.
+function roomBrowserNote(room: RoomState, action: RoomBrowserAction) {
+  const players = room.slots.filter(slot => slot.controller === "human").length, seats = players + room.slots.filter(slot => slot.controller === "open").length;
+  return `${mapName(room.mapId)} · ${t("roomCard.players", { players, seats })} · ${t(`roomCard.action.${action}`)}`;
 }
 
 function roomListNote(text: string, state: "loading" | "empty" | "error") {
@@ -1456,10 +1472,35 @@ function returnHome() {
   openMenuRoute({ screen: "home" });
 }
 
-async function enterRoom(roomId: string, replace = false) {
+// A link into a game under way: watching it is offered, not imposed.
+function askToWatch(roomId: string) {
+  menuView = "rooms"; mainMenu.dataset.menuView = "rooms";
+  menuTitle.textContent = t("roomEntry.watchTitle");
+  menuStatus.textContent = "";
+  const panel = document.createElement("div");
+  panel.className = "menu-page";
+  panel.dataset.watchPrompt = roomId;
+  panel.innerHTML = menuPageMarkup(`<p class="room-entry-question">${escapeHtml(t("roomEntry.watchQuestion"))}</p>`, `
+    <button type="button" data-watch-room>${escapeHtml(t("roomEntry.watch"))}</button>
+    <button type="button" data-back-room-browser>${escapeHtml(t("roomSetup.backRooms"))}</button>`);
+  panel.querySelector("[data-watch-room]")!.addEventListener("click", () => void enterRoom(roomId, true));
+  panel.querySelector("[data-back-room-browser]")!.addEventListener("click", () => openMenuRoute({ screen: "rooms" }));
+  mapList.replaceChildren(panel);
+}
+
+async function enterRoom(roomId: string, replace = false, fromLink = false) {
   const request = ++routeRequest;
   roomSetupSession.cancel(); setupOperation++; setupError = undefined; clearRoomWatch();
   try {
+    // Decided from the room before joining it (see @@@room-entry): a refusal says why, in the player's words.
+    const entry = roomEntry(await deploymentRuntime.findRoom(roomId), localUser.id, fromLink);
+    if (request !== routeRequest) return;
+    if (entry.kind === "refused") {
+      openMenuRoute({ screen: "rooms" }, true);
+      menuStatus.innerHTML = `<span class="error" data-room-refused="${entry.reason}">${escapeHtml(t(`roomEntry.${entry.reason}`))}</span>`;
+      return;
+    }
+    if (entry.kind === "askToWatch") { askToWatch(roomId); return; }
     const entered = await deploymentRuntime.enterRoom(roomId, localUser);
     if (request !== routeRequest) return;
     setRoomRoute({ screen: "room", roomId }, replace);
