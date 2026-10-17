@@ -92,13 +92,12 @@
   max-height:min(var(--hud-command-height),45dvh); align-content:flex-start;
 }
 .command-dock { grid-column:1; grid-row:1; }
-/* @@@item-slots - The focused unit's four carrying positions, one row of four beside the command card, as tall as a
-   one-row card (the common case), on the same bottom line: slot n is always the same well, filled or empty. */
+/* @@@item-slots - What the focused unit carries, one row beside the command card, as tall as a one-row card (the common
+   case), on the same bottom line: one button an item, no wells for empty slots. */
 .item-dock {
-  grid-column:2; grid-row:1; align-self:end; display:grid; grid-template-columns:repeat(4,var(--hud-button-width)); grid-auto-rows:var(--hud-button-height);
+  grid-column:2; grid-row:1; align-self:end; display:grid; grid-auto-flow:column; grid-auto-columns:var(--hud-button-width); grid-auto-rows:var(--hud-button-height);
   width:auto; overflow:hidden;
 }
-.item-button[data-empty] { background:transparent; cursor:default; }
 .command-button,.item-button {
   position:relative; flex:0 0 var(--hud-button-width); width:var(--hud-button-width); height:var(--hud-button-height); padding:0;
   border:1px solid transparent; border-radius:5px; background:#d3e1e608;
@@ -257,7 +256,7 @@
   .control-deck { --hud-button-width:46px; --hud-button-height:50px; grid-template-columns:minmax(0,1fr); min-width:min(calc(var(--hud-card-width) + 24px),calc(100vw - 210px)); max-width:min(calc(var(--hud-dock-width) + 24px),calc(100vw - 210px)); left:8px; bottom:8px; }
   .selection-chip { grid-row:1; width:100%; }
   .hud-actions { grid-column:1; grid-row:2; grid-template-columns:max-content; }
-  .item-dock { grid-column:1; grid-row:1; grid-template-columns:repeat(4,var(--hud-button-width)); height:auto; }
+  .item-dock { grid-column:1; grid-row:1; height:auto; }
   .command-dock { grid-row:2; }
   .hud-subject { grid-template-columns:72px minmax(0,1fr); min-height:72px; }
   .hud-subject-art { width:72px; height:72px; }
