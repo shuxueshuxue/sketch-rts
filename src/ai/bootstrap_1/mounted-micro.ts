@@ -1,7 +1,6 @@
 import { ABILITY_DEFS, UNIT_DEFS, unitMover } from '../../shared/catalog';
 import { capsuleClearsBodies } from '../../shared/navigation-math';
 import { constrainGroundShipStep } from '../../shared/ship-collisions';
-import { abilityCooldown } from '../../shared/ability-cooldowns';
 import { aimingProfile } from '../../shared/aiming';
 import { detCos, detSin } from '../../shared/det-math';
 import { isWalkable, sameGround, segmentWalkable, steerPoint } from '../../shared/terrain';
@@ -9,50 +8,18 @@ import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { groundSteeringRoute, routeLeavesDisks } from '../../shared/route-selection';
 import { MOVE_ORDER_ARRIVAL_RANGE } from '../../shared/movement-rules';
 import { unitAbilities } from '../../shared/unit-abilities';
-import { itemsFor } from '../../shared/equipment';
-import { LIGHTNING_ROD, STORM_STAFF, NEUTRAL_ITEM_TARGET_RANGE, NEUTRAL_STORM_TARGET_RANGE } from '../../shared/item-rules';
 import type { Building, GameCommand, GameSnapshot, Unit } from '../../shared/types';
 import { distance, type Point } from '../policy/spatial';
 import { hostileDamageDisks } from './damage-footprints';
+import { chargeMinimum, mountedThreatReach, THINK_TICKS } from '../policy/threat-reach';
 
 type Threat = Unit | Building;
-export const THINK_TICKS = 15;
+export { castThreatReach, mountedThreatReach, THINK_TICKS } from '../policy/threat-reach';
 
 /** Break healing support before shooting the troops it can keep alive. */
 export function mountedTargetOrder(a: Unit, b: Unit) {
   const heals = (unit: Unit) => unitAbilities(unit).some(ability => ABILITY_DEFS[ability].behavior === 'heal');
   return Number(heals(b)) - Number(heals(a)) || a.hp - b.hp;
-}
-
-function chargeMinimum(foe: Unit, rider: Pick<Unit, 'x' | 'y'>, horizon: number) {
-  return unitAbilities(foe).flatMap(ability => {
-    const rules = ABILITY_DEFS[ability];
-    return rules.behavior === 'charge' && abilityCooldown(foe, ability) <= horizon
-      && distance(rider, foe) < rules.minRange ? [rules.minRange] : [];
-  });
-}
-
-function itemReach(snapshot: GameSnapshot, foe: Unit, horizon: number) {
-  return itemsFor(snapshot, foe).flatMap(item => item.cooldownRemaining <= horizon
-    && (item.kind === 'stormStaff' || item.kind === 'lightningRod')
-    ? [foe.owner === 'neutral' ? item.kind === 'stormStaff' ? NEUTRAL_STORM_TARGET_RANGE : NEUTRAL_ITEM_TARGET_RANGE
-      : item.kind === 'stormStaff' ? STORM_STAFF.range : LIGHTNING_ROD.range] : []);
-}
-
-export function mountedThreatReach(snapshot: GameSnapshot, foe: Threat, rider: Pick<Unit, 'x' | 'y' | 'radius'>, horizon: number) {
-  if (!('order' in foe)) return foe.attackRange + rider.radius;
-  const weaponReach = foe.attackRange <= 80 && chargeMinimum(foe, rider, horizon).length === 0 ? foe.attackRange + foe.radius + rider.radius : foe.attackRange;
-  return Math.max(weaponReach, castThreatReach(snapshot, foe, rider, horizon));
-}
-
-/** Active skills and carried attacks can still execute while ordinary fire is suppressed by a move order. */
-export function castThreatReach(snapshot: GameSnapshot, foe: Unit, rider: Pick<Unit, 'x' | 'y'>, horizon: number) {
-  return Math.max(0, ...itemReach(snapshot, foe, horizon), ...unitAbilities(foe).flatMap(ability => {
-    const rules = ABILITY_DEFS[ability];
-    return ['charge', 'stomp', 'web', 'curse', 'weapon'].includes(rules.behavior)
-      && abilityCooldown(foe, ability) <= horizon
-      && !(rules.behavior === 'charge' && distance(rider, foe) < rules.minRange) ? [rules.range] : [];
-  }));
 }
 
 /** One ordinary command per think; ranges and cooldowns come from the live combatants. */
