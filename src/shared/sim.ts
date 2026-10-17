@@ -2550,8 +2550,8 @@ type ChargeDef = Extract<(typeof ABILITY_DEFS)[AbilityKind], { behavior: "charge
 
 // @@@charge - The cavalry's charge rides the push physics (see @@@push): at an enemy unit between minRange and range away
 // the rider shoves itself at where the unit stands, hard enough to slide on `drive` past the point of meeting it, so it
-// arrives at a gallop (24 a tick at the most, about six times its walk). Once the unit is within its reach it strikes once
-// for damageMultiplier times its weapon's blow, as any melee blow lands (curse, armor and its stance count as ever), and
+// arrives at a gallop (24 a tick at the most, about six times its walk). Once the unit is within its reach, and its weapon
+// is ready (unit.cooldown, the clock every strike waits on), it strikes once for damageMultiplier times its weapon's blow, as any melee blow lands (curse, armor and its stance count as ever), and
 // what is left of its slide carries it into the unit: the two meet as any two bodies do, so a knight throws a footman
 // back and hardly moves a golem. A unit that walks out of the line may be missed: a slide that runs out with the unit
 // out of reach strikes nothing. The charge runs its course: an order given meanwhile waits for it (see
@@ -2594,10 +2594,12 @@ function updateChargeOrder(game: Game, unit: Unit) {
     return;
   }
   if (distance(unit, target) <= unit.attackRange) {
+    // The impact is a blow of the rider's weapon: like every strike it waits on the weapon's one clock.
+    if (unit.cooldown > 0) return;
     const damage = Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(game, unit) * def.damageMultiplier));
     applyAttackDamage(game, unit, target, damage, unit.attackRange);
     addEffect(game, "chargeImpact", target.x, target.y, CHARGE_IMPACT_TICKS, { fromX: unit.x, fromY: unit.y, toX: target.x, toY: target.y, owner: unit.owner, sourceKind: unit.kind, unitId: unit.id, sourceId: unit.id, actionMode: "attack", fromHeight:combatVisualHeight(game,unit),toHeight:combatVisualHeight(game,target) });
-    unit.cooldown = unit.attackCooldown;
+    unit.cooldown = attackCooldownOf(game, unit);
     endCharge(unit, order.resume);
     return;
   }
