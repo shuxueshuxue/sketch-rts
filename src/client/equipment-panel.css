@@ -228,3 +228,9 @@
     linear-gradient(-45deg,transparent 45.5%,currentColor 45.5% 54.5%,transparent 54.5%) center/15px 15px no-repeat;
 }
 .equipment-panel .equipment-close:hover { color:var(--game-error); background-color:#4a321c1f; }
+/* On the doll an empty hand reads like the other empty positions: its label in the corner, a faint sword or shield
+   in the middle, no "Empty" written across it (see @@@paper-doll). */
+.equipment-panel .equipment-positions .equipment-hand.empty::after { display:block; }
+.equipment-panel .equipment-positions .equipment-hand { justify-content:flex-start; padding:0; }
+.equipment-panel .equipment-positions .equipment-hand > small { padding:3px 6px; font-size:11px; }
+.equipment-panel .equipment-positions .equipment-hand.empty .equipment-hand-name { display:none; }

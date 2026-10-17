@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import { perf } from '../perf-overlay';
 import { worldModels,matchModelKeys,snapshotModelKeys } from './model-library';
 import { activateModelPortraits } from './model-portraits';
-import { ActorBatches, setInkZoom } from './batches';
+import { ActorBatches, setInkZoom, type ModelLook } from './batches';
 import { PaintedCardBatches,DEFAULT_CARD_BANKS } from './painted-card-batches';
 import {cardBaseMip,type CardMipPass,type CardMipResidencyInput} from './card-mip-residency';
 import { SelectionMarkers } from './selection-markers';
@@ -29,6 +29,7 @@ import { unitGlyphScale } from '../glyphs';
 import { footprintSquare } from '../footprint-view';
 import { relationTo,RELATION_INK } from '../relations';
 import { ownerInk,trackUnitFacing,type WorldFrame } from '../world-renderer';
+import { BUILDING_DEFS } from '../../shared/catalog';
 import { interactionTargetId } from '../unit-facing';
 import { installedWeapons,mountedWeaponPose } from '../../shared/ship-equipment';
 import { shipProfile,shareShipProfile,shipScale,localToWorld,SHIP_CAMERA } from '../../shared/ship-geometry';
@@ -205,20 +206,20 @@ export class World3DLayer {
   private async warmPrograms(){
     const renderer=this.renderer;if(!renderer||this.keepers||this.contextLost)return;
     const root=new THREE.Scene(),batches=new ActorBatches(root),cards=this.cardBatches(root,Infinity),at=new THREE.Matrix4();
-    const add=(key:string,template:THREE.Object3D,constructing=false,reveal=false)=>batches.add(`${key}:${constructing}:${reveal}`,template,at,key,undefined,constructing,reveal);
+    const add=(key:string,template:THREE.Object3D,look:ModelLook='solid',reveal=false)=>batches.add(`${key}:${look}:${reveal}`,template,at,key,undefined,look,reveal);
     batches.begin();
     for(const key of matchModelKeys){
       const building=this.template(key,'Building'),hull=this.template(key,'Hull'),ensign=this.template(key,'OwnerFlag'),gun=this.template(key,'Gun');
-      if(building)for(const constructing of [false,true])add(key,building,constructing);
+      if(building)for(const look of ['solid','site','ghost'] as const)add(key,building,look);
       if(hull){
         if(!this.rigModels.has(key))this.rigModels.set(key,shipRigModel(hull));
-        for(const reveal of [false,true]){add(`${key}:hull`,hull,false,reveal);for(const rope of this.rigModels.get(key)?.ropes??[])add(`${key}:rope:${rope.id}`,rope.template,false,reveal);}
+        for(const reveal of [false,true]){add(`${key}:hull`,hull,'solid',reveal);for(const rope of this.rigModels.get(key)?.ropes??[])add(`${key}:rope:${rope.id}`,rope.template,'solid',reveal);}
       }
       if(ensign)add(`${key}:ensign`,ensign);
-      if(gun)for(const broken of [false,true])add(`${key}:gun`,gun,broken);
+      if(gun)for(const look of ['solid','site'] as const)add(`${key}:gun`,gun,look);
     }
     for(const [key,model] of Object.entries({ball:this.ball,bolt:this.bolt,magic:this.magic,fire:this.fire,flag:this.flag,flash:this.flash}))add(key,model);
-    for(const deploying of [false,true])add('gangway',this.gangway,deploying);
+    for(const look of ['solid','site'] as const)add('gangway',this.gangway,look);
     batches.finish();
     for(const set of cards){set.begin();set.add('warm',2,ctx=>ctx.fillRect(0,0,1,1),at,'warm',0,16,.5);set.finish(renderer);}
     // Selection marks and combat ink keep their one material for the layer's life; drawing them once is enough.
@@ -368,19 +369,33 @@ export class World3DLayer {
       }
     }
     const towerTops=new Map<string,number>();
-    for(const building of snapshot.buildings){
-      const modelKey=`buildings/${frame.buildingModels?.[building.id]??building.kind}`,model=this.template(modelKey,'Building');if(!model)continue;
+    // One way a building model stands on its footprint, whether built, going up, or still a plan (see @@@build-ghost).
+    const standBuilding=(modelKind:string,kind:string,x:number,y:number,radius:number,color:string,look:ModelLook,id:string,openRoof=false)=>{
+      const modelKey=`buildings/${modelKind}`,model=this.template(modelKey,'Building');if(!model)return undefined;
       let bounds=this.bounds.get(modelKey);if(!bounds){bounds=new THREE.Box3().setFromObject(model);this.bounds.set(modelKey,bounds);}
-      const size=bounds.getSize(new THREE.Vector3()),square=footprintSquare(snapshot,building,building.radius);
-      const extent=square?(square.right-square.left+1)*square.cell*.88:building.radius*2;
-      const rise=buildingRise(building.kind),scale=extent/Math.max(size.x,size.z),height=size.y*scale*rise;
+      const size=bounds.getSize(new THREE.Vector3()),square=footprintSquare(snapshot,{x,y},radius);
+      const extent=square?(square.right-square.left+1)*square.cell*.88:radius*2;
+      const rise=buildingRise(kind),scale=extent/Math.max(size.x,size.z),height=size.y*scale*rise;
+      if(visible(x,y,height*TILT+180))this.batches.add(`building:${modelKey}:${color}:${look}:${openRoof}`,model,this.pose(x,y,-bounds.min.y*scale*rise,0,scale).multiply(riseMatrix(rise)),id,color,look,false,undefined,openRoof);
+      return height;
+    };
+    for(const building of snapshot.buildings){
+      const height=standBuilding(frame.buildingModels?.[building.id]??building.kind,building.kind,building.x,building.y,building.radius,ownerInk(building.owner, snapshot),building.complete?'solid':'site',building.id,towerRoofOpen(snapshot.units,building));
+      if(height===undefined)continue;
       this.positions.set(building.id,{x:building.x,y:building.y,bodyY:building.y,topY:building.y-height*TILT});
       if(!visible(building.x,building.y,height*TILT+180))continue;
       const selected=frame.selectedIds?.has(building.id)??false;
       if(building.hp>0 && (selected || frame.hoveredId===building.id))this.foundationMarker(frame,building,this.markerInk(frame,building.owner),selected);
       if(building.fortified)towerTops.set(building.id,height*TOWER_TOP_Z/TOWER_MODEL_HEIGHT);
-      const openRoof=towerRoofOpen(snapshot.units,building);
-      this.batches.add(`building:${modelKey}:${ownerInk(building.owner, snapshot)}:${building.complete}:${openRoof}`,model,this.pose(building.x,building.y,-bounds.min.y*scale*rise,0,scale).multiply(riseMatrix(rise)),building.id,ownerInk(building.owner, snapshot),!building.complete,false,undefined,openRoof);
+    }
+    // @@@build-ghost - A building not yet begun is the very model it will be, in its owner's colours and see-through, on
+    // the footprint it will take: the one being placed and the viewer's workers' plans. Whether the spot is free shows in
+    // the footprint cells under it, not in the model.
+    const viewerInk=frame.viewer?ownerInk(frame.viewer, snapshot):undefined;
+    if(frame.buildGhost && viewerInk)standBuilding(frame.buildGhost.kind,frame.buildGhost.kind,frame.buildGhost.x,frame.buildGhost.y,BUILDING_DEFS[frame.buildGhost.kind].radius,viewerInk,'ghost','build-ghost');
+    if(viewerInk)for(const worker of snapshot.units){
+      if(worker.owner!==frame.viewer||worker.order?.type!=='build')continue;
+      const order=worker.order;standBuilding(order.buildingKind,order.buildingKind,order.x,order.y,BUILDING_DEFS[order.buildingKind].radius,viewerInk,'ghost',`plan:${worker.id}`);
     }
     const revealedShips=new Set<string>();
     for(const id of frame.selectedIds??[]){const unit=entities.get(id);if(!unit||!('order' in unit))continue;if(unit.deck)revealedShips.add(unit.deck.shipId);else if(ships.has(unit.id))revealedShips.add(unit.id);}
@@ -402,13 +417,13 @@ export class World3DLayer {
         let display=this.rigPoses.get(ship.id);
         if(rig&&display?.model!==rig){display={model:rig,pose:rig.createPose(),worldRopes:rig.ropes.map(()=>new THREE.Matrix4())};this.rigPoses.set(ship.id,display);}
         const animation=display?.pose.update(this.sailMotion.pose(ship,now));
-        this.batches.add(`ship:${ship.kind}:${Boolean(reveal)}`,hull,transform,ship.id,undefined,false,reveal,animation);
+        this.batches.add(`ship:${ship.kind}:${Boolean(reveal)}`,hull,transform,ship.id,undefined,'solid',reveal,animation);
         const ensign=this.template(`ships/${ship.kind}`,'OwnerFlag');
         if(ensign)this.batches.add(`ship-ensign:${ship.kind}:${ownerInk(ship.owner, snapshot)}`,ensign,transform,ship.id,ownerInk(ship.owner, snapshot));
         if(display)for(let i=0;i<display.pose.ropes.length;i++){
           const rope=display.pose.ropes[i]!;if(!rope.visible)continue;
           const matrix=display.worldRopes[i]!.multiplyMatrices(transform,rope.matrix);
-          this.batches.add(`rig-rope:${ship.kind}:${rope.material}:${Boolean(reveal)}`,rope.template,matrix,ship.id,undefined,false,reveal);
+          this.batches.add(`rig-rope:${ship.kind}:${rope.material}:${Boolean(reveal)}`,rope.template,matrix,ship.id,undefined,'solid',reveal);
         }
       }
       const masts=profile.obstacles.filter(obstacle=>obstacle.type==='mast'),mast=masts[ship.kind==='shipOfTheLine'?1:0];
@@ -418,7 +433,7 @@ export class World3DLayer {
         const recoil=this.recoil.get(item.id);
         const age=recoil?(recoil.duration-recoil.remaining)/SIM_TICKS_PER_SECOND:1;
         const back=weapon.art==='fireShip'?0:4*scale*Math.max(0,age<.08?age/.08:1-(age-.08)/.38);
-        this.batches.add(`gun:${weapon.art}:${item.durability===0}`,gun,this.pose(weapon.pivot.x-Math.cos(weapon.heading)*back,weapon.pivot.y-Math.sin(weapon.heading)*back,weapon.pivotHeight,weapon.heading,scale),ship.id,undefined,item.durability===0);
+        this.batches.add(`gun:${weapon.art}:${item.durability===0}`,gun,this.pose(weapon.pivot.x-Math.cos(weapon.heading)*back,weapon.pivot.y-Math.sin(weapon.heading)*back,weapon.pivotHeight,weapon.heading,scale),ship.id,undefined,item.durability===0?'site':'solid');
       }
     }
     for(const source of this.shipPoses.values()){
@@ -433,7 +448,7 @@ export class World3DLayer {
       this.bridgeAcross.set(-dy,0,dx).normalize();this.bridgeUp.crossVectors(this.bridgeAcross,this.bridgeAlong).normalize();
       const matrix=this.pose(0,0,0).makeBasis(this.bridgeAlong,this.bridgeUp,this.bridgeAcross).setPosition(x,(a+b)/2-1,y)
         .scale(this.transformScale.set(span,2,surface.width));
-      this.batches.add(`ship-gangway:${surface.phase}`,this.gangway,matrix,source.id,undefined,surface.phase==='deploying');
+      this.batches.add(`ship-gangway:${surface.phase}`,this.gangway,matrix,source.id,undefined,surface.phase==='deploying'?'site':'solid');
     }
     for(const id of this.rigPoses.keys())if(!ships.has(id))this.rigPoses.delete(id);
     const liveCrew=new Set<string>();
