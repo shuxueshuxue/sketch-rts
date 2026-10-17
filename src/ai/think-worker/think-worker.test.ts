@@ -3,11 +3,13 @@ import { createGame } from "../../shared/sim";
 import { checksumGame } from "../../shared/sim/checksum";
 import { CommandFrameRuntime } from "../../shared/sim/command-frame-runtime";
 import type { CommandFrame } from "../../shared/net/types";
-import { createAiRuntime, createPresetAiRuntimeFramePlanner, type AiThinkExecutorFactory } from "../runtime";
+import { createAiRuntime, createPresetAiRuntimeFramePlanner, type AiRuntimeState, type AiThinkExecutorFactory } from "../runtime";
 import { createAiThinkClientExecutor } from "./client";
 import { createAiThinkHost } from "./host";
 import { createAiThinkPool } from "./node-pool";
-import type { AiThinkReply } from "./protocol";
+import type { AiThinkMessage, AiThinkReply } from "./protocol";
+import type { Game } from "../../shared/sim";
+import { PLANNER_COMMAND_DELAY_TICKS } from "../../shared/sim/planner-schedule";
 
 const TICKS = 600;
 
@@ -18,7 +20,8 @@ function playMatch(executor?: AiThinkExecutorFactory) {
   const runtime = new CommandFrameRuntime({ game, roomId: "think-thread", rejectionLabel: "Think thread rejected", aiPlanner: createPresetAiRuntimeFramePlanner(game, ai, thinking ? { executor: thinking } : {}) });
   const frames: CommandFrame[] = [];
   for (let tick = 0; tick < TICKS && !game.match.winner; tick += 1) {
-    const frame = runtime.tick();
+    // Settled, as a synchronous driver steps a match: every think lands on its due tick, wherever it ran.
+    const frame = runtime.tick([], { settleAi: true });
     if (frame) frames.push(frame);
   }
   thinking?.close?.();
@@ -55,6 +58,39 @@ describe("AI think thread", () => {
   it("plays the same match with its thinks on a worker thread", () => {
     expect(playMatch(pool.executor)).toEqual(inline);
   }, 60_000);
+
+  it("lands a think that arrives late on the first tick after it arrives, and waits for it only when settling", () => {
+    // A thinking thread that answers only when let: thinks wait in its inbox until `answer` runs them.
+    const host = createAiThinkHost();
+    const inbox: AiThinkReply[] = [], pending: AiThinkMessage[] = [];
+    const answer = () => { for (const message of pending.splice(0)) if (message.type === "think") host.think(message); };
+    const executor = (wait?: () => void) => (runtime: AiRuntimeState, game: Game) => createAiThinkClientExecutor(runtime, game, {
+      send(message) {
+        const copy = structuredClone(message);
+        if (copy.type === "open") host.open(copy, (reply) => inbox.push(structuredClone(reply)));
+        else if (copy.type === "think") pending.push(copy);
+      },
+      drain: () => inbox.splice(0),
+      ...(wait ? { wait } : {}),
+      close() {},
+    }, "late");
+    const start = (factory: AiThinkExecutorFactory) => {
+      const game = createGame("bareDuel", { aiPlayers: ["enemy"] });
+      const ai = createAiRuntime(["enemy"]);
+      return { game, runtime: new CommandFrameRuntime({ game, roomId: "late", rejectionLabel: "Late think rejected", aiPlanner: createPresetAiRuntimeFramePlanner(game, ai, { executor: factory(ai, game) }) }) };
+    };
+
+    const live = start(executor());
+    const frames = Array.from({ length: PLANNER_COMMAND_DELAY_TICKS + 3 }, () => live.runtime.tick());
+    expect(frames.every((frame) => frame === undefined)).toBe(true);
+    answer();
+    expect(live.runtime.tick()).toMatchObject({ tick: PLANNER_COMMAND_DELAY_TICKS + 3, commands: expect.arrayContaining([expect.objectContaining({ playerId: "enemy" })]) });
+
+    const settled = start(executor(answer));
+    const due = Array.from({ length: PLANNER_COMMAND_DELAY_TICKS + 1 }, () => settled.runtime.tick([], { settleAi: true }));
+    expect(due.slice(0, PLANNER_COMMAND_DELAY_TICKS)).toEqual(Array(PLANNER_COMMAND_DELAY_TICKS).fill(undefined));
+    expect(due[PLANNER_COMMAND_DELAY_TICKS]).toMatchObject({ tick: PLANNER_COMMAND_DELAY_TICKS });
+  });
 
   it("refuses scripts given as functions instead of thinking without them", () => {
     const game = createGame("bareDuel", { aiPlayers: ["enemy"] });

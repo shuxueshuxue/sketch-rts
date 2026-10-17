@@ -4,6 +4,7 @@ import { createGame, snapshotGame, stepGame } from "../shared/sim";
 import { CommandFrameRuntime } from "../shared/sim/command-frame-runtime";
 import { PLANNER_COMMAND_DELAY_TICKS } from "../shared/sim/planner-schedule";
 import type { CommandEnvelope } from "../shared/net/types";
+import type { PlayerId } from "../shared/types";
 import { DEFAULT_AI_THINK_INTERVAL, createAiRuntime, createPresetAiRuntimeFramePlanner, planAiCommandFrameFromSnapshot, planPresetAiRuntimeCommands, type AiThinkExecutor } from "./runtime";
 import { issueAiCommandFrameForTest, runPresetAiRuntimeForTest } from "./runtime-test-helpers";
 import type { AiPolicyMemory, AiScript } from "./policy";
@@ -209,25 +210,28 @@ describe("shared AI runtime", () => {
     expect(game.units.find((unit) => unit.id === worker.id)?.order.type).toBe("move");
   });
 
-  it("holds the frame runtime until a think running elsewhere has delivered its commands", () => {
+  it("never holds the frame runtime for a think running elsewhere, and lands it on the first tick after it arrives", () => {
     const game = createGame("bareDuel", { aiPlayers: ["enemy"] });
     const worker = game.units.find((unit) => unit.owner === "enemy" && unit.kind === "worker")!;
-    const running = new Set<number>(), arrived = new Map<number, CommandEnvelope[]>();
+    const running = new Map<number, PlayerId[]>(), arrived = new Map<number, CommandEnvelope[]>(), submitted: number[] = [];
     const executor: AiThinkExecutor = {
-      submit: (_game, job) => { running.add(job.deliveryTick); },
-      ready: (tick) => ![...running].some((delivery) => delivery <= tick),
-      take: (tick) => { const commands = arrived.get(tick) ?? []; arrived.delete(tick); return commands; },
+      submit: (_game, job) => { submitted.push(job.tick); running.set(job.deliveryTick, job.requests.map((request) => request.playerId)); },
+      thinking: (owner) => [...running.values()].some((owners) => owners.includes(owner)),
+      take: (tick) => [...arrived].filter(([delivery]) => delivery <= tick).flatMap(([delivery, commands]) => { arrived.delete(delivery); return commands; }),
     };
     const runtime = new CommandFrameRuntime({ game, roomId: "elsewhere-ai", rejectionLabel: "Elsewhere AI rejected", aiPlanner: createPresetAiRuntimeFramePlanner(game, createAiRuntime(["enemy"]), { executor }) });
 
-    while (runtime.ready()) runtime.tick();
-    expect(game.tick).toBe(PLANNER_COMMAND_DELAY_TICKS);
+    // The think of tick 0 is still running at its due tick and past its player's next turn: the match goes on, and the
+    // player, still thinking, skips that turn.
+    for (let tick = 0; tick <= DEFAULT_AI_THINK_INTERVAL + 1; tick += 1) expect(runtime.tick()).toBeUndefined();
+    expect(submitted).toEqual([0]);
 
     const move: CommandEnvelope = { playerId: "enemy", command: { type: "move", unitIds: [worker.id], x: worker.x - 80, y: worker.y } };
     running.delete(PLANNER_COMMAND_DELAY_TICKS);
     arrived.set(PLANNER_COMMAND_DELAY_TICKS, [move]);
-    expect(runtime.ready()).toBe(true);
-    expect(runtime.tick()?.commands).toEqual([move]);
+    const landed = runtime.tick();
+    expect(landed).toMatchObject({ tick: DEFAULT_AI_THINK_INTERVAL + 2, commands: [move] });
+    expect(game.units.find((unit) => unit.id === worker.id)?.order.type).toBe("move");
   });
 
   it("issues a reusable mixed-source command frame from one snapshot", () => {

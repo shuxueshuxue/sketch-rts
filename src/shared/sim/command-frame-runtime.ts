@@ -8,11 +8,9 @@ import type { GameCommand, GameSnapshot } from "../types";
 export type CommandFrameRuntimeAiPlanner<State = unknown> = {
   checkpoint: () => State;
   restore: (state: State) => void;
-  // Whether the commands due on the current tick are planned: a think may still run beside the simulation (see
-  // @@@planner-schedule). A runtime is ticked only when it is ready.
-  ready?: () => boolean;
-  // Plans the owners due on this tick, checking each fresh plan with `check`, and returns the commands due on it.
-  plan: (check: (commands: CommandEnvelope[]) => void) => CommandEnvelope[];
+  // Plans the owners due on this tick, checking each fresh plan with `check`, and returns the commands that land on it:
+  // those due by now whose think has arrived, or, with `settle`, all those due by now (see @@@planner-schedule).
+  plan: (check: (commands: CommandEnvelope[]) => void, settle: boolean) => CommandEnvelope[];
 };
 
 export type CommandFrameRuntimeOptions<State = unknown> = {
@@ -24,6 +22,8 @@ export type CommandFrameRuntimeOptions<State = unknown> = {
 
 export type RuntimeFrameOptions = {
   includeAi?: boolean;
+  // Wait for every AI think due by this tick (a match stepped synchronously; see @@@planner-schedule).
+  settleAi?: boolean;
   frame?: CommandFrame;
   onFrame?: (frame: CommandFrame) => void;
   applyHooks?: CommandFrameApplyHooks;
@@ -70,10 +70,6 @@ export class CommandFrameRuntime<State = unknown> {
 
   constructor(private readonly options: CommandFrameRuntimeOptions<State>) {}
 
-  ready(): boolean {
-    return this.options.aiPlanner?.ready?.() ?? true;
-  }
-
   completeAndApply(commands: CommandEnvelope[], options: RuntimeFrameOptions = {}): CommandFrame | undefined {
     const frame = this.completeFrame(commands, options);
     if (!frame) return undefined;
@@ -101,7 +97,7 @@ export class CommandFrameRuntime<State = unknown> {
   private completeFrame(commands: CommandEnvelope[], options: RuntimeFrameOptions): CommandFrame | undefined {
     const normalizedCommands = normalizeCommandFrameEntries(commands);
     this.validate(normalizedCommands, { purpose: "apply", rejectionLabel: options.rejectionLabel });
-    const aiCommands = options.includeAi === false ? [] : this.planAiCommands();
+    const aiCommands = options.includeAi === false ? [] : this.planAiCommands(options.settleAi ?? false);
     const completedCommands = normalizeCommandFrameEntries([...normalizedCommands, ...aiCommands]);
     if (options.frame) return { ...options.frame, commands: completedCommands };
     if (completedCommands.length === 0) return undefined;
@@ -115,11 +111,11 @@ export class CommandFrameRuntime<State = unknown> {
     return frame;
   }
 
-  private planAiCommands(): CommandEnvelope[] {
+  private planAiCommands(settle: boolean): CommandEnvelope[] {
     if (!this.options.aiPlanner) return [];
     const checkpoint = this.options.aiPlanner.checkpoint();
     try {
-      const delivered = this.options.aiPlanner.plan((commands) => this.validate(commands, { purpose: "apply" }));
+      const delivered = this.options.aiPlanner.plan((commands) => this.validate(commands, { purpose: "apply" }), settle);
       const { deliverable, stale } = partitionDeliveredPlannerCommands(this.options.game, delivered);
       this.staleAiCommands += stale.length;
       return deliverable;

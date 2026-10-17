@@ -79,21 +79,17 @@ describe("local game adapter", () => {
     expect(game.units.find((unit) => unit.id === worker!.id)?.order).toMatchObject({ type: "move" });
   });
 
-  it("holds render-time ticks while the AI's think has not landed from its thread", () => {
+  it("keeps render-time ticks going while the AI's think has not landed from its thread", () => {
     let now = 0;
     const game = createGame("bareDuel", { aiPlayers: ["enemy"] });
-    let delivered = false;
     const adapter = new LocalGameAdapter(game, "player", {
       now: () => now, tickMs: 50, aiRuntime: createAiRuntime(["enemy"]),
-      aiThinkExecutor: () => ({ submit() {}, ready: (tick) => delivered || tick < PLANNER_COMMAND_DELAY_TICKS, take: () => [] }),
+      aiThinkExecutor: () => ({ submit() {}, thinking: () => true, take: () => [] }),
     });
 
-    now = 50 * (PLANNER_COMMAND_DELAY_TICKS + 2);
+    now = 50 * (PLANNER_COMMAND_DELAY_TICKS + 1);
     adapter.updateToRenderTime();
-    expect(game.tick).toBe(PLANNER_COMMAND_DELAY_TICKS);
-    delivered = true;
-    adapter.updateToRenderTime();
-    expect(game.tick).toBeGreaterThan(PLANNER_COMMAND_DELAY_TICKS);
+    expect(game.tick).toBe(PLANNER_COMMAND_DELAY_TICKS + 1);
   });
 
   it("advances render-time ticks even when no player command is sent", () => {
