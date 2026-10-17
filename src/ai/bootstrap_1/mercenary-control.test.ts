@@ -6,7 +6,7 @@ import { snapshotGame, stepGame } from '../../shared/sim';
 import { createAiPolicyMemory } from '../memory';
 import { planAiOwnerCommandEntries } from '../planner-context';
 import { bootstrapPolicyContext } from './policy';
-import { mercenaryControl } from './mercenary-control';
+import { mercenaryControl, mercenaryControlUnitIds } from './mercenary-control';
 import { controlledMercenaryGoals } from './mercenary-goals';
 import { unitControlsMercenaryCamp } from '../../shared/mercenary-camp';
 import { V7_GATHERED_RANGE } from '../policy/v7/creep';
@@ -35,14 +35,24 @@ it.each(cases)('$version collects and rallies $race mercenaries ($economy, mirro
   const original = game.units.filter(unit => unit.owner === 'us'), travelers = new Set<string>();
   expect(game.players.us!.gold).toBe(500);
   let paid = 0, lastHireTick = 0;
+  // A unit is home once it has come within the gathered range since mercenaryControl last sent it away; after that it is
+  // the army's, and may be moved off (a foundation laid where it stands shoves it aside) without leaving home again.
+  const home = new Set<string>();
+  let claimed = new Set<string>();
+  const rallied = (unit: { id: string }) => home.has(unit.id) && !claimed.has(unit.id);
   // Purchase timing also includes ordinary economy priorities. Once the
   // opening ends, each paid recruit still gets the same bounded return window.
   for (let tick = 0; tick < 2400 + lastHireTick; tick++) {
-    if (tick >= 2400 && game.units.filter(unit => unit.owner === 'us' && unit.kind === 'mercenary').every(unit =>
-      Math.hypot(unit.x - x(500), unit.y - 500) <= V7_GATHERED_RANGE)) break;
+    if (tick >= 2400 && game.units.filter(unit => unit.owner === 'us' && unit.kind === 'mercenary').every(rallied)) break;
     if (tick % 15 === 0) {
       const snapshot = snapshotGame(game);
       const options = bootstrapPolicyContext(snapshot, 'us', version, { memory, teams: game.teams });
+      claimed = mercenaryControlUnitIds(snapshot, 'us', options);
+      for (const unit of game.units) {
+        if (unit.owner !== 'us') continue;
+        if (Math.hypot(unit.x - x(500), unit.y - 500) <= V7_GATHERED_RANGE) home.add(unit.id);
+        else if (claimed.has(unit.id)) home.delete(unit.id);
+      }
       const entries = economy === 'planner'
         ? planAiOwnerCommandEntries(snapshot, { playerId: 'us', version, memory }, { teams: game.teams })
         : [...controlledMercenaryGoals(snapshot, 'us', options).flatMap(goal => {
@@ -60,7 +70,7 @@ it.each(cases)('$version collects and rallies $race mercenaries ($economy, mirro
     stepGame(game);
   }
   const mercenaries = game.units.filter(unit => unit.owner === 'us' && unit.kind === 'mercenary');
-  const diagnostic = JSON.stringify({ gold: game.players.us!.gold, paid, travelers: [...travelers],
+  const diagnostic = JSON.stringify({ gold: game.players.us!.gold, paid, travelers: [...travelers], home: [...home], claimed: [...claimed],
     mercenaries: mercenaries.map(unit => ({ id: unit.id, x: unit.x, y: unit.y, order: unit.order })) });
   expect(travelers.size, diagnostic).toBe(1);
   if (economy === 'camp') {
@@ -71,11 +81,10 @@ it.each(cases)('$version collects and rallies $race mercenaries ($economy, mirro
     expect(mercenaries, diagnostic).toHaveLength(paid / 160);
   }
   expect(original.every(unit => game.units.includes(unit)), diagnostic).toBe(true);
-  expect(mercenaries.every(unit =>
-    Math.hypot(unit.x - x(500), unit.y - 500) <= V7_GATHERED_RANGE), diagnostic).toBe(true);
+  expect(mercenaries.every(rallied), diagnostic).toBe(true);
   const camp = game.mercenaryCamps[0]!;
   expect(game.units.filter(unit => travelers.has(unit.id)).every(unit =>
-    Math.hypot(unit.x - x(500), unit.y - 500) <= V7_GATHERED_RANGE
+    rallied(unit)
       || economy === 'planner' && unit.order.type === 'hold' && unitControlsMercenaryCamp(unit, camp)
         && mercenaries.length < 2), diagnostic).toBe(true);
   expect(game.match.stats.goldSpent.us).toBeGreaterThanOrEqual(paid);
