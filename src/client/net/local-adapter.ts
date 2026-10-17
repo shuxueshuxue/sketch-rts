@@ -65,8 +65,8 @@ export class LocalGameAdapter implements GameAdapter {
     this.lastUpdate = Math.max(this.lastUpdate, current - tickMs * 4);
     const started = performance.now();
     let changed = false;
-    // A think still running on its thread holds the match until it lands (see @@@planner-schedule).
-    while (!this.closed && current - this.lastUpdate >= tickMs && !this.game.match.winner && this.frameRuntime.ready()) {
+    // A think still running on its thread never holds the match: it lands when it arrives (see @@@planner-schedule).
+    while (!this.closed && current - this.lastUpdate >= tickMs && !this.game.match.winner) {
       this.applyAndStep(this.queued.splice(0));
       this.lastUpdate += tickMs;
       changed = true;

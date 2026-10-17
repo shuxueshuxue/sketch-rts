@@ -31,7 +31,7 @@ it.each((['v9_archer', 'v9_summoner', 'v9_knight'] as const).flatMap(version =>
     const snapshot = snapshotGame(game);
     const options = bootstrapPolicyContext(snapshot, 'us', version, { memory: createAiPolicyMemory(), teams: game.teams });
     const rider = snapshot.units.find(unit => unit.id === 'rider')!, objective = snapshot.units.find(unit => unit.id === 'objective')!;
-    expect(mountedFieldTargets(snapshot, 'us', rider, new Set([rider.id]), options).map(target => target.id)).toEqual(['objective']);
+    expect([...mountedFieldTargets(snapshot, 'us', rider, new Set([rider.id]), options)].map(target => target.id)).toEqual(['objective']);
     const station = mountedFiringPoint(snapshot, rider, objective,
       snapshot.buildings.filter(building => building.owner === 'foe' && building.complete && building.attackDamage > 0),
       snapshot.units.filter(unit => unit.owner === 'foe' && unit.kind !== 'worker'))!;

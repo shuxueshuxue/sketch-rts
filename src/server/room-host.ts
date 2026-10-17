@@ -367,10 +367,10 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       return tickHostedRoom(hosted, game, ticks);
     },
 
-    // Whether the room can tick now: its restored ship graphs are rebuilt and its AI's due thinks have landed.
+    // Whether the room can tick now: its restored ship graphs are rebuilt. Its AI never holds it (see @@@planner-schedule).
     prepareRoomTick(roomId: string, maxSlices = 1): boolean {
-      const { game, frameRuntime } = getLiveGame(roomId);
-      return prepareShipPlanningJobs(game, maxSlices) && frameRuntime.ready();
+      const { game } = getLiveGame(roomId);
+      return prepareShipPlanningJobs(game, maxSlices);
     },
 
     tickRoomFrame(roomId: string, frame: CommandFrame, source: ReplayCommandSource = "browser"): RoomFrameTickResult {
@@ -472,8 +472,6 @@ export function createRoomHost(options: RoomHostOptions = {}) {
         // A continued save may need its disposable navigation graph rebuilt.
         // Reconstruct one prior slice per ticker turn before advancing truth.
         if (!prepareShipPlanningJobs(game, 1)) continue;
-        // A think still running on its thread holds the room until it lands (see @@@planner-schedule).
-        if (!(hosted.frameRuntime ??= createHostedFrameRuntime(hosted, game)).ready()) continue;
         for (let i = 0; i < ticks; i += 1) {
           advanceHostedRoomTick(hosted, game, { source: "internal-ai" });
           if (game.match.winner) break;
@@ -501,7 +499,9 @@ function tickHostedRoom(hosted: HostedRoom, game: Game, ticks: number, options: 
   for (let i = 0; i < ticks; i += 1) {
     const commands = i === 0 ? options.initialCommands ?? [] : [];
     const source = commands.length > 0 ? options.initialSource ?? "browser" : "internal-ai";
-    advanceHostedRoomTick(hosted, game, { commands, source });
+    // A tick asked for over the API is a step of a match driven from outside: it waits for the AI, so the driver gets
+    // the same frames however busy the thinking thread is (see @@@planner-schedule).
+    advanceHostedRoomTick(hosted, game, { commands, source, settleAi: true });
     if (game.match.winner) break;
   }
   const elapsedMs = performance.now() - started;
@@ -546,10 +546,10 @@ function tickHostedFrame(hosted: HostedRoom, game: Game, frame: CommandFrame, so
   };
 }
 
-function advanceHostedRoomTick(hosted: HostedRoom, game: Game, input: { commands?: CommandEnvelope[]; frame?: CommandFrame; source: ReplayCommandSource }): CommandFrame | undefined {
+function advanceHostedRoomTick(hosted: HostedRoom, game: Game, input: { commands?: CommandEnvelope[]; frame?: CommandFrame; source: ReplayCommandSource; settleAi?: boolean }): CommandFrame | undefined {
   hosted.frameRuntime ??= createHostedFrameRuntime(hosted, game);
   const commands = input.commands ?? input.frame?.commands ?? [];
-  const frameOptions = input.frame ? { frame: input.frame } : {};
+  const frameOptions = { ...(input.frame ? { frame: input.frame } : {}), ...(input.settleAi ? { settleAi: true } : {}) };
   // A whole copy of the world is kept only where the history wants one (see ROOM_CHECKPOINT_INTERVAL_TICKS), and the
   // whole world is hashed only on the ticks lockstep clients compare (see @@@lockstep-cadence), not on every tick.
   if (hosted.history.wantsCheckpoint(game.tick)) hosted.history.recordCheckpoint(createHostedCheckpoint(hosted, game));

@@ -18,9 +18,19 @@ function mountedRoadFoes(snapshot: GameSnapshot, towers: readonly Building[], de
     ...snapshot.buildings.filter(building => building.owner === 'neutral' && building.complete && building.attackDamage > 0)];
 }
 
+// A rider's router against one cover, kept for as long as that cover is: a think weighs many stations and targets of one
+// rider against the same towers and defenders, and the threat disks and guarded field are the rider's alone.
+const firingRouters = new WeakMap<readonly Unit[], WeakMap<readonly Building[], WeakMap<Unit, ReturnType<typeof threatLandRouter>>>>();
+
 /** The roads a firing station is admitted on; a rider sent to that station follows the same one. */
 export function mountedFiringRouter(snapshot: GameSnapshot, rider: Unit, towers: readonly Building[], defenders: readonly Unit[]) {
-  return threatLandRouter(snapshot, rider, mountedRoadFoes(snapshot, towers, defenders));
+  let byTowers = firingRouters.get(defenders);
+  if (!byTowers) firingRouters.set(defenders, byTowers = new WeakMap());
+  let byRider = byTowers.get(towers);
+  if (!byRider) byTowers.set(towers, byRider = new WeakMap());
+  let router = byRider.get(rider);
+  if (!router) byRider.set(rider, router = threatLandRouter(snapshot, rider, mountedRoadFoes(snapshot, towers, defenders)));
+  return router;
 }
 
 export function mountedFiringPoint(snapshot: GameSnapshot, rider: Unit, worker: Point, towers: readonly Building[], defenders: readonly Unit[]): Point | undefined {
@@ -119,7 +129,9 @@ function assign(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContex
   const campLocations = neutralCamps(snapshot);
   while (riders.length) {
     const lead = riders[0]!;
-    const local = riders.filter(unit => sameGround(snapshot.map, lead, unit));
+    // The lead is always its own crew, so every pass takes it: one standing off labelled ground (sameGround is false
+    // even against itself) would otherwise be offered the same choice for ever.
+    const local = riders.filter(unit => unit === lead || sameGround(snapshot.map, lead, unit));
     const hall = nextMountedRaid(snapshot, owner, lead, towers, defenders, options);
     const occupied = new Set(active.flatMap(task => task.objective.kind === 'camp' ? task.objective.ids : []));
     const camp = nextMountedCamp(snapshot, lead, campLocations, occupied);

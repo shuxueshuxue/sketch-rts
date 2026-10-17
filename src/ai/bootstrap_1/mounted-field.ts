@@ -30,24 +30,29 @@ function fieldCover(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
   };
 }
 
-/** Prospective recruits and active riders assess the same opponent, road and firing cover. */
-export function mountedFieldTargets(snapshot: GameSnapshot, owner: PlayerId, rider: Unit, crew: ReadonlySet<string>, options: AiPolicyContext) {
+/** Prospective recruits and active riders assess the same opponent, road and firing cover. The targets come in the
+ * order a rider takes them; each is admitted (a firing station and a covered road found) only when it is reached, so a
+ * rider that takes the first never weighs the rest. */
+export function* mountedFieldTargets(snapshot: GameSnapshot, owner: PlayerId, rider: Unit, crew: ReadonlySet<string>, options: AiPolicyContext) {
   const { towers, enemies } = fieldCover(snapshot, owner, options);
   const engaged = (target: Unit) => strikeGap(rider, target) <= rider.attackRange
     || (target.order.type === 'attack' || target.order.type === 'attackMove') && target.order.targetId !== undefined
       && crew.has(target.order.targetId);
+  // A walk is as long either way, and the terrain grows one field per goal it is asked for: measured to the rider, every
+  // enemy reads the rider's one field instead of growing its own.
   const local = enemies.filter(target => engaged(target)
-    || routeWithinDistance(snapshot.map, rider, target, 'land', LOCAL_RANGE));
+    || routeWithinDistance(snapshot.map, target, rider, 'land', LOCAL_RANGE));
   const admitted = (target: Unit) => strikeGap(rider, target) <= rider.attackRange
     || (target.order.type === 'attack' || target.order.type === 'attackMove') && target.order.targetId === rider.id
     || mountedFiringPoint(snapshot, rider, target, towers, enemies) !== undefined;
-  const nearby = local.filter(admitted);
+  const order = (a: Unit, b: Unit) => Number(engaged(b)) - Number(engaged(a))
+    || mountedTargetOrder(a, b) || distance(rider, a) - distance(rider, b);
+  let nearby = false;
+  for (const target of local.sort(order)) if (admitted(target)) { nearby = true; yield target; }
   // Fight the current front before evaluating an independent journey across the map.
-  const targets = nearby.length ? nearby : enemies.filter(target => !local.includes(target)
-    && target.speed < rider.speed && mountedThreatReach(snapshot, target, rider, rider.attackCooldown) < rider.attackRange)
-    .filter(admitted);
-  return targets.sort((a, b) => Number(engaged(b)) - Number(engaged(a))
-    || mountedTargetOrder(a, b) || distance(rider, a) - distance(rider, b));
+  if (nearby) return;
+  for (const target of enemies.filter(target => !local.includes(target) && target.speed < rider.speed
+    && mountedThreatReach(snapshot, target, rider, rider.attackCooldown) < rider.attackRange).sort(order)) if (admitted(target)) yield target;
 }
 
 /** Free cavalry can fight an exposed army without an available mine or neutral camp. */
@@ -59,8 +64,8 @@ export function mountedFieldPlans(snapshot: GameSnapshot, owner: PlayerId, optio
       && !options.memory.mounted?.some(task => task.unitIds.includes(unit.id)));
   const crew = new Set(riders.map(rider => rider.id));
   return riders.flatMap(rider => {
-    const targets = mountedFieldTargets(snapshot, owner, rider, crew, options);
-    return targets.length ? [{ rider, target: targets[0]! }] : [];
+    const target = mountedFieldTargets(snapshot, owner, rider, crew, options).next();
+    return target.done ? [] : [{ rider, target: target.value }];
   });
 }
 

@@ -37,8 +37,8 @@ export function mountedRecruitment(snapshot: GameSnapshot, owner: PlayerId, opti
     if (!spawn) continue;
     Object.assign(probe, spawn);
     if (nextMountedRaid(snapshot, owner, probe, towers, defenders, options)) return [{ unit: 'horseArcher', count: 1, priority: 59 }];
-    if (mountedFieldTargets(snapshot, owner, probe, new Set(), options).some(target => target.speed < probe.speed
-      && mountedThreatReach(snapshot, target, probe, probe.attackCooldown) < probe.attackRange)) {
+    for (const target of mountedFieldTargets(snapshot, owner, probe, new Set(), options)) if (target.speed < probe.speed
+      && mountedThreatReach(snapshot, target, probe, probe.attackCooldown) < probe.attackRange) {
       return [{ unit: 'horseArcher', count: 1, priority: 59 }];
     }
     const camp = nextMountedCamp(snapshot, probe, camps, occupied);
