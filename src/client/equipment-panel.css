@@ -184,5 +184,47 @@
 .equipment-panel :is(.equipment-close,.equipment-context button,.equipment-pages button,.equipment-action):hover { color:var(--game-button-ink); background:var(--game-button-hover); }
 .equipment-panel .equipment-cell.empty::after { background:#735833; opacity:.2; }
 .equipment-panel .equipment-crew { background:#c9b184; border-color:#87603a; }
-/* The close mark is drawn, two inked strokes, not a font's multiplication sign sitting off centre. */
-.equipment-panel .equipment-close { background:linear-gradient(45deg,transparent 46%,currentColor 46% 54%,transparent 54%) center/16px 16px no-repeat,linear-gradient(-45deg,transparent 46%,currentColor 46% 54%,transparent 54%) center/16px 16px no-repeat,var(--game-button); }
+
+/* @@@paper-doll - The character's equipment laid on the figure: head, body and feet beside the figure on the left, the
+   two hands on the right, the four carrying positions in one row beneath, the stats under that. The columns' own
+   wrappers dissolve (display:contents) so each position is placed against the figure; nothing is renamed, so drag, drop
+   and transfer keep their targets. */
+.equipment-panel .equipment-positions {
+  grid-template-columns:minmax(64px,92px) minmax(0,1fr) minmax(64px,92px);
+  grid-template-rows:repeat(3,minmax(54px,1fr)) auto;
+  grid-template-areas:'head figure main' 'body figure off' 'feet figure .' 'carry carry carry';
+  gap:6px 10px;
+}
+.equipment-panel .equipment-outfit,.equipment-panel .equipment-positions .equipment-hands { display:contents; }
+.equipment-panel .equipment-outfit > h3 { display:none; }
+.equipment-panel .equipment-outfit > .equipment-cell:nth-of-type(1) { grid-area:head; }
+.equipment-panel .equipment-outfit > .equipment-cell:nth-of-type(2) { grid-area:body; }
+.equipment-panel .equipment-outfit > .equipment-cell:nth-of-type(3) { grid-area:feet; }
+.equipment-panel .equipment-positions .equipment-hand:nth-of-type(1) { grid-area:main; }
+.equipment-panel .equipment-positions .equipment-hand:nth-of-type(2) { grid-area:off; }
+.equipment-panel .equipment-positions .equipment-hand { flex-direction:column; align-items:stretch; justify-content:space-between; gap:2px; padding:3px 5px; }
+.equipment-panel .equipment-positions .equipment-hand-name { white-space:normal; text-align:center; line-height:1.25; }
+.equipment-panel .equipment-figure { grid-area:figure; object-fit:contain; }
+.equipment-panel .equipment-carried { grid-area:carry; grid-template-columns:auto repeat(4,minmax(0,1fr)); grid-template-rows:64px; align-items:stretch; }
+.equipment-panel .equipment-carried > h3 { writing-mode:vertical-rl; line-height:1; align-self:center; }
+.equipment-panel .equipment-four-slots { grid-column:2 / span 4; grid-row:1; }
+.equipment-panel[data-mode=character] .equipment-positions { grid-template-columns:minmax(64px,100px) minmax(0,1fr) minmax(64px,100px); }
+/* The character panel is as tall as the doll, not a fixed sheet with paper to spare. */
+.equipment-panel[data-mode=character] { height:auto; max-height:calc(100dvh - 32px); }
+.equipment-panel[data-mode=character] .equipment-positions { height:min(380px,calc(100dvh - 210px)); }
+.equipment-character { grid-template-rows:minmax(0,1fr) 32px; }
+.equipment-character.has-context { grid-template-rows:36px minmax(0,1fr) 32px; }
+.equipment-character.has-cabin-action { grid-template-rows:minmax(0,1fr) 32px 30px; }
+.equipment-character.has-context.has-cabin-action { grid-template-rows:36px minmax(0,1fr) 32px 30px; }
+.equipment-panel[data-short=true] .equipment-character { grid-template-rows:minmax(0,1fr) 28px; }
+.equipment-panel[data-short=true] .equipment-character.has-context { grid-template-rows:30px minmax(0,1fr) 28px; }
+.equipment-panel[data-short=true] .equipment-character.has-cabin-action { grid-template-rows:minmax(0,1fr) 28px 28px; }
+.equipment-panel[data-short=true] .equipment-character.has-context.has-cabin-action { grid-template-rows:30px minmax(0,1fr) 28px 28px; }
+
+/* The close mark: two thin ink strokes on the paper, no wooden box; a soft round shade under it on hover. */
+.equipment-panel .equipment-close {
+  width:30px; height:30px; padding:0; font-size:0; border:0; border-radius:50%; box-shadow:none; color:var(--game-title);
+  background:linear-gradient(45deg,transparent 45.5%,currentColor 45.5% 54.5%,transparent 54.5%) center/15px 15px no-repeat,
+    linear-gradient(-45deg,transparent 45.5%,currentColor 45.5% 54.5%,transparent 54.5%) center/15px 15px no-repeat;
+}
+.equipment-panel .equipment-close:hover { color:var(--game-error); background-color:#4a321c1f; }

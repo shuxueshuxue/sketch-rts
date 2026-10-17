@@ -92,10 +92,10 @@
   max-height:min(var(--hud-command-height),45dvh); align-content:flex-start;
 }
 .command-dock { grid-column:1; grid-row:1; }
-/* @@@item-slots - The focused unit's four carrying positions, two by two beside the command card, sitting on the same
-   bottom line: slot n is always the same well, filled or empty. */
+/* @@@item-slots - The focused unit's four carrying positions, one row of four beside the command card, as tall as a
+   one-row card (the common case), on the same bottom line: slot n is always the same well, filled or empty. */
 .item-dock {
-  grid-column:2; grid-row:1; align-self:end; display:grid; grid-template-columns:repeat(2,var(--hud-button-width)); grid-auto-rows:var(--hud-button-height);
+  grid-column:2; grid-row:1; align-self:end; display:grid; grid-template-columns:repeat(4,var(--hud-button-width)); grid-auto-rows:var(--hud-button-height);
   width:auto; overflow:hidden;
 }
 .item-button[data-empty] { background:transparent; cursor:default; }
