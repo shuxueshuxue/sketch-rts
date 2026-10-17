@@ -2247,7 +2247,7 @@ function hireMercenary(game: Game, owner: PlayerId, campId: string) {
   const camp = game.mercenaryCamps.find((candidate) => candidate.id === campId);
   if (!camp) throw new Error(`Unknown mercenary camp ${campId}`);
   if (camp.stock <= 0) throw new Error(`${camp.id} has no mercenary stock`);
-  if (camp.cooldownRemaining > 0) throw new Error(`${camp.id} is restocking`);
+  if (camp.cooldownRemaining > 0) throw new Error(`${camp.id} is between hires`);
   if (!hasFriendlyUnitAtMercenaryCamp(game, owner, camp)) throw new Error(`${camp.id} needs a friendly unit nearby before hiring`);
   if (!canSupply(game, owner, camp.hireKind)) throw new Error(`Need more supply to hire ${camp.hireKind}`);
   spendGold(game, owner, camp.cost);

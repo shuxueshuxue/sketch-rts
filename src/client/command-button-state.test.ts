@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { abilityCommandState, autocastSwitch, autocastToggle, mercenaryHireCommandState, sharedStance, stanceCommandState, stanceFighters, stanceMenuCommandState, trainCommandState } from "./command-button-state";
-import { TIER_SUPPLY_CAP } from "../shared/catalog";
-import type { MercenaryCamp, PlayerState, Unit } from "../shared/types";
+import { abilityCommandState, autocastSwitch, autocastToggle, legalityCommandState, sharedStance, stanceCommandState, stanceFighters, stanceMenuCommandState } from "./command-button-state";
+import { createGame, snapshotGame } from "../shared/sim";
+import { checkCommandLegality } from "../shared/sim/command-validation";
+import { MERCENARY_HIRE_RANGE, TIER_SUPPLY_CAP, UPGRADE_DEFS, UNIT_DEFS } from "../shared/catalog";
+import type { GameCommand, GameSnapshot } from "../shared/types";
+import type { Unit } from "../shared/types";
 
 describe("command button state", () => {
   it('hides spells and autocast for sheltered crew without blocking ready deck casters',()=>{
@@ -20,16 +23,6 @@ describe("command button state", () => {
     expect(abilityCommandState([learned], "veteranHealingWave", selected)).toMatchObject({ visible: true, enabled: true, autocast: "mixed" });
     expect(autocastToggle(selected, "veteranHealingWave")).toEqual({ unitIds: ["learned", "ready"], enabled: true });
     expect(abilityCommandState([learned], "veteranHealingWave", [learned])).toMatchObject({ enabled: false, cooldownTicks: 24 });
-  });
-
-  it("greys a unit whose tier is locked, with the supply cap it waits for, and hides one the player cannot train", () => {
-    const [advanced, elite] = [TIER_SUPPLY_CAP[2], TIER_SUPPLY_CAP[3]];
-    const early = playerState({ gold: 500, supplyUsed: 8, supplyCap: advanced - 1 });
-    expect(trainCommandState("summoner", early, true)).toEqual({ visible: true, enabled: false, reason: "tier", supplyCap: advanced });
-    expect(trainCommandState("knight", playerState({ gold: 500, supplyUsed: 8, supplyCap: elite - 1 }), true)).toEqual({ visible: true, enabled: false, reason: "tier", supplyCap: elite });
-    expect(trainCommandState("footman", early, true)).toEqual({ visible: true, enabled: true });
-    expect(trainCommandState("summoner", playerState({ gold: 500, supplyUsed: 8, supplyCap: advanced }), true)).toEqual({ visible: true, enabled: true });
-    expect(trainCommandState("summoner", early, false)).toEqual({ visible: false, enabled: false });
   });
 
   it("keeps a selected caster ability visible while disabling it during cooldown", () => {
@@ -103,24 +96,6 @@ describe("command button state", () => {
     expect(sharedStance([braced, { ...braced, id: "footman-4" }])).toBe("brace");
     expect(sharedStance([braced, shocked])).toBeUndefined();
   });
-
-  it("keeps selected mercenary camps visible while explaining unavailable hire states", () => {
-    const player = playerState({ gold: 200, supplyUsed: 10, supplyCap: 10 });
-    const camp = mercenaryCamp({ cooldownRemaining: 35 });
-
-    expect(mercenaryHireCommandState({ camp, player, hasFriendlyUnitAtCamp: true })).toEqual({
-      visible: true,
-      enabled: false,
-      cooldownTicks: 35,
-      reason: "cooldown",
-    });
-
-    expect(mercenaryHireCommandState({ camp: { ...camp, cooldownRemaining: 0 }, player, hasFriendlyUnitAtCamp: true })).toEqual({
-      visible: true,
-      enabled: false,
-      reason: "supply",
-    });
-  });
 });
 
 function unit(kind: Unit["kind"], abilityCooldowns: Unit["abilityCooldowns"]): Unit {
@@ -148,33 +123,49 @@ function unit(kind: Unit["kind"], abilityCooldowns: Unit["abilityCooldowns"]): U
   };
 }
 
-function playerState(overrides: Partial<PlayerState> = {}): PlayerState {
-  return {
-    race: "grove",
-    gold: 500,
-    supplyUsed: 0,
-    supplyCap: 12,
-    upgrades: { weaponTraining: 0, reinforcedPlating: 0, buildingDurability: 0, speedTraining: 0, rangeTraining: 0, leadership: 0, shipbuilding: 0 },
-    ...overrides,
-  };
-}
+// @@@command-refusal - Every order the card offers is greyed exactly when the sim would refuse it, for the sim's reason.
+describe("order buttons read the sim's own check", () => {
+  const CAMP = { id: "camp", x: 1600, y: 960, radius: 50, hireKind: "mercenary" as const, cost: 160, stock: 2, cooldown: 320, cooldownRemaining: 0 };
+  function scene(gold: number) {
+    const game = createGame("bareDuel", { players: ["player", "enemy"], aiPlayers: [], races: { player: "grove", enemy: "grove" }, scenario: {
+      addBuildings: [
+        { id: "barracks", owner: "player", kind: "barracks", x: 1200, y: 960, complete: true },
+        { id: "stables", owner: "player", kind: "stables", x: 1200, y: 1200, complete: true },
+      ],
+      addMercenaryCamps: [CAMP],
+    } });
+    const snapshot = snapshotGame(game);
+    snapshot.players.player!.gold = gold;
+    return snapshot;
+  }
+  const state = (snapshot: GameSnapshot, command: GameCommand) => legalityCommandState(checkCommandLegality(snapshot, "player", command));
+  const research: GameCommand = { type: "research", buildingId: "barracks", upgradeKind: "weaponTraining" };
 
-function mercenaryCamp(overrides: Partial<MercenaryCamp> = {}): MercenaryCamp {
-  return {
-    id: "camp",
-    x: 0,
-    y: 0,
-    radius: 54,
-    hireKind: "mercenary",
-    cost: 160,
-    stock: 1,
-    cooldown: 90,
-    cooldownRemaining: 0,
-    ...overrides,
-  };
-}
+  it("greys a research the player cannot pay for, as it greys training", () => {
+    const cost = UPGRADE_DEFS.weaponTraining.levels[0]!.cost;
+    expect(state(scene(cost - 1), research)).toEqual({ visible: true, enabled: false, reason: "gold" });
+    expect(state(scene(cost), research)).toEqual({ visible: true, enabled: true });
+    expect(state(scene(UNIT_DEFS.footman.cost - 1), { type: "train", buildingId: "barracks", unitKind: "footman" })).toMatchObject({ enabled: false, reason: "gold" });
+  });
 
-it('explains unaffordable and supply-blocked training, including reserved queue supply', () => {
-  expect(trainCommandState('worker',playerState({gold:0,supplyUsed:0,supplyCap:20}),true).reason).toBe('gold');
-  expect(trainCommandState('worker',playerState({gold:1000,supplyUsed:20,supplyCap:20}),true).reason).toBe('supply');
+  it("greys a locked tier with the cap it waits for, and full supply counting the queue", () => {
+    const early = scene(1000);
+    early.players.player!.supplyCap = 8;
+    expect(state(early, { type: "train", buildingId: "stables", unitKind: "knight" })).toEqual({ visible: true, enabled: false, reason: "tier", supplyCap: TIER_SUPPLY_CAP[3] });
+    const full = scene(1000);
+    full.players.player!.supplyCap = full.players.player!.supplyUsed;
+    expect(state(full, { type: "train", buildingId: "barracks", unitKind: "footman" })).toMatchObject({ enabled: false, reason: "supply" });
+  });
+
+  it("offers a hire from as far as the camp's rule reaches, and counts down the wait between hires", () => {
+    const snapshot = scene(1000);
+    const scout = snapshot.units.find(unit => unit.owner === "player")!;
+    const reach = CAMP.radius + scout.radius + MERCENARY_HIRE_RANGE;
+    Object.assign(scout, { x: CAMP.x + reach - 10, y: CAMP.y, deck: undefined });
+    expect(state(snapshot, { type: "hire", campId: "camp" })).toEqual({ visible: true, enabled: true });
+    Object.assign(scout, { x: CAMP.x + reach + 10 });
+    expect(state(snapshot, { type: "hire", campId: "camp" })).toMatchObject({ enabled: false, reason: "position" });
+    snapshot.mercenaryCamps[0]!.cooldownRemaining = 35;
+    expect(state(snapshot, { type: "hire", campId: "camp" })).toEqual({ visible: true, enabled: false, reason: "cooldown", cooldownTicks: 35 });
+  });
 });
