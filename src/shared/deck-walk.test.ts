@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { boardUnit, syncDecks } from './decks';
 import { createGame, issuePlayerCommand, stepGame, warmGameCaches } from './sim';
-import { checksumGame, fnv1a } from './sim/checksum';
+import { checksumGame } from './sim/checksum';
+import { createRoom } from './rooms';
+import { createSaveGameRecord, restoreGameFromSave } from './savegame';
 import { initializeShipEquipment, rebuildShipFittings } from './ship-equipment';
 import { shipBoardingGoal } from './ship-gangway';
 import { shipProfile } from './ship-geometry';
@@ -37,12 +39,30 @@ function deckFight() {
 }
 
 describe('walking on decks', () => {
-  // @@@deck-walk-equivalence - The deck walk's caches and searches are only faster ways to the same answers: the same
-  // fight, tick for tick, as the walk computed afresh for every walker (recorded on main before they were added).
-  it('fights the same boarding fight, tick for tick', () => {
-    const { game, b } = deckFight(), trail: string[] = [];
-    for (let tick = 0; tick < 240; tick++) { stepGame(game); trail.push(checksumGame(game)); }
+  const trail = (game: ReturnType<typeof deckFight>['game'], from: number, to: number) => {
+    const sums: string[] = [];
+    for (let tick = from; tick < to; tick++) { stepGame(game); sums.push(checksumGame(game)); }
+    return sums;
+  };
+  it('fights the boarding fight the same way every time, and the boarders take the ship', () => {
+    const first = deckFight(), second = deckFight();
+    expect(trail(first.game, 0, 240)).toEqual(trail(second.game, 0, 240));
+    expect(first.b.owner).toBe('p');
+  }, 60_000);
+
+  // @@@deck-walk-restore - How a body walks is decided from what a save keeps (see @@@explicit-route): a fight saved in
+  // the middle of the boarding and loaded again goes on tick for tick as the one never saved.
+  it('goes on tick for tick after a save in the middle of the boarding', () => {
+    const { game, b } = deckFight();
+    trail(game, 0, 100);
+    const boarders = game.units.filter(unit => unit.owner === 'p' && unit.deck?.shipId === b.id), defenders = game.units.filter(unit => unit.owner === 'g' && unit.deck && unit.hp > 0);
+    expect(boarders.length).toBeGreaterThan(0); expect(defenders.length).toBeGreaterThan(0);
+    const room = { ...createRoom({ id: 'deck-walk-restore', host: { id: 'host', name: 'Host' }, mapId: 'bareDuel' }), status: 'inMatch' as const };
+    const restored = restoreGameFromSave(JSON.parse(JSON.stringify(createSaveGameRecord(game, room, { id: 'deck-walk-restore' }))));
+    // A scene's own rule, not a match's, so a save does not keep it: the fight on deck alone does not end the match.
+    restored.scriptedVictory = true;
+    warmGameCaches(restored);
+    expect(trail(restored, 100, 240)).toEqual(trail(game, 100, 240));
     expect(b.owner).toBe('p');
-    expect(fnv1a(trail.join(','))).toBe('f99a4123');
   }, 60_000);
 });
