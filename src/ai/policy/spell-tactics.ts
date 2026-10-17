@@ -1,4 +1,5 @@
 import { canReceiveHealing } from '../../shared/healing';
+import { strikeReach } from "../../shared/combat-geometry";
 import { matchesUnitTarget, type UnitTargetFilter } from "../../shared/unit-targeting";
 import { abilityCooldown } from "../../shared/ability-cooldowns";
 import { canReach } from "../../shared/naval";
@@ -305,7 +306,7 @@ function v5ArrivedMercenaryClaimCanFight(snapshot: GameSnapshot, owner: PlayerId
 
 function soloFinisherTarget(fighter: Unit, enemies: Unit[]) {
   return enemies
-    .filter((enemy) => distance(fighter, enemy) <= fighter.attackRange)
+    .filter((enemy) => distance(fighter, enemy) <= strikeReach(fighter, enemy))
     .filter((enemy) => enemy.hp <= fighter.attackDamage)
     .sort((a, b) => soloFinisherScore(b) - soloFinisherScore(a))[0];
 }
