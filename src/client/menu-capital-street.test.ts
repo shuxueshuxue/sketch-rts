@@ -1,5 +1,6 @@
 import { createCanvas } from '@napi-rs/canvas';
 import { describe, expect, it } from 'vitest';
+import { snapshotGame } from '../shared/sim';
 import { createCapitalStreet } from './menu-capital-street';
 
 const positions = (run: ReturnType<typeof createCapitalStreet>) => run.game.units.map(unit => ({ id: unit.id, x: unit.x, y: unit.y, order: unit.order }));
@@ -52,10 +53,11 @@ describe('capital street presentation', () => {
   it('looks across the street slowly, keeps its authored focus inside the map and retains a fixed reduced-motion view', () => {
     const run = createCapitalStreet();
     expect(run.stillSecond).toBe(15);
+    const snapshot = snapshotGame(run.game);
     for (const [width, height] of [[1440, 900], [1280, 720], [390, 844]] as const) {
-      let previous = run.frameAt!(0, width, height).focus;
+      let previous = run.frameAt!(0, width, height, snapshot).focus;
       for (let frame = 1; frame <= 90 * 30; frame++) {
-        const view = run.frameAt!(frame / 30, width, height);
+        const view = run.frameAt!(frame / 30, width, height, snapshot);
         expect(Math.hypot(view.focus.x - previous.x, view.focus.y - previous.y)).toBeLessThan(.19);
         expect(view.focus.x).toBeGreaterThan(1400); expect(view.focus.x).toBeLessThan(2000);
         expect(view.focus.y).toBeGreaterThan(1050); expect(view.focus.y).toBeLessThan(1250);

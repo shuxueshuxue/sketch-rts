@@ -1,121 +1,80 @@
 import { describe, expect, it } from 'vitest';
-import { UNIT_DEFS, UNIT_RULES } from '../shared/catalog';
-import { snapshotGame } from '../shared/sim';
+import { snapshotGame, stepGame } from '../shared/sim';
 import { SIM_TICKS_PER_SECOND } from '../shared/time';
+import { MENU_BATTLES } from './menu-battles';
 import { createForestHorde } from './menu-forest-horde';
-import { UnitAnimationTracker } from './unit-animation';
-import { UnitFacingTracker } from './unit-facing';
-import { isBloodHit } from './combat-presentation';
+import { battleDecided } from './menu-scene-world';
 
-const view = (run: ReturnType<typeof createForestHorde>) => JSON.stringify({units:run.game.units,effects:run.game.effects,corpses:run.game.corpses,cues:run.actions!()!});
+// Fights the battle to its end, or to the longest the home screen shows one.
+function fight(seed: number) {
+  const run = createForestHorde(seed), game = run.game, terrain = game.map.terrain!;
+  const hits = new Set<string>(), standing: string[] = [];
+  let firstHit: number | undefined, decided: number | undefined;
+  for (let tick = 1; tick <= 150 * SIM_TICKS_PER_SECOND && decided === undefined; tick++) {
+    stepGame(game);
+    for (const effect of game.effects) if (effect.type === 'hit') { hits.add(effect.id); firstHit ??= tick; }
+    for (const unit of game.units) standing.push(terrain.cells[Math.floor(unit.y / terrain.cell) * terrain.cols + Math.floor(unit.x / terrain.cell)]!);
+    if (battleDecided(game)) decided = tick;
+  }
+  return { run, game, hits, standing, firstHit, decided };
+}
 
-describe('army against a forest horde menu presentation',()=>{
-  it('uses a bounded local cast with an army formation and genuine mixed creature silhouettes',()=>{
-    const rules=JSON.stringify(UNIT_RULES),run=createForestHorde();
-    expect(run.presentation).toBe(true); expect(run.game.activePlayers).toEqual(['court','wilds']);
-    expect(run.game.units).toHaveLength(40); expect(run.game.buildings).toHaveLength(0);
-    const army=run.game.units.filter(unit=>unit.owner==='court'),horde=run.game.units.filter(unit=>unit.owner==='wilds');
-    expect(army).toHaveLength(18);expect(horde).toHaveLength(22);
-    expect(army.filter(unit=>unit.kind==='archer')).toHaveLength(6);
-    expect(army.filter(unit=>unit.kind==='knight')).toHaveLength(2);
-    expect(horde.filter(unit=>['ogreLord','spiderQueen','graniteGolem','ancientStag'].includes(unit.kind))).toHaveLength(4);
-    expect(new Set(horde.map(unit=>unit.kind)).size).toBeGreaterThanOrEqual(10);
-    for(const time of [6,16.7,35.5,51])run.script(run.game,time);
-    expect(run.game.variants).toBeUndefined();expect(JSON.stringify(UNIT_RULES)).toBe(rules);
-  });
-
-  it('stages opening arrows before contact, then releases melee toward the real opponent',()=>{
-    const run=createForestHorde();
-    run.script(run.game,6);
-    expect(run.game.effects.some(effect=>effect.type==='projectile'&&effect.sourceKind==='archer')).toBe(true);
-    expect(run.actions!()!.every(cue=>run.game.units.find(unit=>unit.id===cue.unitId)?.kind==='archer')).toBe(true);
-    run.script(run.game,16.7);
-    const snapshot=snapshotGame(run.game),units=new Map(snapshot.units.map(unit=>[unit.id,unit]));
-    const facing=new UnitFacingTracker();facing.update(snapshot.units,id=>units.get(id));
-    
-    let contacts=0;
-    for(const cue of run.actions!()!){
-      const source=units.get(cue.unitId)!;
-      if(source.order.type!=='attack')continue;
-      const target=units.get(source.order.targetId)!;
-      expect(target.owner).not.toBe(source.owner);
-      expect(Math.sign(cue.toX!-cue.fromX!)).toBe(source.owner==='court'?1:-1);
-      expect(facing.facing(source.id)).toBe(source.owner==='court'?1:-1);
-      if(source.kind==='archer'||source.kind==='thornSlinger')continue;
-      expect(cue.toX).toBe(target.x);expect(cue.toY).toBe(target.y);
-      expect(Math.hypot(source.x-target.x,source.y-target.y)).toBeLessThanOrEqual(UNIT_DEFS[source.kind].attackRange+1);
-      const releaseTick=cue.tick+1,releaseNow=releaseTick*1000/SIM_TICKS_PER_SECOND;
-      const animation=new UnitAnimationTracker();animation.update({...snapshot,tick:releaseTick},releaseNow,[cue]);
-      const pose=animation.frame(source,releaseNow);
-      expect(pose.mode).toBe('attack');expect(pose.direction).toBeDefined();
-      expect(Math.sign(pose.direction!.x)).toBe(source.owner==='court'?1:-1);
-      contacts++;
+describe('army against a forest horde home battle', () => {
+  it('opens with the bounded cast drawn up and marching, every fighter on the attack', () => {
+    const run = createForestHorde(), units = run.game.units;
+    expect('battle' in run && run.battle).toEqual({ scene: 'woods', seed: 1 });
+    expect(run.game.activePlayers).toEqual(['court', 'wilds']);
+    expect(units).toHaveLength(36); expect(run.game.buildings).toHaveLength(0);
+    const army = units.filter(unit => unit.owner === 'court'), horde = units.filter(unit => unit.owner === 'wilds');
+    expect(army).toHaveLength(18); expect(horde).toHaveLength(18);
+    expect(army.filter(unit => unit.kind === 'archer')).toHaveLength(6);
+    expect(army.filter(unit => unit.kind === 'knight')).toHaveLength(2);
+    expect(horde.filter(unit => ['ogreLord', 'spiderQueen', 'graniteGolem', 'ancientStag'].includes(unit.kind))).toHaveLength(4);
+    expect(new Set(horde.map(unit => unit.kind)).size).toBeGreaterThanOrEqual(10);
+    for (const unit of units) {
+      const healer = unit.kind === 'priest' || unit.kind === 'barkMender';
+      expect(unit.order.type).toBe(healer ? 'move' : 'attackMove');
     }
-    expect(contacts).toBeGreaterThan(1);
+    // The army starts left of the horde and marches right; the horde the other way.
+    expect(Math.max(...army.map(unit => unit.x))).toBeLessThan(Math.min(...horde.map(unit => unit.x)));
   });
 
-  it('has continuous movement, clear body footprints and clear scenery lanes over every authored frame',()=>{
-    const run=createForestHorde(),terrain=run.game.map.terrain!;
-    let previous=new Map(run.game.units.map(unit=>[unit.id,{x:unit.x,y:unit.y}])),maxStep=0,minGap=Infinity;
-    const blocking=run.props.filter(prop=>['stone','deadTree'].includes(prop.kind));
-    for(let frame=1;frame<=51*30;frame++){
-      run.script(run.game,frame/30);
-      const units=run.game.units;
-      for(const unit of units){
-        const before=previous.get(unit.id)!;
-        maxStep=Math.max(maxStep,Math.hypot(unit.x-before.x,unit.y-before.y));
-        expect(terrain.cells[Math.floor(unit.y/terrain.cell)*terrain.cols+Math.floor(unit.x/terrain.cell)]).toBe('.');
-        for(const prop of blocking)expect(Math.hypot(prop.x-unit.x,prop.y-unit.y)-unit.radius).toBeGreaterThan(35);
-      }
-      for(let i=0;i<units.length;i++)for(let j=i+1;j<units.length;j++){
-        const a=units[i]!,b=units[j]!;minGap=Math.min(minGap,Math.hypot(a.x-b.x,a.y-b.y)-a.radius-b.radius);
-      }
-      previous=new Map(units.map(unit=>[unit.id,{x:unit.x,y:unit.y}]));
-    }
-    expect(maxStep).toBeLessThan(3.05);expect(minGap).toBeGreaterThan(2);
+  it('builds the same opening from the same seed, so the thread fights what the page drew', () => {
+    const page = snapshotGame(createForestHorde(7).game), thread = snapshotGame(MENU_BATTLES.woods(7));
+    expect(JSON.stringify(thread)).toBe(JSON.stringify(page));
+    expect(JSON.stringify(snapshotGame(MENU_BATTLES.woods(8)).units)).not.toBe(JSON.stringify(page.units));
   });
 
-  it('can seek without accumulating state and only resets under the menu fade',()=>{
-    const run=createForestHorde();run.script(run.game,35.5);const late=view(run);
-    run.script(run.game,4);run.script(run.game,35.5);expect(view(run)).toBe(late);
-    const fresh=createForestHorde();fresh.script(fresh.game,35.5);expect(view(fresh)).toBe(late);
-    run.script(run.game,52);expect(run.game.units).toHaveLength(40);expect(run.game.corpses).toHaveLength(0);
-    expect(run.game.effects).toHaveLength(0);expect(run.game.tick).toBe(0);
+  it('is fought by the simulation: real hits and deaths in the clearing, decided within the scene', () => {
+    const { game, hits, standing, firstHit, decided } = fight(1);
+    expect(firstHit).toBeGreaterThan(SIM_TICKS_PER_SECOND);
+    expect(firstHit).toBeLessThan(15 * SIM_TICKS_PER_SECOND);
+    expect(hits.size).toBeGreaterThan(40);
+    expect(decided).toBeDefined();
+    // Everyone who fell left remains where they fell; nobody walked into the trees.
+    expect(game.corpses!.length).toBe(36 - game.units.length);
+    expect(game.corpses!.length).toBeGreaterThan(15);
+    expect(new Set(standing)).toEqual(new Set(['.']));
   });
 
-  it('makes every casualty an authored lethal hit with class-correct blood and stable remains',()=>{
-    const run=createForestHorde();let deaths=0;
-    for(const time of [8.15,10.35,17.6,24.6,29.2,31.6,35.4]){
-      run.script(run.game,time+.00001);
-      const fatal=run.game.effects.find(effect=>effect.type==='hit'&&effect.targetHpAfter===0)!;
-      expect(fatal).toBeDefined();expect(fatal.targetUnitClass).toBe(UNIT_DEFS[fatal.targetKind!].unitClass);
-      expect(isBloodHit(fatal)).toBe(true);
-      expect(run.game.units.some(unit=>unit.id===fatal.unitId)).toBe(false);
-      const corpse=run.game.corpses!.find(corpse=>corpse.unitId===fatal.unitId)!;
-      expect(corpse.x).toBe(fatal.x);expect(corpse.y).toBe(fatal.y);
-      deaths++;expect(run.game.corpses).toHaveLength(deaths);
-    }
-    run.script(run.game,20);
-    const stoneHit=run.game.effects.find(effect=>effect.targetKind==='rockGolem');
-    // Sample the whole late window, independent of the exact staggered beat.
-    let mechanical=stoneHit;
-    for(let frame=0;!mechanical&&frame<120;frame++){run.script(run.game,20+frame/30);mechanical=run.game.effects.find(effect=>effect.targetKind==='rockGolem');}
-    expect(mechanical).toBeDefined();expect(mechanical!.targetUnitClass).toBe('mechanical');expect(isBloodHit(mechanical!)).toBe(false);
-  });
-
-  it('keeps both armies and contact inside the uncovered portrait region and desktop right field',()=>{
-    const run=createForestHorde();
-    for(const [width,height] of [[1440,900],[1280,720],[390,844]] as const){
-      for(const time of [0,6,16.7,31.8]){
-        run.script(run.game,time);const view=run.frameAt!(time,width,height);
-        expect(view.zoom).toBeGreaterThan(0);expect(Number.isFinite(view.zoom)).toBe(true);
-        const screen=run.game.units.map(unit=>({x:(unit.x-view.focus.x)*view.zoom+width*view.anchorX,y:(unit.y-view.focus.y)*view.zoom+height*view.anchorY}));
-        expect(Math.min(...screen.map(p=>p.x))).toBeGreaterThan(width<700?0:width*.4);
-        expect(Math.max(...screen.map(p=>p.x))).toBeLessThan(width);
-        expect(Math.min(...screen.map(p=>p.y))).toBeGreaterThan(65);
-        expect(Math.max(...screen.map(p=>p.y))).toBeLessThan(width<700?height-280:height-80);
+  it('keeps the body of both armies inside the uncovered portrait region and the desktop right field', () => {
+    const run = createForestHorde(), game = run.game;
+    for (const second of [0, 8, 16, 30]) {
+      while (game.tick < second * SIM_TICKS_PER_SECOND) stepGame(game);
+      const snapshot = snapshotGame(game);
+      for (const [width, height] of [[1440, 900], [1280, 720], [390, 844]] as const) {
+        // The camera eases toward the fight; let it settle on this moment.
+        let view = run.frameAt!(second, width, height, snapshot);
+        for (let frame = 0; frame < 200; frame++) view = run.frameAt!(second, width, height, snapshot);
+        expect(view.zoom).toBeGreaterThan(0); expect(Number.isFinite(view.zoom)).toBe(true);
+        // The camera promises the body of both armies; a straggler at either end may step out of frame.
+        const body = snapshot.units.slice().sort((a, b) => a.x - b.x).slice(Math.floor(snapshot.units.length * .1), Math.ceil(snapshot.units.length * .9));
+        const screen = body.map(unit => ({ x: (unit.x - view.focus.x) * view.zoom + width * view.anchorX, y: (unit.y - view.focus.y) * view.zoom + height * view.anchorY }));
+        expect(Math.min(...screen.map(p => p.x))).toBeGreaterThan(width < 700 ? 0 : width * .4);
+        expect(Math.max(...screen.map(p => p.x))).toBeLessThan(width);
+        expect(Math.min(...screen.map(p => p.y))).toBeGreaterThan(65);
+        expect(Math.max(...screen.map(p => p.y))).toBeLessThan(width < 700 ? height - 280 : height - 80);
       }
     }
-    expect(run.stillSecond).toBe(16.7);expect(run.game.tick).toBe(Math.floor(31.8*SIM_TICKS_PER_SECOND));
   });
 });

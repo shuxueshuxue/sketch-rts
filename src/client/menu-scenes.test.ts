@@ -5,7 +5,9 @@ import { UNIT_DEFS } from '../shared/catalog';
 import { SIM_TICKS_PER_SECOND } from '../shared/time';
 import { shipProfile } from '../shared/ship-geometry';
 import { createI18n } from './i18n';
-import { MENU_SCENES, MenuBackdrop } from './menu-scenes';
+import { createMatchThreadHost } from './match-worker/host';
+import type { MatchThreadPort } from './match-worker/adapter';
+import { MENU_SCENES, MenuBackdrop, type MenuBattleThreads } from './menu-scenes';
 import { worldLabelsFor, type WorldFrame } from './world-renderer';
 
 const context = () => createCanvas(320, 180).getContext('2d') as unknown as CanvasRenderingContext2D;
@@ -16,6 +18,14 @@ const brightness = (ctx: CanvasRenderingContext2D) => {
   let light = 0;
   for (let index = 0; index < pixels.length; index += 4) light += pixels[index]! + pixels[index + 1]! + pixels[index + 2]!;
   return light / (pixels.length / 4 * 3);
+};
+const authored = MENU_SCENES.flatMap((scene, index) => 'presentation' in scene.create() ? [index] : []);
+const battles = MENU_SCENES.flatMap((scene, index) => 'battle' in scene.create() ? [index] : []);
+// The match thread's own host, answering in this thread: what a worker would run, without the worker.
+const inProcessThreads = (started: string[]): MenuBattleThreads => () => {
+  const port: MatchThreadPort = { onmessage: null, postMessage(message) { started.push(message.type); host.handle(message); } };
+  const host = createMatchThreadHost(event => port.onmessage?.({ data: event }));
+  return { port, terminate: () => started.push('terminated') };
 };
 const paintVisibleWorld = (frames: WorldFrame[]) => (frame: WorldFrame) => {
   frame.ctx.fillStyle = '#e8dfc1';
@@ -58,11 +68,13 @@ describe('bounded home scenes using the world presentation', () => {
   });
   it('keeps the three independent scenes and spawns each cast on its support domain', () => {
     expect(MENU_SCENES.map(scene => scene.id)).toEqual(['capital', 'woods', 'fleet']);
+    expect(battles.map(index => MENU_SCENES[index]!.id)).toEqual(['woods']);
     for (const scene of MENU_SCENES) {
       const run = scene.create(), terrain = run.game.map.terrain!;
-      expect(run.presentation).toBe(true);
-      expect(run.length).toBeGreaterThan(30);
-      expect(run.length).toBeLessThanOrEqual(90);
+      if ('presentation' in run) {
+        expect(run.length).toBeGreaterThan(30);
+        expect(run.length).toBeLessThanOrEqual(90);
+      }
       for (const unit of run.game.units) {
         if (unit.deck) {
           expect(run.game.units.some(ship => ship.id === unit.deck!.shipId && shipProfile(ship))).toBe(true);
@@ -74,10 +86,10 @@ describe('bounded home scenes using the world presentation', () => {
     }
   });
 
-  it('advances presentation clocks and forwards local assets without stepping the match simulation', () => {
+  it('advances authored presentation clocks and forwards local assets without stepping the match simulation', () => {
     const step = vi.spyOn(simulation, 'stepGame');
     try {
-      for (let index = 0; index < MENU_SCENES.length; index++) {
+      for (const index of authored) {
         const scene = MENU_SCENES[index]!, run = scene.create();
         const create = vi.spyOn(scene, 'create').mockReturnValue(run);
         try {
@@ -95,10 +107,44 @@ describe('bounded home scenes using the world presentation', () => {
     } finally { step.mockRestore(); }
   });
 
-  it('holds actors and camera at the authored still frame with reduced motion', () => {
+  it.each(battles)('fights battle %i with the match simulation on its thread, one thread per battle', (index) => {
+    const started: string[] = [], backdrop = new MenuBackdrop(labels, index, inProcessThreads(started)), frames: WorldFrame[] = [], ctx = context();
+    const opening = backdrop.prepare(0);
+    for (let now = 0; now <= 12_000; now += 50) backdrop.draw(ctx, 320, 180, now, false, frame => frames.push(frame));
+    expect(started.filter(type => type === 'scene')).toHaveLength(1);
+    expect(frames[0]!.snapshot.tick).toBe(0);
+    expect(frames.at(-1)!.snapshot.tick).toBeGreaterThan(10 * SIM_TICKS_PER_SECOND);
+    // The armies have closed and struck: the simulation moved them, not a script.
+    expect(JSON.stringify(frames.at(-1)!.snapshot.units.map(unit => [unit.x, unit.y]))).not.toBe(JSON.stringify(opening.units.map(unit => [unit.x, unit.y])));
+    expect(frames.some(frame => frame.snapshot.effects.some(effect => effect.type === 'hit'))).toBe(true);
+    // Another scene ends this battle's thread.
+    backdrop.next();
+    expect(started.at(-1)).toBe('terminated');
+  });
+
+  it.each(battles)('fades out a decided battle %i after its aftermath and opens a fresh one', (index) => {
+    const scene = MENU_SCENES[index]!, original = scene.create;
+    // A battle already all but over: one side down to its last fighter.
+    const create = vi.spyOn(scene, 'create').mockImplementation(seed => {
+      const run = original(seed), loser = run.game.activePlayers[0]!;
+      run.game.units = run.game.units.filter((unit, at, all) => unit.owner !== loser || all.findIndex(other => other.owner === loser) === at);
+      return run;
+    });
+    try {
+      const backdrop = new MenuBackdrop(labels, index), frames: WorldFrame[] = [], ctx = context();
+      backdrop.prepare(0);
+      let now = 0;
+      for (; now <= 60_000 && create.mock.calls.length < 2; now += 50) backdrop.draw(ctx, 320, 180, now, false, paintVisibleWorld(frames));
+      expect(create).toHaveBeenCalledTimes(2);
+      expect(frames.at(-1)!.snapshot.tick).toBe(0);
+      expect(brightness(ctx)).toBeLessThan(16);
+    } finally { create.mockRestore(); }
+  });
+
+  it('holds actors and camera at the still frame with reduced motion', () => {
     for (let index = 0; index < MENU_SCENES.length; index++) {
       const backdrop = new MenuBackdrop(labels, index), frames: WorldFrame[] = [], ctx = context();
-      const reference = MENU_SCENES[index]!.create().stillSecond!;
+      const reference = MENU_SCENES[index]!.create().stillSecond ?? 0;
       backdrop.prepare(0);
       backdrop.draw(ctx, 320, 180, 2000, true, frame => frames.push(frame));
       backdrop.draw(ctx, 320, 180, 7000, true, frame => frames.push(frame));
@@ -115,13 +161,13 @@ describe('bounded home scenes using the world presentation', () => {
       const create = vi.spyOn(scene, 'create');
       try {
         const backdrop = new MenuBackdrop(labels, index), frames: WorldFrame[] = [], ctx = context();
-        const end = run.length! * 1000;
+        const end = (run.length ?? 150) * 1000;
         backdrop.prepare(0);
         for (const now of [0, 2_000, end - 1_500, end - 1_000, end - 100, end, end + 100, end + 1_500, end * 2, 300_000]) {
           backdrop.draw(ctx, 320, 180, now, true, paintVisibleWorld(frames));
           const frame = frames.at(-1)!;
           expect(brightness(ctx), `visible at ${now}ms`).toBeGreaterThan(80);
-          expect(frame.snapshot.tick).toBe(Math.floor(run.stillSecond! * SIM_TICKS_PER_SECOND));
+          expect(frame.snapshot.tick).toBe(Math.floor((run.stillSecond ?? 0) * SIM_TICKS_PER_SECOND));
           expect(actors(frame)).toEqual(actors(frames[0]!));
           expect(frame.view).toEqual(frames[0]!.view);
         }
@@ -133,15 +179,15 @@ describe('bounded home scenes using the world presentation', () => {
         expect(frames.at(-1)!.animation).not.toBe(frames[0]!.animation);
         expect(brightness(ctx)).toBeLessThan(16);
         expect(create).toHaveBeenCalledTimes(2);
-        backdrop.draw(ctx, 320, 180, 302_200, false, paintVisibleWorld(frames));
+        for (let now = 300_250; now <= 302_200; now += 50) backdrop.draw(ctx, 320, 180, now, false, paintVisibleWorld(frames));
         expect(frames.at(-1)!.snapshot.tick).toBe(2 * SIM_TICKS_PER_SECOND);
         expect(brightness(ctx)).toBeGreaterThan(80);
       } finally { create.mockRestore(); }
     },
   );
 
-  it('fades and creates a clean new cast when a bounded scene finishes', () => {
-    for (let index = 0; index < MENU_SCENES.length; index++) {
+  it('fades and creates a clean new cast when an authored scene finishes', () => {
+    for (const index of authored) {
       const backdrop = new MenuBackdrop(labels, index), frames: WorldFrame[] = [], ctx = context();
       const length = MENU_SCENES[index]!.create().length!;
       backdrop.prepare(0);
