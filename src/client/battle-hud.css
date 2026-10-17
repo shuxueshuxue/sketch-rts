@@ -8,9 +8,9 @@
 }
 .menu-open :is(.control-deck,.minimap-tab,.minimap-relations,.minimap-wind,.match-menu-button,.match-menu,.chat-overlay,.status-line,.minimap-frame) { display:none; }
 .control-deck {
-  --hud-card-width:244px;
-  --hud-button-width:58px;
-  --hud-button-height:58px;
+  --hud-card-width:232px;
+  --hud-button-width:52px;
+  --hud-button-height:55px;
   --hud-button-gap:3px;
   --hud-dock-padding:5px;
   --hud-dock-frame:7px;
@@ -25,8 +25,7 @@
 .control-deck > div { box-sizing:border-box; min-width:0; }
 .hud-actions { grid-column:2; grid-row:1; display:grid; grid-template-columns:max-content max-content; align-items:end; align-self:end; justify-items:start; gap:6px 8px; max-width:100%; }
 .selection-chip {
-  /* As tall as the command card at least, so the two frames make one bar along the bottom. */
-  grid-column:1; grid-row:1; padding:8px; min-height:var(--hud-command-height);
+  grid-column:1; grid-row:1; padding:8px;
   background:var(--battle-surface); border:var(--hud-dock-frame) solid var(--battle-edge); border-radius:8px;
   box-shadow:0 4px 18px #0c161a38;
 }
@@ -88,17 +87,16 @@
   box-shadow:0 4px 18px #0c161a38; overflow-x:hidden; overflow-y:auto;
 }
 .command-dock {
-  /* @@@command-card - One fixed card, two rows of eight slots, whatever is selected: buttons fill it from the bottom
-     left, and the card never jumps in size or place between a worker, a squad and a building. */
+  /* The card is as big as what the selection can do: it grows up from the bottom, eight to a row. */
   align-self:end; flex-wrap:wrap-reverse;
-  width:var(--hud-dock-width); max-width:100%; height:min(var(--hud-command-height),45dvh); align-content:flex-start;
+  max-height:min(var(--hud-command-height),45dvh); align-content:flex-start;
 }
 .command-dock { grid-column:1; grid-row:1; }
-/* @@@item-slots - The focused unit's four carrying positions, two by two beside the command card and as tall as it, in
-   the bar along the bottom: slot n is always the same well, filled or empty. */
+/* @@@item-slots - The focused unit's four carrying positions, two by two beside the command card, sitting on the same
+   bottom line: slot n is always the same well, filled or empty. */
 .item-dock {
-  grid-column:2; grid-row:1; display:grid; grid-template-columns:repeat(2,var(--hud-button-width)); grid-auto-rows:var(--hud-button-height);
-  align-content:end; height:min(var(--hud-command-height),45dvh); width:auto; overflow:hidden;
+  grid-column:2; grid-row:1; align-self:end; display:grid; grid-template-columns:repeat(2,var(--hud-button-width)); grid-auto-rows:var(--hud-button-height);
+  width:auto; overflow:hidden;
 }
 .item-button[data-empty] { background:transparent; cursor:default; }
 .command-button,.item-button {
@@ -108,7 +106,7 @@
 }
 .command-button:hover,.item-button:hover { background:#d3e1e617; border-color:#d1b78266; }
 /* @@@learn-ready - A soldier ready to learn a skill must not be missed: the button only shows while one is, and then
-   it is a lit brass medallion that breathes, the first slot of the card. */
+   it is a lit brass medallion that breathes. */
 .control-deck .command-button[data-veteran-learn] {
   border-color:#f3d27a; background:radial-gradient(circle at 50% 42%,#f6dc8c 0 34%,#b8862f 72%,#6e4a17 100%);
   box-shadow:0 0 0 1px #3a2408,0 0 10px #f3d27a99; animation:learn-ready 1.6s ease-in-out infinite;
@@ -119,9 +117,9 @@
 /* A button is its picture and its key; its name and what it does are in its tooltip (and its aria-label), never a
    word cut short under the picture. */
 .command-icon,.item-icon { display:grid; place-items:center; height:100%; color:#d9d2ba; font:26px/1 sans-serif; }
-.command-portrait { display:block; width:48px; height:48px; background:transparent; }
-.command-symbol { width:34px; height:34px; fill:none; stroke:currentColor; stroke-width:1.65; stroke-linecap:round; stroke-linejoin:round; }
-.ability-symbol { display:block; width:48px; height:48px; object-fit:contain; border-radius:3px; }
+.command-portrait { display:block; width:42px; height:42px; background:transparent; }
+.command-symbol { width:32px; height:32px; fill:none; stroke:currentColor; stroke-width:1.65; stroke-linecap:round; stroke-linejoin:round; }
+.ability-symbol { display:block; width:42px; height:42px; object-fit:contain; border-radius:3px; }
 .command-label { display:none; }
 /* Except where the words are the state itself: who a purchase will be handed to. */
 .command-button[data-purchase-recipient] .command-label { display:block; position:absolute; bottom:2px; left:2px; right:2px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font:10px/12px var(--font-ui); text-shadow:0 1px #24140d; }
