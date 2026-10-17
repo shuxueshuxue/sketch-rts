@@ -43,6 +43,8 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
   private readonly matchThreads: MatchThreadFactory | undefined;
   private readonly publicBasePath: string;
   private readonly emptyAdapter = new EmptyGameAdapter();
+  // The match this page plays or watches in each room: a seated player may concede it.
+  private readonly matches = new Map<string, { adapter: GameAdapter; spectating: boolean }>();
 
   constructor(options: ServerDeploymentRuntimeOptions = {}) {
     this.matchThreads = options.matchThreads;
@@ -155,19 +157,25 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
     });
     if (transport.onOpen) transport.onOpen(join);
     else join();
+    this.matches.set(room.id, { adapter, spectating });
     return { room, playerId, adapter, chat, snapshot: adapter.currentSnapshot() };
   }
 
-  canForfeitMatch(_roomId: string): boolean {
-    return false;
+  canForfeitMatch(roomId: string): boolean {
+    const match = this.matches.get(roomId);
+    return !!match && !match.spectating;
   }
 
   isLocalRoom(_roomId: string): boolean {
     return false;
   }
 
-  async forfeitMatch(_roomId: string, _user: LocalUserProfile): Promise<RoomState> {
-    throw new Error("Forfeit is not available in server deployment mode");
+  // Conceded as any command is sent, so every peer concedes the same tick (see @@@forfeit); the match's end, when it
+  // comes, reaches the page as every room change does.
+  async forfeitMatch(roomId: string, _user: LocalUserProfile): Promise<void> {
+    const match = this.matches.get(roomId);
+    if (!match || match.spectating) throw new Error(`No match of yours in room ${roomId}`);
+    match.adapter.sendCommand({ type: "forfeit" });
   }
 
   close(): void {

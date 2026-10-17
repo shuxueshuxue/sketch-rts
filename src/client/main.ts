@@ -1222,8 +1222,11 @@ function renderResultsMenu() {
     return;
   }
 
-  menuStatus.textContent = t("results.finished", { name: currentRoom.name, tick: result.endedAtTick ?? "?" });
+  menuStatus.textContent = result.endedAtTick == null ? t("results.finishedUntimed", { name: currentRoom.name })
+    : t("results.finished", { name: currentRoom.name, time: matchTime(result.endedAtTick) });
   const winners = winningResultSlots(result);
+  // Which computer player each seat had stays at hand for testing, out of the way of the table.
+  const computers = result.slots.filter(slot => slot.controller === "ai" && slot.aiVersion && slot.aiVersion !== "random");
   const rows = result.slots.map((slot) => {
     const kills = result.stats.unitsKilled[slot.playerId] ?? 0;
     const losses = result.stats.unitsLost[slot.playerId] ?? 0;
@@ -1232,7 +1235,7 @@ function renderResultsMenu() {
     return `
       <div class="result-row" data-result-slot="${escapeHtml(slot.playerId)}">
         <span>${escapeHtml(slot.name)}</span>
-        <span>${escapeHtml(slot.controller === "ai" && slot.aiVersion ? `${labelKind("ai")} · ${slot.aiVersion.toUpperCase().replace("_", " ")}` : labelKind(slot.controller))}</span>
+        <span>${escapeHtml(slot.controller === "ai" && slot.aiVersion ? `${labelKind("ai")} · ${aiStyle(slot.aiVersion)}` : labelKind(slot.controller))}</span>
         <span>${escapeHtml(labelKind(roomTeam(slot.team)))}</span>
         <span>${escapeHtml(labelKind(slot.race))}</span>
         <span>${kills}/${losses}</span>
@@ -1250,6 +1253,8 @@ function renderResultsMenu() {
       <span>${escapeHtml(t("results.player"))}</span><span>${escapeHtml(t("results.controller"))}</span><span>${escapeHtml(t("results.team"))}</span><span>${escapeHtml(t("results.race"))}</span><span>${escapeHtml(t("results.killsLosses"))}</span><span>${escapeHtml(t("results.gold"))}</span><span>${escapeHtml(t("results.buildings"))}</span>
     </div>
     <div class="result-list">${rows.join("")}</div>
+    ${computers.length ? `<details class="result-details" data-result-details><summary>${escapeHtml(t("results.details"))}</summary>
+      ${computers.map(slot => `<div>${escapeHtml(slot.name)} · ${escapeHtml(slot.aiVersion!)}</div>`).join("")}</details>` : ""}
 `, `
       <button type="button" data-rematch>${escapeHtml(t("results.rematch"))}</button>
       <button type="button" data-return-home>${escapeHtml(t("common.home"))}</button>
@@ -1330,6 +1335,18 @@ function rememberedSoloSetup(): RoomConfiguration {
   return route?.screen === "setup" && route.configuration ? { ...route.configuration, visibility: "private" } : defaultRoomConfiguration();
 }
 
+// A computer player by how it plays (archers, summons, knights), not by its internal version.
+function aiStyle(version: RoomAiChoice) {
+  return version === "random" ? labelKind("random") : t(`ai.style.${version}`);
+}
+
+// How long a match lasted, as a player reads a clock: m:ss, or h:mm:ss past an hour.
+function matchTime(ticks: number) {
+  const total = Math.floor(ticks / SIM_TICKS_PER_SECOND), hours = Math.floor(total / 3600), minutes = Math.floor(total / 60) % 60, seconds = total % 60;
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return hours ? `${hours}:${pad(minutes)}:${pad(seconds)}` : `${minutes}:${pad(seconds)}`;
+}
+
 function menuButton(label: string, note: string, dataName: string, onClick: () => void, dataValue = "true") {
   const button = document.createElement("button");
   button.className = "map-button";
@@ -1379,7 +1396,7 @@ function slotRow(room: RoomState, slot: RoomState["slots"][number], index: numbe
   // @@@room-ai-races), random by default; a seat on a random race has its computer player drawn too, so that one is locked.
   const aiChoice = slot.race === "random" ? "random" : (slot.aiVersion ?? DEFAULT_INTERNAL_AI_VERSION);
   const aiChoices: RoomAiChoice[] = slot.race === "random" ? ["random"] : ["random", ...roomAiVersionsFor(slot.race)];
-  const aiOptions = aiChoices.map((choice) => `<option value="${choice}" ${aiChoice === choice ? "selected" : ""}>${choice === "random" ? escapeHtml(labelKind("random")) : choice.toUpperCase().replace("_", " ")}</option>`).join("");
+  const aiOptions = aiChoices.map((choice) => `<option value="${choice}" ${aiChoice === choice ? "selected" : ""}>${escapeHtml(choice === "random" ? labelKind("random") : aiStyle(choice))}</option>`).join("");
   const raceOptions = [...RACE_IDS, "random" as const].map((race) => `<option value="${race}" ${slot.race === race ? "selected" : ""}>${escapeHtml(labelKind(race))}</option>`).join("");
   row.innerHTML = `
     <span class="slot-index">${index + 1}</span>
@@ -1637,8 +1654,7 @@ function openResults(room: RoomState) {
 async function forfeitCurrentMatch() {
   if (!currentRoomId) return;
   try {
-    const ended = await deploymentRuntime.forfeitMatch(currentRoomId, localUser);
-    openResults(ended);
+    await deploymentRuntime.forfeitMatch(currentRoomId, localUser);
   } catch (error) {
     showInvalidCommand(error instanceof Error ? error.message : String(error));
   }

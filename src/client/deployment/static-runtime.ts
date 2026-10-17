@@ -165,7 +165,7 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
     return this.lifecycle.hasRoom(roomId);
   }
 
-  async forfeitMatch(roomId: string, user: LocalUserProfile): Promise<RoomState> {
+  async forfeitMatch(roomId: string, user: LocalUserProfile): Promise<void> {
     const room = this.lifecycle.getRoom(roomId);
     const match = this.matches.get(roomId);
     if (!match) throw new Error(`Room ${roomId} is not in a local match`);
@@ -175,7 +175,6 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
     const ended = this.lifecycle.finishRoom(roomId, { ...snapshot, match: { ...snapshot.match, winner, endedAtTick: snapshot.tick } });
     match.adapter.close();
     match.onRoom(ended);
-    return ended;
   }
 
   close(): void {

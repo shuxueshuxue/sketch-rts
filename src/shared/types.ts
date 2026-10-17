@@ -637,7 +637,9 @@ export type GameCommand =
   | { type: "giveItem"; unitId: string; itemId: string; targetId: string }
   | { type: "transferItem"; itemId: string; destination: { unitId: string; slot: EquipmentSlot } | { shipId: string; slot: number } | { shipId:string; mountId:string; installerId?:string } }
   | { type: "wieldItem"; unitId: string; itemId?: string; hand: "right" | "left" }
-  | { type: "useItem"; unitId: string; itemId: string; targetId?: string; x?: number; y?: number };
+  | { type: "useItem"; unitId: string; itemId: string; targetId?: string; x?: number; y?: number }
+  // A player concedes the match (see @@@forfeit).
+  | { type: "forfeit" };
 
 /** Persistent battlefield remains. Separate from live entities and transient effects. */
 export type Corpse = {
