@@ -335,8 +335,88 @@ export function walkConnectedSurfaces(passenger: Unit, world: Point, units: read
     }
     return points;
   };
+  // @@@explicit-route - A walker sent at one body cannot take on another in its way instead (an explicit attack keeps its
+  // target), so a body between them must not hold it: it plans its whole route round every body, as each walker did
+  // before the shared field. The rest walk the field; a body in their way is one they may fight.
+  const searchedLeg = (): Point | undefined => {
+    const graph = geometry.graph, fixedNodes = graph.nodes;
+    const clear = (a: Point, b: Point, ai = -1, bi = -1, occupied = true) => {
+      const count = fixedNodes.length, cacheable = ai >= 2 && bi >= 2 && ai < count + 2 && bi < count + 2;
+      let valid: boolean;
+      if (cacheable) {
+        const index = (ai - 2) * count + bi - 2;
+        if (!graph.links[index]) graph.links[index] = graph.links[(bi - 2) * count + ai - 2] = staticClear(a, b) ? 1 : -1;
+        valid = graph.links[index] === 1;
+      }
+      else valid = staticClear(a, b);
+      return valid && (!occupied || open(a, b));
+    };
+    const nodes: Point[] = [passenger, destination];
+    if (!clear(passenger, destination)) {
+      nodes.push(...fixedNodes);
+      for (const other of bodies) {
+        for (let i = 0; i < 12; i++) {
+          const angle = i * Math.PI / 6, r = (other.radius + passenger.radius + 3) / detCos(Math.PI / 12);
+          const point = { x: other.x + detCos(angle) * r, y: other.y + detSin(angle) * r };
+          if (fits(point, true)) nodes.push(point);
+        }
+        nodes.push(...bridgeFronts(other));
+      }
+    }
+    const fixed = nodes.length > 2 ? fixedNodes.length : 0, distances = graph.distances;
+    const between = (i: number, j: number) => {
+      if (i < 2 || j < 2 || i >= fixed + 2 || j >= fixed + 2) return Math.hypot(nodes[i]!.x - nodes[j]!.x, nodes[i]!.y - nodes[j]!.y);
+      const index = (i - 2) * fixed + j - 2;
+      let value = distances[index]!;
+      if (value !== value) distances[index] = distances[(j - 2) * fixed + i - 2] = value = Math.hypot(nodes[i]!.x - nodes[j]!.x, nodes[i]!.y - nodes[j]!.y);
+      return value;
+    };
+    const count = nodes.length, costs = new Float64Array(count).fill(Infinity), parents = new Int32Array(count).fill(-1), seen = new Uint8Array(count);
+    costs[0] = 0;
+    let destinationNode = 1, settled = 0;
+    while (settled < count) {
+      let current = -1;
+      for (let i = 0; i < count; i++) if (!seen[i] && (current < 0 || costs[i]! < costs[current]!)) current = i;
+      if (current < 0 || !Number.isFinite(costs[current]!)) {
+        // A defender may seal the far end of a one-person bridge: walk to the closest floor reachable, so melee can meet
+        // it at the entrance. Every candidate still has a proven, body-clear path from the start.
+        const remaining = new Float64Array(count).fill(Infinity), visited = new Uint8Array(count); remaining[1] = 0;
+        for (let pass = 0; pass < count; pass++) {
+          let closest = -1;
+          for (let i = 0; i < count; i++) if (!visited[i] && (closest < 0 || remaining[i]! < remaining[closest]!)) closest = i;
+          if (closest < 0 || !Number.isFinite(remaining[closest]!)) break;
+          visited[closest] = 1;
+          for (let i = 0; i < count; i++) if (!visited[i]) {
+            const distance = remaining[closest]! + between(i, closest);
+            if (distance < remaining[i]! && clear(nodes[closest]!, nodes[i]!, closest, i, false)) remaining[i] = distance;
+          }
+        }
+        const estimate = (i: number) => Number.isFinite(remaining[0]!) ? remaining[i]! : Math.hypot(nodes[i]!.x - destination.x, nodes[i]!.y - destination.y);
+        let best = estimate(0);
+        destinationNode = 0;
+        for (let i = 2; i < count; i++) if (Number.isFinite(costs[i]!)) {
+          const distance = estimate(i);
+          if (distance < best - 1e-6) { best = distance; destinationNode = i; }
+        }
+        if (destinationNode === 0) return undefined;
+        break;
+      }
+      if (current === 1) break;
+      seen[current] = 1; settled++;
+      for (let i = 0; i < count; i++) {
+        const value = costs[current]! + between(i, current);
+        if (!seen[i] && value < costs[i]! && clear(nodes[current]!, nodes[i]!, current, i)) { costs[i] = value; parents[i] = current; }
+      }
+    }
+    let next = destinationNode;
+    while (parents[next]! > 0) next = parents[next]!;
+    return nodes[next];
+  };
+  // A boarding crew's attack on the front rank is chosen again every tick: a body in its way becomes its target.
+  const order = passenger.order, explicit = order.type === 'attack' && order.leashX === undefined && !order.frontRank;
   const goal = aim ?? destination;
-  const waypoint = staticClear(passenger, destination) && open(passenger, destination) ? destination
+  const waypoint = explicit ? searchedLeg()
+    : staticClear(passenger, destination) && open(passenger, destination) ? destination
     : walkLeg(geometry.graph, walkField(geometry.graph, goal, staticClear), goal, passenger, staticClear, open, around);
   if (!waypoint)
     return true;
