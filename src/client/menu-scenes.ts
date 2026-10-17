@@ -1,6 +1,8 @@
 import { CORE_SCENERY } from "./art/scenery";
 import { snapshotGame } from "../shared/sim";
-import type { MenuSceneRun } from "./menu-scene-world";
+import { battleDecided, seeded, type MenuSceneRun } from "./menu-scene-world";
+import { MatchThreadGameAdapter, type MatchThreadPort } from "./match-worker/adapter";
+import { LocalGameAdapter } from "./net/local-adapter";
 import type { PaintedRemainsPreparation } from './world3d/painted-remains';
 import { createPirateBoarding } from "./menu-pirate-boarding";
 import { createCapitalStreet } from "./menu-capital-street";
@@ -18,30 +20,22 @@ import { CombatPresentationTracker } from "./combat-presentation";
 import { ProjectileOriginTracker } from "./projectile-origins";
 import { drawWorld, trackUnitFacing, type WorldLabels,type WorldFrame } from "./world-renderer";
 
-// @@@menu-scenes - Three bounded presentation casts, without match pathfinding
-// or combat simulation. They share the game's world and asset renderers.
+// @@@menu-scenes - Three home scenes drawn with the game's world and asset renderers. An authored one poses its cast
+// from a script; a battle is fought by the match simulation on its own thread (see @@@menu-battles).
 
 type Point = { x: number; y: number };
 type Text = { zh: string; en: string };
 type Run = MenuSceneRun;
 type Air = Run["air"];
-export type MenuScene = { id: string; name: Text; create: () => Run };
+export type MenuScene = { id: string; name: Text; create: (seed?: number) => Run };
+/** A thread for one home battle (see @@@match-thread); without one, the battle is fought on the page's thread. */
+export type MenuBattleThreads = () => { port: MatchThreadPort; terminate(): void };
 
 const FRAME_MS = 1000 / 30;
 const FADE = 1.4;
-
-// ---------------------------------------------------------------- building blocks
-
-function seeded(seed: number) {
-  let state = seed >>> 0;
-  return () => {
-    state = (state + 0x6d2b79f5) >>> 0;
-    let t = state;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
+// A decided battle holds its last picture this long before the fade; one that never decides ends anyway.
+const AFTERMATH = 4;
+const LONGEST_BATTLE = 150;
 
 // ---------------------------------------------------------------- the scenes' own pieces
 
@@ -81,8 +75,11 @@ export class MenuBackdrop {
   private lastPaint = -Infinity;
   private motes: Mote[] = [];
   private random = seeded(Date.now());
+  // The running battle's simulation, and when it was decided (scene seconds).
+  private battle: { adapter: LocalGameAdapter | MatchThreadGameAdapter; end(): void } | undefined;
+  private decidedAt: number | undefined;
 
-  constructor(private readonly labels: WorldLabels, private index: number) {}
+  constructor(private readonly labels: WorldLabels, private index: number, private readonly threads?: MenuBattleThreads) {}
 
   get scene() {
     return MENU_SCENES[this.index]!;
@@ -90,15 +87,17 @@ export class MenuBackdrop {
 
   next() {
     this.index = (this.index + 1) % MENU_SCENES.length;
+    this.endBattle();
     this.run = undefined;
     return this.scene;
   }
 
-  prepare(now:number){if(!this.run)this.begin(now);if(!this.snapshot){this.run!.script(this.run!.game,0);this.snapshot=snapshotGame(this.run!.game);}return this.snapshot;}
+  prepare(now:number){if(!this.run)this.begin(now);if(!this.snapshot){const run=this.run!;if('script' in run)run.script(run.game,0);this.snapshot=snapshotGame(run.game);}return this.snapshot;}
   /** Resource loading does not consume the opening beats of the presentation.
    * Keep this cast and its prepared assets; only display history starts anew. */
   startPresentation(now:number){
     if(!this.run)return;
+    this.endBattle();
     this.snapshot=undefined;
     this.facing=new UnitFacingTracker();
     this.motion=new UnitMotionSmoother();
@@ -126,11 +125,24 @@ export class MenuBackdrop {
     this.clock = now;
     const age = (now - this.started) / 1000;
     const sceneSecond = reducedMotion ? (run.stillSecond ?? 0) : age;
-    run.game.tick = Math.floor(sceneSecond * SIM_TICKS_PER_SECOND);
-    run.script(run.game, sceneSecond);
-    this.snapshot = snapshotGame(run.game);
-    trackUnitFacing(this.facing, this.snapshot);
-    const framing = run.frameAt?.(sceneSecond, width, height);
+    let length = run.length, snapshot: GameSnapshot;
+    if ('script' in run) {
+      run.game.tick = Math.floor(sceneSecond * SIM_TICKS_PER_SECOND);
+      run.script(run.game, sceneSecond);
+      snapshot = snapshotGame(run.game);
+    } else if (reducedMotion) {
+      // A still battle is its opening: both sides drawn up, before the simulation moves anyone.
+      snapshot = this.snapshot ?? snapshotGame(run.game);
+    } else {
+      this.battle ??= this.fight(run, now);
+      this.battle.adapter.updateToRenderTime();
+      snapshot = this.battle.adapter.currentSnapshot();
+      if (this.decidedAt === undefined && battleDecided(snapshot)) this.decidedAt = age;
+      length = Math.min(LONGEST_BATTLE, (this.decidedAt ?? Infinity) + AFTERMATH);
+    }
+    this.snapshot = snapshot;
+    trackUnitFacing(this.facing, snapshot);
+    const framing = run.frameAt?.(sceneSecond, width, height, snapshot);
     const zoom = framing?.zoom ?? run.zoom * Math.max(0.85, Math.min(1.4, height / 900));
     const view = { width: width / zoom, height: height / zoom };
     const map = run.game.map;
@@ -142,7 +154,7 @@ export class MenuBackdrop {
     ctx.save();
     paint({
       ctx,
-      snapshot: this.snapshot,
+      snapshot,
       view: { ...camera, width, height, zoom },
       now,
       facing: this.facing,
@@ -157,7 +169,7 @@ export class MenuBackdrop {
       ...(run.models ? { models: run.models } : {}),
       ...(run.buildingModels ? { buildingModels: run.buildingModels } : {}),
       props: (kind) => run.painters?.[kind] ?? PROPS[kind] ?? CORE_SCENERY[kind],
-      story: stageView(run),
+      story: stageView(run, snapshot.tick),
     });
     run.foreground?.(ctx, { ...camera, width, height, zoom }, sceneSecond);
     const toScreen = (point: Point) => ({ x: (point.x - camera.x) * zoom, y: (point.y - camera.y) * zoom });
@@ -172,18 +184,39 @@ export class MenuBackdrop {
     drawGlows(ctx, run.glows.map(toScreen), age, zoom);
     this.drawMotes(ctx, run, width, height, elapsed / 1000, age, toScreen, waterAt, zoom);
     // A static composition stays visible; only a running scene fades and repeats.
-    const fade = reducedMotion ? 0 : Math.max(0, 1 - age / FADE, run.length ? 1 - (run.length - age) / FADE : 0);
+    const fade = reducedMotion ? 0 : Math.max(0, 1 - age / FADE, length ? 1 - (length - age) / FADE : 0);
     if (fade > 0) {
       ctx.fillStyle = `rgba(12, 7, 3, ${Math.min(1, fade)})`;
       ctx.fillRect(0, 0, width, height);
     }
     ctx.restore();
-    if (!reducedMotion && run.length && age >= run.length) this.run = undefined;
+    if (!reducedMotion && length && age >= length) {
+      this.endBattle();
+      this.run = undefined;
+    }
   }
 
   private begin(now: number) {
-    this.run = this.scene.create();
+    this.run = this.scene.create(Math.floor(this.random() * 2 ** 31));
     this.startPresentation(now);
+  }
+
+  // The battle is fought from the page copy's opening: on a thread built from the same scene and seed, or here.
+  private fight(run: Extract<Run, { battle: unknown }>, now: number) {
+    const clock = () => this.clock ?? now;
+    if (!this.threads) {
+      const adapter = new LocalGameAdapter(run.game, run.game.activePlayers[0]!, { now: clock });
+      return { adapter, end: () => adapter.close() };
+    }
+    const thread = this.threads();
+    const adapter = new MatchThreadGameAdapter(thread.port, { type: "scene", ...run.battle, now }, snapshotGame(run.game), { playerId: run.game.activePlayers[0]!, now: clock });
+    return { adapter, end: () => { adapter.close(); thread.terminate(); } };
+  }
+
+  private endBattle() {
+    this.battle?.end();
+    this.battle = undefined;
+    this.decidedAt = undefined;
   }
 
   private drawMotes(ctx: CanvasRenderingContext2D, run: Run, width: number, height: number, dt: number, age: number, toScreen: (point: Point) => Point, waterAt: (point: Point) => boolean, zoom: number) {
@@ -243,10 +276,11 @@ export class MenuBackdrop {
   }
 }
 
-function stageView(run: Run): StageView {
+// The story layer reads the drawn world's tick: a battle's page copy stays at its opening while its thread fights on.
+function stageView(run: Run, tick: number): StageView {
   const actions = run.actions?.();
   return {
-    tick: run.game.tick,
+    tick,
     ...(actions ? { unitActions: actions } : {}),
     lines: [],
     objectives: [],

@@ -5,6 +5,7 @@ import type { ServerNetMessage } from "../../shared/net/types";
 import { createGame, warmGameCaches, type Game } from "../../shared/sim";
 import { SimulationEngine } from "../../shared/sim/engine";
 import type { GameSetupOptions, GameSnapshot, MapId, RoomState } from "../../shared/types";
+import { MENU_BATTLES } from "../menu-battles";
 import { LocalGameAdapter } from "../net/local-adapter";
 import { LockstepClient } from "../net/lockstep-client";
 import type { MatchThreadEvent, MatchThreadMessage, MatchThreadSnapshot } from "./protocol";
@@ -59,6 +60,13 @@ export function createMatchThreadHost(post: (event: MatchThreadEvent) => void) {
               finishRoom: (snapshot) => { post({ type: "ended", snapshot: withoutGround(snapshot) }); return { ...room, status: "ended" } as RoomState; },
             } : {}),
           });
+          return;
+        }
+        if (message.type === "scene") {
+          now = message.now;
+          const game = MENU_BATTLES[message.scene](message.seed);
+          warmGameCaches(game);
+          local = new LocalGameAdapter(game, game.activePlayers[0]!, { now: () => now });
           return;
         }
         if (message.type === "lockstep") {
