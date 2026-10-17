@@ -171,7 +171,7 @@ export class MenuBackdrop {
       props: (kind) => run.painters?.[kind] ?? PROPS[kind] ?? CORE_SCENERY[kind],
       story: stageView(run, snapshot.tick),
     });
-    run.foreground?.(ctx, { ...camera, width, height, zoom }, sceneSecond);
+    run.foreground?.(ctx, { ...camera, width, height, zoom }, sceneSecond, snapshot);
     const toScreen = (point: Point) => ({ x: (point.x - camera.x) * zoom, y: (point.y - camera.y) * zoom });
     const waterAt = (point: Point) => {
       const terrain = map.terrain;
