@@ -2,6 +2,7 @@ import {
   createGrandThirtyRoom as createGrandThirtyRoomState,
   createRoom as createRoomState,
   finishRoom as finishRoomState,
+  reopenRoom as reopenRoomState,
   joinFirstOpenSlot,
   leaveUserSlot,
   lobbyVisibleRooms,
@@ -154,6 +155,10 @@ export function createRoomLifecycleHost(options: RoomLifecycleOptions = {}) {
 
     finishRoom(roomId: string, snapshot: GameSnapshot): RoomState {
       return replaceRoom(finishRoomState(requireRoom(roomId), snapshot));
+    },
+
+    reopenRoom(roomId: string, userId: string): RoomState {
+      return replaceRoom(reopenRoomState(requireRoom(roomId), userId));
     },
   };
 }

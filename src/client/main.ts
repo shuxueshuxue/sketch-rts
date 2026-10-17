@@ -1294,12 +1294,14 @@ async function startCurrentRoom() {
   }
 }
 
-// A rematch is a solo game: one played solo comes back with its settings unchanged; after a game with others, the same
-// map with computers in the other seats.
+// A rematch: a solo game comes back with its settings unchanged; a game with others is played again in the same room,
+// its seats as they were (see @@@rematch).
 async function createReplayRoom(room: RoomState) {
   roomSetupSession.cancel();
-  await createConfiguredRoom(room.visibility === "private" ? roomConfiguration(room)
-    : { ...defaultRoomConfiguration(room.mapId as PoolMapId), name: t("roomCreate.defaultName", { name: localUser.name }) });
+  if (deploymentRuntime.isLocalRoom(room.id)) { await createConfiguredRoom(roomConfiguration(room)); return; }
+  try { await deploymentRuntime.reopenRoom(room.id, localUser); }
+  catch (error) { menuStatus.innerHTML = `<span class="error">${escapeHtml(t("status.enterRoomFailed", { message: error instanceof Error ? error.message : String(error) }))}</span>`; return; }
+  await enterRoom(room.id);
 }
 
 // @@@solo-setup - The last solo game's map and seats, kept in this browser in the form its address takes, so what is read
@@ -1558,9 +1560,15 @@ function handleRuntimeRoomUpdate(room: RoomState) {
     menuStatus.textContent = t('roomSetup.closed');
     return;
   }
+  // Results shown, and the room open again (see @@@rematch): its players go back into it.
+  if (menuView === "results" && room.status === "open") {
+    if (slotForUser(room, localUser.id)) void enterRoom(room.id, true);
+    return;
+  }
   roomSetupSession.accept(room);
+  const shown = menuView === "results" && currentRoom?.status === "ended";
   currentRoom = room;
-  if (room.status === "ended" && room.result) openResults(room);
+  if (room.status === "ended" && room.result) { if (!shown) openResults(room); }
   else if (menuOpen && menuView === "setup") renderMainMenu();
 }
 
@@ -1608,6 +1616,8 @@ function openResults(room: RoomState) {
   syncMatchActions();
   renderMainMenu();
   updateHud();
+  // A room played with others stays heard from: when one of them plays it again, everyone seated comes back together.
+  if (!deploymentRuntime.isLocalRoom(room.id)) watchRoomSetup(room.id);
 }
 
 async function forfeitCurrentMatch() {

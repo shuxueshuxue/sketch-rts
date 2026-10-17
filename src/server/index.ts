@@ -243,6 +243,19 @@ router.post("/api/rooms/:roomId/close", (request, response) => {
   }
 });
 
+router.post("/api/rooms/:roomId/reopen", (request, response) => {
+  const userId = requestUserId(request.body);
+  if (!userId) {
+    response.status(400).json({ error: "Malformed user id" });
+    return;
+  }
+  try {
+    response.json(roomHost.reopenRoom(request.params.roomId, userId));
+  } catch (error) {
+    response.status(400).json({ error: errorMessage(error) });
+  }
+});
+
 router.post("/api/rooms/:roomId/slots/:slotId", (request, response) => {
   const body = request.body as Record<string, unknown>;
   const patch = parseSlotPatch(body.patch), userId = requestUserId(body);

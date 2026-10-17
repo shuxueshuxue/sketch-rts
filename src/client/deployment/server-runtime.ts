@@ -105,6 +105,10 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
     return () => source.close();
   }
 
+  async reopenRoom(roomId: string, user: LocalUserProfile): Promise<RoomState> {
+    return this.fetchJson<RoomState>(this.path(`/api/rooms/${encodeURIComponent(roomId)}/reopen`), { userId: user.id });
+  }
+
   async closeRoom(roomId: string, user: LocalUserProfile): Promise<RoomState> {
     return this.fetchJson<RoomState>(this.path(`/api/rooms/${encodeURIComponent(roomId)}/close`), { userId: user.id });
   }

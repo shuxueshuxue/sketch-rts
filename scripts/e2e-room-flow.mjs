@@ -557,33 +557,62 @@ async page => {
   must(resultText && resultText.includes("Winner:"), "results screen did not show winner");
   must((await page.locator("[data-result-slot='player']").count()) === 1, "results screen missing player slot row");
   must((await page.locator("[data-result-slot='enemy']").count()) === 1, "results screen missing enemy slot row");
+  // A computer is named by how it plays; its internal version waits in the details.
+  const styleProof = await page.evaluate(() => ({ controllers: [...document.querySelectorAll("[data-result-slot] span:nth-child(2)")].map(cell => cell.textContent),
+    finished: document.querySelector("[data-menu-status]")?.textContent ?? "", details: !!document.querySelector("[data-result-details]") }));
+  must(styleProof.controllers.some(text => /AI · (Archers|Summoners|Knights)/.test(text)) && styleProof.details && !/tick/i.test(styleProof.finished),
+    "results should name computers by play style and keep versions in the details: " + JSON.stringify(styleProof));
   must((await page.locator("[data-rematch]").count()) === 1, "results screen missing rematch action");
   must((await page.locator("[data-return-home]").count()) === 1, "results screen missing home action");
 
   // An online player concedes from the match menu (see @@@forfeit): the other side wins, and the results say how long
-  // the match took and name the computer by how it plays.
+  // the match took. Then the room is played again (see @@@rematch): the host's rematch brings both players back into the
+  // same room, seats as they were, the guest to get ready again.
   await page.locator("[data-return-home]").click();
   await page.locator("[data-open-room-browser]").click();
-  const concedeId = await onlineSetup("pineshade");
-  await page.locator("[data-start-room]").click();
-  await page.waitForFunction(() => document.querySelector("[data-main-menu]")?.classList.contains("hidden"), null, { timeout: 30000 });
-  await page.evaluate(() => {
-    const gate = document.querySelector("[data-pointer-lock-gate]");
-    if (gate) { gate.classList.add("hidden"); gate.style.pointerEvents = "none"; }
-  });
-  await page.locator("[data-match-menu-button]").click();
-  await page.locator("[data-forfeit-match]").click();
-  await page.waitForSelector("[data-results-screen='" + concedeId + "']", { timeout: 30000 });
-  const concedeProof = await page.evaluate(async (roomId) => {
-    const room = await (await fetch("/api/rooms/" + roomId)).json();
-    return { status: room.status, winner: room.result?.winner, finished: document.querySelector("[data-menu-status]")?.textContent ?? "",
-      controllers: [...document.querySelectorAll("[data-result-slot] span:nth-child(2)")].map(cell => cell.textContent), details: !!document.querySelector("[data-result-details]") };
-  }, concedeId);
-  must(concedeProof.status === "ended" && concedeProof.winner === "enemy" && /\d+:\d\d/.test(concedeProof.finished) && !/tick/i.test(concedeProof.finished)
-    && concedeProof.controllers.some(text => /AI · (Archers|Summoners|Knights)/.test(text)) && concedeProof.details,
-    "conceding an online match did not end it for the other side with readable results: " + JSON.stringify(concedeProof));
+  const concedeId = await onlineSetup("pineshade", false);
+  const rivalContext = await page.context().browser().newContext();
+  try {
+    const rival = await rivalContext.newPage();
+    await rival.goto(page.url().split(/[?#]/)[0] + "?room=" + encodeURIComponent(concedeId));
+    await rival.waitForSelector("[data-room-setup='" + concedeId + "'] [data-slot-id='slot-2'] [data-slot-ready]:not([disabled])", { timeout: 30000 });
+    await rival.locator("[data-slot-id='slot-2'] [data-slot-ready]").check();
+    await page.waitForFunction(() => document.querySelector("[data-start-room]")?.disabled === false, null, { timeout: 30000 });
+    const seatsBefore = await page.evaluate(async (roomId) => (await (await fetch("/api/rooms/" + roomId)).json()).slots.map(slot => [slot.userId ?? null, slot.controller, slot.team, slot.race]), concedeId);
+    await page.locator("[data-start-room]").click();
+    await page.waitForFunction(() => document.querySelector("[data-main-menu]")?.classList.contains("hidden"), null, { timeout: 30000 });
+    await page.evaluate(() => {
+      const gate = document.querySelector("[data-pointer-lock-gate]");
+      if (gate) { gate.classList.add("hidden"); gate.style.pointerEvents = "none"; }
+    });
+    await page.locator("[data-match-menu-button]").click();
+    await page.locator("[data-forfeit-match]").click();
+    await page.waitForSelector("[data-results-screen='" + concedeId + "']", { timeout: 30000 });
+    await rival.waitForSelector("[data-results-screen='" + concedeId + "']", { timeout: 30000 });
+    const concedeProof = await page.evaluate(async (roomId) => {
+      const room = await (await fetch("/api/rooms/" + roomId)).json();
+      return { status: room.status, winner: room.result?.winner, finished: document.querySelector("[data-menu-status]")?.textContent ?? "" };
+    }, concedeId);
+    must(concedeProof.status === "ended" && concedeProof.winner === "enemy" && /\d+:\d\d/.test(concedeProof.finished) && !/tick/i.test(concedeProof.finished),
+      "conceding an online match did not end it for the other side with readable results: " + JSON.stringify(concedeProof));
+    await page.locator("[data-rematch]").click();
+    await page.waitForSelector("[data-room-setup='" + concedeId + "']", { timeout: 30000 });
+    // The guest, still on the results, is brought back without a click.
+    await rival.waitForSelector("[data-room-setup='" + concedeId + "'] [data-slot-id='slot-2'] [data-slot-ready]", { timeout: 30000 });
+    const rematchProof = await page.evaluate(async (roomId) => {
+      const room = await (await fetch("/api/rooms/" + roomId)).json();
+      return { status: room.status, result: room.result ?? null, seats: room.slots.map(slot => [slot.userId ?? null, slot.controller, slot.team, slot.race]), ready: room.slots.map(slot => slot.ready) };
+    }, concedeId);
+    const rivalBox = await rival.locator("[data-slot-id='slot-2'] [data-slot-ready]").isChecked();
+    must(rematchProof.status === "open" && rematchProof.result === null && JSON.stringify(rematchProof.seats) === JSON.stringify(seatsBefore)
+      && rematchProof.ready[0] === true && rematchProof.ready[1] === false && !rivalBox,
+      "a rematch did not bring both players back to the same room, seats kept, the guest to get ready again: " + JSON.stringify({ seatsBefore, rematchProof, rivalBox }));
+  } finally { await rivalContext.close(); }
+  await page.locator("[data-back-room-browser]").click();
+  await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
+  await page.locator("[data-back-home]").click();
+  await page.waitForSelector("[data-main-menu]:not(.hidden) [data-open-room-browser]", { timeout: 5000 });
 
-  await page.locator("[data-return-home]").click();
   await page.evaluate(() => localStorage.removeItem("sketch-rts-current-room"));
   await page.locator("[data-open-room-browser]").click();
   await page.waitForSelector("[data-room-browser]", { timeout: 5000 });

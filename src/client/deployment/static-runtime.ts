@@ -92,6 +92,10 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
     return () => {};
   }
 
+  async reopenRoom(roomId: string, user: LocalUserProfile): Promise<RoomState> {
+    return this.lifecycle.reopenRoom(roomId, user.id);
+  }
+
   async closeRoom(roomId: string, user: LocalUserProfile): Promise<RoomState> {
     return this.lifecycle.closeRoom(roomId, user.id);
   }
