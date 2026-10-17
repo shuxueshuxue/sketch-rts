@@ -21,12 +21,8 @@ import { planSettlerBoarding } from './ferry-preparation';
 import { planRiderCrossing, riderFerryCrew } from './rider-crossing';
 import { transportRecovery } from './transport-recovery';
 import { postRecoveryAssignments, postRecoveryCommands } from './front-recovery';
+import { strikersOf } from '../policy/threat-reach';
 
-function patientThreats(snapshot: GameSnapshot, patient: Unit, foes: readonly (Unit | Building)[]) {
-  return foes.filter(foe => sameGround(snapshot.map, patient, foe)
-    && distance(patient, foe) <= mountedThreatReach(snapshot, foe, patient, THINK_TICKS)
-      + ('speed' in foe ? foe.speed : 0) * (THINK_TICKS + 2) / SIM_TICKS_PER_SECOND);
-}
 
 function incomingDamage(patient: Unit, foes: readonly (Unit | Building)[], window: number) {
   return foes.reduce((damage, foe) => damage + ('order' in foe
@@ -49,7 +45,7 @@ export function landRecoveryAssignments(snapshot: GameSnapshot, owner: PlayerId,
     && isEnemyOwner(snapshot, owner, foe.owner, options)) : [];
   const unmedicated = landed.filter(unit => !resting.has(unit.id) && unit.expiresTick === undefined && unit.hp < unit.maxHp
     && (!canReceiveHealing(unit, snapshot) || nearestByRoute(snapshot.map, healers, unit, 'land') === undefined)).flatMap(patient => {
-    const threats = patientThreats(snapshot, patient, foes);
+    const threats = strikersOf(snapshot, patient, foes);
     if (!threats.length) return [];
     const danger = [...threats].sort((a, b) => distance(patient, a) - mountedThreatReach(snapshot, a, patient, THINK_TICKS)
       - (distance(patient, b) - mountedThreatReach(snapshot, b, patient, THINK_TICKS)))[0]!;
@@ -79,7 +75,7 @@ export function landRecoveryAssignments(snapshot: GameSnapshot, owner: PlayerId,
 export function patientRendezvousCommands(snapshot: GameSnapshot,
   recovering: ReturnType<typeof landRecoveryAssignments>['recovering'], foes: readonly (Unit | Building)[], medics: ReadonlySet<string>): GameCommand[] {
   return recovering.filter(({ patient }) => !medics.has(patient.id)).map(({ patient, healer }) => {
-    const threats = patientThreats(snapshot, patient, foes);
+    const threats = strikersOf(snapshot, patient, foes);
     if (threats.length) {
       const ability = UNIT_DEFS[healer.kind].abilities.find(ability => ABILITY_DEFS[ability].behavior === 'heal')!;
       if (distance(patient, healer) <= ABILITY_DEFS[ability].range) return mountedEscape(snapshot, patient, threats, 0, healer, true);

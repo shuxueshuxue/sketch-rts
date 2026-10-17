@@ -7,7 +7,7 @@ import type { V6BaseIntel, V6Intel } from './v6/intel';
 import { strengthOf, TOWER_STRENGTH } from './v6/strength';
 import { LOCAL_RANGE } from './v6/general';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
-import { THINK_TICKS } from '../bootstrap_1/mounted-micro';
+import { THINK_TICKS } from './threat-reach';
 
 /** Fire crosses terrain; a land reinforcement outside firing range needs a road. */
 export function groundThreatWithin(snapshot: GameSnapshot, unit: Unit, point: Point, range: number) {
