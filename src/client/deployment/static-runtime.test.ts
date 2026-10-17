@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { LocalUserProfile } from "../../shared/types";
+import type { LocalUserProfile, RoomState } from "../../shared/types";
 import { StaticSoloDeploymentRuntime } from "./static-runtime";
 
 const host: LocalUserProfile = { id: "host", name: "Host" };
@@ -12,7 +12,8 @@ describe("static solo deployment runtime", () => {
     const replacement = runtime.connectRoom(previous.room, 'player', false, () => {});
     expect(previous.adapter.updateToRenderTime()).toBe(false);
     previous.adapter.close();
-    expect((await runtime.forfeitMatch('replace', host)).status).toBe('ended');
+    await runtime.forfeitMatch('replace', host);
+    expect((await runtime.getRoom('replace')).status).toBe('ended');
     expect(replacement.adapter.updateToRenderTime()).toBe(false);
     await runtime.createRoom({id: 'abandoned', host, mapId: 'bareDuel', humanCount: 1, aiCount: 1});
     const abandoned = await runtime.startRoom('abandoned', host);
@@ -97,9 +98,11 @@ describe("static solo deployment runtime", () => {
   it("can concede a local match into ordinary room results", async () => {
     const runtime = new StaticSoloDeploymentRuntime();
     await runtime.createRoom({ id: "room-concede", host, mapId: "bareDuel", humanCount: 1, aiCount: 1 });
-    await runtime.startRoom("room-concede", host);
+    const updates: RoomState[] = [];
+    await runtime.startRoom("room-concede", host, room => updates.push(room));
 
-    const ended = await runtime.forfeitMatch("room-concede", host);
+    await runtime.forfeitMatch("room-concede", host);
+    const ended = updates.at(-1)!;
 
     expect(ended.status).toBe("ended");
     expect(ended.result).toMatchObject({ winner: "enemy" });

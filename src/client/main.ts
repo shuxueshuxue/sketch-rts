@@ -88,7 +88,7 @@ import { configurationOnMap, defaultRoomConfiguration, formatRoomRoute, parseRoo
 import { configurationForRoomMode, RoomSetupSession } from './room-setup-session';
 import { unitHoverCursor } from './unit-hover-cursor';
 import { unitHoverTarget } from './unit-hover-target';
-import { roomBrowserEntries } from "./room-browser-model";
+import { roomBrowserEntries, roomEntry, type RoomBrowserAction } from "./room-browser-model";
 import { roomSetupViewAction } from "./room-view-state";
 import { UnitFacingTracker } from "./unit-facing";
 import { UnitMotionSmoother } from "./unit-motion";
@@ -903,7 +903,7 @@ async function openRouteFromUrl() {
   const route = parseRoomRoute(window.location.search);
   if (route.screen === "room") {
     if (currentRoom?.id === route.roomId) return;
-    await enterRoom(route.roomId, true);
+    await enterRoom(route.roomId, true, true);
     return;
   }
   if (route.screen === 'setup' && currentRoom && deploymentRuntime.isLocalRoom(currentRoom.id) && formatRoomRoute({ screen: 'setup', configuration: roomConfiguration(currentRoom) }) === window.location.search) return;
@@ -922,7 +922,7 @@ function watchRoomSetup(roomId: string) {
   if (activeRoomWatchId === roomId) return;
   clearRoomWatch();
   activeRoomWatchId = roomId;
-  activeRoomUnwatch = deploymentRuntime.watchRoom(roomId, handleRuntimeRoomUpdate);
+  activeRoomUnwatch = deploymentRuntime.watchRoom(roomId, localUser, handleRuntimeRoomUpdate);
 }
 
 function clearRoomWatch() {
@@ -1077,6 +1077,7 @@ function renderProfileMenu() {
 }
 
 // The footer stays mounted while only the room list changes between loading, empty and populated states.
+const ROOM_LIST_REFRESH_MS = 3000;
 async function renderRoomBrowser() {
   menuStatus.textContent = "";
   const browser = document.createElement("div");
@@ -1091,25 +1092,36 @@ async function renderRoomBrowser() {
   const list = browser.querySelector<HTMLDivElement>("[data-room-browser-list]")!;
   list.replaceChildren(roomListNote(t("roomBrowser.loading"), "loading"));
   mapList.replaceChildren(browser);
-  let rooms: RoomState[];
-  try {
-    rooms = await deploymentRuntime.listRooms(localUser.id);
-  } catch {
-    if (browser.isConnected) list.replaceChildren(roomListNote(t("roomBrowser.failed"), "error"));
-    return;
+  // The list keeps itself current while it is shown: rooms open, fill and start without a reload.
+  for (let first = true; browser.isConnected; first = false) {
+    if (!first) await new Promise(resolve => setTimeout(resolve, ROOM_LIST_REFRESH_MS));
+    let rooms: RoomState[];
+    try {
+      rooms = await deploymentRuntime.listRooms(localUser.id);
+    } catch {
+      if (browser.isConnected) list.replaceChildren(roomListNote(t("roomBrowser.failed"), "error"));
+      return;
+    }
+    // Left, or laid out again, while they loaded.
+    if (!browser.isConnected) return;
+    const entries = roomBrowserEntries(rooms, localUser.id, roomId => deploymentRuntime.isLocalRoom(roomId));
+    const group = (playing: boolean) => {
+      const members = entries.filter(entry => entry.playing === playing);
+      if (!members.length) return [];
+      const title = document.createElement("div");
+      title.className = "room-section-title room-browser-group";
+      title.textContent = t(playing ? "roomBrowser.group.playing" : "roomBrowser.group.open");
+      return [title, ...members.map(entry => {
+        const button = menuButton(entry.room.name, roomBrowserNote(entry.room, entry.action), "data-room-id", () => void enterRoom(entry.room.id), entry.room.id);
+        button.dataset.roomAction = entry.action;
+        button.disabled = entry.action === "full";
+        return button;
+      })];
+    };
+    list.replaceChildren(...(entries.length ? [...group(false), ...group(true)] : [roomListNote(t("roomBrowser.noVisible"), "empty")]));
+    // Marked once its rooms are in: what a script waits on.
+    browser.dataset.roomBrowser = "true";
   }
-  // Left, or laid out again, while they loaded.
-  if (!browser.isConnected) return;
-  const visibleRooms = roomBrowserEntries(rooms, localUser.id);
-  list.replaceChildren(
-    ...(visibleRooms.length > 0
-      ? visibleRooms.map((entry) =>
-          menuButton(entry.room.name, roomBrowserNote(entry.room, entry.action), "data-room-id", () => void enterRoom(entry.room.id), entry.room.id),
-        )
-      : [roomListNote(t("roomBrowser.noVisible"), "empty")]),
-  );
-  // Marked once its rooms are in: what a script waits on.
-  browser.dataset.roomBrowser = "true";
 }
 
 function renderRoomSetup() {
@@ -1148,6 +1160,7 @@ function renderRoomSetup() {
         <div class="slot-pane-head">
           <div class="room-section-title">${escapeHtml(t("roomSetup.slots"))}</div>
           <div class="slot-actions">
+            ${solo ? "" : `<button type="button" data-copy-invite>${escapeHtml(t("roomSetup.copyInvite"))}</button>`}
             ${host && !solo ? `<button type="button" class="danger-button" data-close-room ${busy ? "disabled" : ""}>${escapeHtml(t("roomSetup.close"))}</button>` : ""}
           </div>
         </div>
@@ -1185,6 +1198,13 @@ function renderRoomSetup() {
   const local = deploymentRuntime.isLocalRoom(room.id);
   slotList.replaceChildren(...room.slots.map((slot, index) => slotRow(room, slot, index, local)));
   if (busy) slotList.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input,select').forEach(input => input.disabled = true);
+  // An invitation is the room's own address: opened, it seats the friend in an open seat (see @@@room-entry).
+  setup.querySelector("[data-copy-invite]")?.addEventListener("click", () => {
+    const link = new URL(formatRoomRoute({ screen: "room", roomId: room.id }), window.location.href).href;
+    navigator.clipboard.writeText(link).then(
+      () => { menuStatus.textContent = t("roomSetup.inviteCopied"); },
+      () => { menuStatus.textContent = t("roomSetup.inviteLink", { link }); });
+  });
   setup.querySelector("[data-close-room]")?.addEventListener("click", () => void closeCurrentRoom());
   setup.querySelector("[data-start-room]")?.addEventListener("click", () => void startCurrentRoom());
   setup.querySelector("[data-back-home]")?.addEventListener("click", () => openMenuRoute({ screen: "home" }));
@@ -1202,8 +1222,11 @@ function renderResultsMenu() {
     return;
   }
 
-  menuStatus.textContent = t("results.finished", { name: currentRoom.name, tick: result.endedAtTick ?? "?" });
+  menuStatus.textContent = result.endedAtTick == null ? t("results.finishedUntimed", { name: currentRoom.name })
+    : t("results.finished", { name: currentRoom.name, time: matchTime(result.endedAtTick) });
   const winners = winningResultSlots(result);
+  // Which computer player each seat had stays at hand for testing, out of the way of the table.
+  const computers = result.slots.filter(slot => slot.controller === "ai" && slot.aiVersion && slot.aiVersion !== "random");
   const rows = result.slots.map((slot) => {
     const kills = result.stats.unitsKilled[slot.playerId] ?? 0;
     const losses = result.stats.unitsLost[slot.playerId] ?? 0;
@@ -1212,7 +1235,7 @@ function renderResultsMenu() {
     return `
       <div class="result-row" data-result-slot="${escapeHtml(slot.playerId)}">
         <span>${escapeHtml(slot.name)}</span>
-        <span>${escapeHtml(slot.controller === "ai" && slot.aiVersion ? `${labelKind("ai")} · ${slot.aiVersion.toUpperCase().replace("_", " ")}` : labelKind(slot.controller))}</span>
+        <span>${escapeHtml(slot.controller === "ai" && slot.aiVersion ? `${labelKind("ai")} · ${aiStyle(slot.aiVersion)}` : labelKind(slot.controller))}</span>
         <span>${escapeHtml(labelKind(roomTeam(slot.team)))}</span>
         <span>${escapeHtml(labelKind(slot.race))}</span>
         <span>${kills}/${losses}</span>
@@ -1230,6 +1253,8 @@ function renderResultsMenu() {
       <span>${escapeHtml(t("results.player"))}</span><span>${escapeHtml(t("results.controller"))}</span><span>${escapeHtml(t("results.team"))}</span><span>${escapeHtml(t("results.race"))}</span><span>${escapeHtml(t("results.killsLosses"))}</span><span>${escapeHtml(t("results.gold"))}</span><span>${escapeHtml(t("results.buildings"))}</span>
     </div>
     <div class="result-list">${rows.join("")}</div>
+    ${computers.length ? `<details class="result-details" data-result-details><summary>${escapeHtml(t("results.details"))}</summary>
+      ${computers.map(slot => `<div>${escapeHtml(slot.name)} · ${escapeHtml(slot.aiVersion!)}</div>`).join("")}</details>` : ""}
 `, `
       <button type="button" data-rematch>${escapeHtml(t("results.rematch"))}</button>
       <button type="button" data-return-home>${escapeHtml(t("common.home"))}</button>
@@ -1310,6 +1335,18 @@ function rememberedSoloSetup(): RoomConfiguration {
   return route?.screen === "setup" && route.configuration ? { ...route.configuration, visibility: "private" } : defaultRoomConfiguration();
 }
 
+// A computer player by how it plays (archers, summons, knights), not by its internal version.
+function aiStyle(version: RoomAiChoice) {
+  return version === "random" ? labelKind("random") : t(`ai.style.${version}`);
+}
+
+// How long a match lasted, as a player reads a clock: m:ss, or h:mm:ss past an hour.
+function matchTime(ticks: number) {
+  const total = Math.floor(ticks / SIM_TICKS_PER_SECOND), hours = Math.floor(total / 3600), minutes = Math.floor(total / 60) % 60, seconds = total % 60;
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return hours ? `${hours}:${pad(minutes)}:${pad(seconds)}` : `${minutes}:${pad(seconds)}`;
+}
+
 function menuButton(label: string, note: string, dataName: string, onClick: () => void, dataValue = "true") {
   const button = document.createElement("button");
   button.className = "map-button";
@@ -1359,7 +1396,7 @@ function slotRow(room: RoomState, slot: RoomState["slots"][number], index: numbe
   // @@@room-ai-races), random by default; a seat on a random race has its computer player drawn too, so that one is locked.
   const aiChoice = slot.race === "random" ? "random" : (slot.aiVersion ?? DEFAULT_INTERNAL_AI_VERSION);
   const aiChoices: RoomAiChoice[] = slot.race === "random" ? ["random"] : ["random", ...roomAiVersionsFor(slot.race)];
-  const aiOptions = aiChoices.map((choice) => `<option value="${choice}" ${aiChoice === choice ? "selected" : ""}>${choice === "random" ? escapeHtml(labelKind("random")) : choice.toUpperCase().replace("_", " ")}</option>`).join("");
+  const aiOptions = aiChoices.map((choice) => `<option value="${choice}" ${aiChoice === choice ? "selected" : ""}>${escapeHtml(choice === "random" ? labelKind("random") : aiStyle(choice))}</option>`).join("");
   const raceOptions = [...RACE_IDS, "random" as const].map((race) => `<option value="${race}" ${slot.race === race ? "selected" : ""}>${escapeHtml(labelKind(race))}</option>`).join("");
   row.innerHTML = `
     <span class="slot-index">${index + 1}</span>
@@ -1429,14 +1466,10 @@ async function closeCurrentRoom() {
   renderMainMenu();
 }
 
-function activeSlotCount(room: RoomState) {
-  return room.slots.filter((slot) => slot.controller === "human" || slot.controller === "ai").length;
-}
-
-function roomBrowserNote(room: RoomState, action: "join" | "rejoin" | "watch" = slotForUser(room, localUser.id) ? "rejoin" : "join") {
-  const ownedSlot = slotForUser(room, localUser.id);
-  const access = ownedSlot ? t("roomCard.access.youAre", { playerId: ownedSlot.playerId }) : action === "watch" ? t("roomCard.access.watch") : room.status === "open" ? t("roomCard.access.open") : t("roomCard.access.alreadyStarted");
-  return `${mapName(room.mapId)} · ${labelKind(room.status)} · ${t("roomCard.activeSlots", { count: activeSlotCount(room) })} · ${access}`;
+// A room's line in the list: its map, its players against the seats open to players, and what a click does.
+function roomBrowserNote(room: RoomState, action: RoomBrowserAction) {
+  const players = room.slots.filter(slot => slot.controller === "human").length, seats = players + room.slots.filter(slot => slot.controller === "open").length;
+  return `${mapName(room.mapId)} · ${t("roomCard.players", { players, seats })} · ${t(`roomCard.action.${action}`)}`;
 }
 
 function roomListNote(text: string, state: "loading" | "empty" | "error") {
@@ -1456,10 +1489,35 @@ function returnHome() {
   openMenuRoute({ screen: "home" });
 }
 
-async function enterRoom(roomId: string, replace = false) {
+// A link into a game under way: watching it is offered, not imposed.
+function askToWatch(roomId: string) {
+  menuView = "rooms"; mainMenu.dataset.menuView = "rooms";
+  menuTitle.textContent = t("roomEntry.watchTitle");
+  menuStatus.textContent = "";
+  const panel = document.createElement("div");
+  panel.className = "menu-page";
+  panel.dataset.watchPrompt = roomId;
+  panel.innerHTML = menuPageMarkup(`<p class="room-entry-question">${escapeHtml(t("roomEntry.watchQuestion"))}</p>`, `
+    <button type="button" data-watch-room>${escapeHtml(t("roomEntry.watch"))}</button>
+    <button type="button" data-back-room-browser>${escapeHtml(t("roomSetup.backRooms"))}</button>`);
+  panel.querySelector("[data-watch-room]")!.addEventListener("click", () => void enterRoom(roomId, true));
+  panel.querySelector("[data-back-room-browser]")!.addEventListener("click", () => openMenuRoute({ screen: "rooms" }));
+  mapList.replaceChildren(panel);
+}
+
+async function enterRoom(roomId: string, replace = false, fromLink = false) {
   const request = ++routeRequest;
   roomSetupSession.cancel(); setupOperation++; setupError = undefined; clearRoomWatch();
   try {
+    // Decided from the room before joining it (see @@@room-entry): a refusal says why, in the player's words.
+    const entry = roomEntry(await deploymentRuntime.findRoom(roomId), localUser.id, fromLink);
+    if (request !== routeRequest) return;
+    if (entry.kind === "refused") {
+      openMenuRoute({ screen: "rooms" }, true);
+      menuStatus.innerHTML = `<span class="error" data-room-refused="${entry.reason}">${escapeHtml(t(`roomEntry.${entry.reason}`))}</span>`;
+      return;
+    }
+    if (entry.kind === "askToWatch") { askToWatch(roomId); return; }
     const entered = await deploymentRuntime.enterRoom(roomId, localUser);
     if (request !== routeRequest) return;
     setRoomRoute({ screen: "room", roomId }, replace);
@@ -1596,8 +1654,7 @@ function openResults(room: RoomState) {
 async function forfeitCurrentMatch() {
   if (!currentRoomId) return;
   try {
-    const ended = await deploymentRuntime.forfeitMatch(currentRoomId, localUser);
-    openResults(ended);
+    await deploymentRuntime.forfeitMatch(currentRoomId, localUser);
   } catch (error) {
     showInvalidCommand(error instanceof Error ? error.message : String(error));
   }
@@ -3220,16 +3277,12 @@ function updateWindIndicator(rect: ScreenRect, now: number) {
   const label = strength === 0 ? level : `${level} · ${zh ? '吹向' : 'toward '}${direction}`;
   const remaining = Math.ceil((WIND_CHANGE_INTERVAL_TICKS - snapshot.tick % WIND_CHANGE_INTERVAL_TICKS) / SIM_TICKS_PER_SECOND);
   const countdown = `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}`;
-  const key = `${label}:${countdown}:${minimapWind}`;
+  const key = `${label}:${countdown}`;
   if (windTooltipKey === key) return;
   windTooltipKey = key;
   minimapWindButton.setAttribute('aria-label', `${t('hud.minimapWind')} · ${label}`);
-  applyTooltip(minimapWindButton, {
-    title: `${zh ? '光标处' : 'At cursor'}：${label}`,
-    hotkey: 'Alt+W',
-    body: zh ? `点击${minimapWind ? '收起' : '显示'}风向图。当前全图同风。` : `Click to ${minimapWind ? 'hide' : 'show'} the wind map. Wind is currently uniform across the map.`,
-    stats: [zh ? `下次换风 ${countdown}` : `Wind changes in ${countdown}`], requirements: [],
-  });
+  // The tooltip says only when the wind next changes: the arrow already shows where it blows.
+  applyTooltip(minimapWindButton, { title: zh ? `下次换风 ${countdown}` : `Wind changes in ${countdown}`, body: '', stats: [], requirements: [] });
   if (!tooltipLayer.classList.contains('hidden') && shownTooltipTarget === minimapWindButton) renderTooltip(minimapWindButton);
 }
 
@@ -3490,6 +3543,7 @@ function draw() {
   const viewer = matchViewer();
   const hovered = hoveredTarget();
   updateHoverCursor(hovered?.id);
+  const placement = buildPlacement();
   worldPresentation.draw({
     ctx,
     snapshot,
@@ -3507,8 +3561,9 @@ function draw() {
     ...(selectedCampId ? { selectedCampId } : {}),
     ...(viewer ? { viewer } : {}),
     ...(hovered ? { hoveredId: hovered.id } : {}),
+    ...(worldPresentation.is3D && placement ? { buildGhost: placement } : {}),
   },'match');
-  drawBuildPlacementPreview();
+  drawBuildPlacementPreview(placement);
   drawPurchaseRecipientFlash();
   drawAttackMovePreview();
   drawSpellPreview();
@@ -3526,15 +3581,22 @@ function draw() {
 // on the ground is in the way (gold short, a shipyard off the shore).
 const PLACEMENT_INK = { clear: "#4f9a52", blocked: "#b2483c" } as const;
 
-function drawBuildPlacementPreview() {
-  if (!commandMode || commandMode.type !== "build" || !lastMouse || !snapshot) return;
-  const kind = commandMode.placement.buildingKind;
+// Where the building in hand would stand, and whether it can: for the 3D layer's ghost model and the footprint below.
+function buildPlacement() {
+  if (!commandMode || commandMode.type !== "build" || !lastMouse || !snapshot) return undefined;
+  const kind = commandMode.placement.buildingKind, world = screenToWorld(lastMouse);
+  const at = snapToFootprint(snapshot.map, BUILDING_DEFS[kind].radius, world);
+  return { kind, x: at.x, y: at.y, valid: "command" in buildPlacementCommand(snapshot, commandMode.placement, world, localPlayerId) };
+}
+
+function drawBuildPlacementPreview(placement: ReturnType<typeof buildPlacement>) {
+  if (!placement || !commandMode || commandMode.type !== "build" || !snapshot) return;
+  const kind = placement.kind;
   const def = BUILDING_DEFS[kind];
   const size = buildingGlyphSize(kind)*worldZoom;
-  const world = screenToWorld(lastMouse);
-  const at = snapToFootprint(snapshot.map, def.radius, world);
+  const at = { x: placement.x, y: placement.y };
   const point = worldToScreen(at);
-  const validPlacement = "command" in buildPlacementCommand(snapshot, commandMode.placement, world, localPlayerId);
+  const validPlacement = placement.valid;
   const ink = validPlacement ? PLACEMENT_INK.clear : PLACEMENT_INK.blocked;
   const square = footprintSquare(snapshot, at, def.radius);
   if (square) {
@@ -3544,9 +3606,8 @@ function drawBuildPlacementPreview() {
     drawFootprint(ctx, square, camera, (col, row) => (everyCell || blocked.has(`${col},${row}`) ? PLACEMENT_INK.blocked : PLACEMENT_INK.clear));ctx.restore();
   }
   ctx.save();
-  ctx.globalAlpha = 0.62;
-  drawAtlasBuilding(ctx, kind, point, size, ink);
-  ctx.globalAlpha = 1;
+  // Over the 3D world the ghost is the building's own model (see @@@build-ghost); the Canvas sprite is the fallback's.
+  if (!worldPresentation.is3D) { ctx.globalAlpha = 0.62; drawAtlasBuilding(ctx, kind, point, size, ink); ctx.globalAlpha = 1; }
   ctx.fillStyle = ink;
   ctx.font = "11px ui-monospace, monospace";
   ctx.fillText(t("canvas.buildPreview", { building: labelKind(kind), cost: def.cost }), point.x - 34, point.y + size / 2 + 22);
@@ -3736,12 +3797,16 @@ function drawMinimap(marks: MapPresentationMark[]) {
   const relations = minimapRelationsOn();
   if (minimapRelationsButton.getAttribute("aria-pressed") !== String(relations)) minimapRelationsButton.setAttribute("aria-pressed", String(relations));
   const viewer = matchViewer();
-  drawMinimapMap(ctx, snapshot, rect, marks, relations && viewer ? viewer : undefined,
-    minimapWind ? () => windMapDisplay.draw(ctx, rect, now) : undefined);
-  ctx.strokeStyle = "#243126";
-  ctx.lineWidth = 1;
+  drawMinimapMap(ctx, snapshot, rect, marks, relations && viewer ? viewer : undefined, { self: viewer, selected: selectedIds });
+  // The camera's box in white on a dark rim, as Warcraft III draws it, then the wind map over everything (see @@@minimap-art).
   const viewport = minimapViewportRect(rect);
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "rgba(20, 17, 12, 0.7)";
   ctx.strokeRect(viewport.x, viewport.y, viewport.width, viewport.height);
+  ctx.lineWidth = 1.2;
+  ctx.strokeStyle = "#f6efdc";
+  ctx.strokeRect(viewport.x, viewport.y, viewport.width, viewport.height);
+  if (minimapWind) windMapDisplay.draw(ctx, rect, now);
 }
 
 // The player the match is seen as: none for a spectator.

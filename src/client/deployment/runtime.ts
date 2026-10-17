@@ -25,17 +25,21 @@ export type DeploymentRuntime = {
   listRooms(viewerUserId?: string): Promise<RoomState[]>;
   createRoom(input: CreateRoomInput): Promise<RoomState>;
   getRoom(roomId: string): Promise<RoomState>;
+  /** The room, or undefined when there is no such room (closed and gone, or never made). */
+  findRoom(roomId: string): Promise<RoomState | undefined>;
   enterRoom(roomId: string, user: LocalUserProfile): Promise<{ room: RoomState; spectating: boolean; playerId: PlayerId }>;
   // Lobby changes are asked as a user, whom the room checks (see @@@seat-ownership).
   updateRoomMap(roomId: string, mapId: MapId, user: LocalUserProfile): Promise<RoomState>;
   updateRoomSlot(roomId: string, slotId: string, patch: SlotPatch, user: LocalUserProfile): Promise<RoomState>;
   updateRoomSlotCounts(roomId: string, humanCount: number, aiCount: number, user: LocalUserProfile): Promise<RoomState>;
-  watchRoom(roomId: string, onRoom: (room: RoomState) => void): () => void;
+  /** Watches a room's lobby as this user: the server lists an open room only while its host watches it. */
+  watchRoom(roomId: string, user: LocalUserProfile, onRoom: (room: RoomState) => void): () => void;
   closeRoom(roomId: string, user: LocalUserProfile): Promise<RoomState>;
   startRoom(roomId: string, user: LocalUserProfile, onRoom?: (room: RoomState) => void): Promise<StartedMatch>;
   connectRoom(room: RoomState, playerId: PlayerId, spectating: boolean, onRoom: (room: RoomState) => void): StartedMatch;
   canForfeitMatch(roomId: string): boolean;
-  forfeitMatch(roomId: string, user: LocalUserProfile): Promise<RoomState>;
+  /** Concedes the match; its end reaches the page through the room's own updates. */
+  forfeitMatch(roomId: string, user: LocalUserProfile): Promise<void>;
   // Whether the room is played in this browser (see @@@private-rooms-local): nobody else can come into it.
   isLocalRoom(roomId: string): boolean;
   close(): void;
@@ -76,6 +80,10 @@ export class SplitDeploymentRuntime implements DeploymentRuntime {
     return this.at(roomId).getRoom(roomId);
   }
 
+  findRoom(roomId: string) {
+    return this.at(roomId).findRoom(roomId);
+  }
+
   enterRoom(roomId: string, user: LocalUserProfile) {
     return this.at(roomId).enterRoom(roomId, user);
   }
@@ -92,8 +100,8 @@ export class SplitDeploymentRuntime implements DeploymentRuntime {
     return this.at(roomId).updateRoomSlotCounts(roomId, humanCount, aiCount, user);
   }
 
-  watchRoom(roomId: string, onRoom: (room: RoomState) => void) {
-    return this.at(roomId).watchRoom(roomId, onRoom);
+  watchRoom(roomId: string, user: LocalUserProfile, onRoom: (room: RoomState) => void) {
+    return this.at(roomId).watchRoom(roomId, user, onRoom);
   }
 
   closeRoom(roomId: string, user: LocalUserProfile) {

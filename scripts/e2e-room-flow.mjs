@@ -169,10 +169,26 @@ async page => {
   await page.locator("[data-back-home]").click();
   await page.locator("[data-open-room-browser]").click();
   await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
+  // A game played only in this browser is not among rooms to join (see @@@room-list); the play entry opens it again.
   privateLobbyProof.listedForOwner = (await page.locator("[data-room-id='" + firstSoloId + "']").count()) === 1;
-  must(privateLobbyProof.listedForOwner, "owned solo room was not visible after backing to Rooms UI");
-  await page.locator("[data-room-id='" + firstSoloId + "']").click();
-  await page.waitForSelector("[data-room-setup='" + firstSoloId + "']", { timeout: 5000 });
+  must(!privateLobbyProof.listedForOwner, "a solo game of this browser was listed among rooms to join");
+  // An open room whose host is not there (nobody watches it as its host) is not listed to others (see @@@room-presence).
+  const ghostRoomId = await page.evaluate(async () => {
+    const response = await fetch("/api/rooms", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ host: { id: "ghost-host", name: "Ghost" }, visibility: "public", humanCount: 2, aiCount: 0 }) });
+    if (!response.ok) throw new Error(await response.text());
+    return (await response.json()).id;
+  });
+  await page.locator("[data-back-home]").click();
+  await page.locator("[data-open-room-browser]").click();
+  await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
+  must((await page.locator("[data-room-id='" + ghostRoomId + "']").count()) === 0, "a room whose host has left was listed to join");
+  // A link to a room that is gone is refused in the player's words, on the room list (see @@@room-entry).
+  await page.goto(page.url().split(/[?#]/)[0] + "?room=room-gone");
+  await page.waitForSelector("[data-room-refused='closed']", { timeout: 30000 });
+  await page.waitForSelector("[data-room-browser]", { timeout: 5000 });
+  await page.locator("[data-back-home]").click();
+  await soloSetup("pineshade");
   await page.locator("[data-slot-id='slot-1'] [data-slot-race]").selectOption("ember");
   await page.locator("[data-slot-id='slot-1'] [data-slot-team]").selectOption("team-1");
   await page.locator("[data-slot-id='slot-2'] [data-slot-race]").selectOption("grove");
@@ -246,7 +262,22 @@ async page => {
   let guestJoinProof;
   try {
     const guest = await guestContext.newPage();
-    await guest.goto(page.url());
+    // The host's room is offered to others in the room list while the host is there.
+    await guest.goto(page.url().split(/[?#]/)[0]);
+    await guest.waitForSelector("[data-main-menu]:not(.hidden) [data-open-room-browser]", { timeout: 30000 });
+    await guest.locator("[data-open-room-browser]").click();
+    await guest.waitForSelector("[data-room-browser] [data-room-id='" + roomSetupId + "'][data-room-action='join']", { timeout: 10000 });
+    // The invitation is the room's address, copied for the host (or shown when the clipboard refuses).
+    await page.context().grantPermissions(["clipboard-read", "clipboard-write"]).catch(() => {});
+    await page.locator("[data-copy-invite]").click();
+    await page.waitForFunction(() => /./.test(document.querySelector("[data-menu-status]")?.textContent ?? ""), null, { timeout: 5000 });
+    const invite = await page.evaluate(async () => {
+      const status = document.querySelector("[data-menu-status]")?.textContent ?? "";
+      const shown = /https?:\/\/\S+/.exec(status)?.[0];
+      return shown ?? await navigator.clipboard.readText();
+    });
+    must(new URL(invite).searchParams.get("room") === roomSetupId, "the invite link is not the room's address: " + invite);
+    await guest.goto(invite);
     // A fresh context loads the whole client from the dev server before it can show the room: 1.6 to 6.5 s measured
     // on a loaded machine, so 5 s failed main as often as a branch.
     await guest.waitForSelector("[data-room-setup='" + roomSetupId + "']", { timeout: 30000 });
@@ -302,7 +333,7 @@ async page => {
   must(roomSetupLayoutProof.mapThenSeats, "room setup should keep the map dossier left of the compact seats without overlap: " + JSON.stringify(roomSetupLayoutProof));
   must(roomSetupLayoutProof.mapName === "Pineshade" && roomSetupLayoutProof.rows === 2, "room setup should show the map's name and one row per seat: " + JSON.stringify(roomSetupLayoutProof));
   must(roomSetupLayoutProof.maxSlotRowHeight <= 52, "seat rows should stay one line high: " + JSON.stringify(roomSetupLayoutProof));
-  must(roomSetupLayoutProof.slotActions.length === 1 && roomSetupLayoutProof.slotActions[0] === "Close Room", "seats come with the map: only closing the room should be offered: " + JSON.stringify(roomSetupLayoutProof));
+  must(roomSetupLayoutProof.slotActions.join(",") === "Copy invite link,Close Room", "seats come with the map: only inviting and closing the room should be offered: " + JSON.stringify(roomSetupLayoutProof));
   must(
     roomSetupLayoutProof.controllerOptions.join(",") === "ai,open" && roomSetupLayoutProof.hostControllerStatus.toLowerCase() === "human",
     "a seat should be a computer's or open, and a claimed seat shown as identity: " + JSON.stringify(roomSetupLayoutProof),
@@ -371,6 +402,16 @@ async page => {
     const room = await (await fetch("/api/rooms/" + roomId)).json();
     return room.status === "inMatch" && room.mapId === mapId;
   }, { roomId: roomSetupId, mapId: "pineshade" }, { timeout: 5000 });
+  // A friend opening the room's link once the game is under way is asked before watching it (see @@@room-entry).
+  const friendContext = await page.context().browser().newContext();
+  try {
+    const friend = await friendContext.newPage();
+    await friend.goto(page.url().split(/[?#]/)[0] + "?room=" + encodeURIComponent(roomSetupId));
+    await friend.waitForSelector("[data-watch-prompt='" + roomSetupId + "'] [data-watch-room]", { timeout: 30000 });
+    must(await friend.evaluate(() => !document.querySelector("[data-main-menu]")?.classList.contains("hidden")), "a link into a game under way went in before asking");
+    await friend.locator("[data-watch-room]").click();
+    await friend.waitForFunction(() => document.querySelector("[data-main-menu]")?.classList.contains("hidden"), null, { timeout: 30000 });
+  } finally { await friendContext.close(); }
   // A reload during the match comes straight back into it (the room's route).
   await page.reload();
   await page.waitForFunction(() => document.querySelector("[data-main-menu]")?.classList.contains("hidden"), null, { timeout: 5000 });
@@ -559,6 +600,29 @@ async page => {
   must((await page.locator("[data-result-slot='enemy']").count()) === 1, "results screen missing enemy slot row");
   must((await page.locator("[data-rematch]").count()) === 1, "results screen missing rematch action");
   must((await page.locator("[data-return-home]").count()) === 1, "results screen missing home action");
+
+  // An online player concedes from the match menu (see @@@forfeit): the other side wins, and the results say how long
+  // the match took and name the computer by how it plays.
+  await page.locator("[data-return-home]").click();
+  await page.locator("[data-open-room-browser]").click();
+  const concedeId = await onlineSetup("pineshade");
+  await page.locator("[data-start-room]").click();
+  await page.waitForFunction(() => document.querySelector("[data-main-menu]")?.classList.contains("hidden"), null, { timeout: 30000 });
+  await page.evaluate(() => {
+    const gate = document.querySelector("[data-pointer-lock-gate]");
+    if (gate) { gate.classList.add("hidden"); gate.style.pointerEvents = "none"; }
+  });
+  await page.locator("[data-match-menu-button]").click();
+  await page.locator("[data-forfeit-match]").click();
+  await page.waitForSelector("[data-results-screen='" + concedeId + "']", { timeout: 30000 });
+  const concedeProof = await page.evaluate(async (roomId) => {
+    const room = await (await fetch("/api/rooms/" + roomId)).json();
+    return { status: room.status, winner: room.result?.winner, finished: document.querySelector("[data-menu-status]")?.textContent ?? "",
+      controllers: [...document.querySelectorAll("[data-result-slot] span:nth-child(2)")].map(cell => cell.textContent), details: !!document.querySelector("[data-result-details]") };
+  }, concedeId);
+  must(concedeProof.status === "ended" && concedeProof.winner === "enemy" && /\d+:\d\d/.test(concedeProof.finished) && !/tick/i.test(concedeProof.finished)
+    && concedeProof.controllers.some(text => /AI · (Archers|Summoners|Knights)/.test(text)) && concedeProof.details,
+    "conceding an online match did not end it for the other side with readable results: " + JSON.stringify(concedeProof));
 
   await page.locator("[data-return-home]").click();
   await page.evaluate(() => localStorage.removeItem("sketch-rts-current-room"));

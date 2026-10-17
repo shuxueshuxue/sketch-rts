@@ -63,6 +63,7 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
   if(["build","mine","repair","hire"].includes(command.type) && snapshot.units.some(unit=>ids.includes(unit.id) && unit.deck))return commandError("Disembark before working on land",true);
   const player = snapshot.players[owner];
   if (!player) return commandError(`Unknown player ${owner}`);
+  if (command.type === "forfeit") return undefined;
   if (command.type === "aim") {
     const missing = missingUnitError(snapshot, owner, command.unitIds);
     if (missing) return missing;
@@ -256,7 +257,7 @@ function goldRefusal(snapshot: GameSnapshot, owner: PlayerId, cost: number) {
 }
 
 export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, command: GameCommand): GameCommand | undefined {
-  if (!game.players[owner]) return command;
+  if (!game.players[owner] || command.type === "forfeit") return command;
   if (command.type === 'enterCabin' || command.type === 'leaveCabin') {
     const unitIds = currentUnitIds(game,owner,command.unitIds);
     return unitIds.length ? {...command,unitIds} : undefined;

@@ -450,6 +450,14 @@ export function issueCommand(game: Game, command: GameCommand) {
 
 export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
   if (!game.players[owner]) throw new Error(`Unknown player ${owner}`);
+  // @@@forfeit - A player who concedes leaves the field: all they own falls at once, through the ordinary death path
+  // (which clears decks, garrisons and carried items), and the match is decided as by any side losing its last building.
+  // A command like any other, so every peer of a lockstep match concedes the same tick.
+  if (command.type === 'forfeit') {
+    for (const unit of game.units) if (unit.owner === owner) unit.hp = 0;
+    for (const building of game.buildings) if (building.owner === owner) building.hp = 0;
+    return;
+  }
   const cabinOperands = 'unitIds' in command ? [...command.unitIds] : 'unitId' in command ? [command.unitId] : [];
   if ('targetId' in command && command.targetId) cabinOperands.push(command.targetId);
   if ('recipientId' in command && command.recipientId) cabinOperands.push(command.recipientId);

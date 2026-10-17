@@ -43,6 +43,8 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
   private readonly matchThreads: MatchThreadFactory | undefined;
   private readonly publicBasePath: string;
   private readonly emptyAdapter = new EmptyGameAdapter();
+  // The match this page plays or watches in each room: a seated player may concede it.
+  private readonly matches = new Map<string, { adapter: GameAdapter; spectating: boolean }>();
 
   constructor(options: ServerDeploymentRuntimeOptions = {}) {
     this.matchThreads = options.matchThreads;
@@ -71,6 +73,11 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
     return this.fetchJson<RoomState>(this.path(`/api/rooms/${encodeURIComponent(roomId)}`));
   }
 
+  async findRoom(roomId: string): Promise<RoomState | undefined> {
+    try { return await this.getRoom(roomId); }
+    catch (error) { if ((error as { status?: number }).status === 404) return undefined; throw error; }
+  }
+
   async enterRoom(roomId: string, user: LocalUserProfile): Promise<{ room: RoomState; spectating: boolean; playerId: PlayerId }> {
     const existingRoom = await this.getRoom(roomId);
     const ownedSlot = slotForUser(existingRoom, user.id);
@@ -92,8 +99,8 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
     return this.fetchJson<RoomState>(this.path(`/api/rooms/${encodeURIComponent(roomId)}/slot-counts`), { humanCount, aiCount, userId: user.id });
   }
 
-  watchRoom(roomId: string, onRoom: (room: RoomState) => void): () => void {
-    const source = this.createRoomEventSource(this.path(`/api/rooms/${encodeURIComponent(roomId)}/events`));
+  watchRoom(roomId: string, user: LocalUserProfile, onRoom: (room: RoomState) => void): () => void {
+    const source = this.createRoomEventSource(this.path(`/api/rooms/${encodeURIComponent(roomId)}/events?userId=${encodeURIComponent(user.id)}`));
     source.addEventListener("message", (event) => {
       onRoom(JSON.parse(event.data) as RoomState);
     });
@@ -150,19 +157,25 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
     });
     if (transport.onOpen) transport.onOpen(join);
     else join();
+    this.matches.set(room.id, { adapter, spectating });
     return { room, playerId, adapter, chat, snapshot: adapter.currentSnapshot() };
   }
 
-  canForfeitMatch(_roomId: string): boolean {
-    return false;
+  canForfeitMatch(roomId: string): boolean {
+    const match = this.matches.get(roomId);
+    return !!match && !match.spectating;
   }
 
   isLocalRoom(_roomId: string): boolean {
     return false;
   }
 
-  async forfeitMatch(_roomId: string, _user: LocalUserProfile): Promise<RoomState> {
-    throw new Error("Forfeit is not available in server deployment mode");
+  // Conceded as any command is sent, so every peer concedes the same tick (see @@@forfeit); the match's end, when it
+  // comes, reaches the page as every room change does.
+  async forfeitMatch(roomId: string, _user: LocalUserProfile): Promise<void> {
+    const match = this.matches.get(roomId);
+    if (!match || match.spectating) throw new Error(`No match of yours in room ${roomId}`);
+    match.adapter.sendCommand({ type: "forfeit" });
   }
 
   close(): void {
@@ -198,7 +211,8 @@ async function requestJson<T>(path: string, body?: unknown): Promise<T> {
           body: JSON.stringify(body),
         };
   const response = await fetch(path, init);
-  if (!response.ok) throw new Error(await response.text());
+  // The status goes with the error: a room the server does not have (404) is an answer, not a failure (see findRoom).
+  if (!response.ok) throw Object.assign(new Error(await response.text()), { status: response.status });
   return response.json() as Promise<T>;
 }
 
