@@ -2,6 +2,7 @@ import { snapshotGame, type Game } from "../../shared/sim";
 import type { CommandEnvelope } from "../../shared/net/types";
 import type { AiCommandFrameRequest, AiRuntimeState, AiThinkExecutor } from "../runtime";
 import type { AiThinkMessage, AiThinkReply, AiThinkWireRequest } from "./protocol";
+import type { PlayerId } from "../../shared/types";
 
 // How a match reaches its thinking thread (see @@@think-thread).
 export type AiThinkChannel = {
@@ -9,18 +10,20 @@ export type AiThinkChannel = {
   // The replies that have arrived, without waiting.
   drain(): AiThinkReply[];
   // Blocks until a reply may have arrived, where the platform lets this thread block (a Node worker thread does; a
-  // browser page does not, and its match ticks only when ready()).
+  // browser page does not). Only a match stepped synchronously waits (see @@@planner-schedule).
   wait?(timeoutMs: number): void;
   close(): void;
 };
 
 const THINK_TIMEOUT_MS = 30_000;
 
-/** Runs a match's thinks on another thread; their commands land on the same ticks as the inline executor's. */
+/** Runs a match's thinks on another thread. A think that arrives by its delivery tick lands there, as the inline
+ * executor's does; a later one lands on the first tick after it arrives, unless the match settles each tick. */
 export function createAiThinkClientExecutor(runtime: AiRuntimeState, game: Game, channel: AiThinkChannel, session: string): AiThinkExecutor {
   if (runtime.scripts) throw new Error("AI scripts given as functions cannot think on another thread");
   channel.send({ type: "open", session, map: game.map, ...(runtime.policyMode ? { policyMode: runtime.policyMode } : {}) });
-  const running = new Set<number>();
+  // The owners of each think still running, by the tick its commands are due.
+  const running = new Map<number, Set<PlayerId>>();
   const arrived = new Map<number, CommandEnvelope[]>();
   const failed = new Map<number, string>();
   const collect = () => {
@@ -31,31 +34,35 @@ export function createAiThinkClientExecutor(runtime: AiRuntimeState, game: Game,
       else if (reply.commands.length > 0) arrived.set(reply.deliveryTick, [...(arrived.get(reply.deliveryTick) ?? []), ...reply.commands]);
     }
   };
-  const due = (tick: number) => [...running].some((delivery) => delivery <= tick);
+  const due = (tick: number) => [...running.keys()].some((delivery) => delivery <= tick);
   return {
     submit(current, job) {
       const snapshot = snapshotGame(current);
       const { terrain: _terrain, landmarks: _landmarks, ...map } = snapshot.map;
       channel.send({ type: "think", session, tick: job.tick, deliveryTick: job.deliveryTick, snapshot: { ...snapshot, map }, requests: job.requests.map(wireRequest) });
-      running.add(job.deliveryTick);
+      running.set(job.deliveryTick, new Set(job.requests.map((request) => request.playerId)));
     },
-    ready(tick) {
+    thinking(owner) {
       collect();
-      return !due(tick);
+      return [...running.values()].some((owners) => owners.has(owner));
     },
-    take(tick) {
+    take(tick, settle) {
       collect();
       const deadline = performance.now() + THINK_TIMEOUT_MS;
-      while (due(tick)) {
-        if (!channel.wait) throw new Error(`AI think due on tick ${tick} has not arrived; tick the match only when it is ready`);
+      while (settle && due(tick)) {
+        if (!channel.wait) throw new Error(`AI think due on tick ${tick} has not arrived, and this thread cannot wait for it`);
         if (performance.now() > deadline) throw new Error(`AI think due on tick ${tick} took longer than ${THINK_TIMEOUT_MS} ms`);
         channel.wait(1_000);
         collect();
       }
-      const failure = failed.get(tick);
-      if (failure !== undefined) throw new Error(failure);
-      const commands = arrived.get(tick) ?? [];
-      arrived.delete(tick);
+      for (const [delivery, failure] of failed) if (delivery <= tick) { failed.delete(delivery); throw new Error(failure); }
+      // Every think due by now that has arrived, a late one on this tick (see @@@planner-schedule).
+      const commands: CommandEnvelope[] = [];
+      for (const delivery of [...arrived.keys()].sort((a, b) => a - b)) {
+        if (delivery > tick) break;
+        commands.push(...arrived.get(delivery)!);
+        arrived.delete(delivery);
+      }
       return commands;
     },
     close() {

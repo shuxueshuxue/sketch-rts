@@ -3,10 +3,14 @@ import type { GameCommand, PlayerId } from "../types";
 import { checkCommandLegality, narrowFrameCommandToLiveOperands } from "./command-validation";
 
 // @@@planner-schedule - Programs that plan from a copy of the world (the internal AI, SDK agents in the game runner) share
-// one think interval, each on its own phase of it, and their commands land a fixed number of ticks after the think that
-// made them. Phases keep several planners from all thinking on one tick. The fixed delay lets a think run beside the
-// simulation (on another thread) while the match stays a function of its inputs alone, however fast the machine is: the
-// tick a command lands on never depends on when its think finished.
+// one think interval, each on its own phase of it, and their commands are due a fixed number of ticks after the think
+// that made them. Phases keep several planners from all thinking on one tick. A planner is a player: a live match never
+// waits for it. A think running beside the simulation (on another thread) that has not arrived by its due tick lands on
+// the first tick after it arrives, and a player still thinking skips its next turn. The match stays a function of its
+// inputs, because the frame records the tick each command landed on: a lockstep client and a replay apply that frame and
+// never re-run the AI. A match stepped synchronously (a test, an SDK or API driver) settles each tick, waiting for the
+// thinks due, so its frames do not depend on how fast the thinking thread is. A think planned inline always lands on its
+// due tick.
 export const PLANNER_COMMAND_DELAY_TICKS = 3;
 
 /** The tick offset, within one think interval, of the index-th of `count` planners. */

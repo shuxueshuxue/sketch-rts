@@ -94,17 +94,19 @@ export function planPresetAiRuntimeCommands(game: Game, runtime: AiRuntimeState,
   return planAiCommandFrame(game, claimThink(game, runtime, owners), { ...(runtime.policyMode ? { policyMode: runtime.policyMode } : {}), ...options });
 }
 
-// One think: the owners due on `tick`, planned from the world as it stood then. Their commands land on `deliveryTick`.
+// One think: the owners due on `tick`, planned from the world as it stood then. Their commands are due on `deliveryTick`.
 export type AiThinkJob = { tick: number; deliveryTick: number; requests: AiCommandFrameRequest[] };
 
 // Where thinks run: right here (createInlineAiThinkExecutor) or beside the simulation on another thread. A think's commands
-// land on its delivery tick either way, so the match is the same (see @@@planner-schedule).
+// land on its delivery tick, or on the first tick after a slow think arrives (see @@@planner-schedule).
 export type AiThinkExecutor = {
   // `check` rejects a command that is illegal in the world it was planned from.
   submit(game: Game, job: AiThinkJob, check: (commands: CommandEnvelope[]) => void): void;
-  // Whether every think due by this tick has been planned.
-  ready(tick: number): boolean;
-  take(tick: number): CommandEnvelope[];
+  // Whether a think of this owner is still running.
+  thinking(owner: PlayerId): boolean;
+  // The commands of every think due by this tick that has arrived. `settle` first waits for the rest, where the
+  // executor's thread can wait.
+  take(tick: number, settle: boolean): CommandEnvelope[];
   // Releases whatever the executor holds for the match (a thinking thread's session).
   close?(): void;
 };
@@ -120,7 +122,7 @@ export function createInlineAiThinkExecutor(runtime: AiRuntimeState): AiThinkExe
       check(commands);
       if (commands.length > 0) planned.set(job.deliveryTick, [...(planned.get(job.deliveryTick) ?? []), ...commands]);
     },
-    ready: () => true,
+    thinking: () => false,
     take(tick) {
       const commands = planned.get(tick) ?? [];
       planned.delete(tick);
@@ -143,11 +145,11 @@ export function createPresetAiRuntimeFramePlanner(game: Game, runtime: AiRuntime
     restore: (lastThink) => {
       runtime.lastThink = lastThink;
     },
-    ready: () => executor.ready(game.tick),
-    plan: (check) => {
-      const owners = dueAiOwners(game, runtime);
+    plan: (check, settle) => {
+      // A player still thinking skips its turn, as a person thinks again once done (see @@@planner-schedule).
+      const owners = dueAiOwners(game, runtime).filter((owner) => !executor.thinking(owner));
       if (owners.length > 0) executor.submit(game, { tick: game.tick, deliveryTick: game.tick + delay, requests: claimThink(game, runtime, owners) }, check);
-      return executor.take(game.tick);
+      return executor.take(game.tick, settle);
     },
   };
 }
