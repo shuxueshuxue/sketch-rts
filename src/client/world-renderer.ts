@@ -30,6 +30,7 @@ import { drawLevelStar } from "./level-star";
 import { shouldRenderBuildingRally } from "./rally-visual";
 import { RELATION_INK, relationTo } from "./relations";
 import { drawTerrain } from "./terrain-art";
+import { paintRoads } from "./art/environment";
 import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
 import { isAwaitingShipLaunch, trainingQueueCountText } from "./training-queue";
 import type { UnitFacingTracker } from "./unit-facing";
@@ -358,6 +359,7 @@ function drawTextureStroke(ctx: Brush, stroke: TextureStroke) {
 }
 
 function drawLandmarks(painter: Painter, landmarks: TerrainLandmark[]) {
+  paintRoads(painter.ctx, landmarks, (point) => worldToScreen(painter, point), { ...painter.camera, width: painter.width, height: painter.height });
   for (const landmark of landmarks) {
     const point = worldToScreen(painter, landmark);
     if (nearScreen(painter, point, landmark.size + 80)) drawAtlasLandmark(painter.ctx, landmark, point);

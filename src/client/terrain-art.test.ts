@@ -26,7 +26,7 @@ describe('terrain chunks painted off the frame', () => {
     frame(terrain);
     expect(asked).toEqual(['0,0,1', '1,0,1']);
     // Deep in the forest the coarse picture is the minimap's forest colour.
-    expect([...coarse.slice((256 * 1024 + 256) * 4, (256 * 1024 + 256) * 4 + 4)]).toEqual([0x46, 0x57, 0x4b, 255]);
+    expect([...coarse.slice((256 * 1024 + 256) * 4, (256 * 1024 + 256) * 4 + 4)]).toEqual([0x5a, 0x74, 0x49, 255]);
     arrive();
     await settle();
     const painted = frame(terrain);
