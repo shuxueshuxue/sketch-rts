@@ -76,8 +76,8 @@ describe("AI think thread", () => {
     }, "late");
     const start = (factory: AiThinkExecutorFactory) => {
       const game = createGame("bareDuel", { aiPlayers: ["enemy"] });
-      const ai = createAiRuntime(["enemy"]);
-      return { game, runtime: new CommandFrameRuntime({ game, roomId: "late", rejectionLabel: "Late think rejected", aiPlanner: createPresetAiRuntimeFramePlanner(game, ai, { executor: factory(ai, game) }) }) };
+      const ai = createAiRuntime(["enemy"]), thinking = factory(ai, game);
+      return { game, thinking, runtime: new CommandFrameRuntime({ game, roomId: "late", rejectionLabel: "Late think rejected", aiPlanner: createPresetAiRuntimeFramePlanner(game, ai, { executor: thinking }) }) };
     };
 
     const live = start(executor());
@@ -85,6 +85,9 @@ describe("AI think thread", () => {
     expect(frames.every((frame) => frame === undefined)).toBe(true);
     answer();
     expect(live.runtime.tick()).toMatchObject({ tick: PLANNER_COMMAND_DELAY_TICKS + 3, commands: expect.arrayContaining([expect.objectContaining({ playerId: "enemy" })]) });
+    // The readout's account of it: one think, landed three ticks late; no turn skipped yet (the next is tick 15).
+    expect(live.thinking.report!()).toMatchObject({ thinks: 1, late: 1, lateTicks: 3, skipped: 0 });
+    expect(live.thinking.report!()).toMatchObject({ thinks: 0, late: 0 });
 
     const settled = start(executor(answer));
     const due = Array.from({ length: PLANNER_COMMAND_DELAY_TICKS + 1 }, () => settled.runtime.tick([], { settleAi: true }));

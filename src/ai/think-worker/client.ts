@@ -1,6 +1,6 @@
 import { snapshotGame, type Game } from "../../shared/sim";
 import type { CommandEnvelope } from "../../shared/net/types";
-import type { AiCommandFrameRequest, AiRuntimeState, AiThinkExecutor } from "../runtime";
+import { emptyAiThinkReport, type AiCommandFrameRequest, type AiRuntimeState, type AiThinkExecutor } from "../runtime";
 import type { AiThinkMessage, AiThinkReply, AiThinkWireRequest } from "./protocol";
 import type { PlayerId } from "../../shared/types";
 
@@ -31,10 +31,16 @@ export function createAiThinkClientExecutor(runtime: AiRuntimeState, game: Game,
       if (reply.session !== session) continue;
       running.delete(reply.deliveryTick);
       if ("error" in reply) failed.set(reply.deliveryTick, reply.error);
-      else if (reply.commands.length > 0) arrived.set(reply.deliveryTick, [...(arrived.get(reply.deliveryTick) ?? []), ...reply.commands]);
+      else {
+        arrived.set(reply.deliveryTick, [...(arrived.get(reply.deliveryTick) ?? []), ...reply.commands]);
+        report.thinks += 1;
+        report.thinkMs += reply.thinkMs;
+        report.slowestMs = Math.max(report.slowestMs, reply.thinkMs);
+      }
     }
   };
   const due = (tick: number) => [...running.keys()].some((delivery) => delivery <= tick);
+  let report = emptyAiThinkReport();
   return {
     submit(current, job) {
       const snapshot = snapshotGame(current);
@@ -44,7 +50,10 @@ export function createAiThinkClientExecutor(runtime: AiRuntimeState, game: Game,
     },
     thinking(owner) {
       collect();
-      return [...running.values()].some((owners) => owners.has(owner));
+      // Asked only of a player due to think: one still thinking skips that turn (see @@@planner-schedule).
+      const busy = [...running.values()].some((owners) => owners.has(owner));
+      if (busy) report.skipped += 1;
+      return busy;
     },
     take(tick, settle) {
       collect();
@@ -62,8 +71,15 @@ export function createAiThinkClientExecutor(runtime: AiRuntimeState, game: Game,
         if (delivery > tick) break;
         commands.push(...arrived.get(delivery)!);
         arrived.delete(delivery);
+        if (delivery < tick) { report.late += 1; report.lateTicks = Math.max(report.lateTicks, tick - delivery); }
       }
       return commands;
+    },
+    report() {
+      collect();
+      const taken = report;
+      report = emptyAiThinkReport();
+      return taken;
     },
     close() {
       channel.send({ type: "close", session });

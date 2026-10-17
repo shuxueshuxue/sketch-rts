@@ -1,5 +1,5 @@
 import type { Point } from './ship-geometry';
-import { groundSegmentAdvance, groundTravelCost, segmentWalkable, steerPoint, walkingDistance, walkRoute, type Mover } from './terrain';
+import { groundSegmentAdvance, groundTravelCost, nearestByWalk, segmentWalkable, steerPoint, walkingDistance, walkRoute, type Mover } from './terrain';
 import type { GameMap } from './types';
 import { SIM_TICKS_PER_SECOND } from './time';
 import { pointSegmentDistanceSquared } from './navigation-math';
@@ -99,8 +99,12 @@ export function routeArrivals<T extends Point & { speed: number }>(map: Pick<Gam
 
 /** Shortest terrain route to one destination. Unreachable candidates do not compete.
  * Building detours, body clearance and sailing time belong to movement planning.
- * A single destination reuses the terrain's distance field for every candidate. */
+ * One field grown from the candidates answers every destination (see @@@nearest-field). */
 export function nearestByRoute<T extends Point>(map: Pick<GameMap, 'terrain'>, candidates: readonly T[], destination: Point, mover: Mover): T | undefined {
+  if (map.terrain) {
+    const index = nearestByWalk(map, candidates, destination, mover);
+    return index === undefined ? undefined : candidates[index];
+  }
   let best: T | undefined;
   let shortest = Infinity;
   for (const candidate of candidates) {
