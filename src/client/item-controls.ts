@@ -3,19 +3,19 @@ import { isInCabin } from "../shared/ship-cabin";
 import { localToWorld, shipProfile } from '../shared/ship-geometry';
 import type { GameCommand, GameSnapshot, PlayerId, Unit, WorldItem } from "../shared/types";
 
-// @@@item-slots - The item bar is the focused unit's four carrying positions (see CARRY_SLOTS), as Warcraft III's bar is
-// its hero's six slots: slot n always shows what lies in that position and answers to digit n (unless digit n recalls a
-// control group), an empty slot is an empty well, and worn gear (boots, armor) stays on the equipment panel. The bar used
-// to list every item of every selected unit in a row, worn gear included, so a slot's number moved whenever an item came
-// or went, or a control group took a digit.
-export type InventorySlot = { slot: (typeof CARRY_SLOTS)[number]; digit: number; item?: WorldItem };
+// @@@item-slots - The item bar shows what the focused unit carries in its four carrying positions (see CARRY_SLOTS),
+// one button an item, in slot order; a unit carrying nothing has no bar, and worn gear (boots, armor) stays on the
+// equipment panel. The item in slot n answers to digit n (unless digit n recalls a control group), so an item's key does
+// not move when another comes or goes. The bar used to list every item of every selected unit in a row, worn gear
+// included, so a key moved whenever an item came or went; then it kept four wells, empty ones included, for every unit.
+export type InventorySlot = { slot: (typeof CARRY_SLOTS)[number]; digit: number; item: WorldItem };
 
 export function inventorySlots(snapshot: Pick<GameSnapshot, "items">, carrier: Unit | undefined): InventorySlot[] {
   if (!carrier || !canEquip(carrier) || shipProfile(carrier)) return [];
   const carried = snapshot.items.filter(item => item.carrierId === carrier.id && item.kind !== "issuedWeapon");
-  return CARRY_SLOTS.map((slot, index) => {
+  return CARRY_SLOTS.flatMap((slot, index) => {
     const item = carried.find(candidate => itemSlot(snapshot, carrier, candidate) === slot);
-    return { slot, digit: index + 1, ...(item ? { item } : {}) };
+    return item ? [{ slot, digit: index + 1, item }] : [];
   });
 }
 
