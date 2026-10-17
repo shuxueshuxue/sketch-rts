@@ -106,7 +106,7 @@ export function createPirateBoarding(seed = 1): MenuSceneRun {
   // Four a side, one more boarder some visits: a fight on deck costs the simulation far more than one on land, and the
   // home screen keeps it small.
   crew(a, 'menu/pirate', 4 + Math.floor(random() * 2));
-  const marines = crew(b, 'menu/marine', 4);
+  crew(b, 'menu/marine', 4);
   syncDecks(game.units);
   for (const unit of game.units) if (unit.deck) unit.order = { type: 'hold', x: unit.x, y: unit.y };
   // The scene opens with the pirates in the admiralty ship's wake, on the line of the berth the simulation itself would
@@ -124,10 +124,8 @@ export function createPirateBoarding(seed = 1): MenuSceneRun {
   };
   // The opening orders. The pirate helm grapples and boards; once the bridge is out it sends its own crew across.
   issuePlayerCommand(game, PIRATES, { type: 'boardShip', unitIds: [a.id], targetId: b.id });
-  // Scene setup, not a rule: the marines gather on their own deck towards the side the boarders come over, so they meet
-  // them together instead of one at a time at their posts. Short of the rail, so they do not hack at the pirate hull and
-  // cut the bridge loose while it goes out.
-  issuePlayerCommand(game, GUARD, { type: 'attackMove', unitIds: marines.map(unit => unit.id), x: b.x + (berth.x - b.x) * .2, y: b.y + (berth.y - b.y) * .2 });
+  // The marines hold their posts (set with the crews above) and meet the boarders where they come aboard. Sent to the
+  // rail instead, they cut at the pirate hull alongside, and a hull's damage takes the bridge down before it is out.
   const deckProps: DeckProp[] = [];
   const prop = (kind: string, ship: Unit, at: Point, mast = false, shows?: DeckProp['shows']) => {
     deckProps.push({ view: pieces.prop(kind, 0, 0, 1), shipId: ship.id, at, mast, ...(shows ? { shows } : {}) });
