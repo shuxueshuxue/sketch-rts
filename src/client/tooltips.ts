@@ -183,7 +183,7 @@ function fillAbilityNumbers(line: string, ability: AbilityKind) {
 
 export function itemTooltip(kind: ItemKind, hotkey?: string, i18n: I18n = DEFAULT_I18N): GameplayTooltip {
   const tooltip = ITEM_TOOLTIPS[i18n.locale][kind];
-  return { ...tooltip, stats: itemStats(kind, i18n.locale), hotkey: formatHotkey(hotkey) };
+  return { ...tooltip, stats: itemStats(kind, i18n.locale), requirements: [], hotkey: formatHotkey(hotkey) };
 }
 
 export function upgradeTooltip(kind: UpgradeKind, hotkey?: string, currentLevel = 0, i18n: I18n = DEFAULT_I18N): GameplayTooltip {
@@ -458,143 +458,138 @@ const ABILITY_REQUIREMENTS: Record<Locale, Record<AbilityKind, string[]>> = {
   },
 };
 
-const ITEM_TOOLTIPS: Record<Locale, Record<ItemKind, GameplayTooltip>> = {
+// What an item is and how it is used; what is unmet right now (a requirement) is not written here.
+const ITEM_TOOLTIPS: Record<Locale, Record<ItemKind, Omit<GameplayTooltip, "requirements">>> = {
   en: {
-    shipCannon:{title:"Deck Cannon",body:"A tradable naval weapon. Hauling it takes all four carrying positions; installed guns fire automatically.",stats:[],requirements:["Needs a compatible ship fitting."]},
-    shipMortar:{title:"Ship Mortar",body:"A heavy naval siege weapon. Its blast and minimum range are retained when transferred to a compatible ship.",stats:[],requirements:["Needs a compatible ship fitting."]},
-    flameProjector:{title:"Flame Projector",body:"A short-range naval weapon. Carries over its condition and cooldown when moved.",stats:[],requirements:["Needs a compatible ship fitting."]},
-    issuedWeapon:{title:"Service Weapon",body:"The unit's trained weapon. Stow or exchange it using the four shared carrying positions.",stats:[],requirements:[]},
-    leatherArmor:{title:"Leather Armor",body:"Reduces incoming physical damage while worn on the body. Does not reduce magic damage.",stats:[],requirements:[]},
-    roundShield:{title:"Round Shield",body:"Reduces incoming physical damage while held. Does not reduce magic damage; cannot be held alongside a two-handed weapon.",stats:[],requirements:[]},
-    greatSword:{title:"Greatsword",body:"A melee weapon occupying both hands. Your other weapons stay in their carrying positions.",stats:[],requirements:[]},
+    shipCannon:{title:"Deck Cannon",body:"A tradable naval weapon. Hauling it takes all four carrying positions; installed guns fire automatically.",stats:[],notes:["Needs a compatible ship fitting."]},
+    shipMortar:{title:"Ship Mortar",body:"A heavy naval siege weapon. Its blast and minimum range are retained when transferred to a compatible ship.",stats:[],notes:["Needs a compatible ship fitting."]},
+    flameProjector:{title:"Flame Projector",body:"A short-range naval weapon. Carries over its condition and cooldown when moved.",stats:[],notes:["Needs a compatible ship fitting."]},
+    issuedWeapon:{title:"Service Weapon",body:"The unit's trained weapon. Stow or exchange it using the four shared carrying positions.",stats:[]},
+    leatherArmor:{title:"Leather Armor",body:"Reduces incoming physical damage while worn on the body. Does not reduce magic damage.",stats:[]},
+    roundShield:{title:"Round Shield",body:"Reduces incoming physical damage while held. Does not reduce magic damage; cannot be held alongside a two-handed weapon.",stats:[]},
+    greatSword:{title:"Greatsword",body:"A melee weapon occupying both hands. Your other weapons stay in their carrying positions.",stats:[]},
     lightningRod: {
       title: "Lightning Rod",
       body: "Strikes an enemy unit, then jumps to nearby enemies with reduced damage.",
       stats: [],
-      requirements: ["Needs a visible enemy unit in range."],
+      notes: ["Needs a visible enemy unit in range."],
     },
     stormStaff: {
       title: "Storm Staff",
       body: "Calls a storm at a target point, damaging enemies on impact and over time.",
       stats: [],
-      requirements: ["Target a visible enemy or nearby point."],
+      notes: ["Target a visible enemy or nearby point."],
     },
     flameCloak: {
       title: "Flame Cloak",
       body: "Passive aura that burns nearby enemies while worn.",
       stats: [],
-      requirements: ["Passive item. No manual use."],
+      notes: ["Passive item. No manual use."],
     },
     guardianScroll: {
       title: "Guardian Scroll",
       body: "Makes nearby allied units immune to incoming damage for a short time.",
       stats: [],
-      requirements: ["Carrier must not be neutral."],
     },
     experienceBook: {
       title: "Experience Book",
       body: "Consumed by the carrier to gain veteran experience immediately.",
       stats: [],
-      requirements: ["Carrier must not be neutral."],
     },
     breachCharge: {
       title: "Breach Charge",
       body: "Consumed to blast an enemy building at close range.",
       stats: [],
-      requirements: ["Needs an enemy building in range.", "Carrier must not be neutral."],
+      notes: ["Needs an enemy building in range."],
     },
     speedBoots: {
       title: "Boots of Speed",
       body: "Moves its wearer faster while worn on the feet.",
       stats: [],
-      requirements: ["Passive item. No manual use."],
+      notes: ["Passive item. No manual use."],
     },
     regenRing: {
       title: "Regeneration Circlet",
       body: "Heals a non-mechanical wearer over time while worn on the head. Has no effect on mechanical units.",
       stats: [],
-      requirements: ["Passive item. No manual use."],
+      notes: ["Passive item. No manual use."],
     },
     healingScroll: {
       title: "Scroll of Healing",
       body: "Consumed to heal nearby non-mechanical allied units at once. Has no effect on mechanical units.",
       stats: [],
-      requirements: ["Carrier must not be neutral."],
     },
     ivoryTower: {
       title: "Ivory Tower",
       body: "Consumed to raise a finished defense tower with partial health near its carrier.",
       stats: [],
-      requirements: ["Target open ground near the carrier."],
+      notes: ["Target open ground near the carrier."],
     },
   },
   zh: {
-    shipCannon:{title:"甲板火炮",body:"可以流通的船用武器；搬运占满四个携行位，安装到炮位后自动开火。",stats:[],requirements:["需要兼容炮位和附近的己方人员。"]},
-    shipMortar:{title:"舰载臼炮",body:"重型船用攻城武器；转装到兼容船只后保留爆炸效果和最小射程。",stats:[],requirements:["需要兼容炮位和附近的己方人员。"]},
-    flameProjector:{title:"喷火装置",body:"近距离船用武器；搬运和换装保留耐久与射击冷却。",stats:[],requirements:["需要兼容炮位和附近的己方人员。"]},
-    issuedWeapon:{title:"制式武器",body:"单位训练时配发的武器。可以收起或转交，同样占用四个携行位之一。",stats:[],requirements:[]},
-    leatherArmor:{title:"皮甲",body:"穿在身体位置时减少受到的物理伤害，不减免魔法伤害。",stats:[],requirements:[]},
-    roundShield:{title:"圆盾",body:"拿在手中时减少受到的物理伤害，不减免魔法伤害；不能和双手武器同时持用。",stats:[],requirements:[]},
-    greatSword:{title:"双手剑",body:"占用双手的近战武器；其它武器仍保留在各自的携行位。",stats:[],requirements:[]},
+    shipCannon:{title:"甲板火炮",body:"可以流通的船用武器；搬运占满四个携行位，安装到炮位后自动开火。",stats:[],notes:["需要兼容炮位和附近的己方人员。"]},
+    shipMortar:{title:"舰载臼炮",body:"重型船用攻城武器；转装到兼容船只后保留爆炸效果和最小射程。",stats:[],notes:["需要兼容炮位和附近的己方人员。"]},
+    flameProjector:{title:"喷火装置",body:"近距离船用武器；搬运和换装保留耐久与射击冷却。",stats:[],notes:["需要兼容炮位和附近的己方人员。"]},
+    issuedWeapon:{title:"制式武器",body:"单位训练时配发的武器。可以收起或转交，同样占用四个携行位之一。",stats:[]},
+    leatherArmor:{title:"皮甲",body:"穿在身体位置时减少受到的物理伤害，不减免魔法伤害。",stats:[]},
+    roundShield:{title:"圆盾",body:"拿在手中时减少受到的物理伤害，不减免魔法伤害；不能和双手武器同时持用。",stats:[]},
+    greatSword:{title:"双手剑",body:"占用双手的近战武器；其它武器仍保留在各自的携行位。",stats:[]},
     lightningRod: {
       title: "闪电权杖",
       body: "打击一个敌方单位，然后以较低伤害跳向附近敌人。",
       stats: [],
-      requirements: ["需要射程内可见的敌方单位。"],
+      notes: ["需要射程内可见的敌方单位。"],
     },
     stormStaff: {
       title: "风暴法杖",
       body: "在目标点召唤风暴，对敌人造成落点伤害和持续伤害。",
       stats: [],
-      requirements: ["目标必须是可见敌人或附近点位。"],
+      notes: ["目标必须是可见敌人或附近点位。"],
     },
     flameCloak: {
       title: "烈焰斗篷",
       body: "携带时产生被动光环，灼烧附近敌人。",
       stats: [],
-      requirements: ["被动物品，无法手动使用。"],
+      notes: ["被动物品，无法手动使用。"],
     },
     guardianScroll: {
       title: "守护卷轴",
       body: "短时间保护附近友方单位，免疫受到的伤害。",
       stats: [],
-      requirements: ["携带者不能是中立单位。"],
     },
     experienceBook: {
       title: "经验书",
       body: "由携带者消耗，立即获得老兵经验。",
       stats: [],
-      requirements: ["携带者不能是中立单位。"],
     },
     breachCharge: {
       title: "破城炸药",
       body: "消耗后近距离爆破一个敌方建筑。",
       stats: [],
-      requirements: ["需要射程内敌方建筑。", "携带者不能是中立单位。"],
+      notes: ["需要射程内敌方建筑。"],
     },
     speedBoots: {
       title: "速度之靴",
       body: "携带者移速提高。带两双不叠加。",
       stats: [],
-      requirements: ["被动物品，无法手动使用。"],
+      notes: ["被动物品，无法手动使用。"],
     },
     regenRing: {
       title: "回春头环",
       body: "穿在头部位置时为非机械单位持续恢复生命，对机械单位无效。收进携行位或船舱后停止生效。",
       stats: [],
-      requirements: ["被动物品，无法手动使用。"],
+      notes: ["被动物品，无法手动使用。"],
     },
     healingScroll: {
       title: "治疗卷轴",
       body: "消耗后，使用者身边的非机械友军立即回血，对机械单位无效。",
       stats: [],
-      requirements: ["携带者不能是中立单位。"],
     },
     ivoryTower: {
       title: "象牙塔",
       body: "消耗后，在携带者身边立起一座防御塔（初始生命见数值），立即可用。",
       stats: [],
-      requirements: ["目标必须是携带者附近的空地。"],
+      notes: ["目标必须是携带者附近的空地。"],
     },
   },
 };
