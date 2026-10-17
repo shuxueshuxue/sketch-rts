@@ -3,7 +3,7 @@ import { createChatMessage } from "../../shared/chat";
 import type { ChatMessage } from "../../shared/net/types";
 import { assertCreateRoomInput, parseMapUpdateRequest, parseSlotCountsRequest, parseSlotPatch } from "../../shared/room-schema";
 import { createRoomLifecycleHost, liveRoomToGameSetup } from "../../shared/room-lifecycle";
-import type { CreateRoomInput, SlotPatch } from "../../shared/rooms";
+import { hostActionRefusal, seatEditRefusal, type CreateRoomInput, type SlotPatch } from "../../shared/rooms";
 import { createGame, snapshotGame, warmGameCaches } from "../../shared/sim";
 import type { GameSetupOptions, LocalUserProfile, MapId, PlayerId, RoomState } from "../../shared/types";
 import { EmptyGameAdapter } from "../game-adapter";
@@ -60,33 +60,44 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
     return { room, spectating: room.status === "inMatch" && !slot, playerId: slot?.playerId ?? "player" };
   }
 
-  async updateRoomMap(roomId: string, mapId: MapId): Promise<RoomState> {
+  // A room in this browser keys nobody (there is nobody else in it); it checks the same lobby rules (see @@@seat-ownership).
+  async updateRoomMap(roomId: string, mapId: MapId, user: LocalUserProfile): Promise<RoomState> {
     const input = parseMapUpdateRequest({ mapId });
     if (!input) throw new Error("Malformed room map input");
+    this.hostOnly(roomId, user);
     return this.lifecycle.updateMap(roomId, input.mapId);
   }
 
-  async updateRoomSlot(roomId: string, slotId: string, patch: SlotPatch): Promise<RoomState> {
+  async updateRoomSlot(roomId: string, slotId: string, patch: SlotPatch, user: LocalUserProfile): Promise<RoomState> {
     const input = parseSlotPatch(patch);
     if (!input) throw new Error("Malformed slot patch");
+    const refusal = seatEditRefusal(this.lifecycle.getRoom(roomId), user.id, slotId, input);
+    if (refusal) throw new Error(refusal);
     return this.lifecycle.updateSlot(roomId, slotId, input);
   }
 
-  async updateRoomSlotCounts(roomId: string, humanCount: number, aiCount: number): Promise<RoomState> {
+  async updateRoomSlotCounts(roomId: string, humanCount: number, aiCount: number, user: LocalUserProfile): Promise<RoomState> {
     const input = parseSlotCountsRequest({ humanCount, aiCount });
     if (!input) throw new Error("Malformed room slot count input");
+    this.hostOnly(roomId, user);
     return this.lifecycle.resizeSlots(roomId, input.humanCount, input.aiCount);
+  }
+
+  private hostOnly(roomId: string, user: LocalUserProfile) {
+    const refusal = hostActionRefusal(this.lifecycle.getRoom(roomId), user.id);
+    if (refusal) throw new Error(refusal);
   }
 
   watchRoom(_roomId: string, _onRoom: (room: RoomState) => void): () => void {
     return () => {};
   }
 
-  async closeRoom(roomId: string, userId: string): Promise<RoomState> {
-    return this.lifecycle.closeRoom(roomId, userId);
+  async closeRoom(roomId: string, user: LocalUserProfile): Promise<RoomState> {
+    return this.lifecycle.closeRoom(roomId, user.id);
   }
 
   async startRoom(roomId: string, user: LocalUserProfile, onRoom: (room: RoomState) => void = () => {}): Promise<StartedMatch> {
+    this.hostOnly(roomId, user);
     const setup = this.lifecycle.prepareStartRoom(roomId);
     const slot = setup.playerSlots.find((candidate) => candidate.userId === user.id);
     const playerId = slot?.playerId ?? "player";

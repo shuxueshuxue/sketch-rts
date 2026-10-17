@@ -60,7 +60,7 @@ describe("SketchRtsSdk", () => {
     expect(calls).toEqual([
       { path: "/api/catalog", method: "GET" },
       { path: "/api/rooms", method: "POST", body: { id: "room-1", host: { id: "user-1", name: "Host" }, mapId: "bareDuel", visibility: "private", humanCount: 1, aiCount: 1 } },
-      { path: "/api/rooms/room-1/start", method: "POST", body: {} },
+      { path: "/api/rooms/room-1/start", method: "POST", body: { userId: "user-1" } },
       { path: "/api/rooms/room-1/reset", method: "POST", body: { mapId: "bareDuel" } },
       { path: "/api/rooms/room-1/snapshot", method: "GET" },
       { path: "/api/rooms/room-1/command", method: "POST", body: { playerId: "player", command: { type: "move", unitIds: ["worker"], x: 10, y: 20 } } },
@@ -287,8 +287,8 @@ describe("SketchRtsSdk", () => {
 
     expect(calls).toEqual([
       { path: "/api/rooms", method: "POST", body: { id: "room-1", host: { id: "user-1", name: "Host" }, mapId: "bareDuel", visibility: "private", humanCount: 1, aiCount: 3 } },
-      { path: "/api/rooms/room-1/slots/slot-2", method: "POST", body: { controller: "ai", team: "south" } },
-      { path: "/api/rooms/room-1/start", method: "POST", body: {} },
+      { path: "/api/rooms/room-1/slots/slot-2", method: "POST", body: { patch: { controller: "ai", team: "south" }, userId: "user-1" } },
+      { path: "/api/rooms/room-1/start", method: "POST", body: { userId: "user-1" } },
       { path: "/api/rooms/room-1/reset", method: "POST", body: { mapId: "bareDuel", options: { aiPlayers: [] } } },
       { path: "/api/rooms/room-1/snapshot", method: "GET" },
       { path: "/api/rooms/room-1/command", method: "POST", body: { playerId: "player", command: { type: "move", unitIds: ["unit-player-worker-1"], x: 900, y: 900 } } },

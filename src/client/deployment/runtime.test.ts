@@ -49,7 +49,7 @@ describe("deployment runtime factory", () => {
 
     const mine = await runtime.createRoom({ id: "room-mine", host, visibility: "private", humanCount: 1, aiCount: 1 });
     expect(runtime.isLocalRoom(mine.id)).toBe(true);
-    await runtime.updateRoomSlot(mine.id, "slot-2", { race: "ember" });
+    await runtime.updateRoomSlot(mine.id, "slot-2", { race: "ember" }, host);
     const started = await runtime.startRoom(mine.id, host);
     expect(started.room.status).toBe("inMatch");
     expect(runtime.canForfeitMatch(mine.id)).toBe(true);

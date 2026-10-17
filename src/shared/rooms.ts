@@ -181,19 +181,49 @@ export function leaveUserSlot(room: RoomState, userId: string): RoomState {
   };
 }
 
-export function canStartRoom(room: RoomState) {
+// @@@seat-ownership - Who may change what in a room's lobby. A player changes only their own seat: team, race and ready.
+// The host also sets up the computer and open seats (opening, closing, a computer's race, team and player), may clear
+// another player out of a seat, and alone changes the map, the seats' count and starts. People are put into seats only by
+// joining. A room's server and a room played in one browser check the same rules, against the user a request says it is
+// from. That is a deliberate simplification: it keeps players from changing each other's seats by mistake, and does not
+// prove who is asking; a client that lies about its user is not stopped, and identity is left for later.
+export function seatEditRefusal(room: RoomState, actorUserId: string, slotId: string, patch: SlotPatch): string | undefined {
+  const slot = room.slots.find((candidate) => candidate.id === slotId);
+  if (!slot) return `Unknown seat ${slotId}`;
+  if ("userId" in patch || patch.name !== undefined) return "A player takes a seat by joining the room";
+  const keys = Object.keys(patch) as (keyof SlotPatch)[];
+  const only = (allowed: readonly (keyof SlotPatch)[]) => keys.every((key) => allowed.includes(key));
+  if (slot.controller === "human" && slot.userId === actorUserId)
+    return only(["team", "race", "ready"]) ? undefined : "Leave the room to give up your seat";
+  if (room.hostUserId !== actorUserId) return "Only the seat's player or the room's host can change this seat";
+  if (patch.controller === "human") return "A player takes a seat by joining the room";
+  if (slot.controller === "human") return only(["controller"]) ? undefined : "Only that player can change their seat";
+  return only(["controller", "team", "race", "aiVersion"]) ? undefined : "A computer or open seat has nothing else to set";
+}
+
+export function hostActionRefusal(room: RoomState, actorUserId: string): string | undefined {
+  return room.hostUserId === actorUserId ? undefined : "Only the room's host can do this";
+}
+
+// What a room's start waits on, in the order a player would fix it; nothing when it can start.
+export type RoomStartBlocker = { kind: "notOpen" } | { kind: "openSeats" } | { kind: "notReady"; names: string[] } | { kind: "teams" } | { kind: "seats" };
+
+export function roomStartBlocker(room: RoomState): RoomStartBlocker | undefined {
   const active = activeRoomSlots(room);
   const teams = active.map(seatTeam);
   // A pool map plays only with all its seats taken (see @@@map-pool).
   const pool = poolMap(room.mapId);
-  return (
-    room.status === "open" &&
-    (!pool || poolSeatsFit(pool, teams)) &&
-    room.slots.every((slot) => slot.controller !== "open") &&
-    active.length >= 2 &&
-    new Set(teams).size >= 2 &&
-    active.every((slot) => slot.controller === "ai" || (slot.controller === "human" && Boolean(slot.userId) && slot.ready))
-  );
+  if (room.status !== "open") return { kind: "notOpen" };
+  if (room.slots.some((slot) => slot.controller === "open")) return { kind: "openSeats" };
+  const waiting = active.filter((slot) => slot.controller !== "ai" && !(slot.controller === "human" && Boolean(slot.userId) && slot.ready));
+  if (waiting.length) return { kind: "notReady", names: waiting.map((slot) => slot.name) };
+  if (active.length < 2 || new Set(teams).size < 2) return { kind: "teams" };
+  if (pool && !poolSeatsFit(pool, teams)) return { kind: "seats" };
+  return undefined;
+}
+
+export function canStartRoom(room: RoomState) {
+  return !roomStartBlocker(room);
 }
 
 export function roomToGameSetup(room: RoomState): { mapId: MapId; options: GameSetupOptions; playerSlots: ResolvedRoomSlot[] } {

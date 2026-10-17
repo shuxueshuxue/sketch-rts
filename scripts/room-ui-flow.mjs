@@ -72,7 +72,8 @@ export const roomUiFlowCode = String.raw`
   const serverFixtureMap = async (roomId, mapId) => {
     await page.evaluate(async ({ roomId, mapId }) => {
       const response = await fetch("/api/rooms/" + encodeURIComponent(roomId) + "/map", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mapId }),
+        // Asked as this browser's player, the room's host (see @@@seat-ownership).
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mapId, userId: JSON.parse(localStorage.getItem("sketch-rts-user")).id }),
       });
       if (!response.ok) throw new Error(await response.text());
       const room = await response.json();

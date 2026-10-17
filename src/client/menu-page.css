@@ -31,6 +31,8 @@
   gap:10px;
 }
 .menu-page > .menu-actions button { min-height:38px; padding:8px 20px; }
+/* What the start waits on, said at the footer's left (see @@@seat-ownership). Layout only; its look is the theme's. */
+.menu-page > .menu-actions > .room-start-reason { margin-right:auto; min-width:0; font-size:13px; }
 .main-menu[data-menu-view="rooms"] .menu-window { width:min(1020px,calc(100vw - 32px)); }
 .room-browser-list {
   display:grid;

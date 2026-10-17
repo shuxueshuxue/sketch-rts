@@ -12,7 +12,7 @@ async function startStaticTwoHumanRoom() {
   const runtime = new StaticSoloDeploymentRuntime({ tickMs: 50, now: () => now });
   await runtime.createRoom({ id: "static-command-core", host: hostUser, mapId: "bareDuel", humanCount: 2, aiCount: 0 });
   await runtime.enterRoom("static-command-core", guestUser);
-  await runtime.updateRoomSlot("static-command-core", "slot-2", { ready: true, team: "south" });
+  await runtime.updateRoomSlot("static-command-core", "slot-2", { ready: true, team: "south" }, guestUser);
   return runtime.startRoom("static-command-core", hostUser);
 }
 

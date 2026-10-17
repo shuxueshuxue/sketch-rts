@@ -18,13 +18,12 @@ export type FastForwardResult = {
   memory: TickMemoryObservation;
 };
 
+// People take seats by joining; a patch changes a seat's settings (see @@@seat-ownership).
 export type SlotPatchRequest = {
   controller?: SlotController;
   team?: string;
   race?: RaceId;
   ready?: boolean;
-  name?: string;
-  userId?: string;
 };
 
 export type RoomTickResult = FastForwardResult & {
@@ -73,6 +72,9 @@ export type RoomEffectWaitResult = {
 };
 
 export class SketchRtsSdk {
+  // The host of each room this client created: a lobby change is asked as that host (see @@@seat-ownership).
+  private readonly hosts = new Map<string, string>();
+
   constructor(private readonly baseUrl: string, private readonly fetcher: typeof fetch = fetch) {}
 
   serverUrl() {
@@ -90,23 +92,23 @@ export class SketchRtsSdk {
   }
 
   async createRoom(input: CreateRoomRequest): Promise<RoomState> {
-    return this.postJson("/api/rooms", input);
+    return this.remember(await this.postJson<RoomState>("/api/rooms", input));
   }
 
   async createGrandThirtyRoom(host: LocalUserProfile, id?: string, options: GrandStressRoomRequest = {}): Promise<RoomState> {
-    return this.postJson("/api/rooms/grand-thirty", { ...(id ? { id } : {}), host, ...options });
+    return this.remember(await this.postJson<RoomState>("/api/rooms/grand-thirty", { ...(id ? { id } : {}), host, ...options }));
   }
 
   async updateRoomSlot(roomId: string, slotId: string, patch: SlotPatchRequest): Promise<RoomState> {
-    return this.postJson(`/api/rooms/${roomId}/slots/${slotId}`, patch);
+    return this.postJson(`/api/rooms/${roomId}/slots/${slotId}`, { patch, userId: await this.hostOf(roomId) });
   }
 
   async updateRoomMap(roomId: string, mapId: MapId): Promise<RoomState> {
-    return this.postJson(`/api/rooms/${roomId}/map`, { mapId });
+    return this.postJson(`/api/rooms/${roomId}/map`, { mapId, userId: await this.hostOf(roomId) });
   }
 
   async startRoom(roomId: string): Promise<RoomState> {
-    return this.postJson(`/api/rooms/${roomId}/start`, {});
+    return this.postJson(`/api/rooms/${roomId}/start`, { userId: await this.hostOf(roomId) });
   }
 
   async pauseRoom(roomId: string): Promise<RoomState> {
@@ -248,6 +250,16 @@ export class SketchRtsSdk {
       await this.closeRoom(roomId, host.id);
     }
     return incomes;
+  }
+
+  private remember(room: RoomState): RoomState {
+    this.hosts.set(room.id, room.hostUserId);
+    return room;
+  }
+
+  // A lobby change is asked as the room's host (see @@@seat-ownership); a room made elsewhere is looked up.
+  private async hostOf(roomId: string): Promise<string> {
+    return this.hosts.get(roomId) ?? this.remember(await this.getJson<RoomState>(`/api/rooms/${roomId}`)).hostUserId;
   }
 
   private async getJson<T>(path: string): Promise<T> {
