@@ -1,0 +1,243 @@
+[
+ {
+  "map": "sapphireArchipelago",
+  "counts": {
+   "mines": 18,
+   "shops": 1,
+   "camps": 0
+  },
+  "overlaps": [],
+  "standOnCenter": "19/19",
+  "buildOn": [
+   "farm@shop:shop-1"
+  ],
+  "walkedThrough": "19: mine:gold-player-main closest=1 r=42 | mine:gold-enemy-main closest=1 r=42 | mine:gold-enemy2-main closest=1 r=42 | mine:gold-player-4-main closest=1 r=42"
+ },
+ {
+  "map": "grandEstuary",
+  "counts": {
+   "mines": 24,
+   "shops": 1,
+   "camps": 0
+  },
+  "overlaps": [],
+  "standOnCenter": "25/25",
+  "buildOn": [],
+  "walkedThrough": "25: mine:gold-player-main closest=1 r=42 | mine:gold-player-1 closest=1 r=42 | mine:gold-player-2 closest=4 r=42 | mine:gold-enemy-main closest=1 r=42"
+ },
+ {
+  "map": "brokenSea",
+  "counts": {
+   "mines": 12,
+   "shops": 1,
+   "camps": 0
+  },
+  "overlaps": [],
+  "standOnCenter": "13/13",
+  "buildOn": [
+   "farm@shop:shop-1"
+  ],
+  "walkedThrough": "13: mine:gold-player-main closest=1 r=42 | mine:gold-enemy-main closest=1 r=42 | mine:gold-enemy2-main closest=1 r=42 | mine:gold-player-4-main closest=1 r=42"
+ },
+ {
+  "map": "templeSpring",
+  "counts": {
+   "mines": 16,
+   "shops": 4,
+   "camps": 4
+  },
+  "overlaps": [
+   "shop:shop-1~camp:merc-gen-1 d=69 r=40+50",
+   "shop:shop-2~camp:merc-gen-2 d=69 r=40+50",
+   "shop:shop-3~camp:merc-gen-3 d=69 r=40+50",
+   "shop:shop-4~camp:merc-gen-4 d=69 r=40+50"
+  ],
+  "standOnCenter": "24/24",
+  "buildOn": [
+   "farm@shop:shop-1",
+   "farm@shop:shop-2",
+   "farm@shop:shop-3",
+   "farm@shop:shop-4",
+   "farm@camp:merc-gen-1",
+   "farm@camp:merc-gen-2",
+   "farm@camp:merc-gen-3",
+   "farm@camp:merc-gen-4"
+  ],
+  "walkedThrough": "24: mine:gold-player-main closest=1 r=42 | mine:gold-enemy-main closest=1 r=42 | mine:gold-enemy2-main closest=1 r=42 | mine:gold-player-4-main closest=1 r=42"
+ },
+ {
+  "map": "turtleLake",
+  "counts": {
+   "mines": 13,
+   "shops": 0,
+   "camps": 0
+  },
+  "overlaps": [],
+  "standOnCenter": "13/13",
+  "buildOn": [],
+  "walkedThrough": "13: mine:gold-player-main closest=1 r=42 | mine:gold-enemy-main closest=1 r=42 | mine:gold-enemy2-main closest=1 r=42 | mine:gold-player-4-main closest=1 r=42"
+ },
+ {
+  "map": "elderwood",
+  "counts": {
+   "mines": 16,
+   "shops": 4,
+   "camps": 4
+  },
+  "overlaps": [],
+  "standOnCenter": "24/24",
+  "buildOn": [
+   "farm@shop:shop-1",
+   "farm@shop:shop-2",
+   "farm@shop:shop-3",
+   "farm@shop:shop-4",
+   "farm@camp:merc-gen-1",
+   "farm@camp:merc-gen-2",
+   "farm@camp:merc-gen-3",
+   "farm@camp:merc-gen-4"
+  ],
+  "walkedThrough": "24: mine:gold-player-main closest=1 r=42 | mine:gold-enemy-main closest=1 r=42 | mine:gold-enemy2-main closest=1 r=42 | mine:gold-player-4-main closest=1 r=42"
+ },
+ {
+  "map": "ringwater",
+  "counts": {
+   "mines": 16,
+   "shops": 4,
+   "camps": 4
+  },
+  "overlaps": [],
+  "standOnCenter": "24/24",
+  "buildOn": [
+   "farm@shop:shop-1",
+   "farm@shop:shop-2",
+   "farm@shop:shop-3",
+   "farm@shop:shop-4",
+   "farm@camp:merc-gen-1",
+   "farm@camp:merc-gen-2",
+   "farm@camp:merc-gen-3",
+   "farm@camp:merc-gen-4"
+  ],
+  "walkedThrough": "24: mine:gold-player-main closest=1 r=42 | mine:gold-enemy-main closest=1 r=42 | mine:gold-enemy2-main closest=1 r=42 | mine:gold-player-4-main closest=1 r=42"
+ },
+ {
+  "map": "loneMarket",
+  "counts": {
+   "mines": 6,
+   "shops": 1,
+   "camps": 2
+  },
+  "overlaps": [],
+  "standOnCenter": "9/9",
+  "buildOn": [
+   "farm@shop:shop-1",
+   "farm@camp:merc-gen-1",
+   "farm@camp:merc-gen-2"
+  ],
+  "walkedThrough": "9: mine:gold-player-main closest=1 r=42 | mine:gold-enemy-main closest=1 r=42 | mine:gold-gen-1 closest=1 r=42 | mine:gold-gen-2 closest=1 r=42"
+ },
+ {
+  "map": "reedwater",
+  "counts": {
+   "mines": 6,
+   "shops": 0,
+   "camps": 0
+  },
+  "overlaps": [],
+  "standOnCenter": "6/6",
+  "buildOn": [],
+  "walkedThrough": "6: mine:gold-player-main closest=1 r=42 | mine:gold-enemy-main closest=1 r=42 | mine:gold-gen-1 closest=1 r=42 | mine:gold-gen-2 closest=1 r=42"
+ },
+ {
+  "map": "veiledHill",
+  "counts": {
+   "mines": 7,
+   "shops": 2,
+   "camps": 2
+  },
+  "overlaps": [],
+  "standOnCenter": "11/11",
+  "buildOn": [
+   "farm@shop:shop-1",
+   "farm@shop:shop-2",
+   "farm@camp:merc-gen-1",
+   "farm@camp:merc-gen-2"
+  ],
+  "walkedThrough": "9: mine:gold-player-main closest=1 r=42 | mine:gold-enemy-main closest=1 r=42 | mine:gold-gen-1 closest=1 r=42 | mine:gold-gen-2 closest=1 r=42"
+ },
+ {
+  "map": "greystonePass",
+  "counts": {
+   "mines": 6,
+   "shops": 2,
+   "camps": 2
+  },
+  "overlaps": [],
+  "standOnCenter": "10/10",
+  "buildOn": [
+   "farm@shop:shop-1",
+   "farm@shop:shop-2",
+   "farm@camp:merc-gen-1",
+   "farm@camp:merc-gen-2"
+  ],
+  "walkedThrough": "10: mine:gold-player-main closest=1 r=42 | mine:gold-enemy-main closest=1 r=42 | mine:gold-gen-1 closest=1 r=42 | mine:gold-gen-2 closest=1 r=42"
+ },
+ {
+  "map": "pineshade",
+  "counts": {
+   "mines": 7,
+   "shops": 0,
+   "camps": 2
+  },
+  "overlaps": [],
+  "standOnCenter": "9/9",
+  "buildOn": [
+   "farm@camp:merc-gen-1",
+   "farm@camp:merc-gen-2"
+  ],
+  "walkedThrough": "9: mine:gold-player-main closest=1 r=42 | mine:gold-enemy-main closest=1 r=42 | mine:gold-gen-1 closest=1 r=42 | mine:gold-gen-2 closest=1 r=42"
+ },
+ {
+  "map": "gullIsland",
+  "counts": {
+   "mines": 9,
+   "shops": 0,
+   "camps": 0
+  },
+  "overlaps": [],
+  "standOnCenter": "9/9",
+  "buildOn": [],
+  "walkedThrough": "9: mine:gold-player-main closest=1 r=42 | mine:gold-enemy-main closest=1 r=42 | mine:gold-gen-1 closest=1 r=42 | mine:gold-gen-2 closest=1 r=42"
+ },
+ {
+  "map": "stillwater",
+  "counts": {
+   "mines": 12,
+   "shops": 2,
+   "camps": 2
+  },
+  "overlaps": [],
+  "standOnCenter": "16/16",
+  "buildOn": [
+   "farm@shop:shop-1",
+   "farm@shop:shop-2",
+   "farm@camp:merc-gen-1",
+   "farm@camp:merc-gen-2"
+  ],
+  "walkedThrough": "16: mine:gold-player-main closest=1 r=42 | mine:gold-enemy-main closest=1 r=42 | mine:gold-enemy2-main closest=1 r=42 | mine:gold-player-4-main closest=1 r=42"
+ },
+ {
+  "map": "twoShores",
+  "counts": {
+   "mines": 15,
+   "shops": 0,
+   "camps": 2
+  },
+  "overlaps": [],
+  "standOnCenter": "17/17",
+  "buildOn": [
+   "farm@camp:merc-gen-1",
+   "farm@camp:merc-gen-2"
+  ],
+  "walkedThrough": "17: mine:gold-player-main closest=1 r=42 | mine:gold-enemy-main closest=1 r=42 | mine:gold-enemy2-main closest=1 r=42 | mine:gold-player-4-main closest=1 r=42"
+ }
+]
