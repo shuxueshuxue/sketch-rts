@@ -36,11 +36,11 @@ describe("unit value and veteran rewards", () => {
     expect(UNIT_DEFS.venomSpider.goldBounty).toBeGreaterThan(UNIT_DEFS.thornSlinger.goldBounty!);
   });
   it("halves tower damage only against neutrals, including shots from a destroyed tower", () => {
-    expect(singleShot("enemy")).toBe(16);
-    expect(singleShot("neutral")).toBe(8);
-    expect(singleShot("neutral", "footman", true)).toBe(8);
-    expect(singleShot("enemy", "golem")).toBe(11);
-    expect(singleShot("neutral", "golem")).toBe(6);
+    expect(singleShot("enemy")).toBe(13);
+    expect(singleShot("neutral")).toBe(6.5);
+    expect(singleShot("neutral", "footman", true)).toBe(6.5);
+    expect(singleShot("enemy", "golem")).toBe(9);
+    expect(singleShot("neutral", "golem")).toBe(5);
   });
   it("credits one tower last-hit bounty and one readable gold effect", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
