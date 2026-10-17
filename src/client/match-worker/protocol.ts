@@ -1,4 +1,5 @@
 import type { AiScriptVersion } from "../../ai/policy";
+import type { AiThinkReport } from "../../ai/runtime";
 import type { ClientNetMessage, ServerNetMessage } from "../../shared/net/types";
 import type { GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, PlayerId, RoomState } from "../../shared/types";
 
@@ -39,7 +40,8 @@ type CastCommand = Extract<GameCommand, { type: "cast" }>;
 export type MatchThreadSnapshot = Omit<GameSnapshot, "map"> & { map: Omit<GameMap, "terrain" | "landmarks"> };
 
 export type MatchThreadEvent =
-  | { type: "snapshot"; snapshot: MatchThreadSnapshot; pendingCasts?: CastCommand[] }
+  // `ai`: how the match's AI thread has been thinking since the last snapshot (the ?perf=1 readout).
+  | { type: "snapshot"; snapshot: MatchThreadSnapshot; pendingCasts?: CastCommand[]; ai?: AiThinkReport }
   | { type: "ended"; snapshot: MatchThreadSnapshot }
   // A command the live game refused although the page's latest snapshot allowed it.
   | { type: "rejected"; message: string }

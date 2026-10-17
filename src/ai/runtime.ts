@@ -107,9 +107,19 @@ export type AiThinkExecutor = {
   // The commands of every think due by this tick that has arrived. `settle` first waits for the rest, where the
   // executor's thread can wait.
   take(tick: number, settle: boolean): CommandEnvelope[];
+  // What thinking on another thread has been like since the last report (the ?perf=1 readout shows it).
+  report?(): AiThinkReport;
   // Releases whatever the executor holds for the match (a thinking thread's session).
   close?(): void;
 };
+
+// Thinks that arrived and how long they took on their thread; thinks that landed after their due tick and by how many
+// ticks at most; and turns players skipped because their last think was still running (see @@@planner-schedule).
+export type AiThinkReport = { thinks: number; thinkMs: number; slowestMs: number; late: number; lateTicks: number; skipped: number };
+
+export function emptyAiThinkReport(): AiThinkReport {
+  return { thinks: 0, thinkMs: 0, slowestMs: 0, late: 0, lateTicks: 0, skipped: 0 };
+}
 
 export type AiThinkExecutorFactory = (runtime: AiRuntimeState, game: Game) => AiThinkExecutor;
 

@@ -3,6 +3,7 @@ import { bindGangwayCrewRules } from "../../shared/ship-gangway";
 import type { ClientNetMessage, ServerNetMessage } from "../../shared/net/types";
 import type { GameCommand, GameMap, GameSnapshot, PlayerId } from "../../shared/types";
 import type { GameAdapter } from "../game-adapter";
+import { perf } from "../perf-overlay";
 import type { MatchThreadEvent, MatchThreadInit, MatchThreadMessage, MatchThreadSnapshot } from "./protocol";
 
 export type MatchThreadPort = {
@@ -89,6 +90,7 @@ export class MatchThreadGameAdapter implements GameAdapter {
     if (event.type === "snapshot") {
       this.snapshot = this.withGround(event.snapshot);
       this.casts = event.pendingCasts ?? [];
+      if (event.ai) perf?.aiThinking(event.ai);
     } else if (event.type === "ended") {
       this.snapshot = this.withGround(event.snapshot);
       this.options.onEnded?.(this.snapshot);

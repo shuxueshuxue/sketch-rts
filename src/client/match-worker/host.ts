@@ -1,4 +1,4 @@
-import { createAiRuntime, type AiThinkExecutorFactory } from "../../ai/runtime";
+import { createAiRuntime, type AiThinkExecutor, type AiThinkExecutorFactory } from "../../ai/runtime";
 import { createAiThinkClientExecutor } from "../../ai/think-worker/client";
 import type { AiThinkReply } from "../../ai/think-worker/protocol";
 import type { ServerNetMessage } from "../../shared/net/types";
@@ -15,9 +15,12 @@ export function createMatchThreadHost(post: (event: MatchThreadEvent) => void) {
   let local: LocalGameAdapter | undefined;
   let lockstep: LockstepClient | undefined;
   const netHandlers: ((message: ServerNetMessage) => void)[] = [];
+  // The executor the local match thinks through on the AI thread, whose report goes with each snapshot.
+  let thinking: AiThinkExecutor | undefined;
   const report = (error: unknown) => post({ type: "error", message: error instanceof Error ? error.message : String(error) });
   const publish = () => {
-    if (local) post({ type: "snapshot", snapshot: withoutGround(local.currentSnapshot()) });
+    const ai = thinking?.report?.();
+    if (local) post({ type: "snapshot", snapshot: withoutGround(local.currentSnapshot()), ...(ai ? { ai } : {}) });
     else if (lockstep) post({ type: "snapshot", snapshot: withoutGround(lockstep.currentSnapshot()), pendingCasts: [...lockstep.pendingCasts()] });
   };
   const step = () => !!(local?.updateToRenderTime() || lockstep?.updateToRenderTime());
@@ -49,7 +52,7 @@ export function createMatchThreadHost(post: (event: MatchThreadEvent) => void) {
             now: () => now,
             ...(message.tickMs === undefined ? {} : { tickMs: message.tickMs }),
             aiRuntime: createAiRuntime(message.aiPlayers, message.aiVersions ? { versions: message.aiVersions } : {}),
-            ...(message.aiPort ? { aiThinkExecutor: portAiThinkExecutors(message.aiPort) } : {}),
+            ...(message.aiPort ? { aiThinkExecutor: (runtime, game) => (thinking = portAiThinkExecutors(message.aiPort!)(runtime, game)) } : {}),
             ...(room ? {
               room,
               // The room's lifecycle stays with the page; it gets the final world and finishes the room there.
