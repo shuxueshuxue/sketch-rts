@@ -51,6 +51,10 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
     return this.lifecycle.getRoom(roomId);
   }
 
+  async findRoom(roomId: string): Promise<RoomState | undefined> {
+    return this.lifecycle.findRoom(roomId);
+  }
+
   async enterRoom(roomId: string, user: LocalUserProfile): Promise<{ room: RoomState; spectating: boolean; playerId: PlayerId }> {
     let room = this.lifecycle.getRoom(roomId);
     if (room.status === "open") {
@@ -88,7 +92,7 @@ export class StaticSoloDeploymentRuntime implements DeploymentRuntime {
     if (refusal) throw new Error(refusal);
   }
 
-  watchRoom(_roomId: string, _onRoom: (room: RoomState) => void): () => void {
+  watchRoom(_roomId: string, _user: LocalUserProfile, _onRoom: (room: RoomState) => void): () => void {
     return () => {};
   }
 

@@ -71,6 +71,11 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
     return this.fetchJson<RoomState>(this.path(`/api/rooms/${encodeURIComponent(roomId)}`));
   }
 
+  async findRoom(roomId: string): Promise<RoomState | undefined> {
+    try { return await this.getRoom(roomId); }
+    catch (error) { if ((error as { status?: number }).status === 404) return undefined; throw error; }
+  }
+
   async enterRoom(roomId: string, user: LocalUserProfile): Promise<{ room: RoomState; spectating: boolean; playerId: PlayerId }> {
     const existingRoom = await this.getRoom(roomId);
     const ownedSlot = slotForUser(existingRoom, user.id);
@@ -92,8 +97,8 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
     return this.fetchJson<RoomState>(this.path(`/api/rooms/${encodeURIComponent(roomId)}/slot-counts`), { humanCount, aiCount, userId: user.id });
   }
 
-  watchRoom(roomId: string, onRoom: (room: RoomState) => void): () => void {
-    const source = this.createRoomEventSource(this.path(`/api/rooms/${encodeURIComponent(roomId)}/events`));
+  watchRoom(roomId: string, user: LocalUserProfile, onRoom: (room: RoomState) => void): () => void {
+    const source = this.createRoomEventSource(this.path(`/api/rooms/${encodeURIComponent(roomId)}/events?userId=${encodeURIComponent(user.id)}`));
     source.addEventListener("message", (event) => {
       onRoom(JSON.parse(event.data) as RoomState);
     });
@@ -198,7 +203,8 @@ async function requestJson<T>(path: string, body?: unknown): Promise<T> {
           body: JSON.stringify(body),
         };
   const response = await fetch(path, init);
-  if (!response.ok) throw new Error(await response.text());
+  // The status goes with the error: a room the server does not have (404) is an answer, not a failure (see findRoom).
+  if (!response.ok) throw Object.assign(new Error(await response.text()), { status: response.status });
   return response.json() as Promise<T>;
 }
 

@@ -75,6 +75,10 @@ export function createRoomLifecycleHost(options: RoomLifecycleOptions = {}) {
       return requireRoom(roomId);
     },
 
+    findRoom(roomId: string): RoomState | undefined {
+      return rooms.get(roomId);
+    },
+
     hasRoom(roomId: string): boolean {
       return rooms.has(roomId);
     },

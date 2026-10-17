@@ -622,6 +622,27 @@ input[type="range"] {
   background: var(--selected);
 }
 
+/* A full room is listed, not offered. */
+.room-browser-list .map-button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.room-browser-list .map-button:disabled:hover {
+  background: transparent;
+}
+
+/* A link into a game under way: the question stands in the page. */
+.room-entry-question {
+  margin: 8px 0;
+  font-size: 18px;
+}
+
+/* Rooms to join first, then games under way to watch. */
+.room-browser-group:not(:first-child) {
+  margin-top: 10px;
+}
+
 .room-list-note {
   padding: 16px;
   color: var(--inset-ink-soft);

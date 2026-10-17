@@ -13,6 +13,7 @@ import { MAP_SCENARIOS } from "../shared/map";
 import { benchmarkDashboardRunsDir, listBenchmarkDashboardRunsPage, readBenchmarkDashboardRunPage, recordAiVersionBenchmarkDashboardRun } from "../ai/benchmark/dashboard-store";
 import { isCommandEnvelope } from "../shared/command-schema";
 import type { CommandEnvelope } from "../shared/net/types";
+import type { RoomState } from "../shared/types";
 import { isLocalUserProfile, parseContinueSaveRequest, parseGrandStressRoomRequest, parseMapUpdateRequest, parseResetRoomRequest, requestUserId, parseSlotCountsRequest, parseSlotPatch, roomCreateInputFromRequest } from "../shared/room-schema";
 import { hostActionRefusal, seatEditRefusal } from "../shared/rooms";
 import { parseSaveGameInput } from "../shared/savegame";
@@ -41,7 +42,11 @@ const aiThinkPool = createAiThinkPool({
 });
 const roomHost = createRoomHost({ autoTick: roomAutoTick, aiThinkExecutor: aiThinkPool.executor });
 // Lobby pages watching each room through its event stream (see @@@idle-room-reaper).
-const lobbyWatchers = new Map<string, number>();
+// @@@room-presence - Who watches each room's lobby (its event stream), by user: a room is attended while anyone does, and
+// listed as open to join only while its host does. A host who closed the page leaves no joinable room behind; one who
+// reloads is back in a moment.
+const lobbyWatchers = new Map<string, Map<string, number>>();
+const hostPresent = (room: RoomState) => !!lobbyWatchers.get(room.id)?.has(room.hostUserId);
 const roomNetHub = new RoomNetHub({ roomHost });
 
 router.use(express.json({ limit: "64kb" }));
@@ -135,7 +140,7 @@ function hostOnly(roomId: string, userId: string) {
 
 router.get("/api/rooms", (request, response) => {
   const viewerUserId = typeof request.query.userId === "string" ? request.query.userId : undefined;
-  response.json({ rooms: roomHost.listRooms(viewerUserId) });
+  response.json({ rooms: roomHost.listRooms(viewerUserId).filter(room => room.status !== "open" || room.hostUserId === viewerUserId || hostPresent(room)) });
 });
 
 router.post("/api/rooms", (request, response) => {
@@ -195,12 +200,14 @@ router.get("/api/rooms/:roomId/events", (request, response) => {
   writeRoomEvent(response, room);
   const roomId = request.params.roomId;
   const unobserve = roomHost.observeRoomLifecycle(roomId, (event) => writeRoomEvent(response, event.room));
-  lobbyWatchers.set(roomId, (lobbyWatchers.get(roomId) ?? 0) + 1);
+  const watcher = typeof request.query.userId === "string" ? request.query.userId : "";
+  const watchers = lobbyWatchers.get(roomId) ?? new Map<string, number>();
+  watchers.set(watcher, (watchers.get(watcher) ?? 0) + 1); lobbyWatchers.set(roomId, watchers);
   request.on("close", () => {
     unobserve();
-    const left = (lobbyWatchers.get(roomId) ?? 1) - 1;
-    if (left > 0) lobbyWatchers.set(roomId, left);
-    else lobbyWatchers.delete(roomId);
+    const left = (watchers.get(watcher) ?? 1) - 1;
+    if (left > 0) watchers.set(watcher, left); else watchers.delete(watcher);
+    if (!watchers.size && lobbyWatchers.get(roomId) === watchers) lobbyWatchers.delete(roomId);
   });
 });
 

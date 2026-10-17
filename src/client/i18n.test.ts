@@ -17,8 +17,8 @@ describe("client i18n", () => {
     const en = createI18n("en");
     const zh = createI18n("zh");
 
-    expect(en.t("home.rooms.label")).toBe("Rooms");
-    expect(zh.t("home.rooms.label")).toBe("房间");
+    expect(en.t("home.rooms.label")).toBe("Multiplayer");
+    expect(zh.t("home.rooms.label")).toBe("多人游戏");
     expect(() => en.t("missing.key" as TranslationKey)).toThrow("Missing en translation for missing.key");
   });
 
