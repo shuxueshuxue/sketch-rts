@@ -96,7 +96,8 @@ export function waterCoverPixels(terrain: Terrain): WaterCover {
 }
 
 export const WATER_DEEP = [57, 102, 113] as const;
-export const WATER_SHORE_FADE = [.25, .75] as const;
+// Narrow, so the water meets its foam line in a drawn edge rather than a wide blur (see @@@shore-bands).
+export const WATER_SHORE_FADE = [.38, .62] as const;
 export const WATER_DEPTH_FADE = [.045, .22] as const;
 const smooth = (low: number, high: number, value: number) => {
   const t = Math.max(0, Math.min(1, (value - low) / (high - low))); return t * t * (3 - 2 * t);
