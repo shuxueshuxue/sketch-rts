@@ -104,53 +104,88 @@ export class Machine {
    * the diff travels; otherwise the tree travels as one gzipped tar (the ThinkPad-to-A100 link moves about 200 KB/s).
    * node_modules is a directory of links into one shared install per package-lock, so each copy keeps its own caches
    * (a shared node_modules/.vite raced between copies on mac1).
+   * A copy is usable only once its .sketch-complete marker is written, and it is built under the copy's lock (see
+   * lockedBuild): two runs of one commit (a test diff and a bench) build it once, and neither removes a copy the other
+   * already reads.
    */
   async copy(sha: string) {
     const dir = this.path("trees", sha);
     const listing = await this.run(`cd ${quote(this.path("trees"))} 2>/dev/null && ls -d */.sketch-complete 2>/dev/null`, { quiet: true });
     const held = listing.stdout.split("\n").map((line) => line.split("/")[0]!).filter((name) => /^[0-9a-f]{40}$/.test(name));
     if (held.includes(sha)) return dir;
+    const shared = await this.installNodeModules(sha);
     const staging = this.path("trees", `${sha}.partial-${this.runId}`);
     const near = nearestCommit(sha, held);
+    let fill: string, input: NodeJS.ReadableStream;
     if (near) {
       progress(`copying ${sha.slice(0, 10)} to ${this.name} from its copy of ${near.sha.slice(0, 10)} (${near.changed} files differ)`);
-      const patch = git(["diff", "--binary", "--no-renames", near.sha, sha, "--", ...COPY_PATHSPEC]);
-      await this.runOk(`rm -rf ${quote(staging)} && cp -a ${quote(this.path("trees", near.sha))} ${quote(staging)} && rm -f ${quote(staging)}/.sketch-complete && cd ${quote(staging)} && git apply --allow-empty --whitespace=nowarn --unsafe-paths -`, { input: patch.stdout!, quiet: true });
+      fill = `cp -a ${quote(this.path("trees", near.sha))} ${quote(staging)} && rm -f ${quote(staging)}/.sketch-complete && (cd ${quote(staging)} && git apply --allow-empty --whitespace=nowarn --unsafe-paths -)`;
+      input = git(["diff", "--binary", "--no-renames", near.sha, sha, "--", ...COPY_PATHSPEC]).stdout!;
     } else {
       const files = copiedFiles(sha);
       progress(`copying ${sha.slice(0, 10)} to ${this.name} (${files.length} files, gzipped)`);
-      const archive = git(["archive", "--format=tar", sha, "--", ...files]);
-      const gzip = spawn("gzip", ["-1"], { stdio: ["pipe", "pipe", "inherit"] });
-      archive.stdout!.pipe(gzip.stdin!);
-      await this.runOk(`rm -rf ${quote(staging)} && mkdir -p ${quote(staging)} && tar -xz -C ${quote(staging)}`, { input: gzip.stdout!, quiet: true });
+      fill = `mkdir -p ${quote(staging)} && tar -xz -C ${quote(staging)}`;
+      input = gzipped(git(["archive", "--format=tar", sha, "--", ...files]).stdout!);
     }
-    await this.runOk(`rm -rf ${quote(dir)} && mv ${quote(staging)} ${quote(dir)}`, { quiet: true });
-    await this.linkNodeModules(dir, sha);
-    await this.runOk(`touch ${quote(dir)}/.sketch-complete`, { quiet: true });
+    await this.runOk(lockedBuild(dir, [
+      // Under the lock nobody else builds this copy, so whatever is there without its marker is a failed build's.
+      `rm -rf ${quote(dir)} ${quote(dir)}.partial-*`,
+      fill,
+      `rm -rf ${quote(staging)}/node_modules && mkdir -p ${quote(staging)}/node_modules && (cd ${quote(staging)}/node_modules && for entry in ${quote(shared)}/node_modules/* ${quote(shared)}/node_modules/.bin; do ln -sfn "$entry" .; done)`,
+      `mv ${quote(staging)} ${quote(dir)}`,
+      `touch ${quote(dir)}/.sketch-complete`,
+    ].join(" && ")), { input, quiet: true });
     return dir;
   }
 
-  private async linkNodeModules(dir: string, sha: string) {
+  /** The shared install for `sha`'s package-lock (node_modules/<lock hash>), made once under its lock like a copy. */
+  private async installNodeModules(sha: string) {
     const lock = gitOut(["show", `${sha}:package-lock.json`]);
     const hash = createHash("sha256").update(lock).digest("hex").slice(0, 16);
     const shared = this.path("node_modules", hash);
     const installed = await this.run(`test -f ${quote(shared)}/.sketch-complete`, { quiet: true });
-    if (installed.code !== 0) {
-      progress(`installing node_modules ${hash} on ${this.name} (once per package-lock)`);
-      await this.runOk([
-        `rm -rf ${quote(shared)} && mkdir -p ${quote(shared)}`,
-        `cp ${quote(dir)}/package.json ${quote(dir)}/package-lock.json ${quote(shared)}/`,
-        `cd ${quote(shared)} && npm ci --no-audit --no-fund`,
-        `touch ${quote(shared)}/.sketch-complete`,
-      ].join(" && "));
-    }
-    await this.runOk(`rm -rf ${quote(dir)}/node_modules && mkdir -p ${quote(dir)}/node_modules && cd ${quote(dir)}/node_modules && for entry in ${quote(shared)}/node_modules/* ${quote(shared)}/node_modules/.bin; do ln -sfn "$entry" .; done`, { quiet: true });
+    if (installed.code === 0) return shared;
+    progress(`installing node_modules ${hash} on ${this.name} (once per package-lock)`);
+    await this.runOk(lockedBuild(shared, [
+      `rm -rf ${quote(shared)} && mkdir -p ${quote(shared)}`,
+      `tar -x -C ${quote(shared)}`,
+      `cd ${quote(shared)} && npm ci --no-audit --no-fund`,
+      `touch ${quote(shared)}/.sketch-complete`,
+    ].join(" && ")), { input: git(["archive", "--format=tar", sha, "--", "package.json", "package-lock.json"]).stdout! });
+    return shared;
   }
 
   async read(path: string) {
     if (!path.startsWith(this.config.root)) throw new Error(`Refusing to read outside ${this.config.root}: ${path}`);
     return (await this.runOk(`cat ${quote(path)}`, { quiet: true })).stdout;
   }
+}
+
+// The shell that builds `target` (a copy or a shared install) at most once at a time on its machine: it takes
+// <target>.lock with mkdir (atomic, and there on macOS, which has no flock) and records its pid there. A run that finds
+// the lock taken waits; when the target's marker appears it uses what the other built, and when the lock's owner has
+// died (a killed run) it takes the lock over. The builder writes the marker last, so a target without one is never used.
+// The input of a run that finds the target built is read and dropped, so the sending side never sees a broken pipe.
+export function lockedBuild(target: string, body: string) {
+  const lock = quote(`${target}.lock`), done = quote(`${target}/.sketch-complete`);
+  return [
+    `mkdir -p ${quote(target.slice(0, target.lastIndexOf("/")))}`,
+    `while ! mkdir ${lock} 2>/dev/null; do`,
+    `  if [ -f ${done} ]; then cat > /dev/null; exit 0; fi`,
+    `  owner=$(cat ${lock}/pid 2>/dev/null)`,
+    `  if [ -n "$owner" ] && ! kill -0 "$owner" 2>/dev/null; then rm -rf ${lock}; else sleep 2; fi`,
+    `done`,
+    `echo $$ > ${lock}/pid`,
+    `trap ${quote(`rm -rf ${lock}`)} EXIT`,
+    `if [ -f ${done} ]; then cat > /dev/null; exit 0; fi`,
+    body,
+  ].join("\n");
+}
+
+function gzipped(stream: NodeJS.ReadableStream) {
+  const gzip = spawn("gzip", ["-1"], { stdio: ["pipe", "pipe", "inherit"] });
+  stream.pipe(gzip.stdin!);
+  return gzip.stdout!;
 }
 
 // What a copy holds: everything outside docs/, and docs/ text. As a pathspec for diffs between copies, and as a file
