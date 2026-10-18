@@ -26,7 +26,7 @@ function battle(kind: UnitKind, range = UNIT_DEFS[kind].attackRange) {
   const target = game.spawnUnit("enemy", "footman", 1000 + range * .7 + 70, 1000);
   target.invulnerable = true; target.cooldown = 9999;
   target.order = { type: "hold", x: target.x, y: target.y };
-  shooter.abilityCooldown = 9999;
+  shooter.autocast = Object.fromEntries(UNIT_DEFS[kind].abilities.map(ability => [ability, false]));
   if (shooter.sailing) shooter.sailing.heading = kind === "shipOfTheLine" ? Math.PI / 2 : 0;
   return { game, shooter, target };
 }
@@ -74,7 +74,6 @@ describe("sound cues", () => {
     const kind = (Object.keys(UNIT_DEFS) as UnitKind[]).find(kind => UNIT_DEFS[kind].abilities.includes(ability));
     expect(kind, `${ability} needs a real caster`).toBeDefined();
     const { game, shooter, target } = battle(kind!, def.range);
-    shooter.abilityCooldown = 0;
     const at = def.target === "point" ? { x: target.x, y: target.y } : { targetId: target.id };
     expect(tryPlayerCommand(game, "player", { type: "cast", unitId: shooter.id, ability, ...at }).ok).toBe(true);
     firstShots(game, shooter.id, "cast");
