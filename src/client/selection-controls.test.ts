@@ -34,6 +34,15 @@ describe("selection controls", () => {
     expect([...result.selectedIds]).toEqual(["crew"]);
   });
 
+  // @@@box-crew: a box over a deck takes its crew, not the hull under them; a ship still comes with a box that holds no
+  // crew of its own, and with another ship's crew.
+  it("box-selects the crew on a deck without the ship they stand on", () => {
+    const crewed = { ...unit("crew", 100, 100), deck: { shipId: "ship", x: 0, y: 0 } };
+    const snapshot = snapshotWith({ units: [unit("ship", 110, 110, "player", "warship"), crewed, unit("other", 150, 150, "player", "transport")] });
+    expect([...selectInScreenBox(snapshot, "player", rect(60, 60, 180, 180), (point) => point, emptySelection(), false, (unit) => unit).selectedIds]).toEqual(["crew", "other"]);
+    expect([...selectInScreenBox(snapshot, "player", rect(105, 105, 180, 180), (point) => point, emptySelection(), false, (unit) => unit).selectedIds]).toEqual(["ship", "other"]);
+  });
+
   it('keeps sheltered crew out of battlefield box and same-kind selection, including a breached cabin',()=>{
     const hidden={...unit('hidden',100,100,'player','priest'),deck:{shipId:'ship',x:0,y:0},cabin:{shipId:'ship',breached:true as const}};
     const snapshot=snapshotWith({units:[hidden,unit('visible',110,100,'player','priest')]});
