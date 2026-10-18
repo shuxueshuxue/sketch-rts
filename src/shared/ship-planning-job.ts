@@ -19,9 +19,16 @@ const trafficViews=new WeakMap<VoyageJob,ReturnType<typeof shipTraffic>>();
 // This state never participates in the saved job or the world's checksum.
 const reconstruction=new WeakMap<VoyageJob,{remaining:number;invalid:boolean}>();
 
+// @@@precise-traffic - A precise search is planned against the hulls near either end of it, not only those near the
+// ship: a berth beside a hull 600 or more off was planned through that hull, and the ship ran its bow into it.
+const TRAFFIC_RANGE=600;
+function trafficReach(ship:Unit,mode:ShipPlanningMode|undefined,end:{x:number;y:number}) {
+  // Only a precise berth: an exact recovery replan toward a distant goal keeps the hulls about it.
+  return mode==='precise' ? TRAFFIC_RANGE+Math.hypot(end.x-ship.x,end.y-ship.y) : TRAFFIC_RANGE;
+}
 function trafficView(job:VoyageJob):ReturnType<typeof shipTraffic> {
   let traffic=trafficViews.get(job);
-  if(!traffic){traffic=shipTraffic(job.ship,job.traffic);trafficViews.set(job,traffic);}
+  if(!traffic){traffic=shipTraffic(job.ship,job.traffic,trafficReach(job.ship,job.mode,searchGoal(job)));trafficViews.set(job,traffic);}
   return traffic;
 }
 function voyageReference(job:VoyageJob):boolean {
@@ -146,11 +153,12 @@ export function beginShipPlanningJob(ship:Unit,goal:ShipCourseGoal,map:GameMap,u
   mode?:ShipPlanningMode,target?:ShipCourseGoal):void {
   const frozen=plannerUnit(ship);
   if(anchor){frozen.x=anchor.x;frozen.y=anchor.y;frozen.sailing!.heading=anchor.heading;}
-  const traffic=units.filter(unit=>unit!==ship && unit.hp>0 && isShipKind(unit.kind) && Math.hypot(unit.x-frozen.x,unit.y-frozen.y)<600).map(source=>JSON.parse(JSON.stringify({
+  const end=target ?? goal,reach=trafficReach(frozen,mode,end);
+  const traffic=units.filter(unit=>unit!==ship && unit.hp>0 && isShipKind(unit.kind) && Math.hypot(unit.x-frozen.x,unit.y-frozen.y)<reach).map(source=>JSON.parse(JSON.stringify({
     id:source.id,owner:source.owner,kind:source.kind,hp:source.hp,maxHp:source.maxHp,x:source.x,y:source.y,
     radius:source.radius,cargoCapacity:source.cargoCapacity,deckScale:source.deckScale,
     sailing:{heading:source.sailing?.heading??0}})) as Unit);
-  const limited=shipTraffic(frozen,traffic).hasTraffic;
+  const limited=shipTraffic(frozen,traffic,reach).hasTraffic;
   save(ship,{version:1,phase:'direct',ship:frozen,traffic,goal:{...goal},windKey:windAt(map,ship).key,guard:guard(ship),
     ...(anchor?{anchor:{...anchor}}:{}),...(recovery?{recovery:true}:{}),...(limited?{limited:true}:{}),
     ...(mode?{mode}:{}),...(target?{target:{...target}}:{})});
