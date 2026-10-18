@@ -46,6 +46,7 @@ describe("served sound packs", () => {
   });
 
   it("keeps the core pack available when an optional supplement is invalid", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
     const served = await servedSoundPacks("/", server({
       "/audio-packs/served.json": { packs: ["war3"] },
       "/audio-packs/war3/pack.json": { name: "War3", sounds: { click: { file: "click.ogg" } } },
@@ -53,6 +54,58 @@ describe("served sound packs", () => {
     }));
     expect(served.packs.map(pack => pack.id)).toEqual(["war3"]);
     expect(Object.keys(served.packs[0]!.sounds)).toEqual(["click"]);
+    expect(error).toHaveBeenCalledWith("Sound pack war3: rejected extras.json; keeping pack.json", expect.any(Error));
+    expect((error.mock.calls[0]![1] as Error).message).toContain("Sound pack war3: no event misspelledEvent");
+    error.mockRestore();
+  });
+
+  it("loads naval launches alongside an older unit name in the same extras", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const served = await servedSoundPacks("/", server({
+      "/audio-packs/served.json": { packs: ["war3"], default: "war3" },
+      "/audio-packs/war3/pack.json": { name: "Warcraft III", sounds: { click: { file: "click.ogg" } } },
+      "/audio-packs/war3/extras.json": { sounds: {
+        spell: { kinds: { pyreCaller: { file: "summon.ogg" } } },
+        cannonShot: { file: "cannon.ogg", volume: .8 },
+        mortarShot: { file: "mortar.ogg", volume: .8 },
+        grapeshotShot: { file: "cannon.ogg", volume: .7 },
+      } },
+    }));
+    const sounds = served.packs[0]!.sounds;
+    expect(sounds.spell!.kinds.summoner!.url).toBe("/audio-packs/war3/summon.ogg");
+    expect(sounds.cannonShot!.clip!.volume).toBe(.8);
+    expect(sounds.mortarShot!.clip!.url).toBe("/audio-packs/war3/mortar.ogg");
+    expect(sounds.grapeshotShot!.clip!.volume).toBe(.7);
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it.each([
+    [{ sounds: { spell: { kinds: { unknownCaster: { file: "spell.ogg" } } } } }, "spell.kinds.unknownCaster names no unit kind unknownCaster"],
+    [{ sounds: [] }, "extras.json.sounds must map events to sounds"],
+  ])("reports a rejected supplement's pack, field and reason", async (extras, reason) => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const served = await servedSoundPacks("/", server({
+      "/audio-packs/served.json": { packs: ["war3"] },
+      "/audio-packs/war3/pack.json": { name: "Warcraft III", sounds: { click: { file: "click.ogg" } } },
+      "/audio-packs/war3/extras.json": extras,
+    }));
+    expect(Object.keys(served.packs[0]!.sounds)).toEqual(["click"]);
+    expect(error).toHaveBeenCalledWith("Sound pack war3: rejected extras.json; keeping pack.json", expect.any(Error));
+    expect((error.mock.calls[0]![1] as Error).message).toContain(`Sound pack war3: ${reason}`);
+    error.mockRestore();
+  });
+
+  it("reports malformed extras JSON while keeping the core pack", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const load = server({
+      "/audio-packs/served.json": { packs: ["war3"] },
+      "/audio-packs/war3/pack.json": { name: "Warcraft III", sounds: { click: { file: "click.ogg" } } },
+    });
+    const served = await servedSoundPacks("/", ((input: string | URL | Request) => String(input).endsWith("extras.json") ? Promise.resolve(new Response("{")) : load(input)) as typeof fetch);
+    expect(Object.keys(served.packs[0]!.sounds)).toEqual(["click"]);
+    expect(error).toHaveBeenCalledWith("Sound pack war3: could not read extras.json; keeping pack.json", expect.any(SyntaxError));
+    error.mockRestore();
   });
 
   it("plays the server's default only while neither the build nor the player has named one", async () => {

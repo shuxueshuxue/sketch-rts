@@ -25,8 +25,9 @@ export const SOUND_PACKS: SoundPack[] = Object.entries(manifests).flatMap(([path
 // over that path, kept out of the repository and of every release, to offer its packs, and takes one back by dropping it
 // from the list. A listed pack that does not read is left out, saying why; no list that reads offers none.
 export async function servedSoundPacks(base: string, load: typeof fetch = fetch): Promise<{ packs: SoundPack[]; fallback?: string }> {
-  const json = async (path: string): Promise<unknown> => {
+  const json = async (path: string, optional = false): Promise<unknown> => {
     const response = await load(`${base}audio-packs/${path}`);
+    if (optional && response.status === 404) return undefined;
     if (!response.ok) throw new Error(`Sound packs: ${path} answered ${response.status}`);
     return response.json();
   };
@@ -45,13 +46,15 @@ export async function servedSoundPacks(base: string, load: typeof fetch = fetch)
         // Optional additions keep the core manifest readable by older clients.
         // A broken supplement never makes an otherwise valid pack disappear.
         let extras: unknown;
-        try { extras = await json(`${id}/extras.json`); } catch { /* old packs have none */ }
-        if (isRecord(manifest) && isRecord(manifest.sounds) && isRecord(extras) && isRecord(extras.sounds)) {
-          const merged = { ...manifest, sounds: { ...manifest.sounds, ...extras.sounds } };
+        try { extras = await json(`${id}/extras.json`, true); }
+        catch (error) { console.error(`Sound pack ${id}: could not read extras.json; keeping pack.json`, error); }
+        if (isRecord(manifest) && isRecord(manifest.sounds) && extras !== undefined) {
           try {
+            if (!isRecord(extras) || !isRecord(extras.sounds)) throw new Error(`Sound pack ${id}: extras.json.sounds must map events to sounds`);
+            const merged = { ...manifest, sounds: { ...manifest.sounds, ...extras.sounds } };
             readSoundPack(id, merged, Object.fromEntries(namedFiles(merged).map(file => [file, file])));
             manifest = merged;
-          } catch { /* preserve the core pack */ }
+          } catch (error) { console.error(`Sound pack ${id}: rejected extras.json; keeping pack.json`, error); }
         }
         const urls = Object.fromEntries(namedFiles(manifest).map((file) => [file, `${base}audio-packs/${id}/${encodeURI(file)}`]));
         return [readSoundPack(id, manifest, urls)];
