@@ -1,6 +1,6 @@
 # Loot 回程振荡：flow field 的 lookahead 交接（2026-10-18）
 
-**终验结论：机制修复、长振荡同姿态对照通过，但两组 seed 的己方 stall 都明显增加，并有额外性能开销。PR 保持 draft，不按整体验收通过处理；本轮不再继续收窄或调参。**
+**最终决定：#523 关闭、不合并，分支和报告保留。当前 main 的长振荡收益无法量出，两组 seed 的己方 stall 都明显增加，并有额外性能开销；本轮停止。** [不合并理由与重启条件](loot-return-steering-not-merged.md)。
 
 PR [#523](https://github.com/shuxueshuxue/sketch-rts/pull/523)，基于 main `710986b1`。最终生产修法为 `76303b36`：只对实际返回的、可直视且跨出起始 field 的捷径，仅在首格场值不下降且进入后原 lookahead 立即朝反方向时拒绝捷径，回退到短 lookahead 或真实的第一步；单 field 与正常跨 field 捷径保留。它修复玩家和 AI 共用的移动；不改 lootRecovery 的准入、回收范围、任务重发或 AI 阈值。
 
@@ -137,7 +137,7 @@ stall 使用原指标，是无战斗的 land fighters 在 move/attackMove 下停
 
 v5-final-2 / knight-v9 / ladder-12 ember，`unit-p1-knight-8823` 的 tick 25136、31024 是同一类另一个反例：SHORT_LOOK `(944,1360)` 从连续位置 `(1010.4523,1337.4537)` 不可直视，原 steering 靠贴墙滑行通过；这不是按直线执行的捷径。把其几何首格当成实际首步，会改成朝 `(1008,1360)` 走而卡墙。`a63b5d17` 保留这类不可视短提示，`389fca24` 复用长提示已经检查过的可见性，避免重复遍历线段。该快照测试在 d3 上失败，最终版到达并 idle。
 
-`5e4` 的真实轨迹另触发两次 mountedEscape 空候选异常：v5-final-1 / knight-v9 / ladder-52 ember tick **37447**，及 v5-final-2 / summoner-v9 / ladder-12 grove tick **32227**，调用栈从 mounted-micro.ts:131 经 caster-screen/backline 返回 planner。相同局与 seed 在 main 均正常结束（38622 胜、48000 平），d3 两局均正常跑到 48000。没有把异常当成胜负结果或在 AI 中加兜底；最终全量继续明确核对异常数。按审阅安排，空候选是否合法及线上错误边界放到 #523 之后单独诊断，原始异常快照已保留。
+`5e4` 的真实轨迹另触发两次 mountedEscape 空候选异常：v5-final-1 / knight-v9 / ladder-52 ember tick **37447**，及 v5-final-2 / summoner-v9 / ladder-12 grove tick **32227**，调用栈从 mounted-micro.ts:131 经 caster-screen/backline 返回 planner。相同局与 seed 在 main 均正常结束（38622 胜、48000 平），d3 两局均正常跑到 48000。没有把异常当成胜负结果或在 AI 中加兜底；最终全量继续明确核对异常数。最终 960 局 main 和候选均未触发；按最终审阅决定，此项也暂缓，原始调用栈与异常快照保留。
 
 ## 最后一轮：把条件收窄到折返本身
 
