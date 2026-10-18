@@ -27,7 +27,11 @@ export const SHIP_WEAPONS: Record<ShipEquipmentKind, {
     weapon: WeaponDef;
     art: 'warship' | 'bombardShip' | 'fireShip';
 }> = {
-    shipCannon: { cost: 220, mass: 160, hp: 90, damage: 20, range: 312, cooldown: seconds(2), aimSpeed: 440, weapon: { presentation:'cannon', delivery: 'bolt', radius: 8, blastRadius: 48, maxHits: 1, navalMultiplier: 2, hullDamageShare: 1.25 }, art: 'warship' },
+    // @@@cannon-min-range - A broadside cannot be depressed onto a deck lying alongside: hulls grappled for boarding are
+    // a few paces apart (the bridge spans at most GANGWAY_MAX_GAP), and a ship of the line's crew then stands 63-188
+    // from the guns that bear on it, the deck's far corners 225-260 (measured at the home boarding scene's berth). Within
+    // 200 the guns hold their fire, so a fight at the rail is the crews' own; from 200 to 312 a gunnery duel goes on.
+    shipCannon: { cost: 220, mass: 160, hp: 90, damage: 20, range: 312, cooldown: seconds(2), aimSpeed: 440, weapon: { presentation:'cannon', delivery: 'bolt', radius: 8, blastRadius: 48, maxHits: 1, minRange: 240, navalMultiplier: 2, hullDamageShare: 1.25 }, art: 'warship' },
     shipMortar: { cost: 330, mass: 240, hp: 100, damage: 36, range: 576, cooldown: seconds(3.6), aimSpeed: 400, weapon: { presentation:'mortar', delivery: 'shell', radius: 75, minRange: 180, buildingMultiplier: 2, navalMultiplier: 1.7, hullDamageShare: 1.5 }, art: 'bombardShip' },
     flameProjector: { cost: 180, mass: 120, hp: 80, damage: 10, range: 144, cooldown: seconds(1.2), aimSpeed: 480, weapon: { presentation:'flame', delivery: 'cone', coneAngle: .85, buildingMultiplier: .7 }, art: 'fireShip' },
 };
