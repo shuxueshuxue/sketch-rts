@@ -12,8 +12,10 @@ function validateBankCount(banksCount:number){
  * original samples while a draw can retain the world instance order. */
 export function patchCardBankShader(shader:CardShader,banksCount=1){
  validateBankCount(banksCount);
- if(!shader.vertexShader.includes('#include <begin_vertex>')||!shader.fragmentShader.includes('#include <map_pars_fragment>')||!shader.fragmentShader.includes('#include <map_fragment>'))throw new Error('Unsupported painted card shader chunks.');
- shader.vertexShader='attribute float cardLayer;\nattribute vec4 cardRect;\nattribute float cardBank;\nvarying float vCardLayer;\nflat varying float cardBankIndex;\n'+shader.vertexShader;
+ if(!shader.vertexShader.includes('#include <begin_vertex>')||!shader.vertexShader.includes('#include <uv_vertex>')||!shader.fragmentShader.includes('#include <map_pars_fragment>')||!shader.fragmentShader.includes('#include <map_fragment>'))throw new Error('Unsupported painted card shader chunks.');
+ shader.vertexShader='attribute float cardLayer;\nattribute vec4 cardRect;\nattribute vec4 cardUv;\nattribute float cardBank;\nvarying float vCardLayer;\nflat varying float cardBankIndex;\n'+shader.vertexShader;
+ // A card samples its cell of the layer: (0,0,1,1) for a card that fills it (see @@@card-atlas).
+ shader.vertexShader=shader.vertexShader.replace('#include <uv_vertex>','#include <uv_vertex>\nvMapUv = cardUv.xy + vMapUv * cardUv.zw;');
  shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvCardLayer = cardLayer;\ncardBankIndex = cardBank;\ntransformed.xy = mix(cardRect.xy, cardRect.zw, uv);');
  shader.fragmentShader='precision highp sampler2DArray;\nvarying float vCardLayer;\nflat varying float cardBankIndex;\n'+shader.fragmentShader;
  const samplerNames=Array.from({length:banksCount},(_,bank)=>bank===0?'map':`cardMap${bank}`);
@@ -53,7 +55,7 @@ export function configureCardMaterial(material:CardBankMaterial,banks:readonly T
    shader.fragmentShader=shader.fragmentShader.replace('#include <alphatest_fragment>','diffuseColor.a *= vCardOpacity;\n#include <alphatest_fragment>');
   }
  };
- material.customProgramCacheKey=()=>`painted-card-banks-v1:${maxBanks}:${opacity}`;
+ material.customProgramCacheKey=()=>`painted-card-banks-v2:${maxBanks}:${opacity}`;
  material.needsUpdate=true;
  return()=>{bindings[0]!.value=material.map as THREE.DataArrayTexture|null;};
 }
