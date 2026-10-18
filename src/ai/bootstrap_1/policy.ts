@@ -1,3 +1,4 @@
+import { recoverBerth } from './berth-recovery';
 import { miningHandoff } from './mining-handoff';
 import { preventHullLanding } from './return-landing';
 import { safeSoldierBoarding } from './soldier-boarding';
@@ -203,7 +204,9 @@ export function planBootstrapScriptEntries(snapshot: GameSnapshot, owner: Player
   const boardingCommands = safeSoldierBoarding(snapshot, owner, options, landingEntries.map(entry => entry.command));
   const byBoardingCommand = new Map<GameCommand, AiCommandEntry[]>();
   for (const entry of landingEntries) byBoardingCommand.set(entry.command, [...(byBoardingCommand.get(entry.command) ?? []), entry]);
-  return boardingCommands.map(command => byBoardingCommand.get(command)?.shift() ?? { scriptId: 'safeSoldierBoarding', command });
+  const boardingEntries = boardingCommands.map(command => byBoardingCommand.get(command)?.shift() ?? { scriptId: 'safeSoldierBoarding', command });
+  const byRecoveryCommand = new Map(boardingEntries.map(entry => [entry.command, entry]));
+  return recoverBerth(snapshot, owner, options, boardingCommands).map(command => byRecoveryCommand.get(command) ?? { scriptId: 'berthRecovery', command });
 }
 
 export function researchPrerequisites(wants: readonly V6Want[], player: PlayerState): V6Want[] {

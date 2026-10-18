@@ -72,6 +72,8 @@ export type NavalPlanMemory = {
 };
 
 export type AiPolicyMemory = {
+  berthRecovery?: import('./bootstrap_1/berth-recovery').BerthRecovery;
+  berthRetryUntil?: number;
   homeRelief?: { hallId:string; shipId:string; crewIds:string[]; landing:{x:number;y:number}; station:{x:number;y:number}; phase:'travel'|'guard'|'evacuate'|'recover'; since:number; initialThreat:number; approach?:{x:number;y:number} };
   homeReliefRetry?: number;
   evacuationShelters?: Record<string, string>;
