@@ -1,5 +1,0 @@
-{"sample":6,"seconds":51,"rssMiB":1042.22265625,"pssMiB":720.134765625,"frames":189,"stage":"battle","cards":55,"rasterizations":2354}
-{"sample":12,"seconds":111,"rssMiB":1063.78125,"pssMiB":744.0537109375,"frames":447,"stage":"battle","cards":48,"rasterizations":5197}
-{"sample":18,"seconds":171,"rssMiB":1097.10546875,"pssMiB":775.2958984375,"frames":701,"stage":"battle","cards":48,"rasterizations":8075}
-{"sample":24,"seconds":231,"rssMiB":1112.53515625,"pssMiB":787.2421875,"frames":956,"stage":"battle","cards":64,"rasterizations":10836}
-{"passed":false,"samples":25,"actualWallMs":240717,"failure":"TypeError: Cannot read properties of undefined (reading 'kind')\n    at Object.run (http://127.0.0.1:5173/@fs/workspace/sketch-rts/scripts/art-stability-fixture.ts:166:44)","errors":[]}

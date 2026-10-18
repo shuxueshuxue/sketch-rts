@@ -1,8 +1,0 @@
-{
-  "root": "/tmp/art-replay-v1-input-fullsha-restore",
-  "removedFiles": 279,
-  "removedBytes": 227253948,
-  "allCurrentOriginalSizesAndSHARecheckedBeforeCleanup": true,
-  "removedOnlyOwnVerifiedTemporaryMirror": true,
-  "archivesAndOriginalPNGRetained": true
-}
