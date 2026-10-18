@@ -129,3 +129,15 @@ export const mercenaryControl = { id: 'mercenaryControl', phase: 'tactics', clai
         .flatMap(({ unit, goal }) => unit.order.type === 'move' && unit.order.avoidCombat && unit.order.x === goal.x && unit.order.y === goal.y ? [] : [{ type: 'move' as const, unitIds: [unit.id], x: goal.x, y: goal.y, avoidCombat: true }])];
   },
 } satisfies AiScript;
+
+/** Stop is not covered by the legacy runner's movement ownership filter.
+ * A returning hire must keep its avoid-combat road instead of waking a neutral. */
+export function preserveMercenaryTravel(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, commands: GameCommand[]): GameCommand[] {
+  if (!commands.some(command => command.type === 'stop')) return commands;
+  const travelers = mercenaryControlUnitIds(snapshot, owner, options);
+  return commands.flatMap((command): GameCommand[] => {
+    if (command.type !== 'stop') return [command];
+    const unitIds = command.unitIds.filter(id => !travelers.has(id));
+    return unitIds.length ? [{ ...command, unitIds }] : [];
+  });
+}

@@ -1,0 +1,103 @@
+{
+  "archive": "mercenary-stop-replay-evidence.tar.gz",
+  "bytes": 272750,
+  "sha256": "8f2a38caf64f3fc28b5cf9893aff6848a8b57568db4c8197fa1564e47792971a",
+  "files": {
+    "raw/knight-medic-stop-candidate-2970/commands.jsonl": {
+      "bytes": 45082,
+      "sha256": "7775a551db63d7e14ab9b19c94d8f94039853933dd5c92f907c264368cdd950d"
+    },
+    "raw/knight-medic-stop-candidate-2970/entities.jsonl": {
+      "bytes": 7616,
+      "sha256": "00cb1dbe31569e08fe7517c40e4b4e4e0ba9c942d21eeeaf1ef25f518cd5b708"
+    },
+    "raw/knight-medic-stop-candidate-2970/frames/2970.json.gz": {
+      "bytes": 17122,
+      "sha256": "1832121c17408e37c53c8a6294b04db25256a136ec6cd5fa198e91e23631703a"
+    },
+    "raw/knight-medic-stop-candidate-2970/frames/3000.json.gz": {
+      "bytes": 17265,
+      "sha256": "6f0ceb08075b1d656dcdd0906876cd42e0ba2072f1dd8564510dc2dd3dd89a3f"
+    },
+    "raw/knight-medic-stop-candidate-2970/frames/3600.json.gz": {
+      "bytes": 17608,
+      "sha256": "1b667942cd22cd626e036a3869c7f1ca4812126e469ba901e71bbee69547b2a6"
+    },
+    "raw/knight-medic-stop-candidate-2970/frames/4200.json.gz": {
+      "bytes": 17746,
+      "sha256": "d70dcc7267c2db6379dc29aa8b968d9fd8ee246a1b1fc3b3e237ce250ab645a9"
+    },
+    "raw/knight-medic-stop-candidate-2970/frames/4800.json.gz": {
+      "bytes": 17923,
+      "sha256": "bf98feb5b8a0c7d496b5d46bdea8c80cb660a200c27a1ddd96334dab4aefcec4"
+    },
+    "raw/knight-medic-stop-candidate-2970/frames/5400.json.gz": {
+      "bytes": 19515,
+      "sha256": "d30ae80a12acba54744e281670fbfeaf8fd4049b50f3df8ae26850cb002b76fc"
+    },
+    "raw/knight-medic-stop-candidate-2970/frames/6000.json.gz": {
+      "bytes": 18761,
+      "sha256": "1543e542148bd8540ce0c83fcd9a6c47b684791a8e29cbf7a7c7fb2c16ad2e19"
+    },
+    "raw/knight-medic-stop-candidate-2970/frames/6600.json.gz": {
+      "bytes": 18685,
+      "sha256": "a3008456d01f8e6d89d18dc85ca93d4d266372fb5c373835afee2f020bf09a70"
+    },
+    "raw/knight-medic-stop-candidate-2970/frames/7200.json.gz": {
+      "bytes": 19289,
+      "sha256": "2c99951260a52d9ac6db5fc5278666451990676fb90ee980dfcb5db69a6bd3a7"
+    },
+    "raw/knight-medic-stop-candidate-2970/hits.jsonl": {
+      "bytes": 22745,
+      "sha256": "75b8e5e73e3af03c84d57c61e31be92152b982f34bad0c19914c1ce05a34aae8"
+    },
+    "raw/knight-medic-stop-candidate-2970/result.json": {
+      "bytes": 28923,
+      "sha256": "2823fab3e4dfd00e0e2f0270273753f73b3f4a48af6be144683d5f32086c6d61"
+    },
+    "raw/knight-medic-stop-candidate-2970/samples.jsonl": {
+      "bytes": 28604,
+      "sha256": "33c81293c4bab1937e70421bbc4e68a6f12472faee19fc0dbe60958c8f3a4bd7"
+    },
+    "raw/knight-medic-stop-candidate-2970/source.json": {
+      "bytes": 184340,
+      "sha256": "6d50c5373bc3cd722a165652bd788de6153ef1a5709fb0aeb0c6a14a81f30732"
+    },
+    "raw/mercenary-stop-before.log": {
+      "bytes": 2219,
+      "sha256": "9ca004186726e4d1cdc756f5adf93ac9186369286dc95b8525b6197f52990ad6"
+    },
+    "raw/mercenary-stop-after.log": {
+      "bytes": 1784,
+      "sha256": "2a671f1c830f45a4451e5a6b7ddd13295848f7dc609814337d8e722526d0150d"
+    },
+    "raw/mercenary-stop-typecheck.log": {
+      "bytes": 2846,
+      "sha256": "5ede6d3493eebad9e84d12dffb24ff01fa04eb646ae7c208ce821598a981889f"
+    },
+    "raw/mercenary-stop-typecheck-final.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "raw/mercenary-stop-frozen-audit.json": {
+      "bytes": 98,
+      "sha256": "56e8ee0f32823eb224ac3a9384909bf63770bb9575411a7525df7e680c762a6c"
+    },
+    "implementation/mercenary-control.ts": {
+      "bytes": 10508,
+      "sha256": "fe8d1d5d8d7d9451d7ef34bbb52b2008d4bd0517156c1cc57b1854ee20e46877"
+    },
+    "implementation/policy.ts": {
+      "bytes": 13939,
+      "sha256": "44edd62bec6157968a6d0724cae4f6af78bd44211091c51f28cb510a4f60bd68"
+    },
+    "implementation/mercenary-return-stop.test.ts": {
+      "bytes": 1314,
+      "sha256": "2c036b0aa59d949da67294d79a4ed0eb1721382a23fba393a3cc70940bc5b15d"
+    },
+    "implementation/fixtures/mercenary-return-knight-2970.json.gz": {
+      "bytes": 17121,
+      "sha256": "98ee09cde544814600b5a5b5e7cf2dc560cdd7512739aed37a0ce4947415071c"
+    }
+  }
+}

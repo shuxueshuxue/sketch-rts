@@ -31,7 +31,7 @@ import { medicalRecovery, recoveryPatients } from './medical-recovery';
 import { mobileCare } from './mobile-care';
 import { expeditionRecoveryUnitIds, planBootstrapNaval } from './expedition-recovery';
 import { navalUnitIds } from '../policy/naval';
-import { mercenaryControl } from './mercenary-control';
+import { mercenaryControl, preserveMercenaryTravel } from './mercenary-control';
 import { campRecovery } from './camp-recovery';
 import { frontRecovery } from './front-recovery';
 import { lootRecovery, planLootItemCommands } from './loot-recovery';
@@ -114,7 +114,8 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
       { ...script, run: planBootstrapGeneral },
     ];
     if (script === AI_SCRIPT_LIBRARY.v6Backline) return [
-      version === 'v9_summoner' ? { ...script, run: planSummonerScreen } : { ...script, run: planBootstrapCasterScreen }];
+      { ...script, run: (snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) => preserveMercenaryTravel(snapshot, owner, options,
+        (version === 'v9_summoner' ? planSummonerScreen : planBootstrapCasterScreen)(snapshot, owner, options)) }];
     if (script === AI_SCRIPT_LIBRARY.v6Economy) return [miningWorkforce, bootstrapEconomy];
     if (version === 'v9_archer' && script === AI_SCRIPT_LIBRARY.v7Skirmish) return [archerMicro];
     if (script === AI_SCRIPT_LIBRARY.allySupport) return [mobileCare, mountedTasks, lootRecovery, mercenaryControl, script];
