@@ -6,6 +6,10 @@ import { bootstrapPolicyContext } from '../ai/bootstrap_1/policy';
 import { createAiPolicyMemory } from '../ai/memory';
 import { V7_GATHERED_RANGE } from '../ai/policy/v7/creep';
 import { snapshotGame, stepGame } from './sim';
+import { createRoom } from './rooms';
+import { createSaveGameRecord, restoreGameFromSave } from './savegame';
+import { createDebugReplayTrace, replayTraceToTick } from './replay';
+import { checksumGame } from './sim/checksum';
 import { setBuildingBodies, walkingDistance } from './terrain';
 import { standingBodies } from './structure-bodies';
 import type { Building, GameMap, ResourceNode, Unit } from './types';
@@ -54,4 +58,19 @@ it('releases the returning loot task after native movement gets home', () => {
   expect(memory.loot).toBeUndefined();
   expect(walkingDistance(game.map, unit, home, 'land')).toBeLessThanOrEqual(V7_GATHERED_RANGE);
   expect(commands).toBe(0); // No repeated orders or task cancellation is needed.
+});
+
+it('keeps a rules-4 save loadable while refusing to replay its old movement rules', () => {
+  const { game, unit, home } = returningWarden();
+  const room = { ...createRoom({ id: 'old-loot-return', host: { id: 'host', name: 'Host' }, mapId: 'ladder' }), status: 'inMatch' as const };
+  const save = createSaveGameRecord(game, room, { id: 'old-loot-return' });
+  const trace = createDebugReplayTrace({ id: 'old-loot-return', initialSave: save });
+  save.rulesVersion = trace.rulesVersion = 4;
+  trace.initialSave.rulesVersion = 4;
+  expect(() => replayTraceToTick(trace, game.tick + 1)).toThrow(/rules version 4/);
+  const restored = restoreGameFromSave(save), returned = restored.units.find(u => u.id === unit.id)!;
+  expect(checksumGame(restored)).toBe(checksumGame(game));
+  for (let tick = 0; tick < 2400 && returned.order.type !== 'idle'; tick++) stepGame(restored);
+  expect(returned.order.type).toBe('idle');
+  expect(walkingDistance(restored.map, returned, home, 'land')).toBeLessThanOrEqual(V7_GATHERED_RANGE);
 });

@@ -3,13 +3,14 @@
  * 2: canonical shared priest/summoner and race-specific production relations.
  * 3: guardian scroll cast radius reduced from 280 to 180 world units.
  * 4: stronger ship hulls, shipyard shipbuilding, ships excluded from barracks attack/health research.
+ * 5: lookahead shortcuts must descend their current terrain flow field.
  */
-export const RULES_VERSION = 4;
+export const RULES_VERSION = 5;
 export const PREVIOUS_RULES_VERSION = 1;
 
 export function savedRulesVersion(version: unknown): number {
   if (version === undefined) return PREVIOUS_RULES_VERSION;
-  if (version !== PREVIOUS_RULES_VERSION && version !== 2 && version !== 3 && version !== RULES_VERSION) throw new Error(`Unsupported rules version ${String(version)}`);
+  if (version !== PREVIOUS_RULES_VERSION && version !== 2 && version !== 3 && version !== 4 && version !== RULES_VERSION) throw new Error(`Unsupported rules version ${String(version)}`);
   return version;
 }
 

@@ -12,7 +12,7 @@ import { castCommandForSelection, type CastCommand } from "../ability-targeting"
 import type { GameSnapshot } from "../../shared/types";
 
 describe("lockstep client", () => {
-  it.each([0, 1, 99])("closes before applying a checkpoint with incompatible rules %s", rulesVersion => {
+  it.each([0, 1, 4, 99])("closes before applying a checkpoint with incompatible rules %s", rulesVersion => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     const transport = new FakeTransport();
     const errors: string[] = [];
