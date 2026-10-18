@@ -1,0 +1,573 @@
+[
+  {
+    "tick": 0,
+    "gold": 500,
+    "losses": 0,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 600,
+    "gold": 15,
+    "losses": 0,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 1200,
+    "gold": 95,
+    "losses": 0,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 1800,
+    "gold": 55,
+    "losses": 0,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 2400,
+    "gold": 105,
+    "losses": 0,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 3000,
+    "gold": 194,
+    "losses": 0,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 3600,
+    "gold": 384,
+    "losses": 0,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 4200,
+    "gold": 44,
+    "losses": 0,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 4800,
+    "gold": 24,
+    "losses": 0,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 5400,
+    "gold": 109,
+    "losses": 0,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 6000,
+    "gold": 309,
+    "losses": 0,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 6600,
+    "gold": 509,
+    "losses": 0,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 7200,
+    "gold": 39,
+    "losses": 0,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 7800,
+    "gold": 114,
+    "losses": 0,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 8400,
+    "gold": 144,
+    "losses": 0,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 9000,
+    "gold": 324,
+    "losses": 1,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 9600,
+    "gold": 429,
+    "losses": 2,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 10200,
+    "gold": 137,
+    "losses": 4,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 10800,
+    "gold": 307,
+    "losses": 7,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 11400,
+    "gold": 491,
+    "losses": 8,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 12000,
+    "gold": 451,
+    "losses": 8,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 12600,
+    "gold": 611,
+    "losses": 8,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 13200,
+    "gold": 503,
+    "losses": 8,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 13800,
+    "gold": 472,
+    "losses": 8,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 14400,
+    "gold": 508,
+    "losses": 8,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 15000,
+    "gold": 623,
+    "losses": 8,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 15600,
+    "gold": 278,
+    "losses": 8,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 16200,
+    "gold": 168,
+    "losses": 8,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 16800,
+    "gold": 67,
+    "losses": 8,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 17400,
+    "gold": 87,
+    "losses": 8,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 18000,
+    "gold": 217,
+    "losses": 8,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 18600,
+    "gold": 337,
+    "losses": 9,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 19200,
+    "gold": 497,
+    "losses": 9,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 19800,
+    "gold": 627,
+    "losses": 9,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 20400,
+    "gold": 767,
+    "losses": 9,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 21000,
+    "gold": 897,
+    "losses": 9,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 21600,
+    "gold": 522,
+    "losses": 9,
+    "islandHall": [],
+    "islandMine": 6000
+  },
+  {
+    "tick": 22200,
+    "gold": 2,
+    "losses": 9,
+    "islandHall": [
+      {
+        "id": "building-p0-townHall-5191",
+        "complete": false,
+        "hp": 471.85714285714147
+      }
+    ],
+    "islandMine": 6000
+  },
+  {
+    "tick": 22800,
+    "gold": 31,
+    "losses": 9,
+    "islandHall": [
+      {
+        "id": "building-p0-townHall-5191",
+        "complete": true,
+        "hp": 900
+      }
+    ],
+    "islandMine": 5980
+  },
+  {
+    "tick": 23400,
+    "gold": 71,
+    "losses": 9,
+    "islandHall": [
+      {
+        "id": "building-p0-townHall-5191",
+        "complete": true,
+        "hp": 900
+      }
+    ],
+    "islandMine": 5940
+  },
+  {
+    "tick": 24000,
+    "gold": 121,
+    "losses": 9,
+    "islandHall": [
+      {
+        "id": "building-p0-townHall-5191",
+        "complete": true,
+        "hp": 900
+      }
+    ],
+    "islandMine": 5890
+  },
+  {
+    "tick": 24600,
+    "gold": 31,
+    "losses": 9,
+    "islandHall": [
+      {
+        "id": "building-p0-townHall-5191",
+        "complete": true,
+        "hp": 900
+      }
+    ],
+    "islandMine": 5830
+  },
+  {
+    "tick": 25200,
+    "gold": 161,
+    "losses": 9,
+    "islandHall": [
+      {
+        "id": "building-p0-townHall-5191",
+        "complete": true,
+        "hp": 900
+      }
+    ],
+    "islandMine": 5690
+  },
+  {
+    "tick": 25800,
+    "gold": 161,
+    "losses": 9,
+    "islandHall": [
+      {
+        "id": "building-p0-townHall-5191",
+        "complete": true,
+        "hp": 900
+      }
+    ],
+    "islandMine": 5540
+  },
+  {
+    "tick": 26400,
+    "gold": 361,
+    "losses": 9,
+    "islandHall": [
+      {
+        "id": "building-p0-townHall-5191",
+        "complete": true,
+        "hp": 900
+      }
+    ],
+    "islandMine": 5340
+  },
+  {
+    "tick": 27000,
+    "gold": 561,
+    "losses": 9,
+    "islandHall": [
+      {
+        "id": "building-p0-townHall-5191",
+        "complete": true,
+        "hp": 900
+      }
+    ],
+    "islandMine": 5140
+  },
+  {
+    "tick": 27600,
+    "gold": 761,
+    "losses": 9,
+    "islandHall": [
+      {
+        "id": "building-p0-townHall-5191",
+        "complete": true,
+        "hp": 900
+      }
+    ],
+    "islandMine": 4940
+  },
+  {
+    "tick": 28200,
+    "gold": 421,
+    "losses": 9,
+    "islandHall": [
+      {
+        "id": "building-p0-townHall-5191",
+        "complete": true,
+        "hp": 900
+      }
+    ],
+    "islandMine": 4740
+  },
+  {
+    "tick": 28800,
+    "gold": 621,
+    "losses": 9,
+    "islandHall": [
+      {
+        "id": "building-p0-townHall-5191",
+        "complete": true,
+        "hp": 900
+      }
+    ],
+    "islandMine": 4540
+  },
+  {
+    "tick": 29400,
+    "gold": 821,
+    "losses": 9,
+    "islandHall": [
+      {
+        "id": "building-p0-townHall-5191",
+        "complete": true,
+        "hp": 900
+      }
+    ],
+    "islandMine": 4340
+  },
+  {
+    "tick": 30000,
+    "gold": 250,
+    "losses": 10,
+    "islandHall": [
+      {
+        "id": "building-p0-townHall-5191",
+        "complete": true,
+        "hp": 900
+      }
+    ],
+    "islandMine": 4140
+  },
+  {
+    "tick": 30600,
+    "gold": 208,
+    "losses": 12,
+    "islandHall": [
+      {
+        "id": "building-p0-townHall-5191",
+        "complete": true,
+        "hp": 900
+      }
+    ],
+    "islandMine": 3940
+  },
+  {
+    "tick": 31200,
+    "gold": 240,
+    "losses": 14,
+    "islandHall": [
+      {
+        "id": "building-p0-townHall-5191",
+        "complete": true,
+        "hp": 900
+      }
+    ],
+    "islandMine": 3800
+  },
+  {
+    "tick": 31800,
+    "gold": 258,
+    "losses": 14,
+    "islandHall": [
+      {
+        "id": "building-p0-townHall-5191",
+        "complete": true,
+        "hp": 900
+      }
+    ],
+    "islandMine": 3670
+  },
+  {
+    "tick": 32400,
+    "gold": 323,
+    "losses": 14,
+    "islandHall": [
+      {
+        "id": "building-p0-townHall-5191",
+        "complete": true,
+        "hp": 900
+      }
+    ],
+    "islandMine": 3530
+  },
+  {
+    "tick": 33000,
+    "gold": 290,
+    "losses": 16,
+    "islandHall": [
+      {
+        "id": "building-p0-townHall-5191",
+        "complete": true,
+        "hp": 900
+      }
+    ],
+    "islandMine": 3350
+  },
+  {
+    "tick": 33600,
+    "gold": 490,
+    "losses": 16,
+    "islandHall": [
+      {
+        "id": "building-p0-townHall-5191",
+        "complete": true,
+        "hp": 900
+      }
+    ],
+    "islandMine": 3150
+  },
+  {
+    "tick": 34200,
+    "gold": 150,
+    "losses": 16,
+    "islandHall": [
+      {
+        "id": "building-p0-townHall-5191",
+        "complete": true,
+        "hp": 900
+      }
+    ],
+    "islandMine": 2950
+  },
+  {
+    "tick": 34800,
+    "gold": 340,
+    "losses": 16,
+    "islandHall": [
+      {
+        "id": "building-p0-townHall-5191",
+        "complete": true,
+        "hp": 900
+      }
+    ],
+    "islandMine": 2760
+  },
+  {
+    "tick": 35400,
+    "gold": 500,
+    "losses": 16,
+    "islandHall": [
+      {
+        "id": "building-p0-townHall-5191",
+        "complete": true,
+        "hp": 900
+      }
+    ],
+    "islandMine": 2580
+  },
+  {
+    "tick": 36000,
+    "gold": 670,
+    "losses": 16,
+    "islandHall": [
+      {
+        "id": "building-p0-townHall-5191",
+        "complete": true,
+        "hp": 900
+      }
+    ],
+    "islandMine": 2400
+  }
+]

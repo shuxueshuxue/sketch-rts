@@ -1,0 +1,274 @@
+{
+  "input": "/workspace/bootstrap-1-evidence-20261018/candidate-ordinary0/frames/28800.json.gz",
+  "tick": 28800,
+  "diagnoses": [
+    {
+      "id": "unit-p0-transport-2181",
+      "mission": {
+        "purpose": "assault",
+        "targetId": "building-p1-emberForge-3294",
+        "from": {
+          "x": 4368,
+          "y": 6032
+        },
+        "to": {
+          "x": 3440,
+          "y": 3088
+        },
+        "phase": "loading",
+        "crewIds": [
+          "unit-p0-lancer-3903",
+          "unit-p0-footman-1088",
+          "unit-p0-lancer-3084",
+          "unit-p0-lancer-1716",
+          "unit-p0-archer-1301",
+          "unit-p0-lancer-5147"
+        ],
+        "sinceTick": 21975,
+        "targetGround": {
+          "x": 3696,
+          "y": 3440
+        },
+        "progress": {
+          "tick": 26880,
+          "x": 3816.000000000001,
+          "y": 6319.999999999988,
+          "heading": 4.71238898038469,
+          "phase": "loading",
+          "crew": "unit-p0-footman-1088|unit-p0-archer-1301|unit-p0-lancer-1716|unit-p0-lancer-3084|unit-p0-archer-3471|unit-p0-lancer-3903|unit-p0-lancer-5147"
+        }
+      },
+      "required": 18.066904672767468,
+      "globallyReady": false,
+      "availableCrew": [
+        "unit-p0-lancer-1716",
+        "unit-p0-lancer-3084",
+        "unit-p0-lancer-3903",
+        "unit-p0-lancer-5147",
+        "unit-p0-archer-1301",
+        "unit-p0-archer-2640",
+        "unit-p0-archer-3471",
+        "unit-p0-archer-5141",
+        "unit-p0-footman-1088",
+        "unit-p0-archer-1709"
+      ],
+      "cargo": [
+        {
+          "id": "unit-p0-footman-1088",
+          "strength": 0.5778769211765923
+        },
+        {
+          "id": "unit-p0-archer-1301",
+          "strength": 0.6273232681469904
+        },
+        {
+          "id": "unit-p0-lancer-1716",
+          "strength": 0.9615450928153298
+        },
+        {
+          "id": "unit-p0-lancer-3084",
+          "strength": 0.9615450928153298
+        },
+        {
+          "id": "unit-p0-archer-3471",
+          "strength": 0.6273232681469904
+        },
+        {
+          "id": "unit-p0-lancer-3903",
+          "strength": 0.9615450928153298
+        },
+        {
+          "id": "unit-p0-lancer-5147",
+          "strength": 0.9615450928153298
+        }
+      ],
+      "outstanding": []
+    },
+    {
+      "id": "unit-p0-transport-2566",
+      "mission": {
+        "purpose": "assault",
+        "targetId": "building-p1-emberForge-3294",
+        "from": {
+          "x": 4368,
+          "y": 6032
+        },
+        "to": {
+          "x": 3440,
+          "y": 3088
+        },
+        "phase": "loading",
+        "crewIds": [
+          "unit-p0-archer-5141",
+          "unit-p0-archer-2640",
+          "unit-p0-archer-1709"
+        ],
+        "sinceTick": 26985,
+        "targetGround": {
+          "x": 3696,
+          "y": 3440
+        },
+        "progress": {
+          "tick": 28755,
+          "x": 2716.480878333288,
+          "y": 5350.804317476175,
+          "heading": 19.419575779811442,
+          "phase": "loading",
+          "crew": "unit-p0-archer-2640|unit-p0-archer-5141"
+        },
+        "pickup": {
+          "x": 3876.4403820996067,
+          "y": 6208.005960576943
+        }
+      },
+      "required": 18.066904672767468,
+      "globallyReady": false,
+      "availableCrew": [
+        "unit-p0-lancer-1716",
+        "unit-p0-lancer-3084",
+        "unit-p0-lancer-3903",
+        "unit-p0-lancer-5147",
+        "unit-p0-archer-1301",
+        "unit-p0-archer-2640",
+        "unit-p0-archer-3471",
+        "unit-p0-archer-5141",
+        "unit-p0-footman-1088",
+        "unit-p0-archer-1709"
+      ],
+      "cargo": [
+        {
+          "id": "unit-p0-archer-2640",
+          "strength": 0.6273232681469904
+        },
+        {
+          "id": "unit-p0-archer-5141",
+          "strength": 0.6273232681469904
+        }
+      ],
+      "outstanding": [
+        "unit-p0-archer-1709"
+      ]
+    }
+  ],
+  "entries": [],
+  "after": {
+    "unit-p0-transport-2181": {
+      "purpose": "assault",
+      "targetId": "building-p1-emberForge-3294",
+      "from": {
+        "x": 4368,
+        "y": 6032
+      },
+      "to": {
+        "x": 3440,
+        "y": 3088
+      },
+      "phase": "loading",
+      "crewIds": [
+        "unit-p0-lancer-3903",
+        "unit-p0-footman-1088",
+        "unit-p0-lancer-3084",
+        "unit-p0-lancer-1716",
+        "unit-p0-archer-1301",
+        "unit-p0-lancer-5147"
+      ],
+      "sinceTick": 21975,
+      "targetGround": {
+        "x": 3696,
+        "y": 3440
+      },
+      "progress": {
+        "tick": 26880,
+        "x": 3816.000000000001,
+        "y": 6319.999999999988,
+        "heading": 4.71238898038469,
+        "phase": "loading",
+        "crew": "unit-p0-footman-1088|unit-p0-archer-1301|unit-p0-lancer-1716|unit-p0-lancer-3084|unit-p0-archer-3471|unit-p0-lancer-3903|unit-p0-lancer-5147"
+      }
+    },
+    "unit-p0-transport-2566": {
+      "purpose": "assault",
+      "targetId": "building-p1-emberForge-3294",
+      "from": {
+        "x": 4368,
+        "y": 6032
+      },
+      "to": {
+        "x": 3440,
+        "y": 3088
+      },
+      "phase": "loading",
+      "crewIds": [
+        "unit-p0-archer-5141",
+        "unit-p0-archer-2640",
+        "unit-p0-archer-1709"
+      ],
+      "sinceTick": 26985,
+      "targetGround": {
+        "x": 3696,
+        "y": 3440
+      },
+      "progress": {
+        "tick": 28755,
+        "x": 2716.480878333288,
+        "y": 5350.804317476175,
+        "heading": 19.419575779811442,
+        "phase": "loading",
+        "crew": "unit-p0-archer-2640|unit-p0-archer-5141"
+      },
+      "pickup": {
+        "x": 3876.4403820996067,
+        "y": 6208.005960576943
+      }
+    },
+    "unit-p0-transport-3578": {
+      "purpose": "settle",
+      "targetId": "gold-mainland-7",
+      "from": {
+        "x": 3904.0542553849245,
+        "y": 6177.260267150423
+      },
+      "to": {
+        "x": 4464,
+        "y": 4464
+      },
+      "phase": "loading",
+      "crewIds": [
+        "unit-p0-worker-1045",
+        "unit-p0-worker-1015"
+      ],
+      "sinceTick": 26700,
+      "progress": {
+        "tick": 28785,
+        "x": 2719.559359160609,
+        "y": 4874.944298414028,
+        "heading": 7.078114286540646,
+        "phase": "loading",
+        "crew": ""
+      }
+    },
+    "unit-p0-transport-3489": {
+      "purpose": "settle",
+      "targetId": "gold-mainland-7",
+      "from": {
+        "x": 3872.042014232752,
+        "y": 6234.47814830441
+      },
+      "to": {
+        "x": 4464,
+        "y": 4464
+      },
+      "phase": "sailing",
+      "crewIds": [],
+      "sinceTick": 28335,
+      "progress": {
+        "tick": 28365,
+        "x": 4320.488885843658,
+        "y": 5984,
+        "heading": 2.748893571891069,
+        "phase": "sailing",
+        "crew": "unit-p0-worker-2|unit-p0-worker-2707"
+      }
+    }
+  }
+}

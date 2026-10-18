@@ -1,0 +1,17 @@
+{
+  "status": "engineering-interruption",
+  "exitCode": 137,
+  "reason": "Progress slowed after 35400 to roughly 100 ticks in several minutes; intentionally stopped this owned run after SIGINT and SIGTERM did not exit; SIGKILL succeeded. Not an OOM diagnosis, timeout win, draw, or natural loss.",
+  "lastCompleteCheckpoint": "36000.json.gz",
+  "checkpointTick": 36000,
+  "checkpointWinner": null,
+  "lastEventTicks": {
+    "commands": 36030,
+    "hits": 35014,
+    "entities": 35375
+  },
+  "sourceChangedSinceStart": [],
+  "checkpointGold": 670,
+  "checkpointPermanentLosses": 16,
+  "stopRecordedUTC": "2026-10-18T01:21:57.549084+00:00"
+}

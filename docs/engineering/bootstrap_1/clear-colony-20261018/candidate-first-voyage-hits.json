@@ -1,0 +1,1050 @@
+[
+  {
+    "tick": 9717,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 296.69312169312167,
+      "maxHp": 320,
+      "x": 5251.590246611517,
+      "y": 5633.551599150986,
+      "order": {
+        "type": "attackMove",
+        "x": 4741.128988393959,
+        "y": 5750.4641093553,
+        "targetId": "unit-p0-worker-1"
+      }
+    },
+    "target": {
+      "id": "unit-p0-worker-1",
+      "kind": "worker",
+      "owner": "p0",
+      "hp": 50,
+      "maxHp": 70,
+      "x": 5083.844204626587,
+      "y": 5914.147148351783,
+      "deck": {
+        "shipId": "unit-p0-transport-1070",
+        "x": -35.44000000000001,
+        "y": 1.1999999999999957
+      },
+      "order": {
+        "type": "idle"
+      }
+    },
+    "damage": 20,
+    "hpBefore": 70,
+    "distance": 326.91374524927306
+  },
+  {
+    "tick": 9717,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 296.69312169312167,
+      "maxHp": 320,
+      "x": 5251.590246611517,
+      "y": 5633.551599150986,
+      "order": {
+        "type": "attackMove",
+        "x": 4741.128988393959,
+        "y": 5750.4641093553,
+        "targetId": "unit-p0-worker-1"
+      }
+    },
+    "target": {
+      "id": "unit-p0-worker-1030",
+      "kind": "worker",
+      "owner": "p0",
+      "hp": 54,
+      "maxHp": 70,
+      "x": 5069.702069002856,
+      "y": 5942.431419599244,
+      "deck": {
+        "shipId": "unit-p0-transport-1070",
+        "x": -45.44000000000001,
+        "y": -28.800000000000004
+      },
+      "order": {
+        "type": "idle"
+      }
+    },
+    "damage": 16,
+    "hpBefore": 70,
+    "distance": 358.45509151628465
+  },
+  {
+    "tick": 9717,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 296.69312169312167,
+      "maxHp": 320,
+      "x": 5251.590246611517,
+      "y": 5633.551599150986,
+      "order": {
+        "type": "attackMove",
+        "x": 4741.128988393959,
+        "y": 5750.4641093553,
+        "targetId": "unit-p0-worker-1"
+      }
+    },
+    "target": {
+      "id": "unit-p0-transport-1070",
+      "kind": "transport",
+      "owner": "p0",
+      "hp": 252,
+      "maxHp": 270,
+      "x": 5057.935812163912,
+      "y": 5889.935812163955,
+      "order": {
+        "type": "unload",
+        "x": 1648,
+        "y": 4528
+      }
+    },
+    "damage": 18,
+    "hpBefore": 270,
+    "distance": 321.30189022709095
+  },
+  {
+    "tick": 9757,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 296.69312169312167,
+      "maxHp": 320,
+      "x": 5240.031536896972,
+      "y": 5654.22685089113,
+      "order": {
+        "type": "attackMove",
+        "x": 4741.128988393959,
+        "y": 5750.4641093553,
+        "targetId": "unit-p0-worker-1"
+      }
+    },
+    "target": {
+      "id": "unit-p0-worker-1",
+      "kind": "worker",
+      "owner": "p0",
+      "hp": 30,
+      "maxHp": 70,
+      "x": 5097.908392462654,
+      "y": 5928.211336187849,
+      "deck": {
+        "shipId": "unit-p0-transport-1070",
+        "x": -35.44000000000001,
+        "y": 1.1999999999999957
+      },
+      "order": {
+        "type": "idle"
+      }
+    },
+    "damage": 20,
+    "hpBefore": 50,
+    "distance": 308.65269538302454
+  },
+  {
+    "tick": 9757,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 296.69312169312167,
+      "maxHp": 320,
+      "x": 5240.031536896972,
+      "y": 5654.22685089113,
+      "order": {
+        "type": "attackMove",
+        "x": 4741.128988393959,
+        "y": 5750.4641093553,
+        "targetId": "unit-p0-worker-1"
+      }
+    },
+    "target": {
+      "id": "unit-p0-worker-1030",
+      "kind": "worker",
+      "owner": "p0",
+      "hp": 38,
+      "maxHp": 70,
+      "x": 5083.766256838922,
+      "y": 5956.49560743531,
+      "deck": {
+        "shipId": "unit-p0-transport-1070",
+        "x": -45.44000000000001,
+        "y": -28.800000000000004
+      },
+      "order": {
+        "type": "idle"
+      }
+    },
+    "damage": 16,
+    "hpBefore": 54,
+    "distance": 340.2723011565673
+  },
+  {
+    "tick": 9757,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 296.69312169312167,
+      "maxHp": 320,
+      "x": 5240.031536896972,
+      "y": 5654.22685089113,
+      "order": {
+        "type": "attackMove",
+        "x": 4741.128988393959,
+        "y": 5750.4641093553,
+        "targetId": "unit-p0-worker-1"
+      }
+    },
+    "target": {
+      "id": "unit-p0-transport-1070",
+      "kind": "transport",
+      "owner": "p0",
+      "hp": 252,
+      "maxHp": 270,
+      "x": 5071.999999999978,
+      "y": 5904.000000000022,
+      "order": {
+        "type": "unload",
+        "x": 1648,
+        "y": 4528
+      }
+    },
+    "damage": 18,
+    "hpBefore": 270,
+    "distance": 301.03359182612576
+  },
+  {
+    "tick": 9797,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 296.69312169312167,
+      "maxHp": 320,
+      "x": 5235.082336496256,
+      "y": 5663.079566005902,
+      "order": {
+        "type": "attackMove",
+        "x": 4741.128988393959,
+        "y": 5750.4641093553,
+        "targetId": "unit-p0-worker-1"
+      }
+    },
+    "target": {
+      "id": "unit-p0-worker-1",
+      "kind": "worker",
+      "owner": "p0",
+      "hp": 10,
+      "maxHp": 70,
+      "x": 5107.0969116015085,
+      "y": 5909.063634666385,
+      "deck": {
+        "shipId": "unit-p0-transport-1070",
+        "x": -35.44000000000001,
+        "y": 1.1999999999999957
+      },
+      "order": {
+        "type": "idle"
+      }
+    },
+    "damage": 20,
+    "hpBefore": 30,
+    "distance": 277.28763228866575
+  },
+  {
+    "tick": 9797,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 296.69312169312167,
+      "maxHp": 320,
+      "x": 5235.082336496256,
+      "y": 5663.079566005902,
+      "order": {
+        "type": "attackMove",
+        "x": 4741.128988393959,
+        "y": 5750.4641093553,
+        "targetId": "unit-p0-worker-1"
+      }
+    },
+    "target": {
+      "id": "unit-p0-worker-1030",
+      "kind": "worker",
+      "owner": "p0",
+      "hp": 22,
+      "maxHp": 70,
+      "x": 5111.6541595235085,
+      "y": 5940.35630939031,
+      "deck": {
+        "shipId": "unit-p0-transport-1070",
+        "x": -45.44000000000001,
+        "y": -28.800000000000004
+      },
+      "order": {
+        "type": "idle"
+      }
+    },
+    "damage": 16,
+    "hpBefore": 38,
+    "distance": 303.50767254334596
+  },
+  {
+    "tick": 9797,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 296.69312169312167,
+      "maxHp": 320,
+      "x": 5235.082336496256,
+      "y": 5663.079566005902,
+      "order": {
+        "type": "attackMove",
+        "x": 4741.128988393959,
+        "y": 5750.4641093553,
+        "targetId": "unit-p0-worker-1"
+      }
+    },
+    "target": {
+      "id": "unit-p0-transport-1070",
+      "kind": "transport",
+      "owner": "p0",
+      "hp": 252,
+      "maxHp": 270,
+      "x": 5071.999999999978,
+      "y": 5904.000000000022,
+      "order": {
+        "type": "unload",
+        "x": 1648,
+        "y": 4528
+      }
+    },
+    "damage": 18,
+    "hpBefore": 270,
+    "distance": 290.92697364287187
+  },
+  {
+    "tick": 9836,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 296.69312169312167,
+      "maxHp": 320,
+      "x": 5233.766424314236,
+      "y": 5665.4333594917725,
+      "order": {
+        "type": "attackMove",
+        "x": 4741.128988393959,
+        "y": 5750.4641093553,
+        "targetId": "unit-p0-worker-1"
+      }
+    },
+    "target": {
+      "id": "unit-p0-worker-1",
+      "kind": "worker",
+      "owner": "p0",
+      "hp": -10,
+      "maxHp": 70,
+      "x": 5099.668670971625,
+      "y": 5902.800000000022,
+      "deck": {
+        "shipId": "unit-p0-transport-1070",
+        "x": -35.44000000000001,
+        "y": 1.1999999999999957
+      },
+      "order": {
+        "type": "idle"
+      }
+    },
+    "damage": 20,
+    "hpBefore": 10,
+    "distance": 272.6263550680828
+  },
+  {
+    "tick": 9836,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 296.69312169312167,
+      "maxHp": 320,
+      "x": 5233.766424314236,
+      "y": 5665.4333594917725,
+      "order": {
+        "type": "attackMove",
+        "x": 4741.128988393959,
+        "y": 5750.4641093553,
+        "targetId": "unit-p0-worker-1"
+      }
+    },
+    "target": {
+      "id": "unit-p0-worker-1030",
+      "kind": "worker",
+      "owner": "p0",
+      "hp": 6,
+      "maxHp": 70,
+      "x": 5109.668670971625,
+      "y": 5932.800000000022,
+      "deck": {
+        "shipId": "unit-p0-transport-1070",
+        "x": -45.44000000000001,
+        "y": -28.800000000000004
+      },
+      "order": {
+        "type": "idle"
+      }
+    },
+    "damage": 16,
+    "hpBefore": 22,
+    "distance": 294.762909541467
+  },
+  {
+    "tick": 9836,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 296.69312169312167,
+      "maxHp": 320,
+      "x": 5233.766424314236,
+      "y": 5665.4333594917725,
+      "order": {
+        "type": "attackMove",
+        "x": 4741.128988393959,
+        "y": 5750.4641093553,
+        "targetId": "unit-p0-worker-1"
+      }
+    },
+    "target": {
+      "id": "unit-p0-transport-1070",
+      "kind": "transport",
+      "owner": "p0",
+      "hp": 252,
+      "maxHp": 270,
+      "x": 5064.228670971625,
+      "y": 5904.000000000022,
+      "order": {
+        "type": "unload",
+        "x": 1648,
+        "y": 4528
+      }
+    },
+    "damage": 18,
+    "hpBefore": 270,
+    "distance": 292.6723283329878
+  },
+  {
+    "tick": 9885,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 296.69312169312167,
+      "maxHp": 320,
+      "x": 5213.573827437386,
+      "y": 5701.5521853838045,
+      "order": {
+        "type": "attackMove",
+        "x": 4810.468546728424,
+        "y": 5709.072718402514,
+        "targetId": "unit-p0-worker-1030"
+      }
+    },
+    "target": {
+      "id": "unit-p0-worker-1030",
+      "kind": "worker",
+      "owner": "p0",
+      "hp": -14,
+      "maxHp": 70,
+      "x": 5000.703928956361,
+      "y": 5932.800000000022,
+      "deck": {
+        "shipId": "unit-p0-transport-1070",
+        "x": -45.44000000000001,
+        "y": -28.800000000000004
+      },
+      "order": {
+        "type": "idle"
+      }
+    },
+    "damage": 20,
+    "hpBefore": 6,
+    "distance": 314.30740596444514
+  },
+  {
+    "tick": 9885,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 296.69312169312167,
+      "maxHp": 320,
+      "x": 5213.573827437386,
+      "y": 5701.5521853838045,
+      "order": {
+        "type": "attackMove",
+        "x": 4810.468546728424,
+        "y": 5709.072718402514,
+        "targetId": "unit-p0-worker-1030"
+      }
+    },
+    "target": {
+      "id": "unit-p0-transport-1070",
+      "kind": "transport",
+      "owner": "p0",
+      "hp": 252,
+      "maxHp": 270,
+      "x": 4955.263928956361,
+      "y": 5904.000000000022,
+      "order": {
+        "type": "unload",
+        "x": 1648,
+        "y": 4528
+      }
+    },
+    "damage": 18,
+    "hpBefore": 270,
+    "distance": 328.1906782590872
+  },
+  {
+    "tick": 9926,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 296.69312169312167,
+      "maxHp": 320,
+      "x": 5200.064404275141,
+      "y": 5725.617275896275,
+      "order": {
+        "type": "attackMove",
+        "x": 4810.468546728424,
+        "y": 5709.072718402514,
+        "targetId": "unit-p0-transport-1070"
+      }
+    },
+    "target": {
+      "id": "unit-p0-transport-1070",
+      "kind": "transport",
+      "owner": "p0",
+      "hp": 230.21428571428572,
+      "maxHp": 270,
+      "x": 4912.537939904608,
+      "y": 5904.155836670829,
+      "order": {
+        "type": "move",
+        "x": 4496,
+        "y": 5936,
+        "avoidCombat": true
+      }
+    },
+    "damage": 25,
+    "hpBefore": 255.21428571428572,
+    "distance": 338.44864513965564
+  },
+  {
+    "tick": 10042,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 296.69312169312167,
+      "maxHp": 320,
+      "x": 5049.674386802237,
+      "y": 5870.301219768375,
+      "order": {
+        "type": "attackMove",
+        "x": 4810.468546728424,
+        "y": 5709.072718402514,
+        "targetId": "unit-p0-transport-1070"
+      }
+    },
+    "target": {
+      "id": "unit-p0-transport-1070",
+      "kind": "transport",
+      "owner": "p0",
+      "hp": 208.21428571428572,
+      "maxHp": 270,
+      "x": 4675.983947316126,
+      "y": 5922.545381980461,
+      "order": {
+        "type": "idle"
+      }
+    },
+    "damage": 25,
+    "hpBefore": 233.21428571428572,
+    "distance": 377.3247898675159
+  },
+  {
+    "tick": 10081,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 296.69312169312167,
+      "maxHp": 320,
+      "x": 5049.674386802237,
+      "y": 5870.301219768375,
+      "order": {
+        "type": "attackMove",
+        "x": 4810.468546728424,
+        "y": 5709.072718402514,
+        "targetId": "unit-p0-transport-1070"
+      }
+    },
+    "target": {
+      "id": "unit-p0-transport-1070",
+      "kind": "transport",
+      "owner": "p0",
+      "hp": 189.21428571428572,
+      "maxHp": 270,
+      "x": 4675.983947316126,
+      "y": 5922.545381980461,
+      "order": {
+        "type": "idle"
+      }
+    },
+    "damage": 25,
+    "hpBefore": 214.21428571428572,
+    "distance": 377.3247898675159
+  },
+  {
+    "tick": 10121,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 296.69312169312167,
+      "maxHp": 320,
+      "x": 5049.674386802237,
+      "y": 5870.301219768375,
+      "order": {
+        "type": "attackMove",
+        "x": 4810.468546728424,
+        "y": 5709.072718402514,
+        "targetId": "unit-p0-transport-1070"
+      }
+    },
+    "target": {
+      "id": "unit-p0-transport-1070",
+      "kind": "transport",
+      "owner": "p0",
+      "hp": 170.21428571428572,
+      "maxHp": 270,
+      "x": 4675.983947316126,
+      "y": 5922.545381980461,
+      "order": {
+        "type": "idle"
+      }
+    },
+    "damage": 25,
+    "hpBefore": 195.21428571428572,
+    "distance": 377.3247898675159
+  },
+  {
+    "tick": 10161,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 296.69312169312167,
+      "maxHp": 320,
+      "x": 5049.674386802237,
+      "y": 5870.301219768375,
+      "order": {
+        "type": "attackMove",
+        "x": 4810.468546728424,
+        "y": 5709.072718402514,
+        "targetId": "unit-p0-transport-1070"
+      }
+    },
+    "target": {
+      "id": "unit-p0-transport-1070",
+      "kind": "transport",
+      "owner": "p0",
+      "hp": 151.21428571428572,
+      "maxHp": 270,
+      "x": 4675.983947316126,
+      "y": 5922.545381980461,
+      "order": {
+        "type": "idle"
+      }
+    },
+    "damage": 25,
+    "hpBefore": 176.21428571428572,
+    "distance": 377.3247898675159
+  },
+  {
+    "tick": 10201,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 260.6931216931216,
+      "maxHp": 320,
+      "x": 5049.674386802237,
+      "y": 5870.301219768375,
+      "order": {
+        "type": "attackMove",
+        "x": 4888.003042668597,
+        "y": 5735.528708956541,
+        "targetId": "unit-p0-warship-1119"
+      }
+    },
+    "target": {
+      "id": "unit-p0-transport-1070",
+      "kind": "transport",
+      "owner": "p0",
+      "hp": 129.21428571428572,
+      "maxHp": 270,
+      "x": 4675.983947316126,
+      "y": 5922.545381980461,
+      "order": {
+        "type": "idle"
+      }
+    },
+    "damage": 25,
+    "hpBefore": 154.21428571428572,
+    "distance": 377.3247898675159
+  },
+  {
+    "tick": 10242,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 247.6931216931216,
+      "maxHp": 320,
+      "x": 5049.674386802237,
+      "y": 5870.301219768375,
+      "order": {
+        "type": "attackMove",
+        "x": 4888.003042668597,
+        "y": 5735.528708956541,
+        "targetId": "unit-p0-warship-1119"
+      }
+    },
+    "target": {
+      "id": "unit-p0-transport-1070",
+      "kind": "transport",
+      "owner": "p0",
+      "hp": 107.21428571428572,
+      "maxHp": 270,
+      "x": 4675.983947316126,
+      "y": 5922.545381980461,
+      "order": {
+        "type": "idle"
+      }
+    },
+    "damage": 25,
+    "hpBefore": 132.21428571428572,
+    "distance": 377.3247898675159
+  },
+  {
+    "tick": 10804,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 354.6931216931216,
+      "maxHp": 427,
+      "x": 5049.674386802237,
+      "y": 5870.301219768375,
+      "order": {
+        "type": "attackMove",
+        "x": 4675.983947316126,
+        "y": 5922.545381980461,
+        "targetId": "unit-p0-transport-1070"
+      }
+    },
+    "target": {
+      "id": "unit-p0-transport-1070",
+      "kind": "transport",
+      "owner": "p0",
+      "hp": 163.21428571428572,
+      "maxHp": 270,
+      "x": 4675.983947316126,
+      "y": 5922.545381980461,
+      "order": {
+        "type": "idle"
+      }
+    },
+    "damage": 25,
+    "hpBefore": 188.21428571428572,
+    "distance": 377.3247898675159
+  },
+  {
+    "tick": 10844,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 354.6931216931216,
+      "maxHp": 427,
+      "x": 5049.674386802237,
+      "y": 5870.301219768375,
+      "order": {
+        "type": "attackMove",
+        "x": 4675.983947316126,
+        "y": 5922.545381980461,
+        "targetId": "unit-p0-transport-1070"
+      }
+    },
+    "target": {
+      "id": "unit-p0-transport-1070",
+      "kind": "transport",
+      "owner": "p0",
+      "hp": 141.21428571428572,
+      "maxHp": 270,
+      "x": 4675.983947316126,
+      "y": 5922.545381980461,
+      "order": {
+        "type": "idle"
+      }
+    },
+    "damage": 25,
+    "hpBefore": 166.21428571428572,
+    "distance": 377.3247898675159
+  },
+  {
+    "tick": 10884,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 354.6931216931216,
+      "maxHp": 427,
+      "x": 5049.674386802237,
+      "y": 5870.301219768375,
+      "order": {
+        "type": "attackMove",
+        "x": 4675.983947316126,
+        "y": 5922.545381980461,
+        "targetId": "unit-p0-transport-1070"
+      }
+    },
+    "target": {
+      "id": "unit-p0-transport-1070",
+      "kind": "transport",
+      "owner": "p0",
+      "hp": 119.21428571428572,
+      "maxHp": 270,
+      "x": 4675.983947316126,
+      "y": 5922.545381980461,
+      "order": {
+        "type": "idle"
+      }
+    },
+    "damage": 25,
+    "hpBefore": 144.21428571428572,
+    "distance": 377.3247898675159
+  },
+  {
+    "tick": 10924,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 354.6931216931216,
+      "maxHp": 427,
+      "x": 5049.674386802237,
+      "y": 5870.301219768375,
+      "order": {
+        "type": "attackMove",
+        "x": 4675.983947316126,
+        "y": 5922.545381980461,
+        "targetId": "unit-p0-transport-1070"
+      }
+    },
+    "target": {
+      "id": "unit-p0-transport-1070",
+      "kind": "transport",
+      "owner": "p0",
+      "hp": 97.21428571428572,
+      "maxHp": 270,
+      "x": 4675.983947316126,
+      "y": 5922.545381980461,
+      "order": {
+        "type": "idle"
+      }
+    },
+    "damage": 25,
+    "hpBefore": 122.21428571428572,
+    "distance": 377.3247898675159
+  },
+  {
+    "tick": 10964,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 354.6931216931216,
+      "maxHp": 427,
+      "x": 5049.674386802237,
+      "y": 5870.301219768375,
+      "order": {
+        "type": "attackMove",
+        "x": 4675.983947316126,
+        "y": 5922.545381980461,
+        "targetId": "unit-p0-transport-1070"
+      }
+    },
+    "target": {
+      "id": "unit-p0-transport-1070",
+      "kind": "transport",
+      "owner": "p0",
+      "hp": 75.21428571428572,
+      "maxHp": 270,
+      "x": 4675.983947316126,
+      "y": 5922.545381980461,
+      "order": {
+        "type": "idle"
+      }
+    },
+    "damage": 25,
+    "hpBefore": 100.21428571428572,
+    "distance": 377.3247898675159
+  },
+  {
+    "tick": 11004,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 354.6931216931216,
+      "maxHp": 427,
+      "x": 5049.674386802237,
+      "y": 5870.301219768375,
+      "order": {
+        "type": "attackMove",
+        "x": 4675.983947316126,
+        "y": 5922.545381980461,
+        "targetId": "unit-p0-transport-1070"
+      }
+    },
+    "target": {
+      "id": "unit-p0-transport-1070",
+      "kind": "transport",
+      "owner": "p0",
+      "hp": 53.21428571428572,
+      "maxHp": 270,
+      "x": 4675.983947316126,
+      "y": 5922.545381980461,
+      "order": {
+        "type": "idle"
+      }
+    },
+    "damage": 25,
+    "hpBefore": 78.21428571428572,
+    "distance": 377.3247898675159
+  },
+  {
+    "tick": 11044,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 354.6931216931216,
+      "maxHp": 427,
+      "x": 5049.674386802237,
+      "y": 5870.301219768375,
+      "order": {
+        "type": "attackMove",
+        "x": 4675.983947316126,
+        "y": 5922.545381980461,
+        "targetId": "unit-p0-transport-1070"
+      }
+    },
+    "target": {
+      "id": "unit-p0-transport-1070",
+      "kind": "transport",
+      "owner": "p0",
+      "hp": 31.214285714285722,
+      "maxHp": 270,
+      "x": 4675.983947316126,
+      "y": 5922.545381980461,
+      "order": {
+        "type": "idle"
+      }
+    },
+    "damage": 25,
+    "hpBefore": 56.21428571428572,
+    "distance": 377.3247898675159
+  },
+  {
+    "tick": 11084,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 354.6931216931216,
+      "maxHp": 427,
+      "x": 5049.674386802237,
+      "y": 5870.301219768375,
+      "order": {
+        "type": "attackMove",
+        "x": 4675.983947316126,
+        "y": 5922.545381980461,
+        "targetId": "unit-p0-transport-1070"
+      }
+    },
+    "target": {
+      "id": "unit-p0-transport-1070",
+      "kind": "transport",
+      "owner": "p0",
+      "hp": 9.214285714285722,
+      "maxHp": 270,
+      "x": 4675.983947316126,
+      "y": 5922.545381980461,
+      "order": {
+        "type": "idle"
+      }
+    },
+    "damage": 25,
+    "hpBefore": 34.21428571428572,
+    "distance": 377.3247898675159
+  },
+  {
+    "tick": 11124,
+    "attacker": {
+      "id": "unit-p2-warship-1129",
+      "kind": "warship",
+      "owner": "p2",
+      "hp": 354.6931216931216,
+      "maxHp": 427,
+      "x": 5049.674386802237,
+      "y": 5870.301219768375,
+      "order": {
+        "type": "attackMove",
+        "x": 4675.983947316126,
+        "y": 5922.545381980461,
+        "targetId": "unit-p0-transport-1070"
+      }
+    },
+    "target": {
+      "id": "unit-p0-transport-1070",
+      "kind": "transport",
+      "owner": "p0",
+      "hp": -12.785714285714278,
+      "maxHp": 270,
+      "x": 4675.983947316126,
+      "y": 5922.545381980461,
+      "order": {
+        "type": "idle"
+      }
+    },
+    "damage": 25,
+    "hpBefore": 12.214285714285722,
+    "distance": 377.3247898675159
+  }
+]
