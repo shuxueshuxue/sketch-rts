@@ -73,7 +73,7 @@ describe("on-demand audio", () => {
     await board.prepareHome();board.unlock();board.play('menu');expect(audio.sources).toHaveLength(1);board.dispose();
   });
   it('uses a legacy pack\'s generic ship launch when cannonShot is absent',async()=>{
-    const audio=audioContext(),fetcher=vi.fn(async()=>new Response(new Uint8Array(3)));vi.stubGlobal('fetch',fetcher);
+    const audio=audioContext(),fetcher=vi.fn(async(_input:RequestInfo|URL)=>new Response(new Uint8Array(3)));vi.stubGlobal('fetch',fetcher);
     const pack=readSoundPack('old',{name:'Old',sounds:{
       shipShot:{file:'cannon.ogg',kinds:{cutter:{file:'arrow.ogg'},fireShip:{file:'flame.ogg'}}},
       impact:{file:'hit.ogg'},
