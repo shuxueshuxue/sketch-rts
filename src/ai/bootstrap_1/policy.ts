@@ -116,8 +116,10 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: Bootstra
   if (version === 'v9_knight' && army.filter(unit => unit.kind === main).length >= 4) {
     wants.push({ unit: grove ? 'ballista' : 'catapult', count: 2, priority: 64 });
   }
-  // The spirit host fights through summons, which these upgrades do not affect.
-  if (version !== 'v9_summoner') wants.push(
+  // Weapons and plating scale every land combat unit the player trains (see @@@share-of-own-stats): for the spirit host
+  // that is its whole paid army (the summoners themselves, priests, catapults, wardens), though not the spirits it
+  // summons. Left at 0/0 it lost the 10-20 minute fights against V9's 2/2 with more gold in the field (15 of 21 losses).
+  wants.push(
     { upgrade: 'weaponTraining', level: 3, priority: 59 },
     { upgrade: 'reinforcedPlating', level: 3, priority: 58 },
   );

@@ -392,7 +392,7 @@ describe('bootstrap_1 production budget', () => {
     expect(game.players.us!.gold).toBe(280 - UPGRADE_DEFS.weaponTraining.levels[0]!.cost - UNIT_DEFS.archer.cost);
   });
 
-  it('recruits another summoner instead of researching weapons that do not strengthen its spirits', () => {
+  it('researches weapons for its summoners, which the upgrade strengthens, though not their spirits', () => {
     let scene = sketchScene('spirit-host-investment').replaceDefaults()
       .player('us', { race: 'ember' }).player('foe', { race: 'grove' }).playerState('us', { gold: 180 })
       .townHall('us', 500, 500).goldMine('main', 788, 500, 4000)
@@ -403,26 +403,17 @@ describe('bootstrap_1 production budget', () => {
       .farms('us', 5, 400, 1300);
     for (let index = 0; index < 11; index++) scene = scene.worker('us', 500 + index * 35, 650);
     for (let index = 0; index < 10; index++) scene = scene.unit('us', 'summoner', 1500 + index * 35, 1000, { id: `caller-${index}` });
-    const control = scene.build().createGame(), candidate = scene.build().createGame();
-    for (const [index, game] of [control, candidate].entries()) {
-      const memory = createAiPolicyMemory(); memory.v6 = { phase: 2 };
-      const options = bootstrapPolicyContext(snapshotGame(game), 'us', 'v9_summoner', { memory, teams: game.teams });
-      if (index === 0) options.armyWants = [...options.armyWants!, { upgrade: 'weaponTraining', level: 3, priority: 59 }];
-      const commands = planBootstrapEconomy(snapshotGame(game), 'us', options);
-      for (const command of commands) issuePlayerCommand(game, 'us', command);
-      for (let tick = 0; tick < 700; tick++) stepGame(game);
-      const caster = game.units.find(unit => unit.id === 'caller-0')!;
-      issuePlayerCommand(game, 'us', { type: 'cast', unitId: caster.id, ability: 'summon', x: caster.x + 54, y: caster.y + 28 });
-    }
-    expect(control.players.us!.upgrades.weaponTraining).toBe(1);
-    expect(candidate.players.us!.upgrades.weaponTraining).toBe(0);
-    expect(control.units.filter(unit => unit.owner === 'us' && unit.kind === 'summoner')).toHaveLength(10);
-    expect(candidate.units.filter(unit => unit.owner === 'us' && unit.kind === 'summoner')).toHaveLength(11);
-    for (const game of [control, candidate]) {
-      const spirit = game.units.find(unit => unit.owner === 'us' && unit.kind === 'spirit')!;
-      expect(spirit.attackDamage).toBe(UNIT_DEFS.spirit.attackDamage);
-      expect(spirit.maxHp).toBe(UNIT_DEFS.spirit.hp);
-    }
-    expect(candidate.players.us!.gold).toBe(180 - UNIT_DEFS.summoner.cost);
+    const game = scene.build().createGame();
+    const memory = createAiPolicyMemory(); memory.v6 = { phase: 2 };
+    const options = bootstrapPolicyContext(snapshotGame(game), 'us', 'v9_summoner', { memory, teams: game.teams });
+    for (const command of planBootstrapEconomy(snapshotGame(game), 'us', options)) issuePlayerCommand(game, 'us', command);
+    for (let tick = 0; tick < 700; tick++) stepGame(game);
+    const caster = game.units.find(unit => unit.id === 'caller-0')!;
+    issuePlayerCommand(game, 'us', { type: 'cast', unitId: caster.id, ability: 'summon', x: caster.x + 54, y: caster.y + 28 });
+    expect(game.players.us!.upgrades.weaponTraining).toBe(1);
+    expect(caster.attackDamage).toBeGreaterThan(UNIT_DEFS.summoner.attackDamage);
+    const spirit = game.units.find(unit => unit.owner === 'us' && unit.kind === 'spirit')!;
+    expect(spirit.attackDamage).toBe(UNIT_DEFS.spirit.attackDamage);
+    expect(spirit.maxHp).toBe(UNIT_DEFS.spirit.hp);
   });
 });
