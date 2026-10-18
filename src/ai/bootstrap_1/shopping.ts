@@ -12,6 +12,7 @@ import { SHOP_PRIORITY, shopPurchaseAt } from '../policy/v9/shop';
 import { armedFoes, safeLandTravelTicks } from './safe-land-route';
 import { lootRecoveryUnitIds } from './loot-recovery';
 import { mercenaryControlUnitIds } from './mercenary-control';
+import { distance } from '../policy/spatial';
 
 function liveShopping(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const task = options.memory.shopping;
@@ -22,7 +23,8 @@ function liveShopping(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicy
   if (!unit || !shop || !home || unit.deck || unit.hp < unit.maxHp * V7_WOUNDED_SHARE
     || task.returning && walkingDistance(snapshot.map, unit, home, 'land')! <= V7_GATHERED_RANGE
     || !task.returning && !shop.goods.some(good => good.kind === task.kind && good.stock > 0)
-    || safeLandTravelTicks(snapshot, unit, task.returning ? home : shop, armedFoes(snapshot, owner, options)) === undefined) {
+    || safeLandTravelTicks(snapshot, unit, task.returning ? home : shop, armedFoes(snapshot, owner, options),
+      end => task.returning ? distance(end, home) <= V7_GATHERED_RANGE : standsAtShop({ ...unit, ...end }, shop)) === undefined) {
     delete options.memory.shopping;
     return undefined;
   }
@@ -53,7 +55,7 @@ function shoppingAssignment(snapshot: GameSnapshot, owner: PlayerId, options: Ai
         ? { shop, unit, kind: 'speedBoots' as const } : undefined
       : shopPurchaseAt(snapshot, owner, shop, intel.army, [unit], towers);
     if (!purchase || !freeItemSlot(snapshot, unit, purchase.kind)) return [];
-    const ticks = safeLandTravelTicks(snapshot, unit, shop, foes), home = nearestByRoute(snapshot.map, halls, unit, 'land');
+    const ticks = safeLandTravelTicks(snapshot, unit, shop, foes, end => standsAtShop({ ...unit, ...end }, shop)), home = nearestByRoute(snapshot.map, halls, unit, 'land');
     return ticks === undefined || !home ? [] : [{ ...purchase, ticks, home }];
   })).sort((a, b) => b.unit.level - a.unit.level || a.ticks - b.ticks || a.unit.id.localeCompare(b.unit.id))[0];
 }
