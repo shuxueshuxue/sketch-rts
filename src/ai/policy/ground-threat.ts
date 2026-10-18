@@ -37,5 +37,5 @@ export function groundFrontThreat(snapshot: GameSnapshot, intel: V6Intel, front:
     front.some(unit => groundThreatWithin(snapshot, enemy, unit, LOCAL_RANGE)));
   const towers = intel.enemies.flatMap(enemy => enemy.buildings).filter(tower => tower.complete && tower.attackDamage > 0
     && front.some(unit => strikeGap(tower, unit) <= tower.attackRange + unit.speed * THINK_TICKS / SIM_TICKS_PER_SECOND));
-  return strengthOf(army) + towers.length * TOWER_STRENGTH;
+  return { units: army, towerPower: towers.length * TOWER_STRENGTH };
 }

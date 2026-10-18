@@ -140,9 +140,10 @@ export function planV6General(snapshot: GameSnapshot, owner: PlayerId, options: 
     campTerritory: 'home',
     chooseMine: isV9Policy(options) ? v9ExpansionMine : nextExpansionMine,
     threatWithin: (unit, point, range) => distance(unit, point) <= range,
-    frontThreat: (world, _front, center) => world.enemies.reduce((total, enemy) => total
-      + strengthOf(enemy.army.filter(unit => distance(unit, center) <= LOCAL_RANGE)), 0)
-      + enemyTowersNear(world, center, 520) * TOWER_STRENGTH,
+    frontThreat: (world, _front, center) => ({
+      units: world.enemies.flatMap(enemy => enemy.army).filter(unit => distance(unit, center) <= LOCAL_RANGE),
+      towerPower: enemyTowersNear(world, center, 520) * TOWER_STRENGTH,
+    }),
     respondingPower,
     selectAttack: (choices, eligible) => {
       const first = choices[0];
@@ -174,7 +175,7 @@ type ArmyPlan = {
   campTerritory: 'home' | 'ground';
   chooseMine: typeof nextExpansionMine;
   threatWithin: (unit: Unit, point: Point, range: number) => boolean;
-  frontThreat: (intel: V6Intel, front: Unit[], center: Point) => number;
+  frontThreat: (intel: V6Intel, front: Unit[], center: Point) => { units: Unit[]; towerPower: number };
   respondingPower: typeof respondingPower;
   selectAttack: (choices: AttackChoice[], eligible: (choice: AttackChoice) => boolean) => AttackChoice | undefined;
   withinHomeReach: (intel: V6Intel, point: Point) => boolean;
@@ -351,10 +352,14 @@ function continueArmyAttack(snapshot: GameSnapshot, owner: PlayerId, options: Ai
     const group = attackGroup(available, front, current.group ?? []);
     const marching = group.filter((unit) => front.includes(unit));
     const center = marching.length > 0 ? averagePoint(marching) : undefined;
-    const facing = center ? frontThreat(intel, marching, center) : 0;
+    const threat = center ? frontThreat(intel, marching, center) : { units: [], towerPower: 0 };
+    const facing = strengthOf(threat.units) + threat.towerPower;
+    // A stretched front can face soldiers outside its centroid's local range.
+    // The same membership must be excluded from incoming reinforcements.
+    const facingIds = new Set(threat.units.map(unit => unit.id));
     const worn = marchStrength(group) < (current.groupStart ?? 0) * WORN_SHARE;
     const gaps = center ? enemyGaps(intel, center) : {};
-    const incoming = !center ? 0 : isV7Policy(options) ? approachingPower(intel, center, current.enemyCenters ?? {}) : closingPower(intel, center, gaps, current.enemyGaps ?? {});
+    const incoming = !center ? 0 : isV7Policy(options) ? approachingPower(intel, center, current.enemyCenters ?? {}, facingIds) : closingPower(intel, center, gaps, current.enemyGaps ?? {}, facingIds);
     const holds = strengthOf(group) * (1 + aggression) >= facing * RETREAT_LINE;
     const outrun = strengthOf(group) * (1 + aggression) < (facing + incoming) * RETREAT_LINE;
     if (target && center && !worn && holds && !outrun) return rememberCenters(memory, intel, options, attack(snapshot, owner, memory, group, front, target, rally, current.groupStart ?? 0, options, reinforcements, gaps, gatherAssault && isMain(intel, target)));
@@ -777,13 +782,13 @@ function enemyGaps(intel: V6Intel, center: Point): Record<string, number> {
 // of 2000 games against 1321 (351 of 500 on unseen seeds against 342).
 const APPROACH_SLACK = 15;
 
-function approachingPower(intel: V6Intel, center: Point, before: Record<string, Point>) {
+function approachingPower(intel: V6Intel, center: Point, before: Record<string, Point>, facing: ReadonlySet<string>) {
   return intel.enemies.reduce((total, enemy) => {
     const was = before[enemy.owner];
     if (!enemy.center || !was) return total;
     const gap = distance(enemy.center, center);
     if (gap > INCOMING_RANGE || gap >= distance(was, center) - APPROACH_SLACK) return total;
-    return total + strengthOf(enemy.army.filter((unit) => distance(unit, center) > LOCAL_RANGE));
+    return total + strengthOf(enemy.army.filter(unit => !facing.has(unit.id) && distance(unit, center) > LOCAL_RANGE));
   }, 0);
 }
 
@@ -793,12 +798,12 @@ function rememberCenters(memory: V6PolicyMemory, intel: V6Intel, options: AiPoli
 }
 
 // The armies not yet in the fight that are within reach and nearer than at the last look: what arrives next.
-function closingPower(intel: V6Intel, center: Point, gaps: Record<string, number>, before: Record<string, number>) {
+function closingPower(intel: V6Intel, center: Point, gaps: Record<string, number>, before: Record<string, number>, facing: ReadonlySet<string>) {
   return intel.enemies.reduce((total, enemy) => {
     const gap = gaps[enemy.owner];
     const was = before[enemy.owner];
     if (gap === undefined || was === undefined || gap > INCOMING_RANGE || gap >= was) return total;
-    return total + strengthOf(enemy.army.filter((unit) => distance(unit, center) > LOCAL_RANGE));
+    return total + strengthOf(enemy.army.filter(unit => !facing.has(unit.id) && distance(unit, center) > LOCAL_RANGE));
   }, 0);
 }
 
