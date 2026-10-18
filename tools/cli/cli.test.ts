@@ -83,3 +83,32 @@ describe("sketch bench room comparison", () => {
     expect(metricSummary([result(["v9", "v9"])], "v9_knight", "clear")).toBeUndefined();
   });
 });
+
+import { spawn } from "node:child_process";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { lockedBuild } from "./runner";
+
+describe("sketch copies are built once under their lock", () => {
+  const build = (target: string, log: string) => new Promise<number>((resolve) => {
+    const body = `echo built >> '${log}' && sleep 1 && mkdir -p '${target}' && touch '${target}/.sketch-complete'`;
+    const child = spawn("bash", ["-c", lockedBuild(target, body)], { stdio: ["pipe", "ignore", "inherit"] });
+    child.stdin.end("some input the second builder must drain");
+    child.on("close", (code) => resolve(code ?? 1));
+  });
+
+  it("lets one of two concurrent builders build and the other use its result", async () => {
+    const root = mkdtempSync(join(tmpdir(), "sketch-lock-")), target = join(root, "trees", "abc"), log = join(root, "log");
+    expect(await Promise.all([build(target, log), build(target, log)])).toEqual([0, 0]);
+    expect(readFileSync(log, "utf8")).toBe("built\n");
+  });
+
+  it("takes over the lock of a builder that died", async () => {
+    const root = mkdtempSync(join(tmpdir(), "sketch-lock-")), target = join(root, "trees", "abc"), log = join(root, "log");
+    mkdirSync(`${target}.lock`, { recursive: true });
+    writeFileSync(`${target}.lock/pid`, "999999999\n");
+    expect(await build(target, log)).toBe(0);
+    expect(readFileSync(log, "utf8")).toBe("built\n");
+  });
+});
