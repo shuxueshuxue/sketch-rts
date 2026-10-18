@@ -1,0 +1,99 @@
+{
+  "archive": "mercenary-stop-fresh-evidence.tar.gz",
+  "bytes": 376925,
+  "sha256": "b38fcc0dcf3ffa82e4c8f02e27c5ab0f7dd1a8e74aca0627ad2b50799227ac45",
+  "files": {
+    "raw/knight-medic-integrated-fresh0/commands.jsonl": {
+      "bytes": 101950,
+      "sha256": "2de6d85bbf50ae85297f5cccc7785b5711779f7fda0f3de9a4bb5a4121424723"
+    },
+    "raw/knight-medic-integrated-fresh0/entities.jsonl": {
+      "bytes": 17104,
+      "sha256": "a38391a9d79faf40e1afe041d0620cc36a34096156ab99824b5d5ee6564f658d"
+    },
+    "raw/knight-medic-integrated-fresh0/frames/0.json.gz": {
+      "bytes": 14405,
+      "sha256": "0e4ee4441604d6a589612442e7e7b4098be5229dcf98e271c6a75b213d530cf9"
+    },
+    "raw/knight-medic-integrated-fresh0/frames/1200.json.gz": {
+      "bytes": 16167,
+      "sha256": "edf5db562a0b438c8281e6e3c8a4fe9eba94b1fb26b8ef51b6ad11281e088d79"
+    },
+    "raw/knight-medic-integrated-fresh0/frames/1800.json.gz": {
+      "bytes": 16663,
+      "sha256": "160dbb3aa57520ed4074f2b958a84496214399f704d25b572ff96b67a72a8d26"
+    },
+    "raw/knight-medic-integrated-fresh0/frames/2400.json.gz": {
+      "bytes": 16797,
+      "sha256": "3cf18c84eb5c3e31b3acca2870d70ad31433c8fc9ddf9984e913f44d5119f6ed"
+    },
+    "raw/knight-medic-integrated-fresh0/frames/3000.json.gz": {
+      "bytes": 17264,
+      "sha256": "52f7f891b89a2cfc91309a82457318c0509cbcb09fdf2842874a755132014423"
+    },
+    "raw/knight-medic-integrated-fresh0/frames/3600.json.gz": {
+      "bytes": 17608,
+      "sha256": "04d4ad94249d37fe02fff198accab5d43d9c9dfa99bcc1e0aa5adfa1e56ee1fc"
+    },
+    "raw/knight-medic-integrated-fresh0/frames/4200.json.gz": {
+      "bytes": 17746,
+      "sha256": "7cfbf6bc5903e7b4931a2c665d880ec150d494d8438848973800bd40764115c3"
+    },
+    "raw/knight-medic-integrated-fresh0/frames/4800.json.gz": {
+      "bytes": 17923,
+      "sha256": "c74753c51f0a61b15501e74c9fa2af44e2ec7573a3e652d4d67191575628260d"
+    },
+    "raw/knight-medic-integrated-fresh0/frames/5400.json.gz": {
+      "bytes": 19514,
+      "sha256": "eb3b5e402e42dbf68db2127da6897aabcb01f45c58e7133ac9434cef879a4144"
+    },
+    "raw/knight-medic-integrated-fresh0/frames/600.json.gz": {
+      "bytes": 15888,
+      "sha256": "1449dc9cf83df0b8add89242d30dee968cdd8fa6ad0cfb4d56e8a29f064f5148"
+    },
+    "raw/knight-medic-integrated-fresh0/frames/6000.json.gz": {
+      "bytes": 18761,
+      "sha256": "41c23d16bc0bb7fd444746c1470c8718b77541749a999b91ca1e89d6af47f2e1"
+    },
+    "raw/knight-medic-integrated-fresh0/frames/6600.json.gz": {
+      "bytes": 18685,
+      "sha256": "ecfdcf04f9c8a0d71db36c7eaa7e3c067f0d919843de0677a282b72fbf4b8444"
+    },
+    "raw/knight-medic-integrated-fresh0/frames/7200.json.gz": {
+      "bytes": 19289,
+      "sha256": "a48f408114523632f445d9ab5aea081d34dc739c9f30536d980b25135311384a"
+    },
+    "raw/knight-medic-integrated-fresh0/frames/7800.json.gz": {
+      "bytes": 19920,
+      "sha256": "15629d2af6e8e939a8169744db2c0d2b50cb1ce71d77797b7642453f300b844c"
+    },
+    "raw/knight-medic-integrated-fresh0/frames/8400.json.gz": {
+      "bytes": 20223,
+      "sha256": "4ce2920e2deb5dbb47bc826cd0f250db94681360e96dc6ec72ebfdb152997662"
+    },
+    "raw/knight-medic-integrated-fresh0/frames/9000.json.gz": {
+      "bytes": 20801,
+      "sha256": "00cb9ce8622d64b3e24dc8e9b4642ca4957d3eb87683b9807157ebc2affbed5c"
+    },
+    "raw/knight-medic-integrated-fresh0/hits.jsonl": {
+      "bytes": 85390,
+      "sha256": "184f4f59f055393ea0219856db3328f1e593b8d01838b54380f63685d64656fd"
+    },
+    "raw/knight-medic-integrated-fresh0/result.json": {
+      "bytes": 32199,
+      "sha256": "7675921273d8d88a65b72c4b52e201b31b175105226dfd5716f447cf18fdde10"
+    },
+    "raw/knight-medic-integrated-fresh0/samples.jsonl": {
+      "bytes": 53612,
+      "sha256": "84e00bf6d92fe9e05b96748453b721332ca9ff2a8ce2e02a54438e952b25f6b7"
+    },
+    "raw/knight-medic-integrated-fresh0/source.json": {
+      "bytes": 184372,
+      "sha256": "221f1f023cdd0de1c65758bf1e2edaad5b800b0d02fb91eef6e68cf054444d3c"
+    },
+    "raw/mercenary-stop-fresh-replay-equivalence.json": {
+      "bytes": 866,
+      "sha256": "5d7b4e9e649f49d85c74859b0a3a82f0d7c051ecfd712dcca612be1a5048ac3b"
+    }
+  }
+}
