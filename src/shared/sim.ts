@@ -4321,7 +4321,10 @@ function restsAgainstGoalBody(game: Game, unit: Unit, goal: { x: number; y: numb
 // against a friend that has already ended its walk to the same point (and is still standing there), within CROWD_REACH
 // of it. Only one unit can stand on the point; the rest pressed round the first to come for good, holding their orders
 // (seven lancers on the shore across from an island). Any other friend standing about is no reason to stop: a band
-// walking through its own camp stopped at the first idle soldier there and never reached the enemy.
+// walking through its own camp stopped at the first idle soldier there and never reached the enemy. A friend standing
+// idle on the point itself ends a plain move too, whatever walk brought him there: an army's casters, each sent to a
+// post of its own round it, pressed for the rest of a game against a priest standing on the post (his own was a
+// fraction of a unit from it).
 const CROWD_REACH = 100;
 
 // `goal` is the order's point (whose walk a friend shares), `end` where that walk ends for this unit (see walkEnded): a
@@ -4331,7 +4334,10 @@ function restsAgainstArrivedFriend(game: Game, unit: Unit, goal: { x: number; y:
   if (gap > CROWD_REACH) return false;
   const friend = firstNearbyUnit(game, unit, unit.radius + MAX_UNIT_RADIUS + 2, (other) => {
     if (other === unit || other.owner !== unit.owner || distance(other, unit) > other.radius + unit.radius + 2) return false;
-    const there = other.order.type === "idle" && other.arrivedAt?.x === goal.x && other.arrivedAt.y === goal.y;
+    // A friend who ended a walk to this point, or, for a plain move, one standing idle on it (no two can stand on one
+    // spot). An attack-move goes on to whatever it meets there.
+    const there = other.order.type === "idle" && (other.arrivedAt?.x === goal.x && other.arrivedAt.y === goal.y
+      || unit.order.type === "move" && !isShipKind(other.kind) && distance(other, goal) < other.radius + unit.radius);
     // Round the point itself (within two bodies of it) a friend still walking there counts too: three archers pressing
     // round a point, none of them within reach of it, circled it for good with nobody there yet to stop against.
     const huddled = gap <= 2 * (unit.radius + other.radius) && (other.order.type === "move" || other.order.type === "attackMove") && other.order.x === goal.x && other.order.y === goal.y;
