@@ -27,6 +27,8 @@ export function createCardArray(width:number,height:number,depth:number,anisotro
  * Warm compaction transfers completed GPU layers without CPU readback. */
 export class CardMipUploader {
  private scratches=new Map<string,Scratch>();
+ private canvasScratches=new Map<HTMLCanvasElement|OffscreenCanvas,{texture:THREE.CanvasTexture;regions:THREE.Box3[];gpuBytes:number}>();
+ private canvasUploads=0;
  private destination=new THREE.Vector3();
  private sourceRegion=new THREE.Box3();
  private uploadRegion=new THREE.Box2();
@@ -69,17 +71,48 @@ export class CardMipUploader {
   if(page.uploaded)return;
   page.texture.needsUpdate=true;renderer.initTexture(page.texture);page.uploaded=true;this.initializedPages++;
  }
- uploadLayer(page:CardMipPage,layer:number,rgba:Uint8Array|Uint8ClampedArray,renderer:CardTextureRenderer,options?:CardMipUploadOptions){
+ private plan(page:CardMipPage,layer:number,bytes:number|undefined,options?:CardMipUploadOptions){
   const {width,height,depth}=page.texture.image;
   const sourceWidth=options===undefined?width:options.sourceWidth,sourceHeight=options===undefined?height:options.sourceHeight,baseMip=options===undefined?0:options.baseMip;
   const sourceLevels=Math.floor(Math.log2(Math.max(sourceWidth,sourceHeight)))+1,nativeLevels=Math.floor(Math.log2(Math.max(width,height)))+1;
-  if(!Number.isInteger(sourceWidth)||sourceWidth<1||!Number.isInteger(sourceHeight)||sourceHeight<1||!Number.isInteger(width)||width<1||!Number.isInteger(height)||height<1||!Number.isInteger(depth)||depth<1||!Number.isInteger(layer)||layer<0||layer>=depth||!Number.isInteger(baseMip)||baseMip<0||baseMip>=sourceLevels||rgba.byteLength!==sourceWidth*sourceHeight*4)throw new Error('Invalid card layer transfer dimensions.');
+  if(!Number.isInteger(sourceWidth)||sourceWidth<1||!Number.isInteger(sourceHeight)||sourceHeight<1||!Number.isInteger(width)||width<1||!Number.isInteger(height)||height<1||!Number.isInteger(depth)||depth<1||!Number.isInteger(layer)||layer<0||layer>=depth||!Number.isInteger(baseMip)||baseMip<0||baseMip>=sourceLevels||(bytes!==undefined&&bytes!==sourceWidth*sourceHeight*4))throw new Error('Invalid card layer transfer dimensions.');
   const divisor=2**baseMip;
   if(sourceWidth%divisor||sourceHeight%divisor||width!==sourceWidth/divisor||height!==sourceHeight/divisor||nativeLevels!==sourceLevels-baseMip||page.texture.mipmaps.length!==nativeLevels)throw new Error('Invalid card mip tail dimensions.');
   for(let level=0;level<nativeLevels;level++){
    const mip=page.texture.mipmaps[level]!;
    if(mip.width!==Math.max(1,Math.floor(sourceWidth/2**(baseMip+level)))||mip.height!==Math.max(1,Math.floor(sourceHeight/2**(baseMip+level))))throw new Error('Invalid card mip tail storage.');
   }
+  return{sourceWidth,sourceHeight,baseMip,nativeLevels};
+ }
+ private copyMips(source:THREE.Texture,regions:THREE.Box3[],page:CardMipPage,layer:number,baseMip:number,nativeLevels:number,renderer:CardTextureRenderer){
+  this.destination.set(0,0,layer);
+  for(let level=0;level<nativeLevels;level++){
+   const sourceLevel=baseMip+level,region=regions[sourceLevel]!;
+   renderer.copyTextureToTexture(source,page.texture,region,this.destination,sourceLevel,level);this.copyCalls++;this.mipCopyBytes+=region.max.x*region.max.y*4;
+  }
+  this.layerUpdates++;
+ }
+ // @@@canvas-upload - A freshly painted card goes from its canvas to the GPU without a CPU readback: the browser
+ // uploads the (GPU-backed) canvas into a scratch texture, which generates its mips there, then each retained mip is
+ // copied into the page layer as for an RGBA raster. The canvas's top row is the picture's top; flipY puts it last,
+ // the same row order a flipped RGBA raster has. A software canvas still reads back inside the browser's upload.
+ uploadCanvasLayer(page:CardMipPage,layer:number,canvas:HTMLCanvasElement|OffscreenCanvas,renderer:CardTextureRenderer,options:CardMipUploadOptions){
+  if(canvas.width!==options.sourceWidth||canvas.height!==options.sourceHeight)throw new Error('Invalid card canvas dimensions.');
+  const {baseMip,nativeLevels}=this.plan(page,layer,undefined,options);
+  this.transfer(renderer,()=>{
+   this.initialize(page,renderer);
+   let scratch=this.canvasScratches.get(canvas);
+   if(!scratch){
+    const texture=new THREE.CanvasTexture(canvas as HTMLCanvasElement);configure(texture,this.anisotropy);texture.flipY=true;texture.generateMipmaps=true;
+    scratch={texture,regions:levels(canvas.width,canvas.height).map(size=>new THREE.Box3(new THREE.Vector3(),new THREE.Vector3(size.width,size.height,1))),gpuBytes:cardTextureBytes(canvas.width,canvas.height)};
+    this.canvasScratches.set(canvas,scratch);
+   }
+   scratch.texture.needsUpdate=true;renderer.initTexture(scratch.texture);this.canvasUploads++;
+   this.copyMips(scratch.texture,scratch.regions,page,layer,baseMip,nativeLevels,renderer);
+  });
+ }
+ uploadLayer(page:CardMipPage,layer:number,rgba:Uint8Array|Uint8ClampedArray,renderer:CardTextureRenderer,options?:CardMipUploadOptions){
+  const {sourceWidth,sourceHeight,baseMip,nativeLevels}=this.plan(page,layer,rgba.byteLength,options);
   this.transfer(renderer,()=>{
    this.initialize(page,renderer);const scratch=this.scratch(sourceWidth,sourceHeight);
    try{
@@ -101,12 +134,7 @@ export class CardMipUploader {
       this.scratchPartialUploadBytes+=bytes;this.scratchUploadBytes+=bytes;this.scratchPartialUploads++;
      }else this.scratchUnchangedUploads++;
     }
-    this.destination.set(0,0,layer);
-    for(let level=0;level<nativeLevels;level++){
-     const sourceLevel=baseMip+level,region=scratch.regions[sourceLevel]!;
-     renderer.copyTextureToTexture(scratch.texture,page.texture,region,this.destination,sourceLevel,level);this.copyCalls++;this.mipCopyBytes+=region.max.x*region.max.y*4;
-    }
-    this.layerUpdates++;
+    this.copyMips(scratch.texture,scratch.regions,page,layer,baseMip,nativeLevels,renderer);
    }catch(error){
     // The CPU raster may already have changed while the GPU copy only partly
     // completed. A retry must replace the entire base rather than compare with
@@ -136,6 +164,7 @@ export class CardMipUploader {
   });
  }
  releaseSize(width:number,height:number){const key=`${width}:${height}`,scratch=this.scratches.get(key);if(scratch)this.releaseScratch(scratch);this.scratches.delete(key);}
- stats(){return{scratchTextures:this.scratches.size,scratchCpuBytes:[...this.scratches.values()].reduce((sum,s)=>sum+s.data.byteLength,0),scratchGpuBytes:[...this.scratches.values()].reduce((sum,s)=>sum+s.gpuBytes,0),mipInitializedPages:this.initializedPages,mipLayerUpdates:this.layerUpdates,mipCopyCalls:this.copyCalls,mipCopyBytes:this.mipCopyBytes,gpuCompactionLayers:this.compactionLayers,gpuCompactionCopyCalls:this.compactionCopyCalls,arrayBaseUploadBytes:0,scratchUploadBytes:this.scratchUploadBytes,scratchInitialUploadBytes:this.scratchInitialUploadBytes,scratchFullUploadBytes:this.scratchFullUploadBytes,scratchPartialUploadBytes:this.scratchPartialUploadBytes,scratchPartialUploadPixels:this.scratchPartialUploadBytes/4,scratchPartialUploads:this.scratchPartialUploads,scratchUnchangedUploads:this.scratchUnchangedUploads,scratchFullUploadFallbacks:this.scratchFullUploadFallbacks,gpuTransferSubmissionWallMs:this.transferWallMs};}
- dispose(){for(const scratch of this.scratches.values())this.releaseScratch(scratch);this.scratches.clear();this.renderer=undefined;}
+ stats(){return{scratchTextures:this.scratches.size+this.canvasScratches.size,canvasUploads:this.canvasUploads,scratchCpuBytes:[...this.scratches.values()].reduce((sum,s)=>sum+s.data.byteLength,0),scratchGpuBytes:[...this.scratches.values(),...this.canvasScratches.values()].reduce((sum,s)=>sum+s.gpuBytes,0),mipInitializedPages:this.initializedPages,mipLayerUpdates:this.layerUpdates,mipCopyCalls:this.copyCalls,mipCopyBytes:this.mipCopyBytes,gpuCompactionLayers:this.compactionLayers,gpuCompactionCopyCalls:this.compactionCopyCalls,arrayBaseUploadBytes:0,scratchUploadBytes:this.scratchUploadBytes,scratchInitialUploadBytes:this.scratchInitialUploadBytes,scratchFullUploadBytes:this.scratchFullUploadBytes,scratchPartialUploadBytes:this.scratchPartialUploadBytes,scratchPartialUploadPixels:this.scratchPartialUploadBytes/4,scratchPartialUploads:this.scratchPartialUploads,scratchUnchangedUploads:this.scratchUnchangedUploads,scratchFullUploadFallbacks:this.scratchFullUploadFallbacks,gpuTransferSubmissionWallMs:this.transferWallMs};}
+ releaseCanvas(canvas:HTMLCanvasElement|OffscreenCanvas){this.canvasScratches.get(canvas)?.texture.dispose();this.canvasScratches.delete(canvas);}
+ dispose(){for(const scratch of this.scratches.values())this.releaseScratch(scratch);this.scratches.clear();for(const scratch of this.canvasScratches.values())scratch.texture.dispose();this.canvasScratches.clear();this.renderer=undefined;}
 }
