@@ -5,7 +5,7 @@ import { beginShipCollisionFrame } from '../../shared/ship-collisions';
 import { shipRouteTraffic } from '../../shared/ship-avoidance';
 import { nearestShipPose, planVoyageRoute } from '../../shared/ship-navigation';
 import { sameGround, isWalkable, walkDestination } from '../../shared/terrain';
-import { boardingBerth } from '../../shared/naval';
+import { boardingBerth, landingSpot } from '../../shared/naval';
 import { seconds } from '../../shared/time';
 import { coastOnWater } from '../policy/naval';
 import { coastalFireDisks, coastalFireSegmentClear } from '../policy/coastal-voyage';
@@ -97,7 +97,17 @@ export function homeRelief(s:GameSnapshot,owner:PlayerId,options:AiPolicyContext
  }
  if(ship&&crew.some(u=>u.deck?.shipId===ship.id)){
   if(helmEmergency)return {commands,claimed,selection};
-  if(ship.order.type!=='unload'||gap(ship.order,job.landing)>24)commands.push({type:'unload',unitIds:[ship.id],...job.landing});
+  const passengers=shipPassengers(s.units,ship),unassignedPassenger=passengers.some(u=>u.owner===owner&&!job!.crewIds.includes(u.id));
+  if(unassignedPassenger){
+   const ready=crew.filter(u=>u.deck?.shipId===ship.id&&(()=>{const spot=landingSpot(s.map,ship,passengers.indexOf(u),passengers.length,s.units,u);return !!spot&&sameGround(s.map,spot,hall);})());
+   if(ready.length){
+    if(ship.order.type!=='idle')commands.push({type:'stop',unitIds:[ship.id]});
+    commands.push(...ready.map(u=>({type:'unloadPassenger' as const,transportId:ship.id,passengerId:u.id})));
+   }else{
+    const pose=job.approach??nearestShipPose(s.map,ship,job.landing);
+    if(pose){job.approach={x:pose.x,y:pose.y};if(ship.order.type!=='move'||gap(ship.order,pose)>24)commands.push({type:'move',unitIds:[ship.id],x:pose.x,y:pose.y});}
+   }
+  }else if(ship.order.type!=='unload'||gap(ship.order,job.landing)>24)commands.push({type:'unload',unitIds:[ship.id],...job.landing});
  }else{
   job.phase='guard';
   if(ship&&!helmEmergency){

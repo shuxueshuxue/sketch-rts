@@ -1,7 +1,7 @@
 import { planAiOwnerCommandEntries } from '../planner-context';
 import {readFileSync} from 'node:fs';import {gunzipSync} from 'node:zlib';import {expect,it} from 'vitest';
 import {homeRelief} from './home-relief';
-import {createGame,restoreSnapshotIntoGame,snapshotGame} from '../../shared/sim';
+import {createGame,restoreSnapshotIntoGame,snapshotGame,issuePlayerCommand} from '../../shared/sim';
 function saved(tick=54600,rename=false){let raw=gunzipSync(readFileSync(new URL(`./fixtures/home-relief-${tick===54600?'54600':'guard-60000'}.json.gz`,import.meta.url))).toString();if(rename)raw=raw.replaceAll('unit-p0-warship-4662','another-hull').replaceAll('building-p0-townhall','another-home');const f=JSON.parse(raw),game=createGame('bareDuel');restoreSnapshotIntoGame(game,f.snapshot,f.nextId);return {s:snapshotGame(game),options:{memory:f.memories.p0,teams:f.snapshot.teams}};}
 it('selects real adequate embarked defenders and a clear landing, independent of historical IDs',()=>{
  const {s,options}=saved(54600,true),r=homeRelief(s,'p0',options);expect(r.selection).toBeTruthy();expect(options.memory.homeRelief.shipId).toBe('another-hull');expect(options.memory.homeRelief.hallId).toBe('another-home');expect(r.commands.some(c=>c.type==='unload'&&c.unitIds.includes('another-hull'))).toBe(true);expect(r.claimed.size).toBe(3);
@@ -44,4 +44,19 @@ it('does not count the 68400 embarked convoy as already landed infantry',()=>{co
 it.each(['v9_archer','v9_summoner','v9_knight'] as const)('%s integrates relief through the ordinary planner',version=>{
  const {s,options}=saved();const entries=planAiOwnerCommandEntries(s,{playerId:'p0',version,memory:options.memory},{teams:options.teams});
  expect(options.memory.homeRelief).toBeTruthy();expect(entries.some(e=>e.scriptId==='homeRelief'&&e.command.type==='unload'&&e.command.unitIds.includes(options.memory.homeRelief.shipId))).toBe(true);
+});
+
+it('lands only the selected relief fighters through native commands and retains a civilian passenger',()=>{
+ const f=JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/home-relief-selective-26625.json.gz',import.meta.url))).toString());
+ const game=createGame('bareDuel');restoreSnapshotIntoGame(game,f.snapshot,f.nextId);
+ const memory=f.memories.p0,job=memory.homeRelief;
+ const entries=planAiOwnerCommandEntries(snapshotGame(game),{playerId:'p0',version:'v9_archer',memory},{teams:f.snapshot.teams});
+ const commands=entries.filter(e=>e.scriptId==='homeRelief').map(e=>e.command);
+ expect(commands.filter(c=>c.type==='unloadPassenger').map(c=>c.passengerId).sort()).toEqual([...job.crewIds].sort());
+ expect(commands.some(c=>c.type==='unload')).toBe(false);
+ const beforeGold=game.players.p0!.gold;
+ for(const command of commands)issuePlayerCommand(game,'p0',command);
+ for(const id of job.crewIds)expect(game.units.find(u=>u.id===id)?.deck).toBeUndefined();
+ expect(game.units.find(u=>u.id==='unit-p0-worker-3')).toMatchObject({hp:70,deck:{shipId:job.shipId}});
+ expect(game.players.p0!.gold).toBe(beforeGold);
 });

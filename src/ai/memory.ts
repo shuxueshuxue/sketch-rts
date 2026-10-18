@@ -72,7 +72,7 @@ export type NavalPlanMemory = {
 };
 
 export type AiPolicyMemory = {
-  homeRelief?: { hallId:string; shipId:string; crewIds:string[]; landing:{x:number;y:number}; station:{x:number;y:number}; phase:'travel'|'guard'|'evacuate'|'recover'; since:number; initialThreat:number };
+  homeRelief?: { hallId:string; shipId:string; crewIds:string[]; landing:{x:number;y:number}; station:{x:number;y:number}; phase:'travel'|'guard'|'evacuate'|'recover'; since:number; initialThreat:number; approach?:{x:number;y:number} };
   homeReliefRetry?: number;
   mounted?: {
     unitIds: string[];
