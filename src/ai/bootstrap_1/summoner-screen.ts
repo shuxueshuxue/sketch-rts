@@ -10,6 +10,7 @@ import { v6Memory } from '../policy/v6/memory';
 import { SUMMONING_UNIT_KINDS } from '../policy/versions';
 import { summonHost } from './summon-host';
 import { v6AssaultStagePoint } from '../policy/v6/general';
+import { casterAnchorPlanner } from './caster-anchor';
 
 function advancingScreen(front: Unit[], center: Point, target: Point) {
   const toward = { x: target.x - center.x, y: target.y - center.y };
@@ -36,11 +37,12 @@ export function planSummonerScreen(snapshot: GameSnapshot, owner: PlayerId, opti
     }
   }
   const micro = casterMeleeMicro(snapshot, owner, options);
+  const anchorAt = casterAnchorPlanner(snapshot, owner, options, intel.home);
   const screenRoles = (post: Point, screen: Unit[]) => [
     ...planCasterScreen(snapshot, owner, options, intel.home, post, screen,
-      backline.filter(unit => SUMMONING_UNIT_KINDS.has(unit.kind)), false, true, micro),
+      backline.filter(unit => SUMMONING_UNIT_KINDS.has(unit.kind)), false, true, micro, anchorAt),
     ...planCasterScreen(snapshot, owner, options, intel.home, post, screen,
-      backline.filter(unit => !SUMMONING_UNIT_KINDS.has(unit.kind)), true, true, micro),
+      backline.filter(unit => !SUMMONING_UNIT_KINDS.has(unit.kind)), true, true, micro, anchorAt),
   ];
   if (general?.mode === 'attack' && general.stage === 'gather' && general.target && general.group && casters.length >= 4) {
     const group = new Set(general.group), marching = front.filter(unit => group.has(unit.id));
@@ -50,11 +52,11 @@ export function planSummonerScreen(snapshot: GameSnapshot, owner: PlayerId, opti
       const screen = advancingScreen(marching, averagePoint(host), general.target);
       return [
         ...planCasterScreen(snapshot, owner, options, intel.home, v6AssaultStagePoint(general.target, averagePoint(marching)),
-          screen, gathering, false, true, micro),
+          screen, gathering, false, true, micro, anchorAt),
         ...planCasterScreen(snapshot, owner, options, intel.home, v6CasterPost(general, intel.home), front,
-          backline.filter(unit => !SUMMONING_UNIT_KINDS.has(unit.kind)), true, true, micro),
+          backline.filter(unit => !SUMMONING_UNIT_KINDS.has(unit.kind)), true, true, micro, anchorAt),
         ...planCasterScreen(snapshot, owner, options, intel.home, v6CasterPost(general, intel.home), front,
-          backline.filter(unit => SUMMONING_UNIT_KINDS.has(unit.kind) && !group.has(unit.id)), false, true, micro),
+          backline.filter(unit => SUMMONING_UNIT_KINDS.has(unit.kind) && !group.has(unit.id)), false, true, micro, anchorAt),
       ];
     }
   }

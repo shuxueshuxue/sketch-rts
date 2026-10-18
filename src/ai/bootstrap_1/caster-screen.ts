@@ -9,6 +9,7 @@ import { isV8Policy, isV9Policy } from '../policy/versions';
 import { mainBase } from '../policy/world-model';
 import { armedFoes } from './safe-land-route';
 import { mountedMicro, mountedTargetOrder, mountedThreatReach, THINK_TICKS } from './mounted-micro';
+import { casterAnchorPlanner } from './caster-anchor';
 
 /** A ranged caster can outmaneuver slower melee pursuers while its screen is absent. */
 export function casterMeleeMicro(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
@@ -27,5 +28,5 @@ export function casterMeleeMicro(snapshot: GameSnapshot, owner: PlayerId, option
 export function planBootstrapCasterScreen(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const home = mainBase(snapshot, owner), front = units(snapshot, owner).filter(unit => unit.kind !== 'worker' && !isBacklineKind(unit));
   return planCasterScreen(snapshot, owner, options, home, v6CasterPost(v6Memory(options).general, home), front,
-    units(snapshot, owner).filter(isBacklineKind), isV8Policy(options), isV9Policy(options), casterMeleeMicro(snapshot, owner, options));
+    units(snapshot, owner).filter(isBacklineKind), isV8Policy(options), isV9Policy(options), casterMeleeMicro(snapshot, owner, options), casterAnchorPlanner(snapshot, owner, options, home));
 }

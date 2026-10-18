@@ -34,6 +34,7 @@ const MIN_SCREEN = 3;
 const V8_SCREEN_DEPTH = 110;
 
 const BACKLINE_KINDS = new Set(["summoner", "priest", "witch", "ashHexer", "fieldMedic"]);
+export type CasterAnchor = (caster: Unit, point: Point, retreat: boolean) => Point | undefined;
 
 export function isBacklineKind(unit: Unit) {
   return BACKLINE_KINDS.has(unit.kind);
@@ -52,7 +53,7 @@ export function planV6CasterScreen(snapshot: GameSnapshot, owner: PlayerId, opti
     units(snapshot, owner).filter(isBacklineKind), isV8Policy(options), isV9Policy(options), () => undefined);
 }
 
-export function planCasterScreen(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, home: Point, post: Point, front: Unit[], casters: Unit[], close: boolean, standAgainstMelee: boolean, meleeMicro: (caster: Unit, foes: Unit[]) => GameCommand | undefined): GameCommand[] {
+export function planCasterScreen(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, home: Point, post: Point, front: Unit[], casters: Unit[], close: boolean, standAgainstMelee: boolean, meleeMicro: (caster: Unit, foes: Unit[]) => GameCommand | undefined, anchorAt?: CasterAnchor): GameCommand[] {
   if (casters.length === 0) return [];
   const enemies = hostileCombatUnits(snapshot, owner, options.teams);
   const towers = enemyBuildings(snapshot, owner, options.teams).filter((building) => building.complete && building.attackDamage > 0);
@@ -90,8 +91,12 @@ export function planCasterScreen(snapshot: GameSnapshot, owner: PlayerId, option
       if (caster.order.type === "move") commands.push({ type: "stop", unitIds: [caster.id] });
       continue;
     }
-    const anchor = screenAnchor(caster, frontNear, threatsNear, towers, home, post, close);
-    if (!anchor || distance(caster, anchor) <= REPOSITION_SLACK) continue;
+    const anchor = screenAnchor(caster, frontNear, threatsNear, towers, home, post, close, anchorAt);
+    if (!anchor || distance(caster, anchor) <= REPOSITION_SLACK) {
+      // A rejected or already reached post must also cancel the previous walk.
+      if (anchorAt && caster.order.type === "move" && (!anchor || distance(caster.order, anchor) > REPOSITION_SLACK)) commands.push({ type: "stop", unitIds: [caster.id] });
+      continue;
+    }
     commands.push(resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: [caster.id], x: anchor.x, y: anchor.y }, options));
   }
   return commands;
@@ -100,17 +105,18 @@ export function planCasterScreen(snapshot: GameSnapshot, owner: PlayerId, option
 // A front of one or two spirits chasing something is no screen: with fewer than three bodies nearby the casters go back to
 // the general's post instead of following them across the map (they did, and died 1300 from home).
 // frontNear, threatsNear: the front line within FRONT_GROUP_RANGE and the enemies within THREAT_RANGE of a point, in order.
-function screenAnchor(caster: Unit, frontNear: (point: Point) => Unit[], threatsNear: (point: Point) => Unit[], towers: { x: number; y: number; attackRange: number }[], home: Point, post: Point, close: boolean): Point | undefined {
+function screenAnchor(caster: Unit, frontNear: (point: Point) => Unit[], threatsNear: (point: Point) => Unit[], towers: { x: number; y: number; attackRange: number }[], home: Point, post: Point, close: boolean, anchorAt?: CasterAnchor): Point | undefined {
   const screen = frontNear(caster);
   const front = screen.length >= MIN_SCREEN ? averagePoint(screen) : undefined;
   const threats = threatsNear(front ?? caster);
-  if (threats.length === 0) return front ? step(front, home, FOLLOW_DEPTH) : post;
+  const place = (point: Point, retreat = true) => anchorAt ? anchorAt(caster, point, retreat) : point;
+  if (threats.length === 0) return place(front ? step(front, home, FOLLOW_DEPTH) : post);
   const threat = averagePoint(threats);
-  if (close && front) return step(front, away(front, threat), V8_SCREEN_DEPTH);
+  if (close && front) return place(step(front, away(front, threat), V8_SCREEN_DEPTH), false);
   let anchor = front ? step(front, away(front, threat), SCREEN_DEPTH) : step(post, home, FALLBACK_STEP / 2);
   // Behind the front is not enough if a shooter or tower still reaches that spot: keep backing off toward home.
   for (let tries = 0; tries < 4 && inReach(anchor, threats, towers); tries += 1) anchor = step(anchor, home, FALLBACK_STEP / 2);
-  return anchor;
+  return place(anchor);
 }
 
 // With no real front to stand behind, casters wait where the general holds or guards, a step short of a camp it creeps, and at home
