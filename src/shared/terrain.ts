@@ -1214,11 +1214,17 @@ function groundSegmentProgress(map: Pick<GameMap, 'terrain'>, from: Point, goal:
   let nextX = dx === 0 ? Infinity : ((col + Number(dx > 0)) * cell - from.x) / dx;
   let nextY = dy === 0 ? Infinity : ((row + Number(dy > 0)) * cell - from.y) / dy;
   const spanX = cell / Math.abs(dx), spanY = cell / Math.abs(dy);
+  // Each boundary update adds at most one machine epsilon of error in the
+  // segment's [0, 1] parameter (plus its initial division). Bound accumulated
+  // error by the number of crossings, rather than a fixed world-distance
+  // tolerance. Only ignore zero-pace slivers within that bound: a rounded
+  // corner must not divide by zero, while ordinary finite costs stay identical.
+  const cornerEpsilon = Number.EPSILON * (2 + Math.ceil(Math.abs(dx) / cell) + Math.ceil(Math.abs(dy) / cell));
   let at = 0, cost = 0;
   while (at < 1) {
     const end = Math.min(1, nextX, nextY);
     const pace = CELL_GROUND[terrain.cells[row * terrain.cols + col]!]!.pace;
-    const next = cost + (end - at) * length / pace;
+    const next = pace === 0 && end - at <= cornerEpsilon ? cost : cost + (end - at) * length / pace;
     if (next >= budget) return { cost: budget, fraction: at + (budget - cost) * pace / length };
     cost = next;
     if (end === nextX) { col += stepX; nextX += spanX; }

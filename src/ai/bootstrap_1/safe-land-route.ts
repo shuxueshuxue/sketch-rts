@@ -49,10 +49,19 @@ export function retreatLandRoad(snapshot: GameSnapshot, unit: Unit, goal: Point,
 
 /** Shared geometry for admission and retreats; threat policies remain separate. */
 function nativeLandRoad(snapshot: GameSnapshot, unit: Unit, goal: Point) {
+  const invalid = (from: Point, to: Point, value: unknown) => new Error(
+    `Invalid native land travel for ${unit.id} (${unit.kind}, speed ${unit.speed}): (${from.x},${from.y}) -> (${to.x},${to.y}), cost/ticks ${String(value)}`);
+  if (!Number.isFinite(unit.speed) || unit.speed <= 0) throw invalid(unit, goal, unit.speed);
   if (routeTravelTicks(snapshot.map, unit, goal, 'land', unit.speed) === undefined) return undefined;
   const points = groundSteeringRoute(snapshot.map, unit, goal);
-  const cost = points.slice(1).reduce((sum, point, index) => sum + groundTravelCost(snapshot.map, points[index]!, point)!, 0);
+  let cost = 0;
+  for (let index = 1; index < points.length; index++) {
+    const segment = groundTravelCost(snapshot.map, points[index - 1]!, points[index]!);
+    if (segment === undefined || !Number.isFinite(segment)) throw invalid(points[index - 1]!, points[index]!, segment);
+    cost += segment;
+  }
   const ticks = Math.ceil(cost / unit.speed * SIM_TICKS_PER_SECOND);
+  if (!Number.isFinite(ticks)) throw invalid(unit, goal, ticks);
   return { points, ticks };
 }
 
