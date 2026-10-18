@@ -413,7 +413,7 @@ function walkAhead(state: TerrainRuntime, ground: TerrainRuntime, tiles: Tiles, 
   if (at === near) return near === target ? goal : centerOf(state, near);
   const far = at === target ? goal : centerOf(state, at);
   if ((short < 0 || clearSegment(state, from.x, from.y, far.x, far.y))
-    && (!joined || shortcutDescends(state, initialField!, from, near, far))) return far;
+    && (!joined || shortcutDescends(state, initialField!, from, near, far, short >= 0))) return far;
   const close = short < 0 ? far : short === target ? goal : centerOf(state, short);
   return !joined || shortcutDescends(state, initialField!, from, near, close) ? close : centerOf(state, first);
 }
@@ -426,7 +426,7 @@ function walkAhead(state: TerrainRuntime, ground: TerrainRuntime, tiles: Tiles, 
 // cell of its starting field; otherwise use the short lookahead or first step.
 // Keep single-field smoothing unchanged: equal-cost or initially uphill cells
 // can still lead to a valid visible shortcut within one field.
-function shortcutDescends(state: TerrainRuntime, field: BoxField, from: Point, near: number, point: Point) {
+function shortcutDescends(state: TerrainRuntime, field: BoxField, from: Point, near: number, point: Point, visible = false) {
   // A rejected long lookahead can fall back to a SHORT_LOOK point still inside
   // this field. That returned segment joins no fields: preserve its ordinary
   // corner smoothing, even if the unused long path went through another field.
@@ -434,7 +434,8 @@ function shortcutDescends(state: TerrainRuntime, field: BoxField, from: Point, n
   // An occluded SHORT_LOOK point is a wall-sliding hint, not a straight
   // shortcut. Its geometric first cell need not be the cell the unit enters;
   // forcing the first flow cell here can pin a crowd against that same wall.
-  if (!clearSegment(state, from.x, from.y, point.x, point.y)) return true;
+  // The long lookahead's caller has already checked visibility.
+  if (!visible && !clearSegment(state, from.x, from.y, point.x, point.y)) return true;
   const dx = point.x - from.x, dy = point.y - from.y, cell = state.terrain.cell;
   const col = near % state.width - 1, row = Math.floor(near / state.width) - 1;
   const acrossX = dx === 0 ? Infinity : ((col + Number(dx > 0)) * cell - from.x) / dx;

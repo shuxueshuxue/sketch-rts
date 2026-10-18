@@ -83,7 +83,6 @@ it('keeps a rules-4 save loadable while refusing to replay its old movement rule
 it.each([crowded, corner])('preserves ordinary corner smoothing at $provenance.map tick $provenance.tick', fixture => {
   const game = createGame('bareDuel', { aiPlayers: [] });
   restoreSnapshotIntoGame(game, fixture.snapshot as unknown as GameSnapshot, 1_000_000);
-  game.aiPlayers = [];
   game.scriptedVictory = true;
   game.projectiles = [];
   const unit = game.units.find(u => u.id === fixture.provenance.unitId)!;
