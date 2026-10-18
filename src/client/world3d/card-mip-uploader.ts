@@ -11,16 +11,16 @@ export type CardMipUploadOptions={sourceWidth:number;sourceHeight:number;baseMip
 type Scratch={texture:THREE.DataTexture;cpuSource:THREE.DataTexture;data:Uint8Array;uploaded:boolean;retryFull:boolean;regions:THREE.Box3[];gpuBytes:number};
 const MAX_SCRATCH_SIZES=5,EMPTY_MIP_DATA=new Uint8Array(0);
 function levels(width:number,height:number){return Array.from({length:Math.floor(Math.log2(Math.max(width,height)))+1},(_,level)=>({width:Math.max(1,Math.floor(width/2**level)),height:Math.max(1,Math.floor(height/2**level))}));}
-export function cardTextureBytes(width:number,height:number,depth=1,levelCount=Infinity){return levels(width,height).slice(0,levelCount).reduce((sum,size)=>sum+size.width*size.height*4*depth,0);}
+export function cardTextureBytes(width:number,height:number,depth=1){return levels(width,height).reduce((sum,size)=>sum+size.width*size.height*4*depth,0);}
 function configure(texture:THREE.Texture,anisotropy:number){
  texture.colorSpace=THREE.SRGBColorSpace;texture.magFilter=THREE.LinearFilter;texture.minFilter=THREE.LinearMipmapLinearFilter;texture.anisotropy=anisotropy;
  texture.flipY=false;texture.premultiplyAlpha=false;texture.unpackAlignment=1;
 }
-export function createCardArray(width:number,height:number,depth:number,anisotropy:number,levelCount=Infinity){
+export function createCardArray(width:number,height:number,depth:number,anisotropy:number){
  const texture=new THREE.DataArrayTexture(null,width,height,depth);configure(texture,anisotropy);
  texture.generateMipmaps=false;texture.source.dataReady=false;
- // Allocate every mip (or the first levelCount) without retaining or uploading an entire CPU base page.
- texture.mipmaps=levels(width,height).slice(0,levelCount).map(size=>({...size,data:EMPTY_MIP_DATA}));return texture;
+ // Allocate every mip without retaining or uploading an entire CPU base page.
+ texture.mipmaps=levels(width,height).map(size=>({...size,data:EMPTY_MIP_DATA}));return texture;
 }
 
 /** One temporary raster layer feeds the normal GPU-generated sRGB mip chain.
@@ -60,15 +60,6 @@ export class CardMipUploader {
   const cpuSource=new THREE.DataTexture(data,width,height);configure(cpuSource,this.anisotropy);
   const scratch={texture,cpuSource,data,uploaded:false,retryFull:false,regions:levels(width,height).map(size=>new THREE.Box3(new THREE.Vector3(),new THREE.Vector3(size.width,size.height,1))),gpuBytes:cardTextureBytes(width,height)};
   this.scratches.set(key,scratch);return scratch;
- }
- private canvasScratch(canvas:HTMLCanvasElement|OffscreenCanvas){
-  let scratch=this.canvasScratches.get(canvas);
-  if(!scratch){
-   const texture=new THREE.CanvasTexture(canvas as HTMLCanvasElement);configure(texture,this.anisotropy);texture.flipY=true;texture.generateMipmaps=true;
-   scratch={texture,regions:levels(canvas.width,canvas.height).map(size=>new THREE.Box3(new THREE.Vector3(),new THREE.Vector3(size.width,size.height,1))),gpuBytes:cardTextureBytes(canvas.width,canvas.height)};
-   this.canvasScratches.set(canvas,scratch);
-  }
-  return scratch;
  }
  private releaseScratch(scratch:Scratch){scratch.texture.dispose();scratch.cpuSource.dispose();}
  private transfer(renderer:CardTextureRenderer,work:()=>void){
@@ -110,32 +101,14 @@ export class CardMipUploader {
   const {baseMip,nativeLevels}=this.plan(page,layer,undefined,options);
   this.transfer(renderer,()=>{
    this.initialize(page,renderer);
-   const scratch=this.canvasScratch(canvas);
+   let scratch=this.canvasScratches.get(canvas);
+   if(!scratch){
+    const texture=new THREE.CanvasTexture(canvas as HTMLCanvasElement);configure(texture,this.anisotropy);texture.flipY=true;texture.generateMipmaps=true;
+    scratch={texture,regions:levels(canvas.width,canvas.height).map(size=>new THREE.Box3(new THREE.Vector3(),new THREE.Vector3(size.width,size.height,1))),gpuBytes:cardTextureBytes(canvas.width,canvas.height)};
+    this.canvasScratches.set(canvas,scratch);
+   }
    scratch.texture.needsUpdate=true;renderer.initTexture(scratch.texture);this.canvasUploads++;
    this.copyMips(scratch.texture,scratch.regions,page,layer,baseMip,nativeLevels,renderer);
-  });
- }
- /** A window of a painted canvas (canvas pixels, top-left origin) to a cell of a layer (texels from the layer's bottom-left
-  * corner, the window's size at baseMip): only the window is copied, at each of the page's levels, from the canvas's
-  * GPU mip chain (see @@@card-paint-bounds). A cell at the origin of a page its own size fills the whole layer. */
- uploadCanvasWindow(page:CardMipPage,layer:number,canvas:HTMLCanvasElement|OffscreenCanvas,renderer:CardTextureRenderer,window:{x:number;y:number;width:number;height:number},baseMip:number,cell:{x:number;y:number}={x:0,y:0}){
-  const {width,height,depth}=page.texture.image,divisor=2**baseMip,cellWidth=window.width/divisor,cellHeight=window.height/divisor;
-  if(!Number.isInteger(layer)||layer<0||layer>=depth||!Number.isInteger(baseMip)||baseMip<0||window.x<0||window.y<0||window.x+window.width>canvas.width||window.y+window.height>canvas.height
-   ||window.x%divisor||window.y%divisor||!Number.isInteger(cellWidth)||!Number.isInteger(cellHeight)||cell.x<0||cell.y<0||cell.x+cellWidth>width||cell.y+cellHeight>height)throw new Error('Invalid card window transfer.');
-  this.transfer(renderer,()=>{
-   this.initialize(page,renderer);const scratch=this.canvasScratch(canvas);
-   scratch.texture.needsUpdate=true;renderer.initTexture(scratch.texture);this.canvasUploads++;
-   // The scratch is flipped (flipY): its row 0 is the canvas's bottom row, so the window's bottom edge is its origin.
-   const bottom=canvas.height-window.y-window.height;
-   page.texture.mipmaps.forEach((_,level)=>{
-    const source=baseMip+level,scale=2**source,sourceWidth=Math.max(1,Math.floor(canvas.width/scale)),sourceHeight=Math.max(1,Math.floor(canvas.height/scale));
-    const copyWidth=Math.max(1,Math.floor(cellWidth/2**level)),copyHeight=Math.max(1,Math.floor(cellHeight/2**level));
-    const x=Math.max(0,Math.min(Math.floor(window.x/scale),sourceWidth-copyWidth)),y=Math.max(0,Math.min(Math.floor(bottom/scale),sourceHeight-copyHeight));
-    this.sourceRegion.min.set(x,y,0);this.sourceRegion.max.set(x+copyWidth,y+copyHeight,1);
-    this.destination.set(Math.floor(cell.x/2**level),Math.floor(cell.y/2**level),layer);
-    renderer.copyTextureToTexture(scratch.texture,page.texture,this.sourceRegion,this.destination,source,level);this.copyCalls++;this.mipCopyBytes+=copyWidth*copyHeight*4;
-   });
-   this.layerUpdates++;
   });
  }
  uploadLayer(page:CardMipPage,layer:number,rgba:Uint8Array|Uint8ClampedArray,renderer:CardTextureRenderer,options?:CardMipUploadOptions){

@@ -14,11 +14,13 @@ export default async function (s: Scene) {
     addBuildings: [{ id: "tip-forge", owner: "player", kind: "emberForge", x, y, complete: true }] } });
   await s.camera(x, y);
   await s.select(["tip-forge"]);
-  // Ordered through the room's API: a scene's ticks do not take the commands the page sends (reported to Room Lane).
-  await s.order("player", { type: "research", buildingId: "tip-forge", upgradeKind: "weaponTraining" });
-  await s.tick(10);
+  // Ordered as a player does, from the forge's command dock: the room's ticks take what the page sends (@@@api-tick-queue).
+  await s.page.locator("[data-command-label='Research Weapon Training']").click();
+  // An order lands a few ticks after its click, on the tick the server has when the page's message reaches it: the
+  // match is stepped a tick at a time (at most 40) until the research shows.
   const button = s.page.locator("[data-research-progress]");
-  s.must(await button.count() === 1, "no research progress button after ordering Weapon Training");
+  for (let tick = 0; tick < 40 && await button.count() === 0; tick++) await s.tick(1);
+  s.must(await button.count() === 1, "no research progress button within 40 ticks of ordering Weapon Training");
   const read = () => s.page.evaluate(() => {
     const element = document.querySelector<HTMLElement & { probe?: number }>("[data-research-progress]"), layer = document.querySelector("[data-tooltip-layer]");
     return { same: element?.probe === 1, label: element?.getAttribute("aria-label") ?? "", tooltipShown: !!layer && !layer.classList.contains("hidden"), tooltip: layer?.textContent ?? "" };

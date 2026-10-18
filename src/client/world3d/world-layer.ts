@@ -7,7 +7,7 @@ import {PresentationViewIndex} from '../presentation-view';
 import { deckRemainsMatrix } from './deck-remains';
 import { deckRemainsByShip, deckRemainsPose, remainsOpacity } from '../deck-remains';
 import { paintedRemainsRecipe, type PaintedRemainsPreparation } from './painted-remains';
-import {IDLE_FRAME,type UnitAnimationFrame} from '../unit-animation';
+import type {UnitAnimationFrame} from '../unit-animation';
 import {projectActionFrame,actionPaintSize} from '../art/action-direction';
 import {unitPaintKey} from '../art/paint-identity';
 import {CombatInk,type CombatAnchor} from './combat-ink';
@@ -17,7 +17,7 @@ import { worldModels,matchModelKeys,snapshotModelKeys } from './model-library';
 import { SCENE_MODELS } from '../art/model-manifest';
 import { activateModelPortraits } from './model-portraits';
 import { ActorBatches, setInkZoom, type ModelLook } from './batches';
-import { PaintedCardBatches,DEFAULT_CARD_BANKS,troopCardPixelBudget } from './painted-card-batches';
+import { PaintedCardBatches,DEFAULT_CARD_BANKS } from './painted-card-batches';
 import {cardBaseMip,type CardMipPass,type CardMipResidencyInput} from './card-mip-residency';
 import { SelectionMarkers } from './selection-markers';
 import { SailPoseTracker,shipRigModel,type ShipRigModel,type ShipRigPose } from './sail-rig';
@@ -171,9 +171,8 @@ export class World3DLayer {
   /** Troop cards and deck remains cards: the same policies for the drawn world and for the program keepers. */
   private cardBatches(scene:THREE.Scene,rasterBudgetMs:number){
     const renderer=this.renderer,maxTextureBanks=Math.min(DEFAULT_CARD_BANKS,Math.max(1,(renderer?.capabilities.maxTextures??16)-4));
-    const gl=renderer?.getContext(),pixelBudget=troopCardPixelBudget({deviceMemory:(globalThis.navigator as {deviceMemory?:number}|undefined)?.deviceMemory,maxTextureSize:renderer?.capabilities.maxTextureSize??0,maxArrayLayers:gl&&'MAX_ARRAY_TEXTURE_LAYERS' in gl?gl.getParameter(gl.MAX_ARRAY_TEXTURE_LAYERS):0});
     const anisotropy=Math.min(8,renderer?.capabilities.getMaxAnisotropy()??1);
-    return [new PaintedCardBatches(scene,anisotropy,{maxTextureBanks,rasterBudgetMs,pixelBudget}),
+    return [new PaintedCardBatches(scene,anisotropy,{maxTextureBanks,rasterBudgetMs}),
       new PaintedCardBatches(scene,anisotropy,{transparent:true,depthWrite:false,alphaTest:.01,castShadow:false,pickable:false,renderOrder:-1,maxTextureBanks,rasterBudgetMs}),
       // A story's standing props (see @@@prop-stands), the mines, rock piles and gates, casting the sun's shadows as
       // everything that stands does, their edges multisampled as the terrain's (see @@@standing-field).
@@ -553,14 +552,11 @@ export class World3DLayer {
       const key=`${unitPaintKey(unit.kind,ownerInk(unit.owner,snapshot),animation,unit.variant)}:${facing}:${density}:${appearanceKey(appearance)}`;
       const transform=this.pose(at.x,at.y,height,0,scale,rotation);
       const tileSize=model?.paint.paintSize?.(animation)??actionPaintSize(animation,unit.kind),baseMip=this.residentMip(tileSize,density,transform,foot);
-      const ink=ownerInk(unit.owner,snapshot),pose=(frame:UnitAnimationFrame)=>(ctx:CanvasRenderingContext2D)=>{
+      this.cards.add(key,density,ctx=>{
         ctx.scale(facing,1);
-        if(model)model.paint(ctx,ink,frame,facing,appearance);
-        else paintFigure(ctx,unit.kind,ink,frame,facing,appearance);
-      };
-      // The look's anchor: the same unit, facing and kit standing idle (see @@@card-anchor).
-      const anchor={key:`${unitPaintKey(unit.kind,ink,IDLE_FRAME,unit.variant)}:${facing}:${density}:${appearanceKey(appearance)}`,paint:pose(IDLE_FRAME),tileSize:model?.paint.paintSize?.(IDLE_FRAME)??actionPaintSize(IDLE_FRAME,unit.kind)};
-      this.cards.add(key,density,pose(animation),transform,unit.id,foot,tileSize,1,baseMip,anchor);
+        if(model)model.paint(ctx,ownerInk(unit.owner,snapshot),animation,facing,appearance);
+        else paintFigure(ctx,unit.kind,ownerInk(unit.owner,snapshot),animation,facing,appearance);
+      },transform,unit.id,foot,tileSize,1,baseMip);
     }
     for(const [shipId,corpses] of deckRemainsByShip(snapshot.corpses)){
       const ship=this.shipPoses.get(shipId);if(!ship||ship.hp<=0)continue;
