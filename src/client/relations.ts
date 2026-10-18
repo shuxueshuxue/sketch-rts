@@ -46,11 +46,24 @@ export function unitPointerPosition(units: readonly Unit[], unit: Unit, modeled 
   return { x: unit.x, y: unit.y - (lift ? lift + 18 * unitGlyphScale(unit.radius) * (modeled && !unit.variant ? .8 : 1) : 0) };
 }
 
+/** The hull whose deck, drawn raised by its height, lies under a ground point on the screen. */
+export function deckUnder(units: readonly Unit[], point: Point): Unit | undefined {
+  return units.filter(ship=>ship.hp>0 && shipProfile(ship) && circleInPolygon(worldToLocal(ship,{x:point.x,y:point.y+deckVisualHeight(ship)}),0,shipProfile(ship)!.hull))
+    .sort((a,b)=>Math.hypot(point.x-a.x,point.y+deckVisualHeight(a)-a.y)-Math.hypot(point.x-b.x,point.y+deckVisualHeight(b)-b.y))[0];
+}
 export function deckMovePoint(units: readonly Unit[], selected: readonly Unit[], point: Point): Point {
   if(!selected.length || selected.some(unit=>UNIT_DEFS[unit.kind].naval))return point;
-  const ship=units.filter(ship=>ship.hp>0 && shipProfile(ship) && circleInPolygon(worldToLocal(ship,{x:point.x,y:point.y+deckVisualHeight(ship)}),0,shipProfile(ship)!.hull))
-    .sort((a,b)=>Math.hypot(point.x-a.x,point.y+deckVisualHeight(a)-a.y)-Math.hypot(point.x-b.x,point.y+deckVisualHeight(b)-b.y))[0];
+  const ship=deckUnder(units,point);
   return ship ? {x:point.x,y:point.y+deckVisualHeight(ship)} : point;
+}
+
+// @@@deck-click - A point on a deck is a spot to walk to, not a sea destination: a move there (see @@@context-target)
+// takes the walking units of the selection, and the ships in it hold. One point given to both sent a ship to put its
+// middle on its own deck, swinging it round, while its crew went after a spot the hull carried away.
+export function contextMovers(units: readonly Unit[], selected: readonly Unit[], point: Point, deck?: Unit): { movers: Unit[]; deck?: Unit } {
+  const walkers = selected.filter(unit => !UNIT_DEFS[unit.kind].naval);
+  const ship = walkers.length ? deck ?? deckUnder(units, point) : undefined;
+  return ship ? { movers: walkers, deck: ship } : { movers: [...selected] };
 }
 
 export function unitAt(units: readonly Unit[], world: Point, predicate: (unit: Unit) => boolean) {

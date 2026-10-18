@@ -45,7 +45,7 @@ import { buildingPlacementBlocker, terrainBlocksPlacement, upgradeSite } from ".
 import { sameGround, footprintHalf, groundUnder, isOpenGround, isWalkable, openGroundNear, openStep, setBuildingBodies, shareBuildingBodies, snapToFootprint, steerPoint, walkableGoal, walkDestination, warmTerrainRouting } from "./terrain";
 import { alongside, boardingBerth, canReach, carries, landingSpot } from "./naval";
 import { detCos, detSin } from "./det-math";
-import { canBoard, boardUnit, deckPlacement, deckPointFits, moveOnDeck, restoreCargoDecks, syncDecks, settleGangwayCrossings } from "./decks";
+import { canBoard, boardUnit, deckGiveWay, deckPlacement, deckPointFits, moveOnDeck, restoreCargoDecks, syncDecks, settleGangwayCrossings } from "./decks";
 import { bodyMass } from "./physical-body";
 import { walkConnectedSurfaces, settleDeckSupport, decksCanTransfer } from "./connected-decks";
 import { deckHullDamageShare, passengerDamageMultiplier } from "./deck-combat";
@@ -4791,7 +4791,15 @@ function moveToward(unit: Unit, x: number, y: number, map: GameMap, units: reado
     const ship=unit.deck && units.find(ship=>ship.id===unit.deck!.shipId);
     const goal=deckGoal(unit,ship || undefined,{x,y},units);
     if(walkConnectedSurfaces(unit,goal,units,map,pace))return;
-    if(unit.deck){if(ship)moveOnDeck(unit,ship,goal,units,pace);return;}
+    if(unit.deck){
+      if(!ship)return;
+      const before={x:unit.deck.x,y:unit.deck.y};
+      moveOnDeck(unit,ship,goal,units,pace);
+      // A walker held up on its deck has its side's idle crew make way (see @@@give-way).
+      if(unit.deck.x===before.x && unit.deck.y===before.y)
+        for(const {unit:other,spot} of deckGiveWay(ship,unit,goal,units))assignUnitOrder(other,{type:"move",...localToWorld(ship,spot),deckPoint:spot,deckShipId:ship.id});
+      return;
+    }
   }
   const from=knownEmpty ? undefined : {x:unit.x,y:unit.y};
   if (map.terrain) {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { createGame, snapshotGame } from "../shared/sim";
+import { createGame, issuePlayerCommand, snapshotGame, stepGame } from "../shared/sim";
 import { createBuilding } from "../shared/map";
-import { deckMovePoint, hasAlly, pointerTarget, relationTo, targetCommand, unitAt, unitPointerPosition } from "./relations";
+import { contextMovers, deckMovePoint, hasAlly, pointerTarget, relationTo, targetCommand, unitAt, unitPointerPosition } from "./relations";
 import { boardUnit, syncDecks } from '../shared/decks';
 import { deckVisualHeight } from './art/canvas-ships';
 import type { GameSnapshot, Unit } from "../shared/types";
@@ -25,6 +25,29 @@ it('selects raised crew before the hull and moves them across their own damaged 
   expect(targetCommand(snapshot,'player',[worker],{kind:'unit',unit:ship})).toBeUndefined();
   const floor={x:ship.x-15,y:ship.y-deckVisualHeight(ship)};
   expect(deckMovePoint(game.units,[worker],floor)).toEqual({x:ship.x-15,y:ship.y});
+});
+
+// @@@deck-click: a box over a ship takes the ship with its crew. A right-click on its deck moves the crew there and
+// leaves the ship be; given the same point, the hull sailed to put its middle on it and swung round.
+it('moves the crew of a selected ship to the clicked spot on its deck and leaves the ship holding', () => {
+  const game = createGame('bareDuel',{aiPlayers:[]}); game.units=[]; game.items=[]; game.buildings=[]; game.resources=[]; game.obstacles=[];
+  game.map={...game.map,width:3000,height:3000,terrain:{cell:40,cols:75,rows:75,cells:'~'.repeat(75*75)}};
+  const ship=game.spawnUnit('player','warship',1500,1500), crew=game.spawnUnit('player','footman',1500,1500);
+  expect(boardUnit(ship,crew,game.units)).toBe(true); syncDecks(game.units); crew.order={type:'idle'};
+  const floor={x:ship.x,y:ship.y+12-deckVisualHeight(ship)}, snapshot=snapshotGame(game);
+  const target=pointerTarget(snapshot,floor);
+  expect(target).toMatchObject({kind:'unit',unit:{id:ship.id}});
+  expect(targetCommand(snapshot,'player',[ship,crew],target as never)).toBeUndefined();
+  const {movers,deck}=contextMovers(game.units,[ship,crew],floor,ship);
+  expect([movers.map(unit=>unit.id),deck?.id]).toEqual([[crew.id],ship.id]);
+  const spot=deckMovePoint(game.units,movers,floor);
+  expect(spot).toEqual({x:ship.x,y:ship.y+12});
+  issuePlayerCommand(game,'player',{type:'move',unitIds:movers.map(unit=>unit.id),x:spot.x,y:spot.y,avoidCombat:true});
+  for(let tick=0;tick<100;tick++)stepGame(game);
+  expect([ship.x,ship.y,ship.sailing!.heading,ship.order.type]).toEqual([1500,1500,0,'idle']);
+  expect(Math.hypot(crew.x-spot.x,crew.y-spot.y)).toBeLessThan(10); expect(crew.order.type).toBe("idle");
+  // A selection of ships alone still sails where it is sent, deck or not.
+  expect(contextMovers(game.units,[ship],floor,ship)).toEqual({movers:[ship]});
 });
 
 it('never exposes a sheltered or trapped person as a battlefield pointer target',()=>{
