@@ -66,6 +66,7 @@ import { gameplayKeyIntent } from "./keybindings";
 import { isInsideRect, minimapPointToWorld, minimapViewportRectFor, shouldDragMinimap, windProbePoint } from "./minimap";
 import { WindMapDisplay, projectWindDirection } from './minimap-wind';
 import { drawMapPreview, mapPreview, type PreviewSeat } from "./map-preview";
+import { fillMapThumbnails } from "./map-thumbnails";
 import { drawMinimapMap } from "./minimap-art";
 import { MinimapPresentationCache } from './minimap-presentation-cache';
 import { MENU_SCENES, MenuBackdrop } from "./menu-scenes";
@@ -994,13 +995,9 @@ function poolSeatCounts(mapId: MapId) {
 
 function mapDetailMarkup() {
   return `
-    <section class="map-detail">
-      <div class="map-preview-space"><div class="map-preview-frame"><canvas class="map-preview" data-map-preview width="512" height="512"></canvas></div></div>
-      <div class="map-info">
-        <div class="map-info-name" data-map-name></div>
-        <dl class="map-facts" data-map-facts></dl>
-      </div>
-    </section>`;
+    <div class="map-preview-frame"><canvas class="map-preview" data-map-preview width="512" height="512"></canvas></div>
+    <div class="map-preview-name" data-map-name></div>
+    <dl class="map-facts" data-map-facts></dl>`;
 }
 
 function showMapDetail(root: ParentNode, mapId: MapId, seats: PreviewSeat[], layoutSeed?: string) {
@@ -1009,8 +1006,6 @@ function showMapDetail(root: ParentNode, mapId: MapId, seats: PreviewSeat[], lay
   const { facts } = preview;
   const layout = poolMap(mapId)?.layout;
   root.querySelector("[data-map-name]")!.textContent = mapName(mapId);
-  const summary = root.querySelector("[data-map-summary]");
-  if (summary) summary.textContent = `${t("map.fact.playersValue", { players: facts.players })} · ${facts.size} × ${facts.size}`;
   const factList = root.querySelector("[data-map-facts]");
   if (factList) factList.innerHTML = [
     [t("map.fact.players"), t("map.fact.playersValue", { players: facts.players })],
@@ -1027,10 +1022,6 @@ function showMapDetail(root: ParentNode, mapId: MapId, seats: PreviewSeat[], lay
 function mapName(mapId: MapId) {
   const map = poolMap(mapId);
   return map ? map.name[i18n.locale] : mapId;
-}
-
-function mapEntryLabel(mapId: MapId) {
-  return t("map.entry", { players: poolMap(mapId)?.players ?? 2, name: mapName(mapId) });
 }
 
 // Every seat that will play, open ones included (a player takes each before the start); closed seats stay empty.
@@ -1147,15 +1138,15 @@ function renderRoomSetup() {
   menuTitle.textContent = solo ? t("home.solo.title") : t("home.roomSetup.title");
   menuStatus.textContent = setupError ?? (roomSetupSession.busy ? t('roomSetup.preparing') : solo ? "" : t("roomSetup.status", { name: room.name, visibility: labelKind(room.visibility), status: labelKind(room.status) }));
   const setup = document.createElement("div");
-  setup.className = `room-setup menu-page${host ? " with-maps" : ""}`;
+  setup.className = `room-setup menu-page ${solo ? "solo" : "online"}`;
   setup.dataset.roomSetup = room.id;
   setup.dataset.setupShape = `${solo ? "solo" : "online"}-${host ? "host" : "guest"}`;
   setup.innerHTML = menuPageMarkup(`
-    ${host ? `<section class="map-browser" aria-label="${escapeHtml(t("roomCreate.map.label"))}">
+    <section class="map-browser" aria-label="${escapeHtml(t("roomCreate.map.label"))}">
       <div class="room-section-title">${escapeHtml(t("roomCreate.map.label"))}</div>
-      <div class="map-entries" data-map-entries></div>
-    </section>` : ""}
-    <aside class="match-dossier">${mapDetailMarkup()}</aside>
+      <div class="map-row-list" data-map-entries></div>
+    </section>
+    <aside class="map-preview-card">${mapDetailMarkup()}</aside>
     <div class="room-setup-layout">
       <section class="room-slot-pane" aria-label="Player slots">
         <div class="slot-pane-head">
@@ -1180,16 +1171,25 @@ function renderRoomSetup() {
     startButton.disabled = busy || !canStartRoom(room);
     startButton.title = t("roomSetup.startTitle");
   }
-  // Another map rebuilds the room on it, keeping each seat's settings where the new map has that seat. A click acts on the
-  // room as it is then: the entries outlive the room they were made for (see @@@setup-in-place).
-  setup.querySelector("[data-map-entries]")?.replaceChildren(...MAP_POOL.map(map => menuButton(mapEntryLabel(map.id), "", "data-map-id", () => {
-    const room = currentRoom;
-    if (!room || closingRoom || roomSetupSession.busy || map.id === room.mapId) return;
-    // The old room closes as the new one opens; this page is not sent away by hearing it close (the session watches
-    // the room it ends up with again).
-    clearRoomWatch();
-    void createConfiguredRoom(configurationOnMap(roomConfiguration(room), map.id), true);
-  }, map.id)));
+  // Every pool map as a row: its picture (see @@@map-thumbnails), name, players and layout. Another map rebuilds the room on
+  // it, keeping each seat's settings where the new map has that seat; only the host chooses, a guest sees the host's
+  // choice. A click acts on the room as it is then: the rows outlive the room they were made for (see @@@setup-in-place).
+  setup.querySelector("[data-map-entries]")!.replaceChildren(...MAP_POOL.map(map => {
+    const row = document.createElement("button");
+    row.type = "button";
+    row.dataset.mapId = map.id;
+    row.innerHTML = `<img class="map-row-thumb" data-thumbnail-map="${map.id}" alt=""><span class="map-row-name">${escapeHtml(mapName(map.id))}</span>
+      <span class="map-row-meta">${escapeHtml(t("map.fact.playersValue", { players: map.players }))} · ${escapeHtml(t(`map.idea.${map.layout.idea}`))}</span>`;
+    row.addEventListener("click", () => {
+      const room = currentRoom;
+      if (!room || room.hostUserId !== localUser.id || closingRoom || roomSetupSession.busy || map.id === room.mapId) return;
+      // The old room closes as the new one opens; this page is not sent away by hearing it close (the session watches
+      // the room it ends up with again).
+      clearRoomWatch();
+      void createConfiguredRoom(configurationOnMap(roomConfiguration(room), map.id), true);
+    });
+    return row;
+  }));
   showMapDetail(setup, room.mapId, previewSeatsForRoom(room), room.layoutSeed);
   const slotList = setup.querySelector<HTMLDivElement>(".slot-list")!;
   const local = deploymentRuntime.isLocalRoom(room.id);
@@ -1215,16 +1215,21 @@ function renderRoomSetup() {
   const page = shown && shown.dataset.setupShape === setup.dataset.setupShape ? shown : setup;
   if (page === shown) {
     shown.dataset.roomSetup = room.id;
-    for (const part of [".match-dossier", ".slot-pane-head", ".slot-columns", ".menu-actions"]) shown.querySelector(part)!.replaceWith(setup.querySelector(part)!);
+    for (const part of [".map-preview-card", ".slot-pane-head", ".slot-columns", ".menu-actions"]) shown.querySelector(part)!.replaceWith(setup.querySelector(part)!);
     shown.querySelector(".slot-list")!.replaceChildren(...setup.querySelector(".slot-list")!.childNodes);
   }
   page.querySelectorAll<HTMLButtonElement>("[data-map-entries] [data-map-id]").forEach(entry => {
     const chosen = entry.dataset.mapId === room.mapId;
-    entry.disabled = busy;
-    entry.className = `map-entry ${chosen ? "selected" : ""}`;
+    entry.disabled = busy || !host;
+    entry.className = `map-row${chosen ? " is-selected" : ""}`;
     entry.setAttribute("aria-pressed", String(chosen));
   });
-  if (page === setup) mapList.replaceChildren(setup);
+  if (page === setup) {
+    mapList.replaceChildren(setup);
+    // The chosen map is in view when the screen opens (a remembered one may be far down the list).
+    setup.querySelector("[data-map-entries] .is-selected")?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }
+  fillMapThumbnails(page.querySelector<HTMLElement>("[data-map-entries]")!);
 }
 
 function renderResultsMenu() {
@@ -1373,7 +1378,7 @@ function menuButton(label: string, note: string, dataName: string, onClick: () =
 }
 
 function slotColumnsMarkup(ready = false) {
-  return `<div class="slot-columns" aria-hidden="true">
+  return `<div class="slot-columns seat-head" aria-hidden="true">
     <span></span><span>${escapeHtml(t("results.player"))}</span>
     <span>${escapeHtml(t("results.controller"))}</span><span>${escapeHtml(t("results.team"))}</span>
     <span>${escapeHtml(t("results.race"))}</span><span>AI</span>
@@ -1400,7 +1405,7 @@ function slotRow(room: RoomState, slot: RoomState["slots"][number], index: numbe
   const seat = may({ team: slot.team }), controller = !local && slot.controller !== "human" && may({ controller: slot.controller });
   const ready = slot.controller === "human" && may({ ready: !slot.ready });
   const row = document.createElement("div");
-  row.className = "slot-row";
+  row.className = "slot-row seat-row";
   row.dataset.slotId = slot.id;
   // A seat is a computer's or open to a player; a pool map plays with every seat taken (see @@@map-pool). A room played
   // in this browser (see @@@private-rooms-local) has nobody else to come in, so its computers' seats stay theirs.
