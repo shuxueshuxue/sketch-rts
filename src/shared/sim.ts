@@ -1990,12 +1990,14 @@ function updateBoardOrder(game: Game, unit: Unit) {
     if(unit.kind!=='worker' && areEnemyOwners(game,unit.owner,transport.owner) && unit.attackDamage>0
       && unitRules(game,unit).attackRange<=RANGED_ATTACK_RANGE_THRESHOLD) {
       // Answer the reachable front rank before pursuing a higher-priority
-      // shooter whose route is sealed by that defender's body. Still on its
-      // own deck with no defender in reach, a boarder keeps crossing: an attack
-      // order walks no bridge, and it stood at its own rail facing a marine
-      // across the water for good.
+      // shooter whose route is sealed by that defender's body. Nobody in reach:
+      // off the quarry's deck, an enemy who crossed onto our own deck is
+      // answered there (reachable without the bridge); otherwise the boarder
+      // keeps crossing, as an attack order does not route over the bridge to
+      // one across it (it stood at its own rail facing a marine for good).
       const nearby=navalCombatTarget(game,unit,transport,unit.attackRange);
-      const defender=nearby!==transport ? nearby : source.id===transport.id ? navalCombatTarget(game,unit,transport) : transport;
+      const own=source.id===transport.id ? transport : navalCombatTarget(game,unit,source);
+      const defender=nearby!==transport ? nearby : source.id===transport.id ? navalCombatTarget(game,unit,transport) : own!==source ? own : transport;
       if(defender!==transport && isUnit(defender)) {
         const boardingOrder=unit.order;
         unit.order={type:'attack',targetId:defender.id,frontRank:true};
