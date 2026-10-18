@@ -31,7 +31,7 @@ export default async function (s: Scene) {
   for (const [index, home] of homes.slice(0, 2).entries()) {
     const dx = snapshot.map.width / 2 - home.x, dy = snapshot.map.height / 2 - home.y;
     const length = Math.hypot(dx, dy);
-    const camera = { x: home.x + dx / length * 400, y: home.y + dy / length * 400, zoom: 0.65 };
+    const camera = { x: home.x + dx / length * 100, y: home.y + dy / length * 100, zoom: 0.65 };
     await s.camera(camera.x, camera.y, camera.zoom);
     await s.wait(1600);
     await s.shot(`grand-estuary-home-${index + 1}`);
