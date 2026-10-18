@@ -29,6 +29,10 @@ A browser run (`yatu`, `shot`) also needs two fields on its machine: `ports: [fr
 `browser: { playwright, browsersPath }`, the Playwright install it drives, which is not a repo dependency. A machine
 without them refuses a browser run with exit 2.
 
+Ports are a lane's: several sessions on one computer share `~/.config/sketch/machines.json`, so a lane with its own
+range keeps its own copy and points `SKETCH_MACHINES` at it. Two runs that pick the same port anyway are kept apart by
+the port lease (see `tools/cli/drivers/browser.ts`).
+
 A machine may also name an `evidence` directory: the store `sketch evidence` writes to (the A100's
 `/codegeex/jeffry/sketch-rts-evidence`). Objects there are `sha256/<hash of their bytes>` and are never rewritten.
 
