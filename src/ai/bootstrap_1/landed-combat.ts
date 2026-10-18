@@ -20,6 +20,7 @@ import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { capsuleClearsBodies } from '../../shared/navigation-math';
 import { constrainGroundShipStep } from '../../shared/ship-collisions';
 import { casterScreenOutsideFixedFire } from './caster-fixed-fire';
+import { landedShipFireEscape } from './landed-ship-fire';
 
 function healer(unit: Unit) {
   return UNIT_DEFS[unit.kind].abilities.some(ability => ABILITY_DEFS[ability].behavior === 'heal');
@@ -42,7 +43,15 @@ export function planLandedCombat(snapshot: GameSnapshot, owner: PlayerId, option
     for (const unit of group) handled.add(unit.id);
     const enemies = foes.filter(foe => sameGround(snapshot.map, anchor, foe)
       && group.some(unit => distance(unit, foe) <= 900));
-    if (!enemies.length && !group.some(unit => medicalReleases.has(unit.id))) continue;
+    if (!enemies.length) {
+      const ships = snapshot.units.filter(unit => unit.hp > 0 && unit.sailing
+        && isOpponentOwner(snapshot, owner, unit.owner, options));
+      for (const unit of group.filter(unit => !unavailable.has(unit.id) && !medicalReleases.has(unit.id))) {
+        const escape = landedShipFireEscape(snapshot, unit, ships);
+        if (escape) commands.push(escape);
+      }
+      if (!group.some(unit => medicalReleases.has(unit.id))) continue;
+    }
     const army = group.filter(unit => !unavailable.has(unit.id) && !unit.orderQueue?.length
       && (enemies.length > 0 || medicalReleases.has(unit.id))
       && (!['cast', 'charge', 'repair', 'repairUnit', 'repairShip', 'pickupItem'].includes(unit.order.type)
