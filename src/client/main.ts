@@ -1149,6 +1149,7 @@ function renderRoomSetup() {
   const setup = document.createElement("div");
   setup.className = `room-setup menu-page${host ? " with-maps" : ""}`;
   setup.dataset.roomSetup = room.id;
+  setup.dataset.setupShape = `${solo ? "solo" : "online"}-${host ? "host" : "guest"}`;
   setup.innerHTML = menuPageMarkup(`
     ${host ? `<section class="map-browser" aria-label="${escapeHtml(t("roomCreate.map.label"))}">
       <div class="room-section-title">${escapeHtml(t("roomCreate.map.label"))}</div>
@@ -1179,20 +1180,16 @@ function renderRoomSetup() {
     startButton.disabled = busy || !canStartRoom(room);
     startButton.title = t("roomSetup.startTitle");
   }
-  // Another map rebuilds the room on it, keeping each seat's settings where the new map has that seat.
-  setup.querySelector("[data-map-entries]")?.replaceChildren(...MAP_POOL.map(map => {
-    const entry = menuButton(mapEntryLabel(map.id), "", "data-map-id", () => {
-      if (busy || map.id === room.mapId) return;
-      // The old room closes as the new one opens; this page is not sent away by hearing it close (the session watches
-      // the room it ends up with again).
-      clearRoomWatch();
-      void createConfiguredRoom(configurationOnMap(roomConfiguration(room), map.id), true);
-    }, map.id);
-    entry.disabled = busy;
-    entry.className = `map-entry ${map.id === room.mapId ? "selected" : ""}`;
-    entry.setAttribute("aria-pressed", String(map.id === room.mapId));
-    return entry;
-  }));
+  // Another map rebuilds the room on it, keeping each seat's settings where the new map has that seat. A click acts on the
+  // room as it is then: the entries outlive the room they were made for (see @@@setup-in-place).
+  setup.querySelector("[data-map-entries]")?.replaceChildren(...MAP_POOL.map(map => menuButton(mapEntryLabel(map.id), "", "data-map-id", () => {
+    const room = currentRoom;
+    if (!room || closingRoom || roomSetupSession.busy || map.id === room.mapId) return;
+    // The old room closes as the new one opens; this page is not sent away by hearing it close (the session watches
+    // the room it ends up with again).
+    clearRoomWatch();
+    void createConfiguredRoom(configurationOnMap(roomConfiguration(room), map.id), true);
+  }, map.id)));
   showMapDetail(setup, room.mapId, previewSeatsForRoom(room), room.layoutSeed);
   const slotList = setup.querySelector<HTMLDivElement>(".slot-list")!;
   const local = deploymentRuntime.isLocalRoom(room.id);
@@ -1211,7 +1208,23 @@ function renderRoomSetup() {
   setup.querySelector("[data-back-room-browser]")?.addEventListener("click", () => {
     openMenuRoute({ screen: "rooms" });
   });
-  mapList.replaceChildren(setup);
+  // @@@setup-in-place - A setup of the same shape already on screen is brought up to date where it stands. The map list
+  // and the seat list are its scrolled parts: they keep their elements, and so their place, while their contents and
+  // the rest of the page follow the room (another map is another room, and a seat edit a new room state).
+  const shown = mapList.querySelector<HTMLElement>(":scope > .room-setup");
+  const page = shown && shown.dataset.setupShape === setup.dataset.setupShape ? shown : setup;
+  if (page === shown) {
+    shown.dataset.roomSetup = room.id;
+    for (const part of [".match-dossier", ".slot-pane-head", ".slot-columns", ".menu-actions"]) shown.querySelector(part)!.replaceWith(setup.querySelector(part)!);
+    shown.querySelector(".slot-list")!.replaceChildren(...setup.querySelector(".slot-list")!.childNodes);
+  }
+  page.querySelectorAll<HTMLButtonElement>("[data-map-entries] [data-map-id]").forEach(entry => {
+    const chosen = entry.dataset.mapId === room.mapId;
+    entry.disabled = busy;
+    entry.className = `map-entry ${chosen ? "selected" : ""}`;
+    entry.setAttribute("aria-pressed", String(chosen));
+  });
+  if (page === setup) mapList.replaceChildren(setup);
 }
 
 function renderResultsMenu() {
