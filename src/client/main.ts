@@ -220,6 +220,8 @@ const worldPresentation=new WorldPresentation(canvas);
 let applicationClosed=false;
 let animationFrame=0;
 let visualsReady=false;
+// The home's buttons, made once (see @@@home-in-place).
+let homeEntries: HTMLButtonElement[] | undefined;
 let matchAssets:Promise<void>|undefined;
 const hudSelection = new BattleHudSelection(selectionLabel, t("hud.selectionTypes"));
 // The home screen's scene (see @@@menu-scenes): the one the player last picked, or one drawn at random for this visit.
@@ -966,7 +968,10 @@ function renderMainMenu() {
     return;
   }
   menuStatus.textContent = "";
-  mapList.replaceChildren(
+  // @@@home-in-place - The home is drawn again when the server connects and when the address's screen opens after the
+  // home's art, often while a player reaches for it. Its buttons are made once and stay: a button replaced between a
+  // press and its release takes no click, so a click at the end of loading was lost and the menu flickered.
+  homeEntries ??= [
     // A solo game opens on the map and seats played last (see @@@solo-setup).
     menuButton(t("home.play"), "", "data-open-create", () => {
       openMenuRoute({ screen: "setup", configuration: rememberedSoloSetup() });
@@ -977,7 +982,8 @@ function renderMainMenu() {
     menuButton(t("home.settings"), "", "data-open-profile", () => {
       openMenuRoute({ screen: "profile" });
     }),
-  );
+  ];
+  if (mapList.children.length !== homeEntries.length || homeEntries.some((entry, index) => mapList.children[index] !== entry)) mapList.replaceChildren(...homeEntries);
 }
 
 function previewSeatsForRoom(room: RoomState) {
