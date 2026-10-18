@@ -1,3 +1,4 @@
+import { colonyResponseDefense } from './colony-response';
 import { keepMiningWork } from './construction-evacuation';
 import { reviseAssaultBeaches, orderBootstrapAssaultLanding } from './assault-beach';
 import { planShoreTransfers } from './shore-transfer';
@@ -81,6 +82,7 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
     ...(mainland?.recovering ?? []).flatMap(({ patient, healer }) => [patient.id, healer.id])]);
   const commands = [...crossing, ...cancelled, ...planShoreTransfers(snapshot,owner,options), ...planNavalTacticsWithAssignments(snapshot, owner, options, {
     settlementEscort: 'when-defended',
+    settlementResponse: target => colonyResponseDefense(snapshot, owner, options, target),
     orderAssaultLanding: (boat, goal, ordinary) => orderBootstrapAssaultLanding(snapshot, owner, options, boat, goal, ordinary),
     orderCrew: (soldiers, shore, boat) => riderFerryCrew(snapshot, soldiers, shore, boat, options),
     mineEligible: mines.eligible, targetAvailable: mines.targetAvailable,
