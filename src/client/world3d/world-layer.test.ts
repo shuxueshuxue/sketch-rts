@@ -19,7 +19,9 @@ vi.mock('three',async importOriginal=>{
       gpu.casters.push(casters);
     }
     compileAsync(scene:Scene){gpu.compiled=[];scene.traverseVisible(object=>{if((object as Mesh).isMesh)gpu.compiled.push(object as Mesh);});return Promise.resolve();}
-    clear(){}getContext(){return{RGBA:0,UNSIGNED_BYTE:0,readPixels(){}};}
+    // A card window's own blits (see @@@card-window-blit) go through these; the scene tests read no texels.
+    state={bindFramebuffer(){}};properties={get:(texture:object)=>({__webglTexture:texture})};
+    clear(){}getContext(){return{RGBA:0,UNSIGNED_BYTE:0,readPixels(){},createFramebuffer:()=>({}),deleteFramebuffer(){},framebufferTexture2D(){},framebufferTextureLayer(){},blitFramebuffer(){}};}
   }};
 });
 import {World3DLayer} from './world-layer';
