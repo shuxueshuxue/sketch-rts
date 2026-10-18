@@ -84,6 +84,7 @@ import {
 } from "./pointer-lock";
 import { TOWER_GARRISON, garrisonUsed, isFortifiedTower } from "../shared/tower-garrison";
 import { upgradeJob } from "../shared/building-jobs";
+import { castKeyId, commandCardFor, commandKey, commandOnCard, type CommandPalette } from "./command-keys";
 import { RESEARCH_COMMANDS, researchCommandButtonsForSelection, researchProgressButtonsForSelection, type ResearchProgressButton } from "./research-controls";
 import { buildingAt, deckMovePoint, hasAlly, pointerTarget, relationTo, targetCommand, unitAt,unitPointerPosition, type PointerTarget } from "./relations";
 import { configurationOnMap, defaultRoomConfiguration, formatRoomRoute, parseRoomRoute, type RoomRoute } from "./room-route";
@@ -146,6 +147,8 @@ const app = requireElement<HTMLDivElement>("#app");
 
 type CommandButton = {
   element: HTMLButtonElement;
+  // Its entry in the key list (see @@@command-keys), which gives its key and the cards it may stand on.
+  keyId: string;
   hotkey: string;
   tooltip: () => GameplayTooltip;
   state: () => CommandButtonState;
@@ -162,16 +165,14 @@ const UPGRADE_COMMANDS = BUILDING_KINDS.filter((kind) => BUILDING_DEFS[kind].upg
 const TRAIN_COMMANDS = TRAINABLE_UNIT_KINDS.map((kind) => ({ kind, ...TRAINED_UNIT_CARDS[kind].command }));
 
 const SPELL_COMMANDS = ABILITY_KINDS.map((ability) => ({ ability, ...ABILITY_CARDS[ability].command }));
-const HIRE_COMMAND = { icon: "⚔", hotkey: "m" } as const;
-// A shop's goods, in SHOP_GOODS order: a shop selected shows no other button.
-const SHOP_HOTKEYS = ["q", "w", "e", "r", "t", "y", "u", "i", "o"];
+const HIRE_COMMAND = { icon: "⚔" } as const;
 // Pinyin initials: Z 姿态 opens the stances, then Z 追击 (pursue), J 坚阵 (brace), X 陷阵 (shock); the open stance card
 // hides every other button, so X does not meet a hexer's curse.
-const STANCE_MENU_COMMAND = { icon: "⛨", hotkey: "z" } as const;
+const STANCE_MENU_COMMAND = { icon: "⛨" } as const;
 const STANCE_COMMANDS = [
-  { stance: "pursue", icon: "»", hotkey: "z", title: "command.stance.pursue.title", body: "command.stance.pursue.body", stats: "command.stance.pursue.stats" },
-  { stance: "brace", icon: "▥", hotkey: "j", title: "command.stance.brace.title", body: "command.stance.brace.body", stats: "command.stance.brace.stats" },
-  { stance: "shock", icon: "⇥", hotkey: "x", title: "command.stance.shock.title", body: "command.stance.shock.body", stats: "command.stance.shock.stats" },
+  { stance: "pursue", icon: "»", title: "command.stance.pursue.title", body: "command.stance.pursue.body", stats: "command.stance.pursue.stats" },
+  { stance: "brace", icon: "▥", title: "command.stance.brace.title", body: "command.stance.brace.body", stats: "command.stance.brace.stats" },
+  { stance: "shock", icon: "⇥", title: "command.stance.shock.title", body: "command.stance.shock.body", stats: "command.stance.shock.stats" },
 ] as const;
 const DOUBLE_CLICK_SAME_KIND_RADIUS = 900;
 
@@ -301,7 +302,7 @@ let closingRoom = false;
 let hoverCursor = unitHoverCursor(undefined, undefined, undefined);
 let commandMode: CommandMode | undefined;
 // The sub-card open in place of the command card: the worker's buildings, or the melee stances (see stance-buttons).
-let openPalette: "build" | "stance" | "veteran" | undefined;
+let openPalette: CommandPalette | undefined;
 // Hide a submitted choice until its command frame lands; do not offer the same soldier twice in a group.
 const pendingVeteranChoices = new Map<string, number>();
 let pointerLockGateKind: "guide" | "required" = "guide";
@@ -340,50 +341,47 @@ const commandButtons: CommandButton[] = [
   createVeteranLearnButton(),
   ...[0, 1, 2].map(createVeteranChoiceButton),
   createVeteranPassiveButton(),
-  createCommandButton(i18n.locale === "zh" ? "下位老兵" : "Next veteran", "⇄", "n",
+  createCommandButton(i18n.locale === "zh" ? "下位老兵" : "Next veteran", "⇄", "veteranNext",
     () => booleanCommandState(!commandMode && (openPalette === "veteran" || !openPalette && !selectedCampId) && Boolean(nextVeteranStudent(selectedPlayerUnits().filter(unit=>!isInCabin(unit)), focusedSelectionId, pendingVeteranIds()))),
-    focusNextVeteranStudent, () => ({ title: i18n.locale === "zh" ? "下位待学习老兵" : "Next veteran awaiting a skill", body: i18n.locale === "zh" ? "在当前选中的同兵种单位中，切换到下一名尚未学习技能的三星老兵。" : "Focus the next selected soldier of this type who has reached three stars and has not learned a skill.", stats: [], requirements: [], hotkey: "N" })),
-  createCommandButton(i18n.locale==="zh"?"装备":"Equipment","▣","i",()=>booleanCommandState(isUnitCommandPage(commandCardContext()) && focusedPlayerUnits().some(canEquip)),openSelectedEquipment,()=>({title:i18n.locale==="zh"?"人物装备":"Character equipment",body:i18n.locale==="zh"?"查看当前单位的装备、携行物品与双手配置":"Inspect this character’s outfit, carried items and hands",stats:[],requirements:[]})),
-  createCommandButton(i18n.locale==="zh"?"船舱 / 配置":"Hold / Fittings","▣","i",()=>booleanCommandState(isUnitCommandPage(commandCardContext()) && focusedPlayerUnits().some(unit=>Boolean(shipProfile(unit)))),openSelectedEquipment,()=>({title:i18n.locale==="zh"?"船舱与炮位":"Hold and fittings",body:i18n.locale==="zh"?"配置这艘船的货物、炮位和船员装备":"Configure this ship’s cargo, gun mounts and crew equipment",stats:[],requirements:[]})),
-  ...(['enterCabin','leaveCabin'] as const).map(type=>createCommandButton(type==='enterCabin'?(i18n.locale==='zh'?'撤入舱内':'Take shelter'):(i18n.locale==='zh'?'返回甲板':'Return to deck'),type==='enterCabin'?'↘':'↗','',()=>cabinButtonState(type),issueCabinAction,()=>({title:type==='enterCabin'?(i18n.locale==='zh'?'撤入舱内':'Take shelter'):(i18n.locale==='zh'?'返回甲板':'Return to deck'),body:type==='enterCabin'?(i18n.locale==='zh'?'走到舱门后避险，舱内无法攻击或施法。':'Walk to the cabin door for shelter. Crew inside cannot attack or cast.'):(i18n.locale==='zh'?'从舱门返回有空位的甲板。':'Return through the cabin door to clear deck space.'),stats:cabinTooltipStats(type),requirements:[]}))),
+    focusNextVeteranStudent, () => ({ title: i18n.locale === "zh" ? "下位待学习老兵" : "Next veteran awaiting a skill", body: i18n.locale === "zh" ? "在当前选中的同兵种单位中，切换到下一名尚未学习技能的三星老兵。" : "Focus the next selected soldier of this type who has reached three stars and has not learned a skill.", stats: [], requirements: [] })),
+  createCommandButton(i18n.locale==="zh"?"装备":"Equipment","▣","equipment",()=>booleanCommandState(isUnitCommandPage(commandCardContext()) && focusedPlayerUnits().some(canEquip)),openSelectedEquipment,()=>({title:i18n.locale==="zh"?"人物装备":"Character equipment",body:i18n.locale==="zh"?"查看当前单位的装备、携行物品与双手配置":"Inspect this character’s outfit, carried items and hands",stats:[],requirements:[]})),
+  createCommandButton(i18n.locale==="zh"?"船舱 / 配置":"Hold / Fittings","▣","hold",()=>booleanCommandState(isUnitCommandPage(commandCardContext()) && focusedPlayerUnits().some(unit=>Boolean(shipProfile(unit)))),openSelectedEquipment,()=>({title:i18n.locale==="zh"?"船舱与炮位":"Hold and fittings",body:i18n.locale==="zh"?"配置这艘船的货物、炮位和船员装备":"Configure this ship’s cargo, gun mounts and crew equipment",stats:[],requirements:[]})),
+  ...(['enterCabin','leaveCabin'] as const).map(type=>createCommandButton(type==='enterCabin'?(i18n.locale==='zh'?'撤入舱内':'Take shelter'):(i18n.locale==='zh'?'返回甲板':'Return to deck'),type==='enterCabin'?'↘':'↗','cabin',()=>cabinButtonState(type),issueCabinAction,()=>({title:type==='enterCabin'?(i18n.locale==='zh'?'撤入舱内':'Take shelter'):(i18n.locale==='zh'?'返回甲板':'Return to deck'),body:type==='enterCabin'?(i18n.locale==='zh'?'走到舱门后避险，舱内无法攻击或施法。':'Walk to the cabin door for shelter. Crew inside cannot attack or cast.'):(i18n.locale==='zh'?'从舱门返回有空位的甲板。':'Return through the cabin door to clear deck space.'),stats:cabinTooltipStats(type),requirements:[]}))),
   createShipBoardingButton(),
-  createCommandButton(t("command.aim.title"), "⌖", "j", () => booleanCommandState(!commandMode && !openPalette && focusedPlayerUnits().some(unit => !isInCabin(unit) && aimingProfile(UNIT_DEFS[unit.kind]))), beginAimMode, () => ({
-    title: t("command.aim.title"), body: t("command.aim.body"), stats: [], requirements: [t("command.aim.requirements")], hotkey: "J",
+  createCommandButton(t("command.aim.title"), "⌖", "aim", () => booleanCommandState(!commandMode && !openPalette && focusedPlayerUnits().some(unit => !isInCabin(unit) && aimingProfile(UNIT_DEFS[unit.kind]))), beginAimMode, () => ({
+    title: t("command.aim.title"), body: t("command.aim.body"), stats: [], requirements: [t("command.aim.requirements")],
   })),
-  createCommandButton(t("command.attackMove.title"), "⌁", "a", () => booleanCommandState(canAttackMove()), beginAttackMoveMode, () => ({
+  createCommandButton(t("command.attackMove.title"), "⌁", "attackMove", () => booleanCommandState(canAttackMove()), beginAttackMoveMode, () => ({
     title: t("command.attackMove.title"),
     body: t("command.attackMove.body"),
     stats: [t("command.attackMove.stats")],
     requirements: [t("command.attackMove.requirements")],
-    hotkey: "A",
   })),
-  createCommandButton(t("command.unload.title"), "⤓", "d", unloadButtonState, beginUnloadMode, () => ({
+  createCommandButton(t("command.unload.title"), "⤓", "unload", unloadButtonState, beginUnloadMode, () => ({
     title: t("command.unload.title"),
     body: t("command.unload.body"),
     stats: [t("command.unload.stats")],
     requirements: [t("command.unload.requirements")],
-    hotkey: "D",
   })),
-  createCommandButton(t("command.build.title"), "⌘", "b", () => booleanCommandState(canOpenBuildPalette()), openBuildPalette, () => ({
+  createCommandButton(t("command.build.title"), "⌘", "build", () => booleanCommandState(canOpenBuildPalette()), openBuildPalette, () => ({
     title: t("command.build.title"),
     body: t("command.build.body"),
     stats: [t("command.build.stats")],
     requirements: [t("command.build.requirements")],
-    hotkey: "B",
   })),
   ...BUILD_COMMANDS.map((command) =>
-    createCommandButton(t("command.buildSpecific", { building: labelKind(command.kind) }), command.icon, command.hotkey, () => booleanCommandState(canBuild(command.kind)), () => beginBuildPlacement(command.kind), () => buildingTooltip(command.kind, command.hotkey, i18n, snapshot?.players[localPlayerId]?.race), { type: "building", kind: command.kind }),
+    createCommandButton(t("command.buildSpecific", { building: labelKind(command.kind) }), command.icon, `build:${command.kind}`, () => booleanCommandState(canBuild(command.kind)), () => beginBuildPlacement(command.kind), () => buildingTooltip(command.kind, command.hotkey, i18n, snapshot?.players[localPlayerId]?.race), { type: "building", kind: command.kind }),
   ),
   ...TRAIN_COMMANDS.map((command) =>
-    createCommandButton(t("command.trainSpecific", { unit: labelKind(command.kind) }), command.icon, command.hotkey, () => trainButtonState(command.kind), () => train(command.kind), () => unitTooltip(command.kind, command.hotkey, i18n, currentPlayerState()?.race), { type: "unit", kind: command.kind }),
+    createCommandButton(t("command.trainSpecific", { unit: labelKind(command.kind) }), command.icon, `train:${command.kind}`, () => trainButtonState(command.kind), () => train(command.kind), () => unitTooltip(command.kind, command.hotkey, i18n, currentPlayerState()?.race), { type: "unit", kind: command.kind }),
   ),
   ...RESEARCH_COMMANDS.map((command) =>
-    createCommandButton(t("command.researchSpecific", { upgrade: labelKind(command.upgradeKind) }), command.icon, command.hotkey, () => researchButtonState(command.upgradeKind), () => research(command.upgradeKind), () => upgradeTooltip(command.upgradeKind, command.hotkey, currentPlayerState()?.upgrades[command.upgradeKind] ?? 0, i18n)),
+    createCommandButton(t("command.researchSpecific", { upgrade: labelKind(command.upgradeKind) }), command.icon, `research:${command.upgradeKind}`, () => researchButtonState(command.upgradeKind), () => research(command.upgradeKind), () => upgradeTooltip(command.upgradeKind, command.hotkey, currentPlayerState()?.upgrades[command.upgradeKind] ?? 0, i18n)),
   ),
   ...UPGRADE_COMMANDS.map((command) =>
-    createCommandButton(t("command.upgradeSpecific", { building: labelKind(command.kind) }), command.icon, command.hotkey, () => upgradeButtonState(command.kind), () => upgradeFocusedBuilding(command.kind), () => buildingTooltip(command.kind, command.hotkey, i18n, currentPlayerState()?.race), { type: "building", kind: command.kind }),
+    createCommandButton(t("command.upgradeSpecific", { building: labelKind(command.kind) }), command.icon, `upgrade:${command.kind}`, () => upgradeButtonState(command.kind), () => upgradeFocusedBuilding(command.kind), () => buildingTooltip(command.kind, command.hotkey, i18n, currentPlayerState()?.race), { type: "building", kind: command.kind }),
   ),
-  createCommandButton(t("command.ungarrison.title"), "⤓", "u", ungarrisonButtonState, ungarrisonFocusedTower, () => {
+  createCommandButton(t("command.ungarrison.title"), "⤓", "ungarrison", ungarrisonButtonState, ungarrisonFocusedTower, () => {
     const tower = focusedTower();
     return {
       title: t("command.ungarrison.title"),
@@ -391,14 +389,13 @@ const commandButtons: CommandButton[] = [
       stats: tower && snapshot ? [t("command.ungarrison.stats", { used: garrisonUsed(snapshot, tower), capacity: TOWER_GARRISON.supply })] : [],
       requirements: [],
       notes: [t("command.ungarrison.notes")],
-      hotkey: "U",
     };
   }),
   ...SPELL_COMMANDS.map((command) =>
     withAbilityArtwork(withAutocastRing(createCommandButton(
       t("command.castSpecific", { ability: labelKind(command.ability) }),
       command.icon,
-      command.hotkey,
+      castKeyId(command.ability),
       () => abilityButtonState(command.ability),
       () => beginSpellTargeting(command.ability),
       () => abilityTooltip(command.ability, command.hotkey, i18n, abilityButtonState(command.ability).autocast),
@@ -406,27 +403,26 @@ const commandButtons: CommandButton[] = [
       () => toggleAutocast(command.ability),
     ), command.ability), command.ability),
   ),
-  withRing(createCommandButton(t("command.stance.menu.title"), STANCE_MENU_COMMAND.icon, STANCE_MENU_COMMAND.hotkey, stanceMenuButtonState, openStancePalette, () => ({
+  withRing(createCommandButton(t("command.stance.menu.title"), STANCE_MENU_COMMAND.icon, "stance", stanceMenuButtonState, openStancePalette, () => ({
     title: t("command.stance.menu.title"),
     body: t("command.stance.menu.body", { stance: currentStanceLabel() }),
     stats: [],
     requirements: [t("command.stance.requirements")],
-    hotkey: STANCE_MENU_COMMAND.hotkey.toUpperCase(),
   }))),
   ...STANCE_COMMANDS.map((command) =>
-    withRing(createCommandButton(t(command.title), command.icon, command.hotkey, () => stanceButtonState(command.stance), () => setStance(command.stance), () => ({
+    withRing(createCommandButton(t(command.title), command.icon, `stance:${command.stance}`, () => stanceButtonState(command.stance), () => setStance(command.stance), () => ({
       title: t(command.title),
       body: t(command.body),
       stats: [t(command.stats, { share: BRACE_DAMAGE_SHARE, knockback: KNOCKBACK, most: MAX_SHOVE, taken: SHOCK_DAMAGE_TAKEN, pace: LUNGE_PACE })],
       requirements: [t("command.stance.requirements")],
-      hotkey: command.hotkey.toUpperCase(),
     }))),
   ),
-  (()=>{const button=createCommandButton(i18n.locale==="zh"?"指定接收者":"Choose recipient","◎","o",()=>purchaseSeller()&&!commandMode&&!openPalette ? ENABLED_COMMAND_STATE : HIDDEN_COMMAND_STATE,startPurchaseRecipient,()=>({title:i18n.locale==="zh"?"指定购买接收者":"Choose purchase recipient",body:i18n.locale==="zh"?"点击附近的己方人物或船。商品直接进入其装备位或船舱；位置、空位或载重不足时不扣钱。":"Choose a nearby friendly character or ship. Purchases go directly into its equipment or hold; failed delivery costs nothing.",stats:[purchaseRecipientCaption()],requirements:[],hotkey:"O"}));button.element.dataset.purchaseRecipient="true";return button;})(),
-  ...(["shipCannon","shipMortar","flameProjector"] as const).map((kind,index)=>createCommandButton(i18n.locale==="zh"?`购买${labelKind(kind)}`:`Buy ${labelKind(kind)}`,"●",["c","v","b"][index]!,()=>dockGoodButtonState(kind),()=>buyDockGood(kind),()=>({...itemTooltip(kind,undefined,i18n),stats:[...itemTooltip(kind,undefined,i18n).stats,`${SHIP_WEAPONS[kind].cost} G`,purchaseRecipientCaption()],requirements:[purchaseProblem(kind)??(i18n.locale==="zh"?"直接送入接收者；船炮随后安装到炮位。":"Delivered to the recipient; install guns from the hold afterwards.")]}),{type:"item",kind})),
+  (()=>{const button=createCommandButton(i18n.locale==="zh"?"指定接收者":"Choose recipient","◎","recipient",()=>!commandMode&&(openPalette==="buy"&&purchaseSeller()||!openPalette&&selectedShop()) ? ENABLED_COMMAND_STATE : HIDDEN_COMMAND_STATE,startPurchaseRecipient,()=>({title:i18n.locale==="zh"?"指定购买接收者":"Choose purchase recipient",body:i18n.locale==="zh"?"点击附近的己方人物或船。商品直接进入其装备位或船舱；位置、空位或载重不足时不扣钱。":"Choose a nearby friendly character or ship. Purchases go directly into its equipment or hold; failed delivery costs nothing.",stats:[purchaseRecipientCaption()],requirements:[]}));button.element.dataset.purchaseRecipient="true";return button;})(),
+  createCommandButton(i18n.locale==="zh"?"购买":"Buy","⚖","buy",()=>booleanCommandState(!commandMode&&!openPalette&&Boolean(focusedShipyard())),openBuyPalette,()=>({title:i18n.locale==="zh"?"购买船装备":"Buy ship fittings",body:i18n.locale==="zh"?"打开船坞的货架：船炮、臼炮、喷火器，送到指定的接收者。":"Open the shipyard's stock: cannon, mortar and flame projector, delivered to the chosen recipient.",stats:[],requirements:[]})),
+  ...(["shipCannon","shipMortar","flameProjector"] as const).map((kind)=>createCommandButton(i18n.locale==="zh"?`购买${labelKind(kind)}`:`Buy ${labelKind(kind)}`,"●",`dock:${kind}`,()=>dockGoodButtonState(kind),()=>buyDockGood(kind),()=>({...itemTooltip(kind,undefined,i18n),stats:[...itemTooltip(kind,undefined,i18n).stats,`${SHIP_WEAPONS[kind].cost} G`,purchaseRecipientCaption()],requirements:[purchaseProblem(kind)??(i18n.locale==="zh"?"直接送入接收者；船炮随后安装到炮位。":"Delivered to the recipient; install guns from the hold afterwards.")]}),{type:"item",kind})),
   ...SHOP_GOODS.map((good, index) =>
-    createCommandButton(t("command.buy.title", { item: labelKind(good.kind) }), itemIcon(good.kind), SHOP_HOTKEYS[index]!, () => shopGoodButtonState(good.kind), () => buyGood(good.kind), () => {
-      const tooltip = itemTooltip(good.kind, SHOP_HOTKEYS[index], i18n);
+    createCommandButton(t("command.buy.title", { item: labelKind(good.kind) }), itemIcon(good.kind), `shop:${good.kind}`, () => shopGoodButtonState(good.kind), () => buyGood(good.kind), () => {
+      const tooltip = itemTooltip(good.kind, undefined, i18n);
       return {
         ...tooltip,
         title: t("command.buy.title", { item: tooltip.title }),
@@ -435,12 +431,12 @@ const commandButtons: CommandButton[] = [
       };
     }, { type: "item", kind: good.kind }),
   ),
-  createCommandButton(t("command.hire.title"), HIRE_COMMAND.icon, HIRE_COMMAND.hotkey, hireMercenaryButtonState, hireMercenary, () => {
+  createCommandButton(t("command.hire.title"), HIRE_COMMAND.icon, "hire", hireMercenaryButtonState, hireMercenary, () => {
     const camp = selectedMercenaryCamp();
-    return camp ? mercenaryHireTooltip(camp, HIRE_COMMAND.hotkey, i18n) : { title: t("command.hire.title"), body: "", stats: [], requirements: [], hotkey: HIRE_COMMAND.hotkey.toUpperCase() };
+    return camp ? mercenaryHireTooltip(camp, commandKey("hire"), i18n) : { title: t("command.hire.title"), body: "", stats: [], requirements: [] };
   }),
-  createCommandButton(t("common.back"), "←", "escape", () => booleanCommandState(!commandMode && Boolean(openPalette)), closeCommandPalette, () => ({
-    title: t("common.back"), body: t("command.back.body"), stats: [], requirements: [], hotkey: "Esc",
+  createCommandButton(t("common.back"), "←", "back", () => booleanCommandState(!commandMode && Boolean(openPalette)), closeCommandPalette, () => ({
+    title: t("common.back"), body: t("command.back.body"), stats: [], requirements: [],
   })),
 ];
 
@@ -572,13 +568,13 @@ function veteranUnitCaption(unit: Unit) {
 }
 
 function createVeteranLearnButton() {
-  const button = createCommandButton(i18n.locale === "zh" ? "学习技能" : "Learn skill", "+", "p",
+  const button = createCommandButton(i18n.locale === "zh" ? "学习技能" : "Learn skill", "+", "veteranLearn",
     () => booleanCommandState(isUnitCommandPage(commandCardContext()) && Boolean(veteranStudent(selectedPlayerUnits().filter(unit=>!isInCabin(unit)), focusedSelectionId, pendingVeteranIds()))),
     openVeteranPalette, () => {
       const student = veteranStudent(selectedPlayerUnits().filter(unit=>!isInCabin(unit)), focusedSelectionId, pendingVeteranIds());
       return { title: i18n.locale === "zh" ? "学习技能" : "Learn a skill",
         body: i18n.locale === "zh" ? "为这名老兵选择一个技能，学习后不能更换。" : "Choose one permanent skill for this soldier.",
-        stats: student ? [veteranUnitCaption(student)] : [], requirements: [], hotkey: "P" };
+        stats: student ? [veteranUnitCaption(student)] : [], requirements: [] };
     });
   button.element.dataset.veteranLearn = "true";
   return button;
@@ -594,7 +590,7 @@ function veteranChoiceTooltip(index: number): GameplayTooltip {
 }
 
 function createVeteranChoiceButton(index: number) {
-  const button = createCommandButton(i18n.locale === "zh" ? "候选技能" : "Skill choice", "★", ["q", "w", "e"][index]!,
+  const button = createCommandButton(i18n.locale === "zh" ? "候选技能" : "Skill choice", "★", `veteranChoice:${index}`,
     () => booleanCommandState(!commandMode && openPalette === "veteran" && Boolean(focusedVeteranStudent()?.veteranSkillChoices?.[index])),
     () => learnVeteranChoice(index), () => veteranChoiceTooltip(index));
   button.element.dataset.veteranChoice = String(index);
@@ -602,7 +598,7 @@ function createVeteranChoiceButton(index: number) {
 }
 
 function createVeteranPassiveButton() {
-  const button = createCommandButton(i18n.locale === "zh" ? "老兵技能" : "Veteran skill", "★", "",
+  const button = createCommandButton(i18n.locale === "zh" ? "老兵技能" : "Veteran skill", "★", "veteranPassive",
     () => {
       const skill = focusedPlayerUnits()[0]?.veteranSkill;
       return booleanCommandState(isUnitCommandPage(commandCardContext()) && Boolean(skill && VETERAN_SKILLS[skill].effect.type !== "active"));
@@ -679,16 +675,19 @@ function renderAbilityArtwork(element: HTMLElement, ability: AbilityIconId) {
   element.querySelector('.command-icon')!.innerHTML = abilityIconMarkup(ability);
 }
 
-function createCommandButton(label: string, icon: string, hotkey: string, state: () => CommandButtonState, run: () => void, tooltip: () => GameplayTooltip, portrait?: CommandPortrait, contextAction?: () => void): CommandButton {
+function createCommandButton(label: string, icon: string, keyId: string, state: () => CommandButtonState, run: () => void, keylessTooltip: () => GameplayTooltip, portrait?: CommandPortrait, contextAction?: () => void): CommandButton {
+  const hotkey = commandKey(keyId);
   const element = document.createElement("button");
   element.className = "command-button";
   element.type = "button";
   element.dataset.commandLabel = label;
   const hotkeyLabel = hotkey === "escape" ? "Esc" : hotkey.toUpperCase();
   element.dataset.hotkey = hotkeyLabel;
-  element.setAttribute("aria-label", `${label} (${hotkeyLabel})`);
+  element.setAttribute("aria-label", hotkeyLabel ? `${label} (${hotkeyLabel})` : label);
+  // The tooltip names the key the list gives, so the two never disagree.
+  const tooltip = () => { const shown = keylessTooltip(); return hotkeyLabel ? { ...shown, hotkey: hotkeyLabel } : shown; };
   applyTooltip(element, tooltip());
-  element.innerHTML = `<span class="command-icon">${escapeHtml(icon)}</span><span class="command-label">${escapeHtml(portrait ? portrait.type === "item" ? labelKind(portrait.kind) : labelAnyKind(portrait.kind) : label)}</span><span class="hotkey">${hotkeyLabel}</span><span class="command-stock"></span>`;
+  element.innerHTML = `<span class="command-icon">${escapeHtml(icon)}</span><span class="command-label">${escapeHtml(portrait ? portrait.type === "item" ? labelKind(portrait.kind) : labelAnyKind(portrait.kind) : label)}</span>${hotkeyLabel ? `<span class="hotkey">${hotkeyLabel}</span>` : ""}<span class="command-stock"></span>`;
   // Hidden match commands must not fetch their portraits during startup.
   // updateHud paints a portrait when its command actually becomes visible.
   if (!portrait) {
@@ -703,7 +702,7 @@ function createCommandButton(label: string, icon: string, hotkey: string, state:
     contextAction?.();
   });
   commandDock.append(element);
-  return { element, hotkey, tooltip, state, run: guardedRun, ...(contextAction ? { contextAction } : {}), ...(portrait ? {portrait} : {}) };
+  return { element, keyId, hotkey, tooltip, state, run: guardedRun, ...(contextAction ? { contextAction } : {}), ...(portrait ? {portrait} : {}) };
 }
 
 // @@@autocast-ring - The border of light a spell button wears while its autocast is on (see styles.css); a spell the
@@ -1941,6 +1940,11 @@ function onKeyDown(event: KeyboardEvent) {
     return;
   }
   if (event.repeat) return;
+  if (event.key === "F10") {
+    event.preventDefault();
+    matchMenu.classList.toggle("hidden");
+    return;
+  }
   // Alt+A, as in Warcraft III: the minimap in friend-or-foe colours or the players' own. By its key, as Alt changes the
   // letter a Mac types.
   if (event.altKey && event.code === "KeyA") {
@@ -2369,7 +2373,7 @@ function shipBoardingLabel() {
 }
 
 function createShipBoardingButton(): CommandButton {
-  const button = createCommandButton(shipBoardingLabel(), '⇔', '', shipBoardingButtonState, beginShipBoarding, shipBoardingTooltip);
+  const button = createCommandButton(shipBoardingLabel(), '⇔', 'boarding', shipBoardingButtonState, beginShipBoarding, shipBoardingTooltip);
   button.element.dataset.shipBoarding = 'true';
   return button;
 }
@@ -2907,9 +2911,16 @@ function choosePurchaseRecipientAt(point:Point){
   purchaseRecipients.set(seller.id,recipient.id);purchaseRecipientFlash={id:recipient.id,until:performance.now()+900};
   commandMode=undefined;statusLabel.textContent=purchaseRecipientCaption();updateHud();
 }
+function focusedShipyard(){return focusedPlayerBuildings().find(building=>building.kind==="shipyard" && building.complete);}
+// A shipyard sells its fittings from its own sub-card (see @@@command-keys), so their keys never meet its training keys.
+function openBuyPalette(){
+  if(!focusedShipyard())return;
+  openPalette="buy";
+  updateHud();
+}
 function dockGoodButtonState(kind:keyof typeof SHIP_WEAPONS):CommandButtonState{
-  const dock=focusedPlayerBuildings().find(building=>building.kind==="shipyard" && building.complete);
-  if(!dock || commandMode || openPalette)return HIDDEN_COMMAND_STATE;
+  const dock=focusedShipyard();
+  if(!dock || commandMode || openPalette!=="buy")return HIDDEN_COMMAND_STATE;
   const recipient=purchaseRecipient(dock);
   return withPurchaseProblem(orderButtonState({type:"buyShipEquipment",buildingId:dock.id,item:kind,...(recipient?{recipientId:recipient.id}:{})}),kind,recipient);
 }
@@ -3101,22 +3112,39 @@ function pruneSelection(projectedLiveIds?: ReadonlySet<string>) {
     }
   }
   if (openPalette === "build" && !focusedPlayerUnits().some((unit) => unit.kind === "worker")) openPalette = undefined;
+  if (openPalette === "buy" && !focusedShipyard()) openPalette = undefined;
   if (openPalette === "stance" && stanceFighters(focusedPlayerUnits()).length === 0) openPalette = undefined;
   if (openPalette === "veteran" && !focusedVeteranStudent()) openPalette = undefined;
+}
+
+// The dock's card (see @@@command-keys): an open sub-card, a selected site, or the focused group's own card.
+function currentCommandCard() {
+  const race = currentPlayerState()?.race;
+  if (!snapshot || !race) return undefined;
+  const { units, buildings } = focusedSelectionEntities(snapshot, focusedSelectionId, localPlayerId);
+  const focused = units[0] ? { type: "unit" as const, kind: units[0].kind } : buildings[0] ? { type: "building" as const, kind: buildings[0].kind } : undefined;
+  return commandCardFor({ palette: openPalette, shop: Boolean(selectedShop()), camp: Boolean(selectedCampId), focused, race });
+}
+
+// A button shows only on the cards its entry allows, so no two shown buttons ever share a key.
+function cardButtonState(button: CommandButton, card: ReturnType<typeof currentCommandCard>): CommandButtonState {
+  return commandOnCard(button.keyId, card) ? button.state() : HIDDEN_COMMAND_STATE;
 }
 
 function handleGameplayKeyIntent(event: KeyboardEvent) {
   if(equipmentPanel.isOpen())return true;
   if (!snapshot) return false;
+  const card = currentCommandCard();
+  const shown = commandButtons.filter((button) => button.hotkey && cardButtonState(button, card).visible);
   const intent = gameplayKeyIntent(event, {
     controlGroups: new Set(Object.keys(controlGroups).map(Number)),
     inventoryDigits: new Set(inventorySlots(snapshot, inventoryCarrier(inventoryCarriers())).map(({ digit }) => digit)),
-    commandHotkeys: new Set(commandButtons.filter((button) => button.state().visible).map((button) => button.hotkey)),
+    commandHotkeys: new Set(shown.map((button) => button.hotkey)),
   });
   if (intent.type === "none") return false;
   if (intent.type === "inventoryUse") return useInventoryItem(intent.digit);
   if (intent.type === "commandHotkey") {
-    const command = commandButtons.find((button) => button.hotkey === intent.hotkey && button.state().visible);
+    const command = shown.find((button) => button.hotkey === intent.hotkey);
     command?.run();
     return Boolean(command);
   }
@@ -3212,8 +3240,9 @@ function updateHud() {
   let visibleCount = 0;
   // This runs for every snapshot. A hidden button shows nothing and no pointer reaches its tooltip, so it is drawn in
   // full again the update it shows; a shown one writes only what changed, leaving style and layout clean for the frame.
+  const card = currentCommandCard();
   for (const button of commandButtons) {
-    const state = button.state();
+    const state = cardButtonState(button, card);
     setHidden(button.element, !state.visible);
     if (!state.visible) continue;
     renderVeteranCommand(button);
@@ -3515,17 +3544,16 @@ function renderItemDock() {
     button.addEventListener("contextmenu", event => { event.preventDefault(); dropInventoryItem(digit); });
     return button;
   }));
-  const groups = new Set(Object.keys(controlGroups).map(Number));
   slots.forEach(({ item, digit }, index) => {
     const button = itemDock.children[index] as HTMLButtonElement;
-    const hotkey = groups.has(digit) ? "" : String(digit);
+    const hotkey = `⌥${digit}`;
     setText(button.querySelector(".hotkey")!, hotkey);
     const cooldown = button.querySelector<HTMLElement>(".item-cooldown")!;
     button.dataset.itemId = item.id;
     drawCommandPortrait(button, {type:"item",kind:item.kind,...(item.weaponKind?{weaponKind:item.weaponKind}:{})});
     const cooldownText = item.cooldownRemaining > 0 ? t("hud.itemRecharging", { time: formatRemaining(item.cooldownRemaining) }) : "";
-    button.setAttribute("aria-label", `${labelKind(item.kind)}${hotkey ? ` (${hotkey})` : ""}${cooldownText}`);
-    applyTooltip(button, itemTooltip(item.kind, hotkey || undefined, i18n));
+    button.setAttribute("aria-label", `${labelKind(item.kind)} (Alt+${digit})${cooldownText}`);
+    applyTooltip(button, itemTooltip(item.kind, hotkey, i18n));
     cooldown.hidden = item.cooldownRemaining <= 0;
     applyCooldownSweep(button, item.cooldownRemaining, itemCooldownLength(item.kind));
     setText(cooldown, button.dataset.cooldownLabel ?? "");
@@ -3913,10 +3941,11 @@ function updateCamera() {
   if (menuOpen) return;
   const speed = keys.has("shift") ? 24 : 14;
   if(equipmentPanel.isOpen())return;
-  if (keys.has("arrowleft") || keys.has("a")) camera.x -= speed;
-  if (keys.has("arrowright") || keys.has("d")) camera.x += speed;
-  if (keys.has("arrowup") || keys.has("w")) camera.y -= speed;
-  if (keys.has("arrowdown") || keys.has("s")) camera.y += speed;
+  // Letters belong to the command card (see @@@hotkeys): the camera pans by the arrows and the screen's edge alone.
+  if (keys.has("arrowleft")) camera.x -= speed;
+  if (keys.has("arrowright")) camera.x += speed;
+  if (keys.has("arrowup")) camera.y -= speed;
+  if (keys.has("arrowdown")) camera.y += speed;
   const aim = edgeScrollAim();
   const edge = edgeScrollDelta(aim?.point, { width: canvas.clientWidth, height: canvas.clientHeight }, aim?.overInterface);
   camera.x += edge.x;
