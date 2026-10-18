@@ -141,7 +141,14 @@ function createScene(page: any, base: string) {
     async room(map: string, seats?: number) {
       const flow = await import(pathToFileURL(resolve("scripts/room-ui-flow.mjs")).href) as { roomUiFlowCode: string };
       const AsyncFunction = Object.getPrototypeOf(async () => undefined).constructor;
-      const helpers = await new AsyncFunction("page", "must", `${flow.roomUiFlowCode}\nreturn { onlineSetup: typeof onlineSetup === "function" ? onlineSetup : undefined };`)(page, must);
+      // The flow's waits (5 s) are for a warm page on a developer's machine; a fresh copy on a remote one rebuilds a room
+      // slower. It gets the page with every explicit timeout scaled, and is otherwise unchanged.
+      const patient = new Proxy(page, { get(target, key) {
+        const value = target[key];
+        if (key !== "waitForFunction" && key !== "waitForSelector") return typeof value === "function" ? value.bind(target) : value;
+        return (...args: any[]) => target[key](...args.map((arg) => arg && typeof arg === "object" && typeof arg.timeout === "number" ? { ...arg, timeout: arg.timeout * 6 } : arg));
+      } });
+      const helpers = await new AsyncFunction("page", "must", `${flow.roomUiFlowCode}\nreturn { onlineSetup: typeof onlineSetup === "function" ? onlineSetup : undefined };`)(patient, must);
       must(helpers.onlineSetup, "this commit's scripts/room-ui-flow.mjs has no onlineSetup");
       await page.click("[data-open-room-browser]");
       // A cold copy's first page waits on vite's dependency pass; the flow's own waits are for a warm page.
