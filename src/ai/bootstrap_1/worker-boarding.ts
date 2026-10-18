@@ -55,9 +55,9 @@ function weaponCoverage(snapshot: GameSnapshot, foe: Unit | Building, worker: Un
   }) : [])];
 }
 
-/** The native shore, not the ferry's coarse source, owns a shore worker's actual road and wait. */
-export function workerBoardingSafe(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, worker: Unit, boat: Unit) {
-  if (worker.kind !== 'worker' || worker.deck
+/** The native shore, not the ferry's coarse source, owns a shore passenger's actual road and wait. */
+export function passengerBoardingSafe(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, worker: Unit, boat: Unit) {
+  if (worker.deck || worker.cabin
     || alongside(worker, boat) && canBoard(boat, worker, snapshot.units)) return true;
   if (snapshot.projectiles.some(projectile => projectile.targetId === worker.id && projectile.damage > 0
     && isEnemyOwner(snapshot, owner, projectile.owner, options))) return false;

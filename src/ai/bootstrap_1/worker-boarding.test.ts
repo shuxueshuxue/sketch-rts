@@ -3,7 +3,7 @@ import {gunzipSync} from 'node:zlib';
 import {expect,it} from 'vitest';
 import {createGame,restoreSnapshotIntoGame,snapshotGame} from '../../shared/sim';
 import {planAiOwnerCommandEntries} from '../planner-context';
-import {workerBoardingSafe} from './worker-boarding';
+import {passengerBoardingSafe} from './worker-boarding';
 import {boardingBerth} from '../../shared/naval';
 
 function saved(tick:number){
@@ -34,7 +34,7 @@ it('preserves the actual deck worker and does not alter its native mission',()=>
  const worker=snapshot.units.find(unit=>unit.id==='unit-p0-worker-1008')!;
  const boat=snapshot.units.find(unit=>unit.id===worker.deck!.shipId)!;
  const before=JSON.stringify({worker,boat,memory});
- expect(workerBoardingSafe(snapshot,'p0',{memory,teams:{p0:'a',p1:'b'}},worker,boat)).toBe(true);
+ expect(passengerBoardingSafe(snapshot,'p0',{memory,teams:{p0:'a',p1:'b'}},worker,boat)).toBe(true);
  expect(JSON.stringify({worker,boat,memory})).toBe(before);
 });
 
@@ -46,5 +46,5 @@ it('admits the native safe shore after a counterfactual close hull pose, without
  // Pure geometry counterfactual; this is not an observed voyage or a restore edit.
  const close={...boat,...from};
  expect(boardingBerth(snapshot.map,worker,close)?.shore).toMatchObject(from);
- expect(workerBoardingSafe(snapshot,'p0',{memory,teams:{p0:'a',p1:'b'}},worker,close)).toBe(true);
+ expect(passengerBoardingSafe(snapshot,'p0',{memory,teams:{p0:'a',p1:'b'}},worker,close)).toBe(true);
 });

@@ -18,7 +18,7 @@ import { expeditionDeparture } from './expedition-departure';
 import { landRecoveryAssignments, mainlandCareAssignments, patientRendezvousCommands } from './land-recovery';
 import { continuingPatientRendezvous, rememberPatientRendezvous } from './medical-rendezvous';
 import { planLandedCombat } from './landed-combat';
-import { canPauseFerryForWorker, workerBoardingSafe } from './worker-boarding';
+import { canPauseFerryForWorker, passengerBoardingSafe } from './worker-boarding';
 import { settlerSeaRoutes } from './settler-sea-route';
 import { safeFerryReturn } from './safe-ferry-return';
 
@@ -49,7 +49,7 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
     const transportId = worker.order.transportId;
     const boat = snapshot.units.find(unit => unit.id === transportId && unit.owner === owner);
     const mission = boat && ferries?.[boat.id];
-    if (!boat || !mission || workerBoardingSafe(snapshot, owner, options, worker, boat)) continue;
+    if (!boat || !mission || passengerBoardingSafe(snapshot, owner, options, worker, boat)) continue;
     released.add(worker.id);
     mission.crewIds = mission.crewIds.filter(id => id !== worker.id);
     cancelled.push({ type: 'stop', unitIds: [worker.id] });
@@ -87,7 +87,7 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
     transportReady: boat => !transportNeedsRecovery(snapshot, boat),
     troopAvailable: unit => !mounted.has(unit.id) && !reserved.has(unit.id) && !mainlandCare.has(unit.id),
     workerAvailable: (unit, boat) => !keepMiningWork(snapshot, owner, options, unit, boat) && !released.has(unit.id) && canPauseFerryForWorker(snapshot, owner, options, boat)
-      && workerBoardingSafe(snapshot, owner, options, unit, boat),
+      && passengerBoardingSafe(snapshot, owner, options, unit, boat),
   })];
   commands.push(...planSettlerBoarding(snapshot, owner, options, commands));
 

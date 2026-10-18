@@ -1,5 +1,6 @@
 import { miningHandoff } from './mining-handoff';
 import { preventHullLanding } from './return-landing';
+import { safeSoldierBoarding } from './soldier-boarding';
 import { evacuationShelter } from './evacuation-shelter';
 import { homeRelief } from './home-relief';
 import { idleWorkerEvasion } from './idle-worker-evasion';
@@ -198,7 +199,11 @@ export function planBootstrapScriptEntries(snapshot: GameSnapshot, owner: Player
   const landingCommands = preventHullLanding(snapshot, owner, options, shelteredEntries.map(entry => entry.command));
   const byCommand = new Map<GameCommand, AiCommandEntry[]>();
   for (const entry of shelteredEntries) byCommand.set(entry.command, [...(byCommand.get(entry.command) ?? []), entry]);
-  return landingCommands.map(command => byCommand.get(command)?.shift() ?? { scriptId: 'safeReturnLanding', command });
+  const landingEntries = landingCommands.map(command => byCommand.get(command)?.shift() ?? { scriptId: 'safeReturnLanding', command });
+  const boardingCommands = safeSoldierBoarding(snapshot, owner, options, landingEntries.map(entry => entry.command));
+  const byBoardingCommand = new Map<GameCommand, AiCommandEntry[]>();
+  for (const entry of landingEntries) byBoardingCommand.set(entry.command, [...(byBoardingCommand.get(entry.command) ?? []), entry]);
+  return boardingCommands.map(command => byBoardingCommand.get(command)?.shift() ?? { scriptId: 'safeSoldierBoarding', command });
 }
 
 export function researchPrerequisites(wants: readonly V6Want[], player: PlayerState): V6Want[] {
