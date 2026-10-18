@@ -1,0 +1,379 @@
+{
+  "archive": "income-failed-probes-evidence.tar.gz",
+  "bytes": 2940467,
+  "sha256": "849ea80fa130bc8907a962070fe6bf326e9305a405540c231cbed493f130b9a3",
+  "files": {
+    "raw/income-reserve-25800/commands.jsonl": {
+      "bytes": 550967,
+      "sha256": "85e014498e237da0660f2da11d75365cdc47ad2585dd67a2d0f6973c0d7cb60b"
+    },
+    "raw/income-reserve-25800/entities.jsonl": {
+      "bytes": 7957,
+      "sha256": "8d5d1912de942da810433f1fdd4d38319620df78917a31088792483171c48938"
+    },
+    "raw/income-reserve-25800/frames/25800.json.gz": {
+      "bytes": 18189,
+      "sha256": "59709d130d86736eb956f3561ba4553575f92787f6a7618b231576b9d9e8f1a1"
+    },
+    "raw/income-reserve-25800/frames/26400.json.gz": {
+      "bytes": 19325,
+      "sha256": "4f016625663da5277ef69cdca2d794a8044d8e7d8342c23247aea19bbd44c62d"
+    },
+    "raw/income-reserve-25800/frames/27000.json.gz": {
+      "bytes": 18329,
+      "sha256": "6e8d34413f839163d68cf050389fbd83d9aed4cd3d84ab40f5b8286fd3082f94"
+    },
+    "raw/income-reserve-25800/frames/27600.json.gz": {
+      "bytes": 19544,
+      "sha256": "6e821b8f8ac127bbd989d7331e883590274f11adeb48e929c7bbdb4c75434f24"
+    },
+    "raw/income-reserve-25800/frames/28200.json.gz": {
+      "bytes": 19297,
+      "sha256": "792dbc0c8e179e87781a92019fd46fe78879b98c3043125c21c41537ba1d009c"
+    },
+    "raw/income-reserve-25800/frames/28800.json.gz": {
+      "bytes": 19458,
+      "sha256": "bf15a2154534484bfa159a94f3544666c397051fe8aa811084f39cee02d540a3"
+    },
+    "raw/income-reserve-25800/frames/29400.json.gz": {
+      "bytes": 18747,
+      "sha256": "ef214a6e379a79b134eec47299170901957f9219c0b1e756708d8e7147bf0b17"
+    },
+    "raw/income-reserve-25800/frames/30000.json.gz": {
+      "bytes": 19043,
+      "sha256": "746a4fe0404a906437199820eac3aeaf42515a89c457563fab3180a7f35c0d16"
+    },
+    "raw/income-reserve-25800/frames/30600.json.gz": {
+      "bytes": 21289,
+      "sha256": "4ff2c5495b2d4377bf86f09bb0d7c7c82be538d7da326a1e036a3c504bf7a608"
+    },
+    "raw/income-reserve-25800/frames/31200.json.gz": {
+      "bytes": 19510,
+      "sha256": "71570de513345b6cd937087dc97a127b8b7e5d18a224c26fbf06d1ea96321b2b"
+    },
+    "raw/income-reserve-25800/frames/31800.json.gz": {
+      "bytes": 20160,
+      "sha256": "891a9fe6c392941b6c6b5526ff367bed326ef11f8135f361d17ea0bb9246c09c"
+    },
+    "raw/income-reserve-25800/frames/32400.json.gz": {
+      "bytes": 19517,
+      "sha256": "5943320db09dec1c77b0552683f1df867fb9ffe83213ab0ecd66abba18a1ce57"
+    },
+    "raw/income-reserve-25800/frames/33000.json.gz": {
+      "bytes": 18890,
+      "sha256": "8930a401c99452f4e17630905923d85e89e0def28bd9383ea19575c963b8b5a1"
+    },
+    "raw/income-reserve-25800/frames/33600.json.gz": {
+      "bytes": 19843,
+      "sha256": "9ab0c95be22497fbd7a5ff2f6ddcb05bf1d5d652da11004596d7d87042ac53bd"
+    },
+    "raw/income-reserve-25800/frames/34200.json.gz": {
+      "bytes": 19294,
+      "sha256": "788ab9effa8f8c5fc6fbcf698c4ab383b876a176408a7d2eab3e50a41d06a5a1"
+    },
+    "raw/income-reserve-25800/frames/34800.json.gz": {
+      "bytes": 18764,
+      "sha256": "16fbf754d1a5f71c5bd19db5eca696d413a36e6eb5ab659a2ae5e81caf6e42ba"
+    },
+    "raw/income-reserve-25800/frames/35400.json.gz": {
+      "bytes": 19279,
+      "sha256": "ec279fa8cfbf52ac4d36f0e080863617fcb2451a7634c6f166cffe5171cad982"
+    },
+    "raw/income-reserve-25800/frames/36000.json.gz": {
+      "bytes": 19942,
+      "sha256": "2c65fc5e879e005d9de649c3ea301e76551d523c334799f185c321ac0300d390"
+    },
+    "raw/income-reserve-25800/hits.jsonl": {
+      "bytes": 154337,
+      "sha256": "37c410ff3b294cf5eacdc18f7723e0eb94c20e167a18f8a51c92f4cc3dae724e"
+    },
+    "raw/income-reserve-25800/result.json": {
+      "bytes": 39763,
+      "sha256": "5375755349968feda28454fc646aab9a07a0a3a5047fb1b8d0547a4be1e8319d"
+    },
+    "raw/income-reserve-25800/samples.jsonl": {
+      "bytes": 68647,
+      "sha256": "08684846b5f66a0e58578e611b229de0957f355a2ea30ba30a10a7d24ff923b2"
+    },
+    "raw/income-reserve-25800/source.json": {
+      "bytes": 184341,
+      "sha256": "4e4f04630af4fde6aff9fe3edd5e3b6a28935ff2f6a100d4422525878ebe2c78"
+    },
+    "raw/income-reserve-v2-27600/commands.jsonl": {
+      "bytes": 419475,
+      "sha256": "d6ef60d284236445595ea1a0fda7d539bbfb1af91f1088dd3201f61ce2d4017c"
+    },
+    "raw/income-reserve-v2-27600/entities.jsonl": {
+      "bytes": 7535,
+      "sha256": "16a5e43a5233c2fe93a9e797b9d251395e82b9aa653979a16e72ff45d157a17c"
+    },
+    "raw/income-reserve-v2-27600/frames/27600.json.gz": {
+      "bytes": 19544,
+      "sha256": "6e821b8f8ac127bbd989d7331e883590274f11adeb48e929c7bbdb4c75434f24"
+    },
+    "raw/income-reserve-v2-27600/frames/28200.json.gz": {
+      "bytes": 19297,
+      "sha256": "792dbc0c8e179e87781a92019fd46fe78879b98c3043125c21c41537ba1d009c"
+    },
+    "raw/income-reserve-v2-27600/frames/28800.json.gz": {
+      "bytes": 19453,
+      "sha256": "99e71b603077c60ddca3b0e4db144fb322df8625e198414e445e56e9e0ded34d"
+    },
+    "raw/income-reserve-v2-27600/frames/29400.json.gz": {
+      "bytes": 18749,
+      "sha256": "427efe8209baff57c2ea7bdee7ba535628bf0b982ede5ce8b0905105ec9ee17b"
+    },
+    "raw/income-reserve-v2-27600/frames/30000.json.gz": {
+      "bytes": 19047,
+      "sha256": "831100e2cf421800cd89f0d4bfc2656229f15a1e8e8fa582d9ba3f256dc063d2"
+    },
+    "raw/income-reserve-v2-27600/frames/30600.json.gz": {
+      "bytes": 21262,
+      "sha256": "2174cce7fbe9adb1841397ab3a508fcb9c74e7e106a4c9b5a043401ebc058d3e"
+    },
+    "raw/income-reserve-v2-27600/frames/31200.json.gz": {
+      "bytes": 19509,
+      "sha256": "5b76629f689c8d186694445573e1ca7195194917f5f9d3abde3d857df9baada5"
+    },
+    "raw/income-reserve-v2-27600/frames/31800.json.gz": {
+      "bytes": 20164,
+      "sha256": "84b3519a8f2cc59b88b0e08ba7a46b04a13f12a7b15088e594bf80128e767ef4"
+    },
+    "raw/income-reserve-v2-27600/frames/32400.json.gz": {
+      "bytes": 19519,
+      "sha256": "35698cad7792f695980eb86b4f599f445f9e78d700b363560f966fbabc686018"
+    },
+    "raw/income-reserve-v2-27600/frames/33000.json.gz": {
+      "bytes": 18896,
+      "sha256": "1336e0708fb1306a0c7afbcfe3034a497eb8324b9d430dd165160387de8caa00"
+    },
+    "raw/income-reserve-v2-27600/frames/33600.json.gz": {
+      "bytes": 19847,
+      "sha256": "4d84f681f06a74b2def2e3deba94c74d81c5cbc3fc67cdd6142ee1ebcd25de70"
+    },
+    "raw/income-reserve-v2-27600/frames/34200.json.gz": {
+      "bytes": 19297,
+      "sha256": "f6fdf24311308f2569cd02bf9dd03bfa3baf71b3481c2081289cf9c674cf26ef"
+    },
+    "raw/income-reserve-v2-27600/frames/34800.json.gz": {
+      "bytes": 18757,
+      "sha256": "10f414d9b450d7cdc64decd5ce8f5c4b62fb454a73610a56a67ac274c874cff4"
+    },
+    "raw/income-reserve-v2-27600/frames/35400.json.gz": {
+      "bytes": 19270,
+      "sha256": "df6e7c79ececc71d927b54474c7b3131520a67d40a7874a984f59b3c3ff10b8d"
+    },
+    "raw/income-reserve-v2-27600/frames/36000.json.gz": {
+      "bytes": 19933,
+      "sha256": "2de6b8a3cbe846a632418614074512c80a1a49c098b4d0413a2f6a25d11692f5"
+    },
+    "raw/income-reserve-v2-27600/hits.jsonl": {
+      "bytes": 150692,
+      "sha256": "5896ee8d78be2b9f86401738704af451ead2f24aa30ce505cdd74afbbff1cae0"
+    },
+    "raw/income-reserve-v2-27600/result.json": {
+      "bytes": 39763,
+      "sha256": "75411105aac30aa17facf31cb2c72f0e00eb41e964961be620308e4fa733f367"
+    },
+    "raw/income-reserve-v2-27600/samples.jsonl": {
+      "bytes": 57293,
+      "sha256": "553ff04cb7edc2bab8fd304358727554d062e142668d17e63100dc950087606f"
+    },
+    "raw/income-reserve-v2-27600/source.json": {
+      "bytes": 184341,
+      "sha256": "014293f0f427d1c14536335fa3a71d45449d8fb9883e722e8e0adb37df54eda7"
+    },
+    "raw/income-reserve-base-25800/commands.jsonl": {
+      "bytes": 1120,
+      "sha256": "3720dae540fe865d2ab516a83c0c84e83ee34846035426e0c770bba21d3248e9"
+    },
+    "raw/income-reserve-base-25800/entities.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "raw/income-reserve-base-25800/frames/25800.json.gz": {
+      "bytes": 18188,
+      "sha256": "0c923b9804c2db4155e99d86b6767739afb275faef3a52f0109f30bbd115084b"
+    },
+    "raw/income-reserve-base-25800/frames/25815.json.gz": {
+      "bytes": 18171,
+      "sha256": "f4c434022c3f4428e23b7d11653c54ba63cede38153cd8fff7817e92d788992f"
+    },
+    "raw/income-reserve-base-25800/hits.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "raw/income-reserve-base-25800/result.json": {
+      "bytes": 37376,
+      "sha256": "a91562b9e0282884ca082f2a7bbf68423d60d7201913a66402f8ab6705a92da4"
+    },
+    "raw/income-reserve-base-25800/samples.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "raw/income-reserve-base-25800/source.json": {
+      "bytes": 184341,
+      "sha256": "58c02e8a98f6d97abf61ae2b7d1a3eee0734254d92b1ace4307281f7b33db9d8"
+    },
+    "raw/income-reserve-native-25800/commands.jsonl": {
+      "bytes": 1120,
+      "sha256": "3720dae540fe865d2ab516a83c0c84e83ee34846035426e0c770bba21d3248e9"
+    },
+    "raw/income-reserve-native-25800/entities.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "raw/income-reserve-native-25800/frames/25800.json.gz": {
+      "bytes": 18188,
+      "sha256": "0c923b9804c2db4155e99d86b6767739afb275faef3a52f0109f30bbd115084b"
+    },
+    "raw/income-reserve-native-25800/frames/25815.json.gz": {
+      "bytes": 18171,
+      "sha256": "f4c434022c3f4428e23b7d11653c54ba63cede38153cd8fff7817e92d788992f"
+    },
+    "raw/income-reserve-native-25800/hits.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "raw/income-reserve-native-25800/result.json": {
+      "bytes": 37376,
+      "sha256": "6fc2f6e285454e100f00f91a4c4aa73e15f15309c8a9aee5ae6422b1987f8fc9"
+    },
+    "raw/income-reserve-native-25800/samples.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "raw/income-reserve-native-25800/source.json": {
+      "bytes": 184341,
+      "sha256": "58c02e8a98f6d97abf61ae2b7d1a3eee0734254d92b1ace4307281f7b33db9d8"
+    },
+    "raw/income-reserve-observe.mts": {
+      "bytes": 5093,
+      "sha256": "7c90e76a914660bda07706ff1804203db6b1529dbb85f194b09c5918793262b6"
+    },
+    "raw/income-reserve-v2-observe.mts": {
+      "bytes": 5096,
+      "sha256": "a49bdede701020b6a64a31baa01d27ffc1efa6402d1dd0b4e556ff5d30338031"
+    },
+    "raw/income-reserve-base-observe.mts": {
+      "bytes": 5092,
+      "sha256": "bc8b3cec8e7b47b0a5899e78f90daf2d5fccaa157f7ed71a283dd29e50a7ad88"
+    },
+    "raw/observe.mts": {
+      "bytes": 4329,
+      "sha256": "85b4fc492fb518093113d676d078f82ab232311e9e5012e037bd6037dc915317"
+    },
+    "raw/income-reserve-draft-planner.mjs": {
+      "bytes": 1829508,
+      "sha256": "12ac358b82e29bbcec09f7d88f7e2f7dd896b046214c1174696d63eabf21ede2"
+    },
+    "raw/income-reserve-v2-draft-planner.mjs": {
+      "bytes": 1829781,
+      "sha256": "f4ed8477753dcc83fefb8b481b1f3cad4ded38c81f233d7be00b35c5e1cef73a"
+    },
+    "raw/income-reserve-base-planner.mjs": {
+      "bytes": 1829331,
+      "sha256": "368837cb9ba1b29ecd23f6b58a98d322928cb414c61a3346d83164f1f0388d39"
+    },
+    "raw/income-reserve-bundle-control.json": {
+      "bytes": 81,
+      "sha256": "8b97f2f08456fdf4b95cea0f7f3fb213443b2a085ae1ac7102af7cfe6df7c785"
+    },
+    "raw/income-before-priest-27600/commands.jsonl": {
+      "bytes": 32731,
+      "sha256": "ef58a68240b24506b06488c1d5c352ae3081ab47cc4328efd55e562a09193179"
+    },
+    "raw/income-before-priest-27600/entities.jsonl": {
+      "bytes": 194,
+      "sha256": "fe3f6f79d090b1320a22ad7b5d8db84c7881ed5b48c7dacbdda4768779e17c7d"
+    },
+    "raw/income-before-priest-27600/frames/27600.json.gz": {
+      "bytes": 19544,
+      "sha256": "2b524962e89d79f8fa4fde2f8a20fbd3ab5e5d0e713a47e091237054bde81346"
+    },
+    "raw/income-before-priest-27600/frames/27960.json.gz": {
+      "bytes": 19329,
+      "sha256": "a39aeaf5f6c36dcedbab29446bbe1414b1d41375c56bfd231dd004d28606ecb1"
+    },
+    "raw/income-before-priest-27600/hits.jsonl": {
+      "bytes": 5265,
+      "sha256": "62bcbfa035aebb77fcc530d628367e1ad58f51d1d64d92ce79bff2817d32807c"
+    },
+    "raw/income-before-priest-27600/result.json": {
+      "bytes": 43992,
+      "sha256": "db5bea6ee7a12fbf307278799cc003f92549d443b45b477020bdf02cc0a661d5"
+    },
+    "raw/income-before-priest-27600/samples.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "raw/income-before-priest-27600/source.json": {
+      "bytes": 184341,
+      "sha256": "b643b929ec0f5ec13a12019e4f4eea892fd550e4fbc4a5f203307be2dad651af"
+    },
+    "raw/income-reserve-27960-query.json": {
+      "bytes": 1400,
+      "sha256": "75c03f69b5c90b224fb806e201cb98c92b3b0fc25587c83be71425d4f38cb052"
+    },
+    "raw/income-reserve-27960-explanation.json": {
+      "bytes": 1768,
+      "sha256": "38aa739613ea45cc0262978f010204bcb8305e19ac5ff7eb1139f6f245eeae4f"
+    },
+    "raw/income-reserve-v2-query-planner.mjs": {
+      "bytes": 1829896,
+      "sha256": "90448e270d049de9a3a636378657a40be65d957cff23e5f7d50868c04d88bced"
+    },
+    "raw/income-reserve-v2-explanation-planner.mjs": {
+      "bytes": 1830839,
+      "sha256": "82f5b1f2e6a624cd8ccbee009ddbea2aecae35ee7fda400dcb3afdd14fcdae61"
+    },
+    "raw/query-income-reserve.mts": {
+      "bytes": 1157,
+      "sha256": "1811262c34808bbbec79b000c212f090ccbd4bda2f9881fd20fdb8ae99cff1c6"
+    },
+    "raw/query-income-explanation.mts": {
+      "bytes": 1204,
+      "sha256": "82dc506d249da18edfa0d52621e4ce6c669edb3a68828bc104695435b63cd80f"
+    },
+    "raw/measure-collapse-reserve.mts": {
+      "bytes": 1391,
+      "sha256": "fafce7f063ae3600aebe335e2f5d0dc291a99ec373df009452f389cdbfa9ec3e"
+    },
+    "raw/relief-collapse-reserve.json": {
+      "bytes": 4560,
+      "sha256": "19f9192e05d4df2a58f3fbc5a8395e1e51b46d139e25ed1a1413b96d610b7145"
+    },
+    "raw/income-ineffective-equivalence.json": {
+      "bytes": 6533,
+      "sha256": "1dcc35b741c1973a8eb45632fc1622498108a4d7fc464986ff8baf1f6232d5be"
+    },
+    "raw/income-reserve-25800.log": {
+      "bytes": 1288,
+      "sha256": "e5b3f6ff60d8ecd130f1f8cb0533526abf69d3029c30c679e99fbf69a0bdcdc7"
+    },
+    "raw/archive-income-failed-probes.py": {
+      "bytes": 2272,
+      "sha256": "cc9a47306c302334639c0e5f0fe30e1a1ef73f409c72caff323ab6d8503eef8f"
+    },
+    "draft/build-income-reserve-initial.mts": {
+      "bytes": 2228,
+      "sha256": "2d4f20a338e62435b6995aecde528761130f9737bcb9c89139bc5532e63f96e1"
+    },
+    "draft/build-income-reserve.mts": {
+      "bytes": 2290,
+      "sha256": "47c850b9f49ab8be05588a8f5a2a734ae1094703cef7b483f2ef00e9cd3a53fc"
+    },
+    "draft/build-income-reserve-v2.mts": {
+      "bytes": 2598,
+      "sha256": "a180539cddc29c51f66e89ca1d7f3db12c6695dfa222c1bc0eb2953b69219477"
+    },
+    "draft/build-income-reserve-query.mts": {
+      "bytes": 2879,
+      "sha256": "20af178b5804253943a0590d5e3a75ca9b16b8e4ac2ed4fe58b5c3a7ad84f881"
+    },
+    "draft/build-income-reserve-explanation.mts": {
+      "bytes": 3719,
+      "sha256": "0a0375e7e4311ea0a1128a3a9c215a1c82ce698a747501efb39387e03813fabb"
+    }
+  }
+}
