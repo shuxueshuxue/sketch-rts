@@ -72,6 +72,29 @@ describe("room net hub", () => {
     expect(after.units.find((unit) => unit.id === worker!.id)?.order).toMatchObject({ type: "move" });
   });
 
+  // @@@api-tick-queue: a page's command in a paused room lands on the tick an API tick reaches.
+  it("applies a connected page's command when the API ticks a paused room", () => {
+    const roomHost = createRoomHost({ autoTick: false });
+    const room = roomHost.createRoom({ id: "room-api-tick-queue", host: hostUser, mapId: "bareDuel" });
+    roomHost.startRoom(room.id);
+    roomHost.pauseRoom(room.id);
+    const worker = roomHost.snapshot(room.id).units.find((unit) => unit.owner === "player" && unit.kind === "worker")!;
+    const hub = new RoomNetHub({ roomHost, commandDelayTicks: 2 });
+    const socket = new FakeSocket();
+    hub.connect(room.id, socket);
+    socket.emit(encodeNetMessage({ type: "join", rulesVersion: RULES_VERSION, roomId: room.id, playerId: "player" }));
+    socket.emit(encodeNetMessage({ type: "command", roomId: room.id, playerId: "player", clientSeq: 0, epoch: 0, command: { type: "move", unitIds: [worker.id], x: worker.x + 80, y: worker.y } }));
+
+    hub.tickConnectedRooms();
+    expect(roomHost.snapshot(room.id).tick).toBe(0);
+    roomHost.tickRoom(room.id, 4, hub.queuedFrames(room.id));
+
+    const frames = socket.sent.map((raw) => decodeServerNetMessage(raw)).filter((message): message is Extract<ServerNetMessage, { type: "frame" }> => message.type === "frame").map((message) => message.frame);
+    expect(frames.map((frame) => frame.tick)).toEqual([0, 1, 2, 3]);
+    expect(frames[2]?.commands).toContainEqual({ playerId: "player", clientSeq: 0, command: { type: "move", unitIds: [worker.id], x: worker.x + 80, y: worker.y } });
+    expect(roomHost.snapshot(room.id).units.find((unit) => unit.id === worker.id)?.order).toMatchObject({ type: "move" });
+  });
+
   it("broadcasts internal AI commands in the connected room frame", () => {
     const roomHost = createRoomHost({ autoTick: false });
     const room = roomHost.createRoom({ id: "room-connected-ai", host: hostUser, mapId: "bareDuel" });
