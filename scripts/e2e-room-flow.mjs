@@ -231,6 +231,10 @@ async page => {
   const movedSeats = await page.evaluate(() => new URLSearchParams(location.search).get("seats").split(",").map(seat => seat.split(":")));
   must(movedSeats.length === 4 && movedSeats[0][2] === "ember" && movedSeats[1][2] === "grove" && movedSeats[1][0] === "ai",
     "a map change did not keep the seats the new map has: " + JSON.stringify(movedSeats));
+  // At 1600 by 900 too, and for a map at the top of the list, out of sight when the list is scrolled to its end.
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await chooseSetupMap("templeSpring");
+  await page.setViewportSize({ width: 1280, height: 800 });
   await chooseSetupMap("pineshade");
   must((await page.evaluate(() => new URLSearchParams(location.search).get("seats").split(",").map(seat => seat.split(":")[2]).join(","))) === "ember,grove",
     "returning to the first map did not keep the seats' races");
