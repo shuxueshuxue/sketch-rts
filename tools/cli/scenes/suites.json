@@ -1,0 +1,4 @@
+{
+  "render": ["battle-zoomed-out", "tower-top", "spirit-battle", "ships", "ghosts", "sites", "hud", "tower-card", "equip"],
+  "perf": ["home-perf", "terrain-perf"]
+}
