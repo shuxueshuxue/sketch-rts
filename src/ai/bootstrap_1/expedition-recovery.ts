@@ -1,3 +1,4 @@
+import { keepMiningConstruction } from './construction-evacuation';
 import { reviseAssaultBeaches, orderBootstrapAssaultLanding } from './assault-beach';
 import { planShoreTransfers } from './shore-transfer';
 import { unitMover } from '../../shared/catalog';
@@ -85,7 +86,7 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
     mineEligible: mines.eligible, targetAvailable: mines.targetAvailable,
     transportReady: boat => !transportNeedsRecovery(snapshot, boat),
     troopAvailable: unit => !mounted.has(unit.id) && !reserved.has(unit.id) && !mainlandCare.has(unit.id),
-    workerAvailable: (unit, boat) => !released.has(unit.id) && canPauseFerryForWorker(snapshot, owner, options, boat)
+    workerAvailable: (unit, boat) => !keepMiningConstruction(snapshot, owner, options, unit, boat) && !released.has(unit.id) && canPauseFerryForWorker(snapshot, owner, options, boat)
       && workerBoardingSafe(snapshot, owner, options, unit, boat),
   })];
   commands.push(...planSettlerBoarding(snapshot, owner, options, commands));
