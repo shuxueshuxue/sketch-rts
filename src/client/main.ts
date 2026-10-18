@@ -1144,7 +1144,7 @@ function renderRoomSetup() {
   setup.innerHTML = menuPageMarkup(`
     <section class="map-browser" aria-label="${escapeHtml(t("roomCreate.map.label"))}">
       <div class="room-section-title">${escapeHtml(t("roomCreate.map.label"))}</div>
-      <div class="map-list" data-map-entries></div>
+      <div class="map-row-list" data-map-entries></div>
     </section>
     <aside class="map-preview-card">${mapDetailMarkup()}</aside>
     <div class="room-setup-layout">

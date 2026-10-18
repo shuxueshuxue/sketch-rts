@@ -26,7 +26,9 @@ export function fillMapThumbnails(list: HTMLElement) {
 function schedule() {
   if (scheduled) return;
   scheduled = true;
-  const idle = window.requestIdleCallback ?? ((callback: () => void) => window.setTimeout(callback, 16));
+  // An idle moment, or within a fifth of a second: the home scene animating behind the menu leaves few idle moments.
+  const idle = (callback: () => void) => typeof window.requestIdleCallback === "function"
+    ? window.requestIdleCallback(callback, { timeout: 200 }) : window.setTimeout(callback, 16);
   idle(() => {
     scheduled = false;
     const list = pending;
