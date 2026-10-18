@@ -343,10 +343,10 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     expect(gpu.casters.some(casters=>casters.some((caster,i)=>i>0&&casters[i-1]!.morph&&!caster.morph&&caster.side===FrontSide))).toBe(true);
     const compiled=gpu.compiled,materials=new Set<Material>(compiled.flatMap(mesh=>Array.isArray(mesh.material)?mesh.material:[mesh.material]));
     // The variants first drawn minutes into a match: a building under construction, a selected ship's see-through sail,
-    // the troop and deck remains cards, combat ink.
+    // the troop, deck remains and standing props' cards (see @@@prop-stands), combat ink.
     expect([...materials].some(material=>material.transparent&&material.opacity===.48)).toBe(true);
     expect([...materials].some(material=>material.name.startsWith('unbleached sail')&&material.opacity===.22)).toBe(true);
-    expect(compiled.filter(mesh=>mesh.name==='PaintedCards')).toHaveLength(2);
+    expect(compiled.filter(mesh=>mesh.name==='PaintedCards')).toHaveLength(3);
     expect(compiled.some(mesh=>mesh.name==='CombatInk')).toBe(true);
     // Nothing of the warm-up stays in the drawn scene.
     expect(gpu.scene!.getObjectsByProperty('name','PaintedCards').filter(object=>object.visible)).toHaveLength(0);
