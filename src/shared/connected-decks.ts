@@ -231,7 +231,8 @@ function onHull(ship: Unit, point: Point) {
 // to a corner) each held the spots in reach shut to the other, each one's nearest spot was where it stood, and neither
 // ever struck. The crew as the walker sees it for that choice.
 function makingWay(passenger: Unit, ship: Unit, units: readonly Unit[]): readonly Unit[] {
-  const order = passenger.order, victim = order.type === 'attack' ? units.find(unit => unit.id === order.targetId) : undefined;
+  const order = passenger.order, victimId = order.type === 'attack' ? order.targetId : order.type === 'board' ? order.strikeId : undefined;
+  const victim = victimId === undefined ? undefined : units.find(unit => unit.id === victimId);
   if (!victim?.deck || victim.deck.shipId !== ship.id || passenger.deck?.shipId !== ship.id) return units;
   const at = victim.deck, reach = strikeReach(passenger, victim) - 1;
   const own = deckPlacement(ship, passenger, units, at, true);
@@ -437,8 +438,9 @@ export function walkConnectedSurfaces(passenger: Unit, world: Point, units: read
     while (parents[next]! > 0) next = parents[next]!;
     return nodes[next];
   };
-  // A boarding crew's attack on the front rank is chosen again every tick: a body in its way becomes its target.
-  const order = passenger.order, explicit = order.type === 'attack' && order.leashX === undefined && !order.frontRank;
+  // A boarding crew fighting at the entry (see @@@board-phase) chooses its defender again every tick: a body in its way
+  // becomes its target, so it walks the shared field (it holds a board order), not an explicit attack's searched leg.
+  const order = passenger.order, explicit = order.type === 'attack' && order.leashX === undefined;
   const goal = aim ?? destination;
   const waypoint = explicit ? searchedLeg()
     : staticClear(passenger, destination) && open(passenger, destination) ? destination
