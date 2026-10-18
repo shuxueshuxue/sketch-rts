@@ -441,6 +441,28 @@ describe("room net hub", () => {
     expect(roomHost.snapshot(unconnected.id).tick).toBe(0);
   });
 
+  // @@@room-paused: a pause holds a room a page is connected to as well; an explicit tick still reaches the page.
+  it("leaves a paused connected room still, sends its explicit ticks to the page, and ticks it again on resume", () => {
+    const roomHost = createRoomHost({ autoTick: false });
+    const room = roomHost.createRoom({ id: "room-paused-connected", host: hostUser, mapId: "bareDuel" });
+    roomHost.startRoom(room.id);
+    const hub = new RoomNetHub({ roomHost });
+    const socket = new FakeSocket();
+    connectCurrent(hub, room.id, socket);
+    hub.tickConnectedRooms();
+    roomHost.pauseRoom(room.id);
+
+    hub.tickConnectedRooms(); hub.tickConnectedRooms();
+    expect(roomHost.snapshot(room.id).tick).toBe(1);
+    roomHost.tickRoom(room.id, 2);
+    roomHost.resumeRoom(room.id);
+    hub.tickConnectedRooms();
+
+    expect(roomHost.snapshot(room.id).tick).toBe(4);
+    const frames = socket.sent.map((raw) => decodeServerNetMessage(raw)).filter((message): message is Extract<ServerNetMessage, { type: "frame" }> => message.type === "frame");
+    expect(frames.map((message) => message.frame.tick)).toEqual([0, 1, 2, 3]);
+  });
+
   it("skips connected rooms after an external tick ends the match", () => {
     const roomHost = createRoomHost({ autoTick: false });
     const room = roomHost.createRoom({ id: "room-externally-ended", host: hostUser, mapId: "bareDuel" });

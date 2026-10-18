@@ -475,7 +475,7 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       for (const hosted of hostedRooms.values()) {
         if (options.excludeRoomIds?.has(hosted.room.id)) continue;
         if (hosted.room.status !== "inMatch" || !hosted.game) continue;
-        if (!hosted.room.autoTick) continue;
+        if (!hosted.room.autoTick || hosted.room.paused) continue;
         const game = hosted.game;
         // A continued save may need its disposable navigation graph rebuilt.
         // Reconstruct one prior slice per ticker turn before advancing truth.

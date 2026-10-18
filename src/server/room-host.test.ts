@@ -398,10 +398,10 @@ describe("server room host", () => {
     const resumed = host.resumeRoom(room.id);
     host.tickActiveRooms(2);
 
-    expect(paused.autoTick).toBe(false);
+    expect(paused.paused).toBe(true);
     expect(afterAutoTick.tick).toBe(0);
     expect(manual.snapshot.tick).toBe(3);
-    expect(resumed.autoTick).toBe(true);
+    expect(resumed.paused).toBeUndefined();
     expect(host.snapshot(room.id).tick).toBe(5);
   });
 

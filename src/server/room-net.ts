@@ -54,7 +54,9 @@ export class RoomNetHub {
   }
 
   tickRoom(roomId: string): CommandFrame | undefined {
-    if (this.options.roomHost.getRoom(roomId).status !== "inMatch") return undefined;
+    const room = this.options.roomHost.getRoom(roomId);
+    // A paused room stands still with its pages watching (see @@@room-paused).
+    if (room.status !== "inMatch" || room.paused) return undefined;
     const state = this.stateFor(roomId);
     // Keep delayed commands in the coordinator until restored derived work is
     // ready; building a frame earlier would consume its queue and sequence.
@@ -77,7 +79,8 @@ export class RoomNetHub {
       if (state.sockets.size === 0) {
         continue;
       }
-      if (this.options.roomHost.getRoom(roomId).status !== "inMatch") continue;
+      const room = this.options.roomHost.getRoom(roomId);
+      if (room.status !== "inMatch" || room.paused) continue;
       this.tickRoom(roomId);
       ticked.add(roomId);
     }
