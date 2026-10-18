@@ -29,7 +29,8 @@ describe('army against a forest horde home battle', () => {
     expect(army).toHaveLength(18); expect(horde).toHaveLength(18);
     expect(army.filter(unit => unit.kind === 'archer')).toHaveLength(6);
     expect(army.filter(unit => unit.kind === 'knight')).toHaveLength(2);
-    expect(horde.filter(unit => ['ogreLord', 'spiderQueen', 'graniteGolem', 'ancientStag'].includes(unit.kind))).toHaveLength(4);
+    expect(horde.filter(unit => ['spiderQueen', 'graniteGolem', 'ancientStag'].includes(unit.kind))).toHaveLength(3);
+    expect(horde.some(unit => unit.kind === 'ogreLord')).toBe(false);
     expect(new Set(horde.map(unit => unit.kind)).size).toBeGreaterThanOrEqual(10);
     for (const unit of units) {
       const healer = unit.kind === 'priest' || unit.kind === 'barkMender';
@@ -56,6 +57,18 @@ describe('army against a forest horde home battle', () => {
     expect(game.corpses!.length).toBeGreaterThan(15);
     expect(new Set(standing)).toEqual(new Set(['.']));
   });
+
+  // @@@woods-even: the battle is not decided before it starts. Seed 1 falls to the army; on seed 4 the army leads at
+  // twenty seconds and the horde still takes the field.
+  it('can go either way: the army takes one seed, the horde another after trailing', () => {
+    const owners = (game: ReturnType<typeof fight>['game']) => new Set(game.units.filter(unit => unit.hp > 0 && unit.attackDamage > 0).map(unit => unit.owner));
+    expect(owners(fight(1).game)).toEqual(new Set(['court']));
+    const run = createForestHorde(4), game = run.game, count = (owner: string) => game.units.filter(unit => unit.owner === owner && unit.hp > 0).length;
+    while (game.tick < 20 * SIM_TICKS_PER_SECOND) stepGame(game);
+    expect(count('court')).toBeGreaterThan(count('wilds'));
+    for (let tick = 0; tick < 130 * SIM_TICKS_PER_SECOND && !battleDecided(game); tick++) stepGame(game);
+    expect(owners(game)).toEqual(new Set(['wilds']));
+  }, 60_000);
 
   it('keeps the body of both armies inside the uncovered portrait region and the desktop right field', () => {
     const run = createForestHorde(), game = run.game;

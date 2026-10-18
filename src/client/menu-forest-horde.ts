@@ -36,7 +36,9 @@ export function createForestHorde(seed = 1): MenuSceneRun {
   pieces.prop('campfire', CX+575, CY+263, 1, 'out');
   const at = (owner: string, kind: UnitKind, x: number, y: number) => pieces.unit(owner, kind, CX+x+jitter(), CY+y+jitter());
   // The army: a front of footmen and lancers, archers behind, knights on the wings, a priest at the back.
-  const frontKinds: UnitKind[] = ['wildling','ogreWarrior','stonebackBrute','rockGolem','venomSpider','ogreLord','wildling','spiderQueen'];
+  // @@@woods-even - The horde's front carries no ogre lord: with one (380 hp in its line) the horde took 53 of 60 seeds,
+  // a wildling in its place, either side can win (the court 33 of 60).
+  const frontKinds: UnitKind[] = ['wildling','ogreWarrior','stonebackBrute','rockGolem','venomSpider','wildling','wildling','spiderQueen'];
   for (let i=0;i<8;i++) {
     const y=-196+i*56;
     at(ARMY,i%2?'lancer':'footman',-245,y);
@@ -50,7 +52,7 @@ export function createForestHorde(seed = 1): MenuSceneRun {
   at(HORDE,'graniteGolem',415,-274); at(HORDE,'ancientStag',458,284);
   for(let i=0;i<3;i++) at(HORDE,'thornSlinger',680+(i%2)*46,-154+i*147);
   const mender = at(HORDE,'barkMender',570,40);
-  // A reserve of four keeps the two sides even enough that either can win.
+  // A reserve of four comes up behind the horde's line.
   const reserveKinds: UnitKind[] = ['mossGnawer','spiderling','wildling','ogreWarrior'];
   for(let i=0;i<4;i++) at(HORDE,reserveKinds[i]!,510+(i*41)%138,-237+i*150+(i%2?10:-6));
   const game = stage(3800,2600,terrain,[[ARMY,'grove'],[HORDE,'grove']],pieces);
