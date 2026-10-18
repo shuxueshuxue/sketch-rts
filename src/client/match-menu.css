@@ -1,6 +1,6 @@
 /* @@@setup-layout-c - The match setup (the owner's choice C, docs/room-flow/redesign): a map list with pictures, the chosen
    map's picture and facts as one card, then the seats. Layout here (Room Lane); the look of these parts is Art Lane's. */
-.room-setup > .menu-page-body { grid-template-columns:260px 240px minmax(0,1fr); gap:18px; }
+.room-setup > .menu-page-body { grid-template-columns:240px 220px minmax(0,1fr); gap:18px; }
 .map-browser { display:grid; grid-template-rows:auto minmax(0,1fr); min-height:0; min-width:0; gap:8px; }
 .map-list { display:grid; align-content:start; grid-auto-rows:max-content; min-height:0; overflow-y:auto; overflow-x:hidden; gap:2px; padding:2px; }
 /* A row: its picture (a fixed box, so nothing moves when the picture comes, see @@@map-thumbnails), name and line of facts. */
@@ -22,12 +22,12 @@
 .room-setup-layout { display:grid; grid-template-columns:minmax(0,1fr); min-height:0; min-width:0; }
 /* The seats: every column fits at 1280 wide (computer players are named by play style, short). */
 .room-setup .room-slot-pane {
-  --seat-tracks:20px minmax(72px,1fr) 66px 88px 72px 78px;
+  --seat-tracks:20px minmax(84px,1fr) 66px 88px 72px 78px;
   display:grid; grid-template-rows:auto auto minmax(0,1fr); gap:12px; min-height:0; min-width:0;
   padding:14px; border:1px solid var(--inset-edge); border-radius:0;
   background:linear-gradient(110deg,#fff8df38,#c1a77c10); box-shadow:inset 0 1px #fff8e480;
 }
-.room-setup.online .room-slot-pane { --seat-tracks:20px minmax(72px,1fr) 66px 88px 72px 78px 56px; }
+.room-setup.online .room-slot-pane { --seat-tracks:20px minmax(84px,1fr) 66px 88px 72px 78px 56px; }
 .room-setup .room-section-title { color:var(--title); font-size:16px; letter-spacing:1px; }
 .slot-columns, .room-setup .slot-row { display:grid; grid-template-columns:var(--seat-tracks); gap:6px; align-items:center; }
 .slot-columns { overflow-y:hidden; scrollbar-gutter:stable; padding:0 0 8px; border-bottom:1px solid var(--rule); font:12px/1.4 var(--font-body); color:var(--ink-soft); }
