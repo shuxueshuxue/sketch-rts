@@ -11,7 +11,7 @@ import {SHIP_CAMERA} from '../../shared/ship-geometry';
 export const DEFAULT_CARD_BANKS=1;
 const LAYERS=16,PIXEL_BUDGET=12*1024*1024,TILT=Math.tan(SHIP_CAMERA.tilt);
 type Request={key:string;density:number;paint:(ctx:CanvasRenderingContext2D)=>void;matrix:THREE.Matrix4;id:string;foot:number;tileSize:number;opacity:number;baseMip:number;order:number};
-type Card={key:string;page:Page;layer:number;used:number;tileSize:number;sourceSize:number;baseMip:number;mask:Uint8Array};
+type Card={key:string;page:Page;layer:number;used:number;tileSize:number;sourceSize:number;baseMip:number;mask:Uint8Array|undefined;density:number;paint:((ctx:CanvasRenderingContext2D)=>void)|undefined};
 /** Cache allocation is independent of draw order. Pages own no render objects. */
 type Page={texture:THREE.DataArrayTexture;readonly mipBytes:number;uploaded:boolean;cards:(Card|undefined)[];used:number};
 type Instance={card:Card|undefined;matrix:THREE.Matrix4;id:string;foot:number;opacity:number;order:number};
@@ -45,6 +45,7 @@ export class PaintedCardBatches {
   private evictions=0;
   // Requests a frame left waiting with nothing to show: a troop drawn as its health bar alone.
   private bodiless=0;
+  private lazyMasks=0;
   // The distinct cards the last frame drew, and the most any frame has drawn: what the cache must hold not to repaint.
   private frameDemand=0;
   private frameKeys=new Set<string>();
@@ -58,7 +59,8 @@ export class PaintedCardBatches {
   private rayProbe=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({side:THREE.DoubleSide}));
   private raySphere=new THREE.Sphere();
   private rayHits:THREE.Intersection[]=[];
-  private canvases=new Map<number,HTMLCanvasElement>();
+  // Canvases keyed by pixel size: one painted for upload only (GPU-backed), one painted to be read back.
+  private canvases=new Map<string,HTMLCanvasElement>();
   private mipUploader:CardMipUploader;
   private rowScratch=new Uint8Array(0);
   private emptyRgba=new Uint8Array(0);
@@ -102,7 +104,7 @@ export class PaintedCardBatches {
     // Keep a bounded warm cache, but never evict a card referenced by this
     // frame. Large visible armies may legitimately exceed the soft budget.
     const remainingLayers=Math.floor((PIXEL_BUDGET-this.allocatedPixels)/(width*height));
-    if(oldest&&remainingLayers<1){this.evictions++;this.cards.delete(oldest.key);this.maskBytes-=oldest.mask.byteLength;oldest.page.cards[oldest.layer]=undefined;return{page:oldest.page,layer:oldest.layer};}
+    if(oldest&&remainingLayers<1){this.evictions++;this.cards.delete(oldest.key);this.maskBytes-=oldest.mask?.byteLength??0;oldest.page.cards[oldest.layer]=undefined;return{page:oldest.page,layer:oldest.layer};}
     // Reserve only this frame's remaining unique demands, even below budget.
     // A new resident-size bin may need a few poses rather than sixteen warm
     // slots. Current visible demands may still exceed the soft budget.
@@ -143,14 +145,19 @@ export class PaintedCardBatches {
     let target=this.bindings.get(current);if(!target){target=[];this.bindings.set(current,target);}
     for(const row of rows){row.card=current;target.push(row);}this.bindings.delete(previous);
   }
+  private paintCanvas(readable:boolean,density:number,paint:(ctx:CanvasRenderingContext2D)=>void,tileSize:number){
+    const size=tileSize*density,name=`${readable?'read':'upload'}:${size}`;
+    let canvas=this.canvases.get(name);if(!canvas){canvas=document.createElement('canvas');canvas.width=canvas.height=size;this.canvases.set(name,canvas);}
+    const ctx=canvas.getContext('2d',readable?{willReadFrequently:true}:undefined)!;ctx.resetTransform();ctx.clearRect(0,0,size,size);ctx.save();ctx.scale(density,density);ctx.translate(tileSize/2,tileSize/2);
+    try{paint(ctx);}finally{ctx.restore();}
+    return canvas;
+  }
   private readRaster(key:string,density:number,paint:(ctx:CanvasRenderingContext2D)=>void,tileSize:number){
     const size=tileSize*density,cacheStart=performance.now();let rgba=this.rasterCache.get(key);
     this.rasterStages.cacheMs+=performance.now()-cacheStart;const fromCache=!!rgba;let paintMs=0;
     if(!rgba){
       const paintStart=performance.now();
-      let canvas=this.canvases.get(size);if(!canvas){canvas=document.createElement('canvas');canvas.width=canvas.height=size;this.canvases.set(size,canvas);}
-      const ctx=canvas.getContext('2d',{willReadFrequently:true})!;ctx.resetTransform();ctx.clearRect(0,0,size,size);ctx.save();ctx.scale(density,density);ctx.translate(tileSize/2,tileSize/2);
-      try{paint(ctx);}finally{ctx.restore();}
+      const ctx=this.paintCanvas(true,density,paint,tileSize).getContext('2d',{willReadFrequently:true})!;
       const paintedAt=performance.now();this.rasterStages.paintMs+=paintedAt-paintStart;
       rgba=ctx.getImageData(0,0,size,size).data;const readAt=performance.now();this.rasterStages.readbackMs+=readAt-paintedAt;paintMs=readAt-paintStart;
     }
@@ -184,28 +191,23 @@ export class PaintedCardBatches {
     if(!card||card.baseMip>baseMip){
       const previous=card;
       const start=performance.now(),size=tileSize*density;
-      const {rgba,fromCache,paintMs}=this.readRaster(key,density,paint,tileSize);
+      const cacheStart=performance.now(),cached=this.rasterCache.get(key);this.rasterStages.cacheMs+=performance.now()-cacheStart;
+      if(!cached){card=this.rasterFresh(key,density,paint,tileSize,baseMip,renderer,pendingLayers,start);if(previous)this.retire(previous,card);this.instance(card,matrix,id,foot,opacity,order);return;}
+      // A prepared raster comes back from its exact pixels, already in GPU row order (see prepareRaster).
+      const rgba=cached;
       this.pendingRgbaBytes=rgba.byteLength;this.recordPeaks();
       try{
         const maskStart=performance.now(),painted=hasPaint(rgba),sourceSize=painted?size:16,residentMip=painted?baseMip:0,retainedSize=sourceSize/2**residentMip;
-        const mask=this.policy.pickable===false?new Uint8Array(0):painted?packCardPickMask(rgba,size,size,!fromCache):new Uint8Array(16*16/8);
-        this.pendingMaskBytes=mask.byteLength;
-        const flipStart=performance.now();this.rasterStages.pickMaskMs+=flipStart-maskStart;
-        // Reverse rows in place. A single reusable row replaces a second full
-        // RGBA allocation; the source readback is released after this upload.
-        if(painted&&!fromCache)this.flipRows(rgba,size);
-        const flippedAt=performance.now();this.rasterStages.rowFlipMs+=flippedAt-flipStart;
-        // Cached bytes already have GPU row orientation. Rehydration never
-        // rewrites transparent rows just to flip them a second time.
-        if(!fromCache)this.rasterCache.put(key,rgba,size,size,paintMs);
-        const slotStart=performance.now();this.rasterStages.cacheMs+=slotStart-flippedAt;
+        const mask=this.policy.pickable===false?new Uint8Array(0):painted?packCardPickMask(rgba,size,size,false):new Uint8Array(16*16/8);
+        this.pendingMaskBytes=mask.byteLength;this.rasterStages.pickMaskMs+=performance.now()-maskStart;
+        const slotStart=performance.now();
         const {page,layer}=this.slot(retainedSize,retainedSize,pendingLayers.get(retainedSize)??1,!painted);this.recordPeaks();
         this.rasterStages.slotMs+=performance.now()-slotStart;
         this.rasterWorkWallMs+=performance.now()-start;
         if(!painted&&this.emptyRgba.length===0)this.emptyRgba=new Uint8Array(16*16*4);
         this.mipUploader.uploadLayer(page,layer,painted?rgba:this.emptyRgba,renderer,{sourceWidth:sourceSize,sourceHeight:sourceSize,baseMip:residentMip});this.recordPeaks();
-        card={key,page,layer,used:this.frame,tileSize,sourceSize,baseMip:residentMip,mask};page.cards[layer]=card;this.cards.set(key,card);this.maskBytes+=mask.byteLength;
-        if(previous){this.rebind(previous,card);previous.page.cards[previous.layer]=undefined;this.maskBytes-=previous.mask.byteLength;}
+        card={key,page,layer,used:this.frame,tileSize,sourceSize,baseMip:residentMip,mask,density,paint:undefined};page.cards[layer]=card;this.cards.set(key,card);this.maskBytes+=mask.byteLength;
+        if(previous)this.retire(previous,card);
         this.rasterizations++;
         // Empty drawings use a separate minimum domain. Consume the original
         // planned demand once, rather than another request's 16px bin count.
@@ -214,6 +216,28 @@ export class PaintedCardBatches {
       }finally{this.pendingRgbaBytes=this.pendingMaskBytes=0;}
     }
     this.instance(card,matrix,id,foot,opacity,order);
+  }
+  private retire(previous:Card,card:Card){this.rebind(previous,card);previous.page.cards[previous.layer]=undefined;this.maskBytes-=previous.mask?.byteLength??0;}
+  /** A card painted now goes from its canvas straight to its page layer (see @@@canvas-upload): no readback, no row
+   * flip, no recovery copy. Its pick mask is read back only when a pointer first asks it (see hit). */
+  private rasterFresh(key:string,density:number,paint:(ctx:CanvasRenderingContext2D)=>void,tileSize:number,baseMip:number,renderer:CardTextureRenderer,pendingLayers:Map<number,number>,start:number):Card{
+    const size=tileSize*density,retainedSize=size/2**baseMip;
+    const paintStart=performance.now(),canvas=this.paintCanvas(false,density,paint,tileSize);this.rasterStages.paintMs+=performance.now()-paintStart;
+    const slotStart=performance.now(),{page,layer}=this.slot(retainedSize,retainedSize,pendingLayers.get(retainedSize)??1,false);this.recordPeaks();
+    this.rasterStages.slotMs+=performance.now()-slotStart;this.rasterWorkWallMs+=performance.now()-start;
+    this.mipUploader.uploadCanvasLayer(page,layer,canvas,renderer,{sourceWidth:size,sourceHeight:size,baseMip});this.recordPeaks();
+    const pickable=this.policy.pickable!==false,mask=pickable?undefined:new Uint8Array(0);
+    const card:Card={key,page,layer,used:this.frame,tileSize,sourceSize:size,baseMip,mask,density,paint:pickable?paint:undefined};
+    page.cards[layer]=card;this.cards.set(key,card);this.rasterizations++;
+    pendingLayers.set(retainedSize,Math.max(0,(pendingLayers.get(retainedSize)??1)-1));
+    return card;
+  }
+  private mask(card:Card){
+    if(card.mask)return card.mask;
+    const start=performance.now(),{rgba,fromCache}=this.readRaster(card.key,card.density,card.paint!,card.tileSize);
+    card.mask=packCardPickMask(rgba,card.sourceSize,card.sourceSize,!fromCache);card.paint=undefined;
+    this.maskBytes+=card.mask.byteLength;this.lazyMasks++;this.rasterStages.pickMaskMs+=performance.now()-start;
+    return card.mask;
   }
   private compact(renderer:CardTextureRenderer){
     if(this.allocatedPixels<=PIXEL_BUDGET)return;
@@ -260,14 +284,14 @@ export class PaintedCardBatches {
         // holes conservatively; their next request must repaint/recover them.
         for(const card of moved.values()){
           const previous=card.page.cards[card.layer];
-          if(previous&&this.cards.get(previous.key)===previous){this.cards.delete(previous.key);this.maskBytes-=previous.mask.byteLength;}
+          if(previous&&this.cards.get(previous.key)===previous){this.cards.delete(previous.key);this.maskBytes-=previous.mask?.byteLength??0;}
           card.page.cards[card.layer]=undefined;
         }
         this.recordPeaks();throw error;
       }finally{this.retiring.clear();}
       for(const [old,card] of moved){
         const previous=card.page.cards[card.layer];
-        if(previous&&this.cards.get(previous.key)===previous){this.cards.delete(previous.key);this.maskBytes-=previous.mask.byteLength;}
+        if(previous&&this.cards.get(previous.key)===previous){this.cards.delete(previous.key);this.maskBytes-=previous.mask?.byteLength??0;}
         card.page.cards[card.layer]=card;card.page.used=this.frame;this.cards.set(old.key,card);
       }
       for(const [old,card] of moved)this.rebind(old,card);
@@ -433,7 +457,7 @@ export class PaintedCardBatches {
   }
   private hit(chunk:DrawChunk,index:number,uv?:{x:number;y:number}){
     const card=chunk.entries[index];if(this.policy.pickable===false||!card||!uv)return false;
-    return cardMaskHit(card.mask,card.sourceSize,card.sourceSize,uv);
+    return cardMaskHit(this.mask(card),card.sourceSize,card.sourceSize,uv);
   }
   objects(){return this.chunks.filter(chunk=>chunk.mesh.visible).map(chunk=>chunk.mesh);}
   // Owned typed-array and texture storage estimates, not total process RSS or
@@ -445,7 +469,7 @@ export class PaintedCardBatches {
     const gpuBytes=Math.ceil(pixels*4*4/3),allocatedMipBytes=this.pages.reduce((sum,page)=>sum+bytes(page),0),retiredGpuBytes=[...this.retiring].reduce((sum,page)=>sum+(page.uploaded?bytes(page):0),0);
     const drawBufferBytes=this.chunks.reduce((sum,chunk)=>sum+chunk.mesh.instanceMatrix.array.byteLength+Object.values(chunk.geometry.attributes).reduce((total,attribute)=>total+attribute.array.byteLength,0)+(chunk.geometry.index?.array.byteLength??0),0);
     const cpuBytes=this.maskBytes+this.pendingMaskBytes+this.pendingRgbaBytes+this.rowScratch.byteLength+this.emptyRgba.byteLength;
-    return{pages:this.pages.length,cards:this.cards.size,pixels,drawChunks:this.chunks.filter(chunk=>chunk.mesh.visible).length,pooledDrawChunks:this.chunks.length,drawCapacity:this.chunks.reduce((sum,chunk)=>sum+chunk.capacity,0),drawBufferBytes,maxTextureBanks:this.maxTextureBanks,arrayCpuBytes:0,cpuBytes,gpuBytes,allocatedMipBytes,canvasBackingBytes:[...this.canvases.values()].reduce((sum,canvas)=>sum+canvas.width*canvas.height*4,0),maskBytes:this.maskBytes,pendingMaskBytes:this.pendingMaskBytes,pendingRgbaBytes:this.pendingRgbaBytes,rowScratchBytes:this.rowScratch.byteLength,retiredGpuBytes,rasterCache:this.rasterCache.stats(),ownedCpuBytes:cpuBytes+transfer.scratchCpuBytes+this.rasterCache.stats().ownedBytes,ownedGpuBytes:this.pages.reduce((sum,page)=>sum+(page.uploaded?bytes(page):0),0)+transfer.scratchGpuBytes,peakPendingRgbaBytes:this.peakPendingRgbaBytes,peakOwnedCpuBytes:this.peakOwnedCpuBytes,peakOwnedGpuBytes:this.peakOwnedGpuBytes,peakRetiredGpuBytes:this.peakRetiredGpuBytes,rasterizations:this.rasterizations,bodiless:this.bodiless,evictions:this.evictions,frameDemand:this.frameDemand,peakFrameDemand:this.peakFrameDemand,secondDemand,preparedRasters:this.preparedRasters,copiedLayers:this.copiedLayers,rasterStages:{...this.rasterStages},rasterWorkWallMs:this.rasterWorkWallMs,...transfer};
+    return{pages:this.pages.length,cards:this.cards.size,pixels,drawChunks:this.chunks.filter(chunk=>chunk.mesh.visible).length,pooledDrawChunks:this.chunks.length,drawCapacity:this.chunks.reduce((sum,chunk)=>sum+chunk.capacity,0),drawBufferBytes,maxTextureBanks:this.maxTextureBanks,arrayCpuBytes:0,cpuBytes,gpuBytes,allocatedMipBytes,canvasBackingBytes:[...this.canvases.values()].reduce((sum,canvas)=>sum+canvas.width*canvas.height*4,0),maskBytes:this.maskBytes,pendingMaskBytes:this.pendingMaskBytes,pendingRgbaBytes:this.pendingRgbaBytes,rowScratchBytes:this.rowScratch.byteLength,retiredGpuBytes,rasterCache:this.rasterCache.stats(),ownedCpuBytes:cpuBytes+transfer.scratchCpuBytes+this.rasterCache.stats().ownedBytes,ownedGpuBytes:this.pages.reduce((sum,page)=>sum+(page.uploaded?bytes(page):0),0)+transfer.scratchGpuBytes,peakPendingRgbaBytes:this.peakPendingRgbaBytes,peakOwnedCpuBytes:this.peakOwnedCpuBytes,peakOwnedGpuBytes:this.peakOwnedGpuBytes,peakRetiredGpuBytes:this.peakRetiredGpuBytes,rasterizations:this.rasterizations,bodiless:this.bodiless,lazyMasks:this.lazyMasks,evictions:this.evictions,frameDemand:this.frameDemand,peakFrameDemand:this.peakFrameDemand,secondDemand,preparedRasters:this.preparedRasters,copiedLayers:this.copiedLayers,rasterStages:{...this.rasterStages},rasterWorkWallMs:this.rasterWorkWallMs,...transfer};
   }
   private recordPeaks(){
     // Sampling occurs several times per raster. Preserve the same ownership and
@@ -459,7 +483,7 @@ export class PaintedCardBatches {
   }
   private remove(page:Page){
     const sourceSizes=new Set(page.cards.flatMap(card=>card?[card.sourceSize]:[]));
-    for(const card of page.cards)if(card&&this.cards.get(card.key)===card){this.evictions++;this.cards.delete(card.key);this.maskBytes-=card.mask.byteLength;}
+    for(const card of page.cards)if(card&&this.cards.get(card.key)===card){this.evictions++;this.cards.delete(card.key);this.maskBytes-=card.mask?.byteLength??0;}
     page.texture.dispose();this.pages.splice(this.pages.indexOf(page),1);this.allocatedPixels-=page.texture.image.width*page.texture.image.height*page.texture.image.depth;
     // Resident arrays can be smaller than their full-resolution scratch, and
     // different source sizes can share an identically sized resident page.
