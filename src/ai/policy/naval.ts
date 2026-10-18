@@ -271,12 +271,17 @@ function navalStep(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCon
     const guardedIsland = plan && snapshot.units.filter(unit => unit.owner === "neutral" && distance(unit, plan.mine) < 600).reduce((n, unit) => n + effectiveCombatRating(snapshot,unit), 0) > 3;
     const activeBases=halls.filter(hall=>snapshot.resources.some(mine=>mine.amount>0&&distance(mine,hall)<GOLD_MINE_RULES.baseRange)).length;
     const fleetTarget=Math.min(8,Math.max(WARSHIPS,activeBases>2?activeBases+1:WARSHIPS,enemyFleet.length+1));
+    // @@@island-escort - An island's settling crosses water no enemy ship holds with its transport alone: warships are for
+    // an assault, a raid or an enemy fleet. Bought for the island plan all the same, the fleet the home's bases sized kept
+    // a 540-gold warship saved for at the top of the economy (aged to 80, over the knights it waited on) through most of a
+    // game whose island was never settled (V9 knight against V9, 13 draws: a naval goal on top in 23% of its turns).
+    const escort = Boolean(assault) || enemyFleet.length > 0 || !plan || Boolean(raidPlan(snapshot, owner, options));
     const ship: TrainableUnitKind | undefined = held
         ? (warships < Math.max(6,fleetTarget) ? "warship" : undefined)
         : !transported && (plan || assault) ? "transport"
             : moreLift ? (advanced ? "carrier" : "transport")
             : advanced && guardedIsland && !fleet.some(unit => unit.kind === "carrier" && sameGround(snapshot.map, unit, water, "sea")) ? "carrier"
-            : warships < fleetTarget ? "warship"
+            : escort && warships < fleetTarget ? "warship"
                 : advanced && nearTowers && !armed.some(unit => unit.kind === "bombardShip") ? "bombardShip"
                     : enemyFleet.length >= 3 && !armed.some(unit => unit.kind === "fireShip") ? "fireShip"
                         : warships >= 2 && !fleet.some(unit => unit.kind === "cutter") ? "cutter"
