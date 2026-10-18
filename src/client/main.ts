@@ -3164,8 +3164,10 @@ function cycleFocusedSelection(direction: 1 | -1) {
 
 function updateHud() {
   if (!snapshot) return;
-  const statusTooltip = shownTooltipTarget?.dataset.unitStatus ? shownTooltipTarget : undefined;
-  const statusTooltipBefore = statusTooltip ? `${statusTooltip.dataset.tooltipTitle}:${statusTooltip.dataset.tooltipBody}:${statusTooltip.dataset.tooltipStats}` : '';
+  // @@@tooltip-follows-target - An open tooltip follows the element it was opened on through the HUD refresh: closed
+  // if the element left the page, redrawn if its text changed (a progress button's percent, a unit's status).
+  const openTooltip = shownTooltipTarget && !tooltipLayer.classList.contains("hidden") ? shownTooltipTarget : undefined;
+  const openTooltipBefore = openTooltip ? tooltipText(openTooltip) : "";
   for (const [id, tick] of pendingVeteranChoices) {
     const unit = snapshot.units.find(candidate => candidate.id === id);
     if (!unit || unit.veteranSkill || snapshot.tick < tick || snapshot.tick - tick > 100) pendingVeteranChoices.delete(id);
@@ -3205,10 +3207,6 @@ function updateHud() {
       art:{ key:"camp", paint:canvas => drawAtlasBuildingPortrait(requireCanvasContext(canvas), "camp", canvas.clientWidth, "#8b7355") },
     }, [], t("hud.nothingSelected"));
   } else hudSelection.render(undefined, [], t("hud.nothingSelected"));
-  if (statusTooltip && !statusTooltip.isConnected) {
-    tooltipLayer.classList.add('hidden'); shownTooltipTarget = undefined;
-    if (virtualTooltipTarget === statusTooltip) virtualTooltipTarget = undefined;
-  } else if (statusTooltip && !tooltipLayer.classList.contains('hidden') && statusTooltipBefore !== `${statusTooltip.dataset.tooltipTitle}:${statusTooltip.dataset.tooltipBody}:${statusTooltip.dataset.tooltipStats}`) renderTooltip(statusTooltip);
   let visibleCount = 0;
   // This runs for every snapshot. A hidden button shows nothing and no pointer reaches its tooltip, so it is drawn in
   // full again the update it shows; a shown one writes only what changed, leaving style and layout clean for the frame.
@@ -3233,7 +3231,6 @@ function updateHud() {
     applyTooltip(button.element, commandButtonTooltip(button.tooltip(), state));
     visibleCount += 1;
   }
-  commandDock.querySelectorAll("[data-research-progress]").forEach((element) => element.remove());
   const previousTraining = new Map(Array.from(commandDock.querySelectorAll<HTMLButtonElement>("[data-training-progress]"), button => [button.dataset.jobId, button]));
   for (const progress of trainingProgressButtonsForSelection(focusedBuildings)) {
     const previous = previousTraining.get(progress.jobId);
@@ -3243,14 +3240,30 @@ function updateHud() {
     visibleCount += 1;
   }
   for (const button of previousTraining.values()) button.remove();
+  // A research's button is updated in place for as long as it runs, as a training's is: a button rebuilt on every
+  // refresh is never the one under the pointer, so its tooltip could neither follow it nor close.
+  const previousResearch = new Map(Array.from(commandDock.querySelectorAll<HTMLButtonElement>("[data-research-key]"), button => [button.dataset.researchKey, button]));
   for (const progress of researchProgressButtonsForSelection(focusedBuildings, player)) {
-    commandDock.append(renderResearchProgressButton(progress));
+    const key = `${progress.buildingId}:${progress.upgradeKind}:${progress.targetLevel}`, previous = previousResearch.get(key);
+    const button = renderResearchProgressButton(progress, key, previous);
+    if (!previous) commandDock.append(button);
+    previousResearch.delete(key);
     visibleCount += 1;
   }
+  for (const button of previousResearch.values()) button.remove();
   setHidden(commandDock, visibleCount === 0);
   renderItemDock();
   setHidden(hudActions, commandDock.hidden && itemDock.hidden);
   setHidden(controlDeck, selectionLabel.hidden && hudActions.hidden);
+  if (openTooltip && !openTooltip.isConnected) {
+    tooltipLayer.classList.add("hidden"); shownTooltipTarget = undefined;
+    if (virtualTooltipTarget === openTooltip) virtualTooltipTarget = undefined;
+  } else if (openTooltip && openTooltipBefore !== tooltipText(openTooltip)) renderTooltip(openTooltip);
+}
+
+function tooltipText(target: HTMLElement) {
+  const data = target.dataset;
+  return `${data.tooltipTitle}:${data.tooltipBody}:${data.tooltipStats}:${data.tooltipRequirements}:${data.tooltipNotes}:${data.tooltipHotkey}`;
 }
 
 function renderSelectionGroups(groups: SelectionGroup[]) {
@@ -3379,30 +3392,34 @@ function drawSelectionModel(canvas: HTMLCanvasElement, group: SelectionGroup) {
   else drawAtlasBuildingPortrait(mini, group.kind, canvas.clientWidth, color);
 }
 
-function renderResearchProgressButton(progress: ResearchProgressButton) {
+function renderResearchProgressButton(progress: ResearchProgressButton, key: string, previous?: HTMLButtonElement) {
   const percent = Math.floor(progress.progress * 100);
   const label = t(progress.status === "researching" ? "hud.trainingResearching" : "hud.trainingQueued", { label: `${labelKind(progress.upgradeKind)} ${romanLevel(progress.targetLevel)}` });
-  const button = document.createElement("button");
-  button.type = "button";
-  button.tabIndex = -1;
-  button.className = "command-button research-progress-button";
-  button.setAttribute("aria-disabled", "true");
-  button.dataset.researchProgress = progress.upgradeKind;
-  button.dataset.commandLabel = label;
-  button.setAttribute("aria-label", `${label} - ${percent}%`);
+  const button = previous ?? document.createElement("button");
+  if (!previous) {
+    button.type = "button";
+    button.tabIndex = -1;
+    button.className = "command-button research-progress-button";
+    button.setAttribute("aria-disabled", "true");
+    button.dataset.researchKey = key;
+    button.dataset.researchProgress = progress.upgradeKind;
+    button.innerHTML = `
+    <span class="research-progress-fill"></span>
+    <span class="command-icon">${escapeHtml(progress.icon)}</span>
+    <span class="command-label">${escapeHtml(labelKind(progress.upgradeKind))}</span>
+    <span class="research-progress-text"></span>
+  `;
+  }
+  setData(button, "commandLabel", label);
+  setAttribute(button, "aria-label", `${label} - ${percent}%`);
   const tooltip = upgradeTooltip(progress.upgradeKind, undefined, progress.targetLevel - 1, i18n);
   applyTooltip(button, {
     ...tooltip,
     title: label,
     stats: [t("hud.progressComplete", { percent, time: formatRemaining(progress.remaining) }), ...tooltip.stats],
   });
-  button.style.setProperty("--research-progress", `${percent}%`);
-  button.innerHTML = `
-    <span class="research-progress-fill"></span>
-    <span class="command-icon">${escapeHtml(progress.icon)}</span>
-    <span class="command-label">${escapeHtml(labelKind(progress.upgradeKind))}</span>
-    <span class="research-progress-text">${progress.status === "researching" ? formatRemaining(progress.remaining) : escapeHtml(t("hud.productionQueueBadge"))}</span>
-  `;
+  if (button.style.getPropertyValue("--research-progress") !== `${percent}%`) button.style.setProperty("--research-progress", `${percent}%`);
+  setText(button.querySelector(".research-progress-text")!, progress.status === "researching" ? formatRemaining(progress.remaining) : t("hud.productionQueueBadge"));
   return button;
 }
 
