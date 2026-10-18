@@ -1,0 +1,15 @@
+{
+  "rulesVersion": 2,
+  "entryCount": 184,
+  "manifestUnchanged": true,
+  "manifestSha256": "0490e7d43d109e70be3b141f76d1276a778a3402f3ea19f51a8cd37fee941774",
+  "changedRuntimePaths": [
+    "src/ai/bootstrap_1/committed-colony-capital.test.ts",
+    "src/ai/bootstrap_1/committed-colony-capital.ts",
+    "src/ai/bootstrap_1/economy.ts",
+    "src/ai/bootstrap_1/fixtures/knight-committed-colony-30525.json.gz"
+  ],
+  "candidate": "f8b6fc8241247c4d0b566d6828e21aa31aabe90f",
+  "tests": "42 passed; first worker-pool configuration failed before running any tests, corrected minWorkers=1/maxWorkers=1",
+  "typecheck": "passed exit0"
+}

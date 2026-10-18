@@ -1,0 +1,129 @@
+{
+  "classification": "known failed seed normal-start regression; not unseen; not acceptance",
+  "results": [
+    {
+      "directory": "/workspace/bootstrap-1-normal-landing-20261018/knight-shore-holdout",
+      "head": "822ba36ae5a3898b5ae62f64c1dd1fd4f0075da1",
+      "startTick": 0,
+      "resume": null,
+      "tick": 45045,
+      "winner": "p1",
+      "naturalComplete": true,
+      "permanentDeaths": 45,
+      "capturedSurvivors": [],
+      "permanentBirthsAfterStart": 42,
+      "permanentAlive": 0,
+      "hallEvents": [
+        {
+          "tick": 10269,
+          "event": "birth",
+          "id": "building-p0-townHall-1808"
+        },
+        {
+          "tick": 40839,
+          "event": "removal",
+          "id": "building-p0-townhall"
+        },
+        {
+          "tick": 44324,
+          "event": "removal",
+          "id": "building-p0-townHall-1808"
+        }
+      ],
+      "elapsedMs": 703982.618,
+      "sourceChangedDuringRun": []
+    },
+    {
+      "directory": "/workspace/bootstrap-1-capital-20261018/knight-known-capital-normal",
+      "head": "f8b6fc8241247c4d0b566d6828e21aa31aabe90f",
+      "startTick": 0,
+      "resume": null,
+      "tick": 72654,
+      "winner": "p1",
+      "naturalComplete": true,
+      "permanentDeaths": 39,
+      "capturedSurvivors": [
+        {
+          "id": "unit-p0-carrier-7155",
+          "owner": "p2",
+          "kind": "carrier"
+        }
+      ],
+      "permanentBirthsAfterStart": 41,
+      "permanentAlive": 4,
+      "hallEvents": [
+        {
+          "tick": 10269,
+          "event": "birth",
+          "id": "building-p0-townHall-1808"
+        },
+        {
+          "tick": 31948,
+          "event": "birth",
+          "id": "building-p0-townHall-8027"
+        },
+        {
+          "tick": 33407,
+          "event": "removal",
+          "id": "building-p0-townHall-8027"
+        },
+        {
+          "tick": 61654,
+          "event": "removal",
+          "id": "building-p0-townhall"
+        },
+        {
+          "tick": 72200,
+          "event": "removal",
+          "id": "building-p0-townHall-1808"
+        }
+      ],
+      "elapsedMs": 1104915.889,
+      "sourceChangedDuringRun": []
+    }
+  ],
+  "initialEquivalence": {
+    "initialSnapshotEqual": true,
+    "initialNextIdEqual": true,
+    "initialMemoriesEqual": true,
+    "matchEqual": true,
+    "oldHead": "822ba36ae5a3898b5ae62f64c1dd1fd4f0075da1",
+    "newHead": "f8b6fc8241247c4d0b566d6828e21aa31aabe90f"
+  },
+  "divergence": {
+    "equalCommandPrefix": 4756,
+    "oldFirstDifferent": {
+      "tick": 30525,
+      "owner": "p0",
+      "scriptId": "v6Economy",
+      "command": {
+        "type": "train",
+        "buildingId": "building-p0-stables-2690",
+        "unitKind": "knight"
+      }
+    },
+    "newFirstDifferent": {
+      "tick": 30525,
+      "owner": "p0",
+      "scriptId": "v6General",
+      "command": {
+        "type": "attackMove",
+        "unitIds": [
+          "unit-p0-lancer-1367",
+          "unit-p0-lancer-1419",
+          "unit-p0-lancer-1820",
+          "unit-p0-lancer-2071",
+          "unit-p0-raider-5042",
+          "unit-p0-knight-5694",
+          "unit-p0-raider-6008",
+          "unit-p0-knight-6284"
+        ],
+        "x": 5865.953969914126,
+        "y": 2110.3870241878367
+      }
+    },
+    "snapshot30000Equal": true,
+    "nextId30000Equal": true,
+    "memories30000Equal": true
+  }
+}

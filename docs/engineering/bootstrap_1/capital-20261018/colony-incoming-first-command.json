@@ -1,0 +1,22 @@
+[
+  {
+    "tick": 32880,
+    "owner": "p2",
+    "scriptId": "naval",
+    "command": {
+      "type": "attackMove",
+      "unitIds": [
+        "unit-p2-footman-2961",
+        "unit-p2-footman-3262",
+        "unit-p2-footman-7213",
+        "unit-p2-footman-7333",
+        "unit-p2-footman-7516",
+        "unit-p2-footman-7686",
+        "unit-p2-footman-7827",
+        "unit-p2-footman-7951"
+      ],
+      "x": 3680.6834142772473,
+      "y": 4401.516311351366
+    }
+  }
+]

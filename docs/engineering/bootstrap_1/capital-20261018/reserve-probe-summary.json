@@ -1,0 +1,81 @@
+{
+  "kind": "failed diagnostic only; broad no-income reserve filter, not formal implementation",
+  "input": "normal-landing-20261018/knight-shore-holdout/frames/30000.json.gz",
+  "start": 30000,
+  "end": 36000,
+  "winner": null,
+  "firstSampleComplete": [
+    {
+      "tick": 32520,
+      "gold": 52.43
+    }
+  ],
+  "firstHit": {
+    "tick": 33241,
+    "attacker": {
+      "id": "unit-p2-footman-3262",
+      "kind": "footman",
+      "owner": "p2",
+      "hp": 167,
+      "maxHp": 167,
+      "x": 3792.7953445693092,
+      "y": 4368.437031759104,
+      "order": {
+        "type": "attackMove",
+        "x": 3680.6834142772473,
+        "y": 4401.516311351366,
+        "targetId": "building-p0-townHall-8027"
+      }
+    },
+    "target": {
+      "id": "building-p0-townHall-8027",
+      "kind": "townHall",
+      "owner": "p0",
+      "hp": 882,
+      "maxHp": 900,
+      "x": 3888,
+      "y": 4368
+    },
+    "damage": 18,
+    "hpBefore": 900
+  },
+  "lastHit": {
+    "tick": 33407,
+    "attacker": {
+      "id": "unit-p2-footman-7333",
+      "kind": "footman",
+      "owner": "p2",
+      "hp": 167,
+      "maxHp": 167,
+      "x": 3841.6919613382006,
+      "y": 4319.826938956284,
+      "order": {
+        "type": "attackMove",
+        "x": 3680.6834142772473,
+        "y": 4401.516311351366,
+        "targetId": "building-p0-townHall-8027"
+      }
+    },
+    "target": {
+      "id": "building-p0-townHall-8027",
+      "kind": "townHall",
+      "owner": "p0",
+      "hp": 0,
+      "maxHp": 900,
+      "x": 3888,
+      "y": 4368
+    },
+    "damage": 18,
+    "hpBefore": 18
+  },
+  "hits": 50,
+  "result": {
+    "startTick": 30000,
+    "tick": 36000,
+    "winner": null,
+    "elapsedMs": 87244.158,
+    "sourceChangedDuringRun": []
+  },
+  "netTreasuryChangeExcludingRecordedSpending": 29.28,
+  "incomeCaveat": "Treasury accounting residual includes upkeep; not gross mined income."
+}

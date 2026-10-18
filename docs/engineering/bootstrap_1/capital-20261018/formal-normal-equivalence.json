@@ -1,0 +1,6 @@
+{
+  "snapshot36000Equal": true,
+  "nextId36000Equal": true,
+  "memories36000Equal": true,
+  "note": "Formal replay is causally connected to the normal start; separate broad filter probe had a documented goal-age difference."
+}

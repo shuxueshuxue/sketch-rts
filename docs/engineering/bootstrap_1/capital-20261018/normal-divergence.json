@@ -1,0 +1,36 @@
+{
+  "equalCommandPrefix": 4756,
+  "oldFirstDifferent": {
+    "tick": 30525,
+    "owner": "p0",
+    "scriptId": "v6Economy",
+    "command": {
+      "type": "train",
+      "buildingId": "building-p0-stables-2690",
+      "unitKind": "knight"
+    }
+  },
+  "newFirstDifferent": {
+    "tick": 30525,
+    "owner": "p0",
+    "scriptId": "v6General",
+    "command": {
+      "type": "attackMove",
+      "unitIds": [
+        "unit-p0-lancer-1367",
+        "unit-p0-lancer-1419",
+        "unit-p0-lancer-1820",
+        "unit-p0-lancer-2071",
+        "unit-p0-raider-5042",
+        "unit-p0-knight-5694",
+        "unit-p0-raider-6008",
+        "unit-p0-knight-6284"
+      ],
+      "x": 5865.953969914126,
+      "y": 2110.3870241878367
+    }
+  },
+  "snapshot30000Equal": true,
+  "nextId30000Equal": true,
+  "memories30000Equal": true
+}
