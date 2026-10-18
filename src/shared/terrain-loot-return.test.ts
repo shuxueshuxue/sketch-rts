@@ -77,9 +77,9 @@ it('keeps a rules-4 save loadable while refusing to replay its old movement rule
   expect(walkingDistance(restored.map, returned, home, 'land')).toBeLessThanOrEqual(V7_GATHERED_RANGE);
 });
 
-// The unused long path joins fields, but its short fallback stays in the
-// starting field. Rejecting that ordinary corner smoothing pins two lancers
-// against each other instead of letting them round the bend.
+// Preserve same-field short smoothing and occluded wall-sliding hints. Treating
+// either as a visible cross-field shortcut pins units at otherwise passable
+// bends: two lancers against each other, or a knight against a wall.
 it.each([crowded, corner])('preserves ordinary corner smoothing at $provenance.map tick $provenance.tick', fixture => {
   const game = createGame('bareDuel', { aiPlayers: [] });
   restoreSnapshotIntoGame(game, fixture.snapshot as unknown as GameSnapshot, 1_000_000);
