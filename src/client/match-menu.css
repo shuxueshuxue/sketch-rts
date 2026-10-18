@@ -1,118 +1,75 @@
-/* The match setup uses the common menu page with its own content layout: maps, the chosen map, then the seats. */
-.map-browser { display:grid; grid-template-rows:auto minmax(0,1fr); min-height:0; min-width:0; padding:14px; gap:10px; }
-.map-entries { display:grid; align-content:start; min-height:0; overflow-y:auto; overflow-x:hidden; gap:2px; }
-.map-entry { position:relative; border:0; background:transparent; color:var(--inset-ink); padding:8px 10px 8px 16px; text-align:left; min-width:0; }
-.map-entry .map-button-name { font:13px/1.3 var(--font-body); letter-spacing:0; }
-.map-entry:hover,.map-entry.selected { background:var(--selected); }
-.map-entry.selected { font-weight:700; }
-.map-entry.selected::before { content:""; position:absolute; left:4px; top:50%; transform:translateY(-50%); border:4px solid transparent; border-left:5px solid var(--selected-mark); }
+/* @@@setup-layout-c - The match setup (the owner's choice C, docs/room-flow/redesign): a map list with pictures
+   (.map-row-list: .map-list is the menu's own container), the chosen map's picture and facts as one card, then the seats.
+   Layout here (Room Lane); the look of these parts is Art Lane's. */
+/* One row, held to the window's height: the list and the seats scroll inside it, the page itself does not. */
+.room-setup > .menu-page-body { grid-template-columns:240px 220px minmax(0,1fr); grid-template-rows:minmax(0,1fr); gap:18px; }
+.map-browser { display:grid; grid-template-rows:auto minmax(0,1fr); min-height:0; min-width:0; gap:8px; }
+.map-row-list { display:grid; align-content:start; grid-auto-rows:max-content; min-height:0; overflow-y:auto; overflow-x:hidden; gap:2px; padding:2px; }
+/* A row: its picture (a fixed box, so nothing moves when the picture comes, see @@@map-thumbnails), name and line of facts. */
+.map-row { display:grid; grid-template-columns:52px minmax(0,1fr); grid-template-rows:auto auto; column-gap:10px; align-items:center; min-width:0;
+  padding:5px 8px 5px 5px; border:0; background:transparent; color:var(--inset-ink); text-align:left; cursor:pointer; }
+.map-row:disabled { cursor:default; }
+.map-row-thumb { grid-row:1 / 3; width:52px; height:52px; box-sizing:border-box; display:block; background:#d9c79e; border:2px solid #3a2410; }
+.map-row-name { font:600 14px/1.25 var(--font-display); overflow-wrap:anywhere; }
+.map-row-meta { font:12px/1.3 var(--font-body); color:var(--ink-soft); }
+.map-row:hover:not(:disabled), .map-row.is-selected { background:var(--selected); }
+.map-row.is-selected { box-shadow:inset 3px 0 var(--selected-mark); }
+.map-preview-card { display:grid; align-content:start; gap:12px; min-width:0; min-height:0; overflow-y:auto; }
 .map-preview-frame { box-sizing:border-box; min-width:0; line-height:0; border-width:8px; border-image-width:8px; background:#1a0e05; box-shadow:0 4px 12px #0005; aspect-ratio:1; }
 .map-preview { display:block; width:100%; height:auto; aspect-ratio:1; }
-.map-preview-space { display:grid; min-width:0; min-height:0; }
-.map-info { min-width:0; display:grid; align-content:start; padding:12px; gap:10px; }
-.map-info-name { font:20px/1.3 var(--font-display); overflow-wrap:anywhere; }
-.map-facts { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6px 10px; margin:0; font-size:12px; }
+.map-preview-name { font:22px/1.25 var(--font-display); color:var(--title); overflow-wrap:anywhere; }
+.map-facts { display:grid; grid-template-columns:auto minmax(0,1fr); gap:5px 12px; margin:0; font-size:12px; }
 .map-facts dt { color:var(--ink-soft); }
 .map-facts dd { margin:0; font-weight:700; font-variant-numeric:tabular-nums; }
-/* A map dossier on the left; the roster owns the full height on the right. */
-:is(.create-game-form,.room-setup) > .menu-page-body { grid-template-columns:240px minmax(0,1fr); gap:26px; }
-.room-setup.with-maps > .menu-page-body { grid-template-columns:170px 220px minmax(0,1fr); gap:20px; }
-.room-setup .map-browser { padding:4px 0; }
-/* Beside the map list the dossier is narrow: the picture takes its width and the facts follow right under it. */
-.room-setup.with-maps .match-dossier .map-detail { grid-template-rows:auto auto; align-content:start; }
-.room-setup.with-maps .match-dossier .map-preview-space { container-type:inline-size; }
-.room-setup.with-maps .match-dossier .map-preview-frame { width:100cqw; }
-.match-dossier { display:grid; min-width:0; min-height:0; gap:22px; padding:4px 16px 8px 4px; border-right:1px solid var(--rule); }
-.create-game-form .match-dossier { grid-template-rows:minmax(0,1fr) auto; }
-.selected-map-summary { display:grid; grid-template-rows:auto minmax(0,1fr); min-width:0; min-height:0; gap:16px; }
-.selected-map-caption { min-width:0; }
-/* The image fits the space left by the caption and settings, without making the dossier scroll. */
-.match-dossier .map-preview-space { container-type:size; }
-.match-dossier .map-preview-frame { width:min(100cqw,100cqh); }
-.selected-map-summary strong { color:var(--title); font:22px/1.25 var(--font-display); overflow-wrap:anywhere; }
-.selected-map-summary [data-map-summary] { color:var(--ink-soft); font-size:12px; margin-top:6px; }
-.create-options { display:grid; gap:16px; padding-top:16px; border-top:1px solid var(--rule); }
-.create-options input[type=text],.create-options input:not([type]) { box-sizing:border-box; width:100%; min-width:0; height:34px; }
-.match-dossier .map-detail { display:grid; grid-template-rows:minmax(0,1fr) auto; min-height:0; gap:16px; }
-.match-dossier .map-info { padding:0; border:0; background:none; box-shadow:none; gap:16px; }
-.match-dossier .map-info-name { font-size:22px; }
-.room-setup-layout { display:grid; grid-template-columns:minmax(0,1fr); min-height:0; }
-:is(.create-game-form,.room-setup) .room-slot-pane {
-  --seat-tracks:24px minmax(90px,1fr) 84px 96px 104px 128px;
-  display:grid; grid-template-rows:auto auto minmax(0,1fr); gap:14px; min-height:0; min-width:0;
-  padding:18px; border:1px solid var(--inset-edge); border-radius:0;
+.room-setup-layout { display:grid; grid-template-columns:minmax(0,1fr); min-height:0; min-width:0; }
+/* The seats: every column fits at 1280 wide (computer players are named by play style, short). */
+.room-setup .room-slot-pane {
+  --seat-tracks:20px minmax(84px,1fr) 66px 88px 72px 78px;
+  display:grid; grid-template-rows:auto auto minmax(0,1fr); gap:12px; min-height:0; min-width:0;
+  padding:14px; border:1px solid var(--inset-edge); border-radius:0;
   background:linear-gradient(110deg,#fff8df38,#c1a77c10); box-shadow:inset 0 1px #fff8e480;
 }
-.room-setup .room-slot-pane { --seat-tracks:24px minmax(90px,1fr) 78px 86px 94px 128px 46px; }
-:is(.create-game-form,.room-setup) .room-section-title { color:var(--title); font-size:16px; letter-spacing:1px; }
-.slot-columns,:is(.create-game-form,.room-setup) .slot-row { display:grid; grid-template-columns:var(--seat-tracks); gap:8px; align-items:center; }
-.slot-columns { overflow-y:hidden; scrollbar-gutter:stable; padding:0 0 10px; border-bottom:1px solid var(--rule); font:12px/1.4 var(--font-body); color:var(--ink-soft); }
-:is(.create-game-form,.room-setup) .slot-list { overflow-y:auto; overflow-x:hidden; min-height:0; scrollbar-gutter:stable; grid-auto-rows:max-content; gap:0; }
-:is(.create-game-form,.room-setup) .slot-row { min-width:0; min-height:44px; padding:8px 0; box-sizing:border-box; border-bottom:1px solid var(--inset-edge); }
+.room-setup.online .room-slot-pane { --seat-tracks:20px minmax(84px,1fr) 66px 88px 72px 78px 56px; }
+.room-setup .room-section-title { color:var(--title); font-size:16px; letter-spacing:1px; }
+.slot-columns, .room-setup .slot-row { display:grid; grid-template-columns:var(--seat-tracks); gap:6px; align-items:center; }
+.slot-columns { overflow-y:hidden; scrollbar-gutter:stable; padding:0 0 8px; border-bottom:1px solid var(--rule); font:12px/1.4 var(--font-body); color:var(--ink-soft); }
+.room-setup .slot-list { overflow-y:auto; overflow-x:hidden; min-height:0; scrollbar-gutter:stable; grid-auto-rows:max-content; gap:0; }
+.room-setup .slot-row { min-width:0; min-height:44px; padding:7px 0; box-sizing:border-box; border-bottom:1px solid var(--inset-edge); }
 .slot-row > .slot-index { grid-column:1; }
-.slot-row > .slot-name { grid-column:2; font-size:14px; }
+.slot-row > .slot-name { grid-column:2; font-size:14px; white-space:normal; overflow-wrap:anywhere; text-overflow:clip; }
 .slot-row > :is(.slot-controller-badge,[data-slot-controller]) { grid-column:3; }
 .slot-row > [data-slot-team] { grid-column:4; }
 .slot-row > [data-slot-race] { grid-column:5; }
 .slot-row > [data-slot-ai] { grid-column:6; }
-.slot-row > .slot-ready { grid-column:7; }
-:is(.create-game-form,.room-setup) .slot-row select { box-sizing:border-box; width:100%; min-width:0; min-height:30px; padding:4px 6px; font-size:12px; }
-:is(.create-game-form,.room-setup) .slot-controller-badge { min-height:30px; border:0; background:none; box-shadow:none; color:var(--ink-soft); padding:0; }
+.slot-row > .slot-ready { grid-column:7; white-space:nowrap; }
+.room-setup .slot-row select { box-sizing:border-box; width:100%; min-width:0; min-height:30px; padding:4px 4px; font-size:12px; }
+.room-setup .slot-controller-badge { min-height:30px; display:flex; align-items:center; border:0; background:none; box-shadow:none; color:var(--ink-soft); padding:0; font-size:12px; }
 @media(max-width:1100px) {
- :is(.create-game-form,.room-setup) > .menu-page-body { grid-template-columns:200px minmax(0,1fr); gap:18px; }
- .room-setup.with-maps > .menu-page-body { grid-template-columns:150px 180px minmax(0,1fr); gap:14px; }
- :is(.create-game-form,.room-setup) .room-slot-pane { padding:12px; }
- .room-setup .room-slot-pane { --seat-tracks:22px minmax(70px,1fr) 70px 80px 88px 82px 42px; }
+ .room-setup > .menu-page-body { grid-template-columns:220px 200px minmax(0,1fr); gap:14px; }
+ .room-setup .room-slot-pane { padding:10px; }
 }
+/* Narrow windows: one scroll, the maps a row of their own across the top, the chosen map's card, then the seats. */
 @media(max-width:960px) {
- :is(.create-game-form,.room-setup) > .menu-page-body { grid-template-columns:minmax(0,1fr); grid-template-rows:auto minmax(0,1fr); gap:14px; }
- .room-setup.with-maps > .menu-page-body { grid-template-columns:minmax(0,1fr); grid-template-rows:auto auto minmax(0,1fr); }
- .room-setup .map-browser { grid-template-rows:auto; }
- .room-setup .map-browser .room-section-title { display:none; }
- .room-setup .map-entries { grid-auto-flow:column; grid-auto-columns:max-content; overflow-x:auto; overflow-y:hidden; }
- .match-dossier { display:grid; grid-template-columns:160px minmax(0,1fr); gap:18px; border-right:0; border-bottom:1px solid var(--rule); padding:4px 4px 12px; }
- .create-game-form .match-dossier { grid-template-rows:auto; }
- .selected-map-summary { display:flex; align-items:center; gap:12px; padding:0; border:0; grid-column:1; }
- .match-dossier .map-preview-space { container-type:normal; width:60px; height:60px; flex:0 0 60px; }
- .selected-map-summary .map-preview-space { order:-1; }
- .match-dossier .map-preview-frame { width:100%; }
- .selected-map-summary strong { font-size:17px; }
- .create-options { grid-template-columns:minmax(0,1fr) auto; gap:8px 14px; align-items:end; padding:0; border:0; }
- .room-setup .match-dossier { grid-template-columns:minmax(0,1fr); }
- .match-dossier .map-detail { display:flex; align-items:center; gap:14px; }
- .match-dossier .map-info { gap:0; }
- .match-dossier .map-facts { display:none; }
- .match-dossier .map-info-name { font-size:18px; }
- .slot-row > .slot-name { font-size:13px; }
+ .room-setup > .menu-page-body { grid-template-columns:minmax(0,1fr); grid-template-rows:max-content max-content max-content; align-content:start; gap:12px; overflow-y:auto; }
+ .map-browser > .room-section-title { display:none; }
+ .map-row-list { grid-auto-flow:column; grid-auto-columns:160px; grid-auto-rows:auto; overflow-x:auto; overflow-y:hidden; }
+ .map-preview-card { grid-template-columns:96px minmax(0,1fr); align-items:center; overflow:visible; }
+ .map-preview-card .map-preview-frame { grid-row:1 / 3; border-width:4px; border-image-width:4px; }
+ .map-preview-name { font-size:18px; }
+ .map-facts { grid-template-columns:repeat(2, auto minmax(0,1fr)); }
+ .room-setup-layout, .room-setup .room-slot-pane, .room-setup .slot-list { min-height:auto; overflow:visible; }
 }
 @media(max-width:720px) {
- .map-browser,.map-info { padding:8px; }
- .map-entry { padding-right:3px; }
- .map-entry .map-button-name { font-size:12px; }
- .create-game-form .match-dossier { grid-template-columns:140px minmax(0,1fr); gap:12px; }
- .selected-map-summary { grid-column:auto; }
- :is(.create-game-form,.room-setup) .room-slot-pane { grid-template-rows:auto minmax(0,1fr); gap:8px; padding:10px; }
+ .map-row-list { grid-auto-columns:150px; }
+ .map-preview-card { grid-template-columns:72px minmax(0,1fr); }
+ .room-setup .room-slot-pane { grid-template-rows:auto minmax(0,1fr); gap:8px; padding:8px; }
  .slot-columns { display:none; }
- :is(.create-game-form,.room-setup) .slot-row { grid-template-columns:22px repeat(4,minmax(0,1fr)); grid-template-rows:30px 30px; min-height:77px; padding:6px 0; gap:5px; }
+ .room-setup .slot-row { grid-template-columns:22px minmax(92px,1.3fr) minmax(0,1fr) minmax(0,1fr) 58px; grid-template-rows:30px 30px; min-height:77px; padding:6px 0; gap:5px; }
  .slot-row > .slot-index { grid-column:1; grid-row:1 / 3; }
- .slot-row > .slot-name { grid-column:2 / 5; grid-row:1; }
- .slot-row > :is(.slot-controller-badge,[data-slot-controller]) { grid-column:5; grid-row:1; }
+ .slot-row > .slot-name { grid-column:2 / 4; grid-row:1; }
+ .slot-row > :is(.slot-controller-badge,[data-slot-controller]) { grid-column:4 / 6; grid-row:1; }
  .slot-row > [data-slot-team] { grid-column:2; grid-row:2; }
  .slot-row > [data-slot-race] { grid-column:3; grid-row:2; }
  .slot-row > [data-slot-ai] { grid-column:4; grid-row:2; }
  .slot-row > .slot-ready { grid-column:5; grid-row:2; }
-}
-@media(max-height:600px) {
- .match-dossier { gap:12px; }
- .selected-map-summary { gap:10px; }
- .create-options { gap:8px; }
- :is(.create-game-form,.room-setup) > .menu-page-body { gap:10px; }
- :is(.create-game-form,.room-setup) .room-slot-pane { gap:8px; padding:10px; }
-}
-@media(max-width:500px) {
- .create-game-form .match-dossier { grid-template-columns:minmax(0,1fr); gap:10px; }
-}
-@media(max-width:420px) {
- .match-dossier .map-preview-space { width:48px; height:48px; flex-basis:48px; }
- .create-options { grid-template-columns:minmax(0,1fr); }
 }
