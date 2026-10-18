@@ -4,7 +4,7 @@ import { createUnit } from './map';
 import { createGame, issuePlayerCommand, stepGame, type Game } from './sim';
 import { initializeShipEquipment, rebuildShipFittings, shipMounts, SHIP_WEAPONS } from './ship-equipment';
 import { shipBoardingGoal } from './ship-gangway';
-import { shipProfile } from './ship-geometry';
+import { hullContact, shipProfile } from './ship-geometry';
 import type { Unit, WorldItem } from './types';
 
 // Two ships of the line on open water, the boarder `gap` beside its quarry; both hold where they are.
@@ -87,5 +87,35 @@ describe('boarding a ship of the line', () => {
     stepGame(game);
     expect(source.order.type).not.toBe('move');
     expect(source.sailing?.gangway?.phase).toBe('ready');
+  });
+});
+
+// @@@precise-traffic
+describe('a precise approach to a berth beside a hull far off', () => {
+  // The boarder starts `out` off the quarry's beam and `along` its length; light air on the beam, no guns.
+  function apart(out: number, along: number, wind: number) {
+    const game = createGame('bareDuel', { aiPlayers: [] });
+    game.units = []; game.items = []; game.buildings = []; game.resources = []; game.mercenaryCamps = []; game.obstacles = [];
+    game.scriptedVictory = true;
+    game.map = { ...game.map, width: 6000, height: 6000, wind: { direction: wind, speed: 36 }, terrain: { cell: 40, cols: 150, rows: 150, cells: '~'.repeat(150 * 150) } };
+    const target = game.spawnUnit('enemy', 'shipOfTheLine', 3000, 3000), source = game.spawnUnit('player', 'shipOfTheLine', 3000 + along, 3000 + out);
+    source.sailing!.heading = target.sailing!.heading = 0;
+    for (const ship of [source, target]) { ship.order = { type: 'hold', x: ship.x, y: ship.y }; ship.invulnerable = true; }
+    crew(game, source);
+    issuePlayerCommand(game, 'player', { type: 'boardShip', unitIds: [source.id], targetId: target.id });
+    return { game, source, target };
+  }
+
+  it('berths from 800 out and 800 astern, where the quarry lay beyond the hulls it was planned against', () => {
+    const { game, source } = apart(800, -800, Math.PI / 2);
+    // Planned only against hulls within 600 of the boarder, it never berthed.
+    expect(tickUntil(game, () => source.sailing?.gangway?.phase === 'ready', 110 * 20)).toBe(true);
+  });
+
+  it('comes in from 600 abeam without running its bow into the quarry', () => {
+    const { game, source, target } = apart(600, 0, Math.PI / 2);
+    let overlap = 0;
+    expect(tickUntil(game, () => { overlap = Math.max(overlap, hullContact(source, target)?.overlap ?? 0); return source.sailing?.gangway?.phase === 'ready'; }, 80 * 20)).toBe(true);
+    expect(overlap).toBeLessThan(.1);
   });
 });
