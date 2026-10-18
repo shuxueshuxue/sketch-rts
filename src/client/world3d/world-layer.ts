@@ -1,4 +1,5 @@
 import { StandingField } from './standing-field';
+import { propStand } from '../prop-stands';
 import {bloodSurfaceResolver} from '../combat-surfaces';
 import {PresentationViewIndex} from '../presentation-view';
 import { deckRemainsMatrix } from './deck-remains';
@@ -47,6 +48,9 @@ import type { GameSnapshot,Owner,Unit } from '../../shared/types';
 export type ActorPosition={x:number;y:number;bodyY:number;topY:number;facing?:1|-1};
 export const PHYSICAL_EFFECTS=new Set<GameSnapshot['effects'][number]['type']>(['shellFlight','siegeBolt','projectile','muzzleFlash']);
 const TILT=Math.tan(SHIP_CAMERA.tilt),UP=new THREE.Vector3(0,1,0);
+// A prop's card: its painter draws round its foot, which stands PROP_FOOT below the tile's middle, the tallest prop's
+// roof and a cart's wheels both inside.
+const PROP_TILE=192,PROP_FOOT=24;
 // @@@building-rise - A building stands taller than its footprint's model would make it (docs/art-direction.zh.md, 比例):
 // the town hall about four workers high, production buildings about three, so a base reads by its buildings. Only the
 // drawing is stretched upward; the footprint, and so every rule, is untouched. Walls, towers and small works keep theirs.
@@ -85,6 +89,7 @@ export class World3DLayer {
   private templates=new Map<string,THREE.Object3D>();
   private bounds=new Map<string,THREE.Box3>();
   private cards:PaintedCardBatches;
+  private propCards:PaintedCardBatches;
   private remainsCards:PaintedCardBatches;
   // @@@program-keepers - A shader program is compiled the first time a material variant is drawn, and freed when the last
   // material using it is disposed: a reset (every match start) disposes the drawn batches' materials, and a building
@@ -127,7 +132,7 @@ export class World3DLayer {
   private disposed=false;
   private contextLost=false;
   private eventCanvas:HTMLCanvasElement|undefined;
-  private onContextLost=(event:Event)=>{event.preventDefault();this.contextLost=true;this.releaseContextResources();this.cards.invalidateGPU();this.remainsCards.invalidateGPU();this.releaseKeepers();};
+  private onContextLost=(event:Event)=>{event.preventDefault();this.contextLost=true;this.releaseContextResources();this.cards.invalidateGPU();this.remainsCards.invalidateGPU();this.propCards.invalidateGPU();this.releaseKeepers();};
   private onContextRestored=()=>{this.contextLost=false;};
   private sun=new THREE.DirectionalLight('#f1dcc0',2.5);
   // The terrain's trees and boulders, standing up among the world's actors (see @@@standing-field).
@@ -149,7 +154,7 @@ export class World3DLayer {
   private bridgeAcross=new THREE.Vector3();
   private bridgeUp=new THREE.Vector3();
   private constructor(private renderer:THREE.WebGLRenderer|undefined,rasterBudgetMs:number){
-    [this.cards,this.remainsCards]=this.cardBatches(this.scene,rasterBudgetMs);
+    [this.cards,this.remainsCards,this.propCards]=this.cardBatches(this.scene,rasterBudgetMs);
     this.standing=new StandingField(this.scene,Math.min(8,renderer?.capabilities.getMaxAnisotropy()??1));
     this.flag.material.name='TeamColor';
     this.magic.name='SpellOrb';this.magic.material.name='TeamColor';
@@ -163,7 +168,10 @@ export class World3DLayer {
     const renderer=this.renderer,maxTextureBanks=Math.min(DEFAULT_CARD_BANKS,Math.max(1,(renderer?.capabilities.maxTextures??16)-4));
     const anisotropy=Math.min(8,renderer?.capabilities.getMaxAnisotropy()??1);
     return [new PaintedCardBatches(scene,anisotropy,{maxTextureBanks,rasterBudgetMs}),
-      new PaintedCardBatches(scene,anisotropy,{transparent:true,depthWrite:false,alphaTest:.01,castShadow:false,pickable:false,renderOrder:-1,maxTextureBanks,rasterBudgetMs})] as const;
+      new PaintedCardBatches(scene,anisotropy,{transparent:true,depthWrite:false,alphaTest:.01,castShadow:false,pickable:false,renderOrder:-1,maxTextureBanks,rasterBudgetMs}),
+      // A story's standing props (see @@@prop-stands). They keep the shadows painted under them until the world's light
+      // casts every standing thing's (docs/art/render-contract.zh.md, rule 4).
+      new PaintedCardBatches(scene,anisotropy,{castShadow:false,pickable:false,maxTextureBanks,rasterBudgetMs})] as const;
   }
   /** Detach the old renderer's public dispose listeners while its context is
    * lost. Otherwise later reset/dispose attempts to delete pre-loss VAOs and
@@ -276,7 +284,7 @@ export class World3DLayer {
     }
   }
   private template(key:string,name:string){const id=`${key}:${name}`;let model=this.templates.get(id);if(!model){model=this.library.component(key,name);if(model)this.templates.set(id,model);}return model;}
-  reset(){this.lastTick=-1;this.snapshot=undefined;this.indexedUnits=this.indexedBuildings=this.indexedEffects=undefined;this.indexCounts='';this.view=undefined;this.currentFrame=undefined;this.viewIndex.reset();this.activeIndex=this.viewIndex;this.positions.clear();this.combatAnchors.clear();this.combatInk.clear();this.entities=new Map();this.ships.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.recoil.clear();this.deckMotion.clear();this.facing=new CrewFacingTracker();this.sailMotion.reset();this.rigPoses.clear();this.transforms.length=0;this.transformCount=0;this.batches.dispose();this.cards.dispose();this.remainsCards.dispose();this.selection.clear();this.water.prepare(undefined);this.standing.dispose();}
+  reset(){this.lastTick=-1;this.snapshot=undefined;this.indexedUnits=this.indexedBuildings=this.indexedEffects=undefined;this.indexCounts='';this.view=undefined;this.currentFrame=undefined;this.viewIndex.reset();this.activeIndex=this.viewIndex;this.positions.clear();this.combatAnchors.clear();this.combatInk.clear();this.entities=new Map();this.ships.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.recoil.clear();this.deckMotion.clear();this.facing=new CrewFacingTracker();this.sailMotion.reset();this.rigPoses.clear();this.transforms.length=0;this.transformCount=0;this.batches.dispose();this.cards.dispose();this.remainsCards.dispose();this.propCards.dispose();this.selection.clear();this.water.prepare(undefined);this.standing.dispose();}
   private offscreenPosition(id:string):ActorPosition|undefined{
     const frame=this.currentFrame,unit=this.activeIndex.units.get(id);
     if(!frame||!unit||unit.deck||isInCabin(unit)||shipProfile(unit))return undefined;
@@ -365,7 +373,7 @@ export class World3DLayer {
       if(!unit?.deck&&!ships.has(id))frame.facing.actionFacing(id,direction,projectVector);
     },frame.reducedMotion)??0;
     const visible=(x:number,y:number,pad=180)=>x>=frame.view.x-pad && y>=frame.view.y-pad && x<=frame.view.x+frame.view.width/zoom+pad && y<=frame.view.y+frame.view.height/zoom+pad;
-    this.positions.clear();this.combatAnchors.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.batches.begin();this.cards.begin();this.remainsCards.begin();this.selection.begin();
+    this.positions.clear();this.combatAnchors.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.batches.begin();this.cards.begin();this.remainsCards.begin();this.propCards.begin();this.selection.begin();
     for(const site of [...snapshot.mercenaryCamps.map(site=>({...site,model:'camp',scale:site.radius/32})),...(snapshot.shops??[]).map(site=>({...site,model:'shop',scale:site.radius/32})),...(frame.story?.props??[]).filter(site=>['statue','well','beacon','citadel'].includes(site.kind)).map(site=>({...site,id:`prop:${site.id}`,model:site.kind}))]){
       const model=this.template(`buildings/${site.model}`,'Building');if(!model)continue;
       // A shop or camp is a body like a building (see @@@structure-body) and stands on its footprint the way a building
@@ -384,6 +392,15 @@ export class World3DLayer {
         if(frame.selectedCampId===site.id || frame.hoveredId===site.id)this.foundationMarker(frame,{...site,radius:'radius' in site?site.radius:32*site.scale},'#96774a',frame.selectedCampId===site.id);
         this.batches.add(`site:${site.model}`,model,this.pose(site.x+dx,site.y+dy,lift,0,scale),site.id,'#a79b7f');
       }
+    }
+    // A story's standing props stand as cards, their painted foot on their world foot, ordered by the depth buffer with
+    // everything else that stands (see @@@prop-stands); one shown by its model above is already in place.
+    if(frame.story&&frame.props)for(const prop of frame.story.props){
+      const id=`prop:${prop.id}`,paint=frame.props(prop.kind);
+      if(!paint||propStand(prop.kind)!=='standing'||this.positions.has(id))continue;
+      this.positions.set(id,{x:prop.x,y:prop.y,bodyY:prop.y,topY:prop.y-PROP_TILE/2*prop.scale});
+      if(!visible(prop.x,prop.y,PROP_TILE*prop.scale))continue;
+      this.propCards.add(`prop:${prop.kind}:${prop.state??''}:${prop.flip?1:0}`,density,ctx=>{if(prop.flip)ctx.scale(-1,1);paint(ctx,prop.state);},this.pose(prop.x,prop.y,0,0,prop.scale),id,PROP_FOOT,PROP_TILE);
     }
     // A mine is painted on the ground (see @@@mine-stages); its ring is the same footprint square as every other body's.
     for(const mine of snapshot.resources)if(frame.hoveredId===mine.id && visible(mine.x,mine.y))this.foundationMarker(frame,{x:mine.x,y:mine.y,radius:GOLD_MINE_RULES.radius},mineRingInk(mine),false);
@@ -555,7 +572,7 @@ export class World3DLayer {
         this.batches.add(`effect:${shot.look}:${color??''}`,model,this.pose(x,y,height,shot.heading,shot.scale,rotation),effect.id,color);
       }
     }
-    this.batches.finish();this.cards.finish(renderer);this.remainsCards.finish(renderer);this.selection.finish();
+    this.batches.finish();this.cards.finish(renderer);this.remainsCards.finish(renderer);this.propCards.finish(renderer);this.selection.finish();
     if(frame.combat)this.combatInk.update(frame.combat.frame(now),this.combatAnchors,frame.reducedMotion,frame.view);else this.combatInk.clear();
     this.transforms.length=this.transformCount;
     perf?.gpuBegin();renderer.render(this.scene,this.camera);perf?.gpuEnd();

@@ -114,12 +114,21 @@ function drawMarkerGround(ctx: Brush, marker: MarkerView, at: Point, age: number
 export function drawStoryProps(ctx: Brush, view: StageView, toScreen: (point: Point) => Point, near: (point: Point, pad: number) => boolean, painter: (kind: string) => ((b: Brush, state: string | undefined) => void) | undefined, now: number) {
   for (const prop of [...view.props].sort((a, b) => a.y - b.y)) {
     const at = toScreen(prop);
-    if (!near(at, 140 * prop.scale)) continue;
-    const paint = painter(prop.kind);
-    if (!paint) continue;
-    drawAtlasProp(ctx, `${prop.kind}:${prop.state ?? ""}`, (b) => paint(b, prop.state), at, prop.scale, prop.flip);
-    if (prop.state === "burning") drawFlames(ctx, at, prop.scale, now + prop.id * 97);
+    if (near(at, 140 * prop.scale)) drawStoryProp(ctx, prop, at, painter, now);
   }
+}
+
+/** One prop with its foot at `at`, and its flames if it burns. */
+export function drawStoryProp(ctx: Brush, prop: StageView["props"][number], at: Point, painter: (kind: string) => ((b: Brush, state: string | undefined) => void) | undefined, now: number) {
+  const paint = painter(prop.kind);
+  if (!paint) return;
+  drawAtlasProp(ctx, `${prop.kind}:${prop.state ?? ""}`, (b) => paint(b, prop.state), at, prop.scale, prop.flip);
+  if (prop.state === "burning") drawPropFlames(ctx, prop, at, now);
+}
+
+/** A burning prop's flames, with their foot at `at`. */
+export function drawPropFlames(ctx: Brush, prop: StageView["props"][number], at: Point, now: number) {
+  drawFlames(ctx, at, prop.scale, now + prop.id * 97);
 }
 
 // Flames licking up from a burning prop, flickering with the animation clock.
