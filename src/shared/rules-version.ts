@@ -3,7 +3,7 @@
  * 2: canonical shared priest/summoner and race-specific production relations.
  * 3: guardian scroll cast radius reduced from 280 to 180 world units.
  * 4: stronger ship hulls, shipyard shipbuilding, ships excluded from barracks attack/health research.
- * 5: cross-field terrain lookahead cannot shortcut uphill in its starting field.
+ * 5: cross-field terrain lookahead cannot immediately reverse after a non-descending first cell.
  */
 export const RULES_VERSION = 5;
 export const PREVIOUS_RULES_VERSION = 1;

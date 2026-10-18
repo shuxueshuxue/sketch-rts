@@ -1,0 +1,9 @@
+{
+  "sha256": "d3525bf81dfe066633c64be8bc2f1328cdacf4ec93b2522ef11f68f4e5ad0eab",
+  "bytes": 33016500,
+  "name": "loot-return-steering",
+  "kind": "dir",
+  "machine": "a100",
+  "pushed": "557f1543ca9fc74d4afa9edb9be58a1afed0d0b7",
+  "pr": 523
+}
