@@ -8,6 +8,7 @@ import { createI18n } from './i18n';
 import { createMatchThreadHost } from './match-worker/host';
 import type { MatchThreadPort } from './match-worker/adapter';
 import { MENU_SCENES, MenuBackdrop, type MenuBattleThreads } from './menu-scenes';
+import { seeded } from './menu-scene-world';
 import { worldLabelsFor, type WorldFrame } from './world-renderer';
 
 const context = () => createCanvas(320, 180).getContext('2d') as unknown as CanvasRenderingContext2D;
@@ -108,11 +109,11 @@ describe('bounded home scenes using the world presentation', () => {
   });
 
   it.each(battles)('fights battle %i with the match simulation on its thread, one thread per battle', (index) => {
-    const started: string[] = [], backdrop = new MenuBackdrop(labels, index, inProcessThreads(started)), frames: WorldFrame[] = [], ctx = context();
+    const started: string[] = [], backdrop = new MenuBackdrop(labels, index, inProcessThreads(started), seeded(1)), frames: WorldFrame[] = [], ctx = context();
     const opening = backdrop.prepare(0);
-    // Thirty seconds: the fleet's guns hold their fire on decks alongside (see @@@cannon-min-range), so its first sure
-    // blow is the boarders' swords, a little over twenty seconds in.
-    for (let now = 0; now <= 30_000; now += 50) backdrop.draw(ctx, 320, 180, now, false, frame => frames.push(frame));
+    // A fixed seed, so the same battle every run (on the page it is the clock's); one tick per draw, up to twelve seconds
+    // of play: with this seed the first blow lands at tick 69 in the woods and 203 at sea.
+    for (let now = 0; now <= 12 * SIM_TICKS_PER_SECOND * 50; now += 50) backdrop.draw(ctx, 320, 180, now, false, frame => frames.push(frame));
     expect(started.filter(type => type === 'scene')).toHaveLength(1);
     expect(frames[0]!.snapshot.tick).toBe(0);
     expect(frames.at(-1)!.snapshot.tick).toBeGreaterThan(10 * SIM_TICKS_PER_SECOND);
