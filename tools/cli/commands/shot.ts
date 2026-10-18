@@ -52,7 +52,7 @@ export async function run(argv: string[]) {
   if (pairs.length === 0) throw new Error(`The two commits took no shot of the same name: ${unpaired.join(", ")}`);
   progress(`stitching ${pairs.length} pairs on ${machine.name}`);
   const composeDir = machine.path("runs", machine.runId, "shot");
-  const driver = `${composeDir}/compose.ts`, dir = await machine.copy(after);
+  const driver = `${composeDir}/compose.mts`, dir = await machine.copy(after);
   await machine.runOk(`mkdir -p ${quote(composeDir)} && cat > ${quote(driver)}`, { input: Readable.from([COMPOSE]), quiet: true });
   // The dom read back with each side's picture travels with the images.
   await machine.runOk(pairs.map((pair) => `cp ${quote(`${pair.before}.json`)} ${quote(pair.out.replace(/\.webp$/, ".before.json"))} && cp ${quote(`${pair.after}.json`)} ${quote(pair.out.replace(/\.webp$/, ".after.json"))}`).join(" && "), { quiet: true });
