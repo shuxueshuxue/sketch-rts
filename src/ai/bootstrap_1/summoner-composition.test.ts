@@ -27,7 +27,9 @@ describe('summon host support against artillery', () => {
     for (let i = 0; i < 8; i++) scene = scene.building('us', 'farm', x(400 + i * 64), 1600);
     for (let i = 0; i < 11; i++) scene = scene.worker('us', x(i < 5 ? 540 : 1440), 550 + i % 5 * 20,
       { order: { type: 'mine', resourceId: i < 5 ? 'main' : 'natural', phase: 'toMine', timer: 0 } });
-    for (let i = 0; i < 10; i++) scene = scene.unit('us', caller, x(800 + i % 5 * 35), 1000 + Math.floor(i / 5) * 35);
+    // Fourteen callers start the host near the upkeep tier (see the delivery checks below) while it also pays for weapons
+    // and plating, which reach its summoners too (see supportWants).
+    for (let i = 0; i < 14; i++) scene = scene.unit('us', caller, x(800 + i % 5 * 35), 1000 + Math.floor(i / 5) * 35);
     const game = scene.build().createGame(), memory = createAiPolicyMemory();
     // This scene has only our miners. Observe real deliveries and their settlement-time
     // population, including changes caused by recruits and summons during the step.

@@ -15,7 +15,7 @@ export const spec: CommandSpec = {
     { name: "rivals", description: "one duel bench per rival", default: "v8,v9" },
     { name: "seeds", description: "map-selection seeds", default: "v5-final-1" },
     { name: "maps", description: "maps per seed; each map is played with both races (40 games per cell at 20)", default: "20" },
-    { name: "metrics", description: "direct measures (bases@N, workers@N, spent@N, trade@N, clear, hire, upgrade@K.L)", default: "" },
+    { name: "metrics", description: "direct measures (bases@N, workers@N, spent@N, trade@N, clear, hire, upgrade@K.L, count@N.K, stall@N)", default: "" },
     { name: "workers", description: "parallel games per commit", default: "46" },
     { name: "on", description: "machine from ~/.config/sketch/machines.json" },
     { name: "json", description: "one JSON object on stdout instead of tables", boolean: true },
