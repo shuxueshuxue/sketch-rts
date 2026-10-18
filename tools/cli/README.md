@@ -32,5 +32,12 @@ Every command runs in its own process group, and a run only ever kills the group
   `--dir src`) on both commits. It reports only failures that are new on ref and fail again when their file runs alone
   on both sides; the others are listed as flaky (marked when the failure was about time), fixed, or already broken on
   base.
+- `bench room [--base] [--ref] [--subjects …] [--rivals v8,v9] [--maps 20] [--metrics clear,bases@4,trade@15]` plays the
+  room AIs' bench on both commits and compares wins, flipped games and the direct metrics (src/ai/benchmark/metrics.ts:
+  bases@N, workers@N, spent@N, trade@N, clear, hire) taken in the same games. 40 games per cell at the default.
+- `replay <subject> <rival> <seed> "<match>" [--from] [--to] [--every] [--show army,general,orders,losses]` plays one game
+  and prints the armies, the general and the scripts' commands every N ticks. `--fork TICK --after REF` saves the game
+  and the AIs' memory at TICK on --ref and continues that moment on --ref and on --after (the AIs' thinks restart at
+  the fork; commands still in flight are not carried over).
 - `scripts audit [--dead] [--check]` reports which files under `scripts/` are still referenced by package.json, CI,
   src/, tools/ or a live script.

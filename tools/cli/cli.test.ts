@@ -62,3 +62,24 @@ describe("sketch scripts audit", () => {
       "run.ts": true, "helper.ts": true, "tool.test.ts": true, "old-proof.mjs": false, "old-fixture.js": false, "runner-v2.ts": false });
   });
 });
+
+import { cells, metricSummary, type RoomResult } from "./lib/bench-summary";
+
+describe("sketch bench room comparison", () => {
+  const result = (winners: [string | null, string | null], metrics?: RoomResult["metrics"]): RoomResult => ({ subject: "v9_knight", seed: "s", wins: winners.filter((w) => w === "v9_knight").length, rawMatches: 2,
+    byMap: [{ mapId: "ladder-01", grove: { winner: winners[0] }, ember: { winner: winners[1] } }], ...(metrics ? { metrics } : {}) });
+  it("counts wins per cell and lists the games whose winner changed", () => {
+    const compared = cells(new Map([["v9_knight|v9", [result(["v9_knight", "v9"])]]]), new Map([["v9_knight|v9", [result(["v9_knight", "v9_knight"])]]]));
+    expect(compared).toEqual([{ subject: "v9_knight", rival: "v9", base: { wins: 1, games: 2 }, ref: { wins: 2, games: 2 }, flips: ["s ladder-01 ember: v9 -> v9_knight"] }]);
+  });
+  it("averages a metric per side and reads trade as the rival's losses over the subject's", () => {
+    const measured = [result(["v9", "v9"], {
+      a: { "bases@4": { v9_knight: 2, p1: 1 }, "trade@15": { v9_knight: 300, p1: 600 }, clear: { v9_knight: null, p1: 3 } },
+      b: { "bases@4": { v9_knight: 1, p1: 1 }, "trade@15": { v9_knight: 100, p1: 200 }, clear: { v9_knight: 2.5, p1: 2 } },
+    })];
+    expect(metricSummary(measured, "v9_knight", "bases@4")).toEqual({ own: 1.5, rival: 1, missing: 0 });
+    expect(metricSummary(measured, "v9_knight", "trade@15")).toEqual({ own: 2, rival: 0.5, missing: 0 });
+    expect(metricSummary(measured, "v9_knight", "clear")).toEqual({ own: 2.5, rival: 2.5, missing: 1 });
+    expect(metricSummary([result(["v9", "v9"])], "v9_knight", "clear")).toBeUndefined();
+  });
+});

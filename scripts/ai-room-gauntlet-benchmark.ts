@@ -1,5 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { parseMetric } from "../src/ai/benchmark/metrics";
 import { roomGauntlet } from "../src/ai/benchmark/room-gauntlet";
 import { runSubjectGauntletSeedsParallel, type OpponentVersion } from "../src/ai/benchmark/subject-gauntlet";
 import { ROOM_AI_RACES } from "../src/shared/rooms";
@@ -9,7 +10,8 @@ import { commonAiBenchmarkOptionsFromArgs, csvFlag, flag, printJson, requiredFla
 // The room AIs' bench (see @@@room-gauntlet). Each subject and seed's result goes to <out-dir>/<label>-<subject>-<seed>.log;
 // the totals (wins of games per subject) to stdout.
 //   npx tsx scripts/ai-room-gauntlet-benchmark.ts --subjects v9_archer,v9_knight,v9_summoner --rivals v8 \
-//     --seeds v5-final-1,v5-final-2 --map-count 50 --workers 96 --out-dir logs/room --label main
+//     --seeds v5-final-1,v5-final-2 --map-count 50 --workers 96 --out-dir logs/room --label main [--metrics clear,bases@4,trade@15]
+// (`sketch bench room` runs this on two commits and compares them.)
 const args = process.argv.slice(2);
 const subjects = (flag(args, "subjects") ? csvFlag(args, "subjects") : Object.keys(ROOM_AI_RACES)) as RoomAiVersion[];
 for (const subject of subjects) if (!(subject in ROOM_AI_RACES)) throw new Error(`Unknown room AI ${subject}`);
@@ -19,7 +21,9 @@ const outDir = requiredFlag(args, "out-dir"), label = requiredFlag(args, "label"
 mkdirSync(outDir, { recursive: true });
 const totals: Record<string, { wins: number; games: number }> = {};
 for (const subject of subjects) {
-  const { results } = await runSubjectGauntletSeedsParallel(roomGauntlet(subject, rivals), commonAiBenchmarkOptionsFromArgs(args), seeds);
+  const metrics = flag(args, "metrics") ? csvFlag(args, "metrics") : [];
+  for (const metric of metrics) parseMetric(metric);
+  const { results } = await runSubjectGauntletSeedsParallel(roomGauntlet(subject, rivals), { ...commonAiBenchmarkOptionsFromArgs(args), metrics }, seeds);
   seeds.forEach((seed, index) => writeFileSync(join(outDir, `${label}-${subject}-${seed}.log`), `${JSON.stringify(results[index], null, 2)}\n`));
   totals[subject] = { wins: results.reduce((sum, result) => sum + result.wins, 0), games: results.reduce((sum, result) => sum + result.rawMatches, 0) };
 }
