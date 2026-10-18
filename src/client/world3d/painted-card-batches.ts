@@ -10,20 +10,7 @@ import {SHIP_CAMERA} from '../../shared/ship-geometry';
 
 /** Ordinary draws use implicit single-bank sampling; wider chunks are opt-in. */
 export const DEFAULT_CARD_BANKS=1;
-const LAYERS=16,TILT=Math.tan(SHIP_CAMERA.tilt);
-const MPX=1024*1024;
-/** The GPU pixels a batch's cards may hold before it drops the oldest not drawn this frame. */
-export const DEFAULT_CARD_PIXEL_BUDGET=12*MPX;
-/** @@@card-capacity - The troop cards' cap for this device. The cache grows with the cards an animation cycles through
- * (pages are made as cards need them) up to the cap: a cap below that working set makes every card in it miss as the
- * cycle comes round, so it is set as high as the device can afford. 20 Mpx (~107 MB with mips) where the browser
- * reports 4 GB of memory or less; 48 Mpx (~256 MB) where it reports 8 GB or more, or the GPU takes 16384-texel
- * textures and 2048 array layers; 32 Mpx (~171 MB) otherwise. */
-export function troopCardPixelBudget(device:{deviceMemory?:number|undefined;maxTextureSize:number;maxArrayLayers:number}){
-  if(device.deviceMemory!==undefined&&device.deviceMemory<=4)return 20*MPX;
-  if((device.deviceMemory??0)>=8||device.maxTextureSize>=16384&&device.maxArrayLayers>=2048)return 48*MPX;
-  return 32*MPX;
-}
+const LAYERS=16,PIXEL_BUDGET=12*1024*1024,TILT=Math.tan(SHIP_CAMERA.tilt);
 // @@@card-atlas - Cropped cards (see @@@card-paint-bounds) share atlas pages: square layers of ATLAS_SIDE texels, each
 // given to one cell size and cut into a grid of equal cells, every card sampling its cell (cardUv). One page format for
 // every cropped size keeps a draw on one texture, which a single-bank draw needs not to split. A card's mips are
@@ -31,16 +18,10 @@ export function troopCardPixelBudget(device:{deviceMemory?:number|undefined;maxT
 // so cells start on multiples of ATLAS_GUTTER with as much transparent gap between them, and the page keeps
 // ATLAS_LEVELS mips: at the last (1/16) the gap is still a whole texel and the origins still whole texels.
 export const ATLAS_SIDE=1024,ATLAS_LEVELS=5;
-const ATLAS_GUTTER=16,ATLAS_CELLS=81;
-// An atlas page holds about a third of the cap (at least 4 layers): a draw splits where its cards change page, so a
-// larger cap takes larger pages rather than more of them.
-const atlasLayers=(budget:number)=>Math.max(4,Math.round(budget/3/(ATLAS_SIDE*ATLAS_SIDE)));
+const ATLAS_LAYERS=4,ATLAS_GUTTER=16,ATLAS_CELLS=81;
 // The largest window an atlas cell takes: larger ones keep pages of their own size.
 const ATLAS_MAX_CELL=512;
-type Paint=(ctx:CanvasRenderingContext2D)=>void;
-/** @@@card-anchor - A look's anchor: its idle first frame, the card any of its poses shows while its own is not painted yet. */
-export type CardAnchor={key:string;paint:Paint;tileSize:number};
-type Request={key:string;density:number;paint:Paint;matrix:THREE.Matrix4;id:string;foot:number;tileSize:number;opacity:number;baseMip:number;order:number;anchor:string|undefined};
+type Request={key:string;density:number;paint:(ctx:CanvasRenderingContext2D)=>void;matrix:THREE.Matrix4;id:string;foot:number;tileSize:number;opacity:number;baseMip:number;order:number};
 // What part of its painted tile a card keeps, in canvas pixels (top-left origin): the whole tile, or a window around
 // what its painter covered (see @@@card-paint-bounds). Its world quad and pick mask are the window's.
 type CardWindow={x:number;y:number;width:number;height:number};
@@ -53,7 +34,7 @@ type Instance={card:Card|undefined;matrix:THREE.Matrix4;id:string;foot:number;op
 type DrawChunk={banks:THREE.DataArrayTexture[];pages:Page[];entries:Card[];ids:string[];feet:number[];orders:number[];geometry:THREE.PlaneGeometry;material:THREE.MeshBasicMaterial;depth:THREE.MeshDepthMaterial;distance:THREE.MeshDistanceMaterial;mesh:THREE.InstancedMesh;capacity:number;used:number;refreshMaterials:(()=>void)[]};
 /** rasterBudgetMs: once a frame has painted a card and spent this long painting, the cards it still lacks wait for later
  * frames (see finish). */
-export type PaintedCardPolicy={transparent?:boolean;depthWrite?:boolean;alphaTest?:number;alphaToCoverage?:boolean;castShadow?:boolean;pickable?:boolean;renderOrder?:number;maxTextureBanks?:number;rasterBudgetMs?:number;pixelBudget?:number};
+export type PaintedCardPolicy={transparent?:boolean;depthWrite?:boolean;alphaTest?:number;alphaToCoverage?:boolean;castShadow?:boolean;pickable?:boolean;renderOrder?:number;maxTextureBanks?:number;rasterBudgetMs?:number};
 
 /** Renderer-owned card cache and batches. Animation/color/facing vary per
  * instance, not per draw call. No canvas, GPU texture or material per soldier. */
@@ -81,7 +62,6 @@ export class PaintedCardBatches {
   // Requests a frame left waiting with nothing to show: a troop drawn as its health bar alone.
   private bodiless=0;
   private lazyMasks=0;
-  private anchorPaints=0;
   // The distinct cards the last frame drew, and the most any frame has drawn: what the cache must hold not to repaint.
   private frameDemand=0;
   private frameKeys=new Set<string>();
@@ -111,19 +91,15 @@ export class PaintedCardBatches {
   private retiring=new Set<Page>();
   private rasterWorkWallMs=0;
   private rasterCache=new CardRasterCache();
-  private pixelBudget:number;
-  private atlasLayers:number;
-  // The anchors this frame's requests named and are not resident, to paint first (see @@@card-anchor).
-  private anchors=new Map<string,{density:number;paint:Paint;tileSize:number}>();
   private rasterStages={paintMs:0,readbackMs:0,cacheMs:0,pickMaskMs:0,rowFlipMs:0,slotMs:0};
   constructor(private scene:THREE.Scene,private anisotropy:number,private policy:PaintedCardPolicy={}){
-    this.maxTextureBanks=policy.maxTextureBanks??DEFAULT_CARD_BANKS;this.pixelBudget=policy.pixelBudget??DEFAULT_CARD_PIXEL_BUDGET;this.atlasLayers=atlasLayers(this.pixelBudget);
+    this.maxTextureBanks=policy.maxTextureBanks??DEFAULT_CARD_BANKS;
     if(!Number.isInteger(this.maxTextureBanks)||this.maxTextureBanks<1||this.maxTextureBanks>MAX_CARD_BANKS)throw new Error('Invalid painted card bank count.');
     this.drawGroup.name='PaintedCardDraws';
     this.mipUploader=new CardMipUploader(anisotropy);
   }
   begin(){
-    this.frame++;this.instanceOrder=0;this.pending.length=0;this.anchors.clear();this.bindings.clear();this.frameKeys.clear();
+    this.frame++;this.instanceOrder=0;this.pending.length=0;this.bindings.clear();this.frameKeys.clear();
     [this.shownBefore,this.shown]=[this.shown,this.shownBefore];this.shown.clear();
     for(const row of this.instances)if(row){row.card=undefined;row.id='';}
     // A failed upload must not expose last frame's lower-quality draw bindings.
@@ -144,7 +120,7 @@ export class PaintedCardBatches {
     }
     // Keep a bounded warm cache, but never evict a card referenced by this
     // frame. Large visible armies may legitimately exceed the soft budget.
-    const remainingLayers=Math.floor((this.pixelBudget-this.allocatedPixels)/(width*height));
+    const remainingLayers=Math.floor((PIXEL_BUDGET-this.allocatedPixels)/(width*height));
     if(oldest&&remainingLayers<1){this.evictions++;this.cards.delete(oldest.key);this.maskBytes-=oldest.mask?.byteLength??0;oldest.page.cards[oldest.slot]=undefined;return{page:oldest.page,layer:oldest.layer};}
     // Reserve only this frame's remaining unique demands, even below budget.
     // A new resident-size bin may need a few poses rather than sixteen warm
@@ -156,9 +132,9 @@ export class PaintedCardBatches {
     return{page:this.createPage(width,height,layers),layer:0};
   }
   private createAtlasPage(){
-    const page:Page={texture:createCardArray(ATLAS_SIDE,ATLAS_SIDE,this.atlasLayers,this.anisotropy,ATLAS_LEVELS),mipBytes:cardTextureBytes(ATLAS_SIDE,ATLAS_SIDE,this.atlasLayers,ATLAS_LEVELS),uploaded:false,
-      cards:new Array(this.atlasLayers*ATLAS_CELLS),used:this.frame,atlas:{sizes:new Array(this.atlasLayers).fill(undefined),counts:new Array(this.atlasLayers).fill(0)}};
-    this.pages.push(page);this.allocatedPixels+=ATLAS_SIDE*ATLAS_SIDE*this.atlasLayers;return page;
+    const page:Page={texture:createCardArray(ATLAS_SIDE,ATLAS_SIDE,ATLAS_LAYERS,this.anisotropy,ATLAS_LEVELS),mipBytes:cardTextureBytes(ATLAS_SIDE,ATLAS_SIDE,ATLAS_LAYERS,ATLAS_LEVELS),uploaded:false,
+      cards:new Array(ATLAS_LAYERS*ATLAS_CELLS),used:this.frame,atlas:{sizes:new Array(ATLAS_LAYERS).fill(undefined),counts:new Array(ATLAS_LAYERS).fill(0)}};
+    this.pages.push(page);this.allocatedPixels+=ATLAS_SIDE*ATLAS_SIDE*ATLAS_LAYERS;return page;
   }
   /** A cell for a card of this size: a free one in a layer of that size, a layer no card holds, the oldest card of that
    * size not drawn this frame (over budget), a layer of any size none of whose cards this frame draws (over budget), or
@@ -169,7 +145,7 @@ export class PaintedCardBatches {
     let oldest:Card|undefined,free:{page:Page;layer:number}|undefined;
     for(const page of this.pages){
       if(!page.atlas)continue;
-      for(let layer=0;layer<this.atlasLayers;layer++){
+      for(let layer=0;layer<ATLAS_LAYERS;layer++){
         if(page.atlas.sizes[layer]===size){
           for(let index=0;index<columns*rows;index++){
             const card=page.cards[layer*ATLAS_CELLS+index];if(!card)return cell(page,layer,index);
@@ -180,11 +156,11 @@ export class PaintedCardBatches {
     }
     const take=(page:Page,layer:number)=>{page.atlas!.sizes[layer]=size;return cell(page,layer,0);};
     if(free)return take(free.page,free.layer);
-    const over=this.allocatedPixels+ATLAS_SIDE*ATLAS_SIDE*this.atlasLayers>this.pixelBudget;
+    const over=this.allocatedPixels+ATLAS_SIDE*ATLAS_SIDE*ATLAS_LAYERS>PIXEL_BUDGET;
     if(over&&oldest){this.evict(oldest);oldest.page.atlas!.sizes[oldest.layer]=size;return{page:oldest.page,layer:oldest.layer,slot:oldest.slot,cell:oldest.cell!};}
     if(over){
       let stale:{page:Page;layer:number;used:number}|undefined;
-      for(const page of this.pages)if(page.atlas)for(let layer=0;layer<this.atlasLayers;layer++){
+      for(const page of this.pages)if(page.atlas)for(let layer=0;layer<ATLAS_LAYERS;layer++){
         const held=page.cards.slice(layer*ATLAS_CELLS,(layer+1)*ATLAS_CELLS).filter((card):card is Card=>!!card);
         const used=Math.max(...held.map(card=>card.used));
         if(held.length&&used!==this.frame&&(!stale||used<stale.used))stale={page,layer,used};
@@ -201,13 +177,10 @@ export class PaintedCardBatches {
     const atlas=card.page.atlas;if(atlas&&--atlas.counts[card.layer]!<=0){atlas.counts[card.layer]=0;atlas.sizes[card.layer]=undefined;}
   }
   private place(card:Card){card.page.cards[card.slot]=card;if(card.page.atlas)card.page.atlas.counts[card.layer]!++;}
-  add(key:string,density:number,paint:Paint,matrix:THREE.Matrix4,id:string,foot:number,tileSize:number=ART_TILE_SIZE,opacity=1,baseMip=0,anchor?:CardAnchor){
+  add(key:string,density:number,paint:(ctx:CanvasRenderingContext2D)=>void,matrix:THREE.Matrix4,id:string,foot:number,tileSize:number=ART_TILE_SIZE,opacity=1,baseMip=0){
     const size=tileSize*density,factor=2**baseMip;
     if(!Number.isInteger(baseMip)||baseMip<0||baseMip>0&&(!Number.isInteger(size)||size<1||size%factor!==0))throw new Error('Invalid painted card resident mip.');
     key=`${key}:${density}:${tileSize}`;this.frameKeys.add(key);this.askedAt.set(key,this.frame);
-    // A look on screen keeps its anchor: drawn or not, it is in use this frame, so nothing evicts it.
-    const anchorKey=anchor&&`${anchor.key}:${density}:${anchor.tileSize}`,anchorCard=anchorKey?this.cards.get(anchorKey):undefined;
-    if(anchorCard)anchorCard.used=anchorCard.page.used=this.frame;else if(anchor&&!this.anchors.has(anchorKey!))this.anchors.set(anchorKey!,{density,paint:anchor.paint,tileSize:anchor.tileSize});
     const order=this.instanceOrder++,card=this.cards.get(key);
     // Protect every warm pose used this frame before allocating any new one.
     // Otherwise one early cache miss can evict a later visible pose, cascading
@@ -218,7 +191,7 @@ export class PaintedCardBatches {
       // Residency is state of this original raster, not another asset identity.
       if(card.baseMip<=baseMip){this.instance(card,matrix,id,foot,opacity,order);return;}
     }
-    this.pending.push({key,density,paint,matrix,id,foot,tileSize,opacity,baseMip,order,anchor:anchorKey});
+    this.pending.push({key,density,paint,matrix,id,foot,tileSize,opacity,baseMip,order});
   }
   private instance(card:Card,matrix:THREE.Matrix4,id:string,foot:number,opacity:number,order:number){
     card.used=card.page.used=this.frame;
@@ -356,7 +329,7 @@ export class PaintedCardBatches {
     return card.mask;
   }
   private compact(renderer:CardTextureRenderer){
-    if(this.allocatedPixels<=this.pixelBudget)return;
+    if(this.allocatedPixels<=PIXEL_BUDGET)return;
     // Atlas pages are shared by every cropped size (see @@@card-atlas); compaction repacks the pages of one card size.
     const sizes=new Set(this.pages.filter(page=>!page.atlas).map(page=>`${page.texture.image.width}:${page.texture.image.height}`));
     for(const size of sizes){
@@ -439,11 +412,6 @@ export class PaintedCardBatches {
       const card=this.cards.get(request.key);if(card&&card.baseMip<=finest.get(request.key)!.baseMip)continue;
       const before=this.shownBefore.get(request.id),stand=before&&this.cards.get(before.key);if(stand)stand.used=stand.page.used=this.frame;
     }
-    // Missing anchors are painted first and outside the raster budget: one a look, so a pose not painted yet always has
-    // a card to stand in with, and no troop shows only its health bar (see @@@card-anchor).
-    for(const [key,anchor] of this.anchors)if(!this.cards.has(key)){
-      const card=this.rasterFresh(key,anchor.density,anchor.paint,anchor.tileSize,0,renderer,pendingLayers,performance.now());card.used=card.page.used=this.frame;this.anchorPaints++;
-    }
     const showsNothing=(request:Request)=>{const before=this.shownBefore.get(request.id);return!this.cards.get(request.key)&&!(before&&this.cards.get(before.key));};
     const deadline=performance.now()+(this.policy.rasterBudgetMs??Infinity);let painted=0;
     try{
@@ -451,7 +419,7 @@ export class PaintedCardBatches {
         const baseMip=finest.get(request.key)!.baseMip,card=this.cards.get(request.key);
         if(!card||card.baseMip>baseMip){
           if(painted&&performance.now()>=deadline){
-            const before=this.shownBefore.get(request.id),stand=card??(before&&this.cards.get(before.key))??(request.anchor?this.cards.get(request.anchor):undefined);
+            const before=this.shownBefore.get(request.id),stand=card??(before&&this.cards.get(before.key));
             if(stand)this.instance(stand,request.matrix,request.id,request.foot,request.opacity,request.order);else this.bodiless++;
             continue;
           }
@@ -463,7 +431,7 @@ export class PaintedCardBatches {
     this.compact(renderer);
     this.frameDemand=this.frameKeys.size;this.peakFrameDemand=Math.max(this.peakFrameDemand,this.frameDemand);
     for(const page of [...this.pages]){
-      if(!page.cards.some(card=>card?.used===this.frame)&&(!page.cards.some(Boolean)||this.frame-page.used>120||this.allocatedPixels>this.pixelBudget))this.remove(page);
+      if(!page.cards.some(card=>card?.used===this.frame)&&(!page.cards.some(Boolean)||this.frame-page.used>120||this.allocatedPixels>PIXEL_BUDGET))this.remove(page);
     }
     this.draw();
   }
@@ -587,15 +555,12 @@ export class PaintedCardBatches {
   // Canvas backing stores. cpuBytes excludes scratch for existing consumers.
   stats(){
     let secondDemand=0;for(const [key,at] of this.askedAt){if(this.frame-at>=60)this.askedAt.delete(key);else secondDemand++;}
-    // What the cards hold at their resident size, and what the cards of the last 60 frames would hold at that average.
-    let residentPixels=0;for(const card of this.cards.values()){const kept=card.cell??card.page.texture.image;residentPixels+=kept.width*kept.height;}
-    const workingSetPixels=this.cards.size?Math.round(secondDemand*residentPixels/this.cards.size):0;
     const pixels=this.allocatedPixels,transfer=this.mipUploader.stats();
     const bytes=(page:Page)=>page.mipBytes;
     const gpuBytes=Math.ceil(pixels*4*4/3),allocatedMipBytes=this.pages.reduce((sum,page)=>sum+bytes(page),0),retiredGpuBytes=[...this.retiring].reduce((sum,page)=>sum+(page.uploaded?bytes(page):0),0);
     const drawBufferBytes=this.chunks.reduce((sum,chunk)=>sum+chunk.mesh.instanceMatrix.array.byteLength+Object.values(chunk.geometry.attributes).reduce((total,attribute)=>total+attribute.array.byteLength,0)+(chunk.geometry.index?.array.byteLength??0),0);
     const cpuBytes=this.maskBytes+this.pendingMaskBytes+this.pendingRgbaBytes+this.rowScratch.byteLength+this.emptyRgba.byteLength;
-    return{pages:this.pages.length,cards:this.cards.size,pixels,drawChunks:this.chunks.filter(chunk=>chunk.mesh.visible).length,pooledDrawChunks:this.chunks.length,drawCapacity:this.chunks.reduce((sum,chunk)=>sum+chunk.capacity,0),drawBufferBytes,maxTextureBanks:this.maxTextureBanks,arrayCpuBytes:0,cpuBytes,gpuBytes,allocatedMipBytes,canvasBackingBytes:[...this.canvases.values()].reduce((sum,canvas)=>sum+canvas.width*canvas.height*4,0),maskBytes:this.maskBytes,pendingMaskBytes:this.pendingMaskBytes,pendingRgbaBytes:this.pendingRgbaBytes,rowScratchBytes:this.rowScratch.byteLength,retiredGpuBytes,rasterCache:this.rasterCache.stats(),ownedCpuBytes:cpuBytes+transfer.scratchCpuBytes+this.rasterCache.stats().ownedBytes,ownedGpuBytes:this.pages.reduce((sum,page)=>sum+(page.uploaded?bytes(page):0),0)+transfer.scratchGpuBytes,peakPendingRgbaBytes:this.peakPendingRgbaBytes,peakOwnedCpuBytes:this.peakOwnedCpuBytes,peakOwnedGpuBytes:this.peakOwnedGpuBytes,peakRetiredGpuBytes:this.peakRetiredGpuBytes,rasterizations:this.rasterizations,bodiless:this.bodiless,anchorPaints:this.anchorPaints,pixelBudget:this.pixelBudget,residentPixels,workingSetPixels,lazyMasks:this.lazyMasks,evictions:this.evictions,frameDemand:this.frameDemand,peakFrameDemand:this.peakFrameDemand,secondDemand,preparedRasters:this.preparedRasters,copiedLayers:this.copiedLayers,rasterStages:{...this.rasterStages},rasterWorkWallMs:this.rasterWorkWallMs,...transfer};
+    return{pages:this.pages.length,cards:this.cards.size,pixels,drawChunks:this.chunks.filter(chunk=>chunk.mesh.visible).length,pooledDrawChunks:this.chunks.length,drawCapacity:this.chunks.reduce((sum,chunk)=>sum+chunk.capacity,0),drawBufferBytes,maxTextureBanks:this.maxTextureBanks,arrayCpuBytes:0,cpuBytes,gpuBytes,allocatedMipBytes,canvasBackingBytes:[...this.canvases.values()].reduce((sum,canvas)=>sum+canvas.width*canvas.height*4,0),maskBytes:this.maskBytes,pendingMaskBytes:this.pendingMaskBytes,pendingRgbaBytes:this.pendingRgbaBytes,rowScratchBytes:this.rowScratch.byteLength,retiredGpuBytes,rasterCache:this.rasterCache.stats(),ownedCpuBytes:cpuBytes+transfer.scratchCpuBytes+this.rasterCache.stats().ownedBytes,ownedGpuBytes:this.pages.reduce((sum,page)=>sum+(page.uploaded?bytes(page):0),0)+transfer.scratchGpuBytes,peakPendingRgbaBytes:this.peakPendingRgbaBytes,peakOwnedCpuBytes:this.peakOwnedCpuBytes,peakOwnedGpuBytes:this.peakOwnedGpuBytes,peakRetiredGpuBytes:this.peakRetiredGpuBytes,rasterizations:this.rasterizations,bodiless:this.bodiless,lazyMasks:this.lazyMasks,evictions:this.evictions,frameDemand:this.frameDemand,peakFrameDemand:this.peakFrameDemand,secondDemand,preparedRasters:this.preparedRasters,copiedLayers:this.copiedLayers,rasterStages:{...this.rasterStages},rasterWorkWallMs:this.rasterWorkWallMs,...transfer};
   }
   private recordPeaks(){
     // Sampling occurs several times per raster. Preserve the same ownership and

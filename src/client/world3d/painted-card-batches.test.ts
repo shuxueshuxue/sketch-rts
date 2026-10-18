@@ -2,7 +2,7 @@ import { ART_TILE_SIZE, ART_ACTION_SIZE } from '../art/raster-cache';
 import {afterEach,describe,expect,it,vi} from 'vitest';
 import {createCanvas} from '@napi-rs/canvas';
 import * as THREE from 'three';
-import {ATLAS_LEVELS,ATLAS_SIDE,PaintedCardBatches,patchCardShader,troopCardPixelBudget,type PaintedCardPolicy} from './painted-card-batches';
+import {ATLAS_LEVELS,ATLAS_SIDE,PaintedCardBatches,patchCardShader,type PaintedCardPolicy} from './painted-card-batches';
 import {cardTextureBytes} from './card-mip-uploader';
 import {SHIP_CAMERA} from '../../shared/ship-geometry';
 const renderer={initTexture:vi.fn(),copyTextureToTexture:vi.fn(),getRenderTarget:()=>null,getActiveCubeFace:()=>0,getActiveMipmapLevel:()=>0,setRenderTarget:vi.fn()};
@@ -678,50 +678,5 @@ describe('cropped cards in atlas cells',()=>{
   const internal=(cards as unknown as Internal).cards,sizes=new Set([...internal.values()].map(card=>`${card.window.width}x${card.window.height}`));
   expect(sizes.size).toBe(3);expect(new Set([...internal.values()].map(card=>card.page)).size).toBe(1);
   expect(cards.objects()).toHaveLength(1);expect(cards.objects()[0]!.count).toBe(3);cards.dispose();
- });
-});
-
-// @@@card-anchor
-describe("a look's anchor stands in for its poses",()=>{
- const anchor=(look:string,painter=paint)=>({key:`${look}:idle`,paint:painter,tileSize:128});
- it('paints every missing anchor first, past the raster budget, so no troop is left with nothing to show',()=>{
-  const {cards}=setup({maxTextureBanks:8,rasterBudgetMs:0}),poses=vi.fn(paint),anchors=vi.fn(paint);
-  // Ten troops of two looks appear at once, each in a pose of its own; the budget paints one pose a frame.
-  cards.begin();for(let i=0;i<10;i++)cards.add(`look${i%2}:walk:${i}`,2,poses,matrix,`troop${i}`,17,128,1,0,anchor(`look${i%2}`,anchors));cards.finish(renderer);
-  expect(anchors).toHaveBeenCalledTimes(2);expect(poses).toHaveBeenCalledTimes(1);
-  expect(cards.stats()).toMatchObject({bodiless:0,anchorPaints:2});
-  const shown=cards.objects().flatMap(mesh=>mesh.userData.ids.slice(0,mesh.count));expect(shown.sort()).toEqual(Array.from({length:10},(_,i)=>`troop${i}`).sort());
-  cards.dispose();
- });
- it('keeps an anchor while its look is on screen, whatever the cache drops',()=>{
-  // A cache of one 256px page: every new pose of a look drops an old one, never the anchor of a look in view.
-  const {cards}=setup({maxTextureBanks:8,pixelBudget:256*256*16});
-  for(let frame=0;frame<40;frame++){
-   cards.begin();cards.add(`look:walk:${frame}`,2,paint,matrix,'troop',17,128,1,0,anchor('look'));cards.finish(renderer);
-   expect((cards as unknown as {cards:Map<string,unknown>}).cards.has('look:idle:2:128')).toBe(true);
-  }
-  expect(cards.stats().anchorPaints).toBe(1);expect(cards.stats().evictions).toBeGreaterThan(0);cards.dispose();
- });
-});
-
-// @@@card-capacity
-describe('troop card capacity',()=>{
- const MPX=1024*1024;
- it('caps the cache by what the device can afford',()=>{
-  expect(troopCardPixelBudget({deviceMemory:4,maxTextureSize:16384,maxArrayLayers:2048})).toBe(20*MPX);
-  expect(troopCardPixelBudget({deviceMemory:8,maxTextureSize:4096,maxArrayLayers:256})).toBe(48*MPX);
-  expect(troopCardPixelBudget({deviceMemory:undefined,maxTextureSize:16384,maxArrayLayers:2048})).toBe(48*MPX);
-  expect(troopCardPixelBudget({deviceMemory:undefined,maxTextureSize:8192,maxArrayLayers:2048})).toBe(32*MPX);
-  expect(troopCardPixelBudget({deviceMemory:6,maxTextureSize:8192,maxArrayLayers:256})).toBe(32*MPX);
- });
- it('grows with the cards an animation cycles through up to its cap, and reports the working set against it',()=>{
-  const cycle=(cards:PaintedCardBatches,poses:number)=>{for(let round=0;round<3;round++)for(let pose=0;pose<poses;pose++){cards.begin();cards.add(`pose:${pose}`,2,paint,matrix,'troop',17);cards.finish(renderer);}};
-  // Under the cap the cycle's cards all stay: the third round paints nothing.
-  const roomy=setup({maxTextureBanks:8,pixelBudget:64*MPX}).cards;cycle(roomy,60);
-  expect(roomy.stats()).toMatchObject({cards:60,rasterizations:60,evictions:0});expect(roomy.stats().workingSetPixels).toBeLessThan(roomy.stats().pixelBudget);roomy.dispose();
-  // Over it the cache stops at the cap and says the working set does not fit.
-  const tight=setup({maxTextureBanks:8,pixelBudget:256*256*16}).cards;cycle(tight,60);
-  expect(tight.stats().pixels).toBeLessThanOrEqual(256*256*16*2);expect(tight.stats().rasterizations).toBeGreaterThan(60);
-  expect(tight.stats().workingSetPixels).toBeGreaterThan(tight.stats().pixelBudget);tight.dispose();
  });
 });
