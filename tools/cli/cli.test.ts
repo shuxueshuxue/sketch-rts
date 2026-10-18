@@ -5,6 +5,7 @@ import { diff, looksTimed, outcomes, settle, type VitestJson } from "./lib/vites
 import { browserRunExit, sceneFile } from "./lib/browser-run";
 import { sizesOption } from "./commands/yatu";
 
+
 const spec: CommandSpec = { name: "demo", summary: "", usage: "demo", options: [
   { name: "base", description: "", default: "origin/main" }, { name: "json", description: "", boolean: true }] };
 
@@ -86,11 +87,11 @@ describe("sketch bench room comparison", () => {
   });
 });
 
-import { spawn } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { execFileSync, spawn } from "node:child_process";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { lockedBuild } from "./runner";
+import { lockedBuild, resolveRef } from "./runner";
 
 describe("sketch copies are built once under their lock", () => {
   const build = (target: string, log: string) => new Promise<number>((resolve) => {
@@ -129,5 +130,39 @@ describe("sketch browser runs", () => {
   it("finds a scene by name under tools/cli/scenes, and refuses an unknown one", () => {
     expect(sceneFile("tower-card")).toMatch(/tools\/cli\/scenes\/tower-card\.ts$/);
     expect(() => sceneFile("no-such-scene")).toThrow(/No scene/);
+  });
+});
+
+// @@@with-local: the working tree's changes, new files included, laid on --ref; a conflict refuses the run.
+describe("--with-local on another ref", () => {
+  it("lays the working tree's changes on --ref, not on HEAD, and refuses a conflict", () => {
+    const repo = mkdtempSync(join(tmpdir(), "sketch-with-local-")), cwd = process.cwd();
+    const git = (...args: string[]) => execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...args], { cwd: repo, encoding: "utf8" }).trim();
+    const at = (commit: string, path: string) => git("show", `${commit}:${path}`);
+    try {
+      git("init", "-q");
+      writeFileSync(join(repo, "a.txt"), "one\n"); writeFileSync(join(repo, "b.txt"), "base\n");
+      git("add", "-A"); git("commit", "-qm", "first");
+      const first = git("rev-parse", "HEAD");
+      writeFileSync(join(repo, "b.txt"), "head\n"); git("commit", "-qam", "second");
+      // Local: a.txt edited, a new untracked file.
+      writeFileSync(join(repo, "a.txt"), "two\n"); writeFileSync(join(repo, "new.txt"), "fresh\n");
+      process.chdir(repo);
+      const made = resolveRef(first, true);
+      expect(git("rev-parse", `${made}^`)).toBe(first);
+      expect(at(made, "a.txt")).toBe("two");
+      expect(at(made, "new.txt")).toBe("fresh");
+      expect(at(made, "b.txt")).toBe("base");
+      // The index and working tree are as they were.
+      expect(git("status", "--porcelain").split("\n").map((line) => line.trim())).toEqual(["M a.txt", "?? new.txt"]);
+      expect(resolveRef("HEAD", false)).toBe(git("rev-parse", "HEAD"));
+      // A local change to a line --ref changed differently cannot be laid on it.
+      writeFileSync(join(repo, "b.txt"), "local\n");
+      expect(() => resolveRef(first, true)).toThrow(UsageError);
+      expect(readFileSync(join(repo, "b.txt"), "utf8")).toBe("local\n");
+    } finally {
+      process.chdir(cwd);
+      rmSync(repo, { recursive: true, force: true });
+    }
   });
 });
