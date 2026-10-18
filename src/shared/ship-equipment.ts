@@ -1,4 +1,4 @@
-import { shipPartMax } from './ship-handling';
+import { shipPartMax, shipPartWorkingFloor } from './ship-handling';
 export { shipPartMax } from './ship-handling';
 import { itemIndex } from "./item-index";
 import { deadZoneAim, strikePoint, type StrikeTarget } from "./combat-geometry";
@@ -324,11 +324,10 @@ export function repairShipParts(snapshot: Pick<GameSnapshot, 'items'>, ship: Uni
     const max = shipPartMax(ship);
     ship.shipParts ??= { ...max };
     ship.shipParts.cabin ??= max.cabin;
-    const repair = (key: 'rigging' | 'rudder' | 'cabin') => { const healed = Math.min(amount, max[key] - ship.shipParts![key]!); ship.shipParts![key] = ship.shipParts![key]! + healed; amount -= healed; };
-    // Restore propulsion and steering before an otherwise sound hull.
+    const repair = (key: 'rigging' | 'rudder' | 'cabin', to = max[key]) => { const healed = Math.max(0, Math.min(amount, to - ship.shipParts![key]!)); ship.shipParts![key] = ship.shipParts![key]! + healed; amount -= healed; };
+    // A crippled sail or rudder works again before the hull is mended (see @@@crippled-parts).
     for (const key of ['rigging', 'rudder'] as const)
-        if (ship.shipParts[key] <= 0)
-            repair(key);
+        repair(key, shipPartWorkingFloor(key, max[key]));
     const hull = Math.min(amount, ship.maxHp - ship.hp);
     ship.hp += hull;
     amount -= hull;
