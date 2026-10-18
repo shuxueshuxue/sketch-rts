@@ -48,7 +48,7 @@ export const BUILDING_CARDS: Record<BuildingKind, BuildingCard> = {
     name: { en: "Fortified Tower", zh: "加固防御塔" },
     description: { en: "A defense tower fortified: broader and twice as sturdy, with no weapon of its own. Up to 4 supply of troops stand on its top: melee cannot strike them, every other damage reaches them at 40%, and ranged troops there reach 20% farther.", zh: "加固后的防御塔：更宽、生命翻倍，自身不再攻击。塔顶最多站 4 人口的单位：近战打不到，其他伤害只受 40%，远程单位射程 +20%。" },
     command: { icon: "▲", hotkey: "f" },
-    glyph: { frame: "tower-spire", marks: ["arrowSlit", "watchEye", "banner"] },
+    glyph: { frame: "tower-spire", marks: ["crossedBlades", "watchEye", "banner"] },
   },
   moonWell: {
     name: { en: "Moon Well", zh: "月井" },

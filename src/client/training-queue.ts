@@ -16,7 +16,7 @@ export type TrainingProgressButton = ({ product: "unit"; unitKind: TrainableUnit
 export function trainingProgressText(progress: TrainingProgressButton, i18n: ReturnType<typeof createI18n>) {
   const percent = Math.floor(progress.progress * 100);
   return {
-    label: i18n.t(progress.status === "awaitingLaunch" ? "hud.trainingAwaitingLaunch" : progress.status === "training" ? "hud.trainingTraining" : "hud.trainingQueued", { label: i18n.label(progressKind(progress)) }),
+    label: i18n.t(progress.status === "awaitingLaunch" ? "hud.trainingAwaitingLaunch" : progress.status === "queued" ? "hud.trainingQueued" : progress.product === "upgrade" ? "hud.trainingUpgrading" : "hud.trainingTraining", { label: i18n.label(progressKind(progress)) }),
     badge: progress.status === "awaitingLaunch" ? i18n.t("hud.trainingAwaitingLaunchBadge") : progress.status === "training" ? `${percent}%` : i18n.t("hud.productionQueueBadge"),
     hint: progress.status === "awaitingLaunch" ? i18n.t("hud.trainingAwaitingLaunchHint") : undefined,
   };
