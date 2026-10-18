@@ -17,9 +17,10 @@ import { cast, seeded, stage, terrainOf, type MenuSceneRun } from './menu-scene-
 const PIRATES = 'corsairs', GUARD = 'admiralty';
 const CX = 2280, CY = 1430, HEADING = -1.42;
 // The opening's gunnery leg (see the opening below): the pirate hull sails alongside the admiralty ship with its guns
-// this far from the other's hull, in the band between a broadside's dead zone and its range (240 to 312, see
-// @@@hull-reach), for this distance, before it closes to board.
-const BAND_GAP = 280, LEG = 340;
+// this far from the other's hull, in the middle of the band between a broadside's dead zone and its range (125 to 312,
+// see @@@cannon-min-range), for this distance, before it closes to board. Farther out the closing turns show the
+// admiralty the pirate stern for long enough to shoot the rudder away, and the helm can no longer come alongside.
+const BAND_GAP = 200, LEG = 340;
 const presentationHeight = (ship: Unit) => shipProfile(ship)!.deckHeight * Math.tan(SHIP_CAMERA.tilt);
 
 /** Scene-local costume: shared authored body, contact poses and weapon sockets. */
@@ -110,6 +111,14 @@ export function createPirateBoarding(seed = 1): MenuSceneRun {
   // home screen keeps it small.
   crew(a, 'menu/pirate', 4 + Math.floor(random() * 2));
   crew(b, 'menu/marine', 4);
+  // Each deck also carries two carpenters who mend the hull as the balls strike it (slowly while under fire, see
+  // @@@repair-under-fire) and a priest who mends the crew (an autocast heal), so the duel goes back and forth; the
+  // boarders' fight is the swordsmen's. The carpenters pay for their work, so each side has gold for it.
+  for (const ship of [a, b]) for (const kind of ['worker', 'worker', 'priest'] as const) {
+    const hand = game.spawnUnit(ship.owner, kind, ship.x, ship.y);
+    if (!boardUnit(ship, hand, game.units)) throw new Error(`No deck room for a ${kind} on ${ship.id}`);
+  }
+  for (const player of [PIRATES, GUARD]) game.players[player]!.gold = 400;
   syncDecks(game.units);
   for (const unit of game.units) if (unit.deck) unit.order = { type: 'hold', x: unit.x, y: unit.y };
   // The scene opens with the pirates on the side of the berth the simulation itself would choose, on its heading, but
