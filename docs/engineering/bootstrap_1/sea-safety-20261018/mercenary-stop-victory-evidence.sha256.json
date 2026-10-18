@@ -1,0 +1,271 @@
+{
+  "archive": "mercenary-stop-victory-evidence.tar.gz",
+  "bytes": 3360697,
+  "sha256": "aeb069c5e23ede52db118dcb62bf00f93ab2f330b7e4304cdb00bee88fdae638",
+  "files": {
+    "raw/knight-medic-integrated-continue9000/commands.jsonl": {
+      "bytes": 5025994,
+      "sha256": "fab83d8d14707513d46ecc6c6854446753907a05480831c0f12dc8f01178fc33"
+    },
+    "raw/knight-medic-integrated-continue9000/entities.jsonl": {
+      "bytes": 97636,
+      "sha256": "2f94f19fa795bb12513396d42c2f03afb3a28c3fbf4593dfe922eed103719a7c"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/10200.json.gz": {
+      "bytes": 23012,
+      "sha256": "2b80ffd058b8a4bd3193ff26240da025c04458675513d557d6ca37ec2b37812d"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/10800.json.gz": {
+      "bytes": 22663,
+      "sha256": "4040c38979c74de47072f85c8d965c2c1ba13f283af8e1cb53cf49a926b2b3a3"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/11400.json.gz": {
+      "bytes": 23460,
+      "sha256": "46ab1ca1919de2951b596c93b92d08fe26261749fe2576e9ef467c13122d5a57"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/12000.json.gz": {
+      "bytes": 24318,
+      "sha256": "3a3f0cdc920618968a9967f9e7bd818d2071d30579e27806a7e686e7b0793111"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/12600.json.gz": {
+      "bytes": 24375,
+      "sha256": "ba2b636247ef05da09d415b53b57464d568ae0a36449ee934ecd27587e193708"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/13200.json.gz": {
+      "bytes": 25402,
+      "sha256": "b58bbbcb65ead98ed35b5e68359000237159d3e391747ad5256640f45a72da2c"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/13800.json.gz": {
+      "bytes": 24828,
+      "sha256": "93c0dcf5981cd38e14adc2b3e266868924a50796908887cb3166c9207337510c"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/14400.json.gz": {
+      "bytes": 25001,
+      "sha256": "cb0d67ba2decacfcf7825650faab0ca979db7855ed98952c6e821748e4154de1"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/15000.json.gz": {
+      "bytes": 25737,
+      "sha256": "49bde3ae902f8716a6e309d87851739f2c0402c4513d47b656c166bfc1be146d"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/15600.json.gz": {
+      "bytes": 26065,
+      "sha256": "3f5c50168c3ba3f7c20a41c8112bac4ad6eeffa68d9de3aa74034e16575cc863"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/16200.json.gz": {
+      "bytes": 28190,
+      "sha256": "76f56921e9d89b412b28f00a5451354bc9e1bfb8d1b80703c8690711cd1ce94e"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/16800.json.gz": {
+      "bytes": 27197,
+      "sha256": "0e6d5a038a0486ff0a883a53e422bbf2b24fe27e720ae1f5d90324b796914f95"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/17400.json.gz": {
+      "bytes": 28168,
+      "sha256": "7f278a2ab1304830f85fc717e672ce3457b6d24a037ce5020e649f4980435175"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/18000.json.gz": {
+      "bytes": 27850,
+      "sha256": "39d0974cc4b2da5ee31cd1a372e97ee6e951d24e9d878b463fdd59564e221dbc"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/18600.json.gz": {
+      "bytes": 29302,
+      "sha256": "ad686d12c4563e79e738a6d0c6ecd3c14e046c308fd9454212ffc4357cb90631"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/19200.json.gz": {
+      "bytes": 28344,
+      "sha256": "0bc15ded21a861aeb15149a4b8a1ebdc8439ee51decbd60e4cb4bd3c566a611c"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/19800.json.gz": {
+      "bytes": 29527,
+      "sha256": "b3338f2b854886067d908f5dbab674773b78c2f74404903d05d999a6c5022ed0"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/20400.json.gz": {
+      "bytes": 29082,
+      "sha256": "8a45b97bc69460142e522e8a441537befe6b2a64c372c679832a0034a9217b06"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/21000.json.gz": {
+      "bytes": 30699,
+      "sha256": "885f6794183308898a71c97dde5a2d4dc192431164f911e9be158c9ef944e50f"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/21600.json.gz": {
+      "bytes": 30131,
+      "sha256": "baf1f8559473cbb6582cc7a1f294fe4b3304a39e1d77a70df31a7365e843df71"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/22200.json.gz": {
+      "bytes": 28749,
+      "sha256": "2c82f7ad1deca30c0bce265d4690b2aeff295ecc62f6e2538345cfa6cb98a423"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/22800.json.gz": {
+      "bytes": 29855,
+      "sha256": "4996ac52ba2446aed0df66ed07fe899287301c7c903902f2c4c969db361e2aea"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/23400.json.gz": {
+      "bytes": 30303,
+      "sha256": "c4e268a005ceb006d431384f6b3bd376255269da4ea0b964d23d416a8866f672"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/24000.json.gz": {
+      "bytes": 31335,
+      "sha256": "a863b572166b1b912bc2752cf73cfc0234818de8b91ffe1130e8e88a9ffe70f9"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/24600.json.gz": {
+      "bytes": 32476,
+      "sha256": "7d944a21dfc625c0ce630953ba34b17ece5f5b2999425d04f54c02657cef42ca"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/25200.json.gz": {
+      "bytes": 30453,
+      "sha256": "d62aefea7bd61447c1554d34ebe2ea11e8df25dca6702f563451e85ebd1ee1fa"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/25800.json.gz": {
+      "bytes": 30569,
+      "sha256": "247ba3670dbb60f8b02de0a11044d399bd75ae37b48d7bfc01970802ba59b610"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/26400.json.gz": {
+      "bytes": 30532,
+      "sha256": "de271fa9c35092eba54f4ae08a14cd109b5b4a52f12b54dabbc6214ce07cac45"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/27000.json.gz": {
+      "bytes": 31124,
+      "sha256": "3bc9d472f1ee8735589222ff08521693d00462aaba80e6672d3e18c4bff71499"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/27600.json.gz": {
+      "bytes": 35102,
+      "sha256": "d3952f6c7e784556c768d78677d0932793cba976061f40ff3dc688708429f806"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/28200.json.gz": {
+      "bytes": 32910,
+      "sha256": "af5df8dae63555d183b3b824b3450751c8f318f17aef05931f4102dc0e2bc46d"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/28800.json.gz": {
+      "bytes": 35673,
+      "sha256": "b93e1f707376d2fab0130575e5e1477083661bddaf0690ac4a92928ee8148617"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/29400.json.gz": {
+      "bytes": 35018,
+      "sha256": "2c0c3ab0642e3d265530fa8da601328695cc3982eca5d168fdf956a12d778648"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/30000.json.gz": {
+      "bytes": 33070,
+      "sha256": "7cf7a824b7cdbf8626596fccd2be00646c078d87f751b541e86cb36baa01a6cd"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/30600.json.gz": {
+      "bytes": 33055,
+      "sha256": "6ba30f94afab5a9f36c74eeaee5945d74b492772c908c1001296479bdd3a2eca"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/31200.json.gz": {
+      "bytes": 34729,
+      "sha256": "668e4fc8c0434411d58b033571a5c5b6dd2b6e510a02def9e2cc2280f460057b"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/31800.json.gz": {
+      "bytes": 33935,
+      "sha256": "54f9ca06fbead1990c920b4869de4405a07bd7e5a2681d6017328f83900d57e2"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/32400.json.gz": {
+      "bytes": 33091,
+      "sha256": "6236bdcb2dff2fa06fa644a07c9d3ae1161eafd5d6b05d7e4aa31da3d551748a"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/33000.json.gz": {
+      "bytes": 31441,
+      "sha256": "1df32e51489aeeb32118e921e008ae44ab2720ccb14b09ed7d342fdc85d10d1b"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/33600.json.gz": {
+      "bytes": 31499,
+      "sha256": "52b5584d0692dc52ca07e142ebbc5dcd6d43d75fe53f4c3892cfef8fc87ff839"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/34200.json.gz": {
+      "bytes": 31437,
+      "sha256": "b72d585aa188a6d856406302c61dbee7ebfc7eafcf3d110a0a53e04f294a5add"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/34800.json.gz": {
+      "bytes": 31429,
+      "sha256": "17491b2e895b2119b24bd18806b1911ed9f2a5f81bbd238597fe50ddd6fcab8b"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/35400.json.gz": {
+      "bytes": 31462,
+      "sha256": "d809550e528222c61e2a360913e697d1149be336da6b967ff4a235fb0c64bfb0"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/36000.json.gz": {
+      "bytes": 31833,
+      "sha256": "be48408df490dd045067dbcf19c15b7760bd7d0c58c59a9d1633cae26bcfa141"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/36600.json.gz": {
+      "bytes": 31487,
+      "sha256": "e5bcdd81a84e7780b4f18ad826581a13657bfa94f55080f30a69fd6a65a190d9"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/37200.json.gz": {
+      "bytes": 32010,
+      "sha256": "4818d54b24bb169f7a25f5a9455591f71cd6d9ef68cf38c60ae5e9ad9ef0f506"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/37800.json.gz": {
+      "bytes": 31467,
+      "sha256": "bdc295b2cf4cde63aa725936fb881f302399e1f3aaf5b5dc012ca4fca249b3b8"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/38400.json.gz": {
+      "bytes": 32117,
+      "sha256": "a1e166b1c58122bdf5e28762bcd4b61573ca8ab5d5d208ef6ea07f1786b578e3"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/39000.json.gz": {
+      "bytes": 33609,
+      "sha256": "90de4b80ee4d6543fa6789aed1a7ec885bd52cb22b4aa28412743e25f84fed75"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/39600.json.gz": {
+      "bytes": 32632,
+      "sha256": "c7dd3822b2977041258561f5780565bdd678b830c136547ea2e5e1c5be7eb8b3"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/40200.json.gz": {
+      "bytes": 33059,
+      "sha256": "7cf5c9df11ce5f62aef7beaabde5ebc966ccc9144f4c0e3d8bc8e0b076828573"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/40800.json.gz": {
+      "bytes": 34744,
+      "sha256": "e09375f596b0402f6133e342ea5a178b8ad2dfbc37a7d7891d7bdae1c591ffa0"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/41400.json.gz": {
+      "bytes": 32813,
+      "sha256": "eb8f61ebd0ae4d17a431ae88ef3a4fc86a65e3ebec30f5fcfb5193c1d5defdb9"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/42000.json.gz": {
+      "bytes": 31387,
+      "sha256": "2aa59df911f3a00a6f7e910727a17f5dc620de485bfd0171c71eaf91e8862d98"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/42296.json.gz": {
+      "bytes": 31722,
+      "sha256": "cf40bb3d4b424610bb14523c305c3cf642027a564aebfcdb3234ffeeb9695c0e"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/9000.json.gz": {
+      "bytes": 20801,
+      "sha256": "d4caeafdc3ba946b4e3f9362b47e03f028cae15f74fd1fbf651ca8bc534252c6"
+    },
+    "raw/knight-medic-integrated-continue9000/frames/9600.json.gz": {
+      "bytes": 21009,
+      "sha256": "1b67edd07c2cbf037cb72cc081aa1cf8a6dc9801eaece81c6a38cbff31cb51bb"
+    },
+    "raw/knight-medic-integrated-continue9000/hits.jsonl": {
+      "bytes": 1519673,
+      "sha256": "ca1ddc7827c6cb2abb1b1ce58f6e0e4cc88c3397ac7e596558a6801b7c4b2808"
+    },
+    "raw/knight-medic-integrated-continue9000/result.json": {
+      "bytes": 32794,
+      "sha256": "107bf2886ee9cc7dbb91e131ea717e87c845023b0f146428d5a55375324fe367"
+    },
+    "raw/knight-medic-integrated-continue9000/samples.jsonl": {
+      "bytes": 213796,
+      "sha256": "22f31a0480601a747557f72ee7f322ec7795d0c2a3e8f9eee2874e9a28927308"
+    },
+    "raw/knight-medic-integrated-continue9000/source.json": {
+      "bytes": 184472,
+      "sha256": "86b44ea92c81d1587340326978a2502ba3a7939ce03f80b339744c4bf4adf39f"
+    },
+    "raw/mercenary-stop-continuation-source.json": {
+      "bytes": 374,
+      "sha256": "056bfa262a049e520774c1f212b4744ca3ac4fc60d1cb82c1251b1a4eef2cbb4"
+    },
+    "raw/mercenary-stop-final-summary.json": {
+      "bytes": 509,
+      "sha256": "39d8cae97caa07c2b28f40d5f1a3bf18bac90899c49d16d665e7d93dcf9c4f76"
+    },
+    "raw/knight-medic-victory-native.png": {
+      "bytes": 1038251,
+      "sha256": "6330db7b3f73dc2579bf1d8bce9099a68af5ada795868735591b8f95a08d03a8"
+    }
+  }
+}
