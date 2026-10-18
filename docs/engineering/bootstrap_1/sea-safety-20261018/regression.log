@@ -1,0 +1,25 @@
+
+ RUN  v2.1.9 /workspace/bootstrap-1-resume
+
+ ✓ src/ai/bootstrap_1/ferry-loading-escape.test.ts (14 tests) 224ms
+ ✓ src/ai/bootstrap_1/ferry-preparation.test.ts (14 tests) 19897ms
+   ✓ 'v9_archer' sends the reachable idle 'grove' settlers while its ferry sails (mirror=false) 4075ms
+   ✓ 'v9_archer' sends the reachable idle 'ember' settlers while its ferry sails (mirror=false) 3195ms
+   ✓ 'v9_summoner' sends the reachable idle 'grove' settlers while its ferry sails (mirror=false) 2970ms
+   ✓ 'v9_summoner' sends the reachable idle 'ember' settlers while its ferry sails (mirror=false) 2987ms
+   ✓ 'v9_knight' sends the reachable idle 'grove' settlers while its ferry sails (mirror=false) 2971ms
+   ✓ 'v9_knight' sends the reachable idle 'ember' settlers while its ferry sails (mirror=false) 2906ms
+ ✓ src/ai/bootstrap_1/coastal-escape.test.ts (4 tests) 2944ms
+   ✓ finishes the native short move after passing 70px remaining and restores its precise saved mark 2415ms
+ ✓ src/ai/bootstrap_1/colony-departure-defense.test.ts (3 tests) 663ms
+
+ Test Files  4 passed (4)
+      Tests  35 passed (35)
+   Start at  01:31:26
+   Duration  28.64s (transform 2.27s, setup 0ms, collect 4.07s, tests 23.73s, environment 1ms, prepare 207ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

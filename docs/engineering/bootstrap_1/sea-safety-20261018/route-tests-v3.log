@@ -1,0 +1,17 @@
+
+ RUN  v2.1.9 /workspace/bootstrap-1-resume
+
+ ✓ src/ai/bootstrap_1/clear-colony-departure.test.ts (10 tests) 2695ms
+   ✓ the issued colony departure moves the real hull with both engineers still alive 2348ms
+ ✓ src/ai/bootstrap_1/settler-sea-route.test.ts (4 tests) 632ms
+
+ Test Files  2 passed (2)
+      Tests  14 passed (14)
+   Start at  01:30:06
+   Duration  6.64s (transform 1.93s, setup 0ms, collect 2.92s, tests 3.33s, environment 0ms, prepare 102ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

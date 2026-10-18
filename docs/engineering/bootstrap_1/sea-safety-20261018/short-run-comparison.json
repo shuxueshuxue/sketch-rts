@@ -1,0 +1,98 @@
+{
+  "control-9000": {
+    "startTick": 9000,
+    "endTick": 11400,
+    "winner": null,
+    "naturalComplete": false,
+    "p0Lost": 8,
+    "originalSettlersAndShip": [],
+    "sourceChangedDuringRun": []
+  },
+  "waypoint-9000-v2": {
+    "startTick": 9000,
+    "endTick": 11400,
+    "winner": null,
+    "naturalComplete": false,
+    "p0Lost": 2,
+    "originalSettlersAndShip": [
+      {
+        "id": "unit-p0-worker-1",
+        "hp": 70,
+        "x": 1375.2864240905972,
+        "y": 4354.454997148566,
+        "order": {
+          "type": "repair",
+          "buildingId": "building-p0-townHall-1857"
+        },
+        "deck": null
+      },
+      {
+        "id": "unit-p0-worker-1030",
+        "hp": 70,
+        "x": 1668,
+        "y": 4500,
+        "order": {
+          "type": "idle"
+        },
+        "deck": null
+      },
+      {
+        "id": "unit-p0-transport-1070",
+        "hp": 270,
+        "x": 2096.0000000000123,
+        "y": 5274.635484694794,
+        "order": {
+          "type": "idle"
+        },
+        "deck": null
+      }
+    ],
+    "sourceChangedDuringRun": []
+  },
+  "candidate-9000": {
+    "startTick": 9000,
+    "endTick": 15000,
+    "winner": null,
+    "naturalComplete": false,
+    "p0Lost": 5,
+    "originalSettlersAndShip": [
+      {
+        "id": "unit-p0-worker-1",
+        "hp": 70,
+        "x": 1312.7546577609387,
+        "y": 4392.370411288638,
+        "order": {
+          "type": "mine",
+          "resourceId": "gold-seat1-main",
+          "phase": "toMine",
+          "timer": 0
+        },
+        "deck": null
+      },
+      {
+        "id": "unit-p0-worker-1030",
+        "hp": 70,
+        "x": 1341.7141179366179,
+        "y": 4434.49326245326,
+        "order": {
+          "type": "mine",
+          "resourceId": "gold-seat1-main",
+          "phase": "return",
+          "timer": 0
+        },
+        "deck": null
+      },
+      {
+        "id": "unit-p0-transport-1070",
+        "hp": 270,
+        "x": 4112.2175525565635,
+        "y": 5984.176706522175,
+        "order": {
+          "type": "idle"
+        },
+        "deck": null
+      }
+    ],
+    "sourceChangedDuringRun": []
+  }
+}

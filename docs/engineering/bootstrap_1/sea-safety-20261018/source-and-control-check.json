@@ -1,0 +1,9 @@
+{
+  "candidate9000ImplementationCommit": "0a6b4ed84a9faaf432190cd98a115b272be61a79",
+  "candidate9000SourceDifferencesFromCommit": [],
+  "control11400EqualsOriginal": {
+    "snapshot": true,
+    "nextId": true,
+    "memories": true
+  }
+}

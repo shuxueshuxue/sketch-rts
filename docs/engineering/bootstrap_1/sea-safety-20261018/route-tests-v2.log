@@ -1,0 +1,46 @@
+
+ RUN  v2.1.9 /workspace/bootstrap-1-resume
+
+ ✓ src/ai/bootstrap_1/clear-colony-departure.test.ts (10 tests) 2731ms
+   ✓ the issued colony departure moves the real hull with both engineers still alive 2373ms
+ ❯ src/ai/bootstrap_1/settler-sea-route.test.ts (4 tests | 3 failed) 789ms
+   × v9_archer detours the exposed settlers despite nominal escort superiority 313ms
+     → expected [] to have a length of 1 but got +0
+   × v9_summoner detours the exposed settlers despite nominal escort superiority 223ms
+     → expected [] to have a length of 1 but got +0
+   × v9_knight detours the exposed settlers despite nominal escort superiority 128ms
+     → expected [] to have a length of 1 but got +0
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/ai/bootstrap_1/settler-sea-route.test.ts > v9_archer detours the exposed settlers despite nominal escort superiority
+ FAIL  src/ai/bootstrap_1/settler-sea-route.test.ts > v9_summoner detours the exposed settlers despite nominal escort superiority
+ FAIL  src/ai/bootstrap_1/settler-sea-route.test.ts > v9_knight detours the exposed settlers despite nominal escort superiority
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/ai/bootstrap_1/settler-sea-route.test.ts:17:18
+     15|   const entries=planAiOwnerCommandEntries(snapshotGame(game),{playerId…
+     16|   const orders=entries.filter(e=>'unitIds'in e.command&&e.command.unit…
+     17|   expect(orders).toHaveLength(1);
+       |                  ^
+     18|   expect(orders[0]!.command).toMatchObject({type:'move',avoidCombat:tr…
+     19|   const mark=memory.naval.settlerSeaMarks[boatId];
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  3 failed | 11 passed (14)
+   Start at  01:29:23
+   Duration  7.01s (transform 2.08s, setup 0ms, collect 3.08s, tests 3.52s, environment 0ms, prepare 104ms)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
