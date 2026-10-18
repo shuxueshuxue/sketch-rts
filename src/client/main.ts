@@ -2203,8 +2203,15 @@ function issueContextCommandAtWorld(world: Point, queued = false) {
     return;
   }
   const command = target ? targetCommand(snapshot, localPlayerId, selectedUnits, target, queued) : undefined;
+  if (command && "refusal" in command) {
+    showInvalidCommand(t("status.targetUnreachable"));
+    return;
+  }
   if (target && command) {
     sendCommand(command);
+    // The units an attack leaves out cannot come within reach (see @@@context-reach): they walk there.
+    const walkers = command.type === "attack" ? selectedUnits.filter((unit) => !command.unitIds.includes(unit.id)) : [];
+    if (walkers.length) sendCommand({ type: "move", unitIds: walkers.map((unit) => unit.id), x: world.x, y: world.y, queued, avoidCombat: true });
     statusLabel.textContent = contextOrderStatus(command, target);
     return;
   }

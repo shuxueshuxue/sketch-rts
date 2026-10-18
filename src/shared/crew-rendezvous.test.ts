@@ -4,6 +4,7 @@ import { boardUnit,deckPlacement,deckPointFits,syncDecks } from './decks';
 import { hullContact } from './ship-geometry';
 import { hullFits } from './ship-navigation';
 import { targetCommand } from '../client/relations';
+import type { GameCommand } from './types';
 import { commandValidationError,narrowFrameCommandToLiveOperands } from './sim/command-validation';
 import { seconds } from './time';
 import { checksumGame } from './sim/checksum';
@@ -14,7 +15,7 @@ describe('right-click crew rendezvous',()=>{
     const crew=['footman','worker','archer'].map(kind=>game.spawnUnit('player',kind as 'footman',700,800));
     for(const unit of crew)expect(boardUnit(source,unit,game.units)).toBe(true);
     source.sailing!.heading=0;target.sailing!.heading=owner==='player'?Math.PI:0;
-    const command=targetCommand(snapshotGame(game),'player',crew,{kind:'unit',unit:target})!;
+    const command=targetCommand(snapshotGame(game),'player',crew,{kind:'unit',unit:target}) as GameCommand;
     expect(command.type).toBe('board');expect(commandValidationError(snapshotGame(game),'player',command)).toBeUndefined();
     expect(narrowFrameCommandToLiveOperands(game,'player',command)).toEqual(command);
     issuePlayerCommand(game,'player',command);
