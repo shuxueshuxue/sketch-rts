@@ -24,22 +24,23 @@ describe('the pirate boarding home battle', () => {
     expect(JSON.stringify(snapshotGame(MENU_BATTLES.fleet(5)))).toBe(JSON.stringify(snapshotGame(createPirateBoarding(5).game)));
   });
 
-  it('is fought by the simulation: broadsides both ways as the pirates come up, the bridge goes out, the boarders win the deck and the pirates take the ship', () => {
+  // @@@cannon-min-range: the pirates come up from astern inside the broadsides' band, and a deck alongside is under every
+  // gun's dead zone, so no crewman is shot: the fight is the crews' own, with the sword.
+  it('is fought by the simulation: no gun reaches a crew as the pirates come up, the bridge goes out, the boarders win the deck and the pirates take the ship', () => {
     const game = createPirateBoarding().game;
     const [pirates, admiralty] = game.activePlayers.map(owner => game.units.find(unit => unit.owner === owner && unit.kind === 'shipOfTheLine')!);
-    let bridge = 0, decided = 0, captured = 0, hullsHitBeforeBridge = new Set<string>();
-    const hp = new Map([pirates!, admiralty!].map(ship => [ship.id, ship.hp]));
+    let bridge = 0, decided = 0, captured = 0, crewShot = 0;
+    game.observer = { hit(attacker, target) { if ((attacker === pirates || attacker === admiralty) && 'order' in target && target.deck) crewShot++; } };
     for (let tick = 1; tick <= 60 * SIM_TICKS_PER_SECOND && !captured; tick++) {
       stepGame(game);
-      if (!bridge) for (const ship of [pirates!, admiralty!]) if (ship.hp < hp.get(ship.id)!) hullsHitBeforeBridge.add(ship.id);
       if (!bridge && pirates!.sailing?.gangway?.phase === 'ready') bridge = tick;
       if (!decided && battleDecided(game)) decided = tick;
       // Taken by the pirates, not the pirates' own hull taken by the marines.
       if (admiralty!.owner === 'corsairs') captured = tick;
     }
-    // The chase is short enough for the home screen, and each side's guns find the other hull on the way in.
+    // The chase is short enough for the home screen, and no gun ever strikes a crewman.
     expect(bridge).toBeGreaterThan(0); expect(bridge).toBeLessThan(20 * SIM_TICKS_PER_SECOND); expect(decided).toBeGreaterThan(bridge);
-    expect(hullsHitBeforeBridge.size).toBe(2);
+    expect(crewShot).toBe(0);
     // The prize is taken within the aftermath the home screen shows after the fight is decided.
     expect(captured).toBeGreaterThanOrEqual(decided); expect(captured - decided).toBeLessThan(4 * SIM_TICKS_PER_SECOND);
     expect(pirates!.owner).toBe('corsairs');
