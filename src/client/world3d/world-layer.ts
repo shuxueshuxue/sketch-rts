@@ -13,6 +13,7 @@ import {CombatInk,type CombatAnchor} from './combat-ink';
 import * as THREE from 'three';
 import { perf } from '../perf-overlay';
 import { worldModels,matchModelKeys,snapshotModelKeys } from './model-library';
+import { SCENE_MODELS } from '../art/model-manifest';
 import { activateModelPortraits } from './model-portraits';
 import { ActorBatches, setInkZoom, type ModelLook } from './batches';
 import { PaintedCardBatches,DEFAULT_CARD_BANKS } from './painted-card-batches';
@@ -375,7 +376,7 @@ export class World3DLayer {
     },frame.reducedMotion)??0;
     const visible=(x:number,y:number,pad=180)=>x>=frame.view.x-pad && y>=frame.view.y-pad && x<=frame.view.x+frame.view.width/zoom+pad && y<=frame.view.y+frame.view.height/zoom+pad;
     this.positions.clear();this.combatAnchors.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.batches.begin();this.cards.begin();this.remainsCards.begin();this.propCards.begin();this.selection.begin();
-    for(const site of [...snapshot.mercenaryCamps.map(site=>({...site,model:'camp',scale:site.radius/32})),...(snapshot.shops??[]).map(site=>({...site,model:'shop',scale:site.radius/32})),...(frame.story?.props??[]).filter(site=>['statue','well','beacon','citadel'].includes(site.kind)).map(site=>({...site,id:`prop:${site.id}`,model:site.kind}))]){
+    for(const site of [...snapshot.mercenaryCamps.map(site=>({...site,model:'camp',scale:site.radius/32})),...(snapshot.shops??[]).map(site=>({...site,model:'shop',scale:site.radius/32})),...(frame.story?.props??[]).filter(site=>SCENE_MODELS.has(site.kind)).map(site=>({...site,id:`prop:${site.id}`,model:site.kind}))]){
       const model=this.template(`buildings/${site.model}`,'Building');if(!model)continue;
       // A shop or camp is a body like a building (see @@@structure-body) and stands on its footprint the way a building
       // does; a story's prop keeps its own scale.

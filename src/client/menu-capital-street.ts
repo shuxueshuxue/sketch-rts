@@ -4,6 +4,8 @@ import { storyFigure } from './art/story-rig';
 import { INK, darker, ellipse, line, polygon, type Brush } from './art/kit';
 import type { FigurePresentation } from './art/rig';
 import { cast, stage, terrainOf, type AuthoredMenuSceneRun } from './menu-scene-world';
+import { paintBuildingModel } from './art/building-models';
+import { CAPITAL_MODELS } from './art/model-manifest';
 
 // A small, authored street scene. Costumes and architecture belong to this
 // presentation; its inhabitants do not enlist new match units or run city AI.
@@ -159,19 +161,17 @@ function bench(b: Brush) {
 }
 
 function paving(b: Brush) {
-  b.save();
-  polygon(b, [[-62, -22], [62, -22], [62, 22], [-62, 22]], '#b6b5a0', 'transparent', 0);
-  for (let row = 0; row < 5; row++) for (let col = 0; col < 10; col++) {
-    const x = -61 + col * 13 + (row % 2 ? 6 : 0);
-    if (x > 59) continue;
-    const w = Math.min(11.5, 62 - x);
-    const y = -21 + row * 8.6;
-    const color = (row * 7 + col * 3) % 4 === 0 ? '#c5c3ae' : (row + col) % 3 === 0 ? '#a8ac99' : '#b8b9a4';
-    polygon(b, [[x + .3, y + .8], [x + w, y + .4], [x + w - .5, y + 7.2], [x, y + 7.5]], color, '#858d7b', .35);
+  // A ground mark (docs/art/prop-painting.zh.md §7): flat, centred on its point, quiet. Stone courses are suggested by a
+  // few low-contrast joints, so the street reads as one surface and the people and houses on it stay the subject.
+  polygon(b, [[-62, -22], [62, -22], [62, 22], [-62, 22]], '#bdb9a2', 'transparent', 0);
+  for (let row = 1; row < 5; row++) line(b, [[-62, -22 + row * 8.8], [62, -22 + row * 8.8]], '#a9a68f66', .45);
+  for (let row = 0; row < 5; row++) for (let col = 0; col < 6; col++) {
+    const x = -55 + col * 22 + (row % 2 ? 11 : 0), y = -22 + row * 8.8;
+    if (x < 60) line(b, [[x, y + .6], [x, y + 8.2]], '#a9a68f55', .4);
+    if ((row * 5 + col * 3) % 7 === 0) polygon(b, [[x + 2, y + 1.2], [x + 18, y + 1.2], [x + 18, y + 7.6], [x + 2, y + 7.6]], '#c7c3ab55', 'transparent', 0);
   }
-  line(b, [[-62, -22], [62, -22]], '#d5ceb6', 1.8);
-  line(b, [[-62, 22], [62, 22]], '#89937d', 1.1);
-  b.restore();
+  line(b, [[-62, -22], [62, -22]], '#cfc8b0', 1.2);
+  line(b, [[-62, 22], [62, 22]], '#9c9a84', .9);
 }
 
 function planter(b: Brush, state: string | undefined) {
@@ -230,6 +230,8 @@ const PAINTERS: Readonly<Record<string, PropPainter>> = {
   'capital-drain': drain,
   'capital-bundles': bundles,
   'capital-barrels': b => { barrel(b, -9, 3); barrel(b, 11, 0); },
+  // Without the 3D layer, the capital's models are painted from the same construction, ground centre on the prop's point.
+  ...Object.fromEntries(CAPITAL_MODELS.map(kind => [kind, (b: Brush) => { b.save(); b.translate(0, -19); paintBuildingModel(b, kind, '#a79b7f'); b.restore(); }])),
 };
 
 function citizen(cloth: string, style: 'merchant' | 'porter' | 'woman' | 'citizen' | 'innkeeper'): UnitModel {
@@ -359,21 +361,21 @@ export function createCapitalStreet(): AuthoredMenuSceneRun {
     [1510, 876, 1.85, 'shop'], [1910, 899, 1.9, 'ochre'], [2140, 924, 1.8, 'rose'],
     [970, 1452, 1.7, 'rose'], [1210, 1473, 1.9, 'ochre'], [2090, 1469, 1.8, 'shop'],
   ];
-  for (const [x, y, scale, state] of houses) p.prop('capital-house', x, y, scale, state);
-  p.prop('capital-tavern', 1740, 973, 2.2);
-  p.prop('capital-market', 1160, 1015, 1.25, 'produce');
-  p.prop('capital-market', 1370, 1012, 1.25, 'cloth');
-  p.prop('capital-table', 1940, 1310, 1.1, 'wares');
-  p.prop('capital-table', 1640, 1313, 1.1);
-  p.prop('capital-table', 1780, 1310, 1.1);
-  p.prop('capital-bench', 1640, 1354, 1.05);
-  p.prop('capital-bench', 1780, 1352, 1.05);
-  p.prop('capital-barrels', 1850, 1028, 1.25);
-  p.prop('capital-bundles', 1090, 1050, 1, 'sacks');
-  p.prop('capital-bundles', 1420, 1045, 1, 'crates');
-  p.prop('capital-bundles', 1920, 1355, 1, 'sacks');
-  for (const [x, y] of [[900, 1027], [1455, 1033], [2000, 1031], [1550, 1360], [2020, 1350]] as const) p.prop('capital-lamp', x, y, 1.15);
-  for (const [x, y, color] of [[970, 989, 'rose'], [1460, 993, 'gold'], [1980, 985, 'rose'], [1530, 1475, 'gold'], [1885, 1475, 'rose']] as const) p.prop('capital-planter', x, y, 1.1, color);
+  // Houses, the tavern and the street furniture stand as models built like the game's buildings (see @@@capital-models),
+  // sized in world units against a person.
+  const houseModel = { ochre: 'capital-house-slate', rose: 'capital-house-copper', shop: 'capital-house-shop' } as const;
+  for (const [x, y, , state] of houses) p.prop(houseModel[state as keyof typeof houseModel], x, y, 1.25);
+  p.prop('capital-tavern', 1740, 973, 1.15);
+  p.prop('capital-stall-produce', 1160, 1015, 1);
+  p.prop('capital-stall-cloth', 1370, 1012, 1);
+  for (const x of [1940, 1640, 1780]) p.prop('capital-table', x, 1310, 1);
+  for (const x of [1640, 1780]) p.prop('capital-bench', x, 1352, 1);
+  p.prop('capital-barrels', 1850, 1028, 1);
+  p.prop('capital-sacks', 1090, 1050, 1);
+  p.prop('capital-crates', 1420, 1045, 1);
+  p.prop('capital-sacks', 1920, 1355, 1);
+  for (const [x, y] of [[900, 1027], [1455, 1033], [2000, 1031], [1550, 1360], [2020, 1350]] as const) p.prop('capital-lamp', x, y, 1);
+  for (const [x, y] of [[970, 989], [1460, 993], [1980, 985], [1530, 1475], [1885, 1475]] as const) p.prop('capital-planter', x, y, 1);
   for (const x of [1035, 1520, 1970]) p.prop('capital-drain', x, 1168, 1.1);
   p.prop('cart', 2140, 1250, 1.3);
   p.prop('well', 1490, 1267, 1.05);

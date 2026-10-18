@@ -76,12 +76,73 @@ class Construction {
 // below): troops on a fortified tower's top are drawn standing there, and its slate cap is the roof drawn see-through
 // while they do (see @@@tower-garrison).
 export const TOWER_TOP_Z=32, TOWER_MODEL_HEIGHT=55, TOWER_ROOF=SLATE;
-const BASALT='#898b7c', COPPER='#b3825d', BRASS='#d2b779';
+const BASALT='#898b7c', COPPER='#b3825d', BRASS='#d2b779', CAPITAL_SLATE='#6d8b88';
 export type { SiteModelKind } from './model-manifest';
 import type { SiteModelKind } from './model-manifest';
 function build(kind:BuildingKind | SiteModelKind,team:string):Construction{
   const m=new Construction();
+  // @@@capital-models - The capital's houses and street furniture, built like the game's buildings (docs/art/
+  // prop-painting.zh.md, capital-reference.zh.md): world units at scale 1 against a person 45 tall; stone base,
+  // plaster and timber walls, a high roof that carries the silhouette, detail at doors, windows and eaves.
+  const pane=(x:number,y:number,z:number,w:number,h:number,lit=false)=>{
+    m.face([[x-w/2,y,z],[x+w/2,y,z],[x+w/2,y,z+h],[x-w/2,y,z+h]],lit?'#e0bf74':'#3d4a46',[0,1,0],0);
+    m.box(x,y+.4,z-1.5,w+4,2,1.5,CUT,0);m.box(x,y+.3,z+h,w+2,1.2,1.4,WOOD,0);m.box(x,y+.3,z,1,1,h,WOOD,0);
+  };
+  const house=(roofColor:string,wall:string,shop:boolean)=>{
+    const w=92,d=60,front=d/2+.6;
+    m.box(0,0,0,w+4,d+4,5,CUT);m.box(0,0,5,w,d,58,wall);
+    for(const x of [-w/2+2,-w/6,w/6,w/2-2])m.box(x,front,5,3,1.2,58,WOOD,0);
+    m.box(0,front,32,w,1.2,3,WOOD,0);
+    for(const y of [-d/2+2,0,d/2-2])m.box(w/2+.6,y,5,1.2,3,58,WOOD,0);
+    m.box(w/2+.6,0,32,1.2,d,3,WOOD,0);
+    for(const x of [-30,0,30])pane(x,front+.2,40,11,14,x===0);
+    pane(-30,front+.2,14,11,12);m.door(12,front+.4,5,14,24);
+    m.roof(0,0,63,w+8,d+14,46,roofColor);
+    m.box(w/4,-8,84,9,9,30,CUT);m.box(w/4,-8,114,11,11,2,BASALT);
+    if(shop){
+      m.face([[-6,front+.2,31],[30,front+.2,31],[30,front+14,24],[-6,front+14,24]],'#b9a77f',[0,.45,.9]);
+      for(let i=0;i<4;i++)m.face([[-6+i*9,front+.3,31.1],[-1.5+i*9,front+.3,31.1],[-1.5+i*9,front+14.1,24.1],[-6+i*9,front+14.1,24.1]],'#8f5a46',[0,.45,.9],0);
+      m.drum(w/2+9,d/2+2,0,6,15,WOOD,10);m.drum(w/2+9,d/2+2,4,6.3,1.4,IRON,10);m.drum(w/2+9,d/2+2,11,6.3,1.4,IRON,10);
+    }
+  };
+  const stall=(goods:readonly string[],stripe:string)=>{
+    for(const x of [-33,33])for(const y of [-16,16])m.box(x,y,0,2.4,2.4,y<0?62:52,WOOD);
+    m.box(0,8,0,64,16,24,WOOD);m.box(0,8,24,68,19,2,'#a38e6a');
+    goods.forEach((color,i)=>m.drum(-24+i*12,8,26,4.5,5,color,8,3));
+    m.face([[-36,-18,62],[36,-18,62],[36,20,50],[-36,20,50]],'#ddd0ae',[0,.3,.95]);
+    for(let i=0;i<6;i++)m.face([[-36+i*12,-17.9,62.1],[-30+i*12,-17.9,62.1],[-30+i*12,20.1,50.1],[-36+i*12,20.1,50.1]],stripe,[0,.3,.95],0);
+    m.box(0,-16,26,68,1.4,34,'#c9bc9a');
+  };
   switch(kind){
+    // The capital's slate is its own colour: the game's slate is tinted toward a building's owner, and the city is nobody's.
+    case 'capital-house-slate': house(CAPITAL_SLATE,STONE,false);break;
+    case 'capital-house-copper': house(COPPER,'#e2cfae',false);break;
+    case 'capital-house-shop': house(CAPITAL_SLATE,'#e2cfae',true);break;
+    case 'capital-tavern': {
+      const w=118,d=70,front=d/2+3.6;
+      m.box(0,0,0,w+4,d+4,5,BASALT);m.box(0,0,5,w,d,31,CUT);
+      m.box(0,3,36,w+4,d+6,42,STONE);
+      for(const x of [-w/2,-w/4,0,w/4,w/2])m.box(x,front,36,3,1.2,42,WOOD,0);
+      m.box(0,front,56,w+4,1.2,3,WOOD,0);m.box(0,front-1,36,w+6,4,3,WOOD);
+      for(const x of [-44,-15,15,44])pane(x,front+.2,60,12,13,true);
+      pane(-38,d/2+.6,12,16,14,true);pane(38,d/2+.6,12,16,14,true);
+      m.door(0,d/2+.5,5,20,26);
+      m.roof(0,3,78,w+10,d+18,52,COPPER);
+      m.box(-w/3,-10,104,10,10,30,CUT);
+      m.box(w/2+12,front-6,52,22,1.6,1.6,IRON);m.box(w/2+20,front-6,36,14,2,15,'#715e41');
+      m.face([[w/2+14,front-4.9,39],[w/2+26,front-4.9,39],[w/2+26,front-4.9,48],[w/2+14,front-4.9,48]],BRASS,[0,1,0],0);
+      for(const [x,y] of [[-w/2+4,d/2+8],[-w/2+16,d/2+9],[w/2-6,d/2+8]] as const){m.drum(x,y,0,6,15,WOOD,10);m.drum(x,y,11,6.3,1.4,IRON,10);}
+      break;
+    }
+    case 'capital-stall-produce': stall(['#a8693e','#7d8f4c','#c49a52','#8e5a44','#6f8a4a'],'#6f8a4a');break;
+    case 'capital-stall-cloth': stall(['#5d7884','#a35d4c','#c9b27c','#6b6f8c','#8b7a5e'],'#5d7884');break;
+    case 'capital-lamp': m.box(0,0,0,6,6,3,BASALT);m.box(0,0,3,3,3,72,IRON);m.box(5,0,72,12,1.6,1.6,IRON);m.box(10,0,59,6,6,10,BRASS);m.cap(10,0,69,5,5,IRON,4);break;
+    case 'capital-table': m.box(0,0,22,44,24,3,WOOD);for(const x of [-18,18])for(const y of [-9,9])m.box(x,y,0,2.4,2.4,22,WOOD);for(const x of [-12,0,11])m.drum(x,0,25,3,4,x?'#c9b27c':'#8f5a46',8);break;
+    case 'capital-bench': m.box(0,0,14,42,9,3,WOOD);for(const x of [-16,16])m.box(x,0,0,3,7,14,WOOD);break;
+    case 'capital-planter': m.box(0,0,0,40,15,13,CUT);m.box(0,0,13,42,17,2,BASALT);for(let i=0;i<5;i++){m.drum(-15+i*7.5,0,15,4.6,6,'#6f8a4a',7,3);m.drum(-15+i*7.5,1,20,2.2,2.5,i%2?'#c8796a':'#d2b14d',6);}break;
+    case 'capital-barrels': for(const [x,y] of [[-7,0],[7,2]] as const){m.drum(x,y,0,7,18,WOOD,10);for(const z of [3,13])m.drum(x,y,z,7.3,1.5,IRON,10);}break;
+    case 'capital-crates': m.box(-6,0,0,16,16,14,WOOD);m.box(9,2,0,14,14,12,'#a38e6a');m.box(-4,0,14,13,13,11,'#9b8461');break;
+    case 'capital-sacks': for(const [x,y] of [[-8,0],[4,3],[-2,-4]] as const)m.drum(x,y,0,7,14,'#cdbb94',8,4);break;
     case 'citadel': {
       m.box(0,0,0,67,56,3,CUT);
       m.box(0,0,3,55,44,11,BASALT);

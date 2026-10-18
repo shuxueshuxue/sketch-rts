@@ -13,6 +13,7 @@ import { type PropPainter } from "../story/cast";
 import type { PropView, StageView } from "../story/stage";
 import { INK, ellipse, line, polygon, type Brush } from "./art/kit";
 import { paintBuildingModel } from "./art/building-models";
+import { SCENE_MODELS } from "./art/model-manifest";
 import { UnitFacingTracker } from "./unit-facing";
 import { UnitMotionSmoother } from "./unit-motion";
 import { UnitAnimationTracker } from "./unit-animation";
@@ -114,7 +115,7 @@ export class MenuBackdrop {
     return{corpses:run.warmCorpses,...(run.models?{models:run.models}:{})};
   }
   get architectureKinds(){return [...new Set([
-    ...(this.run?.props.map(prop=>prop.kind).filter(kind=>['statue','well','beacon','citadel'].includes(kind))??[]),
+    ...(this.run?.props.map(prop=>prop.kind).filter(kind=>SCENE_MODELS.has(kind))??[]),
     ...Object.values(this.run?.buildingModels??{}),
   ])];}
 
