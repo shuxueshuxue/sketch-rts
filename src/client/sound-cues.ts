@@ -1,4 +1,4 @@
-import { innateMissile, type AttackKind } from "../shared/attack-presentation";
+import type { AttackKind } from "../shared/attack-presentation";
 import { UNIT_DEFS } from "../shared/catalog";
 import { RANGED_ATTACK_RANGE_THRESHOLD } from "../shared/sim";
 import type { GameSnapshot, PlayerId, UnitKind, WorldEffect } from "../shared/types";
@@ -26,9 +26,8 @@ export function soundCues(before: GameSnapshot, after: GameSnapshot, listener: P
     // A projectile effect carrying its shooter is the shot leaving; a hit carries whose weapon dealt it.
     if (["board", "unload"].includes(effect.type)) { if (effect.owner === listener) cues.push({ id: effect.type as "board" | "unload", ...at, kind: effect.sourceKind as UnitKind }); }
     else if (["heal", "summon", "curse", "stomp", "web", "bloodlust"].includes(effect.type)) cues.push({ id: "spell", ...at, kind: effect.sourceKind as UnitKind });
-    else if (["projectile", "siegeBolt", "shellFlight", "grapeshot"].includes(effect.type)) {
-      const attackKind = effect.attackKind ?? legacyShotKind(effect.sourceKind);
-      const id = attackKind && SHOT_SOUNDS[attackKind];
+    else if (effect.attackKind && ["projectile", "siegeBolt", "shellFlight", "grapeshot"].includes(effect.type)) {
+      const id = SHOT_SOUNDS[effect.attackKind];
       if (id) cues.push({ id, x: effect.fromX ?? effect.x, y: effect.fromY ?? effect.y });
     }
     else if (effect.attackKind && effect.type==="hit") {
@@ -54,16 +53,6 @@ export function soundCues(before: GameSnapshot, after: GameSnapshot, listener: P
   }
   for (const building of before.buildings) if (!buildingsAfter.has(building.id)) cues.push({ id: "buildingDown", x: building.x, y: building.y });
   return cues;
-}
-
-// Old effects lack the captured weapon identity. Use the source's declared weapon through the same shot table;
-// never let a legacy pack's per-hull shipShot entry override a captured attack (for example a cutter's fitted cannon).
-function legacyShotKind(sourceKind: NonNullable<WorldEffect["sourceKind"]>): AttackKind | undefined {
-  if (ARCHERS.has(sourceKind)) return "arrow";
-  if (!(sourceKind in UNIT_DEFS)) return;
-  const kind = sourceKind as UnitKind;
-  const def = UNIT_DEFS[kind];
-  return def.weapon?.presentation ?? (def.intrinsicAttack ? innateMissile(kind) : undefined);
 }
 
 function meleeStriker(kind: NonNullable<WorldEffect["sourceKind"]>): kind is UnitKind {
