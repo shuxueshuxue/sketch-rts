@@ -524,18 +524,29 @@ export class EquipmentPanel {
                     const arrow=document.createElementNS('http://www.w3.org/2000/svg','svg');arrow.setAttribute('viewBox',`0 0 ${projection.width} ${projection.height}`);arrow.setAttribute('class','equipment-crew-route');arrow.setAttribute('aria-hidden','true');arrow.style.display='none';arrow.innerHTML='<line/><path/><circle/>';scene.append(arrow);
                     this.crewRoute={crewId:crew.id,shipId:ship.id,arrow,point:{x:latest.deck.x,y:latest.deck.y},valid:true};
                     if(event.isTrusted)token.setPointerCapture(event.pointerId);event.preventDefault();});
+                // @@@cabin-drop - A crewman dragged onto the cabin is sent to shelter in it, by the same rule as its button.
+                const overCabin=(event:PointerEvent)=>{const box=this.root.querySelector<HTMLElement>('.equipment-cabin')?.getBoundingClientRect();
+                    return !!box && event.clientX>=box.left && event.clientX<=box.right && event.clientY>=box.top && event.clientY<=box.bottom;};
+                const markCabin=(on:boolean)=>this.root.querySelector('.equipment-cabin')?.classList.toggle('drop-target',on);
                 token.addEventListener('pointermove',event=>{if(this.crewDrag!==crew.id || !this.crewRoute)return;
                     if(!origin || Math.hypot(event.clientX-origin.x,event.clientY-origin.y)<=4)return;
-                    const point=destination(event);this.crewRoute.point=point??position(event);this.crewRoute.valid=!!point;this.crewRoute.arrow.style.display='';this.updateCrewRoute();});
-                token.addEventListener('pointerup',event=>{if(this.crewDrag!==crew.id)return;const moved=origin && Math.hypot(event.clientX-origin.x,event.clientY-origin.y)>4;origin=undefined;this.clearCrewDrag();
+                    const cabin=overCabin(event);markCabin(cabin);
+                    const point=cabin?undefined:destination(event);this.crewRoute.point=point??position(event);this.crewRoute.valid=!!point;this.crewRoute.arrow.style.display=cabin?'none':'';this.updateCrewRoute();});
+                token.addEventListener('pointerup',event=>{if(this.crewDrag!==crew.id)return;const moved=origin && Math.hypot(event.clientX-origin.x,event.clientY-origin.y)>4;origin=undefined;this.clearCrewDrag();markCabin(false);
                     if(!moved){if(crew.owner===this.owner){this.unitId=crew.id;this.render();}return;}
+                    if(overCabin(event)){
+                        const latest=this.snapshot!.units.find(unit=>unit.id===crew.id),action=latest&&cabinAction(this.snapshot!,this.owner,[latest]),command=cabinCommand(action);
+                        if(command)this.command(command);
+                        else this.feedback(action?.type==='enterCabin'?cabinProblemText(action,this.i18n().locale==='zh'):this.text('这个人物无法入舱','This unit cannot enter the cabin'));
+                        this.updateValues(unit,ship);return;
+                    }
                     const point=destination(event),latestShip=this.snapshot!.units.find(unit=>unit.id===ship.id),latestCrew=this.snapshot!.units.find(unit=>unit.id===crew.id);
                     if(point && latestShip && latestCrew?.deck?.shipId===latestShip.id)this.command({type:'move',unitIds:[crew.id],...localToWorld(latestShip,point)});
                     else this.feedback(this.text('这里没有足够的甲板空间','Not enough clear deck space here'));
                     this.updateValues(unit,ship);
                 });
-                token.addEventListener('pointercancel',()=>{this.clearCrewDrag();this.updateValues(unit,ship);});
-                token.addEventListener('lostpointercapture',()=>{if(this.crewDrag===crew.id){this.clearCrewDrag();this.updateValues(unit,ship);}});scene.append(token);
+                token.addEventListener('pointercancel',()=>{this.clearCrewDrag();markCabin(false);this.updateValues(unit,ship);});
+                token.addEventListener('lostpointercapture',()=>{if(this.crewDrag===crew.id){this.clearCrewDrag();markCabin(false);this.updateValues(unit,ship);}});scene.append(token);
             }
             const parts = document.createElement('p'); parts.dataset.equipmentParts = ''; vessel.append(parts);
             if (shipCabinCapacity(ship)>0) {
