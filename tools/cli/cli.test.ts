@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { parseArgs, UsageError, type CommandSpec } from "./args";
 import { audit } from "./lib/audit";
 import { diff, looksTimed, outcomes, settle, type VitestJson } from "./lib/vitest-report";
+import { browserRunExit, sceneFile } from "./lib/browser-run";
+import { sizesOption } from "./commands/yatu";
 
 const spec: CommandSpec = { name: "demo", summary: "", usage: "demo", options: [
   { name: "base", description: "", default: "origin/main" }, { name: "json", description: "", boolean: true }] };
@@ -110,5 +112,22 @@ describe("sketch copies are built once under their lock", () => {
     writeFileSync(`${target}.lock/pid`, "999999999\n");
     expect(await build(target, log)).toBe(0);
     expect(readFileSync(log, "utf8")).toBe("built\n");
+  });
+});
+
+describe("sketch browser runs", () => {
+  const run = (code: number) => ({ code }) as Parameters<typeof browserRunExit>[0][number];
+  it("exits 2 when the environment failed a run, 1 when a scene's check did, else 0", () => {
+    expect(browserRunExit([run(0), run(0)])).toBe(0);
+    expect(browserRunExit([run(0), run(1)])).toBe(1);
+    expect(browserRunExit([run(1), run(2)])).toBe(2);
+  });
+  it("knows the two viewports, and refuses any other", () => {
+    expect(sizesOption("desktop,phone").map((size) => [size.width, size.height])).toEqual([[1600, 900], [390, 844]]);
+    expect(() => sizesOption("tablet")).toThrow(/Unknown size/);
+  });
+  it("finds a scene by name under tools/cli/scenes, and refuses an unknown one", () => {
+    expect(sceneFile("tower-card")).toMatch(/tools\/cli\/scenes\/tower-card\.ts$/);
+    expect(() => sceneFile("no-such-scene")).toThrow(/No scene/);
   });
 });
