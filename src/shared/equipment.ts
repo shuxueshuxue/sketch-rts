@@ -1,3 +1,4 @@
+import { ERRAND_REACH } from "./approach";
 import { invalidateItemIndex, itemIndex } from "./item-index";
 import { SHIP_WEAPONS, isShipEquipment, shipMounts } from "./ship-equipment";
 import { bodyMass } from "./physical-body";
@@ -8,7 +9,6 @@ import { reductionForGroup } from './damage-reduction';
 import type { EquipmentSlot, GameSnapshot, ItemKind, PlayerId, Unit, UnitKind, WorldItem } from './types';
 export const CARRY_SLOTS = ['carry0', 'carry1', 'carry2', 'carry3'] as const;
 export const ARMOR_SLOTS = ['head', 'body', 'feet'] as const;
-export const ITEM_TRANSFER_REACH = 72;
 export const ITEM_DEFS: Record<ItemKind, {
     slot?: EquipmentSlot;
     hands?: 1 | 2;
@@ -126,7 +126,7 @@ export function shipHoldSlots(ship: Unit) { const profile = shipProfile(ship); r
 export function shipItemMass(snapshot: Pick<GameSnapshot, 'items'>, ship: Unit) { return (itemIndex(snapshot.items).byShip.get(ship.id) ?? []).reduce((sum, item) => sum + ITEM_DEFS[item.kind].mass, 0)+snapshot.items.filter(item=>!item.shipId && !item.carrierId && item.deck?.shipId===ship.id).reduce((sum,item)=>sum+ITEM_DEFS[item.kind].mass,0); }
 export function unitItemMass(snapshot: Pick<GameSnapshot, 'items'>, unit: Unit) { return itemsFor(snapshot, unit).reduce((sum, item) => sum + ITEM_DEFS[item.kind].mass, 0); }
 export function canExchange(snapshot: Pick<GameSnapshot, 'units'>, unit: Unit, ship: Unit) {
-    return unit.deck?.shipId === ship.id || distanceToHull(ship, unit) <= ITEM_TRANSFER_REACH + unit.radius;
+    return unit.deck?.shipId === ship.id || distanceToHull(ship, unit) <= ERRAND_REACH + unit.radius;
 }
 export function exchangeRecipient(snapshot: Pick<GameSnapshot,'units'|'items'>, owner: PlayerId, ship: Unit, kind: ItemKind, preferredId?: string) {
     return snapshot.units.filter(unit=>unit.owner===owner && unit.hp>0 && canEquip(unit) && canExchange(snapshot,unit,ship) && freeItemSlot(snapshot,unit,kind))
@@ -155,7 +155,7 @@ export function transferRefusal(snapshot: GameSnapshot, owner: PlayerId, itemId:
         return 'Destination is no longer available';
     if (source.id !== target.id) {
         const ship = shipProfile(source) ? source : shipProfile(target) ? target : undefined, unit = ship === source ? target : source;
-        if (ship ? !canExchange(snapshot, unit, ship) : source.deck?.shipId !== target.deck?.shipId || Math.hypot(source.x - target.x, source.y - target.y) > ITEM_TRANSFER_REACH)
+        if (ship ? !canExchange(snapshot, unit, ship) : source.deck?.shipId !== target.deck?.shipId || Math.hypot(source.x - target.x, source.y - target.y) > ERRAND_REACH)
             return 'Move closer before exchanging items';
     }
     if ('unitId' in destination) {

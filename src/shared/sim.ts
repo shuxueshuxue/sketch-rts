@@ -20,8 +20,8 @@ import { settleGroundItems } from './item-surfaces';
 import { carryingHull, strikePoint, strikeGap, bodyGap, strikeReach, CONTACT_SLACK } from "./combat-geometry";
 import { purchasePlacement, type PurchasePlacement } from "./purchase";
 import { SHIP_WEAPONS, PREVIOUS_SHIP_TRAIN_COST, damageShipParts, initializeShipEquipment, installedWeapons, isShipEquipment, mountedWeaponPose, mountedTargetPoint, mountedFireLaneClear, rebuildShipFittings, repairShipParts, shipPartMax, shipGunCanAim, shipMounts, bestFiringHeading, type MountedShotClear } from "./ship-equipment";
-import { ITEM_DEFS, ITEM_TRANSFER_REACH, activeItem, canEquip, dropRefusal, freeItemSlot, giveRefusal, itemEquipped, type ItemDestination, normalizeEquipment, removeFromHands, transferRefusal, weaponRules, itemHands, unitItemMass, shipItemMass, itemsFor } from "./equipment";
-import { BREACH_CHARGE, FLAME_CLOAK, GUARDIAN_SCROLL, ITEM_DROP_REACH, IVORY_TOWER_HP_SHARE, LIGHTNING_ROD, STORM_STAFF, NEUTRAL_ITEM_TARGET_RANGE, NEUTRAL_STORM_TARGET_RANGE } from "./item-rules";
+import { ITEM_DEFS, activeItem, canEquip, dropRefusal, freeItemSlot, giveRefusal, itemEquipped, type ItemDestination, normalizeEquipment, removeFromHands, transferRefusal, weaponRules, itemHands, unitItemMass, shipItemMass, itemsFor } from "./equipment";
+import { BREACH_CHARGE, FLAME_CLOAK, GUARDIAN_SCROLL, IVORY_TOWER_HP_SHARE, LIGHTNING_ROD, STORM_STAFF, NEUTRAL_ITEM_TARGET_RANGE, NEUTRAL_STORM_TARGET_RANGE } from "./item-rules";
 import { EXPERIENCE_BOOK_XP, VETERANCY_GAIN_PER_STAR, killXpReward, xpStarThresholds } from "./unit-value";
 import { automaticTargetAllowed, combatTargetScore, combatVictimId, shouldSwitchCombatTarget, type TargetThreat } from "./combat-target";
 import { crewBeforeHulls, boltIntersection, inWeaponCone, weaponDamage } from "./weapons";
@@ -36,6 +36,7 @@ import { rollVeteranSkillChoices } from "./veteran-skills";
 import { unitClassOf } from "./unit-targeting";
 import { veteranWeaponRange } from "./veteran-stats";
 import { buildVeteranFrame, castVeteranAbility, temporaryAttackSpeedMultiplier, type VeteranAutocastFrame, type VeteranUnitModifiers } from "./veteran-runtime";
+import { ERRAND_REACH, type OrderEndReason } from "./approach";
 import { checkCommandLegality, type CommandLegalityError } from "./sim/command-validation";
 import { resolveUnitDamage, unitAttackDamageProfile } from "./damage";
 import { attackDamageProfile, weaponDamageProfile, DAMAGE_PROFILES, ITEM_DAMAGE_PROFILES, type DamageProfile } from "./damage-types";
@@ -163,7 +164,6 @@ const GOLD_PER_TRIP = GOLD_MINE_RULES.goldPerTrip;
 const GATHER_DURATION = seconds(GOLD_MINE_RULES.gatherSeconds);
 const GOLD_MINE_ENTRY_COOLDOWN = seconds(GOLD_MINE_RULES.entrySeconds);
 
-const ITEM_PICKUP_RANGE = 72;
 const SCORCH_DURATION = seconds(8);
 const FLAME_CLOAK_VISUAL_DURATION = seconds(1.7);
 const MOON_WELL_HEAL_EFFECT_DURATION = seconds(1.1);
@@ -1665,12 +1665,12 @@ function updateFollowOrder(game: Game, unit: Unit) {
     return;
   }
   if (shipProfile(unit)) {
-    const goal = shipPursuitGoal(unit, target, game.units, Math.max(72, shipProfile(unit)!.length * .6 + 20), 0, true);
+    const goal = shipPursuitGoal(unit, target, game.units, Math.max(ERRAND_REACH, shipProfile(unit)!.length * .6 + 20), 0, true);
     const pace = statusPace(unit);
     if (goal && pace > 0) sailToward(unit, goal, game.map, game.units, pace);
     return;
   }
-  if (distance(unit, target) > Math.max(72, target.radius + unit.radius + 26)) {
+  if (distance(unit, target) > Math.max(ERRAND_REACH, target.radius + unit.radius + 26)) {
     moveToward(unit, target.x, target.y, game.map, game.units);
   }
 }
@@ -1877,17 +1877,12 @@ function updateMineOrder(game: Game, unit: Unit) {
   if (unit.order.type !== "mine") return;
   const order = unit.order;
   const resource = game.miningFrame!.resources.get(order.resourceId);
-  if ((!resource || resource.amount <= 0) && order.phase !== "return") {
-    unit.order = { type: "idle" };
-    return;
-  }
+  if ((!resource || resource.amount <= 0) && order.phase !== "return") return endOrder(game, unit, "target-gone");
 
   if (order.phase === "toMine") {
-    if (!atMineEntrance(game.map, unit, resource!)) {
-      const entrance = mineEntrance(game.map, resource!, unit, unit.radius);
-      moveToward(unit, entrance.x, entrance.y, game.map, game.units);
-      return;
-    }
+    const reached = () => atMineEntrance(game.map, unit, resource!);
+    // A mine order on another island is not unreachable: it is what a ferry carries the worker to (see @@@errand).
+    if (!reached()) { const entrance = mineEntrance(game.map, resource!, unit, unit.radius); moveToward(unit, entrance.x, entrance.y, game.map, game.units); return; }
     order.timer += 1;
     if ((resource!.harvestCooldownRemaining ?? 0) > 0) return;
     if (game.miningFrame!.nextWorker.get(order.resourceId) !== unit.id) return;
@@ -1908,14 +1903,8 @@ function updateMineOrder(game: Game, unit: Unit) {
   }
 
   const townHall = nearestCompleteTownHall(game, unit.owner, unit.x, unit.y);
-  if (!townHall) {
-    unit.order = { type: "idle" };
-    return;
-  }
-  if (distance(unit, townHall) > TOWN_HALL_DROP_RANGE) {
-    moveToward(unit, townHall.x, townHall.y, game.map, game.units);
-    return;
-  }
+  if (!townHall) return endOrder(game, unit, "target-gone");
+  if (distance(unit, townHall) > TOWN_HALL_DROP_RANGE) { moveToward(unit, townHall.x, townHall.y, game.map, game.units); return; }
   if (isPlayerId(unit.owner)) {
     const player = playerState(game, unit.owner);
     player.gold = addGold(player.gold, upkeepGoldIncome(unit.carryingGold, player.supplyUsed));
@@ -1934,18 +1923,13 @@ function updateGarrisonOrder(game: Game, unit: Unit) {
   const order = unit.order;
   if (order.type !== "garrison") return;
   const tower = game.buildings.find((building) => building.id === order.buildingId);
-  if (!tower || !isFortifiedTower(tower) || tower.hp <= 0 || tower.owner !== unit.owner || unit.garrison) {
-    unit.order = { type: "idle" };
-    return;
-  }
+  if (unit.garrison) { unit.order = { type: "idle" }; return; }
+  if (!tower || !isFortifiedTower(tower) || tower.hp <= 0 || tower.owner !== unit.owner) return endOrder(game, unit, "target-gone");
   // A troop climbs on from beside the tower's walls, as a worker builds and mends from there (see buildingWorkGap).
-  if (buildingWorkGap(unit, tower) > BUILDING_WORK_REACH) {
-    moveToward(unit, tower.x, tower.y, game.map, game.units);
-    if (walkEnded(game, unit, tower, 5) && buildingWorkGap(unit, tower) > BUILDING_WORK_REACH) unit.order = { type: "idle" };
-    return;
-  }
+  const reached = () => buildingWorkGap(unit, tower) <= BUILDING_WORK_REACH;
+  if (!reached()) { errandWalk(game, unit, tower, reached, "walk"); return; }
+  if (!garrisonRoomFor(game, tower, unit)) return endOrder(game, unit, "no-room");
   unit.order = { type: "idle" };
-  if (!garrisonRoomFor(game, tower, unit)) return;
   unit.garrison = { buildingId: tower.id };
   unit.pushX = undefined;
   unit.pushY = undefined;
@@ -2167,21 +2151,17 @@ function updateBuildOrder(game: Game, unit: Unit) {
   if (unit.order.type !== "build" || !isPlayerId(unit.owner)) return;
   const order = unit.order;
   const def = BUILDING_DEFS[order.buildingKind];
-  const half = footprintHalf(def.radius, TERRAIN_CELL);
-  const gap = Math.hypot(Math.max(0, Math.abs(unit.x-order.x)-half), Math.max(0, Math.abs(unit.y-order.y)-half));
-  if (gap > BUILDING_WORK_REACH) {
+  if (buildingWorkGap(unit, { x: order.x, y: order.y, radius: def.radius }) > BUILDING_WORK_REACH) {
     // Track movement rather than a fixed journey limit: long walks are valid, blocked plans must release their worker.
     if (order.progressTick === undefined || Math.hypot(unit.x - (order.progressX ?? unit.x), unit.y - (order.progressY ?? unit.y)) > 24) {
       order.progressTick = game.tick; order.progressX = unit.x; order.progressY = unit.y;
     } else if (game.tick - order.progressTick > seconds(20)) {
-      unit.order = { type: "idle" }; return;
+      return endOrder(game, unit, "stuck");
     }
     moveToward(unit, order.x, order.y, game.map, game.units); return;
   }
   // Revalidate at arrival: two builders cannot claim the same site, and money is paid only on breaking ground.
-  if (buildingPlacementBlocker(game, order.buildingKind, order) || terrainBlocksPlacement(game.map, order.buildingKind, order)) {
-    unit.order = { type: "idle" }; return;
-  }
+  if (buildingPlacementBlocker(game, order.buildingKind, order) || terrainBlocksPlacement(game.map, order.buildingKind, order)) return endOrder(game, unit, "blocked");
   if (playerState(game, unit.owner).gold < def.cost) return; // Wait for funds, retaining the visible plan.
   spendGold(game, unit.owner, def.cost);
   const building = createBuilding(`building-${unit.owner}-${order.buildingKind}-${game.nextId++}`, unit.owner, order.buildingKind, order.x, order.y, false);
@@ -2197,17 +2177,13 @@ function updateRepairOrder(game: Game, unit: Unit) {
   if (unit.order.type !== "repair" || !isPlayerId(unit.owner)) return;
   const order = unit.order;
   const building = game.buildings.find((candidate) => candidate.id === order.buildingId && candidate.owner === unit.owner);
-  if (!building || building.hp <= 0 || (building.complete && building.hp >= building.maxHp)) {
-    unit.order = { type: "idle" };
-    return;
-  }
-  if (buildingWorkGap(unit, building) > BUILDING_WORK_REACH) {
-    moveToward(unit, building.x, building.y, game.map, game.units);
-    return;
-  }
+  if (!building || building.hp <= 0) return endOrder(game, unit, "target-gone");
+  if (building.complete && building.hp >= building.maxHp) { unit.order = { type: "idle" }; return; }
+  const reached = () => buildingWorkGap(unit, building) <= BUILDING_WORK_REACH;
+  if (!reached()) { errandWalk(game, unit, building, reached, "ground"); return; }
   // A site goes up with its builders' work (see updateConstruction); a standing building is mended.
   if (!building.complete || unit.cooldown > 0) return;
-  if (!repairBuildingTick(game, unit, building)) unit.order = { type: "idle" };
+  if (!repairBuildingTick(game, unit, building)) endOrder(game, unit, "refused");
 }
 
 function updateAutoRepair(game: Game, unit: Unit) {
@@ -2226,17 +2202,17 @@ function updateUnitRepairOrder(game: Game, worker: Unit) {
   const targetId = worker.order.targetId;
   const target = game.units.find(unit => unit.id === targetId && unit.owner === worker.owner
     && (worker.order.type !== "repairShip" || unitMover(unit.kind) === "sea"));
-  if (!target || !unitNeedsRepair(game, target)) { worker.order = { type: "idle" }; return; }
+  if (!target) return endOrder(game, worker, "target-gone");
+  if (!unitNeedsRepair(game, target)) { worker.order = { type: "idle" }; return; }
   const ship = Boolean(shipProfile(target));
-  const sameWorkSurface = ship ? worker.deck?.shipId === target.id : worker.deck?.shipId === target.deck?.shipId;
-  const withinReach = distance(worker, target) <= worker.radius + target.radius + BUILDING_WORK_REACH;
   // Crew can work anywhere on their own hull; separate ground/deck units must
   // share a surface and stand within working reach.
-  const canWorkHere = ship ? sameWorkSurface || !worker.deck && withinReach : sameWorkSurface && withinReach;
-  if (!canWorkHere) {
-    moveToward(worker, target.x, target.y, game.map, game.units);
-    return;
-  }
+  const canWorkHere = () => {
+    const sameWorkSurface = ship ? worker.deck?.shipId === target.id : worker.deck?.shipId === target.deck?.shipId;
+    const withinReach = distance(worker, target) <= worker.radius + target.radius + BUILDING_WORK_REACH;
+    return ship ? sameWorkSurface || !worker.deck && withinReach : sameWorkSurface && withinReach;
+  };
+  if (!canWorkHere()) { errandWalk(game, worker, target, canWorkHere, "ground"); return; }
   repairUnitTick(game, worker, target);
   if (!unitNeedsRepair(game, target)) worker.order = { type: "idle" };
 }
@@ -2483,15 +2459,11 @@ function updatePickupItemOrder(game: Game, unit: Unit) {
   if (unit.order.type !== "pickupItem") return;
   const itemId = unit.order.itemId;
   const item = game.items.find((candidate) => candidate.id === itemId);
-  if (!item || item.carrierId || item.shipId) {
-    unit.order = { type: "idle" };
-    return;
-  }
-  if (distance(unit, item) > ITEM_PICKUP_RANGE) {
-    moveToward(unit, item.x, item.y, game.map, game.units);
-    return;
-  }
-  if (freeItemSlot(game,unit,item.kind)) attachItemToUnit(game, item, unit);
+  if (!item || item.carrierId || item.shipId) return endOrder(game, unit, "target-gone");
+  const reached = () => distance(unit, item) <= ERRAND_REACH;
+  if (!reached()) { errandWalk(game, unit, item, reached, "ground"); return; }
+  if (!freeItemSlot(game, unit, item.kind)) return endOrder(game, unit, "no-room");
+  attachItemToUnit(game, item, unit);
   unit.order = { type: "idle" };
 }
 
@@ -2527,7 +2499,7 @@ function giveItem(game: Game, owner: PlayerId, unitId: string, itemId: string, t
   const refusal = giveRefusal(game, owner, unitId, itemId, targetId);
   if (refusal) throw new Error(refusal);
   const unit = game.units.find(candidate => candidate.id === unitId)!, target = game.units.find(candidate => candidate.id === targetId)!;
-  if (distance(unit, target) > ITEM_TRANSFER_REACH) {
+  if (distance(unit, target) > ERRAND_REACH) {
     assignUnitOrder(unit, { type: "itemErrand", itemId, action: "give", targetId });
     return;
   }
@@ -2540,18 +2512,14 @@ function updateItemErrandOrder(game: Game, unit: Unit) {
   const owner = unit.owner;
   const end = () => { unit.order = { type: "idle" }; };
   const item = game.items.find(candidate => candidate.id === order.itemId);
-  if (!item || item.carrierId !== unit.id) return end();
+  if (!item || item.carrierId !== unit.id) return endOrder(game, unit, "target-gone");
   const at = order.action === "use" ? itemUsePoint(game, item, order.targetId, order.x, order.y)
     : order.action === "give" ? game.units.find(candidate => candidate.id === order.targetId && candidate.hp > 0)
     : isNumber(order.x) && isNumber(order.y) ? { x: order.x, y: order.y } : undefined;
-  if (!at) return end();
-  const reach = order.action === "use" ? itemUseReach(item.kind)! : order.action === "give" ? ITEM_TRANSFER_REACH : ITEM_DROP_REACH;
-  if (distance(unit, at) > reach) {
-    moveToward(unit, at.x, at.y, game.map, game.units);
-    // As near as it can come and still out of reach: nothing done (see @@@cast-order).
-    if (walkEnded(game, unit, at, 5)) end();
-    return;
-  }
+  if (!at) return endOrder(game, unit, "target-gone");
+  const reach = order.action === "use" ? itemUseReach(item.kind)! : ERRAND_REACH;
+  const reached = () => distance(unit, at) <= reach;
+  if (!reached()) { errandWalk(game, unit, at, reached, "walk"); return; }
   end();
   // Within reach the errand is the order as given there; one its rules refuse now (a friend's slots filled meanwhile)
   // ends with the item still carried.
@@ -2568,7 +2536,7 @@ function pickupItem(game: Game, owner: PlayerId, unitId: string, itemId: string,
   if (item.carrierId || item.shipId) throw new Error(`${item.id} is already carried`);
   if (unitMover(unit.kind) === "sea") throw new Error("A ship carries no items");
   if (!canEquip(unit) || !freeItemSlot(game,unit,item.kind)) throw new Error(`${unit.id} has no free equipment position`);
-  if (distance(unit, item) > ITEM_PICKUP_RANGE) {
+  if (distance(unit, item) > ERRAND_REACH) {
     assignUnitOrder(unit, { type: "pickupItem", itemId }, queued);
     return;
   }
@@ -2594,7 +2562,7 @@ function dropItem(game: Game, owner: PlayerId, unitId: string, itemId: string, x
   const refusal = dropRefusal(game, owner, unitId, itemId);
   if (refusal) throw new Error(refusal);
   const item = game.items.find(item => item.id === itemId)!;
-  if (item.carrierId === unit.id && !unit.deck && !shipProfile(unit) && Math.hypot(unit.x - x, unit.y - y) > ITEM_DROP_REACH) {
+  if (item.carrierId === unit.id && !unit.deck && !shipProfile(unit) && Math.hypot(unit.x - x, unit.y - y) > ERRAND_REACH) {
     assignUnitOrder(unit, { type: "itemErrand", itemId, action: "drop", x, y });
     return;
   }
@@ -2712,32 +2680,28 @@ function updateCastOrder(game: Game, unit: Unit) {
   if (order.type !== "cast") return;
   const def = ABILITY_DEFS[order.ability];
   const target = order.targetId === undefined ? undefined : findStrikeTarget(game, order.targetId);
-  const end = () => {
-    unit.order = { type: "idle" };
-  };
+  // Done (no reason) or ended before casting (see @@@errand).
+  const end = (reason?: OrderEndReason) => { if (reason) endOrder(game, unit, reason); else unit.order = { type: "idle" }; };
   // Saves can contain a cast for an ability removed from the catalog.
-  if (!def) return end();
+  if (!def) return end("refused");
   if (def.behavior === "veteran") {
     if (unitAbilities(unit).includes(order.ability) && abilityCooldown(unit, order.ability) <= 0) applyVeteranAbility(game, unit, def, false);
     return end();
   }
-  if (order.targetId !== undefined && (!target || target.hp <= 0 || areEnemyOwners(game, target.owner, unit.owner) !== (def.behavior !== "heal"))) return end();
-  if (target && isUnit(target) && !matchesUnitTarget(target, def.targets, game)) return end();
-  if (def.behavior === "heal" && target && (!isUnit(target) || !canReceiveHealing(target, game))) return end();
+  if (order.targetId !== undefined && (!target || target.hp <= 0 || areEnemyOwners(game, target.owner, unit.owner) !== (def.behavior !== "heal"))) return end("target-gone");
+  if (target && isUnit(target) && !matchesUnitTarget(target, def.targets, game)) return end("refused");
+  if (def.behavior === "heal" && target && (!isUnit(target) || !canReceiveHealing(target, game))) return end("refused");
   const at = target ?? (isNumber(order.x) && isNumber(order.y) ? { x: order.x, y: order.y } : undefined);
-  if (!at) return end();
-  if (def.behavior === "weapon" && def.weapon.minRange && distance(unit, at)<def.weapon.minRange) return end();
-  if (distance(unit, at) > def.range + (def.behavior === "weapon" && target && !isUnit(target) ? target.radius : 0)) {
-    moveToward(unit, at.x, at.y, game.map, game.units);
-    // As near as it can come (its point or unit beyond its ground, see @@@reach) and still out of range: no cast.
-    if (walkEnded(game, unit, at, 5)) end();
-    return;
-  }
-  if (abilityCooldown(unit, order.ability) > 0) return end();
+  if (!at) return end("target-gone");
+  if (def.behavior === "weapon" && def.weapon.minRange && distance(unit, at)<def.weapon.minRange) return end("refused");
+  const reached = () => distance(unit, at) <= def.range + (def.behavior === "weapon" && target && !isUnit(target) ? target.radius : 0);
+  // As near as it can come (its point or unit beyond its ground, see @@@reach) and still out of range: no cast.
+  if (!reached()) { errandWalk(game, unit, at, reached, "walk"); return; }
+  if (abilityCooldown(unit, order.ability) > 0) return end("refused");
   if (def.behavior === "weapon") {
     if(order.ability==='incendiaryFlume' && unit.fittings){
       const item=installedWeapons(game,unit).find(item=>item.kind==='flameProjector' && (item.durability ?? 1)>0);
-      if(!item)return end();
+      if(!item)return end("refused");
       if(!shipGunCanAim(unit,item,at)){const mount=shipMounts(unit).find(mount=>mount.id===item.mountId)!;turnShipToward(unit,Math.atan2(at.y-unit.y,at.x-unit.x)-mount.bearing,game.map,game.units);return;}
       item.facing=Math.atan2(at.y-mountedWeaponPose(unit,item)!.pivot.y,at.x-mountedWeaponPose(unit,item)!.pivot.x);
       const proxy=aimMountedWeapon(game,unit,item,at);if(!proxy)return;
@@ -4259,12 +4223,15 @@ const MAX_UNIT_RADIUS = Math.max(...Object.values(UNIT_DEFS).map((def) => def.ra
 // walkable point nearest the goal, or as near as its ground comes when it cannot reach it: see walkDestination), or as
 // near as a building lets it come (see restsAgainstGoalBody), or against a friend already there (see @@@group-arrival).
 // Measured to an unreachable point itself, the order never ended and the unit stood at the shore for good.
-function walkEnded(game: Game, unit: Unit, goal: { x: number; y: number }, within: number) {
+// Unless `pressed`, standing against a building or an arrived friend does not end it: an errand (see errandWalk) ends
+// only where the ground itself comes no nearer, for a worker pressed against a workshop beside a mine still slides
+// round it to the mine.
+function walkEnded(game: Game, unit: Unit, goal: { x: number; y: number }, within: number, pressed = true) {
   const map = game.map;
   const travel=unit.order;
   if((travel.type==="move"||travel.type==="attackMove") && travel.deckShipId && travel.deckShipId!==unit.deck?.shipId && game.units.some(ship=>ship.id===travel.deckShipId && ship.hp>0))return false;
   if(unit.deck && (travel.type==="move"||travel.type==="attackMove") && !travel.deckShipId && isOpenGround(map,goal.x,goal.y,"land"))return false;
-  if(unit.deck){const ship=game.units.find(ship=>ship.id===unit.deck!.shipId);if(!ship)return true;const order=unit.order;if((order.type==="move"||order.type==="attackMove")&&order.deckShipId && order.deckShipId!==ship.id && game.units.some(target=>target.id===order.deckShipId && target.hp>0))return false;const local=deckPlacement(ship,unit,game.units,worldToLocal(ship,deckGoal(unit,ship,goal,game.units)),false);return !local || distance(unit,localToWorld(ship,local))<within || restsAgainstArrivedFriend(game,unit,goal,localToWorld(ship,local));}
+  if(unit.deck){const ship=game.units.find(ship=>ship.id===unit.deck!.shipId);if(!ship)return true;const order=unit.order;if((order.type==="move"||order.type==="attackMove")&&order.deckShipId && order.deckShipId!==ship.id && game.units.some(target=>target.id===order.deckShipId && target.hp>0))return false;const local=deckPlacement(ship,unit,game.units,worldToLocal(ship,deckGoal(unit,ship,goal,game.units)),false);return !local || distance(unit,localToWorld(ship,local))<within || pressed && restsAgainstArrivedFriend(game,unit,goal,localToWorld(ship,local));}
   if(shipProfile(unit)) {
     if(travel.type==="move" && travel.heading!==undefined && Math.abs(headingDifference(unit.sailing!.heading,travel.heading))>1e-6)return false;
     const route=unit.sailing?.route;
@@ -4272,11 +4239,35 @@ function walkEnded(game: Game, unit: Unit, goal: { x: number; y: number }, withi
     const end=nearestShipPose(map,unit,goal);
     return !end || distance(unit,end)<within;
   }
-  if (!map.terrain) return distance(unit, goal) < within || restsAgainstArrivedFriend(game, unit, goal, goal);
+  if (!map.terrain) return distance(unit, goal) < within || pressed && restsAgainstArrivedFriend(game, unit, goal, goal);
   const mover = unitMover(unit.kind);
   const point = isWalkable(map, goal.x, goal.y, mover) ? goal : walkableGoal(map, goal.x, goal.y, mover);
   const end = walkDestination(map, unit, point, mover);
-  return distance(unit, end) < within || restsAgainstGoalBody(game, unit, point, within) || restsAgainstArrivedFriend(game, unit, goal, end);
+  return distance(unit, end) < within || pressed && (restsAgainstGoalBody(game, unit, point, within) || restsAgainstArrivedFriend(game, unit, goal, end));
+}
+
+// An errand's walk (see @@@errand): toward `goal`; when the walk is over and the unit is still not `reached`, the order
+// ends as unreachable. True when it ended. Two rules say when the walk is over:
+// - "walk", as a move's (walkEnded): also pressed against a building or an arrived friend, and on a deck where the deck
+//   comes nearest. Cast, garrison and the item errands have always ended so.
+// - "ground", for errands that never ended before (pickup, repair, machine repair): only a land unit off any deck, where
+//   its ground itself comes no nearer. Pressed against a building it may yet slide round; on a deck it may yet cross
+//   to a touching one (a worker walking over to mend the next ship).
+function errandWalk(game: Game, unit: Unit, goal: { x: number; y: number }, reached: () => boolean, rule: "walk" | "ground") {
+  moveToward(unit, goal.x, goal.y, game.map, game.units);
+  if (reached()) return false;
+  if (rule === "walk" ? !walkEnded(game, unit, goal, 5) : unit.deck || unitMover(unit.kind) !== "land" || !walkEnded(game, unit, goal, 5, false)) return false;
+  endOrder(game, unit, "unreachable");
+  return true;
+}
+
+// An order ended before it was done, and why (see @@@errand). The effect is presentation: its id is the unit's and the
+// tick's, so the entity counter does not move.
+function endOrder(game: Game, unit: Unit, reason: OrderEndReason) {
+  const id = `ended-${unit.id}-${game.tick}`;
+  if (!game.effects.some((effect) => effect.id === id))
+    game.effects.push({ id, type: "orderEnded", x: unit.x, y: unit.y, remaining: seconds(.4), duration: seconds(.4), unitId: unit.id, owner: unit.owner, sourceKind: unit.kind, orderType: unit.order.type, reason });
+  unit.order = { type: "idle" };
 }
 
 function arrive(unit: Unit, goal: { x: number; y: number }) {

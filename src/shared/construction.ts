@@ -4,7 +4,7 @@ import type { Building, GameSnapshot, Unit } from './types';
 
 export const BUILDING_WORK_REACH = TERRAIN_CELL;
 
-export function buildingWorkGap(unit: Unit, building: Building) {
+export function buildingWorkGap(unit: Pick<Unit, "x" | "y">, building: Pick<Building, "x" | "y" | "radius">) {
   const half = footprintHalf(building.radius, TERRAIN_CELL);
   return Math.hypot(Math.max(0, Math.abs(unit.x - building.x) - half), Math.max(0, Math.abs(unit.y - building.y) - half));
 }

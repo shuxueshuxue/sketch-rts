@@ -4,6 +4,7 @@ import type { MAP_IDS } from "./map-ids";
 import type { Terrain } from "./terrain";
 import type { VeteranActiveSkillId, VeteranSkillId } from "./veteran-skills";
 import type { DamageFilter, DamageProfile } from "./damage-types";
+import type { OrderEndReason } from "./approach";
 export type { VeteranSkillId } from "./veteran-skills";
 
 export type PlayerId = string;
@@ -73,7 +74,7 @@ export type WorldEffect = {
     | "guardianField"
     | "experienceBurst"
     | "itemReceived"
-    | "board" | "unload" | "boardingBlocked"
+    | "board" | "unload" | "boardingBlocked" | "orderEnded"
     | "goldBounty"
     | "flameBurn"
     | "scorch"
@@ -114,6 +115,9 @@ export type WorldEffect = {
   sourceId?: string;
   actionMode?: "attack" | "cast";
   actionTick?: number;
+  /** orderEnded: the order that ended and why (see @@@errand). */
+  orderType?: UnitOrder["type"];
+  reason?: OrderEndReason;
   /** A volley aims one gesture at an area while individual missiles fan out. */
   actionToX?: number;
   actionToY?: number;
