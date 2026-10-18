@@ -60,7 +60,6 @@ function roof(b: Brush, color: string, x = 0, y = 0) {
 function cityHouse(b: Brush, state: string | undefined) {
   const merchant = state === 'shop';
   const plaster = state === 'ochre' ? '#c1ae86' : state === 'rose' ? '#c6ae9b' : PLASTER;
-  ellipse(b, 6, 19, 49, 9, '#37453820');
   polygon(b, [[-43, -23], [21, -15], [21, 20], [-43, 12]], plaster, INK, 1.1);
   polygon(b, [[21, -15], [45, -36], [45, -1], [21, 20]], '#aea58a', INK, 1.1);
   for (const x of [-39, -13, 17]) line(b, [[x, -23 + (x + 43) * .125], [x, 12 + (x + 43) * .125]], TIMBER, 2);
@@ -82,7 +81,6 @@ function cityHouse(b: Brush, state: string | undefined) {
 }
 
 function tavern(b: Brush) {
-  ellipse(b, 8, 29, 50, 10, '#30483628');
   // High timber upper storey; a stone ground floor and deep, open street door.
   polygon(b, [[-46, -15], [16, -7], [16, 26], [-46, 18]], '#b6b099', INK, 1.1);
   polygon(b, [[16, -7], [43, -27], [43, 6], [16, 26]], '#8d9180', INK, 1.1);
@@ -113,7 +111,6 @@ function tavern(b: Brush) {
 }
 
 function stall(b: Brush, state: string | undefined) {
-  ellipse(b, 4, 20, 38, 7, '#30483622');
   for (const x of [-32, 32]) line(b, [[x, 17], [x, -31]], TIMBER, 1.8);
   polygon(b, [[-37, -32], [31, -38], [40, -18], [-34, -12]], state === 'cloth' ? '#6b7e84' : '#778a60', INK, 1);
   for (let i = 0; i < 5; i++) polygon(b, [[-35 + i * 14, -32 - i * 1.2], [-28 + i * 14, -32.6 - i * 1.2], [-24 + i * 14, -13 - i * 1.2], [-31 + i * 14, -12.5 - i * 1.2]], '#d1c4a4', 'transparent', 0);
@@ -136,7 +133,6 @@ function stall(b: Brush, state: string | undefined) {
 }
 
 function table(b: Brush, state: string | undefined) {
-  ellipse(b, 0, 19, 28, 5, '#30483620');
   for (const x of [-15, 15]) line(b, [[x, 0], [x, 19]], TIMBER, 2);
   polygon(b, [[-23, -3], [17, -9], [25, 1], [-17, 8]], '#a08257', INK, 1.1);
   for (let i = 0; i < 4; i++) line(b, [[-20 + i * 10, -3 - i * 1.5], [-15 + i * 10, 6 - i * 1.5]], '#6b593f', .65);
@@ -162,11 +158,8 @@ function bench(b: Brush) {
   for (const x of [-22, 18]) line(b, [[x, -15], [x, 3]], TIMBER, 1.7);
 }
 
-function paving(b: Brush, state: string | undefined) {
-  // Square tiles sort before its tables. Keep their picture at the same world
-  // position, but anchor it toward the top of the atlas instead of over furniture.
+function paving(b: Brush) {
   b.save();
-  if (state === 'square') b.translate(0, 39);
   polygon(b, [[-62, -22], [62, -22], [62, 22], [-62, 22]], '#b6b5a0', 'transparent', 0);
   for (let row = 0; row < 5; row++) for (let col = 0; col < 10; col++) {
     const x = -61 + col * 13 + (row % 2 ? 6 : 0);
@@ -196,7 +189,6 @@ function planter(b: Brush, state: string | undefined) {
 }
 
 function lamp(b: Brush) {
-  ellipse(b, 3, 17, 8, 3, '#30483622');
   slab(b, 0, 14, 11, 3);
   line(b, [[0, 15], [0, -40], [11, -40]], TIMBER, 2);
   line(b, [[9, -40], [9, -34]], '#666c5d', .8);
@@ -211,7 +203,6 @@ function drain(b: Brush) {
 }
 
 function bundles(b: Brush, state: string | undefined) {
-  ellipse(b, 2, 15, 23, 5, '#30483620');
   if (state === 'sacks') {
     for (const [x, y] of [[-11, 8], [10, 5], [0, -3]] as const) {
       polygon(b, [[x - 8, y + 5], [x - 10, y - 6], [x - 5, y - 14], [x + 3, y - 15], [x + 8, y - 9], [x + 7, y + 5]], '#b5a37a', INK, .8);
@@ -360,7 +351,8 @@ export function createCapitalStreet(): AuthoredMenuSceneRun {
     p.prop('capital-paving', 780 + i * 285, 1110, 2.3);
     p.prop('capital-paving', 780 + i * 285, 1232, 2.3);
   }
-  for (let i = 0; i < 5; i++) p.prop('capital-paving', 1180 + i * 220, 1250, 1.8, 'square');
+  // The tavern square's tiles: a ground mark under whatever stands on them (see @@@prop-stands).
+  for (let i = 0; i < 5; i++) p.prop('capital-paving', 1180 + i * 220, 1320, 1.8, 'square');
 
   const houses: [number, number, number, string][] = [
     [820, 916, 1.75, 'ochre'], [1040, 929, 1.85, 'shop'], [1275, 929, 1.75, 'rose'],

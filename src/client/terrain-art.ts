@@ -1,6 +1,5 @@
 import { type Brush, type Point, ellipse, line, polygon } from "./art/kit";
 import { createScratchCanvas } from "./art/scratch-canvas";
-import { paintStandingShadow, standingTerrain } from "./standing-terrain";
 import { GROUND, GROUND_LAYERS, cellJitter, groundMaterial, groundTexture, terrainCover, type Tone } from './terrain-materials';
 import type { Terrain } from "../shared/terrain";
 import { waterCover, waterLightMask, paintWaterRipples, shoreMask } from './water-art';
@@ -9,8 +8,8 @@ import { WATER_DEEP, waterField } from './water-field';
 // @@@terrain-art - The ground as an inked atlas after HoMM3's adventure map (docs/art-direction-variants.zh.md, part
 // one): dirt under everything with grass, sand and gravel laid over it in patches with drawn edges; the coast in bands of
 // beach, foam and water; rock as a cliff face to the south; forest as a dark floor; open ground carrying only small, low
-// things. The forest's trees and the rock's boulders stand up in the world (see @@@standing-terrain): the ground keeps
-// their contact shadows only. Nothing here changes what a unit may cross (see @@@terrain). The map is painted in square
+// things. The forest's trees and the rock's boulders stand up in the world (see @@@standing-terrain) and cast the sun's
+// shadows there; the ground paints none of them. Nothing here changes what a unit may cross (see @@@terrain). The map is painted in square
 // chunks once and kept, so a frame only lays down the chunks in view.
 
 const CHUNK = 512;
@@ -293,8 +292,6 @@ function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): 
     const inner = rock.filter(([col, row]) => deep(col, row));
     // Darker than open ground, so the eye reads it as a mass no one walks.
     if (inner.length) { patch(b, inner, size, 2, 135); fill(texture("rock", ROCK)); fill(CLIFF.dark, .28); }
-    // The boulders stand up in the world (see @@@standing-terrain); the ground keeps their shadows.
-    for (const object of standingIn(terrain, x0, y0, w, h)) if (object.look.startsWith("stone:")) paintStandingShadow(b, object);
   }
 
   // Forest (rules 5 and 6): a dark floor under its trees (see @@@standing-terrain for the trees themselves).
@@ -302,8 +299,6 @@ function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): 
   if (forest.length) {
     patch(b, forest, size, 5, 170); fill(FOREST_FLOOR_DARK, .55);
     patch(b, forest, size, 2, 170); fill(texture("floor", FOREST_FLOOR));
-    // The trees stand up in the world (see @@@standing-terrain); the ground keeps their contact shadows.
-    for (const object of standingIn(terrain, x0, y0, w, h)) if (object.look.startsWith("tree:")) paintStandingShadow(b, object);
   }
 
   // Small things on open ground (rule 4): grass tufts and stones on no more than one cell in eight, all low.
@@ -355,9 +350,4 @@ function patch(b: Brush, cells: Cells, size: number, grow: number, salt: number,
 function brushZoom(c: Brush) {
   const transform = c.getTransform();
   return Math.hypot(transform.a, transform.b);
-}
-
-// The terrain's standing objects whose foot lies in the box (a chunk's cells and their margin).
-function standingIn(terrain: Terrain, x: number, y: number, width: number, height: number) {
-  return standingTerrain(terrain).filter(object => object.x >= x && object.x < x + width && object.y >= y && object.y < y + height);
 }

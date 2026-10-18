@@ -40,7 +40,9 @@ import type { UnitFacingTracker } from "./unit-facing";
 import type { UnitMotionSmoother } from "./unit-motion";
 import type { UnitAnimationTracker } from "./unit-animation";
 import type { ShipWakeTracker } from './ship-wakes';
-import { drawStoryAir, drawStoryGround, drawStoryProps, drawStoryScreen } from "./story-renderer";
+import { drawPropFlames, drawStoryAir, drawStoryGround, drawStoryProp, drawStoryPropPicture, drawStoryProps, drawStoryScreen } from "./story-renderer";
+import { standingShadow } from "./sun";
+import { propStand } from "./prop-stands";
 import type { PropPainter, UnitModel } from "../story/cast";
 import type { StageView } from "../story/stage";
 import { BUILDING_DEFS, UNIT_DEFS, unitMover } from "../shared/catalog";
@@ -229,7 +231,8 @@ export function drawWorld(frame: WorldFrame) {
   if(!frame.reducedMotion)frame.wakes?.draw(ctx,{...painter.camera,width:painter.width,height:painter.height},painter.now);
   drawLandmarks(painter, snapshot.map.landmarks);
   if(!frame.depthSelection)drawGroundSelectionMarkers(painter);
-  if (frame.story && frame.props) drawStoryProps(ctx, {...frame.story,props:frame.story.props.filter(prop=>!frame.actorPositions?.has(`prop:${prop.id}`))}, (point) => worldToScreen(painter, point), (point, pad) => nearScreen(painter, point, pad), frame.props, painter.now);
+  // The ground's props only: whatever stands is ordered with the actors by its foot (see @@@prop-stands).
+  if (frame.story && frame.props) drawStoryProps(ctx, {...frame.story,props:frame.story.props.filter(prop=>propStand(prop.kind)==='ground')}, (point) => worldToScreen(painter, point), (point, pad) => nearScreen(painter, point, pad), frame.props, painter.now);
   drawResources(painter, snapshot.resources);
   drawMercenaryCamps(painter, snapshot.mercenaryCamps,false,frame.pass==='ground');
   if (snapshot.shops) drawShops(painter, snapshot.shops,false,frame.pass==='ground');
@@ -251,6 +254,8 @@ export function drawWorld(frame: WorldFrame) {
   painter.engaged=viewIndex.engagedIds();
   painter.abilityEffects=battlefieldEffectFrame(snapshot);
   if(frame.pass==='overlay'){drawMercenaryCamps(painter,snapshot.mercenaryCamps,true);if(snapshot.shops)drawShops(painter,snapshot.shops,true);}
+  // A standing prop that burns is a card in the 3D world; its flames go over it.
+  if(frame.pass==='overlay'&&frame.story)for(const prop of frame.story.props)if(prop.state==='burning'&&propStand(prop.kind)==='standing'){const at=worldToScreen(painter,prop);if(nearScreen(painter,at,140*prop.scale))drawPropFlames(ctx,prop,at,painter.now);}
   // Plans are a private overlay: they never enter target, visibility or pathing indexes.
   if (!painter.still && frame.viewer) for (const worker of viewIndex.builders) {
     if (isInCabin(worker) || worker.owner !== frame.viewer || worker.order.type !== "build") continue;
@@ -271,12 +276,20 @@ export function drawWorld(frame: WorldFrame) {
   if(frame.pass==='overlay'){drawBuildings(painter,snapshot.buildings,true);drawUnits(painter,candidateUnits,true);}
   else {
     // A troop on a tower's top is drawn over its tower, front spots last (see @@@tower-garrison).
-    const depth=(a:Unit|Building|StandingTerrainObject)=>{const tower='order' in a?garrisonTower(snapshot.buildings,a):undefined;return tower?tower.y+1+(a.y-tower.y+50)/100:a.y;};
+    type StoryProp=NonNullable<WorldFrame['story']>['props'][number];
+    const depth=(a:Unit|Building|StandingTerrainObject|StoryProp)=>{const tower='order' in a?garrisonTower(snapshot.buildings,a):undefined;return tower?tower.y+1+(a.y-tower.y+50)/100:a.y;};
     // The terrain's trees and boulders stand among them, in the same order by foot (see @@@standing-terrain).
     const standing=snapshot.map.terrain?standingTerrain(snapshot.map.terrain).filter(a=>nearScreen(painter,worldToScreen(painter,a),140*a.scale)):[];
-    const actors:(Unit|Building|StandingTerrainObject)[]=[...snapshot.buildings,...candidateUnits.filter(unit=>!unit.deck)].filter(a=>nearScreen(painter,worldToScreen(painter,a),Math.max(150,a.radius*3)));
-    actors.push(...standing);byFoot(actors,depth);
-    for(const actor of actors)if('look' in actor)drawStandingObject(ctx,actor,worldToScreen(painter,actor));else if('order' in actor){if(shipProfile(actor))drawShipGroup(painter,actor);else drawUnits(painter,[actor]);}else drawBuildings(painter,[actor]);
+    const actors:(Unit|Building|StandingTerrainObject|StoryProp)[]=[...snapshot.buildings,...candidateUnits.filter(unit=>!unit.deck)].filter(a=>nearScreen(painter,worldToScreen(painter,a),Math.max(150,a.radius*3)));
+    // So do the story's standing props (see @@@prop-stands).
+    const props=frame.story&&frame.props?frame.story.props.filter(prop=>propStand(prop.kind)==='standing'&&nearScreen(painter,worldToScreen(painter,prop),140*prop.scale)):[];
+    actors.push(...standing,...props);byFoot(actors,depth);
+    // Under whatever stands, the shadows the sun casts of the terrain's and the story's standing things (see @@@sun).
+    for(const actor of actors){
+      if('look' in actor)standingShadow(ctx,worldToScreen(painter,actor),b=>drawStandingObject(b,actor,{x:0,y:0}));
+      else if('flip' in actor)standingShadow(ctx,worldToScreen(painter,actor),b=>drawStoryPropPicture(b,actor,{x:0,y:0},frame.props!));
+    }
+    for(const actor of actors)if('look' in actor)drawStandingObject(ctx,actor,worldToScreen(painter,actor));else if('flip' in actor)drawStoryProp(ctx,actor,worldToScreen(painter,actor),frame.props!,painter.now);else if('order' in actor){if(shipProfile(actor))drawShipGroup(painter,actor);else drawUnits(painter,[actor]);}else drawBuildings(painter,[actor]);
   }
   if (!painter.still && painter.viewer) drawAimLines(painter);
   // Carried objects belong in the inventory, not stacked over a unit's head.

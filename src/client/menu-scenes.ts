@@ -41,7 +41,6 @@ const LONGEST_BATTLE = 150;
 
 // A standing stone cut with runes; its glow is the air's (see drawGlows).
 function runestone(b: Brush) {
-  ellipse(b, 2, 18, 18, 5, "#30483630");
   polygon(b, [[-10, 18], [-11, -26], [-3, -36], [8, -30], [11, 18]], "#8e8c7c", INK, 1.2);
   for (const [x1, y1, x2, y2] of [[-4, -24, 3, -18], [3, -18, -2, -10], [-3, -4, 4, 2], [0, 6, 0, 12]] as const) line(b, [[x1, y1], [x2, y2]], "#7fd6c8", 1.6);
 }

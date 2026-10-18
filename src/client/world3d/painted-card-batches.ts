@@ -18,7 +18,7 @@ type Instance={card:Card|undefined;matrix:THREE.Matrix4;id:string;foot:number;op
 type DrawChunk={banks:THREE.DataArrayTexture[];pages:Page[];entries:Card[];ids:string[];feet:number[];orders:number[];geometry:THREE.PlaneGeometry;material:THREE.MeshBasicMaterial;depth:THREE.MeshDepthMaterial;distance:THREE.MeshDistanceMaterial;mesh:THREE.InstancedMesh;capacity:number;used:number;refreshMaterials:(()=>void)[]};
 /** rasterBudgetMs: once a frame has painted a card and spent this long painting, the cards it still lacks wait for later
  * frames (see finish). */
-export type PaintedCardPolicy={transparent?:boolean;depthWrite?:boolean;alphaTest?:number;castShadow?:boolean;pickable?:boolean;renderOrder?:number;maxTextureBanks?:number;rasterBudgetMs?:number};
+export type PaintedCardPolicy={transparent?:boolean;depthWrite?:boolean;alphaTest?:number;alphaToCoverage?:boolean;castShadow?:boolean;pickable?:boolean;renderOrder?:number;maxTextureBanks?:number;rasterBudgetMs?:number};
 
 /** Renderer-owned card cache and batches. Animation/color/facing vary per
  * instance, not per draw call. No canvas, GPU texture or material per soldier. */
@@ -317,7 +317,7 @@ export class PaintedCardBatches {
     geometry.setAttribute('cardBank',new THREE.InstancedBufferAttribute(new Float32Array(capacity),1).setUsage(THREE.DynamicDrawUsage));
   }
   private createChunk(banks:THREE.DataArrayTexture[],count:number,index:number){
-    const material=new THREE.MeshBasicMaterial({map:banks[0]!,alphaTest:this.policy.alphaTest??.4,side:THREE.DoubleSide,toneMapped:false,transparent:this.policy.transparent??false,depthWrite:this.policy.depthWrite??true,depthTest:true});
+    const material=new THREE.MeshBasicMaterial({map:banks[0]!,alphaTest:this.policy.alphaTest??.4,alphaToCoverage:this.policy.alphaToCoverage??false,side:THREE.DoubleSide,toneMapped:false,transparent:this.policy.transparent??false,depthWrite:this.policy.depthWrite??true,depthTest:true});
     const depth=new THREE.MeshDepthMaterial({map:banks[0]!,alphaTest:.4,side:THREE.DoubleSide,depthPacking:THREE.RGBADepthPacking});
     const distance=new THREE.MeshDistanceMaterial({map:banks[0]!,alphaTest:.4,side:THREE.DoubleSide});
     const refreshMaterials=[material,depth,distance].map(item=>configureCardMaterial(item,banks,this.maxTextureBanks,this.policy.transparent??false));
