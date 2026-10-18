@@ -1,3 +1,5 @@
+import { homeRelief } from './home-relief';
+import { idleWorkerEvasion } from './idle-worker-evasion';
 import { loadingApproach } from './loading-approach';
 import { ABILITY_DEFS, canResearchAt, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap, trainingBuildingFor } from '../../shared/catalog';
 import { shopping } from './shopping';
@@ -157,7 +159,20 @@ export function planBootstrapScriptEntries(snapshot: GameSnapshot, owner: Player
     recovered = final.map(command => byCommand.get(command)?.shift() ?? { scriptId: AI_SCRIPT_LIBRARY.naval.id, command });
   }
   const approaches = loadingApproach(snapshot, owner, options, recovered.map(entry => entry.command));
-  return approaches.length ? [...recovered, ...approaches.map(command => ({ scriptId: AI_SCRIPT_LIBRARY.naval.id, command }))] : recovered;
+  const navalEntries = approaches.length ? [...recovered, ...approaches.map(command => ({ scriptId: AI_SCRIPT_LIBRARY.naval.id, command }))] : recovered;
+  const relief = homeRelief(snapshot, owner, options, navalEntries.map(entry => entry.command));
+  const controlled = new Set(['move', 'attack', 'attackMove', 'board', 'unload', 'stop', 'holdPosition', 'follow']);
+  const reliefEntries = navalEntries.flatMap(entry => {
+    const command = entry.command;
+    if (controlled.has(command.type) && 'unitIds' in command) {
+      const unitIds = command.unitIds.filter(id => !relief.claimed.has(id));
+      return unitIds.length ? [{ ...entry, command: { ...command, unitIds } }] : [];
+    }
+    return [entry];
+  });
+  reliefEntries.push(...relief.commands.map(command => ({ scriptId: 'homeRelief', command })));
+  const evasion = idleWorkerEvasion(snapshot, owner, options, reliefEntries.map(entry => entry.command));
+  return evasion.length ? [...reliefEntries, ...evasion.map(command => ({ scriptId: 'idleWorkerEvasion', command }))] : reliefEntries;
 }
 
 export function researchPrerequisites(wants: readonly V6Want[], player: PlayerState): V6Want[] {

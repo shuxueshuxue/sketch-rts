@@ -1,0 +1,263 @@
+{
+  "archive": "relief-recovery-evidence.tar.gz",
+  "bytes": 887915,
+  "sha256": "76ece3cf934b87253e565ea58dc5a915f0fa2798c364faf72133eb186e8cf469",
+  "files": {
+    "raw/home-relief-general-v3-68400/commands.jsonl": {
+      "bytes": 96664,
+      "sha256": "7089dbb50459726585287a9b37633f420e3e7f85f811724a4e8078fbd7e1d4cf"
+    },
+    "raw/home-relief-general-v3-68400/entities.jsonl": {
+      "bytes": 1554,
+      "sha256": "fcbd781c420b35a8ddd88a64690528014e61322640510a4f6ba1834e44c3ea3e"
+    },
+    "raw/home-relief-general-v3-68400/frames/68400.json.gz": {
+      "bytes": 18679,
+      "sha256": "2fa2624c848dad402675a120d441039ffad558266322b1e22d9510f938ee7d3b"
+    },
+    "raw/home-relief-general-v3-68400/frames/69000.json.gz": {
+      "bytes": 20396,
+      "sha256": "09a17aee0f1e82e235149e1c1f0b6e2479b3ceb71691031a4a123258c510a027"
+    },
+    "raw/home-relief-general-v3-68400/frames/69600.json.gz": {
+      "bytes": 20705,
+      "sha256": "765233dab9c0aa2414353576997b346b1c12d9df9667452595581637b6b83ceb"
+    },
+    "raw/home-relief-general-v3-68400/frames/69739.json.gz": {
+      "bytes": 20524,
+      "sha256": "4169985dc65d4cd8955f63fbdb6c3bafe51852595096379b1c4d989af0a51478"
+    },
+    "raw/home-relief-general-v3-68400/hits.jsonl": {
+      "bytes": 81912,
+      "sha256": "b05054b1645e18804a8ca3b6b30b278c1d8cd7ee966e664097afc4624806aa08"
+    },
+    "raw/home-relief-general-v3-68400/result.json": {
+      "bytes": 36193,
+      "sha256": "8dcc8d13e253e004ca4420f605eea38016bb545ad2cecd677516790297eb845e"
+    },
+    "raw/home-relief-general-v3-68400/samples.jsonl": {
+      "bytes": 13506,
+      "sha256": "c1c195a22da4e3ccf8b8f017eab7bc53045c5dbef9390c60843830d3ef5a26d3"
+    },
+    "raw/home-relief-general-v3-68400/source.json": {
+      "bytes": 183643,
+      "sha256": "e1484e7b41a15b47b532bd82988c1dbab14f518f433b842813ba83f9c150abee"
+    },
+    "raw/home-relief-general-v4-54600/commands.jsonl": {
+      "bytes": 925048,
+      "sha256": "a43daf0ae3009f7b2fe899acf6e57fa0d46a8ff9a9b09d71a0e8f30dd237efaa"
+    },
+    "raw/home-relief-general-v4-54600/entities.jsonl": {
+      "bytes": 5778,
+      "sha256": "88bf5151310931c8c38438efb28b8eb010aa1aa8d42d60f7556e5217ed0c4ee6"
+    },
+    "raw/home-relief-general-v4-54600/frames/54600.json.gz": {
+      "bytes": 20240,
+      "sha256": "519b936239dd86d92eae397c74947d201aec9adb6b0e1389ecb9124a8c122c94"
+    },
+    "raw/home-relief-general-v4-54600/frames/55200.json.gz": {
+      "bytes": 19208,
+      "sha256": "898bb52374173d0abe45d341f29f86de3d3b5a7357a2b1e5118b885780cbd1c5"
+    },
+    "raw/home-relief-general-v4-54600/frames/55800.json.gz": {
+      "bytes": 19539,
+      "sha256": "b0685490bde74a04fc24948d7da45431a942578c3f0841221daa5484285a6082"
+    },
+    "raw/home-relief-general-v4-54600/frames/56400.json.gz": {
+      "bytes": 18913,
+      "sha256": "f63019b0d616febc8c014e713308031edbce769528a4e4f01404b2ebf70e3edf"
+    },
+    "raw/home-relief-general-v4-54600/frames/57000.json.gz": {
+      "bytes": 19541,
+      "sha256": "2b4df3ebe1024cec66461179952dabd7724118b87da59bd928e1bc29c0b092b7"
+    },
+    "raw/home-relief-general-v4-54600/frames/57600.json.gz": {
+      "bytes": 20007,
+      "sha256": "b9aa31820013d02ad0024e9ce3bfe4da9a3603ce582ec3e749ce44a651854935"
+    },
+    "raw/home-relief-general-v4-54600/frames/58200.json.gz": {
+      "bytes": 19586,
+      "sha256": "c7368a1e2038692a06fc077d1a285f1f117d86222a67e8f17115a30010c16881"
+    },
+    "raw/home-relief-general-v4-54600/frames/58800.json.gz": {
+      "bytes": 20030,
+      "sha256": "3fa6e29ef43078a657926b20cb0614ee2453dca9941af820b07c3cd4554928ee"
+    },
+    "raw/home-relief-general-v4-54600/frames/59400.json.gz": {
+      "bytes": 21567,
+      "sha256": "02a0557df8b1186025cf7899aea666cabfb617ed7ccae03d6f4b28bc563d3552"
+    },
+    "raw/home-relief-general-v4-54600/frames/60000.json.gz": {
+      "bytes": 19819,
+      "sha256": "9aaf82b4a466271b63214ae2033ee13e5d4952502d904ae45f237f087f44ec21"
+    },
+    "raw/home-relief-general-v4-54600/frames/60600.json.gz": {
+      "bytes": 19770,
+      "sha256": "88db25a94a855c187d4b07ec5e6096e52af39c15a5016a7448b43d22a83241ab"
+    },
+    "raw/home-relief-general-v4-54600/frames/61200.json.gz": {
+      "bytes": 18951,
+      "sha256": "ef284d31cf9cc2c6ca567f9d5414b79abe761631696d80f20cf2a09e84a4a639"
+    },
+    "raw/home-relief-general-v4-54600/frames/61800.json.gz": {
+      "bytes": 20259,
+      "sha256": "885c5d74a84d68847c616bcdbd446a459f630f0145b7cef36c344f3d5aab1d8f"
+    },
+    "raw/home-relief-general-v4-54600/frames/62400.json.gz": {
+      "bytes": 18825,
+      "sha256": "347117ac9d5fa17c8c1cdb2e5ecd95a5a6543299a0d63baf83812cc4b05b6168"
+    },
+    "raw/home-relief-general-v4-54600/frames/63000.json.gz": {
+      "bytes": 21375,
+      "sha256": "e155ec1236ccbe3b2a7be6efb143396c4b9e7b27c54aa1b662df0e3c8dc10bba"
+    },
+    "raw/home-relief-general-v4-54600/frames/63600.json.gz": {
+      "bytes": 18973,
+      "sha256": "7f8e59b1343fc0944fadee4a3771801b3eedda24a15937563290b956c158b9f3"
+    },
+    "raw/home-relief-general-v4-54600/frames/64200.json.gz": {
+      "bytes": 18202,
+      "sha256": "4659f80ed40fee3ead09f650e675220b59ce630c5848d20a8e9084cc3fb7a8e5"
+    },
+    "raw/home-relief-general-v4-54600/frames/64800.json.gz": {
+      "bytes": 19535,
+      "sha256": "44a2dcea66b97e27fe6b8341c0395809f40f90bdbd75b78566daedb8653208ec"
+    },
+    "raw/home-relief-general-v4-54600/frames/65400.json.gz": {
+      "bytes": 19496,
+      "sha256": "baef19c67bc339988a78b0323fb84e92b395f341492578f50c4d1bad03ef1499"
+    },
+    "raw/home-relief-general-v4-54600/frames/66000.json.gz": {
+      "bytes": 20453,
+      "sha256": "3668329d642421f75ca32d3623287ce79c13eef0c1907cdadf4d18530ca586b5"
+    },
+    "raw/home-relief-general-v4-54600/frames/66600.json.gz": {
+      "bytes": 18547,
+      "sha256": "95a617680b4b6754b460acbe9d0a5299a7a05d5420fc0553a118e804cd94d941"
+    },
+    "raw/home-relief-general-v4-54600/frames/67200.json.gz": {
+      "bytes": 19490,
+      "sha256": "e57f9b34dd7252b534f06f8cea3553bde5df8797c79486d9f39158cd779c4801"
+    },
+    "raw/home-relief-general-v4-54600/frames/67800.json.gz": {
+      "bytes": 18441,
+      "sha256": "f802a445dadc03a4daf721ff7746bcb66e29d222a0a12548bedb4edb959756d4"
+    },
+    "raw/home-relief-general-v4-54600/frames/68400.json.gz": {
+      "bytes": 18678,
+      "sha256": "4856ab5f194b44e7a6be6badffd630cf6c34373179a075eb7567153223005b9e"
+    },
+    "raw/home-relief-general-v4-54600/frames/69000.json.gz": {
+      "bytes": 20395,
+      "sha256": "b5e5ee4e01ddac5a8220883e779de93de6867475a4482b74f5ba6e099d089b6f"
+    },
+    "raw/home-relief-general-v4-54600/frames/69600.json.gz": {
+      "bytes": 20704,
+      "sha256": "86e3e581646919c323d004791415d99e756a86c6010c3a2a210725951256ed93"
+    },
+    "raw/home-relief-general-v4-54600/frames/69739.json.gz": {
+      "bytes": 20524,
+      "sha256": "de2f0939fbbe3135637d96630c99eddc21b17778cbb00d8bcde352234b2ef2f4"
+    },
+    "raw/home-relief-general-v4-54600/hits.jsonl": {
+      "bytes": 178181,
+      "sha256": "860cee0a4f74484c21e886acd44a67f6086b9a7fbb1da8ad8a1867d1ac6ade12"
+    },
+    "raw/home-relief-general-v4-54600/result.json": {
+      "bytes": 36195,
+      "sha256": "9c427065aedb79f45a135e5298ee39c81e89e78601c11552e8926f76fd2e6c82"
+    },
+    "raw/home-relief-general-v4-54600/samples.jsonl": {
+      "bytes": 116789,
+      "sha256": "8e4b86bc7968c2ce3bde309580b991e1a649088921d270395857f639655b8ff0"
+    },
+    "raw/home-relief-general-v4-54600/selection-54600.json": {
+      "bytes": 1223,
+      "sha256": "f4ae7d3d8f25b315980b91bed27d9f9a26b542dd17822297bcae88ee8f8736fc"
+    },
+    "raw/home-relief-general-v4-54600/selection-68610.json": {
+      "bytes": 1359,
+      "sha256": "d59dea3ef1045e9c57c082dc32e1feccc4141fe285b8ac5a92e80df141ffbd94"
+    },
+    "raw/home-relief-general-v4-54600/selection-input-54600.json.gz": {
+      "bytes": 16652,
+      "sha256": "3c30a18585eb6c6f799b53bf769e9bf6d2ba01588e554ab57483c2839a267637"
+    },
+    "raw/home-relief-general-v4-54600/selection-input-68610.json.gz": {
+      "bytes": 15909,
+      "sha256": "d0f4f0db4798de8b4f5f609ebb569138dbf2b5b4b5600f269951fe61cb920509"
+    },
+    "raw/home-relief-general-v4-54600/source.json": {
+      "bytes": 183640,
+      "sha256": "78d6291ebbbeded26d82eb0db87888f724fef8a4ab8ec3059e83cd088a2f931c"
+    },
+    "raw/home-relief-general-v3-observe.mts": {
+      "bytes": 5710,
+      "sha256": "8bc6fe87cd506f9f5f56b461c8afe20e5fd741a3e6b417283574c9cabe14092f"
+    },
+    "raw/home-relief-general-v4-observe.mts": {
+      "bytes": 5983,
+      "sha256": "7c52cb8e6539a4d8a1a3e20d25db223654ca23bdeb85a0b8ed60ff2a08f3e3de"
+    },
+    "raw/home-relief-v4-tests.log": {
+      "bytes": 1020,
+      "sha256": "3ed67b4873987fd4131a0929520a07306cdd10e8124cae191173d434c99e6204"
+    },
+    "raw/home-relief-v4-tests-initial-failure.log": {
+      "bytes": 1020,
+      "sha256": "3ed67b4873987fd4131a0929520a07306cdd10e8124cae191173d434c99e6204"
+    },
+    "raw/home-relief-v4-tests-final.log": {
+      "bytes": 380,
+      "sha256": "df4428651d1e79c4e1f5c287cdf03a90857d7636fc2c4b6d55a562fd7fd01557"
+    },
+    "raw/home-relief-v4-typecheck.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "raw/home-relief-v4-typecheck-final.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "raw/home-relief-integrated-tests.log": {
+      "bytes": 4209,
+      "sha256": "a33b28b711800aa1d95ae5c2f88e8da924373dad6dfedfbe88ea990f2527b7b6"
+    },
+    "raw/home-relief-integrated-typecheck.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "raw/archive-relief-recovery.py": {
+      "bytes": 1908,
+      "sha256": "4631883a863d620a8570ac1d96c81ad74e01c8674e82e056ac877a86c2724ecf"
+    },
+    "draft/home-relief-probe-v3.ts": {
+      "bytes": 9307,
+      "sha256": "055738f6a292ad88b6c8bcdd2ae51800b37efe486376d3a0ef4adc2d5ed8b031"
+    },
+    "draft/home-relief-probe-v4.ts": {
+      "bytes": 9499,
+      "sha256": "414de9bdb70d5dae596584067930a54154960b08f0117868c6de4e8511f62107"
+    },
+    "draft/home-relief-v4.test.ts": {
+      "bytes": 5119,
+      "sha256": "065d1473d49738a7ec18b91a331d6330da9518a7652396fae6811ee53caf414f"
+    },
+    "draft/vitest-home-relief-v4.config.ts": {
+      "bytes": 167,
+      "sha256": "41f36683ef0a64db71aca5f87f09f92316840397a47d0b7e4f52f35e0bf1350f"
+    },
+    "draft/tsconfig-home-relief-v4.json": {
+      "bytes": 107,
+      "sha256": "690538d28337eb902af14c3da2c54274344d2c3819b81f3bf2bcf6d2bb4ecb73"
+    },
+    "draft/idle-worker-evasion-probe.ts": {
+      "bytes": 1504,
+      "sha256": "7e376695bbc20000ec42cfdfddc633007ef7e3fc76c4e0e471191cd857b17090"
+    },
+    "draft/install-home-relief.py": {
+      "bytes": 5799,
+      "sha256": "339ec422486abc208d886605ab142ddd5ce8a53b80017e6c24fbbeff72299fd6"
+    }
+  }
+}
