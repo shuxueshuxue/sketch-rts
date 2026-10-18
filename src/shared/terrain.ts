@@ -431,6 +431,10 @@ function shortcutDescends(state: TerrainRuntime, field: BoxField, from: Point, n
   // this field. That returned segment joins no fields: preserve its ordinary
   // corner smoothing, even if the unused long path went through another field.
   if (local(field.box, padAt(state, point.x, point.y), state.width) >= 0) return true;
+  // An occluded SHORT_LOOK point is a wall-sliding hint, not a straight
+  // shortcut. Its geometric first cell need not be the cell the unit enters;
+  // forcing the first flow cell here can pin a crowd against that same wall.
+  if (!clearSegment(state, from.x, from.y, point.x, point.y)) return true;
   const dx = point.x - from.x, dy = point.y - from.y, cell = state.terrain.cell;
   const col = near % state.width - 1, row = Math.floor(near / state.width) - 1;
   const acrossX = dx === 0 ? Infinity : ((col + Number(dx > 0)) * cell - from.x) / dx;

@@ -15,6 +15,7 @@ import { standingBodies } from './structure-bodies';
 import type { Building, GameMap, ResourceNode, Unit, GameSnapshot } from './types';
 import recorded from './test-fixtures/loot-return-ladder-18-8440.json';
 import crowded from './test-fixtures/lookahead-crowd-ladder-16.json';
+import corner from './test-fixtures/lookahead-corner-ladder-12.json';
 
 function returningWarden() {
   // The recorded 41c9c208 unit's only order is its queued trip home. Keep the
@@ -79,13 +80,13 @@ it('keeps a rules-4 save loadable while refusing to replay its old movement rule
 // The unused long path joins fields, but its short fallback stays in the
 // starting field. Rejecting that ordinary corner smoothing pins two lancers
 // against each other instead of letting them round the bend.
-it('does not funnel a rejected cross-field shortcut into the first cell center', () => {
+it.each([crowded, corner])('preserves ordinary corner smoothing at $provenance.map tick $provenance.tick', fixture => {
   const game = createGame('bareDuel', { aiPlayers: [] });
-  restoreSnapshotIntoGame(game, crowded.snapshot as unknown as GameSnapshot, 1_000_000);
+  restoreSnapshotIntoGame(game, fixture.snapshot as unknown as GameSnapshot, 1_000_000);
   game.aiPlayers = [];
   game.scriptedVictory = true;
   game.projectiles = [];
-  const unit = game.units.find(u => u.id === crowded.provenance.unitId)!;
+  const unit = game.units.find(u => u.id === fixture.provenance.unitId)!;
   for (let tick = 0; tick < 1200 && unit.order.type !== 'idle'; tick++) stepGame(game);
   expect(unit.hp).toBeGreaterThan(0);
   expect(unit.order.type, JSON.stringify({ x: unit.x, y: unit.y, order: unit.order })).toBe('idle');
