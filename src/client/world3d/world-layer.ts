@@ -137,7 +137,7 @@ export class World3DLayer {
   private disposed=false;
   private contextLost=false;
   private eventCanvas:HTMLCanvasElement|undefined;
-  private onContextLost=(event:Event)=>{event.preventDefault();this.contextLost=true;this.releaseContextResources();this.cards.invalidateGPU();this.remainsCards.invalidateGPU();this.standingCards.invalidateGPU();this.releaseKeepers();};
+  private onContextLost=(event:Event)=>{event.preventDefault();this.contextLost=true;this.releaseContextResources();this.cards.invalidateGPU();this.remainsCards.invalidateGPU();this.standingCards.invalidateGPU();this.standing.dispose();this.releaseKeepers();};
   private onContextRestored=()=>{this.contextLost=false;};
   private sun=new THREE.DirectionalLight('#f1dcc0',2.5);
   // The terrain's trees and boulders, standing up among the world's actors (see @@@standing-field).
@@ -331,7 +331,7 @@ export class World3DLayer {
     // rendered is allowed to bind scene terrain, including after a map change.
     this.water.prepare(snapshot.map.terrain);
     this.water.update(now,frame.reducedMotion);
-    this.standing.update(snapshot.map.terrain,{x:frame.view.x,y:frame.view.y,width:frame.view.width/zoom,height:frame.view.height/zoom});
+    this.standing.update(snapshot.map.terrain,{x:frame.view.x,y:frame.view.y,width:frame.view.width/zoom,height:frame.view.height/zoom},renderer);
     const cx=frame.view.x+frame.view.width/(2*zoom),cy=frame.view.y+frame.view.height/(2*zoom),extent=Math.max(frame.view.width,frame.view.height)/zoom+400;
     this.shadow.position.set(cx,-.1,cy);this.shadow.scale.set(extent,extent,1);
     this.sun.position.set(cx+SUN.x,SUN.height,cy+SUN.y);this.sun.target.position.set(cx,0,cy);
