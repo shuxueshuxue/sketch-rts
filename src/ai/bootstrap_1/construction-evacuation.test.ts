@@ -4,7 +4,7 @@ import { expect, it } from 'vitest';
 import { createGame, restoreSnapshotIntoGame, snapshotGame } from '../../shared/sim';
 import { planAiOwnerCommandEntries } from '../planner-context';
 import { BOOTSTRAP_VERSIONS, bootstrapPolicyContext } from './policy';
-import { keepMiningConstruction } from './construction-evacuation';
+import { keepMiningWork } from './construction-evacuation';
 
 const builderId = 'unit-p0-worker-12838';
 function input() {
@@ -36,5 +36,5 @@ it.each(['danger', 'finished', 'emptyMine', 'ordinaryRepair', 'otherMission'] as
   if (reason === 'ordinaryRepair') worker.order = { type: 'idle' };
   if (reason === 'otherMission') memory.naval.ferries[boat.id].purpose = 'rebase';
   const snapshot = snapshotGame(game), options = bootstrapPolicyContext(snapshot, 'p0', 'v9_archer', { memory, teams: game.teams });
-  expect(keepMiningConstruction(snapshot, 'p0', options, worker, boat)).toBe(false);
+  expect(keepMiningWork(snapshot, 'p0', options, worker, boat)).toBe(false);
 });

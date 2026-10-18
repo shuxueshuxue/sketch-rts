@@ -1,3 +1,4 @@
+import { miningHandoff } from './mining-handoff';
 import { evacuationShelter } from './evacuation-shelter';
 import { homeRelief } from './home-relief';
 import { idleWorkerEvasion } from './idle-worker-evasion';
@@ -18,7 +19,7 @@ import { miningWorkforce } from './workforce';
 import { miningAssignments } from './mining-assignments';
 import { miningApproachOutsideFire } from './mining-fire';
 import { mineDefense, planBootstrapCloseout, planBootstrapGeneral } from './mine-defense';
-import { miningJobSafety } from './mining-job-defense';
+import { miningFire as miningJobSafety } from './mining-unit-fire';
 import { bootstrapEconomy } from './economy';
 import { shellEvasion } from './shell-evasion';
 import { summonerTowerRush, towerRushAbilities } from './tower-rush';
@@ -138,8 +139,14 @@ export function planBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, v
 
 /** Local deck micro sees every accepted task, including later items and abilities. */
 export function planBootstrapScriptEntries(snapshot: GameSnapshot, owner: PlayerId, scripts: AiScript[], options: AiPolicyContext): AiCommandEntry[] {
+  // Completed construction claims are pruned by the ordinary script runner.
+  // Read the paid builder's next mining task before that cleanup, then publish
+  // it through the existing economy script and its normal ownership checks.
+  const handoff = scripts.some(script => script.id === 'economy') ? miningHandoff(snapshot, owner, options) : undefined;
+  const assignedScripts = handoff ? scripts.map(script => script.id === 'economy'
+    ? { ...script, run: () => handoff } : script) : scripts;
   const healed = new Map<string, Set<AbilityKind>>();
-  const entries = preserveLateCrewCharge(snapshot, owner, planAiCommandEntriesFromScripts(snapshot, owner, scripts, options).filter(({ command }) => {
+  const entries = preserveLateCrewCharge(snapshot, owner, planAiCommandEntriesFromScripts(snapshot, owner, assignedScripts, options).filter(({ command }) => {
     if (command.type !== 'cast' || command.queued || ABILITY_DEFS[command.ability].behavior !== 'heal') return true;
     const caster = snapshot.units.find(unit => unit.id === command.unitId);
     const target = snapshot.units.find(unit => unit.id === command.targetId);
