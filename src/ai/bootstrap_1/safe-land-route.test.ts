@@ -17,7 +17,7 @@ it('computes the full native road past a rounded forest corner', () => {
   expect(retreatLandRoad(snapshot, unit, goal, [])?.ticks).toBe(ticks);
 });
 
-it.each([0, NaN, Infinity])('reports the unit and segment for an invalid speed %s', speed => {
+it.each([0, NaN, Infinity, Number.MIN_VALUE])('reports the unit and segment for invalid travel time at speed %s', speed => {
   const game = sketchScene('invalid-road-speed').map('bareDuel').replaceDefaults()
     .player('us').player('foe').unit('us', 'footman', 200, 200, { id: 'courier' }).build().createGame();
   const snapshot = snapshotGame(game), unit = { ...snapshot.units[0]!, speed };
