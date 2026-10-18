@@ -42,7 +42,9 @@ Every command runs in its own process group, and a run only ever kills the group
   base.
 - `bench room [--base] [--ref] [--subjects …] [--rivals v8,v9] [--maps 20] [--metrics clear,bases@4,trade@15]` plays the
   room AIs' bench on both commits and compares wins, flipped games and the direct metrics (src/ai/benchmark/metrics.ts:
-  bases@N, workers@N, spent@N, trade@N, clear, hire) taken in the same games. 40 games per cell at the default.
+  bases@N, workers@N, spent@N, trade@N, clear, hire, upgrade@K.L, stall@N) taken in the same games. 40 games per cell
+  at the default. A first-minute metric shows how many games never reached it; `--json` also carries every game's
+  values (`gameMetrics`), to trace a measure to its maps.
 - `replay <subject> <rival> <seed> "<match>" [--from] [--to] [--every] [--show army,general,orders,losses]` plays one game
   and prints the armies, the general and the scripts' commands every N ticks. `--fork TICK --after REF` saves the game
   and the AIs' memory at TICK on --ref and continues that moment on --ref and on --after (the AIs' thinks restart at
