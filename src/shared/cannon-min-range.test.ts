@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { boardUnit, syncDecks } from './decks';
+import { boardUnit, deckPlacement, syncDecks } from './decks';
 import { createUnit } from './map';
-import { SHIP_WEAPONS, initializeShipEquipment, installedWeapons, mountedTargetPoint, mountedWeaponPose, rebuildShipFittings } from './ship-equipment';
+import { SHIP_WEAPONS, initializeShipEquipment, installedWeapons, mountedTargetPoint, mountedWeaponPose, rebuildShipFittings, shipGunCanAim } from './ship-equipment';
 import { shipProfile } from './ship-geometry';
 import { strikePoint } from './combat-geometry';
 import { createGame, issuePlayerCommand, stepGame, type Game } from './sim';
@@ -39,7 +39,7 @@ function abreast(gap: number) {
 // @@@cannon-min-range
 describe('a broadside holds its fire on a deck alongside', () => {
   it('takes the cannon min range from the shared weapon of every ship that carries it', () => {
-    expect(SHIP_WEAPONS.shipCannon.weapon.minRange).toBe(240);
+    expect(SHIP_WEAPONS.shipCannon.weapon.minRange).toBe(125);
     expect(SHIP_WEAPONS.shipMortar.weapon.minRange).toBe(180);
     expect(SHIP_WEAPONS.flameProjector.weapon.minRange).toBeUndefined();
   });
@@ -50,11 +50,15 @@ describe('a broadside holds its fire on a deck alongside', () => {
     expect(crewHits()).toBe(0);
   });
 
-  it('sends its ball over an enemy inside its minimum range onto the hull beyond', () => {
+  // The ball passes over what lies within the gun's dead zone, so a boarder on the gun's own deck, ahead of it, is safe
+  // from it. (A whole hull across the bow no longer fits inside the dead zone of 125: see @@@hull-reach.)
+  it('sends its ball over an enemy boarder on its own deck onto the hull beyond', () => {
     const game = sea();
-    const ship = game.spawnUnit('player', 'warship', 1500, 1500), near = game.spawnUnit('enemy', 'cutter', 1640, 1500), far = game.spawnUnit('enemy', 'transport', 1900, 1500);
-    ship.sailing!.heading = 0; near.sailing!.heading = Math.PI / 2; far.sailing!.heading = Math.PI / 2;
-    near.attackDamage = 0; near.order = { type: 'hold', x: near.x, y: near.y }; far.order = { type: 'hold', x: far.x, y: far.y };
+    const ship = game.spawnUnit('player', 'warship', 1500, 1500), far = game.spawnUnit('enemy', 'transport', 1900, 1500);
+    ship.sailing!.heading = 0; far.sailing!.heading = Math.PI / 2; far.order = { type: 'hold', x: far.x, y: far.y };
+    // Its own (unarmed) crewman holds the ship, so the boarder does not take it.
+    crew(game, ship).attackDamage = 0; const near = crew(game, ship); near.owner = 'enemy'; near.attackDamage = 0;
+    near.deck = { shipId: ship.id, ...deckPlacement(ship, near, game.units, { x: 85, y: 0 })! }; syncDecks(game.units);
     issuePlayerCommand(game, 'player', { type: 'attack', unitIds: [ship.id], targetId: far.id });
     ship.order = { type: 'attack', targetId: far.id };
     for (let tick = 0; tick < 200 && far.hp === far.maxHp; tick++) { stepGame(game); ship.x = 1500; ship.y = 1500; ship.sailing!.heading = 0; }
@@ -92,14 +96,14 @@ describe('a gun reckons a ship and everyone on its deck by the whole hull', () =
     return { game, a, b, crews, hits, step };
   }
 
-  it('takes up neither the hull nor its crew while the hull\'s near side lies 200 off, in the dead zone, either way', () => {
-    const { game, a, b, crews, hits, step } = duel(200);
+  it('takes up neither the hull nor its crew while the hull\'s near side lies 80 off, in the dead zone, either way', () => {
+    const { game, a, b, crews, hits, step } = duel(80);
     // The near battery sees the hull inside its dead zone; the far one, a beam farther off, sees it beyond its range.
     for (const [ship, other] of [[a, b], [b, a]] as const) for (const gun of installedWeapons(game, ship)) {
       const pivot = mountedWeaponPose(ship, gun)!.pivot;
       for (const body of [other, ...crews.get(other.id)!]) {
         const point = mountedTargetPoint(game, ship, gun, body);
-        expect(point === undefined || Math.hypot(point.x - pivot.x, point.y - pivot.y) > SHIP_WEAPONS.shipCannon.range, `${ship.id} ${gun.mountId} ${body.id} ${point && Math.hypot(point.x - pivot.x, point.y - pivot.y)}`).toBe(true);
+        expect(point === undefined || Math.hypot(point.x - pivot.x, point.y - pivot.y) > SHIP_WEAPONS.shipCannon.range || !shipGunCanAim(ship, gun, point), `${ship.id} ${gun.mountId} ${body.id}`).toBe(true);
       }
     }
     for (let tick = 0; tick < 400; tick++) step();

@@ -14,7 +14,13 @@ describe('the pirate boarding home battle', () => {
     expect(pirates!.orderQueue?.map(order => order.type)).toEqual(['boardShip']);
     const crew = (owner: string) => game.units.filter(unit => unit.owner === owner && unit.deck);
     expect(crew(admiralty!.owner).every(unit => unit.order.type === 'hold')).toBe(true);
-    expect(crew(pirates!.owner).length).toBeGreaterThanOrEqual(4); expect(crew(admiralty!.owner)).toHaveLength(4);
+    const kinds = (owner: string, kind: string) => crew(owner).filter(unit => unit.kind === kind).length;
+    expect(kinds(pirates!.owner, 'footman')).toBeGreaterThanOrEqual(4); expect(kinds(admiralty!.owner, 'footman')).toBe(4);
+    // Two carpenters and a priest on each deck, and gold to pay for the mending.
+    for (const ship of [pirates!, admiralty!]) {
+      expect([kinds(ship.owner, 'worker'), kinds(ship.owner, 'priest')]).toEqual([2, 1]);
+      expect(game.players[ship.owner]!.gold).toBeGreaterThan(0);
+    }
     // Both carry a ship of the line's four guns, and the pirates start well off the berth, not grappled.
     for (const ship of [pirates!, admiralty!]) expect(game.items.filter(item => item.shipId === ship.id).map(item => item.mountId).sort()).toEqual(['port0', 'port2', 'starboard0', 'starboard2']);
     expect(Math.hypot(pirates!.x - admiralty!.x, pirates!.y - admiralty!.y)).toBeGreaterThan(400);
@@ -28,7 +34,7 @@ describe('the pirate boarding home battle', () => {
   // @@@hull-reach: the pirates sail a leg alongside in the broadsides' band, and both trade fire; then they close to the
   // berth, under every gun's dead zone, so once the bridge is going out no gun strikes a crewman and the fight is the
   // crews' own, with the sword.
-  it('is fought by the simulation: a gun duel on the way up, no gun on a crew once boarding, and the pirates take the ship before the fade', () => {
+  it('is fought by the simulation: a gun duel on the way up, both hulls mended under it and the crews healed, no gun on a crew once boarding, and the pirates take the ship before the fade', () => {
     const game = createPirateBoarding().game;
     const [pirates, admiralty] = game.activePlayers.map(owner => game.units.find(unit => unit.owner === owner && unit.kind === 'shipOfTheLine')!);
     let bridge = 0, decided = 0, captured = 0, crewShotBoarding = 0;
@@ -38,8 +44,15 @@ describe('the pirate boarding home battle', () => {
       if (!bridge) duel.set(attacker.id, duel.get(attacker.id)! + 1);
       else if ('order' in target && target.deck) crewShotBoarding++;
     } };
+    const mended = new Map([[pirates!.id, 0], [admiralty!.id, 0]]);
+    let healed = 0;
     for (let tick = 1; tick <= 146 * SIM_TICKS_PER_SECOND && !captured; tick++) {
+      const hp = new Map(game.units.map(unit => [unit.id, unit.hp])), maxHp = new Map(game.units.map(unit => [unit.id, unit.maxHp]));
       stepGame(game);
+      for (const ship of [pirates!, admiralty!]) if (!bridge && ship.hp > hp.get(ship.id)!) mended.set(ship.id, mended.get(ship.id)! + 1);
+      // A priest's heal lands at once (55), unlike a veteran's trickle of regeneration or a promotion's larger frame.
+      healed += game.units.filter(unit => unit.kind === 'footman' && unit.hp > 0 && unit.maxHp === maxHp.get(unit.id)
+        && unit.hp - hp.get(unit.id)! >= 20).length;
       if (!bridge && pirates!.sailing?.gangway && pirates!.sailing.gangway.phase !== 'approach') bridge = tick;
       if (!decided && battleDecided(game)) decided = tick;
       // Taken by the pirates, not the pirates' own hull taken by the marines.
@@ -47,6 +60,9 @@ describe('the pirate boarding home battle', () => {
     }
     // Both broadsides strike before the bridge goes out, and none strikes a crewman after.
     expect(duel.get(pirates!.id)).toBeGreaterThan(0); expect(duel.get(admiralty!.id)).toBeGreaterThan(0);
+    // The carpenters mend both hulls through the duel, and the priests heal the swordsmen.
+    expect(mended.get(pirates!.id)).toBeGreaterThan(0); expect(mended.get(admiralty!.id)).toBeGreaterThan(0);
+    expect(healed).toBeGreaterThan(0);
     expect(bridge).toBeGreaterThan(0); expect(decided).toBeGreaterThan(bridge);
     expect(crewShotBoarding).toBe(0);
     // The prize is taken before the home screen fades (LONGEST_BATTLE less the fade), within the aftermath it shows

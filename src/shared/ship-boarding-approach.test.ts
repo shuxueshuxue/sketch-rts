@@ -99,6 +99,8 @@ describe('a precise approach to a berth beside a hull far off', () => {
     game.scriptedVictory = true;
     game.map = { ...game.map, width: 6000, height: 6000, wind: { direction: wind, speed: 36 }, terrain: { cell: 40, cols: 150, rows: 150, cells: '~'.repeat(150 * 150) } };
     const target = game.spawnUnit('enemy', 'shipOfTheLine', 3000, 3000), source = game.spawnUnit('player', 'shipOfTheLine', 3000 + along, 3000 + out);
+    // This is about the helm: no guns, so neither hull swings to bring a broadside to bear.
+    game.items = []; for (const ship of [source, target]) delete ship.fittings;
     source.sailing!.heading = target.sailing!.heading = 0;
     for (const ship of [source, target]) { ship.order = { type: 'hold', x: ship.x, y: ship.y }; ship.invulnerable = true; }
     crew(game, source);

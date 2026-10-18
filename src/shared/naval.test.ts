@@ -134,7 +134,8 @@ describe("ships", () => {
   // unanswered; one standing farther up the beach, in the guns' band, is shot.
   it("are shot from the beach by an archer under their guns, and shoot one farther up the shore", () => {
     const sim = game([
-      { id: "near", owner: "player", kind: "archer", ...at(8, 12) },
+      // Inside the warship's dead zone (see @@@cannon-min-range), under its guns.
+      { id: "near", owner: "player", kind: "archer", ...at(10, 12) },
       { id: "far", owner: "player", kind: "archer", ...at(3, 9) },
       { id: "warship", owner: "enemy", kind: "warship", ...at(12, 12) },
     ]);
@@ -296,7 +297,8 @@ describe("transports", () => {
     // Its two workers on deck mend it, with gold to spare, but under fire at a quarter of the pace (see
     // @@@repair-under-fire): the warship's gun still sinks it.
     issuePlayerCommand(sim, "enemy", { type: "attack", unitIds: ["warship"], targetId: "transport" });
-    run(sim, 1200);
+    // About a minute against its two workers' mending under fire: the margin is for the duel's opening.
+    run(sim, 1800);
     expect(unit(sim, "transport")).toBeUndefined();
     expect(sim.match.stats.unitsLost.player).toBe(3);
     expect(sim.match.stats.unitsKilled.enemy).toBe(3);
