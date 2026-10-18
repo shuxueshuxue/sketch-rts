@@ -19,7 +19,7 @@ export type MachineConfig = {
    * range on a shared machine, so a run never lands on another lane's server. */
   ports?: [number, number];
   /** The Playwright install a browser run drives (not a repo dependency), and where its browsers are. */
-  browser?: { playwright: string; browsersPath?: string };
+  browser?: { playwright: string; browsersPath?: string; args?: string[] };
 };
 
 export type MachinesFile = { default?: string; machines: Record<string, MachineConfig> };

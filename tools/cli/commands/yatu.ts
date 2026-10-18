@@ -41,10 +41,11 @@ export async function run(argv: string[]) {
   for (const [index, sha] of refs.entries()) runs.push(await runScene(machine, sha, scene, refs.length > 1 ? `ref${index + 1}-${sha.slice(0, 7)}` : sha.slice(0, 7), sizes, [], stringOption(parsed, "locale")));
   const rows = runs.flatMap((run) => [
     ...run.shots.map((shot) => [run.label, shot.name, shot.size, shot.file.replace(run.remoteDir, run.localDir)]),
+    ...run.records.map((record) => [run.label, record.name, "record", record.file]),
     ...(run.ok ? [] : [[run.label, "FAILED", "", run.failure ?? ""]]),
     ...run.errors.map((error) => [run.label, "page", "", error]),
   ]);
   emit(parsed.options.json === true, table(["run", "shot", "size", "file / message"], rows),
-    { runs: runs.map(({ sha, label, ok, failure, errors, localDir, shots }) => ({ sha, label, ok, failure, errors, localDir, shots: shots.map((shot) => ({ ...shot, file: shot.file.replace(runs.find((run) => run.label === label)!.remoteDir, localDir) })) })) });
+    { runs: runs.map(({ sha, label, ok, failure, errors, localDir, shots, records }) => ({ sha, label, ok, failure, errors, localDir, records, shots: shots.map((shot) => ({ ...shot, file: shot.file.replace(runs.find((run) => run.label === label)!.remoteDir, localDir) })) })) });
   return browserRunExit(runs);
 }

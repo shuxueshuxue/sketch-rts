@@ -14,7 +14,7 @@
       "root": "/Users/mac1/work/sketch-cli",
       "prelude": "export PATH=$HOME/.nvm/versions/node/v24.15.0/bin:$PATH",
       "ports": [5640, 5649],
-      "browser": { "playwright": "/Users/mac1/gugu-matrix/node_modules/playwright" }
+      "browser": { "playwright": "/Users/mac1/gugu-matrix/node_modules/playwright", "args": ["--use-angle=metal", "--enable-gpu"] }
     }
   }
 }

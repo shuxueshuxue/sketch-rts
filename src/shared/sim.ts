@@ -1776,9 +1776,19 @@ function attackMoveTowardTarget(game: Game, unit: Unit, target: Unit | Building,
 function updateAttackOrder(game: Game, unit: Unit, navalFrame = true) {
   const order = unit.order;
   if (order.type !== "attack") return;
+  attackStep(game, unit, order, navalFrame, (next) => { unit.order = next; });
+}
+
+type AttackOrder = Extract<UnitOrder, { type: "attack" }>;
+
+// One tick of an attack: seek the target (or the next, see @@@reach), walk into reach, strike. What the attack becomes
+// (idle when nothing is left, another target, a walk back to the leash) goes to `write` when it changes, at the moment
+// it does, as the attacker's order (see updateAttackOrder). A boarder fighting at a defended entry runs the same tick on
+// its board order's behalf (see @@@board-phase) and only keeps the target it is striking.
+function attackStep(game: Game, unit: Unit, order: AttackOrder, navalFrame: boolean, write: (next: UnitOrder) => void): void {
   let target = findStrikeTarget(game, order.targetId);
   if (!target) {
-    unit.order = { type: "idle" };
+    write({ type: "idle" });
     return;
   }
   if (!navalFrame && isUnit(target) && (target.deck || target.cabin || isShipKind(target.kind))) navalFrame = true;
@@ -1787,25 +1797,26 @@ function updateAttackOrder(game: Game, unit: Unit, navalFrame = true) {
   if (projectedHpAfterPendingProjectiles(game, unit.owner, target) <= 0 || strikeReach(unit, target) < 0 || (navalFrame || game.map.terrain) && !canReach(game.map, unit, target, game.units)) {
     const replacement = nearestEnemyTarget(game, unit, Math.max(AUTO_ACQUIRE_RANGE, unit.attackRange), navalFrame);
     if (!replacement) {
-      unit.order = { type: "idle" };
+      write({ type: "idle" });
       return;
     }
-    unit.order = { ...order, targetId: replacement.id };
-    updateAttackOrder(game, unit, navalFrame);
+    const next: AttackOrder = { ...order, targetId: replacement.id };
+    write(next);
+    attackStep(game, unit, next, navalFrame, write);
     return;
   }
   // Only automatic orders reconsider living targets here. Explicit player attacks keep their target.
   if (!isObstacle(target) && (unit.owner === "neutral" || order.leashX !== undefined)) {
-    if(navalFrame && !automaticTargetAllowed(game.units,unit.owner,target)){unit.order={type:'idle'};return;}
+    if(navalFrame && !automaticTargetAllowed(game.units,unit.owner,target)){write({type:'idle'});return;}
     target = automaticCombatTarget(game, unit, target, navalFrame);
-    if (target.id !== order.targetId) unit.order = { ...order, targetId: target.id };
+    if (target.id !== order.targetId) write({ ...order, targetId: target.id });
   }
   const gap = targetGap(unit, target, navalFrame);
   const ship = navalFrame && Boolean(shipProfile(unit));
   if (!ship && backOutOfDeadZone(game, unit, target, false)) return;
   if (gap > strikeReach(unit, target)) {
     if (isPlayerId(unit.owner) && order.leashX !== undefined && order.leashY !== undefined && distance(unit, { x: order.leashX, y: order.leashY }) > GUARD_LEASH_RANGE) {
-      unit.order = { type: "move", x: order.leashX, y: order.leashY };
+      write({ type: "move", x: order.leashX, y: order.leashY });
       return;
     }
     if (ship) navigateShipAttack(game, unit, target);
@@ -2005,17 +2016,28 @@ function updateBoardShipOrder(game:Game,ship:Unit) {
   ship.order={type:'idle'};
 }
 
+// @@@board-phase - Where a boarding stands, on the order itself, so the HUD, replays and tests read it instead of
+// guessing from the ship's state: approaching (walking to the transport, or to the shore it sails in to), waiting
+// (blockedBy: "ships-apart" while the hulls do not touch, "deck-full" while no spot on the quarry's deck is free),
+// queued (behind crew nearer the entry), fighting (strikeId: the defender at the entry it answers first), crossing
+// (walking to its spot over the bridge or the seam). It ends aboard as idle, or with an orderEnded reason (target-gone,
+// no-room).
+type BoardOrder = Extract<UnitOrder, { type: "board" }>;
+function boardPhase(order: BoardOrder, phase: NonNullable<BoardOrder["phase"]>, blockedBy?: BoardOrder["blockedBy"], strikeId?: string) {
+  order.phase = phase;
+  if (blockedBy) order.blockedBy = blockedBy; else delete order.blockedBy;
+  if (strikeId) order.strikeId = strikeId; else delete order.strikeId;
+}
+
 function updateBoardOrder(game: Game, unit: Unit) {
   if (unit.order.type !== "board") return;
-  const transport = findTarget(game, unit.order.transportId);
-  if (!transport || !isUnit(transport) || transport.hp<=0 || !unit.deck && transport.owner !== unit.owner) {
-    unit.order = { type: "idle" };
-    return;
-  }
+  const order = unit.order;
+  const transport = findTarget(game, order.transportId);
+  if (!transport || !isUnit(transport) || transport.hp<=0 || !unit.deck && transport.owner !== unit.owner) return endOrder(game, unit, "target-gone");
   if(unit.deck){
     const source=game.units.find(ship=>ship.id===unit.deck!.shipId);
     if(!source)return;
-    if(source.id!==transport.id && !decksCanTransfer(source,transport,unit))return;
+    if(source.id!==transport.id && !decksCanTransfer(source,transport,unit))return boardPhase(order,"waiting","ships-apart");
     // A defended entry is a fight, not an unreachable ferry destination.
     // Retain the boarding order so clearing the lane resumes the crossing.
     if(unit.kind!=='worker' && areEnemyOwners(game,unit.owner,transport.owner) && unit.attackDamage>0
@@ -2030,18 +2052,14 @@ function updateBoardOrder(game: Game, unit: Unit) {
       const own=source.id===transport.id ? transport : navalCombatTarget(game,unit,source);
       const defender=nearby!==transport ? nearby : source.id===transport.id ? navalCombatTarget(game,unit,transport) : own!==source ? own : transport;
       if(defender!==transport && isUnit(defender)) {
-        const boardingOrder=unit.order;
-        unit.order={type:'attack',targetId:defender.id,frontRank:true};
-        try { updateAttackOrder(game,unit); }
-        finally { unit.order=boardingOrder; }
+        // The fight runs as an attack's tick (see attackStep) while the order stays a boarding: of what the attack
+        // would become, only the target it strikes is kept (the deck walk reads it, see @@@making-way).
+        boardPhase(order,"fighting",undefined,defender.id);
+        attackStep(game,unit,{type:'attack',targetId:defender.id},true,next=>{if(next.type==='attack')order.strikeId=next.targetId;});
         return;
       }
     }
-    if(source.id!==transport.id && !canBoard(transport,unit,game.units)){
-      unit.order={type:"idle"};
-      addEffect(game,"boardingBlocked",unit.x,unit.y,seconds(.4),{unitId:unit.id,owner:unit.owner,sourceKind:unit.kind});
-      return;
-    }
+    if(source.id!==transport.id && !canBoard(transport,unit,game.units))return endOrder(game,unit,"no-room");
     // One shared entry, crossed one at a time. Waiting crew clear the aft
     // passage on their own deck rather than racing ahead and sealing the exit.
     // Only boarders still on this side are in the queue: one already across
@@ -2054,6 +2072,7 @@ function updateBoardOrder(game: Game, unit: Unit) {
     const ahead=game.units.some(other=>other!==unit && other.hp>0 && other.deck?.shipId===source.id && other.order.type==="board" && other.order.transportId===transport.id
       && (distance(other,transport)<near || distance(other,transport)===near && other.id<unit.id));
     if(ahead && source.id!==transport.id){
+      boardPhase(order,"queued");
       const profile=shipProfile(source)!,entry=worldToLocal(source,transport);
       const waiting=deckPlacement(source,unit,game.units,{x:profile.length/4,y:-Math.sign(entry.y)*profile.beam/2});
       if(waiting){const at=localToWorld(source,waiting);moveToward(unit,at.x,at.y,game.map,game.units);}
@@ -2070,7 +2089,8 @@ function updateBoardOrder(game: Game, unit: Unit) {
       const point=deckPlacement(transport,unit,reserved,preferred,true);
       if(point)unit.order.deckPoint=point;
     }
-    const point=unit.order.deckPoint;if(!point)return;
+    const point=unit.order.deckPoint;if(!point)return boardPhase(order,"waiting","deck-full");
+    boardPhase(order,"crossing");
     const goal=localToWorld(transport,point);
     if(source.id===transport.id){
       moveToward(unit,goal.x,goal.y,game.map,game.units);
@@ -2078,8 +2098,9 @@ function updateBoardOrder(game: Game, unit: Unit) {
     } else if(decksCanTransfer(source,transport,unit))moveToward(unit,goal.x,goal.y,game.map,game.units);
     return;
   }
+  boardPhase(order, "approaching");
   if (alongside(unit, transport)) return;
-  const goal = transport.order.type === "idle" ? unit.order.berth?.shore ?? unit.order.berth ?? transport : transport;
+  const goal = transport.order.type === "idle" ? order.berth?.shore ?? order.berth ?? transport : transport;
   moveToward(unit, goal.x, goal.y, game.map, game.units);
 }
 
@@ -2102,9 +2123,9 @@ function ferryUnits(game: Game, { boarding, unloading }: Ferry, starts: Readonly
     if(passenger.order.type!=="board" || passenger.deck)continue;
     const ship=findTarget(game,passenger.order.transportId);
     if(!ship || !isUnit(ship) || !alongside(passenger,ship))continue;
-    const boarded=boardUnit(ship,passenger,game.units);
+    if(!boardUnit(ship,passenger,game.units)){endOrder(game,passenger,"no-room");continue;}
     assignUnitOrder(passenger,{type:"idle"});
-    addEffect(game,boarded ? "board" : "boardingBlocked",passenger.x,passenger.y,seconds(.4),{unitId:passenger.id,owner:passenger.owner,sourceKind:passenger.kind});
+    addEffect(game,"board",passenger.x,passenger.y,seconds(.4),{unitId:passenger.id,owner:passenger.owner,sourceKind:passenger.kind});
   }
   for(const ship of unloading) {
     if(ship.order.type!=="unload" || (ship.sailing?.speed??0)>.1)continue;

@@ -74,7 +74,7 @@ export type WorldEffect = {
     | "guardianField"
     | "experienceBurst"
     | "itemReceived"
-    | "board" | "unload" | "boardingBlocked" | "orderEnded"
+    | "board" | "unload" | "orderEnded"
     | "goldBounty"
     | "flameBurn"
     | "scorch"
@@ -158,9 +158,7 @@ export type UnitOrder =
   | { type: "move"; x: number; y: number; heading?: number; rendezvousFor?: string; avoidCombat?: boolean; deckPoint?: { x: number; y: number }; deckShipId?: string }
   | { type: "follow"; targetId: string }
   | { type: "attackMove"; x: number; y: number; targetId?: string; deckPoint?: { x: number; y: number }; deckShipId?: string }
-  // frontRank: a boarding crew answering the defender at the front of its way, chosen again every tick by its boarding
-  // order; the order lives only within that tick's update (see @@@explicit-route).
-  | { type: "attack"; targetId: string; leashX?: number; leashY?: number; frontRank?: true }
+  | { type: "attack"; targetId: string; leashX?: number; leashY?: number }
   // Mining timer counts waiting ticks at the entrance, then remaining ticks while gathering.
   | { type: "mine"; resourceId: string; phase: "toMine" | "gather" | "return"; timer: number }
   | { type: "repair"; buildingId: string }
@@ -174,7 +172,9 @@ export type UnitOrder =
   // Walk into weapon range, then prepare a reticle at a point and engage enemies entering range.
   | { type: "aim"; x: number; y: number }
   // Walking to a transport to go aboard, and a transport sailing to unload (see @@@transport).
-  | { type: "board"; transportId: string; deckPoint?: {x:number;y:number}; rendezvous?: import("./crew-rendezvous").CrewRendezvous; berth?: { x: number; y: number; heading?: number; shore?: {x:number;y:number} } }
+  | { type: "board"; transportId: string; deckPoint?: {x:number;y:number}; rendezvous?: import("./crew-rendezvous").CrewRendezvous; berth?: { x: number; y: number; heading?: number; shore?: {x:number;y:number} };
+      // Where the boarding stands (see @@@board-phase); written by the sim each tick, absent until its first tick.
+      phase?: "approaching" | "waiting" | "queued" | "fighting" | "crossing"; blockedBy?: "ships-apart" | "deck-full"; strikeId?: string }
   | { type: "boardShip"; targetId: string }
   | { type: "unload"; x: number; y: number; avoidCombat?: boolean }
   | { type: "enterCabin"; shipId: string }
