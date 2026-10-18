@@ -1,0 +1,327 @@
+{
+  "archive": "evacuation-shelter-probes-evidence.tar.gz",
+  "bytes": 1539756,
+  "sha256": "ac2fe67ffba2b322d9eb3f8a5c1e959cd118e6c727c3c1d47fb2912592fe8cfe",
+  "files": {
+    "raw/evacuation-cabin-30000/commands.jsonl": {
+      "bytes": 400,
+      "sha256": "f78cdf118bdb1222a090e7945e83d59389a9493e27ad2d4dfc64338ceeb92bf9"
+    },
+    "raw/evacuation-cabin-30000/entities.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "raw/evacuation-cabin-30000/frames/30000.json.gz": {
+      "bytes": 19834,
+      "sha256": "38f640a5fd8b0ab5f70bb877c54dde54338deb9edf4ad7a6d269a7eaa5458d8c"
+    },
+    "raw/evacuation-cabin-30000/hits.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "raw/evacuation-cabin-30000/samples.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "raw/evacuation-cabin-30000/source.json": {
+      "bytes": 184108,
+      "sha256": "ae1e1eb306222fbbbfc822142367e4447292b23752edd0f7a49d356ac21a41df"
+    },
+    "raw/evacuation-cabin-30000.log": {
+      "bytes": 1255,
+      "sha256": "01226010ddfa51f16e4f74286c358cbe475a3bd5874495514b24014a634d22a8"
+    },
+    "raw/evacuation-cabin-observe.mts": {
+      "bytes": 6708,
+      "sha256": "25f5ce6d6bb883221124d00ae1d4014be2987aea9f47fb9d3bc4474f790aa2a8"
+    },
+    "raw/evacuation-cabin-v2-30000/commands.jsonl": {
+      "bytes": 265863,
+      "sha256": "b1d00efad623bc0d8a5bc1ef072425557f1098c88840f0348e2bb23ac26a520a"
+    },
+    "raw/evacuation-cabin-v2-30000/entities.jsonl": {
+      "bytes": 2957,
+      "sha256": "b3a58c1aa5f1d333b37f485b0c14b5f5256ab9bd02745897ff24b4897a02e234"
+    },
+    "raw/evacuation-cabin-v2-30000/frames/30000.json.gz": {
+      "bytes": 19834,
+      "sha256": "38f640a5fd8b0ab5f70bb877c54dde54338deb9edf4ad7a6d269a7eaa5458d8c"
+    },
+    "raw/evacuation-cabin-v2-30000/frames/30600.json.gz": {
+      "bytes": 21975,
+      "sha256": "dae887d5421df03bb3e29078ccb1394ee2ab06525727b3e429fc3b4e2ef3c2c7"
+    },
+    "raw/evacuation-cabin-v2-30000/frames/31200.json.gz": {
+      "bytes": 20219,
+      "sha256": "9e46377444e00cc2746f8fe4a7dcbc36a21a132a56e1fd3464538065d7d4285b"
+    },
+    "raw/evacuation-cabin-v2-30000/frames/31800.json.gz": {
+      "bytes": 20458,
+      "sha256": "bd4005b4462c6570d4460f549e4c2d4938466fb1c4f3f185a89994dde76a0fbc"
+    },
+    "raw/evacuation-cabin-v2-30000/frames/32400.json.gz": {
+      "bytes": 19375,
+      "sha256": "3960887778de951c11021635a65765c3ee83d53929d519f04fbcd0cb5ca7b99a"
+    },
+    "raw/evacuation-cabin-v2-30000/frames/33000.json.gz": {
+      "bytes": 18892,
+      "sha256": "41721e5dec2784417367494fdd449374a9a78e5701fa41016b688b887337311d"
+    },
+    "raw/evacuation-cabin-v2-30000/hits.jsonl": {
+      "bytes": 94062,
+      "sha256": "4f732dc024a73349a4e35f7735dbad2b026bbe7f39437e10dd3e480395e041e3"
+    },
+    "raw/evacuation-cabin-v2-30000/result.json": {
+      "bytes": 38631,
+      "sha256": "5c4fa0516cac09347d40f0331e45196017db0106088923df502beeef84f1d194"
+    },
+    "raw/evacuation-cabin-v2-30000/samples.jsonl": {
+      "bytes": 18653,
+      "sha256": "b878f2f76e55a4fce40e69c1652a0aa93bc87c2d8f22ba3acac6f6bb4c484209"
+    },
+    "raw/evacuation-cabin-v2-30000/source.json": {
+      "bytes": 184108,
+      "sha256": "ae1e1eb306222fbbbfc822142367e4447292b23752edd0f7a49d356ac21a41df"
+    },
+    "raw/evacuation-cabin-v2-observe.mts": {
+      "bytes": 6749,
+      "sha256": "f977f8dcaee52bd5f7c99b909a9b301f3959879fb3788922fabc710ee077094a"
+    },
+    "raw/evacuation-defense-30000/commands.jsonl": {
+      "bytes": 293892,
+      "sha256": "ab4909e0e4e76e9468f98a34dba503a469b5afd53862bcebdb80e78fdc1fd267"
+    },
+    "raw/evacuation-defense-30000/entities.jsonl": {
+      "bytes": 6131,
+      "sha256": "f9d459d5258071674c74ed9fee89cb695722208c0d02115573a7d6245f804f93"
+    },
+    "raw/evacuation-defense-30000/frames/30000.json.gz": {
+      "bytes": 19834,
+      "sha256": "38f640a5fd8b0ab5f70bb877c54dde54338deb9edf4ad7a6d269a7eaa5458d8c"
+    },
+    "raw/evacuation-defense-30000/frames/30600.json.gz": {
+      "bytes": 21739,
+      "sha256": "0a6fe504612822718a9f8194f82e7b2f1dcc84c068bbb24c533cb413d618c261"
+    },
+    "raw/evacuation-defense-30000/frames/31200.json.gz": {
+      "bytes": 19736,
+      "sha256": "8dd806688133818c42ca40a95b58dcbc0fe257a703676a86ffc947ade5b99fd8"
+    },
+    "raw/evacuation-defense-30000/frames/31800.json.gz": {
+      "bytes": 19488,
+      "sha256": "6938fe6cca81f6a8fef87c1a02a5ea7995584b7f4e39720fa02824ce0a802c9c"
+    },
+    "raw/evacuation-defense-30000/frames/32400.json.gz": {
+      "bytes": 18904,
+      "sha256": "60176fb380ca48471358aa2056c57b0994048bd55b1552c3e90a5e8dedc8ea9d"
+    },
+    "raw/evacuation-defense-30000/frames/33000.json.gz": {
+      "bytes": 19795,
+      "sha256": "c1c6a2ad1f71d331eb73076a639d677af1f012b2b9df5253ed17bd9cd17234d9"
+    },
+    "raw/evacuation-defense-30000/hits.jsonl": {
+      "bytes": 156262,
+      "sha256": "926efab2b75eb95f7e14b3f8e1594a0926cb3c07fb7d54ed897a121dd5b41182"
+    },
+    "raw/evacuation-defense-30000/result.json": {
+      "bytes": 34977,
+      "sha256": "a2f14b9b7b506f490a30bdddb49fab1784ae16b8852a8b75b2d2e7b0e2c70045"
+    },
+    "raw/evacuation-defense-30000/samples.jsonl": {
+      "bytes": 18903,
+      "sha256": "c70595290607aa8490626336a387150e7954f2a838e25d22aee8209346362a55"
+    },
+    "raw/evacuation-defense-30000/source.json": {
+      "bytes": 184108,
+      "sha256": "ae1e1eb306222fbbbfc822142367e4447292b23752edd0f7a49d356ac21a41df"
+    },
+    "raw/evacuation-defense-observe.mts": {
+      "bytes": 6072,
+      "sha256": "5cd1439f992228528601968bd8555ad2eaa806db5b5dc9889493a8738c636698"
+    },
+    "raw/evacuation-shelter-30000/commands.jsonl": {
+      "bytes": 275701,
+      "sha256": "33b9ed27351664ca3ef9a1bdc77b9e3b2b58887c69351be2bd9693a5105a52de"
+    },
+    "raw/evacuation-shelter-30000/entities.jsonl": {
+      "bytes": 2521,
+      "sha256": "13c167e9ebd0f2f6ea399df07f5f9424056f26bf602cb43cd5644621d1ba1c9e"
+    },
+    "raw/evacuation-shelter-30000/frames/30000.json.gz": {
+      "bytes": 19834,
+      "sha256": "38f640a5fd8b0ab5f70bb877c54dde54338deb9edf4ad7a6d269a7eaa5458d8c"
+    },
+    "raw/evacuation-shelter-30000/frames/30600.json.gz": {
+      "bytes": 22024,
+      "sha256": "3938ac855f0ea44e235a26a756f6b2ebd1cf0dd5dc820089cfaccd238791f160"
+    },
+    "raw/evacuation-shelter-30000/frames/31200.json.gz": {
+      "bytes": 20219,
+      "sha256": "9e46377444e00cc2746f8fe4a7dcbc36a21a132a56e1fd3464538065d7d4285b"
+    },
+    "raw/evacuation-shelter-30000/frames/31800.json.gz": {
+      "bytes": 18993,
+      "sha256": "cabc559c69ba6f82159f9735fd921475155a19766459eee45d9fb0d56880eefc"
+    },
+    "raw/evacuation-shelter-30000/frames/32400.json.gz": {
+      "bytes": 21108,
+      "sha256": "1f3da181e9dc2146cc73f268716bb5d63062484bfa335a5ec31e1ae3d51cf9c9"
+    },
+    "raw/evacuation-shelter-30000/frames/33000.json.gz": {
+      "bytes": 19640,
+      "sha256": "6c63cd0f4a313a41af4a7b46924af757a412334190e4abdd128708c1277021f5"
+    },
+    "raw/evacuation-shelter-30000/hits.jsonl": {
+      "bytes": 88972,
+      "sha256": "840bfc457430622f671f4be7820c658da3100a339ec1d0954182b200f8cf88ba"
+    },
+    "raw/evacuation-shelter-30000/result.json": {
+      "bytes": 39147,
+      "sha256": "958043b4f4073fca0f25b7e2cac2b7f3e3270360ea3016763a46ed8a4127346f"
+    },
+    "raw/evacuation-shelter-30000/samples.jsonl": {
+      "bytes": 18647,
+      "sha256": "6de7d6fa254389e46a09775d033b43a6fa3ab4c5df145149f6f0dcd1b79acd24"
+    },
+    "raw/evacuation-shelter-30000/source.json": {
+      "bytes": 184108,
+      "sha256": "ae1e1eb306222fbbbfc822142367e4447292b23752edd0f7a49d356ac21a41df"
+    },
+    "raw/evacuation-shelter-observe.mts": {
+      "bytes": 5669,
+      "sha256": "3a0919b5dec6b48b61183862a3ac041d8b3d734e05edd72f061ac1f45a1f02ce"
+    },
+    "raw/evacuation-shelter-v2-30000/commands.jsonl": {
+      "bytes": 275701,
+      "sha256": "33b9ed27351664ca3ef9a1bdc77b9e3b2b58887c69351be2bd9693a5105a52de"
+    },
+    "raw/evacuation-shelter-v2-30000/entities.jsonl": {
+      "bytes": 2521,
+      "sha256": "13c167e9ebd0f2f6ea399df07f5f9424056f26bf602cb43cd5644621d1ba1c9e"
+    },
+    "raw/evacuation-shelter-v2-30000/frames/30000.json.gz": {
+      "bytes": 19834,
+      "sha256": "38f640a5fd8b0ab5f70bb877c54dde54338deb9edf4ad7a6d269a7eaa5458d8c"
+    },
+    "raw/evacuation-shelter-v2-30000/frames/30600.json.gz": {
+      "bytes": 22024,
+      "sha256": "3938ac855f0ea44e235a26a756f6b2ebd1cf0dd5dc820089cfaccd238791f160"
+    },
+    "raw/evacuation-shelter-v2-30000/frames/31200.json.gz": {
+      "bytes": 20219,
+      "sha256": "9e46377444e00cc2746f8fe4a7dcbc36a21a132a56e1fd3464538065d7d4285b"
+    },
+    "raw/evacuation-shelter-v2-30000/frames/31800.json.gz": {
+      "bytes": 18993,
+      "sha256": "cabc559c69ba6f82159f9735fd921475155a19766459eee45d9fb0d56880eefc"
+    },
+    "raw/evacuation-shelter-v2-30000/frames/32400.json.gz": {
+      "bytes": 21108,
+      "sha256": "1f3da181e9dc2146cc73f268716bb5d63062484bfa335a5ec31e1ae3d51cf9c9"
+    },
+    "raw/evacuation-shelter-v2-30000/frames/33000.json.gz": {
+      "bytes": 19640,
+      "sha256": "6c63cd0f4a313a41af4a7b46924af757a412334190e4abdd128708c1277021f5"
+    },
+    "raw/evacuation-shelter-v2-30000/hits.jsonl": {
+      "bytes": 88972,
+      "sha256": "840bfc457430622f671f4be7820c658da3100a339ec1d0954182b200f8cf88ba"
+    },
+    "raw/evacuation-shelter-v2-30000/result.json": {
+      "bytes": 39147,
+      "sha256": "f31cab32ec490c65e5d5d7c0a8e1a14038d513d0842e652b93df0a1c848a6bd0"
+    },
+    "raw/evacuation-shelter-v2-30000/samples.jsonl": {
+      "bytes": 18647,
+      "sha256": "6de7d6fa254389e46a09775d033b43a6fa3ab4c5df145149f6f0dcd1b79acd24"
+    },
+    "raw/evacuation-shelter-v2-30000/source.json": {
+      "bytes": 184108,
+      "sha256": "ae1e1eb306222fbbbfc822142367e4447292b23752edd0f7a49d356ac21a41df"
+    },
+    "raw/evacuation-shelter-v2-observe.mts": {
+      "bytes": 5672,
+      "sha256": "90f2fbf5feaec9838c7c856d7bf66bd1b211a4e13887fde6f81940e028087c9f"
+    },
+    "raw/evacuation-shelter-before-release-30600/commands.jsonl": {
+      "bytes": 26801,
+      "sha256": "4b40b7c6f0e53a7102e88cfa39672bee42edafb7f53b48c5b20815fa531c5126"
+    },
+    "raw/evacuation-shelter-before-release-30600/entities.jsonl": {
+      "bytes": 295,
+      "sha256": "4950a5dc9b39f73738a638478ab2dc4d0fdcbde64b1229dd0f750c866d2f2947"
+    },
+    "raw/evacuation-shelter-before-release-30600/frames/30600.json.gz": {
+      "bytes": 22024,
+      "sha256": "e2b47921270d2e22f8da20bc05957be152397ddd96872e01c186af45dc3a73e8"
+    },
+    "raw/evacuation-shelter-before-release-30600/frames/30900.json.gz": {
+      "bytes": 20802,
+      "sha256": "e1807f6acb0eed61dec84acecf41b35998fe01da921ee452fb394c02905a086e"
+    },
+    "raw/evacuation-shelter-before-release-30600/hits.jsonl": {
+      "bytes": 25298,
+      "sha256": "e4e48b38b671d4f1875be3655f8e8122d7d95f3c81d35314fff6ca44f4e02c6a"
+    },
+    "raw/evacuation-shelter-before-release-30600/result.json": {
+      "bytes": 39825,
+      "sha256": "7b637c4a50227f07bdfb76af92bf9024736e019ed145a813ce0e1fc482f5ab1b"
+    },
+    "raw/evacuation-shelter-before-release-30600/samples.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "raw/evacuation-shelter-before-release-30600/source.json": {
+      "bytes": 184106,
+      "sha256": "912606bb7d10548f8b2af7a4aae5a66d3b42dfe1e1212f285a17f9c55637ee5f"
+    },
+    "raw/evacuation-shelter-tests.log": {
+      "bytes": 452,
+      "sha256": "87c97e6ce3445227d631569f1abaf9cd48c1dec54b201478c573ee2c3bf926bb"
+    },
+    "raw/evacuation-shelter-v2-tests.log": {
+      "bytes": 737,
+      "sha256": "ca5f92f6fc53613954b747b5663eb213100ae3f7301f4fddab6fe342469873ea"
+    },
+    "raw/evacuation-shelter-v2-final-tests.log": {
+      "bytes": 483,
+      "sha256": "2da9454bbad6134a197963889597835b5b9fc90b4214f294b0ab0986d739a14a"
+    },
+    "raw/evacuation-shelter-v2-typecheck.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "raw/relief-economic-collapse.json": {
+      "bytes": 7682,
+      "sha256": "f4cf5c419734a8747d705df134a0f57c4994a2089e03a67cdcf9a07b81355fc7"
+    },
+    "raw/relief-selective-base-planner.mjs": {
+      "bytes": 1825549,
+      "sha256": "d8e28743fe92eccff38d072fc1aca4e501847b9dbe7678e43e8118f045c2c29e"
+    },
+    "raw/archive-evacuation-shelter.py": {
+      "bytes": 2141,
+      "sha256": "ce56aa3eca23f89a00575e692f22ee0d5f508fff7e3df308fea45797c5794adf"
+    },
+    "draft/evacuation-shelter-probe.ts": {
+      "bytes": 2337,
+      "sha256": "bb87604f965eff9bf4fe4b489e8b034ebfd11832c55e994cf584ff17c5ad86b3"
+    },
+    "draft/evacuation-shelter-probe-v2.ts": {
+      "bytes": 2523,
+      "sha256": "96fa66a6be45548b3ce58feaca5039d770a2f12694ddb5680e5b521cb509cd0f"
+    },
+    "draft/evacuation-shelter-probe.test.ts": {
+      "bytes": 2120,
+      "sha256": "cf210726373f7a185aa8021ca86aa44f9417e2c8fdf7393026dcfc55c613fd80"
+    },
+    "draft/evacuation-shelter-probe-v2.test.ts": {
+      "bytes": 3041,
+      "sha256": "e41a8aadc71ce5d938451627f4a50020a40ae0e050158fd237afe91804ec40c7"
+    },
+    "draft/tsconfig-evacuation-shelter-v2.json": {
+      "bytes": 89,
+      "sha256": "4e473edd11fda3ecc745e473a584be664f1bed83d5a48ff434222e28193f1ec5"
+    }
+  }
+}
