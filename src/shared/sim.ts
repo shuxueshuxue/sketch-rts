@@ -1349,7 +1349,14 @@ function updateMountedWeapons(game:Game,starts:Map<string,{x:number;y:number;hea
     const requested=defenses.get(ship.id)?.target ?? (ordered && (explicit || isObstacle(ordered) || automaticTargetAllowed(game.units,ship.owner,ordered)) ? ordered : undefined);
     // Acquire far enough to include the offset battery, not just the hull
     // center. Actual heading and firing still use each pivot's own range.
-    let facingPoint=order.type==="aim" ? order : requested ?? (["attackMove","idle","hold"].includes(order.type) ? nearestEnemyTarget(game,ship,acquisitionRange) : undefined);
+    // A guard turns toward an enemy some gun can engage: one inside every gun's dead zone (see @@@cannon-min-range) is
+    // no reason to turn, and facing it kept a ship's bow off the archer farther up the beach it could have shot.
+    const deadZone=weapons.reduce((zone,item)=>{
+      const mount=mounts.find(mount=>mount.id===item.mountId),minimum=SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].weapon.minRange ?? 0;
+      return (item.durability ?? 1)>0 && mount ? Math.min(zone,minimum-Math.hypot(mount.x,mount.y)) : zone;
+    },intrinsic ? 0 : Infinity);
+    const engageable=(candidate:Unit|Building)=>!Number.isFinite(deadZone) || deadZone<=0 || strikeGap(ship,candidate)>=deadZone;
+    let facingPoint=order.type==="aim" ? order : requested ?? (["attackMove","idle","hold"].includes(order.type) ? nearestEnemyTargetFromPoint(game,ship.owner,ship,acquisitionRange,ship,engageable) : undefined);
     if(facingPoint && "owner" in facingPoint && !isObstacle(facingPoint))facingPoint=navalCombatTarget(game,ship,facingPoint);
     const orientHull = ['idle', 'hold', 'aim'].includes(order.type)
       || (order.type === 'attack' || order.type === 'attackMove') && shipCanTurnForAttack(ship);
@@ -1785,12 +1792,14 @@ function updateAttackOrder(game: Game, unit: Unit, navalFrame = true) {
 function navigateShipAttack(game: Game, ship: Unit, target: Unit | Building | Obstacle) {
   if(game.boardingHolds?.has(ship.id))return;
   const weapons = installedWeapons(game, ship).filter(item => (item.durability ?? 1) > 0);
-  const minimum = weapons.length ? Math.min(...weapons.map(item => SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].weapon.minRange ?? 0))
+  // A hull's own attack (a cutter's arrows) has no dead zone: fitted guns' minimum range never drives it off its target.
+  const intrinsic = unitRules(game, ship).intrinsicAttack;
+  const minimum = intrinsic ? 0 : weapons.length ? Math.min(...weapons.map(item => SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].weapon.minRange ?? 0))
     : weaponRules(game, ship).weapon?.minRange ?? 0;
   const blockers=friendlyFireBlockers(game,ship);
   let firingHeading: number | undefined;
   const canFireFrom = (station:Unit,checkTurn:boolean) => {
-    if (!weapons.length) return targetGap(station, target) <= station.attackRange && targetGap(station, target) >= minimum;
+    if (!weapons.length || intrinsic && targetGap(station, target) <= station.attackRange) return targetGap(station, target) <= station.attackRange && targetGap(station, target) >= minimum;
     shareShipProfile(ship,station);
     const start = { x: station.x, y: station.y, heading: station.sailing!.heading };
     const shotClear=mountedShotClear(station,blockers);
@@ -3288,7 +3297,8 @@ function backOutOfDeadZone(game:Game,unit:Unit,target:{x:number;y:number},navalF
   let minimum=weaponRules(game,unit).weapon?.minRange;
   if(navalFrame && isShipKind(unit.kind)){
     const weapons=installedWeapons(game,unit).filter(item=>(item.durability ?? 1)>0);
-    if(weapons.length)minimum=Math.min(...weapons.map(item=>SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].weapon.minRange ?? 0));
+    if(unitRules(game,unit).intrinsicAttack)minimum=0;
+    else if(weapons.length)minimum=Math.min(...weapons.map(item=>SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].weapon.minRange ?? 0));
   }
   if(!minimum||distance(unit,target)>=minimum)return false;
   const dx=unit.x-target.x,dy=unit.y-target.y,length=Math.hypot(dx,dy)||1;
