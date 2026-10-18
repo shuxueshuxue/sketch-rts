@@ -1,0 +1,1919 @@
+{
+  "caster-final": {
+    "candidate": "caster-final",
+    "seed": "v5-final-1",
+    "baseCommit": "d5a81cf4053a84f1b6cbbeba7413d62f4b99ee8f",
+    "candidateCommit": "928e3516aa6f80bccfae3165379812584ac131e1",
+    "games": 240,
+    "baseWins": 176,
+    "candidateWins": 167,
+    "flipsByType": {
+      "D->W": 10,
+      "W->L": 24,
+      "L->W": 15,
+      "D->L": 5,
+      "W->D": 10,
+      "L->D": 4
+    },
+    "cells": [
+      {
+        "subject": "v9_archer",
+        "rival": "v8",
+        "base": {
+          "W": 34,
+          "L": 5,
+          "D": 1
+        },
+        "candidate": {
+          "W": 32,
+          "L": 8
+        },
+        "deltaWins": -2,
+        "metrics": {
+          "trade@15": {
+            "base": {
+              "ownMean": 1577.25,
+              "enemyMean": 3258.25,
+              "enemyOverOwn": 2.0657790458075764,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 1830.125,
+              "enemyMean": 3446.875,
+              "enemyOverOwn": 1.8834096031691825,
+              "samples": 40
+            }
+          },
+          "trade@20": {
+            "base": {
+              "ownMean": 2351.625,
+              "enemyMean": 5168.0,
+              "enemyOverOwn": 2.197629298889066,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 2436.125,
+              "enemyMean": 5206.625,
+              "enemyOverOwn": 2.137256914156704,
+              "samples": 40
+            }
+          },
+          "stall@60": {
+            "base": {
+              "ownMean": 0.7625000000000087,
+              "enemyMean": 0.32708333333333384,
+              "enemyOverOwn": 0.42896174863387554,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 0.6337499999999967,
+              "enemyMean": 1.5424999999999467,
+              "enemyOverOwn": 2.433925049309593,
+              "samples": 40
+            }
+          }
+        }
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v9",
+        "base": {
+          "W": 28,
+          "L": 5,
+          "D": 7
+        },
+        "candidate": {
+          "W": 27,
+          "L": 5,
+          "D": 8
+        },
+        "deltaWins": -1,
+        "metrics": {
+          "trade@15": {
+            "base": {
+              "ownMean": 1159.125,
+              "enemyMean": 1690.0,
+              "enemyOverOwn": 1.4579963334411734,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 1034.5,
+              "enemyMean": 1747.5,
+              "enemyOverOwn": 1.6892218463025617,
+              "samples": 40
+            }
+          },
+          "trade@20": {
+            "base": {
+              "ownMean": 1672.0,
+              "enemyMean": 3149.125,
+              "enemyOverOwn": 1.883447966507177,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 1713.125,
+              "enemyMean": 3064.875,
+              "enemyOverOwn": 1.7890550893834367,
+              "samples": 40
+            }
+          },
+          "stall@60": {
+            "base": {
+              "ownMean": 0.7379166666666584,
+              "enemyMean": 0.24249999999999955,
+              "enemyOverOwn": 0.3286278938452882,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 0.8466666666666534,
+              "enemyMean": 0.5216666666666676,
+              "enemyOverOwn": 0.6161417322834755,
+              "samples": 40
+            }
+          }
+        }
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v8",
+        "base": {
+          "W": 31,
+          "L": 8,
+          "D": 1
+        },
+        "candidate": {
+          "W": 25,
+          "L": 14,
+          "D": 1
+        },
+        "deltaWins": -6,
+        "metrics": {
+          "trade@15": {
+            "base": {
+              "ownMean": 2268.625,
+              "enemyMean": 3956.875,
+              "enemyOverOwn": 1.7441732326849964,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 2354.0,
+              "enemyMean": 3724.75,
+              "enemyOverOwn": 1.5823067119796093,
+              "samples": 40
+            }
+          },
+          "trade@20": {
+            "base": {
+              "ownMean": 3264.125,
+              "enemyMean": 6125.25,
+              "enemyOverOwn": 1.876536590970015,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 3474.625,
+              "enemyMean": 5677.75,
+              "enemyOverOwn": 1.6340612296290966,
+              "samples": 40
+            }
+          },
+          "stall@60": {
+            "base": {
+              "ownMean": 0.11291666666666651,
+              "enemyMean": 0.0,
+              "enemyOverOwn": 0.0,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 0.03333333333333334,
+              "enemyMean": 0.0,
+              "enemyOverOwn": 0.0,
+              "samples": 40
+            }
+          }
+        }
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "base": {
+          "L": 13,
+          "W": 25,
+          "D": 2
+        },
+        "candidate": {
+          "L": 15,
+          "W": 24,
+          "D": 1
+        },
+        "deltaWins": -1,
+        "metrics": {
+          "trade@15": {
+            "base": {
+              "ownMean": 2201.25,
+              "enemyMean": 2472.375,
+              "enemyOverOwn": 1.1231686541737649,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 1731.75,
+              "enemyMean": 2294.25,
+              "enemyOverOwn": 1.32481593763534,
+              "samples": 40
+            }
+          },
+          "trade@20": {
+            "base": {
+              "ownMean": 3328.875,
+              "enemyMean": 3865.375,
+              "enemyOverOwn": 1.1611655589350756,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 3527.375,
+              "enemyMean": 3961.25,
+              "enemyOverOwn": 1.1230022325383606,
+              "samples": 40
+            }
+          },
+          "stall@60": {
+            "base": {
+              "ownMean": 0.1458333333333331,
+              "enemyMean": 0.09708333333333316,
+              "enemyOverOwn": 0.6657142857142857,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 0.004999999999999999,
+              "enemyMean": 0.1333333333333331,
+              "enemyOverOwn": 5.333333333333324,
+              "samples": 40
+            }
+          }
+        }
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v8",
+        "base": {
+          "W": 35,
+          "D": 2,
+          "L": 3
+        },
+        "candidate": {
+          "W": 37,
+          "D": 2,
+          "L": 1
+        },
+        "deltaWins": 2,
+        "metrics": {
+          "trade@15": {
+            "base": {
+              "ownMean": 1604.5,
+              "enemyMean": 4259.75,
+              "enemyOverOwn": 2.6548769086942974,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 1540.0,
+              "enemyMean": 4263.375,
+              "enemyOverOwn": 2.7684253246753245,
+              "samples": 40
+            }
+          },
+          "trade@20": {
+            "base": {
+              "ownMean": 2402.75,
+              "enemyMean": 6320.0,
+              "enemyOverOwn": 2.6303194256581,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 2258.125,
+              "enemyMean": 6448.375,
+              "enemyOverOwn": 2.855632438416828,
+              "samples": 40
+            }
+          },
+          "stall@60": {
+            "base": {
+              "ownMean": 0.016666666666666666,
+              "enemyMean": 0.0,
+              "enemyOverOwn": 0.0,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 0.0,
+              "enemyMean": 0.0,
+              "enemyOverOwn": 0.0,
+              "samples": 40
+            }
+          }
+        }
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "base": {
+          "W": 23,
+          "D": 9,
+          "L": 8
+        },
+        "candidate": {
+          "W": 22,
+          "L": 9,
+          "D": 9
+        },
+        "deltaWins": -1,
+        "metrics": {
+          "trade@15": {
+            "base": {
+              "ownMean": 1378.125,
+              "enemyMean": 2143.625,
+              "enemyOverOwn": 1.5554648526077097,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 1550.625,
+              "enemyMean": 1943.625,
+              "enemyOverOwn": 1.2534461910519952,
+              "samples": 40
+            }
+          },
+          "trade@20": {
+            "base": {
+              "ownMean": 2542.0,
+              "enemyMean": 4019.875,
+              "enemyOverOwn": 1.581382769472856,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 2854.5,
+              "enemyMean": 3744.125,
+              "enemyOverOwn": 1.3116570327552985,
+              "samples": 40
+            }
+          },
+          "stall@60": {
+            "base": {
+              "ownMean": 0.760000000000009,
+              "enemyMean": 0.0225,
+              "enemyOverOwn": 0.02960526315789438,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 0.7020833333333338,
+              "enemyMean": 0.19166666666666626,
+              "enemyOverOwn": 0.27299703264094877,
+              "samples": 40
+            }
+          }
+        }
+      }
+    ],
+    "flips": [
+      {
+        "subject": "v9_archer",
+        "rival": "v8",
+        "map": "ladder-04",
+        "race": "grove",
+        "from": "D",
+        "to": "W"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v8",
+        "map": "ladder-25",
+        "race": "grove",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v8",
+        "map": "ladder-25",
+        "race": "ember",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v8",
+        "map": "ladder-14",
+        "race": "grove",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v8",
+        "map": "ladder-17",
+        "race": "grove",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v8",
+        "map": "ladder-44",
+        "race": "grove",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v9",
+        "map": "ladder-12",
+        "race": "grove",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v9",
+        "map": "ladder-12",
+        "race": "ember",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v9",
+        "map": "ladder-01",
+        "race": "ember",
+        "from": "D",
+        "to": "L"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v9",
+        "map": "ladder-52",
+        "race": "grove",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v9",
+        "map": "ladder-52",
+        "race": "ember",
+        "from": "W",
+        "to": "D"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v9",
+        "map": "ladder-04",
+        "race": "ember",
+        "from": "D",
+        "to": "W"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v9",
+        "map": "ladder-25",
+        "race": "ember",
+        "from": "L",
+        "to": "D"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v9",
+        "map": "ladder-14",
+        "race": "ember",
+        "from": "W",
+        "to": "D"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v9",
+        "map": "ladder-43",
+        "race": "ember",
+        "from": "D",
+        "to": "L"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v9",
+        "map": "ladder-59",
+        "race": "grove",
+        "from": "W",
+        "to": "D"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v9",
+        "map": "ladder-55",
+        "race": "grove",
+        "from": "W",
+        "to": "D"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v9",
+        "map": "ladder-55",
+        "race": "ember",
+        "from": "D",
+        "to": "W"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v8",
+        "map": "ladder-18",
+        "race": "ember",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v8",
+        "map": "ladder-20",
+        "race": "grove",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v8",
+        "map": "ladder-20",
+        "race": "ember",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v8",
+        "map": "ladder-01",
+        "race": "ember",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v8",
+        "map": "ladder-06",
+        "race": "ember",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v8",
+        "map": "ladder-52",
+        "race": "ember",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v8",
+        "map": "ladder-25",
+        "race": "grove",
+        "from": "D",
+        "to": "W"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v8",
+        "map": "ladder-25",
+        "race": "ember",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v8",
+        "map": "ladder-14",
+        "race": "ember",
+        "from": "W",
+        "to": "D"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v8",
+        "map": "ladder-17",
+        "race": "grove",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v8",
+        "map": "ladder-43",
+        "race": "grove",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v8",
+        "map": "ladder-43",
+        "race": "ember",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v8",
+        "map": "ladder-16",
+        "race": "grove",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v8",
+        "map": "ladder-44",
+        "race": "ember",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-02",
+        "race": "ember",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-12",
+        "race": "grove",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-18",
+        "race": "ember",
+        "from": "W",
+        "to": "D"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-63",
+        "race": "grove",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-63",
+        "race": "ember",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-06",
+        "race": "grove",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-25",
+        "race": "grove",
+        "from": "D",
+        "to": "W"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-25",
+        "race": "ember",
+        "from": "D",
+        "to": "L"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-44",
+        "race": "ember",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-21",
+        "race": "grove",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-59",
+        "race": "ember",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-34",
+        "race": "ember",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v8",
+        "map": "ladder-18",
+        "race": "ember",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v8",
+        "map": "ladder-20",
+        "race": "ember",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v8",
+        "map": "ladder-52",
+        "race": "ember",
+        "from": "D",
+        "to": "W"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v8",
+        "map": "ladder-25",
+        "race": "ember",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v8",
+        "map": "ladder-16",
+        "race": "grove",
+        "from": "W",
+        "to": "D"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v8",
+        "map": "ladder-59",
+        "race": "ember",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-12",
+        "race": "grove",
+        "from": "D",
+        "to": "W"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-12",
+        "race": "ember",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-18",
+        "race": "ember",
+        "from": "D",
+        "to": "L"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-01",
+        "race": "grove",
+        "from": "D",
+        "to": "W"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-52",
+        "race": "grove",
+        "from": "D",
+        "to": "W"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-04",
+        "race": "grove",
+        "from": "D",
+        "to": "W"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-49",
+        "race": "grove",
+        "from": "W",
+        "to": "D"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-49",
+        "race": "ember",
+        "from": "L",
+        "to": "D"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-25",
+        "race": "grove",
+        "from": "D",
+        "to": "L"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-25",
+        "race": "ember",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-14",
+        "race": "grove",
+        "from": "W",
+        "to": "D"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-14",
+        "race": "ember",
+        "from": "L",
+        "to": "D"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-17",
+        "race": "grove",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-17",
+        "race": "ember",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-43",
+        "race": "ember",
+        "from": "W",
+        "to": "D"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-21",
+        "race": "ember",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-59",
+        "race": "ember",
+        "from": "L",
+        "to": "D"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-34",
+        "race": "grove",
+        "from": "W",
+        "to": "L"
+      }
+    ]
+  },
+  "caster-withdraw": {
+    "candidate": "caster-withdraw",
+    "seed": "v5-final-1",
+    "baseCommit": "d5a81cf4053a84f1b6cbbeba7413d62f4b99ee8f",
+    "candidateCommit": "3990a581d3e1a629e6b011830e67288cd660f08d",
+    "games": 240,
+    "baseWins": 176,
+    "candidateWins": 164,
+    "flipsByType": {
+      "W->D": 16,
+      "L->D": 10,
+      "W->L": 23,
+      "D->W": 10,
+      "L->W": 17,
+      "D->L": 2
+    },
+    "cells": [
+      {
+        "subject": "v9_archer",
+        "rival": "v8",
+        "base": {
+          "W": 34,
+          "L": 5,
+          "D": 1
+        },
+        "candidate": {
+          "D": 4,
+          "W": 27,
+          "L": 9
+        },
+        "deltaWins": -7,
+        "metrics": {
+          "trade@15": {
+            "base": {
+              "ownMean": 1577.25,
+              "enemyMean": 3258.25,
+              "enemyOverOwn": 2.0657790458075764,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 1936.375,
+              "enemyMean": 3177.875,
+              "enemyOverOwn": 1.6411464721451166,
+              "samples": 40
+            }
+          },
+          "trade@20": {
+            "base": {
+              "ownMean": 2351.625,
+              "enemyMean": 5168.0,
+              "enemyOverOwn": 2.197629298889066,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 2511.25,
+              "enemyMean": 4874.625,
+              "enemyOverOwn": 1.9411149825783973,
+              "samples": 40
+            }
+          },
+          "stall@60": {
+            "base": {
+              "ownMean": 0.7625000000000087,
+              "enemyMean": 0.32708333333333384,
+              "enemyOverOwn": 0.42896174863387554,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 0.8229166666666629,
+              "enemyMean": 1.5512499999999467,
+              "enemyOverOwn": 1.8850632911391845,
+              "samples": 40
+            }
+          }
+        }
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v9",
+        "base": {
+          "W": 28,
+          "L": 5,
+          "D": 7
+        },
+        "candidate": {
+          "W": 25,
+          "L": 6,
+          "D": 9
+        },
+        "deltaWins": -3,
+        "metrics": {
+          "trade@15": {
+            "base": {
+              "ownMean": 1159.125,
+              "enemyMean": 1690.0,
+              "enemyOverOwn": 1.4579963334411734,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 1183.5,
+              "enemyMean": 1796.0,
+              "enemyOverOwn": 1.5175327418673425,
+              "samples": 40
+            }
+          },
+          "trade@20": {
+            "base": {
+              "ownMean": 1672.0,
+              "enemyMean": 3149.125,
+              "enemyOverOwn": 1.883447966507177,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 1859.125,
+              "enemyMean": 3122.25,
+              "enemyOverOwn": 1.6794190815571841,
+              "samples": 40
+            }
+          },
+          "stall@60": {
+            "base": {
+              "ownMean": 0.7379166666666584,
+              "enemyMean": 0.24249999999999955,
+              "enemyOverOwn": 0.3286278938452882,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 0.8129166666666533,
+              "enemyMean": 0.6375000000000014,
+              "enemyOverOwn": 0.7842132239877132,
+              "samples": 40
+            }
+          }
+        }
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v8",
+        "base": {
+          "W": 31,
+          "L": 8,
+          "D": 1
+        },
+        "candidate": {
+          "W": 34,
+          "L": 5,
+          "D": 1
+        },
+        "deltaWins": 3,
+        "metrics": {
+          "trade@15": {
+            "base": {
+              "ownMean": 2268.625,
+              "enemyMean": 3956.875,
+              "enemyOverOwn": 1.7441732326849964,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 1990.375,
+              "enemyMean": 4001.75,
+              "enemyOverOwn": 2.0105507756076118,
+              "samples": 40
+            }
+          },
+          "trade@20": {
+            "base": {
+              "ownMean": 3264.125,
+              "enemyMean": 6125.25,
+              "enemyOverOwn": 1.876536590970015,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 2881.0,
+              "enemyMean": 6156.625,
+              "enemyOverOwn": 2.1369750086775423,
+              "samples": 40
+            }
+          },
+          "stall@60": {
+            "base": {
+              "ownMean": 0.11291666666666651,
+              "enemyMean": 0.0,
+              "enemyOverOwn": 0.0,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 0.18041666666666648,
+              "enemyMean": 0.0,
+              "enemyOverOwn": 0.0,
+              "samples": 40
+            }
+          }
+        }
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "base": {
+          "L": 13,
+          "W": 25,
+          "D": 2
+        },
+        "candidate": {
+          "L": 15,
+          "W": 20,
+          "D": 5
+        },
+        "deltaWins": -5,
+        "metrics": {
+          "trade@15": {
+            "base": {
+              "ownMean": 2201.25,
+              "enemyMean": 2472.375,
+              "enemyOverOwn": 1.1231686541737649,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 2195.875,
+              "enemyMean": 2360.125,
+              "enemyOverOwn": 1.074799339670974,
+              "samples": 40
+            }
+          },
+          "trade@20": {
+            "base": {
+              "ownMean": 3328.875,
+              "enemyMean": 3865.375,
+              "enemyOverOwn": 1.1611655589350756,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 3502.625,
+              "enemyMean": 3657.875,
+              "enemyOverOwn": 1.0443238999321938,
+              "samples": 40
+            }
+          },
+          "stall@60": {
+            "base": {
+              "ownMean": 0.1458333333333331,
+              "enemyMean": 0.09708333333333316,
+              "enemyOverOwn": 0.6657142857142857,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 1.080416666666639,
+              "enemyMean": 4.100833333333893,
+              "enemyOverOwn": 3.795603548014498,
+              "samples": 40
+            }
+          }
+        }
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v8",
+        "base": {
+          "W": 35,
+          "D": 2,
+          "L": 3
+        },
+        "candidate": {
+          "W": 37,
+          "D": 2,
+          "L": 1
+        },
+        "deltaWins": 2,
+        "metrics": {
+          "trade@15": {
+            "base": {
+              "ownMean": 1604.5,
+              "enemyMean": 4259.75,
+              "enemyOverOwn": 2.6548769086942974,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 1449.25,
+              "enemyMean": 4105.0,
+              "enemyOverOwn": 2.832499568742453,
+              "samples": 40
+            }
+          },
+          "trade@20": {
+            "base": {
+              "ownMean": 2402.75,
+              "enemyMean": 6320.0,
+              "enemyOverOwn": 2.6303194256581,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 2266.75,
+              "enemyMean": 6076.5,
+              "enemyOverOwn": 2.680710268004853,
+              "samples": 40
+            }
+          },
+          "stall@60": {
+            "base": {
+              "ownMean": 0.016666666666666666,
+              "enemyMean": 0.0,
+              "enemyOverOwn": 0.0,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 0.0,
+              "enemyMean": 0.0,
+              "enemyOverOwn": 0.0,
+              "samples": 40
+            }
+          }
+        }
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "base": {
+          "W": 23,
+          "D": 9,
+          "L": 8
+        },
+        "candidate": {
+          "W": 21,
+          "D": 15,
+          "L": 4
+        },
+        "deltaWins": -2,
+        "metrics": {
+          "trade@15": {
+            "base": {
+              "ownMean": 1378.125,
+              "enemyMean": 2143.625,
+              "enemyOverOwn": 1.5554648526077097,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 1551.625,
+              "enemyMean": 1985.0,
+              "enemyOverOwn": 1.2793039555304921,
+              "samples": 40
+            }
+          },
+          "trade@20": {
+            "base": {
+              "ownMean": 2542.0,
+              "enemyMean": 4019.875,
+              "enemyOverOwn": 1.581382769472856,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 2642.75,
+              "enemyMean": 3734.375,
+              "enemyOverOwn": 1.413064043136884,
+              "samples": 40
+            }
+          },
+          "stall@60": {
+            "base": {
+              "ownMean": 0.760000000000009,
+              "enemyMean": 0.0225,
+              "enemyOverOwn": 0.02960526315789438,
+              "samples": 40
+            },
+            "candidate": {
+              "ownMean": 0.5041666666666738,
+              "enemyMean": 0.9412499999999797,
+              "enemyOverOwn": 1.8669421487602642,
+              "samples": 40
+            }
+          }
+        }
+      }
+    ],
+    "flips": [
+      {
+        "subject": "v9_archer",
+        "rival": "v8",
+        "map": "ladder-02",
+        "race": "grove",
+        "from": "W",
+        "to": "D"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v8",
+        "map": "ladder-02",
+        "race": "ember",
+        "from": "W",
+        "to": "D"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v8",
+        "map": "ladder-18",
+        "race": "grove",
+        "from": "L",
+        "to": "D"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v8",
+        "map": "ladder-20",
+        "race": "ember",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v8",
+        "map": "ladder-04",
+        "race": "grove",
+        "from": "D",
+        "to": "W"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v8",
+        "map": "ladder-49",
+        "race": "ember",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v8",
+        "map": "ladder-14",
+        "race": "ember",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v8",
+        "map": "ladder-17",
+        "race": "grove",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v8",
+        "map": "ladder-16",
+        "race": "ember",
+        "from": "L",
+        "to": "D"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v8",
+        "map": "ladder-44",
+        "race": "grove",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v8",
+        "map": "ladder-44",
+        "race": "ember",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v9",
+        "map": "ladder-12",
+        "race": "grove",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v9",
+        "map": "ladder-12",
+        "race": "ember",
+        "from": "L",
+        "to": "D"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v9",
+        "map": "ladder-20",
+        "race": "grove",
+        "from": "D",
+        "to": "W"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v9",
+        "map": "ladder-52",
+        "race": "grove",
+        "from": "L",
+        "to": "D"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v9",
+        "map": "ladder-52",
+        "race": "ember",
+        "from": "W",
+        "to": "D"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v9",
+        "map": "ladder-04",
+        "race": "grove",
+        "from": "W",
+        "to": "D"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v9",
+        "map": "ladder-04",
+        "race": "ember",
+        "from": "D",
+        "to": "W"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v9",
+        "map": "ladder-25",
+        "race": "ember",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v9",
+        "map": "ladder-14",
+        "race": "grove",
+        "from": "W",
+        "to": "D"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v9",
+        "map": "ladder-14",
+        "race": "ember",
+        "from": "W",
+        "to": "D"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v9",
+        "map": "ladder-43",
+        "race": "grove",
+        "from": "D",
+        "to": "L"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v9",
+        "map": "ladder-16",
+        "race": "grove",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v9",
+        "map": "ladder-16",
+        "race": "ember",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_archer",
+        "rival": "v9",
+        "map": "ladder-55",
+        "race": "ember",
+        "from": "D",
+        "to": "W"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v8",
+        "map": "ladder-18",
+        "race": "ember",
+        "from": "L",
+        "to": "D"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v8",
+        "map": "ladder-20",
+        "race": "ember",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v8",
+        "map": "ladder-01",
+        "race": "ember",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v8",
+        "map": "ladder-04",
+        "race": "ember",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v8",
+        "map": "ladder-49",
+        "race": "grove",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v8",
+        "map": "ladder-25",
+        "race": "grove",
+        "from": "D",
+        "to": "W"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v8",
+        "map": "ladder-25",
+        "race": "ember",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v8",
+        "map": "ladder-43",
+        "race": "grove",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-12",
+        "race": "ember",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-18",
+        "race": "grove",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-18",
+        "race": "ember",
+        "from": "W",
+        "to": "D"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-20",
+        "race": "grove",
+        "from": "W",
+        "to": "D"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-01",
+        "race": "grove",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-63",
+        "race": "grove",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-63",
+        "race": "ember",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-06",
+        "race": "ember",
+        "from": "W",
+        "to": "D"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-52",
+        "race": "grove",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-49",
+        "race": "grove",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-25",
+        "race": "ember",
+        "from": "D",
+        "to": "W"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-14",
+        "race": "grove",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-43",
+        "race": "grove",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-16",
+        "race": "grove",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-16",
+        "race": "ember",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-44",
+        "race": "ember",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-21",
+        "race": "grove",
+        "from": "W",
+        "to": "D"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-21",
+        "race": "ember",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-59",
+        "race": "grove",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-59",
+        "race": "ember",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_summoner",
+        "rival": "v9",
+        "map": "ladder-34",
+        "race": "ember",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v8",
+        "map": "ladder-18",
+        "race": "ember",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v8",
+        "map": "ladder-20",
+        "race": "ember",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v8",
+        "map": "ladder-52",
+        "race": "ember",
+        "from": "D",
+        "to": "W"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v8",
+        "map": "ladder-25",
+        "race": "ember",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v8",
+        "map": "ladder-16",
+        "race": "ember",
+        "from": "W",
+        "to": "D"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v8",
+        "map": "ladder-59",
+        "race": "ember",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-12",
+        "race": "ember",
+        "from": "L",
+        "to": "D"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-01",
+        "race": "grove",
+        "from": "D",
+        "to": "W"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-01",
+        "race": "ember",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-06",
+        "race": "ember",
+        "from": "D",
+        "to": "W"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-52",
+        "race": "ember",
+        "from": "L",
+        "to": "D"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-04",
+        "race": "grove",
+        "from": "D",
+        "to": "W"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-49",
+        "race": "ember",
+        "from": "L",
+        "to": "D"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-25",
+        "race": "grove",
+        "from": "D",
+        "to": "L"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-25",
+        "race": "ember",
+        "from": "W",
+        "to": "D"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-14",
+        "race": "grove",
+        "from": "W",
+        "to": "D"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-14",
+        "race": "ember",
+        "from": "L",
+        "to": "D"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-17",
+        "race": "grove",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-17",
+        "race": "ember",
+        "from": "L",
+        "to": "W"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-43",
+        "race": "grove",
+        "from": "W",
+        "to": "D"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-43",
+        "race": "ember",
+        "from": "W",
+        "to": "D"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-44",
+        "race": "ember",
+        "from": "L",
+        "to": "D"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-21",
+        "race": "ember",
+        "from": "W",
+        "to": "L"
+      },
+      {
+        "subject": "v9_knight",
+        "rival": "v9",
+        "map": "ladder-59",
+        "race": "grove",
+        "from": "W",
+        "to": "D"
+      }
+    ]
+  }
+}
