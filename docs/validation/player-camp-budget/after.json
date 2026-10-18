@@ -86,13 +86,13 @@
       "players": 8,
       "camps": 32,
       "tiers": {
-        "green": 14,
-        "orange": 10,
+        "green": 16,
+        "orange": 8,
         "red": 8
       },
-      "strength": 266,
+      "strength": 256,
       "campsPerPlayer": 4,
-      "strengthPerPlayer": 33.25,
+      "strengthPerPlayer": 32,
       "transportOnlyCamps": 0,
       "perStart": [
         {
@@ -102,8 +102,8 @@
           "campsWithin120s": 16,
           "greenWithin30s": 2,
           "nearestCamp": 544,
-          "allocatedCamps": 5,
-          "allocatedStrength": 42
+          "allocatedCamps": 4,
+          "allocatedStrength": 32
         },
         {
           "player": "enemy",
@@ -120,18 +120,18 @@
           "x": 6246.4,
           "y": 1587.2,
           "campsWithin120s": 22,
-          "greenWithin30s": 2,
+          "greenWithin30s": 3,
           "nearestCamp": 544,
-          "allocatedCamps": 3,
-          "allocatedStrength": 27
+          "allocatedCamps": 4,
+          "allocatedStrength": 32
         },
         {
           "player": "player-4",
           "x": 8499.2,
           "y": 1587.2,
-          "campsWithin120s": 14,
+          "campsWithin120s": 15,
           "greenWithin30s": 2,
-          "nearestCamp": 576,
+          "nearestCamp": 588.8,
           "allocatedCamps": 4,
           "allocatedStrength": 32
         },
@@ -142,8 +142,8 @@
           "campsWithin120s": 16,
           "greenWithin30s": 2,
           "nearestCamp": 544,
-          "allocatedCamps": 5,
-          "allocatedStrength": 42
+          "allocatedCamps": 4,
+          "allocatedStrength": 32
         },
         {
           "player": "player-6",
@@ -160,18 +160,18 @@
           "x": 6246.4,
           "y": 8652.8,
           "campsWithin120s": 22,
-          "greenWithin30s": 2,
+          "greenWithin30s": 3,
           "nearestCamp": 544,
-          "allocatedCamps": 3,
-          "allocatedStrength": 27
+          "allocatedCamps": 4,
+          "allocatedStrength": 32
         },
         {
           "player": "player-8",
           "x": 8499.2,
           "y": 8652.8,
-          "campsWithin120s": 15,
+          "campsWithin120s": 16,
           "greenWithin30s": 2,
-          "nearestCamp": 576,
+          "nearestCamp": 588.8,
           "allocatedCamps": 4,
           "allocatedStrength": 32
         }

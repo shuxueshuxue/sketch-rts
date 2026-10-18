@@ -58,7 +58,13 @@ export function ensureCampBudget(map: GeneratedMap, seed: string): boolean {
   return true;
 
   function openingCount(home: Point) {
-    return map.camps.filter(camp => camp.tier === 'green' && (walkingDistance(map, camp, home) ?? Infinity) <= OPENING_REACH).length;
+    return map.camps.filter(camp => camp.tier === 'green' && belongsNear(camp, home) && (walkingDistance(map, camp, home) ?? Infinity) <= OPENING_REACH).length;
+  }
+
+  // A nearby teammate's camp cannot satisfy both seats' opening allowance.
+  // Small coordinate rounding in mirrored/rotated home copies is harmless.
+  function belongsNear(camp: Point, home: Point) {
+    return homes.every(other => gap(camp, home) <= gap(camp, other) + 2);
   }
 
   function copies(at: Point, group: Point[]) {
@@ -89,6 +95,7 @@ export function ensureCampBudget(map: GeneratedMap, seed: string): boolean {
         if (!centers.every((center, i) => {
           if (center.x < 100 || center.y < 100 || center.x > map.size - 100 || center.y > map.size - 100) return false;
           if (homes.some(other => gap(center, other) < 520)) return false;
+          if (tier === 'green' && !belongsNear(center, group[i]!)) return false;
           if (map.terrain.levels && map.terrain.levels[cellIndexAt(map.terrain, center.x, center.y)] !== '0') return false;
           if (map.resources.some(mine => gap(center, mine) < (mine.id.endsWith('-main') ? 580 : 520))) return false;
           if (map.camps.some(camp => gap(center, camp) < 480) || centers.some((other, j) => i !== j && gap(center, other) < 480)) return false;

@@ -8,7 +8,21 @@ export default async function (s: Scene) {
   await s.page.waitForSelector('[data-map-id="grandEstuary"]', { timeout: 60_000 });
   await s.page.click('[data-map-id="grandEstuary"]');
   await s.wait(1800);
-  await s.shot('grand-estuary-overview');
+  // Show the actual 512px preview large enough to inspect each camp, without
+  // the rest of the menu obscuring the map in the side-by-side comparison.
+  const box = await s.page.evaluate(() => {
+    const original = document.querySelector<HTMLCanvasElement>('[data-map-preview]')!;
+    const large = document.createElement('canvas');
+    large.id = 'camp-budget-overview';
+    large.width = original.width; large.height = original.height;
+    large.getContext('2d')!.drawImage(original, 0, 0);
+    large.style.cssText = 'position:fixed;left:20px;top:20px;width:700px;height:700px;z-index:999999';
+    document.body.append(large);
+    const rect = large.getBoundingClientRect();
+    return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+  }) as { x: number; y: number; width: number; height: number };
+  await s.shot('grand-estuary-overview', box);
+  await s.page.evaluate(() => document.getElementById('camp-budget-overview')!.remove());
   await s.home();
   await s.room('grandEstuary', 8);
   await s.scenario({ aiPlayers: [] });

@@ -14,7 +14,9 @@ describe('generated camp budget', () => {
       expect(drawn.camps.length).toBeGreaterThanOrEqual(4 * map.players);
       for (const player of options.players!) {
         const start = drawn.starts[player]!, at = { x: start.baseX, y: start.baseY };
-        const nearby = drawn.camps.filter(camp => camp.tier === 'green' && (walkingDistance(drawn, camp, at) ?? Infinity) <= UNIT_DEFS.archer.speed * 30);
+        const nearby = drawn.camps.filter(camp => camp.tier === 'green'
+          && Object.values(drawn.starts).every(other => Math.hypot(camp.x - at.x, camp.y - at.y) <= Math.hypot(camp.x - other.baseX, camp.y - other.baseY) + 2)
+          && (walkingDistance(drawn, camp, at) ?? Infinity) <= UNIT_DEFS.archer.speed * 30);
         expect(nearby.length, `${map.id}/${player}: opening camps`).toBeGreaterThanOrEqual(2);
       }
       for (const unit of drawn.units) expect(isWalkable(drawn, unit.x, unit.y), unit.id).toBe(true);

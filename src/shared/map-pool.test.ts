@@ -26,7 +26,7 @@ import {isWalkable,sameGround} from './terrain';
 // 10-18: shared per-seat camp budget and reachable opening camps; small home islands reserve room for them.
 const HASHES: Record<PoolMapId, string> = {
   sapphireArchipelago:'9ca40925987dc1e7',
-  grandEstuary:'e9a4a4d25c3ec255',
+  grandEstuary:'39d8712515a5ebc3',
   brokenSea: "e3a11ec7847735e2",
   templeSpring: "5d501d9e7c6f0c90",
   turtleLake: "4b4261b4ae71172d",
