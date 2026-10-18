@@ -1,8 +1,12 @@
-import { spawn } from "node:child_process";
+import { execFileSync, spawn, spawnSync } from "node:child_process";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
 import { createHash, randomBytes } from "node:crypto";
 import { machineConfig, type MachineConfig } from "./machines";
 import { progress } from "./output";
 import { git, gitOut } from "./git";
+import { UsageError } from "./args";
 
 // The one way the CLI runs work, here or on another machine.
 // - Every command runs in its own process group (setsid(2)), and a run kills only the groups it started, by id. Nothing is
@@ -218,11 +222,39 @@ export function quote(value: string) {
   return `'${value.replace(/'/g, `'\\''`)}'`;
 }
 
-/** The commit to test: a ref, or with local changes a commit object made from the working tree (no stash entry). */
+/** The commit to test: a ref, or with --with-local that ref with the working tree's uncommitted changes laid on it. */
 export function resolveRef(ref: string, withLocal: boolean) {
-  if (withLocal) {
-    const made = gitOut(["stash", "create"]).trim();
-    if (made) return made;
+  const target = gitOut(["rev-parse", "--verify", `${ref}^{commit}`]).trim();
+  if (!withLocal) return target;
+  // @@@with-local - The working tree's changes are what differs from its HEAD (untracked files too, as git add -A sees
+  // them), read through a throwaway index so neither the index nor a stash is touched. On another ref they are merged in
+  // three ways from HEAD, as a cherry-pick would; a conflict refuses the run. (`git stash create` built on HEAD whatever
+  // --ref named, and left new files out.)
+  const head = gitOut(["rev-parse", "HEAD"]).trim(), local = workingTree();
+  if (local === gitOut(["rev-parse", `${head}^{tree}`]).trim()) return target;
+  let tree = local;
+  if (target !== head) {
+    const merged = spawnSync("git", ["merge-tree", "--write-tree", "--merge-base", head, target, commitTree(local, head, "the working tree")], { encoding: "utf8" });
+    if (merged.status !== 0) throw new UsageError(`The working tree's changes do not apply cleanly on ${ref}:\n${merged.stdout.split("\n").slice(1).join("\n").trim()}`);
+    tree = merged.stdout.split("\n")[0]!.trim();
   }
-  return gitOut(["rev-parse", "--verify", `${ref}^{commit}`]).trim();
+  return commitTree(tree, target, `sketch --with-local: the working tree's changes on ${ref}`);
+}
+
+function workingTree() {
+  const index = join(mkdtempSync(join(tmpdir(), "sketch-index-")), "index");
+  const env = { ...process.env, GIT_INDEX_FILE: index };
+  try {
+    execFileSync("git", ["read-tree", "HEAD"], { env });
+    execFileSync("git", ["add", "-A", "."], { env, cwd: gitOut(["rev-parse", "--show-toplevel"]).trim() });
+    return execFileSync("git", ["write-tree"], { env, encoding: "utf8" }).trim();
+  } finally {
+    rmSync(dirname(index), { recursive: true, force: true });
+  }
+}
+
+// A throwaway commit, named for the CLI: a machine without a git identity makes it too.
+function commitTree(tree: string, parent: string, message: string) {
+  const env = { ...process.env, GIT_AUTHOR_NAME: "sketch", GIT_AUTHOR_EMAIL: "sketch@localhost", GIT_COMMITTER_NAME: "sketch", GIT_COMMITTER_EMAIL: "sketch@localhost" };
+  return execFileSync("git", ["commit-tree", tree, "-p", parent, "-m", message], { env, encoding: "utf8" }).trim();
 }
