@@ -1,4 +1,4 @@
-import { groundApproachRoute, groundSteeringRoute, routeClearsDisks, routeLeavesDisks, routeTravelTicks } from '../../shared/route-selection';
+import { groundSteeringRoute, routeClearsDisks, routeLeavesDisks, routeTravelTicks } from '../../shared/route-selection';
 import { groundTravelCost } from '../../shared/terrain';
 import { MOVE_ORDER_ARRIVAL_RANGE } from '../../shared/movement-rules';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
@@ -21,13 +21,11 @@ export function earliestThreatContactTicks(snapshot: GameSnapshot, foe: Unit, un
   return Math.ceil(Math.max(0, distance(foe, unit) - reach) * SIM_TICKS_PER_SECOND / closing);
 }
 
-/** Terrain travel time, admitted only when every road segment clears known attack coverage. */
-export function safeLandTravelTicks(snapshot: GameSnapshot, unit: Unit, goal: Point, foes: readonly (Unit | Building)[]): number | undefined {
-  const ticks = routeTravelTicks(snapshot.map, unit, goal, 'land', unit.speed);
-  if (ticks === undefined) return undefined;
-  const route = groundApproachRoute(snapshot.map, unit, goal);
-  if (route === undefined) return undefined;
-  return routeClearsDisks([unit, ...route], landThreatDisks(snapshot, unit, foes, ticks)) ? ticks : undefined;
+/** Check the native steering road; each task owns its destination's arrival range. */
+export function safeLandTravelTicks(snapshot: GameSnapshot, unit: Unit, goal: Point, foes: readonly (Unit | Building)[], arrives?: (end: Point) => boolean): number | undefined {
+  const road = nativeLandRoad(snapshot, unit, goal);
+  if (!road || arrives && !arrives(road.points[road.points.length - 1]!)) return undefined;
+  return routeClearsDisks(road.points, landThreatDisks(snapshot, unit, foes, road.ticks)) ? road.ticks : undefined;
 }
 
 /** Check the same building-aware steering road that a recovery move will execute. */
@@ -39,15 +37,23 @@ export function retreatLandTravelTicks(snapshot: GameSnapshot, unit: Unit, goal:
 
 /** A native retreat road may end beside a building; the task decides its arrival range. */
 export function retreatLandRoad(snapshot: GameSnapshot, unit: Unit, goal: Point, foes: readonly (Unit | Building)[]) {
-  if (routeTravelTicks(snapshot.map, unit, goal, 'land', unit.speed) === undefined) return undefined;
-  const points = groundSteeringRoute(snapshot.map, unit, goal);
-  const cost = points.slice(1).reduce((sum, point, index) => sum + groundTravelCost(snapshot.map, points[index]!, point)!, 0);
-  const ticks = Math.ceil(cost / unit.speed * SIM_TICKS_PER_SECOND);
+  const road = nativeLandRoad(snapshot, unit, goal);
+  if (!road) return undefined;
+  const { points, ticks } = road;
   const disks = foes.flatMap(foe => {
     const reach = retreatThreatReach(snapshot, foe, unit, THINK_TICKS + ticks);
     return reach > 0 ? [{ x: foe.x, y: foe.y, radius: reach + ('speed' in foe ? foe.speed : 0) * THINK_TICKS / SIM_TICKS_PER_SECOND }] : [];
   });
   return routeLeavesDisks(points, disks) ? { points, ticks } : undefined;
+}
+
+/** Shared geometry for admission and retreats; threat policies remain separate. */
+function nativeLandRoad(snapshot: GameSnapshot, unit: Unit, goal: Point) {
+  if (routeTravelTicks(snapshot.map, unit, goal, 'land', unit.speed) === undefined) return undefined;
+  const points = groundSteeringRoute(snapshot.map, unit, goal);
+  const cost = points.slice(1).reduce((sum, point, index) => sum + groundTravelCost(snapshot.map, points[index]!, point)!, 0);
+  const ticks = Math.ceil(cost / unit.speed * SIM_TICKS_PER_SECOND);
+  return { points, ticks };
 }
 
 /** Avoid-combat movement suppresses native normal fire; active casts remain possible within the next think. */
