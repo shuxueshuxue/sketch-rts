@@ -1,0 +1,9 @@
+{
+  "archive": "soldier-diagnostic-terrain-correction.tar.gz",
+  "sha256": "6055f7040bca3a09fbd26c1a0002fef4617b2614cda35edbae3b9d9be93c53c0",
+  "files": {
+    "formal-divergence-terrain30270.json": "f7b5443516b3b79b32886341e9953f35dc85ce1587d9f093048bce18b43aa646",
+    "query-draft-terrain.ts": "5dca1b8396dae5dff4d22048faf1e5ce619c578ea8ee06a40b3f2676d622586b",
+    "query-formal-terrain.mts": "0f3b84533fb45b02984fe010bb551f4c15cb495fcf7bcf2554d107ed9c4cc532"
+  }
+}
