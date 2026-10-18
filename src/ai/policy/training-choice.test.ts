@@ -1,3 +1,4 @@
+import { trainingJobs } from "../../shared/building-jobs";
 import { describe, expect, it } from "vitest";
 import { issuePlayerCommand, snapshotGame } from "../../shared/sim";
 import { sketchScene } from "../../sdk/scene";
@@ -13,7 +14,7 @@ describe("AI training choice", () => {
     const chosen = trainingChoice(snapshot, 'v5', snapshot.buildings.find(building => building.id === 'workshop')!, { version: 'v2', requestedVersion: 'v5' });
     expect(chosen).toBe(kind);
     issuePlayerCommand(game, 'v5', { type: 'train', buildingId: 'workshop', unitKind: chosen! });
-    expect(game.buildings.find(building => building.id === 'workshop')!.queue[0]!.unitKind).toBe(kind);
+    expect(trainingJobs(game.buildings.find(building => building.id === 'workshop')!)[0]!.unitKind).toBe(kind);
   });
 
   it.each(['grove', 'ember'] as const)("trains the %s workshop's tier-two unit before tier three opens", race => {
@@ -26,7 +27,7 @@ describe("AI training choice", () => {
     const chosen = trainingChoice(snapshot, 'v5', snapshot.buildings.find(building => building.id === 'workshop')!, { version: 'v2', requestedVersion: 'v5' });
     expect(chosen).toBe(race === 'grove' ? 'ballista' : 'catapult');
     issuePlayerCommand(game, 'v5', { type: 'train', buildingId: 'workshop', unitKind: chosen! });
-    expect(game.buildings.find(building => building.id === 'workshop')!.queue[0]!.unitKind).toBe(chosen);
+    expect(trainingJobs(game.buildings.find(building => building.id === 'workshop')!)[0]!.unitKind).toBe(chosen);
   });
 
   it("opens barracks production with footmen before mixing lancers", () => {

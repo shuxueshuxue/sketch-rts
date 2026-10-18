@@ -1,3 +1,4 @@
+import { trainingJobs } from "../../shared/building-jobs";
 import { describe, expect, it } from "vitest";
 import { sketchScene } from "../../sdk/scene";
 import { BUILDING_DEFS, UNIT_DEFS } from "../../shared/catalog";
@@ -30,7 +31,7 @@ describe("affordable planning work", () => {
     expect(command).toEqual({ type: "train", buildingId: "workshop", unitKind: kind });
     if (!command || Array.isArray(command)) throw new Error("Expected one support-weapon command");
     issuePlayerCommand(game, "us", command);
-    expect(game.buildings.find(building => building.id === "workshop")!.queue.map(job => job.unitKind)).toEqual([kind]);
+    expect(trainingJobs(game.buildings.find(building => building.id === "workshop")!).map(job => job.unitKind)).toEqual([kind]);
     expect(game.players.us!.gold).toBe(0);
   });
 
@@ -68,7 +69,7 @@ describe("affordable planning work", () => {
     expect(options.memory).toEqual(beforeMemory);
     if (!Array.isArray(commands)) throw new Error("Expected training commands");
     for (const command of commands) issuePlayerCommand(game, "us", command);
-    expect(game.buildings.find(building => building.id === "first")!.queue.map(job => job.unitKind)).toEqual(["footman"]);
+    expect(trainingJobs(game.buildings.find(building => building.id === "first")!).map(job => job.unitKind)).toEqual(["footman"]);
     expect(game.buildings.find(building => building.id === "second")!.queue).toEqual([]);
     if (limit === "gold") expect(game.players.us!.gold).toBe(0);
     else expect(game.players.us!.supplyUsed).toBe(game.players.us!.supplyCap);

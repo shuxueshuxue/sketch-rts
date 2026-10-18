@@ -1,3 +1,4 @@
+import { trainingJobs } from "./building-jobs";
 import { describe, expect, it } from "vitest";
 import { canCast } from "./ability-cooldowns";
 import { ABILITY_DEFS, BUILDING_DEFS, MERCENARY_UNIT_KINDS, RACE_DEFS, TRAINABLE_UNIT_KINDS, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap } from "./catalog";
@@ -566,8 +567,8 @@ describe("sketch RTS simulation", () => {
     const emberSpire = ember.buildings.find((building) => building.id === "building-enemy-ember-spire-proof")!;
     expect(grove.players.enemy.race).toBe("grove");
     expect(ember.players.enemy.race).toBe("ember");
-    expect(groveSanctum.queue[0]?.unitKind).toBe("priest");
-    expect(emberSpire.queue[0]?.unitKind).toBe("sparkArcher");
+    expect(trainingJobs(groveSanctum)[0]?.unitKind).toBe("priest");
+    expect(trainingJobs(emberSpire)[0]?.unitKind).toBe("sparkArcher");
   });
 
   it("creates a compact 4096 square sample map with authored content inside bounds", () => {
@@ -810,7 +811,7 @@ describe("sketch RTS simulation", () => {
       issueCommand(game, { type: "train", buildingId: barracks.id, unitKind: "footman" });
     }
 
-    expect(barracks.queue.map((job) => job.unitKind)).toEqual(["footman", "footman", "footman", "footman", "footman"]);
+    expect(trainingJobs(barracks).map((job) => job.unitKind)).toEqual(["footman", "footman", "footman", "footman", "footman"]);
     expect(game.units.filter((unit) => unit.owner === "player" && unit.kind === "footman")).toHaveLength(0);
 
     stepMany(game, UNIT_DEFS.footman.trainTime);

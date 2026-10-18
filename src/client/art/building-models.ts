@@ -78,7 +78,7 @@ class Construction {
 export const TOWER_TOP_Z=32, TOWER_MODEL_HEIGHT=55, TOWER_ROOF=SLATE;
 const BASALT='#898b7c', COPPER='#b3825d', BRASS='#d2b779', CAPITAL_SLATE='#6d8b88';
 export type { SiteModelKind } from './model-manifest';
-import type { SiteModelKind } from './model-manifest';
+import { buildingModelKind, type SiteModelKind } from './model-manifest';
 function build(kind:BuildingKind | SiteModelKind,team:string):Construction{
   const m=new Construction();
   // @@@capital-models - The capital's houses and street furniture, built like the game's buildings (docs/art/
@@ -113,7 +113,7 @@ function build(kind:BuildingKind | SiteModelKind,team:string):Construction{
     for(let i=0;i<6;i++)m.face([[-36+i*12,-17.9,62.1],[-30+i*12,-17.9,62.1],[-30+i*12,20.1,50.1],[-36+i*12,20.1,50.1]],stripe,[0,.3,.95],0);
     m.box(0,-16,26,68,1.4,34,'#c9bc9a');
   };
-  switch(kind){
+  switch(buildingModelKind(kind)){
     // The capital's slate is its own colour: the game's slate is tinted toward a building's owner, and the city is nobody's.
     case 'capital-house-slate': house(CAPITAL_SLATE,STONE,false);break;
     case 'capital-house-copper': house(COPPER,'#e2cfae',false);break;

@@ -146,6 +146,9 @@ export type BuildingRules = {
   // Stands on the shore, part of it where a worker walks and part over open water (see @@@shore-footprint); every other
   // building stands on walkable ground.
   shore?: true;
+  // Reached only by upgrading a standing building of this kind (see @@@building-upgrade), never laid by a worker: its cost
+  // and buildTime are the upgrade's price and time.
+  upgradeFrom?: string;
 };
 
 // Training lists are derived from the race-specific production relationships.
@@ -369,6 +372,10 @@ export const BUILDING_RULES = {
   sanctum: { race: "grove", hp: 500, radius: 38, cost: 175, buildTime: seconds(11.25), researches: ["leadership"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   workshop: { hp: 580, radius: 42, cost: 205, buildTime: seconds(12.5), researches: ["rangeTraining"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   defenseTower: { neutralDamageMultiplier: 0.5, hp: 200, radius: 30, cost: 125, buildTime: seconds(6.5), researches: [], attackDamage: 13, attackRange: 480, attackCooldown: seconds(1.5), supplyProvided: 0 },
+  // @@@tower-garrison: a defense tower fortified, broader and twice as sturdy, with no weapon of its own; troops stand on its
+  // top. A new tower costs 125 and 6.5s; this gives up the tower's weapon for +200 health and a sheltered platform, so it
+  // costs less than another tower and takes about as long as a barracks.
+  fortifiedTower: { upgradeFrom: "defenseTower", hp: 400, radius: 40, cost: 100, buildTime: seconds(12), researches: [], attackDamage: 0, attackRange: 0, attackCooldown: seconds(1.5), supplyProvided: 0 },
   moonWell: { race: "grove", hp: 300, radius: 30, cost: 115, buildTime: seconds(8.5), researches: [], attackDamage: 0, attackRange: 210, attackCooldown: seconds(1.5), supplyProvided: 0 },
   emberForge: { race: "ember", hp: 560, radius: 40, cost: 165, buildTime: seconds(10.5), researches: ["weaponTraining", "reinforcedPlating"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
   cinderSpire: { race: "ember", hp: 500, radius: 38, cost: 170, buildTime: seconds(10.75), researches: ["speedTraining", "rangeTraining", "leadership"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0 },
@@ -381,7 +388,16 @@ export const BUILDING_RULES = {
   shipyard: { hp: 600, radius: 44, cost: 170, buildTime: seconds(12), researches: ["shipbuilding"], attackDamage: 0, attackRange: 0, attackCooldown: seconds(0.05), supplyProvided: 0, shore: true },
 } satisfies Record<string, BuildingRules>;
 
-export const BUILDABLE_BUILDING_KINDS = Object.keys(BUILDING_RULES) as BuildingKind[];
+export const BUILDING_KINDS = Object.keys(BUILDING_RULES) as BuildingKind[];
+// What a worker lays: every kind but those reached by upgrading another (see @@@building-upgrade).
+export const BUILDABLE_BUILDING_KINDS = BUILDING_KINDS.filter(kind => !(BUILDING_RULES[kind] as BuildingRules).upgradeFrom);
+
+// @@@building-upgrade - A standing building becomes another kind as a job in its own work queue, as a Warcraft III scout
+// tower becomes a guard tower: the job takes the new kind's cost and buildTime, shows its progress, can be cancelled for
+// its gold back, and on completion the building is laid down again in the new kind's footprint (see transformBuilding).
+export function upgradesFrom(kind: BuildingKind): BuildingKind[] {
+  return BUILDING_KINDS.filter(other => (BUILDING_RULES[other] as BuildingRules).upgradeFrom === kind);
+}
 
 export type ProductionRule = { at: BuildingKind };
 
@@ -433,7 +449,7 @@ function canTrainForAnyRace(kind: UnitKind): boolean {
 
 const TRAINING_BY_RACE = Object.fromEntries(
   Object.keys(PRODUCTION).map(race => [race, Object.fromEntries(
-    BUILDABLE_BUILDING_KINDS.map(building => [building,
+    BUILDING_KINDS.map(building => [building,
       Object.freeze(TRAINABLE_UNIT_KINDS.filter(kind => canTrainAt(race as RaceId, building, kind))),
     ]),
   )]),
@@ -445,7 +461,7 @@ export function trainableUnitsAt(race: RaceId, building: BuildingKind): readonly
 
 
 export const BUILDING_DEFS: Record<BuildingKind, BuildingDef> = Object.fromEntries(
-  BUILDABLE_BUILDING_KINDS.map((kind) => [kind, { ...BUILDING_RULES[kind], trains: TRAINABLE_UNIT_KINDS.filter(unit => Object.values(PRODUCTION).some(units => units[unit]?.at === kind)) }]),
+  BUILDING_KINDS.map((kind) => [kind, { ...BUILDING_RULES[kind], trains: TRAINABLE_UNIT_KINDS.filter(unit => Object.values(PRODUCTION).some(units => units[unit]?.at === kind)) }]),
 ) as Record<BuildingKind, BuildingDef>;
 
 const SHIPS = TRAINABLE_UNIT_KINDS.filter(kind => UNIT_DEFS[kind].naval);

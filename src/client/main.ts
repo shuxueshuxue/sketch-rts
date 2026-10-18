@@ -82,7 +82,8 @@ import {
   shouldSuppressPointerLockMouseDefault,
   virtualPointerTransform,
 } from "./pointer-lock";
-import { TOWER_GARRISON, garrisonUsed } from "../shared/tower-garrison";
+import { TOWER_GARRISON, garrisonUsed, isFortifiedTower } from "../shared/tower-garrison";
+import { upgradeJob } from "../shared/building-jobs";
 import { RESEARCH_COMMANDS, researchCommandButtonsForSelection, researchProgressButtonsForSelection, type ResearchProgressButton } from "./research-controls";
 import { buildingAt, deckMovePoint, hasAlly, pointerTarget, relationTo, targetCommand, unitAt,unitPointerPosition, type PointerTarget } from "./relations";
 import { configurationOnMap, defaultRoomConfiguration, formatRoomRoute, parseRoomRoute, type RoomRoute } from "./room-route";
@@ -97,14 +98,14 @@ import { UnitAnimationTracker } from "./unit-animation";
 import { abilityTooltip, buildingTooltip, campDetail, formatTooltipDataset, itemTooltip, mercenaryHireTooltip, unitSelectionTooltip, unitTooltip, upgradeTooltip, veteranSkillTooltip, withTooltipRequirement, type GameplayTooltip } from "./tooltips";
 import { canLearnVeteranSkill, learnVeteranSkillCommand, nextVeteranStudent, veteranPeers, veteranStudent } from "./veteran-controls";
 import { VETERAN_SKILLS } from "../shared/veteran-skills";
-import { trainingProgressButtonsForSelection, trainingProgressText, type TrainingProgressButton } from "./training-queue";
+import { progressKind, trainingProgressButtonsForSelection, trainingProgressText, type TrainingProgressButton } from "./training-queue";
 import { newUserId } from "./user-profile";
 import { playerDisplayName } from "./player-name";
 import { applySelectionClick, selectInScreenBox, selectNearbySameKindUnits, type ScreenRect as SelectionScreenRect } from "./selection-controls";
 import { buildingGlyphSize, drawPaperMap, drawWorld, ownerInk, worldLabelsFor } from "./world-renderer";
 import { virtualClickableTargetFromElement, virtualContextTargetFromElement, virtualTooltipTargetFromElement } from "./virtual-ui";
 import { canAutocast } from "../shared/autocast";
-import { ABILITY_DEFS, ABILITY_KINDS, BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS, unitRules, canTrainAt, trainableUnitsAt, trainingBuildingFor } from "../shared/catalog";
+import { ABILITY_DEFS, ABILITY_KINDS, BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, BUILDING_KINDS, RACE_DEFS, RACE_IDS, TRAINABLE_UNIT_KINDS, UNIT_DEFS, unitRules, canTrainAt, trainableUnitsAt, trainingBuildingFor } from "../shared/catalog";
 import { carries, passengerLandingSpot } from "../shared/naval";
 import { SHOP_GOODS } from "../shared/shop";
 import { drawPaintedItem } from "./art/items";
@@ -153,6 +154,7 @@ type CommandButton = {
 
 // The command card's build and train buttons come from the building and unit cards, in catalog order.
 const BUILD_COMMANDS = BUILDABLE_BUILDING_KINDS.map((kind) => ({ kind, ...BUILDING_CARDS[kind].command }));
+const UPGRADE_COMMANDS = BUILDING_KINDS.filter((kind) => BUILDING_DEFS[kind].upgradeFrom).map((kind) => ({ kind, ...BUILDING_CARDS[kind].command }));
 
 const TRAIN_COMMANDS = TRAINABLE_UNIT_KINDS.map((kind) => ({ kind, ...TRAINED_UNIT_CARDS[kind].command }));
 
@@ -373,14 +375,9 @@ const commandButtons: CommandButton[] = [
   ...RESEARCH_COMMANDS.map((command) =>
     createCommandButton(t("command.researchSpecific", { upgrade: labelKind(command.upgradeKind) }), command.icon, command.hotkey, () => researchButtonState(command.upgradeKind), () => research(command.upgradeKind), () => upgradeTooltip(command.upgradeKind, command.hotkey, currentPlayerState()?.upgrades[command.upgradeKind] ?? 0, i18n)),
   ),
-  createCommandButton(t("command.fortifyTower.title"), "▲", "f", fortifyButtonState, fortifyFocusedTower, () => ({
-    title: t("command.fortifyTower.title"),
-    body: t("command.fortifyTower.body"),
-    stats: [t("command.fortifyTower.stats", { cost: TOWER_GARRISON.cost, seconds: TOWER_GARRISON.time / SIM_TICKS_PER_SECOND })],
-    requirements: [],
-    notes: [t("command.fortifyTower.notes")],
-    hotkey: "F",
-  })),
+  ...UPGRADE_COMMANDS.map((command) =>
+    createCommandButton(t("command.upgradeSpecific", { building: labelKind(command.kind) }), command.icon, command.hotkey, () => upgradeButtonState(command.kind), () => upgradeFocusedBuilding(command.kind), () => buildingTooltip(command.kind, command.hotkey, i18n, currentPlayerState()?.race), { type: "building", kind: command.kind }),
+  ),
   createCommandButton(t("command.ungarrison.title"), "⤓", "u", ungarrisonButtonState, ungarrisonFocusedTower, () => {
     const tower = focusedTower();
     return {
@@ -2472,29 +2469,33 @@ function trainButtonState(unitKind: TrainableUnitKind): CommandButtonState {
   return building ? orderButtonState({ type: "train", buildingId: building.id, unitKind }) : HIDDEN_COMMAND_STATE;
 }
 
-// A defense tower's own card (see @@@tower-garrison): fortify it once, then call its troops down.
+// A building's upgrade (see @@@building-upgrade) is offered while none is under way; the job then shows as a
+// progress button of the work queue.
+function focusedUpgradable(to: BuildingKind) {
+  return !commandMode && !openPalette ? focusedPlayerBuildings().find((building) => BUILDING_DEFS[to].upgradeFrom === building.kind && building.complete && !upgradeJob(building)) : undefined;
+}
+
+function upgradeButtonState(to: BuildingKind): CommandButtonState {
+  const building = focusedUpgradable(to);
+  return building ? orderButtonState({ type: "upgradeBuilding", buildingId: building.id, to }) : HIDDEN_COMMAND_STATE;
+}
+
+function upgradeFocusedBuilding(to: BuildingKind) {
+  const building = focusedUpgradable(to);
+  if (!building) return;
+  const state = upgradeButtonState(to);
+  if (!state.enabled) { showInvalidCommand(state.detail ?? t("command.upgradeSpecific", { building: labelKind(to) })); return; }
+  if (sendCommand({ type: "upgradeBuilding", buildingId: building.id, to })) statusLabel.textContent = t("status.upgradeStarted", { building: labelKind(to) });
+}
+
+// A fortified tower's own card (see @@@tower-garrison): call its troops down.
 function focusedTower() {
-  return !commandMode && !openPalette ? focusedPlayerBuildings().find((building) => building.kind === "defenseTower" && building.complete) : undefined;
-}
-
-function fortifyButtonState(): CommandButtonState {
-  const tower = focusedTower();
-  if (!tower || tower.fortified) return HIDDEN_COMMAND_STATE;
-  if (tower.fortify) return { visible: true, enabled: false, reason: "position", detail: t("command.fortifyTower.progress", { percent: Math.floor((1 - tower.fortify.remaining / TOWER_GARRISON.time) * 100) }) };
-  return orderButtonState({ type: "fortifyTower", buildingId: tower.id });
-}
-
-function fortifyFocusedTower() {
-  const tower = focusedTower();
-  if (!tower) return;
-  const state = fortifyButtonState();
-  if (!state.enabled) { showInvalidCommand(state.detail ?? t("command.fortifyTower.title")); return; }
-  if (sendCommand({ type: "fortifyTower", buildingId: tower.id })) statusLabel.textContent = t("status.fortifyStarted");
+  return !commandMode && !openPalette ? focusedPlayerBuildings().find((building) => isFortifiedTower(building) && building.complete) : undefined;
 }
 
 function ungarrisonButtonState(): CommandButtonState {
   const tower = focusedTower();
-  return tower?.fortified ? orderButtonState({ type: "ungarrison", buildingId: tower.id }) : HIDDEN_COMMAND_STATE;
+  return tower ? orderButtonState({ type: "ungarrison", buildingId: tower.id }) : HIDDEN_COMMAND_STATE;
 }
 
 function ungarrisonFocusedTower() {
@@ -3381,11 +3382,13 @@ function renderTrainingProgressButton(progress: TrainingProgressButton, previous
     if (progress.jobId) sendCommand({ type: "cancelTraining", buildingId: progress.buildingId, jobId: progress.jobId });
   });
   if (progress.jobId) button.dataset.jobId = progress.jobId;
-  button.dataset.trainingProgress = progress.unitKind;
+  const kind = progressKind(progress);
+  button.dataset.trainingProgress = kind;
   button.dataset.trainingState = progress.status;
   button.dataset.commandLabel = label;
   button.setAttribute("aria-label", `${label} - ${percent}%`);
-  const tooltip = unitTooltip(progress.unitKind, undefined, i18n, currentPlayerState()?.race);
+  const race = currentPlayerState()?.race;
+  const tooltip = progress.product === "unit" ? unitTooltip(progress.unitKind, undefined, i18n, race) : buildingTooltip(progress.upgradeTo, undefined, i18n, race);
   applyTooltip(button, {
     ...tooltip,
     title: `${label} · ${t("hud.cancelTraining")}`,
@@ -3395,11 +3398,11 @@ function renderTrainingProgressButton(progress: TrainingProgressButton, previous
   button.style.setProperty("--research-progress", `${percent}%`);
   if (!previous) button.innerHTML = `
     <span class="research-progress-fill"></span>
-    <span class="command-icon">${escapeHtml(trainIcon(progress.unitKind))}</span>
-    <span class="command-label">${escapeHtml(labelKind(progress.unitKind))}</span>
+    <span class="command-icon">${escapeHtml(progress.product === "unit" ? trainIcon(progress.unitKind) : BUILDING_CARDS[progress.upgradeTo].command.icon)}</span>
+    <span class="command-label">${escapeHtml(labelKind(kind))}</span>
     <span class="research-progress-text"></span>
   `;
-  drawCommandPortrait(button, { type: "unit", kind: progress.unitKind });
+  drawCommandPortrait(button, progress.product === "unit" ? { type: "unit", kind: progress.unitKind } : { type: "building", kind: progress.upgradeTo });
   button.querySelector(".research-progress-text")!.textContent = badge;
   return button;
 }

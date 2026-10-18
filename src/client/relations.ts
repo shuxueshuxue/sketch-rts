@@ -5,7 +5,7 @@ import { UNIT_DEFS } from "../shared/catalog";
 import { deckVisualHeight } from "./art/canvas-ships";
 import { unitGlyphScale } from "./glyphs";
 import { towerTopLift } from "./tower-presentation";
-import { canStandOnTower } from "../shared/tower-garrison";
+import { canStandOnTower, isFortifiedTower } from "../shared/tower-garrison";
 import { circleInPolygon, worldToLocal, shipProfile } from "../shared/ship-geometry";
 import { areEnemyOwners } from "../shared/sim/command-validation";
 import type { Building, GameCommand, GameSnapshot, Obstacle, Owner, PlayerId, ResourceNode, Unit, WorldItem } from "../shared/types";
@@ -116,7 +116,7 @@ export function targetCommand(
     const damaged = relation === "own" && target.building.hp < target.building.maxHp;
     if (damaged && workers.length > 0) return { type: "repair", unitIds: ids(workers), buildingId: target.building.id, queued };
     // An own fortified tower takes up the troops that can stand on its top (see @@@tower-garrison).
-    const climbers = relation === "own" && target.building.fortified ? selected.filter(unit => canStandOnTower(unit) && unit.garrison?.buildingId !== target.building.id) : [];
+    const climbers = relation === "own" && isFortifiedTower(target.building) ? selected.filter(unit => canStandOnTower(unit) && unit.garrison?.buildingId !== target.building.id) : [];
     return climbers.length ? { type: "garrison", unitIds: ids(climbers), buildingId: target.building.id, queued } : undefined;
   }
   if (relation === "ally") return { type: "follow", unitIds: ids(selected), targetId: thing.id, queued };

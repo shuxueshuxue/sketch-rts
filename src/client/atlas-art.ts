@@ -1,4 +1,5 @@
 import { animationKey, actionPaintSize } from './art/action-direction';
+import { buildingModelKind } from './art/model-manifest';
 import { unitPaintKey } from './art/paint-identity';
 import type { UnitModel } from "../story/cast";
 import { appearanceKey, isCatalogPresentation } from "./art/unit-appearance";
@@ -57,7 +58,7 @@ export function drawAtlasBuilding(c: Brush, kind: BuildingKind | SiteModelKind, 
 
 /** Architecture portraits use the same current model as the world. */
 export function drawAtlasBuildingPortrait(c: Brush, kind: BuildingKind | SiteModelKind, size: number, color: string) {
-  if(drawModelPortrait(c,`buildings/${kind}`,0,0,size,color))return;
+  if(drawModelPortrait(c,`buildings/${buildingModelKind(kind)}`,0,0,size,color))return;
   drawFittedPortrait(c,`building:${kind}:${color}`,b=>paintBuildingModel(b,kind,color),0,0,size,size);
 }
 

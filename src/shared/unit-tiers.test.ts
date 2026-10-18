@@ -1,3 +1,4 @@
+import { trainingJobs } from "./building-jobs";
 import { describe, expect, it } from "vitest";
 import { BUILDING_DEFS, TIER_SUPPLY_CAP, UNIT_DEFS, requiredSupplyCap } from "./catalog";
 import { createBuilding } from "./map";
@@ -43,7 +44,7 @@ describe("unit tiers", () => {
     expect(teched.game.players.player!.supplyCap).toBeGreaterThanOrEqual(advanced);
     expect(teched.game.players.player!.supplyCap).toBeLessThan(elite);
     issueCommand(teched.game, { type: "train", buildingId: teched.sanctum.id, unitKind: "summoner" });
-    expect(teched.sanctum.queue.map((job) => job.unitKind)).toEqual(["summoner"]);
+    expect(trainingJobs(teched.sanctum).map((job) => job.unitKind)).toEqual(["summoner"]);
     expect(() => issueCommand(teched.game, { type: "train", buildingId: teched.stables.id, unitKind: "knight" })).toThrow(`Need a supply cap of ${elite} to train knight`);
   });
 
@@ -62,7 +63,7 @@ describe("unit tiers", () => {
     const gold = game.players.player!.gold;
     issueCommand(game, command);
     expect(yard.queue).toHaveLength(1);
-    expect(yard.queue[0]!.unitKind).toBe("shipOfTheLine");
+    expect(trainingJobs(yard)[0]!.unitKind).toBe("shipOfTheLine");
     expect(game.players.player!.gold).toBe(gold - UNIT_DEFS.shipOfTheLine.cost);
   });
 });

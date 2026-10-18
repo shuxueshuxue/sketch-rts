@@ -1,4 +1,5 @@
 import { TOWER_TOP_Z } from "./art/building-models";
+import { isFortifiedTower } from "../shared/tower-garrison";
 import type { Building, Unit } from "../shared/types";
 
 // How a fortified tower and the troops on its top are drawn (see @@@tower-garrison, @@@tower-top): the tower's picture
@@ -11,7 +12,7 @@ export function buildingSpriteSize(building: Pick<Building, "radius">) {
 
 /** Its roof is drawn see-through while troops stand under it. */
 export function towerRoofOpen(units: readonly Unit[], building: Building) {
-  return !!building.fortified && units.some(unit => unit.hp > 0 && unit.garrison?.buildingId === building.id);
+  return isFortifiedTower(building) && units.some(unit => unit.hp > 0 && unit.garrison?.buildingId === building.id);
 }
 
 /** The tower a troop stands on, if it stands on one. */

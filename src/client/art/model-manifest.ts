@@ -1,5 +1,13 @@
 import { BUILDING_DEFS } from '../../shared/catalog';
 import { SHIP_KINDS } from '../../shared/ship-geometry';
+import type { BuildingKind } from '../../shared/types';
+
+// A building kind drawn with another's model, on its own footprint: a fortified tower is a defense tower's model laid
+// broader (see @@@tower-garrison).
+const BUILDING_MODEL_ALIAS: Partial<Record<BuildingKind, BuildingKind>> = { fortifiedTower: 'defenseTower' };
+export function buildingModelKind<K extends string>(kind: K): K | BuildingKind {
+  return BUILDING_MODEL_ALIAS[kind as BuildingKind] ?? kind;
+}
 
 /** Authored constructions are shared by world GLBs, Canvas portraits and exports. */
 export const SITE_MODELS = ['citadel', 'shop', 'camp', 'well', 'statue', 'beacon', 'fort-lance', 'fort-flame', 'fort-mortar', 'fort-ward', 'fort-wall'] as const;
@@ -12,5 +20,5 @@ export type SiteModelKind = typeof SITE_MODELS[number] | typeof CAPITAL_MODELS[n
 export const SCENE_MODELS: ReadonlySet<string> = new Set(['statue', 'well', 'beacon', 'citadel', ...CAPITAL_MODELS]);
 export const MATCH_MODEL_KEYS: readonly string[] = [
   ...SHIP_KINDS.map(kind => `ships/${kind}`),
-  ...new Set([...Object.keys(BUILDING_DEFS), ...SITE_MODELS]).values(),
+  ...new Set([...Object.keys(BUILDING_DEFS).map(buildingModelKind), ...SITE_MODELS]).values(),
 ].map(kind => kind.startsWith('ships/') ? kind : `buildings/${kind}`);

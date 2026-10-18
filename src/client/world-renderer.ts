@@ -35,7 +35,8 @@ import { byFoot, drawStandingObject, standingTerrain, type StandingTerrainObject
 import { mineStage, paintRoads } from "./art/environment";
 import { GOLD_MINE_RULES } from "../shared/mining";
 import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
-import { isAwaitingShipLaunch, trainingQueueCountText } from "./training-queue";
+import { isAwaitingShipLaunch, jobDuration, trainingQueueCountText } from "./training-queue";
+import { isTrainingJob } from "../shared/building-jobs";
 import type { UnitFacingTracker } from "./unit-facing";
 import type { UnitMotionSmoother } from "./unit-motion";
 import type { UnitAnimationTracker } from "./unit-animation";
@@ -65,13 +66,13 @@ export type WorldView = {
 
 /** The few words painted into the world, in the viewer's language. */
 export type WorldLabels = {
-  unitKind: (kind: TrainableUnitKind | MercenaryUnitKind) => string;
+  kind: (kind: TrainableUnitKind | MercenaryUnitKind | BuildingKind) => string;
   awaitingShipLaunch?: () => string;
 };
 
 export function worldLabelsFor(i18n: ReturnType<typeof createI18n>): WorldLabels {
   return {
-    unitKind: (kind) => i18n.label(kind),
+    kind: (kind) => i18n.label(kind),
     awaitingShipLaunch: () => i18n.t("canvas.shipAwaitingLaunch"),
   };
 }
@@ -421,7 +422,7 @@ function drawMercenaryCamps(painter: Painter, camps: MercenaryCamp[],overlayOnly
     // What the camp sells and how many are left (see @@@camp-text), under its footprint.
     const square = footprintSquare(painter.snapshot, camp, camp.radius);
     const below = square ? (square.bottom + 1) * square.cell - painter.camera.y + 13 : point.y + 48;
-    ctx.fillText(`${painter.labels.unitKind(camp.hireKind)} ×${camp.stock}`, point.x, below);
+    ctx.fillText(`${painter.labels.kind(camp.hireKind)} ×${camp.stock}`, point.x, below);
     ctx.textAlign = "start";
     if (camp.cooldownRemaining > 0) drawProgress(ctx, point.x, below + 12, 1 - camp.cooldownRemaining / camp.cooldown);
   }
@@ -770,15 +771,15 @@ function drawProgress(ctx: Brush, x: number, y: number, ratio: number, ink = "#3
 
 function drawTrainingProgress(painter: Painter, x: number, y: number, building: Building) {
   const { ctx } = painter;
-  const { remaining, unitKind } = building.queue[0]!;
-  const total = UNIT_DEFS[unitKind].trainTime;
+  const job = building.queue[0]!, { remaining } = job;
+  const total = jobDuration(job);
   const awaitingLaunch = isAwaitingShipLaunch(building);
   const ink = awaitingLaunch ? "#9a6a28" : "#315f87";
   drawProgress(ctx, x, y, 1 - remaining / total, ink);
   ctx.fillStyle = ink;
   ctx.font = "9px ui-monospace, monospace";
   const countText = trainingQueueCountText(building.queue.length);
-  ctx.fillText(`${painter.labels.unitKind(unitKind)}${countText ? ` ${countText}` : ""}`, x - 27, y + 16);
+  ctx.fillText(`${painter.labels.kind(isTrainingJob(job) ? job.unitKind : job.to)}${countText ? ` ${countText}` : ""}`, x - 27, y + 16);
   if (awaitingLaunch && painter.labels.awaitingShipLaunch) {
     const label = painter.labels.awaitingShipLaunch();
     ctx.save();

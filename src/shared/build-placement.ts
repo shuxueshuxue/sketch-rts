@@ -54,3 +54,16 @@ export function isBuildPlacementClear(snapshot: PlacementSnapshot, kind: Buildin
 function distance(a: { x: number; y: number }, b: { x: number; y: number }) {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
+
+// Where a building upgraded into another kind stands (see @@@building-upgrade): it is laid down again by the same rules as
+// any building, where it stood if the new footprint is laid on the same grid there, otherwise half a cell off along each
+// axis (a footprint an even number of cells across is centred on a cell corner, an odd one on a cell centre), on the
+// first side, in a fixed order, whose footprint is clear of everything but the building itself. Undefined when none is.
+export function upgradeSite(snapshot: PlacementSnapshot, building: Building, to: BuildingKind) {
+  const others = { ...snapshot, buildings: snapshot.buildings.filter(other => other !== building) };
+  const cell = snapshot.map?.terrain?.cell, radius = BUILDING_DEFS[to].radius;
+  const sites = cell === undefined ? [{ x: building.x, y: building.y }]
+    : [[0, 0], [1, 1], [-1, 1], [1, -1], [-1, -1]].map(([dx, dy]) => ({ x: building.x + dx! * cell / 2, y: building.y + dy! * cell / 2 }))
+      .filter(site => { const at = snapToFootprint(snapshot.map!, radius, site); return at.x === site.x && at.y === site.y; });
+  return sites.find(site => !terrainBlocksPlacement(snapshot.map, to, site) && !buildingPlacementBlocker(others, to, site));
+}

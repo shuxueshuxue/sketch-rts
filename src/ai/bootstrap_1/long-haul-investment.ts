@@ -10,6 +10,7 @@ import { mineClaimedByAlly } from '../policy/mine-claims';
 import type { AiPolicyContext } from '../policy/types';
 import { projectedSupplyUsed } from '../policy/world-model';
 import { armedFoes, safeLandTravelTicks } from './safe-land-route';
+import { trainingJobs } from "../../shared/building-jobs";
 
 /** Buy remote labor only when its travel and payback precede saving for a replacement hall. */
 export function longHaulInvestment(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, constructionCrew: number): GameCommand[] {
@@ -19,7 +20,7 @@ export function longHaulInvestment(snapshot: GameSnapshot, owner: PlayerId, opti
     || player.gold < UNIT_DEFS.worker.cost || player.gold >= BUILDING_DEFS.townHall.cost
     || supply + UNIT_DEFS.worker.supplyUsed > player.supplyCap) return [];
   const halls = snapshot.buildings.filter(building => building.owner === owner && building.kind === 'townHall' && building.complete);
-  const queued = halls.reduce((count, hall) => count + hall.queue.filter(job => job.unitKind === 'worker').length, 0);
+  const queued = halls.reduce((count, hall) => count + trainingJobs(hall).filter(job => job.unitKind === 'worker').length, 0);
   const lanes = snapshot.resources.filter(mine => mine.amount > 0 && !mineClaimedByAlly(snapshot, owner, mine, options))
     .map(mine => ({ mine, workers: workers.filter(unit => !unit.deck && unit.order.type === 'mine' && unit.order.resourceId === mine.id) }))
     .filter(lane => lane.workers.length > 0);
