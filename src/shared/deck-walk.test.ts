@@ -44,11 +44,17 @@ describe('walking on decks', () => {
     for (let tick = from; tick < to; tick++) { stepGame(game); sums.push(checksumGame(game)); }
     return sums;
   };
+  // The fight is the crews' alone (see @@@cannon-min-range): guns hold their fire on a deck alongside, so the prize is
+  // taken by the sword some time after the bridge is out, not within its first twelve seconds.
+  const fightOn = (game: ReturnType<typeof deckFight>['game'], b: ReturnType<typeof deckFight>['b']) => {
+    for (let tick = game.tick; tick < 90 * 20 && b.owner !== 'p'; tick++) stepGame(game);
+  };
   it('fights the boarding fight the same way every time, and the boarders take the ship', () => {
     const first = deckFight(), second = deckFight();
     expect(trail(first.game, 0, 240)).toEqual(trail(second.game, 0, 240));
+    fightOn(first.game, first.b);
     expect(first.b.owner).toBe('p');
-  }, 60_000);
+  }, 120_000);
 
   // @@@deck-walk-restore - How a body walks is decided from what a save keeps (see @@@explicit-route): a fight saved in
   // the middle of the boarding and loaded again goes on tick for tick as the one never saved.
@@ -63,6 +69,7 @@ describe('walking on decks', () => {
     restored.scriptedVictory = true;
     warmGameCaches(restored);
     expect(trail(restored, 100, 240)).toEqual(trail(game, 100, 240));
+    fightOn(game, b);
     expect(b.owner).toBe('p');
-  }, 60_000);
+  }, 120_000);
 });
