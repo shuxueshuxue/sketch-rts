@@ -14,12 +14,17 @@ export const roomUiFlowCode = String.raw`
   const chooseSetupMap = async (mapId) => {
     if ((await page.locator("[data-map-entries] [aria-pressed='true']").getAttribute("data-map-id")) === mapId) return;
     const before = await setupRoomId();
-    // The list stays where it was scrolled to: the same element, at the same place (see @@@setup-in-place).
-    const scrolled = await page.evaluate(() => {
-      const list = document.querySelector("[data-map-entries]"); list.__kept = true;
+    // The list stays where it was scrolled to: the same element, at the same place (see @@@setup-in-place). It is scrolled
+    // as far toward its end as still shows the map's row whole: a click on a row out of sight scrolls the list to it
+    // first (Playwright brings what it clicks into view), which moved the list before the page did anything.
+    const scrolled = await page.evaluate((mapId) => {
+      const list = document.querySelector("[data-map-entries]"), row = list.querySelector("[data-map-id='" + mapId + "']"); list.__kept = true;
       list.scrollTop = list.scrollHeight; list.scrollLeft = list.scrollWidth;
+      const box = list.getBoundingClientRect(), at = row.getBoundingClientRect();
+      if (at.top < box.top) list.scrollTop -= box.bottom - at.bottom;
+      if (at.left < box.left) list.scrollLeft -= box.right - at.right;
       return { top: list.scrollTop, left: list.scrollLeft };
-    });
+    }, mapId);
     await page.locator("[data-map-entries] [data-map-id='" + mapId + "']").click();
     await page.waitForFunction(({ before, mapId }) => {
       const id = document.querySelector("[data-room-setup]")?.getAttribute("data-room-setup");
