@@ -85,7 +85,7 @@ import {
 import { TOWER_GARRISON, garrisonUsed, isFortifiedTower } from "../shared/tower-garrison";
 import { upgradeJob } from "../shared/building-jobs";
 import { RESEARCH_COMMANDS, researchCommandButtonsForSelection, researchProgressButtonsForSelection, type ResearchProgressButton } from "./research-controls";
-import { buildingAt, deckMovePoint, hasAlly, pointerTarget, relationTo, targetCommand, unitAt,unitPointerPosition, type PointerTarget } from "./relations";
+import { buildingAt, contextMovers, deckMovePoint, hasAlly, pointerTarget, relationTo, targetCommand, unitAt,unitPointerPosition, type PointerTarget } from "./relations";
 import { configurationOnMap, defaultRoomConfiguration, formatRoomRoute, parseRoomRoute, type RoomRoute } from "./room-route";
 import { configurationForRoomMode, RoomSetupSession } from './room-setup-session';
 import { unitHoverCursor } from './unit-hover-cursor';
@@ -2236,19 +2236,25 @@ function issueContextCommandAtWorld(world: Point, queued = false) {
     showInvalidCommand(t("status.targetUnreachable"));
     return;
   }
+  const deckShip=target?.kind==='unit'?(shipProfile(target.unit)?target.unit:target.unit.deck?snapshot.units.find(unit=>unit.id===target.unit.deck!.shipId):undefined):undefined;
   if (target && command) {
     sendCommand(command);
     // The units an attack leaves out cannot come within reach (see @@@context-reach): they walk there.
     const walkers = command.type === "attack" ? selectedUnits.filter((unit) => !command.unitIds.includes(unit.id)) : [];
-    if (walkers.length) sendCommand({ type: "move", unitIds: walkers.map((unit) => unit.id), x: world.x, y: world.y, queued, avoidCombat: true });
+    if (walkers.length) sendContextMove(world, walkers, deckShip, queued);
     statusLabel.textContent = contextOrderStatus(command, target);
     return;
   }
-  const deckShip=target?.kind==='unit'?(shipProfile(target.unit)?target.unit:target.unit.deck?snapshot.units.find(unit=>unit.id===target.unit.deck!.shipId):undefined):undefined;
-  const projected=worldPresentation.is3D&&deckShip&&!selectedUnits.some(unit=>shipProfile(unit))?worldPresentation.plane(worldToScreen(world),shipProfile(deckShip)!.deckHeight):undefined;
-  const destination = projected??deckMovePoint(snapshot.units, selectedUnits, world);
-  sendCommand({ type: "move", unitIds, x: destination.x, y: destination.y, queued, avoidCombat:true });
+  sendContextMove(world, selectedUnits, deckShip, queued);
   statusLabel.textContent = t("status.moveOrdered");
+}
+
+/** A move to where the pointer is: onto a deck for its walkers (see @@@deck-click), else for the whole selection. */
+function sendContextMove(world: Point, selected: readonly Unit[], deckShip: Unit | undefined, queued: boolean) {
+  const { movers, deck } = contextMovers(snapshot!.units, selected, world, deckShip);
+  const projected = worldPresentation.is3D && deck ? worldPresentation.plane(worldToScreen(world), shipProfile(deck)!.deckHeight) : undefined;
+  const destination = projected ?? deckMovePoint(snapshot!.units, movers, world);
+  sendCommand({ type: "move", unitIds: movers.map((unit) => unit.id), x: destination.x, y: destination.y, queued, avoidCombat: true });
 }
 
 function contextOrderStatus(command: GameCommand, target: Exclude<PointerTarget, { kind: "item" }>) {
