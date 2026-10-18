@@ -1,0 +1,18 @@
+import { it } from 'vitest';
+import { createGame, issuePlayerCommand, stepGame } from './sim';
+import { boardUnit, syncDecks } from './decks';
+it('run-in timing', () => {
+  const rows: string[] = [];
+  for (const wind of [1, -1]) for (const [lat, along] of [[400, 0], [600, 0], [400, -400], [800, -800], [300, 300]] as const) {
+    const game = createGame('bareDuel', { aiPlayers: [] }); game.units = []; game.items = []; game.buildings = []; game.resources = []; game.scriptedVictory = true;
+    game.map = { ...game.map, width: 6000, height: 6000, wind: { direction: wind * Math.PI / 2, speed: 36 }, terrain: { cell: 40, cols: 150, rows: 150, cells: '~'.repeat(22500) } };
+    const b = game.spawnUnit('enemy', 'shipOfTheLine', 3000, 3000), a = game.spawnUnit('player', 'shipOfTheLine', 3000 + along, 3000 + lat);
+    a.sailing!.heading = b.sailing!.heading = 0; b.order = { type: 'hold', x: b.x, y: b.y }; b.invulnerable = a.invulnerable = true;
+    game.items = [];
+    const crew = game.spawnUnit('player', 'footman', a.x, a.y); boardUnit(a, crew, game.units); syncDecks(game.units); crew.order = { type: 'hold', x: crew.x, y: crew.y };
+    issuePlayerCommand(game, 'player', { type: 'boardShip', unitIds: [a.id], targetId: b.id });
+    let t = 0; for (; t < 20 * 180 && a.sailing!.gangway?.phase !== 'ready'; t++) stepGame(game);
+    rows.push(`wind${wind} lat${lat} along${along}: ${a.sailing!.gangway?.phase === 'ready' ? (t / 20).toFixed(1) + 's' : 'never'}`);
+  }
+  console.log('R ' + rows.join(' | '));
+});

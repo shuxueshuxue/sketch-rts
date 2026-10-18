@@ -1,0 +1,40 @@
+diff --git a/src/shared/ship-gangway.ts b/src/shared/ship-gangway.ts
+index 54fff55d..d31fa45c 100644
+--- a/src/shared/ship-gangway.ts
++++ b/src/shared/ship-gangway.ts
+@@ -159,6 +159,13 @@ export function shipBoardingGoal(map:GameMap,units:readonly Unit[],source:Unit,t
+   }
+   return best;
+ }
++// @@@boarding-run-in - A ship sent to board from far off sails in under canvas first: an ordinary course toward the berth
++// that ends a length short of it, on its own side. Within a length and a half of the berth it docks as precisely as
++// before (undefined here); docking alone from far off pivoted and crept the whole way in.
++export function boardingRunIn(ship:Unit,berth:ShipPose):Point|undefined {
++  const length=shipProfile(ship)!.length,dx=ship.x-berth.x,dy=ship.y-berth.y,gap=Math.hypot(dx,dy);
++  return gap<=length*1.5 ? undefined : {x:berth.x+dx/gap*length,y:berth.y+dy/gap*length};
++}
+ export function beginShipBoarding(map:GameMap,units:readonly Unit[],source:Unit,target:Unit,tick:number,snapshot:CrewSnapshot={}):boolean {
+   if(shipBoardingRefusal(source,units,tick,snapshot) || shipBoardingTargetRefusal(source,target) || !shipBoardingGoal(map,units,source,target))return false;
+   crewRules.set(source,snapshot);
+diff --git a/src/shared/sim.ts b/src/shared/sim.ts
+index 875bbd22..0ba34686 100644
+--- a/src/shared/sim.ts
++++ b/src/shared/sim.ts
+@@ -7,7 +7,7 @@ import { constrainGroundShipStep, drainShipCollisionImpacts, groundShipFrameEmpt
+ import { shipLaunchPose, shipLaunchPrototype } from './ship-launch';
+ import { landSpawnPoint, landSpawnPrototype } from './production-spawn';
+ import { shipFireLaneClear } from './ship-fire-control';
+-import { beginShipBoarding, cancelShipBoarding, shipBoardingGoal, updateShipGangways, damageShipGangway, gangwayCrewEligible, bindGangwayCrewRules } from './ship-gangway';
++import { beginShipBoarding, boardingRunIn, cancelShipBoarding, shipBoardingGoal, updateShipGangways, damageShipGangway, gangwayCrewEligible, bindGangwayCrewRules } from './ship-gangway';
+ import { assignPlayerColors } from './player-colors';
+ import { BUILDING_WORK_REACH, buildingWorkGap, constructionWorkers } from './construction';
+ import { GOLD_MINE_RULES, atMineEntrance, mineEntrance, prepareMiningFrame, upkeepGoldIncome, type MiningFrame } from "./mining";
+@@ -2000,7 +2000,7 @@ function updateBoardShipOrder(game:Game,ship:Unit) {
+   const state=ship.sailing.gangway!;
+   if(state.phase==='approach') {
+     const goal=shipBoardingGoal(game.map,game.units,ship,target);
+-    if(goal)sailToward(ship,goal,game.map,game.units,statusPace(ship));
++    if(goal)sailToward(ship,boardingRunIn(ship,goal) ?? goal,game.map,game.units,statusPace(ship));
+     return;
+   }
+   ship.sailing.speed=0;ship.sailing.yawRate=0;
