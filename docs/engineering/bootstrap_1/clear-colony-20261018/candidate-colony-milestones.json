@@ -1,0 +1,172 @@
+[
+  {
+    "tick": 8400,
+    "hallPresent": false,
+    "hallComplete": false,
+    "mineAmount": 6000,
+    "miners": 0,
+    "carryingGold": 0,
+    "gold": 144,
+    "lost": 0
+  },
+  {
+    "tick": 9000,
+    "hallPresent": false,
+    "hallComplete": false,
+    "mineAmount": 6000,
+    "miners": 0,
+    "carryingGold": 0,
+    "gold": 324,
+    "lost": 1
+  },
+  {
+    "tick": 9600,
+    "hallPresent": false,
+    "hallComplete": false,
+    "mineAmount": 6000,
+    "miners": 0,
+    "carryingGold": 0,
+    "gold": 237,
+    "lost": 2
+  },
+  {
+    "tick": 10200,
+    "hallPresent": false,
+    "hallComplete": false,
+    "mineAmount": 6000,
+    "miners": 0,
+    "carryingGold": 0,
+    "gold": 267,
+    "lost": 4
+  },
+  {
+    "tick": 10800,
+    "hallPresent": false,
+    "hallComplete": false,
+    "mineAmount": 6000,
+    "miners": 0,
+    "carryingGold": 0,
+    "gold": 467,
+    "lost": 4
+  },
+  {
+    "tick": 11400,
+    "hallPresent": false,
+    "hallComplete": false,
+    "mineAmount": 6000,
+    "miners": 0,
+    "carryingGold": 0,
+    "gold": 127,
+    "lost": 4
+  },
+  {
+    "tick": 12000,
+    "hallPresent": false,
+    "hallComplete": false,
+    "mineAmount": 6000,
+    "miners": 0,
+    "carryingGold": 0,
+    "gold": 317,
+    "lost": 4
+  },
+  {
+    "tick": 12600,
+    "hallPresent": false,
+    "hallComplete": false,
+    "mineAmount": 6000,
+    "miners": 0,
+    "carryingGold": 0,
+    "gold": 412,
+    "lost": 4
+  },
+  {
+    "tick": 13200,
+    "hallPresent": false,
+    "hallComplete": false,
+    "mineAmount": 6000,
+    "miners": 0,
+    "carryingGold": 0,
+    "gold": 442,
+    "lost": 4
+  },
+  {
+    "tick": 13800,
+    "hallPresent": true,
+    "hallComplete": true,
+    "mineAmount": 6000,
+    "miners": 2,
+    "carryingGold": 0,
+    "gold": 181,
+    "lost": 4
+  },
+  {
+    "tick": 14400,
+    "hallPresent": true,
+    "hallComplete": true,
+    "mineAmount": 5920,
+    "miners": 2,
+    "carryingGold": 0,
+    "gold": 391,
+    "lost": 4
+  },
+  {
+    "tick": 15000,
+    "hallPresent": true,
+    "hallComplete": true,
+    "mineAmount": 5820,
+    "miners": 3,
+    "carryingGold": 0,
+    "gold": 481,
+    "lost": 4
+  },
+  {
+    "tick": 15600,
+    "hallPresent": true,
+    "hallComplete": true,
+    "mineAmount": 5650,
+    "miners": 5,
+    "carryingGold": 20,
+    "gold": 471,
+    "lost": 4
+  },
+  {
+    "tick": 16200,
+    "hallPresent": true,
+    "hallComplete": true,
+    "mineAmount": 5460,
+    "miners": 5,
+    "carryingGold": 20,
+    "gold": 320,
+    "lost": 4
+  },
+  {
+    "tick": 16800,
+    "hallPresent": true,
+    "hallComplete": true,
+    "mineAmount": 5260,
+    "miners": 5,
+    "carryingGold": 20,
+    "gold": 720,
+    "lost": 4
+  },
+  {
+    "tick": 17400,
+    "hallPresent": true,
+    "hallComplete": true,
+    "mineAmount": 5070,
+    "miners": 5,
+    "carryingGold": 20,
+    "gold": 560,
+    "lost": 4
+  },
+  {
+    "tick": 18000,
+    "hallPresent": true,
+    "hallComplete": true,
+    "mineAmount": 4880,
+    "miners": 5,
+    "carryingGold": 10,
+    "gold": 742,
+    "lost": 4
+  }
+]

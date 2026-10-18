@@ -1,0 +1,11 @@
+
+ RUN  v2.1.9 /workspace/bootstrap-1-resume
+
+ ✓ src/ai/bootstrap_1/clear-colony-departure.test.ts (10 tests) 3139ms
+   ✓ the issued colony departure moves the real hull with both engineers still alive 2627ms
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  01:01:56
+   Duration  6.20s (transform 2.12s, setup 0ms, collect 2.79s, tests 3.14s, environment 0ms, prepare 57ms)
+

@@ -75,6 +75,7 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
   const mainlandCare = new Set([...(mainland?.unmedicated ?? []).map(({ patient }) => patient.id),
     ...(mainland?.recovering ?? []).flatMap(({ patient, healer }) => [patient.id, healer.id])]);
   const commands = [...crossing, ...cancelled, ...planShoreTransfers(snapshot,owner,options), ...planNavalTacticsWithAssignments(snapshot, owner, options, {
+    settlementEscort: 'when-defended',
     orderAssaultLanding: (boat, goal, ordinary) => orderBootstrapAssaultLanding(snapshot, owner, options, boat, goal, ordinary),
     orderCrew: (soldiers, shore, boat) => riderFerryCrew(snapshot, soldiers, shore, boat, options),
     mineEligible: mines.eligible, targetAvailable: mines.targetAvailable,

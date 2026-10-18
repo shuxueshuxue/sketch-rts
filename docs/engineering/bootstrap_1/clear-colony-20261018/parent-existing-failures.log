@@ -1,0 +1,70 @@
+
+ RUN  v2.1.9 /workspace/bootstrap-1-parent-check-20261018
+
+ ❯ src/ai/policy/naval.test.ts (0 test)
+ ❯ src/ai/bootstrap_1/assault-retarget-deployment.test.ts (6 tests | 4 failed) 307ms
+   × counterfactual fallen objective preserves the real 89625 deployment convoy > v9_archer keeps both actual loaded boats sailing and waits before committing either half 115ms
+     → expected 'return' to be 'sailing' // Object.is equality
+   × counterfactual fallen objective preserves the real 89625 deployment convoy > v9_summoner keeps both actual loaded boats sailing and waits before committing either half 45ms
+     → expected 'return' to be 'sailing' // Object.is equality
+   × counterfactual fallen objective preserves the real 89625 deployment convoy > v9_knight keeps both actual loaded boats sailing and waits before committing either half 41ms
+     → expected 'return' to be 'sailing' // Object.is equality
+   × counterfactual fallen objective preserves the real 89625 deployment convoy > preserves the live companion sea goal even without a selected approach 41ms
+     → expected 'return' to be 'sailing' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/ai/policy/naval.test.ts [ src/ai/policy/naval.test.ts ]
+Error: ENOENT: no such file or directory, open '/workspace/bootstrap-1-parent-check-20261018/docs/engineering/bootstrap_1/frozen-policy.json'
+ ❯ scripts/bootstrap_1-planner.ts:14:3
+     12| 
+     13| export const frozenPolicyManifest: { revision: string; rulesVersion: n…
+     14|   readFileSync(new URL('../docs/engineering/bootstrap_1/frozen-policy.…
+       |   ^
+     15| // Acceptance is authorized for the manifest's rules, even when main m…
+     16| assertCurrentRulesVersion(frozenPolicyManifest.rulesVersion, 'bootstra…
+ ❯ src/ai/policy/naval.test.ts:18:32
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/ai/bootstrap_1/assault-retarget-deployment.test.ts > counterfactual fallen objective preserves the real 89625 deployment convoy > v9_archer keeps both actual loaded boats sailing and waits before committing either half
+ FAIL  src/ai/bootstrap_1/assault-retarget-deployment.test.ts > counterfactual fallen objective preserves the real 89625 deployment convoy > v9_summoner keeps both actual loaded boats sailing and waits before committing either half
+ FAIL  src/ai/bootstrap_1/assault-retarget-deployment.test.ts > counterfactual fallen objective preserves the real 89625 deployment convoy > v9_knight keeps both actual loaded boats sailing and waits before committing either half
+AssertionError: expected 'return' to be 'sailing' // Object.is equality
+
+Expected: "sailing"
+Received: "return"
+
+ ❯ src/ai/bootstrap_1/assault-retarget-deployment.test.ts:83:34
+     81|       expect(ferries[id]!.targetId).toBe(selected.id);
+     82|       expect(ferries[id]!.targetGround).toEqual({ x: selected.x, y: se…
+     83|       expect(ferries[id]!.phase).toBe('sailing');
+       |                                  ^
+     84|       expect(preservedMission(ferries[id])).toEqual(preservedMission(b…
+     85|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  src/ai/bootstrap_1/assault-retarget-deployment.test.ts > counterfactual fallen objective preserves the real 89625 deployment convoy > preserves the live companion sea goal even without a selected approach
+AssertionError: expected 'return' to be 'sailing' // Object.is equality
+
+Expected: "sailing"
+Received: "return"
+
+ ❯ src/ai/bootstrap_1/assault-retarget-deployment.test.ts:107:39
+    105|     const { ferries } = query(state);
+    106|     expect(ferries[companion]!.targetId).toBe(ferries[first]!.targetId…
+    107|     expect(ferries[companion]!.phase).toBe('sailing');
+       |                                       ^
+    108|     expect(preservedMission(ferries[companion])).toEqual(preservedMiss…
+    109|     expect(ferries[companion]!.to).toEqual(before.to);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ Test Files  2 failed (2)
+      Tests  4 failed | 2 passed (6)
+   Start at  01:05:49
+   Duration  3.44s (transform 1.84s, setup 0ms, collect 356ms, tests 307ms, environment 0ms, prepare 107ms)
+

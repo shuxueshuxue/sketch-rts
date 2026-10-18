@@ -1,0 +1,76 @@
+
+ RUN  v2.1.9 /workspace/bootstrap-1-resume
+
+ ❯ src/ai/bootstrap_1/clear-colony-departure.test.ts (9 tests | 6 failed) 515ms
+   × v9_archer sends the loaded settlers to the clear mine without waiting for optional soldiers 146ms
+     → expected [] to deep equally contain ObjectContaining{…}
+   × v9_summoner sends the loaded settlers to the clear mine without waiting for optional soldiers 61ms
+     → expected [] to deep equally contain ObjectContaining{…}
+   × v9_knight sends the loaded settlers to the clear mine without waiting for optional soldiers 52ms
+     → expected [] to deep equally contain ObjectContaining{…}
+   × v9_archer does not recruit another escort for an already loaded clear colony 53ms
+     → expected true to be false // Object.is equality
+   × v9_summoner does not recruit another escort for an already loaded clear colony 41ms
+     → expected true to be false // Object.is equality
+   × v9_knight does not recruit another escort for an already loaded clear colony 42ms
+     → expected true to be false // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/ai/bootstrap_1/clear-colony-departure.test.ts > v9_archer sends the loaded settlers to the clear mine without waiting for optional soldiers
+ FAIL  src/ai/bootstrap_1/clear-colony-departure.test.ts > v9_summoner sends the loaded settlers to the clear mine without waiting for optional soldiers
+ FAIL  src/ai/bootstrap_1/clear-colony-departure.test.ts > v9_knight sends the loaded settlers to the clear mine without waiting for optional soldiers
+AssertionError: expected [] to deep equally contain ObjectContaining{…}
+
+- Expected: 
+ObjectContaining {
+  "command": Object {
+    "type": "unload",
+    "unitIds": Array [
+      "unit-p0-transport-1070",
+    ],
+    "x": 1648,
+    "y": 4528,
+  },
+  "scriptId": "naval",
+}
+
++ Received: 
+Array []
+
+ ❯ src/ai/bootstrap_1/clear-colony-departure.test.ts:27:19
+     25|   expect(workers).toHaveLength(2);
+     26|   const entries = planAiOwnerCommandEntries(snapshotGame(game), { play…
+     27|   expect(entries).toContainEqual(expect.objectContaining({ scriptId: '…
+       |                   ^
+     28|     type: 'unload', unitIds: [boatId], ...memory.naval.ferries[boatId]…
+     29|   } }));
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/ai/bootstrap_1/clear-colony-departure.test.ts > v9_archer does not recruit another escort for an already loaded clear colony
+ FAIL  src/ai/bootstrap_1/clear-colony-departure.test.ts > v9_summoner does not recruit another escort for an already loaded clear colony
+ FAIL  src/ai/bootstrap_1/clear-colony-departure.test.ts > v9_knight does not recruit another escort for an already loaded clear colony
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/ai/bootstrap_1/clear-colony-departure.test.ts:42:105
+     40|   memory.naval.ferries[boatId].crewIds = [];
+     41|   const entries = planAiOwnerCommandEntries(snapshotGame(game), { play…
+     42|   expect(entries.some(entry => entry.command.type === 'board' && entry…
+       |                                                                                                         ^
+     43|   expect(entries.some(entry => entry.command.type === 'unload' && entr…
+     44| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ Test Files  1 failed (1)
+      Tests  6 failed | 3 passed (9)
+   Start at  00:53:17
+   Duration  3.86s (transform 2.23s, setup 0ms, collect 3.09s, tests 515ms, environment 0ms, prepare 77ms)
+

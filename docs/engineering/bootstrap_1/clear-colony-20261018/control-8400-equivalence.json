@@ -1,0 +1,17 @@
+{
+  "snapshot": true,
+  "nextId": true,
+  "memories": true,
+  "commands": {
+    "rows": 76,
+    "equal": true
+  },
+  "hits": {
+    "rows": 4,
+    "equal": true
+  },
+  "entities": {
+    "rows": 2,
+    "equal": true
+  }
+}

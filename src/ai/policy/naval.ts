@@ -420,6 +420,7 @@ export function navalDockRepair(snapshot: GameSnapshot, ship: Unit): GameCommand
 /** Fleet combat and ferry ownership are independent of the map generator. */
 export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
     return planNavalTacticsWithAssignments(snapshot, owner, options, {
+        settlementEscort: 'always',
         orderCrew: (soldiers, _shore, boat) => soldiers.sort((a, b) => distance(a, boat) - distance(b, boat)),
         mineEligible: () => true, targetAvailable: () => true, transportReady: () => true, troopAvailable: () => true,
     });
@@ -428,6 +429,7 @@ export function planNavalTactics(snapshot: GameSnapshot, owner: PlayerId, option
 type AssaultLandingOrder = (boat: Unit, goal: Point, ordinary: GameCommand[]) => GameCommand[];
 type FerryCrewOrder = (soldiers: Unit[], shore: Point, boat: Unit) => Unit[];
 type NavalAssignments = {
+    settlementEscort: 'always' | 'when-defended';
     orderCrew: FerryCrewOrder;
     orderAssaultLanding?: AssaultLandingOrder;
     mineEligible: (mine: ResourceNode) => boolean;
@@ -683,7 +685,7 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
         if (ready.length) commands.push({type:"attackMove",unitIds:ready.map(unit=>unit.id),x:target.x,y:target.y});
     }
     for (const transport of own.filter(unit => ferryCapacity(unit) > 0 && unit.id !== outfit?.shipId && !services.reserved.has(unit.id)))
-        commands.push(...ferryCommands(snapshot, owner, options, transport, plan, assault, orderCrew, transportReady, troopAvailable, orderAssaultLanding, assignments.workerAvailable));
+        commands.push(...ferryCommands(snapshot, owner, options, transport, plan, assault, orderCrew, transportReady, troopAvailable, orderAssaultLanding, assignments.settlementEscort, assignments.workerAvailable));
     for (const worker of own.filter(unit => unit.deck && !isInCabin(unit) && unit.kind === "worker" && unit.order.type === "idle")) {
         const hull = own.find(ship => ship.id === worker.deck!.shipId);
         if (hull && shipNeedsRepair(snapshot,hull) && playerState(snapshot, owner).gold > 50)
@@ -725,7 +727,7 @@ function ferryUnloadCommands(snapshot: GameSnapshot, boat: Unit, goal: Point, av
         ({ type: 'unloadPassenger', transportId: boat.id, passengerId }));
 }
 
-function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, boat: Unit, island: IslandPlan | undefined, assault: AssaultPlan | undefined, orderCrew: FerryCrewOrder, ready: (boat: Unit) => boolean, troopAvailable: (unit: Unit) => boolean, orderAssaultLanding: AssaultLandingOrder, workerAvailable?: (unit: Unit, boat: Unit) => boolean): GameCommand[] {
+function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, boat: Unit, island: IslandPlan | undefined, assault: AssaultPlan | undefined, orderCrew: FerryCrewOrder, ready: (boat: Unit) => boolean, troopAvailable: (unit: Unit) => boolean, orderAssaultLanding: AssaultLandingOrder, settlementEscort: NavalAssignments['settlementEscort'], workerAvailable?: (unit: Unit, boat: Unit) => boolean): GameCommand[] {
     const memory = navalMemory(options);
     const ferries = (memory.ferries ??= {});
     let mission = ferries[boat.id];
@@ -913,6 +915,10 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     // Load engineers first. Reserving only their weight did not reserve floor
     // space: nearby infantry filled the deck before distant workers arrived.
     const engineersAboard=cargo.filter(unit=>unit.kind==='worker').length;
+    // Two engineers can establish an undefended mine without exporting more
+    // of the home army. Keep the ordinary escort for guarded destinations.
+    const staffedClearColony = settlementEscort === 'when-defended' && mission.purpose === 'settle'
+        && engineersAboard >= 2 && landingDefense(snapshot, owner, options, target) === 0;
     const engineersReady=mission.purpose!=='settle' || engineersAboard>=2
         || engineersAboard>=1 && (workerCount<2 || snapshot.tick-mission.progress!.tick>seconds(20));
     // An explicitly unloading convoy already threatens this shore. Reserving
@@ -925,7 +931,7 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
         && !unit.deck && unitMover(unit.kind)==='land' && sameGround(map, unit, loadGround)), ...incoming]
         .filter(unit=>combatCapability(snapshot,unit).armed).map(unit=>[unit.id,unit])).values()];
     let strengthLeft = strengthOf(soldiers);
-    for (const soldier of mission.purpose === "rebase" || !engineersReady ? [] : soldiers) {
+    for (const soldier of mission.purpose === "rebase" || !engineersReady || staffedClearColony ? [] : soldiers) {
         if (bodyMass(soldier) > room || (mission.purpose !== "evacuate" && strengthLeft - unitStrengthForFerry(soldier) < strengthOf(threats) * 1.3))
             continue;
         crew.push(soldier);
@@ -1023,6 +1029,14 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     if ((mission.purpose === "settle" || mission.purpose === "assault") && !landingSafe(snapshot, owner, options, boat, mission.purpose === "assault" ? mission.to : target)) {
         if (cargo.length && snapshot.tick - mission.sinceTick > seconds(120)) return cancelFerry(snapshot, boat, mission, options);
         return commands;
+    }
+    // Release only optional soldiers, after the ordinary sea and landing
+    // safety gates. An engineer still boarding keeps its rendezvous.
+    if (staffedClearColony && !crew.length && boarding.every(unit => unit.kind !== 'worker')) {
+        mission.phase = 'sailing';
+        mission.crewIds = [];
+        return [...commands, ...(boarding.length ? [{ type: 'stop' as const, unitIds: boarding.map(unit => unit.id) }] : []),
+            { type: 'unload', unitIds: [boat.id], ...mission.to }];
     }
     if (boarding.length && cargo.length && snapshot.tick - mission.progress!.tick > seconds(20) && (mission.purpose !== "settle" || hasWorkers) && (mission.purpose === "rebase" || hasSoldiers || !guardsRemain)) {
         mission.phase = "sailing";

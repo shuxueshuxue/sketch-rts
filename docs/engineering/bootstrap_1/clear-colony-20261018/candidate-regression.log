@@ -1,0 +1,93 @@
+
+ RUN  v2.1.9 /workspace/bootstrap-1-resume
+
+ ❯ src/ai/policy/naval.test.ts (48 tests | 1 failed) 162938ms
+   ✓ shared dock outfitting > keeps an embarked colony sailing when casualties have lowered population below the opening gate 1388ms
+   ✓ shared dock outfitting > v5 completes a real island colony and puts its settlers to work 59975ms
+   ✓ shared dock outfitting > v7 completes a real island colony and puts its settlers to work 51811ms
+   ✓ shared dock outfitting > v8 completes a real island colony and puts its settlers to work 45148ms
+   × the AI on the water > sends a loading convoy's escort ahead to cover the landing instead of waiting on the boat 13ms
+     → expected 368 to be greater than 504
+   ✓ the AI on the water > ships workers away from a depleted island to a live owned mine 3680ms
+ ❯ src/ai/bootstrap_1/assault-retarget-deployment.test.ts (6 tests | 4 failed) 295ms
+   × counterfactual fallen objective preserves the real 89625 deployment convoy > v9_archer keeps both actual loaded boats sailing and waits before committing either half 102ms
+     → expected 'return' to be 'sailing' // Object.is equality
+   × counterfactual fallen objective preserves the real 89625 deployment convoy > v9_summoner keeps both actual loaded boats sailing and waits before committing either half 44ms
+     → expected 'return' to be 'sailing' // Object.is equality
+   × counterfactual fallen objective preserves the real 89625 deployment convoy > v9_knight keeps both actual loaded boats sailing and waits before committing either half 38ms
+     → expected 'return' to be 'sailing' // Object.is equality
+   × counterfactual fallen objective preserves the real 89625 deployment convoy > preserves the live companion sea goal even without a selected approach 41ms
+     → expected 'return' to be 'sailing' // Object.is equality
+ ✓ src/ai/bootstrap_1/assault-retarget.test.ts (18 tests) 4686ms
+   ✓ actual target identity and permanent combat commitment > v9_archer retains the actual observed island after the target falls 628ms
+   ✓ actual target identity and permanent combat commitment > v9_summoner retains the actual observed island after the target falls 469ms
+   ✓ actual target identity and permanent combat commitment > v9_knight retains the actual observed island after the target falls 417ms
+   ✓ actual target identity and permanent combat commitment > synchronizes the observed island convoy when one target falls, including a live companion objective 433ms
+   ✓ actual target identity and permanent combat commitment > keeps cleared-island cancellation and returning tasks 443ms
+ ✓ src/ai/bootstrap_1/ferry-loading-escape.test.ts (14 tests) 214ms
+ ✓ src/ai/bootstrap_1/ferry-preparation.test.ts (14 tests) 19989ms
+   ✓ 'v9_archer' sends the reachable idle 'grove' settlers while its ferry sails (mirror=false) 3580ms
+   ✓ 'v9_archer' sends the reachable idle 'ember' settlers while its ferry sails (mirror=false) 3100ms
+   ✓ 'v9_summoner' sends the reachable idle 'grove' settlers while its ferry sails (mirror=false) 3089ms
+   ✓ 'v9_summoner' sends the reachable idle 'ember' settlers while its ferry sails (mirror=false) 3080ms
+   ✓ 'v9_knight' sends the reachable idle 'grove' settlers while its ferry sails (mirror=false) 3198ms
+   ✓ 'v9_knight' sends the reachable idle 'ember' settlers while its ferry sails (mirror=false) 3177ms
+ ✓ src/ai/bootstrap_1/assault-island-choice.test.ts (21 tests) 2135ms
+ ✓ src/ai/bootstrap_1/clear-colony-departure.test.ts (10 tests) 2648ms
+   ✓ the issued colony departure moves the real hull with both engineers still alive 2330ms
+ ✓ src/ai/bootstrap_1/colony-departure-defense.test.ts (3 tests) 695ms
+   ✓ v9_archer reserves actual island defenders before an enemy convoy lands 343ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/ai/policy/naval.test.ts > the AI on the water > sends a loading convoy's escort ahead to cover the landing instead of waiting on the boat
+AssertionError: expected 368 to be greater than 504
+ ❯ src/ai/policy/naval.test.ts:371:23
+    369|     expect(command?.type).toBe("move");
+    370|     if (command?.type !== "move") throw new Error("escort did not adva…
+    371|     expect(command.x).toBeGreaterThan(boat.x + 200);
+       |                       ^
+    372|   });
+    373| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  src/ai/bootstrap_1/assault-retarget-deployment.test.ts > counterfactual fallen objective preserves the real 89625 deployment convoy > v9_archer keeps both actual loaded boats sailing and waits before committing either half
+ FAIL  src/ai/bootstrap_1/assault-retarget-deployment.test.ts > counterfactual fallen objective preserves the real 89625 deployment convoy > v9_summoner keeps both actual loaded boats sailing and waits before committing either half
+ FAIL  src/ai/bootstrap_1/assault-retarget-deployment.test.ts > counterfactual fallen objective preserves the real 89625 deployment convoy > v9_knight keeps both actual loaded boats sailing and waits before committing either half
+AssertionError: expected 'return' to be 'sailing' // Object.is equality
+
+Expected: "sailing"
+Received: "return"
+
+ ❯ src/ai/bootstrap_1/assault-retarget-deployment.test.ts:84:34
+     82|       expect(ferries[id]!.targetId).toBe(selected.id);
+     83|       expect(ferries[id]!.targetGround).toEqual({ x: selected.x, y: se…
+     84|       expect(ferries[id]!.phase).toBe('sailing');
+       |                                  ^
+     85|       expect(preservedMission(ferries[id])).toEqual(preservedMission(b…
+     86|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  src/ai/bootstrap_1/assault-retarget-deployment.test.ts > counterfactual fallen objective preserves the real 89625 deployment convoy > preserves the live companion sea goal even without a selected approach
+AssertionError: expected 'return' to be 'sailing' // Object.is equality
+
+Expected: "sailing"
+Received: "return"
+
+ ❯ src/ai/bootstrap_1/assault-retarget-deployment.test.ts:108:39
+    106|     const { ferries } = query(state);
+    107|     expect(ferries[companion]!.targetId).toBe(ferries[first]!.targetId…
+    108|     expect(ferries[companion]!.phase).toBe('sailing');
+       |                                       ^
+    109|     expect(preservedMission(ferries[companion])).toEqual(preservedMiss…
+    110|     expect(ferries[companion]!.to).toEqual(before.to);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ Test Files  2 failed | 6 passed (8)
+      Tests  5 failed | 129 passed (134)
+   Start at  01:02:22
+   Duration  201.25s (transform 3.14s, setup 0ms, collect 6.01s, tests 193.60s, environment 2ms, prepare 417ms)
+

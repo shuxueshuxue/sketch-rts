@@ -1,0 +1,26 @@
+
+ RUN  v2.1.9 /workspace/bootstrap-1-parent-check-20261018
+
+ ❯ src/ai/policy/naval.test.ts (48 tests | 1 failed | 47 skipped) 50ms
+   × the AI on the water > sends a loading convoy's escort ahead to cover the landing instead of waiting on the boat 49ms
+     → expected 368 to be greater than 504
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/ai/policy/naval.test.ts > the AI on the water > sends a loading convoy's escort ahead to cover the landing instead of waiting on the boat
+AssertionError: expected 368 to be greater than 504
+ ❯ src/ai/policy/naval.test.ts:371:23
+    369|     expect(command?.type).toBe("move");
+    370|     if (command?.type !== "move") throw new Error("escort did not adva…
+    371|     expect(command.x).toBeGreaterThan(boat.x + 200);
+       |                       ^
+    372|   });
+    373| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 47 skipped (48)
+   Start at  01:06:17
+   Duration  2.65s (transform 1.83s, setup 0ms, collect 2.39s, tests 50ms, environment 0ms, prepare 54ms)
+

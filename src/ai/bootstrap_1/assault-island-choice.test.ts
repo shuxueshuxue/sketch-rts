@@ -19,6 +19,7 @@ function select(frame: ReturnType<typeof saved>, version: typeof BOOTSTRAP_VERSI
   const options = bootstrapPolicyContext(snapshot, 'p0', version, { memory, teams: snapshot.teams! });
   const before = JSON.stringify(snapshot), otherMemories = JSON.stringify([frame.memories.p1, frame.memories.p2]);
   planNavalTacticsWithAssignments(snapshot, 'p0', options, { orderCrew: units => units,
+    settlementEscort: 'always',
     mineEligible: () => true, targetAvailable: () => true, transportReady: () => false, troopAvailable: () => false });
   expect(JSON.stringify(snapshot)).toBe(before);
   expect(JSON.stringify([frame.memories.p1, frame.memories.p2])).toBe(otherMemories);

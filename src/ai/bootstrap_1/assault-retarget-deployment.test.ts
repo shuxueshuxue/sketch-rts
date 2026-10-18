@@ -43,6 +43,7 @@ function query(state: ReturnType<typeof load>, version: 'v9_archer' | 'v9_summon
   const beforeOthers = structuredClone(otherMemories);
   const context = bootstrapPolicyContext(snapshot, 'p0', version, { teams: snapshot.teams!, memory: state.memories.p0 });
   const commands = planNavalTacticsWithAssignments(snapshot, 'p0', context, {
+    settlementEscort: 'always',
     orderCrew: crew => crew,
     mineEligible: () => true,
     targetAvailable: () => true,
