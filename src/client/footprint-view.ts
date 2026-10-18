@@ -1,3 +1,4 @@
+import { GOLD_MINE_RULES } from "../shared/mining";
 import { standingBodies } from "../shared/structure-bodies";
 import { BUILDING_DEFS } from "../shared/catalog";
 import { footprintCells, isFootprintBuildable, isWalkable } from "../shared/terrain";
@@ -65,4 +66,11 @@ export function blockedFootprintCells(snapshot: Pick<GameSnapshot, "map" | "buil
     }
   }
   return blocked;
+}
+
+/** Where a mine stands and how large its picture is: the hill on its two-cell body (see @@@structure-body), on the
+ * footprint's centre, its rocks a little past the edge (the art spans about 84 across; see @@@mine-stages). */
+export function mineStanding(snapshot: Parameters<typeof footprintSquare>[0], mine: { x: number; y: number }) {
+  const square = footprintSquare(snapshot, mine, GOLD_MINE_RULES.radius);
+  return { ...(square ? footprintCentre(square) : { x: mine.x, y: mine.y }), size: square ? (square.right - square.left + 1) * square.cell * 1.1 / 84 : 1 };
 }

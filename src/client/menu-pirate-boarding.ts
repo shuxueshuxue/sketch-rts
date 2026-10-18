@@ -41,7 +41,7 @@ function pirateModel(captain = false): UnitModel {
       }
     },
   }, captain ? 1.65 : 1.5);
-  return { paint, remains: paint.remains, shadow: 'foot' };
+  return { paint, remains: paint.remains };
 }
 function guardModel(): UnitModel {
   const paint = storyFigure('footman', { shield: false, weapon: 'sword', headwear: false,
@@ -56,7 +56,7 @@ function guardModel(): UnitModel {
       }
     },
   }, 1.45);
-  return { paint, remains: paint.remains, shadow: 'foot' };
+  return { paint, remains: paint.remains };
 }
 const painters: Readonly<Record<string, PropPainter>> = {
   'boarding-pirate-flag': (b, state) => {

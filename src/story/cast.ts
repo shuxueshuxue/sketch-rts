@@ -24,8 +24,6 @@ export type UnitModel = {
   paint: UnitPainter;
   // Low ground-level remains, composed from the same authored anatomy/loadout.
   remains?: UnitRemainsPainter;
-  // The shadow under it: a walker's, a rider's, a beast's, or a giant's.
-  shadow?: "foot" | "mounted" | "beast" | "huge" | "none";
 };
 
 // How a hero grows (see rpg): the experience each level needs and what every level past the first adds.

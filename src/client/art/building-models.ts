@@ -375,13 +375,7 @@ export function paintBuildingModel(b:Brush,kind:BuildingKind | SiteModelKind,tea
     polygon(b,hull.map(([x,y],i)=>[x*1.14+(noise(i)-.5)*2,19+(y-19)*1.2]),'#a59c7424','transparent',0);
     polygon(b,hull.map(([x,y])=>[x*1.035,19+(y-19)*1.045]),'#59624b30','transparent',0);
   }
-  // Union silhouettes into a single fill: overlapping faces do not darken shadows.
-  b.beginPath();
-  for(const f of m.faces){
-    const p=f.p.map(([x,y,z])=>project([x+z*.45,y+z*.3,0]));
-    p.forEach(([x,y],i)=>i?b.lineTo(x,y):b.moveTo(x,y));b.closePath();
-  }
-  b.fillStyle='#56686b20';b.fill();
+  // No cast shadow: the world's sun casts it (docs/art/render-contract.zh.md, rule 4; see @@@sun).
   m.faces.sort((a,z)=>{
     const gap=depth(a)-depth(z);
     return Math.abs(gap)>.001?gap:height(a)-height(z);
