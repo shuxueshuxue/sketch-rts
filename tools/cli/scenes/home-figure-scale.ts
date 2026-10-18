@@ -33,7 +33,7 @@ export default async function (s: Scene) {
       const run = this.run, original = run?.frameAt;
       if (run) {
         const ship = run.game.units.find(unit => unit.kind === 'shipOfTheLine' && unit.owner === 'corsairs');
-        run.frameAt = () => ({ focus: { x: ship.x, y: ship.y - 150 }, zoom: 1.5, anchorX: .5, anchorY: .5 });
+        run.frameAt = () => ({ focus: { x: ship.x, y: ship.y - 60 }, zoom: 1.25, anchorX: .5, anchorY: .5 });
       }
       try { return draw.call(this, ctx, width, height, now, reduced, paint); }
       finally { if (run) run.frameAt = original; }
