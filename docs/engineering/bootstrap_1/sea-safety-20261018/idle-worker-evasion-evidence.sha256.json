@@ -1,0 +1,271 @@
+{
+  "archive": "idle-worker-evasion-evidence.tar.gz",
+  "bytes": 1673803,
+  "sha256": "1ad7274bc13e51946c6b9737e89c90e36822f4668c7505b732f3a5b83fa8ad5a",
+  "files": {
+    "raw/idle-worker-evasion-54600/commands.jsonl": {
+      "bytes": 369090,
+      "sha256": "8dba47832c15fecceb040106a4baa5deb9191b2b81eef001ab41f493003ffa96"
+    },
+    "raw/idle-worker-evasion-54600/entities.jsonl": {
+      "bytes": 907,
+      "sha256": "52214a7bea4ebb2d4d983d84c9caeb998119b9163707795166e387199b93af89"
+    },
+    "raw/idle-worker-evasion-54600/frames/54600.json.gz": {
+      "bytes": 20239,
+      "sha256": "628f7a4d0b79221948cb4c48226aef7b160ead986c1b8579a4499c03af4423ff"
+    },
+    "raw/idle-worker-evasion-54600/frames/55200.json.gz": {
+      "bytes": 19037,
+      "sha256": "1ae625f3ecc90435c1deac5823aa29bb67937e7102f2beaf2cdc2c4df50cdea0"
+    },
+    "raw/idle-worker-evasion-54600/frames/55800.json.gz": {
+      "bytes": 19213,
+      "sha256": "27fee5750707783653223bc404c2295ea2feb8be2cb581050192cd1f729839f4"
+    },
+    "raw/idle-worker-evasion-54600/frames/56400.json.gz": {
+      "bytes": 19192,
+      "sha256": "5a1f888b3562f18b349bef1ebff46f18df19a88d5cf245d1e3bae74569aef02f"
+    },
+    "raw/idle-worker-evasion-54600/frames/57000.json.gz": {
+      "bytes": 19757,
+      "sha256": "e2e4ce9496091882d4825cb801dd12ddcf8d347681334018dc5848b3e76ec5d3"
+    },
+    "raw/idle-worker-evasion-54600/frames/57600.json.gz": {
+      "bytes": 20764,
+      "sha256": "0eae2f99eab9f8a28f9be587970ff7205c494bc7b6c79a6bd996956b877089f6"
+    },
+    "raw/idle-worker-evasion-54600/frames/58200.json.gz": {
+      "bytes": 19177,
+      "sha256": "c3f4ed8b73518e70a8b7625fafc0caa66ca0111108ab26ea88a9c6dd854a7583"
+    },
+    "raw/idle-worker-evasion-54600/frames/58800.json.gz": {
+      "bytes": 19603,
+      "sha256": "8a39ac0f27353436b8e8b8d3779d87466ba11403131fa8fc1c7028e708a010fb"
+    },
+    "raw/idle-worker-evasion-54600/frames/59400.json.gz": {
+      "bytes": 20165,
+      "sha256": "2fdfd3046efc9aa389e606f7cc7c18fc9a7dba098fe74e5355bad12698b3c0ea"
+    },
+    "raw/idle-worker-evasion-54600/frames/60000.json.gz": {
+      "bytes": 20160,
+      "sha256": "77a7debd9aeef6f2dd0c7009b59cc98865fb094a65d2dea15d812dff99b81315"
+    },
+    "raw/idle-worker-evasion-54600/hits.jsonl": {
+      "bytes": 34883,
+      "sha256": "cd6b205dc7805bfc82c76182eeff4d4c77006c7c7640919cf62ec7a78d06ea1d"
+    },
+    "raw/idle-worker-evasion-54600/result.json": {
+      "bytes": 33853,
+      "sha256": "be237d3f4d1197042f251de64ff3c77dfed4a3bf857eeaa638eaab7f0c091450"
+    },
+    "raw/idle-worker-evasion-54600/samples.jsonl": {
+      "bytes": 40092,
+      "sha256": "b6883fea1192f40a597154c905031cfcb1cdbfec27bdcb7d3bbb31a4a73ca08f"
+    },
+    "raw/idle-worker-evasion-54600/source.json": {
+      "bytes": 183640,
+      "sha256": "f102cd2132cbd46d34f931df345ab352dd418de4031825e542df8bf4f57ac121"
+    },
+    "raw/idle-worker-evasion-60000/commands.jsonl": {
+      "bytes": 418576,
+      "sha256": "2f1a8502a8573d8724138712b914ed71d74a43016f29a30572c8c365786abfe0"
+    },
+    "raw/idle-worker-evasion-60000/entities.jsonl": {
+      "bytes": 4913,
+      "sha256": "fd20488abd00ee394e8caabe4db8e7da2ca467f6a291fc2624ffdb03dd00715a"
+    },
+    "raw/idle-worker-evasion-60000/frames/60000.json.gz": {
+      "bytes": 20160,
+      "sha256": "d4d4ba037ac7ef14ba90f3643f5221e48e4ed20302c9f84d44c869e494499c76"
+    },
+    "raw/idle-worker-evasion-60000/frames/60600.json.gz": {
+      "bytes": 20268,
+      "sha256": "c9c9a461691ea975d305945808e9084b196c0ef1d261f94809dfc76f8c516c6f"
+    },
+    "raw/idle-worker-evasion-60000/frames/61200.json.gz": {
+      "bytes": 20481,
+      "sha256": "9170f26df1eb1fe6df796d0692121b7e378be3de73791529e23e00d1b88a5813"
+    },
+    "raw/idle-worker-evasion-60000/frames/61800.json.gz": {
+      "bytes": 21131,
+      "sha256": "87253f35070ec5f1224ea00d4c3aed70c9b379b3c99f39d07c9c5cd03d23adc6"
+    },
+    "raw/idle-worker-evasion-60000/frames/62400.json.gz": {
+      "bytes": 20205,
+      "sha256": "e9760e08913ede6786e78131213c2b68a1e0f7f54bb0de78846d46e4690dad82"
+    },
+    "raw/idle-worker-evasion-60000/frames/63000.json.gz": {
+      "bytes": 19718,
+      "sha256": "df76af97bb28b7fb1d0c4067507ec557435d54bc47a0e240f50f44431887c5e3"
+    },
+    "raw/idle-worker-evasion-60000/frames/63600.json.gz": {
+      "bytes": 20342,
+      "sha256": "bbc014735790be932cdfc6839a7f01b6027e85db5fdcb9d8895ad118e916b76f"
+    },
+    "raw/idle-worker-evasion-60000/frames/64200.json.gz": {
+      "bytes": 20911,
+      "sha256": "2150598d2c10c24e9b69f27c4598347f30fff185aa24b3a231cca141e510a1ba"
+    },
+    "raw/idle-worker-evasion-60000/frames/64800.json.gz": {
+      "bytes": 20293,
+      "sha256": "0c497636ab3f504062f1ee3b7af9d6ba50ae4c7c9842047288ec30dae29507c3"
+    },
+    "raw/idle-worker-evasion-60000/frames/65400.json.gz": {
+      "bytes": 19466,
+      "sha256": "952da23bed0dd2734ee51abbaff078491ac9fe6636c04abe63450a95952bbbe4"
+    },
+    "raw/idle-worker-evasion-60000/frames/66000.json.gz": {
+      "bytes": 19981,
+      "sha256": "680ee20e64bd918ab82563633d28f2f059bf81cdd052835dc58cad26e1097181"
+    },
+    "raw/idle-worker-evasion-60000/frames/66600.json.gz": {
+      "bytes": 21638,
+      "sha256": "7773a9f31ce3810e82065498bf9f3e791d684016cea06547f5fc7faa59e39f74"
+    },
+    "raw/idle-worker-evasion-60000/frames/66682.json.gz": {
+      "bytes": 21334,
+      "sha256": "0a6b8ef0753b265e01a2c39ace1bed956ac816596933ac5a7d1f34074b940665"
+    },
+    "raw/idle-worker-evasion-60000/hits.jsonl": {
+      "bytes": 139330,
+      "sha256": "995196ce7df0891c50463e856b608dc9ee337c53497638ca1e180c1cb341255c"
+    },
+    "raw/idle-worker-evasion-60000/result.json": {
+      "bytes": 32737,
+      "sha256": "853fbc98de17eb2469c56854783945c5e1be9b82170843fa3de12e2604378143"
+    },
+    "raw/idle-worker-evasion-60000/samples.jsonl": {
+      "bytes": 54035,
+      "sha256": "009b31832c82ec5d49e1cc7f76d3d816b92112d3487c67f5d40bd34862ca42c3"
+    },
+    "raw/idle-worker-evasion-60000/source.json": {
+      "bytes": 183641,
+      "sha256": "fc4ef15f7bd12ca3fc9949da24e5764fcc0ebd1f198c7f5543161df74431571e"
+    },
+    "raw/loading-control-60000/commands.jsonl": {
+      "bytes": 416049,
+      "sha256": "c99d5edcd388dc71a97d160e16d3ad2281578a2bee9a7386a6a2e1c5e7d30de1"
+    },
+    "raw/loading-control-60000/entities.jsonl": {
+      "bytes": 5199,
+      "sha256": "01e1ed1cf435fbccf8a0edd712d7d350819d438c9fbb8262f906c3b7a50fc3da"
+    },
+    "raw/loading-control-60000/frames/60000.json.gz": {
+      "bytes": 20405,
+      "sha256": "6f86abf2fbefb461ebadfaa8a178db00c8e8b898efbfd951e2ce9150f8fcf24f"
+    },
+    "raw/loading-control-60000/frames/60600.json.gz": {
+      "bytes": 20403,
+      "sha256": "2b5839cab3303f8bcaa0b1bfb8a0aac214f83deec73a164985c7d33ab74edab3"
+    },
+    "raw/loading-control-60000/frames/61200.json.gz": {
+      "bytes": 19794,
+      "sha256": "d5aaca7ac70460cf6d2a408ddd228e409e4c7597bb350e667b66e8f02ebf32f8"
+    },
+    "raw/loading-control-60000/frames/61800.json.gz": {
+      "bytes": 21414,
+      "sha256": "95ae33437b5fe7718a1a2c056d8384250dd177b2e94d5eca858b3245dc4489f1"
+    },
+    "raw/loading-control-60000/frames/62400.json.gz": {
+      "bytes": 20224,
+      "sha256": "4c4db9d638cdc45422136d3fbbe8b1f271ad86a9259f4403d62a597bfac4f7fc"
+    },
+    "raw/loading-control-60000/frames/63000.json.gz": {
+      "bytes": 19660,
+      "sha256": "77ceaba2f9676db4ad849173975d6f7027635f24d4dc19402ff3cf5a591fd172"
+    },
+    "raw/loading-control-60000/frames/63600.json.gz": {
+      "bytes": 20257,
+      "sha256": "bb5e9674e35c5e55ed3eed558fd7193dc8b8d50de33b0136fe39bb8e48657674"
+    },
+    "raw/loading-control-60000/frames/64200.json.gz": {
+      "bytes": 20759,
+      "sha256": "09a144bf9ef1dab67b1486c3f1bcee0523924353aa542c0a9bd3ea427a01794b"
+    },
+    "raw/loading-control-60000/frames/64800.json.gz": {
+      "bytes": 19616,
+      "sha256": "533d373f4f58ab763226d4ea98b23aeed5b8dbe0a4cd09b6047c14168648bcb6"
+    },
+    "raw/loading-control-60000/frames/65400.json.gz": {
+      "bytes": 19706,
+      "sha256": "5c776204fd26cefdc2dbe794e1964f6d31f54a4bba9b9984b918bfb4fdb789e9"
+    },
+    "raw/loading-control-60000/frames/66000.json.gz": {
+      "bytes": 19997,
+      "sha256": "bb2f32a4039452c61a10f18ea3a3652be701b75b95063d8bef52fabef8899b92"
+    },
+    "raw/loading-control-60000/frames/66600.json.gz": {
+      "bytes": 21164,
+      "sha256": "a4bff3be0408f07c22e853cfb15f4f79fc74c0a3fe0e6366da30a73c1b9f90e4"
+    },
+    "raw/loading-control-60000/frames/67162.json.gz": {
+      "bytes": 19686,
+      "sha256": "2da1072da102381ef231863d73e2aa354eb5fe8b9a800810bfd4a68adcc418c3"
+    },
+    "raw/loading-control-60000/hits.jsonl": {
+      "bytes": 147173,
+      "sha256": "e96091e1c10a29d163aa5b7485d9366dd922dc2b299ff188118d1771e8ae8670"
+    },
+    "raw/loading-control-60000/result.json": {
+      "bytes": 34004,
+      "sha256": "d09f5430fbb8513aff0727f836aff2c416f7075bb3ec0f70970eedfa039431d3"
+    },
+    "raw/loading-control-60000/samples.jsonl": {
+      "bytes": 54288,
+      "sha256": "d783c9054a349e1364622d5661079861ee91879adc0c267fa06e28cbb26d0e75"
+    },
+    "raw/loading-control-60000/source.json": {
+      "bytes": 183640,
+      "sha256": "cfe28d8f29283d0a9b893cb4c764efae0dc9542f62c3bc53c596390d075e1229"
+    },
+    "raw/idle-worker-evasion-observe.mts": {
+      "bytes": 4864,
+      "sha256": "b334e1a791dd33b52a5739435d1835848d018abef2b65183d91e85713401a596"
+    },
+    "raw/observe.mts": {
+      "bytes": 4329,
+      "sha256": "85b4fc492fb518093113d676d078f82ab232311e9e5012e037bd6037dc915317"
+    },
+    "raw/idle-worker-evasion-source.json": {
+      "bytes": 507,
+      "sha256": "756d3e66aaf030bf02f1378101fcc9f621dabfe8131e276359452986d272f3bd"
+    },
+    "raw/idle-worker-evasion-contracts.log": {
+      "bytes": 305,
+      "sha256": "3de1c78bbb85e6cca074b57071554084a17985512536cd68808e1ca35b17f4a5"
+    },
+    "raw/idle-worker-evasion-typecheck.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "raw/idle-worker-evasion-typecheck-initial-failure.log": {
+      "bytes": 4095,
+      "sha256": "6a72e8fef66816b8aee12fdad33f2fc9295e50e907739c063f04bdecbd906620"
+    },
+    "raw/idle-worker-evasion-60000-native.png": {
+      "bytes": 620563,
+      "sha256": "1d561125c8e6bdf57c05916c6d9c20b6ee686edce33c80520799c5f674e487db"
+    },
+    "raw/archive-idle-worker.py": {
+      "bytes": 1778,
+      "sha256": "c9ae10e3110da1181bf13f5f3962f485a92473d936eaed88aff7061d977c4df2"
+    },
+    "draft/idle-worker-evasion-probe.ts": {
+      "bytes": 1504,
+      "sha256": "7e376695bbc20000ec42cfdfddc633007ef7e3fc76c4e0e471191cd857b17090"
+    },
+    "draft/idle-worker-evasion.test.ts": {
+      "bytes": 1946,
+      "sha256": "37e3eccf6678c1186813f2586ece4f2fd0311092441e27ce716874d67654431a"
+    },
+    "draft/vitest-idle-worker.config.ts": {
+      "bytes": 173,
+      "sha256": "286c9e9ce76a44c0fc34851d8a457f32cb10c64a34ae1d0c729f323bfcd6f8e1"
+    },
+    "draft/tsconfig-idle-worker.json": {
+      "bytes": 117,
+      "sha256": "424f1cbe0820db3220856820274b771fe9acd91993ba57948875a5cd1027ee3c"
+    }
+  }
+}
