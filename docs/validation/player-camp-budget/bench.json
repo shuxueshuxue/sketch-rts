@@ -1,0 +1,7093 @@
+{
+  "base": "b42249cb030664cd6af4b0f531d4fb5eafe123ae",
+  "testedRef": "667e80153c8490c9e5b89e9049d3dab4bea0949c",
+  "layoutVerifiedRef": "f646a587",
+  "machine": "a100",
+  "seeds": [
+    "v5-final-1"
+  ],
+  "games": 240,
+  "totals": {
+    "base": 164,
+    "ref": 157,
+    "directFlips": 49,
+    "drawFlips": 38
+  },
+  "cells": [
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "base": {
+        "wins": 29,
+        "games": 40
+      },
+      "ref": {
+        "wins": 31,
+        "games": 40
+      },
+      "flips": [
+        "v5-final-1 ladder-02 grove: v9_archer -> draw",
+        "v5-final-1 ladder-02 ember: v8 -> v9_archer",
+        "v5-final-1 ladder-12 ember: v8 -> v9_archer",
+        "v5-final-1 ladder-20 grove: v9_archer -> draw",
+        "v5-final-1 ladder-01 ember: draw -> v9_archer",
+        "v5-final-1 ladder-04 grove: draw -> v9_archer",
+        "v5-final-1 ladder-49 grove: v8 -> v9_archer",
+        "v5-final-1 ladder-25 grove: v8 -> v9_archer",
+        "v5-final-1 ladder-25 ember: v9_archer -> v8",
+        "v5-final-1 ladder-14 grove: v9_archer -> v8",
+        "v5-final-1 ladder-43 grove: v9_archer -> v8",
+        "v5-final-1 ladder-43 ember: v9_archer -> v8",
+        "v5-final-1 ladder-44 grove: v8 -> v9_archer",
+        "v5-final-1 ladder-21 grove: draw -> v9_archer"
+      ]
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "base": {
+        "wins": 29,
+        "games": 40
+      },
+      "ref": {
+        "wins": 27,
+        "games": 40
+      },
+      "flips": [
+        "v5-final-1 ladder-12 grove: v9_summoner -> v8",
+        "v5-final-1 ladder-12 ember: v8 -> v9_summoner",
+        "v5-final-1 ladder-18 ember: v8 -> v9_summoner",
+        "v5-final-1 ladder-20 ember: v8 -> v9_summoner",
+        "v5-final-1 ladder-06 grove: v8 -> v9_summoner",
+        "v5-final-1 ladder-06 ember: v9_summoner -> v8",
+        "v5-final-1 ladder-04 grove: v9_summoner -> v8",
+        "v5-final-1 ladder-04 ember: draw -> v8",
+        "v5-final-1 ladder-49 ember: v9_summoner -> v8",
+        "v5-final-1 ladder-44 ember: v9_summoner -> v8",
+        "v5-final-1 ladder-21 ember: v8 -> v9_summoner",
+        "v5-final-1 ladder-55 grove: v9_summoner -> v8",
+        "v5-final-1 ladder-55 ember: v9_summoner -> v8"
+      ]
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "base": {
+        "wins": 35,
+        "games": 40
+      },
+      "ref": {
+        "wins": 35,
+        "games": 40
+      },
+      "flips": [
+        "v5-final-1 ladder-12 ember: v9_knight -> v8",
+        "v5-final-1 ladder-20 ember: v9_knight -> v8",
+        "v5-final-1 ladder-06 grove: v8 -> v9_knight",
+        "v5-final-1 ladder-25 grove: v9_knight -> v8",
+        "v5-final-1 ladder-25 ember: v8 -> v9_knight",
+        "v5-final-1 ladder-59 ember: v8 -> v9_knight"
+      ]
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "base": {
+        "wins": 29,
+        "games": 40
+      },
+      "ref": {
+        "wins": 26,
+        "games": 40
+      },
+      "flips": [
+        "v5-final-1 ladder-02 ember: v9_archer -> v9",
+        "v5-final-1 ladder-18 grove: draw -> v9",
+        "v5-final-1 ladder-18 ember: draw -> v9",
+        "v5-final-1 ladder-20 grove: v9_archer -> draw",
+        "v5-final-1 ladder-01 grove: v9 -> v9_archer",
+        "v5-final-1 ladder-52 grove: v9 -> draw",
+        "v5-final-1 ladder-52 ember: v9_archer -> draw",
+        "v5-final-1 ladder-04 ember: draw -> v9_archer",
+        "v5-final-1 ladder-25 ember: draw -> v9_archer",
+        "v5-final-1 ladder-14 ember: draw -> v9_archer",
+        "v5-final-1 ladder-43 ember: v9_archer -> v9",
+        "v5-final-1 ladder-16 grove: v9_archer -> v9",
+        "v5-final-1 ladder-21 grove: v9_archer -> draw",
+        "v5-final-1 ladder-21 ember: v9_archer -> draw",
+        "v5-final-1 ladder-59 ember: v9_archer -> draw",
+        "v5-final-1 ladder-55 ember: draw -> v9_archer"
+      ]
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "base": {
+        "wins": 22,
+        "games": 40
+      },
+      "ref": {
+        "wins": 18,
+        "games": 40
+      },
+      "flips": [
+        "v5-final-1 ladder-02 grove: v9_summoner -> v9",
+        "v5-final-1 ladder-02 ember: draw -> v9",
+        "v5-final-1 ladder-12 grove: v9_summoner -> v9",
+        "v5-final-1 ladder-20 grove: v9_summoner -> v9",
+        "v5-final-1 ladder-63 grove: v9 -> v9_summoner",
+        "v5-final-1 ladder-63 ember: v9_summoner -> draw",
+        "v5-final-1 ladder-06 grove: v9 -> v9_summoner",
+        "v5-final-1 ladder-04 grove: v9_summoner -> draw",
+        "v5-final-1 ladder-04 ember: draw -> v9",
+        "v5-final-1 ladder-49 grove: v9 -> v9_summoner",
+        "v5-final-1 ladder-49 ember: v9_summoner -> v9",
+        "v5-final-1 ladder-14 grove: v9_summoner -> v9",
+        "v5-final-1 ladder-14 ember: v9_summoner -> v9",
+        "v5-final-1 ladder-16 grove: v9 -> v9_summoner",
+        "v5-final-1 ladder-16 ember: v9 -> v9_summoner",
+        "v5-final-1 ladder-44 ember: v9_summoner -> v9",
+        "v5-final-1 ladder-21 grove: v9 -> draw",
+        "v5-final-1 ladder-21 ember: draw -> v9"
+      ]
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "base": {
+        "wins": 20,
+        "games": 40
+      },
+      "ref": {
+        "wins": 20,
+        "games": 40
+      },
+      "flips": [
+        "v5-final-1 ladder-02 ember: v9_knight -> draw",
+        "v5-final-1 ladder-12 grove: v9_knight -> v9",
+        "v5-final-1 ladder-18 grove: v9_knight -> v9",
+        "v5-final-1 ladder-01 ember: v9 -> draw",
+        "v5-final-1 ladder-06 ember: draw -> v9",
+        "v5-final-1 ladder-52 grove: draw -> v9_knight",
+        "v5-final-1 ladder-52 ember: v9 -> v9_knight",
+        "v5-final-1 ladder-04 grove: draw -> v9_knight",
+        "v5-final-1 ladder-04 ember: v9_knight -> draw",
+        "v5-final-1 ladder-49 grove: v9_knight -> draw",
+        "v5-final-1 ladder-49 ember: v9 -> draw",
+        "v5-final-1 ladder-25 grove: draw -> v9_knight",
+        "v5-final-1 ladder-14 grove: v9_knight -> draw",
+        "v5-final-1 ladder-43 grove: v9 -> draw",
+        "v5-final-1 ladder-43 ember: v9_knight -> v9",
+        "v5-final-1 ladder-16 ember: draw -> v9",
+        "v5-final-1 ladder-44 ember: draw -> v9",
+        "v5-final-1 ladder-59 grove: draw -> v9_knight",
+        "v5-final-1 ladder-59 ember: v9 -> v9_knight",
+        "v5-final-1 ladder-34 grove: v9 -> v9_knight"
+      ]
+    }
+  ],
+  "metrics": [
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "metric": "clear",
+      "base": {
+        "own": 3.93625,
+        "rival": 2.7445833333333343,
+        "missing": 0
+      },
+      "ref": {
+        "own": 3.8637499999999987,
+        "rival": 2.7550000000000003,
+        "missing": 0
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "metric": "bases@8",
+      "base": {
+        "own": 2.45,
+        "rival": 2.1,
+        "missing": 0
+      },
+      "ref": {
+        "own": 2.45,
+        "rival": 2.125,
+        "missing": 0
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "metric": "clear",
+      "base": {
+        "own": 2.9412500000000006,
+        "rival": 2.466666666666666,
+        "missing": 0
+      },
+      "ref": {
+        "own": 2.804166666666667,
+        "rival": 2.43625,
+        "missing": 0
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "metric": "bases@8",
+      "base": {
+        "own": 2.225,
+        "rival": 2.15,
+        "missing": 0
+      },
+      "ref": {
+        "own": 2.2,
+        "rival": 2.2,
+        "missing": 0
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "metric": "clear",
+      "base": {
+        "own": 2.994871794871794,
+        "rival": 2.4987500000000002,
+        "missing": 1
+      },
+      "ref": {
+        "own": 2.8995726495726486,
+        "rival": 2.465416666666667,
+        "missing": 1
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "metric": "bases@8",
+      "base": {
+        "own": 2.358974358974359,
+        "rival": 2.230769230769231,
+        "missing": 1
+      },
+      "ref": {
+        "own": 2.41025641025641,
+        "rival": 2.2564102564102564,
+        "missing": 1
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "metric": "clear",
+      "base": {
+        "own": 3.8900000000000015,
+        "rival": 3.7986842105263157,
+        "missing": 0
+      },
+      "ref": {
+        "own": 3.6995833333333343,
+        "rival": 3.934166666666666,
+        "missing": 0
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "metric": "bases@8",
+      "base": {
+        "own": 2.55,
+        "rival": 2.4,
+        "missing": 0
+      },
+      "ref": {
+        "own": 2.475,
+        "rival": 2.45,
+        "missing": 0
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "metric": "clear",
+      "base": {
+        "own": 2.899583333333334,
+        "rival": 2.46375,
+        "missing": 0
+      },
+      "ref": {
+        "own": 2.7845833333333334,
+        "rival": 2.441666666666666,
+        "missing": 0
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "metric": "bases@8",
+      "base": {
+        "own": 2.15,
+        "rival": 2.7,
+        "missing": 0
+      },
+      "ref": {
+        "own": 2.175,
+        "rival": 2.625,
+        "missing": 0
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "metric": "clear",
+      "base": {
+        "own": 2.9829059829059825,
+        "rival": 2.49,
+        "missing": 1
+      },
+      "ref": {
+        "own": 2.8897435897435892,
+        "rival": 2.460416666666667,
+        "missing": 1
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "metric": "bases@8",
+      "base": {
+        "own": 2.3,
+        "rival": 2.7,
+        "missing": 0
+      },
+      "ref": {
+        "own": 2.3,
+        "rival": 2.6,
+        "missing": 0
+      }
+    }
+  ],
+  "gamesByKey": [
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-02",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": null,
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.8333333333333335,
+          "v9_archer": 5.35
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.8333333333333335,
+          "v9_archer": 5.333333333333333
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-02",
+      "race": "ember",
+      "base": "v8",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.8333333333333335,
+          "v9_archer": 4.666666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.8333333333333335,
+          "v9_archer": 4.7
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-12",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 3.15,
+          "p1": 3.1333333333333333
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 1
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 3.15,
+          "p1": 3.1333333333333333
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-12",
+      "race": "ember",
+      "base": "v8",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": 3.0833333333333335,
+          "v9_archer": 3.25
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 3.0833333333333335,
+          "v9_archer": 3.25
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-18",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 3.0833333333333335,
+          "p1": 3.1
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 3.2,
+          "p1": 3.1666666666666665
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-18",
+      "race": "ember",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": 3.4166666666666665,
+          "v9_archer": 3.683333333333333
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 3.466666666666667,
+          "v9_archer": 3.1666666666666665
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-20",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": null,
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 3.466666666666667,
+          "p1": 3.3833333333333333
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 2.816666666666667,
+          "p1": 3.3833333333333333
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-20",
+      "race": "ember",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": 3.683333333333333,
+          "v9_archer": 3.95
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 3.683333333333333,
+          "v9_archer": 3.683333333333333
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-01",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 5.616666666666666,
+          "p1": 2.6666666666666665
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 5.616666666666666,
+          "p1": 2.6666666666666665
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-01",
+      "race": "ember",
+      "base": null,
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 4.933333333333334,
+          "p1": 3.05
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 4.933333333333334,
+          "p1": 3.05
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-63",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 4.05,
+          "p1": 3.066666666666667
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 4.05,
+          "p1": 3.066666666666667
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-63",
+      "race": "ember",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 4.5,
+          "p1": 3.066666666666667
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 4.5,
+          "p1": 3.066666666666667
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-06",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": 3.7,
+          "v9_archer": 4.583333333333333
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_archer": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 3.683333333333333,
+          "v9_archer": 3.7
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-06",
+      "race": "ember",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": 3.7,
+          "v9_archer": 4.866666666666666
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 3.566666666666667,
+          "v9_archer": 4.65
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_archer": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-52",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 2.8,
+          "p1": 1.3333333333333333
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 2.6666666666666665,
+          "p1": 1.3333333333333333
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-52",
+      "race": "ember",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.55,
+          "v9_archer": 2.9166666666666665
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.55,
+          "v9_archer": 3.1
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-04",
+      "race": "grove",
+      "base": null,
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.6666666666666665,
+          "v9_archer": 3.183333333333333
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.6666666666666665,
+          "v9_archer": 3.183333333333333
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_archer": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-04",
+      "race": "ember",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 2.95,
+          "p1": 2.9166666666666665
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 2.95,
+          "p1": 2.9166666666666665
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-49",
+      "race": "grove",
+      "base": "v8",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 5.8,
+          "p1": 3.3833333333333333
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 5.783333333333333,
+          "p1": 3.3833333333333333
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-49",
+      "race": "ember",
+      "base": "v8",
+      "ref": "v8",
+      "baseMetrics": {
+        "clear": {
+          "p1": 3.15,
+          "v9_archer": 4.7
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 3.15,
+          "v9_archer": 4.566666666666666
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-25",
+      "race": "grove",
+      "base": "v8",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": 3.25,
+          "v9_archer": 3.783333333333333
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_archer": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 3.25,
+          "v9_archer": 3.783333333333333
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_archer": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-25",
+      "race": "ember",
+      "base": "v9_archer",
+      "ref": "v8",
+      "baseMetrics": {
+        "clear": {
+          "p1": 3.0833333333333335,
+          "v9_archer": 4.333333333333333
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 3.0833333333333335,
+          "v9_archer": 4.7
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-14",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": "v8",
+      "baseMetrics": {
+        "clear": {
+          "p1": 1.4833333333333334,
+          "v9_archer": 3.85
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 1.4833333333333334,
+          "v9_archer": 3.1166666666666667
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_archer": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-14",
+      "race": "ember",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 3.6666666666666665,
+          "p1": 1.45
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 1
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 3.7333333333333334,
+          "p1": 1.45
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 1
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-17",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.683333333333333,
+          "v9_archer": 3.15
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_archer": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.683333333333333,
+          "v9_archer": 3.25
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-17",
+      "race": "ember",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.683333333333333,
+          "v9_archer": 3.1666666666666665
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.683333333333333,
+          "v9_archer": 3.1666666666666665
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-43",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": "v8",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.966666666666667,
+          "v9_archer": 3.683333333333333
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.6166666666666667,
+          "v9_archer": 3.8666666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-43",
+      "race": "ember",
+      "base": "v9_archer",
+      "ref": "v8",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 3.9,
+          "p1": 2.9166666666666665
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 4.1,
+          "p1": 3.716666666666667
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-16",
+      "race": "grove",
+      "base": "v8",
+      "ref": "v8",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 3.7666666666666666,
+          "p1": 1.4
+        },
+        "bases@8": {
+          "v9_archer": 1,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 3.7666666666666666,
+          "p1": 1.4
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-16",
+      "race": "ember",
+      "base": "v8",
+      "ref": "v8",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 4.616666666666666,
+          "p1": 1.4333333333333333
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 4.616666666666666,
+          "p1": 1.4333333333333333
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-44",
+      "race": "grove",
+      "base": "v8",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": 3.283333333333333,
+          "v9_archer": 3.783333333333333
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 3.283333333333333,
+          "v9_archer": 3.7666666666666666
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-44",
+      "race": "ember",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": 3.0833333333333335,
+          "v9_archer": 3.95
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 3.0833333333333335,
+          "v9_archer": 3.9833333333333334
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-21",
+      "race": "grove",
+      "base": null,
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 3.7,
+          "p1": 1.4
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 3.7,
+          "p1": 1.4
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-21",
+      "race": "ember",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 3.5833333333333335,
+          "p1": 1.4
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 3.5833333333333335,
+          "p1": 1.4
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-59",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 3.45,
+          "p1": 2.6
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 3.45,
+          "p1": 2.6
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-59",
+      "race": "ember",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.3833333333333333,
+          "v9_archer": 4
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.3833333333333333,
+          "v9_archer": 4
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-34",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 3.45,
+          "p1": 2.6166666666666667
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 3.4166666666666665,
+          "p1": 2.6166666666666667
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-34",
+      "race": "ember",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 4.116666666666666,
+          "p1": 3.216666666666667
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 3.55,
+          "p1": 3.216666666666667
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-55",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.8,
+          "v9_archer": 4.083333333333333
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.8,
+          "v9_archer": 4.083333333333333
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v8",
+      "map": "ladder-55",
+      "race": "ember",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 3.9166666666666665,
+          "p1": 2.933333333333333
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 3.9166666666666665,
+          "p1": 2.933333333333333
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-02",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.4833333333333334,
+          "v9_summoner": 6.283333333333333
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.4833333333333334,
+          "v9_summoner": 2.4
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-02",
+      "race": "ember",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.4833333333333334,
+          "v9_summoner": 3.8833333333333333
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.4833333333333334,
+          "v9_summoner": 2.6
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-12",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v8",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.4,
+          "v9_summoner": 3.0833333333333335
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.4,
+          "v9_summoner": 3.1166666666666667
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-12",
+      "race": "ember",
+      "base": "v8",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.3333333333333335,
+          "v9_summoner": 3.1666666666666665
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.3,
+          "v9_summoner": 3.1666666666666665
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-18",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 2.4,
+          "p1": 2.45
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 2.4,
+          "p1": 2.45
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-18",
+      "race": "ember",
+      "base": "v8",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.55,
+          "v9_summoner": 2.6
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.55,
+          "v9_summoner": 2.6
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-20",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.15,
+          "v9_summoner": 2.5166666666666666
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.15,
+          "v9_summoner": 2.5166666666666666
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-20",
+      "race": "ember",
+      "base": "v8",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.15,
+          "v9_summoner": 2.6666666666666665
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.15,
+          "v9_summoner": 2.6666666666666665
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-01",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.283333333333333,
+          "v9_summoner": 2.4166666666666665
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.283333333333333,
+          "v9_summoner": 2.4166666666666665
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-01",
+      "race": "ember",
+      "base": "v8",
+      "ref": "v8",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 3.6,
+          "p1": 2.2
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 3.6,
+          "p1": 2.2
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-63",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.5,
+          "v9_summoner": 2.4
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.5,
+          "v9_summoner": 2.4833333333333334
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-63",
+      "race": "ember",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 2.6166666666666667,
+          "p1": 2.5
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 2.6166666666666667,
+          "p1": 2.5
+        },
+        "bases@8": {
+          "v9_summoner": 3,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-06",
+      "race": "grove",
+      "base": "v8",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 3.066666666666667,
+          "p1": 2.5166666666666666
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 2.6,
+          "p1": 2.5166666666666666
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-06",
+      "race": "ember",
+      "base": "v9_summoner",
+      "ref": "v8",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 3.15,
+          "p1": 2.5166666666666666
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 2.7666666666666666,
+          "p1": 2.5166666666666666
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-52",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.566666666666667,
+          "v9_summoner": 2.45
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.566666666666667,
+          "v9_summoner": 2.433333333333333
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-52",
+      "race": "ember",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 2.55,
+          "p1": 2.5
+        },
+        "bases@8": {
+          "v9_summoner": 3,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 2.55,
+          "p1": 2.55
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-04",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v8",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.25,
+          "v9_summoner": 3.1666666666666665
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.25,
+          "v9_summoner": 3.1666666666666665
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-04",
+      "race": "ember",
+      "base": null,
+      "ref": "v8",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 2.2666666666666666,
+          "p1": 2.216666666666667
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 2.2666666666666666,
+          "p1": 2.216666666666667
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-49",
+      "race": "grove",
+      "base": "v8",
+      "ref": "v8",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.25,
+          "v9_summoner": 3.066666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.25,
+          "v9_summoner": 3.066666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-49",
+      "race": "ember",
+      "base": "v9_summoner",
+      "ref": "v8",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 2.55,
+          "p1": 2.2333333333333334
+        },
+        "bases@8": {
+          "v9_summoner": 3,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 2.55,
+          "p1": 2.2333333333333334
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-25",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 3.683333333333333,
+          "p1": 2.4833333333333334
+        },
+        "bases@8": {
+          "v9_summoner": 3,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 3.4833333333333334,
+          "p1": 2.4833333333333334
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-25",
+      "race": "ember",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 4.616666666666666,
+          "p1": 2.533333333333333
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 4.65,
+          "p1": 2.533333333333333
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-14",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 2.2,
+          "p1": 2.15
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 2.2,
+          "p1": 2.15
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-14",
+      "race": "ember",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 2.3833333333333333,
+          "p1": 2.15
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 2.3833333333333333,
+          "p1": 2.15
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-17",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.1666666666666665,
+          "v9_summoner": 2.283333333333333
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.1666666666666665,
+          "v9_summoner": 2.283333333333333
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-17",
+      "race": "ember",
+      "base": "v8",
+      "ref": "v8",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.1666666666666665,
+          "v9_summoner": 2.3333333333333335
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.1666666666666665,
+          "v9_summoner": 2.3333333333333335
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-43",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 2.6,
+          "p1": 2.5166666666666666
+        },
+        "bases@8": {
+          "v9_summoner": 3,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 2.6,
+          "p1": 2.5166666666666666
+        },
+        "bases@8": {
+          "v9_summoner": 3,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-43",
+      "race": "ember",
+      "base": "v8",
+      "ref": "v8",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.5,
+          "v9_summoner": 2.6666666666666665
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.5,
+          "v9_summoner": 2.6666666666666665
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-16",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.466666666666667,
+          "v9_summoner": 2.433333333333333
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.466666666666667,
+          "v9_summoner": 2.433333333333333
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-16",
+      "race": "ember",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.466666666666667,
+          "v9_summoner": 2.7333333333333334
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.466666666666667,
+          "v9_summoner": 2.7666666666666666
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-44",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.55,
+          "v9_summoner": 3.45
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.5833333333333335,
+          "v9_summoner": 3.466666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-44",
+      "race": "ember",
+      "base": "v9_summoner",
+      "ref": "v8",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 3.6333333333333333,
+          "p1": 2.466666666666667
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 3.6166666666666667,
+          "p1": 2.466666666666667
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-21",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.5833333333333335,
+          "v9_summoner": 2.4
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.5833333333333335,
+          "v9_summoner": 2.433333333333333
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-21",
+      "race": "ember",
+      "base": "v8",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 3.35,
+          "p1": 2.5
+        },
+        "bases@8": {
+          "v9_summoner": 1,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 3.8833333333333333,
+          "p1": 2.4833333333333334
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-59",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 3.183333333333333,
+          "p1": 3.1
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 3.183333333333333,
+          "p1": 3.1
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-59",
+      "race": "ember",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 3.4166666666666665,
+          "p1": 3.1
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 3.4166666666666665,
+          "p1": 3.1
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-34",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.4166666666666665,
+          "v9_summoner": 2.216666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.4166666666666665,
+          "v9_summoner": 2.216666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-34",
+      "race": "ember",
+      "base": "v8",
+      "ref": "v8",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 2.5166666666666666,
+          "p1": 2.5
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 2.5166666666666666,
+          "p1": 2.5
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-55",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v8",
+      "baseMetrics": {
+        "clear": {
+          "p1": 3.2,
+          "v9_summoner": 2.75
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.5833333333333335,
+          "v9_summoner": 2.75
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v8",
+      "map": "ladder-55",
+      "race": "ember",
+      "base": "v9_summoner",
+      "ref": "v8",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 2.9,
+          "p1": 3.1166666666666667
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 2.9,
+          "p1": 2.4833333333333334
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-02",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.6166666666666667,
+          "v9_knight": 2.55
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.6166666666666667,
+          "v9_knight": 2.55
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-02",
+      "race": "ember",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.6166666666666667,
+          "v9_knight": 2.5833333333333335
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.6166666666666667,
+          "v9_knight": 2.5833333333333335
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-12",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "v9_knight": 5.533333333333333,
+          "p1": 2.466666666666667
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 1
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_knight": 5.4,
+          "p1": 2.466666666666667
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 1
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-12",
+      "race": "ember",
+      "base": "v9_knight",
+      "ref": "v8",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.533333333333333,
+          "v9_knight": 3.783333333333333
+        },
+        "bases@8": {
+          "p1": 1,
+          "v9_knight": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.533333333333333,
+          "v9_knight": 2.816666666666667
+        },
+        "bases@8": {
+          "p1": 1,
+          "v9_knight": 1
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-18",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "v9_knight": 3.7333333333333334,
+          "p1": 2.35
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_knight": 3.7333333333333334,
+          "p1": 2.35
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-18",
+      "race": "ember",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "v9_knight": 3.6666666666666665,
+          "p1": 2.2666666666666666
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_knight": 3.6666666666666665,
+          "p1": 2.2666666666666666
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-20",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.2666666666666666,
+          "v9_knight": 2.6166666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.2666666666666666,
+          "v9_knight": 2.85
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-20",
+      "race": "ember",
+      "base": "v9_knight",
+      "ref": "v8",
+      "baseMetrics": {
+        "clear": {
+          "v9_knight": 2.6333333333333333,
+          "p1": 2.283333333333333
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_knight": 3.1,
+          "p1": 2.283333333333333
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-01",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.316666666666667,
+          "v9_knight": 2.15
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.316666666666667,
+          "v9_knight": 2.15
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-01",
+      "race": "ember",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "v9_knight": 2.316666666666667,
+          "p1": 2.2
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_knight": 2.316666666666667,
+          "p1": 2.2
+        },
+        "bases@8": {
+          "v9_knight": 3,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-63",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.2666666666666666,
+          "v9_knight": 2.2
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.2666666666666666,
+          "v9_knight": 2.216666666666667
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-63",
+      "race": "ember",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "v9_knight": 2.316666666666667,
+          "p1": 2.283333333333333
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_knight": 2.283333333333333,
+          "p1": 2.283333333333333
+        },
+        "bases@8": {
+          "v9_knight": 3,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-06",
+      "race": "grove",
+      "base": "v8",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 3.2,
+          "v9_knight": 4.183333333333334
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.55,
+          "v9_knight": 2.55
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-06",
+      "race": "ember",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 3.2,
+          "v9_knight": 4.216666666666667
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.55,
+          "v9_knight": 2.65
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-52",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.6,
+          "v9_knight": 2.716666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.6,
+          "v9_knight": 2.716666666666667
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-52",
+      "race": "ember",
+      "base": null,
+      "ref": null,
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.6,
+          "v9_knight": 2.6666666666666665
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.6,
+          "v9_knight": 2.6666666666666665
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-04",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.2333333333333334,
+          "v9_knight": 2.2
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.2333333333333334,
+          "v9_knight": 2.2333333333333334
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-04",
+      "race": "ember",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.2333333333333334,
+          "v9_knight": 2.316666666666667
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.2333333333333334,
+          "v9_knight": 2.3333333333333335
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-49",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "v9_knight": 2.683333333333333,
+          "p1": 2.6333333333333333
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_knight": 2.5,
+          "p1": 2.6333333333333333
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-49",
+      "race": "ember",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.65,
+          "v9_knight": 2.65
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.65,
+          "v9_knight": 2.683333333333333
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-25",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": "v8",
+      "baseMetrics": {
+        "clear": {
+          "v9_knight": 3.1,
+          "p1": 2.6166666666666667
+        },
+        "bases@8": {
+          "v9_knight": 3,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_knight": 3.1166666666666667,
+          "p1": 2.6166666666666667
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-25",
+      "race": "ember",
+      "base": "v8",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.5166666666666666,
+          "v9_knight": 3.183333333333333
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.5166666666666666,
+          "v9_knight": 3.216666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-14",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.1666666666666665,
+          "v9_knight": 2.2
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.1666666666666665,
+          "v9_knight": 2.2
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-14",
+      "race": "ember",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.1666666666666665,
+          "v9_knight": 2.283333333333333
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.1666666666666665,
+          "v9_knight": 2.283333333333333
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-17",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.466666666666667,
+          "v9_knight": 2.466666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.466666666666667,
+          "v9_knight": 2.466666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-17",
+      "race": "ember",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "v9_knight": 2.5833333333333335,
+          "p1": 2.6
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_knight": 2.5833333333333335,
+          "p1": 2.6
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-43",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 3.05,
+          "v9_knight": 3.45
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 3.033333333333333,
+          "v9_knight": 3.316666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-43",
+      "race": "ember",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 3.05,
+          "v9_knight": 3.5
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 3.033333333333333,
+          "v9_knight": 3.5166666666666666
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-16",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.4833333333333334,
+          "v9_knight": 2.5166666666666666
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.4833333333333334,
+          "v9_knight": 2.5166666666666666
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-16",
+      "race": "ember",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.4833333333333334,
+          "v9_knight": 2.6166666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.4833333333333334,
+          "v9_knight": 2.7
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-44",
+      "race": "grove",
+      "base": "v8",
+      "ref": "v8",
+      "baseMetrics": {
+        "clear": {
+          "v9_knight": null,
+          "p1": 2.3333333333333335
+        },
+        "bases@8": {
+          "v9_knight": null,
+          "p1": null
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_knight": null,
+          "p1": 2.3333333333333335
+        },
+        "bases@8": {
+          "v9_knight": null,
+          "p1": null
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-44",
+      "race": "ember",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "v9_knight": 5.066666666666666,
+          "p1": 2.6
+        },
+        "bases@8": {
+          "v9_knight": 3,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_knight": 5.066666666666666,
+          "p1": 2.6
+        },
+        "bases@8": {
+          "v9_knight": 3,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-21",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.45,
+          "v9_knight": 2.466666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.45,
+          "v9_knight": 2.466666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-21",
+      "race": "ember",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.45,
+          "v9_knight": 2.6
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.45,
+          "v9_knight": 2.6
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-59",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.2666666666666666,
+          "v9_knight": 3.6166666666666667
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.2666666666666666,
+          "v9_knight": 3.6
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-59",
+      "race": "ember",
+      "base": "v8",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.183333333333333,
+          "v9_knight": 4.2
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.183333333333333,
+          "v9_knight": 4.2
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-34",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "v9_knight": 3.25,
+          "p1": 2.5166666666666666
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_knight": 3.25,
+          "p1": 2.5166666666666666
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-34",
+      "race": "ember",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.4,
+          "v9_knight": 2.816666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.4,
+          "v9_knight": 2.816666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-55",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.6333333333333333,
+          "v9_knight": 2.55
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.6333333333333333,
+          "v9_knight": 2.55
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v8",
+      "map": "ladder-55",
+      "race": "ember",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "v9_knight": 2.6166666666666667,
+          "p1": 2.7
+        },
+        "bases@8": {
+          "v9_knight": 3,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_knight": 2.6166666666666667,
+          "p1": 2.7
+        },
+        "bases@8": {
+          "v9_knight": 3,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-02",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": 7.466666666666667,
+          "v9_archer": 5.3
+        },
+        "bases@8": {
+          "p1": 1,
+          "v9_archer": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 3.2666666666666666,
+          "v9_archer": 5.433333333333334
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-02",
+      "race": "ember",
+      "base": "v9_archer",
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "p1": 9.15,
+          "v9_archer": 4.716666666666667
+        },
+        "bases@8": {
+          "p1": 1,
+          "v9_archer": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 3.2666666666666666,
+          "v9_archer": 4.683333333333334
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-12",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 4.4,
+          "p1": 3.1333333333333333
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 3.716666666666667,
+          "p1": 3.5
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-12",
+      "race": "ember",
+      "base": "v9",
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.75,
+          "v9_archer": 3.2333333333333334
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_archer": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.75,
+          "v9_archer": 3.2333333333333334
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_archer": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-18",
+      "race": "grove",
+      "base": null,
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 3.0833333333333335,
+          "p1": 3.1
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 3.2,
+          "p1": 3.216666666666667
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-18",
+      "race": "ember",
+      "base": null,
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "p1": 3.466666666666667,
+          "v9_archer": 3.6
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_archer": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 3.566666666666667,
+          "v9_archer": 3.1666666666666665
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_archer": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-20",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": null,
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 3.466666666666667,
+          "p1": 3.3666666666666667
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 2.816666666666667,
+          "p1": 3.3666666666666667
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-20",
+      "race": "ember",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": null,
+          "v9_archer": 4.266666666666667
+        },
+        "bases@8": {
+          "p1": 1,
+          "v9_archer": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 11.633333333333333,
+          "v9_archer": 3.85
+        },
+        "bases@8": {
+          "p1": 1,
+          "v9_archer": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-01",
+      "race": "grove",
+      "base": "v9",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 5.616666666666666,
+          "p1": 2.6666666666666665
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 5.616666666666666,
+          "p1": 2.6666666666666665
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-01",
+      "race": "ember",
+      "base": null,
+      "ref": null,
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 4.933333333333334,
+          "p1": 3.05
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 4.933333333333334,
+          "p1": 3.05
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-63",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 2.8,
+          "p1": 3.0833333333333335
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 2.8,
+          "p1": 3.0833333333333335
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-63",
+      "race": "ember",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 3.1166666666666667,
+          "p1": 3.0833333333333335
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 3.1166666666666667,
+          "p1": 3.0833333333333335
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-06",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": 10.55,
+          "v9_archer": 4.566666666666666
+        },
+        "bases@8": {
+          "p1": 1,
+          "v9_archer": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 10.25,
+          "v9_archer": 3.716666666666667
+        },
+        "bases@8": {
+          "p1": 1,
+          "v9_archer": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-06",
+      "race": "ember",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": null,
+          "v9_archer": 4.866666666666666
+        },
+        "bases@8": {
+          "p1": 1,
+          "v9_archer": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 14.15,
+          "v9_archer": 4.65
+        },
+        "bases@8": {
+          "p1": 1,
+          "v9_archer": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-52",
+      "race": "grove",
+      "base": "v9",
+      "ref": null,
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 3.316666666666667,
+          "p1": 3
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 3.35,
+          "p1": 3
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-52",
+      "race": "ember",
+      "base": "v9_archer",
+      "ref": null,
+      "baseMetrics": {
+        "clear": {
+          "p1": 3,
+          "v9_archer": 3.2
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_archer": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 3,
+          "v9_archer": 3.4
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_archer": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-04",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.8333333333333335,
+          "v9_archer": 2.65
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_archer": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.8333333333333335,
+          "v9_archer": 2.65
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_archer": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-04",
+      "race": "ember",
+      "base": null,
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 2.933333333333333,
+          "p1": 2.6166666666666667
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 2.933333333333333,
+          "p1": 2.6166666666666667
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-49",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 5.8,
+          "p1": 3.183333333333333
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 2.7666666666666666,
+          "p1": 9.3
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 1
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-49",
+      "race": "ember",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": 9.866666666666667,
+          "v9_archer": 4.683333333333334
+        },
+        "bases@8": {
+          "p1": 1,
+          "v9_archer": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 8.183333333333334,
+          "v9_archer": 4.566666666666666
+        },
+        "bases@8": {
+          "p1": 1,
+          "v9_archer": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-25",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": 3.55,
+          "v9_archer": 3.283333333333333
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_archer": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 3.55,
+          "v9_archer": 3.283333333333333
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_archer": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-25",
+      "race": "ember",
+      "base": null,
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": 3.066666666666667,
+          "v9_archer": 4.983333333333333
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_archer": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 3.066666666666667,
+          "v9_archer": 4.683333333333334
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_archer": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-14",
+      "race": "grove",
+      "base": null,
+      "ref": null,
+      "baseMetrics": {
+        "clear": {
+          "p1": 3.5166666666666666,
+          "v9_archer": 5.516666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 3.6166666666666667,
+          "v9_archer": 5.7
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-14",
+      "race": "ember",
+      "base": null,
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 3.683333333333333,
+          "p1": 1.9
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 3.1,
+          "p1": 1.9
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 1
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-17",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.9,
+          "v9_archer": 3.15
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_archer": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.9,
+          "v9_archer": 3.2333333333333334
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-17",
+      "race": "ember",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.9,
+          "v9_archer": 3.1666666666666665
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_archer": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.9,
+          "v9_archer": 3.2
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_archer": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-43",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": 3.55,
+          "v9_archer": 3.95
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_archer": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.816666666666667,
+          "v9_archer": 3
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_archer": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-43",
+      "race": "ember",
+      "base": "v9_archer",
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 4.216666666666667,
+          "p1": 3.35
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 4.116666666666666,
+          "p1": 3
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-16",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 3.4833333333333334,
+          "p1": 3.066666666666667
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 3.4833333333333334,
+          "p1": 3.066666666666667
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-16",
+      "race": "ember",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 3.9,
+          "p1": 3.05
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 3.9,
+          "p1": 3.05
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-44",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": 8.85,
+          "v9_archer": 3.783333333333333
+        },
+        "bases@8": {
+          "p1": 1,
+          "v9_archer": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 3.55,
+          "v9_archer": 3.7666666666666666
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-44",
+      "race": "ember",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": 3.033333333333333,
+          "v9_archer": 3.95
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 3.033333333333333,
+          "v9_archer": 3.966666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_archer": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-21",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": null,
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 2.966666666666667,
+          "p1": 1.9
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 3,
+          "p1": 1.9
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-21",
+      "race": "ember",
+      "base": "v9_archer",
+      "ref": null,
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 2.95,
+          "p1": 1.9
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 2.95,
+          "p1": 1.9
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-59",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 3.45,
+          "p1": 2.6
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 3.45,
+          "p1": 2.6
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-59",
+      "race": "ember",
+      "base": "v9_archer",
+      "ref": null,
+      "baseMetrics": {
+        "clear": {
+          "p1": 3.2,
+          "v9_archer": 4.333333333333333
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_archer": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 3.2,
+          "v9_archer": 4.333333333333333
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_archer": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-34",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 3.45,
+          "p1": 2.6
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 3.4166666666666665,
+          "p1": 2.6
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-34",
+      "race": "ember",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 3.55,
+          "p1": 4.033333333333333
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 3.5166666666666666,
+          "p1": 2.9166666666666665
+        },
+        "bases@8": {
+          "v9_archer": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-55",
+      "race": "grove",
+      "base": "v9_archer",
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "p1": 3.3,
+          "v9_archer": 3.5166666666666666
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_archer": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 3.3,
+          "v9_archer": 3.5166666666666666
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_archer": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_archer",
+      "rival": "v9",
+      "map": "ladder-55",
+      "race": "ember",
+      "base": null,
+      "ref": "v9_archer",
+      "baseMetrics": {
+        "clear": {
+          "v9_archer": 3.7666666666666666,
+          "p1": 2.716666666666667
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_archer": 3.7666666666666666,
+          "p1": 2.716666666666667
+        },
+        "bases@8": {
+          "v9_archer": 3,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-02",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.5166666666666666,
+          "v9_summoner": 4.866666666666666
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.5166666666666666,
+          "v9_summoner": 2.4
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-02",
+      "race": "ember",
+      "base": null,
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.5166666666666666,
+          "v9_summoner": 3.8833333333333333
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.5166666666666666,
+          "v9_summoner": 2.6
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-12",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.3666666666666667,
+          "v9_summoner": 3.0833333333333335
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.4,
+          "v9_summoner": 3.1166666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-12",
+      "race": "ember",
+      "base": "v9",
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.316666666666667,
+          "v9_summoner": 3.1666666666666665
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.3,
+          "v9_summoner": 3.1666666666666665
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-18",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 2.4,
+          "p1": 2.45
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 2.4,
+          "p1": 2.45
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-18",
+      "race": "ember",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.55,
+          "v9_summoner": 2.6
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.55,
+          "v9_summoner": 2.6
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-20",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.183333333333333,
+          "v9_summoner": 2.5166666666666666
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.183333333333333,
+          "v9_summoner": 2.5166666666666666
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-20",
+      "race": "ember",
+      "base": "v9",
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.183333333333333,
+          "v9_summoner": 2.6666666666666665
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.183333333333333,
+          "v9_summoner": 2.6666666666666665
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-01",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.283333333333333,
+          "v9_summoner": 2.4166666666666665
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.283333333333333,
+          "v9_summoner": 2.4166666666666665
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-01",
+      "race": "ember",
+      "base": "v9",
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 3.6,
+          "p1": 2.15
+        },
+        "bases@8": {
+          "v9_summoner": 1,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 3.6,
+          "p1": 2.15
+        },
+        "bases@8": {
+          "v9_summoner": 1,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-63",
+      "race": "grove",
+      "base": "v9",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.466666666666667,
+          "v9_summoner": 2.4
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.4833333333333334,
+          "v9_summoner": 2.4833333333333334
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-63",
+      "race": "ember",
+      "base": "v9_summoner",
+      "ref": null,
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 2.6166666666666667,
+          "p1": 2.45
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 2.6166666666666667,
+          "p1": 2.4833333333333334
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-06",
+      "race": "grove",
+      "base": "v9",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 3.066666666666667,
+          "p1": 2.5
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 2.6,
+          "p1": 2.5
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-06",
+      "race": "ember",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 3.15,
+          "p1": 2.5
+        },
+        "bases@8": {
+          "v9_summoner": 3,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 2.7666666666666666,
+          "p1": 2.5
+        },
+        "bases@8": {
+          "v9_summoner": 3,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-52",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.566666666666667,
+          "v9_summoner": 2.45
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.566666666666667,
+          "v9_summoner": 2.433333333333333
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-52",
+      "race": "ember",
+      "base": "v9",
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 2.55,
+          "p1": 2.4833333333333334
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 2.55,
+          "p1": 2.55
+        },
+        "bases@8": {
+          "v9_summoner": 3,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-04",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": null,
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.25,
+          "v9_summoner": 3.1666666666666665
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.25,
+          "v9_summoner": 3.1666666666666665
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-04",
+      "race": "ember",
+      "base": null,
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 2.2666666666666666,
+          "p1": 2.216666666666667
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 2.2666666666666666,
+          "p1": 2.216666666666667
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-49",
+      "race": "grove",
+      "base": "v9",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.25,
+          "v9_summoner": 3.066666666666667
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.25,
+          "v9_summoner": 3.066666666666667
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-49",
+      "race": "ember",
+      "base": "v9_summoner",
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 2.55,
+          "p1": 2.2666666666666666
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 2.55,
+          "p1": 2.2666666666666666
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-25",
+      "race": "grove",
+      "base": null,
+      "ref": null,
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 3.683333333333333,
+          "p1": 2.4833333333333334
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 3.4833333333333334,
+          "p1": 2.533333333333333
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-25",
+      "race": "ember",
+      "base": "v9",
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 4.383333333333334,
+          "p1": 2.5833333333333335
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 4.4,
+          "p1": 2.6166666666666667
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-14",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 2.2,
+          "p1": 2.1666666666666665
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 2.2,
+          "p1": 2.1666666666666665
+        },
+        "bases@8": {
+          "v9_summoner": 1,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-14",
+      "race": "ember",
+      "base": "v9_summoner",
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 2.3833333333333333,
+          "p1": 2.1666666666666665
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 2.3833333333333333,
+          "p1": 2.1666666666666665
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-17",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.15,
+          "v9_summoner": 2.283333333333333
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.15,
+          "v9_summoner": 2.283333333333333
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-17",
+      "race": "ember",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.15,
+          "v9_summoner": 2.3333333333333335
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.15,
+          "v9_summoner": 2.3333333333333335
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-43",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 2.6,
+          "p1": 2.5
+        },
+        "bases@8": {
+          "v9_summoner": 3,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 2.6,
+          "p1": 2.5
+        },
+        "bases@8": {
+          "v9_summoner": 3,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-43",
+      "race": "ember",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.466666666666667,
+          "v9_summoner": 2.6666666666666665
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.466666666666667,
+          "v9_summoner": 2.6666666666666665
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-16",
+      "race": "grove",
+      "base": "v9",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.5,
+          "v9_summoner": 2.433333333333333
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.5,
+          "v9_summoner": 2.433333333333333
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-16",
+      "race": "ember",
+      "base": "v9",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.5,
+          "v9_summoner": 2.7333333333333334
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.5,
+          "v9_summoner": 2.7666666666666666
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-44",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.55,
+          "v9_summoner": 3.45
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.5833333333333335,
+          "v9_summoner": 3.466666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-44",
+      "race": "ember",
+      "base": "v9_summoner",
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 3.6333333333333333,
+          "p1": 2.466666666666667
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 3.6166666666666667,
+          "p1": 2.5166666666666666
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-21",
+      "race": "grove",
+      "base": "v9",
+      "ref": null,
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.5833333333333335,
+          "v9_summoner": 2.4
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.5833333333333335,
+          "v9_summoner": 2.433333333333333
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-21",
+      "race": "ember",
+      "base": null,
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 3.3333333333333335,
+          "p1": 2.533333333333333
+        },
+        "bases@8": {
+          "v9_summoner": 3,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 3.35,
+          "p1": 2.533333333333333
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-59",
+      "race": "grove",
+      "base": "v9",
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 3.183333333333333,
+          "p1": 3.066666666666667
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 3.183333333333333,
+          "p1": 3.066666666666667
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-59",
+      "race": "ember",
+      "base": "v9",
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 3.4166666666666665,
+          "p1": 3.066666666666667
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 3.4166666666666665,
+          "p1": 3.066666666666667
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-34",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.4,
+          "v9_summoner": 2.216666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.4,
+          "v9_summoner": 2.216666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-34",
+      "race": "ember",
+      "base": "v9",
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 2.5166666666666666,
+          "p1": 2.4833333333333334
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 2.5166666666666666,
+          "p1": 2.4833333333333334
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-55",
+      "race": "grove",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "p1": 3.2,
+          "v9_summoner": 2.75
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_summoner": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.5833333333333335,
+          "v9_summoner": 2.75
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_summoner": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_summoner",
+      "rival": "v9",
+      "map": "ladder-55",
+      "race": "ember",
+      "base": "v9_summoner",
+      "ref": "v9_summoner",
+      "baseMetrics": {
+        "clear": {
+          "v9_summoner": 2.9,
+          "p1": 3.066666666666667
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_summoner": 2.9,
+          "p1": 2.5
+        },
+        "bases@8": {
+          "v9_summoner": 2,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-02",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.6333333333333333,
+          "v9_knight": 2.55
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.6333333333333333,
+          "v9_knight": 2.55
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-02",
+      "race": "ember",
+      "base": "v9_knight",
+      "ref": null,
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.6333333333333333,
+          "v9_knight": 2.5833333333333335
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.6333333333333333,
+          "v9_knight": 2.5833333333333335
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-12",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "v9_knight": 5.533333333333333,
+          "p1": 2.433333333333333
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_knight": 5.4,
+          "p1": 2.5
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-12",
+      "race": "ember",
+      "base": "v9",
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.533333333333333,
+          "v9_knight": 3.783333333333333
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.533333333333333,
+          "v9_knight": 2.816666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-18",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "v9_knight": 3.7333333333333334,
+          "p1": 2.3666666666666667
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_knight": 3.7333333333333334,
+          "p1": 2.3666666666666667
+        },
+        "bases@8": {
+          "v9_knight": 1,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-18",
+      "race": "ember",
+      "base": null,
+      "ref": null,
+      "baseMetrics": {
+        "clear": {
+          "v9_knight": 3.6666666666666665,
+          "p1": 2.283333333333333
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_knight": 3.6666666666666665,
+          "p1": 2.283333333333333
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-20",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.2666666666666666,
+          "v9_knight": 2.6166666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.2666666666666666,
+          "v9_knight": 2.85
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-20",
+      "race": "ember",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "v9_knight": 2.6333333333333333,
+          "p1": 2.2666666666666666
+        },
+        "bases@8": {
+          "v9_knight": 3,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_knight": 3.1166666666666667,
+          "p1": 2.25
+        },
+        "bases@8": {
+          "v9_knight": 3,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-01",
+      "race": "grove",
+      "base": null,
+      "ref": null,
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.316666666666667,
+          "v9_knight": 2.15
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.316666666666667,
+          "v9_knight": 2.15
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-01",
+      "race": "ember",
+      "base": "v9",
+      "ref": null,
+      "baseMetrics": {
+        "clear": {
+          "v9_knight": 2.316666666666667,
+          "p1": 2.1666666666666665
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_knight": 2.316666666666667,
+          "p1": 2.1666666666666665
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-63",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.2666666666666666,
+          "v9_knight": 2.2
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.283333333333333,
+          "v9_knight": 2.216666666666667
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-63",
+      "race": "ember",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "v9_knight": 2.316666666666667,
+          "p1": 2.283333333333333
+        },
+        "bases@8": {
+          "v9_knight": 3,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_knight": 2.283333333333333,
+          "p1": 2.3
+        },
+        "bases@8": {
+          "v9_knight": 3,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-06",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 3.2,
+          "v9_knight": 4.183333333333334
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.55,
+          "v9_knight": 2.55
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-06",
+      "race": "ember",
+      "base": null,
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "p1": 3.2,
+          "v9_knight": 4.216666666666667
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.55,
+          "v9_knight": 2.65
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-52",
+      "race": "grove",
+      "base": null,
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.6,
+          "v9_knight": 2.716666666666667
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.6,
+          "v9_knight": 2.716666666666667
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-52",
+      "race": "ember",
+      "base": "v9",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.6,
+          "v9_knight": 2.6666666666666665
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.6,
+          "v9_knight": 2.6666666666666665
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-04",
+      "race": "grove",
+      "base": null,
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.2333333333333334,
+          "v9_knight": 2.2
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.2333333333333334,
+          "v9_knight": 2.2333333333333334
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-04",
+      "race": "ember",
+      "base": "v9_knight",
+      "ref": null,
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.2333333333333334,
+          "v9_knight": 2.316666666666667
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.2333333333333334,
+          "v9_knight": 2.3333333333333335
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-49",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": null,
+      "baseMetrics": {
+        "clear": {
+          "v9_knight": 2.683333333333333,
+          "p1": 2.6333333333333333
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_knight": 2.5,
+          "p1": 2.6333333333333333
+        },
+        "bases@8": {
+          "v9_knight": 3,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-49",
+      "race": "ember",
+      "base": "v9",
+      "ref": null,
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.65,
+          "v9_knight": 2.65
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.65,
+          "v9_knight": 2.683333333333333
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-25",
+      "race": "grove",
+      "base": null,
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "v9_knight": 3.1,
+          "p1": 2.6166666666666667
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_knight": 3.1166666666666667,
+          "p1": 2.6166666666666667
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 1
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-25",
+      "race": "ember",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.533333333333333,
+          "v9_knight": 3.183333333333333
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.533333333333333,
+          "v9_knight": 3.216666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-14",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": null,
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.15,
+          "v9_knight": 2.2
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.15,
+          "v9_knight": 2.2
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-14",
+      "race": "ember",
+      "base": "v9",
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.15,
+          "v9_knight": 2.283333333333333
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.15,
+          "v9_knight": 2.283333333333333
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-17",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.4833333333333334,
+          "v9_knight": 2.466666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.4833333333333334,
+          "v9_knight": 2.466666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-17",
+      "race": "ember",
+      "base": "v9",
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "v9_knight": 2.5833333333333335,
+          "p1": 2.566666666666667
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_knight": 2.5833333333333335,
+          "p1": 2.566666666666667
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-43",
+      "race": "grove",
+      "base": "v9",
+      "ref": null,
+      "baseMetrics": {
+        "clear": {
+          "p1": 3.05,
+          "v9_knight": 3.45
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 3.066666666666667,
+          "v9_knight": 3.316666666666667
+        },
+        "bases@8": {
+          "p1": 4,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-43",
+      "race": "ember",
+      "base": "v9_knight",
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "p1": 3.05,
+          "v9_knight": 3.5
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 3.066666666666667,
+          "v9_knight": 3.5166666666666666
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-16",
+      "race": "grove",
+      "base": null,
+      "ref": null,
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.433333333333333,
+          "v9_knight": 2.5166666666666666
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.433333333333333,
+          "v9_knight": 2.5166666666666666
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-16",
+      "race": "ember",
+      "base": null,
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.433333333333333,
+          "v9_knight": 2.6166666666666667
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.433333333333333,
+          "v9_knight": 2.7
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-44",
+      "race": "grove",
+      "base": "v9",
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "v9_knight": null,
+          "p1": 2.3333333333333335
+        },
+        "bases@8": {
+          "v9_knight": 1,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_knight": null,
+          "p1": 2.3333333333333335
+        },
+        "bases@8": {
+          "v9_knight": 1,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-44",
+      "race": "ember",
+      "base": null,
+      "ref": "v9",
+      "baseMetrics": {
+        "clear": {
+          "v9_knight": 4.666666666666667,
+          "p1": 2.5833333333333335
+        },
+        "bases@8": {
+          "v9_knight": 3,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_knight": 4.666666666666667,
+          "p1": 2.5833333333333335
+        },
+        "bases@8": {
+          "v9_knight": 3,
+          "p1": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-21",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.433333333333333,
+          "v9_knight": 2.466666666666667
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.433333333333333,
+          "v9_knight": 2.466666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-21",
+      "race": "ember",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.433333333333333,
+          "v9_knight": 2.6
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.433333333333333,
+          "v9_knight": 2.6
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-59",
+      "race": "grove",
+      "base": null,
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.2666666666666666,
+          "v9_knight": 3.6166666666666667
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.2666666666666666,
+          "v9_knight": 3.6
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-59",
+      "race": "ember",
+      "base": "v9",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.183333333333333,
+          "v9_knight": 4.133333333333334
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.183333333333333,
+          "v9_knight": 4.2
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-34",
+      "race": "grove",
+      "base": "v9",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "v9_knight": 3.25,
+          "p1": 2.4833333333333334
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_knight": 3.25,
+          "p1": 2.4833333333333334
+        },
+        "bases@8": {
+          "v9_knight": 2,
+          "p1": 2
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-34",
+      "race": "ember",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.35,
+          "v9_knight": 2.816666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 2
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.35,
+          "v9_knight": 2.816666666666667
+        },
+        "bases@8": {
+          "p1": 2,
+          "v9_knight": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-55",
+      "race": "grove",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "p1": 2.6333333333333333,
+          "v9_knight": 2.55
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "p1": 2.6333333333333333,
+          "v9_knight": 2.55
+        },
+        "bases@8": {
+          "p1": 3,
+          "v9_knight": 3
+        }
+      }
+    },
+    {
+      "subject": "v9_knight",
+      "rival": "v9",
+      "map": "ladder-55",
+      "race": "ember",
+      "base": "v9_knight",
+      "ref": "v9_knight",
+      "baseMetrics": {
+        "clear": {
+          "v9_knight": 2.6166666666666667,
+          "p1": 2.6333333333333333
+        },
+        "bases@8": {
+          "v9_knight": 3,
+          "p1": 3
+        }
+      },
+      "refMetrics": {
+        "clear": {
+          "v9_knight": 2.6166666666666667,
+          "p1": 2.6333333333333333
+        },
+        "bases@8": {
+          "v9_knight": 3,
+          "p1": 3
+        }
+      }
+    }
+  ]
+}

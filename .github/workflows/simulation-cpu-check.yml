@@ -31,6 +31,8 @@ jobs:
           node-version: "20"
           cache: npm
       - run: npm ci
+      - name: Test generated camp budgets and named map layouts
+        run: npx vitest run src/shared/generated-camp-budget.test.ts src/shared/map-pool.test.ts
       - name: Test release boundaries, mining upkeep and presentation
         run: npx vitest run src/sdk/package-boundaries.test.ts src/ai/bootstrap_1/summoner-composition.test.ts src/shared/mining-upkeep.test.ts src/shared/mining.test.ts src/shared/mining-waiting.test.ts src/shared/ship-training-cost.test.ts src/shared/unit-repair.test.ts src/shared/purchase.test.ts src/shared/savegame.test.ts src/shared/sim/determinism.test.ts src/shared/sim/restore.test.ts src/client/hud-model.test.ts src/client/net/lockstep-client.test.ts src/story/world.test.ts
       - name: Test empty-frame allocation and veteran transitions
