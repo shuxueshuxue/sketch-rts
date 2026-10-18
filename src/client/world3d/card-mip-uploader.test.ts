@@ -1,7 +1,8 @@
 import {describe,it,expect,vi} from 'vitest';
 import * as THREE from 'three';
+import {fakeCardGl} from './card-gl-test-helpers';
 import {CardMipUploader,createCardArray,cardTextureBytes,type CardMipPage,type CardTextureRenderer,type CardMipUploadOptions} from './card-mip-uploader';
-function renderer(){const target=new THREE.WebGLRenderTarget(2,2);return{initTexture:vi.fn<CardTextureRenderer['initTexture']>(),copyTextureToTexture:vi.fn<CardTextureRenderer['copyTextureToTexture']>(),getRenderTarget:()=>target,getActiveCubeFace:()=>2,getActiveMipmapLevel:()=>3,setRenderTarget:vi.fn()} satisfies CardTextureRenderer;}
+function renderer(){const target=new THREE.WebGLRenderTarget(2,2);return{initTexture:vi.fn<CardTextureRenderer['initTexture']>(),copyTextureToTexture:vi.fn<CardTextureRenderer['copyTextureToTexture']>(),getRenderTarget:()=>target,getActiveCubeFace:()=>2,getActiveMipmapLevel:()=>3,setRenderTarget:vi.fn(),...fakeCardGl().renderer} satisfies CardTextureRenderer;}
 function page(size=16):CardMipPage{return{texture:createCardArray(size,size,16,8),uploaded:false};}
 function pixels(size=16,layer=0){return new Uint8Array(size*size*4).fill(layer);}
 describe('streamed card mip transfers',()=>{

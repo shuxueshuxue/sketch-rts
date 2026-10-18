@@ -19,7 +19,9 @@ vi.mock('three',async importOriginal=>{
       gpu.casters.push(casters);
     }
     compileAsync(scene:Scene){gpu.compiled=[];scene.traverseVisible(object=>{if((object as Mesh).isMesh)gpu.compiled.push(object as Mesh);});return Promise.resolve();}
-    clear(){}getContext(){return{RGBA:0,UNSIGNED_BYTE:0,readPixels(){}};}
+    // A card window's own blits (see @@@card-window-blit) go through these; the scene tests read no texels.
+    state={bindFramebuffer(){}};properties={get:(texture:object)=>({__webglTexture:texture})};
+    clear(){}getContext(){return{RGBA:0,UNSIGNED_BYTE:0,readPixels(){},createFramebuffer:()=>({}),deleteFramebuffer(){},framebufferTexture2D(){},framebufferTextureLayer(){},blitFramebuffer(){}};}
   }};
 });
 import {World3DLayer} from './world-layer';
@@ -60,9 +62,11 @@ function setup(){
 const CARD_DENSITY=2;
 function paintedMeshes(){return gpu.scene!.getObjectsByProperty('name','PaintedCards').filter(object=>object instanceof InstancedMesh&&object.visible) as InstancedMesh[];}
 function paintedBinding(mesh:InstancedMesh,index:number){
- const card=mesh.userData.cards[index] as {sourceSize:number;baseMip:number;page:{texture:DataArrayTexture}},bank=mesh.geometry.getAttribute('cardBank').getX(index);
+ const card=mesh.userData.cards[index] as {window:{width:number;height:number};cell?:{width:number;height:number};baseMip:number;page:{texture:DataArrayTexture}},bank=mesh.geometry.getAttribute('cardBank').getX(index);
  const texture:DataArrayTexture=mesh.userData.banks[bank].texture;
- expect(texture).toBe(card.page.texture);expect(texture.image.width).toBe(card.sourceSize/2**card.baseMip);expect(texture.image.height).toBe(card.sourceSize/2**card.baseMip);
+ // A card keeps its window at its resident mip: a whole layer, or a cell of an atlas layer (see @@@card-atlas).
+ const kept=card.cell??texture.image;
+ expect(texture).toBe(card.page.texture);expect(kept.width).toBe(card.window.width/2**card.baseMip);expect(kept.height).toBe(card.window.height/2**card.baseMip);
  return{card,texture};
 }
 describe('production scene CPU integration (GPU renderer mocked)',()=>{
@@ -301,7 +305,7 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     const remains=()=>paintedMeshes().find(object=>object.userData.ids?.includes(corpse.id));
     const mesh=remains()!;expect(mesh).toBeDefined();
     const material=mesh.material as MeshBasicMaterial;
-    expect(layer.cardStats().maxTextureBanks).toBe(1);expect(layer.remainsStats().maxTextureBanks).toBe(1);expect(material.customProgramCacheKey()).toBe('painted-card-banks-v1:1:true');
+    expect(layer.cardStats().maxTextureBanks).toBe(1);expect(layer.remainsStats().maxTextureBanks).toBe(1);expect(material.customProgramCacheKey()).toBe('painted-card-banks-v2:1:true');
     expect(material).toMatchObject({transparent:true,depthTest:true,depthWrite:false,alphaTest:.01});
     expect(mesh.castShadow).toBe(false);expect(mesh.renderOrder).toBeGreaterThan(-1);expect(mesh.renderOrder).toBeLessThan(0);
     expect(layer.positions.has(corpse.id)).toBe(false);
@@ -379,8 +383,8 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
         // The shader expands cardRect before applying the instance matrix;
         // one original source texel still covers 1/CARD_DENSITY authored unit on both axes.
         const rect=mesh.geometry.getAttribute('cardRect');
-        expect(new Vector3().setFromMatrixColumn(matrix,0).length()*(rect.getZ(i)-rect.getX(i))/card.sourceSize).toBeCloseTo(unitGlyphScale(unit.radius)/CARD_DENSITY,5);
-        expect(new Vector3().setFromMatrixColumn(matrix,1).length()*(rect.getW(i)-rect.getY(i))/card.sourceSize).toBeCloseTo(unitGlyphScale(unit.radius)/(CARD_DENSITY*Math.tan(SHIP_CAMERA.tilt)),5);
+        expect(new Vector3().setFromMatrixColumn(matrix,0).length()*(rect.getZ(i)-rect.getX(i))/card.window.width).toBeCloseTo(unitGlyphScale(unit.radius)/CARD_DENSITY,5);
+        expect(new Vector3().setFromMatrixColumn(matrix,1).length()*(rect.getW(i)-rect.getY(i))/card.window.height).toBeCloseTo(unitGlyphScale(unit.radius)/(CARD_DENSITY*Math.tan(SHIP_CAMERA.tilt)),5);
       }
     }
     frame.now+=16;layer.draw(frame);expect(gpu.sizes).toBe(1);expect(gpu.ratios).toBe(1);
@@ -401,7 +405,7 @@ describe('production scene CPU integration (GPU renderer mocked)',()=>{
     expect(meshes.flatMap(mesh=>mesh.userData.ids.slice(0,mesh.count)).sort()).toEqual([first.id,second.id].sort());
     for(const mesh of meshes)for(let i=0;i<mesh.count;i++){
       const unit=game.units.find(unit=>unit.id===mesh.userData.ids[i])!,matrix=new Matrix4();mesh.getMatrixAt(i,matrix);
-      const {card}=paintedBinding(mesh,i),width=card.sourceSize,height=card.sourceSize;
+      const {card}=paintedBinding(mesh,i),{width,height}=card.window;
       const right=new Vector3().setFromMatrixColumn(matrix,0).normalize();
       const rect=mesh.geometry.getAttribute('cardRect');
       expect(new Vector3().setFromMatrixColumn(matrix,0).length()*(rect.getZ(i)-rect.getX(i))/width).toBeCloseTo(2/CARD_DENSITY,5);
