@@ -9,11 +9,14 @@ import { type Brush, type Point, ellipse, line, polygon } from "./kit";
 export type TreeKind = "pine" | "broadleaf";
 const TREE_INK = "#293c35";
 const CROWN = { pine: { base: "#526c4a", dark: "#3c5239", light: "#7a9466" }, broadleaf: { base: "#5f7a49", dark: "#45603a", light: "#8ea468" } };
-export function paintTree(c: Brush, x: number, y: number, size: number, tone = 0, kind: TreeKind = tone % 3 === 2 ? "broadleaf" : "pine", rim = true) {
+// `part` paints the tree with its contact shadow ("all"), the tree alone ("body"), or the shadow alone ("shadow"): a
+// tree standing up in the world (see @@@standing-terrain) leaves its shadow to the ground it stands on.
+export function paintTree(c: Brush, x: number, y: number, size: number, tone = 0, kind: TreeKind = tone % 3 === 2 ? "broadleaf" : "pine", rim = true, part: "all" | "body" | "shadow" = "all") {
   const crown = CROWN[kind];
   const base = rim ? crown.base : crown.dark, lit = rim ? crown.light : crown.base;
   c.save(); c.translate(x, y); c.scale(size, size);
-  c.fillStyle = "#1d261b"; c.globalAlpha = .22; c.beginPath(); c.ellipse(10, 1, 19, 6.5, -.15, 0, Math.PI * 2); c.fill(); c.globalAlpha = 1;
+  if (part !== "body") { c.fillStyle = "#1d261b"; c.globalAlpha = .22; c.beginPath(); c.ellipse(10, 1, 19, 6.5, -.15, 0, Math.PI * 2); c.fill(); c.globalAlpha = 1; }
+  if (part === "shadow") { c.restore(); return; }
   c.fillStyle = "#6b5a40"; c.fillRect(-1.8, -9, 3.6, 10); c.strokeStyle = TREE_INK; c.lineWidth = .9 / size; c.strokeRect(-1.8, -9, 3.6, 10);
   const sway = Math.sin(tone * 2.3) * 1.2;
   // The crown's silhouette: stroked wide in ink, then filled, so only its outer edge keeps a line.

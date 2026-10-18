@@ -1,18 +1,17 @@
 import { type Brush, type Point, ellipse, line, polygon } from "./art/kit";
 import { createScratchCanvas } from "./art/scratch-canvas";
-// The atlas's tree, from its own module: a chunk painter thread (see @@@terrain-chunk-thread) loads no other art.
-import { paintTree as drawAtlasTree, type TreeKind } from "./art/environment";
+import { paintStandingShadow, standingTerrain } from "./standing-terrain";
 import { GROUND, GROUND_LAYERS, cellJitter, groundMaterial, groundTexture, terrainCover, type Tone } from './terrain-materials';
 import type { Terrain } from "../shared/terrain";
-import { environmentField, sampleEnvironment } from "../shared/environment/fields";
 import { waterCover, waterLightMask, paintWaterRipples, shoreMask } from './water-art';
 import { WATER_DEEP, waterField } from './water-field';
 
 // @@@terrain-art - The ground as an inked atlas after HoMM3's adventure map (docs/art-direction-variants.zh.md, part
 // one): dirt under everything with grass, sand and gravel laid over it in patches with drawn edges; the coast in bands of
-// beach, foam and water; rock as boulders with a cliff face to the south; forest as a mass of trees with bigger ones at its
-// edge; open ground carrying only small, low things. Nothing here changes what a unit may cross (see @@@terrain). The map
-// is painted in square chunks once and kept, so a frame only lays down the chunks in view.
+// beach, foam and water; rock as a cliff face to the south; forest as a dark floor; open ground carrying only small, low
+// things. The forest's trees and the rock's boulders stand up in the world (see @@@standing-terrain): the ground keeps
+// their contact shadows only. Nothing here changes what a unit may cross (see @@@terrain). The map is painted in square
+// chunks once and kept, so a frame only lays down the chunks in view.
 
 const CHUNK = 512;
 const MAX_CHUNKS = 48;
@@ -294,49 +293,17 @@ function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): 
     const inner = rock.filter(([col, row]) => deep(col, row));
     // Darker than open ground, so the eye reads it as a mass no one walks.
     if (inner.length) { patch(b, inner, size, 2, 135); fill(texture("rock", ROCK)); fill(CLIFF.dark, .28); }
-    const stones: { x: number; y: number; r: number; seed: number }[] = [];
-    for (const [col, row] of rock) {
-      if (deep(col, row)) {
-        if (cellJitter(col, row, 146) > .55) continue;
-        stones.push({ x: (col + .5 + (cellJitter(col, row, 147) - .5) * 1.6) * size, y: (row + .5 + (cellJitter(col, row, 148) - .5) * 1.6) * size,
-          r: size * (.55 + cellJitter(col, row, 149) * .35), seed: col * 131 + row });
-        continue;
-      }
-      for (let k = 0; k < 2; k++) {
-        if (k && cellJitter(col, row, 144) < .4) continue;
-        stones.push({ x: (col + .5 + (cellJitter(col, row, 141 + k * 9) - .5) * .7) * size, y: (row + .45 + (cellJitter(col, row, 142 + k * 9) - .5) * .5) * size,
-          r: size * (.3 + cellJitter(col, row, 143 + k * 9) * .2), seed: col * 131 + row + k * 7 });
-      }
-    }
-    // Back to front, so a nearer stone overlaps the one behind it.
-    stones.sort((a, z) => a.y - z.y);
-    for (const { x, y, r, seed } of stones) {
-      const points = Array.from({ length: 6 }, (_, i) => {
-        const a = i / 6 * Math.PI * 2 + (cellJitter(seed, i, 150) - .5) * .7, q = r * (.75 + cellJitter(seed, i, 160) * .35);
-        return [x + Math.cos(a) * q, y + Math.sin(a) * q * .8];
-      });
-      polygon(b, points.map(([px, py]) => [px! + 1, py! + r * .45]), CLIFF.dark, "transparent", 0);
-      polygon(b, points, ROCK.base, INK, 1);
-      polygon(b, [points[3]!, points[4]!, points[5]!, [x, y]], ROCK.light, "transparent", 0);
-    }
+    // The boulders stand up in the world (see @@@standing-terrain); the ground keeps their shadows.
+    for (const object of standingIn(terrain, x0, y0, w, h)) if (object.look.startsWith("stone:")) paintStandingShadow(b, object);
   }
 
-  // Forest (rules 5 and 6): a dark floor, then trees from the back row forward. Trees on a wood's edge stand bigger and
-  // lighter; inside they crowd darker. Pines and broadleaves mix, pines more where the ground is colder.
+  // Forest (rules 5 and 6): a dark floor under its trees (see @@@standing-terrain for the trees themselves).
   const forest = collect((col, row) => at(col, row) === "T");
   if (forest.length) {
     patch(b, forest, size, 5, 170); fill(FOREST_FLOOR_DARK, .55);
     patch(b, forest, size, 2, 170); fill(texture("floor", FOREST_FLOOR));
-    const edge = (col: number, row: number) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => at(col + dx!, row + dy!) !== "T");
-    const field = terrain.ecology ? environmentField(terrain) : undefined;
-    for (const [col, row] of forest) {
-      const cold = field ? Math.max(0, Math.min(1, (20 - sampleEnvironment(field, (col + .5) * size, (row + .5) * size).temperatureC) / 12)) : .55;
-      const rim = edge(col, row);
-      for (let k = 0; k < (rim ? 1 : 2); k++) {
-        const x = (col + .5 + (cellJitter(col, row, 181 + k) - .5) * .7) * size, y = (row + .65 + (cellJitter(col, row, 183 + k) - .5) * .5) * size;
-        forestTree(b, x, y, (rim ? 1.05 : .82) * (.85 + cellJitter(col, row, 185 + k) * .3), (col + row) % 3, cellJitter(col, row, 187 + k) < .25 + cold * .5 ? "pine" : "broadleaf", rim, density);
-      }
-    }
+    // The trees stand up in the world (see @@@standing-terrain); the ground keeps their contact shadows.
+    for (const object of standingIn(terrain, x0, y0, w, h)) if (object.look.startsWith("tree:")) paintStandingShadow(b, object);
   }
 
   // Small things on open ground (rule 4): grass tufts and stones on no more than one cell in eight, all low.
@@ -350,24 +317,6 @@ function paintChunk(terrain: Terrain, cx: number, cy: number, density: number): 
     } else for (const dx of [-3, -1, 1, 3]) line(b, [[x + dx, y], [x + dx * 1.5, y - 5 - Math.abs(dx)]], GROUND.grass.dark, 1);
   }
   return { ground: canvas, ...(waterMask ? { water: waterMask } : {}) };
-}
-
-// A forest paints hundreds of trees a chunk; each look (kind, edge or inside, one of three sways, the chunk's density) is
-// painted once into a sprite and stamped from there.
-const TREE_BOX = { left: 24, top: 64, width: 56, height: 73 }, TREE_SPRITE_SCALE = 1.2;
-const treeSprites = new Map<string, HTMLCanvasElement>();
-function forestTree(b: Brush, x: number, y: number, size: number, tone: number, kind: TreeKind, rim: boolean, density: number) {
-  const key = `${kind}:${rim}:${tone}:${density}`;
-  let sprite = treeSprites.get(key);
-  if (!sprite) {
-    const scale = TREE_SPRITE_SCALE * density;
-    sprite = createScratchCanvas(Math.ceil(TREE_BOX.width * scale), Math.ceil(TREE_BOX.height * scale));
-    const s = sprite.getContext("2d")!;
-    s.scale(scale, scale);
-    drawAtlasTree(s, TREE_BOX.left, TREE_BOX.top, 1, tone, kind, rim);
-    treeSprites.set(key, sprite);
-  }
-  b.drawImage(sprite, x - TREE_BOX.left * size, y - TREE_BOX.top * size, TREE_BOX.width * size, TREE_BOX.height * size);
 }
 
 type Cells = [number, number][];
@@ -406,4 +355,9 @@ function patch(b: Brush, cells: Cells, size: number, grow: number, salt: number,
 function brushZoom(c: Brush) {
   const transform = c.getTransform();
   return Math.hypot(transform.a, transform.b);
+}
+
+// The terrain's standing objects whose foot lies in the box (a chunk's cells and their margin).
+function standingIn(terrain: Terrain, x: number, y: number, width: number, height: number) {
+  return standingTerrain(terrain).filter(object => object.x >= x && object.x < x + width && object.y >= y && object.y < y + height);
 }
