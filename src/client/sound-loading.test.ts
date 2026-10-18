@@ -72,6 +72,22 @@ describe("on-demand audio", () => {
     const pack=readSoundPack('old',{name:'Old',sounds:{click:{file:'click.ogg'}}},{'click.ogg':'/click.ogg'}),board=new Soundboard([pack],'old');
     await board.prepareHome();board.unlock();board.play('menu');expect(audio.sources).toHaveLength(1);board.dispose();
   });
+  it('uses a legacy pack\'s generic ship launch when cannonShot is absent',async()=>{
+    const audio=audioContext(),fetcher=vi.fn(async()=>new Response(new Uint8Array(3)));vi.stubGlobal('fetch',fetcher);
+    const pack=readSoundPack('old',{name:'Old',sounds:{
+      shipShot:{file:'cannon.ogg',kinds:{cutter:{file:'arrow.ogg'},fireShip:{file:'flame.ogg'}}},
+      impact:{file:'hit.ogg'},
+    }},{'cannon.ogg':'/cannon.ogg','arrow.ogg':'/arrow.ogg','flame.ogg':'/flame.ogg','hit.ogg':'/hit.ogg'});
+    const board=new Soundboard([pack],'old');board.unlock();board.play('cannonShot');
+    await vi.waitFor(()=>expect(audio.sources).toHaveLength(1));
+    expect(fetcher.mock.calls.map(([url])=>url)).toEqual(['/cannon.ogg']);board.dispose();
+  });
+  it('does not turn a missing cannon launch into an impact through chained fallbacks',()=>{
+    const audio=audioContext(),fetcher=vi.fn(async()=>new Response(new Uint8Array(3)));vi.stubGlobal('fetch',fetcher);
+    const pack=readSoundPack('old',{name:'Old',sounds:{impact:{file:'hit.ogg'}}},{'hit.ogg':'/hit.ogg'});
+    const board=new Soundboard([pack],'old');board.unlock();board.play('cannonShot');
+    expect(fetcher).not.toHaveBeenCalled();expect(audio.sources).toHaveLength(0);board.dispose();
+  });
   it('does not construct audio for silence and keeps unavailable browser audio optional',async()=>{
     const audio=audioContext(),board=new Soundboard([effectPack()],'demo');board.settings.pack='none';
     await board.prepareHome();expect(audio.construct).not.toHaveBeenCalled();

@@ -14,6 +14,52 @@ const effect = (id: string, type: WorldEffect["type"], extra: Partial<WorldEffec
 const ids = (before: GameSnapshot, after: GameSnapshot) => soundCues(before, after, "player").map((cue) => cue.id);
 
 describe("sound cues", () => {
+  it.each([
+    ["warship", "projectile", "cannonShot"],
+    ["shipOfTheLine", "siegeBolt", "cannonShot"],
+    ["bombardShip", "shellFlight", "mortarShot"],
+    ["fireShip", "grapeshot", "flameShot"],
+    ["cutter", "projectile", "arrowShot"],
+  ] as const)("hears an older %s's %s by its declared weapon", (sourceKind, type, id) => {
+    const shots = later(next => next.effects.push(effect("legacy-shot", type, { sourceKind, fromX: 10, fromY: 20 })));
+    expect(soundCues(start, shots, "player")).toEqual([{ id, x: 10, y: 20 }]);
+  });
+
+  it.each(["cutter", "transport", "warship", "bombardShip", "fireShip", "carrier", "shipOfTheLine"] as const)(
+    "uses captured attack kinds for every shot from a %s, regardless of its stock weapon",
+    sourceKind => {
+      const shots = later(next => next.effects.push(
+        effect("cannon", "siegeBolt", { sourceKind, attackKind: "cannon", fromX: 10, fromY: 20 }),
+        effect("mortar", "shellFlight", { sourceKind, attackKind: "mortar", fromX: 30, fromY: 40 }),
+        effect("flame", "grapeshot", { sourceKind, attackKind: "flame", fromX: 50, fromY: 60 }),
+        effect("incendiary", "shellFlight", { sourceKind, attackKind: "fire", fromX: 50, fromY: 60 }),
+        effect("grape", "grapeshot", { sourceKind, attackKind: "grapeshot", fromX: 70, fromY: 80 }),
+        effect("arrow", "projectile", { sourceKind, attackKind: "arrow", fromX: 90, fromY: 100 }),
+        effect("flash", "muzzleFlash", { sourceKind, attackKind: "cannon" }),
+        effect("impact", "siegeImpact", { sourceKind, attackKind: "cannon" }),
+      ));
+      expect(soundCues(start, shots, "player")).toEqual([
+        { id: "cannonShot", x: 10, y: 20 },
+        { id: "mortarShot", x: 30, y: 40 },
+        { id: "flameShot", x: 50, y: 60 },
+        { id: "flameShot", x: 50, y: 60 },
+        { id: "grapeshotShot", x: 70, y: 80 },
+        { id: "arrowShot", x: 90, y: 100 },
+      ]);
+      const next = structuredClone(shots);
+      next.tick += 1;
+      expect(soundCues(shots, next, "player")).toEqual([]);
+    },
+  );
+
+  it("does not guess a shot for an unarmed hull without captured weapon identity", () => {
+    const shots = later(next => next.effects.push(
+      effect("transport-shot", "projectile", { sourceKind: "transport" }),
+      effect("carrier-shot", "projectile", { sourceKind: "carrier" }),
+    ));
+    expect(soundCues(start, shots, "player")).toEqual([]);
+  });
+
   it('uses the launched weapon identity even when the hull or its fittings differ',()=>{
     const shots=later(next=>next.effects.push(
       effect('swapped','siegeBolt',{sourceKind:'fireShip',attackKind:'cannon',fromX:10,fromY:20}),
@@ -77,7 +123,7 @@ describe("sound cues", () => {
     expect(soundCues(start, shots, "player")).toEqual([
       { id: "arrowShot", x: 10, y: 20 },
       { id: "arrowShot", x: 30, y: 40 },
-      { id: "shipShot", x: 100, y: 200, kind: "warship" },
+      { id: "cannonShot", x: 100, y: 200 },
       { id: "arrowHit", x: 100, y: 200 },
       { id: "impact", x: 100, y: 200 },
       { id: "impact", x: 100, y: 200 },
