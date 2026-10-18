@@ -1,4 +1,5 @@
 import { miningHandoff } from './mining-handoff';
+import { preventHullLanding } from './return-landing';
 import { evacuationShelter } from './evacuation-shelter';
 import { homeRelief } from './home-relief';
 import { idleWorkerEvasion } from './idle-worker-evasion';
@@ -193,7 +194,11 @@ export function planBootstrapScriptEntries(snapshot: GameSnapshot, owner: Player
       || 'passengerId' in command && shelter.claimed.has(command.passengerId)) return [];
     return [entry];
   });
-  return [...sheltered, ...shelter.commands.map(command => ({ scriptId: 'evacuationShelter', command }))];
+  const shelteredEntries = [...sheltered, ...shelter.commands.map(command => ({ scriptId: 'evacuationShelter', command }))];
+  const landingCommands = preventHullLanding(snapshot, owner, options, shelteredEntries.map(entry => entry.command));
+  const byCommand = new Map<GameCommand, AiCommandEntry[]>();
+  for (const entry of shelteredEntries) byCommand.set(entry.command, [...(byCommand.get(entry.command) ?? []), entry]);
+  return landingCommands.map(command => byCommand.get(command)?.shift() ?? { scriptId: 'safeReturnLanding', command });
 }
 
 export function researchPrerequisites(wants: readonly V6Want[], player: PlayerState): V6Want[] {
