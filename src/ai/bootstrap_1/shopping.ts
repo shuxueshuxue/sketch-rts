@@ -3,15 +3,27 @@ import { canEquip, freeItemSlot, itemsFor } from '../../shared/equipment';
 import { nearestByRoute } from '../../shared/route-selection';
 import { standsAtShop } from '../../shared/shop';
 import { walkingDistance } from '../../shared/terrain';
-import type { GameCommand, GameSnapshot, PlayerId } from '../../shared/types';
+import type { Building, GameCommand, GameSnapshot, PlayerId, Shop, Unit } from '../../shared/types';
 import type { AiPolicyContext, AiScript } from '../policy/types';
 import { readV6Intel } from '../policy/v6/intel';
 import { V7_WOUNDED_SHARE } from '../policy/v6/general';
 import { V7_GATHERED_RANGE } from '../policy/v7/creep';
 import { SHOP_PRIORITY, shopPurchaseAt } from '../policy/v9/shop';
-import { armedFoes, safeLandTravelTicks } from './safe-land-route';
+import { armedFoes, retreatLandRoad } from './safe-land-route';
+import { distance } from '../policy/spatial';
 import { lootRecoveryUnitIds } from './loot-recovery';
 import { mercenaryControlUnitIds } from './mercenary-control';
+
+// Admit the native steering road executed by the move below, including building
+// detours. Terrain-only approach geometry can miss a camp on that actual road.
+function shoppingTravelTicks(snapshot: GameSnapshot, unit: Unit, target: Shop | Building, foes: readonly (Unit | Building)[]) {
+  const road = retreatLandRoad(snapshot, unit, target, foes);
+  if (!road) return undefined;
+  const end = road.points[road.points.length - 1]!;
+  const arrives = 'goods' in target ? standsAtShop({ ...unit, ...end }, target)
+    : distance(end, target) <= V7_GATHERED_RANGE;
+  return arrives ? road.ticks : undefined;
+}
 
 function liveShopping(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const task = options.memory.shopping;
@@ -22,7 +34,7 @@ function liveShopping(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicy
   if (!unit || !shop || !home || unit.deck || unit.hp < unit.maxHp * V7_WOUNDED_SHARE
     || task.returning && walkingDistance(snapshot.map, unit, home, 'land')! <= V7_GATHERED_RANGE
     || !task.returning && !shop.goods.some(good => good.kind === task.kind && good.stock > 0)
-    || safeLandTravelTicks(snapshot, unit, task.returning ? home : shop, armedFoes(snapshot, owner, options)) === undefined) {
+    || shoppingTravelTicks(snapshot, unit, task.returning ? home : shop, armedFoes(snapshot, owner, options)) === undefined) {
     delete options.memory.shopping;
     return undefined;
   }
@@ -53,7 +65,7 @@ function shoppingAssignment(snapshot: GameSnapshot, owner: PlayerId, options: Ai
         ? { shop, unit, kind: 'speedBoots' as const } : undefined
       : shopPurchaseAt(snapshot, owner, shop, intel.army, [unit], towers);
     if (!purchase || !freeItemSlot(snapshot, unit, purchase.kind)) return [];
-    const ticks = safeLandTravelTicks(snapshot, unit, shop, foes), home = nearestByRoute(snapshot.map, halls, unit, 'land');
+    const ticks = shoppingTravelTicks(snapshot, unit, shop, foes), home = nearestByRoute(snapshot.map, halls, unit, 'land');
     return ticks === undefined || !home ? [] : [{ ...purchase, ticks, home }];
   })).sort((a, b) => b.unit.level - a.unit.level || a.ticks - b.ticks || a.unit.id.localeCompare(b.unit.id))[0];
 }
