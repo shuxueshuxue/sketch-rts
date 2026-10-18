@@ -2020,16 +2020,17 @@ function updateBoardOrder(game: Game, unit: Unit) {
       addEffect(game,"boardingBlocked",unit.x,unit.y,seconds(.4),{unitId:unit.id,owner:unit.owner,sourceKind:unit.kind});
       return;
     }
-    // One shared entry admits large bodies first. Waiting crew clear the aft
+    // One shared entry, crossed one at a time. Waiting crew clear the aft
     // passage on their own deck rather than racing ahead and sealing the exit.
     // Only boarders still on this side are in the queue: one already across
     // keeps its board order until it settles on its spot, and fighting at the
     // entry it never did, holding everyone behind it.
-    // Of a size, the one nearest the quarry crosses next: waiting packed round one spot, a body by the rail is shut in
-    // by the crew beside it, and only those, nearer, can go before it.
+    // The one nearest the quarry crosses next, so the order across is the order the crew stand in and no one has to
+    // pass another on the way: waiting packed round one spot, a body by the rail was shut in by the crew beside it, and
+    // a larger body sent first had to squeeze past a smaller one standing nearer, each blocking the other on a narrow deck.
     const near=distance(unit,transport);
     const ahead=game.units.some(other=>other!==unit && other.hp>0 && other.deck?.shipId===source.id && other.order.type==="board" && other.order.transportId===transport.id
-      && (other.radius>unit.radius || other.radius===unit.radius && (distance(other,transport)<near || distance(other,transport)===near && other.id<unit.id)));
+      && (distance(other,transport)<near || distance(other,transport)===near && other.id<unit.id));
     if(ahead && source.id!==transport.id){
       const profile=shipProfile(source)!,entry=worldToLocal(source,transport);
       const waiting=deckPlacement(source,unit,game.units,{x:profile.length/4,y:-Math.sign(entry.y)*profile.beam/2});
