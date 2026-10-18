@@ -74,12 +74,13 @@ export class MenuBackdrop {
   private clock: number | undefined;
   private lastPaint = -Infinity;
   private motes: Mote[] = [];
-  private random = seeded(Date.now());
   // The running battle's simulation, and when it was decided (scene seconds).
   private battle: { adapter: LocalGameAdapter | MatchThreadGameAdapter; end(): void } | undefined;
   private decidedAt: number | undefined;
 
-  constructor(private readonly labels: WorldLabels, private index: number, private readonly threads?: MenuBattleThreads) {}
+  // The battles' seeds and the motes come from `random`: the clock on the page, so each visit fights a fresh battle; a
+  // fixed seed in a test, so it fights the same one every run.
+  constructor(private readonly labels: WorldLabels, private index: number, private readonly threads?: MenuBattleThreads, private readonly random: () => number = seeded(Date.now())) {}
 
   get scene() {
     return MENU_SCENES[this.index]!;
