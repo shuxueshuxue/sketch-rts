@@ -1,7 +1,7 @@
-import { issuePlayerCommand, snapshotGame, stepGame, type Game } from "../sim";
+import { snapshotGame, stepGame, tryPlayerCommand, type Game } from "../sim";
 import type { CommandEnvelope, CommandFrame } from "../net/types";
 import { checksumGame } from "./checksum";
-import { checkCommandLegality, narrowFrameCommandToLiveOperands } from "./command-validation";
+import { narrowFrameCommandToLiveOperands } from "./command-validation";
 import type { GameCommand, GameSnapshot, PlayerId } from "../types";
 
 export type FrameResult = {
@@ -35,13 +35,11 @@ export function stepCommandFrame(game: Game, frame: CommandFrame, options: { inc
 }
 
 function issueFrameCommand(game: Game, owner: PlayerId, command: GameCommand): void {
-  // @@@frame-issuer-subset - Network frames carry accepted intent; units/buildings that died before this tick are no longer issuers, not sim-corrupt ids.
+  // @@@frame-issuer-subset - Network frames carry accepted intent: units/buildings that died before this tick are no
+  // longer issuers, not sim-corrupt ids, and a refusal a later tick could lift (transient) is skipped. Any other refusal
+  // means the sender broke the rules.
   const currentCommand = narrowFrameCommandToLiveOperands(game, owner, command);
   if (!currentCommand) return;
-  // @@@legality-reads-live-game - The legality check only reads (players, units, buildings, resources, camps, items, teams,
-  // variants) and nothing runs between here and the check, so it reads the game itself rather than a copy of the world.
-  const legality = checkCommandLegality(game, owner, currentCommand);
-  if (legality?.transient) return;
-  if (legality) throw new Error(legality.message);
-  issuePlayerCommand(game, owner, currentCommand);
+  const result = tryPlayerCommand(game, owner, currentCommand);
+  if (!result.ok && !result.transient) throw new Error(result.message);
 }

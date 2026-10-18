@@ -70,9 +70,9 @@ export function shopBuyer(snapshot: Pick<GameSnapshot, "units" | "items">, owner
 // Why the owner may not buy the good at the shop now (transient when only waiting fixes it), or undefined.
 export function buyRefusal(snapshot: Pick<GameSnapshot, "shops" | "units" | "players" | "items">, owner: PlayerId, shopId: string, kind: ItemKind, recipientId?:string): CommandLegalityError | undefined {
   const shop = snapshot.shops?.find((candidate) => candidate.id === shopId);
-  if (!shop) return { message: `Unknown shop ${shopId}`, transient: false };
+  if (!shop) return { message: `Unknown shop ${shopId}`, transient: false, reason: "gone" };
   const good = shop.goods.find((candidate) => candidate.kind === kind);
-  if (!good) return { message: `${shop.id} sells no ${kind}`, transient: false };
+  if (!good) return { message: `${shop.id} sells no ${kind}`, transient: false, reason: "rules" };
   if (good.stock <= 0) return { message: `${shop.id} is out of ${kind}`, transient: true, reason: "cooldown", cooldownTicks: good.restockRemaining };
   if(recipientId!==undefined){const result=purchasePlacement(snapshot,owner,shop,kind,recipientId);if("refusal" in result)return {message:result.refusal,transient:true,reason:"position"};}
   if (!snapshot.units.some((unit) => unit.owner === owner && standsAtShop(unit, shop))) return { message: `${shop.id} needs a unit of yours beside it`, transient: true, reason: "position" };

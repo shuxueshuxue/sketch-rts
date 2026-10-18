@@ -20,7 +20,7 @@ import { settleGroundItems } from './item-surfaces';
 import { strikePoint, strikeGap, bodyGap, strikeReach, CONTACT_SLACK } from "./combat-geometry";
 import { purchasePlacement, type PurchasePlacement } from "./purchase";
 import { SHIP_WEAPONS, PREVIOUS_SHIP_TRAIN_COST, damageShipParts, initializeShipEquipment, installedWeapons, isShipEquipment, mountedWeaponPose, mountedTargetPoint, mountedFireLaneClear, rebuildShipFittings, repairShipParts, shipPartMax, shipGunCanAim, shipMounts, bestFiringHeading, type MountedShotClear } from "./ship-equipment";
-import { ITEM_DEFS, ITEM_TRANSFER_REACH, activeItem, canEquip, dropRefusal, freeItemSlot, giveRefusal, itemEquipped, type ItemDestination, normalizeEquipment, removeFromHands, transferRefusal, weaponRules, wieldRefusal, itemHands, unitItemMass, shipItemMass, itemsFor } from "./equipment";
+import { ITEM_DEFS, ITEM_TRANSFER_REACH, activeItem, canEquip, dropRefusal, freeItemSlot, giveRefusal, itemEquipped, type ItemDestination, normalizeEquipment, removeFromHands, transferRefusal, weaponRules, itemHands, unitItemMass, shipItemMass, itemsFor } from "./equipment";
 import { BREACH_CHARGE, FLAME_CLOAK, GUARDIAN_SCROLL, ITEM_DROP_REACH, IVORY_TOWER_HP_SHARE, LIGHTNING_ROD, STORM_STAFF, NEUTRAL_ITEM_TARGET_RANGE, NEUTRAL_STORM_TARGET_RANGE } from "./item-rules";
 import { EXPERIENCE_BOOK_XP, VETERANCY_GAIN_PER_STAR, killXpReward, xpStarThresholds } from "./unit-value";
 import { automaticTargetAllowed, combatTargetScore, combatVictimId, shouldSwitchCombatTarget, type TargetThreat } from "./combat-target";
@@ -36,10 +36,10 @@ import { rollVeteranSkillChoices } from "./veteran-skills";
 import { unitClassOf } from "./unit-targeting";
 import { veteranWeaponRange } from "./veteran-stats";
 import { buildVeteranFrame, castVeteranAbility, temporaryAttackSpeedMultiplier, type VeteranAutocastFrame, type VeteranUnitModifiers } from "./veteran-runtime";
-import { checkCommandLegality } from "./sim/command-validation";
+import { checkCommandLegality, type CommandLegalityError } from "./sim/command-validation";
 import { resolveUnitDamage, unitAttackDamageProfile } from "./damage";
 import { attackDamageProfile, weaponDamageProfile, DAMAGE_PROFILES, ITEM_DAMAGE_PROFILES, type DamageProfile } from "./damage-types";
-import { autocastEnabled, canAutocast, withAutocast } from "./autocast";
+import { autocastEnabled, withAutocast } from "./autocast";
 import { buildingPlacementBlocker, terrainBlocksPlacement } from "./build-placement";
 import { sameGround, footprintHalf, groundUnder, isOpenGround, isWalkable, openGroundNear, openStep, setBuildingBodies, shareBuildingBodies, snapToFootprint, steerPoint, walkableGoal, walkDestination, warmTerrainRouting } from "./terrain";
 import { alongside, boardingBerth, canReach, carries, landingSpot } from "./naval";
@@ -448,8 +448,36 @@ export function issueCommand(game: Game, command: GameCommand) {
   issuePlayerCommand(game, "player", command);
 }
 
+// @@@command-result - One way into the sim for every command: checkCommandLegality judges it once, and only a command it
+// takes changes the game. A refusal comes back as a value with the check's reason; the frame path skips the transient
+// ones and fails on the rest, the card and the scripts read the same object. A throw from here is a disagreement
+// between the check and the sim, a bug, not a refusal.
+export type CommandResult = { ok: true } | ({ ok: false } & CommandLegalityError);
+
+const COMMAND_TAKEN: CommandResult = { ok: true };
+
+// @@@legality-reads-live-game - The check only reads (players, units, buildings, resources, camps, items, teams, variants)
+// and nothing runs between it and the apply, so it reads the game itself rather than a copy of the world.
+export function tryPlayerCommand(game: Game, owner: PlayerId, command: GameCommand): CommandResult {
+  const refusal = checkCommandLegality(game, owner, command);
+  if (refusal) return { ok: false, ...refusal };
+  applyPlayerCommand(game, owner, command);
+  return COMMAND_TAKEN;
+}
+
+export class CommandRefusedError extends Error {
+  constructor(readonly refusal: Extract<CommandResult, { ok: false }>) {
+    super(refusal.message);
+  }
+}
+
+// For callers that treat a refused command as their own fault (tests, scenes, scripts): the refusal is thrown.
 export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
-  if (!game.players[owner]) throw new Error(`Unknown player ${owner}`);
+  const result = tryPlayerCommand(game, owner, command);
+  if (!result.ok) throw new CommandRefusedError(result);
+}
+
+function applyPlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
   // @@@forfeit - A player who concedes leaves the field: all they own falls at once, through the ordinary death path
   // (which clears decks, garrisons and carried items), and the match is decided as by any side losing its last building.
   // A command like any other, so every peer of a lockstep match concedes the same tick.
@@ -457,20 +485,6 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     for (const unit of game.units) if (unit.owner === owner) unit.hp = 0;
     for (const building of game.buildings) if (building.owner === owner) building.hp = 0;
     return;
-  }
-  const cabinOperands = 'unitIds' in command ? [...command.unitIds] : 'unitId' in command ? [command.unitId] : [];
-  if ('targetId' in command && command.targetId) cabinOperands.push(command.targetId);
-  if ('recipientId' in command && command.recipientId) cabinOperands.push(command.recipientId);
-  if (command.type === 'unloadPassenger') cabinOperands.push(command.passengerId);
-  if (command.type === 'transferItem') {
-    const item = game.items.find(item => item.id === command.itemId);
-    if (item?.carrierId) cabinOperands.push(item.carrierId);
-    if ('unitId' in command.destination) cabinOperands.push(command.destination.unitId);
-    else if ('installerId' in command.destination && command.destination.installerId) cabinOperands.push(command.destination.installerId);
-  }
-  if (command.type === 'enterCabin' || command.type === 'leaveCabin' || game.units.some(unit => cabinOperands.includes(unit.id) && isInCabin(unit))) {
-    const error = checkCommandLegality(game, owner, command);
-    if (error) throw new Error(error.message);
   }
   if (command.type === 'enterCabin' || command.type === 'leaveCabin') {
     const selected=unitsByIds(game,command.unitIds,owner);
@@ -482,8 +496,6 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     return;
   }
   if(command.type==='boardShip') {
-    const error=checkCommandLegality(game,owner,command);
-    if(error)throw new Error(error.message);
     const ships=unitsByIds(game,command.unitIds,owner).filter(ship=>shipProfile(ship));
     if(!command.queued)cancelCrewRendezvous(game.units,new Set(ships.map(ship=>ship.id)));
     for(const ship of ships)
@@ -491,8 +503,6 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     return;
   }
   if(command.type==='cancelBoardShip') {
-    const error=checkCommandLegality(game,owner,command);
-    if(error)throw new Error(error.message);
     const ships=unitsByIds(game,command.unitIds,owner).filter(ship=>shipProfile(ship));
     cancelCrewRendezvous(game.units,new Set(ships.map(ship=>ship.id)));
     for(const ship of ships) {
@@ -503,8 +513,6 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     return;
   }
   if (command.type === "learnVeteranSkill") {
-    const error = checkCommandLegality(game, owner, command);
-    if (error) throw new Error(error.message);
     const unit = game.units.find(unit => unit.id === command.unitId)!;
     unit.veteranSkill = command.skill;
     refreshVeteranFrame(game);
@@ -537,7 +545,6 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
   }
 
   if (command.type === "aim") {
-    if (!Number.isFinite(command.x) || !Number.isFinite(command.y)) throw new Error("Aim requires a finite point");
     for (const unit of unitsByIds(game, command.unitIds, owner)) {
       if (aimingProfile(weaponRules(game, unit))) assignUnitOrder(unit, { type: "aim", x: clamp(command.x, 0, game.map.width), y: clamp(command.y, 0, game.map.height) }, command.queued);
     }
@@ -568,8 +575,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
   // @@@follow - Units told to follow an own unit or an ally's walk after it and keep near it until it dies or they are
   // told otherwise, as in Warcraft III; a right-click on an ally's unit gives it (a rally point onto an own unit too).
   if (command.type === "follow") {
-    const target = game.units.find((unit) => unit.id === command.targetId && !areEnemyOwners(game, unit.owner, owner));
-    if (!target) throw new Error(`Unknown friendly unit ${command.targetId}`);
+    const target = game.units.find((unit) => unit.id === command.targetId && !areEnemyOwners(game, unit.owner, owner))!;
     for (const unit of unitsByIds(game, command.unitIds, owner)) {
       if (unit !== target) assignUnitOrder(unit, { type: "follow", targetId: target.id }, command.queued);
     }
@@ -578,8 +584,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
   }
 
   if (command.type === "mine") {
-    const resource = game.resources.find((candidate) => candidate.id === command.resourceId);
-    if (!resource) throw new Error(`Unknown resource ${command.resourceId}`);
+    const resource = game.resources.find((candidate) => candidate.id === command.resourceId)!;
     for (const unit of unitsByIds(game, command.unitIds, owner).filter((unit) => unit.kind === "worker")) {
       // Reaffirming the same mine keeps the current haul and queue position.
       // Resetting gather here discarded completed work on every right-click.
@@ -593,9 +598,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
   }
 
   if (command.type === "repair") {
-    const building = game.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner);
-    if (!building) throw new Error(`Unknown ${owner} building ${command.buildingId}`);
-    if (building.hp >= building.maxHp) throw new Error(`${building.kind} is already fully repaired`);
+    const building = game.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner)!;
     for (const unit of unitsByIds(game, command.unitIds, owner).filter((unit) => unit.kind === "worker")) {
       assignUnitOrder(unit, { type: "repair", buildingId: building.id }, command.queued);
       if (unit.order.type === "repair" && unit.order.buildingId === building.id) unit.cooldown = 0;
@@ -605,22 +608,14 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
   }
   if (command.type === "repairUnit" || command.type === "repairShip") {
     const target = game.units.find(candidate => candidate.id === command.targetId && candidate.owner === owner
-      && (command.type !== "repairShip" || unitMover(candidate.kind) === "sea"));
-    if (!target) throw new Error(`Unknown ${owner} repair target ${command.targetId}`);
-    if (!unitNeedsRepair(game, target)) throw new Error(`${target.kind} cannot be repaired or is already fully repaired`);
+      && (command.type !== "repairShip" || unitMover(candidate.kind) === "sea"))!;
     for (const worker of unitsByIds(game, command.unitIds, owner).filter(unit => unit.kind === "worker"))
       assignUnitOrder(worker, { type: "repairUnit", targetId: target.id }, command.queued);
     return;
   }
 
   if (command.type === "build") {
-    const worker = game.units.find((unit) => unit.id === command.unitId && unit.owner === owner && unit.kind === "worker");
-    if (!worker) throw new Error(`Unknown ${owner} worker ${command.unitId}`);
-    if (!RACE_DEFS[playerState(game, owner).race].buildableBuildings.includes(command.buildingKind)) throw new Error(`${playerState(game, owner).race} race cannot build ${command.buildingKind}`);
-    const blocker = buildingPlacementBlocker(game, command.buildingKind, command);
-    if (blocker) throw new Error(`${command.buildingKind} placement is too close to ${blocker.kind}`);
-    if (terrainBlocksPlacement(game.map, command.buildingKind, command)) throw new Error(`${command.buildingKind} placement is on blocked ground`);
-    if (playerState(game, owner).gold < BUILDING_DEFS[command.buildingKind].cost) throw new Error("Not enough gold");
+    const worker = game.units.find((unit) => unit.id === command.unitId && unit.owner === owner && unit.kind === "worker")!;
     const at = snapToFootprint(game.map, BUILDING_DEFS[command.buildingKind].radius, command);
     // A plan is an order, not an entity: no remote HP, vision, collision or attack target.
     assignUnitOrder(worker, { type: "build", buildingKind: command.buildingKind, ...at, progressTick: game.tick, progressX: worker.x, progressY: worker.y });
@@ -629,8 +624,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
   }
 
   if (command.type === "cancelTraining") {
-    const building = game.buildings.find(b => b.id === command.buildingId && b.owner === owner);
-    if (!building) throw new Error(`Unknown ${owner} building ${command.buildingId}`);
+    const building = game.buildings.find(b => b.id === command.buildingId && b.owner === owner)!;
     const index = building.queue.findIndex(job => job.id === command.jobId);
     // A delayed/duplicate click must never cancel the following soldier.
     if (index < 0) return;
@@ -655,7 +649,6 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
   }
 
   if (command.type === "setAutocast") {
-    if (!canAutocast(command.ability)) throw new Error(`${command.ability} cannot be autocast`);
     for (const unit of unitsByIds(game, command.unitIds, owner)) {
       if (!unitAbilities(unit).includes(command.ability)) continue;
       const autocast = withAutocast(unit, command.ability, command.enabled);
@@ -685,8 +678,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
 
   // Told to board, soldiers walk to the transport, and an idle transport sails in to meet them (see @@@transport).
   if (command.type === "board") {
-    const transport = game.units.find((unit) => unit.id === command.transportId && unit.hp>0 && carries(unit) > 0);
-    if (!transport) throw new Error(`Unknown ${owner} transport ${command.transportId}`);
+    const transport = game.units.find((unit) => unit.id === command.transportId && unit.hp>0 && carries(unit) > 0)!;
     const boarders = unitsByIds(game, command.unitIds, owner).filter((unit) => canBoard(transport,unit,game.units));
     const existing = game.units.find(unit => unit.order.type === "board" && unit.order.transportId === transport.id);
     const shoreBoarder=boarders.find(unit=>!unit.deck);
@@ -714,15 +706,12 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
   }
 
   if (command.type === "research") {
-    const building = game.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner);
-    if (!building) throw new Error(`Unknown ${owner} building ${command.buildingId}`);
+    const building = game.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner)!;
     queueResearch(game, building, command.upgradeKind);
     return;
   }
 
   if (command.type === "fortifyTower" || command.type === "garrison" || command.type === "ungarrison") {
-    const error = checkCommandLegality(game, owner, command);
-    if (error) throw new Error(error.message);
     const tower = game.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner)!;
     if (command.type === "fortifyTower") {
       spendGold(game, owner, TOWER_GARRISON.cost);
@@ -737,9 +726,8 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
   }
 
   if(command.type==="buyShipEquipment"){
-    const dock=game.buildings.find(building=>building.id===command.buildingId && building.owner===owner && building.kind==="shipyard" && building.complete);if(!dock)throw new Error("A completed shipyard is required");
+    const dock=game.buildings.find(building=>building.id===command.buildingId && building.owner===owner && building.kind==="shipyard" && building.complete)!;
     const delivery=command.recipientId!==undefined ? purchasePlacement(game,owner,dock,command.item,command.recipientId) : undefined;
-    if(delivery && "refusal" in delivery)throw new Error(delivery.refusal);
     const def=SHIP_WEAPONS[command.item];spendGold(game,owner,def.cost);const at=walkableGoal(game.map,dock.x,dock.y+dock.radius+36,"land");
     const item:WorldItem={id:`ship-item-${game.nextId++}`,kind:command.item,x:at.x,y:at.y,durability:def.hp,cooldownRemaining:0};game.items.push(item);
     if(delivery && "placement" in delivery)deliverPurchase(game,item,delivery.placement);else addEffect(game,"summon",at.x,at.y,seconds(.8));return;
@@ -753,7 +741,6 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     return;
   }
   if(command.type === "wieldItem"){
-    const refusal=wieldRefusal(game,owner,command.unitId,command.itemId,command.hand);if(refusal)throw new Error(refusal);
     const unit=game.units.find(unit=>unit.id===command.unitId)!;unit.hands??={};
     if(command.itemId){removeFromHands(unit,command.itemId);unit.hands[command.hand]=command.itemId;const item=game.items.find(item=>item.id===command.itemId)!;if(itemHands(item)===2)delete unit.hands.left;}else delete unit.hands[command.hand];
     unit.aim=undefined;unit.cooldown=Math.max(unit.cooldown,seconds(.35));applyDerivedUnitStats(game,unit);return;
@@ -773,8 +760,7 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
     return;
   }
 
-  const building = game.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner);
-  if (!building) throw new Error(`Unknown ${owner} building ${command.buildingId}`);
+  const building = game.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner)!;
   queueTraining(game, building, command.unitKind);
 }
 

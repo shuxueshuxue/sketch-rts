@@ -114,10 +114,10 @@
 
 ### 3.2 一个入口，一种结果
 
-- `issuePlayerCommand(game, owner, command): CommandResult`，其中 `CommandResult = { ok: true } | { ok: false; reason: CommandRefusalReason; message: string; transient: boolean; detail?: {...} }`。
+- `tryPlayerCommand(game, owner, command): CommandResult`，其中 `CommandResult = { ok: true } | { ok: false; reason: CommandRefusalReason; message: string; transient: boolean; cooldownTicks?; supplyCap? }`。它判一次合法性，通过了才执行。帧路径在调用它之前先去掉网络延迟期间死掉的操作对象（narrow），这一步只属于帧路径，直接调用的人点名的东西必须存在。
 - **合法性只判一次**：`checkCommandLegality` 成为唯一的判定处。issuePlayerCommand 在最开头对所有命令类型调用它，各分支里的内联 throw 全部挪进 validation。客户端按钮状态、服务器拒绝、帧路径读的是同一个对象（今晚 Tower 和 UX 都要分别对照两条路径）。
-- **`CommandRefusalReason` 扩成完整的枚举**：在 gold、supply、tier、stock、cooldown、position 之外，加上 target（目标不合法）、range（射程或最小射程）、unreachable、occupied、owner、state（单位当前状态不允许）。`message` 由 reason 加参数统一生成，消除两种措辞的问题。
-- 要 throw 的调用方（测试、脚本）用 `issueCommandOrThrow`，它只是一层包装。
+- **`CommandRefusalReason` 扩成完整的枚举**：在 gold、supply、tier、stock、cooldown、position 之外，加上 gone（发出者、建筑或目标已经不在了）、target（目标不合法）、range（射程或最小射程）、unreachable、occupied、state（单位当前状态不允许）、rules（规则表禁止）。每个拒绝都必须带 reason。sim 里重复的内联检查已经删掉，所以每种拒绝只有一种措辞；message 暂时仍然逐条手写，还不是由 reason 加参数生成的。
+- `issuePlayerCommand` 保持"被拒绝就 throw"（抛出 `CommandRefusedError`，带着同一个结果对象），它只是 `tryPlayerCommand` 外面的一层包装。最初的设计是反过来的：让 `issuePlayerCommand` 返回结果，另加一个 `issueCommandOrThrow`。没有这样做，是因为测试里有 1000 多处调用，其他车道在途的 PR 里还有新的调用；这些调用都不读返回值，如果改成返回结果，被拒绝的命令就会被静默吞掉。保留原来的语义，失败才会响。
 - **scenario/reset 也返回 `CommandResult[]`**：写进 scenario 的订单逐条报告是否生效（UX：hold/move 订单在结果里看不见）；scenario 的资源允许直接给出 `amount`（Art 想要金矿中期状态）。
 
 ### 3.3 errand：一个"走过去再做"的抽象
