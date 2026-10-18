@@ -17,6 +17,7 @@ import { landRecoveryAssignments, mainlandCareAssignments, patientRendezvousComm
 import { continuingPatientRendezvous, rememberPatientRendezvous } from './medical-rendezvous';
 import { planLandedCombat } from './landed-combat';
 import { canPauseFerryForWorker, workerBoardingSafe } from './worker-boarding';
+import { settlerSeaRoutes } from './settler-sea-route';
 
 function recoveryAssignments(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const home = snapshot.buildings.find(building => building.owner === owner && building.kind === 'townHall');
@@ -118,5 +119,5 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
       return unitIds.length ? [{ ...command, unitIds }] : [];
     }), ...departing.commands];
   rememberPatientRendezvous(options, recovering, retreat, published, continuing);
-  return published;
+  return settlerSeaRoutes(snapshot, owner, options, published);
 }
