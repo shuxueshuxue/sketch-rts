@@ -1,0 +1,135 @@
+{
+  "archive": "caster-deck-formal-fix-evidence.tar.gz",
+  "bytes": 1132525,
+  "sha256": "98c2e7980a9ae70b805bf3ef0ab0fe2da5d670680c4f20594f53fa4f7b13f196",
+  "files": {
+    "raw/formal-deck93870/commands.jsonl": {
+      "bytes": 5557,
+      "sha256": "c889756f2c611a764ac1555c71d3ff4fa757fb7dff57231b88dc9d52169db02b"
+    },
+    "raw/formal-deck93870/entities.jsonl": {
+      "bytes": 469,
+      "sha256": "5bb60a0e16ad473753922a3334ed9ff18cad5053e937dcb03a7bcb47e37daeae"
+    },
+    "raw/formal-deck93870/frames/100000.json.gz": {
+      "bytes": 18521,
+      "sha256": "ed90aba249baf017d454921bab5fa50f5f7de6a7fd3186a6bf1d0df4c27d6721"
+    },
+    "raw/formal-deck93870/frames/93870.json.gz": {
+      "bytes": 20669,
+      "sha256": "10f8e2ce983ac02770592db67c64e8e3a953adca47ad853194dd203b981d5d2e"
+    },
+    "raw/formal-deck93870/frames/94200.json.gz": {
+      "bytes": 19160,
+      "sha256": "5ff2c2ee6f122a06eb4c06e5cb553ae227164fffbee6d171f8596429fc99dcb3"
+    },
+    "raw/formal-deck93870/frames/94800.json.gz": {
+      "bytes": 18767,
+      "sha256": "494774ffd912bc6481d60f2501580057f466c2f1f5cda3382e8a5ee71927eb1d"
+    },
+    "raw/formal-deck93870/frames/95400.json.gz": {
+      "bytes": 18856,
+      "sha256": "0253e0379d27d16e7e4bea0582e321a6588d64418ede269458a6f36ce600a99b"
+    },
+    "raw/formal-deck93870/frames/96000.json.gz": {
+      "bytes": 18554,
+      "sha256": "7c8ebc53488db5b8e1265b89278f4eb48b7ea0b4f019b1a7a32feb6cb4710d1c"
+    },
+    "raw/formal-deck93870/frames/96600.json.gz": {
+      "bytes": 18522,
+      "sha256": "8588eaf802aaccbba6719145a6ab8c1265da7c08b11f16e948b714535d2aab26"
+    },
+    "raw/formal-deck93870/frames/97200.json.gz": {
+      "bytes": 18522,
+      "sha256": "f94f7a4627f49a5b66764bddbe67d8d2e28b223df77bdac9ecec78d90b073e94"
+    },
+    "raw/formal-deck93870/frames/97800.json.gz": {
+      "bytes": 18522,
+      "sha256": "0eb14e319c573a29a4c37e06bceb6b024cbec9fb70c646c19e7f41a5e9b15982"
+    },
+    "raw/formal-deck93870/frames/98400.json.gz": {
+      "bytes": 18522,
+      "sha256": "72175664e6a4ba482e978e6728eb1e12fc2154f48379065e0d0d6304853c38f2"
+    },
+    "raw/formal-deck93870/frames/99000.json.gz": {
+      "bytes": 18522,
+      "sha256": "b0b892f4f3fb53df7d929ca39a8b79af6b0a4dbb563f95c737984638736c7476"
+    },
+    "raw/formal-deck93870/frames/99600.json.gz": {
+      "bytes": 18522,
+      "sha256": "fd311854ab71874fb025682cfe52e2c0fa86ec8b07b1bf82603458d8e43f3aae"
+    },
+    "raw/formal-deck93870/hits.jsonl": {
+      "bytes": 36723,
+      "sha256": "d9a07db7ffe4d773cb48d732881fd20812e5357c290858d0383488631584be61"
+    },
+    "raw/formal-deck93870/result.json": {
+      "bytes": 29268,
+      "sha256": "985e6b0af499c9d0d9cf4a884574158e20df4c6a5946cc693c2b851417d9c923"
+    },
+    "raw/formal-deck93870/samples.jsonl": {
+      "bytes": 34331,
+      "sha256": "0d5a645e838e0884e8083954e442abdfc81428c50ee763f38d631fd6f71f9a81"
+    },
+    "raw/formal-deck93870/source.json": {
+      "bytes": 185768,
+      "sha256": "28adf99a895ca04727c0396ddfa69bbf43558f64a9d9154183eae2ef144b4fa1"
+    },
+    "raw/formal-deck93870.log": {
+      "bytes": 611,
+      "sha256": "3b6e9f640bc2190906a9b76aa30b6a2223904ec2bc148aab32b135dbb93658a4"
+    },
+    "raw/formal-deck-summary.json": {
+      "bytes": 153,
+      "sha256": "da552dd539c08aa3dcd192a9b7a2e618c0b4d77b9c83be1ab737c7ccdffdc14f"
+    },
+    "raw/formal-deck-equivalence.json": {
+      "bytes": 881,
+      "sha256": "63ce1e69c40c03fb5b46af565a7d92c5aa4f0ec7027073604992389bf79f48f5"
+    },
+    "raw/compare-formal-deck.py": {
+      "bytes": 873,
+      "sha256": "c2bccdfdf824325ba5f04ea25879c3edf98577f27534de42cea0f4ed0a249dfa"
+    },
+    "raw/formal-deck100000.png": {
+      "bytes": 830352,
+      "sha256": "a03a6ff27f748ee0d59a9bd3231af3edacc9154eb1a8ff1bdff1b202bb439edb"
+    },
+    "raw/caster-deck-before.log": {
+      "bytes": 3596,
+      "sha256": "3d905872a715ecf8bf2db48ec96bc390c4fc49e4fe02bfc46b31be4cf63c5209"
+    },
+    "raw/caster-deck-after.log": {
+      "bytes": 1585,
+      "sha256": "f78cf3a59b28c234d21bfb5e5edc704e48d94b2d92f457cd1a47a2840dd67aa7"
+    },
+    "raw/caster-deck-typecheck.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "raw/caster-deck-validation.json": {
+      "bytes": 680,
+      "sha256": "65674ecd5665206be7dc7254e4875e4ed6c280f84545de959624d99b44b085dc"
+    },
+    "raw/caster-deck-frozen-audit.json": {
+      "bytes": 120,
+      "sha256": "fd79e0fd26658eb80b9c02bd95262a9881c10b25e383ecc004a73093a73df85d"
+    },
+    "raw/caster-crash93600/crash-input.json.gz": {
+      "bytes": 18084,
+      "sha256": "f7854a7d054afdd7fa1079feb55b308e13e2ce8e6cabceb8a348fd03c8a8dd15"
+    },
+    "raw/caster-crash93600/crash.json": {
+      "bytes": 1208,
+      "sha256": "1d5cb42e83b143f0a1b699161b7c71f7bf1ca8844d84100b875afdf511fa62f8"
+    },
+    "raw/query-caster-three-routes.mts": {
+      "bytes": 1656,
+      "sha256": "fa8013adfcf5c2f50075bdcf5b8de04a46743cc355e46da50172e58922a67abb"
+    },
+    "raw/caster-guard-three-routes.json": {
+      "bytes": 834,
+      "sha256": "d20de4b3b8759a37bf144ec90598cd39876afff232133fb1c95de54b3a00eb65"
+    }
+  }
+}
