@@ -14,12 +14,20 @@ export const roomUiFlowCode = String.raw`
   const chooseSetupMap = async (mapId) => {
     if ((await page.locator("[data-map-entries] [aria-pressed='true']").getAttribute("data-map-id")) === mapId) return;
     const before = await setupRoomId();
+    // The list stays where it was scrolled to: the same element, at the same place (see @@@setup-in-place).
+    const scrolled = await page.evaluate(() => {
+      const list = document.querySelector("[data-map-entries]"); list.__kept = true;
+      list.scrollTop = list.scrollHeight; list.scrollLeft = list.scrollWidth;
+      return { top: list.scrollTop, left: list.scrollLeft };
+    });
     await page.locator("[data-map-entries] [data-map-id='" + mapId + "']").click();
     await page.waitForFunction(({ before, mapId }) => {
       const id = document.querySelector("[data-room-setup]")?.getAttribute("data-room-setup");
       const entry = document.querySelector("[data-map-entries] [aria-pressed='true']");
       return id && id !== before && entry?.getAttribute("data-map-id") === mapId && !entry.disabled;
     }, { before, mapId }, { timeout: 5000 });
+    const kept = await page.evaluate(() => { const list = document.querySelector("[data-map-entries]"); return { same: !!list.__kept, top: list.scrollTop, left: list.scrollLeft }; });
+    must(kept.same && kept.top === scrolled.top && kept.left === scrolled.left, "choosing a map moved the map list: " + JSON.stringify({ scrolled, kept }));
   };
   const setupControls = () => page.evaluate(() => ({
     modeSwitch: document.querySelectorAll("input[name='gameMode']").length, close: document.querySelectorAll("[data-close-room]").length,
