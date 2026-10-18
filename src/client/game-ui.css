@@ -69,7 +69,7 @@
 
 /* @@@setup-look - The match setup's look (layout C, see @@@setup-layout-c in match-menu.css, which owns the grid): the
    materials of docs/room-flow/redesign/visual-kit.css. Only colours, frames and type here; no tracks or breakpoints. */
-.room-setup .map-list { gap:3px; padding:2px 4px 2px 2px; scroll-padding-block:14px;
+.room-setup .map-row-list { gap:3px; padding:2px 4px 2px 2px; scroll-padding-block:14px;
   mask-image:linear-gradient(transparent, #000 12px, #000 calc(100% - 12px), transparent); }
 .room-setup .map-row { position:relative; border-radius:0; color:var(--game-ink); }
 .room-setup .map-row:hover:not(:disabled) { background:#fff6dd88; }
@@ -100,4 +100,4 @@
 .room-setup .slot-row.is-open > .slot-name { color:var(--game-muted); font-style:italic; font-weight:400; }
 .room-setup .slot-row.is-open { background:repeating-linear-gradient(135deg,transparent 0 8px,#8767420d 8px 16px); }
 /* Where the maps are a strip across the top (see @@@setup-layout-c), its ends fade instead. */
-@media(max-width:960px) { .room-setup .map-list { scroll-padding-inline:14px; mask-image:linear-gradient(90deg, transparent, #000 12px, #000 calc(100% - 12px), transparent); } }
+@media(max-width:960px) { .room-setup .map-row-list { scroll-padding-inline:14px; mask-image:linear-gradient(90deg, transparent, #000 12px, #000 calc(100% - 12px), transparent); } }
