@@ -17,32 +17,36 @@ import { runAiCommandEntriesFromScripts } from '../policy/script-runner';
 import { planBootstrapGeneral } from './mine-defense';
 import { mountedTasks } from './mounted-tasks';
 
-function clearCamp(game: Game, rider: Unit, ids: ReadonlySet<string>) {
+// Each rider is micro-managed on its own, as the mounted tasks do.
+function clearCamp(game: Game, rider: Unit | readonly Unit[], ids: ReadonlySet<string>) {
+  const riders = Array.isArray(rider) ? rider : [rider as Unit], ours = new Set(riders.map(unit => unit.id));
+  expect(riders.length).toBeGreaterThan(0);
   let damage = 0;
   const turns: unknown[] = [];
 
   const hits: unknown[] = [];
   let arrows = 0;
-  game.observer = { hit(source, target, taken) { if (source.id === rider.id) {
+  game.observer = { hit(source, target, taken) { if (ours.has(source.id)) {
     arrows++;
-  } if (target.id === rider.id) {
+  } if (ours.has(target.id)) {
     damage += taken;
-    hits.push({ tick: game.tick, kind: source.kind, taken, source: { x: source.x, y: source.y }, rider: { x: rider.x, y: rider.y }, order: structuredClone(rider.order), turns: structuredClone(turns) });
+    hits.push({ tick: game.tick, kind: source.kind, taken, source: { x: source.x, y: source.y }, rider: { id: target.id, x: target.x, y: target.y }, order: structuredClone((target as Unit).order), turns: structuredClone(turns) });
   } } };
   for (let tick = 0; tick < 24000; tick++) {
     const foes = game.units.filter(unit => ids.has(unit.id));
-    if (!foes.length || !game.units.includes(rider)) break;
-    if (tick % 15 === 0) {
-      const target = [...foes].sort((a, b) => mountedTargetOrder(a, b) || distance(rider, a) - distance(rider, b))[0]!;
-      const command = mountedMicro(snapshotGame(game), rider, target, foes, { kind: 'camp' });
-      turns.push({ tick: game.tick, rider: { x: rider.x, y: rider.y, cooldown: rider.cooldown }, foes: foes.map(unit => ({ kind: unit.kind, x: unit.x, y: unit.y, hp: unit.hp, order: unit.order })), command });
+    if (!foes.length || riders.some(unit => !game.units.includes(unit))) break;
+    if (tick % 15 === 0) for (const unit of riders) {
+      const target = [...foes].sort((a, b) => mountedTargetOrder(a, b) || distance(unit, a) - distance(unit, b))[0]!;
+      const command = mountedMicro(snapshotGame(game), unit, target, foes, { kind: 'camp' });
+      turns.push({ tick: game.tick, rider: { id: unit.id, x: unit.x, y: unit.y, cooldown: unit.cooldown }, foes: foes.map(foe => ({ kind: foe.kind, x: foe.x, y: foe.y, hp: foe.hp, order: foe.order })), command });
       if (turns.length > 3) turns.shift();
-      issueCommandFrame(game, [{ playerId: rider.owner, scriptId: 'mounted-proof', command }]);
+      issueCommandFrame(game, [{ playerId: unit.owner, scriptId: 'mounted-proof', command }]);
     }
     stepGame(game);
   }
+  // `arrows` counts the riders' blows that landed (the observer's hits), not shots loosed.
   console.log(JSON.stringify({ tick: game.tick, damage, hits, arrows, remaining: game.units.filter(unit => ids.has(unit.id)).map(unit => ({ kind: unit.kind, hp: unit.hp })) }));
-  expect(game.units.includes(rider)).toBe(true);
+  for (const unit of riders) expect(game.units.includes(unit)).toBe(true);
   expect(game.units.some(unit => ids.has(unit.id))).toBe(false);
   expect(damage).toBe(0);
 }
@@ -149,6 +153,10 @@ describe('mounted micro through ordinary SDK commands', () => {
       .townHall('us', 500, 500).townHall('foe', 3500, 3500).building('us', 'workshop', 700, 500).building('us', 'stables', 900, 500)
       .building('us', 'barracks', 1100, 500)
       .farms('us', 8, 400, 1200).goldMine('main', 750, 500, 10000).unit('us', 'horseArcher', 1700, 1900, { id: 'rider' });
+    // The murloc camp carries two tide priests, each healing 55 every 12 s: one rider's arrows fall short of that, and it
+    // cleared the camp only when a lucky volley landed while both heals were cooling, so whether it did hung on the tick
+    // the fight began. Two riders out-damage the heals at any start.
+    if (template === 'murloc-red-2') scene = scene.unit('us', 'horseArcher', 1660, 1900, { id: 'partner' });
     for (let index = 0; index < 3; index++) scene = scene.unit('us', 'worker', 530, 480 + index * 20, { order: { type: 'mine', resourceId: 'main', phase: 'toMine', timer: 0 } });
     for (const [index, kind] of CAMP_TEMPLATES.find(camp => camp.id === template)!.kinds.entries()) {
       const angle = index * Math.PI / 2;
@@ -174,8 +182,8 @@ describe('mounted micro through ordinary SDK commands', () => {
         expect(game.players.us!.upgrades.weaponTraining).toBe(index + 1);
       }
     }
-    clearCamp(game, game.units.find(unit => unit.id === 'rider')!, new Set(game.units.filter(unit => unit.owner === 'neutral').map(unit => unit.id)));
-    expect(game.match.stats.goldSpent.us).toBe(template === 'murloc-red-2' ? 1210 : 685);
+    clearCamp(game, game.units.filter(unit => unit.id === 'rider' || unit.id === 'partner'), new Set(game.units.filter(unit => unit.owner === 'neutral').map(unit => unit.id)));
+    expect(game.match.stats.goldSpent.us).toBe(685 + (template === 'murloc-red-2' ? UPGRADE_DEFS.weaponTraining.levels.reduce((sum, level) => sum + level.cost, 0) : 0));
   }, 30000);
 
   it('keeps three riders independent while killing a partly tower-covered mining line and its melee pursuers', () => {

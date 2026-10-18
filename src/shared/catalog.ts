@@ -474,6 +474,9 @@ const ORDINARY_COMBAT_UNITS = TRAINABLE_UNIT_KINDS.filter((kind) => kind !== "wo
 // reaches (equal-gold mirror duels, ten unit kinds, 8 to 24 units), and a level reaches every unit alive when it completes
 // or trained after: about 3,500 gold of units for an army that keeps fighting, 2-5 times what stands at that moment. The
 // prices return about 1.8 times their gold on that reach, as weapons I and II already did for light units.
+// @@@later-levels-reach-more - A later level is researched later, when the army it reaches is larger, and it was priced as if it
+// reached the same army as level I (weapons 150/175/200, plating 180/210/240): level III came almost free. Weapons and plating
+// now climb about one and a half times a level, as speed (185/285/420), range (195/305/450) and leadership (200/300/450) do.
 
 const UPGRADE_RULES: Record<UpgradeKind, Omit<UpgradeDef, "researchBuildingKinds">> = {
   shipbuilding: {
@@ -489,16 +492,16 @@ const UPGRADE_RULES: Record<UpgradeKind, Omit<UpgradeDef, "researchBuildingKinds
     affectedUnitKinds: LAND_COMBAT_UNITS,
     levels: [
       { cost: 150, researchTime: seconds(34.5), attackMultiplier: 1.15 },
-      { cost: 175, researchTime: seconds(46.5), attackMultiplier: 1.3 },
-      { cost: 200, researchTime: seconds(60), attackMultiplier: 1.45 },
+      { cost: 260, researchTime: seconds(46.5), attackMultiplier: 1.3 },
+      { cost: 400, researchTime: seconds(60), attackMultiplier: 1.45 },
     ],
   },
   reinforcedPlating: {
     affectedUnitKinds: LAND_COMBAT_UNITS,
     levels: [
       { cost: 180, researchTime: seconds(40.5), maxHpMultiplier: 1.15 },
-      { cost: 210, researchTime: seconds(52.5), maxHpMultiplier: 1.3 },
-      { cost: 240, researchTime: seconds(66), maxHpMultiplier: 1.45 },
+      { cost: 300, researchTime: seconds(52.5), maxHpMultiplier: 1.3 },
+      { cost: 450, researchTime: seconds(66), maxHpMultiplier: 1.45 },
     ],
   },
   // Three levels like every other technology, cumulative relative to the base: a fifth more health a level, and a third
