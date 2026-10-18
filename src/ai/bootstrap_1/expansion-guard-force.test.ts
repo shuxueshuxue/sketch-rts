@@ -34,3 +34,23 @@ it.each((['v9_knight', 'v9_summoner'] as const).flatMap(version => (['grove', 'e
     const goals = rankBootstrapGoals(snapshot, 'us', bootstrapPolicyContext(snapshot, 'us', version, { memory, teams: game.teams }));
     expect(goals.some(goal => goal.id === `unit:${standIn}`)).toBe(true);
   });
+
+// The guard is measured against the army the general clears it with (see mainArmyIntel): a soldier the main army does
+// not command (here one on a mounted task) is not there. Six lancers beat an ogre lord and mage, five do not.
+it.each([false, true])('v9_knight counts only the soldiers its general commands against the guard (one away: %s)', (away) => {
+  const strategy = BOOTSTRAP_DOCTRINES.v9_knight.find(candidate => candidate.race === 'grove')!;
+  let scene = sketchScene('expansion-guard-army').map('bareDuel').replaceDefaults()
+    .player('us', { race: 'grove', team: 'a' }).player('foe', { team: 'b' }).playerState('us', { gold: 1500 })
+    .townHall('us', 500, 500).townHall('foe', 3500, 3500).farms('us', 8, 500, 3000)
+    .goldMine('main', 500, 800, 10000).goldMine('natural', 1500, 600, 10000)
+    .building('us', trainingBuildingFor('grove', strategy.standIn)!, 800, 300)
+    .unit('neutral', 'ogreLord', 1500, 760, { id: 'guard-lord' }).unit('neutral', 'ogreMage', 1560, 760, { id: 'guard-mage' });
+  for (let index = 0; index < 6; index++) scene = scene.worker('us', 520 + index * 20, 700);
+  for (let index = 0; index < 6; index++) scene = scene.unit('us', strategy.standIn, 700 + index * 30, 600, { id: `lancer-${index}` });
+  const game = scene.build().createGame(), memory = createAiPolicyMemory();
+  memory.v6 = { ...memory.v6, phase: 0, doctrine: { profileId: 'steady', strategyId: strategy.id, decidedTick: 0 } } as NonNullable<typeof memory.v6>;
+  if (away) memory.mounted = [{ unitIds: ['lancer-5'], objective: { kind: 'camp', ids: [] } }];
+  const snapshot = snapshotGame(game);
+  const goals = rankBootstrapGoals(snapshot, 'us', bootstrapPolicyContext(snapshot, 'us', 'v9_knight', { memory, teams: game.teams }));
+  expect(goals.some(goal => goal.id === `unit:${strategy.standIn}`)).toBe(away);
+});
