@@ -25,7 +25,11 @@ export function selectInScreenBox(
   additive: boolean,
   unitPosition:(unit:Unit)=>Point=unit=>unitPointerPosition(snapshot.units,unit,false,snapshot.buildings),
 ): SelectionState {
-  const units = snapshot.units.filter((unit) => unit.owner === owner && !isInCabin(unit) && isProjectedInside(unitPosition(unit), rect, project)).map((unit) => unit.id);
+  const boxed = snapshot.units.filter((unit) => unit.owner === owner && !isInCabin(unit) && isProjectedInside(unitPosition(unit), rect, project));
+  // @@@box-crew - A box drawn over a deck is drawn to take the crew on it: when it holds crew and the hull they stand
+  // on, it takes the crew. A ship is taken by a click on it, or by a box without its crew.
+  const decks = new Set(boxed.flatMap((unit) => unit.deck ? [unit.deck.shipId] : []));
+  const units = boxed.filter((unit) => !decks.has(unit.id)).map((unit) => unit.id);
   if (units.length > 0) return applySelectionPick(previous, units, additive);
   const building = snapshot.buildings.find((candidate) => candidate.owner === owner && isProjectedInside(candidate, rect, project));
   return applySelectionPick(previous, building ? [building.id] : [], additive);

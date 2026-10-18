@@ -44,6 +44,7 @@
 .equipment-vessel.has-cabin { grid-template-rows:26px minmax(0,1fr)auto auto; }
 .equipment-cabin { display:flex; align-items:center; gap:8px; min-width:0; border-top:1px solid #9b805b50; padding-top:5px; }
 .equipment-cabin > small { flex:none; color:var(--game-muted); font-size:10px; }
+.equipment-cabin.drop-target { outline:2px dashed #d3b46e; outline-offset:2px; background:#d3b46e1a; }
 .equipment-cabin-roster { display:flex; flex-wrap:wrap; gap:3px; }
 .equipment-cabin-roster button { width:28px; height:28px; padding:0; border:1px solid #9b8354; background:#272b25; }
 .equipment-cabin-roster button[aria-pressed=true] { outline:1px solid #e3c184; }
