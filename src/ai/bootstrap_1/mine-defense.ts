@@ -3,6 +3,7 @@ import { lootRecoveryUnitIds } from './loot-recovery';
 import { shoppingUnitIds } from './shopping';
 import { campRecruitRoadClear, chooseBootstrapCamp, startBootstrapCamp } from './camp-geometry';
 import { routeAssaultCampCommands } from './assault-camp-roads';
+import { attackRouteTowers } from './attack-route-towers';
 import { armedFoes } from './safe-land-route';
 import { postRecoveryAssignments, recoverBootstrapFront } from './front-recovery';
 import { coveredDefenseTarget, holdCoveredPost } from './covered-defense';
@@ -22,10 +23,11 @@ import { buildings } from '../policy/snapshot';
 import { isBacklineKind } from '../policy/v6/backline';
 import { readIntrusion, readV6Intel, type V6Intel, type V6Intrusion } from '../policy/v6/intel';
 import { bootstrapExpansionMine } from './expansion-target';
-import { availableV6Army, planV6Army, retreatV6Front, V7_WOUNDED_SHARE, waitsForTowers } from '../policy/v6/general';
+import { attackMargin, availableV6Army, planV6Army, retreatV6Front, V7_WOUNDED_SHARE, waitsForTowers } from '../policy/v6/general';
 import { activeCamp, neutralCamps, V7_GATHERED_RANGE, V7_HOME_REACH } from '../policy/v7/creep';
 import { DETACHMENT_MIN, planV6CloseoutArmy } from '../policy/v6/closeout';
-import { strengthOf, TOWER_STRENGTH } from '../policy/v6/strength';
+import { marchStrength, strengthOf, TOWER_STRENGTH } from '../policy/v6/strength';
+import { v6Doctrine } from '../policy/v6/select';
 import { summonedMiningRaids } from './summoned-raids';
 import { mountedFieldOwns } from './mounted-field';
 import { planV8Charge } from '../policy/v8/charge';
@@ -146,7 +148,21 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
     threatWithin: (unit, point, range) => groundThreatWithin(snapshot, unit, point, range),
     frontThreat: (world, front) => groundFrontThreat(snapshot, world, front),
     respondingPower: (world, target, front) => groundRespondingPower(snapshot, world, target, front),
-    selectAttack: (choices, eligible) => choices.find(eligible),
+    selectAttack: (choices, eligible) => {
+      const available = availableV6Army(snapshot, options, intel);
+      const front = available.filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0);
+      const marching = marchStrength(available) * (1 + v6Doctrine(snapshot, owner, options).profile.aggression);
+      for (const choice of choices) {
+        if (!eligible(choice)) continue;
+        const transit = attackRouteTowers(snapshot, intel, front, choice.base).length * TOWER_STRENGTH;
+        if (transit === 0) return choice;
+        const guarded = { ...choice, defended: choice.defended + transit, need: choice.need + transit * attackMargin(options) };
+        // The existing margin/idle rules still apply. A maxed army's stale
+        // override cannot send it through more total firepower than it has.
+        if (marching >= guarded.defended && eligible(guarded)) return guarded;
+      }
+      return undefined;
+    },
     withinHomeReach: (world, point) => [world.home, ...world.ownHalls]
       .some(hall => routeWithinDistance(snapshot.map, hall, point, 'land', V7_HOME_REACH)),
     campOnOwnSide: (world, point) => {
