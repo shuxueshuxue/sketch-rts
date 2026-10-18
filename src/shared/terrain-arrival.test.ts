@@ -2,8 +2,17 @@ import { expect, it } from 'vitest';
 import { sketchScene } from '../sdk/scene';
 import { issueCommandFrame } from '../sdk/commands/frame';
 import { routeArrivals, routeTravelTicks } from './route-selection';
-import { groundSegmentTravelCost, groundTravelCost, walkingDistance } from './terrain';
+import { groundSegmentAdvance, groundSegmentTravelCost, groundTravelCost, walkingDistance } from './terrain';
 import { stepGame } from './sim';
+
+it('keeps the cost and advance finite when rounding clips a zero-length forest corner', () => {
+  // ladder-20 grove tick 1275: translate (1936,1392) -> (1968,1872).
+  // Repeated nextY additions put row 8's forest in [0.49999999999999994, 0.5].
+  const map = { terrain: { cell: 32, cols: 3, rows: 18, cells: '........................T..T..........................' } };
+  const from = { x: 16, y: 16 }, goal = { x: 48, y: 496 }, length = Math.hypot(32, 480);
+  expect(groundTravelCost(map, from, goal)).toBeCloseTo(length);
+  expect(groundSegmentAdvance(map, from, goal, length + 1)).toEqual(goal);
+});
 
 it.each([false, true])('ranks a longer grass route ahead of a shorter mud corridor by actual arrival (mirror=%s)', mirror => {
   const x = (value: number) => mirror ? 4096 - value : value;
