@@ -1,7 +1,7 @@
 import type { BenchmarkTracker } from "../../sdk/benchmark/core";
-import { MERCENARY_UNIT_KINDS, UNIT_DEFS } from "../../shared/catalog";
+import { MERCENARY_UNIT_KINDS, UNIT_DEFS, UPGRADE_DEFS } from "../../shared/catalog";
 import { SIM_TICKS_PER_SECOND } from "../../shared/time";
-import type { GameSnapshot, PlayerId } from "../../shared/types";
+import type { GameSnapshot, PlayerId, UpgradeKind } from "../../shared/types";
 import type { AiGameAgent } from "../game-runner";
 import { neutralCamps } from "../policy/v7/creep";
 import { distance } from "../policy/spatial";
@@ -15,6 +15,7 @@ import { distance } from "../policy/spatial";
 //   trade@N    gold worth of fighters lost by minute N (a bench reads the ratio of the two sides)
 //   clear      minute the player's fighters took their first neutral camp (null: none in the game)
 //   hire       minute the player first had a mercenary (null: none)
+//   upgrade@K.L  minute the player's upgrade K reached level L (null: never), e.g. upgrade@weaponTraining.3
 export type MetricValues = Record<PlayerId, number | null>;
 type MetricTracker = BenchmarkTracker<AiGameAgent, unknown, MetricValues>;
 
@@ -22,16 +23,18 @@ const MINUTE = 60 * SIM_TICKS_PER_SECOND;
 // Sampled each second: the measures are minutes apart, and a per-tick scan of every unit would slow the bench.
 const SAMPLE = SIM_TICKS_PER_SECOND;
 
-export function parseMetric(name: string): { kind: string; minute?: number } {
+export function parseMetric(name: string): { kind: string; minute?: number; upgrade?: UpgradeKind; level?: number } {
   const match = name.match(/^(bases|workers|spent|trade)@(\d+)$/);
   if (match) return { kind: match[1]!, minute: Number(match[2]) };
   if (name === "clear" || name === "hire") return { kind: name };
-  throw new Error(`Unknown bench metric "${name}" (bases@N, workers@N, spent@N, trade@N, clear, hire)`);
+  const upgrade = name.match(/^upgrade@(\w+)\.([1-3])$/);
+  if (upgrade && upgrade[1]! in UPGRADE_DEFS) return { kind: "upgrade", upgrade: upgrade[1] as UpgradeKind, level: Number(upgrade[2]) };
+  throw new Error(`Unknown bench metric "${name}" (bases@N, workers@N, spent@N, trade@N, clear, hire, upgrade@K.L)`);
 }
 
 export function createMetricTrackers(names: readonly string[]): MetricTracker[] {
   return names.map((name) => {
-    const { kind, minute } = parseMetric(name);
+    const { kind, minute, upgrade, level } = parseMetric(name);
     const id = `metric:${name}`;
     if (kind === "bases" || kind === "workers" || kind === "spent") {
       const read = (after: GameSnapshot, owner: PlayerId) => kind === "bases"
@@ -41,6 +44,7 @@ export function createMetricTrackers(names: readonly string[]): MetricTracker[] 
       return atMinute(id, minute!, read);
     }
     if (kind === "trade") return lostByMinute(id, minute!);
+    if (kind === "upgrade") return firstMinute(id, (after, owner) => (after.players[owner]?.upgrades[upgrade!] ?? 0) >= level!);
     if (kind === "hire") return firstMinute(id, (after, owner) => after.units.some((unit) => unit.owner === owner && (MERCENARY_UNIT_KINDS as readonly string[]).includes(unit.kind)));
     return firstCampCleared(id);
   });
