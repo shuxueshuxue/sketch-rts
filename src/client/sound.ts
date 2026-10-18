@@ -1,6 +1,7 @@
 import { UNIT_DEFS } from "../shared/catalog";
 import { resources,type ResourcePhase } from './resources';
 import type { UnitKind } from "../shared/types";
+import { UNIT_NAMES } from "../shared/unit-name-migration";
 
 // @@@sound - The game's sounds, heard on the client only: the simulation never hears them, so a game plays the same with
 // or without them. What a game sounds like is a sound pack's (see @@@sound-packs): for each event below, the recording
@@ -73,9 +74,12 @@ export function readSoundPack(id: string, manifest: unknown, urls: Readonly<Reco
     if (entry.kinds !== undefined) {
       if (!isRecord(entry.kinds)) throw fail(`${event} kinds must map unit kinds to files`);
       for (const [kind, kindEntry] of Object.entries(entry.kinds)) {
-        if (!(kind in UNIT_DEFS)) throw fail(`${event} names no unit kind ${kind}`);
+        const currentKind = Object.hasOwn(UNIT_NAMES, kind) ? UNIT_NAMES[kind]! : kind;
+        if (!Object.hasOwn(UNIT_DEFS, currentKind)) throw fail(`${event}.kinds.${kind} names no unit kind ${kind}`);
         if (!isRecord(kindEntry)) throw fail(`${event}.${kind} needs a file`);
-        kinds[kind as UnitKind] = readClip(`${event}.${kind}`, kindEntry, base);
+        const clip = readClip(`${event}.${kind}`, kindEntry, base);
+        // A current-name entry wins over an older name, regardless of JSON order.
+        if (kind === currentKind || !Object.hasOwn(entry.kinds, currentKind)) kinds[currentKind as UnitKind] = clip;
       }
     }
     if (entry.file === undefined && Object.keys(kinds).length === 0) throw fail(`${event} needs a file or kinds`);

@@ -40,11 +40,37 @@ describe("sound packs", () => {
     expect(() => readSoundPack("p", { name: "P", sounds: { roar: { file: "hit.ogg" } } }, files)).toThrow("no event roar");
     expect(() => readSoundPack("p", { name: "P", sounds: { melee: {} } }, files)).toThrow("melee needs a file or kinds");
     expect(() => readSoundPack("p", { name: "P", sounds: { melee: { file: "gone.ogg" } } }, files)).toThrow("melee plays gone.ogg, which is not in the pack");
-    expect(() => readSoundPack("p", { name: "P", sounds: { melee: { kinds: { footmen: { file: "hit.ogg" } } } } }, files)).toThrow("melee names no unit kind footmen");
+    expect(() => readSoundPack("p", { name: "P", sounds: { melee: { kinds: { footmen: { file: "hit.ogg" } } } } }, files)).toThrow("melee.kinds.footmen names no unit kind footmen");
     expect(() => readSoundPack("p", { name: "P", sounds: { melee: { kinds: { footman: { file: "gone.ogg" } } } } }, files)).toThrow("melee.footman plays gone.ogg");
     expect(() => readSoundPack("p", { name: "P", sounds: { melee: { file: "hit.ogg", volume: 0 } } }, files)).toThrow("melee volume");
     expect(() => readSoundPack("p", { name: "P", sounds: { melee: { file: "hit.ogg", pitch: 0.9 } } }, files)).toThrow("melee pitch");
     expect(() => readSoundPack("p", { name: "P", sounds: { melee: { file: "hit.ogg", max: 1.5 } } }, files)).toThrow("melee max");
+  });
+
+  it("reads renamed unit kinds from older extras under their current names", () => {
+    const extras = { name: "Warcraft III", sounds: { spell: { volume: .65, pitch: .025, kinds: {
+      pyreCaller: { file: "summon.ogg", variants: ["summon2.ogg"] },
+      emberAcolyte: { file: "heal.ogg", volume: .6 },
+    } } } };
+    const before = JSON.stringify(extras);
+    const pack = readSoundPack("war3", extras, urls(["summon.ogg", "summon2.ogg", "heal.ogg"]));
+    expect(pack.sounds.spell!.kinds).toEqual({
+      summoner: { file: "summon.ogg", url: "/packs/summon.ogg", volume: .65, pitch: .025, variants: [{ file: "summon2.ogg", url: "/packs/summon2.ogg" }] },
+      priest: { file: "heal.ogg", url: "/packs/heal.ogg", volume: .6, pitch: .025 },
+    });
+    expect(JSON.stringify(extras)).toBe(before);
+  });
+
+  it.each([false, true])("prefers a current unit entry when the older name comes first: %s", olderFirst => {
+    const older = { pyreCaller: { file: "old.ogg" } }, current = { summoner: { file: "current.ogg" } };
+    const kinds = olderFirst ? { ...older, ...current } : { ...current, ...older };
+    const pack = readSoundPack("war3", { name: "Warcraft III", sounds: { spell: { kinds } } }, urls(["old.ogg", "current.ogg"]));
+    expect(Object.keys(pack.sounds.spell!.kinds)).toEqual(["summoner"]);
+    expect(pack.sounds.spell!.kinds.summoner!.file).toBe("current.ogg");
+  });
+
+  it.each(["__proto__", "constructor"])("rejects an inherited property as a unit kind: %s", kind => {
+    expect(() => readSoundPack("p", { name: "P", sounds: { spell: { kinds: { [kind]: { file: "hit.ogg" } } } } }, urls(["hit.ogg"]))).toThrow(`spell.kinds.${kind} names no unit kind`);
   });
 
   it("carries a cc0 pack whose sounds are all events, holding exactly the files it plays", () => {
