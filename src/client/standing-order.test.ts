@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { setScratchCanvasFactory } from './art/scratch-canvas';
 import { LOOK_DENSITY, LOOK_FOOT, LOOK_HEIGHT, LOOK_WIDTH, byFoot, standingLookCanvas, standingTerrain } from './standing-terrain';
 import { StandingField } from './world3d/standing-field';
+import { fakeCardGl } from './world3d/card-gl-test-helpers';
 import { configureWorldCamera } from './world3d/projection';
 import { SHIP_CAMERA } from '../shared/ship-geometry';
 import type { Terrain } from '../shared/terrain';
@@ -27,7 +28,7 @@ describe('standing objects in front of and behind one another', () => {
     const terrain = strewn(3), objects = standingTerrain(terrain), scene = new THREE.Scene(), field = new StandingField(scene, 1);
     // The uploader reuses its destination vector: each copy's layer is read as it is made.
     const layers: number[] = [], copy = vi.fn((...call: unknown[]) => { if (call[4] === 0) layers.push((call[3] as THREE.Vector3).z); });
-    const renderer = { initTexture: vi.fn(), copyTextureToTexture: copy, getRenderTarget: () => null, getActiveCubeFace: () => 0, getActiveMipmapLevel: () => 0, setRenderTarget: vi.fn() };
+    const renderer = { initTexture: vi.fn(), copyTextureToTexture: copy, getRenderTarget: () => null, getActiveCubeFace: () => 0, getActiveMipmapLevel: () => 0, setRenderTarget: vi.fn(), ...fakeCardGl().renderer };
     // Each look's canvas goes to its own layer on the GPU, flipped so its foot row samples v = 0; nothing is read back.
     const looks = [...new Set(objects.map(object => object.look))], reads = vi.fn();
     for (const look of looks) standingLookCanvas(look).getContext('2d')!.getImageData = reads;

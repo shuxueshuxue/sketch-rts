@@ -2,11 +2,14 @@ import { ART_TILE_SIZE, ART_ACTION_SIZE } from '../art/raster-cache';
 import {afterEach,describe,expect,it,vi} from 'vitest';
 import {createCanvas} from '@napi-rs/canvas';
 import * as THREE from 'three';
-import {PaintedCardBatches,patchCardShader,type PaintedCardPolicy} from './painted-card-batches';
+import {ATLAS_LEVELS,ATLAS_SIDE,PaintedCardBatches,patchCardShader,troopCardPixelBudget,type PaintedCardPolicy} from './painted-card-batches';
 import {cardTextureBytes} from './card-mip-uploader';
 import {SHIP_CAMERA} from '../../shared/ship-geometry';
-const renderer={initTexture:vi.fn(),copyTextureToTexture:vi.fn(),getRenderTarget:()=>null,getActiveCubeFace:()=>0,getActiveMipmapLevel:()=>0,setRenderTarget:vi.fn()};
-afterEach(()=>{vi.unstubAllGlobals();renderer.initTexture.mockReset();renderer.copyTextureToTexture.mockReset();renderer.setRenderTarget.mockReset();});
+import {fakeCardGl} from './card-gl-test-helpers';
+// A card window's copies are the uploader's own blits (see @@@card-window-blit), executed by a fake WebGL2.
+const gl=fakeCardGl();
+const renderer={initTexture:vi.fn(),copyTextureToTexture:vi.fn(),getRenderTarget:()=>null,getActiveCubeFace:()=>0,getActiveMipmapLevel:()=>0,setRenderTarget:vi.fn(),...gl.renderer};
+afterEach(()=>{vi.unstubAllGlobals();gl.fail(undefined);gl.blits.length=0;renderer.initTexture.mockReset();renderer.copyTextureToTexture.mockReset();renderer.setRenderTarget.mockReset();});
 function setup(policy:PaintedCardPolicy={maxTextureBanks:8}){
   vi.stubGlobal('document',{createElement:()=>createCanvas(1,1)});
   const scene=new THREE.Scene(),cards=new PaintedCardBatches(scene,8,policy);return{scene,cards};
@@ -19,7 +22,11 @@ function binding(cards:PaintedCardBatches,id:string){
 function residentTextures(cards:PaintedCardBatches){return(cards as unknown as {pages:{texture:THREE.DataArrayTexture}[]}).pages.map(page=>page.texture);}
 function storedMipBytes(texture:THREE.DataArrayTexture){return(texture.mipmaps as {width:number;height:number}[]).reduce((sum,mip)=>sum+mip.width*mip.height*4*texture.image.depth,0);}
 const matrix=new THREE.Matrix4();
-const paint=(ctx:CanvasRenderingContext2D)=>{ctx.fillStyle='#ff0000';ctx.fillRect(-16,-24,32,48);};
+// The batches' own mechanisms (pages, promotion, compaction, budgets) are tested on whole tiles: an invisible fill
+// across the tile makes its bounds the whole tile (see @@@card-paint-bounds) without painting a pixel. Cropped windows
+// have their own tests below.
+const wholeTile=(ctx:CanvasRenderingContext2D)=>{ctx.save();ctx.fillStyle='rgba(0,0,0,0)';ctx.fillRect(-1e4,-1e4,2e4,2e4);ctx.restore();};
+const paint=(ctx:CanvasRenderingContext2D)=>{wholeTile(ctx);ctx.fillStyle='#ff0000';ctx.fillRect(-16,-24,32,48);};
 const fullPaint=(ctx:CanvasRenderingContext2D)=>{ctx.fillStyle='#ff0000';ctx.fillRect(-62,-62,124,124);};
 describe('painted card array batches',()=>{
   it.each([2,4])('prepares exact density-%i source bytes without allocating GPU pages or showing actors',density=>{
@@ -125,17 +132,15 @@ describe('painted card array batches',()=>{
   });
   it('uploads the complete painted canvas and mip domain without a readback, including non-power-of-two action tiles',()=>{
     const {cards}=setup(),density=4,foot=23,size=640;
-    const painter=(ctx:CanvasRenderingContext2D)=>{ctx.fillStyle='#634b87';ctx.fillRect(-7,-68,11,84);ctx.fillStyle='rgba(201,89,37,.6)';ctx.fillRect(12,-31,4,6);};
+    const painter=(ctx:CanvasRenderingContext2D)=>{wholeTile(ctx);ctx.fillStyle='#634b87';ctx.fillRect(-7,-68,11,84);ctx.fillStyle='rgba(201,89,37,.6)';ctx.fillRect(12,-31,4,6);};
     const source=createCanvas(size,size),ctx=source.getContext('2d');ctx.scale(density,density);ctx.translate(80,80);painter(ctx as unknown as CanvasRenderingContext2D);
     const rgba=ctx.getImageData(0,0,size,size).data;
-    // The browser flips the canvas on upload (flipY): its top row lands last, as the card's foot side samples v = 0.
-    let uploaded:Uint8ClampedArray|undefined,flipY:boolean|undefined;
-    renderer.copyTextureToTexture.mockImplementation((source:THREE.Texture,_destination:THREE.Texture,_region:unknown,_position:unknown,level:number)=>{
-     if(level===0&&source instanceof THREE.CanvasTexture){const image=source.image as HTMLCanvasElement;uploaded=image.getContext('2d')!.getImageData(0,0,image.width,image.height).data;flipY=source.flipY;}
-    });
     cards.begin();cards.add('extended',density,painter,matrix,'one',foot,160);cards.finish(renderer);
     const mesh=cards.objects()[0]!,texture=(mesh.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture;
-    expect(Buffer.from(uploaded!).equals(Buffer.from(rgba))).toBe(true);expect(flipY).toBe(true);expect(texture.image.data).toBeNull();expect(texture.source.dataReady).toBe(false);
+    // The browser flips the canvas on upload (flipY): its top row lands last, as the card's foot side samples v = 0.
+    const expected=new Uint8ClampedArray(rgba.length);for(let y=0;y<size;y++)expected.set(rgba.subarray(y*size*4,(y+1)*size*4),(size-1-y)*size*4);
+    const scratch=gl.blits.find(blit=>blit.destination===texture&&blit.level===0)!.source as THREE.CanvasTexture;
+    expect(Buffer.from(gl.texels(texture,0,0)!.data).equals(Buffer.from(expected))).toBe(true);expect(scratch.flipY).toBe(true);expect(texture.image.data).toBeNull();expect(texture.source.dataReady).toBe(false);
     expect(texture.image.width*texture.image.height).toBe(size*size);expect(cards.stats()).toMatchObject({peakPendingRgbaBytes:0,pendingRgbaBytes:0,canvasUploads:1,rasterCache:{entries:0}});cards.dispose();
   });
 });
@@ -145,7 +150,7 @@ it('retains mixed 128/160 domains and density identities at their original foot 
  const {cards}=setup();cards.begin();
  // The identical logical key must not alias either the domain or the density.
  cards.add('same',4,paint,matrix,'ready',17,ART_TILE_SIZE);
- cards.add('same',4,b=>{b.fillStyle='#345';b.fillRect(68,-72,7,7);},matrix,'upward',17,ART_ACTION_SIZE);
+ cards.add('same',4,b=>{wholeTile(b);b.fillStyle='#345';b.fillRect(68,-72,7,7);},matrix,'upward',17,ART_ACTION_SIZE);
  cards.add('same',2,paint,matrix,'ready-low',17,ART_TILE_SIZE);
  cards.finish(renderer);expect(cards.stats().cards).toBe(3);expect(cards.stats().rasterizations).toBe(3);
  expect(cards.objects().reduce((sum,mesh)=>sum+mesh.count,0)).toBe(3);
@@ -227,9 +232,9 @@ it('preserves every ownership peak sample without collecting public draw statist
  // A painted card samples after taking its slot and after its upload; nothing is read back to sample before.
  expect(samples).toHaveBeenCalledTimes(6);
  cards.begin();cards.add('action',4,paint,matrix,'coarse-warm',17,176,1,1);cards.add('action',4,paint,matrix,'fine',17,176);
- renderer.copyTextureToTexture.mockImplementation((_source:THREE.Texture,destination:THREE.Texture)=>{if(destination instanceof THREE.DataArrayTexture&&destination.image.width===704)throw Error('peak promotion failure');});
+ gl.fail(blit=>(blit.destination as THREE.DataArrayTexture).image.width===704?Error('peak promotion failure'):undefined);
  expect(()=>cards.finish(renderer)).toThrow('peak promotion failure');check();expect(samples).toHaveBeenCalledTimes(7);
- renderer.copyTextureToTexture.mockReset();cards.begin();cards.add('action',4,paint,matrix,'fine-retry',17,176);cards.add('body',4,paint,matrix,'body-warm',17);cards.finish(renderer);check();expect(samples).toHaveBeenCalledTimes(9);
+ gl.fail(undefined);cards.begin();cards.add('action',4,paint,matrix,'fine-retry',17,176);cards.add('body',4,paint,matrix,'body-warm',17);cards.finish(renderer);check();expect(samples).toHaveBeenCalledTimes(9);
  expect(cards.objects().flatMap(mesh=>mesh.userData.ids)).toEqual(['fine-retry','body-warm']);cards.dispose();expect(cards.stats()).toMatchObject({ownedCpuBytes:0,ownedGpuBytes:0,allocatedMipBytes:0});
 });
 
@@ -286,9 +291,9 @@ it('compacts into existing inactive holes without allocating a temporary GPU pag
 
 it.each(['paint','upload'] as const)('releases transient data and request closures after a %s failure',stage=>{
  const {cards}=setup();cards.begin();cards.add('failed',2,ctx=>{paint(ctx);if(stage==='paint')throw Error('paint failed');},matrix,'one',17);
- if(stage==='upload')renderer.copyTextureToTexture.mockImplementation(()=>{throw Error('upload failed');});
+ if(stage==='upload')gl.fail(()=>Error('upload failed'));
  expect(()=>cards.finish(renderer)).toThrow(`${stage} failed`);expect(cards.stats()).toMatchObject({pendingRgbaBytes:0,pendingMaskBytes:0,maskBytes:0,cards:0});expect((cards as unknown as {pending:unknown[]}).pending).toHaveLength(0);
- renderer.copyTextureToTexture.mockReset();cards.begin();cards.add('recovered',2,paint,matrix,'one',17);cards.finish(renderer);expect(cards.objects()[0]!.userData.paintedHit(0,{x:.5,y:.5})).toBe(true);
+ gl.fail(undefined);cards.begin();cards.add('recovered',2,paint,matrix,'one',17);cards.finish(renderer);expect(cards.objects()[0]!.userData.paintedHit(0,{x:.5,y:.5})).toBe(true);
  const canvases=[...(cards as unknown as {canvases:Map<number,HTMLCanvasElement>}).canvases.values()];cards.dispose();expect(canvases.every(canvas=>canvas.width===1&&canvas.height===1)).toBe(true);expect(cards.stats()).toMatchObject({ownedCpuBytes:0,canvasBackingBytes:0,pages:0});
 });
 
@@ -313,7 +318,7 @@ it.each([128,160,ART_ACTION_SIZE])('keeps original picking texels and authored g
  const {cards,scene}=setup(),sourceSize=tileSize*4;
  // Exactly one original source pixel. A reduced-resolution picking mask
  // would move or lose this hit, so this checks the original alpha contract.
- cards.begin();cards.add('one-pixel',4,ctx=>{ctx.fillStyle='#a45a23';ctx.fillRect(7.25,-13.25,.25,.25);},matrix,'pixel',17,tileSize,1,1);cards.finish(renderer);scene.updateMatrixWorld(true);
+ cards.begin();cards.add('one-pixel',4,ctx=>{wholeTile(ctx);ctx.fillStyle='#a45a23';ctx.fillRect(7.25,-13.25,.25,.25);},matrix,'pixel',17,tileSize,1,1);cards.finish(renderer);scene.updateMatrixWorld(true);
  const mesh=cards.objects()[0]!,texture=(mesh.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture;
  expect(texture.image).toMatchObject({width:sourceSize/2,height:sourceSize/2,depth:1});expect(texture.generateMipmaps).toBe(false);
  const uv={x:.5+7.375/tileSize,y:.5+13.125/tileSize};
@@ -323,9 +328,9 @@ it.each([128,160,ART_ACTION_SIZE])('keeps original picking texels and authored g
  expect(cards.stats().maskBytes).toBe(sourceSize*sourceSize/8);expect(cards.stats().scratchCpuBytes).toBe(0);
  const rect=mesh.geometry.getAttribute('cardRect');expect(rect.getX(0)).toBe(-tileSize/2);expect(rect.getZ(0)).toBe(tileSize/2);
  expect(rect.getY(0)).toBeCloseTo((-tileSize/2+17)/Math.tan(SHIP_CAMERA.tilt),4);
- const transfer=renderer.copyTextureToTexture.mock.calls.find(([source,destination])=>source instanceof THREE.CanvasTexture&&destination===texture)!;
- expect((transfer[0] as THREE.CanvasTexture).image.width).toBe(sourceSize);expect(transfer[4]).toBe(1);expect(transfer[5]).toBe(0);
- expect((transfer[2] as THREE.Box3).max.x).toBe(sourceSize/2);cards.dispose();
+ const transfer=gl.blits.find(blit=>blit.destination===texture&&blit.level===0)!;
+ expect(((transfer.source as THREE.CanvasTexture).image as HTMLCanvasElement).width).toBe(sourceSize);expect(transfer.sourceLevel).toBe(1);
+ expect(transfer.from[2]-transfer.from[0]).toBe(sourceSize/2);cards.dispose();
 });
 
 it('promotes one original raster transactionally and reuses its finer resident chain for subsequent coarse requests',()=>{
@@ -375,10 +380,10 @@ it('keeps the original coarse card and mask after a failed promotion and retries
  const {cards}=setup();cards.begin();cards.add('same',4,paint,matrix,'seed',17,128,1,1);cards.finish(renderer);
  const cached=(cards as unknown as {cards:Map<string,{baseMip:number}>}).cards,previous=cached.get('same:4:128');
  cards.begin();cards.add('same',4,paint,matrix,'warm-coarse',17,128,1,1);cards.add('same',4,paint,matrix,'fine',17,128,1,0);
- renderer.copyTextureToTexture.mockImplementation((_source:THREE.Texture,destination:THREE.Texture)=>{if(destination instanceof THREE.DataArrayTexture&&destination.image.width===512)throw Error('promotion transfer failed');});
+ gl.fail(blit=>(blit.destination as THREE.DataArrayTexture).image.width===512?Error('promotion transfer failed'):undefined);
  expect(()=>cards.finish(renderer)).toThrow('promotion transfer failed');expect(cached.get('same:4:128')).toBe(previous);expect(previous!.baseMip).toBe(1);
  expect(cards.stats()).toMatchObject({cards:1,rasterizations:1,maskBytes:0,pendingRgbaBytes:0,pendingMaskBytes:0});
- renderer.copyTextureToTexture.mockReset();cards.begin();cards.add('same',4,paint,matrix,'warm-coarse',17,128,1,1);cards.add('same',4,paint,matrix,'fine',17,128,1,0);cards.finish(renderer);
+ gl.fail(undefined);cards.begin();cards.add('same',4,paint,matrix,'warm-coarse',17,128,1,1);cards.add('same',4,paint,matrix,'fine',17,128,1,0);cards.finish(renderer);
  expect(cards.stats()).toMatchObject({cards:1,pages:1,rasterizations:2,maskBytes:0});expect(cached.get('same:4:128')!.baseMip).toBe(0);
  const mesh=cards.objects()[0]!;expect(mesh.userData.ids).toEqual(['warm-coarse','fine']);expect(((mesh.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture).image.width).toBe(512);cards.dispose();
 });
@@ -399,10 +404,10 @@ it.each([0,1])('keeps full-source scratch textures when unused mip pages expire 
  cards.dispose();expect(cards.stats().scratchTextures).toBe(0);
 });
 
-it('keeps empty live artwork in its requested domain, never hit, since nothing reads it back to find it empty',()=>{
+it('retains empty live artwork in a sixteen-pixel mip-zero domain, known empty from its painter without a readback',()=>{
  const {cards}=setup();cards.begin();cards.add('empty',4,()=>{},matrix,'empty',17,ART_ACTION_SIZE,1,1);cards.finish(renderer);
  const mesh=cards.objects()[0]!,texture=(mesh.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture;
- expect(texture.image).toMatchObject({width:ART_ACTION_SIZE*2,height:ART_ACTION_SIZE*2});
+ expect(texture.image).toMatchObject({width:16,height:16});
  expect(mesh.userData.paintedHit(0,{x:.5,y:.5})).toBe(false);cards.dispose();
 });
 
@@ -613,4 +618,110 @@ it('draws an instance whose new card is still waiting with the card it drew last
  frame({a:'a2',b:'b2'});expect([drawn('a'),drawn('b')]).toEqual(['a2','b1']);
  frame({a:'a2',b:'b2'});expect([drawn('a'),drawn('b')]).toEqual(['a2','b2']);
  expect(cards.stats().rasterizations).toBe(4);cards.dispose();
+});
+
+// @@@card-atlas
+describe('cropped cards in atlas cells',()=>{
+ type Internal={cards:Map<string,{window:{x:number;y:number;width:number;height:number};cell?:{x:number;y:number;width:number;height:number};page:{texture:THREE.DataArrayTexture}}>};
+ const dot=(color:string)=>(ctx:CanvasRenderingContext2D)=>{ctx.fillStyle=color;ctx.fillRect(7.25,-13.25,.25,.25);};
+ it('keeps a cropped card in a cell of a shared atlas page, its quad its window and its picking exact',()=>{
+  const {cards,scene}=setup(),density=4,tileSize=128;
+  cards.begin();cards.add('dot',density,dot('#a45a23'),matrix,'dot',17,tileSize);cards.finish(renderer);scene.updateMatrixWorld(true);
+  const card=(cards as unknown as Internal).cards.get(`dot:${density}:${tileSize}`)!,{window:win}=card,mesh=cards.objects()[0]!;
+  expect(card.page.texture.image).toMatchObject({width:ATLAS_SIDE,height:ATLAS_SIDE});expect(card.page.texture.mipmaps).toHaveLength(ATLAS_LEVELS);
+  expect(win.width).toBeLessThan(tileSize*density/2);expect(card.cell).toMatchObject({width:win.width,height:win.height});
+  const uvRect=mesh.geometry.getAttribute('cardUv');
+  expect([uvRect.getX(0),uvRect.getY(0),uvRect.getZ(0),uvRect.getW(0)]).toEqual([card.cell!.x/ATLAS_SIDE,card.cell!.y/ATLAS_SIDE,win.width/ATLAS_SIDE,win.height/ATLAS_SIDE]);
+  // The quad is the window: one canvas pixel per 1/density world unit.
+  const rect=mesh.geometry.getAttribute('cardRect');expect((rect.getZ(0)-rect.getX(0))*density).toBeCloseTo(win.width,5);
+  // The one painted pixel, at canvas (285, 203), hits; its neighbours do not.
+  const at=(x:number,y:number)=>({x:(x+.5-win.x)/win.width,y:1-(y+.5-win.y)/win.height});
+  expect(mesh.userData.paintedHit(0,at(285,203))).toBe(true);
+  for(const [x,y] of [[284,203],[286,203],[285,202],[285,204]] as const)expect(mesh.userData.paintedHit(0,at(x,y))).toBe(false);
+  cards.dispose();
+ });
+ it('holds each card whole in its own cell at every atlas mip, and never samples a neighbouring cell, down to the last',()=>{
+  // Two cards of one window size in neighbouring cells of one layer, the first red, the second blue, drawn large
+  // enough to survive the box filter down to the last level. Their copies are executed (see card-gl-test-helpers).
+  const {cards}=setup(),block=(color:string)=>(ctx:CanvasRenderingContext2D)=>{ctx.fillStyle=color;ctx.fillRect(-12,-30,24,40);};
+  cards.begin();cards.add('red',4,block('#f00'),matrix,'red',17,128);cards.add('blue',4,block('#00f'),matrix,'blue',17,128);cards.finish(renderer);
+  const internal=(cards as unknown as Internal).cards,red=internal.get('red:4:128')!,blue=internal.get('blue:4:128')!;
+  expect(red.page).toBe(blue.page);expect(red.cell!.y).toBe(blue.cell!.y);
+  const texture=red.page.texture,layer=(red as unknown as {layer:number}).layer;
+  const mesh=cards.objects()[0]!,uv=mesh.geometry.getAttribute('cardUv'),index=mesh.userData.ids.indexOf('red');
+  for(let level=0;level<ATLAS_LEVELS;level++){
+   const image=gl.texels(texture,level,layer)!,side=ATLAS_SIDE>>level;expect(image.width).toBe(side);
+   const at=(x:number,y:number)=>image.data.subarray((Math.min(side-1,Math.max(0,y))*side+Math.min(side-1,Math.max(0,x)))*4,(Math.min(side-1,Math.max(0,y))*side+Math.min(side-1,Math.max(0,x)))*4+4);
+   // Each cell holds its own card: the red one red where painted, the blue one blue, at this level too.
+   for(const [card,own] of [[red,0],[blue,2]] as const){
+    const cell=card.cell!,x0=cell.x>>level,y0=cell.y>>level,w=Math.max(1,cell.width>>level),h=Math.max(1,cell.height>>level);
+    let mine=0,theirs=0;for(let y=y0;y<y0+h;y++)for(let x=x0;x<x0+w;x++){const t=at(x,y);if(t[3]!>0){if(t[own]!>t[2-own]!)mine++;else theirs++;}}
+    expect(mine,`level ${level}: ${own?'blue':'red'} cell holds its card`).toBeGreaterThan(0);expect(theirs,`level ${level}: no other colour in it`).toBe(0);
+   }
+   // Bilinear samples all over the red card, edges included, as the shader takes them (cardUv.xy + uv * cardUv.zw).
+   for(let i=0;i<=32;i++)for(let j=0;j<=32;j++){
+    const u=(uv.getX(index)+i/32*uv.getZ(index))*side-.5,v=(uv.getY(index)+j/32*uv.getW(index))*side-.5,x=Math.floor(u),y=Math.floor(v),fx=u-x,fy=v-y;
+    for(const [dx,dy,weight] of [[0,0,(1-fx)*(1-fy)],[1,0,fx*(1-fy)],[0,1,(1-fx)*fy],[1,1,fx*fy]] as const){
+     if(weight<=0)continue;const t=at(x+dx,y+dy);
+     expect(t[3]!>0&&t[2]!>t[0]!,`level ${level} uv ${i}/32,${j}/32 samples blue`).toBe(false);
+    }
+   }
+  }
+  cards.dispose();
+ });
+ it('draws cropped cards of different sizes from one atlas page in one draw',()=>{
+  const {cards}=setup();cards.begin();
+  cards.add('small',4,dot('#123'),matrix,'small',17,128);
+  cards.add('wide',4,b=>{b.fillStyle='#456';b.fillRect(-40,-10,80,8);},matrix,'wide',17,128);
+  cards.add('tall',4,b=>{b.fillStyle='#789';b.fillRect(-4,-50,8,70);},matrix,'tall',17,128);
+  cards.finish(renderer);
+  const internal=(cards as unknown as Internal).cards,sizes=new Set([...internal.values()].map(card=>`${card.window.width}x${card.window.height}`));
+  expect(sizes.size).toBe(3);expect(new Set([...internal.values()].map(card=>card.page)).size).toBe(1);
+  expect(cards.objects()).toHaveLength(1);expect(cards.objects()[0]!.count).toBe(3);cards.dispose();
+ });
+});
+
+// @@@card-anchor
+describe("a look's anchor stands in for its poses",()=>{
+ const anchor=(look:string,painter=paint)=>({key:`${look}:idle`,paint:painter,tileSize:128});
+ it('paints every missing anchor first, past the raster budget, so no troop is left with nothing to show',()=>{
+  const {cards}=setup({maxTextureBanks:8,rasterBudgetMs:0}),poses=vi.fn(paint),anchors=vi.fn(paint);
+  // Ten troops of two looks appear at once, each in a pose of its own; the budget paints one pose a frame.
+  cards.begin();for(let i=0;i<10;i++)cards.add(`look${i%2}:walk:${i}`,2,poses,matrix,`troop${i}`,17,128,1,0,anchor(`look${i%2}`,anchors));cards.finish(renderer);
+  expect(anchors).toHaveBeenCalledTimes(2);expect(poses).toHaveBeenCalledTimes(1);
+  expect(cards.stats()).toMatchObject({bodiless:0,anchorPaints:2});
+  const shown=cards.objects().flatMap(mesh=>mesh.userData.ids.slice(0,mesh.count));expect(shown.sort()).toEqual(Array.from({length:10},(_,i)=>`troop${i}`).sort());
+  cards.dispose();
+ });
+ it('keeps an anchor while its look is on screen, whatever the cache drops',()=>{
+  // A cache of one 256px page: every new pose of a look drops an old one, never the anchor of a look in view.
+  const {cards}=setup({maxTextureBanks:8,pixelBudget:256*256*16});
+  for(let frame=0;frame<40;frame++){
+   cards.begin();cards.add(`look:walk:${frame}`,2,paint,matrix,'troop',17,128,1,0,anchor('look'));cards.finish(renderer);
+   expect((cards as unknown as {cards:Map<string,unknown>}).cards.has('look:idle:2:128')).toBe(true);
+  }
+  expect(cards.stats().anchorPaints).toBe(1);expect(cards.stats().evictions).toBeGreaterThan(0);cards.dispose();
+ });
+});
+
+// @@@card-capacity
+describe('troop card capacity',()=>{
+ const MPX=1024*1024;
+ it('caps the cache by what the device can afford',()=>{
+  expect(troopCardPixelBudget({deviceMemory:4,maxTextureSize:16384,maxArrayLayers:2048})).toBe(20*MPX);
+  expect(troopCardPixelBudget({deviceMemory:8,maxTextureSize:4096,maxArrayLayers:256})).toBe(48*MPX);
+  expect(troopCardPixelBudget({deviceMemory:undefined,maxTextureSize:16384,maxArrayLayers:2048})).toBe(48*MPX);
+  expect(troopCardPixelBudget({deviceMemory:undefined,maxTextureSize:8192,maxArrayLayers:2048})).toBe(32*MPX);
+  expect(troopCardPixelBudget({deviceMemory:6,maxTextureSize:8192,maxArrayLayers:256})).toBe(32*MPX);
+ });
+ it('grows with the cards an animation cycles through up to its cap, and reports the working set against it',()=>{
+  const cycle=(cards:PaintedCardBatches,poses:number)=>{for(let round=0;round<3;round++)for(let pose=0;pose<poses;pose++){cards.begin();cards.add(`pose:${pose}`,2,paint,matrix,'troop',17);cards.finish(renderer);}};
+  // Under the cap the cycle's cards all stay: the third round paints nothing.
+  const roomy=setup({maxTextureBanks:8,pixelBudget:64*MPX}).cards;cycle(roomy,60);
+  expect(roomy.stats()).toMatchObject({cards:60,rasterizations:60,evictions:0});expect(roomy.stats().workingSetPixels).toBeLessThan(roomy.stats().pixelBudget);roomy.dispose();
+  // Over it the cache stops at the cap and says the working set does not fit.
+  const tight=setup({maxTextureBanks:8,pixelBudget:256*256*16}).cards;cycle(tight,60);
+  expect(tight.stats().pixels).toBeLessThanOrEqual(256*256*16*2);expect(tight.stats().rasterizations).toBeGreaterThan(60);
+  expect(tight.stats().workingSetPixels).toBeGreaterThan(tight.stats().pixelBudget);tight.dispose();
+ });
 });

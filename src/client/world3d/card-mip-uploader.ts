@@ -2,7 +2,10 @@ import * as THREE from 'three';
 import {updateCardPixels} from './card-upload-region';
 
 /** Scene tests explicitly provide this public transfer contract. */
-export type CardTextureRenderer=Pick<THREE.WebGLRenderer,'initTexture'|'copyTextureToTexture'|'getRenderTarget'|'getActiveCubeFace'|'getActiveMipmapLevel'|'setRenderTarget'>;
+export type CardTextureRenderer=Pick<THREE.WebGLRenderer,'initTexture'|'copyTextureToTexture'|'getRenderTarget'|'getActiveCubeFace'|'getActiveMipmapLevel'|'setRenderTarget'>&{
+ // For copies three gets wrong (see @@@card-window-blit): the WebGL2 context, three's state cache, its texture handles.
+ getContext():WebGL2RenderingContext|WebGLRenderingContext;state:{bindFramebuffer(target:number,framebuffer:WebGLFramebuffer|null):unknown};properties:{get(object:object):unknown};
+};
 export type CardMipPage={texture:THREE.DataArrayTexture;uploaded:boolean};
 export type CardMipMove={source:CardMipPage;sourceLayer:number;destination:CardMipPage;destinationLayer:number};
 /** The raster always retains its authored domain. A page may retain a complete
@@ -11,16 +14,16 @@ export type CardMipUploadOptions={sourceWidth:number;sourceHeight:number;baseMip
 type Scratch={texture:THREE.DataTexture;cpuSource:THREE.DataTexture;data:Uint8Array;uploaded:boolean;retryFull:boolean;regions:THREE.Box3[];gpuBytes:number};
 const MAX_SCRATCH_SIZES=5,EMPTY_MIP_DATA=new Uint8Array(0);
 function levels(width:number,height:number){return Array.from({length:Math.floor(Math.log2(Math.max(width,height)))+1},(_,level)=>({width:Math.max(1,Math.floor(width/2**level)),height:Math.max(1,Math.floor(height/2**level))}));}
-export function cardTextureBytes(width:number,height:number,depth=1){return levels(width,height).reduce((sum,size)=>sum+size.width*size.height*4*depth,0);}
+export function cardTextureBytes(width:number,height:number,depth=1,levelCount=Infinity){return levels(width,height).slice(0,levelCount).reduce((sum,size)=>sum+size.width*size.height*4*depth,0);}
 function configure(texture:THREE.Texture,anisotropy:number){
  texture.colorSpace=THREE.SRGBColorSpace;texture.magFilter=THREE.LinearFilter;texture.minFilter=THREE.LinearMipmapLinearFilter;texture.anisotropy=anisotropy;
  texture.flipY=false;texture.premultiplyAlpha=false;texture.unpackAlignment=1;
 }
-export function createCardArray(width:number,height:number,depth:number,anisotropy:number){
+export function createCardArray(width:number,height:number,depth:number,anisotropy:number,levelCount=Infinity){
  const texture=new THREE.DataArrayTexture(null,width,height,depth);configure(texture,anisotropy);
  texture.generateMipmaps=false;texture.source.dataReady=false;
- // Allocate every mip without retaining or uploading an entire CPU base page.
- texture.mipmaps=levels(width,height).map(size=>({...size,data:EMPTY_MIP_DATA}));return texture;
+ // Allocate every mip (or the first levelCount) without retaining or uploading an entire CPU base page.
+ texture.mipmaps=levels(width,height).slice(0,levelCount).map(size=>({...size,data:EMPTY_MIP_DATA}));return texture;
 }
 
 /** One temporary raster layer feeds the normal GPU-generated sRGB mip chain.
@@ -48,6 +51,7 @@ export class CardMipUploader {
  private scratchUnchangedUploads=0;
  private scratchFullUploadFallbacks=0;
  private transferWallMs=0;
+ private blitFramebuffers:{gl:WebGL2RenderingContext;read:WebGLFramebuffer;draw:WebGLFramebuffer}|undefined;
  constructor(private anisotropy:number){}
  private scratch(width:number,height:number){
   const key=`${width}:${height}`,existing=this.scratches.get(key);
@@ -60,6 +64,15 @@ export class CardMipUploader {
   const cpuSource=new THREE.DataTexture(data,width,height);configure(cpuSource,this.anisotropy);
   const scratch={texture,cpuSource,data,uploaded:false,retryFull:false,regions:levels(width,height).map(size=>new THREE.Box3(new THREE.Vector3(),new THREE.Vector3(size.width,size.height,1))),gpuBytes:cardTextureBytes(width,height)};
   this.scratches.set(key,scratch);return scratch;
+ }
+ private canvasScratch(canvas:HTMLCanvasElement|OffscreenCanvas){
+  let scratch=this.canvasScratches.get(canvas);
+  if(!scratch){
+   const texture=new THREE.CanvasTexture(canvas as HTMLCanvasElement);configure(texture,this.anisotropy);texture.flipY=true;texture.generateMipmaps=true;
+   scratch={texture,regions:levels(canvas.width,canvas.height).map(size=>new THREE.Box3(new THREE.Vector3(),new THREE.Vector3(size.width,size.height,1))),gpuBytes:cardTextureBytes(canvas.width,canvas.height)};
+   this.canvasScratches.set(canvas,scratch);
+  }
+  return scratch;
  }
  private releaseScratch(scratch:Scratch){scratch.texture.dispose();scratch.cpuSource.dispose();}
  private transfer(renderer:CardTextureRenderer,work:()=>void){
@@ -101,15 +114,53 @@ export class CardMipUploader {
   const {baseMip,nativeLevels}=this.plan(page,layer,undefined,options);
   this.transfer(renderer,()=>{
    this.initialize(page,renderer);
-   let scratch=this.canvasScratches.get(canvas);
-   if(!scratch){
-    const texture=new THREE.CanvasTexture(canvas as HTMLCanvasElement);configure(texture,this.anisotropy);texture.flipY=true;texture.generateMipmaps=true;
-    scratch={texture,regions:levels(canvas.width,canvas.height).map(size=>new THREE.Box3(new THREE.Vector3(),new THREE.Vector3(size.width,size.height,1))),gpuBytes:cardTextureBytes(canvas.width,canvas.height)};
-    this.canvasScratches.set(canvas,scratch);
-   }
+   const scratch=this.canvasScratch(canvas);
    scratch.texture.needsUpdate=true;renderer.initTexture(scratch.texture);this.canvasUploads++;
    this.copyMips(scratch.texture,scratch.regions,page,layer,baseMip,nativeLevels,renderer);
   });
+ }
+ /** A window of a painted canvas (canvas pixels, top-left origin) to a cell of a layer (texels from the layer's bottom-left
+  * corner, the window's size at baseMip): only the window is copied, at each of the page's levels, from the canvas's
+  * GPU mip chain (see @@@card-paint-bounds). A cell at the origin of a page its own size fills the whole layer. */
+ uploadCanvasWindow(page:CardMipPage,layer:number,canvas:HTMLCanvasElement|OffscreenCanvas,renderer:CardTextureRenderer,window:{x:number;y:number;width:number;height:number},baseMip:number,cell:{x:number;y:number}={x:0,y:0}){
+  const {width,height,depth}=page.texture.image,divisor=2**baseMip,cellWidth=window.width/divisor,cellHeight=window.height/divisor;
+  if(!Number.isInteger(layer)||layer<0||layer>=depth||!Number.isInteger(baseMip)||baseMip<0||window.x<0||window.y<0||window.x+window.width>canvas.width||window.y+window.height>canvas.height
+   ||window.x%divisor||window.y%divisor||!Number.isInteger(cellWidth)||!Number.isInteger(cellHeight)||cell.x<0||cell.y<0||cell.x+cellWidth>width||cell.y+cellHeight>height)throw new Error('Invalid card window transfer.');
+  this.transfer(renderer,()=>{
+   this.initialize(page,renderer);const scratch=this.canvasScratch(canvas);
+   scratch.texture.needsUpdate=true;renderer.initTexture(scratch.texture);this.canvasUploads++;
+   // The scratch is flipped (flipY): its row 0 is the canvas's bottom row, so the window's bottom edge is its origin.
+   const bottom=canvas.height-window.y-window.height;
+   page.texture.mipmaps.forEach((_,level)=>{
+    const source=baseMip+level,scale=2**source,sourceWidth=Math.max(1,Math.floor(canvas.width/scale)),sourceHeight=Math.max(1,Math.floor(canvas.height/scale));
+    const copyWidth=Math.max(1,Math.floor(cellWidth/2**level)),copyHeight=Math.max(1,Math.floor(cellHeight/2**level));
+    const x=Math.max(0,Math.min(Math.floor(window.x/scale),sourceWidth-copyWidth)),y=Math.max(0,Math.min(Math.floor(bottom/scale),sourceHeight-copyHeight));
+    this.blit(renderer,scratch.texture,source,x,y,page.texture,level,layer,Math.floor(cell.x/2**level),Math.floor(cell.y/2**level),copyWidth,copyHeight);
+    this.copyCalls++;this.mipCopyBytes+=copyWidth*copyHeight*4;
+   });
+   this.layerUpdates++;
+  });
+ }
+ // @@@card-window-blit - A rectangle of one level of a 2D texture to a rectangle of one level and layer of an array
+ // texture, both anywhere. three 0.186's WebGLRenderer.copyTextureToTexture cannot: for a source level above 0 it calls
+ // blitFramebuffer(minX, minY, width, height, dstX, dstY, width, height), passing sizes where GL takes end corners,
+ // which is right only when both rectangles start at the origin. A card's window and its atlas cell rarely do, so its
+ // mips past the first were copied from the wrong place (#504 reverted the atlas over it). Revisit when three is
+ // upgraded: once it passes minX + width (and dstX + width), this can go back to copyTextureToTexture. The framebuffers
+ // are bound through three's state cache, so three's own later binds stay right.
+ private blit(renderer:CardTextureRenderer,source:THREE.Texture,sourceLevel:number,sx:number,sy:number,destination:THREE.DataArrayTexture,level:number,layer:number,dx:number,dy:number,width:number,height:number){
+  const gl=renderer.getContext() as WebGL2RenderingContext;
+  if(!this.blitFramebuffers||this.blitFramebuffers.gl!==gl)this.blitFramebuffers={gl,read:gl.createFramebuffer()!,draw:gl.createFramebuffer()!};
+  const handle=(texture:THREE.Texture)=>(renderer.properties.get(texture) as {__webglTexture?:WebGLTexture}).__webglTexture;
+  const from=handle(source),to=handle(destination);
+  if(!from||!to)throw new Error('Card window blit: a texture is not on the GPU yet.');
+  const {read,draw}=this.blitFramebuffers;
+  renderer.state.bindFramebuffer(gl.READ_FRAMEBUFFER,read);renderer.state.bindFramebuffer(gl.DRAW_FRAMEBUFFER,draw);
+  try{
+   gl.framebufferTexture2D(gl.READ_FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,from,sourceLevel);
+   gl.framebufferTextureLayer(gl.DRAW_FRAMEBUFFER,gl.COLOR_ATTACHMENT0,to,level,layer);
+   gl.blitFramebuffer(sx,sy,sx+width,sy+height,dx,dy,dx+width,dy+height,gl.COLOR_BUFFER_BIT,gl.NEAREST);
+  }finally{renderer.state.bindFramebuffer(gl.READ_FRAMEBUFFER,null);renderer.state.bindFramebuffer(gl.DRAW_FRAMEBUFFER,null);}
  }
  uploadLayer(page:CardMipPage,layer:number,rgba:Uint8Array|Uint8ClampedArray,renderer:CardTextureRenderer,options?:CardMipUploadOptions){
   const {sourceWidth,sourceHeight,baseMip,nativeLevels}=this.plan(page,layer,rgba.byteLength,options);
@@ -166,5 +217,5 @@ export class CardMipUploader {
  releaseSize(width:number,height:number){const key=`${width}:${height}`,scratch=this.scratches.get(key);if(scratch)this.releaseScratch(scratch);this.scratches.delete(key);}
  stats(){return{scratchTextures:this.scratches.size+this.canvasScratches.size,canvasUploads:this.canvasUploads,scratchCpuBytes:[...this.scratches.values()].reduce((sum,s)=>sum+s.data.byteLength,0),scratchGpuBytes:[...this.scratches.values(),...this.canvasScratches.values()].reduce((sum,s)=>sum+s.gpuBytes,0),mipInitializedPages:this.initializedPages,mipLayerUpdates:this.layerUpdates,mipCopyCalls:this.copyCalls,mipCopyBytes:this.mipCopyBytes,gpuCompactionLayers:this.compactionLayers,gpuCompactionCopyCalls:this.compactionCopyCalls,arrayBaseUploadBytes:0,scratchUploadBytes:this.scratchUploadBytes,scratchInitialUploadBytes:this.scratchInitialUploadBytes,scratchFullUploadBytes:this.scratchFullUploadBytes,scratchPartialUploadBytes:this.scratchPartialUploadBytes,scratchPartialUploadPixels:this.scratchPartialUploadBytes/4,scratchPartialUploads:this.scratchPartialUploads,scratchUnchangedUploads:this.scratchUnchangedUploads,scratchFullUploadFallbacks:this.scratchFullUploadFallbacks,gpuTransferSubmissionWallMs:this.transferWallMs};}
  releaseCanvas(canvas:HTMLCanvasElement|OffscreenCanvas){this.canvasScratches.get(canvas)?.texture.dispose();this.canvasScratches.delete(canvas);}
- dispose(){for(const scratch of this.scratches.values())this.releaseScratch(scratch);this.scratches.clear();for(const scratch of this.canvasScratches.values())scratch.texture.dispose();this.canvasScratches.clear();this.renderer=undefined;}
+ dispose(){if(this.blitFramebuffers){this.blitFramebuffers.gl.deleteFramebuffer(this.blitFramebuffers.read);this.blitFramebuffers.gl.deleteFramebuffer(this.blitFramebuffers.draw);this.blitFramebuffers=undefined;}for(const scratch of this.scratches.values())this.releaseScratch(scratch);this.scratches.clear();for(const scratch of this.canvasScratches.values())scratch.texture.dispose();this.canvasScratches.clear();this.renderer=undefined;}
 }
