@@ -364,15 +364,15 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       return tickHostedRoom(hosted, game, 1, { initialCommands: commands, initialSource: "browser" }).snapshot;
     },
 
-    commandTickRoom(roomId: string, commands: { playerId: PlayerId; command: GameCommand }[], ticks: number): RoomTickResult {
+    commandTickRoom(roomId: string, commands: { playerId: PlayerId; command: GameCommand }[], ticks: number, queued?: QueuedFrames): RoomTickResult {
       const { hosted, game, frameRuntime } = getLiveGame(roomId);
       frameRuntime.admit(commands);
-      return tickHostedRoom(hosted, game, ticks, { initialCommands: commands, initialSource: "sdk-agent" });
+      return tickHostedRoom(hosted, game, ticks, { initialCommands: commands, initialSource: "sdk-agent", ...(queued ? { queued } : {}) });
     },
 
-    tickRoom(roomId: string, ticks: number): RoomTickResult {
+    tickRoom(roomId: string, ticks: number, queued?: QueuedFrames): RoomTickResult {
       const { hosted, game } = getLiveGame(roomId);
-      return tickHostedRoom(hosted, game, ticks);
+      return tickHostedRoom(hosted, game, ticks, queued ? { queued } : {});
     },
 
     // Whether the room can tick now: its restored ship graphs are rebuilt. Its AI never holds it (see @@@planner-schedule).
@@ -498,18 +498,25 @@ export function createRoomHost(options: RoomHostOptions = {}) {
   }
 }
 
-function tickHostedRoom(hosted: HostedRoom, game: Game, ticks: number, options: { initialCommands?: CommandEnvelope[]; initialSource?: ReplayCommandSource } = {}): RoomTickResult {
+// @@@api-tick-queue - A tick asked for over the API is the room's tick like any other: when pages are connected, the
+// commands they sent wait in the room's lockstep queue for the tick they were given, and the API's tick takes them from
+// there as the live ticker does. A paused room (see @@@room-paused) is moved only by the API, so a click on its page took
+// effect on no tick at all.
+export type QueuedFrames = (tick: number) => CommandFrame;
+
+function tickHostedRoom(hosted: HostedRoom, game: Game, ticks: number, options: { initialCommands?: CommandEnvelope[]; initialSource?: ReplayCommandSource; queued?: QueuedFrames } = {}): RoomTickResult {
   if (!Number.isInteger(ticks) || ticks < 1) throw new Error("ticks must be a positive integer");
   const memoryStarted = process.memoryUsage();
   const cpuStarted = process.cpuUsage();
   const started = performance.now();
   hosted.frameRuntime ??= createHostedFrameRuntime(hosted, game);
   for (let i = 0; i < ticks; i += 1) {
-    const commands = i === 0 ? options.initialCommands ?? [] : [];
-    const source = commands.length > 0 ? options.initialSource ?? "browser" : "internal-ai";
+    const frame = options.queued?.(game.tick), given = i === 0 ? options.initialCommands ?? [] : [];
+    const commands = [...(frame?.commands ?? []), ...given];
+    const source = given.length > 0 ? options.initialSource ?? "browser" : frame?.commands.length ? "browser" : "internal-ai";
     // A tick asked for over the API is a step of a match driven from outside: it waits for the AI, so the driver gets
     // the same frames however busy the thinking thread is (see @@@planner-schedule).
-    advanceHostedRoomTick(hosted, game, { commands, source, settleAi: true });
+    advanceHostedRoomTick(hosted, game, { ...(frame ? { frame } : {}), commands, source, settleAi: true });
     if (game.match.winner) break;
   }
   const elapsedMs = performance.now() - started;

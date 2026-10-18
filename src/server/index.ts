@@ -406,7 +406,7 @@ router.post("/api/rooms/:roomId/tick", (request, response) => {
     return;
   }
   try {
-    const result = roomHost.tickRoom(request.params.roomId, requestedTicks);
+    const result = roomHost.tickRoom(request.params.roomId, requestedTicks, roomNetHub.queuedFrames(request.params.roomId));
     response.json(result);
   } catch (error) {
     response.status(400).json({ error: errorMessage(error) });
@@ -420,7 +420,7 @@ router.post("/api/rooms/:roomId/command-tick", (request, response) => {
     return;
   }
   try {
-    const result = roomHost.commandTickRoom(request.params.roomId, body.commands as CommandEnvelope[], body.ticks);
+    const result = roomHost.commandTickRoom(request.params.roomId, body.commands as CommandEnvelope[], body.ticks, roomNetHub.queuedFrames(request.params.roomId));
     response.json(result);
   } catch (error) {
     response.status(400).json({ error: errorMessage(error) });
