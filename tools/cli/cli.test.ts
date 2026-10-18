@@ -4,6 +4,7 @@ import { audit } from "./lib/audit";
 import { diff, looksTimed, outcomes, settle, type VitestJson } from "./lib/vitest-report";
 import { browserRunExit, sceneFile } from "./lib/browser-run";
 import { sizesOption } from "./commands/yatu";
+import { shotExit, suiteScenes } from "./commands/shot";
 
 
 const spec: CommandSpec = { name: "demo", summary: "", usage: "demo", options: [
@@ -130,6 +131,15 @@ describe("sketch browser runs", () => {
   it("finds a scene by name under tools/cli/scenes, and refuses an unknown one", () => {
     expect(sceneFile("tower-card")).toMatch(/tools\/cli\/scenes\/tower-card\.ts$/);
     expect(() => sceneFile("no-such-scene")).toThrow(/No scene/);
+  });
+  it("names only scenes that exist in its suites, and refuses an unknown suite", () => {
+    for (const suite of ["render", "perf"]) for (const scene of suiteScenes(suite)) expect(sceneFile(scene)).toMatch(new RegExp(`/${scene}\\.ts$`));
+    expect(() => suiteScenes("no-such-suite")).toThrow(/No suite/);
+  });
+  it("shot exits 1 only for a check the after commit broke, 2 when the environment failed", () => {
+    expect(shotExit([run(1), run(0)], [])).toBe(0);
+    expect(shotExit([run(0), run(1)], ["tower-top"])).toBe(1);
+    expect(shotExit([run(0), run(2)], [])).toBe(2);
   });
 });
 

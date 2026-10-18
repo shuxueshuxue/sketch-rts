@@ -66,10 +66,17 @@ Every command runs in its own process group, and a run only ever kills the group
   browser against each commit's own dev server and brings its shots back to `~/.cache/sketch-cli/runs/<run id>/`. Exit 1
   when the scene's own `must` failed, 2 when the environment did (busy ports, a wrong build, no CJK font for a page in
   Chinese, no Playwright).
-- `shot <scene> --before REF --after REF [--at 5,30] [--sizes desktop,phone] [--locale en-US] [--out DIR] [--pr N] [--on M]` runs the same
-  scene on both commits and stitches each shot before|after into one labelled webp, with the page read back on each side
-  (`.before.json`, `.after.json`). They go to the evidence store and leave a pointer, or to `--out`. `--at` also shoots
-  the game at those seconds after the scene ends.
+- `shot <scene> | --suite NAME --before REF --after REF [--at 5,30] [--sizes desktop,phone] [--locale en-US] [--out DIR] [--pr N] [--on M]`
+  runs one scene, or a suite's, on both commits (three scene runs at a time) and stitches each shot before|after into
+  one labelled webp, with the page read back on each side (`.before.json`, `.after.json`). Each pair carries the share
+  of pixels that changed, measured by the same browser canvas that stitches, and `index.html` shows every pair, most
+  changed first, after the scenes that did not finish. The changed share only orders what to look at: animation moves
+  every picture a little, and a person judges the pictures. They stay in `~/.cache/sketch-cli/runs/<run id>/shot` (or
+  `--out`); `--pr N` also pushes them to the evidence store and leaves a pointer. `--at` also shoots the game at those
+  seconds after the scene ends. Exit 1 when a scene's own `must` holds on before and fails on after (a check already
+  failing on before is listed, not counted), 2 when the environment failed.
+- Suites are fixed lists in `tools/cli/scenes/suites.json`. `render` is the set a PR that changes drawing or cards is
+  checked with: `sketch shot --suite render --before origin/main --after <branch> --on mac1`. `perf` is the probes.
 
 ## Scenes
 
