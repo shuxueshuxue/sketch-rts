@@ -37,14 +37,14 @@ describe('ordered card bank material sampling',()=>{
   for(const [index,material] of [new THREE.MeshBasicMaterial({alphaTest:.4,toneMapped:false}),new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking,alphaTest:.4}),new THREE.MeshDistanceMaterial({alphaTest:.4})].entries()){
    const before={alphaTest:material.alphaTest,transparent:material.transparent,depthTest:material.depthTest,depthWrite:material.depthWrite};configureCardMaterial(material,banks,8);expect(material.map).toBe(banks[0]);
    const s=compiled(material,sources[index]!);expect(s.uniforms.map!.value).toBe(banks[0]);expect(s.uniforms.cardMap1!.value).toBe(banks[1]);for(let slot=2;slot<8;slot++)expect(s.uniforms[`cardMap${slot}`]!.value).toBe(banks[1]);
-   expect(material.customProgramCacheKey()).toBe('painted-card-banks-v1:8:false');expect({alphaTest:material.alphaTest,transparent:material.transparent,depthTest:material.depthTest,depthWrite:material.depthWrite}).toEqual(before);
+   expect(material.customProgramCacheKey()).toBe('painted-card-banks-v2:8:false');expect({alphaTest:material.alphaTest,transparent:material.transparent,depthTest:material.depthTest,depthWrite:material.depthWrite}).toEqual(before);
    material.dispose();
   }
   for(const texture of banks)texture.dispose();
  });
  it('applies per-instance opacity before the same alpha cutoff in all three passes',()=>{
   const texture=bank();for(const [index,material] of [new THREE.MeshBasicMaterial(),new THREE.MeshDepthMaterial(),new THREE.MeshDistanceMaterial()].entries()){
-   configureCardMaterial(material,[texture],2,true);const s=compiled(material,sources[index]!);expect(s.vertexShader).toContain('vCardOpacity = cardOpacity;');expect(s.fragmentShader).toContain('diffuseColor.a *= vCardOpacity;\n#include <alphatest_fragment>');expect(material.customProgramCacheKey()).toBe('painted-card-banks-v1:2:true');material.dispose();
+   configureCardMaterial(material,[texture],2,true);const s=compiled(material,sources[index]!);expect(s.vertexShader).toContain('vCardOpacity = cardOpacity;');expect(s.fragmentShader).toContain('diffuseColor.a *= vCardOpacity;\n#include <alphatest_fragment>');expect(material.customProgramCacheKey()).toBe('painted-card-banks-v2:2:true');material.dispose();
   }texture.dispose();
  });
  it('reads changed bank arrays in every program variant without recompiling or relying on color draw hooks',()=>{

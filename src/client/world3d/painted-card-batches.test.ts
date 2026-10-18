@@ -2,7 +2,7 @@ import { ART_TILE_SIZE, ART_ACTION_SIZE } from '../art/raster-cache';
 import {afterEach,describe,expect,it,vi} from 'vitest';
 import {createCanvas} from '@napi-rs/canvas';
 import * as THREE from 'three';
-import {PaintedCardBatches,patchCardShader,type PaintedCardPolicy} from './painted-card-batches';
+import {ATLAS_LEVELS,ATLAS_SIDE,PaintedCardBatches,patchCardShader,type PaintedCardPolicy} from './painted-card-batches';
 import {cardTextureBytes} from './card-mip-uploader';
 import {SHIP_CAMERA} from '../../shared/ship-geometry';
 const renderer={initTexture:vi.fn(),copyTextureToTexture:vi.fn(),getRenderTarget:()=>null,getActiveCubeFace:()=>0,getActiveMipmapLevel:()=>0,setRenderTarget:vi.fn()};
@@ -19,7 +19,11 @@ function binding(cards:PaintedCardBatches,id:string){
 function residentTextures(cards:PaintedCardBatches){return(cards as unknown as {pages:{texture:THREE.DataArrayTexture}[]}).pages.map(page=>page.texture);}
 function storedMipBytes(texture:THREE.DataArrayTexture){return(texture.mipmaps as {width:number;height:number}[]).reduce((sum,mip)=>sum+mip.width*mip.height*4*texture.image.depth,0);}
 const matrix=new THREE.Matrix4();
-const paint=(ctx:CanvasRenderingContext2D)=>{ctx.fillStyle='#ff0000';ctx.fillRect(-16,-24,32,48);};
+// The batches' own mechanisms (pages, promotion, compaction, budgets) are tested on whole tiles: an invisible fill
+// across the tile makes its bounds the whole tile (see @@@card-paint-bounds) without painting a pixel. Cropped windows
+// have their own tests below.
+const wholeTile=(ctx:CanvasRenderingContext2D)=>{ctx.save();ctx.fillStyle='rgba(0,0,0,0)';ctx.fillRect(-1e4,-1e4,2e4,2e4);ctx.restore();};
+const paint=(ctx:CanvasRenderingContext2D)=>{wholeTile(ctx);ctx.fillStyle='#ff0000';ctx.fillRect(-16,-24,32,48);};
 const fullPaint=(ctx:CanvasRenderingContext2D)=>{ctx.fillStyle='#ff0000';ctx.fillRect(-62,-62,124,124);};
 describe('painted card array batches',()=>{
   it.each([2,4])('prepares exact density-%i source bytes without allocating GPU pages or showing actors',density=>{
@@ -125,7 +129,7 @@ describe('painted card array batches',()=>{
   });
   it('uploads the complete painted canvas and mip domain without a readback, including non-power-of-two action tiles',()=>{
     const {cards}=setup(),density=4,foot=23,size=640;
-    const painter=(ctx:CanvasRenderingContext2D)=>{ctx.fillStyle='#634b87';ctx.fillRect(-7,-68,11,84);ctx.fillStyle='rgba(201,89,37,.6)';ctx.fillRect(12,-31,4,6);};
+    const painter=(ctx:CanvasRenderingContext2D)=>{wholeTile(ctx);ctx.fillStyle='#634b87';ctx.fillRect(-7,-68,11,84);ctx.fillStyle='rgba(201,89,37,.6)';ctx.fillRect(12,-31,4,6);};
     const source=createCanvas(size,size),ctx=source.getContext('2d');ctx.scale(density,density);ctx.translate(80,80);painter(ctx as unknown as CanvasRenderingContext2D);
     const rgba=ctx.getImageData(0,0,size,size).data;
     // The browser flips the canvas on upload (flipY): its top row lands last, as the card's foot side samples v = 0.
@@ -145,7 +149,7 @@ it('retains mixed 128/160 domains and density identities at their original foot 
  const {cards}=setup();cards.begin();
  // The identical logical key must not alias either the domain or the density.
  cards.add('same',4,paint,matrix,'ready',17,ART_TILE_SIZE);
- cards.add('same',4,b=>{b.fillStyle='#345';b.fillRect(68,-72,7,7);},matrix,'upward',17,ART_ACTION_SIZE);
+ cards.add('same',4,b=>{wholeTile(b);b.fillStyle='#345';b.fillRect(68,-72,7,7);},matrix,'upward',17,ART_ACTION_SIZE);
  cards.add('same',2,paint,matrix,'ready-low',17,ART_TILE_SIZE);
  cards.finish(renderer);expect(cards.stats().cards).toBe(3);expect(cards.stats().rasterizations).toBe(3);
  expect(cards.objects().reduce((sum,mesh)=>sum+mesh.count,0)).toBe(3);
@@ -311,9 +315,11 @@ it('repaints evicted live poses, and recovers prepared ones from exact compresse
 
 it.each([128,160,ART_ACTION_SIZE])('keeps original picking texels and authored geometry when %ipx artwork starts residency at mip one',tileSize=>{
  const {cards,scene}=setup(),sourceSize=tileSize*4;
+ // The uploader reuses its region box: each copy's extent is read as it is made.
+ const extents:number[]=[];renderer.copyTextureToTexture.mockImplementation((_source:THREE.Texture,_destination:THREE.Texture,region:unknown)=>{if(region instanceof THREE.Box3)extents.push(region.max.x-region.min.x);});
  // Exactly one original source pixel. A reduced-resolution picking mask
  // would move or lose this hit, so this checks the original alpha contract.
- cards.begin();cards.add('one-pixel',4,ctx=>{ctx.fillStyle='#a45a23';ctx.fillRect(7.25,-13.25,.25,.25);},matrix,'pixel',17,tileSize,1,1);cards.finish(renderer);scene.updateMatrixWorld(true);
+ cards.begin();cards.add('one-pixel',4,ctx=>{wholeTile(ctx);ctx.fillStyle='#a45a23';ctx.fillRect(7.25,-13.25,.25,.25);},matrix,'pixel',17,tileSize,1,1);cards.finish(renderer);scene.updateMatrixWorld(true);
  const mesh=cards.objects()[0]!,texture=(mesh.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture;
  expect(texture.image).toMatchObject({width:sourceSize/2,height:sourceSize/2,depth:1});expect(texture.generateMipmaps).toBe(false);
  const uv={x:.5+7.375/tileSize,y:.5+13.125/tileSize};
@@ -325,7 +331,7 @@ it.each([128,160,ART_ACTION_SIZE])('keeps original picking texels and authored g
  expect(rect.getY(0)).toBeCloseTo((-tileSize/2+17)/Math.tan(SHIP_CAMERA.tilt),4);
  const transfer=renderer.copyTextureToTexture.mock.calls.find(([source,destination])=>source instanceof THREE.CanvasTexture&&destination===texture)!;
  expect((transfer[0] as THREE.CanvasTexture).image.width).toBe(sourceSize);expect(transfer[4]).toBe(1);expect(transfer[5]).toBe(0);
- expect((transfer[2] as THREE.Box3).max.x).toBe(sourceSize/2);cards.dispose();
+ expect(extents[renderer.copyTextureToTexture.mock.calls.indexOf(transfer)]).toBe(sourceSize/2);cards.dispose();
 });
 
 it('promotes one original raster transactionally and reuses its finer resident chain for subsequent coarse requests',()=>{
@@ -399,10 +405,10 @@ it.each([0,1])('keeps full-source scratch textures when unused mip pages expire 
  cards.dispose();expect(cards.stats().scratchTextures).toBe(0);
 });
 
-it('keeps empty live artwork in its requested domain, never hit, since nothing reads it back to find it empty',()=>{
+it('retains empty live artwork in a sixteen-pixel mip-zero domain, known empty from its painter without a readback',()=>{
  const {cards}=setup();cards.begin();cards.add('empty',4,()=>{},matrix,'empty',17,ART_ACTION_SIZE,1,1);cards.finish(renderer);
  const mesh=cards.objects()[0]!,texture=(mesh.material as THREE.MeshBasicMaterial).map as THREE.DataArrayTexture;
- expect(texture.image).toMatchObject({width:ART_ACTION_SIZE*2,height:ART_ACTION_SIZE*2});
+ expect(texture.image).toMatchObject({width:16,height:16});
  expect(mesh.userData.paintedHit(0,{x:.5,y:.5})).toBe(false);cards.dispose();
 });
 
@@ -613,4 +619,64 @@ it('draws an instance whose new card is still waiting with the card it drew last
  frame({a:'a2',b:'b2'});expect([drawn('a'),drawn('b')]).toEqual(['a2','b1']);
  frame({a:'a2',b:'b2'});expect([drawn('a'),drawn('b')]).toEqual(['a2','b2']);
  expect(cards.stats().rasterizations).toBe(4);cards.dispose();
+});
+
+// @@@card-atlas
+describe('cropped cards in atlas cells',()=>{
+ type Internal={cards:Map<string,{window:{x:number;y:number;width:number;height:number};cell?:{x:number;y:number;width:number;height:number};page:{texture:THREE.DataArrayTexture}}>};
+ const dot=(color:string)=>(ctx:CanvasRenderingContext2D)=>{ctx.fillStyle=color;ctx.fillRect(7.25,-13.25,.25,.25);};
+ it('keeps a cropped card in a cell of a shared atlas page, its quad its window and its picking exact',()=>{
+  const {cards,scene}=setup(),density=4,tileSize=128;
+  cards.begin();cards.add('dot',density,dot('#a45a23'),matrix,'dot',17,tileSize);cards.finish(renderer);scene.updateMatrixWorld(true);
+  const card=(cards as unknown as Internal).cards.get(`dot:${density}:${tileSize}`)!,{window:win}=card,mesh=cards.objects()[0]!;
+  expect(card.page.texture.image).toMatchObject({width:ATLAS_SIDE,height:ATLAS_SIDE});expect(card.page.texture.mipmaps).toHaveLength(ATLAS_LEVELS);
+  expect(win.width).toBeLessThan(tileSize*density/2);expect(card.cell).toMatchObject({width:win.width,height:win.height});
+  const uvRect=mesh.geometry.getAttribute('cardUv');
+  expect([uvRect.getX(0),uvRect.getY(0),uvRect.getZ(0),uvRect.getW(0)]).toEqual([card.cell!.x/ATLAS_SIDE,card.cell!.y/ATLAS_SIDE,win.width/ATLAS_SIDE,win.height/ATLAS_SIDE]);
+  // The quad is the window: one canvas pixel per 1/density world unit.
+  const rect=mesh.geometry.getAttribute('cardRect');expect((rect.getZ(0)-rect.getX(0))*density).toBeCloseTo(win.width,5);
+  // The one painted pixel, at canvas (285, 203), hits; its neighbours do not.
+  const at=(x:number,y:number)=>({x:(x+.5-win.x)/win.width,y:1-(y+.5-win.y)/win.height});
+  expect(mesh.userData.paintedHit(0,at(285,203))).toBe(true);
+  for(const [x,y] of [[284,203],[286,203],[285,202],[285,204]] as const)expect(mesh.userData.paintedHit(0,at(x,y))).toBe(false);
+  cards.dispose();
+ });
+ it('never samples a neighbouring cell, at any atlas mip down to the last',()=>{
+  const {cards}=setup(),copies:{level:number;x:number;y:number;width:number;height:number}[]=[];
+  renderer.copyTextureToTexture.mockImplementation((_source:THREE.Texture,destination:THREE.Texture,region:unknown,position:unknown,_from:number,level:number)=>{
+   if(destination instanceof THREE.DataArrayTexture&&destination.image.width===ATLAS_SIDE&&region instanceof THREE.Box3&&position instanceof THREE.Vector3)
+    copies.push({level,x:position.x,y:position.y,width:region.max.x-region.min.x,height:region.max.y-region.min.y});
+  });
+  // Two cards of one window size: neighbouring cells of one layer, the first red, the second blue.
+  cards.begin();cards.add('red',4,dot('#f00'),matrix,'red',17,128);cards.add('blue',4,dot('#00f'),matrix,'blue',17,128);cards.finish(renderer);
+  expect(copies).toHaveLength(2*ATLAS_LEVELS);
+  const mesh=cards.objects()[0]!,uv=mesh.geometry.getAttribute('cardUv'),red=mesh.userData.ids.indexOf('red');
+  for(let level=0;level<ATLAS_LEVELS;level++){
+   // Each card's cell at this level, as its copies filled it: 1 red, 2 blue, 0 the gap and the rest.
+   const side=ATLAS_SIDE>>level,texels=new Uint8Array(side*side);
+   copies.filter(copy=>copy.level===level).forEach((copy,card)=>{for(let y=copy.y;y<copy.y+copy.height;y++)for(let x=copy.x;x<copy.x+copy.width;x++)texels[y*side+x]=card+1;});
+   const fetch=(x:number,y:number)=>texels[Math.min(side-1,Math.max(0,y))*side+Math.min(side-1,Math.max(0,x))]!;
+   let reds=0;
+   // Bilinear samples all over the red card, edges included, as the shader takes them (cardUv.xy + uv * cardUv.zw).
+   for(let i=0;i<=32;i++)for(let j=0;j<=32;j++){
+    const u=(uv.getX(red)+i/32*uv.getZ(red))*side-.5,v=(uv.getY(red)+j/32*uv.getW(red))*side-.5,x=Math.floor(u),y=Math.floor(v),fx=u-x,fy=v-y;
+    for(const [dx,dy,weight] of [[0,0,(1-fx)*(1-fy)],[1,0,fx*(1-fy)],[0,1,(1-fx)*fy],[1,1,fx*fy]] as const){
+     if(weight<=0)continue;const texel=fetch(x+dx,y+dy);
+     expect(texel,`level ${level} uv ${i}/32,${j}/32`).not.toBe(2);if(texel===1)reds++;
+    }
+   }
+   expect(reds).toBeGreaterThan(0);
+  }
+  cards.dispose();
+ });
+ it('draws cropped cards of different sizes from one atlas page in one draw',()=>{
+  const {cards}=setup();cards.begin();
+  cards.add('small',4,dot('#123'),matrix,'small',17,128);
+  cards.add('wide',4,b=>{b.fillStyle='#456';b.fillRect(-40,-10,80,8);},matrix,'wide',17,128);
+  cards.add('tall',4,b=>{b.fillStyle='#789';b.fillRect(-4,-50,8,70);},matrix,'tall',17,128);
+  cards.finish(renderer);
+  const internal=(cards as unknown as Internal).cards,sizes=new Set([...internal.values()].map(card=>`${card.window.width}x${card.window.height}`));
+  expect(sizes.size).toBe(3);expect(new Set([...internal.values()].map(card=>card.page)).size).toBe(1);
+  expect(cards.objects()).toHaveLength(1);expect(cards.objects()[0]!.count).toBe(3);cards.dispose();
+ });
 });
