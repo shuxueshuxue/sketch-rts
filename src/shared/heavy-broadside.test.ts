@@ -60,8 +60,8 @@ describe('heavy broadside ship', () => {
       ship.fittings = [...ship.fittings!, { ...mount, id: gun.id }];
     }
     // A stationary target directly off the port side leaves every port mount
-    // in its real ±35° arc, without requiring a hull turn.
-    const target = game.spawnUnit('enemy', 'carrier', 1200, 810);
+    // in its real ±35° arc, without requiring a hull turn; its near side lies out of their dead zone (see @@@hull-reach).
+    const target = game.spawnUnit('enemy', 'carrier', 1200, 700);
     target.hp = target.maxHp = 10000;
     target.order = { type: 'hold', x: target.x, y: target.y };
     issuePlayerCommand(game, 'player', { type: 'holdPosition', unitIds: [ship.id] });

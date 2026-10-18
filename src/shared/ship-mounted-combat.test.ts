@@ -20,8 +20,9 @@ function sea() {
 }
 
 const movingCases = [
-  { label: 'bow cannon', kind: 'warship', x: 2330, y: 2100, heading: 0, firstBy: 1.5 },
-  { label: 'cannon against a moving occupied deck', kind: 'warship', x: 2360, y: 2060, heading: 0, crew: true, firstBy: 2 },
+  // Its hull's near edge starts out of the bow cannon's dead zone (see @@@hull-reach).
+  { label: 'bow cannon', kind: 'warship', x: 2400, y: 2100, heading: 0, firstBy: 1.5 },
+  { label: 'cannon against a moving occupied deck', kind: 'warship', x: 2420, y: 2060, heading: 0, crew: true, firstBy: 2 },
   { label: 'bow mortar', kind: 'bombardShip', x: 2600, y: 2000, heading: Math.PI / 2, firstBy: 2.5 },
   { label: 'flame projector', kind: 'fireShip', x: 2245, y: 2000, heading: Math.PI / 2, firstBy: 3 },
 ] as const;
@@ -49,7 +50,7 @@ describe('mounted weapons in live sailing combat', () => {
     expect(hullPassageClear(game.map,ship,start,end)).toBe(true);
     const headed=(heading:number)=>({...ship,sailing:{...ship.sailing!,heading}});
     const heading=bestFiringHeading(game,ship,target,0,(_item,point,heading)=>mountedFireLaneClear(headed(heading),gun,point,blockers));
-    const aimed=headed(heading),point=mountedTargetPoint(game,aimed,gun,target);
+    const aimed=headed(heading),point=mountedTargetPoint(game,aimed,gun,target)!;
     expect(heading).toBeGreaterThan(Math.PI/2);
     expect(shipGunCanAim(aimed,gun,point)).toBe(true);
     expect(mountedFireLaneClear(aimed,gun,point,blockers)).toBe(true);
@@ -180,8 +181,9 @@ describe('mounted weapons in live sailing combat', () => {
   });
 
   it('uses an otherwise idle gun against a nearby enemy without replacing the ordered chase', () => {
+    // The nearby hull starts with its near side out of the bow gun's dead zone (see @@@hull-reach).
     const game = sea(), ship = game.spawnUnit('player', 'warship', 2000, 2000);
-    const far = game.spawnUnit('enemy', 'transport', 2800, 2000), near = game.spawnUnit('enemy', 'transport', 2280, 2040);
+    const far = game.spawnUnit('enemy', 'transport', 2800, 2000), near = game.spawnUnit('enemy', 'transport', 2440, 2040);
     for (const target of [far, near]) { target.order = { type: 'hold', x: target.x, y: target.y }; target.hp = target.maxHp = 10000; }
     issuePlayerCommand(game, 'player', { type: 'attack', unitIds: [ship.id], targetId: far.id });
     let firedAt: string | undefined;

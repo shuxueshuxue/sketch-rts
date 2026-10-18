@@ -220,9 +220,11 @@ describe('physical ship equipment', () => {
         expect(ship.x).toBeGreaterThan(650);
     });
     it('bursts a cannonball across nearby deck crew and damages their hull only once', () => {
-        const game = match(), gun = game.spawnUnit('player', 'warship', 700, 800), ship = game.spawnUnit('enemy', 'transport', 950, 800);
+        // Abeam, its near side out of the gun's dead zone (see @@@hull-reach).
+        const game = match(), gun = game.spawnUnit('player', 'warship', 950, 1140), ship = game.spawnUnit('enemy', 'transport', 950, 800);
         const a = game.spawnUnit('enemy', 'footman', 950, 800), b = game.spawnUnit('enemy', 'footman', 950, 800);
-        for (const [unit, point] of [[a, { x: -5, y: 18 }], [b, { x: 20, y: -15 }]] as const) {
+        // By the rail the gun bears on: it aims at the hull's nearest point and bursts there (see @@@hull-reach).
+        for (const [unit, point] of [[a, { x: -5, y: 32 }], [b, { x: 20, y: 24 }]] as const) {
             boardUnit(ship, unit, game.units);
             unit.deck = { shipId: ship.id, ...deckPlacement(ship, unit, game.units, point)! };
             unit.order = { type: 'hold', x: unit.x, y: unit.y };
@@ -230,14 +232,16 @@ describe('physical ship equipment', () => {
         }
         syncDecks(game.units);
         issuePlayerCommand(game, 'player', { type: 'attack', unitIds: [gun.id], targetId: ship.id });
-        for (let i = 0; i < seconds(3) && !game.projectiles.length; i++)
+        for (let i = 0; i < seconds(6) && !game.projectiles.length; i++)
             stepGame(game);
         const shot = game.projectiles[0]!, hull = ship.hp, hpa = a.hp, hpb = b.hp;
         gun.cooldown = 9999;
         run(game, shot.remaining);
         expect(a.hp).toBeLessThan(hpa);
         expect(b.hp).toBeLessThan(hpb);
-        expect(ship.hp).toBeCloseTo(hull - Math.round(shot.damage * SHIP_WEAPONS.shipCannon.weapon.hullDamageShare! * TRANSPORT_COMBAT.rangedDamageTaken));
+        // Once: at most one blow's hull share, though two crew were struck (the burst's falloff can make it less).
+        expect(ship.hp).toBeLessThan(hull);
+        expect(hull - ship.hp).toBeLessThanOrEqual(Math.round(shot.damage * SHIP_WEAPONS.shipCannon.weapon.hullDamageShare! * TRANSPORT_COMBAT.rangedDamageTaken));
     });
     it('prices bundled weapons as paid equipment plus a nonzero hull', () => {
         for (const [ship, weapon] of [['warship', 'shipCannon'], ['bombardShip', 'shipMortar'], ['fireShip', 'flameProjector']] as const) {

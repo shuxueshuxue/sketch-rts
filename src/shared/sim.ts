@@ -17,7 +17,7 @@ import { unitNeedsRepair, unitRepairHpPerGold } from './unit-repair';
 import { innateMissile, type AttackKind } from "./attack-presentation";
 import { invalidateItemIndex } from "./item-index";
 import { settleGroundItems } from './item-surfaces';
-import { strikePoint, strikeGap, bodyGap, strikeReach, CONTACT_SLACK } from "./combat-geometry";
+import { carryingHull, strikePoint, strikeGap, bodyGap, strikeReach, CONTACT_SLACK } from "./combat-geometry";
 import { purchasePlacement, type PurchasePlacement } from "./purchase";
 import { SHIP_WEAPONS, PREVIOUS_SHIP_TRAIN_COST, damageShipParts, initializeShipEquipment, installedWeapons, isShipEquipment, mountedWeaponPose, mountedTargetPoint, mountedFireLaneClear, rebuildShipFittings, repairShipParts, shipPartMax, shipGunCanAim, shipMounts, bestFiringHeading, type MountedShotClear } from "./ship-equipment";
 import { ITEM_DEFS, ITEM_TRANSFER_REACH, activeItem, canEquip, dropRefusal, freeItemSlot, giveRefusal, itemEquipped, type ItemDestination, normalizeEquipment, removeFromHands, transferRefusal, weaponRules, itemHands, unitItemMass, shipItemMass, itemsFor } from "./equipment";
@@ -1376,9 +1376,12 @@ function updateMountedWeapons(game:Game,starts:Map<string,{x:number;y:number;hea
       const mount=mounts.find(mount=>mount.id===item.mountId),minimum=SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].weapon.minRange ?? 0;
       return (item.durability ?? 1)>0 && mount ? Math.min(zone,minimum-Math.hypot(mount.x,mount.y)) : zone;
     },intrinsic ? 0 : Infinity);
-    const engageable=(candidate:Unit|Building)=>!Number.isFinite(deadZone) || deadZone<=0 || strikeGap(ship,candidate)>=deadZone;
+    const engageable=(candidate:Unit|Building)=>!Number.isFinite(deadZone) || deadZone<=0 || strikeGap(ship,carryingHull(candidate,game.units) ?? candidate)>=deadZone;
     let facingPoint=order.type==="aim" ? order : requested ?? (["attackMove","idle","hold"].includes(order.type) ? nearestEnemyTargetFromPoint(game,ship.owner,ship,acquisitionRange,ship,engageable) : undefined);
     if(facingPoint && "owner" in facingPoint && !isObstacle(facingPoint))facingPoint=navalCombatTarget(game,ship,facingPoint);
+    // Guns with a dead zone turn on a ship as a whole, as they sail for it (see @@@hull-reach).
+    const deadZoneGuns=!intrinsic && weapons.some(item=>(item.durability ?? 1)>0 && SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].weapon.minRange);
+    if(deadZoneGuns && facingPoint && "order" in facingPoint)facingPoint=carryingHull(facingPoint,game.units) ?? facingPoint;
     const orientHull = ['idle', 'hold', 'aim'].includes(order.type)
       || (order.type === 'attack' || order.type === 'attackMove') && shipCanTurnForAttack(ship);
     if(!crossing.has(ship.id) && facingPoint && (shipCanTurnForAttack(ship) || strikeGap(ship,facingPoint)<=acquisitionRange) && orientHull) {
@@ -1389,15 +1392,23 @@ function updateMountedWeapons(game:Game,starts:Map<string,{x:number;y:number;hea
       const def=SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS],pose=mountedWeaponPose(ship,item)!;
       const range=veteranWeaponRange(ship,def.range);
       const canShoot=(candidate:Unit|Building|Obstacle)=>{
-        const point=mountedTargetPoint(game,ship,item,candidate,pose),gap=distance(pose.pivot,point);
+        const point=mountedTargetPoint(game,ship,item,candidate,pose);if(!point)return false;const gap=distance(pose.pivot,point);
         return shipGunCanAim(ship,item,point) && gap<=range && gap>=(def.weapon.minRange??0)
           && (!blockers.length || mountedFireLaneClear(ship,item,point,blockers));
+      };
+      // @@@hull-reach - For a gun with a dead zone the ship is the target: it aims at the nearest point of the hull a
+      // troop stands on, and the ball and its burst strike whom they meet (see crewBeforeHulls). Troops keep to crew
+      // before hulls (see navalCombatTarget).
+      const gunTarget=(candidate:Unit|Building|Obstacle)=>{
+        const body=def.weapon.minRange && isUnit(candidate) ? carryingHull(candidate,game.units) ?? candidate : candidate;
+        return canShoot(body) ? body : undefined;
       };
       const preferred=requested && !isObstacle(requested) ? navalCombatTarget(game,ship,requested) : requested;
       // The ordered enemy remains the navigator's objective. A gun which
       // cannot bear on it may still defend against another reachable enemy.
-      const target=preferred && areEnemyOwners(game,ship.owner,preferred.owner) && canShoot(preferred) ? preferred
-        : nearestEnemyTargetFromPoint(game,ship.owner,pose.pivot,range,ship,candidate=>canShoot(candidate) && (!["move","unload","follow"].includes(order.type) || candidate.attackDamage>0));
+      const ordered=preferred && areEnemyOwners(game,ship.owner,preferred.owner) ? gunTarget(preferred) : undefined;
+      const nearest=ordered ? undefined : nearestEnemyTargetFromPoint(game,ship.owner,pose.pivot,range,ship,candidate=>gunTarget(candidate)!==undefined && (!["move","unload","follow"].includes(order.type) || candidate.attackDamage>0),true,!!def.weapon.minRange);
+      const target=ordered ?? (nearest && gunTarget(nearest));
       const aimTarget=order.type==="aim" && !target ? order : target;
       const point=target ? mountedTargetPoint(game,ship,item,target,pose) : aimTarget && strikePoint(pose.pivot,aimTarget);
       if(!point || !shipGunCanAim(ship,item,point) || distance(pose.pivot,point)>range || def.weapon.minRange && distance(pose.pivot,point)<def.weapon.minRange)continue;
@@ -1810,13 +1821,16 @@ function updateAttackOrder(game: Game, unit: Unit, navalFrame = true) {
   unit.cooldown = attackCooldownOf(game, unit);
 }
 
-function navigateShipAttack(game: Game, ship: Unit, target: Unit | Building | Obstacle) {
+function navigateShipAttack(game: Game, ship: Unit, ordered: Unit | Building | Obstacle) {
   if(game.boardingHolds?.has(ship.id))return;
   const weapons = installedWeapons(game, ship).filter(item => (item.durability ?? 1) > 0);
   // A hull's own attack (a cutter's arrows) has no dead zone: fitted guns' minimum range never drives it off its target.
   const intrinsic = unitRules(game, ship).intrinsicAttack;
   const minimum = intrinsic ? 0 : weapons.length ? Math.min(...weapons.map(item => SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].weapon.minRange ?? 0))
     : weaponRules(game, ship).weapon?.minRange ?? 0;
+  // Guns with a dead zone fire at a ship as a whole (see @@@hull-reach): they sail for a station on the crew's hull, and
+  // take the crew from it whenever they reach them.
+  const target = minimum > 0 && isUnit(ordered) ? carryingHull(ordered, game.units) ?? ordered : ordered;
   const blockers=friendlyFireBlockers(game,ship);
   let firingHeading: number | undefined;
   const canFireFrom = (station:Unit,checkTurn:boolean) => {
@@ -1832,7 +1846,7 @@ function navigateShipAttack(game: Game, ship: Unit, target: Unit | Building | Ob
         const pose = mountedWeaponPose(aimed, item), def = SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS];
         if (!pose) return false;
         const point = mountedTargetPoint(game,aimed,item,target,pose);
-        if (!shipGunCanAim(aimed, item, point)) return false;
+        if (!point || !shipGunCanAim(aimed, item, point)) return false;
         const gap = distance(pose.pivot, point);
         return gap <= veteranWeaponRange(station, def.range) && gap >= (def.weapon.minRange ?? 0)
           && (!blockers.length || mountedFireLaneClear(aimed,item,point,blockers));
@@ -3946,7 +3960,7 @@ function targetGap(from: { x: number; y: number }, target: Unit | Building | Obs
   return strikeGap(from,target);
 }
 
-function nearestEnemyTargetFromPoint(game: Game, owner: Owner, point: { x: number; y: number }, range: number, attacker?: Unit, accepts?: (target:Unit|Building)=>boolean, navalFrame = true): Unit | Building | undefined {
+function nearestEnemyTargetFromPoint(game: Game, owner: Owner, point: { x: number; y: number }, range: number, attacker?: Unit, accepts?: (target:Unit|Building)=>boolean, navalFrame = true, crewedHulls = false): Unit | Building | undefined {
   let best: Unit | Building | undefined;
   let bestScore = Number.NEGATIVE_INFINITY;
   // A melee striker reaches a unit its body touches (see @@@contact-reach): the search reaches as far as the broadest.
@@ -3956,7 +3970,8 @@ function nearestEnemyTargetFromPoint(game: Game, owner: Owner, point: { x: numbe
   forEachNearbyEnemyUnit(game, owner, point, Math.max(range, contact) + (navalFrame ? game.shipReachPadding ?? shipReachPadding(game.units) : 0), (candidate) => {
     if (navalFrame && isInCabin(candidate)) return;
     if(navalFrame && !automaticTargetAllowed(game.units,owner,candidate))return;
-    if (navalFrame && shipProfile(candidate) && shipPassengers(game.units, candidate).some(unit => unit.hp > 0 && !isInCabin(unit) && (!attacker || canReach(game.map, attacker, unit, game.units)))) return;
+    // A gun with a dead zone takes a ship with its crew as one target (see @@@hull-reach); others take the crew first.
+    if (navalFrame && !crewedHulls && shipProfile(candidate) && shipPassengers(game.units, candidate).some(unit => unit.hp > 0 && !isInCabin(unit) && (!attacker || canReach(game.map, attacker, unit, game.units)))) return;
     if(accepts && !accepts(candidate))return;
     const candidateDistance = navalFrame && isShipKind(candidate.kind) ? distanceToHull(candidate, point) ** 2 : distanceSquared(point, candidate);
     const reach = attacker ? strikeReach(attacker, candidate, range) : range;

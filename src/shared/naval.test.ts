@@ -293,6 +293,10 @@ describe("transports", () => {
     issuePlayerCommand(sim, "player", { type: "board", unitIds: ["w1", "w2"], transportId: "transport" });
     run(sim, 600); // Includes the larger hull's bounded turn toward its shore berth.
     expect(shipPassengers(sim.units, unit(sim, "transport")!)).toHaveLength(2);
+    // A gun aims at the hull's near side, not at the crew amidships (see @@@hull-reach), so its workers on deck would
+    // mend it as fast as one gun breaks it: they have no gold to, and it is down to its last few points.
+    unit(sim, "transport")!.hp = 5;
+    sim.players.player!.gold = 0;
     issuePlayerCommand(sim, "enemy", { type: "attack", unitIds: ["warship"], targetId: "transport" });
     run(sim, 1200);
     expect(unit(sim, "transport")).toBeUndefined();

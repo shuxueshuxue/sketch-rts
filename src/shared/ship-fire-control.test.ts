@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { strikePoint, strikePointInBand, type StrikeTarget } from './combat-geometry';
+import { deadZoneAim, strikePoint, type StrikeTarget } from './combat-geometry';
 import { createUnit } from './map';
 import { SHIP_WEAPONS, bestFiringHeading, mountedFireLaneClear, mountedTargetPoint, mountedWeaponPose, shipGunCanAim, shipMounts } from './ship-equipment';
 import { headingDifference } from './ship-navigation';
@@ -19,10 +19,10 @@ function battery(kind: UnitKind = 'bombardShip', weapon: ShipEquipmentKind = 'sh
 function canFire(ship: Unit, item: WorldItem, target: StrikeTarget, heading: number, margin = 0) {
   const posed = { ...ship, sailing: { ...ship.sailing!, heading } };
   const pose = mountedWeaponPose(posed, item)!, mount = shipMounts(posed).find(mount => mount.id === item.mountId)!;
-  // A gun with a dead zone aims at the part of a hull beyond it (see @@@band-aim).
-  const def = SHIP_WEAPONS[item.kind as ShipEquipmentKind], minimum = def.weapon.minRange;
-  const band = minimum ? strikePointInBand(pose.pivot, target, minimum, veteranWeaponRange(ship, def.range), { bearing: heading + mount.bearing, halfArc: mount.halfArc - margin }) : undefined;
-  const point = band ?? strikePoint(pose.pivot, target);
+  // A gun with a dead zone reaches nothing aboard a hull inside it (see @@@hull-reach).
+  const def = SHIP_WEAPONS[item.kind as ShipEquipmentKind];
+  const point = deadZoneAim(pose.pivot, target, def.weapon.minRange ?? 0);
+  if (!point) return false;
   const gap = Math.hypot(point.x - pose.pivot.x, point.y - pose.pivot.y);
   return shipGunCanAim(posed, item, target)
     && gap >= (def.weapon.minRange ?? 0) && gap <= veteranWeaponRange(ship, def.range)
@@ -129,7 +129,8 @@ describe('mounted firing headings', () => {
         id: `gun-${index}`, kind: 'shipCannon', x: ship.x, y: ship.y,
         shipId: ship.id, mountId: mount.id, durability: SHIP_WEAPONS.shipCannon.hp, cooldownRemaining: 0,
       }));
-      const target = createUnit('target', 'enemy', 'transport', 1280, 1170);
+      // Far enough that a broadside turned on it keeps the hull's near edge out of the dead zone (see @@@hull-reach).
+      const target = createUnit('target', 'enemy', 'transport', 1336, 1204);
       target.sailing = { heading: .4, speed: velocity, load: 0, balance: 0, velocityX: velocity, velocityY: 0 };
       const snapshot = { items, units: [ship, target] }, original = JSON.stringify(snapshot);
       freeze(snapshot);
@@ -146,11 +147,11 @@ describe('mounted firing headings', () => {
         return mountedFireLaneClear(posed, gun, point, []);
       };
       const heading = bestFiringHeading(snapshot, ship, target, Math.PI / 36, policy);
-      expect(queries.size).toBeGreaterThan(0);
+      expect(queries.size, `velocity ${velocity}`).toBeGreaterThan(0);
       const posed = { ...ship, sailing: { ...ship.sailing!, heading } };
       expect(items.some(gun => {
         const point = mountedTargetPoint(snapshot, posed, gun, target), pose = mountedWeaponPose(posed, gun)!;
-        return shipGunCanAim(posed, gun, point)
+        return !!point && shipGunCanAim(posed, gun, point)
           && Math.hypot(point.x - pose.pivot.x, point.y - pose.pivot.y) <= SHIP_WEAPONS.shipCannon.range;
       })).toBe(true);
       expect(JSON.stringify(snapshot)).toBe(original);
@@ -178,7 +179,7 @@ describe('mounted firing headings', () => {
     const snapshot = { items, units: [ship, target] };
     const heading = bestFiringHeading(snapshot, ship, target, Math.PI / 36);
     const posed = { ...ship, sailing: { ...ship.sailing!, heading } };
-    const point = mountedTargetPoint(snapshot, posed, item, target), pose = mountedWeaponPose(posed, item)!;
+    const point = mountedTargetPoint(snapshot, posed, item, target)!, pose = mountedWeaponPose(posed, item)!;
     expect(shipGunCanAim(posed, item, point)).toBe(true);
     expect(Math.hypot(point.x - pose.pivot.x, point.y - pose.pivot.y)).toBeLessThanOrEqual(SHIP_WEAPONS.shipMortar.range);
     expect(heading).toBeGreaterThan(bestFiringHeading({ items }, ship, { ...target, sailing: { ...target.sailing!, velocityX: 0, velocityY: 0 } }, Math.PI / 36));
@@ -263,7 +264,8 @@ describe('mounted firing headings', () => {
         if (heading !== ship.sailing!.heading) expect(canFire(ship, item, target, heading), detail).toBe(true);
       }
     }
-    expect(reachable).toBeGreaterThan(50);
+    // A hull whose near edge lies inside a dead zone is out of reach (see @@@hull-reach): fewer cases than band-aim had.
+    expect(reachable).toBeGreaterThan(35);
     expect(unreachable).toBeGreaterThan(20);
   });
 });
