@@ -219,13 +219,13 @@ describe("sketch RTS simulation", () => {
   it("keeps tech cheaper to start but slower to complete", () => {
     expect(UPGRADE_DEFS.weaponTraining.levels).toEqual([
       { cost: 150, researchTime: seconds(34.5), attackMultiplier: 1.15 },
-      { cost: 175, researchTime: seconds(46.5), attackMultiplier: 1.3 },
-      { cost: 200, researchTime: seconds(60), attackMultiplier: 1.45 },
+      { cost: 260, researchTime: seconds(46.5), attackMultiplier: 1.3 },
+      { cost: 400, researchTime: seconds(60), attackMultiplier: 1.45 },
     ]);
     expect(UPGRADE_DEFS.reinforcedPlating.levels).toEqual([
       { cost: 180, researchTime: seconds(40.5), maxHpMultiplier: 1.15 },
-      { cost: 210, researchTime: seconds(52.5), maxHpMultiplier: 1.3 },
-      { cost: 240, researchTime: seconds(66), maxHpMultiplier: 1.45 },
+      { cost: 300, researchTime: seconds(52.5), maxHpMultiplier: 1.3 },
+      { cost: 450, researchTime: seconds(66), maxHpMultiplier: 1.45 },
     ]);
     expect(UPGRADE_DEFS.buildingDurability.levels).toEqual([
       { cost: 200, researchTime: seconds(54), buildingMaxHpMultiplier: 1.2, healingBuildingHealMultiplier: 4 / 3 },
