@@ -162,3 +162,26 @@ it('sends troops up an own fortified tower and points at them on its top', () =>
   expect(point.y).toBeLessThan(archer.y - 30);
   expect(pointerTarget(snapshot, point)).toMatchObject({ kind: 'unit', unit: { id: archer.id } });
 });
+
+describe("an attack on a target across water (see @@@context-reach)", () => {
+  // Columns 10 to 14 are deep water: 160 across, beyond a footman's reach and within an archer's.
+  function channel(width: number) {
+    const game = createGame("bareDuel", { players: ["player", "enemy"], aiPlayers: [] });
+    game.units = [];
+    game.map = { ...game.map, width: 1280, height: 1280, terrain: { cell: 32, cols: 40, rows: 40, cells: Array.from({ length: 1600 }, (_, at) => (at % 40 >= 10 && at % 40 < 10 + width ? "~" : ".")).join("") } };
+    const footman = game.spawnUnit("player", "footman", 200, 640), archer = game.spawnUnit("player", "archer", 260, 640);
+    return { game, footman, archer };
+  }
+
+  it("goes to the units that can strike it, and leaves the rest to walk", () => {
+    const { game, footman, archer } = channel(5);
+    const foe = game.spawnUnit("enemy", "footman", 15.5 * 32, 640);
+    expect(targetCommand(snapshotGame(game), "player", [footman, archer], { kind: "unit", unit: foe })).toEqual({ type: "attack", unitIds: [archer.id], targetId: foe.id, queued: false });
+  });
+
+  it("is refused when none can, instead of an attack nobody carries out", () => {
+    const { game, footman, archer } = channel(20);
+    const foe = game.spawnUnit("enemy", "footman", 1100, 640);
+    expect(targetCommand(snapshotGame(game), "player", [footman, archer], { kind: "unit", unit: foe })).toEqual({ refusal: "unreachable" });
+  });
+});

@@ -1,6 +1,7 @@
 import { targetCommand } from '../../client/relations';
 import { boardUnit } from '../../shared/decks';
 import { createGame, snapshotGame } from '../../shared/sim';
+import type { GameCommand } from '../../shared/types';
 import { defineRecordingScene, timedCommands } from '../scene';
 
 /** The same right-click command as a match, with separated ships and mixed crew. */
@@ -22,7 +23,7 @@ export default defineRecordingScene({
   commands:timedCommands([{at:.5,commands:game=>{
     const target=game.units.filter(unit=>unit.kind==='transport')[1]!;
     const crew=game.units.filter(unit=>!!unit.deck);
-    return [{playerId:'player',command:targetCommand(snapshotGame(game),'player',crew,{kind:'unit',unit:target})!}];
+    return [{playerId:'player',command:targetCommand(snapshotGame(game),'player',crew,{kind:'unit',unit:target}) as GameCommand}];
   }}]),
   defaults:{seconds:40,width:1280,height:720,fps:12,camera:{type:'fixed',x:975,y:875,zoom:1.6}},
 });
