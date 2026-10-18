@@ -5,8 +5,8 @@ import type { GameCommand, GameSnapshot, PlayerId, Unit, WorldItem } from "../sh
 
 // @@@item-slots - The item bar shows what the focused unit carries in its four carrying positions (see CARRY_SLOTS),
 // one button an item, in slot order; a unit carrying nothing has no bar, and worn gear (boots, armor) stays on the
-// equipment panel. The item in slot n answers to digit n (unless digit n recalls a control group), so an item's key does
-// not move when another comes or goes. The bar used to list every item of every selected unit in a row, worn gear
+// equipment panel. The item in slot n answers to Alt+digit n (a bare digit is a control group's, see @@@hotkeys), so an
+// item's key neither moves when another comes or goes nor gives way to a group. The bar used to list every item of every selected unit in a row, worn gear
 // included, so a key moved whenever an item came or went; then it kept four wells, empty ones included, for every unit.
 export type InventorySlot = { slot: (typeof CARRY_SLOTS)[number]; digit: number; item: WorldItem };
 
