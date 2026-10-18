@@ -12,9 +12,9 @@ it('places the spear contact surface on the painted point including mounted tran
 });
 it('scales story equipment about the feet and omits a thrown javelin',()=>{
  const pose={mode:'idle',frame:0,carry:6,carryAim:-4} as const;
- const base=figureWeaponSurface('lancer',pose)!,story=storyFigure('lancer',{},1.25).weaponSurface!(pose)!;
- expect(story.segments[0]!.a[0]).toBeCloseTo(base.segments[0]!.a[0]*1.25);
- expect(story.segments[0]!.a[1]).toBeCloseTo(base.segments[0]!.a[1]*1.25);
+ const base=figureWeaponSurface('lancer',pose)!,story=storyFigure('lancer',{},.85).weaponSurface!(pose)!;
+ expect(story.segments[0]!.a[0]).toBeCloseTo(base.segments[0]!.a[0]*.85);
+ expect(story.segments[0]!.a[1]).toBeCloseTo(base.segments[0]!.a[1]*.85);
  const ogre=creatureWeaponSurface('ogreWarrior',pose)!;
  expect(storyCreature('ogreWarrior',{}).weaponSurface!(pose)).toEqual(ogre);
  expect(creatureGround('ogreWarrior')).toBe(18);

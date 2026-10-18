@@ -4,6 +4,8 @@ import { setScratchCanvasFactory } from './art/scratch-canvas';
 import { clearCanvasArtCache } from './atlas-art';
 import { actionPaintSize } from './art/action-direction';
 import { createPirateBoarding } from './menu-pirate-boarding';
+import { createCapitalStreet } from './menu-capital-street';
+import { unitGlyphScale } from './glyphs';
 import type { UnitAnimationFrame } from './unit-animation';
 import { figures } from './art/appearance';
 import { paintFigure } from './art/painted-units';
@@ -24,21 +26,40 @@ function touchesBorder(paint: (ctx: CanvasRenderingContext2D) => void, tile: num
 
 const POSES: UnitAnimationFrame[] = [{ mode: 'idle', frame: 0 }, ...[0, 2, 4, 6].map(frame => ({ mode: 'walk' as const, frame })), ...[0, 2, 4, 5].map(frame => ({ mode: 'attack' as const, frame }))];
 
-// @@@story-figure-size - The home screen's boarders are painted half again a footman's size and more.
-describe('a larger-than-life figure keeps its head on its card', () => {
-  setScratchCanvasFactory((w, h) => createCanvas(w, h) as unknown as HTMLCanvasElement);
-  const run = createPirateBoarding(1);
-  for (const variant of ['menu/pirate', 'menu/pirate-captain', 'menu/marine']) {
-    const model = run.models!(variant)!;
-    it(`${variant} fits its own card in every pose, and was cut off on a footman's`, () => {
-      setScratchCanvasFactory((w, h) => createCanvas(w, h) as unknown as HTMLCanvasElement);
-      let cut = false;
-      for (const pose of POSES) {
-        const paint = (ctx: CanvasRenderingContext2D) => model.paint(ctx, '#856144', pose, 1);
-        expect(touchesBorder(paint, model.paint.paintSize!(pose)), `${pose.mode} ${pose.frame}`).toBe(false);
-        cut ||= touchesBorder(paint, actionPaintSize(pose, 'footman'));
+// Measure the shared face landmark in world coordinates, rather than costume bounds:
+// the captain's hat may be taller, but his body must match an ordinary footman.
+function faceLandmark(paint: (ctx: CanvasRenderingContext2D) => void, scale: number) {
+  const ctx = createCanvas(256, 256).getContext('2d') as unknown as CanvasRenderingContext2D;
+  ctx.scale(scale, scale);
+  const moveTo = ctx.moveTo.bind(ctx);
+  let point: { x: number; y: number } | undefined;
+  ctx.moveTo = (x, y) => {
+    if (x === -3 && y === -34) {
+      const m = ctx.getTransform();
+      point = { x: m.a * x + m.c * y + m.e, y: m.b * x + m.d * y + m.f };
+    }
+    moveTo(x, y);
+  };
+  paint(ctx);
+  expect(point).toBeDefined();
+  return point;
+}
+
+describe('home figures use their gameplay body size', () => {
+  for (const run of [createPirateBoarding(1), createCapitalStreet()]) {
+    const variants = new Map(run.game.units.filter(unit => unit.variant).map(unit => [unit.variant!, unit]));
+    for (const [variant, unit] of variants) it(variant, () => {
+      const model = run.models!(variant)!;
+      for (const pose of POSES.filter(pose => pose.mode !== 'attack')) {
+        const scale = unitGlyphScale(unit.radius);
+        const gameplay = faceLandmark(ctx => { paintFigure(ctx, unit.kind, '#856144', pose, 1); }, scale);
+        const home = faceLandmark(ctx => model.paint(ctx, '#856144', pose, 1), scale);
+        expect(home, `${pose.mode} ${pose.frame}`).toEqual(gameplay);
       }
-      expect(cut).toBe(true);
+      for (const pose of POSES) {
+        expect(model.paint.paintSize!(pose)).toBe(actionPaintSize(pose, unit.kind));
+        expect(touchesBorder(ctx => model.paint(ctx, '#856144', pose, 1), actionPaintSize(pose, unit.kind))).toBe(false);
+      }
     });
   }
 });

@@ -44,7 +44,7 @@ function pirateModel(captain = false): UnitModel {
         line(b, [[-5,-24],[4,-11]], '#3f3e33', 2.1);
       }
     },
-  }, captain ? 1.65 : 1.5);
+  });
   return { paint, remains: paint.remains };
 }
 function guardModel(): UnitModel {
@@ -59,7 +59,7 @@ function guardModel(): UnitModel {
         for (const y of [-22,-18,-14]) ellipse(b, 1, y, .65, .65, '#d8c8a0');
       }
     },
-  }, 1.45);
+  });
   return { paint, remains: paint.remains };
 }
 const painters: Readonly<Record<string, PropPainter>> = {

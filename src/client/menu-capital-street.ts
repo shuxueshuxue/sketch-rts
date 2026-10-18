@@ -97,7 +97,7 @@ function citizen(cloth: string, style: 'merchant' | 'porter' | 'woman' | 'citize
       }
     },
   };
-  const paint = storyFigure('worker', presentation, style === 'merchant' ? 1.03 : .95);
+  const paint = storyFigure('worker', presentation);
   return { paint, remains: paint.remains };
 }
 
