@@ -32,6 +32,8 @@
     "test:yatu": "node scripts/yatu-player-loop.mjs",
     "test:sdk-effect-proof": "tsx scripts/sdk-effect-proof.ts",
     "audit:crash-inventory": "tsx scripts/crash-inventory.ts",
+    "report:mining-throughput": "tsx scripts/mining-throughput.ts",
+    "report:mining-waiting": "tsx scripts/mining-waiting-review.ts",
     "build": "tsc --noEmit && vite build",
     "build:server-bundle": "node --import tsx scripts/build-server-bundle.ts",
     "build:production": "npm run build && npm run build:server-bundle && node --import tsx scripts/production-client-bootstrap.ts dist",

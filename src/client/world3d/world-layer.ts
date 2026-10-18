@@ -1,3 +1,4 @@
+import { StandingField } from './standing-field';
 import {bloodSurfaceResolver} from '../combat-surfaces';
 import {PresentationViewIndex} from '../presentation-view';
 import { deckRemainsMatrix } from './deck-remains';
@@ -129,6 +130,8 @@ export class World3DLayer {
   private onContextLost=(event:Event)=>{event.preventDefault();this.contextLost=true;this.releaseContextResources();this.cards.invalidateGPU();this.remainsCards.invalidateGPU();this.releaseKeepers();};
   private onContextRestored=()=>{this.contextLost=false;};
   private sun=new THREE.DirectionalLight('#f1dcc0',2.5);
+  // The terrain's trees and boulders, standing up among the world's actors (see @@@standing-field).
+  private standing:StandingField;
   private colorMipPass:CardMipPass={camera:this.camera,physicalWidth:0,physicalHeight:0};
   private shadowMipPass:CardMipPass={camera:this.sun.shadow.camera,physicalWidth:0,physicalHeight:0};
   private colorMipPasses=[this.colorMipPass];
@@ -147,6 +150,7 @@ export class World3DLayer {
   private bridgeUp=new THREE.Vector3();
   private constructor(private renderer:THREE.WebGLRenderer|undefined,rasterBudgetMs:number){
     [this.cards,this.remainsCards]=this.cardBatches(this.scene,rasterBudgetMs);
+    this.standing=new StandingField(this.scene,Math.min(8,renderer?.capabilities.getMaxAnisotropy()??1));
     this.flag.material.name='TeamColor';
     this.magic.name='SpellOrb';this.magic.material.name='TeamColor';
     this.gangway.name='ShipGangway';
@@ -272,7 +276,7 @@ export class World3DLayer {
     }
   }
   private template(key:string,name:string){const id=`${key}:${name}`;let model=this.templates.get(id);if(!model){model=this.library.component(key,name);if(model)this.templates.set(id,model);}return model;}
-  reset(){this.lastTick=-1;this.snapshot=undefined;this.indexedUnits=this.indexedBuildings=this.indexedEffects=undefined;this.indexCounts='';this.view=undefined;this.currentFrame=undefined;this.viewIndex.reset();this.activeIndex=this.viewIndex;this.positions.clear();this.combatAnchors.clear();this.combatInk.clear();this.entities=new Map();this.ships.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.recoil.clear();this.deckMotion.clear();this.facing=new CrewFacingTracker();this.sailMotion.reset();this.rigPoses.clear();this.transforms.length=0;this.transformCount=0;this.batches.dispose();this.cards.dispose();this.remainsCards.dispose();this.selection.clear();this.water.prepare(undefined);}
+  reset(){this.lastTick=-1;this.snapshot=undefined;this.indexedUnits=this.indexedBuildings=this.indexedEffects=undefined;this.indexCounts='';this.view=undefined;this.currentFrame=undefined;this.viewIndex.reset();this.activeIndex=this.viewIndex;this.positions.clear();this.combatAnchors.clear();this.combatInk.clear();this.entities=new Map();this.ships.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.recoil.clear();this.deckMotion.clear();this.facing=new CrewFacingTracker();this.sailMotion.reset();this.rigPoses.clear();this.transforms.length=0;this.transformCount=0;this.batches.dispose();this.cards.dispose();this.remainsCards.dispose();this.selection.clear();this.water.prepare(undefined);this.standing.dispose();}
   private offscreenPosition(id:string):ActorPosition|undefined{
     const frame=this.currentFrame,unit=this.activeIndex.units.get(id);
     if(!frame||!unit||unit.deck||isInCabin(unit)||shipProfile(unit))return undefined;
@@ -314,6 +318,7 @@ export class World3DLayer {
     // rendered is allowed to bind scene terrain, including after a map change.
     this.water.prepare(snapshot.map.terrain);
     this.water.update(now,frame.reducedMotion);
+    this.standing.update(snapshot.map.terrain,{x:frame.view.x,y:frame.view.y,width:frame.view.width/zoom,height:frame.view.height/zoom});
     const cx=frame.view.x+frame.view.width/(2*zoom),cy=frame.view.y+frame.view.height/(2*zoom),extent=Math.max(frame.view.width,frame.view.height)/zoom+400;
     this.shadow.position.set(cx,-.1,cy);this.shadow.scale.set(extent,extent,1);
     this.sun.position.set(cx-450,650,cy+250);this.sun.target.position.set(cx,0,cy);
@@ -579,7 +584,7 @@ export class World3DLayer {
     if(this.disposed)return;this.disposed=true;
     this.eventCanvas?.removeEventListener('webglcontextlost',this.onContextLost);this.eventCanvas?.removeEventListener('webglcontextrestored',this.onContextRestored);this.eventCanvas=undefined;this.reset();
     this.selection.dispose();this.combatInk.dispose();this.releaseKeepers();
-    this.water.dispose();for(const rig of this.rigModels.values())rig?.dispose();this.rigModels.clear();
+    this.water.dispose();this.standing.dispose();for(const rig of this.rigModels.values())rig?.dispose();this.rigModels.clear();
     // Decoded models are the application cache shared by other layers and UI
     // portraits. This layer owns only instances, rigs, cards and render targets.
     this.templates.clear();this.bounds.clear();
