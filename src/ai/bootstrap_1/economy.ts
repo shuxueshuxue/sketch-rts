@@ -21,6 +21,7 @@ import { distance } from '../policy/spatial';
 import { controlledMercenaryGoals } from './mercenary-goals';
 import { shoppingGoals } from './shopping';
 import { routeArrivals } from '../../shared/route-selection';
+import { sameGround } from '../../shared/terrain';
 import { colonyRecoveryGoals } from './colony-recovery';
 import { armedFoes, retreatLandTravelTicks } from './safe-land-route';
 import { freeIncomeCapitalGoals } from './free-income-capital';
@@ -206,9 +207,19 @@ export function planBootstrapEconomy(snapshot: GameSnapshot, owner: PlayerId, op
   const player = snapshot.players[owner]!;
   let gold = player.gold;
   let supply = projectedSupplyUsed(snapshot, owner);
-  const navalReserve = Math.max(navalBudgetReserve(snapshot, owner, options),
-    ...goals.filter(goal => goal.id === 'naval:islandHall'
-      && readV6Intel(snapshot, owner, options).intrusion === undefined).map(goal => goal.cost));
+  const voyageReserve = navalBudgetReserve(snapshot, owner, options);
+  const capital = goals.filter(goal => goal.id === 'naval:islandHall'
+    && readV6Intel(snapshot, owner, options).intrusion === undefined);
+  const navalReserve = Math.max(voyageReserve, ...capital.map(goal => goal.cost));
+  // A second hall on working colony land must not starve that colony's
+  // higher-ranked care. Real overseas capital keeps its protected budget.
+  // Naval hall issuers only reserve their builder in the supplied set.
+  const nextHall = voyageReserve === 0 ? capital[0]?.issue(new Set()) : undefined;
+  const localCare = new Set(nextHall?.type === 'build' && nextHall.buildingKind === 'townHall'
+    ? snapshot.buildings.filter(hall => hall.owner === owner && hall.kind === 'townHall' && hall.complete
+      && sameGround(snapshot.map, hall, nextHall)
+      && snapshot.resources.some(mine => mine.amount > 0 && distance(hall, mine) < GOLD_MINE_RULES.baseRange))
+      .map(hall => `colony:recovery:${hall.id}`) : []);
   const builders = new Set<string>();
   const commands: GameCommand[] = [];
   const bought = new Set<string>();
@@ -216,7 +227,7 @@ export function planBootstrapEconomy(snapshot: GameSnapshot, owner: PlayerId, op
   const labs = new Set<string>();
   let savingDiscretionary = false;
   for (const goal of goals) {
-    const reservedPurchase = navalReservePurchase(goal.id);
+    const reservedPurchase = navalReservePurchase(goal.id) || localCare.has(goal.id);
     if (savingDiscretionary && !reservedPurchase) continue;
     if (goal.producer && producers.has(goal.producer)) continue;
     // Fund the existing production wave before spending the remainder on more factories.
