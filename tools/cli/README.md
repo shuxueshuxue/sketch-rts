@@ -26,8 +26,9 @@ On a machine the CLI keeps:
 
 A browser run (`yatu`, `shot`) also needs two fields on its machine: `ports: [from, to]`, the range it may serve on
 (each run takes a port and port + 20000 for vite's HMR, both unanswered; a lane's own range on a shared machine), and
-`browser: { playwright, browsersPath }`, the Playwright install it drives, which is not a repo dependency. A machine
-without them refuses a browser run with exit 2.
+`browser: { playwright, browsersPath, args }`, the Playwright install it drives (not a repo dependency) and the flags
+its Chromium starts with. mac1 names `["--use-angle=metal", "--enable-gpu"]`: frame and GPU times mean something only
+on a real GPU, not a software renderer's. A machine without `ports` or `browser` refuses a browser run with exit 2.
 
 Ports are a lane's: several sessions on one computer share `~/.config/sketch/machines.json`, so a lane with its own
 range keeps its own copy and points `SKETCH_MACHINES` at it. Two runs that pick the same port anyway are kept apart by
@@ -81,12 +82,19 @@ home screen once the page has reached the server, and hands the scene:
   the open seats, started, and paused: the match moves only when the scene ticks it (a reset keeps the pause). On a commit
   from before the pause held with a page connected (@@@room-paused), the connected page still drives the room live.
 - `scenario(options)`: resets the game (`POST /api/rooms/:id/reset`), and the page loads it.
-- `tick(n)`: advances the room and waits until the page shows it (reloading a page that does not follow).
+- `tick(n)`: advances the room and waits until the page shows it (a page that does not follow fails the scene).
+- `reload()`: loads the page into the room again and waits until it shows the room's tick: after a scene moved the game through
+  `api()` (thousands of ticks, a reset onto another map) instead of having the page follow each frame.
 - `snapshot()`, `order(playerId, command)` (a command posted for any seat), `api(url, body?)`.
 - `camera(x, y, zoom?)`, `select(ids)`, `command(command)` (sent as the player, refused as the player would be),
   `screenOf(x, y)`, `click(x, y, button?)`, `drag(x0, y0, x1, y1)`, `key(k)`.
-- `shot(name, clip?)` at every `--sizes` viewport, `readDom(selector)`, `must(condition, message)`, `wait(ms)`, and
-  `page` (Playwright's) for anything else.
+- `shot(name, clip?, page?)` at every `--sizes` viewport (of a second player's page when one is given), `record(name, data)` (a probe's measurements, beside the shots as
+  `<name>.json`), `readDom(selector)`, `must(condition, message)`, `wait(ms)`, and `page` (Playwright's) for anything
+  else.
+
+A probe scene (`home-perf`, `terrain-perf`) measures rather than shoots: it records what a trace and the perf overlay (`?perf=1`) say.
+Read frame JS and GPU times from it; mac1's headless browser paces an idle page at about ten frames a second, so its
+gaps between frames are that pacing, not the game's.
 
 `camera`, `select`, `command` and `screenOf` use the client's debug hooks (`window.__sketchRtsDebug`, see
 @@@debug-hooks), which exist only in the dev build; the driver also waits on its `ready()` (the first screen opened, no

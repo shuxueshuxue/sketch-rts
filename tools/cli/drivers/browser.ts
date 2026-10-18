@@ -10,7 +10,7 @@ import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 type Size = { name: string; width: number; height: number };
-type Options = { scene: string; sha: string; out: string; leases: string; ports: [number, number]; playwright: string; browsersPath?: string; sizes: Size[]; label: string; at?: number[]; locale?: string };
+type Options = { scene: string; sha: string; out: string; leases: string; ports: [number, number]; playwright: string; browsersPath?: string; sizes: Size[]; label: string; at?: number[]; locale?: string; launchArgs?: string[] };
 type ShotRecord = { name: string; size: string; file: string; dom: Record<string, unknown> };
 
 class EnvError extends Error {}
@@ -18,7 +18,7 @@ class SceneFailure extends Error {}
 
 const options = JSON.parse(process.argv[2]!) as Options;
 mkdirSync(options.out, { recursive: true });
-const shots: ShotRecord[] = [], errors: string[] = [];
+const shots: ShotRecord[] = [], records: { name: string; file: string }[] = [], errors: string[] = [];
 let server: ChildProcess | undefined;
 
 let leased: string | undefined;
@@ -118,7 +118,8 @@ async function main() {
   let chromium: { launch: (options?: object) => Promise<any> };
   try { ({ chromium } = createRequire(import.meta.url)(options.playwright)); }
   catch (error) { throw new EnvError(`Playwright not found at ${options.playwright} ("browser.playwright" in machines.json): ${(error as Error).message}`); }
-  const browser = await chromium.launch({ headless: true });
+  // A machine may name its browser's flags ("browser.args"): mac1 draws on Metal, where frame and GPU times mean something.
+  const browser = await chromium.launch({ headless: true, args: options.launchArgs ?? [] });
   try {
     const desktop = options.sizes[0]!;
     // The game speaks the browser's language (see detectLocale): `--locale zh-CN` shoots it in Chinese.
@@ -228,6 +229,15 @@ function createScene(page: any, base: string) {
       for (const started = Date.now(); Date.now() - started < 60_000; await wait(200)) if (await liveTick() >= target) return;
       must(false, `the page shows tick ${await liveTick()}, the room is at ${target}`);
     },
+    /** Loads the page into the room again and waits until it shows the room's tick: for a scene that moved the game with
+     * api() (a reset onto another map, thousands of ticks) rather than having the page follow every frame. */
+    async reload() {
+      const target = (await scene.snapshot() as { tick: number }).tick;
+      await page.reload({ waitUntil: "load" });
+      await page.waitForFunction((target: number) => document.querySelector("[data-main-menu]")?.classList.contains("hidden") && ((window as any).__sketchRtsView?.tick ?? -1) >= target, target, { timeout: 180_000 });
+      await loaded();
+      await settle();
+    },
     /** Centres the camera on a world point: the dev hook, or on an older commit a click on the minimap. */
     async camera(x: number, y: number, zoom?: number) {
       if (await hooks()) await page.evaluate(({ x, y, zoom }: { x: number; y: number; zoom?: number }) => (window as any).__sketchRtsDebug.camera(x, y, zoom), { x, y, zoom });
@@ -267,12 +277,20 @@ function createScene(page: any, base: string) {
         text: (element as HTMLElement).innerText?.slice(0, 500), visible: !!(element as HTMLElement).offsetParent,
         data: { ...(element as HTMLElement).dataset } })), selector);
     },
-    /** A screenshot at every requested size, with what the page shows read back. */
-    async shot(name: string, clip?: { x: number; y: number; width: number; height: number }) {
+    /** Measurements a probe scene brings back beside its shots, as <name>.json. */
+    record(name: string, data: unknown) {
+      must(/^[a-z0-9][a-z0-9-]*$/.test(name), `record names are kebab-case: ${name}`);
+      const file = join(options.out, `${name}.json`);
+      writeFileSync(file, `${JSON.stringify(data, null, 2)}\n`);
+      records.push({ name, file });
+    },
+    /** A screenshot at every requested size, with what the page shows read back; of another page (a second player's)
+     * when one is given. */
+    async shot(name: string, clip?: { x: number; y: number; width: number; height: number }, from: any = page) {
       must(/^[a-z0-9][a-z0-9-]*$/.test(name), `shot names are kebab-case: ${name}`);
       for (const size of options.sizes) {
-        if (options.sizes.length > 1) { await page.setViewportSize({ width: size.width, height: size.height }); await wait(600); }
-        const dom = await page.evaluate(() => ({
+        if (options.sizes.length > 1) { await from.setViewportSize({ width: size.width, height: size.height }); await wait(600); }
+        const dom = await from.evaluate(() => ({
           text: document.body.innerText.slice(0, 4000),
           selection: (document.querySelector("[data-selection]") as HTMLElement | null)?.innerText ?? null,
           commands: [...document.querySelectorAll("[data-command-label]")].filter((element) => (element as HTMLElement).offsetParent).map((element) => (element as HTMLElement).dataset.commandLabel),
@@ -280,11 +298,11 @@ function createScene(page: any, base: string) {
         }));
         if (!hasCjkFont && /[\u3400-\u9fff]/.test(dom.text)) throw new EnvError(`The page shows Chinese text and this machine has no CJK font (fc-list :lang=zh is empty); shoot it on a machine that has one`);
         const file = join(options.out, `${name}-${size.name}.png`);
-        await page.screenshot({ path: file, ...(clip && size === options.sizes[0] ? { clip } : {}) });
+        await from.screenshot({ path: file, ...(clip && size === options.sizes[0] ? { clip } : {}) });
         shots.push({ name, size: size.name, file, dom });
         writeFileSync(`${file}.json`, `${JSON.stringify(dom, null, 2)}\n`);
       }
-      if (options.sizes.length > 1) await page.setViewportSize({ width: options.sizes[0]!.width, height: options.sizes[0]!.height });
+      if (options.sizes.length > 1) await from.setViewportSize({ width: options.sizes[0]!.width, height: options.sizes[0]!.height });
     },
   };
   return scene;
@@ -292,11 +310,11 @@ function createScene(page: any, base: string) {
 
 main().then(() => {
   stopServer();
-  process.stdout.write(`${JSON.stringify({ ok: true, shots, errors })}\n`);
+  process.stdout.write(`${JSON.stringify({ ok: true, shots, records, errors })}\n`);
   process.exit(0);
 }, (error: unknown) => {
   stopServer();
   const message = error instanceof Error ? error.message : String(error);
-  process.stdout.write(`${JSON.stringify({ ok: false, failure: message, shots, errors })}\n`);
+  process.stdout.write(`${JSON.stringify({ ok: false, failure: message, shots, records, errors })}\n`);
   process.exit(error instanceof SceneFailure ? 1 : 2);
 });
