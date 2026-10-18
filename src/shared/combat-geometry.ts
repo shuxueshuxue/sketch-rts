@@ -49,6 +49,47 @@ export function strikePoint(from: Point, target: StrikeTarget): Point {
   if (gap <= target.radius) return from;
   return { x: target.x + dx * target.radius / gap, y: target.y + dy * target.radius / gap };
 }
+// @@@band-aim - A weapon with a minimum range aims at the part of a hull lying in its band and its traverse: the nearest
+// point of the hull at least `minimum` and at most `maximum` away, within `arc` when given, so a ship lying across the
+// dead zone is still struck on its far side. Any other body is struck where it is aimed or not at all (undefined), and
+// so is a hull no part of which lies in the band.
+export function strikePointInBand(from: Point, target: StrikeTarget, minimum: number, maximum: number, arc?: { bearing: number; halfArc: number }): Point | undefined {
+  if (!("order" in target)) return undefined;
+  const profile = shipProfile(target);
+  if (!profile) return undefined;
+  const angle = target.sailing?.heading ?? 0, c = detCos(angle), s = detSin(angle);
+  const hull = profile.hull.map(p => ({ x: target.x + p.x * c - p.y * s, y: target.y + p.x * s + p.y * c }));
+  let best: Point | undefined, bestGap = Infinity;
+  const consider = (p: Point) => {
+    const dx = p.x - from.x, dy = p.y - from.y, gap = Math.hypot(dx, dy);
+    if (gap < minimum || gap > maximum || gap >= bestGap) return;
+    if (arc) {
+      let off = Math.atan2(dy, dx) - arc.bearing;
+      off = Math.atan2(Math.sin(off), Math.cos(off));
+      if (Math.abs(off) > arc.halfArc + 1e-7) return;
+    }
+    best = p; bestGap = gap;
+  };
+  const rays = arc ? [arc.bearing - arc.halfArc, arc.bearing + arc.halfArc] : [];
+  for (let index = 0; index < hull.length; index++) {
+    const a = hull[index]!, b = hull[(index + 1) % hull.length]!, dx = b.x - a.x, dy = b.y - a.y, fx = a.x - from.x, fy = a.y - from.y;
+    consider(a);
+    // Where the edge crosses the dead zone's rim and the band's outer rim, a hair inside the band so every exact
+    // range check downstream agrees.
+    for (const radius of [minimum + 1e-6, maximum - 1e-6]) {
+      const A = dx * dx + dy * dy, B = 2 * (fx * dx + fy * dy), C = fx * fx + fy * fy - radius * radius, disc = B * B - 4 * A * C;
+      if (A > 0 && disc >= 0) for (const t of [(-B - Math.sqrt(disc)) / (2 * A), (-B + Math.sqrt(disc)) / (2 * A)]) if (t >= 0 && t <= 1) consider({ x: a.x + dx * t, y: a.y + dy * t });
+    }
+    // Where the edge crosses the traverse's edges.
+    for (const ray of rays) {
+      const ux = Math.cos(ray), uy = Math.sin(ray), denominator = dx * uy - dy * ux;
+      if (Math.abs(denominator) < 1e-12) continue;
+      const t = (fy * ux - fx * uy) / denominator;
+      if (t >= 0 && t <= 1) consider({ x: a.x + dx * t, y: a.y + dy * t });
+    }
+  }
+  return best;
+}
 export function strikeGap(from: Point, target: StrikeTarget) {
   const point = strikePoint(from, target);
   return Math.hypot(point.x - from.x, point.y - from.y);
