@@ -63,6 +63,9 @@ describe('boarding a ship of the line', () => {
 
   it('still lets the quarry sail out of a boarding with a helm order of its own', () => {
     const { game, source, target } = sea(300);
+    // This is about the helm order. Both broadsides now trade fire on the way in (see @@@band-aim), and a quarry whose
+    // rigging is shot away could not sail out at all, so every gun is wrecked here.
+    for (const item of game.items) item.durability = 0;
     company(game, source);
     issuePlayerCommand(game, 'player', { type: 'boardShip', unitIds: [source.id], targetId: target.id });
     expect(tickUntil(game, () => source.sailing?.gangway?.phase === 'deploying', 60 * 20)).toBe(true);

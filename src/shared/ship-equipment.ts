@@ -310,7 +310,8 @@ export function mountedFireLaneClear(ship: Unit, item: WorldItem, point: Point, 
     const reach=Math.hypot(pose.muzzle.x-pose.pivot.x,pose.muzzle.y-pose.pivot.y);
     const dx=point.x-pose.pivot.x,dy=point.y-pose.pivot.y,length=Math.hypot(dx,dy) || 1;
     const muzzle={x:pose.pivot.x+dx/length*reach,y:pose.pivot.y+dy/length*reach};
-    return shipFireLaneClear(muzzle,point,SHIP_WEAPONS[item.kind as ShipEquipmentKind].weapon,blockers,ship.id);
+    const weapon=SHIP_WEAPONS[item.kind as ShipEquipmentKind].weapon;
+    return shipFireLaneClear(muzzle,point,weapon,blockers,ship.id,Math.max(0,(weapon.minRange ?? 0)-reach));
 }
 export function rebuildShipFittings(snapshot: GameSnapshot, ship: Unit) {
     ship.fittings = installedWeapons(snapshot, ship).map(item => {const mount=shipMounts(ship).find(mount => mount.id === item.mountId)!;return { ...mount,accepts:[...mount.accepts],id:item.id };});

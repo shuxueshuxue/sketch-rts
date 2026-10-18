@@ -1383,7 +1383,7 @@ function updateMountedWeapons(game:Game,starts:Map<string,{x:number;y:number;hea
       const proxy=aimMountedWeapon(game,ship,item,point,pose);
       if(!proxy || !target)continue;
       const launchPose=mountedWeaponPose(ship,item)!;
-      if(blockers.length && !shipFireLaneClear(launchPose.muzzle,point,def.weapon,blockers))continue;
+      if(blockers.length && !shipFireLaneClear(launchPose.muzzle,point,def.weapon,blockers,undefined,Math.max(0,(def.weapon.minRange ?? 0)-distance(launchPose.pivot,launchPose.muzzle))))continue;
       fireWeapon(game,ship,target,Math.round(def.damage*(nonStarUnitStats(game,ship).attackDamage/Math.max(1,weaponRules(game,ship).attackDamage))*outgoingDamageMultiplier(game,ship)),def.weapon,range,{},target.id,{item,pose:launchPose,aimPoint:point});
       markAimShot(proxy);item.cooldownRemaining=attackCooldownOf(game,ship,def.cooldown);if(item.mountId==="bow" && !intrinsic)ship.cooldown=item.cooldownRemaining;
     }

@@ -63,9 +63,10 @@ describe('mounted firing headings', () => {
   it('does not let its own carrying hull obstruct a traversed mounted muzzle', () => {
     const {ship,item}=battery('warship','shipCannon');
     ship.sailing!.heading=0;
-    const point={x:1300,y:1000};
+    // The blocker lies across the cannon's band (240-312), not inside its dead zone, which a ball passes over.
+    const point={x:1340,y:1000};
     expect(mountedFireLaneClear(ship,item,point,[ship])).toBe(true);
-    const blocker=createUnit('ally','player','transport',1220,1000);
+    const blocker=createUnit('ally','player','transport',1270,1000);
     blocker.sailing={heading:Math.PI/2,speed:0,load:0,balance:0};
     expect(mountedFireLaneClear(ship,item,point,[ship,blocker])).toBe(false);
     blocker.y+=300;
@@ -91,8 +92,8 @@ describe('mounted firing headings', () => {
   });
 
   it('reuses identical lane queries only within one selection, then observes a moved friendly hull', () => {
-    const {ship,item,items}=battery('warship','shipCannon'),target={x:1300,y:1000};
-    const blocker=createUnit('ally','player','transport',1220,1000);
+    const {ship,item,items}=battery('warship','shipCannon'),target={x:1340,y:1000};
+    const blocker=createUnit('ally','player','transport',1270,1000);
     blocker.sailing={heading:Math.PI/2,speed:0,load:0,balance:0};
     const select=()=>{
       const queried=new Set<number>();

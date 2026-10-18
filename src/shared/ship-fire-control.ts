@@ -9,7 +9,8 @@ import { boltIntersection } from './weapons';
 /** Low, direct fire needs a clear lane through the actual friendly hulls.
  * Mortar shells pass over them; a cannon barrel's protruding muzzle, rather
  * than its deck pivot, begins the lane. The caller owns alliance selection. */
-export function shipFireLaneClear(from: Point, to: Point, weapon: WeaponDef, blockers: readonly Unit[], excludedId?: string): boolean {
+/** `clearance`: how far from `from` a bolt passes over what lies there (its gun's minimum range, reckoned from the muzzle). */
+export function shipFireLaneClear(from: Point, to: Point, weapon: WeaponDef, blockers: readonly Unit[], excludedId?: string, clearance = 0): boolean {
   if (weapon.delivery !== 'bolt' && weapon.delivery !== 'cone') return true;
   const width = weapon.delivery === 'bolt' ? weapon.radius ?? 12 : 0;
   const left = Math.min(from.x, to.x) - width, right = Math.max(from.x, to.x) + width;
@@ -22,7 +23,7 @@ export function shipFireLaneClear(from: Point, to: Point, weapon: WeaponDef, blo
     // clips the complete rotated polygon, including its tapered bow/stern.
     const radius = Math.hypot(profile.length, profile.beam) / 2;
     if (unit.x + radius < left || unit.x - radius > right || unit.y + radius < top || unit.y - radius > bottom) continue;
-    if (boltIntersection(from, to, unit, width, weapon.delivery === 'bolt' ? weapon.minRange ?? 0 : 0) !== undefined) return false;
+    if (boltIntersection(from, to, unit, width, weapon.delivery === 'bolt' ? clearance : 0) !== undefined) return false;
   }
   return true;
 }

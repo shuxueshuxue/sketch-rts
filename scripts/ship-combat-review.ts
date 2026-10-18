@@ -3,7 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { boardUnit } from '../src/shared/decks';
 import { strikePoint } from '../src/shared/combat-geometry';
-import { installedWeapons, mountedWeaponPose, rebuildShipFittings, SHIP_WEAPONS, shipGunCanAim, shipMounts } from '../src/shared/ship-equipment';
+import { installedWeapons, mountedTargetPoint, mountedWeaponPose, rebuildShipFittings, SHIP_WEAPONS, shipGunCanAim, shipMounts } from '../src/shared/ship-equipment';
 import { hullContact, localToWorld, shipProfile } from '../src/shared/ship-geometry';
 import { headingDifference, hullFits } from '../src/shared/ship-navigation';
 import { shipMotionLimits } from '../src/shared/ship-handling';
@@ -108,7 +108,8 @@ function weaponFrame(game: Game, unit: Unit, fallback?: Unit) {
   const target = game.units.find(candidate => candidate.id === id && candidate.hp > 0) ?? fallback;
   return installedWeapons(game, unit).map(item => {
     const pose = mountedWeaponPose(unit, item)!, mount = shipMounts(unit).find(mount => mount.id === item.mountId)!, def = SHIP_WEAPONS[item.kind as ShipEquipmentKind];
-    const point = target && strikePoint(pose.pivot, target), gap = point ? Math.hypot(point.x - pose.pivot.x, point.y - pose.pivot.y) : Infinity;
+    // The point the gun itself takes: within its band and traverse when it has a dead zone (see @@@band-aim).
+    const point = target && mountedTargetPoint(game, unit, item, target, pose), gap = point ? Math.hypot(point.x - pose.pivot.x, point.y - pose.pivot.y) : Infinity;
     const live = unit.hp > 0 && (item.durability ?? 1) > 0 && target !== undefined && target.hp > 0;
     const inRange = live && gap <= def.range && gap >= (def.weapon.minRange ?? 0), inArc = live && !!point && shipGunCanAim(unit, item, point);
     return { id: item.id, kind: item.kind, mountId: item.mountId, ...pose, bearing: mount.bearing, halfArc: mount.halfArc, range: def.range, minRange: def.weapon.minRange ?? 0,
