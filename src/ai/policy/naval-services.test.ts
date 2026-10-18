@@ -140,7 +140,8 @@ describe("physical naval service tasks", () => {
   it("honors an explicit player attack on a hull being boarded", () => {
     const game = sea(),
       ship = game.spawnUnit("player", "warship", 900, 900),
-      prize = game.spawnUnit("enemy", "transport", 1150, 900),
+      // Its near side out of the bow gun's dead zone (see @@@hull-reach).
+      prize = game.spawnUnit("enemy", "transport", 1340, 900),
       crew = game.spawnUnit("player", "footman", 900, 900);
     boardUnit(ship, crew, game.units);
     syncDecks(game.units);

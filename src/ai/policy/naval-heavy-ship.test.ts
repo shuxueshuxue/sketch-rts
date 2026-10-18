@@ -51,7 +51,8 @@ describe("heavy broadside ships in shared naval policy", () => {
 
   it("counts its real battery and assigns it to an engagement with a nearby enemy ship", () => {
     const game = coastFleet(), ship = game.spawnUnit("player", "shipOfTheLine", 1600, 1000);
-    const enemy = game.spawnUnit("enemy", "warship", 1600, 1300);
+    // Its near side out of the broadside's dead zone (see @@@hull-reach).
+    const enemy = game.spawnUnit("enemy", "warship", 1600, 1340);
     const options = { version: "v8" as const, memory: createAiPolicyMemory() };
     const snapshot = snapshotGame(game);
     expect(combatCapability(snapshot, ship)).toEqual({ armed: true, range: 312, dps: 40 });
