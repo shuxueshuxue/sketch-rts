@@ -144,6 +144,9 @@ function createScene(page: any, base: string) {
       const helpers = await new AsyncFunction("page", "must", `${flow.roomUiFlowCode}\nreturn { onlineSetup: typeof onlineSetup === "function" ? onlineSetup : undefined };`)(page, must);
       must(helpers.onlineSetup, "this commit's scripts/room-ui-flow.mjs has no onlineSetup");
       await page.click("[data-open-room-browser]");
+      // A cold copy's first page waits on vite's dependency pass; the flow's own waits are for a warm page.
+      await page.waitForSelector("[data-create-room]", { state: "visible", timeout: 60_000 });
+      await wait(500);
       roomId = await helpers.onlineSetup(map);
       const slots = await page.locator("[data-slot-id]").count();
       if (seats !== undefined) must(slots === seats, `${map} has ${slots} seats, not ${seats}`);
