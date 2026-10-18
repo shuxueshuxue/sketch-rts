@@ -1,0 +1,815 @@
+{
+  "walkingSpeed": 60,
+  "rows": [
+    {
+      "id": "sapphireArchipelago",
+      "name": "蓝宝群岛",
+      "size": 10240,
+      "players": 6,
+      "camps": 12,
+      "tiers": {
+        "green": 0,
+        "orange": 6,
+        "red": 6
+      },
+      "strength": 144,
+      "campsPerPlayer": 2,
+      "strengthPerPlayer": 24,
+      "transportOnlyCamps": 12,
+      "perStart": [
+        {
+          "player": "player",
+          "x": 8493.94505874975,
+          "y": 3634.7257153851533,
+          "campsWithin120s": 0,
+          "greenWithin30s": 0,
+          "nearestCamp": null,
+          "allocatedCamps": 0,
+          "allocatedStrength": 0
+        },
+        {
+          "player": "enemy",
+          "x": 8093.257791439091,
+          "y": 7299.284989542839,
+          "campsWithin120s": 0,
+          "greenWithin30s": 0,
+          "nearestCamp": null,
+          "allocatedCamps": 0,
+          "allocatedStrength": 0
+        },
+        {
+          "player": "enemy2",
+          "x": 4719.31273268934,
+          "y": 8784.559274157687,
+          "campsWithin120s": 0,
+          "greenWithin30s": 0,
+          "nearestCamp": null,
+          "allocatedCamps": 0,
+          "allocatedStrength": 0
+        },
+        {
+          "player": "player-4",
+          "x": 1746.0549412502492,
+          "y": 6605.274284614844,
+          "campsWithin120s": 0,
+          "greenWithin30s": 0,
+          "nearestCamp": null,
+          "allocatedCamps": 0,
+          "allocatedStrength": 0
+        },
+        {
+          "player": "player-5",
+          "x": 2146.7422085609087,
+          "y": 2940.715010457161,
+          "campsWithin120s": 0,
+          "greenWithin30s": 0,
+          "nearestCamp": null,
+          "allocatedCamps": 0,
+          "allocatedStrength": 0
+        },
+        {
+          "player": "player-6",
+          "x": 5520.687267310659,
+          "y": 1455.440725842313,
+          "campsWithin120s": 0,
+          "greenWithin30s": 0,
+          "nearestCamp": null,
+          "allocatedCamps": 0,
+          "allocatedStrength": 0
+        }
+      ]
+    },
+    {
+      "id": "grandEstuary",
+      "name": "八方河湾",
+      "size": 10240,
+      "players": 8,
+      "camps": 16,
+      "tiers": {
+        "green": 0,
+        "orange": 8,
+        "red": 8
+      },
+      "strength": 168,
+      "campsPerPlayer": 2,
+      "strengthPerPlayer": 21,
+      "transportOnlyCamps": 0,
+      "perStart": [
+        {
+          "player": "player",
+          "x": 1740.8000000000002,
+          "y": 1587.2,
+          "campsWithin120s": 9,
+          "greenWithin30s": 0,
+          "nearestCamp": 940.8,
+          "allocatedCamps": 2,
+          "allocatedStrength": 21
+        },
+        {
+          "player": "enemy",
+          "x": 3993.6000000000004,
+          "y": 1587.2,
+          "campsWithin120s": 13,
+          "greenWithin30s": 0,
+          "nearestCamp": 953.6,
+          "allocatedCamps": 2,
+          "allocatedStrength": 21
+        },
+        {
+          "player": "enemy2",
+          "x": 6246.4,
+          "y": 1587.2,
+          "campsWithin120s": 14,
+          "greenWithin30s": 0,
+          "nearestCamp": 940.8,
+          "allocatedCamps": 2,
+          "allocatedStrength": 21
+        },
+        {
+          "player": "player-4",
+          "x": 8499.2,
+          "y": 1587.2,
+          "campsWithin120s": 8,
+          "greenWithin30s": 0,
+          "nearestCamp": 940.8,
+          "allocatedCamps": 2,
+          "allocatedStrength": 21
+        },
+        {
+          "player": "player-5",
+          "x": 1740.8000000000002,
+          "y": 8652.8,
+          "campsWithin120s": 9,
+          "greenWithin30s": 0,
+          "nearestCamp": 940.8,
+          "allocatedCamps": 2,
+          "allocatedStrength": 21
+        },
+        {
+          "player": "player-6",
+          "x": 3993.6000000000004,
+          "y": 8652.8,
+          "campsWithin120s": 13,
+          "greenWithin30s": 0,
+          "nearestCamp": 953.6,
+          "allocatedCamps": 2,
+          "allocatedStrength": 21
+        },
+        {
+          "player": "player-7",
+          "x": 6246.4,
+          "y": 8652.8,
+          "campsWithin120s": 14,
+          "greenWithin30s": 0,
+          "nearestCamp": 940.8,
+          "allocatedCamps": 2,
+          "allocatedStrength": 21
+        },
+        {
+          "player": "player-8",
+          "x": 8499.2,
+          "y": 8652.8,
+          "campsWithin120s": 9,
+          "greenWithin30s": 0,
+          "nearestCamp": 940.8,
+          "allocatedCamps": 2,
+          "allocatedStrength": 21
+        }
+      ]
+    },
+    {
+      "id": "brokenSea",
+      "name": "碎海",
+      "size": 7680,
+      "players": 4,
+      "camps": 8,
+      "tiers": {
+        "green": 0,
+        "orange": 8,
+        "red": 0
+      },
+      "strength": 56,
+      "campsPerPlayer": 2,
+      "strengthPerPlayer": 14,
+      "transportOnlyCamps": 8,
+      "perStart": [
+        {
+          "player": "player",
+          "x": 4493.872426971194,
+          "y": 6526.36741516249,
+          "campsWithin120s": 0,
+          "greenWithin30s": 0,
+          "nearestCamp": null,
+          "allocatedCamps": 0,
+          "allocatedStrength": 0
+        },
+        {
+          "player": "enemy",
+          "x": 1153.63258483751,
+          "y": 4493.872426971195,
+          "campsWithin120s": 0,
+          "greenWithin30s": 0,
+          "nearestCamp": null,
+          "allocatedCamps": 0,
+          "allocatedStrength": 0
+        },
+        {
+          "player": "enemy2",
+          "x": 3186.127573028805,
+          "y": 1153.63258483751,
+          "campsWithin120s": 0,
+          "greenWithin30s": 0,
+          "nearestCamp": null,
+          "allocatedCamps": 0,
+          "allocatedStrength": 0
+        },
+        {
+          "player": "player-4",
+          "x": 6526.36741516249,
+          "y": 3186.127573028805,
+          "campsWithin120s": 0,
+          "greenWithin30s": 0,
+          "nearestCamp": null,
+          "allocatedCamps": 0,
+          "allocatedStrength": 0
+        }
+      ]
+    },
+    {
+      "id": "templeSpring",
+      "name": "神泉殿",
+      "size": 6656,
+      "players": 4,
+      "camps": 17,
+      "tiers": {
+        "green": 4,
+        "orange": 8,
+        "red": 5
+      },
+      "strength": 158,
+      "campsPerPlayer": 4.25,
+      "strengthPerPlayer": 39.5,
+      "transportOnlyCamps": 4,
+      "perStart": [
+        {
+          "player": "player",
+          "x": 5850,
+          "y": 3328,
+          "campsWithin120s": 13,
+          "greenWithin30s": 1,
+          "nearestCamp": 1062.4,
+          "allocatedCamps": 3.333333333333333,
+          "allocatedStrength": 24.666666666666668
+        },
+        {
+          "player": "enemy",
+          "x": 3328,
+          "y": 5850,
+          "campsWithin120s": 13,
+          "greenWithin30s": 1,
+          "nearestCamp": 1094.4,
+          "allocatedCamps": 3.333333333333333,
+          "allocatedStrength": 24.666666666666668
+        },
+        {
+          "player": "enemy2",
+          "x": 806,
+          "y": 3328,
+          "campsWithin120s": 13,
+          "greenWithin30s": 1,
+          "nearestCamp": 1094.4,
+          "allocatedCamps": 3,
+          "allocatedStrength": 20
+        },
+        {
+          "player": "player-4",
+          "x": 3328,
+          "y": 806,
+          "campsWithin120s": 13,
+          "greenWithin30s": 1,
+          "nearestCamp": 1062.4,
+          "allocatedCamps": 3.333333333333333,
+          "allocatedStrength": 24.666666666666668
+        }
+      ]
+    },
+    {
+      "id": "turtleLake",
+      "name": "龟湖",
+      "size": 6144,
+      "players": 4,
+      "camps": 13,
+      "tiers": {
+        "green": 4,
+        "orange": 8,
+        "red": 1
+      },
+      "strength": 124,
+      "campsPerPlayer": 3.25,
+      "strengthPerPlayer": 31,
+      "transportOnlyCamps": 0,
+      "perStart": [
+        {
+          "player": "player",
+          "x": 5140,
+          "y": 5140,
+          "campsWithin120s": 13,
+          "greenWithin30s": 1,
+          "nearestCamp": 1075.2,
+          "allocatedCamps": 4,
+          "allocatedStrength": 43
+        },
+        {
+          "player": "enemy",
+          "x": 1004,
+          "y": 5140,
+          "campsWithin120s": 13,
+          "greenWithin30s": 1,
+          "nearestCamp": 1075.2,
+          "allocatedCamps": 3,
+          "allocatedStrength": 27
+        },
+        {
+          "player": "enemy2",
+          "x": 1004,
+          "y": 1004,
+          "campsWithin120s": 13,
+          "greenWithin30s": 1,
+          "nearestCamp": 1075.2,
+          "allocatedCamps": 3,
+          "allocatedStrength": 27
+        },
+        {
+          "player": "player-4",
+          "x": 5140,
+          "y": 1004,
+          "campsWithin120s": 13,
+          "greenWithin30s": 1,
+          "nearestCamp": 1075.2,
+          "allocatedCamps": 3,
+          "allocatedStrength": 27
+        }
+      ]
+    },
+    {
+      "id": "elderwood",
+      "name": "古木林",
+      "size": 7168,
+      "players": 4,
+      "camps": 21,
+      "tiers": {
+        "green": 8,
+        "orange": 8,
+        "red": 5
+      },
+      "strength": 188,
+      "campsPerPlayer": 5.25,
+      "strengthPerPlayer": 47,
+      "transportOnlyCamps": 4,
+      "perStart": [
+        {
+          "player": "player",
+          "x": 6014,
+          "y": 4423,
+          "campsWithin120s": 17,
+          "greenWithin30s": 2,
+          "nearestCamp": 1049.6,
+          "allocatedCamps": 4.333333333333334,
+          "allocatedStrength": 32.33333333333333
+        },
+        {
+          "player": "enemy",
+          "x": 2745,
+          "y": 6014,
+          "campsWithin120s": 17,
+          "greenWithin30s": 2,
+          "nearestCamp": 1049.6,
+          "allocatedCamps": 4.333333333333334,
+          "allocatedStrength": 32.33333333333333
+        },
+        {
+          "player": "enemy2",
+          "x": 1154,
+          "y": 2745,
+          "campsWithin120s": 17,
+          "greenWithin30s": 2,
+          "nearestCamp": 1049.6,
+          "allocatedCamps": 4,
+          "allocatedStrength": 27
+        },
+        {
+          "player": "player-4",
+          "x": 4423,
+          "y": 1154,
+          "campsWithin120s": 17,
+          "greenWithin30s": 2,
+          "nearestCamp": 1049.6,
+          "allocatedCamps": 4.333333333333334,
+          "allocatedStrength": 32.33333333333333
+        }
+      ]
+    },
+    {
+      "id": "ringwater",
+      "name": "环海",
+      "size": 6656,
+      "players": 4,
+      "camps": 17,
+      "tiers": {
+        "green": 4,
+        "orange": 8,
+        "red": 5
+      },
+      "strength": 184,
+      "campsPerPlayer": 4.25,
+      "strengthPerPlayer": 46,
+      "transportOnlyCamps": 4,
+      "perStart": [
+        {
+          "player": "player",
+          "x": 5048,
+          "y": 5048,
+          "campsWithin120s": 13,
+          "greenWithin30s": 1,
+          "nearestCamp": 1113.6,
+          "allocatedCamps": 3.3333333333333335,
+          "allocatedStrength": 31.333333333333332
+        },
+        {
+          "player": "enemy",
+          "x": 1608,
+          "y": 5048,
+          "campsWithin120s": 13,
+          "greenWithin30s": 1,
+          "nearestCamp": 1113.6,
+          "allocatedCamps": 3.3333333333333335,
+          "allocatedStrength": 31.333333333333332
+        },
+        {
+          "player": "enemy2",
+          "x": 1608,
+          "y": 1608,
+          "campsWithin120s": 13,
+          "greenWithin30s": 1,
+          "nearestCamp": 1113.6,
+          "allocatedCamps": 3,
+          "allocatedStrength": 26
+        },
+        {
+          "player": "player-4",
+          "x": 5048,
+          "y": 1608,
+          "campsWithin120s": 13,
+          "greenWithin30s": 1,
+          "nearestCamp": 1113.6,
+          "allocatedCamps": 3.3333333333333335,
+          "allocatedStrength": 31.333333333333332
+        }
+      ]
+    },
+    {
+      "id": "loneMarket",
+      "name": "孤市",
+      "size": 6656,
+      "players": 2,
+      "camps": 6,
+      "tiers": {
+        "green": 0,
+        "orange": 6,
+        "red": 0
+      },
+      "strength": 56,
+      "campsPerPlayer": 3,
+      "strengthPerPlayer": 28,
+      "transportOnlyCamps": 0,
+      "perStart": [
+        {
+          "player": "player",
+          "x": 1210,
+          "y": 1210,
+          "campsWithin120s": 6,
+          "greenWithin30s": 0,
+          "nearestCamp": 1164.8,
+          "allocatedCamps": 3,
+          "allocatedStrength": 28
+        },
+        {
+          "player": "enemy",
+          "x": 5446,
+          "y": 5446,
+          "campsWithin120s": 6,
+          "greenWithin30s": 0,
+          "nearestCamp": 1164.8,
+          "allocatedCamps": 3,
+          "allocatedStrength": 28
+        }
+      ]
+    },
+    {
+      "id": "reedwater",
+      "name": "芦苇泽",
+      "size": 5120,
+      "players": 2,
+      "camps": 9,
+      "tiers": {
+        "green": 4,
+        "orange": 4,
+        "red": 1
+      },
+      "strength": 66,
+      "campsPerPlayer": 4.5,
+      "strengthPerPlayer": 33,
+      "transportOnlyCamps": 0,
+      "perStart": [
+        {
+          "player": "player",
+          "x": 2560,
+          "y": 866,
+          "campsWithin120s": 9,
+          "greenWithin30s": 2,
+          "nearestCamp": 1075.2,
+          "allocatedCamps": 4.5,
+          "allocatedStrength": 33
+        },
+        {
+          "player": "enemy",
+          "x": 2560,
+          "y": 4254,
+          "campsWithin120s": 9,
+          "greenWithin30s": 2,
+          "nearestCamp": 1107.2,
+          "allocatedCamps": 4.5,
+          "allocatedStrength": 33
+        }
+      ]
+    },
+    {
+      "id": "veiledHill",
+      "name": "雾丘",
+      "size": 4608,
+      "players": 2,
+      "camps": 8,
+      "tiers": {
+        "green": 2,
+        "orange": 4,
+        "red": 2
+      },
+      "strength": 78,
+      "campsPerPlayer": 4,
+      "strengthPerPlayer": 39,
+      "transportOnlyCamps": 0,
+      "perStart": [
+        {
+          "player": "player",
+          "x": 713,
+          "y": 713,
+          "campsWithin120s": 8,
+          "greenWithin30s": 1,
+          "nearestCamp": 1088,
+          "allocatedCamps": 4,
+          "allocatedStrength": 39
+        },
+        {
+          "player": "enemy",
+          "x": 3895,
+          "y": 3895,
+          "campsWithin120s": 8,
+          "greenWithin30s": 1,
+          "nearestCamp": 1088,
+          "allocatedCamps": 4,
+          "allocatedStrength": 39
+        }
+      ]
+    },
+    {
+      "id": "greystonePass",
+      "name": "灰岩隘口",
+      "size": 4608,
+      "players": 2,
+      "camps": 6,
+      "tiers": {
+        "green": 2,
+        "orange": 4,
+        "red": 0
+      },
+      "strength": 48,
+      "campsPerPlayer": 3,
+      "strengthPerPlayer": 24,
+      "transportOnlyCamps": 0,
+      "perStart": [
+        {
+          "player": "player",
+          "x": 932,
+          "y": 932,
+          "campsWithin120s": 6,
+          "greenWithin30s": 1,
+          "nearestCamp": 1049.6,
+          "allocatedCamps": 3,
+          "allocatedStrength": 24
+        },
+        {
+          "player": "enemy",
+          "x": 3676,
+          "y": 3676,
+          "campsWithin120s": 6,
+          "greenWithin30s": 1,
+          "nearestCamp": 1017.6,
+          "allocatedCamps": 3,
+          "allocatedStrength": 24
+        }
+      ]
+    },
+    {
+      "id": "pineshade",
+      "name": "松影林",
+      "size": 4608,
+      "players": 2,
+      "camps": 9,
+      "tiers": {
+        "green": 4,
+        "orange": 4,
+        "red": 1
+      },
+      "strength": 70,
+      "campsPerPlayer": 4.5,
+      "strengthPerPlayer": 35,
+      "transportOnlyCamps": 0,
+      "perStart": [
+        {
+          "player": "player",
+          "x": 3720,
+          "y": 888,
+          "campsWithin120s": 9,
+          "greenWithin30s": 1,
+          "nearestCamp": 1164.8,
+          "allocatedCamps": 4,
+          "allocatedStrength": 27
+        },
+        {
+          "player": "enemy",
+          "x": 888,
+          "y": 3720,
+          "campsWithin120s": 9,
+          "greenWithin30s": 1,
+          "nearestCamp": 1164.8,
+          "allocatedCamps": 5,
+          "allocatedStrength": 43
+        }
+      ]
+    },
+    {
+      "id": "gullIsland",
+      "name": "鸥岛",
+      "size": 6656,
+      "players": 2,
+      "camps": 9,
+      "tiers": {
+        "green": 2,
+        "orange": 4,
+        "red": 3
+      },
+      "strength": 94,
+      "campsPerPlayer": 4.5,
+      "strengthPerPlayer": 47,
+      "transportOnlyCamps": 2,
+      "perStart": [
+        {
+          "player": "player",
+          "x": 1497,
+          "y": 1497,
+          "campsWithin120s": 7,
+          "greenWithin30s": 1,
+          "nearestCamp": 1196.8,
+          "allocatedCamps": 3,
+          "allocatedStrength": 23
+        },
+        {
+          "player": "enemy",
+          "x": 5159,
+          "y": 5159,
+          "campsWithin120s": 7,
+          "greenWithin30s": 1,
+          "nearestCamp": 1196.8,
+          "allocatedCamps": 4,
+          "allocatedStrength": 39
+        }
+      ]
+    },
+    {
+      "id": "stillwater",
+      "name": "静水原",
+      "size": 7168,
+      "players": 4,
+      "camps": 12,
+      "tiers": {
+        "green": 0,
+        "orange": 8,
+        "red": 4
+      },
+      "strength": 136,
+      "campsPerPlayer": 3,
+      "strengthPerPlayer": 34,
+      "transportOnlyCamps": 0,
+      "perStart": [
+        {
+          "player": "player",
+          "x": 640,
+          "y": 2150,
+          "campsWithin120s": 12,
+          "greenWithin30s": 0,
+          "nearestCamp": 1081.6,
+          "allocatedCamps": 3,
+          "allocatedStrength": 32
+        },
+        {
+          "player": "enemy",
+          "x": 6528,
+          "y": 2150,
+          "campsWithin120s": 12,
+          "greenWithin30s": 0,
+          "nearestCamp": 1113.6,
+          "allocatedCamps": 3,
+          "allocatedStrength": 33
+        },
+        {
+          "player": "enemy2",
+          "x": 640,
+          "y": 5018,
+          "campsWithin120s": 11,
+          "greenWithin30s": 0,
+          "nearestCamp": 1081.6,
+          "allocatedCamps": 3,
+          "allocatedStrength": 35
+        },
+        {
+          "player": "player-4",
+          "x": 6528,
+          "y": 5018,
+          "campsWithin120s": 11,
+          "greenWithin30s": 0,
+          "nearestCamp": 1113.6,
+          "allocatedCamps": 3,
+          "allocatedStrength": 36
+        }
+      ]
+    },
+    {
+      "id": "twoShores",
+      "name": "双岸",
+      "size": 7168,
+      "players": 4,
+      "camps": 11,
+      "tiers": {
+        "green": 0,
+        "orange": 8,
+        "red": 3
+      },
+      "strength": 124,
+      "campsPerPlayer": 2.75,
+      "strengthPerPlayer": 31,
+      "transportOnlyCamps": 3,
+      "perStart": [
+        {
+          "player": "player",
+          "x": 2150,
+          "y": 630,
+          "campsWithin120s": 8,
+          "greenWithin30s": 0,
+          "nearestCamp": 1139.2,
+          "allocatedCamps": 2,
+          "allocatedStrength": 21
+        },
+        {
+          "player": "enemy",
+          "x": 2150,
+          "y": 6538,
+          "campsWithin120s": 8,
+          "greenWithin30s": 0,
+          "nearestCamp": 1139.2,
+          "allocatedCamps": 2,
+          "allocatedStrength": 21
+        },
+        {
+          "player": "enemy2",
+          "x": 5018,
+          "y": 630,
+          "campsWithin120s": 8,
+          "greenWithin30s": 0,
+          "nearestCamp": 1164.8,
+          "allocatedCamps": 2,
+          "allocatedStrength": 17
+        },
+        {
+          "player": "player-4",
+          "x": 5018,
+          "y": 6538,
+          "campsWithin120s": 8,
+          "greenWithin30s": 0,
+          "nearestCamp": 1164.8,
+          "allocatedCamps": 2,
+          "allocatedStrength": 17
+        }
+      ]
+    }
+  ]
+}

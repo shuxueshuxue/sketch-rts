@@ -11,6 +11,7 @@ import { cellIndexAt, footprintCells, footprintHalf, isFootprintBuildable, isSho
 import { seconds } from "./time";
 import { GOLD_MINE_RULES, initialMiningPoint } from "./mining";
 import { GridFlood } from "./grid-flood";
+import { ensureCampBudget } from "./generated-camp-budget";
 import { resourceBlocksPlacement } from "./build-placement";
 import type { Building, CreepFamilyUnitKind, GeneratedLayoutKind, GeneratedLayoutOptions, ItemKind, MapIdea, MapSite, MercenaryCamp, MercenaryUnitKind, Obstacle, ObstacleKind, PlayerId, ResourceNode, TerrainLandmark, Unit, WorldItem } from "./types";
 
@@ -175,8 +176,11 @@ const IDEAS: Record<MapIdea, IdeaSpec> = {
 const FALLBACK: Record<GeneratedLayoutKind, MapIdea> = { ring: "openRing", sides: "openSides" };
 
 export function generateMap(options: GeneratedLayoutOptions, players: PlayerId[], teams: Record<PlayerId, string>): GeneratedMap {
-  if (options.idea === "islandStarts") return archipelagoMap(options, players);
-  if (options.idea === 'riverValley' && players.length===8) return estuaryMap(options,players);
+  if (options.idea === "islandStarts" || (options.idea === 'riverValley' && players.length === 8)) {
+    const map = options.idea === 'islandStarts' ? archipelagoMap(options, players) : estuaryMap(options, players);
+    if (!ensureCampBudget(map, options.seed)) throw new Error(`No camp budget fits ${options.idea} seed ${options.seed}`);
+    return map;
+  }
   const random = seededRandom(options.seed);
   const teamOrder = [...new Set(players.map((player) => teams[player] ?? player))];
   const teamSizes = teamOrder.map((team) => players.filter((player) => (teams[player] ?? player) === team).length);
@@ -185,6 +189,13 @@ export function generateMap(options: GeneratedLayoutOptions, players: PlayerId[]
   if (kind === "sides" && !evenTeams) throw new Error(`A sides layout needs two teams of the same size (two or more), not ${teamSizes.join(" and ")}`);
   const fitting = (Object.keys(IDEAS) as MapIdea[]).filter((idea) => IDEAS[idea].kind === kind && idea !== FALLBACK[kind] && idea !== "islandStarts" && IDEAS[idea].seats(players.length));
   const idea = options.idea ?? (fitting.length > 0 ? pick(random, fitting) : FALLBACK[kind]);
+  // An inferred eight-seat river uses the same roomy river generator as an
+  // explicitly requested one. The four-seat plateau layout cannot fit it.
+  if (idea === 'riverValley' && players.length === 8) {
+    const map = estuaryMap(options, players);
+    if (!ensureCampBudget(map, options.seed)) throw new Error(`No camp budget fits ${idea} seed ${options.seed}`);
+    return map;
+  }
   const spec = IDEAS[idea];
   if (spec.kind !== kind || !spec.seats(players.length)) throw new Error(`The ${idea} idea is not drawn as a ${kind} layout for ${players.length} players`);
   for (let attempt = 0; attempt < ATTEMPTS; attempt += 1) {
@@ -195,7 +206,9 @@ export function generateMap(options: GeneratedLayoutOptions, players: PlayerId[]
     const terrain = carveTerrain(field, plain);
     if (!terrain) continue;
     prepareEcology(terrain,options.seed);
-    return assemble(kind, idea, field, players, terrain);
+    const map = assemble(kind, idea, field, players, terrain);
+    // A draw needs both walkable terrain and enough reachable opening camps.
+    if (ensureCampBudget(map, options.seed)) return map;
   }
   throw new Error(`No ${idea} map fits the seed ${options.seed} for ${players.length} players`);
 }

@@ -23,22 +23,23 @@ import {isWalkable,sameGround} from './terrain';
 // 10-09 follow-up: minimum hall distance 210 and all snapped initial hauling lanes
 // exactly 216; the shorter mineral offset also updates protected terrain around mains.
 // Prepared mineral courtyards stay dry in mire layouts; reedwater retains mud outside them.
+// 10-18: shared per-seat camp budget and reachable opening camps; small home islands reserve room for them.
 const HASHES: Record<PoolMapId, string> = {
-  sapphireArchipelago:'b6703a780998228c',
-  grandEstuary:'f61173bfe2528d83',
-  brokenSea: "ccf2b2d83de2b3e1",
-  templeSpring: "f1852bf289626b67",
-  turtleLake: "57468c4991eaf724",
+  sapphireArchipelago:'9ca40925987dc1e7',
+  grandEstuary:'39d8712515a5ebc3',
+  brokenSea: "e3a11ec7847735e2",
+  templeSpring: "5d501d9e7c6f0c90",
+  turtleLake: "4b4261b4ae71172d",
   elderwood: "2421b993970b6212",
-  ringwater: "8ea4e0320581a02b",
-  loneMarket: "ba20d16b14e5104b",
+  ringwater: "aa335b94ee2dc268",
+  loneMarket: "ed2f8ef2345f29ed",
   reedwater: "2a97d95f469f461e",
-  veiledHill: "b2c80d16362a59cc",
-  greystonePass: "f9a7a649d1d05728",
-  pineshade: "502472ad7ac76b35",
-  gullIsland: "2be7184ae9b2ba29",
-  stillwater: "e67ba5ef77911369",
-  twoShores: "db5e5da96cbefa5a",
+  veiledHill: "b8b31afcf1f5215d",
+  greystonePass: "ff0b4dd1fb846c77",
+  pineshade: "9e8b1af1ccfd80e8",
+  gullIsland: "e028364eee91667f",
+  stillwater: "c2667ced06c15b3d",
+  twoShores: "1ed7b9a82e3d1144",
 };
 
 const host = { id: "host", name: "Host" };
@@ -130,11 +131,10 @@ it('guards expansion gold with complete tiered camps, equally strong for every s
       const neutral = drawn.units.filter(unit => unit.owner === 'neutral');
       for (const camp of drawn.camps) {
         const members = neutral.filter(unit => Math.hypot(unit.x - camp.x, unit.y - camp.y) < 100);
-        expect(members.length).toBeGreaterThanOrEqual(2);
+        expect(members.length).toBeGreaterThanOrEqual(camp.tier === 'green' ? 1 : 2);
         const power = campLevel(members.map(unit => unit.kind as CreepFamilyUnitKind));
         expect(power).toBeGreaterThanOrEqual(TIER_LEVELS[camp.tier].min);
         expect(power).toBeLessThanOrEqual(TIER_LEVELS[camp.tier].max);
-        expect(drawn.resources.some(mine => Math.hypot(mine.x - camp.x, mine.y - camp.y) < 250)).toBe(true);
       }
       for (const mine of drawn.resources) {
         if (mine.id.endsWith('-main')) {
@@ -142,7 +142,9 @@ it('guards expansion gold with complete tiered camps, equally strong for every s
         } else expect(drawn.camps.some(camp => Math.hypot(camp.x - mine.x, camp.y - mine.y) < 250)).toBe(true);
       }
       for (const tier of ['orange', 'red'] as const) {
-        const rosters = drawn.camps.filter(camp => camp.tier === tier).map(camp => neutral.filter(unit => Math.hypot(unit.x - camp.x, unit.y - camp.y) < 100).map(unit => unit.kind));
+        // The shared budget also adds free camps. Compare the mineral guards
+        // with one another; every expansion must still have its original guard.
+        const rosters = drawn.camps.filter(camp => camp.tier === tier && drawn.resources.some(mine => Math.hypot(mine.x - camp.x, mine.y - camp.y) < 250)).map(camp => neutral.filter(unit => Math.hypot(unit.x - camp.x, unit.y - camp.y) < 100).map(unit => unit.kind));
         expect(rosters.every(roster => JSON.stringify(roster) === JSON.stringify(rosters[0]))).toBe(true);
       }
     }
