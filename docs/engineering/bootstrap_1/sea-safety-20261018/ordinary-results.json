@@ -1,0 +1,156 @@
+{
+  "candidate-ordinary0": {
+    "sourceCommit": "0a6b4ed84a9faaf432190cd98a115b272be61a79",
+    "match": {
+      "name": "brokenSea/v9_archer/v5+v8/grove/0",
+      "mapId": "brokenSea",
+      "subject": "v9_archer",
+      "side": 0,
+      "seed": "bootstrap_1-official-brokenSea-archer-v5-v8-20261016",
+      "unseen": false,
+      "agents": {
+        "p0": {
+          "version": "v9_archer",
+          "versionLabel": "v9_archer",
+          "race": "grove",
+          "controller": "external-agent",
+          "team": "a"
+        },
+        "p1": {
+          "version": "v5",
+          "versionLabel": "v5",
+          "race": "ember",
+          "controller": "external-agent",
+          "team": "b"
+        },
+        "p2": {
+          "version": "v8",
+          "versionLabel": "v8",
+          "race": "grove",
+          "controller": "external-agent",
+          "team": "b"
+        }
+      },
+      "maxTicks": 90000,
+      "thinkInterval": 15
+    },
+    "startTick": 0,
+    "endTick": 65498,
+    "winner": "p1",
+    "naturalComplete": true,
+    "p0PermanentDeaths": 40,
+    "p0Survivors": 7,
+    "p0RemainingBuildings": 0,
+    "elapsedMs": 1346229.315,
+    "sourceChangedDuringRun": [],
+    "sampledOwnershipChanges": [
+      {
+        "id": "unit-p0-transport-1070",
+        "from": "p0",
+        "to": "p2",
+        "afterTick": 19800,
+        "byTick": 20400
+      }
+    ]
+  },
+  "unseen-ordinary0": {
+    "sourceCommit": "0a6b4ed84a9faaf432190cd98a115b272be61a79",
+    "match": {
+      "name": "brokenSea/v9_archer/v5+v8/grove/0",
+      "mapId": "brokenSea",
+      "subject": "v9_archer",
+      "side": 0,
+      "seed": "bootstrap_1-unseen-sea-20261018-0135z-a7c39e",
+      "unseen": true,
+      "agents": {
+        "p0": {
+          "version": "v9_archer",
+          "versionLabel": "v9_archer",
+          "race": "grove",
+          "controller": "external-agent",
+          "team": "a"
+        },
+        "p1": {
+          "version": "v5",
+          "versionLabel": "v5",
+          "race": "ember",
+          "controller": "external-agent",
+          "team": "b"
+        },
+        "p2": {
+          "version": "v8",
+          "versionLabel": "v8",
+          "race": "grove",
+          "controller": "external-agent",
+          "team": "b"
+        }
+      },
+      "maxTicks": 90000,
+      "thinkInterval": 15
+    },
+    "startTick": 0,
+    "endTick": 69002,
+    "winner": "p0",
+    "naturalComplete": true,
+    "p0PermanentDeaths": 26,
+    "p0Survivors": 81,
+    "p0RemainingBuildings": 35,
+    "elapsedMs": 1517888.369,
+    "sourceChangedDuringRun": [],
+    "sampledOwnershipChanges": [
+      {
+        "id": "unit-p0-warship-3105",
+        "from": "p0",
+        "to": "p2",
+        "afterTick": 29400,
+        "byTick": 30000
+      }
+    ]
+  },
+  "knight-knownseed-ordinary0": {
+    "sourceCommit": "0a6b4ed84a9faaf432190cd98a115b272be61a79",
+    "match": {
+      "name": "twoShores/v9_knight/v5+v7/grove/1",
+      "mapId": "twoShores",
+      "subject": "v9_knight",
+      "side": 1,
+      "seed": "bootstrap_1-first-use-knight-v5-v7-twoShores-20261016-2257z-9d3d16a7",
+      "unseen": true,
+      "agents": {
+        "p0": {
+          "version": "v9_knight",
+          "versionLabel": "v9_knight",
+          "race": "grove",
+          "controller": "external-agent",
+          "team": "a"
+        },
+        "p1": {
+          "version": "v5",
+          "versionLabel": "v5",
+          "race": "ember",
+          "controller": "external-agent",
+          "team": "b"
+        },
+        "p2": {
+          "version": "v7",
+          "versionLabel": "v7",
+          "race": "grove",
+          "controller": "external-agent",
+          "team": "b"
+        }
+      },
+      "maxTicks": 90000,
+      "thinkInterval": 15
+    },
+    "startTick": 0,
+    "endTick": 56477,
+    "winner": "p0",
+    "naturalComplete": true,
+    "p0PermanentDeaths": 29,
+    "p0Survivors": 52,
+    "p0RemainingBuildings": 35,
+    "elapsedMs": 310935.52,
+    "sourceChangedDuringRun": [],
+    "sampledOwnershipChanges": []
+  }
+}
