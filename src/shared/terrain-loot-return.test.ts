@@ -16,6 +16,7 @@ import type { Building, GameMap, ResourceNode, Unit, GameSnapshot } from './type
 import recorded from './test-fixtures/loot-return-ladder-18-8440.json';
 import crowded from './test-fixtures/lookahead-crowd-ladder-16.json';
 import corner from './test-fixtures/lookahead-corner-ladder-12.json';
+import opposing from './test-fixtures/lookahead-head-on-ladder-44.json';
 
 function returningWarden() {
   // The recorded 41c9c208 unit's only order is its queued trip home. Keep the
@@ -89,4 +90,17 @@ it.each([crowded, corner])('preserves ordinary corner smoothing at $provenance.m
   for (let tick = 0; tick < 1200 && unit.order.type !== 'idle'; tick++) stepGame(game);
   expect(unit.hp).toBeGreaterThan(0);
   expect(unit.order.type, JSON.stringify({ x: unit.x, y: unit.y, order: unit.order })).toBe('idle');
+});
+
+it('lets opposing knights pass when an initially uphill shortcut keeps heading forward', () => {
+  const game = createGame('bareDuel', { aiPlayers: [] });
+  restoreSnapshotIntoGame(game, opposing.snapshot as unknown as GameSnapshot, 1_000_000);
+  game.scriptedVictory = true;
+  game.projectiles = [];
+  const units = opposing.provenance.unitIds.map(id => game.units.find(u => u.id === id)!);
+  for (let tick = 0; tick < 1200 && units.some(u => u.order.type !== 'idle'); tick++) stepGame(game);
+  for (const unit of units) {
+    expect(unit.hp).toBeGreaterThan(0);
+    expect(unit.order.type, JSON.stringify({ id: unit.id, x: unit.x, y: unit.y, order: unit.order })).toBe('idle');
+  }
 });

@@ -375,7 +375,7 @@ export function walkDestination(map: Pick<GameMap, "terrain">, from: Point, goal
 // @@@terrain-steering - Where a unit at `from`, in cell `near`, heads down the tiles to `target`, the cell of `goal`: the
 // cell LOOKAHEAD steps on when it sees it, else the one SHORT_LOOK on. The steps go down its square's field to the window
 // it leaves by, across into the next square and on down that square's, or down the goal's field near the goal.
-function walkAhead(state: TerrainRuntime, ground: TerrainRuntime, tiles: Tiles, from: Point, near: number, target: number, goal: Point): Point {
+function walkAhead(state: TerrainRuntime, ground: TerrainRuntime, tiles: Tiles, from: Point, near: number, target: number, goal: Point, guard = true): Point {
   let at = near;
   let short = -1;
   let first = -1;
@@ -412,21 +412,23 @@ function walkAhead(state: TerrainRuntime, ground: TerrainRuntime, tiles: Tiles, 
   // and back every tick.
   if (at === near) return near === target ? goal : centerOf(state, near);
   const far = at === target ? goal : centerOf(state, at);
+  if (!guard) return short < 0 || clearSegment(state, from.x, from.y, far.x, far.y)
+    ? far : short === target ? goal : centerOf(state, short);
   if ((short < 0 || clearSegment(state, from.x, from.y, far.x, far.y))
-    && (!joined || shortcutDescends(state, initialField!, from, near, far, short >= 0))) return far;
+    && (!joined || shortcutKeepsHeading(state, ground, tiles, initialField!, from, near, target, goal, far, short >= 0))) return far;
   const close = short < 0 ? far : short === target ? goal : centerOf(state, short);
-  return !joined || shortcutDescends(state, initialField!, from, near, close) ? close : centerOf(state, first);
+  return !joined || shortcutKeepsHeading(state, ground, tiles, initialField!, from, near, target, goal, close) ? close : centerOf(state, first);
 }
 
 // Visibility alone does not make a lookahead shortcut follow the flow. After
 // joining two tile fields, its endpoint can be past a bend while the straight
 // shortcut first enters a cell uphill in the current field. The next tick then
 // steers back: ladder-18's returning warden oscillated across y=3456 forever.
-// Only when lookahead joins fields, require the shortcut to enter a downhill
-// cell of its starting field; otherwise use the short lookahead or first step.
-// Keep single-field smoothing unchanged: equal-cost or initially uphill cells
-// can still lead to a valid visible shortcut within one field.
-function shortcutDescends(state: TerrainRuntime, field: BoxField, from: Point, near: number, point: Point, visible = false) {
+// Only a visible, cross-field shortcut that immediately points back after its
+// first uphill cell crossing is rejected. Initial ascent alone can be a valid
+// shortcut to another window; constraining it funnels opposing crowds together.
+// Keep single-field smoothing and occluded wall-sliding hints unchanged.
+function shortcutKeepsHeading(state: TerrainRuntime, ground: TerrainRuntime, tiles: Tiles, field: BoxField, from: Point, near: number, target: number, goal: Point, point: Point, visible = false) {
   // A rejected long lookahead can fall back to a SHORT_LOOK point still inside
   // this field. That returned segment joins no fields: preserve its ordinary
   // corner smoothing, even if the unused long path went through another field.
@@ -444,7 +446,17 @@ function shortcutDescends(state: TerrainRuntime, field: BoxField, from: Point, n
   const next = near + (acrossX <= acrossY ? Math.sign(dx) : 0)
     + (acrossY <= acrossX ? Math.sign(dy) * state.width : 0);
   const index = local(field.box, next, state.width);
-  return index < 0 || field.dist[index]! < field.dist[local(field.box, near, state.width)]!;
+  if (index < 0 || field.dist[index]! < field.dist[local(field.box, near, state.width)]!) return true;
+  // Initial ascent is not itself a reversal: a visible shortcut can leave by
+  // another window and continue forward. Reject it only when the original
+  // lookahead immediately turns back after that first cell crossing. Probe a
+  // tiny fraction of one cell past the boundary, above floating-point noise.
+  const t = Math.min(acrossX, acrossY) + cell * 1e-7 / Math.max(Math.abs(dx), Math.abs(dy));
+  const crossing = { x: from.x + dx * t, y: from.y + dy * t };
+  const crossed = padAt(state, crossing.x, crossing.y);
+  const forward = clearSegment(state, crossing.x, crossing.y, goal.x, goal.y)
+    ? goal : walkAhead(state, ground, tiles, crossing, crossed, target, goal, false);
+  return (forward.x - crossing.x) * dx + (forward.y - crossing.y) * dy >= 0;
 }
 
 // The field a walk to `target` follows from cell `at`: the goal's when it reaches the cell, else the field of the window
