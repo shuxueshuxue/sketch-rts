@@ -22,7 +22,8 @@ export { canonicalGameState, type CanonicalGameState } from "./canonical";
 // 17: exact saved state of deterministic incremental ship navigation.
 // 18: death-time corpse equipment, owner race and deck attachment facts.
 // 19: building upgrades as work-queue jobs; the fortified tower is its own building kind.
-export const CHECKSUM_VERSION = 19;
+// 20: the tick a ship's hull was last struck by an enemy, which slows its repair.
+export const CHECKSUM_VERSION = 20;
 
 export function checksumGame(game: Game): string {
   return fnv1a(JSON.stringify(canonicalGameState(game)));
@@ -31,8 +32,18 @@ export function checksumGame(game: Game): string {
 /** Same-rules replay compatibility only; callers must validate the rules version first. */
 export function checksumGameForVersion(game: Game, version: number): string {
   // Version 19 changed only how an upgrade under way and a fortified tower are kept; a game with neither hashes the same.
-  if (version === CHECKSUM_VERSION || version === 18) return checksumGame(game);
+  if (version === CHECKSUM_VERSION) return checksumGame(game);
   const checkedGame = { ...game };
+  // Versions 18 and 19 kept no tick of a ship's last hull hit (version 20); 18 differs from 19 only where 19 has an
+  // upgrade under way or a fortified tower, which an 18 game cannot hold.
+  if (version === 19 || version === 18) {
+    checkedGame.units = game.units.map(unit => {
+      if (unit.sailing?.hullHitTick === undefined) return unit;
+      const { hullHitTick, ...sailing } = unit.sailing;
+      return { ...unit, sailing };
+    });
+    return checksumGame(checkedGame);
+  }
   if (version === 2) {
     delete checkedGame.corpses;
   } else if (version === 17) {

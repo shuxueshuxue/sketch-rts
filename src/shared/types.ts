@@ -269,6 +269,8 @@ export type Unit = {
     defense?: { originX:number; originY:number; targetId?:string; returning?:boolean };
     gangway?: import('./ship-gangway').ShipGangway;
     gangwayCooldownUntilTick?: number;
+    /** The last tick an enemy blow struck the hull: repair is slow under fire (see @@@repair-under-fire). */
+    hullHitTick?: number;
     /** Age of a deferred complex route request; persisted for fair replay-stable scheduling. */
     planningRequestedAtTick?: number;
     /** Last tick which still needed the queued plan; expires abandoned requests. */
