@@ -161,7 +161,11 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
       // The local helmsman and every physical sweep still see all ships.
       return !voyageCompanion(other,bearing);
     }) : units;
-    const traffic=reservationTraffic(ship,strategicUnits);
+    // @@@precise-traffic - A precise route is planned against every hull near either end of it, not only those near the
+    // ship now: a berth beside a hull more than 600 off was planned through that hull, and the ship ran its bow into it
+    // and fell into exact replanning at a crawl.
+    const end=contact ?? point;
+    const traffic=reservationTraffic(ship,strategicUnits,precision ? 600+Math.hypot(end.x-ship.x,end.y-ship.y) : 600);
     const planner=allowCruise && !precision ? planVoyageRoute : planShipRoute;
     // A nearby firing station requests a soft hull attitude, not an exact
     // berth or a full-speed turning circle. Each control step still sweeps
