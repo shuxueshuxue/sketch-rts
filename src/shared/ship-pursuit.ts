@@ -144,7 +144,8 @@ export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly U
   // by its own length's margin put it past its range, and two of them under attack orders lay apart for good.
   // The dead zone is the guns', so it is measured to what they are fired at: crew aboard a hull, not that hull's
   // nearest edge (bow to bow, the edges almost touched while the crew stood a hull's length off, out of range).
-  const backOff = minimum > 0 ? Math.min(minimum + ownLength * .45, (minimum + range) / 2) : 0;
+  // A bow gun fires from ahead of the hull's middle: the back-off clears the minimum from that muzzle, not the middle.
+  const backOff = minimum > 0 ? Math.min(minimum + ownLength * .45, Math.max((minimum + range) / 2, minimum + Math.max(0, stationBowReach) + 8)) : 0;
   if (!following && minimum > 0 && !firing && strikeGap(ship, requested) < backOff) {
     // Keep a bow mortar facing the opponent while backing out of its dead
     // zone. A full sailing turn only brings its stern closer to the danger.
