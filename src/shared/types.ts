@@ -745,7 +745,11 @@ export type RoomState = {
   mapId: MapId;
   layoutSeed?: string;
   status: RoomStatus;
+  // Whether the match advances on its own while no page is connected (ROOM_AUTOTICK; see @@@room-paused).
   autoTick: boolean;
+  // @@@room-paused - Paused (POST /pause, until /resume): nothing advances the match on its own, connected pages or not;
+  // only an explicit /tick or command-tick does.
+  paused?: boolean;
   slots: RoomSlot[];
   result?: RoomResult;
 };

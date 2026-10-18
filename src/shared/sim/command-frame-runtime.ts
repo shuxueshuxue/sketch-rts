@@ -25,6 +25,8 @@ export type RuntimeFrameOptions = {
   // Wait for every AI think due by this tick (a match stepped synchronously; see @@@planner-schedule).
   settleAi?: boolean;
   frame?: CommandFrame;
+  // A frame even for a tick with no commands: a hosted room's every tick is one its lockstep clients and history follow.
+  everyTick?: boolean;
   onFrame?: (frame: CommandFrame) => void;
   applyHooks?: CommandFrameApplyHooks;
   rejectionLabel?: (entry: CommandEnvelope, index: number) => string;
@@ -100,7 +102,7 @@ export class CommandFrameRuntime<State = unknown> {
     const aiCommands = options.includeAi === false ? [] : this.planAiCommands(options.settleAi ?? false);
     const completedCommands = normalizeCommandFrameEntries([...normalizedCommands, ...aiCommands]);
     if (options.frame) return { ...options.frame, commands: completedCommands };
-    if (completedCommands.length === 0) return undefined;
+    if (completedCommands.length === 0 && !options.everyTick) return undefined;
     const frame = {
       roomId: this.options.roomId,
       tick: this.options.game.tick,

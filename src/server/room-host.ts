@@ -475,7 +475,7 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       for (const hosted of hostedRooms.values()) {
         if (options.excludeRoomIds?.has(hosted.room.id)) continue;
         if (hosted.room.status !== "inMatch" || !hosted.game) continue;
-        if (!hosted.room.autoTick) continue;
+        if (!hosted.room.autoTick || hosted.room.paused) continue;
         const game = hosted.game;
         // A continued save may need its disposable navigation graph rebuilt.
         // Reconstruct one prior slice per ticker turn before advancing truth.
@@ -557,7 +557,11 @@ function tickHostedFrame(hosted: HostedRoom, game: Game, frame: CommandFrame, so
 function advanceHostedRoomTick(hosted: HostedRoom, game: Game, input: { commands?: CommandEnvelope[]; frame?: CommandFrame; source: ReplayCommandSource; settleAi?: boolean }): CommandFrame | undefined {
   hosted.frameRuntime ??= createHostedFrameRuntime(hosted, game);
   const commands = input.commands ?? input.frame?.commands ?? [];
-  const frameOptions = { ...(input.frame ? { frame: input.frame } : {}), ...(input.settleAi ? { settleAi: true } : {}) };
+  // @@@hosted-every-tick - A hosted room's every tick is a frame, whoever advances it: the live ticker (the lockstep
+  // coordinator's frame), the REST /tick, the SDK and the active-room ticker alike. A tick with no commands left no frame,
+  // so a page joined to the room waited for that tick forever and the history skipped it, and a client restored from an
+  // earlier checkpoint stalled at the gap.
+  const frameOptions = { everyTick: true, ...(input.frame ? { frame: input.frame } : {}), ...(input.settleAi ? { settleAi: true } : {}) };
   // A whole copy of the world is kept only where the history wants one (see ROOM_CHECKPOINT_INTERVAL_TICKS), and the
   // whole world is hashed only on the ticks lockstep clients compare (see @@@lockstep-cadence), not on every tick.
   if (hosted.history.wantsCheckpoint(game.tick)) hosted.history.recordCheckpoint(createHostedCheckpoint(hosted, game));

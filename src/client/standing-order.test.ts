@@ -1,8 +1,8 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createCanvas } from '@napi-rs/canvas';
 import * as THREE from 'three';
 import { setScratchCanvasFactory } from './art/scratch-canvas';
-import { LOOK_DENSITY, LOOK_FOOT, LOOK_HEIGHT, byFoot, standingTerrain } from './standing-terrain';
+import { LOOK_DENSITY, LOOK_FOOT, LOOK_HEIGHT, LOOK_WIDTH, byFoot, standingLookCanvas, standingTerrain } from './standing-terrain';
 import { StandingField } from './world3d/standing-field';
 import { configureWorldCamera } from './world3d/projection';
 import { SHIP_CAMERA } from '../shared/ship-geometry';
@@ -25,8 +25,18 @@ describe('standing objects in front of and behind one another', () => {
   it('stand every card upright with its painted foot on its world foot', () => {
     setScratchCanvasFactory((w, h) => createCanvas(w, h) as unknown as HTMLCanvasElement);
     const terrain = strewn(3), objects = standingTerrain(terrain), scene = new THREE.Scene(), field = new StandingField(scene, 1);
-    field.update(terrain, { x: 0, y: 0, width: 4000, height: 4000 });
-    expect(field.instances).toBe(objects.length);
+    // The uploader reuses its destination vector: each copy's layer is read as it is made.
+    const layers: number[] = [], copy = vi.fn((...call: unknown[]) => { if (call[4] === 0) layers.push((call[3] as THREE.Vector3).z); });
+    const renderer = { initTexture: vi.fn(), copyTextureToTexture: copy, getRenderTarget: () => null, getActiveCubeFace: () => 0, getActiveMipmapLevel: () => 0, setRenderTarget: vi.fn() };
+    // Each look's canvas goes to its own layer on the GPU, flipped so its foot row samples v = 0; nothing is read back.
+    const looks = [...new Set(objects.map(object => object.look))], reads = vi.fn();
+    for (const look of looks) standingLookCanvas(look).getContext('2d')!.getImageData = reads;
+    field.update(terrain, { x: 0, y: 0, width: 4000, height: 4000 }, renderer);
+    expect(field.instances).toBe(objects.length);expect(reads).not.toHaveBeenCalled();
+    const firstMips = copy.mock.calls.filter(call => call[4] === 0);
+    expect(layers).toEqual(looks.map((_, index) => index));
+    firstMips.forEach((call, index) => { const source = call[0] as THREE.CanvasTexture; expect(source.image).toBe(standingLookCanvas(looks[index]!)); expect(source.flipY).toBe(true); });
+    expect((firstMips[0]![1] as THREE.DataArrayTexture).image).toMatchObject({ width: LOOK_WIDTH, height: LOOK_HEIGHT, depth: looks.length });
     // Instance matrices are float32: a foot is matched to a hundredth of a world unit.
     const near = new Map<string, typeof objects>(), matrix = new THREE.Matrix4();
     for (const object of objects) { const key = `${Math.round(object.x)},${Math.round(object.y)}`; near.set(key, [...near.get(key) ?? [], object]); }
