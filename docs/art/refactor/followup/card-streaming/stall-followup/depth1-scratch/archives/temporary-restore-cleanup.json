@@ -1,9 +1,0 @@
-{
-  "path": "/tmp/depth1-full-restore-v2",
-  "removedOnlyIndependentTemporaryRestore": true,
-  "files": 8743,
-  "bytes": 204094392,
-  "previousIndependentFullShaProof": "independent-full-restore-proof.json",
-  "proofPassed": true,
-  "originalArchivesPreserved": true
-}

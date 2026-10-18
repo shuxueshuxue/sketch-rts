@@ -1,4 +1,0 @@
-000000000015d290 T vkGetInstanceProcAddr
-000000000015ae70 T vk_icdGetInstanceProcAddr
-000000000015aef0 T vk_icdGetPhysicalDeviceProcAddr
-000000000015aec0 T vk_icdNegotiateLoaderICDInterfaceVersion

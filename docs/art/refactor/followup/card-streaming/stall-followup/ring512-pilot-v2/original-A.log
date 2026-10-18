@@ -1,3 +1,0 @@
-START 8345a0dc hidden=0 cycle=0
-VIEWPORT streaming cycle 0 0 43.90499999970198 409.7999999988824
-{"output":"/workspace/sketch-rts-viewport/docs/art/refactor/followup/card-streaming/stall-followup/ring512-pilot-v2/original-A/raw.json","cycles":[{"hiddenCount":0,"cycle":0,"cpu":{"samples":60,"meanMs":43.90499999970198,"p50Ms":6.5,"p95Ms":148.29999999701977,"p99Ms":481.30000000447035,"maxMs":481.30000000447035,"over16_67Ms":28,"over50Ms":20},"real":{"samples":12,"meanMs":409.7999999988824,"p50Ms":202.20000000298023,"p95Ms":1282.0999999940395,"p99Ms":1282.0999999940395,"maxMs":1282.0999999940395,"over16_67Ms":12,"over50Ms":12}}]}

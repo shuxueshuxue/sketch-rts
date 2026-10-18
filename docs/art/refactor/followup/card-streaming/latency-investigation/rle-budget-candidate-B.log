@@ -1,6 +1,0 @@
-10:03:36 AM [vite] (client) ✨ new dependencies optimized: three, three/addons/loaders/GLTFLoader.js
-START aec09d62 hidden=0 cycle=0
-VIEWPORT streaming cycle 0 0 42.26500000009934 461.06666666672874
-START aec09d62 hidden=0 cycle=1
-VIEWPORT streaming cycle 0 1 41.59166666666667 428.6416666666046
-{"output":"/workspace/sketch-rts-viewport/docs/art/refactor/followup/card-streaming/latency-investigation/rle-budget-abba/candidate-B/raw.json","cycles":[{"hiddenCount":0,"cycle":0,"cpu":{"samples":60,"meanMs":42.26500000009934,"p50Ms":10.100000001490116,"p95Ms":124.30000000074506,"p99Ms":529.7000000029802,"maxMs":529.7000000029802,"over16_67Ms":28,"over50Ms":16},"real":{"samples":12,"meanMs":461.06666666672874,"p50Ms":263.69999999925494,"p95Ms":1313.4000000022352,"p99Ms":1313.4000000022352,"maxMs":1313.4000000022352,"over16_67Ms":12,"over50Ms":12}},{"hiddenCount":0,"cycle":1,"cpu":{"samples":60,"meanMs":41.59166666666667,"p50Ms":6.800000000745058,"p95Ms":124.30000000074506,"p99Ms":467.5,"maxMs":467.5,"over16_67Ms":28,"over50Ms":18},"real":{"samples":12,"meanMs":428.6416666666046,"p50Ms":196,"p95Ms":1411.699999999255,"p99Ms":1411.699999999255,"maxMs":1411.699999999255,"over16_67Ms":12,"over50Ms":12}}]}

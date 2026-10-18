@@ -1,4 +1,0 @@
-9:55:59 AM [vite] (client) ✨ new dependencies optimized: three, three/addons/loaders/GLTFLoader.js
-START aec09d62 hidden=0 cycle=0
-VIEWPORT streaming cycle 0 0 39.25166666650524 442.68333333265036
-{"output":"/workspace/sketch-rts-viewport/docs/art/refactor/followup/card-streaming/latency-investigation/rle-budget-pilot/candidate-B/raw.json","cycles":[{"hiddenCount":0,"cycle":0,"cpu":{"samples":60,"meanMs":39.25166666650524,"p50Ms":13.300000000745058,"p95Ms":115.59999999776483,"p99Ms":379,"maxMs":379,"over16_67Ms":28,"over50Ms":20},"real":{"samples":12,"meanMs":442.68333333265036,"p50Ms":190.30000000074506,"p95Ms":1415.2999999970198,"p99Ms":1415.2999999970198,"maxMs":1415.2999999970198,"over16_67Ms":12,"over50Ms":12}}]}

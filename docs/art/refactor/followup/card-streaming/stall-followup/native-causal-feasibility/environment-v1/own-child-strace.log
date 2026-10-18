@@ -1,3 +1,0 @@
-144318 execve("/usr/bin/true", ["/usr/bin/true"], 0x7ffd539c7ea8 /* 61 vars */) = 0
-144318 exit_group(0)                    = ?
-144318 +++ exited with 0 +++
