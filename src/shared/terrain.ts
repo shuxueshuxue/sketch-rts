@@ -378,7 +378,10 @@ export function walkDestination(map: Pick<GameMap, "terrain">, from: Point, goal
 function walkAhead(state: TerrainRuntime, ground: TerrainRuntime, tiles: Tiles, from: Point, near: number, target: number, goal: Point): Point {
   let at = near;
   let short = -1;
+  let first = -1;
   let way = wayAt(state, ground, tiles, at, target);
+  const initialField = way?.field;
+  let joined = false;
   for (let step = 1; step <= LOOKAHEAD && way; step += 1) {
     let next = downhill(state, way.field, at);
     if (next < 0) {
@@ -387,21 +390,19 @@ function walkAhead(state: TerrainRuntime, ground: TerrainRuntime, tiles: Tiles, 
       if (!way.exit) break;
       const nearer = wayAt(state, ground, tiles, at, target);
       if (nearer && !nearer.exit) {
+        joined ||= way.field !== nearer.field;
         way = nearer;
         next = downhill(state, way.field, at);
         if (next < 0) break;
       } else {
         next = at + way.exit.across;
         if (state.walk[next] !== 1) break;
-        // A lookahead shortcut must follow one field at a time. After crossing
-        // its exit, a second field can curl back behind this one; aiming straight
-        // at that later point reverses the current field and oscillates at the
-        // border. Hand off at the first cell across, then use its field next tick.
-        at = next;
-        break;
+        joined = true;
+        way = wayAt(state, ground, tiles, next, target);
       }
     }
     at = next;
+    if (step === 1) first = at;
     if (step === SHORT_LOOK) short = at;
     if (way && !way.exit && way.field.dist[local(way.field.box, at, state.width)] === 0) break;
   }
@@ -411,8 +412,30 @@ function walkAhead(state: TerrainRuntime, ground: TerrainRuntime, tiles: Tiles, 
   // and back every tick.
   if (at === near) return near === target ? goal : centerOf(state, near);
   const far = at === target ? goal : centerOf(state, at);
-  if (short < 0 || clearSegment(state, from.x, from.y, far.x, far.y)) return far;
-  return short === target ? goal : centerOf(state, short);
+  if ((short < 0 || clearSegment(state, from.x, from.y, far.x, far.y))
+    && (!joined || shortcutDescends(state, initialField!, from, near, far))) return far;
+  const close = short < 0 ? far : short === target ? goal : centerOf(state, short);
+  return !joined || shortcutDescends(state, initialField!, from, near, close) ? close : centerOf(state, first);
+}
+
+// Visibility alone does not make a lookahead shortcut follow the flow. After
+// joining two tile fields, its endpoint can be past a bend while the straight
+// shortcut first enters a cell uphill in the current field. The next tick then
+// steers back: ladder-18's returning warden oscillated across y=3456 forever.
+// Only when lookahead joins fields, require the shortcut to enter a downhill
+// cell of its starting field; otherwise use the short lookahead or first step.
+// Keep single-field smoothing unchanged: equal-cost or initially uphill cells
+// can still lead to a valid visible shortcut within one field.
+function shortcutDescends(state: TerrainRuntime, field: BoxField, from: Point, near: number, point: Point) {
+  const dx = point.x - from.x, dy = point.y - from.y, cell = state.terrain.cell;
+  const col = near % state.width - 1, row = Math.floor(near / state.width) - 1;
+  const acrossX = dx === 0 ? Infinity : ((col + Number(dx > 0)) * cell - from.x) / dx;
+  const acrossY = dy === 0 ? Infinity : ((row + Number(dy > 0)) * cell - from.y) / dy;
+  if (Math.min(acrossX, acrossY) > 1) return false;
+  const next = near + (acrossX <= acrossY ? Math.sign(dx) : 0)
+    + (acrossY <= acrossX ? Math.sign(dy) * state.width : 0);
+  const index = local(field.box, next, state.width);
+  return index < 0 || field.dist[index]! < field.dist[local(field.box, near, state.width)]!;
 }
 
 // The field a walk to `target` follows from cell `at`: the goal's when it reaches the cell, else the field of the window
