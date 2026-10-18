@@ -209,7 +209,7 @@ export class World3DLayer {
     const renderer=new THREE.WebGLRenderer({canvas,context,alpha:true,antialias:true});
     renderer.setClearColor(0,0);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
     renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.9;
-    const layer=new World3DLayer(renderer,rasterBudgetMs);layer.eventCanvas=canvas;perf?.attach(renderer);
+    const layer=new World3DLayer(renderer,rasterBudgetMs);layer.eventCanvas=canvas;perf?.attach(renderer);perf?.watchCards(()=>layer.cards.stats());
     canvas.addEventListener('webglcontextlost',layer.onContextLost);canvas.addEventListener('webglcontextrestored',layer.onContextRestored);
     return layer;
   }

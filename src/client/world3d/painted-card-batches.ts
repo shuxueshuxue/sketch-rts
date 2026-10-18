@@ -41,6 +41,16 @@ export class PaintedCardBatches {
   private maxTextureBanks:number;
   private pending:Request[]=[];
   private rasterizations=0;
+  // Warm cards dropped to make room or with their page: each one drawn again is painted again.
+  private evictions=0;
+  // Requests a frame left waiting with nothing to show: a troop drawn as its health bar alone.
+  private bodiless=0;
+  // The distinct cards the last frame drew, and the most any frame has drawn: what the cache must hold not to repaint.
+  private frameDemand=0;
+  private frameKeys=new Set<string>();
+  // When each card was last asked for: the cards of the last second are what an animation cycles through.
+  private askedAt=new Map<string,number>();
+  private peakFrameDemand=0;
   private preparedRasters=0;
   private copiedLayers=0;
   private matrix=new THREE.Matrix4();
@@ -70,7 +80,7 @@ export class PaintedCardBatches {
     this.mipUploader=new CardMipUploader(anisotropy);
   }
   begin(){
-    this.frame++;this.instanceOrder=0;this.pending.length=0;this.bindings.clear();
+    this.frame++;this.instanceOrder=0;this.pending.length=0;this.bindings.clear();this.frameKeys.clear();
     [this.shownBefore,this.shown]=[this.shown,this.shownBefore];this.shown.clear();
     for(const row of this.instances)if(row){row.card=undefined;row.id='';}
     // A failed upload must not expose last frame's lower-quality draw bindings.
@@ -92,7 +102,7 @@ export class PaintedCardBatches {
     // Keep a bounded warm cache, but never evict a card referenced by this
     // frame. Large visible armies may legitimately exceed the soft budget.
     const remainingLayers=Math.floor((PIXEL_BUDGET-this.allocatedPixels)/(width*height));
-    if(oldest&&remainingLayers<1){this.cards.delete(oldest.key);this.maskBytes-=oldest.mask.byteLength;oldest.page.cards[oldest.layer]=undefined;return{page:oldest.page,layer:oldest.layer};}
+    if(oldest&&remainingLayers<1){this.evictions++;this.cards.delete(oldest.key);this.maskBytes-=oldest.mask.byteLength;oldest.page.cards[oldest.layer]=undefined;return{page:oldest.page,layer:oldest.layer};}
     // Reserve only this frame's remaining unique demands, even below budget.
     // A new resident-size bin may need a few poses rather than sixteen warm
     // slots. Current visible demands may still exceed the soft budget.
@@ -105,7 +115,7 @@ export class PaintedCardBatches {
   add(key:string,density:number,paint:(ctx:CanvasRenderingContext2D)=>void,matrix:THREE.Matrix4,id:string,foot:number,tileSize:number=ART_TILE_SIZE,opacity=1,baseMip=0){
     const size=tileSize*density,factor=2**baseMip;
     if(!Number.isInteger(baseMip)||baseMip<0||baseMip>0&&(!Number.isInteger(size)||size<1||size%factor!==0))throw new Error('Invalid painted card resident mip.');
-    key=`${key}:${density}:${tileSize}`;
+    key=`${key}:${density}:${tileSize}`;this.frameKeys.add(key);this.askedAt.set(key,this.frame);
     const order=this.instanceOrder++,card=this.cards.get(key);
     // Protect every warm pose used this frame before allocating any new one.
     // Otherwise one early cache miss can evict a later visible pose, cascading
@@ -296,7 +306,7 @@ export class PaintedCardBatches {
         if(!card||card.baseMip>baseMip){
           if(painted&&performance.now()>=deadline){
             const before=this.shownBefore.get(request.id),stand=card??(before&&this.cards.get(before.key));
-            if(stand)this.instance(stand,request.matrix,request.id,request.foot,request.opacity,request.order);
+            if(stand)this.instance(stand,request.matrix,request.id,request.foot,request.opacity,request.order);else this.bodiless++;
             continue;
           }
           painted++;
@@ -305,6 +315,7 @@ export class PaintedCardBatches {
       }
     }finally{this.pending.length=0;}
     this.compact(renderer);
+    this.frameDemand=this.frameKeys.size;this.peakFrameDemand=Math.max(this.peakFrameDemand,this.frameDemand);
     for(const page of [...this.pages]){
       if(!page.cards.some(card=>card?.used===this.frame)&&(!page.cards.some(Boolean)||this.frame-page.used>120||this.allocatedPixels>PIXEL_BUDGET))this.remove(page);
     }
@@ -428,12 +439,13 @@ export class PaintedCardBatches {
   // Owned typed-array and texture storage estimates, not total process RSS or
   // Canvas backing stores. cpuBytes excludes scratch for existing consumers.
   stats(){
+    let secondDemand=0;for(const [key,at] of this.askedAt){if(this.frame-at>=60)this.askedAt.delete(key);else secondDemand++;}
     const pixels=this.allocatedPixels,transfer=this.mipUploader.stats();
     const bytes=(page:Page)=>page.mipBytes;
     const gpuBytes=Math.ceil(pixels*4*4/3),allocatedMipBytes=this.pages.reduce((sum,page)=>sum+bytes(page),0),retiredGpuBytes=[...this.retiring].reduce((sum,page)=>sum+(page.uploaded?bytes(page):0),0);
     const drawBufferBytes=this.chunks.reduce((sum,chunk)=>sum+chunk.mesh.instanceMatrix.array.byteLength+Object.values(chunk.geometry.attributes).reduce((total,attribute)=>total+attribute.array.byteLength,0)+(chunk.geometry.index?.array.byteLength??0),0);
     const cpuBytes=this.maskBytes+this.pendingMaskBytes+this.pendingRgbaBytes+this.rowScratch.byteLength+this.emptyRgba.byteLength;
-    return{pages:this.pages.length,cards:this.cards.size,pixels,drawChunks:this.chunks.filter(chunk=>chunk.mesh.visible).length,pooledDrawChunks:this.chunks.length,drawCapacity:this.chunks.reduce((sum,chunk)=>sum+chunk.capacity,0),drawBufferBytes,maxTextureBanks:this.maxTextureBanks,arrayCpuBytes:0,cpuBytes,gpuBytes,allocatedMipBytes,canvasBackingBytes:[...this.canvases.values()].reduce((sum,canvas)=>sum+canvas.width*canvas.height*4,0),maskBytes:this.maskBytes,pendingMaskBytes:this.pendingMaskBytes,pendingRgbaBytes:this.pendingRgbaBytes,rowScratchBytes:this.rowScratch.byteLength,retiredGpuBytes,rasterCache:this.rasterCache.stats(),ownedCpuBytes:cpuBytes+transfer.scratchCpuBytes+this.rasterCache.stats().ownedBytes,ownedGpuBytes:this.pages.reduce((sum,page)=>sum+(page.uploaded?bytes(page):0),0)+transfer.scratchGpuBytes,peakPendingRgbaBytes:this.peakPendingRgbaBytes,peakOwnedCpuBytes:this.peakOwnedCpuBytes,peakOwnedGpuBytes:this.peakOwnedGpuBytes,peakRetiredGpuBytes:this.peakRetiredGpuBytes,rasterizations:this.rasterizations,preparedRasters:this.preparedRasters,copiedLayers:this.copiedLayers,rasterStages:{...this.rasterStages},rasterWorkWallMs:this.rasterWorkWallMs,...transfer};
+    return{pages:this.pages.length,cards:this.cards.size,pixels,drawChunks:this.chunks.filter(chunk=>chunk.mesh.visible).length,pooledDrawChunks:this.chunks.length,drawCapacity:this.chunks.reduce((sum,chunk)=>sum+chunk.capacity,0),drawBufferBytes,maxTextureBanks:this.maxTextureBanks,arrayCpuBytes:0,cpuBytes,gpuBytes,allocatedMipBytes,canvasBackingBytes:[...this.canvases.values()].reduce((sum,canvas)=>sum+canvas.width*canvas.height*4,0),maskBytes:this.maskBytes,pendingMaskBytes:this.pendingMaskBytes,pendingRgbaBytes:this.pendingRgbaBytes,rowScratchBytes:this.rowScratch.byteLength,retiredGpuBytes,rasterCache:this.rasterCache.stats(),ownedCpuBytes:cpuBytes+transfer.scratchCpuBytes+this.rasterCache.stats().ownedBytes,ownedGpuBytes:this.pages.reduce((sum,page)=>sum+(page.uploaded?bytes(page):0),0)+transfer.scratchGpuBytes,peakPendingRgbaBytes:this.peakPendingRgbaBytes,peakOwnedCpuBytes:this.peakOwnedCpuBytes,peakOwnedGpuBytes:this.peakOwnedGpuBytes,peakRetiredGpuBytes:this.peakRetiredGpuBytes,rasterizations:this.rasterizations,bodiless:this.bodiless,evictions:this.evictions,frameDemand:this.frameDemand,peakFrameDemand:this.peakFrameDemand,secondDemand,preparedRasters:this.preparedRasters,copiedLayers:this.copiedLayers,rasterStages:{...this.rasterStages},rasterWorkWallMs:this.rasterWorkWallMs,...transfer};
   }
   private recordPeaks(){
     // Sampling occurs several times per raster. Preserve the same ownership and
@@ -447,7 +459,7 @@ export class PaintedCardBatches {
   }
   private remove(page:Page){
     const sourceSizes=new Set(page.cards.flatMap(card=>card?[card.sourceSize]:[]));
-    for(const card of page.cards)if(card&&this.cards.get(card.key)===card){this.cards.delete(card.key);this.maskBytes-=card.mask.byteLength;}
+    for(const card of page.cards)if(card&&this.cards.get(card.key)===card){this.evictions++;this.cards.delete(card.key);this.maskBytes-=card.mask.byteLength;}
     page.texture.dispose();this.pages.splice(this.pages.indexOf(page),1);this.allocatedPixels-=page.texture.image.width*page.texture.image.height*page.texture.image.depth;
     // Resident arrays can be smaller than their full-resolution scratch, and
     // different source sizes can share an identically sized resident page.
