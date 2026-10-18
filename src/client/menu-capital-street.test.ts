@@ -50,20 +50,25 @@ describe('capital street presentation', () => {
     expect(moving.size).toBeGreaterThanOrEqual(12);
   });
 
-  it('looks across the street slowly, keeps its authored focus inside the map and retains a fixed reduced-motion view', () => {
+  it('tours the whole street smoothly, keeps its authored focus inside the city and retains a fixed reduced-motion view', () => {
     const run = createCapitalStreet();
     expect(run.stillSecond).toBe(15);
     const snapshot = snapshotGame(run.game);
     for (const [width, height] of [[1440, 900], [1280, 720], [390, 844]] as const) {
       let previous = run.frameAt!(0, width, height, snapshot).focus;
+      let west = Infinity, east = -Infinity;
       for (let frame = 1; frame <= 90 * 30; frame++) {
         const view = run.frameAt!(frame / 30, width, height, snapshot);
-        expect(Math.hypot(view.focus.x - previous.x, view.focus.y - previous.y)).toBeLessThan(.19);
-        expect(view.focus.x).toBeGreaterThan(1400); expect(view.focus.x).toBeLessThan(2000);
-        expect(view.focus.y).toBeGreaterThan(1050); expect(view.focus.y).toBeLessThan(1250);
+        // Eased, no jerk: at most 0.9 a frame (27 a second) at the tour's fastest (see @@@capital-tour).
+        expect(Math.hypot(view.focus.x - previous.x, view.focus.y - previous.y)).toBeLessThan(.9);
+        expect(view.focus.x).toBeGreaterThan(950); expect(view.focus.x).toBeLessThan(2100);
+        expect(view.focus.y).toBeGreaterThan(900); expect(view.focus.y).toBeLessThan(1250);
         expect(view.zoom).toBeGreaterThan(.8); expect(view.zoom).toBeLessThan(1.5);
+        west = Math.min(west, view.focus.x); east = Math.max(east, view.focus.x);
         previous = view.focus;
       }
+      // The pass crosses the city from the west market to the tavern square, not one shopfront.
+      expect(east - west).toBeGreaterThan(750);
     }
   });
 

@@ -324,6 +324,27 @@ function poseOnRoute(unit: Unit, route: Route, second: number) {
   else unit.order = { type: 'idle' };
 }
 
+// The camera's tour through the city (see @@@capital-tour), its focus points in world units. The menu covers the left of
+// a wide screen, so there the focus sits at seven tenths across and the street is seen east of it.
+const DESKTOP_TOUR: readonly Point[] = [{ x: 1230, y: 1150 }, { x: 1420, y: 1000 }, { x: 1760, y: 960 }, { x: 2010, y: 1200 }];
+const COMPACT_TOUR: readonly Point[] = [{ x: 1230, y: 1120 }, { x: 1420, y: 980 }, { x: 1760, y: 940 }, { x: 2010, y: 1170 }];
+const MOBILE_TOUR: readonly Point[] = [{ x: 1150, y: 1110 }, { x: 1400, y: 1000 }, { x: 1720, y: 930 }, { x: 2060, y: 1200 }];
+
+/** The point a share `progress` (0..1) of the way along a path, by length. */
+function alongPath(path: readonly Point[], progress: number): Point {
+  const lengths = path.slice(1).map((point, index) => Math.hypot(point.x - path[index]!.x, point.y - path[index]!.y));
+  let left = progress * lengths.reduce((total, length) => total + length, 0);
+  for (let index = 0; index < lengths.length; index++) {
+    const length = lengths[index]!;
+    if (left <= length || index === lengths.length - 1) {
+      const share = length ? Math.min(1, left / length) : 0, from = path[index]!, to = path[index + 1]!;
+      return { x: from.x + (to.x - from.x) * share, y: from.y + (to.y - from.y) * share };
+    }
+    left -= length;
+  }
+  return path[0]!;
+}
+
 /** City daily life is a fixed cast of 24, a static street and a slow camera.
  * All route updates are bounded linear arithmetic, independent of map size. */
 export function createCapitalStreet(): AuthoredMenuSceneRun {
@@ -456,17 +477,18 @@ export function createCapitalStreet(): AuthoredMenuSceneRun {
       for (const route of routes) poseOnRoute(units.get(route.id)!, route, second);
     },
     frameAt(second, viewportWidth, viewportHeight) {
-      // A gentle pass from market frontage to the tavern square. Smoothstep
-      // starts and ends without a visible camera jerk; no idle camera jitter.
+      // @@@capital-tour - The camera walks the whole city in one eased pass: the west market, up past the barracks and
+      // the hall, and down to the tavern square at the east end. It used to drift 215 (50 on a phone) over 80 s and
+      // showed one shopfront; the street runs from 760 to 2240.
       const t = Math.max(0, Math.min(1, (second - 2) / 80));
-      const progress = t * t * (3 - 2 * t);
       const mobile = viewportWidth < 700;
       const compact = viewportHeight < 760;
+      const at = alongPath(mobile ? MOBILE_TOUR : compact ? COMPACT_TOUR : DESKTOP_TOUR, t * t * (3 - 2 * t));
       return mobile ? {
-        focus: { x: 1710 + progress * 50, y: 1115 + progress * 12 },
+        focus: at,
         zoom: .93 * Math.max(.87, Math.min(1.08, viewportHeight / 844)), anchorX: .52, anchorY: .4,
       } : {
-        focus: { x: 1580 + progress * 215, y: (compact ? 1172 : 1210) + progress * 12 },
+        focus: at,
         zoom: (compact ? 1.08 : 1.15) * Math.max(.88, Math.min(1.28, viewportHeight / 900)), anchorX: .7, anchorY: .5,
       };
     },
