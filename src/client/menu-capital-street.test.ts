@@ -68,7 +68,7 @@ describe('capital street presentation', () => {
         previous = view.focus;
       }
       // The pass crosses the city from the west market to the tavern square, not one shopfront.
-      expect(east - west).toBeGreaterThan(900);
+      expect(east - west).toBeGreaterThan(750);
     }
   });
 

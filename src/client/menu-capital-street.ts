@@ -326,9 +326,9 @@ function poseOnRoute(unit: Unit, route: Route, second: number) {
 
 // The camera's tour through the city (see @@@capital-tour), its focus points in world units. The menu covers the left of
 // a wide screen, so there the focus sits at seven tenths across and the street is seen east of it.
-const DESKTOP_TOUR: readonly Point[] = [{ x: 1080, y: 1170 }, { x: 1420, y: 1000 }, { x: 1760, y: 960 }, { x: 2010, y: 1200 }];
-const COMPACT_TOUR: readonly Point[] = [{ x: 1080, y: 1140 }, { x: 1420, y: 980 }, { x: 1760, y: 940 }, { x: 2010, y: 1170 }];
-const MOBILE_TOUR: readonly Point[] = [{ x: 1000, y: 1120 }, { x: 1400, y: 1000 }, { x: 1720, y: 930 }, { x: 2060, y: 1200 }];
+const DESKTOP_TOUR: readonly Point[] = [{ x: 1230, y: 1150 }, { x: 1420, y: 1000 }, { x: 1760, y: 960 }, { x: 2010, y: 1200 }];
+const COMPACT_TOUR: readonly Point[] = [{ x: 1230, y: 1120 }, { x: 1420, y: 980 }, { x: 1760, y: 940 }, { x: 2010, y: 1170 }];
+const MOBILE_TOUR: readonly Point[] = [{ x: 1150, y: 1110 }, { x: 1400, y: 1000 }, { x: 1720, y: 930 }, { x: 2060, y: 1200 }];
 
 /** The point a share `progress` (0..1) of the way along a path, by length. */
 function alongPath(path: readonly Point[], progress: number): Point {
