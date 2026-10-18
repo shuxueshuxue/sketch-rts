@@ -9,6 +9,7 @@ import { weaponRules } from './equipment';
 import { combatCapability } from './combat-capabilities';
 import { localToWorld, shipProfile, SHIP_SIZE_MULTIPLIER } from './ship-geometry';
 import { sailToward, turnShipToward } from './sailing';
+import { shipMotionLimits } from './ship-handling';
 import { checksumGame } from './sim/checksum';
 import type { WorldItem } from './types';
 import { createBuilding } from './map';
@@ -337,6 +338,29 @@ describe('physical ship equipment', () => {
         repairShipParts(game, ship, 1000);
         expect(shipNeedsRepair(game, ship)).toBe(false);
         expect(cannon.durability).toBe(SHIP_WEAPONS.shipCannon.hp);
+    });
+    // @@@crippled-parts: a rudder shot to 1.3 of 152 steers at under a hundredth of its rate, so it is mended before a
+    // hull that fire keeps from ever being whole; above a quarter of its work the hull comes first again.
+    it('mends a crippled rudder or rigging to working order before the hull, and a working one after it', () => {
+        const game = match(), ship = game.spawnUnit('player', 'shipOfTheLine', 900, 800), parts = shipPartMax(ship);
+        const sound = { ...shipMotionLimits(ship) };
+        ship.hp -= 300;
+        ship.shipParts = { ...parts, rudder: 1.3 };
+        repairShipParts(game, ship, 20);
+        expect([ship.shipParts.rudder, ship.hp]).toEqual([21.3, ship.maxHp - 300]);
+        repairShipParts(game, ship, 30);
+        expect(ship.shipParts.rudder).toBe(parts.rudder / 4);
+        expect(ship.hp).toBeCloseTo(ship.maxHp - 300 + 30 - (parts.rudder / 4 - 21.3));
+        expect(shipMotionLimits(ship).turnRate).toBeCloseTo(sound.turnRate / 4);
+        // Working, if far from whole: the hull now comes first.
+        const hp = ship.hp;
+        repairShipParts(game, ship, 10);
+        expect([ship.shipParts.rudder, ship.hp]).toEqual([parts.rudder / 4, hp + 10]);
+        // The rigging's floor is where it gives a quarter of the headway, a sixteenth of its hp.
+        ship.shipParts.rigging = 1;
+        repairShipParts(game, ship, 100);
+        expect(ship.shipParts.rigging).toBe(parts.rigging / 16);
+        expect(shipMotionLimits(ship).speed).toBeCloseTo(sound.speed / 4);
     });
     it('walks a repair worker over from a touching friendly deck to rescue an immobilized ship', () => {
         const game = match();
