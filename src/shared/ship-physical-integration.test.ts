@@ -77,15 +77,16 @@ describe('physical ship impacts through stepGame',()=>{
     expect(observed.some(hit=>hit.source===moving.id&&hit.target===rock.id)).toBe(true);
     expect(moving.kills).toBe(0);expect(moving.xp).toBe(0);expect(game.match.stats.neutralUnitsKilled.player??0).toBe(0);
   });
+  // An enemy's: a hull shoulders its own side's troops aside (see @@@shoulder-aside).
   it('damages a reachable ground body in shallow water through normal death handling',()=>{
     const game=sea();game.map.terrain!.cells=','.repeat(4096);
-    const moving=ship(game,'moving'),worker=createUnit('worker','player','worker',moving.x+shipProfile(moving)!.length/2+15+.4,moving.y);
+    const moving=ship(game,'moving'),worker=createUnit('worker','enemy','worker',moving.x+shipProfile(moving)!.length/2+15+.4,moving.y);
     worker.hp=1;worker.order={type:'hold',x:worker.x,y:worker.y};game.units.push(worker);
     const observed=hits(game);pushed(moving);stepGame(game);
     expect(moving.hp).toBeLessThan(moving.maxHp);expect(game.units).not.toContain(worker);
     expect(observed.some(hit=>hit.source===moving.id&&hit.target===worker.id)).toBe(true);
     expect(distanceToHull(moving,worker)).toBeGreaterThanOrEqual(worker.radius-1e-5);
-    expect(game.match.stats.unitsLost.player).toBe(1);expect(moving.kills).toBe(0);expect(moving.xp).toBe(0);
+    expect(game.match.stats.unitsLost.enemy).toBe(1);expect(moving.kills).toBe(1);expect(moving.xp).toBeGreaterThan(0);
   });
   it('counts friendly shipwreck passengers as losses without awarding a crash bounty',()=>{
     const {game,a,b}=pair(),crew=createUnit('crew','player','footman',b.x,b.y);

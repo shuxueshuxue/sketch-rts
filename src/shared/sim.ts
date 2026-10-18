@@ -3,7 +3,7 @@ import { addGold, roundGold } from "./gold";
 import { unitControlsMercenaryCamp } from './mercenary-camp';
 import { boardingHoldShips, cancelCrewRendezvous, prepareCrewRendezvous } from './crew-rendezvous';
 import { prepareShipDefenseFrame, combatHull, type ShipDefenseFrame } from './ship-defense';
-import { constrainGroundShipStep, drainShipCollisionImpacts, groundShipFrameEmpty, shipBodyClearAtPose } from './ship-collisions';
+import { constrainGroundShipStep, hullsInTheWay, shoulderAside, drainShipCollisionImpacts, groundShipFrameEmpty, shipBodyClearAtPose } from './ship-collisions';
 import { shipLaunchPose, shipLaunchPrototype } from './ship-launch';
 import { landSpawnPoint, landSpawnPrototype } from './production-spawn';
 import { shipFireLaneClear } from './ship-fire-control';
@@ -45,6 +45,7 @@ import { buildingPlacementBlocker, terrainBlocksPlacement, upgradeSite } from ".
 import { sameGround, footprintHalf, groundUnder, isOpenGround, isWalkable, openGroundNear, openStep, setBuildingBodies, shareBuildingBodies, snapToFootprint, steerPoint, walkableGoal, walkDestination, warmTerrainRouting } from "./terrain";
 import { alongside, boardingBerth, canReach, carries, landingSpot } from "./naval";
 import { detCos, detSin } from "./det-math";
+import { giveWayHulls } from "./ship-mooring";
 import { canBoard, boardUnit, deckGiveWay, deckPlacement, deckPointFits, moveOnDeck, restoreCargoDecks, syncDecks, settleGangwayCrossings } from "./decks";
 import { bodyMass } from "./physical-body";
 import { walkConnectedSurfaces, settleDeckSupport, decksCanTransfer } from "./connected-decks";
@@ -856,6 +857,10 @@ export function stepGame(game: Game) {
   if (!navalFrame && (ferry || (game.units !== updateUnitsSource || game.units.length !== updateUnitsCount) && (navalFrameFlags(game) & NAVAL_FRAME))) navalFrame = true;
   if (navalFrame) updateMountedWeapons(game,starts,defenses);
   if (ferry) ferryUnits(game, ferry, starts);
+  // A hull sets down off its side the troops of its own it came over (see @@@shoulder-aside); and hulls that held up
+  // their own side's land units this tick make way (see @@@give-way).
+  if (navalFrame) shoulderAside(game.map, game.units, starts);
+  if (navalFrame) giveWayHulls(game.map, game.units, hullsInTheWay(game.units), game.boardingHolds, starts, (ship, order) => assignUnitOrder(ship, order));
   if (navalFrame) {
     for (const ship of shipsIn(game.units)) { const start = starts.get(ship.id); if (start && ship.sailing && start.x === ship.x && start.y === ship.y) ship.sailing.speed = 0; }
     updateShipGangways(game.map,game.units,game.tick,game);

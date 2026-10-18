@@ -133,7 +133,7 @@ describe('continuous physical ship impacts', () => {
 
   it('stops a reachable off-deck ground body even when both desired endpoints are clear', () => {
     const map = water(); map.terrain!.cells = ','.repeat(128 * 128);
-    const ship = boat('a'), soldier = createUnit('soldier', 'player', 'footman', ship.x + bow(ship) + 40, 1000), units = [ship, soldier];
+    const ship = boat('a'), soldier = createUnit('soldier', 'enemy', 'footman', ship.x + bow(ship) + 40, 1000), units = [ship, soldier];
     ship.speed = 10000; ship.sailing!.speed = 10000; ship.sailing!.velocityX = 10000;
     const end = { ...pose(ship), x: ship.x + 500 };
     expect(shipBodyClearAtPose(map, ship, pose(ship), [soldier])).toBe(true);
