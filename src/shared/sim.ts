@@ -1990,9 +1990,12 @@ function updateBoardOrder(game: Game, unit: Unit) {
     if(unit.kind!=='worker' && areEnemyOwners(game,unit.owner,transport.owner) && unit.attackDamage>0
       && unitRules(game,unit).attackRange<=RANGED_ATTACK_RANGE_THRESHOLD) {
       // Answer the reachable front rank before pursuing a higher-priority
-      // shooter whose route is sealed by that defender's body.
+      // shooter whose route is sealed by that defender's body. Still on its
+      // own deck with no defender in reach, a boarder keeps crossing: an attack
+      // order walks no bridge, and it stood at its own rail facing a marine
+      // across the water for good.
       const nearby=navalCombatTarget(game,unit,transport,unit.attackRange);
-      const defender=nearby!==transport ? nearby : navalCombatTarget(game,unit,transport);
+      const defender=nearby!==transport ? nearby : source.id===transport.id ? navalCombatTarget(game,unit,transport) : transport;
       if(defender!==transport && isUnit(defender)) {
         const boardingOrder=unit.order;
         unit.order={type:'attack',targetId:defender.id,frontRank:true};
@@ -2008,7 +2011,10 @@ function updateBoardOrder(game: Game, unit: Unit) {
     }
     // One shared entry admits large bodies first. Waiting crew clear the aft
     // passage on their own deck rather than racing ahead and sealing the exit.
-    const ahead=game.units.some(other=>other!==unit && other.hp>0 && other.deck && other.order.type==="board" && other.order.transportId===transport.id
+    // Only boarders still on this side are in the queue: one already across
+    // keeps its board order until it settles on its spot, and fighting at the
+    // entry it never did, holding everyone behind it.
+    const ahead=game.units.some(other=>other!==unit && other.hp>0 && other.deck?.shipId===source.id && other.order.type==="board" && other.order.transportId===transport.id
       && (other.radius>unit.radius || other.radius===unit.radius && other.id<unit.id));
     if(ahead && source.id!==transport.id){
       const profile=shipProfile(source)!,entry=worldToLocal(source,transport);
