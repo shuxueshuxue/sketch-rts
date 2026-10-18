@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "sketch": "tsx tools/cli/main.ts",
     "dev": "tsx src/server/index.ts",
     "dev:static": "VITE_SKETCH_RTS_DEPLOYMENT=static vite --host 0.0.0.0",
     "dev:lan": "HOST=0.0.0.0 tsx src/server/index.ts",
@@ -68,5 +69,8 @@
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
+  },
+  "bin": {
+    "sketch": "bin/sketch"
   }
 }
