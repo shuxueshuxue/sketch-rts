@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Setup option A: map grid</title>
+<link rel="stylesheet" href="visual-kit.css"><link rel="stylesheet" href="proto-layout.css">
+</head>
+<body>
+<!-- (a) The maps take the main area as cards; the seats stand beside them (below on a phone). One screen, one click per map. -->
+<main class="rs-screen layout-a">
+  <header class="rs-head"><div class="rs-title"></div><div class="rs-status"></div></header>
+  <div class="rs-body">
+    <section class="map-grid" aria-label="地图"></section>
+    <section class="seat-pane">
+      <div class="seat-pane-head"><span class="map-bar-name"></span> <span class="map-bar-meta"></span></div>
+      <div class="seat-table"></div>
+    </section>
+  </div>
+  <footer class="rs-footer"></footer>
+</main>
+<script src="maps.js"></script>
+<script src="proto.js"></script>
+<script>
+const { loadMaps, seatsFor, renderSeats, seatHead, mode, canChooseMap, title, status, footer, meta } = Proto;
+Proto.switcher("a");
+document.querySelector(".rs-screen").classList.add(mode);
+document.querySelector(".rs-title").textContent = title;
+document.querySelector(".rs-status").textContent = status;
+footer(document.querySelector(".rs-footer"));
+const maps = loadMaps(), grid = document.querySelector(".map-grid"), table = document.querySelector(".seat-table");
+let chosen = maps.find(map => map.id === new URLSearchParams(location.search).get("map")) ?? maps[0], seats = seatsFor(chosen.players);
+seatHead(table);
+// The cards are made once; a click moves the selection and redraws the seats, the grid stays where it is scrolled to.
+for (const map of maps) {
+  const card = document.createElement("button");
+  card.className = "map-card"; card.dataset.mapId = map.id;
+  if (!canChooseMap) card.setAttribute("aria-disabled", "true");
+  card.innerHTML = `<img class="map-card-thumb" src="maps/${map.id}.png" alt=""><span class="map-card-name">${map.name}</span><span class="map-card-meta">${meta(map)}</span>`;
+  card.addEventListener("click", () => { if (!canChooseMap || map === chosen) return; chosen = map; seats = seatsFor(map.players, seats); show(); });
+  grid.appendChild(card);
+}
+function show() {
+  for (const card of grid.children) card.classList.toggle("is-selected", card.dataset.mapId === chosen.id);
+  document.querySelector(".seat-pane .map-bar-name").textContent = chosen.name;
+  document.querySelector(".seat-pane .map-bar-meta").textContent = meta(chosen);
+  renderSeats(table, seats);
+}
+show();
+// The chosen map is in view when the screen opens (a remembered map may be far down); a guest sees the host's map chosen and
+// the others for reference only.
+grid.querySelector(".is-selected")?.scrollIntoView({ block: "nearest" });
+</script>
+</body>
+</html>

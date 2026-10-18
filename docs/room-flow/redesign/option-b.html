@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Setup option B: two steps</title>
+<link rel="stylesheet" href="visual-kit.css"><link rel="stylesheet" href="proto-layout.css">
+</head>
+<body>
+<!-- (b) Two steps: the maps fill the window; picking one goes on to its seats, with the map as a bar on top that leads back.
+     ?step=maps|seats opens a step (a remembered solo setup, and a guest, open on the seats). -->
+<main class="rs-screen layout-b">
+  <header class="rs-head"><div class="rs-title"></div><div class="rs-status"></div></header>
+  <div class="rs-body">
+    <section class="map-grid" aria-label="地图"></section>
+    <section class="seat-page" hidden>
+      <div class="map-bar"><img class="map-bar-thumb" alt=""><div><div class="map-bar-name"></div><div class="map-bar-meta"></div></div><button class="btn map-bar-change">换图</button></div>
+      <div class="seat-table"></div>
+    </section>
+  </div>
+  <footer class="rs-footer"></footer>
+</main>
+<script src="maps.js"></script>
+<script src="proto.js"></script>
+<script>
+const { loadMaps, seatsFor, renderSeats, seatHead, mode, role, canChooseMap, title, status, footer, meta } = Proto;
+Proto.switcher("b");
+const params = new URLSearchParams(location.search), screen = document.querySelector(".rs-screen");
+screen.classList.add(mode);
+document.querySelector(".rs-status").textContent = status;
+const maps = loadMaps(), grid = document.querySelector(".map-grid"), seatPage = document.querySelector(".seat-page"), table = document.querySelector(".seat-table");
+let chosen = maps.find(map => map.id === params.get("map")) ?? maps[0], seats = seatsFor(chosen.players);
+seatHead(table);
+for (const map of maps) {
+  const card = document.createElement("button");
+  card.className = "map-card"; card.dataset.mapId = map.id;
+  card.innerHTML = `<img class="map-card-thumb" src="maps/${map.id}.png" alt=""><span class="map-card-name">${map.name}</span><span class="map-card-meta">${meta(map)}</span>`;
+  // One click picks the map and goes on to its seats.
+  card.addEventListener("click", () => { if (map !== chosen) { chosen = map; seats = seatsFor(map.players, seats); } step("seats"); });
+  grid.appendChild(card);
+}
+const change = document.querySelector(".map-bar-change");
+if (!canChooseMap) change.remove(); else change.addEventListener("click", () => step("maps"));
+// The grid is hidden, not rebuilt, on the seat page: back on it, it is where it was left.
+function step(which) {
+  grid.hidden = which !== "maps"; seatPage.hidden = which !== "seats";
+  document.querySelector(".rs-title").textContent = which === "maps" ? "选择地图" : title;
+  for (const card of grid.children) card.classList.toggle("is-selected", card.dataset.mapId === chosen.id);
+  document.querySelector(".map-bar-thumb").src = `maps/${chosen.id}.png`;
+  document.querySelector(".map-bar-name").textContent = chosen.name;
+  document.querySelector(".map-bar-meta").textContent = meta(chosen);
+  renderSeats(table, seats);
+  footer(document.querySelector(".rs-footer"));
+  if (which === "maps") {
+    document.querySelector(".rs-footer").innerHTML = `<button class="btn btn-quiet">返回</button>`;
+    grid.querySelector(".is-selected")?.scrollIntoView({ block: "nearest" });
+  }
+}
+step(role === "guest" ? "seats" : params.get("step") === "seats" ? "seats" : "maps");
+</script>
+</body>
+</html>

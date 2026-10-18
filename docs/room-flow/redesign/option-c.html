@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Setup option C: wide list</title>
+<link rel="stylesheet" href="visual-kit.css"><link rel="stylesheet" href="proto-layout.css">
+</head>
+<body>
+<!-- (c) Today's three columns, rebalanced: a wider map list with thumbnails, the chosen map's picture and facts as one card,
+     the seats narrower. -->
+<main class="rs-screen layout-c">
+  <header class="rs-head"><div class="rs-title"></div><div class="rs-status"></div></header>
+  <div class="rs-body">
+    <section class="map-list" aria-label="地图"></section>
+    <section class="map-preview-card"><img alt=""><div class="map-preview-name"></div><dl class="map-facts"></dl></section>
+    <div class="seat-table"></div>
+  </div>
+  <footer class="rs-footer"></footer>
+</main>
+<script src="maps.js"></script>
+<script src="proto.js"></script>
+<script>
+const { loadMaps, seatsFor, renderSeats, seatHead, mode, canChooseMap, title, status, footer, meta } = Proto;
+Proto.switcher("c");
+document.querySelector(".rs-screen").classList.add(mode);
+document.querySelector(".rs-title").textContent = title;
+document.querySelector(".rs-status").textContent = status;
+footer(document.querySelector(".rs-footer"));
+const maps = loadMaps(), list = document.querySelector(".map-list"), table = document.querySelector(".seat-table");
+let chosen = maps.find(map => map.id === new URLSearchParams(location.search).get("map")) ?? maps[0], seats = seatsFor(chosen.players);
+seatHead(table);
+for (const map of maps) {
+  const row = document.createElement("button");
+  row.className = "map-row"; row.dataset.mapId = map.id;
+  if (!canChooseMap) row.setAttribute("aria-disabled", "true");
+  row.innerHTML = `<img class="map-row-thumb" src="maps/${map.id}.png" alt=""><span class="map-row-name">${map.name}</span><span class="map-row-meta">${meta(map)}</span>`;
+  row.addEventListener("click", () => { if (!canChooseMap || map === chosen) return; chosen = map; seats = seatsFor(map.players, seats); show(); });
+  list.appendChild(row);
+}
+const factNames = { size: "尺寸", mines: "金矿", camps: "野怪营地", posts: "雇佣兵营地", items: "宝物" };
+function show() {
+  for (const row of list.children) row.classList.toggle("is-selected", row.dataset.mapId === chosen.id);
+  const card = document.querySelector(".map-preview-card");
+  card.querySelector("img").src = `maps/${chosen.id}.png`;
+  card.querySelector(".map-preview-name").textContent = chosen.name;
+  card.querySelector(".map-facts").innerHTML = `<dt>玩家</dt><dd>${chosen.players} 人</dd>` + (chosen.idea ? `<dt>布局</dt><dd>${chosen.idea}</dd>` : "")
+    + Object.entries(factNames).filter(([key]) => chosen.facts[key] !== undefined).map(([key, label]) => `<dt>${label}</dt><dd>${key === "size" ? `${chosen.facts.size} × ${chosen.facts.size}` : chosen.facts[key]}</dd>`).join("");
+  renderSeats(table, seats);
+}
+show();
+list.querySelector(".is-selected")?.scrollIntoView({ block: "nearest", inline: "nearest" });
+</script>
+</body>
+</html>
