@@ -7,11 +7,13 @@ import { cast, stage, terrainOf, type AuthoredMenuSceneRun } from './menu-scene-
 
 // A small, authored street scene. Costumes and architecture belong to this
 // presentation; its inhabitants do not enlist new match units or run city AI.
-const PLASTER = '#d8c9a5';
+const PLASTER = '#dfd3b7';
 const STONE = '#b5b39e';
 const TIMBER = '#655543';
-const SLATE = '#667e77';
-const WARM_ROOF = '#92705a';
+// Timber framing is a structure line in the wood's own colour, not ink (prop-painting.zh.md §4).
+const BEAM = '#7d654b';
+const SLATE = '#6d8b88';
+const WARM_ROOF = '#b3825d';
 const PALE = '#e2d4b6';
 const CIVILIAN = 'townsfolk';
 const CROWN = 'lion';
@@ -36,7 +38,7 @@ function barrel(b: Brush, x: number, y: number, scale = 1) {
 
 function window(b: Brush, x: number, y: number, wide = false, lit = false) {
   const w = wide ? 12 : 7;
-  polygon(b, [[x - w / 2, y], [x + w / 2, y - 1], [x + w / 2, y + 11], [x - w / 2, y + 12]], lit ? '#c8aa70' : '#45524b', TIMBER, 1);
+  polygon(b, [[x - w / 2, y], [x + w / 2, y - 1], [x + w / 2, y + 11], [x - w / 2, y + 12]], lit ? '#c8aa70' : '#45524b', BEAM, 0.65);
   line(b, [[x, y], [x, y + 11]], '#b69e74', .7);
   line(b, [[x - w / 2, y + 6], [x + w / 2, y + 5]], '#b69e74', .7);
   line(b, [[x - w / 2 - 1, y + 13], [x + w / 2 + 1, y + 12]], STONE, 1.5);
@@ -44,7 +46,7 @@ function window(b: Brush, x: number, y: number, wide = false, lit = false) {
 
 function roof(b: Brush, color: string, x = 0, y = 0) {
   const p = (points: number[][]) => points.map(([px, py]) => [px! + x, py! + y]);
-  polygon(b, p([[-55, -31], [-21, -61], [48, -49], [21, -22]]), color, INK, 1.1);
+  polygon(b, p([[-55, -31], [-21, -61], [48, -49], [21, -22]]), color, INK, 1);
   polygon(b, p([[21, -22], [48, -49], [55, -42], [27, -17]]), darker(color, .2), INK, .9);
   for (let row = 1; row < 5; row++) {
     const t = row / 5;
@@ -60,50 +62,48 @@ function roof(b: Brush, color: string, x = 0, y = 0) {
 function cityHouse(b: Brush, state: string | undefined) {
   const merchant = state === 'shop';
   const plaster = state === 'ochre' ? '#c1ae86' : state === 'rose' ? '#c6ae9b' : PLASTER;
-  ellipse(b, 6, 19, 49, 9, '#37453820');
-  polygon(b, [[-43, -23], [21, -15], [21, 20], [-43, 12]], plaster, INK, 1.1);
-  polygon(b, [[21, -15], [45, -36], [45, -1], [21, 20]], '#aea58a', INK, 1.1);
-  for (const x of [-39, -13, 17]) line(b, [[x, -23 + (x + 43) * .125], [x, 12 + (x + 43) * .125]], TIMBER, 2);
-  line(b, [[-42, -4], [21, 4]], TIMBER, 2);
+  polygon(b, [[-43, -23], [21, -15], [21, 20], [-43, 12]], plaster, INK, 1);
+  polygon(b, [[21, -15], [45, -36], [45, -1], [21, 20]], '#aea58a', INK, 1);
+  for (const x of [-39, -13, 17]) line(b, [[x, -23 + (x + 43) * .125], [x, 12 + (x + 43) * .125]], BEAM, 1.3);
+  line(b, [[-42, -4], [21, 4]], BEAM, 1.3);
   line(b, [[-40, -20], [-15, 0], [15, -15]], '#7f6b52', 1.3);
   for (const [x, y] of [[-29, -15], [4, -11]] as const) window(b, x, y, false, x > 0);
-  polygon(b, [[-13, 4], [-3, 5], [-3, 17], [-13, 15.5]], '#394136', TIMBER, 1);
+  polygon(b, [[-13, 4], [-3, 5], [-3, 17], [-13, 15.5]], '#394136', BEAM, 0.65);
   line(b, [[-10, 6], [-10, 15]], '#9d8058', .6);
   slab(b, -8, 16, 18, 4);
   roof(b, state === 'rose' ? WARM_ROOF : SLATE);
   polygon(b, [[24, -47], [30, -45.5], [30, -57], [24, -58.5]], '#9b9783', INK, .8);
   line(b, [[23, -58], [31, -56.5]], '#d4c5a7', 1.8);
   if (merchant) {
-    polygon(b, [[-45, -7], [-15, -3], [-8, 5], [-44, 0]], '#a88759', TIMBER, .8);
+    polygon(b, [[-45, -7], [-15, -3], [-8, 5], [-44, 0]], '#a88759', BEAM, 0.52);
     for (let i = 0; i < 4; i++) polygon(b, [[-42 + i * 8, -6.6 + i], [-38 + i * 8, -6 + i], [-33 + i * 8, 3.6 + i], [-38 + i * 8, 3 + i]], '#d3c3a1', 'transparent', 0);
-    line(b, [[-43, 0], [-43, 14]], TIMBER, 1.4);
+    line(b, [[-43, 0], [-43, 14]], BEAM, 0.91);
     barrel(b, 32, 10, .8);
   }
 }
 
 function tavern(b: Brush) {
-  ellipse(b, 8, 29, 50, 10, '#30483628');
   // High timber upper storey; a stone ground floor and deep, open street door.
-  polygon(b, [[-46, -15], [16, -7], [16, 26], [-46, 18]], '#b6b099', INK, 1.1);
-  polygon(b, [[16, -7], [43, -27], [43, 6], [16, 26]], '#8d9180', INK, 1.1);
+  polygon(b, [[-46, -15], [16, -7], [16, 26], [-46, 18]], '#b6b099', INK, 1);
+  polygon(b, [[16, -7], [43, -27], [43, 6], [16, 26]], '#8d9180', INK, 1);
   for (let row = 0; row < 4; row++) for (let col = 0; col < 6; col++) {
     const x = -44 + col * 10 + (row % 2 ? 4 : 0);
     if (x < 10) line(b, [[x, -9 + row * 8 + (x + 44) * .13], [x + 8, -8 + row * 8 + (x + 44) * .13]], '#d1c7ac', .6);
   }
   polygon(b, [[-48, -39], [17, -31], [17, -6], [-48, -14]], PALE, INK, 1);
   polygon(b, [[17, -31], [43, -50], [43, -26], [17, -6]], '#baa98b', INK, 1);
-  for (const x of [-43, -13, 13]) line(b, [[x, -39 + (x + 48) * .12], [x, -14 + (x + 48) * .12]], TIMBER, 2.1);
-  line(b, [[-48, -15], [17, -7]], TIMBER, 2.6);
-  line(b, [[-44, -36], [-16, -13], [12, -32]], TIMBER, 1.5);
+  for (const x of [-43, -13, 13]) line(b, [[x, -39 + (x + 48) * .12], [x, -14 + (x + 48) * .12]], BEAM, 1.37);
+  line(b, [[-48, -15], [17, -7]], BEAM, 1.5);
+  line(b, [[-44, -36], [-16, -13], [12, -32]], BEAM, 0.98);
   window(b, -28, -33, true, true); window(b, 1, -29, true, true);
   window(b, 33, -37, false, true);
-  polygon(b, [[-16, 0], [-2, 1], [-2, 24], [-16, 22]], '#303930', TIMBER, 1.4);
+  polygon(b, [[-16, 0], [-2, 1], [-2, 24], [-16, 22]], '#303930', BEAM, 0.91);
   line(b, [[-15, 1], [-14, 20]], '#bb9b67', 1.1);
   slab(b, -8, 24, 23, 4);
   window(b, -34, 1, true, true);
   roof(b, WARM_ROOF, 0, -1);
   // Sign is a carved tankard rather than text tied to one locale.
-  line(b, [[26, -13], [52, -10]], TIMBER, 2);
+  line(b, [[26, -13], [52, -10]], BEAM, 1.3);
   line(b, [[48, -10], [48, -4]], '#8c927e', 1);
   polygon(b, [[38, -4], [60, -1], [58, 16], [38, 13]], '#715e41', INK, .9);
   polygon(b, [[44, 0], [52, 1], [51, 10], [44, 9]], '#d9c192', '#b6a173', .6);
@@ -113,8 +113,7 @@ function tavern(b: Brush) {
 }
 
 function stall(b: Brush, state: string | undefined) {
-  ellipse(b, 4, 20, 38, 7, '#30483622');
-  for (const x of [-32, 32]) line(b, [[x, 17], [x, -31]], TIMBER, 1.8);
+  for (const x of [-32, 32]) line(b, [[x, 17], [x, -31]], BEAM, 1.17);
   polygon(b, [[-37, -32], [31, -38], [40, -18], [-34, -12]], state === 'cloth' ? '#6b7e84' : '#778a60', INK, 1);
   for (let i = 0; i < 5; i++) polygon(b, [[-35 + i * 14, -32 - i * 1.2], [-28 + i * 14, -32.6 - i * 1.2], [-24 + i * 14, -13 - i * 1.2], [-31 + i * 14, -12.5 - i * 1.2]], '#d1c4a4', 'transparent', 0);
   polygon(b, [[-34, -12], [40, -18], [39, -11], [-33, -5]], state === 'cloth' ? '#506674' : '#647b52', INK, .7);
@@ -136,9 +135,8 @@ function stall(b: Brush, state: string | undefined) {
 }
 
 function table(b: Brush, state: string | undefined) {
-  ellipse(b, 0, 19, 28, 5, '#30483620');
-  for (const x of [-15, 15]) line(b, [[x, 0], [x, 19]], TIMBER, 2);
-  polygon(b, [[-23, -3], [17, -9], [25, 1], [-17, 8]], '#a08257', INK, 1.1);
+  for (const x of [-15, 15]) line(b, [[x, 0], [x, 19]], BEAM, 1.3);
+  polygon(b, [[-23, -3], [17, -9], [25, 1], [-17, 8]], '#a08257', INK, 1);
   for (let i = 0; i < 4; i++) line(b, [[-20 + i * 10, -3 - i * 1.5], [-15 + i * 10, 6 - i * 1.5]], '#6b593f', .65);
   if (state === 'wares') {
     for (const [x, y, color] of [[-9, -5, '#a28e6c'], [3, -5, '#5e7672'], [13, -4, '#b09f77']] as const) {
@@ -156,10 +154,10 @@ function table(b: Brush, state: string | undefined) {
 }
 
 function bench(b: Brush) {
-  for (const x of [-20, 20]) line(b, [[x, 0], [x, 14]], TIMBER, 2.2);
+  for (const x of [-20, 20]) line(b, [[x, 0], [x, 14]], BEAM, 1.43);
   polygon(b, [[-28, -2], [21, -8], [26, -1], [-23, 5]], '#99815c', INK, .9);
   line(b, [[-26, -12], [21, -18]], '#8c7351', 3.5);
-  for (const x of [-22, 18]) line(b, [[x, -15], [x, 3]], TIMBER, 1.7);
+  for (const x of [-22, 18]) line(b, [[x, -15], [x, 3]], BEAM, 1.1);
 }
 
 function paving(b: Brush, state: string | undefined) {
@@ -167,17 +165,16 @@ function paving(b: Brush, state: string | undefined) {
   // position, but anchor it toward the top of the atlas instead of over furniture.
   b.save();
   if (state === 'square') b.translate(0, 39);
-  polygon(b, [[-62, -22], [62, -22], [62, 22], [-62, 22]], '#b6b5a0', 'transparent', 0);
-  for (let row = 0; row < 5; row++) for (let col = 0; col < 10; col++) {
-    const x = -61 + col * 13 + (row % 2 ? 6 : 0);
-    if (x > 59) continue;
-    const w = Math.min(11.5, 62 - x);
-    const y = -21 + row * 8.6;
-    const color = (row * 7 + col * 3) % 4 === 0 ? '#c5c3ae' : (row + col) % 3 === 0 ? '#a8ac99' : '#b8b9a4';
-    polygon(b, [[x + .3, y + .8], [x + w, y + .4], [x + w - .5, y + 7.2], [x, y + 7.5]], color, '#858d7b', .35);
+  // A quiet ground mark (prop-painting.zh.md §7): a few low-contrast joints suggest the courses.
+  polygon(b, [[-62, -22], [62, -22], [62, 22], [-62, 22]], '#bdb9a2', 'transparent', 0);
+  for (let row = 1; row < 5; row++) line(b, [[-62, -22 + row * 8.8], [62, -22 + row * 8.8]], '#a9a68f66', .45);
+  for (let row = 0; row < 5; row++) for (let col = 0; col < 6; col++) {
+    const x = -55 + col * 22 + (row % 2 ? 11 : 0), y = -22 + row * 8.8;
+    if (x < 60) line(b, [[x, y + .6], [x, y + 8.2]], '#a9a68f55', .4);
+    if ((row * 5 + col * 3) % 7 === 0) polygon(b, [[x + 2, y + 1.2], [x + 18, y + 1.2], [x + 18, y + 7.6], [x + 2, y + 7.6]], '#c7c3ab55', 'transparent', 0);
   }
-  line(b, [[-62, -22], [62, -22]], '#d5ceb6', 1.8);
-  line(b, [[-62, 22], [62, 22]], '#89937d', 1.1);
+  line(b, [[-62, -22], [62, -22]], '#cfc8b0', 1.2);
+  line(b, [[-62, 22], [62, 22]], '#9c9a84', .9);
   b.restore();
 }
 
@@ -196,9 +193,8 @@ function planter(b: Brush, state: string | undefined) {
 }
 
 function lamp(b: Brush) {
-  ellipse(b, 3, 17, 8, 3, '#30483622');
   slab(b, 0, 14, 11, 3);
-  line(b, [[0, 15], [0, -40], [11, -40]], TIMBER, 2);
+  line(b, [[0, 15], [0, -40], [11, -40]], BEAM, 1.3);
   line(b, [[9, -40], [9, -34]], '#666c5d', .8);
   polygon(b, [[4, -34], [13, -34], [15, -20], [4, -20]], '#9b9676', INK, .8);
   polygon(b, [[6, -32], [11, -32], [12, -23], [6, -23]], '#d5bb83', '#737662', .5);
@@ -211,11 +207,10 @@ function drain(b: Brush) {
 }
 
 function bundles(b: Brush, state: string | undefined) {
-  ellipse(b, 2, 15, 23, 5, '#30483620');
   if (state === 'sacks') {
     for (const [x, y] of [[-11, 8], [10, 5], [0, -3]] as const) {
       polygon(b, [[x - 8, y + 5], [x - 10, y - 6], [x - 5, y - 14], [x + 3, y - 15], [x + 8, y - 9], [x + 7, y + 5]], '#b5a37a', INK, .8);
-      line(b, [[x - 4, y - 11], [x + 4, y - 12]], TIMBER, .9);
+      line(b, [[x - 4, y - 11], [x + 4, y - 12]], BEAM, 0.59);
       line(b, [[x + 3, y - 8], [x + 5, y + 2]], '#93815e', .65);
     }
   } else {
