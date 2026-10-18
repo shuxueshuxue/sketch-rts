@@ -120,10 +120,16 @@ export function drawStoryProps(ctx: Brush, view: StageView, toScreen: (point: Po
 
 /** One prop with its foot at `at`, and its flames if it burns. */
 export function drawStoryProp(ctx: Brush, prop: StageView["props"][number], at: Point, painter: (kind: string) => ((b: Brush, state: string | undefined) => void) | undefined, now: number) {
-  const paint = painter(prop.kind);
-  if (!paint) return;
-  drawAtlasProp(ctx, `${prop.kind}:${prop.state ?? ""}`, (b) => paint(b, prop.state), at, prop.scale, prop.flip);
+  if (!drawStoryPropPicture(ctx, prop, at, painter)) return;
   if (prop.state === "burning") drawPropFlames(ctx, prop, at, now);
+}
+
+/** A prop's picture alone, its foot at `at`; whether it has one. */
+export function drawStoryPropPicture(ctx: Brush, prop: StageView["props"][number], at: Point, painter: (kind: string) => ((b: Brush, state: string | undefined) => void) | undefined) {
+  const paint = painter(prop.kind);
+  if (!paint) return false;
+  drawAtlasProp(ctx, `${prop.kind}:${prop.state ?? ""}`, (b) => paint(b, prop.state), at, prop.scale, prop.flip);
+  return true;
 }
 
 /** A burning prop's flames, with their foot at `at`. */

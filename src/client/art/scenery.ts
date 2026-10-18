@@ -10,7 +10,6 @@ const CHAR = "#4a423c";
 
 function hut(b: Brush, state: string | undefined) {
   const ruined = state === "ruined";
-  ellipse(b, 4, 20, 36, 9, "#30483624");
   polygon(b, [[-24, -2], [8, 4], [8, 22], [-24, 16]], ruined ? "#8a8274" : PLASTER);
   polygon(b, [[8, 4], [26, -6], [26, 14], [8, 22]], ruined ? "#6f685c" : "#bdb08c");
   polygon(b, [[-12, 8], [-5, 9.5], [-5, 20], [-12, 18.5]], "#4b3d2c");
@@ -43,7 +42,6 @@ function dock(b: Brush) {
 }
 
 function campfire(b: Brush, state: string | undefined) {
-  ellipse(b, 0, 8, 18, 6, "#30483630");
   for (const [x, y] of [[-12, 6], [-6, 10], [2, 11], [10, 8], [12, 3], [-10, 2]]) ellipse(b, x!, y!, 3.2, 2.4, "#8f877a", INK);
   line(b, [[-9, 6], [8, -2]], "#6b5234", 3);
   line(b, [[-8, -2], [9, 6]], "#5f4a31", 3);
@@ -54,7 +52,6 @@ function campfire(b: Brush, state: string | undefined) {
 
 function cart(b: Brush, state: string | undefined) {
   const burnt = state === "ruined";
-  ellipse(b, 2, 14, 28, 6, "#30483628");
   polygon(b, [[-22, -6], [18, -10], [20, 6], [-20, 10]], burnt ? CHAR : "#9c7a4f", INK, 1.2);
   for (const x of [-12, 12]) {
     ellipse(b, x, 10, 7, 7, burnt ? "#3a3430" : "#7a6343", INK);
@@ -86,7 +83,6 @@ function fence(b: Brush) {
 }
 
 function watchtower(b: Brush, state: string | undefined) {
-  ellipse(b, 2, 24, 26, 7, "#30483628");
   for (const [x1, x2] of [[-16, -10], [16, 10]]) line(b, [[x1!, 22], [x2!, -30]], "#6b5234", 3);
   line(b, [[-14, 6], [14, -6]], "#7a6343", 1.8);
   line(b, [[-14, -6], [14, 6]], "#7a6343", 1.8);
@@ -99,7 +95,6 @@ function watchtower(b: Brush, state: string | undefined) {
 }
 
 function tent(b: Brush, state: string | undefined) {
-  ellipse(b, 2, 16, 30, 7, "#30483628");
   polygon(b, [[-26, 14], [0, -24], [26, 14]], state === "ruined" ? CHAR : "#8a3f2e", INK, 1.3);
   polygon(b, [[0, -24], [26, 14], [8, 14]], darker("#8a3f2e", 0.25), "transparent", 0);
   polygon(b, [[-6, 14], [0, 0], [6, 14]], "#2f2724");
@@ -116,7 +111,6 @@ function banner(b: Brush, state: string | undefined) {
 }
 
 function stone(b: Brush) {
-  ellipse(b, 2, 14, 16, 5, "#30483628");
   polygon(b, [[-9, 14], [-8, -18], [0, -24], [8, -18], [9, 14]], "#b9b59c", INK, 1.2);
   line(b, [[-4, -10], [4, -10]], "#6f6b58", 1.2);
   line(b, [[0, -16], [0, 4]], "#6f6b58", 1.2);
@@ -132,7 +126,6 @@ function cairn(b: Brush) {
 
 function pyre(b: Brush, state: string | undefined) {
   // The Ember Pact's brazier: a dim coal while the Pyre fails, a blaze when it is lit again.
-  ellipse(b, 0, 16, 26, 7, "#30483630");
   polygon(b, [[-18, 14], [-12, -4], [12, -4], [18, 14]], "#3a3538", INK, 1.3);
   polygon(b, [[-14, -4], [-16, -10], [16, -10], [14, -4]], "#4a4448", INK, 1.2);
   line(b, [[-12, 4], [12, 4]], GOLD, 1.2);
@@ -158,14 +151,12 @@ function bridge(b: Brush, state: string | undefined) {
 }
 
 function tree(b: Brush) {
-  ellipse(b, 3, 10, 16, 5, "#304f3b22");
   line(b, [[0, 10], [0, -8]], "#79744f", 3);
   polygon(b, [[-16, 0], [-8, -16], [-11, -16], [0, -40], [11, -16], [8, -16], [16, 0], [0, 4]], "#577762", "#526951", 1);
   polygon(b, [[0, -37], [0, 1], [-13, -2], [-6, -15], [-9, -16]], "#799573", "transparent", 0);
 }
 
 function deadTree(b: Brush) {
-  ellipse(b, 3, 12, 14, 4, "#30483622");
   line(b, [[0, 12], [0, -26]], "#4f4640", 3);
   line(b, [[0, -10], [-12, -20], [-16, -30]], "#4f4640", 2.2);
   line(b, [[0, -16], [10, -26], [12, -34]], "#4f4640", 2);
@@ -211,7 +202,6 @@ function target(b: Brush) {
 
 function beacon(b: Brush, state: string | undefined) {
   // A stone beacon-tower on a hill: dark until someone lights it.
-  ellipse(b, 2, 18, 24, 7, "#30483628");
   polygon(b, [[-14, 16], [-10, -18], [10, -18], [14, 16]], "#9a9480", INK, 1.3);
   for (const y of [-8, 2, 10]) line(b, [[-12, y], [12, y]], "#7a7462", 0.9);
   polygon(b, [[-14, -18], [-16, -24], [16, -24], [14, -18]], "#7a7462", INK, 1.1);

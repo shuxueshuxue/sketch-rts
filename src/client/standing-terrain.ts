@@ -7,14 +7,13 @@ import { environmentField, sampleEnvironment } from "../shared/environment/field
 
 // @@@standing-terrain - The terrain's standing objects (see docs/art/render-contract.zh.md): the forest's trees and the
 // rock fields' boulders, each with its foot (the point where it meets the ground) and a look shared by every object
-// painted alike. They are no part of the painted ground (see @@@terrain-art), which keeps only what lies flat, their
-// contact shadows among it: standing up, they hide what stands behind them and are hidden by what stands before, in
+// painted alike. They are no part of the painted ground (see @@@terrain-art), which keeps only what lies flat: standing
+// up, they hide what stands behind them and are hidden by what stands before, in
 // the 3D world as cards (see @@@standing-field) and in the Canvas world in its depth-sorted pass (see standingDepth).
 export type StandingTerrainObject = { x: number; y: number; scale: number; look: string };
 
 const INK = "#293c35";
 const ROCK = { base: "#bdb6a0", dark: "#8c856f", light: "#dcd5bd" };
-const CLIFF_DARK = "#6d614b";
 // A boulder's look is one of these shapes, scaled to its size: every boulder its own would be a picture each.
 export const STONE_SHAPES = 16;
 // The radius a stone look is painted at; a boulder's scale is its radius over this.
@@ -83,21 +82,13 @@ function stonePoints(shape: number) {
   });
 }
 
-/** Paints a look standing on the origin (its foot), at scale one, without its contact shadow (see paintStandingShadow). */
+/** Paints a look standing on the origin (its foot), at scale one, without a painted shadow (the sun casts its shadow). */
 export function paintStandingLook(b: Brush, look: string) {
   const [kind, a, b2, c] = look.split(":");
   if (kind === "tree") { paintTree(b, 0, 0, 1, Number(c), a as TreeKind, b2 === "true", "body"); return; }
   const points = stonePoints(Number(a));
   polygon(b, points, ROCK.base, INK, 1);
   polygon(b, [points[3]!, points[4]!, points[5]!, [0, 0]], ROCK.light, "transparent", 0);
-}
-
-/** Paints an object's contact shadow on the ground, where the painted ground carries it. */
-export function paintStandingShadow(b: Brush, object: StandingTerrainObject) {
-  const [kind, a, b2, c] = object.look.split(":");
-  if (kind === "tree") { paintTree(b, object.x, object.y, object.scale, Number(c), a as TreeKind, b2 === "true", "shadow"); return; }
-  const r = STONE_RADIUS * object.scale;
-  polygon(b, stonePoints(Number(a)).map(([px, py]) => [object.x + px! * object.scale + 1, object.y + py! * object.scale + r * .45]), CLIFF_DARK, "transparent", 0);
 }
 
 /** The Canvas world's drawing order for whatever stands (see the render contract's third rule): back to front by the

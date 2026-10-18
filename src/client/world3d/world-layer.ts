@@ -1,4 +1,5 @@
 import { StandingField } from './standing-field';
+import { SUN } from '../sun';
 import { propStand } from '../prop-stands';
 import {bloodSurfaceResolver} from '../combat-surfaces';
 import {PresentationViewIndex} from '../presentation-view';
@@ -169,9 +170,9 @@ export class World3DLayer {
     const anisotropy=Math.min(8,renderer?.capabilities.getMaxAnisotropy()??1);
     return [new PaintedCardBatches(scene,anisotropy,{maxTextureBanks,rasterBudgetMs}),
       new PaintedCardBatches(scene,anisotropy,{transparent:true,depthWrite:false,alphaTest:.01,castShadow:false,pickable:false,renderOrder:-1,maxTextureBanks,rasterBudgetMs}),
-      // A story's standing props (see @@@prop-stands). They keep the shadows painted under them until the world's light
-      // casts every standing thing's (docs/art/render-contract.zh.md, rule 4).
-      new PaintedCardBatches(scene,anisotropy,{castShadow:false,pickable:false,maxTextureBanks,rasterBudgetMs})] as const;
+      // A story's standing props (see @@@prop-stands), casting the sun's shadows as everything that stands does, their
+      // edges multisampled as the terrain's (see @@@standing-field).
+      new PaintedCardBatches(scene,anisotropy,{alphaToCoverage:true,pickable:false,maxTextureBanks,rasterBudgetMs})] as const;
   }
   /** Detach the old renderer's public dispose listeners while its context is
    * lost. Otherwise later reset/dispose attempts to delete pre-loss VAOs and
@@ -329,7 +330,7 @@ export class World3DLayer {
     this.standing.update(snapshot.map.terrain,{x:frame.view.x,y:frame.view.y,width:frame.view.width/zoom,height:frame.view.height/zoom});
     const cx=frame.view.x+frame.view.width/(2*zoom),cy=frame.view.y+frame.view.height/(2*zoom),extent=Math.max(frame.view.width,frame.view.height)/zoom+400;
     this.shadow.position.set(cx,-.1,cy);this.shadow.scale.set(extent,extent,1);
-    this.sun.position.set(cx-450,650,cy+250);this.sun.target.position.set(cx,0,cy);
+    this.sun.position.set(cx+SUN.x,SUN.height,cy+SUN.y);this.sun.target.position.set(cx,0,cy);
     const shadow=this.sun.shadow.camera;shadow.left=shadow.bottom=-extent/2;shadow.right=shadow.top=extent/2;shadow.near=1;shadow.far=3000;shadow.updateProjectionMatrix();
     // Evaluate the same public shadow camera the renderer will sample. A small
     // color footprint alone is insufficient: the 2048px shadow can need detail.
