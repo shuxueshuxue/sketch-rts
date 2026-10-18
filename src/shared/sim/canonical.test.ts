@@ -42,9 +42,9 @@ describe("canonical game state", () => {
   });
 
   it("gives the recorded checksums for fresh games, on any machine and in any locale", () => {
-    // Version 19 makes a building upgrade a job of the work queue; fresh games have none, and their checksums stand.
+    // Version 20 keeps a ship's last hull hit; fresh games have none, and their checksums stand.
     // Fresh-game goldens also include the closer 216-unit initial mine layout, and each mine's start amount.
-    expect(CHECKSUM_VERSION).toBe(19);
+    expect(CHECKSUM_VERSION).toBe(20);
     // Repeat creation to catch accidental dependence on a process-global random stream.
     for (let repeat = 0; repeat < 2; repeat += 1) {
       expect(checksumGame(createGame("bareDuel", { aiPlayers: [] }))).toBe("a22ffc6e");
@@ -57,6 +57,16 @@ describe("canonical game state", () => {
   it("checks a version 18 save as version 19: a game with no upgrade under way and no fortified tower hashes the same", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     expect(checksumGameForVersion(game, 18)).toBe(checksumGame(game));
+  });
+
+  it("projects a ship's last hull hit away for versions 18 and 19", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    const ship = game.spawnUnit("player", "warship", 1000, 1000), prior = checksumGame(game);
+    ship.sailing!.hullHitTick = 7;
+    expect(checksumGame(game)).not.toBe(prior);
+    expect(checksumGameForVersion(game, 19)).toBe(prior);
+    expect(checksumGameForVersion(game, 18)).toBe(prior);
+    expect(ship.sailing!.hullHitTick).toBe(7);
   });
 
   it("projects only death equipment facts for version 17 without mutating current state", () => {
