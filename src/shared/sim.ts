@@ -13,7 +13,7 @@ import { BUILDING_WORK_REACH, buildingWorkGap, constructionWorkers } from './con
 import { GOLD_MINE_RULES, atMineEntrance, mineEntrance, prepareMiningFrame, upkeepGoldIncome, type MiningFrame } from "./mining";
 import { canReceiveHealing } from './healing';
 import { SPARK_FIRE, sparkIgnites } from './spark-fire';
-import { unitNeedsRepair, unitRepairHpPerGold } from './unit-repair';
+import { repairPace, unitNeedsRepair, unitRepairHpPerGold } from './unit-repair';
 import { innateMissile, type AttackKind } from "./attack-presentation";
 import { invalidateItemIndex } from "./item-index";
 import { settleGroundItems } from './item-surfaces';
@@ -2259,7 +2259,8 @@ function repairUnitTick(game: Game, worker: Unit, target: Unit) {
   spendGold(game, worker.owner, 1);
   if (shipProfile(target)) repairShipParts(game,target,healed);
   else target.hp = Math.min(target.maxHp, target.hp + healed);
-  worker.cooldown = seconds(healed / REPAIR_HP_PER_SECOND);
+  // Under fire the same mending takes longer (see @@@repair-under-fire).
+  worker.cooldown = seconds(healed / (REPAIR_HP_PER_SECOND * repairPace(game.tick, target)));
 }
 
 function emitWorkerWork(game: Game, worker: Unit, target: Unit | Building) {
@@ -3577,6 +3578,7 @@ function applyDamage(game: Game, attacker: Unit | Building, target: Unit | Build
   const hpBefore = target.hp;
   target.hp -= taken;
   if(isUnit(target) && shipProfile(target)){
+    if(taken>0 && target.sailing && areEnemyOwners(game,attacker.owner,target.owner))target.sailing.hullHitTick=game.tick;
     damageShipGangway(target,taken);
     damageShipParts(game,target,impact ?? strikePoint(attacker,target),taken,blastRadius);
     if(target.hp>0) {
