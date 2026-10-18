@@ -23,3 +23,12 @@ rsync -a -e "ssh -F ~/YellowPage/ssh_config" \
 ```
 
 Every file is also still in git history before the commit that removed it (`git show 3504f817:<path>`).
+
+## New evidence
+
+`bin/sketch evidence push <file|dir> [--pr N]` copies it to the same store, under `sha256/<hash of its bytes>`, and
+writes `<path>.evidence.json` beside it: a small pointer to commit (and cite in the PR) instead of the file. A
+directory travels as one gzipped tar. `bin/sketch evidence get <pointer>` fetches it back and checks the hash.
+`bin/sketch evidence check` runs the same size check as CI on the current branch. The A100 must have
+`"evidence": "/codegeex/jeffry/sketch-rts-evidence"` in `~/.config/sketch/machines.json` (see
+`tools/cli/machines.example.json`).
