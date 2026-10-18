@@ -40,7 +40,8 @@ import type { UnitFacingTracker } from "./unit-facing";
 import type { UnitMotionSmoother } from "./unit-motion";
 import type { UnitAnimationTracker } from "./unit-animation";
 import type { ShipWakeTracker } from './ship-wakes';
-import { drawPropFlames, drawStoryAir, drawStoryGround, drawStoryProp, drawStoryProps, drawStoryScreen } from "./story-renderer";
+import { drawPropFlames, drawStoryAir, drawStoryGround, drawStoryProp, drawStoryPropPicture, drawStoryProps, drawStoryScreen } from "./story-renderer";
+import { standingShadow } from "./sun";
 import { propStand } from "./prop-stands";
 import type { PropPainter, UnitModel } from "../story/cast";
 import type { StageView } from "../story/stage";
@@ -283,6 +284,11 @@ export function drawWorld(frame: WorldFrame) {
     // So do the story's standing props (see @@@prop-stands).
     const props=frame.story&&frame.props?frame.story.props.filter(prop=>propStand(prop.kind)==='standing'&&nearScreen(painter,worldToScreen(painter,prop),140*prop.scale)):[];
     actors.push(...standing,...props);byFoot(actors,depth);
+    // Under whatever stands, the shadows the sun casts of the terrain's and the story's standing things (see @@@sun).
+    for(const actor of actors){
+      if('look' in actor)standingShadow(ctx,worldToScreen(painter,actor),b=>drawStandingObject(b,actor,{x:0,y:0}));
+      else if('flip' in actor)standingShadow(ctx,worldToScreen(painter,actor),b=>drawStoryPropPicture(b,actor,{x:0,y:0},frame.props!));
+    }
     for(const actor of actors)if('look' in actor)drawStandingObject(ctx,actor,worldToScreen(painter,actor));else if('flip' in actor)drawStoryProp(ctx,actor,worldToScreen(painter,actor),frame.props!,painter.now);else if('order' in actor){if(shipProfile(actor))drawShipGroup(painter,actor);else drawUnits(painter,[actor]);}else drawBuildings(painter,[actor]);
   }
   if (!painter.still && painter.viewer) drawAimLines(painter);

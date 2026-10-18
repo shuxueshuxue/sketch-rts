@@ -20,6 +20,8 @@ export class StandingField {
   private group = new THREE.Group();
   private texture: THREE.DataArrayTexture | undefined;
   private material: THREE.MeshBasicMaterial | undefined;
+  // What the sun's shadow map sees of a card: its painted silhouette, cut out as the colour pass cuts it.
+  private depth: THREE.MeshDepthMaterial | undefined;
   private chunks: { mesh: THREE.InstancedMesh; left: number; top: number }[] = [];
   constructor(scene: THREE.Scene, private anisotropy: number) {
     this.group.name = 'StandingField';
@@ -52,8 +54,11 @@ export class StandingField {
     texture.colorSpace = THREE.SRGBColorSpace; texture.magFilter = THREE.LinearFilter; texture.minFilter = THREE.LinearMipmapLinearFilter;
     texture.generateMipmaps = true; texture.anisotropy = this.anisotropy;
     texture.flipY = false; texture.premultiplyAlpha = false; texture.unpackAlignment = 1; texture.needsUpdate = true;
-    const material = this.material = new THREE.MeshBasicMaterial({ map: texture, alphaTest: .4, side: THREE.DoubleSide, toneMapped: false });
+    // Alpha to coverage: the multisampled edge of a crown is as soft as the painted ground's was, not a cutout's stair.
+    const material = this.material = new THREE.MeshBasicMaterial({ map: texture, alphaTest: .4, alphaToCoverage: true, side: THREE.DoubleSide, toneMapped: false });
     configureCardMaterial(material, [texture], 1);
+    const depth = this.depth = new THREE.MeshDepthMaterial({ map: texture, alphaTest: .4, side: THREE.DoubleSide, depthPacking: THREE.RGBADepthPacking });
+    configureCardMaterial(depth, [texture], 1);
     // The card's corners in world units at scale one: its foot at the origin, standing up, as a troop card's (see painted-card-batches.ts).
     const rect = [-LOOK_FOOT.x / LOOK_DENSITY, (LOOK_FOOT.y - LOOK_HEIGHT) / (LOOK_DENSITY * TILT),
       (LOOK_WIDTH - LOOK_FOOT.x) / LOOK_DENSITY, LOOK_FOOT.y / (LOOK_DENSITY * TILT)] as const;
@@ -73,7 +78,8 @@ export class StandingField {
       geometry.setAttribute('cardBank', new THREE.InstancedBufferAttribute(new Float32Array(list.length), 1));
       const mesh = new THREE.InstancedMesh(geometry, material, list.length);
       list.forEach((object, i) => mesh.setMatrixAt(i, matrix.compose(place.set(object.x, 0, object.y), turn, scale.setScalar(object.scale))));
-      mesh.name = 'StandingCards'; mesh.frustumCulled = false; mesh.castShadow = false; mesh.raycast = () => {};
+      // Each casts the sun's shadow (docs/art/render-contract.zh.md, rule 4); the ground keeps none painted.
+      mesh.name = 'StandingCards'; mesh.frustumCulled = false; mesh.castShadow = true; mesh.customDepthMaterial = depth; mesh.raycast = () => {};
       this.group.add(mesh);
       this.chunks.push({ mesh, left: cx * CHUNK, top: cy * CHUNK });
     }
@@ -83,6 +89,7 @@ export class StandingField {
     for (const chunk of this.chunks) { this.group.remove(chunk.mesh); chunk.mesh.geometry.dispose(); chunk.mesh.dispose(); }
     this.chunks = [];
     this.material?.dispose(); this.material = undefined;
+    this.depth?.dispose(); this.depth = undefined;
     this.texture?.dispose(); this.texture = undefined;
     this.terrain = undefined;
   }

@@ -6,7 +6,6 @@ import type { PropPainter } from "../../story/cast";
 function heartwood(b: Brush, state: string | undefined) {
   // The Old Grove's heart: a vast tree, its bark lit from within while the grove lives.
   const scorched = state === "scorched";
-  ellipse(b, 0, 26, 50, 11, "#30483634");
   for (const [x1, x2] of [[-10, -26], [-4, -12], [6, 14], [10, 28]]) line(b, [[x1!, 12], [x2!, 26]], "#6b5a3e", 4);
   polygon(b, [[-14, 16], [-10, -30], [-4, -40], [6, -40], [11, -28], [14, 16]], "#7c6a48", INK, 1.4);
   for (const x of [-7, 0, 7]) line(b, [[x, -34], [x + (x < 0 ? -2 : 2), 14]], "#5f5034", 1.2);
