@@ -19,6 +19,21 @@ describe('streamed card mip transfers',()=>{
   expect(r.initTexture).toHaveBeenCalledTimes(2);expect(copied).toEqual([...Array(5).fill(0),...Array(5).fill(2)]);expect(r.setRenderTarget).toHaveBeenLastCalledWith(r.getRenderTarget(),2,3);
   const version=p.texture.version;upload.uploadLayer(p,7,pixels(16,7),r);expect(r.initTexture).toHaveBeenCalledTimes(2);expect(p.texture.version).toBe(version);expect(p.texture.image.data).toBeNull();expect(upload.stats()).toMatchObject({mipInitializedPages:1,mipLayerUpdates:3,mipCopyCalls:15,scratchTextures:1,arrayBaseUploadBytes:0});upload.dispose();
  });
+ it('uploads a painted canvas, flipped and mipmapped on the GPU, and copies each retained mip into its layer',()=>{
+  // @@@canvas-upload - no CPU pixels: the canvas is the source the browser uploads, once per paint.
+  const upload=new CardMipUploader(8),p=page(16),r=renderer(),canvas={width:32,height:32} as HTMLCanvasElement,copies:[number,number,number][]=[];
+  r.initTexture.mockImplementation(texture=>{if(texture instanceof THREE.CanvasTexture)expect(texture.version).toBeGreaterThan(0);});
+  r.copyTextureToTexture.mockImplementation((source,destination,region,position,srcLevel,dstLevel)=>{
+   expect(source).toBeInstanceOf(THREE.CanvasTexture);expect(source.image).toBe(canvas);expect(source.flipY).toBe(true);expect(source.generateMipmaps).toBe(true);expect(source.premultiplyAlpha).toBe(false);
+   expect(destination).toBe(p.texture);expect((region as THREE.Box3).max.x).toBe(32/2**srcLevel!);copies.push([srcLevel!,dstLevel!,(position as THREE.Vector3).z]);
+  });
+  upload.uploadCanvasLayer(p,3,canvas,r,{sourceWidth:32,sourceHeight:32,baseMip:1});upload.uploadCanvasLayer(p,4,canvas,r,{sourceWidth:32,sourceHeight:32,baseMip:1});
+  expect(copies).toEqual([...[1,2,3,4,5].map(l=>[l,l-1,3]),...[1,2,3,4,5].map(l=>[l,l-1,4])]);
+  // The page once, then the canvas texture at each paint: a repaint of the same canvas must upload again.
+  expect(r.initTexture).toHaveBeenCalledTimes(3);expect(upload.stats()).toMatchObject({canvasUploads:2,scratchTextures:1,scratchCpuBytes:0,scratchGpuBytes:cardTextureBytes(32,32),scratchUploadBytes:0});
+  expect(()=>upload.uploadCanvasLayer(p,5,canvas,r,{sourceWidth:64,sourceHeight:64,baseMip:2})).toThrow('Invalid card canvas dimensions.');
+  upload.dispose();expect(upload.stats().scratchTextures).toBe(0);
+ });
  it('uploads a single dirty rectangle from an uninitialized CPU source and clears old paint',()=>{
   const upload=new CardMipUploader(8),p=page(),r=renderer(),initialized=new Set<THREE.Texture>(),gpu=new Map<THREE.Texture,Uint8Array>(),rectangles:THREE.Box2[]=[],layers:Uint8Array[]=[];
   r.initTexture.mockImplementation(texture=>{initialized.add(texture);if(texture instanceof THREE.DataTexture)gpu.set(texture,new Uint8Array(texture.image.data as Uint8Array));});

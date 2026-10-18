@@ -22,6 +22,7 @@ export function startPerfOverlay() {
 }
 
 const LONG_MS = 50;
+type CardCounts = { cards: number; pages: number; pixels: number; rasterizations: number; evictions: number; bodiless: number; rasterWorkWallMs: number; gpuTransferSubmissionWallMs: number; frameDemand: number; peakFrameDemand: number; secondDemand: number };
 const SEGMENTS = ['sync', 'camera', '3d', 'ground', 'overlay', 'rest'] as const;
 type Segment = (typeof SEGMENTS)[number];
 type LongFrame = { start: number; end: number; js: number; cause?: 'CPU' | 'GPU' };
@@ -74,6 +75,9 @@ export class PerfOverlay {
   private renderer: THREE.WebGLRenderer | undefined;
   // The match's AI thread over this window (see AiThinkReport); undefined until a match with AI reports.
   private ai: AiThinkReport | undefined;
+  // The troop cards' running counts (see PaintedCardBatches.stats), read once a window; the last window's, for its rates.
+  private cardSource: (() => CardCounts) | undefined;
+  private cardsBefore: CardCounts | undefined;
 
   constructor(parent: HTMLElement) {
     this.element.className = 'perf-overlay';
@@ -107,6 +111,9 @@ export class PerfOverlay {
     this.timer = this.gl.getExtension('EXT_disjoint_timer_query_webgl2') as Timer | null;
     this.queries = []; this.active = undefined;
   }
+
+  /** The troop cards the readout reports: how many are held, and how many were painted and dropped each second. */
+  watchCards(source: () => CardCounts) { this.cardSource = source; this.cardsBefore = undefined; }
 
   /** Called first in each animation frame with the browser's own rAF timestamp. */
   frameStart(timestamp: number) {
@@ -192,6 +199,7 @@ export class PerfOverlay {
       `frame JS ${this.frameJs.text()} ms`,
       ...SEGMENTS.map(name => `  ${name.padEnd(8)}${this.segments.get(name)!.text()}`),
       `GPU 3D ${!this.renderer ? 'no 3D renderer' : this.timer ? `${this.gpu.text()} ms` : 'unsupported'}`,
+      ...this.cardLines(seconds),
       ...(this.ai ? [`AI think ${this.ai.thinks ? (this.ai.thinkMs / this.ai.thinks).toFixed(0) : '–'} / ${this.ai.slowestMs.toFixed(0)} ms  late ${this.ai.late}${this.ai.late ? ` (≤${this.ai.lateTicks}t)` : ''}  skip ${this.ai.skipped}`] : []),
       `>${LONG_MS}ms gaps: CPU ${this.longCounts.CPU}  GPU/comp ${this.longCounts.GPU}`,
       `  recent ${this.longFrames.map(frame => `${Math.round(frame.end - frame.start)}${frame.cause ? frame.cause[0] : '?'}`).join(' ') || '–'}`,
@@ -199,9 +207,18 @@ export class PerfOverlay {
       ...this.loafs.slice(-3).map(loaf => `  ${Math.round(loaf.end - loaf.start)} ms: js ${Math.round(loaf.script)} render ${Math.round(loaf.render)} layout ${Math.round(loaf.layout)}`),
     ];
     this.element.textContent = lines.join('\n');
+    this.cardsBefore = this.cardSource?.();
     this.windowStart = now; this.frames = 0;
     this.interval.reset(); this.frameJs.reset(); this.gpu.reset();
     if (this.ai) this.ai = noThinking();
     for (const stat of this.segments.values()) stat.reset();
+  }
+
+  private cardLines(seconds: number) {
+    const now = this.cardSource?.(), before = this.cardsBefore;
+    if (!now) return [];
+    const rate = (key: 'rasterizations' | 'evictions' | 'bodiless' | 'rasterWorkWallMs' | 'gpuTransferSubmissionWallMs') => before ? ((now[key] - before[key]) / seconds).toFixed(key.endsWith('Ms') ? 1 : 0) : '–';
+    return [`troop cards ${now.cards} in ${now.pages} pages (${(now.pixels / 1048576).toFixed(1)}M px)  frame needs ${now.frameDemand} (peak ${now.peakFrameDemand}), 60 frames ${now.secondDemand}`,
+      `  painted ${rate('rasterizations')}/s (${rate('rasterWorkWallMs')} ms/s, upload ${rate('gpuTransferSubmissionWallMs')} ms/s)  dropped ${rate('evictions')}/s  no body ${rate('bodiless')}/s`];
   }
 }
