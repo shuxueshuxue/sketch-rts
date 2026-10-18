@@ -20,7 +20,9 @@ export function archipelagoMap(options: GeneratedLayoutOptions, players: PlayerI
     const point = (angle: number, reach: number) => ({ x: center.x + detCos(angle) * reach, y: center.y + detSin(angle) * reach });
     // More ocean between islands, while the playable home ground remains close
     // to its previous size. Mining offsets and the terrain's 32-unit cells stay fixed.
-    const homes = players.map((owner, index) => ({ owner, at: point(rotation + index * Math.PI * 2 / players.length, size * .36), radius: Math.max(480, size * .076) }));
+    // Even a small home island needs ground outside its main's safety disk for
+    // the shared generator's two opening camps (see generated-camp-budget).
+    const homes = players.map((owner, index) => ({ owner, at: point(rotation + index * Math.PI * 2 / players.length, size * .36), radius: Math.max(640, size * .076) }));
     const large=players.length>=6;
     const mainland = { at: center, radius: size * (large ? .096 : .124) };
     // A satellite's central mine needs a 280–320-unit hauling base, its whole
