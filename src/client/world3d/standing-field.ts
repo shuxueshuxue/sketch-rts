@@ -79,7 +79,6 @@ export class StandingField {
       geometry.setAttribute('cardRect', new THREE.InstancedBufferAttribute(rects, 4));
       geometry.setAttribute('cardLayer', new THREE.InstancedBufferAttribute(layers, 1));
       geometry.setAttribute('cardBank', new THREE.InstancedBufferAttribute(new Float32Array(list.length), 1));
-      geometry.setAttribute('cardUv', new THREE.InstancedBufferAttribute(new Float32Array(list.length * 4).map((_, i) => i % 4 < 2 ? 0 : 1), 4));
       const mesh = new THREE.InstancedMesh(geometry, material, list.length);
       list.forEach((object, i) => mesh.setMatrixAt(i, matrix.compose(place.set(object.x, 0, object.y), turn, scale.setScalar(object.scale))));
       // Each casts the sun's shadow (docs/art/render-contract.zh.md, rule 4); the ground keeps none painted.
