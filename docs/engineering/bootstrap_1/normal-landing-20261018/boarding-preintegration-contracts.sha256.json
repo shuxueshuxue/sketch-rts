@@ -1,0 +1,12 @@
+{
+  "archive": "boarding-preintegration-contracts.tar.gz",
+  "sha256": "1a4522cbd5791365e93ebf0fec473a101e577234a86f42f424989bd0ebb0b9c3",
+  "files": {
+    "archive.py": "42deb8b08fc4856a361a6b31eca16199c4f4982b37cdbe1109fbd6b75c143b82",
+    "query-soldier-three-routes.mts": "b2451c59cc816198abd09facdf29fbac5877c9b9f06407ad0dcc10bb5a2d93b5",
+    "safe-passenger-comparison36000-detail.json": "63e9ced42627314e075a7873952d949acb0938b2e3a818e90fe8d5b46bc34c6d",
+    "soldier-boarding-draft.ts": "abc9165e8119d79ba6778a484bf90f609a42aa39e27833468ae5df83a0bfdb83",
+    "soldier-boarding.test.ts.txt": "045fa8a1456b267305f3a90431af6a41d6936f2adeaf5d8a318dc409466d7ff4",
+    "soldier-three-routes.json": "b1651c4f5aa2812f421e3571817aa397e9e5e91a08d5589a257569909bf3117d"
+  }
+}
