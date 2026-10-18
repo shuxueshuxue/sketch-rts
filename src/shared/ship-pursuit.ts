@@ -1,4 +1,4 @@
-import { strikeGap } from './combat-geometry';
+import { strikeGap, strikePoint } from './combat-geometry';
 import { shipMotionLimits } from './ship-handling';
 import { distanceToHull, hullContact, shareShipProfile, shipProfile, shipsIn } from './ship-geometry';
 import { headingDifference, hullPassageClear } from './ship-navigation';
@@ -120,7 +120,9 @@ export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly U
   const enter = following ? safeGap + ownLength * .35 : range * .82;
   const leave = following ? safeGap + ownLength * .6 : range * 1.05;
   const firing = !following ? stationaryFire?.() : undefined;
-  const phase = firing !== undefined ? firing ? 'engage' : 'approach'
+  // A moving quarry at the edge of a gun's band is in and out of reach tick by tick: the chase stays engaged until it
+  // falls back out of range or into the dead zone, as the ranged phases below do.
+  const phase = firing !== undefined ? firing || moving && previous?.phase === 'engage' && gap <= leave + Math.max(0, stationBowReach) && gap >= minimum ? 'engage' : 'approach'
     : previous?.phase === 'engage' ? phaseGap > leave || gap < minimum ? 'approach' : 'engage' : phaseGap <= enter && gap >= minimum ? 'engage' : 'approach';
   if (previous) { previous.phase = phase; previous.moving = moving; }
   else motion.pursuit = { targetId: target.id, phase, moving };
@@ -142,11 +144,12 @@ export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly U
   // most of a bow mortar's reach from the hull's middle, but never beyond the middle of the band between minimum and
   // range, and its approach stops no nearer. A broadside's band is narrow (200 to 312): backing a ship of the line out
   // by its own length's margin put it past its range, and two of them under attack orders lay apart for good.
-  // The dead zone is the guns', so it is measured to what they are fired at: crew aboard a hull, not that hull's
-  // nearest edge (bow to bow, the edges almost touched while the crew stood a hull's length off, out of range).
+  // The dead zone is the guns', so it is measured to what they are fired at (a gun with one fires at a crew's hull,
+  // see @@@hull-reach).
   // A bow gun fires from ahead of the hull's middle: the back-off clears the minimum from that muzzle, not the middle.
   const backOff = minimum > 0 ? Math.min(minimum + ownLength * .45, Math.max((minimum + range) / 2, minimum + Math.max(0, stationBowReach) + 8)) : 0;
-  if (!following && minimum > 0 && !firing && strikeGap(ship, requested) < backOff) {
+  // A moving quarry is kept off by the engagement's own closing speed (below), not by stopping to back away.
+  if (!following && !moving && minimum > 0 && !firing && strikeGap(ship, requested) < backOff) {
     // Keep a bow mortar facing the opponent while backing out of its dead
     // zone. A full sailing turn only brings its stern closer to the danger.
     const separation = Math.max(safeGap, edgeOffset + backOff);
@@ -157,17 +160,27 @@ export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly U
   // A stationary occupied deck can put the actual fighting crew farther than
   // its nearest hull edge. Its firing approach aims at that fighting position;
   // ordinary hull sweep validation still prevents penetration.
-  const standoff = !moving && !following && stationaryFire !== undefined
+  const stationary = !moving && !following && stationaryFire !== undefined;
+  const standoff = stationary
     ? Math.max(safeGap, minimum + 24, range * .9) : Math.max(safeGap, edgeOffset + Math.max(minimum + 24, range * .68, backOff));
+  // A gun with a dead zone strikes a hull only by its nearest side (see @@@hull-reach), so a station on a bearing keeps
+  // that side mid-band from the gun: as far from the hull's middle as its edge lies on that bearing, and the band beyond.
+  const bandHull = stationary && minimum > 0 && 'order' in target && shipProfile(target) ? target : undefined;
+  const ringAt = (angle: number) => {
+    if (!bandHull) return standoff;
+    const edge = strikePoint({ x: predicted.x + detCos(angle) * 4000, y: predicted.y + detSin(angle) * 4000 }, bandHull);
+    return Math.hypot(edge.x - predicted.x, edge.y - predicted.y) + (minimum + range) / 2;
+  };
   // Keep the waiting station astern when the leader stops. Basing it on the
   // follower's own position makes the destination orbit with every correction.
   const followHeading = speed > 1 ? Math.atan2(vy, vx) : targetMotion?.heading ?? Math.atan2(dy, dx);
   const bearingX = following ? detCos(followHeading) : predicted.x - ship.x;
   const bearingY = following ? detSin(followHeading) : predicted.y - ship.y;
   const bearingLength = Math.hypot(bearingX, bearingY) || 1;
+  const approach = following ? standoff : ringAt(Math.atan2(-bearingY, -bearingX));
   const goal: PursuitGoal = {
-    x: predicted.x - bearingX / bearingLength * standoff,
-    y: predicted.y - bearingY / bearingLength * standoff,
+    x: predicted.x - bearingX / bearingLength * approach,
+    y: predicted.y - bearingY / bearingLength * approach,
     intent: 'pursuit', targetId: target.id, arrivalRadius: Math.max(4, ownLength * .04),
   };
   if(moving && !following && 'order' in target && shipProfile(target)){
@@ -254,10 +267,11 @@ export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly U
     // on the pursuer's new bearing otherwise makes a stopped enemy appear
     // to drag the destination sideways on every tick. Near the station,
     // let gunnery refine range to crew standing on the far side of a deck.
+    const previousRing = previousStation ? ringAt(Math.atan2(previousStation.y - predicted.y, previousStation.x - predicted.x)) : standoff;
     if (previousStation && Math.hypot(previousStation.x - ship.x, previousStation.y - ship.y) > ownLength * .5
-      && (Math.hypot(previousStation.x - predicted.x, previousStation.y - predicted.y) >= standoff-ownLength*.25
+      && (Math.hypot(previousStation.x - predicted.x, previousStation.y - predicted.y) >= previousRing-ownLength*.25
         || requested===target && 'order' in target && shipProfile(target) && distanceToHull(target,previousStation)>=radius+8)
-      && Math.hypot(previousStation.x - predicted.x, previousStation.y - predicted.y) <= standoff+ownLength*1.15
+      && Math.hypot(previousStation.x - predicted.x, previousStation.y - predicted.y) <= previousRing+ownLength*1.15
       && inRange(previousStation,1)
       && valid(previousStation) && accessible(previousStation) && armedStation(previousStation)) { best = previousStation; retained = true; }
     // A still useful station only needs validation, rather than another full
@@ -271,7 +285,7 @@ export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly U
       if (committed!.retreat !== undefined) goal.retreat = committed!.retreat;
     }
     for (const offset of best ? [] : STATION_OFFSETS) {
-      const angle=bearing+offset,c=detCos(angle),s=detSin(angle);
+      const angle=bearing+offset,c=detCos(angle),s=detSin(angle),standoff=ringAt(angle);
       const station=(separation:number)=>({x:predicted.x+separation*c,y:predicted.y+separation*s});
       // A fixed circle sends a rear battery to the enemy's opposite side
       // once nearby slots are reserved. Also consider an outer station in
@@ -321,10 +335,14 @@ export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly U
   if (moving && phase === 'engage') {
     // Closing error changes speed continuously. A target moving away remains
     // a voyage even while the guns already have range.
-    const closingGap = following ? distance - safeGap : gap - range * .68;
-    if (fireHeading !== undefined && !following) {
-      goal.fireHeading = fireHeading;
-      const along = vx * detCos(fireHeading) + vy * detSin(fireHeading);
+    // A gun with a dead zone strikes a hull only by its nearest side (see @@@hull-reach): hold that side mid-band from
+    // the gun, which on the bow stands ahead of the hull's middle.
+    const closingGap = following ? distance - safeGap : gap - (minimum > 0 ? (minimum + range) / 2 + Math.max(0, stationBowReach) : range * .68);
+    // Kept engaged through a tick out of reach (see the phase above), it keeps the firing heading it sails on.
+    const heading = fireHeading ?? (motion.route?.intent === 'pursuit' && motion.route.targetId === target.id ? motion.route.fireHeading : undefined);
+    if (heading !== undefined && !following) {
+      goal.fireHeading = heading;
+      const along = vx * detCos(heading) + vy * detSin(heading);
       goal.targetSpeed = Math.min(limits.speed, Math.max(0, along + closingGap * .2));
     } else goal.targetSpeed = Math.min(limits.speed, Math.max(speed * .55, speed + closingGap * .2));
   }

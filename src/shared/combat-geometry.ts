@@ -49,46 +49,31 @@ export function strikePoint(from: Point, target: StrikeTarget): Point {
   if (gap <= target.radius) return from;
   return { x: target.x + dx * target.radius / gap, y: target.y + dy * target.radius / gap };
 }
-// @@@band-aim - A weapon with a minimum range aims at the part of a hull lying in its band and its traverse: the nearest
-// point of the hull at least `minimum` and at most `maximum` away, within `arc` when given, so a ship lying across the
-// dead zone is still struck on its far side. Any other body is struck where it is aimed or not at all (undefined), and
-// so is a hull no part of which lies in the band.
-export function strikePointInBand(from: Point, target: StrikeTarget, minimum: number, maximum: number, arc?: { bearing: number; halfArc: number }): Point | undefined {
-  if (!("order" in target)) return undefined;
-  const profile = shipProfile(target);
-  if (!profile) return undefined;
-  const angle = target.sailing?.heading ?? 0, c = detCos(angle), s = detSin(angle);
-  const hull = profile.hull.map(p => ({ x: target.x + p.x * c - p.y * s, y: target.y + p.x * s + p.y * c }));
-  let best: Point | undefined, bestGap = Infinity;
-  const consider = (p: Point) => {
-    const dx = p.x - from.x, dy = p.y - from.y, gap = Math.hypot(dx, dy);
-    if (gap < minimum || gap > maximum || gap >= bestGap) return;
-    if (arc) {
-      let off = Math.atan2(dy, dx) - arc.bearing;
-      off = Math.atan2(Math.sin(off), Math.cos(off));
-      if (Math.abs(off) > arc.halfArc + 1e-7) return;
-    }
-    best = p; bestGap = gap;
-  };
-  const rays = arc ? [arc.bearing - arc.halfArc, arc.bearing + arc.halfArc] : [];
-  for (let index = 0; index < hull.length; index++) {
-    const a = hull[index]!, b = hull[(index + 1) % hull.length]!, dx = b.x - a.x, dy = b.y - a.y, fx = a.x - from.x, fy = a.y - from.y;
-    consider(a);
-    // Where the edge crosses the dead zone's rim and the band's outer rim, a hair inside the band so every exact
-    // range check downstream agrees.
-    for (const radius of [minimum + 1e-6, maximum - 1e-6]) {
-      const A = dx * dx + dy * dy, B = 2 * (fx * dx + fy * dy), C = fx * fx + fy * fy - radius * radius, disc = B * B - 4 * A * C;
-      if (A > 0 && disc >= 0) for (const t of [(-B - Math.sqrt(disc)) / (2 * A), (-B + Math.sqrt(disc)) / (2 * A)]) if (t >= 0 && t <= 1) consider({ x: a.x + dx * t, y: a.y + dy * t });
-    }
-    // Where the edge crosses the traverse's edges.
-    for (const ray of rays) {
-      const ux = Math.cos(ray), uy = Math.sin(ray), denominator = dx * uy - dy * ux;
-      if (Math.abs(denominator) < 1e-12) continue;
-      const t = (fy * ux - fx * uy) / denominator;
-      if (t >= 0 && t <= 1) consider({ x: a.x + dx * t, y: a.y + dy * t });
-    }
-  }
-  return best;
+// @@@hull-reach - A weapon with a minimum range reckons whatever is aboard a ship by that whole ship: while the nearest
+// point of the hull lies inside its dead zone, nothing on board, neither the hull nor a troop on its deck, may be taken up.
+// Otherwise it aims as any weapon does, at the hull's nearest point or at the troop. Two hulls lie as far from each other
+// either way, so both broadsides can fire or neither can. A body on no ship is reckoned by itself. `units` finds the
+// ship a troop stands on; a target that was led for a moving shot carries its ship with it by the same offset.
+export function deadZoneAim(from: Point, target: StrikeTarget, minimum: number, units: readonly Unit[] = []): Point | undefined {
+  const point = strikePoint(from, target);
+  if (minimum <= 0) return point;
+  const carrier = carrierOf(target, units);
+  // The led hull is the standing one moved by the troop's offset: the gun moves the other way instead of copying a ship.
+  const seen = carrier ? { x: from.x - carrier.dx, y: from.y - carrier.dy } : from;
+  const near = carrier ? strikePoint(seen, carrier.ship) : point;
+  return Math.hypot(near.x - seen.x, near.y - seen.y) < minimum ? undefined : point;
+}
+/** The ship a troop stands on, and how far a led copy of that troop lies from it standing. */
+function carrierOf(target: StrikeTarget, units: readonly Unit[]) {
+  if (!("order" in target) || !target.deck || shipProfile(target)) return undefined;
+  const ship = units.find(unit => unit.id === target.deck!.shipId);
+  if (!ship) return undefined;
+  const standing = target.id === undefined ? undefined : units.find(unit => unit.id === target.id);
+  return { ship, dx: standing ? target.x - standing.x : 0, dy: standing ? target.y - standing.y : 0 };
+}
+/** The ship a troop stands on. */
+export function carryingHull(target: StrikeTarget, units: readonly Unit[]): Unit | undefined {
+  return carrierOf(target, units)?.ship;
 }
 export function strikeGap(from: Point, target: StrikeTarget) {
   const point = strikePoint(from, target);

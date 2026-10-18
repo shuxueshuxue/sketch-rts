@@ -1,3 +1,4 @@
+import { strikePoint } from './combat-geometry';
 import { installedWeapons, mountedWeaponPose, SHIP_WEAPONS } from "./ship-equipment";
 import { describe, expect, it } from 'vitest';
 import { createGame, issuePlayerCommand, removeUnit, restoreSnapshotIntoGame, snapshotGame, stepGame } from './sim';
@@ -53,9 +54,11 @@ describe('live naval combat', () => {
         const next = firstShot(game);
         expect(next.targetId).toBe(ship.id);
     });
-    it('launches a cannon round from the traversed muzzle and hits crew ahead of their hull', () => {
-        const game = match(), gun = game.spawnUnit('player', 'warship', 1150, 800), ship = game.spawnUnit('enemy', 'transport', 900, 800), crew = game.spawnUnit('enemy', 'archer', 900, 800);
-        place(game, ship, crew, -5, 20);
+    // @@@hull-reach: a gun aims at the hull's nearest point, and its burst strikes the crew by that rail.
+    it('launches a cannon round from the traversed muzzle at the hull and bursts on the crew by its rail', () => {
+        // Abeam, its near side out of the gun's dead zone.
+        const game = match(), gun = game.spawnUnit('player', 'warship', 900, 1120), ship = game.spawnUnit('enemy', 'transport', 900, 800), crew = game.spawnUnit('enemy', 'archer', 900, 800);
+        place(game, ship, crew, -5, 30);
         issuePlayerCommand(game, 'player', { type: 'attack', unitIds: [gun.id], targetId: ship.id });
         const shot = firstShot(game), pose = mountedWeaponPose(gun, installedWeapons(game, gun)[0]!)!;
         expect(shot.fromX).toBeCloseTo(pose.muzzle.x);
@@ -63,11 +66,16 @@ describe('live naval combat', () => {
         const flash = game.effects.find(e => e.type === 'muzzleFlash')!;
         expect(flash.unitId).toBe(gun.id);
         expect(flash.fromHeight).toBe(pose.height);
+        const near = strikePoint(pose.pivot, ship);
+        expect(shot.targetId).toBe(ship.id);
+        expect(Math.hypot(shot.toX - near.x, shot.toY - near.y)).toBeLessThan(12);
         const hp = crew.hp, hull = ship.hp;
         gun.cooldown = 9999;
         run(game, shot.remaining);
         expect(crew.hp).toBeLessThan(hp);
-        expect(ship.hp).toBeCloseTo(hull - Math.round(shot.damage * SHIP_WEAPONS.shipCannon.weapon.hullDamageShare! * TRANSPORT_COMBAT.rangedDamageTaken));
+        // The hull takes the crew's share of the blow, not a direct hit as well (see crewBeforeHulls).
+        expect(ship.hp).toBeLessThan(hull);
+        expect(hull - ship.hp).toBeLessThanOrEqual(Math.round(shot.damage * SHIP_WEAPONS.shipCannon.weapon.hullDamageShare! * TRANSPORT_COMBAT.rangedDamageTaken));
     });
     it('aggregates one shell blast across several passengers without stacking hull damage', () => {
         const game = match(), gun = game.spawnUnit('player', 'catapult', 1320, 900), ship = game.spawnUnit('enemy', 'carrier', 900, 900), a = game.spawnUnit('enemy', 'archer', 900, 900), b = game.spawnUnit('enemy', 'archer', 900, 900);
