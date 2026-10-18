@@ -1,3 +1,4 @@
+import { evacuationShelter } from './evacuation-shelter';
 import { homeRelief } from './home-relief';
 import { idleWorkerEvasion } from './idle-worker-evasion';
 import { loadingApproach } from './loading-approach';
@@ -172,7 +173,19 @@ export function planBootstrapScriptEntries(snapshot: GameSnapshot, owner: Player
   });
   reliefEntries.push(...relief.commands.map(command => ({ scriptId: 'homeRelief', command })));
   const evasion = idleWorkerEvasion(snapshot, owner, options, reliefEntries.map(entry => entry.command));
-  return evasion.length ? [...reliefEntries, ...evasion.map(command => ({ scriptId: 'idleWorkerEvasion', command }))] : reliefEntries;
+  const ordinary = evasion.length ? [...reliefEntries, ...evasion.map(command => ({ scriptId: 'idleWorkerEvasion', command }))] : reliefEntries;
+  const shelter = evacuationShelter(snapshot, owner, options);
+  const sheltered = ordinary.flatMap(entry => {
+    const command = entry.command;
+    if ('unitIds' in command) {
+      const unitIds = command.unitIds.filter(id => !shelter.claimed.has(id));
+      return unitIds.length ? [{ ...entry, command: { ...command, unitIds } }] : [];
+    }
+    if ('unitId' in command && shelter.claimed.has(command.unitId)
+      || 'passengerId' in command && shelter.claimed.has(command.passengerId)) return [];
+    return [entry];
+  });
+  return [...sheltered, ...shelter.commands.map(command => ({ scriptId: 'evacuationShelter', command }))];
 }
 
 export function researchPrerequisites(wants: readonly V6Want[], player: PlayerState): V6Want[] {
