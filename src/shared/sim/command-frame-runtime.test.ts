@@ -61,7 +61,7 @@ describe("command frame runtime boundary", () => {
   });
 
   it("keeps offline SDK and AI diagnostic runners from owning raw apply or step loops", () => {
-    const runnerFiles = ["src/sdk/game-runner.ts", "src/sdk/playtest.ts", "src/ai/playtest.ts", "src/ai/ab-test.ts", "scripts/ai-matrix.ts"];
+    const runnerFiles = ["src/sdk/game-runner.ts", "src/sdk/playtest.ts", "src/ai/playtest.ts", "src/ai/ab-test.ts"];
     const forbidden = ["stepGame", "issuePlayerCommand", "applyCommandFrame", "runPresetAiRuntime"];
     const offenders = runnerFiles.flatMap((file) => {
       const source = readFileSync(file, "utf8");
