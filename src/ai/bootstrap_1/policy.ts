@@ -1,8 +1,8 @@
 import { canResearchAt, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap, trainingBuildingFor } from '../../shared/catalog';
 import { shopping } from './shopping';
 import type { BootstrapAiVersion, GameSnapshot, PlayerId, PlayerState, Unit } from '../../shared/types';
-import { readV6Intel } from '../policy/v6/intel';
 import { isBacklineKind } from '../policy/v6/backline';
+import { availableV6Army } from '../policy/v6/general';
 import { combatRating } from '../policy/v6/strength';
 import { creepForce, EXPANSION_GUARD_RANGE, forceFor, neutralCamps } from '../policy/v7/creep';
 import { distance } from '../policy/spatial';
@@ -18,7 +18,7 @@ import { archerMicro } from './archer-micro';
 import { battleRepair } from './repair';
 import { miningWorkforce } from './workforce';
 import { miningAssignments } from './mining-assignments';
-import { mineDefense, planBootstrapCloseout, planBootstrapGeneral } from './mine-defense';
+import { mainArmyIntel, mineDefense, planBootstrapCloseout, planBootstrapGeneral } from './mine-defense';
 import { miningJobSafety } from './mining-job-defense';
 import { bootstrapEconomy } from './economy';
 import { shellEvasion } from './shell-evasion';
@@ -76,11 +76,15 @@ function expansionGuardWant(snapshot: GameSnapshot, owner: PlayerId, version: Bo
   const count = (kind: string) => snapshot.units.filter(unit => unit.owner === owner && unit.kind === kind).length;
   if (activeMiningBaseCount(snapshot, owner) >= (phase.advanceBases ?? 0)
     || phase.wants.some(want => 'unit' in want && count(want.unit) < want.count)) return [];
-  const intel = readV6Intel(snapshot, owner, options);
+  // The army the general clears the guard with, as planBootstrapGeneral sees it: without the mine's detachment, the hired
+  // and shopping and caring crews (see mainArmyIntel), and only those free to march (see availableV6Army). Counted from
+  // the whole army it found six lancers enough for an ogre guard the general's five could not take, wanted none more, and
+  // the main sat on one mine from 2:30 to 9:00 banking 1675 gold (ladder-43, V9 knight against V9).
+  const intel = mainArmyIntel(snapshot, owner, options);
   const mine = bootstrapExpansionMine(snapshot, owner, intel, options);
   const guard = mine && neutralCamps(snapshot).find(camp => distance(camp.center, mine) <= EXPANSION_GUARD_RANGE);
   if (!guard) return [];
-  const front = intel.army.filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0);
+  const front = availableV6Army(snapshot, options, intel).filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0);
   const missing = forceFor(guard) - creepForce(front, guard);
   if (missing <= 0) return [];
   const unit = strategy.standIn, def = UNIT_DEFS[unit];

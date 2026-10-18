@@ -195,7 +195,7 @@ export function planBootstrapCloseout(snapshot: GameSnapshot, owner: PlayerId, o
   return planV6CloseoutArmy(snapshot, owner, options, intel);
 }
 
-function mainArmyIntel(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): V6Intel {
+export function mainArmyIntel(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): V6Intel {
   const intel = readV6Intel(snapshot, owner, options), guard = detachment(snapshot, owner, options);
   const crew = new Set(guard?.crew.map(unit => unit.id));
   for (const id of mercenaryControlUnitIds(snapshot, owner, options)) crew.add(id);
