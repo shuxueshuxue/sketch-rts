@@ -1,9 +1,0 @@
-{
-  "file": "final-depth1-doc-links.json.gz",
-  "originalBytes": 89224,
-  "originalSha256": "b36e42c855c80fc70b1bdb82009aecc7c8519478116abf0c8e43ca4a91607d6a",
-  "gzipBytes": 6789,
-  "gzipSha256": "cea791a14b3b30db7922fe40f1258252855d287c67de80f889355f767f8e1e0f",
-  "decodedBytesExactlyEqual": true,
-  "meaning": "Read-only final local Markdown links QA. No Browser, SDK test, archive or performance work repeated."
-}

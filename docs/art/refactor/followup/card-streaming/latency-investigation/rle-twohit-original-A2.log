@@ -1,7 +1,0 @@
-9:36:44 AM [vite] (client) ✨ new dependencies optimized: three, three/addons/loaders/GLTFLoader.js
-9:36:44 AM [vite] (client) ✨ optimized dependencies changed. reloading
-START aec09d62 hidden=0 cycle=0
-VIEWPORT streaming cycle 0 0 39.80333333350718 424.4583333336438
-START aec09d62 hidden=0 cycle=1
-VIEWPORT streaming cycle 0 1 45.49166666716337 432.9833333327745
-{"output":"/workspace/sketch-rts-viewport/docs/art/refactor/followup/card-streaming/latency-investigation/rle-twohit-abba/original-A2/raw.json","cycles":[{"hiddenCount":0,"cycle":0,"cpu":{"samples":60,"meanMs":39.80333333350718,"p50Ms":6.700000002980232,"p95Ms":117.30000000074506,"p99Ms":474.5999999977648,"maxMs":474.5999999977648,"over16_67Ms":29,"over50Ms":17},"real":{"samples":12,"meanMs":424.4583333336438,"p50Ms":197.5,"p95Ms":1321.9000000022352,"p99Ms":1321.9000000022352,"maxMs":1321.9000000022352,"over16_67Ms":12,"over50Ms":12}},{"hiddenCount":0,"cycle":1,"cpu":{"samples":60,"meanMs":45.49166666716337,"p50Ms":15.800000000745058,"p95Ms":148.30000000074506,"p99Ms":497.80000000074506,"maxMs":497.80000000074506,"over16_67Ms":28,"over50Ms":21},"real":{"samples":12,"meanMs":432.9833333327745,"p50Ms":207.59999999776483,"p95Ms":1339.3999999985099,"p99Ms":1339.3999999985099,"maxMs":1339.3999999985099,"over16_67Ms":12,"over50Ms":12}}]}

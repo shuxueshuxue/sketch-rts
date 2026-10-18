@@ -1,8 +1,0 @@
-{
-  "script": "scripts/art-depth1-evidence-archive.py",
-  "bytes": 32089,
-  "sha256": "984b41015b27d94dcef4312c7d2ba1020f2105796fb98e16cf8824f06530bf9d",
-  "gzipBytes": 8583,
-  "gzipSha256": "bbfb6c6dfe91eae7b61c3f075e581abb5d3e0c975ec5bc01291518fc5143fecf",
-  "snapshotBeforeSuccessfulPackaging": true
-}
