@@ -146,7 +146,7 @@ describe('predictable ship steering',()=>{
     expect(ship.x).toBeGreaterThan(800);
   });
   it('chooses the near side and only the rotation needed to enter its firing arc',()=>{
-    const game=scene(),ship=game.spawnUnit('player','carrier',1000,1000),target={x:1240,y:1000};
+    const game=scene(),ship=game.spawnUnit('player','carrier',1000,1000),target={x:1300,y:1000};
     ship.sailing!.heading=.8;
     for(const [i,mountId] of ['port0','starboard0','starboard1','starboard2'].entries())game.items.push({id:`gun-${i}`,kind:'shipCannon',shipId:ship.id,mountId,durability:SHIP_WEAPONS.shipCannon.hp,x:ship.x,y:ship.y,cooldownRemaining:0});
     const originalItems=[...game.items];

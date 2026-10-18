@@ -27,7 +27,12 @@ const movingCases = [
 ] as const;
 
 describe('mounted weapons in live sailing combat', () => {
+  // The obstruction geometry of firing intervals, drawn with both blockers inside what is now the broadside's dead zone,
+  // which a ball passes over (see @@@cannon-min-range, tested there): the dead zone is lifted for this fixture alone.
   it('turns a held single-gun broadside into a clear interval whose two firing boundaries are obstructed', () => {
+    const cannon=SHIP_WEAPONS.shipCannon.weapon as { minRange?: number }, minimum=cannon.minRange;
+    delete cannon.minRange;
+    try {
     const game=sea(),ship=game.spawnUnit('player','shipOfTheLine',1000,1000),target=game.spawnUnit('enemy','transport',1420,1000);
     ship.sailing!.heading=target.sailing!.heading=Math.PI/2;
     const blockers=[game.spawnUnit('player','cutter',1176.7485918849707,1038.0384407471865),game.spawnUnit('player','cutter',1255.8803045144305,905.2789421752095)];
@@ -61,6 +66,7 @@ describe('mounted weapons in live sailing combat', () => {
     }
     expect(first).toBeDefined();expect(first!).toBeLessThanOrEqual(6);
     expect({x:ship.x,y:ship.y}).toEqual({x:1000,y:1000});expect(ship.order.type).toBe('hold');
+    } finally { if (minimum !== undefined) cannon.minRange=minimum; }
   });
 
   it('brings a rear broadside battery into a clear firing station while forward peers are already engaged', () => {
@@ -97,8 +103,9 @@ describe('mounted weapons in live sailing combat', () => {
     game.units=[];game.items=[];game.buildings=[];game.resources=[];game.scriptedVictory=true;
     game.map={...game.map,width:6000,height:6000,wind:{direction:Math.PI/2,speed:80},
       terrain:{cell:40,cols:150,rows:150,cells:'~'.repeat(22500)}};
-    const ship=game.spawnUnit('player','warship',2000,2000),ally=game.spawnUnit('ally','transport',2180,2000),target=game.spawnUnit('enemy','transport',2360,2000);
-    ally.sailing!.heading=Math.PI/2;
+    // The ally lies across the cannon's band (240-312), not inside its dead zone, which a ball passes over.
+    const ship=game.spawnUnit('player','warship',2000,2000),ally=game.spawnUnit('ally','cutter',2270,2000),target=game.spawnUnit('enemy','transport',2350,2000);
+    ally.sailing!.heading=Math.PI/2;target.sailing!.heading=Math.PI/2;ally.attackDamage=0;
     for(const unit of [ship,ally,target])unit.order={type:'hold',x:unit.x,y:unit.y};
     expect(hullContact(ship,ally)).toBeUndefined();expect(hullContact(ally,target)).toBeUndefined();
     const gun=installedWeapons(game,ship)[0]!,originalHp=target.hp;

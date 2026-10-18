@@ -6,6 +6,7 @@ import { bodyMass } from "./physical-body";
 import { shipsIn, circleInPolygon, hullGap, localToWorld, shipPassengers, shipProfile, worldToLocal, type Point } from "./ship-geometry";
 import { detCos, detSin } from "./det-math";
 import { perTick } from "./time";
+import { strikeReach } from "./combat-geometry";
 import { groundRevision, isOpenGround } from "./terrain";
 import { SHIP_IMPACT_SAFE_SPEED, shipPointVelocity } from './ship-collisions';
 import { gangwayBetween, gangwayCrossingAt, gangwaySurface, type GangwaySurface } from './ship-gangway';
@@ -224,6 +225,30 @@ function onHull(ship: Unit, point: Point) {
   return circleInPolygon(worldToLocal(ship, point), 0, profile.hull);
 }
 
+// @@@making-way - A boarder on a deck sent at a body there walks to the free spot nearest it. When that spot is out of
+// reach, the boarder makes way: it chooses as if the boarders nearer the body already stood at the spots they would
+// take (and the farther were not there), so it leaves them room. Two side by side at a narrow mouth (the deck tapering
+// to a corner) each held the spots in reach shut to the other, each one's nearest spot was where it stood, and neither
+// ever struck. The crew as the walker sees it for that choice.
+function makingWay(passenger: Unit, ship: Unit, units: readonly Unit[]): readonly Unit[] {
+  const order = passenger.order, victim = order.type === 'attack' ? units.find(unit => unit.id === order.targetId) : undefined;
+  if (!victim?.deck || victim.deck.shipId !== ship.id || passenger.deck?.shipId !== ship.id) return units;
+  const at = victim.deck, reach = strikeReach(passenger, victim) - 1;
+  const own = deckPlacement(ship, passenger, units, at, true);
+  if (!own || Math.hypot(own.x - at.x, own.y - at.y) <= reach) return units;
+  const near = (unit: Unit) => Math.hypot(unit.x - victim.x, unit.y - victim.y), mine = near(passenger);
+  const rivals = units.filter(other => other !== passenger && other.owner === passenger.owner && other.hp > 0 && other.deck?.shipId === ship.id
+    && (other.order.type === 'board' && other.order.transportId === ship.id || other.order.type === 'attack' && other.order.targetId === victim.id));
+  const ahead = rivals.filter(other => near(other) < mine || near(other) === mine && other.id < passenger.id).sort((a, b) => near(a) - near(b) || (a.id < b.id ? -1 : 1));
+  if (!ahead.length) return units;
+  const rival = new Set(rivals), placed = units.filter(unit => !rival.has(unit));
+  for (const other of ahead) {
+    const claimed = deckPlacement(ship, other, placed, at, true);
+    placed.push(claimed ? { ...other, deck: { ...other.deck!, ...claimed } } : other);
+  }
+  return placed;
+}
+
 /** Hull contact, usable floor and body clearance govern decks and shore alike. */
 export function walkConnectedSurfaces(passenger: Unit, world: Point, units: readonly Unit[], map: GameMap, pace = 1) {
   const hulls = shipsIn(units);
@@ -259,7 +284,7 @@ export function walkConnectedSurfaces(passenger: Unit, world: Point, units: read
       return false;
     if (!source && !ships.some(ship => Math.hypot(passenger.x - ship.x, passenger.y - ship.y) < shipProfile(ship)!.length / 2 + passenger.radius * 3))
       return false;
-    const local = worldToLocal(target, source ? world : passenger), goal = deckPlacement(target, passenger, units, local, true);
+    const local = worldToLocal(target, source ? world : passenger), goal = deckPlacement(target, passenger, makingWay(passenger, target, units), local, true);
     // The walk is laid toward where this body would stand on an empty deck, the same for every walker sent there; the
     // spot it takes among the crew is its last, direct step.
     const free = deckPlacement(target, passenger, units, local, false);

@@ -18,7 +18,7 @@ function run(game: ReturnType<typeof match>, ticks: number) { for (let i = 0; i 
     stepGame(game); }
 describe('physical ship equipment', () => {
     it('keeps the hull free of reticles while each working mounted cannon aims and fires',()=>{
-        const game=match(),ship=game.spawnUnit('player','warship',900,800),enemy=game.spawnUnit('enemy','transport',1270,800);
+        const game=match(),ship=game.spawnUnit('player','warship',900,800),enemy=game.spawnUnit('enemy','transport',1370,800);
         enemy.hp=enemy.maxHp=10000;enemy.order={type:'hold',x:enemy.x,y:enemy.y};
         const cannon=installedWeapons(game,ship)[0]!;
         issuePlayerCommand(game,'player',{type:'aim',unitIds:[ship.id],x:1100,y:800});
@@ -46,9 +46,11 @@ describe('physical ship equipment', () => {
         for(let i=0;i<seconds(5);i++){stepGame(game);for(const shot of game.projectiles)if(shot.attackerId===ship.id&&shot.attackKind==='arrow')arrows.add(shot.id);}
         expect(arrows.size).toBeGreaterThanOrEqual(3);expect(enemy.hp).toBeLessThan(2000);expect(ship.aim).toBeDefined();
     });
+    // The cutter's arrows reach 264 from its middle, its bow cannon fires from 240 to 312 from its muzzle (see
+    // @@@cannon-min-range): one target cannot stand in both bands at once, so each takes its own.
     it('keeps cutter arrows and a fitted cannon independently armed, aimed and cooled down',()=>{
-        const game=match(),ship=game.spawnUnit('player','cutter',900,800),enemy=game.spawnUnit('enemy','transport',1120,800);
-        enemy.hp=enemy.maxHp=5000;enemy.order={type:'hold',x:enemy.x,y:enemy.y};
+        const game=match(),ship=game.spawnUnit('player','cutter',900,800),enemy=game.spawnUnit('enemy','transport',1221,800),far=game.spawnUnit('enemy','transport',1300,960);
+        enemy.hp=enemy.maxHp=5000;enemy.order={type:'hold',x:enemy.x,y:enemy.y};far.hp=far.maxHp=5000;far.order={type:'hold',x:far.x,y:far.y};
         const cannon:WorldItem={id:'cutter-gun',kind:'shipCannon',shipId:ship.id,mountId:'bow',x:ship.x,y:ship.y,durability:90,cooldownRemaining:0};
         game.items.push(cannon);ship.fittings=[{...shipMounts(ship)[0]!,id:cannon.id}];
         issuePlayerCommand(game,'player',{type:'attack',unitIds:[ship.id],targetId:enemy.id});
@@ -62,7 +64,7 @@ describe('physical ship equipment', () => {
     });
     it('revises an automatic naval engagement while preserving a player-chosen attack target',()=>{
         for(const automatic of [false,true]){
-            const game=match(),ship=game.spawnUnit('player','warship',900,800),enemy=game.spawnUnit('enemy','warship',1150,880),farm=createBuilding('farm','enemy','farm',1200,800,true);
+            const game=match(),ship=game.spawnUnit('player','warship',900,800),enemy=game.spawnUnit('enemy','warship',1250,1000),farm=createBuilding('farm','enemy','farm',1250,800,true);
             ship.hp=ship.maxHp=10000;enemy.hp=enemy.maxHp=10000;enemy.order={type:'hold',x:enemy.x,y:enemy.y};farm.hp=farm.maxHp=5000;game.buildings.push(farm);
             issuePlayerCommand(game,'player',automatic?{type:'attackMove',unitIds:[ship.id],x:farm.x,y:farm.y}:{type:'attack',unitIds:[ship.id],targetId:farm.id});
             run(game,seconds(5));
@@ -71,14 +73,14 @@ describe('physical ship equipment', () => {
         }
     });
     it('turns a holding ship toward an approaching enemy without moving its guard position',()=>{
-        const game=match(),ship=game.spawnUnit('player','warship',900,800),enemy=game.spawnUnit('enemy','transport',900,1100);
+        const game=match(),ship=game.spawnUnit('player','warship',900,800),enemy=game.spawnUnit('enemy','transport',900,1180);
         enemy.hp=enemy.maxHp=2000;enemy.order={type:'hold',x:enemy.x,y:enemy.y};
         issuePlayerCommand(game,'player',{type:'holdPosition',unitIds:[ship.id]});
         run(game,seconds(12));expect(enemy.hp).toBeLessThan(2000);expect(ship.order.type).toBe('hold');
         expect(ship.x).toBe(900);expect(ship.y).toBe(800);
     });
     it('keeps firing at the next reachable threat after its original ship target sinks',()=>{
-        const game=match(),ship=game.spawnUnit('player','warship',900,800),enemy=game.spawnUnit('enemy','transport',1130,800),yard=createBuilding('next-yard','enemy','shipyard',1290,800,true);
+        const game=match(),ship=game.spawnUnit('player','warship',900,800),enemy=game.spawnUnit('enemy','transport',1330,800),yard=createBuilding('next-yard','enemy','shipyard',1080,1080,true);
         enemy.hp=1;yard.hp=yard.maxHp=5000;game.buildings.push(yard);
         issuePlayerCommand(game,'player',{type:'attack',unitIds:[ship.id],targetId:enemy.id});
         run(game,seconds(20));expect(game.units.some(unit=>unit.id===enemy.id)).toBe(false);
@@ -86,7 +88,7 @@ describe('physical ship equipment', () => {
         expect(ship.shipParts!.rigging).toBe(shipPartMax(ship).rigging);
     });
     it('guards an idle player ship with the same aiming and target rules as combat orders',()=>{
-        const game=match(),ship=game.spawnUnit('player','warship',900,800),enemy=game.spawnUnit('enemy','transport',1250,800);
+        const game=match(),ship=game.spawnUnit('player','warship',900,800),enemy=game.spawnUnit('enemy','transport',1350,800);
         enemy.hp=enemy.maxHp=2000;enemy.order={type:'hold',x:enemy.x,y:enemy.y};
         stepGame(game);expect(enemy.hp).toBe(2000);expect(installedWeapons(game,ship)[0]!.aim?.tracking).toBe(true);
         run(game,seconds(5));expect(enemy.hp).toBeLessThan(2000);
@@ -99,7 +101,7 @@ describe('physical ship equipment', () => {
         run(game,seconds(10));expect(yard.hp).toBeLessThan(5000);
     });
     it('fires opportunistically while continuing an unloading task and proceeds after its path clears',()=>{
-        const game=match(),ship=game.spawnUnit('player','warship',900,800),enemy=game.spawnUnit('enemy','warship',1100,800);
+        const game=match(),ship=game.spawnUnit('player','warship',900,800),enemy=game.spawnUnit('enemy','warship',1300,900);
         ship.hp=ship.maxHp=10000;enemy.hp=enemy.maxHp=10000;
         enemy.order={type:'attack',targetId:ship.id};
         issuePlayerCommand(game,'player',{type:'unload',unitIds:[ship.id],x:1500,y:800});
@@ -154,7 +156,7 @@ describe('physical ship equipment', () => {
         }
     });
     it('refuses shots beyond the mount arc and turns a multi-gun broadside toward an attack target', () => {
-        const game = match(), ship = game.spawnUnit('player', 'warship', 900, 800), enemy = game.spawnUnit('enemy', 'golem', 1150, 800);
+        const game = match(), ship = game.spawnUnit('player', 'warship', 900, 800), enemy = game.spawnUnit('enemy', 'golem', 1240, 800);
         ship.sailing = { heading: 0, speed: 0, load: 0, balance: 0 };
         enemy.cooldown = 9999;
         enemy.order = { type: 'hold', x: enemy.x, y: enemy.y };
@@ -200,12 +202,15 @@ describe('physical ship equipment', () => {
         // This point remains inside minimum range under every possible hull rotation.
         expect(bestFiringHeading(game, ship, { x: ship.x + centerDistance, y: ship.y })).toBe(Math.PI / 2);
     });
-    it('uses a close-range side gun instead of retreating because its bow mortar is inside minimum range',()=>{
+    // @@@cannon-min-range: a side cannon no longer covers its bow mortar's dead zone, for a broadside's own is wider
+    // (240 against 180). A target inside both is out of every gun's reach: the ship backs out until one bears.
+    it('backs out to fire when its target is inside both its mortar\'s and its cannon\'s minimum range',()=>{
         const game=match(),ship=game.spawnUnit('player','bombardShip',900,800),enemy=game.spawnUnit('enemy','footman',1010,800);
         enemy.hp=enemy.maxHp=1000;enemy.cooldown=9999;enemy.order={type:'hold',x:enemy.x,y:enemy.y};
         game.items.push({id:'close-cannon',kind:'shipCannon',shipId:ship.id,mountId:'port0',durability:90,x:ship.x,y:ship.y,cooldownRemaining:0});
-        issuePlayerCommand(game,'player',{type:'attack',unitIds:[ship.id],targetId:enemy.id});run(game,seconds(8));
-        expect(ship.x).toBe(900);expect(ship.y).toBe(800);expect(enemy.hp).toBeLessThan(1000);
+        issuePlayerCommand(game,'player',{type:'attack',unitIds:[ship.id],targetId:enemy.id});run(game,seconds(3));
+        expect(enemy.hp).toBe(1000);expect(ship.x).toBeLessThan(900);
+        run(game,seconds(20));expect(enemy.hp).toBeLessThan(1000);
     });
     it('closes on a moving occupied deck without restarting an in-place waypoint every tick',()=>{
         const game=match();game.map.terrain={cell:40,cols:50,rows:40,cells:'~'.repeat(2000)};game.map.width=2000;game.map.height=1600;
@@ -292,8 +297,8 @@ describe('physical ship equipment', () => {
         expect(() => issuePlayerCommand(game, 'player', { type: 'transferItem', itemId: cannon.id, destination: { shipId: small.id, slot: 1 } })).toThrow(/No room/);
     });
     it('gives a refitted transport a working independently aimed cannon with real muzzle effects', () => {
-        const game = match(), ship = game.spawnUnit('player', 'transport', 900, 800), worker = game.spawnUnit('player', 'worker', 900, 740), enemy = game.spawnUnit('enemy', 'footman', 1100, 800);
-        enemy.order = { type: 'hold', x: 1100, y: 800 };
+        const game = match(), ship = game.spawnUnit('player', 'transport', 900, 800), worker = game.spawnUnit('player', 'worker', 900, 740), enemy = game.spawnUnit('enemy', 'footman', 1200, 800);
+        enemy.order = { type: 'hold', x: 1200, y: 800 };
         enemy.attackDamage = 0;
         const cannon: WorldItem = { id: 'cannon', kind: 'shipCannon', shipId: ship.id, holdSlot: 0, durability: 90, x: 900, y: 800, cooldownRemaining: 0 };
         game.items.push(cannon);
@@ -347,9 +352,9 @@ describe('physical ship equipment', () => {
         expect(game.players.player!.gold).toBeLessThan(3000);
     });
     it('saves each mounted weapon without sharing mutable aim, durability or fitting arrays', () => {
-        const game = match(), ship = game.spawnUnit('player', 'warship', 900, 800), enemy = game.spawnUnit('enemy', 'footman', 1100, 800);
+        const game = match(), ship = game.spawnUnit('player', 'warship', 900, 800), enemy = game.spawnUnit('enemy', 'footman', 1200, 800);
         enemy.cooldown = 9999;
-        enemy.order = { type: 'hold', x: 1100, y: 800 };
+        enemy.order = { type: 'hold', x: 1200, y: 800 };
         run(game, 5);
         const snapshot = snapshotGame(game), cannon = installedWeapons(game, ship)[0]!;
         const saved = snapshot.items.find(item => item.id === cannon.id)!;

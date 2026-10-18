@@ -1349,7 +1349,14 @@ function updateMountedWeapons(game:Game,starts:Map<string,{x:number;y:number;hea
     const requested=defenses.get(ship.id)?.target ?? (ordered && (explicit || isObstacle(ordered) || automaticTargetAllowed(game.units,ship.owner,ordered)) ? ordered : undefined);
     // Acquire far enough to include the offset battery, not just the hull
     // center. Actual heading and firing still use each pivot's own range.
-    let facingPoint=order.type==="aim" ? order : requested ?? (["attackMove","idle","hold"].includes(order.type) ? nearestEnemyTarget(game,ship,acquisitionRange) : undefined);
+    // A guard turns toward an enemy some gun can engage: one inside every gun's dead zone (see @@@cannon-min-range) is
+    // no reason to turn, and facing it kept a ship's bow off the archer farther up the beach it could have shot.
+    const deadZone=weapons.reduce((zone,item)=>{
+      const mount=mounts.find(mount=>mount.id===item.mountId),minimum=SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].weapon.minRange ?? 0;
+      return (item.durability ?? 1)>0 && mount ? Math.min(zone,minimum-Math.hypot(mount.x,mount.y)) : zone;
+    },intrinsic ? 0 : Infinity);
+    const engageable=(candidate:Unit|Building)=>!Number.isFinite(deadZone) || deadZone<=0 || strikeGap(ship,candidate)>=deadZone;
+    let facingPoint=order.type==="aim" ? order : requested ?? (["attackMove","idle","hold"].includes(order.type) ? nearestEnemyTargetFromPoint(game,ship.owner,ship,acquisitionRange,ship,engageable) : undefined);
     if(facingPoint && "owner" in facingPoint && !isObstacle(facingPoint))facingPoint=navalCombatTarget(game,ship,facingPoint);
     const orientHull = ['idle', 'hold', 'aim'].includes(order.type)
       || (order.type === 'attack' || order.type === 'attackMove') && shipCanTurnForAttack(ship);
@@ -1376,7 +1383,7 @@ function updateMountedWeapons(game:Game,starts:Map<string,{x:number;y:number;hea
       const proxy=aimMountedWeapon(game,ship,item,point,pose);
       if(!proxy || !target)continue;
       const launchPose=mountedWeaponPose(ship,item)!;
-      if(blockers.length && !shipFireLaneClear(launchPose.muzzle,point,def.weapon,blockers))continue;
+      if(blockers.length && !shipFireLaneClear(launchPose.muzzle,point,def.weapon,blockers,undefined,Math.max(0,(def.weapon.minRange ?? 0)-distance(launchPose.pivot,launchPose.muzzle))))continue;
       fireWeapon(game,ship,target,Math.round(def.damage*(nonStarUnitStats(game,ship).attackDamage/Math.max(1,weaponRules(game,ship).attackDamage))*outgoingDamageMultiplier(game,ship)),def.weapon,range,{},target.id,{item,pose:launchPose,aimPoint:point});
       markAimShot(proxy);item.cooldownRemaining=attackCooldownOf(game,ship,def.cooldown);if(item.mountId==="bow" && !intrinsic)ship.cooldown=item.cooldownRemaining;
     }
@@ -1785,12 +1792,14 @@ function updateAttackOrder(game: Game, unit: Unit, navalFrame = true) {
 function navigateShipAttack(game: Game, ship: Unit, target: Unit | Building | Obstacle) {
   if(game.boardingHolds?.has(ship.id))return;
   const weapons = installedWeapons(game, ship).filter(item => (item.durability ?? 1) > 0);
-  const minimum = weapons.length ? Math.min(...weapons.map(item => SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].weapon.minRange ?? 0))
+  // A hull's own attack (a cutter's arrows) has no dead zone: fitted guns' minimum range never drives it off its target.
+  const intrinsic = unitRules(game, ship).intrinsicAttack;
+  const minimum = intrinsic ? 0 : weapons.length ? Math.min(...weapons.map(item => SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].weapon.minRange ?? 0))
     : weaponRules(game, ship).weapon?.minRange ?? 0;
   const blockers=friendlyFireBlockers(game,ship);
   let firingHeading: number | undefined;
   const canFireFrom = (station:Unit,checkTurn:boolean) => {
-    if (!weapons.length) return targetGap(station, target) <= station.attackRange && targetGap(station, target) >= minimum;
+    if (!weapons.length || intrinsic && targetGap(station, target) <= station.attackRange) return targetGap(station, target) <= station.attackRange && targetGap(station, target) >= minimum;
     shareShipProfile(ship,station);
     const start = { x: station.x, y: station.y, heading: station.sailing!.heading };
     const shotClear=mountedShotClear(station,blockers);
@@ -1990,9 +1999,14 @@ function updateBoardOrder(game: Game, unit: Unit) {
     if(unit.kind!=='worker' && areEnemyOwners(game,unit.owner,transport.owner) && unit.attackDamage>0
       && unitRules(game,unit).attackRange<=RANGED_ATTACK_RANGE_THRESHOLD) {
       // Answer the reachable front rank before pursuing a higher-priority
-      // shooter whose route is sealed by that defender's body.
+      // shooter whose route is sealed by that defender's body. Nobody in reach:
+      // off the quarry's deck, an enemy who crossed onto our own deck is
+      // answered there (reachable without the bridge); otherwise the boarder
+      // keeps crossing, as an attack order does not route over the bridge to
+      // one across it (it stood at its own rail facing a marine for good).
       const nearby=navalCombatTarget(game,unit,transport,unit.attackRange);
-      const defender=nearby!==transport ? nearby : navalCombatTarget(game,unit,transport);
+      const own=source.id===transport.id ? transport : navalCombatTarget(game,unit,source);
+      const defender=nearby!==transport ? nearby : source.id===transport.id ? navalCombatTarget(game,unit,transport) : own!==source ? own : transport;
       if(defender!==transport && isUnit(defender)) {
         const boardingOrder=unit.order;
         unit.order={type:'attack',targetId:defender.id,frontRank:true};
@@ -2006,10 +2020,17 @@ function updateBoardOrder(game: Game, unit: Unit) {
       addEffect(game,"boardingBlocked",unit.x,unit.y,seconds(.4),{unitId:unit.id,owner:unit.owner,sourceKind:unit.kind});
       return;
     }
-    // One shared entry admits large bodies first. Waiting crew clear the aft
+    // One shared entry, crossed one at a time. Waiting crew clear the aft
     // passage on their own deck rather than racing ahead and sealing the exit.
-    const ahead=game.units.some(other=>other!==unit && other.hp>0 && other.deck && other.order.type==="board" && other.order.transportId===transport.id
-      && (other.radius>unit.radius || other.radius===unit.radius && other.id<unit.id));
+    // Only boarders still on this side are in the queue: one already across
+    // keeps its board order until it settles on its spot, and fighting at the
+    // entry it never did, holding everyone behind it.
+    // The one nearest the quarry crosses next, so the order across is the order the crew stand in and no one has to
+    // pass another on the way: waiting packed round one spot, a body by the rail was shut in by the crew beside it, and
+    // a larger body sent first had to squeeze past a smaller one standing nearer, each blocking the other on a narrow deck.
+    const near=distance(unit,transport);
+    const ahead=game.units.some(other=>other!==unit && other.hp>0 && other.deck?.shipId===source.id && other.order.type==="board" && other.order.transportId===transport.id
+      && (distance(other,transport)<near || distance(other,transport)===near && other.id<unit.id));
     if(ahead && source.id!==transport.id){
       const profile=shipProfile(source)!,entry=worldToLocal(source,transport);
       const waiting=deckPlacement(source,unit,game.units,{x:profile.length/4,y:-Math.sign(entry.y)*profile.beam/2});
@@ -3277,7 +3298,8 @@ function backOutOfDeadZone(game:Game,unit:Unit,target:{x:number;y:number},navalF
   let minimum=weaponRules(game,unit).weapon?.minRange;
   if(navalFrame && isShipKind(unit.kind)){
     const weapons=installedWeapons(game,unit).filter(item=>(item.durability ?? 1)>0);
-    if(weapons.length)minimum=Math.min(...weapons.map(item=>SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].weapon.minRange ?? 0));
+    if(unitRules(game,unit).intrinsicAttack)minimum=0;
+    else if(weapons.length)minimum=Math.min(...weapons.map(item=>SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].weapon.minRange ?? 0));
   }
   if(!minimum||distance(unit,target)>=minimum)return false;
   const dx=unit.x-target.x,dy=unit.y-target.y,length=Math.hypot(dx,dy)||1;
@@ -3314,7 +3336,9 @@ function fireWeapon(game:Game,attacker:Unit|Building,at:{x:number;y:number;id?:s
     addEffect(game,"grapeshot",point.x,point.y,seconds(.7),{...visuals,radius:range});return;
   }
   const flight=Math.max(seconds(0.2),Math.ceil(distance(origin,point)/perTick(weapon.delivery==="shell"?240:560)));
-  const projectile:Projectile={id:`projectile-${game.nextId++}`,owner:attacker.owner,attackerId:attacker.id,targetId:targetId??"",fromX:origin.x,fromY:origin.y,toX:point.x,toY:point.y,damage,damageProfile:{...damageProfile},remaining:flight,duration:flight,attackKind,weapon:{...weapon},...(isUnit(attacker)?{sourceKind:attacker.kind}:{}),...skill};
+  // The minimum range is reckoned from where the gun is aimed (its pivot, or the shooter), the flight from its muzzle.
+  const clearance=weapon.minRange ? {minRange:Math.max(0,weapon.minRange-distance(mounted?.pose.pivot ?? attacker,origin))} : {};
+  const projectile:Projectile={id:`projectile-${game.nextId++}`,owner:attacker.owner,attackerId:attacker.id,targetId:targetId??"",fromX:origin.x,fromY:origin.y,toX:point.x,toY:point.y,damage,damageProfile:{...damageProfile},remaining:flight,duration:flight,attackKind,weapon:{...weapon,...clearance},...(isUnit(attacker)?{sourceKind:attacker.kind}:{}),...skill};
   game.projectiles.push(projectile);
   addEffect(game,weapon.delivery==="shell"?"shellFlight":"siegeBolt",point.x,point.y,flight,{...visuals,radius:weapon.radius??0});
 }
@@ -3335,7 +3359,9 @@ function impactWeapon(game:Game,projectile:Projectile){
   const flightLength=distance(from,to),impactAt=(along:number)=>{const share=flightLength?Math.max(0,Math.min(1,along/flightLength)):0;return{x:from.x+(to.x-from.x)*share,y:from.y+(to.y-from.y)*share};};
   const foes=[...game.units,...game.buildings,...(game.obstacles??[])].filter(t=>t.hp>0&&(!isUnit(t)||!isInCabin(t))&&areEnemyOwners(game,projectile.owner,t.owner));
   if(weapon.delivery==="bolt"){
-    const intersections=foes.map(target=>({target,along:boltIntersection(from,to,target,weapon.radius??12)})).filter(h=>h.along!==undefined).sort((a,b)=>a.along!-b.along!);
+    // A gun that cannot be depressed onto what is near cannot strike it either: within its minimum range the ball
+    // passes over (see @@@cannon-min-range).
+    const intersections=foes.map(target=>({target,along:boltIntersection(from,to,target,weapon.radius??12,weapon.minRange??0)})).filter(h=>h.along!==undefined).sort((a,b)=>a.along!-b.along!);
     const eligible=new Set(crewBeforeHulls(intersections.map(hit=>hit.target)));
     const hits=intersections.filter(hit=>eligible.has(hit.target)).slice(0,weapon.maxHits??1);
     if(weapon.blastRadius && hits[0]){

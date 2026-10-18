@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { strikePoint, type StrikeTarget } from './combat-geometry';
+import { strikePoint, strikePointInBand, type StrikeTarget } from './combat-geometry';
 import { createUnit } from './map';
 import { SHIP_WEAPONS, bestFiringHeading, mountedFireLaneClear, mountedTargetPoint, mountedWeaponPose, shipGunCanAim, shipMounts } from './ship-equipment';
 import { headingDifference } from './ship-navigation';
@@ -19,7 +19,10 @@ function battery(kind: UnitKind = 'bombardShip', weapon: ShipEquipmentKind = 'sh
 function canFire(ship: Unit, item: WorldItem, target: StrikeTarget, heading: number, margin = 0) {
   const posed = { ...ship, sailing: { ...ship.sailing!, heading } };
   const pose = mountedWeaponPose(posed, item)!, mount = shipMounts(posed).find(mount => mount.id === item.mountId)!;
-  const def = SHIP_WEAPONS[item.kind as ShipEquipmentKind], point = strikePoint(pose.pivot, target);
+  // A gun with a dead zone aims at the part of a hull beyond it (see @@@band-aim).
+  const def = SHIP_WEAPONS[item.kind as ShipEquipmentKind], minimum = def.weapon.minRange;
+  const band = minimum ? strikePointInBand(pose.pivot, target, minimum, veteranWeaponRange(ship, def.range), { bearing: heading + mount.bearing, halfArc: mount.halfArc - margin }) : undefined;
+  const point = band ?? strikePoint(pose.pivot, target);
   const gap = Math.hypot(point.x - pose.pivot.x, point.y - pose.pivot.y);
   return shipGunCanAim(posed, item, target)
     && gap >= (def.weapon.minRange ?? 0) && gap <= veteranWeaponRange(ship, def.range)
@@ -60,9 +63,10 @@ describe('mounted firing headings', () => {
   it('does not let its own carrying hull obstruct a traversed mounted muzzle', () => {
     const {ship,item}=battery('warship','shipCannon');
     ship.sailing!.heading=0;
-    const point={x:1300,y:1000};
+    // The blocker lies across the cannon's band (240-312), not inside its dead zone, which a ball passes over.
+    const point={x:1340,y:1000};
     expect(mountedFireLaneClear(ship,item,point,[ship])).toBe(true);
-    const blocker=createUnit('ally','player','transport',1220,1000);
+    const blocker=createUnit('ally','player','transport',1270,1000);
     blocker.sailing={heading:Math.PI/2,speed:0,load:0,balance:0};
     expect(mountedFireLaneClear(ship,item,point,[ship,blocker])).toBe(false);
     blocker.y+=300;
@@ -71,7 +75,7 @@ describe('mounted firing headings', () => {
 
   it('only asks a firing-lane policy about otherwise legal mount arcs and ranges', () => {
     const {ship,item,items}=battery('warship','shipCannon');
-    const target={x:1250,y:1000};
+    const target={x:1310,y:1000};
     let checked=0;
     const heading=bestFiringHeading({items},ship,target,0,(gun,point,candidate)=>{
       checked++;
@@ -88,8 +92,8 @@ describe('mounted firing headings', () => {
   });
 
   it('reuses identical lane queries only within one selection, then observes a moved friendly hull', () => {
-    const {ship,item,items}=battery('warship','shipCannon'),target={x:1300,y:1000};
-    const blocker=createUnit('ally','player','transport',1220,1000);
+    const {ship,item,items}=battery('warship','shipCannon'),target={x:1340,y:1000};
+    const blocker=createUnit('ally','player','transport',1270,1000);
     blocker.sailing={heading:Math.PI/2,speed:0,load:0,balance:0};
     const select=()=>{
       const queried=new Set<number>();
@@ -168,7 +172,7 @@ describe('mounted firing headings', () => {
 
   it('brings the predicted crossing target into the mortar arc rather than only its current position', () => {
     const { ship, item, items } = battery();
-    const target = createUnit('target', 'enemy', 'transport', 1500, 1220);
+    const target = createUnit('target', 'enemy', 'transport', 1400, 1380);
     target.sailing = { heading: Math.PI / 2, speed: 45, load: 0, balance: 0, velocityX: 0, velocityY: 45 };
     ship.sailing!.heading = 0;
     const snapshot = { items, units: [ship, target] };
@@ -207,7 +211,7 @@ describe('mounted firing headings', () => {
   });
 
   it('preserves a working heading and offers an interior traverse margin for a moving target', () => {
-    const { ship, item, items } = battery('warship', 'shipCannon'), target = { x: 1250, y: 1000 };
+    const { ship, item, items } = battery('warship', 'shipCannon'), target = { x: 1310, y: 1000 };
     ship.sailing!.heading = bestFiringHeading({ items }, ship, target);
     expect(bestFiringHeading({ items }, ship, target)).toBe(ship.sailing!.heading);
     const margin = 5 * Math.PI / 180, heading = bestFiringHeading({ items }, ship, target, margin);

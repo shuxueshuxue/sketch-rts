@@ -1,7 +1,7 @@
 import { shipPartMax } from './ship-handling';
 export { shipPartMax } from './ship-handling';
 import { itemIndex } from "./item-index";
-import { strikePoint, type StrikeTarget } from "./combat-geometry";
+import { strikePoint, strikePointInBand, type StrikeTarget } from "./combat-geometry";
 import { detCos, detSin } from "./det-math";
 import { type WeaponDef } from './catalog';
 import { SHIP_KINDS, localToWorld, shipProfile, shipScale, worldToLocal, type Point } from './ship-geometry';
@@ -27,7 +27,11 @@ export const SHIP_WEAPONS: Record<ShipEquipmentKind, {
     weapon: WeaponDef;
     art: 'warship' | 'bombardShip' | 'fireShip';
 }> = {
-    shipCannon: { cost: 220, mass: 160, hp: 90, damage: 20, range: 312, cooldown: seconds(2), aimSpeed: 440, weapon: { presentation:'cannon', delivery: 'bolt', radius: 8, blastRadius: 48, maxHits: 1, navalMultiplier: 2, hullDamageShare: 1.25 }, art: 'warship' },
+    // @@@cannon-min-range - A broadside cannot be depressed onto a deck lying alongside: hulls grappled for boarding are
+    // a few paces apart (the bridge spans at most GANGWAY_MAX_GAP), and a ship of the line's crew then stands 63-188
+    // from the guns that bear on it, the deck's far corners 225-260 (measured at the home boarding scene's berth). Within
+    // 200 the guns hold their fire, so a fight at the rail is the crews' own; from 200 to 312 a gunnery duel goes on.
+    shipCannon: { cost: 220, mass: 160, hp: 90, damage: 20, range: 312, cooldown: seconds(2), aimSpeed: 440, weapon: { presentation:'cannon', delivery: 'bolt', radius: 8, blastRadius: 48, maxHits: 1, minRange: 240, navalMultiplier: 2, hullDamageShare: 1.25 }, art: 'warship' },
     shipMortar: { cost: 330, mass: 240, hp: 100, damage: 36, range: 576, cooldown: seconds(3.6), aimSpeed: 400, weapon: { presentation:'mortar', delivery: 'shell', radius: 75, minRange: 180, buildingMultiplier: 2, navalMultiplier: 1.7, hullDamageShare: 1.5 }, art: 'bombardShip' },
     flameProjector: { cost: 180, mass: 120, hp: 80, damage: 10, range: 144, cooldown: seconds(1.2), aimSpeed: 480, weapon: { presentation:'flame', delivery: 'cone', coneAngle: .85, buildingMultiplier: .7 }, art: 'fireShip' },
 };
@@ -77,8 +81,11 @@ export function shipGunCanAim(ship: Unit, item: WorldItem, target: StrikeTarget)
     const mount = shipMounts(ship).find(mount => mount.id === item.mountId);
     if (!mount)
         return false;
-    const pivot = localToWorld(ship, mount), point = strikePoint(pivot, target), angle = Math.atan2(point.y - pivot.y, point.x - pivot.x);
-    return Math.abs(headingDifference((ship.sailing?.heading ?? 0) + mount.bearing, angle)) <= mount.halfArc + 1e-7;
+    // A gun with a dead zone bears on the part of a hull in its band (see @@@band-aim).
+    const def = SHIP_WEAPONS[item.kind as ShipEquipmentKind], bearing = (ship.sailing?.heading ?? 0) + mount.bearing, pivot = localToWorld(ship, mount);
+    const point = (def.weapon.minRange ? strikePointInBand(pivot, target, def.weapon.minRange, veteranWeaponRange(ship, def.range), { bearing, halfArc: mount.halfArc }) : undefined) ?? strikePoint(pivot, target);
+    const angle = Math.atan2(point.y - pivot.y, point.x - pivot.x);
+    return Math.abs(headingDifference(bearing, angle)) <= mount.halfArc + 1e-7;
 }
 /** Bring a working gun into its arc with the least hull rotation. A gun
  * already able to fire never gives up its shot just to align a larger battery. */
@@ -117,7 +124,8 @@ export function bestFiringHeading(snapshot: Pick<GameSnapshot, 'items'> & Partia
         if(check.eligible===undefined){
             const def=SHIP_WEAPONS[item.kind as ShipEquipmentKind],c=detCos(candidate),s=detSin(candidate);
             const pivot={x:ship.x+mount.x*c-mount.y*s,y:ship.y+mount.x*s+mount.y*c};
-            const target=strikePoint(pivot,predicted),gap=Math.hypot(target.x-pivot.x,target.y-pivot.y);
+            const minimum=def.weapon.minRange,band=minimum ? strikePointInBand(pivot,predicted,minimum,veteranWeaponRange(ship,def.range),{bearing:candidate+mount.bearing,halfArc:Math.max(0,mount.halfArc-arcMargin)}) : undefined;
+            const target=band ?? strikePoint(pivot,predicted),gap=Math.hypot(target.x-pivot.x,target.y-pivot.y);
             check.point=target;
             check.eligible=gap<=veteranWeaponRange(ship,def.range) && gap>=(def.weapon.minRange ?? 0)
               && Math.abs(headingDifference(candidate+mount.bearing,Math.atan2(target.y-pivot.y,target.x-pivot.x)))<=Math.max(0,mount.halfArc-arcMargin)+1e-7;
@@ -288,7 +296,11 @@ export function mountedWeaponPose(ship: Unit, item: WorldItem) {
 export function mountedTargetPoint(snapshot: Partial<Pick<GameSnapshot, 'units'>>, ship: Unit, item: WorldItem, target: StrikeTarget, pose=mountedWeaponPose(ship,item)!) {
     const def=SHIP_WEAPONS[item.kind as ShipEquipmentKind];
     const reach=Math.hypot(pose.muzzle.x-pose.pivot.x,pose.muzzle.y-pose.pivot.y);
-    return strikePoint(pose.pivot,ballisticTarget(pose.pivot,target,targetSailingVelocity(target,snapshot.units),def.weapon,reach));
+    const predicted=ballisticTarget(pose.pivot,target,targetSailingVelocity(target,snapshot.units),def.weapon,reach);
+    // A gun with a dead zone takes the nearest part of a hull in its band and traverse (see @@@band-aim).
+    const mount=def.weapon.minRange ? shipMounts(ship).find(mount=>mount.id===item.mountId) : undefined;
+    const band=mount && strikePointInBand(pose.pivot,predicted,def.weapon.minRange!,veteranWeaponRange(ship,def.range),{bearing:(ship.sailing?.heading ?? 0)+mount.bearing,halfArc:mount.halfArc});
+    return band ?? strikePoint(pose.pivot,predicted);
 }
 /** Test the muzzle after the independent barrel has traversed toward its
  * reticle. Alliance filtering belongs to the caller, not hull ownership. */
@@ -298,7 +310,8 @@ export function mountedFireLaneClear(ship: Unit, item: WorldItem, point: Point, 
     const reach=Math.hypot(pose.muzzle.x-pose.pivot.x,pose.muzzle.y-pose.pivot.y);
     const dx=point.x-pose.pivot.x,dy=point.y-pose.pivot.y,length=Math.hypot(dx,dy) || 1;
     const muzzle={x:pose.pivot.x+dx/length*reach,y:pose.pivot.y+dy/length*reach};
-    return shipFireLaneClear(muzzle,point,SHIP_WEAPONS[item.kind as ShipEquipmentKind].weapon,blockers,ship.id);
+    const weapon=SHIP_WEAPONS[item.kind as ShipEquipmentKind].weapon;
+    return shipFireLaneClear(muzzle,point,weapon,blockers,ship.id,Math.max(0,(weapon.minRange ?? 0)-reach));
 }
 export function rebuildShipFittings(snapshot: GameSnapshot, ship: Unit) {
     ship.fittings = installedWeapons(snapshot, ship).map(item => {const mount=shipMounts(ship).find(mount => mount.id === item.mountId)!;return { ...mount,accepts:[...mount.accepts],id:item.id };});
