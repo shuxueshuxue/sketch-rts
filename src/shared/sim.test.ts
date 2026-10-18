@@ -17,19 +17,25 @@ import type { MapId, PlayerId, PlayerNumberMap, Unit, UnitKind } from "./types";
 // @@@structure-body) kept 14% more soldiers alive in bareDuel, and each time a match within its per-unit cost failed. A
 // match's work is its AIs' thinking for every tick of live play and its sim's for every soldier (a unit that is not a
 // worker, creeps included) standing on such a tick; what each costs is that match's own, since a map's terrain, towers
-// and posts make its soldiers dearer (the ladder's cost 2.7 times bareDuel's). Rates in microseconds, measured on mac1
-// at b845eaa3 (the median of three runs, rounded up). CI's runners took 3.5 times mac1 on the same bareDuel (12.0-12.3
-// s against 3.4-3.6 s); a match fails past 1.3 times that, so a regression in what a tick or a soldier costs shows
-// whoever wins and however long it lasts.
+// and posts make its soldiers dearer (the ladder's sim cost 2.8 times bareDuel's). On top of that work a match pays once
+// for warming up: the first run of a match in a process costs 0.75-1.6 s more process CPU on mac1 than the same match
+// run again (V8 compiling its code and collecting on helper threads, which process.cpuUsage counts), the same at any
+// length (verdantDuel: 1.0-1.25 s over 22010 live ticks, 0.9-1.1 s over 16047). Folded into per-tick rates it made a
+// shorter match look dearer per tick: dearer tech kept every rate (sim 1.16 against 1.12 us a soldier tick) and failed
+// verdantDuel on CI. So a match's budget is its fixed warm-up plus its work at warm rates. Measured on mac1 at 808510cb:
+// fixedMs is the largest first-run excess of three processes and the rates the median of each process's third run (its
+// process CPU split between AI and sim by their wall time), rounded up. CI's runners took 3.5 times mac1 on the same
+// bareDuel (12.0-12.3 s against 3.4-3.6 s); a match fails past 1.3 times that, so a regression in what a tick or a
+// soldier costs shows whoever wins and however long it lasts.
 const CI_OVER_MAC1 = 3.5;
 const CPU_HEADROOM = 1.3;
-type MatchRates = { aiUsPerAiTick: number; simUsPerSoldierTick: number };
+type MatchRates = { fixedMs: number; aiUsPerAiTick: number; simUsPerSoldierTick: number };
 const MATCH_RATES = {
-  bareDuel: { aiUsPerAiTick: 17, simUsPerSoldierTick: 2.1 },
-  verdantDuel: { aiUsPerAiTick: 25, simUsPerSoldierTick: 1.4 },
-  ladder: { aiUsPerAiTick: 35, simUsPerSoldierTick: 5.6 },
-  freeForAll: { aiUsPerAiTick: 22, simUsPerSoldierTick: 1.5 },
-  v7Allied: { aiUsPerAiTick: 57, simUsPerSoldierTick: 1.9 },
+  bareDuel: { fixedMs: 900, aiUsPerAiTick: 11, simUsPerSoldierTick: 1.8 },
+  verdantDuel: { fixedMs: 1_300, aiUsPerAiTick: 18, simUsPerSoldierTick: 1.2 },
+  ladder: { fixedMs: 2_000, aiUsPerAiTick: 27, simUsPerSoldierTick: 5.1 },
+  freeForAll: { fixedMs: 1_600, aiUsPerAiTick: 21, simUsPerSoldierTick: 1.4 },
+  v7Allied: { fixedMs: 1_500, aiUsPerAiTick: 34, simUsPerSoldierTick: 1.4 },
 } satisfies Record<string, MatchRates>;
 const FREE_FOR_ALL_TICKS = 42_000;
 
@@ -71,7 +77,7 @@ function stepMatch(game: ReturnType<typeof createGame>, runtime: AiRuntimeState,
 
 function cpuBudgetMs(work: MatchWork, rates: MatchRates) {
   const mac1Us = rates.aiUsPerAiTick * work.ais * work.liveTicks + rates.simUsPerSoldierTick * work.liveSoldierTicks;
-  return (mac1Us / 1_000) * CI_OVER_MAC1 * CPU_HEADROOM;
+  return (rates.fixedMs + mac1Us / 1_000) * CI_OVER_MAC1 * CPU_HEADROOM;
 }
 
 function expectWithinCpu(work: MatchWork, rates: MatchRates) {
