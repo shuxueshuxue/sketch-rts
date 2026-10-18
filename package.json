@@ -26,6 +26,7 @@
     "test:sdk-agent-15v15": "tsx scripts/sdk-agent-15v15.ts",
     "test:sdk-smoke": "tsx scripts/sdk-smoke.ts",
     "test:sdk-savegame": "tsx scripts/sdk-savegame.ts",
+    "perf:frame-cpu": "node scripts/frame-cpu.mjs",
     "test:e2e-room-flow": "node scripts/e2e-room-flow.mjs",
     "test:e2e-room-sync": "node --import tsx scripts/room-sync-yatu.mjs",
     "test:e2e-brutal": "node scripts/e2e-brutal-spec.mjs",
