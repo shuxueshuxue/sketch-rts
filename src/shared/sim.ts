@@ -3336,7 +3336,9 @@ function fireWeapon(game:Game,attacker:Unit|Building,at:{x:number;y:number;id?:s
     addEffect(game,"grapeshot",point.x,point.y,seconds(.7),{...visuals,radius:range});return;
   }
   const flight=Math.max(seconds(0.2),Math.ceil(distance(origin,point)/perTick(weapon.delivery==="shell"?240:560)));
-  const projectile:Projectile={id:`projectile-${game.nextId++}`,owner:attacker.owner,attackerId:attacker.id,targetId:targetId??"",fromX:origin.x,fromY:origin.y,toX:point.x,toY:point.y,damage,damageProfile:{...damageProfile},remaining:flight,duration:flight,attackKind,weapon:{...weapon},...(isUnit(attacker)?{sourceKind:attacker.kind}:{}),...skill};
+  // The minimum range is reckoned from where the gun is aimed (its pivot, or the shooter), the flight from its muzzle.
+  const clearance=weapon.minRange ? {minRange:Math.max(0,weapon.minRange-distance(mounted?.pose.pivot ?? attacker,origin))} : {};
+  const projectile:Projectile={id:`projectile-${game.nextId++}`,owner:attacker.owner,attackerId:attacker.id,targetId:targetId??"",fromX:origin.x,fromY:origin.y,toX:point.x,toY:point.y,damage,damageProfile:{...damageProfile},remaining:flight,duration:flight,attackKind,weapon:{...weapon,...clearance},...(isUnit(attacker)?{sourceKind:attacker.kind}:{}),...skill};
   game.projectiles.push(projectile);
   addEffect(game,weapon.delivery==="shell"?"shellFlight":"siegeBolt",point.x,point.y,flight,{...visuals,radius:weapon.radius??0});
 }
@@ -3357,7 +3359,9 @@ function impactWeapon(game:Game,projectile:Projectile){
   const flightLength=distance(from,to),impactAt=(along:number)=>{const share=flightLength?Math.max(0,Math.min(1,along/flightLength)):0;return{x:from.x+(to.x-from.x)*share,y:from.y+(to.y-from.y)*share};};
   const foes=[...game.units,...game.buildings,...(game.obstacles??[])].filter(t=>t.hp>0&&(!isUnit(t)||!isInCabin(t))&&areEnemyOwners(game,projectile.owner,t.owner));
   if(weapon.delivery==="bolt"){
-    const intersections=foes.map(target=>({target,along:boltIntersection(from,to,target,weapon.radius??12)})).filter(h=>h.along!==undefined).sort((a,b)=>a.along!-b.along!);
+    // A gun that cannot be depressed onto what is near cannot strike it either: within its minimum range the ball
+    // passes over (see @@@cannon-min-range).
+    const intersections=foes.map(target=>({target,along:boltIntersection(from,to,target,weapon.radius??12,weapon.minRange??0)})).filter(h=>h.along!==undefined).sort((a,b)=>a.along!-b.along!);
     const eligible=new Set(crewBeforeHulls(intersections.map(hit=>hit.target)));
     const hits=intersections.filter(hit=>eligible.has(hit.target)).slice(0,weapon.maxHits??1);
     if(weapon.blastRadius && hits[0]){

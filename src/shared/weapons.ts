@@ -8,7 +8,10 @@ export type WeaponPoint = {
     radius?: number;
 };
 /** Projection along a shot and distance from its centerline; no map-specific geometry. */
-export function boltIntersection(from: WeaponPoint, to: WeaponPoint, target: WeaponPoint, width: number) {
+/** Where a bolt from `from` toward `to` first meets the target, as a distance along its flight. Nothing within `minimum`
+ * of the muzzle is struck (see @@@cannon-min-range): the ball passes over it, and a hull is met where its flight first
+ * lies inside it beyond that distance. */
+export function boltIntersection(from: WeaponPoint, to: WeaponPoint, target: WeaponPoint, width: number, minimum = 0) {
     if ("order" in target) {
         const ship=target as Unit,profile=shipProfile(ship);
         if(profile){
@@ -21,7 +24,8 @@ export function boltIntersection(from: WeaponPoint, to: WeaponPoint, target: Wea
                 enter=Math.max(enter,Math.min(lo,hi));leave=Math.min(leave,Math.max(lo,hi));
                 if(enter>leave+1e-7)return undefined;
             }
-            return enter*Math.hypot(dx,dy);
+            const length=Math.hypot(dx,dy),meet=Math.max(enter*length,minimum);
+            return meet<=leave*length+1e-7 ? meet : undefined;
         }
     }
     const dx = to.x - from.x, dy = to.y - from.y;
@@ -34,7 +38,7 @@ export function boltIntersection(from: WeaponPoint, to: WeaponPoint, target: Wea
     if(side>body+1e-7)return undefined;
     const halfChord=Math.sqrt(Math.max(0,body*body-side*side));
     const enter=along-halfChord,leave=along+halfChord;
-    return leave>=-1e-7 && enter<=length+1e-7 ? Math.max(0,along) : undefined;
+    return leave>=-1e-7 && enter<=length+1e-7 && Math.max(0,along)>=minimum ? Math.max(0,along) : undefined;
 }
 export function inWeaponCone(from: WeaponPoint, toward: WeaponPoint, target: WeaponPoint, range: number, angle: number) {
     const dx = toward.x - from.x, dy = toward.y - from.y;

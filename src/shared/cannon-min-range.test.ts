@@ -49,6 +49,18 @@ describe('a broadside holds its fire on a deck alongside', () => {
     expect(crewHits()).toBe(0);
   });
 
+  it('sends its ball over an enemy inside its minimum range onto the hull beyond', () => {
+    const game = sea();
+    const ship = game.spawnUnit('player', 'warship', 1500, 1500), near = game.spawnUnit('enemy', 'cutter', 1640, 1500), far = game.spawnUnit('enemy', 'transport', 1900, 1500);
+    ship.sailing!.heading = 0; near.sailing!.heading = Math.PI / 2; far.sailing!.heading = Math.PI / 2;
+    near.attackDamage = 0; near.order = { type: 'hold', x: near.x, y: near.y }; far.order = { type: 'hold', x: far.x, y: far.y };
+    issuePlayerCommand(game, 'player', { type: 'attack', unitIds: [ship.id], targetId: far.id });
+    ship.order = { type: 'attack', targetId: far.id };
+    for (let tick = 0; tick < 200 && far.hp === far.maxHp; tick++) { stepGame(game); ship.x = 1500; ship.y = 1500; ship.sailing!.heading = 0; }
+    expect(far.hp).toBeLessThan(far.maxHp);
+    expect(near.hp).toBe(near.maxHp);
+  });
+
   it('still shoots a crew a gunnery duel away', () => {
     const { game, crewHits } = abreast(150);
     for (let tick = 0; tick < 400 && crewHits() === 0; tick++) stepGame(game);
@@ -97,7 +109,7 @@ describe('boarders queue over one bridge and all cross', () => {
     const guard = crew(game, target); guard.attackDamage = 0; guard.invulnerable = true;
     guard.deck = { shipId: target.id, x: shipProfile(target)!.length * .3, y: 0 }; syncDecks(game.units);
     issuePlayerCommand(game, 'player', { type: 'board', unitIds: boarders.map(unit => unit.id), transportId: target.id });
-    for (let tick = 0; tick < 60 * 20 && !boarders.every(unit => unit.deck?.shipId === target.id); tick++) { stepGame(game); if (process.env.DBG && tick % 100 === 0) console.log("q", tick, guard.x|0, guard.y|0, boarders.map(u => `${u.id.slice(5,6)}:${u.deck?.shipId.slice(-4)}:${u.x|0},${u.y|0}:${u.order.type}${u.gangway?'G':''}`).join(" ")); }
+    for (let tick = 0; tick < 60 * 20 && !boarders.every(unit => unit.deck?.shipId === target.id); tick++) stepGame(game);
     expect(boarders.filter(unit => unit.deck?.shipId === target.id)).toHaveLength(5);
     expect(source.sailing?.gangway?.phase).toBe('ready');
   });

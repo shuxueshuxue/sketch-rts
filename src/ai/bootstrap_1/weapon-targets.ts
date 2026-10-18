@@ -14,7 +14,7 @@ const scoreWeaponTarget: WeaponTargetScore = (snapshot, caster, def, targets, ta
   const pose = shipWeaponPose(caster);
   const from = pose ? pose.muzzle : caster;
   const to = strikePoint(from, target);
-  const intersections = targets.map(other => ({ target: other, along: boltIntersection(from, to, other, def.weapon.radius!) }))
+  const intersections = targets.map(other => ({ target: other, along: boltIntersection(from, to, other, def.weapon.radius!, def.weapon.minRange ?? 0) }))
     .filter(hit => hit.along !== undefined).sort((a, b) => a.along! - b.along!);
   const eligible = new Set(crewBeforeHulls(intersections.map(hit => hit.target)));
   return intersections.filter(hit => eligible.has(hit.target)).slice(0, def.weapon.maxHits!).reduce((score, { target }, index) => {

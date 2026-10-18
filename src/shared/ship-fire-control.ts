@@ -22,7 +22,7 @@ export function shipFireLaneClear(from: Point, to: Point, weapon: WeaponDef, blo
     // clips the complete rotated polygon, including its tapered bow/stern.
     const radius = Math.hypot(profile.length, profile.beam) / 2;
     if (unit.x + radius < left || unit.x - radius > right || unit.y + radius < top || unit.y - radius > bottom) continue;
-    if (boltIntersection(from, to, unit, width) !== undefined) return false;
+    if (boltIntersection(from, to, unit, width, weapon.delivery === 'bolt' ? weapon.minRange ?? 0 : 0) !== undefined) return false;
   }
   return true;
 }
