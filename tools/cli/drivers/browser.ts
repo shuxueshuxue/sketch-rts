@@ -200,6 +200,8 @@ function createScene(page: any, base: string) {
       centred = { x, y };
       await wait(800);
     },
+    /** A command posted to the room for any seat (POST /api/rooms/:id/command), as a script or the server would. */
+    order(playerId: string, command: Record<string, unknown>) { must(roomId, "order() before room()"); return api(`/api/rooms/${roomId}/command`, { playerId, command }); },
     async select(ids: string[]) { await needHooks("select"); await page.evaluate((ids: string[]) => (window as any).__sketchRtsDebug.select(ids), ids); await wait(400); },
     async command(command: Record<string, unknown>) { await needHooks("command"); return page.evaluate((command: unknown) => (window as any).__sketchRtsDebug.command(command), command) as Promise<boolean>; },
     /** The page point where a world point is drawn now. */
