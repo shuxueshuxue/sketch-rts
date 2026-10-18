@@ -1,7 +1,7 @@
 import { reviseAssaultBeaches, orderBootstrapAssaultLanding } from './assault-beach';
 import { planShoreTransfers } from './shore-transfer';
 import { unitMover } from '../../shared/catalog';
-import { GOLD_MINE_RULES } from '../../shared/mining';
+import { rebaseReceiverSafe } from './rebase-receiver';
 import { sameGround } from '../../shared/terrain';
 import type { GameCommand, GameSnapshot, PlayerId } from '../../shared/types';
 import { cancelFerry, planNavalTacticsWithAssignments } from '../policy/naval';
@@ -56,13 +56,7 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
   if (ferries) for (const boat of units(snapshot, owner)) {
     const mission = ferries[boat.id];
     if (mission?.purpose === 'rebase' && mission.phase !== 'return') {
-      const mine = snapshot.resources.find(mine => mine.id === mission.targetId);
-      // This is a workforce transfer to an existing income, not a funded
-      // colony. A surviving gold deposit cannot receive miners after its
-      // hall is destroyed or captured while the ship is crossing.
-      const receiver = mine && snapshot.buildings.some(hall => hall.owner === owner && hall.kind === 'townHall'
-        && Math.hypot(hall.x - mine.x, hall.y - mine.y) < GOLD_MINE_RULES.baseRange);
-      if (!mine || mine.amount === 0 || !receiver) {
+      if (!rebaseReceiverSafe(snapshot, owner, options, boat, mission.targetId, mission.to)) {
         // The ordinary ferry return owns the hull; cancellation releases its pending boarders.
         cancelled.push(...cancelFerry(snapshot, boat, mission, options).filter(command => command.type === 'stop'));
       }
