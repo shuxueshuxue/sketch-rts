@@ -3,7 +3,7 @@ import type { PlayerId, WorldEffect } from "../shared/types";
 const privateFeedback = new Set<WorldEffect["type"]>([
   "move", "queuedMove", "mine", "queuedMine", "attack", "queuedAttack",
   "attackTarget", "queuedAttackTarget", "queuedRepair", "board", "unload",
-  "boardingBlocked", "orderEnded", "itemReceived", "goldBounty",
+  "orderEnded", "itemReceived", "goldBounty",
 ]);
 
 /** Order receipts are private. A repair pulse tied to a real worker instead

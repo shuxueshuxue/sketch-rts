@@ -146,6 +146,24 @@ type OrderEndReason = 'target-gone' | 'unreachable' | 'blocked' | 'stuck' | 'no-
 - **看门狗**：进展看门狗仍然只有 build 有（结束原因记为 stuck），这次没有推广到别的 errand。
 - **建筑间隙**：只剩 `buildingWorkGap` 一处，build 的内联副本已删掉。
 
+**第 5 批落地情况（登船部分）**：
+- **阶段写在订单上**：`board` 订单新增 `phase` 字段（@@@board-phase），由 sim 每 tick 写入：
+  - `approaching`：从岸上走向运输船，或走向它要靠的岸点；
+  - `waiting`：带 `blockedBy`，其中 `ships-apart` 表示两船还没贴上，`deck-full` 表示对方甲板没有空位；
+  - `queued`：排在离入口更近的船员后面；
+  - `fighting`：带 `strikeId`，表示正在打入口处的守军；
+  - `crossing`：正在跨过跳板或接缝，走向自己的落脚点。
+- **去掉借壳**：
+  - 入口有守军时，攻击不再临时换成 `{attack, frontRank}` 订单再换回来。
+  - `updateAttackOrder` 拆出 `attackStep(game, unit, order, navalFrame, write)`：订单要变成什么，由 `write` 交给调用方。普通攻击照旧写回自己的订单；登船方只保留"正在打谁"（`strikeId`）。
+  - 甲板行走的 `makingWay` 改为从 `strikeId` 读取目标。
+  - `frontRank` 字段已删除。
+- **结束带原因**：
+  - 运输船或目标船没了：`target-gone`；
+  - 甲板放不下、岸上登船被拒：`no-room`。
+  - 这两种都走 `endOrder`，发 `orderEnded`，取代原来的 `boardingBlocked`（该效果类型已删除）。
+- **未做**：船这一侧的接近（`boardShip` 的 approach 段）属于 Tower Lane 的导航重做，这次没有动。
+
 ### 3.4 右键上下文命令
 
 `targetCommand` 改成返回 `{ command?, refusal? }`，用 3.3 的同一个 `reachGap` 加上 `strikeReach`，逐个判断选中的单位能不能执行：
