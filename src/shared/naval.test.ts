@@ -130,14 +130,18 @@ describe("ships", () => {
     expect(() => issuePlayerCommand(sim, "player", { type: "train", buildingId: "hall-a", unitKind: "worker" })).toThrow(/more supply/);
   });
 
-  it("are shot from the beach by an archer within its range, and shoot what stands on the shore", () => {
+  // @@@cannon-min-range: a broadside cannot be depressed onto the beach right under it. An archer there shoots the ship
+  // unanswered; one standing farther up the beach, in the guns' band, is shot.
+  it("are shot from the beach by an archer under their guns, and shoot one farther up the shore", () => {
     const sim = game([
-      { id: "archer", owner: "player", kind: "archer", ...at(7, 12) },
-      { id: "warship", owner: "enemy", kind: "warship", ...at(13, 12) },
+      { id: "near", owner: "player", kind: "archer", ...at(8, 12) },
+      { id: "far", owner: "player", kind: "archer", ...at(3, 9) },
+      { id: "warship", owner: "enemy", kind: "warship", ...at(12, 12) },
     ]);
-    run(sim, 260);
+    run(sim, 400);
     expect(unit(sim, "warship")!.hp).toBeLessThan(UNIT_DEFS.warship.hp);
-    expect(unit(sim, "archer")!.hp).toBeLessThan(72);
+    expect(unit(sim, "near")!.hp).toBe(UNIT_DEFS.archer.hp);
+    expect(unit(sim, "far")?.hp ?? 0).toBeLessThan(UNIT_DEFS.archer.hp);
   });
 
   it("lose to a tower on the shore, one against one", () => {

@@ -138,10 +138,18 @@ export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly U
   // The nearest hull edge defines weapon reach, while the navigation goal is
   // a center position. Keep enough center separation for both complete hulls.
   const edgeOffset = Math.max(0, distance - gap);
-  if (!following && minimum > 0 && !firing && gap < minimum + ownLength * .45) {
+  // @@@dead-zone-band - Out of a weapon's dead zone a ship backs off to where it can fire again: past the minimum by
+  // most of a bow mortar's reach from the hull's middle, but never beyond the middle of the band between minimum and
+  // range, and its approach stops no nearer. A broadside's band is narrow (200 to 312): backing a ship of the line out
+  // by its own length's margin put it past its range, and two of them under attack orders lay apart for good.
+  // The dead zone is the guns', so it is measured to what they are fired at: crew aboard a hull, not that hull's
+  // nearest edge (bow to bow, the edges almost touched while the crew stood a hull's length off, out of range).
+  // A bow gun fires from ahead of the hull's middle: the back-off clears the minimum from that muzzle, not the middle.
+  const backOff = minimum > 0 ? Math.min(minimum + ownLength * .45, Math.max((minimum + range) / 2, minimum + Math.max(0, stationBowReach) + 8)) : 0;
+  if (!following && minimum > 0 && !firing && strikeGap(ship, requested) < backOff) {
     // Keep a bow mortar facing the opponent while backing out of its dead
     // zone. A full sailing turn only brings its stern closer to the danger.
-    const separation = Math.max(safeGap, edgeOffset + minimum + ownLength * .45);
+    const separation = Math.max(safeGap, edgeOffset + backOff);
     return { x: target.x - dx / (distance || 1) * separation, y: target.y - dy / (distance || 1) * separation,
       intent: 'pursuit', targetId: target.id, arrivalRadius: Math.max(4, ownLength * .04),
       fireHeading: Math.atan2(dy, dx), retreat: true, targetSpeed: limits.reverseSpeed };
@@ -150,7 +158,7 @@ export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly U
   // its nearest hull edge. Its firing approach aims at that fighting position;
   // ordinary hull sweep validation still prevents penetration.
   const standoff = !moving && !following && stationaryFire !== undefined
-    ? Math.max(safeGap, minimum + 24, range * .9) : Math.max(safeGap, edgeOffset + Math.max(minimum + 24, range * .68));
+    ? Math.max(safeGap, minimum + 24, range * .9) : Math.max(safeGap, edgeOffset + Math.max(minimum + 24, range * .68, backOff));
   // Keep the waiting station astern when the leader stops. Basing it on the
   // follower's own position makes the destination orbit with every correction.
   const followHeading = speed > 1 ? Math.atan2(vy, vx) : targetMotion?.heading ?? Math.atan2(dy, dx);

@@ -138,7 +138,8 @@ export const historicalNavalScenarios: HistoricalScenario[] = [
     sources: ['virginia-capes-1781', 'mahan-1890'], scope: 'Four normal-HP broadside hulls isolate forward and rear range while holding station.',
     limits: ['The drawn separation is an engineering range fixture, not a scale plan of the 1781 battle.'], setup(seed) {
       const { game, offset } = sea(seed, Math.PI * 5 / 8), ships: Unit[] = [], groups: Record<string, string[]> = { van: [], rear: [] };
-      for (const [role, x, gap] of [['van', 3300, 340], ['rear', 1500, 950]] as const) {
+      // The van lies a broadside's band apart (see @@@cannon-min-range: 240-312 from the guns), the rear well beyond it.
+      for (const [role, x, gap] of [['van', 3300, 440], ['rear', 1500, 950]] as const) {
         const a = boat(game, 'shipOfTheLine', shifted({ x, y: 2500 }, offset));
         const b = boat(game, 'shipOfTheLine', shifted({ x, y: 2500 + gap }, offset), 'enemy');
         ships.push(a, b); groups[role]!.push(a.id, b.id);

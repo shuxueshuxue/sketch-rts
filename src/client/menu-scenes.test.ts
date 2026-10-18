@@ -110,7 +110,9 @@ describe('bounded home scenes using the world presentation', () => {
   it.each(battles)('fights battle %i with the match simulation on its thread, one thread per battle', (index) => {
     const started: string[] = [], backdrop = new MenuBackdrop(labels, index, inProcessThreads(started)), frames: WorldFrame[] = [], ctx = context();
     const opening = backdrop.prepare(0);
-    for (let now = 0; now <= 12_000; now += 50) backdrop.draw(ctx, 320, 180, now, false, frame => frames.push(frame));
+    // Thirty seconds: the fleet's guns hold their fire on decks alongside (see @@@cannon-min-range), so its first sure
+    // blow is the boarders' swords, a little over twenty seconds in.
+    for (let now = 0; now <= 30_000; now += 50) backdrop.draw(ctx, 320, 180, now, false, frame => frames.push(frame));
     expect(started.filter(type => type === 'scene')).toHaveLength(1);
     expect(frames[0]!.snapshot.tick).toBe(0);
     expect(frames.at(-1)!.snapshot.tick).toBeGreaterThan(10 * SIM_TICKS_PER_SECOND);
