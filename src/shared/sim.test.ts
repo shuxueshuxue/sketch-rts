@@ -2312,11 +2312,9 @@ describe("sketch RTS simulation", () => {
     expect(totalNeutralKills).toBeGreaterThan(0);
   });
 
-  // Known stalemate of the preset (v2) AIs, not of the sim: with weapons and plating II/III priced like the other techs
-  // (@@@later-levels-reach-more) both reach the supply cap by 30:00 (42 against 48) and skirmish along one line, attacking
-  // and recalling, past 90000 ticks with no winner; neither reaches weapons III. The v2 attack decision does not break a
-  // capped even line. Flip back to it() when the preset AI learns to commit, or when the duel decides again.
-  it.fails("runs a fast two-AI duel on the ladder map's terrain, camps and mercenary posts", () => {
+  // The per-seat opening camps change the preset (v2) AIs' routes and this
+  // seeded duel settles again. Keep the winner, combat and CPU assertions live.
+  it("runs a fast two-AI duel on the ladder map's terrain, camps and mercenary posts", () => {
     // A ladder game gets fifty minutes: the preset AIs' duel on it has run from 12 to 37 with each change to how they build
     // or walk, and to 44 (enemy, tick 53211) when towers came down to 13 damage. Melee blows landing on contact left it
     // without a winner at 66000 (armies swinging between attack-moves and recalls across the middle) until mines, shops
