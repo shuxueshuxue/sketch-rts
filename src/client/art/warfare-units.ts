@@ -6,7 +6,7 @@ import { sampleMotion } from './motion';
 const ink = '#252f34', wood = '#77634c', metal = '#7d9298', ivory = '#d9d0b6';
 function plate(b: Brush, p: number[][], color: string) { polygon(b, p, color, ink, .8); line(b, p.slice(0, 2), '#e3d4ad88', .7); }
 function ship(id: string): UnitModel {
-    return { shadow: 'none', paint(b, team) {
+    return { paint(b, team) {
             const lineShip = id === 'lineShip';
             if(lineShip){b.save();b.scale(.84,.84);}
             const heavy = id === 'bombard' || id === 'frigate', w = id === 'cutter' ? 32 : lineShip ? 61 : id === 'carrier' ? 54 : 45;

@@ -98,7 +98,7 @@ function citizen(cloth: string, style: 'merchant' | 'porter' | 'woman' | 'citize
     },
   };
   const paint = storyFigure('worker', presentation, style === 'merchant' ? 1.03 : .95);
-  return { paint, remains: paint.remains, shadow: 'foot' };
+  return { paint, remains: paint.remains };
 }
 
 const MODELS: Readonly<Record<string, UnitModel>> = {

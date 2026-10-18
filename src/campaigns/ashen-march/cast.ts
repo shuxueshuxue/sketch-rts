@@ -78,19 +78,19 @@ export const CAST = {
     id: "ashen/fen-wolf",
     name: { zh: "沼狼", en: "Fen wolf" },
     rules: { base: "mossGnawer", hp: 95, attackDamage: 10, attackCooldown: seconds(1.3), speed: 72, radius: 15, xpReward: 22, supplyUsed: 0 },
-    model: { paint: art.paintFenWolf, remains: art.paintFenWolf.remains, shadow: "beast" },
+    model: { paint: art.paintFenWolf, remains: art.paintFenWolf.remains },
   }),
   fenWolfAlpha: defineUnit({
     id: "ashen/fen-wolf-alpha",
     name: { zh: "独眼头狼", en: "One-eyed alpha" },
     rules: { base: "mossGnawer", hp: 260, attackDamage: 18, attackCooldown: seconds(1.2), speed: 76, radius: 19, xpReward: 60, supplyUsed: 0 },
-    model: { paint: art.paintFenWolfAlpha, remains: art.paintFenWolfAlpha.remains, shadow: "beast" },
+    model: { paint: art.paintFenWolfAlpha, remains: art.paintFenWolfAlpha.remains },
   }),
   cinderHound: defineUnit({
     id: "ashen/cinder-hound",
     name: { zh: "烬犬", en: "Cinder hound" },
     rules: { base: "cinderRunner", hp: 125, attackDamage: 13, attackCooldown: seconds(1), speed: 88, radius: 16, xpReward: 28, supplyUsed: 0 },
-    model: { paint: art.paintCinderHound, remains: art.paintCinderHound.remains, shadow: "beast" },
+    model: { paint: art.paintCinderHound, remains: art.paintCinderHound.remains },
   }),
   ashRaider: defineUnit({
     id: "ashen/ash-raider",
@@ -136,7 +136,7 @@ export const CAST = {
     name: { zh: "熔烬巨像", en: "The Cinder Colossus" },
     color: "#b8401f",
     rules: { base: "golem", hp: 7000, attackDamage: 80, attackRange: 110, attackCooldown: seconds(2.6), speed: 30, radius: 54, regenPerSecond: 0, xpReward: 1200, supplyUsed: 0 },
-    model: { paint: art.paintColossus, remains: art.paintColossus.remains, shadow: "huge" },
+    model: { paint: art.paintColossus, remains: art.paintColossus.remains },
   }),
   // What the colossus becomes once Ig breaks its seal: the same bulk, its obsidian cracked open (no heavy armor).
   brokenColossus: defineUnit({
@@ -144,26 +144,26 @@ export const CAST = {
     name: { zh: "熔烬巨像（封印破碎）", en: "The Cinder Colossus, unsealed" },
     color: "#b8401f",
     rules: { base: "stonebackBrute", hp: 7000, attackDamage: 70, attackRange: 110, attackCooldown: seconds(2.8), speed: 26, radius: 54, xpReward: 1200, goldBounty: 0, supplyUsed: 0 },
-    model: { paint: art.paintColossusBroken, remains: art.paintColossusBroken.remains, shadow: "huge" },
+    model: { paint: art.paintColossusBroken, remains: art.paintColossusBroken.remains },
   }),
   elder: defineUnit({
     id: "ashen/elder",
     name: { zh: "苔藓长老", en: "Elder Moss" },
     color: "#4f7a3a",
     rules: { base: "golem", hp: 2400, attackDamage: 45, attackRange: 80, attackCooldown: seconds(2), speed: 40, radius: 34, xpReward: 0, supplyUsed: 0 },
-    model: { paint: art.paintElder, remains: art.paintElder.remains, shadow: "huge" },
+    model: { paint: art.paintElder, remains: art.paintElder.remains },
   }),
   treant: defineUnit({
     id: "ashen/treant",
     name: { zh: "心木树人", en: "Heartwood treant" },
     rules: { base: "golem", hp: 520, attackDamage: 28, attackRange: 62, attackCooldown: seconds(1.8), speed: 50, radius: 24, xpReward: 0, supplyUsed: 0 },
-    model: { paint: art.paintTreant, remains: art.paintTreant.remains, shadow: "huge" },
+    model: { paint: art.paintTreant, remains: art.paintTreant.remains },
   }),
   groveRider: defineUnit({
     id: "ashen/grove-rider",
     name: { zh: "林地骑手", en: "Grove rider" },
     rules: { base: "knight", hp: 300, attackDamage: 26, speed: 76, supplyUsed: 0 },
-    model: { paint: art.paintGroveRider, remains: art.paintGroveRider.remains, shadow: "mounted" },
+    model: { paint: art.paintGroveRider, remains: art.paintGroveRider.remains },
   }),
 } as const satisfies CastBook;
 
