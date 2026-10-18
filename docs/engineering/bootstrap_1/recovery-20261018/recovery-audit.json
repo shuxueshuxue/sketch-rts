@@ -1,0 +1,586 @@
+{
+  "sourceHead": "6266950dcf7f4447ca0ede6f16b008e5c56b9fde",
+  "main": "c107026b071b4e8836489e86d2ab8cc701d940d0",
+  "rulesVersion": 2,
+  "frozenRevision": "d1ae110f2edd99f9c7d899ed61557891ab587639",
+  "manifestEntries": 184,
+  "allManifestHashesMatch": true,
+  "migrationChanges": [
+    {
+      "path": "src/ai/policy/core.ts",
+      "before": "a06a2b4ce4182ccbb9419452a846aac0db2f090196f660e0a50efd5d478cff46",
+      "after": "73e5e8d74061a370df842a8e4f01bae4bad7f7983d8bf91aa811e14afdfac8d6",
+      "beforeExact": true,
+      "afterExact": true
+    },
+    {
+      "path": "src/ai/policy/playbook.ts",
+      "before": "0b21ad276a247ba3a4ee51365e5d3e31a55ae307320c281a65cd82f6ce9be455",
+      "after": "2670a9377f50cf3eaaf3f7c089ac7b984e284b8e6ea7bc4de11d322fccd1c622",
+      "beforeExact": true,
+      "afterExact": true
+    },
+    {
+      "path": "src/ai/policy/skirmish-tactics.ts",
+      "before": "18bac002c82b0be48176911e9156166905666bcc39670f628a1e4d10a2aece8b",
+      "after": "e423e3d31b543240b572567d2cfe99b445c2d6e4293a3be91bf78c6130e15280",
+      "beforeExact": true,
+      "afterExact": true
+    },
+    {
+      "path": "src/ai/policy/spell-tactics.ts",
+      "before": "f1f45e0ec1eef59efbebfc52dcd76e6b4ee0e55d0cebd77246802a29ec54650e",
+      "after": "ba347191c7c4081fa3c34b3ab84ae487cffbe57edb73b3828b4aedae8dcd3f81",
+      "beforeExact": true,
+      "afterExact": true
+    },
+    {
+      "path": "src/ai/policy/training-choice.ts",
+      "before": "d261a5ae40ec5fc886f4499421b90bdd947df2d309ba0b4dc7ec9a0c62dbb5b4",
+      "after": "90c2a8144244d73f0907114947044ec547f1f1bde1daef851c4fc96f77f20af4",
+      "beforeExact": true,
+      "afterExact": true
+    },
+    {
+      "path": "src/ai/policy/types.ts",
+      "before": "1291c15fa9bfe94346028e5a82944cac22a04c18e6a5311c5858c817f0540aeb",
+      "after": "44f007f0f7c48874cf1ed5639b5e07cf290edbd9e1c25d24b8e89542683a6328",
+      "beforeExact": true,
+      "afterExact": true
+    },
+    {
+      "path": "src/ai/policy/v6/backline.ts",
+      "before": "f5145498df749370d13c9bd64caf9a30f4767069ac9c5a96321a0fa618d382be",
+      "after": "9e43e06771ef94b80e33cf19c55b95c8f52780e28eb5881fd067da2f9aa63ac9",
+      "beforeExact": true,
+      "afterExact": true
+    },
+    {
+      "path": "src/ai/policy/v6/doctrine.ts",
+      "before": "aee8c26c9c3ff517df439150f31ab6dca4b499a4d9157e1773c8edcc8f003111",
+      "after": "11a22617b459a0a85ad89062c23e476125dbebc001c0f2413ff703fcfb33ddc7",
+      "beforeExact": true,
+      "afterExact": true
+    },
+    {
+      "path": "src/ai/policy/v6/economy.ts",
+      "before": "aad7a690594c675650ff3ae6f2e94b1eb358d65efeb059c0f42c4935d55fa6e2",
+      "after": "d52818f0a4eea28124497901f92a1c22c4639fa69c44d7983e1e796b6bab3c44",
+      "beforeExact": true,
+      "afterExact": true
+    },
+    {
+      "path": "src/ai/policy/v6/general.ts",
+      "before": "fa534a8a63385178baac864a62951955e81471a4b112fe375bc7ef13cec783f4",
+      "after": "34b29b9eda21bdcdfaa64f62c519abb7aa14327160aecc1ab8206e4704f63c7d",
+      "beforeExact": true,
+      "afterExact": true
+    },
+    {
+      "path": "src/ai/policy/v6/strength.ts",
+      "before": "bd474f113ea57894a442ae846f727432e70e3d63da9f9e86eeb837f281999823",
+      "after": "611e8271dc2005514b9c2704537c2085c5c6af293ace636b6931ef1d16765c77",
+      "beforeExact": true,
+      "afterExact": true
+    },
+    {
+      "path": "src/ai/policy/v8/doctrine.ts",
+      "before": "94fc1aff9dd33707cf5c111c19bcd6cff4e06d623a1ea43a7e0d71587b7c6f02",
+      "after": "7f342d61820292651864f9f4198050699059830c29ac1768b571b5b588dcdf30",
+      "beforeExact": true,
+      "afterExact": true
+    },
+    {
+      "path": "src/ai/policy/world-model.ts",
+      "before": "3185911b8de4f5276c3ec040ffebf04a351b4226fb9cbf1e0103415b64dba169",
+      "after": "dca52e1bc33518a30ef92a7baef0f089514a568f3504df1d91bd8d2d0b69b35e",
+      "beforeExact": true,
+      "afterExact": true
+    }
+  ],
+  "unchangedAiRuntimeFiles": 98,
+  "evidence": {
+    "caster-ground-fire-20261016": {
+      "indexedLocalPaths": [
+        {
+          "path": "/tmp/bootstrap-c4-full-health-resume265800-20261016",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-c4-full-health-resume265800-20261016/natural-from-265800-final.json.gz",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-c4-full-health-resume265800-20261016/natural-from-265800.frames/288119.json.gz",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-c4-full-health-resume265800-prepared-20261016/native-process-exit-1.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-c4-full-health-win288119-closure-20261016/C4-CONSEQUENTIAL-COMPLETE-CHANGED-CODE-WIN-159600-288119.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-c4-full-health-win288119-closure-20261016/CLOSED-WIN-FULL-159600-288119.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-c4-full-health-win288119-closure-20261016/png-final768-prepared",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-c4-full-health-win288119-closure-20261016/png-final768-prepared/EXIT.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-c4-full-health-win288119-closure-20261016/png-final768-prepared/ROOT-PERSONAL-VISUAL-OBSERVATION.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-c4-full-health-win288119-closure-20261016/png-prepared",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-c4-full-health-win288119-closure-20261016/png-prepared/EXIT.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-c4-full-health-win288119-closure-20261016/png-prepared/ROOT-PERSONAL-PARTIAL-VISUAL-OBSERVATION.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-caster-fixed-fire-afda48-validation-20261016/runtime-source-cap.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-caster-fixed-fire-afda48-validation-20261016/tests-exit-1.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-caster-fixed-fire-afda48-validation-20261016/typecheck-exit-1.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-caster-fixed-fire-c3-native159600-20261016-v4",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-caster-fixed-fire-c3-prepared-20261016/finalafda48c6-v4/native-process-exit-1.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-caster-fixed-fire-c3-readonly-cp-review-20261016/C4-CONSEQUENTIAL-COMPACT-159600-265800.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/c4-incoming-overlap-validation-prepared-20261016/ROOT-ACTUAL-LOCAL-VALIDATION.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/c4-v6general-retreat-221340-pure-20261016/ACTUAL-V6GENERAL-RETREAT.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/root-c4-tower-battle-native-visuals-20261016",
+          "exists": false
+        },
+        {
+          "path": "/tmp/root-c4-tower-battle-native-visuals-20261016/ROOT-PERSONAL-VISUAL-OBSERVATION.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/strict600-c4-retreat-221340-20261016/strict600-c4-strict600-proof.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/strict600-c4-retreat-221340-prepared-20261016/ACTUAL-STRICT600-CLOSED.json",
+          "exists": false
+        }
+      ],
+      "copiedEvidence": [
+        {
+          "path": "docs/engineering/bootstrap_1/caster-ground-fire-20261016/consequential.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/caster-ground-fire-20261016/actual-tests.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/caster-ground-fire-20261016/actual-typecheck.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/caster-ground-fire-20261016/personal-visual-observation.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/caster-ground-fire-20261016/strict600-proof.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/caster-ground-fire-20261016/actual-native-process-exit.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/caster-ground-fire-20261016/runtime-source1565.json.gz",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/caster-ground-fire-20261016/actual-retreat-query-summary.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/caster-ground-fire-20261016/win-consequential.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/caster-ground-fire-20261016/win-actual-native-process-exit.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/caster-ground-fire-20261016/win-first-render-exit.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/caster-ground-fire-20261016/win-final768-render-exit.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/caster-ground-fire-20261016/win-personal-partial-visual-observation.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/caster-ground-fire-20261016/win-personal-final768-visual-observation.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/caster-ground-fire-20261016/incoming-dedup-local-validation.json",
+          "exists": true,
+          "shaMatches": true
+        }
+      ]
+    },
+    "incoming-threat-overlap-20261016": {
+      "indexedLocalPaths": [
+        {
+          "path": "/tmp/bootstrap-c4-full-health-win288119-closure-20261016/CLOSED-WIN-FULL-159600-288119.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-c6-221325-readonly-review-20261016/ACTUAL-FIRST-P0-DIVERGENCE-221325-221340.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-c6-incoming-overlap-from221325-prepared-20261016/native-process-exit-1.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-c6-incoming-overlap-native221325-20261016",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-c6-natural-win263342-closure-20261016/C6-CLOSED-NATURAL-WIN-221325-263342-FULL.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-c6-natural-win263342-closure-20261016/C6-CONSEQUENTIAL-NATURAL-WIN-221325-263342-v2.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-c6-natural-win263342-closure-20261016/png-prepared/EXIT.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-c6-natural-win263342-closure-20261016/png-prepared/ROOT-PERSONAL-VISUAL-OBSERVATION.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/c4-incoming-overlap-validation-prepared-20261016/ROOT-ACTUAL-LOCAL-VALIDATION.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/c4-incoming-overlap-validation-prepared-20261016/candidate-source-cap.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/strict600-c4-retreat-221340-20261016/strict600-c4.contexts/221325-p0-before.json.gz",
+          "exists": false
+        }
+      ],
+      "copiedEvidence": [
+        {
+          "path": "docs/engineering/bootstrap_1/incoming-threat-overlap-20261016/consequential-v2.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/incoming-threat-overlap-20261016/first-divergence.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/incoming-threat-overlap-20261016/local-validation.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/incoming-threat-overlap-20261016/personal-visual-observation.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/incoming-threat-overlap-20261016/actual-native-process-exit.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/incoming-threat-overlap-20261016/actual-render-exit.json",
+          "exists": true,
+          "shaMatches": true
+        }
+      ]
+    },
+    "official-brokenSea-archer-20261016": {
+      "indexedLocalPaths": [
+        {
+          "path": "/tmp/coastal-colony-capital-v4-positive-audit-20261016/ACTUAL-POSITIVE-COMPACT.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/official-brokenSea-archer-early12000-review-20261016/png-prepared/ROOT-PERSONAL-VISUAL-OBSERVATION.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/official-brokenSea-archer-early12000-review-20261016/png-prepared/native-8400-official-ordinary0-preloss-harbor.png",
+          "exists": false
+        },
+        {
+          "path": "/tmp/official-brokenSea-archer-early12000-review-20261016/png-prepared/native-9835-official-ordinary0-deck-casualties.png",
+          "exists": false
+        },
+        {
+          "path": "/tmp/official-brokenSea-archer-fullclosed-loss37485-review-20261016/COMPACT-CLOSED-ORDINARY0-LOSS37485.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/official-brokenSea-archer-fullclosed-loss37485-review-20261016/FULL-CLOSED-ORDINARY0-LOSS37485-v2.json",
+          "exists": false
+        }
+      ],
+      "copiedEvidence": [
+        {
+          "path": "docs/engineering/bootstrap_1/official-brokenSea-archer-20261016/ordinary0-loss37485-compact.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/official-brokenSea-archer-20261016/personal-early-visual-observation.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/official-brokenSea-archer-20261016/c5-capital-focus2400-compact.json",
+          "exists": true,
+          "shaMatches": true
+        }
+      ]
+    },
+    "ferry-loading-fire-20261016": {
+      "indexedLocalPaths": [
+        {
+          "path": "/tmp/bootstrap-ferry-loading-fire-c6-prepared-20261016/IMPLEMENTED-CANDIDATE-CAUSAL-AND-LOCAL-VALIDATION.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-ferry-loading-fire-c6-prepared-20261016/OLD-RED-ACTUAL-READBACK-CORRECTION.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-ferry-loading-fire-c6-prepared-20261016/candidate-source-cap.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-ferry-loading-fire-c6-prepared-20261016/old-red-exit-1.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-ferry-loading-fire-candidate-native11400-20261016/natural-from-11400",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-ferry-loading-fire-candidate-native11400-20261016/natural-from-11400.contexts/11565-p0-after.json.gz",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-ferry-loading-fire-candidate-native11400-prepared-20261016/native-process-exit-1.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-ferry-loading-fire-candidate-native11400-review-20261016/COMPACT-CLOSED-CANDIDATE-11400-RESULT-v2.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-ferry-loading-fire-candidate-native11400-review-20261016/FULL-CLOSED-CANDIDATE-11400-RESULT.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/official-archer-11565-before-context-nativeview-prepared-20261016/ROOT-PERSONAL-VISUAL-OBSERVATION.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/strict600-official-archer-ferry11565-20261016/strict600-official-archer-strict600-proof.json",
+          "exists": false
+        }
+      ],
+      "copiedEvidence": [
+        {
+          "path": "docs/engineering/bootstrap_1/ferry-loading-fire-20261016/causal-and-local-validation.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/ferry-loading-fire-20261016/strict600-original-proof.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/ferry-loading-fire-20261016/old-red-original-exit.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/ferry-loading-fire-20261016/old-red-readback-correction.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/ferry-loading-fire-20261016/personal-11565-visual-observation.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/ferry-loading-fire-20261016/native-complete-loss54426-compact-v2.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/ferry-loading-fire-20261016/actual-native-process-exit.json",
+          "exists": true,
+          "shaMatches": true
+        }
+      ]
+    },
+    "knight-first-use-twoShores-20261017": {
+      "indexedLocalPaths": [
+        {
+          "path": "/tmp/bootstrap-knight-c7-committed-source1569-20261017/candidate-source-full1569-601a5f950353.tar.gz",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-knight-c7-committed-source1569-20261017/runtime-source-cap.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-knight-unseen-twoShores-c7-review-20261017/COMPACT-CLOSED-KNIGHT-ORDINARY0-v2.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-knight-unseen-twoShores-c7-review-20261017/FULL-CLOSED-KNIGHT-ORDINARY0-v2.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-next-knight-unseen-ordinary0-source-unbound-prepared-20261016/native-process-exit-1.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-next-knight-unseen-ordinary0-source-unbound-prepared-20261016/selection.actual-c7-601a5f95.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-unseen-twoShores-knight-v5v7-c7-ordinary0-20261017/ordinary0-c7",
+          "exists": false
+        },
+        {
+          "path": "/tmp/bootstrap-unseen-twoShores-knight-v5v7-c7-ordinary0-20261017/ordinary0-c7.frames/56477.json.gz",
+          "exists": false
+        },
+        {
+          "path": "/tmp/knight-c7-25200-world-front-nativevisual-prepared-20261017/EXIT.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/knight-c7-25200-world-front-nativevisual-prepared-20261017/ROOT-PERSONAL-VISUAL-OBSERVATION.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/knight-c7-final56477-nativevisual-prepared-20261017/EXIT.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/knight-c7-final56477-nativevisual-prepared-20261017/ROOT-PERSONAL-VISUAL-OBSERVATION.json",
+          "exists": false
+        },
+        {
+          "path": "/tmp/knight-c7-final56477-nativevisual-prepared-20261017/native-56477-knight-c7-natural-victory-whole-world.png",
+          "exists": false
+        }
+      ],
+      "copiedEvidence": [
+        {
+          "path": "docs/engineering/bootstrap_1/knight-first-use-twoShores-20261017/closed-ordinary0-win56477-compact-v2.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/knight-first-use-twoShores-20261017/actual-native-process-exit.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/knight-first-use-twoShores-20261017/actual-source-selection.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/knight-first-use-twoShores-20261017/actual-25200-render-exit.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/knight-first-use-twoShores-20261017/personal-25200-visual-observation.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/knight-first-use-twoShores-20261017/actual-final56477-render-exit.json",
+          "exists": true,
+          "shaMatches": true
+        },
+        {
+          "path": "docs/engineering/bootstrap_1/knight-first-use-twoShores-20261017/personal-final56477-visual-observation.json",
+          "exists": true,
+          "shaMatches": true
+        }
+      ]
+    }
+  },
+  "uncommittedDepartureRecovered": false,
+  "uncommittedEarlyFireRecovered": false
+}

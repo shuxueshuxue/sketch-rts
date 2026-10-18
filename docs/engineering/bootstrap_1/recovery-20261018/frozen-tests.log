@@ -1,0 +1,20 @@
+
+ RUN  v2.1.9 /workspace/bootstrap-1-resume
+
+✘ [ERROR] Failed to write to output file: open /tmp/bootstrap_1-frozen-Zv0J5r/planner.mjs: is a directory
+
+ ✓ scripts/bootstrap_1-planner.test.ts (25 tests) 7280ms
+   ✓ bootstrap_1 frozen loader initialization > exports identical frozen code from the repository and an unrelated non-Git working directory 3089ms
+   ✓ bootstrap_1 frozen loader initialization > retries the public planner after git failure without caching an incomplete tree or masking the error 615ms
+   ✓ bootstrap_1 frozen loader initialization > retries the public planner after tar failure without caching an incomplete tree or masking the error 654ms
+   ✓ bootstrap_1 frozen loader initialization > retries the public planner after cleanup failure without caching an incomplete tree or masking the error 631ms
+   ✓ bootstrap_1 frozen loader initialization > retries a failed esbuild while reusing a successfully extracted frozen tree 691ms
+   ✓ bootstrap_1 historical opponents on the current engine > gives the archived planner the same building obstruction field and updates it after native construction 1234ms
+ ✓ scripts/bootstrap_1-rules.test.ts (4 tests) 867ms
+   ✓ loads the approved frozen manifest on rules 2 413ms
+
+ Test Files  2 passed (2)
+      Tests  29 passed (29)
+   Start at  00:49:51
+   Duration  11.04s (transform 2.36s, setup 0ms, collect 2.49s, tests 8.15s, environment 0ms, prepare 103ms)
+
