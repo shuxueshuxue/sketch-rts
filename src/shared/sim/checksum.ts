@@ -21,7 +21,8 @@ export { canonicalGameState, type CanonicalGameState } from "./canonical";
 // 16: persisted, fairly scheduled complex ship route requests.
 // 17: exact saved state of deterministic incremental ship navigation.
 // 18: death-time corpse equipment, owner race and deck attachment facts.
-export const CHECKSUM_VERSION = 18;
+// 19: building upgrades as work-queue jobs; the fortified tower is its own building kind.
+export const CHECKSUM_VERSION = 19;
 
 export function checksumGame(game: Game): string {
   return fnv1a(JSON.stringify(canonicalGameState(game)));
@@ -29,7 +30,8 @@ export function checksumGame(game: Game): string {
 
 /** Same-rules replay compatibility only; callers must validate the rules version first. */
 export function checksumGameForVersion(game: Game, version: number): string {
-  if (version === CHECKSUM_VERSION) return checksumGame(game);
+  // Version 19 changed only how an upgrade under way and a fortified tower are kept; a game with neither hashes the same.
+  if (version === CHECKSUM_VERSION || version === 18) return checksumGame(game);
   const checkedGame = { ...game };
   if (version === 2) {
     delete checkedGame.corpses;

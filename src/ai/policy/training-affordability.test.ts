@@ -1,3 +1,4 @@
+import { trainingJobs } from "../../shared/building-jobs";
 import { describe, expect, it } from "vitest";
 import { sketchScene } from "../../sdk/scene";
 import { UNIT_DEFS } from "../../shared/catalog";
@@ -45,7 +46,7 @@ describe.each(["grove", "ember"] as const)("%s training affordability", race => 
     expect(commands).toEqual([{ type: "train", buildingId: "hall", unitKind: "worker" }]);
     for (const command of commands) issuePlayerCommand(game, "us", command);
     expect(game.players.us!.gold).toBe(0);
-    expect(game.buildings.find(building => building.id === "hall")!.queue.map(job => job.unitKind)).toEqual(["worker"]);
+    expect(trainingJobs(game.buildings.find(building => building.id === "hall")!).map(job => job.unitKind)).toEqual(["worker"]);
   });
 
   it("keeps a negative reserved budget from ordering a purchase or changing policy memory", () => {
@@ -64,7 +65,7 @@ describe.each(["grove", "ember"] as const)("%s training affordability", race => 
     const commands = plan(snapshotGame(game));
     expect(commands).toEqual([{ type: "train", buildingId: "hall", unitKind: "worker" }]);
     for (const command of commands) issuePlayerCommand(game, "us", command);
-    expect(game.buildings.find(building => building.id === "hall")!.queue.map(job => job.unitKind)).toEqual(["worker"]);
+    expect(trainingJobs(game.buildings.find(building => building.id === "hall")!).map(job => job.unitKind)).toEqual(["worker"]);
   });
 
   it("waits for its occupied producer and resumes after the queued purchase is cancelled", () => {
@@ -107,6 +108,6 @@ describe.each(["grove", "ember"] as const)("%s training affordability", race => 
     const commands = plan(snapshotGame(game));
     expect(commands).toEqual([{ type: "train", buildingId: "hall", unitKind: "worker" }]);
     for (const command of commands) issuePlayerCommand(game, "us", command);
-    expect(game.buildings.find(building => building.id === "hall")!.queue.map(job => job.unitKind)).toEqual(["worker"]);
+    expect(trainingJobs(game.buildings.find(building => building.id === "hall")!).map(job => job.unitKind)).toEqual(["worker"]);
   });
 });

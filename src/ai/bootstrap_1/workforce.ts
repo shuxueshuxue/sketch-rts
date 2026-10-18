@@ -10,6 +10,7 @@ import type { Point } from '../policy/spatial';
 import { towerRushConstructionCrew } from './tower-rush';
 import { longHaulInvestment } from './long-haul-investment';
 import { miningJobOrder } from './mining-jobs';
+import { trainingJobs } from "../../shared/building-jobs";
 
 /** Fill a mining base while it rises, before competing army and technology purchases. */
 export const miningWorkforce: AiScript = {
@@ -55,7 +56,7 @@ function miningWorkerDemand(snapshot: GameSnapshot, owner: PlayerId, constructio
   const mining = halls.filter(hall => snapshot.resources.some(mine => mine.amount > 0
     && Math.hypot(mine.x - hall.x, mine.y - hall.y) <= GOLD_MINE_RULES.baseRange));
   const workers = snapshot.units.filter(unit => unit.owner === owner && unit.kind === 'worker');
-  const queued = halls.reduce((total, hall) => total + hall.queue.filter(job => job.unitKind === 'worker').length, 0);
+  const queued = halls.reduce((total, hall) => total + trainingJobs(hall).filter(job => job.unitKind === 'worker').length, 0);
   const outlying = snapshot.resources.filter(mine => mine.amount > 0
     && workers.some(worker => miningJobOrder(worker)?.resourceId === mine.id)
     && !mining.some(hall => Math.hypot(mine.x - hall.x, mine.y - hall.y) <= GOLD_MINE_RULES.baseRange)
@@ -70,7 +71,7 @@ function miningWorkerDemand(snapshot: GameSnapshot, owner: PlayerId, constructio
   for (const region of regions) {
     const land = region.origins[0]!;
     const local = workers.filter(worker => !worker.deck && sameGround(snapshot.map, worker, land)).length
-      + halls.filter(hall => sameGround(snapshot.map, hall, land)).reduce((total, hall) => total + hall.queue.filter(job => job.unitKind === 'worker').length, 0);
+      + halls.filter(hall => sameGround(snapshot.map, hall, land)).reduce((total, hall) => total + trainingJobs(hall).filter(job => job.unitKind === 'worker').length, 0);
     const deficit = Math.max(0, region.origins.length * GOLD_MINE_RULES.workstations - local);
     const inTransit = Math.min(embarked, deficit);
     region.missing = deficit - inTransit;

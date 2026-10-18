@@ -7,7 +7,8 @@ import type { GameSnapshot } from '../../shared/types';
 import { attachShipRigParts } from './sail-rig';
 
 export { SITE_MODELS, MATCH_MODEL_KEYS as matchModelKeys } from '../art/model-manifest';
-export function snapshotModelKeys(snapshot:GameSnapshot){return [...new Set([...snapshot.units.filter(unit=>isShipKind(unit.kind)).map(unit=>`ships/${unit.kind}`),...snapshot.units.filter(unit=>isShipKind(unit.kind)).flatMap(ship=>installedWeapons(snapshot,ship).flatMap(item=>{const weapon=mountedWeaponPose(ship,item);return weapon?[`ships/${weapon.art}`]:[];})),...snapshot.buildings.map(building=>`buildings/${building.kind}`),...(snapshot.shops?.length?['buildings/shop']:[]),...(snapshot.mercenaryCamps.length?['buildings/camp']:[])])];}
+import { buildingModelKind } from '../art/model-manifest';
+export function snapshotModelKeys(snapshot:GameSnapshot){return [...new Set([...snapshot.units.filter(unit=>isShipKind(unit.kind)).map(unit=>`ships/${unit.kind}`),...snapshot.units.filter(unit=>isShipKind(unit.kind)).flatMap(ship=>installedWeapons(snapshot,ship).flatMap(item=>{const weapon=mountedWeaponPose(ship,item);return weapon?[`ships/${weapon.art}`]:[];})),...snapshot.buildings.map(building=>`buildings/${buildingModelKind(building.kind)}`),...(snapshot.shops?.length?['buildings/shop']:[]),...(snapshot.mercenaryCamps.length?['buildings/camp']:[])])];}
 
 export class ModelLibrary {
   private models=new Map<string,THREE.Object3D>();

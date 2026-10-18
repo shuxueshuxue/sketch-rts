@@ -23,6 +23,7 @@ import { EXPANSION_GUARD_RANGE } from "../v7/creep";
 import { v6Doctrine } from "./select";
 import { navalWant, navalBudgetReserve, navalReservePurchase } from "../naval";
 import { SHOP_PRIORITY, shopErrandCost } from "../v9/shop";
+import { trainingJobs } from "../../../shared/building-jobs";
 
 // @@@v6-economy - One place spends V6's gold, the way AMAI's builder does (common.eai OneBuildLoopAM). Workers and farms
 // come first, as in AMAI. Then the current phase of the strategy states its wants; each want that is not met becomes a
@@ -186,7 +187,7 @@ function unitTargets(want: V6Want): [TrainableUnitKind, number][] {
 }
 
 function have(economy: Omit<Economy, "phase">, kind: TrainableUnitKind) {
-  return economy.intel.army.filter((unit) => unit.kind === kind).length + economy.own.reduce((total, building) => total + building.queue.filter((job) => job.unitKind === kind).length, 0);
+  return economy.intel.army.filter((unit) => unit.kind === kind).length + economy.own.reduce((total, building) => total + trainingJobs(building).filter((job) => job.unitKind === kind).length, 0);
 }
 
 function supplyGoals(economy: Economy): Goal[] {
@@ -204,7 +205,7 @@ function supplyGoals(economy: Economy): Goal[] {
 // soldier) so neither eats the other. Training only for halls already rising left V6 on six workers until minute six,
 // and its hall waited on gold six workers could not bring in.
 function workerGoals(economy: Economy): Goal[] {
-  const queued = economy.own.reduce((total, building) => total + building.queue.filter((job) => job.unitKind === "worker").length, 0);
+  const queued = economy.own.reduce((total, building) => total + trainingJobs(building).filter((job) => job.unitKind === "worker").length, 0);
   const halls = economy.own.filter((building) => building.kind === "townHall").length;
   const rising = economy.own.filter((building) => building.kind === "townHall" && !building.complete).length;
   // V7 trains a base's workers once its hall is rising, not while it is only wanted: five fill a mine (measured: 375 gold a

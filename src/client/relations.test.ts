@@ -153,7 +153,7 @@ it('sends troops up an own fortified tower and points at them on its top', () =>
   game.buildings.push(tower);
   const archer = game.spawnUnit('player', 'archer', 1500, 1700), worker = game.spawnUnit('player', 'worker', 1540, 1700);
   expect(targetCommand(snapshotGame(game), 'player', [archer], { kind: 'building', building: tower })).toBeUndefined();
-  tower.fortified = true;
+  tower.kind = 'fortifiedTower';
   expect(targetCommand(snapshotGame(game), 'player', [archer, worker], { kind: 'building', building: tower })).toEqual({ type: 'garrison', unitIds: [archer.id, worker.id], buildingId: tower.id, queued: false });
   tower.hp -= 50;
   expect(targetCommand(snapshotGame(game), 'player', [archer, worker], { kind: 'building', building: tower })).toMatchObject({ type: 'repair', unitIds: [worker.id] });

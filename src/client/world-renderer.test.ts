@@ -16,7 +16,7 @@ import { boardUnit } from '../shared/decks';
 import { beginShipBoarding, gangwaySurface, updateShipGangways } from '../shared/ship-gangway';
 import { shipProfile } from '../shared/ship-geometry';
 import { createBuilding, createUnit } from '../shared/map';
-import type { GameSnapshot } from "../shared/types";
+import type { GameSnapshot, TrainingJob } from "../shared/types";
 
 type Call = { name: string; args: unknown[]; at?: Transform; ink?: unknown };
 type Transform = { a: number; b: number; c: number; d: number; e: number; f: number };
@@ -91,7 +91,7 @@ function frame(snapshot: GameSnapshot, overrides: Partial<WorldFrame> = {}): Wor
     view: { x: 0, y: 0, width: 800, height: 600 },
     now: 1000,
     facing: new UnitFacingTracker(),
-    labels: { unitKind: (kind) => `kind:${kind}` },
+    labels: { kind: (kind) => `kind:${kind}` },
     ...overrides,
   };
 }
@@ -329,7 +329,7 @@ describe("world renderer", () => {
       const measure=vi.fn(()=>({width:63.25}) as TextMetrics);rendered.ctx.measureText=measure;drawWorld(rendered);
       expect(rendered.selectedIds?.size??0).toBe(0);
       expect(rendered.calls.some(call=>call.name==='fillRect'&&call.ink==='#9a6a28'&&call.args[2]===56&&call.args[3]===5)).toBe(true);
-      expect(rendered.calls.some(call=>call.name==='fillText'&&call.args[0]===`${labels.unitKind('transport')} x2`)).toBe(true);
+      expect(rendered.calls.some(call=>call.name==='fillText'&&call.args[0]===`${labels.kind('transport')} x2`)).toBe(true);
       expect(rendered.calls.filter(call=>call.name==='fillText'&&call.args[0]==='Awaiting launch')).toHaveLength(1);
       expect(measure).toHaveBeenCalledWith('Awaiting launch');
       expect(rendered.calls.filter(call=>call.name==='fillRect'&&call.ink==='rgba(255, 250, 226, 0.94)')).toMatchObject([{args:[expect.any(Number),expect.any(Number),72,15]}]);
@@ -349,7 +349,7 @@ describe("world renderer", () => {
       expect(rendered.calls.some(call=>call.ink==='#9a6a28')).toBe(false);
       expect(rendered.calls.some(call=>call.name==='fillText'&&call.args[0]==='Awaiting launch')).toBe(false);
       expect(rendered.calls.some(call=>call.ink==='rgba(255, 250, 226, 0.94)')).toBe(false);
-      expect(rendered.calls.some(call=>call.name==='fillText'&&call.args[0]===`${labels.unitKind(building.queue[0]!.unitKind)} x2`)).toBe(true);
+      expect(rendered.calls.some(call=>call.name==='fillText'&&call.args[0]===`${labels.kind((building.queue[0] as TrainingJob).unitKind)} x2`)).toBe(true);
     }
   });
 

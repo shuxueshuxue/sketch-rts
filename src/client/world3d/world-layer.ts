@@ -1,6 +1,7 @@
 import { StandingField } from './standing-field';
 import { SUN } from '../sun';
 import { propStand } from '../prop-stands';
+import { buildingModelKind } from '../art/model-manifest';
 import {bloodSurfaceResolver} from '../combat-surfaces';
 import {PresentationViewIndex} from '../presentation-view';
 import { deckRemainsMatrix } from './deck-remains';
@@ -46,6 +47,7 @@ import { towerRoofOpen } from '../tower-presentation';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { ResourcePhase } from '../resources';
 import type { GameSnapshot,Owner,Unit } from '../../shared/types';
+import { isFortifiedTower } from '../../shared/tower-garrison';
 
 export type ActorPosition={x:number;y:number;bodyY:number;topY:number;facing?:1|-1};
 export const PHYSICAL_EFFECTS=new Set<GameSnapshot['effects'][number]['type']>(['shellFlight','siegeBolt','projectile','muzzleFlash']);
@@ -57,7 +59,7 @@ const PROP_TILE=192,PROP_FOOT=24;
 // the town hall about four workers high, production buildings about three, so a base reads by its buildings. Only the
 // drawing is stretched upward; the footprint, and so every rule, is untouched. Walls, towers and small works keep theirs.
 const BUILDING_RISE:Readonly<Record<string,number>>={townHall:1.5,farm:1.1,well:1,statue:1,beacon:1,camp:1,defenseTower:1.15};
-const buildingRise=(kind:string)=>kind.startsWith('fort')?1:BUILDING_RISE[kind]??1.3;
+const buildingRise=(kind:string)=>kind.startsWith('fort-')?1:BUILDING_RISE[buildingModelKind(kind)]??1.3;
 const rises=new Map<number,THREE.Matrix4>();
 const riseMatrix=(rise:number)=>{let matrix=rises.get(rise);if(!matrix)rises.set(rise,matrix=new THREE.Matrix4().makeScale(1,rise,1));return matrix;};
 // A frame's painting of new troop and remains cards: a few at most on a fast core. A match opening on its armies, or a
@@ -420,13 +422,13 @@ export class World3DLayer {
       return height;
     };
     for(const building of snapshot.buildings){
-      const height=standBuilding(frame.buildingModels?.[building.id]??building.kind,building.kind,building.x,building.y,building.radius,ownerInk(building.owner, snapshot),building.complete?'solid':'site',building.id,towerRoofOpen(snapshot.units,building));
+      const height=standBuilding(frame.buildingModels?.[building.id]??buildingModelKind(building.kind),building.kind,building.x,building.y,building.radius,ownerInk(building.owner, snapshot),building.complete?'solid':'site',building.id,towerRoofOpen(snapshot.units,building));
       if(height===undefined)continue;
       this.positions.set(building.id,{x:building.x,y:building.y,bodyY:building.y,topY:building.y-height*TILT});
       if(!visible(building.x,building.y,height*TILT+180))continue;
       const selected=frame.selectedIds?.has(building.id)??false;
       if(building.hp>0 && (selected || frame.hoveredId===building.id))this.foundationMarker(frame,building,this.markerInk(frame,building.owner),selected);
-      if(building.fortified)towerTops.set(building.id,height*TOWER_TOP_Z/TOWER_MODEL_HEIGHT);
+      if(isFortifiedTower(building))towerTops.set(building.id,height*TOWER_TOP_Z/TOWER_MODEL_HEIGHT);
     }
     // @@@build-ghost - A building not yet begun is the very model it will be, in its owner's colours and see-through, on
     // the footprint it will take: the one being placed and the viewer's workers' plans. Whether the spot is free shows in

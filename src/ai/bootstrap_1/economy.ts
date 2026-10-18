@@ -24,6 +24,7 @@ import { routeArrivals } from '../../shared/route-selection';
 import { colonyRecoveryGoals } from './colony-recovery';
 import { armedFoes, retreatLandTravelTicks } from './safe-land-route';
 import { freeIncomeCapitalGoals } from './free-income-capital';
+import { trainingJobs } from "../../shared/building-jobs";
 
 export const bootstrapEconomy: AiScript = {
   id: 'v6Economy',
@@ -41,7 +42,7 @@ function wantedUnits(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyC
   for (const want of [...phase.wants, ...options.armyWants!]) {
     if (!('unit' in want) || requiredSupplyCap(want.unit) > player.supplyCap) continue;
     const have = army.filter(unit => unit.kind === want.unit).length
-      + own.reduce((total, building) => total + building.queue.filter(job => job.unitKind === want.unit).length, 0);
+      + own.reduce((total, building) => total + trainingJobs(building).filter(job => job.unitKind === want.unit).length, 0);
     if (have < want.count) wanted.add(want.unit);
   }
   return wanted;
@@ -57,7 +58,7 @@ function productionWaveSupply(snapshot: GameSnapshot, owner: PlayerId, options: 
   }
   if (missingMiningWorkers(snapshot, owner, towerRushConstructionCrew(snapshot, owner, options), options) > 0) production.add('worker');
   return own.filter(building => building.complete).reduce((total, building) => {
-    const kinds = [...trainableUnitsAt(race, building.kind).filter(kind => production.has(kind)), ...building.queue.map(job => job.unitKind)];
+    const kinds = [...trainableUnitsAt(race, building.kind).filter(kind => production.has(kind)), ...trainingJobs(building).map(job => job.unitKind)];
     return total + Math.max(0, ...kinds.map(kind => UNIT_DEFS[kind].supplyUsed));
   }, 0);
 }
@@ -132,7 +133,7 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
   // Keep the requested first healer funded until its ordinary training has been queued.
   const recoveryReserve = wanted.has(healer) && !snapshot.units.some(unit => unit.owner === owner && unit.kind === healer)
     && own.some(building => canTrainAt(player.race, building.kind, healer) && (building.queue.length > 0 || recovering)
-      && building.queue.every(job => job.unitKind !== healer)) ? UNIT_DEFS[healer].cost : 0;
+      && trainingJobs(building).every(job => job.unitKind !== healer)) ? UNIT_DEFS[healer].cost : 0;
   // Fund the next recruitment wave before adding production infrastructure.
   const waveReserve = own.some(building => building.complete && building.queue.length > 0)
     ? own.filter(building => building.complete && building.queue.length === 0).reduce((total, building) => total
