@@ -20,7 +20,7 @@ import { casterScreenOutsideFixedFire } from './caster-fixed-fire';
 export function casterMeleeMicro(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const threats = armedFoes(snapshot, owner, options);
   return (caster: Unit, foes: Unit[]): GameCommand | undefined => {
-    if (caster.attackRange <= 100 || caster.attackDamage <= 0 || caster.order.type === 'cast'
+    if (caster.deck || caster.attackRange <= 100 || caster.attackDamage <= 0 || caster.order.type === 'cast'
       || foes.some(foe => foe.speed >= caster.speed)) return undefined;
     const local = threats.filter(foe => distance(caster, foe) <= Math.max(caster.attackRange,
       mountedThreatReach(snapshot, foe, caster, THINK_TICKS + caster.cooldown))
