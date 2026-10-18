@@ -1,0 +1,148 @@
+/* Room setup redesign: the shared look for every layout option (Art Lane). Layout and flow belong to each prototype page;
+   this file only says what a screen, a button, a map and a seat look like, in the game's own materials. */
+@import url("../../../src/client/game-materials.css");
+
+:root {
+  --rs-selected: #ae8134;
+  --rs-selected-glow: #e7c27a66;
+  --rs-row-you: linear-gradient(90deg, #e9cf9a66, #e9cf9a10);
+  --rs-thumb-frame: #2f1c0d;
+  --rs-tag: #f3e6c6;
+  --rs-danger: #8f2f1e;
+}
+
+html, body { margin: 0; min-height: 100%; }
+body { background: var(--walnut); color: var(--game-ink); font: 13px/1.45 var(--game-text); }
+
+/* ---------- the window ---------- */
+.rs-screen {
+  box-sizing: border-box; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 16px;
+  width: min(1200px, calc(100vw - 32px)); height: min(760px, calc(100dvh - 32px)); margin: 16px auto; padding: 22px 26px 18px;
+  background: var(--game-paper); border: 8px solid transparent; border-image: var(--frame-walnut) 16 / 8px stretch; box-shadow: var(--game-frame);
+}
+.rs-head { display: flex; align-items: baseline; gap: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--game-edge); }
+.rs-title { margin: 0; color: var(--game-title); font: 600 26px/1.2 var(--game-serif); letter-spacing: 1px; }
+.rs-status { color: var(--game-muted); font-size: 13px; }
+.rs-body { min-height: 0; min-width: 0; }
+.rs-footer { display: flex; justify-content: flex-end; align-items: center; gap: 10px; padding-top: 12px; border-top: 1px solid var(--game-edge); }
+.rs-footer > :first-child:not(.btn-primary) { margin-right: auto; }
+.rs-section-title { margin: 0 0 8px; color: var(--game-title); font: 600 15px var(--game-serif); letter-spacing: 1px; }
+
+/* ---------- buttons ---------- */
+.btn {
+  min-height: 34px; padding: 0 18px; border: 1px solid var(--game-brass); border-radius: 1px; cursor: pointer;
+  background: var(--game-button); color: var(--game-button-ink); box-shadow: var(--game-inset); font: 600 13px var(--game-text); letter-spacing: 1px;
+}
+.btn:hover { background: var(--game-button-hover); border-color: var(--game-brass-lit); }
+.btn:focus-visible, .map-card:focus-visible, .map-row:focus-visible { outline: 2px solid var(--game-brass-lit); outline-offset: 2px; }
+.btn-primary { min-width: 120px; border-color: #d9b56a; box-shadow: var(--game-inset), 0 0 0 1px #2a1709, 0 0 10px #e3b45e55; }
+.btn-danger { color: #f3cdb9; border-color: #8f4a35; }
+.btn-quiet { background: none; border-color: transparent; box-shadow: none; color: var(--game-muted); font-weight: 500; text-decoration: underline 1px; text-underline-offset: 3px; }
+.btn-quiet:hover { background: #fff6dd66; border-color: transparent; color: var(--game-ink); }
+.btn[disabled] { cursor: default; opacity: .45; filter: saturate(.6); }
+.btn[disabled]:hover { background: var(--game-button); border-color: var(--game-brass); }
+
+/* ---------- a map's picture, wherever it appears ---------- */
+.map-card-thumb, .map-bar-thumb, .map-row-thumb, .map-preview-card img {
+  display: block; box-sizing: border-box; aspect-ratio: 1; width: 100%; object-fit: cover; image-rendering: pixelated;
+  border: 3px solid var(--rs-thumb-frame); outline: 1px solid #c9a96a; outline-offset: -4px; background: #2d4c56;
+}
+.tag { display: inline-block; padding: 1px 7px; border: 1px solid var(--game-edge); border-radius: 9px; background: var(--rs-tag); color: var(--game-muted); font-size: 11px; line-height: 16px; white-space: nowrap; }
+
+/* ---------- map cards (options a, b) ---------- */
+.map-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 14px; align-content: start; min-height: 0; overflow: auto; padding: 4px; }
+.map-card {
+  position: relative; display: grid; gap: 6px; align-content: start; padding: 8px 8px 10px; text-align: left; cursor: pointer;
+  border: 1px solid var(--game-edge); background: var(--game-field); color: var(--game-ink); font: inherit;
+  box-shadow: 0 1px 0 #fff8e6 inset, 0 2px 6px #4a2e1222; transition: transform .12s, box-shadow .12s, border-color .12s;
+}
+.map-card:hover { border-color: var(--game-brass); transform: translateY(-2px); box-shadow: 0 1px 0 #fff8e6 inset, 0 6px 14px #4a2e1233; }
+.map-card-name { color: var(--game-title); font: 600 15px/1.25 var(--game-serif); }
+.map-card-meta { color: var(--game-muted); font-size: 12px; }
+.map-card-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.map-card.is-selected { border-color: var(--rs-selected); background: #fbf1d8; box-shadow: 0 0 0 2px var(--rs-selected), 0 0 16px var(--rs-selected-glow); }
+.map-card.is-selected::after {
+  content: "✓"; position: absolute; top: 2px; right: 2px; display: grid; place-items: center; width: 24px; height: 24px;
+  background: var(--rs-selected); color: #fff7e0; font: 700 14px var(--game-text); clip-path: polygon(0 0, 100% 0, 100% 100%);
+  padding: 0 0 8px 8px; box-sizing: border-box;
+}
+.map-card[aria-disabled="true"] { cursor: default; }
+.map-card[aria-disabled="true"]:hover { transform: none; border-color: var(--game-edge); box-shadow: 0 1px 0 #fff8e6 inset, 0 2px 6px #4a2e1222; }
+.map-card[aria-disabled="true"]:not(.is-selected) { opacity: .55; filter: saturate(.7); }
+.map-card[aria-disabled="true"].is-selected:hover { border-color: var(--rs-selected); box-shadow: 0 0 0 2px var(--rs-selected), 0 0 16px var(--rs-selected-glow); }
+
+/* ---------- current-map bar (option b, top of the seat page) ---------- */
+.map-bar {
+  display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; gap: 4px 14px; padding: 8px 12px;
+  border: 1px solid var(--game-edge); background: var(--game-slot); box-shadow: var(--game-inset);
+}
+.map-bar-thumb { grid-row: span 2; width: 64px; }
+.map-bar-name { align-self: end; color: var(--game-title); font: 600 18px var(--game-serif); }
+.map-bar-meta { align-self: start; grid-column: 2; color: var(--game-muted); font-size: 12px; }
+.map-bar-change { grid-column: 3; grid-row: 1 / span 2; }
+.map-bar-change:not(.btn) { min-height: 32px; padding: 0 14px; border: 1px solid var(--game-brass); background: var(--game-field); color: var(--game-title); font: 600 13px var(--game-text); cursor: pointer; }
+.map-bar-change:not(.btn):hover { background: #fff3d4; border-color: var(--game-brass-lit); }
+
+/* ---------- wide list and its preview card (option c) ---------- */
+.map-list { display: grid; align-content: start; gap: 2px; min-height: 0; overflow: auto; padding-right: 4px; }
+.map-row {
+  position: relative; display: grid; grid-template-columns: 44px minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 10px; align-items: center;
+  padding: 6px 10px 6px 12px; border: 0; background: transparent; color: var(--game-ink); text-align: left; font: inherit; cursor: pointer;
+}
+.map-row-thumb { grid-row: span 2; width: 44px; border-width: 2px; outline: none; }
+.map-row-name { align-self: end; font: 600 14px var(--game-serif); color: var(--game-title); }
+.map-row-meta { align-self: start; color: var(--game-muted); font-size: 12px; }
+.map-row:hover { background: #fff6dd88; }
+.map-row.is-selected { background: var(--game-slot); box-shadow: var(--game-inset); }
+.map-row.is-selected::before { content: ""; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; background: var(--rs-selected); }
+.map-preview-card { display: grid; align-content: start; gap: 10px; }
+.map-preview-name { margin: 0; color: var(--game-title); font: 600 22px var(--game-serif); }
+.map-facts { display: grid; grid-template-columns: auto 1fr; gap: 3px 16px; margin: 0; font-size: 12px; }
+.map-facts dt { color: var(--game-muted); }
+.map-facts dd { margin: 0; color: var(--game-ink); font-weight: 600; }
+
+/* ---------- seats ---------- */
+.seat-table { --seat-tracks: 26px minmax(110px, 1fr) 92px 112px 112px 116px 60px; display: grid; align-content: start; min-height: 0; overflow: auto; }
+.seat-head, .seat-row { display: grid; grid-template-columns: var(--seat-tracks); gap: 8px; align-items: center; }
+.seat-head { padding: 0 8px 6px; border-bottom: 1px solid var(--game-edge); color: var(--game-muted); font-size: 12px; }
+.seat-row { min-height: 46px; padding: 6px 8px; border-bottom: 1px solid var(--game-edge); }
+.seat-index { color: #9b3d22; font: 700 14px var(--game-serif); text-align: center; }
+.seat-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.seat-row select, .seat-ctrl select {
+  box-sizing: border-box; width: 100%; min-width: 0; min-height: 30px; padding: 3px 6px; border: 1px solid var(--game-edge); border-radius: 1px;
+  background: var(--game-field); color: var(--game-ink); font: 12px var(--game-text);
+}
+.seat-row select:hover { border-color: var(--game-brass); }
+.seat-badge { display: inline-block; padding: 2px 8px; border: 1px solid var(--game-edge); border-radius: 9px; background: var(--rs-tag); color: var(--game-muted); font-size: 12px; }
+.seat-ready { display: flex; justify-content: center; align-items: center; gap: 4px; color: var(--game-muted); font-size: 12px; }
+.seat-ready input { accent-color: var(--game-brass-lit); width: 16px; height: 16px; }
+.seat-row.is-you { background: var(--rs-row-you); }
+.seat-row.is-you .seat-name::after { content: " ·你"; color: var(--game-brass-lit); font-weight: 600; }
+.seat-row.is-open .seat-name { color: var(--game-muted); font-style: italic; font-weight: 400; }
+.seat-row.is-open { background: repeating-linear-gradient(135deg, transparent 0 8px, #8767420d 8px 16px); }
+.seat-row.is-locked select { appearance: none; border-color: transparent; background: none; padding-left: 0; color: var(--game-ink); pointer-events: none; }
+
+/* ---------- phones ---------- */
+@media (max-width: 720px) {
+  .rs-screen { width: 100vw; height: 100dvh; margin: 0; padding: 14px 12px 12px; gap: 10px; border-width: 5px; border-image-width: 5px; }
+  .rs-title { font-size: 20px; }
+  .rs-head { flex-wrap: wrap; gap: 4px 12px; }
+  .map-grid { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 10px; }
+  .map-card-name { font-size: 14px; }
+  .map-bar { grid-template-columns: 48px minmax(0, 1fr) auto; padding: 6px 8px; }
+  .map-bar-thumb { width: 48px; }
+  .map-bar-name { font-size: 16px; }
+  .seat-head { display: none; }
+  /* Two lines a seat: who sits there and who controls it, then the choices. */
+  .seat-row {
+    grid-template-columns: 22px repeat(3, minmax(0, 1fr)) auto; grid-template-areas: "i name name ctrl ctrl" ". team race ai ready";
+    row-gap: 6px; padding: 8px 4px;
+  }
+  .seat-index { grid-area: i; }
+  .seat-name { grid-area: name; }
+  .seat-ctrl { grid-area: ctrl; }
+  .seat-row > .seat-team { grid-area: team; }
+  .seat-row > .seat-race { grid-area: race; }
+  .seat-row > .seat-ai { grid-area: ai; }
+  .seat-row > .seat-ready { grid-area: ready; }
+}

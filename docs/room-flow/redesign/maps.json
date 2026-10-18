@@ -1,0 +1,272 @@
+[
+ {
+  "id": "sapphireArchipelago",
+  "name": {
+   "en": "Sapphire Archipelago",
+   "zh": "蓝宝群岛"
+  },
+  "players": 6,
+  "facts": {
+   "size": 10240,
+   "players": 6,
+   "mines": 18,
+   "camps": 12,
+   "posts": 0,
+   "items": 0
+  },
+  "idea": "islandStarts",
+  "ideaZh": "孤岛起兵"
+ },
+ {
+  "id": "grandEstuary",
+  "name": {
+   "en": "Grand Estuary",
+   "zh": "八方河湾"
+  },
+  "players": 8,
+  "facts": {
+   "size": 10240,
+   "players": 8,
+   "mines": 24,
+   "camps": 16,
+   "posts": 0,
+   "items": 0
+  },
+  "idea": "riverValley",
+  "ideaZh": "河谷"
+ },
+ {
+  "id": "brokenSea",
+  "name": {
+   "en": "Broken Sea",
+   "zh": "碎海"
+  },
+  "players": 4,
+  "facts": {
+   "size": 7680,
+   "players": 4,
+   "mines": 12,
+   "camps": 8,
+   "posts": 0,
+   "items": 0
+  },
+  "idea": "islandStarts",
+  "ideaZh": "孤岛起兵"
+ },
+ {
+  "id": "templeSpring",
+  "name": {
+   "en": "Temple Spring",
+   "zh": "神泉殿"
+  },
+  "players": 4,
+  "facts": {
+   "size": 6656,
+   "players": 4,
+   "mines": 16,
+   "camps": 17,
+   "posts": 4,
+   "items": 5
+  },
+  "idea": "fountainRing",
+  "ideaZh": "泉心"
+ },
+ {
+  "id": "turtleLake",
+  "name": {
+   "en": "Turtle Lake",
+   "zh": "龟湖"
+  },
+  "players": 4,
+  "facts": {
+   "size": 6144,
+   "players": 4,
+   "mines": 13,
+   "camps": 13,
+   "posts": 0,
+   "items": 5
+  },
+  "idea": "turtleIsle",
+  "ideaZh": "龟岛"
+ },
+ {
+  "id": "elderwood",
+  "name": {
+   "en": "Elderwood",
+   "zh": "古木林"
+  },
+  "players": 4,
+  "facts": {
+   "size": 7168,
+   "players": 4,
+   "mines": 16,
+   "camps": 21,
+   "posts": 4,
+   "items": 5
+  },
+  "idea": "twistedPaths",
+  "ideaZh": "曲径"
+ },
+ {
+  "id": "ringwater",
+  "name": {
+   "en": "Ringwater",
+   "zh": "环海"
+  },
+  "players": 4,
+  "facts": {
+   "size": 6656,
+   "players": 4,
+   "mines": 16,
+   "camps": 17,
+   "posts": 4,
+   "items": 5
+  },
+  "idea": "outerSea",
+  "ideaZh": "外海"
+ },
+ {
+  "id": "loneMarket",
+  "name": {
+   "en": "Lone Market",
+   "zh": "孤市"
+  },
+  "players": 2,
+  "facts": {
+   "size": 6656,
+   "players": 2,
+   "mines": 6,
+   "camps": 6,
+   "posts": 2,
+   "items": 4
+  },
+  "idea": "oneMarket",
+  "ideaZh": "独市"
+ },
+ {
+  "id": "reedwater",
+  "name": {
+   "en": "Reedwater",
+   "zh": "芦苇泽"
+  },
+  "players": 2,
+  "facts": {
+   "size": 5120,
+   "players": 2,
+   "mines": 6,
+   "camps": 9,
+   "posts": 0,
+   "items": 3
+  },
+  "idea": "floodedValley",
+  "ideaZh": "淹谷"
+ },
+ {
+  "id": "veiledHill",
+  "name": {
+   "en": "Veiled Hill",
+   "zh": "雾丘"
+  },
+  "players": 2,
+  "facts": {
+   "size": 4608,
+   "players": 2,
+   "mines": 7,
+   "camps": 8,
+   "posts": 2,
+   "items": 4
+  },
+  "idea": "hiddenHill",
+  "ideaZh": "隐丘"
+ },
+ {
+  "id": "greystonePass",
+  "name": {
+   "en": "Greystone Pass",
+   "zh": "灰岩隘口"
+  },
+  "players": 2,
+  "facts": {
+   "size": 4608,
+   "players": 2,
+   "mines": 6,
+   "camps": 6,
+   "posts": 2,
+   "items": 2
+  },
+  "idea": "bridgeStand",
+  "ideaZh": "断桥"
+ },
+ {
+  "id": "pineshade",
+  "name": {
+   "en": "Pineshade",
+   "zh": "松影林"
+  },
+  "players": 2,
+  "facts": {
+   "size": 4608,
+   "players": 2,
+   "mines": 7,
+   "camps": 9,
+   "posts": 2,
+   "items": 3
+  },
+  "idea": "deepJungle",
+  "ideaZh": "密林"
+ },
+ {
+  "id": "gullIsland",
+  "name": {
+   "en": "Gull Island",
+   "zh": "鸥岛"
+  },
+  "players": 2,
+  "facts": {
+   "size": 6656,
+   "players": 2,
+   "mines": 9,
+   "camps": 9,
+   "posts": 0,
+   "items": 3
+  },
+  "idea": "northIsles",
+  "ideaZh": "群岛"
+ },
+ {
+  "id": "stillwater",
+  "name": {
+   "en": "Stillwater",
+   "zh": "静水原"
+  },
+  "players": 4,
+  "facts": {
+   "size": 7168,
+   "players": 4,
+   "mines": 12,
+   "camps": 12,
+   "posts": 2,
+   "items": 8
+  },
+  "idea": "riverValley",
+  "ideaZh": "河谷"
+ },
+ {
+  "id": "twoShores",
+  "name": {
+   "en": "Two Shores",
+   "zh": "双岸"
+  },
+  "players": 4,
+  "facts": {
+   "size": 7168,
+   "players": 4,
+   "mines": 15,
+   "camps": 11,
+   "posts": 2,
+   "items": 5
+  },
+  "idea": "twoShores",
+  "ideaZh": "双岸"
+ }
+]
