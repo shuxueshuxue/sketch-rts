@@ -12,6 +12,7 @@ import type { Point } from '../policy/spatial';
 import { towerRushConstructionCrew } from './tower-rush';
 import { longHaulInvestment } from './long-haul-investment';
 import { miningJobOrder } from './mining-jobs';
+import { unsafeWorkerHalls } from './workforce-safety';
 
 type MiningWorkforceOptions = TeamPolicyOptions & { memory?: AiPolicyContext['memory'] };
 
@@ -73,14 +74,17 @@ export function missingMiningWorkers(snapshot: GameSnapshot, owner: PlayerId, co
 
 /** Mining labor belongs to its walk-connected land; embarked labor is credited only once. */
 function miningWorkerDemand(snapshot: GameSnapshot, owner: PlayerId, constructionCrew: number, options: MiningWorkforceOptions) {
-  const halls = snapshot.buildings.filter(building => building.owner === owner && building.kind === 'townHall');
-  const mining = halls.filter(hall => snapshot.resources.some(mine => mine.amount > 0
+  const ownedHalls = snapshot.buildings.filter(building => building.owner === owner && building.kind === 'townHall');
+  const unsafe = unsafeWorkerHalls(snapshot, owner, options);
+  const halls = ownedHalls.filter(hall => !unsafe.has(hall.id));
+  const allMining = ownedHalls.filter(hall => snapshot.resources.some(mine => mine.amount > 0
     && Math.hypot(mine.x - hall.x, mine.y - hall.y) <= GOLD_MINE_RULES.baseRange));
+  const mining = allMining.filter(hall => !unsafe.has(hall.id));
   const workers = snapshot.units.filter(unit => unit.owner === owner && unit.kind === 'worker');
-  const queued = halls.reduce((total, hall) => total + hall.queue.filter(job => job.unitKind === 'worker').length, 0);
+  const queued = ownedHalls.reduce((total, hall) => total + hall.queue.filter(job => job.unitKind === 'worker').length, 0);
   const outlying = snapshot.resources.filter(mine => mine.amount > 0
     && workers.some(worker => miningJobOrder(worker)?.resourceId === mine.id)
-    && !mining.some(hall => Math.hypot(mine.x - hall.x, mine.y - hall.y) <= GOLD_MINE_RULES.baseRange)
+    && !allMining.some(hall => Math.hypot(mine.x - hall.x, mine.y - hall.y) <= GOLD_MINE_RULES.baseRange)
     && !mineClaimedByAlly(snapshot, owner, mine, options));
   const origins: Point[] = [...mining, ...outlying];
   const regions: { origins: Point[]; missing: number }[] = [];
