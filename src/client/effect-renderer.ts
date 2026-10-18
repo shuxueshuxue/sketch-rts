@@ -122,7 +122,8 @@ export function renderWorldEffects(options: RenderWorldEffectsOptions) {
       continue;
     }
 
-    if (effect.type === "boardingBlocked") {
+    // An order that could not be carried out (see @@@errand): the same mark as a refused boarding.
+    if (effect.type === "boardingBlocked" || effect.type === "orderEnded") {
       ctx.save();
       ctx.strokeStyle = "#c37639"; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.moveTo(point.x-5,point.y-12); ctx.lineTo(point.x+5,point.y-2);

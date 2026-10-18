@@ -8,6 +8,7 @@ import { towerTopLift } from "./tower-presentation";
 import { canStandOnTower, isFortifiedTower } from "../shared/tower-garrison";
 import { circleInPolygon, worldToLocal, shipProfile } from "../shared/ship-geometry";
 import { areEnemyOwners } from "../shared/sim/command-validation";
+import { canReach } from "../shared/naval";
 import type { Building, GameCommand, GameSnapshot, Obstacle, Owner, PlayerId, ResourceNode, Unit, WorldItem } from "../shared/types";
 
 type Point = { x: number; y: number };
@@ -91,13 +92,19 @@ export function pointerTarget(snapshot: Pick<GameSnapshot, "items" | "resources"
 // in Warcraft III: workers mine a mine and repair own damaged buildings or mechanical units; soldiers board an own transport (see
 // @@@transport) and climb onto an own fortified tower (see @@@tower-garrison); an enemy's or the creeps' unit or building, or rocks or a gate, is attacked; an ally's unit is followed
 // (see @@@follow). Anything else (an own unit or building, an ally's building, a mine for soldiers) is a move there.
+// @@@context-reach - An attack goes to the selected units that can come within reach of the target, by the sim's own
+// test (canReach: a footman reaches no ship out on deep water; crew on a deck are left to boarding); the others are
+// walked there (the caller moves them).
+// When none can, the click is refused with the reason, instead of an order the whole selection could never carry out.
+export type ContextRefusal = { refusal: "unreachable" };
+
 export function targetCommand(
-  snapshot: Pick<GameSnapshot, "teams"> & Partial<Pick<GameSnapshot,"items" | "variants">>,
+  snapshot: Pick<GameSnapshot, "teams" | "map" | "units"> & Partial<Pick<GameSnapshot,"items" | "variants">>,
   owner: PlayerId,
   selected: readonly Unit[],
   target: Exclude<PointerTarget, { kind: "item" }>,
   queued = false,
-): GameCommand | undefined {
+): GameCommand | ContextRefusal | undefined {
   const ids = (units: readonly Unit[]) => units.map((unit) => unit.id);
   const workers = selected.filter((unit) => unit.kind === "worker");
   if (target.kind === "resource") return workers.length > 0 ? { type: "mine", unitIds: ids(workers), resourceId: target.resource.id, queued } : undefined;
@@ -111,7 +118,11 @@ export function targetCommand(
     if(crew.length)return {type:'board',unitIds:ids(crew),transportId:target.unit.id,queued};
     if(relation==='enemy' || relation==='creep' || selected.some(unit=>unit.deck))return undefined;
   }
-  if (relation === "enemy" || relation === "creep") return { type: "attack", unitIds: ids(selected), targetId: thing.id, queued };
+  if (relation === "enemy" || relation === "creep") {
+    // Crew on a deck reach across by boarding, which their own order sees to: they keep the attack as given.
+    const strikers = selected.filter((unit) => unit.deck || canReach(snapshot.map, unit, thing, snapshot.units));
+    return strikers.length ? { type: "attack", unitIds: ids(strikers), targetId: thing.id, queued } : { refusal: "unreachable" };
+  }
   if (target.kind === "building") {
     const damaged = relation === "own" && target.building.hp < target.building.maxHp;
     if (damaged && workers.length > 0) return { type: "repair", unitIds: ids(workers), buildingId: target.building.id, queued };

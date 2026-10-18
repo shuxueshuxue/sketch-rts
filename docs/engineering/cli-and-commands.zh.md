@@ -136,11 +136,28 @@ type OrderEndReason = 'target-gone' | 'unreachable' | 'blocked' | 'stuck' | 'no-
 - **结束带原因**：订单结束时发一个 `orderEnded { unitId, order, reason }` 效果，取代现在只有登船才有的 `boardingBlocked`。overlay、replay 探针和 YATU 都读它。Art 的"跳板被毁后 boardShip 静默变 idle"、Tower 的上船冻结，都会直接显示原因。
 - **登船去掉"借壳"**：board 订单显式记录阶段 `queued | approaching | waiting(blockedBy) | ferrying`，不再临时换成 frontRank attack 再换回来（Tower：订单显示 board，实际走的是 attack 的寻路）。Room 要求的 queued / blocked-by / no-route 可以从这里读到。
 
+**第 5 批落地情况（errand 部分）**：
+- **新模块**：`src/shared/approach.ts`，内容是 `OrderEndReason` 和 `ERRAND_REACH`（72）。拾取、转交、丢下、跟随里的四个 72 收成了这一个常量。
+- **结束**：`endOrder(game, unit, reason)` 把订单置为 idle，同时发一个 `orderEnded` 效果，带 orderType 和 reason。效果 id 由单位加 tick 组成，不推进 nextId，所以不会改变之后的实体编号。
+- **走**：`errandWalk(game, unit, goal, reached, rule)`，有两种规则。
+  - "walk"：和 move 的结束判定相同（贴着建筑、贴着已到达的友军、甲板走到边，都算走完）。施法、上塔、物品跑腿一直是这个判定，保持不变。
+  - "ground"：拾取、修建筑、修机械原来永远走不完，现在用这个。只对不在甲板上的陆地单位生效，而且只有"地面本身再也走不近"才算走完。它不用贴墙规则，因为 mounted-micro 测试里，矿在 hall 和 workshop 之间，贴着 workshop 的工人其实还能绕过去；它也不处理甲板，因为修船工人还要跨到相邻的船上。
+- **采矿例外**：矿在别的岛上不算够不着。房间 AI 就是这样扩张的，先下采矿订单，再用运输船摆渡过去，有 19 个测试依赖这一点。所以采矿只在矿没了时才以 target-gone 结束。
+- **看门狗**：进展看门狗仍然只有 build 有（结束原因记为 stuck），这次没有推广到别的 errand。
+- **建筑间隙**：只剩 `buildingWorkGap` 一处，build 的内联副本已删掉。
+
 ### 3.4 右键上下文命令
 
 `targetCommand` 改成返回 `{ command?, refusal? }`，用 3.3 的同一个 `reachGap` 加上 `strikeReach`，逐个判断选中的单位能不能执行：
 - 能打到、走到目标的那部分单位拿到命令，其余的退化成 `move`（今晚"工人打不到大单位"就出在这里）；
 - 一个都不能时，返回 refusal 并在 HUD 显示原因，不再静默变成 move。
+
+**第 5 批落地情况（右键部分）**：
+- **判定**：只用于 attack，用的是 sim 自己的 `canReach`。
+- **能打到的**：拿到 attack 命令；其余的单位由调用方给一个 move，走到点击处。
+- **一个都不能时**：返回 `{ refusal: "unreachable" }`，HUD 显示"选中的单位都够不着这个目标"。
+- **甲板上的船员**：保持原来的 attack，因为跨船靠的是登船，等登船阶段那部分再处理。
+- **其他命令**：mine、repair 等仍按原逻辑，它们走不到时由 sim 的 orderEnded 报告原因。
 
 ### 3.5 建筑工作队列（和 Tower Lane 对齐，采用他们的形状）
 
