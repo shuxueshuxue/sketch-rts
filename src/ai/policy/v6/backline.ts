@@ -109,14 +109,24 @@ function screenAnchor(caster: Unit, frontNear: (point: Point) => Unit[], threats
   const screen = frontNear(caster);
   const front = screen.length >= MIN_SCREEN ? averagePoint(screen) : undefined;
   const threats = threatsNear(front ?? caster);
-  const place = (point: Point, retreat = true) => anchorAt ? anchorAt(caster, point, retreat) : point;
-  if (threats.length === 0) return place(front ? step(front, home, FOLLOW_DEPTH) : post);
+  const place = (point: Point, retreat: boolean) => anchorAt ? anchorAt(caster, point, retreat) : point;
+  if (threats.length === 0) {
+    const point = front ? step(front, home, FOLLOW_DEPTH) : post;
+    return place(point, !front || distance(point, home) < distance(caster, home));
+  }
   const threat = averagePoint(threats);
-  if (close && front) return place(step(front, away(front, threat), V8_SCREEN_DEPTH), false);
+  // Following a screen toward the enemy is an advance, including moving inside
+  // a charger's minimum range. Escape-road checks apply when stepping away.
+  const withdrawing = (point: Point) => (point.x - caster.x) * (caster.x - threat.x)
+    + (point.y - caster.y) * (caster.y - threat.y) > 0;
+  if (close && front) {
+    const point = step(front, away(front, threat), V8_SCREEN_DEPTH);
+    return place(point, withdrawing(point));
+  }
   let anchor = front ? step(front, away(front, threat), SCREEN_DEPTH) : step(post, home, FALLBACK_STEP / 2);
   // Behind the front is not enough if a shooter or tower still reaches that spot: keep backing off toward home.
   for (let tries = 0; tries < 4 && inReach(anchor, threats, towers); tries += 1) anchor = step(anchor, home, FALLBACK_STEP / 2);
-  return place(anchor);
+  return place(anchor, withdrawing(anchor));
 }
 
 // With no real front to stand behind, casters wait where the general holds or guards, a step short of a camp it creeps, and at home
