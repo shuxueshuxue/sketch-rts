@@ -127,7 +127,7 @@ export class CommandFrameRuntime<State = unknown> {
 
   private validate(commands: CommandEnvelope[], options: { purpose: ValidationPurpose; rejectionLabel?: RuntimeFrameOptions["rejectionLabel"] }): void {
     if (commands.length === 0) return;
-    // Validation changes nothing, so every command reads the game itself (see @@@legality-reads-live-game in frame.ts).
+    // Validation changes nothing, so every command reads the game itself (see @@@legality-reads-live-game in sim.ts).
     for (const [index, entry] of commands.entries()) {
       const rejection = commandRejection(this.options.game, entry, options.purpose);
       if (rejection) throw new Error(`${options.rejectionLabel?.(entry, index) ?? this.options.rejectionLabel}: ${rejection}`);

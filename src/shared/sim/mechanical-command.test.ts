@@ -16,7 +16,7 @@ describe("mechanical command legality", () => {
     target.hp /= 2;
     const snapshot = snapshotGame(game);
     expect(checkCommandLegality(snapshot, "player", { type: "cast", unitId: priest.id, ability: "heal", targetId: target.id }))
-      .toEqual({ message: "Healing cannot restore mechanical units", transient: false });
+      .toEqual({ message: "Healing cannot restore mechanical units", transient: false, reason: "target" });
     expect(checkCommandLegality(snapshot, "player", { type: "repairUnit", unitIds: [worker.id], targetId: target.id })).toBeUndefined();
   });
 

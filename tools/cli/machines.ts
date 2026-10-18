@@ -13,6 +13,8 @@ export type MachineConfig = {
   root: string;
   /** Shell lines run before every command there. */
   prelude?: string;
+  /** The evidence store on that machine (see `sketch evidence`): files named by their sha256, never rewritten. */
+  evidence?: string;
 };
 
 export type MachinesFile = { default?: string; machines: Record<string, MachineConfig> };

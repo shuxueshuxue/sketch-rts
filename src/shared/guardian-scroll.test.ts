@@ -80,7 +80,7 @@ describe('guardian scroll area balance', () => {
     const game = sketchScene('neutral-guardian').map('bareDuel').replaceDefaults().player('player')
       .unit('neutral', 'wildling', 1500, 1500, { id: 'carrier' })
       .item('scroll', 'guardianScroll', 0, 0, { carrierId: 'carrier' }).build().createGame();
-    expect(() => cast(game)).toThrow('Unknown player item user carrier');
+    expect(() => cast(game)).toThrow('Unknown player item carrier carrier');
     expect(game.items.map(item => item.id)).toEqual(['scroll']);
     expect(game.effects.some(effect => effect.type === 'guardianField')).toBe(false);
     expect(game.units[0]!.effects).toEqual([]);

@@ -24,6 +24,9 @@ On a machine the CLI keeps:
 - `node_modules/<lock hash>`: one install per package-lock, which copies link into.
 - `runs/<run id>`: reports of a run.
 
+A machine may also name an `evidence` directory: the store `sketch evidence` writes to (the A100's
+`/codegeex/jeffry/sketch-rts-evidence`). Objects there are `sha256/<hash of their bytes>` and are never rewritten.
+
 Every command runs in its own process group, and a run only ever kills the groups it started.
 
 ## Commands
@@ -41,3 +44,9 @@ Every command runs in its own process group, and a run only ever kills the group
   the fork; commands still in flight are not carried over).
 - `scripts audit [--dead] [--check]` reports which files under `scripts/` are still referenced by package.json, CI,
   src/, tools/ or a live script.
+- `evidence push <file|dir> [--pr N] [--on M]` copies raw evidence (a trace, an archive, frame dumps; a directory
+  travels as one gzipped tar that packs to the same bytes each time) to the evidence store and writes
+  `<path>.evidence.json` next to it, a small pointer (sha256, size, name, machine, commit, PR) to commit in its place.
+  `evidence get <pointer> [--out PATH]` fetches it back and checks the sha256.
+- `evidence check [--base origin/main] [--ref HEAD]` runs `scripts/check-file-sizes.sh`, the same size rule CI applies to
+  the files a branch adds or changes.
