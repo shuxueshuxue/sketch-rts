@@ -20,6 +20,9 @@ export function standingShadow(b: CanvasRenderingContext2D, foot: { x: number; y
   const along = shadowOffset(1);
   b.save();
   b.transform(1, 0, -along.x / TILT, -along.y / TILT, foot.x, foot.y);
+  // Only what rises above the foot casts: a boulder or a mine drawn round its foot has its lower half under the ground,
+  // as on a card, where the 3D world's sun casts nothing of it.
+  b.beginPath(); b.rect(-1e4, -1e4, 2e4, 1e4); b.clip();
   b.filter = "brightness(0)";
   b.globalAlpha *= .24;
   paint(b);

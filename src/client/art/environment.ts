@@ -256,8 +256,6 @@ export function mineStage(mine: { amount: number; startAmount: number }): MineSt
 /** The art spans about 84 across (x -42 to 42), round the mine's centre. */
 export function paintMine(b: Brush, stage: MineStage = "rich") {
     const spent = stage === "collapsed";
-    ellipse(b, 4, 22, 42, 12, "#38302920");
-    ellipse(b, 1, 22, 32, 7, "#38302935");
     // A worked-out hill loses its warmth: the same rocks, greyed.
     const tone = (color: string, grey: string) => spent ? grey : color;
     const rock = (p:number[][], color:string) => { polygon(b,p,color,"#55554d",.65); line(b,p.slice(0,3),"#c5bfab",.75); };
@@ -321,10 +319,6 @@ export function paintObstacle(c: Brush, obstacle: Pick<Obstacle, "kind" | "radiu
   // The point `t` of the way across (-1 to 1, one side of the way to the other), `lift` above the ground.
   const at = (t: number, lift = 0): Point => ({ x: across.x * r * t, y: across.y * r * t - lift });
   const cracked = obstacle.hp < obstacle.maxHp / 2;
-  c.save();
-  c.rotate(Math.atan2(across.y, across.x));
-  ellipse(c, 0, r * 0.08, r * 1.2, r * 0.5, "#35493726");
-  c.restore();
   if (obstacle.kind === "rocks") {
     const stones = [[-0.98, 0.44], [-0.55, 0.58], [-0.08, 0.64], [0.4, 0.58], [0.94, 0.46], [-0.76, 0.38], [0.16, 0.42], [0.68, 0.36]] as const;
     const placed = stones.map(([t, size], index) => ({ ...at(t), size: r * size, index, back: index >= 5 }));

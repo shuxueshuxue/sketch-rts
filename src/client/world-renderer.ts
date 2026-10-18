@@ -23,7 +23,7 @@ import { drawAtlasCorpse, drawAtlasBuilding, drawAtlasCamp, drawAtlasGround, dra
 import { renderWorldEffects } from "./effect-renderer";
 import { drawScorchedUnitFlames } from "./art/canvas-effects";
 import { battlefieldEffectFrame, drawUnitStatusEffects } from './ability-effects';
-import { footprintCentre, footprintSquare } from "./footprint-view";
+import { footprintSquare, mineStanding } from "./footprint-view";
 import { creatureShadow } from "./art/painted-creatures";
 import { unitGlyphScale } from "./glyphs";
 import type { createI18n } from "./i18n";
@@ -234,10 +234,10 @@ export function drawWorld(frame: WorldFrame) {
   if(!frame.depthSelection)drawGroundSelectionMarkers(painter);
   // The ground's props only: whatever stands is ordered with the actors by its foot (see @@@prop-stands).
   if (frame.story && frame.props) drawStoryProps(ctx, {...frame.story,props:frame.story.props.filter(prop=>propStand(prop.kind)==='ground')}, (point) => worldToScreen(painter, point), (point, pad) => nearScreen(painter, point, pad), frame.props, painter.now);
-  drawResources(painter, snapshot.resources);
+  // Mines, rocks and gates stand (docs/art/render-contract.zh.md): in the 3D world as cards, in the Canvas world with the
+  // actors by their feet.
   drawMercenaryCamps(painter, snapshot.mercenaryCamps,false,frame.pass==='ground');
   if (snapshot.shops) drawShops(painter, snapshot.shops,false,frame.pass==='ground');
-  drawObstacles(painter, snapshot.obstacles ?? []);
   drawItems(painter, snapshot.items);
   if (frame.story) drawStoryGround(ctx, frame.story, (point) => worldToScreen(painter, point), (point, pad) => nearScreen(painter, point, pad));
   if(combat)drawCombatGround(ctx,combat,combatProjection);
@@ -254,7 +254,7 @@ export function drawWorld(frame: WorldFrame) {
   if(frame.pass==='ground'){ctx.restore();return;}
   painter.engaged=viewIndex.engagedIds();
   painter.abilityEffects=battlefieldEffectFrame(snapshot);
-  if(frame.pass==='overlay'){drawMercenaryCamps(painter,snapshot.mercenaryCamps,true);if(snapshot.shops)drawShops(painter,snapshot.shops,true);}
+  if(frame.pass==='overlay'){drawMercenaryCamps(painter,snapshot.mercenaryCamps,true);if(snapshot.shops)drawShops(painter,snapshot.shops,true);drawSiteLabels(painter);}
   // A standing prop that burns is a card in the 3D world; its flames go over it.
   if(frame.pass==='overlay'&&frame.story)for(const prop of frame.story.props)if(prop.state==='burning'&&propStand(prop.kind)==='standing'){const at=worldToScreen(painter,prop);if(nearScreen(painter,at,140*prop.scale))drawPropFlames(ctx,prop,at,painter.now);}
   // Plans are a private overlay: they never enter target, visibility or pathing indexes.
@@ -278,19 +278,28 @@ export function drawWorld(frame: WorldFrame) {
   else {
     // A troop on a tower's top is drawn over its tower, front spots last (see @@@tower-garrison).
     type StoryProp=NonNullable<WorldFrame['story']>['props'][number];
-    const depth=(a:Unit|Building|StandingTerrainObject|StoryProp)=>{const tower='order' in a?garrisonTower(snapshot.buildings,a):undefined;return tower?tower.y+1+(a.y-tower.y+50)/100:a.y;};
+    type Standing=Unit|Building|StandingTerrainObject|StoryProp|ResourceNode|Obstacle;
+    // A mine stands on its footprint's centre (see @@@structure-body); a troop on a tower's top over its tower.
+    const depth=(a:Standing)=>{if('amount' in a)return mineFoot(painter,a).foot.y;const tower='order' in a?garrisonTower(snapshot.buildings,a):undefined;return tower?tower.y+1+(a.y-tower.y+50)/100:a.y;};
     // The terrain's trees and boulders stand among them, in the same order by foot (see @@@standing-terrain).
     const standing=snapshot.map.terrain?standingTerrain(snapshot.map.terrain).filter(a=>nearScreen(painter,worldToScreen(painter,a),140*a.scale)):[];
-    const actors:(Unit|Building|StandingTerrainObject|StoryProp)[]=[...snapshot.buildings,...candidateUnits.filter(unit=>!unit.deck)].filter(a=>nearScreen(painter,worldToScreen(painter,a),Math.max(150,a.radius*3)));
+    const actors:Standing[]=[...snapshot.buildings,...candidateUnits.filter(unit=>!unit.deck),...(snapshot.obstacles??[])].filter(a=>nearScreen(painter,worldToScreen(painter,a),Math.max(150,a.radius*3)));
+    actors.push(...snapshot.resources.filter(mine=>nearScreen(painter,worldToScreen(painter,mine),120)));
     // So do the story's standing props (see @@@prop-stands).
     const props=frame.story&&frame.props?frame.story.props.filter(prop=>propStand(prop.kind)==='standing'&&nearScreen(painter,worldToScreen(painter,prop),140*prop.scale)):[];
     actors.push(...standing,...props);byFoot(actors,depth);
-    // Under whatever stands, the shadows the sun casts of the terrain's and the story's standing things (see @@@sun).
+    // Under whatever stands, the shadows the sun casts of it all (see @@@sun): each picture as it is drawn, laid on the
+    // ground from its foot. A ship, a deck's crew and a troop up a tower stand above the ground and cast none here.
     for(const actor of actors){
       if('look' in actor)standingShadow(ctx,worldToScreen(painter,actor),b=>drawStandingObject(b,actor,{x:0,y:0}));
       else if('flip' in actor)standingShadow(ctx,worldToScreen(painter,actor),b=>drawStoryPropPicture(b,actor,{x:0,y:0},frame.props!));
+      else if('amount' in actor){const {foot,size}=mineFoot(painter,actor);standingShadow(ctx,foot,b=>drawAtlasMine(b,{x:0,y:0},mineStage(actor),size));}
+      else if('along' in actor)standingShadow(ctx,obstacleFoot(painter,actor),b=>drawAtlasObstacle(b,actor,{x:0,y:0}));
+      else if('order' in actor){const figure=groundUnitFigure(painter,actor);if(figure)standingShadow(ctx,{x:figure.point.x,y:figure.point.y+figure.feet},b=>figure.draw(b,{x:0,y:-figure.feet}));}
+      else{const figure=buildingFigure(painter,actor);standingShadow(ctx,{x:figure.point.x,y:figure.point.y+figure.feet},b=>figure.draw(b,{x:0,y:-figure.feet}));}
     }
-    for(const actor of actors)if('look' in actor)drawStandingObject(ctx,actor,worldToScreen(painter,actor));else if('flip' in actor)drawStoryProp(ctx,actor,worldToScreen(painter,actor),frame.props!,painter.now);else if('order' in actor){if(shipProfile(actor))drawShipGroup(painter,actor);else drawUnits(painter,[actor]);}else drawBuildings(painter,[actor]);
+    for(const actor of actors)if('look' in actor)drawStandingObject(ctx,actor,worldToScreen(painter,actor));else if('flip' in actor)drawStoryProp(ctx,actor,worldToScreen(painter,actor),frame.props!,painter.now);else if('amount' in actor)drawMine(painter,actor);else if('along' in actor)drawObstacle(painter,actor);else if('order' in actor){if(shipProfile(actor))drawShipGroup(painter,actor);else drawUnits(painter,[actor]);}else drawBuildings(painter,[actor]);
+    drawSiteLabels(painter);
   }
   if (!painter.still && painter.viewer) drawAimLines(painter);
   // Carried objects belong in the inventory, not stacked over a unit's head.
@@ -390,22 +399,33 @@ function drawLandmarks(painter: Painter, landmarks: TerrainLandmark[]) {
   }
 }
 
-function drawResources(painter: Painter, resources: ResourceNode[]) {
+// A mine's foot on the screen and its picture's size (see mineStanding); what is left in it shows in the art.
+function mineFoot(painter: Painter, resource: ResourceNode) {
+  const { size, ...foot } = mineStanding(painter.snapshot, resource);
+  return { foot: worldToScreen(painter, foot), size };
+}
+
+function drawMine(painter: Painter, resource: ResourceNode) {
+  const { foot, size } = mineFoot(painter, resource);
+  drawAtlasMine(painter.ctx, foot, mineStage(resource), size);
+}
+
+// Over whatever stands: the gold left in each mine, and a rock pile's or gate's health.
+function drawSiteLabels(painter: Painter) {
   const { ctx } = painter;
-  for (const resource of resources) {
-    const square = footprintSquare(painter.snapshot, resource, GOLD_MINE_RULES.radius);
-    const point = worldToScreen(painter, square ? footprintCentre(square) : resource);
-    if (!nearScreen(painter, point, 80)) continue;
-    // The hill stands on its two-cell body (see @@@structure-body), its rocks a little past the edge; what is left in it
-    // shows in the art (see @@@mine-stages).
-    const size = square ? (square.right - square.left + 1) * square.cell * 1.1 / 84 : 1, stage = mineStage(resource);
-    drawAtlasMine(ctx, point, stage, size);
-    if (painter.still || stage === "collapsed") continue;
+  for (const resource of painter.snapshot.resources) {
+    const { foot, size } = mineFoot(painter, resource);
+    if (painter.still || !nearScreen(painter, foot, 80) || mineStage(resource) === "collapsed") continue;
     ctx.font = "600 11px ui-monospace, monospace";
     ctx.textAlign = "center";
     ctx.fillStyle = "#776443";
-    ctx.fillText(Math.ceil(resource.amount).toLocaleString(), point.x, point.y + 45 * size);
+    ctx.fillText(Math.ceil(resource.amount).toLocaleString(), foot.x, foot.y + 45 * size);
     ctx.textAlign = "start";
+  }
+  if (painter.still) return;
+  for (const obstacle of painter.snapshot.obstacles ?? []) {
+    const point = obstacleFoot(painter, obstacle);
+    if (obstacle.hp < obstacle.maxHp && nearScreen(painter, point, obstacle.radius + 80)) drawHp(ctx, point.x, point.y - obstacleArtTop(obstacle) - 10, obstacle.hp, obstacle.maxHp);
   }
 }
 
@@ -429,14 +449,14 @@ function drawMercenaryCamps(painter: Painter, camps: MercenaryCamp[],overlayOnly
 }
 
 // Rocks and gates across their ways (see @@@obstacle-art), their health shown once they are struck.
-function drawObstacles(painter: Painter, obstacles: Obstacle[]) {
-  for (const obstacle of obstacles) {
-    const shake = hitFeedbackOffset(painter.snapshot, obstacle,painter.viewIndex.hits);
-    const point = worldToScreen(painter, { x: obstacle.x + shake.x, y: obstacle.y + shake.y });
-    if (!nearScreen(painter, point, obstacle.radius + 80)) continue;
-    drawAtlasObstacle(painter.ctx, obstacle, point);
-    if (!painter.still && obstacle.hp < obstacle.maxHp) drawHp(painter.ctx, point.x, point.y - obstacleArtTop(obstacle) - 10, obstacle.hp, obstacle.maxHp);
-  }
+// A rock pile or gate stands across its way, its foot at its middle, shaken when struck.
+function obstacleFoot(painter: Painter, obstacle: Obstacle) {
+  const shake = hitFeedbackOffset(painter.snapshot, obstacle, painter.viewIndex.hits);
+  return worldToScreen(painter, { x: obstacle.x + shake.x, y: obstacle.y + shake.y });
+}
+
+function drawObstacle(painter: Painter, obstacle: Obstacle) {
+  drawAtlasObstacle(painter.ctx, obstacle, obstacleFoot(painter, obstacle));
 }
 
 function drawShops(painter: Painter, shops: Shop[],overlayOnly=false,groundOnly=false) {
@@ -561,6 +581,33 @@ function drawGangways(painter: Painter) {
   }
 }
 
+// A unit's figure as the Canvas world stamps it: its pose, facing and model, its feet `feet` below the stamp's origin.
+function unitStamp(painter: Painter, unit: Unit) {
+  const model = unit.variant !== undefined ? painter.models?.(unit.variant) : undefined;
+  const scale = unitGlyphScale(unit.radius) * (painter.models && !unit.variant ? .8 : 1), modelScale = Math.max(0.72, unit.radius / 18);
+  const rawPose=painter.reducedMotion||(painter.still&&unitMover(unit.kind)==="sea")?IDLE_FRAME:painter.animation?.frame(unit,painter.now)??IDLE_FRAME;
+  const facing=painter.facing.actionFacing(unit.id,rawPose.direction??rawPose.carryDirection,projectPaperDirection);
+  const pose=projectActionFrame(rawPose,facing), color=ownerInk(unit.owner, painter.snapshot), appearance=appearanceFor(painter.snapshot,unit);
+  const feet=model?17*modelScale:(creatureShadow(unit.kind)?.y??17)*scale;
+  const draw=(b: Brush, at: Point) => model ? drawAtlasModel(b, unit.variant!, model, at, modelScale, color, facing, pose, appearance) : drawAtlasUnit(b, unit.kind, at, scale, color, facing, pose, appearance);
+  return { facing, feet, draw };
+}
+
+// A unit standing on the ground (not on a deck, a gangway or a tower's top): where its stamp goes, and the stamp.
+function groundUnitFigure(painter: Painter, unit: Unit) {
+  if (isInCabin(unit) || unit.deck || shipProfile(unit) || towerTopLift(painter.snapshot.buildings, unit) || gangwayCrewVisualPose(unit, painter.ships, painter.gangways)) return undefined;
+  const shake = hitFeedbackOffset(painter.snapshot, unit, painter.viewIndex.hits), at = drawnPosition(painter, unit);
+  return { point: worldToScreen(painter, { x: at.x + shake.x, y: at.y + shake.y }), ...unitStamp(painter, unit) };
+}
+
+// A building as the Canvas world stamps it: its model's ground centre (paint (0, 19)) `feet` below the stamp's origin.
+function buildingFigure(painter: Painter, building: Building) {
+  const shake = hitFeedbackOffset(painter.snapshot, building, painter.viewIndex.hits), size = buildingSpriteSize(building);
+  const kind = painter.buildingModels?.[building.id] ?? building.kind, color = ownerInk(building.owner, painter.snapshot), open = towerRoofOpen(painter.snapshot.units, building);
+  return { point: worldToScreen(painter, { x: building.x + shake.x, y: building.y + shake.y }), feet: 19 * size / 64,
+    draw: (b: Brush, at: Point) => drawAtlasBuilding(b, kind, at, size, color, open) };
+}
+
 function drawUnits(painter: Painter, units: readonly Unit[], overlayOnly=false) {
   const { ctx, now } = painter;
   const engaged = painter.engaged;
@@ -582,15 +629,11 @@ function drawUnits(painter: Painter, units: readonly Unit[], overlayOnly=false) 
     ctx.fillStyle = unit.owner === "neutral" ? "#f0d9bd" : "#fffbe7";
     ctx.lineWidth = selected ? 4 : 2;
     if (hasCarriedItem(painter.snapshot, unit, "flameCloak")) drawFlameCloakAura(ctx, point, now, unit.radius);
-    const model = unit.variant !== undefined ? painter.models?.(unit.variant) : undefined;
     const blood=painter.combatBody?.get(unit.id);
     if(!overlayOnly||blood){
-      const rawPose=painter.reducedMotion||(painter.still&&unitMover(unit.kind)==="sea")?IDLE_FRAME:painter.animation?.frame(unit,now)??IDLE_FRAME;
-      const facing=painter.facing.actionFacing(unit.id,rawPose.direction??rawPose.carryDirection,projectPaperDirection);
-      const pose=projectActionFrame(rawPose,facing);
-      if (!overlayOnly && model) drawAtlasModel(ctx, unit.variant!, model, point, Math.max(0.72, unit.radius / 18), String(ctx.strokeStyle), facing, pose,appearanceFor(painter.snapshot,unit));
-      else if(!overlayOnly) drawAtlasUnit(ctx, unit.kind, point, scale, String(ctx.strokeStyle), facing, pose, appearanceFor(painter.snapshot,unit));
-      if(blood)drawCombatBody(ctx,blood,{x:point.x,y:point.y+(model?17*Math.max(.72,unit.radius/18):(creatureShadow(unit.kind)?.y??17)*scale)},anchor?.facing??facing);
+      const stamp=unitStamp(painter,unit);
+      if(!overlayOnly)stamp.draw(ctx,point);
+      if(blood)drawCombatBody(ctx,blood,{x:point.x,y:point.y+stamp.feet},anchor?.facing??stamp.facing);
     }
     if(unit.id==='tide-admiral'){
       ctx.fillStyle='#edd094';ctx.strokeStyle='#26373d';ctx.lineWidth=2;

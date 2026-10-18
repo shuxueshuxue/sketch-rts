@@ -33,6 +33,8 @@ function recordingContext() {
     restore: () => void (transform = stack.pop() ?? transform),
     scale: (x: number, y: number) => void (transform = { ...transform, a: transform.a * x, b: transform.b * x, c: transform.c * y, d: transform.d * y }),
     translate: (x: number, y: number) => void (transform = { ...transform, e: transform.e + transform.a * x + transform.c * y, f: transform.f + transform.b * x + transform.d * y }),
+    transform: (a: number, b: number, c: number, d: number, e: number, f: number) => void (transform = { a: transform.a * a + transform.c * b, b: transform.b * a + transform.d * b,
+      c: transform.a * c + transform.c * d, d: transform.b * c + transform.d * d, e: transform.a * e + transform.c * f + transform.e, f: transform.b * e + transform.d * f + transform.f }),
     getTransform: () => ({ ...transform }),
     createLinearGradient: gradient,
     createRadialGradient: gradient,
@@ -64,9 +66,10 @@ function fakeCanvas(width: number, height: number) {
   return { width, height, getContext: () => recordingContext().ctx } as unknown as HTMLCanvasElement;
 }
 
-// Sprites are drawn scaled into a box (five arguments); the paper ground tiles are drawn as they are (three).
+// Sprites are drawn scaled into a box (five arguments); the paper ground tiles are drawn as they are (three). A standing
+// thing's shadow is its sprite again, sheared onto the ground (see @@@sun): not a sprite drawn.
 function spriteDraws(calls: Call[]) {
-  return calls.filter((call) => call.name === "drawImage" && call.args.length === 5 && Number(call.args[3]) < 500);
+  return calls.filter((call) => call.name === "drawImage" && call.args.length === 5 && Number(call.args[3]) < 500 && !call.at?.c);
 }
 
 function duelSnapshot(options: { northX?: number; southX?: number; campStock?: number; cloak?: boolean } = {}): GameSnapshot {
@@ -106,7 +109,7 @@ describe("world renderer", () => {
     const rendered=frame(snapshot,{viewer:'north',selectedIds:new Set([snapshot.units[0]!.id,snapshot.units[1]!.id,building.id])});
     drawWorld(rendered);
     const marks=rendered.calls.map((call,index)=>({call,index})).filter(({call})=>call.name==='strokeRect' || call.name==='stroke' && [RELATION_INK.own,RELATION_INK.enemy].includes(String(call.ink)));
-    const bodies=rendered.calls.map((call,index)=>({call,index})).filter(({call})=>call.name==='drawImage' && call.args.length===5 && Number(call.args[3])<500);
+    const bodies=rendered.calls.map((call,index)=>({call,index})).filter(({call})=>call.name==='drawImage' && call.args.length===5 && Number(call.args[3])<500 && !call.at?.c);
     expect(marks.length).toBeGreaterThanOrEqual(3);expect(bodies.length).toBeGreaterThanOrEqual(3);
     expect(Math.max(...marks.map(mark=>mark.index))).toBeLessThan(Math.min(...bodies.map(body=>body.index)));
   });
@@ -231,14 +234,14 @@ describe("world renderer", () => {
     const facingRight = frame(duelSnapshot({ northX: 300, southX: 200 }));
     drawWorld(facingRight);
     expect(spriteDraws(facingRight.calls)).toHaveLength(2);
-    expect(facingRight.calls.filter((call) => call.name === "scale" && call.args[0] === -1)).toHaveLength(0);
+    expect(spriteDraws(facingRight.calls).filter((call) => call.at!.a < 0)).toHaveLength(0);
 
     // Now south attacks from the right: it turns to face left and its sprite is drawn mirrored.
     const facingLeft = frame(duelSnapshot({ northX: 200, southX: 300 }));
     drawWorld(facingLeft);
     expect(facingLeft.facing.facing("south-footman")).toBe(-1);
     expect(spriteDraws(facingLeft.calls)).toHaveLength(2);
-    expect(facingLeft.calls.filter((call) => call.name === "scale" && call.args[0] === -1 && call.args[1] === 1)).toHaveLength(1);
+    expect(spriteDraws(facingLeft.calls).filter((call) => call.at!.a < 0)).toHaveLength(1);
   });
 
   it('mirrors attached blood with the rendered recovery pose, not a new order facing behind it',()=>{

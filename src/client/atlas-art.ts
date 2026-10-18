@@ -8,12 +8,10 @@ import { paintMine, type MineStage } from "./art/environment";
 import { drawModelPortrait } from './model-portraits';
 import { drawFittedPortrait, clearFittedPortraits } from './art/portrait-fit';
 import { isShipKind,shipProfile } from "../shared/ship-geometry";
-import { unitMover } from "../shared/catalog";
 import { paintCorpse, corpseAppearanceKey, type CorpsePresentation } from "./art/corpses";
 import { paintBuildingModel, type SiteModelKind } from "./art/building-models";
 import { paintFigure } from "./art/painted-units";
-import { creatureShadow } from "./art/painted-creatures";
-import { type Brush, type Point, ellipse, line, polygon } from "./art/kit";
+import { type Brush, type Point, line, polygon } from "./art/kit";
 import { createScratchCanvas } from "./art/scratch-canvas";
 import { UNIT_CARDS } from "./content/units";
 import type { BuildingKind, UnitKind, Unit } from "../shared/types";
@@ -67,13 +65,7 @@ export function drawAtlasUnit(c: Brush, kind: UnitKind, point: Point, scale: num
     const shared=catalogPaintKey(kind,color,pose,presentation);
     const key=shared===undefined?`painted:${kind}:${color}:${facing}:${animationKey(pose)}:${appearanceKey(presentation)}`:`painted:${shared}:${facing}:${appearanceKey(presentation)}`;
     sprite(c, key, point, scale, (b) => {
-      const mounted = UNIT_CARDS[kind].art.bearing === "mounted";
-      const broad = mounted || UNIT_CARDS[kind].art.bearing !== "foot";
-      const feet = creatureShadow(kind);
-      if (unitMover(kind) !== "sea") {
-        ellipse(b, 3, feet?.y ?? 18, feet ? feet.rx * 1.12 : broad ? 29 : 14, feet ? feet.ry * 1.2 : broad ? 6 : 4.5, "#29282418");
-        ellipse(b, 1, feet?.y ?? 17, feet?.rx ?? (broad ? 24 : 10), feet?.ry ?? (broad ? 4.5 : 2.8), "#29282438");
-      }
+      // No shadow under its feet: the world's sun casts it (see @@@sun).
       paintFigure(b, kind, color, pose, facing, presentation);
     }, facing === -1, actionPaintSize(pose,kind));
 
@@ -96,11 +88,6 @@ export function drawAtlasUnitFigure(c:Brush,kind:UnitKind,width:number,height:nu
 /** A campaign unit's own model (see story/cast), cached like the catalog's units, per model and team colour. */
 export function drawAtlasModel(c: Brush, key: string, model: UnitModel, point: Point, scale: number, color: string, facing: Facing = 1, pose: UnitAnimationFrame = IDLE_FRAME,presentation:FigurePresentation={}) {
   sprite(c, `m:${key}:${color}:${facing}:${animationKey(pose)}:${appearanceKey(presentation)}`, point, scale, (b) => {
-    const shadow = model.shadow ?? "foot";
-    if (shadow === "foot") ellipse(b, 2, 16, 17, 6, "#30483630");
-    else if (shadow === "mounted") ellipse(b, 2, 17, 22, 5.5, "#30483630");
-    else if (shadow === "beast") ellipse(b, 2, 15, 20, 5, "#30483630");
-    else if (shadow === "huge") ellipse(b, 2, 18, 30, 8, "#30483638");
     model.paint(b, color, pose, facing,presentation);
   }, facing === -1, model.paint.paintSize?.(pose)??actionPaintSize(pose));
 }
