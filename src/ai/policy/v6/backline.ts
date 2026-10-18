@@ -94,7 +94,7 @@ export function planCasterScreen(snapshot: GameSnapshot, owner: PlayerId, option
     const anchor = screenAnchor(caster, frontNear, threatsNear, towers, home, post, close, anchorAt);
     if (!anchor || distance(caster, anchor) <= REPOSITION_SLACK) {
       // A rejected or already reached post must also cancel the previous walk.
-      if (anchorAt && caster.order.type === "move" && (!anchor || distance(caster.order, anchor) > REPOSITION_SLACK)) commands.push({ type: "stop", unitIds: [caster.id] });
+      if (anchorAt && caster.order.type === "move" && (!anchor || distance(caster.order, anchor) > REPOSITION_SLACK)) commands.push({ type: "holdPosition", unitIds: [caster.id] });
       continue;
     }
     commands.push(resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: [caster.id], x: anchor.x, y: anchor.y }, options));
