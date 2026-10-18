@@ -104,7 +104,7 @@ export class Machine {
     if (near) {
       progress(`copying ${sha.slice(0, 10)} to ${this.name} from its copy of ${near.sha.slice(0, 10)} (${near.changed} files differ)`);
       const patch = git(["diff", "--binary", "--no-renames", near.sha, sha, "--", ...COPY_PATHSPEC]);
-      await this.runOk(`rm -rf ${quote(staging)} && cp -a ${quote(this.path("trees", near.sha))} ${quote(staging)} && rm -f ${quote(staging)}/.sketch-complete && cd ${quote(staging)} && git apply --whitespace=nowarn --unsafe-paths -`, { input: patch.stdout!, quiet: true });
+      await this.runOk(`rm -rf ${quote(staging)} && cp -a ${quote(this.path("trees", near.sha))} ${quote(staging)} && rm -f ${quote(staging)}/.sketch-complete && cd ${quote(staging)} && git apply --allow-empty --whitespace=nowarn --unsafe-paths -`, { input: patch.stdout!, quiet: true });
     } else {
       const files = copiedFiles(sha);
       progress(`copying ${sha.slice(0, 10)} to ${this.name} (${files.length} files, gzipped)`);
