@@ -44,13 +44,14 @@ describe("canonical game state", () => {
   it("gives the recorded checksums for fresh games, on any machine and in any locale", () => {
     // Version 20 keeps a ship's last hull hit; fresh games have none, and their checksums stand.
     // Fresh-game goldens also include the closer 216-unit initial mine layout, and each mine's start amount.
+    // Per-player camp budgets give each start at least two green camps, changing the seeded ladder's initial state.
     expect(CHECKSUM_VERSION).toBe(20);
     // Repeat creation to catch accidental dependence on a process-global random stream.
     for (let repeat = 0; repeat < 2; repeat += 1) {
       expect(checksumGame(createGame("bareDuel", { aiPlayers: [] }))).toBe("a22ffc6e");
       const ladder = createGame("ladder", { players: ["v8", "p1", "p2"], teams: { v8: "a", p1: "b", p2: "b" }, races: { v8: "ember", p1: "grove", p2: "ember" }, layout: { seed: "canonical" } });
       // The seeded map carries an environment recipe and habitat-scored scenery.
-      expect(checksumGame(ladder)).toBe("bda0e2e0");
+      expect(checksumGame(ladder)).toBe("e8933abb");
     }
   });
 

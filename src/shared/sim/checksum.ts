@@ -5,6 +5,8 @@ export { canonicalGameState, type CanonicalGameState } from "./canonical";
 // Which way checksumGame hashes, for anything that stores a checksum to compare later. 1: keys and ids ordered by
 // localeCompare (locale-dependent); 2: by code unit (see @@@canonical-order). Checksums of different versions cannot be
 // compared: the same game mostly hashes differently under each.
+// This versions the canonical hash representation, not the seed-to-initial-map mapping: changing a map changes the
+// state being hashed, while the checksum format can stay the same.
 // 3: persistent corpse records participate in deterministic state checks.
 // 4: movement and push velocities use distance per second.
 // 5: live deck crew, local deck orders and continuous hull poses.
