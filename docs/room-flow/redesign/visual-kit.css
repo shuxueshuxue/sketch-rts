@@ -1,6 +1,6 @@
 /* Room setup redesign: the shared look for every layout option (Art Lane). Layout and flow belong to each prototype page;
    this file only says what a screen, a button, a map and a seat look like, in the game's own materials. */
-@import url("../../../src/client/game-materials.css");
+@import url("game-materials.css");
 
 :root {
   --rs-selected: #ae8134;
