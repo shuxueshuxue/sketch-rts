@@ -1,4 +1,4 @@
-import type { GameSnapshot, PlayerId } from "../shared/types";
+import type { GameCommand, GameSnapshot, PlayerId } from "../shared/types";
 
 export type SketchRtsDebugView = {
   roomId?: string;
@@ -10,6 +10,17 @@ export type SketchRtsDebugView = {
   localPlayerUnitIds: string[];
   localPlayerBuildingIds: string[];
   enemyOrders?: Record<string, number>;
+};
+
+/** Dev-build hooks for scene scripts (see @@@debug-hooks). */
+export type SketchRtsDebugHooks = {
+  camera(x: number, y: number, zoom?: number): void;
+  select(ids: string[]): void;
+  command(command: GameCommand): boolean;
+  /** The page point (CSS pixels) where a world point is drawn now. */
+  screenOf(x: number, y: number): { x: number; y: number };
+  /** The page has opened its first screen and no art is loading (the home's, or a match's). */
+  ready(): boolean;
 };
 
 export function createSketchRtsDebugView(input: {
