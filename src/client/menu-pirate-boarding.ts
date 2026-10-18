@@ -127,7 +127,7 @@ export function createPirateBoarding(seed = 1): MenuSceneRun {
   const standOff = BAND_GAP - nearestGun();
   a.x += out.x / outward * standOff - ahead.x * LEG; a.y += out.y / outward * standOff - ahead.y * LEG;
   // Until the bridge is out the boarders keep to the far rail, out of the burst of the admiralty's balls on the near one.
-  const far = { x: -out.x / outward * shipProfile(a)!.beam, y: -out.y / outward * shipProfile(a)!.beam };
+  const far = { x: out.x / outward * shipProfile(a)!.beam, y: out.y / outward * shipProfile(a)!.beam };
   for (const unit of game.units) if (unit.deck?.shipId === a.id) {
     const local = worldToLocal(a, { x: a.x + far.x, y: a.y + far.y }), spot = deckPlacement(a, unit, game.units, { x: unit.deck.x, y: local.y * .3 });
     if (spot) unit.deck = { shipId: a.id, ...spot };
