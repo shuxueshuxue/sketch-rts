@@ -1,3 +1,5 @@
+import { CAPITAL_MODELS } from "./art/model-manifest";
+
 // @@@prop-stands - Every kind of prop declares how it meets the ground (docs/art/render-contract.zh.md, rule 1): it
 // stands (it hides what stands behind it and is hidden by what stands before, by its foot; see @@@standing-field) or it
 // lies flat (a ground mark under everything that stands). A prop's foot is the point its scene sets it at.
@@ -12,10 +14,10 @@ export const PROP_STANDS: Readonly<Record<string, PropStand>> = {
   citadel: "standing",
   // The Ashen March's (campaigns/ashen-march/scenery.ts).
   heartwood: "standing",
-  // The capital street's (menu-capital-street.ts): its paving and drains lie in the street.
-  "capital-house": "standing", "capital-tavern": "standing", "capital-market": "standing", "capital-table": "standing",
-  "capital-bench": "standing", "capital-paving": "ground", "capital-planter": "standing", "capital-lamp": "standing",
-  "capital-drain": "ground", "capital-bundles": "standing", "capital-barrels": "standing",
+  // The capital street's (menu-capital-street.ts): its houses and furniture are models (see @@@capital-models); its
+  // paving and drains lie in the street.
+  ...Object.fromEntries(CAPITAL_MODELS.map(kind => [kind, "standing" as const])),
+  "capital-paving": "ground", "capital-drain": "ground",
 };
 
 /** How a prop kind meets the ground; a kind that never declared it is an error, not a guess. */

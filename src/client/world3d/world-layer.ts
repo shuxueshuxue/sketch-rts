@@ -13,6 +13,7 @@ import {CombatInk,type CombatAnchor} from './combat-ink';
 import * as THREE from 'three';
 import { perf } from '../perf-overlay';
 import { worldModels,matchModelKeys,snapshotModelKeys } from './model-library';
+import { SCENE_MODELS } from '../art/model-manifest';
 import { activateModelPortraits } from './model-portraits';
 import { ActorBatches, setInkZoom, type ModelLook } from './batches';
 import { PaintedCardBatches,DEFAULT_CARD_BANKS } from './painted-card-batches';
@@ -375,7 +376,7 @@ export class World3DLayer {
     },frame.reducedMotion)??0;
     const visible=(x:number,y:number,pad=180)=>x>=frame.view.x-pad && y>=frame.view.y-pad && x<=frame.view.x+frame.view.width/zoom+pad && y<=frame.view.y+frame.view.height/zoom+pad;
     this.positions.clear();this.combatAnchors.clear();this.shipPoses.clear();this.gangwaySurfaces.clear();this.batches.begin();this.cards.begin();this.remainsCards.begin();this.propCards.begin();this.selection.begin();
-    for(const site of [...snapshot.mercenaryCamps.map(site=>({...site,model:'camp',scale:site.radius/32})),...(snapshot.shops??[]).map(site=>({...site,model:'shop',scale:site.radius/32})),...(frame.story?.props??[]).filter(site=>['statue','well','beacon','citadel'].includes(site.kind)).map(site=>({...site,id:`prop:${site.id}`,model:site.kind}))]){
+    for(const site of [...snapshot.mercenaryCamps.map(site=>({...site,model:'camp',scale:site.radius/32})),...(snapshot.shops??[]).map(site=>({...site,model:'shop',scale:site.radius/32})),...(frame.story?.props??[]).filter(site=>SCENE_MODELS.has(site.kind)).map(site=>({...site,id:`prop:${site.id}`,model:site.kind}))]){
       const model=this.template(`buildings/${site.model}`,'Building');if(!model)continue;
       // A shop or camp is a body like a building (see @@@structure-body) and stands on its footprint the way a building
       // does; a story's prop keeps its own scale.
@@ -399,9 +400,11 @@ export class World3DLayer {
     if(frame.story&&frame.props)for(const prop of frame.story.props){
       const id=`prop:${prop.id}`,paint=frame.props(prop.kind);
       if(!paint||propStand(prop.kind)!=='standing'||this.positions.has(id))continue;
-      this.positions.set(id,{x:prop.x,y:prop.y,bodyY:prop.y,topY:prop.y-PROP_TILE/2*prop.scale});
-      if(!visible(prop.x,prop.y,PROP_TILE*prop.scale))continue;
-      this.propCards.add(`prop:${prop.kind}:${prop.state??''}:${prop.flip?1:0}`,density,ctx=>{if(prop.flip)ctx.scale(-1,1);paint(ctx,prop.state);},this.pose(prop.x,prop.y,0,0,prop.scale),id,PROP_FOOT,PROP_TILE);
+      // A painter larger than its cell paints below its size; its card is drawn back up (see PropPainter.paintScale).
+      const scale=prop.scale/(paint.paintScale??1);
+      this.positions.set(id,{x:prop.x,y:prop.y,bodyY:prop.y,topY:prop.y-PROP_TILE/2*scale});
+      if(!visible(prop.x,prop.y,PROP_TILE*scale))continue;
+      this.propCards.add(`prop:${prop.kind}:${prop.state??''}:${prop.flip?1:0}`,density,ctx=>{if(prop.flip)ctx.scale(-1,1);paint(ctx,prop.state);},this.pose(prop.x,prop.y,0,0,scale),id,PROP_FOOT,PROP_TILE);
     }
     // A mine is painted on the ground (see @@@mine-stages); its ring is the same footprint square as every other body's.
     for(const mine of snapshot.resources)if(frame.hoveredId===mine.id && visible(mine.x,mine.y))this.foundationMarker(frame,{x:mine.x,y:mine.y,radius:GOLD_MINE_RULES.radius},mineRingInk(mine),false);

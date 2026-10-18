@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>王城效果图</title>
+<style>
+  :root { --paper:#efe6cf; --ink:#352619; --muted:#786146; --title:#572f1b; --brass:#ae8134; --edge:#87674255; --wood:#3f2716; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--wood); color:var(--ink); font:14px/1.6 "PingFang SC","Microsoft YaHei","Segoe UI",sans-serif; }
+  main { max-width:1240px; margin:0 auto; padding:24px 16px 48px; }
+  .sheet { background:var(--paper); border:6px solid #2a170b; outline:1px solid #c9a96a; outline-offset:-10px; padding:26px 28px; }
+  h1 { margin:0 0 4px; color:var(--title); font:600 28px "Songti SC","Noto Serif CJK SC",Georgia,serif; letter-spacing:1px; }
+  .lede { margin:0 0 20px; color:var(--muted); }
+  .tabs { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 14px; }
+  .tabs button { min-height:36px; padding:0 16px; border:1px solid var(--edge); background:#f8f0dc; color:var(--ink); font:600 14px inherit; cursor:pointer; }
+  .tabs button[aria-pressed="true"] { background:var(--brass); border-color:var(--brass); color:#fff7e0; }
+  .tabs .sep { width:1px; background:var(--edge); margin:0 6px; }
+  figure { margin:0; }
+  figure img { display:block; width:100%; height:auto; border:3px solid #2f1c0d; background:#2d4c56; }
+  figcaption { margin-top:8px; color:var(--muted); font-size:13px; }
+  .grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin-top:26px; }
+  .card { border:1px solid var(--edge); background:#f8f0dc; padding:14px 16px; }
+  .card h2 { margin:0 0 6px; color:var(--title); font:600 18px "Songti SC","Noto Serif CJK SC",Georgia,serif; }
+  .card ul { margin:0; padding-left:18px; }
+  .card li { margin:2px 0; }
+  .pick { border-color:var(--brass); box-shadow:0 0 0 1px var(--brass) inset; }
+  .note { margin-top:22px; color:var(--muted); font-size:13px; }
+  @media (max-width:760px) { .grid { grid-template-columns:1fr; } .sheet { padding:18px 14px; } h1 { font-size:22px; } }
+</style>
+</head>
+<body>
+<main><div class="sheet">
+  <h1>王城：两版效果图</h1>
+  <p class="lede">都是真实引擎渲染的画面（mac1，Chromium，1600×900，同一帧时间）。点按钮切换版本和视角。</p>
+  <div class="tabs" role="group" aria-label="版本">
+    <button data-version="main">现在（main）</button>
+    <button data-version="a" aria-pressed="true">A 版：3D 同语言</button>
+    <button data-version="b">B 版：2D 精修</button>
+    <span class="sep"></span>
+    <button data-view="wide" aria-pressed="true">全景</button>
+    <button data-view="close">特写</button>
+  </div>
+  <figure><img id="shot" src="a-wide.webp" alt=""><figcaption id="caption"></figcaption></figure>
+  <div class="grid">
+    <section class="card"><h2>现在</h2><ul>
+      <li>房子是平涂剪贴画，墨色粗线，和游戏建筑像两个游戏</li>
+      <li>灰砖路面一块块都画了，是全图最抢眼的东西</li>
+      <li>每个道具自带朝下的阴影椭圆，和 3D 太阳的阴影方向不一致</li>
+    </ul></section>
+    <section class="card pick"><h2>A 版：3D 同语言（推荐）</h2><ul>
+      <li>民房、酒馆、摊位、路灯、桌凳、桶箱都按游戏建筑的方法建模：同样的三档光、同样的墨线</li>
+      <li>阴影和遮挡由引擎统一处理，和人物、游戏建筑是一套</li>
+      <li>屋顶撑起轮廓，木构、窗、门、招牌是细节的重点（英雄无敌 3 的原则）</li>
+      <li>以后加房子就是加几何体；新增约 236 KB 的模型，只有首页王城会加载</li>
+    </ul></section>
+    <section class="card"><h2>B 版：2D 精修</h2><ul>
+      <li>还是原来的 2D 素材，按作画规范改：细线、木构用木色、材质色、去掉自带阴影</li>
+      <li>比现在干净，但房子的透视还是素材自己画的，和游戏镜头不一致</li>
+      <li>渲染契约的引擎阴影接上以前，这一版的道具没有影子，看起来有点飘</li>
+    </ul></section>
+  </div>
+  <p class="note">
+    两版都没动的：树、推车、旗是游戏里共用的素材，防御塔、兵营是游戏建筑，所以都不在王城里单独改。市政厅用的是首页专用的模型。
+    代码分支：A 版是 art/capital-mockups，B 版是 art/capital-mockup-b。
+    规范见 ../prop-painting.zh.md 和 ../capital-reference.zh.md。
+  </p>
+</div></main>
+<script>
+const captions = {
+  main: "现在：平涂剪贴画风格的民房，灰砖路面，各自画的阴影。",
+  a: "A 版：民房、酒馆、摊位、街道物件都是 3D 模型，和游戏建筑同一种画法；阴影由引擎生成。",
+  b: "B 版：仍是 2D 素材，按作画规范重画了线、色和阴影。",
+};
+let version = "a", view = "wide";
+const shot = document.getElementById("shot"), caption = document.getElementById("caption");
+function show() {
+  shot.src = `${version === "main" ? "main" : version}-${view}.webp`;
+  caption.textContent = captions[version] + (view === "close" ? "（特写）" : "（全景）");
+  for (const b of document.querySelectorAll("[data-version]")) b.setAttribute("aria-pressed", String(b.dataset.version === version));
+  for (const b of document.querySelectorAll("[data-view]")) b.setAttribute("aria-pressed", String(b.dataset.view === view));
+}
+for (const b of document.querySelectorAll("[data-version]")) b.addEventListener("click", () => { version = b.dataset.version; show(); });
+for (const b of document.querySelectorAll("[data-view]")) b.addEventListener("click", () => { view = b.dataset.view; show(); });
+show();
+</script>
+</body>
+</html>
