@@ -72,9 +72,11 @@
 .room-setup .map-row-list { gap:3px; padding:2px 4px 2px 2px; scroll-padding-block:14px;
   mask-image:linear-gradient(transparent, #000 12px, #000 calc(100% - 12px), transparent); }
 .room-setup .map-row { position:relative; border-radius:0; color:var(--game-ink); }
-.room-setup .map-row:hover:not(:disabled) { background:#fff6dd88; }
+/* Hover lightens a row that is not chosen; the chosen row keeps its look, its brass mark only brightening. */
+.room-setup .map-row:hover:not(:disabled):not(.is-selected) { background:#fff6dd88; }
 .room-setup .map-row.is-selected { background:var(--game-slot); box-shadow:var(--game-inset); }
 .room-setup .map-row.is-selected::before { content:""; position:absolute; left:-2px; top:5px; bottom:5px; width:3px; background:var(--game-brass-lit); }
+.room-setup .map-row.is-selected:hover:not(:disabled)::before { background:#d6a650; box-shadow:0 0 4px #e3b45e88; }
 .room-setup .map-row:focus-visible { outline:2px solid var(--game-brass-lit); outline-offset:-2px; }
 /* The picture's box is fixed, so nothing moves when it is drawn (see @@@map-thumbnails); until then, sea-blue paper. */
 .room-setup .map-row-thumb { border:2px solid #2f1c0d; outline:1px solid #c9a96a88; outline-offset:-3px; image-rendering:pixelated;
