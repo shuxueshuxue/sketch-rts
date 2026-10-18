@@ -97,6 +97,10 @@ export function createMatchThreadHost(post: (event: MatchThreadEvent) => void) {
         }
         if (message.type === "net") {
           for (const handler of netHandlers) handler(message.message);
+          // @@@restore-redraws - A checkpoint replaces the world without a tick: the page gets it on its next frame. A
+          // snapshot went out only after a tick, so in a paused room (after a reset, or on joining one) none followed and
+          // the page kept drawing the world it had before.
+          if (message.message.type === "checkpoint") stepped = true;
           return;
         }
         if (message.type === "join") {
