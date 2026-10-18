@@ -73,3 +73,39 @@ describe('walking on decks', () => {
     expect(b.owner).toBe('p');
   }, 120_000);
 });
+
+// @@@give-way: four boarders laid on a ship of the line as boarding lays them, the first in the pocket behind the stern
+// cabin and the others at its mouth. Sent forward, the first walks out: the idle crew in the way step aside and are
+// idle again. Crew holding their ground do not yield, and the walker waits.
+describe('idle crew give way on a deck', () => {
+  function packed(stance: 'idle' | 'hold') {
+    const game = createGame('bareDuel', { aiPlayers: [] });
+    game.units = []; game.items = []; game.buildings = []; game.resources = []; game.mercenaryCamps = []; game.obstacles = []; game.scriptedVictory = true;
+    game.map = { ...game.map, width: 4000, height: 4000, wind: { direction: Math.PI / 2, speed: 36 }, terrain: { cell: 40, cols: 100, rows: 100, cells: '~'.repeat(100 * 100) } };
+    const ship = game.spawnUnit('player', 'shipOfTheLine', 2000, 2000);
+    const crew = (['footman', 'archer', 'worker', 'footman'] as const).map(kind => { const unit = game.spawnUnit('player', kind, ship.x, ship.y); expect(boardUnit(ship, unit, game.units)).toBe(true); return unit; });
+    syncDecks(game.units);
+    for (const unit of crew) unit.order = stance === 'idle' ? { type: 'idle' } : { type: 'hold', x: unit.x, y: unit.y };
+    const [walker, ...others] = crew;
+    issuePlayerCommand(game, 'player', { type: 'move', unitIds: [walker!.id], x: ship.x + 60, y: ship.y });
+    return { game, ship, walker: walker!, others };
+  }
+  it('lets a crewman walk out of the pocket behind the stern cabin past idle crew', () => {
+    const { game, ship, walker, others } = packed('idle');
+    const start = { ...walker.deck! };
+    for (let tick = 0; tick < 300 && walker.order.type === 'move'; tick++) stepGame(game);
+    expect(start.x).toBeLessThan(-140);
+    expect(Math.hypot(walker.deck!.x - 60, walker.deck!.y)).toBeLessThan(10);
+    // Those who stepped aside walked there and stand idle again.
+    for (let tick = 0; tick < 100; tick++) stepGame(game);
+    expect(others.map(unit => unit.order.type)).toEqual(['idle', 'idle', 'idle']);
+    expect([ship.x, ship.y, ship.sailing!.heading]).toEqual([2000, 2000, 0]);
+  });
+  it('does not move crew holding their ground', () => {
+    const { game, walker, others } = packed('hold');
+    const start = { ...walker.deck! }, posts = others.map(unit => ({ ...unit.deck! }));
+    for (let tick = 0; tick < 200; tick++) stepGame(game);
+    expect(walker.deck).toEqual(start);
+    expect(others.map(unit => ({ ...unit.deck! }))).toEqual(posts);
+  });
+});

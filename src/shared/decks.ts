@@ -218,10 +218,14 @@ function clearPath(ship: Unit, passenger: Unit, a:Point, b:Point, bodies?:readon
 }
 /** Small visibility graph around fixed deck fittings; moving crew are physical bodies. */
 function deckWaypoint(ship:Unit,passenger:Unit,goal:Point,units:readonly Unit[],avoidCrew=false) {
+  return deckRoute(ship,passenger,goal,units,avoidCrew)?.[1] ?? passenger.deck!;
+}
+/** The walk from where the passenger stands to the goal, start and goal included, or undefined when none is open. */
+function deckRoute(ship:Unit,passenger:Unit,goal:Point,units:readonly Unit[],avoidCrew:boolean):Point[]|undefined {
   const start=passenger.deck!, profile=shipProfile(ship)!;
   // The crew is gathered once for the whole search, not once for every edge it tries.
   const bodies=avoidCrew?deckBodies(ship,passenger,units):undefined;
-  if(clearPath(ship,passenger,start,goal,bodies))return goal;
+  if(clearPath(ship,passenger,start,goal,bodies))return [start,goal];
   const nodes:Point[]=[start,goal];
   // Deck corners connect narrow passages between the cabin and the railing.
   // Fitting-ring nodes alone can leave these routes disconnected on large hulls.
@@ -238,7 +242,7 @@ function deckWaypoint(ship:Unit,passenger:Unit,goal:Point,units:readonly Unit[],
     let current=-1;
     for(let i=0;i<nodes.length;i++)if(!seen.has(i)&&(current<0||cost[i]!<cost[current]!))current=i;
     if(current<0||!Number.isFinite(cost[current]!))break;
-    if(current===1){let next=1;while(previous[next]!>0)next=previous[next]!;return nodes[next]!;}
+    if(current===1){const route=[nodes[1]!];for(let at=1;at>0;at=previous[at]!)route.unshift(nodes[previous[at]!]!);return route;}
     seen.add(current);
     for(let i=0;i<nodes.length;i++) {
       const candidate=cost[current]!+Math.hypot(nodes[i]!.x-nodes[current]!.x,nodes[i]!.y-nodes[current]!.y);
@@ -246,7 +250,7 @@ function deckWaypoint(ship:Unit,passenger:Unit,goal:Point,units:readonly Unit[],
       if(candidate<cost[i]!){cost[i]=candidate;previous[i]=current;}
     }
   }
-  return start;
+  return undefined;
 }
 /** Admission checks use the same fixed deck routes as walking. Temporary crew
  * congestion can yield; a railing or fitting that seals the route cannot. */
@@ -256,6 +260,35 @@ export function deckStaticPathExists(ship:Unit,passenger:Unit,goal:Point) {
   if(Math.hypot(goal.x-start.x,goal.y-start.y)<1e-7)return true;
   const next=deckWaypoint(ship,passenger,goal,[],false);
   return Math.hypot(next.x-start.x,next.y-start.y)>1e-7;
+}
+// @@@give-way - An idle body gives way to its own side's movement, as idle units do in Warcraft III: when a mover finds
+// no way past its side's bodies but one past the fixed ground, each idle body of its side standing on that way is sent
+// to the free spot nearest it off the way, and walks there as ordered. Bodies holding their ground, fighting or under
+// orders do not yield. On a deck the bodies are crew and the fixed ground the deck's fittings: boarders packed in behind
+// a stern cabin stood at the mouth of its pocket, and whoever was told to walk out of it never could. (The cabin door's
+// queue has its own, see yieldCabinApproach.)
+export function deckGiveWay(ship:Unit,mover:Unit,world:Point,units:readonly Unit[]):{unit:Unit;spot:Point}[] {
+  if(!mover.deck)return [];
+  // Only idle crew of the mover's side yield; a deck without any (a fight) needs no search.
+  const willing=shipPassengers(units,ship).filter(other=>other.id!==mover.id && other.owner===mover.owner && other.hp>0 && !isInCabin(other)
+    && !other.gangway && other.order.type==='idle' && !other.orderQueue?.length);
+  if(!willing.length)return [];
+  const goal=deckPlacement(ship,mover,units,worldToLocal(ship,world),true);
+  if(!goal || deckRoute(ship,mover,goal,units,true))return [];
+  const route=deckRoute(ship,mover,goal,units,false);
+  if(!route)return [];
+  const idle=willing.filter(other=>route.some((point,i)=>i>0 && !capsuleClearsBodies(route[i-1]!,point,0,[{...other.deck!,radius:mover.radius+other.radius+1}])));
+  if(!idle.length)return [];
+  // The way itself is kept clear, as if the mover already stood all along it.
+  const way:Unit[]=[];
+  route.forEach((point,i)=>{if(i===0)return;const from=route[i-1]!,steps=Math.max(1,Math.ceil(Math.hypot(point.x-from.x,point.y-from.y)/mover.radius));
+    for(let k=1;k<=steps;k++)way.push({...mover,id:`${mover.id}#way${way.length}`,deck:{shipId:ship.id,x:from.x+(point.x-from.x)*k/steps,y:from.y+(point.y-from.y)*k/steps}});});
+  const yielding:{unit:Unit;spot:Point}[]=[];
+  for(const other of idle){
+    const spot=deckPlacement(ship,other,[...units,...way],other.deck!,true,2);
+    if(spot)yielding.push({unit:other,spot});
+  }
+  return yielding;
 }
 export function moveOnDeck(passenger:Unit,ship:Unit,world:Point,units:readonly Unit[],pace=1,avoidCrew=true) {
   if(!passenger.deck)return;
