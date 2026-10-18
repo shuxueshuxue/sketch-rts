@@ -725,3 +725,20 @@ describe("naval strategic choices", () => {
     expect(planNavalTactics(snapshotGame(sim),"player",options).some(c=>c.type==="unload")).toBe(true);
   });
 });
+
+// @@@island-escort: an island plan on water no enemy ship holds asks for no warships; enemy warships there do.
+describe("warships for an island plan", () => {
+  function plannedIsland() {
+    const game = islandGame(); game.scriptedVictory = true;
+    game.players.player!.gold = 2_000;
+    game.buildings.push({ ...game.buildings.find(building => building.id === "hall-a")!, id: "yard", kind: "shipyard", ...at(8, 9), complete: true, queue: [], researchQueue: [] });
+    game.units.push(createUnit("ferry", "player", "transport", at(12, 9).x, at(12, 9).y));
+    return game;
+  }
+  it.each([false, true])("buys a warship only when an enemy fleet holds the water (enemy warship: %s)", (enemy) => {
+    const game = plannedIsland();
+    if (enemy) game.units.push(createUnit("raider-ship", "enemy", "warship", at(16, 9).x, at(16, 9).y));
+    const want = navalWant(snapshotGame(game), "player", { version: "v8", memory: createAiPolicyMemory() });
+    expect(want?.id === "naval:warship").toBe(enemy);
+  });
+});
