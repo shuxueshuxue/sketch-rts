@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createGame, issuePlayerCommand, snapshotGame, restoreSnapshotIntoGame, stepGame } from './sim';
+import { createGame, issuePlayerCommand, snapshotGame, restoreSnapshotIntoGame, stepGame, tryPlayerCommand } from './sim';
 import { boardUnit, deckPlacement, syncDecks } from './decks';
 import { SHIP_HULL_COST, SHIP_WEAPONS, bestFiringHeading, shipGunCanAim, damageShipParts, installedWeapons, repairShipParts, shipMounts, shipNeedsRepair, shipPartMax } from './ship-equipment';
 import { UNIT_DEFS } from './catalog';
@@ -21,7 +21,7 @@ describe('physical ship equipment', () => {
         const game=match(),ship=game.spawnUnit('player','warship',900,800),enemy=game.spawnUnit('enemy','transport',1370,800);
         enemy.hp=enemy.maxHp=10000;enemy.order={type:'hold',x:enemy.x,y:enemy.y};
         const cannon=installedWeapons(game,ship)[0]!;
-        issuePlayerCommand(game,'player',{type:'aim',unitIds:[ship.id],x:1100,y:800});
+        expect(tryPlayerCommand(game,'player',{type:'aim',unitIds:[ship.id],x:1100,y:800})).toMatchObject({ok:false,reason:'rules'});
         expect(ship.order.type).not.toBe('aim');
         issuePlayerCommand(game,'player',{type:'holdPosition',unitIds:[ship.id]});
         run(game,seconds(.4));expect(ship.aim).toBeUndefined();expect(cannon.aim?.tracking).toBe(true);expect(enemy.hp).toBe(10000);

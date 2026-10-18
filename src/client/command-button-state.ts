@@ -99,7 +99,7 @@ export function stanceFighters(units: readonly Unit[]) {
 export function legalityCommandState(refusal: CommandLegalityError | undefined): CommandButtonState {
   if (!refusal) return ENABLED_COMMAND_STATE;
   return {
-    visible: true, enabled: false, reason: refusal.reason ?? "missing",
+    visible: true, enabled: false, reason: refusal.reason,
     ...(refusal.cooldownTicks !== undefined ? { cooldownTicks: refusal.cooldownTicks } : {}),
     ...(refusal.supplyCap !== undefined ? { supplyCap: refusal.supplyCap } : {}),
   };

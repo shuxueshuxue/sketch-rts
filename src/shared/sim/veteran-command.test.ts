@@ -52,7 +52,7 @@ describe("veteran command boundary", () => {
     ], { includeAi: false });
     expect(veteran.veteranSkill).toBe("veteranHealingWave");
     expect(veteran.veteranSkillChoices).toEqual(originalChoices);
-    expect(checkCommandLegality(game, "player", command)).toEqual({ message: "Veteran skill already learned", transient: true });
+    expect(checkCommandLegality(game, "player", command)).toEqual({ message: "Veteran skill already learned", transient: true, reason: "state" });
     expect(() => runtime.admit([{ playerId: "player", command }])).toThrow(/already learned/);
     expect(() => runtime.completeAndApply([{ playerId: "player", command }], { includeAi: false })).not.toThrow();
     veteran.hp = 0;
@@ -68,7 +68,7 @@ describe("veteran command boundary", () => {
     expect(commandValidationError(game, "player", cast)).toBeUndefined();
     expect(commandValidationError(game, "player", { type: "setAutocast", unitIds: [veteran.id], ability: "veteranHealingWave", enabled: false })).toBeUndefined();
     veteran.effects.push({ type: "stun", remaining: 10 });
-    expect(checkCommandLegality(game, "player", cast)).toEqual({ message: "priest is stunned", transient: true });
+    expect(checkCommandLegality(game, "player", cast)).toEqual({ message: "priest is stunned", transient: true, reason: "state" });
   });
 
   it("preserves pending offers, learned choices and cooldowns across saves and replay", () => {

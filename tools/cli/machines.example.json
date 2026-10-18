@@ -4,7 +4,8 @@
     "a100": {
       "ssh": ["-F", "~/YellowPage/ssh_config", "zhipu-a100-102"],
       "root": "/codegeex/jeffry/sketch-cli",
-      "prelude": ". /codegeex/jeffry/sketch-rts-aiperf/env.sh"
+      "prelude": ". /codegeex/jeffry/sketch-rts-aiperf/env.sh",
+      "evidence": "/codegeex/jeffry/sketch-rts-evidence"
     },
     "mac1": {
       "ssh": ["-F", "~/YellowPage/ssh_config", "mac1"],

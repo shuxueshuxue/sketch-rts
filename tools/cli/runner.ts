@@ -33,8 +33,18 @@ export class Machine {
     return [this.config.root, ...parts].join("/");
   }
 
-  /** Runs a shell script on the machine in a fresh process group; stdin may be piped in (a tar stream). */
-  run(script: string, options: { input?: NodeJS.ReadableStream; quiet?: boolean } = {}): Promise<RunResult> {
+  /** An object in the machine's evidence store; the store is the one place besides the root the CLI writes to. */
+  evidencePath(sha256: string) {
+    if (!this.config.evidence) throw new Error(`Machine "${this.name}" has no evidence store; set "evidence" for it in machines.json (see tools/cli/machines.example.json)`);
+    if (!/^[0-9a-f]{64}$/.test(sha256)) throw new Error(`Not a sha256: ${sha256}`);
+    return `${this.config.evidence}/sha256/${sha256}`;
+  }
+
+  /**
+   * Runs a shell script on the machine in a fresh process group; stdin may be piped in (a tar stream), and stdout may be
+   * piped out (bytes, which the collected string would mangle).
+   */
+  run(script: string, options: { input?: NodeJS.ReadableStream; output?: NodeJS.WritableStream; quiet?: boolean } = {}): Promise<RunResult> {
     const marker = `__sketch_pgid_${this.runId}__`;
     const wrapped = [
       this.config.prelude ?? "",
@@ -54,7 +64,8 @@ export class Machine {
         options.input.pipe(child.stdin!);
       }
       let stdout = "", stderr = "", group: string | undefined;
-      child.stdout!.on("data", (chunk) => { stdout += chunk; });
+      if (options.output) child.stdout!.pipe(options.output);
+      else child.stdout!.on("data", (chunk) => { stdout += chunk; });
       child.stderr!.on("data", (chunk) => {
         const text = String(chunk);
         const found = text.match(new RegExp(`${marker}(\\d+)`));
@@ -71,7 +82,7 @@ export class Machine {
     });
   }
 
-  async runOk(script: string, options: { input?: NodeJS.ReadableStream; quiet?: boolean } = {}) {
+  async runOk(script: string, options: { input?: NodeJS.ReadableStream; output?: NodeJS.WritableStream; quiet?: boolean } = {}) {
     const result = await this.run(script, options);
     if (result.code !== 0) throw new Error(`On ${this.name} failed (exit ${result.code}): ${script.split("\n")[0]}\n${result.stderr.slice(-2000)}`);
     return result;
