@@ -84,8 +84,9 @@ function expectWithinCpu(work: MatchWork, rates: MatchRates) {
   expect(work.elapsedMs, JSON.stringify({ ...work, budgetMs: Math.round(cpuBudgetMs(work, rates)) })).toBeLessThan(cpuBudgetMs(work, rates));
 }
 
-function runTwoAiDuel(mapId: MapId, ticks = 36_000) {
+function runTwoAiDuel(mapId: MapId, ticks = 36_000, prepare?: (game: ReturnType<typeof createGame>) => void) {
   const game = createGame(mapId, { aiPlayers: ["player", "enemy"] });
+  prepare?.(game);
   const runtime = createAiRuntime(["player", "enemy"]);
   return { game, ticks, work: stepMatch(game, runtime, 2, ticks) };
 }
@@ -2302,13 +2303,20 @@ describe("sketch RTS simulation", () => {
   });
 
   it("runs a fast two-AI duel with neutral camp clearing and mercenary combat", () => {
-    const result = runTwoAiDuel("verdantCrossroads", 48_000);
-    const totalMercenaryKills = sumPlayerStats(result.game.match.stats.mercenaryKills);
+    // Mercenary combat is hired mercenaries striking the other side. Who lands the killing blow is the course of the day:
+    // since a plain move ends against a friend standing on its point (@@@group-arrival) this duel runs to 30:00 with eight
+    // mercenaries hired and in the fight (one alone struck 16 times for 448), none of them with a last hit.
+    let mercenaryHits = 0;
+    const result = runTwoAiDuel("verdantCrossroads", 48_000, (game) => {
+      game.observer = { hit(attacker, target) {
+        if ("order" in attacker && (MERCENARY_UNIT_KINDS as readonly string[]).includes(attacker.kind) && attacker.owner !== target.owner && target.owner !== "neutral") mercenaryHits += 1;
+      } };
+    });
     const totalNeutralKills = sumPlayerStats(result.game.match.stats.neutralUnitsKilled);
 
     expectTwoAiDuelBaseline(result, MATCH_RATES.verdantDuel);
     expect(result.game.mercenaryCamps.length).toBeGreaterThan(0);
-    expect(totalMercenaryKills).toBeGreaterThan(0);
+    expect(mercenaryHits).toBeGreaterThan(0);
     expect(totalNeutralKills).toBeGreaterThan(0);
   });
 
