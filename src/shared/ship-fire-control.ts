@@ -141,14 +141,6 @@ export function firingBoundaryHeadings(origin: Point, mount: Point, target: Stri
     for (const range of [minimum, maximum]) for (const side of [-1, 1]) {
       cosineRoots(normal - armBearing, (offset + side * range) / arm);
     }
-    // A band-aimed gun (see @@@band-aim) can bear on the part of an edge beyond its dead zone: its arc's edge crosses this
-    // edge exactly `range` from the pivot where arm·cos(θ + armBearing − normal) + range·cos(θ + edge ray − normal) =
-    // offset, one cosine in θ.
-    if (minimum > 0) for (const range of [minimum, maximum]) for (const ray of [bearing - halfArc, bearing + halfArc]) {
-      const x = arm * detCos(armBearing - normal) + range * detCos(ray - normal), y = arm * detSin(armBearing - normal) + range * detSin(ray - normal);
-      const amplitude = Math.hypot(x, y);
-      if (amplitude > 1e-9) cosineRoots(-Math.atan2(y, x), offset / amplitude);
-    }
   }
   return headings;
 }

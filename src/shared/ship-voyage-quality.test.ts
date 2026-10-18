@@ -1,3 +1,5 @@
+import { strikePoint } from './combat-geometry';
+import { SHIP_WEAPONS, installedWeapons, mountedWeaponPose } from './ship-equipment';
 import { describe, expect, it } from 'vitest';
 import { boardUnit } from './decks';
 import { hullContact, localToWorld, shipProfile } from './ship-geometry';
@@ -122,7 +124,9 @@ describe('observable ship voyage quality', () => {
       issuePlayerCommand(game, 'player', { type: 'attack', unitIds: [ship.id], targetId: target.id });
     }
     const fired = new Set<string>();
-    for (let tick = 0; tick < seconds(75) && fired.size < fleet.length; tick++) {
+    // A gun reaches only the hull's near side (see @@@hull-reach): the last batteries sail round the first to their own
+    // stations, about 100 seconds for all six (75 while a gun could fire across a hull at its far side).
+    for (let tick = 0; tick < seconds(110) && fired.size < fleet.length; tick++) {
       stepGame(game);
       for (const projectile of game.projectiles) if (fleet.some(ship => ship.id === projectile.attackerId)) fired.add(projectile.attackerId!);
       if (tick % 5 === 0) for (let a = 0; a < game.units.length; a++) for (let b = a + 1; b < game.units.length; b++) {
@@ -186,7 +190,9 @@ describe('observable ship voyage quality', () => {
     // isolated interception and avoidance corrections, not repeated oscillation.
     expect(metrics.rapidTurnReversals).toBeLessThanOrEqual(4);
     expect(metrics.travel).toBeGreaterThan(1500);
-    if (!close) expect(Math.hypot(ship.x - target.x, ship.y - target.y)).toBeLessThan(450);
+    // It keeps up: its bow gun still reaches the hull, held off by its dead zone (see @@@hull-reach).
+    if (!close) { const pivot = mountedWeaponPose(ship, installedWeapons(game, ship)[0]!)!.pivot, near = strikePoint(pivot, target);
+      expect(Math.hypot(near.x - pivot.x, near.y - pivot.y)).toBeLessThanOrEqual(SHIP_WEAPONS.shipCannon.range); }
   });
 
   for (const kind of kinds) it(`${kind} resumes the full journey after yielding to an oncoming hull`, () => {

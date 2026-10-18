@@ -1,0 +1,31 @@
+import { it } from 'vitest';
+import { writeFileSync } from 'node:fs';
+import { createPirateBoarding } from './menu-pirate-boarding';
+import { stepGame } from '../shared/sim';
+import { shipProfile } from '../shared/ship-geometry';
+import type { Unit } from '../shared/types';
+// Probe: seeds 1-20 of the home pirate boarding against the three criteria.
+it('pirate seeds', () => {
+  const rows: unknown[] = [];
+  for (let seed = 1; seed <= 20; seed++) {
+    const { game } = createPirateBoarding(seed);
+    const [a, b] = game.units.filter(u => shipProfile(u));
+    let bridgeAt: number | undefined, takenAt: number | undefined;
+    const pre: Record<string, number[]> = {}; let crewHitsAfter = 0; const crewHitsBefore: Record<string, number> = {};
+    game.observer = { hit(att, tgt) {
+      if (!('order' in att) || !shipProfile(att as Unit)) return;
+      const crew = !shipProfile(tgt as Unit);
+      if (bridgeAt === undefined) { (pre[att.owner] ??= []).push(game.tick); if (crew) crewHitsBefore[att.owner] = (crewHitsBefore[att.owner] ?? 0) + 1; }
+      else if (crew) crewHitsAfter++;
+    } };
+    for (let t = 0; t < 150 * 20 && takenAt === undefined; t++) {
+      stepGame(game);
+      if (bridgeAt === undefined && game.units.some(u => u.sailing?.gangway?.phase === 'deploying' || u.sailing?.gangway?.phase === 'ready')) bridgeAt = game.tick;
+      if (b!.owner === a!.owner) takenAt = game.tick;
+    }
+    const span = (ticks?: number[]) => ticks?.length ? `${ticks.length} hits ${(ticks[0]! / 20).toFixed(1)}-${(ticks.at(-1)! / 20).toFixed(1)}s` : '0 hits';
+    const row = { seed, pirates: span(pre[a!.owner]), admiralty: span(pre[b!.owner]), crewHitsBefore, bridge: bridgeAt && +(bridgeAt / 20).toFixed(1), crewGunHitsAfterBridge: crewHitsAfter, taken: takenAt && +(takenAt / 20).toFixed(1) };
+    rows.push(row); console.log(JSON.stringify(row));
+  }
+  writeFileSync(process.env.OUT ?? '/tmp/claude-1000/-home-jeffry-work-sketch-rts/11800240-8b86-4374-94ba-a005a58cda46/scratchpad/pirate-seeds.json', JSON.stringify(rows, null, 1));
+}, 3_600_000);

@@ -1,7 +1,7 @@
 import { shipPartMax } from './ship-handling';
 export { shipPartMax } from './ship-handling';
 import { itemIndex } from "./item-index";
-import { strikePoint, strikePointInBand, type StrikeTarget } from "./combat-geometry";
+import { deadZoneAim, strikePoint, type StrikeTarget } from "./combat-geometry";
 import { detCos, detSin } from "./det-math";
 import { type WeaponDef } from './catalog';
 import { SHIP_KINDS, localToWorld, shipProfile, shipScale, worldToLocal, type Point } from './ship-geometry';
@@ -81,9 +81,9 @@ export function shipGunCanAim(ship: Unit, item: WorldItem, target: StrikeTarget)
     const mount = shipMounts(ship).find(mount => mount.id === item.mountId);
     if (!mount)
         return false;
-    // A gun with a dead zone bears on the part of a hull in its band (see @@@band-aim).
-    const def = SHIP_WEAPONS[item.kind as ShipEquipmentKind], bearing = (ship.sailing?.heading ?? 0) + mount.bearing, pivot = localToWorld(ship, mount);
-    const point = (def.weapon.minRange ? strikePointInBand(pivot, target, def.weapon.minRange, veteranWeaponRange(ship, def.range), { bearing, halfArc: mount.halfArc }) : undefined) ?? strikePoint(pivot, target);
+    // Whether its traverse bears on the target's aim point; its dead zone is the caller's (see mountedTargetPoint).
+    const bearing = (ship.sailing?.heading ?? 0) + mount.bearing, pivot = localToWorld(ship, mount);
+    const point = strikePoint(pivot, target);
     const angle = Math.atan2(point.y - pivot.y, point.x - pivot.x);
     return Math.abs(headingDifference(bearing, angle)) <= mount.halfArc + 1e-7;
 }
@@ -124,8 +124,10 @@ export function bestFiringHeading(snapshot: Pick<GameSnapshot, 'items'> & Partia
         if(check.eligible===undefined){
             const def=SHIP_WEAPONS[item.kind as ShipEquipmentKind],c=detCos(candidate),s=detSin(candidate);
             const pivot={x:ship.x+mount.x*c-mount.y*s,y:ship.y+mount.x*s+mount.y*c};
-            const minimum=def.weapon.minRange,band=minimum ? strikePointInBand(pivot,predicted,minimum,veteranWeaponRange(ship,def.range),{bearing:candidate+mount.bearing,halfArc:Math.max(0,mount.halfArc-arcMargin)}) : undefined;
-            const target=band ?? strikePoint(pivot,predicted),gap=Math.hypot(target.x-pivot.x,target.y-pivot.y);
+            // A target aboard a hull inside the dead zone is out of reach (see @@@hull-reach).
+            const target=deadZoneAim(pivot,predicted,def.weapon.minRange ?? 0,snapshot.units);
+            if(!target){check.eligible=false;return false;}
+            const gap=Math.hypot(target.x-pivot.x,target.y-pivot.y);
             check.point=target;
             check.eligible=gap<=veteranWeaponRange(ship,def.range) && gap>=(def.weapon.minRange ?? 0)
               && Math.abs(headingDifference(candidate+mount.bearing,Math.atan2(target.y-pivot.y,target.x-pivot.x)))<=Math.max(0,mount.halfArc-arcMargin)+1e-7;
@@ -297,10 +299,8 @@ export function mountedTargetPoint(snapshot: Partial<Pick<GameSnapshot, 'units'>
     const def=SHIP_WEAPONS[item.kind as ShipEquipmentKind];
     const reach=Math.hypot(pose.muzzle.x-pose.pivot.x,pose.muzzle.y-pose.pivot.y);
     const predicted=ballisticTarget(pose.pivot,target,targetSailingVelocity(target,snapshot.units),def.weapon,reach);
-    // A gun with a dead zone takes the nearest part of a hull in its band and traverse (see @@@band-aim).
-    const mount=def.weapon.minRange ? shipMounts(ship).find(mount=>mount.id===item.mountId) : undefined;
-    const band=mount && strikePointInBand(pose.pivot,predicted,def.weapon.minRange!,veteranWeaponRange(ship,def.range),{bearing:(ship.sailing?.heading ?? 0)+mount.bearing,halfArc:mount.halfArc});
-    return band ?? strikePoint(pose.pivot,predicted);
+    // Undefined while the target, or the hull it stands on, lies inside the gun's dead zone (see @@@hull-reach).
+    return deadZoneAim(pose.pivot,predicted,def.weapon.minRange ?? 0,snapshot.units);
 }
 /** Test the muzzle after the independent barrel has traversed toward its
  * reticle. Alliance filtering belongs to the caller, not hull ownership. */

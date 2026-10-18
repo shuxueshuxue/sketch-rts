@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { boardUnit, syncDecks } from './decks';
 import { createUnit } from './map';
-import { SHIP_WEAPONS, initializeShipEquipment, rebuildShipFittings } from './ship-equipment';
+import { SHIP_WEAPONS, initializeShipEquipment, installedWeapons, mountedTargetPoint, mountedWeaponPose, rebuildShipFittings } from './ship-equipment';
 import { shipProfile } from './ship-geometry';
+import { strikePoint } from './combat-geometry';
 import { createGame, issuePlayerCommand, stepGame, type Game } from './sim';
 import type { Unit, UnitKind } from './types';
 
@@ -61,10 +62,55 @@ describe('a broadside holds its fire on a deck alongside', () => {
     expect(near.hp).toBe(near.maxHp);
   });
 
-  it('still shoots a crew a gunnery duel away', () => {
-    const { game, crewHits } = abreast(150);
-    for (let tick = 0; tick < 400 && crewHits() === 0; tick++) stepGame(game);
-    expect(crewHits()).toBeGreaterThan(0);
+});
+
+// @@@hull-reach
+describe('a gun reckons a ship and everyone on its deck by the whole hull', () => {
+  /** Two armed, crewed ships of the line abreast, their nearest guns `gap` from the other hull; both fire. */
+  function duel(gap: number) {
+    const game = sea();
+    const a = game.spawnUnit('player', 'shipOfTheLine', 1500, 1500), b = game.spawnUnit('enemy', 'shipOfTheLine', 1500, 1500);
+    a.sailing!.heading = b.sailing!.heading = 0;
+    for (const ship of [a, b]) delete ship.fittings;
+    initializeShipEquipment(game); for (const ship of [a, b]) rebuildShipFittings(game, ship);
+    // `gap` from the nearest gun to the other hull, as the dead zone and the range are reckoned (a broadside's pivots
+    // stand inside its own hull's outline).
+    b.y = a.y + 1000;
+    const nearest = () => Math.min(...[[a, b], [b, a]].flatMap(([ship, other]) => installedWeapons(game, ship!).map(gun => {
+      const pivot = mountedWeaponPose(ship!, gun)!.pivot, point = strikePoint(pivot, other!);
+      return Math.hypot(point.x - pivot.x, point.y - pivot.y);
+    })));
+    b.y -= nearest() - gap;
+    for (const ship of [a, b]) ship.order = { type: 'hold', x: ship.x, y: ship.y };
+    const crews = new Map([a, b].map(ship => [ship.id, [0, 1, 2, 3].map(() => crew(game, ship))]));
+    syncDecks(game.units);
+    const hits = new Map([[a.id, 0], [b.id, 0]]);
+    game.observer = { hit(attacker) { if (hits.has(attacker.id)) hits.set(attacker.id, hits.get(attacker.id)! + 1); } };
+    // Each ship holds its pose: a hull turned to bring its guns to bear moves them out of the other's dead zone.
+    const poses = [a, b].map(ship => ({ ship, x: ship.x, y: ship.y }));
+    const step = () => { stepGame(game); for (const { ship, x, y } of poses) { ship.x = x; ship.y = y; ship.sailing!.heading = 0; } };
+    return { game, a, b, crews, hits, step };
+  }
+
+  it('takes up neither the hull nor its crew while the hull\'s near side lies 200 off, in the dead zone, either way', () => {
+    const { game, a, b, crews, hits, step } = duel(200);
+    // The near battery sees the hull inside its dead zone; the far one, a beam farther off, sees it beyond its range.
+    for (const [ship, other] of [[a, b], [b, a]] as const) for (const gun of installedWeapons(game, ship)) {
+      const pivot = mountedWeaponPose(ship, gun)!.pivot;
+      for (const body of [other, ...crews.get(other.id)!]) {
+        const point = mountedTargetPoint(game, ship, gun, body);
+        expect(point === undefined || Math.hypot(point.x - pivot.x, point.y - pivot.y) > SHIP_WEAPONS.shipCannon.range, `${ship.id} ${gun.mountId} ${body.id} ${point && Math.hypot(point.x - pivot.x, point.y - pivot.y)}`).toBe(true);
+      }
+    }
+    for (let tick = 0; tick < 400; tick++) step();
+    expect([...hits.values()]).toEqual([0, 0]);
+  });
+
+  it('lets both broadsides strike the other\'s near side when their guns lie 280 from it', () => {
+    const { a, b, hits, step } = duel(280);
+    for (let tick = 0; tick < 400 && [...hits.values()].some(count => count === 0); tick++) step();
+    expect(hits.get(a.id)).toBeGreaterThan(0);
+    expect(hits.get(b.id)).toBeGreaterThan(0);
   });
 });
 
