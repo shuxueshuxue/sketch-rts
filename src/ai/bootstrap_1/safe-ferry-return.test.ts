@@ -4,7 +4,7 @@ import {createGame,restoreSnapshotIntoGame,snapshotGame,issuePlayerCommand} from
 import {safeFerryReturn} from './safe-ferry-return';
 import {bootstrapPolicyContext,BOOTSTRAP_VERSIONS} from './policy';
 
-function saved(arrival=false){const f=JSON.parse(gunzipSync(readFileSync(new URL(arrival?'./fixtures/failed-colony-return-landing-37305.json.gz':'./fixtures/failed-colony-return-36600.json.gz',import.meta.url))).toString());const g=createGame('bareDuel');restoreSnapshotIntoGame(g,f.snapshot,f.nextId);return {g,memory:f.memories.p0};}
+function saved(arrival=false){const f=JSON.parse(gunzipSync(readFileSync(new URL(arrival?'./fixtures/failed-colony-return-scoped-37305.json.gz':'./fixtures/failed-colony-return-36600.json.gz',import.meta.url))).toString());const g=createGame('bareDuel');restoreSnapshotIntoGame(g,f.snapshot,f.nextId);return {g,memory:f.memories.p0};}
 const shipId='unit-p0-transport-5237';
 it.each(BOOTSTRAP_VERSIONS)('%s sends the failed colony home through a complete native voyage',v=>{
  const {g,memory}=saved(),s=snapshotGame(g),before=JSON.stringify(s),o=bootstrapPolicyContext(s,'p0',v,{memory,teams:g.teams});
@@ -22,4 +22,22 @@ it.each(BOOTSTRAP_VERSIONS)('%s integrates the safer return in its actual planne
  const {g,memory}=saved();const entries=planAiOwnerCommandEntries(snapshotGame(g),{playerId:'p0',version,memory},{teams:g.teams});
  const helm=entries.filter(e=>'unitIds'in e.command&&e.command.unitIds.includes(shipId));
  expect(helm).toHaveLength(1);expect(helm[0]!.command).toMatchObject({type:'move',x:4976,y:6192,avoidCombat:true});
+});
+
+it.each(BOOTSTRAP_VERSIONS)('%s keeps the original safe return instead of unloading early',version=>{
+ const f=JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/safe-colony-return-13470.json.gz',import.meta.url))).toString());
+ const g=createGame('bareDuel');restoreSnapshotIntoGame(g,f.snapshot,f.nextId);
+ const entries=planAiOwnerCommandEntries(snapshotGame(g),{playerId:'p0',version,memory:f.memories.p0},{teams:g.teams});
+ const relevant=entries.filter(e=>('unitIds'in e.command&&e.command.unitIds.includes('unit-p0-transport-1070'))||(e.command.type==='unloadPassenger'&&e.command.transportId==='unit-p0-transport-1070'));
+ expect(relevant.map(e=>e.command)).toEqual([{type:'unload',unitIds:['unit-p0-transport-1070'],x:4368,y:6032,avoidCombat:true}]);
+ expect(f.memories.p0.safeFerryReturns).toBeUndefined();
+});
+it('retains ownership after changing a stale departure to the safe coast',()=>{
+ const {g,memory}=saved(),s=snapshotGame(g),options={memory,teams:g.teams};
+ const first=safeFerryReturn(s,'p0',options,[]);expect(memory.safeFerryReturns[shipId]).toBeDefined();
+ const second=safeFerryReturn(s,'p0',options,[{type:'unload',unitIds:[shipId],x:4976,y:6192}]);expect(second.commands).toEqual(first.commands);
+});
+it('clears the old return marker when the hull starts a new voyage',()=>{
+ const {g,memory}=saved(),s=snapshotGame(g),options={memory,teams:g.teams};safeFerryReturn(s,'p0',options,[]);
+ memory.naval.ferries[shipId].phase='loading';safeFerryReturn(s,'p0',options,[]);expect(memory.safeFerryReturns).toBeUndefined();
 });

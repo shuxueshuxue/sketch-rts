@@ -1,0 +1,13 @@
+{
+  "correction": "The stop request was pending while the native loop reached a natural terminal state and wrote result.json. Exit143 does not invalidate the completed result. Prior stop-confirmation naturalComplete=false was inferred from signal status and is corrected here; preserved unchanged.",
+  "tick": 42029,
+  "winner": "p1",
+  "naturalComplete": true,
+  "permanentDeaths": 12,
+  "permanentAlive": 12,
+  "buildingsRemaining": 0,
+  "sourceChangedDuringRun": [],
+  "resultSha256": "8adee4f26c7a2b77381f9982e82a63cb3217f8b909b1bcb2160005768f3340f6",
+  "rawArchive": "safe-return-scope-evidence.tar.gz",
+  "rawEntry": "raw/safe-return-unseen-fresh0/result.json"
+}

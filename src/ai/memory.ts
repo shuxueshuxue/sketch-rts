@@ -75,6 +75,7 @@ export type AiPolicyMemory = {
   homeRelief?: { hallId:string; shipId:string; crewIds:string[]; landing:{x:number;y:number}; station:{x:number;y:number}; phase:'travel'|'guard'|'evacuate'|'recover'; since:number; initialThreat:number; approach?:{x:number;y:number} };
   homeReliefRetry?: number;
   evacuationShelters?: Record<string, string>;
+  safeFerryReturns?: Record<string, { sinceTick: number; targetId: string }>;
   mounted?: {
     unitIds: string[];
     objective: { kind: 'camp'; ids: string[] } | { kind: 'raid'; hallId: string; owner: PlayerId };
