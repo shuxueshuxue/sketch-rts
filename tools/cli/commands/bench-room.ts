@@ -15,7 +15,7 @@ export const spec: CommandSpec = {
     { name: "rivals", description: "one duel bench per rival", default: "v8,v9" },
     { name: "seeds", description: "map-selection seeds", default: "v5-final-1" },
     { name: "maps", description: "maps per seed; each map is played with both races (40 games per cell at 20)", default: "20" },
-    { name: "metrics", description: "direct measures (bases@N, workers@N, spent@N, trade@N, clear, hire)", default: "" },
+    { name: "metrics", description: "direct measures (bases@N, workers@N, spent@N, trade@N, clear, hire, upgrade@K.L)", default: "" },
     { name: "workers", description: "parallel games per commit", default: "46" },
     { name: "on", description: "machine from ~/.config/sketch/machines.json" },
     { name: "json", description: "one JSON object on stdout instead of tables", boolean: true },
@@ -63,14 +63,19 @@ export async function run(argv: string[]) {
     const all = (results: Map<string, RoomResult[]>) => [...results].filter(([key]) => key.startsWith(`${subject}|`)).flatMap(([, list]) => list);
     return { subject, metric, base: metricSummary(all(baseResults), subject, metric), ref: metricSummary(all(refResults), subject, metric) };
   }));
+  // A first-minute metric the subject never reached in some games says how many: "7.2 / 6.9 (12 never)".
+  const side = (summary: ReturnType<typeof metricSummary>, absent: string) => summary ? `${fmt(summary.own)} / ${fmt(summary.rival)}${summary.missing ? ` (${summary.missing} never)` : ""}` : absent;
   const fmt = (value: number | null | undefined) => value === null || value === undefined ? "-" : Number.isInteger(value) ? String(value) : value.toFixed(3);
-  const data = { base, ref, machine: machine.name, games: compared.reduce((sum, cell) => sum + cell.ref.games, 0), totals: { base: total("base"), ref: total("ref") }, cells: compared, metrics: metricRows };
+  // Each game's metric values too, keyed "<subject>|<rival>" then by game, so a measure can be traced to the maps it comes from.
+  const perGame = (results: Map<string, RoomResult[]>) => Object.fromEntries([...results].map(([key, list]) => [key, Object.assign({}, ...list.map((result) => result.metrics ?? {}))]));
+  const data = { base, ref, machine: machine.name, games: compared.reduce((sum, cell) => sum + cell.ref.games, 0), totals: { base: total("base"), ref: total("ref") }, cells: compared, metrics: metricRows,
+    ...(options.metrics.length ? { gameMetrics: { base: perGame(baseResults), ref: perGame(refResults) } } : {}) };
   const human = [
     table(["subject", "rival", "base", "ref", "flipped games"], compared.map((cell) => [cell.subject, cell.rival, `${cell.base.wins}/${cell.base.games}`, `${cell.ref.wins}/${cell.ref.games}`, cell.flips.length])),
     `total wins: base ${data.totals.base}  ref ${data.totals.ref}`,
     ...(metricRows.length ? ["", "metrics (subject / its rival; trade@N is the rival's losses over the subject's, higher is better for the subject)",
       table(["subject", "metric", "base", "ref"], metricRows.map((row) => [row.subject, row.metric,
-        row.base ? `${fmt(row.base.own)} / ${fmt(row.base.rival)}` : "n/a (commit predates metrics)", row.ref ? `${fmt(row.ref.own)} / ${fmt(row.ref.rival)}` : "n/a"]))] : []),
+        side(row.base, "n/a (commit predates this metric)"), side(row.ref, "n/a")]))] : []),
   ].join("\n");
   emit(json, human, data);
   return EXIT.ok;
