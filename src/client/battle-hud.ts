@@ -6,6 +6,10 @@ export type HudArt = { key: string; paint: (canvas: HTMLCanvasElement) => void }
 export type HudIdentity = {
   key: string; name: string; caption: string; detail: string; art: HudArt;
   health?: { current: number; max: number };
+  /** Work under way on the subject itself (a building going up): its share done and the time left (see @@@work-bar). */
+  work?: { ratio: number; time: string };
+  /** A cooldown the detail line tells the time of, 1 to 0 of it left: a small sweep in front of it (see @@@cooldown-sweep). */
+  cooldownLeft?: number;
   inspection?: { name: string; detail: string; art: HudArt };
   statuses?: HudStatus[];
 };
@@ -48,6 +52,9 @@ export class BattleHudSelection {
   private readonly health = document.createElement("div");
   private readonly healthFill = document.createElement("span");
   private readonly healthText = text("hud-health-text");
+  private readonly work = document.createElement("div");
+  private readonly workFill = document.createElement("span");
+  private readonly workText = text("hud-work-text");
   private readonly grid = document.createElement("div");
   private readonly statusBar = document.createElement("div");
   private statuses = new Map<string, { element: HTMLDivElement; image: HTMLImageElement; badge: HTMLSpanElement }>();
@@ -67,7 +74,9 @@ export class BattleHudSelection {
     const copy = document.createElement("div"); copy.className = "hud-subject-copy";
     this.health.className = "hud-health";
     this.health.append(this.healthFill, this.healthText);
-    copy.append(this.caption, this.name, this.health, this.detail);
+    this.work.className = "hud-work";
+    this.work.append(this.workFill, this.workText);
+    copy.append(this.caption, this.name, this.health, this.work, this.detail);
     this.identity.append(this.portrait, copy);
     this.grid.className = "hud-roster"; this.grid.tabIndex = 0;
     this.statusBar.className = 'hud-statuses';
@@ -100,6 +109,13 @@ export class BattleHudSelection {
         this.healthFill.style.width = `${Math.max(0, Math.min(100, hp.current / Math.max(1, hp.max) * 100))}%`;
         this.healthFill.style.backgroundColor = healthBarColor(hp.current, hp.max);
         this.healthText.textContent = `${Math.ceil(hp.current)} / ${hp.max}`;
+      }
+      if (identity.cooldownLeft === undefined) { delete this.detail.dataset.cooldown; this.detail.style.removeProperty("--cooldown-left"); }
+      else { this.detail.dataset.cooldown = ""; this.detail.style.setProperty("--cooldown-left", identity.cooldownLeft.toFixed(3)); }
+      this.work.hidden = !identity.work;
+      if (identity.work) {
+        this.workFill.style.setProperty("--work-share", `${Math.max(0, Math.min(100, identity.work.ratio * 100))}%`);
+        this.workText.textContent = identity.work.time;
       }
       if (identity.inspection) {
         paint(this.inspectionArt, identity.inspection.art);

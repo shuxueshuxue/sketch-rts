@@ -4,7 +4,8 @@ import { checksumGame } from '../shared/sim/checksum';
 import { buildVeteranFrame } from '../shared/veteran-runtime';
 import { VETERAN_SKILLS } from '../shared/veteran-skills';
 import { seconds } from '../shared/time';
-import { effectiveUnitStatusEffects, presentUnitStatuses, statusDurationBadge, unitStatusIcon, unitStatusPolarity } from './status-presentation';
+import { effectiveUnitStatusEffects, presentUnitStatuses, unitStatusIcon, unitStatusPolarity } from './status-presentation';
+import { formatRemaining } from './format-remaining';
 import type { Unit, UnitStatusEffect } from '../shared/types';
 
 function scene() {
@@ -106,7 +107,7 @@ describe('focused unit status presentation', () => {
   });
 
   it('keeps last-tick crowd control visible, excludes expired statuses and gives every existing status a pictorial icon', () => {
-    expect(statusDurationBadge(1)).toBe('0.1s'); expect(statusDurationBadge(0)).toBe('');
+    expect(formatRemaining(1)).toBe('0.1s'); expect(formatRemaining(0)).toBe('');
     const types: UnitStatusEffect['type'][] = ['curse', 'guardian', 'scorch', 'slow', 'stun', 'root', 'poison', 'bloodlust', 'protection', 'veteranBuff'];
     for (const type of types) {
       const effect: UnitStatusEffect = { type, remaining: 1 };

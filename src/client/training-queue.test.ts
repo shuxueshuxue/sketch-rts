@@ -5,13 +5,14 @@ import { createBuilding, createUnit } from "../shared/map";
 import { SHIP_KINDS } from "../shared/ship-geometry";
 import { createGame, issuePlayerCommand, stepGame } from "../shared/sim";
 import { createI18n } from "./i18n";
+import { formatRemaining } from "./format-remaining";
 import { BUILDING_DEFS } from "../shared/catalog";
 
 describe("training queue presentation", () => {
   it("shows a stack count only when a building has multiple queued jobs", () => {
     expect(trainingQueueCountText(0)).toBe("");
     expect(trainingQueueCountText(1)).toBe("");
-    expect(trainingQueueCountText(5)).toBe("x5");
+    expect(trainingQueueCountText(5)).toBe("×5");
   });
 
   it("reports the active and queued production jobs for selected buildings", () => {
@@ -76,7 +77,7 @@ describe("training queue presentation", () => {
     expect(zh.label).toContain('已造好 · 等待下水');expect(zh.badge).toBe('待下水');expect(zh.hint).toContain('如果有船挤在船厂旁');expect(zh.hint).toContain('自动下水');
     expect(en.label).toContain('built · awaiting launch');expect(en.badge).toBe('Ready');expect(en.hint).toContain('If nearby ships');expect(en.hint).toContain('launch automatically');
     const [active,queued]=trainingProgressButtonsForSelection([building()]);
-    expect(trainingProgressText(active!,createI18n('en'))).toMatchObject({label:'Training Footman',badge:`${Math.floor(active!.progress*100)}%`,hint:undefined});
+    expect(trainingProgressText(active!,createI18n('en'))).toMatchObject({label:'Training Footman',badge:formatRemaining(active!.remaining),hint:undefined});
     expect(trainingProgressText(queued!,createI18n('zh'))).toMatchObject({badge:'排队',hint:undefined});
   });
 });

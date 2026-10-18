@@ -73,7 +73,7 @@ export function buyRefusal(snapshot: Pick<GameSnapshot, "shops" | "units" | "pla
   if (!shop) return { message: `Unknown shop ${shopId}`, transient: false, reason: "gone" };
   const good = shop.goods.find((candidate) => candidate.kind === kind);
   if (!good) return { message: `${shop.id} sells no ${kind}`, transient: false, reason: "rules" };
-  if (good.stock <= 0) return { message: `${shop.id} is out of ${kind}`, transient: true, reason: "cooldown", cooldownTicks: good.restockRemaining };
+  if (good.stock <= 0) return { message: `${shop.id} is out of ${kind}`, transient: true, reason: "cooldown", cooldownTicks: good.restockRemaining, cooldownLength: good.restock };
   if(recipientId!==undefined){const result=purchasePlacement(snapshot,owner,shop,kind,recipientId);if("refusal" in result)return {message:result.refusal,transient:true,reason:"position"};}
   if (!snapshot.units.some((unit) => unit.owner === owner && standsAtShop(unit, shop))) return { message: `${shop.id} needs a unit of yours beside it`, transient: true, reason: "position" };
   if ((snapshot.players[owner]?.gold ?? 0) < good.cost) return { message: `Need ${good.cost} gold`, transient: true, reason: "gold" };

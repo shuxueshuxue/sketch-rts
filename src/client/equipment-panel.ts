@@ -2,6 +2,7 @@ import { appearanceFor, appearanceKey } from "./art/unit-appearance";
 import { modelArtRevision } from "./model-portraits";
 import {paintPortrait} from './portrait-cache';
 import { formatMass } from "./format-mass";
+import { healthBarColor } from "./health-bars";
 import { isShipEquipment, shipMounts, shipPartMax } from "../shared/ship-equipment";
 import { ARMOR_SLOTS, CARRY_SLOTS, ITEM_DEFS, canEquip, canExchange, exchangeRecipient, equipmentProtection, freeItemSlot, itemHands, itemSlot, itemsFor, shipHoldSlots, shipItemMass, transferRefusal, wieldRefusal, type ItemDestination } from '../shared/equipment';
 import { localToWorld, shipPassengers, shipProfile } from '../shared/ship-geometry';
@@ -651,7 +652,7 @@ export class EquipmentPanel {
             button.dataset.condition=condition.state;button.title=`${this.name(item)} · ${this.conditionText(item)}`;button.setAttribute('aria-label',button.title);
             const meter=button.querySelector<HTMLElement>('.equipment-condition-meter')!;
             meter.setAttribute('aria-label',this.text('武器耐久','Weapon durability'));meter.setAttribute('aria-valuemin','0');meter.setAttribute('aria-valuemax',String(condition.max));meter.setAttribute('aria-valuenow',String(condition.hp));
-            meter.querySelector<HTMLElement>('i')!.style.width=`${condition.ratio*100}%`;
+            const fill=meter.querySelector<HTMLElement>('i')!;fill.style.width=`${condition.ratio*100}%`;fill.style.backgroundColor=healthBarColor(condition.hp,condition.max);
             button.querySelector<HTMLElement>('[data-condition-label]')!.textContent=condition.state==='broken'?this.text('损坏','Broken'):`${Math.ceil(condition.hp)} / ${condition.max}`;
         }
         for(const node of this.root.querySelectorAll<HTMLElement>('[data-condition-summary]')){const item=items.get(node.dataset.conditionSummary!);node.textContent=item?this.conditionText(item):'';}

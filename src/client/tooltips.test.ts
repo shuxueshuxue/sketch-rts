@@ -356,7 +356,7 @@ describe("mercenary camp text", () => {
       const detail = campDetail(camp, i18n);
       expect(detail).toContain(name);
       expect(detail).toContain("177");
-      expect(detail).toContain("2.0s");
+      expect(detail).toContain("2s");
       for (const other of ["mercenary", "contractArcher", "fieldMedic"] as const) if (other !== hireKind && !name.includes(i18n.label(other))) {
         expect(`${tooltip.title} ${tooltip.body} ${detail}`).not.toContain(i18n.label(other));
       }

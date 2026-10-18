@@ -164,8 +164,7 @@
 .equipment-condition { position:absolute; bottom:2px; left:3px; right:3px; pointer-events:none; }
 .equipment-condition small { display:block; color:var(--game-ink); text-align:center; font:10px/12px var(--game-text); }
 .equipment-condition-meter { display:block; height:3px; background:#0d120d; box-shadow:0 0 0 1px #080a08; }
-.equipment-condition-meter i { display:block; height:100%; background:#9eaf79; }
-.equipment-item[data-condition=damaged] .equipment-condition-meter i { background:#d2a45c; }
+.equipment-condition-meter i { display:block; height:100%; }
 .equipment-item[data-condition=broken] canvas { filter:grayscale(1) brightness(.55); }
 .equipment-item[data-condition=broken]::after { content:'×'; position:absolute; right:3px; top:0; color:#f2a182; font:18px var(--game-serif); text-shadow:0 1px 3px #000; }
 .equipment-deck-scene .equipment-condition small { display:none; }
