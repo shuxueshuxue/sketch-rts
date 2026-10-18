@@ -31,6 +31,7 @@ import { drawLevelStar } from "./level-star";
 import { shouldRenderBuildingRally } from "./rally-visual";
 import { RELATION_INK, relationTo } from "./relations";
 import { drawTerrain } from "./terrain-art";
+import { byFoot, drawStandingObject, standingTerrain, type StandingTerrainObject } from "./standing-terrain";
 import { mineStage, paintRoads } from "./art/environment";
 import { GOLD_MINE_RULES } from "../shared/mining";
 import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
@@ -270,9 +271,12 @@ export function drawWorld(frame: WorldFrame) {
   if(frame.pass==='overlay'){drawBuildings(painter,snapshot.buildings,true);drawUnits(painter,candidateUnits,true);}
   else {
     // A troop on a tower's top is drawn over its tower, front spots last (see @@@tower-garrison).
-    const depth=(a:Unit|Building)=>{const tower='order' in a?garrisonTower(snapshot.buildings,a):undefined;return tower?tower.y+1+(a.y-tower.y+50)/100:a.y;};
-    const actors=[...snapshot.buildings,...candidateUnits.filter(unit=>!unit.deck)].filter(a=>nearScreen(painter,worldToScreen(painter,a),Math.max(150,a.radius*3))).sort((a,b)=>depth(a)-depth(b));
-    for(const actor of actors)if('order' in actor){if(shipProfile(actor))drawShipGroup(painter,actor);else drawUnits(painter,[actor]);}else drawBuildings(painter,[actor]);
+    const depth=(a:Unit|Building|StandingTerrainObject)=>{const tower='order' in a?garrisonTower(snapshot.buildings,a):undefined;return tower?tower.y+1+(a.y-tower.y+50)/100:a.y;};
+    // The terrain's trees and boulders stand among them, in the same order by foot (see @@@standing-terrain).
+    const standing=snapshot.map.terrain?standingTerrain(snapshot.map.terrain).filter(a=>nearScreen(painter,worldToScreen(painter,a),140*a.scale)):[];
+    const actors:(Unit|Building|StandingTerrainObject)[]=[...snapshot.buildings,...candidateUnits.filter(unit=>!unit.deck)].filter(a=>nearScreen(painter,worldToScreen(painter,a),Math.max(150,a.radius*3)));
+    actors.push(...standing);byFoot(actors,depth);
+    for(const actor of actors)if('look' in actor)drawStandingObject(ctx,actor,worldToScreen(painter,actor));else if('order' in actor){if(shipProfile(actor))drawShipGroup(painter,actor);else drawUnits(painter,[actor]);}else drawBuildings(painter,[actor]);
   }
   if (!painter.still && painter.viewer) drawAimLines(painter);
   // Carried objects belong in the inventory, not stacked over a unit's head.
