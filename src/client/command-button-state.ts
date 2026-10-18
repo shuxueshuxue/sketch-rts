@@ -6,6 +6,7 @@ import type { AbilityKind, MeleeStance, Unit } from "../shared/types";
 import type { CommandLegalityError, CommandRefusalReason } from "../shared/sim/command-validation";
 import { readyAbilityCasters, type CastCommand } from "./ability-targeting";
 import { isInCabin } from '../shared/ship-cabin';
+import { abilityCooldownLength } from "./cooldown-sweep";
 
 export type CommandButtonDisabledReason = CommandRefusalReason | "missing";
 
@@ -16,6 +17,8 @@ export type CommandButtonState = {
   visible: boolean;
   enabled: boolean;
   cooldownTicks?: number;
+  // The whole cooldown the ticks above are part of, for its sweep (see @@@cooldown-sweep).
+  cooldownLength?: number;
   reason?: CommandButtonDisabledReason;
   detail?:string;
   // The supply cap a locked unit waits for (reason "tier").
@@ -24,6 +27,8 @@ export type CommandButtonState = {
   autocast?: AutocastSwitch;
   // A mode button (a melee stance) that all the selected units it applies to are in, or only some.
   pressed?: "all" | "some";
+  // How many a seller has left of a good, shown in the button's corner.
+  stock?: number;
 };
 
 export const HIDDEN_COMMAND_STATE: CommandButtonState = { visible: false, enabled: false };
@@ -42,7 +47,8 @@ export function abilityCommandState(units: readonly Unit[], ability: AbilityKind
   if (readyAbilityCasters(casters, ability, pending).length) return withAutocast(ENABLED_COMMAND_STATE);
   if (casters.some(unit => abilityCooldown(unit, ability) <= 0)) return withAutocast({ visible: true, enabled: false, reason: "missing" });
   const cooldownTicks = Math.min(...casters.map((unit) => abilityCooldown(unit, ability)));
-  return withAutocast({ visible: true, enabled: false, cooldownTicks, reason: "cooldown" });
+  const cooldownLength = abilityCooldownLength(ability);
+  return withAutocast({ visible: true, enabled: false, cooldownTicks, ...(cooldownLength ? { cooldownLength } : {}), reason: "cooldown" });
 }
 
 // @@@autocast-toggle - Warcraft III's right-click on a spell button: if any selected unit with the ability has its
@@ -101,6 +107,7 @@ export function legalityCommandState(refusal: CommandLegalityError | undefined):
   return {
     visible: true, enabled: false, reason: refusal.reason,
     ...(refusal.cooldownTicks !== undefined ? { cooldownTicks: refusal.cooldownTicks } : {}),
+    ...(refusal.cooldownLength !== undefined ? { cooldownLength: refusal.cooldownLength } : {}),
     ...(refusal.supplyCap !== undefined ? { supplyCap: refusal.supplyCap } : {}),
   };
 }

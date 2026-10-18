@@ -1,6 +1,7 @@
 import { isTrainingJob } from "../shared/building-jobs";
 import { BUILDING_DEFS, UNIT_DEFS } from "../shared/catalog";
 import type { Building, BuildingJob, BuildingKind, TrainableUnitKind } from "../shared/types";
+import { formatRemaining } from "./format-remaining";
 import type { createI18n } from "./i18n";
 
 /** One job of a building's work queue: a unit in training, or the building's own upgrade (see @@@building-upgrade). */
@@ -14,10 +15,9 @@ export type TrainingProgressButton = ({ product: "unit"; unitKind: TrainableUnit
 };
 
 export function trainingProgressText(progress: TrainingProgressButton, i18n: ReturnType<typeof createI18n>) {
-  const percent = Math.floor(progress.progress * 100);
   return {
     label: i18n.t(progress.status === "awaitingLaunch" ? "hud.trainingAwaitingLaunch" : progress.status === "queued" ? "hud.trainingQueued" : progress.product === "upgrade" ? "hud.trainingUpgrading" : "hud.trainingTraining", { label: i18n.label(progressKind(progress)) }),
-    badge: progress.status === "awaitingLaunch" ? i18n.t("hud.trainingAwaitingLaunchBadge") : progress.status === "training" ? `${percent}%` : i18n.t("hud.productionQueueBadge"),
+    badge: progress.status === "awaitingLaunch" ? i18n.t("hud.trainingAwaitingLaunchBadge") : progress.status === "training" ? formatRemaining(progress.remaining) : i18n.t("hud.productionQueueBadge"),
     hint: progress.status === "awaitingLaunch" ? i18n.t("hud.trainingAwaitingLaunchHint") : undefined,
   };
 }
@@ -31,7 +31,7 @@ export function jobDuration(job: BuildingJob) {
 }
 
 export function trainingQueueCountText(queueLength: number) {
-  return queueLength > 1 ? `x${queueLength}` : "";
+  return queueLength > 1 ? `×${queueLength}` : "";
 }
 
 /** A completed head job remains in the simulation queue until the hull can launch. */

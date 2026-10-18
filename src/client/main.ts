@@ -54,7 +54,7 @@ import { createDeploymentRuntime, type MatchChat } from "./deployment/runtime";
 import { createBrowserMatchThreads } from "./match-worker/browser";
 import { setTerrainChunkPainter } from "./terrain-art";
 import { createTerrainChunkPainter } from "./terrain-thread/browser";
-import { createSketchRtsDebugView, type SketchRtsDebugView } from "./debug-view";
+import { createSketchRtsDebugView, type SketchRtsDebugHooks, type SketchRtsDebugView } from "./debug-view";
 import { edgeScrollDelta } from "./edge-scroll";
 import { liveSelectionIds, syncFrontendWorldView } from "./frontend-world-view";
 import type { GameAdapter } from "./game-adapter";
@@ -118,6 +118,8 @@ import type { MapPresentationMark } from "../shared/presentation";
 import { canStartRoom, roomStartBlocker, seatEditRefusal, createRoom, DEFAULT_INTERNAL_AI_VERSION, ROOM_AI_RACES, ROOM_TEAMS, roomAiVersionsFor, roomConfiguration, roomTeam, seatTeam, winningResultSlots, type SlotPatch, type RoomConfiguration } from "../shared/rooms";
 import { snapToFootprint } from "../shared/terrain";
 import { perf, startPerfOverlay } from "./perf-overlay";
+import { formatRemaining } from "./format-remaining";
+import { applyCooldownSweep, cooldownLeft, itemCooldownLength } from "./cooldown-sweep";
 import type { AbilityKind, Building, BuildingKind, GameCommand, GameSnapshot, LocalUserProfile, MeleeStance, PlayerId, RoomState, TrainableUnitKind, Unit, UpgradeKind, WorldItem } from "../shared/types";
 import type { MapId, RaceChoice, RoomAiChoice } from "../shared/types";
 
@@ -132,6 +134,7 @@ type MenuView = "home" | "profile" | "rooms" | "setup" | "results";
 declare global {
   interface Window {
     __sketchRtsView?: SketchRtsDebugView;
+    __sketchRtsDebug?: SketchRtsDebugHooks;
   }
 }
 
@@ -220,6 +223,8 @@ const worldPresentation=new WorldPresentation(canvas);
 let applicationClosed=false;
 let animationFrame=0;
 let visualsReady=false;
+// The home's buttons, made once (see @@@home-in-place).
+let homeEntries: HTMLButtonElement[] | undefined;
 let matchAssets:Promise<void>|undefined;
 const hudSelection = new BattleHudSelection(selectionLabel, t("hud.selectionTypes"));
 // The home screen's scene (see @@@menu-scenes): the one the player last picked, or one drawn at random for this visit.
@@ -542,7 +547,10 @@ async function prepareHome(){
   menuBackdrop.startPresentation(performance.now());
   visualsReady=true;
 }
-export async function initializeVisuals(){if(applicationClosed)return;await prepareHome();if(!applicationClosed)await openRouteFromUrl();}
+// The page has drawn its first screen for good: the home's art is in and the address's screen opened (which draws the
+// menu again). A scene script waits for it before clicking (see @@@debug-hooks).
+let firstScreenOpened=false;
+export async function initializeVisuals(){if(applicationClosed)return;await prepareHome();if(!applicationClosed)await openRouteFromUrl();firstScreenOpened=true;}
 async function ensureMatchResources(){
   if(!matchAssets){visualsReady=false;matchAssets=resourcePanel().run('match',resourceText('读取遭遇战模型与作战资源','Loading skirmish models and combat resources'),async()=>{await worldPresentation.prepare(menuBackdrop.prepare(performance.now()),'match');await soundboard.prepareMatch();}).catch(error=>{matchAssets=undefined;throw error;}).finally(()=>{visualsReady=true;});}
   await matchAssets;
@@ -680,7 +688,7 @@ function createCommandButton(label: string, icon: string, hotkey: string, state:
   element.dataset.hotkey = hotkeyLabel;
   element.setAttribute("aria-label", `${label} (${hotkeyLabel})`);
   applyTooltip(element, tooltip());
-  element.innerHTML = `<span class="command-icon">${escapeHtml(icon)}</span><span class="command-label">${escapeHtml(portrait ? portrait.type === "item" ? labelKind(portrait.kind) : labelAnyKind(portrait.kind) : label)}</span><span class="hotkey">${hotkeyLabel}</span>`;
+  element.innerHTML = `<span class="command-icon">${escapeHtml(icon)}</span><span class="command-label">${escapeHtml(portrait ? portrait.type === "item" ? labelKind(portrait.kind) : labelAnyKind(portrait.kind) : label)}</span><span class="hotkey">${hotkeyLabel}</span><span class="command-stock"></span>`;
   // Hidden match commands must not fetch their portraits during startup.
   // updateHud paints a portrait when its command actually becomes visible.
   if (!portrait) {
@@ -761,6 +769,9 @@ function applyTooltip(element: HTMLElement, tooltip: GameplayTooltip) {
 function renderCommandButtonState(element: HTMLButtonElement, state: CommandButtonState) {
   if (state.cooldownTicks !== undefined) setData(element, "cooldownTicks", String(state.cooldownTicks));
   else delete element.dataset.cooldownTicks;
+  applyCooldownSweep(element, state.cooldownTicks, state.cooldownLength);
+  const stock = element.querySelector(".command-stock");
+  if (stock) setText(stock, state.stock === undefined ? "" : `×${state.stock}`);
   const label = commandButtonStateLabel(state);
   if (label) setData(element, "disabledLabel", label);
   else delete element.dataset.disabledLabel;
@@ -777,7 +788,8 @@ function commandButtonTooltip(tooltip: GameplayTooltip, state: CommandButtonStat
 }
 
 function commandButtonStateLabel(state: CommandButtonState) {
-  if (state.cooldownTicks !== undefined) return `${Math.ceil(state.cooldownTicks / SIM_TICKS_PER_SECOND)}s`;
+  // A cooldown shows as its sweep and the time in its middle (see @@@cooldown-sweep), not as a band.
+  if (state.cooldownTicks !== undefined) return undefined;
   if (state.reason === "stock") return t("hud.commandNoStockShort");
   if (state.reason === "gold") return t("hud.commandNoGoldShort");
   if (state.reason === "supply") return t("hud.commandNoSupplyShort");
@@ -788,7 +800,7 @@ function commandButtonStateLabel(state: CommandButtonState) {
 
 function commandButtonStateRequirement(state: CommandButtonState) {
   if(state.detail)return state.detail;
-  if (state.cooldownTicks !== undefined) return t("hud.commandCooldown", { seconds: Math.ceil(state.cooldownTicks / SIM_TICKS_PER_SECOND) });
+  if (state.cooldownTicks !== undefined) return t("hud.commandCooldown", { time: formatRemaining(state.cooldownTicks) });
   if (state.reason === "stock") return t("hud.commandNoStock");
   if (state.reason === "gold") return t("hud.commandNoGold");
   if (state.reason === "supply") return t("hud.commandNoSupply");
@@ -966,7 +978,10 @@ function renderMainMenu() {
     return;
   }
   menuStatus.textContent = "";
-  mapList.replaceChildren(
+  // @@@home-in-place - The home is drawn again when the server connects and when the address's screen opens after the
+  // home's art, often while a player reaches for it. Its buttons are made once and stay: a button replaced between a
+  // press and its release takes no click, so a click at the end of loading was lost and the menu flickered.
+  homeEntries ??= [
     // A solo game opens on the map and seats played last (see @@@solo-setup).
     menuButton(t("home.play"), "", "data-open-create", () => {
       openMenuRoute({ screen: "setup", configuration: rememberedSoloSetup() });
@@ -977,7 +992,8 @@ function renderMainMenu() {
     menuButton(t("home.settings"), "", "data-open-profile", () => {
       openMenuRoute({ screen: "profile" });
     }),
-  );
+  ];
+  if (mapList.children.length !== homeEntries.length || homeEntries.some((entry, index) => mapList.children[index] !== entry)) mapList.replaceChildren(...homeEntries);
 }
 
 function previewSeatsForRoom(room: RoomState) {
@@ -1740,8 +1756,21 @@ function syncDebugView() {
   // Built when read (tests, the SDK's browser driver), from the state as it is now: a frame never pays for it.
   const input = { roomId: currentRoomId, localPlayerId, snapshot, selectedIds: new Set(selectedIds), focusedSelectionId };
   let view: SketchRtsDebugView | undefined;
-  Object.defineProperty(window, "__sketchRtsView", { configurable: true, enumerable: true, get: () => (view ??= createSketchRtsDebugView(input)) });
+  // The tick is read live: a script waiting for the client to catch up must not see the tick of the last sync.
+  const live = () => { view ??= createSketchRtsDebugView(input); Object.defineProperty(view, "tick", { configurable: true, enumerable: true, get: () => snapshot?.tick }); return view; };
+  Object.defineProperty(window, "__sketchRtsView", { configurable: true, enumerable: true, get: live });
 }
+
+// @@@debug-hooks - Dev-build only (`sketch yatu` / `sketch shot` serve the client through vite): put the camera on a
+// world point, select units by id, and send a command as the player would (refused as the player would be), so a scene
+// script need not reach the world through minimap clicks. The production build has none of them.
+if (import.meta.env.DEV) window.__sketchRtsDebug = {
+  camera(x, y, zoom) { if (zoom !== undefined) worldZoom = zoom; centerCameraOnWorld({ x, y }); },
+  select(ids) { if (!snapshot) return; selectedIds = new Set(ids); focusedSelectionId = resolveFocusedSelectionId(snapshot, selectedIds, focusedSelectionId, localPlayerId); selectedCampId = undefined; openPalette = undefined; updateHud(); },
+  command(command) { return sendCommand(command); },
+  screenOf(x, y) { const at = worldToScreen({ x, y }), box = canvas.getBoundingClientRect(); return { x: box.x + at.x, y: box.y + at.y }; },
+  ready() { return firstScreenOpened && visualsReady; },
+};
 
 function isEdgeBrowser() {
   const brands =
@@ -2351,7 +2380,7 @@ function shipBoardingButtonState(): CommandButtonState {
   if (!action) return HIDDEN_COMMAND_STATE;
   return action.enabled ? ENABLED_COMMAND_STATE : { visible: true, enabled: false,
     reason: action.problem === 'cooldown' ? 'cooldown' : 'missing', detail: shipBoardingProblem(action, i18n.locale === 'zh'),
-    ...(action.cooldownTicks !== undefined ? { cooldownTicks: action.cooldownTicks } : {}) };
+    ...(action.cooldownTicks !== undefined ? { cooldownTicks: action.cooldownTicks, cooldownLength: GANGWAY_COOLDOWN_TICKS } : {}) };
 }
 
 function shipBoardingTooltip(): GameplayTooltip {
@@ -2827,7 +2856,8 @@ function shopGoodButtonState(kind: WorldItem["kind"]): CommandButtonState {
   if (!shop || commandMode || openPalette) return HIDDEN_COMMAND_STATE;
   if (!shop.goods.some((candidate) => candidate.kind === kind)) return HIDDEN_COMMAND_STATE;
   const recipient = purchaseRecipient(shop);
-  return withPurchaseProblem(orderButtonState({ type: "buy", shopId: shop.id, item: kind, ...(recipient ? { recipientId: recipient.id } : {}) }), kind, recipient);
+  const stock = shop.goods.find((candidate) => candidate.kind === kind)!.stock;
+  return { ...withPurchaseProblem(orderButtonState({ type: "buy", shopId: shop.id, item: kind, ...(recipient ? { recipientId: recipient.id } : {}) }), kind, recipient), stock };
 }
 
 function purchaseSeller(){return selectedShop() ?? focusedPlayerBuildings().find(building=>building.kind==="shipyard" && building.complete);}
@@ -3171,6 +3201,7 @@ function updateHud() {
     hudSelection.render({
       key:camp.id, name:t("hud.campName"), caption:t("hud.neutral"),
       detail:campDetail(camp, i18n),
+      ...(camp.cooldownRemaining > 0 ? { cooldownLeft:cooldownLeft(camp.cooldownRemaining, camp.cooldown) } : {}),
       art:{ key:"camp", paint:canvas => drawAtlasBuildingPortrait(requireCanvasContext(canvas), "camp", canvas.clientWidth, "#8b7355") },
     }, [], t("hud.nothingSelected"));
   } else hudSelection.render(undefined, [], t("hud.nothingSelected"));
@@ -3240,6 +3271,7 @@ function renderSelectionGroups(groups: SelectionGroup[]) {
     ].filter(Boolean).join(" · ") : "",
     art:{ key:`${focused.kind}:${ownerInk(owner,snapshot??undefined)}:${selectionAppearanceKey(focused)}`, paint:canvas => drawSelectionModel(canvas, focused) },
     ...(entity ? { health:{ current:entity.hp, max:entity.maxHp } } : {}),
+    ...(entity && 'buildProgress' in entity && !entity.complete ? { work:{ ratio:entity.buildProgress / Math.max(1, entity.buildTime), time:formatRemaining(entity.buildTime - entity.buildProgress) } } : {}),
     ...((entity && 'order' in entity) ? { statuses: focusedHudStatuses(entity) } : {}),
   };
   hudSelection.render(identity, groups.map(group => {
@@ -3311,8 +3343,7 @@ function updateWindIndicator(rect: ScreenRect, now: number) {
   const compass = (Math.round(wind.direction / (Math.PI / 4)) + 8) % 8;
   const direction = (zh ? ['东', '东南', '南', '西南', '西', '西北', '北', '东北'] : ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'])[compass]!;
   const label = strength === 0 ? level : `${level} · ${zh ? '吹向' : 'toward '}${direction}`;
-  const remaining = Math.ceil((WIND_CHANGE_INTERVAL_TICKS - snapshot.tick % WIND_CHANGE_INTERVAL_TICKS) / SIM_TICKS_PER_SECOND);
-  const countdown = `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}`;
+  const countdown = formatRemaining(WIND_CHANGE_INTERVAL_TICKS - snapshot.tick % WIND_CHANGE_INTERVAL_TICKS);
   const key = `${label}:${countdown}`;
   if (windTooltipKey === key) return;
   windTooltipKey = key;
@@ -3363,14 +3394,14 @@ function renderResearchProgressButton(progress: ResearchProgressButton) {
   applyTooltip(button, {
     ...tooltip,
     title: label,
-    stats: [t("hud.progressComplete", { percent }), ...tooltip.stats],
+    stats: [t("hud.progressComplete", { percent, time: formatRemaining(progress.remaining) }), ...tooltip.stats],
   });
   button.style.setProperty("--research-progress", `${percent}%`);
   button.innerHTML = `
     <span class="research-progress-fill"></span>
     <span class="command-icon">${escapeHtml(progress.icon)}</span>
     <span class="command-label">${escapeHtml(labelKind(progress.upgradeKind))}</span>
-    <span class="research-progress-text">${progress.status === "researching" ? `${percent}%` : escapeHtml(t("hud.productionQueueBadge"))}</span>
+    <span class="research-progress-text">${progress.status === "researching" ? formatRemaining(progress.remaining) : escapeHtml(t("hud.productionQueueBadge"))}</span>
   `;
   return button;
 }
@@ -3400,7 +3431,7 @@ function renderTrainingProgressButton(progress: TrainingProgressButton, previous
     ...tooltip,
     title: `${label} · ${t("hud.cancelTraining")}`,
     body: hint ?? tooltip.body,
-    stats: [t("hud.progressComplete", { percent }), ...tooltip.stats],
+    stats: [t("hud.progressComplete", { percent, time: formatRemaining(progress.remaining) }), ...tooltip.stats],
   });
   button.style.setProperty("--research-progress", `${percent}%`);
   if (!previous) button.innerHTML = `
@@ -3492,11 +3523,12 @@ function renderItemDock() {
     const cooldown = button.querySelector<HTMLElement>(".item-cooldown")!;
     button.dataset.itemId = item.id;
     drawCommandPortrait(button, {type:"item",kind:item.kind,...(item.weaponKind?{weaponKind:item.weaponKind}:{})});
-    const cooldownText = item.cooldownRemaining > 0 ? t("hud.itemRecharging", { ticks:item.cooldownRemaining }) : "";
+    const cooldownText = item.cooldownRemaining > 0 ? t("hud.itemRecharging", { time: formatRemaining(item.cooldownRemaining) }) : "";
     button.setAttribute("aria-label", `${labelKind(item.kind)}${hotkey ? ` (${hotkey})` : ""}${cooldownText}`);
     applyTooltip(button, itemTooltip(item.kind, hotkey || undefined, i18n));
     cooldown.hidden = item.cooldownRemaining <= 0;
-    setText(cooldown, `${Math.ceil(item.cooldownRemaining / SIM_TICKS_PER_SECOND)}s`);
+    applyCooldownSweep(button, item.cooldownRemaining, itemCooldownLength(item.kind));
+    setText(cooldown, button.dataset.cooldownLabel ?? "");
   });
 }
 

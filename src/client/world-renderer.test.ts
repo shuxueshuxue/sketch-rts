@@ -9,8 +9,9 @@ import { UnitMotionSmoother } from "./unit-motion";
 import { RELATION_INK } from "./relations";
 import { drawWorld, ownerInk, trackUnitFacing, worldLabelsFor, type WorldFrame } from "./world-renderer";
 import { createI18n } from "./i18n";
+import { formatRemaining } from "./format-remaining";
 import { sketchScene } from "../sdk/scene";
-import { ABILITY_DEFS } from "../shared/catalog";
+import { ABILITY_DEFS, UPGRADE_DEFS } from "../shared/catalog";
 import { createGame, snapshotGame, stepGame } from "../shared/sim";
 import { boardUnit } from '../shared/decks';
 import { beginShipBoarding, gangwaySurface, updateShipGangways } from '../shared/ship-gangway';
@@ -331,8 +332,8 @@ describe("world renderer", () => {
       const rendered=frame(snapshot,{labels,...(pass?{pass}:{})});
       const measure=vi.fn(()=>({width:63.25}) as TextMetrics);rendered.ctx.measureText=measure;drawWorld(rendered);
       expect(rendered.selectedIds?.size??0).toBe(0);
-      expect(rendered.calls.some(call=>call.name==='fillRect'&&call.ink==='#9a6a28'&&call.args[2]===56&&call.args[3]===5)).toBe(true);
-      expect(rendered.calls.some(call=>call.name==='fillText'&&call.args[0]===`${labels.kind('transport')} x2`)).toBe(true);
+      expect(rendered.calls.some(call=>call.name==='fillRect'&&call.ink==='#d1b782'&&call.args[2]===48&&call.args[3]===3)).toBe(true);
+      expect(rendered.calls.some(call=>call.name==='fillText'&&call.args[0]==='×2')).toBe(true);
       expect(rendered.calls.filter(call=>call.name==='fillText'&&call.args[0]==='Awaiting launch')).toHaveLength(1);
       expect(measure).toHaveBeenCalledWith('Awaiting launch');
       expect(rendered.calls.filter(call=>call.name==='fillRect'&&call.ink==='rgba(255, 250, 226, 0.94)')).toMatchObject([{args:[expect.any(Number),expect.any(Number),72,15]}]);
@@ -348,12 +349,24 @@ describe("world renderer", () => {
       const building=createBuilding('producer','north',kind,300,300,true);
       building.queue=kind==='shipyard'?[{unitKind:'transport',remaining:10},{unitKind:'carrier',remaining:0}]:[{unitKind:'footman',remaining:0},{unitKind:'lancer',remaining:80}];
       snapshot.buildings=[building];const rendered=frame(snapshot,{labels,pass:'overlay'});drawWorld(rendered);
-      expect(rendered.calls.some(call=>call.name==='fillRect'&&call.ink==='#315f87'&&call.args[3]===5)).toBe(true);
-      expect(rendered.calls.some(call=>call.ink==='#9a6a28')).toBe(false);
+      expect(rendered.calls.some(call=>call.name==='fillRect'&&call.ink==='#7fb0d6'&&call.args[3]===3)).toBe(true);
+      expect(rendered.calls.some(call=>call.ink==='#d1b782')).toBe(false);
       expect(rendered.calls.some(call=>call.name==='fillText'&&call.args[0]==='Awaiting launch')).toBe(false);
       expect(rendered.calls.some(call=>call.ink==='rgba(255, 250, 226, 0.94)')).toBe(false);
-      expect(rendered.calls.some(call=>call.name==='fillText'&&call.args[0]===`${labels.kind((building.queue[0] as TrainingJob).unitKind)} x2`)).toBe(true);
+      expect(rendered.calls.some(call=>call.name==='fillText'&&call.args[0]===[formatRemaining((building.queue[0] as TrainingJob).remaining),'×2'].filter(Boolean).join(' '))).toBe(true);
     }
+  });
+
+  it('draws research as a work bar 2px under the health bar, with the time left at its right (see @@@work-bar)',()=>{
+    const snapshot=duelSnapshot();snapshot.units=[];
+    const smithy=createBuilding('smithy','north','barracks',300,300,true);
+    const researchTime=UPGRADE_DEFS.weaponTraining.levels[0]!.researchTime;
+    smithy.researchQueue=[{upgradeKind:'weaponTraining',targetLevel:1,remaining:researchTime/2}];smithy.hp=smithy.maxHp/2;
+    snapshot.buildings=[smithy];const rendered=frame(snapshot,{pass:'overlay'});drawWorld(rendered);
+    const hp=rendered.calls.find(call=>call.name==='fillRect'&&call.ink==='#e5b45f'&&call.args[3]===3)!;
+    const work=rendered.calls.find(call=>call.name==='fillRect'&&call.ink==='#7fb0d6'&&call.args[3]===3)!;
+    expect(work.args).toEqual([hp.args[0],(hp.args[1] as number)+7,24,3]);
+    expect(rendered.calls.some(call=>call.name==='fillText'&&call.args[0]===formatRemaining(researchTime/2))).toBe(true);
   });
 
   it('reads waiting-launch words from the live localization callback and never evaluates it for a culled yard',()=>{
@@ -373,7 +386,7 @@ describe("world renderer", () => {
     expect(zh.calls.find(call=>call.name==='fillRect'&&call.ink==='rgba(255, 250, 226, 0.94)')?.args[2]).toBe(37);
     expect(waiting).toHaveBeenCalledTimes(2);waiting.mockClear();dock.x=10000;
     const culled=frame(snapshot,{labels,pass:'overlay'});drawWorld(culled);
-    expect(waiting).not.toHaveBeenCalled();expect(culled.calls.some(call=>call.ink==='#9a6a28')).toBe(false);
+    expect(waiting).not.toHaveBeenCalled();expect(culled.calls.some(call=>call.ink==='#d1b782')).toBe(false);
     expect(culled.calls.some(call=>call.ink==='rgba(255, 250, 226, 0.94)')).toBe(false);
   });
 

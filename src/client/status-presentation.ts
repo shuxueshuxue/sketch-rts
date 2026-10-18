@@ -1,7 +1,7 @@
+import { formatRemaining } from './format-remaining';
 import { ABILITY_DEFS, POISON_DAMAGE, SLOW_PACE } from '../shared/catalog';
 import { areEnemyOwners } from '../shared/sim/command-validation';
 import { isInCabin } from '../shared/ship-cabin';
-import { SIM_TICKS_PER_SECOND } from '../shared/time';
 import type { GameSnapshot, Unit, UnitStatusEffect } from '../shared/types';
 import { matchesUnitTarget } from '../shared/unit-targeting';
 import { isVeteranSkillId, VETERAN_SKILLS, type VeteranModifiers, type VeteranSkillId } from '../shared/veteran-skills';
@@ -77,15 +77,6 @@ export function unitStatusIcon(effect: UnitStatusEffect): AbilityIconId {
   }
 }
 
-/** A live fraction never reads 0; short crowd control retains tenths of a second. */
-export function statusDurationBadge(ticks: number): string {
-  const seconds = ticks / SIM_TICKS_PER_SECOND;
-  if (!(seconds > 0) || !Number.isFinite(seconds)) return '';
-  if (seconds < 3) return `${Math.ceil(seconds * 10) / 10}s`;
-  const rounded = Math.ceil(seconds);
-  return rounded >= 60 ? `${Math.floor(rounded / 60)}:${String(rounded % 60).padStart(2, '0')}` : `${rounded}s`;
-}
-
 function percent(value: number) { return `${Math.round(value * 100)}%`; }
 
 function effectDescription(effect: UnitStatusEffect, locale: Locale): string {
@@ -135,7 +126,7 @@ export function presentUnitStatuses(snapshot: GameSnapshot, unit: Unit, locale: 
   for (const effect of effects) result.push({
     key: effectKey(effect), type: effect.type, polarity: unitStatusPolarity(effect), icon: unitStatusIcon(effect),
     name: STATUS_NAMES[effect.type][locale], description: effectDescription(effect, locale),
-    remainingTicks: effect.remaining, badge: statusDurationBadge(effect.remaining), sourceIds: effect.sourceId ? [effect.sourceId] : [],
+    remainingTicks: effect.remaining, badge: formatRemaining(effect.remaining), sourceIds: effect.sourceId ? [effect.sourceId] : [],
   });
   if (unit.invulnerable && !effects.some(effect => effect.type === 'guardian')) result.push({ key: 'invulnerable', type: 'invulnerable', polarity: 'buff', icon: 'guardianScroll', name: locale === 'zh' ? '无敌' : 'Invulnerable', description: locale === 'zh' ? '当前免疫伤害。' : 'Currently immune to damage.', badge: '', sourceIds: [] });
   for (const { source, skill } of activeVeteranAuraSources(snapshot, unit)) {
@@ -143,6 +134,6 @@ export function presentUnitStatuses(snapshot: GameSnapshot, unit: Unit, locale: 
     result.push({ key: `aura:${skill}`, type: 'aura', polarity: 'buff', icon: skill,
       name: definition.name[locale], description: definition.description[locale], badge: '∞', sourceIds: [source.id] });
   }
-  if (unit.expiresTick !== undefined && unit.expiresTick > snapshot.tick) result.push({ key: 'lifetime', type: 'lifetime', polarity: 'neutral', icon: 'summon', name: locale === 'zh' ? '召唤时限' : 'Summon lifetime', description: locale === 'zh' ? '召唤物会在倒计时结束后消失。' : 'This summon disappears when the countdown ends.', remainingTicks: unit.expiresTick - snapshot.tick, badge: statusDurationBadge(unit.expiresTick - snapshot.tick), sourceIds: [] });
+  if (unit.expiresTick !== undefined && unit.expiresTick > snapshot.tick) result.push({ key: 'lifetime', type: 'lifetime', polarity: 'neutral', icon: 'summon', name: locale === 'zh' ? '召唤时限' : 'Summon lifetime', description: locale === 'zh' ? '召唤物会在倒计时结束后消失。' : 'This summon disappears when the countdown ends.', remainingTicks: unit.expiresTick - snapshot.tick, badge: formatRemaining(unit.expiresTick - snapshot.tick), sourceIds: [] });
   return result.sort((a, b) => STATUS_ORDER[a.type] - STATUS_ORDER[b.type] || a.key.localeCompare(b.key));
 }

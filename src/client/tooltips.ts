@@ -1,4 +1,5 @@
 import { SHIP_WEAPONS,isShipEquipment,shipMounts } from "../shared/ship-equipment";
+import { formatRemaining } from "./format-remaining";
 import { ITEM_DEFS } from "../shared/equipment";
 import { shipProfile, shipPassengers, isShipKind } from "../shared/ship-geometry";
 import { shipCabinUsage } from '../shared/ship-cabin';
@@ -654,7 +655,7 @@ export function campStockLine(camp: Pick<MercenaryCamp, "stock">, i18n: I18n = D
 
 // The camp as its selection panel names it: the unit it sells at what price, what is left, and the wait for the next hire.
 export function campDetail(camp: MercenaryCamp, i18n: I18n = DEFAULT_I18N) {
-  const wait = camp.cooldownRemaining > 0 ? localized(i18n.locale, ` · ${formatSeconds(camp.cooldownRemaining)} 后可再雇`, ` · next hire in ${formatSeconds(camp.cooldownRemaining)}`) : "";
+  const wait = camp.cooldownRemaining > 0 ? localized(i18n.locale, ` · ${formatRemaining(camp.cooldownRemaining)} 后可再雇`, ` · next hire in ${formatRemaining(camp.cooldownRemaining)}`) : "";
   return `${labelKind(camp.hireKind, i18n)} · ${tooltipLine(i18n.locale, "cost", camp.cost)} · ${campStockLine(camp, i18n)}${wait}`;
 }
 
