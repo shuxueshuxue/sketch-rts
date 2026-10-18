@@ -291,13 +291,14 @@ async page => {
       const user = JSON.parse(localStorage.getItem("sketch-rts-user"));
       // A guest has no start or host controls; the footer says what the start waits on (see @@@seat-ownership).
       return { status: room.status, owner: room.hostUserId, userId: user.id, slots: room.slots.filter(slot => slot.userId === user.id),
-        hostControls: document.querySelectorAll("[data-start-room], [data-close-room], [data-map-entries]").length,
+        hostControls: document.querySelectorAll("[data-start-room], [data-close-room], [data-map-entries] [data-map-id]:not([disabled])").length,
+        mapsShown: document.querySelectorAll("[data-map-entries] [data-map-id]").length,
         reason: document.querySelector("[data-start-reason]")?.textContent ?? "",
         hostSeatLocked: [...document.querySelectorAll("[data-slot-id='slot-1'] select, [data-slot-id='slot-1'] input")].every(control => control.disabled),
         ownSeatOpen: !document.querySelector("[data-slot-id='slot-2'] [data-slot-race]")?.disabled };
     }, roomSetupId);
     must(guestJoinProof.owner !== guestJoinProof.userId && guestJoinProof.slots.length === 1 && guestJoinProof.slots[0].id === "slot-2" &&
-      guestJoinProof.status === "open" && guestJoinProof.hostControls === 0 && guestJoinProof.reason.length > 0 &&
+      guestJoinProof.status === "open" && guestJoinProof.hostControls === 0 && guestJoinProof.mapsShown > 1 && guestJoinProof.reason.length > 0 &&
       guestJoinProof.hostSeatLocked && guestJoinProof.ownSeatOpen, "public invitation did not join one guest seat and wait for the host: " + JSON.stringify(guestJoinProof));
     // Asked straight at the server, the guest still cannot change the host's seat.
     const guestRefused = await guest.evaluate(async (roomId) => {
@@ -317,11 +318,20 @@ async page => {
   await page.waitForFunction(() => document.querySelector("[data-slot-id='slot-2'] [data-slot-controller]")?.value === "ai" && document.querySelector("[data-start-room]")?.disabled === false, null, { timeout: 5000 });
   must(roomSetupId, "room setup did not expose room id");
   const roomSetupLayoutProof = await page.evaluate(() => {
-    const mapPane = document.querySelector(".match-dossier")?.getBoundingClientRect();
+    // The setup's three columns (see @@@setup-layout-c): the map list, the chosen map's card, the seats.
+    const listPane = document.querySelector(".map-browser")?.getBoundingClientRect();
+    const mapPane = document.querySelector(".map-preview-card")?.getBoundingClientRect();
     const slotPane = document.querySelector(".room-slot-pane")?.getBoundingClientRect();
     const rowRects = [...document.querySelectorAll(".slot-row")].map((row) => row.getBoundingClientRect());
+    // At this width (1280) nothing in a seat row is cut short: names whole, every control inside its row.
+    const clipped = [...document.querySelectorAll(".slot-row")].flatMap((row) => {
+      const box = row.getBoundingClientRect();
+      return [...row.querySelectorAll(".slot-name, select, .slot-controller-badge, .slot-ready")].filter((part) =>
+        part.scrollWidth > part.clientWidth + 1 || part.getBoundingClientRect().right > box.right + 1).map((part) => part.className || part.tagName);
+    });
     return {
-      mapThenSeats: Boolean(mapPane && slotPane && slotPane.left > mapPane.right + 8),
+      mapThenSeats: Boolean(listPane && mapPane && slotPane && mapPane.left > listPane.right + 8 && slotPane.left > mapPane.right + 8),
+      clipped,
       mapName: document.querySelector("[data-map-name]")?.textContent ?? "",
       rows: rowRects.length,
       maxSlotRowHeight: Math.max(...rowRects.map((rect) => rect.height)),
@@ -333,6 +343,7 @@ async page => {
   must(roomSetupLayoutProof.mapThenSeats, "room setup should keep the map dossier left of the compact seats without overlap: " + JSON.stringify(roomSetupLayoutProof));
   must(roomSetupLayoutProof.mapName === "Pineshade" && roomSetupLayoutProof.rows === 2, "room setup should show the map's name and one row per seat: " + JSON.stringify(roomSetupLayoutProof));
   must(roomSetupLayoutProof.maxSlotRowHeight <= 52, "seat rows should stay one line high: " + JSON.stringify(roomSetupLayoutProof));
+  must(roomSetupLayoutProof.clipped.length === 0, "a seat row cuts something short at 1280 wide: " + JSON.stringify(roomSetupLayoutProof));
   must(roomSetupLayoutProof.slotActions.join(",") === "Copy invite link,Close Room", "seats come with the map: only inviting and closing the room should be offered: " + JSON.stringify(roomSetupLayoutProof));
   must(
     roomSetupLayoutProof.controllerOptions.join(",") === "ai,open" && roomSetupLayoutProof.hostControllerStatus.toLowerCase() === "human",
