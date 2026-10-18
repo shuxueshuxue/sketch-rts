@@ -66,7 +66,10 @@ export async function run(argv: string[]) {
   // A first-minute metric the subject never reached in some games says how many: "7.2 / 6.9 (12 never)".
   const side = (summary: ReturnType<typeof metricSummary>, absent: string) => summary ? `${fmt(summary.own)} / ${fmt(summary.rival)}${summary.missing ? ` (${summary.missing} never)` : ""}` : absent;
   const fmt = (value: number | null | undefined) => value === null || value === undefined ? "-" : Number.isInteger(value) ? String(value) : value.toFixed(3);
-  const data = { base, ref, machine: machine.name, games: compared.reduce((sum, cell) => sum + cell.ref.games, 0), totals: { base: total("base"), ref: total("ref") }, cells: compared, metrics: metricRows };
+  // Each game's metric values too, keyed "<subject>|<rival>" then by game, so a measure can be traced to the maps it comes from.
+  const perGame = (results: Map<string, RoomResult[]>) => Object.fromEntries([...results].map(([key, list]) => [key, Object.assign({}, ...list.map((result) => result.metrics ?? {}))]));
+  const data = { base, ref, machine: machine.name, games: compared.reduce((sum, cell) => sum + cell.ref.games, 0), totals: { base: total("base"), ref: total("ref") }, cells: compared, metrics: metricRows,
+    ...(options.metrics.length ? { gameMetrics: { base: perGame(baseResults), ref: perGame(refResults) } } : {}) };
   const human = [
     table(["subject", "rival", "base", "ref", "flipped games"], compared.map((cell) => [cell.subject, cell.rival, `${cell.base.wins}/${cell.base.games}`, `${cell.ref.wins}/${cell.ref.games}`, cell.flips.length])),
     `total wins: base ${data.totals.base}  ref ${data.totals.ref}`,

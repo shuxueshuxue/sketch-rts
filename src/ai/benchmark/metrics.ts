@@ -5,6 +5,7 @@ import type { GameSnapshot, PlayerId, UpgradeKind } from "../../shared/types";
 import type { AiGameAgent } from "../game-runner";
 import { neutralCamps } from "../policy/v7/creep";
 import { distance } from "../policy/spatial";
+import { areEnemyOwners } from "../../shared/sim/command-validation";
 
 // @@@bench-metrics - Direct measures a bench can take in the same games it plays, named on the command line
 // (`--metrics clear,bases@4,trade@15`), so a change is judged by what it is meant to move and not by win rate alone.
@@ -16,6 +17,9 @@ import { distance } from "../policy/spatial";
 //   clear      minute the player's fighters took their first neutral camp (null: none in the game)
 //   hire       minute the player first had a mercenary (null: none)
 //   upgrade@K.L  minute the player's upgrade K reached level L (null: never), e.g. upgrade@weaponTraining.3
+//   stall@N    unit-minutes the player's land fighters stood still under a move or attack-move for N seconds or more
+//              in a row, with no enemy within reach and no shot fired: an army jammed (an own idle hull parked on a
+//              land pass held fifteen for twenty minutes on ladder-52)
 export type MetricValues = Record<PlayerId, number | null>;
 type MetricTracker = BenchmarkTracker<AiGameAgent, unknown, MetricValues>;
 
@@ -27,6 +31,8 @@ export function parseMetric(name: string): { kind: string; minute?: number; upgr
   const match = name.match(/^(bases|workers|spent|trade)@(\d+)$/);
   if (match) return { kind: match[1]!, minute: Number(match[2]) };
   if (name === "clear" || name === "hire") return { kind: name };
+  const stall = name.match(/^stall@(\d+)$/);
+  if (stall) return { kind: "stall", minute: Number(stall[1]) };
   const upgrade = name.match(/^upgrade@(\w+)\.([1-3])$/);
   if (upgrade && upgrade[1]! in UPGRADE_DEFS) return { kind: "upgrade", upgrade: upgrade[1] as UpgradeKind, level: Number(upgrade[2]) };
   throw new Error(`Unknown bench metric "${name}" (bases@N, workers@N, spent@N, trade@N, clear, hire, upgrade@K.L)`);
@@ -44,6 +50,7 @@ export function createMetricTrackers(names: readonly string[]): MetricTracker[] 
       return atMinute(id, minute!, read);
     }
     if (kind === "trade") return lostByMinute(id, minute!);
+    if (kind === "stall") return stalled(id, minute!);
     if (kind === "upgrade") return firstMinute(id, (after, owner) => (after.players[owner]?.upgrades[upgrade!] ?? 0) >= level!);
     if (kind === "hire") return firstMinute(id, (after, owner) => after.units.some((unit) => unit.owner === owner && (MERCENARY_UNIT_KINDS as readonly string[]).includes(unit.kind)));
     return firstCampCleared(id);
@@ -91,6 +98,32 @@ function lostByMinute(id: string, minute: number): MetricTracker {
       }
       for (const [unitId, fighter] of state.alive) if (!now.has(unitId) && fighter.owner in state.values) state.values[fighter.owner]! += fighter.cost;
       state.alive = now;
+    },
+    finish: (raw) => (raw as State).values,
+  };
+}
+
+function stalled(id: string, seconds: number): MetricTracker {
+  type State = { values: MetricValues; still: Map<string, { x: number; y: number; since: number }> };
+  return {
+    id,
+    create: ({ players }) => ({ values: Object.fromEntries(players.map((owner) => [owner, 0])), still: new Map() }) as State,
+    afterStep(raw, { after, players }) {
+      const state = raw as State;
+      if (after.tick % SAMPLE !== 0) return;
+      const now = new Map<string, { x: number; y: number; since: number }>();
+      for (const unit of after.units) {
+        if (!players.includes(unit.owner as PlayerId) || unit.kind === "worker" || unit.attackDamage <= 0 || unit.deck || unit.garrison || UNIT_DEFS[unit.kind].naval) continue;
+        if (unit.order.type !== "move" && unit.order.type !== "attackMove") continue;
+        const last = state.still.get(unit.id);
+        const fighting = unit.cooldown > 0 || after.units.some((foe) => foe.hp > 0 && areEnemyOwners(after, foe.owner, unit.owner)
+          && distance(foe, unit) <= unit.attackRange + unit.radius + foe.radius + 50);
+        // Still: within a cell of where it stood when the stillness began (pressed bodies jostle back and forth).
+        if (fighting || !last || distance(last, unit) > 32) { now.set(unit.id, { x: unit.x, y: unit.y, since: after.tick }); continue; }
+        now.set(unit.id, last);
+        if (after.tick - last.since >= seconds * SIM_TICKS_PER_SECOND) state.values[unit.owner as PlayerId]! += SAMPLE / MINUTE;
+      }
+      state.still = now;
     },
     finish: (raw) => (raw as State).values,
   };
