@@ -400,9 +400,11 @@ export class World3DLayer {
     if(frame.story&&frame.props)for(const prop of frame.story.props){
       const id=`prop:${prop.id}`,paint=frame.props(prop.kind);
       if(!paint||propStand(prop.kind)!=='standing'||this.positions.has(id))continue;
-      this.positions.set(id,{x:prop.x,y:prop.y,bodyY:prop.y,topY:prop.y-PROP_TILE/2*prop.scale});
-      if(!visible(prop.x,prop.y,PROP_TILE*prop.scale))continue;
-      this.propCards.add(`prop:${prop.kind}:${prop.state??''}:${prop.flip?1:0}`,density,ctx=>{if(prop.flip)ctx.scale(-1,1);paint(ctx,prop.state);},this.pose(prop.x,prop.y,0,0,prop.scale),id,PROP_FOOT,PROP_TILE);
+      // A painter larger than its cell paints below its size; its card is drawn back up (see PropPainter.paintScale).
+      const scale=prop.scale/(paint.paintScale??1);
+      this.positions.set(id,{x:prop.x,y:prop.y,bodyY:prop.y,topY:prop.y-PROP_TILE/2*scale});
+      if(!visible(prop.x,prop.y,PROP_TILE*scale))continue;
+      this.propCards.add(`prop:${prop.kind}:${prop.state??''}:${prop.flip?1:0}`,density,ctx=>{if(prop.flip)ctx.scale(-1,1);paint(ctx,prop.state);},this.pose(prop.x,prop.y,0,0,scale),id,PROP_FOOT,PROP_TILE);
     }
     // A mine is painted on the ground (see @@@mine-stages); its ring is the same footprint square as every other body's.
     for(const mine of snapshot.resources)if(frame.hoveredId===mine.id && visible(mine.x,mine.y))this.foundationMarker(frame,{x:mine.x,y:mine.y,radius:GOLD_MINE_RULES.radius},mineRingInk(mine),false);

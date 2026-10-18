@@ -53,7 +53,9 @@ export function defineUnit<const M extends CastMember>(member: M): M {
 export type CastBook = Readonly<Record<string, CastMember>>;
 
 // A piece of scenery's painter (see stage props): drawn around its foot like a unit, once per state.
-export type PropPainter = (brush: CanvasRenderingContext2D, state: string | undefined) => void;
+/** Paints a prop around its point. A prop larger than its atlas cell paints at `paintScale` of its size, and is drawn
+ * back up by as much, so it keeps its world size (see drawStoryProps). */
+export type PropPainter = ((brush: CanvasRenderingContext2D, state: string | undefined) => void) & { paintScale?: number };
 
 // Registers the cast's variants in a game: from here on the game can field them.
 export function enlist(game: Game, cast: CastBook) {

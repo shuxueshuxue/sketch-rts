@@ -111,7 +111,7 @@ function drawMarkerGround(ctx: Brush, marker: MarkerView, at: Point, age: number
 
 // ---- Scenery (world space, with the landmarks).
 
-export function drawStoryProps(ctx: Brush, view: StageView, toScreen: (point: Point) => Point, near: (point: Point, pad: number) => boolean, painter: (kind: string) => ((b: Brush, state: string | undefined) => void) | undefined, now: number) {
+export function drawStoryProps(ctx: Brush, view: StageView, toScreen: (point: Point) => Point, near: (point: Point, pad: number) => boolean, painter: (kind: string) => (((b: Brush, state: string | undefined) => void) & { paintScale?: number }) | undefined, now: number) {
   for (const prop of [...view.props].sort((a, b) => a.y - b.y)) {
     const at = toScreen(prop);
     if (near(at, 140 * prop.scale)) drawStoryProp(ctx, prop, at, painter, now);
@@ -119,16 +119,17 @@ export function drawStoryProps(ctx: Brush, view: StageView, toScreen: (point: Po
 }
 
 /** One prop with its foot at `at`, and its flames if it burns. */
-export function drawStoryProp(ctx: Brush, prop: StageView["props"][number], at: Point, painter: (kind: string) => ((b: Brush, state: string | undefined) => void) | undefined, now: number) {
+export function drawStoryProp(ctx: Brush, prop: StageView["props"][number], at: Point, painter: (kind: string) => (((b: Brush, state: string | undefined) => void) & { paintScale?: number }) | undefined, now: number) {
   if (!drawStoryPropPicture(ctx, prop, at, painter)) return;
   if (prop.state === "burning") drawPropFlames(ctx, prop, at, now);
 }
 
 /** A prop's picture alone, its foot at `at`; whether it has one. */
-export function drawStoryPropPicture(ctx: Brush, prop: StageView["props"][number], at: Point, painter: (kind: string) => ((b: Brush, state: string | undefined) => void) | undefined) {
+export function drawStoryPropPicture(ctx: Brush, prop: StageView["props"][number], at: Point, painter: (kind: string) => (((b: Brush, state: string | undefined) => void) & { paintScale?: number }) | undefined) {
   const paint = painter(prop.kind);
   if (!paint) return false;
-  drawAtlasProp(ctx, `${prop.kind}:${prop.state ?? ""}`, (b) => paint(b, prop.state), at, prop.scale, prop.flip);
+  // A painter larger than its atlas cell paints below its size and is drawn back up (see PropPainter.paintScale).
+  drawAtlasProp(ctx, `${prop.kind}:${prop.state ?? ""}`, (b) => paint(b, prop.state), at, prop.scale / (paint.paintScale ?? 1), prop.flip);
   return true;
 }
 
