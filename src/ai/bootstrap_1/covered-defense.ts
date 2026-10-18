@@ -50,7 +50,8 @@ export function coveredDefenseTarget(snapshot: GameSnapshot, intel: V6Intel): Ar
 export function holdCoveredPost(snapshot: GameSnapshot, owner: PlayerId, memory: V6PolicyMemory,
   line: Unit[], defense: ArmyDefense, options: AiPolicyContext): GameCommand[] {
   const point = defense.waitingPoint;
-  memory.general = { mode: 'guard', target: { x: point.x, y: point.y } };
+  const holdingSince = memory.general?.holdingSince;
+  memory.general = { mode: 'guard', target: { x: point.x, y: point.y }, ...(holdingSince !== undefined ? { holdingSince } : {}) };
   const arriving = line.filter(unit => distance(unit, point) <= POST_RADIUS && unit.order.type !== 'hold');
   const walking = line.filter(unit => distance(unit, point) > POST_RADIUS
     && !(unit.order.type === 'move' && distance(unit.order, point) <= POST_RADIUS / 2));

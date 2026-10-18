@@ -499,7 +499,8 @@ export function waitsForTowers(intel: V6Intel, defense: { waitingCover: number; 
 
 function towerWait(snapshot: GameSnapshot, owner: PlayerId, memory: V6PolicyMemory, line: Unit[], defense: ArmyDefense, options: AiPolicyContext): GameCommand[] {
   const point = defense.waitingPoint;
-  memory.general = { mode: "guard", target: { x: point.x, y: point.y } };
+  const holdingSince = memory.general?.holdingSince;
+  memory.general = { mode: "guard", target: { x: point.x, y: point.y }, ...(holdingSince !== undefined ? { holdingSince } : {}) };
   const walking = line.filter((unit) => distance(unit, point) > ORDER_SLACK && !(unit.order.type === "move" && distance(unit.order, point) <= ORDER_SLACK));
   return walking.length > 0 ? [resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: walking.map((unit) => unit.id), x: point.x, y: point.y }, options)] : [];
 }
@@ -729,7 +730,10 @@ function isMain(intel: V6Intel, base: V6BaseIntel | undefined) {
 }
 
 function order(snapshot: GameSnapshot, owner: PlayerId, memory: V6PolicyMemory, mode: Mode, front: Unit[], point: Point, options: AiPolicyContext, leash?: number): GameCommand[] {
-  const holdingSince = mode === "hold" ? (memory.general?.mode === "hold" ? (memory.general.holdingSince ?? snapshot.tick) : snapshot.tick) : undefined;
+  // A defensive interruption does not buy another full idle period. Consume the
+  // wait on an attack or a creep mission, while defense keeps priority over it.
+  const holdingSince = mode === "hold" ? (memory.general?.holdingSince ?? snapshot.tick)
+    : mode === "defend" || mode === "guard" ? memory.general?.holdingSince : undefined;
   memory.general = { mode, target: { x: point.x, y: point.y }, ...(holdingSince !== undefined ? { holdingSince } : {}), ...(leash !== undefined ? { leash } : {}) };
   return orderUnits(snapshot, owner, mode, front, point, options, leash, mode === "hold" || mode === "guard");
 }
