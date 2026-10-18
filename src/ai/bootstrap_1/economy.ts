@@ -25,6 +25,7 @@ import { sameGround } from '../../shared/terrain';
 import { colonyRecoveryGoals } from './colony-recovery';
 import { armedFoes, retreatLandTravelTicks } from './safe-land-route';
 import { freeIncomeCapitalGoals } from './free-income-capital';
+import { committedColonyCapital } from './committed-colony-capital';
 
 export const bootstrapEconomy: AiScript = {
   id: 'v6Economy',
@@ -207,7 +208,7 @@ export function planBootstrapEconomy(snapshot: GameSnapshot, owner: PlayerId, op
   const player = snapshot.players[owner]!;
   let gold = player.gold;
   let supply = projectedSupplyUsed(snapshot, owner);
-  const voyageReserve = navalBudgetReserve(snapshot, owner, options);
+  const voyageReserve = Math.max(navalBudgetReserve(snapshot, owner, options), committedColonyCapital(snapshot, owner, options));
   const capital = goals.filter(goal => goal.id === 'naval:islandHall'
     && readV6Intel(snapshot, owner, options).intrusion === undefined);
   const navalReserve = Math.max(voyageReserve, ...capital.map(goal => goal.cost));
