@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { upgradeJob } from "./building-jobs";
-import { BUILDING_DEFS, type BuildingDef } from "./catalog";
+import { BUILDING_DEFS, UNIT_DEFS, type BuildingDef } from "./catalog";
 import { createBuilding } from "./map";
 import { createGame, issuePlayerCommand, restoreSnapshotIntoGame, snapshotGame, stepGame, strikeUnit, transformBuilding, type Game } from "./sim";
 import { checksumGame } from "./sim/checksum";
@@ -347,6 +347,42 @@ describe("tower garrison", () => {
     issuePlayerCommand(game, "player", { type: "move", unitIds: [troops[0]!.id], x: start.x + 300, y: start.y });
     for (let tick = 0; tick < 20; tick++) stepGame(game);
     expect(troops[0]!.x).toBeGreaterThan(start.x + 10);
+  });
+});
+
+describe("a ranged troop on the tower's top reaches farther", () => {
+  it("strikes a mark beyond its own range but within 1.2 times it, and no longer once down", () => {
+    const game = field();
+    const building = tower(game);
+    const [archer] = garrison(game, building, ["archer"]);
+    const base = UNIT_DEFS.archer.attackRange;
+    expect(archer!.attackRange).toBeCloseTo(base * TOWER_GARRISON.rangeMultiplier, 5);
+    const gap = base * 1.08;
+    const mark = quiet(game.spawnUnit("enemy", "footman", archer!.x + archer!.radius + 16 + gap, archer!.y));
+    mark.radius = 16;
+    for (let tick = 0; tick < 100 && mark.hp === mark.maxHp; tick++) stepGame(game);
+    expect(mark.hp).toBeLessThan(mark.maxHp);
+    issuePlayerCommand(game, "player", { type: "ungarrison", buildingId: building.id });
+    expect(archer!.attackRange).toBeCloseTo(base, 5);
+    // The same gap on the ground.
+    mark.hp = mark.maxHp;
+    mark.x = archer!.x + archer!.radius + mark.radius + gap; mark.y = archer!.y;
+    quiet(archer!); archer!.attackDamage = 13;
+    archer!.order = { type: "hold", x: archer!.x, y: archer!.y };
+    for (let tick = 0; tick < 100; tick++) stepGame(game);
+    expect(mark.hp).toBe(mark.maxHp);
+  });
+
+  it("loses the reach when its tower falls, and a melee troop never gains any", () => {
+    const game = field();
+    const building = tower(game);
+    const [archer, footman] = garrison(game, building, ["archer", "footman"]);
+    const blade = footman!.attackRange;
+    expect(blade).toBe(game.spawnUnit("player", "footman", 100, 100).attackRange);
+    building.hp = 0;
+    stepGame(game);
+    expect(archer!.attackRange).toBeCloseTo(UNIT_DEFS.archer.attackRange, 5);
+    expect(footman!.attackRange).toBe(blade);
   });
 });
 

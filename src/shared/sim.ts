@@ -82,7 +82,7 @@ import { BOOTS_SPEED, HEALING_SCROLL_HEAL, HEALING_SCROLL_RADIUS, IVORY_TOWER_RE
 import { poolMap } from "./map-pool";
 import { perTick, seconds, SIM_TICKS_PER_SECOND } from "./time";
 import { ownUnitLookup } from "./unit-lookup";
-import { canStandOnTower, garrisonRoomFor, isFortifiedTower, towerFoot, towerGarrison, towerTopSpot } from "./tower-garrison";
+import { canStandOnTower, garrisonRangeMultiplier, garrisonRoomFor, isFortifiedTower, towerFoot, towerGarrison, towerTopSpot } from "./tower-garrison";
 import { isTrainingJob, trainingJobs } from "./building-jobs";
 import type { AbilityKind, Building, BuildingKind, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Obstacle, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, Projectile, RallyTarget, ScenarioOverride, ScenarioPlayerSeed, SettledUnitOrder, TrainableUnitKind, TrainingJob, Unit, UnitKind, UnitOrder, UnitStatusEffect, UpgradeJob, UpgradeKind, WorldEffect, WorldItem } from "./types";
 
@@ -1935,6 +1935,7 @@ function updateGarrisonOrder(game: Game, unit: Unit) {
   unit.garrison = { buildingId: tower.id };
   unit.pushX = undefined;
   unit.pushY = undefined;
+  applyDerivedUnitStats(game, unit);
   invalidateSeparationFrame(game);
   settleGarrisons(game);
 }
@@ -1943,6 +1944,7 @@ function updateGarrisonOrder(game: Game, unit: Unit) {
 function leaveTower(game: Game, unit: Unit, toward: { x: number; y: number }) {
   const tower = game.buildings.find((building) => building.id === unit.garrison!.buildingId);
   delete unit.garrison;
+  applyDerivedUnitStats(game, unit);
   invalidateSeparationFrame(game);
   if (tower) Object.assign(unit, towerFoot(tower, unit, toward));
 }
@@ -1956,6 +1958,7 @@ function settleGarrisons(game: Game) {
     const tower = game.buildings.find((building) => building.id === unit.garrison!.buildingId);
     if (!tower || tower.hp <= 0 || !isFortifiedTower(tower) || tower.owner !== unit.owner || unit.hp <= 0) {
       delete unit.garrison;
+      if (unit.hp > 0) applyDerivedUnitStats(game, unit);
       invalidateSeparationFrame(game);
       continue;
     }
@@ -3790,7 +3793,7 @@ function applyDerivedUnitStats(game: Game, unit: Unit) {
   unit.attackDamage = Math.round(base.attackDamage);
   unit.maxHp = Math.round(base.maxHp * multiplier);
   unit.speed = base.speed * (heavy ? .45 : 1) * (veterans?.moveSpeedMultiplier ?? 1);
-  unit.attackRange = base.attackRange * (veterans?.attackRangeMultiplier ?? 1);
+  unit.attackRange = base.attackRange * (veterans?.attackRangeMultiplier ?? 1) * garrisonRangeMultiplier(unit, base.attackRange);
   unit.hp = Math.min(unit.maxHp, Math.max(1, unit.hp + unit.maxHp - previousMaxHp));
 }
 

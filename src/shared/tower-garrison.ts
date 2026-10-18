@@ -1,3 +1,4 @@
+import { RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
 import { unitMover, unitRules } from "./catalog";
 import type { DamageReductionSource } from "./damage-reduction";
 import type { Building, GameSnapshot, Unit } from "./types";
@@ -5,7 +6,8 @@ import type { Building, GameSnapshot, Unit } from "./types";
 // @@@tower-garrison - A defense tower may be upgraded into a fortified tower (see @@@building-upgrade), each tower on its
 // own: it stands broader, its health doubles, and it strikes no more; instead its owner's troops climb onto its top, up to
 // TOWER_GARRISON.supply of supply (a troop with no supply, a summon, counts as one). Up there a troop does not walk: it
-// strikes what is within its own reach and waits for what is not. Two rules protect it until the tower falls: a melee blow never crosses between a
+// strikes what is within its own reach and waits for what is not, and a ranged troop reaches TOWER_GARRISON.rangeMultiplier
+// farther (see applyDerivedUnitStats). Two rules protect it until the tower falls: a melee blow never crosses between a
 // tower's top and anything else, either way (see strikeReach), and every other kind of damage, shots, spells, blasts, fire
 // and poison, lands at TOWER_GARRISON.damageTaken (see garrisonCover). Heals, curses and other effects reach it as
 // anywhere. Any walking order takes a troop down to the tower's foot first; when the tower falls its troops are left
@@ -13,6 +15,7 @@ import type { Building, GameSnapshot, Unit } from "./types";
 export const TOWER_GARRISON = {
   supply: 4,
   damageTaken: 0.4,
+  rangeMultiplier: 1.2,
 } as const;
 // Where the troops stand on a fortified top, from the tower's center, in garrison order.
 const TOP_SPOTS = [{ x: -14, y: -14 }, { x: 14, y: -14 }, { x: -14, y: 14 }, { x: 14, y: 14 }] as const;
@@ -57,6 +60,11 @@ export function towerFoot(tower: Pick<Building, "x" | "y" | "radius">, unit: Pic
   const dx = toward.x - tower.x, dy = toward.y - tower.y, length = Math.hypot(dx, dy);
   const reach = tower.radius + unit.radius + 2;
   return length === 0 ? { x: tower.x, y: tower.y + reach } : { x: tower.x + dx / length * reach, y: tower.y + dy / length * reach };
+}
+
+/** A ranged troop on a tower's top reaches farther (see @@@tower-garrison); `baseRange` is its range before stars. */
+export function garrisonRangeMultiplier(unit: Pick<Unit, "garrison">, baseRange: number) {
+  return unit.garrison && baseRange > RANGED_ATTACK_RANGE_THRESHOLD ? TOWER_GARRISON.rangeMultiplier : 1;
 }
 
 /** A garrison's shelter against everything but a melee blow, which never reaches it (see strikeReach). */
