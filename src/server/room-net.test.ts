@@ -104,9 +104,10 @@ describe("room net hub", () => {
     roomHost.commandTickRoom(room.id, [{ playerId: "player", command: { type: "move", unitIds: [worker!.id], x: worker!.x + 80, y: worker!.y } }], 1 + PLANNER_COMMAND_DELAY_TICKS);
 
     const frames = socket.sent.map((raw) => decodeServerNetMessage(raw)).filter((message): message is Extract<ServerNetMessage, { type: "frame" }> => message.type === "frame");
-    expect(frames.map((message) => message.frame.tick)).toEqual([0, PLANNER_COMMAND_DELAY_TICKS]);
+    // The page follows every tick, the ticks between with no commands too (see @@@hosted-every-tick).
+    expect(frames.map((message) => message.frame.tick)).toEqual(Array.from({ length: PLANNER_COMMAND_DELAY_TICKS + 1 }, (_, tick) => tick));
     expect(frames[0]?.frame.commands).toContainEqual({ playerId: "player", command: { type: "move", unitIds: [worker!.id], x: worker!.x + 80, y: worker!.y } });
-    expect(frames[1]?.frame.commands.some((entry) => entry.playerId === "enemy" && entry.command.type === "mine")).toBe(true);
+    expect(frames.at(-1)?.frame.commands.some((entry) => entry.playerId === "enemy" && entry.command.type === "mine")).toBe(true);
   });
 
   it("publishes single room commands as one connected room frame tick", () => {

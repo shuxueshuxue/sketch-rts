@@ -287,10 +287,12 @@ describe("server room host", () => {
     expect(hosted.snapshot.units).toEqual(localSnapshot.units);
     expect(hostedEnemyWorker?.order).toEqual(localEnemyWorker?.order);
     if (!hostedEnemyWorker || hostedEnemyWorker.order.type !== "move") throw new Error("expected hosted enemy worker to keep its AI move order");
-    expect(recorded.frames.map((frame) => frame.tick)).toEqual([0, PLANNER_COMMAND_DELAY_TICKS]);
+    // Every tick is a frame (see @@@hosted-every-tick); the ticks between carry no commands.
+    expect(recorded.frames.map((frame) => frame.tick)).toEqual(Array.from({ length: PLANNER_COMMAND_DELAY_TICKS + 1 }, (_, tick) => tick));
+    expect(recorded.frames.slice(1, -1).every((frame) => frame.commands.length === 0)).toBe(true);
     expect(recorded.frames[0]?.source).toBe("sdk-agent");
     expect(recorded.frames[0]?.commands).toEqual([{ playerId: "player", command: playerCommand }]);
-    expect(recorded.frames[1]?.commands).toEqual([
+    expect(recorded.frames.at(-1)?.commands).toEqual([
       { playerId: "enemy", command: { type: "move", unitIds: [hostedEnemyWorker!.id], x: hostedEnemyWorker!.order.x, y: hostedEnemyWorker!.order.y } },
     ]);
   });
@@ -354,6 +356,20 @@ describe("server room host", () => {
       }),
     ).not.toThrow();
     expect(host.snapshot(room.id).tick).toBe(1);
+  });
+
+  // @@@hosted-every-tick: a page joined to the room needs every tick's frame; ticks with no commands left none.
+  it("sends and keeps a frame for every tick it is advanced over the API, commands or not, before and after a reset", () => {
+    const host = createRoomHost();
+    const room = host.createRoom({ id: "room-every-tick", host: hostUser, mapId: "bareDuel" });
+    host.startRoom(room.id);
+    const sent: number[] = [];
+    host.observeRoomFrames(room.id, (event) => sent.push(event.frame.tick));
+    host.tickRoom(room.id, 5);
+    host.resetRoom(room.id, "bareDuel", { aiPlayers: [] });
+    host.tickRoom(room.id, 4);
+    expect(sent).toEqual([0, 1, 2, 3, 4, 0, 1, 2, 3]);
+    expect(host.framesFrom(room.id, 0).map((frame) => frame.tick)).toEqual([0, 1, 2, 3]);
   });
 
   it("creates checkpoint frames from live room runtime state", () => {
