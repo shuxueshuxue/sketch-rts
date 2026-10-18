@@ -5,15 +5,16 @@ import { lootRecovery } from '../ai/bootstrap_1/loot-recovery';
 import { bootstrapPolicyContext } from '../ai/bootstrap_1/policy';
 import { createAiPolicyMemory } from '../ai/memory';
 import { V7_GATHERED_RANGE } from '../ai/policy/v7/creep';
-import { snapshotGame, stepGame } from './sim';
+import { createGame, restoreSnapshotIntoGame, snapshotGame, stepGame } from './sim';
 import { createRoom } from './rooms';
 import { createSaveGameRecord, restoreGameFromSave } from './savegame';
 import { createDebugReplayTrace, replayTraceToTick } from './replay';
 import { checksumGame } from './sim/checksum';
 import { setBuildingBodies, walkingDistance } from './terrain';
 import { standingBodies } from './structure-bodies';
-import type { Building, GameMap, ResourceNode, Unit } from './types';
+import type { Building, GameMap, ResourceNode, Unit, GameSnapshot } from './types';
 import recorded from './test-fixtures/loot-return-ladder-18-8440.json';
+import crowded from './test-fixtures/lookahead-crowd-ladder-16.json';
 
 function returningWarden() {
   // The recorded 41c9c208 unit's only order is its queued trip home. Keep the
@@ -73,4 +74,19 @@ it('keeps a rules-4 save loadable while refusing to replay its old movement rule
   for (let tick = 0; tick < 2400 && returned.order.type !== 'idle'; tick++) stepGame(restored);
   expect(returned.order.type).toBe('idle');
   expect(walkingDistance(restored.map, returned, home, 'land')).toBeLessThanOrEqual(V7_GATHERED_RANGE);
+});
+
+// The unused long path joins fields, but its short fallback stays in the
+// starting field. Rejecting that ordinary corner smoothing pins two lancers
+// against each other instead of letting them round the bend.
+it('does not funnel a rejected cross-field shortcut into the first cell center', () => {
+  const game = createGame('bareDuel', { aiPlayers: [] });
+  restoreSnapshotIntoGame(game, crowded.snapshot as unknown as GameSnapshot, 1_000_000);
+  game.aiPlayers = [];
+  game.scriptedVictory = true;
+  game.projectiles = [];
+  const unit = game.units.find(u => u.id === crowded.provenance.unitId)!;
+  for (let tick = 0; tick < 1200 && unit.order.type !== 'idle'; tick++) stepGame(game);
+  expect(unit.hp).toBeGreaterThan(0);
+  expect(unit.order.type, JSON.stringify({ x: unit.x, y: unit.y, order: unit.order })).toBe('idle');
 });

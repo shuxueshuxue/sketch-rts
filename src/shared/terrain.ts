@@ -427,6 +427,10 @@ function walkAhead(state: TerrainRuntime, ground: TerrainRuntime, tiles: Tiles, 
 // Keep single-field smoothing unchanged: equal-cost or initially uphill cells
 // can still lead to a valid visible shortcut within one field.
 function shortcutDescends(state: TerrainRuntime, field: BoxField, from: Point, near: number, point: Point) {
+  // A rejected long lookahead can fall back to a SHORT_LOOK point still inside
+  // this field. That returned segment joins no fields: preserve its ordinary
+  // corner smoothing, even if the unused long path went through another field.
+  if (local(field.box, padAt(state, point.x, point.y), state.width) >= 0) return true;
   const dx = point.x - from.x, dy = point.y - from.y, cell = state.terrain.cell;
   const col = near % state.width - 1, row = Math.floor(near / state.width) - 1;
   const acrossX = dx === 0 ? Infinity : ((col + Number(dx > 0)) * cell - from.x) / dx;
