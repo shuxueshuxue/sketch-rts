@@ -312,7 +312,7 @@ describe('early course alterations for vessel encounters',()=>{
   it('keeps a land body in the physical passing proof when the map admits both land and ships',()=>{
     const {ship,units,map,heading,original,turned,end}=stoppedEncounter();
     delete map.terrain;
-    const worker=createUnit('shore-worker','player','worker',end.x,end.y);units.push(worker);
+    const worker=createUnit('shore-worker','enemy','worker',end.x,end.y);units.push(worker);
     beginShipMotionFrame(units,map);
     expect(shipTraffic(ship,units,Infinity)(turned,end)).toBe(true);
     expect(sweepShipCollision(map,ship,units,turned,end)?.kind).toBe('unit');

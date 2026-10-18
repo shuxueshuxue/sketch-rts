@@ -412,7 +412,7 @@ describe('remembered hull sweeps and shared swept shapes', () => {
           other.sailing = { heading: heading(next), speed: 0, load: 0, balance: 0 };
           units.push(other);
         }
-        for (let i = 0; i < 6; i++) units.push(createUnit(`crew-${round}-${i}`, 'player', 'footman', center.x + (next() * 2 - 1) * 160, center.y + (next() * 2 - 1) * 160));
+        for (let i = 0; i < 6; i++) units.push(createUnit(`crew-${round}-${i}`, 'enemy', 'footman', center.x + (next() * 2 - 1) * 160, center.y + (next() * 2 - 1) * 160));
         for (let i = 0; i < 2; i++) solids.push({ id: `yard-${round}-${i}`, owner: 'player', kind: 'shipyard', x: center.x + (next() * 2 - 1) * 180, y: center.y + (next() * 2 - 1) * 180, radius: 24 + next() * 40, hp: 100, maxHp: 100 } as Building);
         const length = shipProfile(ship)!.length;
         for (let move = 0; move < 12; move++) {

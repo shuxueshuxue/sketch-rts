@@ -78,9 +78,11 @@ describe('AI crowded shore transfers', () => {
         }
       }
       stepGame(blocked.game); stepGame(cleared.game);
-      // Both branches use the same legal, stationary hull throughout: clearing
-      // the actual shore bodies is what makes the crossing possible.
-      for (const { game, boat } of [blocked, cleared]) {
+      // Both branches use the same legal, stationary hull until the crossing is made: clearing the actual shore bodies
+      // is what makes it possible. Once all are aboard, the boat may give way to the troops it was clearing (see
+      // @@@give-way).
+      for (const { game, boat, passengers } of [blocked, cleared]) {
+        if (passengers.every(unit => unit.deck)) continue;
         expect(hullFits(game.map, boat)).toBe(true);
         expect([boat.x, boat.y, boat.sailing!.heading]).toEqual([272, 368, 3 * Math.PI / 2]);
       }

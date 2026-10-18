@@ -14,7 +14,7 @@ type Contact = { fraction: number; normal: Point; point: Point; other?: Body; ki
 /** Damage is proposed here; the simulation applies its usual armor, cabin and death rules. */
 export type ShipCollisionImpact = Contact & { ship: Unit; closingSpeed: number; energy: number; shipDamage: number; otherDamage: number };
 type Entry = { body: Body; radius: number; keys: number[]; left: number; right: number; top: number; bottom: number };
-type Frame = { map?: GameMap; hasShips: boolean; buckets: Map<number, Set<Entry>>; shipBuckets: Map<number, Set<Entry>>; entries: Map<Body, Entry>; velocities: Map<Body, Point>; yawRates: Map<Unit, number>; impacts: ShipCollisionImpact[]; hitPairs: Set<string> };
+type Frame = { map?: GameMap; hasShips: boolean; buckets: Map<number, Set<Entry>>; shipBuckets: Map<number, Set<Entry>>; entries: Map<Body, Entry>; velocities: Map<Body, Point>; yawRates: Map<Unit, number>; impacts: ShipCollisionImpact[]; hitPairs: Set<string>; inTheWay: Set<Unit> };
 const frames = new WeakMap<readonly Unit[], Frame>();
 const CELL = 192;
 // A bucket's key packs its column and row into one integer (2^20 cells either way of the origin, far past any map):
@@ -87,10 +87,10 @@ export function beginShipCollisionFrame(units: readonly Unit[], map?: GameMap, s
   let frame = frames.get(units);
   if (frame) {
     frame.buckets.clear(); frame.shipBuckets.clear(); frame.entries.clear();
-    frame.velocities.clear(); frame.yawRates.clear(); frame.impacts.length = 0; frame.hitPairs.clear();
+    frame.velocities.clear(); frame.yawRates.clear(); frame.impacts.length = 0; frame.hitPairs.clear(); frame.inTheWay.clear();
     if (map) frame.map = map; else delete frame.map;
   } else {
-    frame = { ...(map ? { map } : {}), hasShips: false, buckets: new Map(), shipBuckets: new Map(), entries: new Map(), velocities: new Map(), yawRates: new Map(), impacts: [], hitPairs: new Set() };
+    frame = { ...(map ? { map } : {}), hasShips: false, buckets: new Map(), shipBuckets: new Map(), entries: new Map(), velocities: new Map(), yawRates: new Map(), impacts: [], hitPairs: new Set(), inTheWay: new Set() };
     frames.set(units, frame);
   }
   frame.hasShips = vessels.some(unit => unit.hp > 0 && isShipKind(unit.kind));
@@ -258,7 +258,7 @@ export function sweepShipCollision(map: GameMap, ship: Unit, units: readonly Uni
   const frame = frameFor(units, map), sweep = beginSweep(ship, from, to), radius = sweep.radius;
   let best: Contact | undefined;
   for (const { body } of nearby(frame, from, to, radius)) {
-    if (body === ship || !activeBody(map, body)) continue;
+    if (body === ship || !activeBody(map, body) || shoulders(ship, body)) continue;
     const contact = sweepShape(sweep, outline(map, body));
     if (contact && (!best || contact.fraction < best.fraction - 1e-8)) best = { ...contact, other: body, kind: kindOf(body) };
   }
@@ -315,6 +315,44 @@ export function shipCollisionImpactCount(units: readonly Unit[]): number { retur
 export function groundShipFrameEmpty(units: readonly Unit[]): boolean { return frames.get(units)?.hasShips === false; }
 
 /** Ground crew retain their own layer; an off-deck body cannot walk or slide through a reachable hull. */
+// @@@shoulder-aside - A hull is not stopped by its own side's troops wading beside it: it shoulders them aside, and a
+// trooper it comes over is set down just off its side. Pressed on by the very troops whose way it closed (they wade
+// into it from both sides of a ford), a hull could neither turn nor sail, and neither could they. An enemy's troops
+// still stop it, so a hull is still struck from the shallows; its own still cannot walk through it.
+function shoulders(ship: Unit, body: Body) {
+  return unitBody(body) && body.owner === ship.owner && !shipProfile(body) && !body.deck;
+}
+export function shoulderAside(map: GameMap, units: readonly Unit[], starts: ReadonlyMap<string, ShipPose>) {
+  const frame = frames.get(units);
+  if (!frame?.hasShips) return;
+  for (const ship of units) {
+    const profile = shipProfile(ship), start = starts.get(ship.id);
+    // Only a hull that moved came over anyone; one at rest leaves those standing by it be.
+    if (!profile || ship.hp <= 0 || !ship.sailing || !start || start.x === ship.x && start.y === ship.y && start.heading === ship.sailing.heading) continue;
+    const hull = profile.hull, c = detCos(ship.sailing.heading), s = detSin(ship.sailing.heading);
+    for (const { body } of nearby(frame, ship, ship, polygonRadius(hull) + 64)) {
+      if (!shoulders(ship, body) || body.hp <= 0 || !isWalkable(map, body.x, body.y, 'land')) continue;
+      const unit = body as Unit, wx = unit.x - ship.x, wy = unit.y - ship.y, px = wx * c + wy * s, py = -wx * s + wy * c;
+      // The nearest point of the hull's side, and the way out of it there.
+      let inside = true, gap = Infinity, out = { x: 0, y: 0, nx: 0, ny: 0 };
+      for (let i = 0; i < hull.length; i++) {
+        const a = hull[i]!, b = hull[(i + 1) % hull.length]!, dx = b.x - a.x, dy = b.y - a.y, length = Math.hypot(dx, dy);
+        if ((dx * (py - a.y) - dy * (px - a.x)) / length < 0) inside = false;
+        const t = Math.max(0, Math.min(1, ((px - a.x) * dx + (py - a.y) * dy) / (length * length))), qx = a.x + dx * t, qy = a.y + dy * t;
+        const d = Math.hypot(px - qx, py - qy);
+        if (d < gap) { gap = d; out = { x: qx, y: qy, nx: dy / length, ny: -dx / length }; }
+      }
+      if (!inside && gap >= unit.radius) continue;
+      const lx = out.x + out.nx * (unit.radius + 1), ly = out.y + out.ny * (unit.radius + 1);
+      const at = { x: ship.x + lx * c - ly * s, y: ship.y + lx * s + ly * c };
+      if (isWalkable(map, at.x, at.y, 'land')) { unit.x = at.x; unit.y = at.y; }
+    }
+  }
+}
+/** This tick's hulls that held up a step of their own side's land units, in the order the steps came (see @@@give-way). */
+export function hullsInTheWay(units: readonly Unit[]): ReadonlySet<Unit> {
+  return frames.get(units)?.inTheWay ?? new Set();
+}
 export function constrainGroundShipStep(map: GameMap, unit: Unit, from: Point, to: Point, units: readonly Unit[]): Point {
   if (frames.get(units)?.hasShips === false) return to;
   if (unit.deck || isShipKind(unit.kind) || !isWalkable(map, from.x, from.y, 'land')) return to;
@@ -332,7 +370,9 @@ export function constrainGroundShipStep(map: GameMap, unit: Unit, from: Point, t
     if (pointSegmentDistanceSquared(body, from, to) > (polygonRadius(shipProfile(body)!.hull) + ownReach + 1) ** 2) continue;
     const configuration = minkowskiSum(outline(map, body), negated ??= own.map(p => ({ x: -p.x, y: -p.y })));
     const contact = segmentContact(from, to, configuration);
-    if (contact) fraction = Math.min(fraction, Math.max(0, contact.fraction - 1e-5 / Math.max(1, Math.hypot(to.x - from.x, to.y - from.y))));
+    if (!contact) continue;
+    fraction = Math.min(fraction, Math.max(0, contact.fraction - 1e-5 / Math.max(1, Math.hypot(to.x - from.x, to.y - from.y))));
+    if (body.owner === unit.owner) frame.inTheWay.add(body);
   }
   return fraction === 1 ? to : { x: from.x + (to.x - from.x) * fraction, y: from.y + (to.y - from.y) * fraction };
 }
