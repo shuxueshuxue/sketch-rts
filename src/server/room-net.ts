@@ -53,6 +53,13 @@ export class RoomNetHub {
     socket.on("close", () => { state.sockets.delete(socket); this.compatibleSockets.delete(socket); });
   }
 
+  // The frames the room's connected pages have queued commands for, for a tick asked for over the API (see
+  // @@@api-tick-queue); none when no page is connected to the room.
+  queuedFrames(roomId: string): ((tick: number) => CommandFrame) | undefined {
+    const state = this.rooms.get(roomId);
+    return state && ((tick: number) => state.coordinator.buildFrame(tick));
+  }
+
   tickRoom(roomId: string): CommandFrame | undefined {
     const room = this.options.roomHost.getRoom(roomId);
     // A paused room stands still with its pages watching (see @@@room-paused).
