@@ -2,11 +2,13 @@
 //   npm run sketch -- <command> [options]      or      bin/sketch <command> [options]
 import { helpText, UsageError, type CommandSpec } from "./args";
 import { EXIT } from "./output";
+import * as benchRoom from "./commands/bench-room";
+import * as replay from "./commands/replay";
 import * as scriptsAudit from "./commands/scripts-audit";
 import * as testDiff from "./commands/test-diff";
 
 type Command = { spec: CommandSpec; run: (argv: string[]) => Promise<number> };
-const COMMANDS: Command[] = [testDiff, scriptsAudit];
+const COMMANDS: Command[] = [testDiff, benchRoom, replay, scriptsAudit];
 
 function usage() {
   return ["sketch <command> [options]   (--help after a command for its options)", "", ...COMMANDS.map(({ spec }) => `  ${spec.name.padEnd(16)}${spec.summary}`)].join("\n");

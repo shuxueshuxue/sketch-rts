@@ -9,6 +9,7 @@ import { createUnitRosterStatsTracker } from "./unit-roster-stats";
 import { nudgedPlanner, type GauntletNudge } from "./nudge";
 import { createV6DoctrineTracker, createV7DoctrineTracker, createV8DoctrineTracker, createV9DoctrineTracker } from "./v6-doctrine-stats";
 import { createWoundedMoonWellStatsTracker } from "./wounded-moonwell-stats";
+import { createMetricTrackers } from "./metrics";
 
 type SerializedAiGameAgent = Omit<AiGameAgent, "scripts"> & {
   scriptIds?: string[];
@@ -17,7 +18,7 @@ type SerializedAiGameAgent = Omit<AiGameAgent, "scripts"> & {
 const SCRIPT_BY_ID = Object.fromEntries(Object.values(AI_SCRIPT_LIBRARY).map((script) => [script.id, script]));
 
 // A gauntlet's nudged replay carries its nudge (see @@@gauntlet-nudge); the planner made here applies it.
-export function runBenchmarkParallelMatch(match: BenchmarkMatchInput<SerializedAiGameAgent> & { nudge?: GauntletNudge }): BenchmarkMatchReport {
+export function runBenchmarkParallelMatch(match: BenchmarkMatchInput<SerializedAiGameAgent> & { nudge?: GauntletNudge; metrics?: readonly string[] }): BenchmarkMatchReport {
   const trackers = [
     createAiCommandStatsTracker() as unknown as BenchmarkTracker<AiGameAgent>,
     createWoundedMoonWellStatsTracker() as unknown as BenchmarkTracker<AiGameAgent>,
@@ -28,6 +29,7 @@ export function runBenchmarkParallelMatch(match: BenchmarkMatchInput<SerializedA
     createV7DoctrineTracker() as unknown as BenchmarkTracker<AiGameAgent>,
     createV8DoctrineTracker() as unknown as BenchmarkTracker<AiGameAgent>,
     createV9DoctrineTracker() as unknown as BenchmarkTracker<AiGameAgent>,
+    ...createMetricTrackers(match.metrics ?? []) as unknown as BenchmarkTracker<AiGameAgent>[],
   ];
   const agents = reviveAgents(match.agents);
   const planner = createAiGameCommandPlanner();

@@ -44,10 +44,13 @@ export type SubjectGauntletOptions = Pick<AiVersionBenchmarkOptions, "seed" | "m
   nudges?: number;
   // The game second from which a replay's nudge lands (default 60).
   nudgeAt?: number;
+  // Direct measures taken in every game (see @@@bench-metrics), reported per game in `metrics`.
+  metrics?: readonly string[];
 };
 
-// A gauntlet game; a nudged replay carries its nudge, which the parallel worker applies to the planner it makes.
-export type SubjectGauntletMatch = BenchmarkMatchInput<AiGameAgent> & { nudge?: GauntletNudge };
+// A gauntlet game; a nudged replay carries its nudge, which the parallel worker applies to the planner it makes, and the
+// metrics it takes (see @@@bench-metrics), which the worker turns into trackers.
+export type SubjectGauntletMatch = BenchmarkMatchInput<AiGameAgent> & { nudge?: GauntletNudge; metrics?: readonly string[] };
 
 const DEFAULT_NUDGE_AT_SECONDS = 60;
 
@@ -75,6 +78,8 @@ export type SubjectGauntletResult = {
   elapsedMs: number;
   cpuMs: number;
   workers?: number;
+  // Per game (by match name), each requested metric's value per player (see @@@bench-metrics).
+  metrics?: Record<string, Record<string, Record<string, number | null>>>;
   // A nudged bench: replays per game and the nudge second. Every count above is over all replays; a map's race entry
   // lists each replay's winner (its `winner` is replay 0's) and its wins count every replay's.
   nudges?: number;
@@ -195,7 +200,9 @@ export async function runSubjectGauntletSeedsParallel(
   seeds: readonly string[],
 ): Promise<{ results: SubjectGauntletResult[]; pool: SubjectGauntletPool }> {
   const bundles = seeds.map((seed) => createSubjectGauntletInput(gauntlet, { ...options, seed }));
-  const report = await runBenchmarkParallel(serializableAiBenchmarkInput({ name: gauntlet.name, evaluations: bundles.map((bundle) => bundle.input.evaluations[0]!) }), {
+  const evaluations = bundles.map((bundle) => bundle.input.evaluations[0]!);
+  const measured = options.metrics?.length ? evaluations.map((evaluation) => ({ ...evaluation, matches: evaluation.matches.map((match) => ({ ...match, metrics: options.metrics })) })) : evaluations;
+  const report = await runBenchmarkParallel(serializableAiBenchmarkInput({ name: gauntlet.name, evaluations: measured }), {
     workerModule: new URL("./parallel-worker.ts", import.meta.url).href,
     ...(options.workers !== undefined ? { workers: options.workers } : {}),
   });
@@ -274,6 +281,7 @@ export function summarizeSubjectGauntlet(gauntlet: SubjectGauntlet, input: { see
     cpuMs: input.report.cpuMs,
     ...(input.workers !== undefined ? { workers: input.workers } : {}),
     ...(input.nudges !== undefined ? { nudges: input.nudges, nudgeAt: input.nudgeAt ?? DEFAULT_NUDGE_AT_SECONDS } : {}),
+    ...metricsOf(evaluation.matches),
     byMap: input.selectedMapIds.map((mapId) => {
       if (input.nudges !== undefined) {
         const replays = (race: RaceId) =>
@@ -332,4 +340,12 @@ function fielded(match: BenchmarkMatchReport, subject: SubjectVersion, kinds: Re
   const roster = (match.result.trackers.unitRosterStats as UnitRosterStats | undefined)?.owners[subject];
   if (!roster) return false;
   return [...kinds].some((kind) => (roster.orderedByKind[kind] ?? 0) > 0 || (roster.peakByKind[kind] ?? 0) > 0);
+}
+
+function metricsOf(matches: readonly BenchmarkMatchReport[]): Pick<SubjectGauntletResult, "metrics"> {
+  const metrics = Object.fromEntries(matches.flatMap((match) => {
+    const measured = Object.entries(match.result.trackers).filter(([id]) => id.startsWith("metric:"));
+    return measured.length ? [[match.name, Object.fromEntries(measured.map(([id, values]) => [id.slice("metric:".length), values as Record<string, number | null>]))]] : [];
+  }));
+  return Object.keys(metrics).length ? { metrics } : {};
 }
