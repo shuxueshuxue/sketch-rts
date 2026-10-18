@@ -2312,14 +2312,10 @@ describe("sketch RTS simulation", () => {
     expect(totalNeutralKills).toBeGreaterThan(0);
   });
 
-  // Known v2 stalemate: attackWave and skirmishPreservation can overwrite each
-  // other's orders. #517 happened to make this seed settle; any change to match
-  // trajectories can expose it again. The lookahead fix does: 24 attackWave →
-  // preservation flips within 3s with no enemy within 600, while all ten long
-  // oscillation snapshots have the same static crowd behavior on both rules.
-  // See docs/ai/loot-return-steering.md. Keep this expected failure until v2's
-  // conflicting orders are fixed, rather than requiring movement to hide it.
-  it.fails("runs a fast two-AI duel on the ladder map's terrain, camps and mercenary posts", () => {
+  // v2 has a known attackWave/skirmishPreservation stalemate, so any change to
+  // match trajectories can affect this seeded winner. #517 made it settle;
+  // the final lookahead fix still does. Keep the live winner/combat/CPU checks.
+  it("runs a fast two-AI duel on the ladder map's terrain, camps and mercenary posts", () => {
     // A ladder game gets fifty minutes: the preset AIs' duel on it has run from 12 to 37 with each change to how they build
     // or walk, and to 44 (enemy, tick 53211) when towers came down to 13 damage. Melee blows landing on contact left it
     // without a winner at 66000 (armies swinging between attack-moves and recalls across the middle) until mines, shops
