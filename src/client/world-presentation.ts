@@ -119,6 +119,8 @@ export class WorldPresentation {
     this.current={snapshot:frame.snapshot,phase,sites:Object.values(frame.buildingModels??{}),...(artPreparation?{artPreparation}:{})};
     if(changed && !this.enabled){this.revision++;void this.recoverCurrent();}
     const dpr=Math.min(devicePixelRatio,2),width=frame.view.width,height=frame.view.height;
+    // The presentation owns its overlay canvas: one full clear a frame, whichever world (3D or Canvas) then draws on it.
+    frame.ctx.save();frame.ctx.setTransform(1,0,0,1,0,0);frame.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);frame.ctx.restore();
     if(!this.enabled||!this.layer){this.stack.hidden=true;drawWorld(frame);return;}
     this.stack.hidden=false;
     const dimensions=`${width}:${height}:${dpr}`;
@@ -134,7 +136,6 @@ export class WorldPresentation {
     const ground=this.ground.getContext('2d')!;ground.setTransform(1,0,0,1,0,0);ground.clearRect(0,0,this.ground.width,this.ground.height);ground.setTransform(dpr,0,0,dpr,0,0);
     const common={actorPositions:this.layer.positions,physicalEffects:this.effectTypes!,physicalCombat:true,depthSelection:true};
     drawWorld({...frame,...common,ctx:ground,pass:'ground'});perf?.lap('ground');
-    frame.ctx.save();frame.ctx.setTransform(1,0,0,1,0,0);frame.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);frame.ctx.restore();
     drawWorld({...frame,...common,pass:'overlay'});perf?.lap('overlay');
   }
   pick(point:{x:number;y:number}){return this.enabled?this.layer?.pick(point):undefined;}

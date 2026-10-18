@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { createAiRuntime } from "../../ai/runtime";
 import { createGame, snapshotGame } from "../../shared/sim";
+import { RULES_VERSION } from "../../shared/rules-version";
 import type { GameSetupOptions } from "../../shared/types";
 import { LocalGameAdapter } from "../net/local-adapter";
 import { MatchThreadGameAdapter, type MatchThreadPort } from "./adapter";
@@ -71,6 +72,22 @@ describe("match thread", () => {
     } finally {
       vi.restoreAllMocks();
     }
+  });
+
+  // @@@restore-redraws: no frame follows a checkpoint in a paused room; the page still draws what it restored.
+  it("hands the page a restored checkpoint on its next frame, with no tick after it", () => {
+    const lockstepOptions: GameSetupOptions = { aiPlayers: [] };
+    const page = new MatchThreadGameAdapter(copiedThread(), { type: "lockstep", roomId: "room-1", playerId: "player", mapId: "bareDuel", options: lockstepOptions },
+      snapshotGame(createGame("bareDuel", lockstepOptions)), { playerId: "player", now: () => 0 });
+    const restored = createGame("bareDuel", lockstepOptions);
+    restored.tick = 40;
+    restored.players.player.gold = 8744;
+
+    page.forward({ type: "checkpoint", rulesVersion: RULES_VERSION, checkpoint: { roomId: "room-1", tick: 40, snapshot: snapshotGame(restored), nextId: restored.nextId }, epoch: 0 });
+    page.updateToRenderTime();
+
+    expect(page.currentSnapshot().tick).toBe(40);
+    expect(page.currentSnapshot().players.player.gold).toBe(8744);
   });
 
   it("refuses a command the latest snapshot refuses, as it is given", () => {

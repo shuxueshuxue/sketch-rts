@@ -3569,8 +3569,9 @@ function draw() {
     menuBackdrop.draw(ctx, canvas.clientWidth, canvas.clientHeight, performance.now(), reducedUnitMotion.matches,frame=>worldPresentation.draw(frame,'home'));
     return;
   }
-  ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+  // A match's frame is cleared by the world presentation that draws it (see WorldPresentation.draw).
   if (!snapshot) {
+    ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
     updateHoverCursor();
     drawPaperMap(ctx, currentRoom?.mapId ?? LADDER_MAP_ID, camera, canvas.clientWidth, canvas.clientHeight);
     ctx.fillStyle = "#243126";
