@@ -13,7 +13,7 @@ import { abilityCooldown } from "../ability-cooldowns";
 import { aimingProfile } from "../aiming";
 import { canAutocast } from "../autocast";
 import { canTakeStance } from "../push";
-import { buildingPlacementBlocker, terrainBlocksPlacement } from "../build-placement";
+import { buildingPlacementBlocker, terrainBlocksPlacement, upgradeSite } from "../build-placement";
 import { ABILITY_DEFS, BUILDING_DEFS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, canTrainAt, canResearchAt, maxUpgradeLevel, requiredSupplyCap, unitRules } from "../catalog";
 import { canReach, carries, passengerLandingSpot } from "../naval";
 import { MAX_CARRIED_ITEMS, buyRefusal, carriedItemCount } from "../shop";
@@ -23,7 +23,8 @@ import { ownUnitLookup } from "../unit-lookup";
 import { purchasePlacement } from "../purchase";
 import { isStunned, unitAbilities } from "../unit-abilities";
 import { canEnterCabin, isInCabin, cabinExitPoint } from '../ship-cabin';
-import { TOWER_GARRISON, canFortify, fortifiedSite, canStandOnTower, garrisonSupply, garrisonUsed, towerGarrison } from "../tower-garrison";
+import { TOWER_GARRISON, canStandOnTower, garrisonSupply, garrisonUsed, isFortifiedTower, towerGarrison } from "../tower-garrison";
+import { trainingJobs, upgradeJob } from "../building-jobs";
 
 // @@@command-refusal - Why an order is refused right now, in the player's terms. This check is the one place a command
 // is judged: the sim takes a command only after it (see tryPlayerCommand), and the command card greys a button with
@@ -235,16 +236,18 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     if (!item) return commandError(`Unknown item ${command.itemId}`, "gone", true);
     return item.carrierId === command.unitId ? undefined : commandError(`${command.unitId} is not carrying ${item.id}`, "state", true);
   }
-  if (command.type === "fortifyTower" || command.type === "garrison" || command.type === "ungarrison") {
+  if (command.type === "upgradeBuilding") {
+    const building = snapshot.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner);
+    if (!building) return commandError(`Unknown ${owner} building ${command.buildingId}`, "gone", true);
+    if (BUILDING_DEFS[command.to]?.upgradeFrom !== building.kind) return commandError(`${building.kind} cannot be upgraded to ${command.to}`, "rules");
+    if (!building.complete) return commandError(`Cannot upgrade incomplete ${building.kind}`, "state");
+    if (upgradeJob(building)) return commandError(`${building.kind} is already upgrading`, "state", true);
+    if (!upgradeSite(snapshot, building, command.to)) return refusal(`No room round the ${building.kind} to stand a ${command.to}`, "occupied");
+    return goldRefusal(snapshot, owner, BUILDING_DEFS[command.to].cost);
+  }
+  if (command.type === "garrison" || command.type === "ungarrison") {
     const tower = snapshot.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner);
-    if (!tower || tower.kind !== "defenseTower") return commandError(`Unknown ${owner} defense tower ${command.buildingId}`, "gone", true);
-    if (command.type === "fortifyTower") {
-      if (tower.fortified || tower.fortify) return commandError("Tower is already fortified", "state", true);
-      if (!canFortify(tower)) return commandError("Cannot fortify an incomplete tower", "state");
-      if (!fortifiedSite(snapshot, tower)) return refusal("No room round the tower to broaden it", "position");
-      return goldRefusal(snapshot, owner, TOWER_GARRISON.cost);
-    }
-    if (!tower.fortified) return commandError("Only a fortified tower holds troops", "state", true);
+    if (!tower || !isFortifiedTower(tower)) return commandError(`Unknown ${owner} fortified tower ${command.buildingId}`, "gone", true);
     if (command.type === "ungarrison") return towerGarrison(snapshot.units, tower).length ? undefined : commandError("No troops on this tower", "state", true);
     const missing = missingUnitError(snapshot, owner, command.unitIds);
     if (missing) return missing;
@@ -368,7 +371,7 @@ export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, co
   if (command.type === "hire" || command.type === "buy" || command.type==="buyShipEquipment") {
     return command;
   }
-  if (command.type === "fortifyTower" || command.type === "ungarrison") return currentBuilding(game, owner, command.buildingId) ? command : undefined;
+  if (command.type === "upgradeBuilding" || command.type === "ungarrison") return currentBuilding(game, owner, command.buildingId) ? command : undefined;
   if (command.type === "garrison") {
     const unitIds = currentUnitIds(game, owner, command.unitIds);
     return unitIds.length && currentBuilding(game, owner, command.buildingId) ? { ...command, unitIds } : undefined;
@@ -499,7 +502,7 @@ function canSupply(snapshot: GameSnapshot, owner: PlayerId, unitKind: UnitKind) 
   const unitSupply = snapshot.units.filter((unit) => unit.owner === owner).reduce((total, unit) => total + supply(unit), 0);
   const queuedSupply = snapshot.buildings
     .filter((building) => building.owner === owner)
-    .flatMap((building) => building.queue)
+    .flatMap((building) => trainingJobs(building))
     .reduce((total, job) => total + UNIT_DEFS[job.unitKind].supplyUsed, 0);
   return unitSupply + queuedSupply + UNIT_DEFS[unitKind].supplyUsed <= snapshot.players[owner]!.supplyCap;
 }

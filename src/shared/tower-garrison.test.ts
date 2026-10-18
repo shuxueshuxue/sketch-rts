@@ -1,12 +1,15 @@
-import { describe, expect, it } from "vitest";
-import { BUILDING_DEFS } from "./catalog";
+import { afterEach, describe, expect, it } from "vitest";
+import { upgradeJob } from "./building-jobs";
+import { BUILDING_DEFS, UNIT_DEFS, type BuildingDef } from "./catalog";
 import { createBuilding } from "./map";
-import { createGame, issuePlayerCommand, restoreSnapshotIntoGame, snapshotGame, stepGame, strikeUnit, type Game } from "./sim";
+import { createGame, issuePlayerCommand, restoreSnapshotIntoGame, snapshotGame, stepGame, strikeUnit, transformBuilding, type Game } from "./sim";
 import { checksumGame } from "./sim/checksum";
 import { checkCommandLegality } from "./sim/command-validation";
 import { footprintCells, isOpenGround, openGroundNear, snapToFootprint } from "./terrain";
 import { TOWER_GARRISON, towerGarrison } from "./tower-garrison";
-import type { Building, Unit, UnitKind } from "./types";
+import type { Building, BuildingKind, Unit, UnitKind } from "./types";
+
+const FORTIFIED = BUILDING_DEFS.fortifiedTower;
 
 function field(mapId: "bareDuel" | "ladder" = "bareDuel") {
   const game = createGame(mapId, { players: ["player", "enemy"], aiPlayers: [] });
@@ -16,14 +19,18 @@ function field(mapId: "bareDuel" | "ladder" = "bareDuel") {
   return game;
 }
 
+function upgrade(game: Game, building: Building) {
+  issuePlayerCommand(game, "player", { type: "upgradeBuilding", buildingId: building.id, to: "fortifiedTower" });
+}
+
 function tower(game: Game, x = 1500, y = 1500, fortified = true) {
   // Laid on the grid as a worker lays one (see snapToFootprint).
   const at = snapToFootprint(game.map, BUILDING_DEFS.defenseTower.radius, { x, y });
   const building = createBuilding(`tower-${game.buildings.length}`, "player", "defenseTower", at.x, at.y, true);
   game.buildings.push(building);
   if (fortified) {
-    issuePlayerCommand(game, "player", { type: "fortifyTower", buildingId: building.id });
-    for (let tick = 0; tick < TOWER_GARRISON.time; tick++) stepGame(game);
+    upgrade(game, building);
+    for (let tick = 0; tick < FORTIFIED.buildTime; tick++) stepGame(game);
   }
   return building;
 }
@@ -42,28 +49,54 @@ function quiet(unit: Unit) {
   return unit;
 }
 
-describe("tower fortification", () => {
-  it("costs its gold and time, keeps the tower shooting until done, then doubles health, broadens it and disarms it", () => {
+// @@@building-upgrade
+describe("tower upgrade", () => {
+  it("is a job of the tower's work queue: it takes its gold and time, keeps the tower shooting until done, then the tower is a fortified one", () => {
     const game = field();
     const building = tower(game, 1500, 1500, false);
     const enemy = quiet(game.spawnUnit("enemy", "footman", 1500 + 300, 1500));
-    issuePlayerCommand(game, "player", { type: "fortifyTower", buildingId: building.id });
-    expect(game.players.player!.gold).toBe(5000 - TOWER_GARRISON.cost);
-    expect(building.fortify).toEqual({ remaining: TOWER_GARRISON.time });
-    expect(checkCommandLegality(game, "player", { type: "fortifyTower", buildingId: building.id })?.message).toMatch(/already fortified/);
-    for (let tick = 0; tick < TOWER_GARRISON.time - 1; tick++) stepGame(game);
-    expect(building.fortified).toBeUndefined();
+    const supply = game.players.player!.supplyUsed;
+    upgrade(game, building);
+    expect(game.players.player!.gold).toBe(5000 - FORTIFIED.cost);
+    expect(building.queue).toEqual([{ kind: "upgrade", id: expect.any(String), to: "fortifiedTower", remaining: FORTIFIED.buildTime, paidGold: FORTIFIED.cost }]);
+    expect(checkCommandLegality(game, "player", { type: "upgradeBuilding", buildingId: building.id, to: "fortifiedTower" })?.message).toMatch(/already upgrading/);
+    // It takes no supply.
+    expect(game.players.player!.supplyUsed).toBe(supply);
+    for (let tick = 0; tick < FORTIFIED.buildTime - 1; tick++) stepGame(game);
+    expect(building.kind).toBe("defenseTower");
     expect(enemy.hp).toBeLessThan(enemy.maxHp);
     stepGame(game);
-    expect(building.fortify).toBeUndefined();
-    expect(building.fortified).toBe(true);
-    expect(building.maxHp).toBe(BUILDING_DEFS.defenseTower.hp * 2);
+    expect(building.queue).toEqual([]);
+    expect(building.kind).toBe("fortifiedTower");
+    expect(building.maxHp).toBe(FORTIFIED.hp);
     expect(building.hp).toBe(building.maxHp);
-    expect(building.radius).toBe(TOWER_GARRISON.radius);
+    expect(building.radius).toBe(FORTIFIED.radius);
     expect(building.attackDamage).toBe(0);
     enemy.hp = enemy.maxHp;
     for (let tick = 0; tick < 200; tick++) stepGame(game);
     expect(enemy.hp).toBe(enemy.maxHp);
+    expect(checkCommandLegality(game, "player", { type: "upgradeBuilding", buildingId: building.id, to: "fortifiedTower" })?.message).toMatch(/cannot be upgraded/);
+  });
+
+  it("is cancelled by its job id for all its gold back, as a unit in training is", () => {
+    const game = field();
+    const building = tower(game, 1500, 1500, false);
+    upgrade(game, building);
+    for (let tick = 0; tick < 40; tick++) stepGame(game);
+    issuePlayerCommand(game, "player", { type: "cancelTraining", buildingId: building.id, jobId: upgradeJob(building)!.id });
+    expect(game.players.player!.gold).toBe(5000);
+    expect(building.queue).toEqual([]);
+    for (let tick = 0; tick < FORTIFIED.buildTime; tick++) stepGame(game);
+    expect(building.kind).toBe("defenseTower");
+  });
+
+  it("keeps the share of health a damaged tower had", () => {
+    const game = field();
+    const building = tower(game, 1500, 1500, false);
+    building.hp = building.maxHp / 2;
+    upgrade(game, building);
+    for (let tick = 0; tick < FORTIFIED.buildTime; tick++) stepGame(game);
+    expect(building.hp).toBe(FORTIFIED.hp / 2);
   });
 
   it("sets whoever stood where the tower grew outside its new wall", () => {
@@ -72,22 +105,22 @@ describe("tower fortification", () => {
     const building = tower(game, site.x, site.y, false);
     // Pressed against the old wall, inside the new one.
     const worker = quiet(game.spawnUnit("player", "worker", site.x + BUILDING_DEFS.defenseTower.radius + 4, site.y));
-    issuePlayerCommand(game, "player", { type: "fortifyTower", buildingId: building.id });
-    for (let tick = 0; tick < TOWER_GARRISON.time + 2; tick++) stepGame(game);
-    expect(building.fortified).toBe(true);
+    upgrade(game, building);
+    for (let tick = 0; tick < FORTIFIED.buildTime + 2; tick++) stepGame(game);
+    expect(building.kind).toBe("fortifiedTower");
     expect(isOpenGround(game.map, worker.x, worker.y)).toBe(true);
-    expect(Math.hypot(worker.x - building.x, worker.y - building.y)).toBeGreaterThan(TOWER_GARRISON.radius);
+    expect(Math.hypot(worker.x - building.x, worker.y - building.y)).toBeGreaterThan(FORTIFIED.radius);
   });
 });
 
-describe("fortified footprint", () => {
+describe("upgraded footprint", () => {
   it("lays the broader tower on the grid like any building: three cells across, centred on its own cell", () => {
     const game = field("ladder");
     const site = openGroundNear(game.map, { x: 2600, y: 1500 })!;
     const plain = tower(game, site.x, site.y, false);
     const at = { x: plain.x, y: plain.y };
-    issuePlayerCommand(game, "player", { type: "fortifyTower", buildingId: plain.id });
-    for (let tick = 0; tick < TOWER_GARRISON.time; tick++) stepGame(game);
+    upgrade(game, plain);
+    for (let tick = 0; tick < FORTIFIED.buildTime; tick++) stepGame(game);
     const cell = game.map.terrain!.cell, cells = footprintCells(cell, plain.x, plain.y, plain.radius);
     expect([cells.right - cells.left + 1, cells.bottom - cells.top + 1]).toEqual([3, 3]);
     expect(((cells.left + cells.right + 1) / 2) * cell).toBe(plain.x);
@@ -106,26 +139,76 @@ describe("fortified footprint", () => {
       addUnits: [{ id: "a", owner: "player", kind: "archer", x: cx - 160, y: cy + 120 }, { id: "b", owner: "player", kind: "archer", x: cx - 120, y: cy + 120 }],
     } });
     game.players.player!.gold = 1000;
-    issuePlayerCommand(game, "player", { type: "fortifyTower", buildingId: "t" });
-    for (let tick = 0; tick < TOWER_GARRISON.time; tick++) stepGame(game);
+    upgrade(game, game.buildings.find(building => building.id === "t")!);
+    for (let tick = 0; tick < FORTIFIED.buildTime; tick++) stepGame(game);
     issuePlayerCommand(game, "player", { type: "garrison", unitIds: ["a", "b"], buildingId: "t" });
     for (let tick = 0; tick < 300; tick++) stepGame(game);
     expect(game.units.filter(unit => unit.garrison?.buildingId === "t").map(unit => unit.id).sort()).toEqual(["a", "b"]);
   });
 
-  it("refuses to fortify a tower walled in on every side, and refunds one walled in while it was being fortified", () => {
+  it("refuses to upgrade a tower walled in on every side, and refunds one walled in while it was upgrading", () => {
     const game = field("ladder");
     const site = openGroundNear(game.map, { x: 2600, y: 1500 })!;
     const plain = tower(game, site.x, site.y, false);
     const cell = game.map.terrain!.cell;
     const wall = (dx: number, dy: number) => game.buildings.push(createBuilding(`wall-${dx}-${dy}`, "player", "defenseTower", plain.x + dx * cell * 2, plain.y + dy * cell * 2, true));
-    issuePlayerCommand(game, "player", { type: "fortifyTower", buildingId: plain.id });
+    upgrade(game, plain);
     for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) wall(dx!, dy!);
-    for (let tick = 0; tick < TOWER_GARRISON.time; tick++) stepGame(game);
-    expect(plain.fortified).toBeUndefined();
-    expect(plain.fortify).toBeUndefined();
+    for (let tick = 0; tick < FORTIFIED.buildTime; tick++) stepGame(game);
+    expect(plain.kind).toBe("defenseTower");
+    expect(plain.queue).toEqual([]);
     expect(game.players.player!.gold).toBe(5000);
-    expect(checkCommandLegality(game, "player", { type: "fortifyTower", buildingId: plain.id })?.message).toMatch(/No room/);
+    expect(game.effects).toContainEqual(expect.objectContaining({ type: "goldBounty", owner: "player", amount: FORTIFIED.cost }));
+    expect(checkCommandLegality(game, "player", { type: "upgradeBuilding", buildingId: plain.id, to: "fortifiedTower" })?.message).toMatch(/No room/);
+  });
+});
+
+// The transform knows nothing of towers: a made-up kind upgraded from a farm is laid down by the same rules.
+describe("transformBuilding", () => {
+  const FAKE = "testGranary" as BuildingKind;
+  const defs = BUILDING_DEFS as Record<string, BuildingDef>;
+  afterEach(() => { delete defs[FAKE]; });
+
+  // Open ground with a grid: bareDuel has none.
+  function plain() {
+    const game = field();
+    game.buildings = [];
+    game.map = { ...game.map, terrain: { cell: 32, cols: 128, rows: 128, cells: ".".repeat(128 * 128) } };
+    return game;
+  }
+
+  function farm(game: Game) {
+    const at = snapToFootprint(game.map, BUILDING_DEFS.farm.radius, { x: 1500, y: 1500 });
+    const building = createBuilding("farm-1", "player", "farm", at.x, at.y, true);
+    game.buildings.push(building);
+    return building;
+  }
+
+  it("re-lays a building whose new footprint is laid on another grid half a cell off, and one on the same grid where it stood", () => {
+    for (const [radius, offset] of [[44, 0.5], [60, 0]] as const) {
+      const game = plain();
+      const building = farm(game);
+      const cell = game.map.terrain!.cell, at = { x: building.x, y: building.y };
+      defs[FAKE] = { ...BUILDING_DEFS.farm, upgradeFrom: "farm", hp: 900, radius, cost: 30, buildTime: 20 };
+      building.hp = building.maxHp * 0.75;
+      issuePlayerCommand(game, "player", { type: "upgradeBuilding", buildingId: building.id, to: FAKE });
+      for (let tick = 0; tick < 20; tick++) stepGame(game);
+      expect(building.kind).toBe(FAKE);
+      expect(building.radius).toBe(radius);
+      expect(building.hp).toBe(675);
+      expect(Math.abs(building.x - at.x)).toBe(cell * offset);
+      expect(snapToFootprint(game.map, radius, building)).toEqual({ x: building.x, y: building.y });
+      expect(game.players.player!.gold).toBe(5000 - 30);
+    }
+  });
+
+  it("changes nothing when the new footprint has no room", () => {
+    const game = plain();
+    const building = farm(game);
+    defs[FAKE] = { ...BUILDING_DEFS.farm, upgradeFrom: "farm", radius: 4000 };
+    const before = structuredClone(building);
+    expect(transformBuilding(game, building, FAKE)).toBe(false);
+    expect(building).toEqual(before);
   });
 });
 
@@ -152,7 +235,7 @@ describe("tower garrison", () => {
     expect(towerGarrison(game.units, building)).toHaveLength(4);
   });
 
-  it("refuses an unfortified tower", () => {
+  it("refuses a tower not upgraded", () => {
     const game = field();
     const building = tower(game, 1500, 1500, false);
     const archer = game.spawnUnit("player", "archer", 1500, 1700);
@@ -267,6 +350,42 @@ describe("tower garrison", () => {
   });
 });
 
+describe("a ranged troop on the tower's top reaches farther", () => {
+  it("strikes a mark beyond its own range but within 1.2 times it, and no longer once down", () => {
+    const game = field();
+    const building = tower(game);
+    const [archer] = garrison(game, building, ["archer"]);
+    const base = UNIT_DEFS.archer.attackRange;
+    expect(archer!.attackRange).toBeCloseTo(base * TOWER_GARRISON.rangeMultiplier, 5);
+    const gap = base * 1.08;
+    const mark = quiet(game.spawnUnit("enemy", "footman", archer!.x + archer!.radius + 16 + gap, archer!.y));
+    mark.radius = 16;
+    for (let tick = 0; tick < 100 && mark.hp === mark.maxHp; tick++) stepGame(game);
+    expect(mark.hp).toBeLessThan(mark.maxHp);
+    issuePlayerCommand(game, "player", { type: "ungarrison", buildingId: building.id });
+    expect(archer!.attackRange).toBeCloseTo(base, 5);
+    // The same gap on the ground.
+    mark.hp = mark.maxHp;
+    mark.x = archer!.x + archer!.radius + mark.radius + gap; mark.y = archer!.y;
+    quiet(archer!); archer!.attackDamage = 13;
+    archer!.order = { type: "hold", x: archer!.x, y: archer!.y };
+    for (let tick = 0; tick < 100; tick++) stepGame(game);
+    expect(mark.hp).toBe(mark.maxHp);
+  });
+
+  it("loses the reach when its tower falls, and a melee troop never gains any", () => {
+    const game = field();
+    const building = tower(game);
+    const [archer, footman] = garrison(game, building, ["archer", "footman"]);
+    const blade = footman!.attackRange;
+    expect(blade).toBe(game.spawnUnit("player", "footman", 100, 100).attackRange);
+    building.hp = 0;
+    stepGame(game);
+    expect(archer!.attackRange).toBeCloseTo(UNIT_DEFS.archer.attackRange, 5);
+    expect(footman!.attackRange).toBe(blade);
+  });
+});
+
 describe("tower garrison save and replay", () => {
   function scene() {
     const game = field("ladder");
@@ -274,28 +393,43 @@ describe("tower garrison save and replay", () => {
     const fortified = tower(game, site.x, site.y);
     garrison(game, fortified, ["footman", "archer"]);
     const second = openGroundNear(game.map, { x: 2600, y: 1900 })!;
-    const fortifying = tower(game, second.x, second.y, false);
-    issuePlayerCommand(game, "player", { type: "fortifyTower", buildingId: fortifying.id });
+    const upgrading = tower(game, second.x, second.y, false);
+    upgrade(game, upgrading);
     for (let tick = 0; tick < 40; tick++) stepGame(game);
     const raider = game.spawnUnit("enemy", "archer", site.x + 300, site.y);
     const mark = towerGarrison(game.units, fortified)[0]!;
     issuePlayerCommand(game, "enemy", { type: "attack", unitIds: [raider.id], targetId: mark.id });
     const brute = game.spawnUnit("enemy", "footman", site.x - 200, site.y);
-    return { game, fortified, fortifying, mark, brute };
+    return { game, fortified, upgrading, mark, brute };
   }
 
-  it("restores a fortification under way and a full garrison, and plays on identically", () => {
-    const { game, fortifying } = scene();
-    expect(fortifying.fortify!.remaining).toBeGreaterThan(0);
-    expect(towerGarrison(game.units, game.buildings.find(building => building.fortified)!).length).toBe(2);
+  function restored(game: Game) {
     const snapshot = snapshotGame(game);
     const copy = createGame("ladder", { players: ["player", "enemy"], aiPlayers: [] });
     copy.scriptedVictory = true;
     restoreSnapshotIntoGame(copy, structuredClone(snapshot), game.nextId);
     expect(snapshotGame(copy)).toEqual(snapshot);
     expect(checksumGame(copy)).toBe(checksumGame(game));
-    for (let tick = 0; tick < TOWER_GARRISON.time; tick++) { stepGame(game); stepGame(copy); }
-    expect(copy.buildings.find(building => building.id === fortifying.id)!.fortified).toBe(true);
+    return copy;
+  }
+
+  it("restores an upgrade under way and a full garrison, and plays on identically", () => {
+    const { game, upgrading } = scene();
+    expect(upgradeJob(upgrading)!.remaining).toBeGreaterThan(0);
+    expect(towerGarrison(game.units, game.buildings.find(building => building.kind === "fortifiedTower")!).length).toBe(2);
+    const copy = restored(game);
+    for (let tick = 0; tick < FORTIFIED.buildTime; tick++) { stepGame(game); stepGame(copy); }
+    expect(copy.buildings.find(building => building.id === upgrading.id)!.kind).toBe("fortifiedTower");
+    expect(checksumGame(copy)).toBe(checksumGame(game));
+  });
+
+  it("restores a finished upgrade with a full garrison, and plays on identically", () => {
+    const { game, upgrading } = scene();
+    for (let tick = 0; tick < FORTIFIED.buildTime; tick++) stepGame(game);
+    garrison(game, upgrading, ["archer", "archer"]);
+    expect(towerGarrison(game.units, upgrading).length).toBe(2);
+    const copy = restored(game);
+    for (let tick = 0; tick < 200; tick++) { stepGame(game); stepGame(copy); }
     expect(checksumGame(copy)).toBe(checksumGame(game));
   });
 
@@ -307,4 +441,27 @@ describe("tower garrison save and replay", () => {
     expect(first.mark.hp).toBeLessThan(first.mark.maxHp);
     expect(first.brute.order.type === "attack" && towerGarrison(one.units, first.fortified).some(unit => unit.id === (first.brute.order as { targetId: string }).targetId)).toBe(false);
   });
+
+  it("reads a save from before upgrades were jobs: a fortified tower, and one being fortified", () => {
+    const game = field("ladder");
+    const done = tower(game, ...xy(openGroundNear(game.map, { x: 2600, y: 1500 })!), false);
+    const doing = tower(game, ...xy(openGroundNear(game.map, { x: 2600, y: 1900 })!), false);
+    const snapshot = structuredClone(snapshotGame(game));
+    const old = (id: string) => snapshot.buildings.find(building => building.id === id)! as Building & { fortified?: boolean; fortify?: { remaining: number } };
+    Object.assign(old(done.id), { fortified: true, radius: 40, maxHp: 400, hp: 100 });
+    old(doing.id).fortify = { remaining: 50 };
+    const copy = createGame("ladder", { players: ["player", "enemy"], aiPlayers: [] });
+    restoreSnapshotIntoGame(copy, snapshot, game.nextId);
+    const [a, b] = [done, doing].map(tower => copy.buildings.find(building => building.id === tower.id)!);
+    expect(a).toMatchObject({ kind: "fortifiedTower", radius: FORTIFIED.radius, maxHp: FORTIFIED.hp, hp: 100 });
+    expect(b!.kind).toBe("defenseTower");
+    expect(b!.queue).toEqual([{ kind: "upgrade", id: expect.any(String), to: "fortifiedTower", remaining: 50, paidGold: FORTIFIED.cost }]);
+    for (const building of [a!, b!]) expect("fortified" in building || "fortify" in building).toBe(false);
+    for (let tick = 0; tick < 50; tick++) stepGame(copy);
+    expect(b!.kind).toBe("fortifiedTower");
+  });
 });
+
+function xy(point: { x: number; y: number }) {
+  return [point.x, point.y] as const;
+}

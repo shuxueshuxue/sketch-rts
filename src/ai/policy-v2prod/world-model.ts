@@ -4,6 +4,7 @@ import type { AiPolicyMemory } from "../memory";
 import { activeUnitClaim } from "./claims";
 import { buildings, completeBuildings, units } from "./snapshot";
 import { distance, nearestEntity, type Point } from "./spatial";
+import { trainingJobs } from "../../shared/building-jobs";
 
 type AvailableBuilderOptions = {
   memory?: AiPolicyMemory;
@@ -65,14 +66,14 @@ export function playerState(snapshot: GameSnapshot, owner: PlayerId) {
 
 export function projectedSupplyUsed(snapshot: GameSnapshot, owner: PlayerId) {
   const queued = buildings(snapshot, owner)
-    .flatMap((building) => building.queue)
+    .flatMap((building) => trainingJobs(building))
     .reduce((total, job) => total + UNIT_DEFS[job.unitKind].supplyUsed, 0);
   return units(snapshot, owner).reduce((total, unit) => total + UNIT_DEFS[unit.kind].supplyUsed, 0) + queued;
 }
 
 export function queuedUnitCount(snapshot: GameSnapshot, owner: PlayerId, unitKind: TrainableUnitKind) {
   return buildings(snapshot, owner)
-    .flatMap((building) => building.queue)
+    .flatMap((building) => trainingJobs(building))
     .filter((job) => job.unitKind === unitKind).length;
 }
 

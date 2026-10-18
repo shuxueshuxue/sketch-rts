@@ -327,12 +327,9 @@ export type Building = {
   rallyX: number;
   rallyY: number;
   rallyTarget?: RallyTarget;
-  queue: TrainingJob[];
+  /** The building's work: training and upgrades in order (see @@@building-upgrade); read training alone with trainingJobs. */
+  queue: BuildingJob[];
   researchQueue: ResearchJob[];
-  /** A defense tower being fortified, ticks left (see @@@tower-garrison). */
-  fortify?: { remaining: number };
-  /** A fortified defense tower: broader, twice the health, no weapon, and units stand on its top. */
-  fortified?: true;
 };
 
 export type TrainingJob = {
@@ -342,6 +339,17 @@ export type TrainingJob = {
   unitKind: TrainableUnitKind;
   remaining: number;
 };
+
+/** Turning the building into another kind (see @@@building-upgrade). */
+export type UpgradeJob = {
+  kind: "upgrade";
+  id: string;
+  to: BuildingKind;
+  remaining: number;
+  /** The price actually paid, refunded when the job is cancelled or cannot complete. */
+  paidGold: number;
+};
+export type BuildingJob = TrainingJob | UpgradeJob;
 
 export type ResearchJob = {
   upgradeKind: UpgradeKind;
@@ -616,7 +624,7 @@ export type GameCommand =
   | { type: "setRally"; buildingIds: string[]; x: number; y: number; target?: RallyTarget }
   | { type: "train"; buildingId: string; unitKind: TrainableUnitKind }
   | { type: "research"; buildingId: string; upgradeKind: UpgradeKind }
-  | { type: "fortifyTower"; buildingId: string }
+  | { type: "upgradeBuilding"; buildingId: string; to: BuildingKind }
   | { type: "garrison"; unitIds: string[]; buildingId: string; queued?: boolean }
   | { type: "ungarrison"; buildingId: string }
   | { type: "hire"; campId: string }

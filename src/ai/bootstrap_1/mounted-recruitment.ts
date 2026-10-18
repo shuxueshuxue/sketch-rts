@@ -13,6 +13,7 @@ import { nextMountedCamp, nextMountedRaid } from './mounted-tasks';
 import { mountedThreatReach } from './mounted-micro';
 import { mountedFieldTargets } from './mounted-field';
 import { armedFoes, retreatLandTravelTicks } from './safe-land-route';
+import { trainingJobs } from "../../shared/building-jobs";
 
 /** Fund one independent scout when its real factory exit can serve an admitted sortie. */
 export function mountedRecruitment(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): V6Want[] {
@@ -22,7 +23,7 @@ export function mountedRecruitment(snapshot: GameSnapshot, owner: PlayerId, opti
   if (own.some(unit => unit.kind === 'horseArcher')) return [
     { upgrade: 'rangeTraining', level: 1, priority: 58 }, { upgrade: 'speedTraining', level: 1, priority: 57 },
   ];
-  if (snapshot.buildings.some(building => building.owner === owner && building.queue.some(job => job.unitKind === 'horseArcher'))) return [];
+  if (snapshot.buildings.some(building => building.owner === owner && trainingJobs(building).some(job => job.unitKind === 'horseArcher'))) return [];
   const camps = neutralCamps(snapshot);
   const occupied = new Set(options.memory.mounted?.flatMap(task => task.objective.kind === 'camp' ? task.objective.ids : []));
   const foes = armedFoes(snapshot, owner, options);

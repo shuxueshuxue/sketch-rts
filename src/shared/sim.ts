@@ -40,7 +40,7 @@ import { checkCommandLegality, type CommandLegalityError } from "./sim/command-v
 import { resolveUnitDamage, unitAttackDamageProfile } from "./damage";
 import { attackDamageProfile, weaponDamageProfile, DAMAGE_PROFILES, ITEM_DAMAGE_PROFILES, type DamageProfile } from "./damage-types";
 import { autocastEnabled, withAutocast } from "./autocast";
-import { buildingPlacementBlocker, terrainBlocksPlacement } from "./build-placement";
+import { buildingPlacementBlocker, terrainBlocksPlacement, upgradeSite } from "./build-placement";
 import { sameGround, footprintHalf, groundUnder, isOpenGround, isWalkable, openGroundNear, openStep, setBuildingBodies, shareBuildingBodies, snapToFootprint, steerPoint, walkableGoal, walkDestination, warmTerrainRouting } from "./terrain";
 import { alongside, boardingBerth, canReach, carries, landingSpot } from "./naval";
 import { detCos, detSin } from "./det-math";
@@ -82,8 +82,9 @@ import { BOOTS_SPEED, HEALING_SCROLL_HEAL, HEALING_SCROLL_RADIUS, IVORY_TOWER_RE
 import { poolMap } from "./map-pool";
 import { perTick, seconds, SIM_TICKS_PER_SECOND } from "./time";
 import { ownUnitLookup } from "./unit-lookup";
-import { TOWER_GARRISON, canStandOnTower, fortifiedSite, garrisonRoomFor, towerFoot, towerGarrison, towerTopSpot } from "./tower-garrison";
-import type { AbilityKind, Building, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Obstacle, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, Projectile, RallyTarget, ScenarioOverride, ScenarioPlayerSeed, SettledUnitOrder, TrainableUnitKind, Unit, UnitKind, UnitOrder, UnitStatusEffect, UpgradeKind, WorldEffect, WorldItem } from "./types";
+import { canStandOnTower, garrisonRangeMultiplier, garrisonRoomFor, isFortifiedTower, towerFoot, towerGarrison, towerTopSpot } from "./tower-garrison";
+import { isTrainingJob, trainingJobs } from "./building-jobs";
+import type { AbilityKind, Building, BuildingKind, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Obstacle, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, Projectile, RallyTarget, ScenarioOverride, ScenarioPlayerSeed, SettledUnitOrder, TrainableUnitKind, TrainingJob, Unit, UnitKind, UnitOrder, UnitStatusEffect, UpgradeJob, UpgradeKind, WorldEffect, WorldItem } from "./types";
 
 export type CreateGameOptions = GameSetupOptions;
 
@@ -629,7 +630,7 @@ function applyPlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
     // A delayed/duplicate click must never cancel the following soldier.
     if (index < 0) return;
     const [job] = building.queue.splice(index, 1);
-    const refund=job!.paidGold ?? UNIT_DEFS[job!.unitKind].cost;
+    const refund=job!.paidGold ?? UNIT_DEFS[(job as TrainingJob).unitKind].cost;
     playerState(game, owner).gold = addGold(playerState(game, owner).gold, refund);
     game.match.stats.goldSpent[owner] = Math.max(0, (game.match.stats.goldSpent[owner] ?? 0) - refund);
     updateSupplyState(game);
@@ -711,12 +712,17 @@ function applyPlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
     return;
   }
 
-  if (command.type === "fortifyTower" || command.type === "garrison" || command.type === "ungarrison") {
+  if (command.type === "upgradeBuilding") {
+    const building = game.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner)!;
+    const { cost, buildTime } = BUILDING_DEFS[command.to];
+    spendGold(game, owner, cost);
+    building.queue.push({ kind: "upgrade", id: `upgrade-${game.nextId++}`, to: command.to, remaining: buildTime, paidGold: cost });
+    return;
+  }
+
+  if (command.type === "garrison" || command.type === "ungarrison") {
     const tower = game.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner)!;
-    if (command.type === "fortifyTower") {
-      spendGold(game, owner, TOWER_GARRISON.cost);
-      tower.fortify = { remaining: TOWER_GARRISON.time };
-    } else if (command.type === "garrison") {
+    if (command.type === "garrison") {
       for (const unit of unitsByIds(game, command.unitIds, owner)) if (canStandOnTower(unit) && unit.garrison?.buildingId !== tower.id) assignUnitOrder(unit, { type: "garrison", buildingId: tower.id }, command.queued);
     } else for (const unit of towerGarrison(game.units, tower)) {
       leaveTower(game, unit, unit);
@@ -979,7 +985,6 @@ export function snapshotGame(game: Game): GameSnapshot {
       if (rallyTarget) copy.rallyTarget = { ...rallyTarget };
       copy.queue = building.queue.map((job) => ({ ...job }));
       copy.researchQueue = building.researchQueue.map((job) => ({ ...job }));
-      if (building.fortify) copy.fortify = { ...building.fortify };
       return copy;
     }),
     resources: game.resources.map((resource) => ({ ...resource })),
@@ -1028,7 +1033,8 @@ export function restoreSnapshotIntoGame(game: Game, snapshot: GameSnapshot, next
   if (snapshot.obstacles) game.obstacles = cloneSnapshotValue(snapshot.obstacles);
   else delete game.obstacles;
   if (!snapshot.rateUnits) migrateSnapshotRates(game);
-  for(const building of game.buildings)for(const job of building.queue)if(job.paidGold===undefined)job.paidGold=isShipKind(job.unitKind) ? PREVIOUS_SHIP_TRAIN_COST[job.unitKind as keyof typeof PREVIOUS_SHIP_TRAIN_COST] : UNIT_DEFS[job.unitKind].cost;
+  for (const building of game.buildings) migrateTowerFortify(game, building);
+  for(const building of game.buildings)for(const job of trainingJobs(building))if(job.paidGold===undefined)job.paidGold=isShipKind(job.unitKind) ? PREVIOUS_SHIP_TRAIN_COST[job.unitKind as keyof typeof PREVIOUS_SHIP_TRAIN_COST] : UNIT_DEFS[job.unitKind].cost;
   migrateShipSizes(game.units);
   restoreCargoDecks(game.units);
   for (const ship of shipsIn(game.units)) if (ship.shipParts) ship.shipParts.cabin ??= shipPartMax(ship).cabin;
@@ -1128,6 +1134,7 @@ function updateTraining(game: Game) {
     if (!job) continue;
     job.remaining = Math.max(0,job.remaining-1);
     if (job.remaining > 0) continue;
+    if (!isTrainingJob(job)) { building.queue.shift(); completeUpgrade(game, building, job); continue; }
     const sea=unitMover(job.unitKind)==="sea";
     const launch=sea ? shipLaunchPose(game,building,shipLaunchPrototype(building,job.unitKind)) : undefined;
     const from=sea ? launch : landSpawnPoint(game,building,landSpawnPrototype(building,job.unitKind));
@@ -1140,23 +1147,51 @@ function updateTraining(game: Game) {
   }
 }
 
+// An upgrade job done (see @@@building-upgrade): the building becomes the new kind where it can stand; something built since
+// against it can leave it no room, and then the gold comes back.
+function completeUpgrade(game: Game, building: Building, job: UpgradeJob) {
+  if (transformBuilding(game, building, job.to)) return;
+  playerState(game, building.owner).gold = addGold(playerState(game, building.owner).gold, job.paidGold);
+  game.match.stats.goldSpent[building.owner] = Math.max(0, (game.match.stats.goldSpent[building.owner] ?? 0) - job.paidGold);
+  addEffect(game, "goldBounty", building.x, building.y, seconds(1.2), { owner: building.owner, amount: job.paidGold });
+}
+
+/** Turns a standing building into another kind, laid down again for the new footprint (see upgradeSite) with the same
+ * share of its health; false, and nothing changed, when it has no room. */
+export function transformBuilding(game: Game, building: Building, to: BuildingKind) {
+  const site = upgradeSite(game, building, to);
+  if (!site) return false;
+  const share = building.hp / building.maxHp;
+  building.kind = to;
+  building.x = site.x;
+  building.y = site.y;
+  applyDerivedBuildingStats(game, building);
+  building.hp = Math.max(1, Math.round(building.maxHp * share));
+  // The new body stands in the way from now on: the routing takes it up, and whoever stood where it grew is set outside
+  // it as anyone in a building is (see keepUnitsOutOfBuildings).
+  delete game.buildingBodiesSeen;
+  delete game.buildingSpatial;
+  syncBuildingBodies(game);
+  updateSupplyState(game);
+  return true;
+}
+
+// Saves from before @@@building-upgrade kept a fortified tower, and one being fortified, as marks on a defense tower.
+function migrateTowerFortify(game: Game, building: Building) {
+  const old = building as Building & { fortified?: boolean; fortify?: { remaining: number } };
+  if (old.fortified) {
+    const share = building.hp / building.maxHp;
+    building.kind = "fortifiedTower";
+    applyDerivedBuildingStats(game, building);
+    building.hp = Math.max(1, Math.round(building.maxHp * share));
+  }
+  if (old.fortify) building.queue.push({ kind: "upgrade", id: `upgrade-${game.nextId++}`, to: "fortifiedTower", remaining: old.fortify.remaining, paidGold: BUILDING_DEFS.fortifiedTower.cost });
+  delete old.fortified;
+  delete old.fortify;
+}
+
 function updateResearch(game: Game) {
   for (const building of game.buildings) {
-    if (building.fortify && --building.fortify.remaining <= 0) {
-      delete building.fortify;
-      // Something built since against the tower can leave no room to broaden it: the gold comes back (see fortifiedSite).
-      const site = fortifiedSite(game, building);
-      if (!site) { playerState(game, building.owner).gold += TOWER_GARRISON.cost; continue; }
-      building.x = site.x;
-      building.y = site.y;
-      building.fortified = true;
-      applyDerivedBuildingStats(game, building);
-      // The broader body stands in the way from now on: the routing takes it up, and whoever stood where it grew is
-      // set outside it as anyone in a building is (see keepUnitsOutOfBuildings).
-      delete game.buildingBodiesSeen;
-      delete game.buildingSpatial;
-      syncBuildingBodies(game);
-    }
     if (!building.complete || building.researchQueue.length === 0) continue;
     const job = building.researchQueue[0];
     if (!job) continue;
@@ -1885,7 +1920,7 @@ function updateGarrisonOrder(game: Game, unit: Unit) {
   const order = unit.order;
   if (order.type !== "garrison") return;
   const tower = game.buildings.find((building) => building.id === order.buildingId);
-  if (!tower || !tower.fortified || tower.hp <= 0 || tower.owner !== unit.owner || unit.garrison) {
+  if (!tower || !isFortifiedTower(tower) || tower.hp <= 0 || tower.owner !== unit.owner || unit.garrison) {
     unit.order = { type: "idle" };
     return;
   }
@@ -1900,6 +1935,7 @@ function updateGarrisonOrder(game: Game, unit: Unit) {
   unit.garrison = { buildingId: tower.id };
   unit.pushX = undefined;
   unit.pushY = undefined;
+  applyDerivedUnitStats(game, unit);
   invalidateSeparationFrame(game);
   settleGarrisons(game);
 }
@@ -1908,6 +1944,7 @@ function updateGarrisonOrder(game: Game, unit: Unit) {
 function leaveTower(game: Game, unit: Unit, toward: { x: number; y: number }) {
   const tower = game.buildings.find((building) => building.id === unit.garrison!.buildingId);
   delete unit.garrison;
+  applyDerivedUnitStats(game, unit);
   invalidateSeparationFrame(game);
   if (tower) Object.assign(unit, towerFoot(tower, unit, toward));
 }
@@ -1919,8 +1956,9 @@ function settleGarrisons(game: Game) {
   for (const unit of game.units) {
     if (!unit.garrison) continue;
     const tower = game.buildings.find((building) => building.id === unit.garrison!.buildingId);
-    if (!tower || tower.hp <= 0 || !tower.fortified || tower.owner !== unit.owner || unit.hp <= 0) {
+    if (!tower || tower.hp <= 0 || !isFortifiedTower(tower) || tower.owner !== unit.owner || unit.hp <= 0) {
       delete unit.garrison;
+      if (unit.hp > 0) applyDerivedUnitStats(game, unit);
       invalidateSeparationFrame(game);
       continue;
     }
@@ -2363,11 +2401,10 @@ function applyDerivedBuildingStats(game: Game, building: Building) {
     const multiplier = currentUpgradeLevel(game, building.owner, upgradeKind)?.buildingMaxHpMultiplier;
     if (multiplier) maxHp = Math.round(maxHp * multiplier);
   }
-  if (building.fortified) maxHp = Math.round(maxHp * TOWER_GARRISON.maxHpMultiplier);
   building.maxHp = maxHp;
   building.hp = Math.min(building.maxHp, Math.max(1, building.hp + building.maxHp - previousMaxHp));
-  building.radius = building.fortified ? TOWER_GARRISON.radius : def.radius;
-  building.attackDamage = building.fortified ? 0 : def.attackDamage;
+  building.radius = def.radius;
+  building.attackDamage = def.attackDamage;
   building.attackRange = def.attackRange;
   building.attackCooldown = def.attackCooldown;
 }
@@ -3756,7 +3793,7 @@ function applyDerivedUnitStats(game: Game, unit: Unit) {
   unit.attackDamage = Math.round(base.attackDamage);
   unit.maxHp = Math.round(base.maxHp * multiplier);
   unit.speed = base.speed * (heavy ? .45 : 1) * (veterans?.moveSpeedMultiplier ?? 1);
-  unit.attackRange = base.attackRange * (veterans?.attackRangeMultiplier ?? 1);
+  unit.attackRange = base.attackRange * (veterans?.attackRangeMultiplier ?? 1) * garrisonRangeMultiplier(unit, base.attackRange);
   unit.hp = Math.min(unit.maxHp, Math.max(1, unit.hp + unit.maxHp - previousMaxHp));
 }
 
@@ -3808,7 +3845,7 @@ function projectedSupplyUsed(game: Game, owner: PlayerId) {
     .reduce((total, unit) => total + unitRules(game, unit).supplyUsed + (unit.cargo ? cargoSupply(game, unit) : 0), 0);
   const queuedSupply = game.buildings
     .filter((building) => building.owner === owner)
-    .flatMap((building) => building.queue)
+    .flatMap((building) => trainingJobs(building))
     .reduce((total, job) => total + UNIT_DEFS[job.unitKind].supplyUsed, 0);
   return unitSupply + queuedSupply;
 }

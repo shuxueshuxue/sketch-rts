@@ -1,5 +1,5 @@
 import { ITEM_DEFS } from "./equipment";
-import { BUILDABLE_BUILDING_KINDS, BUILDING_DEFS, MERCENARY_UNIT_KINDS, RACE_IDS, UNIT_DEFS } from "./catalog";
+import { BUILDING_KINDS, BUILDING_DEFS, MERCENARY_UNIT_KINDS, RACE_IDS, UNIT_DEFS } from "./catalog";
 import { isMapId, isMapIdea } from "./map-ids";
 import { isGrandStressSlotCounts, resolveRoomSlotCounts } from "./room-slot-counts";
 import { ROOM_AI_VERSIONS, ROOM_TEAMS, type CreateRoomInput, type SlotPatch, type RoomSeatSetup } from "./rooms";
@@ -358,7 +358,7 @@ function isItemKind(value: unknown): value is ItemKind {
 }
 
 function isBuildableBuilding(value: unknown): value is BuildingKind {
-  return typeof value === "string" && (BUILDABLE_BUILDING_KINDS as readonly string[]).includes(value);
+  return typeof value === "string" && (BUILDING_KINDS as readonly string[]).includes(value);
 }
 
 function isLandmarkKind(value: unknown) {

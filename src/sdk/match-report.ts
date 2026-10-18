@@ -1,3 +1,4 @@
+import { trainingJobs } from "../shared/building-jobs";
 import { UNIT_DEFS, UPGRADE_KINDS } from "../shared/catalog";
 import type { Game } from "../shared/sim";
 import type { PlayerId, Unit } from "../shared/types";
@@ -146,9 +147,9 @@ function summarizePlayerTimeline(game: Game, owner: PlayerId, team: string): Pla
   for (const building of game.buildings) {
     if (building.owner !== owner || !building.complete) continue;
     if (building.kind === "townHall") summary.bases += 1;
-    else if (building.kind === "defenseTower") summary.towers += 1;
+    else if (building.kind === "defenseTower" || building.kind === "fortifiedTower") summary.towers += 1;
     else if (building.kind !== "farm" && building.kind !== "moonWell" && building.kind !== "emberShrine") summary.productionBuildings += 1;
-    summary.queuedUnits += building.queue.length;
+    summary.queuedUnits += trainingJobs(building).length;
   }
 
   return summary;

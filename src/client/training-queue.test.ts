@@ -5,6 +5,7 @@ import { createBuilding, createUnit } from "../shared/map";
 import { SHIP_KINDS } from "../shared/ship-geometry";
 import { createGame, issuePlayerCommand, stepGame } from "../shared/sim";
 import { createI18n } from "./i18n";
+import { BUILDING_DEFS } from "../shared/catalog";
 
 describe("training queue presentation", () => {
   it("shows a stack count only when a building has multiple queued jobs", () => {
@@ -18,6 +19,14 @@ describe("training queue presentation", () => {
       { buildingId: "barracks-1", unitKind: "footman", status: "training", progress: expect.any(Number) },
       { buildingId: "barracks-1", unitKind: "lancer", status: "queued", progress: 0 },
     ]);
+  });
+
+  it("shows a building's upgrade as a job of its queue, labelled as an upgrade", () => {
+    const tower = createBuilding("tower", "player", "defenseTower", 304, 624, true);
+    tower.queue = [{ kind: "upgrade", id: "up", to: "fortifiedTower", remaining: 60, paidGold: 100 }];
+    const [progress] = trainingProgressButtonsForSelection([tower]);
+    expect(progress).toMatchObject({ product: "upgrade", upgradeTo: "fortifiedTower", jobId: "up", status: "training", progress: 1 - 60 / BUILDING_DEFS.fortifiedTower.buildTime });
+    expect(trainingProgressText(progress!, createI18n("en")).label).toBe("Upgrading to Fortified Tower");
   });
 
   it.each(SHIP_KINDS)('marks a completed %s at the head as awaiting launch without changing the job',kind=>{

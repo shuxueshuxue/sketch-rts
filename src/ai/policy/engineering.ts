@@ -6,6 +6,7 @@ import { isOpponentOwner } from "./ownership";
 import type { AiPolicyContext } from "./types";
 import type { NavalWant } from "./naval";
 import { canSupply } from "./world-model";
+import { trainingJobs } from "../../shared/building-jobs";
 /** Pick a support weapon from the opponent's force and defenses, with a bounded share of the army. */
 export function engineeringWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): NavalWant | undefined {
     const player = snapshot.players[owner]!;
@@ -15,7 +16,7 @@ export function engineeringWant(snapshot: GameSnapshot, owner: PlayerId, options
     if (own.length < 8)
         return undefined;
     const engines = own.filter(unit => UNIT_DEFS[unit.kind].weapon);
-    const queued = snapshot.buildings.filter(building => building.owner === owner).flatMap(building => building.queue).filter(job => UNIT_DEFS[job.unitKind].weapon);
+    const queued = snapshot.buildings.filter(building => building.owner === owner).flatMap((building) => trainingJobs(building)).filter(job => UNIT_DEFS[job.unitKind].weapon);
     if (engines.length + queued.length >= Math.max(1, Math.floor(own.length / 5)))
         return undefined;
     const home = snapshot.buildings.find(building => building.owner === owner && building.kind === "townHall");

@@ -51,7 +51,7 @@ function setup(){
   vi.stubGlobal('fetch',async(url:string)=>new Response(readFileSync(`public/art/world3d/${url.split('/art/world3d/')[1]!.split('?')[0]}`)));
   setScratchCanvasFactory((w,h)=>createCanvas(w,h) as unknown as HTMLCanvasElement);
   const {game,ship}=createShipWebglScene();
-  const frame:WorldFrame={snapshot:snapshotGame(game),ctx:createCanvas(1200,900).getContext('2d') as unknown as CanvasRenderingContext2D,view:{x:300,y:300,width:1200,height:900},now:0,facing:new UnitFacingTracker(),animation:new UnitAnimationTracker(),motion:new UnitMotionSmoother(),labels:{unitKind:()=>''}};
+  const frame:WorldFrame={snapshot:snapshotGame(game),ctx:createCanvas(1200,900).getContext('2d') as unknown as CanvasRenderingContext2D,view:{x:300,y:300,width:1200,height:900},now:0,facing:new UnitFacingTracker(),animation:new UnitAnimationTracker(),motion:new UnitMotionSmoother(),labels:{kind:()=>''}};
   const canvas=new EventTarget() as HTMLCanvasElement;
   // Every card a frame needs is painted in that frame: what these tests read must not depend on the machine's speed.
   return{game,ship,frame,canvas,layer:World3DLayer.create(canvas,{} as WebGL2RenderingContext,Infinity)};

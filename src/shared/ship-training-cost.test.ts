@@ -1,3 +1,4 @@
+import { trainingJobs } from "./building-jobs";
 import { describe, expect, it } from 'vitest';
 import { UNIT_DEFS } from './catalog';
 import { createBuilding } from './map';
@@ -42,7 +43,7 @@ function saveGame(game: ReturnType<typeof scene>['game']) {
 
 function savedPrices(save: SaveGameRecord) {
   save.runtime.checksumVersion = CHECKSUM_VERSION - 1;
-  const jobs = save.snapshot.buildings[0]!.queue;
+  const jobs = trainingJobs(save.snapshot.buildings[0]!);
   const paid = jobs.reduce((sum, job) => {
     delete job.paidGold;
     return sum + PREVIOUS_SHIP_TRAIN_COST[job.unitKind as ShipKind];

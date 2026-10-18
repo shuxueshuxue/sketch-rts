@@ -1,3 +1,4 @@
+import { trainingJobs } from "../../shared/building-jobs";
 import { describe, expect, it } from "vitest";
 import { sketchScene } from "../../sdk/scene";
 import { BUILDING_DEFS, UNIT_DEFS } from "../../shared/catalog";
@@ -49,7 +50,7 @@ describe("support weapons after workshop readiness", () => {
     game.buildings.find(building => building.id === "workshop")!.complete = true;
     const firstKind = race === "grove" ? "ballista" : "siegeRam";
     issuePlayerCommand(game, "us", { type: "train", buildingId: "workshop", unitKind: firstKind });
-    expect(game.buildings.find(building => building.id === "workshop")!.queue.map(job => job.unitKind)).toEqual([firstKind]);
+    expect(trainingJobs(game.buildings.find(building => building.id === "workshop")!).map(job => job.unitKind)).toEqual([firstKind]);
     // Twelve permanent soldiers allow two support weapons; the queue itself
     // stops this plan, rather than the earlier weapon-share limit.
     expect(engineeringWant(snapshotGame(game), "us", options)).toBeUndefined();
@@ -75,7 +76,7 @@ describe("support weapons after workshop readiness", () => {
     expect(snapshot).toEqual(before);
     expect(memory).toEqual(beforeMemory);
     issuePlayerCommand(game, "us", command!);
-    expect(game.buildings.find(building => building.id === "workshop")!.queue.map(job => job.unitKind)).toEqual([kind]);
+    expect(trainingJobs(game.buildings.find(building => building.id === "workshop")!).map(job => job.unitKind)).toEqual([kind]);
     expect(game.players.us!.gold).toBe(5_000 - UNIT_DEFS[kind].cost);
   });
 

@@ -1,5 +1,5 @@
 import { ARMOR_SLOTS, CARRY_SLOTS } from "./equipment";
-import { ABILITY_KINDS, BUILDABLE_BUILDING_KINDS, TRAINABLE_UNIT_KINDS, UPGRADE_KINDS } from "./catalog";
+import { ABILITY_KINDS, BUILDABLE_BUILDING_KINDS, BUILDING_KINDS, TRAINABLE_UNIT_KINDS, UPGRADE_KINDS } from "./catalog";
 import type { GameCommand, PlayerId } from "./types";
 import type { CommandEnvelope } from "./net/types";
 import { isMeleeStance } from "./push";
@@ -23,7 +23,8 @@ export function isGameCommand(value: unknown): value is GameCommand {
   if (command.type === "train") return typeof command.buildingId === "string" && isTrainableUnit(command.unitKind);
   if (command.type === "research") return typeof command.buildingId === "string" && isUpgradeKind(command.upgradeKind);
   if (command.type === "hire") return typeof command.campId === "string";
-  if (command.type === "fortifyTower" || command.type === "ungarrison") return typeof command.buildingId === "string";
+  if (command.type === "ungarrison") return typeof command.buildingId === "string";
+  if (command.type === "upgradeBuilding") return typeof command.buildingId === "string" && (BUILDING_KINDS as unknown[]).includes(command.to);
   if (command.type === "garrison") return isStringArray(command.unitIds) && typeof command.buildingId === "string" && (command.queued === undefined || typeof command.queued === "boolean");
   if(command.type==="buyShipEquipment")return typeof command.buildingId==="string" && ["shipCannon","shipMortar","flameProjector"].includes(command.item as string) && (command.recipientId===undefined || typeof command.recipientId==="string");
   if (command.type === "buy") return typeof command.shopId === "string" && typeof command.item === "string" && (command.recipientId===undefined || typeof command.recipientId==="string");
