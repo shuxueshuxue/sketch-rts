@@ -22,7 +22,7 @@ export function startPerfOverlay() {
 }
 
 const LONG_MS = 50;
-type CardCounts = { cards: number; pages: number; pixels: number; rasterizations: number; evictions: number; bodiless: number; rasterWorkWallMs: number; gpuTransferSubmissionWallMs: number; frameDemand: number; peakFrameDemand: number; secondDemand: number };
+type CardCounts = { cards: number; pages: number; pixels: number; rasterizations: number; evictions: number; bodiless: number; pixelBudget: number; workingSetPixels: number; rasterWorkWallMs: number; gpuTransferSubmissionWallMs: number; frameDemand: number; peakFrameDemand: number; secondDemand: number };
 const SEGMENTS = ['sync', 'camera', '3d', 'ground', 'overlay', 'rest'] as const;
 type Segment = (typeof SEGMENTS)[number];
 type LongFrame = { start: number; end: number; js: number; cause?: 'CPU' | 'GPU' };
@@ -218,7 +218,10 @@ export class PerfOverlay {
     const now = this.cardSource?.(), before = this.cardsBefore;
     if (!now) return [];
     const rate = (key: 'rasterizations' | 'evictions' | 'bodiless' | 'rasterWorkWallMs' | 'gpuTransferSubmissionWallMs') => before ? ((now[key] - before[key]) / seconds).toFixed(key.endsWith('Ms') ? 1 : 0) : '–';
-    return [`troop cards ${now.cards} in ${now.pages} pages (${(now.pixels / 1048576).toFixed(1)}M px)  frame needs ${now.frameDemand} (peak ${now.peakFrameDemand}), 60 frames ${now.secondDemand}`,
+    const mpx = (pixels: number) => (pixels / 1048576).toFixed(1);
+    // @@@card-capacity: the working set past the cap repaints every card in it as the animation comes round.
+    const over = now.workingSetPixels > now.pixelBudget ? [`  ! troop cards' working set ${mpx(now.workingSetPixels)}M px is over the ${mpx(now.pixelBudget)}M px cap: they repaint as they cycle`] : [];
+    return [`troop cards ${now.cards} in ${now.pages} pages (${mpx(now.pixels)} of ${mpx(now.pixelBudget)}M px)  frame needs ${now.frameDemand} (peak ${now.peakFrameDemand}), 60 frames ${now.secondDemand} (~${mpx(now.workingSetPixels)}M px)`, ...over,
       `  painted ${rate('rasterizations')}/s (${rate('rasterWorkWallMs')} ms/s, upload ${rate('gpuTransferSubmissionWallMs')} ms/s)  dropped ${rate('evictions')}/s  no body ${rate('bodiless')}/s`];
   }
 }
