@@ -25,6 +25,10 @@ export default async function (s: Scene) {
   s.must((await s.snapshot() as Snap).units.some((unit) => unit.deck), "no crew went aboard");
   await s.camera(at!.x, at!.y); await s.wait(3000);
   await s.shot("still");
+  // Close in on our line, crews on deck: the masts and yards #416 drew without an ink outline.
+  await s.camera(at!.x, at!.y + 260, 2.2); await s.wait(2000);
+  await s.shot("rig-close");
+  await s.camera(at!.x, at!.y, 1);
   for (const owner of ["player", enemy]) await s.order(owner, { type: "attackMove", unitIds: ships.filter((ship) => ship.owner === owner).map((ship) => ship.id), x: Math.round(at!.x), y: Math.round(at!.y + (owner === "player" ? -400 : 400)) });
   await s.tick(90);
   await s.camera(at!.x, at!.y); await s.wait(1500);

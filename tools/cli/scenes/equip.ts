@@ -19,4 +19,14 @@ export default async function (s: Scene) {
   await s.shot("one-soldier", HUD);
   await s.key("i"); await s.wait(1000);
   await s.shot("equipment");
+  // The window alone, large enough to read the paper doll's hand slots (#446).
+  const box = await s.page.evaluate(`(() => {
+    var panel = document.querySelector(".equipment-panel:not([hidden])");
+    if (!panel) return null;
+    var r = panel.getBoundingClientRect();
+    if (r.width > innerWidth * .9 && panel.firstElementChild) r = panel.firstElementChild.getBoundingClientRect();
+    return { x: Math.max(0, Math.floor(r.x)), y: Math.max(0, Math.floor(r.y)), width: Math.ceil(r.width), height: Math.ceil(r.height) };
+  })()`) as { x: number; y: number; width: number; height: number } | null;
+  s.must(box, "the equipment window did not open");
+  await s.shot("equipment-window", box!);
 }

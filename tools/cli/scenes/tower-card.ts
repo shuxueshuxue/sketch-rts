@@ -14,4 +14,17 @@ export default async function (s: Scene) {
   const labels = await s.readDom("[data-command-label]");
   s.must(labels.some((label) => label.visible), "the tower's card shows no command");
   await s.shot("tower-card", { x: 0, y: 560, width: 1000, height: 340 });
+  // The upgrade begun as a player begins it (its button on the card), then halfway (12 s, 240 ticks): the progress #471
+  // shows on the card. On commits from before the upgrade job there is nothing to begin.
+  const begin = s.page.locator("[data-command-label]:visible").first();
+  if (!(await begin.getAttribute("data-command-label"))?.toLowerCase().includes("upgrade")) return;
+  await begin.click();
+  await s.wait(1500);
+  await s.tick(120);
+  await s.wait(1000);
+  const card = await s.page.evaluate("document.querySelector('[data-command-label]') && [...document.querySelectorAll('[data-command-label]')].map(e => e.textContent + ' ' + (e.getAttribute('aria-label') || '')).join(' | ')") as string;
+  s.must(/%/.test(card), `the upgrade shows no progress on the card: ${card}`);
+  // The pointer off the card, so its tooltip does not cover the progress.
+  await s.page.mouse.move(1500, 120); await s.wait(500);
+  await s.shot("tower-upgrading", { x: 0, y: 560, width: 1000, height: 340 });
 }
