@@ -5,7 +5,7 @@ import { progress } from "./output";
 import { git, gitOut } from "./git";
 
 // The one way the CLI runs work, here or on another machine.
-// - Every command runs in its own process group (setsid), and a run kills only the groups it started, by id. Nothing is
+// - Every command runs in its own process group (setsid(2)), and a run kills only the groups it started, by id. Nothing is
 //   ever killed by name: `pkill -f <name>` matched its own shell at least three times on 2026-10-17.
 // - Every path it writes is under the machine's root; anything else is refused before it runs.
 // - A copy of the repo is made per commit (trees/<sha>), never by overlaying files on another tree.
@@ -52,7 +52,8 @@ export class Machine {
       // The script's own group: its pid is its group id, reported on stderr so the run can kill exactly it. A background
       // job's stdin is /dev/null in a non-interactive shell, so the piped input is handed over explicitly; and a bash
       // reading an ssh socket sources ~/.bashrc, which on the A100 resets HOME and PATH, hence --norc.
-      `exec 3<&0; setsid bash --norc --noprofile -c ${quote(script)} <&3 & child=$!; exec 3<&-; echo "${marker}$child" >&2; wait $child`,
+      // setsid(2) through perl: macOS has no setsid(1), and both machines have perl.
+      `exec 3<&0; perl -MPOSIX -e ${quote('POSIX::setsid() or die "setsid: $!\n"; exec @ARGV or die "exec: $!\n"')} bash --norc --noprofile -c ${quote(script)} <&3 & child=$!; exec 3<&-; echo "${marker}$child" >&2; wait $child`,
     ].filter(Boolean).join("\n");
     const [command, args] = this.remote
       ? ["ssh", [...this.config.ssh!, `bash -c ${quote(wrapped)}`]] as const

@@ -6,10 +6,12 @@ import * as benchRoom from "./commands/bench-room";
 import * as evidence from "./commands/evidence";
 import * as replay from "./commands/replay";
 import * as scriptsAudit from "./commands/scripts-audit";
+import * as shot from "./commands/shot";
 import * as testDiff from "./commands/test-diff";
+import * as yatu from "./commands/yatu";
 
 type Command = { spec: CommandSpec; run: (argv: string[]) => Promise<number> };
-const COMMANDS: Command[] = [testDiff, benchRoom, replay, scriptsAudit, evidence.push, evidence.get, evidence.check];
+const COMMANDS: Command[] = [testDiff, benchRoom, replay, scriptsAudit, evidence.push, evidence.get, evidence.check, yatu, shot];
 
 function usage() {
   return ["sketch <command> [options]   (--help after a command for its options)", "", ...COMMANDS.map(({ spec }) => `  ${spec.name.padEnd(16)}${spec.summary}`)].join("\n");
