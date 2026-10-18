@@ -209,7 +209,7 @@ export function drawWorld(frame: WorldFrame) {
     trackUnitFacing(painter.facing,painter.snapshot,viewIndex.entities);
     painter.animation?.observeDirections(painter.now,(id,direction)=>painter.facing.actionFacing(id,direction,projectPaperDirection),painter.reducedMotion);
   }
-  if(!frame.physicalCombat)frame.combat?.update(snapshot,painter.now,bloodSurfaceResolver(snapshot,frame.animation,frame.facing,frame.models,frame.reducedMotion,frame.models?.8:1),areas=>viewIndex.queryBoundsUnion(areas));
+  if(!frame.physicalCombat)frame.combat?.update(snapshot,painter.now,bloodSurfaceResolver(snapshot,frame.animation,frame.facing,frame.models,frame.reducedMotion,1),areas=>viewIndex.queryBoundsUnion(areas));
   frame.projectiles?.update(snapshot,frame.models,id=>frame.facing.releaseFacing(id));
   const combat=frame.combat?.frame(painter.now);
   if(combat&&!frame.physicalCombat){
@@ -612,7 +612,7 @@ function drawGangways(painter: Painter) {
 // A unit's figure as the Canvas world stamps it: its pose, facing and model, its feet `feet` below the stamp's origin.
 function unitStamp(painter: Painter, unit: Unit) {
   const model = unit.variant !== undefined ? painter.models?.(unit.variant) : undefined;
-  const scale = unitGlyphScale(unit.radius) * (painter.models && !unit.variant ? .8 : 1), modelScale = Math.max(0.72, unit.radius / 18);
+  const scale = unitGlyphScale(unit.radius), modelScale = Math.max(0.72, unit.radius / 18);
   const rawPose=painter.reducedMotion||(painter.still&&unitMover(unit.kind)==="sea")?IDLE_FRAME:painter.animation?.frame(unit,painter.now)??IDLE_FRAME;
   const facing=painter.facing.actionFacing(unit.id,rawPose.direction??rawPose.carryDirection,projectPaperDirection);
   const pose=projectActionFrame(rawPose,facing), color=ownerInk(unit.owner, painter.snapshot), appearance=appearanceFor(painter.snapshot,unit);
@@ -646,11 +646,11 @@ function drawUnits(painter: Painter, units: readonly Unit[], overlayOnly=false) 
     const at = anchor?{x:anchor.x,y:anchor.bodyY}:drawnPosition(painter, unit);
     const ship=unit.deck ? painter.ships.get(unit.deck.shipId) : undefined;
     const bridge = !anchor && gangwayCrewVisualPose(unit, painter.ships, painter.gangways);
-    const bodyHeight = 18*unitGlyphScale(unit.radius)*(painter.models && !unit.variant ? .8 : 1);
+    const bodyHeight = 18*unitGlyphScale(unit.radius);
     const lift=anchor||bridge||ship?0:towerTopLift(painter.snapshot.buildings,unit);
     const height=anchor?0:bridge ? bridge.height * Math.tan(SHIP_CAMERA.tilt) + bodyHeight : ship ? deckVisualHeight(ship)+bodyHeight : lift ? lift+bodyHeight : 0;
     const point = worldToScreen(painter, { x: at.x + shake.x, y: at.y + shake.y-height });
-    const scale = unitGlyphScale(unit.radius) * (painter.models && !unit.variant ? .8 : 1);
+    const scale = unitGlyphScale(unit.radius);
     if (!nearScreen(painter, point, Math.max(60, unit.radius * 3))) continue;
     const selected = painter.selectedIds.has(unit.id);
     ctx.strokeStyle = ownerInk(unit.owner, painter.snapshot);
@@ -774,7 +774,7 @@ function drawUnitSelectionMarker(painter:Painter,unit:Unit) {
   if(unit.hp<=0 || isInCabin(unit) || (!selected && painter.hoveredId!==unit.id))return;
   const {ctx}=painter,at=drawnPosition(painter,unit),profile=shipProfile(unit);
   const parent=unit.deck && painter.ships.get(unit.deck.shipId),bridge=gangwayCrewVisualPose(unit,painter.ships,painter.gangways);
-  const scale=unitGlyphScale(unit.radius)*(painter.models && !unit.variant ? .8:1);
+  const scale=unitGlyphScale(unit.radius);
   const lift=bridge||parent?0:towerTopLift(painter.snapshot.buildings,unit);
   const height=bridge?bridge.height*Math.tan(SHIP_CAMERA.tilt):parent?deckVisualHeight(parent):lift;
   const point=worldToScreen(painter,{x:at.x,y:at.y-height});

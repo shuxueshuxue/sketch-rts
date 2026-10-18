@@ -28,17 +28,8 @@ function quietColor(color: string | undefined) {
 function gear(override:Pick<FigurePresentation,'weapon'|'shield'|'shieldStyle'>={}){
  return {...(override.weapon?{weapon:override.weapon}:{}),...(override.shield!==undefined?{shield:override.shield}:{}),...(override.shieldStyle?{shieldStyle:override.shieldStyle}:{})};
 }
-// @@@story-figure-size - A figure painted larger than the troop it is built on (a pirate captain at 1.65) needs a larger
-// card: scaled about its feet (17 below the card's centre), its head rises size times as far above them, and a card the
-// troop's own size cut it off flat at the card's edge (the home screen's pirates lost their heads standing, and got
-// them back only in the first frames of a swing, whose card is larger). The card grows so the scaled troop's card fits
-// round the feet, in steps of 16 so its mips divide as the troop's do.
-export function figurePaintSize(tileSize: number, size: number) {
-  if (size <= 1) return tileSize;
-  const half = size * (tileSize / 2 + 17) - 17;
-  return Math.ceil(2 * half / 16) * 16;
-}
-
+// Home costumes keep the catalog body's size. The campaign's smaller Ashe still
+// uses size < 1, with equipment, release sockets and remains following her body.
 export function storyFigure(kind: UnitKind, presentation: FigureAppearance, size = 1): StoryPainter {
   const appearance={...figures[kind]!,...presentation.appearance};
   const remains:CorpsePresentation={
@@ -57,7 +48,7 @@ export function storyFigure(kind: UnitKind, presentation: FigureAppearance, size
     b.restore();
   };
   return Object.assign(paint,{
-    paintSize:(pose:import('../unit-animation').UnitAnimationFrame)=>figurePaintSize(actionPaintSize(pose,kind),size),
+    paintSize:(pose:import('../unit-animation').UnitAnimationFrame)=>actionPaintSize(pose,kind),
     weaponSurface:(pose:import('../unit-animation').UnitAnimationFrame,override:Readonly<FigurePresentation>={})=>figureWeaponSurface(kind,pose,{...presentation,...gear(override)},size),
     release:(pose:import('../unit-animation').UnitAnimationFrame,override:Readonly<FigurePresentation>={})=>figureReleaseSocket(kind,pose,{...presentation,...gear(override)},size),
     remains:((b,_team,override={})=>{const equipment=gear(override);paintCorpse(b,kind,{...remains,...equipment,...(equipment.weapon!==undefined||equipment.shield!==undefined?{shield:sampleFigurePose(appearance,IDLE_FRAME,{...presentation,...equipment}).shield}:{})});}) as UnitRemainsPainter,

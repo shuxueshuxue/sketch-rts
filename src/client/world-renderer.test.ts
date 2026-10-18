@@ -101,6 +101,23 @@ function frame(snapshot: GameSnapshot, overrides: Partial<WorldFrame> = {}): Wor
 }
 
 describe("world renderer", () => {
+  it('keeps ordinary deck crew at gameplay size when a home scene supplies costume models', () => {
+    const game = createGame('bareDuel', { aiPlayers: [] });
+    game.units = []; game.buildings = [];
+    const ship = game.spawnUnit('player', 'shipOfTheLine', 350, 350);
+    for (const kind of ['footman', 'worker', 'priest'] as const) {
+      const unit = game.spawnUnit('player', kind, 350, 350);
+      expect(boardUnit(ship, unit, game.units)).toBe(true);
+    }
+    const snapshot = snapshotGame(game), paint = vi.spyOn(atlasArt, 'drawAtlasUnit');
+    drawWorld(frame(snapshot));
+    const gameplay = paint.mock.calls.map(([_, kind, point, scale]) => ({ kind, point, scale }));
+    expect(gameplay.map(call => call.kind).sort()).toEqual(['footman', 'priest', 'worker']);
+    paint.mockClear();
+    drawWorld(frame(snapshot, { models: () => undefined }));
+    expect(paint.mock.calls.map(([_, kind, point, scale]) => ({ kind, point, scale }))).toEqual(gameplay);
+    paint.mockRestore();
+  });
   it('draws all overlapping ground selection marks before any unit or building body',()=>{
     const snapshot=duelSnapshot({northX:300,southX:315});
     snapshot.units[1]!.y=315;
