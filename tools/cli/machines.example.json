@@ -1,0 +1,15 @@
+{
+  "default": "a100",
+  "machines": {
+    "a100": {
+      "ssh": ["-F", "~/YellowPage/ssh_config", "zhipu-a100-102"],
+      "root": "/codegeex/jeffry/sketch-cli",
+      "prelude": ". /codegeex/jeffry/sketch-rts-aiperf/env.sh"
+    },
+    "mac1": {
+      "ssh": ["-F", "~/YellowPage/ssh_config", "mac1"],
+      "root": "/Users/mac1/work/sketch-cli",
+      "prelude": "export PATH=$HOME/.nvm/versions/node/v24.15.0/bin:$PATH"
+    }
+  }
+}

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# sketch: the project's tooling entry (tools/cli/main.ts). Same as `npm run sketch -- <command>`.
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+exec "$here/node_modules/.bin/tsx" "$here/tools/cli/main.ts" "$@"
