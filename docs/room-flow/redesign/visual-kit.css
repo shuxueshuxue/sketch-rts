@@ -146,3 +146,6 @@ body { background: var(--walnut); color: var(--game-ink); font: 13px/1.45 var(--
   .seat-row > .seat-ai { grid-area: ai; }
   .seat-row > .seat-ready { grid-area: ready; }
 }
+
+/* A scrolled map grid or list fades at its edges instead of cutting the cards flat (Art Lane). */
+.map-grid, .map-list { mask-image: linear-gradient(transparent, #000 14px, #000 calc(100% - 14px), transparent); scroll-padding-block: 14px; }
