@@ -1,0 +1,214 @@
+{
+  "rulesVersion": 2,
+  "implementation": "822ba36ae5a3898b5ae62f64c1dd1fd4f0075da1",
+  "activeRuns": [],
+  "broadAcceptancePassed": false,
+  "previous85ffNormal": {
+    "startTick": 0,
+    "tick": 88057,
+    "winner": "p0",
+    "naturalComplete": true,
+    "elapsedMs": 8657397.536,
+    "sourceChangedDuringRun": [],
+    "implementation": "85ff0654693cfe91f0edf39b8925238f6527c675",
+    "knownSeed": true,
+    "permanentLosses": {
+      "p2": 31,
+      "p0": 28,
+      "p1": 51
+    },
+    "alive": 92,
+    "comparison": "Original same-seed04df normal run reached120000 cap with no winner55 permanent deaths. This85ff normal run wins88057 with28 permanent deaths; broader acceptance remains open."
+  },
+  "threeRouteNormalRuns": [
+    {
+      "case": "archer-official-shore",
+      "implementation": "822ba36ae5a3898b5ae62f64c1dd1fd4f0075da1",
+      "tick": 120000,
+      "winner": null,
+      "naturalComplete": false,
+      "permanentLosses": {
+        "p0": 10,
+        "p2": 14,
+        "p1": 4
+      },
+      "alive": 28,
+      "temporaryKilled": {},
+      "temporaryExpired": {},
+      "sourceChangedDuringRun": [],
+      "novelty": "official-known-map"
+    },
+    {
+      "case": "summoner-harbor-regression",
+      "implementation": "822ba36ae5a3898b5ae62f64c1dd1fd4f0075da1",
+      "tick": 49385,
+      "winner": "p1",
+      "naturalComplete": true,
+      "permanentLosses": {
+        "p2": 40,
+        "p0": 25,
+        "p1": 8
+      },
+      "alive": 7,
+      "temporaryKilled": {
+        "p0": 26
+      },
+      "temporaryExpired": {
+        "p0": 113
+      },
+      "sourceChangedDuringRun": [],
+      "novelty": "known-failed-seed"
+    },
+    {
+      "case": "knight-shore-holdout",
+      "implementation": "822ba36ae5a3898b5ae62f64c1dd1fd4f0075da1",
+      "tick": 45045,
+      "winner": "p1",
+      "naturalComplete": true,
+      "permanentLosses": {
+        "p1": 4,
+        "p0": 45,
+        "p2": 38
+      },
+      "alive": 0,
+      "temporaryKilled": {},
+      "temporaryExpired": {
+        "p1": 49
+      },
+      "sourceChangedDuringRun": [],
+      "novelty": "fresh128bit-before-map-generation"
+    }
+  ],
+  "knownWinNormalRegression": {
+    "startTick": 0,
+    "tick": 90021,
+    "winner": "p0",
+    "naturalComplete": true,
+    "elapsedMs": 2281498.556,
+    "sourceChangedDuringRun": [],
+    "implementation": "822ba36ae5a3898b5ae62f64c1dd1fd4f0075da1",
+    "permanentLosses": {
+      "p2": 33,
+      "p0": 16,
+      "p1": 53
+    },
+    "alive": 102,
+    "original8": {
+      "unit-p0-footman-4479": {
+        "present": true,
+        "owner": "p0",
+        "hp": 277
+      },
+      "unit-p0-footman-4635": {
+        "present": true,
+        "owner": "p0",
+        "hp": 30
+      },
+      "unit-p0-footman-6445": {
+        "present": true,
+        "owner": "p0",
+        "hp": 260
+      },
+      "unit-p0-knight-8083": {
+        "present": true,
+        "owner": "p0",
+        "hp": 141
+      },
+      "unit-p0-knight-9454": {
+        "present": true,
+        "owner": "p0",
+        "hp": 434
+      },
+      "unit-p0-lancer-2054": {
+        "present": true,
+        "owner": "p0",
+        "hp": 182
+      },
+      "unit-p0-lancer-3656": {
+        "present": true,
+        "owner": "p0",
+        "hp": 78
+      },
+      "unit-p0-raider-9390": {
+        "present": true,
+        "owner": "p0",
+        "hp": 60
+      }
+    },
+    "initialEquivalence": {
+      "snapshot": true,
+      "nextId": true,
+      "memories": true
+    },
+    "prefixComparison": {
+      "sampledFrames": 147,
+      "firstDifferentState": {
+        "tick": 55200,
+        "snapshot": false,
+        "nextId": false,
+        "memories": false
+      },
+      "firstDifferentCommand": {
+        "index": 10012,
+        "baseline": {
+          "tick": 54870,
+          "owner": "p1",
+          "scriptId": "attackWave",
+          "command": {
+            "type": "attackMove",
+            "unitIds": [
+              "unit-p1-sparkArcher-1056",
+              "unit-p1-sparkArcher-1214",
+              "unit-p1-sparkArcher-1237",
+              "unit-p1-sparkArcher-1289",
+              "unit-p1-sparkArcher-1366",
+              "unit-p1-ashHexer-1417",
+              "unit-p1-sparkArcher-1494",
+              "unit-p1-sparkArcher-1520",
+              "unit-p1-sparkArcher-1556",
+              "unit-p1-sparkArcher-1613",
+              "unit-p1-sparkArcher-1647",
+              "unit-p1-sparkArcher-1689",
+              "unit-p1-priest-2376",
+              "unit-p1-sparkArcher-2464",
+              "unit-p1-siegeRam-9076"
+            ],
+            "x": 4656,
+            "y": 6896
+          }
+        },
+        "after": {
+          "tick": 54870,
+          "owner": "p0",
+          "scriptId": "naval",
+          "command": {
+            "type": "move",
+            "unitIds": [
+              "unit-p0-knight-9454"
+            ],
+            "x": 4561.757106156607,
+            "y": 7028.236921802538,
+            "avoidCombat": true
+          }
+        }
+      },
+      "lastTick": 87600
+    }
+  },
+  "formalSavedReplay": {
+    "from": 55800,
+    "to": 60000,
+    "originalCasualtiesAlive": 8,
+    "addedPermanentDeaths": 0,
+    "totalLosses": 12,
+    "baselineTotalLosses": 20,
+    "normalStart": false
+  },
+  "checks": {
+    "relatedContracts": 16,
+    "typecheck": "passed",
+    "frozenFiles": 184,
+    "frozenMismatches": []
+  },
+  "nextEvidence": "knight-economy-diagnostic30525: exact167-command replay; genuine enemy landing releases400 reserve and two190-gold recruits exhaust colony capital; no economic patch applied"
+}
