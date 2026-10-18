@@ -1,0 +1,219 @@
+{
+  "archive": "established-defense-failed-evidence.tar.gz",
+  "bytes": 1532542,
+  "sha256": "a9e000b4db9611c122e7b69e7d70e7a356727131d2b817a98f2df45400e57fdc",
+  "files": {
+    "raw/defense-draft37800/commands.jsonl": {
+      "bytes": 1010755,
+      "sha256": "c43b36119d6660c6243cc72bffac6873a3ecd4075788730e45f85522c0135e5d"
+    },
+    "raw/defense-draft37800/entities.jsonl": {
+      "bytes": 24446,
+      "sha256": "03f1e152a6cf056f2bb03fde35577e6ff319b3f5ba352f46509ddc6a4f9a870d"
+    },
+    "raw/defense-draft37800/frames/37800.json.gz": {
+      "bytes": 19087,
+      "sha256": "eed4461fedacbb64284db04965822ddabbc4965903ac9ec695372f5b418d5ff9"
+    },
+    "raw/defense-draft37800/frames/38400.json.gz": {
+      "bytes": 19107,
+      "sha256": "8a29255b915e176bd8b35083055ea7744ba94643bbc6ae5914ca5022fcb3d855"
+    },
+    "raw/defense-draft37800/frames/39000.json.gz": {
+      "bytes": 18553,
+      "sha256": "71b45680b715f2abe568f18c07ee213733e10a3938944020faa4fbc00dfcc889"
+    },
+    "raw/defense-draft37800/frames/39600.json.gz": {
+      "bytes": 18386,
+      "sha256": "997c81d19a2fdeab3591ba0ee5918d07ce3768f4a0168b4514c3a81ec1d41e80"
+    },
+    "raw/defense-draft37800/frames/40200.json.gz": {
+      "bytes": 19485,
+      "sha256": "2fb3ba8f6c060f13ce0fede709d8e70d09762a56dda21c8a34b06f8d658c27cb"
+    },
+    "raw/defense-draft37800/frames/40800.json.gz": {
+      "bytes": 20534,
+      "sha256": "558e76d9f0ad56da2a8e40d8f1c6eadb89d68ff8a6934fc077eea2b5158ff713"
+    },
+    "raw/defense-draft37800/frames/41400.json.gz": {
+      "bytes": 18811,
+      "sha256": "72d6b5a083ebf042385ec70ec5dbe53a2ab11b167384231dc91ea9f63dbb8006"
+    },
+    "raw/defense-draft37800/frames/42000.json.gz": {
+      "bytes": 21040,
+      "sha256": "44f9a683886281754c081e5c72d54e19d99724808ce9e2d764616cb37d871fcb"
+    },
+    "raw/defense-draft37800/frames/42600.json.gz": {
+      "bytes": 19675,
+      "sha256": "f090a6303bf8241929353e38d131eff9c9771c98c22cc3bc101b805724b29be3"
+    },
+    "raw/defense-draft37800/frames/43200.json.gz": {
+      "bytes": 18734,
+      "sha256": "16d0d413c570276580a6b8051fe9d684452ed9827313f7e530febb605ad13c60"
+    },
+    "raw/defense-draft37800/frames/43800.json.gz": {
+      "bytes": 19644,
+      "sha256": "b93d08a849831da6e0b9530001db928b1778e8dbca1c3aa925d60137d5adcaaf"
+    },
+    "raw/defense-draft37800/frames/44400.json.gz": {
+      "bytes": 18551,
+      "sha256": "46b164c9f9106de1b808c22799a619610638f1c35f0a0b1ad0ee0431faae19d9"
+    },
+    "raw/defense-draft37800/frames/45000.json.gz": {
+      "bytes": 21511,
+      "sha256": "1ff0401b2fc4ad4a982a5a53939de5bac0dc64bbf02ff7343bf8d717d17230a2"
+    },
+    "raw/defense-draft37800/frames/45600.json.gz": {
+      "bytes": 23328,
+      "sha256": "14667ed879234f26e05871f05c8a6fd4767f4f8a3fa3927cf9d37cd81a4558d3"
+    },
+    "raw/defense-draft37800/frames/46200.json.gz": {
+      "bytes": 22010,
+      "sha256": "eafbc894579b3799c242129aaae6337db4ea2375e7136a77325c391cce089902"
+    },
+    "raw/defense-draft37800/frames/46800.json.gz": {
+      "bytes": 20930,
+      "sha256": "c2bcd31fe3b08d8b980941b087109fedda2ae98c0f36acbada08aa623e8d1b53"
+    },
+    "raw/defense-draft37800/frames/47400.json.gz": {
+      "bytes": 21196,
+      "sha256": "b7ca47bcbdf3cb501f82986b6eb8ac64f3b2488513491ced92008403dadbaa8d"
+    },
+    "raw/defense-draft37800/frames/48000.json.gz": {
+      "bytes": 20559,
+      "sha256": "5216cb9fb1cb7e037e639e0db2b7bd30f8ee007a8180abec0377fe4cf22f0eaa"
+    },
+    "raw/defense-draft37800/frames/48600.json.gz": {
+      "bytes": 19255,
+      "sha256": "fe39189bcaca9ead386b9be43041d7cb776214f43160666daeb82f8eb49f7011"
+    },
+    "raw/defense-draft37800/frames/49200.json.gz": {
+      "bytes": 19737,
+      "sha256": "265d7f2e5e26ff2cd0eb0765dde695b26ec73d4eb43d9caca465d54972bf1862"
+    },
+    "raw/defense-draft37800/frames/49800.json.gz": {
+      "bytes": 19675,
+      "sha256": "a8a46b57054a7a86b15cc87d21b73945689e71a8df7280aca47006d068927e5e"
+    },
+    "raw/defense-draft37800/frames/50400.json.gz": {
+      "bytes": 18310,
+      "sha256": "5a85e9dae74f5e7e6cb0d6485871bd523d15a602e03b6342a6f625c96be4cddb"
+    },
+    "raw/defense-draft37800/frames/51000.json.gz": {
+      "bytes": 17631,
+      "sha256": "ab525fa5b79761481e7b49551bc9234a6dc52a962e2c1daa7dfd984156ff3d1c"
+    },
+    "raw/defense-draft37800/frames/51600.json.gz": {
+      "bytes": 17463,
+      "sha256": "7fb2bf8cc2a3396cd577a670f1797255a2d2da63dd0115090377f2c9fcf4c06d"
+    },
+    "raw/defense-draft37800/frames/52200.json.gz": {
+      "bytes": 17467,
+      "sha256": "8821862dad24c66e4afa737ef7bdc1189760fccb137eceef728917f8e6526d7c"
+    },
+    "raw/defense-draft37800/frames/52800.json.gz": {
+      "bytes": 17450,
+      "sha256": "d6caaf1692293aa64f7c07e49277a2da192c1a94722f2534fbfacc14d81b470d"
+    },
+    "raw/defense-draft37800/frames/53400.json.gz": {
+      "bytes": 17523,
+      "sha256": "da21cac9dc276c957856d63f9aea9da7ec1f128aa2708deb18e2631fd2f83975"
+    },
+    "raw/defense-draft37800/frames/54000.json.gz": {
+      "bytes": 17489,
+      "sha256": "abb18d633256f51f6475172803b7a06d85f64043f5edc76ed37ab69e416893dd"
+    },
+    "raw/defense-draft37800/hits.jsonl": {
+      "bytes": 698007,
+      "sha256": "25fc54738a58c9c3515b3aaadaaa17165db4c8bd248dc1071102447fb511e900"
+    },
+    "raw/defense-draft37800/result.json": {
+      "bytes": 26109,
+      "sha256": "0e6baabef8006c2997fcc21989f5dc69a1668fff94ff3c9aea9767af63aba2ee"
+    },
+    "raw/defense-draft37800/samples.jsonl": {
+      "bytes": 103938,
+      "sha256": "ca36b554b81e5033ff7418d67c52e7c810f5135f99fd2835dddb0982a4c00340"
+    },
+    "raw/defense-draft37800/source.json": {
+      "bytes": 185439,
+      "sha256": "1f6dbe2c1595f7c29bcf49f6168b0f0b3b16533996a4262f914b5ccd3b29e5a4"
+    },
+    "raw/defense-draft37800.log": {
+      "bytes": 1661,
+      "sha256": "5319b6f83cd6a397d474f184616cac22632b2e928b8535a96d9c438b7ecd7d65"
+    },
+    "raw/defense-draft-summary.json": {
+      "bytes": 835,
+      "sha256": "39c66dfe07a884445e89d465d33ef88bbe3e47bec2496af21424854930655c0e"
+    },
+    "raw/defense-draft-failure-native.png": {
+      "bytes": 643583,
+      "sha256": "fa1d264c4ef7ae4f285ccbcbb6d5aedbccf91e07980ff62e71bd9bc76ded5a0d"
+    },
+    "raw/defense-first-input39600/commands.jsonl": {
+      "bytes": 21883,
+      "sha256": "0c6672fe8dc5084b71193f6b8ee189ccf4a46ff2e3384ef38d227b0b4de27176"
+    },
+    "raw/defense-first-input39600/entities.jsonl": {
+      "bytes": 135,
+      "sha256": "ccb53591b43ccc9af847fd3e4c2e30a48f488bff8b96f0cb9fc724fdb081ae76"
+    },
+    "raw/defense-first-input39600/frames/39600.json.gz": {
+      "bytes": 18385,
+      "sha256": "bd7276f4b5a072d79f3cff84939eb2f034fde9764472ec0499313c0d51c682f7"
+    },
+    "raw/defense-first-input39600/frames/40170.json.gz": {
+      "bytes": 18862,
+      "sha256": "3e380cca358a3ae49d7be691633ac07d7c54f5ed1825784563b30f55c17bfe5b"
+    },
+    "raw/defense-first-input39600/hits.jsonl": {
+      "bytes": 1412,
+      "sha256": "8925b2be48d8117c61cce9ef1f8aeacce011814d4135bca7b33569ceef4ae214"
+    },
+    "raw/defense-first-input39600/result.json": {
+      "bytes": 38162,
+      "sha256": "72e9041a3b7ed981ec12506279485cccb70bef144463ae1b7484864e29973fcb"
+    },
+    "raw/defense-first-input39600/samples.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "raw/defense-first-input39600/source.json": {
+      "bytes": 185445,
+      "sha256": "9e48aefc8aac05375ff4045d314d14c281cd88b4aa97b4afc07c5ee828b7f92e"
+    },
+    "raw/defense-first-input39600.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "raw/observe-defense-draft.mts": {
+      "bytes": 4877,
+      "sha256": "8eb968f66b864ec63347524f13816c72436bc94335470f194798182346a79775"
+    },
+    "raw/income-defense-economy.ts": {
+      "bytes": 19780,
+      "sha256": "8c3d746ae6844a7e3a76c26b8d49d3a111abc2e3e6969a3ff8985bb5dc0e0f90"
+    },
+    "raw/naval-foothold-query.ts": {
+      "bytes": 130898,
+      "sha256": "15c1d118a3379302e8ddb402ab52497a9976a2349de0cdfef3ac53f5ff99f1b5"
+    },
+    "raw/query-foothold.mts": {
+      "bytes": 1323,
+      "sha256": "65db7903beb2bb241c8ae6de47f0149ff4002c72e2107492e725f5a1c5f1d31d"
+    },
+    "raw/foothold-query.json": {
+      "bytes": 1583,
+      "sha256": "bc3a8d1d366e1947042f7ae82886d1bdbb7475f631ebacc7fe6e6fda56231eea"
+    },
+    "raw/query-stalled-construction.mts": {
+      "bytes": 1277,
+      "sha256": "2c92bd4fa91fba5c379220da6ec664be5659b21e2abe26732244747e2eddc398"
+    },
+    "raw/stalled-construction-query.json": {
+      "bytes": 3139,
+      "sha256": "a4d36720d81cbc762df479396ff51d22c075034ba814126fd9e058dbc77cdca3"
+    }
+  }
+}
