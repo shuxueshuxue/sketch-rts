@@ -14,7 +14,7 @@ import { quote, type Machine } from "../runner";
 export type Size = { name: string; width: number; height: number };
 export const SIZES: Record<string, Size> = { desktop: { name: "desktop", width: 1600, height: 900 }, phone: { name: "phone", width: 390, height: 844 } };
 export type ShotRecord = { name: string; size: string; file: string; dom: Record<string, unknown> };
-export type BrowserRun = { sha: string; label: string; ok: boolean; failure?: string; shots: ShotRecord[]; errors: string[]; code: number; localDir: string; remoteDir: string };
+export type BrowserRun = { sha: string; label: string; ok: boolean; failure?: string; shots: ShotRecord[]; records: { name: string; file: string }[]; errors: string[]; code: number; localDir: string; remoteDir: string };
 
 // The drivers are this CLI's, not the copy's: an older commit has none.
 const DRIVER = readFileSync(fileURLToPath(new URL("../drivers/browser.ts", import.meta.url)), "utf8");
@@ -45,16 +45,16 @@ export async function runScene(machine: Machine, sha: string, scene: string, lab
   // Placed at the copy's root under this run's own names: two runs of one commit share its copy.
   await machine.runOk(`cat > ${quote(dir)}/${driver}`, { input: Readable.from([DRIVER]), quiet: true });
   await machine.runOk(`cat > ${quote(dir)}/${sceneName}`, { input: Readable.from([readFileSync(scene, "utf8")]), quiet: true });
-  const options = { scene: sceneName, sha, out: remoteDir, leases: machine.path("ports"), ports, playwright: browser.playwright, browsersPath: browser.browsersPath, sizes, label, at, locale };
+  const options = { scene: sceneName, sha, out: remoteDir, leases: machine.path("ports"), ports, playwright: browser.playwright, browsersPath: browser.browsersPath, launchArgs: browser.args ?? [], sizes, label, at, locale };
   progress(`${label}: ${basename(scene)} on ${sha.slice(0, 10)} (${machine.name})`);
   const result = await machine.run(`cd ${quote(dir)} && node_modules/.bin/tsx ${driver} ${quote(JSON.stringify(options))}; code=$?; rm -f ${driver} ${sceneName}; exit $code`, { quiet: true });
   const last = result.stdout.trim().split("\n").at(-1) ?? "";
-  let report: { ok: boolean; failure?: string; shots: ShotRecord[]; errors: string[] };
+  let report: { ok: boolean; failure?: string; shots: ShotRecord[]; records?: { name: string; file: string }[]; errors: string[] };
   try { report = JSON.parse(last); }
   catch { throw new Error(`The browser driver on ${machine.name} reported nothing (exit ${result.code}):\n${result.stderr.slice(-2000)}`); }
   const localDir = join(localRunDir(machine), label);
   await pull(machine, remoteDir, localDir);
-  return { sha, label, ...report, code: result.code, localDir, remoteDir };
+  return { sha, label, ...report, records: (report.records ?? []).map((record) => ({ ...record, file: record.file.replace(remoteDir, localDir) })), code: result.code, localDir, remoteDir };
 }
 
 /** Copies a run directory from the machine to here. */
