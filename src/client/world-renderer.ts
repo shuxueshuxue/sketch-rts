@@ -36,7 +36,7 @@ import { mineStage, paintRoads } from "./art/environment";
 import { GOLD_MINE_RULES } from "../shared/mining";
 import { generateTerrainLinework, type TextureStroke } from "./terrain-texture";
 import { isAwaitingShipLaunch, jobDuration, trainingQueueCountText } from "./training-queue";
-import { isTrainingJob } from "../shared/building-jobs";
+import { formatRemaining } from "./format-remaining";
 import type { UnitFacingTracker } from "./unit-facing";
 import type { UnitMotionSmoother } from "./unit-motion";
 import type { UnitAnimationTracker } from "./unit-animation";
@@ -46,7 +46,7 @@ import { standingShadow } from "./sun";
 import { propStand } from "./prop-stands";
 import type { PropPainter, UnitModel } from "../story/cast";
 import type { StageView } from "../story/stage";
-import { BUILDING_DEFS, UNIT_DEFS, unitMover } from "../shared/catalog";
+import { BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS, unitMover } from "../shared/catalog";
 import type { Building, BuildingKind, GameSnapshot, MapId, MercenaryCamp, MercenaryUnitKind, Obstacle, Owner, PlayerId, ResourceNode, Shop, TerrainLandmark, TrainableUnitKind, Unit, WorldItem,WorldEffect } from "../shared/types";
 
 type Point = { x: number; y: number };
@@ -442,9 +442,10 @@ function drawMercenaryCamps(painter: Painter, camps: MercenaryCamp[],overlayOnly
     // What the camp sells and how many are left (see @@@camp-text), under its footprint.
     const square = footprintSquare(painter.snapshot, camp, camp.radius);
     const below = square ? (square.bottom + 1) * square.cell - painter.camera.y + 13 : point.y + 48;
-    ctx.fillText(`${painter.labels.kind(camp.hireKind)} ×${camp.stock}`, point.x, below);
+    const text = `${painter.labels.kind(camp.hireKind)} ×${camp.stock}`;
+    ctx.fillText(text, point.x, below);
     ctx.textAlign = "start";
-    if (camp.cooldownRemaining > 0) drawProgress(ctx, point.x, below + 12, 1 - camp.cooldownRemaining / camp.cooldown);
+    if (camp.cooldownRemaining > 0) drawCooldownSweep(ctx, point.x - ctx.measureText(text).width / 2 - 9, below - 4, camp.cooldownRemaining / camp.cooldown);
   }
 }
 
@@ -491,11 +492,38 @@ function drawBuildings(painter: Painter, buildings: Building[],overlayOnly=false
     if(!overlayOnly)drawAtlasBuilding(ctx, painter.buildingModels?.[building.id] ?? building.kind, point, size, ownerInk(building.owner, painter.snapshot), towerRoofOpen(painter.snapshot.units, building));
     ctx.restore();
     if (showRally) drawBuildingRally(ctx, building, point, rallyPoint, ownerInk(building.owner, painter.snapshot));
-    if (shouldShowHealthBar({ hp: building.hp, maxHp: building.maxHp, selected, hovered: painter.hoveredId === building.id, engaged: engaged.has(building.id), constructing: !building.complete, still: painter.still })) drawHp(ctx, point.x, painter.actorPositions?.get(building.id)?.topY!==undefined?painter.actorPositions.get(building.id)!.topY-painter.camera.y-7:point.y - size * 0.78 - 5, building.hp, building.maxHp, 48);
-    if (!building.complete) drawProgress(ctx, point.x, point.y + size * 0.6 + 10, building.buildProgress / building.buildTime);
-    if (building.complete && building.queue[0]) {
-      drawTrainingProgress(painter, point.x, point.y + size * 0.6 + 10, building);
-    }
+    const barY = painter.actorPositions?.get(building.id)?.topY!==undefined?painter.actorPositions.get(building.id)!.topY-painter.camera.y-7:point.y - size * 0.78 - 5;
+    const showHp = shouldShowHealthBar({ hp: building.hp, maxHp: building.maxHp, selected, hovered: painter.hoveredId === building.id, engaged: engaged.has(building.id), constructing: !building.complete, still: painter.still });
+    if (showHp) drawHp(ctx, point.x, barY, building.hp, building.maxHp, 48);
+    drawBuildingWork(painter, point.x, showHp ? barY + WORK_BAR_STEP : barY, building);
+  }
+}
+
+// @@@work-bar - A building's work (construction, training, an upgrade, research) is one cold-blue bar of the health
+// bar's size, growing left to right, with the time left at its right (docs/art/progress-display.zh.md §4). It sits in
+// the health bar's place, or 2px under it when both show; research under the queue when a building does both.
+const WORK_BAR_STEP = 7;
+const WORK_INK = "#7fb0d6", WORK_DONE_INK = "#d1b782";
+
+function drawBuildingWork(painter: Painter, x: number, y: number, building: Building) {
+  const { ctx } = painter;
+  if (!building.complete) {
+    drawWorkBar(ctx, x, y, building.buildProgress / building.buildTime, formatRemaining(building.buildTime - building.buildProgress));
+    return;
+  }
+  const job = building.queue[0];
+  if (job) {
+    const awaitingLaunch = isAwaitingShipLaunch(building);
+    const count = trainingQueueCountText(building.queue.length);
+    drawWorkBar(ctx, x, y, awaitingLaunch ? 1 : 1 - job.remaining / jobDuration(job), [formatRemaining(job.remaining), count].filter(Boolean).join(" "), awaitingLaunch ? WORK_DONE_INK : WORK_INK);
+    if (awaitingLaunch && painter.labels.awaitingShipLaunch) drawAwaitingLaunch(ctx, x, y + WORK_BAR_STEP, painter.labels.awaitingShipLaunch());
+    y += WORK_BAR_STEP;
+  }
+  const research = building.researchQueue[0];
+  const duration = research && UPGRADE_DEFS[research.upgradeKind].levels[research.targetLevel - 1]?.researchTime;
+  if (research && duration) {
+    const count = trainingQueueCountText(building.researchQueue.length);
+    drawWorkBar(ctx, x, y, 1 - research.remaining / duration, [formatRemaining(research.remaining), count].filter(Boolean).join(" "));
   }
 }
 
@@ -805,37 +833,51 @@ function drawHp(ctx: Brush, x: number, y: number, hp: number, maxHp: number, wid
   ctx.fillRect(x - width / 2, y, width * ratio, 3);
 }
 
-function drawProgress(ctx: Brush, x: number, y: number, ratio: number, ink = "#315f87") {
-  ctx.fillStyle = "rgba(35, 49, 38, 0.18)";
-  ctx.fillRect(x - 28, y, 56, 5);
+function drawWorkBar(ctx: Brush, x: number, y: number, ratio: number, text: string, ink = WORK_INK, width = 48) {
+  ctx.fillStyle = "rgba(35, 49, 38, 0.28)";
+  ctx.fillRect(x - width / 2 - 1, y - 1, width + 2, 5);
   ctx.fillStyle = ink;
-  ctx.fillRect(x - 28, y, 56 * Math.max(0, Math.min(1, ratio)), 5);
+  ctx.fillRect(x - width / 2, y, width * Math.max(0, Math.min(1, ratio)), 3);
+  if (!text) return;
+  ctx.save();
+  ctx.font = "600 9px ui-monospace, monospace";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = "rgba(255, 250, 226, 0.85)";
+  ctx.strokeText(text, x + width / 2 + 3, y + 1.5);
+  ctx.fillStyle = "#24343f";
+  ctx.fillText(text, x + width / 2 + 3, y + 1.5);
+  ctx.restore();
 }
 
-function drawTrainingProgress(painter: Painter, x: number, y: number, building: Building) {
-  const { ctx } = painter;
-  const job = building.queue[0]!, { remaining } = job;
-  const total = jobDuration(job);
-  const awaitingLaunch = isAwaitingShipLaunch(building);
-  const ink = awaitingLaunch ? "#9a6a28" : "#315f87";
-  drawProgress(ctx, x, y, 1 - remaining / total, ink);
-  ctx.fillStyle = ink;
-  ctx.font = "9px ui-monospace, monospace";
-  const countText = trainingQueueCountText(building.queue.length);
-  ctx.fillText(`${painter.labels.kind(isTrainingJob(job) ? job.unitKind : job.to)}${countText ? ` ${countText}` : ""}`, x - 27, y + 16);
-  if (awaitingLaunch && painter.labels.awaitingShipLaunch) {
-    const label = painter.labels.awaitingShipLaunch();
-    ctx.save();
-    ctx.font = "600 10px ui-monospace, monospace";
-    ctx.textAlign = "left";
-    ctx.textBaseline = "alphabetic";
-    const width = Math.ceil(ctx.measureText(label).width) + 8;
-    ctx.fillStyle = "rgba(255, 250, 226, 0.94)";
-    ctx.fillRect(x - 31, y + 20, width, 15);
-    ctx.fillStyle = "#704a20";
-    ctx.fillText(label, x - 27, y + 31);
-    ctx.restore();
+function drawAwaitingLaunch(ctx: Brush, x: number, y: number, label: string) {
+  ctx.save();
+  ctx.font = "600 10px ui-monospace, monospace";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+  const width = Math.ceil(ctx.measureText(label).width) + 8;
+  ctx.fillStyle = "rgba(255, 250, 226, 0.94)";
+  ctx.fillRect(x - 25, y, width, 15);
+  ctx.fillStyle = "#704a20";
+  ctx.fillText(label, x - 21, y + 11);
+  ctx.restore();
+}
+
+/** A cooldown in the world: a small dark wedge from twelve o'clock shrinking clockwise, never a bar (see @@@cooldown-sweep). */
+function drawCooldownSweep(ctx: Brush, x: number, y: number, left: number, radius = 6) {
+  const share = Math.max(0, Math.min(1, left));
+  ctx.save();
+  ctx.fillStyle = "rgba(255, 250, 226, 0.7)";
+  ctx.strokeStyle = "#24343f";
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  if (share > 0) {
+    const end = -Math.PI / 2 + Math.PI * 2;
+    ctx.fillStyle = "rgba(16, 28, 36, 0.7)";
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, radius, end - Math.PI * 2 * share, end); ctx.closePath(); ctx.fill();
   }
+  ctx.restore();
 }
 
 // @@@hit-shake - A subtle, decaying contact response; strong hits cannot move

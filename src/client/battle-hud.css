@@ -37,6 +37,11 @@
 .hud-subject-name { color:var(--battle-ink); font-size:14px; font-weight:600; line-height:1.25; overflow-wrap:anywhere; }
 .hud-subject-detail { color:var(--battle-muted); font-size:10px; line-height:1.4; }
 .hud-subject-caption:empty,.hud-subject-detail:empty { display:none; }
+.hud-subject-detail[data-cooldown]::before {
+  content:""; display:inline-block; width:10px; height:10px; margin-right:4px; vertical-align:-1px; border-radius:50%;
+  background:conic-gradient(transparent 0 calc((1 - var(--cooldown-left,1)) * 360deg),#101c24b3 0),#fff3d14d;
+  box-shadow:0 0 0 1px #fff3d166;
+}
 .hud-statuses[hidden] { display:none; }
 .hud-statuses { display:flex; flex-wrap:wrap; gap:4px; margin-top:7px; padding-top:7px; border-top:1px solid var(--battle-edge); }
 .hud-status { position:relative; width:29px; height:34px; flex:0 0 29px; border:1px solid #709792; border-radius:3px; background:#11191f; overflow:hidden; cursor:help; }
@@ -49,6 +54,10 @@
 .hud-health { position:relative; height:17px; background:#0d161c; border-radius:3px; overflow:hidden; }
 .hud-health > span:first-child { position:absolute; inset:0 auto 0 0; background:#baa57145; border-right:1px solid #ffffff55; }
 .hud-health-text { position:relative; display:block; color:#e4dec9; text-align:center; font-size:10px; line-height:17px; }
+.hud-work { display:flex; align-items:center; gap:4px; margin-top:3px; }
+.hud-work[hidden] { display:none; }
+.hud-work > span:first-child { position:relative; flex:1; height:4px; background:linear-gradient(#7fb0d6,#7fb0d6) 0 0/var(--work-share,0%) 100% no-repeat,#0d161c; }
+.hud-work-text { color:var(--battle-muted); font:600 10px/12px var(--font-ui); font-variant-numeric:tabular-nums; }
 .hud-roster {
   position:relative; display:grid; grid-template-columns:repeat(4,minmax(0,1fr));
   gap:2px; margin-top:6px; padding-top:6px; border-top:1px solid var(--battle-edge);
@@ -123,15 +132,41 @@
 /* Except where the words are the state itself: who a purchase will be handed to. */
 .command-button[data-purchase-recipient] .command-label { display:block; position:absolute; bottom:2px; left:2px; right:2px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font:10px/12px var(--font-ui); text-shadow:0 1px #24140d; }
 .hotkey { position:absolute; right:2px; top:1px; padding:0 2px; border-radius:2px; background:#182127d9; color:#bdbba9; font:8px/11px var(--font-ui); }
+.command-stock { position:absolute; z-index:3; right:2px; bottom:1px; padding:0 2px; border-radius:2px; background:#182127d9; color:#e4dec9; font:600 10px/12px var(--font-ui); font-variant-numeric:tabular-nums; pointer-events:none; }
+.command-stock:empty { display:none; }
 .command-button-disabled { opacity:.48; cursor:help; }
 .command-button-disabled:hover { opacity:.85; }
 .command-button[data-disabled-label]::after { content:attr(data-disabled-label); position:absolute; top:17px; left:2px; right:2px; color:#fff3d1; background:#302014f2; padding:1px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font:10px/12px var(--font-ui); }
-.command-button-cooldown::before,.item-cooldown { position:absolute; inset:0; border-radius:inherit; background:#101c2473; pointer-events:none; }
+/* @@@cooldown-sweep - A cooldown is a dark wedge from twelve o'clock that shrinks clockwise (--cooldown-left, 1 to 0),
+   with a thin bright edge at the hand, and the time left in its middle (docs/art/progress-display.zh.md §4). The
+   button itself stays at full strength: the wedge already says it cannot be used yet. */
+.command-button,.item-button { container-type:size; }
+.command-button-cooldown::before,.item-cooldown {
+  --cooldown-turn:calc((1 - var(--cooldown-left,1)) * 360deg);
+  position:absolute; inset:0; z-index:1; border-radius:inherit; pointer-events:none;
+  background:conic-gradient(transparent 0 var(--cooldown-turn),#fff3d166 0 calc(var(--cooldown-turn) + 2deg),#101c24b3 0);
+}
 .command-button-cooldown::before { content:""; }
-.item-cooldown { display:grid; place-items:center; color:var(--battle-ink); font-size:12px; }
+.command-button-cooldown.command-button-disabled,.command-button-cooldown.command-button-disabled:hover { opacity:1; }
+.item-cooldown { display:grid; place-items:center; font-size:0; }
 .item-cooldown[hidden] { display:none; }
-.research-progress-fill { position:absolute; z-index:2; left:0; bottom:0; height:3px; width:var(--research-progress); background:#91b76f; box-shadow:0 -1px #20311d; pointer-events:none; }
-.research-progress-text { position:absolute; z-index:2; top:2px; left:2px; padding:1px 3px; background:#302014f2; color:#fff3d1; font:600 11px/14px var(--font-ui); text-shadow:0 1px #000; pointer-events:none; }
+/* The number only on a button whose short side is at least 40px; a smaller one shows the wedge alone and keeps the
+   time in its tooltip. */
+@container (min-width:40px) and (min-height:40px) {
+  .command-button-cooldown[data-cooldown-label]::after,.item-cooldown {
+    color:#fff3d1; font:600 12px/1 var(--font-ui); font-variant-numeric:tabular-nums;
+    text-shadow:-1px 0 #101c24,1px 0 #101c24,0 -1px #101c24,0 1px #101c24;
+  }
+  .command-button-cooldown[data-cooldown-label]::after {
+    content:attr(data-cooldown-label); position:absolute; inset:0; z-index:2; display:grid; place-items:center; pointer-events:none;
+  }
+}
+/* @@@work-bar - Work (training, research, upgrades) is a 4px cold-blue bar growing left to right over a dark track,
+   with the time left in the corner badge; the percentage is in the tooltip. */
+.research-progress-button::before { content:""; position:absolute; z-index:2; left:0; right:0; bottom:0; height:4px; background:#0d161c; pointer-events:none; }
+.research-progress-fill { position:absolute; z-index:2; left:0; bottom:0; height:4px; width:var(--research-progress); background:#7fb0d6; pointer-events:none; }
+.research-progress-text { position:absolute; z-index:2; top:2px; left:2px; padding:1px 3px; background:#302014f2; color:#fff3d1; font:600 11px/14px var(--font-ui); font-variant-numeric:tabular-nums; text-shadow:0 1px #000; pointer-events:none; }
+.research-progress-text:empty { display:none; }
 .training-launch-waiting .research-progress-fill { background:var(--battle-accent); }
 .training-cancel-button:hover::after { content:'×'; position:absolute; z-index:3; top:0; right:3px; color:#fff3d1; text-shadow:0 1px #000; font:18px/1 sans-serif; }
 @property --autocast-turn {

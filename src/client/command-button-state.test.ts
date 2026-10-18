@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { abilityCommandState, autocastSwitch, autocastToggle, legalityCommandState, sharedStance, stanceCommandState, stanceFighters, stanceMenuCommandState } from "./command-button-state";
 import { createGame, snapshotGame } from "../shared/sim";
 import { checkCommandLegality } from "../shared/sim/command-validation";
-import { MERCENARY_HIRE_RANGE, TIER_SUPPLY_CAP, UPGRADE_DEFS, UNIT_DEFS } from "../shared/catalog";
+import { ABILITY_DEFS, MERCENARY_HIRE_RANGE, TIER_SUPPLY_CAP, UPGRADE_DEFS, UNIT_DEFS } from "../shared/catalog";
 import type { GameCommand, GameSnapshot } from "../shared/types";
 import type { Unit } from "../shared/types";
 
@@ -30,6 +30,7 @@ describe("command button state", () => {
       visible: true,
       enabled: false,
       cooldownTicks: 75,
+      cooldownLength: ABILITY_DEFS.heal.cooldown,
       reason: "cooldown",
       autocast: "on",
     });
@@ -166,6 +167,6 @@ describe("order buttons read the sim's own check", () => {
     Object.assign(scout, { x: CAMP.x + reach + 10 });
     expect(state(snapshot, { type: "hire", campId: "camp" })).toMatchObject({ enabled: false, reason: "position" });
     snapshot.mercenaryCamps[0]!.cooldownRemaining = 35;
-    expect(state(snapshot, { type: "hire", campId: "camp" })).toEqual({ visible: true, enabled: false, reason: "cooldown", cooldownTicks: 35 });
+    expect(state(snapshot, { type: "hire", campId: "camp" })).toEqual({ visible: true, enabled: false, reason: "cooldown", cooldownTicks: 35, cooldownLength: CAMP.cooldown });
   });
 });

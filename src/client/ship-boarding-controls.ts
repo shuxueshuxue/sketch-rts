@@ -1,6 +1,6 @@
 import { shipProfile } from '../shared/ship-geometry';
 import { shipBoardingRefusal, shipBoardingTargetRefusal } from '../shared/ship-gangway';
-import { SIM_TICKS_PER_SECOND } from '../shared/time';
+import { formatRemaining } from './format-remaining';
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from '../shared/types';
 
 type BoardingSnapshot = Pick<GameSnapshot, 'units' | 'tick' | 'variants'>;
@@ -58,8 +58,8 @@ export function shipBoardingProblem(action: ShipBoardingAction, zh: boolean): st
 export function shipBoardingStatus(ship: Unit, tick: number, zh: boolean): string {
   const bridge = ship.sailing?.gangway;
   if (bridge?.phase === 'approach') return zh ? '正在靠拢目标船' : 'Approaching target ship';
-  if (bridge?.phase === 'deploying') return `${zh ? '正在架桥' : 'Deploying bridge'} · ${Math.max(0, Math.ceil((bridge.readyAtTick - tick) / SIM_TICKS_PER_SECOND))}s`;
+  if (bridge?.phase === 'deploying') return `${zh ? '正在架桥' : 'Deploying bridge'} · ${formatRemaining(bridge.readyAtTick - tick)}`;
   if (bridge?.phase === 'ready') return zh ? '接舷桥已就绪' : 'Boarding bridge ready';
   const remaining = (ship.sailing?.gangwayCooldownUntilTick ?? 0) - tick;
-  return remaining > 0 ? `${zh ? '接舷冷却' : 'Bridge cooldown'} ${Math.ceil(remaining / SIM_TICKS_PER_SECOND)}s` : '';
+  return remaining > 0 ? `${zh ? '接舷冷却' : 'Bridge cooldown'} ${formatRemaining(remaining)}` : '';
 }

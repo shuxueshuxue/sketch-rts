@@ -46,8 +46,10 @@ export type CommandLegalityError = {
   message: string;
   transient: boolean;
   reason: CommandRefusalReason;
-  // reason "cooldown": ticks until it is ready; reason "tier": the supply cap the unit waits for.
+  // reason "cooldown": ticks until it is ready, and the whole cooldown it is part of; reason "tier": the supply cap the
+  // unit waits for.
   cooldownTicks?: number;
+  cooldownLength?: number;
   supplyCap?: number;
 };
 
@@ -188,7 +190,7 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     const camp = snapshot.mercenaryCamps.find((candidate) => candidate.id === command.campId);
     if (!camp) return commandError(`Unknown mercenary camp ${command.campId}`, "rules");
     if (camp.stock <= 0) return refusal(`${camp.id} has no mercenary stock`, "stock");
-    if (camp.cooldownRemaining > 0) return refusal(`${camp.id} is between hires`, "cooldown", { cooldownTicks: camp.cooldownRemaining });
+    if (camp.cooldownRemaining > 0) return refusal(`${camp.id} is between hires`, "cooldown", { cooldownTicks: camp.cooldownRemaining, cooldownLength: camp.cooldown });
     if (!hasFriendlyUnitAtCamp(snapshot, owner, camp)) return refusal(`${camp.id} needs a friendly unit nearby before hiring`, "position");
     if (!canSupply(snapshot, owner, camp.hireKind)) return refusal(`Need more supply to hire ${camp.hireKind}`, "supply");
     return goldRefusal(snapshot, owner, camp.cost);
@@ -262,7 +264,7 @@ function commandError(message: string, reason: CommandRefusalReason, transient =
   return { message, transient, reason };
 }
 
-function refusal(message: string, reason: CommandRefusalReason, extra: Pick<CommandLegalityError, "cooldownTicks" | "supplyCap"> = {}): CommandLegalityError {
+function refusal(message: string, reason: CommandRefusalReason, extra: Pick<CommandLegalityError, "cooldownTicks" | "cooldownLength" | "supplyCap"> = {}): CommandLegalityError {
   return { message, transient: true, reason, ...extra };
 }
 
