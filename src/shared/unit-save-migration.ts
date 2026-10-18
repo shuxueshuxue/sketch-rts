@@ -1,7 +1,7 @@
 import { ABILITY_DEFS, BUILDING_DEFS, UNIT_DEFS } from './catalog';
 import type { GameSnapshot } from './types';
+import { UNIT_NAMES } from './unit-name-migration';
 
-const UNIT_NAMES: Readonly<Record<string, string>> = { pyreCaller: 'summoner', emberAcolyte: 'priest' };
 const ABILITY_NAMES: Readonly<Record<string, string>> = { cinderSoul: 'summon', emberMend: 'heal' };
 // Missing paidGold in these old queues must keep the old purchase price, not
 // acquire the canonical unit's price during restoreSnapshotIntoGame.
