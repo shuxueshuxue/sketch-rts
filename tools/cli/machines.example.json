@@ -5,12 +5,16 @@
       "ssh": ["-F", "~/YellowPage/ssh_config", "zhipu-a100-102"],
       "root": "/codegeex/jeffry/sketch-cli",
       "prelude": ". /codegeex/jeffry/sketch-rts-aiperf/env.sh",
-      "evidence": "/codegeex/jeffry/sketch-rts-evidence"
+      "evidence": "/codegeex/jeffry/sketch-rts-evidence",
+      "ports": [4700, 4719],
+      "browser": { "playwright": "/codegeex/jeffry/sketch-rts-aiperf/pw/node_modules/playwright", "browsersPath": "/codegeex/jeffry/sketch-rts-aiperf/pw/browsers" }
     },
     "mac1": {
       "ssh": ["-F", "~/YellowPage/ssh_config", "mac1"],
       "root": "/Users/mac1/work/sketch-cli",
-      "prelude": "export PATH=$HOME/.nvm/versions/node/v24.15.0/bin:$PATH"
+      "prelude": "export PATH=$HOME/.nvm/versions/node/v24.15.0/bin:$PATH",
+      "ports": [5640, 5649],
+      "browser": { "playwright": "/Users/mac1/gugu-matrix/node_modules/playwright" }
     }
   }
 }

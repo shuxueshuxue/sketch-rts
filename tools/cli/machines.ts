@@ -15,6 +15,11 @@ export type MachineConfig = {
   prelude?: string;
   /** The evidence store on that machine (see `sketch evidence`): files named by their sha256, never rewritten. */
   evidence?: string;
+  /** The ports `sketch yatu` / `sketch shot` may serve on (each run also takes port + 20000 for vite's HMR): a lane's own
+   * range on a shared machine, so a run never lands on another lane's server. */
+  ports?: [number, number];
+  /** The Playwright install a browser run drives (not a repo dependency), and where its browsers are. */
+  browser?: { playwright: string; browsersPath?: string };
 };
 
 export type MachinesFile = { default?: string; machines: Record<string, MachineConfig> };

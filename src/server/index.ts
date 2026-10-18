@@ -92,6 +92,12 @@ router.get("/api/catalog", (_request, response) => {
   });
 });
 
+// The commit a dev server was started from (`sketch yatu` sets SKETCH_BUILD_SHA), so a script proves which code it
+// drives; a production server has no such route.
+if (process.env.NODE_ENV !== "production") router.get("/api/build", (_request, response) => {
+  response.json({ sha: process.env.SKETCH_BUILD_SHA ?? null });
+});
+
 router.get("/api/benchmark-dashboard/runs", async (request, response) => {
   try {
     response.json(await listBenchmarkDashboardRunsPage(benchmarkDashboardPageOptionsFromQuery(request.query)));

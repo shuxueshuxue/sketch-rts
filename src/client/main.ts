@@ -54,7 +54,7 @@ import { createDeploymentRuntime, type MatchChat } from "./deployment/runtime";
 import { createBrowserMatchThreads } from "./match-worker/browser";
 import { setTerrainChunkPainter } from "./terrain-art";
 import { createTerrainChunkPainter } from "./terrain-thread/browser";
-import { createSketchRtsDebugView, type SketchRtsDebugView } from "./debug-view";
+import { createSketchRtsDebugView, type SketchRtsDebugHooks, type SketchRtsDebugView } from "./debug-view";
 import { edgeScrollDelta } from "./edge-scroll";
 import { liveSelectionIds, syncFrontendWorldView } from "./frontend-world-view";
 import type { GameAdapter } from "./game-adapter";
@@ -132,6 +132,7 @@ type MenuView = "home" | "profile" | "rooms" | "setup" | "results";
 declare global {
   interface Window {
     __sketchRtsView?: SketchRtsDebugView;
+    __sketchRtsDebug?: SketchRtsDebugHooks;
   }
 }
 
@@ -1740,8 +1741,20 @@ function syncDebugView() {
   // Built when read (tests, the SDK's browser driver), from the state as it is now: a frame never pays for it.
   const input = { roomId: currentRoomId, localPlayerId, snapshot, selectedIds: new Set(selectedIds), focusedSelectionId };
   let view: SketchRtsDebugView | undefined;
-  Object.defineProperty(window, "__sketchRtsView", { configurable: true, enumerable: true, get: () => (view ??= createSketchRtsDebugView(input)) });
+  // The tick is read live: a script waiting for the client to catch up must not see the tick of the last sync.
+  const live = () => { view ??= createSketchRtsDebugView(input); Object.defineProperty(view, "tick", { configurable: true, enumerable: true, get: () => snapshot?.tick }); return view; };
+  Object.defineProperty(window, "__sketchRtsView", { configurable: true, enumerable: true, get: live });
 }
+
+// @@@debug-hooks - Dev-build only (`sketch yatu` / `sketch shot` serve the client through vite): put the camera on a
+// world point, select units by id, and send a command as the player would (refused as the player would be), so a scene
+// script need not reach the world through minimap clicks. The production build has none of them.
+if (import.meta.env.DEV) window.__sketchRtsDebug = {
+  camera(x, y, zoom) { if (zoom !== undefined) worldZoom = zoom; centerCameraOnWorld({ x, y }); },
+  select(ids) { if (!snapshot) return; selectedIds = new Set(ids); focusedSelectionId = resolveFocusedSelectionId(snapshot, selectedIds, focusedSelectionId, localPlayerId); selectedCampId = undefined; openPalette = undefined; updateHud(); },
+  command(command) { return sendCommand(command); },
+  screenOf(x, y) { const at = worldToScreen({ x, y }), box = canvas.getBoundingClientRect(); return { x: box.x + at.x, y: box.y + at.y }; },
+};
 
 function isEdgeBrowser() {
   const brands =
