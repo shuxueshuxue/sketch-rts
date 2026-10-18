@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { configureCardMaterial } from './card-bank-shader';
+import { CardMipUploader, createCardArray, type CardTextureRenderer } from './card-mip-uploader';
 import { SHIP_CAMERA } from '../../shared/ship-geometry';
 import type { Terrain } from '../../shared/terrain';
 import { LOOK_DENSITY, LOOK_FOOT, LOOK_HEIGHT, LOOK_WIDTH, standingLookCanvas, standingTerrain } from '../standing-terrain';
@@ -15,45 +16,47 @@ const REACH = 200;
 // alone (an upright card nearer the camera is the one whose foot lies further south, whatever heights its pixels and the
 // others' have; see the render contract's third rule). The terrain stands still, so its cards are laid out once when a
 // map is shown: one array texture, a layer a look, and an instanced draw a chunk; a frame only shows or hides chunks.
+// A look's canvas goes to its layer on the GPU (see @@@canvas-upload): no pixel is read back. The layers live only on
+// the GPU, so a lost context drops the field and the next frame lays it out again.
 export class StandingField {
   private terrain: Terrain | undefined;
   private group = new THREE.Group();
   private texture: THREE.DataArrayTexture | undefined;
+  private uploader: CardMipUploader;
   private material: THREE.MeshBasicMaterial | undefined;
   // What the sun's shadow map sees of a card: its painted silhouette, cut out as the colour pass cuts it.
   private depth: THREE.MeshDepthMaterial | undefined;
   private chunks: { mesh: THREE.InstancedMesh; left: number; top: number }[] = [];
   constructor(scene: THREE.Scene, private anisotropy: number) {
+    this.uploader = new CardMipUploader(anisotropy);
     this.group.name = 'StandingField';
     scene.add(this.group);
   }
 
   /** Lays out the terrain's cards when the map changes, then shows the chunks near the view (world units). */
-  update(terrain: Terrain | undefined, view: { x: number; y: number; width: number; height: number }) {
-    if (terrain !== this.terrain) this.build(terrain);
+  update(terrain: Terrain | undefined, view: { x: number; y: number; width: number; height: number }, renderer: CardTextureRenderer) {
+    if (terrain !== this.terrain) this.build(terrain, renderer);
     for (const chunk of this.chunks) chunk.mesh.visible = chunk.left < view.x + view.width + REACH && chunk.left + CHUNK > view.x - REACH
       && chunk.top < view.y + view.height + REACH * 2 && chunk.top + CHUNK > view.y - REACH;
   }
 
   get instances() { return this.chunks.reduce((total, chunk) => total + chunk.mesh.count, 0); }
 
-  private build(terrain: Terrain | undefined) {
+  private build(terrain: Terrain | undefined, renderer: CardTextureRenderer) {
     this.dispose();
     this.terrain = terrain;
     if (!terrain) return;
     const objects = standingTerrain(terrain);
     if (!objects.length) return;
     const looks = [...new Set(objects.map(object => object.look))], layer = new Map(looks.map((look, index) => [look, index]));
-    // One layer a look, its rows bottom first: a card samples v = 0 at its foot's side, as a troop card's (see painted-card-batches.ts).
-    const data = new Uint8Array(LOOK_WIDTH * LOOK_HEIGHT * 4 * looks.length), row = LOOK_WIDTH * 4;
-    looks.forEach((look, index) => {
-      const pixels = standingLookCanvas(look).getContext('2d')!.getImageData(0, 0, LOOK_WIDTH, LOOK_HEIGHT).data;
-      for (let y = 0; y < LOOK_HEIGHT; y++) data.set(pixels.subarray(y * row, (y + 1) * row), ((index * LOOK_HEIGHT) + LOOK_HEIGHT - 1 - y) * row);
-    });
-    const texture = this.texture = new THREE.DataArrayTexture(data, LOOK_WIDTH, LOOK_HEIGHT, looks.length);
-    texture.colorSpace = THREE.SRGBColorSpace; texture.magFilter = THREE.LinearFilter; texture.minFilter = THREE.LinearMipmapLinearFilter;
-    texture.generateMipmaps = true; texture.anisotropy = this.anisotropy;
-    texture.flipY = false; texture.premultiplyAlpha = false; texture.unpackAlignment = 1; texture.needsUpdate = true;
+    // One layer a look, its rows bottom first (the upload flips the canvas): a card samples v = 0 at its foot's side, as a
+    // troop card's (see painted-card-batches.ts).
+    const page = { texture: createCardArray(LOOK_WIDTH, LOOK_HEIGHT, looks.length, this.anisotropy), uploaded: false };
+    this.texture = page.texture;
+    looks.forEach((look, index) => this.uploader.uploadCanvasLayer(page, index, standingLookCanvas(look), renderer, { sourceWidth: LOOK_WIDTH, sourceHeight: LOOK_HEIGHT, baseMip: 0 }));
+    // The scratch textures served this layout only.
+    this.uploader.dispose();
+    const texture = page.texture;
     // Alpha to coverage: the multisampled edge of a crown is as soft as the painted ground's was, not a cutout's stair.
     const material = this.material = new THREE.MeshBasicMaterial({ map: texture, alphaTest: .4, alphaToCoverage: true, side: THREE.DoubleSide, toneMapped: false });
     configureCardMaterial(material, [texture], 1);
