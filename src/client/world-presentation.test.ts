@@ -95,6 +95,18 @@ describe('current scene graphics recovery (GPU mocked)',()=>{
     expect(mocks.image.mock.calls.every(call=>call[1]==='home')).toBe(true);
     expect(mocks.image).not.toHaveBeenCalledWith('portraits/warship','match');
   });
+  it('clears its overlay canvas once a frame, in the 3D world, the Canvas world and a failed 3D draw alike',async()=>{
+    // The overlay is a full-screen layer at device pixels: a second clear a frame was a second screen of raster.
+    const presentation=new WorldPresentation(new Element() as unknown as HTMLCanvasElement);
+    const clears:number[][]=[],overlay={...context2d,clearRect:(...rect:number[])=>{clears.push(rect);}};
+    const draw=()=>{clears.length=0;presentation.draw({...frame(snapshot()),ctx:overlay} as unknown as WorldFrame,'home');return clears;};
+    expect(draw()).toEqual([[0,0,800,600]]);expect(presentation.is3D).toBe(false);
+    await presentation.prepare(snapshot(),'home');expect(presentation.is3D).toBe(true);
+    expect(draw()).toEqual([[0,0,800,600]]);
+    const error=vi.spyOn(console,'error').mockImplementation(()=>{});
+    mocks.layer.draw.mockImplementationOnce(()=>{throw new Error('GPU lost');});
+    expect(draw()).toEqual([[0,0,800,600]]);expect(mocks.draw).toHaveBeenCalled();error.mockRestore();
+  });
   it('keeps a failed draw on Canvas across scene preparation until the graphics context is restored',async()=>{
     const presentation=new WorldPresentation(new Element() as unknown as HTMLCanvasElement);
     await presentation.prepare(snapshot(),'home');
