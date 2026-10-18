@@ -118,11 +118,12 @@ export function createRoomLifecycleHost(options: RoomLifecycleOptions = {}) {
     },
 
     pauseRoom(roomId: string): RoomState {
-      return replaceRoom({ ...requireRoom(roomId), autoTick: false });
+      return replaceRoom({ ...requireRoom(roomId), paused: true });
     },
 
     resumeRoom(roomId: string): RoomState {
-      return replaceRoom({ ...requireRoom(roomId), autoTick: true });
+      const { paused: _paused, ...room } = requireRoom(roomId);
+      return replaceRoom(room);
     },
 
     closeRoom(roomId: string, userId: string): RoomState {

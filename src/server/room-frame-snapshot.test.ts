@@ -50,9 +50,10 @@ describe('hosted frame snapshot consumers', () => {
     expect(work.snapshots).toHaveBeenCalledTimes(3);
     expect(work.hashes).not.toHaveBeenCalled();
     expect(result.snapshot.tick).toBe(ticks);
-    expect(host.framesFrom(roomId, 0)).toEqual([{
-      roomId, tick: 0, sequence: 0, commands: [{ playerId: 'player', command }],
-    }]);
+    // Every tick is a frame (see @@@hosted-every-tick); only the first carries the command.
+    expect(host.framesFrom(roomId, 0)).toEqual(Array.from({ length: ticks }, (_, tick) => ({
+      roomId, tick, sequence: tick, commands: tick === 0 ? [{ playerId: 'player', command }] : [],
+    })));
     expect(host.checkpointAtOrBefore(roomId, ROOM_CHECKPOINT_INTERVAL_TICKS - 1)!.tick).toBe(0);
     const checkpoint = host.checkpointAtOrBefore(roomId, ROOM_CHECKPOINT_INTERVAL_TICKS)!;
     expect(checkpoint.tick).toBe(ROOM_CHECKPOINT_INTERVAL_TICKS);
