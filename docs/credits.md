@@ -18,6 +18,12 @@ The `cc0` sound pack is made of recordings from [Freesound](https://freesound.or
 | `buildingDown.ogg` | [Big falling debris (crash)](https://freesound.org/people/xkeril/sounds/703247/) | xkeril |
 | `click.ogg` | [Basic Click Wooden](https://freesound.org/people/GameAudio/sounds/220200/) | GameAudio |
 
+The `mortarShot` supplement selected for the hosted `war3` pack uses one shot from
+[Mortar Shots.flac](https://freesound.org/people/qubodup/sounds/184382/) by **qubodup**, released under
+[CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). The edited recording uses the public high-quality
+MP3 preview, cut from 0.960 to 3.100 seconds and levelled for the game. Its preparation and separate release
+are documented in [the mortar sound review](reviews/war3-mortar-20261018.zh.md).
+
 The titles and buttons are set in [Cinzel](https://github.com/NDISCOVER/Cinzel) by Natanael Gama (© 2020 The Cinzel Project Authors), under the [SIL Open Font License 1.1](../src/client/fonts/cinzel/OFL.txt); the game serves its Latin letters itself, from `src/client/fonts/cinzel/`.
 
 This repository contains no Warcraft III files and does not distribute any. The hosted game at lexicalmathical.com plays a sound pack taken from Warcraft III game files, provided by that site separately from the repository; those sounds are © Blizzard Entertainment.
