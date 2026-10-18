@@ -1,0 +1,665 @@
+{
+  "sourceRuntime": "f8b6fc8241247c4d0b566d6828e21aa31aabe90f",
+  "source": "capital-20261018/formal-30000",
+  "correction": "The eight responders embarked on carrier5722, then actually disembarked by32880. They were not continuously walking on mainland from the founding time.",
+  "timeline": [
+    {
+      "tick": 30000,
+      "footmen": [
+        {
+          "id": "unit-p2-footman-2961",
+          "x": 3999.579925663337,
+          "y": 3276.5718209697025,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-3262",
+          "x": 3994.667678235639,
+          "y": 3312.235104963315,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7213",
+          "x": 3928.7322703085792,
+          "y": 3500.237976275069,
+          "order": {
+            "type": "attackMove",
+            "x": 3999.3165857227523,
+            "y": 3278.4836886486337
+          }
+        }
+      ],
+      "ownLocalFighters": []
+    },
+    {
+      "tick": 31830,
+      "footmen": [
+        {
+          "id": "unit-p2-footman-2961",
+          "x": 2909.3047051716235,
+          "y": 3845.1431839175407,
+          "deck": {
+            "shipId": "unit-p2-carrier-5722",
+            "x": -19.840000000000003,
+            "y": -43.96000000000001
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-3262",
+          "x": 2812.43352788168,
+          "y": 3874.4685144435603,
+          "deck": {
+            "shipId": "unit-p2-carrier-5722",
+            "x": -69.84,
+            "y": 44.03999999999999
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7213",
+          "x": 2849.048526629604,
+          "y": 3867.8850604344916,
+          "deck": {
+            "shipId": "unit-p2-carrier-5722",
+            "x": -47.84,
+            "y": 14.039999999999992
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7333",
+          "x": 2872.3326282554326,
+          "y": 3837.5890109976744,
+          "deck": {
+            "shipId": "unit-p2-carrier-5722",
+            "x": -51.84,
+            "y": -23.960000000000008
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7516",
+          "x": 2886.0206035457954,
+          "y": 3875.4392333543583,
+          "deck": {
+            "shipId": "unit-p2-carrier-5722",
+            "x": -15.840000000000003,
+            "y": -5.960000000000008
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7686",
+          "x": 2844.3218790955248,
+          "y": 3904.7857217170294,
+          "deck": {
+            "shipId": "unit-p2-carrier-5722",
+            "x": -25.840000000000003,
+            "y": 44.03999999999999
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7827",
+          "x": 2922.9212648283333,
+          "y": 3880.165880888438,
+          "deck": {
+            "shipId": "unit-p2-carrier-5722",
+            "x": 14.159999999999997,
+            "y": -27.960000000000008
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7951",
+          "x": 3645.041171086617,
+          "y": 3726.4838391634617,
+          "order": {
+            "type": "board",
+            "transportId": "unit-p2-carrier-5722",
+            "berth": {
+              "x": 2896,
+              "y": 3888,
+              "heading": 13.326516854734058,
+              "shore": {
+                "x": 2896,
+                "y": 3888,
+                "score": 157.27987508156252
+              }
+            }
+          }
+        }
+      ],
+      "ownLocalFighters": [
+        "unit-p0-transport-1067"
+      ]
+    },
+    {
+      "tick": 32520,
+      "footmen": [
+        {
+          "id": "unit-p2-footman-2961",
+          "x": 2816.017741167982,
+          "y": 4075.1204470104603,
+          "deck": {
+            "shipId": "unit-p2-carrier-5722",
+            "x": -19.840000000000003,
+            "y": -43.96000000000001
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-3262",
+          "x": 2867.079636019002,
+          "y": 4162.50856344641,
+          "deck": {
+            "shipId": "unit-p2-carrier-5722",
+            "x": -69.84,
+            "y": 44.03999999999999
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7213",
+          "x": 2852.1567281727757,
+          "y": 4128.430611315846,
+          "deck": {
+            "shipId": "unit-p2-carrier-5722",
+            "x": -47.84,
+            "y": 14.039999999999992
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7333",
+          "x": 2817.2741983382025,
+          "y": 4112.835448208649,
+          "deck": {
+            "shipId": "unit-p2-carrier-5722",
+            "x": -51.84,
+            "y": -23.960000000000008
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7516",
+          "x": 2850.900271002555,
+          "y": 4090.7156101176574,
+          "deck": {
+            "shipId": "unit-p2-carrier-5722",
+            "x": -15.840000000000003,
+            "y": -5.960000000000008
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7686",
+          "x": 2889.1443195574398,
+          "y": 4124.440864010425,
+          "deck": {
+            "shipId": "unit-p2-carrier-5722",
+            "x": -25.840000000000003,
+            "y": 44.03999999999999
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7827",
+          "x": 2846.910523697133,
+          "y": 4053.7280187329934,
+          "deck": {
+            "shipId": "unit-p2-carrier-5722",
+            "x": 14.159999999999997,
+            "y": -27.960000000000008
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7951",
+          "x": 2887.8878623872192,
+          "y": 4086.7258628122354,
+          "deck": {
+            "shipId": "unit-p2-carrier-5722",
+            "x": 6.159999999999997,
+            "y": 24.039999999999992
+          },
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "ownLocalFighters": [
+        "unit-p0-transport-1067"
+      ]
+    },
+    {
+      "tick": 32865,
+      "footmen": [
+        {
+          "id": "unit-p2-footman-2961",
+          "x": 2822.0989087505427,
+          "y": 3469.8036316129555,
+          "deck": {
+            "shipId": "unit-p2-carrier-5722",
+            "x": -19.840000000000003,
+            "y": -43.96000000000001
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-3262",
+          "x": 2904.9365792966087,
+          "y": 3527.957912096008,
+          "deck": {
+            "shipId": "unit-p2-carrier-5722",
+            "x": -69.84,
+            "y": 44.03999999999999
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7213",
+          "x": 2877.16836165197,
+          "y": 3503.2005679565405,
+          "deck": {
+            "shipId": "unit-p2-carrier-5722",
+            "x": -47.84,
+            "y": 14.039999999999992
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7333",
+          "x": 2838.9601348026276,
+          "y": 3503.563060755352,
+          "deck": {
+            "shipId": "unit-p2-carrier-5722",
+            "x": -51.84,
+            "y": -23.960000000000008
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7516",
+          "x": 2860.307135599885,
+          "y": 3469.441138814144,
+          "deck": {
+            "shipId": "unit-p2-carrier-5722",
+            "x": -15.840000000000003,
+            "y": -5.960000000000008
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7686",
+          "x": 2909.127373793781,
+          "y": 3484.1579435859453,
+          "deck": {
+            "shipId": "unit-p2-carrier-5722",
+            "x": -25.840000000000003,
+            "y": 44.03999999999999
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7827",
+          "x": 2841.26451122929,
+          "y": 3437.482126672334,
+          "deck": {
+            "shipId": "unit-p2-carrier-5722",
+            "x": 14.159999999999997,
+            "y": -27.960000000000008
+          },
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7951",
+          "x": 2892.266147741696,
+          "y": 3450.3985144435487,
+          "deck": {
+            "shipId": "unit-p2-carrier-5722",
+            "x": 6.159999999999997,
+            "y": 24.039999999999992
+          },
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "ownLocalFighters": []
+    },
+    {
+      "tick": 32880,
+      "footmen": [
+        {
+          "id": "unit-p2-footman-2961",
+          "x": 2884,
+          "y": 3668,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-3262",
+          "x": 2956,
+          "y": 3644,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7213",
+          "x": 2908,
+          "y": 3636,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7333",
+          "x": 2980,
+          "y": 3612,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7516",
+          "x": 2852,
+          "y": 3644,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7686",
+          "x": 2940,
+          "y": 3604,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7827",
+          "x": 2988,
+          "y": 3572,
+          "order": {
+            "type": "idle"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7951",
+          "x": 2948,
+          "y": 3564,
+          "order": {
+            "type": "idle"
+          }
+        }
+      ],
+      "ownLocalFighters": []
+    },
+    {
+      "tick": 33000,
+      "footmen": [
+        {
+          "id": "unit-p2-footman-2961",
+          "x": 3126.4314286557906,
+          "y": 3901.2935755798135,
+          "order": {
+            "type": "attackMove",
+            "x": 3680.6834142772473,
+            "y": 4401.516311351366
+          }
+        },
+        {
+          "id": "unit-p2-footman-3262",
+          "x": 3207.791585174025,
+          "y": 3921.88801706081,
+          "order": {
+            "type": "attackMove",
+            "x": 3680.6834142772473,
+            "y": 4401.516311351366
+          }
+        },
+        {
+          "id": "unit-p2-footman-7213",
+          "x": 3150.222836042901,
+          "y": 3861.170211353631,
+          "order": {
+            "type": "attackMove",
+            "x": 3680.6834142772473,
+            "y": 4401.516311351366
+          }
+        },
+        {
+          "id": "unit-p2-footman-7333",
+          "x": 3223.257244914815,
+          "y": 3889.379351004171,
+          "order": {
+            "type": "attackMove",
+            "x": 3680.6834142772473,
+            "y": 4401.516311351366
+          }
+        },
+        {
+          "id": "unit-p2-footman-7516",
+          "x": 3089.61999848608,
+          "y": 3866.1732066806776,
+          "order": {
+            "type": "attackMove",
+            "x": 3680.6834142772473,
+            "y": 4401.516311351366
+          }
+        },
+        {
+          "id": "unit-p2-footman-7686",
+          "x": 3176.155320835755,
+          "y": 3886.1403181309033,
+          "order": {
+            "type": "attackMove",
+            "x": 3680.6834142772473,
+            "y": 4401.516311351366
+          }
+        },
+        {
+          "id": "unit-p2-footman-7827",
+          "x": 3203.1482458381774,
+          "y": 3857.47642235017,
+          "order": {
+            "type": "attackMove",
+            "x": 3680.6834142772473,
+            "y": 4401.516311351366
+          }
+        },
+        {
+          "id": "unit-p2-footman-7951",
+          "x": 3177.562765886509,
+          "y": 3832.1508776246806,
+          "order": {
+            "type": "attackMove",
+            "x": 3680.6834142772473,
+            "y": 4401.516311351366
+          }
+        }
+      ],
+      "ownLocalFighters": []
+    },
+    {
+      "tick": 33240,
+      "footmen": [
+        {
+          "id": "unit-p2-footman-2961",
+          "x": 3703.9482887742774,
+          "y": 4367.951690275346,
+          "order": {
+            "type": "attackMove",
+            "x": 3680.6834142772473,
+            "y": 4401.516311351366,
+            "targetId": "building-p0-townHall-8027"
+          }
+        },
+        {
+          "id": "unit-p2-footman-3262",
+          "x": 3792.7953445693092,
+          "y": 4368.437031759104,
+          "order": {
+            "type": "attackMove",
+            "x": 3680.6834142772473,
+            "y": 4401.516311351366,
+            "targetId": "building-p0-townHall-8027"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7213",
+          "x": 3672.3208693621023,
+          "y": 4350.670533400092,
+          "order": {
+            "type": "attackMove",
+            "x": 3680.6834142772473,
+            "y": 4401.516311351366,
+            "targetId": "building-p0-townHall-8027"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7333",
+          "x": 3765.928808732065,
+          "y": 4344.474785368038,
+          "order": {
+            "type": "attackMove",
+            "x": 3680.6834142772473,
+            "y": 4401.516311351366,
+            "targetId": "building-p0-townHall-8027"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7516",
+          "x": 3637.2092724056733,
+          "y": 4344.058536946431,
+          "order": {
+            "type": "attackMove",
+            "x": 3680.6834142772473,
+            "y": 4401.516311351366,
+            "targetId": "building-p0-townHall-8027"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7686",
+          "x": 3740.941958572224,
+          "y": 4370.371833973505,
+          "order": {
+            "type": "attackMove",
+            "x": 3680.6834142772473,
+            "y": 4401.516311351366,
+            "targetId": "building-p0-townHall-8027"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7827",
+          "x": 3724.998117439793,
+          "y": 4338.126086611021,
+          "order": {
+            "type": "attackMove",
+            "x": 3680.6834142772473,
+            "y": 4401.516311351366,
+            "targetId": "building-p0-townHall-8027"
+          }
+        },
+        {
+          "id": "unit-p2-footman-7951",
+          "x": 3693.2036481919013,
+          "y": 4321.346319031319,
+          "order": {
+            "type": "attackMove",
+            "x": 3680.6834142772473,
+            "y": 4401.516311351366,
+            "targetId": "building-p0-townHall-8027"
+          }
+        }
+      ],
+      "ownLocalFighters": []
+    }
+  ],
+  "landingCommands": [
+    {
+      "tick": 32865,
+      "owner": "p2",
+      "scriptId": "naval",
+      "command": {
+        "type": "unload",
+        "unitIds": [
+          "unit-p2-carrier-5722"
+        ],
+        "x": 2992,
+        "y": 3888,
+        "avoidCombat": true
+      }
+    },
+    {
+      "tick": 32880,
+      "owner": "p2",
+      "scriptId": "naval",
+      "command": {
+        "type": "attackMove",
+        "unitIds": [
+          "unit-p2-footman-2961",
+          "unit-p2-footman-3262",
+          "unit-p2-footman-7213",
+          "unit-p2-footman-7333",
+          "unit-p2-footman-7516",
+          "unit-p2-footman-7686",
+          "unit-p2-footman-7827",
+          "unit-p2-footman-7951"
+        ],
+        "x": 3680.6834142772473,
+        "y": 4401.516311351366
+      }
+    }
+  ]
+}

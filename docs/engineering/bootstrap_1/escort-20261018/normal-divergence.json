@@ -1,0 +1,29 @@
+{
+  "equalPrefix": 1207,
+  "baselineFirstDifferent": {
+    "tick": 18105,
+    "owner": "p0",
+    "scriptId": "naval",
+    "command": {
+      "type": "unload",
+      "unitIds": [
+        "unit-p0-transport-1067"
+      ],
+      "x": 3696,
+      "y": 4784
+    }
+  },
+  "candidateFirstDifferent": {
+    "tick": 18105,
+    "owner": "p2",
+    "scriptId": "v6Backline",
+    "command": {
+      "type": "move",
+      "unitIds": [
+        "unit-p2-priest-2788"
+      ],
+      "x": 2480,
+      "y": 1424
+    }
+  }
+}

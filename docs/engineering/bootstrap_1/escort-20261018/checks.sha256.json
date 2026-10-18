@@ -1,0 +1,14 @@
+{
+  "archive": "checks.tar.gz",
+  "sha256": "695a96d7ef08f6de90e14827af28a43161f55a80334d60634764ed82a1cd44e9",
+  "files": {
+    "initial-test-fixture29400.json.gz": "8cfb66306807abc71c7ac321a71bcb845c9af7a65872bb2e4f1b0d2ed4959047",
+    "integration-test.log": "4cbaa552d898c562dead42ac6631e7a3493b7366ffd3197ac6a1812d6e8dfc2d",
+    "tests-final.log": "080cbe145a2903ba57c41a90a35549c267186f32141c0ac1dbd85cf86b64b336",
+    "tests.log": "ec4fd47bc8dcfd87c9adbcfa1845baed234aae188c7800958724d7a1d4fc4dd3",
+    "typecheck-final.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "typecheck-final2.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "typecheck.log": "6d7e5369e08a684c7b40ae6489dc648c3e45ddcd7250a4bcc04bd535e0cf8626",
+    "validation.json": "c6e29456118b2947de0320fec541d0206403ef0ee188ed25327b684cc9dc04a7"
+  }
+}

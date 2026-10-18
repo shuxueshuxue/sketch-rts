@@ -1,0 +1,418 @@
+{
+  "period": [
+    40000,
+    41700
+  ],
+  "attackers": {
+    "warship": 114,
+    "knight": 4,
+    "priest": 14
+  },
+  "fatalHits": [
+    {
+      "tick": 40412,
+      "attacker": {
+        "id": "unit-p2-warship-7948",
+        "kind": "warship",
+        "owner": "p2",
+        "hp": 222.5,
+        "maxHp": 320,
+        "x": 5723.390036126687,
+        "y": 3114.8664968679327,
+        "order": {
+          "type": "attackMove",
+          "x": 5878.5058923528895,
+          "y": 3333.9781328478166,
+          "targetId": "unit-p0-warship-2430"
+        }
+      },
+      "target": {
+        "id": "unit-p0-warship-2430",
+        "kind": "warship",
+        "owner": "p0",
+        "hp": -6,
+        "maxHp": 368,
+        "x": 5903.7713449398925,
+        "y": 3368.3929714939327,
+        "order": {
+          "type": "move",
+          "x": 5931.624837826068,
+          "y": 3406.3330582628673
+        }
+      },
+      "damage": 47,
+      "hpBefore": 41
+    },
+    {
+      "tick": 40505,
+      "attacker": {
+        "id": "unit-p2-warship-8228",
+        "kind": "warship",
+        "owner": "p2",
+        "hp": 278.3999999999994,
+        "maxHp": 320,
+        "x": 5619.5775362448185,
+        "y": 2350.9484052126054,
+        "order": {
+          "type": "attackMove",
+          "x": 6028.106253261011,
+          "y": 2851.6405867772946,
+          "targetId": "unit-p0-knight-8102"
+        }
+      },
+      "target": {
+        "id": "unit-p0-knight-8102",
+        "kind": "knight",
+        "owner": "p0",
+        "hp": -4,
+        "maxHp": 253,
+        "x": 5907.085853966675,
+        "y": 2205.884273090292,
+        "order": {
+          "type": "hold",
+          "x": 5907.085853966675,
+          "y": 2205.884273090292
+        }
+      },
+      "damage": 13,
+      "hpBefore": 9
+    },
+    {
+      "tick": 40661,
+      "attacker": {
+        "id": "unit-p2-warship-7948",
+        "kind": "warship",
+        "owner": "p2",
+        "hp": 202.5,
+        "maxHp": 320,
+        "x": 5774.601478551408,
+        "y": 3179.237940695289,
+        "order": {
+          "type": "attackMove",
+          "x": 6231.495649625557,
+          "y": 3091.579571048845,
+          "targetId": "unit-p0-witch-3919"
+        }
+      },
+      "target": {
+        "id": "unit-p0-worker-1839",
+        "kind": "worker",
+        "owner": "p0",
+        "hp": -10,
+        "maxHp": 70,
+        "x": 6102.340576893402,
+        "y": 3225.876088349483,
+        "deck": {
+          "shipId": "unit-p0-carrier-2915",
+          "x": -55.84,
+          "y": -23.960000000000008
+        },
+        "order": {
+          "type": "idle"
+        }
+      },
+      "damage": 20,
+      "hpBefore": 10
+    },
+    {
+      "tick": 40741,
+      "attacker": {
+        "id": "unit-p2-warship-7948",
+        "kind": "warship",
+        "owner": "p2",
+        "hp": 187.5,
+        "maxHp": 320,
+        "x": 5774.601478551408,
+        "y": 3179.237940695289,
+        "order": {
+          "type": "attackMove",
+          "x": 6231.495649625557,
+          "y": 3091.579571048845,
+          "targetId": "unit-p0-witch-3919"
+        }
+      },
+      "target": {
+        "id": "unit-p0-witch-3919",
+        "kind": "witch",
+        "owner": "p0",
+        "hp": -24,
+        "maxHp": 106,
+        "x": 6113.1412251797765,
+        "y": 3258.668556945092,
+        "deck": {
+          "shipId": "unit-p0-carrier-2915",
+          "x": -49.84,
+          "y": 10.039999999999992
+        },
+        "order": {
+          "type": "attack",
+          "targetId": "unit-p2-warship-7948",
+          "leashX": 6113.1412251797765,
+          "leashY": 3258.668556945092
+        }
+      },
+      "damage": 26,
+      "hpBefore": 2
+    },
+    {
+      "tick": 40783,
+      "attacker": {
+        "id": "unit-p2-warship-7948",
+        "kind": "warship",
+        "owner": "p2",
+        "hp": 187.5,
+        "maxHp": 320,
+        "x": 5774.601478551408,
+        "y": 3179.237940695289,
+        "order": {
+          "type": "attackMove",
+          "x": 6231.495649625557,
+          "y": 3091.579571048845,
+          "targetId": "unit-p0-priest-3525"
+        }
+      },
+      "target": {
+        "id": "unit-p0-priest-3525",
+        "kind": "priest",
+        "owner": "p0",
+        "hp": -13,
+        "maxHp": 103,
+        "x": 6094.250233651497,
+        "y": 3295.751308179035,
+        "deck": {
+          "shipId": "unit-p0-carrier-2915",
+          "x": -73.84,
+          "y": 44.03999999999999
+        },
+        "order": {
+          "type": "idle"
+        }
+      },
+      "damage": 26,
+      "hpBefore": 13
+    },
+    {
+      "tick": 40865,
+      "attacker": {
+        "id": "unit-p2-warship-7948",
+        "kind": "warship",
+        "owner": "p2",
+        "hp": 187.5,
+        "maxHp": 320,
+        "x": 5795.855953829677,
+        "y": 3190.32535823108,
+        "order": {
+          "type": "attackMove",
+          "x": 6231.495649625557,
+          "y": 3091.579571048845,
+          "targetId": "unit-p0-lancer-1367"
+        }
+      },
+      "target": {
+        "id": "unit-p0-lancer-1367",
+        "kind": "lancer",
+        "owner": "p0",
+        "hp": -7,
+        "maxHp": 150,
+        "x": 6129.880201429083,
+        "y": 3290.602969013035,
+        "deck": {
+          "shipId": "unit-p0-carrier-2915",
+          "x": -37.84,
+          "y": 44.03999999999999
+        },
+        "order": {
+          "type": "idle"
+        }
+      },
+      "damage": 26,
+      "hpBefore": 19
+    },
+    {
+      "tick": 40910,
+      "attacker": {
+        "id": "unit-p2-warship-7948",
+        "kind": "warship",
+        "owner": "p2",
+        "hp": 294.5,
+        "maxHp": 427,
+        "x": 5795.855953829677,
+        "y": 3190.32535823108,
+        "order": {
+          "type": "attackMove",
+          "x": 6231.495649625557,
+          "y": 3091.579571048845,
+          "targetId": "unit-p0-priest-4494"
+        }
+      },
+      "target": {
+        "id": "unit-p0-worker-1015",
+        "kind": "worker",
+        "owner": "p0",
+        "hp": -22,
+        "maxHp": 70,
+        "x": 6077.4205004278765,
+        "y": 3207.2484264201803,
+        "deck": {
+          "shipId": "unit-p0-carrier-2915",
+          "x": -77.84,
+          "y": -45.96000000000001
+        },
+        "order": {
+          "type": "idle"
+        }
+      },
+      "damage": 26,
+      "hpBefore": 4
+    },
+    {
+      "tick": 40951,
+      "attacker": {
+        "id": "unit-p2-warship-7948",
+        "kind": "warship",
+        "owner": "p2",
+        "hp": 289.5,
+        "maxHp": 427,
+        "x": 5795.855953829677,
+        "y": 3190.32535823108,
+        "order": {
+          "type": "attackMove",
+          "x": 6231.495649625557,
+          "y": 3091.579571048845,
+          "targetId": "unit-p0-priest-4494"
+        }
+      },
+      "target": {
+        "id": "unit-p0-priest-4494",
+        "kind": "priest",
+        "owner": "p0",
+        "hp": -15,
+        "maxHp": 103,
+        "x": 6096.225205643824,
+        "y": 3204.5312474159027,
+        "deck": {
+          "shipId": "unit-p0-carrier-2915",
+          "x": -58.84000000000049,
+          "y": -45.95999999999983
+        },
+        "order": {
+          "type": "attack",
+          "targetId": "unit-p2-warship-7948",
+          "leashX": 6122.947681477014,
+          "leashY": 3200.669993041403
+        }
+      },
+      "damage": 26,
+      "hpBefore": 11
+    },
+    {
+      "tick": 40995,
+      "attacker": {
+        "id": "unit-p2-warship-7948",
+        "kind": "warship",
+        "owner": "p2",
+        "hp": 289.5,
+        "maxHp": 427,
+        "x": 5795.855953829677,
+        "y": 3190.32535823108,
+        "order": {
+          "type": "attackMove",
+          "x": 6231.495649625557,
+          "y": 3091.579571048845,
+          "targetId": "unit-p0-lancer-2071"
+        }
+      },
+      "target": {
+        "id": "unit-p0-lancer-1419",
+        "kind": "lancer",
+        "owner": "p0",
+        "hp": -10,
+        "maxHp": 150,
+        "x": 6158.405076629937,
+        "y": 3264.2527983347327,
+        "deck": {
+          "shipId": "unit-p0-carrier-2915",
+          "x": -5.840000000000003,
+          "y": 22.039999999999992
+        },
+        "order": {
+          "type": "idle"
+        }
+      },
+      "damage": 20,
+      "hpBefore": 10
+    },
+    {
+      "tick": 41035,
+      "attacker": {
+        "id": "unit-p2-warship-7948",
+        "kind": "warship",
+        "owner": "p2",
+        "hp": 289.5,
+        "maxHp": 427,
+        "x": 5795.855953829677,
+        "y": 3190.32535823108,
+        "order": {
+          "type": "attackMove",
+          "x": 6231.495649625557,
+          "y": 3091.579571048845,
+          "targetId": "unit-p0-lancer-2071"
+        }
+      },
+      "target": {
+        "id": "unit-p0-lancer-2071",
+        "kind": "lancer",
+        "owner": "p0",
+        "hp": -9,
+        "maxHp": 150,
+        "x": 6137.7072150720105,
+        "y": 3232.8904239519006,
+        "deck": {
+          "shipId": "unit-p0-carrier-2915",
+          "x": -21.840000000000003,
+          "y": -11.960000000000008
+        },
+        "order": {
+          "type": "idle"
+        }
+      },
+      "damage": 26,
+      "hpBefore": 17
+    },
+    {
+      "tick": 41670,
+      "attacker": {
+        "id": "unit-p2-warship-7948",
+        "kind": "warship",
+        "owner": "p2",
+        "hp": 224.5,
+        "maxHp": 427,
+        "x": 5888.756368301568,
+        "y": 3213.7765340946867,
+        "order": {
+          "type": "attackMove",
+          "x": 6136.6722581166505,
+          "y": 3475.320587953558,
+          "targetId": "unit-p0-warship-3882"
+        }
+      },
+      "target": {
+        "id": "unit-p0-carrier-2915",
+        "kind": "carrier",
+        "owner": "p0",
+        "hp": -6,
+        "maxHp": 552,
+        "x": 6161.033121535562,
+        "y": 3241.60416526397,
+        "order": {
+          "type": "unload",
+          "x": 6228,
+          "y": 3076,
+          "avoidCombat": true
+        }
+      },
+      "damage": 23,
+      "hpBefore": 17
+    }
+  ]
+}

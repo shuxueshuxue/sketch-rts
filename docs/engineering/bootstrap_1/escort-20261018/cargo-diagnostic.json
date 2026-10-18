@@ -1,0 +1,367 @@
+{
+  "caveat": "Cargo power only; not the whole native landingSafe support computation.",
+  "rows": [
+    {
+      "tick": 21600,
+      "ferries": [
+        {
+          "ship": "unit-p0-carrier-2915",
+          "phase": "loading",
+          "target": "gold-mainland-7",
+          "response": 7.60925287209719,
+          "cargoPowerOnly": 6.0608710950643845,
+          "crew": [
+            {
+              "id": "unit-p0-worker-1015",
+              "kind": "worker",
+              "hp": 70,
+              "maxHp": 70
+            },
+            {
+              "id": "unit-p0-worker-1048",
+              "kind": "worker",
+              "hp": 70,
+              "maxHp": 70
+            },
+            {
+              "id": "unit-p0-lancer-1367",
+              "kind": "lancer",
+              "hp": 130,
+              "maxHp": 130
+            },
+            {
+              "id": "unit-p0-lancer-1419",
+              "kind": "lancer",
+              "hp": 130,
+              "maxHp": 130
+            },
+            {
+              "id": "unit-p0-lancer-1820",
+              "kind": "lancer",
+              "hp": 130,
+              "maxHp": 130
+            },
+            {
+              "id": "unit-p0-lancer-2071",
+              "kind": "lancer",
+              "hp": 130,
+              "maxHp": 130
+            },
+            {
+              "id": "unit-p0-priest-3525",
+              "kind": "priest",
+              "hp": 90,
+              "maxHp": 90
+            },
+            {
+              "id": "unit-p0-witch-3919",
+              "kind": "witch",
+              "hp": 92,
+              "maxHp": 92
+            },
+            {
+              "id": "unit-p0-priest-4494",
+              "kind": "priest",
+              "hp": 90,
+              "maxHp": 90
+            }
+          ]
+        },
+        {
+          "ship": "unit-p0-transport-1067",
+          "phase": "loading",
+          "target": "gold-mainland-7",
+          "response": 7.60925287209719,
+          "cargoPowerOnly": 0,
+          "crew": [
+            {
+              "id": "unit-p0-worker-3",
+              "kind": "worker",
+              "hp": 70,
+              "maxHp": 70
+            },
+            {
+              "id": "unit-p0-worker-1715",
+              "kind": "worker",
+              "hp": 70,
+              "maxHp": 70
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 30000,
+      "ferries": [
+        {
+          "ship": "unit-p0-transport-1067",
+          "phase": "return",
+          "target": "gold-mainland-0",
+          "response": 10.791122733333175,
+          "cargoPowerOnly": 0,
+          "crew": [
+            {
+              "id": "unit-p0-worker-1715",
+              "kind": "worker",
+              "hp": 70,
+              "maxHp": 70
+            }
+          ]
+        },
+        {
+          "ship": "unit-p0-carrier-2915",
+          "phase": "loading",
+          "target": "gold-mainland-1",
+          "response": 10.791122733333175,
+          "cargoPowerOnly": 9.576418901271044,
+          "crew": [
+            {
+              "id": "unit-p0-worker-1015",
+              "kind": "worker",
+              "hp": 70,
+              "maxHp": 70
+            },
+            {
+              "id": "unit-p0-lancer-1367",
+              "kind": "lancer",
+              "hp": 150,
+              "maxHp": 150
+            },
+            {
+              "id": "unit-p0-lancer-1419",
+              "kind": "lancer",
+              "hp": 150,
+              "maxHp": 150
+            },
+            {
+              "id": "unit-p0-lancer-1820",
+              "kind": "lancer",
+              "hp": 150,
+              "maxHp": 150
+            },
+            {
+              "id": "unit-p0-worker-1839",
+              "kind": "worker",
+              "hp": 70,
+              "maxHp": 70
+            },
+            {
+              "id": "unit-p0-lancer-2071",
+              "kind": "lancer",
+              "hp": 150,
+              "maxHp": 150
+            },
+            {
+              "id": "unit-p0-priest-3525",
+              "kind": "priest",
+              "hp": 103,
+              "maxHp": 103
+            },
+            {
+              "id": "unit-p0-witch-3919",
+              "kind": "witch",
+              "hp": 106,
+              "maxHp": 106
+            },
+            {
+              "id": "unit-p0-priest-4494",
+              "kind": "priest",
+              "hp": 103,
+              "maxHp": 103
+            },
+            {
+              "id": "unit-p0-raider-6391",
+              "kind": "raider",
+              "hp": 132,
+              "maxHp": 132
+            },
+            {
+              "id": "unit-p0-knight-6970",
+              "kind": "knight",
+              "hp": 253,
+              "maxHp": 253
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 33600,
+      "ferries": [
+        {
+          "ship": "unit-p0-transport-1067",
+          "phase": "return",
+          "target": "gold-mainland-0",
+          "response": 12.748120732022382,
+          "cargoPowerOnly": 0,
+          "crew": [
+            {
+              "id": "unit-p0-worker-1715",
+              "kind": "worker",
+              "hp": 70,
+              "maxHp": 70
+            }
+          ]
+        },
+        {
+          "ship": "unit-p0-carrier-2915",
+          "phase": "return",
+          "target": "gold-mainland-1",
+          "response": 12.748120732022382,
+          "cargoPowerOnly": 8.495488131032143,
+          "crew": [
+            {
+              "id": "unit-p0-worker-1015",
+              "kind": "worker",
+              "hp": 70,
+              "maxHp": 70
+            },
+            {
+              "id": "unit-p0-lancer-1367",
+              "kind": "lancer",
+              "hp": 150,
+              "maxHp": 150
+            },
+            {
+              "id": "unit-p0-lancer-1419",
+              "kind": "lancer",
+              "hp": 150,
+              "maxHp": 150
+            },
+            {
+              "id": "unit-p0-worker-1839",
+              "kind": "worker",
+              "hp": 70,
+              "maxHp": 70
+            },
+            {
+              "id": "unit-p0-lancer-2071",
+              "kind": "lancer",
+              "hp": 150,
+              "maxHp": 150
+            },
+            {
+              "id": "unit-p0-priest-3525",
+              "kind": "priest",
+              "hp": 103,
+              "maxHp": 103
+            },
+            {
+              "id": "unit-p0-witch-3919",
+              "kind": "witch",
+              "hp": 106,
+              "maxHp": 106
+            },
+            {
+              "id": "unit-p0-priest-4494",
+              "kind": "priest",
+              "hp": 103,
+              "maxHp": 103
+            },
+            {
+              "id": "unit-p0-raider-6391",
+              "kind": "raider",
+              "hp": 132,
+              "maxHp": 132
+            },
+            {
+              "id": "unit-p0-knight-6970",
+              "kind": "knight",
+              "hp": 253,
+              "maxHp": 253
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tick": 34800,
+      "ferries": [
+        {
+          "ship": "unit-p0-transport-1067",
+          "phase": "return",
+          "target": "gold-mainland-0",
+          "response": 13.69425624757663,
+          "cargoPowerOnly": 0,
+          "crew": [
+            {
+              "id": "unit-p0-worker-1715",
+              "kind": "worker",
+              "hp": 70,
+              "maxHp": 70
+            }
+          ]
+        },
+        {
+          "ship": "unit-p0-carrier-2915",
+          "phase": "return",
+          "target": "gold-mainland-1",
+          "response": 13.69425624757663,
+          "cargoPowerOnly": 8.495488131032143,
+          "crew": [
+            {
+              "id": "unit-p0-worker-1015",
+              "kind": "worker",
+              "hp": 70,
+              "maxHp": 70
+            },
+            {
+              "id": "unit-p0-lancer-1367",
+              "kind": "lancer",
+              "hp": 150,
+              "maxHp": 150
+            },
+            {
+              "id": "unit-p0-lancer-1419",
+              "kind": "lancer",
+              "hp": 150,
+              "maxHp": 150
+            },
+            {
+              "id": "unit-p0-worker-1839",
+              "kind": "worker",
+              "hp": 70,
+              "maxHp": 70
+            },
+            {
+              "id": "unit-p0-lancer-2071",
+              "kind": "lancer",
+              "hp": 150,
+              "maxHp": 150
+            },
+            {
+              "id": "unit-p0-priest-3525",
+              "kind": "priest",
+              "hp": 103,
+              "maxHp": 103
+            },
+            {
+              "id": "unit-p0-witch-3919",
+              "kind": "witch",
+              "hp": 106,
+              "maxHp": 106
+            },
+            {
+              "id": "unit-p0-priest-4494",
+              "kind": "priest",
+              "hp": 103,
+              "maxHp": 103
+            },
+            {
+              "id": "unit-p0-raider-6391",
+              "kind": "raider",
+              "hp": 132,
+              "maxHp": 132
+            },
+            {
+              "id": "unit-p0-knight-6970",
+              "kind": "knight",
+              "hp": 253,
+              "maxHp": 253
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

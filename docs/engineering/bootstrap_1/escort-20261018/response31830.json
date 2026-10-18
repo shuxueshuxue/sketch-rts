@@ -1,0 +1,106 @@
+[
+  {
+    "id": "gold-mainland-0",
+    "x": 4349.7058296234545,
+    "y": 3555.6018466166383,
+    "foes": [
+      {
+        "id": "unit-p2-footman-7951",
+        "kind": "footman",
+        "ticks": 234
+      }
+    ],
+    "own": []
+  },
+  {
+    "id": "gold-mainland-1",
+    "x": 4401.516311351366,
+    "y": 3999.3165857227527,
+    "foes": [
+      {
+        "id": "unit-p2-footman-7951",
+        "kind": "footman",
+        "ticks": 260
+      }
+    ],
+    "own": []
+  },
+  {
+    "id": "gold-mainland-2",
+    "x": 4124.398153383362,
+    "y": 4349.7058296234545,
+    "foes": [
+      {
+        "id": "unit-p2-footman-7951",
+        "kind": "footman",
+        "ticks": 254
+      }
+    ],
+    "own": []
+  },
+  {
+    "id": "gold-mainland-3",
+    "x": 3680.6834142772473,
+    "y": 4401.516311351366,
+    "foes": [
+      {
+        "id": "unit-p2-footman-7951",
+        "kind": "footman",
+        "ticks": 219
+      }
+    ],
+    "own": []
+  },
+  {
+    "id": "gold-mainland-4",
+    "x": 3330.294170376546,
+    "y": 4124.398153383362,
+    "foes": [
+      {
+        "id": "unit-p2-footman-7951",
+        "kind": "footman",
+        "ticks": 164
+      }
+    ],
+    "own": []
+  },
+  {
+    "id": "gold-mainland-5",
+    "x": 3278.4836886486337,
+    "y": 3680.6834142772477,
+    "foes": [
+      {
+        "id": "unit-p2-footman-7951",
+        "kind": "footman",
+        "ticks": 120
+      }
+    ],
+    "own": []
+  },
+  {
+    "id": "gold-mainland-6",
+    "x": 3555.601846616639,
+    "y": 3330.2941703765455,
+    "foes": [
+      {
+        "id": "unit-p2-footman-7951",
+        "kind": "footman",
+        "ticks": 132
+      }
+    ],
+    "own": []
+  },
+  {
+    "id": "gold-mainland-7",
+    "x": 3999.3165857227523,
+    "y": 3278.4836886486337,
+    "foes": [
+      {
+        "id": "unit-p2-footman-7951",
+        "kind": "footman",
+        "ticks": 185
+      }
+    ],
+    "own": []
+  }
+]

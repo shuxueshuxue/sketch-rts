@@ -1,0 +1,10 @@
+{
+  "implementation": "727cfc9501ec7b639f848f4324da960d33ef1741",
+  "rulesVersion": 2,
+  "frozenEntries": 184,
+  "frozenManifestUnchanged": true,
+  "typecheck": "passed",
+  "distinctTestsPassed": 48,
+  "testRuns": "47 in final batch, then6 colony-response tests including one new integration test; five overlap",
+  "sharedHook": "Optional settlementResponse supplied only by bootstrap_1; default0 preserves ordinary caller behavior; archived opponents unchanged."
+}

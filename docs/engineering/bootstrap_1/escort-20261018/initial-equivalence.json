@@ -1,0 +1,8 @@
+{
+  "snapshot": true,
+  "nextId": true,
+  "memories": true,
+  "match": true,
+  "baseline": "f8b6fc8241247c4d0b566d6828e21aa31aabe90f",
+  "candidate": "727cfc9501ec7b639f848f4324da960d33ef1741"
+}

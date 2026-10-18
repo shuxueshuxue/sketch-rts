@@ -1,0 +1,22 @@
+[
+  {
+    "tick": 35475,
+    "owner": "p0",
+    "scriptId": "v6Economy",
+    "command": {
+      "type": "train",
+      "buildingId": "building-p0-stables-2690",
+      "unitKind": "knight"
+    }
+  },
+  {
+    "tick": 35475,
+    "owner": "p0",
+    "scriptId": "v6Economy",
+    "command": {
+      "type": "train",
+      "buildingId": "building-p0-stables-7037",
+      "unitKind": "knight"
+    }
+  }
+]

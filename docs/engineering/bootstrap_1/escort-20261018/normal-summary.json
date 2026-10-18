@@ -1,0 +1,216 @@
+{
+  "classification": "Known seed normal regression, not unseen; no acceptance implied by duration or casualties.",
+  "results": [
+    {
+      "directory": "/workspace/bootstrap-1-capital-20261018/knight-known-capital-normal",
+      "head": "f8b6fc8241247c4d0b566d6828e21aa31aabe90f",
+      "startTick": 0,
+      "resume": null,
+      "tick": 72654,
+      "winner": "p1",
+      "naturalComplete": true,
+      "permanentDeaths": 39,
+      "nativeUnitsLost": 39,
+      "permanentBirthsAfterStart": 41,
+      "permanentOwnAlive": 4,
+      "capturedOriginalSurvivors": [
+        {
+          "id": "unit-p0-carrier-7155",
+          "kind": "carrier",
+          "owner": "p2",
+          "hp": 602,
+          "maxHp": 624,
+          "x": 4792.955602424409,
+          "y": 5337.721212449946,
+          "order": {
+            "type": "move",
+            "x": 4752,
+            "y": 4144,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "originalDeathsUnderOtherOwner": [],
+      "hallEvents": [
+        {
+          "tick": 10269,
+          "event": "birth",
+          "entity": {
+            "id": "building-p0-townHall-1808",
+            "kind": "townHall",
+            "owner": "p0",
+            "hp": 90,
+            "maxHp": 900,
+            "x": 5328,
+            "y": 6064
+          }
+        },
+        {
+          "tick": 31948,
+          "event": "birth",
+          "entity": {
+            "id": "building-p0-townHall-8027",
+            "kind": "townHall",
+            "owner": "p0",
+            "hp": 90,
+            "maxHp": 900,
+            "x": 3888,
+            "y": 4368
+          }
+        },
+        {
+          "tick": 33407,
+          "event": "removal",
+          "entity": {
+            "id": "building-p0-townHall-8027",
+            "kind": "townHall",
+            "owner": "p0",
+            "hp": 18,
+            "maxHp": 900,
+            "x": 3888,
+            "y": 4368
+          }
+        },
+        {
+          "tick": 61654,
+          "event": "removal",
+          "entity": {
+            "id": "building-p0-townhall",
+            "kind": "townHall",
+            "owner": "p0",
+            "hp": 18,
+            "maxHp": 900,
+            "x": 6256,
+            "y": 2480
+          }
+        },
+        {
+          "tick": 72200,
+          "event": "removal",
+          "entity": {
+            "id": "building-p0-townHall-1808",
+            "kind": "townHall",
+            "owner": "p0",
+            "hp": 13,
+            "maxHp": 900,
+            "x": 5328,
+            "y": 6064
+          }
+        }
+      ],
+      "sourceChangedDuringRun": [],
+      "elapsedMs": 1104915.889
+    },
+    {
+      "directory": "/workspace/bootstrap-1-escort-20261018/knight-known-response-normal",
+      "head": "727cfc9501ec7b639f848f4324da960d33ef1741",
+      "startTick": 0,
+      "resume": null,
+      "tick": 66929,
+      "winner": "p1",
+      "naturalComplete": true,
+      "permanentDeaths": 35,
+      "nativeUnitsLost": 35,
+      "permanentBirthsAfterStart": 39,
+      "permanentOwnAlive": 6,
+      "capturedOriginalSurvivors": [
+        {
+          "id": "unit-p0-transport-1067",
+          "kind": "transport",
+          "owner": "p2",
+          "hp": 100,
+          "maxHp": 351,
+          "x": 5067.767435014894,
+          "y": 3096.8762787555675,
+          "order": {
+            "type": "move",
+            "x": 4700,
+            "y": 3460,
+            "avoidCombat": true
+          }
+        }
+      ],
+      "originalDeathsUnderOtherOwner": [],
+      "hallEvents": [
+        {
+          "tick": 10269,
+          "event": "birth",
+          "entity": {
+            "id": "building-p0-townHall-1808",
+            "kind": "townHall",
+            "owner": "p0",
+            "hp": 90,
+            "maxHp": 900,
+            "x": 5328,
+            "y": 6064
+          }
+        },
+        {
+          "tick": 59496,
+          "event": "removal",
+          "entity": {
+            "id": "building-p0-townhall",
+            "kind": "townHall",
+            "owner": "p0",
+            "hp": 4,
+            "maxHp": 900,
+            "x": 6256,
+            "y": 2480
+          }
+        },
+        {
+          "tick": 66375,
+          "event": "removal",
+          "entity": {
+            "id": "building-p0-townHall-1808",
+            "kind": "townHall",
+            "owner": "p0",
+            "hp": 1,
+            "maxHp": 900,
+            "x": 5328,
+            "y": 6064
+          }
+        }
+      ],
+      "sourceChangedDuringRun": [],
+      "elapsedMs": 971997.027
+    }
+  ],
+  "initialEquivalence": {
+    "snapshot": true,
+    "nextId": true,
+    "memories": true,
+    "match": true,
+    "baseline": "f8b6fc8241247c4d0b566d6828e21aa31aabe90f",
+    "candidate": "727cfc9501ec7b639f848f4324da960d33ef1741"
+  },
+  "divergence": {
+    "equalPrefix": 1207,
+    "baselineFirstDifferent": {
+      "tick": 18105,
+      "owner": "p0",
+      "scriptId": "naval",
+      "command": {
+        "type": "unload",
+        "unitIds": [
+          "unit-p0-transport-1067"
+        ],
+        "x": 3696,
+        "y": 4784
+      }
+    },
+    "candidateFirstDifferent": {
+      "tick": 18105,
+      "owner": "p2",
+      "scriptId": "v6Backline",
+      "command": {
+        "type": "move",
+        "unitIds": [
+          "unit-p2-priest-2788"
+        ],
+        "x": 2480,
+        "y": 1424
+      }
+    }
+  }
+}

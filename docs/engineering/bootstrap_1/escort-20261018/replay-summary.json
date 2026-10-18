@@ -1,0 +1,13 @@
+{
+  "startTick": 29400,
+  "tick": 36000,
+  "winner": null,
+  "elapsedMs": 204823.759,
+  "sourceChangedDuringRun": [],
+  "gold": 57.43,
+  "nativeUnitsLost": 15,
+  "ownHalls": [
+    "building-p0-townhall",
+    "building-p0-townHall-1808"
+  ]
+}
