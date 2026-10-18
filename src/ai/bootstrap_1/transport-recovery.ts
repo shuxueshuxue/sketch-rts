@@ -1,3 +1,4 @@
+import { activeMiningBaseCount } from '../policy/expansion-model';
 import { DOCK_REPAIR, unitMover } from '../../shared/catalog';
 import { BOARDING_GAP } from '../../shared/naval';
 import { nearestByRoute } from '../../shared/route-selection';
@@ -12,18 +13,24 @@ import { distance } from '../policy/spatial';
 import type { AiPolicyContext } from '../policy/types';
 import { armedFoes, safeLandTravelTicks } from './safe-land-route';
 
-/** Do not strand an operational ferry for unaffordable minor maintenance.
- * Keep the last dock repair quantum pending; substantial hull damage and any
- * propulsion or steering damage still require recovery before a trip. */
+/** Preserve normal paid recovery. An exhausted economy with no gold delivery
+ * cannot fund maintenance, so retain operational lift without inventing repairs. */
 export function transportNeedsRecovery(snapshot: GameSnapshot, boat: Unit): boolean {
   if (!shipNeedsRepair(snapshot,boat)) return false;
   if ((snapshot.players[boat.owner]?.gold ?? 0) >= DOCK_REPAIR.goldPerSecond) return true;
   const max=shipPartMax(boat);
+  // With neither mining nor a gold delivery left, waiting cannot pay for repair.
+  // Keep the existing crossing risk checks and the real damaged ship state.
+  if (activeMiningBaseCount(snapshot, boat.owner) === 0
+    && !snapshot.units.some(unit => unit.owner === boat.owner && unit.carryingGold > 0)
+    && boat.hp >= boat.maxHp * .75
+    && (boat.shipParts?.rigging ?? max.rigging) >= max.rigging * .8
+    && (boat.shipParts?.rudder ?? max.rudder) >= max.rudder * .8) return false;
   return boat.maxHp-boat.hp>DOCK_REPAIR.hpPerSecond || (boat.shipParts?.rigging ?? max.rigging)<max.rigging
     || (boat.shipParts?.rudder ?? max.rudder)<max.rudder;
 }
 
-/** Finish the current crossing, then repair at a reachable port before taking another payload. */
+/** Finish the current crossing, then use a reachable port when recovery is required. */
 export function transportRecovery(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const docks = snapshot.buildings.filter(dock => dock.owner === owner && dock.kind === 'shipyard' && dock.complete);
   const services = navalServices(snapshot, owner, options).reserved;

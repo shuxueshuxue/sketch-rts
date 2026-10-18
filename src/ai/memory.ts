@@ -58,6 +58,7 @@ export type NavalPlanMemory = {
   combat?: Record<string, { targetId: string; commandTargetId?: string }>;
   coastalRetreat?: Record<string, { x: number; y: number; astern?: true; boarding?: true; pursuit?: true }>;
   coastalVoyages?: Record<string, { targetId: string; goal: {x:number;y:number}; waypoint: {x:number;y:number}; proof: "complete" | "prefix" }>;
+  loadingApproaches?: Record<string, { tick:number; bestGap:number; crew:string; goal:{x:number;y:number}; shore:{x:number;y:number}; checkedAt?:number }>;
   settlerSeaMarks?: Record<string, { goal: {x:number;y:number}; waypoint: {x:number;y:number} }>;
   muster?:{at:{x:number;y:number};goal:{x:number;y:number};leader:string;sinceTick:number;launched:boolean;heading?:number};
   outfit?: {shipId:string; workerId?:string; mountId:string; itemId?:string; kind:'shipCannon'|'shipMortar'; progress?:{tick:number;x:number;y:number;workerX:number;workerY:number;itemId?:string}};

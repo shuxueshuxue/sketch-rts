@@ -1,3 +1,4 @@
+import { loadingApproach } from './loading-approach';
 import { ABILITY_DEFS, canResearchAt, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap, trainingBuildingFor } from '../../shared/catalog';
 import { shopping } from './shopping';
 import type { AbilityKind, BootstrapAiVersion, GameCommand, GameSnapshot, PlayerId, PlayerState } from '../../shared/types';
@@ -149,10 +150,14 @@ export function planBootstrapScriptEntries(snapshot: GameSnapshot, owner: Player
   if (!scripts.some(script => script.id === AI_SCRIPT_LIBRARY.naval.id)) return entries;
   const planned = entries.map(entry => entry.command);
   const final = combatDeckRecovery(snapshot, owner, options, planned);
-  if (final === planned) return entries;
-  const byCommand = new Map<GameCommand, AiCommandEntry[]>();
-  for (const entry of entries) byCommand.set(entry.command, [...(byCommand.get(entry.command) ?? []), entry]);
-  return final.map(command => byCommand.get(command)?.shift() ?? { scriptId: AI_SCRIPT_LIBRARY.naval.id, command });
+  let recovered = entries;
+  if (final !== planned) {
+    const byCommand = new Map<GameCommand, AiCommandEntry[]>();
+    for (const entry of entries) byCommand.set(entry.command, [...(byCommand.get(entry.command) ?? []), entry]);
+    recovered = final.map(command => byCommand.get(command)?.shift() ?? { scriptId: AI_SCRIPT_LIBRARY.naval.id, command });
+  }
+  const approaches = loadingApproach(snapshot, owner, options, recovered.map(entry => entry.command));
+  return approaches.length ? [...recovered, ...approaches.map(command => ({ scriptId: AI_SCRIPT_LIBRARY.naval.id, command }))] : recovered;
 }
 
 export function researchPrerequisites(wants: readonly V6Want[], player: PlayerState): V6Want[] {
