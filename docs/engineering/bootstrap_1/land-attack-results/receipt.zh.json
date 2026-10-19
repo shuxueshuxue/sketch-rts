@@ -1,0 +1,255 @@
+{
+  "base": "bb757c5997216e9f4edad4abedeef24f43de09fa",
+  "candidateRuntime": "9c5e4927bfb3c5089f21f41658f41a8e682eef49",
+  "scope": "只改房间 AI 的进攻目标与扩张分兵；不改进攻/撤退战力门槛，不改 sim。",
+  "observableSpecifications": [
+    {
+      "behavior": "扩张按既有营地强度和争夺规则保留最小足够清营队伍；清完后只带 3 名施工护卫，其余人继续归 general。",
+      "proof": [
+        "attack-objective.test.ts: clears and builds the mine with its own small party while the rest destroy an enemy expansion",
+        "funded-expansion-escort.test.ts: 48 个阵营/镜像/资金状态组合",
+        "expansion-construction-escort.test.ts: 12 个施工与回防组合"
+      ]
+    },
+    {
+      "behavior": "第一波先打最近可拿下的分矿；施工期只有沿实际 steering 路线能在完工前到达才声称可以截建造。出生基地不会因二矿补塔而被重新叫作分矿。",
+      "proof": [
+        "attack-target-eligibility.test.ts: 24 组最近可进攻目标",
+        "attack-objective.test.ts: actual steering arrival and density-heavy natural",
+        "attack-objective.scene.test.ts: summoner ladder-12 grove tick 3037"
+      ]
+    },
+    {
+      "behavior": "进攻目标跨过道路营地、临时回防保留。只有实际目标消失、部队丧失作战单位、或者现有撤退判定才记录结果；选中 attack 不算成功。局部任务只借走一人时，其余人继续进攻。",
+      "proof": [
+        "attack-objective.test.ts: destruction, actual loss, home defense/resume, road camp/resume, retreat and partial local borrowing",
+        "attack-objective.scene.test.ts: 同目标回防/恢复、明确撤退、后续拆掉新矿"
+      ]
+    }
+  ],
+  "sharedFunctions": [
+    {
+      "file": "src/ai/policy/v6/general.ts",
+      "function": "planV6Army",
+      "change": "可选 expansionHandled 默认关闭。房间扩张已有专队或进攻已有明确目标时，主力不再重复接管 miningFirst、施工护送及选矿清营。冻结 v8/v9 不传此项。"
+    },
+    {
+      "file": "src/ai/policy/v6/general.ts",
+      "change": "仅导出 AttackChoice 类型；其他共享函数和战斗常量未改。"
+    },
+    {
+      "file": "src/ai/planner-context.ts",
+      "function": "planAiOwnerCommandEntries",
+      "change": "仅房间 AI 分支开启一次同步 think 的纯路线复用 scope；任务/归属/目标不缓存。"
+    },
+    {
+      "file": "src/ai/policy/v7/creep.ts",
+      "function": "creepForce",
+      "change": "整队 killSeconds 提取一次，算式不变。"
+    },
+    {
+      "file": "src/ai/policy/threat-reach.ts",
+      "function": "mountedThreatReach/castThreatReach",
+      "change": "同规则直接求最大射程，不分配临时范围数组；7 条冷却/最短距离/装备边界测试和 190080 个前后值完全一致。"
+    }
+  ],
+  "roomFunctionChanges": [
+    "prepareExpansionMission/selectExpansionScreen/expansionMissionCommands/assistExpansionMission",
+    "planBootstrapGeneral/mainArmyIntel 的分兵视图与空军团处理",
+    "prepareLandAttack/observeLandAttack/chooseRoomAttack/attackArrivalTicks/attackRoadCampCommands",
+    "expansionGuardWant/bootstrapScripts/campRecovery/rankBootstrapGoals"
+  ],
+  "claims": "继续使用 unitClaims.expansionMineId；无第二份扩张兵名单。private combat 仅保存营地执行状态。新命令仍从现有 v6General 发出，沿用 redirects: local，回防脚本优先。",
+  "partialBorrowing": "临时借走的兵退出当前波次人员名单，但保留原出发战力，沿用现有 worn 判定：少量借兵仍可继续；大半部队在治疗时必须撤退。新增逻辑不放宽这条安全线。",
+  "realSnapshot": {
+    "seed": "v5-final-1",
+    "slot": "ladder-12",
+    "subject": "v9_summoner grove",
+    "rival": "v9 ember",
+    "fixture": "src/ai/bootstrap_1/fixtures/summoner-attack-2m32.json",
+    "startTick": 3037,
+    "events": [
+      {
+        "tick": 8557,
+        "event": "第一波选择二矿 building-p1-townHall-1216，而非原主城。"
+      },
+      {
+        "tick": 9232,
+        "event": "真实矿区威胁触发回防；保留原二矿目标。"
+      },
+      {
+        "tick": 9577,
+        "event": "继续原二矿进攻。"
+      },
+      {
+        "tick": 10492,
+        "event": "现有 general:retreat 明确判定撤退；不记为成功。"
+      },
+      {
+        "tick": 11092,
+        "event": "下一波进攻新矿 building-p1-townHall-3038，同时扩张护送另有归属。"
+      },
+      {
+        "tick": 14437,
+        "event": "新矿实际拆除后，才记录 destroyed。原主城仍存在。"
+      }
+    ],
+    "mainRedProof": "将这个完整 scene 测试与同一快照复制到 bb757c59，退出码 1；main 没有持续进攻目标/结果，第一波仍向原主城。测试不是以 import 缺失失败。"
+  },
+  "assertionChanges": [
+    {
+      "file": "expansion-garrison.scene.test.ts",
+      "originalIntent": "新矿落成后不抽空护卫，二矿存活，并且第三矿不能因留守而无限推迟。",
+      "whySplit": "tick 4500 的世界完全相同；新的主力调度随后改变 v9 去向，使清营队确实遭遇更大敌军。要求旧快照仍硬赶原截止时间，会把正确避战判成失败。经派遣会话明确批准，交接/避战与开局节奏分开验证。",
+      "retained": [
+        "矿厅先落基再下补塔命令",
+        "矿厅按正常 560 ticks 完成",
+        "tick 5100 后每帧都有至少一名 footman 等价守军或有效静态火力",
+        "二矿最终满血 900",
+        "不把道路清营变成另一个矿任务"
+      ],
+      "positiveThreatAssertion": {
+        "tick": 6705,
+        "nearbyHost": "附近约 1000 范围有 6 ravager + 1 ashWarden；实际 900 范围计入的是 5 ravager。",
+        "countedEnemyForce": 4.945762711864407,
+        "partyForce": 5.13051282051282,
+        "oldAbortRule": "敌军强度 > 清营队强度 × 0.5",
+        "retryUntil": 7305,
+        "resumedTick": 7305,
+        "enemyForceOnResume": 0,
+        "sameMine": "gold-gen-4",
+        "clearedTick": 7815
+      },
+      "deadlineOwner": "expansion-mission.test.ts 的新开局、双方完整 AI 场景：二矿落基 <4:00；三矿落基 <6:30；三矿完工 <=7:30。实测 4746 / 7725 / 8290，即 3:57.3 / 6:26.25 / 6:54.5。"
+    },
+    {
+      "file": "funded-expansion-escort.test.ts",
+      "originalIntent": "无资金不能把军队永久留给一座愿望矿；已筹资/有工人/已有收入时施工需有护送；零损失与资金守恒。",
+      "change": "旧的全军 hold 断言与本次分兵规格冲突，改成保留 3 名有独立归属的施工护卫、攻击队不与之重叠，其余人可实际打到目标；保留全部零损失和资金守恒检查。"
+    },
+    {
+      "file": "expansion-construction-escort.test.ts",
+      "originalIntent": "矿厅施工、工人回款与遭袭防御不中断。",
+      "change": "加入正式调度中已存在的 mineDefense/miningRally/miningLeash/expansionGarrison。原测试只调用全军 general，无法验证现已独立的施工交接。设置 scriptedVictory，让富余部队打赢远处对手后仍继续观察矿区；保留工人生存、三矿完成、袭击兵全灭、回款和资金守恒。"
+    },
+    {
+      "file": "attack-target-eligibility.test.ts",
+      "change": "保留可拿下、实际打到目标、零损失、零额外花钱的条件；原来无反击部队时挑更便宜远矿，按新规格统一优先最近可打分矿。场景按真实建造顺序先放主城再放分矿。"
+    }
+  ],
+  "frozenOpponentCheck": {
+    "inputSnapshots": 4,
+    "versions": [
+      "v8",
+      "v9"
+    ],
+    "comparison": "同一世界和同一对手记忆，直接比较完整命令条目 JSON 字节；含空输出。共 8 个调用，25 条非空命令，逐字节相同。",
+    "bytes": 4180,
+    "sha256": "ef9a6f9d347e7d46ec33b4e857174d06986faf26c872c2f6f6a23f5e40a47559"
+  },
+  "validation": {
+    "typecheck": {
+      "root": "npx tsc --noEmit: exit 0",
+      "cli": "npx tsc -p tools/cli/tsconfig.json: exit 0"
+    },
+    "mainSceneFails": true,
+    "fullSrc": {
+      "status": "passed-after-isolated-retry",
+      "source": "9c5e4927bfb3c5089f21f41658f41a8e682eef49",
+      "machine": "mac1",
+      "runId": "mvf66uac-7905d3",
+      "command": "npx vitest run --dir src --maxWorkers 4 --minWorkers 1",
+      "files": 686,
+      "testsPassedInFull": 7691,
+      "testsSkipped": 1,
+      "testsFailedInFull": 1,
+      "seconds": 297.05,
+      "entireRunPassed": false,
+      "failure": "rest-command-boundary.test.ts 最后一个服务启动用例 30 秒无输出、未监听",
+      "isolatedRerun": {
+        "testsPassed": 8,
+        "seconds": 10.33,
+        "exit": 0,
+        "sameSource": true,
+        "timeoutUnchanged": true
+      },
+      "allRequiredCasesResolved": true
+    },
+    "browser": {
+      "passed": true,
+      "machine": "mac1",
+      "runId": "mvf4rxzv-6ecc22",
+      "snapshotCommit": "837259c2755052920539455c804650a472fcfa5e",
+      "productionParent": "bad62347c113550e6d1ac9240004004b4c6e8d02",
+      "temporaryDelta": "一行 frozen v9 reset 输入校验；附带当时未提交的 JSON 说明，无 AI/sim/renderer 差异。",
+      "frames": [
+        {
+          "tick": 9196,
+          "image": "first-expansion-goal-tick-9196.jpg",
+          "exactWorld": true
+        },
+        {
+          "tick": 16057,
+          "image": "outpost-under-attack-tick-16057.jpg",
+          "exactWorld": true
+        },
+        {
+          "tick": 16209,
+          "image": "outpost-near-demolition-tick-16209.jpg",
+          "exactWorld": true
+        },
+        {
+          "tick": 16216,
+          "image": "outpost-demolished-tick-16216.jpg",
+          "exactWorld": true
+        }
+      ],
+      "noBrowserErrors": true
+    },
+    "winRateBench": false,
+    "finalTargeted": "20/20: six clinic cases, thirteen attack specs, one full snapshot scene",
+    "earlierRegression": "97748539 的完整 src 发现 6 条 clinic 失败：扣掉借兵战力放宽了 worn。bad62347 保留原出发战力，最终完整一轮全部通过；旧失败日志在证据包保留并标明。",
+    "previousBehaviorFullSrc": {
+      "status": "passed",
+      "machine": "mac1",
+      "source": "bad62347c113550e6d1ac9240004004b4c6e8d02",
+      "runId": "mvf4ryd3-9a369b",
+      "command": "npx vitest run --dir src --maxWorkers 4 --minWorkers 1",
+      "filesPassed": 684,
+      "testsPassed": 7680,
+      "testsSkipped": 1,
+      "seconds": 328.26,
+      "entireRunPassed": true,
+      "presetAlsoPassed": true,
+      "clinicAlsoPassed": true
+    },
+    "performance": "performance.zh.json：同机 ABBA、逐 think、全部命令字节等价、共享纯函数等价；所有计时探针在 evidence。"
+  },
+  "limits": "这项证明目标选择、任务归属和物理结果一致；未声称所有进攻都成功。真实第一波仍可能在现有安全判定下撤退。下一项中盘 hold 前压未混入。",
+  "browserHarness": {
+    "productionChanges": false,
+    "temporaryInputAdmission": "仅诊断快照允许 reset 的 aiVersions.v9；公开房间选择器仍只有三种房间 AI，临时校验放行不进 PR。",
+    "filesInEvidence": [
+      "probes/land-attack-results.ts",
+      "probes/browser-v9-admission.patch"
+    ],
+    "method": "SDK 与真实房间双 AI 独立从相同新开局运行，截图帧校验单位位置/HP、建筑/HP/完成状态、矿量、资金；无改兵、加钱、手工代打。",
+    "reproduce": "在 bad62347 的独立 worktree 应用 evidence 的 browser-v9-admission.patch，然后 bin/sketch yatu <evidence>/probes/land-attack-results.ts --ref bad62347 --with-local --on mac1 --locale zh-CN --json；诊断后还原这一行校验。",
+    "outsidePr": true,
+    "actualDamage": {
+      "underAttackTick": 16057,
+      "hp": 1054,
+      "nearDemolitionTick": 16209,
+      "hpBeforeDemolition": 50,
+      "destroyedObservedTick": 16216,
+      "maxHp": 1080
+    }
+  },
+  "evidencePointer": "raw.evidence.json",
+  "performanceOnlyFollowup": {
+    "before": "cae68976",
+    "after": "9c5e4927bfb3c5089f21f41658f41a8e682eef49",
+    "commandParity": "900 tick、180 次 think、1193270 字节完全一致；sha256 a75bd06fe758f4188ed6ac3c65c1e20125e0fac1b4d0bc4ac51c17e01e362799",
+    "browserProof": "既有照片仍是 bad62347 的行为证明；本次性能改动没有新拍照片，不声称照片对应 9c 源码完全相同。"
+  }
+}

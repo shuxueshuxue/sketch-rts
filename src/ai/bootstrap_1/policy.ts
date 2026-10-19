@@ -2,10 +2,10 @@ import { canResearchAt, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap, trainingBuil
 import { shopping } from './shopping';
 import type { BootstrapAiVersion, GameSnapshot, PlayerId, PlayerState, Unit } from '../../shared/types';
 import { isBacklineKind } from '../policy/v6/backline';
-import { availableV6Army } from '../policy/v6/general';
+import { availableV6Army, V7_WOUNDED_SHARE } from '../policy/v6/general';
 import { combatRating } from '../policy/v6/strength';
-import { creepForce, EXPANSION_GUARD_RANGE, forceFor, neutralCamps } from '../policy/v7/creep';
-import { distance } from '../policy/spatial';
+import { activeCamp, campContested, creepForce, EXPANSION_GUARD_RANGE, forceFor, neutralCamps } from '../policy/v7/creep';
+import { averagePoint, distance } from '../policy/spatial';
 import { bootstrapExpansionMine } from './expansion-target';
 import { activeMiningBaseCount } from '../policy/expansion-model';
 import { AI_SCRIPT_LIBRARY, V9_AI_STACK, V7_AI_STACK, V8_AI_STACK, planAiCommandEntriesFromScripts } from '../policy/core';
@@ -38,7 +38,8 @@ import { frontRecovery } from './front-recovery';
 import { lootRecovery, planLootItemCommands } from './loot-recovery';
 import { summonedRaids } from './summoned-raids';
 import { mountedField } from './mounted-field';
-import { migrateExpansionClaims, prepareExpansionMission } from './expansion-mission';
+import { expansionMissionUnitIds, migrateExpansionClaims, prepareExpansionMission } from './expansion-mission';
+import { withLandRoadReuse } from './safe-land-route';
 import { expansionGarrison, garrisonRecoveryCommands, maintainExpansionGarrisons } from './expansion-garrison';
 
 export const BOOTSTRAP_VERSIONS = ['v9_archer', 'v9_summoner', 'v9_knight'] as const;
@@ -88,14 +89,21 @@ function expansionGuardWant(snapshot: GameSnapshot, owner: PlayerId, version: Bo
   // the main sat on one mine from 2:30 to 9:00 banking 1675 gold (ladder-43, V9 knight against V9).
   const intel = mainArmyIntel(snapshot, owner, options);
   const mine = bootstrapExpansionMine(snapshot, owner, intel, options);
-  const guard = mine && neutralCamps(snapshot).find(camp => distance(camp.center, mine) <= EXPANSION_GUARD_RANGE);
+  const camps = neutralCamps(snapshot);
+  const guard = activeCamp(options.memory.landExpansion?.combat?.creep, camps)
+    ?? (mine && camps.find(camp => distance(camp.center, mine) <= EXPANSION_GUARD_RANGE));
   if (!guard) return [];
   const front = availableV6Army(snapshot, options, intel).filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0);
-  const missing = forceFor(guard) - creepForce(front, guard);
-  if (missing <= 0) return [];
+  const assault = new Set(options.memory.landAttack?.general.group), members = new Set(expansionMissionUnitIds(options.memory));
+  const available = front.filter(unit => unit.hp >= unit.maxHp * V7_WOUNDED_SHARE
+    && (!assault.has(unit.id) || members.has(unit.id) || activeMiningBaseCount(snapshot, owner) === 0));
+  const missing = forceFor(guard) - creepForce(available, guard);
+  const contested = options.memory.landExpansion && available.length > 0
+    && (campContested(intel, guard.center, available) || campContested(intel, averagePoint(available), available));
+  if (missing <= 0 && !contested) return [];
   const unit = strategy.standIn, def = UNIT_DEFS[unit];
   const rating = combatRating({ kind: unit, hp: def.hp, maxHp: def.hp, attackDamage: def.attackDamage, attackCooldown: def.attackCooldown } as Unit);
-  return [{ unit, count: count(unit) + Math.ceil(missing / rating), priority: 80 }];
+  return [{ unit, count: count(unit) + Math.max(contested ? 1 : 0, Math.ceil(missing / rating)), priority: 80 }];
 }
 
 function roomExpansionTarget(snapshot: GameSnapshot, owner: PlayerId, army: Unit[]) {
@@ -156,7 +164,11 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
     if (script === AI_SCRIPT_LIBRARY.v6General) return [
       summonedRaids,
       { ...AI_SCRIPT_LIBRARY.v6Closeout, run: planBootstrapCloseout },
-      { ...script, run: planBootstrapGeneral, onCommands: recordMiningGeneralCommands },
+      { ...script, run: planBootstrapGeneral, onCommands: recordMiningGeneralCommands,
+        claimsUnits(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
+          return new Set([...script.claimsUnits!(snapshot, owner, options),
+            ...(options.memory.landExpansion?.paused ? [] : expansionMissionUnitIds(options.memory))]);
+        } },
     ];
     if (script === AI_SCRIPT_LIBRARY.v6Backline) return [
       version === 'v9_summoner' ? { ...script, run: planSummonerScreen } : { ...script, run: planBootstrapCasterScreen }];
@@ -183,7 +195,7 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
 }
 
 export function planBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion, options: AiPolicyContext) {
-  return planAiCommandEntriesFromScripts(snapshot, owner, bootstrapScripts(version), bootstrapPolicyContext(snapshot, owner, version, options));
+  return withLandRoadReuse(() => planAiCommandEntriesFromScripts(snapshot, owner, bootstrapScripts(version), bootstrapPolicyContext(snapshot, owner, version, options)));
 }
 
 export function researchPrerequisites(wants: readonly V6Want[], player: PlayerState): V6Want[] {

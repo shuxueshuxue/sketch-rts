@@ -6,10 +6,11 @@ import { setBuildingBodies, snapToFootprint } from '../../shared/terrain';
 import { createAiPolicyMemory } from '../memory';
 import { BOOTSTRAP_VERSIONS, bootstrapPolicyContext } from './policy';
 import { planBootstrapGeneral } from './mine-defense';
+import { expansionMissionUnitIds } from './expansion-mission';
 
 it.each(BOOTSTRAP_VERSIONS.flatMap(version => (['grove', 'ember'] as const).flatMap(race =>
   [false, true].flatMap(mirror => (['wish', 'funded', 'builder', 'working'] as const).map(state => ({ version, race, mirror, state }))))))(
-  '$version/$race reserves an expansion only for $state (mirror=$mirror)', ({ version, race, mirror, state }) => {
+  '$version/$race retains a funded construction screen and lets surplus attack ($state, mirror=$mirror)', ({ version, race, mirror, state }) => {
     const x = (value: number) => mirror ? 4096 - value : value;
     const heavy = race === 'grove' ? 'knight' : 'ashChieftain';
     let scene = sketchScene('unfunded-expansion-host').map('openClaims').replaceDefaults()
@@ -39,14 +40,18 @@ it.each(BOOTSTRAP_VERSIONS.flatMap(version => (['grove', 'ember'] as const).flat
         options.doctrines = [{ id: 'unfunded-capital-wish', race, weight: 1, raids: [], standIn: heavy,
           phases: [{ wants: [{ bases: 2, priority: 66 }], advanceShare: 1, advanceSupply: 1000 }] }];
         for (const command of planBootstrapGeneral(snapshot, 'us', options)) issuePlayerCommand(game, 'us', command);
+        const screen = expansionMissionUnitIds(memory);
+        if (state !== 'wish') {
+          expect(screen).toHaveLength(3);
+          expect(memory.landAttack?.general.group?.some(id => screen.includes(id)) ?? false).toBe(false);
+        } else expect(screen).toHaveLength(0);
         attacked ||= memory.v6?.general?.mode === 'attack';
       }
       stepGame(game);
     }
-    expect(attacked).toBe(state === 'wish');
+    expect(attacked).toBe(true);
     expect(game.match.stats.unitsLost.us).toBe(0);
-    if (state === 'wish') expect(target.hp).toBeLessThan(target.maxHp);
-    else expect(memory.v6!.general!.mode).toBe('hold');
+    expect(target.hp).toBeLessThan(target.maxHp);
     const carried = game.units.filter(unit => unit.owner === 'us').reduce((sum, unit) => sum + unit.carryingGold, 0);
     expect(game.players.us!.gold + carried + game.match.stats.goldSpent.us!).toBe(500);
   }, 30000);

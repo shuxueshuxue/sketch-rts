@@ -14,14 +14,16 @@ import { mountedEscape, mountedThreatReach, THINK_TICKS } from './mounted-micro'
 import { hostileDamageDisks } from './damage-footprints';
 
 function campRecoveryPatients(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
-  const camp = options.memory.v6?.creep;
-  if (camp === undefined) return [];
+  const camps = [options.memory.v6?.creep, options.memory.landExpansion?.combat?.creep]
+    .filter((camp): camp is NonNullable<typeof camp> => camp !== undefined);
+  if (!camps.length) return [];
   const foes = armedFoes(snapshot, owner, options);
   const healers = snapshot.units.filter(unit => unit.owner === owner && !unit.deck && unit.hp > 0
     && UNIT_DEFS[unit.kind].abilities.some(ability => ABILITY_DEFS[ability].behavior === 'heal')
     && foes.every(foe => distance(unit, foe) > mountedThreatReach(snapshot, foe, unit, 0)));
-  return snapshot.units.filter(unit => unit.owner === owner && camp.group.includes(unit.id)
+  return snapshot.units.filter(unit => unit.owner === owner && camps.some(camp => camp.group.includes(unit.id))
     && unit.expiresTick === undefined && unit.hp < unit.maxHp).map(patient => {
+      const camp = camps.find(camp => camp.group.includes(patient.id))!;
       const care = canReceiveHealing(patient, snapshot) ? healers.filter(healer => UNIT_DEFS[healer.kind].abilities.some(ability =>
         ABILITY_DEFS[ability].behavior === 'heal' && matchesUnitTarget(patient, ABILITY_DEFS[ability].targets, snapshot))) : [];
       const healer = nearestByRoute(snapshot.map, care, patient, 'land');
@@ -47,8 +49,6 @@ export const campRecovery: AiScript = {
   id: 'campRecovery', phase: 'tactics', redirects: 'local',
   claimsUnits: (snapshot, owner, options) => new Set(campRecoveryPatients(snapshot, owner, options).map(({ patient }) => patient.id)),
   run: (snapshot, owner, options): GameCommand[] => {
-    const camp = options.memory.v6?.creep;
-    if (camp === undefined) return [];
     const patients = campRecoveryPatients(snapshot, owner, options);
     if (!patients.length) return [];
     const foes = armedFoes(snapshot, owner, options);

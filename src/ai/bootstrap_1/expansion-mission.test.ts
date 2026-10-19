@@ -52,7 +52,7 @@ it('finishes the requested mine, escort and hall instead of continuing an unrela
     if (tick % 15 === 0) {
       const { snapshot, options } = context();
       const commands = planBootstrapGeneral(snapshot, 'us', options);
-      if (tick === 0) expect(memory.v6!.creep!.center.x).toBe(1600);
+      if (tick === 0) expect(memory.landExpansion!.combat!.creep!.center.x).toBe(1600);
       const entries = runAiCommandEntriesFromScripts(snapshot, 'us', [bootstrapEconomy, miningAssignments], options);
       issueCommandFrame(game, [...entries.map(entry => ({ ...entry, playerId: 'us' })),
         ...commands.map(command => ({ playerId: 'us', scriptId: 'v6General', command }))]);
@@ -86,7 +86,7 @@ it('records a real home threat, yields to defense and resumes the same mine afte
   expect(memory.landExpansion!.stage).toBe('clear');
 });
 
-it('sends a small escort along the traveling builder’s road while the other soldiers keep the cleared mine', () => {
+it('sends only a small escort along the traveling builder’s road and releases the rest to the general', () => {
   const { game, memory, context } = expansionScene();
   game.units = game.units.filter(unit => unit.owner !== 'neutral');
   delete memory.v6!.creep;
@@ -101,7 +101,9 @@ it('sends a small escort along the traveling builder’s road while the other so
   expect(memory.landExpansion!.stage).toBe('escort');
   issueCommandFrame(game, commands.map(command => ({ playerId: 'us', scriptId: 'v6General', command })));
   for (let tick = 0; tick < 60; tick++) stepGame(game);
-  expect(game.units.filter(unit => unit.id.startsWith('screen-') && Math.hypot(unit.x - mine.x, unit.y - mine.y) < 180)).toHaveLength(3);
+  const escorted = new Set(escort.flatMap(command => 'unitIds' in command ? command.unitIds : []));
+  expect(expansionMissionUnitIds(memory)).toHaveLength(3);
+  expect(game.units.filter(unit => escorted.has(unit.id) && Math.hypot(unit.x - mine.x, unit.y - mine.y) > 180)).toHaveLength(3);
 });
 
 it('yields both arrived and traveling escorts to a mine rally, then fills the escort from the remaining nearby soldiers', () => {
@@ -172,21 +174,27 @@ it('releases an existing unfunded task after the last income is lost instead of 
   expect(screen.some(unit => expansionOwnsDefender(snapshot, 'us', options, unit))).toBe(false);
 });
 
-it('starts the archer ladder-16 grove natural before 4:00 and third before 6:30 against the real v9', () => {
+it('starts the archer ladder-16 natural before 4:00 and finishes the third before 7:30 against the real v9', () => {
   // v5-final-1, slot 16, grove: main starts this hall at tick 6870 (5:43.5).
   const { input } = createSubjectGauntletInput(roomGauntlet('v9_archer', ['v9']), { seed: 'v5-final-1', mapCount: 20 });
   const match = input.evaluations[0]!.matches[28]!;
   let foundationTick: number | undefined;
   let thirdTick: number | undefined;
-  runGameLoop({ ...match, maxTicks: 7800, commandPlanner: navalObservedPlanner({}) }, {
+  let thirdCompleteTick: number | undefined;
+  runGameLoop({ ...match, maxTicks: 9000, commandPlanner: navalObservedPlanner({}) }, {
     onStep({ game }) {
       const halls = game.buildings.filter(building => building.owner === 'v9_archer' && building.kind === 'townHall');
       if (foundationTick === undefined && halls.length > 1) foundationTick = game.tick;
       if (thirdTick === undefined && halls.length > 2) thirdTick = game.tick;
+      if (thirdCompleteTick === undefined && halls.filter(hall => hall.complete).length > 2) thirdCompleteTick = game.tick;
     },
   });
   expect(foundationTick).toBeDefined();
   expect(foundationTick!).toBeLessThan(4800);
   expect(thirdTick).toBeDefined();
   expect(thirdTick!).toBeLessThan(7800);
+  // This fresh opening owns the expansion deadline. The old handoff snapshot
+  // separately verifies a real enemy approach, avoidance and the same-mine retry.
+  expect(thirdCompleteTick).toBeDefined();
+  expect(thirdCompleteTick!).toBeLessThanOrEqual(9000);
 }, 30000);

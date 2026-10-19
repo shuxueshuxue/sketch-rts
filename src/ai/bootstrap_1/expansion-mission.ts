@@ -1,22 +1,22 @@
 import { BUILDING_DEFS } from '../../shared/catalog';
 import { GOLD_MINE_RULES } from '../../shared/mining';
-import type { GameCommand, GameSnapshot, PlayerId } from '../../shared/types';
+import type { GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { walkableGoal } from '../../shared/terrain';
 import { groundSteeringRoute, routeClearsDisks, routePrefix } from '../../shared/route-selection';
 import { resolveAiCommandIntent } from '../policy/commands';
 import { activeMiningBaseCount } from '../policy/expansion-model';
 import { groundThreatWithin } from '../policy/ground-threat';
-import { distance } from '../policy/spatial';
+import { averagePoint, distance, withinRangeOf } from '../policy/spatial';
 import type { AiPolicyContext } from '../policy/types';
-import { availableV6Army } from '../policy/v6/general';
+import { availableV6Army, V7_WOUNDED_SHARE } from '../policy/v6/general';
 import type { V6Intel } from '../policy/v6/intel';
 import { isBacklineKind } from '../policy/v6/backline';
 import { recordPlay, v6Memory } from '../policy/v6/memory';
 import { v6Doctrine } from '../policy/v6/select';
 import { strengthOf } from '../policy/v6/strength';
-import { activeCamp, campContested, continueV7Creep, neutralCamps, CREEP_ROUTE_CLEARANCE, EXPANSION_GUARD_RANGE } from '../policy/v7/creep';
+import { activeCamp, campContested, continueV7Creep, creepForce, forceFor, neutralCamps, CREEP_ASSEMBLED_RANGE, V7_GATHERED_RANGE, CREEP_ROUTE_CLEARANCE, EXPANSION_GUARD_RANGE } from '../policy/v7/creep';
 import { bootstrapExpansionMine } from './expansion-target';
-import { bootstrapCampApproach, chooseBootstrapCamp, startBootstrapCamp } from './camp-geometry';
+import { bootstrapCampApproach, campRecruitRoadClear, chooseBootstrapCamp, startBootstrapCamp } from './camp-geometry';
 import { miningJobDefenseTarget } from './mining-job-defense';
 import { mineClaimedByAlly } from '../policy/mine-claims';
 import { miningRallyAssignment } from './mining-rally';
@@ -117,29 +117,96 @@ export function prepareExpansionMission(snapshot: GameSnapshot, owner: PlayerId,
         ...((homeThreat ?? mineThreat) ? { targetId: (homeThreat ?? mineThreat)!.id } : {}) });
       recordPlay(v6, `expansion:interrupted:${reason}`);
     }
+    task.pausedAt ??= snapshot.tick;
     task.paused = true;
     for (const id of expansionMissionUnitIds(memory)) if (memory.unitClaims[id]?.kind === 'expansion') clearUnitClaim(memory, id);
   } else {
+    if (task.pausedAt !== undefined && task.combat?.creep) task.combat.creep.since += snapshot.tick - task.pausedAt;
+    delete task.pausedAt;
     delete task.paused;
     const alive = new Set(snapshot.units.filter(unit => unit.owner === owner && !defending.has(unit.id)
       && !unit.deck && unit.order.type !== 'board').map(unit => unit.id));
     const retained = expansionMissionUnitIds(memory);
     for (const id of retained) if (!alive.has(id)) forgetExpansionMember(memory, id);
-    const members = [...new Set([...retained.filter(id => alive.has(id)), ...availableV6Army(snapshot, options, intel)
-      .filter(unit => !defending.has(unit.id) && !isBacklineKind(unit) && unit.attackDamage > 0).map(unit => unit.id)])];
-    // Reuse the existing errand claim contract. New shop/mercenary trips cannot borrow the expansion's screen.
+    const assault = new Set(memory.landAttack?.general.group);
+    const pool = availableV6Army(snapshot, options, intel)
+      .filter(unit => !defending.has(unit.id) && !isBacklineKind(unit) && unit.attackDamage > 0
+        && (!assault.has(unit.id) || retained.includes(unit.id) || activeMiningBaseCount(snapshot, owner) === 0));
+    const members = selectExpansionScreen(snapshot, options, pool, retained.filter(id => alive.has(id)), intel);
+    for (const id of retained) if (!members.includes(id)) {
+      if (memory.unitClaims[id]?.kind === 'expansion') clearUnitClaim(memory, id);
+      forgetExpansionMember(memory, id);
+    }
+    // Only the camp's required force, or the builder's small escort, owns this task.
     for (const id of members) setUnitClaim(memory, id, { kind: 'expansion', targetId: target.id,
       x: target.x, y: target.y, sinceTick: snapshot.tick, expiresTick: snapshot.tick + 30, expansionMineId: target.id });
   }
   return task;
 }
 
+/** Retain a sufficient camp party; after clearing, only three builder escorts remain. */
+export function selectExpansionScreen(snapshot: GameSnapshot, options: AiPolicyContext, pool: Unit[], retained: string[], intel: V6Intel) {
+  const task = options.memory.landExpansion!;
+  const mine = snapshot.resources.find(mine => mine.id === task.mineId)!;
+  const camps = neutralCamps(snapshot);
+  const camp = activeCamp(task.combat?.creep, camps)
+    ?? camps.find(camp => distance(camp.center, mine) <= EXPANSION_GUARD_RANGE);
+  const assault = new Set(options.memory.landAttack?.general.group);
+  const order = (a: Unit, b: Unit) => Number(a.hp < a.maxHp * .35) - Number(b.hp < b.maxHp * .35)
+    || Number(!retained.includes(a.id)) - Number(!retained.includes(b.id))
+    || Number(assault.has(a.id)) - Number(assault.has(b.id))
+    || distance(a, camp?.center ?? mine) - distance(b, camp?.center ?? mine);
+  let front = [...pool].sort(order);
+  if (camp && !task.combat?.creep && pool.length) {
+    const nearby = withinRangeOf(pool, CREEP_ASSEMBLED_RANGE);
+    // Rate each assembled cohort once, not on both sides of every sort comparison.
+    // Keep the first cohort on ties, as the stable sort did.
+    const assembled = pool.map(nearby).map(units => ({ units, force: creepForce(units, camp) }))
+      .reduce((best, candidate) => candidate.force > best.force ? candidate : best);
+    if (assembled.force >= forceFor(camp)) front = [...assembled.units].sort(order);
+  }
+  // Commit a clearing party through the entire camp. Falling creep HP must not
+  // immediately release its fighters; those units finish the remaining battle.
+  const selected = camp && task.combat?.creep
+    ? snapshot.units.filter(unit => retained.includes(unit.id)) : [];
+  for (const unit of front) {
+    // continueV7Creep sends these patients back to staging instead of fighting.
+    // Their rating and free-volley DPS cannot fund the minimum clearing party.
+    const fighting = selected.filter(unit => pool.includes(unit) && unit.hp >= unit.maxHp * V7_WOUNDED_SHARE);
+    if (camp ? creepForce(fighting, camp) >= forceFor(camp)
+      && !campContested(intel, camp.center, selected)
+      && !campContested(intel, averagePoint(selected), selected) : selected.length >= 3) break;
+    if (!selected.includes(unit)) selected.push(unit);
+  }
+  return selected.map(unit => unit.id);
+}
+
+/** The expedition's camp state cannot overwrite a simultaneous main-army assault. */
 export function expansionMissionCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel): GameCommand[] | undefined {
   const task = prepareExpansionMission(snapshot, owner, options, intel);
   if (!task || task.paused || task.stage === 'complete') return undefined;
+  const shared = v6Memory(options);
+  shared.plays ??= {};
+  const state = { ...shared };
+  delete state.general; delete state.creep; delete state.creepRetry;
+  Object.assign(state, task.combat);
+  const mission = { ...options, memory: { ...options.memory, v6: state } };
+  const contestedBefore = shared.plays['creep:enemy'] ?? 0;
+  const commands = planExpansionScreen(snapshot, owner, mission, intel);
+  if ((shared.plays['creep:enemy'] ?? 0) > contestedBefore) {
+    task.interruptions.push({ tick: snapshot.tick, reason: 'camp-threat' });
+    recordPlay(shared, 'expansion:interrupted:camp-threat');
+  }
+  task.combat = { ...(state.creep ? { creep: state.creep } : {}),
+    ...(state.creepRetry ? { creepRetry: state.creepRetry } : {}) };
+  return commands;
+}
+
+function planExpansionScreen(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel): GameCommand[] {
+  const task = options.memory.landExpansion!;
   const mine = snapshot.resources.find(mine => mine.id === task.mineId)!, memory = v6Memory(options);
-  const home = intel.home;
-  const front = availableV6Army(snapshot, options, intel).filter(unit => {
+  const home = intel.home, members = new Set(expansionMissionUnitIds(options.memory));
+  const front = availableV6Army(snapshot, options, intel).filter(unit => members.has(unit.id)).filter(unit => {
     const claim = activeUnitClaim(snapshot, owner, unit, options);
     return !isMineRallyClaim(claim) && claim?.kind !== 'mineLeash' && claim?.kind !== 'expansionGarrison' && claim?.kind !== 'harassSquad';
   }).filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0);
@@ -150,7 +217,8 @@ export function expansionMissionCommands(snapshot: GameSnapshot, owner: PlayerId
     if (task.roadCamp && (!active || distance(active.center, task.roadCamp) > 300)) delete task.roadCamp;
     if (memory.creep && active !== guard && !task.roadCamp) delete memory.creep;
     if (!memory.creep) {
-      let choice = chooseBootstrapCamp(home, snapshot, front, camps, [guard], options, mine);
+      const fighting = front.filter(unit => unit.hp >= unit.maxHp * V7_WOUNDED_SHARE);
+      let choice = chooseBootstrapCamp(home, snapshot, fighting, camps, [guard], options, mine);
       if (!choice && Object.keys(options.memory.expansionGarrisons ?? {}).length > 0) {
         // A camp on the expedition's actual road is part of reaching this mine.
         // Keep the mine as the parent objective; do not wait forever merely
@@ -163,14 +231,24 @@ export function expansionMissionCommands(snapshot: GameSnapshot, owner: PlayerId
           .filter(item => item.at >= 0).sort((a, b) => a.at - b.at);
         const blocker = blockers[0]?.camp;
         if (blocker && !campContested(intel, blocker.center, front)) {
-          choice = chooseBootstrapCamp(home, snapshot, front, camps, [blocker], options, blocker.center);
+          choice = chooseBootstrapCamp(home, snapshot, fighting, camps, [blocker], options, blocker.center);
           if (choice) { task.roadCamp = { ...blocker.center }; recordPlay(memory, 'expansion:clearRoad'); }
         }
       }
       if (choice) startBootstrapCamp(snapshot, front, choice, options);
     }
+    const state = memory.creep, target = activeCamp(state, camps);
+    const recruits = state ? front.filter(unit => !state.group.includes(unit.id)
+      && unit.hp >= unit.maxHp * V7_WOUNDED_SHARE && !['cast', 'charge'].includes(unit.order.type)) : [];
+    const arrived = state ? recruits.filter(unit => distance(unit, state.staging) <= V7_GATHERED_RANGE) : [];
+    state?.group.push(...arrived.map(unit => unit.id));
     const under = continueV7Creep(snapshot, owner, front, camps, intel, options);
     if (under) {
+      const walking = state && target ? recruits.filter(unit => !arrived.includes(unit)
+        && campRecruitRoadClear(snapshot, unit, state.staging, camps, target)
+        && !(unit.order.type === 'move' && distance(unit.order, state.staging) < V7_GATHERED_RANGE)) : [];
+      if (walking.length) under.commands.push(resolveAiCommandIntent(snapshot, owner,
+        { type: 'move', unitIds: walking.map(unit => unit.id), ...state!.staging }, options));
       task.stage = 'clear';
       memory.general = { mode: 'creep', target: under.point };
       return under.commands;
@@ -195,7 +273,7 @@ export function expansionMissionCommands(snapshot: GameSnapshot, owner: PlayerId
   const escorts = builder ? [...front].sort((a, b) => distance(a, builder) - distance(b, builder)).slice(0, 3) : [];
   const road = builder?.order.type === 'build' ? groundSteeringRoute(snapshot.map, builder, builder.order) : [];
   const escortPoint = builder ? routePrefix(builder, road, 220).at(-1) ?? builder : point;
-  // A small escort follows the builder's actual steering road; the rest keep the cleared mine covered.
+  // A small escort follows the builder's actual steering road.
   return [{ units: front.filter(unit => !escorts.includes(unit)), point }, { units: escorts, point: escortPoint }]
     .flatMap(({ units, point }): GameCommand[] => {
       const moving = units.filter(unit => distance(unit, point) > 180
@@ -203,4 +281,20 @@ export function expansionMissionCommands(snapshot: GameSnapshot, owner: PlayerId
       return moving.length ? [resolveAiCommandIntent(snapshot, owner,
         { type: task.stage === 'assemble' ? 'move' : 'attackMove', unitIds: moving.map(unit => unit.id), x: point.x, y: point.y }, options)] : [];
     });
+}
+
+/** Idle surplus helps the expedition for this think; it remains free to attack on the next. */
+export function assistExpansionMission(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, front: Unit[]): GameCommand[] {
+  const task = options.memory.landExpansion, state = task?.combat?.creep;
+  if (!task || task.paused || !state) return [];
+  const camps = neutralCamps(snapshot), camp = activeCamp(state, camps);
+  if (!camp) return [];
+  const point = state.stage === 'gather' ? state.staging : camp.center;
+  const disks = camps.filter(other => other !== camp).flatMap(other => other.creeps.map(unit =>
+    ({ x: unit.x, y: unit.y, radius: CREEP_ROUTE_CLEARANCE })));
+  const helping = front.filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0 && unit.hp >= unit.maxHp * .35
+    && routeClearsDisks(groundSteeringRoute(snapshot.map, unit, point), disks)
+    && unit.order.type !== 'attack');
+  return helping.length ? [resolveAiCommandIntent(snapshot, owner, { type: state.stage === 'gather' ? 'move' : 'attackMove',
+    unitIds: helping.map(unit => unit.id), ...point }, options)] : [];
 }
