@@ -82,8 +82,11 @@ it('feeds all 19 real 14:48 defenders into one mine defense while the first suff
   const enemyHome = snapshot.buildings.find(building => building.owner === 'p1' && building.kind === 'townHall')!;
   foes.forEach((unit, index) => { Object.assign(unit, walkableGoal(snapshot.map, enemyHome.x + 200 + index % 6 * 40,
     enemyHome.y + 200 + Math.floor(index / 6) * 40)); unit.order = { type: 'idle' }; });
-  // The original raid is over and every surviving original defender is back at its own post.
-  for (const unit of snapshot.units.filter(unit => defenders.includes(unit.id))) Object.assign(unit, point);
+  // The controlled second raid starts only after the entire current rally has returned. Rules 7 changes
+  // combat and can add newly recruited defenders beyond the 19 original arrivals checked above.
+  const station = memory.miningDefense?.point ?? point;
+  for (const unit of snapshot.units.filter(unit => isMineRallyClaim(activeUnitClaim(snapshot, subject, unit, { memory }))))
+    Object.assign(unit, station);
   planBootstrapCommands(snapshot, subject, 'v9_archer', { memory, teams: after.result.game.teams });
   expect(memory.miningDefense).toBeUndefined();
 

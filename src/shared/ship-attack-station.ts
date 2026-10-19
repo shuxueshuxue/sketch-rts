@@ -30,10 +30,11 @@ export function continuingShipAim(world: World, ship: Unit, target: Target, bloc
     const range = mountedAttackRange(ship, item, target.id);
     if (range <= veteranWeaponRange(ship, def.range)) return false;
     const pose = mountedWeaponPose(ship, item);
-    const point = pose && mountedTargetPoint(world, ship, item, target, pose);
-    const gap = point && hypot2(point.x - pose!.pivot.x, point.y - pose!.pivot.y);
-    return !!point && shipGunCanAim(ship, item, point)
-      && gap! > veteranWeaponRange(ship, def.range) && gap! <= range
+    if (!pose) return false;
+    const point = mountedTargetPoint(world, ship, item, target, pose);
+    if (!point || !shipGunCanAim(ship, item, point)) return false;
+    const gap = hypot2(point.x - pose.pivot.x, point.y - pose.pivot.y);
+    return gap > veteranWeaponRange(ship, def.range) && gap <= range
       && (!blockers.length || mountedFireLaneClear(ship, item, point, blockers));
   });
 }

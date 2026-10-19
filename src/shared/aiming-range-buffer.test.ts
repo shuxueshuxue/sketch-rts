@@ -117,10 +117,13 @@ describe('aiming range motion buffer', () => {
     const prior = UNIT_DEFS.archer.aimRangeBuffer;
     UNIT_DEFS.archer.aimRangeBuffer = 0;
     try {
-      const { game } = pursuit(true);
-      for (let tick = 0; tick < 200; tick++) stepGame(game);
-      expect(game.match.stats.unitsKilled.player).toBe(0);
-      expect(game.projectiles).toHaveLength(0);
+      const { game, shooter } = pursuit(true);
+      let shots = 0;
+      for (let tick = 0; tick < 200; tick++) {
+        stepGame(game);
+        shots += game.projectiles.filter(projectile => projectile.attackerId === shooter.id).length;
+      }
+      expect(shots).toBe(0);
     } finally {
       if (prior === undefined) delete UNIT_DEFS.archer.aimRangeBuffer;
       else UNIT_DEFS.archer.aimRangeBuffer = prior;

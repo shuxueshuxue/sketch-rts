@@ -30,7 +30,8 @@ it.each((['grove', 'ember'] as const).flatMap(race => [false, true].map(mirror =
     }
     const survivors = game.units.filter(unit => unit.owner === 'us');
     expect(survivors).toHaveLength(4);
-    expect(survivors.every(unit => unit.hp === unit.maxHp && Math.hypot(unit.x - x(500), unit.y - 500) < 300)).toBe(true);
+    expect(survivors.every(unit => unit.hp === unit.maxHp && Math.hypot(unit.x - x(500), unit.y - 500) < 300),
+      JSON.stringify({ race, mirror, damage, survivors: survivors.map(unit => ({ id: unit.id, hp: unit.hp, maxHp: unit.maxHp, x: unit.x, y: unit.y })) })).toBe(true);
     expect(damage).toBe(0);
     const dragon = game.units.find(unit => unit.id === 'dragon')!;
     expect(dragon.hp).toBe(dragon.maxHp);

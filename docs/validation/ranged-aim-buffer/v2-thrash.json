@@ -1,0 +1,382 @@
+{
+  "rule": 7,
+  "version": "v2",
+  "tick": 60000,
+  "winner": null,
+  "window": [
+    30000,
+    60000
+  ],
+  "enemyRadius": 600,
+  "maxOverrideTicks": 60,
+  "counts": {
+    "attackWave->skirmishPreservation": 75,
+    "skirmishPreservation->attackWave": 270
+  },
+  "examples": [
+    {
+      "tick": 31380,
+      "unit": "unit-player-footman-6060",
+      "owner": "player",
+      "deltaTicks": 60,
+      "previous": {
+        "tick": 31320,
+        "script": "attackWave",
+        "order": "{\"type\":\"attack\",\"targetId\":\"unit-enemy-emberRavager-8131\"}"
+      },
+      "order": {
+        "type": "move",
+        "x": 2864,
+        "y": 1840,
+        "avoidCombat": true
+      },
+      "x": 2731.314762898621,
+      "y": 2042.3598025879242
+    },
+    {
+      "tick": 31380,
+      "unit": "unit-player-footman-6156",
+      "owner": "player",
+      "deltaTicks": 60,
+      "previous": {
+        "tick": 31320,
+        "script": "attackWave",
+        "order": "{\"type\":\"attack\",\"targetId\":\"unit-enemy-emberRavager-8131\"}"
+      },
+      "order": {
+        "type": "move",
+        "x": 2864,
+        "y": 1840,
+        "avoidCombat": true
+      },
+      "x": 2745.9295337480467,
+      "y": 1964.2694817624347
+    },
+    {
+      "tick": 31567,
+      "unit": "unit-enemy-cinderRunner-4099",
+      "owner": "enemy",
+      "deltaTicks": 60,
+      "previous": {
+        "tick": 31507,
+        "script": "skirmishPreservation",
+        "order": "{\"type\":\"move\",\"x\":1776,\"y\":2768,\"avoidCombat\":true}"
+      },
+      "order": {
+        "type": "attack",
+        "targetId": "unit-player-footman-6470"
+      },
+      "x": 1848.5685581392675,
+      "y": 2687.263041472866
+    },
+    {
+      "tick": 37882,
+      "unit": "unit-enemy-emberRavager-4195",
+      "owner": "enemy",
+      "deltaTicks": 45,
+      "previous": {
+        "tick": 37837,
+        "script": "attackWave",
+        "order": "{\"type\":\"attack\",\"targetId\":\"unit-player-footman-6397\"}"
+      },
+      "order": {
+        "type": "move",
+        "x": 1744,
+        "y": 2768,
+        "avoidCombat": true
+      },
+      "x": 1837.214843039948,
+      "y": 2613.1990296003905
+    },
+    {
+      "tick": 37882,
+      "unit": "unit-enemy-emberRavager-5729",
+      "owner": "enemy",
+      "deltaTicks": 45,
+      "previous": {
+        "tick": 37837,
+        "script": "attackWave",
+        "order": "{\"type\":\"attack\",\"targetId\":\"unit-player-footman-6397\"}"
+      },
+      "order": {
+        "type": "move",
+        "x": 1744,
+        "y": 2768,
+        "avoidCombat": true
+      },
+      "x": 1923.8296515068928,
+      "y": 2581.500275515372
+    },
+    {
+      "tick": 37882,
+      "unit": "unit-enemy-cinderRunner-8512",
+      "owner": "enemy",
+      "deltaTicks": 45,
+      "previous": {
+        "tick": 37837,
+        "script": "attackWave",
+        "order": "{\"type\":\"attack\",\"targetId\":\"unit-player-footman-6397\"}"
+      },
+      "order": {
+        "type": "move",
+        "x": 1744,
+        "y": 2768,
+        "avoidCombat": true
+      },
+      "x": 1895.6109014062044,
+      "y": 2602.205399102419
+    },
+    {
+      "tick": 38797,
+      "unit": "unit-enemy-cinderRunner-3476",
+      "owner": "enemy",
+      "deltaTicks": 45,
+      "previous": {
+        "tick": 38752,
+        "script": "attackWave",
+        "order": "{\"type\":\"attack\",\"targetId\":\"unit-player-footman-5023\"}"
+      },
+      "order": {
+        "type": "move",
+        "x": 1682.418474402907,
+        "y": 2924.925690452874,
+        "avoidCombat": true
+      },
+      "x": 1715.9575378291606,
+      "y": 2721.786939289816
+    },
+    {
+      "tick": 38857,
+      "unit": "unit-enemy-cinderRunner-3476",
+      "owner": "enemy",
+      "deltaTicks": 60,
+      "previous": {
+        "tick": 38797,
+        "script": "skirmishPreservation",
+        "order": "{\"type\":\"move\",\"x\":1682.418474402907,\"y\":2924.925690452874,\"avoidCombat\":true}"
+      },
+      "order": {
+        "type": "attack",
+        "targetId": "unit-player-footman-8368"
+      },
+      "x": 1649.554645893221,
+      "y": 2830.6525864362407
+    },
+    {
+      "tick": 40267,
+      "unit": "unit-enemy-emberRavager-5056",
+      "owner": "enemy",
+      "deltaTicks": 60,
+      "previous": {
+        "tick": 40207,
+        "script": "attackWave",
+        "order": "{\"type\":\"attack\",\"targetId\":\"unit-player-lancer-8166\"}"
+      },
+      "order": {
+        "type": "move",
+        "x": 1744,
+        "y": 2768,
+        "avoidCombat": true
+      },
+      "x": 1861.5922183742543,
+      "y": 2631.9303447477737
+    },
+    {
+      "tick": 40477,
+      "unit": "unit-enemy-cinderRunner-6526",
+      "owner": "enemy",
+      "deltaTicks": 60,
+      "previous": {
+        "tick": 40417,
+        "script": "attackWave",
+        "order": "{\"type\":\"attack\",\"targetId\":\"unit-player-footman-6156\"}"
+      },
+      "order": {
+        "type": "move",
+        "x": 1744,
+        "y": 2768,
+        "avoidCombat": true
+      },
+      "x": 1824.8484046227488,
+      "y": 2597.5626933745652
+    },
+    {
+      "tick": 44857,
+      "unit": "unit-enemy-cinderRunner-3078",
+      "owner": "enemy",
+      "deltaTicks": 60,
+      "previous": {
+        "tick": 44797,
+        "script": "attackWave",
+        "order": "{\"type\":\"attack\",\"targetId\":\"unit-player-footman-4569\"}"
+      },
+      "order": {
+        "type": "move",
+        "x": 1797.8786820181792,
+        "y": 2778.0852556068276,
+        "avoidCombat": true
+      },
+      "x": 1907.1546607970488,
+      "y": 2539.7615488564315
+    },
+    {
+      "tick": 44857,
+      "unit": "unit-enemy-cinderRunner-8512",
+      "owner": "enemy",
+      "deltaTicks": 60,
+      "previous": {
+        "tick": 44797,
+        "script": "attackWave",
+        "order": "{\"type\":\"attack\",\"targetId\":\"unit-player-footman-4569\"}"
+      },
+      "order": {
+        "type": "move",
+        "x": 1797.8786820181792,
+        "y": 2778.0852556068276,
+        "avoidCombat": true
+      },
+      "x": 1961.9613872075456,
+      "y": 2581.246429788592
+    },
+    {
+      "tick": 49545,
+      "unit": "unit-player-footman-4204",
+      "owner": "player",
+      "deltaTicks": 60,
+      "previous": {
+        "tick": 49485,
+        "script": "skirmishPreservation",
+        "order": "{\"type\":\"move\",\"x\":2803.682929362608,\"y\":1804.8610227128506,\"avoidCombat\":true}"
+      },
+      "order": {
+        "type": "attack",
+        "targetId": "unit-enemy-emberRavager-6096"
+      },
+      "x": 2776.711023501025,
+      "y": 1881.633072329395
+    },
+    {
+      "tick": 49545,
+      "unit": "unit-player-footman-6156",
+      "owner": "player",
+      "deltaTicks": 30,
+      "previous": {
+        "tick": 49515,
+        "script": "skirmishPreservation",
+        "order": "{\"type\":\"move\",\"x\":2803.682929362608,\"y\":1804.8610227128506,\"avoidCombat\":true}"
+      },
+      "order": {
+        "type": "attack",
+        "targetId": "unit-enemy-emberRavager-6096"
+      },
+      "x": 2837.868245265337,
+      "y": 1860.2757869302154
+    },
+    {
+      "tick": 49545,
+      "unit": "unit-player-footman-6470",
+      "owner": "player",
+      "deltaTicks": 30,
+      "previous": {
+        "tick": 49515,
+        "script": "skirmishPreservation",
+        "order": "{\"type\":\"move\",\"x\":2803.682929362608,\"y\":1804.8610227128506,\"avoidCombat\":true}"
+      },
+      "order": {
+        "type": "attack",
+        "targetId": "unit-enemy-emberRavager-6096"
+      },
+      "x": 2851.4689569135735,
+      "y": 1893.8027481500392
+    },
+    {
+      "tick": 49545,
+      "unit": "unit-player-footman-8368",
+      "owner": "player",
+      "deltaTicks": 60,
+      "previous": {
+        "tick": 49485,
+        "script": "skirmishPreservation",
+        "order": "{\"type\":\"move\",\"x\":2803.682929362608,\"y\":1804.8610227128506,\"avoidCombat\":true}"
+      },
+      "order": {
+        "type": "attack",
+        "targetId": "unit-enemy-emberRavager-6096"
+      },
+      "x": 2792.9367361548457,
+      "y": 1913.7897179287797
+    },
+    {
+      "tick": 49545,
+      "unit": "unit-player-footman-8816",
+      "owner": "player",
+      "deltaTicks": 30,
+      "previous": {
+        "tick": 49515,
+        "script": "skirmishPreservation",
+        "order": "{\"type\":\"move\",\"x\":2803.682929362608,\"y\":1804.8610227128506,\"avoidCombat\":true}"
+      },
+      "order": {
+        "type": "attack",
+        "targetId": "unit-enemy-emberRavager-6096"
+      },
+      "x": 2815.29390824873,
+      "y": 1888.318598990718
+    },
+    {
+      "tick": 49582,
+      "unit": "unit-enemy-emberRavager-2648",
+      "owner": "enemy",
+      "deltaTicks": 30,
+      "previous": {
+        "tick": 49552,
+        "script": "attackWave",
+        "order": "{\"type\":\"attack\",\"targetId\":\"unit-player-footman-6397\"}"
+      },
+      "order": {
+        "type": "move",
+        "x": 1580.7426093769445,
+        "y": 3305.843845942818,
+        "avoidCombat": true
+      },
+      "x": 2015.227188152775,
+      "y": 3046.1118672812772
+    },
+    {
+      "tick": 49582,
+      "unit": "unit-enemy-cinderRunner-5871",
+      "owner": "enemy",
+      "deltaTicks": 60,
+      "previous": {
+        "tick": 49522,
+        "script": "attackWave",
+        "order": "{\"type\":\"attack\",\"targetId\":\"unit-player-footman-6397\"}"
+      },
+      "order": {
+        "type": "move",
+        "x": 1580.7426093769445,
+        "y": 3305.843845942818,
+        "avoidCombat": true
+      },
+      "x": 1981.0632432692714,
+      "y": 3038.507600715926
+    },
+    {
+      "tick": 50295,
+      "unit": "unit-player-footman-6397",
+      "owner": "player",
+      "deltaTicks": 45,
+      "previous": {
+        "tick": 50250,
+        "script": "skirmishPreservation",
+        "order": "{\"type\":\"move\",\"x\":3618.2210619984207,\"y\":1214.5375864606874}"
+      },
+      "order": {
+        "type": "attack",
+        "targetId": "unit-enemy-emberRavager-6096"
+      },
+      "x": 3629.460071637675,
+      "y": 1265.7696021793215
+    }
+  ]
+}
