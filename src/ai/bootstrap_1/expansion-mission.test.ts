@@ -15,6 +15,7 @@ import { mainArmyIntel, miningRally, planBootstrapGeneral } from './mine-defense
 import { bootstrapPolicyContext } from './policy';
 import { v6ExpansionPoint } from '../policy/v6/economy';
 import { expansionMissionCommands } from './expansion-mission';
+import { expansionOwnsDefender } from './mining-leash';
 
 function expansionScene(invaded = false) {
   let draft = sketchScene('finish-one-expansion').map('openClaims').replaceDefaults()
@@ -156,11 +157,15 @@ it('releases an existing unfunded task after the last income is lost instead of 
   issuePlayerCommand(game, 'us', { type: 'train', buildingId: home.id, unitKind: 'worker' });
   issuePlayerCommand(game, 'us', { type: 'train', buildingId: home.id, unitKind: 'worker' });
   expect(game.players.us!.gold).toBeLessThan(400);
-  memory.landExpansion = { mineId: 'natural', sinceTick: 0, stage: 'escort', unitIds: [], interruptions: [] };
+  const screen = game.units.filter(unit => unit.id.startsWith('screen-'));
+  memory.landExpansion = { mineId: 'natural', sinceTick: 0, stage: 'escort', unitIds: screen.map(unit => unit.id), interruptions: [] };
+  for (const unit of screen) memory.unitClaims[unit.id] = { kind: 'expansion', targetId: 'natural', x: 1600, y: 1100,
+    sinceTick: 0, expiresTick: 30 };
   const { snapshot, options } = context();
   planBootstrapGeneral(snapshot, 'us', options);
   expect(memory.landExpansion!.stage).toBe('fund');
   expect(memory.v6!.general!.mode).toBe('attack');
+  expect(screen.some(unit => expansionOwnsDefender(snapshot, 'us', options, unit))).toBe(false);
 });
 
 it('starts the archer ladder-16 grove natural before 4:00 and third before 6:30 against the real v9', () => {

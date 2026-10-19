@@ -5,7 +5,9 @@ import type { GameSnapshot } from '../../shared/types';
 import type { AiPolicyMemory } from '../memory';
 import { createAiMemoryProvider, planAiOwnerCommandEntries } from '../planner-context';
 import { runAiGameLoop } from '../game-runner';
-import { bootstrapScripts } from './policy';
+import { bootstrapScripts, planBootstrapCommands } from './policy';
+import { unitMover } from '../../shared/catalog';
+import { walkableGoal } from '../../shared/terrain';
 import { MINING_RALLY_RADIUS, miningRallyAssignment } from './mining-rally';
 import { bootstrapPolicyContext } from './policy';
 import { mainArmyIntel, miningRally, planBootstrapGeneral } from './mine-defense';
@@ -34,7 +36,6 @@ function replay(anchored: boolean) {
       && Math.hypot(source.x - hall.x, source.y - hall.y) <= 650) firstEngagement = Math.min(firstEngagement, game.tick);
   } };
   const halls = new Set<string>();
-  const laterRallies: { tick: number; hallId: string; attackersAtMine: number }[] = [];
   const result = runAiGameLoop({ name: 'real-mine-rally-14m48', game, maxTicks: 20760, thinkInterval: 15,
     agents: {
       p1: { controller: 'external-agent', team: 'rivals', race: 'grove', version: 'v9' },
@@ -49,13 +50,6 @@ function replay(anchored: boolean) {
     // finished, expansion may resume and a later, separate raid may legitimately defend another mine.
     if (anchor) { point ??= anchor.point; if (firstGatheredTick === undefined) halls.add(anchor.hallId);
       if (anchor.phase === 'fight') firstFight = Math.min(firstFight, game.tick); }
-    if (anchor && firstGatheredTick !== undefined && !halls.has(anchor.hallId)
-      && !laterRallies.some(rally => rally.hallId === anchor.hallId)) {
-      const nextHall = game.buildings.find(building => building.id === anchor.hallId)!;
-      laterRallies.push({ tick: game.tick, hallId: anchor.hallId,
-        attackersAtMine: game.units.filter(unit => unit.owner === 'p1' && unit.attackDamage > 0 && anchor.attackerIds.includes(unit.id)
-          && Math.hypot(unit.x - nextHall.x, unit.y - nextHall.y) <= 1000).length });
-    }
     // Both runs are measured at the same first threatened hall's mouth, regardless of the mode label.
     const post = point ?? { x: 2681.6543031765154, y: 4102.184899904971 };
     const atPost = game.units.filter(unit => defenders.includes(unit.id)
@@ -64,7 +58,7 @@ function replay(anchored: boolean) {
     maxGathered = Math.max(maxGathered, atPost.length);
     if (arrived.size === defenders.length) firstGatheredTick ??= game.tick;
   } });
-  return { result, maxGathered, firstGatheredTick, halls, laterRallies, arrived, firstEngagement, firstFight, hallDamage };
+  return { result, memories, maxGathered, firstGatheredTick, halls, arrived, firstEngagement, firstFight, hallDamage };
 }
 
 it('feeds all 19 real 14:48 defenders into one mine defense while the first sufficient group fights', () => {
@@ -79,11 +73,31 @@ it('feeds all 19 real 14:48 defenders into one mine defense while the first suff
   expect(after.firstFight).toBeLessThanOrEqual(saved.snapshot.tick + 45 * 20);
   expect(after.firstGatheredTick).toBeLessThanOrEqual(saved.snapshot.tick + 90 * 20);
   expect([...after.halls]).toEqual(['building-v9_archer-townhall']);
-  // After the original rally completes, a genuine second raid at the other mine starts a fresh task.
-  expect(after.laterRallies).toHaveLength(1);
-  expect(after.laterRallies[0]!.hallId).toBe('building-v9_archer-townHall-1602');
-  expect(after.laterRallies[0]!.tick).toBeGreaterThan(after.firstGatheredTick!);
-  expect(after.laterRallies[0]!.attackersAtMine).toBeGreaterThan(0);
+  // Script the next raid from the real replay's final state: pursuit changes can alter whether
+  // a natural second raid happens within this short window, but it must remain a legal new task.
+  const snapshot = snapshotGame(after.result.game), memory = after.memories[subject]!;
+  const point = { x: 2681.6543031765154, y: 4102.184899904971 };
+  const foes = snapshot.units.filter(unit => unit.owner === 'p1' && unit.kind !== 'worker' && !unit.deck && unitMover(unit.kind) === 'land');
+  const enemyHome = snapshot.buildings.find(building => building.owner === 'p1' && building.kind === 'townHall')!;
+  foes.forEach((unit, index) => { Object.assign(unit, walkableGoal(snapshot.map, enemyHome.x + 200 + index % 6 * 40,
+    enemyHome.y + 200 + Math.floor(index / 6) * 40)); unit.order = { type: 'idle' }; });
+  // The original raid is over and every surviving original defender is back at its own post.
+  for (const unit of snapshot.units.filter(unit => defenders.includes(unit.id))) Object.assign(unit, point);
+  planBootstrapCommands(snapshot, subject, 'v9_archer', { memory, teams: after.result.game.teams });
+  expect(memory.miningDefense).toBeUndefined();
+
+  const nextHall = snapshot.buildings.find(building => building.id === 'building-v9_archer-townHall-1602')!;
+  snapshot.tick += 15;
+  foes.forEach((unit, index) => { Object.assign(unit, walkableGoal(snapshot.map, nextHall.x - 240 + index % 6 * 25,
+    nextHall.y - 240 + Math.floor(index / 6) * 25)); unit.order = { type: 'attackMove', x: nextHall.x, y: nextHall.y }; });
+  const entries = planBootstrapCommands(snapshot, subject, 'v9_archer', { memory, teams: after.result.game.teams });
+  expect(memory.miningDefense?.hallId).toBe(nextHall.id);
+  expect(memory.miningDefense!.unitIds.length).toBeGreaterThan(0);
+  expect(Math.hypot(memory.miningDefense!.point.x - nextHall.x, memory.miningDefense!.point.y - nextHall.y)).toBeLessThanOrEqual(201);
+  expect(foes.some(unit => unit.attackDamage > 0 && memory.miningDefense!.attackerIds.includes(unit.id)
+    && Math.hypot(unit.x - nextHall.x, unit.y - nextHall.y) <= 1000)).toBe(true);
+  expect(entries.some(entry => entry.scriptId === 'miningRally' && 'unitIds' in entry.command
+    && entry.command.unitIds.some(id => memory.miningDefense!.unitIds.includes(id)))).toBe(true);
 }, 30000);
 
 

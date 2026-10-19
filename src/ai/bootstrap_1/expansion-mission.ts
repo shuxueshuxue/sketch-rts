@@ -37,6 +37,10 @@ export function prepareExpansionMission(snapshot: GameSnapshot, owner: PlayerId,
     if (task) {
       if (task.stage !== 'fund') recordPlay(v6, 'expansion:needsFunds');
       task.stage = 'fund';
+      // No expedition can depart without capital. Release ownership too, so the mine-defense
+      // leash does not mistake these now-free soldiers for an active construction screen.
+      for (const id of task.unitIds) if (memory.unitClaims[id]?.kind === 'expansion') delete memory.unitClaims[id];
+      task.unitIds = [];
     }
     return undefined;
   }
