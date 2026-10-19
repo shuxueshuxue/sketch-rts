@@ -22,7 +22,10 @@ export default async function(s: Scene) {
   await s.api(`/api/rooms/${roomId}/start`,{userId:host.id});
   await s.api(`/api/rooms/${roomId}/pause`,{});
   const roomUrl=new URL(`?room=${roomId}`,s.page.url()).href;
-  const reload=async(target:number)=>{await s.page.goto(roomUrl,{waitUntil:'load'});await s.page.waitForFunction((t:number)=>((window as any).__sketchRtsView?.tick??-1)>=t,target,{timeout:120000});await s.page.waitForFunction(()=>!!(window as any).__sketchRtsDebug?.ready(),null,{timeout:120000});};
+  const reload=async(target:number)=>{await s.page.goto(roomUrl,{waitUntil:'load'});await s.page.waitForFunction((t:number)=>((window as any).__sketchRtsView?.tick??-1)>=t,target,{timeout:120000});await s.page.waitForFunction(()=>!!(window as any).__sketchRtsDebug?.ready(),null,{timeout:120000});
+    // Match the CLI driver's normal settle(): its pointer-lock guide must not cover the replay's mining site.
+    await s.page.addStyleTag({content:'[data-pointer-lock-gate]{display:none!important}'});
+  };
   await s.api(`/api/rooms/${roomId}/reset`,{mapId:'ladder',options:{...match.options,players:['player','enemy'],aiPlayers:[],teams:{player:'v9_archer-side',enemy:'rivals'},races:{player:'grove',enemy:'ember'}}});
   await reload(0);
   const samples:any[]=[];
