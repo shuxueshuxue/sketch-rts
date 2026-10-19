@@ -166,6 +166,8 @@ type ArmyPlan = {
   reinforcements: "rally" | "siege";
   expansionBasis: "halls" | "mines";
   reserveExpansion: boolean;
+  // Room planners may give a separate expedition the entire mining objective.
+  expansionHandled?: boolean;
   pursue: (defense: { hall: Point; field: Point; leash: number | undefined }) => boolean;
   recovery: (wounded: Unit[], point: Point) => GameCommand[];
   gatherAssault: boolean;
@@ -193,8 +195,8 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
   const available = availableV6Army(snapshot, options, intel);
   const front = available.filter((unit) => !isBacklineKind(unit) && unit.attackDamage > 0);
   const strength = strengthOf(available);
-  const miningFirst = expansionBasis === "mines" && activeMiningBaseCount(snapshot, owner) <= 1;
-  const constructing = expansionBasis === 'mines' && snapshot.buildings.some(building => building.owner === owner
+  const miningFirst = !plan.expansionHandled && expansionBasis === "mines" && activeMiningBaseCount(snapshot, owner) <= 1;
+  const constructing = !plan.expansionHandled && expansionBasis === 'mines' && snapshot.buildings.some(building => building.owner === owner
     && building.kind === 'townHall' && !building.complete);
   // V9 holds at its front (see v9-front), by the mine of the base it wants next while that mine is clear (see v9-escort),
   // and at home under its towers while the armies closing on it outweigh it (see v9-fall-back).
@@ -271,7 +273,7 @@ export function planV6Army(snapshot: GameSnapshot, owner: PlayerId, options: AiP
   if (isV7Policy(options) && !pushed && !pressed) {
     const under = continueV7Creep(snapshot, owner, front, v7Camps, intel, options);
     if (under) return creepOrders(memory, under);
-    const mine = v7WantsBase(snapshot, owner, options, expansionBasis) ? chooseMine(snapshot, intel) : undefined;
+    const mine = !plan.expansionHandled && v7WantsBase(snapshot, owner, options, expansionBasis) ? chooseMine(snapshot, intel) : undefined;
     const guard = mine ? chooseCamp(snapshot, front, v7Camps, expansionBasis === "mines" ? v7Uncontested : v7Reachable, options, mine) : undefined;
     if (guard) {
       startCamp(snapshot, front, guard, options);
@@ -575,7 +577,7 @@ function toward(from: Point, to: Point, length: number): Point {
   return gap < 1 ? from : { x: from.x + ((to.x - from.x) / gap) * Math.min(length, gap), y: from.y + ((to.y - from.y) / gap) * Math.min(length, gap) };
 }
 
-type AttackChoice = { base: V6BaseIntel; need: number; defended: number; why: string };
+export type AttackChoice = { base: V6BaseIntel; need: number; defended: number; why: string };
 
 function attackChoices(intel: V6Intel, margin: number, within: ArmyPlan['threatWithin']): AttackChoice[] {
   const choices = intel.enemies.flatMap((enemy) => {

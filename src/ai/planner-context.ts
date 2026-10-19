@@ -6,6 +6,7 @@ import { bootstrapPolicyContext, bootstrapScripts, isBootstrapVersion } from "./
 import { planVeteranSkillCommands } from "./veteran-skills";
 import { standingBodies } from "../shared/structure-bodies";
 import { setBuildingBodies } from "../shared/terrain";
+import { withLandRoadReuse } from "./bootstrap_1/safe-land-route";
 
 export const DEFAULT_AI_PLANNER_VERSION: AiScriptVersion = "v2";
 
@@ -62,19 +63,21 @@ export function planAiOwnerCommandEntries<Source extends string = string>(snapsh
     ];
   };
   if (isBootstrapVersion(version)) {
-    const scripts = request.scripts || request.scriptIds ? scriptsForRequest(request, version) : bootstrapScripts(version);
-    const context = bootstrapPolicyContext(snapshot, owner, version, {
-      ...policyOptions,
-      ...(policyMode ? { policyMode } : {}),
-      ...(disabledBehaviors ? { disabledBehaviors } : {}),
-      memory,
+    return withLandRoadReuse(() => {
+      const scripts = request.scripts || request.scriptIds ? scriptsForRequest(request, version) : bootstrapScripts(version);
+      const context = bootstrapPolicyContext(snapshot, owner, version, {
+        ...policyOptions,
+        ...(policyMode ? { policyMode } : {}),
+        ...(disabledBehaviors ? { disabledBehaviors } : {}),
+        memory,
+      });
+      return withVeteranSkills(planAiCommandEntriesFromScripts(snapshot, owner, scripts, context).map(entry => ({
+        playerId: owner,
+        ...(request.source !== undefined ? { source: request.source } : {}),
+        scriptId: entry.scriptId,
+        command: entry.command,
+      })));
     });
-    return withVeteranSkills(planAiCommandEntriesFromScripts(snapshot, owner, scripts, context).map(entry => ({
-      playerId: owner,
-      ...(request.source !== undefined ? { source: request.source } : {}),
-      scriptId: entry.scriptId,
-      command: entry.command,
-    })));
   }
   // @@@frozen-v2-prod-brain - Production V2 is a frozen policy artifact that still plays through the live simulation core.
   if (version === "v2-prod") {

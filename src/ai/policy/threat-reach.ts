@@ -22,27 +22,36 @@ export function chargeMinimum(foe: Unit, rider: Pick<Unit, 'x' | 'y'>, horizon: 
   });
 }
 
-function itemReach(snapshot: GameSnapshot, foe: Unit, horizon: number) {
-  return itemsFor(snapshot, foe).flatMap(item => item.cooldownRemaining <= horizon
-    && (item.kind === 'stormStaff' || item.kind === 'lightningRod')
-    ? [foe.owner === 'neutral' ? item.kind === 'stormStaff' ? NEUTRAL_STORM_TARGET_RANGE : NEUTRAL_ITEM_TARGET_RANGE
-      : item.kind === 'stormStaff' ? STORM_STAFF.range : LIGHTNING_ROD.range] : []);
-}
-
 export function mountedThreatReach(snapshot: GameSnapshot, foe: Threat, rider: Pick<Unit, 'x' | 'y' | 'radius'>, horizon: number) {
   if (!('order' in foe)) return foe.attackRange + rider.radius;
-  const weaponReach = foe.attackRange <= 80 && chargeMinimum(foe, rider, horizon).length === 0 ? foe.attackRange + foe.radius + rider.radius : foe.attackRange;
+  const withinChargeMinimum = foe.attackRange <= 80 && unitAbilities(foe).some(ability => {
+    const rules = ABILITY_DEFS[ability];
+    return rules.behavior === 'charge' && abilityCooldown(foe, ability) <= horizon && distance(rider, foe) < rules.minRange;
+  });
+  const weaponReach = foe.attackRange <= 80 && !withinChargeMinimum ? foe.attackRange + foe.radius + rider.radius : foe.attackRange;
   return Math.max(weaponReach, castThreatReach(snapshot, foe, rider, horizon));
 }
 
+const ATTACK_BEHAVIORS = new Set(['charge', 'stomp', 'web', 'curse', 'weapon']);
+
 /** Active skills and carried attacks can still execute while ordinary fire is suppressed by a move order. */
 export function castThreatReach(snapshot: GameSnapshot, foe: Unit, rider: Pick<Unit, 'x' | 'y'>, horizon: number) {
-  return Math.max(0, ...itemReach(snapshot, foe, horizon), ...unitAbilities(foe).flatMap(ability => {
+  // This query is inside every unit/foe road check. Accumulate the same maximum
+  // directly instead of allocating item, ability and flattened range arrays.
+  let reach = 0;
+  for (const item of itemsFor(snapshot, foe)) {
+    if (item.cooldownRemaining <= horizon && (item.kind === 'stormStaff' || item.kind === 'lightningRod'))
+      reach = Math.max(reach, foe.owner === 'neutral'
+        ? item.kind === 'stormStaff' ? NEUTRAL_STORM_TARGET_RANGE : NEUTRAL_ITEM_TARGET_RANGE
+        : item.kind === 'stormStaff' ? STORM_STAFF.range : LIGHTNING_ROD.range);
+  }
+  for (const ability of unitAbilities(foe)) {
     const rules = ABILITY_DEFS[ability];
-    return ['charge', 'stomp', 'web', 'curse', 'weapon'].includes(rules.behavior)
+    if (ATTACK_BEHAVIORS.has(rules.behavior)
       && abilityCooldown(foe, ability) <= horizon
-      && !(rules.behavior === 'charge' && distance(rider, foe) < rules.minRange) ? [rules.range] : [];
-  }));
+      && !(rules.behavior === 'charge' && distance(rider, foe) < rules.minRange)) reach = Math.max(reach, rules.range);
+  }
+  return reach;
 }
 
 

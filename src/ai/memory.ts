@@ -88,6 +88,16 @@ export type NavalPlanMemory = {
 };
 
 export type AiPolicyMemory = {
+  landAttack?: {
+    targetId: string;
+    sinceTick: number;
+    general: NonNullable<V6PolicyMemory['general']>;
+    camp?: NonNullable<V6PolicyMemory['creep']>;
+    paused?: 'defense' | 'expansion';
+    pausedAt?: number;
+  };
+  landAttackResult?: { targetId: string; tick: number; result: 'destroyed' | 'army-lost' | 'withdrew'; reason: string };
+
   harassDefense?: { hallId: string; targetId: string; point: { x: number; y: number } };
   miningLeash?: { hallId: string; point: { x: number; y: number } };
   miningDefense?: { hallId: string; point: { x: number; y: number };
@@ -99,8 +109,10 @@ export type AiPolicyMemory = {
     staging?: { x: number; y: number };
     stagingCheckedTick?: number;
     roadCamp?: { x: number; y: number };
-    interruptions: { tick: number; reason: 'home-threat' | 'mining-threat' | 'mine-threat'; targetId?: string }[];
+    combat?: Pick<V6PolicyMemory, 'creep' | 'creepRetry'>;
+    interruptions: { tick: number; reason: 'home-threat' | 'mining-threat' | 'mine-threat' | 'camp-threat'; targetId?: string }[];
     paused?: boolean;
+    pausedAt?: number;
   };
   // Posts awaiting their own static defense. Unit membership lives only in unitClaims.
   expansionGarrisons?: Record<string, { mineId: string; sinceTick: number }>;
