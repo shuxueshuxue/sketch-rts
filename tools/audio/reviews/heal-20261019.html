@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>治疗与召唤音效 · 确认试听</title>
+<style>
+body{max-width:48rem;margin:3rem auto;padding:0 1.2rem;background:#20272a;color:#e8e8df;font:17px/1.7 system-ui,sans-serif}h1{font-size:1.5rem}h2{font-size:1.15rem;margin:2rem 0 .3rem}h3{font-size:1rem}audio{display:block;width:100%;margin:.6rem 0}small{color:#bcc5c9}a{color:#9fd8ed}details{margin-top:1.5rem;border-top:1px solid #536065;padding-top:1rem}.pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(16rem,1fr));gap:1rem}.clip{margin:.8rem 0}
+</style>
+<h1>治疗与召唤音效 · 确认试听</h1>
+<p>三项均已确认：治疗 A / 0.60、召唤 / 0.36、消失 Feral Spirit Done / 0.21。这里保留修改前后的试听，游戏默认包尚未发布这些改动。</p>
+<h2>治疗 · 已确认 A</h2>
+<audio controls preload="metadata" src="heal-approved.mp3"></audio>
+<small>HealTarget（2c95dfd331f5eebf.ogg），包内音量 0.60。祭司、战地医师、潮汐祭司、树皮医者统一使用。</small>
+<h2>灵体召唤 · 已确认 0.36</h2>
+<div class="pair"><div>现在 · 0.60<audio controls preload="metadata" src="summon-before.mp3"></audio></div><div>建议 · 0.36<audio controls preload="metadata" src="summon-after.mp3"></audio></div></div>
+<small>同一段 ResurrectTarget，建议值为原来的 60%（约 −4.44 dB），不改变其他法术。</small>
+<h2>灵体消失 · 当前声音</h2>
+<audio controls preload="metadata" src="disappear-before.mp3"></audio>
+<small>MetalMediumBashFlesh1（2f218ee413d56fc4.ogg），0.35。现在到期消失也会播放这段打击声。</small>
+<h2>消失 · 已确认 Feral Spirit Done / 0.21</h2>
+<p>魔兽源表明确把 FeralSpiritDone 和 FeralSpiritTarget 都指向 FeralSpiritTarget1.wav；消失特效模型也引用这段录音。它已在本站包中，文件为 8ab28a60b0f2c969.ogg。</p>
+<div class="pair"><div>参考 · 0.35<audio controls preload="metadata" src="feral-spirit-reference.mp3"></audio></div><div>建议 · 0.21<audio controls preload="metadata" src="feral-spirit-quieter.mp3"></audio></div></div>
+<h2>其他候选记录 · Orc Dissipate</h2>
+<p>幽灵狼模型含有指向 OrcDissipate 的声音事件；其事件时间不落在模型当前 Death 动画区间，尚未在魔兽客户端验证何时实际播放。人类、暗夜和兽族的 Dissipate 原始音频完全相同。</p>
+<div class="pair"><div>参考 · 0.35<audio controls preload="metadata" src="orc-dissipate-reference.mp3"></audio></div><div>建议 · 0.21<audio controls preload="metadata" src="orc-dissipate-quieter.mp3"></audio></div></div>
+<small>消失候选的 0.35 是统一比较的参考音量，0.21 是其 60%；均不是幽灵狼在本游戏中的现有配置。本游戏没有幽灵狼单位。</small>
+<details><summary>其余相关录音：出生、取消召唤、亡灵消散、驱散</summary><div id="other-clips"></div></details>
+<p><small>音量已写入试听文件，手机和电脑都能比较。试听不含游戏中的距离衰减、effects 总音量和混音压缩。
+所有录音来自主人提供的 Warcraft III 1.27 enUS 私有素材，© Blizzard Entertainment；未将录音提交到仓库。</small></p>
+<p><a href="candidates.json">文件来源与 SHA-256 记录</a></p>
+<script>
+for (const [id, label] of [['wolf-birth','SpiritWolfBirth1 · 出生声'],['unsummon','CityscapeCrystalShield1 · Unsummon 目录'],['undead-dissipate','UndeadDissipate2 · 亡灵消散'],['dispel','DispelMagicTarget · 驱散'],['disenchant','Disenchant · 消魔']]) {
+  const section = document.createElement('section');
+  const heading = document.createElement('h3'); heading.textContent = label; section.append(heading);
+  const pair = document.createElement('div'); pair.className = 'pair';
+  for (const [suffix, title] of [['reference', '参考 · 0.35'], ['quieter', '建议 · 0.21']]) {
+    const card = document.createElement('div'); card.textContent = title;
+    const audio = document.createElement('audio'); audio.controls = true; audio.preload = 'none'; audio.src = id + '-' + suffix + '.mp3';
+    card.append(audio); pair.append(card);
+  }
+  section.append(pair); document.querySelector('#other-clips').append(section);
+}
+const players = [...document.querySelectorAll('audio')];
+for (const player of players) player.addEventListener('play', () => {
+  for (const other of players) if (other !== player) other.pause();
+});
+</script>
+</html>

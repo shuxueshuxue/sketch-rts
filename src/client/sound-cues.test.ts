@@ -50,6 +50,64 @@ function firstShots(game: ReturnType<typeof createGame>, sourceId: string, actio
 }
 
 describe("sound cues", () => {
+  const healerKinds = (Object.keys(UNIT_DEFS) as UnitKind[]).filter(kind => UNIT_DEFS[kind].abilities.some(ability => ABILITY_DEFS[ability].behavior === "heal"));
+  describe.each(["heal", "veteranHealingWave"] as const)("%s healing", ability => {
+    it.each(healerKinds)("uses the dedicated heal event for a real %s cast", kind => {
+      const game = createGame("bareDuel", { aiPlayers: [] });
+      game.units = []; game.buildings = []; game.items = []; game.resources = [];
+      game.scriptedVictory = true;
+      delete game.map.terrain;
+      const caster = game.spawnUnit("player", kind, 1000, 1000);
+      const patient = game.spawnUnit("player", "footman", 1060, 1000);
+      patient.hp = 10;
+      caster.autocast = { heal: false, veteranHealingWave: false };
+      if (ability === "veteranHealingWave") caster.veteranSkill = ability;
+      const before = snapshotGame(game);
+      issueCommand(game, { type: "cast", unitId: caster.id, ability, ...(ability === "heal" ? { targetId: patient.id } : {}) });
+      stepGame(game);
+      const after = snapshotGame(game), heals = after.effects.filter(effect => effect.type === "heal");
+      expect(patient.hp).toBeGreaterThan(10);
+      expect(heals).toHaveLength(1);
+      expect(heals[0]!.sourceKind).toBe(kind);
+      expect(soundCues(before, after, "player")).toEqual([{ id: "heal", x: heals[0]!.x, y: heals[0]!.y, kind }]);
+      const next = structuredClone(after); next.tick += 1;
+      expect(soundCues(after, next, "player")).toEqual([]);
+    });
+  });
+
+  it.each(["curse", "stomp", "web", "bloodlust"] as const)("keeps %s separate from healing", type => {
+    const after = later(next => next.effects.push(effect(`non-heal-${type}`, type, { sourceKind: "fieldMedic" })));
+    expect(soundCues(start, after, "player")).toEqual([{ id: "spell", x: 100, y: 200, kind: "fieldMedic" }]);
+  });
+
+  const summoners = (Object.keys(UNIT_DEFS) as UnitKind[]).flatMap(kind => UNIT_DEFS[kind].abilities.filter(ability => ABILITY_DEFS[ability].behavior === "summon").map(ability => ({ kind, ability })));
+  it.each(summoners)("separates a real $kind summon and its expiry from other spells and deaths", ({ kind, ability }) => {
+    const { game, shooter: caster } = battle(kind);
+    game.units = [caster];
+    const before = snapshotGame(game);
+    issueCommand(game, { type: "cast", unitId: caster.id, ability, x: 1060, y: 1000 });
+    stepGame(game);
+    const after = snapshotGame(game), summon = after.effects.find(effect => effect.type === "summon")!;
+    expect(summon.sourceKind).toBe(kind);
+    expect(soundCues(before, after, "player")).toEqual([{ id: "summon", x: summon.x, y: summon.y, kind }]);
+    const summoned = game.units.find(unit => unit.id !== caster.id)!;
+    expect(summoned.expiresTick).toBeDefined();
+    summoned.expiresTick = game.tick + 1;
+    const beforeExpiry = snapshotGame(game); stepGame(game);
+    expect(game.units.some(unit => unit.id === summoned.id)).toBe(false);
+    expect(soundCues(beforeExpiry, snapshotGame(game), "player")).toEqual([{ id: "summonDisappear", x: summoned.x, y: summoned.y, kind: summoned.kind }]);
+    const next = snapshotGame(game); next.tick += 1;
+    expect(soundCues(snapshotGame(game), next, "player")).toEqual([]);
+  });
+
+  it.each(["spirit", "footman", "warship"] as const)("uses one disappearance event for slain temporary %s units independently of kind", kind => {
+    const { game, shooter: summoned } = battle(kind);
+    game.units = [summoned];
+    summoned.expiresTick = game.tick + 100;
+    const before = snapshotGame(game); summoned.hp = 0; stepGame(game);
+    expect(soundCues(before, snapshotGame(game), "player")).toEqual([{ id: "summonDisappear", x: summoned.x, y: summoned.y, kind }]);
+  });
+
   const rangedKinds = (Object.keys(UNIT_DEFS) as UnitKind[]).filter(kind => UNIT_DEFS[kind].attackDamage > 0 && UNIT_DEFS[kind].attackRange > RANGED_ATTACK_RANGE_THRESHOLD);
   it.each(rangedKinds)("captures attackKind on every real %s launch and sounds it once at its origin", kind => {
     const { game, shooter, target } = battle(kind);
