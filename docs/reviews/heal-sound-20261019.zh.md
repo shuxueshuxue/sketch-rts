@@ -34,12 +34,12 @@
 | 行为 | 当前本游戏事件 | 当前文件 / volume | 修改后入口 |
 | --- | --- | --- | --- |
 | 灵体召唤 | `spell`，按召唤师选录音 | `282737251034bf2a.ogg` / 0.60，ResurrectTarget | `summon`；同一录音 0.36 已获确认 |
-| 灵体到期消失或被击杀 | `death` | `2f218ee413d56fc4.ogg` / 0.35，MetalMediumBashFlesh1 | 所有临时召唤物共用 `summonDisappear`；录音待确认 |
+| 灵体到期消失或被击杀 | `death` | `2f218ee413d56fc4.ogg` / 0.35，MetalMediumBashFlesh1 | 所有临时召唤物共用 `summonDisappear`；FeralSpiritDone / 0.21 已获确认 |
 | 幽灵狼消失 | 本游戏无此单位，无对应事件和包内音量 | 魔兽素材另查如下 | 不添加单位特例 |
 
 召唤物身份依据模拟已有的 `expiresTick`，不检查 spirit 这个单位名。到期、被击杀、被诅咒消灭都使用相同入口；
 永久单位仍用 death，普通船只仍用 shipSink，登船不会被当成消失。
-建议消失音量为 0.21，即当前 0.35 的 60%（约 −4.44 dB）；这只是待确认的建议。
+主人已确认消失使用 FeralSpiritDone（现有 `8ab28a60b0f2c969.ogg`），音量为 0.21，即当前 0.35 的 60%（约 −4.44 dB）。
 
 ## 魔兽原始素材的核对
 
@@ -75,7 +75,8 @@
 - 没有新事件的旧包只回退一层：heal / summon → spell，summonDisappear → death。
   回退保留旧包按单位选择录音的规则。
 - curse、stomp、web、bloodlust 仍用 spell。包括召唤师或祭司学习战吼时，仍保留其 spell 原配置。
-- 本代码 PR 不修改默认包配置，不发布或替换游戏音频。
+- prepare-war3.py 的完整重建配方加入上述三项已确认事件；spell 及其 kinds 保持不变。
+  本 PR 不发布或替换线上的默认包。
 
 相关测试 114 项通过；真实模拟测试覆盖全部原生治疗者、两类治疗能力、召唤、到期消失和被击杀的临时单位，
 也验证其他临时单位种类共用消失入口，普通死亡、船只沉没和登船保持原有行为。
@@ -86,7 +87,7 @@
 
 [确认试听页](https://lexicalmathical.com/sketch-rts/audio-packs/heal-review-20261019/index.html)
 包含已确认的治疗 A（HealTarget / 0.6）、召唤 0.6 → 0.36、消失现状，以及两个优先消散候选的 0.35 / 0.21 对比。
-后者的 0.35 是统一的比较参考值，并非本游戏幽灵狼的配置。消失音色和音量仍等待主人确认。
+后者的 0.35 是统一的比较参考值，并非本游戏幽灵狼的配置。主人最终选择 FeralSpiritDone / 0.21，召唤 0.36；其余候选只保留为审查记录。
 试听文件已烘焙音量，避免移动端忽略 HTML audio.volume；页面不额外乘音量。
 全部录音来自主人提供的 Warcraft III 私有素材（© Blizzard Entertainment），不提交音频到仓库。
 试听目录不列入 served.json，不改变默认包。
@@ -104,15 +105,17 @@ Ogg 文件名为素材路径 SHA-256 的前 16 位。MP3 对比预览另乘明�
 当前审查输入、录音及 candidates.json 在 A100 `/codegeex/jeffry/sketch-sound-audio/heal/`，
 试听副本在服务器 `audio-packs/heal-review-20261019/`。
 
-代码合并、部署且主人确认剩余选择后，素材配置另审：
+三项素材均已确认。代码合并、部署且总指挥通知后，再发布音效包：
 
 1. 用 rsync 从线上取**完整** war3 包，保留原副本，另建 staged 副本。
 2. 给 staged/extras.json 新增通用 heal（`2c95dfd331f5eebf.ogg`、volume 0.6、pitch 0.025、max 4）
    和 summon（`282737251034bf2a.ogg`、volume 0.36、pitch 0.025、max 4）。
-   确认消失录音后，再加入单一 summonDisappear 文件和选定音量；不能新增 spirit 的 kinds 覆盖。
+   新增单一 summonDisappear（`8ab28a60b0f2c969.ogg`、volume 0.21、pitch 0.025、max 4）；不能新增 spirit 的 kinds 覆盖。
    保留 spell 及其全部 kinds，确保诅咒、践踏、蛛网、嗜血和战吼不变；舰炮、葡萄弹、迫击炮不变。
-3. 需要新录音时，将审核通过的 Ogg 及 sources.json 映射加入完整副本。
-   所有新事件齐备后应有 26 个事件；若暂不配置消失，则为 25 个。
+3. 三项全部复用现有 Ogg，**不重编码、不新增录音**，无需替换 sources.json。
+   完整副本应有 26 个事件。已准备的副本位于 juma 本 worktree 的
+   `work/heal-sound-20261019/approved-stage/war3/`，仅新增上述三个事件，并以 readSoundPack 校验通过。
+   发布前重新抓取线上包并确认没有其他更新，再套用同样的三项修改，避免覆盖他人音效发布。
 4. 发布前先通过以下校验；未通过不得上传：
 
    ```sh
