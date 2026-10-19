@@ -35,7 +35,7 @@ export default async function(s: Scene) {
     }
     if(current<target)await s.api(`/api/rooms/${roomId}/tick`,{ticks:target-current});current=target;
     await reload(target);
-    const world:any=await s.snapshot();
+    const world:any=await s.api(`/api/rooms/${roomId}/snapshot`);
     s.must(fingerprint(world)===fingerprint(expected.get(target)),`browser room differs from real SDK match at ${target}`);
     const halls=world.buildings.filter((b:any)=>b.owner==='player'&&b.kind==='townHall');
     samples.push({tick:target,halls:halls.map((b:any)=>({id:b.id,x:b.x,y:b.y,complete:b.complete,hp:b.hp}))});
