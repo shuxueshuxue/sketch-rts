@@ -39,8 +39,8 @@ jobs:
         run: npx vitest run src/ai/benchmark/naval-metrics.test.ts src/ai/benchmark/naval-room.test.ts src/ai/benchmark/naval-loading-diagnostics.test.ts src/ai/benchmark/naval-obstacle-metrics.test.ts
       - name: Verify shipyard departures and frozen physical solids
         run: npx vitest run src/shared/ship-solid-planning.test.ts src/shared/ship-planning-state.test.ts
-      - name: Verify first combat ferry deliveries and recruitment
-        run: npx vitest run src/ai/bootstrap_1/combat-delivery.test.ts
+      - name: Verify first combat deliveries and repeated reinforcements
+        run: npx vitest run src/ai/bootstrap_1/combat-delivery.test.ts src/ai/bootstrap_1/reinforcement-ferries.test.ts
       - name: Test release boundaries, mining upkeep and presentation
         run: npx vitest run src/sdk/package-boundaries.test.ts src/ai/bootstrap_1/summoner-composition.test.ts src/shared/mining-upkeep.test.ts src/shared/mining.test.ts src/shared/mining-waiting.test.ts src/shared/ship-training-cost.test.ts src/shared/unit-repair.test.ts src/shared/purchase.test.ts src/shared/savegame.test.ts src/shared/sim/determinism.test.ts src/shared/sim/restore.test.ts src/client/hud-model.test.ts src/client/net/lockstep-client.test.ts src/story/world.test.ts
       - name: Test empty-frame allocation and veteran transitions

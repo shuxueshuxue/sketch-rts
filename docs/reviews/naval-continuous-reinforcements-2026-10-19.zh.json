@@ -1,0 +1,122 @@
+{
+  "标题": "持续转运：把本岛闲兵送到已有登陆点，空船回家接下一批",
+  "基线": "2002452bf749b19963d0014671092020d7694287（#539首航、#537防守归属、#538扩张归属均已合并）",
+  "规格": [
+    "本岛有超过6名健康、永久、武装且idle/hold的可用陆军，家里没有intrusion，并已有己方或盟友的殖民岛或登陆点时，为它们分配一条持续运输线。",
+    "一条线路明确保存装载岸与前线接收岸。卸兵后保留任务，空船实际回到装载岸，再接下一批；空船停在前线不会被计为完成返程。",
+    "卸兵必须核对曾在船上的具体单位仍活着、已经离船并位于目标岛。每批保存真实交付名单与时间，返抵装载岸另记往返次数。",
+    "空船驶向装载岸和陆军走向船只并行进行，沿用共享登船、守备强度、甲板几何、岸防及水面威胁检查。",
+    "受isDefenseTaskClaim保护的防守任务、harassSquad、骑手与恢复任务保留原归属。陆路可达的扩张任务不被调走；原目标就在接收岛上的跨海扩张预备队可以搭船。",
+    "已有载员或正在等人登船的殖民任务继续执行。闲兵达到门槛、接收岛与海路确实可用、却没有空船时，用正常240金造一艘专用运输船；每个席位只保留一条这种专线，已有专线或正在造船时不重复买。",
+    "不足7名可用闲兵时在装载岸待下一批；家里出现威胁时暂停新装载并释放待登船者。接收点设在已有殖民岛海岸。"
+  ],
+  "25分钟真实场景": {
+    "来源": "sapphireArchipelago v9_archer ember side-1 vs-v9；1bf481b0完整对局第1500秒。src/ai/bootstrap_1/fixtures/naval-reinforcements-sapphire-25m.json保存原始世界。",
+    "精确人数": {
+      "本岛陆军": 40,
+      "其中idle": 38,
+      "殖民岛陆军": 20,
+      "player本岛": 14,
+      "enemy2本岛": 19,
+      "player-5本岛": 7
+    },
+    "实际约束": "player唯一空船11025已有两名殖民工人下了登船令，仍承担原殖民任务；不能把空甲板误当成无任务可用船。",
+    "资金": "player原帧只有124.67金，运输船正常成本240金。场景先验保存240金的请求；另将预算置为恰好240金，严格执行正常训练命令，证明会实际排产并扣到0。预算投影不会被写成原对局已有240金。",
+    "结果": "三家族都建立专用运力请求，保留原殖民任务。实际来回送兵由独立物理场景和mac1完整对局验证。"
+  },
+  "代码": [
+    "src/ai/bootstrap_1/reinforcement-ferries.ts：同一套选兵、友军前线与海路检查用于分派及采购，避免买了船却没有可执行任务。",
+    "src/ai/policy/naval.ts：reinforce任务的真实卸兵记账、空船回装载岸、下一批装载及安全检查。",
+    "src/ai/bootstrap_1/economy.ts：已有军队所需的专用运力先于可选开支，继续使用普通资金、供应及训练准入。"
+  ],
+  "验证": {
+    "脚本场景": "18项：三家族分别覆盖真实25分钟预算、连续两次实际交付及一次空船返程、并行走向装载岸、保护现有殖民任务、保护防守/恢复/骑手任务、6人阈值及家中受袭。",
+    "main失败证明": "精确2002452b源码只加当前测试与25分钟快照；所选6项真实预算/往返断言全部失败，12项按过滤跳过。不存在因为缺新模块而失败。",
+    "类型检查": "npx tsc --noEmit通过",
+    "完整源码": "A100 Node24，逐项SHA-256核对3348源文件与675测试文件；vitest run --dir src --maxWorkers 4 --minWorkers 1，675文件、7600项测试全部通过，372.14秒。"
+  },
+  "原生对局": {
+    "环境": {
+      "platform": "darwin",
+      "arch": "arm64",
+      "node": "v26.3.1"
+    },
+    "配置": "mac1完整原生房间，从开局自主生产；蓝宝群岛、ember、v9_archer team-1 vs v9。没有注入部队、金币或强制命令。只跑该真实场景，不做胜负bench。",
+    "同船两次交付": [
+      {
+        "tick": 14950,
+        "unitIds": [
+          "unit-player-5-emberRavager-1499",
+          "unit-player-5-sparkArcher-2460",
+          "unit-player-5-sparkArcher-3483",
+          "unit-player-5-sparkArcher-3763",
+          "unit-player-5-ashWarden-3835",
+          "unit-player-5-sparkArcher-3906",
+          "unit-player-5-ashWarden-4044"
+        ],
+        "shipId": "unit-player-5-transport-4377"
+      },
+      {
+        "tick": 18640,
+        "unitIds": [
+          "unit-player-5-sparkArcher-5120",
+          "unit-player-5-sparkArcher-5232",
+          "unit-player-5-sparkArcher-5435",
+          "unit-player-5-sparkArcher-5627",
+          "unit-player-5-sparkArcher-5791",
+          "unit-player-5-sparkArcher-5904",
+          "unit-player-5-sparkArcher-6402",
+          "unit-player-5-priest-6758"
+        ],
+        "shipId": "unit-player-5-transport-4377"
+      }
+    ],
+    "交付时间秒": [
+      747.5,
+      932.0
+    ],
+    "空船实际回装载岸次数": 1,
+    "交付价值": "7人800金，8人905金；共15名永久陆军，基础招募价合计1705金，不含装备和升级。第二次卸兵时15人都仍在目标岛上存活。",
+    "下一批状态": "15:33现场，player本岛仅剩1名未被其他任务占用的空闲陆军，另7名已在专线船上航行；player-5本岛无陆军；enemy2本岛11名idle均有mineRally或mineGuard归属，按要求保留。",
+    "15分33秒原始筛选": [
+      {
+        "owner": "player",
+        "tick": 18660,
+        "homeArmy": 1,
+        "idle": 1,
+        "eligible": 1,
+        "homeClaims": {
+          "none": 1
+        }
+      },
+      {
+        "owner": "enemy2",
+        "tick": 18660,
+        "homeArmy": 11,
+        "idle": 11,
+        "eligible": 0,
+        "homeClaims": {
+          "mineRally": 1,
+          "mineGuard": 10
+        }
+      },
+      {
+        "owner": "player-5",
+        "tick": 18660,
+        "homeArmy": 0,
+        "idle": 0,
+        "eligible": 0,
+        "homeClaims": {}
+      }
+    ],
+    "校验": {
+      "现场终态tick": 18860,
+      "现场校验和": "60cad7c1",
+      "移除所有checkpoint后从开局固定命令流冷重放": "60cad7c1",
+      "片段": "sapphire/player-5-landing.replay.json，从第一批登陆前45秒起，覆盖第一次卸兵、空船返航、再次装载及第二次卸兵；片段终态也核对校验和。"
+    },
+    "截图": "docs/reviews/naval-continuous-reinforcements/sapphire-second-unload.png 与 sapphire-two-batches.png，原生存档tick18640（15:32）。在mac1暂停房间加载实际关键帧，通过自己的Gugu浏览器只调整镜头和选中单位。",
+    "范围限制": "本场景记录到player-5完整两批；其他席位的专线或防守归属按上文逐项列出，不表述为所有席位都已完成两趟。三家族的实际往返行为由18项脚本场景覆盖。"
+  },
+  "范围": "第二条规格的独立PR。没有跑胜率bench；舰炮集火另作第三条。"
+}
