@@ -1,3 +1,4 @@
+import { clearUnitClaim } from './claims';
 import { unitControlsMercenaryCamp } from '../../shared/mercenary-camp';
 import { GOLD_MINE_RULES } from "../../shared/mining";
 import { friendlyUnitsAtMercenaryCamp, hiredMercenaryCount, mercenaryRoleLimit } from './mercenary-model';
@@ -2605,7 +2606,7 @@ function recallUnsafeObjectiveClaims(snapshot: GameSnapshot, owner: PlayerId, op
       return stale.length > 0 ? resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: stale.map((unit) => unit.id), x: rally.x, y: rally.y }, options) : undefined;
     }
     if (!localEnemyControlNearObjective(snapshot, owner, group.point, group.units, options) && !enemyControlsObjectiveRoute(snapshot, owner, averagePoint(group.units), group.point, group.units, options)) continue;
-    for (const unit of group.units) delete options.memory.unitClaims[unit.id];
+    for (const unit of group.units) clearUnitClaim(options.memory, unit.id);
     // @@@objective-claim-release - Long creep claims are useful until the route changes; then they must be actively broken or the squad keeps walking into the bad path.
     const rally = defensiveRallyPoint(snapshot, owner);
     const stale = group.units.filter((unit) => distance(unit, rally) > 220);

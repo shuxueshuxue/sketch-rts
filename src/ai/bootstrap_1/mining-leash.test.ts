@@ -103,8 +103,9 @@ it.each([
   { stage: 'complete', paused: false, recalled: true },
 ])('respects expansion ownership at $stage (paused=$paused)', ({ stage, paused, recalled }) => {
   const { snapshot, memory, options, unit } = strayingDefender();
-  const mission = { mineId: 'gold-gen-1', stage, paused, unitIds: [unit.id], sinceTick: snapshot.tick, interruptions: [] };
+  const mission = { mineId: 'gold-gen-1', stage, paused, sinceTick: snapshot.tick, interruptions: [] };
   Object.assign(memory, { landExpansion: mission });
+  memory.unitClaims[unit.id]!.expansionMineId = mission.mineId;
   const original = structuredClone(mission);
   const entries = runAiCommandEntriesFromScripts(snapshot, owner, [miningLeash], options);
   expect(entries.some(entry => 'unitIds' in entry.command && entry.command.unitIds.includes(unit.id))).toBe(recalled);
