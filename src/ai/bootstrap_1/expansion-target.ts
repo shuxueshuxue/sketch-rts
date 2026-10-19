@@ -38,7 +38,12 @@ export function bootstrapExpansionMine(snapshot: GameSnapshot, owner: PlayerId, 
       if (mineGuards(snapshot, mine).length > 0) {
         const camp = camps.find(camp => distance(camp.center, mine) <= EXPANSION_GUARD_RANGE);
         // After the natural, prefer a mine the escort can clear now over waiting for a larger army at a stronger camp.
-        return camp && creepForce(front, camp) < forceFor(camp) ? 2 : 1;
+        if (!camp || creepForce(front, camp) >= forceFor(camp)) return 1;
+        // Once a new mine has its own garrison, the remaining front may be just
+        // short of either camp. Prefer the smaller reinforcement bill instead
+        // of treating a one-recruit camp and the central ogre camp as equal.
+        const missing = forceFor(camp) - creepForce(front, camp);
+        return Object.keys(options.memory.expansionGarrisons ?? {}).length ? 2 + missing / (1 + missing) : 2;
       }
       const point = v6ExpansionPoint(snapshot, owner, mine);
       return isBuildPlacementClear(snapshot, 'townHall', point)

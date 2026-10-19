@@ -28,6 +28,8 @@ export type AiPolicyUnitClaim = {
   // Construction-screen membership survives the shorter ordinary movement claim.
   // expansionMission is the membership-only kind when that movement claim has ended.
   expansionMineId?: string;
+  // Healthy soldiers cover construction temporarily; recovering guards keep the post after healing.
+  garrisonTemporary?: boolean;
 };
 
 export type AiStrategicPlan = {
@@ -96,9 +98,12 @@ export type AiPolicyMemory = {
     stage: 'fund' | 'assemble' | 'clear' | 'escort' | 'build' | 'complete';
     staging?: { x: number; y: number };
     stagingCheckedTick?: number;
+    roadCamp?: { x: number; y: number };
     interruptions: { tick: number; reason: 'home-threat' | 'mining-threat' | 'mine-threat'; targetId?: string }[];
     paused?: boolean;
   };
+  // Posts awaiting their own static defense. Unit membership lives only in unitClaims.
+  expansionGarrisons?: Record<string, { mineId: string; sinceTick: number }>;
   mounted?: {
     unitIds: string[];
     objective: { kind: 'camp'; ids: string[] } | { kind: 'raid'; hallId: string; owner: PlayerId };

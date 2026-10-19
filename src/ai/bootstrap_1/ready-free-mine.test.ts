@@ -5,6 +5,7 @@ import { BUILDING_DEFS } from '../../shared/catalog';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { issuePlayerCommand, snapshotGame, stepGame } from '../../shared/sim';
 import { snapToFootprint, setBuildingBodies } from '../../shared/terrain';
+import { recordUnitTaskClaim } from '../policy/claims';
 import { createAiPolicyMemory } from '../memory';
 import { AI_SCRIPT_LIBRARY } from '../policy/core';
 import { runAiCommandEntriesFromScripts } from '../policy/script-runner';
@@ -33,11 +34,19 @@ it.each((['v9_archer', 'v9_summoner', 'v9_knight'] as const).flatMap(version =>
   for (let index = 0; index < 8; index++) scene = scene.unit('foe', 'knight', x(3300 + index % 4 * 40), 650 + Math.floor(index / 4) * 40, { id: `garrison-${index}` });
   const game = scene.build().createGame(), memory = createAiPolicyMemory();
   game.scriptedVictory = true;
+  // Two existing soldiers already own this mine's defense. Preserve the original
+  // ban on redundant cover while the remaining soldiers hold elsewhere.
+  for (const guard of game.units.filter(unit => ['screen-2', 'screen-3'].includes(unit.id))) {
+    guard.x = x(2250 + (guard.id === 'screen-2' ? 0 : 30)); guard.y = 2000;
+    recordUnitTaskClaim(snapshotGame(game), memory, guard.id,
+      { kind: 'expansionGarrison', targetId: 'free', x: x(2300), y: 1800 });
+  }
   game.map.terrain = { cell: 32, cols: 128, rows: 128, cells: '.'.repeat(128 * 128) };
   for (const building of game.buildings) Object.assign(building, snapToFootprint(game.map, building.radius, building));
   setBuildingBodies(game.map, game.buildings);
   for (const owner of ['us', 'foe']) issuePlayerCommand(game, owner, { type: 'holdPosition', unitIds: game.units.filter(unit => unit.id.startsWith(owner === 'us' ? 'screen-' : 'garrison-')).map(unit => unit.id) });
   let returned = false, damage = 0;
+  let incomeFoundationTick: number | undefined, incomeCompleteTick: number | undefined, coverFoundationTick: number | undefined;
   const loads = new Set<string>();
   game.observer = { hit(_source, target, taken) { if (target.owner === 'us') damage += taken; } };
   for (let tick = 0; tick < 3000 && !returned; tick++) {
@@ -52,10 +61,18 @@ it.each((['v9_archer', 'v9_summoner', 'v9_knight'] as const).flatMap(version =>
     const gathering = game.units.filter(unit => unit.owner === 'us' && unit.order.type === 'mine' && unit.order.resourceId === 'free' && unit.order.phase === 'gather' && unit.carryingGold === 0);
     const carrying = game.units.filter(unit => loads.has(unit.id) && unit.order.type === 'mine' && unit.order.resourceId === 'free' && unit.order.phase === 'return' && unit.carryingGold > 0);
     stepGame(game);
+    const income = game.buildings.find(building => building.owner === 'us' && building.kind === 'townHall'
+      && Math.hypot(building.x - x(2300), building.y - 1800) <= GOLD_MINE_RULES.baseRange);
+    if (income) incomeFoundationTick ??= game.tick;
+    if (income?.complete) incomeCompleteTick ??= game.tick;
+    if (game.buildings.some(building => building.owner === 'us' && building.kind === 'defenseTower'
+      && Math.hypot(building.x - x(2300), building.y - 1800) <= building.attackRange)) coverFoundationTick ??= game.tick;
     for (const unit of gathering) if (unit.order.type === 'mine' && unit.order.resourceId === 'free' && unit.order.phase === 'return' && unit.carryingGold > 0) loads.add(unit.id);
     returned = carrying.some(unit => unit.carryingGold === 0 && unit.order.type === 'mine' && unit.order.phase === 'toMine');
   }
   expect(returned).toBe(true);
+  expect(incomeCompleteTick! - incomeFoundationTick!).toBe(BUILDING_DEFS.townHall.buildTime);
+  expect(coverFoundationTick).toBeUndefined();
   expect(game.buildings.filter(building => building.owner === 'us' && building.kind === 'townHall' && building.complete)).toHaveLength(3);
   expect(game.units.some(unit => unit.owner === 'neutral' && unit.kind === 'ogreLord')).toBe(true);
   expect(game.buildings.some(building => building.owner === 'us' && building.kind === 'defenseTower' && building.complete && Math.hypot(building.x - x(2300), building.y - 1800) <= building.attackRange)).toBe(false);
