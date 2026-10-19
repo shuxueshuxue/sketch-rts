@@ -74,7 +74,7 @@ export type AiPolicyMemory = {
   landExpansion?: {
     mineId: string;
     sinceTick: number;
-    stage: 'assemble' | 'clear' | 'escort' | 'build' | 'complete';
+    stage: 'fund' | 'assemble' | 'clear' | 'escort' | 'build' | 'complete';
     unitIds: string[];
     staging?: { x: number; y: number };
     stagingCheckedTick?: number;

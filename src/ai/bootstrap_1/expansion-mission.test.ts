@@ -101,6 +101,22 @@ it('sends a small escort along the traveling builder’s road while the other so
   expect(game.units.filter(unit => unit.id.startsWith('screen-') && Math.hypot(unit.x - mine.x, unit.y - mine.y) < 180)).toHaveLength(3);
 });
 
+it('releases an existing unfunded task after the last income is lost instead of reserving its army forever', () => {
+  const { game, memory, context } = expansionScene();
+  game.units = game.units.filter(unit => unit.owner !== 'neutral');
+  for (const mine of game.resources) if (mine.id === 'main') mine.amount = 0;
+  delete memory.v6!.creep;
+  const home = game.buildings.find(building => building.owner === 'us' && building.kind === 'townHall')!;
+  issuePlayerCommand(game, 'us', { type: 'train', buildingId: home.id, unitKind: 'worker' });
+  issuePlayerCommand(game, 'us', { type: 'train', buildingId: home.id, unitKind: 'worker' });
+  expect(game.players.us!.gold).toBeLessThan(400);
+  memory.landExpansion = { mineId: 'natural', sinceTick: 0, stage: 'escort', unitIds: [], interruptions: [] };
+  const { snapshot, options } = context();
+  planBootstrapGeneral(snapshot, 'us', options);
+  expect(memory.landExpansion!.stage).toBe('fund');
+  expect(memory.v6!.general!.mode).toBe('attack');
+});
+
 it('starts the archer ladder-16 grove natural before 4:00 and third before 6:30 against the real v9', () => {
   // v5-final-1, slot 16, grove: main starts this hall at tick 6870 (5:43.5).
   const { input } = createSubjectGauntletInput(roomGauntlet('v9_archer', ['v9']), { seed: 'v5-final-1', mapCount: 20 });

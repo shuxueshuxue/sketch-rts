@@ -24,9 +24,16 @@ import { mineClaimedByAlly } from '../policy/mine-claims';
 export function prepareExpansionMission(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel) {
   const memory = options.memory, v6 = v6Memory(options);
   let task = memory.landExpansion;
-  if (!task && activeMiningBaseCount(snapshot, owner) === 0
+  if (activeMiningBaseCount(snapshot, owner) === 0
     && snapshot.players[owner]!.gold < BUILDING_DEFS.townHall.cost
-    && !snapshot.units.some(unit => unit.owner === owner && unit.order.type === 'build' && unit.order.buildingKind === 'townHall')) return undefined;
+    && !snapshot.buildings.some(building => building.owner === owner && building.kind === 'townHall' && !building.complete)
+    && !snapshot.units.some(unit => unit.owner === owner && unit.order.type === 'build' && unit.order.buildingKind === 'townHall')) {
+    if (task) {
+      if (task.stage !== 'fund') recordPlay(v6, 'expansion:needsFunds');
+      task.stage = 'fund';
+    }
+    return undefined;
+  }
   const mineId = task?.mineId;
   const mine = mineId === undefined ? undefined : snapshot.resources.find(mine => mine.id === mineId && mine.amount > 0);
   const hall = mine && snapshot.buildings.find(building => building.kind === 'townHall'

@@ -20,7 +20,7 @@ import { creepForce, forceFor, neutralCamps, EXPANSION_GUARD_RANGE } from '../po
 /** Share land and naval ownership facts before applying the common expansion geometry. */
 export function bootstrapExpansionMine(snapshot: GameSnapshot, owner: PlayerId, intel: V6Intel, options: AiPolicyContext) {
   const task = options.memory.landExpansion;
-  const committed = task && ['assemble', 'clear', 'escort'].includes(task.stage)
+  const committed = task && ['fund', 'assemble', 'clear', 'escort'].includes(task.stage)
     ? snapshot.resources.find(mine => mine.id === task.mineId && mine.amount > 0
       && snapshot.buildings.every(building => building.kind !== 'townHall' || Math.hypot(building.x - mine.x, building.y - mine.y) > 340)
       && !mineClaimedByAlly(snapshot, owner, mine, options)) : undefined;
