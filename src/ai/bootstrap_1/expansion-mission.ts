@@ -2,6 +2,7 @@ import { BUILDING_DEFS } from '../../shared/catalog';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import type { GameCommand, GameSnapshot, PlayerId } from '../../shared/types';
 import { walkableGoal } from '../../shared/terrain';
+import { groundSteeringRoute, routePrefix } from '../../shared/route-selection';
 import { resolveAiCommandIntent } from '../policy/commands';
 import { activeMiningBaseCount } from '../policy/expansion-model';
 import { groundThreatWithin } from '../policy/ground-threat';
@@ -109,8 +110,17 @@ export function expansionMissionCommands(snapshot: GameSnapshot, owner: PlayerId
   const destination = task.stage === 'assemble' ? task.staging ?? intel.home : mine;
   const point = walkableGoal(snapshot.map, destination.x, destination.y);
   memory.general = { mode: 'hold', target: point, holdingSince: task.sinceTick };
-  const moving = front.filter(unit => distance(unit, point) > 180
-    && !((unit.order.type === 'attackMove' || unit.order.type === 'move') && distance(unit.order, point) < 100));
-  return moving.length ? [resolveAiCommandIntent(snapshot, owner,
-    { type: task.stage === 'assemble' ? 'move' : 'attackMove', unitIds: moving.map(unit => unit.id), ...point }, options)] : [];
+  const builder = task.stage === 'escort' ? snapshot.units.find(unit => unit.owner === owner && unit.order.type === 'build'
+    && unit.order.buildingKind === 'townHall' && distance(unit.order, mine) < GOLD_MINE_RULES.baseRange) : undefined;
+  const escorts = builder ? [...front].sort((a, b) => distance(a, builder) - distance(b, builder)).slice(0, 3) : [];
+  const road = builder?.order.type === 'build' ? groundSteeringRoute(snapshot.map, builder, builder.order) : [];
+  const escortPoint = builder ? routePrefix(builder, road, 220).at(-1) ?? builder : point;
+  // A small escort follows the builder's actual steering road; the rest keep the cleared mine covered.
+  return [{ units: front.filter(unit => !escorts.includes(unit)), point }, { units: escorts, point: escortPoint }]
+    .flatMap(({ units, point }): GameCommand[] => {
+      const moving = units.filter(unit => distance(unit, point) > 180
+        && !((unit.order.type === 'attackMove' || unit.order.type === 'move') && distance(unit.order, point) < 100));
+      return moving.length ? [resolveAiCommandIntent(snapshot, owner,
+        { type: task.stage === 'assemble' ? 'move' : 'attackMove', unitIds: moving.map(unit => unit.id), x: point.x, y: point.y }, options)] : [];
+    });
 }

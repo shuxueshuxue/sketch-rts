@@ -2,7 +2,7 @@ import { expect, it } from 'vitest';
 import { sketchScene } from '../../sdk/scene';
 import { issueCommandFrame } from '../../sdk/commands/frame';
 import { runGameLoop } from '../../sdk/game-runner';
-import { snapshotGame, stepGame } from '../../shared/sim';
+import { issuePlayerCommand, snapshotGame, stepGame } from '../../shared/sim';
 import { setBuildingBodies, snapToFootprint } from '../../shared/terrain';
 import { createAiPolicyMemory } from '../memory';
 import { createSubjectGauntletInput } from '../benchmark/subject-gauntlet';
@@ -13,6 +13,7 @@ import { bootstrapEconomy } from './economy';
 import { miningAssignments } from './mining-assignments';
 import { planBootstrapGeneral } from './mine-defense';
 import { bootstrapPolicyContext } from './policy';
+import { v6ExpansionPoint } from '../policy/v6/economy';
 
 function expansionScene(invaded = false) {
   let draft = sketchScene('finish-one-expansion').map('openClaims').replaceDefaults()
@@ -80,6 +81,24 @@ it('records a real home threat, yields to defense and resumes the same mine afte
   expect(memory.landExpansion!.mineId).toBe('natural');
   expect(memory.landExpansion!.paused).toBeUndefined();
   expect(memory.landExpansion!.stage).toBe('clear');
+});
+
+it('sends a small escort along the traveling builder’s road while the other soldiers keep the cleared mine', () => {
+  const { game, memory, context } = expansionScene();
+  game.units = game.units.filter(unit => unit.owner !== 'neutral');
+  delete memory.v6!.creep;
+  const mine = game.resources.find(resource => resource.id === 'natural')!;
+  for (const unit of game.units.filter(unit => unit.id.startsWith('screen-'))) Object.assign(unit, { x: 1560, y: 1100 });
+  const site = v6ExpansionPoint(snapshotGame(game), 'us', mine);
+  issuePlayerCommand(game, 'us', { type: 'build', unitId: 'builder', buildingKind: 'townHall', ...site });
+  const { snapshot, options } = context(), builder = game.units.find(unit => unit.id === 'builder')!;
+  const commands = planBootstrapGeneral(snapshot, 'us', options);
+  const escort = commands.filter(command => command.type === 'attackMove' && Math.hypot(command.x - builder.x, command.y - builder.y) <= 250);
+  expect(escort.flatMap(command => 'unitIds' in command ? command.unitIds : [])).toHaveLength(3);
+  expect(memory.landExpansion!.stage).toBe('escort');
+  issueCommandFrame(game, commands.map(command => ({ playerId: 'us', scriptId: 'v6General', command })));
+  for (let tick = 0; tick < 60; tick++) stepGame(game);
+  expect(game.units.filter(unit => unit.id.startsWith('screen-') && Math.hypot(unit.x - mine.x, unit.y - mine.y) < 180)).toHaveLength(3);
 });
 
 it('starts the archer ladder-16 grove natural before 4:00 and third before 6:30 against the real v9', () => {
