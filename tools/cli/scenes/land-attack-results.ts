@@ -1,14 +1,13 @@
 import type { Scene } from '../drivers/browser';
 import { pathToFileURL } from 'node:url';
 
-/** A real room-AI/v9 match. Reapply its accepted commands to the hosted room and
- * compare the actual world at every photographed frame, without changing forces. */
+/** A real room-AI/v9 match, independently run by the SDK and live room AIs.
+ * Compare each photographed world, without altering units, resources or commands. */
 export default async function(s: Scene) {
   const load = (path: string) => import(pathToFileURL(`${process.cwd()}/${path}`).href);
   const { createSubjectGauntletInput } = await load('src/ai/benchmark/subject-gauntlet.ts');
   const { roomGauntlet } = await load('src/ai/benchmark/room-gauntlet.ts');
   const { runGameLoop } = await load('src/sdk/game-runner.ts');
-  const { commandRejection } = await load('src/shared/sim/command-frame-runtime.ts');
   const { navalObservedPlanner } = await load('src/ai/benchmark/naval-room-worker.ts');
   const { input } = createSubjectGauntletInput(roomGauntlet('v9_summoner', ['v9']), { seed: 'v5-final-1', mapCount: 20 });
   const match = input.evaluations[0].matches[2];
@@ -16,7 +15,7 @@ export default async function(s: Scene) {
   // entire match. The snapshot regression separately retains the original IDs.
   match.agents = { player: match.agents.v9_summoner, enemy: match.agents.p1 };
   const memories: any = {}, frames = new Map<number, any[]>(), shots = new Map<number, any>();
-  const events: any[] = [], results: any[] = [], refused: any[] = [];
+  const events: any[] = [], results: any[] = [];
   const targets = [9196, 15376, 16100, 16216];
   let prior = '', lastResult = '';
   const fingerprint = (world: any) => JSON.stringify({ tick: world.tick,
@@ -25,12 +24,7 @@ export default async function(s: Scene) {
     resources: world.resources.map((r: any) => [r.id, r.amount]).sort(),
     gold: Object.fromEntries(Object.entries(world.players).map(([id, p]: any) => [id, p.gold])) });
   runGameLoop({ ...match, maxTicks: targets.at(-1)!, commandPlanner: navalObservedPlanner(memories) }, {
-    afterCommand(e: any) {
-      // SDK apply permits transient no-ops. REST admission rejects those attempts;
-      // omit only commands rejected in their exact pre-command world, and verify
-      // the resulting hosted world is still byte-for-byte the same at each shot.
-      const reason = commandRejection(e.before, { playerId: e.owner, command: e.command }, 'admission');
-      if (reason) { refused.push({ tick: e.tick, owner: e.owner, command: e.command, reason }); return; }
+    onCommand(e: any) {
       if (!frames.has(e.tick)) frames.set(e.tick, []);
       frames.get(e.tick)!.push({ playerId: e.owner, command: structuredClone(e.command) });
     }, onStep({ game }: any) {
@@ -53,17 +47,13 @@ export default async function(s: Scene) {
   await s.api(`/api/rooms/${roomId}/start`, { userId: host.id });
   await s.api(`/api/rooms/${roomId}/pause`, {});
   await s.api(`/api/rooms/${roomId}/reset`, { mapId: 'ladder', options: { ...match.options,
-    players: ['player', 'enemy'], aiPlayers: [], teams: { player: match.agents.player.team, enemy: match.agents.enemy.team },
+    players: ['player', 'enemy'], aiPlayers: ['player', 'enemy'],
+    aiVersions: { player: 'v9_summoner', enemy: 'v9' }, teams: { player: match.agents.player.team, enemy: match.agents.enemy.team },
     races: { player: 'grove', enemy: 'ember' } } });
   const url = new URL(`?room=${roomId}`, s.page.url()).href;
   let current = 0;
   const proof: any[] = [];
   for (const target of targets) {
-    for (const [tick, commands] of frames) {
-      if (tick < current || tick >= target) continue;
-      if (tick > current) await s.api(`/api/rooms/${roomId}/tick`, { ticks: tick - current });
-      await s.api(`/api/rooms/${roomId}/command-tick`, { commands, ticks: 1 }); current = tick + 1;
-    }
     if (current < target) await s.api(`/api/rooms/${roomId}/tick`, { ticks: target - current }); current = target;
     const world: any = await s.api(`/api/rooms/${roomId}/snapshot`), expected = shots.get(target);
     s.must(fingerprint(world) === expected.world, `hosted world differs from the real match at tick ${target}`);
@@ -84,6 +74,7 @@ export default async function(s: Scene) {
       target: world.buildings.find((b: any) => b.id === goalId) ?? null, exactWorld: true });
   }
   s.record('land-attack-real-match', { seed: 'v5-final-1', slot: 'ladder-12',
-    subject: 'v9_summoner grove', rival: 'v9 ember', owners: 'public browser seats player/enemy', events, results, refused, proof });
-  s.record('land-attack-command-replay', [...frames].map(([tick, commands]) => ({ tick, commands })));
+    subject: 'v9_summoner grove', rival: 'v9 ember', owners: 'public browser seats player/enemy, both autonomous in the sim',
+    method: 'SDK reference and live room AI run independently; each photographed world matches exactly', events, results, proof });
+  s.record('land-attack-sdk-reference-commands', [...frames].map(([tick, commands]) => ({ tick, commands })));
 }

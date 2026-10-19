@@ -135,7 +135,7 @@ export function prepareLandAttack(snapshot: GameSnapshot, owner: PlayerId, optio
   const borrowed = survivors.filter(unit => !available.has(unit.id));
   if (borrowed.length) {
     const ids = new Set(borrowed.map(unit => unit.id));
-    task.general.group = task.general.group?.filter(id => !ids.has(id));
+    task.general.group = task.general.group!.filter(id => !ids.has(id));
     task.general.groupStart = Math.max(0, (task.general.groupStart ?? 0) - marchStrength(borrowed));
   }
   memory.general = structuredClone(task.general);
