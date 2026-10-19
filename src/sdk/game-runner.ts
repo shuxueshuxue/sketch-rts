@@ -207,12 +207,15 @@ export function runGameLoop<TAgent extends SdkGameAgent = SdkGameAgent>(input: S
     createGame(requireMapId(input), {
       ...(input.options ?? {}),
       players: playersOf(input),
-      aiPlayers: playersOf(input).filter((owner) => input.agents[owner]?.controller === "internal-ai"),
+      aiPlayers: playersOf(input),
       teams: teamsOf(input),
       races: racesOf(input),
       ...(input.options?.scenario ? { scenario: input.options.scenario } : {}),
     });
   const players = playersOf(input);
+  // Both controller kinds are autonomous seats; source labels only label their commands.
+  game.aiPlayers = [...players];
+  for (const unit of game.units) if (players.includes(unit.owner)) delete unit.guardPosition;
   const teams = teamsOf(input);
   const loopContext = { game, players, teams };
   const frameRuntime = createSdkCommandFrameRuntime(game);
@@ -404,6 +407,7 @@ function issueAgentCommands(
 // into [], which no planner reads.
 function plannerView(game: Game): GameSnapshot {
   return {
+    aiPlayers: [...game.aiPlayers],
     tick: game.tick,
     equipmentVersion: 1,
     rateUnits: "perSecond",

@@ -35,6 +35,8 @@ jobs:
         run: npx vitest run src/shared/generated-camp-budget.test.ts src/shared/map-pool.test.ts
       - name: Verify guardian scroll reduction, presentation and rules boundaries
         run: npx vitest run src/shared/guardian-scroll.test.ts src/shared/shipbuilding.test.ts src/shared/sim/canonical.test.ts src/client/tooltips.test.ts src/client/status-presentation.test.ts src/client/guardian-scroll-visual.test.ts
+      - name: Verify human guard stations and unchanged all-AI command replays
+        run: npx vitest run src/shared/sim/guard-position.test.ts src/shared/sim/ai-guard-compatibility.test.ts src/shared/sim/snapshot-unit-copy.test.ts src/shared/sim/restore.test.ts src/sdk/game-runner.test.ts src/client/net/lockstep-client.test.ts src/shared/player-aggro.test.ts src/shared/push.test.ts src/story/director.test.ts src/client/menu-forest-horde.test.ts src/client/menu-scenes.test.ts src/campaigns/ashen-march/campaign.test.ts
       - name: Verify passive naval room measurements and real crossings
         run: npx vitest run src/ai/benchmark/naval-metrics.test.ts src/ai/benchmark/naval-room.test.ts src/ai/benchmark/naval-loading-diagnostics.test.ts src/ai/benchmark/naval-obstacle-metrics.test.ts
       - name: Verify shipyard departures and frozen physical solids
@@ -106,6 +108,9 @@ jobs:
 
       - name: Verify mercenary trip roads and retained purchasing ownership
         run: npx vitest run src/ai/bootstrap_1/island-mercenary-return.test.ts src/ai/bootstrap_1/mercenary-trip-roads.test.ts src/ai/bootstrap_1/mercenary-control.test.ts src/ai/bootstrap_1/mercenary-goals.test.ts src/ai/bootstrap_1/mercenary-retreat-ownership.test.ts
+
+      - name: Verify coast targets have working gun stations and produce real hits
+        run: npx vitest run src/shared/ship-attack-station.test.ts src/ai/bootstrap_1/fleet-coast-target.test.ts
 
       - name: Test balanced AI duels and CPU budgets
         run: npx vitest run src/shared/sim.test.ts --testNamePattern="runs a fast two-AI duel" --maxWorkers=1 --minWorkers=1

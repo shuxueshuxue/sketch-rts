@@ -130,16 +130,19 @@ describe("director", () => {
     expect(() => Director.load<Vars>({ id: "tale", player: "heroes", story: tale }, tampered)).toThrow(/does not replay/);
   });
 
-  it("refuses a save hashed by another checksum version, and says so", () => {
+  it("validates supported prior checksum formats and refuses an unknown version explicitly", () => {
     const director = new Director<Vars>({ id: "tale", game: field(), player: "heroes", vars: { log: [] }, story: tale, pilot, seed: 7 });
     director.begin();
     advanceUntil(director, () => director.vars.log.some((entry) => entry.startsWith("second")));
     const save = director.save();
     expect(save.checksumVersion).toBe(CHECKSUM_VERSION);
-    const olderGame = { ...director.game };delete olderGame.corpses;
-    const versionTwo = { ...save, checksumVersion: 2, checksum: checksumGame(olderGame) };
+    // Recorded with main 9e637649's version-2 projection: neither corpses nor the new human guard state was hashed.
+    // A current-format checksum tagged as version 2 is not a valid old save.
+    const versionTwo = { ...save, checksumVersion: 2, checksum: "34a610c2" };
     expect(Director.load<Vars>({ id: "tale", player: "heroes", story: tale }, versionTwo).tick).toBe(director.tick);
     expect(() => Director.load<Vars>({ id: "tale", player: "heroes", story: tale }, { ...versionTwo, checksum: "00000000" })).toThrow(/does not replay/);
+    // The last format before human guard state was version 20; this hash also comes from main 9e637649.
+    expect(Director.load<Vars>({ id: "tale", player: "heroes", story: tale }, { ...save, checksumVersion: 20, checksum: "3692d40f" }).tick).toBe(director.tick);
     // A save from before checksum versions (version 1) carries none.
     const { checksumVersion: _version, ...older } = save;
     expect(() => Director.load<Vars>({ id: "tale", player: "heroes", story: tale }, older)).toThrow(`checksum version 1; this build checks version ${CHECKSUM_VERSION}`);
@@ -172,7 +175,8 @@ describe("director", () => {
       delete prior.deck;
       return prior;
     };
-    const prior = { ...save, checksumVersion: 17, checksum: checksumGame({ ...director.game, corpses: director.game.corpses!.map(priorCorpse) }) };
+    // Recorded with main 9e637649's version-17 representation, before death equipment facts and human guard state.
+    const prior = { ...save, checksumVersion: 17, checksum: "668241b7" };
     prior.checkpoint.game.snapshot.corpses = prior.checkpoint.game.snapshot.corpses!.map(priorCorpse);
     const loaded = Director.load<Vars>({ id: "tale", player: "heroes", story: tale }, prior);
     expect(loaded.tick).toBe(save.tick);

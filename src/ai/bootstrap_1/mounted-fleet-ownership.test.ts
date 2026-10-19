@@ -15,7 +15,7 @@ const cases = (['v9_archer', 'v9_summoner', 'v9_knight'] as const).flatMap(versi
 it.each(cases)('$version keeps a coast battery out of a mounted clearing mission (mirror=$mirror)', ({ version, mirror }) => {
   const x = (value: number) => mirror ? 4096 - value : value;
   const game = sketchScene('mounted-fleet-ownership').map('bareDuel').replaceDefaults()
-    .player('us', { race: 'grove', team: 'a' }).player('foe', { team: 'b' })
+    .player('us', { race: 'grove', team: 'a', ai: true }).player('foe', { team: 'b', ai: true })
     .townHall('us', x(500), 500).townHall('foe', x(500), 3500)
     .building('us', 'shipyard', x(1200), 1000)
     .goldMine('main', x(716), 500, 10000).goldMine('island', x(3300), 1800, 10000)

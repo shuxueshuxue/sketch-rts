@@ -5,6 +5,7 @@ export type CanonicalGameState = ReturnType<typeof canonicalGameState>;
 const NUMBER_PRECISION = 1_000;
 
 export function canonicalGameState(game: Game) {
+  const humanPlayers = game.activePlayers.filter(owner => !game.aiPlayers?.includes(owner));
   return canonicalize({
     tick: game.tick,
     match: game.match,
@@ -21,6 +22,7 @@ export function canonicalGameState(game: Game) {
     corpses: game.corpses,
     obstacles: game.obstacles,
     runtime: {
+      ...(humanPlayers.length ? { humanPlayers } : {}),
       nextId: game.nextId,
       activePlayers: game.activePlayers,
       teams: game.teams,

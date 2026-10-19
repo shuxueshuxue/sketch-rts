@@ -42,26 +42,26 @@ describe("canonical game state", () => {
   });
 
   it("gives the recorded checksums for fresh games, on any machine and in any locale", () => {
-    // Version 20 keeps a ship's last hull hit; fresh games have none, and their checksums stand.
+    // Version 21 hashes human controller identity and persistent human guard stations.
     // Fresh-game goldens also include the closer 216-unit initial mine layout, and each mine's start amount.
     // Per-player camp budgets give each start at least two green camps, changing the seeded ladder's initial state.
-    expect(CHECKSUM_VERSION).toBe(20);
+    expect(CHECKSUM_VERSION).toBe(21);
     // Repeat creation to catch accidental dependence on a process-global random stream.
     for (let repeat = 0; repeat < 2; repeat += 1) {
-      expect(checksumGame(createGame("bareDuel", { aiPlayers: [] }))).toBe("a22ffc6e");
+      expect(checksumGame(createGame("bareDuel", { aiPlayers: [] }))).toBe("24665fcc");
       const ladder = createGame("ladder", { players: ["v8", "p1", "p2"], teams: { v8: "a", p1: "b", p2: "b" }, races: { v8: "ember", p1: "grove", p2: "ember" }, layout: { seed: "canonical" } });
       // The seeded map carries an environment recipe and habitat-scored scenery.
-      expect(checksumGame(ladder)).toBe("e8933abb");
+      expect(checksumGame(ladder)).toBe("49ecdaa4");
     }
   });
 
   it("checks a version 18 save as version 19: a game with no upgrade under way and no fortified tower hashes the same", () => {
-    const game = createGame("bareDuel", { aiPlayers: [] });
+    const game = createGame("bareDuel", { aiPlayers: ['player', 'enemy'] });
     expect(checksumGameForVersion(game, 18)).toBe(checksumGame(game));
   });
 
   it("projects a ship's last hull hit away for versions 18 and 19", () => {
-    const game = createGame("bareDuel", { aiPlayers: [] });
+    const game = createGame("bareDuel", { aiPlayers: ['player', 'enemy'] });
     const ship = game.spawnUnit("player", "warship", 1000, 1000), prior = checksumGame(game);
     ship.sailing!.hullHitTick = 7;
     expect(checksumGame(game)).not.toBe(prior);
@@ -74,13 +74,21 @@ describe("canonical game state", () => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     const corpse = { id: "corpse", unitId: "fallen", kind: "knight" as const, owner: "p1", x: 100, y: 200, radius: 18, diedAtTick: 4 };
     game.corpses = [corpse];
-    const prior = checksumGame(game);
+    const prior = checksumGameForVersion(game, 17), currentBefore = checksumGame(game);
     game.corpses = [{ ...corpse, equipmentCaptured: true, rightItemKind: "greatSword", weaponKind: "footman", leftItemKind: "roundShield", ownerRace: "ember", deck: { shipId: "ship", x: 2, y: 3 } }];
-    expect(checksumGame(game)).not.toBe(prior);
+    expect(checksumGame(game)).not.toBe(currentBefore);
     expect(checksumGameForVersion(game, 17)).toBe(prior);
     expect(game.corpses[0]!.rightItemKind).toBe("greatSword");
     game.corpses[0]!.x += 1;
     expect(checksumGameForVersion(game, 17)).not.toBe(prior);
     expect(() => checksumGameForVersion(game, 16)).toThrow(/Unsupported checksum version 16/);
+  });
+
+  it('projects human guard state away when checking a version-20 checksum without altering the live game', () => {
+    const game = createGame('bareDuel', { aiPlayers: [] });
+    const before = JSON.stringify(game.units);
+    expect(checksumGameForVersion(game, 20)).toBe('a22ffc6e');
+    expect(checksumGame(game)).not.toBe('a22ffc6e');
+    expect(JSON.stringify(game.units)).toBe(before);
   });
 });

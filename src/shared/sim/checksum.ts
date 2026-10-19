@@ -25,7 +25,8 @@ export { canonicalGameState, type CanonicalGameState } from "./canonical";
 // 18: death-time corpse equipment, owner race and deck attachment facts.
 // 19: building upgrades as work-queue jobs; the fortified tower is its own building kind.
 // 20: the tick a ship's hull was last struck by an enemy, which slows its repair.
-export const CHECKSUM_VERSION = 20;
+// 21: human seat identity and persistent guard stations; all-AI state hashes stay unchanged.
+export const CHECKSUM_VERSION = 21;
 
 export function checksumGame(game: Game): string {
   return fnv1a(JSON.stringify(canonicalGameState(game)));
@@ -36,15 +37,23 @@ export function checksumGameForVersion(game: Game, version: number): string {
   // Version 19 changed only how an upgrade under way and a fortified tower are kept; a game with neither hashes the same.
   if (version === CHECKSUM_VERSION) return checksumGame(game);
   const checkedGame = { ...game };
+  checkedGame.units = game.units.map(unit => {
+    const { guardPosition, ...prior } = unit;
+    if (prior.order.type === 'move' && prior.order.returnToGuard) {
+      const { returnToGuard, ...order } = prior.order;
+      prior.order = order;
+    }
+    return prior;
+  });
   // Versions 18 and 19 kept no tick of a ship's last hull hit (version 20); 18 differs from 19 only where 19 has an
   // upgrade under way or a fortified tower, which an 18 game cannot hold.
-  if (version === 19 || version === 18) {
-    checkedGame.units = game.units.map(unit => {
-      if (unit.sailing?.hullHitTick === undefined) return unit;
+  if (version === 20 || version === 19 || version === 18) {
+    checkedGame.units = checkedGame.units.map(unit => {
+      if (version === 20 || unit.sailing?.hullHitTick === undefined) return unit;
       const { hullHitTick, ...sailing } = unit.sailing;
       return { ...unit, sailing };
     });
-    return checksumGame(checkedGame);
+    return priorVersionChecksum(checkedGame);
   }
   if (version === 2) {
     delete checkedGame.corpses;
@@ -56,7 +65,13 @@ export function checksumGameForVersion(game: Game, version: number): string {
   } else {
     throw new Error(`Unsupported checksum version ${version}`);
   }
-  return checksumGame(checkedGame);
+  return priorVersionChecksum(checkedGame);
+}
+
+function priorVersionChecksum(game: Game): string {
+  const canonical = canonicalGameState(game) as { runtime: { humanPlayers?: string[] } };
+  delete canonical.runtime.humanPlayers;
+  return fnv1a(JSON.stringify(canonical));
 }
 
 export function fnv1a(input: string) {
