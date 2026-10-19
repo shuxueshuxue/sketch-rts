@@ -35,6 +35,7 @@ it.each((['v9_archer', 'v9_summoner', 'v9_knight'] as const).flatMap(version =>
   setBuildingBodies(game.map, game.buildings);
   for (const owner of ['us', 'foe']) issuePlayerCommand(game, owner, { type: 'holdPosition', unitIds: game.units.filter(unit => unit.id.startsWith(owner === 'us' ? 'screen-' : 'garrison-')).map(unit => unit.id) });
   let returned = false, damage = 0;
+  let incomeFoundationTick: number | undefined, coverFoundationTick: number | undefined;
   const loads = new Set<string>();
   game.observer = { hit(_source, target, taken) { if (target.owner === 'us') damage += taken; } };
   for (let tick = 0; tick < 3000 && !returned; tick++) {
@@ -49,12 +50,19 @@ it.each((['v9_archer', 'v9_summoner', 'v9_knight'] as const).flatMap(version =>
     const gathering = game.units.filter(unit => unit.owner === 'us' && unit.order.type === 'mine' && unit.order.resourceId === 'free' && unit.order.phase === 'gather' && unit.carryingGold === 0);
     const carrying = game.units.filter(unit => loads.has(unit.id) && unit.order.type === 'mine' && unit.order.resourceId === 'free' && unit.order.phase === 'return' && unit.carryingGold > 0);
     stepGame(game);
+    if (game.buildings.some(building => building.owner === 'us' && building.kind === 'townHall'
+      && Math.hypot(building.x - x(2300), building.y - 1800) <= GOLD_MINE_RULES.baseRange)) incomeFoundationTick ??= game.tick;
+    if (game.buildings.some(building => building.owner === 'us' && building.kind === 'defenseTower'
+      && Math.hypot(building.x - x(2300), building.y - 1800) <= building.attackRange)) coverFoundationTick ??= game.tick;
     for (const unit of gathering) if (unit.order.type === 'mine' && unit.order.resourceId === 'free' && unit.order.phase === 'return' && unit.carryingGold > 0) loads.add(unit.id);
     returned = carrying.some(unit => unit.carryingGold === 0 && unit.order.type === 'mine' && unit.order.phase === 'toMine');
   }
   expect(returned).toBe(true);
   expect(game.buildings.filter(building => building.owner === 'us' && building.kind === 'townHall' && building.complete)).toHaveLength(3);
-  expect(game.buildings.some(building => building.owner === 'us' && building.kind === 'defenseTower' && building.complete && Math.hypot(building.x - x(2300), building.y - 1800) <= building.attackRange)).toBe(false);
+  // Clearing this mine never requires buying a tower first. After its hall is
+  // paid and founded, the expansion's defensive handoff may add its own cover.
+  expect(incomeFoundationTick).toBeDefined();
+  if (coverFoundationTick !== undefined) expect(incomeFoundationTick!).toBeLessThan(coverFoundationTick);
   expect(game.units.filter(unit => unit.id.startsWith('screen-'))).toHaveLength(4);
   expect(damage).toBe(0);
   expect(game.match.stats.unitsLost.us).toBe(0);

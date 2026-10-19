@@ -59,6 +59,7 @@ it('keeps the completed natural defended while the remaining troops establish th
   } });
   expect(firstUnguardedTick, 'first tick below a footman of defense and without completed static cover').toBeUndefined();
   expect(minimumStrength).toBeGreaterThanOrEqual(1);
+  expect(game.buildings.find(building => building.id === naturalId)?.hp, 'natural survives the raid while the third finishes').toBe(900);
   expect(naturalCompleteTick).toBeDefined();
   expect(naturalCompleteTick!).toBeLessThanOrEqual(5298);
   expect(protectedFrames).toBeGreaterThanOrEqual(3000);

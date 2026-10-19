@@ -60,18 +60,21 @@ export function expansionGarrisonCoverGoals(economy: Economy) {
 
 /** A post lasts until its hall/mine is lost or a completed weapon covers the hall and workers. */
 export function maintainExpansionGarrisons(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
-  const memory = options.memory;
+  const memory = options.memory, retired = new Set<string>();
   for (const [hallId, task] of Object.entries(memory.expansionGarrisons ?? {})) {
     const target = expansionSite(snapshot, owner, task.mineId);
     if (!target || target.hall.id !== hallId || ownDefense(snapshot, owner, target.hall, target.mine)) {
+      retired.add(hallId);
       delete memory.expansionGarrisons![hallId];
     }
   }
   for (const [id, claim] of Object.entries(memory.unitClaims)) {
     if (claim.kind !== 'expansionGarrison') continue;
     const unit = snapshot.units.find(unit => unit.id === id && unit.owner === owner && !unit.deck && unit.order.type !== 'board');
-    if (!unit || !memory.expansionGarrisons?.[claim.targetId]) delete memory.unitClaims[id];
-    else recordUnitTaskClaim(snapshot, memory, id, claim);
+    if (!unit || retired.has(claim.targetId)) delete memory.unitClaims[id];
+    else if (memory.expansionGarrisons?.[claim.targetId]) recordUnitTaskClaim(snapshot, memory, id, claim);
+    // A serialized task without our post record is owned by its original issuer.
+    // Leave its normal claim lifetime intact; a ferry must not borrow that soldier.
   }
 }
 
@@ -82,13 +85,19 @@ export function expansionGarrisonReady(snapshot: GameSnapshot, owner: PlayerId, 
   (options.memory.expansionGarrisons ??= {})[target.hall.id] ??= { mineId, sinceTick: snapshot.tick };
   if (!target.hall.complete) return false;
   return strengthOf(snapshot.units.filter(unit => activeUnitClaim(snapshot, owner, unit, options)?.kind === 'expansionGarrison'
-    && options.memory.unitClaims[unit.id]?.targetId === target.hall.id && distance(unit, target.hall) <= PERIMETER)) >= requiredScreen(snapshot, owner, options, target.hall);
+    && options.memory.unitClaims[unit.id]?.targetId === target.hall.id && distance(unit, target.hall) <= PERIMETER)) >= requiredScreen(snapshot, owner, options, postPoint(snapshot, target.hall, target.mine));
 }
 
-function requiredScreen(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, hall: Building) {
+function requiredScreen(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, point: { x: number; y: number }) {
   const raiders = snapshot.units.filter(unit => isOpponentOwner(snapshot, owner, unit.owner, options)
-    && !unit.deck && unit.attackDamage > 0 && groundThreatWithin(snapshot, unit, hall, PERIMETER));
+    && !unit.deck && unit.attackDamage > 0 && groundThreatWithin(snapshot, unit, point, PERIMETER));
   return Math.max(MINIMUM_SCREEN, strengthOf(raiders) * 1.2);
+}
+
+// Threat admission and the guards' move orders use this same reachable post,
+// rather than asking an enemy to path to the occupied center of the hall.
+function postPoint(snapshot: GameSnapshot, hall: Building, mine: { x: number; y: number }) {
+  return walkableGoal(snapshot.map, (hall.x + mine.x) / 2, (hall.y + mine.y) / 2);
 }
 
 function assignments(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
@@ -115,14 +124,14 @@ function assignments(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyC
       && !options.memory.mounted?.some(task => task.unitIds.includes(unit.id)) && !healingElsewhere.has(unit.id)
       && !used.has(unit.id) && !isDefenseTaskClaim(activeUnitClaim(snapshot, owner, unit, options)))
       .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp || distance(a, target.hall) - distance(b, target.hall));
-    const units = [...held], required = requiredScreen(snapshot, owner, options, target.hall);
+    const point = postPoint(snapshot, target.hall, target.mine);
+    const units = [...held], required = requiredScreen(snapshot, owner, options, point);
     // Recovering soldiers still deter small raids; keep the healthy clearing force marching.
     for (const unit of pool) {
       if (strengthOf(units) >= required) break;
       units.push(unit);
     }
     units.forEach(unit => used.add(unit.id));
-    const point = walkableGoal(snapshot.map, (target.hall.x + target.mine.x) / 2, (target.hall.y + target.mine.y) / 2);
     return [{ hall: target.hall, units, point }];
   });
 }

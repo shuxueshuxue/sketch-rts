@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { expect, it } from 'vitest';
 import { sketchScene } from '../../sdk/scene';
+import { setBuildingBodies } from '../../shared/terrain';
 import { snapshotGame } from '../../shared/sim';
 import type { GameSnapshot } from '../../shared/types';
 import { createAiPolicyMemory, type AiPolicyMemory } from '../memory';
@@ -21,6 +22,8 @@ function post() {
     .unit('us', 'footman', 1550, 1000, { id: 'hurt-b', hp: 41 })
     .unit('us', 'archer', 1500, 1050, { id: 'healthy-a' })
     .unit('us', 'archer', 1550, 1050, { id: 'healthy-b' }).build().createGame();
+  game.map.terrain = { cell: 32, cols: 128, rows: 128, cells: '.'.repeat(128 * 128) };
+  setBuildingBodies(game.map, game.buildings);
   const snapshot = snapshotGame(game), memory = createAiPolicyMemory(), options = { memory };
   memory.landExpansion = { mineId: 'natural', sinceTick: 0, stage: 'complete', interruptions: [] };
   expansionGarrisonReady(snapshot, 'us', options, 'natural');
@@ -138,4 +141,25 @@ it('recruits the next expansion only from soldiers left outside the garrison', (
     expect(expansionMissionUnitIds(memory)).not.toContain(id);
   }
   expect(expansionMissionUnitIds(memory)).toContain('healthy-a');
+});
+
+it('adds healthy reinforcements only when the recovering screen cannot cover known raiders', () => {
+  const { snapshot, memory, options } = post();
+  const raider = { ...snapshot.units.find(unit => unit.id === 'hurt-b')!, id: 'raider', owner: 'foe', x: 1750, y: 1100 };
+  raider.hp = raider.maxHp;
+  const raiders = [raider, { ...raider, id: 'raider-b', x: 1790 }];
+  snapshot.units.push(...raiders);
+  runAiCommandEntriesFromScripts(snapshot, 'us', [expansionGarrison], options);
+  const guards = snapshot.units.filter(unit => memory.unitClaims[unit.id]?.kind === 'expansionGarrison');
+  expect(guards).toHaveLength(4);
+  expect(strengthOf(guards)).toBeGreaterThanOrEqual(strengthOf(raiders) * 1.2);
+});
+
+it('preserves a serialized garrison claim owned by another issuer', () => {
+  const { snapshot, memory, options } = post();
+  delete memory.expansionGarrisons;
+  recordUnitTaskClaim(snapshot, memory, 'healthy-a', { kind: 'expansionGarrison', targetId: 'home', x: 500, y: 500 });
+  const before = structuredClone(memory.unitClaims['healthy-a']);
+  maintainExpansionGarrisons(snapshot, 'us', options);
+  expect(memory.unitClaims['healthy-a']).toEqual(before);
 });
