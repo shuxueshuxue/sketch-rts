@@ -10,7 +10,7 @@ import { ABILITY_DEFS, UNIT_DEFS } from "../../shared/catalog";
 import type { Building, GameCommand, GameSnapshot, PlayerId, Unit } from "../../shared/types";
 import { armyPower } from "./combat-math";
 import { resolveAiCommandIntent } from "./commands";
-import { activeUnitClaim } from "./claims";
+import { activeUnitClaim, isDefenseTaskClaim } from "./claims";
 import { activeMiningBaseCount } from "./expansion-model";
 import { enemyCombatUnits, enemyUnitsNear, neutralUnitsNear, units } from "./snapshot";
 import { anyWithinRangeOf, averagePoint, distance, type Point } from "./spatial";
@@ -277,7 +277,7 @@ function singleHitFinisherTarget(candidates: Unit[], canJoin: ReturnType<typeof 
 
 function focusFireReadyUnit(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, options: PresetAiPolicyOptions) {
   const claim = activeUnitClaim(snapshot, owner, unit, options);
-  return !claim || claim.kind === "attack" || v5ArrivedMercenaryClaimCanFight(snapshot, owner, unit, claim, options);
+  return !claim || isDefenseTaskClaim(claim) || claim.kind === "attack" || v5ArrivedMercenaryClaimCanFight(snapshot, owner, unit, claim, options);
 }
 
 // The part of v5ArrivedMercenaryClaimCanCounterFocus that depends on the fighter alone.

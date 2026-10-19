@@ -15,7 +15,7 @@ import type { AiPolicyContext, AiScript } from '../policy/types';
 import { isBacklineKind } from '../policy/v6/backline';
 import { armedFoes, earliestThreatContactTicks, retreatLandRoad } from './safe-land-route';
 import { miningJobOrder } from './mining-jobs';
-import { planWorkerSafety, workerSafetyPlans } from './worker-safety';
+import { planWorkerSafety, workerSafetyPlans, recordWorkerSafetyAcceptedCommands, finishWorkerSafetyPlans } from './worker-safety';
 
 /** A hauling job remains real income after its mine's hall has fallen. */
 export function miningJobDefenseTarget(snapshot: GameSnapshot, owner: PlayerId, intel: V6Intel, options: AiPolicyContext): ArmyDefense | undefined {
@@ -90,6 +90,8 @@ function exposedMiners(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
 
 export const miningJobSafety: AiScript = {
   id: 'miningJobSafety', phase: 'tactics', redirects: 'local',
+  onCommands: recordWorkerSafetyAcceptedCommands,
+  afterPlan: finishWorkerSafetyPlans,
   claimsUnits: (snapshot, owner, options) => new Set([
     ...workerSafetyPlans(snapshot, owner, options).map(task => task.worker.id),
     ...exposedMiners(snapshot, owner, options).map(task => task.worker.id),

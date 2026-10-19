@@ -13,6 +13,7 @@ import { bootstrapPolicyContext } from './policy';
 import { mainArmyIntel, miningRally, planBootstrapGeneral } from './mine-defense';
 import { runAiCommandEntriesFromScripts } from '../policy/script-runner';
 import { strengthOf } from '../policy/v6/strength';
+import { activeUnitClaim, isMineRallyClaim, recordUnitTaskClaim } from '../policy/claims';
 
 const saved: { snapshot: GameSnapshot; nextId: number; activePlayers: string[]; memories: Record<string, AiPolicyMemory> } =
   JSON.parse(readFileSync(new URL('./fixtures/defense-rally-14m48.json', import.meta.url), 'utf8'));
@@ -92,12 +93,16 @@ it('feeds all 19 real 14:48 defenders into one mine defense while the first suff
     nextHall.y - 240 + Math.floor(index / 6) * 25)); unit.order = { type: 'attackMove', x: nextHall.x, y: nextHall.y }; });
   const entries = planBootstrapCommands(snapshot, subject, 'v9_archer', { memory, teams: after.result.game.teams });
   expect(memory.miningDefense?.hallId).toBe(nextHall.id);
-  expect(memory.miningDefense!.unitIds.length).toBeGreaterThan(0);
+  const nextDefenders = snapshot.units.filter(unit => {
+    const claim = activeUnitClaim(snapshot, subject, unit, { memory });
+    return isMineRallyClaim(claim) && claim?.targetId === nextHall.id;
+  });
+  expect(nextDefenders.length).toBeGreaterThan(0);
   expect(Math.hypot(memory.miningDefense!.point.x - nextHall.x, memory.miningDefense!.point.y - nextHall.y)).toBeLessThanOrEqual(201);
   expect(foes.some(unit => unit.attackDamage > 0 && memory.miningDefense!.attackerIds.includes(unit.id)
     && Math.hypot(unit.x - nextHall.x, unit.y - nextHall.y) <= 1000)).toBe(true);
   expect(entries.some(entry => entry.scriptId === 'miningRally' && 'unitIds' in entry.command
-    && entry.command.unitIds.some(id => memory.miningDefense!.unitIds.includes(id)))).toBe(true);
+    && entry.command.unitIds.some(id => nextDefenders.some(unit => unit.id === id)))).toBe(true);
 }, 30000);
 
 
@@ -131,7 +136,7 @@ it('starts the mine fight with a sufficient arrived group while the rest are sti
   expect(advance.length).toBeLessThan(assignment.units.length);
   const next = miningRallyAssignment(snapshot, subject, options, mainArmyIntel(snapshot, subject, options))!;
   expect(next.state.phase).toBe('fight');
-  expect(next.state.arrivedIds.length).toBeLessThan(next.state.unitIds.length);
+  expect(next.arrivedIds.length).toBeLessThan(next.units.length);
 });
 
 it.each(['hall', 'worker'] as const)('starts the mine fight immediately when its %s takes damage, even without a sufficient arrived force', victim => {
@@ -140,30 +145,34 @@ it.each(['hall', 'worker'] as const)('starts the mine fight immediately when its
     && Math.hypot(unit.x - assignment.hall.x, unit.y - assignment.hall.y) <= 650)!;
   target.hp -= 1;
   const next = miningRallyAssignment(snapshot, subject, options, mainArmyIntel(snapshot, subject, options))!;
-  expect(next.state.arrivedIds).toHaveLength(0);
+  expect(next.arrivedIds).toHaveLength(0);
   expect(next.state.phase).toBe('fight');
 });
 
 it('keeps commanding troops outside the actual rally assignment during gather', () => {
   const { snapshot, options, memory, assignment } = context();
-  memory.miningDefense!.unitIds = assignment.state.unitIds.slice(0, 3);
+  const owned = assignment.units.slice(0, 3).map(unit => unit.id);
+  for (const [id, claim] of Object.entries(memory.unitClaims)) if (isMineRallyClaim(claim) && !owned.includes(id)) delete memory.unitClaims[id];
   const commands = planBootstrapGeneral(snapshot, subject, options);
   const ordered = commands.flatMap(command => 'unitIds' in command ? command.unitIds : []);
   expect(ordered.length).toBeGreaterThan(0);
-  expect(ordered.some(id => memory.miningDefense!.unitIds.includes(id))).toBe(false);
+  expect(ordered.some(id => owned.includes(id))).toBe(false);
 });
 
 it.each(['local', 'strategic', undefined] as const)('uses a newly named script declaration (%s) to decide actual reassignment', redirects => {
   const { snapshot, options, assignment, memory } = context();
   const unit = assignment.units[0]!;
   Object.assign(unit, assignment.state.point);
-  memory.miningDefense = { ...assignment.state, phase: 'fight', unitIds: [unit.id], arrivedIds: [unit.id] };
+  memory.miningDefense = { ...assignment.state, phase: 'fight' };
+  for (const [id, claim] of Object.entries(memory.unitClaims)) if (isMineRallyClaim(claim)) delete memory.unitClaims[id];
+  recordUnitTaskClaim(snapshot, memory, unit.id, { kind: 'mineRally', targetId: assignment.hall.id,
+    x: assignment.state.point.x, y: assignment.state.point.y, arrived: true });
   const entries = runAiCommandEntriesFromScripts(snapshot, subject, [miningRally,
     { id: 'new-task-with-no-rally-special-case', phase: 'tactics', ...(redirects ? { redirects } : {}),
       run: () => ({ type: 'move', unitIds: [unit.id], x: 1000, y: 1000 }) },
   ], options);
   expect(entries.some(entry => entry.scriptId === 'new-task-with-no-rally-special-case')).toBe(true);
-  expect(memory.miningDefense?.unitIds.includes(unit.id) ?? false).toBe(redirects === 'local');
+  expect(isMineRallyClaim(activeUnitClaim(snapshot, subject, unit, options))).toBe(redirects === 'local');
 });
 
 it.each(['v9_archer', 'v9_summoner', 'v9_knight'] as const)('%s declares every tactical script’s task redirection semantics', version => {

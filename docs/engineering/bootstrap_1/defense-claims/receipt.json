@@ -1,0 +1,104 @@
+{
+  "change": "Store rally membership, arrival progress, returning defenders and worker evacuation in the existing per-unit unitClaims table. Persistent task state contains only the hall, fixed post, phase and observed threat/health information.",
+  "base": "9032706c7a15ed9e54b74a70c4bc33e9b94b4e42",
+  "ownership": {
+    "mineRally": "Accepted rally orders; arrived records actual entry into the gathering radius.",
+    "mineLeash": "Accepted return order; resumeKind restores the prior mineRally/mineGuard assignment on return.",
+    "mineGuard": "Accepted general defend/guard orders; replaces the leash defenderIds cohort.",
+    "workerSafety": "Accepted evacuation orders; origin, shelter and original/safe mine are claim data.",
+    "strategic_redirect": "An accepted movement from a script with redirects=strategic (or undeclared) releases the old claim in recordAiMemoryForCommands. Empty/rejected commands do not transfer ownership.",
+    "local_redirect": "Local fighting retains its task. Local retreat coordinates remain on that same claim, so existing pullback micro can finish its route.",
+    "lifecycle": "Use activeUnitClaim and pruneAiPolicyMemory for expiry, owner and target existence. New task claims use the existing 3600-tick objective window and accepted local movement renews it.",
+    "expansionGarrison": "Reader/type support for the expansion branch’s future garrison claim. Rally, leash, local detachments, main-army and mounted-field selectors, and the next expansion preserve this ownership; local micro keeps the same claim. This PR does not assign garrisons."
+  },
+  "removed": [
+    "miningDefense.unitIds",
+    "miningDefense.arrivedIds",
+    "miningLeash.unitIds",
+    "miningLeash.defenderIds",
+    "AiPolicyMemory.workerSafety"
+  ],
+  "compatibility": "Retain the typed landExpansion.unitIds compatibility read in expansionOwnsDefender until the expansion branch migrates its own state. expansion-mission only changes its defense membership reads to activeUnitClaim; its landExpansion mission storage and workflow remain.",
+  "command_equivalence": {
+    "parent": "9032706c7a15ed9e54b74a70c4bc33e9b94b4e42",
+    "afterSource": "3f5635a92dad206c0c6af491b25da59222c6e1fc",
+    "schedule": "both full AI stacks, thinkInterval=15, normal phases and 3-tick delivery delay",
+    "scenarios": [
+      {
+        "name": "rally-14m48",
+        "seconds": 150,
+        "commands": 1512,
+        "sha256": "52bfa241fb43217f89e06fc611264dae4bc8cb2870cf99495c9f78689e29af1e",
+        "fixtureSha256": "7f679adb93206a5a79258985db8a29c0336806ef05dae86cc41e4fb61d38c1d7",
+        "byteIdentical": true
+      },
+      {
+        "name": "pursuit-19m50",
+        "seconds": 60,
+        "commands": 856,
+        "sha256": "525d851ecb0d8162d82480d37f8ad9e70420342706d2c59838be62e37cb20e0e",
+        "fixtureSha256": "efb2ac9273ca1a719b124cd9a77d68a8ccf8a3a2b449cd62011570bc81e6d275",
+        "byteIdentical": true
+      },
+      {
+        "name": "worker-32m36",
+        "seconds": 94,
+        "commands": 1454,
+        "sha256": "aa185b400d6f9d6b5c6409e8bc92de552fed31b8de051c0f180cd9d503630d08",
+        "fixtureSha256": "06cbef36868aed0c406f863b0e447c5f5dac3656f3755ce7c97715a0cbd2ffda",
+        "byteIdentical": true
+      }
+    ]
+  },
+  "behavior_regressions": "The 14:48 gathering/early-fight/damage assertions, 19:50 pursuit/physical-return assertions and 32:36 six-worker survival/safe-mining assertions are unchanged. Test setup/accessors now use claims rather than removed lists. The three original fixture files are unedited. Preserve #535’s first-wave-only anchor check and separate second-raid rally assertions; query that second rally’s members by both claim kind and defended hall.",
+  "new_tests": {
+    "file": "src/ai/bootstrap_1/defense-claims.test.ts",
+    "count": 14,
+    "coverage": [
+      "rejected rally proposals do not acquire units",
+      "worker evacuation claims require accepted orders",
+      "local vs strategic vs undeclared script transfers",
+      "an empty strategic plan does not transfer units",
+      "general plan-only change does not erase an actual guard",
+      "local pullback keeps task ownership and retreat micro",
+      "expiry and hall loss release claims",
+      "single-unitId strategic errands transfer ownership",
+      "expansion garrison is not borrowed by defense or next expansion",
+      "garrison local pullback retains ownership"
+    ]
+  },
+  "validation": {
+    "typescript": "tsc --noEmit passed",
+    "test_source": "b04340b8e4f5d645eda08d9dfcfa80c8e23a15bd",
+    "win_rate_benchmark": false,
+    "juma": {
+      "command": "vitest run src/ai/think-worker/think-worker.test.ts --maxWorkers=1 --minWorkers=1",
+      "files": 1,
+      "tests": 4,
+      "all_passed": true
+    },
+    "a100_worker_limitation": "Earlier isolated A100 attempts time out after ERR_MODULE_NOT_FOUND for extensionless ./host from node-entry.ts; all four tests pass on juma, including this rebased code. No thread code or timeout was changed.",
+    "a100": {
+      "command": "vitest run src/ai --exclude src/ai/think-worker/think-worker.test.ts --maxWorkers=8 --minWorkers=1",
+      "files": 291,
+      "tests": 3839,
+      "all_passed": true
+    },
+    "total_files": 292,
+    "total_tests": 3843,
+    "production_code_identical_to_test_source": true,
+    "supplemental": "The final second-rally membership check is scoped to its own hall; all 11 rally cases pass again locally."
+  },
+  "shared_functions": [
+    "recordAiMemoryForCommands / clearUnitClaimsForCommand / claimTargetExists",
+    "runScriptsWithContext: pass each script’s redirect semantics to the claim recorder",
+    "unitRetreatClaim and focusFireReadyUnit: preserve existing local combat semantics",
+    "archerMicro.claimsUnits / v2SkirmishFallbackPoint: read retreat movement from the same claim",
+    "miningRallyAssignment / planMiningRally / accepted-command and final-state hooks",
+    "miningLeashAssignment / planMiningLeash / recordMiningGeneralCommands / accepted-command and final-state hooks",
+    "workerSafetyPlans / planWorkerSafety / accepted-command and release hooks",
+    "mineDefense detachment / miningRally and miningLeash wiring / mountedFieldPlans",
+    "prepareExpansionMission / expansionMissionCommands: replace removed defense-list reads; expansion mission itself is not migrated"
+  ],
+  "raw_evidence": "comparison.evidence.json"
+}

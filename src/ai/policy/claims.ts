@@ -18,6 +18,7 @@ type RecordAiMemoryOptions = {
   teams?: Partial<Record<PlayerId, string>> | undefined;
   preserveHireCampClaims?: boolean;
   preserveSkirmishRetreatClaims?: boolean;
+  redirects?: 'local' | 'strategic';
 };
 
 type AttackWaveCommand = Extract<GameCommand, { type: "attack" }> | Extract<GameCommand, { type: "attackMove" }>;
@@ -42,6 +43,19 @@ export function pruneAiPolicyMemory(snapshot: GameSnapshot, owner: PlayerId, mem
 export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: string, commands: GameCommand[], memory: AiPolicyMemory, options: RecordAiMemoryOptions = {}) {
   const query = aiSnapshotQuery(snapshot, options.teams);
   for (const command of commands) {
+    // Only accepted orders reach this function. Local fighting keeps its task; a strategic task transfers it.
+    const moving = ['move', 'attackMove', 'attack', 'holdPosition', 'follow', 'aim', 'board', 'garrison'].includes(command.type);
+    const actors = 'unitIds' in command ? command.unitIds : 'unitId' in command ? [command.unitId] : [];
+    for (const id of actors) {
+      const claim = memory.unitClaims[id];
+      if (!isDefenseTaskClaim(claim)) continue;
+      if (options.redirects !== 'local') delete memory.unitClaims[id];
+      else {
+        if (moving && claim.kind === 'mineLeash' && scriptId !== 'miningLeash') claim.kind = claim.resumeKind ?? 'mineGuard';
+        if (moving && scriptId !== 'skirmishPreservation') delete claim.localRetreat;
+        claim.expiresTick = snapshot.tick + OBJECTIVE_CLAIM_TTL_TICKS;
+      }
+    }
     if ((scriptId === "expansion" || scriptId === "economicCatchUp") && command.type === "build" && command.buildingKind === "townHall") {
       memory.strategicPlan = { ...memory.strategicPlan, expansionAttemptTick: snapshot.tick };
     }
@@ -172,6 +186,11 @@ export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: stri
     }
     if (scriptId === "skirmishPreservation" && (command.type === "move" || options.preserveSkirmishRetreatClaims && command.type === "attackMove")) {
       for (const unitId of command.unitIds) {
+        const task = memory.unitClaims[unitId];
+        if (options.redirects === 'local' && isDefenseTaskClaim(task)) {
+          task.localRetreat = { x: command.x, y: command.y };
+          continue;
+        }
         memory.unitClaims[unitId] = {
           kind: "retreat",
           targetId: "retreat",
@@ -183,8 +202,32 @@ export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: stri
       }
       continue;
     }
-    clearUnitClaimsForCommand(memory, command);
+    clearUnitClaimsForCommand(memory, command, options.redirects === 'local');
   }
+}
+
+export function isDefenseTaskClaim(claim: AiPolicyUnitClaim | undefined): claim is AiPolicyUnitClaim & { kind: 'mineRally' | 'mineLeash' | 'mineGuard' | 'workerSafety' | 'expansionGarrison' } {
+  return claim !== undefined && ['mineRally', 'mineLeash', 'mineGuard', 'workerSafety', 'expansionGarrison'].includes(claim.kind);
+}
+
+export function isMineRallyClaim(claim: AiPolicyUnitClaim | undefined) {
+  return claim?.kind === 'mineRally' || claim?.kind === 'mineLeash' && claim.resumeKind === 'mineRally';
+}
+
+/** A local pullback keeps the task's ownership and exposes its movement to existing retreat micro. */
+export function unitRetreatClaim(snapshot: GameSnapshot, unit: Unit, options: ClaimPolicyOptions) {
+  const claim = activeUnitClaim(snapshot, unit.owner, unit, options);
+  if (claim?.kind === 'retreat') return claim;
+  return claim?.localRetreat ? { ...claim, ...claim.localRetreat, kind: 'retreat' as const } : undefined;
+}
+
+/** Task modules call this with orders accepted by the runner, never with their proposed unit selection. */
+export function recordUnitTaskClaim(snapshot: GameSnapshot, memory: AiPolicyMemory, unitId: string,
+  task: Omit<AiPolicyUnitClaim, 'sinceTick' | 'expiresTick'>) {
+  const previous = memory.unitClaims[unitId];
+  memory.unitClaims[unitId] = { ...task,
+    sinceTick: previous?.kind === task.kind && previous.targetId === task.targetId ? previous.sinceTick : snapshot.tick,
+    expiresTick: snapshot.tick + OBJECTIVE_CLAIM_TTL_TICKS };
 }
 
 function recordAttackWaveMemory(snapshot: GameSnapshot, query: ReturnType<typeof createSnapshotQuery>, command: AttackWaveCommand, memory: AiPolicyMemory, owner: PlayerId | undefined) {
@@ -274,6 +317,8 @@ function objectiveClaimAbandoned(unit: Unit, claim: AiPolicyUnitClaim, currentTi
 }
 
 function claimTargetExists(query: ReturnType<typeof createSnapshotQuery>, owner: PlayerId, claim: AiPolicyUnitClaim) {
+  if (['mineRally', 'mineLeash', 'mineGuard'].includes(claim.kind)) return query.buildingsFor(owner).some(building => building.id === claim.targetId);
+  if (claim.kind === 'workerSafety') return query.unitById(claim.targetId)?.owner === owner;
   if (claim.kind === "mercenary") return Boolean(query.mercenaryCampById(claim.targetId));
   if (claim.kind === "expansion") return expansionClaimStillNeedsArmy(query, owner, claim);
   if (claim.kind === "creep") return Boolean(query.unitById(claim.targetId));
@@ -307,9 +352,9 @@ function clearUnitClaimsForTarget(memory: AiPolicyMemory, targetId: string) {
   for (const [unitId, claim] of Object.entries(memory.unitClaims)) if (claim.targetId === targetId) delete memory.unitClaims[unitId];
 }
 
-function clearUnitClaimsForCommand(memory: AiPolicyMemory, command: GameCommand) {
+function clearUnitClaimsForCommand(memory: AiPolicyMemory, command: GameCommand, local = false) {
   if (command.type !== "move" && command.type !== "attackMove" && command.type !== "attack") return;
-  for (const unitId of command.unitIds) delete memory.unitClaims[unitId];
+  for (const unitId of command.unitIds) if (!local || !isDefenseTaskClaim(memory.unitClaims[unitId])) delete memory.unitClaims[unitId];
 }
 
 function nearestEntity<T extends Point>(entities: T[], from: Point): T | undefined {

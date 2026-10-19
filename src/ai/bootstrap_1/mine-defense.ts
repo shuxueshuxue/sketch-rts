@@ -31,9 +31,10 @@ import { summonedMiningRaids } from './summoned-raids';
 import { mountedFieldOwns } from './mounted-field';
 import { planV8Charge } from '../policy/v8/charge';
 import type { AiPolicyContext, AiScript } from '../policy/types';
-import { anchoredMiningDefense, miningRallyAssignment, planMiningRally, recordMiningRallyCommands, miningRallyOwns } from './mining-rally';
+import { anchoredMiningDefense, miningRallyAssignment, planMiningRally, recordMiningRallyCommands, recordMiningRallyAcceptedCommands, miningRallyOwns } from './mining-rally';
+import { activeUnitClaim, isMineRallyClaim } from '../policy/claims';
 
-import { expansionOwnsDefender, MINING_PURSUIT_RADIUS, miningLeashAssignment, miningLeashOwns, planMiningLeash, recordMiningLeashCommands } from './mining-leash';
+import { expansionOwnsDefender, MINING_PURSUIT_RADIUS, miningLeashAssignment, miningLeashOwns, planMiningLeash, recordMiningLeashCommands, recordMiningLeashAcceptedCommands } from './mining-leash';
 
 export { recordMiningGeneralCommands } from './mining-leash';
 
@@ -75,7 +76,8 @@ function detachment(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
   const intel = readV6Intel(snapshot, owner, options);
   const raids = miningRaids(snapshot, intel);
   const pool = intel.army.filter(unit => !unit.deck && unit.hp >= unit.maxHp * .6
-    && !options.memory.miningDefense?.unitIds.includes(unit.id)
+    && activeUnitClaim(snapshot, owner, unit, options)?.kind !== 'expansionGarrison'
+    && !isMineRallyClaim(activeUnitClaim(snapshot, owner, unit, options))
     && !['board', 'cast', 'charge'].includes(unit.order.type));
   for (const { hall, attackers } of raids) {
     const nearby = routeArrivals(snapshot.map, pool, hall, 'land')
@@ -225,10 +227,11 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
 /** Rallying reinforcements keep their route while arrived fighters defend the anchored mine. */
 export const miningRally: AiScript = {
   id: 'miningRally', phase: 'tactics', redirects: 'local',
-  afterPlan: (snapshot, owner, options, entries, scripts) => recordMiningRallyCommands(snapshot, owner, options.memory, entries, scripts),
+  onCommands: recordMiningRallyAcceptedCommands,
+  afterPlan: (snapshot, owner, options) => recordMiningRallyCommands(snapshot, owner, options.memory),
   claimsUnits(snapshot, owner, options) {
     const assignment = miningRallyAssignment(snapshot, owner, options, mainArmyIntel(snapshot, owner, options));
-    return new Set(assignment?.state.unitIds.filter(id => assignment.state.phase === 'gather' || !assignment.state.arrivedIds.includes(id)) ?? []);
+    return new Set(assignment?.units.filter(unit => assignment.state.phase === 'gather' || !assignment.arrivedIds.includes(unit.id)).map(unit => unit.id));
   },
   run(snapshot, owner, options) { return planMiningRally(snapshot, owner, options, mainArmyIntel(snapshot, owner, options)); },
 };
@@ -236,10 +239,11 @@ export const miningRally: AiScript = {
 export const miningLeash: AiScript = {
   id: 'miningLeash', phase: 'tactics', redirects: 'local',
   claimsUnits(snapshot, owner, options) {
-    return new Set(miningLeashAssignment(snapshot, owner, options, mainArmyIntel(snapshot, owner, options))?.state.unitIds);
+    return new Set(miningLeashAssignment(snapshot, owner, options, mainArmyIntel(snapshot, owner, options))?.units.map(unit => unit.id));
   },
   run: (snapshot, owner, options) => planMiningLeash(snapshot, owner, options, mainArmyIntel(snapshot, owner, options)),
-  afterPlan: (snapshot, _owner, options, entries, scripts) => recordMiningLeashCommands(snapshot, options.memory, entries, scripts),
+  onCommands: recordMiningLeashAcceptedCommands,
+  afterPlan: (snapshot, owner, options) => recordMiningLeashCommands(snapshot, owner, options.memory),
 };
 
 export function planBootstrapCloseout(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
@@ -258,7 +262,8 @@ export function mainArmyIntel(snapshot: GameSnapshot, owner: PlayerId, options: 
   for (const id of mobileCare.claimsUnits!(snapshot, owner, options)) crew.add(id);
   for (const { patient, walk } of postRecoveryAssignments(snapshot, owner, options)) if (!walk) crew.add(patient.id);
   for (const { spirit } of summonedMiningRaids(snapshot, owner, options)) crew.add(spirit.id);
-  const army = intel.army.filter(unit => !miningRallyOwns(snapshot, options.memory, unit.id) && !miningLeashOwns(snapshot, options.memory, unit.id) && !crew.has(unit.id) && !mountedFieldOwns(snapshot, owner, unit.id)
+  const army = intel.army.filter(unit => activeUnitClaim(snapshot, owner, unit, options)?.kind !== 'expansionGarrison'
+    && !miningRallyOwns(snapshot, options.memory, unit.id) && !miningLeashOwns(snapshot, options.memory, unit.id) && !crew.has(unit.id) && !mountedFieldOwns(snapshot, owner, unit.id)
     && !options.memory.mounted?.some(assignment => assignment.unitIds.includes(unit.id)));
   const covered = guard && intel.intrusion && distance(intel.intrusion.building, guard.hall) < 600
     && intel.intrusion.attackers.every(unit => guard.attackers.includes(unit));
