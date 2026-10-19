@@ -153,9 +153,35 @@
       "runId": "mveuty09-79b039",
       "remoteLog": "/Users/mac1/work/sketch-cli/runs/mveuty09-79b039/pr538-full-src.log",
       "command": "npx vitest run --dir src --maxWorkers 2 --minWorkers 1",
-      "status": "running"
+      "status": "failed",
+      "code": 1,
+      "stderr": "",
+      "filesPassed": 671,
+      "filesFailed": 2,
+      "testsPassed": 7537,
+      "testsFailed": 2,
+      "testsSkipped": 1,
+      "durationSeconds": 1008.64
     },
-    "finalTestSource": "fa25d19afed4e1ad5dc328e098d898e26e5f3e67",
-    "finalTestCase": "10/10 lifecycle tests pass on juma and mac1. The final test-only commit supplies the scene builder’s required gold amount; production source is identical to aa913a08."
+    "finalTestSource": "6a0f16acdf2fffeaef0a1595d94af0da96308300",
+    "finalTestCase": "Final test-only changes supply the required mine amount and rename the saved-snapshot test to satisfy the source naming boundary; production source is unchanged from aa913a08.",
+    "finalRecheck": {
+      "sha": "6a0f16acdf2fffeaef0a1595d94af0da96308300",
+      "dir": "/Users/mac1/work/sketch-cli/trees/6a0f16acdf2fffeaef0a1595d94af0da96308300",
+      "machine": "mac1",
+      "command": "npx vitest run src/sdk/package-boundaries.test.ts src/ai/bootstrap_1/expansion-claims.test.ts src/ai/benchmark/presets.test.ts --maxWorkers 1 --minWorkers 1",
+      "code": 0,
+      "files": 3,
+      "tests": 34,
+      "passed": true,
+      "parallelWorkerPresetMilliseconds": 1028
+    },
+    "fullSrcFailures": {
+      "naming": "A prohibited word in the new test title was fixed. package-boundaries and the new tests pass on both juma and mac1; the new docs naming was checked too.",
+      "presets": "SDK parallel preset exceeded 5000ms during the full run. Unchanged test passes isolated on juma (1620ms) and the same mac1 (1028ms). No timeout was changed."
+    },
+    "result": "All 673 source test files covered: 671 passed in the full run, the two failed files pass after the title fix and isolated rechecks. 7539 tests pass, one is skipped. Final tsc --noEmit exits 0.",
+    "rawEvidence": "validation.evidence.json",
+    "productionIdenticalToFullTestSource": true
   }
 }
