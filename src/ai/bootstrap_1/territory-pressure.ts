@@ -115,14 +115,21 @@ export function territoryPostCommands(snapshot: GameSnapshot, owner: PlayerId, o
   const walking: { unit: Unit; point: { x: number; y: number } }[] = [], holding: Unit[] = [], going: Unit[] = [];
   const target = snapshot.buildings.find(building => building.id === objective.targetId)!;
   const dx = target.x - objective.point.x, dy = target.y - objective.point.y, length = Math.hypot(dx, dy) || 1;
-  for (const unit of front) {
-    // Stable, small slots keep the first arrivals from blocking the whole post.
-    // New recruits do not renumber the troops already marching. Each slot still
-    // has to pass the executed steering-road check below.
-    const slot = [...unit.id].reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) >>> 0, 0) % 9;
+  objective.slots ??= Array.from({ length: 9 }, (_, slot) => {
     const side = (slot % 3 - 1) * 64, back = Math.floor(slot / 3) * 64;
     const point = walkableGoal(snapshot.map, objective.point.x - dy / length * side - dx / length * back,
       objective.point.y + dx / length * side - dy / length * back);
+    const scout = { ...front[0]!, ...objective.point };
+    const local = nativeLandRoad(snapshot, scout, point);
+    // Walkable does not mean locally connected: a slot across a river may
+    // require a map-wide detour. Check the executed local road once per post.
+    return local && local.ticks <= (distance(objective.point, point) + 128) / scout.speed * SIM_TICKS_PER_SECOND
+      ? { x: point.x, y: point.y } : { ...objective.point };
+  });
+  for (const unit of front) {
+    // Stable slots do not renumber the troops when a recruit arrives.
+    const slot = [...unit.id].reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) >>> 0, 0) % 9;
+    const point = objective.slots[slot]!;
     if (distance(unit, point) <= 60) { holding.push(unit); continue; }
     if ((unit.order.type === 'move' || unit.order.type === 'attackMove') && distance(unit.order, point) < 20) {
       going.push(unit); continue;
@@ -130,7 +137,7 @@ export function territoryPostCommands(snapshot: GameSnapshot, owner: PlayerId, o
     if (safeLandTravelTicks(snapshot, unit, point, foes, end => distance(end, point) <= 60) !== undefined) walking.push({ unit, point });
   }
   if (walking.length + holding.length + going.length < minimum) return undefined;
-  if (front.filter(unit => distance(unit, objective.point) <= POST_ARRIVAL).length >= 3) objective.reachedTick ??= snapshot.tick;
+  if (holding.length >= 3) objective.reachedTick ??= snapshot.tick;
   const general = v6Memory(options).general!;
   general.target = { ...objective.point };
   state.idleTicks = 0;

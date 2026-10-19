@@ -6,7 +6,8 @@ import { snapshotGame, stepGame } from '../../shared/sim';
 import { createAiPolicyMemory } from '../memory';
 import type { AiPolicyContext } from '../policy/types';
 import { mainArmyIntel, planBootstrapGeneral } from './mine-defense';
-import { beginTerritoryThink, finishTerritoryThink, territoryReady } from './territory-pressure';
+import { nativeLandRoad } from './safe-land-route';
+import { beginTerritoryThink, finishTerritoryThink, territoryPostCommands, territoryReady } from './territory-pressure';
 
 function pressureScene(mirror = false, soldiers = 8) {
   const x = (value: number) => mirror ? 4096 - value : value;
@@ -135,4 +136,27 @@ it('keeps an existing post when another task borrows two of its four soldiers', 
   expect(memory.territory!.objective?.targetId).toBe('outpost');
   const home = game.buildings.find(building => building.owner === 'us' && building.kind === 'townHall')!;
   expect(party.slice(0, 2).every(unit => Math.hypot(unit.x - home.x, unit.y - home.y) > 700)).toBe(true);
+});
+
+it('keeps post slots on locally connected ground instead of sending soldiers on a cross-river detour', () => {
+  const { game, memory, options } = pressureScene(false, 4);
+  const cells = [...game.map.terrain!.cells];
+  // The next row is forest except for a distant passage. Slots just across
+  // it are walkable, but the executed road takes a map-wide detour.
+  for (let col = 0; col < 100; col++) cells[26 * 128 + col] = 'T';
+  game.map.terrain = { ...game.map.terrain!, cells: cells.join('') };
+  setBuildingBodies(game.map, game.buildings);
+  const point = { x: 1200, y: 800 };
+  memory.v6!.general = { mode: 'hold', target: point };
+  memory.territory = { idleTicks: 1200, lastTick: game.tick, idle: false,
+    objective: { targetId: 'outpost', point, sinceTick: game.tick } };
+  const snapshot = snapshotGame(game);
+  const result = territoryPostCommands(snapshot, 'us', options, mainArmyIntel(snapshot, 'us', options), true);
+  expect(result).toBeDefined();
+  const slots = memory.territory.objective!.slots!;
+  expect(slots).toHaveLength(9);
+  expect(slots.filter(slot => slot.x === point.x && slot.y === point.y).length).toBeGreaterThan(1);
+  const scout = { ...game.units.find(unit => unit.kind === 'footman')!, ...point };
+  for (const slot of slots) expect(nativeLandRoad(snapshot, scout, slot)!.ticks)
+    .toBeLessThanOrEqual((Math.hypot(slot.x - point.x, slot.y - point.y) + 128) / scout.speed * 20);
 });

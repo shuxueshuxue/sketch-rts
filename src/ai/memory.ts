@@ -90,7 +90,7 @@ export type NavalPlanMemory = {
 export type AiPolicyMemory = {
   territory?: {
     idleTicks: number; lastTick: number; idle: boolean; retryUntil?: number;
-    objective?: { targetId: string; point: { x: number; y: number }; sinceTick: number; reachedTick?: number; nextStepCheck?: number } | undefined;
+    objective?: { targetId: string; point: { x: number; y: number }; sinceTick: number; reachedTick?: number; nextStepCheck?: number; slots?: { x: number; y: number }[] } | undefined;
     lastAction?: { tick: number; kind: 'post' | 'attack'; targetId: string };
   };
   landAttack?: {
