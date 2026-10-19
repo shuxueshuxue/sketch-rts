@@ -211,8 +211,8 @@ export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: stri
   }
 }
 
-export function isDefenseTaskClaim(claim: AiPolicyUnitClaim | undefined): claim is AiPolicyUnitClaim & { kind: 'mineRally' | 'mineLeash' | 'mineGuard' | 'workerSafety' | 'expansionGarrison' } {
-  return claim !== undefined && ['mineRally', 'mineLeash', 'mineGuard', 'workerSafety', 'expansionGarrison'].includes(claim.kind);
+export function isDefenseTaskClaim(claim: AiPolicyUnitClaim | undefined): claim is AiPolicyUnitClaim & { kind: 'mineRally' | 'mineLeash' | 'mineGuard' | 'workerSafety' | 'expansionGarrison' | 'harassSquad' } {
+  return claim !== undefined && ['mineRally', 'mineLeash', 'mineGuard', 'workerSafety', 'expansionGarrison', 'harassSquad'].includes(claim.kind);
 }
 
 export function isMineRallyClaim(claim: AiPolicyUnitClaim | undefined) {
@@ -354,6 +354,7 @@ function claimTargetExists(query: ReturnType<typeof createSnapshotQuery>, owner:
   if (claim.kind === "mercenary") return Boolean(query.mercenaryCampById(claim.targetId));
   if (claim.kind === "expansion") return expansionClaimStillNeedsArmy(query, owner, claim);
   if (claim.kind === "creep") return Boolean(query.unitById(claim.targetId));
+  if (claim.kind === "harassSquad") return Boolean(query.unitById(claim.targetId));
   if (claim.kind === "harass") return Boolean(query.targetById(claim.targetId));
   if (claim.kind === "build") return query.unitsFor(owner).some(unit => unit.order.type === "build" && distance(unit.order, claim) <= 80) || claim.sinceTick >= query.snapshot.tick || query.buildingsFor(owner).some((building) => !building.complete && distance(building, claim) <= 80);
   return true;

@@ -52,7 +52,7 @@ export function prepareExpansionMission(snapshot: GameSnapshot, owner: PlayerId,
   // Neither retaining yesterday's escorts nor recruiting today may take them from that task.
   const defending = new Set(snapshot.units.filter(unit => {
     const claim = activeUnitClaim(snapshot, owner, unit, options);
-    return isMineRallyClaim(claim) || claim?.kind === 'mineLeash' || claim?.kind === 'expansionGarrison';
+    return isMineRallyClaim(claim) || claim?.kind === 'mineLeash' || claim?.kind === 'expansionGarrison' || claim?.kind === 'harassSquad';
   }).map(unit => unit.id));
   for (const id of defending) forgetExpansionMember(memory, id);
   if (activeMiningBaseCount(snapshot, owner) === 0
@@ -134,7 +134,7 @@ export function expansionMissionCommands(snapshot: GameSnapshot, owner: PlayerId
   const mine = snapshot.resources.find(mine => mine.id === task.mineId)!, memory = v6Memory(options);
   const front = availableV6Army(snapshot, options, intel).filter(unit => {
     const claim = activeUnitClaim(snapshot, owner, unit, options);
-    return !isMineRallyClaim(claim) && claim?.kind !== 'mineLeash' && claim?.kind !== 'expansionGarrison';
+    return !isMineRallyClaim(claim) && claim?.kind !== 'mineLeash' && claim?.kind !== 'expansionGarrison' && claim?.kind !== 'harassSquad';
   }).filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0);
   if (!front.length) return [];
   const camps = neutralCamps(snapshot), guard = camps.find(camp => distance(camp.center, mine) <= EXPANSION_GUARD_RANGE);
