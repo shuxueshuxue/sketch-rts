@@ -1877,7 +1877,7 @@ function attackStep(game: Game, unit: Unit, order: AttackOrder, navalFrame: bool
   if (station && distance(target, station) > GUARD_LEASH_RANGE) { write(guardReturnOrder(game, unit)); return; }
   if (!ship && backOutOfDeadZone(game, unit, target, false)) return;
   if (gap > strikeReach(unit, target)) {
-    if (isPlayerId(unit.owner) && order.leashX !== undefined && order.leashY !== undefined && distance(unit, { x: order.leashX, y: order.leashY }) > GUARD_LEASH_RANGE) {
+    if (!humanGuard && isPlayerId(unit.owner) && order.leashX !== undefined && order.leashY !== undefined && distance(unit, { x: order.leashX, y: order.leashY }) > GUARD_LEASH_RANGE) {
       write({ type: "move", x: order.leashX, y: order.leashY });
       return;
     }

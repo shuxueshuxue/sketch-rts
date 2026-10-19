@@ -23,7 +23,7 @@ export default async function (s: Scene) {
   await s.select(soldiers);
   await s.shot('selected-before-move');
   const point = await s.screenOf(1450, 2000);
-  const input = await s.page.evaluate(({x,y}) => ({ at: document.elementFromPoint(x,y)?.outerHTML.slice(0,300), view: (window as any).__sketchRtsView }), point);
+  const input = await s.page.evaluate(({x,y}: {x:number;y:number}) => ({ at: document.elementFromPoint(x,y)?.outerHTML.slice(0,300), view: (window as any).__sketchRtsView }), point);
   s.record('mouse-input', { point, input });
   // Actual browser mouse event: the page sends the right-click move through its socket.
   await s.click(1450, 2000, 'right');

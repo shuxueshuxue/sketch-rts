@@ -4,6 +4,8 @@ import { createBuilding } from '../map';
 import { createRoom } from '../rooms';
 import { createSaveGameRecord, restoreGameFromSave } from '../savegame';
 import { RULES_VERSION, assertCurrentRulesVersion, savedRulesVersion } from '../rules-version';
+import { setGuardPosition } from '../guard-position';
+import { syncDecks } from '../decks';
 
 function duel(ai = false) {
   const game = createGame('bareDuel', { aiPlayers: ai ? ['player', 'enemy'] : ['enemy'] });
@@ -153,6 +155,26 @@ describe('human guard position', () => {
     for (let tick = 0; tick < 200; tick++) stepGame(copy);
     expect(copy.units[0]!.guardPosition).toEqual({ x: 1000, y: 1500 });
     expect(copy.units[0]!.order.type).toBe('idle');
+  });
+
+  it('keeps the same deck-local station when its hull sails beyond the old world-space leash', () => {
+    const { game, guard } = duel();
+    game.map.terrain = { cell: 32, cols: 128, rows: 128, cells: '~'.repeat(128 * 128) };
+    const ship = game.spawnUnit('player', 'transport', 1000, 2000);
+    guard.deck = { shipId: ship.id, x: -30, y: 0 };
+    const enemy = game.spawnUnit('enemy', 'footman', 1050, 2000);
+    enemy.deck = { shipId: ship.id, x: 50, y: 0 };
+    enemy.order = { type: 'hold', x: enemy.x, y: enemy.y };
+    syncDecks(game.units);
+    setGuardPosition(game, guard);
+    guard.order = { type: 'attack', targetId: enemy.id, leashX: guard.x, leashY: guard.y };
+    const station = { ...guard.guardPosition! };
+    ship.x += 1000;
+    syncDecks(game.units);
+    stepGame(game);
+    expect(guard.order.type).toBe('attack');
+    expect(guard.guardPosition).toEqual(station);
+    expect(guard.deck?.shipId).toBe(ship.id);
   });
 
   it('reads rules-5 saves and initializes missing stations at the saved position on the first tick', () => {
