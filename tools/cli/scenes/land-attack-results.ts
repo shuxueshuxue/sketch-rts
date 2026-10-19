@@ -16,14 +16,19 @@ export default async function(s: Scene) {
   match.agents = { player: match.agents.v9_summoner, enemy: match.agents.p1 };
   const memories: any = {}, frames = new Map<number, any[]>(), shots = new Map<number, any>();
   const events: any[] = [], results: any[] = [];
-  const targets = [9196, 15376, 16100, 16216];
+  let firstWave: any;
+  let photographed: any[] = [];
+  const damage = new Map<string, { first: any; last: any }>();
   let prior = '', lastResult = '';
   const fingerprint = (world: any) => JSON.stringify({ tick: world.tick,
     units: world.units.map((u: any) => [u.id, u.kind, u.owner, u.x, u.y, u.hp]).sort(),
     buildings: world.buildings.map((b: any) => [b.id, b.owner, b.kind, b.x, b.y, b.hp, b.complete]).sort(),
     resources: world.resources.map((r: any) => [r.id, r.amount]).sort(),
     gold: Object.fromEntries(Object.entries(world.players).map(([id, p]: any) => [id, p.gold])) });
-  runGameLoop({ ...match, maxTicks: targets.at(-1)!, commandPlanner: navalObservedPlanner(memories) }, {
+  const capture = (game: any, goal: any, name: string) => ({ tick: game.tick, name, goal: structuredClone(goal),
+    world: fingerprint(game), task: structuredClone(memories.player.landAttack),
+    result: structuredClone(memories.player.landAttackResult) });
+  runGameLoop({ ...match, maxTicks: 18000, commandPlanner: navalObservedPlanner(memories) }, {
     onCommand(e: any) {
       if (!frames.has(e.tick)) frames.set(e.tick, []);
       frames.get(e.tick)!.push({ playerId: e.owner, command: structuredClone(e.command) });
@@ -33,12 +38,27 @@ export default async function(s: Scene) {
       if (key !== prior) { events.push({ tick: game.tick, task: structuredClone(task), general: structuredClone(memories.player.v6?.general) }); prior = key; }
       const result = memories.player.landAttackResult;
       if (result && JSON.stringify(result) !== lastResult) { results.push({ ...result }); lastResult = JSON.stringify(result); }
-      if (targets.includes(game.tick)) shots.set(game.tick, { world: fingerprint(game), task: structuredClone(task),
-        result: structuredClone(result), halls: structuredClone(game.buildings.filter((b: any) => b.kind === 'townHall')) });
+      const goal = game.buildings.find((b: any) => b.id === task?.targetId);
+      if (goal && !firstWave) firstWave = capture(game, goal, 'first-expansion-goal');
+      if (goal && goal.hp < goal.maxHp && task.general.group.some((id: string) => game.units.some((unit: any) =>
+        unit.id === id && Math.hypot(unit.x - goal.x, unit.y - goal.y) < 1000))) {
+        const prior = damage.get(goal.id);
+        if (!prior || prior.last.goal.hp !== goal.hp) {
+          const frame = capture(game, goal, 'outpost-under-attack');
+          damage.set(goal.id, { first: prior?.first ?? frame, last: frame });
+        }
+      }
+      if (!photographed.length && result?.result === 'destroyed') {
+        const hit = damage.get(result.targetId);
+        s.must(hit, 'destroyed result has no preceding physical assault');
+        photographed = [firstWave, hit!.first, { ...hit!.last, name: 'outpost-near-demolition' },
+          capture(game, hit!.last.goal, 'outpost-demolished')];
+      }
     },
   });
   s.must(results.some(result => result.result === 'destroyed'), 'real match did not demolish an enemy outpost');
-  s.must(events.find(event => event.task)?.task.targetId === 'building-enemy-townHall-1205', 'first wave bypassed the natural');
+  s.must(firstWave?.goal.id !== 'building-enemy-townhall', 'first wave bypassed the natural');
+  for (const frame of photographed) shots.set(frame.tick, frame);
   const host = await s.page.evaluate(() => JSON.parse(localStorage.getItem('sketch-rts-user')!));
   const created: any = await s.api('/api/rooms', { host, mapId: 'ladder', layoutSeed: match.options.layout.seed,
     visibility: 'private', humanCount: 1, aiCount: 1,
@@ -53,7 +73,7 @@ export default async function(s: Scene) {
   const url = new URL(`?room=${roomId}`, s.page.url()).href;
   let current = 0;
   const proof: any[] = [];
-  for (const target of targets) {
+  for (const target of [...shots.keys()].sort((a, b) => a - b)) {
     if (current < target) await s.api(`/api/rooms/${roomId}/tick`, { ticks: target - current }); current = target;
     const world: any = await s.api(`/api/rooms/${roomId}/snapshot`), expected = shots.get(target);
     s.must(fingerprint(world) === expected.world, `hosted world differs from the real match at tick ${target}`);
@@ -61,12 +81,10 @@ export default async function(s: Scene) {
     await s.page.waitForFunction((tick: number) => ((window as any).__sketchRtsView?.tick ?? -1) >= tick, target, { timeout: 120000 });
     await s.page.waitForFunction(() => !!(window as any).__sketchRtsDebug?.ready(), null, { timeout: 120000 });
     await s.page.addStyleTag({ content: '[data-pointer-lock-gate]{display:none!important}' });
-    const goalId = target === targets[0] ? 'building-enemy-townHall-1205' : 'building-enemy-townHall-2965';
-    const hall = expected.halls.find((b: any) => b.id === goalId)
-      ?? shots.get(targets[1]!).halls.find((b: any) => b.id === goalId);
+    const hall = expected.goal, goalId = hall.id;
     await s.camera(hall.x, hall.y, .62); await s.wait(1500);
     if (world.buildings.some((b: any) => b.id === goalId)) await s.select([goalId]);
-    const name = `attack-result-tick-${target}`;
+    const name = `${expected.name}-tick-${target}`;
     await s.shot(name);
     const output = JSON.parse(process.argv[2]!).out;
     await s.page.screenshot({ path: `${output}/${name}.jpg`, type: 'jpeg', quality: 82 });

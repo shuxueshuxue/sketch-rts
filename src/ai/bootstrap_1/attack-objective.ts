@@ -7,7 +7,6 @@ import type { AiPolicyMemory, V6PolicyMemory } from '../memory';
 import { distance } from '../policy/spatial';
 import type { AiPolicyContext } from '../policy/types';
 import { availableV6Army, type AttackChoice } from '../policy/v6/general';
-import { marchStrength } from '../policy/v6/strength';
 import { isBacklineKind } from '../policy/v6/backline';
 import type { V6Intel } from '../policy/v6/intel';
 import { recordPlay, v6Memory } from '../policy/v6/memory';
@@ -129,14 +128,13 @@ export function prepareLandAttack(snapshot: GameSnapshot, owner: PlayerId, optio
   delete task.paused;
   delete task.pausedAt;
   // A local medic, garrison or courier assignment may borrow part of the wave.
-  // Keep the remaining wave on its objective. Remove only living borrowed force
-  // from the departure budget; actual deaths still count toward the old worn test.
+  // Keep the remaining wave on its objective. Preserve its departure budget:
+  // if treatment takes most of the wave, the existing worn test must withdraw it.
   const available = new Set(availableV6Army(snapshot, options, intel).map(unit => unit.id));
   const borrowed = survivors.filter(unit => !available.has(unit.id));
   if (borrowed.length) {
     const ids = new Set(borrowed.map(unit => unit.id));
     task.general.group = task.general.group!.filter(id => !ids.has(id));
-    task.general.groupStart = Math.max(0, (task.general.groupStart ?? 0) - marchStrength(borrowed));
   }
   memory.general = structuredClone(task.general);
   if (task.camp) memory.creep = structuredClone(task.camp);
