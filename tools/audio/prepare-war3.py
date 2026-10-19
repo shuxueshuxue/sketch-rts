@@ -3,6 +3,8 @@
 
 No recordings are committed. Core events remain readable by older clients;
 extras.json supplies naval sounds, spells and menu feedback to the runtime.
+Then run prepare-war3-mortar.py for the selected CC0 mortar supplement; see
+docs/reviews/war3-mortar-20261018.zh.md for its separately stored input.
 """
 import argparse
 import csv
