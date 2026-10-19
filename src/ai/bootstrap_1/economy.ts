@@ -123,7 +123,10 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
   goals.push(...colonyRecoveryGoals(snapshot, owner, options));
   const siege = options.requestedVersion === 'v7' ? towerRushGoal(snapshot, owner, options) : undefined;
   if (siege) goals.push(siege);
-  const ranked = ageV6Goals(snapshot, options, goals);
+  const task = options.memory.landExpansion;
+  // Once the screen is sufficient, finish its paid mining objective before optional tech and extra recruitment.
+  const ranked = ageV6Goals(snapshot, options, goals.map(goal => task && !task.paused
+    && ['clear', 'escort'].includes(task.stage) && goal.id.startsWith('bases:') ? { ...goal, priority: 90 } : goal));
   const player = snapshot.players[owner]!;
   const wanted = wantedUnits(snapshot, owner, options);
   const wave = productionWaveSupply(snapshot, owner, options, ranked, wanted);
@@ -161,6 +164,7 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
     }
     return [{ ...goal, productionReserve: Math.max(productionReserve, goal.id === `unit:${healer}` ? 0 : recoveryReserve) }];
   }).filter(goal => {
+    if (task?.paused && goal.id.startsWith('bases:')) return false;
     // Being near an outlying farm or a forward tower does not itself threaten a mining hall.
     if (goal.id.startsWith('worker@') && missingMiningWorkers(snapshot, owner, towerRushConstructionCrew(snapshot, owner, options), options) <= 0) return false;
     if (goal.id === 'tower:ahead' && !threatenedHome) return false;

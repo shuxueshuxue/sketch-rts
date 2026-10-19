@@ -1,0 +1,163 @@
+{
+  "结论": "扩张任务保持同一个矿点，从清营、护送到基地建成；只因真实威胁暂停并记录原因。",
+  "base": "c0a345a72880c2029e70f559db46fa1cc1c2f71f",
+  "candidate": "1015d6e533f28a24f35c42e69ef1660bc8c1ff6d",
+  "复现": {
+    "seed": "v5-final-1",
+    "map": "ladder-16",
+    "subject": "v9_archer",
+    "race": "grove",
+    "rival": "v9",
+    "index": 28,
+    "owner": "v9_archer"
+  },
+  "落基时间秒": {
+    "二矿": {
+      "base": 343.5,
+      "candidate": 226.9
+    },
+    "三矿": {
+      "base": 507.25,
+      "candidate": 389.1
+    }
+  },
+  "规格": [
+    "阶段需要新基地时，锁定矿点；优先补足清营战力，在安全位置集结、清营；三名兵沿工人实际 steering 路线护送，其余守矿，直到基地建成。",
+    "两处有效收入与至少四名健康护送兵，即请求三矿；优先选择当前护送兵力可清掉的营地。",
+    "自家矿区或运矿工人有真实威胁、目标矿受到压制时暂停，记录 tick 和原因，威胁解除后恢复原矿点；暂停期间停止扩张资本与额外清营招募。",
+    "失去全部收入、没有400金且未开工的既有任务进入 fund 状态，释放军队恢复经济；保留矿点，恢复资金后继续。"
+  ],
+  "共享范围": "未修改共享 general.ts 或 v8/v9 preset；AiPolicyMemory 仅新增可选 landExpansion，保留 workerSafety/miningDefense。房间入口 planBootstrapGeneral 先分发扩张任务。回防实现不改，只复用 #534 的 rally 分配判断；其测试按单次回防限定统计边界，并断言第二次独立回防。",
+  "验证": {
+    "tsc": "passed（当前 c0a345a7 集成代码）",
+    "main回归测试": "d7cd89d6 上 4 条核心新增行为测试均失败；另有 1 条既有任务失去资金后的防回归用例。",
+    "胜率bench": "未运行，按最新要求用行为场景验收",
+    "回防认领回归": "新增补员场景在修正前 #535（de74279b）失败：已知 rally 存在、当前无 intrusion 时任务仍未暂停；修正后通过。",
+    "合并后关键场景": "当前完整运行：expansion-mission 6/6、mining-rally 11/11、mining-leash 7/7；所有 24 项通过。",
+    "历史独立分支_完整房间AI测试": {
+      "files": 178,
+      "passed": 2532,
+      "failed": 1,
+      "说明": "唯一失败为 large-battle-think 并行运行时耗时断言（单次 7.707 秒 > 2 秒）；单独重跑通过，整项 39.26 秒。"
+    },
+    "历史独立分支_large-battle-think单独重跑": "1/1 passed",
+    "历史独立分支_共享general_creep": "2 files, 48 passed",
+    "历史独立分支_资金恢复边界": "5 个任务场景及 48 个原有资金/护送场景，共 53 passed；tsc passed。",
+    "前轮fd54606b完整src": {
+      "filesPassed": 667,
+      "filesTotal": 668,
+      "testsPassed": 7417,
+      "skipped": 1,
+      "errors": 1,
+      "说明": "painted-card-batches worker 意外退出；单跑 RSS 升到 8.3 GiB 后主动停止，fake GL 文件级 Map 保留跨测试像素。未修改测试/生产代码，71 项按 8 个独立进程覆盖，全通过。当前 c0a345a7 的正式整套改放 mac1（32核/512GiB），2 workers，原文件完整执行。"
+    },
+    "fund归属兼容反证": "新 main 的 expansionOwnsDefender 会读任务名单和 claim；旧 fund 任务仍错误返回 owns=true。回归测试先失败，再在 fund 分支释放名单与 expansion claim；不改 #536 helper 或字段名。",
+    "完整src测试": {
+      "base": "c0a345a7",
+      "candidate": "1015d6e5",
+      "machine": "mac1",
+      "command": "npx vitest run --dir src --maxWorkers 2 --minWorkers 1",
+      "filesPassed": 671,
+      "filesTotal": 671,
+      "testsPassed": 7515,
+      "skipped": 1,
+      "errors": 0,
+      "exitCode": 0,
+      "durationSeconds": 321.26,
+      "largeBattleThinkSeconds": 14.693,
+      "paintedCardBatchesSeconds": 59.012
+    },
+    "diffCheck": "passed"
+  },
+  "浏览器证明": {
+    "machine": "mac1",
+    "command": "bin/sketch yatu land-expansion --ref 1015d6e5 --ref2 c0a345a7 --on mac1 --locale zh-CN --json",
+    "说明": "同地图种子的真实 SDK 房间 AI 对 v9 对局，使用公开房间 player/enemy ID；命令重放到实际服务器和浏览器，核对单位位置/生命、建筑、资源及金钱。与原复现的 owner ID 不同，独立列为画面证明。",
+    "截图tick": [
+      4800,
+      8200
+    ],
+    "原始PNG": "保留于同名 evidence 目录；PR 内 JPEG 由浏览器直接截图产生。",
+    "预览": [
+      {
+        "file": "docs/reviews/land-expansion-mission/after-natural.jpg",
+        "sha256": "ac060e699570176ce746f7f12f8b3c72ed2b857b454f06ac82bbd2d6942bb36c",
+        "bytes": 223646,
+        "commit": "1015d6e533f28a24f35c42e69ef1660bc8c1ff6d"
+      },
+      {
+        "file": "docs/reviews/land-expansion-mission/after-third.jpg",
+        "sha256": "dac96797ef03b0aded12e0736773f88acea06f22852531a32df13b8ce478ccac",
+        "bytes": 244440,
+        "commit": "1015d6e533f28a24f35c42e69ef1660bc8c1ff6d"
+      },
+      {
+        "file": "docs/reviews/land-expansion-mission/before-natural.jpg",
+        "sha256": "aa18a0f1e4b747b7235a7bc65a221515bb5e098bb4ca96b0a1cbf7efb8ff0544",
+        "bytes": 220717,
+        "commit": "c0a345a72880c2029e70f559db46fa1cc1c2f71f"
+      },
+      {
+        "file": "docs/reviews/land-expansion-mission/before-third.jpg",
+        "sha256": "0b3d847995459d8ddf8fb343e2f9760ebf07ced2d824bfe62c8b7b12d4f6fe9d",
+        "bytes": 246031,
+        "commit": "c0a345a72880c2029e70f559db46fa1cc1c2f71f"
+      }
+    ],
+    "实际运行": "c0a345a7 与 1015d6e5 两端重新重放、补拍，均通过实际房间/SDK 状态核对。",
+    "结果说明": "4:00 新版二矿施工中，main 没有二矿；6:50 新版第三处矿点施工后段，main 没有这处基地。新版画面只剩初始主城和正在建的第三处矿点；原二矿已失，截图不表示三座基地同时存活。原始 owner 重放中该二矿于 tick 8169（6:48.45）被拆。"
+  },
+  "finalCodeCommit": "1015d6e533f28a24f35c42e69ef1660bc8c1ff6d",
+  "合并基线": "c0a345a7",
+  "回防集成": {
+    "优先级": "miningDefense 全名单（包括已到场、重新进入 general 军力视图的人）优先于扩张。既有任务成员和新招募均排除该名单，清掉其扩张认领。",
+    "暂停": "复用 general 的未覆盖 intrusion，包含矿口塔遇袭；使用 miningRallyAssignment 识别正在建立或等待最后一人的 rally，没有当前 intrusion 也不提前恢复。暂停时释放扩张认领。",
+    "补员": "护送每次从实际可用、未被回防认领的兵中重选三人；新增场景把原三名护卫拉去回防，确认暂停、认领释放，回防结束后由工人附近其他三人补足。",
+    "redirects": "没有新增 AiScript 或独立命令来源；仍通过既有 v6General 发令，继承 #534 的 local 声明。扩张不重定向任何 miningDefense 成员。",
+    "Codex37测试调整": {
+      "file": "src/ai/bootstrap_1/mining-rally.test.ts",
+      "test": "feeds all 19 real 14:48 defenders into one mine defense while the first sufficient group fights",
+      "原意": "保证同一次回防中锚点不切换；19 人必须全到原矿口，足够的先到部队须在全员集结前交战。",
+      "改动": "halls 只统计第一轮 19 人全部实际到达前的锚点。交战先后、矿区损伤、45 秒内开战与 90 秒内全部到场的原断言保留。",
+      "第二轮正向断言": "当前从真实重放的尾快照续写受控场景：让原敌军退回、确认首轮已释放，再在另一矿发起明确武装袭击；断言新 hallId、非空认领、距新矿不超过201的锚点、1000内真实攻击者，以及 miningRally 实际接受的单位命令。没有使用条件断言跳过第二轮。",
+      "原矿位置": {
+        "x": 2576,
+        "y": 4272
+      },
+      "第二轮矿位置": {
+        "x": 1904,
+        "y": 4016
+      },
+      "原因": "新增扩张任务会在首轮回防结束后恢复，改变后续来袭时间和最近受威胁矿点；合法的新任务不属于原回防的锚点切换。",
+      "旧基线自然第二轮": {
+        "base": "fd54606b",
+        "candidate": "4480277e",
+        "下令tick": 20512,
+        "首次观测tick": 20513,
+        "时间秒": 1025.65,
+        "矿位置": {
+          "x": 1904,
+          "y": 4016
+        },
+        "说明": "这是首次集成时发现的真实后续袭击；#536 改变后续走向后，当前短重放不再自然发生这一轮。"
+      }
+    },
+    "fund与追击兼容": "fund 阶段保留矿点、释放任务成员与 expansion claim，确保 #536 不将无法出发的军队误判为护送任务。",
+    "第536号PR": "保留 let defendedHall / haulingDefense、defenseTarget 记录、pursue 缰绳、后置越界修正、onCommands 回调，以及所有原有声明；仅将 let commands 接上扩张分发。"
+  },
+  "原始对局后续事实": {
+    "二矿被拆tick": 8169,
+    "二矿被拆时间秒": 408.45,
+    "三矿完成tick": 8342,
+    "三矿完成时间秒": 417.1,
+    "说明": "当前 c0a345a7 集成版本原始 owner 单局重放；如实保留扩张后的基地损失。"
+  },
+  "历史证据": {
+    "sha256": "b6e4c1507ebfc9a2829ef88d8637a3b6bd5b36ca0f9bb6157a499d20273a8896",
+    "bytes": 6999527,
+    "name": "land-expansion-mission",
+    "kind": "dir",
+    "machine": "a100",
+    "pushed": "293cac380b4880c294d4e3c6d28659698bb4f139"
+  }
+}
