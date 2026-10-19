@@ -51,7 +51,7 @@ function runScriptsWithContext(snapshot: GameSnapshot, owner: PlayerId, scripts:
     const scriptCommands = withoutUnitsClaimedElsewhere(asCommands(script.run(budget, owner, policyOptions)), claims, script.id);
     script.onCommands?.(snapshot, owner, policyOptions, scriptCommands);
     if (scriptCommands.length > 0) {
-      recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams, preserveHireCampClaims, preserveSkirmishRetreatClaims });
+      recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams, preserveHireCampClaims, preserveSkirmishRetreatClaims, ...(script.redirects ? { redirects: script.redirects } : {}) });
       commands.push(...scriptCommands.map((command) => ({ scriptId: script.id, command })));
       spent += scriptCommands.reduce((total, command) => total + purchaseCost(snapshot, owner, command), 0);
       reserveOrderedUnits(scriptCommands, movedUnitIds, snapshot);
@@ -69,7 +69,7 @@ function runScriptsWithContext(snapshot: GameSnapshot, owner: PlayerId, scripts:
       : removeOrderedUnitConflicts(rawScriptCommands, movedUnitIds, (command) => runnerOptions.minimumAttackMoveUnits?.(script.id, command, snapshot, owner, policyOptions) ?? 1);
     script.onCommands?.(snapshot, owner, policyOptions, scriptCommands);
     if (scriptCommands.length === 0) continue;
-    recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams, preserveHireCampClaims, preserveSkirmishRetreatClaims });
+    recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams, preserveHireCampClaims, preserveSkirmishRetreatClaims, ...(script.redirects ? { redirects: script.redirects } : {}) });
     reserveOrderedUnits(scriptCommands, movedUnitIds, snapshot);
     commands.push(...scriptCommands.map((command) => ({ scriptId: script.id, command })));
   }

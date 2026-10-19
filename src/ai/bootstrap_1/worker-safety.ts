@@ -1,7 +1,8 @@
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { groundSteeringRoute, nearestByRoute } from '../../shared/route-selection';
 import type { Building, GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
-import type { AiPolicyMemory } from '../memory';
+import type { AiPolicyMemory, WorkerEvacuation } from '../memory';
+import { activeUnitClaim, recordUnitTaskClaim } from '../policy/claims';
 import { distance } from '../policy/spatial';
 import type { AiPolicyContext } from '../policy/types';
 import { armedFoes, retreatLandRoad, retreatThreatReach, safeLandTravelTicks } from './safe-land-route';
@@ -9,7 +10,8 @@ import { miningJobOrder } from './mining-jobs';
 import { THINK_TICKS } from './mounted-micro';
 import { mineClaimedByAlly } from '../policy/mine-claims';
 
-type Evacuation = NonNullable<AiPolicyMemory['workerSafety']>[string];
+type WorkerSafetyPlan = { worker: Unit; released: boolean; state: WorkerEvacuation; commands: GameCommand[] };
+const proposals = new WeakMap<AiPolicyMemory, { tick: number; plans: WorkerSafetyPlan[] }>();
 type Threat = Unit | Building;
 // Start before the next volley, with enough room for a worker to leave the firing lane.
 const CLEARANCE = 160;
@@ -48,12 +50,13 @@ function evacuation(snapshot: GameSnapshot, owner: PlayerId, worker: Unit, foes:
 }
 
 /** Workers need a retreat even when their hall stands, their mine is spent, or no soldier can rescue them. */
-export function workerSafetyPlans(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
+export function workerSafetyPlans(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): WorkerSafetyPlan[] {
   const foes = armedFoes(snapshot, owner, options).filter(foe => !('order' in foe && foe.deck));
   const workers = snapshot.units.filter(worker => worker.owner === owner && worker.kind === 'worker' && !worker.deck
     && !worker.garrison && worker.order.type !== 'board');
-  return workers.flatMap(worker => {
-    const previous = options.memory.workerSafety?.[worker.id];
+  return workers.flatMap<WorkerSafetyPlan>(worker => {
+    const claim = activeUnitClaim(snapshot, owner, worker, options);
+    const previous = claim?.kind === 'workerSafety' ? claim.evacuation : undefined;
     // The hauling escort below handles melee interception. Ranged fire needs an immediate withdrawal,
     // even with a standing hall or a friendly army nearby; neither stops a volley hitting the workers.
     const exposed = endangered(snapshot, worker, worker, previous ? foes : foes.filter(foe => foe.attackRange > 80));
@@ -73,7 +76,7 @@ export function workerSafetyPlans(snapshot: GameSnapshot, owner: PlayerId, optio
       && (!previous.safeResourceId || safeMine && !endangered(snapshot, worker, safeMine, foes));
     const destination = existing ? previous : evacuation(snapshot, owner, worker, foes, options);
     if (!destination) return [];
-    const state: Evacuation = { origin, ...(resourceId ? { resourceId } : {}), ...destination };
+    const state: WorkerEvacuation = { origin, ...(resourceId ? { resourceId } : {}), ...destination };
     const commands: GameCommand[] = [];
     if (!(state.safeResourceId && job?.resourceId === state.safeResourceId && !exposed)) {
       const walking = worker.order.type === 'move' && worker.order.avoidCombat
@@ -92,13 +95,24 @@ export function workerSafetyPlans(snapshot: GameSnapshot, owner: PlayerId, optio
 
 export function planWorkerSafety(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext,
   plans = workerSafetyPlans(snapshot, owner, options)) {
-  if (plans.length === 0 && !options.memory.workerSafety) return [];
-  const memory = options.memory.workerSafety ??= {};
-  const living = new Set(snapshot.units.filter(unit => unit.owner === owner).map(unit => unit.id));
-  for (const id of Object.keys(memory)) if (!living.has(id)) delete memory[id];
-  for (const plan of plans) {
-    if (plan.released) delete memory[plan.worker.id];
-    else memory[plan.worker.id] = plan.state;
-  }
+  proposals.set(options.memory, { tick: snapshot.tick, plans });
   return plans.flatMap(plan => plan.commands);
+}
+
+export function recordWorkerSafetyAcceptedCommands(snapshot: GameSnapshot, _owner: PlayerId, options: AiPolicyContext, commands: readonly GameCommand[]) {
+  const proposal = proposals.get(options.memory);
+  if (!proposal || proposal.tick !== snapshot.tick) return;
+  const issued = new Set(commands.flatMap(command => 'unitIds' in command ? command.unitIds : []));
+  for (const plan of proposal.plans) if (!plan.released && issued.has(plan.worker.id)) {
+    recordUnitTaskClaim(snapshot, options.memory, plan.worker.id, { kind: 'workerSafety', targetId: plan.worker.id,
+      x: plan.state.shelter.x, y: plan.state.shelter.y, evacuation: plan.state });
+  }
+}
+
+export function finishWorkerSafetyPlans(snapshot: GameSnapshot, _owner: PlayerId, options: AiPolicyContext) {
+  const proposal = proposals.get(options.memory); proposals.delete(options.memory);
+  if (!proposal || proposal.tick !== snapshot.tick) return;
+  for (const plan of proposal.plans) if (plan.released && options.memory.unitClaims[plan.worker.id]?.kind === 'workerSafety') {
+    delete options.memory.unitClaims[plan.worker.id];
+  }
 }

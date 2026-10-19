@@ -20,6 +20,7 @@ import { bootstrapCampApproach, chooseBootstrapCamp, startBootstrapCamp } from '
 import { miningJobDefenseTarget } from './mining-job-defense';
 import { mineClaimedByAlly } from '../policy/mine-claims';
 import { miningRallyAssignment } from './mining-rally';
+import { activeUnitClaim, isMineRallyClaim } from '../policy/claims';
 
 /** A room army owns one mining objective through clearing, escort and construction. */
 export function prepareExpansionMission(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel) {
@@ -27,9 +28,11 @@ export function prepareExpansionMission(snapshot: GameSnapshot, owner: PlayerId,
   let task = memory.landExpansion;
   // Arrived defenders return to the general's combat view, but still belong to the mine defense.
   // Neither retaining yesterday's escorts nor recruiting today may take them from that task.
-  const defending = new Set(memory.miningDefense?.unitIds);
+  const defending = new Set(snapshot.units.filter(unit => {
+    const claim = activeUnitClaim(snapshot, owner, unit, options);
+    return isMineRallyClaim(claim) || claim?.kind === 'mineLeash' || claim?.kind === 'expansionGarrison';
+  }).map(unit => unit.id));
   if (task) task.unitIds = task.unitIds.filter(id => !defending.has(id));
-  for (const id of defending) if (memory.unitClaims[id]?.kind === 'expansion') delete memory.unitClaims[id];
   if (activeMiningBaseCount(snapshot, owner) === 0
     && snapshot.players[owner]!.gold < BUILDING_DEFS.townHall.cost
     && !snapshot.buildings.some(building => building.owner === owner && building.kind === 'townHall' && !building.complete)
@@ -103,8 +106,10 @@ export function expansionMissionCommands(snapshot: GameSnapshot, owner: PlayerId
   const task = prepareExpansionMission(snapshot, owner, options, intel);
   if (!task || task.paused || task.stage === 'complete') return undefined;
   const mine = snapshot.resources.find(mine => mine.id === task.mineId)!, memory = v6Memory(options);
-  const front = availableV6Army(snapshot, options, intel).filter(unit => !options.memory.miningDefense?.unitIds.includes(unit.id)
-    && !isBacklineKind(unit) && unit.attackDamage > 0);
+  const front = availableV6Army(snapshot, options, intel).filter(unit => {
+    const claim = activeUnitClaim(snapshot, owner, unit, options);
+    return !isMineRallyClaim(claim) && claim?.kind !== 'mineLeash' && claim?.kind !== 'expansionGarrison';
+  }).filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0);
   if (!front.length) return [];
   const camps = neutralCamps(snapshot), guard = camps.find(camp => distance(camp.center, mine) <= EXPANSION_GUARD_RANGE);
   if (guard) {

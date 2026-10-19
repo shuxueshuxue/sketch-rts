@@ -15,6 +15,7 @@ import type { PresetAiPolicyOptions } from "./types";
 import { isV5HybridPolicy, isV6Policy } from "./versions";
 import { veteranRecoveryHpRatio } from "./veterancy";
 import { mainBase, playerState } from "./world-model";
+import { unitRetreatClaim } from './claims';
 
 // groupFallback: false leaves walking a locally outnumbered group home to a general that owns the army's position (see
 // @@@v8-one-voice); the script still kites, pulls its wounded back and takes a critical pick-off.
@@ -102,7 +103,7 @@ function v2SkirmishFallbackPoint(snapshot: GameSnapshot, allies: Unit[], safePoi
   if (allies.some((unit) => unitMover(unit.kind) !== "land")) return safePoint;
   // Reissuing a retreat must not roll its goal backward every policy frame.
   for (const unit of allies) {
-    const claim = options.memory?.unitClaims[unit.id];
+    const claim = unitRetreatClaim(snapshot, unit, options);
     if (claim?.kind === "retreat" && claim.expiresTick >= snapshot.tick && unit.order.type === "move" && unit.order.avoidCombat && distance(unit.order, claim) < 1 && distance(unit, claim) > 110) return claim;
   }
   const center = averagePoint(allies);

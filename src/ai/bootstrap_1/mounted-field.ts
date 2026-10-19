@@ -11,6 +11,7 @@ import { availableMountedRiders, mountedFiringPoint, mountedFiringRouter } from 
 import { armedFoes } from './safe-land-route';
 import { threatRoadCommands } from './threat-roads';
 import { mineGuardUnitIds, uncoveredMiningRaid } from './mine-defense';
+import { activeUnitClaim, isMineRallyClaim } from '../policy/claims';
 
 const allocations = new WeakMap<GameSnapshot, Map<PlayerId, ReadonlySet<string>>>();
 
@@ -61,7 +62,8 @@ export function mountedFieldPlans(snapshot: GameSnapshot, owner: PlayerId, optio
   const guards = mineGuardUnitIds(snapshot, owner, options);
   const riders = availableMountedRiders(snapshot, owner, options)
     .filter(unit => !guards.has(unit.id) && !options.memory.v6?.creep?.group.includes(unit.id)
-      && !options.memory.miningDefense?.unitIds.includes(unit.id)
+      && !isMineRallyClaim(activeUnitClaim(snapshot, owner, unit, options))
+      && activeUnitClaim(snapshot, owner, unit, options)?.kind !== 'expansionGarrison'
       && !options.memory.mounted?.some(task => task.unitIds.includes(unit.id)));
   const crew = new Set(riders.map(rider => rider.id));
   return riders.flatMap(rider => {
