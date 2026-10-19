@@ -1,0 +1,922 @@
+{
+  "base": "bb757c5997216e9f4edad4abedeef24f43de09fa",
+  "beforeOptimization": "cae689761acfeef44faea7f5d600b362480ad118",
+  "optimizedRuntime": "9c5e4927bfb3c5089f21f41658f41a8e682eef49",
+  "conclusion": "同机 ABBA 的总耗时由旧 PR 的 52.99 秒降至 35.46 秒；最终对照 main 为 38.77 秒。最终 think 的 p50/p95/max 均低于同轮 main，原测试上限没有修改。",
+  "method": {
+    "machine": "juma / ser497065980654",
+    "cpu": "AMD EPYC 7K62 48-Core Processor",
+    "availableCpus": 16,
+    "node": "v24.22.0",
+    "scene": "逐字复制 large-battle-think.test.ts 的 Temple Spring / pool-templeSpring-1：4 方各 80 名混合兵、3 个房间 AI，900 tick。",
+    "sequence": "初始 A1/B1/B2/A2：bb757c59 vs cae68976；最终 A5/D1/D2/A6：bb757c59 vs 9c5e4927。每轮独立 Node 进程，顺序执行。中间 A3/C1/C2/A4 也保留。",
+    "measurement": "包裹 inline think executor.submit；记录每次 snapshot/规划/命令检查的 wall time，分离模拟推进。每轮 180 次 think（每 AI 60），每个版本合并两轮 360 次。",
+    "quantiles": "nearest rank：排序后第 ceil(q*n) 项；没有去掉冷启动 think 或异常值。",
+    "roundTiming": "900 tick loop 的总耗时，不含 TS 模块导入、场景构造和 warmGameCaches；不等同 Vitest 的端到端进程耗时。",
+    "profiles": "CPU profile 单独运行，不混入 ABBA；原始逐 think 时间、CPU 用量、轮前后 load 和校验和均保留。没有并行跑两个性能场景。",
+    "limits": "这是同一四军场景的对照，不是所有地图/兵力规模的上限承诺；没有跑胜率 bench。"
+  },
+  "abba": {
+    "initial": {
+      "main": {
+        "runs": [
+          "A1",
+          "A2"
+        ],
+        "refs": [
+          "bb757c5997216e9f4edad4abedeef24f43de09fa"
+        ],
+        "n": 360,
+        "p50": 160.68569800000114,
+        "p95": 404.97299799999746,
+        "max": 1079.9656830000001,
+        "meanThinkMs": 183.13800992499975,
+        "roundMeanMs": 36790.1545215,
+        "thinkCpuMeanMs": 42459.171,
+        "checksums": [
+          "e77bef39"
+        ]
+      },
+      "oldPr": {
+        "runs": [
+          "B1",
+          "B2"
+        ],
+        "refs": [
+          "cae689761acfeef44faea7f5d600b362480ad118"
+        ],
+        "n": 360,
+        "p50": 194.24212999999872,
+        "p95": 687.5537569999942,
+        "max": 1552.6811249999998,
+        "meanThinkMs": 272.8917457722224,
+        "roundMeanMs": 52990.402313499995,
+        "thinkCpuMeanMs": 59391.303,
+        "checksums": [
+          "e96ba5a1"
+        ]
+      },
+      "deltaPercent": {
+        "p50": 20.883272386816486,
+        "p95": 69.77767910343458,
+        "max": 43.77133916763536,
+        "roundMeanMs": 44.0341933941393,
+        "thinkCpuMeanMs": 39.878621275954714
+      }
+    },
+    "routeReuseOnly": {
+      "main": {
+        "runs": [
+          "A3",
+          "A4"
+        ],
+        "refs": [
+          "bb757c5997216e9f4edad4abedeef24f43de09fa"
+        ],
+        "n": 360,
+        "p50": 168.72101499999917,
+        "p95": 402.4207609999994,
+        "max": 1081.137939,
+        "meanThinkMs": 187.21245056388892,
+        "roundMeanMs": 37632.791798000006,
+        "thinkCpuMeanMs": 43070.64999999999,
+        "checksums": [
+          "e77bef39"
+        ]
+      },
+      "optimized": {
+        "runs": [
+          "C1",
+          "C2"
+        ],
+        "refs": [
+          "42d463c5994f7cc8294bbb27a8a810569152d1aa"
+        ],
+        "n": 360,
+        "p50": 178.38741599999958,
+        "p95": 438.35380800000166,
+        "max": 1245.1471699999997,
+        "meanThinkMs": 203.1984274305555,
+        "roundMeanMs": 40899.3561895,
+        "thinkCpuMeanMs": 46753.511999999995,
+        "checksums": [
+          "e96ba5a1"
+        ]
+      },
+      "deltaPercent": {
+        "p50": 5.729221697724163,
+        "p95": 8.92922296322638,
+        "max": 15.170056020020928,
+        "roundMeanMs": 8.680101144325935,
+        "thinkCpuMeanMs": 8.550746273854726
+      }
+    },
+    "final": {
+      "main": {
+        "runs": [
+          "A5",
+          "A6"
+        ],
+        "refs": [
+          "bb757c5997216e9f4edad4abedeef24f43de09fa"
+        ],
+        "n": 360,
+        "p50": 171.17630100000133,
+        "p95": 421.0337569999974,
+        "max": 1279.0564869999998,
+        "meanThinkMs": 192.94132522777764,
+        "roundMeanMs": 38772.439267,
+        "thinkCpuMeanMs": 43998.03449999998,
+        "checksums": [
+          "e77bef39"
+        ]
+      },
+      "optimized": {
+        "runs": [
+          "D1",
+          "D2"
+        ],
+        "refs": [
+          "9c5e4927bfb3c5089f21f41658f41a8e682eef49"
+        ],
+        "n": 360,
+        "p50": 159.5408350000016,
+        "p95": 357.1875930000024,
+        "max": 975.520438,
+        "meanThinkMs": 174.5953950694445,
+        "roundMeanMs": 35457.163801999995,
+        "thinkCpuMeanMs": 41393.78899999999,
+        "checksums": [
+          "e96ba5a1"
+        ]
+      },
+      "deltaPercent": {
+        "p50": -6.797358005767185,
+        "p95": -15.16414371496474,
+        "max": -23.731246593489963,
+        "roundMeanMs": -8.550598125049369,
+        "thinkCpuMeanMs": -5.919004177334308
+      }
+    }
+  },
+  "perRun": [
+    {
+      "ref": "bb757c5997216e9f4edad4abedeef24f43de09fa",
+      "elapsedMs": 37233.228204,
+      "checksum": "e77bef39",
+      "thinks": {
+        "n": 180,
+        "p50": 164.20959800000128,
+        "p95": 405.61294499999894,
+        "max": 1072.76363,
+        "sum": 33330.357943999974,
+        "cpuMs": 43098.44899999999
+      },
+      "byOwner": {
+        "enemy": {
+          "n": 60,
+          "p50": 182.782553,
+          "p95": 447.7554949999976,
+          "max": 1072.76363,
+          "sum": 14108.32884799999,
+          "cpuMs": 17800.728000000003
+        },
+        "enemy2": {
+          "n": 60,
+          "p50": 77.3973619999997,
+          "p95": 152.79899199999636,
+          "max": 565.8328590000001,
+          "sum": 5816.634257999995,
+          "cpuMs": 8516.487
+        },
+        "player-4": {
+          "n": 60,
+          "p50": 201.0453469999993,
+          "p95": 356.2096110000002,
+          "max": 660.6900689999998,
+          "sum": 13405.394837999986,
+          "cpuMs": 16781.234
+        }
+      },
+      "loadBefore": [
+        10.34,
+        9.51,
+        9.76
+      ],
+      "loadAfter": [
+        11.68,
+        9.97,
+        9.9
+      ],
+      "run": "A1"
+    },
+    {
+      "ref": "cae689761acfeef44faea7f5d600b362480ad118",
+      "elapsedMs": 53058.615984,
+      "checksum": "e96ba5a1",
+      "thinks": {
+        "n": 180,
+        "p50": 189.029219,
+        "p95": 708.0711840000004,
+        "max": 1408.4268200000001,
+        "sum": 49226.94806900002,
+        "cpuMs": 59193.16600000001
+      },
+      "byOwner": {
+        "enemy": {
+          "n": 60,
+          "p50": 201.7307209999999,
+          "p95": 741.4564099999989,
+          "max": 1408.4268200000001,
+          "sum": 19090.567191999988,
+          "cpuMs": 23112.882
+        },
+        "enemy2": {
+          "n": 60,
+          "p50": 137.21155799999906,
+          "p95": 553.7213110000012,
+          "max": 942.552279,
+          "sum": 14074.557342000013,
+          "cpuMs": 16635.869
+        },
+        "player-4": {
+          "n": 60,
+          "p50": 218.5884049999995,
+          "p95": 438.1984800000064,
+          "max": 869.8828169999997,
+          "sum": 16061.823535000025,
+          "cpuMs": 19444.414999999994
+        }
+      },
+      "loadBefore": [
+        13.3,
+        10.49,
+        10.08
+      ],
+      "loadAfter": [
+        13.2,
+        10.88,
+        10.23
+      ],
+      "run": "B1"
+    },
+    {
+      "ref": "cae689761acfeef44faea7f5d600b362480ad118",
+      "elapsedMs": 52922.188642999994,
+      "checksum": "e96ba5a1",
+      "thinks": {
+        "n": 180,
+        "p50": 196.26529500000106,
+        "p95": 674.1203460000033,
+        "max": 1552.6811249999998,
+        "sum": 49014.080409000046,
+        "cpuMs": 59589.439999999995
+      },
+      "byOwner": {
+        "enemy": {
+          "n": 60,
+          "p50": 205.2799300000006,
+          "p95": 714.3245119999992,
+          "max": 1552.6811249999998,
+          "sum": 19057.03186300002,
+          "cpuMs": 22721.135999999995
+        },
+        "enemy2": {
+          "n": 60,
+          "p50": 134.44863500000065,
+          "p95": 523.740135,
+          "max": 991.5401860000002,
+          "sum": 13947.261184000006,
+          "cpuMs": 16784.331999999995
+        },
+        "player-4": {
+          "n": 60,
+          "p50": 221.25349800000004,
+          "p95": 423.5305179999996,
+          "max": 1055.4581340000004,
+          "sum": 16009.787362000023,
+          "cpuMs": 20083.97200000001
+        }
+      },
+      "loadBefore": [
+        13.2,
+        10.88,
+        10.23
+      ],
+      "loadAfter": [
+        12.49,
+        11.08,
+        10.34
+      ],
+      "run": "B2"
+    },
+    {
+      "ref": "bb757c5997216e9f4edad4abedeef24f43de09fa",
+      "elapsedMs": 36347.080839,
+      "checksum": "e77bef39",
+      "thinks": {
+        "n": 180,
+        "p50": 158.68623099999968,
+        "p95": 399.1245689999996,
+        "max": 1079.9656830000001,
+        "sum": 32599.325628999944,
+        "cpuMs": 41819.89300000002
+      },
+      "byOwner": {
+        "enemy": {
+          "n": 60,
+          "p50": 173.20560399999886,
+          "p95": 441.6949679999998,
+          "max": 1079.9656830000001,
+          "sum": 13832.60957399998,
+          "cpuMs": 17359.815999999995
+        },
+        "enemy2": {
+          "n": 60,
+          "p50": 74.48799999999756,
+          "p95": 167.22193200000038,
+          "max": 528.1872020000001,
+          "sum": 5606.703281999977,
+          "cpuMs": 8039.778000000001
+        },
+        "player-4": {
+          "n": 60,
+          "p50": 201.61712100000113,
+          "p95": 387.78255399999944,
+          "max": 640.3503600000004,
+          "sum": 13160.012772999988,
+          "cpuMs": 16420.298999999995
+        }
+      },
+      "loadBefore": [
+        12.49,
+        11.08,
+        10.34
+      ],
+      "loadAfter": [
+        12.89,
+        11.34,
+        10.45
+      ],
+      "run": "A2"
+    },
+    {
+      "ref": "bb757c5997216e9f4edad4abedeef24f43de09fa",
+      "elapsedMs": 37799.640514,
+      "checksum": "e77bef39",
+      "thinks": {
+        "n": 180,
+        "p50": 169.13811900000292,
+        "p95": 403.30806600000506,
+        "max": 1081.137939,
+        "sum": 33811.84457800001,
+        "cpuMs": 43323.696999999986
+      },
+      "byOwner": {
+        "enemy": {
+          "n": 60,
+          "p50": 186.45898900000248,
+          "p95": 424.6384029999972,
+          "max": 1081.137939,
+          "sum": 14200.28842600001,
+          "cpuMs": 17492.549999999996
+        },
+        "enemy2": {
+          "n": 60,
+          "p50": 82.6809379999977,
+          "p95": 166.1238680000024,
+          "max": 547.400654,
+          "sum": 5854.134074000005,
+          "cpuMs": 8673.432999999999
+        },
+        "player-4": {
+          "n": 60,
+          "p50": 222.3505810000006,
+          "p95": 347.7573279999997,
+          "max": 715.6083959999996,
+          "sum": 13757.422077999996,
+          "cpuMs": 17157.713999999993
+        }
+      },
+      "loadBefore": [
+        11.25,
+        11.65,
+        11.02
+      ],
+      "loadAfter": [
+        11.2,
+        11.62,
+        11.04
+      ],
+      "run": "A3"
+    },
+    {
+      "ref": "42d463c5994f7cc8294bbb27a8a810569152d1aa",
+      "elapsedMs": 40089.748444,
+      "checksum": "e96ba5a1",
+      "thinks": {
+        "n": 180,
+        "p50": 177.52454899999975,
+        "p95": 441.465658000001,
+        "max": 1245.1471699999997,
+        "sum": 35877.41392299996,
+        "cpuMs": 46217.699
+      },
+      "byOwner": {
+        "enemy": {
+          "n": 60,
+          "p50": 189.32400099999722,
+          "p95": 476.4441729999962,
+          "max": 1245.1471699999997,
+          "sum": 15013.821955999989,
+          "cpuMs": 18850.306
+        },
+        "enemy2": {
+          "n": 60,
+          "p50": 105.13569399999687,
+          "p95": 208.28239699999904,
+          "max": 646.8810440000002,
+          "sum": 7514.47786799998,
+          "cpuMs": 10651.449
+        },
+        "player-4": {
+          "n": 60,
+          "p50": 202.91940999999952,
+          "p95": 345.10712799999965,
+          "max": 709.1368549999997,
+          "sum": 13349.114098999991,
+          "cpuMs": 16715.944
+        }
+      },
+      "loadBefore": [
+        11.2,
+        11.62,
+        11.04
+      ],
+      "loadAfter": [
+        10.16,
+        11.23,
+        10.93
+      ],
+      "run": "C1"
+    },
+    {
+      "ref": "42d463c5994f7cc8294bbb27a8a810569152d1aa",
+      "elapsedMs": 41708.963935,
+      "checksum": "e96ba5a1",
+      "thinks": {
+        "n": 180,
+        "p50": 181.93155900000056,
+        "p95": 420.6516479999991,
+        "max": 1171.945354,
+        "sum": 37274.019952000024,
+        "cpuMs": 47289.32499999999
+      },
+      "byOwner": {
+        "enemy": {
+          "n": 60,
+          "p50": 203.02920799999993,
+          "p95": 467.0336509999979,
+          "max": 1171.945354,
+          "sum": 15436.73625000001,
+          "cpuMs": 19298.435999999998
+        },
+        "enemy2": {
+          "n": 60,
+          "p50": 110.96376600000076,
+          "p95": 209.6651720000009,
+          "max": 698.1991689999995,
+          "sum": 8087.484959000006,
+          "cpuMs": 10947.959000000003
+        },
+        "player-4": {
+          "n": 60,
+          "p50": 220.58388099999866,
+          "p95": 390.0609359999944,
+          "max": 712.3543179999997,
+          "sum": 13749.798743000007,
+          "cpuMs": 17042.929999999997
+        }
+      },
+      "loadBefore": [
+        10.16,
+        11.23,
+        10.93
+      ],
+      "loadAfter": [
+        9.12,
+        10.86,
+        10.82
+      ],
+      "run": "C2"
+    },
+    {
+      "ref": "bb757c5997216e9f4edad4abedeef24f43de09fa",
+      "elapsedMs": 37465.943082000005,
+      "checksum": "e77bef39",
+      "thinks": {
+        "n": 180,
+        "p50": 166.83541799999875,
+        "p95": 397.4122200000056,
+        "max": 1042.7382509999998,
+        "sum": 33584.637624999996,
+        "cpuMs": 42817.60299999999
+      },
+      "byOwner": {
+        "enemy": {
+          "n": 60,
+          "p50": 181.63891599999988,
+          "p95": 464.71833499999775,
+          "max": 1042.7382509999998,
+          "sum": 14122.04443100002,
+          "cpuMs": 17453.449999999997
+        },
+        "enemy2": {
+          "n": 60,
+          "p50": 78.14453399999911,
+          "p95": 170.78912399999535,
+          "max": 628.1802429999998,
+          "sum": 5850.718129999979,
+          "cpuMs": 8363.635000000002
+        },
+        "player-4": {
+          "n": 60,
+          "p50": 212.0329099999999,
+          "p95": 362.1344339999996,
+          "max": 642.9278429999999,
+          "sum": 13611.875063999996,
+          "cpuMs": 17000.518000000004
+        }
+      },
+      "loadBefore": [
+        9.35,
+        10.88,
+        10.82
+      ],
+      "loadAfter": [
+        10.95,
+        11.1,
+        10.9
+      ],
+      "run": "A4"
+    },
+    {
+      "ref": "bb757c5997216e9f4edad4abedeef24f43de09fa",
+      "elapsedMs": 38681.563293,
+      "checksum": "e77bef39",
+      "thinks": {
+        "n": 180,
+        "p50": 176.8955060000044,
+        "p95": 403.08692900000096,
+        "max": 1279.0564869999998,
+        "sum": 34671.28822699995,
+        "cpuMs": 43903.774999999994
+      },
+      "byOwner": {
+        "enemy": {
+          "n": 60,
+          "p50": 191.94995600000038,
+          "p95": 448.94601699999475,
+          "max": 1279.0564869999998,
+          "sum": 14808.741813999983,
+          "cpuMs": 18224.978999999992
+        },
+        "enemy2": {
+          "n": 60,
+          "p50": 83.10858599999847,
+          "p95": 148.85970699999598,
+          "max": 635.484563,
+          "sum": 6051.622617999969,
+          "cpuMs": 8552.463000000002
+        },
+        "player-4": {
+          "n": 60,
+          "p50": 224.20157099999778,
+          "p95": 376.94616999999926,
+          "max": 679.5887469999998,
+          "sum": 13810.923794999999,
+          "cpuMs": 17126.333
+        }
+      },
+      "loadBefore": [
+        14.08,
+        12.1,
+        11.32
+      ],
+      "loadAfter": [
+        16.6,
+        13.01,
+        11.66
+      ],
+      "run": "A5"
+    },
+    {
+      "ref": "9c5e4927bfb3c5089f21f41658f41a8e682eef49",
+      "elapsedMs": 35778.676693999994,
+      "checksum": "e96ba5a1",
+      "thinks": {
+        "n": 180,
+        "p50": 158.15349400000196,
+        "p95": 367.5166109999991,
+        "max": 975.520438,
+        "sum": 31642.852577999984,
+        "cpuMs": 41789.10399999999
+      },
+      "byOwner": {
+        "enemy": {
+          "n": 60,
+          "p50": 173.15500500000053,
+          "p95": 396.45809700000245,
+          "max": 975.520438,
+          "sum": 13054.042932000002,
+          "cpuMs": 16835.305999999997
+        },
+        "enemy2": {
+          "n": 60,
+          "p50": 102.23950200000036,
+          "p95": 165.5332269999999,
+          "max": 535.2366299999999,
+          "sum": 6820.150346000002,
+          "cpuMs": 9509.801000000001
+        },
+        "player-4": {
+          "n": 60,
+          "p50": 181.41661699999986,
+          "p95": 285.9169839999995,
+          "max": 565.842498,
+          "sum": 11768.659299999978,
+          "cpuMs": 15443.997
+        }
+      },
+      "loadBefore": [
+        16.6,
+        13.01,
+        11.66
+      ],
+      "loadAfter": [
+        14.95,
+        13.01,
+        11.71
+      ],
+      "run": "D1"
+    },
+    {
+      "ref": "9c5e4927bfb3c5089f21f41658f41a8e682eef49",
+      "elapsedMs": 35135.650910000004,
+      "checksum": "e96ba5a1",
+      "thinks": {
+        "n": 180,
+        "p50": 160.422556000005,
+        "p95": 328.0075360000046,
+        "max": 970.1154389999999,
+        "sum": 31211.48964700004,
+        "cpuMs": 40998.47399999999
+      },
+      "byOwner": {
+        "enemy": {
+          "n": 60,
+          "p50": 175.5864619999993,
+          "p95": 379.03837000000203,
+          "max": 970.1154389999999,
+          "sum": 12908.785641000026,
+          "cpuMs": 16578.812
+        },
+        "enemy2": {
+          "n": 60,
+          "p50": 106.53466800000024,
+          "p95": 186.1721280000056,
+          "max": 494.256613,
+          "sum": 6911.227203000002,
+          "cpuMs": 9791.265999999996
+        },
+        "player-4": {
+          "n": 60,
+          "p50": 183.7881009999992,
+          "p95": 301.4445569999989,
+          "max": 481.75556400000005,
+          "sum": 11391.47680300001,
+          "cpuMs": 14628.395999999999
+        }
+      },
+      "loadBefore": [
+        14.95,
+        13.01,
+        11.71
+      ],
+      "loadAfter": [
+        13.26,
+        12.78,
+        11.68
+      ],
+      "run": "D2"
+    },
+    {
+      "ref": "bb757c5997216e9f4edad4abedeef24f43de09fa",
+      "elapsedMs": 38863.315241000004,
+      "checksum": "e77bef39",
+      "thinks": {
+        "n": 180,
+        "p50": 168.45151799999803,
+        "p95": 423.7534109999997,
+        "max": 1064.239083,
+        "sum": 34787.588854999995,
+        "cpuMs": 44092.29399999997
+      },
+      "byOwner": {
+        "enemy": {
+          "n": 60,
+          "p50": 183.74983300000167,
+          "p95": 457.43051299999934,
+          "max": 1064.239083,
+          "sum": 14674.932831999999,
+          "cpuMs": 18249.183999999997
+        },
+        "enemy2": {
+          "n": 60,
+          "p50": 79.30267599999934,
+          "p95": 167.24183400000038,
+          "max": 572.503056,
+          "sum": 5962.7648730000055,
+          "cpuMs": 8564.272999999997
+        },
+        "player-4": {
+          "n": 60,
+          "p50": 218.38929899999857,
+          "p95": 423.7534109999997,
+          "max": 672.9723130000002,
+          "sum": 14149.891149999985,
+          "cpuMs": 17278.83700000001
+        }
+      },
+      "loadBefore": [
+        14.04,
+        12.95,
+        11.74
+      ],
+      "loadAfter": [
+        14.17,
+        13.11,
+        11.84
+      ],
+      "run": "A6"
+    }
+  ],
+  "hotspots": {
+    "finding": "主要热点是重复 mainArmyIntel 查询触发的 loot/shopping 安全路线，以及扩张队伍排序中的重复 creepForce。新的进攻目标选择本身不是主热点。",
+    "beforeProfileInclusiveMs": {
+      "mainArmyIntel": 18310.2,
+      "lootAssignments": 11001.3,
+      "shoppingAssignment": 10766.0,
+      "selectExpansionScreen": 3503.9,
+      "creepForce": 3177.2
+    },
+    "baseProfileInclusiveMs": {
+      "mainArmyIntel": 9479.9,
+      "lootAssignments": 1915.1,
+      "shoppingAssignment": 2835.9
+    },
+    "interpretation": "inclusive 含子调用，不能把父子热点相加；不同版本世界走向不同，剖析用于定位。本次优化前后完整命令流另作逐字节比较。",
+    "fixes": [
+      {
+        "file": "src/ai/bootstrap_1/expansion-mission.ts",
+        "function": "selectExpansionScreen",
+        "change": "每个聚集队伍只打分一次，再线性选首个最高分，保留稳定排序的同分顺序。"
+      },
+      {
+        "file": "src/ai/policy/v7/creep.ts",
+        "function": "creepForce",
+        "change": "整队 killSeconds 只归约一次，避免给每名成员打分时再次遍历全队；数学公式、归约顺序与结果不变。"
+      },
+      {
+        "file": "src/ai/bootstrap_1/safe-land-route.ts",
+        "function": "withLandRoadReuse/nativeLandRoad/safeLandTravelTicks/retreatLandRoad",
+        "change": "仅在一次同步房间 AI think 内复用纯路线及相同敌军名单下的安全查询。下一轮、嵌套调用、异常均清理/恢复；预算视图分开；敌军名单逐项比较；到达回调每次检查；给调用方独立路径点。"
+      },
+      {
+        "file": "src/ai/planner-context.ts",
+        "function": "planAiOwnerCommandEntries",
+        "change": "仅 bootstrap 分支包住本轮纯路线复用，覆盖 context、claim 和 run；其他版本不进入 scope。planBootstrapCommands 的直接入口也使用同一约定。"
+      },
+      {
+        "file": "src/ai/policy/threat-reach.ts",
+        "function": "mountedThreatReach/castThreatReach",
+        "change": "同规则直接累计最大射程，用 some 判断是否存在冲锋最短距离，避免单位×敌军查询反复 flatMap/展开临时数组。冷却、最短距离、主动技能、装备和中立射程规则不变。"
+      }
+    ],
+    "notCached": "未缓存 mainArmyIntel、分兵结果、任务归属或可变 policy memory；同一 think 中的回防/护卫归属变化继续重新计算。",
+    "profilesInclusiveMs": {
+      "main": {
+        "castThreatReach": 3649.36,
+        "creepForce": 418.61,
+        "groundSteeringRoute": 767.08,
+        "lootAssignments": 1915.13,
+        "mainArmyIntel": 9479.9,
+        "mountedThreatReach": 5026.27,
+        "nativeLandRoad": 1206.32,
+        "selectExpansionScreen": 0,
+        "shoppingAssignment": 2835.86
+      },
+      "before": {
+        "castThreatReach": 6735.21,
+        "creepForce": 3177.16,
+        "groundSteeringRoute": 2625.35,
+        "lootAssignments": 11001.29,
+        "mainArmyIntel": 18310.23,
+        "mountedThreatReach": 8771.82,
+        "nativeLandRoad": 3887.44,
+        "selectExpansionScreen": 3503.9,
+        "shoppingAssignment": 10765.99
+      },
+      "routeReuse": {
+        "castThreatReach": 3091.23,
+        "creepForce": 206.17,
+        "groundSteeringRoute": 766.24,
+        "lootAssignments": 1860.65,
+        "mainArmyIntel": 9884.86,
+        "mountedThreatReach": 4391.15,
+        "nativeLandRoad": 1513.55,
+        "selectExpansionScreen": 446.84,
+        "shoppingAssignment": 5655.45
+      },
+      "final": {
+        "castThreatReach": 1678.86,
+        "creepForce": 206.95,
+        "groundSteeringRoute": 727.52,
+        "lootAssignments": 1489.5,
+        "mainArmyIntel": 8437.05,
+        "mountedThreatReach": 2550.08,
+        "nativeLandRoad": 1387.62,
+        "selectExpansionScreen": 456.61,
+        "shoppingAssignment": 5153.82
+      }
+    }
+  },
+  "sharedFunctionsChanged": [
+    "planV6Army 的既有 expansionHandled（此前已审核）",
+    "planAiOwnerCommandEntries 仅房间 AI 分支的 scope",
+    "creepForce 的不变整队归约",
+    "mountedThreatReach/castThreatReach 的无临时数组计算"
+  ],
+  "tests": {
+    "newRoadReuseCases": 5,
+    "newThreatBoundaryCases": 7,
+    "rootTypecheck": "exit 0",
+    "cliTypecheck": "exit 0",
+    "targeted": "41/41：威胁边界、scope、主动装备与回程安全",
+    "fullSrc": {
+      "sha": "9c5e4927bfb3c5089f21f41658f41a8e682eef49",
+      "machine": "mac1",
+      "dir": "/Users/mac1/work/sketch-cli/trees/9c5e4927bfb3c5089f21f41658f41a8e682eef49",
+      "runId": "mvf66uac-7905d3",
+      "remoteLog": "/Users/mac1/work/sketch-cli/runs/mvf66uac-7905d3/attack-perf-terminal-full-src.log",
+      "command": "npx vitest run --dir src --maxWorkers 4 --minWorkers 1",
+      "status": "failed",
+      "code": 1,
+      "stderr": ""
+    },
+    "fullSrcCounts": {
+      "files": 686,
+      "passedFiles": 685,
+      "passedTests": 7691,
+      "failedTests": 1,
+      "skippedTests": 1,
+      "seconds": 297.05,
+      "entireRunPassed": false
+    },
+    "fullSrcFailure": {
+      "file": "src/server/rest-command-boundary.test.ts",
+      "reason": "最后一个 /sketch-rts/ 启动服务用例 30 秒未监听，stdout/stderr 为空；未改测试上限，也没有将原因未经证据归为 AI 逻辑。"
+    },
+    "isolatedRetry": {
+      "machine": "mac1",
+      "source": "9c5e4927",
+      "file": "src/server/rest-command-boundary.test.ts",
+      "workers": 1,
+      "exit": 0,
+      "passedTests": 8,
+      "seconds": 10.33,
+      "failedCaseSeconds": 1.148
+    },
+    "allRequiredCasesResolved": true
+  },
+  "evidencePointer": "performance.evidence.json",
+  "commandParity": {
+    "original": "cae68976",
+    "candidate": "9c5e4927",
+    "ticks": 900,
+    "thinks": 180,
+    "bytes": 1193270,
+    "sha256": "a75bd06fe758f4188ed6ac3c65c1e20125e0fac1b4d0bc4ac51c17e01e362799",
+    "identical": true
+  },
+  "pureQueryParity": {
+    "original": "cae68976",
+    "candidate": "9c5e4927",
+    "unitKinds": 55,
+    "reachCases": 95040,
+    "reachValues": 190080,
+    "forceCases": 162,
+    "exact": true,
+    "sha256": "280f5af8cb95e235c67bedeee427fe8805e4ec874a054367ef7ec5a63cb305d4"
+  }
+}

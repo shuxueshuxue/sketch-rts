@@ -1,6 +1,6 @@
 {
   "base": "bb757c5997216e9f4edad4abedeef24f43de09fa",
-  "candidateRuntime": "bad62347c113550e6d1ac9240004004b4c6e8d02",
+  "candidateRuntime": "9c5e4927bfb3c5089f21f41658f41a8e682eef49",
   "scope": "只改房间 AI 的进攻目标与扩张分兵；不改进攻/撤退战力门槛，不改 sim。",
   "observableSpecifications": [
     {
@@ -36,6 +36,21 @@
     {
       "file": "src/ai/policy/v6/general.ts",
       "change": "仅导出 AttackChoice 类型；其他共享函数和战斗常量未改。"
+    },
+    {
+      "file": "src/ai/planner-context.ts",
+      "function": "planAiOwnerCommandEntries",
+      "change": "仅房间 AI 分支开启一次同步 think 的纯路线复用 scope；任务/归属/目标不缓存。"
+    },
+    {
+      "file": "src/ai/policy/v7/creep.ts",
+      "function": "creepForce",
+      "change": "整队 killSeconds 提取一次，算式不变。"
+    },
+    {
+      "file": "src/ai/policy/threat-reach.ts",
+      "function": "mountedThreatReach/castThreatReach",
+      "change": "同规则直接求最大射程，不分配临时范围数组；7 条冷却/最短距离/装备边界测试和 190080 个前后值完全一致。"
     }
   ],
   "roomFunctionChanges": [
@@ -139,19 +154,26 @@
     },
     "mainSceneFails": true,
     "fullSrc": {
-      "status": "passed",
+      "status": "passed-after-isolated-retry",
+      "source": "9c5e4927bfb3c5089f21f41658f41a8e682eef49",
       "machine": "mac1",
-      "source": "bad62347c113550e6d1ac9240004004b4c6e8d02",
-      "runId": "mvf4ryd3-9a369b",
+      "runId": "mvf66uac-7905d3",
       "command": "npx vitest run --dir src --maxWorkers 4 --minWorkers 1",
-      "filesPassed": 684,
-      "testsPassed": 7680,
+      "files": 686,
+      "testsPassedInFull": 7691,
       "testsSkipped": 1,
-      "seconds": 328.26,
-      "entireRunPassed": true,
-      "presetAlsoPassed": true,
-      "clinicAlsoPassed": true,
-      "finalProductionSrcIdentical": true
+      "testsFailedInFull": 1,
+      "seconds": 297.05,
+      "entireRunPassed": false,
+      "failure": "rest-command-boundary.test.ts 最后一个服务启动用例 30 秒无输出、未监听",
+      "isolatedRerun": {
+        "testsPassed": 8,
+        "seconds": 10.33,
+        "exit": 0,
+        "sameSource": true,
+        "timeoutUnchanged": true
+      },
+      "allRequiredCasesResolved": true
     },
     "browser": {
       "passed": true,
@@ -186,7 +208,22 @@
     },
     "winRateBench": false,
     "finalTargeted": "20/20: six clinic cases, thirteen attack specs, one full snapshot scene",
-    "earlierRegression": "97748539 的完整 src 发现 6 条 clinic 失败：扣掉借兵战力放宽了 worn。bad62347 保留原出发战力，最终完整一轮全部通过；旧失败日志在证据包保留并标明。"
+    "earlierRegression": "97748539 的完整 src 发现 6 条 clinic 失败：扣掉借兵战力放宽了 worn。bad62347 保留原出发战力，最终完整一轮全部通过；旧失败日志在证据包保留并标明。",
+    "previousBehaviorFullSrc": {
+      "status": "passed",
+      "machine": "mac1",
+      "source": "bad62347c113550e6d1ac9240004004b4c6e8d02",
+      "runId": "mvf4ryd3-9a369b",
+      "command": "npx vitest run --dir src --maxWorkers 4 --minWorkers 1",
+      "filesPassed": 684,
+      "testsPassed": 7680,
+      "testsSkipped": 1,
+      "seconds": 328.26,
+      "entireRunPassed": true,
+      "presetAlsoPassed": true,
+      "clinicAlsoPassed": true
+    },
+    "performance": "performance.zh.json：同机 ABBA、逐 think、全部命令字节等价、共享纯函数等价；所有计时探针在 evidence。"
   },
   "limits": "这项证明目标选择、任务归属和物理结果一致；未声称所有进攻都成功。真实第一波仍可能在现有安全判定下撤退。下一项中盘 hold 前压未混入。",
   "browserHarness": {
@@ -208,5 +245,11 @@
       "maxHp": 1080
     }
   },
-  "evidencePointer": "raw.evidence.json"
+  "evidencePointer": "raw.evidence.json",
+  "performanceOnlyFollowup": {
+    "before": "cae68976",
+    "after": "9c5e4927bfb3c5089f21f41658f41a8e682eef49",
+    "commandParity": "900 tick、180 次 think、1193270 字节完全一致；sha256 a75bd06fe758f4188ed6ac3c65c1e20125e0fac1b4d0bc4ac51c17e01e362799",
+    "browserProof": "既有照片仍是 bad62347 的行为证明；本次性能改动没有新拍照片，不声称照片对应 9c 源码完全相同。"
+  }
 }
