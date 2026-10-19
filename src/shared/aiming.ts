@@ -1,11 +1,18 @@
 import type { UnitDef } from "./catalog";
-import type { Unit } from "./types";
+import type { Unit, UnitAim } from "./types";
 import { perTick } from "./time";
 
 type Point = { x: number; y: number };
 export const RANGED_ATTACK_RANGE_THRESHOLD = 80;
 export const DEFAULT_AIM_MOVE_TOLERANCE = 6;
 export const AIM_SPEED_MULTIPLIER = 2 / 3;
+export const DEFAULT_AIM_RANGE_BUFFER = .25;
+
+/** Finish the same windup, without turning its margin into acquisition range or the next shot's starting range. */
+export function aimingRange(aim: UnitAim | undefined, range: number, targetId: string | undefined, buffer = DEFAULT_AIM_RANGE_BUFFER) {
+  if (range <= RANGED_ATTACK_RANGE_THRESHOLD || !aim?.tracking || targetId === undefined || aim.targetId !== targetId) return range;
+  return range * (1 + (Number.isFinite(buffer) ? Math.max(0, buffer) : 0));
+}
 
 function requiresAiming(rules: UnitDef) {
   return !(rules.naval && !rules.intrinsicAttack || rules.attackDamage <= 0 || rules.attackRange <= RANGED_ATTACK_RANGE_THRESHOLD);
@@ -44,7 +51,7 @@ function invalidateAimByTolerance(unit: Unit, tolerance: number) {
 }
 
 /** Advance only when the weapon is ready. Repeating an order never buys extra aim ticks. */
-export function aimAt(unit: Unit, rules: UnitDef, target: Point, tick: number, speedMultiplier = 1) {
+export function aimAt(unit: Unit, rules: UnitDef, target: Point, tick: number, speedMultiplier = 1, targetId?: string) {
   if (!requiresAiming(rules)) { unit.aim = undefined; return true; }
   const speed = aimingSpeed(rules);
   invalidateAimByTolerance(unit, rules.aimMoveTolerance ?? DEFAULT_AIM_MOVE_TOLERANCE);
@@ -53,6 +60,8 @@ export function aimAt(unit: Unit, rules: UnitDef, target: Point, tick: number, s
     if(unit.deck){unit.aim.anchorDeckX=unit.deck.x;unit.aim.anchorDeckY=unit.deck.y;}
   }
   const aim = unit.aim;
+  if (targetId === undefined) delete aim.targetId;
+  else aim.targetId = targetId;
   if (aim.updatedTick !== tick) {
     // Identity is irrelevant: use the shortest route even after changing enemies or a prepared point.
     if (Math.hypot(target.x - unit.x, target.y - unit.y) < Math.hypot(target.x - aim.x, target.y - aim.y)) {

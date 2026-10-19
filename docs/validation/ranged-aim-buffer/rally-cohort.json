@@ -1,0 +1,86 @@
+{
+  "before546": [
+    {
+      "tick": 20760,
+      "original": 19,
+      "current": 18,
+      "state": {
+        "hallId": "building-v9_archer-townhall",
+        "point": {
+          "x": 2544.44111899603,
+          "y": 4074.5056025357244
+        },
+        "attackerIds": [
+          "unit-p1-lancer-1085",
+          "unit-p1-lancer-1103",
+          "unit-p1-lancer-1135",
+          "unit-p1-lancer-1140",
+          "unit-p1-lancer-1638",
+          "unit-p1-lancer-1944",
+          "unit-p1-priest-3250",
+          "unit-p1-witch-3631",
+          "unit-p1-knight-4149",
+          "unit-p1-golem-4546",
+          "unit-p1-witch-4967",
+          "unit-p1-knight-5341",
+          "unit-p1-knight-5838",
+          "unit-p1-witch-6163",
+          "unit-p1-lancer-6204",
+          "unit-p1-raider-6340",
+          "unit-p1-knight-7183",
+          "unit-p1-priest-7278",
+          "unit-p1-raider-7609",
+          "unit-p1-lancer-7745"
+        ],
+        "protectedHp": {
+          "building-v9_archer-townhall": 900,
+          "unit-v9_archer-worker-1013": 70,
+          "unit-v9_archer-worker-1026": 70,
+          "unit-v9_archer-worker-1035": 70,
+          "unit-v9_archer-worker-1607": 70,
+          "unit-v9_archer-worker-1716": 70,
+          "unit-v9_archer-worker-7267": 70
+        },
+        "phase": "gather"
+      },
+      "extras": [
+        {
+          "id": "unit-v9_archer-sparkArcher-2014",
+          "kind": "sparkArcher",
+          "distance": 807.2811346132021,
+          "claim": {
+            "kind": "mineRally",
+            "targetId": "building-v9_archer-townhall",
+            "x": 2544.44111899603,
+            "y": 4074.5056025357244,
+            "arrived": false,
+            "sinceTick": 20497,
+            "expiresTick": 24247
+          }
+        },
+        {
+          "id": "unit-v9_archer-sparkArcher-7586",
+          "kind": "sparkArcher",
+          "distance": 969.4581092820978,
+          "claim": {
+            "kind": "mineRally",
+            "targetId": "building-v9_archer-townhall",
+            "x": 2544.44111899603,
+            "y": 4074.5056025357244,
+            "arrived": false,
+            "sinceTick": 20497,
+            "expiresTick": 24322
+          }
+        }
+      ]
+    }
+  ],
+  "after546": [
+    {
+      "tick": 20760,
+      "original": 19,
+      "current": 0,
+      "extras": []
+    }
+  ]
+}

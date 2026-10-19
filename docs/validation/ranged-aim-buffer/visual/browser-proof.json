@@ -1,0 +1,46 @@
+{
+  "before": {
+    "start": 10,
+    "hasBuffer": false,
+    "shots": [],
+    "interrupted": 48,
+    "gpu": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Ultra, Unspecified Version)",
+      "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+    }
+  },
+  "after": {
+    "start": 10,
+    "hasBuffer": true,
+    "shots": [
+      12,
+      74,
+      151,
+      228
+    ],
+    "interrupted": 0,
+    "gpu": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Ultra, Unspecified Version)",
+      "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+    }
+  },
+  "beforeRef": "f408671c84f8e310153d3f973f170efc92258874",
+  "afterRef": "c15ea2168ef5e00bcd942bd5541a381a2489e222",
+  "run": "mvf7dxgo-ffc8af",
+  "durationTicks": 240,
+  "secondsPerTick": 0.05,
+  "shotTicksRelativeToStart": true,
+  "camera": {
+    "x": 1640,
+    "y": 3600,
+    "zoom": 1.6
+  },
+  "checkpointRelativeTicks": [
+    0,
+    12,
+    74,
+    180,
+    240
+  ],
+  "rawFrames": "../raw.evidence.json"
+}

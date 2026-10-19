@@ -1,0 +1,48 @@
+{
+  "main": {
+    "tick": 15000,
+    "first": {
+      "targetId": "building-p1-townHall-1216",
+      "sinceTick": 8557
+    },
+    "paused": true,
+    "resumed": true,
+    "parallel": true,
+    "results": [
+      {
+        "targetId": "building-p1-townHall-1216",
+        "tick": 10492,
+        "result": "withdrew",
+        "reason": "general:retreat"
+      },
+      {
+        "targetId": "building-p1-townHall-3038",
+        "tick": 14437,
+        "result": "destroyed",
+        "reason": "target-gone"
+      }
+    ],
+    "homeHp": 1080
+  },
+  "after": {
+    "tick": 15000,
+    "first": {
+      "targetId": "building-p1-townHall-1216",
+      "sinceTick": 9592
+    },
+    "paused": false,
+    "resumed": false,
+    "parallel": true,
+    "results": [
+      {
+        "targetId": "building-p1-townHall-1216",
+        "tick": 10507,
+        "result": "withdrew",
+        "reason": "general:retreat:incoming"
+      }
+    ],
+    "homeHp": 1080
+  },
+  "mainRef": "f408671c",
+  "afterRef": "c15ea216"
+}

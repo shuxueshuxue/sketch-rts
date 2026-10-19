@@ -1,0 +1,29 @@
+
+ RUN  v2.1.9 /codegeex/jeffry/sketch-rts-camps/ranged-aim-buffer/control-f408671c
+
+ ❯ src/shared/aiming-range-buffer.test.ts (13 tests | 2 failed | 11 skipped) 63ms
+   × aiming range motion buffer > finishes repeated shots while pursuing a retreating melee unit (AI=false) 48ms
+     → {"shots":[],"interrupted":25}: expected 0 to be greater than or equal to 4
+   × aiming range motion buffer > finishes repeated shots while pursuing a retreating melee unit (AI=true) 13ms
+     → {"shots":[],"interrupted":25}: expected 0 to be greater than or equal to 4
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/shared/aiming-range-buffer.test.ts > aiming range motion buffer > finishes repeated shots while pursuing a retreating melee unit (AI=false)
+ FAIL  src/shared/aiming-range-buffer.test.ts > aiming range motion buffer > finishes repeated shots while pursuing a retreating melee unit (AI=true)
+AssertionError: {"shots":[],"interrupted":25}: expected 0 to be greater than or equal to 4
+ ❯ src/shared/aiming-range-buffer.test.ts:58:66
+     56|       }
+     57|     }
+     58|     expect(shots.length, JSON.stringify({ shots, interrupted })).toBeG…
+       |                                                                  ^
+     59|     expect(shots[0]).toBeLessThan(30);
+     60|     expect(interrupted).toBe(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 11 skipped (13)
+   Start at  12:03:48
+   Duration  3.08s (transform 2.09s, setup 0ms, collect 2.63s, tests 63ms, environment 0ms, prepare 89ms)
+

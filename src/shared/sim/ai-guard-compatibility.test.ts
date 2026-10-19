@@ -1,8 +1,10 @@
 import { readFileSync } from 'node:fs';
-import { expect, it } from 'vitest';
+import { afterAll, beforeAll, expect, it } from 'vitest';
+import { UNIT_DEFS } from '../catalog';
+import { SHIP_WEAPONS } from '../ship-equipment';
 import { createGame } from '../sim';
 import { advanceCommandFrameTick } from './command-frame-runtime';
-import { checksumGame } from './checksum';
+import { checksumGameForVersion } from './checksum';
 import { runGameLoop } from '../../sdk/game-runner';
 import type { GameCommand, GameSetupOptions, MapId, PlayerId } from '../types';
 
@@ -12,9 +14,18 @@ type Recording = {
   checksums: string[];
 };
 
-// Actual room-AI games captured on main a2cff607, including both autonomous combat and commanded movement.
-// Replay the recorded commands, not today's planner, and compare every tick against the pre-change simulation.
-it.each(['v9_archer', 'v9_summoner', 'v9_knight'])('preserves every tick of the main all-AI %s recording', subject => {
+// Isolate the guard-station rule: the later range-buffer combat rule intentionally changes AI combat too.
+// Its public zero-buffer setting and the pre-target-lock checksum representation retain this independent guard proof.
+const definitions = [...Object.values(UNIT_DEFS), ...Object.values(SHIP_WEAPONS)];
+const buffers = definitions.map(rules => rules.aimRangeBuffer);
+beforeAll(() => { for (const rules of definitions) rules.aimRangeBuffer = 0; });
+afterAll(() => definitions.forEach((rules, index) => {
+  if (buffers[index] === undefined) delete rules.aimRangeBuffer;
+  else rules.aimRangeBuffer = buffers[index];
+}));
+
+// Actual room-AI commands captured on main a2cff607; no current planner replaces the recording.
+it.each(['v9_archer', 'v9_summoner', 'v9_knight'])('preserves the guard-only all-AI %s recording with the later aiming buffer disabled', subject => {
   const fixture = JSON.parse(readFileSync(new URL(`./fixtures/guard-ai-${subject}.json`, import.meta.url), 'utf8')) as Recording;
   expect(fixture.base).toBe('a2cff607');
   expect(fixture.automaticTicks).toBeGreaterThan(0);
@@ -22,7 +33,7 @@ it.each(['v9_archer', 'v9_summoner', 'v9_knight'])('preserves every tick of the 
   const game = createGame(fixture.mapId, fixture.options);
   let index = 0;
   for (let tick = 0; tick < fixture.checksums.length; tick++) {
-    expect(checksumGame(game), `${subject} tick ${tick}`).toBe(fixture.checksums[tick]);
+    expect(checksumGameForVersion(game, 21), `${subject} tick ${tick}`).toBe(fixture.checksums[tick]);
     if (tick === fixture.checksums.length - 1) break;
     const commands = [];
     while (fixture.commands[index]?.tick === tick) {
@@ -42,5 +53,5 @@ it('identifies both external SDK agents as AI seats before their first simulated
   const { game } = runGameLoop({ name: 'external-controller-identity', mapId: fixture.mapId,
     options: { ...fixture.options, aiPlayers: [] }, agents, maxTicks: 1, thinkInterval: 15 });
   expect(game.aiPlayers).toEqual(fixture.options.players);
-  expect(checksumGame(game)).toBe(fixture.checksums[1]);
+  expect(checksumGameForVersion(game, 21)).toBe(fixture.checksums[1]);
 });
