@@ -1,0 +1,256 @@
+{
+  "title": "修复世界坐标舍入导致 AI 房间停止的陆路积分异常",
+  "base": "3fea9ccf",
+  "failure": {
+    "nativeRoom": "1名AFK人类，其余为默认房间AI；在夺岛B的开发对局中发现，原样抓取错误前状态。单独在main复现相同错误。",
+    "map": "ringwater",
+    "tick": 15620,
+    "seconds": 781,
+    "owner": "enemy2",
+    "version": "v9_archer",
+    "unitId": "unit-enemy2-mercenary-7807",
+    "speed": 74,
+    "actualUnitPosition": {
+      "x": 2338.971124226364,
+      "y": 1783.7964059457604
+    },
+    "segmentFrom": {
+      "x": 2320,
+      "y": 2064
+    },
+    "segmentTo": {
+      "x": 2295.5467650801706,
+      "y": 2186.266174599146
+    },
+    "forestCell": {
+      "col": 71,
+      "row": 66,
+      "pace": 0
+    },
+    "intervalStart": 0.6543101578362318,
+    "intervalEnd": 0.6543101578362367,
+    "intervalFraction": 4.884981308350689e-15,
+    "intervalWorldLength": 6.090962144848843e-13,
+    "oldParameterBound": 1.5543122344752192e-15,
+    "newParameterBound": 1.7342627693251694e-14,
+    "newWorldBound": 2.1624092725027876e-12,
+    "terrainVisibilityAcceptsSegment": true,
+    "originalCost": "Infinity",
+    "fixedCost": 124.68752202667689,
+    "fixedSegmentTicksAtSpeed74": 34,
+    "fixture": "src/ai/bootstrap_1/fixtures/ringwater-nonfinite-road-13m01.json"
+  },
+  "cause": "仍属格角sliver。原界只计穿格过程在[0,1]参数中的累加误差；端点的世界坐标精度在短路段转换为参数时，影响可超过这份界。可达检查接受切角线，积分却采出6.09e-13世界长度的森林片段，除以pace=0得到Infinity。",
+  "fix": "在原穿格次数的误差界上加入端点绝对坐标的精度项，并除以实际路长转换为参数界。只影响落在机器精度界内的零pace片段；普通非零pace贡献的算式不变。",
+  "failLoud": "nativeLandRoad及各调用方的异常约定保持原样，没有try/catch吞错。非法速度依然抛错，真实森林穿越仍返回Infinity，不可走起点仍没有陆路。",
+  "tests": {
+    "targeted": "17项地形/路线测试通过；真实帧场景保留nextId=10283、全部对手和原始记忆，从tick15620完整运行到18000，本机通过。",
+    "fullSrc": {
+      "command": "node node_modules/vitest/vitest.mjs run --dir src --maxWorkers 8 --minWorkers 8",
+      "filesPassed": 692,
+      "testsPassed": 7749,
+      "seconds": 209.45,
+      "machine": "A100",
+      "node": "v24.22.0",
+      "exitCode": 0
+    },
+    "mainRed": {
+      "filesFailed": 2,
+      "testsFailed": 3,
+      "testsPassed": 9,
+      "exitCode": 1,
+      "description": "世界坐标格角积分正反两向与实际佣兵前哨路线均在main失败。"
+    },
+    "directFullPlanner": {
+      "main": {
+        "tick": 15620,
+        "threw": true,
+        "error": "Error: Invalid native land travel for unit-enemy2-mercenary-7807 (mercenary, speed 74): (2320,2064) -> (2295.5467650801706,2186.266174599146), cost/ticks Infinity",
+        "stack": "Error: Invalid native land travel for unit-enemy2-mercenary-7807 (mercenary, speed 74): (2320,2064) -> (2295.5467650801706,2186.266174599146), cost/ticks Infinity\n    at invalid (/codegeex/jeffry/sketch-rts-naval/infinity-main/src/ai/policy/land-road.ts:41:63)\n    at computeNativeLandRoad (/codegeex/jeffry/sketch-rts-naval/infinity-main/src/ai/policy/land-road.ts:49:67)\n    at nativeLandRoad (/codegeex/jeffry/sketch-rts-naval/infinity-main/src/ai/policy/land-road.ts:32:39)\n    at safeLandTravelTicks (/codegeex/jeffry/sketch-rts-naval/infinity-main/src/ai/bootstrap_1/safe-land-route.ts:65:16)\n    at territoryPostCommands (/codegeex/jeffry/sketch-rts-naval/infinity-main/src/ai/bootstrap_1/territory-pressure.ts:137:9)\n    at Object.planBootstrapGeneral (/codegeex/jeffry/sketch-rts-naval/infinity-main/src/ai/bootstrap_1/mine-defense.ts:261:22)\n    at runScriptsWithContext (/codegeex/jeffry/sketch-rts-naval/infinity-main/src/ai/policy/script-runner.ts:64:78)\n    at run (/codegeex/jeffry/sketch-rts-naval/infinity-main/src/ai/policy/script-runner.ts:21:21)\n    at withCombatReadinessReuse (/codegeex/jeffry/sketch-rts-naval/infinity-main/src/ai/policy/combat-readiness.ts:37:12)\n    at runAiCommandEntriesFromScripts (/codegeex/jeffry/sketch-rts-naval/infinity-main/src/ai/policy/script-runner.ts:23:7)"
+      },
+      "fixed": {
+        "tick": 15620,
+        "threw": false,
+        "commands": 13
+      }
+    }
+  },
+  "callers": {
+    "tick": 15620,
+    "exactRoad": {
+      "native": 110,
+      "safe": 110,
+      "retreat": 110,
+      "arrival": [
+        120
+      ]
+    },
+    "surveys": [
+      {
+        "call": "nativeLandRoad",
+        "units": 130,
+        "targets": 28,
+        "reachable": 2453,
+        "disconnected": 1187,
+        "errors": []
+      },
+      {
+        "call": "incomingLandArmy",
+        "owner": "enemy",
+        "counts": [
+          {
+            "hallId": "building-enemy-townhall",
+            "arrivals": 9
+          },
+          {
+            "hallId": "building-enemy-townHall-1622",
+            "arrivals": 15
+          },
+          {
+            "hallId": "building-enemy-townHall-3324",
+            "arrivals": 15
+          }
+        ]
+      },
+      {
+        "call": "incomingLandArmy",
+        "owner": "enemy2",
+        "counts": [
+          {
+            "hallId": "building-enemy2-townhall",
+            "arrivals": 16
+          },
+          {
+            "hallId": "building-enemy2-townHall-1641",
+            "arrivals": 21
+          },
+          {
+            "hallId": "building-enemy2-townHall-3567",
+            "arrivals": 22
+          }
+        ]
+      },
+      {
+        "call": "incomingLandArmy",
+        "owner": "player-4",
+        "counts": [
+          {
+            "hallId": "building-player-4-townhall",
+            "arrivals": 5
+          },
+          {
+            "hallId": "building-player-4-townHall-1574",
+            "arrivals": 14
+          },
+          {
+            "hallId": "building-player-4-townHall-2510",
+            "arrivals": 11
+          },
+          {
+            "hallId": "building-player-4-townHall-8445",
+            "arrivals": 0
+          }
+        ]
+      }
+    ],
+    "invalidSpeeds": []
+  },
+  "largeBattleABBA": {
+    "machine": "A100 / AMD EPYC 7642 / Node v24.22.0",
+    "order": [
+      "A1",
+      "B1",
+      "B2",
+      "A2"
+    ],
+    "method": "同机、四军各80名混合部队，900tick，每轮180次think；本lane全量测试与其它对局均已结束后串行测量。",
+    "beforeMeanMs": 112.23968596944437,
+    "afterMeanMs": 111.79923056111105,
+    "meanChangePercent": -0.3924239492733683,
+    "runs": {
+      "A1": {
+        "thinkMs": {
+          "n": 180,
+          "mean": 112.29428511111094,
+          "p50": 105.12376399999994,
+          "p95": 198.15574500000002,
+          "max": 520.9683679999998
+        },
+        "tickMs": {
+          "n": 900,
+          "mean": 25.09562093111122,
+          "p50": 2.0789780000013707,
+          "p95": 131.9687560000002,
+          "max": 543.7065490000005
+        },
+        "initialChecksum": "1a7ec4ce",
+        "finalChecksum": "30821755",
+        "maxThinkSampleIndex": 0
+      },
+      "B1": {
+        "thinkMs": {
+          "n": 180,
+          "mean": 112.08399248888873,
+          "p50": 104.7832750000016,
+          "p95": 204.87719199999992,
+          "max": 631.0468579999997
+        },
+        "tickMs": {
+          "n": 900,
+          "mean": 24.9883199122222,
+          "p50": 2.0570169999991776,
+          "p95": 130.4691469999998,
+          "max": 653.6928050000006
+        },
+        "initialChecksum": "1a7ec4ce",
+        "finalChecksum": "30821755",
+        "maxThinkSampleIndex": 0
+      },
+      "B2": {
+        "thinkMs": {
+          "n": 180,
+          "mean": 111.51446863333335,
+          "p50": 106.50900899999942,
+          "p95": 201.9252520000009,
+          "max": 597.0954160000001
+        },
+        "tickMs": {
+          "n": 900,
+          "mean": 24.91119868666663,
+          "p50": 2.0991659999999683,
+          "p95": 129.4439190000012,
+          "max": 619.816433
+        },
+        "initialChecksum": "1a7ec4ce",
+        "finalChecksum": "30821755",
+        "maxThinkSampleIndex": 0
+      },
+      "A2": {
+        "thinkMs": {
+          "n": 180,
+          "mean": 112.18508682777778,
+          "p50": 105.41764700000203,
+          "p95": 201.2575960000031,
+          "max": 581.0190599999996
+        },
+        "tickMs": {
+          "n": 900,
+          "mean": 25.008627798888945,
+          "p50": 2.0370900000016263,
+          "p95": 132.5562609999979,
+          "max": 603.856127
+        },
+        "initialChecksum": "1a7ec4ce",
+        "finalChecksum": "30821755",
+        "maxThinkSampleIndex": 0
+      }
+    },
+    "note": "均值略降，p95约+1.9%；单次最大值从基线最慢581.02ms到修复631.05ms。四轮最大值均为各自的第一个think，仍完整保留全部原始尾部数字。四轮初始/终点校验和均相同。"
+  },
+  "source": {
+    "runtimeFingerprint": "bd45b3bf276c6783a34eef1857c672b41eb5ddcd5a06a37c1f0e8fb01c7818f2",
+    "manifest": "source-sha256.json",
+    "runtimeManifest": "runtime-sha256.json",
+    "fingerprintFormat": "SHA256 of Python json.dumps(runtimeManifest, sort_keys=True), UTF-8"
+  }
+}
