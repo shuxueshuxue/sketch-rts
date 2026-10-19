@@ -3,7 +3,7 @@ import { addGold, roundGold } from "./gold";
 import { unitControlsMercenaryCamp } from './mercenary-camp';
 import { boardingHoldShips, cancelCrewRendezvous, prepareCrewRendezvous } from './crew-rendezvous';
 import { prepareShipDefenseFrame, combatHull, type ShipDefenseFrame } from './ship-defense';
-import { constrainGroundShipStep, hullsInTheWay, shoulderAside, drainShipCollisionImpacts, groundShipFrameEmpty, shipBodyClearAtPose } from './ship-collisions';
+import { constrainGroundShipStep, hullsInTheWay, shoulderAside, drainShipCollisionImpacts, groundShipFrameEmpty, shipBodyClearAtPose, setShipCollisionSolids } from './ship-collisions';
 import { shipLaunchPose, shipLaunchPrototype } from './ship-launch';
 import { landSpawnPoint, landSpawnPrototype } from './production-spawn';
 import { shipFireLaneClear } from './ship-fire-control';
@@ -271,8 +271,12 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
       const at = launchPose ?? walkableGoal(this.map, x, y, unitMover(kind));
       const unit = createUnit(`unit-${owner}-${kind}-${this.nextId}`, owner, kind, at.x, at.y);
       if(shipProfile(unit)) {
-        const traffic=shipTraffic(unit,this.units,Infinity);
-        const bodies=[...this.units,...this.buildings,...(this.obstacles ?? [])];
+        // Scenario/restore callers may replace world arrays before the first
+        // tick. Launch clearance and the planning source must see those bodies.
+        const solids=[...this.buildings,...(this.obstacles ?? [])];
+        setShipCollisionSolids(this.map,solids);
+        const traffic=shipTraffic(unit,this.units,Infinity,this.map);
+        const bodies=[...this.units,...solids];
         const clear=(pose:ShipPose)=>traffic(pose,pose) && shipBodyClearAtPose(this.map,unit,pose,bodies);
         const pose=launchPose ? clear(launchPose) ? launchPose : undefined : nearestShipPose(this.map,unit,at,unit,clear);
         if(!pose)throw new Error('No clear water berth for this ship');
@@ -300,6 +304,7 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
   keepShipsOnWater(game.map,game.units);
   updateSupplyState(game);
   nativeUnitSpawners.set(game, game.spawnUnit);
+  setShipCollisionSolids(game.map, [...game.buildings,...(game.obstacles ?? [])]);
   return game;
 }
 
@@ -825,7 +830,7 @@ export function stepGame(game: Game) {
   // The empty collision frame still clears prior hull impacts and binds ground
   // movement to this tick's no-hull geometry.
   // Hulls meet the buildings, rocks and gates; the neutral sites stand inland, out of every hull's way.
-  beginShipMotionFrame(game.units,game.map,vessels.length ? [...game.buildings,...(game.obstacles ?? [])] : game.buildings,vessels);
+  beginShipMotionFrame(game.units,game.map,undefined,vessels);
   let defenses: ShipDefenseFrame;
   if (navalFrame) {
     beginShipPlanningFrame(game.units,game.tick,vessels);
@@ -914,6 +919,7 @@ function syncBuildingBodies(game: Game) {
   const bodies = standingBodies(game);
   game.buildingBodiesSeen = bodies;
   setBuildingBodies(game.map, bodies);
+  setShipCollisionSolids(game.map, [...game.buildings,...(game.obstacles ?? [])]);
 }
 
 /** A runtime loading a game calls this before its first tick: the routing its first walks and launches would build cold
@@ -1008,6 +1014,7 @@ export function snapshotGame(game: Game): GameSnapshot {
   };
   bindGangwayCrewRules(snapshot.units,snapshot);
   shareBuildingBodies(game.map, snapshot.map);
+  setShipCollisionSolids(snapshot.map, [...snapshot.buildings,...(snapshot.obstacles ?? [])]);
   return snapshot;
 }
 
@@ -1067,6 +1074,7 @@ export function restoreSnapshotIntoGame(game: Game, snapshot: GameSnapshot, next
   invalidateGameRuntimeCaches(game);
   refreshVeteranFrame(game);
   bindGangwayCrewRules(game.units,game);
+  setShipCollisionSolids(game.map, [...game.buildings,...(game.obstacles ?? [])]);
 }
 
 /** Old saves used 20 Hz rates, including passengers and campaign rule overrides. */
@@ -1857,7 +1865,7 @@ function navigateShipAttack(game: Game, ship: Unit, ordered: Unit | Building | O
     for (const margin of [Math.PI / 36, 0]) {
       const heading = bestFiringHeading(game, station, target, margin,shotClear), aimed = { ...station, sailing: { ...station.sailing!, heading } }, end = { ...start, heading };
       shareShipProfile(ship,aimed);
-      if (checkTurn && (!hullPassageClear(game.map, station, start, end) || !shipTraffic(station, game.units)(start, end))) continue;
+      if (checkTurn && (!hullPassageClear(game.map, station, start, end) || !shipTraffic(station,game.units,600,game.map)(start, end))) continue;
       if (weapons.some(item => {
         const pose = mountedWeaponPose(aimed, item), def = SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS];
         if (!pose) return false;

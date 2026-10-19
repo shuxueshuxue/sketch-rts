@@ -16,6 +16,36 @@ export type ShipCollisionImpact = Contact & { ship: Unit; closingSpeed: number; 
 type Entry = { body: Body; radius: number; keys: number[]; left: number; right: number; top: number; bottom: number };
 type Frame = { map?: GameMap; hasShips: boolean; buckets: Map<number, Set<Entry>>; shipBuckets: Map<number, Set<Entry>>; entries: Map<Body, Entry>; velocities: Map<Body, Point>; yawRates: Map<Unit, number>; impacts: ShipCollisionImpact[]; hitPairs: Set<string>; inTheWay: Set<Unit> };
 const frames = new WeakMap<readonly Unit[], Frame>();
+// Planning reads the very same static bodies as physical motion. Maps in AI
+// snapshots register their own bodies, so later damage cannot change a saved view.
+type SolidSource = { bodies: readonly Solid[]; cell?: number | undefined; seen?: { x: number; y: number; radius: number; alive: boolean }[]; outlines?: Point[][] };
+const solidSources = new WeakMap<GameMap, SolidSource>();
+const noSolids: Point[][] = [];
+export function setShipCollisionSolids(map: GameMap, solids: readonly Solid[]) {
+  solidSources.set(map, { bodies: solids });
+}
+export function shipCollisionMap(units: readonly Unit[]) { return frames.get(units)?.map; }
+export function freezeShipCollisionSolids(map: GameMap, center?: Point, range=Infinity): Point[][] {
+  const source = solidSources.get(map);
+  if (!source) return noSolids;
+  if (!source.seen || source.cell !== map.terrain?.cell || source.bodies.length !== source.seen.length || source.bodies.some((body, i) => {
+    const seen = source.seen![i]!;
+    return body.x !== seen.x || body.y !== seen.y || body.radius !== seen.radius || (body.hp > 0) !== seen.alive;
+  })) {
+    source.cell = map.terrain?.cell;
+    source.seen = source.bodies.map(body => ({ x: body.x, y: body.y, radius: body.radius, alive: body.hp > 0 }));
+    source.outlines = source.bodies.filter(body => body.hp > 0).map(body => physicalSolidOutline(map, body));
+  }
+  // Replaced whole on change: existing searches retain their immutable view.
+  if (!center || !Number.isFinite(range)) return source.outlines!;
+  // These are the physical axis-aligned square footprints. Include a body
+  // when any of its footprint enters the caller's planning neighborhood.
+  return source.outlines!.filter(polygon => {
+    const left = polygon[0]!, right = polygon[2]!;
+    const dx = Math.max(left.x-center.x,center.x-right.x,0), dy = Math.max(left.y-center.y,center.y-right.y,0);
+    return dx*dx+dy*dy <= range*range;
+  });
+}
 const CELL = 192;
 // A bucket's key packs its column and row into one integer (2^20 cells either way of the origin, far past any map):
 // every body is filed again each tick, and printing "x,y" for each of its cells was most of a frame's cost.
@@ -83,7 +113,9 @@ function updateEntry(frame: Frame, entry: Entry) {
       if (ship) { let ships = frame.shipBuckets.get(key); if (!ships) frame.shipBuckets.set(key, ships = new Set()); ships.add(entry); }
     }
 }
-export function beginShipCollisionFrame(units: readonly Unit[], map?: GameMap, solids: readonly Solid[] = [], vessels: readonly Unit[] = units) {
+export function beginShipCollisionFrame(units: readonly Unit[], map?: GameMap, solids?: readonly Solid[], vessels: readonly Unit[] = units) {
+  if (map && solids) setShipCollisionSolids(map, solids);
+  solids ??= map ? solidSources.get(map)?.bodies ?? [] : [];
   let frame = frames.get(units);
   if (frame) {
     frame.buckets.clear(); frame.shipBuckets.clear(); frame.entries.clear();
@@ -219,6 +251,24 @@ function sweepShape(sweep: Sweep, bodyPolygon: readonly Point[]): Omit<Contact, 
     const own = supportPoint(hullOutline(ship, pose), contact.normal), other = supportPoint(bodyPolygon, { x: -contact.normal.x, y: -contact.normal.y });
     return { fraction, normal: contact.normal, point: { x: (own.x + other.x) / 2, y: (own.y + other.y) / 2 } };
   }
+}
+/** Static planning uses the physical sweep, including its initial-contact
+ * escape rule. The polygons are frozen when a resumable search is created. */
+export function shipSolidsPassageClear(ship: Unit, from: ShipPose, to: ShipPose, solids: readonly Point[][]): boolean {
+  if (!solids.length) return true;
+  const sweep = beginSweep(ship, from, to);
+  const stationary = from.x === to.x && from.y === to.y && Math.abs(sweep.turn) < 1e-8;
+  for (const polygon of solids) {
+    // Reject distant footprints before preparing any rotated hull geometry.
+    const extent = outlineExtent(polygon);
+    const arcReach = to.curvature ? 2 / Math.abs(to.curvature) : sweep.lever * 2;
+    if (pointSegmentDistanceSquared(polygon[0]!, from, to) > (extent + sweep.radius + arcReach + 1) ** 2) continue;
+    if (stationary) {
+      const reflected = hullOutline(ship, from).map(p => ({ x: from.x - p.x, y: from.y - p.y }));
+      if (insideSupportingPlanes(minkowskiSum(polygon, reflected), from.x, from.y)) return false;
+    } else if (sweepShape(sweep, polygon)) return false;
+  }
+  return true;
 }
 /** Shared placement check for launching and physical motion. */
 export function shipBodyClearAtPose(map: GameMap, ship: Unit, pose: ShipPose, bodies: readonly Body[]) {
