@@ -351,6 +351,20 @@ describe("veteran active skills", () => {
     for (const unit of [caster, broken, unloaded, enemy]) expect(unit.effects).toEqual([]);
   });
 
+  it('does not spend a weaker veteran ward while the scroll ward is active', () => {
+    const caster = soldier('caster', 'veteranInnerFire', 'priest');
+    const enemy = soldier('enemy', undefined, 'footman', 'enemy', 525);
+    enemy.order = { type: 'attack', targetId: caster.id };
+    caster.effects = [{ type: 'guardian', remaining: seconds(7), damageReduction: .4, protectionGroup: 'ward' }];
+    const game = snapshot(caster, enemy);
+    expect(castVeteranAbility(game, caster, 'veteranInnerFire', true)).toBe(false);
+    expect(castVeteranAbility(game, caster, 'veteranInnerFire', false)).toBe(false);
+    expect(caster.abilityCooldowns).toBeUndefined();
+    caster.effects[0]!.remaining = 0;
+    expect(castVeteranAbility(game, caster, 'veteranInnerFire', true)).toBe(true);
+    expect(caster.effects).toContainEqual(expect.objectContaining({ type: 'protection', damageReduction: .35 }));
+  });
+
   it("preserves automatic wards under guardian immunity while allowing a deliberate manual precast", () => {
     const caster = soldier("caster", "veteranInnerFire", "priest");
     const enemy = soldier("enemy", undefined, "footman", "enemy", 525);

@@ -33,6 +33,8 @@ jobs:
       - run: npm ci
       - name: Test generated camp budgets and named map layouts
         run: npx vitest run src/shared/generated-camp-budget.test.ts src/shared/map-pool.test.ts
+      - name: Verify guardian scroll reduction, presentation and rules boundaries
+        run: npx vitest run src/shared/guardian-scroll.test.ts src/shared/shipbuilding.test.ts src/shared/sim/canonical.test.ts src/client/tooltips.test.ts src/client/status-presentation.test.ts src/client/guardian-scroll-visual.test.ts
       - name: Verify passive naval room measurements and real crossings
         run: npx vitest run src/ai/benchmark/naval-metrics.test.ts src/ai/benchmark/naval-room.test.ts src/ai/benchmark/naval-loading-diagnostics.test.ts
       - name: Test release boundaries, mining upkeep and presentation

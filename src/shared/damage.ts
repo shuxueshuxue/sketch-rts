@@ -52,7 +52,9 @@ export function statusDamageProtection(effects: readonly ProtectionEffect[]): {
   const reductions: DamageReductionSource[] = [];
   for (const effect of effects) {
     if (effect.remaining <= 0) continue;
-    if (effect.type === "guardian") invulnerable = true;
+    // Campaign scripts and older snapshots use an unvalued guardian for immunity.
+    // Scroll wards carry a reduction and join the same pipeline as other wards.
+    if (effect.type === "guardian" && effect.damageReduction === undefined) invulnerable = true;
     if (effect.damageReduction !== undefined) reductions.push({
       group: effect.protectionGroup ?? "ward",
       amount: effect.damageReduction,

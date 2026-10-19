@@ -2,6 +2,7 @@ import { abilityCooldown, withAbilityCooldown } from "./ability-cooldowns";
 import { ABILITY_DEFS } from "./catalog";
 import { combatCapability } from "./combat-capabilities";
 import type { DamageReductionSource } from "./damage-reduction";
+import { reductionForGroup, statusDamageProtection } from "./damage";
 import { canReceiveHealing } from "./healing";
 import { isStunned } from "./unit-abilities";
 import { matchesUnitTarget } from "./unit-targeting";
@@ -109,8 +110,8 @@ export function temporaryAttackSpeedMultiplier(unit: Pick<Unit, "effects">): num
 }
 
 function wardReduction(unit: Unit): number {
-  return unit.effects.reduce((best, effect) => effect.type === "protection" && effect.remaining > 0
-    ? Math.max(best, effect.damageReduction ?? 0) : best, 0);
+  return reductionForGroup("ward", statusDamageProtection(unit.effects).reductions
+    .filter(source => source.group === "ward").map(source => source.amount));
 }
 
 function needsAttackSpeedBuff(snapshot: VeteranSnapshot, unit: Unit, multiplier: number | undefined): boolean {
@@ -119,7 +120,7 @@ function needsAttackSpeedBuff(snapshot: VeteranSnapshot, unit: Unit, multiplier:
 }
 
 function needsBuff(snapshot: VeteranSnapshot, unit: Unit, modifiers: VeteranModifiers, automatic: boolean): boolean {
-  const alreadyImmune = automatic && (unit.invulnerable || unit.effects.some(effect => effect.type === "guardian" && effect.remaining > 0));
+  const alreadyImmune = automatic && (unit.invulnerable || statusDamageProtection(unit.effects).invulnerable);
   return (modifiers.damageReduction !== undefined && !alreadyImmune && wardReduction(unit) < modifiers.damageReduction)
     || needsAttackSpeedBuff(snapshot, unit, modifiers.attackSpeedMultiplier);
 }
