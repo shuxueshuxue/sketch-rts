@@ -7,6 +7,7 @@ import type { AiPolicyContext } from '../policy/types';
 import { isEnemyOwner } from '../policy/ownership';
 import { castThreatReach, mountedThreatReach, THINK_TICKS } from './mounted-micro';
 
+import { withNavalShoreReuse } from '../policy/naval-shore-reuse';
 import { nativeLandRoad, withNativeLandRoadReuse } from '../policy/land-road';
 export { nativeLandRoad } from '../policy/land-road';
 type Threat = Unit | Building;
@@ -22,7 +23,7 @@ export function withLandRoadReuse<T>(run: () => T): T {
   // fresh scope. Budget views have distinct snapshot keys. Finally also clears on error.
   const previous = roadReuse;
   roadReuse = new WeakMap();
-  try { return withNativeLandRoadReuse(run); }
+  try { return withNativeLandRoadReuse(() => withNavalShoreReuse(run)); }
   finally { roadReuse = previous; }
 }
 

@@ -103,6 +103,9 @@ export type NavalPlanMemory = {
     & {targetId:string;from:{x:number;y:number};to:{x:number;y:number};phase:"loading"|"sailing"|"return";crewIds:string[];sinceTick:number;reinforcementTaskId?:string;payloadIds?:string[];deliveries?:{tick:number;unitIds:string[]}[];returnTrips?:number;progress?:{tick:number;x:number;y:number;heading:number;phase:string;crew:string}}>;
   ferryRetryUntil?: Record<string,number>;
   ferryFailures?: Record<string, Record<string, { attempts: number; tick: number; reason: string }>>;
+  // One candidate per resource island; paid routes survive a temporary local opportunity.
+  islands?: { tick: number; plans: { mineId: string; landing: { x: number; y: number } }[] };
+  expeditions?: { mineId: string; landing: { x: number; y: number } }[];
   island?: { tick: number; plan?: { mineId: string; landing: { x: number; y: number } } };
   assault?: { tick: number; plan?: { targetId: string; landing: { x: number; y: number } } };
   raid?: { tick: number; water?: { x: number; y: number } };
