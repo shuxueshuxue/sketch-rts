@@ -1,3 +1,4 @@
+import { activeUnitClaim } from '../policy/claims';
 import { detCos, detSin } from '../../shared/det-math';
 import { isOpenGround, isWalkable, sameGround, walkingDistance } from '../../shared/terrain';
 import { nearestByRoute } from '../../shared/route-selection';
@@ -91,7 +92,8 @@ export function availableMountedRiders(snapshot: GameSnapshot, owner: PlayerId, 
     && unit.id !== options.memory.shopping?.unitId
     && !options.memory.v6?.creep?.group.includes(unit.id)
     && !['board', 'cast', 'charge'].includes(unit.order.type)
-    && options.memory.unitClaims[unit.id]?.kind !== 'retreat');
+    && options.memory.unitClaims[unit.id]?.kind !== 'retreat'
+    && activeUnitClaim(snapshot, owner, unit, options)?.kind !== 'harassSquad');
 }
 
 function assign(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {

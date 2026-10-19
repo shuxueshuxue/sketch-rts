@@ -1,0 +1,117 @@
+{
+  "base": "a2cff60725d2e74035ce92dd77cdc5b8cddb2d41",
+  "behavior": {
+    "selection": "Live range strictly greater than the rider first, otherwise horseArcher/raider/knight with live speed at least the rider. Route-local, healthy, unclaimed troops; expansion and expansionGarrison remain owned.",
+    "size": "Effective damage against the live rider must kill in two volleys; squad strength >= nearby harassment strength * 1.25, <= 55% of own army. No fixed member count or IDs. Mounted harassment is measured by strength <= 30% of own army, not rider headcount; stronger mounted attacks still summon ordinary defense.",
+    "binding": "Only accepted mineDefense orders write harassSquad claims. Task memory contains only hallId, targetId and fixed point. No replacement or retarget while the bound target stays alive nearby; rejected actors never join.",
+    "leash": "Return to the fixed mine-mouth post when own or target position exceeds 650 from the defended hall. Keep binding while rider circles between 650 and 1000, release after target dies or leaves beyond 1000 (or defended hall is lost). Return progress lives on the same per-unit claim; accepted keepalive orders renew shared TTL.",
+    "fallback": "Without sufficient eligible range/speed and strength, dispatch nobody; workerSafety still evacuates workers and the main army keeps its original objective."
+  },
+  "fixture": {
+    "file": "src/ai/bootstrap_1/fixtures/defense-harass-9m03.json",
+    "sha256": "d68f822bac456995c46997e06b865ef2accfaa6658f7e4c07df34fd996edf86b",
+    "unedited": true,
+    "tick": 10860,
+    "originalSource": "1bf481b04b75e8e8142a7a9f22792863ca221e01",
+    "seed": "defense-observe-20261019",
+    "map": "ladder-03",
+    "subject": "v9_knight ember",
+    "opponent": "v9_archer grove",
+    "liveRider": {
+      "attackRange": 304,
+      "speed": 99,
+      "hp": 109
+    },
+    "archerRange": 352.8
+  },
+  "mac1": {
+    "source": "639f8dc1a32d15348fe16b766a9bcac6fcc3bd2d",
+    "tree": "2f16701778a4f0826d540da9d49b3bd096686428",
+    "out": "/Users/mac1/work/sketch-cli/runs/mvevj6qm-627155/defense-harass-final",
+    "renderer": "src/recorder/record.ts (native client world renderer)",
+    "schedule": "both complete AI stacks, normal 15-tick phases and 3-tick delivery delay; parent uses its actually delivered command trace, no disabled planner scripts",
+    "seconds": 150,
+    "firstTick": 10860,
+    "lastTick": 13860,
+    "frameTicks": [
+      10860,
+      11460,
+      12060,
+      12660,
+      13260,
+      13860
+    ],
+    "mainObjectiveUnchanged": true,
+    "metrics": {
+      "before": {
+        "directives": 105,
+        "crew": [
+          "unit-v9_knight-emberRavager-3629",
+          "unit-v9_knight-ashChieftain-3441",
+          "unit-v9_knight-emberRavager-1117",
+          "unit-v9_knight-emberRavager-2245",
+          "unit-v9_knight-emberRavager-1280",
+          "unit-v9_knight-emberRavager-1138",
+          "unit-v9_knight-emberRavager-1133",
+          "unit-v9_knight-ashChieftain-4164",
+          "unit-v9_knight-emberRavager-4344",
+          "unit-v9_knight-ashChieftain-4533",
+          "unit-v9_knight-contractArcher-1691"
+        ],
+        "hitsBy": 65,
+        "hitsAgainst": 0,
+        "deadTick": null,
+        "commandSha256": "b261bcbdaa86722e7226727a095df82f6e8383a293185fb486bf4aad25725837",
+        "commandCount": 1202
+      },
+      "after": {
+        "directives": 30,
+        "crew": [
+          "unit-v9_knight-contractArcher-2749",
+          "unit-v9_knight-contractArcher-2253",
+          "unit-v9_knight-contractArcher-1691"
+        ],
+        "hitsBy": 2,
+        "hitsAgainst": 7,
+        "deadTick": 11462,
+        "commandSha256": "5086899b0f64bcc536c73f19d276b2adb9dcea4cd22b02dc2a837bab61d29dde",
+        "commandCount": 726
+      }
+    }
+  },
+  "tests": {
+    "newScenarios": 16,
+    "ai": {
+      "files": 292,
+      "tests": 3855,
+      "workers": 8,
+      "source": "6bbe66e6201c1b8daa98f809e222b7b05786cc93",
+      "log": "/codegeex/jeffry/sketch-rts-defense/runs/mvevirfl-44f127/defense-harass-tests.log",
+      "command": "vitest run src/ai --exclude src/ai/think-worker/think-worker.test.ts --maxWorkers=8 --minWorkers=1"
+    },
+    "thinkWorker": {
+      "machine": "juma",
+      "files": 1,
+      "tests": 4,
+      "command": "vitest run src/ai/think-worker/think-worker.test.ts --maxWorkers=1 --minWorkers=1"
+    },
+    "totalFiles": 293,
+    "totalTests": 3859,
+    "existingSnapshotsUnedited": [
+      "14:48 rally",
+      "19:50 pursuit",
+      "32:36 worker safety"
+    ],
+    "typecheck": "tsc --noEmit passed"
+  },
+  "sharedFunctions": [
+    "mine-defense.ts: uncoveredRaid, detachment, mineDefense.run/onCommands, mineGuardUnitIds, mainArmyIntel",
+    "expansion-mission.ts: prepareExpansionMission, expansionMissionCommands (exclude active harassSquad)",
+    "mounted-tasks.ts: availableMountedRiders",
+    "policy/claims.ts: isDefenseTaskClaim, claimTargetExists",
+    "memory.ts: harassSquad kind, returning flag, harassDefense task metadata"
+  ],
+  "compatibility": "general.ts unchanged; expansionOwnsDefender landExpansion compatibility read retained. expansion/expansionGarrison claims respected.",
+  "reproduce": "tsx scripts/ai-harass-replay.ts src/ai/bootstrap_1/fixtures/defense-harass-9m03.json /tmp/harass-proof/parent.json /tmp/replay 150 30",
+  "evidence": "replay.evidence.json restores parent commands, both GIFs, native keyframes, delivered command traces, fixture and full AI test log."
+}

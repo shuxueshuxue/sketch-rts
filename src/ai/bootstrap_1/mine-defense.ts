@@ -1,3 +1,4 @@
+import { harassSquadAssignment, harassSquadGuard, mountedHarassment, planHarassSquad, recordHarassSquadCommands } from './harass-squad';
 import { mercenaryControlUnitIds } from './mercenary-control';
 import { expansionMissionCommands } from './expansion-mission';
 import { lootRecoveryUnitIds } from './loot-recovery';
@@ -63,6 +64,7 @@ export function uncoveredMiningRaid(snapshot: GameSnapshot, owner: PlayerId, opt
 
 function uncoveredRaid(snapshot: GameSnapshot, intel: V6Intel, guard: Detachment | undefined): V6Intrusion | undefined {
   for (const { hall, attackers } of miningRaids(snapshot, intel)) {
+    if (mountedHarassment(snapshot, intel, attackers)) continue;
     if (guard && attackers.every(unit => guard.attackers.includes(unit))) continue;
     const cover = intel.ownTowers.filter(tower => distance(tower, hall) <= tower.attackRange)
       .reduce((power, tower) => power + TOWER_STRENGTH * tower.hp / tower.maxHp, 0);
@@ -74,12 +76,15 @@ function uncoveredRaid(snapshot: GameSnapshot, intel: V6Intel, guard: Detachment
 
 function detachment(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): Detachment | undefined {
   const intel = readV6Intel(snapshot, owner, options);
+  const squad = harassSquadGuard(snapshot, owner, options, intel);
+  if (squad) return squad;
   const raids = miningRaids(snapshot, intel);
   const pool = intel.army.filter(unit => !unit.deck && unit.hp >= unit.maxHp * .6
     && activeUnitClaim(snapshot, owner, unit, options)?.kind !== 'expansionGarrison'
     && !isMineRallyClaim(activeUnitClaim(snapshot, owner, unit, options))
     && !['board', 'cast', 'charge'].includes(unit.order.type));
   for (const { hall, attackers } of raids) {
+    if (mountedHarassment(snapshot, intel, attackers)) continue;
     const nearby = routeArrivals(snapshot.map, pool, hall, 'land')
       .filter(({ unit, ticks }) => ticks < SIM_TICKS_PER_SECOND * 1300 / unit.speed
         && (unit.expiresTick === undefined || unit.expiresTick > snapshot.tick + ticks))
@@ -106,7 +111,10 @@ function detachment(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
 export const mineDefense: AiScript = {
   id: 'mineDefense', phase: 'tactics', redirects: 'local',
   claimsUnits: mineGuardUnitIds,
+  onCommands: recordHarassSquadCommands,
   run(snapshot, owner, options): GameCommand[] {
+    const squad = planHarassSquad(snapshot, owner, options, readV6Intel(snapshot, owner, options));
+    if (squad !== undefined) return squad;
     const guard = detachment(snapshot, owner, options);
     if (!guard) return [];
     const crewIds = new Set(guard.crew.map(unit => unit.id));
@@ -129,7 +137,8 @@ export const mineDefense: AiScript = {
 };
 
 export function mineGuardUnitIds(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
-  return new Set(detachment(snapshot, owner, options)?.crew.map(unit => unit.id));
+  const squad = harassSquadAssignment(snapshot, owner, options, readV6Intel(snapshot, owner, options));
+  return new Set((squad?.crew ?? detachment(snapshot, owner, options)?.crew)?.filter(unit => !squad || unit.hp >= unit.maxHp * .35).map(unit => unit.id));
 }
 
 export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
@@ -278,6 +287,6 @@ export function mainArmyIntel(snapshot: GameSnapshot, owner: PlayerId, options: 
   if (army.length) main.armyCenter = averagePoint(army);
   const raid = uncoveredRaid(snapshot, intel, guard);
   if (raid) main.intrusion = raid;
-  else if (intrusion && !covered) main.intrusion = intrusion;
+  else if (intrusion && !covered && !mountedHarassment(snapshot, intel, intrusion.attackers)) main.intrusion = intrusion;
   return main;
 }
