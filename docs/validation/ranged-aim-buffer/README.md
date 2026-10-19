@@ -10,7 +10,7 @@
 
 `src/shared/aiming-range-buffer.test.ts` 用明确攻击命令追击后退近战单位。控制后退速度为 24，专门隔离瞄准取消和双方本身速度差异；200 tick 共 10 秒。
 
-| 控制者 | main bb757c59 箭数 / 中断 | 修改后箭数 / 中断 | 修改后射击 tick |
+| 控制者 | main f408671c 箭数 / 中断 | 修改后箭数 / 中断 | 修改后射击 tick |
 |---|---:|---:|---|
 | 人类 | 0 / 25 | 4 / 0 | 21、73、125、176 |
 | AI | 0 / 25 | 4 / 0 | 21、73、125、176 |
@@ -20,6 +20,17 @@
 `RULES_VERSION = 7` 接受规则 6 等旧存档，跨规则命令回放仍拒绝。单位及炮位的 `aim.targetId` 持久保存，因此独立将 `CHECKSUM_VERSION` 升为 22；版本 21 的投影只删除这个新字段，保留其原有驻守点与人类席位身份。旧剧情存档的校验仍使用旧格式。新开局没有 aim，初始 golden 不变。
 
 先前的人类驻守规则留下的全 AI 固定命令流回归，显式关闭这个后续战斗缓冲、使用版本 21 校验和投影，继续独立验证驻守规则不影响 AI；本次新测试另行验证缓冲确实对 AI 生效。
+
+## 完整验证
+
+在基于 `f408671c` 的源码提交 `c15ea216` 上，A100 / Node 24.15.0 以 4 workers 跑完整 `vitest run --dir src`：685 个文件通过、2 个失败；7705 条测试通过、2 条失败，耗时 389.30 秒。完整日志见 [原始证据指针](raw.evidence.json) 中的 `full-src.log`，结构化结果见 [validation.json](validation.json)。构建和 CLI 类型检查通过。
+
+两项失败均保留原断言，等待叠加的 AI 适配 PR：
+
+- `expansion-mission.test.ts:193`：二矿落基 tick 5247，要求小于 4800；下文列出三矿及分阶段测量。
+- `attack-objective.scene.test.ts:56`：#546 新增的真实扩张进攻场景，`paused && resumed` 为 false。目标 ID 的前置断言仍通过。单独探针确认并行扩张为 true，但首次进攻由 tick 8557 推迟到 9592，没有经过回防暂停，于 tick 10507 因 `general:retreat:incoming` 撤退；截至 15000 没有拆矿。main 则确实暂停/恢复、先撤退，再于 14437 拆掉另一座矿。见 [探针汇总](attack-objective.json)，原始输出在证据归档中。
+
+这两项没有改成预期失败，也没有放宽时间或场景要求。两个 PR 一起审核合并，避免 main 出现中间状态。
 
 ## mac1 真浏览器对照
 
@@ -31,7 +42,7 @@ SKETCH_MACHINES=~/.config/sketch/machines-camps.json \
 
 真实房间和 GPU 浏览器，选择弓手后用 Playwright 的右键事件点敌人，断言服务器收到对应攻击命令；敌方石像沿固定方向撤退。两种单位都用原始游戏属性（弓手速度 60，石像速度 42）。两侧都在相同 tick 截取同一镜头。GPU 为 `ANGLE Metal Renderer: Apple M3 Ultra`，没有软件渲染。五组图全部逐张看过。
 
-左侧 main，右侧修改后；起始图完全一致。第 12、74 tick 的右侧可看见完成的射击，后续图显示同一条追击路线。实际浏览器的 240 tick 记录、显卡信息见 [visual/browser-proof.json](visual/browser-proof.json)。
+左侧 main，右侧修改后；起始图完全一致。第 12、74 tick 的右侧可看见完成的射击，后续图显示同一条追击路线。实际浏览器的箭数、中断次数和显卡信息见 [visual/browser-proof.json](visual/browser-proof.json)；完整逐帧状态在原始证据归档的 `browser-proof-frames.json`。
 
 ![第一次完成射击，同镜头](visual/pursuit-12-desktop.webp)
 
@@ -68,3 +79,13 @@ SKETCH_MACHINES=~/.config/sketch/machines-camps.json \
 普通 verdant 镜像更早结束，清营地有部队控制时，双方现金最多只有 112.98 / 113，低于 160 招募费，所以没有雇佣机会；佣兵脚本仍实际发出前往营地命令。参战回归现在将一个仅售一名佣兵的营地放到初始驻军旁，并仅补足这一笔招募费用。AI 必须自己雇佣、库存必须售罄、佣兵必须击杀；胜利、双方消费、互有伤亡、野怪击杀、CPU 预算等原断言保留。原始查询见 [mercenary-probe.jsonl](mercenary-probe.jsonl)。
 
 撤退的 4 名火花射手仍全员到家，因敌弓手完成已有瞄准，受伤总计 65，上限按审阅要求设为 80；骑射击杀追击女巫时受一击 8，上限设为 10。保留全员存活、零阵亡、原野怪营地未被惊动、实际击杀和费用要求，未改 AI 生产逻辑。
+
+## 原始证据
+
+遵照 `docs/EVIDENCE.md`，完整日志、逐帧状态及源码 SHA256 清单存放在 A100 的本任务目录，git 保留 [raw.evidence.json](raw.evidence.json) 指针和上述小型汇总、对照图。归档上传后已下载并校验 SHA256。
+
+存储根目录：`/codegeex/jeffry/sketch-rts-camps/ranged-aim-buffer/evidence`。将 `SKETCH_MACHINES` 配置中 a100 的 `evidence` 指向此目录，即可运行：
+
+```sh
+bin/sketch evidence get docs/validation/ranged-aim-buffer/raw.evidence.json --out /tmp/ranged-aim-raw
+```
