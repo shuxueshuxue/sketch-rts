@@ -4,7 +4,7 @@ import { beginShipCollisionFrame, setShipCollisionSolids, sweepShipCollision } f
 import { reservationTraffic, shipTraffic } from './ship-avoidance';
 import { hullPassageClear, planShipRoute } from './ship-navigation';
 import { advanceShipPlanningJob, beginShipPlanningJob, validShipPlanningJob } from './ship-planning-job';
-import { createGame, snapshotGame } from './sim';
+import { createGame, restoreSnapshotIntoGame, snapshotGame } from './sim';
 import { beginShipMotionFrame } from './ship-motion';
 import { beginShipPlanningFrame } from './ship-planning-budget';
 import { sailToward } from './sailing';
@@ -86,11 +86,28 @@ it('keeps the same frozen solid geometry when a pending search is cold-restored'
   expect(validShipPlanningJob(restored, goal, map)).toBe(false);
 });
 
+it('bounds saved solids to the traffic neighborhood while retaining a distant precise berth', () => {
+  const { map, ship, units, solids } = scene(0);
+  const distant = { ...solids[0]!, id: 'distant-dock', x: 1000, y: 2000 };
+  setShipCollisionSolids(map, [...solids, distant]);
+  const goal = { x: distant.x, y: distant.y };
+  beginShipPlanningJob(ship, goal, map, units);
+  const ordinary = JSON.parse(ship.sailing!.planningJob!);
+  expect(ordinary.solids.length).toBeGreaterThan(0);
+  expect(ordinary.solids.every((polygon: { x: number }[]) => polygon.every(p => p.x > 5000))).toBe(true);
+  beginShipPlanningJob(ship, goal, map, units, undefined, false, 'precise');
+  const precise = JSON.parse(ship.sailing!.planningJob!);
+  expect(precise.solids.some((polygon: { x: number }[]) => polygon.some(p => p.x < 2000))).toBe(true);
+});
+
 it('gives AI snapshots their own physical solid source, including death state', () => {
   const { map, ship, solids, from, saved } = scene(0);
   const game = createGame('bareDuel', { aiPlayers: [] });
   game.map = map; game.units = [ship]; game.buildings = solids; game.obstacles = [];
   const before = snapshotGame(game);
+  const restored = createGame('bareDuel', { aiPlayers: [] });
+  restoreSnapshotIntoGame(restored, before, game.nextId);
+  expect(shipTraffic(restored.units[0]!, [], 600, restored.map)(from, saved.firstLeg)).toBe(false);
   for (const building of game.buildings) building.hp = 0;
   const after = snapshotGame(game);
   expect(shipTraffic(before.units[0]!, [], 600, before.map)(from, saved.firstLeg)).toBe(false);

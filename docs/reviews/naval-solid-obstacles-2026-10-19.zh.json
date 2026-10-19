@@ -1,0 +1,7185 @@
+{
+  "标题": "船厂障碍规划修复：168局普查、现场回归与存档/性能核验",
+  "日期": "2026-10-19",
+  "PR": "https://github.com/shuxueshuxue/sketch-rts/pull/532",
+  "结论": [
+    "规划与真实船体扫掠共用建筑/障碍来源和几何；冻结范围收至trafficReach加船体半径，避免把全图建筑写入每艘船的job。",
+    "168局原版普查：我方125局242艘、对手128局216艘同时有静止受阻与规划放行证据。船壳及装炮价值分别76500、66900金；这不是沉没损失或修复可兑现收益。",
+    "原报告的四处真实离港现场，主分支检查均错误放行，实际碰撞在段起点即发生；修复拒绝四条旧段，替代航线通过实际扫掠，四船30秒内离开原位超过31单位且不掉血。",
+    "原先全图冻结使远处建筑也把搜索设成limited，误触发1024步限额；局部冻结同时恢复深搜存档和mounted clearing场景原有行为。",
+    "新开局校验和不变；固定深搜的持续job格式使前25tick校验和暂时不同，随后一致；船厂受阻流按预期改变。每个版本内部的热续跑与冷恢复均逐tick一致。"
+  ],
+  "版本与方法": {
+    "A": "main 1bf481b0",
+    "初稿全图": "e8891792",
+    "B": "e8891792加本报告列出的局部冻结/初始化补丁",
+    "B文件sha256": {
+      "src/shared/ship-collisions.ts": "4751acb6cded43d3989b11d9501945e6f7e80e9401c82e4cfd9a089a413805e2",
+      "src/shared/ship-planning-job.ts": "0ee2b4fc4b315eb6cb5dc4c76698e3b09cf4f8a7ece69f1d786b047de14b1098",
+      "src/shared/sim.ts": "3032e4adb56e434619d3a449e4a5dbce94490acf37e1750ea3ff5288ca36a119",
+      "src/shared/ship-solid-planning.test.ts": "2a89789d796da2986cb8712c1e3f54a111b65859f54c6806fb8baec73d591217"
+    },
+    "测量脚本sha256": "9b1aeaafc8a52f746628dc86dd26a131f8a67ea5f6abb58eccb03abe0abd0dd3",
+    "ABBA实际执行脚本sha256": "1d2391d0e753960704c060a122284fca3a7c3d92cbdd9ad521d12fc143ecc0ea",
+    "普查代码": "c08bd1a9；src/shared与1bf481b0相同，仅增加被动观测；v8/v9各84局分开运行、每组最多24workers。",
+    "范围说明": "按主人调整，仅完成原版普查；没有跑修复版168局海战或240局胜率验收。"
+  },
+  "普查": {
+    "口径": "每秒检查实际已提交第一段与真实物理障碍。船位/船头等效位移32单位内至少30秒，且累计至少30个fraction=0受阻采样；该船至少一次保存现场同时通过旧地形和船只规划检查。累计受阻并不等于单次连续卡死，也不排除同时作战。",
+    "金额口径": "uniqueHullGold为每艘船观测到的最高船壳加舰载武器价值；uniquePeakExposedGold为每船实际同一时刻船装加乘客峰值之和，非全队同一时刻余额。每船/每局金额范围、峰值和全部168局详列；不将静止资产算成已损失金币。",
+    "对局与双方": {
+      "v8": {
+        "ours": {
+          "games": 59,
+          "hulls": 114,
+          "uniqueHullGold": 35660,
+          "hullGoldRange": [
+            160,
+            1520
+          ],
+          "perHullPeakAssetRange": [
+            160,
+            1940
+          ],
+          "perHullPeakAssetMedian": 490.0,
+          "uniquePeakExposedGold": 69085
+        },
+        "theirs": {
+          "games": 67,
+          "hulls": 122,
+          "uniqueHullGold": 39380,
+          "hullGoldRange": [
+            160,
+            760
+          ],
+          "perHullPeakAssetRange": [
+            160,
+            1230
+          ],
+          "perHullPeakAssetMedian": 420.0,
+          "uniquePeakExposedGold": 63250
+        }
+      },
+      "v9": {
+        "ours": {
+          "games": 66,
+          "hulls": 128,
+          "uniqueHullGold": 40840,
+          "hullGoldRange": [
+            160,
+            1520
+          ],
+          "perHullPeakAssetRange": [
+            160,
+            2310
+          ],
+          "perHullPeakAssetMedian": 402.5,
+          "uniquePeakExposedGold": 71965
+        },
+        "theirs": {
+          "games": 61,
+          "hulls": 94,
+          "uniqueHullGold": 27520,
+          "hullGoldRange": [
+            160,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            160,
+            1990
+          ],
+          "perHullPeakAssetMedian": 390.0,
+          "uniquePeakExposedGold": 48385
+        }
+      }
+    },
+    "全部障碍种类": "shipyard",
+    "逐局": [
+      {
+        "对局": "brokenSea v9_archer ember side-1 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            360,
+            360
+          ],
+          "perHullPeakAssetMedian": 360,
+          "uniquePeakExposedGold": 360
+        }
+      },
+      {
+        "对局": "brokenSea v9_archer ember side-2 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 3,
+          "uniqueHullGold": 640,
+          "hullGoldRange": [
+            160,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            160,
+            630
+          ],
+          "perHullPeakAssetMedian": 620,
+          "uniquePeakExposedGold": 1410
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 540,
+          "hullGoldRange": [
+            540,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            540,
+            540
+          ],
+          "perHullPeakAssetMedian": 540,
+          "uniquePeakExposedGold": 540
+        }
+      },
+      {
+        "对局": "brokenSea v9_archer grove side-1 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 4,
+          "uniqueHullGold": 1480,
+          "hullGoldRange": [
+            160,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            360,
+            640
+          ],
+          "perHullPeakAssetMedian": 540.0,
+          "uniquePeakExposedGold": 2080
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "brokenSea v9_archer grove side-2 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            1065
+          ],
+          "perHullPeakAssetMedian": 652.5,
+          "uniquePeakExposedGold": 1305
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 4,
+          "uniqueHullGold": 1480,
+          "hullGoldRange": [
+            160,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            485,
+            840
+          ],
+          "perHullPeakAssetMedian": 650.0,
+          "uniquePeakExposedGold": 2625
+        }
+      },
+      {
+        "对局": "brokenSea v9_knight ember side-1 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 780,
+          "hullGoldRange": [
+            240,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            615,
+            990
+          ],
+          "perHullPeakAssetMedian": 802.5,
+          "uniquePeakExposedGold": 1605
+        }
+      },
+      {
+        "对局": "brokenSea v9_knight ember side-2 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 400,
+          "hullGoldRange": [
+            160,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            280,
+            480
+          ],
+          "perHullPeakAssetMedian": 380.0,
+          "uniquePeakExposedGold": 760
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "brokenSea v9_knight grove side-1 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 2060,
+          "hullGoldRange": [
+            540,
+            1520
+          ],
+          "perHullPeakAssetRange": [
+            540,
+            1905
+          ],
+          "perHullPeakAssetMedian": 1222.5,
+          "uniquePeakExposedGold": 2445
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "brokenSea v9_knight grove side-2 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            720
+          ],
+          "perHullPeakAssetMedian": 480.0,
+          "uniquePeakExposedGold": 960
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            500,
+            1090
+          ],
+          "perHullPeakAssetMedian": 795.0,
+          "uniquePeakExposedGold": 1590
+        }
+      },
+      {
+        "对局": "brokenSea v9_summoner ember side-1 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            1110,
+            1110
+          ],
+          "perHullPeakAssetMedian": 1110,
+          "uniquePeakExposedGold": 1110
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 3,
+          "uniqueHullGold": 1380,
+          "hullGoldRange": [
+            380,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            460,
+            615
+          ],
+          "perHullPeakAssetMedian": 500,
+          "uniquePeakExposedGold": 1575
+        }
+      },
+      {
+        "对局": "brokenSea v9_summoner ember side-2 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 3,
+          "uniqueHullGold": 940,
+          "hullGoldRange": [
+            160,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            520,
+            735
+          ],
+          "perHullPeakAssetMedian": 720,
+          "uniquePeakExposedGold": 1975
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            930
+          ],
+          "perHullPeakAssetMedian": 585.0,
+          "uniquePeakExposedGold": 1170
+        }
+      },
+      {
+        "对局": "brokenSea v9_summoner grove side-1 vs-v8",
+        "秒": 2215.35,
+        "超时": false,
+        "获胜队": "team-1",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 1520,
+          "hullGoldRange": [
+            540,
+            980
+          ],
+          "perHullPeakAssetRange": [
+            540,
+            1160
+          ],
+          "perHullPeakAssetMedian": 850.0,
+          "uniquePeakExposedGold": 1700
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 780,
+          "hullGoldRange": [
+            240,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            540
+          ],
+          "perHullPeakAssetMedian": 390.0,
+          "uniquePeakExposedGold": 780
+        }
+      },
+      {
+        "对局": "brokenSea v9_summoner grove side-2 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 3,
+          "uniqueHullGold": 560,
+          "hullGoldRange": [
+            160,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            160,
+            360
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 760
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 3,
+          "uniqueHullGold": 720,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            610,
+            1125
+          ],
+          "perHullPeakAssetMedian": 940,
+          "uniquePeakExposedGold": 2675
+        }
+      },
+      {
+        "对局": "elderwood v9_archer ember side-1 vs-v8",
+        "秒": 2281.65,
+        "超时": false,
+        "获胜队": "team-1",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            315
+          ],
+          "perHullPeakAssetMedian": 277.5,
+          "uniquePeakExposedGold": 555
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "elderwood v9_archer ember side-2 vs-v8",
+        "秒": 1216.6,
+        "超时": false,
+        "获胜队": "team-1",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "elderwood v9_archer grove side-1 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "elderwood v9_archer grove side-2 vs-v8",
+        "秒": 2165.85,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "elderwood v9_knight ember side-1 vs-v8",
+        "秒": 1179.25,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "elderwood v9_knight ember side-2 vs-v8",
+        "秒": 1682,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            315
+          ],
+          "perHullPeakAssetMedian": 277.5,
+          "uniquePeakExposedGold": 555
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "elderwood v9_knight grove side-1 vs-v8",
+        "秒": 1684.95,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "elderwood v9_knight grove side-2 vs-v8",
+        "秒": 1475.35,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "elderwood v9_summoner ember side-1 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            390
+          ],
+          "perHullPeakAssetMedian": 390,
+          "uniquePeakExposedGold": 390
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "elderwood v9_summoner ember side-2 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            315,
+            315
+          ],
+          "perHullPeakAssetMedian": 315,
+          "uniquePeakExposedGold": 315
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "elderwood v9_summoner grove side-1 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "elderwood v9_summoner grove side-2 vs-v8",
+        "秒": 1335.35,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "gullIsland v9_archer ember side-1 vs-v8",
+        "秒": 2233.2,
+        "超时": false,
+        "获胜队": "team-1",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 420,
+          "hullGoldRange": [
+            420,
+            420
+          ],
+          "perHullPeakAssetRange": [
+            570,
+            570
+          ],
+          "perHullPeakAssetMedian": 570,
+          "uniquePeakExposedGold": 570
+        }
+      },
+      {
+        "对局": "gullIsland v9_archer ember side-2 vs-v8",
+        "秒": 1158.45,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "gullIsland v9_archer grove side-1 vs-v8",
+        "秒": 1077.55,
+        "超时": false,
+        "获胜队": "team-1",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 420,
+          "hullGoldRange": [
+            420,
+            420
+          ],
+          "perHullPeakAssetRange": [
+            420,
+            420
+          ],
+          "perHullPeakAssetMedian": 420,
+          "uniquePeakExposedGold": 420
+        }
+      },
+      {
+        "对局": "gullIsland v9_archer grove side-2 vs-v8",
+        "秒": 1481.55,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "gullIsland v9_knight ember side-1 vs-v8",
+        "秒": 2279.25,
+        "超时": false,
+        "获胜队": "team-1",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 420,
+          "hullGoldRange": [
+            420,
+            420
+          ],
+          "perHullPeakAssetRange": [
+            1550,
+            1550
+          ],
+          "perHullPeakAssetMedian": 1550,
+          "uniquePeakExposedGold": 1550
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "gullIsland v9_knight ember side-2 vs-v8",
+        "秒": 2253.45,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            650,
+            650
+          ],
+          "perHullPeakAssetMedian": 650,
+          "uniquePeakExposedGold": 650
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 420,
+          "hullGoldRange": [
+            420,
+            420
+          ],
+          "perHullPeakAssetRange": [
+            495,
+            495
+          ],
+          "perHullPeakAssetMedian": 495,
+          "uniquePeakExposedGold": 495
+        }
+      },
+      {
+        "对局": "gullIsland v9_knight grove side-1 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 420,
+          "hullGoldRange": [
+            420,
+            420
+          ],
+          "perHullPeakAssetRange": [
+            420,
+            420
+          ],
+          "perHullPeakAssetMedian": 420,
+          "uniquePeakExposedGold": 420
+        }
+      },
+      {
+        "对局": "gullIsland v9_knight grove side-2 vs-v8",
+        "秒": 2204.95,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 420,
+          "hullGoldRange": [
+            420,
+            420
+          ],
+          "perHullPeakAssetRange": [
+            1940,
+            1940
+          ],
+          "perHullPeakAssetMedian": 1940,
+          "uniquePeakExposedGold": 1940
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            315,
+            315
+          ],
+          "perHullPeakAssetMedian": 315,
+          "uniquePeakExposedGold": 315
+        }
+      },
+      {
+        "对局": "gullIsland v9_summoner ember side-1 vs-v8",
+        "秒": 1444.85,
+        "超时": false,
+        "获胜队": "team-1",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "gullIsland v9_summoner ember side-2 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 420,
+          "hullGoldRange": [
+            420,
+            420
+          ],
+          "perHullPeakAssetRange": [
+            420,
+            420
+          ],
+          "perHullPeakAssetMedian": 420,
+          "uniquePeakExposedGold": 420
+        }
+      },
+      {
+        "对局": "gullIsland v9_summoner grove side-1 vs-v8",
+        "秒": 2056.05,
+        "超时": false,
+        "获胜队": "team-1",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "gullIsland v9_summoner grove side-2 vs-v8",
+        "秒": 1829.65,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "ringwater v9_archer ember side-1 vs-v8",
+        "秒": 1299.7,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            390
+          ],
+          "perHullPeakAssetMedian": 390,
+          "uniquePeakExposedGold": 390
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            995
+          ],
+          "perHullPeakAssetMedian": 617.5,
+          "uniquePeakExposedGold": 1235
+        }
+      },
+      {
+        "对局": "ringwater v9_archer ember side-2 vs-v8",
+        "秒": 1929.2,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            940
+          ],
+          "perHullPeakAssetMedian": 665.0,
+          "uniquePeakExposedGold": 1330
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            390
+          ],
+          "perHullPeakAssetMedian": 315.0,
+          "uniquePeakExposedGold": 630
+        }
+      },
+      {
+        "对局": "ringwater v9_archer grove side-1 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 4,
+          "uniqueHullGold": 1440,
+          "hullGoldRange": [
+            240,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            885
+          ],
+          "perHullPeakAssetMedian": 585.0,
+          "uniquePeakExposedGold": 2445
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            390
+          ],
+          "perHullPeakAssetMedian": 315.0,
+          "uniquePeakExposedGold": 630
+        }
+      },
+      {
+        "对局": "ringwater v9_archer grove side-2 vs-v8",
+        "秒": 1275.7,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 540,
+          "hullGoldRange": [
+            540,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            725,
+            725
+          ],
+          "perHullPeakAssetMedian": 725,
+          "uniquePeakExposedGold": 725
+        }
+      },
+      {
+        "对局": "ringwater v9_knight ember side-1 vs-v8",
+        "秒": 1389.25,
+        "超时": false,
+        "获胜队": "team-1",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 700,
+          "hullGoldRange": [
+            240,
+            460
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            535
+          ],
+          "perHullPeakAssetMedian": 462.5,
+          "uniquePeakExposedGold": 925
+        }
+      },
+      {
+        "对局": "ringwater v9_knight ember side-2 vs-v8",
+        "秒": 1518.9,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "ringwater v9_knight grove side-1 vs-v8",
+        "秒": 1709.05,
+        "超时": false,
+        "获胜队": "team-1",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            1215
+          ],
+          "perHullPeakAssetMedian": 802.5,
+          "uniquePeakExposedGold": 1605
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            390
+          ],
+          "perHullPeakAssetMedian": 315.0,
+          "uniquePeakExposedGold": 630
+        }
+      },
+      {
+        "对局": "ringwater v9_knight grove side-2 vs-v8",
+        "秒": 923.1,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 780,
+          "hullGoldRange": [
+            240,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            615
+          ],
+          "perHullPeakAssetMedian": 427.5,
+          "uniquePeakExposedGold": 855
+        }
+      },
+      {
+        "对局": "ringwater v9_summoner ember side-1 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            990,
+            990
+          ],
+          "perHullPeakAssetMedian": 990,
+          "uniquePeakExposedGold": 990
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            390
+          ],
+          "perHullPeakAssetMedian": 390,
+          "uniquePeakExposedGold": 390
+        }
+      },
+      {
+        "对局": "ringwater v9_summoner ember side-2 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            390
+          ],
+          "perHullPeakAssetMedian": 315.0,
+          "uniquePeakExposedGold": 630
+        }
+      },
+      {
+        "对局": "ringwater v9_summoner grove side-1 vs-v8",
+        "秒": 2133.1,
+        "超时": false,
+        "获胜队": "team-1",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            1155,
+            1155
+          ],
+          "perHullPeakAssetMedian": 1155,
+          "uniquePeakExposedGold": 1155
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            315
+          ],
+          "perHullPeakAssetMedian": 277.5,
+          "uniquePeakExposedGold": 555
+        }
+      },
+      {
+        "对局": "ringwater v9_summoner grove side-2 vs-v8",
+        "秒": 1337.95,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 780,
+          "hullGoldRange": [
+            240,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            615
+          ],
+          "perHullPeakAssetMedian": 502.5,
+          "uniquePeakExposedGold": 1005
+        }
+      },
+      {
+        "对局": "sapphireArchipelago v9_archer ember side-1 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 3,
+          "uniqueHullGold": 1160,
+          "hullGoldRange": [
+            240,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            490,
+            1090
+          ],
+          "perHullPeakAssetMedian": 810,
+          "uniquePeakExposedGold": 2390
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 7,
+          "uniqueHullGold": 2580,
+          "hullGoldRange": [
+            240,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            1110
+          ],
+          "perHullPeakAssetMedian": 615,
+          "uniquePeakExposedGold": 5020
+        }
+      },
+      {
+        "对局": "sapphireArchipelago v9_archer ember side-2 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 3,
+          "uniqueHullGold": 1320,
+          "hullGoldRange": [
+            240,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            780,
+            950
+          ],
+          "perHullPeakAssetMedian": 880,
+          "uniquePeakExposedGold": 2610
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 4,
+          "uniqueHullGold": 1280,
+          "hullGoldRange": [
+            160,
+            460
+          ],
+          "perHullPeakAssetRange": [
+            160,
+            1110
+          ],
+          "perHullPeakAssetMedian": 687.5,
+          "uniquePeakExposedGold": 2645
+        }
+      },
+      {
+        "对局": "sapphireArchipelago v9_archer grove side-1 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            1065,
+            1065
+          ],
+          "perHullPeakAssetMedian": 1065,
+          "uniquePeakExposedGold": 1065
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 700,
+          "hullGoldRange": [
+            160,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            270,
+            540
+          ],
+          "perHullPeakAssetMedian": 405.0,
+          "uniquePeakExposedGold": 810
+        }
+      },
+      {
+        "对局": "sapphireArchipelago v9_archer grove side-2 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 1080,
+          "hullGoldRange": [
+            540,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            540,
+            650
+          ],
+          "perHullPeakAssetMedian": 595.0,
+          "uniquePeakExposedGold": 1190
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 620,
+          "hullGoldRange": [
+            160,
+            460
+          ],
+          "perHullPeakAssetRange": [
+            345,
+            1050
+          ],
+          "perHullPeakAssetMedian": 697.5,
+          "uniquePeakExposedGold": 1395
+        }
+      },
+      {
+        "对局": "sapphireArchipelago v9_knight ember side-1 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 620,
+          "hullGoldRange": [
+            160,
+            460
+          ],
+          "perHullPeakAssetRange": [
+            160,
+            1110
+          ],
+          "perHullPeakAssetMedian": 635.0,
+          "uniquePeakExposedGold": 1270
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 1000,
+          "hullGoldRange": [
+            460,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            540,
+            970
+          ],
+          "perHullPeakAssetMedian": 755.0,
+          "uniquePeakExposedGold": 1510
+        }
+      },
+      {
+        "对局": "sapphireArchipelago v9_knight ember side-2 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 5,
+          "uniqueHullGold": 1260,
+          "hullGoldRange": [
+            160,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            235,
+            630
+          ],
+          "perHullPeakAssetMedian": 400,
+          "uniquePeakExposedGold": 2085
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 700,
+          "hullGoldRange": [
+            240,
+            460
+          ],
+          "perHullPeakAssetRange": [
+            990,
+            990
+          ],
+          "perHullPeakAssetMedian": 990.0,
+          "uniquePeakExposedGold": 1980
+        }
+      },
+      {
+        "对局": "sapphireArchipelago v9_knight grove side-1 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 4,
+          "uniqueHullGold": 1160,
+          "hullGoldRange": [
+            160,
+            460
+          ],
+          "perHullPeakAssetRange": [
+            160,
+            1050
+          ],
+          "perHullPeakAssetMedian": 392.5,
+          "uniquePeakExposedGold": 1995
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 5,
+          "uniqueHullGold": 2320,
+          "hullGoldRange": [
+            240,
+            760
+          ],
+          "perHullPeakAssetRange": [
+            645,
+            1135
+          ],
+          "perHullPeakAssetMedian": 785,
+          "uniquePeakExposedGold": 4195
+        }
+      },
+      {
+        "对局": "sapphireArchipelago v9_knight grove side-2 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 3,
+          "uniqueHullGold": 1460,
+          "hullGoldRange": [
+            380,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            455,
+            540
+          ],
+          "perHullPeakAssetMedian": 540,
+          "uniquePeakExposedGold": 1535
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 700,
+          "hullGoldRange": [
+            240,
+            460
+          ],
+          "perHullPeakAssetRange": [
+            940,
+            1230
+          ],
+          "perHullPeakAssetMedian": 1085.0,
+          "uniquePeakExposedGold": 2170
+        }
+      },
+      {
+        "对局": "sapphireArchipelago v9_summoner ember side-1 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            1170,
+            1170
+          ],
+          "perHullPeakAssetMedian": 1170,
+          "uniquePeakExposedGold": 1170
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 3,
+          "uniqueHullGold": 940,
+          "hullGoldRange": [
+            160,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            400,
+            1110
+          ],
+          "perHullPeakAssetMedian": 540,
+          "uniquePeakExposedGold": 2050
+        }
+      },
+      {
+        "对局": "sapphireArchipelago v9_summoner ember side-2 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 4,
+          "uniqueHullGold": 1100,
+          "hullGoldRange": [
+            160,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            160,
+            1065
+          ],
+          "perHullPeakAssetMedian": 350.0,
+          "uniquePeakExposedGold": 1925
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 3,
+          "uniqueHullGold": 940,
+          "hullGoldRange": [
+            240,
+            460
+          ],
+          "perHullPeakAssetRange": [
+            795,
+            990
+          ],
+          "perHullPeakAssetMedian": 990,
+          "uniquePeakExposedGold": 2775
+        }
+      },
+      {
+        "对局": "sapphireArchipelago v9_summoner grove side-1 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 3,
+          "uniqueHullGold": 900,
+          "hullGoldRange": [
+            240,
+            420
+          ],
+          "perHullPeakAssetRange": [
+            1070,
+            1770
+          ],
+          "perHullPeakAssetMedian": 1290,
+          "uniquePeakExposedGold": 4130
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 540,
+          "hullGoldRange": [
+            540,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            540,
+            540
+          ],
+          "perHullPeakAssetMedian": 540,
+          "uniquePeakExposedGold": 540
+        }
+      },
+      {
+        "对局": "sapphireArchipelago v9_summoner grove side-2 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 4,
+          "uniqueHullGold": 1560,
+          "hullGoldRange": [
+            240,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            540,
+            1110
+          ],
+          "perHullPeakAssetMedian": 825.0,
+          "uniquePeakExposedGold": 3300
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 460,
+          "hullGoldRange": [
+            460,
+            460
+          ],
+          "perHullPeakAssetRange": [
+            535,
+            535
+          ],
+          "perHullPeakAssetMedian": 535,
+          "uniquePeakExposedGold": 535
+        }
+      },
+      {
+        "对局": "templeSpring v9_archer ember side-1 vs-v8",
+        "秒": 1286.3,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            315,
+            1060
+          ],
+          "perHullPeakAssetMedian": 687.5,
+          "uniquePeakExposedGold": 1375
+        }
+      },
+      {
+        "对局": "templeSpring v9_archer ember side-2 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            390
+          ],
+          "perHullPeakAssetMedian": 390,
+          "uniquePeakExposedGold": 390
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "templeSpring v9_archer grove side-1 vs-v8",
+        "秒": 2019.35,
+        "超时": false,
+        "获胜队": "team-1",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            390
+          ],
+          "perHullPeakAssetMedian": 315.0,
+          "uniquePeakExposedGold": 630
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            315
+          ],
+          "perHullPeakAssetMedian": 277.5,
+          "uniquePeakExposedGold": 555
+        }
+      },
+      {
+        "对局": "templeSpring v9_archer grove side-2 vs-v8",
+        "秒": 1505.7,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            390
+          ],
+          "perHullPeakAssetMedian": 315.0,
+          "uniquePeakExposedGold": 630
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            390
+          ],
+          "perHullPeakAssetMedian": 390.0,
+          "uniquePeakExposedGold": 780
+        }
+      },
+      {
+        "对局": "templeSpring v9_knight ember side-1 vs-v8",
+        "秒": 2134.25,
+        "超时": false,
+        "获胜队": "team-1",
+        "ours": {
+          "games": 1,
+          "hulls": 3,
+          "uniqueHullGold": 720,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            315,
+            1025
+          ],
+          "perHullPeakAssetMedian": 955,
+          "uniquePeakExposedGold": 2295
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            315
+          ],
+          "perHullPeakAssetMedian": 277.5,
+          "uniquePeakExposedGold": 555
+        }
+      },
+      {
+        "对局": "templeSpring v9_knight ember side-2 vs-v8",
+        "秒": 1564.05,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            390
+          ],
+          "perHullPeakAssetMedian": 390,
+          "uniquePeakExposedGold": 390
+        }
+      },
+      {
+        "对局": "templeSpring v9_knight grove side-1 vs-v8",
+        "秒": 1744.45,
+        "超时": false,
+        "获胜队": "team-1",
+        "ours": {
+          "games": 1,
+          "hulls": 3,
+          "uniqueHullGold": 720,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            960
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 1440
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            315
+          ],
+          "perHullPeakAssetMedian": 277.5,
+          "uniquePeakExposedGold": 555
+        }
+      },
+      {
+        "对局": "templeSpring v9_knight grove side-2 vs-v8",
+        "秒": 1567.7,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            390
+          ],
+          "perHullPeakAssetMedian": 390,
+          "uniquePeakExposedGold": 390
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            315,
+            390
+          ],
+          "perHullPeakAssetMedian": 352.5,
+          "uniquePeakExposedGold": 705
+        }
+      },
+      {
+        "对局": "templeSpring v9_summoner ember side-1 vs-v8",
+        "秒": 947.75,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "templeSpring v9_summoner ember side-2 vs-v8",
+        "秒": 1684.7,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            315,
+            1110
+          ],
+          "perHullPeakAssetMedian": 712.5,
+          "uniquePeakExposedGold": 1425
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            315,
+            315
+          ],
+          "perHullPeakAssetMedian": 315,
+          "uniquePeakExposedGold": 315
+        }
+      },
+      {
+        "对局": "templeSpring v9_summoner grove side-1 vs-v8",
+        "秒": 1661.8,
+        "超时": false,
+        "获胜队": "team-1",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            390
+          ],
+          "perHullPeakAssetMedian": 315.0,
+          "uniquePeakExposedGold": 630
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 700,
+          "hullGoldRange": [
+            240,
+            460
+          ],
+          "perHullPeakAssetRange": [
+            315,
+            460
+          ],
+          "perHullPeakAssetMedian": 387.5,
+          "uniquePeakExposedGold": 775
+        }
+      },
+      {
+        "对局": "templeSpring v9_summoner grove side-2 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            390
+          ],
+          "perHullPeakAssetMedian": 390,
+          "uniquePeakExposedGold": 390
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 700,
+          "hullGoldRange": [
+            240,
+            460
+          ],
+          "perHullPeakAssetRange": [
+            315,
+            460
+          ],
+          "perHullPeakAssetMedian": 387.5,
+          "uniquePeakExposedGold": 775
+        }
+      },
+      {
+        "对局": "twoShores v9_archer ember side-1 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "twoShores v9_archer ember side-2 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "twoShores v9_archer grove side-1 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 420,
+          "hullGoldRange": [
+            420,
+            420
+          ],
+          "perHullPeakAssetRange": [
+            420,
+            420
+          ],
+          "perHullPeakAssetMedian": 420,
+          "uniquePeakExposedGold": 420
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 660,
+          "hullGoldRange": [
+            240,
+            420
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            420
+          ],
+          "perHullPeakAssetMedian": 405.0,
+          "uniquePeakExposedGold": 810
+        }
+      },
+      {
+        "对局": "twoShores v9_archer grove side-2 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 420,
+          "hullGoldRange": [
+            420,
+            420
+          ],
+          "perHullPeakAssetRange": [
+            570,
+            570
+          ],
+          "perHullPeakAssetMedian": 570,
+          "uniquePeakExposedGold": 570
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            315,
+            315
+          ],
+          "perHullPeakAssetMedian": 315,
+          "uniquePeakExposedGold": 315
+        }
+      },
+      {
+        "对局": "twoShores v9_knight ember side-1 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            390
+          ],
+          "perHullPeakAssetMedian": 390,
+          "uniquePeakExposedGold": 390
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 660,
+          "hullGoldRange": [
+            240,
+            420
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            420
+          ],
+          "perHullPeakAssetMedian": 330.0,
+          "uniquePeakExposedGold": 660
+        }
+      },
+      {
+        "对局": "twoShores v9_knight ember side-2 vs-v8",
+        "秒": 840.65,
+        "超时": false,
+        "获胜队": "team-1",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "twoShores v9_knight grove side-1 vs-v8",
+        "秒": 2139.15,
+        "超时": false,
+        "获胜队": "team-1",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 420,
+          "hullGoldRange": [
+            420,
+            420
+          ],
+          "perHullPeakAssetRange": [
+            1910,
+            1910
+          ],
+          "perHullPeakAssetMedian": 1910,
+          "uniquePeakExposedGold": 1910
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 3,
+          "uniqueHullGold": 900,
+          "hullGoldRange": [
+            240,
+            420
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            420
+          ],
+          "perHullPeakAssetMedian": 390,
+          "uniquePeakExposedGold": 1050
+        }
+      },
+      {
+        "对局": "twoShores v9_knight grove side-2 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            315,
+            635
+          ],
+          "perHullPeakAssetMedian": 475.0,
+          "uniquePeakExposedGold": 950
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "twoShores v9_summoner ember side-1 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            315,
+            315
+          ],
+          "perHullPeakAssetMedian": 315,
+          "uniquePeakExposedGold": 315
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "twoShores v9_summoner ember side-2 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 660,
+          "hullGoldRange": [
+            240,
+            420
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            570
+          ],
+          "perHullPeakAssetMedian": 405.0,
+          "uniquePeakExposedGold": 810
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "twoShores v9_summoner grove side-1 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            390
+          ],
+          "perHullPeakAssetMedian": 390.0,
+          "uniquePeakExposedGold": 780
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 880,
+          "hullGoldRange": [
+            420,
+            460
+          ],
+          "perHullPeakAssetRange": [
+            420,
+            460
+          ],
+          "perHullPeakAssetMedian": 440.0,
+          "uniquePeakExposedGold": 880
+        }
+      },
+      {
+        "对局": "twoShores v9_summoner grove side-2 vs-v8",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "brokenSea v9_archer ember side-1 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            960,
+            960
+          ],
+          "perHullPeakAssetMedian": 960,
+          "uniquePeakExposedGold": 960
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            1035,
+            1035
+          ],
+          "perHullPeakAssetMedian": 1035,
+          "uniquePeakExposedGold": 1035
+        }
+      },
+      {
+        "对局": "brokenSea v9_archer ember side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            620,
+            1080
+          ],
+          "perHullPeakAssetMedian": 850.0,
+          "uniquePeakExposedGold": 1700
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 540,
+          "hullGoldRange": [
+            540,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            540,
+            540
+          ],
+          "perHullPeakAssetMedian": 540,
+          "uniquePeakExposedGold": 540
+        }
+      },
+      {
+        "对局": "brokenSea v9_archer grove side-1 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240.0,
+          "uniquePeakExposedGold": 480
+        }
+      },
+      {
+        "对局": "brokenSea v9_archer grove side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            950
+          ],
+          "perHullPeakAssetMedian": 595.0,
+          "uniquePeakExposedGold": 1190
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 780,
+          "hullGoldRange": [
+            240,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            540,
+            975
+          ],
+          "perHullPeakAssetMedian": 757.5,
+          "uniquePeakExposedGold": 1515
+        }
+      },
+      {
+        "对局": "brokenSea v9_knight ember side-1 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 3,
+          "uniqueHullGold": 1460,
+          "hullGoldRange": [
+            240,
+            760
+          ],
+          "perHullPeakAssetRange": [
+            720,
+            850
+          ],
+          "perHullPeakAssetMedian": 760,
+          "uniquePeakExposedGold": 2330
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 4,
+          "uniqueHullGold": 1360,
+          "hullGoldRange": [
+            160,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            160,
+            1990
+          ],
+          "perHullPeakAssetMedian": 742.5,
+          "uniquePeakExposedGold": 3635
+        }
+      },
+      {
+        "对局": "brokenSea v9_knight ember side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 3,
+          "uniqueHullGold": 940,
+          "hullGoldRange": [
+            160,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            360,
+            780
+          ],
+          "perHullPeakAssetMedian": 400,
+          "uniquePeakExposedGold": 1540
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "brokenSea v9_knight grove side-1 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 4,
+          "uniqueHullGold": 1480,
+          "hullGoldRange": [
+            160,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            270,
+            835
+          ],
+          "perHullPeakAssetMedian": 630.0,
+          "uniquePeakExposedGold": 2365
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "brokenSea v9_knight grove side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 3,
+          "uniqueHullGold": 2740,
+          "hullGoldRange": [
+            240,
+            1520
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            2300
+          ],
+          "perHullPeakAssetMedian": 1230,
+          "uniquePeakExposedGold": 3770
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            680,
+            1075
+          ],
+          "perHullPeakAssetMedian": 877.5,
+          "uniquePeakExposedGold": 1755
+        }
+      },
+      {
+        "对局": "brokenSea v9_summoner ember side-1 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 460,
+          "hullGoldRange": [
+            460,
+            460
+          ],
+          "perHullPeakAssetRange": [
+            1110,
+            1110
+          ],
+          "perHullPeakAssetMedian": 1110,
+          "uniquePeakExposedGold": 1110
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 3,
+          "uniqueHullGold": 1320,
+          "hullGoldRange": [
+            240,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            615,
+            1130
+          ],
+          "perHullPeakAssetMedian": 780,
+          "uniquePeakExposedGold": 2525
+        }
+      },
+      {
+        "对局": "brokenSea v9_summoner ember side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 3,
+          "uniqueHullGold": 560,
+          "hullGoldRange": [
+            160,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            160,
+            520
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 920
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "brokenSea v9_summoner grove side-1 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            540,
+            540
+          ],
+          "perHullPeakAssetMedian": 540,
+          "uniquePeakExposedGold": 540
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 400,
+          "hullGoldRange": [
+            160,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            380
+          ],
+          "perHullPeakAssetMedian": 310.0,
+          "uniquePeakExposedGold": 620
+        }
+      },
+      {
+        "对局": "brokenSea v9_summoner grove side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 3,
+          "uniqueHullGold": 940,
+          "hullGoldRange": [
+            160,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            160,
+            540
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 940
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            830,
+            1065
+          ],
+          "perHullPeakAssetMedian": 947.5,
+          "uniquePeakExposedGold": 1895
+        }
+      },
+      {
+        "对局": "elderwood v9_archer ember side-1 vs-v9",
+        "秒": 2319,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            315,
+            315
+          ],
+          "perHullPeakAssetMedian": 315.0,
+          "uniquePeakExposedGold": 630
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "elderwood v9_archer ember side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "elderwood v9_archer grove side-1 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240.0,
+          "uniquePeakExposedGold": 480
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "elderwood v9_archer grove side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "elderwood v9_knight ember side-1 vs-v9",
+        "秒": 1587.95,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "elderwood v9_knight ember side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            390
+          ],
+          "perHullPeakAssetMedian": 390,
+          "uniquePeakExposedGold": 390
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "elderwood v9_knight grove side-1 vs-v9",
+        "秒": 2179,
+        "超时": false,
+        "获胜队": "team-1",
+        "ours": {
+          "games": 1,
+          "hulls": 3,
+          "uniqueHullGold": 720,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            315
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 795
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "elderwood v9_knight grove side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "elderwood v9_summoner ember side-1 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "elderwood v9_summoner ember side-2 vs-v9",
+        "秒": 1935.8,
+        "超时": false,
+        "获胜队": "team-1",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "elderwood v9_summoner grove side-1 vs-v9",
+        "秒": 1257.8,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "elderwood v9_summoner grove side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 420,
+          "hullGoldRange": [
+            420,
+            420
+          ],
+          "perHullPeakAssetRange": [
+            420,
+            420
+          ],
+          "perHullPeakAssetMedian": 420,
+          "uniquePeakExposedGold": 420
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "gullIsland v9_archer ember side-1 vs-v9",
+        "秒": 2189.55,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            315,
+            315
+          ],
+          "perHullPeakAssetMedian": 315,
+          "uniquePeakExposedGold": 315
+        }
+      },
+      {
+        "对局": "gullIsland v9_archer ember side-2 vs-v9",
+        "秒": 2389.1,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 420,
+          "hullGoldRange": [
+            420,
+            420
+          ],
+          "perHullPeakAssetRange": [
+            495,
+            495
+          ],
+          "perHullPeakAssetMedian": 495,
+          "uniquePeakExposedGold": 495
+        }
+      },
+      {
+        "对局": "gullIsland v9_archer grove side-1 vs-v9",
+        "秒": 1968.85,
+        "超时": false,
+        "获胜队": "team-1",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 420,
+          "hullGoldRange": [
+            420,
+            420
+          ],
+          "perHullPeakAssetRange": [
+            570,
+            570
+          ],
+          "perHullPeakAssetMedian": 570,
+          "uniquePeakExposedGold": 570
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "gullIsland v9_archer grove side-2 vs-v9",
+        "秒": 1905.1,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "gullIsland v9_knight ember side-1 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 420,
+          "hullGoldRange": [
+            420,
+            420
+          ],
+          "perHullPeakAssetRange": [
+            2310,
+            2310
+          ],
+          "perHullPeakAssetMedian": 2310,
+          "uniquePeakExposedGold": 2310
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "gullIsland v9_knight ember side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            870,
+            870
+          ],
+          "perHullPeakAssetMedian": 870,
+          "uniquePeakExposedGold": 870
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "gullIsland v9_knight grove side-1 vs-v9",
+        "秒": 2346.05,
+        "超时": false,
+        "获胜队": "team-1",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "gullIsland v9_knight grove side-2 vs-v9",
+        "秒": 1778.25,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 660,
+          "hullGoldRange": [
+            240,
+            420
+          ],
+          "perHullPeakAssetRange": [
+            1235,
+            2130
+          ],
+          "perHullPeakAssetMedian": 1682.5,
+          "uniquePeakExposedGold": 3365
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "gullIsland v9_summoner ember side-1 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            315,
+            315
+          ],
+          "perHullPeakAssetMedian": 315,
+          "uniquePeakExposedGold": 315
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "gullIsland v9_summoner ember side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240.0,
+          "uniquePeakExposedGold": 480
+        }
+      },
+      {
+        "对局": "gullIsland v9_summoner grove side-1 vs-v9",
+        "秒": 1959.25,
+        "超时": false,
+        "获胜队": "team-1",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            315,
+            315
+          ],
+          "perHullPeakAssetMedian": 315,
+          "uniquePeakExposedGold": 315
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "gullIsland v9_summoner grove side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            315,
+            315
+          ],
+          "perHullPeakAssetMedian": 315,
+          "uniquePeakExposedGold": 315
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 460,
+          "hullGoldRange": [
+            460,
+            460
+          ],
+          "perHullPeakAssetRange": [
+            460,
+            460
+          ],
+          "perHullPeakAssetMedian": 460,
+          "uniquePeakExposedGold": 460
+        }
+      },
+      {
+        "对局": "ringwater v9_archer ember side-1 vs-v9",
+        "秒": 2116.95,
+        "超时": false,
+        "获胜队": "team-1",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            830
+          ],
+          "perHullPeakAssetMedian": 610.0,
+          "uniquePeakExposedGold": 1220
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            390
+          ],
+          "perHullPeakAssetMedian": 390,
+          "uniquePeakExposedGold": 390
+        }
+      },
+      {
+        "对局": "ringwater v9_archer ember side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            390
+          ],
+          "perHullPeakAssetMedian": 315.0,
+          "uniquePeakExposedGold": 630
+        }
+      },
+      {
+        "对局": "ringwater v9_archer grove side-1 vs-v9",
+        "秒": 1747.15,
+        "超时": false,
+        "获胜队": "team-1",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 420,
+          "hullGoldRange": [
+            420,
+            420
+          ],
+          "perHullPeakAssetRange": [
+            1330,
+            1330
+          ],
+          "perHullPeakAssetMedian": 1330,
+          "uniquePeakExposedGold": 1330
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            390
+          ],
+          "perHullPeakAssetMedian": 390,
+          "uniquePeakExposedGold": 390
+        }
+      },
+      {
+        "对局": "ringwater v9_archer grove side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 4,
+          "uniqueHullGold": 1320,
+          "hullGoldRange": [
+            240,
+            420
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            570
+          ],
+          "perHullPeakAssetMedian": 480.0,
+          "uniquePeakExposedGold": 1920
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 3,
+          "uniqueHullGold": 720,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            390
+          ],
+          "perHullPeakAssetMedian": 315,
+          "uniquePeakExposedGold": 945
+        }
+      },
+      {
+        "对局": "ringwater v9_knight ember side-1 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            390
+          ],
+          "perHullPeakAssetMedian": 390,
+          "uniquePeakExposedGold": 390
+        }
+      },
+      {
+        "对局": "ringwater v9_knight ember side-2 vs-v9",
+        "秒": 2084.65,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "ringwater v9_knight grove side-1 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 3,
+          "uniqueHullGold": 900,
+          "hullGoldRange": [
+            240,
+            420
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            1020
+          ],
+          "perHullPeakAssetMedian": 570,
+          "uniquePeakExposedGold": 1830
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            315,
+            315
+          ],
+          "perHullPeakAssetMedian": 315,
+          "uniquePeakExposedGold": 315
+        }
+      },
+      {
+        "对局": "ringwater v9_knight grove side-2 vs-v9",
+        "秒": 1595.65,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            1015,
+            1015
+          ],
+          "perHullPeakAssetMedian": 1015,
+          "uniquePeakExposedGold": 1015
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240.0,
+          "uniquePeakExposedGold": 480
+        }
+      },
+      {
+        "对局": "ringwater v9_summoner ember side-1 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "ringwater v9_summoner ember side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            390
+          ],
+          "perHullPeakAssetMedian": 390.0,
+          "uniquePeakExposedGold": 780
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "ringwater v9_summoner grove side-1 vs-v9",
+        "秒": 1830.55,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            390
+          ],
+          "perHullPeakAssetMedian": 390.0,
+          "uniquePeakExposedGold": 780
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 460,
+          "hullGoldRange": [
+            460,
+            460
+          ],
+          "perHullPeakAssetRange": [
+            840,
+            840
+          ],
+          "perHullPeakAssetMedian": 840,
+          "uniquePeakExposedGold": 840
+        }
+      },
+      {
+        "对局": "ringwater v9_summoner grove side-2 vs-v9",
+        "秒": 2374.75,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            315,
+            315
+          ],
+          "perHullPeakAssetMedian": 315,
+          "uniquePeakExposedGold": 315
+        }
+      },
+      {
+        "对局": "sapphireArchipelago v9_archer ember side-1 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            1090,
+            1090
+          ],
+          "perHullPeakAssetMedian": 1090,
+          "uniquePeakExposedGold": 1090
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 3,
+          "uniqueHullGold": 1320,
+          "hullGoldRange": [
+            240,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            540,
+            1110
+          ],
+          "perHullPeakAssetMedian": 540,
+          "uniquePeakExposedGold": 2190
+        }
+      },
+      {
+        "对局": "sapphireArchipelago v9_archer ember side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 780,
+          "hullGoldRange": [
+            240,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            660,
+            665
+          ],
+          "perHullPeakAssetMedian": 662.5,
+          "uniquePeakExposedGold": 1325
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 400,
+          "hullGoldRange": [
+            160,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            400,
+            1140
+          ],
+          "perHullPeakAssetMedian": 770.0,
+          "uniquePeakExposedGold": 1540
+        }
+      },
+      {
+        "对局": "sapphireArchipelago v9_archer grove side-1 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            1060,
+            1060
+          ],
+          "perHullPeakAssetMedian": 1060,
+          "uniquePeakExposedGold": 1060
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 780,
+          "hullGoldRange": [
+            240,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            725,
+            940
+          ],
+          "perHullPeakAssetMedian": 832.5,
+          "uniquePeakExposedGold": 1665
+        }
+      },
+      {
+        "对局": "sapphireArchipelago v9_archer grove side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 4,
+          "uniqueHullGold": 1860,
+          "hullGoldRange": [
+            240,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            540,
+            1100
+          ],
+          "perHullPeakAssetMedian": 677.5,
+          "uniquePeakExposedGold": 2995
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            1145,
+            1145
+          ],
+          "perHullPeakAssetMedian": 1145,
+          "uniquePeakExposedGold": 1145
+        }
+      },
+      {
+        "对局": "sapphireArchipelago v9_knight ember side-1 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 3,
+          "uniqueHullGold": 860,
+          "hullGoldRange": [
+            160,
+            460
+          ],
+          "perHullPeakAssetRange": [
+            400,
+            1110
+          ],
+          "perHullPeakAssetMedian": 870,
+          "uniquePeakExposedGold": 2380
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 3,
+          "uniqueHullGold": 1240,
+          "hullGoldRange": [
+            240,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            540,
+            1095
+          ],
+          "perHullPeakAssetMedian": 580,
+          "uniquePeakExposedGold": 2215
+        }
+      },
+      {
+        "对局": "sapphireArchipelago v9_knight ember side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 4,
+          "uniqueHullGold": 1480,
+          "hullGoldRange": [
+            160,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            160,
+            540
+          ],
+          "perHullPeakAssetMedian": 427.5,
+          "uniquePeakExposedGold": 1555
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            1110,
+            1110
+          ],
+          "perHullPeakAssetMedian": 1110,
+          "uniquePeakExposedGold": 1110
+        }
+      },
+      {
+        "对局": "sapphireArchipelago v9_knight grove side-1 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 5,
+          "uniqueHullGold": 1320,
+          "hullGoldRange": [
+            160,
+            460
+          ],
+          "perHullPeakAssetRange": [
+            160,
+            1050
+          ],
+          "perHullPeakAssetMedian": 405,
+          "uniquePeakExposedGold": 2490
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 3,
+          "uniqueHullGold": 1020,
+          "hullGoldRange": [
+            240,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            540,
+            900
+          ],
+          "perHullPeakAssetMedian": 830,
+          "uniquePeakExposedGold": 2270
+        }
+      },
+      {
+        "对局": "sapphireArchipelago v9_knight grove side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 5,
+          "uniqueHullGold": 2400,
+          "hullGoldRange": [
+            240,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            540,
+            760
+          ],
+          "perHullPeakAssetMedian": 650,
+          "uniquePeakExposedGold": 3245
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 780,
+          "hullGoldRange": [
+            240,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            540,
+            1185
+          ],
+          "perHullPeakAssetMedian": 862.5,
+          "uniquePeakExposedGold": 1725
+        }
+      },
+      {
+        "对局": "sapphireArchipelago v9_summoner ember side-1 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            1170,
+            1170
+          ],
+          "perHullPeakAssetMedian": 1170,
+          "uniquePeakExposedGold": 1170
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 780,
+          "hullGoldRange": [
+            240,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            540,
+            1285
+          ],
+          "perHullPeakAssetMedian": 912.5,
+          "uniquePeakExposedGold": 1825
+        }
+      },
+      {
+        "对局": "sapphireArchipelago v9_summoner ember side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 6,
+          "uniqueHullGold": 1800,
+          "hullGoldRange": [
+            160,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            160,
+            555
+          ],
+          "perHullPeakAssetMedian": 350.0,
+          "uniquePeakExposedGold": 2115
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 400,
+          "hullGoldRange": [
+            160,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            160,
+            1160
+          ],
+          "perHullPeakAssetMedian": 660.0,
+          "uniquePeakExposedGold": 1320
+        }
+      },
+      {
+        "对局": "sapphireArchipelago v9_summoner grove side-1 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            1070,
+            1070
+          ],
+          "perHullPeakAssetMedian": 1070,
+          "uniquePeakExposedGold": 1070
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 540,
+          "hullGoldRange": [
+            540,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            540,
+            540
+          ],
+          "perHullPeakAssetMedian": 540,
+          "uniquePeakExposedGold": 540
+        }
+      },
+      {
+        "对局": "sapphireArchipelago v9_summoner grove side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 5,
+          "uniqueHullGold": 2020,
+          "hullGoldRange": [
+            160,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            315,
+            900
+          ],
+          "perHullPeakAssetMedian": 540,
+          "uniquePeakExposedGold": 2815
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            1050,
+            1050
+          ],
+          "perHullPeakAssetMedian": 1050,
+          "uniquePeakExposedGold": 1050
+        }
+      },
+      {
+        "对局": "templeSpring v9_archer ember side-1 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            315,
+            315
+          ],
+          "perHullPeakAssetMedian": 315,
+          "uniquePeakExposedGold": 315
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "templeSpring v9_archer ember side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            390
+          ],
+          "perHullPeakAssetMedian": 390,
+          "uniquePeakExposedGold": 390
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 4,
+          "uniqueHullGold": 1140,
+          "hullGoldRange": [
+            240,
+            420
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            420
+          ],
+          "perHullPeakAssetMedian": 352.5,
+          "uniquePeakExposedGold": 1365
+        }
+      },
+      {
+        "对局": "templeSpring v9_archer grove side-1 vs-v9",
+        "秒": 1296.1,
+        "超时": false,
+        "获胜队": "team-1",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "templeSpring v9_archer grove side-2 vs-v9",
+        "秒": 1308.15,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "templeSpring v9_knight ember side-1 vs-v9",
+        "秒": 1984.5,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            315,
+            390
+          ],
+          "perHullPeakAssetMedian": 352.5,
+          "uniquePeakExposedGold": 705
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "templeSpring v9_knight ember side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 660,
+          "hullGoldRange": [
+            240,
+            420
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            570
+          ],
+          "perHullPeakAssetMedian": 480.0,
+          "uniquePeakExposedGold": 960
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "templeSpring v9_knight grove side-1 vs-v9",
+        "秒": 1353.95,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            390
+          ],
+          "perHullPeakAssetMedian": 315.0,
+          "uniquePeakExposedGold": 630
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "templeSpring v9_knight grove side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240.0,
+          "uniquePeakExposedGold": 480
+        }
+      },
+      {
+        "对局": "templeSpring v9_summoner ember side-1 vs-v9",
+        "秒": 1682.55,
+        "超时": false,
+        "获胜队": "team-1",
+        "ours": {
+          "games": 1,
+          "hulls": 3,
+          "uniqueHullGold": 720,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            315
+          ],
+          "perHullPeakAssetMedian": 315,
+          "uniquePeakExposedGold": 870
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            315
+          ],
+          "perHullPeakAssetMedian": 277.5,
+          "uniquePeakExposedGold": 555
+        }
+      },
+      {
+        "对局": "templeSpring v9_summoner ember side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            390
+          ],
+          "perHullPeakAssetMedian": 390,
+          "uniquePeakExposedGold": 390
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "templeSpring v9_summoner grove side-1 vs-v9",
+        "秒": 1090.15,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "templeSpring v9_summoner grove side-2 vs-v9",
+        "秒": 1633.7,
+        "超时": false,
+        "获胜队": "team-1",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            315
+          ],
+          "perHullPeakAssetMedian": 277.5,
+          "uniquePeakExposedGold": 555
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "twoShores v9_archer ember side-1 vs-v9",
+        "秒": 2389.55,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            315,
+            315
+          ],
+          "perHullPeakAssetMedian": 315,
+          "uniquePeakExposedGold": 315
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            315,
+            315
+          ],
+          "perHullPeakAssetMedian": 315,
+          "uniquePeakExposedGold": 315
+        }
+      },
+      {
+        "对局": "twoShores v9_archer ember side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "twoShores v9_archer grove side-1 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            390
+          ],
+          "perHullPeakAssetMedian": 390,
+          "uniquePeakExposedGold": 390
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "twoShores v9_archer grove side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "twoShores v9_knight ember side-1 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 660,
+          "hullGoldRange": [
+            240,
+            420
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            570
+          ],
+          "perHullPeakAssetMedian": 480.0,
+          "uniquePeakExposedGold": 960
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            315,
+            315
+          ],
+          "perHullPeakAssetMedian": 315,
+          "uniquePeakExposedGold": 315
+        }
+      },
+      {
+        "对局": "twoShores v9_knight ember side-2 vs-v9",
+        "秒": 2085.4,
+        "超时": false,
+        "获胜队": "team-2",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            1185,
+            1185
+          ],
+          "perHullPeakAssetMedian": 1185,
+          "uniquePeakExposedGold": 1185
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "twoShores v9_knight grove side-1 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            390
+          ],
+          "perHullPeakAssetMedian": 390,
+          "uniquePeakExposedGold": 390
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            315,
+            390
+          ],
+          "perHullPeakAssetMedian": 352.5,
+          "uniquePeakExposedGold": 705
+        }
+      },
+      {
+        "对局": "twoShores v9_knight grove side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            540,
+            540
+          ],
+          "perHullPeakAssetMedian": 540,
+          "uniquePeakExposedGold": 540
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 420,
+          "hullGoldRange": [
+            420,
+            420
+          ],
+          "perHullPeakAssetRange": [
+            570,
+            570
+          ],
+          "perHullPeakAssetMedian": 570,
+          "uniquePeakExposedGold": 570
+        }
+      },
+      {
+        "对局": "twoShores v9_summoner ember side-1 vs-v9",
+        "秒": 1810.05,
+        "超时": false,
+        "获胜队": "team-1",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            390,
+            390
+          ],
+          "perHullPeakAssetMedian": 390,
+          "uniquePeakExposedGold": 390
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      },
+      {
+        "对局": "twoShores v9_summoner ember side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            315
+          ],
+          "perHullPeakAssetMedian": 277.5,
+          "uniquePeakExposedGold": 555
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 240,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240,
+          "uniquePeakExposedGold": 240
+        }
+      },
+      {
+        "对局": "twoShores v9_summoner grove side-1 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 1,
+          "hulls": 1,
+          "uniqueHullGold": 420,
+          "hullGoldRange": [
+            420,
+            420
+          ],
+          "perHullPeakAssetRange": [
+            420,
+            420
+          ],
+          "perHullPeakAssetMedian": 420,
+          "uniquePeakExposedGold": 420
+        },
+        "theirs": {
+          "games": 1,
+          "hulls": 2,
+          "uniqueHullGold": 480,
+          "hullGoldRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetRange": [
+            240,
+            240
+          ],
+          "perHullPeakAssetMedian": 240.0,
+          "uniquePeakExposedGold": 480
+        }
+      },
+      {
+        "对局": "twoShores v9_summoner grove side-2 vs-v9",
+        "秒": 2400,
+        "超时": true,
+        "获胜队": "timeout",
+        "ours": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        },
+        "theirs": {
+          "games": 0,
+          "hulls": 0,
+          "uniqueHullGold": 0,
+          "hullGoldRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetRange": [
+            0,
+            0
+          ],
+          "perHullPeakAssetMedian": null,
+          "uniquePeakExposedGold": 0
+        }
+      }
+    ],
+    "单位补充": "两组各84局；每组双方各168个房间席位记录。地图按真实房间人数/队伍生成，非手造1v1。",
+    "后续复用": "规划放行证据只用于本次原版普查。修复后若要横向比较，必须使用独立物理扫掠的conflictSeconds、immediateBlockSeconds、stationaryBlockSeconds及stationaryAtLeast30；不能以shipTrafficClear变为false就声称阻挡消失。",
+    "可复用物理基线": {
+      "v8": {
+        "ours": {
+          "games": 59,
+          "names": [
+            "brokenSea v9_archer ember side-2 vs-v8",
+            "brokenSea v9_archer grove side-1 vs-v8",
+            "brokenSea v9_archer grove side-2 vs-v8",
+            "brokenSea v9_knight ember side-2 vs-v8",
+            "brokenSea v9_knight grove side-1 vs-v8",
+            "brokenSea v9_knight grove side-2 vs-v8",
+            "brokenSea v9_summoner ember side-1 vs-v8",
+            "brokenSea v9_summoner ember side-2 vs-v8",
+            "brokenSea v9_summoner grove side-1 vs-v8",
+            "brokenSea v9_summoner grove side-2 vs-v8",
+            "elderwood v9_archer ember side-1 vs-v8",
+            "elderwood v9_archer grove side-1 vs-v8",
+            "elderwood v9_archer grove side-2 vs-v8",
+            "elderwood v9_knight ember side-2 vs-v8",
+            "elderwood v9_knight grove side-2 vs-v8",
+            "elderwood v9_summoner ember side-1 vs-v8",
+            "elderwood v9_summoner ember side-2 vs-v8",
+            "elderwood v9_summoner grove side-1 vs-v8",
+            "elderwood v9_summoner grove side-2 vs-v8",
+            "gullIsland v9_archer grove side-1 vs-v8",
+            "gullIsland v9_knight ember side-1 vs-v8",
+            "gullIsland v9_knight ember side-2 vs-v8",
+            "gullIsland v9_knight grove side-2 vs-v8",
+            "ringwater v9_archer ember side-1 vs-v8",
+            "ringwater v9_archer ember side-2 vs-v8",
+            "ringwater v9_archer grove side-1 vs-v8",
+            "ringwater v9_knight grove side-1 vs-v8",
+            "ringwater v9_summoner ember side-1 vs-v8",
+            "ringwater v9_summoner ember side-2 vs-v8",
+            "ringwater v9_summoner grove side-1 vs-v8",
+            "sapphireArchipelago v9_archer ember side-1 vs-v8",
+            "sapphireArchipelago v9_archer ember side-2 vs-v8",
+            "sapphireArchipelago v9_archer grove side-1 vs-v8",
+            "sapphireArchipelago v9_archer grove side-2 vs-v8",
+            "sapphireArchipelago v9_knight ember side-1 vs-v8",
+            "sapphireArchipelago v9_knight ember side-2 vs-v8",
+            "sapphireArchipelago v9_knight grove side-1 vs-v8",
+            "sapphireArchipelago v9_knight grove side-2 vs-v8",
+            "sapphireArchipelago v9_summoner ember side-1 vs-v8",
+            "sapphireArchipelago v9_summoner ember side-2 vs-v8",
+            "sapphireArchipelago v9_summoner grove side-1 vs-v8",
+            "sapphireArchipelago v9_summoner grove side-2 vs-v8",
+            "templeSpring v9_archer ember side-2 vs-v8",
+            "templeSpring v9_archer grove side-1 vs-v8",
+            "templeSpring v9_archer grove side-2 vs-v8",
+            "templeSpring v9_knight ember side-1 vs-v8",
+            "templeSpring v9_knight grove side-1 vs-v8",
+            "templeSpring v9_knight grove side-2 vs-v8",
+            "templeSpring v9_summoner ember side-2 vs-v8",
+            "templeSpring v9_summoner grove side-1 vs-v8",
+            "templeSpring v9_summoner grove side-2 vs-v8",
+            "twoShores v9_archer grove side-1 vs-v8",
+            "twoShores v9_archer grove side-2 vs-v8",
+            "twoShores v9_knight ember side-1 vs-v8",
+            "twoShores v9_knight grove side-1 vs-v8",
+            "twoShores v9_knight grove side-2 vs-v8",
+            "twoShores v9_summoner ember side-1 vs-v8",
+            "twoShores v9_summoner ember side-2 vs-v8",
+            "twoShores v9_summoner grove side-1 vs-v8"
+          ],
+          "hulls": 115,
+          "uniqueHullGold": 36040,
+          "hullGoldRange": [
+            160,
+            1520
+          ],
+          "perHullPeakAssetRange": [
+            160,
+            1940
+          ],
+          "perHullPeakAssetMedian": 490,
+          "uniquePeakExposedGold": 69465,
+          "outcomes": {
+            "timeout": 37,
+            "win": 21,
+            "loss": 1
+          }
+        },
+        "theirs": {
+          "games": 67,
+          "names": [
+            "brokenSea v9_archer ember side-1 vs-v8",
+            "brokenSea v9_archer ember side-2 vs-v8",
+            "brokenSea v9_archer grove side-1 vs-v8",
+            "brokenSea v9_archer grove side-2 vs-v8",
+            "brokenSea v9_knight ember side-1 vs-v8",
+            "brokenSea v9_knight grove side-1 vs-v8",
+            "brokenSea v9_knight grove side-2 vs-v8",
+            "brokenSea v9_summoner ember side-1 vs-v8",
+            "brokenSea v9_summoner ember side-2 vs-v8",
+            "brokenSea v9_summoner grove side-1 vs-v8",
+            "brokenSea v9_summoner grove side-2 vs-v8",
+            "elderwood v9_archer ember side-1 vs-v8",
+            "elderwood v9_archer grove side-2 vs-v8",
+            "elderwood v9_knight ember side-1 vs-v8",
+            "elderwood v9_knight ember side-2 vs-v8",
+            "elderwood v9_knight grove side-1 vs-v8",
+            "elderwood v9_knight grove side-2 vs-v8",
+            "elderwood v9_summoner ember side-1 vs-v8",
+            "elderwood v9_summoner ember side-2 vs-v8",
+            "elderwood v9_summoner grove side-1 vs-v8",
+            "gullIsland v9_archer ember side-1 vs-v8",
+            "gullIsland v9_archer grove side-1 vs-v8",
+            "gullIsland v9_knight ember side-1 vs-v8",
+            "gullIsland v9_knight ember side-2 vs-v8",
+            "gullIsland v9_knight grove side-1 vs-v8",
+            "gullIsland v9_knight grove side-2 vs-v8",
+            "gullIsland v9_summoner ember side-2 vs-v8",
+            "ringwater v9_archer ember side-1 vs-v8",
+            "ringwater v9_archer ember side-2 vs-v8",
+            "ringwater v9_archer grove side-1 vs-v8",
+            "ringwater v9_archer grove side-2 vs-v8",
+            "ringwater v9_knight ember side-1 vs-v8",
+            "ringwater v9_knight ember side-2 vs-v8",
+            "ringwater v9_knight grove side-1 vs-v8",
+            "ringwater v9_knight grove side-2 vs-v8",
+            "ringwater v9_summoner ember side-1 vs-v8",
+            "ringwater v9_summoner ember side-2 vs-v8",
+            "ringwater v9_summoner grove side-1 vs-v8",
+            "ringwater v9_summoner grove side-2 vs-v8",
+            "sapphireArchipelago v9_archer ember side-1 vs-v8",
+            "sapphireArchipelago v9_archer ember side-2 vs-v8",
+            "sapphireArchipelago v9_archer grove side-1 vs-v8",
+            "sapphireArchipelago v9_archer grove side-2 vs-v8",
+            "sapphireArchipelago v9_knight ember side-1 vs-v8",
+            "sapphireArchipelago v9_knight ember side-2 vs-v8",
+            "sapphireArchipelago v9_knight grove side-1 vs-v8",
+            "sapphireArchipelago v9_knight grove side-2 vs-v8",
+            "sapphireArchipelago v9_summoner ember side-1 vs-v8",
+            "sapphireArchipelago v9_summoner ember side-2 vs-v8",
+            "sapphireArchipelago v9_summoner grove side-1 vs-v8",
+            "sapphireArchipelago v9_summoner grove side-2 vs-v8",
+            "templeSpring v9_archer ember side-1 vs-v8",
+            "templeSpring v9_archer grove side-1 vs-v8",
+            "templeSpring v9_archer grove side-2 vs-v8",
+            "templeSpring v9_knight ember side-1 vs-v8",
+            "templeSpring v9_knight ember side-2 vs-v8",
+            "templeSpring v9_knight grove side-1 vs-v8",
+            "templeSpring v9_knight grove side-2 vs-v8",
+            "templeSpring v9_summoner ember side-2 vs-v8",
+            "templeSpring v9_summoner grove side-1 vs-v8",
+            "templeSpring v9_summoner grove side-2 vs-v8",
+            "twoShores v9_archer ember side-2 vs-v8",
+            "twoShores v9_archer grove side-1 vs-v8",
+            "twoShores v9_archer grove side-2 vs-v8",
+            "twoShores v9_knight ember side-1 vs-v8",
+            "twoShores v9_knight grove side-1 vs-v8",
+            "twoShores v9_summoner grove side-1 vs-v8"
+          ],
+          "hulls": 123,
+          "uniqueHullGold": 39840,
+          "hullGoldRange": [
+            160,
+            760
+          ],
+          "perHullPeakAssetRange": [
+            160,
+            1230
+          ],
+          "perHullPeakAssetMedian": 420,
+          "uniquePeakExposedGold": 63710,
+          "outcomes": {
+            "timeout": 36,
+            "loss": 27,
+            "win": 4
+          }
+        }
+      },
+      "v9": {
+        "ours": {
+          "games": 66,
+          "names": [
+            "brokenSea v9_archer ember side-1 vs-v9",
+            "brokenSea v9_archer ember side-2 vs-v9",
+            "brokenSea v9_archer grove side-2 vs-v9",
+            "brokenSea v9_knight ember side-1 vs-v9",
+            "brokenSea v9_knight ember side-2 vs-v9",
+            "brokenSea v9_knight grove side-1 vs-v9",
+            "brokenSea v9_knight grove side-2 vs-v9",
+            "brokenSea v9_summoner ember side-1 vs-v9",
+            "brokenSea v9_summoner ember side-2 vs-v9",
+            "brokenSea v9_summoner grove side-1 vs-v9",
+            "brokenSea v9_summoner grove side-2 vs-v9",
+            "elderwood v9_archer ember side-1 vs-v9",
+            "elderwood v9_archer grove side-1 vs-v9",
+            "elderwood v9_archer grove side-2 vs-v9",
+            "elderwood v9_knight ember side-2 vs-v9",
+            "elderwood v9_knight grove side-1 vs-v9",
+            "elderwood v9_knight grove side-2 vs-v9",
+            "elderwood v9_summoner ember side-1 vs-v9",
+            "elderwood v9_summoner grove side-2 vs-v9",
+            "gullIsland v9_archer grove side-1 vs-v9",
+            "gullIsland v9_knight ember side-1 vs-v9",
+            "gullIsland v9_knight ember side-2 vs-v9",
+            "gullIsland v9_knight grove side-2 vs-v9",
+            "gullIsland v9_summoner ember side-1 vs-v9",
+            "gullIsland v9_summoner grove side-1 vs-v9",
+            "gullIsland v9_summoner grove side-2 vs-v9",
+            "ringwater v9_archer ember side-1 vs-v9",
+            "ringwater v9_archer grove side-1 vs-v9",
+            "ringwater v9_archer grove side-2 vs-v9",
+            "ringwater v9_knight grove side-1 vs-v9",
+            "ringwater v9_knight grove side-2 vs-v9",
+            "ringwater v9_summoner ember side-1 vs-v9",
+            "ringwater v9_summoner ember side-2 vs-v9",
+            "ringwater v9_summoner grove side-1 vs-v9",
+            "ringwater v9_summoner grove side-2 vs-v9",
+            "sapphireArchipelago v9_archer ember side-1 vs-v9",
+            "sapphireArchipelago v9_archer ember side-2 vs-v9",
+            "sapphireArchipelago v9_archer grove side-1 vs-v9",
+            "sapphireArchipelago v9_archer grove side-2 vs-v9",
+            "sapphireArchipelago v9_knight ember side-1 vs-v9",
+            "sapphireArchipelago v9_knight ember side-2 vs-v9",
+            "sapphireArchipelago v9_knight grove side-1 vs-v9",
+            "sapphireArchipelago v9_knight grove side-2 vs-v9",
+            "sapphireArchipelago v9_summoner ember side-1 vs-v9",
+            "sapphireArchipelago v9_summoner ember side-2 vs-v9",
+            "sapphireArchipelago v9_summoner grove side-1 vs-v9",
+            "sapphireArchipelago v9_summoner grove side-2 vs-v9",
+            "templeSpring v9_archer ember side-1 vs-v9",
+            "templeSpring v9_archer ember side-2 vs-v9",
+            "templeSpring v9_archer grove side-1 vs-v9",
+            "templeSpring v9_knight ember side-1 vs-v9",
+            "templeSpring v9_knight ember side-2 vs-v9",
+            "templeSpring v9_knight grove side-1 vs-v9",
+            "templeSpring v9_knight grove side-2 vs-v9",
+            "templeSpring v9_summoner ember side-1 vs-v9",
+            "templeSpring v9_summoner ember side-2 vs-v9",
+            "templeSpring v9_summoner grove side-2 vs-v9",
+            "twoShores v9_archer ember side-1 vs-v9",
+            "twoShores v9_archer grove side-1 vs-v9",
+            "twoShores v9_knight ember side-1 vs-v9",
+            "twoShores v9_knight ember side-2 vs-v9",
+            "twoShores v9_knight grove side-1 vs-v9",
+            "twoShores v9_knight grove side-2 vs-v9",
+            "twoShores v9_summoner ember side-1 vs-v9",
+            "twoShores v9_summoner ember side-2 vs-v9",
+            "twoShores v9_summoner grove side-1 vs-v9"
+          ],
+          "hulls": 128,
+          "uniqueHullGold": 40840,
+          "hullGoldRange": [
+            160,
+            1520
+          ],
+          "perHullPeakAssetRange": [
+            160,
+            2310
+          ],
+          "perHullPeakAssetMedian": 402.5,
+          "uniquePeakExposedGold": 71965,
+          "outcomes": {
+            "timeout": 48,
+            "loss": 6,
+            "win": 12
+          }
+        },
+        "theirs": {
+          "games": 61,
+          "names": [
+            "brokenSea v9_archer ember side-1 vs-v9",
+            "brokenSea v9_archer ember side-2 vs-v9",
+            "brokenSea v9_archer grove side-1 vs-v9",
+            "brokenSea v9_archer grove side-2 vs-v9",
+            "brokenSea v9_knight ember side-1 vs-v9",
+            "brokenSea v9_knight grove side-1 vs-v9",
+            "brokenSea v9_knight grove side-2 vs-v9",
+            "brokenSea v9_summoner ember side-1 vs-v9",
+            "brokenSea v9_summoner grove side-1 vs-v9",
+            "brokenSea v9_summoner grove side-2 vs-v9",
+            "elderwood v9_archer ember side-2 vs-v9",
+            "elderwood v9_knight ember side-2 vs-v9",
+            "elderwood v9_summoner ember side-2 vs-v9",
+            "elderwood v9_summoner grove side-2 vs-v9",
+            "gullIsland v9_archer ember side-1 vs-v9",
+            "gullIsland v9_archer ember side-2 vs-v9",
+            "gullIsland v9_knight grove side-1 vs-v9",
+            "gullIsland v9_knight grove side-2 vs-v9",
+            "gullIsland v9_summoner ember side-1 vs-v9",
+            "gullIsland v9_summoner ember side-2 vs-v9",
+            "gullIsland v9_summoner grove side-2 vs-v9",
+            "ringwater v9_archer ember side-1 vs-v9",
+            "ringwater v9_archer ember side-2 vs-v9",
+            "ringwater v9_archer grove side-1 vs-v9",
+            "ringwater v9_archer grove side-2 vs-v9",
+            "ringwater v9_knight ember side-1 vs-v9",
+            "ringwater v9_knight ember side-2 vs-v9",
+            "ringwater v9_knight grove side-1 vs-v9",
+            "ringwater v9_knight grove side-2 vs-v9",
+            "ringwater v9_summoner ember side-2 vs-v9",
+            "ringwater v9_summoner grove side-1 vs-v9",
+            "ringwater v9_summoner grove side-2 vs-v9",
+            "sapphireArchipelago v9_archer ember side-1 vs-v9",
+            "sapphireArchipelago v9_archer ember side-2 vs-v9",
+            "sapphireArchipelago v9_archer grove side-1 vs-v9",
+            "sapphireArchipelago v9_archer grove side-2 vs-v9",
+            "sapphireArchipelago v9_knight ember side-1 vs-v9",
+            "sapphireArchipelago v9_knight ember side-2 vs-v9",
+            "sapphireArchipelago v9_knight grove side-1 vs-v9",
+            "sapphireArchipelago v9_knight grove side-2 vs-v9",
+            "sapphireArchipelago v9_summoner ember side-1 vs-v9",
+            "sapphireArchipelago v9_summoner ember side-2 vs-v9",
+            "sapphireArchipelago v9_summoner grove side-1 vs-v9",
+            "sapphireArchipelago v9_summoner grove side-2 vs-v9",
+            "templeSpring v9_archer ember side-1 vs-v9",
+            "templeSpring v9_archer ember side-2 vs-v9",
+            "templeSpring v9_archer grove side-1 vs-v9",
+            "templeSpring v9_knight ember side-1 vs-v9",
+            "templeSpring v9_knight ember side-2 vs-v9",
+            "templeSpring v9_knight grove side-1 vs-v9",
+            "templeSpring v9_knight grove side-2 vs-v9",
+            "templeSpring v9_summoner ember side-1 vs-v9",
+            "templeSpring v9_summoner ember side-2 vs-v9",
+            "twoShores v9_archer ember side-1 vs-v9",
+            "twoShores v9_archer grove side-1 vs-v9",
+            "twoShores v9_archer grove side-2 vs-v9",
+            "twoShores v9_knight ember side-1 vs-v9",
+            "twoShores v9_knight grove side-1 vs-v9",
+            "twoShores v9_knight grove side-2 vs-v9",
+            "twoShores v9_summoner ember side-2 vs-v9",
+            "twoShores v9_summoner grove side-1 vs-v9"
+          ],
+          "hulls": 94,
+          "uniqueHullGold": 27520,
+          "hullGoldRange": [
+            160,
+            540
+          ],
+          "perHullPeakAssetRange": [
+            160,
+            1990
+          ],
+          "perHullPeakAssetMedian": 390.0,
+          "uniquePeakExposedGold": 48385,
+          "outcomes": {
+            "timeout": 45,
+            "win": 6,
+            "loss": 10
+          }
+        }
+      }
+    }
+  },
+  "代码定位": {
+    "障碍唯一来源": "src/shared/ship-collisions.ts:24",
+    "物理方形轮廓": "src/shared/ship-collisions.ts:75",
+    "同一实际扫掠": "src/shared/ship-collisions.ts:257",
+    "规划接入": "src/shared/ship-avoidance.ts:357",
+    "局部冻结": "src/shared/ship-planning-job.ts:166",
+    "旧job重新规划": "src/shared/ship-planning-job.ts:135",
+    "创建及冷恢复绑定": "src/shared/sim.ts:307及1077",
+    "快照源隔离": "src/shared/sim.ts:1017",
+    "场景替换数组后出生位刷新": "src/shared/sim.ts:276"
+  },
+  "回归": {
+    "新增测试数": 15,
+    "原main失败证据": "main-failing-regression.log，4/4旧段错误放行；fixture原地形、船体和附近建筑投影。",
+    "覆盖": [
+      "四个真实第一段拒绝",
+      "四条替代航线每段实际无碰撞",
+      "四船30秒实际helm离港",
+      "持续job冻结与冷恢复、旧版本失效",
+      "局部范围与远距离precise目标",
+      "snapshot/恢复障碍源相互隔离"
+    ],
+    "父会话6项失败原因": {
+      "包边界": "新测试名称的禁词已更名。",
+      "room-planning-restore三项": "不是读档损坏；全图两座远建筑使limited=true，场景最大searchSteps从91降至7，测试根本未能先创建深搜存档；局部冻结恢复limited=false及91步。",
+      "mounted-fleet两项": "全图limited搜索改变船只行动，破坏原清营隔离场景；局部冻结后原断言原样通过，未放宽伤害期望。"
+    },
+    "四处现场": [
+      {
+        "name": "brokenSea v9_archer ember side-2 vs-v9",
+        "sourceCommit": "710986b1",
+        "second": 700,
+        "map": "brokenSea"
+      },
+      {
+        "name": "brokenSea v9_summoner grove side-2 vs-v9",
+        "sourceCommit": "710986b1",
+        "second": 600,
+        "map": "brokenSea"
+      },
+      {
+        "name": "brokenSea v9_archer ember side-1 vs-v9",
+        "sourceCommit": "710986b1",
+        "second": 928,
+        "map": "brokenSea"
+      },
+      {
+        "name": "gullIsland v9_archer grove side-1 vs-v9",
+        "sourceCommit": "710986b1",
+        "second": 900,
+        "map": "gullIsland"
+      }
+    ],
+    "证据边界": "四现场保留真实地形、该船、附近建筑，隔离其他船/陆军/后续AI命令；替代航线用物理扫掠逐段验，helm实际执行600tick。证明局部规划/执行一致和可离开接触点，不代表完整对局已成功登陆或胜率改善。"
+  },
+  "体积": {
+    "单位": "未压缩UTF-8 JSON字节，固定save日期和房间元数据；job是JSON字符串，snapshot/save包含其转义开销。",
+    "真实现场": "蓝宝群岛1bf481b0完整重放第25分钟，94座建筑，12船双方各6；原168局未找到双方各十几船的25分钟现场。",
+    "压力现场": "同一真实现场加物理可放置的空载船至双方各12艘，94座建筑；明确区分人工加船。",
+    "测量阶段": "同时新建phase=direct jobs；不是全生命周期最大值。",
+    "对比": {
+      "real": {
+        "base": {
+          "ships": 12,
+          "units": 206,
+          "buildings": 94,
+          "snapshotBytes": 316083,
+          "saveBytes": 317455,
+          "jobBytes": {
+            "n": 12,
+            "mean": 885.75,
+            "p50": 905,
+            "p95": 1145,
+            "max": 1145
+          },
+          "totalJobBytes": 10629
+        },
+        "full": {
+          "ships": 12,
+          "units": 206,
+          "buildings": 94,
+          "snapshotBytes": 426861,
+          "saveBytes": 428233,
+          "jobBytes": {
+            "n": 12,
+            "mean": 8610.25,
+            "p50": 8622,
+            "p95": 8862,
+            "max": 8862
+          },
+          "totalJobBytes": 103323,
+          "snapshot变化百分比": 35.04712369852223
+        },
+        "bounded": {
+          "ships": 12,
+          "units": 206,
+          "buildings": 94,
+          "snapshotBytes": 319170,
+          "saveBytes": 320542,
+          "jobBytes": {
+            "n": 12,
+            "mean": 1101.5,
+            "p50": 1116,
+            "p95": 1744,
+            "max": 1744
+          },
+          "totalJobBytes": 13218,
+          "snapshot变化百分比": 0.9766422110648154
+        }
+      },
+      "stress": {
+        "base": {
+          "ships": 24,
+          "units": 218,
+          "buildings": 94,
+          "snapshotBytes": 339969,
+          "saveBytes": 341341,
+          "jobBytes": {
+            "n": 24,
+            "mean": 991,
+            "p50": 1104,
+            "p95": 1165,
+            "max": 1165
+          },
+          "totalJobBytes": 23784
+        },
+        "full": {
+          "ships": 24,
+          "units": 218,
+          "buildings": 94,
+          "snapshotBytes": 561423,
+          "saveBytes": 562795,
+          "jobBytes": {
+            "n": 24,
+            "mean": 8711.75,
+            "p50": 8821,
+            "p95": 8882,
+            "max": 8882
+          },
+          "totalJobBytes": 209082,
+          "snapshot变化百分比": 65.13946859860754
+        },
+        "bounded": {
+          "ships": 24,
+          "units": 218,
+          "buildings": 94,
+          "snapshotBytes": 343224,
+          "saveBytes": 344596,
+          "jobBytes": {
+            "n": 24,
+            "mean": 1104.875,
+            "p50": 1150,
+            "p95": 1647,
+            "max": 1744
+          },
+          "totalJobBytes": 26517,
+          "snapshot变化百分比": 0.9574402371981039
+        }
+      }
+    },
+    "持续1000tick峰值": {
+      "base": {
+        "relativeTick": 95,
+        "jobBytes": {
+          "n": 24,
+          "mean": 874.5416666666666,
+          "p50": 790,
+          "p95": 1168,
+          "max": 1274
+        },
+        "totalJobBytes": 20989,
+        "snapshotBytes": 308674,
+        "saveBytes": 310046
+      },
+      "bounded": {
+        "relativeTick": 159,
+        "jobBytes": {
+          "n": 24,
+          "mean": 1003.875,
+          "p50": 920,
+          "p95": 1419,
+          "max": 2125
+        },
+        "totalJobBytes": 24093,
+        "snapshotBytes": 313170,
+        "saveBytes": 314542
+      }
+    },
+    "峰值限制": "实际持续搜索峰值在不同tick，修复后的航迹不同；不能作为同一帧逐字节差。"
+  },
+  "性能": {
+    "机器": "juma ser497065980654，AMD EPYC7K62，Node24.22.0，同一逻辑CPU14，独立进程A/B/B/A。",
+    "tick场景": "25分钟24船94建筑压力现场；先100tick热身、测900tick；固定move命令每200tick重发，双方各自重复臂终值一致。修复改变航迹，工作量不完全相同。",
+    "large场景": "按large-battle-think.test.ts同一320兵/四方场景，900tick、180次submit；四臂终值均5e87bc99。",
+    "正式复核": {
+      "tick": {
+        "ABBA": [
+          {
+            "arm": "A1",
+            "startedAt": "2026-10-19T04:50:16.225Z",
+            "tickMs": {
+              "n": 900,
+              "mean": 8.7387097077778,
+              "p50": 6.5570459999999,
+              "p95": 20.62451500000043,
+              "max": 80.53333700000076
+            },
+            "cpuMs": 7890.615,
+            "initialChecksum": "95ee686f",
+            "finalChecksum": "31ddde6a",
+            "jobCounts": {
+              "n": 900,
+              "mean": 23.64666666666667,
+              "p50": 24,
+              "p95": 24,
+              "max": 24
+            }
+          },
+          {
+            "arm": "B1",
+            "startedAt": "2026-10-19T04:50:29.069Z",
+            "tickMs": {
+              "n": 900,
+              "mean": 8.323815736666646,
+              "p50": 5.329678999998578,
+              "p95": 21.46644600000036,
+              "max": 69.63438799999949
+            },
+            "cpuMs": 7519.266,
+            "initialChecksum": "95ee686f",
+            "finalChecksum": "e0de88e4",
+            "jobCounts": {
+              "n": 900,
+              "mean": 23.58222222222222,
+              "p50": 24,
+              "p95": 24,
+              "max": 24
+            }
+          },
+          {
+            "arm": "B2",
+            "startedAt": "2026-10-19T04:50:41.390Z",
+            "tickMs": {
+              "n": 900,
+              "mean": 8.697448599999985,
+              "p50": 5.859969999999521,
+              "p95": 23.534982000000127,
+              "max": 72.90142900000046
+            },
+            "cpuMs": 7865.742,
+            "initialChecksum": "95ee686f",
+            "finalChecksum": "e0de88e4",
+            "jobCounts": {
+              "n": 900,
+              "mean": 23.58222222222222,
+              "p50": 24,
+              "p95": 24,
+              "max": 24
+            }
+          },
+          {
+            "arm": "A2",
+            "startedAt": "2026-10-19T04:50:54.066Z",
+            "tickMs": {
+              "n": 900,
+              "mean": 8.991801371111134,
+              "p50": 6.43886300000031,
+              "p95": 24.406929000000673,
+              "max": 74.9652189999997
+            },
+            "cpuMs": 8122.086,
+            "initialChecksum": "95ee686f",
+            "finalChecksum": "31ddde6a",
+            "jobCounts": {
+              "n": 900,
+              "mean": 23.64666666666667,
+              "p50": 24,
+              "p95": 24,
+              "max": 24
+            }
+          }
+        ],
+        "A均值毫秒": 8.865255539444467,
+        "B均值毫秒": 8.510632168333316,
+        "变化百分比": -4.000148326614095
+      },
+      "large": {
+        "ABBA": [
+          {
+            "arm": "A1",
+            "startedAt": "2026-10-19T04:51:06.837Z",
+            "tickMs": {
+              "n": 900,
+              "mean": 41.70043916777774,
+              "p50": 4.25970000000234,
+              "p95": 221.0437619999975,
+              "max": 1667.2131880000002
+            },
+            "cpuMs": 37509.068,
+            "initialChecksum": "b294ca2d",
+            "finalChecksum": "5e87bc99",
+            "thinkMs": {
+              "n": 180,
+              "mean": 184.34386657777762,
+              "p50": 153.60296700000072,
+              "p95": 395.12565099999847,
+              "max": 1603.171636
+            }
+          },
+          {
+            "arm": "B1",
+            "startedAt": "2026-10-19T04:51:47.031Z",
+            "tickMs": {
+              "n": 900,
+              "mean": 41.97712670333328,
+              "p50": 3.8372630000012578,
+              "p95": 214.75469800000064,
+              "max": 1595.3565550000003
+            },
+            "cpuMs": 37759.967,
+            "initialChecksum": "b294ca2d",
+            "finalChecksum": "5e87bc99",
+            "thinkMs": {
+              "n": 180,
+              "mean": 186.09281262777776,
+              "p50": 155.95739599999797,
+              "p95": 421.4691729999977,
+              "max": 1540.8412170000001
+            }
+          },
+          {
+            "arm": "B2",
+            "startedAt": "2026-10-19T04:52:27.591Z",
+            "tickMs": {
+              "n": 900,
+              "mean": 42.109934964444456,
+              "p50": 3.936681999999564,
+              "p95": 202.46356599999854,
+              "max": 1830.3658809999997
+            },
+            "cpuMs": 37880.427,
+            "initialChecksum": "b294ca2d",
+            "finalChecksum": "5e87bc99",
+            "thinkMs": {
+              "n": 180,
+              "mean": 186.3394154444445,
+              "p50": 157.9698129999997,
+              "p95": 399.24519599999985,
+              "max": 1772.6473209999995
+            }
+          },
+          {
+            "arm": "A2",
+            "startedAt": "2026-10-19T04:53:08.214Z",
+            "tickMs": {
+              "n": 900,
+              "mean": 42.00220729555556,
+              "p50": 4.415064999999231,
+              "p95": 206.48017400000026,
+              "max": 1567.4787299999998
+            },
+            "cpuMs": 37776.034,
+            "initialChecksum": "b294ca2d",
+            "finalChecksum": "5e87bc99",
+            "thinkMs": {
+              "n": 180,
+              "mean": 185.57038977222214,
+              "p50": 152.54363599999851,
+              "p95": 421.23219199999585,
+              "max": 1511.8444760000002
+            }
+          }
+        ],
+        "A均值毫秒": 184.95712817499987,
+        "B均值毫秒": 186.21611403611115,
+        "变化百分比": 0.680690640871151
+      }
+    },
+    "首次测量保留": {
+      "tick": {
+        "ABBA": [
+          {
+            "arm": "A1",
+            "startedAt": "2026-10-19T04:18:22.373Z",
+            "tickMs": {
+              "n": 900,
+              "mean": 9.112596387777806,
+              "p50": 6.67172600000049,
+              "p95": 23.424352,
+              "max": 72.94343500000105
+            },
+            "cpuMs": 8241.303,
+            "initialChecksum": "95ee686f",
+            "finalChecksum": "31ddde6a",
+            "jobCounts": {
+              "n": 900,
+              "mean": 23.64666666666667,
+              "p50": 24,
+              "p95": 24,
+              "max": 24
+            }
+          },
+          {
+            "arm": "B1",
+            "startedAt": "2026-10-19T04:22:02.878Z",
+            "tickMs": {
+              "n": 900,
+              "mean": 8.71809487333331,
+              "p50": 5.7576349999999366,
+              "p95": 22.75557200000003,
+              "max": 70.90225400000054
+            },
+            "cpuMs": 7907.243,
+            "initialChecksum": "95ee686f",
+            "finalChecksum": "e0de88e4",
+            "jobCounts": {
+              "n": 900,
+              "mean": 23.58222222222222,
+              "p50": 24,
+              "p95": 24,
+              "max": 24
+            }
+          },
+          {
+            "arm": "B2",
+            "startedAt": "2026-10-19T04:22:15.651Z",
+            "tickMs": {
+              "n": 900,
+              "mean": 9.720286560000014,
+              "p50": 6.570063000000118,
+              "p95": 27.177557999999408,
+              "max": 109.05585899999824
+            },
+            "cpuMs": 8783.009,
+            "initialChecksum": "95ee686f",
+            "finalChecksum": "e0de88e4",
+            "jobCounts": {
+              "n": 900,
+              "mean": 23.58222222222222,
+              "p50": 24,
+              "p95": 24,
+              "max": 24
+            }
+          },
+          {
+            "arm": "A2",
+            "startedAt": "2026-10-19T04:22:29.776Z",
+            "tickMs": {
+              "n": 900,
+              "mean": 8.71932706333331,
+              "p50": 6.440507000001162,
+              "p95": 21.689601999999468,
+              "max": 59.302685999999994
+            },
+            "cpuMs": 7879.118,
+            "initialChecksum": "95ee686f",
+            "finalChecksum": "31ddde6a",
+            "jobCounts": {
+              "n": 900,
+              "mean": 23.64666666666667,
+              "p50": 24,
+              "p95": 24,
+              "max": 24
+            }
+          }
+        ],
+        "A均值毫秒": 8.915961725555558,
+        "B均值毫秒": 9.219190716666663,
+        "变化百分比": 3.4009678422235456
+      },
+      "large": {
+        "ABBA": [
+          {
+            "arm": "A1",
+            "startedAt": "2026-10-19T04:22:42.229Z",
+            "tickMs": {
+              "n": 900,
+              "mean": 45.037648045555606,
+              "p50": 4.5862080000006245,
+              "p95": 232.64221299999917,
+              "max": 1687.494079
+            },
+            "cpuMs": 40511.132,
+            "initialChecksum": "b294ca2d",
+            "finalChecksum": "5e87bc99",
+            "thinkMs": {
+              "n": 180,
+              "mean": 199.63897341666666,
+              "p50": 167.01655100000062,
+              "p95": 453.20684999999867,
+              "max": 1628.2017660000001
+            }
+          },
+          {
+            "arm": "B1",
+            "startedAt": "2026-10-19T04:23:25.595Z",
+            "tickMs": {
+              "n": 900,
+              "mean": 42.708247698888904,
+              "p50": 4.126506000000518,
+              "p95": 216.29733900000065,
+              "max": 1702.3163789999999
+            },
+            "cpuMs": 38405.002,
+            "initialChecksum": "b294ca2d",
+            "finalChecksum": "5e87bc99",
+            "thinkMs": {
+              "n": 180,
+              "mean": 188.63782148333328,
+              "p50": 153.4877779999988,
+              "p95": 452.1206480000037,
+              "max": 1648.4450740000002
+            }
+          },
+          {
+            "arm": "B2",
+            "startedAt": "2026-10-19T04:24:06.737Z",
+            "tickMs": {
+              "n": 900,
+              "mean": 44.99624351555546,
+              "p50": 4.285306999998284,
+              "p95": 229.81083400000352,
+              "max": 1849.8867729999997
+            },
+            "cpuMs": 40471.294,
+            "initialChecksum": "b294ca2d",
+            "finalChecksum": "5e87bc99",
+            "thinkMs": {
+              "n": 180,
+              "mean": 198.19941008888904,
+              "p50": 165.87144999999873,
+              "p95": 424.5710340000005,
+              "max": 1783.1734939999997
+            }
+          },
+          {
+            "arm": "A2",
+            "startedAt": "2026-10-19T04:24:49.959Z",
+            "tickMs": {
+              "n": 900,
+              "mean": 46.04661425000002,
+              "p50": 4.572258000000147,
+              "p95": 224.58571099999972,
+              "max": 1708.305907
+            },
+            "cpuMs": 41415.598,
+            "initialChecksum": "b294ca2d",
+            "finalChecksum": "5e87bc99",
+            "thinkMs": {
+              "n": 180,
+              "mean": 203.25848103333342,
+              "p50": 175.65630200000123,
+              "p95": 450.78218200000265,
+              "max": 1647.2670430000003
+            }
+          }
+        ],
+        "A均值毫秒": 201.44872722500003,
+        "B均值毫秒": 193.41861578611116,
+        "变化百分比": -3.986181272776157
+      }
+    },
+    "解释": "首次测量有本任务单测并行（限定CPU0–7）及另一lane任务，tick为+3.40%，large think为-3.99%；复核时本任务单测均已结束，tick为-4.00%，large think为+0.68%。不能宣称稳定加速或零成本。复核两臂最大think均低于2秒。"
+  },
+  "校验和": {
+    "新开局七图": {
+      "A": [
+        {
+          "map": "sapphireArchipelago",
+          "checksum": "b2f19e9f"
+        },
+        {
+          "map": "brokenSea",
+          "checksum": "1566e409"
+        },
+        {
+          "map": "templeSpring",
+          "checksum": "014e2b57"
+        },
+        {
+          "map": "elderwood",
+          "checksum": "482c25a4"
+        },
+        {
+          "map": "ringwater",
+          "checksum": "9b9ce091"
+        },
+        {
+          "map": "gullIsland",
+          "checksum": "e20b6e3a"
+        },
+        {
+          "map": "twoShores",
+          "checksum": "845da9d5"
+        }
+      ],
+      "B": [
+        {
+          "map": "sapphireArchipelago",
+          "checksum": "b2f19e9f"
+        },
+        {
+          "map": "brokenSea",
+          "checksum": "1566e409"
+        },
+        {
+          "map": "templeSpring",
+          "checksum": "014e2b57"
+        },
+        {
+          "map": "elderwood",
+          "checksum": "482c25a4"
+        },
+        {
+          "map": "ringwater",
+          "checksum": "9b9ce091"
+        },
+        {
+          "map": "gullIsland",
+          "checksum": "e20b6e3a"
+        },
+        {
+          "map": "twoShores",
+          "checksum": "845da9d5"
+        }
+      ],
+      "一致": true
+    },
+    "固定命令流300tick": {
+      "fixedGround": {
+        "不同tick数量": 0,
+        "首个不同tick": null,
+        "最后不同tick": null,
+        "A终值": "dd76b26f",
+        "B终值": "dd76b26f",
+        "A冷恢复首个不一致tick": null,
+        "B冷恢复首个不一致tick": null
+      },
+      "fixedOpenWater": {
+        "不同tick数量": 0,
+        "首个不同tick": null,
+        "最后不同tick": null,
+        "A终值": "a24ae6fe",
+        "B终值": "a24ae6fe",
+        "A冷恢复首个不一致tick": null,
+        "B冷恢复首个不一致tick": null
+      },
+      "fixedDeepIsland": {
+        "不同tick数量": 25,
+        "首个不同tick": 1,
+        "最后不同tick": 25,
+        "A终值": "9c711843",
+        "B终值": "9c711843",
+        "A冷恢复首个不一致tick": null,
+        "B冷恢复首个不一致tick": null
+      },
+      "fixedShipyard": {
+        "不同tick数量": 300,
+        "首个不同tick": 1,
+        "最后不同tick": 300,
+        "A终值": "e6d38146",
+        "B终值": "be993acc",
+        "A冷恢复首个不一致tick": null,
+        "B冷恢复首个不一致tick": null
+      }
+    },
+    "持续job差异": "fixedDeepIsland tick1..25因job version/solids序列化不同；tick26起一致，终值9c711843。没有剥除规划状态、没有归一化checksum。",
+    "复现恢复": "四条命令流各在tick120冷恢复，继续逐tick比较；A/B各版本内部均无不一致。新增真实待搜索job测试和原room-planning-restore也核验暂停准备不改tick/snapshot/checksum。"
+  },
+  "完整测试": {
+    "状态": "通过，666文件/7446测试，无跳过",
+    "命令": "node node_modules/vitest/vitest.mjs run --dir src --maxWorkers=4 --minWorkers=1",
+    "环境排查": "juma三次运行同一未改动painted-card-batches worker退出；转A100该71项全通过。A100原Node22线程TypeScript无扩展名模块加载失败；换与juma相同Node24.22后线程4项已通过，再跑完整src。未修改或跳过这些测试。",
+    "机器": "A100，Node24.22.0，4workers",
+    "开始UTC": "2026-10-19T04:56:02Z",
+    "耗时秒": 343.65,
+    "日志": "performance/full-suite-node24.log",
+    "其他检查": [
+      "npx tsc --noEmit通过",
+      "package-boundaries 7项通过",
+      "git diff --check通过"
+    ]
+  },
+  "原始证据": {
+    "指针": "docs/reviews/naval-solid-obstacles-2026-10-19.evidence.json",
+    "取回": "SKETCH_MACHINES=~/.config/sketch/machines-naval.json bin/sketch evidence get docs/reviews/naval-solid-obstacles-2026-10-19.evidence.json --out work/naval-solid-review-evidence",
+    "内容": "168局原始逐船episode、对局manifest、四现场main失败日志、两局超时重放帧及facts、体积/ABBA逐采样/校验和、测试日志、候选代码补丁及sha256。"
+  }
+}

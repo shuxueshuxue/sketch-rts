@@ -271,8 +271,12 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
       const at = launchPose ?? walkableGoal(this.map, x, y, unitMover(kind));
       const unit = createUnit(`unit-${owner}-${kind}-${this.nextId}`, owner, kind, at.x, at.y);
       if(shipProfile(unit)) {
+        // Scenario/restore callers may replace world arrays before the first
+        // tick. Launch clearance and the planning source must see those bodies.
+        const solids=[...this.buildings,...(this.obstacles ?? [])];
+        setShipCollisionSolids(this.map,solids);
         const traffic=shipTraffic(unit,this.units,Infinity,this.map);
-        const bodies=[...this.units,...this.buildings,...(this.obstacles ?? [])];
+        const bodies=[...this.units,...solids];
         const clear=(pose:ShipPose)=>traffic(pose,pose) && shipBodyClearAtPose(this.map,unit,pose,bodies);
         const pose=launchPose ? clear(launchPose) ? launchPose : undefined : nearestShipPose(this.map,unit,at,unit,clear);
         if(!pose)throw new Error('No clear water berth for this ship');
@@ -300,6 +304,7 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
   keepShipsOnWater(game.map,game.units);
   updateSupplyState(game);
   nativeUnitSpawners.set(game, game.spawnUnit);
+  setShipCollisionSolids(game.map, [...game.buildings,...(game.obstacles ?? [])]);
   return game;
 }
 
@@ -1069,6 +1074,7 @@ export function restoreSnapshotIntoGame(game: Game, snapshot: GameSnapshot, next
   invalidateGameRuntimeCaches(game);
   refreshVeteranFrame(game);
   bindGangwayCrewRules(game.units,game);
+  setShipCollisionSolids(game.map, [...game.buildings,...(game.obstacles ?? [])]);
 }
 
 /** Old saves used 20 Hz rates, including passengers and campaign rule overrides. */

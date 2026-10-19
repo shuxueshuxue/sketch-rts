@@ -25,7 +25,7 @@ export function setShipCollisionSolids(map: GameMap, solids: readonly Solid[]) {
   solidSources.set(map, { bodies: solids });
 }
 export function shipCollisionMap(units: readonly Unit[]) { return frames.get(units)?.map; }
-export function freezeShipCollisionSolids(map: GameMap): Point[][] {
+export function freezeShipCollisionSolids(map: GameMap, center?: Point, range=Infinity): Point[][] {
   const source = solidSources.get(map);
   if (!source) return noSolids;
   if (!source.seen || source.cell !== map.terrain?.cell || source.bodies.length !== source.seen.length || source.bodies.some((body, i) => {
@@ -37,7 +37,14 @@ export function freezeShipCollisionSolids(map: GameMap): Point[][] {
     source.outlines = source.bodies.filter(body => body.hp > 0).map(body => physicalSolidOutline(map, body));
   }
   // Replaced whole on change: existing searches retain their immutable view.
-  return source.outlines!;
+  if (!center || !Number.isFinite(range)) return source.outlines!;
+  // These are the physical axis-aligned square footprints. Include a body
+  // when any of its footprint enters the caller's planning neighborhood.
+  return source.outlines!.filter(polygon => {
+    const left = polygon[0]!, right = polygon[2]!;
+    const dx = Math.max(left.x-center.x,center.x-right.x,0), dy = Math.max(left.y-center.y,center.y-right.y,0);
+    return dx*dx+dy*dy <= range*range;
+  });
 }
 const CELL = 192;
 // A bucket's key packs its column and row into one integer (2^20 cells either way of the origin, far past any map):

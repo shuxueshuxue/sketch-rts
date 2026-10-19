@@ -7,6 +7,7 @@ import type { GameMap, Unit } from './types';
 import { hasShipPlanningWork } from './ship-planning-budget';
 import { freezeShipCollisionSolids } from './ship-collisions';
 import type { Point } from './ship-geometry';
+import { polygonRadius } from './navigation-math';
 
 /** `exact`: a maneuver search whose route the executor follows pose by pose; `precise`: a requested attitude or berth.
  * Both search the heading lattice to `target` (else the goal) without voyage smoothing. */
@@ -160,7 +161,9 @@ export function beginShipPlanningJob(ship:Unit,goal:ShipCourseGoal,map:GameMap,u
     id:source.id,owner:source.owner,kind:source.kind,hp:source.hp,maxHp:source.maxHp,x:source.x,y:source.y,
     radius:source.radius,cargoCapacity:source.cargoCapacity,deckScale:source.deckScale,
     sailing:{heading:source.sailing?.heading??0}})) as Unit);
-  const solids=freezeShipCollisionSolids(map);
+  // Freeze only the same neighborhood as vessel traffic, expanded by the
+  // own hull's reach. Live helm checks still see every physical solid.
+  const solids=freezeShipCollisionSolids(map,frozen,reach+polygonRadius(shipProfile(frozen)!.hull));
   const limited=shipTraffic(frozen,traffic,reach,undefined,solids).hasTraffic;
   save(ship,{version:2,phase:'direct',ship:frozen,traffic,solids,goal:{...goal},windKey:windAt(map,ship).key,guard:guard(ship),
     ...(anchor?{anchor:{...anchor}}:{}),...(recovery?{recovery:true}:{}),...(limited?{limited:true}:{}),
