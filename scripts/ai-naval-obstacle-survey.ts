@@ -17,7 +17,7 @@ if (flag(args, 'match')) for (const evaluation of input.evaluations) evaluation.
 const matches = input.evaluations.flatMap(evaluation => evaluation.matches);
 if (!matches.length) throw new Error('No matches selected');
 mkdirSync(outDir, { recursive: true });
-writeFileSync(join(outDir, 'manifest.json'), JSON.stringify({ source: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), rival, workers, names: matches.map(match => match.name) }));
+writeFileSync(join(outDir, 'manifest.json'), JSON.stringify({ source: flag(args, 'source') ?? execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), rival, workers, names: matches.map(match => match.name) }));
 const report = await runBenchmarkParallel(input, { workers, workerModule: new URL('../src/ai/benchmark/naval-obstacle-worker.ts', import.meta.url).href });
 writeFileSync(join(outDir, 'report.json'), JSON.stringify(report));
 console.log(JSON.stringify({ rival, games: report.matchCount, outDir, elapsedMs: report.elapsedMs }));
