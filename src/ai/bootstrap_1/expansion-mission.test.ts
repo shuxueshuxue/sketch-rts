@@ -11,9 +11,10 @@ import { navalObservedPlanner } from '../benchmark/naval-room-worker';
 import { runAiCommandEntriesFromScripts } from '../policy/script-runner';
 import { bootstrapEconomy } from './economy';
 import { miningAssignments } from './mining-assignments';
-import { planBootstrapGeneral } from './mine-defense';
+import { mainArmyIntel, miningRally, planBootstrapGeneral } from './mine-defense';
 import { bootstrapPolicyContext } from './policy';
 import { v6ExpansionPoint } from '../policy/v6/economy';
+import { expansionMissionCommands } from './expansion-mission';
 
 function expansionScene(invaded = false) {
   let draft = sketchScene('finish-one-expansion').map('openClaims').replaceDefaults()
@@ -99,6 +100,51 @@ it('sends a small escort along the traveling builder’s road while the other so
   issueCommandFrame(game, commands.map(command => ({ playerId: 'us', scriptId: 'v6General', command })));
   for (let tick = 0; tick < 60; tick++) stepGame(game);
   expect(game.units.filter(unit => unit.id.startsWith('screen-') && Math.hypot(unit.x - mine.x, unit.y - mine.y) < 180)).toHaveLength(3);
+});
+
+it('yields both arrived and traveling escorts to a mine rally, then fills the escort from the remaining nearby soldiers', () => {
+  const { game, memory, context } = expansionScene();
+  game.units = game.units.filter(unit => unit.owner !== 'neutral');
+  delete memory.v6!.creep;
+  const mine = game.resources.find(resource => resource.id === 'natural')!;
+  const site = v6ExpansionPoint(snapshotGame(game), 'us', mine);
+  issuePlayerCommand(game, 'us', { type: 'build', unitId: 'builder', buildingKind: 'townHall', ...site });
+  const builder = game.units.find(unit => unit.id === 'builder')!;
+  const soldiers = game.units.filter(unit => unit.id.startsWith('screen-'));
+  soldiers.forEach((unit, index) => Object.assign(unit, { x: 1560, y: 1100 + index * 20 }));
+  let { snapshot, options } = context();
+  const first = expansionMissionCommands(snapshot, 'us', options, mainArmyIntel(snapshot, 'us', options))!;
+  const escortIds = first.filter(command => command.type === 'attackMove'
+    && Math.hypot(command.x - builder.x, command.y - builder.y) <= 250)
+    .flatMap(command => 'unitIds' in command ? command.unitIds : []);
+  expect(escortIds).toHaveLength(3);
+  const hall = game.buildings.find(building => building.owner === 'us')!;
+  memory.miningDefense = { hallId: hall.id, point: { x: hall.x + 150, y: hall.y },
+    unitIds: escortIds, arrivedIds: escortIds.slice(0, 2), attackerIds: [],
+    protectedHp: { [hall.id]: hall.hp }, phase: 'fight' };
+  // No current intrusion: the original raid left, but the last defender has not reached the rally yet.
+  for (const id of escortIds.slice(0, 2)) Object.assign(soldiers.find(unit => unit.id === id)!, memory.miningDefense.point);
+  ({ snapshot, options } = context());
+  expect(mainArmyIntel(snapshot, 'us', options).intrusion).toBeUndefined();
+  expect(memory.landExpansion!.paused).toBe(true);
+  expect(memory.landExpansion!.interruptions.at(-1)?.reason).toBe('mining-threat');
+  expect(memory.landExpansion!.unitIds.some(id => escortIds.includes(id))).toBe(false);
+  expect(escortIds.some(id => memory.unitClaims[id]?.kind === 'expansion')).toBe(false);
+  expect(expansionMissionCommands(snapshot, 'us', options, mainArmyIntel(snapshot, 'us', options))).toBeUndefined();
+  // The rally releases its members only after its final reinforcement arrives.
+  Object.assign(soldiers.find(unit => unit.id === escortIds[2])!, memory.miningDefense.point);
+  snapshot = snapshotGame(game);
+  miningRally.run(snapshot, 'us', options);
+  expect(memory.miningDefense).toBeUndefined();
+  for (const unit of soldiers.filter(unit => !escortIds.includes(unit.id))) Object.assign(unit, { x: builder.x, y: builder.y });
+  ({ snapshot, options } = context());
+  const resumed = expansionMissionCommands(snapshot, 'us', options, mainArmyIntel(snapshot, 'us', options))!;
+  const replacement = resumed.filter(command => command.type === 'attackMove'
+    && Math.hypot(command.x - builder.x, command.y - builder.y) <= 250)
+    .flatMap(command => 'unitIds' in command ? command.unitIds : []);
+  expect(memory.landExpansion!.paused).toBeUndefined();
+  expect(replacement).toHaveLength(3);
+  expect(replacement.some(id => escortIds.includes(id))).toBe(false);
 });
 
 it('releases an existing unfunded task after the last income is lost instead of reserving its army forever', () => {

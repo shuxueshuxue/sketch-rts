@@ -19,11 +19,17 @@ import { bootstrapExpansionMine } from './expansion-target';
 import { bootstrapCampApproach, chooseBootstrapCamp, startBootstrapCamp } from './camp-geometry';
 import { miningJobDefenseTarget } from './mining-job-defense';
 import { mineClaimedByAlly } from '../policy/mine-claims';
+import { miningRallyAssignment } from './mining-rally';
 
 /** A room army owns one mining objective through clearing, escort and construction. */
 export function prepareExpansionMission(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel) {
   const memory = options.memory, v6 = v6Memory(options);
   let task = memory.landExpansion;
+  // Arrived defenders return to the general's combat view, but still belong to the mine defense.
+  // Neither retaining yesterday's escorts nor recruiting today may take them from that task.
+  const defending = new Set(memory.miningDefense?.unitIds);
+  if (task) task.unitIds = task.unitIds.filter(id => !defending.has(id));
+  for (const id of defending) if (memory.unitClaims[id]?.kind === 'expansion') delete memory.unitClaims[id];
   if (activeMiningBaseCount(snapshot, owner) === 0
     && snapshot.players[owner]!.gold < BUILDING_DEFS.townHall.cost
     && !snapshot.buildings.some(building => building.owner === owner && building.kind === 'townHall' && !building.complete)
@@ -50,7 +56,7 @@ export function prepareExpansionMission(snapshot: GameSnapshot, owner: PlayerId,
     // A purchasing visit is optional. Recall the opening courier to the expansion screen; ferries and medical care
     // keep their existing ownership. Claims below prevent another shopping trip from immediately replacing this one.
     const courier = memory.mercenaryCourier && snapshot.units.find(unit => unit.id === memory.mercenaryCourier!.unitId);
-    if (courier && !courier.deck && courier.hp === courier.maxHp && courier.order.type !== 'board') {
+    if (courier && !defending.has(courier.id) && !courier.deck && courier.hp === courier.maxHp && courier.order.type !== 'board') {
       delete memory.mercenaryCourier;
       task.unitIds.push(courier.id);
       memory.unitClaims[courier.id] = { kind: 'expansion', targetId: next.id, x: next.x, y: next.y,
@@ -58,11 +64,15 @@ export function prepareExpansionMission(snapshot: GameSnapshot, owner: PlayerId,
     }
   }
   const target = snapshot.resources.find(mine => mine.id === task.mineId)!;
-  const homeThreat = intel.intrusion?.attackers.find(unit => intel.ownHalls.some(hall =>
-    groundThreatWithin(snapshot, unit, hall, 900)));
+  // Use the general's uncovered intrusion, including a threatened mine-mouth tower. A second,
+  // narrower hall-distance check could send the army away one think before the rally starts.
+  const homeThreat = intel.intrusion?.attackers[0];
   const atMine = intel.enemies.flatMap(enemy => enemy.army).filter(unit => groundThreatWithin(snapshot, unit, target, 800));
   const mineThreat = strengthOf(atMine) > intel.power * .5 ? atMine[0] : undefined;
-  const miningThreat = miningJobDefenseTarget(snapshot, owner, intel, options);
+  // A rally remains a real defense assignment between intrusion samples and while its last
+  // reinforcements arrive. Only the rally selector may release it after the mine is safe.
+  const rally = miningRallyAssignment(snapshot, owner, options, intel);
+  const miningThreat = rally ?? miningJobDefenseTarget(snapshot, owner, intel, options);
   const reason = homeThreat ? 'home-threat' : miningThreat ? 'mining-threat' : mineThreat ? 'mine-threat' : undefined;
   if (reason) {
     if (!task.paused) {
@@ -71,11 +81,13 @@ export function prepareExpansionMission(snapshot: GameSnapshot, owner: PlayerId,
       recordPlay(v6, `expansion:interrupted:${reason}`);
     }
     task.paused = true;
+    for (const id of task.unitIds) if (memory.unitClaims[id]?.kind === 'expansion') delete memory.unitClaims[id];
   } else {
     delete task.paused;
-    const alive = new Set(snapshot.units.filter(unit => unit.owner === owner && !unit.deck && unit.order.type !== 'board').map(unit => unit.id));
+    const alive = new Set(snapshot.units.filter(unit => unit.owner === owner && !defending.has(unit.id)
+      && !unit.deck && unit.order.type !== 'board').map(unit => unit.id));
     task.unitIds = [...new Set([...task.unitIds.filter(id => alive.has(id)), ...availableV6Army(snapshot, options, intel)
-      .filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0).map(unit => unit.id)])];
+      .filter(unit => !defending.has(unit.id) && !isBacklineKind(unit) && unit.attackDamage > 0).map(unit => unit.id)])];
     // Reuse the existing errand claim contract. New shop/mercenary trips cannot borrow the expansion's screen.
     for (const id of task.unitIds) memory.unitClaims[id] = { kind: 'expansion', targetId: target.id,
       x: target.x, y: target.y, sinceTick: snapshot.tick, expiresTick: snapshot.tick + 30 };
@@ -87,7 +99,8 @@ export function expansionMissionCommands(snapshot: GameSnapshot, owner: PlayerId
   const task = prepareExpansionMission(snapshot, owner, options, intel);
   if (!task || task.paused || task.stage === 'complete') return undefined;
   const mine = snapshot.resources.find(mine => mine.id === task.mineId)!, memory = v6Memory(options);
-  const front = availableV6Army(snapshot, options, intel).filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0);
+  const front = availableV6Army(snapshot, options, intel).filter(unit => !options.memory.miningDefense?.unitIds.includes(unit.id)
+    && !isBacklineKind(unit) && unit.attackDamage > 0);
   if (!front.length) return [];
   const camps = neutralCamps(snapshot), guard = camps.find(camp => distance(camp.center, mine) <= EXPANSION_GUARD_RANGE);
   if (guard) {
