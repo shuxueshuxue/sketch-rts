@@ -6,6 +6,8 @@ import { runGameLoop } from '../../sdk/game-runner';
 import type { AiPolicyMemory } from '../memory';
 import type { AiGameAgent } from '../game-runner';
 import { navalObservedPlanner } from '../benchmark/naval-room-worker';
+import { AI_SCRIPT_VERSIONS } from '../policy';
+import { bootstrapScripts } from './policy';
 
 type Saved = { snapshot: GameSnapshot; nextId: number; activePlayers: string[];
   memories: Record<string, AiPolicyMemory>; agents: Record<string, AiGameAgent>; thinkInterval: number };
@@ -55,8 +57,13 @@ it('accumulates the real summoner holds across defenses and physically sets out 
   expect(advanced).toBe(true);
 });
 
-it('takes the historic knight 10:00 hold forward and keeps real troops by the enemy mine through 14:30', () => {
+it('keeps the historic knight ground pressure by the enemy mine when neither navy borrows the land front', () => {
   const saved = savedScene('knight-territory-10m');
+  // Isolate the land-pressure contract. A working ferry can now borrow troops
+  // from this old mixed naval/land frame and change the opponent's next raid.
+  // Keep the original physical post and occupation-duration assertions below.
+  saved.agents.p1!.scripts = AI_SCRIPT_VERSIONS.v9.filter(script => script.id !== 'naval');
+  saved.agents.v9_knight!.scripts = bootstrapScripts('v9_knight').filter(script => script.id !== 'naval');
   const game = createGame(saved.snapshot.map.id, { players: saved.activePlayers });
   restoreSnapshotIntoGame(game, structuredClone(saved.snapshot), saved.nextId);
   game.activePlayers = [...saved.activePlayers];
@@ -82,4 +89,34 @@ it('takes the historic knight 10:00 hold forward and keeps real troops by the en
   expect(reached).toBeDefined();
   expect(peakFront).toBeGreaterThanOrEqual(3);
   expect(closeTicks).toBeGreaterThan(45 * 20);
+});
+
+it('still occupies the real knight post with both navies active, yielding to an actual home raid', () => {
+  const saved = savedScene('knight-territory-10m');
+  const game = createGame(saved.snapshot.map.id, { players: saved.activePlayers });
+  restoreSnapshotIntoGame(game, structuredClone(saved.snapshot), saved.nextId);
+  game.activePlayers = [...saved.activePlayers];
+  const memories = structuredClone(saved.memories);
+  let reached = false, peakFront = 0, closeTicks = 0, defendedRaid = false;
+  runGameLoop({ name: 'knight-pressure-with-live-navies', game, agents: saved.agents, maxTicks: 17400,
+    thinkInterval: saved.thinkInterval, commandPlanner: navalObservedPlanner(memories),
+  }, { onStep({ game }) {
+    const memory = memories.v9_knight!;
+    reached ||= memory.territory?.objective?.reachedTick !== undefined;
+    const mine = game.resources.find(mine => mine.id === 'gold-gen-5')!;
+    const close = game.units.filter(unit => unit.owner === 'v9_knight' && unit.kind !== 'worker' && unit.attackDamage > 0
+      && Math.hypot(unit.x - mine.x, unit.y - mine.y) <= 1200).length;
+    peakFront = Math.max(peakFront, close);
+    if (close >= 2) closeTicks++;
+    const defense = memory.v6?.general;
+    const hall = defense?.mode === 'defend' && game.buildings.find(building => building.id === defense.targetHallId);
+    if (hall && game.units.some(unit => unit.owner === 'p1' && !unit.deck && unit.attackDamage > 0
+      && Math.hypot(unit.x - hall.x, unit.y - hall.y) < 1000)) defendedRaid = true;
+  } });
+  expect(reached).toBe(true);
+  expect(peakFront).toBeGreaterThanOrEqual(3);
+  // A physically present raid may recall the post. Without one, the same
+  // sustained occupation required by the isolated ground scene still applies.
+  if (!defendedRaid) expect(closeTicks).toBeGreaterThan(45 * 20);
+  else expect(closeTicks).toBeGreaterThan(0);
 });

@@ -14,6 +14,7 @@ import { distance } from '../policy/spatial';
 import { readV6Intel } from '../policy/v6/intel';
 import type { AiPolicyContext } from '../policy/types';
 import { canSupply } from '../policy/world-model';
+import { ferryTargetAvailable } from '../policy/ferry-retries';
 
 /** Recruit idle, unassigned home troops; a defense or recovery task keeps its people. */
 export function reinforcementCrew(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, candidates: readonly Unit[], landing?: { x: number; y: number }) {
@@ -56,7 +57,8 @@ function reinforcementRoute(snapshot: GameSnapshot, owner: PlayerId, options: Ai
   const trips = fronts.flatMap(front => {
     const to = coastOnWater(snapshot, front, boat);
     const mine = snapshot.resources.filter(mine => sameGround(snapshot.map, front, mine)).sort((a, b) => distance(a, front) - distance(b, front))[0];
-    if (!to || !mine || reinforcementCrew(snapshot, owner, options, crew, to).length <= REINFORCEMENT_DISPATCH_SIZE
+    if (!to || !mine || !ferryTargetAvailable(options.memory.naval ?? {}, boat.id, mine.id)
+      || reinforcementCrew(snapshot, owner, options, crew, to).length <= REINFORCEMENT_DISPATCH_SIZE
       || !landingSafe(snapshot, owner, options, boat, to) || outgunned(snapshot, owner, options, to, own)) return [];
     const road = walkingDistance(snapshot.map, from, to, 'sea');
     return road === undefined ? [] : [{ targetId: mine.id, to, road, base: 'complete' in front }];
@@ -74,6 +76,7 @@ export function planReinforcementFerries(snapshot: GameSnapshot, owner: PlayerId
   if (!fronts.length) return;
   const reserved = navalServices(snapshot, owner, options).reserved;
   const boats = own.filter(boat => isTransportKind(boat.kind) && !reserved.has(boat.id) && naval.outfit?.shipId !== boat.id
+    && (naval.ferryRetryUntil?.[boat.id] ?? 0) <= snapshot.tick
     && !shipNeedsRepair(snapshot, boat) && !shipPassengers(snapshot.units, boat).length
     && !snapshot.units.some(unit => unit.order.type === 'board' && unit.order.transportId === boat.id)
     && (!ferries[boat.id] || ferries[boat.id]!.purpose !== 'creep' && ferries[boat.id]!.purpose !== 'reinforce'

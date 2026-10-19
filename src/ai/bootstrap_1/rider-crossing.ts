@@ -16,6 +16,7 @@ import { distance, type Point } from '../policy/spatial';
 import { readV6Intel } from '../policy/v6/intel';
 import type { AiPolicyContext } from '../policy/types';
 import { mountedThreatReach, THINK_TICKS } from './mounted-micro';
+import { ferryTargetAvailable } from '../policy/ferry-retries';
 
 /** Rank land arrivals separately from sea-route length, which is not a sailing ETA. */
 export function riderFerryCrew(snapshot: GameSnapshot, soldiers: Unit[], shore: Point, boat: Unit, options: AiPolicyContext) {
@@ -48,7 +49,8 @@ export function planRiderCrossing(snapshot: GameSnapshot, owner: PlayerId, optio
     && !snapshot.units.some(unit => isOpponentOwner(snapshot, owner, unit.owner, options) && sameGround(snapshot.map, unit, mine))
     && !snapshot.buildings.some(building => isOpponentOwner(snapshot, owner, building.owner, options) && sameGround(snapshot.map, building, mine)));
   const trips = boats.flatMap(boat => riders.flatMap(rider => mines.flatMap(mine => {
-    if (sameGround(snapshot.map, rider, mine)) return [];
+    if ((naval.ferryRetryUntil?.[boat.id] ?? 0) > snapshot.tick
+      || !ferryTargetAvailable(naval, boat.id, mine.id) || sameGround(snapshot.map, rider, mine)) return [];
     const guards = camps.guards(mine);
     if (!guards.length) return [];
     const from = coastOnWater(snapshot, rider, boat), to = coastOnWater(snapshot, mine, boat);

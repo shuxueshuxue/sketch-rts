@@ -33,6 +33,8 @@ import { buildings, units } from "./snapshot";
 import { distance } from "./spatial";
 import { mineClaimedByAlly } from './mine-claims';
 import { isDefenseTaskClaim } from './claims';
+import { incomingLandArmy } from './land-arrivals';
+import { ferryTargetAvailable } from './ferry-retries';
 import { chooseNavalMine } from './naval-mines';
 import type { AiPolicyContext } from "./types";
 import { attackMargin } from "./v6/general";
@@ -550,8 +552,8 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
             .filter(route => route.from && route.to && !sameGround(map, route.worker, route.mine))
             .sort((a, b) => distance(a.worker, boat) - distance(b.worker, boat))[0];
         const target = evacuation?.hall ?? relocation?.mine ?? island?.mine ?? assault?.target;
-        if (!target) {
-            decision('no-target');
+        if (!target || !ferryTargetAvailable(memory, boat.id, target.id)) {
+            decision(target ? 'target-retries-exhausted' : 'no-target');
             return [];
         }
         const sources = [...halls, ...own.filter(unit => !unit.deck && unitMover(unit.kind) === "land" && unit.kind !== "worker" && unit.expiresTick === undefined)];
@@ -570,6 +572,12 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
         }
         mission = ferries[boat.id] = { purpose: evacuation ? "evacuate" : relocation ? "rebase" : island ? "settle" : "assault", targetId: target.id, from: shore, to: landing, phase: "loading", crewIds: [], sinceTick: snapshot.tick };
     }
+    if (mission.phase !== 'return' && !ferryTargetAvailable(memory, boat.id, mission.targetId)) {
+        decision('target-retries-exhausted');
+        const cancelled = cancelFerry(snapshot, boat, mission, options);
+        if (!shipPassengers(snapshot.units, boat).length) delete ferries[boat.id];
+        return cancelled;
+    }
     // A loaded colony expedition can take newly available income before it sails.
     if (mission.purpose === 'settle' && mission.phase === 'loading' && island && mission.targetId !== island.mine.id) {
         const landing = coastOnWater(snapshot, island.mine, boat);
@@ -580,20 +588,30 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
             delete mission.progress;
         }
     }
-    const aboardIds=shipPassengers(snapshot.units,boat).map(unit=>unit.id).join('|'), progress=mission.progress;
-    const combatAvailable = own.some(unit => unit.kind !== 'worker' && unitMover(unit.kind) === 'land'
-        && unit.expiresTick === undefined && combatCapability(snapshot, unit).armed);
-    const productionArrived = mission.phase === 'loading' && priorDecision === 'no-combat-crew' && combatAvailable;
+    const aboard = shipPassengers(snapshot.units, boat), aboardIds = aboard.map(unit => unit.id).join('|'), progress = mission.progress;
+    const priorCrew = progress?.crew.split('|').filter(Boolean) ?? [];
+    // A casualty or a different array order is not loading/unloading. Keep
+    // the last physical progress clock when a stationary boat loses a passenger.
+    const transferred = aboard.some(unit => !priorCrew.includes(unit.id)) || priorCrew.some(id =>
+        !aboard.some(unit => unit.id === id) && (snapshot.units.some(unit => unit.id === id && unit.hp > 0 && !unit.deck)
+            || snapshot.effects.some(effect => effect.type === 'unload' && effect.unitId === id)));
     // A precise berth turn moves the hull while its center stays still. Measure
     // the bow's angular travel against the same distance gate as translation.
-    if(!progress || productionArrived || progress.phase!==mission.phase || progress.crew!==aboardIds || distance(boat,progress)>32
+    if(!progress || transferred || distance(boat,progress)>32
         || Math.abs(headingDifference(progress.heading,boat.sailing!.heading))*shipProfile(boat)!.length/2>32)
         mission.progress={tick:snapshot.tick,x:boat.x,y:boat.y,heading:boat.sailing!.heading,phase:mission.phase,crew:aboardIds};
-    else if(snapshot.tick-progress.tick>seconds(40) && !((mission.purpose === 'advance' || mission.purpose === 'assault')
-        && mission.phase === 'loading' && !combatAvailable)){
-        decision('stalled-route');
+    else if(snapshot.tick-progress.tick>seconds(40)){
+        const reason = priorDecision ?? 'stalled-route';
+        decision(`stalled:${reason}`);
+        const failures = (memory.ferryFailures ??= {})[boat.id] ??= {};
+        failures[mission.targetId] = { attempts: (failures[mission.targetId]?.attempts ?? 0) + 1,
+            tick: snapshot.tick, reason };
         (memory.ferryRetryUntil ??= {})[boat.id]=snapshot.tick+seconds(20);
-        if(mission.phase==='return' && !aboardIds){delete ferries[boat.id];return [{type:'stop',unitIds:[boat.id]}];}
+        if(!aboardIds){
+            const cancelled = cancelFerry(snapshot,boat,mission,options);
+            delete ferries[boat.id];
+            return [...cancelled, {type:'stop',unitIds:[boat.id]}];
+        }
         mission.progress={tick:snapshot.tick,x:boat.x,y:boat.y,heading:boat.sailing!.heading,phase:'return',crew:aboardIds};
         return cancelFerry(snapshot,boat,mission,options);
     }
@@ -713,7 +731,6 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     const soldiers = orderCrew(availableSoldiers.filter(unit => ferryCrewTaskAvailable(unit, options)), loadGround, boat);
     if (mission.purpose === 'reinforce' && !cargo.length && !boarding.length && soldiers.length <= REINFORCEMENT_DISPATCH_SIZE) {
         decision('await-reinforcement-batch');
-        mission.progress!.tick = snapshot.tick;
         return boat.order.type === 'idle' ? [] : [{ type: 'stop', unitIds: [boat.id] }];
     }
     // Load engineers first. Reserving only their weight did not reserve floor
@@ -721,11 +738,23 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     const engineersAboard=cargo.filter(unit=>unit.kind==='worker').length;
     const engineersReady=mission.purpose!=='settle' || engineersAboard>=2
         || engineersAboard>=1 && (workerCount<2 || snapshot.tick-mission.progress!.tick>seconds(20));
-    const threats = snapshot.units.filter(unit => isOpponentOwner(snapshot, owner, unit.owner, options) && sameGround(map, unit, loadGround) && combatCapability(snapshot,unit).armed);
+    // Count arrivals at our bases, not every enemy sharing the continent. The
+    // mine garrison uses this same native-road forecast. A live intrusion also
+    // retains its full attack group; it is not capped to a two-fighter raid.
+    const homeHalls = halls.filter(hall => sameGround(map, hall, loadGround));
+    const threats = new Set(homeHalls.flatMap(hall => incomingLandArmy(snapshot, owner, options, hall).map(({ unit }) => unit)));
+    const intrusion = readV6Intel(snapshot, owner, options).intrusion;
+    if (intrusion && sameGround(map, intrusion.building, loadGround))
+        for (const unit of intrusion.attackers) threats.add(unit);
+    const reserveStrength = strengthOf([...threats]) * 1.3;
     let strengthLeft = strengthOf(availableSoldiers);
+    let defenseHeld = false;
     for (const soldier of mission.purpose === "rebase" || !engineersReady ? [] : soldiers) {
-        if (bodyMass(soldier) > room || (mission.purpose !== "evacuate" && strengthLeft - unitStrengthForFerry(soldier) < strengthOf(threats) * 1.3))
+        if (bodyMass(soldier) > room) continue;
+        if (mission.purpose !== "evacuate" && strengthLeft - unitStrengthForFerry(soldier) < reserveStrength) {
+            defenseHeld = true;
             continue;
+        }
         crew.push(soldier);
         room -= bodyMass(soldier);
         strengthLeft -= unitStrengthForFerry(soldier);
@@ -754,7 +783,8 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     const combatTrip = mission.purpose === 'assault' || mission.purpose === 'advance' || mission.purpose === 'reinforce';
     if (mission.purpose === 'reinforce') mission.payloadIds = cargo.filter(unit => unit.owner === owner && unit.kind !== 'worker' && unit.expiresTick === undefined).map(unit => unit.id);
     const payloadReady = combatTrip ? hasSoldiers : mission.purpose === 'rebase' || hasSoldiers || !guardsRemain;
-    if (combatTrip && !hasSoldiers) decision(boarding.some(unit => unit.kind !== 'worker') || crew.some(unit => unit.kind !== 'worker') ? 'await-combat-boarding' : 'no-combat-crew');
+    if (combatTrip && !hasSoldiers) decision(boarding.some(unit => unit.kind !== 'worker') || crew.some(unit => unit.kind !== 'worker')
+        ? 'await-combat-boarding' : defenseHeld ? 'home-raid-reserve' : 'no-combat-crew');
     // Do not repeatedly drown the economy in a blockade the escort has yet to clear.
     if (outgunned(snapshot, owner, options, mission.to, coveringFleet(own, mission.to))) {
         decision('destination-water-held');

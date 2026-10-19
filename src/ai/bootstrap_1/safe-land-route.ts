@@ -1,5 +1,4 @@
-import { groundSteeringRoute, routeClearsDisks, routeLeavesDisks, routeTravelTicks } from '../../shared/route-selection';
-import { groundTravelCost } from '../../shared/terrain';
+import { routeClearsDisks, routeLeavesDisks } from '../../shared/route-selection';
 import { MOVE_ORDER_ARRIVAL_RANGE } from '../../shared/movement-rules';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { Building, GameSnapshot, PlayerId, Unit } from '../../shared/types';
@@ -8,10 +7,10 @@ import type { AiPolicyContext } from '../policy/types';
 import { isEnemyOwner } from '../policy/ownership';
 import { castThreatReach, mountedThreatReach, THINK_TICKS } from './mounted-micro';
 
-type Road = { points: ReturnType<typeof groundSteeringRoute>; ticks: number };
+import { nativeLandRoad, withNativeLandRoadReuse } from '../policy/land-road';
+export { nativeLandRoad } from '../policy/land-road';
 type Threat = Unit | Building;
 type RoadReuse = {
-  roads: WeakMap<Unit, Map<string, Road | undefined>>;
   checks: WeakMap<Unit, Map<string, { foes: readonly Threat[]; clear: boolean }>>;
 };
 let roadReuse: WeakMap<GameSnapshot, RoadReuse> | undefined;
@@ -23,14 +22,14 @@ export function withLandRoadReuse<T>(run: () => T): T {
   // fresh scope. Budget views have distinct snapshot keys. Finally also clears on error.
   const previous = roadReuse;
   roadReuse = new WeakMap();
-  try { return run(); }
+  try { return withNativeLandRoadReuse(run); }
   finally { roadReuse = previous; }
 }
 
 function reuseFor(snapshot: GameSnapshot) {
   if (!roadReuse) return undefined;
   let reuse = roadReuse.get(snapshot);
-  if (!reuse) roadReuse.set(snapshot, reuse = { roads: new WeakMap(), checks: new WeakMap() });
+  if (!reuse) roadReuse.set(snapshot, reuse = { checks: new WeakMap() });
   return reuse;
 }
 
@@ -89,38 +88,6 @@ export function retreatLandRoad(snapshot: GameSnapshot, unit: Unit, goal: Point,
     return routeLeavesDisks(points, disks);
   });
   return clear ? { points, ticks } : undefined;
-}
-
-/** Shared geometry for admission and retreats; threat policies remain separate. */
-export function nativeLandRoad(snapshot: GameSnapshot, unit: Unit, goal: Point) {
-  const reuse = reuseFor(snapshot);
-  if (!reuse) return computeNativeLandRoad(snapshot, unit, goal);
-  let goals = reuse.roads.get(unit);
-  if (!goals) reuse.roads.set(unit, goals = new Map());
-  const key = `${goal.x}:${goal.y}`;
-  if (!goals.has(key)) goals.set(key, computeNativeLandRoad(snapshot, unit, goal));
-  const road = goals.get(key);
-  // Callers own their returned road, just as they do outside the reuse scope.
-  if (!road) return undefined;
-  const points: Road['points'] = [{ ...road.points[0] }, ...road.points.slice(1).map(point => ({ ...point }))];
-  return { ticks: road.ticks, points };
-}
-
-function computeNativeLandRoad(snapshot: GameSnapshot, unit: Unit, goal: Point) {
-  const invalid = (from: Point, to: Point, value: unknown) => new Error(
-    `Invalid native land travel for ${unit.id} (${unit.kind}, speed ${unit.speed}): (${from.x},${from.y}) -> (${to.x},${to.y}), cost/ticks ${String(value)}`);
-  if (!Number.isFinite(unit.speed) || unit.speed <= 0) throw invalid(unit, goal, unit.speed);
-  if (routeTravelTicks(snapshot.map, unit, goal, 'land', unit.speed) === undefined) return undefined;
-  const points = groundSteeringRoute(snapshot.map, unit, goal);
-  let cost = 0;
-  for (let index = 1; index < points.length; index++) {
-    const segment = groundTravelCost(snapshot.map, points[index - 1]!, points[index]!);
-    if (segment === undefined || !Number.isFinite(segment)) throw invalid(points[index - 1]!, points[index]!, segment);
-    cost += segment;
-  }
-  const ticks = Math.ceil(cost / unit.speed * SIM_TICKS_PER_SECOND);
-  if (!Number.isFinite(ticks)) throw invalid(unit, goal, ticks);
-  return { points, ticks };
 }
 
 /** Avoid-combat movement suppresses native normal fire; active casts remain possible within the next think. */
