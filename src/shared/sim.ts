@@ -1,4 +1,5 @@
 import { standingBodies, standsAsSeen, type StructureBody } from "./structure-bodies";
+import { automaticLeash, guardPosition, GUARD_LEASH_RANGE, hasHumanGuard, setGuardPosition } from './guard-position';
 import { addGold, roundGold } from "./gold";
 import { unitControlsMercenaryCamp } from './mercenary-camp';
 import { boardingHoldShips, cancelCrewRendezvous, prepareCrewRendezvous } from './crew-rendezvous';
@@ -91,6 +92,7 @@ import type { AbilityKind, Building, BuildingKind, GameCommand, GameMap, GameSet
 export type CreateGameOptions = GameSetupOptions;
 
 export type Game = GameSnapshot & {
+  aiPlayers: PlayerId[];
   /** Derived at tick boundaries; never serialized or used as a source of permanent stats. */
   veteranFrame?: Map<string, VeteranUnitModifiers> | undefined;
   veteranAutocastFrame?: VeteranAutocastFrame | undefined;
@@ -122,6 +124,7 @@ export type SimObserver = {
 };
 
 export const GAME_SNAPSHOT_RESTORE_KEYS = [
+  "aiPlayers",
   "equipmentVersion",
   "rateUnits",
   "tick",
@@ -188,9 +191,8 @@ const NEUTRAL_ASSIST_RANGE = 360;
 // Only self-directed behaviour answers. A move, an explicit attack or a worker job is a command and is never overridden,
 // which keeps retreats, focus fire and kiting in the players' hands.
 const HELP_CALL_RANGE = 300;
-// Self-directed chases (idle acquisition, retaliation, answering a call) give up this far from where the unit stood, so one
-// raider cannot drag a base's defenders across the map. Commanded attacks and attack-moves are not leashed.
-const GUARD_LEASH_RANGE = 600;
+// Human self-directed chases retain the last commanded station (see guard-position).
+// AI troops retain their existing per-engagement origin. Explicit attacks and attack-moves are unbounded.
 // Threat: an enemy that is attacking our side outranks a bystander about 100px nearer.
 const DEFAULT_PLAYERS: PlayerId[] = ["player", "enemy"];
 const DEFAULT_TEAMS: Record<string, string> = { player: "player", enemy: "enemy", enemy2: "enemy2" };
@@ -247,6 +249,7 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
   const generated = layout ? generateMap(layout, activePlayers, layoutTeams) : undefined;
   const shops = (generated?.sites ?? []).filter((site) => site.kind === "shop").map((site, index) => createShop(`shop-${index + 1}`, site.x, site.y));
   const game = {
+    aiPlayers: [...aiPlayers],
     equipmentVersion: 1,
     rateUnits: "perSecond",
     tick: 0,
@@ -288,6 +291,7 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
       initializeShipEquipment({...this,units:[unit]});
       normalizeEquipment({...this,units:[unit]},true);
       refreshEquipmentMass(this,[unit]);
+      setGuardPosition(this, unit);
       return unit;
     },
   } satisfies Game;
@@ -302,6 +306,7 @@ export function createGame(mapId: MapId = DEFAULT_MAP_ID, options: CreateGameOpt
   normalizeEquipment(game,true);
   refreshEquipmentMass(game);
   keepShipsOnWater(game.map,game.units);
+  for (const unit of game.units) setGuardPosition(game, unit);
   updateSupplyState(game);
   nativeUnitSpawners.set(game, game.spawnUnit);
   setShipCollisionSolids(game.map, [...game.buildings,...(game.obstacles ?? [])]);
@@ -547,7 +552,10 @@ function applyPlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
   }
 
   if (command.type === "stop") {
-    for (const unit of unitsByIds(game, command.unitIds, owner)) assignUnitOrder(unit, { type: "idle" });
+    for (const unit of unitsByIds(game, command.unitIds, owner)) {
+      assignUnitOrder(unit, { type: "idle" });
+      if (unit.order.type === 'idle') setGuardPosition(game, unit);
+    }
     return;
   }
 
@@ -565,6 +573,7 @@ function applyPlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
     for (const unit of unitsByIds(game, command.unitIds, owner)) {
       if (unit.kind === "worker") continue;
       assignUnitOrder(unit, { type: "hold", x: unit.x, y: unit.y }, command.queued);
+      if (!command.queued && unit.order.type === 'hold') setGuardPosition(game, unit);
     }
     return;
   }
@@ -940,6 +949,7 @@ function copyUnitOrder(order:UnitOrder):UnitOrder {
 }
 export function snapshotGame(game: Game): GameSnapshot {
   const snapshot:GameSnapshot = {
+    aiPlayers: [...game.aiPlayers],
     equipmentVersion: 1,
     rateUnits: "perSecond",
     tick: game.tick,
@@ -967,6 +977,7 @@ export function snapshotGame(game: Game): GameSnapshot {
       copy.order = copyUnitOrder(unit.order);
       copy.orderQueue = unit.orderQueue?.map(copyUnitOrder) ?? [];
       if (unit.aim) copy.aim = { ...unit.aim };
+      if (unit.guardPosition) copy.guardPosition = { ...unit.guardPosition };
       if (unit.deck) copy.deck = { ...unit.deck };
       if (unit.cabin) copy.cabin = { ...unit.cabin };
       if (unit.garrison) copy.garrison = { ...unit.garrison };
@@ -1019,6 +1030,7 @@ export function snapshotGame(game: Game): GameSnapshot {
 }
 
 export function restoreSnapshotIntoGame(game: Game, snapshot: GameSnapshot, nextId: number): void {
+  game.aiPlayers = [...(snapshot.aiPlayers ?? game.aiPlayers)];
   game.equipmentVersion = 1;
   game.rateUnits = "perSecond";
   game.tick = snapshot.tick;
@@ -1134,7 +1146,7 @@ function updateConstruction(game: Game) {
     if (building.buildProgress >= building.buildTime) {
       applyDerivedBuildingStats(game, building);
       building.complete = true;
-      for (const builder of builders) builder.order = { type: "idle" };
+      for (const builder of builders) finishUnitCommand(game, builder);
       updateSupplyState(game);
     }
   }
@@ -1481,6 +1493,7 @@ function updateUnits(game: Game, defenses: ShipDefenseFrame, navalFrame: boolean
   const sourceCount = game.units.length;
   for (let i = 0; i < count; i += 1) {
     const unit = ordered[i]!;
+    if (!unit.guardPosition) setGuardPosition(game, unit);
     const navalUnitFrame = navalFrame || game.units.length !== sourceCount;
     if (unit.sailing?.pursuit && !['attack', 'attackMove', 'follow'].includes(unit.order.type) && !defenses.has(unit.id)) delete unit.sailing.pursuit;
     if(unit.aim)invalidateMovedAim(unit, weaponRules(game, unit));
@@ -1589,9 +1602,10 @@ function updateUnits(game: Game, defenses: ShipDefenseFrame, navalFrame: boolean
     }
     if(navalUnitFrame && shipProfile(unit))continue;
     if (unit.kind !== "worker") {
+      // Only a self-directed chase returns to its station. A shove alone must leave an idle unit where it lands.
       // A troop on a tower's top takes up only what it can strike from there (see @@@tower-garrison).
       const target = nearestEnemyTarget(game, unit, unit.owner === "neutral" ? 150 : unit.garrison ? unit.attackRange : AUTO_ACQUIRE_RANGE, navalUnitFrame);
-      if (target) unit.order = { type: "attack", targetId: target.id, leashX: unit.x, leashY: unit.y };
+      if (target) unit.order = { type: "attack", targetId: target.id, ...automaticLeash(game, unit) };
     }
 
   }
@@ -1618,7 +1632,7 @@ function deckGoal(unit: Unit, ship: Unit | undefined, goal: { x: number; y: numb
 function advanceMoveOrder(game: Game, unit: Unit, order: Extract<UnitOrder, { type: "move" }>, navalFrame: boolean) {
   if (unit.sailing && followQueuedShipCourse(unit, game.map, game.units, statusPace(unit))) return;
   moveToward(unit, order.x, order.y, game.map, game.units, navalFrame);
-  if (walkEnded(game, unit, order, MOVE_ORDER_ARRIVAL_RANGE)) arrive(unit, order);
+  if (walkEnded(game, unit, order, MOVE_ORDER_ARRIVAL_RANGE)) arrive(game, unit, order);
 }
 
 function updateShipOwnership(game:Game) {
@@ -1630,6 +1644,8 @@ function updateShipOwnership(game:Game) {
     const owner=occupants[0]?.owner;
     if(!owner || occupants.some(unit=>areEnemyOwners(game,owner,unit.owner)))continue;
     ship.owner=owner;ship.order={type:"idle"};ship.orderQueue=[];ship.aim=undefined;
+    delete ship.guardPosition;
+    setGuardPosition(game, ship);
     if(ship.sailing){ship.sailing.speed=0;ship.sailing.route=undefined;delete ship.sailing.pursuit;cancelShipPlanningJob(ship);}
     refreshUnitStats(game,ship);changed=true;
   }
@@ -1663,6 +1679,7 @@ function activateQueuedOrder(game:Game,unit: Unit) {
   // pending crew orders behind would send an idle ship back to its old berth.
   if(shipProfile(unit))cancelCrewRendezvous(game.units,new Set([unit.id]));
   unit.order = next;
+  if (next.type === 'hold' || next.type === 'idle') setGuardPosition(game, unit);
   if(unit.sailing?.gangway)cancelShipBoarding(unit);
   if (unit.sailing) { unit.sailing.route = undefined; delete unit.sailing.pursuit;
     cancelShipPlanningJob(unit);
@@ -1674,6 +1691,7 @@ function updateFollowOrder(game: Game, unit: Unit) {
   const order = unit.order;
   const target = game.units.find((candidate) => candidate.id === order.targetId && !areEnemyOwners(game, candidate.owner, unit.owner));
   if (!target) {
+    setGuardPosition(game, unit);
     unit.order = { type: "idle" };
     return;
   }
@@ -1765,7 +1783,7 @@ function updateAttackMoveOrder(game: Game, unit: Unit, navalFrame = true) {
   }
   if (unit.sailing) delete unit.sailing.pursuit;
   moveToward(unit, order.x, order.y, game.map, game.units, navalFrame);
-  if (walkEnded(game, unit, order, 8)) arrive(unit, order);
+  if (walkEnded(game, unit, order, 8)) arrive(game, unit, order);
 }
 
 function attackMoveTowardTarget(game: Game, unit: Unit, target: Unit | Building, navalFrame = true) {
@@ -1789,7 +1807,21 @@ function attackMoveTowardTarget(game: Game, unit: Unit, target: Unit | Building,
 function updateAttackOrder(game: Game, unit: Unit, navalFrame = true) {
   const order = unit.order;
   if (order.type !== "attack") return;
-  attackStep(game, unit, order, navalFrame, (next) => { unit.order = next; });
+  const station = order.leashX !== undefined && hasHumanGuard(game, unit) ? guardPosition(game, unit) : undefined;
+  const before = station ? { x: unit.x, y: unit.y, deck: unit.deck && { ...unit.deck } } : undefined;
+  attackStep(game, unit, order, navalFrame, (next) => {
+    // A queued explicit task takes precedence over an automatic trip home.
+    if (next.type === 'move' && next.returnToGuard && unit.orderQueue?.length) next = { type: 'idle' };
+    if (next.type === 'idle' && order.leashX === undefined) setGuardPosition(game, unit);
+    unit.order = next.type === 'idle' && !unit.orderQueue?.length && order.leashX !== undefined && hasHumanGuard(game, unit)
+      && distance(unit, guardPosition(game, unit)) >= MOVE_ORDER_ARRIVAL_RANGE ? guardReturnOrder(game, unit) : next;
+  });
+  // Routing and siege dead-zone retreat must respect the same station as a direct pursuit step.
+  if (station && before && distance(before, station) <= GUARD_LEASH_RANGE && distance(unit, station) > GUARD_LEASH_RANGE) {
+    unit.x = before.x; unit.y = before.y;
+    if (before.deck) unit.deck = before.deck;
+    returnToGuard(game, unit);
+  }
 }
 
 type AttackOrder = Extract<UnitOrder, { type: "attack" }>;
@@ -1799,8 +1831,23 @@ type AttackOrder = Extract<UnitOrder, { type: "attack" }>;
 // it does, as the attacker's order (see updateAttackOrder). A boarder fighting at a defended entry runs the same tick on
 // its board order's behalf (see @@@board-phase) and only keeps the target it is striking.
 function attackStep(game: Game, unit: Unit, order: AttackOrder, navalFrame: boolean, write: (next: UnitOrder) => void): void {
+  const humanGuard = order.leashX !== undefined && hasHumanGuard(game, unit);
+  const station = humanGuard ? guardPosition(game, unit) : undefined;
   let target = findStrikeTarget(game, order.targetId);
+  if (station && (distance(unit, station) >= GUARD_LEASH_RANGE || target && distance(target, station) > GUARD_LEASH_RANGE)) {
+    write(guardReturnOrder(game, unit));
+    return;
+  }
   if (!target) {
+    // A second local fight may continue, but it inherits the same station rather than today's position.
+    const replacement = station ? nearestEnemyTarget(game, unit, Math.max(AUTO_ACQUIRE_RANGE, unit.attackRange), navalFrame,
+      candidate => distance(candidate, station) <= GUARD_LEASH_RANGE) : undefined;
+    if (replacement) {
+      const next: AttackOrder = { ...order, targetId: replacement.id };
+      write(next);
+      attackStep(game, unit, next, navalFrame, write);
+      return;
+    }
     write({ type: "idle" });
     return;
   }
@@ -1826,9 +1873,10 @@ function attackStep(game: Game, unit: Unit, order: AttackOrder, navalFrame: bool
   }
   const gap = targetGap(unit, target, navalFrame);
   const ship = navalFrame && Boolean(shipProfile(unit));
+  if (station && distance(target, station) > GUARD_LEASH_RANGE) { write(guardReturnOrder(game, unit)); return; }
   if (!ship && backOutOfDeadZone(game, unit, target, false)) return;
   if (gap > strikeReach(unit, target)) {
-    if (isPlayerId(unit.owner) && order.leashX !== undefined && order.leashY !== undefined && distance(unit, { x: order.leashX, y: order.leashY }) > GUARD_LEASH_RANGE) {
+    if (!humanGuard && isPlayerId(unit.owner) && order.leashX !== undefined && order.leashY !== undefined && distance(unit, { x: order.leashX, y: order.leashY }) > GUARD_LEASH_RANGE) {
       write({ type: "move", x: order.leashX, y: order.leashY });
       return;
     }
@@ -1960,6 +2008,7 @@ function updateGarrisonOrder(game: Game, unit: Unit) {
   applyDerivedUnitStats(game, unit);
   invalidateSeparationFrame(game);
   settleGarrisons(game);
+  setGuardPosition(game, unit);
 }
 
 /** Sets a troop down at its tower's foot toward a point (see @@@tower-garrison). */
@@ -2026,7 +2075,7 @@ function updateBoardShipOrder(game:Game,ship:Unit) {
   }
   // Deploying completes the command. The saved connection continues to hold
   // its source station until cancelled, damaged, or a new helm order departs.
-  ship.order={type:'idle'};
+  finishUnitCommand(game, ship);
 }
 
 // @@@board-phase - Where a boarding stands, on the order itself, so the HUD, replays and tests read it instead of
@@ -2107,7 +2156,7 @@ function updateBoardOrder(game: Game, unit: Unit) {
     const goal=localToWorld(transport,point);
     if(source.id===transport.id){
       moveToward(unit,goal.x,goal.y,game.map,game.units);
-      if(distance(unit,goal)<1e-6)unit.order={type:"idle"};
+      if(distance(unit,goal)<1e-6)finishUnitCommand(game, unit);
     } else if(decksCanTransfer(source,transport,unit))moveToward(unit,goal.x,goal.y,game.map,game.units);
     return;
   }
@@ -2138,6 +2187,7 @@ function ferryUnits(game: Game, { boarding, unloading }: Ferry, starts: Readonly
     if(!ship || !isUnit(ship) || !alongside(passenger,ship))continue;
     if(!boardUnit(ship,passenger,game.units)){endOrder(game,passenger,"no-room");continue;}
     assignUnitOrder(passenger,{type:"idle"});
+    setGuardPosition(game, passenger);
     addEffect(game,"board",passenger.x,passenger.y,seconds(.4),{unitId:passenger.id,owner:passenger.owner,sourceKind:passenger.kind});
   }
   for(const ship of unloading) {
@@ -2151,7 +2201,7 @@ function ferryUnits(game: Game, { boarding, unloading }: Ferry, starts: Readonly
     // A deferred route can hold the departure pose without reaching the
     // shore. Keep even an empty ship's unload order active during that wait.
     const planning=ship.sailing?.planningJob!==undefined || ship.sailing?.planningRequestedAtTick!==undefined;
-    if(unloadCargo(game,ship)>0 || arrived || !planning && shipPassengers(game.units,ship).length===0)ship.order={type:"idle"};
+    if(unloadCargo(game,ship)>0 || arrived || !planning && shipPassengers(game.units,ship).length===0)finishUnitCommand(game, ship);
   }
 }
 
@@ -2169,6 +2219,7 @@ function unloadCargo(game: Game, ship: Unit, passengerId?: string) {
     passenger.aim=undefined;
     Object.assign(passenger,spot);
     assignUnitOrder(passenger,{type:"idle"});
+    setGuardPosition(game, passenger);
     addEffect(game,"unload",spot.x,spot.y,seconds(.4),{unitId:passenger.id,owner:passenger.owner,sourceKind:passenger.kind});
     landed++;
   });
@@ -2212,7 +2263,7 @@ function updateRepairOrder(game: Game, unit: Unit) {
   const order = unit.order;
   const building = game.buildings.find((candidate) => candidate.id === order.buildingId && candidate.owner === unit.owner);
   if (!building || building.hp <= 0) return endOrder(game, unit, "target-gone");
-  if (building.complete && building.hp >= building.maxHp) { unit.order = { type: "idle" }; return; }
+  if (building.complete && building.hp >= building.maxHp) { finishUnitCommand(game, unit); return; }
   const reached = () => buildingWorkGap(unit, building) <= BUILDING_WORK_REACH;
   if (!reached()) { errandWalk(game, unit, building, reached, "ground"); return; }
   // A site goes up with its builders' work (see updateConstruction); a standing building is mended.
@@ -2237,7 +2288,7 @@ function updateUnitRepairOrder(game: Game, worker: Unit) {
   const target = game.units.find(unit => unit.id === targetId && unit.owner === worker.owner
     && (worker.order.type !== "repairShip" || unitMover(unit.kind) === "sea"));
   if (!target) return endOrder(game, worker, "target-gone");
-  if (!unitNeedsRepair(game, target)) { worker.order = { type: "idle" }; return; }
+  if (!unitNeedsRepair(game, target)) { finishUnitCommand(game, worker); return; }
   const ship = Boolean(shipProfile(target));
   // Crew can work anywhere on their own hull; separate ground/deck units must
   // share a surface and stand within working reach.
@@ -2248,7 +2299,7 @@ function updateUnitRepairOrder(game: Game, worker: Unit) {
   };
   if (!canWorkHere()) { errandWalk(game, worker, target, canWorkHere, "ground"); return; }
   repairUnitTick(game, worker, target);
-  if (!unitNeedsRepair(game, target)) worker.order = { type: "idle" };
+  if (!unitNeedsRepair(game, target)) finishUnitCommand(game, worker);
 }
 
 function autoRepairDeckShip(game: Game, worker: Unit) {
@@ -2499,7 +2550,7 @@ function updatePickupItemOrder(game: Game, unit: Unit) {
   if (!reached()) { errandWalk(game, unit, item, reached, "ground"); return; }
   if (!freeItemSlot(game, unit, item.kind)) return endOrder(game, unit, "no-room");
   attachItemToUnit(game, item, unit);
-  unit.order = { type: "idle" };
+  finishUnitCommand(game, unit);
 }
 
 // Moves an item to a unit's position or a ship's hold or fitting (see transferRefusal). Onto an occupied carrying position
@@ -2545,7 +2596,7 @@ function updateItemErrandOrder(game: Game, unit: Unit) {
   const order = unit.order;
   if (order.type !== "itemErrand" || !isPlayerId(unit.owner)) return;
   const owner = unit.owner;
-  const end = () => { unit.order = { type: "idle" }; };
+  const end = () => finishUnitCommand(game, unit);
   const item = game.items.find(candidate => candidate.id === order.itemId);
   if (!item || item.carrierId !== unit.id) return endOrder(game, unit, "target-gone");
   const at = order.action === "use" ? itemUsePoint(game, item, order.targetId, order.x, order.y)
@@ -2716,7 +2767,7 @@ function updateCastOrder(game: Game, unit: Unit) {
   const def = ABILITY_DEFS[order.ability];
   const target = order.targetId === undefined ? undefined : findStrikeTarget(game, order.targetId);
   // Done (no reason) or ended before casting (see @@@errand).
-  const end = (reason?: OrderEndReason) => { if (reason) endOrder(game, unit, reason); else unit.order = { type: "idle" }; };
+  const end = (reason?: OrderEndReason) => { if (reason) endOrder(game, unit, reason); else { setGuardPosition(game, unit); unit.order = { type: "idle" }; } };
   // Saves can contain a cast for an ability removed from the catalog.
   if (!def) return end("refused");
   if (def.behavior === "veteran") {
@@ -2818,6 +2869,8 @@ function inChargeWindow(caster: Unit, target: Unit, def: ChargeDef) {
 function startCharge(game: Game, caster: Unit, ability: AbilityKind, target: Unit, def: ChargeDef, commanded: boolean) {
   if (!matchesUnitTarget(target, def.targets, game)) return;
   const current = caster.order.type === "charge" ? caster.order.resume : caster.order;
+  if (!commanded && hasHumanGuard(game, caster) && (current.type === 'idle' || current.type === 'attack' && current.leashX !== undefined)
+    && distance(target, guardPosition(game, caster)) + def.drive > GUARD_LEASH_RANGE) return;
   // Charged from a standstill on its own, the rider keeps an idle unit's leash back to where it stood.
   const resume: SettledUnitOrder =
     current.type === "attackMove"
@@ -2825,7 +2878,7 @@ function startCharge(game: Game, caster: Unit, ability: AbilityKind, target: Uni
       : current.type === "attack" && current.leashX !== undefined && current.leashY !== undefined
         ? { type: "attack", targetId: target.id, leashX: current.leashX, leashY: current.leashY }
         : current.type === "idle" && !commanded
-          ? { type: "attack", targetId: target.id, leashX: caster.x, leashY: caster.y }
+          ? { type: "attack", targetId: target.id, ...automaticLeash(game, caster) }
           : { type: "attack", targetId: target.id };
   caster.abilityCooldowns = withAbilityCooldown(caster, ability, def.cooldown);
   caster.order = { type: "charge", targetId: target.id, resume };
@@ -3675,7 +3728,7 @@ function takeUpAttacker(game: Game, unit: Unit, attacker: Unit | Building, victi
   const order = unit.order;
   if(shipProfile(unit) && order.type==='idle')return;
   if (order.type === "idle") {
-    if (!unit.orderQueue?.length) unit.order = { type: "attack", targetId: attacker.id, leashX: unit.x, leashY: unit.y };
+    if (!unit.orderQueue?.length) unit.order = { type: "attack", targetId: attacker.id, ...automaticLeash(game, unit) };
     return;
   }
   if (order.type === "attackMove") {
@@ -3948,9 +4001,9 @@ function nearestEnemyUnit(game: Game, owner: PlayerId, x: number, y: number, ran
 
 // The best enemy for a unit to strike within the range: none for a unit without a weapon, and only what it can reach
 // (see @@@reach).
-function nearestEnemyTarget(game: Game, unit: Unit, range: number, navalFrame = true): Unit | Building | undefined {
+function nearestEnemyTarget(game: Game, unit: Unit, range: number, navalFrame = true, accepts?: (target: Unit | Building) => boolean): Unit | Building | undefined {
   if (unit.attackDamage <= 0) return undefined;
-  return nearestEnemyTargetFromPoint(game, unit.owner, unit, range, unit, undefined, navalFrame);
+  return nearestEnemyTargetFromPoint(game, unit.owner, unit, range, unit, accepts, navalFrame);
 }
 
 // @@@building-reach - Buildings and ships are reached at their edges, other units at their centers: a footman's 48 reaches a
@@ -4303,12 +4356,28 @@ function endOrder(game: Game, unit: Unit, reason: OrderEndReason) {
   const id = `ended-${unit.id}-${game.tick}`;
   if (!game.effects.some((effect) => effect.id === id))
     game.effects.push({ id, type: "orderEnded", x: unit.x, y: unit.y, remaining: seconds(.4), duration: seconds(.4), unitId: unit.id, owner: unit.owner, sourceKind: unit.kind, orderType: unit.order.type, reason });
-  unit.order = { type: "idle" };
+  finishUnitCommand(game, unit);
 }
 
-function arrive(unit: Unit, goal: { x: number; y: number }) {
+function finishUnitCommand(game: Game, unit: Unit) {
+  setGuardPosition(game, unit);
+  unit.order = { type: 'idle' };
+}
+
+function arrive(game: Game, unit: Unit, goal: { x: number; y: number }) {
+  if (unit.order.type !== 'move' || !unit.order.returnToGuard) setGuardPosition(game, unit);
   unit.order = { type: "idle" };
   unit.arrivedAt = { x: goal.x, y: goal.y };
+}
+
+function guardReturnOrder(game: Game, unit: Unit): Extract<UnitOrder, { type: 'move' }> {
+  const station = guardPosition(game, unit);
+  return { type: 'move', x: station.x, y: station.y, returnToGuard: true,
+    ...(unit.guardPosition?.shipId ? { deckShipId: unit.guardPosition.shipId, deckPoint: { x: unit.guardPosition.x, y: unit.guardPosition.y } } : {}) };
+}
+
+function returnToGuard(game: Game, unit: Unit): void {
+  unit.order = unit.orderQueue?.length ? { type: 'idle' } : guardReturnOrder(game, unit);
 }
 
 // A walk whose goal lies within a building's reach, or `within` of it, ends where the unit stands pressed against that

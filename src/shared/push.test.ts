@@ -55,6 +55,11 @@ describe("push", () => {
       expect(unit.y).toBe(1000);
       if (perTick(pushSpeed(strength)) <= 24 + perTick(perTick(PUSH_FRICTION)) / 2) expect(ticks).toBe(Math.ceil(pushSpeed(strength) / perTick(PUSH_FRICTION)));
       expect(unit.pushY).toBeUndefined();
+      // Being carried past the guard leash is not a chase or a new explicit station command.
+      expect(unit.guardPosition).toEqual({ x: 1000, y: 1000 });
+      steps(game, 40);
+      expect(unit.order).toEqual({ type: "idle" });
+      expect(unit.x - 1000).toBeCloseTo(strength, 6);
     }
   });
 

@@ -110,7 +110,8 @@ export function ashenWorld(): Game {
   const players = [PLAYER, FOLK, EMBER, WILD];
   const game = createGame("grandThirty", {
     players,
-    aiPlayers: [],
+    // The party is human-controlled; the other factions are scripted NPCs.
+    aiPlayers: players.filter(owner => owner !== PLAYER),
     teams: { [PLAYER]: "grove", [FOLK]: "grove", [EMBER]: "ember", [WILD]: "wild" },
     races: { [PLAYER]: "grove", [FOLK]: "grove", [EMBER]: "ember", [WILD]: "grove" },
     scenario: {

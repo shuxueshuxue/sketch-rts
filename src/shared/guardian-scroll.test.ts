@@ -146,11 +146,11 @@ describe('guardian scroll area balance', () => {
 
 describe('guardian balance rules boundary', () => {
   it('identifies current rules and refuses replay/network simulation of rules 4', () => {
-    expect(RULES_VERSION).toBe(5);
+    expect(RULES_VERSION).toBe(6);
     expect(GUARDIAN_SCROLL.radius).toBe(180);
     expect(() => assertCurrentRulesVersion(4, 'Old replay')).toThrow('Cross-version simulation is not supported');
     expect(() => assertCurrentRulesVersion(RULES_VERSION, 'Current replay')).not.toThrow();
-    expect([undefined, 1, 2, 3, 4, RULES_VERSION].map(savedRulesVersion)).toEqual([1, 1, 2, 3, 4, 5]);
+    expect([undefined, 1, 2, 3, 4, 5, RULES_VERSION].map(savedRulesVersion)).toEqual([1, 1, 2, 3, 4, 5, 6]);
   });
 
   it.each([2, 4])('imports a canonical rules-%s snapshot without recasting existing buffs or changing recorded field radius', rulesVersion => {

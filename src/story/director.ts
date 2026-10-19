@@ -192,7 +192,7 @@ export class Director<Vars = unknown> {
     assertCurrentRulesVersion(save.rulesVersion, `Story save of ${save.story}`);
     // A save hashed another way cannot be checked by this build: say so, rather than that it does not replay.
     const checksumVersion = save.checksumVersion ?? 1;
-    if (checksumVersion !== CHECKSUM_VERSION && checksumVersion !== 19 && checksumVersion !== 18 && checksumVersion !== 17 && checksumVersion !== 2) throw new Error(`Save of ${save.story} was hashed by checksum version ${checksumVersion}; this build checks version ${CHECKSUM_VERSION}`);
+    if (checksumVersion !== CHECKSUM_VERSION && checksumVersion !== 20 && checksumVersion !== 19 && checksumVersion !== 18 && checksumVersion !== 17 && checksumVersion !== 2) throw new Error(`Save of ${save.story} was hashed by checksum version ${checksumVersion}; this build checks version ${CHECKSUM_VERSION}`);
     const game = reviveGame(save.checkpoint.game);
     const director = new Director<Vars>({ ...options, game, vars: clone(save.checkpoint.vars) }, clone(save.checkpoint));
     director.replaying = clone(save.inputs);

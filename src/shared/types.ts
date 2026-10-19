@@ -155,7 +155,7 @@ export type Projectile = {
 export type UnitOrder =
   | { type: "build"; buildingKind: BuildingKind; x: number; y: number; progressTick?: number; progressX?: number; progressY?: number }
   | { type: "idle" }
-  | { type: "move"; x: number; y: number; heading?: number; rendezvousFor?: string; avoidCombat?: boolean; deckPoint?: { x: number; y: number }; deckShipId?: string }
+  | { type: "move"; x: number; y: number; heading?: number; rendezvousFor?: string; avoidCombat?: boolean; returnToGuard?: true; deckPoint?: { x: number; y: number }; deckShipId?: string }
   | { type: "follow"; targetId: string }
   | { type: "attackMove"; x: number; y: number; targetId?: string; deckPoint?: { x: number; y: number }; deckShipId?: string }
   | { type: "attack"; targetId: string; leashX?: number; leashY?: number }
@@ -218,6 +218,8 @@ export type Unit = {
   y: number;
   homeX?: number;
   homeY?: number;
+  /** Human player's persistent station; deck stations use hull-local coordinates. */
+  guardPosition?: { x: number; y: number; shipId?: string };
   hp: number;
   maxHp: number;
   /** Explicit invulnerability; ordinary armor and wards use damage reduction. */
@@ -676,6 +678,8 @@ export type Corpse = {
 };
 
 export type GameSnapshot = {
+  /** Seat controllers are simulation rules, also when replaying commands without an AI planner. */
+  aiPlayers?: PlayerId[];
   /** Equipment migration is applied once; current saves restore byte-for-byte. */
   equipmentVersion?: 1;
   /** Unmarked older snapshots store movement and push rates per tick at 20 Hz. */

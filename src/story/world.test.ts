@@ -1,9 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { createGame } from "../shared/sim";
+import { createGame, stepGame } from "../shared/sim";
 import { defineUnit, enlist } from "./cast";
 import { Stage } from "./stage";
 import { instant } from "./time";
 import { World } from "./world";
+
+it("takes up the new scene's guard station on explicit story placement, leaving AI guard state absent", () => {
+  const game = createGame("bareDuel", { aiPlayers: ["enemy"] });
+  game.units = [];
+  const world = new World(game, new Stage(game, () => instant(game.tick)), {}, () => .5);
+  const hero = world.spawn("footman", "player", { x: 1000, y: 1000 });
+  const npc = world.spawn("footman", "enemy", { x: 1000, y: 2000 });
+  world.place(hero, { x: 3000, y: 1000 });
+  world.place(npc, { x: 3000, y: 2000 });
+  stepGame(game);
+  expect(hero.guardPosition).toEqual({ x: 3000, y: 1000 });
+  expect(npc.guardPosition).toBeUndefined();
+});
 
 describe("story medical healing", () => {
   it("heals non-mechanical characters while respecting mechanical catalog and campaign variant classifications", () => {

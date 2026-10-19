@@ -1,4 +1,5 @@
 import { addGold } from "../shared/gold";
+import { setGuardPosition } from "../shared/guard-position";
 import { createSquadMemory, planSquad, type SquadIntent, type SquadOptions, type SquadReport } from "../ai/squad/squad";
 import { createBuilding } from "../shared/map";
 import { canReceiveHealing } from "../shared/healing";
@@ -155,6 +156,7 @@ export class World {
     unit.homeY = at.y;
     unit.order = { type: "idle" };
     unit.orderQueue = [];
+    setGuardPosition(this.game, unit);
   }
 
   // ---- Orders (through the sim's commands, as the unit's owner would give them).

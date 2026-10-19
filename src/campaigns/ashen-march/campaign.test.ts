@@ -13,6 +13,11 @@ function playThrough(limit = 70 * MINUTE) {
 }
 
 describe("the Ashen March", () => {
+  it("marks the scripted factions as AI while keeping the player's party human-controlled", () => {
+    const { director } = startCampaign(ASHEN_MARCH);
+    expect(director.game.aiPlayers).toEqual(director.game.activePlayers.filter(owner => owner !== ASHEN_MARCH.player));
+  });
+
   it("is played through to its ending by its pilot, in more than forty minutes", () => {
     const { director } = playThrough();
     expect(director.finished).toBe(true);
