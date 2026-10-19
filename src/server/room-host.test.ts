@@ -331,6 +331,7 @@ describe("server room host", () => {
 
     const after = host.snapshot(room.id);
     const recorded = host.readDebugReplay(room.id);
+    expect(host.getRoom(room.id).status).toBe("errored");
     expect(after.tick).toBe(0);
     expect(after.units.find((unit) => unit.id === worker!.id)?.order).toEqual({ type: "idle" });
     expect(after.buildings.find((building) => building.id === enemyTownHall!.id)?.queue).toHaveLength(0);
@@ -543,6 +544,7 @@ describe("server room host", () => {
     host.startRoom(room.id);
 
     expect(() => host.tickRoom(room.id, 1)).toThrow(/Hosted command rejected: townHall cannot train footman/);
+    expect(host.getRoom(room.id).status).toBe("errored");
 
     const after = host.snapshot(room.id);
     const enemyTownHall = after.buildings.find((building) => building.owner === "enemy" && building.kind === "townHall");
