@@ -42,7 +42,7 @@ export default async function(s: Scene) {
   const host = await s.page.evaluate(() => JSON.parse(localStorage.getItem('sketch-rts-user')!));
   const created: any = await s.api('/api/rooms', { host, mapId: 'ladder', layoutSeed: match.options.layout.seed,
     visibility: 'private', humanCount: 1, aiCount: 1,
-    seatSetup: [{ controller: 'human', team: 'team-1', race: 'grove' }, { controller: 'ai', team: 'team-2', race: 'ember', aiVersion: 'v9' }] });
+    seatSetup: [{ controller: 'human', team: 'team-1', race: 'grove' }, { controller: 'ai', team: 'team-2', race: 'ember', aiVersion: 'v9_knight' }] });
   const roomId = created.id;
   await s.api(`/api/rooms/${roomId}/start`, { userId: host.id });
   await s.api(`/api/rooms/${roomId}/pause`, {});
