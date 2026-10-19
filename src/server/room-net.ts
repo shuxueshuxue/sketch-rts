@@ -3,7 +3,7 @@ import { decodeClientNetMessage, encodeNetMessage } from "../shared/net/codec";
 import { createChatMessage } from "../shared/chat";
 import { checkpointRequestClass } from "../shared/net/checkpoint-semantics";
 import type { CheckpointRequestClass, ClientNetMessage, CommandFrame, RoomSyncEvent, RoomSyncEventKind, RoomSyncSummary, ServerNetMessage } from "../shared/net/types";
-import type { PlayerId } from "../shared/types";
+import type { PlayerId, RoomState } from "../shared/types";
 import { LockstepRoomCoordinator } from "./lockstep-room";
 import type { createRoomHost, HostedRoomFrameEvent, HostedRoomLifecycleEvent } from "./room-host";
 import { DEFAULT_ROOM_FRAME_HISTORY_LIMIT } from "./room-history";
@@ -88,7 +88,11 @@ export class RoomNetHub {
       }
       const room = this.options.roomHost.getRoom(roomId);
       if (room.status !== "inMatch" || room.paused) continue;
-      this.tickRoom(roomId);
+      try {
+        this.tickRoom(roomId);
+      } catch (error) {
+        this.options.roomHost.failRoom(roomId, error);
+      }
       ticked.add(roomId);
     }
     return ticked;
@@ -132,6 +136,12 @@ export class RoomNetHub {
       catch (error) { state.sockets.delete(socket); throw error; }
       state.sockets.add(socket);
       this.compatibleSockets.add(socket);
+      const room = this.options.roomHost.getRoom(message.roomId);
+      if (room.status === "errored") {
+        this.send(message.roomId, socket, { type: "room", room });
+        this.send(message.roomId, socket, { type: "error", roomId: room.id, message: roomFailureMessage(room) });
+        return;
+      }
       this.send(message.roomId, socket, { type: "hello", rulesVersion: RULES_VERSION, roomId: message.roomId, playerId: message.playerId, tick: this.options.roomHost.currentTick(message.roomId), epoch: state.epoch });
       return;
     }
@@ -225,6 +235,7 @@ export class RoomNetHub {
     if (!state) return;
     if (event.checkpoint) this.resetLockstepSession(roomId, state);
     this.broadcast(roomId, { type: "room", room: event.room });
+    if (event.room.status === "errored") this.broadcast(roomId, { type: "error", roomId, message: roomFailureMessage(event.room) });
     if (event.checkpoint) this.broadcast(roomId, { type: "checkpoint", rulesVersion: RULES_VERSION, checkpoint: event.checkpoint, epoch: state.epoch });
   }
 
@@ -365,6 +376,10 @@ export class RoomNetHub {
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
+}
+
+function roomFailureMessage(room: RoomState): string {
+  return `Room ${room.id} stopped at tick ${room.error?.tick}: ${room.error?.message}`;
 }
 
 function zeroKindCounts(): Record<RoomSyncEventKind, number> {

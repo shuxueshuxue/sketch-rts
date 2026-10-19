@@ -80,6 +80,7 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
 
   async enterRoom(roomId: string, user: LocalUserProfile): Promise<{ room: RoomState; spectating: boolean; playerId: PlayerId }> {
     const existingRoom = await this.getRoom(roomId);
+    if (existingRoom.status === "errored") throw new Error(`Room ${roomId} stopped at tick ${existingRoom.error?.tick}: ${existingRoom.error?.message}`);
     const ownedSlot = slotForUser(existingRoom, user.id);
     const room = existingRoom.status === "inMatch" && !ownedSlot ? existingRoom : await this.fetchJson<RoomState>(this.path(`/api/rooms/${encodeURIComponent(roomId)}/join`), { user });
     const joinedSlot = slotForUser(room, user.id);

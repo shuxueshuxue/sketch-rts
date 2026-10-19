@@ -59,6 +59,7 @@ type HostedRoom = {
   room: RoomState;
   history: RoomHistoryLog;
   finishRoom: (snapshot: GameSnapshot) => RoomState;
+  failRoom: (error: unknown, tick: number) => void;
   game?: Game;
   aiRuntime?: AiRuntimeState;
   frameRuntime?: CommandFrameRuntime<AiRuntimeFramePlannerState>;
@@ -99,6 +100,12 @@ export function createRoomHost(options: RoomHostOptions = {}) {
     return { hosted, game: hosted.game, frameRuntime: hosted.frameRuntime };
   }
 
+  function getRoomGame(roomId: string): Game {
+    const hosted = getHosted(roomId);
+    if (!hosted.game || hosted.room.status !== "inMatch" && hosted.room.status !== "errored") throw new Error(`Room ${roomId} is not in a live match`);
+    return hosted.game;
+  }
+
   // Scripts given as functions cannot cross to another thread; a host given them thinks on its own.
   const thinkExecutors = options.aiScripts ? undefined : options.aiThinkExecutor;
 
@@ -107,6 +114,7 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       room,
       history: createRoomHistory(),
       finishRoom: (snapshot) => lifecycle.finishRoom(room.id, snapshot),
+      failRoom: (error, tick) => failHostedRoom(room.id, error, tick),
       frameListeners: frameListenerSet(room.id),
       lifecycleListeners: lifecycleListenerSet(room.id),
       ...(thinkExecutors ? { thinkExecutors } : {}),
@@ -156,6 +164,16 @@ export function createRoomHost(options: RoomHostOptions = {}) {
     return closed;
   }
 
+  function failHostedRoom(roomId: string, error: unknown, tick = getHosted(roomId).game?.tick ?? 0): void {
+    const hosted = getHosted(roomId);
+    if (hosted.room.status === "errored") return;
+    const message = error instanceof Error ? error.message : String(error);
+    hosted.room = lifecycle.failRoom(roomId, { tick, message });
+    console.error(`Room ${roomId} failed at tick ${tick}\n${error instanceof Error ? error.stack ?? error.message : String(error)}`);
+    releaseThinkExecutor(hosted);
+    notifyHostedRoomLifecycle(hosted, { room: hosted.room });
+  }
+
   return {
     listRooms(viewerUserId?: string): RoomState[] {
       return lifecycle.listRooms(viewerUserId);
@@ -178,6 +196,9 @@ export function createRoomHost(options: RoomHostOptions = {}) {
     hasRoom(roomId: string): boolean {
       return lifecycle.hasRoom(roomId);
     },
+
+    // The automatic drivers also isolate preparation/transport failures at this same room boundary.
+    failRoom: failHostedRoom,
 
     observeRoomFrames(roomId: string, listener: HostedRoomFrameListener): () => void {
       const listeners = frameListenerSet(roomId);
@@ -335,15 +356,16 @@ export function createRoomHost(options: RoomHostOptions = {}) {
     },
 
     snapshot(roomId: string): GameSnapshot {
-      return snapshotGame(getLiveGame(roomId).game);
+      // Preserve read-only diagnostics after a failed tick, without recreating its AI executor.
+      return snapshotGame(getRoomGame(roomId));
     },
 
     currentTick(roomId: string): number {
-      return getLiveGame(roomId).game.tick;
+      return getRoomGame(roomId).tick;
     },
 
     checksumRoom(roomId: string): string {
-      return checksumGame(getLiveGame(roomId).game);
+      return checksumGame(getRoomGame(roomId));
     },
 
     commandRoom(roomId: string, playerId: PlayerId, command: GameCommand): GameSnapshot {
@@ -377,8 +399,8 @@ export function createRoomHost(options: RoomHostOptions = {}) {
 
     // Whether the room can tick now: its restored ship graphs are rebuilt. Its AI never holds it (see @@@planner-schedule).
     prepareRoomTick(roomId: string, maxSlices = 1): boolean {
-      const { game } = getLiveGame(roomId);
-      return prepareShipPlanningJobs(game, maxSlices);
+      const { hosted, game } = getLiveGame(roomId);
+      return withRoomTickFailure(hosted, game, () => prepareShipPlanningJobs(game, maxSlices));
     },
 
     tickRoomFrame(roomId: string, frame: CommandFrame, source: ReplayCommandSource = "browser"): RoomFrameTickResult {
@@ -454,6 +476,7 @@ export function createRoomHost(options: RoomHostOptions = {}) {
         room,
         history: createRoomHistory(),
         finishRoom: (snapshot) => lifecycle.finishRoom(room.id, snapshot),
+        failRoom: (error, tick) => failHostedRoom(room.id, error, tick),
         game,
         aiRuntime: createHostedAiRuntime(save.runtime.aiPlayers, save.runtime.aiVersions),
         frameListeners: frameListenerSet(room.id),
@@ -479,10 +502,14 @@ export function createRoomHost(options: RoomHostOptions = {}) {
         const game = hosted.game;
         // A continued save may need its disposable navigation graph rebuilt.
         // Reconstruct one prior slice per ticker turn before advancing truth.
-        if (!prepareShipPlanningJobs(game, 1)) continue;
-        for (let i = 0; i < ticks; i += 1) {
-          advanceHostedRoomTick(hosted, game, { source: "internal-ai" });
-          if (game.match.winner) break;
+        try {
+          if (!prepareShipPlanningJobs(game, 1)) continue;
+          for (let i = 0; i < ticks; i += 1) {
+            advanceHostedRoomTick(hosted, game, { source: "internal-ai" });
+            if (game.match.winner) break;
+          }
+        } catch (error) {
+          failHostedRoom(hosted.room.id, error);
         }
         changed.push(hosted.room);
       }
@@ -562,6 +589,22 @@ function tickHostedFrame(hosted: HostedRoom, game: Game, frame: CommandFrame, so
 }
 
 function advanceHostedRoomTick(hosted: HostedRoom, game: Game, input: { commands?: CommandEnvelope[]; frame?: CommandFrame; source: ReplayCommandSource; settleAi?: boolean }): CommandFrame | undefined {
+  return withRoomTickFailure(hosted, game, () => advanceHostedRoomTickUnchecked(hosted, game, input));
+}
+
+function withRoomTickFailure<T>(hosted: HostedRoom, game: Game, advance: () => T): T {
+  const tick = game.tick;
+  try {
+    return advance();
+  } catch (error) {
+    // Stop before notifying clients: an exception can leave a partly applied tick. REST callers still get the error;
+    // automatic drivers catch it per room and continue the other rooms. Never resume this world's damaged state.
+    hosted.failRoom(error, tick);
+    throw error;
+  }
+}
+
+function advanceHostedRoomTickUnchecked(hosted: HostedRoom, game: Game, input: { commands?: CommandEnvelope[]; frame?: CommandFrame; source: ReplayCommandSource; settleAi?: boolean }): CommandFrame | undefined {
   hosted.frameRuntime ??= createHostedFrameRuntime(hosted, game);
   const commands = input.commands ?? input.frame?.commands ?? [];
   // @@@hosted-every-tick - A hosted room's every tick is a frame, whoever advances it: the live ticker (the lockstep

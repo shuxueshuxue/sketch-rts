@@ -727,7 +727,7 @@ export type RoomSlot = {
   ready: boolean;
 };
 
-export type RoomStatus = "open" | "starting" | "inMatch" | "ended" | "closed";
+export type RoomStatus = "open" | "starting" | "inMatch" | "ended" | "errored" | "closed";
 export type RoomVisibility = "private" | "public";
 
 export type RoomResult = {
@@ -752,4 +752,6 @@ export type RoomState = {
   paused?: boolean;
   slots: RoomSlot[];
   result?: RoomResult;
+  // A failed tick may have partially changed truth. Only a fresh reset can run this room again.
+  error?: { tick: number; message: string };
 };

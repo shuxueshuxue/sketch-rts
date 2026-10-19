@@ -163,7 +163,10 @@ describe("room net hub", () => {
     connectCurrent(hub, room.id, socket);
 
     expect(() => hub.tickRoom(room.id)).toThrow(/Hosted command rejected: townHall cannot train footman/);
-    expect(socket.sent.map((raw) => decodeServerNetMessage(raw)).filter((message) => message.type === "error")).toEqual([]);
+    expect(socket.sent.map((raw) => decodeServerNetMessage(raw)).filter((message) => message.type === "error")).toEqual([
+      expect.objectContaining({ roomId: room.id, message: expect.stringMatching(/stopped at tick 0.*Hosted command rejected/) }),
+    ]);
+    expect(roomHost.getRoom(room.id).status).toBe("errored");
   });
 
   it("reports invalid lockstep commands without crashing the room ticker", () => {
