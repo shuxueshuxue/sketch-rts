@@ -9,7 +9,8 @@ import { runAiCommandEntriesFromScripts } from '../policy/script-runner';
 import { strengthOf } from '../policy/v6/strength';
 import { BOOTSTRAP_VERSIONS, bootstrapPolicyContext } from './policy';
 import { miningAssignments } from './mining-assignments';
-import { planBootstrapGeneral } from './mine-defense';
+import { planBootstrapGeneral, mineDefense, miningRally, miningLeash } from './mine-defense';
+import { expansionGarrison } from './expansion-garrison';
 
 it.each(BOOTSTRAP_VERSIONS.flatMap(version => (['grove', 'ember'] as const)
   .flatMap(race => [false, true].map(mirrored => ({ version, race, mirrored }))))) (
@@ -32,6 +33,9 @@ it.each(BOOTSTRAP_VERSIONS.flatMap(version => (['grove', 'ember'] as const)
     for (let i = 0; i < 4; i++) scene = scene.unit('raiders', 'footman', x(3550 + i % 2 * 40), 3000 + Math.floor(i / 2) * 40, { id: `raider-${i}` })
       .unit('foe', 'knight', x(3360 + i % 2 * 40), 600 + Math.floor(i / 2) * 40, { id: `garrison-${i}` });
     const game = scene.build().createGame(), memory = createAiPolicyMemory();
+    // The free army may now finish the remote opponent while this scene keeps
+    // checking the construction/handoff. Victory is outside this test's scope.
+    game.scriptedVictory = true;
     game.map.terrain = { cell: 32, cols: 128, rows: 128, cells: '.'.repeat(128 * 128) };
     for (const building of game.buildings) Object.assign(building, snapToFootprint(game.map, building.radius, building));
     setBuildingBodies(game.map, game.buildings);
@@ -51,7 +55,7 @@ it.each(BOOTSTRAP_VERSIONS.flatMap(version => (['grove', 'ember'] as const)
         context.doctrines = [{ id: 'requested-replacement', race, weight: 1, raids: [], standIn: heavy,
           phases: [{ wants: [{ bases: 3, priority: 76 }], advanceShare: 1, advanceSupply: 1000 }] }];
         context.armyWants = [];
-        issueCommandFrame(game, runAiCommandEntriesFromScripts(snapshot, 'us', [AI_SCRIPT_LIBRARY.economy, miningAssignments,
+        issueCommandFrame(game, runAiCommandEntriesFromScripts(snapshot, 'us', [AI_SCRIPT_LIBRARY.economy, miningAssignments, mineDefense, miningRally, miningLeash, expansionGarrison,
           { ...AI_SCRIPT_LIBRARY.v6General, run: planBootstrapGeneral }], context)
           .map(entry => ({ ...entry, playerId: 'us', source: 'external-agent' as const })));
       }

@@ -5,6 +5,7 @@ import { snapshotGame, stepGame } from '../../shared/sim';
 import { setBuildingBodies, snapToFootprint } from '../../shared/terrain';
 import type { GameCommand } from '../../shared/types';
 import type { Game } from '../../shared/sim';
+import { campContested, neutralCamps } from '../policy/v7/creep';
 import { createAiPolicyMemory } from '../memory';
 import { runAiCommandEntriesFromScripts } from '../policy/script-runner';
 import type { AiPolicyContext } from '../policy/types';
@@ -12,7 +13,7 @@ import { prepareExpansionMission, expansionMissionUnitIds } from './expansion-mi
 import { rankBootstrapGoals, bootstrapEconomy } from './economy';
 import { miningAssignments } from './mining-assignments';
 import { mainArmyIntel, planBootstrapGeneral } from './mine-defense';
-import { attackArrivalTicks } from './attack-objective';
+import { attackArrivalTicks, chooseRoomAttack } from './attack-objective';
 
 function battle(expanding = false, roadCamp = false) {
   let scene = sketchScene('attack-through-a-result').map('openClaims').replaceDefaults()
@@ -176,4 +177,67 @@ it('reserves the hall capital through the private camp while retaining the main 
   expect(goals.some(goal => goal.id === 'bases:2' && goal.cost === 400 && goal.save && goal.hold)).toBe(true);
   expect(memory.v6!.general).toEqual(general);
   expect(memory.v6!.general?.mode).toBe('attack');
+});
+
+it('keeps the committed base instead of silently switching to a cheaper one during a pause', () => {
+  const { game, memory, options, think } = battle();
+  think();
+  const snapshot = snapshotGame(game), intel = mainArmyIntel(snapshot, 'us', options);
+  const choices = intel.enemies.flatMap(enemy => enemy.bases.map(base => ({ base, need: 2, defended: 0, why: 'expansion' })));
+  const next = chooseRoomAttack(snapshot, options, intel, choices, choice => choice.base.hall.id !== 'outpost');
+  expect(next).toBeUndefined();
+  expect(memory.landAttack?.targetId).toBe('outpost');
+  expect(memory.landAttackResult).toBeUndefined();
+});
+
+it('does not bypass a protected income for the main on its first wave', () => {
+  const { game, memory, options } = battle();
+  const snapshot = snapshotGame(game), intel = mainArmyIntel(snapshot, 'us', options);
+  const choices = intel.enemies.flatMap(enemy => enemy.bases.map(base => ({ base, need: 2, defended: 0, why: 'expansion' })));
+  const admitted = (choice: typeof choices[number]) => choice.base.hall.id === 'enemy-main';
+  expect(chooseRoomAttack(snapshot, options, intel, choices, admitted)).toBeUndefined();
+  memory.v6 = { plays: { 'attack:result:destroyed': 1 } };
+  expect(chooseRoomAttack(snapshot, options, intel, choices, admitted)?.base.hall.id).toBe('enemy-main');
+});
+
+it('reserves the party that also passes the existing nearby-enemy test', () => {
+  const { game, memory, options, think } = battle(true);
+  const fighter = game.units.find(unit => unit.id === 'fighter-0')!;
+  game.units.push(...Array.from({ length: 2 }, (_, i) => ({ ...structuredClone(fighter), owner: 'foe', id: `watcher-${i}`,
+    x: 2000 + i * 32, y: 1900, order: { type: 'idle' as const } })));
+  think();
+  const ids = new Set(expansionMissionUnitIds(memory));
+  expect(ids.size).toBeGreaterThan(2);
+  expect(ids.size).toBeLessThan(8);
+  const snapshot = snapshotGame(game), intel = mainArmyIntel(snapshot, 'us', options);
+  const camp = neutralCamps(snapshot).find(camp => camp.creeps.some(unit => unit.id === 'guard'))!;
+  expect(campContested(intel, camp.center, snapshot.units.filter(unit => ids.has(unit.id)))).toBe(false);
+});
+
+it('keeps the remaining assault moving when a local job borrows one living fighter', () => {
+  const { game, memory, think } = battle();
+  think();
+  memory.support = { baseId: 'home', unitIds: ['fighter-0'], sinceTick: game.tick };
+  advance(game, 30, think);
+  expect(memory.landAttack?.targetId).toBe('outpost');
+  expect(memory.landAttack?.paused).toBeUndefined();
+  expect(memory.landAttack?.general.group).not.toContain('fighter-0');
+  expect(memory.landAttack?.general.group).toHaveLength(7);
+  expect(memory.landAttackResult).toBeUndefined();
+  for (let tick = 0; tick < 1500 && game.buildings.some(building => building.id === 'outpost'); tick++) {
+    if (game.tick % 15 === 0) think(); stepGame(game);
+  }
+  think();
+  expect(game.buildings.some(building => building.id === 'outpost')).toBe(false);
+  expect(memory.landAttackResult).toMatchObject({ targetId: 'outpost', result: 'destroyed' });
+});
+
+it('does not rename the birth hall as an expansion when more buildings surround the natural', () => {
+  const { game, options } = battle();
+  const snapshot = snapshotGame(game), intel = mainArmyIntel(snapshot, 'us', options);
+  const enemy = intel.enemies[0]!;
+  // The shared density-based classifier would select this tower-heavy natural as main.
+  enemy.buildings = enemy.buildings.filter(building => building.id !== 'enemy-main');
+  const choices = enemy.bases.map(base => ({ base, need: 2, defended: 0, why: 'expansion' }));
+  expect(chooseRoomAttack(snapshot, options, intel, choices, () => true)?.base.hall.id).toBe('outpost');
 });

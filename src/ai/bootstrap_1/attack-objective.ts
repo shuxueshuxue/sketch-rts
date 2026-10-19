@@ -6,7 +6,8 @@ import type { Building, GameCommand, GameSnapshot, PlayerId, Unit } from '../../
 import type { AiPolicyMemory, V6PolicyMemory } from '../memory';
 import { distance } from '../policy/spatial';
 import type { AiPolicyContext } from '../policy/types';
-import { availableV6Army, isMain, type AttackChoice } from '../policy/v6/general';
+import { availableV6Army, type AttackChoice } from '../policy/v6/general';
+import { marchStrength } from '../policy/v6/strength';
 import { isBacklineKind } from '../policy/v6/backline';
 import type { V6Intel } from '../policy/v6/intel';
 import { recordPlay, v6Memory } from '../policy/v6/memory';
@@ -53,8 +54,13 @@ export function chooseRoomAttack(snapshot: GameSnapshot, options: AiPolicyContex
     return admitted.get(choice)!;
   };
   const committed = choices.find(choice => choice.base.hall.id === options.memory.landAttack?.targetId);
-  if (committed && canAttack(committed)) return committed;
-  const expansions = choices.filter(choice => !isMain(intel, choice.base));
+  if (options.memory.landAttack) return committed && canAttack(committed) ? committed : undefined;
+  // Buildings remain in creation order. Use the first surviving hall, as the
+  // army's own home selector does: adding towers at a natural must not turn the
+  // birth hall into an "expansion" and send the first wave past that natural.
+  const main = (choice: AttackChoice) => intel.enemies.find(enemy => enemy.owner === choice.base.owner)
+    ?.bases[0]?.hall.id === choice.base.hall.id;
+  const expansions = choices.filter(choice => !main(choice));
   const walk = (choice: AttackChoice) => walkingDistance(snapshot.map, leader, choice.base.hall) ?? Infinity;
   expansions.sort((a, b) => walk(a) - walk(b));
   const rising = expansions.find(choice => {
@@ -67,7 +73,11 @@ export function chooseRoomAttack(snapshot: GameSnapshot, options: AiPolicyContex
       / unit.speed * SIM_TICKS_PER_SECOND >= remaining)) return false;
     return front.every(unit => attackArrivalTicks(snapshot, unit, hall) < remaining);
   });
-  return rising ?? expansions.find(canAttack) ?? choices.find(choice => isMain(intel, choice.base) && canAttack(choice));
+  const expansion = rising ?? expansions.find(canAttack);
+  // The first wave dismantles an income, rather than bypassing a defended
+  // expansion to march around it at the distant main. Build the needed force.
+  if (expansion || expansions.length && !options.memory.v6?.plays?.['attack:result:destroyed']) return expansion;
+  return choices.find(choice => main(choice) && canAttack(choice));
 }
 
 function finish(snapshot: GameSnapshot, options: AiPolicyContext,
@@ -111,10 +121,23 @@ export function prepareLandAttack(snapshot: GameSnapshot, owner: PlayerId, optio
     task.pausedAt ??= snapshot.tick;
     return;
   }
-  if (task.pausedAt !== undefined && task.general.stageSince !== undefined)
-    task.general.stageSince += snapshot.tick - task.pausedAt;
+  if (task.pausedAt !== undefined) {
+    const elapsed = snapshot.tick - task.pausedAt;
+    if (task.general.stageSince !== undefined) task.general.stageSince += elapsed;
+    if (task.camp) task.camp.since += elapsed;
+  }
   delete task.paused;
   delete task.pausedAt;
+  // A local medic, garrison or courier assignment may borrow part of the wave.
+  // Keep the remaining wave on its objective. Remove only living borrowed force
+  // from the departure budget; actual deaths still count toward the old worn test.
+  const available = new Set(availableV6Army(snapshot, options, intel).map(unit => unit.id));
+  const borrowed = survivors.filter(unit => !available.has(unit.id));
+  if (borrowed.length) {
+    const ids = new Set(borrowed.map(unit => unit.id));
+    task.general.group = task.general.group?.filter(id => !ids.has(id));
+    task.general.groupStart = Math.max(0, (task.general.groupStart ?? 0) - marchStrength(borrowed));
+  }
   memory.general = structuredClone(task.general);
   if (task.camp) memory.creep = structuredClone(task.camp);
 }

@@ -719,7 +719,7 @@ function isSummoner(unit: Unit) {
   return unit.kind === "summoner";
 }
 
-export function isMain(intel: V6Intel, base: V6BaseIntel | undefined) {
+function isMain(intel: V6Intel, base: V6BaseIntel | undefined) {
   if (!base) return false;
   const enemy = intel.enemies.find((candidate) => candidate.owner === base.owner);
   return Boolean(enemy && mainHall(enemy)?.id === base.hall.id);

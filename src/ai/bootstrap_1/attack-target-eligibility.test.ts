@@ -18,10 +18,10 @@ it.each((['v9_archer', 'v9_summoner', 'v9_knight'] as const).flatMap(version =>
       .player('far', { team: 'b' }).player('near', { team: 'b' })
       .townHall('us', x(500), 500).goldMine('home', x(788), 500, 10000)
       .townHall('us', x(500), 1400).goldMine('natural', x(788), 1400, 10000)
-      .townHall('far', x(3400), 500, { id: 'cheap-far' }).goldMine('far-mine', x(3688), 500, 10000)
       .townHall('far', x(3200), 3500).worker('far', x(3200), 3400)
-      .townHall('near', x(1600), 800, { id: 'eligible-near' }).tower('near', x(1720), 1050)
-      .townHall('near', x(3600), 3500).worker('near', x(3600), 3400);
+      .townHall('far', x(3400), 500, { id: 'cheap-far' }).goldMine('far-mine', x(3688), 500, 10000)
+      .townHall('near', x(3600), 3500).worker('near', x(3600), 3400)
+      .townHall('near', x(1600), 800, { id: 'eligible-near' }).tower('near', x(1720), 1050);
     for (let index = 0; index < 3; index++) scene = scene.tower('far', x(3050 + index * 100), 3300)
       .tower('near', x(3450 + index * 100), 3300);
     for (let index = 0; counterarmy && index < 20; index++) scene = scene.unit('far', 'knight',

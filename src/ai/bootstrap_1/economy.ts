@@ -24,6 +24,7 @@ import { routeArrivals } from '../../shared/route-selection';
 import { colonyRecoveryGoals } from './colony-recovery';
 import { armedFoes, retreatLandTravelTicks } from './safe-land-route';
 import { freeIncomeCapitalGoals } from './free-income-capital';
+import { EXPANSION_GUARD_RANGE } from '../policy/v7/creep';
 import { trainingJobs } from "../../shared/building-jobs";
 import { reinforcementTransportWant } from './reinforcement-ferries';
 import { expansionGarrisonCoverGoals } from './expansion-garrison';
@@ -122,9 +123,12 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
     (view, intel) => bootstrapExpansionMine(view, owner, intel, options),
     economy => [...healingPostGoals(economy), ...freeIncomeCapitalGoals(economy), ...expansionGarrisonCoverGoals(economy)]);
   const clearing = options.memory.landExpansion;
-  if (clearing && !clearing.paused && clearing.combat?.creep) {
+  const clearingMine = clearing && snapshot.resources.find(mine => mine.id === clearing.mineId);
+  if (clearing && !clearing.paused && clearing.combat?.creep && clearingMine
+    && distance(clearing.combat.creep.center, clearingMine) <= EXPANSION_GUARD_RANGE) {
     // The expedition now has its own camp state. Preserve the hall's capital
-    // while it clears that camp, without borrowing the main general's state.
+    // while it clears the mine's own guard, without borrowing the main general's
+    // state. An earlier road camp still needs recruits; do not reserve too soon.
     const { strategy } = v6Doctrine(snapshot, owner, options);
     const phase = strategy.phases[Math.min(options.memory.v6?.phase ?? 0, strategy.phases.length - 1)]!;
     const target = Math.max(activeMiningBaseCount(snapshot, owner) + 1,

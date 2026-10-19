@@ -174,21 +174,27 @@ it('releases an existing unfunded task after the last income is lost instead of 
   expect(screen.some(unit => expansionOwnsDefender(snapshot, 'us', options, unit))).toBe(false);
 });
 
-it('starts the archer ladder-16 grove natural before 4:00 and third before 6:30 against the real v9', () => {
+it('starts the archer ladder-16 natural before 4:00 and finishes the third before 7:30 against the real v9', () => {
   // v5-final-1, slot 16, grove: main starts this hall at tick 6870 (5:43.5).
   const { input } = createSubjectGauntletInput(roomGauntlet('v9_archer', ['v9']), { seed: 'v5-final-1', mapCount: 20 });
   const match = input.evaluations[0]!.matches[28]!;
   let foundationTick: number | undefined;
   let thirdTick: number | undefined;
-  runGameLoop({ ...match, maxTicks: 7800, commandPlanner: navalObservedPlanner({}) }, {
+  let thirdCompleteTick: number | undefined;
+  runGameLoop({ ...match, maxTicks: 9000, commandPlanner: navalObservedPlanner({}) }, {
     onStep({ game }) {
       const halls = game.buildings.filter(building => building.owner === 'v9_archer' && building.kind === 'townHall');
       if (foundationTick === undefined && halls.length > 1) foundationTick = game.tick;
       if (thirdTick === undefined && halls.length > 2) thirdTick = game.tick;
+      if (thirdCompleteTick === undefined && halls.filter(hall => hall.complete).length > 2) thirdCompleteTick = game.tick;
     },
   });
   expect(foundationTick).toBeDefined();
   expect(foundationTick!).toBeLessThan(4800);
   expect(thirdTick).toBeDefined();
   expect(thirdTick!).toBeLessThan(7800);
+  // This fresh opening owns the expansion deadline. The old handoff snapshot
+  // separately verifies a real enemy approach, avoidance and the same-mine retry.
+  expect(thirdCompleteTick).toBeDefined();
+  expect(thirdCompleteTick!).toBeLessThanOrEqual(9000);
 }, 30000);

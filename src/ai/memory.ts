@@ -110,8 +110,9 @@ export type AiPolicyMemory = {
     stagingCheckedTick?: number;
     roadCamp?: { x: number; y: number };
     combat?: Pick<V6PolicyMemory, 'creep' | 'creepRetry'>;
-    interruptions: { tick: number; reason: 'home-threat' | 'mining-threat' | 'mine-threat'; targetId?: string }[];
+    interruptions: { tick: number; reason: 'home-threat' | 'mining-threat' | 'mine-threat' | 'camp-threat'; targetId?: string }[];
     paused?: boolean;
+    pausedAt?: number;
   };
   // Posts awaiting their own static defense. Unit membership lives only in unitClaims.
   expansionGarrisons?: Record<string, { mineId: string; sinceTick: number }>;

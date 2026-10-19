@@ -152,6 +152,9 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
   const intel = { ...whole, army, power: strengthOf(army), ...(army.length ? { armyCenter: averagePoint(army) } : {}) };
   let defendedHall: Building | undefined, haulingDefense = false;
   const defense = (() => {
+    // Local micro may own every fighter. The shared planner also returns before
+    // choosing a defense post in this case; there is no main-army center to use.
+    if (!army.length) return undefined;
     const anchored = anchoredMiningDefense(snapshot, owner, options, intel);
     if (anchored) { defendedHall = nearestByRoute(snapshot.map, intel.ownHalls, anchored.hall, 'land'); return anchored; }
     const mining = miningJobDefenseTarget(snapshot, owner, intel, options);
@@ -163,10 +166,10 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
   const task = options.memory.landAttack;
   const living = task?.general.group?.filter(id => snapshot.units.some(unit => unit.id === id)) ?? [];
   const borrowed = living.length > 0 && living.every(id => reserved.has(id));
-  const localJob = living.some(id => !reserved.has(id) && !army.some(unit => unit.id === id));
-  prepareLandAttack(snapshot, owner, options, intel, beforePriority, defense || localJob ? 'defense' : borrowed ? 'expansion' : undefined);
-  if (localJob && !defense && options.memory.v6?.general?.mode === 'attack')
-    options.memory.v6.general = { mode: 'hold', target: intel.armyCenter ?? intel.home, holdingSince: snapshot.tick };
+  const available = new Set(availableV6Army(snapshot, options, intel).map(unit => unit.id));
+  const localJob = living.length > 0 && living.every(id => !available.has(id));
+  prepareLandAttack(snapshot, owner, options, intel, beforePriority,
+    defense ? 'defense' : borrowed ? 'expansion' : localJob ? 'defense' : undefined);
   const creep = options.memory.v6?.creep, previous = options.memory.v6?.general;
   const retreatBefore = { ...options.memory.v6?.plays };
   const recruits = creep ? availableV6Army(snapshot, options, intel).filter(unit => !unit.deck && !isBacklineKind(unit)
