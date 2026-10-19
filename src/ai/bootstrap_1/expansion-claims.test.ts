@@ -10,7 +10,7 @@ import { expansionOwnsDefender, recordMiningGeneralCommands } from './mining-lea
 function assigned() {
   const game = sketchScene('expansion-ownership').map('openClaims').replaceDefaults()
     .player('us', { team: 'a' }).player('foe', { team: 'b' })
-    .townHall('us', 500, 500).goldMine('natural', 1600, 1100)
+    .townHall('us', 500, 500).goldMine('natural', 1600, 1100, 6000)
     .townHall('foe', 3500, 3500).unit('us', 'footman', 1400, 1100, { id: 'escort' }).build().createGame();
   const snapshot = snapshotGame(game), memory = createAiPolicyMemory();
   memory.landExpansion = { mineId: 'natural', sinceTick: 0, stage: 'build', interruptions: [] };
