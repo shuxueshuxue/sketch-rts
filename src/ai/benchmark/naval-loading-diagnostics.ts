@@ -10,6 +10,8 @@ import { SHIP_HULL_COST, installedWeapons, SHIP_WEAPONS } from '../../shared/shi
 import { distanceToHull, isShipKind, shipPassengers } from '../../shared/ship-geometry';
 import { sameGround, walkableGoal } from '../../shared/terrain';
 import { SIM_TICKS_PER_SECOND as TPS } from '../../shared/time';
+import type { GameSnapshot, Unit } from '../../shared/types';
+import { combatHull } from '../../shared/ship-defense';
 import type { AiGameAgent } from '../game-runner';
 import type { AiPolicyMemory } from '../memory';
 import { strengthOf } from '../policy/v6/strength';
@@ -47,7 +49,7 @@ export function createNavalLoadingDiagnostics(memory: (owner: string) => AiPolic
           if (enemyDemand <= 0) continue;
           const ownStrength = strengthOf(soldiers), filteredStrength = strengthOf([rider]);
           const fullGuardSufficient = ownStrength - filteredStrength >= enemyDemand;
-          const gold = isShipKind(boat.kind) ? SHIP_HULL_COST[boat.kind] + installedWeapons(s, boat).reduce((sum, item) => sum + SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].cost, 0) : UNIT_DEFS[boat.kind].cost;
+          const gold = assetPrice(s, boat);
           const evidence = { second: s.tick / TPS, shipId: id, riderId: rider.id, targetId: mission.targetId, gold, shoreGap, ownEligible: soldiers.length, ownStrength, filteredStrength, enemyDemand, fullGuardSufficient };
           const stats = state[owner]!;
           stats.blockedSeconds++;
@@ -61,9 +63,51 @@ export function createNavalLoadingDiagnostics(memory: (owner: string) => AiPolic
   };
 }
 
+type Departure = { second: number; shipId: string; targetId: string; purpose: string; shipGold: number; cargoGold: number; cargo: string[]; origin: { x: number; y: number }; destination: { x: number; y: number }; originEnemies: string[]; originCover: string[]; destinationEnemies: string[] };
+type TurnaroundOwner = { departures: number; immediateReturns: (Departure & { returnSecond: number; emptyDestinationBlockedOrigin: boolean })[]; pending: Record<string, Departure>; previous: Record<string, string> };
+
+/** Observe the real loading -> sailing -> return transitions every tick. Asset values are counted once per event;
+ * summaries must deduplicate hull IDs before adding exposed capital across repeated attempts. */
+export function createNavalTurnaroundDiagnostics(memory: (owner: string) => AiPolicyMemory | undefined): BenchmarkTracker<AiGameAgent, Record<string, TurnaroundOwner>, unknown> {
+  return {
+    id: 'navalTurnaroundDiagnostics',
+    create: ({ players }) => Object.fromEntries(players.map(owner => [owner, { departures: 0, immediateReturns: [], pending: {}, previous: {} }])),
+    afterStep(state, { after: s, players }) {
+      for (const owner of players) {
+        const stats = state[owner]!, ferries = memory(owner)?.naval?.ferries ?? {};
+        const previous: Record<string, string> = {};
+        for (const [id, mission] of Object.entries(ferries)) {
+          const key = `${id}:${mission.sinceTick}:${mission.targetId}`;
+          previous[key] = mission.phase;
+          const boat = s.units.find(unit => unit.id === id && unit.owner === owner);
+          if (!boat) continue;
+          if (mission.phase === 'sailing' && stats.previous[key] !== 'sailing') {
+            const nearby = (point: { x: number; y: number }) => s.units.filter(unit => unitMover(unit.kind) === 'sea' && combatCapability(s, unit).armed && sameGround(s.map, unit, point, 'sea') && Math.hypot(unit.x - point.x, unit.y - point.y) < 900);
+            const enemy = (unit: Unit) => unit.owner === 'neutral' || (s.teams?.[unit.owner] ?? unit.owner) !== (s.teams?.[owner] ?? owner);
+            const cargo = shipPassengers(s.units, boat);
+            stats.departures++;
+            stats.pending[key] = { second: s.tick / TPS, shipId: id, targetId: mission.targetId, purpose: mission.purpose, shipGold: assetPrice(s, boat), cargoGold: cargo.reduce((sum, unit) => sum + UNIT_DEFS[unit.kind].cost, 0), cargo: cargo.map(unit => unit.id), origin: { x: boat.x, y: boat.y }, destination: { ...mission.to }, originEnemies: nearby(boat).filter(enemy).map(unit => unit.id), originCover: nearby(boat).filter(unit => unit.owner === owner && combatHull(unit) && unit.hp >= unit.maxHp * .4).map(unit => unit.id), destinationEnemies: nearby(mission.to).filter(enemy).map(unit => unit.id) };
+          }
+          const departure = stats.pending[key];
+          if (mission.phase === 'return' && departure) {
+            if (departure.cargo.length > 0 && shipPassengers(s.units, boat).length > 0 && s.tick / TPS - departure.second <= 2) stats.immediateReturns.push({ ...departure, returnSecond: s.tick / TPS, emptyDestinationBlockedOrigin: departure.destinationEnemies.length === 0 && departure.originEnemies.length > 0 && departure.originCover.length === 0 });
+            delete stats.pending[key];
+          }
+        }
+        stats.previous = previous;
+      }
+    },
+    finish: state => Object.fromEntries(Object.entries(state).map(([owner, { departures, immediateReturns }]) => [owner, { departures, immediateReturns }])),
+  };
+}
+
+function assetPrice(snapshot: GameSnapshot, unit: Unit) {
+  return isShipKind(unit.kind) ? SHIP_HULL_COST[unit.kind] + installedWeapons(snapshot, unit).reduce((sum, item) => sum + SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].cost, 0) : UNIT_DEFS[unit.kind].cost;
+}
+
 export function runBenchmarkParallelMatch(match: NavalRoomMatch) {
   const memories: Record<string, AiPolicyMemory> = {};
-  const report = runBenchmarkMatch({ ...match, commandPlanner: navalObservedPlanner(memories) }, [createNavalLoadingDiagnostics(owner => memories[owner]) as never]);
+  const report = runBenchmarkMatch({ ...match, commandPlanner: navalObservedPlanner(memories) }, [createNavalLoadingDiagnostics(owner => memories[owner]) as never, createNavalTurnaroundDiagnostics(owner => memories[owner]) as never]);
   if (match.naval.outDir) {
     mkdirSync(match.naval.outDir, { recursive: true });
     writeFileSync(join(match.naval.outDir, `${match.name.replaceAll(' ', '_')}.json`), JSON.stringify(report));

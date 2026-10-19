@@ -14,8 +14,9 @@ const names = new Set<string>();
 for (const file of readdirSync(baseline)) {
   if (!file.endsWith('.json') || file === 'manifest.json' || file === 'report.json') continue;
   const report = JSON.parse(readFileSync(join(baseline, file), 'utf8'));
-  // Recheck every game whose actual memory samples contain this mission, including successful ones.
-  if (Object.values(report.result.trackers.naval).some((owner: any) => owner.samples.some((sample: any) => Object.values(sample.mission ?? {}).some((mission: any) => mission.purpose === 'creep')))) names.add(report.name);
+  // All V9-opponent games with ships cover every possible launch/return event.
+  // The V8 follow-up checks every visible creep mission, including successful ones.
+  if (Object.values(report.result.trackers.naval).some((owner: any) => rival === 'v9' ? owner.ships.length > 0 : owner.samples.some((sample: any) => Object.values(sample.mission ?? {}).some((mission: any) => mission.purpose === 'creep')))) names.add(report.name);
 }
 const input = createNavalRoomInput({ rival, subjects: ROOM_AI_VERSIONS, outDir });
 for (const evaluation of input.evaluations) evaluation.matches = evaluation.matches.filter(match => names.has(match.name));
