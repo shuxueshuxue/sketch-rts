@@ -14,6 +14,7 @@ import { readV6Intel } from '../policy/v6/intel';
 import { distance } from '../policy/spatial';
 import { coursePerformance, windAt } from '../../shared/ship-wind';
 import type { GameMap, Unit } from '../../shared/types';
+import { ferryTargetAvailable } from '../policy/ferry-retries';
 
 function voyageSeconds(ship: Unit, map: GameMap, to: { x: number; y: number }) {
   const heading = Math.atan2(to.y - ship.y, to.x - ship.x);
@@ -44,12 +45,14 @@ export function planFirstCombatCrossing(snapshot: GameSnapshot, owner: PlayerId,
   if (!home) return;
   const reserved = navalServices(snapshot, owner, options).reserved;
   const boat = own.find(unit => isTransportKind(unit.kind) && !ferries[unit.id] && !shipPassengers(snapshot.units, unit).length
+    && (naval.ferryRetryUntil?.[unit.id] ?? 0) <= snapshot.tick
     && !reserved.has(unit.id) && naval.outfit?.shipId !== unit.id && !shipNeedsRepair(snapshot, unit));
   if (!boat) return;
   const nearBoat = walkableGoal(snapshot.map, boat.x, boat.y);
   const from = coastOnWater(snapshot, sameGround(snapshot.map, nearBoat, home) ? nearBoat : home, boat);
   if (!from) return;
   const mines = snapshot.resources.filter(mine => mine.amount > 0 && !sameGround(snapshot.map, mine, home)
+    && ferryTargetAvailable(naval, boat.id, mine.id)
     && !mineClaimedByAlly(snapshot, owner, mine, options)).sort((a, b) => distance(boat, a) - distance(boat, b));
   const trips: { targetId: string; to: { x: number; y: number }; seconds: number }[] = [];
   for (const mine of mines) {
