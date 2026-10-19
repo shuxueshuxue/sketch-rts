@@ -20,11 +20,33 @@ import { bootstrapCampApproach, chooseBootstrapCamp, startBootstrapCamp } from '
 import { miningJobDefenseTarget } from './mining-job-defense';
 import { mineClaimedByAlly } from '../policy/mine-claims';
 import { miningRallyAssignment } from './mining-rally';
-import { activeUnitClaim, isMineRallyClaim } from '../policy/claims';
+import { activeUnitClaim, clearUnitClaim, forgetExpansionMember, isMineRallyClaim, recordUnitTaskClaim, setUnitClaim } from '../policy/claims';
+import type { AiPolicyMemory } from '../memory';
+
+export function expansionMissionUnitIds(memory: AiPolicyMemory) {
+  const mineId = memory.landExpansion?.mineId;
+  return mineId === undefined ? [] : Object.entries(memory.unitClaims)
+    .filter(([, claim]) => claim.expansionMineId === mineId).map(([id]) => id);
+}
+
+/** Import old replay/debug memory once; there is no second live membership list. */
+export function migrateExpansionClaims(snapshot: GameSnapshot, memory: AiPolicyMemory) {
+  const task = memory.landExpansion as (AiPolicyMemory['landExpansion'] & { unitIds?: string[] });
+  if (!task?.unitIds) return;
+  const mine = snapshot.resources.find(mine => mine.id === task.mineId);
+  for (const id of task.unitIds) {
+    const claim = memory.unitClaims[id];
+    if (claim) claim.expansionMineId = task.mineId;
+    else recordUnitTaskClaim(snapshot, memory, id, { kind: 'expansionMission', targetId: task.mineId,
+      x: mine?.x ?? 0, y: mine?.y ?? 0, expansionMineId: task.mineId });
+  }
+  delete task.unitIds;
+}
 
 /** A room army owns one mining objective through clearing, escort and construction. */
 export function prepareExpansionMission(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel) {
   const memory = options.memory, v6 = v6Memory(options);
+  migrateExpansionClaims(snapshot, memory);
   let task = memory.landExpansion;
   // Arrived defenders return to the general's combat view, but still belong to the mine defense.
   // Neither retaining yesterday's escorts nor recruiting today may take them from that task.
@@ -32,7 +54,7 @@ export function prepareExpansionMission(snapshot: GameSnapshot, owner: PlayerId,
     const claim = activeUnitClaim(snapshot, owner, unit, options);
     return isMineRallyClaim(claim) || claim?.kind === 'mineLeash' || claim?.kind === 'expansionGarrison';
   }).map(unit => unit.id));
-  if (task) task.unitIds = task.unitIds.filter(id => !defending.has(id));
+  for (const id of defending) forgetExpansionMember(memory, id);
   if (activeMiningBaseCount(snapshot, owner) === 0
     && snapshot.players[owner]!.gold < BUILDING_DEFS.townHall.cost
     && !snapshot.buildings.some(building => building.owner === owner && building.kind === 'townHall' && !building.complete)
@@ -42,8 +64,10 @@ export function prepareExpansionMission(snapshot: GameSnapshot, owner: PlayerId,
       task.stage = 'fund';
       // No expedition can depart without capital. Release ownership too, so the mine-defense
       // leash does not mistake these now-free soldiers for an active construction screen.
-      for (const id of task.unitIds) if (memory.unitClaims[id]?.kind === 'expansion') delete memory.unitClaims[id];
-      task.unitIds = [];
+      for (const id of expansionMissionUnitIds(memory)) {
+        if (memory.unitClaims[id]?.kind === 'expansion') clearUnitClaim(memory, id);
+        forgetExpansionMember(memory, id);
+      }
     }
     return undefined;
   }
@@ -59,15 +83,15 @@ export function prepareExpansionMission(snapshot: GameSnapshot, owner: PlayerId,
     if (wanted <= activeMiningBaseCount(snapshot, owner)) return undefined;
     const next = bootstrapExpansionMine(snapshot, owner, intel, options);
     if (!next) return undefined;
-    task = memory.landExpansion = { mineId: next.id, sinceTick: snapshot.tick, stage: 'assemble', unitIds: [], interruptions: [] };
+    for (const id of expansionMissionUnitIds(memory)) forgetExpansionMember(memory, id);
+    task = memory.landExpansion = { mineId: next.id, sinceTick: snapshot.tick, stage: 'assemble', interruptions: [] };
     // A purchasing visit is optional. Recall the opening courier to the expansion screen; ferries and medical care
     // keep their existing ownership. Claims below prevent another shopping trip from immediately replacing this one.
     const courier = memory.mercenaryCourier && snapshot.units.find(unit => unit.id === memory.mercenaryCourier!.unitId);
     if (courier && !defending.has(courier.id) && !courier.deck && courier.hp === courier.maxHp && courier.order.type !== 'board') {
       delete memory.mercenaryCourier;
-      task.unitIds.push(courier.id);
-      memory.unitClaims[courier.id] = { kind: 'expansion', targetId: next.id, x: next.x, y: next.y,
-        sinceTick: snapshot.tick, expiresTick: snapshot.tick + 30 };
+      setUnitClaim(memory, courier.id, { kind: 'expansion', targetId: next.id, x: next.x, y: next.y,
+        sinceTick: snapshot.tick, expiresTick: snapshot.tick + 30, expansionMineId: next.id });
     }
   }
   const target = snapshot.resources.find(mine => mine.id === task.mineId)!;
@@ -88,16 +112,18 @@ export function prepareExpansionMission(snapshot: GameSnapshot, owner: PlayerId,
       recordPlay(v6, `expansion:interrupted:${reason}`);
     }
     task.paused = true;
-    for (const id of task.unitIds) if (memory.unitClaims[id]?.kind === 'expansion') delete memory.unitClaims[id];
+    for (const id of expansionMissionUnitIds(memory)) if (memory.unitClaims[id]?.kind === 'expansion') clearUnitClaim(memory, id);
   } else {
     delete task.paused;
     const alive = new Set(snapshot.units.filter(unit => unit.owner === owner && !defending.has(unit.id)
       && !unit.deck && unit.order.type !== 'board').map(unit => unit.id));
-    task.unitIds = [...new Set([...task.unitIds.filter(id => alive.has(id)), ...availableV6Army(snapshot, options, intel)
+    const retained = expansionMissionUnitIds(memory);
+    for (const id of retained) if (!alive.has(id)) forgetExpansionMember(memory, id);
+    const members = [...new Set([...retained.filter(id => alive.has(id)), ...availableV6Army(snapshot, options, intel)
       .filter(unit => !defending.has(unit.id) && !isBacklineKind(unit) && unit.attackDamage > 0).map(unit => unit.id)])];
     // Reuse the existing errand claim contract. New shop/mercenary trips cannot borrow the expansion's screen.
-    for (const id of task.unitIds) memory.unitClaims[id] = { kind: 'expansion', targetId: target.id,
-      x: target.x, y: target.y, sinceTick: snapshot.tick, expiresTick: snapshot.tick + 30 };
+    for (const id of members) setUnitClaim(memory, id, { kind: 'expansion', targetId: target.id,
+      x: target.x, y: target.y, sinceTick: snapshot.tick, expiresTick: snapshot.tick + 30, expansionMineId: target.id });
   }
   return task;
 }

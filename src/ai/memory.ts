@@ -8,7 +8,7 @@ export type AiJobState = {
 };
 
 export type AiPolicyUnitClaimKind = "mercenary" | "creep" | "expansion" | "attack" | "harass" | "retreat" | "build"
-  | "mineRally" | "mineLeash" | "mineGuard" | "workerSafety" | "expansionGarrison";
+  | "mineRally" | "mineLeash" | "mineGuard" | "workerSafety" | "expansionGarrison" | "expansionMission";
 
 export type WorkerEvacuation = { origin: { x: number; y: number }; resourceId?: string;
   shelter: { x: number; y: number }; safeResourceId?: string };
@@ -24,6 +24,9 @@ export type AiPolicyUnitClaim = {
   resumeKind?: 'mineRally' | 'mineGuard';
   evacuation?: WorkerEvacuation;
   localRetreat?: { x: number; y: number };
+  // Construction-screen membership survives the shorter ordinary movement claim.
+  // expansionMission is the membership-only kind when that movement claim has ended.
+  expansionMineId?: string;
 };
 
 export type AiStrategicPlan = {
@@ -81,7 +84,6 @@ export type AiPolicyMemory = {
     mineId: string;
     sinceTick: number;
     stage: 'fund' | 'assemble' | 'clear' | 'escort' | 'build' | 'complete';
-    unitIds: string[];
     staging?: { x: number; y: number };
     stagingCheckedTick?: number;
     interruptions: { tick: number; reason: 'home-threat' | 'mining-threat' | 'mine-threat'; targetId?: string }[];

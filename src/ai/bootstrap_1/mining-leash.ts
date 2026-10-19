@@ -1,6 +1,6 @@
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import type { AiPolicyMemory, AiPolicyUnitClaim } from '../memory';
-import { activeUnitClaim, isMineRallyClaim, recordUnitTaskClaim } from '../policy/claims';
+import { activeUnitClaim, clearUnitClaim, isMineRallyClaim, recordUnitTaskClaim } from '../policy/claims';
 import { distance } from '../policy/spatial';
 import type { AiPolicyContext } from '../policy/types';
 import type { V6Intel } from '../policy/v6/intel';
@@ -12,9 +12,9 @@ const proposals = new WeakMap<AiPolicyMemory, { tick: number; units: Unit[]; sta
 const defender = (claim: AiPolicyUnitClaim | undefined) => claim?.kind === 'mineGuard' || isMineRallyClaim(claim) || claim?.kind === 'mineLeash';
 
 export function expansionOwnsDefender(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, unit: Unit) {
-  // Keep this compatibility read until the expansion branch migrates its construction screen to unitClaims.
   const mission = options.memory.landExpansion;
-  if (mission && !mission.paused && mission.stage !== 'complete' && mission.unitIds.includes(unit.id)) return true;
+  if (mission && !mission.paused && mission.stage !== 'complete'
+    && options.memory.unitClaims[unit.id]?.expansionMineId === mission.mineId) return true;
   const claim = activeUnitClaim(snapshot, owner, unit, options);
   return claim?.kind === 'expansion' || claim?.kind === 'expansionGarrison';
 }
@@ -84,7 +84,7 @@ export function recordMiningGeneralCommands(snapshot: GameSnapshot, owner: Playe
   if (!hall) {
     if (!returning) {
       for (const command of commands) if ('unitIds' in command) for (const id of command.unitIds) {
-        if (options.memory.unitClaims[id]?.kind === 'mineGuard') delete options.memory.unitClaims[id];
+        if (options.memory.unitClaims[id]?.kind === 'mineGuard') clearUnitClaim(options.memory, id);
       }
       if (!snapshot.units.some(unit => activeUnitClaim(snapshot, owner, unit, options)?.kind === 'mineGuard')) delete options.memory.miningLeash;
     }

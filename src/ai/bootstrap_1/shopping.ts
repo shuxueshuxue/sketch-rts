@@ -1,3 +1,4 @@
+import { ordinaryUnitClaim } from '../policy/claims';
 import { unitMover } from '../../shared/catalog';
 import { canEquip, freeItemSlot, itemsFor } from '../../shared/equipment';
 import { nearestByRoute } from '../../shared/route-selection';
@@ -40,7 +41,7 @@ function shoppingAssignment(snapshot: GameSnapshot, owner: PlayerId, options: Ai
   const camp = options.memory.v6?.creep;
   const occupied = new Set([...lootRecoveryUnitIds(snapshot, owner, options), ...mercenaryControlUnitIds(snapshot, owner, options)]);
   const buyers = intel.army.filter(unit => !unit.deck && unit.expiresTick === undefined && unitMover(unit.kind) === 'land'
-    && canEquip(unit) && unit.hp >= unit.maxHp * .7 && !options.memory.unitClaims[unit.id]
+    && canEquip(unit) && unit.hp >= unit.maxHp * .7 && !ordinaryUnitClaim(options.memory, unit.id)
     && !camp?.group.includes(unit.id) && !options.memory.v6?.raid?.unitIds.includes(unit.id)
     && (unit.kind === 'horseArcher' || !options.memory.mounted?.some(task => task.unitIds.includes(unit.id)))
     && !occupied.has(unit.id) && ['idle', 'hold', 'move', 'attackMove'].includes(unit.order.type));

@@ -1,0 +1,187 @@
+{
+  "change": "Move landExpansion.unitIds into the per-unit claims registry, preserving both durable mission membership and the existing short ordinary order leases.",
+  "base": "a2cff60725d2e74035ce92dd77cdc5b8cddb2d41",
+  "candidateProductionSource": "aa913a08fee02fd4892ed767bfbfd7b8eae28339",
+  "removed": [
+    "landExpansion.unitIds"
+  ],
+  "membership": {
+    "expansionMineId": "The sole durable membership record, on unitClaims[id]. Follows the current mission; defense reassignment, funding failure, death/owner loss and a new mine release it.",
+    "expansionMission": "Membership-only claim after the ordinary order lease expires or is cleared. Hidden from ordinaryUnitClaim/activeUnitClaim so it does not introduce a new shop/loot/hire exclusion.",
+    "ordinaryLease": "The old expansion claim still lasts 30 ticks and is pruned at a foundation. Accepted orders clear/replace the ordinary lease on the same schedule. Local retreat and temporary defense keep their prior command behavior.",
+    "paused": "Membership remains while paused, but expansionOwnsDefender returns false. Resume reclaims the same retained live members plus available recruits.",
+    "snapshotImport": "bootstrapPolicyContext imports an old replay/debug unitIds list once and deletes the field before selecting forces. prepareExpansionMission also supports direct callers."
+  },
+  "commandEquivalence": {
+    "allOwners": true,
+    "allScripts": true,
+    "normalThinkInterval": 15,
+    "normalDeliveryDelay": 3,
+    "comparison": "Raw JSON bytes, without sorting, filtering, rounding or normalizing any commands. Both planned entries (including empty think frames) and issued orders are compared. Final snapshot bytes are also identical.",
+    "scenarios": [
+      {
+        "name": "archer-build",
+        "provenance": {
+          "ref": "a2cff60725d2e74035ce92dd77cdc5b8cddb2d41",
+          "seed": "v5-final-1",
+          "name": "ladder-16 v9_archer grove",
+          "index": 28
+        },
+        "fixtureSha256": "78fb4f008e7b91e796833258607295ccd7a7e759eb0e9014401efce823c7fae2",
+        "startTick": 4500,
+        "endTick": 9000,
+        "seconds": 225.0,
+        "thinkFrames": 600,
+        "commands": 856,
+        "planned": {
+          "bytes": 176314,
+          "sha256": "13fc9e1edbbc96a9bd5ee8935be498b7009c8b5844baeb319c6a2204e620f49b"
+        },
+        "issued": {
+          "bytes": 158247,
+          "sha256": "6c1c932767b71ad193bc2b8e0b192e0b8de18651ace99e53df9c5ba5b6a7bf80"
+        },
+        "finalWorld": {
+          "bytes": 98061,
+          "sha256": "f203cf9ee20c652f6f548073619b1f0ec53df9d03afdc0931e8c4529ba80e747"
+        },
+        "byteIdentical": true
+      },
+      {
+        "name": "summoner-wave",
+        "provenance": {
+          "ref": "a2cff60725d2e74035ce92dd77cdc5b8cddb2d41",
+          "seed": "v5-final-1",
+          "name": "ladder-12 v9_summoner grove",
+          "index": 2
+        },
+        "fixtureSha256": "58f8eeccde52d5818ef75c9b21e4ec8c06c494d3a891202caa01c19055fa3b36",
+        "startTick": 3030,
+        "endTick": 7530,
+        "seconds": 225.0,
+        "thinkFrames": 600,
+        "commands": 933,
+        "planned": {
+          "bytes": 204843,
+          "sha256": "7b9cec483e89cc07137c32b626832838c267ff44f24d506e47c363de45ec4fbc"
+        },
+        "issued": {
+          "bytes": 186789,
+          "sha256": "7cf82287e47462f02dc9d4e1803fc72141c1e054c93686ebb4b6d0d7595d6803"
+        },
+        "finalWorld": {
+          "bytes": 88732,
+          "sha256": "5b93c5a5aaf0bc629e104ec15063b660ca644cc8dd5f30ea12c4fd476579ea03"
+        },
+        "byteIdentical": true
+      },
+      {
+        "name": "knight-hold",
+        "provenance": {
+          "ref": "a2cff60725d2e74035ce92dd77cdc5b8cddb2d41",
+          "seed": "v5-final-1",
+          "name": "ladder-16 v9_knight ember",
+          "index": 29
+        },
+        "fixtureSha256": "003760b85bab6019a558bd6dcc26ed10fe250917efdc6c910e7aad38bba63cde",
+        "startTick": 12000,
+        "endTick": 15600,
+        "seconds": 180.0,
+        "thinkFrames": 480,
+        "commands": 493,
+        "planned": {
+          "bytes": 107460,
+          "sha256": "8f51eb63ce59610305a3f4968b62d9f9b81fc9fb219e7c42ae273c533bb01171"
+        },
+        "issued": {
+          "bytes": 91292,
+          "sha256": "b601e58181bf855408bf54d1ecd3247f4b2f79555671b440413f3c46ed087686"
+        },
+        "finalWorld": {
+          "bytes": 172699,
+          "sha256": "5bdad6bd023f0e9e984dae0dc05b223ab07bbe87db27affca7e19f4bc366dced"
+        },
+        "byteIdentical": true
+      },
+      {
+        "name": "rally",
+        "provenance": {
+          "fixture": "src/ai/bootstrap_1/fixtures/defense-rally-14m48.json"
+        },
+        "fixtureSha256": "7f679adb93206a5a79258985db8a29c0336806ef05dae86cc41e4fb61d38c1d7",
+        "startTick": 17760,
+        "endTick": 20760,
+        "seconds": 150.0,
+        "thinkFrames": 400,
+        "commands": 1512,
+        "planned": {
+          "bytes": 310456,
+          "sha256": "0cb115756ef66beb106887f49902af0720f22650f33ae016028a4212619cf190"
+        },
+        "issued": {
+          "bytes": 308161,
+          "sha256": "7d38f8b0772073b3c2ed68ee3c4020e5e6224a629e530caf41aeee42b981fced"
+        },
+        "finalWorld": {
+          "bytes": 138600,
+          "sha256": "bbb852fdea921425a168cf22d1156ad931921a52cf9e95ba10817c764005a8bb"
+        },
+        "byteIdentical": true
+      }
+    ]
+  },
+  "sharedFunctions": [
+    "recordAiMemoryForCommands / recordAttackWaveMemory / recordUnitTaskClaim: retain mission membership when ordinary leases change",
+    "pruneAiPolicyMemory: preserve live membership while expiring ordinary leases; remove dead/wrong-owner members",
+    "activeUnitClaim / ordinaryUnitClaim: membership-only entries are not ordinary tactical claims",
+    "clearUnitClaim / setUnitClaim / forgetExpansionMember: central registry updates",
+    "core neutral objective release: clear ordinary lease through the same registry helper",
+    "mining-leash expansionOwnsDefender / temporary guard release: replace the old roster with registry membership"
+  ],
+  "existingTests": "Only membership access/setup changed in expansion-mission, mining-leash and defense-claims tests; all physical timing, defense ownership, escort and funding assertions retained.",
+  "newLifecycleTests": 10,
+  "behaviorFollowUp": "Garrison behavior is deliberately unchanged. The next expansion still takes all six archers/footmen after the natural completes; a separate PR will retain a garrison.",
+  "winRateBenchmark": false,
+  "rawEvidence": "comparison.evidence.json",
+  "validation": {
+    "typescript": "passed",
+    "focused": "expansion mission 6 + defense claims 14 + mining leash 7; lifecycle 10 passed",
+    "fullSrc": {
+      "sha": "aa913a08fee02fd4892ed767bfbfd7b8eae28339",
+      "machine": "mac1",
+      "dir": "/Users/mac1/work/sketch-cli/trees/aa913a08fee02fd4892ed767bfbfd7b8eae28339",
+      "runId": "mveuty09-79b039",
+      "remoteLog": "/Users/mac1/work/sketch-cli/runs/mveuty09-79b039/pr538-full-src.log",
+      "command": "npx vitest run --dir src --maxWorkers 2 --minWorkers 1",
+      "status": "failed",
+      "code": 1,
+      "stderr": "",
+      "filesPassed": 671,
+      "filesFailed": 2,
+      "testsPassed": 7537,
+      "testsFailed": 2,
+      "testsSkipped": 1,
+      "durationSeconds": 1008.64
+    },
+    "finalTestSource": "6a0f16acdf2fffeaef0a1595d94af0da96308300",
+    "finalTestCase": "Final test-only changes supply the required mine amount and rename the saved-snapshot test to satisfy the source naming boundary; production source is unchanged from aa913a08.",
+    "finalRecheck": {
+      "sha": "6a0f16acdf2fffeaef0a1595d94af0da96308300",
+      "dir": "/Users/mac1/work/sketch-cli/trees/6a0f16acdf2fffeaef0a1595d94af0da96308300",
+      "machine": "mac1",
+      "command": "npx vitest run src/sdk/package-boundaries.test.ts src/ai/bootstrap_1/expansion-claims.test.ts src/ai/benchmark/presets.test.ts --maxWorkers 1 --minWorkers 1",
+      "code": 0,
+      "files": 3,
+      "tests": 34,
+      "passed": true,
+      "parallelWorkerPresetMilliseconds": 1028
+    },
+    "fullSrcFailures": {
+      "naming": "A prohibited word in the new test title was fixed. package-boundaries and the new tests pass on both juma and mac1; the new docs naming was checked too.",
+      "presets": "SDK parallel preset exceeded 5000ms during the full run. Unchanged test passes isolated on juma (1620ms) and the same mac1 (1028ms). No timeout was changed."
+    },
+    "result": "All 673 source test files covered: 671 passed in the full run, the two failed files pass after the title fix and isolated rechecks. 7539 tests pass, one is skipped. Final tsc --noEmit exits 0.",
+    "rawEvidence": "validation.evidence.json",
+    "productionIdenticalToFullTestSource": true
+  }
+}
