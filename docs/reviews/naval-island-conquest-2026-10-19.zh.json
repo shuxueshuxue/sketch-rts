@@ -1,0 +1,5843 @@
+{
+  "base": "91851eb6",
+  "runtimeFingerprint": "5084248c2c6f91908d2fd821465b7878fb3adb5ab5951668b4b823fa95e211fb",
+  "method": {
+    "nativeRoom": "一名AFK人类，其余为线上默认房间AI；房间ID固定corner-intent-MAP；没有指令、资源、阵营或地形覆盖",
+    "maps": 7,
+    "aiSeats": 21,
+    "seconds": 900,
+    "noWinRateBenchmark": true,
+    "boarding": "真实装进运输船/航母的永久战斗单位去重人数",
+    "landing": "真实卸到初始中立岛的永久战斗单位去重人数；不含敌方起始岛",
+    "camp": "初始neutralCamps；最后一个初始守怪击杀者记清营，另列守怪击杀数",
+    "hallsAndMines": "结束帧上存活且建成的中立岛矿厅与320距离内有余量矿",
+    "garrison": "结束帧上expansionGarrison归属到该厅，且实体已在650范围内",
+    "gullIsland": "修改前原生858.35秒结束；修改后达到900秒，分别如实列出终局帧"
+  },
+  "summary": {
+    "boardedCombat": {
+      "before": 156,
+      "after": 196
+    },
+    "unloadedIslandCombat": {
+      "before": 98,
+      "after": 135
+    },
+    "unloadedIslandWorkers": {
+      "before": 23,
+      "after": 23
+    },
+    "clearedIslandCamps": {
+      "before": 11,
+      "after": 17
+    },
+    "neutralIslandHalls": {
+      "before": 6,
+      "after": 13
+    },
+    "neutralIslandMines": {
+      "before": 8,
+      "after": 14
+    },
+    "arrivedIslandGarrisonUnits": {
+      "before": 0,
+      "after": 2
+    },
+    "islandCoverBuildings": {
+      "before": 2,
+      "after": 9
+    },
+    "completedConquestsAfter": 9
+  },
+  "games": [
+    {
+      "map": "sapphireArchipelago",
+      "before": {
+        "map": "sapphireArchipelago",
+        "endTick": 18000,
+        "checksum": "ef89b392",
+        "coldReplayChecksum": "ef89b392",
+        "allCommandsColdReplayed": true
+      },
+      "after": {
+        "map": "sapphireArchipelago",
+        "endTick": 18000,
+        "checksum": "f11cafc9",
+        "coldReplayChecksum": "f11cafc9",
+        "allCommandsColdReplayed": true
+      }
+    },
+    {
+      "map": "brokenSea",
+      "before": {
+        "map": "brokenSea",
+        "endTick": 18000,
+        "checksum": "bc464f01",
+        "coldReplayChecksum": "bc464f01",
+        "allCommandsColdReplayed": true
+      },
+      "after": {
+        "map": "brokenSea",
+        "endTick": 18000,
+        "checksum": "4d32fe3e",
+        "coldReplayChecksum": "4d32fe3e",
+        "allCommandsColdReplayed": true
+      }
+    },
+    {
+      "map": "templeSpring",
+      "before": {
+        "map": "templeSpring",
+        "endTick": 18000,
+        "checksum": "55fae85a",
+        "coldReplayChecksum": "55fae85a",
+        "allCommandsColdReplayed": true
+      },
+      "after": {
+        "map": "templeSpring",
+        "endTick": 18000,
+        "checksum": "aef10a6e",
+        "coldReplayChecksum": "aef10a6e",
+        "allCommandsColdReplayed": true
+      }
+    },
+    {
+      "map": "elderwood",
+      "before": {
+        "map": "elderwood",
+        "endTick": 18000,
+        "checksum": "e7c879cc",
+        "coldReplayChecksum": "e7c879cc",
+        "allCommandsColdReplayed": true
+      },
+      "after": {
+        "map": "elderwood",
+        "endTick": 18000,
+        "checksum": "e7c879cc",
+        "coldReplayChecksum": "e7c879cc",
+        "allCommandsColdReplayed": true
+      }
+    },
+    {
+      "map": "ringwater",
+      "before": {
+        "map": "ringwater",
+        "endTick": 18000,
+        "checksum": "52760a32",
+        "coldReplayChecksum": "52760a32",
+        "allCommandsColdReplayed": true
+      },
+      "after": {
+        "map": "ringwater",
+        "endTick": 18000,
+        "checksum": "90434b2b",
+        "coldReplayChecksum": "90434b2b",
+        "allCommandsColdReplayed": true
+      }
+    },
+    {
+      "map": "gullIsland",
+      "before": {
+        "map": "gullIsland",
+        "endTick": 17167,
+        "checksum": "37ad08b4",
+        "coldReplayChecksum": "37ad08b4",
+        "allCommandsColdReplayed": true
+      },
+      "after": {
+        "map": "gullIsland",
+        "endTick": 18000,
+        "checksum": "63e14781",
+        "coldReplayChecksum": "63e14781",
+        "allCommandsColdReplayed": true
+      }
+    },
+    {
+      "map": "twoShores",
+      "before": {
+        "map": "twoShores",
+        "endTick": 18000,
+        "checksum": "ad0ae8f3",
+        "coldReplayChecksum": "ad0ae8f3",
+        "allCommandsColdReplayed": true
+      },
+      "after": {
+        "map": "twoShores",
+        "endTick": 18000,
+        "checksum": "ea4edc60",
+        "coldReplayChecksum": "ea4edc60",
+        "allCommandsColdReplayed": true
+      }
+    }
+  ],
+  "seats": [
+    {
+      "map": "sapphireArchipelago",
+      "mapName": "蓝宝群岛",
+      "owner": "enemy",
+      "before": {
+        "version": "v9_archer",
+        "endSecond": 900.0,
+        "boardedCombat": 14,
+        "unloadedIslandCombat": 1,
+        "firstIslandCombatUnloadSecond": 222.85,
+        "unloadedIslandWorkers": 1,
+        "clearedIslandCamps": 0,
+        "islandGuardsKilled": 0,
+        "neutralIslandHalls": 0,
+        "neutralIslandMines": 0,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {},
+        "ferries": {
+          "unit-enemy-transport-5822": {
+            "purpose": "reinforce",
+            "targetId": "gold-enemy2-main",
+            "from": {
+              "x": 7376,
+              "y": 7280
+            },
+            "to": {
+              "x": 5392,
+              "y": 8784
+            },
+            "phase": "sailing",
+            "crewIds": [],
+            "sinceTick": 15675,
+            "deliveries": [],
+            "returnTrips": 0,
+            "progress": {
+              "tick": 17985,
+              "x": 5541.858180425758,
+              "y": 8780.443912661156,
+              "heading": 3.927140647669863,
+              "phase": "sailing",
+              "crew": "unit-enemy-sparkArcher-4073|unit-enemy-sparkArcher-4471|unit-enemy-sparkArcher-4602|unit-enemy-sparkArcher-5049|unit-enemy-sparkArcher-5227|unit-enemy-sparkArcher-5453|unit-enemy-sparkArcher-5636"
+            },
+            "payloadIds": [
+              "unit-enemy-sparkArcher-4073",
+              "unit-enemy-sparkArcher-4471",
+              "unit-enemy-sparkArcher-4602",
+              "unit-enemy-sparkArcher-5049",
+              "unit-enemy-sparkArcher-5227",
+              "unit-enemy-sparkArcher-5453",
+              "unit-enemy-sparkArcher-5636"
+            ]
+          },
+          "unit-enemy-transport-1134": {
+            "purpose": "settle",
+            "targetId": "gold-enemy2-main",
+            "from": {
+              "x": 7376,
+              "y": 7312
+            },
+            "to": {
+              "x": 5392,
+              "y": 8784
+            },
+            "phase": "loading",
+            "crewIds": [],
+            "sinceTick": 17745,
+            "progress": {
+              "tick": 17970,
+              "x": 7219.328572738246,
+              "y": 7124.477021889136,
+              "heading": 8.442903650391917,
+              "phase": "loading",
+              "crew": ""
+            }
+          }
+        },
+        "decisions": {
+          "unit-enemy-transport-1134": {
+            "tick": 17985,
+            "reason": "loading",
+            "lastBlock": {
+              "tick": 17745,
+              "reason": "approaching-load"
+            }
+          },
+          "unit-enemy-transport-5822": {
+            "tick": 17985,
+            "reason": "sailing",
+            "lastBlock": {
+              "tick": 15900,
+              "reason": "await-combat-boarding"
+            }
+          }
+        },
+        "failures": {
+          "unit-enemy-transport-1134": {
+            "gold-satellite-0": {
+              "attempts": 1,
+              "tick": 17325,
+              "reason": "landing-defense"
+            }
+          }
+        },
+        "firstCombatDelivery": {
+          "firstShipTick": 1875,
+          "deadlineTick": 5495,
+          "attempts": {
+            "unit-enemy-transport-1134": {
+              "firstSeenTick": 1875,
+              "passengerIds": [
+                "unit-enemy-emberRavager-1152"
+              ],
+              "reason": "delivered",
+              "tick": 4470,
+              "targetId": "gold-satellite-0"
+            }
+          },
+          "routeBudgeted": true,
+          "firstMinuteBlock": {
+            "tick": 3090,
+            "reason": "sailing"
+          },
+          "deliveredTick": 4470,
+          "deliveredShipId": "unit-enemy-transport-1134",
+          "deliveredUnitId": "unit-enemy-emberRavager-1152"
+        }
+      },
+      "after": {
+        "version": "v9_archer",
+        "endSecond": 900.0,
+        "boardedCombat": 16,
+        "unloadedIslandCombat": 16,
+        "firstIslandCombatUnloadSecond": 222.85,
+        "unloadedIslandWorkers": 1,
+        "clearedIslandCamps": 1,
+        "islandGuardsKilled": 2,
+        "neutralIslandHalls": 1,
+        "neutralIslandMines": 1,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 1,
+        "conquests": {
+          "gold-satellite-0": {
+            "mineId": "gold-satellite-0",
+            "sinceTick": 4470,
+            "stage": "complete",
+            "interruptions": [],
+            "landing": {
+              "x": 7088,
+              "y": 5680
+            },
+            "reason": "garrison-established",
+            "combat": {},
+            "stagingCheckedTick": 7185,
+            "staging": {
+              "x": 7176.553459404582,
+              "y": 5636.615504784163
+            }
+          }
+        },
+        "ferries": {
+          "unit-enemy-transport-1134": {
+            "purpose": "settle",
+            "targetId": "gold-satellite-5",
+            "from": {
+              "x": 7536,
+              "y": 5808
+            },
+            "to": {
+              "x": 6096,
+              "y": 2960
+            },
+            "phase": "sailing",
+            "crewIds": [],
+            "sinceTick": 17085,
+            "progress": {
+              "tick": 17985,
+              "x": 6672.795301202269,
+              "y": 5360.79530120227,
+              "heading": 3.9269908169872414,
+              "phase": "sailing",
+              "crew": "unit-enemy-worker-1|unit-enemy-emberRavager-1152|unit-enemy-sparkArcher-1643|unit-enemy-sparkArcher-2749|unit-enemy-sparkArcher-2970|unit-enemy-sparkArcher-3191|unit-enemy-ashWarden-3410|unit-enemy-worker-3585"
+            }
+          }
+        },
+        "decisions": {
+          "unit-enemy-transport-1134": {
+            "tick": 17985,
+            "reason": "sailing",
+            "lastBlock": {
+              "tick": 15330,
+              "reason": "approaching-load"
+            }
+          }
+        },
+        "failures": {
+          "unit-enemy-transport-1134": {
+            "gold-satellite-0": {
+              "attempts": 2,
+              "tick": 14925,
+              "reason": "await-reinforcement-batch"
+            }
+          }
+        },
+        "firstCombatDelivery": {
+          "firstShipTick": 1875,
+          "deadlineTick": 5495,
+          "attempts": {
+            "unit-enemy-transport-1134": {
+              "firstSeenTick": 1875,
+              "passengerIds": [
+                "unit-enemy-emberRavager-1152"
+              ],
+              "reason": "delivered",
+              "tick": 4470,
+              "targetId": "gold-satellite-0"
+            }
+          },
+          "routeBudgeted": true,
+          "firstMinuteBlock": {
+            "tick": 3090,
+            "reason": "sailing"
+          },
+          "deliveredTick": 4470,
+          "deliveredShipId": "unit-enemy-transport-1134",
+          "deliveredUnitId": "unit-enemy-emberRavager-1152"
+        },
+        "endpointPolicy": {
+          "map": "sapphireArchipelago",
+          "owner": "enemy",
+          "localExpansionAvailable": false,
+          "navalWant": {
+            "id": "naval:warship",
+            "cost": 540,
+            "command": {
+              "type": "train",
+              "buildingId": "building-enemy-shipyard-1048",
+              "unitKind": "warship"
+            }
+          },
+          "goals": [
+            {
+              "id": "unit:ashHexer",
+              "cost": 140,
+              "priority": 87
+            },
+            {
+              "id": "naval:warship",
+              "cost": 540,
+              "priority": 86
+            },
+            {
+              "id": "unit:priest",
+              "cost": 135,
+              "priority": 85
+            },
+            {
+              "id": "upgrade:weaponTraining",
+              "cost": 260,
+              "priority": 79
+            },
+            {
+              "id": "upgrade:reinforcedPlating",
+              "cost": 180,
+              "priority": 78
+            }
+          ],
+          "gold": 516.38,
+          "yards": [
+            {
+              "id": "building-enemy-shipyard-1048",
+              "complete": true,
+              "queue": [],
+              "x": 7600,
+              "y": 6832
+            }
+          ],
+          "buildingWorkers": []
+        },
+        "reasons": [
+          "gold-satellite-0: complete / garrison-established"
+        ]
+      }
+    },
+    {
+      "map": "sapphireArchipelago",
+      "mapName": "蓝宝群岛",
+      "owner": "enemy2",
+      "before": {
+        "version": "v9_knight",
+        "endSecond": 900.0,
+        "boardedCombat": 3,
+        "unloadedIslandCombat": 1,
+        "firstIslandCombatUnloadSecond": 240.25,
+        "unloadedIslandWorkers": 1,
+        "clearedIslandCamps": 0,
+        "islandGuardsKilled": 0,
+        "neutralIslandHalls": 0,
+        "neutralIslandMines": 0,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {},
+        "ferries": {},
+        "decisions": {
+          "unit-enemy2-transport-1136": {
+            "tick": 9423,
+            "reason": "return",
+            "lastBlock": {
+              "tick": 8658,
+              "reason": "crossing-water-held"
+            }
+          },
+          "unit-enemy2-transport-3055": {
+            "tick": 11943,
+            "reason": "retry-delay",
+            "lastBlock": {
+              "tick": 11943,
+              "reason": "retry-delay"
+            }
+          }
+        },
+        "failures": {
+          "unit-enemy2-transport-3055": {
+            "gold-satellite-1": {
+              "attempts": 1,
+              "tick": 11793,
+              "reason": "landing-defense"
+            }
+          }
+        },
+        "firstCombatDelivery": {
+          "firstShipTick": 1893,
+          "deadlineTick": 6923,
+          "attempts": {
+            "unit-enemy2-transport-1136": {
+              "firstSeenTick": 1893,
+              "passengerIds": [
+                "unit-enemy2-lancer-1150"
+              ],
+              "reason": "delivered",
+              "tick": 4818,
+              "targetId": "gold-satellite-1"
+            }
+          },
+          "routeBudgeted": true,
+          "firstMinuteBlock": {
+            "tick": 3108,
+            "reason": "sailing"
+          },
+          "deliveredTick": 4818,
+          "deliveredShipId": "unit-enemy2-transport-1136",
+          "deliveredUnitId": "unit-enemy2-lancer-1150"
+        }
+      },
+      "after": {
+        "version": "v9_knight",
+        "endSecond": 900.0,
+        "boardedCombat": 12,
+        "unloadedIslandCombat": 6,
+        "firstIslandCombatUnloadSecond": 240.25,
+        "unloadedIslandWorkers": 1,
+        "clearedIslandCamps": 1,
+        "islandGuardsKilled": 2,
+        "neutralIslandHalls": 1,
+        "neutralIslandMines": 1,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 1,
+        "conquests": {
+          "gold-satellite-1": {
+            "mineId": "gold-satellite-1",
+            "sinceTick": 4818,
+            "stage": "complete",
+            "interruptions": [],
+            "landing": {
+              "x": 5872,
+              "y": 6800
+            },
+            "reason": "garrison-established",
+            "combat": {},
+            "stagingCheckedTick": 6708,
+            "staging": {
+              "x": 5978.370870174722,
+              "y": 7019.305155366059
+            }
+          }
+        },
+        "ferries": {
+          "unit-enemy2-transport-5822": {
+            "purpose": "reinforce",
+            "targetId": "gold-satellite-1",
+            "from": {
+              "x": 5392,
+              "y": 8816
+            },
+            "to": {
+              "x": 6320,
+              "y": 7600
+            },
+            "phase": "sailing",
+            "crewIds": [],
+            "sinceTick": 16623,
+            "deliveries": [],
+            "returnTrips": 0,
+            "progress": {
+              "tick": 17958,
+              "x": 5488.966486987127,
+              "y": 8943.033513012862,
+              "heading": -0.7853981633974486,
+              "phase": "sailing",
+              "crew": "unit-enemy2-priest-3926|unit-enemy2-raider-5522|unit-enemy2-raider-5561|unit-enemy2-raider-5605|unit-enemy2-raider-5719"
+            },
+            "payloadIds": [
+              "unit-enemy2-priest-3926",
+              "unit-enemy2-raider-5522",
+              "unit-enemy2-raider-5561",
+              "unit-enemy2-raider-5605",
+              "unit-enemy2-raider-5719"
+            ]
+          },
+          "unit-enemy2-transport-1136": {
+            "purpose": "settle",
+            "targetId": "gold-satellite-2",
+            "from": {
+              "x": 5416.693040011582,
+              "y": 8474.612348403858
+            },
+            "to": {
+              "x": 3344,
+              "y": 7216
+            },
+            "phase": "sailing",
+            "crewIds": [],
+            "sinceTick": 17073,
+            "progress": {
+              "tick": 17883,
+              "x": 5526.588908650685,
+              "y": 8566.588908650652,
+              "heading": -21.205750411731103,
+              "phase": "sailing",
+              "crew": "unit-enemy2-worker-1026|unit-enemy2-worker-1086|unit-enemy2-priest-6342"
+            }
+          }
+        },
+        "decisions": {
+          "unit-enemy2-transport-1136": {
+            "tick": 17988,
+            "reason": "sailing",
+            "lastBlock": {
+              "tick": 17748,
+              "reason": "landing-defense"
+            }
+          },
+          "unit-enemy2-transport-5822": {
+            "tick": 17988,
+            "reason": "sailing",
+            "lastBlock": {
+              "tick": 17778,
+              "reason": "destination-water-held"
+            }
+          }
+        },
+        "failures": {
+          "unit-enemy2-transport-1136": {
+            "gold-satellite-1": {
+              "attempts": 1,
+              "tick": 12078,
+              "reason": "returning-for-reinforcements"
+            },
+            "gold-satellite-3": {
+              "attempts": 1,
+              "tick": 16653,
+              "reason": "sailing"
+            }
+          }
+        },
+        "firstCombatDelivery": {
+          "firstShipTick": 1893,
+          "deadlineTick": 6923,
+          "attempts": {
+            "unit-enemy2-transport-1136": {
+              "firstSeenTick": 1893,
+              "passengerIds": [
+                "unit-enemy2-lancer-1150"
+              ],
+              "reason": "delivered",
+              "tick": 4818,
+              "targetId": "gold-satellite-1"
+            }
+          },
+          "routeBudgeted": true,
+          "firstMinuteBlock": {
+            "tick": 3108,
+            "reason": "sailing"
+          },
+          "deliveredTick": 4818,
+          "deliveredShipId": "unit-enemy2-transport-1136",
+          "deliveredUnitId": "unit-enemy2-lancer-1150"
+        },
+        "endpointPolicy": {
+          "map": "sapphireArchipelago",
+          "owner": "enemy2",
+          "localExpansionAvailable": false,
+          "goals": [
+            {
+              "id": "farm",
+              "cost": 120,
+              "priority": 105
+            },
+            {
+              "id": "upgrade:weaponTraining",
+              "cost": 260,
+              "priority": 79
+            },
+            {
+              "id": "upgrade:reinforcedPlating",
+              "cost": 180,
+              "priority": 78
+            },
+            {
+              "id": "unit:witch",
+              "cost": 145,
+              "priority": 77
+            },
+            {
+              "id": "build:stables",
+              "cost": 175,
+              "priority": 77
+            }
+          ],
+          "gold": 176.86,
+          "yards": [
+            {
+              "id": "building-enemy2-shipyard-1040",
+              "complete": true,
+              "queue": [],
+              "x": 5360,
+              "y": 8784
+            }
+          ],
+          "buildingWorkers": []
+        },
+        "reasons": [
+          "gold-satellite-1: complete / garrison-established"
+        ]
+      }
+    },
+    {
+      "map": "sapphireArchipelago",
+      "mapName": "蓝宝群岛",
+      "owner": "player-4",
+      "before": {
+        "version": "v9_knight",
+        "endSecond": 900.0,
+        "boardedCombat": 9,
+        "unloadedIslandCombat": 4,
+        "firstIslandCombatUnloadSecond": 403.75,
+        "unloadedIslandWorkers": 1,
+        "clearedIslandCamps": 0,
+        "islandGuardsKilled": 0,
+        "neutralIslandHalls": 0,
+        "neutralIslandMines": 0,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {},
+        "ferries": {
+          "unit-player-4-transport-2043": {
+            "purpose": "settle",
+            "targetId": "gold-enemy2-main",
+            "from": {
+              "x": 1761.3441622757764,
+              "y": 7272.754493499728
+            },
+            "to": {
+              "x": 5392,
+              "y": 8784
+            },
+            "phase": "loading",
+            "crewIds": [
+              "unit-player-4-emberRavager-3696",
+              "unit-player-4-priest-3540",
+              "unit-player-4-emberRavager-4685",
+              "unit-player-4-ashHexer-5976",
+              "unit-player-4-ashHexer-5552",
+              "unit-player-4-ashHexer-6802",
+              "unit-player-4-priest-7553"
+            ],
+            "sinceTick": 17736,
+            "progress": {
+              "tick": 17781,
+              "x": 1776.736488426664,
+              "y": 7375.999999999952,
+              "heading": -0.1412772120879417,
+              "phase": "loading",
+              "crew": "unit-player-4-worker-1027|unit-player-4-priest-3540|unit-player-4-emberRavager-3696|unit-player-4-emberRavager-4685|unit-player-4-ashHexer-5552|unit-player-4-ashHexer-5976"
+            }
+          }
+        },
+        "decisions": {
+          "unit-player-4-transport-2043": {
+            "tick": 17991,
+            "reason": "loading",
+            "lastBlock": {
+              "tick": 17766,
+              "reason": "landing-defense"
+            }
+          }
+        },
+        "failures": {
+          "unit-player-4-transport-2043": {
+            "gold-satellite-2": {
+              "attempts": 2,
+              "tick": 14886,
+              "reason": "landing-defense"
+            }
+          }
+        },
+        "firstCombatDelivery": {
+          "firstShipTick": 6906,
+          "deadlineTick": 9696,
+          "attempts": {
+            "unit-player-4-transport-2043": {
+              "firstSeenTick": 6906,
+              "passengerIds": [
+                "unit-player-4-emberRavager-1126",
+                "unit-player-4-emberRavager-1176",
+                "unit-player-4-emberRavager-1280",
+                "unit-player-4-emberRavager-1225"
+              ],
+              "reason": "delivered",
+              "tick": 8076,
+              "targetId": "gold-satellite-3"
+            }
+          },
+          "routeBudgeted": true,
+          "deliveredTick": 8076,
+          "deliveredShipId": "unit-player-4-transport-2043",
+          "deliveredUnitId": "unit-player-4-emberRavager-1126"
+        }
+      },
+      "after": {
+        "version": "v9_knight",
+        "endSecond": 900.0,
+        "boardedCombat": 12,
+        "unloadedIslandCombat": 7,
+        "firstIslandCombatUnloadSecond": 323.85,
+        "unloadedIslandWorkers": 3,
+        "clearedIslandCamps": 1,
+        "islandGuardsKilled": 2,
+        "neutralIslandHalls": 0,
+        "neutralIslandMines": 0,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {
+          "gold-satellite-3": {
+            "mineId": "gold-satellite-3",
+            "sinceTick": 6486,
+            "stage": "build",
+            "interruptions": [],
+            "landing": {
+              "x": 2448,
+              "y": 5360
+            },
+            "reason": "mine-occupied",
+            "combat": {
+              "creepRetry": {
+                "center": {
+                  "x": 2969.6504536514453,
+                  "y": 4979.570457930838
+                },
+                "until": 7341
+              }
+            },
+            "stagingCheckedTick": 6741,
+            "staging": {
+              "x": 2727.261339057895,
+              "y": 5156.340130461379
+            },
+            "abandonedTick": 9066,
+            "endpointDiagnostic": {
+              "map": "sapphireArchipelago",
+              "owner": "player-4",
+              "mineId": "gold-satellite-3",
+              "stage": "build",
+              "abandonedTick": 9066,
+              "crew": [],
+              "healthyFront": 0,
+              "retryUntil": 7341,
+              "ferries": [],
+              "homeHalls": 1
+            }
+          }
+        },
+        "ferries": {
+          "unit-player-4-transport-1536": {
+            "purpose": "settle",
+            "targetId": "gold-satellite-2",
+            "from": {
+              "x": 1182.7351194345165,
+              "y": 6303.418450601222
+            },
+            "to": {
+              "x": 3344,
+              "y": 7216
+            },
+            "phase": "sailing",
+            "crewIds": [],
+            "sinceTick": 16311,
+            "progress": {
+              "tick": 17961,
+              "x": 1130.9812420827857,
+              "y": 6197.779785741733,
+              "heading": 7.544219952260363,
+              "phase": "sailing",
+              "crew": "unit-player-4-worker-3|unit-player-4-worker-1081|unit-player-4-emberRavager-3541|unit-player-4-emberRavager-4503|unit-player-4-emberRavager-4874|unit-player-4-emberRavager-5310|unit-player-4-ashWarden-5592"
+            }
+          }
+        },
+        "decisions": {
+          "unit-player-4-transport-1536": {
+            "tick": 17991,
+            "reason": "sailing",
+            "lastBlock": {
+              "tick": 15126,
+              "reason": "landing-defense"
+            }
+          }
+        },
+        "failures": {
+          "unit-player-4-transport-1536": {
+            "building-player-4-townhall": {
+              "attempts": 1,
+              "tick": 12501,
+              "reason": "loading"
+            }
+          }
+        },
+        "firstCombatDelivery": {
+          "firstShipTick": 5286,
+          "deadlineTick": 8076,
+          "attempts": {
+            "unit-player-4-transport-1536": {
+              "firstSeenTick": 5286,
+              "passengerIds": [
+                "unit-player-4-emberRavager-1145",
+                "unit-player-4-emberRavager-1218",
+                "unit-player-4-emberRavager-1126",
+                "unit-player-4-emberRavager-1176",
+                "unit-player-4-emberRavager-1319",
+                "unit-player-4-emberRavager-1254"
+              ],
+              "reason": "delivered",
+              "tick": 6486,
+              "targetId": "gold-satellite-3"
+            }
+          },
+          "routeBudgeted": true,
+          "deliveredTick": 6486,
+          "deliveredShipId": "unit-player-4-transport-1536",
+          "deliveredUnitId": "unit-player-4-emberRavager-1126"
+        },
+        "endpointPolicy": {
+          "map": "sapphireArchipelago",
+          "owner": "player-4",
+          "localExpansionAvailable": false,
+          "navalWant": {
+            "id": "naval:warship",
+            "cost": 540,
+            "command": {
+              "type": "train",
+              "buildingId": "building-player-4-shipyard-1410",
+              "unitKind": "warship"
+            }
+          },
+          "goals": [
+            {
+              "id": "build:cinderSpire",
+              "cost": 170,
+              "priority": 92
+            },
+            {
+              "id": "naval:warship",
+              "cost": 540,
+              "priority": 86
+            },
+            {
+              "id": "build:ashenHall",
+              "cost": 215,
+              "priority": 85
+            },
+            {
+              "id": "unit:ashWarden",
+              "cost": 120,
+              "priority": 67
+            },
+            {
+              "id": "upgrade:weaponTraining",
+              "cost": 150,
+              "priority": 64
+            }
+          ],
+          "gold": 428,
+          "yards": [
+            {
+              "id": "building-player-4-shipyard-1410",
+              "complete": true,
+              "queue": [],
+              "x": 2096,
+              "y": 6096
+            }
+          ],
+          "buildingWorkers": []
+        },
+        "reasons": [
+          "gold-satellite-3: build / mine-occupied",
+          "已放弃于 453.30 秒"
+        ]
+      }
+    },
+    {
+      "map": "sapphireArchipelago",
+      "mapName": "蓝宝群岛",
+      "owner": "player-5",
+      "before": {
+        "version": "v9_summoner",
+        "endSecond": 900.0,
+        "boardedCombat": 8,
+        "unloadedIslandCombat": 1,
+        "firstIslandCombatUnloadSecond": 191.55,
+        "unloadedIslandWorkers": 1,
+        "clearedIslandCamps": 0,
+        "islandGuardsKilled": 0,
+        "neutralIslandHalls": 0,
+        "neutralIslandMines": 0,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {},
+        "ferries": {},
+        "decisions": {
+          "unit-player-5-transport-1137": {
+            "tick": 11079,
+            "reason": "repair-needed",
+            "lastBlock": {
+              "tick": 11079,
+              "reason": "repair-needed"
+            }
+          },
+          "unit-player-5-transport-3534": {
+            "tick": 16359,
+            "reason": "repair-needed",
+            "lastBlock": {
+              "tick": 16359,
+              "reason": "repair-needed"
+            }
+          },
+          "unit-player-5-transport-6576": {
+            "tick": 17994,
+            "reason": "repair-needed",
+            "lastBlock": {
+              "tick": 17994,
+              "reason": "repair-needed"
+            }
+          }
+        },
+        "failures": {},
+        "firstCombatDelivery": {
+          "firstShipTick": 1899,
+          "deadlineTick": 7189,
+          "attempts": {
+            "unit-player-5-transport-1137": {
+              "firstSeenTick": 1899,
+              "passengerIds": [
+                "unit-player-5-footman-1149"
+              ],
+              "reason": "delivered",
+              "tick": 3834,
+              "targetId": "gold-satellite-3"
+            }
+          },
+          "routeBudgeted": true,
+          "firstMinuteBlock": {
+            "tick": 3114,
+            "reason": "sailing"
+          },
+          "deliveredTick": 3834,
+          "deliveredShipId": "unit-player-5-transport-1137",
+          "deliveredUnitId": "unit-player-5-footman-1149"
+        }
+      },
+      "after": {
+        "version": "v9_summoner",
+        "endSecond": 900.0,
+        "boardedCombat": 11,
+        "unloadedIslandCombat": 11,
+        "firstIslandCombatUnloadSecond": 191.55,
+        "unloadedIslandWorkers": 3,
+        "clearedIslandCamps": 0,
+        "islandGuardsKilled": 0,
+        "neutralIslandHalls": 1,
+        "neutralIslandMines": 1,
+        "arrivedIslandGarrisonUnits": 1,
+        "islandCoverBuildings": 0,
+        "conquests": {
+          "gold-satellite-3": {
+            "mineId": "gold-satellite-3",
+            "sinceTick": 9069,
+            "stage": "complete",
+            "interruptions": [],
+            "landing": {
+              "x": 2896,
+              "y": 5360
+            },
+            "reason": "garrison-established",
+            "combat": {}
+          }
+        },
+        "ferries": {
+          "unit-player-5-transport-4364": {
+            "purpose": "settle",
+            "targetId": "gold-satellite-4",
+            "from": {
+              "x": 2864,
+              "y": 3088
+            },
+            "to": {
+              "x": 3824,
+              "y": 3280
+            },
+            "phase": "loading",
+            "crewIds": [
+              "unit-player-5-worker-1028",
+              "unit-player-5-lancer-5591",
+              "unit-player-5-priest-5166"
+            ],
+            "sinceTick": 17079,
+            "progress": {
+              "tick": 17994,
+              "x": 2257.6951998137542,
+              "y": 3814.7796513826925,
+              "heading": 6.231035505934833,
+              "phase": "loading",
+              "crew": "unit-player-5-worker-1028|unit-player-5-worker-1057"
+            }
+          }
+        },
+        "decisions": {
+          "unit-player-5-transport-1137": {
+            "tick": 12534,
+            "reason": "repair-needed",
+            "lastBlock": {
+              "tick": 12534,
+              "reason": "repair-needed"
+            }
+          },
+          "unit-player-5-transport-4364": {
+            "tick": 17994,
+            "reason": "loading",
+            "lastBlock": {
+              "tick": 16884,
+              "reason": "approaching-load"
+            }
+          }
+        },
+        "failures": {
+          "unit-player-5-transport-1137": {
+            "gold-satellite-3": {
+              "attempts": 1,
+              "tick": 9999,
+              "reason": "await-reinforcement-batch"
+            }
+          }
+        },
+        "firstCombatDelivery": {
+          "firstShipTick": 1899,
+          "deadlineTick": 7189,
+          "attempts": {
+            "unit-player-5-transport-1137": {
+              "firstSeenTick": 1899,
+              "passengerIds": [
+                "unit-player-5-footman-1149"
+              ],
+              "reason": "delivered",
+              "tick": 3834,
+              "targetId": "gold-satellite-3"
+            }
+          },
+          "routeBudgeted": true,
+          "firstMinuteBlock": {
+            "tick": 3114,
+            "reason": "sailing"
+          },
+          "deliveredTick": 3834,
+          "deliveredShipId": "unit-player-5-transport-1137",
+          "deliveredUnitId": "unit-player-5-footman-1149"
+        },
+        "endpointPolicy": {
+          "map": "sapphireArchipelago",
+          "owner": "player-5",
+          "localExpansionAvailable": false,
+          "navalWant": {
+            "id": "naval:footholdProducer",
+            "cost": 170,
+            "command": {
+              "type": "build",
+              "unitId": "unit-player-5-worker-2",
+              "buildingKind": "barracks",
+              "x": 2948,
+              "y": 5172
+            }
+          },
+          "goals": [
+            {
+              "id": "naval:footholdProducer",
+              "cost": 170,
+              "priority": 82
+            },
+            {
+              "id": "unit:lancer",
+              "cost": 110,
+              "priority": 81
+            },
+            {
+              "id": "build:sanctum",
+              "cost": 175,
+              "priority": 77
+            },
+            {
+              "id": "worker@building-player-5-townhall",
+              "cost": 75,
+              "priority": 76
+            },
+            {
+              "id": "unit:summoner",
+              "cost": 180,
+              "priority": 76
+            }
+          ],
+          "gold": 337,
+          "yards": [
+            {
+              "id": "building-player-5-shipyard-1046",
+              "complete": true,
+              "queue": [],
+              "x": 1680,
+              "y": 2512
+            }
+          ],
+          "buildingWorkers": []
+        },
+        "reasons": [
+          "gold-satellite-3: complete / garrison-established"
+        ]
+      }
+    },
+    {
+      "map": "sapphireArchipelago",
+      "mapName": "蓝宝群岛",
+      "owner": "player-6",
+      "before": {
+        "version": "v9_knight",
+        "endSecond": 900.0,
+        "boardedCombat": 9,
+        "unloadedIslandCombat": 5,
+        "firstIslandCombatUnloadSecond": 154.5,
+        "unloadedIslandWorkers": 3,
+        "clearedIslandCamps": 1,
+        "islandGuardsKilled": 2,
+        "neutralIslandHalls": 1,
+        "neutralIslandMines": 1,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {},
+        "ferries": {
+          "unit-player-6-transport-1135": {
+            "purpose": "settle",
+            "targetId": "gold-enemy2-main",
+            "from": {
+              "x": 4848,
+              "y": 1456
+            },
+            "to": {
+              "x": 5392,
+              "y": 8784
+            },
+            "phase": "sailing",
+            "crewIds": [],
+            "sinceTick": 17352,
+            "progress": {
+              "tick": 17997,
+              "x": 5757.93517336586,
+              "y": 2454.3932421815894,
+              "heading": 8.140045699572077,
+              "phase": "sailing",
+              "crew": "unit-player-6-worker-1030|unit-player-6-worker-1058|unit-player-6-ashHexer-6595|unit-player-6-priest-7083"
+            }
+          }
+        },
+        "decisions": {
+          "unit-player-6-transport-1135": {
+            "tick": 17997,
+            "reason": "sailing",
+            "lastBlock": {
+              "tick": 17532,
+              "reason": "landing-defense"
+            }
+          }
+        },
+        "failures": {},
+        "firstCombatDelivery": {
+          "firstShipTick": 1887,
+          "deadlineTick": 7227,
+          "attempts": {
+            "unit-player-6-transport-1135": {
+              "firstSeenTick": 1887,
+              "passengerIds": [
+                "unit-player-6-emberRavager-1155"
+              ],
+              "reason": "delivered",
+              "tick": 3102,
+              "targetId": "gold-satellite-4"
+            }
+          },
+          "routeBudgeted": true,
+          "deliveredTick": 3102,
+          "deliveredShipId": "unit-player-6-transport-1135",
+          "deliveredUnitId": "unit-player-6-emberRavager-1155"
+        }
+      },
+      "after": {
+        "version": "v9_knight",
+        "endSecond": 900.0,
+        "boardedCombat": 13,
+        "unloadedIslandCombat": 5,
+        "firstIslandCombatUnloadSecond": 154.5,
+        "unloadedIslandWorkers": 1,
+        "clearedIslandCamps": 0,
+        "islandGuardsKilled": 0,
+        "neutralIslandHalls": 0,
+        "neutralIslandMines": 0,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {
+          "gold-satellite-4": {
+            "mineId": "gold-satellite-4",
+            "sinceTick": 3102,
+            "stage": "assemble",
+            "interruptions": [],
+            "landing": {
+              "x": 3824,
+              "y": 3280
+            },
+            "reason": "reinforcing-beachhead",
+            "combat": {},
+            "stagingCheckedTick": 7932,
+            "staging": {
+              "x": 3941.69606660092,
+              "y": 3238.7363337891543
+            },
+            "endpointDiagnostic": {
+              "map": "sapphireArchipelago",
+              "owner": "player-6",
+              "mineId": "gold-satellite-4",
+              "stage": "assemble",
+              "crew": [],
+              "healthyFront": 0,
+              "assembledForce": 0,
+              "requiredForce": 4.112747911106153,
+              "campContested": false,
+              "ferries": [
+                {
+                  "id": "unit-player-6-transport-5832",
+                  "purpose": "reinforce",
+                  "reinforcementTaskId": "gold-satellite-4",
+                  "targetId": "gold-satellite-4",
+                  "from": {
+                    "x": 4860,
+                    "y": 1292
+                  },
+                  "to": {
+                    "x": 3824,
+                    "y": 3280
+                  },
+                  "phase": "return",
+                  "crewIds": [],
+                  "sinceTick": 17967,
+                  "deliveries": [],
+                  "returnTrips": 0,
+                  "progress": {
+                    "tick": 17982,
+                    "x": 4784,
+                    "y": 1296,
+                    "heading": -1.3258176636564265,
+                    "phase": "loading",
+                    "crew": "unit-player-6-emberRavager-3138|unit-player-6-emberRavager-3560|unit-player-6-emberRavager-3850|unit-player-6-emberRavager-3912|unit-player-6-emberRavager-3963|unit-player-6-ashWarden-5739"
+                  },
+                  "payloadIds": [
+                    "unit-player-6-emberRavager-3138",
+                    "unit-player-6-emberRavager-3560",
+                    "unit-player-6-emberRavager-3850",
+                    "unit-player-6-emberRavager-3912",
+                    "unit-player-6-emberRavager-3963",
+                    "unit-player-6-ashWarden-5739"
+                  ],
+                  "decision": {
+                    "tick": 17997,
+                    "reason": "crossing-water-held",
+                    "lastBlock": {
+                      "tick": 17997,
+                      "reason": "crossing-water-held"
+                    }
+                  }
+                }
+              ],
+              "homeHalls": 1
+            }
+          }
+        },
+        "ferries": {
+          "unit-player-6-transport-5832": {
+            "purpose": "reinforce",
+            "reinforcementTaskId": "gold-satellite-4",
+            "targetId": "gold-satellite-4",
+            "from": {
+              "x": 4860,
+              "y": 1292
+            },
+            "to": {
+              "x": 3824,
+              "y": 3280
+            },
+            "phase": "return",
+            "crewIds": [],
+            "sinceTick": 17967,
+            "deliveries": [],
+            "returnTrips": 0,
+            "progress": {
+              "tick": 17982,
+              "x": 4784,
+              "y": 1296,
+              "heading": -1.3258176636564265,
+              "phase": "loading",
+              "crew": "unit-player-6-emberRavager-3138|unit-player-6-emberRavager-3560|unit-player-6-emberRavager-3850|unit-player-6-emberRavager-3912|unit-player-6-emberRavager-3963|unit-player-6-ashWarden-5739"
+            },
+            "payloadIds": [
+              "unit-player-6-emberRavager-3138",
+              "unit-player-6-emberRavager-3560",
+              "unit-player-6-emberRavager-3850",
+              "unit-player-6-emberRavager-3912",
+              "unit-player-6-emberRavager-3963",
+              "unit-player-6-ashWarden-5739"
+            ]
+          }
+        },
+        "decisions": {
+          "unit-player-6-transport-1135": {
+            "tick": 14832,
+            "reason": "await-combat-boarding",
+            "lastBlock": {
+              "tick": 14832,
+              "reason": "await-combat-boarding"
+            }
+          },
+          "unit-player-6-transport-5147": {
+            "tick": 16392,
+            "reason": "returning-for-reinforcements",
+            "lastBlock": {
+              "tick": 15387,
+              "reason": "crossing-water-held"
+            }
+          },
+          "unit-player-6-transport-5832": {
+            "tick": 17997,
+            "reason": "crossing-water-held",
+            "lastBlock": {
+              "tick": 17997,
+              "reason": "crossing-water-held"
+            }
+          }
+        },
+        "failures": {},
+        "firstCombatDelivery": {
+          "firstShipTick": 1887,
+          "deadlineTick": 7227,
+          "attempts": {
+            "unit-player-6-transport-1135": {
+              "firstSeenTick": 1887,
+              "passengerIds": [
+                "unit-player-6-emberRavager-1155"
+              ],
+              "reason": "delivered",
+              "tick": 3102,
+              "targetId": "gold-satellite-4"
+            }
+          },
+          "routeBudgeted": true,
+          "deliveredTick": 3102,
+          "deliveredShipId": "unit-player-6-transport-1135",
+          "deliveredUnitId": "unit-player-6-emberRavager-1155"
+        },
+        "endpointPolicy": {
+          "map": "sapphireArchipelago",
+          "owner": "player-6",
+          "localExpansionAvailable": false,
+          "navalWant": {
+            "id": "naval:warship",
+            "cost": 540,
+            "command": {
+              "type": "train",
+              "buildingId": "building-player-6-shipyard-1042",
+              "unitKind": "warship"
+            }
+          },
+          "goals": [
+            {
+              "id": "naval:warship",
+              "cost": 540,
+              "priority": 85
+            },
+            {
+              "id": "upgrade:weaponTraining",
+              "cost": 150,
+              "priority": 75
+            },
+            {
+              "id": "upgrade:reinforcedPlating",
+              "cost": 180,
+              "priority": 74
+            },
+            {
+              "id": "engineering:workshop",
+              "cost": 205,
+              "priority": 74
+            },
+            {
+              "id": "build:ashenHall",
+              "cost": 215,
+              "priority": 73
+            }
+          ],
+          "gold": 507,
+          "yards": [
+            {
+              "id": "building-player-6-shipyard-1042",
+              "complete": true,
+              "queue": [],
+              "x": 4880,
+              "y": 1456
+            }
+          ],
+          "buildingWorkers": []
+        },
+        "reasons": [
+          "gold-satellite-4: assemble / reinforcing-beachhead",
+          "集结战力 0.000/4.113；安全集结路线 None；敌军干扰 False"
+        ]
+      }
+    },
+    {
+      "map": "brokenSea",
+      "mapName": "碎海",
+      "owner": "enemy",
+      "before": {
+        "version": "v9_knight",
+        "endSecond": 900.0,
+        "boardedCombat": 11,
+        "unloadedIslandCombat": 7,
+        "firstIslandCombatUnloadSecond": 172.75,
+        "unloadedIslandWorkers": 3,
+        "clearedIslandCamps": 4,
+        "islandGuardsKilled": 8,
+        "neutralIslandHalls": 2,
+        "neutralIslandMines": 4,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 1,
+        "conquests": {},
+        "ferries": {
+          "unit-enemy-transport-1064": {
+            "purpose": "settle",
+            "targetId": "gold-mainland-7",
+            "from": {
+              "x": 1712,
+              "y": 4432
+            },
+            "to": {
+              "x": 4464,
+              "y": 4464
+            },
+            "phase": "sailing",
+            "crewIds": [],
+            "sinceTick": 15735,
+            "progress": {
+              "tick": 17985,
+              "x": 3755.0163693843947,
+              "y": 4978.865946178746,
+              "heading": -5.73638629712368,
+              "phase": "sailing",
+              "crew": "unit-enemy-worker-1|unit-enemy-worker-1032|unit-enemy-lancer-3239|unit-enemy-lancer-3437|unit-enemy-lancer-3590|unit-enemy-priest-4206"
+            }
+          }
+        },
+        "decisions": {
+          "unit-enemy-transport-1064": {
+            "tick": 17985,
+            "reason": "sailing",
+            "lastBlock": {
+              "tick": 15810,
+              "reason": "landing-defense"
+            }
+          }
+        },
+        "failures": {
+          "unit-enemy-transport-1064": {
+            "building-player-townhall": {
+              "attempts": 2,
+              "tick": 6300,
+              "reason": "no-combat-crew"
+            },
+            "building-enemy2-farm-3474": {
+              "attempts": 1,
+              "tick": 14505,
+              "reason": "destination-water-held"
+            }
+          }
+        },
+        "firstCombatDelivery": {
+          "firstShipTick": 1860,
+          "deadlineTick": 5910,
+          "attempts": {
+            "unit-enemy-transport-1064": {
+              "firstSeenTick": 1860,
+              "passengerIds": [
+                "unit-enemy-lancer-1072"
+              ],
+              "reason": "delivered",
+              "tick": 3465,
+              "targetId": "gold-mainland-2"
+            }
+          },
+          "routeBudgeted": true,
+          "firstMinuteBlock": {
+            "tick": 3075,
+            "reason": "sailing"
+          },
+          "deliveredTick": 3465,
+          "deliveredShipId": "unit-enemy-transport-1064",
+          "deliveredUnitId": "unit-enemy-lancer-1072"
+        }
+      },
+      "after": {
+        "version": "v9_knight",
+        "endSecond": 900.0,
+        "boardedCombat": 12,
+        "unloadedIslandCombat": 8,
+        "firstIslandCombatUnloadSecond": 172.75,
+        "unloadedIslandWorkers": 1,
+        "clearedIslandCamps": 6,
+        "islandGuardsKilled": 11,
+        "neutralIslandHalls": 5,
+        "neutralIslandMines": 6,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 3,
+        "conquests": {
+          "gold-mainland-2": {
+            "mineId": "gold-mainland-2",
+            "sinceTick": 3465,
+            "stage": "complete",
+            "interruptions": [],
+            "landing": {
+              "x": 2832,
+              "y": 3920
+            },
+            "reason": "garrison-established",
+            "combat": {},
+            "stagingCheckedTick": 6840,
+            "staging": {
+              "x": 3026.0421665281747,
+              "y": 3819.657369598024
+            }
+          }
+        },
+        "ferries": {
+          "unit-enemy-transport-1064": {
+            "purpose": "rebase",
+            "targetId": "gold-mainland-1",
+            "from": {
+              "x": 4628,
+              "y": 7084
+            },
+            "to": {
+              "x": 3312,
+              "y": 4528
+            },
+            "phase": "sailing",
+            "crewIds": [],
+            "sinceTick": 14985,
+            "progress": {
+              "tick": 17985,
+              "x": 4071.767596767921,
+              "y": 7079.767596767925,
+              "heading": -8.639379797371932,
+              "phase": "sailing",
+              "crew": "unit-enemy-worker-2"
+            }
+          },
+          "unit-enemy-carrier-5824": {
+            "purpose": "rebase",
+            "targetId": "gold-mainland-1",
+            "from": {
+              "x": 4628,
+              "y": 7084
+            },
+            "to": {
+              "x": 3312,
+              "y": 4528
+            },
+            "phase": "loading",
+            "crewIds": [],
+            "sinceTick": 16935,
+            "progress": {
+              "tick": 17970,
+              "x": 2684.878361387802,
+              "y": 5632.7379584426435,
+              "heading": 0.7811426648186877,
+              "phase": "loading",
+              "crew": ""
+            }
+          }
+        },
+        "decisions": {
+          "unit-enemy-transport-1064": {
+            "tick": 17985,
+            "reason": "sailing",
+            "lastBlock": {
+              "tick": 17130,
+              "reason": "approaching-load"
+            }
+          },
+          "unit-enemy-carrier-5824": {
+            "tick": 17985,
+            "reason": "approaching-load",
+            "lastBlock": {
+              "tick": 17985,
+              "reason": "approaching-load"
+            }
+          }
+        },
+        "failures": {
+          "unit-enemy-transport-1064": {
+            "gold-mainland-2": {
+              "attempts": 1,
+              "tick": 10380,
+              "reason": "await-reinforcement-batch"
+            }
+          }
+        },
+        "firstCombatDelivery": {
+          "firstShipTick": 1860,
+          "deadlineTick": 5910,
+          "attempts": {
+            "unit-enemy-transport-1064": {
+              "firstSeenTick": 1860,
+              "passengerIds": [
+                "unit-enemy-lancer-1072"
+              ],
+              "reason": "delivered",
+              "tick": 3465,
+              "targetId": "gold-mainland-2"
+            }
+          },
+          "routeBudgeted": true,
+          "firstMinuteBlock": {
+            "tick": 3075,
+            "reason": "sailing"
+          },
+          "deliveredTick": 3465,
+          "deliveredShipId": "unit-enemy-transport-1064",
+          "deliveredUnitId": "unit-enemy-lancer-1072"
+        },
+        "endpointPolicy": {
+          "map": "brokenSea",
+          "owner": "enemy",
+          "localExpansionAvailable": true,
+          "navalWant": {
+            "id": "naval:warship",
+            "cost": 540,
+            "command": {
+              "type": "train",
+              "buildingId": "building-enemy-shipyard-1015",
+              "unitKind": "warship"
+            }
+          },
+          "goals": [
+            {
+              "id": "naval:warship",
+              "cost": 540,
+              "priority": 82
+            },
+            {
+              "id": "build:stables",
+              "cost": 175,
+              "priority": 77
+            },
+            {
+              "id": "unit:raider",
+              "cost": 115,
+              "priority": 75
+            },
+            {
+              "id": "engineering:workshop",
+              "cost": 205,
+              "priority": 74
+            },
+            {
+              "id": "unit:witch",
+              "cost": 145,
+              "priority": 73
+            }
+          ],
+          "gold": 160.25,
+          "yards": [
+            {
+              "id": "building-enemy-shipyard-1015",
+              "complete": true,
+              "queue": [],
+              "x": 1520,
+              "y": 4848
+            }
+          ],
+          "buildingWorkers": []
+        },
+        "reasons": [
+          "gold-mainland-2: complete / garrison-established"
+        ]
+      }
+    },
+    {
+      "map": "brokenSea",
+      "mapName": "碎海",
+      "owner": "enemy2",
+      "before": {
+        "version": "v9_archer",
+        "endSecond": 900.0,
+        "boardedCombat": 17,
+        "unloadedIslandCombat": 7,
+        "firstIslandCombatUnloadSecond": 149,
+        "unloadedIslandWorkers": 3,
+        "clearedIslandCamps": 1,
+        "islandGuardsKilled": 2,
+        "neutralIslandHalls": 0,
+        "neutralIslandMines": 0,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {},
+        "ferries": {
+          "unit-enemy2-transport-1065": {
+            "purpose": "settle",
+            "targetId": "gold-mainland-5",
+            "from": {
+              "x": 3696,
+              "y": 1072
+            },
+            "to": {
+              "x": 4208,
+              "y": 3088
+            },
+            "phase": "return",
+            "crewIds": [],
+            "sinceTick": 16760,
+            "progress": {
+              "tick": 17795,
+              "x": 3760.0188632272902,
+              "y": 1815.4097047805174,
+              "heading": 5.605716761109166,
+              "phase": "return",
+              "crew": "unit-enemy2-worker-1|unit-enemy2-worker-2"
+            }
+          },
+          "unit-enemy2-transport-4317": {
+            "purpose": "reinforce",
+            "targetId": "gold-mainland-5",
+            "from": {
+              "x": 3664,
+              "y": 976
+            },
+            "to": {
+              "x": 4560,
+              "y": 3280
+            },
+            "phase": "loading",
+            "crewIds": [
+              "unit-enemy2-sparkArcher-3999",
+              "unit-enemy2-sparkArcher-3562",
+              "unit-enemy2-sparkArcher-3812",
+              "unit-enemy2-ashWarden-2845",
+              "unit-enemy2-sparkArcher-4145",
+              "unit-enemy2-sparkArcher-5358",
+              "unit-enemy2-ashWarden-3606",
+              "unit-enemy2-sparkArcher-3690"
+            ],
+            "sinceTick": 17645,
+            "deliveries": [],
+            "returnTrips": 1,
+            "payloadIds": [
+              "unit-enemy2-ashWarden-2845",
+              "unit-enemy2-sparkArcher-3562",
+              "unit-enemy2-sparkArcher-3812",
+              "unit-enemy2-sparkArcher-3999",
+              "unit-enemy2-sparkArcher-4145",
+              "unit-enemy2-sparkArcher-5358"
+            ],
+            "progress": {
+              "tick": 17975,
+              "x": 3728,
+              "y": 944,
+              "heading": 4.3271356102259535,
+              "phase": "loading",
+              "crew": "unit-enemy2-ashWarden-2845|unit-enemy2-sparkArcher-3562|unit-enemy2-sparkArcher-3812|unit-enemy2-sparkArcher-3999|unit-enemy2-sparkArcher-4145|unit-enemy2-sparkArcher-5358"
+            }
+          }
+        },
+        "decisions": {
+          "unit-enemy2-transport-1065": {
+            "tick": 17990,
+            "reason": "return",
+            "lastBlock": {
+              "tick": 17150,
+              "reason": "crossing-water-held"
+            }
+          },
+          "unit-enemy2-transport-4317": {
+            "tick": 17990,
+            "reason": "destination-water-held",
+            "lastBlock": {
+              "tick": 17990,
+              "reason": "destination-water-held"
+            }
+          }
+        },
+        "failures": {},
+        "firstCombatDelivery": {
+          "firstShipTick": 1865,
+          "deadlineTick": 6235,
+          "attempts": {
+            "unit-enemy2-transport-1065": {
+              "firstSeenTick": 1865,
+              "passengerIds": [
+                "unit-enemy2-emberRavager-1073"
+              ],
+              "reason": "delivered",
+              "tick": 2990,
+              "targetId": "gold-mainland-1"
+            }
+          },
+          "routeBudgeted": true,
+          "deliveredTick": 2990,
+          "deliveredShipId": "unit-enemy2-transport-1065",
+          "deliveredUnitId": "unit-enemy2-emberRavager-1073"
+        }
+      },
+      "after": {
+        "version": "v9_archer",
+        "endSecond": 900.0,
+        "boardedCombat": 18,
+        "unloadedIslandCombat": 10,
+        "firstIslandCombatUnloadSecond": 149,
+        "unloadedIslandWorkers": 1,
+        "clearedIslandCamps": 2,
+        "islandGuardsKilled": 4,
+        "neutralIslandHalls": 0,
+        "neutralIslandMines": 0,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {
+          "gold-mainland-1": {
+            "mineId": "gold-mainland-1",
+            "sinceTick": 2990,
+            "stage": "assemble",
+            "interruptions": [],
+            "landing": {
+              "x": 3728,
+              "y": 2864
+            },
+            "reason": "mine-occupied",
+            "combat": {},
+            "stagingCheckedTick": 6830,
+            "abandonedTick": 9860,
+            "endpointDiagnostic": {
+              "map": "brokenSea",
+              "owner": "enemy2",
+              "mineId": "gold-mainland-1",
+              "stage": "assemble",
+              "abandonedTick": 9860,
+              "crew": [],
+              "healthyFront": 0,
+              "ferries": [],
+              "homeHalls": 1
+            }
+          },
+          "gold-mainland-4": {
+            "mineId": "gold-mainland-4",
+            "sinceTick": 10910,
+            "stage": "escort",
+            "interruptions": [],
+            "landing": {
+              "x": 3796,
+              "y": 2892
+            },
+            "reason": "mine-occupied",
+            "combat": {},
+            "abandonedTick": 12395,
+            "endpointDiagnostic": {
+              "map": "brokenSea",
+              "owner": "enemy2",
+              "mineId": "gold-mainland-4",
+              "stage": "escort",
+              "abandonedTick": 12395,
+              "crew": [],
+              "healthyFront": 0,
+              "ferries": [],
+              "homeHalls": 1
+            }
+          }
+        },
+        "ferries": {
+          "unit-enemy2-transport-1065": {
+            "purpose": "settle",
+            "targetId": "gold-mainland-0",
+            "from": {
+              "x": 3696,
+              "y": 1040
+            },
+            "to": {
+              "x": 4144,
+              "y": 4560
+            },
+            "phase": "sailing",
+            "crewIds": [],
+            "sinceTick": 17090,
+            "progress": {
+              "tick": 17990,
+              "x": 3859.7123097836857,
+              "y": 1634.3444224534323,
+              "heading": 26.73150244062699,
+              "phase": "sailing",
+              "crew": "unit-enemy2-worker-2|unit-enemy2-worker-3|unit-enemy2-priest-2778|unit-enemy2-sparkArcher-3617|unit-enemy2-sparkArcher-3870|unit-enemy2-sparkArcher-4908|unit-enemy2-sparkArcher-5625|unit-enemy2-sparkArcher-5755"
+            }
+          }
+        },
+        "decisions": {
+          "unit-enemy2-transport-1065": {
+            "tick": 17990,
+            "reason": "sailing",
+            "lastBlock": {
+              "tick": 16160,
+              "reason": "colony-claimed"
+            }
+          }
+        },
+        "failures": {},
+        "firstCombatDelivery": {
+          "firstShipTick": 1865,
+          "deadlineTick": 6235,
+          "attempts": {
+            "unit-enemy2-transport-1065": {
+              "firstSeenTick": 1865,
+              "passengerIds": [
+                "unit-enemy2-emberRavager-1073"
+              ],
+              "reason": "delivered",
+              "tick": 2990,
+              "targetId": "gold-mainland-1"
+            }
+          },
+          "routeBudgeted": true,
+          "deliveredTick": 2990,
+          "deliveredShipId": "unit-enemy2-transport-1065",
+          "deliveredUnitId": "unit-enemy2-emberRavager-1073"
+        },
+        "endpointPolicy": {
+          "map": "brokenSea",
+          "owner": "enemy2",
+          "localExpansionAvailable": false,
+          "navalWant": {
+            "id": "naval:warship",
+            "cost": 540,
+            "command": {
+              "type": "train",
+              "buildingId": "building-enemy2-shipyard-1027",
+              "unitKind": "warship"
+            }
+          },
+          "goals": [
+            {
+              "id": "naval:warship",
+              "cost": 540,
+              "priority": 89
+            },
+            {
+              "id": "upgrade:reinforcedPlating",
+              "cost": 180,
+              "priority": 78
+            },
+            {
+              "id": "build:cinderSpire",
+              "cost": 170,
+              "priority": 77
+            },
+            {
+              "id": "upgrade:weaponTraining",
+              "cost": 260,
+              "priority": 76
+            },
+            {
+              "id": "engineering:workshop",
+              "cost": 205,
+              "priority": 74
+            }
+          ],
+          "gold": 498.98,
+          "yards": [
+            {
+              "id": "building-enemy2-shipyard-1027",
+              "complete": true,
+              "queue": [],
+              "x": 3664,
+              "y": 1104
+            }
+          ],
+          "buildingWorkers": []
+        },
+        "reasons": [
+          "gold-mainland-1: assemble / mine-occupied",
+          "gold-mainland-4: escort / mine-occupied",
+          "已放弃于 493.00 秒",
+          "已放弃于 619.75 秒"
+        ]
+      }
+    },
+    {
+      "map": "brokenSea",
+      "mapName": "碎海",
+      "owner": "player-4",
+      "before": {
+        "version": "v9_archer",
+        "endSecond": 900.0,
+        "boardedCombat": 5,
+        "unloadedIslandCombat": 3,
+        "firstIslandCombatUnloadSecond": 263.45,
+        "unloadedIslandWorkers": 1,
+        "clearedIslandCamps": 0,
+        "islandGuardsKilled": 0,
+        "neutralIslandHalls": 0,
+        "neutralIslandMines": 0,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {},
+        "ferries": {
+          "unit-player-4-transport-4149": {
+            "purpose": "settle",
+            "targetId": "gold-mainland-6",
+            "from": {
+              "x": 6681.8332581746035,
+              "y": 2685.981673553788
+            },
+            "to": {
+              "x": 4688,
+              "y": 3536
+            },
+            "phase": "loading",
+            "crewIds": [
+              "unit-player-4-archer-5245",
+              "unit-player-4-footman-4922"
+            ],
+            "sinceTick": 17695,
+            "progress": {
+              "tick": 17995,
+              "x": 6735.114477089552,
+              "y": 2554.718224267266,
+              "heading": 0.27168704479390005,
+              "phase": "loading",
+              "crew": "unit-player-4-worker-1035|unit-player-4-worker-1311"
+            }
+          }
+        },
+        "decisions": {
+          "unit-player-4-transport-1066": {
+            "tick": 15160,
+            "reason": "landing-defense",
+            "lastBlock": {
+              "tick": 15160,
+              "reason": "landing-defense"
+            }
+          },
+          "unit-player-4-transport-4149": {
+            "tick": 17995,
+            "reason": "landing-defense",
+            "lastBlock": {
+              "tick": 17995,
+              "reason": "landing-defense"
+            }
+          }
+        },
+        "failures": {
+          "unit-player-4-transport-1066": {
+            "building-enemy2-farm-1167": {
+              "attempts": 3,
+              "tick": 10405,
+              "reason": "destination-water-held"
+            }
+          }
+        },
+        "firstCombatDelivery": {
+          "firstShipTick": 1885,
+          "deadlineTick": 7435,
+          "attempts": {
+            "unit-player-4-transport-1066": {
+              "firstSeenTick": 1885,
+              "passengerIds": [
+                "unit-player-4-footman-1071"
+              ],
+              "reason": "delivered",
+              "tick": 5275,
+              "targetId": "gold-mainland-6"
+            }
+          },
+          "routeBudgeted": true,
+          "firstMinuteBlock": {
+            "tick": 3100,
+            "reason": "sailing"
+          },
+          "deliveredTick": 5275,
+          "deliveredShipId": "unit-player-4-transport-1066",
+          "deliveredUnitId": "unit-player-4-footman-1071"
+        }
+      },
+      "after": {
+        "version": "v9_archer",
+        "endSecond": 900.0,
+        "boardedCombat": 5,
+        "unloadedIslandCombat": 2,
+        "firstIslandCombatUnloadSecond": 263.45,
+        "unloadedIslandWorkers": 1,
+        "clearedIslandCamps": 0,
+        "islandGuardsKilled": 1,
+        "neutralIslandHalls": 0,
+        "neutralIslandMines": 0,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {
+          "gold-mainland-6": {
+            "mineId": "gold-mainland-6",
+            "sinceTick": 5275,
+            "stage": "build",
+            "interruptions": [],
+            "landing": {
+              "x": 4816,
+              "y": 3600
+            },
+            "reason": "mine-occupied",
+            "combat": {
+              "creepRetry": {
+                "center": {
+                  "x": 4462.122009867637,
+                  "y": 3821.960265417192
+                },
+                "until": 11005
+              }
+            },
+            "abandonedTick": 10735,
+            "endpointDiagnostic": {
+              "map": "brokenSea",
+              "owner": "player-4",
+              "mineId": "gold-mainland-6",
+              "stage": "build",
+              "abandonedTick": 10735,
+              "crew": [],
+              "healthyFront": 0,
+              "retryUntil": 11005,
+              "ferries": [],
+              "homeHalls": 1
+            }
+          }
+        },
+        "ferries": {
+          "unit-player-4-transport-1887": {
+            "purpose": "settle",
+            "targetId": "gold-mainland-0",
+            "from": {
+              "x": 6030.55708315174,
+              "y": 2870.794377575269
+            },
+            "to": {
+              "x": 4144,
+              "y": 4560
+            },
+            "phase": "sailing",
+            "crewIds": [],
+            "sinceTick": 16165,
+            "progress": {
+              "tick": 17995,
+              "x": 5000.416042897094,
+              "y": 3123.8518107063305,
+              "heading": 4.240949225110111,
+              "phase": "sailing",
+              "crew": "unit-player-4-worker-3|unit-player-4-worker-1050|unit-player-4-archer-2484|unit-player-4-footman-3867|unit-player-4-footman-3898"
+            }
+          }
+        },
+        "decisions": {
+          "unit-player-4-transport-1066": {
+            "tick": 8785,
+            "reason": "returning-for-reinforcements",
+            "lastBlock": {
+              "tick": 5890,
+              "reason": "await-combat-boarding"
+            }
+          },
+          "unit-player-4-transport-1887": {
+            "tick": 17995,
+            "reason": "sailing",
+            "lastBlock": {
+              "tick": 15670,
+              "reason": "approaching-load"
+            }
+          }
+        },
+        "failures": {},
+        "firstCombatDelivery": {
+          "firstShipTick": 1885,
+          "deadlineTick": 7435,
+          "attempts": {
+            "unit-player-4-transport-1066": {
+              "firstSeenTick": 1885,
+              "passengerIds": [
+                "unit-player-4-footman-1071"
+              ],
+              "reason": "delivered",
+              "tick": 5275,
+              "targetId": "gold-mainland-6"
+            }
+          },
+          "routeBudgeted": true,
+          "firstMinuteBlock": {
+            "tick": 3100,
+            "reason": "sailing"
+          },
+          "deliveredTick": 5275,
+          "deliveredShipId": "unit-player-4-transport-1066",
+          "deliveredUnitId": "unit-player-4-footman-1071"
+        },
+        "endpointPolicy": {
+          "map": "brokenSea",
+          "owner": "player-4",
+          "localExpansionAvailable": false,
+          "goals": [],
+          "gold": 1579,
+          "yards": [
+            {
+              "id": "building-player-4-shipyard-1024",
+              "complete": true,
+              "queue": [],
+              "x": 6864,
+              "y": 2832
+            }
+          ],
+          "buildingWorkers": []
+        },
+        "reasons": [
+          "gold-mainland-6: build / mine-occupied",
+          "已放弃于 536.75 秒"
+        ]
+      }
+    },
+    {
+      "map": "templeSpring",
+      "mapName": "神泉殿",
+      "owner": "enemy",
+      "before": {
+        "version": "v9_knight",
+        "endSecond": 900.0,
+        "boardedCombat": 11,
+        "unloadedIslandCombat": 8,
+        "firstIslandCombatUnloadSecond": 608.4,
+        "unloadedIslandWorkers": 0,
+        "clearedIslandCamps": 1,
+        "islandGuardsKilled": 3,
+        "neutralIslandHalls": 0,
+        "neutralIslandMines": 0,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {},
+        "ferries": {
+          "unit-enemy-transport-2943": {
+            "purpose": "reinforce",
+            "targetId": "gold-gen-10",
+            "from": {
+              "x": 1520,
+              "y": 5872
+            },
+            "to": {
+              "x": 848,
+              "y": 6416
+            },
+            "phase": "loading",
+            "crewIds": [
+              "unit-enemy-knight-6915",
+              "unit-enemy-witch-5740",
+              "unit-enemy-witch-6604"
+            ],
+            "sinceTick": 17475,
+            "deliveries": [
+              {
+                "tick": 15615,
+                "unitIds": [
+                  "unit-enemy-lancer-1090",
+                  "unit-enemy-lancer-1550",
+                  "unit-enemy-lancer-2203",
+                  "unit-enemy-fieldMedic-3035",
+                  "unit-enemy-priest-3059",
+                  "unit-enemy-priest-3293",
+                  "unit-enemy-witch-3977"
+                ]
+              }
+            ],
+            "returnTrips": 2,
+            "progress": {
+              "tick": 17985,
+              "x": 1399.5985720516867,
+              "y": 5939.002051479357,
+              "heading": -2.709379214853267,
+              "phase": "loading",
+              "crew": ""
+            },
+            "payloadIds": []
+          }
+        },
+        "decisions": {
+          "unit-enemy-transport-2943": {
+            "tick": 17985,
+            "reason": "await-combat-boarding",
+            "lastBlock": {
+              "tick": 17985,
+              "reason": "await-combat-boarding"
+            }
+          },
+          "unit-enemy-transport-8030": {
+            "tick": 17985,
+            "reason": "no-target",
+            "lastBlock": {
+              "tick": 17985,
+              "reason": "no-target"
+            }
+          }
+        },
+        "failures": {
+          "unit-enemy-transport-2943": {
+            "gold-gen-10": {
+              "attempts": 1,
+              "tick": 9660,
+              "reason": "home-raid-reserve"
+            }
+          }
+        },
+        "firstCombatDelivery": {
+          "firstShipTick": 8430,
+          "deadlineTick": 11910,
+          "attempts": {
+            "unit-enemy-transport-2943": {
+              "firstSeenTick": 8430,
+              "passengerIds": [
+                "unit-enemy-horseArcher-3685"
+              ],
+              "reason": "delivered",
+              "tick": 12180,
+              "targetId": "gold-gen-10"
+            }
+          },
+          "routeBudgeted": true,
+          "firstMinuteBlock": {
+            "tick": 9645,
+            "reason": "home-raid-reserve"
+          },
+          "overdueTick": 11925,
+          "deliveredTick": 12180,
+          "deliveredShipId": "unit-enemy-transport-2943",
+          "deliveredUnitId": "unit-enemy-horseArcher-3685"
+        }
+      },
+      "after": {
+        "version": "v9_knight",
+        "endSecond": 900.0,
+        "boardedCombat": 15,
+        "unloadedIslandCombat": 7,
+        "firstIslandCombatUnloadSecond": 608.85,
+        "unloadedIslandWorkers": 0,
+        "clearedIslandCamps": 1,
+        "islandGuardsKilled": 3,
+        "neutralIslandHalls": 0,
+        "neutralIslandMines": 0,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {
+          "gold-gen-10": {
+            "mineId": "gold-gen-10",
+            "sinceTick": 12180,
+            "stage": "escort",
+            "interruptions": [],
+            "landing": {
+              "x": 592,
+              "y": 6480
+            },
+            "reason": "await-engineer-transport",
+            "combat": {},
+            "endpointDiagnostic": {
+              "map": "templeSpring",
+              "owner": "enemy",
+              "mineId": "gold-gen-10",
+              "stage": "escort",
+              "crew": [
+                {
+                  "id": "unit-enemy-lancer-1057",
+                  "kind": "lancer",
+                  "hp": 145,
+                  "maxHp": 150
+                },
+                {
+                  "id": "unit-enemy-lancer-1072",
+                  "kind": "lancer",
+                  "hp": 150,
+                  "maxHp": 150
+                },
+                {
+                  "id": "unit-enemy-lancer-1419",
+                  "kind": "lancer",
+                  "hp": 150,
+                  "maxHp": 150
+                },
+                {
+                  "id": "unit-enemy-lancer-1487",
+                  "kind": "lancer",
+                  "hp": 150,
+                  "maxHp": 150
+                },
+                {
+                  "id": "unit-enemy-lancer-2203",
+                  "kind": "lancer",
+                  "hp": 150,
+                  "maxHp": 150
+                },
+                {
+                  "id": "unit-enemy-horseArcher-3685",
+                  "kind": "horseArcher",
+                  "hp": 209,
+                  "maxHp": 209
+                }
+              ],
+              "healthyFront": 6,
+              "ferries": [
+                {
+                  "id": "unit-enemy-transport-2943",
+                  "purpose": "settle",
+                  "targetId": "gold-gen-10",
+                  "from": {
+                    "x": 1520,
+                    "y": 5872
+                  },
+                  "to": {
+                    "x": 592,
+                    "y": 6480
+                  },
+                  "phase": "loading",
+                  "crewIds": [
+                    "unit-enemy-raider-10761",
+                    "unit-enemy-raider-10382",
+                    "unit-enemy-raider-8464",
+                    "unit-enemy-lancer-1098",
+                    "unit-enemy-raider-7909",
+                    "unit-enemy-lancer-7758"
+                  ],
+                  "sinceTick": 16695,
+                  "progress": {
+                    "tick": 17985,
+                    "x": 1375.2476617233237,
+                    "y": 6112.865957426752,
+                    "heading": 5.890490072076252,
+                    "phase": "loading",
+                    "crew": "unit-enemy-worker-1391|unit-enemy-worker-2158"
+                  },
+                  "decision": {
+                    "tick": 17985,
+                    "reason": "loading",
+                    "lastBlock": {
+                      "tick": 16695,
+                      "reason": "approaching-load"
+                    }
+                  }
+                },
+                {
+                  "id": "unit-enemy-transport-12659",
+                  "purpose": "reinforce",
+                  "targetId": "gold-gen-10",
+                  "from": {
+                    "x": 1232,
+                    "y": 5296
+                  },
+                  "to": {
+                    "x": 1008,
+                    "y": 6192
+                  },
+                  "phase": "sailing",
+                  "crewIds": [],
+                  "sinceTick": 16965,
+                  "deliveries": [],
+                  "returnTrips": 0,
+                  "progress": {
+                    "tick": 17985,
+                    "x": 1353.544504329733,
+                    "y": 5852.74664040008,
+                    "heading": 1.6910533115215631,
+                    "phase": "sailing",
+                    "crew": "unit-enemy-lancer-1090|unit-enemy-priest-3293|unit-enemy-priest-4854|unit-enemy-witch-5043|unit-enemy-raider-8236|unit-enemy-witch-9088|unit-enemy-priest-9283|unit-enemy-witch-11285"
+                  },
+                  "payloadIds": [
+                    "unit-enemy-lancer-1090",
+                    "unit-enemy-priest-3293",
+                    "unit-enemy-priest-4854",
+                    "unit-enemy-witch-5043",
+                    "unit-enemy-raider-8236",
+                    "unit-enemy-witch-9088",
+                    "unit-enemy-priest-9283",
+                    "unit-enemy-witch-11285"
+                  ],
+                  "decision": {
+                    "tick": 17985,
+                    "reason": "sailing",
+                    "lastBlock": {
+                      "tick": 17520,
+                      "reason": "await-combat-boarding"
+                    }
+                  }
+                }
+              ],
+              "homeHalls": 3
+            }
+          }
+        },
+        "ferries": {
+          "unit-enemy-transport-2943": {
+            "purpose": "settle",
+            "targetId": "gold-gen-10",
+            "from": {
+              "x": 1520,
+              "y": 5872
+            },
+            "to": {
+              "x": 592,
+              "y": 6480
+            },
+            "phase": "loading",
+            "crewIds": [
+              "unit-enemy-raider-10761",
+              "unit-enemy-raider-10382",
+              "unit-enemy-raider-8464",
+              "unit-enemy-lancer-1098",
+              "unit-enemy-raider-7909",
+              "unit-enemy-lancer-7758"
+            ],
+            "sinceTick": 16695,
+            "progress": {
+              "tick": 17985,
+              "x": 1375.2476617233237,
+              "y": 6112.865957426752,
+              "heading": 5.890490072076252,
+              "phase": "loading",
+              "crew": "unit-enemy-worker-1391|unit-enemy-worker-2158"
+            }
+          },
+          "unit-enemy-transport-12659": {
+            "purpose": "reinforce",
+            "targetId": "gold-gen-10",
+            "from": {
+              "x": 1232,
+              "y": 5296
+            },
+            "to": {
+              "x": 1008,
+              "y": 6192
+            },
+            "phase": "sailing",
+            "crewIds": [],
+            "sinceTick": 16965,
+            "deliveries": [],
+            "returnTrips": 0,
+            "progress": {
+              "tick": 17985,
+              "x": 1353.544504329733,
+              "y": 5852.74664040008,
+              "heading": 1.6910533115215631,
+              "phase": "sailing",
+              "crew": "unit-enemy-lancer-1090|unit-enemy-priest-3293|unit-enemy-priest-4854|unit-enemy-witch-5043|unit-enemy-raider-8236|unit-enemy-witch-9088|unit-enemy-priest-9283|unit-enemy-witch-11285"
+            },
+            "payloadIds": [
+              "unit-enemy-lancer-1090",
+              "unit-enemy-priest-3293",
+              "unit-enemy-priest-4854",
+              "unit-enemy-witch-5043",
+              "unit-enemy-raider-8236",
+              "unit-enemy-witch-9088",
+              "unit-enemy-priest-9283",
+              "unit-enemy-witch-11285"
+            ]
+          }
+        },
+        "decisions": {
+          "unit-enemy-transport-2943": {
+            "tick": 17985,
+            "reason": "loading",
+            "lastBlock": {
+              "tick": 16695,
+              "reason": "approaching-load"
+            }
+          },
+          "unit-enemy-transport-12659": {
+            "tick": 17985,
+            "reason": "sailing",
+            "lastBlock": {
+              "tick": 17520,
+              "reason": "await-combat-boarding"
+            }
+          }
+        },
+        "failures": {
+          "unit-enemy-transport-2943": {
+            "gold-gen-10": {
+              "attempts": 1,
+              "tick": 9660,
+              "reason": "home-raid-reserve"
+            }
+          }
+        },
+        "firstCombatDelivery": {
+          "firstShipTick": 8430,
+          "deadlineTick": 11910,
+          "attempts": {
+            "unit-enemy-transport-2943": {
+              "firstSeenTick": 8430,
+              "passengerIds": [
+                "unit-enemy-horseArcher-3685"
+              ],
+              "reason": "delivered",
+              "tick": 12180,
+              "targetId": "gold-gen-10"
+            }
+          },
+          "routeBudgeted": true,
+          "firstMinuteBlock": {
+            "tick": 9645,
+            "reason": "home-raid-reserve"
+          },
+          "overdueTick": 11925,
+          "deliveredTick": 12180,
+          "deliveredShipId": "unit-enemy-transport-2943",
+          "deliveredUnitId": "unit-enemy-horseArcher-3685"
+        },
+        "endpointPolicy": {
+          "map": "templeSpring",
+          "owner": "enemy",
+          "localExpansionAvailable": true,
+          "goals": [
+            {
+              "id": "bases:4",
+              "cost": 400,
+              "priority": 110
+            },
+            {
+              "id": "farm",
+              "cost": 120,
+              "priority": 98
+            },
+            {
+              "id": "upgrade:weaponTraining",
+              "cost": 400,
+              "priority": 79
+            },
+            {
+              "id": "upgrade:reinforcedPlating",
+              "cost": 300,
+              "priority": 78
+            },
+            {
+              "id": "build:stables",
+              "cost": 175,
+              "priority": 69
+            }
+          ],
+          "gold": 624.38,
+          "yards": [
+            {
+              "id": "building-enemy-shipyard-1870",
+              "complete": true,
+              "queue": [],
+              "x": 1552,
+              "y": 5840
+            },
+            {
+              "id": "building-enemy-shipyard-7911",
+              "complete": true,
+              "queue": [],
+              "x": 5136,
+              "y": 6256
+            }
+          ],
+          "buildingWorkers": [
+            {
+              "id": "unit-enemy-worker-3",
+              "order": {
+                "type": "build",
+                "buildingKind": "farm",
+                "x": 2784,
+                "y": 6400,
+                "progressTick": 18000,
+                "progressX": 2604.489062298045,
+                "progressY": 6240.258479193556
+              }
+            }
+          ]
+        },
+        "reasons": [
+          "gold-gen-10: escort / await-engineer-transport",
+          "船 unit-enemy-transport-2943：loading/loading，6 人登船中；船 unit-enemy-transport-12659：sailing/sailing，0 人登船中"
+        ]
+      }
+    },
+    {
+      "map": "templeSpring",
+      "mapName": "神泉殿",
+      "owner": "enemy2",
+      "before": {
+        "version": "v9_knight",
+        "endSecond": 900.0,
+        "boardedCombat": 13,
+        "unloadedIslandCombat": 13,
+        "firstIslandCombatUnloadSecond": 583,
+        "unloadedIslandWorkers": 1,
+        "clearedIslandCamps": 1,
+        "islandGuardsKilled": 3,
+        "neutralIslandHalls": 1,
+        "neutralIslandMines": 1,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {},
+        "ferries": {},
+        "decisions": {
+          "unit-enemy2-transport-4151": {
+            "tick": 17990,
+            "reason": "no-target",
+            "lastBlock": {
+              "tick": 17990,
+              "reason": "no-target"
+            }
+          },
+          "unit-enemy2-carrier-5419": {
+            "tick": 17990,
+            "reason": "no-target",
+            "lastBlock": {
+              "tick": 17990,
+              "reason": "no-target"
+            }
+          }
+        },
+        "failures": {
+          "unit-enemy2-transport-4151": {
+            "gold-gen-11": {
+              "attempts": 1,
+              "tick": 16100,
+              "reason": "await-reinforcement-batch"
+            }
+          }
+        },
+        "firstCombatDelivery": {
+          "firstShipTick": 10100,
+          "deadlineTick": 14200,
+          "attempts": {
+            "unit-enemy2-transport-4151": {
+              "firstSeenTick": 10100,
+              "passengerIds": [
+                "unit-enemy2-emberRavager-1444",
+                "unit-enemy2-emberRavager-1092",
+                "unit-enemy2-emberRavager-1140",
+                "unit-enemy2-emberRavager-1566",
+                "unit-enemy2-emberRavager-1780",
+                "unit-enemy2-emberRavager-1059"
+              ],
+              "reason": "delivered",
+              "tick": 11660,
+              "targetId": "gold-gen-11"
+            }
+          },
+          "routeBudgeted": true,
+          "firstMinuteBlock": {
+            "tick": 11315,
+            "reason": "sailing"
+          },
+          "deliveredTick": 11660,
+          "deliveredShipId": "unit-enemy2-transport-4151",
+          "deliveredUnitId": "unit-enemy2-emberRavager-1059"
+        }
+      },
+      "after": {
+        "version": "v9_knight",
+        "endSecond": 900.0,
+        "boardedCombat": 18,
+        "unloadedIslandCombat": 13,
+        "firstIslandCombatUnloadSecond": 583,
+        "unloadedIslandWorkers": 1,
+        "clearedIslandCamps": 1,
+        "islandGuardsKilled": 3,
+        "neutralIslandHalls": 1,
+        "neutralIslandMines": 1,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 1,
+        "conquests": {
+          "gold-gen-11": {
+            "mineId": "gold-gen-11",
+            "sinceTick": 11660,
+            "stage": "complete",
+            "interruptions": [],
+            "landing": {
+              "x": 176,
+              "y": 592
+            },
+            "reason": "garrison-established",
+            "stagingCheckedTick": 11660,
+            "staging": {
+              "x": 398.97971625553333,
+              "y": 650.9275412588196
+            },
+            "combat": {}
+          }
+        },
+        "ferries": {},
+        "decisions": {
+          "unit-enemy2-transport-4152": {
+            "tick": 17990,
+            "reason": "no-target",
+            "lastBlock": {
+              "tick": 17990,
+              "reason": "no-target"
+            }
+          },
+          "unit-enemy2-transport-6737": {
+            "tick": 17990,
+            "reason": "no-target",
+            "lastBlock": {
+              "tick": 17990,
+              "reason": "no-target"
+            }
+          }
+        },
+        "failures": {
+          "unit-enemy2-transport-6737": {
+            "gold-gen-11": {
+              "attempts": 1,
+              "tick": 15890,
+              "reason": "await-reinforcement-batch"
+            }
+          }
+        },
+        "firstCombatDelivery": {
+          "firstShipTick": 10100,
+          "deadlineTick": 14200,
+          "attempts": {
+            "unit-enemy2-transport-4152": {
+              "firstSeenTick": 10100,
+              "passengerIds": [
+                "unit-enemy2-emberRavager-1444",
+                "unit-enemy2-emberRavager-1092",
+                "unit-enemy2-emberRavager-1140",
+                "unit-enemy2-emberRavager-1566",
+                "unit-enemy2-emberRavager-1780",
+                "unit-enemy2-emberRavager-1059"
+              ],
+              "reason": "delivered",
+              "tick": 11660,
+              "targetId": "gold-gen-11"
+            }
+          },
+          "routeBudgeted": true,
+          "firstMinuteBlock": {
+            "tick": 11315,
+            "reason": "sailing"
+          },
+          "deliveredTick": 11660,
+          "deliveredShipId": "unit-enemy2-transport-4152",
+          "deliveredUnitId": "unit-enemy2-emberRavager-1059"
+        },
+        "endpointPolicy": {
+          "map": "templeSpring",
+          "owner": "enemy2",
+          "localExpansionAvailable": true,
+          "goals": [
+            {
+              "id": "farm",
+              "cost": 120,
+              "priority": 95
+            },
+            {
+              "id": "unit:cinderRevenant",
+              "cost": 210,
+              "priority": 94
+            },
+            {
+              "id": "tower:underFire",
+              "cost": 125,
+              "priority": 93
+            },
+            {
+              "id": "unit:ashChieftain",
+              "cost": 190,
+              "priority": 88
+            },
+            {
+              "id": "unit:priest",
+              "cost": 135,
+              "priority": 86
+            }
+          ],
+          "gold": 246.77,
+          "yards": [
+            {
+              "id": "building-enemy2-shipyard-3103",
+              "complete": true,
+              "queue": [],
+              "x": 1264,
+              "y": 1360
+            }
+          ],
+          "buildingWorkers": [
+            {
+              "id": "unit-enemy2-worker-2376",
+              "order": {
+                "type": "build",
+                "buildingKind": "farm",
+                "x": 1632,
+                "y": 3360,
+                "progressTick": 17996,
+                "progressX": 946.4264450882132,
+                "progressY": 3027.6532992228713
+              }
+            }
+          ]
+        },
+        "reasons": [
+          "gold-gen-11: complete / garrison-established"
+        ]
+      }
+    },
+    {
+      "map": "templeSpring",
+      "mapName": "神泉殿",
+      "owner": "player-4",
+      "before": {
+        "version": "v9_summoner",
+        "endSecond": 900.0,
+        "boardedCombat": 20,
+        "unloadedIslandCombat": 13,
+        "firstIslandCombatUnloadSecond": 480,
+        "unloadedIslandWorkers": 3,
+        "clearedIslandCamps": 1,
+        "islandGuardsKilled": 3,
+        "neutralIslandHalls": 1,
+        "neutralIslandMines": 1,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 1,
+        "conquests": {},
+        "ferries": {},
+        "decisions": {
+          "unit-player-4-transport-2765": {
+            "tick": 17995,
+            "reason": "no-target",
+            "lastBlock": {
+              "tick": 17995,
+              "reason": "no-target"
+            }
+          },
+          "unit-player-4-carrier-3413": {
+            "tick": 17995,
+            "reason": "outfitting",
+            "lastBlock": {
+              "tick": 16495,
+              "reason": "no-target"
+            }
+          }
+        },
+        "failures": {
+          "unit-player-4-transport-2765": {
+            "gold-gen-12": {
+              "attempts": 1,
+              "tick": 17065,
+              "reason": "await-reinforcement-batch"
+            }
+          }
+        },
+        "firstCombatDelivery": {
+          "firstShipTick": 8050,
+          "deadlineTick": 11500,
+          "attempts": {
+            "unit-player-4-transport-2765": {
+              "firstSeenTick": 8050,
+              "passengerIds": [
+                "unit-player-4-fieldMedic-2031",
+                "unit-player-4-fieldMedic-1409",
+                "unit-player-4-footman-1064",
+                "unit-player-4-footman-1095"
+              ],
+              "reason": "delivered",
+              "tick": 9610,
+              "targetId": "gold-gen-12"
+            },
+            "unit-player-4-carrier-3413": {
+              "firstSeenTick": 9265,
+              "passengerIds": [],
+              "reason": "landing-defense",
+              "tick": 9595,
+              "targetId": "gold-gen-12"
+            }
+          },
+          "routeBudgeted": true,
+          "firstMinuteBlock": {
+            "tick": 9265,
+            "reason": "sailing"
+          },
+          "deliveredTick": 9610,
+          "deliveredShipId": "unit-player-4-transport-2765",
+          "deliveredUnitId": "unit-player-4-footman-1064"
+        }
+      },
+      "after": {
+        "version": "v9_summoner",
+        "endSecond": 900.0,
+        "boardedCombat": 13,
+        "unloadedIslandCombat": 8,
+        "firstIslandCombatUnloadSecond": 480,
+        "unloadedIslandWorkers": 3,
+        "clearedIslandCamps": 1,
+        "islandGuardsKilled": 3,
+        "neutralIslandHalls": 1,
+        "neutralIslandMines": 1,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 1,
+        "conquests": {
+          "gold-gen-12": {
+            "mineId": "gold-gen-12",
+            "sinceTick": 9610,
+            "stage": "complete",
+            "interruptions": [],
+            "landing": {
+              "x": 6064,
+              "y": 176
+            },
+            "reason": "garrison-established",
+            "combat": {},
+            "stagingCheckedTick": 11155,
+            "staging": {
+              "x": 6005.172406638984,
+              "y": 398.33947869408513
+            }
+          }
+        },
+        "ferries": {
+          "unit-player-4-carrier-3413": {
+            "purpose": "reinforce",
+            "targetId": "gold-gen-12",
+            "from": {
+              "x": 5136,
+              "y": 784
+            },
+            "to": {
+              "x": 5648,
+              "y": 464
+            },
+            "phase": "loading",
+            "crewIds": [],
+            "sinceTick": 17065,
+            "deliveries": [],
+            "returnTrips": 0,
+            "progress": {
+              "tick": 17725,
+              "x": 5336.497098769029,
+              "y": 709.6340496783241,
+              "heading": 4.75679904987554,
+              "phase": "loading",
+              "crew": ""
+            }
+          }
+        },
+        "decisions": {
+          "unit-player-4-transport-2765": {
+            "tick": 17995,
+            "reason": "outfitting",
+            "lastBlock": {
+              "tick": 17065,
+              "reason": "retry-delay"
+            }
+          },
+          "unit-player-4-carrier-3413": {
+            "tick": 17995,
+            "reason": "await-reinforcement-batch",
+            "lastBlock": {
+              "tick": 17995,
+              "reason": "await-reinforcement-batch"
+            }
+          },
+          "unit-player-4-transport-13209": {
+            "tick": 17995,
+            "reason": "no-target",
+            "lastBlock": {
+              "tick": 17995,
+              "reason": "no-target"
+            }
+          }
+        },
+        "failures": {
+          "unit-player-4-transport-2765": {
+            "gold-gen-12": {
+              "attempts": 2,
+              "tick": 16795,
+              "reason": "returning-for-reinforcements"
+            }
+          }
+        },
+        "firstCombatDelivery": {
+          "firstShipTick": 8050,
+          "deadlineTick": 11500,
+          "attempts": {
+            "unit-player-4-transport-2765": {
+              "firstSeenTick": 8050,
+              "passengerIds": [
+                "unit-player-4-fieldMedic-2031",
+                "unit-player-4-fieldMedic-1409",
+                "unit-player-4-footman-1064",
+                "unit-player-4-footman-1095"
+              ],
+              "reason": "delivered",
+              "tick": 9610,
+              "targetId": "gold-gen-12"
+            },
+            "unit-player-4-carrier-3413": {
+              "firstSeenTick": 9265,
+              "passengerIds": [],
+              "reason": "loading",
+              "tick": 9595,
+              "targetId": "gold-gen-12"
+            }
+          },
+          "routeBudgeted": true,
+          "firstMinuteBlock": {
+            "tick": 9265,
+            "reason": "sailing"
+          },
+          "deliveredTick": 9610,
+          "deliveredShipId": "unit-player-4-transport-2765",
+          "deliveredUnitId": "unit-player-4-footman-1064"
+        },
+        "endpointPolicy": {
+          "map": "templeSpring",
+          "owner": "player-4",
+          "localExpansionAvailable": true,
+          "goals": [
+            {
+              "id": "bases:5",
+              "cost": 400,
+              "priority": 95
+            },
+            {
+              "id": "unit:summoner",
+              "cost": 180,
+              "priority": 72
+            },
+            {
+              "id": "unit:summoner",
+              "cost": 180,
+              "priority": 72
+            },
+            {
+              "id": "engineering:ballista",
+              "cost": 300,
+              "priority": 54
+            },
+            {
+              "id": "shopping",
+              "cost": 200,
+              "priority": 45
+            }
+          ],
+          "gold": 680.96,
+          "yards": [
+            {
+              "id": "building-player-4-shipyard-1585",
+              "complete": true,
+              "queue": [],
+              "x": 5104,
+              "y": 816
+            }
+          ],
+          "buildingWorkers": [
+            {
+              "id": "unit-player-4-worker-1036",
+              "order": {
+                "type": "build",
+                "buildingKind": "townHall",
+                "x": 4880,
+                "y": 4784,
+                "progressTick": 18000,
+                "progressX": 4561.884421539472,
+                "progressY": 3062.193493973714
+              }
+            }
+          ]
+        },
+        "reasons": [
+          "gold-gen-12: complete / garrison-established"
+        ]
+      }
+    },
+    {
+      "map": "elderwood",
+      "mapName": "古木林",
+      "owner": "enemy",
+      "before": {
+        "version": "v9_summoner",
+        "endSecond": 900.0,
+        "boardedCombat": 0,
+        "unloadedIslandCombat": 0,
+        "firstIslandCombatUnloadSecond": null,
+        "unloadedIslandWorkers": 0,
+        "clearedIslandCamps": 0,
+        "islandGuardsKilled": 0,
+        "neutralIslandHalls": 0,
+        "neutralIslandMines": 0,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {},
+        "ferries": {},
+        "decisions": {},
+        "failures": {},
+        "firstCombatDelivery": null
+      },
+      "after": {
+        "version": "v9_summoner",
+        "endSecond": 900.0,
+        "boardedCombat": 0,
+        "unloadedIslandCombat": 0,
+        "firstIslandCombatUnloadSecond": null,
+        "unloadedIslandWorkers": 0,
+        "clearedIslandCamps": 0,
+        "islandGuardsKilled": 0,
+        "neutralIslandHalls": 0,
+        "neutralIslandMines": 0,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {},
+        "ferries": {},
+        "decisions": {},
+        "failures": {},
+        "firstCombatDelivery": null,
+        "endpointPolicy": {
+          "map": "elderwood",
+          "owner": "enemy",
+          "localExpansionAvailable": true,
+          "navalWant": {
+            "id": "naval:islandHall",
+            "cost": 400,
+            "command": {
+              "type": "build",
+              "unitId": "unit-enemy-worker-2",
+              "buildingKind": "townHall",
+              "x": 4208,
+              "y": 5136
+            }
+          },
+          "goals": [
+            {
+              "id": "upgrade:reinforcedPlating",
+              "cost": 450,
+              "priority": 78
+            },
+            {
+              "id": "unit:summoner",
+              "cost": 180,
+              "priority": 72
+            },
+            {
+              "id": "unit:summoner",
+              "cost": 180,
+              "priority": 72
+            },
+            {
+              "id": "engineering:catapult",
+              "cost": 390,
+              "priority": 55
+            }
+          ],
+          "gold": 303.45,
+          "yards": [
+            {
+              "id": "building-enemy-shipyard-2447",
+              "complete": true,
+              "queue": [],
+              "x": 4112,
+              "y": 6768
+            }
+          ],
+          "buildingWorkers": []
+        },
+        "reasons": [
+          "本土可扩张优先；没有未完成的真实登陆任务"
+        ]
+      }
+    },
+    {
+      "map": "elderwood",
+      "mapName": "古木林",
+      "owner": "enemy2",
+      "before": {
+        "version": "v9_archer",
+        "endSecond": 900.0,
+        "boardedCombat": 0,
+        "unloadedIslandCombat": 0,
+        "firstIslandCombatUnloadSecond": null,
+        "unloadedIslandWorkers": 0,
+        "clearedIslandCamps": 0,
+        "islandGuardsKilled": 0,
+        "neutralIslandHalls": 0,
+        "neutralIslandMines": 0,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {},
+        "ferries": {},
+        "decisions": {},
+        "failures": {},
+        "firstCombatDelivery": null
+      },
+      "after": {
+        "version": "v9_archer",
+        "endSecond": 900.0,
+        "boardedCombat": 0,
+        "unloadedIslandCombat": 0,
+        "firstIslandCombatUnloadSecond": null,
+        "unloadedIslandWorkers": 0,
+        "clearedIslandCamps": 0,
+        "islandGuardsKilled": 0,
+        "neutralIslandHalls": 0,
+        "neutralIslandMines": 0,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {},
+        "ferries": {},
+        "decisions": {},
+        "failures": {},
+        "firstCombatDelivery": null,
+        "endpointPolicy": {
+          "map": "elderwood",
+          "owner": "enemy2",
+          "localExpansionAvailable": true,
+          "goals": [
+            {
+              "id": "farm",
+              "cost": 120,
+              "priority": 95
+            },
+            {
+              "id": "unit:archer",
+              "cost": 115,
+              "priority": 92
+            },
+            {
+              "id": "upgrade:weaponTraining",
+              "cost": 260,
+              "priority": 79
+            },
+            {
+              "id": "upgrade:reinforcedPlating",
+              "cost": 180,
+              "priority": 78
+            }
+          ],
+          "gold": 372.46,
+          "yards": [
+            {
+              "id": "building-enemy2-shipyard-3225",
+              "complete": true,
+              "queue": [],
+              "x": 400,
+              "y": 4112
+            }
+          ],
+          "buildingWorkers": [
+            {
+              "id": "unit-enemy2-worker-1569",
+              "order": {
+                "type": "build",
+                "buildingKind": "farm",
+                "x": 1472,
+                "y": 3488,
+                "progressTick": 17973,
+                "progressX": 1358.2287535226385,
+                "progressY": 2714.7565993119006
+              }
+            }
+          ]
+        },
+        "reasons": [
+          "本土可扩张优先；没有未完成的真实登陆任务"
+        ]
+      }
+    },
+    {
+      "map": "elderwood",
+      "mapName": "古木林",
+      "owner": "player-4",
+      "before": {
+        "version": "v9_archer",
+        "endSecond": 900.0,
+        "boardedCombat": 0,
+        "unloadedIslandCombat": 0,
+        "firstIslandCombatUnloadSecond": null,
+        "unloadedIslandWorkers": 0,
+        "clearedIslandCamps": 0,
+        "islandGuardsKilled": 0,
+        "neutralIslandHalls": 0,
+        "neutralIslandMines": 0,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {},
+        "ferries": {},
+        "decisions": {},
+        "failures": {},
+        "firstCombatDelivery": null
+      },
+      "after": {
+        "version": "v9_archer",
+        "endSecond": 900.0,
+        "boardedCombat": 0,
+        "unloadedIslandCombat": 0,
+        "firstIslandCombatUnloadSecond": null,
+        "unloadedIslandWorkers": 0,
+        "clearedIslandCamps": 0,
+        "islandGuardsKilled": 0,
+        "neutralIslandHalls": 0,
+        "neutralIslandMines": 0,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {},
+        "ferries": {},
+        "decisions": {},
+        "failures": {},
+        "firstCombatDelivery": null,
+        "endpointPolicy": {
+          "map": "elderwood",
+          "owner": "player-4",
+          "localExpansionAvailable": true,
+          "goals": [
+            {
+              "id": "farm",
+              "cost": 120,
+              "priority": 115
+            },
+            {
+              "id": "expansion-garrison:building-player-4-townHall-15744",
+              "cost": 125,
+              "priority": 105
+            },
+            {
+              "id": "upgrade:reinforcedPlating",
+              "cost": 450,
+              "priority": 78
+            },
+            {
+              "id": "unit:ashWarden",
+              "cost": 120,
+              "priority": 74
+            },
+            {
+              "id": "engineering:catapult",
+              "cost": 390,
+              "priority": 74
+            }
+          ],
+          "gold": 174.89,
+          "yards": [
+            {
+              "id": "building-player-4-shipyard-3181",
+              "complete": true,
+              "queue": [],
+              "x": 3056,
+              "y": 400
+            }
+          ],
+          "buildingWorkers": []
+        },
+        "reasons": [
+          "本土可扩张优先；没有未完成的真实登陆任务"
+        ]
+      }
+    },
+    {
+      "map": "ringwater",
+      "mapName": "环海",
+      "owner": "enemy",
+      "before": {
+        "version": "v9_knight",
+        "endSecond": 900.0,
+        "boardedCombat": 0,
+        "unloadedIslandCombat": 0,
+        "firstIslandCombatUnloadSecond": null,
+        "unloadedIslandWorkers": 0,
+        "clearedIslandCamps": 0,
+        "islandGuardsKilled": 0,
+        "neutralIslandHalls": 0,
+        "neutralIslandMines": 0,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {},
+        "ferries": {
+          "unit-enemy-transport-4748": {
+            "purpose": "advance",
+            "targetId": "gold-gen-5",
+            "from": {
+              "x": 1264,
+              "y": 3920
+            },
+            "to": {
+              "x": 2896,
+              "y": 6032
+            },
+            "phase": "loading",
+            "crewIds": [
+              "unit-enemy-worker-1"
+            ],
+            "sinceTick": 17505,
+            "progress": {
+              "tick": 17760,
+              "x": 1193.8912434988374,
+              "y": 3883.4684317117603,
+              "heading": 1.5304779894350158,
+              "phase": "loading",
+              "crew": "unit-enemy-worker-1"
+            }
+          }
+        },
+        "decisions": {
+          "unit-enemy-transport-4748": {
+            "tick": 17985,
+            "reason": "home-raid-reserve",
+            "lastBlock": {
+              "tick": 17985,
+              "reason": "home-raid-reserve"
+            }
+          }
+        },
+        "failures": {
+          "unit-enemy-transport-4748": {
+            "gold-gen-6": {
+              "attempts": 3,
+              "tick": 15255,
+              "reason": "home-raid-reserve"
+            },
+            "gold-gen-5": {
+              "attempts": 1,
+              "tick": 17085,
+              "reason": "home-raid-reserve"
+            }
+          }
+        },
+        "firstCombatDelivery": {
+          "firstShipTick": 10935,
+          "deadlineTick": 13685,
+          "attempts": {
+            "unit-enemy-transport-4748": {
+              "firstSeenTick": 10935,
+              "passengerIds": [],
+              "reason": "home-raid-reserve",
+              "tick": 17985,
+              "targetId": "gold-gen-5"
+            }
+          },
+          "routeBudgeted": true,
+          "firstMinuteBlock": {
+            "tick": 12150,
+            "reason": "retry-delay"
+          },
+          "overdueTick": 13695
+        }
+      },
+      "after": {
+        "version": "v9_knight",
+        "endSecond": 900.0,
+        "boardedCombat": 4,
+        "unloadedIslandCombat": 0,
+        "firstIslandCombatUnloadSecond": null,
+        "unloadedIslandWorkers": 0,
+        "clearedIslandCamps": 0,
+        "islandGuardsKilled": 0,
+        "neutralIslandHalls": 0,
+        "neutralIslandMines": 0,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {},
+        "ferries": {
+          "unit-enemy-transport-4748": {
+            "purpose": "advance",
+            "targetId": "gold-gen-5",
+            "from": {
+              "x": 1264,
+              "y": 3920
+            },
+            "to": {
+              "x": 2896,
+              "y": 6032
+            },
+            "phase": "sailing",
+            "crewIds": [],
+            "sinceTick": 15645,
+            "progress": {
+              "tick": 17970,
+              "x": 1017.3516851318391,
+              "y": 3956.5018791480484,
+              "heading": 0.8818111888919686,
+              "phase": "sailing",
+              "crew": "unit-enemy-worker-1|unit-enemy-priest-2364|unit-enemy-priest-3107|unit-enemy-ashHexer-6126|unit-enemy-ashHexer-9364"
+            }
+          }
+        },
+        "decisions": {
+          "unit-enemy-transport-4748": {
+            "tick": 17985,
+            "reason": "sailing",
+            "lastBlock": {
+              "tick": 16215,
+              "reason": "await-combat-boarding"
+            }
+          }
+        },
+        "failures": {
+          "unit-enemy-transport-4748": {
+            "gold-gen-6": {
+              "attempts": 3,
+              "tick": 15225,
+              "reason": "home-raid-reserve"
+            }
+          }
+        },
+        "firstCombatDelivery": {
+          "firstShipTick": 10935,
+          "deadlineTick": 13685,
+          "attempts": {
+            "unit-enemy-transport-4748": {
+              "firstSeenTick": 10935,
+              "passengerIds": [
+                "unit-enemy-ashHexer-9364",
+                "unit-enemy-priest-2364",
+                "unit-enemy-priest-3107",
+                "unit-enemy-ashHexer-6126"
+              ],
+              "reason": "sailing",
+              "tick": 17985,
+              "targetId": "gold-gen-5"
+            }
+          },
+          "routeBudgeted": true,
+          "firstMinuteBlock": {
+            "tick": 12150,
+            "reason": "retry-delay"
+          },
+          "overdueTick": 13695
+        },
+        "endpointPolicy": {
+          "map": "ringwater",
+          "owner": "enemy",
+          "localExpansionAvailable": true,
+          "navalWant": {
+            "id": "naval:islandHall",
+            "cost": 400,
+            "command": {
+              "type": "build",
+              "unitId": "unit-enemy-worker-3",
+              "buildingKind": "townHall",
+              "x": 3088,
+              "y": 4656
+            }
+          },
+          "goals": [
+            {
+              "id": "bases:4",
+              "cost": 400,
+              "priority": 110
+            },
+            {
+              "id": "unit:catapult",
+              "cost": 390,
+              "priority": 94
+            },
+            {
+              "id": "unit:ashHexer",
+              "cost": 140,
+              "priority": 93
+            },
+            {
+              "id": "unit:ashChieftain",
+              "cost": 190,
+              "priority": 89
+            },
+            {
+              "id": "unit:ashChieftain",
+              "cost": 190,
+              "priority": 89
+            }
+          ],
+          "gold": 184.94,
+          "yards": [
+            {
+              "id": "building-enemy-shipyard-2020",
+              "complete": true,
+              "queue": [],
+              "x": 1392,
+              "y": 3888
+            }
+          ],
+          "buildingWorkers": []
+        },
+        "reasons": [
+          "本土可扩张优先；没有未完成的真实登陆任务"
+        ]
+      }
+    },
+    {
+      "map": "ringwater",
+      "mapName": "环海",
+      "owner": "enemy2",
+      "before": {
+        "version": "v9_archer",
+        "endSecond": 900.0,
+        "boardedCombat": 0,
+        "unloadedIslandCombat": 0,
+        "firstIslandCombatUnloadSecond": null,
+        "unloadedIslandWorkers": 0,
+        "clearedIslandCamps": 0,
+        "islandGuardsKilled": 0,
+        "neutralIslandHalls": 0,
+        "neutralIslandMines": 0,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {},
+        "ferries": {
+          "unit-enemy2-transport-6467": {
+            "purpose": "creep",
+            "riderId": "unit-enemy2-horseArcher-6271",
+            "targetId": "gold-gen-6",
+            "from": {
+              "x": 1488,
+              "y": 3600
+            },
+            "to": {
+              "x": 880,
+              "y": 3600
+            },
+            "phase": "loading",
+            "crewIds": [
+              "unit-enemy2-horseArcher-6271"
+            ],
+            "sinceTick": 13820,
+            "progress": {
+              "tick": 17990,
+              "x": 3041.3694888772416,
+              "y": 1327.9999999999961,
+              "heading": 3.141592653589793,
+              "phase": "loading",
+              "crew": ""
+            }
+          }
+        },
+        "decisions": {
+          "unit-enemy2-transport-6467": {
+            "tick": 17990,
+            "reason": "approaching-load",
+            "lastBlock": {
+              "tick": 17990,
+              "reason": "approaching-load"
+            }
+          }
+        },
+        "failures": {
+          "unit-enemy2-transport-6467": {
+            "gold-gen-7": {
+              "attempts": 1,
+              "tick": 13385,
+              "reason": "home-raid-reserve"
+            }
+          }
+        },
+        "firstCombatDelivery": {
+          "firstShipTick": 12290,
+          "deadlineTick": 14954,
+          "attempts": {
+            "unit-enemy2-transport-6467": {
+              "firstSeenTick": 12290,
+              "passengerIds": [],
+              "reason": "approaching-load",
+              "tick": 17990,
+              "targetId": "gold-gen-6"
+            }
+          },
+          "routeBudgeted": true,
+          "firstMinuteBlock": {
+            "tick": 13505,
+            "reason": "retry-delay"
+          },
+          "overdueTick": 14960
+        }
+      },
+      "after": {
+        "version": "v9_archer",
+        "endSecond": 900.0,
+        "boardedCombat": 0,
+        "unloadedIslandCombat": 0,
+        "firstIslandCombatUnloadSecond": null,
+        "unloadedIslandWorkers": 0,
+        "clearedIslandCamps": 0,
+        "islandGuardsKilled": 0,
+        "neutralIslandHalls": 0,
+        "neutralIslandMines": 0,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {},
+        "ferries": {
+          "unit-enemy2-transport-6467": {
+            "purpose": "creep",
+            "riderId": "unit-enemy2-horseArcher-6271",
+            "targetId": "gold-gen-6",
+            "from": {
+              "x": 1488,
+              "y": 3600
+            },
+            "to": {
+              "x": 880,
+              "y": 3600
+            },
+            "phase": "loading",
+            "crewIds": [
+              "unit-enemy2-horseArcher-6271"
+            ],
+            "sinceTick": 13835,
+            "progress": {
+              "tick": 17960,
+              "x": 3087.999999999999,
+              "y": 1327.9999999999961,
+              "heading": 3.028146251442351,
+              "phase": "loading",
+              "crew": ""
+            }
+          }
+        },
+        "decisions": {
+          "unit-enemy2-transport-6467": {
+            "tick": 17990,
+            "reason": "approaching-load",
+            "lastBlock": {
+              "tick": 17990,
+              "reason": "approaching-load"
+            }
+          }
+        },
+        "failures": {
+          "unit-enemy2-transport-6467": {
+            "gold-gen-7": {
+              "attempts": 1,
+              "tick": 13385,
+              "reason": "home-raid-reserve"
+            }
+          }
+        },
+        "firstCombatDelivery": {
+          "firstShipTick": 12290,
+          "deadlineTick": 14954,
+          "attempts": {
+            "unit-enemy2-transport-6467": {
+              "firstSeenTick": 12290,
+              "passengerIds": [],
+              "reason": "approaching-load",
+              "tick": 17990,
+              "targetId": "gold-gen-6"
+            }
+          },
+          "routeBudgeted": true,
+          "firstMinuteBlock": {
+            "tick": 13505,
+            "reason": "retry-delay"
+          },
+          "overdueTick": 14960
+        },
+        "endpointPolicy": {
+          "map": "ringwater",
+          "owner": "enemy2",
+          "localExpansionAvailable": true,
+          "navalWant": {
+            "id": "naval:islandHall",
+            "cost": 400,
+            "command": {
+              "type": "build",
+              "unitId": "unit-enemy2-worker-1",
+              "buildingKind": "townHall",
+              "x": 3088,
+              "y": 4656
+            }
+          },
+          "goals": [
+            {
+              "id": "build:stables",
+              "cost": 175,
+              "priority": 77
+            },
+            {
+              "id": "upgrade:reinforcedPlating",
+              "cost": 300,
+              "priority": 66
+            },
+            {
+              "id": "unit:horseArcher",
+              "cost": 150,
+              "priority": 59
+            },
+            {
+              "id": "unit:archer",
+              "cost": 115,
+              "priority": 54
+            },
+            {
+              "id": "engineering:ballista",
+              "cost": 300,
+              "priority": 54
+            }
+          ],
+          "gold": 44.82,
+          "yards": [
+            {
+              "id": "building-enemy2-shipyard-2503",
+              "complete": true,
+              "queue": [],
+              "x": 2704,
+              "y": 1328
+            }
+          ],
+          "buildingWorkers": []
+        },
+        "reasons": [
+          "本土可扩张优先；没有未完成的真实登陆任务"
+        ]
+      }
+    },
+    {
+      "map": "ringwater",
+      "mapName": "环海",
+      "owner": "player-4",
+      "before": {
+        "version": "v9_knight",
+        "endSecond": 900.0,
+        "boardedCombat": 14,
+        "unloadedIslandCombat": 13,
+        "firstIslandCombatUnloadSecond": 604.15,
+        "unloadedIslandWorkers": 1,
+        "clearedIslandCamps": 1,
+        "islandGuardsKilled": 4,
+        "neutralIslandHalls": 0,
+        "neutralIslandMines": 0,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {},
+        "ferries": {},
+        "decisions": {
+          "unit-player-4-transport-4770": {
+            "tick": 17995,
+            "reason": "no-target",
+            "lastBlock": {
+              "tick": 17995,
+              "reason": "no-target"
+            }
+          },
+          "unit-player-4-carrier-7876": {
+            "tick": 17995,
+            "reason": "retry-delay",
+            "lastBlock": {
+              "tick": 17995,
+              "reason": "retry-delay"
+            }
+          }
+        },
+        "failures": {
+          "unit-player-4-carrier-7876": {
+            "gold-gen-8": {
+              "attempts": 1,
+              "tick": 17710,
+              "reason": "await-reinforcement-batch"
+            }
+          }
+        },
+        "firstCombatDelivery": {
+          "firstShipTick": 10960,
+          "deadlineTick": 13740,
+          "attempts": {
+            "unit-player-4-transport-4770": {
+              "firstSeenTick": 10960,
+              "passengerIds": [
+                "unit-player-4-emberRavager-2078",
+                "unit-player-4-emberRavager-1056",
+                "unit-player-4-ashChieftain-4564",
+                "unit-player-4-priest-3078",
+                "unit-player-4-emberRavager-1956"
+              ],
+              "reason": "delivered",
+              "tick": 12085,
+              "targetId": "gold-gen-8"
+            }
+          },
+          "routeBudgeted": true,
+          "deliveredTick": 12085,
+          "deliveredShipId": "unit-player-4-transport-4770",
+          "deliveredUnitId": "unit-player-4-emberRavager-1056"
+        }
+      },
+      "after": {
+        "version": "v9_knight",
+        "endSecond": 900.0,
+        "boardedCombat": 9,
+        "unloadedIslandCombat": 9,
+        "firstIslandCombatUnloadSecond": 604.15,
+        "unloadedIslandWorkers": 3,
+        "clearedIslandCamps": 1,
+        "islandGuardsKilled": 4,
+        "neutralIslandHalls": 1,
+        "neutralIslandMines": 1,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 1,
+        "conquests": {
+          "gold-gen-8": {
+            "mineId": "gold-gen-8",
+            "sinceTick": 12085,
+            "stage": "complete",
+            "interruptions": [],
+            "landing": {
+              "x": 6032,
+              "y": 2864
+            },
+            "reason": "garrison-established",
+            "stagingCheckedTick": 12085,
+            "staging": {
+              "x": 5999.126751892392,
+              "y": 2985.0570406502384
+            },
+            "combat": {
+              "creep": {
+                "center": {
+                  "x": 5906,
+                  "y": 3328
+                },
+                "reach": 55.36244214266564,
+                "staging": {
+                  "x": 5816.749424491127,
+                  "y": 2984.0279080260516
+                },
+                "stage": "engage",
+                "since": 14080,
+                "group": [
+                  "unit-player-4-emberRavager-1056",
+                  "unit-player-4-mercenary-1473",
+                  "unit-player-4-mercenary-1769",
+                  "unit-player-4-emberRavager-1956",
+                  "unit-player-4-emberRavager-2078",
+                  "unit-player-4-emberRavager-3305",
+                  "unit-player-4-ashChieftain-4564"
+                ]
+              }
+            }
+          }
+        },
+        "ferries": {},
+        "decisions": {
+          "unit-player-4-transport-4770": {
+            "tick": 17995,
+            "reason": "no-target",
+            "lastBlock": {
+              "tick": 17995,
+              "reason": "no-target"
+            }
+          }
+        },
+        "failures": {},
+        "firstCombatDelivery": {
+          "firstShipTick": 10960,
+          "deadlineTick": 13740,
+          "attempts": {
+            "unit-player-4-transport-4770": {
+              "firstSeenTick": 10960,
+              "passengerIds": [
+                "unit-player-4-emberRavager-2078",
+                "unit-player-4-emberRavager-1056",
+                "unit-player-4-ashChieftain-4564",
+                "unit-player-4-priest-3078",
+                "unit-player-4-emberRavager-1956"
+              ],
+              "reason": "delivered",
+              "tick": 12085,
+              "targetId": "gold-gen-8"
+            }
+          },
+          "routeBudgeted": true,
+          "deliveredTick": 12085,
+          "deliveredShipId": "unit-player-4-transport-4770",
+          "deliveredUnitId": "unit-player-4-emberRavager-1056"
+        },
+        "endpointPolicy": {
+          "map": "ringwater",
+          "owner": "player-4",
+          "localExpansionAvailable": true,
+          "navalWant": {
+            "id": "naval:islandHall",
+            "cost": 400,
+            "command": {
+              "type": "build",
+              "unitId": "unit-player-4-worker-8716",
+              "buildingKind": "townHall",
+              "x": 4016,
+              "y": 4944
+            }
+          },
+          "goals": [
+            {
+              "id": "unit:catapult",
+              "cost": 390,
+              "priority": 79
+            },
+            {
+              "id": "upgrade:reinforcedPlating",
+              "cost": 300,
+              "priority": 78
+            },
+            {
+              "id": "unit:cinderRevenant",
+              "cost": 210,
+              "priority": 74
+            },
+            {
+              "id": "unit:cinderRevenant",
+              "cost": 210,
+              "priority": 74
+            },
+            {
+              "id": "engineering:catapult",
+              "cost": 390,
+              "priority": 74
+            }
+          ],
+          "gold": 114.85,
+          "yards": [
+            {
+              "id": "building-player-4-shipyard-3835",
+              "complete": true,
+              "queue": [],
+              "x": 5264,
+              "y": 2768
+            }
+          ],
+          "buildingWorkers": []
+        },
+        "reasons": [
+          "gold-gen-8: complete / garrison-established"
+        ]
+      }
+    },
+    {
+      "map": "gullIsland",
+      "mapName": "鸥岛",
+      "owner": "enemy",
+      "before": {
+        "version": "v9_summoner",
+        "endSecond": 858.35,
+        "boardedCombat": 16,
+        "unloadedIslandCombat": 16,
+        "firstIslandCombatUnloadSecond": 436.9,
+        "unloadedIslandWorkers": 3,
+        "clearedIslandCamps": 1,
+        "islandGuardsKilled": 3,
+        "neutralIslandHalls": 1,
+        "neutralIslandMines": 1,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {},
+        "ferries": {
+          "unit-enemy-carrier-1320": {
+            "purpose": "settle",
+            "targetId": "gold-gen-4",
+            "from": {
+              "x": 4054.795847501864,
+              "y": 3722.4347454392155
+            },
+            "to": {
+              "x": 816,
+              "y": 5488
+            },
+            "phase": "loading",
+            "crewIds": [],
+            "sinceTick": 15780,
+            "progress": {
+              "tick": 17145,
+              "x": 5220.24167292993,
+              "y": 2303.684669388808,
+              "heading": -4.024699216032586,
+              "phase": "loading",
+              "crew": ""
+            }
+          },
+          "unit-enemy-transport-1245": {
+            "purpose": "settle",
+            "targetId": "gold-gen-4",
+            "from": {
+              "x": 5872,
+              "y": 5872
+            },
+            "to": {
+              "x": 816,
+              "y": 5488
+            },
+            "phase": "loading",
+            "crewIds": [
+              "unit-enemy-worker-1012",
+              "unit-enemy-cinderRunner-1848",
+              "unit-enemy-cinderRunner-1871",
+              "unit-enemy-emberRavager-1981",
+              "unit-enemy-emberRavager-2369",
+              "unit-enemy-emberRavager-1880"
+            ],
+            "sinceTick": 16455,
+            "progress": {
+              "tick": 17130,
+              "x": 6342.758576530906,
+              "y": 5106.15160662374,
+              "heading": -1.3822757049528311,
+              "phase": "loading",
+              "crew": "unit-enemy-worker-1"
+            }
+          }
+        },
+        "decisions": {
+          "unit-enemy-transport-1245": {
+            "tick": 17160,
+            "reason": "landing-defense",
+            "lastBlock": {
+              "tick": 17160,
+              "reason": "landing-defense"
+            }
+          },
+          "unit-enemy-carrier-1320": {
+            "tick": 17160,
+            "reason": "landing-defense",
+            "lastBlock": {
+              "tick": 17160,
+              "reason": "landing-defense"
+            }
+          }
+        },
+        "failures": {},
+        "firstCombatDelivery": {
+          "firstShipTick": 6540,
+          "deadlineTick": 12581,
+          "attempts": {
+            "unit-enemy-transport-1245": {
+              "firstSeenTick": 6540,
+              "passengerIds": [
+                "unit-enemy-emberRavager-1019",
+                "unit-enemy-emberRavager-1021",
+                "unit-enemy-emberRavager-1029",
+                "unit-enemy-summoner-1152",
+                "unit-enemy-summoner-1215",
+                "unit-enemy-summoner-1175"
+              ],
+              "reason": "delivered",
+              "tick": 8745,
+              "targetId": "gold-gen-3"
+            }
+          },
+          "routeBudgeted": true,
+          "firstMinuteBlock": {
+            "tick": 7755,
+            "reason": "sailing"
+          },
+          "deliveredTick": 8745,
+          "deliveredShipId": "unit-enemy-transport-1245",
+          "deliveredUnitId": "unit-enemy-emberRavager-1019"
+        }
+      },
+      "after": {
+        "version": "v9_summoner",
+        "endSecond": 900.0,
+        "boardedCombat": 21,
+        "unloadedIslandCombat": 16,
+        "firstIslandCombatUnloadSecond": 436.9,
+        "unloadedIslandWorkers": 3,
+        "clearedIslandCamps": 1,
+        "islandGuardsKilled": 3,
+        "neutralIslandHalls": 1,
+        "neutralIslandMines": 1,
+        "arrivedIslandGarrisonUnits": 1,
+        "islandCoverBuildings": 0,
+        "conquests": {
+          "gold-gen-3": {
+            "mineId": "gold-gen-3",
+            "sinceTick": 8745,
+            "stage": "complete",
+            "interruptions": [],
+            "landing": {
+              "x": 5840,
+              "y": 1168
+            },
+            "reason": "garrison-established",
+            "stagingCheckedTick": 8745,
+            "staging": {
+              "x": 5603.202295824085,
+              "y": 1258.221868531269
+            },
+            "combat": {}
+          }
+        },
+        "ferries": {
+          "unit-enemy-carrier-1321": {
+            "purpose": "settle",
+            "targetId": "gold-gen-4",
+            "from": {
+              "x": 5200,
+              "y": 3632
+            },
+            "to": {
+              "x": 816,
+              "y": 5488
+            },
+            "phase": "loading",
+            "crewIds": [
+              "unit-enemy-priest-2022",
+              "unit-enemy-emberRavager-1654",
+              "unit-enemy-emberRavager-1549",
+              "unit-enemy-emberRavager-1437",
+              "unit-enemy-emberRavager-2020",
+              "unit-enemy-cinderRunner-1364",
+              "unit-enemy-cinderRunner-1393",
+              "unit-enemy-emberRavager-1377",
+              "unit-enemy-emberRavager-1381",
+              "unit-enemy-emberRavager-1391",
+              "unit-enemy-emberRavager-1585"
+            ],
+            "sinceTick": 16395,
+            "progress": {
+              "tick": 17970,
+              "x": 5243.301333469833,
+              "y": 3431.461333469538,
+              "heading": -5.809153953542388,
+              "phase": "loading",
+              "crew": "unit-enemy-worker-1126|unit-enemy-worker-1129"
+            }
+          },
+          "unit-enemy-transport-1245": {
+            "purpose": "settle",
+            "targetId": "gold-gen-4",
+            "from": {
+              "x": 5872,
+              "y": 5872
+            },
+            "to": {
+              "x": 816,
+              "y": 5488
+            },
+            "phase": "loading",
+            "crewIds": [],
+            "sinceTick": 17175,
+            "progress": {
+              "tick": 17985,
+              "x": 6062.650172864972,
+              "y": 5919.680834573627,
+              "heading": -4.29668832281946,
+              "phase": "loading",
+              "crew": ""
+            }
+          }
+        },
+        "decisions": {
+          "unit-enemy-transport-1245": {
+            "tick": 17985,
+            "reason": "loading",
+            "lastBlock": {
+              "tick": 17175,
+              "reason": "approaching-load"
+            }
+          },
+          "unit-enemy-carrier-1321": {
+            "tick": 17985,
+            "reason": "loading",
+            "lastBlock": {
+              "tick": 15855,
+              "reason": "approaching-load"
+            }
+          }
+        },
+        "failures": {},
+        "firstCombatDelivery": {
+          "firstShipTick": 6540,
+          "deadlineTick": 12581,
+          "attempts": {
+            "unit-enemy-transport-1245": {
+              "firstSeenTick": 6540,
+              "passengerIds": [
+                "unit-enemy-emberRavager-1019",
+                "unit-enemy-emberRavager-1021",
+                "unit-enemy-emberRavager-1029",
+                "unit-enemy-summoner-1152",
+                "unit-enemy-summoner-1215",
+                "unit-enemy-summoner-1175"
+              ],
+              "reason": "delivered",
+              "tick": 8745,
+              "targetId": "gold-gen-3"
+            }
+          },
+          "routeBudgeted": true,
+          "firstMinuteBlock": {
+            "tick": 7755,
+            "reason": "sailing"
+          },
+          "deliveredTick": 8745,
+          "deliveredShipId": "unit-enemy-transport-1245",
+          "deliveredUnitId": "unit-enemy-emberRavager-1019"
+        },
+        "endpointPolicy": {
+          "map": "gullIsland",
+          "owner": "enemy",
+          "localExpansionAvailable": false,
+          "navalWant": {
+            "id": "naval:footholdProducer",
+            "cost": 165,
+            "command": {
+              "type": "build",
+              "unitId": "unit-enemy-worker-3",
+              "buildingKind": "emberForge",
+              "x": 5540,
+              "y": 1140
+            }
+          },
+          "goals": [
+            {
+              "id": "worker@building-enemy-townhall",
+              "cost": 75,
+              "priority": 90
+            },
+            {
+              "id": "worker@building-enemy-townHall-1113",
+              "cost": 75,
+              "priority": 90
+            },
+            {
+              "id": "naval:footholdProducer",
+              "cost": 165,
+              "priority": 88
+            },
+            {
+              "id": "unit:emberRavager",
+              "cost": 120,
+              "priority": 81
+            },
+            {
+              "id": "unit:priest",
+              "cost": 135,
+              "priority": 80
+            }
+          ],
+          "gold": 453.1,
+          "yards": [
+            {
+              "id": "building-enemy-shipyard-1141",
+              "complete": true,
+              "queue": [],
+              "x": 5040,
+              "y": 3632
+            }
+          ],
+          "buildingWorkers": []
+        },
+        "reasons": [
+          "gold-gen-3: complete / garrison-established"
+        ]
+      }
+    },
+    {
+      "map": "twoShores",
+      "mapName": "双岸",
+      "owner": "enemy",
+      "before": {
+        "version": "v9_knight",
+        "endSecond": 900.0,
+        "boardedCombat": 0,
+        "unloadedIslandCombat": 0,
+        "firstIslandCombatUnloadSecond": null,
+        "unloadedIslandWorkers": 0,
+        "clearedIslandCamps": 0,
+        "islandGuardsKilled": 0,
+        "neutralIslandHalls": 0,
+        "neutralIslandMines": 0,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {},
+        "ferries": {},
+        "decisions": {},
+        "failures": {},
+        "firstCombatDelivery": null
+      },
+      "after": {
+        "version": "v9_knight",
+        "endSecond": 900.0,
+        "boardedCombat": 0,
+        "unloadedIslandCombat": 0,
+        "firstIslandCombatUnloadSecond": null,
+        "unloadedIslandWorkers": 0,
+        "clearedIslandCamps": 0,
+        "islandGuardsKilled": 0,
+        "neutralIslandHalls": 0,
+        "neutralIslandMines": 0,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {},
+        "ferries": {},
+        "decisions": {},
+        "failures": {},
+        "firstCombatDelivery": null,
+        "endpointPolicy": {
+          "map": "twoShores",
+          "owner": "enemy",
+          "localExpansionAvailable": false,
+          "navalWant": {
+            "id": "naval:shipyard",
+            "cost": 170,
+            "command": {
+              "type": "build",
+              "unitId": "unit-enemy-worker-1045",
+              "buildingKind": "shipyard",
+              "x": 1136,
+              "y": 4400
+            }
+          },
+          "goals": [
+            {
+              "id": "unit:raider",
+              "cost": 115,
+              "priority": 95
+            },
+            {
+              "id": "unit:witch",
+              "cost": 145,
+              "priority": 93
+            },
+            {
+              "id": "tower:underFire",
+              "cost": 125,
+              "priority": 92
+            },
+            {
+              "id": "build:workshop",
+              "cost": 205,
+              "priority": 89
+            },
+            {
+              "id": "unit:knight",
+              "cost": 190,
+              "priority": 79
+            }
+          ],
+          "gold": 18.25,
+          "yards": [],
+          "buildingWorkers": []
+        },
+        "reasons": [
+          "未建立夺岛任务；海军需求 naval:shipyard"
+        ]
+      }
+    },
+    {
+      "map": "twoShores",
+      "mapName": "双岸",
+      "owner": "enemy2",
+      "before": {
+        "version": "v9_archer",
+        "endSecond": 900.0,
+        "boardedCombat": 0,
+        "unloadedIslandCombat": 0,
+        "firstIslandCombatUnloadSecond": null,
+        "unloadedIslandWorkers": 0,
+        "clearedIslandCamps": 0,
+        "islandGuardsKilled": 0,
+        "neutralIslandHalls": 0,
+        "neutralIslandMines": 0,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {},
+        "ferries": {},
+        "decisions": {},
+        "failures": {},
+        "firstCombatDelivery": null
+      },
+      "after": {
+        "version": "v9_archer",
+        "endSecond": 900.0,
+        "boardedCombat": 0,
+        "unloadedIslandCombat": 0,
+        "firstIslandCombatUnloadSecond": null,
+        "unloadedIslandWorkers": 0,
+        "clearedIslandCamps": 0,
+        "islandGuardsKilled": 0,
+        "neutralIslandHalls": 0,
+        "neutralIslandMines": 0,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {},
+        "ferries": {},
+        "decisions": {},
+        "failures": {},
+        "firstCombatDelivery": null,
+        "endpointPolicy": {
+          "map": "twoShores",
+          "owner": "enemy2",
+          "localExpansionAvailable": false,
+          "navalWant": {
+            "id": "naval:shipyard",
+            "cost": 170,
+            "command": {
+              "type": "build",
+              "unitId": "unit-enemy2-worker-1032",
+              "buildingKind": "shipyard",
+              "x": 4400,
+              "y": 2928
+            }
+          },
+          "goals": [
+            {
+              "id": "upgrade:weaponTraining",
+              "cost": 400,
+              "priority": 79
+            },
+            {
+              "id": "naval:shipyard",
+              "cost": 170,
+              "priority": 74
+            },
+            {
+              "id": "upgrade:reinforcedPlating",
+              "cost": 450,
+              "priority": 70
+            },
+            {
+              "id": "engineering:catapult",
+              "cost": 390,
+              "priority": 65
+            },
+            {
+              "id": "unit:ashWarden",
+              "cost": 120,
+              "priority": 64
+            }
+          ],
+          "gold": 333.11,
+          "yards": [],
+          "buildingWorkers": []
+        },
+        "reasons": [
+          "未建立夺岛任务；海军需求 naval:shipyard"
+        ]
+      }
+    },
+    {
+      "map": "twoShores",
+      "mapName": "双岸",
+      "owner": "player-4",
+      "before": {
+        "version": "v9_knight",
+        "endSecond": 900.0,
+        "boardedCombat": 6,
+        "unloadedIslandCombat": 6,
+        "firstIslandCombatUnloadSecond": 524.45,
+        "unloadedIslandWorkers": 1,
+        "clearedIslandCamps": 0,
+        "islandGuardsKilled": 0,
+        "neutralIslandHalls": 0,
+        "neutralIslandMines": 0,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 0,
+        "conquests": {},
+        "ferries": {},
+        "decisions": {
+          "unit-player-4-transport-4081": {
+            "tick": 16135,
+            "reason": "approaching-load",
+            "lastBlock": {
+              "tick": 16135,
+              "reason": "approaching-load"
+            }
+          }
+        },
+        "failures": {},
+        "firstCombatDelivery": {
+          "firstShipTick": 9145,
+          "deadlineTick": 12565,
+          "attempts": {
+            "unit-player-4-transport-4081": {
+              "firstSeenTick": 9145,
+              "passengerIds": [
+                "unit-player-4-lancer-1064",
+                "unit-player-4-contractArcher-1453",
+                "unit-player-4-lancer-1090",
+                "unit-player-4-lancer-1185",
+                "unit-player-4-lancer-1056",
+                "unit-player-4-lancer-1262"
+              ],
+              "reason": "delivered",
+              "tick": 10495,
+              "targetId": "gold-gen-6"
+            }
+          },
+          "routeBudgeted": true,
+          "firstMinuteBlock": {
+            "tick": 10360,
+            "reason": "sailing"
+          },
+          "deliveredTick": 10495,
+          "deliveredShipId": "unit-player-4-transport-4081",
+          "deliveredUnitId": "unit-player-4-lancer-1056"
+        }
+      },
+      "after": {
+        "version": "v9_knight",
+        "endSecond": 900.0,
+        "boardedCombat": 17,
+        "unloadedIslandCombat": 17,
+        "firstIslandCombatUnloadSecond": 524.45,
+        "unloadedIslandWorkers": 1,
+        "clearedIslandCamps": 1,
+        "islandGuardsKilled": 4,
+        "neutralIslandHalls": 1,
+        "neutralIslandMines": 1,
+        "arrivedIslandGarrisonUnits": 0,
+        "islandCoverBuildings": 1,
+        "conquests": {
+          "gold-gen-6": {
+            "mineId": "gold-gen-6",
+            "sinceTick": 10495,
+            "stage": "complete",
+            "interruptions": [],
+            "landing": {
+              "x": 3280,
+              "y": 4016
+            },
+            "reason": "garrison-established",
+            "stagingCheckedTick": 10495,
+            "staging": {
+              "x": 3313.4369651561337,
+              "y": 3919.701540350334
+            },
+            "combat": {}
+          }
+        },
+        "ferries": {
+          "unit-player-4-transport-4081": {
+            "purpose": "reinforce",
+            "targetId": "gold-gen-6",
+            "from": {
+              "x": 4432,
+              "y": 4208
+            },
+            "to": {
+              "x": 3280,
+              "y": 4016
+            },
+            "phase": "return",
+            "crewIds": [],
+            "sinceTick": 13915,
+            "deliveries": [
+              {
+                "tick": 12040,
+                "unitIds": [
+                  "unit-player-4-lancer-1098",
+                  "unit-player-4-raider-4125",
+                  "unit-player-4-knight-4900",
+                  "unit-player-4-raider-5398"
+                ]
+              },
+              {
+                "tick": 16045,
+                "unitIds": [
+                  "unit-player-4-priest-2893",
+                  "unit-player-4-priest-3189",
+                  "unit-player-4-witch-5989",
+                  "unit-player-4-raider-6449",
+                  "unit-player-4-priest-6580",
+                  "unit-player-4-raider-6949",
+                  "unit-player-4-raider-7250"
+                ]
+              }
+            ],
+            "returnTrips": 1,
+            "progress": {
+              "tick": 17980,
+              "x": 4412.3879499472305,
+              "y": 4045.8279348248916,
+              "heading": -0.5762640474785898,
+              "phase": "return",
+              "crew": ""
+            }
+          }
+        },
+        "decisions": {
+          "unit-player-4-transport-4081": {
+            "tick": 17995,
+            "reason": "returning-for-reinforcements",
+            "lastBlock": {
+              "tick": 14830,
+              "reason": "await-combat-boarding"
+            }
+          }
+        },
+        "failures": {},
+        "firstCombatDelivery": {
+          "firstShipTick": 9145,
+          "deadlineTick": 12565,
+          "attempts": {
+            "unit-player-4-transport-4081": {
+              "firstSeenTick": 9145,
+              "passengerIds": [
+                "unit-player-4-lancer-1064",
+                "unit-player-4-contractArcher-1453",
+                "unit-player-4-lancer-1090",
+                "unit-player-4-lancer-1185",
+                "unit-player-4-lancer-1056",
+                "unit-player-4-lancer-1262"
+              ],
+              "reason": "delivered",
+              "tick": 10495,
+              "targetId": "gold-gen-6"
+            }
+          },
+          "routeBudgeted": true,
+          "firstMinuteBlock": {
+            "tick": 10360,
+            "reason": "sailing"
+          },
+          "deliveredTick": 10495,
+          "deliveredShipId": "unit-player-4-transport-4081",
+          "deliveredUnitId": "unit-player-4-lancer-1056"
+        },
+        "endpointPolicy": {
+          "map": "twoShores",
+          "owner": "player-4",
+          "localExpansionAvailable": false,
+          "navalWant": {
+            "id": "naval:carrier",
+            "cost": 420,
+            "command": {
+              "type": "train",
+              "buildingId": "building-player-4-shipyard-3146",
+              "unitKind": "carrier"
+            }
+          },
+          "goals": [
+            {
+              "id": "tower:underFire",
+              "cost": 125,
+              "priority": 95
+            },
+            {
+              "id": "unit:raider",
+              "cost": 115,
+              "priority": 81
+            },
+            {
+              "id": "unit:knight",
+              "cost": 190,
+              "priority": 77
+            },
+            {
+              "id": "build:stables",
+              "cost": 175,
+              "priority": 77
+            },
+            {
+              "id": "unit:witch",
+              "cost": 145,
+              "priority": 77
+            }
+          ],
+          "gold": 166.4,
+          "yards": [
+            {
+              "id": "building-player-4-shipyard-3146",
+              "complete": true,
+              "queue": [],
+              "x": 4400,
+              "y": 4240
+            }
+          ],
+          "buildingWorkers": [
+            {
+              "id": "unit-player-4-worker-11574",
+              "order": {
+                "type": "build",
+                "buildingKind": "defenseTower",
+                "x": 2272,
+                "y": 1568,
+                "progressTick": 17993,
+                "progressX": 4572.498481372917,
+                "progressY": 5691.794772916128
+              }
+            }
+          ]
+        },
+        "reasons": [
+          "gold-gen-6: complete / garrison-established"
+        ]
+      }
+    }
+  ],
+  "changes": [
+    {
+      "rule": "真实首航的载员记录/卸载记录启动目标岛任务；不把已有骑射队误认成登陆，不在已有本方矿厅的整块岛上另起任务。保留同一块岛当前已承诺的矿。",
+      "locations": [
+        "src/ai/bootstrap_1/island-conquest.ts:32"
+      ]
+    },
+    {
+      "rule": "登陆部队使用与#535相同的清营、集结、工人护送逻辑，作战状态按任务保存；按登陆岛的可达地面读取敌军。防守与骑射队保持归属。",
+      "locations": [
+        "src/ai/bootstrap_1/expansion-mission.ts:216",
+        "src/ai/bootstrap_1/island-conquest.ts:216",
+        "src/ai/policy/v6/intel.ts:70"
+      ]
+    },
+    {
+      "rule": "营地清空后，从本土确实存在的空闲/采矿工人里，保留3名矿工后用空船运工程队；已有装载、修理和骑射任务不被抢走。登陆矿厅的400金持续保留，已发出的建厅命令不会重复计价。",
+      "locations": [
+        "src/ai/bootstrap_1/island-conquest.ts:98",
+        "src/ai/policy/naval.ts:120",
+        "src/ai/policy/naval.ts:1073"
+      ]
+    },
+    {
+      "rule": "新海外矿厅复用#542驻矿交接，筛选驻军时用矿厅所在的地面；海军提前让出防守模块提出的驻军命令。实体到位或矿口火力覆盖满足防守预测，任务才完成。",
+      "locations": [
+        "src/ai/bootstrap_1/expansion-garrison.ts:76",
+        "src/ai/bootstrap_1/policy.ts:193"
+      ]
+    }
+  ],
+  "thinkABBA": {
+    "think": {
+      "beforeMeanMs": 23.9795768263889,
+      "afterMeanMs": 24.311358104166693,
+      "meanChangePercent": 1.3835993861771367,
+      "runs": {
+        "A1": {
+          "n": 72,
+          "mean": 23.85813898611115,
+          "p50": 24.35640999999987,
+          "p95": 31.703012999999828,
+          "max": 32.541729999999916
+        },
+        "B1": {
+          "n": 72,
+          "mean": 24.18706831944448,
+          "p50": 24.521030000000337,
+          "p95": 32.86323300000004,
+          "max": 35.33894800000053
+        },
+        "B2": {
+          "n": 72,
+          "mean": 24.43564788888891,
+          "p50": 24.928166000000147,
+          "p95": 33.01504900000009,
+          "max": 41.12683900000002
+        },
+        "A2": {
+          "n": 72,
+          "mean": 24.101014666666654,
+          "p50": 24.16285599999992,
+          "p95": 32.69866399999955,
+          "max": 41.41696499999989
+        }
+      },
+      "host": "develop-20261012121540-anbh4",
+      "node": "v24.22.0"
+    },
+    "large": {
+      "beforeMeanMs": 112.6939730694444,
+      "afterMeanMs": 112.10733977499996,
+      "meanChangePercent": -0.5205542749681435,
+      "runs": {
+        "A1": {
+          "n": 180,
+          "mean": 113.60071080000004,
+          "p50": 105.56288999999924,
+          "p95": 212.65535600000112,
+          "max": 613.8144350000002
+        },
+        "B1": {
+          "n": 180,
+          "mean": 110.99279900000008,
+          "p50": 105.48945299999832,
+          "p95": 203.23598800000036,
+          "max": 548.4237290000005
+        },
+        "B2": {
+          "n": 180,
+          "mean": 113.22188054999984,
+          "p50": 105.83162600000014,
+          "p95": 198.5925180000013,
+          "max": 616.429682
+        },
+        "A2": {
+          "n": 180,
+          "mean": 111.78723533888875,
+          "p50": 105.88653999999951,
+          "p95": 199.99976500000048,
+          "max": 561.3177500000002
+        }
+      },
+      "host": "develop-20261012121540-anbh4",
+      "node": "v24.22.0",
+      "checksums": {
+        "A1": {
+          "initial": "1a7ec4ce",
+          "final": "30821755"
+        },
+        "B1": {
+          "initial": "1a7ec4ce",
+          "final": "30821755"
+        },
+        "B2": {
+          "initial": "1a7ec4ce",
+          "final": "30821755"
+        },
+        "A2": {
+          "initial": "1a7ec4ce",
+          "final": "30821755"
+        }
+      },
+      "peakThinkIndices": {
+        "A1": 0,
+        "B1": 0,
+        "B2": 0,
+        "A2": 0
+      },
+      "maxNote": "四次max都在第一次think；原始样本全部保留，数值与每次p50/p95/max见runs。"
+    },
+    "method": "同一A100/Node24，己方房间观察、全量测试、冷重放全部结束后按A1→B1→B2→A2串行。真实神泉殿600秒+环海900秒共6席，各12次热采样；另以四军各80单位large-battle-think，180次think。"
+  },
+  "scenarios": {
+    "file": "src/ai/bootstrap_1/island-conquest.scene.test.ts",
+    "count": 8,
+    "fixtures": "348ab866实际环海/神泉殿/蓝宝15分钟帧，及初版B和此次开发中的实际碎海15分钟帧；保留全部敌军、指令、资源、记忆和存档原始nextId，没有移兵或补金",
+    "main": "7 failed, 1 passed (the already reorganized crossing remains covered)",
+    "candidate": "8 passed",
+    "physical": "环海900→1100秒，所有实际AI对手同时运行；同一工人先真实在甲板上、再卸到岛上，矿厅完成、实体驻军到达、任务complete。",
+    "otherAssertions": [
+      "环海/神泉殿清营后目标与建厅资金保留",
+      "蓝宝已满载殖民船回到尚未完成的真实登陆矿",
+      "蓝宝实际海外矿厅能领到驻军命令，海军不抢归属"
+    ]
+  },
+  "testing": {
+    "fullSrc": {
+      "command": "vitest run --dir src --maxWorkers 8 --minWorkers 8",
+      "filesPassed": 693,
+      "testsPassed": 7757,
+      "seconds": 213.64
+    },
+    "tsc": true,
+    "relatedRegressions": "expedition-available-force与reinforcement-ferries共30项通过；没有依赖放宽这些断言。",
+    "cli": {
+      "tests": 20,
+      "files": 2,
+      "command": "vitest run --dir tools/cli",
+      "tscCommand": "tsc -p tools/cli/tsconfig.json",
+      "tscExit": 0,
+      "note": "CI发现浏览器场景host参数缺少类型，补充显式注解后重新验证CLI与完整src测试。游戏src/scripts运行时代码未变。"
+    }
+  },
+  "mac1": {
+    "command": "SKETCH_MACHINES=~/.config/sketch/machines-naval.json bin/sketch yatu naval-island-conquest --ref HEAD --on mac1 --locale zh-CN --json",
+    "sourceTree": "f5fc357211ff5a7257bdc37ab5dca24c6ca29e0c（相同运行时代码，场景测试编写时的临时对象）",
+    "snapshotsExactlyEqual": "mac1与A100在18000tick的完整GameSnapshot逐字段相同，包括单位、建筑、矿量、金币、match、map。",
+    "images": [
+      "images/naval-island-completion-600s.jpg",
+      "images/naval-island-completion-900s.jpg"
+    ],
+    "raw": [
+      "600秒无厅",
+      "750秒矿厅已完工",
+      "900秒完整基地、矿和防守火力"
+    ],
+    "scene": "tools/cli/scenes/naval-island-conquest.ts",
+    "sceneSha256": "899f0666cc0c97e9550659acfd8bc48c855794c54e88e73d032d5b6092064507",
+    "sceneTypeAnnotation": "复现脚本补充host参数的TypeScript注解；运行时JS行为与截图生成时相同。"
+  },
+  "reviewFix": {
+    "request": "保留安全滩头的逐批补兵，恢复碎海两席，不降低清营余量。",
+    "rootCause": {
+      "mine": "gold-mainland-2：9000金，中央中立大陆，初始玩家基地数0",
+      "camp": "ogreWarrior+ogreMage，营地强度1.947692525611837，加原有1.5清营余量=3.447692525611837；没有把对手本土防守算进去",
+      "initialB": "已登陆1枪兵的清营战力0.8965356258845705，本土5名闲枪兵卡在机会转运>6门槛；殖民船检查矿点而非实际滩头，3次landing-defense后停派"
+    },
+    "rules": [
+      "所有殖民/战斗航次在装载和航行阶段均以mission.to做landingSafe检查；水边命令点投影到相邻陆地，检查实际滩头的威胁和已登陆支援。",
+      "有明确清营缺口时，reinforcementTaskId标记专用补兵；按与清营相同的creepForce/forceFor分批征募，不受机会转运>6闲兵门槛限制；已有防守归属与本土实际到达威胁预留保持。",
+      "滩头重新安全时，仅重新考虑因旧矿点安全检查留下的landing-defense失败；其他失败上限不清除。",
+      "清营后解除专用补兵标记，普通空船重新服从>6门槛；已装载的航次继续驶向原目标。已放弃的矿不重新进入殖民候选。"
+    ],
+    "enemyBatchesSeconds": {
+      "172.75": 1,
+      "326.45": 3,
+      "431.95": 4
+    },
+    "enemy2BatchesSeconds": {
+      "149": 1,
+      "326.45": 2,
+      "430.15": 4,
+      "545": 3
+    },
+    "enemy2OriginalWasNotCompletelyIdle": "初版B在636.25秒失去首批部队，658秒已改选gold-mainland-4，900秒载兵驶往gold-mainland-7；实际问题是后续来得太晚。新增真实帧测试保留这条重新组织的航程。",
+    "targetSeats": {
+      "enemy": {
+        "main": {
+          "version": "v9_knight",
+          "endSecond": 900.0,
+          "boardedCombat": 11,
+          "unloadedIslandCombat": 7,
+          "firstIslandCombatUnloadSecond": 172.75,
+          "unloadedIslandWorkers": 3,
+          "clearedIslandCamps": 4,
+          "islandGuardsKilled": 8,
+          "neutralIslandHalls": 2,
+          "neutralIslandMines": 4,
+          "arrivedIslandGarrisonUnits": 0,
+          "islandCoverBuildings": 1,
+          "conquests": {},
+          "ferries": {
+            "unit-enemy-transport-1064": {
+              "purpose": "settle",
+              "targetId": "gold-mainland-7",
+              "from": {
+                "x": 1712,
+                "y": 4432
+              },
+              "to": {
+                "x": 4464,
+                "y": 4464
+              },
+              "phase": "sailing",
+              "crewIds": [],
+              "sinceTick": 15735,
+              "progress": {
+                "tick": 17985,
+                "x": 3755.0163693843947,
+                "y": 4978.865946178746,
+                "heading": -5.73638629712368,
+                "phase": "sailing",
+                "crew": "unit-enemy-worker-1|unit-enemy-worker-1032|unit-enemy-lancer-3239|unit-enemy-lancer-3437|unit-enemy-lancer-3590|unit-enemy-priest-4206"
+              }
+            }
+          },
+          "decisions": {
+            "unit-enemy-transport-1064": {
+              "tick": 17985,
+              "reason": "sailing",
+              "lastBlock": {
+                "tick": 15810,
+                "reason": "landing-defense"
+              }
+            }
+          },
+          "failures": {
+            "unit-enemy-transport-1064": {
+              "building-player-townhall": {
+                "attempts": 2,
+                "tick": 6300,
+                "reason": "no-combat-crew"
+              },
+              "building-enemy2-farm-3474": {
+                "attempts": 1,
+                "tick": 14505,
+                "reason": "destination-water-held"
+              }
+            }
+          },
+          "firstCombatDelivery": {
+            "firstShipTick": 1860,
+            "deadlineTick": 5910,
+            "attempts": {
+              "unit-enemy-transport-1064": {
+                "firstSeenTick": 1860,
+                "passengerIds": [
+                  "unit-enemy-lancer-1072"
+                ],
+                "reason": "delivered",
+                "tick": 3465,
+                "targetId": "gold-mainland-2"
+              }
+            },
+            "routeBudgeted": true,
+            "firstMinuteBlock": {
+              "tick": 3075,
+              "reason": "sailing"
+            },
+            "deliveredTick": 3465,
+            "deliveredShipId": "unit-enemy-transport-1064",
+            "deliveredUnitId": "unit-enemy-lancer-1072"
+          }
+        },
+        "after": {
+          "version": "v9_knight",
+          "endSecond": 900.0,
+          "boardedCombat": 12,
+          "unloadedIslandCombat": 8,
+          "firstIslandCombatUnloadSecond": 172.75,
+          "unloadedIslandWorkers": 1,
+          "clearedIslandCamps": 6,
+          "islandGuardsKilled": 11,
+          "neutralIslandHalls": 5,
+          "neutralIslandMines": 6,
+          "arrivedIslandGarrisonUnits": 0,
+          "islandCoverBuildings": 3,
+          "conquests": {
+            "gold-mainland-2": {
+              "mineId": "gold-mainland-2",
+              "sinceTick": 3465,
+              "stage": "complete",
+              "interruptions": [],
+              "landing": {
+                "x": 2832,
+                "y": 3920
+              },
+              "reason": "garrison-established",
+              "combat": {},
+              "stagingCheckedTick": 6840,
+              "staging": {
+                "x": 3026.0421665281747,
+                "y": 3819.657369598024
+              }
+            }
+          },
+          "ferries": {
+            "unit-enemy-transport-1064": {
+              "purpose": "rebase",
+              "targetId": "gold-mainland-1",
+              "from": {
+                "x": 4628,
+                "y": 7084
+              },
+              "to": {
+                "x": 3312,
+                "y": 4528
+              },
+              "phase": "sailing",
+              "crewIds": [],
+              "sinceTick": 14985,
+              "progress": {
+                "tick": 17985,
+                "x": 4071.767596767921,
+                "y": 7079.767596767925,
+                "heading": -8.639379797371932,
+                "phase": "sailing",
+                "crew": "unit-enemy-worker-2"
+              }
+            },
+            "unit-enemy-carrier-5824": {
+              "purpose": "rebase",
+              "targetId": "gold-mainland-1",
+              "from": {
+                "x": 4628,
+                "y": 7084
+              },
+              "to": {
+                "x": 3312,
+                "y": 4528
+              },
+              "phase": "loading",
+              "crewIds": [],
+              "sinceTick": 16935,
+              "progress": {
+                "tick": 17970,
+                "x": 2684.878361387802,
+                "y": 5632.7379584426435,
+                "heading": 0.7811426648186877,
+                "phase": "loading",
+                "crew": ""
+              }
+            }
+          },
+          "decisions": {
+            "unit-enemy-transport-1064": {
+              "tick": 17985,
+              "reason": "sailing",
+              "lastBlock": {
+                "tick": 17130,
+                "reason": "approaching-load"
+              }
+            },
+            "unit-enemy-carrier-5824": {
+              "tick": 17985,
+              "reason": "approaching-load",
+              "lastBlock": {
+                "tick": 17985,
+                "reason": "approaching-load"
+              }
+            }
+          },
+          "failures": {
+            "unit-enemy-transport-1064": {
+              "gold-mainland-2": {
+                "attempts": 1,
+                "tick": 10380,
+                "reason": "await-reinforcement-batch"
+              }
+            }
+          },
+          "firstCombatDelivery": {
+            "firstShipTick": 1860,
+            "deadlineTick": 5910,
+            "attempts": {
+              "unit-enemy-transport-1064": {
+                "firstSeenTick": 1860,
+                "passengerIds": [
+                  "unit-enemy-lancer-1072"
+                ],
+                "reason": "delivered",
+                "tick": 3465,
+                "targetId": "gold-mainland-2"
+              }
+            },
+            "routeBudgeted": true,
+            "firstMinuteBlock": {
+              "tick": 3075,
+              "reason": "sailing"
+            },
+            "deliveredTick": 3465,
+            "deliveredShipId": "unit-enemy-transport-1064",
+            "deliveredUnitId": "unit-enemy-lancer-1072"
+          },
+          "endpointPolicy": {
+            "map": "brokenSea",
+            "owner": "enemy",
+            "localExpansionAvailable": true,
+            "navalWant": {
+              "id": "naval:warship",
+              "cost": 540,
+              "command": {
+                "type": "train",
+                "buildingId": "building-enemy-shipyard-1015",
+                "unitKind": "warship"
+              }
+            },
+            "goals": [
+              {
+                "id": "naval:warship",
+                "cost": 540,
+                "priority": 82
+              },
+              {
+                "id": "build:stables",
+                "cost": 175,
+                "priority": 77
+              },
+              {
+                "id": "unit:raider",
+                "cost": 115,
+                "priority": 75
+              },
+              {
+                "id": "engineering:workshop",
+                "cost": 205,
+                "priority": 74
+              },
+              {
+                "id": "unit:witch",
+                "cost": 145,
+                "priority": 73
+              }
+            ],
+            "gold": 160.25,
+            "yards": [
+              {
+                "id": "building-enemy-shipyard-1015",
+                "complete": true,
+                "queue": [],
+                "x": 1520,
+                "y": 4848
+              }
+            ],
+            "buildingWorkers": []
+          },
+          "reasons": [
+            "gold-mainland-2: complete / garrison-established"
+          ]
+        }
+      },
+      "enemy2": {
+        "main": {
+          "version": "v9_archer",
+          "endSecond": 900.0,
+          "boardedCombat": 17,
+          "unloadedIslandCombat": 7,
+          "firstIslandCombatUnloadSecond": 149,
+          "unloadedIslandWorkers": 3,
+          "clearedIslandCamps": 1,
+          "islandGuardsKilled": 2,
+          "neutralIslandHalls": 0,
+          "neutralIslandMines": 0,
+          "arrivedIslandGarrisonUnits": 0,
+          "islandCoverBuildings": 0,
+          "conquests": {},
+          "ferries": {
+            "unit-enemy2-transport-1065": {
+              "purpose": "settle",
+              "targetId": "gold-mainland-5",
+              "from": {
+                "x": 3696,
+                "y": 1072
+              },
+              "to": {
+                "x": 4208,
+                "y": 3088
+              },
+              "phase": "return",
+              "crewIds": [],
+              "sinceTick": 16760,
+              "progress": {
+                "tick": 17795,
+                "x": 3760.0188632272902,
+                "y": 1815.4097047805174,
+                "heading": 5.605716761109166,
+                "phase": "return",
+                "crew": "unit-enemy2-worker-1|unit-enemy2-worker-2"
+              }
+            },
+            "unit-enemy2-transport-4317": {
+              "purpose": "reinforce",
+              "targetId": "gold-mainland-5",
+              "from": {
+                "x": 3664,
+                "y": 976
+              },
+              "to": {
+                "x": 4560,
+                "y": 3280
+              },
+              "phase": "loading",
+              "crewIds": [
+                "unit-enemy2-sparkArcher-3999",
+                "unit-enemy2-sparkArcher-3562",
+                "unit-enemy2-sparkArcher-3812",
+                "unit-enemy2-ashWarden-2845",
+                "unit-enemy2-sparkArcher-4145",
+                "unit-enemy2-sparkArcher-5358",
+                "unit-enemy2-ashWarden-3606",
+                "unit-enemy2-sparkArcher-3690"
+              ],
+              "sinceTick": 17645,
+              "deliveries": [],
+              "returnTrips": 1,
+              "payloadIds": [
+                "unit-enemy2-ashWarden-2845",
+                "unit-enemy2-sparkArcher-3562",
+                "unit-enemy2-sparkArcher-3812",
+                "unit-enemy2-sparkArcher-3999",
+                "unit-enemy2-sparkArcher-4145",
+                "unit-enemy2-sparkArcher-5358"
+              ],
+              "progress": {
+                "tick": 17975,
+                "x": 3728,
+                "y": 944,
+                "heading": 4.3271356102259535,
+                "phase": "loading",
+                "crew": "unit-enemy2-ashWarden-2845|unit-enemy2-sparkArcher-3562|unit-enemy2-sparkArcher-3812|unit-enemy2-sparkArcher-3999|unit-enemy2-sparkArcher-4145|unit-enemy2-sparkArcher-5358"
+              }
+            }
+          },
+          "decisions": {
+            "unit-enemy2-transport-1065": {
+              "tick": 17990,
+              "reason": "return",
+              "lastBlock": {
+                "tick": 17150,
+                "reason": "crossing-water-held"
+              }
+            },
+            "unit-enemy2-transport-4317": {
+              "tick": 17990,
+              "reason": "destination-water-held",
+              "lastBlock": {
+                "tick": 17990,
+                "reason": "destination-water-held"
+              }
+            }
+          },
+          "failures": {},
+          "firstCombatDelivery": {
+            "firstShipTick": 1865,
+            "deadlineTick": 6235,
+            "attempts": {
+              "unit-enemy2-transport-1065": {
+                "firstSeenTick": 1865,
+                "passengerIds": [
+                  "unit-enemy2-emberRavager-1073"
+                ],
+                "reason": "delivered",
+                "tick": 2990,
+                "targetId": "gold-mainland-1"
+              }
+            },
+            "routeBudgeted": true,
+            "deliveredTick": 2990,
+            "deliveredShipId": "unit-enemy2-transport-1065",
+            "deliveredUnitId": "unit-enemy2-emberRavager-1073"
+          }
+        },
+        "after": {
+          "version": "v9_archer",
+          "endSecond": 900.0,
+          "boardedCombat": 18,
+          "unloadedIslandCombat": 10,
+          "firstIslandCombatUnloadSecond": 149,
+          "unloadedIslandWorkers": 1,
+          "clearedIslandCamps": 2,
+          "islandGuardsKilled": 4,
+          "neutralIslandHalls": 0,
+          "neutralIslandMines": 0,
+          "arrivedIslandGarrisonUnits": 0,
+          "islandCoverBuildings": 0,
+          "conquests": {
+            "gold-mainland-1": {
+              "mineId": "gold-mainland-1",
+              "sinceTick": 2990,
+              "stage": "assemble",
+              "interruptions": [],
+              "landing": {
+                "x": 3728,
+                "y": 2864
+              },
+              "reason": "mine-occupied",
+              "combat": {},
+              "stagingCheckedTick": 6830,
+              "abandonedTick": 9860,
+              "endpointDiagnostic": {
+                "map": "brokenSea",
+                "owner": "enemy2",
+                "mineId": "gold-mainland-1",
+                "stage": "assemble",
+                "abandonedTick": 9860,
+                "crew": [],
+                "healthyFront": 0,
+                "ferries": [],
+                "homeHalls": 1
+              }
+            },
+            "gold-mainland-4": {
+              "mineId": "gold-mainland-4",
+              "sinceTick": 10910,
+              "stage": "escort",
+              "interruptions": [],
+              "landing": {
+                "x": 3796,
+                "y": 2892
+              },
+              "reason": "mine-occupied",
+              "combat": {},
+              "abandonedTick": 12395,
+              "endpointDiagnostic": {
+                "map": "brokenSea",
+                "owner": "enemy2",
+                "mineId": "gold-mainland-4",
+                "stage": "escort",
+                "abandonedTick": 12395,
+                "crew": [],
+                "healthyFront": 0,
+                "ferries": [],
+                "homeHalls": 1
+              }
+            }
+          },
+          "ferries": {
+            "unit-enemy2-transport-1065": {
+              "purpose": "settle",
+              "targetId": "gold-mainland-0",
+              "from": {
+                "x": 3696,
+                "y": 1040
+              },
+              "to": {
+                "x": 4144,
+                "y": 4560
+              },
+              "phase": "sailing",
+              "crewIds": [],
+              "sinceTick": 17090,
+              "progress": {
+                "tick": 17990,
+                "x": 3859.7123097836857,
+                "y": 1634.3444224534323,
+                "heading": 26.73150244062699,
+                "phase": "sailing",
+                "crew": "unit-enemy2-worker-2|unit-enemy2-worker-3|unit-enemy2-priest-2778|unit-enemy2-sparkArcher-3617|unit-enemy2-sparkArcher-3870|unit-enemy2-sparkArcher-4908|unit-enemy2-sparkArcher-5625|unit-enemy2-sparkArcher-5755"
+              }
+            }
+          },
+          "decisions": {
+            "unit-enemy2-transport-1065": {
+              "tick": 17990,
+              "reason": "sailing",
+              "lastBlock": {
+                "tick": 16160,
+                "reason": "colony-claimed"
+              }
+            }
+          },
+          "failures": {},
+          "firstCombatDelivery": {
+            "firstShipTick": 1865,
+            "deadlineTick": 6235,
+            "attempts": {
+              "unit-enemy2-transport-1065": {
+                "firstSeenTick": 1865,
+                "passengerIds": [
+                  "unit-enemy2-emberRavager-1073"
+                ],
+                "reason": "delivered",
+                "tick": 2990,
+                "targetId": "gold-mainland-1"
+              }
+            },
+            "routeBudgeted": true,
+            "deliveredTick": 2990,
+            "deliveredShipId": "unit-enemy2-transport-1065",
+            "deliveredUnitId": "unit-enemy2-emberRavager-1073"
+          },
+          "endpointPolicy": {
+            "map": "brokenSea",
+            "owner": "enemy2",
+            "localExpansionAvailable": false,
+            "navalWant": {
+              "id": "naval:warship",
+              "cost": 540,
+              "command": {
+                "type": "train",
+                "buildingId": "building-enemy2-shipyard-1027",
+                "unitKind": "warship"
+              }
+            },
+            "goals": [
+              {
+                "id": "naval:warship",
+                "cost": 540,
+                "priority": 89
+              },
+              {
+                "id": "upgrade:reinforcedPlating",
+                "cost": 180,
+                "priority": 78
+              },
+              {
+                "id": "build:cinderSpire",
+                "cost": 170,
+                "priority": 77
+              },
+              {
+                "id": "upgrade:weaponTraining",
+                "cost": 260,
+                "priority": 76
+              },
+              {
+                "id": "engineering:workshop",
+                "cost": 205,
+                "priority": 74
+              }
+            ],
+            "gold": 498.98,
+            "yards": [
+              {
+                "id": "building-enemy2-shipyard-1027",
+                "complete": true,
+                "queue": [],
+                "x": 3664,
+                "y": 1104
+              }
+            ],
+            "buildingWorkers": []
+          },
+          "reasons": [
+            "gold-mainland-1: assemble / mine-occupied",
+            "gold-mainland-4: escort / mine-occupied",
+            "已放弃于 493.00 秒",
+            "已放弃于 619.75 秒"
+          ]
+        }
+      }
+    },
+    "initialBComparison": {
+      "halls": [
+        8,
+        13
+      ],
+      "mines": [
+        9,
+        14
+      ],
+      "camps": [
+        13,
+        17
+      ],
+      "combatUnloaded": [
+        111,
+        135
+      ],
+      "workersUnloaded": [
+        34,
+        23
+      ],
+      "arrivedGuards": [
+        6,
+        2
+      ],
+      "coverBuildings": [
+        5,
+        9
+      ]
+    },
+    "locations": [
+      "src/ai/policy/naval.ts:854",
+      "src/ai/bootstrap_1/island-conquest.ts:132",
+      "src/ai/bootstrap_1/island-conquest.ts:155",
+      "src/ai/policy/naval.ts:1095"
+    ]
+  },
+  "limitations": [
+    "仍有个别席位退步：碎海player-4中立岛卸兵3→2，蓝宝player-6岛厅1→0，神泉殿player-4卸兵13→8；全表原样列出。",
+    "相对初版B，卸工人34→23、驻军实体6→2；最终卸工人与main的23相同，岛厅8→13、矿9→14、覆盖矿口的建筑5→9。没有把每一列都说成单调增加。",
+    "蓝宝player-4的既有目标被其他席位占领而放弃；player-6仍在补兵。神泉殿enemy工程队仍在登船，没有算成已占矿。",
+    "古木林本土扩张优先级保持；多海湾补船厂与后续目标选择的完整调度留给C。",
+    "驻军人数仅记expansionGarrison且实体到位的人，覆盖建筑另列；沿用原驻矿规则，允许实际覆盖足够的炮塔替代常驻兵。"
+  ],
+  "source": {
+    "base": "91851eb6",
+    "runtimeFingerprint": "5084248c2c6f91908d2fd821465b7878fb3adb5ab5951668b4b823fa95e211fb",
+    "sourceManifest": "proof/source-sha256.json",
+    "sourceFiles": 1397,
+    "note": "原生房间、全量测试、性能和mac1使用同一运行时代码；测试包含原始nextId、实际安全滩头补兵、失去部队后重新组织，以及清营后解除专用补兵标记；最终源文件逐个核对。"
+  },
+  "evidence": {
+    "review": "naval-island-conquest-2026-10-19-review.evidence.json",
+    "full": "naval-island-conquest-2026-10-19-full.evidence.json"
+  }
+}

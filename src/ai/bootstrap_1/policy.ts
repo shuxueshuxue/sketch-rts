@@ -41,6 +41,8 @@ import { mountedField } from './mounted-field';
 import { expansionMissionUnitIds, migrateExpansionClaims, prepareExpansionMission } from './expansion-mission';
 import { withLandRoadReuse } from './safe-land-route';
 import { expansionGarrison, garrisonRecoveryCommands, maintainExpansionGarrisons } from './expansion-garrison';
+import { prepareIslandConquests } from './island-conquest';
+import { activeUnitClaim, isDefenseTaskClaim } from '../policy/claims';
 
 export const BOOTSTRAP_VERSIONS = ['v9_archer', 'v9_summoner', 'v9_knight'] as const;
 export const BOOTSTRAP_PARENTS = { v9_archer: 'v5', v9_summoner: 'v7', v9_knight: 'v8' } as const;
@@ -188,7 +190,9 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
       claimsUnits(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
         const riders = mountedTasks.claimsUnits!(snapshot, owner, options);
         const recovering = expeditionRecoveryUnitIds(snapshot, owner, options);
-        return navalUnitIds(snapshot, owner, options, unit => !riders.has(unit.id) || recovering.has(unit.id));
+        const garrison = expansionGarrison.claimsUnits!(snapshot, owner, options);
+        return navalUnitIds(snapshot, owner, options, unit => !garrison.has(unit.id)
+          && !isDefenseTaskClaim(activeUnitClaim(snapshot, owner, unit, options)) && (!riders.has(unit.id) || recovering.has(unit.id)));
       },
     }, miningJobSafety, miningAssignments, battleRepair, shellEvasion, mineDefense] : [script];
   });
@@ -208,6 +212,7 @@ export function researchPrerequisites(wants: readonly V6Want[], player: PlayerSt
 
 export function bootstrapPolicyContext(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion, options: AiPolicyContext): AiPolicyContext {
   migrateExpansionClaims(snapshot, options.memory);
+  prepareIslandConquests(snapshot, owner, options);
   maintainExpansionGarrisons(snapshot, owner, options);
   const { wants, guard } = supportWants(snapshot, owner, version, options);
   const expansion = wants.filter(want => 'bases' in want);

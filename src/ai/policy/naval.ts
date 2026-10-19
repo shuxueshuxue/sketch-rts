@@ -117,10 +117,12 @@ export function navalBudgetReserve(snapshot: GameSnapshot, owner: PlayerId, opti
         return 0;
     const settling = Object.values(options.memory?.naval?.ferries ?? {}).some(mission => mission.purpose === "settle" && mission.phase !== "return"
         && remote.some(mine => mine.id === mission.targetId));
+    const landed = Object.values(options.memory.naval?.conquests ?? {}).some(task => task.abandonedTick === undefined && task.stage !== 'complete'
+        && remote.some(mine => mine.id === task.mineId));
     const remaining = snapshot.resources.filter(mine => mine.amount > 0 && halls.some(hall => distance(hall, mine) < GOLD_MINE_RULES.baseRange)).reduce((sum, mine) => sum + mine.amount, 0);
     const pendingHall = units(snapshot, owner).some(unit => unit.order.type === "build" && unit.order.buildingKind === "townHall");
     const approachingDepletion = remaining < 2500 && !localExpansionAvailable(snapshot, owner, options);
-    return ((settling || approachingDepletion) && !pendingHall ? BUILDING_DEFS.townHall.cost : 0)
+    return ((settling || landed || approachingDepletion) && !pendingHall ? BUILDING_DEFS.townHall.cost : 0)
         + (approachingDepletion && !units(snapshot, owner).some(unit => ferryCapacity(unit) > 0) ? UNIT_DEFS.transport.cost : 0);
 }
 // The transport, population prerequisite and hall can use their own reserved
@@ -150,7 +152,7 @@ function planNavalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     if (foothold)
         return { ...foothold, closeout: true };
     const threat = enemyShipsNear(snapshot, owner, options);
-    if (!threat.length && groundWholes(snapshot.map) > 1 && localExpansionAvailable(snapshot, owner, options)) return localExpansionWant(snapshot, owner, options, land);
+    if (!plan && !threat.length && groundWholes(snapshot.map) > 1 && localExpansionAvailable(snapshot, owner, options)) return localExpansionWant(snapshot, owner, options, land);
     const assault = assaultPlan(snapshot, owner, options);
     const halls = buildings(snapshot, owner).filter((building) => building.kind === "townHall" && building.complete);
     if (!halls.length)
@@ -678,7 +680,7 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
             mission.crewIds = [];
             return commands;
         }
-        if ((mission.purpose === "assault" || mission.purpose === "advance" || mission.purpose === 'reinforce' || mission.purpose === "settle") && !landingSafe(snapshot, owner, options, boat, mission.purpose === "settle" ? target : mission.to)) {
+        if ((mission.purpose === "assault" || mission.purpose === "advance" || mission.purpose === 'reinforce' || mission.purpose === "settle") && !landingSafe(snapshot, owner, options, boat, mission.to)) {
             decision('landing-defense');
             return cancelFerry(snapshot, boat, mission, options);
         }
@@ -729,7 +731,7 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     const availableSoldiers = own.filter(unit => !unit.deck && unit.kind !== "worker" && unitMover(unit.kind) === "land" && !unit.expiresTick && !attached.has(unit.id) && sameGround(map, unit, loadGround) && unit.order.type !== "board" && unit.order.type !== "cast");
     // Crew selection can keep only a mission's rider. The rest still defend this ground; they are not passengers.
     const soldiers = orderCrew(availableSoldiers.filter(unit => ferryCrewTaskAvailable(unit, options)), loadGround, boat);
-    if (mission.purpose === 'reinforce' && !cargo.length && !boarding.length && soldiers.length <= REINFORCEMENT_DISPATCH_SIZE) {
+    if (mission.purpose === 'reinforce' && !mission.reinforcementTaskId && !cargo.length && !boarding.length && soldiers.length <= REINFORCEMENT_DISPATCH_SIZE) {
         decision('await-reinforcement-batch');
         return boat.order.type === 'idle' ? [] : [{ type: 'stop', unitIds: [boat.id] }];
     }
@@ -790,7 +792,7 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
         decision('destination-water-held');
         return commands;
     }
-    if ((mission.purpose === "settle" || combatTrip) && !landingSafe(snapshot, owner, options, boat, mission.purpose === "settle" ? target : mission.to)) {
+    if ((mission.purpose === "settle" || combatTrip) && !landingSafe(snapshot, owner, options, boat, mission.to)) {
         decision('landing-defense');
         if (cargo.length && snapshot.tick - mission.sinceTick > seconds(120)) return cancelFerry(snapshot, boat, mission, options);
         return commands;
@@ -847,6 +849,9 @@ function evacuationRoute(snapshot: GameSnapshot, owner: PlayerId, options: AiPol
 }
 
 export function landingSafe(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, boat: Unit, target: Point) {
+    // Unload orders name water beside the shore. Threats and arrived troops
+    // belong to its adjacent land, rather than an inland mining objective.
+    target = walkableGoal(snapshot.map, target.x, target.y);
     const guards = snapshot.units.filter(unit => combatCapability(snapshot,unit).armed && distance(unit, target) < 400 && sameGround(snapshot.map, unit, target)
         && (unit.owner === "neutral" || isOpponentOwner(snapshot, owner, unit.owner, options)));
     const defenders = landingDefense(snapshot, owner, options, target);
@@ -1065,6 +1070,14 @@ function islandPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
     const home = buildings(snapshot, owner).find((building) => building.kind === "townHall");
     if (!home)
         return undefined;
+    // A physical landing has already paid for its crossing. Finish that mine
+    // before treating the next local expansion as a reason to forget it.
+    for (const task of Object.values(navalMemory(options).conquests ?? {})) {
+        const mine = snapshot.resources.find(mine => mine.id === task.mineId && mine.amount > 0);
+        if (task.abandonedTick === undefined && task.stage !== 'complete' && mine && eligible(mine)
+            && !buildings(snapshot, owner).some(hall => hall.kind === 'townHall' && distance(hall, mine) <= GOLD_MINE_RULES.baseRange)
+            && !mineClaimedByAlly(snapshot, owner, mine, options)) return { mine, landing: task.landing };
+    }
     if (localExpansionAvailable(snapshot, owner, options)) return undefined;
     const ownedHalls = buildings(snapshot, owner).filter(hall => hall.kind === "townHall" && hall.complete);
     const memory = navalMemory(options);
@@ -1079,7 +1092,7 @@ function islandPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
     const heldByUs = (mine: ResourceNode) => buildings(snapshot, owner).some(building => building.kind === "townHall" && distance(building, mine) <= GOLD_MINE_RULES.baseRange);
     if (known?.plan) {
         const mine = snapshot.resources.find(mine => mine.id === known!.plan!.mineId);
-        if (!mine || mine.amount <= 0 || heldByUs(mine) || !eligible(mine) || mineClaimedByAlly(snapshot, owner, mine, options) || snapshot.buildings.some(building => building.kind === "townHall" && distance(building, mine) < 400 && isOpponentOwner(snapshot, owner, building.owner, options)))
+        if (!mine || mine.amount <= 0 || memory.conquests?.[mine.id]?.abandonedTick !== undefined || heldByUs(mine) || !eligible(mine) || mineClaimedByAlly(snapshot, owner, mine, options) || snapshot.buildings.some(building => building.kind === "townHall" && distance(building, mine) < 400 && isOpponentOwner(snapshot, owner, building.owner, options)))
             known = undefined;
     }
     const sailing = Object.values(memory.ferries ?? {}).some(mission => mission.purpose === 'settle' && mission.phase === 'sailing');
@@ -1090,7 +1103,7 @@ function islandPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
         // Keep failed searches too; the world and policy context remain fixed inside this invocation.
         const coasts: { water: Point; shore: Point | undefined }[] = [];
         const candidates = snapshot.resources
-            .filter((mine) => mine.amount > 0 && eligible(mine) && !sameGround(map, home, mine) && !held(mine) && !heldByUs(mine)
+            .filter((mine) => mine.amount > 0 && memory.conquests?.[mine.id]?.abandonedTick === undefined && eligible(mine) && !sameGround(map, home, mine) && !held(mine) && !heldByUs(mine)
                 && !mineClaimedByAlly(snapshot, owner, mine, options))
             .map((mine) => ({ mine, landing: walkableGoal(map, mine.x, mine.y, "sea") }))
             .flatMap(entry => {
