@@ -12,26 +12,30 @@ export const chooseBootstrapCamp = (home: Point, ...args: Parameters<typeof choo
   if (front.length === 0) return undefined;
   const nearby = withinRangeOf(front, CREEP_ASSEMBLED_RANGE);
   const group = front.map(nearby).sort((a, b) => creepForce(b) - creepForce(a))[0]!;
-  return chooseCreepCamp(snapshot, group, camps, candidates, options, (camp, from, all) => {
-    const disks = all.filter(other => other !== camp).flatMap(other => other.creeps.map(creep =>
-      ({ x: creep.x, y: creep.y, radius: CREEP_ROUTE_CLEARANCE })));
-    const retreat = groundApproachRoute(snapshot.map, camp.center, home);
-    if (retreat === undefined || !routeClearsDisks([camp.center, ...retreat], disks)) return undefined;
-    for (const turn of CREEP_STAGING_TURNS) {
-      const raw = stagingPoint(camp, from, turn);
-      const staging = walkableGoal(snapshot.map, raw.x, raw.y);
-      if (!stagingClear(staging, all, camp)) continue;
-      const returning = groundApproachRoute(snapshot.map, staging, home);
-      if (returning === undefined || !routeClearsDisks([staging, ...returning], disks)) continue;
-      const roads = group.map(unit => ({ unit, points: groundApproachRoute(snapshot.map, unit, staging),
-        distance: walkingDistance(snapshot.map, unit, staging, 'land') }));
-      if (roads.some(road => road.points === undefined || road.distance === undefined
-        || !routeClearsDisks([road.unit, ...road.points], disks))) continue;
-      return { staging, travelDistance: roads.reduce((sum, road) => sum + road.distance!, 0) / roads.length };
-    }
-    return undefined;
-  }, expansionMine);
+  return chooseCreepCamp(snapshot, group, camps, candidates, options,
+    (camp, from, all) => bootstrapCampApproach(snapshot, home, group, camp, from, all), expansionMine);
 };
+
+/** The expansion assembles on this same safe approach while its remaining recruits are training. */
+export function bootstrapCampApproach(snapshot: GameSnapshot, home: Point, group: Unit[], camp: Camp, from: Point, all: Camp[]) {
+  const disks = all.filter(other => other !== camp).flatMap(other => other.creeps.map(creep =>
+    ({ x: creep.x, y: creep.y, radius: CREEP_ROUTE_CLEARANCE })));
+  const retreat = groundApproachRoute(snapshot.map, camp.center, home);
+  if (retreat === undefined || !routeClearsDisks([camp.center, ...retreat], disks)) return undefined;
+  for (const turn of CREEP_STAGING_TURNS) {
+    const raw = stagingPoint(camp, from, turn);
+    const staging = walkableGoal(snapshot.map, raw.x, raw.y);
+    if (!stagingClear(staging, all, camp)) continue;
+    const returning = groundApproachRoute(snapshot.map, staging, home);
+    if (returning === undefined || !routeClearsDisks([staging, ...returning], disks)) continue;
+    const roads = group.map(unit => ({ unit, points: groundApproachRoute(snapshot.map, unit, staging),
+      distance: walkingDistance(snapshot.map, unit, staging, 'land') }));
+    if (roads.some(road => road.points === undefined || road.distance === undefined
+      || !routeClearsDisks([road.unit, ...road.points], disks))) continue;
+    return { staging, travelDistance: roads.reduce((sum, road) => sum + road.distance!, 0) / roads.length };
+  }
+  return undefined;
+}
 
 /** Execute the selected geometry without recomputing it against a different camp collection. */
 export const startBootstrapCamp: typeof startV7Creep = (snapshot, front, choice, options) => {

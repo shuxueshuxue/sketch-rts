@@ -71,6 +71,14 @@ export type AiPolicyMemory = {
     attackerIds: string[]; arrivedIds: string[]; protectedHp: Record<string, number>; phase: 'gather' | 'fight' };
   workerSafety?: Record<string, { origin: { x: number; y: number }; resourceId?: string;
     shelter: { x: number; y: number }; safeResourceId?: string }>;
+  landExpansion?: {
+    mineId: string;
+    sinceTick: number;
+    stage: 'assemble' | 'clear' | 'escort' | 'build' | 'complete';
+    unitIds: string[];
+    interruptions: { tick: number; reason: 'home-threat' | 'mine-threat'; targetId?: string }[];
+    paused?: boolean;
+  };
   mounted?: {
     unitIds: string[];
     objective: { kind: 'camp'; ids: string[] } | { kind: 'raid'; hallId: string; owner: PlayerId };
