@@ -1,0 +1,4 @@
+fatal: bad object 001f3bfade3a642bb56d31859c8e992954635fbf
+sketch: Command failed: git diff --name-only --no-renames 001f3bfade3a642bb56d31859c8e992954635fbf 14df1d7c4998cc0c00366ed3e04ec78fc979a29b -- . :(exclude)docs :(glob)docs/**/*.md :(glob)docs/**/*.ts :(glob)docs/**/*.js :(glob)docs/**/*.mjs :(glob)docs/**/*.cjs :(glob)docs/**/*.json :(glob)docs/**/*.txt :(glob)docs/**/*.html :(glob)docs/**/*.css
+fatal: bad object 001f3bfade3a642bb56d31859c8e992954635fbf
+
