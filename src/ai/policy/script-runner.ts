@@ -74,7 +74,7 @@ function runScriptsWithContext(snapshot: GameSnapshot, owner: PlayerId, scripts:
     commands.push(...scriptCommands.map((command) => ({ scriptId: script.id, command })));
   }
 
-  for (const script of scripts) script.afterPlan?.(snapshot, owner, policyOptions, commands);
+  for (const script of scripts) script.afterPlan?.(snapshot, owner, policyOptions, commands, scripts);
   return commands;
 }
 

@@ -32,4 +32,4 @@ export const planBootstrapAbilities: typeof import('../policy/spell-tactics').pl
     command.type !== 'cast' || ABILITY_DEFS[command.ability].behavior !== 'heal' || !recovering.has(command.unitId));
 };
 
-export const bootstrapAbilities: AiScript = { id: 'abilities', phase: 'tactics', run: planBootstrapAbilities };
+export const bootstrapAbilities: AiScript = { id: 'abilities', phase: 'tactics', redirects: 'local', run: planBootstrapAbilities };

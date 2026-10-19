@@ -17,7 +17,7 @@ const DIRECTIONS = [0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6, 7, -7, 8];
 
 export const shellEvasion: AiScript = {
   id: 'shellEvasion',
-  phase: 'tactics',
+  phase: 'tactics', redirects: 'local',
   run: planShellEvasion,
   claimsUnits: (snapshot, owner, options) => new Set(planShellEvasion(snapshot, owner, options).flatMap(command =>
     command.type === 'move' || command.type === 'holdPosition' ? command.unitIds : [])),

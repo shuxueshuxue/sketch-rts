@@ -151,7 +151,7 @@ function assign(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContex
 }
 
 export const mountedTasks: AiScript = {
-  id: 'mountedTasks', phase: 'tactics',
+  id: 'mountedTasks', phase: 'tactics', redirects: 'strategic',
   claimsUnits: (snapshot, owner, options) => new Set(assign(snapshot, owner, options).flatMap(assignment => assignment.unitIds)),
   run(snapshot, owner, options): GameCommand[] {
     const towers = snapshot.buildings.filter(building => building.complete && building.attackDamage > 0 && isOpponentOwner(snapshot, owner, building.owner, options));

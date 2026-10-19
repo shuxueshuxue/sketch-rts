@@ -71,7 +71,7 @@ export function mountedFieldPlans(snapshot: GameSnapshot, owner: PlayerId, optio
 }
 
 export const mountedField: AiScript = {
-  id: 'mountedField', phase: 'tactics',
+  id: 'mountedField', phase: 'tactics', redirects: 'strategic',
   onCommands(snapshot, owner, _options, commands) {
     const issued = new Set(commands.flatMap(command => 'unitIds' in command ? command.unitIds : 'unitId' in command ? [command.unitId] : []));
     const frame = allocations.get(snapshot);

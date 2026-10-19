@@ -89,7 +89,7 @@ function exposedMiners(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
 }
 
 export const miningJobSafety: AiScript = {
-  id: 'miningJobSafety', phase: 'tactics',
+  id: 'miningJobSafety', phase: 'tactics', redirects: 'local',
   claimsUnits: (snapshot, owner, options) => new Set([
     ...workerSafetyPlans(snapshot, owner, options).map(task => task.worker.id),
     ...exposedMiners(snapshot, owner, options).map(task => task.worker.id),

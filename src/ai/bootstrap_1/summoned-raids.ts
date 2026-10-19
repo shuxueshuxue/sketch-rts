@@ -41,7 +41,7 @@ export function summonedMiningRaids(snapshot: GameSnapshot, owner: PlayerId, opt
 }
 
 export const summonedRaids: AiScript = {
-  id: 'summonedRaids', phase: 'tactics',
+  id: 'summonedRaids', phase: 'tactics', redirects: 'strategic',
   claimsUnits: (snapshot, owner, options) => new Set(summonedMiningRaids(snapshot, owner, options).map(raid => raid.spirit.id)),
   run: (snapshot, owner, options) => summonedMiningRaids(snapshot, owner, options).flatMap(({ spirit, worker }) =>
     spirit.order.type === 'attack' && spirit.order.targetId === worker.id ? []

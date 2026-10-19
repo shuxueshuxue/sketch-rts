@@ -54,7 +54,7 @@ export function medicalRecoveryUnitIds(snapshot: GameSnapshot, owner: PlayerId) 
 
 /** Recovery owns the healer until critical permanent patients can fight again. */
 export const medicalRecovery: AiScript = {
-  id: 'medicalRecovery', phase: 'tactics',
+  id: 'medicalRecovery', phase: 'tactics', redirects: 'local',
   claimsUnits: medicalRecoveryUnitIds,
   run: (snapshot, owner) => planMedicalRecovery(snapshot, owner, recoveryPatients(snapshot, owner)),
 };
