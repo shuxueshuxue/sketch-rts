@@ -1,0 +1,8 @@
+{
+  "sha256": "9e500089c49d583abd609708cf3eae885724376f6d1a5308622de1097fa35e20",
+  "bytes": 2829262,
+  "name": "mac1-evidence",
+  "kind": "dir",
+  "machine": "a100",
+  "pushed": "bf078ec5b92ac440394955a71d5696a9c23291e4"
+}
