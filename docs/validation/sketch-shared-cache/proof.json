@@ -1,0 +1,90 @@
+{
+  "base": "710986b1",
+  "testedCode": "d2ef71f5f416df41835219048ebd9fd2a2afeb0e",
+  "runnerSha256": "2aa9f014e05f8346537204d208cadb617096fd842704622f4b30e5b64faece07",
+  "sharedRoot": "/Users/mac1/work/sketch-cli",
+  "ports": [
+    5660,
+    5669
+  ],
+  "scene": "pages",
+  "sequence": [
+    "juma-first",
+    "thinkpad",
+    "juma-return"
+  ],
+  "juma": {
+    "driver": "juma",
+    "hostname": "ser497065980654",
+    "code": "d2ef71f5f416df41835219048ebd9fd2a2afeb0e",
+    "objectDatabase": "/tmp/sketch-cache-proof-20261019/driver.git",
+    "sharedRoot": "/Users/mac1/work/sketch-cli",
+    "ports": [
+      5660,
+      5669
+    ],
+    "commits": {
+      "juma-before": "14df1d7c4998cc0c00366ed3e04ec78fc979a29b",
+      "juma-after": "ef8fc1d37fb0dce0d789fd053ee28860d2920577",
+      "juma-return-before": "a84f1dc0ee3b7356e6191e8ab6a0fbfce8a60c2c",
+      "juma-return-after": "acef2fbd95091f4ba7080809aec03c2a6b4292b6"
+    },
+    "scene": "pages",
+    "firstExitCode": 0,
+    "otherDriverCommitsAbsent": {
+      "485704578bc768f9c6d0f249ee53ed1aa4af23f4": true,
+      "3a3cf6556b8be37ca4667652ea716f8c9f3f1f25": true,
+      "e3128738908bc5fc7467524d59c3dfc082a0f13b": true,
+      "c1a26de023b73d62e744968d3e5b69e17593af66": true
+    },
+    "returnExitCode": 0
+  },
+  "thinkpad": {
+    "driver": "ThinkPad",
+    "hostname": "jeffry-ThinkPad-T14p-Gen-3",
+    "code": "d2ef71f5f416df41835219048ebd9fd2a2afeb0e",
+    "objectDatabase": "/home/jeffry/work/sketch-rts",
+    "cli": "/home/jeffry/.cache/sketch-cli/shared-cache-proof-d2ef71f5/driver/bin/sketch",
+    "config": "/home/jeffry/.cache/sketch-cli/shared-cache-proof-d2ef71f5/machines.json",
+    "sharedRoot": "/Users/mac1/work/sketch-cli",
+    "ports": [
+      5660,
+      5669
+    ],
+    "commits": {
+      "thinkpad-retry-before": "e3128738908bc5fc7467524d59c3dfc082a0f13b",
+      "thinkpad-retry-after": "c1a26de023b73d62e744968d3e5b69e17593af66"
+    },
+    "otherDriverCommitsAbsent": {
+      "14df1d7c4998cc0c00366ed3e04ec78fc979a29b": true,
+      "ef8fc1d37fb0dce0d789fd053ee28860d2920577": true
+    },
+    "command": [
+      "/home/jeffry/.cache/sketch-cli/shared-cache-proof-d2ef71f5/driver/bin/sketch",
+      "shot",
+      "pages",
+      "--before",
+      "e3128738908bc5fc7467524d59c3dfc082a0f13b",
+      "--after",
+      "c1a26de023b73d62e744968d3e5b69e17593af66",
+      "--on",
+      "mac1",
+      "--sizes",
+      "desktop",
+      "--locale",
+      "zh-CN",
+      "--out",
+      "/home/jeffry/.cache/sketch-cli/shared-cache-proof-d2ef71f5/thinkpad-retry",
+      "--json"
+    ],
+    "exitCode": 0
+  },
+  "mainReproductionExitCode": 2,
+  "successfulExitCodes": [
+    0,
+    0,
+    0
+  ],
+  "allSuccessfulImageDiffs": 0,
+  "initialThinkPadAttempt": "cache copy succeeded; a separate port identity collision caused exit 2; retried successfully with fresh driver-local commits"
+}

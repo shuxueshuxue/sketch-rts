@@ -20,7 +20,10 @@ and writes under `~/.cache/sketch-cli`.
 On a machine the CLI keeps:
 
 - `trees/<sha>`: a clean copy of a commit (everything outside docs/, and docs/ text up to 1 MB), made once and reused.
-  A copy near one already there is made from it with a diff, so usually only the change travels.
+  A copy near one already there is made from it with a diff, so usually only the change travels. Several drivers may
+  share this cache: only completed copies whose commits also exist in the current driver's local Git repository are
+  considered as incremental bases. Foreign or unpushed commits are skipped with a reason; if no usable base remains,
+  the CLI reports the fallback and sends the full tree.
 - `node_modules/<lock hash>`: one install per package-lock, which copies link into.
 - `runs/<run id>`: reports of a run.
 

@@ -1,0 +1,13 @@
+
+ RUN  v2.1.9 /root/work/sketch-camps
+
+ ✓ tools/cli/runner.test.ts (4 tests) 1033ms
+ ✓ tools/cli/cli.test.ts (16 tests) 3288ms
+   ✓ sketch copies are built once under their lock > lets one of two concurrent builders build and the other use its result 2028ms
+   ✓ sketch copies are built once under their lock > takes over the lock of a builder that died 1033ms
+
+ Test Files  2 passed (2)
+      Tests  20 passed (20)
+   Start at  01:29:47
+   Duration  3.87s (transform 243ms, setup 0ms, collect 370ms, tests 4.32s, environment 1ms, prepare 170ms)
+
