@@ -21,18 +21,18 @@ export default async function (s: Scene) {
       replaceDefaultUnits: true, replaceDefaultBuildings: true, replaceDefaultLandmarks: true,
       replaceDefaultResources: true, replaceDefaultMercenaryCamps: true,
       addUnits: [
-        { id: 'shooter', owner: 'player', kind: 'archer', x: 1000, y: 2160, order: { type: 'hold', x: 1000, y: 2160 } },
-        { id: 'retreating-melee', owner: 'enemy', kind: 'golem', x: 1310, y: 2160, order: { type: 'hold', x: 1310, y: 2160 } },
+        { id: 'shooter', owner: 'player', kind: 'archer', x: 1200, y: 3560, order: { type: 'hold', x: 1200, y: 3560 } },
+        { id: 'retreating-melee', owner: 'enemy', kind: 'golem', x: 1510, y: 3560, order: { type: 'hold', x: 1510, y: 3560 } },
       ],
     },
   } });
   await s.reload(); await s.tick(1);
-  await s.camera(1440, 2200, 1.15);
+  await s.camera(1640, 3600, 1.6);
   await s.select(['shooter']);
   await s.shot('selected-before-attack');
-  await s.order('enemy', { type: 'move', unitIds: ['retreating-melee'], x: 3500, y: 2160 });
+  await s.order('enemy', { type: 'move', unitIds: ['retreating-melee'], x: 3000, y: 3560 });
   // Real browser right-click on the enemy sends the player's explicit attack through the room socket.
-  await s.click(1310, 2160, 'right');
+  await s.click(1510, 3560, 'right');
   await s.tick(8);
   let snapshot = await s.snapshot() as Snapshot;
   s.must(snapshot.units.find(unit => unit.id === 'shooter')?.order.targetId === 'retreating-melee', 'right-click did not issue an attack on the retreating melee unit');
@@ -50,7 +50,7 @@ export default async function (s: Scene) {
       seen.add(projectile.id); shots.push(snapshot.tick - start);
     }
     if (tick % 4 === 0) samples.push({ tick: snapshot.tick, shooter, target, projectiles: snapshot.projectiles });
-    if ([24, 96, 180, 240].includes(tick)) await s.shot(`pursuit-${tick}`);
+    if ([12, 74, 180, 240].includes(tick)) await s.shot(`pursuit-${tick}`);
   }
   s.record('ranged-aim-buffer', { start, hasBuffer, shots, interrupted, samples });
   if (hasBuffer) {
