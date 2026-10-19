@@ -10,7 +10,7 @@
     "expansionMission": "Membership-only claim after the ordinary order lease expires or is cleared. Hidden from ordinaryUnitClaim/activeUnitClaim so it does not introduce a new shop/loot/hire exclusion.",
     "ordinaryLease": "The old expansion claim still lasts 30 ticks and is pruned at a foundation. Accepted orders clear/replace the ordinary lease on the same schedule. Local retreat and temporary defense keep their prior command behavior.",
     "paused": "Membership remains while paused, but expansionOwnsDefender returns false. Resume reclaims the same retained live members plus available recruits.",
-    "legacy": "bootstrapPolicyContext imports an old replay/debug unitIds list once and deletes the field before selecting forces. prepareExpansionMission also supports direct callers."
+    "snapshotImport": "bootstrapPolicyContext imports an old replay/debug unitIds list once and deletes the field before selecting forces. prepareExpansionMission also supports direct callers."
   },
   "commandEquivalence": {
     "allOwners": true,

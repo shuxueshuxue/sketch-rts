@@ -77,7 +77,7 @@ it.each(['dead', 'owner', 'mission'] as const)('cleans membership through the sh
   expect(memory.unitClaims[unit.id]).toBeUndefined();
 });
 
-it('imports a legacy snapshot roster once without extending an existing order lease', () => {
+it('imports a saved snapshot roster once without extending an existing order lease', () => {
   const { snapshot, memory, unit } = assigned();
   delete memory.unitClaims[unit.id]!.expansionMineId;
   Object.assign(memory.landExpansion!, { unitIds: [unit.id] });
