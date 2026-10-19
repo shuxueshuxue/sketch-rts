@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { readSoundPack, Soundboard } from "./sound";
 import { resources } from './resources';
+import { ABILITY_DEFS, UNIT_DEFS } from '../shared/catalog';
+import type { UnitKind } from '../shared/types';
 
 afterEach(() => {resources.dispose();vi.unstubAllGlobals();vi.restoreAllMocks();});
 
@@ -15,8 +17,77 @@ function audioContext(){
   const construct=vi.fn(function(){return context;});vi.stubGlobal('window',{AudioContext:construct});return{context,nodes,sources,construct};
 }
 function effectPack(){return readSoundPack('demo',{name:'Demo',sounds:{melee:{file:'hit.ogg'}}},{'hit.ogg':'/hit.ogg'});}
+const healers = (Object.keys(UNIT_DEFS) as UnitKind[]).filter(kind => UNIT_DEFS[kind].abilities.some(ability => ABILITY_DEFS[ability].behavior === 'heal'));
 
 describe("on-demand audio", () => {
+  it('plays a separately configured summon without changing the caster\'s other spells', async () => {
+    const audio = audioContext(), fetcher = vi.fn(async (_input: RequestInfo | URL) => new Response(new Uint8Array(3)));
+    vi.stubGlobal('fetch', fetcher);
+    const pack = readSoundPack('test', { name: 'Test', sounds: {
+      summon: { file: 'summon.ogg', volume: .36 },
+      spell: { file: 'spell.ogg', kinds: { summoner: { file: 'other-spell.ogg' } } },
+    } }, { 'summon.ogg': '/summon.ogg', 'spell.ogg': '/spell.ogg', 'other-spell.ogg': '/other-spell.ogg' });
+    const board = new Soundboard([pack], 'test'); board.unlock();
+    board.play('summon', undefined, 'summoner'); board.play('spell', undefined, 'summoner');
+    await vi.waitFor(() => expect(audio.sources).toHaveLength(2));
+    expect(fetcher.mock.calls.map(([url]) => url)).toEqual(['/summon.ogg', '/other-spell.ogg']);
+    board.dispose();
+  });
+
+  it.each(['spirit', 'footman'] as const)('shares summon disappearance for %s despite a per-unit override', async kind => {
+    const audio = audioContext(), fetcher = vi.fn(async (_input: RequestInfo | URL) => new Response(new Uint8Array(3)));
+    vi.stubGlobal('fetch', fetcher);
+    const pack = readSoundPack('test', { name: 'Test', sounds: {
+      summonDisappear: { file: 'shared.ogg', kinds: { [kind]: { file: 'specific.ogg' } } },
+    } }, { 'shared.ogg': '/shared.ogg', 'specific.ogg': '/specific.ogg' });
+    const board = new Soundboard([pack], 'test'); board.unlock(); board.play('summonDisappear', undefined, kind);
+    await vi.waitFor(() => expect(audio.sources).toHaveLength(1));
+    expect(fetcher.mock.calls.map(([url]) => url)).toEqual(['/shared.ogg']); board.dispose();
+  });
+
+  it.each([['summon', 'spell', 'summoner'], ['summonDisappear', 'death', 'spirit']] as const)('preserves the older %s fallback to %s', async (event, fallback, kind) => {
+    const audio = audioContext(), fetcher = vi.fn(async (_input: RequestInfo | URL) => new Response(new Uint8Array(3)));
+    vi.stubGlobal('fetch', fetcher);
+    const pack = readSoundPack('old', { name: 'Old', sounds: {
+      [fallback]: { file: 'default.ogg', kinds: { [kind]: { file: 'specific.ogg' } } },
+    } }, { 'default.ogg': '/default.ogg', 'specific.ogg': '/specific.ogg' });
+    const board = new Soundboard([pack], 'old'); board.unlock(); board.play(event, undefined, kind);
+    await vi.waitFor(() => expect(audio.sources).toHaveLength(1));
+    expect(fetcher.mock.calls.map(([url]) => url)).toEqual(['/specific.ogg']); board.dispose();
+  });
+
+  it.each(healers)('uses one shared heal recording for %s even if the pack carries a per-unit override', async kind => {
+    const audio = audioContext(), fetcher = vi.fn(async (_input: RequestInfo | URL) => new Response(new Uint8Array(3)));
+    vi.stubGlobal('fetch', fetcher);
+    const pack = readSoundPack('test', { name: 'Test', sounds: {
+      heal: { file: 'shared-heal.ogg', volume: .6, kinds: { [kind]: { file: 'unit-specific.ogg' } } },
+      spell: { file: 'spell.ogg' },
+    } }, { 'shared-heal.ogg': '/shared-heal.ogg', 'unit-specific.ogg': '/unit-specific.ogg', 'spell.ogg': '/spell.ogg' });
+    const board = new Soundboard([pack], 'test'); board.unlock(); board.play('heal', undefined, kind);
+    await vi.waitFor(() => expect(audio.sources).toHaveLength(1));
+    expect(fetcher.mock.calls.map(([url]) => url)).toEqual(['/shared-heal.ogg']);
+    board.dispose();
+  });
+
+  it.each(healers)('preserves the older spell fallback for %s until a heal recording is configured', async kind => {
+    const audio = audioContext(), fetcher = vi.fn(async (_input: RequestInfo | URL) => new Response(new Uint8Array(3)));
+    vi.stubGlobal('fetch', fetcher);
+    const pack = readSoundPack('old', { name: 'Old', sounds: {
+      spell: { file: 'spell.ogg', kinds: { priest: { file: 'priest.ogg' } } },
+    } }, { 'spell.ogg': '/spell.ogg', 'priest.ogg': '/priest.ogg' });
+    const board = new Soundboard([pack], 'old'); board.unlock(); board.play('heal', undefined, kind);
+    await vi.waitFor(() => expect(audio.sources).toHaveLength(1));
+    expect(fetcher.mock.calls.map(([url]) => url)).toEqual([kind === 'priest' ? '/priest.ogg' : '/spell.ogg']);
+    board.dispose();
+  });
+
+  it('keeps healing silent if the pack has neither heal nor spell', () => {
+    const audio = audioContext(), fetcher = vi.fn(async () => new Response(new Uint8Array(3)));
+    vi.stubGlobal('fetch', fetcher);
+    const board = new Soundboard([effectPack()], 'demo'); board.unlock(); board.play('heal', undefined, 'fieldMedic');
+    expect(fetcher).not.toHaveBeenCalled(); expect(audio.sources).toHaveLength(0); board.dispose();
+  });
+
   it('prepares only homepage cues before a gesture and plays the first cached cue after resume',async()=>{
     const audio=audioContext();audio.context.state='suspended';
     const fetcher=vi.fn(async(_input:RequestInfo|URL)=>new Response(new Uint8Array(3)));vi.stubGlobal('fetch',fetcher);

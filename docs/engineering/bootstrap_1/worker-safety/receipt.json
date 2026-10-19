@@ -1,0 +1,45 @@
+{
+  "behavior": "Workers under ranged fire withdraw to a safe intact post, keep an available safe mining job, and resume the original job after its firing lane clears. Covers working, idle, repairing and building land workers, including mines with halls and exhausted mines. Naval ownership keeps priority.",
+  "root_cause": "The old safety selector required a nonempty, unbased hauling job plus a rescuing soldier. All four observed matches fell outside that gate. The old hauling escort is preserved; direct ranged-fire evacuation runs independently.",
+  "snapshot": {
+    "baseline": "1bf481b04b75e8e8142a7a9f22792863ca221e01",
+    "seed": "defense-observe-20261019",
+    "match": "ladder-03 v9_knight ember vs v9",
+    "tick": 39120,
+    "sha256": "06cbef36868aed0c406f863b0e447c5f5dac3656f3755ce7c97715a0cbd2ffda",
+    "unedited": true
+  },
+  "scripted_regression": {
+    "before_workers_alive": 0,
+    "after_workers_alive": 6,
+    "after_worker_damage": 0,
+    "end_tick": 41000,
+    "additional_case": "Same terrain and firing lane with live mines: workers mine elsewhere, then return after the ballista is removed."
+  },
+  "mac1": {
+    "machine": "mac1.local",
+    "platform": "darwin",
+    "tested_source": "52f2a408511d32ca77263ade400c6b108f7a27ec",
+    "renderer": "native client world renderer; normal planner phases and three-tick command delay",
+    "first_tick": 39120,
+    "last_tick": 40720,
+    "before_alive": 0,
+    "after_alive": 6,
+    "after_all_hp": 70,
+    "sampling": "one key frame every 20 game seconds; the simulation advances every tick",
+    "raw_evidence": "replay.evidence.json"
+  },
+  "validation": {
+    "typescript": "tsc --noEmit passed",
+    "bootstrap_1_test_files": 176,
+    "bootstrap_1_tests": 2527,
+    "all_passed": true,
+    "win_rate_benchmark": false
+  },
+  "shared_code": [
+    "AiPolicyMemory.workerSafety (new optional field)",
+    "miningJobSafety.claimsUnits",
+    "miningJobSafety.run"
+  ],
+  "limits": "The unedited 32:36 snapshot has no gold remaining anywhere, so the six rescued workers wait safely at the main. Safe mining and return are validated separately with live resources in the same captured terrain. No changes to general.ts."
+}

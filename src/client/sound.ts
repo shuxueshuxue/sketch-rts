@@ -12,8 +12,9 @@ import { UNIT_NAMES } from "../shared/unit-name-migration";
 // a compressor, a sound already playing is quieter for each copy of it, and no more than a dozen play at once.
 
 export type SoundGroup = "effects" | "ui";
-export type SoundEvent = "impact" | "melee" | "arrowShot" | "arrowHit" | "death" | "construction" | "built" | "buildingDown" | "click" | "menu" | "shipShot" | "shipHit" | "shipSink" | "spell" | "board" | "unload" | "select" | "order" | "cannonShot" | "mortarShot" | "boltShot" | "flameShot" | "stoneShot" | "spellShot" | "grapeshotShot";
-export const SOUND_EVENTS: readonly SoundEvent[] = ["impact", "melee", "arrowShot", "arrowHit", "death", "construction", "built", "buildingDown", "click", "menu", "shipShot", "shipHit", "shipSink", "spell", "board", "unload", "select", "order", "cannonShot", "mortarShot", "boltShot", "flameShot", "stoneShot", "spellShot", "grapeshotShot"];
+export type SoundEvent = "impact" | "melee" | "arrowShot" | "arrowHit" | "death" | "construction" | "built" | "buildingDown" | "click" | "menu" | "shipShot" | "shipHit" | "shipSink" | "spell" | "heal" | "summon" | "summonDisappear" | "board" | "unload" | "select" | "order" | "cannonShot" | "mortarShot" | "boltShot" | "flameShot" | "stoneShot" | "spellShot" | "grapeshotShot";
+export const SOUND_EVENTS: readonly SoundEvent[] = ["impact", "melee", "arrowShot", "arrowHit", "death", "construction", "built", "buildingDown", "click", "menu", "shipShot", "shipHit", "shipSink", "spell", "heal", "summon", "summonDisappear", "board", "unload", "select", "order", "cannonShot", "mortarShot", "boltShot", "flameShot", "stoneShot", "spellShot", "grapeshotShot"];
+const SHARED_EVENTS: readonly SoundEvent[] = ["heal", "summonDisappear"];
 const EVENT_GROUPS: Record<SoundEvent, SoundGroup> = {
   cannonShot: "effects", mortarShot: "effects", boltShot: "effects", flameShot: "effects", stoneShot: "effects", spellShot: "effects", grapeshotShot: "effects",
   impact: "effects",
@@ -26,7 +27,7 @@ const EVENT_GROUPS: Record<SoundEvent, SoundGroup> = {
   buildingDown: "effects",
   click: "ui",
   menu: "ui",
-  shipShot: "effects", shipHit: "effects", shipSink: "effects", spell: "effects",
+  shipShot: "effects", shipHit: "effects", shipSink: "effects", spell: "effects", heal: "effects", summon: "effects", summonDisappear: "effects",
   board: "effects", unload: "effects", select: "ui", order: "ui",
 };
 
@@ -67,6 +68,7 @@ export function readSoundPack(id: string, manifest: unknown, urls: Readonly<Reco
   for (const [event, entry] of Object.entries(manifest.sounds)) {
     if (!SOUND_EVENTS.includes(event as SoundEvent)) throw fail(`no event ${event} (events: ${SOUND_EVENTS.join(", ")})`);
     if (!isRecord(entry)) throw fail(`${event} needs a file or kinds`);
+    if (SHARED_EVENTS.includes(event as SoundEvent) && entry.file === undefined) throw fail(`${event} needs a shared file`);
     const base = { volume: entry.volume ?? 1, pitch: entry.pitch ?? 0 };
     const max = entry.max ?? 4;
     if (typeof max !== "number" || !Number.isInteger(max) || max < 1) throw fail(`${event} max must be a whole number of at least 1`);
@@ -200,9 +202,13 @@ export class Soundboard {
     // Older packs may advertise these voiced acknowledgements. They have no
     // place in this game's generic feedback, even when a pack is still cached.
     if (event === 'select' || event === 'order') return;
-    const fallback = event === "menu" ? "click" : event === "cannonShot" ? "shipShot" : event === "shipShot" ? "impact" : event === "shipHit" ? "impact" : event === "shipSink" ? "buildingDown" : event === "impact" ? "arrowHit" : undefined;
-    const sound = this.pack?.sounds[event] ?? (fallback && this.pack?.sounds[fallback]);
-    const clip = sound && ((kind && sound.kinds[kind]) || sound.clip);
+    const fallback = event === "menu" ? "click" : event === "heal" || event === "summon" ? "spell" : event === "summonDisappear" ? "death" : event === "cannonShot" ? "shipShot" : event === "shipShot" ? "impact" : event === "shipHit" ? "impact" : event === "shipSink" ? "buildingDown" : event === "impact" ? "arrowHit" : undefined;
+    const ownSound = this.pack?.sounds[event];
+    const sound = ownSound ?? (fallback && this.pack?.sounds[fallback]);
+    // Healing and summon disappearance share one recording across kinds.
+    // Older packs keep their per-kind selection while using the fallback.
+    const useKind = !SHARED_EVENTS.includes(event) || !ownSound;
+    const clip = sound && ((useKind && kind && sound.kinds[kind]) || sound.clip);
     if (!sound || !clip || !this.ctx || this.settings.muted) return;
     const url = clip.url;
     const buffer = this.buffers.get(url);

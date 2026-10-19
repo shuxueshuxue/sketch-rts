@@ -49,6 +49,9 @@ def recipe(paths):
         'spell': entry('Abilities/Spells/Orc/FeralSpirit/FeralSpiritTarget1.wav', .65, kinds={
             'priest': entry('Abilities/Spells/Human/Heal/HealTarget.wav', .6),
             'pyreCaller': entry('Abilities/Spells/Human/Resurrect/ResurrectTarget.wav', .6)}),
+        'heal': entry('Abilities/Spells/Human/Heal/HealTarget.wav', .6),
+        'summon': entry('Abilities/Spells/Human/Resurrect/ResurrectTarget.wav', .36),
+        'summonDisappear': entry('Abilities/Spells/Orc/FeralSpirit/FeralSpiritTarget1.wav', .21),
         'board': entry('Abilities/Spells/Other/LoadUnload/Loading.wav', .5, max=2),
         'unload': entry('Abilities/Spells/Other/LoadUnload/Loading.wav', .5, max=2),
     }
