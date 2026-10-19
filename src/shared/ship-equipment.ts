@@ -4,7 +4,7 @@ import { itemIndex } from "./item-index";
 import { deadZoneAim, strikePoint, type StrikeTarget } from "./combat-geometry";
 import { detCos, detSin } from "./det-math";
 import { type WeaponDef } from './catalog';
-import { SHIP_KINDS, localToWorld, shipProfile, shipScale, worldToLocal, type Point } from './ship-geometry';
+import { shareShipProfile, SHIP_KINDS, localToWorld, shipProfile, shipScale, worldToLocal, type Point } from './ship-geometry';
 import { headingDifference } from "./ship-navigation";
 import { seconds } from './time';
 import type { GameSnapshot, ShipEquipmentKind, Unit, WorldItem } from './types';
@@ -357,4 +357,14 @@ export function damageShipParts(snapshot: Pick<GameSnapshot, 'items'>, ship: Uni
         if (Math.hypot(local.x - mount.x, local.y - mount.y) <= mount.radius + radius)
             item.durability = Math.max(0, (item.durability ?? SHIP_WEAPONS[item.kind as ShipEquipmentKind].hp) - damage * .65);
     }
+}
+
+export function mountedShotClear(ship:Unit,blockers:readonly Unit[]):MountedShotClear|undefined{
+  if(!blockers.length)return undefined;
+  const poses=new Map<number,Unit>();
+  return(item,point,heading)=>{
+    let aimed=poses.get(heading);
+    if(!aimed){aimed={...ship,sailing:{...ship.sailing!,heading}};shareShipProfile(ship,aimed);poses.set(heading,aimed);}
+    return mountedFireLaneClear(aimed,item,point,blockers);
+  };
 }

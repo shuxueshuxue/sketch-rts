@@ -1,3 +1,4 @@
+import { shipAttackStation, shipCanAttackCoastTarget } from './ship-attack-station';
 import { standingBodies, standsAsSeen, type StructureBody } from "./structure-bodies";
 import { addGold, roundGold } from "./gold";
 import { unitControlsMercenaryCamp } from './mercenary-camp';
@@ -19,7 +20,7 @@ import { invalidateItemIndex } from "./item-index";
 import { settleGroundItems } from './item-surfaces';
 import { carryingHull, strikePoint, strikeGap, bodyGap, strikeReach, CONTACT_SLACK } from "./combat-geometry";
 import { purchasePlacement, type PurchasePlacement } from "./purchase";
-import { SHIP_WEAPONS, PREVIOUS_SHIP_TRAIN_COST, damageShipParts, initializeShipEquipment, installedWeapons, isShipEquipment, mountedWeaponPose, mountedTargetPoint, mountedFireLaneClear, rebuildShipFittings, repairShipParts, shipPartMax, shipGunCanAim, shipMounts, bestFiringHeading, type MountedShotClear } from "./ship-equipment";
+import { SHIP_WEAPONS, PREVIOUS_SHIP_TRAIN_COST, damageShipParts, initializeShipEquipment, installedWeapons, isShipEquipment, mountedWeaponPose, mountedTargetPoint, mountedFireLaneClear, rebuildShipFittings, repairShipParts, shipPartMax, shipGunCanAim, shipMounts, bestFiringHeading, mountedShotClear } from "./ship-equipment";
 import { ITEM_DEFS, activeItem, canEquip, dropRefusal, freeItemSlot, giveRefusal, itemEquipped, type ItemDestination, normalizeEquipment, removeFromHands, transferRefusal, weaponRules, itemHands, unitItemMass, shipItemMass, itemsFor } from "./equipment";
 import { BREACH_CHARGE, FLAME_CLOAK, GUARDIAN_SCROLL, IVORY_TOWER_HP_SHARE, LIGHTNING_ROD, STORM_STAFF, NEUTRAL_ITEM_TARGET_RANGE, NEUTRAL_STORM_TARGET_RANGE } from "./item-rules";
 import { EXPERIENCE_BOOK_XP, VETERANCY_GAIN_PER_STAR, killXpReward, xpStarThresholds } from "./unit-value";
@@ -50,7 +51,7 @@ import { canBoard, boardUnit, deckGiveWay, deckPlacement, deckPointFits, moveOnD
 import { bodyMass } from "./physical-body";
 import { walkConnectedSurfaces, settleDeckSupport, decksCanTransfer } from "./connected-decks";
 import { deckHullDamageShare, passengerDamageMultiplier } from "./deck-combat";
-import { shipsIn, isShipKind, circleInPolygon, distanceToHull, localToWorld, shipPassengers, shipProfile, shareShipProfile, shipWeaponPose, worldToLocal, migrateShipSizes, SHIP_SIZE_MULTIPLIER } from "./ship-geometry";
+import { shipsIn, isShipKind, circleInPolygon, distanceToHull, localToWorld, shipPassengers, shipProfile, shipWeaponPose, worldToLocal, migrateShipSizes, SHIP_SIZE_MULTIPLIER } from "./ship-geometry";
 import { keepShipsOnWater, sailToward, turnShipToward } from "./sailing";
 import { followQueuedShipCourse } from './ship-queued-course';
 import { shipCanTurnForAttack, shipNavigationTarget, shipPursuitGoal } from './ship-pursuit';
@@ -1355,15 +1356,6 @@ function aimMountedWeapon(game:Game,ship:Unit,item:WorldItem,point:{x:number;y:n
 function friendlyFireBlockers(game:Game,ship:Unit){
   return shipsIn(game.units).filter(other=>other.id!==ship.id && other.hp>0 && !areEnemyOwners(game,ship.owner,other.owner));
 }
-function mountedShotClear(ship:Unit,blockers:readonly Unit[]):MountedShotClear|undefined{
-  if(!blockers.length)return undefined;
-  const poses=new Map<number,Unit>();
-  return(item,point,heading)=>{
-    let aimed=poses.get(heading);
-    if(!aimed){aimed={...ship,sailing:{...ship.sailing!,heading}};shareShipProfile(ship,aimed);poses.set(heading,aimed);}
-    return mountedFireLaneClear(aimed,item,point,blockers);
-  };
-}
 function updateMountedWeapons(game:Game,starts:Map<string,{x:number;y:number;heading:number}>,defenses:ShipDefenseFrame){
   const crossing=game.boardingHolds!;
   for(const ship of shipsIn(game.units)){
@@ -1744,7 +1736,7 @@ function updateAttackMoveOrder(game: Game, unit: Unit, navalFrame = true) {
     // direct array replacement. A stale hull or passenger still uses its
     // original geometry even when this frame's current bodies are grounded.
     if (!navalFrame && target && isUnit(target) && (target.deck || target.cabin || isShipKind(target.kind))) navalFrame = true;
-    if (target && target.hp > 0 && (!navalFrame || automaticTargetAllowed(game.units,unit.owner,target)) && projectedHpAfterPendingProjectiles(game, unit.owner, target) > 0 && areEnemyOwners(game, unit.owner, target.owner) && (!navalFrame && !game.map.terrain || canReach(game.map, unit, target, game.units))) {
+    if (target && target.hp > 0 && (!navalFrame || automaticTargetAllowed(game.units,unit.owner,target)) && projectedHpAfterPendingProjectiles(game, unit.owner, target) > 0 && areEnemyOwners(game, unit.owner, target.owner) && (!navalFrame && !game.map.terrain || canReach(game.map, unit, target, game.units)) && (!unit.sailing || shipCanAttackCoastTarget(game, unit, target))) {
       const chosen = automaticCombatTarget(game, unit, target, navalFrame);
       if (chosen.id !== order.targetId) unit.order = { ...order, targetId: chosen.id };
       attackMoveTowardTarget(game, unit, chosen, navalFrame);
@@ -1847,42 +1839,10 @@ function attackStep(game: Game, unit: Unit, order: AttackOrder, navalFrame: bool
 
 function navigateShipAttack(game: Game, ship: Unit, ordered: Unit | Building | Obstacle) {
   if(game.boardingHolds?.has(ship.id))return;
-  const weapons = installedWeapons(game, ship).filter(item => (item.durability ?? 1) > 0);
-  // A hull's own attack (a cutter's arrows) has no dead zone: fitted guns' minimum range never drives it off its target.
-  const intrinsic = unitRules(game, ship).intrinsicAttack;
-  const minimum = intrinsic ? 0 : weapons.length ? Math.min(...weapons.map(item => SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].weapon.minRange ?? 0))
-    : weaponRules(game, ship).weapon?.minRange ?? 0;
-  // Guns with a dead zone fire at a ship as a whole (see @@@hull-reach): they sail for a station on the crew's hull, and
-  // take the crew from it whenever they reach them.
-  const target = minimum > 0 && isUnit(ordered) ? carryingHull(ordered, game.units) ?? ordered : ordered;
-  const blockers=friendlyFireBlockers(game,ship);
-  let firingHeading: number | undefined;
-  const canFireFrom = (station:Unit,checkTurn:boolean) => {
-    if (!weapons.length || intrinsic && targetGap(station, target) <= station.attackRange) return targetGap(station, target) <= station.attackRange && targetGap(station, target) >= minimum;
-    shareShipProfile(ship,station);
-    const start = { x: station.x, y: station.y, heading: station.sailing!.heading };
-    const shotClear=mountedShotClear(station,blockers);
-    for (const margin of [Math.PI / 36, 0]) {
-      const heading = bestFiringHeading(game, station, target, margin,shotClear), aimed = { ...station, sailing: { ...station.sailing!, heading } }, end = { ...start, heading };
-      shareShipProfile(ship,aimed);
-      if (checkTurn && (!hullPassageClear(game.map, station, start, end) || !shipTraffic(station,game.units,600,game.map)(start, end))) continue;
-      if (weapons.some(item => {
-        const pose = mountedWeaponPose(aimed, item), def = SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS];
-        if (!pose) return false;
-        const point = mountedTargetPoint(game,aimed,item,target,pose);
-        if (!point || !shipGunCanAim(aimed, item, point)) return false;
-        const gap = distance(pose.pivot, point);
-        return gap <= veteranWeaponRange(station, def.range) && gap >= (def.weapon.minRange ?? 0)
-          && (!blockers.length || mountedFireLaneClear(aimed,item,point,blockers));
-      })) { if(checkTurn)firingHeading = heading; return true; }
-    }
-    return false;
-  };
-  const firing = canFireFrom(ship,true);
-  const bow=weapons.find(item=>item.mountId==='bow' && veteranWeaponRange(ship,SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS].range)>=ship.attackRange);
-  const bowPose=bow && mountedWeaponPose(ship,bow);
-  const stationBowReach=bowPose ? (bowPose.pivot.x-ship.x)*detCos(ship.sailing!.heading)+(bowPose.pivot.y-ship.y)*detSin(ship.sailing!.heading) : 0;
-  const goal = shipPursuitGoal(ship, target, game.units, ship.attackRange, minimum, false, () => firing, game.map, firingHeading,stationBowReach,station=>canFireFrom(station,false),()=>tryAdmitShipPlan(ship));
+  const geometry = shipAttackStation(game, ship, ordered, friendlyFireBlockers(game, ship));
+  const firing = geometry.firingPose(ship, true);
+  const goal = shipPursuitGoal(ship, geometry.target, game.units, ship.attackRange, geometry.minimum, false, () => !!firing,
+    game.map, firing?.heading, geometry.bowReach, station => !!geometry.firingPose(station, false), () => tryAdmitShipPlan(ship));
   const pace = statusPace(ship);
   if (goal && pace > 0) sailToward(ship, goal, game.map, game.units, pace);
   else if (!goal && ship.sailing!.planningRequestedAtTick !== undefined && !ship.sailing!.route) {
@@ -1891,7 +1851,7 @@ function navigateShipAttack(game: Game, ship: Unit, ordered: Unit | Building | O
     // carrying hull, but cannot surge toward an untested firing station.
     ship.sailing!.speed = 0;
     if (pace > 0) {
-      const quarry = shipNavigationTarget(target, game.units);
+      const quarry = shipNavigationTarget(geometry.target, game.units);
       turnShipToward(ship, Math.atan2(quarry.y - ship.y, quarry.x - ship.x), game.map, game.units);
     }
   }
@@ -4008,6 +3968,7 @@ function shipReachPadding(units: readonly Unit[]) {
 
 function automaticCandidateReachable(game: Game, unit: Unit, candidate: Unit | Building, navalFrame = true): boolean {
   if ((navalFrame || game.map.terrain) && !canReach(game.map, unit, candidate, game.units)) return false;
+  if (unit.sailing && !shipCanAttackCoastTarget(game, unit, candidate)) return false;
   if (unit.owner !== "neutral") return true;
   const origin = neutralResponseOrigin(unit);
   return !origin || distance(candidate, origin) <= NEUTRAL_DAMAGE_RESPONSE_RANGE;
