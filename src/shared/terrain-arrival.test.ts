@@ -14,6 +14,27 @@ it('keeps the cost and advance finite when rounding clips a zero-length forest c
   expect(groundSegmentAdvance(map, from, goal, length + 1)).toEqual(goal);
 });
 
+it.each([false, true])('integrates the real ringwater mercenary road at world-coordinate precision (reverse=%s)', reverse => {
+  // Native room at ~13 minutes, mercenary speed 74. Visibility accepts the
+  // corner, but the forest interval is 4.885e-15 of the road (6.091e-13 units),
+  // larger than the old 7 * EPSILON bound. Keep the original world coordinates.
+  const map = { terrain: { cell: 32, cols: 80, rows: 80,
+    cells: Array.from({ length: 6400 }, (_, index) => index === 66 * 80 + 71 ? 'T' : '.').join('') } };
+  const a = { x: 2320, y: 2064 }, b = { x: 2295.5467650801706, y: 2186.266174599146 };
+  const [from, goal] = reverse ? [b, a] : [a, b], length = Math.hypot(b.x - a.x, b.y - a.y);
+  expect(groundTravelCost(map, from!, goal!)).toBeCloseTo(length, 9);
+  expect(groundSegmentAdvance(map, from!, goal!, length + 1)).toEqual(goal);
+  expect(routeTravelTicks(map, from!, goal!, 'land', 74)).toBe(Math.ceil(length / 74 * 20));
+});
+
+it('does not mistake a real blocked interval or a blocked start for coordinate rounding', () => {
+  const map = { terrain: { cell: 32, cols: 80, rows: 80,
+    cells: Array.from({ length: 6400 }, (_, index) => index === 66 * 80 + 71 ? 'T' : '.').join('') } };
+  const from = { x: 2320, y: 2064 }, goal = { x: 2295.5467650801706 - 1e-7, y: 2186.266174599146 };
+  expect(groundSegmentTravelCost(map, from, goal)).toBe(Infinity);
+  expect(groundTravelCost(map, { x: 2288, y: 2128 }, goal)).toBeUndefined();
+});
+
 it.each([false, true])('ranks a longer grass route ahead of a shorter mud corridor by actual arrival (mirror=%s)', mirror => {
   const x = (value: number) => mirror ? 4096 - value : value;
   const from = [{ id: 'near-mud', x: x(320), y: 800, speed: 60 }, { id: 'far-grass', x: x(720), y: 1248, speed: 60 }];
