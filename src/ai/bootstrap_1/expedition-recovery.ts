@@ -18,6 +18,7 @@ import { V7_WOUNDED_SHARE } from '../policy/v6/general';
 import { planMedicalRecovery } from './medical-recovery';
 import { mountedEscape, mountedThreatReach, THINK_TICKS } from './mounted-micro';
 import { planSettlerBoarding } from './ferry-preparation';
+import { planFirstCombatCrossing, recordCombatDelivery } from './combat-delivery';
 import { planRiderCrossing, riderFerryCrew } from './rider-crossing';
 import { transportRecovery } from './transport-recovery';
 import { postRecoveryAssignments, postRecoveryCommands } from './front-recovery';
@@ -101,6 +102,7 @@ export function expeditionRecoveryUnitIds(snapshot: GameSnapshot, owner: PlayerI
 /** An expedition's naval ownership also owns its land recovery orders. */
 export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
   planRiderCrossing(snapshot, owner, options);
+  planFirstCombatCrossing(snapshot, owner, options);
   const ferries = options.memory.naval?.ferries, cancelled: GameCommand[] = [];
   if (ferries) for (const boat of units(snapshot, owner)) {
     const mission = ferries[boat.id];
@@ -124,6 +126,7 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
     troopAvailable: unit => !mounted.has(unit.id) && !reserved.has(unit.id),
   })];
   commands.push(...planSettlerBoarding(snapshot, owner, options, commands));
+  recordCombatDelivery(snapshot, owner, options);
 
   const healing = medics.size ? planMedicalRecovery(snapshot, owner, recovering.map(({ patient }) => patient)).filter(command =>
     'unitId' in command ? medics.has(command.unitId) : 'unitIds' in command && command.unitIds.some(id => medics.has(id))) : [];
