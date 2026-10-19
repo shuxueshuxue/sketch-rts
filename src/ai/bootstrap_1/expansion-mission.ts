@@ -151,7 +151,7 @@ export function expansionMissionCommands(snapshot: GameSnapshot, owner: PlayerId
     if (memory.creep && active !== guard && !task.roadCamp) delete memory.creep;
     if (!memory.creep) {
       let choice = chooseBootstrapCamp(home, snapshot, front, camps, [guard], options, mine);
-      if (!choice) {
+      if (!choice && Object.keys(options.memory.expansionGarrisons ?? {}).length > 0) {
         // A camp on the expedition's actual road is part of reaching this mine.
         // Keep the mine as the parent objective; do not wait forever merely
         // because the final guard's safe-approach check sees this earlier camp.
