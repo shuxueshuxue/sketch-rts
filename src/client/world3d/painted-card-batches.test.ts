@@ -1,3 +1,4 @@
+import {setImmediate} from 'node:timers/promises';
 import { ART_TILE_SIZE, ART_ACTION_SIZE } from '../art/raster-cache';
 import {afterEach,describe,expect,it,vi} from 'vitest';
 import {createCanvas} from '@napi-rs/canvas';
@@ -9,7 +10,11 @@ import {fakeCardGl} from './card-gl-test-helpers';
 // A card window's copies are the uploader's own blits (see @@@card-window-blit), executed by a fake WebGL2.
 const gl=fakeCardGl();
 const renderer={initTexture:vi.fn(),copyTextureToTexture:vi.fn(),getRenderTarget:()=>null,getActiveCubeFace:()=>0,getActiveMipmapLevel:()=>0,setRenderTarget:vi.fn(),...gl.renderer};
-afterEach(()=>{vi.unstubAllGlobals();gl.fail(undefined);gl.blits.length=0;renderer.initTexture.mockReset();renderer.copyTextureToTexture.mockReset();renderer.setRenderTarget.mockReset();});
+afterEach(async()=>{
+  vi.unstubAllGlobals();gl.reset();renderer.initTexture.mockReset();renderer.copyTextureToTexture.mockReset();renderer.setRenderTarget.mockReset();
+  // Let native canvas cleanup run before the next test allocates more pixels.
+  await setImmediate();
+});
 function setup(policy:PaintedCardPolicy={maxTextureBanks:8}){
   vi.stubGlobal('document',{createElement:()=>createCanvas(1,1)});
   const scene=new THREE.Scene(),cards=new PaintedCardBatches(scene,8,policy);return{scene,cards};

@@ -56,6 +56,11 @@ export function fakeCardGl() {
   };
   return {
     blits,
+    /** Release this test's pixels, texture references and injected failure. */
+    reset: () => {
+      stored.clear(); blits.length = 0; failure = undefined;
+      read = undefined; draw = undefined;
+    },
     /** Makes the blits this returns an error for throw it (a lost context, a failed transfer); undefined stops. */
     fail: (when: typeof failure) => { failure = when; },
     /** What one level and layer of a texture holds (texels from its bottom-left corner), or undefined if never written. */
