@@ -1,8 +1,8 @@
 {
-  "sha256": "81e7c81df34e26c10367ab59f675f9fdcfc10a9a6fd8ac6bc0db70e25f572218",
-  "bytes": 55970595,
+  "sha256": "eeab012fa53d86bde5086a08599dc4c7372f4a12ecc39f28dc7a01500e256491",
+  "bytes": 56280207,
   "name": "naval-loading-full",
   "kind": "dir",
   "machine": "a100",
-  "pushed": "93da2479e513e914db0101def67c5d1c8a7c8f64"
+  "pushed": "348ab866cee2006402c5817f497471dc541c068d"
 }

@@ -4173,25 +4173,29 @@
           "n": 72,
           "mean": 18.561175694444433,
           "p50": 16.84096099999988,
-          "p95": 26.133770999999797
+          "p95": 26.133770999999797,
+          "max": 30.338516000000254
         },
         "B1": {
           "n": 72,
           "mean": 24.33225240277779,
           "p50": 24.746953000000303,
-          "p95": 35.87525500000038
+          "p95": 35.87525500000038,
+          "max": 37.10470700000042
         },
         "B2": {
           "n": 72,
           "mean": 24.69401800000001,
           "p50": 24.791246999999657,
-          "p95": 34.27903399999968
+          "p95": 34.27903399999968,
+          "max": 37.853423999999904
         },
         "A2": {
           "n": 72,
           "mean": 20.01960175000001,
           "p50": 18.84722200000033,
-          "p95": 28.253725999999915
+          "p95": 28.253725999999915,
+          "max": 33.25903699999981
         }
       }
     },
@@ -4258,14 +4262,50 @@
           "initial": "1a7ec4ce",
           "final": "30821755"
         }
-      }
-    }
+      },
+      "reviewConclusion": "同一A100的四军场景，每轮180次think。p95区间：A=204.40–208.71ms，B=202.81–211.43ms；max最差A=640.28ms、B=634.16ms，没有明显尾部退化。真实海图帧均值仍增加27.07%，不隐去。"
+    },
+    "reuse": "withLandRoadReuse在单个同步think内包裹withNativeLandRoadReuse；共享建筑绕行路线按snapshot/unit/goal缓存，不跨think复用。"
   },
   "territoryScene": {
     "originalBothNaviesBeforeCloseTicks": 2129,
     "originalBothNaviesAfterCloseTicks": 496,
     "groundOnlyAfterCloseTicks": 2628,
-    "testScope": "Original 45-second land occupation assertions retained with both naval tactical scripts omitted. Full planners remain covered in a separate post-arrival/actual-raid test."
+    "testScope": "完整双边AI场景保留45秒持续施压要求；只有在退出当帧同时证明敌军可到达本方工作矿厅且前哨局部威胁超过可用兵力时允许提前撤退，并要求三名前哨兵真实回到矿厅防守。另加同局三个未经编辑的安全、撤回、回防帧，验证安全时继续守前哨，有实际来袭时保留陆兵并进入防守。无海军控制仍单列作辅助。",
+    "metric": "gold-gen-5敌方矿区1200半径内至少2名地面战斗兵的累计时间；不是我方矿区留守，排除船上乘员。",
+    "occupationStartTick": 15202,
+    "occupationEndTick": 15698,
+    "endSeconds": 784.9,
+    "endFrame": {
+      "enemyMineId": "gold-gen-5",
+      "enemyHallId": "building-p1-townHall-2265",
+      "defendedOwnHallId": "building-v9_knight-townHall-1300",
+      "ownHallPosition": {
+        "x": 5392,
+        "y": 4400
+      },
+      "nearestEnemyId": "unit-p1-raider-2211",
+      "nearestArrivalTicks": 455,
+      "nearestArrivalSeconds": 22.75,
+      "incomingEnemiesWithin45Seconds": 22,
+      "frontThreat": 15.283333333333335,
+      "availableArmyPower": 12.500000000000002,
+      "boardCommands": [],
+      "withdrawingFrontIds": [
+        "unit-v9_knight-emberRavager-1049",
+        "unit-v9_knight-emberRavager-1076",
+        "unit-v9_knight-emberRavager-1403"
+      ]
+    },
+    "boardingOrderTick": 12235,
+    "elapsedSecondsSinceBoarding": 173.15,
+    "reviewFrames": {
+      "safe": 15300,
+      "withdraw": 15698,
+      "defend": 16200,
+      "path": "src/ai/bootstrap_1/fixtures/knight-territory-review-frames.json"
+    },
+    "conclusion": "结束时存在可到达威胁，且共享估算准确识别，未漏算。三名前哨兵无登船命令，撤回后实际在本方矿厅防守范围内交战。此前将短驻留仅归于海军借兵过于笼统，现以退出当帧的威胁、兵力和后来回防实体共同验证。"
   },
   "title": "A：按可达本土威胁装兵，并终止虚假的运输进展",
   "changes": [
@@ -4300,8 +4340,8 @@
       "machine": "A100",
       "node": "v24.22.0",
       "filesPassed": 691,
-      "testsPassed": 7742,
-      "seconds": 206.52,
+      "testsPassed": 7745,
+      "seconds": 207.31,
       "exitCode": 0
     },
     "typecheck": {
@@ -4315,14 +4355,23 @@
       "candidate": "9 passed",
       "description": "神泉殿600秒两席、环海600秒一席实际装兵并在300秒内卸到目标岛；另三席保留真实来袭防守；验证无物理变化不刷新时钟，以及三次失败后释放并换岛。"
     },
-    "territoryTestChange": "原混合海陆实战驻留变短的数值单列在 territoryScene。45秒驻留断言保留在双方禁用 naval 战术的控制场景；双方完整 AI 另验前进到岗及真实遇袭回防。"
+    "territoryTestChange": "完整双边AI场景保留45秒持续施压要求；只有在退出当帧同时证明敌军可到达本方工作矿厅且前哨局部威胁超过可用兵力时允许提前撤退，并要求三名前哨兵真实回到矿厅防守。另加同局三个未经编辑的安全、撤回、回防帧，验证安全时继续守前哨，有实际来袭时保留陆兵并进入防守。无海军控制仍单列作辅助。",
+    "territoryReviewScenes": {
+      "candidate": "6 passed",
+      "realFrames": [
+        15300,
+        15698,
+        16200
+      ],
+      "runtimeChanged": false
+    }
   },
   "source": {
     "base": "93da2479e513e914db0101def67c5d1c8a7c8f64",
     "runtimeManifest": "runtime-sha256.json",
     "runtimeFingerprint": "f8e27ba056d16a1f9e40b854a8256c25630df87d141844de50b982b44cd6cecc",
     "fullTestManifest": "source-final-sha256.json",
-    "note": "原生房间、全量测试与ABBA共用该运行时代码指纹；1386个源文件逐文件核对。"
+    "note": "原生房间与ABBA的运行时代码指纹不变；本次只增补真实回防帧和测试。全量测试对应1387个src/scripts文件，逐文件核对。"
   },
   "limitations": [
     "环海两席在15分钟仍未登岛，存在真正的本土来袭留守；古木林三席依照本土可扩张优先级未买船。",
