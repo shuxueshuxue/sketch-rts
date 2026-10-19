@@ -66,6 +66,7 @@ export type NavalPlanMemory = {
 };
 
 export type AiPolicyMemory = {
+  miningLeash?: { hallId: string; point: { x: number; y: number }; unitIds: string[]; defenderIds: string[] };
   miningDefense?: { hallId: string; point: { x: number; y: number }; unitIds: string[];
     attackerIds: string[]; arrivedIds: string[]; protectedHp: Record<string, number>; phase: 'gather' | 'fight' };
   workerSafety?: Record<string, { origin: { x: number; y: number }; resourceId?: string;
