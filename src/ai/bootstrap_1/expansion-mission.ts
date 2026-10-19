@@ -22,6 +22,7 @@ import { mineClaimedByAlly } from '../policy/mine-claims';
 import { miningRallyAssignment } from './mining-rally';
 import { activeUnitClaim, clearUnitClaim, forgetExpansionMember, isMineRallyClaim, recordUnitTaskClaim, setUnitClaim } from '../policy/claims';
 import type { AiPolicyMemory } from '../memory';
+import { expansionGarrisonReady } from './expansion-garrison';
 
 export function expansionMissionUnitIds(memory: AiPolicyMemory) {
   const mineId = memory.landExpansion?.mineId;
@@ -75,7 +76,12 @@ export function prepareExpansionMission(snapshot: GameSnapshot, owner: PlayerId,
   const mine = mineId === undefined ? undefined : snapshot.resources.find(mine => mine.id === mineId && mine.amount > 0);
   const hall = mine && snapshot.buildings.find(building => building.kind === 'townHall'
     && distance(building, mine) < GOLD_MINE_RULES.baseRange);
-  if (task && hall?.owner === owner) task.stage = hall.complete ? 'complete' : 'build';
+  if (task && hall?.owner === owner) {
+    task.stage = hall.complete ? 'complete' : 'build';
+    // Prepare the post during construction, while the expedition already covers this mine.
+    const ready = expansionGarrisonReady(snapshot, owner, options, task.mineId);
+    if (hall.complete && !ready) return task;
+  }
   if (!task || task.stage === 'complete' || !mine || hall && hall.owner !== owner || mineClaimedByAlly(snapshot, owner, mine, options)) {
     const { strategy } = v6Doctrine(snapshot, owner, options);
     const phase = strategy.phases[Math.min(v6.phase ?? 0, strategy.phases.length - 1)];

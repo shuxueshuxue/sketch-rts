@@ -99,6 +99,8 @@ export type AiPolicyMemory = {
     interruptions: { tick: number; reason: 'home-threat' | 'mining-threat' | 'mine-threat'; targetId?: string }[];
     paused?: boolean;
   };
+  // Posts awaiting their own static defense. Unit membership lives only in unitClaims.
+  expansionGarrisons?: Record<string, { mineId: string; sinceTick: number }>;
   mounted?: {
     unitIds: string[];
     objective: { kind: 'camp'; ids: string[] } | { kind: 'raid'; hallId: string; owner: PlayerId };

@@ -39,6 +39,7 @@ import { lootRecovery, planLootItemCommands } from './loot-recovery';
 import { summonedRaids } from './summoned-raids';
 import { mountedField } from './mounted-field';
 import { migrateExpansionClaims, prepareExpansionMission } from './expansion-mission';
+import { expansionGarrison, maintainExpansionGarrisons } from './expansion-garrison';
 
 export const BOOTSTRAP_VERSIONS = ['v9_archer', 'v9_summoner', 'v9_knight'] as const;
 export const BOOTSTRAP_PARENTS = { v9_archer: 'v5', v9_summoner: 'v7', v9_knight: 'v8' } as const;
@@ -151,7 +152,7 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
   return family.filter(script => script !== AI_SCRIPT_LIBRARY.v6Closeout).flatMap(script => {
     if (script === AI_SCRIPT_LIBRARY.items) return [{ ...script, run: planLootItemCommands }];
     if (script === AI_SCRIPT_LIBRARY.shopping) return [shopping];
-    if (script === AI_SCRIPT_LIBRARY.battlefield) return [campRecovery, frontRecovery, miningRally, miningLeash, mountedField, script];
+    if (script === AI_SCRIPT_LIBRARY.battlefield) return [campRecovery, frontRecovery, miningRally, miningLeash, expansionGarrison, mountedField, script];
     if (script === AI_SCRIPT_LIBRARY.v6General) return [
       summonedRaids,
       { ...AI_SCRIPT_LIBRARY.v6Closeout, run: planBootstrapCloseout },
@@ -189,6 +190,7 @@ export function researchPrerequisites(wants: readonly V6Want[], player: PlayerSt
 
 export function bootstrapPolicyContext(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion, options: AiPolicyContext): AiPolicyContext {
   migrateExpansionClaims(snapshot, options.memory);
+  maintainExpansionGarrisons(snapshot, owner, options);
   const wants = supportWants(snapshot, owner, version, options);
   const expansion = wants.filter(want => 'bases' in want);
   const player = snapshot.players[owner]!;
