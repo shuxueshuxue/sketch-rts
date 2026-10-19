@@ -21,7 +21,8 @@ export function continuingShipAim(world: World, ship: Unit, target: Target, bloc
   const rules = unitRules(world, ship);
   if (rules.intrinsicAttack) {
     const range = aimingRange(ship.aim, ship.attackRange, target.id, rules.aimRangeBuffer);
-    if (range > ship.attackRange && strikeGap(ship, target) <= range) return true;
+    const gap = strikeGap(ship, target);
+    if (gap > ship.attackRange && gap <= range) return true;
   }
   return installedWeapons(world, ship).some(item => {
     if ((item.durability ?? 1) <= 0) return false;
@@ -30,8 +31,9 @@ export function continuingShipAim(world: World, ship: Unit, target: Target, bloc
     if (range <= veteranWeaponRange(ship, def.range)) return false;
     const pose = mountedWeaponPose(ship, item);
     const point = pose && mountedTargetPoint(world, ship, item, target, pose);
+    const gap = point && hypot2(point.x - pose!.pivot.x, point.y - pose!.pivot.y);
     return !!point && shipGunCanAim(ship, item, point)
-      && hypot2(point.x - pose!.pivot.x, point.y - pose!.pivot.y) <= range
+      && gap! > veteranWeaponRange(ship, def.range) && gap! <= range
       && (!blockers.length || mountedFireLaneClear(ship, item, point, blockers));
   });
 }

@@ -21,18 +21,18 @@ export default async function (s: Scene) {
       replaceDefaultUnits: true, replaceDefaultBuildings: true, replaceDefaultLandmarks: true,
       replaceDefaultResources: true, replaceDefaultMercenaryCamps: true,
       addUnits: [
-        { id: 'shooter', owner: 'player', kind: 'archer', x: 1000, y: 1500, order: { type: 'hold', x: 1000, y: 1500 } },
-        { id: 'retreating-melee', owner: 'enemy', kind: 'golem', x: 1310, y: 1500, order: { type: 'hold', x: 1310, y: 1500 } },
+        { id: 'shooter', owner: 'player', kind: 'archer', x: 1000, y: 2160, order: { type: 'hold', x: 1000, y: 2160 } },
+        { id: 'retreating-melee', owner: 'enemy', kind: 'golem', x: 1310, y: 2160, order: { type: 'hold', x: 1310, y: 2160 } },
       ],
     },
   } });
   await s.reload(); await s.tick(1);
-  await s.camera(1440, 1540, 1.15);
+  await s.camera(1440, 2200, 1.15);
   await s.select(['shooter']);
   await s.shot('selected-before-attack');
-  await s.order('enemy', { type: 'move', unitIds: ['retreating-melee'], x: 3500, y: 1500 });
+  await s.order('enemy', { type: 'move', unitIds: ['retreating-melee'], x: 3500, y: 2160 });
   // Real browser right-click on the enemy sends the player's explicit attack through the room socket.
-  await s.click(1310, 1500, 'right');
+  await s.click(1310, 2160, 'right');
   await s.tick(8);
   let snapshot = await s.snapshot() as Snapshot;
   s.must(snapshot.units.find(unit => unit.id === 'shooter')?.order.targetId === 'retreating-melee', 'right-click did not issue an attack on the retreating melee unit');

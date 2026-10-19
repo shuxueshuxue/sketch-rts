@@ -304,8 +304,9 @@ describe('bootstrap_1 summoner tower rush', () => {
     for (const owner of ['fa', 'fb']) issuePlayerCommand(game, owner, { type: 'attackMove', unitIds: game.units.filter(unit => unit.owner === owner).map(unit => unit.id), x: 1150, y: 620 });
     const forward: string[] = [];
     let advanced = false;
-    // Towers strike for 13: the rush still wins, about ten ticks past the 1600 it took when they struck for 16.
-    for (let tick = 0; tick < 2000 && !game.match.winner; tick++) {
+    // With the ranged windup buffer, defending archers finish their shots: this rush wins after 2117 advance ticks.
+    // Keep every advance, clean-victory and surviving-host assertion, allowing 2400 ticks for the changed combat rules.
+    for (let tick = 0; tick < 2400 && !game.match.winner; tick++) {
       if (tick % 15 === 0) {
         for (const owner of ['fa', 'fb']) for (const entry of planAiOwnerCommandEntries(snapshotGame(game), { playerId: owner, version: 'v5', policyMode: 'combat' }, { teams: game.teams, memoryProvider: memories })) issuePlayerCommand(game, owner, entry.command);
         for (const entry of runAiCommandEntriesFromScripts(snapshotGame(game), 'us',
