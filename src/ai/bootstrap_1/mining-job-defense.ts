@@ -15,6 +15,7 @@ import type { AiPolicyContext, AiScript } from '../policy/types';
 import { isBacklineKind } from '../policy/v6/backline';
 import { armedFoes, earliestThreatContactTicks, retreatLandRoad } from './safe-land-route';
 import { miningJobOrder } from './mining-jobs';
+import { planWorkerSafety, workerSafetyPlans } from './worker-safety';
 
 /** A hauling job remains real income after its mine's hall has fallen. */
 export function miningJobDefenseTarget(snapshot: GameSnapshot, owner: PlayerId, intel: V6Intel, options: AiPolicyContext): ArmyDefense | undefined {
@@ -89,12 +90,17 @@ function exposedMiners(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
 
 export const miningJobSafety: AiScript = {
   id: 'miningJobSafety', phase: 'tactics',
-  claimsUnits: (snapshot, owner, options) => new Set(exposedMiners(snapshot, owner, options).map(task => task.worker.id)),
+  claimsUnits: (snapshot, owner, options) => new Set([
+    ...workerSafetyPlans(snapshot, owner, options).map(task => task.worker.id),
+    ...exposedMiners(snapshot, owner, options).map(task => task.worker.id),
+  ]),
   run(snapshot, owner, options): GameCommand[] {
-    return exposedMiners(snapshot, owner, options).flatMap(({ worker, job, shelter }): GameCommand[] => {
+    const safety = workerSafetyPlans(snapshot, owner, options), claimed = new Set(safety.map(task => task.worker.id));
+    return [...planWorkerSafety(snapshot, owner, options, safety), ...exposedMiners(snapshot, owner, options)
+      .filter(task => !claimed.has(task.worker.id)).flatMap(({ worker, job, shelter }): GameCommand[] => {
       if (worker.order.type === 'move' && worker.order.avoidCombat && worker.orderQueue?.some(order => order.type === 'mine')) return [];
       return [{ type: 'move', unitIds: [worker.id], ...shelter.point, avoidCombat: true },
         { type: 'mine', unitIds: [worker.id], resourceId: job.resourceId, queued: true }];
-    });
+    })];
   },
 };

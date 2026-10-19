@@ -66,6 +66,8 @@ export type NavalPlanMemory = {
 };
 
 export type AiPolicyMemory = {
+  workerSafety?: Record<string, { origin: { x: number; y: number }; resourceId?: string;
+    shelter: { x: number; y: number }; safeResourceId?: string }>;
   mounted?: {
     unitIds: string[];
     objective: { kind: 'camp'; ids: string[] } | { kind: 'raid'; hallId: string; owner: PlayerId };
