@@ -53,7 +53,7 @@ function replay(anchored: boolean) {
       && !laterRallies.some(rally => rally.hallId === anchor.hallId)) {
       const nextHall = game.buildings.find(building => building.id === anchor.hallId)!;
       laterRallies.push({ tick: game.tick, hallId: anchor.hallId,
-        attackersAtMine: game.units.filter(unit => anchor.attackerIds.includes(unit.id)
+        attackersAtMine: game.units.filter(unit => unit.owner === 'p1' && unit.attackDamage > 0 && anchor.attackerIds.includes(unit.id)
           && Math.hypot(unit.x - nextHall.x, unit.y - nextHall.y) <= 1000).length });
     }
     // Both runs are measured at the same first threatened hall's mouth, regardless of the mode label.
