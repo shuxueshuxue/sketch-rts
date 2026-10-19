@@ -6,6 +6,6 @@ export const STORM_STAFF = { range: 320, radius: 145, impactDamage: 24, pulseDam
 export const NEUTRAL_ITEM_TARGET_RANGE = 240;
 export const NEUTRAL_STORM_TARGET_RANGE = 280;
 export const FLAME_CLOAK = { radius: 90, damage: 12, interval: seconds(2) };
-export const GUARDIAN_SCROLL = { radius: 180, duration: seconds(7) };
+export const GUARDIAN_SCROLL = { radius: 180, duration: seconds(7), damageReduction: .4 };
 export const BREACH_CHARGE = { range: 280, damage: 260 };
 export const IVORY_TOWER_HP_SHARE = 0.5;

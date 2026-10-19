@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { sketchScene } from '../sdk/scene';
-import { issueCommand, issuePlayerCommand, stepGame, type Game } from './sim';
+import { issueCommand, issuePlayerCommand, stepGame, strikeUnit, type Game } from './sim';
+import { resolveUnitDamage } from './damage';
+import { DAMAGE_PROFILES } from './damage-types';
 import { GUARDIAN_SCROLL } from './item-rules';
 import { SHOP_GOODS } from './shop';
 import { seconds } from './time';
@@ -27,6 +29,48 @@ function cast(game: Game) {
 }
 
 describe('guardian scroll area balance', () => {
+  it.each(['melee', 'spell'] as const)('takes 60% of %s damage during protection and full damage after expiry', style => {
+    const game = scene().unit('player', 'golem', 1580, 1500, { id: 'target', order: { type: 'hold', x: 1580, y: 1500 } })
+      .unit('enemy', 'footman', 2500, 1500, { id: 'attacker', order: { type: 'hold', x: 2500, y: 1500 } }).build().createGame();
+    game.scriptedVictory = true;
+    const target = game.units.find(unit => unit.id === 'target')!, attacker = game.units.find(unit => unit.id === 'attacker')!;
+    cast(game);
+    const initialHp = target.hp;
+    strikeUnit(game, attacker, target, 100, style);
+    expect(initialHp - target.hp).toBeCloseTo(60);
+    for (let tick = 0; tick < GUARDIAN_SCROLL.duration; tick++) stepGame(game);
+    expect(target.effects.some(effect => effect.type === 'guardian')).toBe(false);
+    const expiredHp = target.hp;
+    strikeUnit(game, attacker, target, 100, style);
+    expect(expiredHp - target.hp).toBeCloseTo(100);
+  });
+
+  it('shares the strongest ward layer and multiplies with separate aura protection', () => {
+    const game = scene().unit('player', 'footman', 1580, 1500, { id: 'target' }).build().createGame();
+    const target = game.units.find(unit => unit.id === 'target')!;
+    cast(game);
+    target.effects.push({ type: 'protection', remaining: seconds(10), damageReduction: .35, protectionGroup: 'ward' });
+    expect(resolveUnitDamage(game, target, 100, DAMAGE_PROFILES.MELEE_CUT).damage).toBeCloseTo(60);
+    expect(resolveUnitDamage(game, target, 100, DAMAGE_PROFILES.POISON, [{ group: 'aura', amount: .2 }]).damage).toBeCloseTo(48);
+    target.effects.push({ type: 'protection', remaining: seconds(1), damageReduction: .5, protectionGroup: 'ward' });
+    expect(resolveUnitDamage(game, target, 100, DAMAGE_PROFILES.MELEE_CUT).damage).toBeCloseTo(50);
+    target.effects.find(effect => effect.damageReduction === .5)!.remaining = 0;
+    expect(resolveUnitDamage(game, target, 100, DAMAGE_PROFILES.MELEE_CUT).damage).toBeCloseTo(60);
+    target.effects.find(effect => effect.type === 'guardian')!.remaining = 0;
+    expect(resolveUnitDamage(game, target, 100, DAMAGE_PROFILES.MELEE_CUT).damage).toBeCloseTo(65);
+  });
+
+  it('reduces damage without blocking on-hit poison', () => {
+    const game = scene().unit('player', 'footman', 1580, 1500, { id: 'target' })
+      .unit('neutral', 'venomSpider', 1620, 1500, { id: 'attacker' }).build().createGame();
+    const target = game.units.find(unit => unit.id === 'target')!;
+    cast(game);
+    const hp = target.hp;
+    strikeUnit(game, game.units.find(unit => unit.id === 'attacker')!, target, 10, 'melee');
+    expect(hp - target.hp).toBeCloseTo(6);
+    expect(target.effects.some(effect => effect.type === 'poison')).toBe(true);
+  });
+
   it.each(directions.flatMap(([dx, dy]) => [
     { dx, dy, reach: 179.99, receives: true },
     { dx, dy, reach: 180, receives: true },
@@ -39,7 +83,7 @@ describe('guardian scroll area balance', () => {
     expect(Math.hypot(target.x - center.x, target.y - center.y)).toBeCloseTo(reach, 9);
     cast(game);
     expect(target.effects.some(effect => effect.type === 'guardian')).toBe(receives);
-    expect(game.units.find(unit => unit.id === 'carrier')!.effects).toContainEqual({ type: 'guardian', remaining: seconds(7) });
+    expect(game.units.find(unit => unit.id === 'carrier')!.effects).toContainEqual({ type: 'guardian', remaining: seconds(7), damageReduction: .4, protectionGroup: 'ward' });
     expect(game.effects.find(effect => effect.type === 'guardianField')).toMatchObject({
       x: center.x, y: center.y, radius: 180, duration: seconds(7), remaining: seconds(7),
     });
@@ -68,11 +112,11 @@ describe('guardian scroll area balance', () => {
       const target = game.units.find(unit => unit.id === 'target')!, attacker = game.units.find(unit => unit.id === 'attacker')!;
       cast(game);
       issuePlayerCommand(game, 'enemy', { type: 'attack', unitIds: [attacker.id], targetId: target.id });
+      const initialHp = target.hp;
       let fired = false;
-      for (let tick = 0; tick < 100; tick++) { stepGame(game); fired ||= attacker.cooldown > 0; }
+      for (let tick = 0; tick < 100 && target.hp === initialHp; tick++) { stepGame(game); fired ||= attacker.cooldown > 0; }
       expect(fired).toBe(true);
-      if (guarded) expect(target.hp).toBe(target.maxHp);
-      else expect(target.hp).toBeLessThan(target.maxHp);
+      expect(initialHp - target.hp).toBeCloseTo(attacker.attackDamage * (guarded ? .6 : 1));
       expect(target.effects.some(effect => effect.type === 'guardian')).toBe(guarded);
     });
 
@@ -94,29 +138,29 @@ describe('guardian scroll area balance', () => {
     const recipient = game.units.find(unit => unit.id === 'recipient')!, arrival = game.units.find(unit => unit.id === 'late-arrival')!;
     recipient.x = 1850; arrival.x = 1580;
     stepGame(game);
-    expect(recipient.effects).toContainEqual({ type: 'guardian', remaining: seconds(7) - 1 });
+    expect(recipient.effects).toContainEqual({ type: 'guardian', remaining: seconds(7) - 1, damageReduction: .4, protectionGroup: 'ward' });
     expect(arrival.effects.some(effect => effect.type === 'guardian')).toBe(false);
     expect(game.effects.find(effect => effect.type === 'guardianField')).toMatchObject(center);
   });
 });
 
 describe('guardian balance rules boundary', () => {
-  it('identifies current rules and refuses replay/network simulation of rules 2', () => {
-    expect(RULES_VERSION).toBe(4);
+  it('identifies current rules and refuses replay/network simulation of rules 4', () => {
+    expect(RULES_VERSION).toBe(5);
     expect(GUARDIAN_SCROLL.radius).toBe(180);
-    expect(() => assertCurrentRulesVersion(2, 'Old replay')).toThrow('Cross-version simulation is not supported');
+    expect(() => assertCurrentRulesVersion(4, 'Old replay')).toThrow('Cross-version simulation is not supported');
     expect(() => assertCurrentRulesVersion(RULES_VERSION, 'Current replay')).not.toThrow();
-    expect([undefined, 1, 2, 3].map(savedRulesVersion)).toEqual([1, 1, 2, 3]);
+    expect([undefined, 1, 2, 3, 4, RULES_VERSION].map(savedRulesVersion)).toEqual([1, 1, 2, 3, 4, 5]);
   });
 
-  it('imports a canonical rules-2 snapshot without recasting existing buffs or changing recorded field radius', () => {
+  it.each([2, 4])('imports a canonical rules-%s snapshot without recasting existing buffs or changing recorded field radius', rulesVersion => {
     const game = scene().unit('player', 'footman', 1720, 1500, { id: 'old-recipient' }).build().createGame();
     const target = game.units.find(unit => unit.id === 'old-recipient')!;
     target.effects.push({ type: 'guardian', remaining: 73 });
     game.effects.push({ id: 'old-field', type: 'guardianField', ...center, radius: 280, duration: seconds(7), remaining: 73 });
     const room = { ...createRoom({ id: 'old-snapshot', host: { id: 'host', name: 'Host' }, mapId: 'bareDuel' }), status: 'inMatch' as const };
     const save = createSaveGameRecord(game, room, { id: 'old-snapshot' });
-    save.rulesVersion = 2;
+    save.rulesVersion = rulesVersion;
     const bytes = JSON.stringify(save);
     const imported = restoreGameFromSave(save);
     expect(imported.units.find(unit => unit.id === target.id)!.effects).toEqual(target.effects);

@@ -18,6 +18,25 @@ function advance(game: ReturnType<typeof scene>, ticks: number) { for (let i = 0
 function statuses(game: ReturnType<typeof scene>, unit: Unit) { return presentUnitStatuses(snapshotGame(game), unit); }
 
 describe('focused unit status presentation', () => {
+  it('shows the scroll as a 40% ward, resumes weaker wards, and preserves scripted immunity labels', () => {
+    const game = scene(), unit = game.spawnUnit('player', 'footman', 800, 800);
+    unit.effects = [{ type: 'guardian', remaining: 20, damageReduction: .4, protectionGroup: 'ward' },
+      { type: 'protection', remaining: 60, damageReduction: .35, protectionGroup: 'ward' }];
+    for (const locale of ['zh', 'en'] as const) {
+      const presented = presentUnitStatuses(snapshotGame(game), unit, locale);
+      expect(presented).toHaveLength(1);
+      expect(presented[0]).toMatchObject({ type: 'guardian', icon: 'guardianScroll' });
+      expect(presented[0]!.description).toContain('40%');
+      expect(presented[0]!.description).not.toMatch(/免疫|immune/i);
+    }
+    unit.invulnerable = true;
+    expect(statuses(game, unit).map(status => status.type)).toContain('invulnerable');
+    unit.invulnerable = false;
+    unit.effects[0]!.remaining = 0;
+    expect(statuses(game, unit)).toMatchObject([{ type: 'protection' }]);
+    unit.effects = [{ type: 'guardian', remaining: 20 }];
+    expect(statuses(game, unit)[0]!.description).toContain('免疫伤害');
+  });
   it('uses the shared summon ability icon for both factions',()=>{
     for(const race of ['grove','ember'] as const){
       const game=scene();game.players.player.race=race;const spirit=game.spawnUnit('player','spirit',800,800);spirit.expiresTick=game.tick+60;

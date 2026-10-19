@@ -489,7 +489,7 @@ const ITEM_TOOLTIPS: Record<Locale, Record<ItemKind, Omit<GameplayTooltip, "requ
     },
     guardianScroll: {
       title: "Guardian Scroll",
-      body: "Makes nearby allied units immune to incoming damage for a short time.",
+      body: `Reduces incoming damage to nearby allied units by ${GUARDIAN_SCROLL.damageReduction * 100}% for a short time.`,
       stats: [],
     },
     experienceBook: {
@@ -555,7 +555,7 @@ const ITEM_TOOLTIPS: Record<Locale, Record<ItemKind, Omit<GameplayTooltip, "requ
     },
     guardianScroll: {
       title: "守护卷轴",
-      body: "短时间保护附近友方单位，免疫受到的伤害。",
+      body: `短时间保护附近友方单位，受到的伤害降低 ${GUARDIAN_SCROLL.damageReduction * 100}%。`,
       stats: [],
     },
     experienceBook: {
@@ -694,7 +694,7 @@ function itemStats(kind: ItemKind, locale: Locale) {
     case "lightningRod": stats = [localized(locale, `初始伤害 ${LIGHTNING_ROD.damage}`, `${LIGHTNING_ROD.damage} initial damage`), localized(locale, `最多命中 ${LIGHTNING_ROD.hits} 个目标`, `Up to ${LIGHTNING_ROD.hits} targets`), range(LIGHTNING_ROD.range), localized(locale, `弹跳范围 ${LIGHTNING_ROD.bounceRange}`, `Bounce range ${LIGHTNING_ROD.bounceRange}`), tooltipLine(locale, "cooldown", formatSeconds(LIGHTNING_ROD.cooldown))]; break;
     case "stormStaff": stats = [localized(locale, `落点伤害 ${STORM_STAFF.impactDamage}`, `${STORM_STAFF.impactDamage} impact damage`), localized(locale, `每 ${formatSeconds(STORM_STAFF.pulseEvery)} 造成 ${STORM_STAFF.pulseDamage} 伤害`, `${STORM_STAFF.pulseDamage} damage every ${formatSeconds(STORM_STAFF.pulseEvery)}`), radius(STORM_STAFF.radius), range(STORM_STAFF.range), tooltipLine(locale, "duration", formatSeconds(STORM_STAFF.duration)), tooltipLine(locale, "cooldown", formatSeconds(STORM_STAFF.cooldown))]; break;
     case "flameCloak": stats = [localized(locale, `每 ${formatSeconds(FLAME_CLOAK.interval)} 造成 ${FLAME_CLOAK.damage} 伤害`, `${FLAME_CLOAK.damage} damage every ${formatSeconds(FLAME_CLOAK.interval)}`), radius(FLAME_CLOAK.radius)]; break;
-    case "guardianScroll": stats = [radius(GUARDIAN_SCROLL.radius), tooltipLine(locale, "duration", formatSeconds(GUARDIAN_SCROLL.duration)), consumed]; break;
+    case "guardianScroll": stats = [localized(locale, `减伤 ${GUARDIAN_SCROLL.damageReduction * 100}%`, `Damage reduction ${GUARDIAN_SCROLL.damageReduction * 100}%`), radius(GUARDIAN_SCROLL.radius), tooltipLine(locale, "duration", formatSeconds(GUARDIAN_SCROLL.duration)), consumed]; break;
     case "experienceBook": stats = [localized(locale, `获得 ${EXPERIENCE_BOOK_XP} 经验`, `Grants ${EXPERIENCE_BOOK_XP} XP`), consumed]; break;
     case "breachCharge": stats = [localized(locale, `建筑伤害 ${BREACH_CHARGE.damage}`, `${BREACH_CHARGE.damage} building damage`), range(BREACH_CHARGE.range), consumed]; break;
     case "speedBoots": stats = [tooltipLine(locale, "speedBonus", Math.round((BOOTS_SPEED - 1) * 100))]; break;
