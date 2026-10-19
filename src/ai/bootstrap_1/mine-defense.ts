@@ -1,4 +1,5 @@
 import { mercenaryControlUnitIds } from './mercenary-control';
+import { expansionMissionCommands } from './expansion-mission';
 import { lootRecoveryUnitIds } from './loot-recovery';
 import { shoppingUnitIds } from './shopping';
 import { campRecruitRoadClear, chooseBootstrapCamp, startBootstrapCamp } from './camp-geometry';
@@ -139,7 +140,7 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
   const arrived = creep ? recruits.filter(unit => distance(unit, creep.staging) <= V7_GATHERED_RANGE) : [];
   if (creep) creep.group.push(...arrived.map(unit => unit.id));
   let defendedHall: Building | undefined, haulingDefense = false;
-  let commands = planV6Army(snapshot, owner, options, intel, {
+  let commands = expansionMissionCommands(snapshot, owner, options, intel) ?? planV6Army(snapshot, owner, options, intel, {
     reinforcements: 'siege', expansionBasis: 'mines',
     // Secure a working economy; an unfunded wish alone cannot reserve a stranded host.
     reserveExpansion: activeMiningBaseCount(snapshot, owner) > 0
