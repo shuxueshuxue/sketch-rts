@@ -7,20 +7,20 @@
 body{max-width:48rem;margin:3rem auto;padding:0 1.2rem;background:#20272a;color:#e8e8df;font:17px/1.7 system-ui,sans-serif}h1{font-size:1.5rem}h2{font-size:1.15rem;margin:2rem 0 .3rem}h3{font-size:1rem}audio{display:block;width:100%;margin:.6rem 0}small{color:#bcc5c9}a{color:#9fd8ed}details{margin-top:1.5rem;border-top:1px solid #536065;padding-top:1rem}.pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(16rem,1fr));gap:1rem}.clip{margin:.8rem 0}
 </style>
 <h1>治疗与召唤音效 · 确认试听</h1>
-<p>治疗已选 A。召唤建议降为原音量的 60%，消失声音等待选择。这里是试听文件，游戏默认包尚未修改。</p>
+<p>三项均已确认：治疗 A / 0.60、召唤 / 0.36、消失 Feral Spirit Done / 0.21。这里保留修改前后的试听，游戏默认包尚未发布这些改动。</p>
 <h2>治疗 · 已确认 A</h2>
 <audio controls preload="metadata" src="heal-approved.mp3"></audio>
 <small>HealTarget（2c95dfd331f5eebf.ogg），包内音量 0.60。祭司、战地医师、潮汐祭司、树皮医者统一使用。</small>
-<h2>灵体召唤 · 音量比较</h2>
+<h2>灵体召唤 · 已确认 0.36</h2>
 <div class="pair"><div>现在 · 0.60<audio controls preload="metadata" src="summon-before.mp3"></audio></div><div>建议 · 0.36<audio controls preload="metadata" src="summon-after.mp3"></audio></div></div>
 <small>同一段 ResurrectTarget，建议值为原来的 60%（约 −4.44 dB），不改变其他法术。</small>
 <h2>灵体消失 · 当前声音</h2>
 <audio controls preload="metadata" src="disappear-before.mp3"></audio>
 <small>MetalMediumBashFlesh1（2f218ee413d56fc4.ogg），0.35。现在到期消失也会播放这段打击声。</small>
-<h2>消失候选 1 · Feral Spirit Done</h2>
+<h2>消失 · 已确认 Feral Spirit Done / 0.21</h2>
 <p>魔兽源表明确把 FeralSpiritDone 和 FeralSpiritTarget 都指向 FeralSpiritTarget1.wav；消失特效模型也引用这段录音。它已在本站包中，文件为 8ab28a60b0f2c969.ogg。</p>
 <div class="pair"><div>参考 · 0.35<audio controls preload="metadata" src="feral-spirit-reference.mp3"></audio></div><div>建议 · 0.21<audio controls preload="metadata" src="feral-spirit-quieter.mp3"></audio></div></div>
-<h2>消失候选 2 · Orc Dissipate</h2>
+<h2>其他候选记录 · Orc Dissipate</h2>
 <p>幽灵狼模型含有指向 OrcDissipate 的声音事件；其事件时间不落在模型当前 Death 动画区间，尚未在魔兽客户端验证何时实际播放。人类、暗夜和兽族的 Dissipate 原始音频完全相同。</p>
 <div class="pair"><div>参考 · 0.35<audio controls preload="metadata" src="orc-dissipate-reference.mp3"></audio></div><div>建议 · 0.21<audio controls preload="metadata" src="orc-dissipate-quieter.mp3"></audio></div></div>
 <small>消失候选的 0.35 是统一比较的参考音量，0.21 是其 60%；均不是幽灵狼在本游戏中的现有配置。本游戏没有幽灵狼单位。</small>
