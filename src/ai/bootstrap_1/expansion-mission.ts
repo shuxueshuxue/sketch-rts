@@ -10,12 +10,14 @@ import type { AiPolicyContext } from '../policy/types';
 import { availableV6Army } from '../policy/v6/general';
 import type { V6Intel } from '../policy/v6/intel';
 import { isBacklineKind } from '../policy/v6/backline';
-import { v6Memory } from '../policy/v6/memory';
+import { recordPlay, v6Memory } from '../policy/v6/memory';
 import { v6Doctrine } from '../policy/v6/select';
 import { strengthOf } from '../policy/v6/strength';
 import { activeCamp, continueV7Creep, neutralCamps, EXPANSION_GUARD_RANGE } from '../policy/v7/creep';
 import { bootstrapExpansionMine } from './expansion-target';
 import { bootstrapCampApproach, chooseBootstrapCamp, startBootstrapCamp } from './camp-geometry';
+import { miningJobDefenseTarget } from './mining-job-defense';
+import { mineClaimedByAlly } from '../policy/mine-claims';
 
 /** A room army owns one mining objective through clearing, escort and construction. */
 export function prepareExpansionMission(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel) {
@@ -29,7 +31,7 @@ export function prepareExpansionMission(snapshot: GameSnapshot, owner: PlayerId,
   const hall = mine && snapshot.buildings.find(building => building.kind === 'townHall'
     && distance(building, mine) < GOLD_MINE_RULES.baseRange);
   if (task && hall?.owner === owner) task.stage = hall.complete ? 'complete' : 'build';
-  if (!task || task.stage === 'complete' || !mine || hall && hall.owner !== owner) {
+  if (!task || task.stage === 'complete' || !mine || hall && hall.owner !== owner || mineClaimedByAlly(snapshot, owner, mine, options)) {
     const { strategy } = v6Doctrine(snapshot, owner, options);
     const phase = strategy.phases[Math.min(v6.phase ?? 0, strategy.phases.length - 1)];
     const wanted = Math.max(0, ...(phase?.wants ?? []).map(want => 'bases' in want ? want.bases : 0));
@@ -52,9 +54,14 @@ export function prepareExpansionMission(snapshot: GameSnapshot, owner: PlayerId,
     groundThreatWithin(snapshot, unit, hall, 900)));
   const atMine = intel.enemies.flatMap(enemy => enemy.army).filter(unit => groundThreatWithin(snapshot, unit, target, 800));
   const mineThreat = strengthOf(atMine) > intel.power * .5 ? atMine[0] : undefined;
-  const reason = homeThreat ? 'home-threat' : mineThreat ? 'mine-threat' : undefined;
+  const miningThreat = miningJobDefenseTarget(snapshot, owner, intel, options);
+  const reason = homeThreat ? 'home-threat' : miningThreat ? 'mining-threat' : mineThreat ? 'mine-threat' : undefined;
   if (reason) {
-    if (!task.paused) task.interruptions.push({ tick: snapshot.tick, reason, targetId: (homeThreat ?? mineThreat)!.id });
+    if (!task.paused) {
+      task.interruptions.push({ tick: snapshot.tick, reason,
+        ...((homeThreat ?? mineThreat) ? { targetId: (homeThreat ?? mineThreat)!.id } : {}) });
+      recordPlay(v6, `expansion:interrupted:${reason}`);
+    }
     task.paused = true;
   } else {
     delete task.paused;
@@ -63,7 +70,7 @@ export function prepareExpansionMission(snapshot: GameSnapshot, owner: PlayerId,
       .filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0).map(unit => unit.id)])];
     // Reuse the existing errand claim contract. New shop/mercenary trips cannot borrow the expansion's screen.
     for (const id of task.unitIds) memory.unitClaims[id] = { kind: 'expansion', targetId: target.id,
-      x: target.x, y: target.y, sinceTick: task.sinceTick, expiresTick: snapshot.tick + 30 };
+      x: target.x, y: target.y, sinceTick: snapshot.tick, expiresTick: snapshot.tick + 30 };
   }
   return task;
 }
@@ -93,7 +100,13 @@ export function expansionMissionCommands(snapshot: GameSnapshot, owner: PlayerId
     if (task.stage !== 'build') task.stage = 'escort';
   }
   // Assemble on the camp's safe approach while recruits arrive. Once clear, stay with the mine.
-  const destination = task.stage === 'assemble' ? bootstrapCampApproach(snapshot, intel.home, front, guard!, intel.home, camps)?.staging ?? intel.home : mine;
+  if (task.stage === 'assemble' && front.length >= 3 && !task.staging
+    && snapshot.tick - (task.stagingCheckedTick ?? -300) >= 300) {
+    task.stagingCheckedTick = snapshot.tick;
+    const staging = bootstrapCampApproach(snapshot, intel.home, front, guard!, intel.home, camps)?.staging;
+    if (staging) task.staging = staging;
+  }
+  const destination = task.stage === 'assemble' ? task.staging ?? intel.home : mine;
   const point = walkableGoal(snapshot.map, destination.x, destination.y);
   memory.general = { mode: 'hold', target: point, holdingSince: task.sinceTick };
   const moving = front.filter(unit => distance(unit, point) > 180

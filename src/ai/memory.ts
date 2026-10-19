@@ -76,7 +76,9 @@ export type AiPolicyMemory = {
     sinceTick: number;
     stage: 'assemble' | 'clear' | 'escort' | 'build' | 'complete';
     unitIds: string[];
-    interruptions: { tick: number; reason: 'home-threat' | 'mine-threat'; targetId?: string }[];
+    staging?: { x: number; y: number };
+    stagingCheckedTick?: number;
+    interruptions: { tick: number; reason: 'home-threat' | 'mining-threat' | 'mine-threat'; targetId?: string }[];
     paused?: boolean;
   };
   mounted?: {
