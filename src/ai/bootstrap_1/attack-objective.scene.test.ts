@@ -100,7 +100,7 @@ it('resumes the same real attack after a scripted raid and actually demolishes t
   // Keep the real first encounter. After its withdrawal the opponent follows
   // explicit scene orders: pull its army away, raid our third during our next
   // sortie, then retreat. Our economy, movement, combat and objective logic all
-  // remain live. No target HP, attacker strength or admission rule is changed.
+  // remain live. No target HP, unit stats or admission rule is changed.
   runGameLoop({ name: 'summoner-12-scripted-attack-lifecycle', game, agents: saved.agents,
     maxTicks: 16500, thinkInterval: saved.thinkInterval,
     commandPlanner: context => context.owner === 'p1' && withdrewAt !== undefined ? [] : planner(context),
