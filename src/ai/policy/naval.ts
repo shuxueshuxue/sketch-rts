@@ -117,10 +117,12 @@ export function navalBudgetReserve(snapshot: GameSnapshot, owner: PlayerId, opti
         return 0;
     const settling = Object.values(options.memory?.naval?.ferries ?? {}).some(mission => mission.purpose === "settle" && mission.phase !== "return"
         && remote.some(mine => mine.id === mission.targetId));
+    const landed = Object.values(options.memory.naval?.conquests ?? {}).some(task => task.abandonedTick === undefined && task.stage !== 'complete'
+        && remote.some(mine => mine.id === task.mineId));
     const remaining = snapshot.resources.filter(mine => mine.amount > 0 && halls.some(hall => distance(hall, mine) < GOLD_MINE_RULES.baseRange)).reduce((sum, mine) => sum + mine.amount, 0);
     const pendingHall = units(snapshot, owner).some(unit => unit.order.type === "build" && unit.order.buildingKind === "townHall");
     const approachingDepletion = remaining < 2500 && !localExpansionAvailable(snapshot, owner, options);
-    return ((settling || approachingDepletion) && !pendingHall ? BUILDING_DEFS.townHall.cost : 0)
+    return ((settling || landed || approachingDepletion) && !pendingHall ? BUILDING_DEFS.townHall.cost : 0)
         + (approachingDepletion && !units(snapshot, owner).some(unit => ferryCapacity(unit) > 0) ? UNIT_DEFS.transport.cost : 0);
 }
 // The transport, population prerequisite and hall can use their own reserved
@@ -150,7 +152,7 @@ function planNavalWant(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     if (foothold)
         return { ...foothold, closeout: true };
     const threat = enemyShipsNear(snapshot, owner, options);
-    if (!threat.length && groundWholes(snapshot.map) > 1 && localExpansionAvailable(snapshot, owner, options)) return localExpansionWant(snapshot, owner, options, land);
+    if (!plan && !threat.length && groundWholes(snapshot.map) > 1 && localExpansionAvailable(snapshot, owner, options)) return localExpansionWant(snapshot, owner, options, land);
     const assault = assaultPlan(snapshot, owner, options);
     const halls = buildings(snapshot, owner).filter((building) => building.kind === "townHall" && building.complete);
     if (!halls.length)
@@ -1065,6 +1067,14 @@ function islandPlan(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
     const home = buildings(snapshot, owner).find((building) => building.kind === "townHall");
     if (!home)
         return undefined;
+    // A physical landing has already paid for its crossing. Finish that mine
+    // before treating the next local expansion as a reason to forget it.
+    for (const task of Object.values(navalMemory(options).conquests ?? {})) {
+        const mine = snapshot.resources.find(mine => mine.id === task.mineId && mine.amount > 0);
+        if (task.abandonedTick === undefined && task.stage !== 'complete' && mine && eligible(mine)
+            && !buildings(snapshot, owner).some(hall => hall.kind === 'townHall' && distance(hall, mine) <= GOLD_MINE_RULES.baseRange)
+            && !mineClaimedByAlly(snapshot, owner, mine, options)) return { mine, landing: task.landing };
+    }
     if (localExpansionAvailable(snapshot, owner, options)) return undefined;
     const ownedHalls = buildings(snapshot, owner).filter(hall => hall.kind === "townHall" && hall.complete);
     const memory = navalMemory(options);

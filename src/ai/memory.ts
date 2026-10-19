@@ -66,7 +66,27 @@ export type V6PolicyMemory = {
 
 // The naval script's plans (see @@@ai-naval), each with the tick it was looked for: the island's mine and the water a ship
 // lands at, the assault's target and its water, the raid's water.
+export type MiningMissionMemory = {
+  mineId: string;
+  sinceTick: number;
+  stage: 'fund' | 'assemble' | 'clear' | 'escort' | 'build' | 'complete';
+  staging?: { x: number; y: number };
+  stagingCheckedTick?: number;
+  roadCamp?: { x: number; y: number };
+  combat?: Pick<V6PolicyMemory, 'creep' | 'creepRetry'>;
+  interruptions: { tick: number; reason: 'home-threat' | 'mining-threat' | 'mine-threat' | 'camp-threat'; targetId?: string }[];
+  paused?: boolean;
+  pausedAt?: number;
+};
+
+export type NavalConquestMemory = MiningMissionMemory & {
+  landing: { x: number; y: number };
+  reason: string;
+  abandonedTick?: number;
+};
+
 export type NavalPlanMemory = {
+  conquests?: Record<string, NavalConquestMemory>;
   ferryDecisions?: Record<string, { tick: number; reason: string; lastBlock?: { tick: number; reason: string } }>;
   firstCombatDelivery?: {
     firstShipTick: number; deadlineTick: number; routeBudgeted?: boolean; overdueTick?: number;
@@ -108,18 +128,7 @@ export type AiPolicyMemory = {
   miningLeash?: { hallId: string; point: { x: number; y: number } };
   miningDefense?: { hallId: string; point: { x: number; y: number };
     attackerIds: string[]; protectedHp: Record<string, number>; phase: 'gather' | 'fight' };
-  landExpansion?: {
-    mineId: string;
-    sinceTick: number;
-    stage: 'fund' | 'assemble' | 'clear' | 'escort' | 'build' | 'complete';
-    staging?: { x: number; y: number };
-    stagingCheckedTick?: number;
-    roadCamp?: { x: number; y: number };
-    combat?: Pick<V6PolicyMemory, 'creep' | 'creepRetry'>;
-    interruptions: { tick: number; reason: 'home-threat' | 'mining-threat' | 'mine-threat' | 'camp-threat'; targetId?: string }[];
-    paused?: boolean;
-    pausedAt?: number;
-  };
+  landExpansion?: MiningMissionMemory;
   // Posts awaiting their own static defense. Unit membership lives only in unitClaims.
   expansionGarrisons?: Record<string, { mineId: string; sinceTick: number }>;
   mounted?: {

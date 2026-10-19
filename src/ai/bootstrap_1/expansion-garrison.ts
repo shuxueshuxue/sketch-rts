@@ -73,7 +73,7 @@ function establishedDefense(snapshot: GameSnapshot, owner: PlayerId, options: Ai
 function guardPool(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, site: Site) {
   const healingElsewhere = new Set(postRecoveryAssignments(snapshot, owner, options)
     .filter(care => distance(care.point, site.hall) > PERIMETER).map(care => care.patient.id));
-  return availableV6Army(snapshot, options, readV6Intel(snapshot, owner, options)).filter(unit => {
+  return availableV6Army(snapshot, options, { ...readV6Intel(snapshot, owner, options), home: site.hall }).filter(unit => {
     const claim = ordinaryUnitClaim(options.memory, unit.id);
     const ownGuard = claim?.kind === 'expansionGarrison' && claim.targetId === site.hall.id;
     return unit.owner === owner && unit.hp > 0 && !unit.deck && unit.order.type !== 'board'
