@@ -1,4 +1,5 @@
 import type { Game } from "../sim";
+import type { UnitAim } from '../types';
 import { canonicalGameState } from "./canonical";
 export { canonicalGameState, type CanonicalGameState } from "./canonical";
 
@@ -26,7 +27,8 @@ export { canonicalGameState, type CanonicalGameState } from "./canonical";
 // 19: building upgrades as work-queue jobs; the fortified tower is its own building kind.
 // 20: the tick a ship's hull was last struck by an enemy, which slows its repair.
 // 21: human seat identity and persistent guard stations; all-AI state hashes stay unchanged.
-export const CHECKSUM_VERSION = 21;
+// 22: aim records identify the target allowed to finish the current ranged windup.
+export const CHECKSUM_VERSION = 22;
 
 export function checksumGame(game: Game): string {
   return fnv1a(JSON.stringify(canonicalGameState(game)));
@@ -37,7 +39,10 @@ export function checksumGameForVersion(game: Game, version: number): string {
   // Version 19 changed only how an upgrade under way and a fortified tower are kept; a game with neither hashes the same.
   if (version === CHECKSUM_VERSION) return checksumGame(game);
   const checkedGame = { ...game };
-  checkedGame.units = game.units.map(unit => {
+  checkedGame.units = game.units.map(withoutAimTarget);
+  checkedGame.items = game.items.map(withoutAimTarget);
+  if (version === 21) return checksumGame(checkedGame);
+  checkedGame.units = checkedGame.units.map(unit => {
     const { guardPosition, ...prior } = unit;
     if (prior.order.type === 'move' && prior.order.returnToGuard) {
       const { returnToGuard, ...order } = prior.order;
@@ -66,6 +71,12 @@ export function checksumGameForVersion(game: Game, version: number): string {
     throw new Error(`Unsupported checksum version ${version}`);
   }
   return priorVersionChecksum(checkedGame);
+}
+
+function withoutAimTarget<T extends { aim?: UnitAim | undefined }>(entity: T): T {
+  if (!entity.aim || entity.aim.targetId === undefined) return entity;
+  const { targetId, ...aim } = entity.aim;
+  return { ...entity, aim };
 }
 
 function priorVersionChecksum(game: Game): string {

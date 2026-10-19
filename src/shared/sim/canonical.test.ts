@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { installedWeapons } from "../ship-equipment";
 import { createGame, type Game } from "../sim";
 import { canonicalGameState, checksumGame, checksumGameForVersion, CHECKSUM_VERSION } from "./checksum";
 
@@ -45,7 +46,8 @@ describe("canonical game state", () => {
     // Version 21 hashes human controller identity and persistent human guard stations.
     // Fresh-game goldens also include the closer 216-unit initial mine layout, and each mine's start amount.
     // Per-player camp budgets give each start at least two green camps, changing the seeded ladder's initial state.
-    expect(CHECKSUM_VERSION).toBe(21);
+    // Version 22 adds the current aim target; fresh games have no aim, so these goldens stay the same.
+    expect(CHECKSUM_VERSION).toBe(22);
     // Repeat creation to catch accidental dependence on a process-global random stream.
     for (let repeat = 0; repeat < 2; repeat += 1) {
       expect(checksumGame(createGame("bareDuel", { aiPlayers: [] }))).toBe("24665fcc");
@@ -91,4 +93,22 @@ describe("canonical game state", () => {
     expect(checksumGame(game)).not.toBe('a22ffc6e');
     expect(JSON.stringify(game.units)).toBe(before);
   });
+  it('projects unit and mounted aim target locks away for version 21 without losing guard state', () => {
+    const game = createGame('bareDuel', { aiPlayers: [] });
+    const ship = game.spawnUnit('player', 'warship', 1000, 1000);
+    const gun = installedWeapons(game, ship)[0]!;
+    const unit = game.units[0]!;
+    unit.aim = { x: 1200, y: 1000, anchorX: 1000, anchorY: 1000, tracking: true, updatedTick: 1 };
+    gun.aim = { ...unit.aim };
+    const prior = checksumGame(game);
+    unit.aim.targetId = 'unit-target';
+    gun.aim.targetId = 'gun-target';
+    expect(checksumGame(game)).not.toBe(prior);
+    expect(checksumGameForVersion(game, 21)).toBe(prior);
+    expect(unit.aim.targetId).toBe('unit-target');
+    expect(gun.aim.targetId).toBe('gun-target');
+    unit.guardPosition!.x += 1;
+    expect(checksumGameForVersion(game, 21)).not.toBe(prior);
+  });
+
 });

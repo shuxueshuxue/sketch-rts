@@ -214,7 +214,7 @@ describe('human guard position', () => {
     expect(restored.units[0]!.guardPosition).toEqual({ x: 1300, y: 1500 });
     expect(JSON.stringify(save)).toBe(bytes);
     expect(savedRulesVersion(5)).toBe(5);
-    expect(RULES_VERSION).toBe(6);
+    expect(RULES_VERSION).toBe(7);
     expect(() => assertCurrentRulesVersion(5, 'Replay')).toThrow('Cross-version');
   });
 });

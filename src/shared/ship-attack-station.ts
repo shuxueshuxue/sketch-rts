@@ -1,10 +1,11 @@
 import { unitRules } from './catalog';
+import { aimingRange } from './aiming';
 import { carryingHull, strikeGap } from './combat-geometry';
 import { detCos, detSin } from './det-math';
 import { weaponRules } from './equipment';
 import { hypot2 } from './hypot';
 import { shipTraffic } from './ship-avoidance';
-import { bestFiringHeading, installedWeapons, mountedFireLaneClear, mountedShotClear, mountedTargetPoint, mountedWeaponPose, SHIP_WEAPONS, shipGunCanAim } from './ship-equipment';
+import { bestFiringHeading, installedWeapons, mountedAttackRange, mountedFireLaneClear, mountedShotClear, mountedTargetPoint, mountedWeaponPose, SHIP_WEAPONS, shipGunCanAim } from './ship-equipment';
 import { shareShipProfile, shipProfile } from './ship-geometry';
 import { hullId, hullPassageClear } from './ship-navigation';
 import { shipPursuitGoal } from './ship-pursuit';
@@ -14,6 +15,26 @@ import { veteranWeaponRange } from './veteran-stats';
 
 type World = Pick<GameSnapshot, 'items' | 'variants' | 'map' | 'units'>;
 type Target = Unit | Building | Obstacle;
+
+/** A live windup may keep its present station, never admit a more distant future firing station. */
+export function continuingShipAim(world: World, ship: Unit, target: Target, blockers: readonly Unit[]): boolean {
+  const rules = unitRules(world, ship);
+  if (rules.intrinsicAttack) {
+    const range = aimingRange(ship.aim, ship.attackRange, target.id, rules.aimRangeBuffer);
+    if (range > ship.attackRange && strikeGap(ship, target) <= range) return true;
+  }
+  return installedWeapons(world, ship).some(item => {
+    if ((item.durability ?? 1) <= 0) return false;
+    const def = SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS];
+    const range = mountedAttackRange(ship, item, target.id);
+    if (range <= veteranWeaponRange(ship, def.range)) return false;
+    const pose = mountedWeaponPose(ship, item);
+    const point = pose && mountedTargetPoint(world, ship, item, target, pose);
+    return !!point && shipGunCanAim(ship, item, point)
+      && hypot2(point.x - pose!.pivot.x, point.y - pose!.pivot.y) <= range
+      && (!blockers.length || mountedFireLaneClear(ship, item, point, blockers));
+  });
+}
 
 /** The actual navigator and target admission use the same fitted guns, muzzle
  * positions, range, traverse and swept turn. */

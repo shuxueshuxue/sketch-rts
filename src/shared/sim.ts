@@ -1,4 +1,4 @@
-import { shipAttackStation, shipCanAttackCoastTarget } from './ship-attack-station';
+import { continuingShipAim, shipAttackStation, shipCanAttackCoastTarget } from './ship-attack-station';
 import { standingBodies, standsAsSeen, type StructureBody } from "./structure-bodies";
 import { automaticLeash, guardPosition, GUARD_LEASH_RANGE, hasHumanGuard, setGuardPosition } from './guard-position';
 import { addGold, roundGold } from "./gold";
@@ -21,13 +21,13 @@ import { invalidateItemIndex } from "./item-index";
 import { settleGroundItems } from './item-surfaces';
 import { carryingHull, strikePoint, strikeGap, bodyGap, strikeReach, CONTACT_SLACK } from "./combat-geometry";
 import { purchasePlacement, type PurchasePlacement } from "./purchase";
-import { SHIP_WEAPONS, PREVIOUS_SHIP_TRAIN_COST, damageShipParts, initializeShipEquipment, installedWeapons, isShipEquipment, mountedWeaponPose, mountedTargetPoint, mountedFireLaneClear, rebuildShipFittings, repairShipParts, shipPartMax, shipGunCanAim, shipMounts, bestFiringHeading, mountedShotClear } from "./ship-equipment";
+import { SHIP_WEAPONS, PREVIOUS_SHIP_TRAIN_COST, damageShipParts, initializeShipEquipment, installedWeapons, isShipEquipment, mountedWeaponPose, mountedAttackRange, mountedTargetPoint, mountedFireLaneClear, rebuildShipFittings, repairShipParts, shipPartMax, shipGunCanAim, shipMounts, bestFiringHeading, mountedShotClear } from "./ship-equipment";
 import { ITEM_DEFS, activeItem, canEquip, dropRefusal, freeItemSlot, giveRefusal, itemEquipped, type ItemDestination, normalizeEquipment, removeFromHands, transferRefusal, weaponRules, itemHands, unitItemMass, shipItemMass, itemsFor } from "./equipment";
 import { BREACH_CHARGE, FLAME_CLOAK, GUARDIAN_SCROLL, IVORY_TOWER_HP_SHARE, LIGHTNING_ROD, STORM_STAFF, NEUTRAL_ITEM_TARGET_RANGE, NEUTRAL_STORM_TARGET_RANGE } from "./item-rules";
 import { EXPERIENCE_BOOK_XP, VETERANCY_GAIN_PER_STAR, killXpReward, xpStarThresholds } from "./unit-value";
 import { automaticTargetAllowed, combatTargetScore, combatVictimId, shouldSwitchCombatTarget, type TargetThreat } from "./combat-target";
 import { crewBeforeHulls, boltIntersection, inWeaponCone, weaponDamage } from "./weapons";
-import { aimAt, aimingProfile, invalidateMovedAim, markAimShot, RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
+import { aimingRange, aimAt, aimingProfile, invalidateMovedAim, markAimShot, RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
 export { RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
 import type { WeaponDef } from "./catalog";
 import { ABILITY_DEFS, BUILDING_DEFS, DOCK_REPAIR, SUPPORT_BUILDING_HEAL, POISON_DAMAGE, POISON_TICKS, SLOW_PACE, SLOW_TICKS, SPLASH_RADIUS, SPLASH_SHARE, MAX_UPGRADE_LEVEL, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, canTrainAt, canResearchAt, constructionStartHp, hasSpell, isHealingBuildingKind, maxUpgradeLevel, requiredSupplyCap, unitMover, unitRules, type UnitDef } from "./catalog";
@@ -1353,14 +1353,14 @@ function updateMercenaryCamps(game: Game) {
 }
 
 /** Both ordinary shots and weapon skills use the fitting's own reticle. */
-function aimMountedWeapon(game:Game,ship:Unit,item:WorldItem,point:{x:number;y:number},pose=mountedWeaponPose(ship,item)!) {
+function aimMountedWeapon(game:Game,ship:Unit,item:WorldItem,point:{x:number;y:number},targetId?:string,pose=mountedWeaponPose(ship,item)!) {
   const def=SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS];
   const mount=shipMounts(ship).find(mount=>mount.id===item.mountId)!;
   // A fixed fitting travels with its deck. World displacement must not reset
   // its reticle every few ticks while the carrying hull is making way.
   const proxy={...ship,x:pose.pivot.x,y:pose.pivot.y,deck:{shipId:ship.id,x:mount.x,y:mount.y},aim:item.aim};
   const {naval:_hull,...weaponBase}=unitRules(game,ship);
-  const ready=aimAt(proxy,{...weaponBase,attackDamage:def.damage,attackRange:def.range,aimSpeed:def.aimSpeed,weapon:def.weapon},point,game.tick,veteranAimSpeed(game,ship));
+  const ready=aimAt(proxy,{...weaponBase,attackDamage:def.damage,attackRange:def.range,aimSpeed:def.aimSpeed,weapon:def.weapon},point,game.tick,veteranAimSpeed(game,ship),targetId);
   if(proxy.aim)item.aim=proxy.aim;else delete item.aim;
   if(proxy.facing!==undefined)item.facing=proxy.facing;
   return ready?proxy:undefined;
@@ -1410,7 +1410,7 @@ function updateMountedWeapons(game:Game,starts:Map<string,{x:number;y:number;hea
       const range=veteranWeaponRange(ship,def.range);
       const canShoot=(candidate:Unit|Building|Obstacle)=>{
         const point=mountedTargetPoint(game,ship,item,candidate,pose);if(!point)return false;const gap=distance(pose.pivot,point);
-        return shipGunCanAim(ship,item,point) && gap<=range && gap>=(def.weapon.minRange??0)
+        return shipGunCanAim(ship,item,point) && gap<=mountedAttackRange(ship,item,candidate.id) && gap>=(def.weapon.minRange??0)
           && (!blockers.length || mountedFireLaneClear(ship,item,point,blockers));
       };
       // @@@hull-reach - For a gun with a dead zone the ship is the target: it aims at the nearest point of the hull a
@@ -1425,15 +1425,18 @@ function updateMountedWeapons(game:Game,starts:Map<string,{x:number;y:number;hea
       // cannot bear on it may still defend against another reachable enemy.
       const ordered=preferred && areEnemyOwners(game,ship.owner,preferred.owner) ? gunTarget(preferred) : undefined;
       const nearest=ordered ? undefined : nearestEnemyTargetFromPoint(game,ship.owner,pose.pivot,range,ship,candidate=>gunTarget(candidate)!==undefined && (!["move","unload","follow"].includes(order.type) || candidate.attackDamage>0),true,!!def.weapon.minRange);
-      const target=ordered ?? (nearest && gunTarget(nearest));
+      const tracked=item.aim?.tracking && item.aim.targetId ? findStrikeTarget(game,item.aim.targetId) : undefined;
+      const continuing=tracked && areEnemyOwners(game,ship.owner,tracked.owner) && mountedAttackRange(ship,item,tracked.id)>range ? gunTarget(tracked) : undefined;
+      const target=ordered ?? continuing ?? (nearest && gunTarget(nearest));
       const aimTarget=order.type==="aim" && !target ? order : target;
       const point=target ? mountedTargetPoint(game,ship,item,target,pose) : aimTarget && strikePoint(pose.pivot,aimTarget);
-      if(!point || !shipGunCanAim(ship,item,point) || distance(pose.pivot,point)>range || def.weapon.minRange && distance(pose.pivot,point)<def.weapon.minRange)continue;
-      const proxy=aimMountedWeapon(game,ship,item,point,pose);
+      const shotRange=mountedAttackRange(ship,item,target?.id);
+      if(!point || !shipGunCanAim(ship,item,point) || distance(pose.pivot,point)>shotRange || def.weapon.minRange && distance(pose.pivot,point)<def.weapon.minRange)continue;
+      const proxy=aimMountedWeapon(game,ship,item,point,target?.id,pose);
       if(!proxy || !target)continue;
       const launchPose=mountedWeaponPose(ship,item)!;
       if(blockers.length && !shipFireLaneClear(launchPose.muzzle,point,def.weapon,blockers,undefined,Math.max(0,(def.weapon.minRange ?? 0)-distance(launchPose.pivot,launchPose.muzzle))))continue;
-      fireWeapon(game,ship,target,Math.round(def.damage*(nonStarUnitStats(game,ship).attackDamage/Math.max(1,weaponRules(game,ship).attackDamage))*outgoingDamageMultiplier(game,ship)),def.weapon,range,{},target.id,{item,pose:launchPose,aimPoint:point});
+      fireWeapon(game,ship,target,Math.round(def.damage*(nonStarUnitStats(game,ship).attackDamage/Math.max(1,weaponRules(game,ship).attackDamage))*outgoingDamageMultiplier(game,ship)),def.weapon,shotRange,{},target.id,{item,pose:launchPose,aimPoint:point});
       markAimShot(proxy);item.cooldownRemaining=attackCooldownOf(game,ship,def.cooldown);if(item.mountId==="bow" && !intrinsic)ship.cooldown=item.cooldownRemaining;
     }
   }
@@ -1581,10 +1584,11 @@ function updateUnits(game: Game, defenses: ShipDefenseFrame, navalFrame: boolean
       const defense=defenses.get(unit.id);
       if(defense?.target){
         const target=navalCombatTarget(game,unit,defense.target);
+        const range=aimingRange(unit.aim,unit.attackRange,target.id,weaponRules(game,unit).aimRangeBuffer);
         navigateShipAttack(game,unit,target);
-        if(unitRules(game,unit).intrinsicAttack && unit.cooldown===0 && targetGap(unit,target)<=strikeReach(unit,target)
-          && aimAt(unit,weaponRules(game,unit),strikePoint(unit,target),game.tick,veteranAimSpeed(game,unit))){
-          applyWeaponAttack(game,unit,target,Math.max(1,Math.round(unit.attackDamage*outgoingDamageMultiplier(game,unit))),unit.attackRange);
+        if(unitRules(game,unit).intrinsicAttack && unit.cooldown===0 && targetGap(unit,target)<=strikeReach(unit,target,range)
+          && aimAt(unit,weaponRules(game,unit),strikePoint(unit,target),game.tick,veteranAimSpeed(game,unit),target.id)){
+          applyWeaponAttack(game,unit,target,Math.max(1,Math.round(unit.attackDamage*outgoingDamageMultiplier(game,unit))),range);
           markAimShot(unit);unit.cooldown=attackCooldownOf(game,unit);
         }
       }
@@ -1723,12 +1727,22 @@ function updateNeutralLeash(game: Game, unit: Unit) {
 function updateHoldOrder(game: Game, unit: Unit, navalFrame = true) {
   if(navalFrame && shipProfile(unit) && !unitRules(game,unit).intrinsicAttack)return;
   if (unit.cooldown > 0 || unit.attackDamage <= 0) return;
-  const target = nearestEnemyTarget(game, unit, unit.attackRange, navalFrame);
+  const target = continuingAimTarget(game, unit, navalFrame) ?? nearestEnemyTarget(game, unit, unit.attackRange, navalFrame);
   if (!target) return;
-  if (!aimAt(unit, weaponRules(game, unit), strikePoint(unit,target), game.tick, veteranAimSpeed(game, unit))) return;
-  applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(game, unit))), unit.attackRange);
+  const range = aimingRange(unit.aim, unit.attackRange, target.id, weaponRules(game, unit).aimRangeBuffer);
+  if (!aimAt(unit, weaponRules(game, unit), strikePoint(unit,target), game.tick, veteranAimSpeed(game, unit), target.id)) return;
+  applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(game, unit))), range);
   markAimShot(unit);
   unit.cooldown = attackCooldownOf(game, unit);
+}
+
+function continuingAimTarget(game: Game, unit: Unit, navalFrame: boolean) {
+  const target = unit.aim?.tracking && unit.aim.targetId ? findTarget(game, unit.aim.targetId) : undefined;
+  if (!target || target.hp <= 0 || !areEnemyOwners(game, unit.owner, target.owner)) return undefined;
+  if (navalFrame && !automaticTargetAllowed(game.units, unit.owner, target)) return undefined;
+  const range = aimingRange(unit.aim, unit.attackRange, target.id, weaponRules(game, unit).aimRangeBuffer);
+  return range > unit.attackRange && targetGap(unit, target, navalFrame) <= strikeReach(unit, target, range)
+    && canReach(game.map, unit, target, game.units) ? target : undefined;
 }
 
 function updateAimOrder(game: Game, unit: Unit, navalFrame = true) {
@@ -1741,7 +1755,7 @@ function updateAimOrder(game: Game, unit: Unit, navalFrame = true) {
     return;
   }
   if (backOutOfDeadZone(game, unit, point, navalFrame)) { unit.aim = undefined; return; }
-  if (nearestEnemyTarget(game, unit, unit.attackRange, navalFrame)) updateHoldOrder(game, unit, navalFrame);
+  if (continuingAimTarget(game, unit, navalFrame) || nearestEnemyTarget(game, unit, unit.attackRange, navalFrame)) updateHoldOrder(game, unit, navalFrame);
   else aimAt(unit, weaponRules(game, unit), point, game.tick, veteranAimSpeed(game, unit));
 }
 
@@ -1781,17 +1795,18 @@ function updateAttackMoveOrder(game: Game, unit: Unit, navalFrame = true) {
 function attackMoveTowardTarget(game: Game, unit: Unit, target: Unit | Building, navalFrame = true) {
   if (navalFrame) target = navalCombatTarget(game, unit, target);
   const gap = targetGap(unit, target, navalFrame);
+  const range = aimingRange(unit.aim, unit.attackRange, target.id, weaponRules(game, unit).aimRangeBuffer);
   const ship = navalFrame && Boolean(shipProfile(unit));
   if (ship) navigateShipAttack(game, unit, target);
   else if (backOutOfDeadZone(game, unit, target, false)) return;
-  if (gap > strikeReach(unit, target)) {
+  if (gap > strikeReach(unit, target, range)) {
     if (!ship) moveToward(unit, target.x, target.y, game.map, game.units, navalFrame);
     return;
   }
   if(ship && !unitRules(game,unit).intrinsicAttack)return;
   if (unit.cooldown > 0) return;
-  if (!aimAt(unit, weaponRules(game, unit), strikePoint(unit,target), game.tick, veteranAimSpeed(game, unit))) return;
-  applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(game, unit))), unit.attackRange);
+  if (!aimAt(unit, weaponRules(game, unit), strikePoint(unit,target), game.tick, veteranAimSpeed(game, unit), target.id)) return;
+  applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(game, unit))), range);
   markAimShot(unit);
   unit.cooldown = attackCooldownOf(game, unit);
 }
@@ -1864,10 +1879,11 @@ function attackStep(game: Game, unit: Unit, order: AttackOrder, navalFrame: bool
     if (target.id !== order.targetId) write({ ...order, targetId: target.id });
   }
   const gap = targetGap(unit, target, navalFrame);
+  const range = aimingRange(unit.aim, unit.attackRange, target.id, weaponRules(game, unit).aimRangeBuffer);
   const ship = navalFrame && Boolean(shipProfile(unit));
   if (station && distance(target, station) > GUARD_LEASH_RANGE) { write(guardReturnOrder(game, unit)); return; }
   if (!ship && backOutOfDeadZone(game, unit, target, false)) return;
-  if (gap > strikeReach(unit, target)) {
+  if (gap > strikeReach(unit, target, range)) {
     if (!humanGuard && isPlayerId(unit.owner) && order.leashX !== undefined && order.leashY !== undefined && distance(unit, { x: order.leashX, y: order.leashY }) > GUARD_LEASH_RANGE) {
       write({ type: "move", x: order.leashX, y: order.leashY });
       return;
@@ -1879,15 +1895,17 @@ function attackStep(game: Game, unit: Unit, order: AttackOrder, navalFrame: bool
   if (ship) navigateShipAttack(game, unit, target);
   if(ship && !unitRules(game,unit).intrinsicAttack)return;
   if (unit.cooldown > 0) return;
-  if (!aimAt(unit, weaponRules(game, unit), strikePoint(unit,target), game.tick, veteranAimSpeed(game, unit))) return;
-  applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(game, unit))), unit.attackRange);
+  if (!aimAt(unit, weaponRules(game, unit), strikePoint(unit,target), game.tick, veteranAimSpeed(game, unit), target.id)) return;
+  applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(game, unit))), range);
   markAimShot(unit);
   unit.cooldown = attackCooldownOf(game, unit);
 }
 
 function navigateShipAttack(game: Game, ship: Unit, ordered: Unit | Building | Obstacle) {
   if(game.boardingHolds?.has(ship.id))return;
-  const geometry = shipAttackStation(game, ship, ordered, friendlyFireBlockers(game, ship));
+  const blockers = friendlyFireBlockers(game, ship);
+  const geometry = shipAttackStation(game, ship, ordered, blockers);
+  if (continuingShipAim(game, ship, geometry.target, blockers)) return;
   const firing = geometry.firingPose(ship, true);
   const goal = shipPursuitGoal(ship, geometry.target, game.units, ship.attackRange, geometry.minimum, false, () => !!firing,
     game.map, firing?.heading, geometry.bowReach, station => !!geometry.firingPose(station, false), () => tryAdmitShipPlan(ship));
@@ -2750,10 +2768,10 @@ function updateCastOrder(game: Game, unit: Unit) {
       if(!item)return end("refused");
       if(!shipGunCanAim(unit,item,at)){const mount=shipMounts(unit).find(mount=>mount.id===item.mountId)!;turnShipToward(unit,Math.atan2(at.y-unit.y,at.x-unit.x)-mount.bearing,game.map,game.units);return;}
       item.facing=Math.atan2(at.y-mountedWeaponPose(unit,item)!.pivot.y,at.x-mountedWeaponPose(unit,item)!.pivot.x);
-      const proxy=aimMountedWeapon(game,unit,item,at);if(!proxy)return;
+      const proxy=aimMountedWeapon(game,unit,item,at,target?.id);if(!proxy)return;
       applyWeaponAbility(game,unit,order.ability,at,def,target?.id);markAimShot(proxy);end();return;
     }
-    if (!aimAt(unit, weaponRules(game, unit), at, game.tick, veteranAimSpeed(game, unit))) return;
+    if (!aimAt(unit, weaponRules(game, unit), at, game.tick, veteranAimSpeed(game, unit), target?.id)) return;
     applyWeaponAbility(game,unit,order.ability,at,def,target?.id);
     markAimShot(unit);
   }

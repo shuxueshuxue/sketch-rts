@@ -101,7 +101,7 @@ export function weaponRules(snapshot: Pick<GameSnapshot, 'items' | 'variants'>, 
         const weapon = (itemIndex(snapshot.items).byShip.get(unit.id) ?? []).filter(item => item.mountId && isShipEquipment(item.kind) && (item.durability ?? 1) > 0).sort((a, b) => SHIP_WEAPONS[b.kind as keyof typeof SHIP_WEAPONS].range - SHIP_WEAPONS[a.kind as keyof typeof SHIP_WEAPONS].range)[0];
         if (weapon) {
             const profile = SHIP_WEAPONS[weapon.kind as keyof typeof SHIP_WEAPONS];
-            return { ...base, attackDamage: profile.damage, attackRange: profile.range, attackCooldown: profile.cooldown, weapon: profile.weapon, aimSpeed: profile.aimSpeed };
+            return { ...base, attackDamage: profile.damage, attackRange: profile.range, attackCooldown: profile.cooldown, weapon: profile.weapon, aimSpeed: profile.aimSpeed, ...(profile.aimRangeBuffer !== undefined ? { aimRangeBuffer: profile.aimRangeBuffer } : {}) };
         }
         return { ...base, attackDamage: 0, attackRange: 0 };
     }
@@ -114,10 +114,10 @@ export function weaponRules(snapshot: Pick<GameSnapshot, 'items' | 'variants'>, 
         defaultKits.set(unit, { items: snapshot.items, item });
         return base;
     }
-    const { weapon: _weapon, aimSpeed: _aim, aimMoveTolerance: _tolerance, ...body } = base;
+    const { weapon: _weapon, aimSpeed: _aim, aimMoveTolerance: _tolerance, aimRangeBuffer: _buffer, ...body } = base;
     if (item?.kind === 'issuedWeapon' && item.weaponKind) {
         const profile = UNIT_DEFS[item.weaponKind];
-        return { ...body, attackDamage: profile.attackDamage, attackRange: profile.attackRange, attackCooldown: profile.attackCooldown, ...(profile.weapon ? { weapon: profile.weapon } : {}), ...(profile.aimSpeed ? { aimSpeed: profile.aimSpeed } : {}), ...(profile.aimMoveTolerance ? { aimMoveTolerance: profile.aimMoveTolerance } : {}) };
+        return { ...body, attackDamage: profile.attackDamage, attackRange: profile.attackRange, attackCooldown: profile.attackCooldown, ...(profile.weapon ? { weapon: profile.weapon } : {}), ...(profile.aimSpeed ? { aimSpeed: profile.aimSpeed } : {}), ...(profile.aimMoveTolerance ? { aimMoveTolerance: profile.aimMoveTolerance } : {}), ...(profile.aimRangeBuffer !== undefined ? { aimRangeBuffer: profile.aimRangeBuffer } : {}) };
     }
     const selected = item && ITEM_DEFS[item.kind].weapon;
     return selected ? { ...body, attackDamage: selected.damage, attackRange: selected.range, attackCooldown: selected.cooldown } : base;

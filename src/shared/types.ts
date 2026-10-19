@@ -198,6 +198,8 @@ export type MeleeStance = "pursue" | "brace" | "shock";
 
 /** A private reticle in world coordinates. Its anchor is the last shot's standing position. */
 export type UnitAim = {
+  /** Only this target may use the ongoing shot's range buffer. Prepared points have no target. */
+  targetId?: string;
   x: number;
   y: number;
   anchorX: number;
