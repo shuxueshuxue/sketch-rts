@@ -9,7 +9,7 @@ import type { AiGameAgent } from '../game-runner';
 import { navalObservedPlanner } from '../benchmark/naval-room-worker';
 import { bootstrapPolicyContext, planBootstrapCommands } from './policy';
 import { planBootstrapNaval } from './expedition-recovery';
-import { navalBudgetReserve } from '../policy/naval';
+import { landingSafe, navalBudgetReserve } from '../policy/naval';
 import { expansionGarrisonReady } from './expansion-garrison';
 
 // Unedited 15-minute frames from native one-human/default-AI rooms at 348ab866.
@@ -90,4 +90,44 @@ it('hands the actual overseas hall to a local guard without the naval claim stea
   expect(guards.length).toBeGreaterThan(0);
   expect(entries.some(entry => entry.scriptId === 'expansionGarrison' && 'unitIds' in entry.command
     && entry.command.unitIds.some(id => guards.some(([unitId]) => id === unitId)))).toBe(true);
+});
+
+it('fills the actual clearing deficit with fewer than six idle home fighters at a safe beachhead', () => {
+  const owner = 'enemy', { snapshot, memory, options } = scene('broken', owner);
+  const boatId = 'unit-enemy-transport-1064', boat = snapshot.units.find(unit => unit.id === boatId)!;
+  const task = memory.naval!.conquests!['gold-mainland-2']!;
+  const home = snapshot.buildings.find(building => building.owner === owner && building.kind === 'townHall')!;
+  const idle = snapshot.units.filter(unit => unit.owner === owner && unit.kind === 'lancer'
+    && unit.order.type === 'idle' && !unit.deck && sameGround(snapshot.map, unit, home));
+  expect(idle).toHaveLength(5);
+  expect(memory.naval!.ferryFailures![boatId]![task.mineId]).toMatchObject({ attempts: 3, reason: 'landing-defense' });
+  const mine = snapshot.resources.find(mine => mine.id === task.mineId)!;
+  expect(landingSafe(snapshot, owner, options, boat, mine)).toBe(false);
+  expect(landingSafe(snapshot, owner, options, boat, task.landing)).toBe(true);
+  const commands = planBootstrapNaval(snapshot, owner, options);
+  expect(memory.naval!.ferries![boatId]).toMatchObject({ purpose: 'reinforce', reinforcementTaskId: task.mineId });
+  const recruits = commands.flatMap(command => command.type === 'board' && command.transportId === boatId ? command.unitIds : []);
+  expect(recruits.length).toBeGreaterThan(0);
+  expect(recruits.every(id => idle.some(unit => unit.id === id))).toBe(true);
+});
+
+it('keeps the actual reorganization sailing to a different mine after the first landing party died', () => {
+  const owner = 'enemy2', { snapshot, memory, options } = scene('broken', owner);
+  expect(memory.naval!.conquests!['gold-mainland-1']!.abandonedTick).toBe(12725);
+  const boatId = 'unit-enemy2-transport-2237';
+  expect(memory.naval!.ferries![boatId]).toMatchObject({ targetId: 'gold-mainland-7', phase: 'sailing' });
+  planBootstrapNaval(snapshot, owner, options);
+  expect(memory.naval!.ferries![boatId]).toMatchObject({ targetId: 'gold-mainland-7', phase: 'sailing' });
+  expect(Object.values(memory.naval!.ferries!).some(mission => mission.targetId === 'gold-mainland-1')).toBe(false);
+});
+
+it('returns the actual cleared task to ordinary ferry rules without cancelling its loaded crossing', () => {
+  const owner = 'enemy', { snapshot, memory, options } = scene('broken-completed', owner);
+  const boatId = 'unit-enemy-transport-1064', mineId = 'gold-mainland-2';
+  expect(snapshot.units.some(unit => unit.id === 'guard-2-0' || unit.id === 'guard-2-1')).toBe(false);
+  expect(memory.naval!.ferries![boatId]).toMatchObject({ reinforcementTaskId: mineId, phase: 'sailing' });
+  expect(snapshot.units.filter(unit => unit.deck?.shipId === boatId).length).toBeGreaterThan(0);
+  planBootstrapNaval(snapshot, owner, options);
+  expect(memory.naval!.ferries![boatId]).toMatchObject({ purpose: 'reinforce', targetId: mineId, phase: 'sailing' });
+  expect(memory.naval!.ferries![boatId]!.reinforcementTaskId).toBeUndefined();
 });

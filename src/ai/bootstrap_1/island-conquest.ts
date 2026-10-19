@@ -10,16 +10,18 @@ import { activeUnitClaim, isDefenseTaskClaim } from '../policy/claims';
 import { mineClaimedByAlly } from '../policy/mine-claims';
 import { isOpponentOwner } from '../policy/ownership';
 import { distance } from '../policy/spatial';
-import { coastOnWater, ferryCrewTaskAvailable, outgunned } from '../policy/naval';
+import { coastOnWater, ferryCrewTaskAvailable, landingSafe, outgunned } from '../policy/naval';
 import { navalServices } from '../policy/naval-services';
 import { ferryTargetAvailable } from '../policy/ferry-retries';
 import type { AiPolicyContext } from '../policy/types';
 import { isBacklineKind } from '../policy/v6/backline';
 import { readV6IntelAt } from '../policy/v6/intel';
 import { v6Memory } from '../policy/v6/memory';
-import { neutralCamps, EXPANSION_GUARD_RANGE } from '../policy/v7/creep';
+import { neutralCamps, EXPANSION_GUARD_RANGE, creepForce, forceFor } from '../policy/v7/creep';
+import { V7_WOUNDED_SHARE } from '../policy/v6/general';
 import { expansionGarrisonReady } from './expansion-garrison';
 import { planMiningScreen } from './expansion-mission';
+import { reinforcementCrew } from './reinforcement-ferries';
 
 function permanentLand(unit: Unit) {
   return unit.hp > 0 && !unit.deck && unitMover(unit.kind) === 'land' && unit.expiresTick === undefined
@@ -122,6 +124,83 @@ export function planConquestEngineers(snapshot: GameSnapshot, owner: PlayerId, o
     ferries[boat.id] = { purpose: 'settle', targetId: mine.id, from, to: { ...task.landing },
       phase: 'loading', crewIds: [], sinceTick: snapshot.tick };
     task.reason = 'engineers-dispatched';
+  }
+}
+
+/** A named clearing deficit recruits each available batch, independently of
+ * the six-person threshold for an otherwise optional front-line ferry. */
+export function conquestReinforcementCrew(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext,
+  candidates: readonly Unit[], boat: Unit) {
+  const mission = options.memory.naval?.ferries?.[boat.id];
+  const task = mission?.reinforcementTaskId && options.memory.naval?.conquests?.[mission.reinforcementTaskId];
+  if (!task || !mission) return [];
+  const mine = snapshot.resources.find(mine => mine.id === task.mineId);
+  const camp = mine && neutralCamps(snapshot).find(camp => distance(camp.center, mine) <= EXPANSION_GUARD_RANGE);
+  if (!camp) return reinforcementCrew(snapshot, owner, options, candidates, mission.to);
+  const present = conquestCrew(snapshot, owner, options, task).filter(unit => !isBacklineKind(unit)
+    && unit.attackDamage > 0 && unit.hp >= unit.maxHp * V7_WOUNDED_SHARE);
+  const inbound = snapshot.units.filter(unit => unit.owner === owner && unit.deck && unit.kind !== 'worker'
+    && options.memory.naval?.ferries?.[unit.deck.shipId]?.reinforcementTaskId === task.mineId);
+  const crew = reinforcementCrew(snapshot, owner, options, candidates, mission.to)
+    .filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0);
+  const selected: Unit[] = [];
+  for (const unit of crew) {
+    if (creepForce([...present, ...inbound, ...selected], camp) >= forceFor(camp)) break;
+    selected.push(unit);
+  }
+  return selected;
+}
+
+/** A safe beachhead can accumulate its camp party over several crossings. */
+export function planConquestReinforcements(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
+  const naval = options.memory.naval;
+  if (!naval?.conquests) return;
+  const own = snapshot.units.filter(unit => unit.owner === owner && unit.hp > 0);
+  const ferries = naval.ferries ??= {}, reserved = navalServices(snapshot, owner, options).reserved;
+  const camps = neutralCamps(snapshot);
+  for (const mission of Object.values(ferries)) {
+    const task = mission.reinforcementTaskId ? naval.conquests[mission.reinforcementTaskId] : undefined;
+    const mine = task && snapshot.resources.find(mine => mine.id === task.mineId && mine.amount > 0);
+    // The special trigger pays only a live clearing deficit. Once cleared,
+    // an empty return follows the ordinary surplus-army dispatch threshold.
+    if (mission.reinforcementTaskId && (!mine || task?.stage === 'complete' || task?.abandonedTick !== undefined
+      || !camps.some(camp => distance(camp.center, mine) <= EXPANSION_GUARD_RANGE))) delete mission.reinforcementTaskId;
+  }
+  for (const task of Object.values(naval.conquests)) {
+    if (task.stage === 'complete' || task.stage === 'build') continue;
+    const mine = snapshot.resources.find(mine => mine.id === task.mineId && mine.amount > 0);
+    if (!mine || !camps.some(camp => distance(camp.center, mine) <= EXPANSION_GUARD_RANGE)
+      || mineClaimedByAlly(snapshot, owner, mine, options)
+      || Object.values(ferries).some(mission => mission.reinforcementTaskId === mine.id)) continue;
+    for (const boat of own.filter(ship => isTransportKind(ship.kind) && !reserved.has(ship.id)
+      && naval.outfit?.shipId !== ship.id && !shipNeedsRepair(snapshot, ship)
+      && !shipPassengers(snapshot.units, ship).length
+      && !own.some(unit => unit.order.type === 'board' && unit.order.transportId === ship.id)
+      && (!ferries[ship.id] || ferries[ship.id]!.phase === 'return')
+      && (naval.ferryRetryUntil?.[ship.id] ?? 0) <= snapshot.tick
+      && sameGround(snapshot.map, ship, task.landing, 'sea'))) {
+      const crew = reinforcementCrew(snapshot, owner, options, own, task.landing)
+        .filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0);
+      const from = crew[0] && coastOnWater(snapshot, crew[0], boat);
+      if (!from || !landingSafe(snapshot, owner, options, boat, task.landing)
+        || outgunned(snapshot, owner, options, task.landing, own)) continue;
+      // A restored save may retain failures from checking the inland mine.
+      // Reconsider that gate only once the actual beachhead is safe again.
+      const failure = naval.ferryFailures?.[boat.id]?.[mine.id];
+      if (failure?.reason === 'landing-defense') delete naval.ferryFailures![boat.id]![mine.id];
+      if (!ferryTargetAvailable(naval, boat.id, mine.id)) continue;
+      const previous = ferries[boat.id];
+      ferries[boat.id] = { purpose: 'reinforce', reinforcementTaskId: mine.id, targetId: mine.id,
+        from, to: { ...task.landing }, phase: 'loading', crewIds: [], sinceTick: snapshot.tick,
+        deliveries: [], returnTrips: 0 };
+      if (!conquestReinforcementCrew(snapshot, owner, options, own, boat).length) {
+        if (previous) ferries[boat.id] = previous; else delete ferries[boat.id];
+        continue;
+      }
+      delete task.abandonedTick;
+      task.reason = 'reinforcing-beachhead';
+      break;
+    }
   }
 }
 

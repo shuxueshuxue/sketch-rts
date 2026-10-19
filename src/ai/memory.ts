@@ -100,7 +100,7 @@ export type NavalPlanMemory = {
   outfit?: {shipId:string; workerId?:string; mountId:string; itemId?:string; kind:'shipCannon'|'shipMortar'; progress?:{tick:number;x:number;y:number;workerX:number;workerY:number;itemId?:string}};
   outfitRetryUntil?: number;
   ferries?: Record<string, ({ purpose: "settle" | "assault" | "rebase" | "evacuate" | "advance" | "reinforce" } | { purpose: "creep"; riderId: string })
-    & {targetId:string;from:{x:number;y:number};to:{x:number;y:number};phase:"loading"|"sailing"|"return";crewIds:string[];sinceTick:number;payloadIds?:string[];deliveries?:{tick:number;unitIds:string[]}[];returnTrips?:number;progress?:{tick:number;x:number;y:number;heading:number;phase:string;crew:string}}>;
+    & {targetId:string;from:{x:number;y:number};to:{x:number;y:number};phase:"loading"|"sailing"|"return";crewIds:string[];sinceTick:number;reinforcementTaskId?:string;payloadIds?:string[];deliveries?:{tick:number;unitIds:string[]}[];returnTrips?:number;progress?:{tick:number;x:number;y:number;heading:number;phase:string;crew:string}}>;
   ferryRetryUntil?: Record<string,number>;
   ferryFailures?: Record<string, Record<string, { attempts: number; tick: number; reason: string }>>;
   island?: { tick: number; plan?: { mineId: string; landing: { x: number; y: number } } };

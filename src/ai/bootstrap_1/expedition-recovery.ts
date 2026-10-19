@@ -24,7 +24,7 @@ import { transportRecovery } from './transport-recovery';
 import { postRecoveryAssignments, postRecoveryCommands } from './front-recovery';
 import { strikersOf } from '../policy/threat-reach';
 import { planReinforcementFerries, reinforcementCrew } from './reinforcement-ferries';
-import { islandConquestCommands, planConquestEngineers, prepareIslandConquests } from './island-conquest';
+import { conquestReinforcementCrew, islandConquestCommands, planConquestEngineers, planConquestReinforcements, prepareIslandConquests } from './island-conquest';
 
 
 function incomingDamage(patient: Unit, foes: readonly (Unit | Building)[], window: number) {
@@ -105,6 +105,7 @@ export function expeditionRecoveryUnitIds(snapshot: GameSnapshot, owner: PlayerI
 export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
   prepareIslandConquests(snapshot, owner, options);
   planConquestEngineers(snapshot, owner, options);
+  planConquestReinforcements(snapshot, owner, options);
   planReinforcementFerries(snapshot, owner, options);
   planRiderCrossing(snapshot, owner, options);
   planFirstCombatCrossing(snapshot, owner, options);
@@ -127,7 +128,9 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
   const conquest = islandConquestCommands(snapshot, owner, options);
   const commands = [...cancelled, ...planNavalTacticsWithAssignments(snapshot, owner, options, {
     orderCrew: (soldiers, shore, boat) => riderFerryCrew(snapshot,
-      options.memory.naval?.ferries?.[boat.id]?.purpose === 'reinforce'
+      options.memory.naval?.ferries?.[boat.id]?.reinforcementTaskId
+        ? conquestReinforcementCrew(snapshot, owner, options, soldiers, boat)
+        : options.memory.naval?.ferries?.[boat.id]?.purpose === 'reinforce'
         ? reinforcementCrew(snapshot, owner, options, soldiers, options.memory.naval.ferries[boat.id]!.to) : soldiers,
       shore, boat, options),
     mineEligible: mines.eligible, targetAvailable: mines.targetAvailable,
