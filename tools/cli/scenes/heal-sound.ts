@@ -1,6 +1,5 @@
 // Prepared for the reviewer to run on mac1. Uses disposable CC0-backed pack
-// fixtures: it verifies real casts and Web Audio starts, without choosing or
-// publishing the owner's eventual healing recording.
+// fixtures: it verifies real casts, summon removal and Web Audio starts.
 import type { Scene } from "../drivers/browser";
 import { ABILITY_DEFS, UNIT_DEFS } from "../../../src/shared/catalog";
 import type { UnitKind } from "../../../src/shared/types";
@@ -16,8 +15,13 @@ export default async function (s: Scene) {
     const shared = cc0.sounds.click.clip, spell = cc0.sounds.melee.clip, priest = cc0.sounds.built.clip;
     const urls = Object.fromEntries([shared, spell, priest].map(clip => [clip.file, clip.url]));
     const fixtures = ['old', 'shared'].map(mode => readSoundPack('heal-check-' + mode, { name: mode, sounds: {
-      ...(mode === 'shared' ? { heal: { file: shared.file, volume: .6, kinds: { priest: { file: priest.file } } } } : {}),
-      spell: { file: spell.file, volume: .65, kinds: { priest: { file: priest.file, volume: .6 } } },
+      ...(mode === 'shared' ? {
+        heal: { file: shared.file, volume: .6, kinds: { priest: { file: priest.file } } },
+        summon: { file: priest.file, volume: .36 },
+        summonDisappear: { file: shared.file, volume: .21, kinds: { spirit: { file: priest.file } } },
+      } : {}),
+      spell: { file: spell.file, volume: .65, kinds: { priest: { file: priest.file, volume: .6 }, summoner: { file: priest.file, volume: .6 } } },
+      death: { file: priest.file, volume: .35 },
       melee: { file: priest.file },
     } }, urls));
     const evidence = window.__healSoundCheck = { fixtures, expected: { shared: shared.url, spell: spell.url, priest: priest.url }, calls: [], started: [] };
@@ -50,6 +54,7 @@ export default async function (s: Scene) {
     const patients = cast.map(unit => ({ id: `patient-${unit.kind}`, kind: "footman", owner: "player", x: unit.x, y: 1080, hp: 10, order: { type: "hold", x: unit.x, y: 1080 } }));
     await s.scenario({ aiPlayers: [], scenario: { replaceDefaultUnits: true, addUnits: [...cast, ...patients,
       { id: "control-summoner", kind: "summoner", owner: "player", x: 1400, y: 900, order: { type: "move", x: 1400, y: 1400 } },
+      { id: "control-witch", kind: "witch", owner: "enemy", x: 1450, y: 1000, order: { type: "move", x: 1450, y: 1400 } },
     ] } });
     await s.camera(1240, 1020);
     for (const kind of healers) {
@@ -68,8 +73,18 @@ export default async function (s: Scene) {
     await s.order("player", { type: "cast", unitId: "control-summoner", ability: "summon", x: 1420, y: 940 });
     await s.tick(3); await s.wait(200);
     const control = await s.page.evaluate("window.__healSoundCheck.started.filter(row => row.kind === 'summoner').at(-1)");
-    s.must(control?.event === "spell", `${mode}: summoning must remain a spell: ${JSON.stringify(control)}`);
+    s.must(control?.event === "summon" && control.url && control.volume === (mode === "shared" ? .36 : .6), `${mode}: summon did not start its separate cue: ${JSON.stringify(control)}`);
     results.push({ mode, control });
+    const summoned = (await s.snapshot() as { units: { id: string; kind: string; expiresTick?: number }[] }).units.find(unit => unit.kind === "spirit");
+    s.must(summoned?.expiresTick !== undefined, "The real summon did not create a temporary unit");
+    await s.page.evaluate("window.__healSoundCheck.board.stopEffects()");
+    await s.order("enemy", { type: "cast", unitId: "control-witch", ability: "curse", targetId: summoned!.id });
+    await s.tick(3); await s.wait(200);
+    const removed = await s.page.evaluate("window.__healSoundCheck.started.filter(row => row.event === 'summonDisappear').at(-1)");
+    const expectedRemoval = await s.page.evaluate(`window.__healSoundCheck.expected.${mode === "shared" ? "shared" : "priest"}`);
+    s.must(removed?.url === expectedRemoval && removed.state === "running", `${mode}: summon disappearance did not start its shared clip: ${JSON.stringify(removed)}`);
+    s.must(await s.page.evaluate("window.__healSoundCheck.started.some(row => row.event === 'spell' && row.kind === 'witch')"), "Curse no longer uses spell");
+    results.push({ mode, removed });
     await s.shot(`healing-${mode}`);
   }
   s.record("heal-sound", { fixturesOnly: true, healers, results });

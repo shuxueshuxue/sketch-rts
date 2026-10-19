@@ -26,7 +26,8 @@ export function soundCues(before: GameSnapshot, after: GameSnapshot, listener: P
     // A projectile effect carrying its shooter is the shot leaving; a hit carries whose weapon dealt it.
     if (["board", "unload"].includes(effect.type)) { if (effect.owner === listener) cues.push({ id: effect.type as "board" | "unload", ...at, kind: effect.sourceKind as UnitKind }); }
     else if (effect.type === "heal") cues.push({ id: "heal", ...at, kind: effect.sourceKind as UnitKind });
-    else if (["summon", "curse", "stomp", "web", "bloodlust"].includes(effect.type)) cues.push({ id: "spell", ...at, kind: effect.sourceKind as UnitKind });
+    else if (effect.type === "summon") cues.push({ id: "summon", ...at, kind: effect.sourceKind as UnitKind });
+    else if (["curse", "stomp", "web", "bloodlust"].includes(effect.type)) cues.push({ id: "spell", ...at, kind: effect.sourceKind as UnitKind });
     else if (effect.attackKind && ["projectile", "siegeBolt", "shellFlight", "grapeshot"].includes(effect.type)) {
       const id = SHOT_SOUNDS[effect.attackKind];
       if (id) cues.push({ id, x: effect.fromX ?? effect.x, y: effect.fromY ?? effect.y });
@@ -43,8 +44,9 @@ export function soundCues(before: GameSnapshot, after: GameSnapshot, listener: P
   // Old cargo snapshots also preserve living passenger IDs; live deck crew stay in units.
   const aboard = (snapshot: GameSnapshot) => snapshot.units.flatMap((unit) => unit.cargo ?? []).map((unit) => unit.id);
   const unitsAfter = new Set([...after.units.map((unit) => unit.id), ...aboard(after)]);
-  // A ship goes down with its timbers breaking, as a building falls, not with a cry.
-  for (const unit of before.units) if (!unitsAfter.has(unit.id)) cues.push({ id: UNIT_DEFS[unit.kind].naval ? "shipSink" : "death", x: unit.x, y: unit.y, kind: unit.kind });
+  // Temporary summons share their disappearance sound, whether expired or slain.
+  // Ordinary ships still go down with their timbers breaking.
+  for (const unit of before.units) if (!unitsAfter.has(unit.id)) cues.push({ id: unit.expiresTick !== undefined ? "summonDisappear" : UNIT_DEFS[unit.kind].naval ? "shipSink" : "death", x: unit.x, y: unit.y, kind: unit.kind });
   const buildingsBefore = new Map(before.buildings.map((building) => [building.id, building]));
   const buildingsAfter = new Set(after.buildings.map((building) => building.id));
   for (const building of after.buildings) {

@@ -61,8 +61,8 @@ describe("sound packs", () => {
     expect(JSON.stringify(extras)).toBe(before);
   });
 
-  it("requires a shared file for healing rather than only per-unit entries", () => {
-    expect(() => readSoundPack("p", { name: "P", sounds: { heal: { kinds: { priest: { file: "heal.ogg" } } } } }, urls(["heal.ogg"]))).toThrow("Sound pack p: heal needs a shared file for all healers");
+  it.each(["heal", "summonDisappear"])("requires a shared file for %s rather than only per-unit entries", event => {
+    expect(() => readSoundPack("p", { name: "P", sounds: { [event]: { kinds: { priest: { file: "shared.ogg" } } } } }, urls(["shared.ogg"]))).toThrow(`Sound pack p: ${event} needs a shared file`);
   });
 
   it.each([false, true])("prefers a current unit entry when the older name comes first: %s", olderFirst => {

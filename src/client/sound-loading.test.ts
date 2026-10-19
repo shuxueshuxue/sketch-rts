@@ -20,6 +20,42 @@ function effectPack(){return readSoundPack('demo',{name:'Demo',sounds:{melee:{fi
 const healers = (Object.keys(UNIT_DEFS) as UnitKind[]).filter(kind => UNIT_DEFS[kind].abilities.some(ability => ABILITY_DEFS[ability].behavior === 'heal'));
 
 describe("on-demand audio", () => {
+  it('plays a separately configured summon without changing the caster\'s other spells', async () => {
+    const audio = audioContext(), fetcher = vi.fn(async (_input: RequestInfo | URL) => new Response(new Uint8Array(3)));
+    vi.stubGlobal('fetch', fetcher);
+    const pack = readSoundPack('test', { name: 'Test', sounds: {
+      summon: { file: 'summon.ogg', volume: .36 },
+      spell: { file: 'spell.ogg', kinds: { summoner: { file: 'other-spell.ogg' } } },
+    } }, { 'summon.ogg': '/summon.ogg', 'spell.ogg': '/spell.ogg', 'other-spell.ogg': '/other-spell.ogg' });
+    const board = new Soundboard([pack], 'test'); board.unlock();
+    board.play('summon', undefined, 'summoner'); board.play('spell', undefined, 'summoner');
+    await vi.waitFor(() => expect(audio.sources).toHaveLength(2));
+    expect(fetcher.mock.calls.map(([url]) => url)).toEqual(['/summon.ogg', '/other-spell.ogg']);
+    board.dispose();
+  });
+
+  it.each(['spirit', 'footman'] as const)('shares summon disappearance for %s despite a per-unit override', async kind => {
+    const audio = audioContext(), fetcher = vi.fn(async (_input: RequestInfo | URL) => new Response(new Uint8Array(3)));
+    vi.stubGlobal('fetch', fetcher);
+    const pack = readSoundPack('test', { name: 'Test', sounds: {
+      summonDisappear: { file: 'shared.ogg', kinds: { [kind]: { file: 'specific.ogg' } } },
+    } }, { 'shared.ogg': '/shared.ogg', 'specific.ogg': '/specific.ogg' });
+    const board = new Soundboard([pack], 'test'); board.unlock(); board.play('summonDisappear', undefined, kind);
+    await vi.waitFor(() => expect(audio.sources).toHaveLength(1));
+    expect(fetcher.mock.calls.map(([url]) => url)).toEqual(['/shared.ogg']); board.dispose();
+  });
+
+  it.each([['summon', 'spell', 'summoner'], ['summonDisappear', 'death', 'spirit']] as const)('preserves the older %s fallback to %s', async (event, fallback, kind) => {
+    const audio = audioContext(), fetcher = vi.fn(async (_input: RequestInfo | URL) => new Response(new Uint8Array(3)));
+    vi.stubGlobal('fetch', fetcher);
+    const pack = readSoundPack('old', { name: 'Old', sounds: {
+      [fallback]: { file: 'default.ogg', kinds: { [kind]: { file: 'specific.ogg' } } },
+    } }, { 'default.ogg': '/default.ogg', 'specific.ogg': '/specific.ogg' });
+    const board = new Soundboard([pack], 'old'); board.unlock(); board.play(event, undefined, kind);
+    await vi.waitFor(() => expect(audio.sources).toHaveLength(1));
+    expect(fetcher.mock.calls.map(([url]) => url)).toEqual(['/specific.ogg']); board.dispose();
+  });
+
   it.each(healers)('uses one shared heal recording for %s even if the pack carries a per-unit override', async kind => {
     const audio = audioContext(), fetcher = vi.fn(async (_input: RequestInfo | URL) => new Response(new Uint8Array(3)));
     vi.stubGlobal('fetch', fetcher);
