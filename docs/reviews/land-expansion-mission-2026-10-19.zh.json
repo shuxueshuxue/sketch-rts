@@ -1,0 +1,84 @@
+{
+  "结论": "扩张任务保持同一个矿点，从清营、护送到基地建成；只因真实威胁暂停并记录原因。",
+  "base": "d7cd89d6",
+  "candidate": "4abf725b3a89834a5afb37ace19dc45d1a41b7c2",
+  "复现": {
+    "seed": "v5-final-1",
+    "map": "ladder-16",
+    "subject": "v9_archer",
+    "race": "grove",
+    "rival": "v9",
+    "index": 28,
+    "owner": "v9_archer"
+  },
+  "落基时间秒": {
+    "二矿": {
+      "base": 343.5,
+      "candidate": 226.9
+    },
+    "三矿": {
+      "base": 507.25,
+      "candidate": 388.8
+    }
+  },
+  "规格": [
+    "阶段需要新基地时，锁定矿点；优先补足清营战力，在安全位置集结、清营；三名兵沿工人实际 steering 路线护送，其余守矿，直到基地建成。",
+    "两处有效收入与至少四名健康护送兵，即请求三矿；优先选择当前护送兵力可清掉的营地。",
+    "自家矿区或运矿工人有真实威胁、目标矿受到压制时暂停，记录 tick 和原因，威胁解除后恢复原矿点；暂停期间停止扩张资本与额外清营招募。",
+    "失去全部收入、没有400金且未开工的既有任务进入 fund 状态，释放军队恢复经济；保留矿点，恢复资金后继续。"
+  ],
+  "共享范围": "未修改共享 general.ts 或 v8/v9 preset；AiPolicyMemory 仅新增可选 landExpansion，保留 workerSafety。房间入口 planBootstrapGeneral 先分发扩张任务，未改回防、追击或守矿函数。",
+  "验证": {
+    "完整房间AI测试": {
+      "files": 178,
+      "passed": 2532,
+      "failed": 1,
+      "说明": "唯一失败为 large-battle-think 并行运行时耗时断言（单次 7.707 秒 > 2 秒）；单独重跑通过，整项 39.26 秒。"
+    },
+    "large-battle-think单独重跑": "1/1 passed",
+    "tsc": "passed",
+    "共享general_creep": "2 files, 48 passed",
+    "main回归测试": "d7cd89d6 上 4 条核心新增行为测试均失败；另有 1 条既有任务失去资金后的防回归用例。",
+    "胜率bench": "未运行，按最新要求用行为场景验收",
+    "资金恢复边界": "5 个任务场景及 48 个原有资金/护送场景，共 53 passed；tsc passed。"
+  },
+  "浏览器证明": {
+    "machine": "mac1",
+    "command": "bin/sketch yatu land-expansion --ref 4abf725b --ref2 d7cd89d6 --on mac1 --locale zh-CN --json",
+    "说明": "同地图种子的真实 SDK 房间 AI 对 v9 对局，使用公开房间 player/enemy ID；命令重放到实际服务器和浏览器，核对单位位置/生命、建筑、资源及金钱。与原复现的 owner ID 不同，独立列为画面证明。",
+    "截图tick": [
+      4800,
+      8200
+    ],
+    "原始PNG": "保留于同名 evidence 目录；PR 内 JPEG 由浏览器直接截图产生。",
+    "预览": [
+      {
+        "file": "docs/reviews/land-expansion-mission/after-natural.jpg",
+        "sha256": "591734a874a0bf6c1381f306dffd3e2439b5fe33a0ae85365fc141fd5bcf79e2",
+        "bytes": 223695,
+        "commit": "4abf725b3a89834a5afb37ace19dc45d1a41b7c2"
+      },
+      {
+        "file": "docs/reviews/land-expansion-mission/after-third.jpg",
+        "sha256": "4c7d7dc3b98c47d2a157d58f48172d3c26bd414cb2378e081d8f355b4f3380d0",
+        "bytes": 244480,
+        "commit": "4abf725b3a89834a5afb37ace19dc45d1a41b7c2"
+      },
+      {
+        "file": "docs/reviews/land-expansion-mission/before-natural.jpg",
+        "sha256": "647bb68a641256435f94679145c0abc35f7b0a6ec8793b883dd3ec1a44b5efff",
+        "bytes": 220697,
+        "commit": "d7cd89d6aeef26ed9a363c49286b6a95b9ac5427"
+      },
+      {
+        "file": "docs/reviews/land-expansion-mission/before-third.jpg",
+        "sha256": "44306182337415487eacddd369c7fafbdafcb671e2f9057fba2afbc6a0e880d4",
+        "bytes": 246008,
+        "commit": "d7cd89d6aeef26ed9a363c49286b6a95b9ac5427"
+      }
+    ],
+    "实际运行": "candidate 4abf725b 单独复拍，baseline 取前一轮同脚本 d7cd89d6 对照；两轮均通过实际房间/SDK 状态核对。",
+    "结果说明": "4:00 新版二矿施工中，main 没有二矿；6:50 新版三矿施工后段，main 没有三矿。"
+  },
+  "finalCodeCommit": "293cac380b4880c294d4e3c6d28659698bb4f139"
+}
