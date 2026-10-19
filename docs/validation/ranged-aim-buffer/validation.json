@@ -1,0 +1,44 @@
+{
+  "sourceCommit": "c15ea2168ef5e00bcd942bd5541a381a2489e222",
+  "baseCommit": "f408671c",
+  "runtime": "Node.js 24.15.0",
+  "machine": "A100",
+  "command": "node --max-old-space-size=8192 node_modules/vitest/vitest.mjs run --dir src --maxWorkers 4 --minWorkers 1",
+  "files": {
+    "passed": 685,
+    "failed": 2,
+    "total": 687
+  },
+  "tests": {
+    "passed": 7705,
+    "failed": 2,
+    "total": 7707
+  },
+  "durationSeconds": 389.3,
+  "failures": [
+    {
+      "file": "src/ai/bootstrap_1/attack-objective.scene.test.ts",
+      "line": 56,
+      "assertion": "paused && resumed === true",
+      "actual": false
+    },
+    {
+      "file": "src/ai/bootstrap_1/expansion-mission.test.ts",
+      "line": 193,
+      "assertion": "foundationTick < 4800",
+      "actual": 5247
+    }
+  ],
+  "build": "passed",
+  "gpuProof": {
+    "before": "f408671c",
+    "after": "c15ea216",
+    "renderer": "ANGLE Metal Renderer: Apple M3 Ultra",
+    "pairsIndividuallyInspected": 5
+  },
+  "winRateBenchmark": "not run, per instruction",
+  "status": "draft; AI adaptation PR will be stacked on this branch; original failing AI assertions retained",
+  "cliTypeCheck": "passed",
+  "remoteSourceHashesAfterFullSuite": "all match source commit manifest",
+  "rawEvidence": "raw.evidence.json"
+}

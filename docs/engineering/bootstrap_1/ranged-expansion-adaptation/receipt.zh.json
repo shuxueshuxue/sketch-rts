@@ -1,0 +1,221 @@
+{
+  "pr": 548,
+  "base": "c15ea2168ef5e00bcd942bd5541a381a2489e222",
+  "baseBranch": "fix/ranged-aim-motion-buffer",
+  "runtime": "6332f317",
+  "conclusion": "扩张集结延迟来自可选消费占资；为真实、可立即执行的清营补兵保留普通费用，二矿和三矿恢复原时限。summoner 自然帧是规则7改变敌军轨迹，单独拆成自然验证和脚本生命周期。",
+  "rootCause": {
+    "match": "v5-final-1 / ladder-16 / v9_archer grove vs v9",
+    "assemblyStartTick": 2475,
+    "assembledForce": 4.081775829900215,
+    "requiredForce": 4.318142002414866,
+    "assembledUnits": "1 footman + 4 archer，均满血、空闲，缺第六人",
+    "mainReadyRecruitTick": 3870,
+    "rule7ReadyRecruitTick": 4320,
+    "rule7HireTick": 3990,
+    "goldAt3870": 124,
+    "archerCost": 115,
+    "fieldMedicCost": 155,
+    "delayTicks": 450,
+    "delaySeconds": 22.5,
+    "priorities": {
+      "controlledMedic": "64 + 20 的老化加成 = 84",
+      "necessaryArcher": "80 + 2 = 82"
+    },
+    "whyRule7ExposedIt": "射击规则改变 courier 的位置和营地到达时机；同种医师目标保留较早的年龄，使可选雇佣先占住费用。不是射手多站着射箭，也不是集结范围和站位不一致。",
+    "tickConvention": "开支和任务判定记录 think tick；普通命令在3 tick后交付。矿厅落基/完工列为实际world tick。"
+  },
+  "implementation": {
+    "request": "supportWants 复用 expansionGuardWant 已算出的原请求，交给 bootstrapPolicyContext；不重复算营地或路线。",
+    "reservation": "只在未暂停的 assemble 阶段，存在尚未付款的请求、可用补给和已完工空闲生产线时，保留下一波可实际生产的正常费用；波数受缺兵数、独立生产线数和剩余补给限制。",
+    "optionalSpending": "hire、shopping、v9shop 只使用预留之外的钱；不足时跳过该可选目标，普通补兵继续走已有执行器。",
+    "paidRecruitment": "现有同种士兵和生产队列都算已满足；已付款队列不再二次预留。",
+    "runtimeFunctions": [
+      "bootstrap_1/policy.ts: supportWants, bootstrapPolicyContext",
+      "bootstrap_1/economy.ts: rankBootstrapGoals"
+    ],
+    "sharedChange": "policy/types.ts 的 AiPolicyContext 增加可选 expansionRecruit 字段；general 和 sim 无行为修改。",
+    "thresholds": "原营地强度、兵数、进攻/撤退线、二矿240秒/三矿390秒/完工450秒断言保持原值。"
+  },
+  "openingComparison": [
+    {
+      "version": "main",
+      "source": "f408671c",
+      "naturalFoundationTick": 4746,
+      "thirdFoundationTick": 7725,
+      "thirdCompleteTick": 8290,
+      "naturalFoundationSeconds": 237.3,
+      "thirdFoundationSeconds": 386.25,
+      "thirdCompleteSeconds": 414.5,
+      "checksumAt9000": "489fdaf4"
+    },
+    {
+      "version": "rule7",
+      "source": "c15ea216",
+      "naturalFoundationTick": 5247,
+      "thirdFoundationTick": 8318,
+      "thirdCompleteTick": 8878,
+      "naturalFoundationSeconds": 262.35,
+      "thirdFoundationSeconds": 415.9,
+      "thirdCompleteSeconds": 443.9,
+      "checksumAt9000": "0f988dd6"
+    },
+    {
+      "version": "candidate",
+      "source": "6332f317",
+      "naturalFoundationTick": 4739,
+      "thirdFoundationTick": 7732,
+      "thirdCompleteTick": 8329,
+      "naturalFoundationSeconds": 236.95,
+      "thirdFoundationSeconds": 386.6,
+      "thirdCompleteSeconds": 416.45,
+      "checksumAt9000": "6b49040b"
+    }
+  ],
+  "naturalAttackScene": {
+    "fixture": "src/ai/bootstrap_1/fixtures/summoner-attack-2m32.json",
+    "seed": "v5-final-1",
+    "slot": "ladder-12",
+    "subject": "v9_summoner grove",
+    "startTick": 3037,
+    "originalSequence": [
+      {
+        "tick": 8557,
+        "event": "首攻"
+      },
+      {
+        "tick": 9232,
+        "event": "暂停回防"
+      },
+      {
+        "tick": 9577,
+        "event": "恢复"
+      },
+      {
+        "tick": 10492,
+        "event": "撤回"
+      },
+      {
+        "tick": 14437,
+        "event": "拆掉后来新建的分矿"
+      }
+    ],
+    "rule7Sequence": [
+      {
+        "tick": 8512,
+        "event": "2 ravager + 1 warden 已进入三矿1000范围，主力先防守；此时无进攻任务"
+      },
+      {
+        "tick": 8557,
+        "event": "1000范围内扩大到9 ravager + 1 warden"
+      },
+      {
+        "tick": 9592,
+        "event": "首次进攻原二矿"
+      },
+      {
+        "tick": 10507,
+        "event": "general:retreat:incoming，明确记录 withdrew"
+      },
+      {
+        "tick": 12262,
+        "event": "真实准入回调拒绝再次全面进攻",
+        "marching": 14.43,
+        "defended": 13.9,
+        "need": 20.07
+      },
+      {
+        "tick": 14797,
+        "event": "仍未满足准入",
+        "marching": 19.24,
+        "need": 35.66
+      }
+    ],
+    "cause": "双方购买直到tick5440一致；清完第二个营由5992变6097，V9清营和进攻路线随后分叉。旧版8512最近敌军距三矿1469，新版已达威胁范围。新版没有建成旧版14437被拆的那个新矿，不能要求同一遭遇顺序。",
+    "unchangedByBudgetFix": {
+      "commands": 6558,
+      "bytes": 1136284,
+      "sha256": "b9a984682c40264e58e2468e2b4f9312d66c84c275dc2f32e69664a08912a395"
+    },
+    "comparison": "#547 与本PR的 6558 条完整 issued commands、1136284字节逐字节一致；哈希不是只比胜负或订单数量。",
+    "test": "自然帧直接 spy 真正的 chooseRoomAttack 准入回调及 AttackChoice，记录拒绝原因，不复写守备/增援公式。",
+    "scopeDecision": "经派发会话同意，本次自然帧验先防、明确撤回和拒绝原因。累计安全hold后的前压和有限攻击留到下一项。"
+  },
+  "scriptedLifecycle": {
+    "source": "同一真实tick3037快照；首次遭遇继续运行双AI，10507撤回后敌方改走脚本命令，我方完整AI持续运行。",
+    "events": [
+      {
+        "tick": 10507,
+        "event": "敌军按真实move命令退到3800,350；停止敌方后续自动决策"
+      },
+      {
+        "tick": 11317,
+        "event": "我方第二次出击，仍指向原二矿"
+      },
+      {
+        "tick": 11362,
+        "event": "脚本在三矿侧生成5个标准emberRavager并攻击该矿"
+      },
+      {
+        "tick": 11407,
+        "event": "同一任务暂停回防，未假报完成"
+      },
+      {
+        "tick": 11467,
+        "event": "袭击部队按move命令撤走，没有直接删除"
+      },
+      {
+        "tick": 12112,
+        "event": "恢复相同sinceTick和targetId的进攻"
+      },
+      {
+        "tick": 12772,
+        "event": "沿现有判定明确撤退"
+      },
+      {
+        "tick": 13372,
+        "event": "下一波继续原目标"
+      },
+      {
+        "tick": 16027,
+        "event": "真实伤害拆掉building-p1-townHall-1216，目标从world消失"
+      }
+    ],
+    "targetHpMutation": false,
+    "attackAdmissionMutation": false,
+    "enemyBirthHallHpAt16500": 1080,
+    "endTick": 16500
+  },
+  "validation": {
+    "budgetTests": "12/12通过：镜像雇佣/购物、两笔预算同时充足、已排队且另有空生产线时释放预留。",
+    "redOnBase": "同一12条在#547原版4失败/8通过，失败为两种镜像下必要补兵被医师或购物卡住。",
+    "redOnMain": "f408671c 原版对应的医师镜像用例2失败；该问题在规则7前已存在。",
+    "attackScenes": "2/2通过，自然帧和脚本生命周期；本地合计43.4秒。",
+    "rootTypecheck": "passed",
+    "cliTypecheck": "passed",
+    "fullSrc": {
+      "sha": "6332f317",
+      "machine": "mac1",
+      "dir": "/Users/mac1/work/sketch-cli/trees/6332f317",
+      "runId": "mvf8br6b-bfc7c9",
+      "remoteLog": "/Users/mac1/work/sketch-cli/runs/mvf8br6b-bfc7c9/ranged-adapt-full-src.log",
+      "command": "npx vitest run --dir src --maxWorkers 4 --minWorkers 1",
+      "status": "passed",
+      "code": 0,
+      "stderr": "",
+      "summary": [
+        "Test Files  688 passed (688)",
+        "Tests  7719 passed | 1 skipped (7720)",
+        "Duration  356.56s (transform 23.36s, setup 0ms, collect 294.08s, tests 965.64s, environment 94ms, prepare 37.40s)"
+      ]
+    },
+    "winrateBench": false,
+    "evidenceVerification": {
+      "downloadedAndVerified": true,
+      "files": 33,
+      "sha256": "3148d4658cd38bdd4a602355e369213a53e1558854eb93a8857f0af338a4824b"
+    }
+  },
+  "evidence": "evidence.evidence.json，包含临时探针、三版本逐think记录、预算红/绿测试、完整命令流哈希及真实快照；探针未进入运行时源码。",
+  "limits": "结论验证指定场景和普通预算约定，未声称射击规则不会改变其他对局轨迹。自然帧未达全面进攻准入的问题留待独立的领地意识规格。"
+}

@@ -7,7 +7,7 @@ import { snapToFootprint } from '../../shared/terrain';
 import { distance } from '../policy/spatial';
 import { mountedMicro } from './mounted-micro';
 
-it.each([false, true])('prepares a shot outside the pursuing witch’s range (mirror=%s)', mirrored => {
+it.each([false, true])('prepares a shot and defeats the pursuing witch with bounded injury (mirror=%s)', mirrored => {
   const x = (value: number) => mirrored ? 4096 - value : value;
   let scene = sketchScene('mounted-prepared-pursuit').map('openClaims').replaceDefaults()
     .player('us', { race: 'grove', team: 'a' }).player('foe', { race: 'grove', team: 'b' })
@@ -40,6 +40,9 @@ it.each([false, true])('prepares a shot outside the pursuing witch’s range (mi
   expect(game.units).toContain(rider);
   expect(game.units).not.toContain(pursuer);
   expect(prepared).toBeGreaterThan(0);
-  expect(damage).toBe(0);
+  // The witch also gains rules 7's windup buffer and now lands one 8-damage shot. Keep the real kill,
+  // preparation and zero-loss requirements, allowing at most 10 damage instead of the former perfect no-hit run.
+  expect(damage).toBeLessThanOrEqual(10);
+  expect(game.match.stats.unitsLost.us).toBe(0);
   expect(game.match.stats.goldSpent.us).toBe(UPGRADE_DEFS.rangeTraining.levels[0]!.cost);
 });

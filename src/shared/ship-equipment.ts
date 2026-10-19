@@ -1,4 +1,5 @@
 import { shipPartMax, shipPartWorkingFloor } from './ship-handling';
+import { aimingRange } from './aiming';
 export { shipPartMax } from './ship-handling';
 import { itemIndex } from "./item-index";
 import { deadZoneAim, strikePoint, type StrikeTarget } from "./combat-geometry";
@@ -24,6 +25,7 @@ export const SHIP_WEAPONS: Record<ShipEquipmentKind, {
     range: number;
     cooldown: number;
     aimSpeed: number;
+    aimRangeBuffer?: number;
     weapon: WeaponDef;
     art: 'warship' | 'bombardShip' | 'fireShip';
 }> = {
@@ -38,6 +40,11 @@ export const SHIP_WEAPONS: Record<ShipEquipmentKind, {
     shipMortar: { cost: 330, mass: 240, hp: 100, damage: 36, range: 576, cooldown: seconds(3.6), aimSpeed: 400, weapon: { presentation:'mortar', delivery: 'shell', radius: 75, minRange: 180, buildingMultiplier: 2, navalMultiplier: 1.7, hullDamageShare: 1.5 }, art: 'bombardShip' },
     flameProjector: { cost: 180, mass: 120, hp: 80, damage: 10, range: 144, cooldown: seconds(1.2), aimSpeed: 480, weapon: { presentation:'flame', delivery: 'cone', coneAngle: .85, buildingMultiplier: .7 }, art: 'fireShip' },
 };
+/** Each fitting owns its target lock, independently of the carrying hull and its other guns. */
+export function mountedAttackRange(ship: Unit, item: WorldItem, targetId?: string) {
+  const def = SHIP_WEAPONS[item.kind as ShipEquipmentKind];
+  return aimingRange(item.aim, veteranWeaponRange(ship, def.range), targetId, def.aimRangeBuffer);
+}
 /** Bow guns traverse ±30°; broadside guns traverse ±35° around their own side. */
 export function shipMounts(ship: Unit) {
     const profile=shipProfile(ship);

@@ -66,8 +66,13 @@ describe('army against a forest horde home battle', () => {
     const owners = (game: ReturnType<typeof fight>['game']) => new Set(game.units.filter(unit => unit.hp > 0 && unit.attackDamage > 0).map(unit => unit.owner));
     expect(owners(fight(1).game)).toEqual(new Set(['court']));
     const run = createForestHorde(4), game = run.game, count = (owner: string) => game.units.filter(unit => unit.owner === owner && unit.hp > 0).length;
-    while (game.tick < 20 * SIM_TICKS_PER_SECOND) stepGame(game);
-    expect(count('court')).toBeGreaterThan(count('wilds'));
+    // The ranged buffer changes the lead at exactly 20s. The original promise is a comeback, not that timestamp.
+    let hordeTrailed = false;
+    while (game.tick < 20 * SIM_TICKS_PER_SECOND) {
+      stepGame(game);
+      hordeTrailed ||= count('court') > count('wilds');
+    }
+    expect(hordeTrailed).toBe(true);
     for (let tick = 0; tick < 130 * SIM_TICKS_PER_SECOND && !battleDecided(game); tick++) stepGame(game);
     expect(owners(game)).toEqual(new Set(['wilds']));
   }, 60_000);

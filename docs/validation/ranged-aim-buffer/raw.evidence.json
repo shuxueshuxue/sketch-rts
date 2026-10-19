@@ -1,0 +1,9 @@
+{
+  "sha256": "64c4f13d28172aca1c647edf3868395055073f0b01331b66ea262652c048b828",
+  "bytes": 116731,
+  "name": "ranged-aim-raw",
+  "kind": "dir",
+  "machine": "a100",
+  "pushed": "c15ea2168ef5e00bcd942bd5541a381a2489e222",
+  "pr": 547
+}

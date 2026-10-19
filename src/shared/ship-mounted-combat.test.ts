@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createGame, issuePlayerCommand, stepGame } from './sim';
 import { boardUnit, syncDecks } from './decks';
-import { bestFiringHeading, installedWeapons, mountedFireLaneClear, mountedTargetPoint, mountedWeaponPose, shipGunCanAim, SHIP_WEAPONS } from './ship-equipment';
+import { bestFiringHeading, installedWeapons, mountedFireLaneClear, mountedTargetPoint, mountedWeaponPose, shipGunCanAim, SHIP_WEAPONS, mountedAttackRange } from './ship-equipment';
 import { shipFireLaneClear } from './ship-fire-control';
 import { hullContact } from './ship-geometry';
 import { shipTraffic } from './ship-avoidance';
@@ -82,6 +82,7 @@ describe('mounted weapons in live sailing combat', () => {
     const counts=new Map(fleet.map(unit=>[unit.id,{shots:0,first:undefined as number|undefined}]));
     for(let tick=0;tick<1800;tick++){
       const cooldowns=new Map(fleet.flatMap(unit=>installedWeapons(game,unit).map(item=>[item.id,item.cooldownRemaining] as const)));
+      const ranges=new Map(fleet.flatMap(unit=>installedWeapons(game,unit).map(item=>[item.id,mountedAttackRange(unit,item,target.id)] as const)));
       stepGame(game);
       for(const unit of fleet)for(const item of installedWeapons(game,unit)){
         if(item.cooldownRemaining<=cooldowns.get(item.id)!)continue;
@@ -89,7 +90,8 @@ describe('mounted weapons in live sailing combat', () => {
         const flash=game.effects.find(effect=>effect.type==='muzzleFlash'&&effect.itemId===item.id&&effect.unitId===unit.id)!;
         const to={x:flash.toX!,y:flash.toY!},pose=mountedWeaponPose(unit,item)!,def=SHIP_WEAPONS[item.kind as keyof typeof SHIP_WEAPONS];
         expect(shipGunCanAim(unit,item,to)).toBe(true);
-        expect(Math.hypot(to.x-pose.pivot.x,to.y-pose.pivot.y)).toBeLessThanOrEqual(def.range);
+        // A shot already tracking this target may finish in its buffered range.
+        expect(Math.hypot(to.x-pose.pivot.x,to.y-pose.pivot.y)).toBeLessThanOrEqual(ranges.get(item.id)!);
         expect(shipFireLaneClear({x:flash.fromX!,y:flash.fromY!},to,def.weapon,fleet.filter(other=>other!==unit))).toBe(true);
       }
     }

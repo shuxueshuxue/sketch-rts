@@ -68,6 +68,8 @@ export type UnitDef = {
   /** Weapon/proficiency reticle distance per second before the global multiplier; allowed displacement from the last shot. */
   aimSpeed?: number;
   aimMoveTolerance?: number;
+  /** Extra range fraction for finishing an already tracking shot; new aim still uses attackRange. */
+  aimRangeBuffer?: number;
   // @@@creep-traits - What a creep's blow does besides its damage: slows its target (a murloc hunter's net), poisons it (a
   // venom spider's bite), or strikes every enemy round it for a share of the blow (a red dragon's fire).
   slowOnHit?: true;

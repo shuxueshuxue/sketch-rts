@@ -5,13 +5,14 @@
  * 4: stronger ship hulls, shipyard shipbuilding, ships excluded from barracks attack/health research.
  * 5: guardian scroll uses 40% ward damage reduction instead of immunity.
  * 6: human units retain their commanded guard station across automatic pursuits.
+ * 7: an ongoing ranged windup can finish against the same target within a 25% range buffer.
  */
-export const RULES_VERSION = 6;
+export const RULES_VERSION = 7;
 export const PREVIOUS_RULES_VERSION = 1;
 
 export function savedRulesVersion(version: unknown): number {
   if (version === undefined) return PREVIOUS_RULES_VERSION;
-  if (version !== PREVIOUS_RULES_VERSION && version !== 2 && version !== 3 && version !== 4 && version !== 5 && version !== RULES_VERSION) throw new Error(`Unsupported rules version ${String(version)}`);
+  if (version !== PREVIOUS_RULES_VERSION && version !== 2 && version !== 3 && version !== 4 && version !== 5 && version !== 6 && version !== RULES_VERSION) throw new Error(`Unsupported rules version ${String(version)}`);
   return version;
 }
 
