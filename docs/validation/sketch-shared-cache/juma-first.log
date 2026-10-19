@@ -1,0 +1,7 @@
+[sketch] cached commits unavailable locally on mac1: 001f3bfade, 09b17415b4, 17aecb5cd4, 1b005a96fe, 21f5b2312e, and 15 more; no usable incremental base, falling back to full copy
+[sketch] copying 14df1d7c49 to mac1 (2817 files, gzipped)
+[sketch] cached commits unavailable locally on mac1: 001f3bfade, 09b17415b4, 17aecb5cd4, 1b005a96fe, 21f5b2312e, and 15 more; skipping them
+[sketch] copying ef8fc1d37f to mac1 from its copy of 14df1d7c49 (0 files differ)
+[sketch] pages.after: pages.ts on ef8fc1d37f (mac1)
+[sketch] pages.before: pages.ts on 14df1d7c49 (mac1)
+[sketch] stitching 1 pairs on mac1
