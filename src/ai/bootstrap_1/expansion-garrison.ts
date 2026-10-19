@@ -2,11 +2,9 @@ import { BUILDING_DEFS, unitMover } from '../../shared/catalog';
 import { isBuildPlacementClear } from '../../shared/build-placement';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { sameGround, walkableGoal } from '../../shared/terrain';
-import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { Building, GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import type { AiPolicyMemory } from '../memory';
 import { activeUnitClaim, forgetExpansionMember, isDefenseTaskClaim, ordinaryUnitClaim, recordUnitTaskClaim } from '../policy/claims';
-import { isOpponentOwner } from '../policy/ownership';
 import { distance, type Point } from '../policy/spatial';
 import type { AiPolicyContext, AiScript } from '../policy/types';
 import { isBacklineKind } from '../policy/v6/backline';
@@ -17,15 +15,13 @@ import { availableV6Army } from '../policy/v6/general';
 import { readV6Intel } from '../policy/v6/intel';
 import { strengthOf, TOWER_STRENGTH } from '../policy/v6/strength';
 import { postRecoveryAssignments } from './front-recovery';
+import { incomingLandArmy } from '../policy/land-arrivals';
 
 const POST_RANGE = 240;
 const PERIMETER = 650;
 // A small raid's first two arriving fighters, not the opponent's entire army.
 // Larger committed attacks retain the mine-rally commander's priority.
 const RAID_FIGHTERS = 2;
-// Start cover before a raid within 45 seconds can arrive, including the builder's
-// walk and the tower's 6.5-second construction. Remote armies do not tax a safe mine.
-const RAID_HORIZON = 45 * SIM_TICKS_PER_SECOND;
 const RECOVERING_SHARE = .6;
 type Site = { mine: Point & { id: string }; hall: Building };
 type Assignment = { hall: Building; units: Unit[]; point: Point };
@@ -59,15 +55,7 @@ function expectedRaid(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicy
   const key = `${owner}:${site.hall.id}`, cached = byPost.get(key);
   if (cached) return cached;
   const point = postPoint(snapshot, site);
-  const arriving = snapshot.units.filter(unit => unit.hp > 0 && unit.kind !== 'worker' && !unit.deck
-    && unit.attackDamage > 0 && unitMover(unit.kind) === 'land' && isOpponentOwner(snapshot, owner, unit.owner, options))
-    .flatMap(unit => {
-      // Estimate the route that a move order really executes, including buildings;
-      // exclude summons that expire on the way and troops on disconnected land.
-      const ticks = safeLandTravelTicks(snapshot, unit, point, [], end => distance(end, point) <= POST_RANGE);
-      return ticks !== undefined && ticks <= RAID_HORIZON
-        && (unit.expiresTick === undefined || unit.expiresTick > snapshot.tick + ticks) ? [{ unit, ticks }] : [];
-    }).sort((a, b) => a.ticks - b.ticks).slice(0, RAID_FIGHTERS);
+  const arriving = incomingLandArmy(snapshot, owner, options, point).slice(0, RAID_FIGHTERS);
   const result = { power: strengthOf(arriving.map(({ unit }) => unit)), arrival: arriving[0]?.ticks ?? Infinity };
   byPost.set(key, result);
   return result;
