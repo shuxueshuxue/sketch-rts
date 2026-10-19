@@ -10,6 +10,7 @@ import type { GameCommand, GameSnapshot, PlayerId } from '../../shared/types';
 import { navalServices } from '../policy/naval-services';
 import { distance } from '../policy/spatial';
 import type { AiPolicyContext } from '../policy/types';
+import { ferryCrewTaskAvailable } from '../policy/naval';
 
 /** A real boarding order owns the worker while the ferry still sails to the loading coast. */
 export function planSettlerBoarding(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, primary: readonly GameCommand[]): GameCommand[] {
@@ -31,7 +32,8 @@ export function planSettlerBoarding(snapshot: GameSnapshot, owner: PlayerId, opt
     const settlers = [...cargo, ...pending].filter(unit => unit.kind === 'worker').length;
     const workers = own.filter(unit => unit.kind === 'worker' && !unit.deck && !reserved.has(unit.id)
       && (unit.order.type === 'idle' || unit.order.type === 'mine') && sameGround(snapshot.map, unit, shore)
-      && options.memory.unitClaims[unit.id]?.kind !== 'build' && options.memory.unitClaims[unit.id]?.kind !== 'retreat');
+      && options.memory.unitClaims[unit.id]?.kind !== 'build' && options.memory.unitClaims[unit.id]?.kind !== 'retreat'
+      && ferryCrewTaskAvailable(unit, options));
     const reserveMiners = snapshot.resources.some(mine => mine.amount > 0 && sameGround(snapshot.map, mine, shore)
       && snapshot.buildings.some(hall => hall.owner === owner && hall.kind === 'townHall' && hall.complete
         && distance(hall, mine) < GOLD_MINE_RULES.baseRange)) ? 3 : 0;

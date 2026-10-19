@@ -1,8 +1,8 @@
 import { missingMiningWorkers } from './workforce';
-import { BUILDING_DEFS, UNIT_DEFS, canTrainAt, requiredSupplyCap, trainableUnitsAt } from '../../shared/catalog';
+import { BUILDING_DEFS, UNIT_DEFS, canTrainAt, requiredSupplyCap, trainableUnitsAt, unitMover } from '../../shared/catalog';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import type { BuildingKind, GameCommand, GameSnapshot, PlayerId, TrainableUnitKind, Unit } from '../../shared/types';
-import { colonyNavalWantWithMineEligibility, navalBudgetReserve, navalReservePurchase } from '../policy/naval';
+import { colonyNavalWantWithMineEligibility, ferryCrewTaskAvailable, navalBudgetReserve, navalReservePurchase } from '../policy/naval';
 import { mountedMinePlan } from '../policy/mounted-mine-plan';
 import type { AiPolicyContext, AiScript } from '../policy/types';
 import { ageV6Goals, availableV6ConstructionWorkers, collectV6Goals, expansionCapital, healingPostGoals, issueV6Construction, v6ExpansionGoal, type rankV6Goals } from '../policy/v6/economy';
@@ -183,6 +183,25 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
 export function planBootstrapEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
   const goals = rankBootstrapGoals(snapshot, owner, options);
   const player = snapshot.players[owner]!;
+  const awaitingCrew = options.memory.naval?.firstCombatDelivery?.deliveredTick === undefined
+    && Object.values(options.memory.naval?.ferries ?? {}).some(mission => mission.phase === 'loading'
+      && (mission.purpose === 'advance' || mission.purpose === 'assault'))
+    && !snapshot.units.some(unit => unit.owner === owner && unit.kind !== 'worker' && unitMover(unit.kind) === 'land'
+      && unit.expiresTick === undefined && !unit.deck && unit.attackDamage > 0 && ferryCrewTaskAvailable(unit, options))
+    && !snapshot.buildings.some(building => building.owner === owner && trainingJobs(building)
+      .some(job => job.unitKind !== 'worker' && unitMover(job.unitKind) === 'land'))
+    && readV6Intel(snapshot, owner, options).intrusion === undefined;
+  // Buying a transport commits its first crew before optional purchases.
+  // Use an existing, trainable doctrine request and its normal admission path.
+  const firstCrew = awaitingCrew ? goals.find(goal => {
+    if (!goal.id.startsWith('unit:') || !goal.producer) return false;
+    const kind = goal.id.slice(5) as TrainableUnitKind, definition = UNIT_DEFS[kind];
+    return unitMover(kind) === 'land' && definition.attackDamage > 0 && kind !== 'worker'
+      && requiredSupplyCap(kind) <= player.supplyCap
+      && projectedSupplyUsed(snapshot, owner) + definition.supplyUsed <= player.supplyCap
+      && snapshot.buildings.some(building => building.id === goal.producer && building.complete && building.queue.length === 0);
+  }) : undefined;
+  if (firstCrew) { goals.splice(goals.indexOf(firstCrew), 1); goals.unshift(firstCrew); }
   let gold = player.gold;
   let supply = projectedSupplyUsed(snapshot, owner);
   const navalReserve = Math.max(navalBudgetReserve(snapshot, owner, options),
@@ -200,7 +219,7 @@ export function planBootstrapEconomy(snapshot: GameSnapshot, owner: PlayerId, op
     const research = goal.id.startsWith('upgrade:')
       ? goal.issue(builders) as Extract<GameCommand, { type: 'research' }> : undefined;
     if (research !== undefined && labs.has(research.buildingId)) continue;
-    if (goal.cost > gold - (navalReservePurchase(goal.id) ? 0 : navalReserve)) {
+    if (goal.cost > gold - (goal === firstCrew || navalReservePurchase(goal.id) ? 0 : navalReserve)) {
       if (goal.save && goal.cost > gold) break;
       continue;
     }
