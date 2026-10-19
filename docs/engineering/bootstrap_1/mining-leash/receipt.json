@@ -1,0 +1,82 @@
+{
+  "behavior": "Defenders pursue within 650 of the defended mining hall. A defender already outside that circle breaks its attack and returns to the same fixed mine-mouth post before normal combat resumes. Confirm membership from accepted general orders; honor active expansion and other strategic ownership.",
+  "snapshot": {
+    "baseline": "1bf481b04b75e8e8142a7a9f22792863ca221e01",
+    "seed": "defense-observe-20261019",
+    "match": "ladder-03 v9_knight ember vs v9",
+    "tick": 23800,
+    "sha256": "efb2ac9273ca1a719b124cd9a77d68a8ccf8a3a2b449cd62011570bc81e6d275",
+    "unedited": true
+  },
+  "specification": {
+    "pursuit_radius_from_hall": 650,
+    "return_radius_at_fixed_post": 240,
+    "reason": "The existing mine-raid perimeter is 650; a post 200 toward the attackers leaves 450 of fighting room, approximately one viewport. The distance is measured from the defended hall, not the moving enemy or post.",
+    "actual_defenders_only": true,
+    "active_expansion_escort_and_construction_preserved": true,
+    "unbased_hauling_escort_preserved": true
+  },
+  "control": {
+    "source": "fd54606bb905c7902ccf1fb53ed8938781c48714",
+    "input": "src/ai/bootstrap_1/fixtures/defense-pursuit-before-commands.json",
+    "sha256": "68474e97fa6a39edfd206f4bd22b7931cc808b18d854c0925a86215c05e3602d",
+    "description": "Actual delivered commands from both complete parent AI stacks, replayed unchanged. No production before-mode behavior flag."
+  },
+  "scripted_regression": {
+    "tests_added": 7,
+    "real_snapshot_seconds": 60,
+    "before_max_general_pursuit_order_distance": 1685.6275137190798,
+    "after_general_pursuit_order_distance_limit": 650,
+    "derived_case": "A healthy guard that actually arrived in this captured terrain is placed at a walkable point 800 from the hall, attacking a real enemy. It receives avoidCombat return, cannot be stolen by normal fighting during return, and physically reaches within 240 of the same post in 20 seconds.",
+    "ownership_cases": [
+      "active expansion build",
+      "active expansion escort",
+      "paused expansion yields",
+      "completed expansion yields",
+      "accepted independent strategic sortie releases defender"
+    ],
+    "uses_full_both_ai_stacks_and_normal_schedule": true
+  },
+  "mac1": {
+    "machine": "mac1.local",
+    "platform": "darwin",
+    "tested_source": "532134628792ef5dbb229aa2dd5fb9fa975e94c0",
+    "renderer": "native client world renderer; complete AI stacks; normal 15-tick phases and three-tick command delay",
+    "first_tick": 23800,
+    "last_tick": 24600,
+    "before_max_general_pursuit_order_distance": 1685.6275137190796,
+    "after_max_general_pursuit_order_distance": 199.99999999999994,
+    "before_first_general_return_tick": null,
+    "after_first_general_return_tick": 23890,
+    "after_first_general_return_seconds": 4.5,
+    "hall_damage_before": 0,
+    "hall_damage_after": 0,
+    "original_combatants_alive_before": 18,
+    "original_combatants_alive_after": 18,
+    "sampling": "every tick; native key frames every 10 game seconds; committed pair at tick 24000",
+    "final_source_equivalence": {
+      "source": "bfdf6e6aab9fc653037a2fb4eecc165459c18739",
+      "after_delivered_commands": 700,
+      "sha256": "fa442349dbe25978982b7629b2cd0a6be1de473e47cd6dcd319dc9cf4d05459b",
+      "byte_identical": true,
+      "description": "Final unbased-hauling exemption produces the identical entire delivered-command stream as the mac1 after replay."
+    },
+    "raw_evidence": "replay.evidence.json"
+  },
+  "validation": {
+    "typescript": "tsc --noEmit passed",
+    "test_machine": "A100; isolated sketch-rts-defense tree; maxWorkers=8",
+    "test_source": "9f1443cb43511973ddbe082fcd0f4edcf64d8b78",
+    "test_files": 181,
+    "tests": 2573,
+    "all_passed": true,
+    "win_rate_benchmark": false
+  },
+  "shared_code": [
+    "AiPolicyMemory.miningLeash",
+    "planBootstrapGeneral: defended-hall pursuit callback and fleeing-enemy clamp",
+    "mainArmyIntel: exclude actual returners",
+    "bootstrapScripts: miningLeash and accepted general-command hook"
+  ],
+  "limits": "Distances in the real-match comparison measure pursuit order destinations, not every friendly unit position. Wounded troops and units on independent strategic tasks may legitimately be outside the circle. Physical return is separately verified by the derived captured-terrain case. The original 19:50 observation predates rally changes; the control here is the merged rally parent. general.ts is unchanged."
+}

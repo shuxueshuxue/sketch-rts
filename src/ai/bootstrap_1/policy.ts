@@ -18,7 +18,7 @@ import { archerMicro } from './archer-micro';
 import { battleRepair } from './repair';
 import { miningWorkforce } from './workforce';
 import { miningAssignments } from './mining-assignments';
-import { mainArmyIntel, mineDefense, miningRally, planBootstrapCloseout, planBootstrapGeneral } from './mine-defense';
+import { mainArmyIntel, mineDefense, miningRally, miningLeash, recordMiningGeneralCommands, planBootstrapCloseout, planBootstrapGeneral } from './mine-defense';
 import { miningJobSafety } from './mining-job-defense';
 import { bootstrapEconomy } from './economy';
 import { shellEvasion } from './shell-evasion';
@@ -137,11 +137,11 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
   return family.filter(script => script !== AI_SCRIPT_LIBRARY.v6Closeout).flatMap(script => {
     if (script === AI_SCRIPT_LIBRARY.items) return [{ ...script, run: planLootItemCommands }];
     if (script === AI_SCRIPT_LIBRARY.shopping) return [shopping];
-    if (script === AI_SCRIPT_LIBRARY.battlefield) return [campRecovery, frontRecovery, miningRally, mountedField, script];
+    if (script === AI_SCRIPT_LIBRARY.battlefield) return [campRecovery, frontRecovery, miningRally, miningLeash, mountedField, script];
     if (script === AI_SCRIPT_LIBRARY.v6General) return [
       summonedRaids,
       { ...AI_SCRIPT_LIBRARY.v6Closeout, run: planBootstrapCloseout },
-      { ...script, run: planBootstrapGeneral },
+      { ...script, run: planBootstrapGeneral, onCommands: recordMiningGeneralCommands },
     ];
     if (script === AI_SCRIPT_LIBRARY.v6Backline) return [
       version === 'v9_summoner' ? { ...script, run: planSummonerScreen } : { ...script, run: planBootstrapCasterScreen }];
