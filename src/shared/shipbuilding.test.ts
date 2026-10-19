@@ -97,7 +97,7 @@ describe('shipbuilding balance', () => {
     expect(loaded.players.player.upgrades.shipbuilding).toBe(0);
     expect(loaded.units.find(u => u.id === neutral.id)).toMatchObject({ hp: 80, maxHp: 400 });
     expect(JSON.stringify(save)).toBe(bytes);
-    expect(RULES_VERSION).toBe(5);
+    expect(RULES_VERSION).toBe(6);
     expect(() => assertCurrentRulesVersion(3, 'Replay')).toThrow('Cross-version');
   });
 });

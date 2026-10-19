@@ -4,6 +4,7 @@ import { shipsIn, shipProfile } from './ship-geometry';
 import { areEnemyOwners } from './sim/command-validation';
 import type { GameSnapshot, Unit } from './types';
 import { isTransportKind } from './transport-role';
+import { guardPosition } from './guard-position';
 
 export const SHIP_GUARD_LEASH = 900;
 export const SHIP_GUARD_RETURN_RADIUS = 24;
@@ -49,7 +50,8 @@ export function prepareShipDefenseFrame(snapshot: DefenseSnapshot, nearby: Nearb
       }
       continue;
     }
-    const guard = ship.sailing.defense ??= { originX: ship.x, originY: ship.y };
+    const station = ship.guardPosition ? guardPosition(snapshot, ship) : ship;
+    const guard = ship.sailing.defense ??= { originX: station.x, originY: station.y };
     const origin = { x: guard.originX, y: guard.originY };
     const homeGap = Math.hypot(ship.x - origin.x, ship.y - origin.y);
     const acquisition = Math.min(700, Math.max(450, capability.range + shipProfile(ship)!.length * .4 + 100));

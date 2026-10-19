@@ -10,6 +10,7 @@ import type { GameMap, Unit, UnitOrder } from './types';
 
 type Move = Extract<UnitOrder, { type: 'move' }>;
 const plainMove = (order: UnitOrder | undefined): order is Move => order?.type === 'move'
+  && !order.returnToGuard
   && order.heading === undefined && order.rendezvousFor === undefined
   && order.deckPoint === undefined && order.deckShipId === undefined;
 

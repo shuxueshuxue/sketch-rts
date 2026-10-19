@@ -55,7 +55,7 @@ export function assertSaveGameInput(value: unknown, label = "savegame input"): S
   return input;
 }
 
-export function createSaveGameRecord(game: Game, room: RoomState, input: SaveGameInput, now = new Date(), aiPlayers: PlayerId[] = [], aiVersions: Partial<Record<PlayerId, AiScriptVersion>> = {}): SaveGameRecord {
+export function createSaveGameRecord(game: Game, room: RoomState, input: SaveGameInput, now = new Date(), aiPlayers: PlayerId[] = game.aiPlayers, aiVersions: Partial<Record<PlayerId, AiScriptVersion>> = {}): SaveGameRecord {
   if (room.status !== "inMatch") throw new Error("Only live room matches can be saved");
   return {
     schemaVersion: SAVEGAME_SCHEMA_VERSION,
