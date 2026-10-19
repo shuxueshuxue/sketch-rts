@@ -11,7 +11,7 @@ import { effectiveCombatRating, structureRating } from './v6/strength';
 type MineCoast = { mine: ResourceNode; landing: { x: number; y: number }; departure: { x: number; y: number } };
 
 /** Uncontested income first; compare actual sea roads from the fleet and its reachable departure coast. */
-export function chooseNavalMine(snapshot: GameSnapshot, owner: PlayerId, candidates: MineCoast[], options: AiPolicyContext) {
+export function rankNavalMines(snapshot: GameSnapshot, owner: PlayerId, candidates: MineCoast[], options: AiPolicyContext) {
   const fleet = snapshot.units.filter(unit => unit.owner === owner && isTransportKind(unit.kind) && unit.hp > 0);
   const threats = [
     ...snapshot.units.filter(unit => unit.hp > 0 && isEnemyOwner(snapshot, owner, unit.owner, options)
@@ -25,5 +25,9 @@ export function chooseNavalMine(snapshot: GameSnapshot, owner: PlayerId, candida
     const threat = threats.filter(({ body }) => distance(body, candidate.mine) < 400)
       .reduce((score, { rating }) => score + rating, 0);
     return { candidate, threat, road };
-  }).sort((a, b) => a.threat - b.threat || a.road - b.road)[0]?.candidate;
+  }).sort((a, b) => a.threat - b.threat || a.road - b.road).map(entry => entry.candidate);
+}
+
+export function chooseNavalMine(...args: Parameters<typeof rankNavalMines>) {
+  return rankNavalMines(...args)[0];
 }

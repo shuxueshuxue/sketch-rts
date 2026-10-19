@@ -215,7 +215,7 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
 // Only the candidate's purchase order changes; all commands spend ordinary gold and supply.
 export function planBootstrapEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
   const goals = rankBootstrapGoals(snapshot, owner, options);
-  const nextLift = goals.find(goal => goal.id === 'naval:reinforcementTransport');
+  const nextLift = goals.find(goal => goal.expedition || goal.id === 'naval:reinforcementTransport');
   if (nextLift) { goals.splice(goals.indexOf(nextLift), 1); goals.unshift(nextLift); }
   const player = snapshot.players[owner]!;
   const awaitingCrew = options.memory.naval?.firstCombatDelivery?.deliveredTick === undefined
@@ -239,7 +239,7 @@ export function planBootstrapEconomy(snapshot: GameSnapshot, owner: PlayerId, op
   if (firstCrew) { goals.splice(goals.indexOf(firstCrew), 1); goals.unshift(firstCrew); }
   let gold = player.gold;
   let supply = projectedSupplyUsed(snapshot, owner);
-  const navalReserve = Math.max(navalBudgetReserve(snapshot, owner, options),
+  const navalReserve = Math.max(navalBudgetReserve(snapshot, owner, options), nextLift?.cost ?? 0,
     ...goals.filter(goal => goal.id === 'naval:islandHall'
       && readV6Intel(snapshot, owner, options).intrusion === undefined).map(goal => goal.cost));
   const builders = new Set<string>();
@@ -250,7 +250,7 @@ export function planBootstrapEconomy(snapshot: GameSnapshot, owner: PlayerId, op
   for (const goal of goals) {
     if (goal.producer && producers.has(goal.producer)) continue;
     // Fund the existing production wave before spending the remainder on more factories.
-    if (goal.productionReserve > 0 && gold < goal.cost + goal.productionReserve) continue;
+    if (goal !== nextLift && goal.productionReserve > 0 && gold < goal.cost + goal.productionReserve) continue;
     const research = goal.id.startsWith('upgrade:')
       ? goal.issue(builders) as Extract<GameCommand, { type: 'research' }> : undefined;
     if (research !== undefined && labs.has(research.buildingId)) continue;

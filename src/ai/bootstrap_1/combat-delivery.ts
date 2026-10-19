@@ -29,11 +29,11 @@ function voyageSeconds(ship: Unit, map: GameMap, to: { x: number; y: number }) {
   return road === undefined ? Infinity : road / Math.max(1, speed);
 }
 
-/** Use the first free boat to establish a usable mineral-island beachhead.
+/** Free boats establish mineral-island beachheads independently in each bay.
  * Existing settlers, riders and live convoys retain their assignments. */
 export function planFirstCombatCrossing(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const naval = options.memory.naval ??= {}, ferries = naval.ferries ??= {};
-  if (naval.firstCombatDelivery?.deliveredTick !== undefined || Object.values(ferries).some(mission => mission.purpose === 'advance' && mission.phase !== 'return')) return;
+
   if (readV6Intel(snapshot, owner, options).intrusion) return;
   const own = snapshot.units.filter(unit => unit.owner === owner && unit.hp > 0);
   // A navy-only settlement has no promised army to wait for. A working land
@@ -44,31 +44,41 @@ export function planFirstCombatCrossing(snapshot: GameSnapshot, owner: PlayerId,
   const home = snapshot.buildings.find(building => building.owner === owner && building.kind === 'townHall');
   if (!home) return;
   const reserved = navalServices(snapshot, owner, options).reserved;
-  const boat = own.find(unit => isTransportKind(unit.kind) && !ferries[unit.id] && !shipPassengers(snapshot.units, unit).length
+  const boats = own.filter(unit => isTransportKind(unit.kind) && !ferries[unit.id] && !shipPassengers(snapshot.units, unit).length
     && (naval.ferryRetryUntil?.[unit.id] ?? 0) <= snapshot.tick
     && !reserved.has(unit.id) && naval.outfit?.shipId !== unit.id && !shipNeedsRepair(snapshot, unit));
-  if (!boat) return;
-  const nearBoat = walkableGoal(snapshot.map, boat.x, boat.y);
-  const from = coastOnWater(snapshot, sameGround(snapshot.map, nearBoat, home) ? nearBoat : home, boat);
-  if (!from) return;
-  const mines = snapshot.resources.filter(mine => mine.amount > 0 && !sameGround(snapshot.map, mine, home)
-    && ferryTargetAvailable(naval, boat.id, mine.id)
-    && !mineClaimedByAlly(snapshot, owner, mine, options)).sort((a, b) => distance(boat, a) - distance(boat, b));
-  const trips: { targetId: string; to: { x: number; y: number }; seconds: number }[] = [];
-  for (const mine of mines) {
-    const nearest = coastOnWater(snapshot, mine, boat);
-    if (!nearest) continue;
-    const shores = [nearest, ...shoreSpots(snapshot.map, BUILDING_DEFS.shipyard.radius)
-      .filter(point => sameGround(snapshot.map, point, mine))
-      .sort((a, b) => distance(boat, a) + distance(a, mine) * .25 - distance(boat, b) - distance(b, mine) * .25)
-      .map(point => walkableGoal(snapshot.map, point.x, point.y, 'sea'))];
-    const to = shores.find(point => sameGround(snapshot.map, point, boat, 'sea')
-      && sameGround(snapshot.map, walkableGoal(snapshot.map, point.x, point.y), mine)
-      && landingSafe(snapshot, owner, options, boat, point) && !outgunned(snapshot, owner, options, point, own));
-    if (to) trips.push({ targetId: mine.id, to, seconds: voyageSeconds(boat, snapshot.map, to) });
+  for (const boat of boats) {
+    if (Object.values(ferries).some(mission => mission.purpose === 'advance' && mission.phase !== 'return'
+      && sameGround(snapshot.map, boat, mission.to, 'sea'))) continue;
+    const nearBoat = walkableGoal(snapshot.map, boat.x, boat.y);
+    const from = coastOnWater(snapshot, sameGround(snapshot.map, nearBoat, home) ? nearBoat : home, boat);
+    if (!from) continue;
+    const mines = snapshot.resources.filter(mine => mine.amount > 0 && !sameGround(snapshot.map, mine, home)
+      && !snapshot.buildings.some(hall => hall.kind === 'townHall' && (Math.hypot(hall.x - mine.x, hall.y - mine.y) < 400
+        || hall.owner === owner && sameGround(snapshot.map, hall, mine)))
+      && naval.conquests?.[mine.id]?.abandonedTick === undefined
+      && !Object.values(naval.conquests ?? {}).some(task => task.stage !== 'complete' && task.abandonedTick === undefined
+        && snapshot.resources.some(other => other.id === task.mineId && sameGround(snapshot.map, other, mine)))
+      && ferryTargetAvailable(naval, boat.id, mine.id)
+      && !mineClaimedByAlly(snapshot, owner, mine, options)).sort((a, b) => distance(boat, a) - distance(boat, b));
+    const trips: { targetId: string; to: { x: number; y: number }; seconds: number }[] = [];
+    for (const mine of mines) {
+      const nearest = coastOnWater(snapshot, mine, boat);
+      if (!nearest) continue;
+      const admitted = (point: { x: number; y: number }) => sameGround(snapshot.map, point, boat, 'sea')
+        && sameGround(snapshot.map, walkableGoal(snapshot.map, point.x, point.y), mine)
+        && landingSafe(snapshot, owner, options, boat, point) && !outgunned(snapshot, owner, options, point, own);
+      // Most crossings use the nearest admitted beach. Enumerate alternate
+      // shores only after that same first candidate actually fails its checks.
+      const to = admitted(nearest) ? nearest : shoreSpots(snapshot.map, BUILDING_DEFS.shipyard.radius)
+        .filter(point => sameGround(snapshot.map, point, mine))
+        .sort((a, b) => distance(boat, a) + distance(a, mine) * .25 - distance(boat, b) - distance(b, mine) * .25)
+        .map(point => walkableGoal(snapshot.map, point.x, point.y, 'sea')).find(admitted);
+      if (to) trips.push({ targetId: mine.id, to, seconds: voyageSeconds(boat, snapshot.map, to) });
+    }
+    const trip = trips.filter(trip => Number.isFinite(trip.seconds)).sort((a, b) => a.seconds - b.seconds)[0];
+    if (trip) ferries[boat.id] = { purpose: 'advance', targetId: trip.targetId, from, to: trip.to, phase: 'loading', crewIds: [], sinceTick: snapshot.tick };
   }
-  const trip = trips.filter(trip => Number.isFinite(trip.seconds)).sort((a, b) => a.seconds - b.seconds)[0];
-  if (trip) ferries[boat.id] = { purpose: 'advance', targetId: trip.targetId, from, to: trip.to, phase: 'loading', crewIds: [], sinceTick: snapshot.tick };
 }
 
 /** A seat owns its first real delivery: boarding and unloading at home do not

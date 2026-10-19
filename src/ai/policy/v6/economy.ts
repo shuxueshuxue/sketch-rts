@@ -33,7 +33,7 @@ import { trainingJobs } from "../../../shared/building-jobs";
 
 // `hold`: the goal's gold is kept for it even while it cannot be issued yet (V9's shop errand, whose unit is still on its
 // way: see @@@v9-shop).
-type Goal = { id: string; priority: number; cost: number; save: boolean; issue: (builders: Set<string>) => GameCommand | undefined; hold?: true; producer?: string };
+type Goal = { id: string; priority: number; cost: number; save: boolean; issue: (builders: Set<string>) => GameCommand | undefined; hold?: true; producer?: string; expedition?: true };
 
 export type Economy = {
   snapshot: GameSnapshot;
@@ -441,7 +441,8 @@ function engineeringGoals(economy:Economy):Goal[]{
 
 function navalGoals(economy: Economy): Goal[] {
   const want = economy.naval(economy.snapshot, economy.owner, economy.options);
-  return want ? [goal(want.id, want.closeout ? CLOSEOUT_PRIORITY : NAVAL_PRIORITY, want.cost, true, want.issue)] : [];
+  return want ? [{ ...goal(want.id, want.expedition ? 90 : want.closeout ? CLOSEOUT_PRIORITY : NAVAL_PRIORITY, want.cost, true, want.issue),
+    ...(want.expedition ? { expedition: true as const } : {}) }] : [];
 }
 
 // V9's shop errand under way (see @@@v9-shop): its gold held at SHOP_PRIORITY until the shop script spends it.
