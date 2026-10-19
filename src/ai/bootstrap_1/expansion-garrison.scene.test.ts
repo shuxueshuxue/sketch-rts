@@ -27,7 +27,7 @@ it('keeps the completed natural defended while the remaining troops establish th
   let naturalFoundationTick: number | undefined, naturalCompleteTick: number | undefined;
   let coverOrderTick: number | undefined;
   let protectedFrames = 0;
-  const naturalId = 'building-v9_archer-townHall-1553';
+  let naturalId: string | undefined;
   let minimumStrength = Infinity;
   let firstUnguardedTick: number | undefined;
   let thirdFoundationTick: number | undefined;
@@ -41,6 +41,8 @@ it('keeps the completed natural defended while the remaining troops establish th
     if (owner === 'v9_archer' && command.type === 'build' && command.buildingKind === 'defenseTower'
       && Math.hypot(command.x - 3535, command.y - 1856) <= BUILDING_DEFS.defenseTower.attackRange) coverOrderTick ??= tick;
   }, onStep({ game }) {
+    naturalId ??= game.buildings.find(building => building.owner === 'v9_archer' && building.kind === 'townHall'
+      && Math.hypot(building.x - naturalPoint.x, building.y - naturalPoint.y) < 100)?.id;
     const mission = memories.v9_archer!.landExpansion;
     if (mission?.roadCamp) roadClearObjectives.add(mission.mineId);
     const third = game.buildings.find(building => building.owner === 'v9_archer'

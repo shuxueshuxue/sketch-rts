@@ -1,6 +1,7 @@
 import { harassSquadAssignment, harassSquadGuard, mountedHarassment, planHarassSquad, recordHarassSquadCommands } from './harass-squad';
 import { mercenaryControlUnitIds } from './mercenary-control';
-import { expansionMissionCommands } from './expansion-mission';
+import { assistExpansionMission, expansionMissionCommands, expansionMissionUnitIds } from './expansion-mission';
+import { attackRoadCampCommands, chooseRoomAttack, observeLandAttack, prepareLandAttack } from './attack-objective';
 import { lootRecoveryUnitIds } from './loot-recovery';
 import { shoppingUnitIds } from './shopping';
 import { campRecruitRoadClear, chooseBootstrapCamp, startBootstrapCamp } from './camp-geometry';
@@ -142,30 +143,54 @@ export function mineGuardUnitIds(snapshot: GameSnapshot, owner: PlayerId, option
 }
 
 export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
-  const intel = mainArmyIntel(snapshot, owner, options), creep = options.memory.v6?.creep;
-  const previous = options.memory.v6?.general;
+  const whole = mainArmyIntel(snapshot, owner, options), beforePriority = options.memory.v6?.general;
+  const expansion = expansionMissionCommands(snapshot, owner, options, whole);
+  const reserved = new Set(expansion === undefined ? [] : expansionMissionUnitIds(options.memory));
+  if (options.memory.v6?.creep?.group.some(id => reserved.has(id)) && !options.memory.landAttack?.camp)
+    delete options.memory.v6.creep;
+  const army = whole.army.filter(unit => !reserved.has(unit.id));
+  const intel = { ...whole, army, power: strengthOf(army), ...(army.length ? { armyCenter: averagePoint(army) } : {}) };
+  let defendedHall: Building | undefined, haulingDefense = false;
+  const defense = (() => {
+    const anchored = anchoredMiningDefense(snapshot, owner, options, intel);
+    if (anchored) { defendedHall = nearestByRoute(snapshot.map, intel.ownHalls, anchored.hall, 'land'); return anchored; }
+    const mining = miningJobDefenseTarget(snapshot, owner, intel, options);
+    if (mining) { haulingDefense = true; return mining; }
+    const covered = coveredDefenseTarget(snapshot, intel);
+    defendedHall = covered && nearestByRoute(snapshot.map, intel.ownHalls, covered.hall, 'land');
+    return covered;
+  })();
+  const task = options.memory.landAttack;
+  const living = task?.general.group?.filter(id => snapshot.units.some(unit => unit.id === id)) ?? [];
+  const borrowed = living.length > 0 && living.every(id => reserved.has(id));
+  const localJob = living.some(id => !reserved.has(id) && !army.some(unit => unit.id === id));
+  prepareLandAttack(snapshot, owner, options, intel, beforePriority, defense || localJob ? 'defense' : borrowed ? 'expansion' : undefined);
+  if (localJob && !defense && options.memory.v6?.general?.mode === 'attack')
+    options.memory.v6.general = { mode: 'hold', target: intel.armyCenter ?? intel.home, holdingSince: snapshot.tick };
+  const creep = options.memory.v6?.creep, previous = options.memory.v6?.general;
+  const retreatBefore = { ...options.memory.v6?.plays };
   const recruits = creep ? availableV6Army(snapshot, options, intel).filter(unit => !unit.deck && !isBacklineKind(unit)
     && unit.attackDamage > 0 && unit.hp >= unit.maxHp * V7_WOUNDED_SHARE
     && !creep.group.includes(unit.id) && !['cast', 'charge'].includes(unit.order.type)) : [];
   // Reinforcements walk to the existing staging point. Count them in the camp's force only after they arrive.
   const arrived = creep ? recruits.filter(unit => distance(unit, creep.staging) <= V7_GATHERED_RANGE) : [];
   if (creep) creep.group.push(...arrived.map(unit => unit.id));
-  let defendedHall: Building | undefined, haulingDefense = false;
-  let commands = expansionMissionCommands(snapshot, owner, options, intel) ?? planV6Army(snapshot, owner, options, intel, {
+  let commands = attackRoadCampCommands(snapshot, owner, options, intel, false) ?? planV6Army(snapshot, owner, options, intel, {
     reinforcements: 'siege', expansionBasis: 'mines',
+    expansionHandled: expansion !== undefined || options.memory.landAttack !== undefined,
     // Secure a working economy; an unfunded wish alone cannot reserve a stranded host.
     reserveExpansion: activeMiningBaseCount(snapshot, owner) > 0
       || snapshot.players[owner]!.gold >= BUILDING_DEFS.townHall.cost
       || snapshot.units.some(unit => unit.owner === owner && unit.kind === 'worker'
         && unit.order.type === 'build' && unit.order.buildingKind === 'townHall'),
-    chooseCamp: (...args) => chooseBootstrapCamp(intel.home, ...args),
+    chooseCamp: (...args) => expansion === undefined ? chooseBootstrapCamp(intel.home, ...args) : undefined,
     startCamp: startBootstrapCamp,
     campTerritory: 'ground',
-    chooseMine: (view, world) => bootstrapExpansionMine(view, owner, world, options),
+    chooseMine: (view, world) => expansion === undefined ? bootstrapExpansionMine(view, owner, world, options) : undefined,
     threatWithin: (unit, point, range) => groundThreatWithin(snapshot, unit, point, range),
     frontThreat: (world, front) => groundFrontThreat(snapshot, world, front),
     respondingPower: (world, target, front) => groundRespondingPower(snapshot, world, target, front),
-    selectAttack: (choices, eligible) => choices.find(eligible),
+    selectAttack: (choices, eligible) => chooseRoomAttack(snapshot, options, intel, choices, eligible),
     withinHomeReach: (world, point) => [world.home, ...world.ownHalls]
       .some(hall => routeWithinDistance(snapshot.map, hall, point, 'land', V7_HOME_REACH)),
     campOnOwnSide: (world, point) => {
@@ -173,15 +198,7 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
       const enemy = nearestByRoute(snapshot.map, world.enemies.flatMap(enemy => enemy.bases.map(base => base.hall)), point, 'land');
       return enemy === undefined || walkingDistance(snapshot.map, own, point, 'land')! < walkingDistance(snapshot.map, enemy, point, 'land')!;
     },
-    defenseTarget: (view, world, context) => {
-      const anchored = anchoredMiningDefense(view, owner, context, world);
-      if (anchored) { defendedHall = nearestByRoute(view.map, world.ownHalls, anchored.hall, 'land'); return anchored; }
-      const mining = miningJobDefenseTarget(view, owner, world, context);
-      if (mining) { haulingDefense = true; return mining; }
-      const covered = coveredDefenseTarget(view, world);
-      defendedHall = covered && nearestByRoute(view.map, world.ownHalls, covered.hall, 'land');
-      return covered;
-    },
+    defenseTarget: () => defense,
     towerWaiting: holdCoveredPost,
     waitForTowers: waitsForTowers,
     gatherAssault: intel.enemies.some(enemy => enemy.army.length > 0),
@@ -226,11 +243,25 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
     commands.push(...retreatV6Front(snapshot, owner, leaving, general!.target!, options)
       .map(command => ({ ...command, avoidCombat: true })));
   }
-  return general?.mode === 'attack' && general.stage !== 'gather'
+  if (general?.mode === 'hold') {
+    const assistance = assistExpansionMission(snapshot, owner, options, army);
+    const helping = new Set(assistance.flatMap(command => 'unitIds' in command ? command.unitIds : []));
+    commands = commands.flatMap((command): GameCommand[] => {
+      if (!('unitIds' in command)) return [command];
+      const unitIds = command.unitIds.filter(id => !helping.has(id));
+      return unitIds.length ? [{ ...command, unitIds }] : [];
+    });
+    commands.push(...assistance);
+  }
+  observeLandAttack(snapshot, options, retreatBefore);
+  const road = options.memory.landAttack?.camp ? undefined : attackRoadCampCommands(snapshot, owner, options, intel, true);
+  if (road !== undefined) return [...(expansion ?? []), ...road];
+  const routed = general?.mode === 'attack' && general.stage !== 'gather'
     && !intel.army.some(unit => general.group!.includes(unit.id) && (unit.kind === 'ballista' || unit.kind === 'catapult'))
     ? routeAssaultCampCommands(snapshot, commands,
       intel.army.filter(unit => !isBacklineKind(unit) && general.group!.includes(unit.id)).map(unit => unit.id), general.target!,
       armedFoes(snapshot, owner, options)) : commands;
+  return [...(expansion ?? []), ...routed];
 }
 
 /** Rallying reinforcements keep their route while arrived fighters defend the anchored mine. */

@@ -38,7 +38,7 @@ import { frontRecovery } from './front-recovery';
 import { lootRecovery, planLootItemCommands } from './loot-recovery';
 import { summonedRaids } from './summoned-raids';
 import { mountedField } from './mounted-field';
-import { migrateExpansionClaims, prepareExpansionMission } from './expansion-mission';
+import { expansionMissionUnitIds, migrateExpansionClaims, prepareExpansionMission } from './expansion-mission';
 import { expansionGarrison, garrisonRecoveryCommands, maintainExpansionGarrisons } from './expansion-garrison';
 
 export const BOOTSTRAP_VERSIONS = ['v9_archer', 'v9_summoner', 'v9_knight'] as const;
@@ -156,7 +156,11 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
     if (script === AI_SCRIPT_LIBRARY.v6General) return [
       summonedRaids,
       { ...AI_SCRIPT_LIBRARY.v6Closeout, run: planBootstrapCloseout },
-      { ...script, run: planBootstrapGeneral, onCommands: recordMiningGeneralCommands },
+      { ...script, run: planBootstrapGeneral, onCommands: recordMiningGeneralCommands,
+        claimsUnits(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
+          return new Set([...script.claimsUnits!(snapshot, owner, options),
+            ...(options.memory.landExpansion?.paused ? [] : expansionMissionUnitIds(options.memory))]);
+        } },
     ];
     if (script === AI_SCRIPT_LIBRARY.v6Backline) return [
       version === 'v9_summoner' ? { ...script, run: planSummonerScreen } : { ...script, run: planBootstrapCasterScreen }];

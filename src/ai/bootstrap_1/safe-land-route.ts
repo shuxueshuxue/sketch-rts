@@ -48,7 +48,7 @@ export function retreatLandRoad(snapshot: GameSnapshot, unit: Unit, goal: Point,
 }
 
 /** Shared geometry for admission and retreats; threat policies remain separate. */
-function nativeLandRoad(snapshot: GameSnapshot, unit: Unit, goal: Point) {
+export function nativeLandRoad(snapshot: GameSnapshot, unit: Unit, goal: Point) {
   const invalid = (from: Point, to: Point, value: unknown) => new Error(
     `Invalid native land travel for ${unit.id} (${unit.kind}, speed ${unit.speed}): (${from.x},${from.y}) -> (${to.x},${to.y}), cost/ticks ${String(value)}`);
   if (!Number.isFinite(unit.speed) || unit.speed <= 0) throw invalid(unit, goal, unit.speed);

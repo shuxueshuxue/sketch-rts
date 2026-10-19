@@ -52,7 +52,7 @@ it('finishes the requested mine, escort and hall instead of continuing an unrela
     if (tick % 15 === 0) {
       const { snapshot, options } = context();
       const commands = planBootstrapGeneral(snapshot, 'us', options);
-      if (tick === 0) expect(memory.v6!.creep!.center.x).toBe(1600);
+      if (tick === 0) expect(memory.landExpansion!.combat!.creep!.center.x).toBe(1600);
       const entries = runAiCommandEntriesFromScripts(snapshot, 'us', [bootstrapEconomy, miningAssignments], options);
       issueCommandFrame(game, [...entries.map(entry => ({ ...entry, playerId: 'us' })),
         ...commands.map(command => ({ playerId: 'us', scriptId: 'v6General', command }))]);
@@ -86,7 +86,7 @@ it('records a real home threat, yields to defense and resumes the same mine afte
   expect(memory.landExpansion!.stage).toBe('clear');
 });
 
-it('sends a small escort along the traveling builder’s road while the other soldiers keep the cleared mine', () => {
+it('sends only a small escort along the traveling builder’s road and releases the rest to the general', () => {
   const { game, memory, context } = expansionScene();
   game.units = game.units.filter(unit => unit.owner !== 'neutral');
   delete memory.v6!.creep;
@@ -101,7 +101,9 @@ it('sends a small escort along the traveling builder’s road while the other so
   expect(memory.landExpansion!.stage).toBe('escort');
   issueCommandFrame(game, commands.map(command => ({ playerId: 'us', scriptId: 'v6General', command })));
   for (let tick = 0; tick < 60; tick++) stepGame(game);
-  expect(game.units.filter(unit => unit.id.startsWith('screen-') && Math.hypot(unit.x - mine.x, unit.y - mine.y) < 180)).toHaveLength(3);
+  const escorted = new Set(escort.flatMap(command => 'unitIds' in command ? command.unitIds : []));
+  expect(expansionMissionUnitIds(memory)).toHaveLength(3);
+  expect(game.units.filter(unit => escorted.has(unit.id) && Math.hypot(unit.x - mine.x, unit.y - mine.y) > 180)).toHaveLength(3);
 });
 
 it('yields both arrived and traveling escorts to a mine rally, then fills the escort from the remaining nearby soldiers', () => {

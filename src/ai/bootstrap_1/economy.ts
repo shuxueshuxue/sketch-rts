@@ -121,6 +121,16 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
       ?? colonyNavalWantWithMineEligibility(view, player, context, mountedMinePlan(view, context.memory).eligible), prepareMiningCover,
     (view, intel) => bootstrapExpansionMine(view, owner, intel, options),
     economy => [...healingPostGoals(economy), ...freeIncomeCapitalGoals(economy), ...expansionGarrisonCoverGoals(economy)]);
+  const clearing = options.memory.landExpansion;
+  if (clearing && !clearing.paused && clearing.combat?.creep) {
+    // The expedition now has its own camp state. Preserve the hall's capital
+    // while it clears that camp, without borrowing the main general's state.
+    const { strategy } = v6Doctrine(snapshot, owner, options);
+    const phase = strategy.phases[Math.min(options.memory.v6?.phase ?? 0, strategy.phases.length - 1)]!;
+    const target = Math.max(activeMiningBaseCount(snapshot, owner) + 1,
+      ...phase.wants.map(want => 'bases' in want ? want.bases : 0));
+    if (!goals.some(goal => goal.id === `bases:${target}`)) goals.push(expansionCapital(target, 90));
+  }
   goals.push(...controlledMercenaryGoals(snapshot, owner, options));
   goals.push(...shoppingGoals(snapshot, owner, options));
   goals.push(...colonyRecoveryGoals(snapshot, owner, options));

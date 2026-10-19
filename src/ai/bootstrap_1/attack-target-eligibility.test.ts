@@ -10,7 +10,7 @@ import { planBootstrapGeneral } from './mine-defense';
 it.each((['v9_archer', 'v9_summoner', 'v9_knight'] as const).flatMap(version =>
   (['grove', 'ember'] as const).flatMap(race => [false, true].flatMap(mirror =>
     [false, true].map(counterarmy => ({ version, race, mirror, counterarmy }))))) )(
-  '$version considers eligible $race targets beyond the cheapest defended base (mirror=$mirror, counter=$counterarmy)',
+  '$version chooses the closest eligible $race expansion even when a farther base is cheaper (mirror=$mirror, counter=$counterarmy)',
   ({ version, race, mirror, counterarmy }) => {
     const x = (value: number) => mirror ? 4096 - value : value;
     let scene = sketchScene('attack-target-eligibility').map('bareDuel').replaceDefaults()
@@ -33,7 +33,7 @@ it.each((['v9_archer', 'v9_summoner', 'v9_knight'] as const).flatMap(version =>
     for (const building of game.buildings) Object.assign(building, snapToFootprint(game.map, building.radius, building));
     setBuildingBodies(game.map, game.buildings);
     memory.v6 = { phase: 1, general: { mode: 'hold', target: { x: x(1000), y: 1000 }, holdingSince: 0 } };
-    const targetId = counterarmy ? 'eligible-near' : 'cheap-far';
+    const targetId = 'eligible-near';
     const snapshot = snapshotGame(game), commands = planBootstrapGeneral(snapshot, 'us',
       bootstrapPolicyContext(snapshot, 'us', version, { memory, teams: game.teams }));
     expect(memory.v6.general!.mode).toBe('attack');
