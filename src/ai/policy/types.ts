@@ -1,4 +1,4 @@
-import type { GameCommand, GameSnapshot, AiScriptVersion, PlayerId } from "../../shared/types";
+import type { GameCommand, GameSnapshot, AiScriptVersion, PlayerId, TrainableUnitKind } from "../../shared/types";
 import type { AiPolicyMemory } from "../memory";
 
 export type { AiScriptVersion } from "../../shared/types";
@@ -37,6 +37,8 @@ export type PresetAiPolicyOptions = {
 
 export type AiPolicyContext = PresetAiPolicyOptions & {
   memory: AiPolicyMemory;
+  /** The room expansion's existing force request, before optional purchases. */
+  expansionRecruit?: { unit: TrainableUnitKind; count: number } | undefined;
 };
 
 export type LocalScript = (snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) => GameCommand | GameCommand[] | undefined;

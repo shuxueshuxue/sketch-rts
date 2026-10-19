@@ -9,7 +9,7 @@ import { ageV6Goals, availableV6ConstructionWorkers, collectV6Goals, expansionCa
 import { v6Memory } from '../policy/v6/memory';
 import { readV6Intel } from '../policy/v6/intel';
 import { v6Doctrine } from '../policy/v6/select';
-import { projectedSupplyUsed } from '../policy/world-model';
+import { canSupply, projectedSupplyUsed } from '../policy/world-model';
 import { towerRushGoal, towerRushConstructionCrew } from './tower-rush';
 import { isOpponentOwner } from '../policy/ownership';
 import { recoveryPatients } from './medical-recovery';
@@ -148,6 +148,17 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
   const wanted = wantedUnits(snapshot, owner, options);
   const wave = productionWaveSupply(snapshot, owner, options, ranked, wanted);
   const own = snapshot.buildings.filter(building => building.owner === owner);
+  const request = options.expansionRecruit;
+  const paidRecruits = request ? snapshot.units.filter(unit => unit.owner === owner && unit.kind === request.unit).length
+    + own.reduce((count, building) => count + trainingJobs(building).filter(job => job.unitKind === request.unit).length, 0) : 0;
+  const requiredRecruits = task?.stage === 'assemble' && !task.paused && request && paidRecruits < request.count
+    && canSupply(snapshot, owner, request.unit)
+    ? ranked.filter(goal => goal.id === `unit:${request.unit}` && own.some(building => building.id === goal.producer
+      && building.complete && building.queue.length === 0)) : [];
+  const recruitWave = request ? Math.min(Math.max(0, request.count - paidRecruits),
+    new Set(requiredRecruits.map(goal => goal.producer)).size,
+    Math.floor((player.supplyCap - projectedSupplyUsed(snapshot, owner)) / UNIT_DEFS[request.unit].supplyUsed)) : 0;
+  const expansionReserve = recruitWave * (requiredRecruits[0]?.cost ?? 0);
   const healer = 'priest';
   const recovering = recoveryPatients(snapshot, owner).length > 0;
   // Keep the requested first healer funded until its ordinary training has been queued.
@@ -166,6 +177,11 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
   const purchases = new Set<string>();
   return ranked.flatMap(goal => {
     let productionReserve = 0;
+    // An aged shopping/hire goal must not hold the last camp recruit's gold.
+    // Reserve only a live, trainable expansion request; queued recruits are
+    // already paid. Optional purchases can still spend everything above it.
+    if (goal.id.startsWith('hire:') || goal.id === 'shopping' || goal.id === 'v9shop')
+      productionReserve = expansionReserve;
     if (goal.id.startsWith('build:') || goal.id.startsWith('capacity:')) {
       const kind = goal.id.split(':')[1] as BuildingKind;
       const existing = own.filter(building => building.kind === kind);

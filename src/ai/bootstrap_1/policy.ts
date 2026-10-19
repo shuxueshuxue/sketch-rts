@@ -114,7 +114,7 @@ function roomExpansionTarget(snapshot: GameSnapshot, owner: PlayerId, army: Unit
     activeMiningBaseCount(snapshot, owner) >= 2 && escort.length >= 4 ? 3 : 0);
 }
 
-function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion, options: AiPolicyContext): V6Want[] {
+function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion, options: AiPolicyContext): { wants: V6Want[]; guard: V6Want[] } {
   const army = snapshot.units.filter(unit => unit.owner === owner && unit.kind !== 'worker' && unit.expiresTick === undefined);
   const grove = snapshot.players[owner]!.race === 'grove';
   const healer = 'priest';
@@ -132,7 +132,7 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: Bootstra
       || UNIT_DEFS[unit.kind].weapon?.maxHits! > 1)) counters.push({ unit: grove ? 'lancer' : 'ashWarden', count: 4, priority: 64 });
   const guard = expansionGuardWant(snapshot, owner, version, options);
   const expansion = roomExpansionTarget(snapshot, owner, army);
-  if (army.length < 10) return [...(expansion ? [{ bases: expansion, priority: 76 }] : []), ...guard, ...counters, ...medical, ...mounted];
+  if (army.length < 10) return { wants: [...(expansion ? [{ bases: expansion, priority: 76 }] : []), ...guard, ...counters, ...medical, ...mounted], guard };
   const main = version === 'v9_knight' ? (grove ? 'knight' : 'ashChieftain')
     : version === 'v9_summoner' ? 'summoner' : (grove ? 'horseArcher' : 'sparkArcher');
   const producer = trainingBuildingFor(snapshot.players[owner]!.race, main)!;
@@ -152,7 +152,7 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: Bootstra
   );
   // Dispel and healing share a production queue in Grove; counter the incoming wave before queuing recovery.
   wants.push(...guard, ...counters, ...medical, ...mounted);
-  return wants;
+  return { wants, guard };
 }
 
 export function bootstrapScripts(version: BootstrapAiVersion) {
@@ -209,7 +209,7 @@ export function researchPrerequisites(wants: readonly V6Want[], player: PlayerSt
 export function bootstrapPolicyContext(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion, options: AiPolicyContext): AiPolicyContext {
   migrateExpansionClaims(snapshot, options.memory);
   maintainExpansionGarrisons(snapshot, owner, options);
-  const wants = supportWants(snapshot, owner, version, options);
+  const { wants, guard } = supportWants(snapshot, owner, version, options);
   const expansion = wants.filter(want => 'bases' in want);
   const player = snapshot.players[owner]!;
   const context: AiPolicyContext = {
@@ -221,6 +221,7 @@ export function bootstrapPolicyContext(snapshot: GameSnapshot, owner: PlayerId, 
       })),
     })),
     armyWants: wants.filter(want => !('bases' in want)),
+    expansionRecruit: guard.find(want => 'unit' in want),
   };
   prepareExpansionMission(snapshot, owner, context, mainArmyIntel(snapshot, owner, context));
   return context;
