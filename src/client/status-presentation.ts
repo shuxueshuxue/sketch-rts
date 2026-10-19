@@ -40,7 +40,8 @@ export function activeUnitStatusEffects(unit: Pick<Unit, 'hp' | 'effects'>): Uni
 
 function effectKey(effect: UnitStatusEffect) {
   return effect.type === 'bloodlust' || effect.type === 'veteranBuff' ? 'temporaryAttackSpeed'
-    : effect.type === 'protection' ? `protection:${JSON.stringify(effect.damageFilter ?? {})}` : effect.type;
+    : effect.type === 'protection' || effect.type === 'guardian' && effect.damageReduction !== undefined
+      ? `protection:${JSON.stringify(effect.damageFilter ?? {})}` : effect.type;
 }
 
 /** HUD and battlefield signs follow the same non-stacking temporary layers. */
@@ -52,7 +53,7 @@ export function effectiveUnitStatusEffects(unit: Pick<Unit, 'hp' | 'effects'>): 
     if ((effect.type === 'protection' && !((effect.damageReduction ?? 0) > 0)) || (effect.type === 'veteranBuff' && !(speed(effect) > 1))) continue;
     const key = effectKey(effect);
     const old = picked.get(key);
-    const strength = (status: UnitStatusEffect) => key === 'temporaryAttackSpeed' ? speed(status) : status.type === 'protection' ? status.damageReduction ?? 0 : status.type === 'curse' ? 1 - (status.damageMultiplier ?? .4) : 1;
+    const strength = (status: UnitStatusEffect) => key === 'temporaryAttackSpeed' ? speed(status) : status.damageReduction !== undefined ? status.damageReduction : status.type === 'curse' ? 1 - (status.damageMultiplier ?? .4) : 1;
     if (!old || strength(effect) > strength(old) || strength(effect) === strength(old) && effect.remaining > old.remaining) picked.set(key, effect);
   }
   return [...picked.values()];
@@ -83,7 +84,9 @@ function effectDescription(effect: UnitStatusEffect, locale: Locale): string {
   const zh = locale === 'zh';
   switch (effect.type) {
     case 'curse': return zh ? `造成的伤害降低 ${percent(1 - (effect.damageMultiplier ?? .4))}。` : `Deal ${percent(1 - (effect.damageMultiplier ?? .4))} less damage.`;
-    case 'guardian': return zh ? '免疫伤害；被挡住的攻击不会附加命中状态。' : 'Immune to damage. Blocked hits cannot apply on-hit statuses.';
+    case 'guardian':
+      if (effect.damageReduction === undefined) return zh ? '免疫伤害；被挡住的攻击不会附加命中状态。' : 'Immune to damage. Blocked hits cannot apply on-hit statuses.';
+      return wardDescription(effect, zh);
     case 'scorch': return zh ? '余烬近战单位对其造成额外伤害；灰烬诅咒的削弱进一步增强。印记本身不持续扣血。' : 'Ember melee troops deal additional damage to this target, and Ash Curse becomes stronger. The mark itself does not deal damage over time.';
     case 'slow': return zh ? `移动速度降低 ${percent(1 - SLOW_PACE)}。` : `Movement speed reduced by ${percent(1 - SLOW_PACE)}.`;
     case 'stun': return zh ? '无法移动、攻击或施放技能。' : 'Cannot move, attack or cast abilities.';
@@ -94,9 +97,13 @@ function effectDescription(effect: UnitStatusEffect, locale: Locale): string {
       const speed = def.behavior === 'bloodlust' ? def.attackSpeed : 1;
       return zh ? `攻击速度提高 ${percent(speed - 1)}；短时攻速增益只取最强。` : `Attack speed increased by ${percent(speed - 1)}. Only the strongest temporary attack-speed buff applies.`;
     }
-    case 'protection': return zh ? `受到的${effect.damageFilter ? '匹配类型' : ''}伤害降低 ${percent(effect.damageReduction ?? 0)}；短时防护只取最强。` : `Take ${percent(effect.damageReduction ?? 0)} less ${effect.damageFilter ? 'matching ' : ''}damage. Only the strongest temporary ward applies.`;
+    case 'protection': return wardDescription(effect, zh);
     case 'veteranBuff': return zh ? `攻击速度提高 ${percent((effect.attackSpeedMultiplier ?? 1) - 1)}；短时攻速增益只取最强。` : `Attack speed increased by ${percent((effect.attackSpeedMultiplier ?? 1) - 1)}. Only the strongest temporary attack-speed buff applies.`;
   }
+}
+
+function wardDescription(effect: UnitStatusEffect, zh: boolean): string {
+  return zh ? `受到的${effect.damageFilter ? '匹配类型' : ''}伤害降低 ${percent(effect.damageReduction ?? 0)}；短时防护只取最强。` : `Take ${percent(effect.damageReduction ?? 0)} less ${effect.damageFilter ? 'matching ' : ''}damage. Only the strongest temporary ward applies.`;
 }
 
 /** Query one focused unit, or provide a spatial list of potential aura sources. */
@@ -128,7 +135,7 @@ export function presentUnitStatuses(snapshot: GameSnapshot, unit: Unit, locale: 
     name: STATUS_NAMES[effect.type][locale], description: effectDescription(effect, locale),
     remainingTicks: effect.remaining, badge: formatRemaining(effect.remaining), sourceIds: effect.sourceId ? [effect.sourceId] : [],
   });
-  if (unit.invulnerable && !effects.some(effect => effect.type === 'guardian')) result.push({ key: 'invulnerable', type: 'invulnerable', polarity: 'buff', icon: 'guardianScroll', name: locale === 'zh' ? '无敌' : 'Invulnerable', description: locale === 'zh' ? '当前免疫伤害。' : 'Currently immune to damage.', badge: '', sourceIds: [] });
+  if (unit.invulnerable && !effects.some(effect => effect.type === 'guardian' && effect.damageReduction === undefined)) result.push({ key: 'invulnerable', type: 'invulnerable', polarity: 'buff', icon: 'guardianScroll', name: locale === 'zh' ? '无敌' : 'Invulnerable', description: locale === 'zh' ? '当前免疫伤害。' : 'Currently immune to damage.', badge: '', sourceIds: [] });
   for (const { source, skill } of activeVeteranAuraSources(snapshot, unit)) {
     const definition = VETERAN_SKILLS[skill];
     result.push({ key: `aura:${skill}`, type: 'aura', polarity: 'buff', icon: skill,

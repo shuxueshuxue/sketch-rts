@@ -28,7 +28,6 @@ it.each(cases)('$version judges the actual local $race fight (mirror=$mirror, re
     const game = scene.build().createGame(), memory = createAiPolicyMemory(), sdk = new SdkCommandFrameRuntime(game);
     game.scriptedVictory = true;
     const locals = game.units.filter(unit => unit.id === 'carrier' || unit.id.startsWith('local-'));
-    const startHp = locals.map(unit => unit.hp);
     for (const foe of game.units.filter(unit => unit.owner === 'foe')) sdk.issue([
       { playerId: 'foe', scriptId: 'ranged-contact', command: { type: 'attack', unitIds: [foe.id], targetId: 'carrier' } },
     ], {}, { checksum: false });
@@ -42,12 +41,18 @@ it.each(cases)('$version judges the actual local $race fight (mirror=$mirror, re
     expect(locals.every(unit => unit.effects.some(effect => effect.type === 'guardian' && effect.remaining === GUARDIAN_SCROLL.duration))).toBe(shouldCast);
     if (shouldCast) {
       let enemyFired = false;
+      let guardedHits = 0;
+      game.observer = { hit(attacker, target, damage) {
+        if (attacker.owner !== 'foe' || !locals.some(unit => unit.id === target.id)) return;
+        guardedHits++;
+        expect(damage).toBeCloseTo(attacker.attackDamage * .6);
+      } };
       for (let tick = 0; tick < 80; tick++) {
         stepGame(game);
         enemyFired ||= game.units.some(unit => unit.owner === 'foe' && unit.cooldown > 0);
       }
       expect(enemyFired).toBe(true);
-      expect(locals.map(unit => unit.hp)).toEqual(startHp);
+      expect(guardedHits).toBeGreaterThan(0);
       expect(game.match.stats.unitsLost.us).toBe(0);
       expect(game.players.us!.gold).toBe(500);
       expect(game.units.filter(unit => unit.id.startsWith('reserve-')).every(unit => !unit.effects.some(effect => effect.type === 'guardian'))).toBe(true);

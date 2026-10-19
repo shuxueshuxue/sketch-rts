@@ -3098,7 +3098,7 @@ function activateItem(
     forEachNearbyUnit(game, carrier, GUARDIAN_SCROLL.radius, (unit) => {
       if (distance(unit, carrier) > GUARDIAN_SCROLL.radius || areEnemyOwners(game, carrier.owner, unit.owner)) return;
       unit.effects = unit.effects.filter((effect) => effect.type !== "guardian");
-      unit.effects.push({ type: "guardian", remaining: GUARDIAN_SCROLL.duration });
+      unit.effects.push({ type: "guardian", remaining: GUARDIAN_SCROLL.duration, damageReduction: GUARDIAN_SCROLL.damageReduction, protectionGroup: "ward" });
     });
     addEffect(game, "guardianField", carrier.x, carrier.y, GUARDIAN_SCROLL.duration, { radius: GUARDIAN_SCROLL.radius, sourceId: carrier.id, actionMode: "cast", fromX: carrier.x, fromY: carrier.y, toX: carrier.x, toY: carrier.y });
     consumeItem(game, item);
@@ -3548,7 +3548,7 @@ function applyAttackStatusEffects(game: Game, attacker: Unit | Building, target:
   if (rules.poisonOnHit) setStatus(target, { type: "poison", remaining: POISON_TICKS, sourceId: attacker.id, sourceOwner: attacker.owner });
 }
 
-// The damage the target took, or undefined when a guardian field turned the blow aside.
+// The damage the target took, or undefined when immunity or shelter blocked the hit.
 function applyDamage(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number, hullShare?: number,impact?:{x:number;y:number},blastRadius=0, profile: DamageProfile = isUnit(attacker) ? unitAttackDamageProfile(game, attacker) : attackDamageProfile(attacker.kind), armorAlreadyApplied = false, existingStatus = false): number | undefined {
   if (isUnit(attacker) && isInCabin(attacker)) return undefined;
   // Existing poison persists indoors; shelter blocks incoming attacks rather than cleansing statuses.

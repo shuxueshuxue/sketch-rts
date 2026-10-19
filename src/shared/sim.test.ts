@@ -7,7 +7,7 @@ import { createAiRuntime, type AiRuntimeState } from "../ai/runtime";
 import { runPresetAiRuntimeForTest } from "../ai/runtime-test-helpers";
 import { createBuilding, createInitialMercenaryCamps, createInitialResources } from "./map";
 import { GOLD_MINE_RULES } from "./mining";
-import { createGame, issueCommand, issuePlayerCommand, leadershipRegenPerSecond, stepGame } from "./sim";
+import { createGame, issueCommand, issuePlayerCommand, leadershipRegenPerSecond, stepGame, strikeUnit } from "./sim";
 import { seconds, perTick } from "./time";
 import { sketchScene } from "../sdk/scene";
 import type { MapId, PlayerId, PlayerNumberMap, Unit, UnitKind } from "./types";
@@ -1981,7 +1981,7 @@ describe("sketch RTS simulation", () => {
     expect(game.items.some((item) => item.id === "breach-charge")).toBe(false);
   });
 
-  it("guardian scroll protects nearby friendly units from incoming damage for its duration", () => {
+  it("guardian scroll reduces incoming damage to nearby friendly units for its duration", () => {
     const game = sketchScene("guardian-scroll-protection")
       .map("bareDuel")
       .replaceDefaults()
@@ -1997,10 +1997,13 @@ describe("sketch RTS simulation", () => {
     const attacker = game.units.find((unit) => unit.id === "enemy-archer")!;
 
     issueCommand(game, { type: "useItem", unitId: "scroll-carrier", itemId: "guardian-scroll" });
+    const initialHp = guarded.hp;
+    strikeUnit(game, attacker, guarded, 20, 'melee');
+    expect(initialHp - guarded.hp).toBeCloseTo(12);
     issuePlayerCommand(game, "enemy", { type: "attack", unitIds: [attacker.id], targetId: guarded.id });
     stepMany(game, 2);
 
-    expect(guarded.hp).toBe(guarded.maxHp);
+    expect(guarded.hp).toBeLessThan(guarded.maxHp);
     expect(guarded.effects.some((effect) => effect.type === "guardian")).toBe(true);
     expect(game.effects.some((effect) => effect.type === "guardianField" && effect.radius === 180)).toBe(true);
     expect(game.items.some((item) => item.id === "guardian-scroll")).toBe(false);

@@ -14,6 +14,14 @@ if (CHARGE.behavior !== "charge") throw new Error("charge is not a charge");
 const CHARGE_COOLDOWN_SECONDS = (CHARGE.cooldown / SIM_TICKS_PER_SECOND).toFixed(1);
 
 describe("gameplay tooltips", () => {
+  it('states guardian scroll damage reduction in both the body and numeric stats in both languages', () => {
+    for (const locale of ['zh', 'en'] as const) {
+      const tooltip = itemTooltip('guardianScroll', undefined, createI18n(locale));
+      expect(tooltip.body).toContain('40%');
+      expect(tooltip.body).not.toMatch(/免疫|immune/i);
+      expect(tooltip.stats).toContain(locale === 'zh' ? '减伤 40%' : 'Damage reduction 40%');
+    }
+  });
   it('describes both troop ferries with one shared protection rule and no heavy armor', () => {
     for (const kind of ['transport', 'carrier'] as const) for (const locale of ['zh', 'en'] as const) {
       const tooltip = unitTooltip(kind, undefined, createI18n(locale));
