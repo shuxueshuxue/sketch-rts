@@ -61,6 +61,7 @@ export function mountedFieldPlans(snapshot: GameSnapshot, owner: PlayerId, optio
   const guards = mineGuardUnitIds(snapshot, owner, options);
   const riders = availableMountedRiders(snapshot, owner, options)
     .filter(unit => !guards.has(unit.id) && !options.memory.v6?.creep?.group.includes(unit.id)
+      && !options.memory.miningDefense?.unitIds.includes(unit.id)
       && !options.memory.mounted?.some(task => task.unitIds.includes(unit.id)));
   const crew = new Set(riders.map(rider => rider.id));
   return riders.flatMap(rider => {
@@ -71,12 +72,15 @@ export function mountedFieldPlans(snapshot: GameSnapshot, owner: PlayerId, optio
 
 export const mountedField: AiScript = {
   id: 'mountedField', phase: 'tactics',
+  onCommands(snapshot, owner, _options, commands) {
+    const issued = new Set(commands.flatMap(command => 'unitIds' in command ? command.unitIds : 'unitId' in command ? [command.unitId] : []));
+    const frame = allocations.get(snapshot);
+    if (frame) frame.set(owner, issued);
+    else allocations.set(snapshot, new Map([[owner, issued]]));
+  },
   claimsUnits: (snapshot, owner, options) => new Set(mountedFieldPlans(snapshot, owner, options).map(plan => plan.rider.id)),
   run(snapshot, owner, options) {
     const plans = mountedFieldPlans(snapshot, owner, options);
-    const frame = allocations.get(snapshot);
-    if (frame === undefined) allocations.set(snapshot, new Map([[owner, new Set(plans.map(plan => plan.rider.id))]]));
-    else frame.set(owner, new Set(plans.map(plan => plan.rider.id)));
     const foes = armedFoes(snapshot, owner, options), { towers, enemies } = fieldCover(snapshot, owner, options);
     return plans.flatMap(({ rider, target }) => {
       if (strikeGap(rider, target) > strikeReach(rider, target)

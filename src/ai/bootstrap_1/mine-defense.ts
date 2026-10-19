@@ -30,6 +30,7 @@ import { summonedMiningRaids } from './summoned-raids';
 import { mountedFieldOwns } from './mounted-field';
 import { planV8Charge } from '../policy/v8/charge';
 import type { AiPolicyContext, AiScript } from '../policy/types';
+import { anchoredMiningDefense, miningRallyAssignment, planMiningRally, recordMiningRallyCommands } from './mining-rally';
 
 type Detachment = { hall: Building; attackers: Unit[]; crew: Unit[] };
 
@@ -69,6 +70,7 @@ function detachment(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
   const intel = readV6Intel(snapshot, owner, options);
   const raids = miningRaids(snapshot, intel);
   const pool = intel.army.filter(unit => !unit.deck && unit.hp >= unit.maxHp * .6
+    && !options.memory.miningDefense?.unitIds.includes(unit.id)
     && !['board', 'cast', 'charge'].includes(unit.order.type));
   for (const { hall, attackers } of raids) {
     const nearby = routeArrivals(snapshot.map, pool, hall, 'land')
@@ -124,6 +126,7 @@ export function mineGuardUnitIds(snapshot: GameSnapshot, owner: PlayerId, option
 }
 
 export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
+  if (options.memory.miningDefense?.phase === 'gather') return [];
   const intel = mainArmyIntel(snapshot, owner, options), creep = options.memory.v6?.creep;
   const previous = options.memory.v6?.general;
   const recruits = creep ? availableV6Army(snapshot, options, intel).filter(unit => !unit.deck && !isBacklineKind(unit)
@@ -155,6 +158,8 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
       return enemy === undefined || walkingDistance(snapshot.map, own, point, 'land')! < walkingDistance(snapshot.map, enemy, point, 'land')!;
     },
     defenseTarget: (view, world, context) => {
+      const anchored = anchoredMiningDefense(view, owner, context, world);
+      if (anchored) return anchored;
       const mining = miningJobDefenseTarget(view, owner, world, context);
       if (mining) return mining;
       return coveredDefenseTarget(view, world);
@@ -187,6 +192,17 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
       intel.army.filter(unit => !isBacklineKind(unit) && general.group!.includes(unit.id)).map(unit => unit.id), general.target!,
       armedFoes(snapshot, owner, options)) : commands;
 }
+
+/** Rally ownership precedes opportunistic battlefield orders until every defender reaches the mine. */
+export const miningRally: AiScript = {
+  id: 'miningRally', phase: 'tactics',
+  afterPlan: (snapshot, owner, options, entries) => recordMiningRallyCommands(snapshot, owner, options.memory, entries),
+  claimsUnits(snapshot, owner, options) {
+    const assignment = miningRallyAssignment(snapshot, owner, options, mainArmyIntel(snapshot, owner, options));
+    return new Set(assignment?.state.phase === 'gather' ? assignment.state.unitIds : []);
+  },
+  run(snapshot, owner, options) { return planMiningRally(snapshot, owner, options, mainArmyIntel(snapshot, owner, options)); },
+};
 
 export function planBootstrapCloseout(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
   const intel = mainArmyIntel(snapshot, owner, options), job = options.memory.v6?.closeout;

@@ -47,6 +47,10 @@ export type AiScript = {
   run: LocalScript;
   // Units only this script may move or send to attack; every other script's orders for them are dropped.
   claimsUnits?: (snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) => ReadonlySet<string>;
+  // Commit this script's assignments from accepted orders before the next script reads them.
+  onCommands?: (snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, commands: readonly GameCommand[]) => void;
+  // Finalize task ownership from the complete plan after all claims and command conflicts were resolved.
+  afterPlan?: (snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, entries: readonly AiCommandEntry[]) => void;
 };
 
 export type AiCommandEntry = {

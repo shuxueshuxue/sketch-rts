@@ -1,0 +1,68 @@
+{
+  "behavior": "The original defenders gather at one fixed mouth of the first threatened mining base before normal fighting resumes. Arrival uses actual positions; only accepted orders establish or redirect task ownership. Local recovery at that same mine keeps the assignment.",
+  "snapshot": {
+    "baseline": "1bf481b04b75e8e8142a7a9f22792863ca221e01",
+    "seed": "defense-observe-20261019",
+    "match": "ladder-03 v9_archer ember vs v9",
+    "tick": 17760,
+    "sha256": "7f679adb93206a5a79258985db8a29c0336806ef05dae86cc41e4fb61d38c1d7",
+    "unedited": true
+  },
+  "specification": {
+    "post_distance_from_hall": 200,
+    "gather_radius": 240,
+    "gather_deadline_seconds": 90,
+    "keep_hall_until_gathered_and_attackers_clear": true,
+    "ownership_from_accepted_commands": true
+  },
+  "scripted_regression": {
+    "original_defenders": 19,
+    "after_gathered": 19,
+    "before_never_gathers_all_19": true,
+    "uses_full_both_ai_stacks_and_normal_schedule": true,
+    "anchored_hall_ids": [
+      "building-v9_archer-townhall"
+    ]
+  },
+  "mac1": {
+    "machine": "mac1.local",
+    "platform": "darwin",
+    "before_tested_source": "da9199e7bc9cd13408b5321bce5b42f07b81928f",
+    "after_tested_source": "5e1e9c64bc047ffe9aa5a440ae74465a5347a12b",
+    "renderer": "native client world renderer; normal planner phases and three-tick command delay",
+    "first_tick": 17760,
+    "last_tick": 20560,
+    "first_all_gathered_tick": 19288,
+    "gather_seconds": 76.4,
+    "after_max_gathered": 19,
+    "after_original_alive": 19,
+    "rally_point": {
+      "x": 2681.6543031765154,
+      "y": 4102.184899904971
+    },
+    "sampling": "every tick for arrival; key frames every 20 game seconds plus the exact all-arrived frame",
+    "before_image_tick": 18960,
+    "after_image_tick": 19288,
+    "raw_evidence": "replay.evidence.json"
+  },
+  "validation": {
+    "typescript": "tsc --noEmit passed",
+    "test_machine": "A100; isolated sketch-rts-defense tree; maxWorkers=8",
+    "test_files": 180,
+    "tests": 2555,
+    "all_passed": true,
+    "supplemental_case": "Real mountedField ownership is false in the subsequent commander when a higher-priority claim rejected its orders.",
+    "win_rate_benchmark": false
+  },
+  "shared_code": [
+    "AiPolicyMemory.miningDefense (new optional field)",
+    "AiScript.onCommands and afterPlan (new optional hooks)",
+    "runScriptsWithContext",
+    "mountedField.run/onCommands",
+    "mountedFieldPlans",
+    "detachment",
+    "planBootstrapGeneral",
+    "bootstrapScripts"
+  ],
+  "limits": "Gather time includes three distant catapults and local healing. Firing only at already in-range targets during withdrawal preserves the group. The long pursuit leash and fixed anti-harassment squad are separate following changes. general.ts is unchanged."
+}

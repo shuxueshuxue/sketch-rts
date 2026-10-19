@@ -49,6 +49,7 @@ function runScriptsWithContext(snapshot: GameSnapshot, owner: PlayerId, scripts:
     const reserve = script.id === "v6Economy" || script.id === "economy" && isV6Policy(policyOptions) ? 0 : script.id === "economy" || script.id === "navalEconomy" ? shopReserve : navalReserve + shopReserve;
     const budget = budgetAfter(reserve);
     const scriptCommands = withoutUnitsClaimedElsewhere(asCommands(script.run(budget, owner, policyOptions)), claims, script.id);
+    script.onCommands?.(snapshot, owner, policyOptions, scriptCommands);
     if (scriptCommands.length > 0) {
       recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams, preserveHireCampClaims, preserveSkirmishRetreatClaims });
       commands.push(...scriptCommands.map((command) => ({ scriptId: script.id, command })));
@@ -63,16 +64,17 @@ function runScriptsWithContext(snapshot: GameSnapshot, owner: PlayerId, scripts:
     const rawScriptCommands = withoutUnitsClaimedElsewhere(asCommands(script.run(script.id === "shopping" ? budgetAfter(0) : snapshot, owner, policyOptions)), claims, script.id);
     // The script still runs: it may update its memory even without issuing a
     // command. Empty results need no conflict copies or command bookkeeping.
-    if (rawScriptCommands.length === 0) continue;
     const scriptCommands = runnerOptions.commandConflictBypassScriptIds?.has(script.id)
       ? rawScriptCommands
       : removeOrderedUnitConflicts(rawScriptCommands, movedUnitIds, (command) => runnerOptions.minimumAttackMoveUnits?.(script.id, command, snapshot, owner, policyOptions) ?? 1);
+    script.onCommands?.(snapshot, owner, policyOptions, scriptCommands);
     if (scriptCommands.length === 0) continue;
     recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams, preserveHireCampClaims, preserveSkirmishRetreatClaims });
     reserveOrderedUnits(scriptCommands, movedUnitIds, snapshot);
     commands.push(...scriptCommands.map((command) => ({ scriptId: script.id, command })));
   }
 
+  for (const script of scripts) script.afterPlan?.(snapshot, owner, policyOptions, commands);
   return commands;
 }
 
