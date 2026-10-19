@@ -8,7 +8,7 @@ import type { AiGameAgent } from '../game-runner';
 import { DEFAULT_AI_THINK_INTERVAL } from '../runtime';
 
 export type NavalRoomMatch = BenchmarkMatchInput<AiGameAgent> & {
-  naval: { subject: RoomAiVersion; rival: 'v8' | 'v9'; subjectTeam: string; outDir?: string; sampleSeconds: number };
+  naval: { subject: RoomAiVersion; rival: 'v8' | 'v9'; subjectTeam: string; outDir?: string; sampleSeconds: number; fullMetrics?: boolean };
   metrics?: readonly string[];
 };
 

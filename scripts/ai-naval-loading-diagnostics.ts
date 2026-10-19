@@ -1,9 +1,9 @@
 import { readFileSync, readdirSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { runBenchmarkParallel } from '../src/sdk/benchmark/parallel';
-import { createNavalRoomInput } from '../src/ai/benchmark/naval-room';
+import { createNavalRoomInput, type NavalRoomMatch } from '../src/ai/benchmark/naval-room';
 import { ROOM_AI_VERSIONS } from '../src/shared/rooms';
-import { flag, requiredFlag } from './benchmark-cli';
+import { boolFlag, flag, requiredFlag } from './benchmark-cli';
 
 const args = process.argv.slice(2), baseline = requiredFlag(args, 'baseline'), outDir = resolve(requiredFlag(args, 'out-dir'));
 const rival = requiredFlag(args, 'rival');
@@ -23,6 +23,7 @@ const excludedFile = flag(args, 'exclude-matches-file');
 const excluded = new Set<string>(excludedFile ? JSON.parse(readFileSync(excludedFile, 'utf8')) : []);
 const input = createNavalRoomInput({ rival, subjects: ROOM_AI_VERSIONS, outDir });
 for (const evaluation of input.evaluations) evaluation.matches = evaluation.matches.filter(match => names.has(match.name) && !excluded.has(match.name));
+if (boolFlag(args, 'full-metrics')) for (const evaluation of input.evaluations) for (const match of evaluation.matches) (match as NavalRoomMatch).naval.fullMetrics = true;
 mkdirSync(outDir, { recursive: true });
 writeFileSync(join(outDir, 'manifest.json'), JSON.stringify({ baseline, names: [...names], workers }));
 const report = await runBenchmarkParallel(input, { workers, workerModule: new URL('../src/ai/benchmark/naval-loading-diagnostics.ts', import.meta.url).href });

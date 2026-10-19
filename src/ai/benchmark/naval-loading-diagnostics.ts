@@ -108,10 +108,11 @@ function assetPrice(snapshot: GameSnapshot, unit: Unit) {
 
 export function runBenchmarkParallelMatch(match: NavalRoomMatch) {
   const memories: Record<string, AiPolicyMemory> = {};
-  const report = runBenchmarkMatch({ ...match, commandPlanner: navalObservedPlanner(memories) }, [createNavalLoadingDiagnostics(owner => memories[owner]) as never, createNavalTurnaroundDiagnostics(owner => memories[owner]) as never, createNavalMetricsTracker({ memory: owner => memories[owner], ferriesOnly: true }) as never]);
+  const report = runBenchmarkMatch({ ...match, commandPlanner: navalObservedPlanner(memories) }, [createNavalLoadingDiagnostics(owner => memories[owner]) as never, createNavalTurnaroundDiagnostics(owner => memories[owner]) as never, createNavalMetricsTracker({ memory: owner => memories[owner], ferriesOnly: !match.naval.fullMetrics, sampleSeconds: match.naval.sampleSeconds }) as never]);
+  if (match.naval.fullMetrics) report.result.trackers.navalFerries = report.result.trackers.naval;
   if (match.naval.outDir) {
     mkdirSync(match.naval.outDir, { recursive: true });
-    writeFileSync(join(match.naval.outDir, `${match.name.replaceAll(' ', '_')}.json`), JSON.stringify(report));
+    writeFileSync(join(match.naval.outDir, `${match.name.replaceAll(' ', '_')}.json`), JSON.stringify({ naval: match.naval, ...report }));
   }
   return report;
 }
