@@ -71,6 +71,7 @@ export const BOOTSTRAP_DOCTRINES: Record<BootstrapAiVersion, V6Strategy[]> = {
 // front can take the camp. A requested expansion now asks for that force immediately, without waiting for unrelated
 // phase quotas, and includes the same dynamic third-base request as the economy.
 function expansionGuardWant(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion, options: AiPolicyContext): V6Want[] {
+  if (options.memory.landExpansion?.paused) return [];
   const race = snapshot.players[owner]!.race, chosen = options.memory.v6?.doctrine?.strategyId;
   const strategies = BOOTSTRAP_DOCTRINES[version].filter(strategy => strategy.race === race);
   const strategy = strategies.find(candidate => candidate.id === chosen) ?? strategies[0]!;

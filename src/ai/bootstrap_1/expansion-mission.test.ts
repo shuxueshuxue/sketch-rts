@@ -65,12 +65,16 @@ it('finishes the requested mine, escort and hall instead of continuing an unrela
 
 it('records a real home threat, yields to defense and resumes the same mine afterwards', () => {
   const { game, memory, context } = expansionScene(true);
+  for (const unit of game.units.filter(unit => unit.id.startsWith('screen-'))) unit.hp = 1;
   let { snapshot, options } = context();
   planBootstrapGeneral(snapshot, 'us', options);
   expect(memory.landExpansion).toMatchObject({ mineId: 'natural', paused: true,
     interruptions: [{ tick: 0, reason: 'home-threat', targetId: 'invader' }] });
   expect(['defend', 'guard']).toContain(memory.v6!.general!.mode);
+  const paused = bootstrapPolicyContext(snapshotGame(game), 'us', 'v9_knight', { memory, teams: game.teams });
+  expect(paused.armyWants!.some(want => want.priority === 80)).toBe(false);
   game.units = game.units.filter(unit => !unit.id.startsWith('invader'));
+  for (const unit of game.units.filter(unit => unit.id.startsWith('screen-'))) unit.hp = unit.maxHp;
   ({ snapshot, options } = context());
   planBootstrapGeneral(snapshot, 'us', options);
   expect(memory.landExpansion!.mineId).toBe('natural');

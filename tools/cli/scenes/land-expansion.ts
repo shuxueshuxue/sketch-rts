@@ -44,7 +44,11 @@ export default async function(s: Scene) {
     samples.push({tick:target,halls:halls.map((b:any)=>({id:b.id,x:b.x,y:b.y,complete:b.complete,hp:b.hp}))});
     await s.camera(target===4800?3620:2920,target===4800?1950:3400,.7);await s.wait(5000);
     const focus=halls.find((b:any)=>Math.hypot(b.x-(target===4800?3696:2960),b.y-(target===4800?2000:3600))<100);if(focus)await s.select([focus.id]);
-    await s.shot(target===4800?'natural-at-four-minutes':'third-at-six-fifty');
+    const name=target===4800?'natural-at-four-minutes':'third-at-six-fifty';
+    await s.shot(name);
+    // Native browser JPEG previews fit the PR's file limit; retain the original PNGs in the evidence archive.
+    const output=JSON.parse(process.argv[2]!).out;
+    await s.page.screenshot({path:`${output}/${name}.jpg`,type:'jpeg',quality:82});
   }
   s.record('real-match-expansion',{seed:'v5-final-1',slot:'ladder-16',subject:'v9_archer grove',rival:'v9 ember',owners:'public room IDs player/enemy; exact SDK replay checked',samples});
 }
