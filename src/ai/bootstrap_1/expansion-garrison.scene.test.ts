@@ -5,7 +5,7 @@ import type { GameSnapshot } from '../../shared/types';
 import type { AiPolicyMemory } from '../memory';
 import type { AiGameAgent } from '../game-runner';
 import { strengthOf } from '../policy/v6/strength';
-import { unitMover } from '../../shared/catalog';
+import { unitMover, BUILDING_DEFS } from '../../shared/catalog';
 import { runGameLoop } from '../../sdk/game-runner';
 import { navalObservedPlanner } from '../benchmark/naval-room-worker';
 
@@ -24,7 +24,8 @@ it('keeps the completed natural defended while the remaining troops establish th
   game.activePlayers = [...saved.activePlayers];
   const memories = structuredClone(saved.memories);
   const naturalPoint = { x: 3696, y: 2000 };
-  let naturalCompleteTick: number | undefined;
+  let naturalFoundationTick: number | undefined, naturalCompleteTick: number | undefined;
+  let coverOrderTick: number | undefined;
   let protectedFrames = 0;
   const naturalId = 'building-v9_archer-townHall-1553';
   let minimumStrength = Infinity;
@@ -36,7 +37,10 @@ it('keeps the completed natural defended while the remaining troops establish th
   runGameLoop({ name: 'archer-natural-garrison-handoff', game, agents: saved.agents,
     maxTicks: 9000, thinkInterval: saved.thinkInterval,
     commandPlanner: navalObservedPlanner(memories),
-  }, { onStep({ game }) {
+  }, { onCommand({ tick, owner, command }) {
+    if (owner === 'v9_archer' && command.type === 'build' && command.buildingKind === 'defenseTower'
+      && Math.hypot(command.x - 3535, command.y - 1856) <= BUILDING_DEFS.defenseTower.attackRange) coverOrderTick ??= tick;
+  }, onStep({ game }) {
     const mission = memories.v9_archer!.landExpansion;
     if (mission?.roadCamp) roadClearObjectives.add(mission.mineId);
     const third = game.buildings.find(building => building.owner === 'v9_archer'
@@ -46,6 +50,7 @@ it('keeps the completed natural defended while the remaining troops establish th
     garrisonRecorded ||= Object.values(memories.v9_archer!.unitClaims)
       .some(claim => claim.kind === 'expansionGarrison' && claim.targetId === naturalId);
     const natural = game.buildings.find(building => building.id === naturalId);
+    if (natural) naturalFoundationTick ??= game.tick;
     if (natural?.complete) naturalCompleteTick ??= game.tick;
     if (game.tick < 5100) return;
     protectedFrames++;
@@ -64,6 +69,8 @@ it('keeps the completed natural defended while the remaining troops establish th
   expect(minimumStrength).toBeGreaterThanOrEqual(1);
   expect(game.buildings.find(building => building.id === naturalId)?.hp, 'natural survives the raid while the third finishes').toBe(900);
   expect(naturalCompleteTick).toBeDefined();
+  expect(coverOrderTick).toBeGreaterThan(naturalFoundationTick!);
+  expect(naturalCompleteTick! - naturalFoundationTick!).toBe(BUILDING_DEFS.townHall.buildTime);
   expect(naturalCompleteTick!).toBeLessThanOrEqual(5298);
   expect(protectedFrames).toBeGreaterThanOrEqual(3000);
   expect(garrisonRecorded || minimumStrength === Infinity).toBe(true);
