@@ -1,0 +1,142 @@
+{
+  "base": "f34b4677e4528d2194290662918d2357b56b7ae5",
+  "productionHead": "ae23da95f83996b83d618b0af3381aa0c4996527",
+  "strengthenedSceneHead": "ae23da95f83996b83d618b0af3381aa0c4996527",
+  "scenario": {
+    "seed": "v5-final-1",
+    "slot": "ladder-16",
+    "subject": "v9_archer grove",
+    "rival": "v9 ember",
+    "continuationStartTick": 4500,
+    "endTick": 9000,
+    "inputSha256": "78fb4f008e7b91e796833258607295ccd7a7e759eb0e9014401efce823c7fae2"
+  },
+  "specification": {
+    "raidEstimate": {
+      "fighters": 2,
+      "maximumNativeSteeringArrivalSeconds": 45,
+      "strengthCurrency": "strengthOf, current HP and veterancy",
+      "extraMargin": 0,
+      "expiresBeforeArrival": "excluded"
+    },
+    "defenseHandoff": "Fund the hall first, then retain real defense until the post is independently covered. Count already assigned local defenders. Never keep a second unit roster.",
+    "recruitment": "Recovering melee first, recovering ranged second, healthy escorts last. Select by actual strength, not a fixed guard count. A remote army still leaves a recovering soldier present.",
+    "towerAdmission": "Buy a tower only if the closest plausible raid exceeds recovering/established defense. No tax when existing guards are sufficient or the enemy army is more than 45 native-road seconds away.",
+    "temporaryEscorts": "Healthy construction escorts are marked in unitClaims and released after the actual replacement defense is present. Recovering guards remain recognized after healing.",
+    "recovery": "Safe recovery remains at the mining post; immediate danger may still cause an escape. Far healing posts cannot repeatedly borrow a mine garrison.",
+    "nextObjective": "With a garrison committed, rank unready mine camps by their missing reinforcement force. Clear a camp that actually blocks the expedition road as a prerequisite of the same mine; retain the parent mine through that child task."
+  },
+  "historyAudit": [
+    {
+      "file": "two-income-expansion.test.ts",
+      "cases": 12,
+      "origins": [
+        "#293, 2b3dc8a7",
+        "#332, 99a4bc3b"
+      ],
+      "intent": "Do not demand a 125-gold tower before a 400-gold free hall, or spend 125 redundantly at an already safe income."
+    },
+    {
+      "file": "ready-free-mine.test.ts",
+      "cases": 12,
+      "origins": [
+        "#356, 3a4b02d3, inheriting #332"
+      ],
+      "intent": "Fund an executable free mine before the closer guarded objective; preserve ally, terrain and road eligibility, and no redundant cover."
+    }
+  ],
+  "oldTestChanges": "Retain all 24 no-tower assertions. Move two of the four existing fighters to the free mine and record their already adequate garrison claims; add no units or resources. Keep all original troop, deposit, zero-damage, zero-loss and treasury assertions. Also assert the hall completes in its ordinary 560 ticks.",
+  "constructionAssertions": {
+    "hallFoundationBeforeCoverOrder": true,
+    "naturalBuildTicks": 560,
+    "thirdCompletionDeadlineTick": 9000,
+    "toleranceFromBaseTicks": 600
+  },
+  "observed": {
+    "naturalFoundationTick": {
+      "base": 4538,
+      "candidate": 4538
+    },
+    "naturalCompleteTick": {
+      "base": 5098,
+      "candidate": 5098
+    },
+    "naturalCoverCompleteTick": {
+      "base": 6770,
+      "candidate": 4954
+    },
+    "thirdFoundationTick": {
+      "base": 7782,
+      "candidate": 7586
+    },
+    "thirdCompleteTick": {
+      "base": 8342,
+      "candidate": 8146
+    },
+    "naturalLostTick": {
+      "base": 8257,
+      "candidate": null
+    },
+    "naturalHpAt9000": {
+      "base": null,
+      "candidate": 900
+    },
+    "firstBelowFootmanWithoutCoverTick": {
+      "base": 5495,
+      "candidate": null
+    },
+    "firstZeroTroopsWithoutCoverTick": {
+      "base": 6141,
+      "candidate": null
+    }
+  },
+  "changedRoomFunctions": [
+    "bootstrapScripts",
+    "bootstrapPolicyContext",
+    "prepareExpansionMission",
+    "expansionMissionCommands",
+    "bootstrapExpansionMine",
+    "rankBootstrapGoals",
+    "postRecoveryAssignments"
+  ],
+  "sharedRuntimeFunctionsChanged": [],
+  "memoryChanges": [
+    "expansionGarrisons: per-hall task metadata only",
+    "unitClaims.garrisonTemporary: temporary healthy escort marker",
+    "landExpansion.roadCamp: parent-objective prerequisite marker, no unit roster"
+  ],
+  "browser": {
+    "machine": "mac1",
+    "runId": "mveyojlo-9930c5",
+    "base": "f34b4677e4528d2194290662918d2357b56b7ae5",
+    "candidate": "ae23da95f83996b83d618b0af3381aa0c4996527",
+    "bothRunsPassed": true,
+    "worldProof": "Public room IDs player/enemy, exact SDK replay world fingerprints checked at 6600 and 8600; no visual simulation substitutes."
+  },
+  "validation": {
+    "fullSrc": "passed",
+    "fullSrcCommand": "npx vitest run --dir src --maxWorkers 4 --minWorkers 1",
+    "relatedLocalTests": 62,
+    "typecheck": "exit 0",
+    "strengthenedConstructionScene": "passed in the final full src run",
+    "benchRun": false,
+    "fullSrcRef": "ae23da95f83996b83d618b0af3381aa0c4996527",
+    "fullSrcFiles": 678,
+    "fullSrcPassedTests": 7634,
+    "fullSrcSkippedTests": 1,
+    "fullSrcSeconds": 244.63,
+    "largeBattleThinkMs": 14709,
+    "strengthenedConstructionSceneRef": "ae23da95f83996b83d618b0af3381aa0c4996527",
+    "strengthenedSceneAndBoundariesFiles": 2,
+    "strengthenedSceneAndBoundariesPassedTests": 8,
+    "mainRedProof": {
+      "ref": "f34b4677e4528d2194290662918d2357b56b7ae5",
+      "command": "npx vitest run src/ai/bootstrap_1/expansion-garrison.scene.test.ts --maxWorkers 1 --minWorkers 1",
+      "exitCode": 1,
+      "firstUnguardedTick": 5495,
+      "log": "validation/garrison-main-f34-red.log"
+    },
+    "finalFullSrcRunId": "mveyo012-c24328"
+  },
+  "evidencePointer": "evidence.json"
+}

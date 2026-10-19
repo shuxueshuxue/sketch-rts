@@ -2,7 +2,7 @@ import { BUILDING_DEFS } from '../../shared/catalog';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import type { GameCommand, GameSnapshot, PlayerId } from '../../shared/types';
 import { walkableGoal } from '../../shared/terrain';
-import { groundSteeringRoute, routePrefix } from '../../shared/route-selection';
+import { groundSteeringRoute, routeClearsDisks, routePrefix } from '../../shared/route-selection';
 import { resolveAiCommandIntent } from '../policy/commands';
 import { activeMiningBaseCount } from '../policy/expansion-model';
 import { groundThreatWithin } from '../policy/ground-threat';
@@ -14,7 +14,7 @@ import { isBacklineKind } from '../policy/v6/backline';
 import { recordPlay, v6Memory } from '../policy/v6/memory';
 import { v6Doctrine } from '../policy/v6/select';
 import { strengthOf } from '../policy/v6/strength';
-import { activeCamp, continueV7Creep, neutralCamps, EXPANSION_GUARD_RANGE } from '../policy/v7/creep';
+import { activeCamp, campContested, continueV7Creep, neutralCamps, CREEP_ROUTE_CLEARANCE, EXPANSION_GUARD_RANGE } from '../policy/v7/creep';
 import { bootstrapExpansionMine } from './expansion-target';
 import { bootstrapCampApproach, chooseBootstrapCamp, startBootstrapCamp } from './camp-geometry';
 import { miningJobDefenseTarget } from './mining-job-defense';
@@ -22,6 +22,7 @@ import { mineClaimedByAlly } from '../policy/mine-claims';
 import { miningRallyAssignment } from './mining-rally';
 import { activeUnitClaim, clearUnitClaim, forgetExpansionMember, isMineRallyClaim, recordUnitTaskClaim, setUnitClaim } from '../policy/claims';
 import type { AiPolicyMemory } from '../memory';
+import { expansionGarrisonReady } from './expansion-garrison';
 
 export function expansionMissionUnitIds(memory: AiPolicyMemory) {
   const mineId = memory.landExpansion?.mineId;
@@ -75,7 +76,12 @@ export function prepareExpansionMission(snapshot: GameSnapshot, owner: PlayerId,
   const mine = mineId === undefined ? undefined : snapshot.resources.find(mine => mine.id === mineId && mine.amount > 0);
   const hall = mine && snapshot.buildings.find(building => building.kind === 'townHall'
     && distance(building, mine) < GOLD_MINE_RULES.baseRange);
-  if (task && hall?.owner === owner) task.stage = hall.complete ? 'complete' : 'build';
+  if (task && hall?.owner === owner) {
+    task.stage = hall.complete ? 'complete' : 'build';
+    // Prepare the post during construction, while the expedition already covers this mine.
+    const ready = expansionGarrisonReady(snapshot, owner, options, task.mineId);
+    if (hall.complete && !ready) return task;
+  }
   if (!task || task.stage === 'complete' || !mine || hall && hall.owner !== owner || mineClaimedByAlly(snapshot, owner, mine, options)) {
     const { strategy } = v6Doctrine(snapshot, owner, options);
     const phase = strategy.phases[Math.min(v6.phase ?? 0, strategy.phases.length - 1)];
@@ -132,6 +138,7 @@ export function expansionMissionCommands(snapshot: GameSnapshot, owner: PlayerId
   const task = prepareExpansionMission(snapshot, owner, options, intel);
   if (!task || task.paused || task.stage === 'complete') return undefined;
   const mine = snapshot.resources.find(mine => mine.id === task.mineId)!, memory = v6Memory(options);
+  const home = intel.home;
   const front = availableV6Army(snapshot, options, intel).filter(unit => {
     const claim = activeUnitClaim(snapshot, owner, unit, options);
     return !isMineRallyClaim(claim) && claim?.kind !== 'mineLeash' && claim?.kind !== 'expansionGarrison' && claim?.kind !== 'harassSquad';
@@ -139,9 +146,27 @@ export function expansionMissionCommands(snapshot: GameSnapshot, owner: PlayerId
   if (!front.length) return [];
   const camps = neutralCamps(snapshot), guard = camps.find(camp => distance(camp.center, mine) <= EXPANSION_GUARD_RANGE);
   if (guard) {
-    if (memory.creep && activeCamp(memory.creep, camps) !== guard) delete memory.creep;
+    const active = memory.creep && activeCamp(memory.creep, camps);
+    if (task.roadCamp && (!active || distance(active.center, task.roadCamp) > 300)) delete task.roadCamp;
+    if (memory.creep && active !== guard && !task.roadCamp) delete memory.creep;
     if (!memory.creep) {
-      const choice = chooseBootstrapCamp(intel.home, snapshot, front, camps, [guard], options, mine);
+      let choice = chooseBootstrapCamp(home, snapshot, front, camps, [guard], options, mine);
+      if (!choice && Object.keys(options.memory.expansionGarrisons ?? {}).length > 0) {
+        // A camp on the expedition's actual road is part of reaching this mine.
+        // Keep the mine as the parent objective; do not wait forever merely
+        // because the final guard's safe-approach check sees this earlier camp.
+        const leader = [...front].sort((a, b) => distance(a, guard.center) - distance(b, guard.center))[0]!;
+        const road = groundSteeringRoute(snapshot.map, leader, guard.center);
+        const blockers = camps.filter(camp => camp !== guard).map(camp => ({ camp,
+          at: road.findIndex((point, index) => index > 0 && !routeClearsDisks([road[index - 1]!, point],
+            camp.creeps.map(creep => ({ x: creep.x, y: creep.y, radius: CREEP_ROUTE_CLEARANCE })))) }))
+          .filter(item => item.at >= 0).sort((a, b) => a.at - b.at);
+        const blocker = blockers[0]?.camp;
+        if (blocker && !campContested(intel, blocker.center, front)) {
+          choice = chooseBootstrapCamp(home, snapshot, front, camps, [blocker], options, blocker.center);
+          if (choice) { task.roadCamp = { ...blocker.center }; recordPlay(memory, 'expansion:clearRoad'); }
+        }
+      }
       if (choice) startBootstrapCamp(snapshot, front, choice, options);
     }
     const under = continueV7Creep(snapshot, owner, front, camps, intel, options);
@@ -152,17 +177,17 @@ export function expansionMissionCommands(snapshot: GameSnapshot, owner: PlayerId
     }
     task.stage = 'assemble';
   } else {
-    delete memory.creep;
+    delete memory.creep; delete task.roadCamp;
     if (task.stage !== 'build') task.stage = 'escort';
   }
   // Assemble on the camp's safe approach while recruits arrive. Once clear, stay with the mine.
   if (task.stage === 'assemble' && front.length >= 3 && !task.staging
     && snapshot.tick - (task.stagingCheckedTick ?? -300) >= 300) {
     task.stagingCheckedTick = snapshot.tick;
-    const staging = bootstrapCampApproach(snapshot, intel.home, front, guard!, intel.home, camps)?.staging;
+    const staging = bootstrapCampApproach(snapshot, home, front, guard!, home, camps)?.staging;
     if (staging) task.staging = staging;
   }
-  const destination = task.stage === 'assemble' ? task.staging ?? intel.home : mine;
+  const destination = task.stage === 'assemble' ? task.staging ?? home : mine;
   const point = walkableGoal(snapshot.map, destination.x, destination.y);
   memory.general = { mode: 'hold', target: point, holdingSince: task.sinceTick };
   const builder = task.stage === 'escort' ? snapshot.units.find(unit => unit.owner === owner && unit.order.type === 'build'

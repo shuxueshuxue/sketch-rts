@@ -26,6 +26,7 @@ import { armedFoes, retreatLandTravelTicks } from './safe-land-route';
 import { freeIncomeCapitalGoals } from './free-income-capital';
 import { trainingJobs } from "../../shared/building-jobs";
 import { reinforcementTransportWant } from './reinforcement-ferries';
+import { expansionGarrisonCoverGoals } from './expansion-garrison';
 
 export const bootstrapEconomy: AiScript = {
   id: 'v6Economy',
@@ -119,7 +120,7 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
     (view, player, context) => reinforcementTransportWant(view, player, context)
       ?? colonyNavalWantWithMineEligibility(view, player, context, mountedMinePlan(view, context.memory).eligible), prepareMiningCover,
     (view, intel) => bootstrapExpansionMine(view, owner, intel, options),
-    economy => [...healingPostGoals(economy), ...freeIncomeCapitalGoals(economy)]);
+    economy => [...healingPostGoals(economy), ...freeIncomeCapitalGoals(economy), ...expansionGarrisonCoverGoals(economy)]);
   goals.push(...controlledMercenaryGoals(snapshot, owner, options));
   goals.push(...shoppingGoals(snapshot, owner, options));
   goals.push(...colonyRecoveryGoals(snapshot, owner, options));
