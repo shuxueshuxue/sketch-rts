@@ -1602,10 +1602,7 @@ function updateUnits(game: Game, defenses: ShipDefenseFrame, navalFrame: boolean
     }
     if(navalUnitFrame && shipProfile(unit))continue;
     if (unit.kind !== "worker") {
-      if (hasHumanGuard(game, unit) && distance(unit, guardPosition(game, unit)) > GUARD_LEASH_RANGE) {
-        returnToGuard(game, unit);
-        continue;
-      }
+      // Only a self-directed chase returns to its station. A shove alone must leave an idle unit where it lands.
       // A troop on a tower's top takes up only what it can strike from there (see @@@tower-garrison).
       const target = nearestEnemyTarget(game, unit, unit.owner === "neutral" ? 150 : unit.garrison ? unit.attackRange : AUTO_ACQUIRE_RANGE, navalUnitFrame);
       if (target) unit.order = { type: "attack", targetId: target.id, ...automaticLeash(game, unit) };

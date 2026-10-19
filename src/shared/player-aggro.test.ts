@@ -142,10 +142,10 @@ describe("player unit aggro", () => {
     expect(column.order).toEqual({ type: "attackMove", x: 1_380, y: 400, targetId: "shooter" });
   });
 
-  it("leashes a self-directed chase to where the soldier stood, but lets a commanded chase run", () => {
+  it("leashes a self-directed chase to its persistent station, but lets a commanded chase run", () => {
     const game = duel("aggro-leash")
       .unit("v2", "footman", 1_000, 1_000, { id: "sentry" })
-      .unit("v1", "raider", 1_100, 1_000, { id: "bait" })
+      .unit("v1", "raider", 1_200, 1_000, { id: "bait" })
       .unit("v2", "footman", 1_000, 1_500, { id: "hunter" })
       .unit("v1", "raider", 1_100, 1_500, { id: "hunted" })
       .build()
@@ -156,17 +156,23 @@ describe("player unit aggro", () => {
 
     const sentry = unit(game, "sentry")!;
     const hunter = unit(game, "hunter")!;
+    // The old assertion anchored each chase where it started. Displacement since taking up the station must not
+    // move that anchor: an automatic chase still returns to the original 1000, not the current 1100.
+    sentry.x = 1_100;
     stepGame(game);
     expect(sentry.order).toMatchObject({ type: "attack", targetId: "bait", leashX: 1_000, leashY: 1_000 });
 
     expect(stepUntil(game, 20 * 20, () => sentry.order.type === "move")).toBe(true);
-    expect(sentry.order).toEqual({ type: "move", x: 1_000, y: 1_000 });
-    expect(sentry.x).toBeGreaterThan(1_550);
+    expect(sentry.order).toEqual({ type: "move", x: 1_000, y: 1_000, returnToGuard: true });
+    expect(sentry.x).toBeGreaterThan(1_100);
+    expect(Math.hypot(sentry.x - 1_000, sentry.y - 1_000)).toBeLessThanOrEqual(600);
     expect(hunter.order).toMatchObject({ type: "attack", targetId: "hunted" });
 
     expect(stepUntil(game, 20 * 20, () => sentry.order.type === "idle")).toBe(true);
     expect(Math.hypot(sentry.x - 1_000, sentry.y - 1_000)).toBeLessThan(8);
-    expect(hunter.x).toBeGreaterThan(2_000);
+    // The sentry now turns back as soon as the bait leaves its station's range, so its return no longer times the hunt.
+    expect(stepUntil(game, 20 * 20, () => hunter.x > 2_000)).toBe(true);
+    expect(hunter.order).toMatchObject({ type: "attack", targetId: "hunted" });
   });
 
   it("scores an enemy attacking our side above a nearer bystander", () => {

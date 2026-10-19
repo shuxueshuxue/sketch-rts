@@ -102,7 +102,8 @@ export function cast(): Cast & {
 export function stage(width: number, height: number, terrain: Terrain, seats: [PlayerId, RaceId][], pieces: Cast): Game {
   const game = createGame("bareDuel", {
     players: seats.map(([id]) => id),
-    aiPlayers: [],
+    // The home screen's cast is autonomous; none of these seats is controlled by a human.
+    aiPlayers: seats.map(([id]) => id),
     teams: Object.fromEntries(seats.map(([id]) => [id, id])),
     races: Object.fromEntries(seats),
     scenario: {

@@ -24,6 +24,8 @@ describe('army against a forest horde home battle', () => {
     const run = createForestHorde(), units = run.game.units;
     expect('battle' in run && run.battle).toEqual({ scene: 'woods', seed: 1 });
     expect(run.game.activePlayers).toEqual(['court', 'wilds']);
+    expect(run.game.aiPlayers).toEqual(run.game.activePlayers);
+    expect(units.every(unit => unit.guardPosition === undefined)).toBe(true);
     expect(units).toHaveLength(36); expect(run.game.buildings).toHaveLength(0);
     const army = units.filter(unit => unit.owner === 'court'), horde = units.filter(unit => unit.owner === 'wilds');
     expect(army).toHaveLength(18); expect(horde).toHaveLength(18);

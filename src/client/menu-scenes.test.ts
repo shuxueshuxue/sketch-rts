@@ -72,6 +72,8 @@ describe('bounded home scenes using the world presentation', () => {
     expect(battles.map(index => MENU_SCENES[index]!.id)).toEqual(['woods', 'fleet']);
     for (const scene of MENU_SCENES) {
       const run = scene.create(), terrain = run.game.map.terrain!;
+      expect(run.game.aiPlayers).toEqual(run.game.activePlayers);
+      expect(run.game.units.every(unit => !unit.guardPosition)).toBe(true);
       if ('presentation' in run) {
         expect(run.length).toBeGreaterThan(30);
         expect(run.length).toBeLessThanOrEqual(90);
