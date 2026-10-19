@@ -59,7 +59,7 @@ export function postRecoveryAssignments(snapshot: GameSnapshot, owner: PlayerId,
 
 /** Care keeps its ordinary movement ownership until the patient has fully recovered. */
 export const frontRecovery: AiScript = {
-  id: 'frontRecovery', phase: 'tactics',
+  id: 'frontRecovery', phase: 'tactics', redirects: 'local',
   claimsUnits: (snapshot, owner, options) => new Set(postRecoveryAssignments(snapshot, owner, options).map(({ patient }) => patient.id)),
   run: (snapshot, owner, options) => postRecoveryCommands(postRecoveryAssignments(snapshot, owner, options)),
 };

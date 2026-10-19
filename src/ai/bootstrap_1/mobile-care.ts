@@ -21,7 +21,7 @@ function assignments(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyC
 
 /** Home-ground patients rendezvous with an existing medic while expeditions and camps keep their own care. */
 export const mobileCare: AiScript = {
-  id: 'mobileCare', phase: 'tactics',
+  id: 'mobileCare', phase: 'tactics', redirects: 'local',
   claimsUnits: (snapshot, owner, options) => new Set(assignments(snapshot, owner, options).map(({ patient }) => patient.id)),
   run: (snapshot, owner, options) => assignments(snapshot, owner, options)
     .flatMap(({ patient, healer, foes, medics }) => patientRendezvousCommands(snapshot, [{ patient, healer }], foes, medics)),

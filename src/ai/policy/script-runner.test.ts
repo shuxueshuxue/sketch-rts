@@ -21,6 +21,31 @@ describe("AI script runner", () => {
   }
   const retreatClaim = { kind: "retreat" as const, targetId: "retreat", x: 500, y: 500, sinceTick: 0, expiresTick: 900 };
 
+  it('finalizes task membership only from commands that survived both ownership and order conflicts', () => {
+    const game = tacticalScene(), memory = createAiPolicyMemory();
+    let assigned = ['guard', 'free'];
+    let finalFieldOrders = -1;
+    const scripts: AiScript[] = [
+      { id: 'rescue', phase: 'tactics', claimsUnits: () => new Set(['guard']),
+        run: () => ({ type: 'move', unitIds: ['guard'], x: 500, y: 500 }) },
+      { id: 'first', phase: 'tactics', run: () => ({ type: 'move', unitIds: ['free'], x: 700, y: 700 }) },
+      { id: 'field', phase: 'tactics', run: () => ({ type: 'attackMove', unitIds: ['guard', 'free'], x: 2000, y: 2000 }),
+        onCommands(_snapshot, _owner, _options, commands) {
+          assigned = commands.flatMap(command => 'unitIds' in command ? command.unitIds : []);
+        },
+        afterPlan(_snapshot, _owner, _options, entries) {
+          finalFieldOrders = entries.filter(entry => entry.scriptId === 'field').length;
+        } },
+      { id: 'commander', phase: 'tactics', run() { expect(assigned).toEqual([]); return []; } },
+    ];
+    const issued = runAiCommandEntriesFromScripts(snapshotGame(game), 'v2', scripts, { memory });
+    expect(assigned).toEqual([]);
+    expect(finalFieldOrders).toBe(0);
+    for (const entry of issued) issuePlayerCommand(game, 'v2', entry.command);
+    expect(game.units.find(unit => unit.id === 'guard')!.order).toMatchObject({ type: 'move', x: 500 });
+    expect(game.units.find(unit => unit.id === 'free')!.order).toMatchObject({ type: 'move', x: 700 });
+  });
+
   it.each(["undefined", "array"] as const)("keeps an empty %s script's memory updates before later real commands", result => {
     const game = tacticalScene(), snapshot = snapshotGame(game), memory = createAiPolicyMemory();
     const before = structuredClone(snapshot), calls: string[] = [];

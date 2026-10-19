@@ -83,7 +83,7 @@ export function shoppingGoals(snapshot: GameSnapshot, owner: PlayerId, options: 
 }
 
 export const shopping: AiScript = {
-  id: 'shopping', phase: 'tactics', claimsUnits: shoppingUnitIds,
+  id: 'shopping', phase: 'tactics', redirects: 'strategic', claimsUnits: shoppingUnitIds,
   run: (snapshot, owner, options): GameCommand[] => {
     let active = liveShopping(snapshot, owner, options);
     if (!active) {

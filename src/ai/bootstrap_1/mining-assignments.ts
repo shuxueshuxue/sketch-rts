@@ -31,7 +31,7 @@ function assignments(snapshot: GameSnapshot, owner: PlayerId) {
 
 /** Losing a mining hall ends its workers' old hauling route. */
 export const miningAssignments: AiScript = {
-  id: 'miningAssignments', phase: 'tactics',
+  id: 'miningAssignments', phase: 'tactics', redirects: 'strategic',
   run(snapshot, owner) {
     return assignments(snapshot, owner).map(({ unitId, resourceId }) => ({ type: 'mine' as const, unitIds: [unitId], resourceId }));
   },
