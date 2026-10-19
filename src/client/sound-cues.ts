@@ -25,7 +25,8 @@ export function soundCues(before: GameSnapshot, after: GameSnapshot, listener: P
     const at = { x: effect.x, y: effect.y };
     // A projectile effect carrying its shooter is the shot leaving; a hit carries whose weapon dealt it.
     if (["board", "unload"].includes(effect.type)) { if (effect.owner === listener) cues.push({ id: effect.type as "board" | "unload", ...at, kind: effect.sourceKind as UnitKind }); }
-    else if (["heal", "summon", "curse", "stomp", "web", "bloodlust"].includes(effect.type)) cues.push({ id: "spell", ...at, kind: effect.sourceKind as UnitKind });
+    else if (effect.type === "heal") cues.push({ id: "heal", ...at, kind: effect.sourceKind as UnitKind });
+    else if (["summon", "curse", "stomp", "web", "bloodlust"].includes(effect.type)) cues.push({ id: "spell", ...at, kind: effect.sourceKind as UnitKind });
     else if (effect.attackKind && ["projectile", "siegeBolt", "shellFlight", "grapeshot"].includes(effect.type)) {
       const id = SHOT_SOUNDS[effect.attackKind];
       if (id) cues.push({ id, x: effect.fromX ?? effect.x, y: effect.fromY ?? effect.y });

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>统一治疗音效 · 候选试听</title>
+<style>
+body{max-width:40rem;margin:3rem auto;padding:0 1.2rem;background:#20272a;color:#e8e8df;font:17px/1.7 system-ui,sans-serif}h1{font-size:1.5rem}h2{font-size:1.1rem;margin:2rem 0 .3rem}audio{display:block;width:100%;margin:.6rem 0}small{color:#bcc5c9}a{color:#9fd8ed}details{margin-top:2.5rem;border-top:1px solid #536065;padding-top:1rem}
+</style>
+<h1>统一治疗音效 · 候选试听</h1>
+<p>所有治疗者将使用同一种治疗声。下面两段来自站点现有音效包，等待选择，当前游戏尚未替换。</p>
+<h2>A · 现在祭司的治疗声</h2>
+<audio controls preload="metadata" data-volume="0.6" src="../war3/2c95dfd331f5eebf.ogg"></audio>
+<small>HealTarget · 两个候选均以 60% 音量比较。</small>
+<h2>B · 现有复活法术声</h2>
+<audio controls preload="metadata" data-volume="0.6" src="../war3/282737251034bf2a.ogg"></audio>
+<small>ResurrectTarget · 目前是召唤师的法术声。</small>
+<details>
+<summary>对照：现在战地医师、潮汐祭司、树皮医者的治疗声</summary>
+<audio controls preload="metadata" data-volume="0.65" src="../war3/8ab28a60b0f2c969.ogg"></audio>
+<small>FeralSpiritTarget1 · 当前包内音量为 65%；诅咒、践踏、蛛网和嗜血也共用这段录音。</small>
+</details>
+<p><small>游戏中还会受距离和其他声音影响。本页只比较录音；选择之后才单独发布治疗素材配置。
+录音来自站点已有 Warcraft III 私有音效包，© Blizzard Entertainment。</small></p>
+<script>
+const players = [...document.querySelectorAll('audio')];
+for (const player of players) {
+  player.volume = Number(player.dataset.volume);
+  player.addEventListener('play', () => {
+    for (const other of players) if (other !== player) other.pause();
+  });
+}
+</script>
+</html>

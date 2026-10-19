@@ -50,6 +50,36 @@ function firstShots(game: ReturnType<typeof createGame>, sourceId: string, actio
 }
 
 describe("sound cues", () => {
+  const healerKinds = (Object.keys(UNIT_DEFS) as UnitKind[]).filter(kind => UNIT_DEFS[kind].abilities.some(ability => ABILITY_DEFS[ability].behavior === "heal"));
+  describe.each(["heal", "veteranHealingWave"] as const)("%s healing", ability => {
+    it.each(healerKinds)("uses the dedicated heal event for a real %s cast", kind => {
+      const game = createGame("bareDuel", { aiPlayers: [] });
+      game.units = []; game.buildings = []; game.items = []; game.resources = [];
+      game.scriptedVictory = true;
+      delete game.map.terrain;
+      const caster = game.spawnUnit("player", kind, 1000, 1000);
+      const patient = game.spawnUnit("player", "footman", 1060, 1000);
+      patient.hp = 10;
+      caster.autocast = { heal: false, veteranHealingWave: false };
+      if (ability === "veteranHealingWave") caster.veteranSkill = ability;
+      const before = snapshotGame(game);
+      issueCommand(game, { type: "cast", unitId: caster.id, ability, ...(ability === "heal" ? { targetId: patient.id } : {}) });
+      stepGame(game);
+      const after = snapshotGame(game), heals = after.effects.filter(effect => effect.type === "heal");
+      expect(patient.hp).toBeGreaterThan(10);
+      expect(heals).toHaveLength(1);
+      expect(heals[0]!.sourceKind).toBe(kind);
+      expect(soundCues(before, after, "player")).toEqual([{ id: "heal", x: heals[0]!.x, y: heals[0]!.y, kind }]);
+      const next = structuredClone(after); next.tick += 1;
+      expect(soundCues(after, next, "player")).toEqual([]);
+    });
+  });
+
+  it.each(["summon", "curse", "stomp", "web", "bloodlust"] as const)("keeps %s separate from healing", type => {
+    const after = later(next => next.effects.push(effect(`non-heal-${type}`, type, { sourceKind: "fieldMedic" })));
+    expect(soundCues(start, after, "player")).toEqual([{ id: "spell", x: 100, y: 200, kind: "fieldMedic" }]);
+  });
+
   const rangedKinds = (Object.keys(UNIT_DEFS) as UnitKind[]).filter(kind => UNIT_DEFS[kind].attackDamage > 0 && UNIT_DEFS[kind].attackRange > RANGED_ATTACK_RANGE_THRESHOLD);
   it.each(rangedKinds)("captures attackKind on every real %s launch and sounds it once at its origin", kind => {
     const { game, shooter, target } = battle(kind);
