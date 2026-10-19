@@ -31,6 +31,7 @@ import { isEnemyOwner, isOpponentOwner } from "./ownership";
 import { buildings, units } from "./snapshot";
 import { distance } from "./spatial";
 import { mineClaimedByAlly } from './mine-claims';
+import { isDefenseTaskClaim } from './claims';
 import { chooseNavalMine } from './naval-mines';
 import type { AiPolicyContext } from "./types";
 import { attackMargin } from "./v6/general";
@@ -39,6 +40,14 @@ import { readV6Intel } from "./v6/intel";
 import { TOWER_STRENGTH, effectiveCombatRating, strengthOf } from "./v6/strength";
 import { canSupply, playerState } from "./world-model";
 function ferryCapacity(unit:Unit){return isTransportKind(unit.kind) ? carries(unit) : 0;}
+
+/** Task ownership filters recruits, never the force counted as defending shore. */
+export function ferryCrewTaskAvailable(unit: Unit, options: AiPolicyContext) {
+    const claim = options.memory.unitClaims[unit.id];
+    // Keep the upcoming squad claim protected when reading persisted memory as well.
+    const taskKind: string | undefined = claim?.kind;
+    return !isDefenseTaskClaim(claim) && taskKind !== 'harassSquad';
+}
 
 type Point = {
     x: number;
@@ -658,12 +667,12 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     const attached = new Set([...cargo, ...boarding].map(unit => unit.id));
     mission.crewIds = mission.crewIds.filter(id => attached.has(id));
     let room = ferryCapacity(boat) - [...cargo, ...boarding].reduce((n, unit) => n + bodyMass(unit), 0);
-    const workers = own.filter(unit => !unit.deck && !attached.has(unit.id) && unit.kind === "worker" && sameGround(map, unit, loadGround) && (unit.order.type === "mine" || unit.order.type === "idle"));
+    const workers = own.filter(unit => !unit.deck && !attached.has(unit.id) && unit.kind === "worker" && sameGround(map, unit, loadGround) && (unit.order.type === "mine" || unit.order.type === "idle") && ferryCrewTaskAvailable(unit, options));
     const crew: Unit[] = [];
     const workerCount = [...cargo, ...boarding].filter(unit => unit.kind === "worker").length;
     const reserveMiners = snapshot.resources.some(mine => mine.amount > 0 && sameGround(map, mine, loadGround) && halls.some(hall => distance(hall, mine) < GOLD_MINE_RULES.baseRange)) ? 3 : 0;
     if (mission.purpose === "evacuate")
-        crew.push(...own.filter(unit => !unit.deck && unit.kind === "worker" && sameGround(map, unit, loadGround) && !attached.has(unit.id) && unit.order.type !== "board").slice(0, Math.min(2, Math.floor(room / 75))));
+        crew.push(...own.filter(unit => !unit.deck && unit.kind === "worker" && sameGround(map, unit, loadGround) && !attached.has(unit.id) && unit.order.type !== "board" && ferryCrewTaskAvailable(unit, options)).slice(0, Math.min(2, Math.floor(room / 75))));
     else if (mission.purpose === "rebase")
         crew.push(...workers.slice(0, Math.max(0, Math.floor(room / 75))));
     else if (mission.purpose === "settle" && workerCount < 2 && workers.length > reserveMiners)
@@ -676,7 +685,7 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
         room -= 75 * Math.max(0, 2 - workerCount - crew.filter(unit => unit.kind === "worker").length);
     const availableSoldiers = own.filter(unit => !unit.deck && unit.kind !== "worker" && unitMover(unit.kind) === "land" && !unit.expiresTick && !attached.has(unit.id) && sameGround(map, unit, loadGround) && unit.order.type !== "board" && unit.order.type !== "cast");
     // Crew selection can keep only a mission's rider. The rest still defend this ground; they are not passengers.
-    const soldiers = orderCrew([...availableSoldiers], loadGround, boat);
+    const soldiers = orderCrew(availableSoldiers.filter(unit => ferryCrewTaskAvailable(unit, options)), loadGround, boat);
     // Load engineers first. Reserving only their weight did not reserve floor
     // space: nearby infantry filled the deck before distant workers arrived.
     const engineersAboard=cargo.filter(unit=>unit.kind==='worker').length;

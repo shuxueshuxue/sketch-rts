@@ -6,7 +6,7 @@ import { seconds, SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { isTransportKind } from '../../shared/transport-role';
 import type { GameSnapshot, PlayerId } from '../../shared/types';
 import type { AiPolicyContext } from '../policy/types';
-import { coastOnWater, landingSafe, outgunned } from '../policy/naval';
+import { coastOnWater, ferryCrewTaskAvailable, landingSafe, outgunned } from '../policy/naval';
 import { navalServices } from '../policy/naval-services';
 import { shipNeedsRepair } from '../../shared/ship-equipment';
 import { mineClaimedByAlly } from '../policy/mine-claims';
@@ -37,7 +37,7 @@ export function planFirstCombatCrossing(snapshot: GameSnapshot, owner: PlayerId,
   const own = snapshot.units.filter(unit => unit.owner === owner && unit.hp > 0);
   // A navy-only settlement has no promised army to wait for. A working land
   // producer or a real combat unit makes this a troop-delivery assignment.
-  if (!own.some(unit => unit.kind !== 'worker' && unitMover(unit.kind) === 'land' && unit.expiresTick === undefined)
+  if (!own.some(unit => unit.kind !== 'worker' && unitMover(unit.kind) === 'land' && unit.expiresTick === undefined && ferryCrewTaskAvailable(unit, options))
     && !snapshot.buildings.some(building => building.owner === owner && building.complete
       && BUILDING_DEFS[building.kind].trains.some(kind => kind !== 'worker' && unitMover(kind) === 'land'))) return;
   const home = snapshot.buildings.find(building => building.owner === owner && building.kind === 'townHall');

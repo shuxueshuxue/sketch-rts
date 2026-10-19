@@ -13,6 +13,7 @@ import { createUnit } from '../../shared/map';
 import type { GameSnapshot, Unit } from '../../shared/types';
 import { planBootstrapEconomy } from './economy';
 import { UNIT_DEFS } from '../../shared/catalog';
+import type { AiPolicyUnitClaimKind } from '../memory';
 
 function crossing() {
   const game = sketchScene('first-combat-delivery').map('bareDuel').replaceDefaults()
@@ -36,6 +37,35 @@ function crossing() {
   return { game, boat, memory, from, to };
 }
 const versions = ['v9_archer', 'v9_summoner', 'v9_knight'] as const;
+const protectedTasks = ['mineRally', 'mineLeash', 'mineGuard', 'workerSafety', 'expansionGarrison', 'harassSquad'] as const;
+it.each(versions.flatMap(version => protectedTasks.map(task => ({ version, task }))))(
+  '$version leaves a $task unit with its current task while boarding free troops', ({ version, task }) => {
+    const { game, boat, memory } = crossing();
+    boat.x = 1424; boat.sailing!.heading = 0;
+    const guard = game.spawnUnit('us', 'emberRavager', 1100, 1800);
+    const free = game.spawnUnit('us', 'emberRavager', 1140, 1800);
+    // Include the next squad claim's serialized spelling before its picker lands.
+    memory.unitClaims[guard.id] = { kind: task as AiPolicyUnitClaimKind, targetId: 'home',
+      x: 640, y: 500, sinceTick: 0, expiresTick: 3600 };
+    const snapshot = snapshotGame(game);
+    const commands = planBootstrapNaval(snapshot, 'us', bootstrapPolicyContext(snapshot, 'us', version, { memory, teams: game.teams }));
+    const boarders = commands.flatMap(command => command.type === 'board' ? command.unitIds : []);
+    expect(boarders).toContain(free.id);
+    expect(boarders).not.toContain(guard.id);
+    expect(memory.unitClaims[guard.id]?.kind).toBe(task);
+  });
+it.each(versions)('%s leaves the protected worker out of the first ferry crew', version => {
+  const { game, boat, memory } = crossing();
+  boat.x = 1424; boat.sailing!.heading = 0;
+  const engineer = game.units.find(unit => unit.id === 'engineer')!;
+  for (let i = 0; i < 6; i++) game.spawnUnit('us', 'worker', 1120 + i * 30, 1760);
+  game.spawnUnit('us', 'emberRavager', 1100, 1800);
+  memory.unitClaims[engineer.id] = { kind: 'workerSafety', targetId: 'home', x: 640, y: 500, sinceTick: 0, expiresTick: 3600 };
+  const snapshot = snapshotGame(game);
+  const commands = planBootstrapNaval(snapshot, 'us', bootstrapPolicyContext(snapshot, 'us', version, { memory, teams: game.teams }));
+  expect(commands.some(command => command.type === 'board' && command.unitIds.includes(engineer.id))).toBe(false);
+  expect(commands.some(command => command.type === 'board' && command.unitIds.some(id => game.units.find(unit => unit.id === id)?.kind === 'worker'))).toBe(true);
+});
 it.each(versions)('%s does not send a lone worker to attack an unguarded enemy island', version => {
   const { game, boat, memory, to } = crossing();
   boat.x = 1424; boat.sailing!.heading = 0;

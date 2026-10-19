@@ -2,7 +2,7 @@ import { missingMiningWorkers } from './workforce';
 import { BUILDING_DEFS, UNIT_DEFS, canTrainAt, requiredSupplyCap, trainableUnitsAt, unitMover } from '../../shared/catalog';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import type { BuildingKind, GameCommand, GameSnapshot, PlayerId, TrainableUnitKind, Unit } from '../../shared/types';
-import { colonyNavalWantWithMineEligibility, navalBudgetReserve, navalReservePurchase } from '../policy/naval';
+import { colonyNavalWantWithMineEligibility, ferryCrewTaskAvailable, navalBudgetReserve, navalReservePurchase } from '../policy/naval';
 import { mountedMinePlan } from '../policy/mounted-mine-plan';
 import type { AiPolicyContext, AiScript } from '../policy/types';
 import { ageV6Goals, availableV6ConstructionWorkers, collectV6Goals, expansionCapital, healingPostGoals, issueV6Construction, v6ExpansionGoal, type rankV6Goals } from '../policy/v6/economy';
@@ -187,7 +187,7 @@ export function planBootstrapEconomy(snapshot: GameSnapshot, owner: PlayerId, op
     && Object.values(options.memory.naval?.ferries ?? {}).some(mission => mission.phase === 'loading'
       && (mission.purpose === 'advance' || mission.purpose === 'assault'))
     && !snapshot.units.some(unit => unit.owner === owner && unit.kind !== 'worker' && unitMover(unit.kind) === 'land'
-      && unit.expiresTick === undefined && !unit.deck && unit.attackDamage > 0)
+      && unit.expiresTick === undefined && !unit.deck && unit.attackDamage > 0 && ferryCrewTaskAvailable(unit, options))
     && !snapshot.buildings.some(building => building.owner === owner && trainingJobs(building)
       .some(job => job.unitKind !== 'worker' && unitMover(job.unitKind) === 'land'))
     && readV6Intel(snapshot, owner, options).intrusion === undefined;

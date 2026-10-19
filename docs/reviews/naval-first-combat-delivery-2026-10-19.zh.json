@@ -33,8 +33,8 @@
   ],
   "脚本验证": {
     "文件": "src/ai/bootstrap_1/combat-delivery.test.ts",
-    "用例数": 21,
-    "覆盖": "三家族：工人不能单独进攻3项、并行登船3项、60秒实际卸兵3项；两处真实首船快照各覆盖三家族的资金6项与完整物理登船卸兵6项。真实快照投影明确保留地形、船体、建筑与守军，隔离宏观生产，154秒注入该局实际观测到的第一名部队。",
+    "用例数": 42,
+    "覆盖": "三家族：工人不能单独进攻3项、并行登船3项、60秒实际卸兵3项；两处真实首船快照各覆盖三家族的资金6项与完整物理登船卸兵6项。真实快照投影明确保留地形、船体、建筑与守军，隔离宏观生产，154秒注入该局实际观测到的第一名部队。 另加三家族×六种受保护任务18项，三家族workerSafety工人3项，总计42项。",
     "main失败证明": "将新测试和快照放入精确 bf078ec5 源码；funds|lone worker|recruits 12项全部失败，其余9项按过滤跳过。失败是实际行为断言，不是缺模块。",
     "归属回归": "mounted-expedition-priority 的18项全部通过；没有修改旧断言。",
     "骑手筛选修复": "保留完整 availableSoldiers 计算守军强度；orderCrew 的筛选仅影响候选登船者，未覆盖 Codex23 的修改。"
@@ -139,8 +139,16 @@
   },
   "原始证据": "同名 .evidence.json 指向仓库外的原始回放、存档、现场记录和验证日志。",
   "验证汇总": {
-    "完整源码": "A100，同一份3317文件源副本经SHA-256逐项核对；vitest run --dir src --maxWorkers 4 --minWorkers 1：670文件、7524测试全部通过，358.17秒。",
+    "完整源码": "a2cff607加首航及任务归属修复，A100 3341文件副本经SHA-256逐项核对；vitest run --dir src --maxWorkers 4 --minWorkers 1：673文件、7572测试全部通过，368.44秒。",
     "类型检查": "npx tsc --noEmit 通过",
     "提交前空白检查": "git diff --check 通过"
+  },
+  "更新基线": "a2cff607（#535陆路扩张与#537单位防守归属已合并）",
+  "归属协议": {
+    "防守任务": "候选乘员和可选工程工人排除isDefenseTaskClaim识别的mineRally、mineLeash、mineGuard、workerSafety、expansionGarrison；同时保护即将加入的harassSquad存档拼写。完整可用岸上军队仍参与守备强度计算，不因候选筛选漏算。",
+    "海军任务": "ferries与firstCombatDelivery仍存放于memory.naval；其他模块调用navalUnitIds(snapshot,owner,options,claimLanded)，即可取得船只、crewIds、实际board订单与deck乘员的占用集合。直接查memory.naval.ferries可取得具体目的地与阶段；firstCombatDelivery只记交付时钟，不另抢兵。",
+    "新增验证": "三家族×六种受保护任务18项，另有三家族的workerSafety工人3项；合计42项首航测试。",
+    "main失败证明": "精确a2cff607源码只复制当前测试与快照，21项新任务归属断言全部失败，其余21项按过滤跳过；修改后42项全通过。",
+    "新main实际房间复验": "在a2cff607加这次修复的mac1源码上重新执行两场完整原生房间；5/5席位的交付时间与之前完全一致。移除checkpoint后的完整命令流冷重放再次通过，校验和分别19d849ca与9d1fa2ce。原截图所示世界与更新后同tick、同校验和。"
   }
 }
