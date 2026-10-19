@@ -16,7 +16,8 @@ export default async function (s: Scene) {
   await s.room('templeSpring');
   // Both units use their ordinary game stats. The golem's native 42 speed lets the 60-speed archer catch up again.
   await s.api(`/api/rooms/${s.roomId}/reset`, { mapId: 'bareDuel', options: {
-    aiPlayers: [], layout: { seed: 'ranged-aim-buffer', kind: 'sides', idea: 'openSides', size: 4096 }, scenario: {
+    players: ['player', 'enemy', 'enemy2', 'player-4'], aiPlayers: [],
+    teams: { player: 'a', enemy: 'b', enemy2: 'a', 'player-4': 'b' }, layout: { seed: 'ranged-aim-buffer', kind: 'sides', idea: 'openSides', size: 4096 }, scenario: {
       replaceDefaultUnits: true, replaceDefaultBuildings: true, replaceDefaultLandmarks: true,
       replaceDefaultResources: true, replaceDefaultMercenaryCamps: true,
       addUnits: [
