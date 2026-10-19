@@ -1133,21 +1133,15 @@ export function islandPlans(snapshot: GameSnapshot, owner: PlayerId, options: Ai
         return mission.purpose === 'settle' && mission.phase === 'sailing' && mine && available(mine)
             ? [{ mine, landing: mission.to }] : [];
     });
-    if (local && !committed.length && !sailing.length && !memory.expeditions?.some(route => paid(route.landing))) {
-        memory.island = { tick: snapshot.tick };
-        return [];
-    }
+    if (local && !memory.expeditions?.length && !committed.length && !sailing.length) return [];
     // An admitted expedition keeps its first boat funded even while another land mine opens.
-    const admission = `${Number(local)}:${Number(populationReady)}:${Number(fundingReady)}:${(memory.expeditions ?? [])
-        .filter(route => paid(route.landing)).map(route => route.mineId).join('|')}`;
-    if (!memory.islands || memory.islands.admission !== admission || snapshot.tick - memory.islands.tick >= PLAN_RETRY) {
+    if (!memory.islands || snapshot.tick - memory.islands.tick >= PLAN_RETRY) {
         const coasts: { water: Point; departure?: Point }[] = [];
         const candidates = snapshot.resources.filter(mine => available(mine) && !halls.some(hall => sameGround(map, hall, mine))
             && memory.conquests?.[mine.id]?.abandonedTick === undefined)
             .flatMap(mine => {
                 const landing = walkableGoal(map, mine.x, mine.y, 'sea');
-                if (!isWalkable(map, landing.x, landing.y, 'sea')
-                    || (local || !populationReady || !fundingReady) && !paid(landing)) return [];
+                if (!isWalkable(map, landing.x, landing.y, 'sea')) return [];
                 let coast = coasts.find(entry => sameGround(map, entry.water, landing, 'sea'));
                 if (!coast) {
                     const yard = shipyardOf(snapshot, owner, landing);
@@ -1158,7 +1152,7 @@ export function islandPlans(snapshot: GameSnapshot, owner: PlayerId, options: Ai
                 }
                 return coast.departure ? [{ mine, landing, departure: coast.departure }] : [];
             });
-        memory.islands = { tick: snapshot.tick, admission, plans: rankNavalMines(snapshot, owner, candidates, options)
+        memory.islands = { tick: snapshot.tick, plans: rankNavalMines(snapshot, owner, candidates, options)
             .map(candidate => ({ mineId: candidate.mine.id, landing: candidate.landing })) };
     }
     const candidates = memory.islands.plans.flatMap(plan => {

@@ -104,7 +104,7 @@ export type NavalPlanMemory = {
   ferryRetryUntil?: Record<string,number>;
   ferryFailures?: Record<string, Record<string, { attempts: number; tick: number; reason: string }>>;
   // One candidate per resource island; paid routes survive a temporary local opportunity.
-  islands?: { tick: number; admission?: string; plans: { mineId: string; landing: { x: number; y: number } }[] };
+  islands?: { tick: number; plans: { mineId: string; landing: { x: number; y: number } }[] };
   expeditions?: { mineId: string; landing: { x: number; y: number } }[];
   island?: { tick: number; plan?: { mineId: string; landing: { x: number; y: number } } };
   assault?: { tick: number; plan?: { targetId: string; landing: { x: number; y: number } } };

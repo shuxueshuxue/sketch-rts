@@ -142,7 +142,7 @@ describe('one island-plan scan reuses only identical water coasts', () => {
       snapshot.tick = 900;
       const mine = snapshot.resources.find(candidate => candidate.id === 'remote-0')!;
       const memory = createAiPolicyMemory();
-      memory.naval = { islands: { admission: '0:1:1:', tick: mode === 'expired' || mode === 'empty-expired' ? 0 : 899,
+      memory.naval = { islands: { tick: mode === 'expired' || mode === 'empty-expired' ? 0 : 899,
         plans: mode.startsWith('empty') ? [] : [{ mineId: mine.id, landing: walkableGoal(snapshot.map, mine.x, mine.y, 'sea') }] } };
       if (mode === 'depleted') mine.amount = 0;
       const { result } = compare(snapshot, memory, candidate => mode !== 'ineligible' || candidate.id !== mine.id);
