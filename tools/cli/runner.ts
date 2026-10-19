@@ -120,7 +120,11 @@ export class Machine {
     if (held.includes(sha)) return dir;
     const shared = await this.installNodeModules(sha);
     const staging = this.path("trees", `${sha}.partial-${this.runId}`);
-    const near = nearestCommit(sha, held);
+    const { best: near, unavailable } = nearestCommit(sha, held);
+    if (unavailable.length) {
+      const commits = unavailable.slice(0, 5).map(commit => commit.slice(0, 10)).join(", ") + (unavailable.length > 5 ? `, and ${unavailable.length - 5} more` : "");
+      progress(`cached commits unavailable locally on ${this.name}: ${commits}${near ? "; skipping them" : "; no usable incremental base, falling back to full copy"}`);
+    }
     let fill: string, input: NodeJS.ReadableStream;
     if (near) {
       progress(`copying ${sha.slice(0, 10)} to ${this.name} from its copy of ${near.sha.slice(0, 10)} (${near.changed} files differ)`);
@@ -208,14 +212,18 @@ function copiedFiles(sha: string) {
   });
 }
 
-/** The held copy whose commit differs least from `sha`, if any differs by fewer than 2000 files. */
+/** Pick the local commit differing by the fewest files (fewer than 2000).
+ * Remote copies can come from other drivers' unpushed or --with-local commits. */
 function nearestCommit(sha: string, held: readonly string[]) {
   let best: { sha: string; changed: number } | undefined;
+  const unavailable: string[] = [];
   for (const candidate of held) {
+    const object = spawnSync("git", ["cat-file", "-t", candidate], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+    if (object.status !== 0 || object.stdout.trim() !== "commit") { unavailable.push(candidate); continue; }
     const changed = gitOut(["diff", "--name-only", "--no-renames", candidate, sha, "--", ...COPY_PATHSPEC]).split("\n").filter(Boolean).length;
     if (changed < 2000 && (!best || changed < best.changed)) best = { sha: candidate, changed };
   }
-  return best;
+  return { best, unavailable };
 }
 
 export function quote(value: string) {
