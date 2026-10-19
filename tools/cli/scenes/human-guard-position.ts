@@ -8,19 +8,30 @@ export default async function (s: Scene) {
   await s.room('templeSpring');
   const soldiers = ['guard-0', 'guard-1', 'guard-2'];
   const baits = Array.from({ length: 8 }, (_, i) => ({ id: `bait-${i}`, owner: 'enemy', kind: 'worker', x: 1650 + i * 175, y: 2000 }));
-  await s.api(`/api/rooms/${s.roomId}/reset`, { mapId: 'bareDuel', options: { aiPlayers: [], scenario: {
+  await s.api(`/api/rooms/${s.roomId}/reset`, { mapId: 'bareDuel', options: { players: ['player', 'enemy', 'enemy2', 'player-4'], aiPlayers: [], teams: { player: 'a', enemy: 'b', enemy2: 'a', 'player-4': 'b' },
+    layout: { seed: 'human-guard-proof', kind: 'sides', idea: 'openSides', size: 4096 }, scenario: {
     replaceDefaultUnits: true,
+    replaceDefaultResources: true, replaceDefaultMercenaryCamps: true,
     addUnits: [...soldiers.map((id, i) => ({ id, owner: 'player', kind: 'footman', x: 1200, y: 1960 + i * 40 })), ...baits],
     addBuildings: [{ id: 'guard-post', owner: 'player', kind: 'farm', x: 1450, y: 2220, complete: true }],
   } } });
   await s.reload();
+  // A local tick-0 image can precede websocket join; wait for an authoritative frame before real input.
+  await s.tick(1);
   await s.camera(2125, 2050, .7);
   await s.select(soldiers);
+  await s.shot('selected-before-move');
+  const point = await s.screenOf(1450, 2000);
+  const input = await s.page.evaluate(({x,y}) => ({ at: document.elementFromPoint(x,y)?.outerHTML.slice(0,300), view: (window as any).__sketchRtsView }), point);
+  s.record('mouse-input', { point, input });
   // Actual browser mouse event: the page sends the right-click move through its socket.
   await s.click(1450, 2000, 'right');
-  await s.tick(1);
+  // Human network commands land after the room's input delay, not on the immediately following tick.
+  await s.tick(8);
   let snapshot = await s.snapshot() as Snapshot;
-  s.must(snapshot.units.filter(u => soldiers.includes(u.id)).every(u => u.order.type === 'move'), 'right-click did not move the selected squad');
+  await s.shot('after-mouse');
+  s.record('post-mouse', { snapshot, view: await s.page.evaluate(() => (window as any).__sketchRtsView), events: await s.api(`/api/rooms/${s.roomId}/sync-events`) });
+  s.must(snapshot.units.filter(u => soldiers.includes(u.id)).every(u => u.order.type === 'move'), `right-click did not move the selected squad: ${JSON.stringify({ point, units: snapshot.units.filter(u => soldiers.includes(u.id)) })}`);
   const stations = new Map<string, { x: number; y: number }>();
   for (let ticks = 0; ticks < 160 && stations.size < soldiers.length; ticks++) {
     await s.tick(1);
@@ -56,5 +67,5 @@ export default async function (s: Scene) {
     s.must(final.length === soldiers.length, 'a guard died during the lure proof');
     s.must(final.every(u => Math.hypot(u.x - stations.get(u.id)!.x, u.y - stations.get(u.id)!.y) < 50), 'guards did not return to their commanded station');
     s.must(Object.values(farthest).every(distance => distance <= 600), `guard exceeded its leash: ${JSON.stringify(farthest)}`);
-  }
+  } else s.must(Object.values(farthest).some(distance => distance > 600), `comparison did not reproduce the original drift: ${JSON.stringify(farthest)}`);
 }

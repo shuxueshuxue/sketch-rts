@@ -20,7 +20,7 @@ import { recordUnitTaskClaim } from '../policy/claims';
 
 function expansionScene(invaded = false) {
   let draft = sketchScene('finish-one-expansion').map('openClaims').replaceDefaults()
-    .player('us', { team: 'a' }).player('foe', { team: 'b' })
+    .player('us', { team: 'a', ai: true }).player('foe', { team: 'b', ai: true })
     .townHall('us', 500, 500).goldMine('main', 788, 500, 6000)
     .goldMine('natural', 1600, 1100, 6000).townHall('foe', 3500, 3500)
     .worker('us', 800, 650, { id: 'builder' }).farms('us', 5, 500, 3000)

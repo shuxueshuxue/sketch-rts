@@ -191,8 +191,8 @@ const NEUTRAL_ASSIST_RANGE = 360;
 // Only self-directed behaviour answers. A move, an explicit attack or a worker job is a command and is never overridden,
 // which keeps retreats, focus fire and kiting in the players' hands.
 const HELP_CALL_RANGE = 300;
-// Self-directed chases (idle acquisition, retaliation, answering a call) give up this far from where the unit stood, so one
-// raider cannot drag a base's defenders across the map. Commanded attacks and attack-moves are not leashed.
+// Human self-directed chases retain the last commanded station (see guard-position).
+// AI troops retain their existing per-engagement origin. Explicit attacks and attack-moves are unbounded.
 // Threat: an enemy that is attacking our side outranks a bystander about 100px nearer.
 const DEFAULT_PLAYERS: PlayerId[] = ["player", "enemy"];
 const DEFAULT_TEAMS: Record<string, string> = { player: "player", enemy: "enemy", enemy2: "enemy2" };
@@ -1647,6 +1647,8 @@ function updateShipOwnership(game:Game) {
     const owner=occupants[0]?.owner;
     if(!owner || occupants.some(unit=>areEnemyOwners(game,owner,unit.owner)))continue;
     ship.owner=owner;ship.order={type:"idle"};ship.orderQueue=[];ship.aim=undefined;
+    delete ship.guardPosition;
+    setGuardPosition(game, ship);
     if(ship.sailing){ship.sailing.speed=0;ship.sailing.route=undefined;delete ship.sailing.pursuit;cancelShipPlanningJob(ship);}
     refreshUnitStats(game,ship);changed=true;
   }
@@ -2175,6 +2177,7 @@ function ferryUnits(game: Game, { boarding, unloading }: Ferry, starts: Readonly
     if(!ship || !isUnit(ship) || !alongside(passenger,ship))continue;
     if(!boardUnit(ship,passenger,game.units)){endOrder(game,passenger,"no-room");continue;}
     assignUnitOrder(passenger,{type:"idle"});
+    setGuardPosition(game, passenger);
     addEffect(game,"board",passenger.x,passenger.y,seconds(.4),{unitId:passenger.id,owner:passenger.owner,sourceKind:passenger.kind});
   }
   for(const ship of unloading) {
@@ -2206,6 +2209,7 @@ function unloadCargo(game: Game, ship: Unit, passengerId?: string) {
     passenger.aim=undefined;
     Object.assign(passenger,spot);
     assignUnitOrder(passenger,{type:"idle"});
+    setGuardPosition(game, passenger);
     addEffect(game,"unload",spot.x,spot.y,seconds(.4),{unitId:passenger.id,owner:passenger.owner,sourceKind:passenger.kind});
     landed++;
   });

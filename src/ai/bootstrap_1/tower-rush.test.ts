@@ -16,7 +16,7 @@ import { trainingBuildingFor, ABILITY_DEFS, BUILDING_DEFS, UNIT_DEFS } from '../
 
 function battlefield(miningRaid = 0, support = 0, mineCrew = 0) {
   let scene = sketchScene('summoner-construction-convoy').replaceDefaults()
-    .player('us', { race: 'ember', team: 'a' }).player('fa', { race: 'grove', team: 'b' }).player('fb', { race: 'grove', team: 'b' })
+    .player('us', { race: 'ember', team: 'a', ai: true }).player('fa', { race: 'grove', team: 'b', ai: true }).player('fb', { race: 'grove', team: 'b', ai: true })
     .playerState('us', { gold: 450 }).townHall('us', 400, 620).goldMine('main', 688, 620, 4000)
     .townHall('us', 900, 2000).goldMine('natural', 1188, 2000, 4000)
     .townHall('fa', 2100, 450).townHall('fb', 2400, 850)
