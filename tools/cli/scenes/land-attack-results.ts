@@ -63,7 +63,7 @@ export default async function(s: Scene) {
     await s.page.addStyleTag({ content: '[data-pointer-lock-gate]{display:none!important}' });
     const goalId = target === targets[0] ? 'building-enemy-townHall-1205' : 'building-enemy-townHall-2965';
     const hall = expected.halls.find((b: any) => b.id === goalId)
-      ?? shots.get(targets[1]).halls.find((b: any) => b.id === goalId);
+      ?? shots.get(targets[1]!).halls.find((b: any) => b.id === goalId);
     await s.camera(hall.x, hall.y, .62); await s.wait(1500);
     if (world.buildings.some((b: any) => b.id === goalId)) await s.select([goalId]);
     const name = `attack-result-tick-${target}`;
