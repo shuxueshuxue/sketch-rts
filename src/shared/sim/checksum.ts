@@ -53,7 +53,7 @@ export function checksumGameForVersion(game: Game, version: number): string {
       const { hullHitTick, ...sailing } = unit.sailing;
       return { ...unit, sailing };
     });
-    return legacyChecksum(checkedGame);
+    return priorVersionChecksum(checkedGame);
   }
   if (version === 2) {
     delete checkedGame.corpses;
@@ -65,10 +65,10 @@ export function checksumGameForVersion(game: Game, version: number): string {
   } else {
     throw new Error(`Unsupported checksum version ${version}`);
   }
-  return legacyChecksum(checkedGame);
+  return priorVersionChecksum(checkedGame);
 }
 
-function legacyChecksum(game: Game): string {
+function priorVersionChecksum(game: Game): string {
   const canonical = canonicalGameState(game) as { runtime: { humanPlayers?: string[] } };
   delete canonical.runtime.humanPlayers;
   return fnv1a(JSON.stringify(canonical));
