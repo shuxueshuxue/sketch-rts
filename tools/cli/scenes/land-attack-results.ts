@@ -8,6 +8,7 @@ export default async function(s: Scene) {
   const { createSubjectGauntletInput } = await load('src/ai/benchmark/subject-gauntlet.ts');
   const { roomGauntlet } = await load('src/ai/benchmark/room-gauntlet.ts');
   const { runGameLoop } = await load('src/sdk/game-runner.ts');
+  const { commandRejection } = await load('src/shared/sim/command-frame-runtime.ts');
   const { navalObservedPlanner } = await load('src/ai/benchmark/naval-room-worker.ts');
   const { input } = createSubjectGauntletInput(roomGauntlet('v9_summoner', ['v9']), { seed: 'v5-final-1', mapCount: 20 });
   const match = input.evaluations[0].matches[2];
@@ -15,7 +16,7 @@ export default async function(s: Scene) {
   // entire match. The snapshot regression separately retains the original IDs.
   match.agents = { player: match.agents.v9_summoner, enemy: match.agents.p1 };
   const memories: any = {}, frames = new Map<number, any[]>(), shots = new Map<number, any>();
-  const events: any[] = [], results: any[] = [];
+  const events: any[] = [], results: any[] = [], refused: any[] = [];
   const targets = [9196, 15376, 16100, 16216];
   let prior = '', lastResult = '';
   const fingerprint = (world: any) => JSON.stringify({ tick: world.tick,
@@ -24,7 +25,12 @@ export default async function(s: Scene) {
     resources: world.resources.map((r: any) => [r.id, r.amount]).sort(),
     gold: Object.fromEntries(Object.entries(world.players).map(([id, p]: any) => [id, p.gold])) });
   runGameLoop({ ...match, maxTicks: targets.at(-1)!, commandPlanner: navalObservedPlanner(memories) }, {
-    onCommand(e: any) {
+    afterCommand(e: any) {
+      // SDK apply permits transient no-ops. REST admission rejects those attempts;
+      // omit only commands rejected in their exact pre-command world, and verify
+      // the resulting hosted world is still byte-for-byte the same at each shot.
+      const reason = commandRejection(e.before, { playerId: e.owner, command: e.command }, 'admission');
+      if (reason) { refused.push({ tick: e.tick, owner: e.owner, command: e.command, reason }); return; }
       if (!frames.has(e.tick)) frames.set(e.tick, []);
       frames.get(e.tick)!.push({ playerId: e.owner, command: structuredClone(e.command) });
     }, onStep({ game }: any) {
@@ -78,6 +84,6 @@ export default async function(s: Scene) {
       target: world.buildings.find((b: any) => b.id === goalId) ?? null, exactWorld: true });
   }
   s.record('land-attack-real-match', { seed: 'v5-final-1', slot: 'ladder-12',
-    subject: 'v9_summoner grove', rival: 'v9 ember', owners: 'public browser seats player/enemy', events, results, proof });
+    subject: 'v9_summoner grove', rival: 'v9 ember', owners: 'public browser seats player/enemy', events, results, refused, proof });
   s.record('land-attack-command-replay', [...frames].map(([tick, commands]) => ({ tick, commands })));
 }
