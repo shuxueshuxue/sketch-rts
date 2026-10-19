@@ -104,9 +104,10 @@ it('keeps an expansion garrison out of the rally, local detachment, main army an
     intrusion: { building: hall, attackers: intel.enemies.flatMap(enemy => enemy.army), threat: 1 } })!;
   expect(assignment.units.some(candidate => candidate.id === unit.id)).toBe(false);
   memory.landExpansion = { mineId: snapshot.resources.find(mine => mine.amount > 0)!.id,
-    sinceTick: snapshot.tick, stage: 'escort', unitIds: [unit.id], interruptions: [] };
+    sinceTick: snapshot.tick, stage: 'escort', interruptions: [] };
+  memory.unitClaims[unit.id]!.expansionMineId = memory.landExpansion.mineId;
   prepareExpansionMission(snapshot, owner, options, mainArmyIntel(snapshot, owner, options));
-  expect(memory.landExpansion.unitIds).not.toContain(unit.id);
+  expect(memory.unitClaims[unit.id]?.expansionMineId).toBeUndefined();
   expect(activeUnitClaim(snapshot, owner, unit, options)?.kind).toBe('expansionGarrison');
 });
 

@@ -14,7 +14,7 @@ import { miningAssignments } from './mining-assignments';
 import { mainArmyIntel, miningRally, planBootstrapGeneral } from './mine-defense';
 import { bootstrapPolicyContext } from './policy';
 import { v6ExpansionPoint } from '../policy/v6/economy';
-import { expansionMissionCommands } from './expansion-mission';
+import { expansionMissionCommands, expansionMissionUnitIds } from './expansion-mission';
 import { expansionOwnsDefender } from './mining-leash';
 import { recordUnitTaskClaim } from '../policy/claims';
 
@@ -133,7 +133,7 @@ it('yields both arrived and traveling escorts to a mine rally, then fills the es
   expect(mainArmyIntel(snapshot, 'us', options).intrusion).toBeUndefined();
   expect(memory.landExpansion!.paused).toBe(true);
   expect(memory.landExpansion!.interruptions.at(-1)?.reason).toBe('mining-threat');
-  expect(memory.landExpansion!.unitIds.some(id => escortIds.includes(id))).toBe(false);
+  expect(expansionMissionUnitIds(memory).some(id => escortIds.includes(id))).toBe(false);
   expect(escortIds.some(id => memory.unitClaims[id]?.kind === 'expansion')).toBe(false);
   expect(expansionMissionCommands(snapshot, 'us', options, mainArmyIntel(snapshot, 'us', options))).toBeUndefined();
   // The rally releases its members only after its final reinforcement arrives.
@@ -162,9 +162,9 @@ it('releases an existing unfunded task after the last income is lost instead of 
   issuePlayerCommand(game, 'us', { type: 'train', buildingId: home.id, unitKind: 'worker' });
   expect(game.players.us!.gold).toBeLessThan(400);
   const screen = game.units.filter(unit => unit.id.startsWith('screen-'));
-  memory.landExpansion = { mineId: 'natural', sinceTick: 0, stage: 'escort', unitIds: screen.map(unit => unit.id), interruptions: [] };
+  memory.landExpansion = { mineId: 'natural', sinceTick: 0, stage: 'escort', interruptions: [] };
   for (const unit of screen) memory.unitClaims[unit.id] = { kind: 'expansion', targetId: 'natural', x: 1600, y: 1100,
-    sinceTick: 0, expiresTick: 30 };
+    sinceTick: 0, expiresTick: 30, expansionMineId: 'natural' };
   const { snapshot, options } = context();
   planBootstrapGeneral(snapshot, 'us', options);
   expect(memory.landExpansion!.stage).toBe('fund');

@@ -35,7 +35,12 @@ export function pruneAiPolicyMemory(snapshot: GameSnapshot, owner: PlayerId, mem
   const query = aiSnapshotQuery(snapshot);
   for (const [unitId, claim] of Object.entries(memory.unitClaims)) {
     const unit = query.unitById(unitId);
-    if (!unit || unit.owner !== owner || claim.expiresTick < snapshot.tick || objectiveClaimAbandoned(unit, claim, snapshot.tick) || !claimTargetExists(query, owner, claim)) delete memory.unitClaims[unitId];
+    if (!unit || unit.owner !== owner) { delete memory.unitClaims[unitId]; continue; }
+    // Membership follows the mission, not its short movement lease. The old construction
+    // roster likewise survived a foundation, local micro and a temporary defense pause.
+    if (claim.expansionMineId && claim.expansionMineId !== memory.landExpansion?.mineId) forgetExpansionMember(memory, unitId);
+    if (claim.kind !== 'expansionMission' && (claim.expiresTick < snapshot.tick
+      || objectiveClaimAbandoned(unit, claim, snapshot.tick) || !claimTargetExists(query, owner, claim))) clearUnitClaim(memory, unitId);
   }
   pruneStrategicExpansionClaim(query, owner, memory);
 }
@@ -49,7 +54,7 @@ export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: stri
     for (const id of actors) {
       const claim = memory.unitClaims[id];
       if (!isDefenseTaskClaim(claim)) continue;
-      if (options.redirects !== 'local') delete memory.unitClaims[id];
+      if (options.redirects !== 'local') clearUnitClaim(memory, id);
       else {
         if (moving && claim.kind === 'mineLeash' && scriptId !== 'miningLeash') claim.kind = claim.resumeKind ?? 'mineGuard';
         if (moving && scriptId !== 'skirmishPreservation') delete claim.localRetreat;
@@ -60,14 +65,14 @@ export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: stri
       memory.strategicPlan = { ...memory.strategicPlan, expansionAttemptTick: snapshot.tick };
     }
     if (command.type === "build") {
-      memory.unitClaims[command.unitId] = {
+      setUnitClaim(memory, command.unitId, {
         kind: "build",
         targetId: buildTargetId(command.buildingKind, command.x, command.y),
         x: command.x,
         y: command.y,
         sinceTick: snapshot.tick,
         expiresTick: snapshot.tick + UNIT_CLAIM_TTL_TICKS,
-      };
+      });
       continue;
     }
     if (command.type === "hire") {
@@ -84,14 +89,14 @@ export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: stri
     }
     if (scriptId === "attackWave" && command.type === "move") {
       for (const unitId of command.unitIds) {
-        memory.unitClaims[unitId] = {
+        setUnitClaim(memory, unitId, {
           kind: "retreat",
           targetId: "retreat",
           x: command.x,
           y: command.y,
           sinceTick: snapshot.tick,
           expiresTick: snapshot.tick + UNIT_CLAIM_TTL_TICKS,
-        };
+        });
       }
       continue;
     }
@@ -99,14 +104,14 @@ export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: stri
       const camp = nearestEntity(query.mercenaryCamps(), command);
       if (!camp || distance(camp, command) > ATTACK_MOVE_REDIRECT_DISTANCE) continue;
       for (const unitId of command.unitIds) {
-        memory.unitClaims[unitId] = {
+        setUnitClaim(memory, unitId, {
           kind: "mercenary",
           targetId: camp.id,
           x: camp.x,
           y: camp.y,
           sinceTick: snapshot.tick,
           expiresTick: snapshot.tick + OBJECTIVE_CLAIM_TTL_TICKS,
-        };
+        });
       }
       continue;
     }
@@ -115,14 +120,14 @@ export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: stri
       if (!mine || distance(mine, command) > ATTACK_MOVE_REDIRECT_DISTANCE) continue;
       memory.strategicPlan = { ...memory.strategicPlan, expansionClaimTargetId: mine.id, expansionClaimTick: snapshot.tick };
       for (const unitId of command.unitIds) {
-        memory.unitClaims[unitId] = {
+        setUnitClaim(memory, unitId, {
           kind: "expansion",
           targetId: mine.id,
           x: mine.x,
           y: mine.y,
           sinceTick: snapshot.tick,
           expiresTick: snapshot.tick + OBJECTIVE_CLAIM_TTL_TICKS,
-        };
+        });
       }
       continue;
     }
@@ -130,42 +135,42 @@ export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: stri
       const camp = nearestEntity(query.mercenaryCamps(), command);
       if (camp && distance(camp, command) <= ATTACK_MOVE_REDIRECT_DISTANCE) {
         for (const unitId of command.unitIds) {
-          memory.unitClaims[unitId] = {
+          setUnitClaim(memory, unitId, {
             kind: "mercenary",
             targetId: camp.id,
             x: camp.x,
             y: camp.y,
             sinceTick: snapshot.tick,
             expiresTick: snapshot.tick + OBJECTIVE_CLAIM_TTL_TICKS,
-          };
+          });
         }
         continue;
       }
       const guard = nearestEntity(query.neutralUnitsNear(command, ATTACK_MOVE_REDIRECT_DISTANCE), command);
       if (!guard) continue;
       for (const unitId of command.unitIds) {
-        memory.unitClaims[unitId] = {
+        setUnitClaim(memory, unitId, {
           kind: "creep",
           targetId: guard.id,
           x: guard.x,
           y: guard.y,
           sinceTick: snapshot.tick,
           expiresTick: snapshot.tick + OBJECTIVE_CLAIM_TTL_TICKS,
-        };
+        });
       }
       continue;
     }
     if (scriptId === "objectiveControl" && command.type === "move") {
       for (const unitId of command.unitIds) {
         // @@@objective-move-retreat-claim - Objective recalls are still objective-owned; record the move as recovery so the next pass does not reclaim the same camp.
-        memory.unitClaims[unitId] = {
+        setUnitClaim(memory, unitId, {
           kind: "retreat",
           targetId: "retreat",
           x: command.x,
           y: command.y,
           sinceTick: snapshot.tick,
           expiresTick: snapshot.tick + UNIT_CLAIM_TTL_TICKS,
-        };
+        });
       }
       continue;
     }
@@ -173,14 +178,14 @@ export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: stri
       const target = query.targetById(command.targetId);
       if (!target) continue;
       for (const unitId of command.unitIds) {
-        memory.unitClaims[unitId] = {
+        setUnitClaim(memory, unitId, {
           kind: "harass",
           targetId: command.targetId,
           x: target.x,
           y: target.y,
           sinceTick: snapshot.tick,
           expiresTick: snapshot.tick + UNIT_CLAIM_TTL_TICKS,
-        };
+        });
       }
       continue;
     }
@@ -191,14 +196,14 @@ export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: stri
           task.localRetreat = { x: command.x, y: command.y };
           continue;
         }
-        memory.unitClaims[unitId] = {
+        setUnitClaim(memory, unitId, {
           kind: "retreat",
           targetId: "retreat",
           x: command.x,
           y: command.y,
           sinceTick: snapshot.tick,
           expiresTick: snapshot.tick + UNIT_CLAIM_TTL_TICKS,
-        };
+        });
       }
       continue;
     }
@@ -225,9 +230,36 @@ export function unitRetreatClaim(snapshot: GameSnapshot, unit: Unit, options: Cl
 export function recordUnitTaskClaim(snapshot: GameSnapshot, memory: AiPolicyMemory, unitId: string,
   task: Omit<AiPolicyUnitClaim, 'sinceTick' | 'expiresTick'>) {
   const previous = memory.unitClaims[unitId];
-  memory.unitClaims[unitId] = { ...task,
+  setUnitClaim(memory, unitId, { ...task,
     sinceTick: previous?.kind === task.kind && previous.targetId === task.targetId ? previous.sinceTick : snapshot.tick,
-    expiresTick: snapshot.tick + OBJECTIVE_CLAIM_TTL_TICKS };
+    expiresTick: snapshot.tick + OBJECTIVE_CLAIM_TTL_TICKS });
+}
+
+/** The ordinary order lease; membership-only entries must not newly block optional errands. */
+export function ordinaryUnitClaim(memory: AiPolicyMemory | undefined, unitId: string) {
+  const claim = memory?.unitClaims[unitId];
+  return claim?.kind === 'expansionMission' ? undefined : claim;
+}
+
+/** Changing a local order does not erase the construction screen's membership. */
+export function setUnitClaim(memory: AiPolicyMemory, unitId: string, claim: AiPolicyUnitClaim) {
+  const mineId = memory.unitClaims[unitId]?.expansionMineId;
+  memory.unitClaims[unitId] = mineId ? { ...claim, expansionMineId: claim.expansionMineId ?? mineId } : claim;
+}
+
+export function clearUnitClaim(memory: AiPolicyMemory, unitId: string) {
+  const claim = memory.unitClaims[unitId];
+  if (!claim?.expansionMineId) { delete memory.unitClaims[unitId]; return; }
+  memory.unitClaims[unitId] = { kind: 'expansionMission', targetId: claim.expansionMineId,
+    x: claim.x, y: claim.y, sinceTick: claim.sinceTick, expiresTick: claim.expiresTick,
+    expansionMineId: claim.expansionMineId };
+}
+
+/** Release construction membership without discarding a newer, unrelated order lease. */
+export function forgetExpansionMember(memory: AiPolicyMemory, unitId: string) {
+  const claim = memory.unitClaims[unitId];
+  if (claim?.kind === 'expansionMission') delete memory.unitClaims[unitId];
+  else if (claim) delete claim.expansionMineId;
 }
 
 function recordAttackWaveMemory(snapshot: GameSnapshot, query: ReturnType<typeof createSnapshotQuery>, command: AttackWaveCommand, memory: AiPolicyMemory, owner: PlayerId | undefined) {
@@ -259,14 +291,14 @@ function recordAttackWaveMemory(snapshot: GameSnapshot, query: ReturnType<typeof
   memory.strategicPlan = nextPlan;
   upsertMemoryJob(memory, `attackWave:${targetOwner}`, "attackWave", snapshot.tick);
   for (const unitId of command.unitIds) {
-    memory.unitClaims[unitId] = {
+    setUnitClaim(memory, unitId, {
       kind: "attack",
       targetId,
       x: targetPoint.x,
       y: targetPoint.y,
       sinceTick: snapshot.tick,
       expiresTick: snapshot.tick + UNIT_CLAIM_TTL_TICKS,
-    };
+    });
   }
 }
 
@@ -300,7 +332,7 @@ function upsertMemoryJob(memory: AiPolicyMemory, id: string, kind: string, tick:
 }
 
 export function activeUnitClaim(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, options: ClaimPolicyOptions) {
-  const claim = options.memory?.unitClaims[unit.id];
+  const claim = ordinaryUnitClaim(options.memory, unit.id);
   if (!claim || claim.expiresTick < snapshot.tick || unit.owner !== owner) return undefined;
   if (objectiveClaimAbandoned(unit, claim, snapshot.tick)) return undefined;
   return claimTargetExists(aiSnapshotQuery(snapshot), owner, claim) ? claim : undefined;
@@ -349,12 +381,12 @@ function buildTargetId(buildingKind: string, x: number, y: number) {
 }
 
 function clearUnitClaimsForTarget(memory: AiPolicyMemory, targetId: string) {
-  for (const [unitId, claim] of Object.entries(memory.unitClaims)) if (claim.targetId === targetId) delete memory.unitClaims[unitId];
+  for (const [unitId, claim] of Object.entries(memory.unitClaims)) if (claim.targetId === targetId) clearUnitClaim(memory, unitId);
 }
 
 function clearUnitClaimsForCommand(memory: AiPolicyMemory, command: GameCommand, local = false) {
   if (command.type !== "move" && command.type !== "attackMove" && command.type !== "attack") return;
-  for (const unitId of command.unitIds) if (!local || !isDefenseTaskClaim(memory.unitClaims[unitId])) delete memory.unitClaims[unitId];
+  for (const unitId of command.unitIds) if (!local || !isDefenseTaskClaim(memory.unitClaims[unitId])) clearUnitClaim(memory, unitId);
 }
 
 function nearestEntity<T extends Point>(entities: T[], from: Point): T | undefined {

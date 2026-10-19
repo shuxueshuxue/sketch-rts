@@ -1,3 +1,4 @@
+import { ordinaryUnitClaim } from '../policy/claims';
 import { unitMover } from '../../shared/catalog';
 import { canEquip, freeItemSlot } from '../../shared/equipment';
 import { nearestByRoute } from '../../shared/route-selection';
@@ -35,7 +36,7 @@ function lootAssignments(snapshot: GameSnapshot, owner: PlayerId, options: AiPol
   const engaged = camp !== undefined && neutralUnitsNear(snapshot, camp.center, camp.reach).length > 0;
   const own = snapshot.units.filter(unit => unit.owner === owner && unit.kind !== 'worker' && !unit.deck
     && unit.expiresTick === undefined && unitMover(unit.kind) === 'land' && unit.hp === unit.maxHp && canEquip(unit)
-    && !options.memory.unitClaims[unit.id]
+    && !ordinaryUnitClaim(options.memory, unit.id)
     && !(engaged && camp!.group.includes(unit.id)) && !options.memory.v6?.raid?.unitIds.includes(unit.id)
     && !options.memory.mounted?.some(task => task.unitIds.includes(unit.id))
     && ['idle', 'hold', 'move', 'attackMove'].includes(unit.order.type));

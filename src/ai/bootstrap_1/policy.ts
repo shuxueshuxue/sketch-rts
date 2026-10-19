@@ -38,7 +38,7 @@ import { frontRecovery } from './front-recovery';
 import { lootRecovery, planLootItemCommands } from './loot-recovery';
 import { summonedRaids } from './summoned-raids';
 import { mountedField } from './mounted-field';
-import { prepareExpansionMission } from './expansion-mission';
+import { migrateExpansionClaims, prepareExpansionMission } from './expansion-mission';
 
 export const BOOTSTRAP_VERSIONS = ['v9_archer', 'v9_summoner', 'v9_knight'] as const;
 export const BOOTSTRAP_PARENTS = { v9_archer: 'v5', v9_summoner: 'v7', v9_knight: 'v8' } as const;
@@ -188,6 +188,7 @@ export function researchPrerequisites(wants: readonly V6Want[], player: PlayerSt
 }
 
 export function bootstrapPolicyContext(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion, options: AiPolicyContext): AiPolicyContext {
+  migrateExpansionClaims(snapshot, options.memory);
   const wants = supportWants(snapshot, owner, version, options);
   const expansion = wants.filter(want => 'bases' in want);
   const player = snapshot.players[owner]!;

@@ -1,3 +1,4 @@
+import { ordinaryUnitClaim } from '../policy/claims';
 import { unitControlsMercenaryCamp } from '../../shared/mercenary-camp';
 import { armedFoes, safeLandTravelTicks } from './safe-land-route';
 import { ABILITY_DEFS, UNIT_DEFS, MERCENARY_UNIT_KINDS, unitMover } from '../../shared/catalog';
@@ -17,7 +18,7 @@ function courierHome(snapshot: GameSnapshot, owner: PlayerId, unit: Unit) {
 
 function expeditionUnits(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   return snapshot.units.filter(unit => unit.owner === owner && !unit.deck && unitMover(unit.kind) === 'land' && unit.kind !== 'worker'
-    && unit.expiresTick === undefined && !options.memory.unitClaims[unit.id] && !options.memory.v6?.creep?.group.includes(unit.id)
+    && unit.expiresTick === undefined && !ordinaryUnitClaim(options.memory, unit.id) && !options.memory.v6?.creep?.group.includes(unit.id)
     && !options.memory.v6?.raid?.unitIds.includes(unit.id));
 }
 
