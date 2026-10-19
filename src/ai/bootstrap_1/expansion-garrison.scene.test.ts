@@ -32,10 +32,13 @@ it('keeps the completed natural defended while the remaining troops establish th
   let thirdFoundationTick: number | undefined;
   let thirdCompleteTick: number | undefined;
   let garrisonRecorded = false;
+  const roadClearObjectives = new Set<string>();
   runGameLoop({ name: 'archer-natural-garrison-handoff', game, agents: saved.agents,
     maxTicks: 9000, thinkInterval: saved.thinkInterval,
     commandPlanner: navalObservedPlanner(memories),
   }, { onStep({ game }) {
+    const mission = memories.v9_archer!.landExpansion;
+    if (mission?.roadCamp) roadClearObjectives.add(mission.mineId);
     const third = game.buildings.find(building => building.owner === 'v9_archer'
       && building.kind === 'townHall' && building.id !== 'building-v9_archer-townhall' && building.id !== naturalId);
     if (third) thirdFoundationTick ??= game.tick;
@@ -64,6 +67,8 @@ it('keeps the completed natural defended while the remaining troops establish th
   expect(naturalCompleteTick!).toBeLessThanOrEqual(5298);
   expect(protectedFrames).toBeGreaterThanOrEqual(3000);
   expect(garrisonRecorded || minimumStrength === Infinity).toBe(true);
+  // The intervening camp is a prerequisite of the same mine, not an unrelated errand.
+  expect([...roadClearObjectives]).toEqual(['gold-gen-4']);
   // Original third: foundation 7782 (6:29.1), completion 8342 (6:57.1).
   // Allow thirty seconds for the natural's handoff, with a hard 7:30 limit on completion.
   expect(thirdFoundationTick).toBeDefined();

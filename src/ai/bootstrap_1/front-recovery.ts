@@ -6,6 +6,8 @@ import { distance, type Point } from '../policy/spatial';
 import type { AiPolicyContext, AiScript } from '../policy/types';
 import { retreatV6Front, V7_WOUNDED_SHARE } from '../policy/v6/general';
 import { armedFoes, retreatLandTravelTicks, retreatThreatReach } from './safe-land-route';
+import { activeUnitClaim } from '../policy/claims';
+import { MINING_PURSUIT_RADIUS } from './mining-leash';
 import { incomingItemDamage } from './damage-footprints';
 import { THINK_TICKS } from './mounted-micro';
 
@@ -46,9 +48,11 @@ export function postRecoveryAssignments(snapshot: GameSnapshot, owner: PlayerId,
   return patients.flatMap(patient => {
     const critical = patient.hp < patient.maxHp * V7_WOUNDED_SHARE
       || incomingItemDamage(snapshot, patient, foes, THINK_TICKS) >= patient.hp;
-    const posts = reachableCare(snapshot, patient, wells.filter(post => critical
-      || distance(patient, post) <= post.attackRange
-      || patient.order.type === 'move' && patient.order.avoidCombat && distance(patient.order, post) <= post.attackRange), foes);
+    const claim = activeUnitClaim(snapshot, owner, patient, options);
+    const posts = reachableCare(snapshot, patient, wells.filter(post =>
+      (claim?.kind !== 'expansionGarrison' || distance(post, claim) <= MINING_PURSUIT_RADIUS)
+      && (critical || distance(patient, post) <= post.attackRange
+        || patient.order.type === 'move' && patient.order.avoidCombat && distance(patient.order, post) <= post.attackRange)), foes);
     const exposed = foes.some(foe => distance(patient, foe) <= retreatThreatReach(snapshot, foe, patient, 0));
     const ready = exposed ? [] : posts.filter(care => distance(patient, care.post) <= care.post.attackRange);
     const post = ready.length ? ready.sort((a, b) => distance(patient, a) - distance(patient, b))[0]

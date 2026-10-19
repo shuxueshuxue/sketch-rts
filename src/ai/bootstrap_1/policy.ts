@@ -39,7 +39,7 @@ import { lootRecovery, planLootItemCommands } from './loot-recovery';
 import { summonedRaids } from './summoned-raids';
 import { mountedField } from './mounted-field';
 import { migrateExpansionClaims, prepareExpansionMission } from './expansion-mission';
-import { expansionGarrison, maintainExpansionGarrisons } from './expansion-garrison';
+import { expansionGarrison, garrisonRecoveryCommands, maintainExpansionGarrisons } from './expansion-garrison';
 
 export const BOOTSTRAP_VERSIONS = ['v9_archer', 'v9_summoner', 'v9_knight'] as const;
 export const BOOTSTRAP_PARENTS = { v9_archer: 'v5', v9_summoner: 'v7', v9_knight: 'v8' } as const;
@@ -161,7 +161,13 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
     if (script === AI_SCRIPT_LIBRARY.v6Backline) return [
       version === 'v9_summoner' ? { ...script, run: planSummonerScreen } : { ...script, run: planBootstrapCasterScreen }];
     if (script === AI_SCRIPT_LIBRARY.v6Economy) return [miningWorkforce, bootstrapEconomy];
-    if (version === 'v9_archer' && script === AI_SCRIPT_LIBRARY.v7Skirmish) return [archerMicro];
+    if (script === AI_SCRIPT_LIBRARY.v7Skirmish) {
+      const micro = version === 'v9_archer' ? archerMicro : script;
+      return [{ ...micro, run(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
+        const commands = micro.run(snapshot, owner, options);
+        return garrisonRecoveryCommands(snapshot, owner, options, commands === undefined ? [] : Array.isArray(commands) ? commands : [commands]);
+      } }];
+    }
     if (script === AI_SCRIPT_LIBRARY.allySupport) return [mobileCare, mountedTasks, lootRecovery, mercenaryControl, script];
     if (script === AI_SCRIPT_LIBRARY.abilities) return version === 'v9_summoner'
       ? [medicalRecovery, towerRushAbilities, summonerTowerRush] : [medicalRecovery, bootstrapAbilities];
