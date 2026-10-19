@@ -66,7 +66,27 @@ export type V6PolicyMemory = {
 
 // The naval script's plans (see @@@ai-naval), each with the tick it was looked for: the island's mine and the water a ship
 // lands at, the assault's target and its water, the raid's water.
+export type MiningMissionMemory = {
+  mineId: string;
+  sinceTick: number;
+  stage: 'fund' | 'assemble' | 'clear' | 'escort' | 'build' | 'complete';
+  staging?: { x: number; y: number };
+  stagingCheckedTick?: number;
+  roadCamp?: { x: number; y: number };
+  combat?: Pick<V6PolicyMemory, 'creep' | 'creepRetry'>;
+  interruptions: { tick: number; reason: 'home-threat' | 'mining-threat' | 'mine-threat' | 'camp-threat'; targetId?: string }[];
+  paused?: boolean;
+  pausedAt?: number;
+};
+
+export type NavalConquestMemory = MiningMissionMemory & {
+  landing: { x: number; y: number };
+  reason: string;
+  abandonedTick?: number;
+};
+
 export type NavalPlanMemory = {
+  conquests?: Record<string, NavalConquestMemory>;
   ferryDecisions?: Record<string, { tick: number; reason: string; lastBlock?: { tick: number; reason: string } }>;
   firstCombatDelivery?: {
     firstShipTick: number; deadlineTick: number; routeBudgeted?: boolean; overdueTick?: number;
@@ -80,7 +100,7 @@ export type NavalPlanMemory = {
   outfit?: {shipId:string; workerId?:string; mountId:string; itemId?:string; kind:'shipCannon'|'shipMortar'; progress?:{tick:number;x:number;y:number;workerX:number;workerY:number;itemId?:string}};
   outfitRetryUntil?: number;
   ferries?: Record<string, ({ purpose: "settle" | "assault" | "rebase" | "evacuate" | "advance" | "reinforce" } | { purpose: "creep"; riderId: string })
-    & {targetId:string;from:{x:number;y:number};to:{x:number;y:number};phase:"loading"|"sailing"|"return";crewIds:string[];sinceTick:number;payloadIds?:string[];deliveries?:{tick:number;unitIds:string[]}[];returnTrips?:number;progress?:{tick:number;x:number;y:number;heading:number;phase:string;crew:string}}>;
+    & {targetId:string;from:{x:number;y:number};to:{x:number;y:number};phase:"loading"|"sailing"|"return";crewIds:string[];sinceTick:number;reinforcementTaskId?:string;payloadIds?:string[];deliveries?:{tick:number;unitIds:string[]}[];returnTrips?:number;progress?:{tick:number;x:number;y:number;heading:number;phase:string;crew:string}}>;
   ferryRetryUntil?: Record<string,number>;
   ferryFailures?: Record<string, Record<string, { attempts: number; tick: number; reason: string }>>;
   island?: { tick: number; plan?: { mineId: string; landing: { x: number; y: number } } };
@@ -108,18 +128,7 @@ export type AiPolicyMemory = {
   miningLeash?: { hallId: string; point: { x: number; y: number } };
   miningDefense?: { hallId: string; point: { x: number; y: number };
     attackerIds: string[]; protectedHp: Record<string, number>; phase: 'gather' | 'fight' };
-  landExpansion?: {
-    mineId: string;
-    sinceTick: number;
-    stage: 'fund' | 'assemble' | 'clear' | 'escort' | 'build' | 'complete';
-    staging?: { x: number; y: number };
-    stagingCheckedTick?: number;
-    roadCamp?: { x: number; y: number };
-    combat?: Pick<V6PolicyMemory, 'creep' | 'creepRetry'>;
-    interruptions: { tick: number; reason: 'home-threat' | 'mining-threat' | 'mine-threat' | 'camp-threat'; targetId?: string }[];
-    paused?: boolean;
-    pausedAt?: number;
-  };
+  landExpansion?: MiningMissionMemory;
   // Posts awaiting their own static defense. Unit membership lives only in unitClaims.
   expansionGarrisons?: Record<string, { mineId: string; sinceTick: number }>;
   mounted?: {

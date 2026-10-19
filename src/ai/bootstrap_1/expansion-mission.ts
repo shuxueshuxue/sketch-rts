@@ -21,7 +21,7 @@ import { miningJobDefenseTarget } from './mining-job-defense';
 import { mineClaimedByAlly } from '../policy/mine-claims';
 import { miningRallyAssignment } from './mining-rally';
 import { activeUnitClaim, clearUnitClaim, forgetExpansionMember, isMineRallyClaim, recordUnitTaskClaim, setUnitClaim } from '../policy/claims';
-import type { AiPolicyMemory } from '../memory';
+import type { AiPolicyMemory, MiningMissionMemory } from '../memory';
 import { expansionGarrisonReady } from './expansion-garrison';
 
 export function expansionMissionUnitIds(memory: AiPolicyMemory) {
@@ -204,12 +204,18 @@ export function expansionMissionCommands(snapshot: GameSnapshot, owner: PlayerId
 
 function planExpansionScreen(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel): GameCommand[] {
   const task = options.memory.landExpansion!;
-  const mine = snapshot.resources.find(mine => mine.id === task.mineId)!, memory = v6Memory(options);
-  const home = intel.home, members = new Set(expansionMissionUnitIds(options.memory));
+  const members = new Set(expansionMissionUnitIds(options.memory));
   const front = availableV6Army(snapshot, options, intel).filter(unit => members.has(unit.id)).filter(unit => {
     const claim = activeUnitClaim(snapshot, owner, unit, options);
     return !isMineRallyClaim(claim) && claim?.kind !== 'mineLeash' && claim?.kind !== 'expansionGarrison' && claim?.kind !== 'harassSquad';
   }).filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0);
+  return planMiningScreen(snapshot, owner, options, intel, task, front);
+}
+
+/** Land and overseas mining missions share their clearing, staging and escort behavior. */
+export function planMiningScreen(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel,
+  task: MiningMissionMemory, front: Unit[]): GameCommand[] {
+  const mine = snapshot.resources.find(mine => mine.id === task.mineId)!, memory = v6Memory(options), home = intel.home;
   if (!front.length) return [];
   const camps = neutralCamps(snapshot), guard = camps.find(camp => distance(camp.center, mine) <= EXPANSION_GUARD_RANGE);
   if (guard) {
