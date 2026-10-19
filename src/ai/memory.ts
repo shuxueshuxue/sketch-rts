@@ -7,7 +7,11 @@ export type AiJobState = {
   updatedTick: number;
 };
 
-export type AiPolicyUnitClaimKind = "mercenary" | "creep" | "expansion" | "attack" | "harass" | "retreat" | "build";
+export type AiPolicyUnitClaimKind = "mercenary" | "creep" | "expansion" | "attack" | "harass" | "retreat" | "build"
+  | "mineRally" | "mineLeash" | "mineGuard" | "workerSafety" | "expansionGarrison";
+
+export type WorkerEvacuation = { origin: { x: number; y: number }; resourceId?: string;
+  shelter: { x: number; y: number }; safeResourceId?: string };
 
 export type AiPolicyUnitClaim = {
   kind: AiPolicyUnitClaimKind;
@@ -16,6 +20,10 @@ export type AiPolicyUnitClaim = {
   y: number;
   sinceTick: number;
   expiresTick: number;
+  arrived?: boolean;
+  resumeKind?: 'mineRally' | 'mineGuard';
+  evacuation?: WorkerEvacuation;
+  localRetreat?: { x: number; y: number };
 };
 
 export type AiStrategicPlan = {
@@ -66,11 +74,9 @@ export type NavalPlanMemory = {
 };
 
 export type AiPolicyMemory = {
-  miningLeash?: { hallId: string; point: { x: number; y: number }; unitIds: string[]; defenderIds: string[] };
-  miningDefense?: { hallId: string; point: { x: number; y: number }; unitIds: string[];
-    attackerIds: string[]; arrivedIds: string[]; protectedHp: Record<string, number>; phase: 'gather' | 'fight' };
-  workerSafety?: Record<string, { origin: { x: number; y: number }; resourceId?: string;
-    shelter: { x: number; y: number }; safeResourceId?: string }>;
+  miningLeash?: { hallId: string; point: { x: number; y: number } };
+  miningDefense?: { hallId: string; point: { x: number; y: number };
+    attackerIds: string[]; protectedHp: Record<string, number>; phase: 'gather' | 'fight' };
   landExpansion?: {
     mineId: string;
     sinceTick: number;

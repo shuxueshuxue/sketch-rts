@@ -16,6 +16,7 @@ import { bootstrapPolicyContext } from './policy';
 import { v6ExpansionPoint } from '../policy/v6/economy';
 import { expansionMissionCommands } from './expansion-mission';
 import { expansionOwnsDefender } from './mining-leash';
+import { recordUnitTaskClaim } from '../policy/claims';
 
 function expansionScene(invaded = false) {
   let draft = sketchScene('finish-one-expansion').map('openClaims').replaceDefaults()
@@ -121,8 +122,11 @@ it('yields both arrived and traveling escorts to a mine rally, then fills the es
   expect(escortIds).toHaveLength(3);
   const hall = game.buildings.find(building => building.owner === 'us')!;
   memory.miningDefense = { hallId: hall.id, point: { x: hall.x + 150, y: hall.y },
-    unitIds: escortIds, arrivedIds: escortIds.slice(0, 2), attackerIds: [],
+    attackerIds: [],
     protectedHp: { [hall.id]: hall.hp }, phase: 'fight' };
+  for (const [index, id] of escortIds.entries()) recordUnitTaskClaim(snapshot, memory, id, {
+    kind: 'mineRally', targetId: hall.id, x: memory.miningDefense.point.x, y: memory.miningDefense.point.y, arrived: index < 2,
+  });
   // No current intrusion: the original raid left, but the last defender has not reached the rally yet.
   for (const id of escortIds.slice(0, 2)) Object.assign(soldiers.find(unit => unit.id === id)!, memory.miningDefense.point);
   ({ snapshot, options } = context());

@@ -13,6 +13,7 @@ import { runAiCommandEntriesFromScripts } from '../policy/script-runner';
 import { bootstrapPolicyContext } from './policy';
 import { mainArmyIntel, miningLeash, miningRally } from './mine-defense';
 import { MINING_PURSUIT_RADIUS } from './mining-leash';
+import { activeUnitClaim, isMineRallyClaim } from '../policy/claims';
 
 const saved: { snapshot: GameSnapshot; nextId: number; activePlayers: string[]; memories: Record<string, AiPolicyMemory> } =
   JSON.parse(readFileSync(new URL('./fixtures/defense-pursuit-19m50.json', import.meta.url), 'utf8'));
@@ -60,7 +61,7 @@ function strayingDefender() {
   const snapshot = snapshotGame(game), memory = memories[owner]!;
   const options = bootstrapPolicyContext(snapshot, owner, 'v9_knight', { memory, teams: game.teams });
   const intel = mainArmyIntel(snapshot, owner, options), anchor = memory.miningDefense!;
-  const unit = intel.army.find(unit => anchor.arrivedIds.includes(unit.id) && unit.attackDamage > 0 && unit.speed >= 60
+  const unit = intel.army.find(unit => activeUnitClaim(snapshot, owner, unit, options)?.arrived && unit.attackDamage > 0 && unit.speed >= 60
     && unit.hp >= unit.maxHp * .8)!;
   const hall = snapshot.buildings.find(building => building.id === hallId)!;
   const outside = walkableGoal(snapshot.map, hall.x + (anchor.point.x - hall.x) * 4, hall.y + (anchor.point.y - hall.y) * 4);
@@ -120,8 +121,8 @@ it('does not recall a defender after a real strategic sortie has taken ownership
     miningRally, miningLeash,
   ], options);
   expect(entries.some(entry => entry.scriptId === 'independent-sortie')).toBe(true);
-  expect(memory.miningDefense?.unitIds.includes(unit.id) ?? false).toBe(false);
-  expect(memory.miningLeash?.defenderIds.includes(unit.id) ?? false).toBe(false);
+  expect(isMineRallyClaim(activeUnitClaim(snapshot, owner, unit, options))).toBe(false);
+  expect(['mineGuard', 'mineLeash']).not.toContain(activeUnitClaim(snapshot, owner, unit, options)?.kind);
   issueCommandFrame(game, entries.map(entry => ({ ...entry, playerId: owner })));
   const next = runAiCommandEntriesFromScripts(snapshotGame(game), owner, [miningLeash], options);
   expect(next.some(entry => 'unitIds' in entry.command && entry.command.unitIds.includes(unit.id))).toBe(false);

@@ -2,6 +2,7 @@ import type { GameCommand, GameSnapshot, PlayerId } from '../../shared/types';
 import { planSkirmishPreservation } from '../policy/skirmish-tactics';
 import type { AiPolicyContext, AiScript } from '../policy/types';
 import { isBacklineKind } from '../policy/v6/backline';
+import { unitRetreatClaim } from '../policy/claims';
 
 // @@@archer-one-voice - While the general fights for a base (defend, guard), it alone judges whether that fight is lost and
 // where the army stands (see @@@v7-one-voice); the skirmish script keeps only its shooters' and casters' own micro (kiting,
@@ -32,7 +33,7 @@ export const archerMicro: AiScript = {
   },
   claimsUnits(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
     const continuing = snapshot.units.filter(unit => unit.owner === owner && unit.order.type === 'move'
-      && options.memory.unitClaims[unit.id]?.kind === 'retreat').map(unit => unit.id);
+      && unitRetreatClaim(snapshot, unit, options)).map(unit => unit.id);
     return new Set([...continuing, ...archerSkirmish(snapshot, owner, options)
       .flatMap(command => command.type === 'move' || command.type === 'attack' || command.type === 'attackMove' ? command.unitIds : [])
     ].filter(id => snapshot.units.some(unit => unit.id === id && ['archer', 'horseArcher', 'sparkArcher'].includes(unit.kind))));

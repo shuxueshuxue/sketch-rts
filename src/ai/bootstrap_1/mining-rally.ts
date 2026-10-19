@@ -2,7 +2,7 @@ import { GOLD_MINE_RULES } from '../../shared/mining';
 import { nearestByRoute } from '../../shared/route-selection';
 import type { GameCommand, GameSnapshot, PlayerId } from '../../shared/types';
 import { averagePoint, distance } from '../policy/spatial';
-import type { AiCommandEntry, AiPolicyContext, AiScript } from '../policy/types';
+import type { AiPolicyContext } from '../policy/types';
 import type { AiPolicyMemory } from '../memory';
 import { availableV6Army, V7_WOUNDED_SHARE } from '../policy/v6/general';
 import { isBacklineKind } from '../policy/v6/backline';
@@ -10,6 +10,7 @@ import type { V6Intel } from '../policy/v6/intel';
 import { isEnemyOwner } from '../policy/ownership';
 import { coveredDefenseTarget } from './covered-defense';
 import { strengthOf } from '../policy/v6/strength';
+import { activeUnitClaim, isMineRallyClaim, recordUnitTaskClaim } from '../policy/claims';
 
 export const MINING_RALLY_RADIUS = 240;
 const proposals = new WeakMap<AiPolicyMemory, { tick: number; owner: PlayerId;
@@ -23,8 +24,11 @@ export function miningRallyAssignment(snapshot: GameSnapshot, owner: PlayerId, o
   if (!hall || !known && (!intrusion || distance(intrusion.building, hall) > GOLD_MINE_RULES.baseRange
     || !snapshot.resources.some(mine => mine.amount > 0 && distance(mine, hall) <= GOLD_MINE_RULES.baseRange)
       && !snapshot.units.some(unit => unit.owner === owner && unit.kind === 'worker' && distance(unit, hall) <= GOLD_MINE_RULES.baseRange))) return undefined;
-  const available = known ? snapshot.units.filter(unit => unit.owner === owner && known.unitIds.includes(unit.id) && !unit.deck)
+  const available = known ? snapshot.units.filter(unit => unit.owner === owner && !unit.deck
+      && isMineRallyClaim(activeUnitClaim(snapshot, owner, unit, options))
+      && activeUnitClaim(snapshot, owner, unit, options)?.targetId === hall.id)
     : availableV6Army(snapshot, options, intel).filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0
+      && activeUnitClaim(snapshot, owner, unit, options)?.kind !== 'expansionGarrison'
       && unit.hp >= unit.maxHp * V7_WOUNDED_SHARE);
   if (available.length === 0) return undefined;
   const field = intrusion ? averagePoint(intrusion.attackers) : hall;
@@ -34,7 +38,8 @@ export function miningRallyAssignment(snapshot: GameSnapshot, owner: PlayerId, o
   const attackers = snapshot.units.filter(unit => unit.attackDamage > 0 && isEnemyOwner(snapshot, owner, unit.owner, options)
     && (distance(unit, hall) <= 1000 || known?.attackerIds.includes(unit.id) && distance(unit, hall) <= 1400));
   const arrived = available.filter(unit => distance(unit, point) <= MINING_RALLY_RADIUS);
-  const arrivedIds = [...new Set([...(known?.arrivedIds ?? []), ...arrived.map(unit => unit.id)])];
+  const arrivedIds = [...new Set([...available.filter(unit => activeUnitClaim(snapshot, owner, unit, options)?.arrived)
+    .map(unit => unit.id), ...arrived.map(unit => unit.id)])];
   const protectedUnits = snapshot.units.filter(unit => unit.owner === owner && unit.kind === 'worker' && distance(unit, hall) <= 650);
   const protectedEntities = [hall, ...protectedUnits];
   const protectedHp = Object.fromEntries(protectedEntities.map(entity => [entity.id, entity.hp]));
@@ -45,26 +50,42 @@ export function miningRallyAssignment(snapshot: GameSnapshot, owner: PlayerId, o
   const enough = arrived.length > 0 && attackers.length > 0 && strengthOf(arrived) >= strengthOf(attackers) * 1.25;
   const gathered = available.every(unit => arrivedIds.includes(unit.id));
   if (known && gathered && attackers.length === 0) return undefined;
-  return { hall, units: available, state: { hallId: hall.id, point,
-    unitIds: available.map(unit => unit.id), attackerIds: [...new Set([...(known?.attackerIds ?? intrusion!.attackers.map(unit => unit.id)), ...attackers.map(unit => unit.id)])],
-    arrivedIds, protectedHp,
+  return { hall, units: available, arrivedIds, state: { hallId: hall.id, point,
+    attackerIds: [...new Set([...(known?.attackerIds ?? intrusion!.attackers.map(unit => unit.id)), ...attackers.map(unit => unit.id)])],
+    protectedHp,
     phase: known?.phase === 'fight' || enough || underAttack || gathered ? 'fight' as const : 'gather' as const } };
 }
 
 /** Only the still-rallying units leave the general's live army view. */
 export function miningRallyOwns(snapshot: GameSnapshot, memory: AiPolicyMemory, unitId: string) {
-  const proposal = proposals.get(memory);
-  const state = proposal?.tick === snapshot.tick ? proposal.assignment.state : memory.miningDefense;
-  return state?.unitIds.includes(unitId) && (state.phase === 'gather' || !state.arrivedIds.includes(unitId));
+  const proposal = proposals.get(memory), unit = snapshot.units.find(unit => unit.id === unitId);
+  if (!unit) return false;
+  if (proposal?.tick === snapshot.tick) return proposal.assignment.units.some(unit => unit.id === unitId)
+    && (proposal.assignment.state.phase === 'gather' || !proposal.assignment.arrivedIds.includes(unitId));
+  const claim = activeUnitClaim(snapshot, unit.owner, unit, { memory });
+  const state = memory.miningDefense;
+  return !!state && !!claim && isMineRallyClaim(claim) && state.hallId === claim.targetId
+    && (state.phase === 'gather' || !claim.arrived);
 }
 
 export function planMiningRally(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel): GameCommand[] {
   const assignment = miningRallyAssignment(snapshot, owner, options, intel);
-  if (!assignment) { delete options.memory.miningDefense; proposals.delete(options.memory); return []; }
-  const { state, units } = assignment;
-  const owns = (id: string) => options.memory.miningDefense?.unitIds.includes(id);
+  if (!assignment) {
+    delete options.memory.miningDefense; proposals.delete(options.memory);
+    for (const claim of Object.values(options.memory.unitClaims)) {
+      if (claim.kind === 'mineRally') claim.kind = 'mineGuard';
+      if (claim.kind === 'mineLeash' && claim.resumeKind === 'mineRally') claim.resumeKind = 'mineGuard';
+    }
+    return [];
+  }
+  const { state, units, arrivedIds } = assignment;
+  const owns = (id: string) => {
+    const unit = units.find(unit => unit.id === id)!;
+    const claim = activeUnitClaim(snapshot, owner, unit, options);
+    return isMineRallyClaim(claim) && claim?.targetId === state.hallId;
+  };
   proposals.set(options.memory, { tick: snapshot.tick, owner, assignment });
-  const arriving = units.filter(unit => !state.arrivedIds.includes(unit.id)
+  const arriving = units.filter(unit => !arrivedIds.includes(unit.id)
     && !['cast', 'charge'].includes(unit.order.type));
   const foes = snapshot.units.filter(unit => unit.attackDamage > 0 && !unit.deck
     && isEnemyOwner(snapshot, owner, unit.owner, options));
@@ -85,22 +106,29 @@ export function planMiningRally(snapshot: GameSnapshot, owner: PlayerId, options
   ];
 }
 
-/** Confirm assignment only after claim and command-conflict filtering, from commands actually returned by the planner. */
-export function recordMiningRallyCommands(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory, entries: readonly AiCommandEntry[], scripts: readonly AiScript[]) {
-  const proposal = proposals.get(memory);
-  proposals.delete(memory);
+/** The runner supplies accepted orders, so rejected rally proposals never acquire ownership. */
+export function recordMiningRallyAcceptedCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, commands: readonly GameCommand[]) {
+  const proposal = proposals.get(options.memory);
   if (!proposal || proposal.tick !== snapshot.tick || proposal.owner !== owner) return;
-  const assigned = new Set(entries.filter(entry => entry.scriptId === 'miningRally')
-    .flatMap(entry => 'unitIds' in entry.command ? entry.command.unitIds : []));
-  const roles = new Map(scripts.map(script => [script.id, script.redirects ?? 'strategic']));
-  const redirected = new Set(entries.filter(entry => entry.scriptId !== 'miningRally' && roles.get(entry.scriptId) !== 'local')
-    .flatMap(entry => ['move', 'attackMove', 'attack', 'holdPosition', 'follow', 'aim', 'board', 'garrison'].includes(entry.command.type)
-      && 'unitIds' in entry.command ? entry.command.unitIds : []));
-  const confirmed = proposal.assignment.state.unitIds.filter(id => assigned.has(id)
-    || memory.miningDefense?.unitIds.includes(id) && !redirected.has(id));
+  const { state, arrivedIds } = proposal.assignment;
+  for (const command of commands) if ('unitIds' in command) for (const id of command.unitIds) {
+    const previous = options.memory.unitClaims[id];
+    recordUnitTaskClaim(snapshot, options.memory, id, { kind: previous?.kind === 'mineLeash' ? 'mineLeash' : 'mineRally',
+      ...(previous?.kind === 'mineLeash' ? { resumeKind: 'mineRally' } : {}), targetId: state.hallId,
+      x: state.point.x, y: state.point.y, arrived: arrivedIds.includes(id) });
+  }
+}
+
+export function recordMiningRallyCommands(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory) {
+  const proposal = proposals.get(memory); proposals.delete(memory);
+  if (!proposal || proposal.tick !== snapshot.tick || proposal.owner !== owner) return;
+  const confirmed = proposal.assignment.units.filter(unit => {
+    const claim = activeUnitClaim(snapshot, owner, unit, { memory });
+    return isMineRallyClaim(claim) && claim?.targetId === proposal.assignment.state.hallId;
+  });
   if (confirmed.length === 0) { delete memory.miningDefense; return; }
-  memory.miningDefense = { ...proposal.assignment.state, unitIds: confirmed,
-    arrivedIds: proposal.assignment.state.arrivedIds.filter(id => confirmed.includes(id)) };
+  for (const unit of confirmed) if (proposal.assignment.arrivedIds.includes(unit.id)) memory.unitClaims[unit.id]!.arrived = true;
+  memory.miningDefense = proposal.assignment.state;
 }
 
 /** The defended hall stays fixed even while raiders cross the line between two mines. */
