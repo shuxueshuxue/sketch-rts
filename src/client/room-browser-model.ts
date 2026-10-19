@@ -16,7 +16,7 @@ export function roomBrowserEntries(rooms: RoomState[], viewerUserId: string, loc
   return rooms.flatMap((room): RoomBrowserEntry[] => {
     if (room.status === "ended" || room.status === "closed" || local(room.id)) return [];
     const owned = room.slots.some((slot) => slot.userId === viewerUserId);
-    if (room.status === "inMatch") return owned || room.visibility === "public" ? [{ room, action: owned ? "rejoin" : "watch", playing: true }] : [];
+    if (room.status === "inMatch" || room.status === "errored") return owned || room.visibility === "public" ? [{ room, action: owned ? "rejoin" : "watch", playing: true }] : [];
     return [{ room, action: owned ? "rejoin" : room.slots.some((slot) => slot.controller === "open") ? "join" : "full", playing: false }];
   });
 }
@@ -28,6 +28,8 @@ export type RoomEntry = { kind: "enter" } | { kind: "askToWatch" } | { kind: "re
 // way opened from a link asks first whether to watch it (one picked from the room list was already chosen to watch).
 export function roomEntry(room: RoomState | undefined, viewerUserId: string, fromLink: boolean): RoomEntry {
   if (!room || room.status === "closed" || room.status === "ended" && !room.result) return { kind: "refused", reason: "closed" };
+  // The deployment reports a stopped match through the existing entry error prompt.
+  if (room.status === "errored") return room.visibility !== "public" && !room.slots.some(slot => slot.userId === viewerUserId) ? { kind: "refused", reason: "private" } : { kind: "enter" };
   if (room.status === "ended" || room.slots.some((slot) => slot.userId === viewerUserId)) return { kind: "enter" };
   if (room.status === "inMatch") return room.visibility !== "public" ? { kind: "refused", reason: "private" } : fromLink ? { kind: "askToWatch" } : { kind: "enter" };
   return room.slots.some((slot) => slot.controller === "open") ? { kind: "enter" } : { kind: "refused", reason: "full" };

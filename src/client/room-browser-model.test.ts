@@ -26,6 +26,13 @@ describe("room browser model", () => {
     const solo = createRoom({ id: "solo", host: viewer, visibility: "private" });
     expect(roomBrowserEntries([solo, live({ ...solo, id: "solo-playing" })], viewer.id, (id) => id.startsWith("solo"))).toEqual([]);
   });
+
+  it("keeps a failed match out of the setup flow and lets its players open the recorded entry error", () => {
+    const failed: RoomState = { ...createRoom({ id: "failed", host, visibility: "private" }), status: "errored", error: { tick: 42, message: "AI failed" } };
+    expect(roomBrowserEntries([failed], host.id)).toEqual([{ room: failed, action: "rejoin", playing: true }]);
+    expect(roomEntry(failed, host.id, false)).toEqual({ kind: "enter" });
+    expect(roomEntry(failed, viewer.id, true)).toEqual({ kind: "refused", reason: "private" });
+  });
 });
 
 describe("opening a room", () => {

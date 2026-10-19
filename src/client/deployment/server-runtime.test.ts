@@ -9,6 +9,18 @@ import type { NetTransport } from "../net/transport";
 import { ServerDeploymentRuntime, createRoomWebSocketUrl } from "./server-runtime";
 
 describe("server deployment runtime", () => {
+  it("reports a stopped room through the existing entry error instead of trying to join or resume it", async () => {
+    const host = { id: "host", name: "Host" };
+    const room = { ...createRoom({ id: "broken", host }), status: "errored" as const, error: { tick: 42, message: "AI failed" } };
+    const calls: string[] = [];
+    const runtime = new ServerDeploymentRuntime({
+      publicBasePath: "/",
+      fetchJson: async <T>(path: string) => { calls.push(path); return room as T; },
+    });
+    await expect(runtime.enterRoom(room.id, host)).rejects.toThrow("Room broken stopped at tick 42: AI failed");
+    expect(calls).toEqual(["/api/rooms/broken"]);
+  });
+
   it("boots server deployment without opening a global session gameplay socket", () => {
     const runtime = new ServerDeploymentRuntime({
       createRoomTransport: () => new FakeTransport(),

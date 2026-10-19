@@ -122,8 +122,13 @@ export function createRoomLifecycleHost(options: RoomLifecycleOptions = {}) {
     },
 
     resumeRoom(roomId: string): RoomState {
+      if (requireRoom(roomId).status === "errored") throw new Error(`Room ${roomId} failed; reset it before resuming`);
       const { paused: _paused, ...room } = requireRoom(roomId);
       return replaceRoom(room);
+    },
+
+    failRoom(roomId: string, error: NonNullable<RoomState["error"]>): RoomState {
+      return replaceRoom({ ...requireRoom(roomId), status: "errored", error });
     },
 
     closeRoom(roomId: string, userId: string): RoomState {
@@ -141,7 +146,7 @@ export function createRoomLifecycleHost(options: RoomLifecycleOptions = {}) {
     startRoom(roomId: string): RoomStartResult {
       const room = requireRoom(roomId);
       const setup = prepareStartRoom(roomId);
-      const { result: _result, ...roomWithoutResult } = room;
+      const { result: _result, error: _error, ...roomWithoutResult } = room;
       const started = replaceRoom({ ...roomWithoutResult, status: "inMatch" });
       return { room: started, setup };
     },
@@ -153,7 +158,7 @@ export function createRoomLifecycleHost(options: RoomLifecycleOptions = {}) {
     resetRoom(roomId: string, mapId: MapId): RoomStartResult {
       const room = requireRoom(roomId);
       const setup = prepareResetRoom(roomId, mapId);
-      const { result: _result, ...roomWithoutResult } = room;
+      const { result: _result, error: _error, ...roomWithoutResult } = room;
       const reset = replaceRoom({ ...roomWithoutResult, mapId, status: "inMatch" });
       return { room: reset, setup };
     },
