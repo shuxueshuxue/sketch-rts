@@ -1,0 +1,5419 @@
+{
+  "标题": "海战房间 AI 基线与判定一致性调查（仅测量，未改 AI）",
+  "日期": "2026-10-19",
+  "摘要": [
+    "168 局已完成。对 v8：33 胜 / 7 负 / 44 超时；对 v9：17 胜 / 11 负 / 56 超时。",
+    "蓝宝群岛与碎海合计 24/24 局都在 40 分钟超时，双方均无胜局。",
+    "最明确的总体差距是海外资源覆盖：15 分钟我方 14 基地/16 矿，对 v9 为 27/33；15/84 局落后，单局矿储量差中位数 7330 金，合计正差 191810 金。这些均为超时局，不能转换为胜场收益。",
+    "总体资源缺口尚不能按机制分摊；以下是分别重放确认的两处行为缺陷。已定位两处检查集合/位置与实际执行不一致，详见判定缺陷；其中骑射手筛选只在房间 AI 中发生，起航/返航位置检查为共享策略。",
+    "船体与装炮沉没价值我方 108780 金、v9 为 103140 金，交换比 0.948，净差 5640 金；37/84 局我方船损更高。",
+    "独有的筛兵留守错误出现在 18/84 局；其中真实留守足够仍被挡的 8 局占用 9 条船、2880 金资产。这 8 局为 6 胜、2 超时，与 15 分钟资源落后的 15 局不重叠。",
+    "纠正同岛反复上下船后，成功出航 112 对 118，往返 57 对 57；匹配同一物理席位且双方都军事登陆的 36 对，中位数仅慢 17.4 秒。",
+    "整体船只静止占比和匹配席位的首次军事登陆不能支持“房间 AI 全局更慢更闲”的结论；不能用仅发生登陆的不同样本中位数比较。"
+  ],
+  "判定缺陷": [
+    {
+      "名称": "清营船把筛过的登船名单当作全部留守兵力",
+      "对v9出现": {
+        "guardGames": 18,
+        "guardSeconds": 3011,
+        "guardShips": 28,
+        "guardShipGold": 7980,
+        "sufficientGuardGames": 8,
+        "sufficientGuardSeconds": 547,
+        "sufficientGuardShips": 9,
+        "sufficientGuardShipGold": 2880,
+        "guardNames": [
+          "elderwood v9_archer grove side-1 vs-v9",
+          "elderwood v9_archer grove side-2 vs-v9",
+          "elderwood v9_knight grove side-1 vs-v9",
+          "elderwood v9_knight grove side-2 vs-v9",
+          "elderwood v9_summoner grove side-2 vs-v9",
+          "gullIsland v9_archer grove side-1 vs-v9",
+          "gullIsland v9_archer grove side-2 vs-v9",
+          "gullIsland v9_knight grove side-1 vs-v9",
+          "gullIsland v9_summoner grove side-1 vs-v9",
+          "gullIsland v9_summoner grove side-2 vs-v9",
+          "ringwater v9_archer grove side-1 vs-v9",
+          "ringwater v9_archer grove side-2 vs-v9",
+          "ringwater v9_knight grove side-1 vs-v9",
+          "ringwater v9_summoner grove side-1 vs-v9",
+          "templeSpring v9_archer grove side-1 vs-v9",
+          "templeSpring v9_knight grove side-1 vs-v9",
+          "templeSpring v9_summoner grove side-2 vs-v9",
+          "twoShores v9_archer grove side-1 vs-v9"
+        ],
+        "sufficientGuardNames": [
+          "elderwood v9_knight grove side-1 vs-v9",
+          "elderwood v9_knight grove side-2 vs-v9",
+          "gullIsland v9_archer grove side-1 vs-v9",
+          "gullIsland v9_archer grove side-2 vs-v9",
+          "gullIsland v9_summoner grove side-1 vs-v9",
+          "ringwater v9_archer grove side-1 vs-v9",
+          "ringwater v9_knight grove side-1 vs-v9",
+          "templeSpring v9_archer grove side-1 vs-v9"
+        ]
+      },
+      "v9对手出现": {
+        "guardGames": 0,
+        "sufficientGuardGames": 0
+      },
+      "对v8出现": {
+        "guardGames": 17,
+        "guardSeconds": 3309,
+        "guardShipGold": 7140,
+        "sufficientGuardGames": 9,
+        "sufficientGuardSeconds": 434,
+        "sufficientGuardShipGold": 2820
+      },
+      "每船价值": "无额外装炮的运输船 240 金，航母 420 金；重复等待不重复计买船金额。",
+      "对v9逐局金额与次数": [
+        {
+          "name": "elderwood v9_archer grove side-1 vs-v9",
+          "guardShips": 3,
+          "guardGold": 720,
+          "sufficientGuardShips": 0,
+          "sufficientGuardGold": 0,
+          "quickReturns": 0,
+          "signatureReturns": 0
+        },
+        {
+          "name": "elderwood v9_archer grove side-2 vs-v9",
+          "guardShips": 4,
+          "guardGold": 960,
+          "sufficientGuardShips": 0,
+          "sufficientGuardGold": 0,
+          "quickReturns": 0,
+          "signatureReturns": 0
+        },
+        {
+          "name": "elderwood v9_knight grove side-1 vs-v9",
+          "guardShips": 2,
+          "guardGold": 480,
+          "sufficientGuardShips": 1,
+          "sufficientGuardGold": 240,
+          "quickReturns": 0,
+          "signatureReturns": 0
+        },
+        {
+          "name": "elderwood v9_knight grove side-2 vs-v9",
+          "guardShips": 1,
+          "guardGold": 240,
+          "sufficientGuardShips": 1,
+          "sufficientGuardGold": 240,
+          "quickReturns": 0,
+          "signatureReturns": 0
+        },
+        {
+          "name": "elderwood v9_summoner grove side-2 vs-v9",
+          "guardShips": 1,
+          "guardGold": 240,
+          "sufficientGuardShips": 0,
+          "sufficientGuardGold": 0,
+          "quickReturns": 0,
+          "signatureReturns": 0
+        },
+        {
+          "name": "gullIsland v9_archer grove side-1 vs-v9",
+          "guardShips": 2,
+          "guardGold": 660,
+          "sufficientGuardShips": 1,
+          "sufficientGuardGold": 420,
+          "quickReturns": 0,
+          "signatureReturns": 0
+        },
+        {
+          "name": "gullIsland v9_archer grove side-2 vs-v9",
+          "guardShips": 1,
+          "guardGold": 420,
+          "sufficientGuardShips": 1,
+          "sufficientGuardGold": 420,
+          "quickReturns": 0,
+          "signatureReturns": 0
+        },
+        {
+          "name": "gullIsland v9_knight grove side-1 vs-v9",
+          "guardShips": 1,
+          "guardGold": 420,
+          "sufficientGuardShips": 0,
+          "sufficientGuardGold": 0,
+          "quickReturns": 0,
+          "signatureReturns": 0
+        },
+        {
+          "name": "gullIsland v9_summoner grove side-1 vs-v9",
+          "guardShips": 1,
+          "guardGold": 240,
+          "sufficientGuardShips": 1,
+          "sufficientGuardGold": 240,
+          "quickReturns": 0,
+          "signatureReturns": 0
+        },
+        {
+          "name": "gullIsland v9_summoner grove side-2 vs-v9",
+          "guardShips": 1,
+          "guardGold": 240,
+          "sufficientGuardShips": 0,
+          "sufficientGuardGold": 0,
+          "quickReturns": 0,
+          "signatureReturns": 0
+        },
+        {
+          "name": "ringwater v9_archer grove side-1 vs-v9",
+          "guardShips": 3,
+          "guardGold": 900,
+          "sufficientGuardShips": 2,
+          "sufficientGuardGold": 660,
+          "quickReturns": 0,
+          "signatureReturns": 0
+        },
+        {
+          "name": "ringwater v9_archer grove side-2 vs-v9",
+          "guardShips": 1,
+          "guardGold": 240,
+          "sufficientGuardShips": 0,
+          "sufficientGuardGold": 0,
+          "quickReturns": 0,
+          "signatureReturns": 0
+        },
+        {
+          "name": "ringwater v9_knight grove side-1 vs-v9",
+          "guardShips": 1,
+          "guardGold": 420,
+          "sufficientGuardShips": 1,
+          "sufficientGuardGold": 420,
+          "quickReturns": 0,
+          "signatureReturns": 0
+        },
+        {
+          "name": "ringwater v9_summoner grove side-1 vs-v9",
+          "guardShips": 2,
+          "guardGold": 660,
+          "sufficientGuardShips": 0,
+          "sufficientGuardGold": 0,
+          "quickReturns": 0,
+          "signatureReturns": 0
+        },
+        {
+          "name": "templeSpring v9_archer grove side-1 vs-v9",
+          "guardShips": 1,
+          "guardGold": 240,
+          "sufficientGuardShips": 1,
+          "sufficientGuardGold": 240,
+          "quickReturns": 0,
+          "signatureReturns": 0
+        },
+        {
+          "name": "templeSpring v9_knight grove side-1 vs-v9",
+          "guardShips": 1,
+          "guardGold": 240,
+          "sufficientGuardShips": 0,
+          "sufficientGuardGold": 0,
+          "quickReturns": 0,
+          "signatureReturns": 0
+        },
+        {
+          "name": "templeSpring v9_summoner grove side-2 vs-v9",
+          "guardShips": 1,
+          "guardGold": 240,
+          "sufficientGuardShips": 0,
+          "sufficientGuardGold": 0,
+          "quickReturns": 0,
+          "signatureReturns": 0
+        },
+        {
+          "name": "twoShores v9_archer grove side-1 vs-v9",
+          "guardShips": 1,
+          "guardGold": 420,
+          "sufficientGuardShips": 0,
+          "sufficientGuardGold": 0,
+          "quickReturns": 0,
+          "signatureReturns": 0
+        }
+      ],
+      "样本结果限制": "真实留守足够的 8 局为 6 胜、2 超时、0 负；与 15 分钟海外矿数落后的 15 局没有重叠。它是明确的名单错误，但本批不能据此声称解释了资源差额或输局。1 秒采样也不构成所有短暂分支的穷尽记录。",
+      "判定链": [
+        "src/ai/bootstrap_1/rider-crossing.ts:23 仅保留指定骑射手；:24 把此名单送回共享装载。",
+        "src/ai/policy/naval.ts:638 接收筛过的名单，:645 用其计算全部留守战力。",
+        "src/ai/policy/naval.ts:644 的威胁仍是同陆地全部敌军；:647 再减去唯一骑射手，变成 0 与正需求比较，故不发 board。"
+      ],
+      "重放": [
+        {
+          "name": "gullIsland v9_archer grove side-1 vs-v9",
+          "owner": "player",
+          "second": 1230,
+          "ship": "unit-player-carrier-4150",
+          "phase": "loading",
+          "rider": "unit-player-horseArcher-5908",
+          "cargo": 0,
+          "shoreGap": 20.55011771448904,
+          "ownStrength": 46.54080870478122,
+          "riderStrength": 1.5,
+          "enemyDemand": 44.61407088472666,
+          "riderRouteExists": true,
+          "riderFitsDeck": true,
+          "target": {
+            "id": "gold-gen-3",
+            "x": 5412,
+            "y": 1244,
+            "gold": 6000
+          },
+          "recentNavalCommands": [
+            {
+              "second": 1218.9,
+              "owner": "player",
+              "scriptId": "naval",
+              "command": {
+                "type": "move",
+                "unitIds": [
+                  "unit-player-carrier-4150"
+                ],
+                "x": 2352,
+                "y": 2896,
+                "avoidCombat": true
+              }
+            },
+            {
+              "second": 1227.15,
+              "owner": "player",
+              "scriptId": "naval",
+              "command": {
+                "type": "move",
+                "unitIds": [
+                  "unit-player-transport-2286"
+                ],
+                "x": 2684.3449528233946,
+                "y": 3004.9092929654616,
+                "avoidCombat": true
+              }
+            },
+            {
+              "second": 1227.9,
+              "owner": "player",
+              "scriptId": "naval",
+              "command": {
+                "type": "move",
+                "unitIds": [
+                  "unit-player-transport-2286"
+                ],
+                "x": 2684.3449528233946,
+                "y": 3004.9092929654616,
+                "avoidCombat": true
+              }
+            }
+          ],
+          "说明": "已验证指定骑射手有陆路且实际甲板可容纳。完整候选战力减去骑射手高于原门槛，但观察到空船 loading，未发登船指令。"
+        },
+        {
+          "name": "gullIsland v9_archer grove side-2 vs-v9",
+          "owner": "enemy",
+          "second": 1291,
+          "ship": "unit-enemy-carrier-4436",
+          "phase": "loading",
+          "rider": "unit-enemy-horseArcher-4852",
+          "cargo": 0,
+          "shoreGap": 28.88452860988209,
+          "ownStrength": 43.04652092921323,
+          "riderStrength": 1.5,
+          "enemyDemand": 38.1028569828722,
+          "riderRouteExists": true,
+          "riderFitsDeck": true,
+          "target": {
+            "id": "gold-gen-3",
+            "x": 5412,
+            "y": 1244,
+            "gold": 6000
+          },
+          "recentNavalCommands": [],
+          "说明": "已验证指定骑射手有陆路且实际甲板可容纳。完整候选战力减去骑射手高于原门槛，但观察到空船 loading，未发登船指令。"
+        }
+      ],
+      "结论限制": "fullGuardSufficient 只确认当前留守门槛因名单被截短而多拦了一次；不保证后续登陆成功、清营、占矿或增加胜场。两个鸥岛例子目标均为 6000 金矿，但不能据此记为丢失 12000 金。"
+    },
+    {
+      "名称": "起航放行看目的地，下一次航行检查看出发处，载人船立即掉头",
+      "对v9我方": {
+        "quickReturnGames": 18,
+        "quickReturnEvents": 105,
+        "quickReturnShips": 31,
+        "quickReturnShipGold": 7440,
+        "quickReturnAssetRange": [
+          390,
+          1265
+        ],
+        "signatureGames": 12,
+        "signatureEvents": 91,
+        "signatureShips": 22,
+        "signatureShipGold": 5280,
+        "signatureAssetRange": [
+          390,
+          1265
+        ],
+        "quickNames": [
+          "brokenSea v9_archer ember side-1 vs-v9",
+          "brokenSea v9_archer ember side-2 vs-v9",
+          "brokenSea v9_archer grove side-1 vs-v9",
+          "brokenSea v9_knight ember side-1 vs-v9",
+          "brokenSea v9_knight grove side-1 vs-v9",
+          "brokenSea v9_knight grove side-2 vs-v9",
+          "brokenSea v9_summoner grove side-1 vs-v9",
+          "sapphireArchipelago v9_archer ember side-1 vs-v9",
+          "sapphireArchipelago v9_archer ember side-2 vs-v9",
+          "sapphireArchipelago v9_archer grove side-1 vs-v9",
+          "sapphireArchipelago v9_archer grove side-2 vs-v9",
+          "sapphireArchipelago v9_knight ember side-1 vs-v9",
+          "sapphireArchipelago v9_knight ember side-2 vs-v9",
+          "sapphireArchipelago v9_knight grove side-1 vs-v9",
+          "sapphireArchipelago v9_summoner ember side-1 vs-v9",
+          "sapphireArchipelago v9_summoner ember side-2 vs-v9",
+          "sapphireArchipelago v9_summoner grove side-1 vs-v9",
+          "sapphireArchipelago v9_summoner grove side-2 vs-v9"
+        ],
+        "signatureNames": [
+          "brokenSea v9_archer ember side-1 vs-v9",
+          "brokenSea v9_archer grove side-1 vs-v9",
+          "brokenSea v9_knight ember side-1 vs-v9",
+          "brokenSea v9_summoner grove side-1 vs-v9",
+          "sapphireArchipelago v9_archer ember side-1 vs-v9",
+          "sapphireArchipelago v9_archer ember side-2 vs-v9",
+          "sapphireArchipelago v9_archer grove side-1 vs-v9",
+          "sapphireArchipelago v9_archer grove side-2 vs-v9",
+          "sapphireArchipelago v9_knight ember side-1 vs-v9",
+          "sapphireArchipelago v9_summoner ember side-2 vs-v9",
+          "sapphireArchipelago v9_summoner grove side-1 vs-v9",
+          "sapphireArchipelago v9_summoner grove side-2 vs-v9"
+        ]
+      },
+      "对v9对手": {
+        "quickReturnGames": 20,
+        "quickReturnEvents": 257,
+        "quickReturnShips": 43,
+        "quickReturnShipGold": 10320,
+        "signatureGames": 20,
+        "signatureEvents": 148,
+        "signatureShips": 35,
+        "signatureShipGold": 8400,
+        "signatureAssetRange": [
+          315,
+          1285
+        ]
+      },
+      "对v8我方": {
+        "quickReturnGames": 18,
+        "quickReturnEvents": 54,
+        "quickReturnShips": 28,
+        "quickReturnShipGold": 6940,
+        "quickReturnAssetRange": [
+          315,
+          1290
+        ],
+        "signatureGames": 16,
+        "signatureEvents": 41,
+        "signatureShips": 19,
+        "signatureShipGold": 4780,
+        "signatureAssetRange": [
+          315,
+          1290
+        ]
+      },
+      "判定链": [
+        "src/ai/policy/naval.ts:666 在 loading 只用 mission.to 与其附近掩护判断 outgunned。",
+        "src/ai/policy/naval.ts:677-680 改成 sailing 并发目的地 unload。",
+        "src/ai/policy/naval.ts:595 下一次规划以 boat 当前地点和当前掩护判断同一 outgunned；:596 取消，:688 改为 return。"
+      ],
+      "重放": [
+        {
+          "name": "brokenSea v9_archer grove side-1 vs-v9",
+          "owner": "player",
+          "ship": "unit-player-transport-1418",
+          "outboundCommandSecond": 316.65,
+          "returnCommandSecond": 317.4,
+          "shipGold": 240,
+          "cargoGold": 290,
+          "exposedGold": 530,
+          "cargo": "工人75 + 步兵100 + 弓手115",
+          "现场": "目的地无敌舰；出发处敌舰1169生命400。己方战舰1194生命76，低于40%健康门槛，不算护航。",
+          "frames": "replays/broken-grove-cancel/316.json,317.json,318.json"
+        },
+        {
+          "name": "brokenSea v9_archer ember side-1 vs-v9",
+          "owner": "enemy2",
+          "ship": "unit-enemy2-transport-1088",
+          "outboundCommandSecond": 927.5,
+          "returnCommandSecond": 928.25,
+          "repeatedCommandPairs": [
+            [
+              941.75,
+              942.5
+            ],
+            [
+              946.25,
+              947
+            ],
+            [
+              956,
+              956.75
+            ]
+          ],
+          "shipGold": 240,
+          "cargoGold": 720,
+          "exposedGold": 960,
+          "cargo": "2工人 + 2 ravager + 3 sparkArcher",
+          "targetGold": 9000,
+          "现场": "目的地无敌舰且有己方战舰；出发处有敌舰1574且无本方健康战舰。矿还存在，计划仍 eligible；无对方或盟友基地占领，排除了更早的计划取消分支。",
+          "frames": "replays/broken-ember-cancel/927.json,928.json,942.json,943.json"
+        }
+      ],
+      "结论限制": "对 v9 时我方严格特征为 12 局/91 次，对手为 20 局/148 次，因此不能把它列为我方相对劣势的已证实来源。这是共享 v9 策略，修复同时影响对手；严格特征计数和两局已确认分支分开记录。重复掉头重复使用同一批资产，不能把每事件船+乘员价值相加当损失。"
+    }
+  ],
+  "重放追加发现（频次未全量普查）": {
+    "名称": "规划路线只躲船，实际转船还会撞己方船厂",
+    "样本范围": "在定向选择的 6 局重放中，4 局出现此现场，涉及 8 条唯一船、船体和装炮价值 2620 金；其中房间 AI 7 条、2380 金，v9 1 条、240 金。不是从 168 局随机抽样，不能写成 4/168 的发生率。",
+    "直接证据": "对已保存世界的同一船、同一段路线调用现有检查：hullPassageClear=true、shipTraffic=true；真实 sweepShipCollision 返回 building 且 fraction=0。对第一例尝试很小的真实转动 advanceShip 仍 false，船位和艏向均不变。未修改策略或物理代码。",
+    "判定链": [
+      "src/shared/ship-planning-job.ts:157 冻结规划障碍时只保留 isShipKind。",
+      "src/shared/ship-avoidance.ts:295 的 shipTraffic 也只遍历 shipsIn。",
+      "src/shared/ship-collisions.ts:260-264 的真实扫掠还检查建筑，命中己方船厂，停止实际运动。"
+    ],
+    "两局资源缺口重放": [
+      {
+        "name": "brokenSea v9_archer ember side-2 vs-v9",
+        "frame": "replays/broken-resource-gap/700.json",
+        "ship": "unit-player-4-transport-1090",
+        "shipGold": 240,
+        "cargoGold": 390,
+        "exposedGold": 630,
+        "blockedBy": "building-player-4-shipyard-1034",
+        "at15MineCount": [
+          0,
+          4
+        ],
+        "at15GoldStockGap": 35650,
+        "wholeGameStationaryShipSeconds": 1262
+      },
+      {
+        "name": "brokenSea v9_summoner grove side-2 vs-v9",
+        "frame": "replays/broken-summoner-resource-gap/600.json",
+        "ship": "unit-player-4-warship-2641",
+        "shipGold": 540,
+        "cargoGold": 0,
+        "blockedBy": "building-player-4-shipyard-1034",
+        "at15MineCount": [
+          1,
+          4
+        ],
+        "at15GoldStockGap": 26260,
+        "wholeGameStationaryShipSeconds": 1809
+      }
+    ],
+    "全部现场": [
+      {
+        "name": "brokenSea v9_archer ember side-1 vs-v9",
+        "frame": "broken-archer-ember/1200.json",
+        "second": 1200,
+        "owner": "enemy",
+        "ship": "unit-enemy-transport-1092",
+        "shipKind": "transport",
+        "x": 1633.4653357076816,
+        "y": 4896.822272533929,
+        "heading": 2.3322091398198945,
+        "speed": 0,
+        "order": {
+          "type": "move",
+          "x": 1712,
+          "y": 4528,
+          "avoidCombat": true
+        },
+        "first": {
+          "x": 1633.4653357076816,
+          "y": 4896.822272533929,
+          "heading": 2.794709968195404,
+          "exact": true
+        },
+        "contact": {
+          "id": "building-enemy-shipyard-1020",
+          "kind": "building",
+          "fraction": 0,
+          "point": {
+            "x": 1581.6227118333563,
+            "y": 4878.196593151773
+          }
+        },
+        "shipGold": 240,
+        "cargoGold": 0
+      },
+      {
+        "name": "brokenSea v9_archer ember side-1 vs-v9",
+        "frame": "broken-archer-ember/1500.json",
+        "second": 1500,
+        "owner": "enemy",
+        "ship": "unit-enemy-transport-1092",
+        "shipKind": "transport",
+        "x": 1633.4653357076816,
+        "y": 4896.822272533929,
+        "heading": 2.3322091398198945,
+        "speed": 0,
+        "order": {
+          "type": "move",
+          "x": 1712,
+          "y": 4528,
+          "avoidCombat": true
+        },
+        "first": {
+          "x": 1633.4653357076816,
+          "y": 4896.822272533929,
+          "heading": 2.283369687492741,
+          "exact": true
+        },
+        "contact": {
+          "id": "building-enemy-shipyard-1020",
+          "kind": "building",
+          "fraction": 0,
+          "point": {
+            "x": 1566.776327769429,
+            "y": 4897.599207002138
+          }
+        },
+        "shipGold": 240,
+        "cargoGold": 0
+      },
+      {
+        "name": "brokenSea v9_archer ember side-1 vs-v9",
+        "frame": "broken-archer-ember/180.json",
+        "second": 180,
+        "owner": "enemy",
+        "ship": "unit-enemy-transport-1092",
+        "shipKind": "transport",
+        "x": 1650.192151877281,
+        "y": 4879.273178969577,
+        "heading": 2.501628204078155,
+        "speed": 0,
+        "order": {
+          "type": "move",
+          "x": 1616,
+          "y": 4784,
+          "avoidCombat": true
+        },
+        "first": {
+          "x": 1650.192151877281,
+          "y": 4879.273178969577,
+          "heading": 2.8374028064231,
+          "exact": true
+        },
+        "contact": {
+          "id": "building-enemy-shipyard-1020",
+          "kind": "building",
+          "fraction": 0,
+          "point": {
+            "x": 1575.4255723710203,
+            "y": 4883.082280151544
+          }
+        },
+        "shipGold": 240,
+        "cargoGold": 0
+      },
+      {
+        "name": "brokenSea v9_archer ember side-1 vs-v9",
+        "frame": "broken-archer-ember/1800.json",
+        "second": 1800,
+        "owner": "enemy",
+        "ship": "unit-enemy-transport-1092",
+        "shipKind": "transport",
+        "x": 1633.4653357076816,
+        "y": 4896.822272533929,
+        "heading": 2.3322091398198945,
+        "speed": 0,
+        "order": {
+          "type": "move",
+          "x": 1712,
+          "y": 4528,
+          "avoidCombat": true
+        },
+        "first": {
+          "x": 1633.4653357076816,
+          "y": 4896.822272533929,
+          "heading": 2.283369687492741,
+          "exact": true
+        },
+        "contact": {
+          "id": "building-enemy-shipyard-1020",
+          "kind": "building",
+          "fraction": 0,
+          "point": {
+            "x": 1566.776327769429,
+            "y": 4897.599207002138
+          }
+        },
+        "shipGold": 240,
+        "cargoGold": 0
+      },
+      {
+        "name": "brokenSea v9_archer ember side-1 vs-v9",
+        "frame": "broken-archer-ember/240.json",
+        "second": 240,
+        "owner": "enemy",
+        "ship": "unit-enemy-transport-1092",
+        "shipKind": "transport",
+        "x": 1650.192151877281,
+        "y": 4879.273178969577,
+        "heading": 2.501628204078155,
+        "speed": 0,
+        "order": {
+          "type": "move",
+          "x": 1616,
+          "y": 4784,
+          "avoidCombat": true
+        },
+        "first": {
+          "x": 1650.192151877281,
+          "y": 4879.273178969577,
+          "heading": 2.8374028064231,
+          "exact": true
+        },
+        "contact": {
+          "id": "building-enemy-shipyard-1020",
+          "kind": "building",
+          "fraction": 0,
+          "point": {
+            "x": 1575.4255723710203,
+            "y": 4883.082280151544
+          }
+        },
+        "shipGold": 240,
+        "cargoGold": 0
+      },
+      {
+        "name": "brokenSea v9_archer ember side-1 vs-v9",
+        "frame": "broken-archer-ember/240.json",
+        "second": 240,
+        "owner": "player",
+        "ship": "unit-player-warship-1200",
+        "shipKind": "warship",
+        "x": 4520,
+        "y": 5891.312687709012,
+        "heading": -0.2278631662343031,
+        "speed": 0,
+        "order": {
+          "type": "move",
+          "x": 1642.5096679918781,
+          "y": 4970.509667991878
+        },
+        "first": {
+          "x": 4520,
+          "y": 5891.312687709012,
+          "heading": -0.4498071135060607,
+          "exact": true
+        },
+        "contact": {
+          "id": "building-player-shipyard-1038",
+          "kind": "building",
+          "fraction": 0,
+          "point": {
+            "x": 4459.309860413863,
+            "y": 5951.772213960101
+          }
+        },
+        "shipGold": 540,
+        "cargoGold": 0
+      },
+      {
+        "name": "brokenSea v9_archer ember side-1 vs-v9",
+        "frame": "broken-archer-ember/300.json",
+        "second": 300,
+        "owner": "enemy",
+        "ship": "unit-enemy-transport-1092",
+        "shipKind": "transport",
+        "x": 1650.192151877281,
+        "y": 4879.273178969577,
+        "heading": 2.501628204078155,
+        "speed": 0,
+        "order": {
+          "type": "move",
+          "x": 1616,
+          "y": 4784,
+          "avoidCombat": true
+        },
+        "first": {
+          "x": 1650.192151877281,
+          "y": 4879.273178969577,
+          "heading": 2.8374028064231,
+          "exact": true
+        },
+        "contact": {
+          "id": "building-enemy-shipyard-1020",
+          "kind": "building",
+          "fraction": 0,
+          "point": {
+            "x": 1575.4255723710203,
+            "y": 4883.082280151544
+          }
+        },
+        "shipGold": 240,
+        "cargoGold": 0
+      },
+      {
+        "name": "brokenSea v9_archer ember side-1 vs-v9",
+        "frame": "broken-archer-ember/450.json",
+        "second": 450,
+        "owner": "enemy",
+        "ship": "unit-enemy-transport-1092",
+        "shipKind": "transport",
+        "x": 1650.192151877281,
+        "y": 4879.273178969577,
+        "heading": 2.501628204078155,
+        "speed": 0,
+        "order": {
+          "type": "move",
+          "x": 1616,
+          "y": 4784,
+          "avoidCombat": true
+        },
+        "first": {
+          "x": 1650.192151877281,
+          "y": 4879.273178969577,
+          "heading": 2.8374028064231,
+          "exact": true
+        },
+        "contact": {
+          "id": "building-enemy-shipyard-1020",
+          "kind": "building",
+          "fraction": 0,
+          "point": {
+            "x": 1575.4255723710203,
+            "y": 4883.082280151544
+          }
+        },
+        "shipGold": 240,
+        "cargoGold": 0
+      },
+      {
+        "name": "brokenSea v9_archer ember side-1 vs-v9",
+        "frame": "broken-archer-ember/600.json",
+        "second": 600,
+        "owner": "enemy",
+        "ship": "unit-enemy-transport-1092",
+        "shipKind": "transport",
+        "x": 1650.192151877281,
+        "y": 4879.273178969577,
+        "heading": 2.501628204078155,
+        "speed": 0,
+        "order": {
+          "type": "move",
+          "x": 1616,
+          "y": 4784,
+          "avoidCombat": true
+        },
+        "first": {
+          "x": 1650.192151877281,
+          "y": 4879.273178969577,
+          "heading": 2.8374028064231,
+          "exact": true
+        },
+        "contact": {
+          "id": "building-enemy-shipyard-1020",
+          "kind": "building",
+          "fraction": 0,
+          "point": {
+            "x": 1575.4255723710203,
+            "y": 4883.082280151544
+          }
+        },
+        "shipGold": 240,
+        "cargoGold": 0
+      },
+      {
+        "name": "brokenSea v9_archer ember side-1 vs-v9",
+        "frame": "broken-ember-cancel/1000.json",
+        "second": 1000,
+        "owner": "enemy",
+        "ship": "unit-enemy-transport-1092",
+        "shipKind": "transport",
+        "x": 1633.4653357076816,
+        "y": 4896.822272533929,
+        "heading": 2.3322091398198945,
+        "speed": 0,
+        "order": {
+          "type": "move",
+          "x": 1712,
+          "y": 4528,
+          "avoidCombat": true
+        },
+        "first": {
+          "x": 1633.4653357076816,
+          "y": 4896.822272533929,
+          "heading": 2.794709968195404,
+          "exact": true
+        },
+        "contact": {
+          "id": "building-enemy-shipyard-1020",
+          "kind": "building",
+          "fraction": 0,
+          "point": {
+            "x": 1581.6227118333563,
+            "y": 4878.196593151773
+          }
+        },
+        "shipGold": 240,
+        "cargoGold": 0
+      },
+      {
+        "name": "brokenSea v9_archer ember side-1 vs-v9",
+        "frame": "broken-ember-cancel/928.json",
+        "second": 928,
+        "owner": "enemy2",
+        "ship": "unit-enemy2-transport-1088",
+        "shipKind": "transport",
+        "x": 3823.999999999996,
+        "y": 1007.9999999999955,
+        "heading": -0.7150787273349997,
+        "speed": 0,
+        "order": {
+          "type": "unload",
+          "x": 3696,
+          "y": 2992
+        },
+        "first": {
+          "x": 3823.999999999996,
+          "y": 1007.9999999999955,
+          "heading": 1.621148794384245,
+          "exact": true
+        },
+        "contact": {
+          "id": "building-enemy2-shipyard-1036",
+          "kind": "building",
+          "fraction": 0,
+          "point": {
+            "x": 3712.460345884093,
+            "y": 1084.6501636415142
+          }
+        },
+        "shipGold": 240,
+        "cargoGold": 720
+      },
+      {
+        "name": "brokenSea v9_archer ember side-1 vs-v9",
+        "frame": "broken-ember-cancel/935.json",
+        "second": 935,
+        "owner": "enemy2",
+        "ship": "unit-enemy2-transport-1088",
+        "shipKind": "transport",
+        "x": 3823.999999999996,
+        "y": 1007.9999999999955,
+        "heading": -0.7150787273349997,
+        "speed": 0,
+        "order": {
+          "type": "move",
+          "x": 3785.3326056635824,
+          "y": 1154.0140073831765,
+          "avoidCombat": true
+        },
+        "first": {
+          "x": 3823.999999999996,
+          "y": 1007.9999999999955,
+          "heading": 1.1622205771643797,
+          "exact": true
+        },
+        "contact": {
+          "id": "building-enemy2-shipyard-1036",
+          "kind": "building",
+          "fraction": 0,
+          "point": {
+            "x": 3712.460345884093,
+            "y": 1084.6501636415142
+          }
+        },
+        "shipGold": 240,
+        "cargoGold": 150
+      },
+      {
+        "name": "brokenSea v9_archer ember side-1 vs-v9",
+        "frame": "broken-ember-cancel/947.json",
+        "second": 947,
+        "owner": "enemy2",
+        "ship": "unit-enemy2-transport-1088",
+        "shipKind": "transport",
+        "x": 3823.999999999996,
+        "y": 1007.9999999999955,
+        "heading": -0.7150787273349997,
+        "speed": 0,
+        "order": {
+          "type": "unload",
+          "x": 3696,
+          "y": 2992
+        },
+        "first": {
+          "x": 3824,
+          "y": 1008,
+          "heading": 0.7853981633974483,
+          "exact": true
+        },
+        "contact": {
+          "id": "building-enemy2-shipyard-1036",
+          "kind": "building",
+          "fraction": 0,
+          "point": {
+            "x": 3712.460345884093,
+            "y": 1084.6501636415142
+          }
+        },
+        "shipGold": 240,
+        "cargoGold": 720
+      },
+      {
+        "name": "brokenSea v9_archer ember side-1 vs-v9",
+        "frame": "broken-ember-cancel/956.json",
+        "second": 956,
+        "owner": "enemy",
+        "ship": "unit-enemy-transport-1092",
+        "shipKind": "transport",
+        "x": 1633.4653357076816,
+        "y": 4896.822272533929,
+        "heading": 2.3322091398198945,
+        "speed": 0,
+        "order": {
+          "type": "move",
+          "x": 1712,
+          "y": 4528,
+          "avoidCombat": true
+        },
+        "first": {
+          "x": 1633.4653357076816,
+          "y": 4896.822272533929,
+          "heading": 2.794709968195404,
+          "exact": true
+        },
+        "contact": {
+          "id": "building-enemy-shipyard-1020",
+          "kind": "building",
+          "fraction": 0,
+          "point": {
+            "x": 1581.6227118333563,
+            "y": 4878.196593151773
+          }
+        },
+        "shipGold": 240,
+        "cargoGold": 0
+      },
+      {
+        "name": "brokenSea v9_archer ember side-1 vs-v9",
+        "frame": "broken-ember-cancel/957.json",
+        "second": 957,
+        "owner": "enemy",
+        "ship": "unit-enemy-transport-1092",
+        "shipKind": "transport",
+        "x": 1633.4653357076816,
+        "y": 4896.822272533929,
+        "heading": 2.3322091398198945,
+        "speed": 0,
+        "order": {
+          "type": "move",
+          "x": 1712,
+          "y": 4528,
+          "avoidCombat": true
+        },
+        "first": {
+          "x": 1633.4653357076816,
+          "y": 4896.822272533929,
+          "heading": 2.794709968195404,
+          "exact": true
+        },
+        "contact": {
+          "id": "building-enemy-shipyard-1020",
+          "kind": "building",
+          "fraction": 0,
+          "point": {
+            "x": 1581.6227118333563,
+            "y": 4878.196593151773
+          }
+        },
+        "shipGold": 240,
+        "cargoGold": 0
+      },
+      {
+        "name": "brokenSea v9_archer ember side-1 vs-v9",
+        "frame": "broken-ember-cancel/980.json",
+        "second": 980,
+        "owner": "enemy",
+        "ship": "unit-enemy-transport-1092",
+        "shipKind": "transport",
+        "x": 1633.4653357076816,
+        "y": 4896.822272533929,
+        "heading": 2.3322091398198945,
+        "speed": 0,
+        "order": {
+          "type": "move",
+          "x": 1712,
+          "y": 4528,
+          "avoidCombat": true
+        },
+        "first": {
+          "x": 1633.4653357076816,
+          "y": 4896.822272533929,
+          "heading": 2.794709968195404,
+          "exact": true
+        },
+        "contact": {
+          "id": "building-enemy-shipyard-1020",
+          "kind": "building",
+          "fraction": 0,
+          "point": {
+            "x": 1581.6227118333563,
+            "y": 4878.196593151773
+          }
+        },
+        "shipGold": 240,
+        "cargoGold": 0
+      },
+      {
+        "name": "brokenSea v9_archer ember side-2 vs-v9",
+        "frame": "broken-resource-gap/377.json",
+        "second": 377,
+        "owner": "enemy",
+        "ship": "unit-enemy-transport-1088",
+        "shipKind": "transport",
+        "x": 1650.1252342035289,
+        "y": 4879.333735314955,
+        "heading": 2.502050301079306,
+        "speed": 0,
+        "order": {
+          "type": "move",
+          "x": 1616,
+          "y": 4784,
+          "avoidCombat": true
+        },
+        "first": {
+          "x": 1650.1252342035289,
+          "y": 4879.333735314955,
+          "heading": 2.8372242566086197,
+          "exact": true
+        },
+        "contact": {
+          "id": "building-enemy-shipyard-1020",
+          "kind": "building",
+          "fraction": 0,
+          "point": {
+            "x": 1575.3940388938663,
+            "y": 4883.098346511784
+          }
+        },
+        "shipGold": 240,
+        "cargoGold": 0
+      },
+      {
+        "name": "brokenSea v9_archer ember side-2 vs-v9",
+        "frame": "broken-resource-gap/600.json",
+        "second": 600,
+        "owner": "player-4",
+        "ship": "unit-player-4-transport-1090",
+        "shipKind": "transport",
+        "x": 6952.870670617634,
+        "y": 2751.0044713674833,
+        "heading": -2.3209883229047454,
+        "speed": 0,
+        "order": {
+          "type": "move",
+          "x": 6640,
+          "y": 2672,
+          "avoidCombat": true
+        },
+        "first": {
+          "x": 6952.870670617634,
+          "y": 2751.0044713674833,
+          "heading": -2.620048813961569,
+          "exact": true
+        },
+        "contact": {
+          "id": "building-player-4-shipyard-1034",
+          "kind": "building",
+          "fraction": 0,
+          "point": {
+            "x": 6913.122204547099,
+            "y": 2785.501207326054
+          }
+        },
+        "shipGold": 240,
+        "cargoGold": 0
+      },
+      {
+        "name": "brokenSea v9_archer ember side-2 vs-v9",
+        "frame": "broken-resource-gap/700.json",
+        "second": 700,
+        "owner": "player-4",
+        "ship": "unit-player-4-transport-1090",
+        "shipKind": "transport",
+        "x": 6952.870670617634,
+        "y": 2751.0044713674833,
+        "heading": -2.3209883229047454,
+        "speed": 0,
+        "order": {
+          "type": "unload",
+          "x": 4144,
+          "y": 4560
+        },
+        "first": {
+          "x": 6970.387050573308,
+          "y": 2593.7152088612165,
+          "heading": -3.7403827133687946,
+          "pivot": {
+            "x": 6870.075401062998,
+            "y": 2662.1640698635774
+          },
+          "exact": true
+        },
+        "contact": {
+          "id": "building-player-4-shipyard-1034",
+          "kind": "building",
+          "fraction": 0,
+          "point": {
+            "x": 6913.122204547099,
+            "y": 2785.501207326054
+          }
+        },
+        "shipGold": 240,
+        "cargoGold": 390
+      },
+      {
+        "name": "brokenSea v9_summoner grove side-2 vs-v9",
+        "frame": "broken-summoner-resource-gap/450.json",
+        "second": 450,
+        "owner": "enemy",
+        "ship": "unit-enemy-cutter-1554",
+        "shipKind": "cutter",
+        "x": 1573.0315144914266,
+        "y": 4942.83973285262,
+        "heading": 2.1648013688820336,
+        "speed": 0,
+        "order": {
+          "type": "move",
+          "x": 3893.490332008122,
+          "y": 6069.490332008122
+        },
+        "first": {
+          "x": 1679.3266740033328,
+          "y": 4922.243464638732,
+          "heading": 0.594005042087137,
+          "pivot": {
+            "x": 1615.8809601404355,
+            "y": 4879.394018989723
+          },
+          "exact": true
+        },
+        "contact": {
+          "id": "building-enemy-shipyard-1020",
+          "kind": "building",
+          "fraction": 0,
+          "point": {
+            "x": 1557.9360036349667,
+            "y": 4910.923855651075
+          }
+        },
+        "shipGold": 160,
+        "cargoGold": 0
+      },
+      {
+        "name": "brokenSea v9_summoner grove side-2 vs-v9",
+        "frame": "broken-summoner-resource-gap/600.json",
+        "second": 600,
+        "owner": "player-4",
+        "ship": "unit-player-4-warship-2641",
+        "shipKind": "warship",
+        "x": 6926.487521983337,
+        "y": 2729.4476341060654,
+        "heading": 0.9436732134827732,
+        "speed": 0,
+        "order": {
+          "type": "move",
+          "x": 6329.349737766458,
+          "y": 4109.712695539693
+        },
+        "first": {
+          "x": 7036.878645028749,
+          "y": 2717.321795930853,
+          "heading": 1.9791080234352734,
+          "pivot": {
+            "x": 6992.3284701165,
+            "y": 2820.298113185298
+          },
+          "exact": true
+        },
+        "contact": {
+          "id": "building-player-4-shipyard-1034",
+          "kind": "building",
+          "fraction": 0,
+          "point": {
+            "x": 6900.004836010184,
+            "y": 2770.6666060694674
+          }
+        },
+        "shipGold": 540,
+        "cargoGold": 0
+      },
+      {
+        "name": "gullIsland v9_archer grove side-1 vs-v9",
+        "frame": "gull-archer/780.json",
+        "second": 780,
+        "owner": "player",
+        "ship": "unit-player-carrier-4150",
+        "shipKind": "carrier",
+        "x": 1648.0000000000002,
+        "y": 3183.9999999999995,
+        "heading": 6.789683999994007,
+        "speed": 0,
+        "order": {
+          "type": "move",
+          "x": 3056,
+          "y": 3056,
+          "avoidCombat": true
+        },
+        "first": {
+          "x": 1648,
+          "y": 3184,
+          "heading": 0.7853981633974483,
+          "exact": true
+        },
+        "contact": {
+          "id": "building-player-shipyard-1495",
+          "kind": "building",
+          "fraction": 0,
+          "point": {
+            "x": 1589.4178709432142,
+            "y": 3077.688816196426
+          }
+        },
+        "shipGold": 420,
+        "cargoGold": 0
+      },
+      {
+        "name": "gullIsland v9_archer grove side-1 vs-v9",
+        "frame": "gull-archer/840.json",
+        "second": 840,
+        "owner": "player",
+        "ship": "unit-player-carrier-4150",
+        "shipKind": "carrier",
+        "x": 1648.0000000000002,
+        "y": 3183.9999999999995,
+        "heading": 6.789683999994007,
+        "speed": 0,
+        "order": {
+          "type": "move",
+          "x": 3056,
+          "y": 3056,
+          "avoidCombat": true
+        },
+        "first": {
+          "x": 1648,
+          "y": 3184,
+          "heading": 0.7853981633974483,
+          "exact": true
+        },
+        "contact": {
+          "id": "building-player-shipyard-1495",
+          "kind": "building",
+          "fraction": 0,
+          "point": {
+            "x": 1589.4178709432142,
+            "y": 3077.688816196426
+          }
+        },
+        "shipGold": 420,
+        "cargoGold": 150
+      },
+      {
+        "name": "gullIsland v9_archer grove side-1 vs-v9",
+        "frame": "gull-archer/900.json",
+        "second": 900,
+        "owner": "player",
+        "ship": "unit-player-carrier-4150",
+        "shipKind": "carrier",
+        "x": 1648.0000000000002,
+        "y": 3183.9999999999995,
+        "heading": 6.789683999994007,
+        "speed": 0,
+        "order": {
+          "type": "move",
+          "x": 3848.9838294211013,
+          "y": 3564.983802120811,
+          "avoidCombat": true
+        },
+        "first": {
+          "x": 1648,
+          "y": 3184,
+          "heading": 0.7853981633974483,
+          "exact": true
+        },
+        "contact": {
+          "id": "building-player-shipyard-1495",
+          "kind": "building",
+          "fraction": 0,
+          "point": {
+            "x": 1589.4178709432142,
+            "y": 3077.688816196426
+          }
+        },
+        "shipGold": 420,
+        "cargoGold": 0
+      }
+    ],
+    "限制": "这两局资源差额与整局静止时间不能全部归因到这一个碰撞条件。基线运输/资源指标已全量覆盖，但该追加诊断只有定向重放的发生下界；若选择修此项，先补全量频次与金额普查。"
+  },
+  "代码": {
+    "base": "710986b1",
+    "initialMeasurementSource": "874550f3",
+    "correctedFerrySource": "cf057afa",
+    "finalToolingSource": "a500587e",
+    "branch": "codex/naval-room-baseline",
+    "repository": "shuxueshuxue/sketch-rts",
+    "AI策略改动": false
+  },
+  "范围": {
+    "matches": 168,
+    "perRival": 84,
+    "races": [
+      "grove",
+      "ember"
+    ],
+    "subjects": [
+      "v9_archer",
+      "v9_summoner",
+      "v9_knight"
+    ],
+    "maps": [
+      {
+        "mapId": "sapphireArchipelago",
+        "players": 6,
+        "remoteMines": [
+          17,
+          17,
+          17,
+          17,
+          17,
+          17
+        ],
+        "unreachableEnemies": [
+          3,
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "selected": true
+      },
+      {
+        "mapId": "brokenSea",
+        "players": 4,
+        "remoteMines": [
+          11,
+          11,
+          11,
+          11
+        ],
+        "unreachableEnemies": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "selected": true
+      },
+      {
+        "mapId": "templeSpring",
+        "players": 4,
+        "remoteMines": [
+          4,
+          4,
+          4,
+          4
+        ],
+        "unreachableEnemies": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "selected": true
+      },
+      {
+        "mapId": "elderwood",
+        "players": 4,
+        "remoteMines": [
+          4,
+          4,
+          4,
+          4
+        ],
+        "unreachableEnemies": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "selected": true
+      },
+      {
+        "mapId": "ringwater",
+        "players": 4,
+        "remoteMines": [
+          4,
+          4,
+          4,
+          4
+        ],
+        "unreachableEnemies": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "selected": true
+      },
+      {
+        "mapId": "gullIsland",
+        "players": 2,
+        "remoteMines": [
+          2,
+          2
+        ],
+        "unreachableEnemies": [
+          0,
+          0
+        ],
+        "selected": true
+      },
+      {
+        "mapId": "twoShores",
+        "players": 4,
+        "remoteMines": [
+          3,
+          3,
+          3,
+          3
+        ],
+        "unreachableEnemies": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "selected": true
+      }
+    ],
+    "时限秒": 2400,
+    "配置": "使用 roomToGameSetup 的完整真实席位；交错两队，每个地图、种族和房间 AI 均交换队伍；v8/v9 分别成组。固定地图池布局，不使用随机双人 ladder 地图。",
+    "重复性限制": "每组合一个固定布局和种族；这是定位基线，不是随机种子置信区间。可步行交战但有海外矿的地图与纯海隔绝地图均纳入，但按图分别给出结果。"
+  },
+  "验证": {
+    "测量单元测试": 14,
+    "TypeScript": "npx tsc --noEmit 通过",
+    "观察器一致性": {
+      "v8": {
+        "merged": 84,
+        "noShipGames": 0,
+        "missing": [],
+        "changed": []
+      },
+      "v9": {
+        "merged": 82,
+        "noShipGames": 2,
+        "missing": [],
+        "changed": []
+      }
+    },
+    "说明": "对每个出现过船只的对局用修正观察器重放，比较 tick、winnerTeam、timeout、result.players 完全相同；无船对局的运输指标直接为零/无事件。原测量曾将海外殖民地当地兵反复上下船当跨海，已修正并全量重测这五个运输字段，旧运输计数未用于结论。"
+  },
+  "指标口径": {
+    "登陆": "逐 tick 记录存活乘员从真实船甲板到陆地；与登船前所在陆地不连通且不属于原始家园才算海外登陆。军事登陆排除临时召唤物。同岛反复上下船不算。",
+    "海外基地矿": "3/5/10/15/20/30/40 分钟时，家园陆地以外的已完工存活 townHall，以及同陆地且在基地工作范围内、剩余金额大于零的矿。矿数表示基地可覆盖，未要求工人正在采矿；islandGold 是这些矿的剩余储量。提前结束的对局不填零。",
+    "舰船交换": "敌队击沉船体与已装武器的重置金额 / 我方同值；俘获仍存活船只不计击沉。不等于逐单位击杀归属。",
+    "闲置": "idleShipSeconds 为 idle 指令的累计船秒；stalledShipSeconds 为连续 30 秒没有超过 32 距离的平移或相应船艏转动，且没有生命、乘员、击杀或开火变化后的累计船秒。",
+    "运输往返": "deliveries 按从出发处的一次出航中首次真正跨陆地卸载计；roundTrips 另要求船体离开出发点 160 之外后返回 160 以内。途中反复卸兵不重复算成功出航。",
+    "岛屿计划": "观察实际 AI memory 中的 cached plan，记录每次出现和失效时间；completedSecond 指该目标最终出现己方已完工基地。重复尝试同一矿的占领应按 mineId 去重。",
+    "空船登兵诊断": "这是判定条件的现场采样计数，不是函数命中日志；每秒采样，限空载、抵岸、无待登船兵、无装备/冷却阻塞且存在能走到岸边的指定骑射手的 creep 船；blockedSeconds 是累计船秒。fullGuardSufficient 另外要求真实全部候选陆军减去骑射手后仍满足原有留守门槛。",
+    "快速返航诊断": "逐 tick 观察载人 loading→sailing→return，2 秒以内且返航时仍有乘员；成功卸载不计。严格特征另要求目的地无敌舰、出发处有敌舰而无健康本方战舰掩护。该特征是同一位置检查不一致的充分现场条件，全部事件的具体取消分支仍需逐局重放。",
+    "金额限制": "被卡船按对局内唯一船 ID 去重计资产价值；船与乘员金额表示被占用资本，不能当实际损失或修复可赚金额。矿金额是资源储量，不是已损失收入。"
+  },
+  "结果": {
+    "v8": {
+      "aggregate": {
+        "games": 84,
+        "wins": 33,
+        "losses": 7,
+        "timeouts": 44,
+        "ours": {
+          "lostGold": 85440,
+          "idleShipSeconds": 166218.74999999834,
+          "stalledShipSeconds": 161712,
+          "shipSeconds": 488353.35000039707,
+          "deliveries": 103,
+          "roundTrips": 51,
+          "remoteMilitaryPassengers": 519,
+          "remoteWorkers": 426,
+          "uncompletedLongPlanOwners": 151,
+          "stalledShare": 0.3311372800040555,
+          "checkpoints": {
+            "3": {
+              "games": 84,
+              "islandBases": 0,
+              "islandMines": 0,
+              "islandGold": 0
+            },
+            "5": {
+              "games": 84,
+              "islandBases": 0,
+              "islandMines": 0,
+              "islandGold": 0
+            },
+            "10": {
+              "games": 84,
+              "islandBases": 0,
+              "islandMines": 0,
+              "islandGold": 0
+            },
+            "15": {
+              "games": 83,
+              "islandBases": 14,
+              "islandMines": 20,
+              "islandGold": 165360
+            },
+            "20": {
+              "games": 78,
+              "islandBases": 27,
+              "islandMines": 31,
+              "islandGold": 223180
+            },
+            "30": {
+              "games": 58,
+              "islandBases": 54,
+              "islandMines": 60,
+              "islandGold": 323870
+            },
+            "40": {
+              "games": 44,
+              "islandBases": 61,
+              "islandMines": 49,
+              "islandGold": 218090
+            }
+          },
+          "firstLandingSecond": {
+            "eventGames": 34,
+            "noEventGames": 50,
+            "conditionalMedian": 797.825,
+            "by15Games": 21
+          },
+          "firstMilitaryLandingSecond": {
+            "eventGames": 34,
+            "noEventGames": 50,
+            "conditionalMedian": 802.875,
+            "by15Games": 21
+          }
+        },
+        "theirs": {
+          "lostGold": 107960,
+          "idleShipSeconds": 208519.84999998406,
+          "stalledShipSeconds": 202045,
+          "shipSeconds": 448984.30000043556,
+          "deliveries": 75,
+          "roundTrips": 25,
+          "remoteMilitaryPassengers": 428,
+          "remoteWorkers": 516,
+          "uncompletedLongPlanOwners": 144,
+          "stalledShare": 0.45000459926951564,
+          "checkpoints": {
+            "3": {
+              "games": 84,
+              "islandBases": 0,
+              "islandMines": 0,
+              "islandGold": 0
+            },
+            "5": {
+              "games": 84,
+              "islandBases": 0,
+              "islandMines": 0,
+              "islandGold": 0
+            },
+            "10": {
+              "games": 84,
+              "islandBases": 2,
+              "islandMines": 2,
+              "islandGold": 14720
+            },
+            "15": {
+              "games": 83,
+              "islandBases": 20,
+              "islandMines": 24,
+              "islandGold": 178730
+            },
+            "20": {
+              "games": 78,
+              "islandBases": 30,
+              "islandMines": 37,
+              "islandGold": 247470
+            },
+            "30": {
+              "games": 58,
+              "islandBases": 35,
+              "islandMines": 36,
+              "islandGold": 163900
+            },
+            "40": {
+              "games": 44,
+              "islandBases": 43,
+              "islandMines": 32,
+              "islandGold": 150500
+            }
+          },
+          "firstLandingSecond": {
+            "eventGames": 26,
+            "noEventGames": 58,
+            "conditionalMedian": 523.075,
+            "by15Games": 25
+          },
+          "firstMilitaryLandingSecond": {
+            "eventGames": 24,
+            "noEventGames": 60,
+            "conditionalMedian": 495.09999999999997,
+            "by15Games": 24
+          }
+        },
+        "resourceDeficit15": {
+          "games": 13,
+          "names": [
+            "brokenSea v9_archer ember side-1 vs-v8",
+            "brokenSea v9_knight grove side-2 vs-v8",
+            "brokenSea v9_summoner ember side-1 vs-v8",
+            "brokenSea v9_summoner grove side-2 vs-v8",
+            "ringwater v9_summoner ember side-1 vs-v8",
+            "sapphireArchipelago v9_archer ember side-1 vs-v8",
+            "sapphireArchipelago v9_archer ember side-2 vs-v8",
+            "sapphireArchipelago v9_knight ember side-1 vs-v8",
+            "sapphireArchipelago v9_knight grove side-1 vs-v8",
+            "sapphireArchipelago v9_knight grove side-2 vs-v8",
+            "sapphireArchipelago v9_summoner ember side-1 vs-v8",
+            "sapphireArchipelago v9_summoner ember side-2 vs-v8",
+            "sapphireArchipelago v9_summoner grove side-2 vs-v8"
+          ],
+          "goldStockGapSum": 133490,
+          "goldStockGapMedian": 6930,
+          "goldStockGapRange": [
+            4160,
+            35900
+          ],
+          "timeouts": 13
+        },
+        "negativeNavalExchange": {
+          "games": 19,
+          "names": [
+            "brokenSea v9_archer grove side-1 vs-v8",
+            "brokenSea v9_knight ember side-1 vs-v8",
+            "brokenSea v9_knight grove side-1 vs-v8",
+            "brokenSea v9_summoner ember side-1 vs-v8",
+            "brokenSea v9_summoner grove side-1 vs-v8",
+            "elderwood v9_knight ember side-1 vs-v8",
+            "elderwood v9_knight grove side-1 vs-v8",
+            "gullIsland v9_knight ember side-1 vs-v8",
+            "gullIsland v9_knight ember side-2 vs-v8",
+            "gullIsland v9_knight grove side-2 vs-v8",
+            "gullIsland v9_summoner grove side-2 vs-v8",
+            "sapphireArchipelago v9_archer ember side-2 vs-v8",
+            "sapphireArchipelago v9_knight ember side-1 vs-v8",
+            "sapphireArchipelago v9_knight ember side-2 vs-v8",
+            "sapphireArchipelago v9_knight grove side-1 vs-v8",
+            "sapphireArchipelago v9_knight grove side-2 vs-v8",
+            "sapphireArchipelago v9_summoner ember side-1 vs-v8",
+            "sapphireArchipelago v9_summoner grove side-2 vs-v8",
+            "twoShores v9_archer grove side-1 vs-v8"
+          ],
+          "positiveDeficitsSum": 22060,
+          "positiveDeficitsMedian": 660
+        },
+        "navalExchangeRatio": 1.2635767790262171
+      },
+      "bySubject": {
+        "v9_archer": {
+          "games": 28,
+          "wins": 10,
+          "losses": 3,
+          "timeouts": 15,
+          "ours": {
+            "lostGold": 26080,
+            "idleShipSeconds": 45065.39999999043,
+            "stalledShipSeconds": 46652,
+            "shipSeconds": 147518.450000132,
+            "deliveries": 30,
+            "roundTrips": 12,
+            "remoteMilitaryPassengers": 198,
+            "remoteWorkers": 156,
+            "uncompletedLongPlanOwners": 53,
+            "stalledShare": 0.31624518831345,
+            "checkpoints": {
+              "3": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 28,
+                "islandBases": 5,
+                "islandMines": 6,
+                "islandGold": 47820
+              },
+              "20": {
+                "games": 26,
+                "islandBases": 10,
+                "islandMines": 11,
+                "islandGold": 75970
+              },
+              "30": {
+                "games": 20,
+                "islandBases": 16,
+                "islandMines": 18,
+                "islandGold": 83380
+              },
+              "40": {
+                "games": 15,
+                "islandBases": 17,
+                "islandMines": 11,
+                "islandGold": 49260
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 10,
+              "noEventGames": 18,
+              "conditionalMedian": 764.025,
+              "by15Games": 6
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 10,
+              "noEventGames": 18,
+              "conditionalMedian": 793.625,
+              "by15Games": 6
+            }
+          },
+          "theirs": {
+            "lostGold": 42720,
+            "idleShipSeconds": 68633.24999999051,
+            "stalledShipSeconds": 70928,
+            "shipSeconds": 156166.75000017518,
+            "deliveries": 30,
+            "roundTrips": 9,
+            "remoteMilitaryPassengers": 179,
+            "remoteWorkers": 236,
+            "uncompletedLongPlanOwners": 46,
+            "stalledShare": 0.4541811877363167,
+            "checkpoints": {
+              "3": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 28,
+                "islandBases": 2,
+                "islandMines": 2,
+                "islandGold": 14720
+              },
+              "15": {
+                "games": 28,
+                "islandBases": 5,
+                "islandMines": 6,
+                "islandGold": 40830
+              },
+              "20": {
+                "games": 26,
+                "islandBases": 11,
+                "islandMines": 14,
+                "islandGold": 97010
+              },
+              "30": {
+                "games": 20,
+                "islandBases": 14,
+                "islandMines": 16,
+                "islandGold": 96700
+              },
+              "40": {
+                "games": 15,
+                "islandBases": 18,
+                "islandMines": 17,
+                "islandGold": 83640
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 8,
+              "noEventGames": 20,
+              "conditionalMedian": 461.375,
+              "by15Games": 8
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 8,
+              "noEventGames": 20,
+              "conditionalMedian": 461.375,
+              "by15Games": 8
+            }
+          },
+          "resourceDeficit15": {
+            "games": 3,
+            "names": [
+              "brokenSea v9_archer ember side-1 vs-v8",
+              "sapphireArchipelago v9_archer ember side-1 vs-v8",
+              "sapphireArchipelago v9_archer ember side-2 vs-v8"
+            ],
+            "goldStockGapSum": 18420,
+            "goldStockGapMedian": 5640,
+            "goldStockGapRange": [
+              4160,
+              8620
+            ],
+            "timeouts": 3
+          },
+          "negativeNavalExchange": {
+            "games": 3,
+            "names": [
+              "brokenSea v9_archer grove side-1 vs-v8",
+              "sapphireArchipelago v9_archer ember side-2 vs-v8",
+              "twoShores v9_archer grove side-1 vs-v8"
+            ],
+            "positiveDeficitsSum": 2180,
+            "positiveDeficitsMedian": 440
+          },
+          "navalExchangeRatio": 1.638036809815951
+        },
+        "v9_knight": {
+          "games": 28,
+          "wins": 14,
+          "losses": 3,
+          "timeouts": 11,
+          "ours": {
+            "lostGold": 33380,
+            "idleShipSeconds": 55633.70000001139,
+            "stalledShipSeconds": 61215,
+            "shipSeconds": 169566.50000011522,
+            "deliveries": 45,
+            "roundTrips": 24,
+            "remoteMilitaryPassengers": 211,
+            "remoteWorkers": 209,
+            "uncompletedLongPlanOwners": 47,
+            "stalledShare": 0.36100880775364474,
+            "checkpoints": {
+              "3": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 27,
+                "islandBases": 6,
+                "islandMines": 9,
+                "islandGold": 75410
+              },
+              "20": {
+                "games": 25,
+                "islandBases": 10,
+                "islandMines": 11,
+                "islandGold": 76890
+              },
+              "30": {
+                "games": 16,
+                "islandBases": 19,
+                "islandMines": 20,
+                "islandGold": 86430
+              },
+              "40": {
+                "games": 11,
+                "islandBases": 19,
+                "islandMines": 14,
+                "islandGold": 36450
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 14,
+              "noEventGames": 14,
+              "conditionalMedian": 829.05,
+              "by15Games": 8
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 14,
+              "noEventGames": 14,
+              "conditionalMedian": 829.05,
+              "by15Games": 8
+            }
+          },
+          "theirs": {
+            "lostGold": 29300,
+            "idleShipSeconds": 61382.49999998619,
+            "stalledShipSeconds": 55960,
+            "shipSeconds": 139737.1000001142,
+            "deliveries": 23,
+            "roundTrips": 10,
+            "remoteMilitaryPassengers": 119,
+            "remoteWorkers": 138,
+            "uncompletedLongPlanOwners": 53,
+            "stalledShare": 0.40046630422381935,
+            "checkpoints": {
+              "3": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 27,
+                "islandBases": 6,
+                "islandMines": 7,
+                "islandGold": 51290
+              },
+              "20": {
+                "games": 25,
+                "islandBases": 9,
+                "islandMines": 11,
+                "islandGold": 69790
+              },
+              "30": {
+                "games": 16,
+                "islandBases": 9,
+                "islandMines": 8,
+                "islandGold": 24540
+              },
+              "40": {
+                "games": 11,
+                "islandBases": 9,
+                "islandMines": 5,
+                "islandGold": 13460
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 9,
+              "noEventGames": 19,
+              "conditionalMedian": 599.25,
+              "by15Games": 8
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 8,
+              "noEventGames": 20,
+              "conditionalMedian": 556.275,
+              "by15Games": 8
+            }
+          },
+          "resourceDeficit15": {
+            "games": 4,
+            "names": [
+              "brokenSea v9_knight grove side-2 vs-v8",
+              "sapphireArchipelago v9_knight ember side-1 vs-v8",
+              "sapphireArchipelago v9_knight grove side-1 vs-v8",
+              "sapphireArchipelago v9_knight grove side-2 vs-v8"
+            ],
+            "goldStockGapSum": 28460,
+            "goldStockGapMedian": 6875.0,
+            "goldStockGapRange": [
+              6190,
+              8520
+            ],
+            "timeouts": 4
+          },
+          "negativeNavalExchange": {
+            "games": 11,
+            "names": [
+              "brokenSea v9_knight ember side-1 vs-v8",
+              "brokenSea v9_knight grove side-1 vs-v8",
+              "elderwood v9_knight ember side-1 vs-v8",
+              "elderwood v9_knight grove side-1 vs-v8",
+              "gullIsland v9_knight ember side-1 vs-v8",
+              "gullIsland v9_knight ember side-2 vs-v8",
+              "gullIsland v9_knight grove side-2 vs-v8",
+              "sapphireArchipelago v9_knight ember side-1 vs-v8",
+              "sapphireArchipelago v9_knight ember side-2 vs-v8",
+              "sapphireArchipelago v9_knight grove side-1 vs-v8",
+              "sapphireArchipelago v9_knight grove side-2 vs-v8"
+            ],
+            "positiveDeficitsSum": 14080,
+            "positiveDeficitsMedian": 460
+          },
+          "navalExchangeRatio": 0.877771120431396
+        },
+        "v9_summoner": {
+          "games": 28,
+          "wins": 9,
+          "losses": 1,
+          "timeouts": 18,
+          "ours": {
+            "lostGold": 25980,
+            "idleShipSeconds": 65519.64999999653,
+            "stalledShipSeconds": 53845,
+            "shipSeconds": 171268.40000014988,
+            "deliveries": 28,
+            "roundTrips": 15,
+            "remoteMilitaryPassengers": 110,
+            "remoteWorkers": 61,
+            "uncompletedLongPlanOwners": 51,
+            "stalledShare": 0.3143895779954322,
+            "checkpoints": {
+              "3": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 28,
+                "islandBases": 3,
+                "islandMines": 5,
+                "islandGold": 42130
+              },
+              "20": {
+                "games": 27,
+                "islandBases": 7,
+                "islandMines": 9,
+                "islandGold": 70320
+              },
+              "30": {
+                "games": 22,
+                "islandBases": 19,
+                "islandMines": 22,
+                "islandGold": 154060
+              },
+              "40": {
+                "games": 18,
+                "islandBases": 25,
+                "islandMines": 24,
+                "islandGold": 132380
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 10,
+              "noEventGames": 18,
+              "conditionalMedian": 761.925,
+              "by15Games": 7
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 10,
+              "noEventGames": 18,
+              "conditionalMedian": 806.55,
+              "by15Games": 7
+            }
+          },
+          "theirs": {
+            "lostGold": 35940,
+            "idleShipSeconds": 78504.10000000735,
+            "stalledShipSeconds": 75157,
+            "shipSeconds": 153080.45000014614,
+            "deliveries": 22,
+            "roundTrips": 6,
+            "remoteMilitaryPassengers": 130,
+            "remoteWorkers": 142,
+            "uncompletedLongPlanOwners": 45,
+            "stalledShare": 0.49096406497321016,
+            "checkpoints": {
+              "3": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 28,
+                "islandBases": 9,
+                "islandMines": 11,
+                "islandGold": 86610
+              },
+              "20": {
+                "games": 27,
+                "islandBases": 10,
+                "islandMines": 12,
+                "islandGold": 80670
+              },
+              "30": {
+                "games": 22,
+                "islandBases": 12,
+                "islandMines": 12,
+                "islandGold": 42660
+              },
+              "40": {
+                "games": 18,
+                "islandBases": 16,
+                "islandMines": 10,
+                "islandGold": 53400
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 9,
+              "noEventGames": 19,
+              "conditionalMedian": 664.05,
+              "by15Games": 9
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 8,
+              "noEventGames": 20,
+              "conditionalMedian": 548.8499999999999,
+              "by15Games": 8
+            }
+          },
+          "resourceDeficit15": {
+            "games": 6,
+            "names": [
+              "brokenSea v9_summoner ember side-1 vs-v8",
+              "brokenSea v9_summoner grove side-2 vs-v8",
+              "ringwater v9_summoner ember side-1 vs-v8",
+              "sapphireArchipelago v9_summoner ember side-1 vs-v8",
+              "sapphireArchipelago v9_summoner ember side-2 vs-v8",
+              "sapphireArchipelago v9_summoner grove side-2 vs-v8"
+            ],
+            "goldStockGapSum": 86610,
+            "goldStockGapMedian": 11655.0,
+            "goldStockGapRange": [
+              5790,
+              35900
+            ],
+            "timeouts": 6
+          },
+          "negativeNavalExchange": {
+            "games": 5,
+            "names": [
+              "brokenSea v9_summoner ember side-1 vs-v8",
+              "brokenSea v9_summoner grove side-1 vs-v8",
+              "gullIsland v9_summoner grove side-2 vs-v8",
+              "sapphireArchipelago v9_summoner ember side-1 vs-v8",
+              "sapphireArchipelago v9_summoner grove side-2 vs-v8"
+            ],
+            "positiveDeficitsSum": 5800,
+            "positiveDeficitsMedian": 1080
+          },
+          "navalExchangeRatio": 1.3833718244803694
+        }
+      },
+      "byMap": {
+        "brokenSea": {
+          "games": 12,
+          "wins": 1,
+          "losses": 0,
+          "timeouts": 11,
+          "ours": {
+            "lostGold": 37660,
+            "idleShipSeconds": 37127.40000001562,
+            "stalledShipSeconds": 44166,
+            "shipSeconds": 151455.9000001001,
+            "deliveries": 40,
+            "roundTrips": 22,
+            "remoteMilitaryPassengers": 106,
+            "remoteWorkers": 100,
+            "uncompletedLongPlanOwners": 16,
+            "stalledShare": 0.2916096368643995,
+            "checkpoints": {
+              "3": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 12,
+                "islandBases": 8,
+                "islandMines": 14,
+                "islandGold": 123260
+              },
+              "20": {
+                "games": 12,
+                "islandBases": 12,
+                "islandMines": 16,
+                "islandGold": 132800
+              },
+              "30": {
+                "games": 12,
+                "islandBases": 26,
+                "islandMines": 33,
+                "islandGold": 222030
+              },
+              "40": {
+                "games": 11,
+                "islandBases": 27,
+                "islandMines": 28,
+                "islandGold": 126170
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 11,
+              "noEventGames": 1,
+              "conditionalMedian": 223.65,
+              "by15Games": 9
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 11,
+              "noEventGames": 1,
+              "conditionalMedian": 786.25,
+              "by15Games": 9
+            }
+          },
+          "theirs": {
+            "lostGold": 38900,
+            "idleShipSeconds": 31679.749999991094,
+            "stalledShipSeconds": 33231,
+            "shipSeconds": 117351.25000020198,
+            "deliveries": 38,
+            "roundTrips": 16,
+            "remoteMilitaryPassengers": 153,
+            "remoteWorkers": 97,
+            "uncompletedLongPlanOwners": 17,
+            "stalledShare": 0.28317550942101427,
+            "checkpoints": {
+              "3": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 12,
+                "islandBases": 5,
+                "islandMines": 9,
+                "islandGold": 79590
+              },
+              "20": {
+                "games": 12,
+                "islandBases": 10,
+                "islandMines": 17,
+                "islandGold": 138900
+              },
+              "30": {
+                "games": 12,
+                "islandBases": 8,
+                "islandMines": 11,
+                "islandGold": 76200
+              },
+              "40": {
+                "games": 11,
+                "islandBases": 10,
+                "islandMines": 13,
+                "islandGold": 73640
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 12,
+              "noEventGames": 0,
+              "conditionalMedian": 293.275,
+              "by15Games": 12
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 12,
+              "noEventGames": 0,
+              "conditionalMedian": 293.275,
+              "by15Games": 12
+            }
+          },
+          "resourceDeficit15": {
+            "games": 4,
+            "names": [
+              "brokenSea v9_archer ember side-1 vs-v8",
+              "brokenSea v9_knight grove side-2 vs-v8",
+              "brokenSea v9_summoner ember side-1 vs-v8",
+              "brokenSea v9_summoner grove side-2 vs-v8"
+            ],
+            "goldStockGapSum": 61940,
+            "goldStockGapMedian": 8760.0,
+            "goldStockGapRange": [
+              8520,
+              35900
+            ],
+            "timeouts": 4
+          },
+          "negativeNavalExchange": {
+            "games": 5,
+            "names": [
+              "brokenSea v9_archer grove side-1 vs-v8",
+              "brokenSea v9_knight ember side-1 vs-v8",
+              "brokenSea v9_knight grove side-1 vs-v8",
+              "brokenSea v9_summoner ember side-1 vs-v8",
+              "brokenSea v9_summoner grove side-1 vs-v8"
+            ],
+            "positiveDeficitsSum": 7160,
+            "positiveDeficitsMedian": 1500
+          },
+          "navalExchangeRatio": 1.0329261816250663
+        },
+        "elderwood": {
+          "games": 12,
+          "wins": 5,
+          "losses": 3,
+          "timeouts": 4,
+          "ours": {
+            "lostGold": 480,
+            "idleShipSeconds": 18734.249999994056,
+            "stalledShipSeconds": 21148,
+            "shipSeconds": 29815.999999996344,
+            "deliveries": 0,
+            "roundTrips": 0,
+            "remoteMilitaryPassengers": 0,
+            "remoteWorkers": 0,
+            "uncompletedLongPlanOwners": 24,
+            "stalledShare": 0.7092836061176078,
+            "checkpoints": {
+              "3": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "20": {
+                "games": 11,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "30": {
+                "games": 6,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "40": {
+                "games": 4,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 0,
+              "noEventGames": 12,
+              "conditionalMedian": null,
+              "by15Games": 0
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 0,
+              "noEventGames": 12,
+              "conditionalMedian": null,
+              "by15Games": 0
+            }
+          },
+          "theirs": {
+            "lostGold": 240,
+            "idleShipSeconds": 38076.199999990786,
+            "stalledShipSeconds": 38120,
+            "shipSeconds": 45374.95000000106,
+            "deliveries": 0,
+            "roundTrips": 0,
+            "remoteMilitaryPassengers": 0,
+            "remoteWorkers": 0,
+            "uncompletedLongPlanOwners": 22,
+            "stalledShare": 0.8401111185797254,
+            "checkpoints": {
+              "3": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "20": {
+                "games": 11,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "30": {
+                "games": 6,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "40": {
+                "games": 4,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 0,
+              "noEventGames": 12,
+              "conditionalMedian": null,
+              "by15Games": 0
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 0,
+              "noEventGames": 12,
+              "conditionalMedian": null,
+              "by15Games": 0
+            }
+          },
+          "resourceDeficit15": {
+            "games": 0,
+            "names": [],
+            "goldStockGapSum": 0,
+            "goldStockGapMedian": null,
+            "goldStockGapRange": [
+              0,
+              0
+            ],
+            "timeouts": 0
+          },
+          "negativeNavalExchange": {
+            "games": 2,
+            "names": [
+              "elderwood v9_knight ember side-1 vs-v8",
+              "elderwood v9_knight grove side-1 vs-v8"
+            ],
+            "positiveDeficitsSum": 480,
+            "positiveDeficitsMedian": 240.0
+          },
+          "navalExchangeRatio": 0.5
+        },
+        "gullIsland": {
+          "games": 12,
+          "wins": 10,
+          "losses": 0,
+          "timeouts": 2,
+          "ours": {
+            "lostGold": 2880,
+            "idleShipSeconds": 9991.399999996724,
+            "stalledShipSeconds": 2492,
+            "shipSeconds": 30872.400000027526,
+            "deliveries": 17,
+            "roundTrips": 7,
+            "remoteMilitaryPassengers": 107,
+            "remoteWorkers": 117,
+            "uncompletedLongPlanOwners": 9,
+            "stalledShare": 0.08071934802599662,
+            "checkpoints": {
+              "3": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "20": {
+                "games": 10,
+                "islandBases": 2,
+                "islandMines": 2,
+                "islandGold": 11120
+              },
+              "30": {
+                "games": 8,
+                "islandBases": 6,
+                "islandMines": 6,
+                "islandGold": 23010
+              },
+              "40": {
+                "games": 2,
+                "islandBases": 2,
+                "islandMines": 2,
+                "islandGold": 6140
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 6,
+              "noEventGames": 6,
+              "conditionalMedian": 1312.125,
+              "by15Games": 1
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 6,
+              "noEventGames": 6,
+              "conditionalMedian": 1312.125,
+              "by15Games": 1
+            }
+          },
+          "theirs": {
+            "lostGold": 4920,
+            "idleShipSeconds": 10880.6999999976,
+            "stalledShipSeconds": 9322,
+            "shipSeconds": 22772.600000001596,
+            "deliveries": 0,
+            "roundTrips": 0,
+            "remoteMilitaryPassengers": 0,
+            "remoteWorkers": 0,
+            "uncompletedLongPlanOwners": 12,
+            "stalledShare": 0.40935158919048975,
+            "checkpoints": {
+              "3": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "20": {
+                "games": 10,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "30": {
+                "games": 8,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "40": {
+                "games": 2,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 0,
+              "noEventGames": 12,
+              "conditionalMedian": null,
+              "by15Games": 0
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 0,
+              "noEventGames": 12,
+              "conditionalMedian": null,
+              "by15Games": 0
+            }
+          },
+          "resourceDeficit15": {
+            "games": 0,
+            "names": [],
+            "goldStockGapSum": 0,
+            "goldStockGapMedian": null,
+            "goldStockGapRange": [
+              0,
+              0
+            ],
+            "timeouts": 0
+          },
+          "negativeNavalExchange": {
+            "games": 4,
+            "names": [
+              "gullIsland v9_knight ember side-1 vs-v8",
+              "gullIsland v9_knight ember side-2 vs-v8",
+              "gullIsland v9_knight grove side-2 vs-v8",
+              "gullIsland v9_summoner grove side-2 vs-v8"
+            ],
+            "positiveDeficitsSum": 1320,
+            "positiveDeficitsMedian": 240.0
+          },
+          "navalExchangeRatio": 1.7083333333333333
+        },
+        "ringwater": {
+          "games": 12,
+          "wins": 8,
+          "losses": 1,
+          "timeouts": 3,
+          "ours": {
+            "lostGold": 240,
+            "idleShipSeconds": 14349.799999995328,
+            "stalledShipSeconds": 11027,
+            "shipSeconds": 26864.94999999764,
+            "deliveries": 7,
+            "roundTrips": 6,
+            "remoteMilitaryPassengers": 14,
+            "remoteWorkers": 20,
+            "uncompletedLongPlanOwners": 24,
+            "stalledShare": 0.4104604698687684,
+            "checkpoints": {
+              "3": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "20": {
+                "games": 11,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "30": {
+                "games": 5,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "40": {
+                "games": 3,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 2,
+              "noEventGames": 10,
+              "conditionalMedian": 1486.75,
+              "by15Games": 0
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 2,
+              "noEventGames": 10,
+              "conditionalMedian": 1486.75,
+              "by15Games": 0
+            }
+          },
+          "theirs": {
+            "lostGold": 11980,
+            "idleShipSeconds": 21650.049999994688,
+            "stalledShipSeconds": 18519,
+            "shipSeconds": 37692.90000000037,
+            "deliveries": 2,
+            "roundTrips": 0,
+            "remoteMilitaryPassengers": 0,
+            "remoteWorkers": 19,
+            "uncompletedLongPlanOwners": 18,
+            "stalledShare": 0.4913126875353135,
+            "checkpoints": {
+              "3": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 12,
+                "islandBases": 1,
+                "islandMines": 1,
+                "islandGold": 5790
+              },
+              "20": {
+                "games": 11,
+                "islandBases": 1,
+                "islandMines": 1,
+                "islandGold": 4710
+              },
+              "30": {
+                "games": 5,
+                "islandBases": 1,
+                "islandMines": 1,
+                "islandGold": 1960
+              },
+              "40": {
+                "games": 3,
+                "islandBases": 1,
+                "islandMines": 0,
+                "islandGold": 0
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 2,
+              "noEventGames": 10,
+              "conditionalMedian": 909.4749999999999,
+              "by15Games": 1
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 0,
+              "noEventGames": 12,
+              "conditionalMedian": null,
+              "by15Games": 0
+            }
+          },
+          "resourceDeficit15": {
+            "games": 1,
+            "names": [
+              "ringwater v9_summoner ember side-1 vs-v8"
+            ],
+            "goldStockGapSum": 5790,
+            "goldStockGapMedian": 5790,
+            "goldStockGapRange": [
+              5790,
+              5790
+            ],
+            "timeouts": 1
+          },
+          "negativeNavalExchange": {
+            "games": 0,
+            "names": [],
+            "positiveDeficitsSum": 0,
+            "positiveDeficitsMedian": null
+          },
+          "navalExchangeRatio": 49.916666666666664
+        },
+        "sapphireArchipelago": {
+          "games": 12,
+          "wins": 0,
+          "losses": 0,
+          "timeouts": 12,
+          "ours": {
+            "lostGold": 40100,
+            "idleShipSeconds": 49758.9500000091,
+            "stalledShipSeconds": 50403,
+            "shipSeconds": 180727.80000026769,
+            "deliveries": 36,
+            "roundTrips": 16,
+            "remoteMilitaryPassengers": 273,
+            "remoteWorkers": 183,
+            "uncompletedLongPlanOwners": 31,
+            "stalledShare": 0.2788890253736578,
+            "checkpoints": {
+              "3": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 12,
+                "islandBases": 6,
+                "islandMines": 6,
+                "islandGold": 42100
+              },
+              "20": {
+                "games": 12,
+                "islandBases": 13,
+                "islandMines": 13,
+                "islandGold": 79260
+              },
+              "30": {
+                "games": 12,
+                "islandBases": 22,
+                "islandMines": 21,
+                "islandGold": 78830
+              },
+              "40": {
+                "games": 12,
+                "islandBases": 32,
+                "islandMines": 19,
+                "islandGold": 85780
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 12,
+              "noEventGames": 0,
+              "conditionalMedian": 683.025,
+              "by15Games": 11
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 12,
+              "noEventGames": 0,
+              "conditionalMedian": 683.025,
+              "by15Games": 11
+            }
+          },
+          "theirs": {
+            "lostGold": 38940,
+            "idleShipSeconds": 57352.40000002507,
+            "stalledShipSeconds": 59127,
+            "shipSeconds": 157656.75000023458,
+            "deliveries": 35,
+            "roundTrips": 9,
+            "remoteMilitaryPassengers": 275,
+            "remoteWorkers": 400,
+            "uncompletedLongPlanOwners": 28,
+            "stalledShare": 0.37503627342255896,
+            "checkpoints": {
+              "3": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 12,
+                "islandBases": 2,
+                "islandMines": 2,
+                "islandGold": 14720
+              },
+              "15": {
+                "games": 12,
+                "islandBases": 14,
+                "islandMines": 14,
+                "islandGold": 93350
+              },
+              "20": {
+                "games": 12,
+                "islandBases": 19,
+                "islandMines": 19,
+                "islandGold": 103860
+              },
+              "30": {
+                "games": 12,
+                "islandBases": 26,
+                "islandMines": 24,
+                "islandGold": 85740
+              },
+              "40": {
+                "games": 12,
+                "islandBases": 32,
+                "islandMines": 19,
+                "islandGold": 76860
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 12,
+              "noEventGames": 0,
+              "conditionalMedian": 623.175,
+              "by15Games": 12
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 12,
+              "noEventGames": 0,
+              "conditionalMedian": 623.175,
+              "by15Games": 12
+            }
+          },
+          "resourceDeficit15": {
+            "games": 8,
+            "names": [
+              "sapphireArchipelago v9_archer ember side-1 vs-v8",
+              "sapphireArchipelago v9_archer ember side-2 vs-v8",
+              "sapphireArchipelago v9_knight ember side-1 vs-v8",
+              "sapphireArchipelago v9_knight grove side-1 vs-v8",
+              "sapphireArchipelago v9_knight grove side-2 vs-v8",
+              "sapphireArchipelago v9_summoner ember side-1 vs-v8",
+              "sapphireArchipelago v9_summoner ember side-2 vs-v8",
+              "sapphireArchipelago v9_summoner grove side-2 vs-v8"
+            ],
+            "goldStockGapSum": 65760,
+            "goldStockGapMedian": 6855.0,
+            "goldStockGapRange": [
+              4160,
+              14720
+            ],
+            "timeouts": 8
+          },
+          "negativeNavalExchange": {
+            "games": 7,
+            "names": [
+              "sapphireArchipelago v9_archer ember side-2 vs-v8",
+              "sapphireArchipelago v9_knight ember side-1 vs-v8",
+              "sapphireArchipelago v9_knight ember side-2 vs-v8",
+              "sapphireArchipelago v9_knight grove side-1 vs-v8",
+              "sapphireArchipelago v9_knight grove side-2 vs-v8",
+              "sapphireArchipelago v9_summoner ember side-1 vs-v8",
+              "sapphireArchipelago v9_summoner grove side-2 vs-v8"
+            ],
+            "positiveDeficitsSum": 12860,
+            "positiveDeficitsMedian": 1680
+          },
+          "navalExchangeRatio": 0.971072319201995
+        },
+        "templeSpring": {
+          "games": 12,
+          "wins": 8,
+          "losses": 2,
+          "timeouts": 2,
+          "ours": {
+            "lostGold": 0,
+            "idleShipSeconds": 17831.79999999461,
+            "stalledShipSeconds": 17435,
+            "shipSeconds": 27585.349999994254,
+            "deliveries": 1,
+            "roundTrips": 0,
+            "remoteMilitaryPassengers": 6,
+            "remoteWorkers": 2,
+            "uncompletedLongPlanOwners": 24,
+            "stalledShare": 0.632038382692394,
+            "checkpoints": {
+              "3": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "20": {
+                "games": 11,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "30": {
+                "games": 4,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "40": {
+                "games": 2,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 1,
+              "noEventGames": 11,
+              "conditionalMedian": 1715.35,
+              "by15Games": 0
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 1,
+              "noEventGames": 11,
+              "conditionalMedian": 1715.35,
+              "by15Games": 0
+            }
+          },
+          "theirs": {
+            "lostGold": 3200,
+            "idleShipSeconds": 29112.849999993163,
+            "stalledShipSeconds": 26403,
+            "shipSeconds": 35444.249999993524,
+            "deliveries": 0,
+            "roundTrips": 0,
+            "remoteMilitaryPassengers": 0,
+            "remoteWorkers": 0,
+            "uncompletedLongPlanOwners": 23,
+            "stalledShare": 0.7449163122369588,
+            "checkpoints": {
+              "3": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "20": {
+                "games": 11,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "30": {
+                "games": 4,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "40": {
+                "games": 2,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 0,
+              "noEventGames": 12,
+              "conditionalMedian": null,
+              "by15Games": 0
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 0,
+              "noEventGames": 12,
+              "conditionalMedian": null,
+              "by15Games": 0
+            }
+          },
+          "resourceDeficit15": {
+            "games": 0,
+            "names": [],
+            "goldStockGapSum": 0,
+            "goldStockGapMedian": null,
+            "goldStockGapRange": [
+              0,
+              0
+            ],
+            "timeouts": 0
+          },
+          "negativeNavalExchange": {
+            "games": 0,
+            "names": [],
+            "positiveDeficitsSum": 0,
+            "positiveDeficitsMedian": null
+          },
+          "navalExchangeRatio": null
+        },
+        "twoShores": {
+          "games": 12,
+          "wins": 1,
+          "losses": 1,
+          "timeouts": 10,
+          "ours": {
+            "lostGold": 4080,
+            "idleShipSeconds": 18425.14999999292,
+            "stalledShipSeconds": 15041,
+            "shipSeconds": 41030.95000001352,
+            "deliveries": 2,
+            "roundTrips": 0,
+            "remoteMilitaryPassengers": 13,
+            "remoteWorkers": 4,
+            "uncompletedLongPlanOwners": 23,
+            "stalledShare": 0.366576937653041,
+            "checkpoints": {
+              "3": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 11,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "20": {
+                "games": 11,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "30": {
+                "games": 11,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "40": {
+                "games": 10,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 2,
+              "noEventGames": 10,
+              "conditionalMedian": 1434.55,
+              "by15Games": 0
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 2,
+              "noEventGames": 10,
+              "conditionalMedian": 1434.55,
+              "by15Games": 0
+            }
+          },
+          "theirs": {
+            "lostGold": 9780,
+            "idleShipSeconds": 19767.89999999165,
+            "stalledShipSeconds": 17323,
+            "shipSeconds": 32691.60000000244,
+            "deliveries": 0,
+            "roundTrips": 0,
+            "remoteMilitaryPassengers": 0,
+            "remoteWorkers": 0,
+            "uncompletedLongPlanOwners": 24,
+            "stalledShare": 0.5298914705917944,
+            "checkpoints": {
+              "3": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 11,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "20": {
+                "games": 11,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "30": {
+                "games": 11,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "40": {
+                "games": 10,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 0,
+              "noEventGames": 12,
+              "conditionalMedian": null,
+              "by15Games": 0
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 0,
+              "noEventGames": 12,
+              "conditionalMedian": null,
+              "by15Games": 0
+            }
+          },
+          "resourceDeficit15": {
+            "games": 0,
+            "names": [],
+            "goldStockGapSum": 0,
+            "goldStockGapMedian": null,
+            "goldStockGapRange": [
+              0,
+              0
+            ],
+            "timeouts": 0
+          },
+          "negativeNavalExchange": {
+            "games": 1,
+            "names": [
+              "twoShores v9_archer grove side-1 vs-v8"
+            ],
+            "positiveDeficitsSum": 240,
+            "positiveDeficitsMedian": 240
+          },
+          "navalExchangeRatio": 2.3970588235294117
+        }
+      },
+      "pairedPhysicalSeats": {
+        "firstLandingSecond": {
+          "physicalSeatPairs": 168,
+          "bothOccurred": 31,
+          "medianRoomMinusRivalSeconds": -1.5,
+          "roomOnly": 24,
+          "rivalOnly": 12,
+          "neither": 101,
+          "roomSlowerAtLeast60": 15,
+          "rivalSlowerAtLeast60": 10
+        },
+        "firstMilitaryLandingSecond": {
+          "physicalSeatPairs": 168,
+          "bothOccurred": 31,
+          "medianRoomMinusRivalSeconds": 191.20000000000005,
+          "roomOnly": 24,
+          "rivalOnly": 10,
+          "neither": 103,
+          "roomSlowerAtLeast60": 19,
+          "rivalSlowerAtLeast60": 10
+        }
+      }
+    },
+    "v9": {
+      "aggregate": {
+        "games": 84,
+        "wins": 17,
+        "losses": 11,
+        "timeouts": 56,
+        "ours": {
+          "lostGold": 108780,
+          "idleShipSeconds": 207739.54999999338,
+          "stalledShipSeconds": 192802,
+          "shipSeconds": 541986.4000005762,
+          "deliveries": 112,
+          "roundTrips": 57,
+          "remoteMilitaryPassengers": 541,
+          "remoteWorkers": 416,
+          "uncompletedLongPlanOwners": 153,
+          "stalledShare": 0.35573217335304913,
+          "checkpoints": {
+            "3": {
+              "games": 84,
+              "islandBases": 0,
+              "islandMines": 0,
+              "islandGold": 0
+            },
+            "5": {
+              "games": 84,
+              "islandBases": 0,
+              "islandMines": 0,
+              "islandGold": 0
+            },
+            "10": {
+              "games": 84,
+              "islandBases": 0,
+              "islandMines": 0,
+              "islandGold": 0
+            },
+            "15": {
+              "games": 84,
+              "islandBases": 14,
+              "islandMines": 16,
+              "islandGold": 123670
+            },
+            "20": {
+              "games": 83,
+              "islandBases": 23,
+              "islandMines": 26,
+              "islandGold": 176740
+            },
+            "30": {
+              "games": 73,
+              "islandBases": 50,
+              "islandMines": 60,
+              "islandGold": 327990
+            },
+            "40": {
+              "games": 56,
+              "islandBases": 58,
+              "islandMines": 49,
+              "islandGold": 228030
+            }
+          },
+          "firstLandingSecond": {
+            "eventGames": 36,
+            "noEventGames": 48,
+            "conditionalMedian": 708.125,
+            "by15Games": 21
+          },
+          "firstMilitaryLandingSecond": {
+            "eventGames": 36,
+            "noEventGames": 48,
+            "conditionalMedian": 914.55,
+            "by15Games": 18
+          }
+        },
+        "theirs": {
+          "lostGold": 103140,
+          "idleShipSeconds": 220891.40000004348,
+          "stalledShipSeconds": 198507,
+          "shipSeconds": 451756.9500004044,
+          "deliveries": 118,
+          "roundTrips": 57,
+          "remoteMilitaryPassengers": 544,
+          "remoteWorkers": 864,
+          "uncompletedLongPlanOwners": 148,
+          "stalledShare": 0.4394110594199432,
+          "checkpoints": {
+            "3": {
+              "games": 84,
+              "islandBases": 0,
+              "islandMines": 0,
+              "islandGold": 0
+            },
+            "5": {
+              "games": 84,
+              "islandBases": 0,
+              "islandMines": 0,
+              "islandGold": 0
+            },
+            "10": {
+              "games": 84,
+              "islandBases": 0,
+              "islandMines": 0,
+              "islandGold": 0
+            },
+            "15": {
+              "games": 84,
+              "islandBases": 27,
+              "islandMines": 33,
+              "islandGold": 248660
+            },
+            "20": {
+              "games": 83,
+              "islandBases": 38,
+              "islandMines": 48,
+              "islandGold": 337540
+            },
+            "30": {
+              "games": 73,
+              "islandBases": 49,
+              "islandMines": 57,
+              "islandGold": 302680
+            },
+            "40": {
+              "games": 56,
+              "islandBases": 62,
+              "islandMines": 55,
+              "islandGold": 275950
+            }
+          },
+          "firstLandingSecond": {
+            "eventGames": 29,
+            "noEventGames": 55,
+            "conditionalMedian": 583,
+            "by15Games": 24
+          },
+          "firstMilitaryLandingSecond": {
+            "eventGames": 27,
+            "noEventGames": 57,
+            "conditionalMedian": 577.45,
+            "by15Games": 22
+          }
+        },
+        "resourceDeficit15": {
+          "games": 15,
+          "names": [
+            "brokenSea v9_archer ember side-2 vs-v9",
+            "brokenSea v9_archer grove side-2 vs-v9",
+            "brokenSea v9_knight ember side-1 vs-v9",
+            "brokenSea v9_summoner grove side-1 vs-v9",
+            "brokenSea v9_summoner grove side-2 vs-v9",
+            "ringwater v9_knight ember side-1 vs-v9",
+            "ringwater v9_summoner ember side-1 vs-v9",
+            "sapphireArchipelago v9_archer ember side-2 vs-v9",
+            "sapphireArchipelago v9_archer grove side-1 vs-v9",
+            "sapphireArchipelago v9_archer grove side-2 vs-v9",
+            "sapphireArchipelago v9_knight grove side-2 vs-v9",
+            "sapphireArchipelago v9_summoner ember side-1 vs-v9",
+            "sapphireArchipelago v9_summoner ember side-2 vs-v9",
+            "sapphireArchipelago v9_summoner grove side-1 vs-v9",
+            "sapphireArchipelago v9_summoner grove side-2 vs-v9"
+          ],
+          "goldStockGapSum": 191810,
+          "goldStockGapMedian": 7330,
+          "goldStockGapRange": [
+            5960,
+            35650
+          ],
+          "timeouts": 15
+        },
+        "negativeNavalExchange": {
+          "games": 37,
+          "names": [
+            "brokenSea v9_archer ember side-1 vs-v9",
+            "brokenSea v9_archer ember side-2 vs-v9",
+            "brokenSea v9_archer grove side-1 vs-v9",
+            "brokenSea v9_knight ember side-1 vs-v9",
+            "brokenSea v9_knight grove side-1 vs-v9",
+            "brokenSea v9_knight grove side-2 vs-v9",
+            "brokenSea v9_summoner ember side-1 vs-v9",
+            "brokenSea v9_summoner grove side-1 vs-v9",
+            "brokenSea v9_summoner grove side-2 vs-v9",
+            "elderwood v9_archer ember side-1 vs-v9",
+            "elderwood v9_archer grove side-2 vs-v9",
+            "elderwood v9_knight ember side-1 vs-v9",
+            "elderwood v9_summoner grove side-1 vs-v9",
+            "elderwood v9_summoner grove side-2 vs-v9",
+            "gullIsland v9_knight ember side-1 vs-v9",
+            "gullIsland v9_knight ember side-2 vs-v9",
+            "gullIsland v9_summoner ember side-2 vs-v9",
+            "ringwater v9_archer ember side-2 vs-v9",
+            "ringwater v9_knight grove side-1 vs-v9",
+            "ringwater v9_summoner ember side-1 vs-v9",
+            "ringwater v9_summoner grove side-1 vs-v9",
+            "sapphireArchipelago v9_archer ember side-1 vs-v9",
+            "sapphireArchipelago v9_archer ember side-2 vs-v9",
+            "sapphireArchipelago v9_archer grove side-1 vs-v9",
+            "sapphireArchipelago v9_archer grove side-2 vs-v9",
+            "sapphireArchipelago v9_knight ember side-2 vs-v9",
+            "sapphireArchipelago v9_knight grove side-2 vs-v9",
+            "sapphireArchipelago v9_summoner ember side-2 vs-v9",
+            "sapphireArchipelago v9_summoner grove side-1 vs-v9",
+            "templeSpring v9_archer ember side-1 vs-v9",
+            "templeSpring v9_knight ember side-1 vs-v9",
+            "templeSpring v9_knight grove side-1 vs-v9",
+            "templeSpring v9_summoner grove side-2 vs-v9",
+            "twoShores v9_archer ember side-1 vs-v9",
+            "twoShores v9_knight ember side-1 vs-v9",
+            "twoShores v9_knight grove side-2 vs-v9",
+            "twoShores v9_summoner grove side-2 vs-v9"
+          ],
+          "positiveDeficitsSum": 34980,
+          "positiveDeficitsMedian": 480
+        },
+        "navalExchangeRatio": 0.9481522338665196
+      },
+      "bySubject": {
+        "v9_archer": {
+          "games": 28,
+          "wins": 7,
+          "losses": 3,
+          "timeouts": 18,
+          "ours": {
+            "lostGold": 34820,
+            "idleShipSeconds": 62939.64999998581,
+            "stalledShipSeconds": 57465,
+            "shipSeconds": 153217.8500001378,
+            "deliveries": 34,
+            "roundTrips": 17,
+            "remoteMilitaryPassengers": 225,
+            "remoteWorkers": 126,
+            "uncompletedLongPlanOwners": 53,
+            "stalledShare": 0.3750542120252197,
+            "checkpoints": {
+              "3": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 28,
+                "islandBases": 6,
+                "islandMines": 7,
+                "islandGold": 51020
+              },
+              "20": {
+                "games": 28,
+                "islandBases": 6,
+                "islandMines": 6,
+                "islandGold": 31900
+              },
+              "30": {
+                "games": 25,
+                "islandBases": 10,
+                "islandMines": 10,
+                "islandGold": 26280
+              },
+              "40": {
+                "games": 18,
+                "islandBases": 13,
+                "islandMines": 6,
+                "islandGold": 32470
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 14,
+              "noEventGames": 14,
+              "conditionalMedian": 1039.45,
+              "by15Games": 6
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 14,
+              "noEventGames": 14,
+              "conditionalMedian": 1176.05,
+              "by15Games": 5
+            }
+          },
+          "theirs": {
+            "lostGold": 31020,
+            "idleShipSeconds": 82152.55000002279,
+            "stalledShipSeconds": 73227,
+            "shipSeconds": 164299.9000001763,
+            "deliveries": 38,
+            "roundTrips": 16,
+            "remoteMilitaryPassengers": 224,
+            "remoteWorkers": 425,
+            "uncompletedLongPlanOwners": 49,
+            "stalledShare": 0.44569108076098296,
+            "checkpoints": {
+              "3": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 28,
+                "islandBases": 11,
+                "islandMines": 14,
+                "islandGold": 108290
+              },
+              "20": {
+                "games": 28,
+                "islandBases": 16,
+                "islandMines": 20,
+                "islandGold": 142160
+              },
+              "30": {
+                "games": 25,
+                "islandBases": 24,
+                "islandMines": 28,
+                "islandGold": 155080
+              },
+              "40": {
+                "games": 18,
+                "islandBases": 31,
+                "islandMines": 30,
+                "islandGold": 142220
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 8,
+              "noEventGames": 20,
+              "conditionalMedian": 574.55,
+              "by15Games": 6
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 8,
+              "noEventGames": 20,
+              "conditionalMedian": 574.55,
+              "by15Games": 6
+            }
+          },
+          "resourceDeficit15": {
+            "games": 5,
+            "names": [
+              "brokenSea v9_archer ember side-2 vs-v9",
+              "brokenSea v9_archer grove side-2 vs-v9",
+              "sapphireArchipelago v9_archer ember side-2 vs-v9",
+              "sapphireArchipelago v9_archer grove side-1 vs-v9",
+              "sapphireArchipelago v9_archer grove side-2 vs-v9"
+            ],
+            "goldStockGapSum": 75570,
+            "goldStockGapMedian": 8530,
+            "goldStockGapRange": [
+              6850,
+              35650
+            ],
+            "timeouts": 5
+          },
+          "negativeNavalExchange": {
+            "games": 12,
+            "names": [
+              "brokenSea v9_archer ember side-1 vs-v9",
+              "brokenSea v9_archer ember side-2 vs-v9",
+              "brokenSea v9_archer grove side-1 vs-v9",
+              "elderwood v9_archer ember side-1 vs-v9",
+              "elderwood v9_archer grove side-2 vs-v9",
+              "ringwater v9_archer ember side-2 vs-v9",
+              "sapphireArchipelago v9_archer ember side-1 vs-v9",
+              "sapphireArchipelago v9_archer ember side-2 vs-v9",
+              "sapphireArchipelago v9_archer grove side-1 vs-v9",
+              "sapphireArchipelago v9_archer grove side-2 vs-v9",
+              "templeSpring v9_archer ember side-1 vs-v9",
+              "twoShores v9_archer ember side-1 vs-v9"
+            ],
+            "positiveDeficitsSum": 11900,
+            "positiveDeficitsMedian": 970.0
+          },
+          "navalExchangeRatio": 0.890867317633544
+        },
+        "v9_knight": {
+          "games": 28,
+          "wins": 6,
+          "losses": 3,
+          "timeouts": 19,
+          "ours": {
+            "lostGold": 32480,
+            "idleShipSeconds": 75468.25000000377,
+            "stalledShipSeconds": 68352,
+            "shipSeconds": 203488.35000021607,
+            "deliveries": 39,
+            "roundTrips": 18,
+            "remoteMilitaryPassengers": 158,
+            "remoteWorkers": 155,
+            "uncompletedLongPlanOwners": 52,
+            "stalledShare": 0.3359012936117838,
+            "checkpoints": {
+              "3": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 28,
+                "islandBases": 4,
+                "islandMines": 4,
+                "islandGold": 30120
+              },
+              "20": {
+                "games": 28,
+                "islandBases": 12,
+                "islandMines": 15,
+                "islandGold": 112200
+              },
+              "30": {
+                "games": 24,
+                "islandBases": 20,
+                "islandMines": 26,
+                "islandGold": 140130
+              },
+              "40": {
+                "games": 19,
+                "islandBases": 23,
+                "islandMines": 21,
+                "islandGold": 100450
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 10,
+              "noEventGames": 18,
+              "conditionalMedian": 504.29999999999995,
+              "by15Games": 7
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 10,
+              "noEventGames": 18,
+              "conditionalMedian": 521.9749999999999,
+              "by15Games": 6
+            }
+          },
+          "theirs": {
+            "lostGold": 34340,
+            "idleShipSeconds": 73691.35000001107,
+            "stalledShipSeconds": 65008,
+            "shipSeconds": 148240.700000099,
+            "deliveries": 37,
+            "roundTrips": 19,
+            "remoteMilitaryPassengers": 135,
+            "remoteWorkers": 191,
+            "uncompletedLongPlanOwners": 48,
+            "stalledShare": 0.43853003932089224,
+            "checkpoints": {
+              "3": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 28,
+                "islandBases": 5,
+                "islandMines": 6,
+                "islandGold": 45190
+              },
+              "20": {
+                "games": 28,
+                "islandBases": 10,
+                "islandMines": 14,
+                "islandGold": 105210
+              },
+              "30": {
+                "games": 24,
+                "islandBases": 12,
+                "islandMines": 17,
+                "islandGold": 98260
+              },
+              "40": {
+                "games": 19,
+                "islandBases": 13,
+                "islandMines": 13,
+                "islandGold": 61640
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 11,
+              "noEventGames": 17,
+              "conditionalMedian": 624.4,
+              "by15Games": 9
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 10,
+              "noEventGames": 18,
+              "conditionalMedian": 603.7,
+              "by15Games": 8
+            }
+          },
+          "resourceDeficit15": {
+            "games": 3,
+            "names": [
+              "brokenSea v9_knight ember side-1 vs-v9",
+              "ringwater v9_knight ember side-1 vs-v9",
+              "sapphireArchipelago v9_knight grove side-2 vs-v9"
+            ],
+            "goldStockGapSum": 37800,
+            "goldStockGapMedian": 14090,
+            "goldStockGapRange": [
+              5960,
+              17750
+            ],
+            "timeouts": 3
+          },
+          "negativeNavalExchange": {
+            "games": 13,
+            "names": [
+              "brokenSea v9_knight ember side-1 vs-v9",
+              "brokenSea v9_knight grove side-1 vs-v9",
+              "brokenSea v9_knight grove side-2 vs-v9",
+              "elderwood v9_knight ember side-1 vs-v9",
+              "gullIsland v9_knight ember side-1 vs-v9",
+              "gullIsland v9_knight ember side-2 vs-v9",
+              "ringwater v9_knight grove side-1 vs-v9",
+              "sapphireArchipelago v9_knight ember side-2 vs-v9",
+              "sapphireArchipelago v9_knight grove side-2 vs-v9",
+              "templeSpring v9_knight ember side-1 vs-v9",
+              "templeSpring v9_knight grove side-1 vs-v9",
+              "twoShores v9_knight ember side-1 vs-v9",
+              "twoShores v9_knight grove side-2 vs-v9"
+            ],
+            "positiveDeficitsSum": 10220,
+            "positiveDeficitsMedian": 480
+          },
+          "navalExchangeRatio": 1.0572660098522169
+        },
+        "v9_summoner": {
+          "games": 28,
+          "wins": 4,
+          "losses": 5,
+          "timeouts": 19,
+          "ours": {
+            "lostGold": 41480,
+            "idleShipSeconds": 69331.6500000038,
+            "stalledShipSeconds": 66985,
+            "shipSeconds": 185280.20000022225,
+            "deliveries": 39,
+            "roundTrips": 22,
+            "remoteMilitaryPassengers": 158,
+            "remoteWorkers": 135,
+            "uncompletedLongPlanOwners": 48,
+            "stalledShare": 0.3615335043891341,
+            "checkpoints": {
+              "3": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 28,
+                "islandBases": 4,
+                "islandMines": 5,
+                "islandGold": 42530
+              },
+              "20": {
+                "games": 27,
+                "islandBases": 5,
+                "islandMines": 5,
+                "islandGold": 32640
+              },
+              "30": {
+                "games": 24,
+                "islandBases": 20,
+                "islandMines": 24,
+                "islandGold": 161580
+              },
+              "40": {
+                "games": 19,
+                "islandBases": 22,
+                "islandMines": 22,
+                "islandGold": 95110
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 12,
+              "noEventGames": 16,
+              "conditionalMedian": 708.125,
+              "by15Games": 8
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 12,
+              "noEventGames": 16,
+              "conditionalMedian": 775.675,
+              "by15Games": 7
+            }
+          },
+          "theirs": {
+            "lostGold": 37780,
+            "idleShipSeconds": 65047.50000000964,
+            "stalledShipSeconds": 60272,
+            "shipSeconds": 139216.35000012908,
+            "deliveries": 43,
+            "roundTrips": 22,
+            "remoteMilitaryPassengers": 185,
+            "remoteWorkers": 248,
+            "uncompletedLongPlanOwners": 51,
+            "stalledShare": 0.4329376542334583,
+            "checkpoints": {
+              "3": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 28,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 28,
+                "islandBases": 11,
+                "islandMines": 13,
+                "islandGold": 95180
+              },
+              "20": {
+                "games": 27,
+                "islandBases": 12,
+                "islandMines": 14,
+                "islandGold": 90170
+              },
+              "30": {
+                "games": 24,
+                "islandBases": 13,
+                "islandMines": 12,
+                "islandGold": 49340
+              },
+              "40": {
+                "games": 19,
+                "islandBases": 18,
+                "islandMines": 12,
+                "islandGold": 72090
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 10,
+              "noEventGames": 18,
+              "conditionalMedian": 552.675,
+              "by15Games": 9
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 9,
+              "noEventGames": 19,
+              "conditionalMedian": 485.45,
+              "by15Games": 8
+            }
+          },
+          "resourceDeficit15": {
+            "games": 7,
+            "names": [
+              "brokenSea v9_summoner grove side-1 vs-v9",
+              "brokenSea v9_summoner grove side-2 vs-v9",
+              "ringwater v9_summoner ember side-1 vs-v9",
+              "sapphireArchipelago v9_summoner ember side-1 vs-v9",
+              "sapphireArchipelago v9_summoner ember side-2 vs-v9",
+              "sapphireArchipelago v9_summoner grove side-1 vs-v9",
+              "sapphireArchipelago v9_summoner grove side-2 vs-v9"
+            ],
+            "goldStockGapSum": 78440,
+            "goldStockGapMedian": 7310,
+            "goldStockGapRange": [
+              5980,
+              26260
+            ],
+            "timeouts": 7
+          },
+          "negativeNavalExchange": {
+            "games": 12,
+            "names": [
+              "brokenSea v9_summoner ember side-1 vs-v9",
+              "brokenSea v9_summoner grove side-1 vs-v9",
+              "brokenSea v9_summoner grove side-2 vs-v9",
+              "elderwood v9_summoner grove side-1 vs-v9",
+              "elderwood v9_summoner grove side-2 vs-v9",
+              "gullIsland v9_summoner ember side-2 vs-v9",
+              "ringwater v9_summoner ember side-1 vs-v9",
+              "ringwater v9_summoner grove side-1 vs-v9",
+              "sapphireArchipelago v9_summoner ember side-2 vs-v9",
+              "sapphireArchipelago v9_summoner grove side-1 vs-v9",
+              "templeSpring v9_summoner grove side-2 vs-v9",
+              "twoShores v9_summoner grove side-2 vs-v9"
+            ],
+            "positiveDeficitsSum": 12860,
+            "positiveDeficitsMedian": 510.0
+          },
+          "navalExchangeRatio": 0.9108003857280618
+        }
+      },
+      "byMap": {
+        "brokenSea": {
+          "games": 12,
+          "wins": 0,
+          "losses": 0,
+          "timeouts": 12,
+          "ours": {
+            "lostGold": 46740,
+            "idleShipSeconds": 25653.85000000534,
+            "stalledShipSeconds": 24504,
+            "shipSeconds": 125019.3500001579,
+            "deliveries": 42,
+            "roundTrips": 25,
+            "remoteMilitaryPassengers": 113,
+            "remoteWorkers": 101,
+            "uncompletedLongPlanOwners": 17,
+            "stalledShare": 0.19600165894294805,
+            "checkpoints": {
+              "3": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 12,
+                "islandBases": 6,
+                "islandMines": 8,
+                "islandGold": 71070
+              },
+              "20": {
+                "games": 12,
+                "islandBases": 7,
+                "islandMines": 10,
+                "islandGold": 80590
+              },
+              "30": {
+                "games": 12,
+                "islandBases": 22,
+                "islandMines": 32,
+                "islandGold": 226660
+              },
+              "40": {
+                "games": 12,
+                "islandBases": 23,
+                "islandMines": 30,
+                "islandGold": 148510
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 12,
+              "noEventGames": 0,
+              "conditionalMedian": 381.22499999999997,
+              "by15Games": 8
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 12,
+              "noEventGames": 0,
+              "conditionalMedian": 1003.675,
+              "by15Games": 5
+            }
+          },
+          "theirs": {
+            "lostGold": 36760,
+            "idleShipSeconds": 38062.10000003922,
+            "stalledShipSeconds": 35205,
+            "shipSeconds": 113323.95000016302,
+            "deliveries": 44,
+            "roundTrips": 22,
+            "remoteMilitaryPassengers": 160,
+            "remoteWorkers": 136,
+            "uncompletedLongPlanOwners": 16,
+            "stalledShare": 0.3106580736018234,
+            "checkpoints": {
+              "3": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 12,
+                "islandBases": 9,
+                "islandMines": 15,
+                "islandGold": 125100
+              },
+              "20": {
+                "games": 12,
+                "islandBases": 15,
+                "islandMines": 25,
+                "islandGold": 205670
+              },
+              "30": {
+                "games": 12,
+                "islandBases": 20,
+                "islandMines": 29,
+                "islandGold": 203100
+              },
+              "40": {
+                "games": 12,
+                "islandBases": 28,
+                "islandMines": 36,
+                "islandGold": 210770
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 12,
+              "noEventGames": 0,
+              "conditionalMedian": 302.725,
+              "by15Games": 10
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 12,
+              "noEventGames": 0,
+              "conditionalMedian": 302.725,
+              "by15Games": 10
+            }
+          },
+          "resourceDeficit15": {
+            "games": 5,
+            "names": [
+              "brokenSea v9_archer ember side-2 vs-v9",
+              "brokenSea v9_archer grove side-2 vs-v9",
+              "brokenSea v9_knight ember side-1 vs-v9",
+              "brokenSea v9_summoner grove side-1 vs-v9",
+              "brokenSea v9_summoner grove side-2 vs-v9"
+            ],
+            "goldStockGapSum": 115150,
+            "goldStockGapMedian": 17990,
+            "goldStockGapRange": [
+              17500,
+              35650
+            ],
+            "timeouts": 5
+          },
+          "negativeNavalExchange": {
+            "games": 9,
+            "names": [
+              "brokenSea v9_archer ember side-1 vs-v9",
+              "brokenSea v9_archer ember side-2 vs-v9",
+              "brokenSea v9_archer grove side-1 vs-v9",
+              "brokenSea v9_knight ember side-1 vs-v9",
+              "brokenSea v9_knight grove side-1 vs-v9",
+              "brokenSea v9_knight grove side-2 vs-v9",
+              "brokenSea v9_summoner ember side-1 vs-v9",
+              "brokenSea v9_summoner grove side-1 vs-v9",
+              "brokenSea v9_summoner grove side-2 vs-v9"
+            ],
+            "positiveDeficitsSum": 14760,
+            "positiveDeficitsMedian": 1480
+          },
+          "navalExchangeRatio": 0.7864783910997005
+        },
+        "elderwood": {
+          "games": 12,
+          "wins": 1,
+          "losses": 4,
+          "timeouts": 7,
+          "ours": {
+            "lostGold": 2560,
+            "idleShipSeconds": 39491.84999999662,
+            "stalledShipSeconds": 42179,
+            "shipSeconds": 56799.8000000272,
+            "deliveries": 0,
+            "roundTrips": 0,
+            "remoteMilitaryPassengers": 0,
+            "remoteWorkers": 0,
+            "uncompletedLongPlanOwners": 24,
+            "stalledShare": 0.7425906429244434,
+            "checkpoints": {
+              "3": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "20": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "30": {
+                "games": 10,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "40": {
+                "games": 7,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 0,
+              "noEventGames": 12,
+              "conditionalMedian": null,
+              "by15Games": 0
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 0,
+              "noEventGames": 12,
+              "conditionalMedian": null,
+              "by15Games": 0
+            }
+          },
+          "theirs": {
+            "lostGold": 0,
+            "idleShipSeconds": 36549.849999992075,
+            "stalledShipSeconds": 36146,
+            "shipSeconds": 42010.84999999971,
+            "deliveries": 0,
+            "roundTrips": 0,
+            "remoteMilitaryPassengers": 0,
+            "remoteWorkers": 0,
+            "uncompletedLongPlanOwners": 24,
+            "stalledShare": 0.860396778451287,
+            "checkpoints": {
+              "3": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "20": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "30": {
+                "games": 10,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "40": {
+                "games": 7,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 0,
+              "noEventGames": 12,
+              "conditionalMedian": null,
+              "by15Games": 0
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 0,
+              "noEventGames": 12,
+              "conditionalMedian": null,
+              "by15Games": 0
+            }
+          },
+          "resourceDeficit15": {
+            "games": 0,
+            "names": [],
+            "goldStockGapSum": 0,
+            "goldStockGapMedian": null,
+            "goldStockGapRange": [
+              0,
+              0
+            ],
+            "timeouts": 0
+          },
+          "negativeNavalExchange": {
+            "games": 5,
+            "names": [
+              "elderwood v9_archer ember side-1 vs-v9",
+              "elderwood v9_archer grove side-2 vs-v9",
+              "elderwood v9_knight ember side-1 vs-v9",
+              "elderwood v9_summoner grove side-1 vs-v9",
+              "elderwood v9_summoner grove side-2 vs-v9"
+            ],
+            "positiveDeficitsSum": 2560,
+            "positiveDeficitsMedian": 480
+          },
+          "navalExchangeRatio": 0.0
+        },
+        "gullIsland": {
+          "games": 12,
+          "wins": 6,
+          "losses": 1,
+          "timeouts": 5,
+          "ours": {
+            "lostGold": 3000,
+            "idleShipSeconds": 14308.799999994553,
+            "stalledShipSeconds": 5125,
+            "shipSeconds": 37251.45000003238,
+            "deliveries": 18,
+            "roundTrips": 5,
+            "remoteMilitaryPassengers": 84,
+            "remoteWorkers": 56,
+            "uncompletedLongPlanOwners": 9,
+            "stalledShare": 0.1375785372111836,
+            "checkpoints": {
+              "3": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "20": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "30": {
+                "games": 11,
+                "islandBases": 3,
+                "islandMines": 3,
+                "islandGold": 12890
+              },
+              "40": {
+                "games": 5,
+                "islandBases": 3,
+                "islandMines": 3,
+                "islandGold": 13440
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 9,
+              "noEventGames": 3,
+              "conditionalMedian": 1730.65,
+              "by15Games": 0
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 9,
+              "noEventGames": 3,
+              "conditionalMedian": 1730.65,
+              "by15Games": 0
+            }
+          },
+          "theirs": {
+            "lostGold": 7040,
+            "idleShipSeconds": 14510.549999993675,
+            "stalledShipSeconds": 5945,
+            "shipSeconds": 26429.25000000471,
+            "deliveries": 6,
+            "roundTrips": 1,
+            "remoteMilitaryPassengers": 33,
+            "remoteWorkers": 38,
+            "uncompletedLongPlanOwners": 9,
+            "stalledShare": 0.2249401704550428,
+            "checkpoints": {
+              "3": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "20": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "30": {
+                "games": 11,
+                "islandBases": 1,
+                "islandMines": 1,
+                "islandGold": 4940
+              },
+              "40": {
+                "games": 5,
+                "islandBases": 3,
+                "islandMines": 3,
+                "islandGold": 12010
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 3,
+              "noEventGames": 9,
+              "conditionalMedian": 1408.8,
+              "by15Games": 0
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 3,
+              "noEventGames": 9,
+              "conditionalMedian": 1408.8,
+              "by15Games": 0
+            }
+          },
+          "resourceDeficit15": {
+            "games": 0,
+            "names": [],
+            "goldStockGapSum": 0,
+            "goldStockGapMedian": null,
+            "goldStockGapRange": [
+              0,
+              0
+            ],
+            "timeouts": 0
+          },
+          "negativeNavalExchange": {
+            "games": 3,
+            "names": [
+              "gullIsland v9_knight ember side-1 vs-v9",
+              "gullIsland v9_knight ember side-2 vs-v9",
+              "gullIsland v9_summoner ember side-2 vs-v9"
+            ],
+            "positiveDeficitsSum": 720,
+            "positiveDeficitsMedian": 240
+          },
+          "navalExchangeRatio": 2.3466666666666667
+        },
+        "ringwater": {
+          "games": 12,
+          "wins": 5,
+          "losses": 1,
+          "timeouts": 6,
+          "ours": {
+            "lostGold": 2160,
+            "idleShipSeconds": 33415.00000000989,
+            "stalledShipSeconds": 29230,
+            "shipSeconds": 59270.80000003795,
+            "deliveries": 6,
+            "roundTrips": 4,
+            "remoteMilitaryPassengers": 24,
+            "remoteWorkers": 43,
+            "uncompletedLongPlanOwners": 23,
+            "stalledShare": 0.49316020704936137,
+            "checkpoints": {
+              "3": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "20": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "30": {
+                "games": 10,
+                "islandBases": 1,
+                "islandMines": 1,
+                "islandGold": 4530
+              },
+              "40": {
+                "games": 6,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 2,
+              "noEventGames": 10,
+              "conditionalMedian": 1082.35,
+              "by15Games": 1
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 2,
+              "noEventGames": 10,
+              "conditionalMedian": 1082.35,
+              "by15Games": 1
+            }
+          },
+          "theirs": {
+            "lostGold": 8040,
+            "idleShipSeconds": 30347.14999999677,
+            "stalledShipSeconds": 31759,
+            "shipSeconds": 50602.65000002264,
+            "deliveries": 10,
+            "roundTrips": 6,
+            "remoteMilitaryPassengers": 0,
+            "remoteWorkers": 30,
+            "uncompletedLongPlanOwners": 21,
+            "stalledShare": 0.6276153521601298,
+            "checkpoints": {
+              "3": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 12,
+                "islandBases": 2,
+                "islandMines": 2,
+                "islandGold": 11940
+              },
+              "20": {
+                "games": 12,
+                "islandBases": 2,
+                "islandMines": 2,
+                "islandGold": 9980
+              },
+              "30": {
+                "games": 10,
+                "islandBases": 2,
+                "islandMines": 2,
+                "islandGold": 3650
+              },
+              "40": {
+                "games": 6,
+                "islandBases": 2,
+                "islandMines": 0,
+                "islandGold": 0
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 2,
+              "noEventGames": 10,
+              "conditionalMedian": 650.9749999999999,
+              "by15Games": 2
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 0,
+              "noEventGames": 12,
+              "conditionalMedian": null,
+              "by15Games": 0
+            }
+          },
+          "resourceDeficit15": {
+            "games": 2,
+            "names": [
+              "ringwater v9_knight ember side-1 vs-v9",
+              "ringwater v9_summoner ember side-1 vs-v9"
+            ],
+            "goldStockGapSum": 11940,
+            "goldStockGapMedian": 5970.0,
+            "goldStockGapRange": [
+              5960,
+              5980
+            ],
+            "timeouts": 2
+          },
+          "negativeNavalExchange": {
+            "games": 4,
+            "names": [
+              "ringwater v9_archer ember side-2 vs-v9",
+              "ringwater v9_knight grove side-1 vs-v9",
+              "ringwater v9_summoner ember side-1 vs-v9",
+              "ringwater v9_summoner grove side-1 vs-v9"
+            ],
+            "positiveDeficitsSum": 2160,
+            "positiveDeficitsMedian": 510.0
+          },
+          "navalExchangeRatio": 3.7222222222222223
+        },
+        "sapphireArchipelago": {
+          "games": 12,
+          "wins": 0,
+          "losses": 0,
+          "timeouts": 12,
+          "ours": {
+            "lostGold": 43460,
+            "idleShipSeconds": 44501.40000000062,
+            "stalledShipSeconds": 50339,
+            "shipSeconds": 178547.8500003015,
+            "deliveries": 45,
+            "roundTrips": 23,
+            "remoteMilitaryPassengers": 319,
+            "remoteWorkers": 216,
+            "uncompletedLongPlanOwners": 32,
+            "stalledShare": 0.281935626779684,
+            "checkpoints": {
+              "3": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 12,
+                "islandBases": 8,
+                "islandMines": 8,
+                "islandGold": 52600
+              },
+              "20": {
+                "games": 12,
+                "islandBases": 16,
+                "islandMines": 16,
+                "islandGold": 96150
+              },
+              "30": {
+                "games": 12,
+                "islandBases": 24,
+                "islandMines": 24,
+                "islandGold": 83910
+              },
+              "40": {
+                "games": 12,
+                "islandBases": 32,
+                "islandMines": 16,
+                "islandGold": 66080
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 12,
+              "noEventGames": 0,
+              "conditionalMedian": 504.29999999999995,
+              "by15Games": 12
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 12,
+              "noEventGames": 0,
+              "conditionalMedian": 504.29999999999995,
+              "by15Games": 12
+            }
+          },
+          "theirs": {
+            "lostGold": 37280,
+            "idleShipSeconds": 47609.70000001669,
+            "stalledShipSeconds": 43586,
+            "shipSeconds": 143449.65000019124,
+            "deliveries": 58,
+            "roundTrips": 28,
+            "remoteMilitaryPassengers": 351,
+            "remoteWorkers": 660,
+            "uncompletedLongPlanOwners": 32,
+            "stalledShare": 0.3038418009381124,
+            "checkpoints": {
+              "3": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 12,
+                "islandBases": 16,
+                "islandMines": 16,
+                "islandGold": 111620
+              },
+              "20": {
+                "games": 12,
+                "islandBases": 21,
+                "islandMines": 21,
+                "islandGold": 121890
+              },
+              "30": {
+                "games": 12,
+                "islandBases": 26,
+                "islandMines": 25,
+                "islandGold": 90990
+              },
+              "40": {
+                "games": 12,
+                "islandBases": 29,
+                "islandMines": 16,
+                "islandGold": 53170
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 12,
+              "noEventGames": 0,
+              "conditionalMedian": 580.225,
+              "by15Games": 12
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 12,
+              "noEventGames": 0,
+              "conditionalMedian": 580.225,
+              "by15Games": 12
+            }
+          },
+          "resourceDeficit15": {
+            "games": 8,
+            "names": [
+              "sapphireArchipelago v9_archer ember side-2 vs-v9",
+              "sapphireArchipelago v9_archer grove side-1 vs-v9",
+              "sapphireArchipelago v9_archer grove side-2 vs-v9",
+              "sapphireArchipelago v9_knight grove side-2 vs-v9",
+              "sapphireArchipelago v9_summoner ember side-1 vs-v9",
+              "sapphireArchipelago v9_summoner ember side-2 vs-v9",
+              "sapphireArchipelago v9_summoner grove side-1 vs-v9",
+              "sapphireArchipelago v9_summoner grove side-2 vs-v9"
+            ],
+            "goldStockGapSum": 64720,
+            "goldStockGapMedian": 7175.0,
+            "goldStockGapRange": [
+              6650,
+              14090
+            ],
+            "timeouts": 8
+          },
+          "negativeNavalExchange": {
+            "games": 8,
+            "names": [
+              "sapphireArchipelago v9_archer ember side-1 vs-v9",
+              "sapphireArchipelago v9_archer ember side-2 vs-v9",
+              "sapphireArchipelago v9_archer grove side-1 vs-v9",
+              "sapphireArchipelago v9_archer grove side-2 vs-v9",
+              "sapphireArchipelago v9_knight ember side-2 vs-v9",
+              "sapphireArchipelago v9_knight grove side-2 vs-v9",
+              "sapphireArchipelago v9_summoner ember side-2 vs-v9",
+              "sapphireArchipelago v9_summoner grove side-1 vs-v9"
+            ],
+            "positiveDeficitsSum": 11120,
+            "positiveDeficitsMedian": 1130.0
+          },
+          "navalExchangeRatio": 0.8578002761159687
+        },
+        "templeSpring": {
+          "games": 12,
+          "wins": 3,
+          "losses": 4,
+          "timeouts": 5,
+          "ours": {
+            "lostGold": 1680,
+            "idleShipSeconds": 22580.799999998773,
+            "stalledShipSeconds": 21874,
+            "shipSeconds": 34844.10000001165,
+            "deliveries": 1,
+            "roundTrips": 0,
+            "remoteMilitaryPassengers": 1,
+            "remoteWorkers": 0,
+            "uncompletedLongPlanOwners": 24,
+            "stalledShare": 0.6277676852033109,
+            "checkpoints": {
+              "3": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "20": {
+                "games": 11,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "30": {
+                "games": 6,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "40": {
+                "games": 5,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 1,
+              "noEventGames": 11,
+              "conditionalMedian": 1278.4,
+              "by15Games": 0
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 1,
+              "noEventGames": 11,
+              "conditionalMedian": 1278.4,
+              "by15Games": 0
+            }
+          },
+          "theirs": {
+            "lostGold": 480,
+            "idleShipSeconds": 26598.70000000641,
+            "stalledShipSeconds": 27010,
+            "shipSeconds": 35098.1500000172,
+            "deliveries": 0,
+            "roundTrips": 0,
+            "remoteMilitaryPassengers": 0,
+            "remoteWorkers": 0,
+            "uncompletedLongPlanOwners": 22,
+            "stalledShare": 0.7695562301712986,
+            "checkpoints": {
+              "3": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "20": {
+                "games": 11,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "30": {
+                "games": 6,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "40": {
+                "games": 5,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 0,
+              "noEventGames": 12,
+              "conditionalMedian": null,
+              "by15Games": 0
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 0,
+              "noEventGames": 12,
+              "conditionalMedian": null,
+              "by15Games": 0
+            }
+          },
+          "resourceDeficit15": {
+            "games": 0,
+            "names": [],
+            "goldStockGapSum": 0,
+            "goldStockGapMedian": null,
+            "goldStockGapRange": [
+              0,
+              0
+            ],
+            "timeouts": 0
+          },
+          "negativeNavalExchange": {
+            "games": 4,
+            "names": [
+              "templeSpring v9_archer ember side-1 vs-v9",
+              "templeSpring v9_knight ember side-1 vs-v9",
+              "templeSpring v9_knight grove side-1 vs-v9",
+              "templeSpring v9_summoner grove side-2 vs-v9"
+            ],
+            "positiveDeficitsSum": 1680,
+            "positiveDeficitsMedian": 480.0
+          },
+          "navalExchangeRatio": 0.2857142857142857
+        },
+        "twoShores": {
+          "games": 12,
+          "wins": 2,
+          "losses": 1,
+          "timeouts": 9,
+          "ours": {
+            "lostGold": 9180,
+            "idleShipSeconds": 27787.849999987593,
+            "stalledShipSeconds": 19551,
+            "shipSeconds": 50253.050000007606,
+            "deliveries": 0,
+            "roundTrips": 0,
+            "remoteMilitaryPassengers": 0,
+            "remoteWorkers": 0,
+            "uncompletedLongPlanOwners": 24,
+            "stalledShare": 0.38905101282403837,
+            "checkpoints": {
+              "3": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "20": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "30": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "40": {
+                "games": 9,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 0,
+              "noEventGames": 12,
+              "conditionalMedian": null,
+              "by15Games": 0
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 0,
+              "noEventGames": 12,
+              "conditionalMedian": null,
+              "by15Games": 0
+            }
+          },
+          "theirs": {
+            "lostGold": 13540,
+            "idleShipSeconds": 27213.34999999864,
+            "stalledShipSeconds": 18856,
+            "shipSeconds": 40842.450000005876,
+            "deliveries": 0,
+            "roundTrips": 0,
+            "remoteMilitaryPassengers": 0,
+            "remoteWorkers": 0,
+            "uncompletedLongPlanOwners": 24,
+            "stalledShare": 0.4616765154881083,
+            "checkpoints": {
+              "3": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "5": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "10": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "15": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "20": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "30": {
+                "games": 12,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              },
+              "40": {
+                "games": 9,
+                "islandBases": 0,
+                "islandMines": 0,
+                "islandGold": 0
+              }
+            },
+            "firstLandingSecond": {
+              "eventGames": 0,
+              "noEventGames": 12,
+              "conditionalMedian": null,
+              "by15Games": 0
+            },
+            "firstMilitaryLandingSecond": {
+              "eventGames": 0,
+              "noEventGames": 12,
+              "conditionalMedian": null,
+              "by15Games": 0
+            }
+          },
+          "resourceDeficit15": {
+            "games": 0,
+            "names": [],
+            "goldStockGapSum": 0,
+            "goldStockGapMedian": null,
+            "goldStockGapRange": [
+              0,
+              0
+            ],
+            "timeouts": 0
+          },
+          "negativeNavalExchange": {
+            "games": 4,
+            "names": [
+              "twoShores v9_archer ember side-1 vs-v9",
+              "twoShores v9_knight ember side-1 vs-v9",
+              "twoShores v9_knight grove side-2 vs-v9",
+              "twoShores v9_summoner grove side-2 vs-v9"
+            ],
+            "positiveDeficitsSum": 1980,
+            "positiveDeficitsMedian": 450.0
+          },
+          "navalExchangeRatio": 1.4749455337690631
+        }
+      },
+      "pairedPhysicalSeats": {
+        "firstLandingSecond": {
+          "physicalSeatPairs": 168,
+          "bothOccurred": 38,
+          "medianRoomMinusRivalSeconds": -1.7000000000000028,
+          "roomOnly": 18,
+          "rivalOnly": 13,
+          "neither": 99,
+          "roomSlowerAtLeast60": 15,
+          "rivalSlowerAtLeast60": 12
+        },
+        "firstMilitaryLandingSecond": {
+          "physicalSeatPairs": 168,
+          "bothOccurred": 36,
+          "medianRoomMinusRivalSeconds": 17.400000000000006,
+          "roomOnly": 18,
+          "rivalOnly": 12,
+          "neither": 102,
+          "roomSlowerAtLeast60": 17,
+          "rivalSlowerAtLeast60": 12
+        }
+      }
+    }
+  },
+  "复现": [
+    ". /codegeex/jeffry/sketch-rts-aiperf/env.sh",
+    "node --import tsx scripts/ai-naval-room-benchmark.ts --rival v9 --workers 24 --out-dir results/v9",
+    "node --import tsx scripts/ai-naval-room-benchmark.ts --rival v8 --workers 24 --out-dir results/v8",
+    "node --import tsx scripts/ai-naval-loading-diagnostics.ts --rival v9 --baseline results/v9 --workers 24 --out-dir results/diagnostics-v9",
+    "node --import tsx scripts/ai-naval-loading-diagnostics.ts --rival v8 --baseline results/v8 --workers 24 --out-dir results/diagnostics-v8",
+    "注意：这些多局命令按顺序在 A100 自有目录运行，同时运行的 worker 总数最多 24；首次 benchmark 用最终修正观察器即可，无需为纠正旧指标再重跑。"
+  ],
+  "附件": {
+    "逐局指标": "naval-room-baseline-2026-10-19.metrics.json.gz.evidence.json",
+    "诊断逐局": "naval-room-baseline-2026-10-19.diagnostics.json.gz.evidence.json",
+    "完整证据": "naval-room-baseline-2026-10-19.evidence.tar.gz.evidence.json"
+  },
+  "当前边界": "仅提交 benchmark、metric、重放工具和本报告。未改 AI，未建立修复 PR，未合并。修复目标与做法交由总指挥决定。",
+  "证据获取": {
+    "规范": "docs/EVIDENCE.md：原始指标、诊断和重放包存 A100，仓库只保留 sha256 指针。",
+    "示例": "SKETCH_MACHINES=~/.config/sketch/machines-naval.json bin/sketch evidence get docs/reviews/naval-room-baseline-2026-10-19.evidence.tar.gz.evidence.json",
+    "说明": "文件取回时会校验 sha256；证据包内包含完整 168 局数据和分析脚本。"
+  }
+}
