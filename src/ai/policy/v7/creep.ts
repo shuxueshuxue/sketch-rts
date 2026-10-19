@@ -109,7 +109,10 @@ export function neutralCamps(snapshot: GameSnapshot): Camp[] {
 // per creep (its share of the camp's hit points) the gap between the reaches over the creep's speed, and the camp's hit
 // points over the group's damage per second. A camp that outranges the group gives it nothing.
 export function creepForce(units: readonly Unit[], camp?: Camp) {
-  const rated = (unit: Unit) => combatRating(unit) * (camp ? 1 + freeSeconds(unit, camp) / killSeconds(units, camp) : 1);
+  // The group's kill time is identical for each member. Reducing the whole
+  // group inside rated made every cohort evaluation quadratic in its size.
+  const clearingSeconds = camp ? killSeconds(units, camp) : 1;
+  const rated = (unit: Unit) => combatRating(unit) * (camp ? 1 + freeSeconds(unit, camp) / clearingSeconds : 1);
   return units.reduce((total, unit) => total + rated(unit), 0);
 }
 

@@ -159,8 +159,11 @@ export function selectExpansionScreen(snapshot: GameSnapshot, options: AiPolicyC
   let front = [...pool].sort(order);
   if (camp && !task.combat?.creep && pool.length) {
     const nearby = withinRangeOf(pool, CREEP_ASSEMBLED_RANGE);
-    const assembled = pool.map(nearby).sort((a, b) => creepForce(b, camp) - creepForce(a, camp))[0]!;
-    if (creepForce(assembled, camp) >= forceFor(camp)) front = [...assembled].sort(order);
+    // Rate each assembled cohort once, not on both sides of every sort comparison.
+    // Keep the first cohort on ties, as the stable sort did.
+    const assembled = pool.map(nearby).map(units => ({ units, force: creepForce(units, camp) }))
+      .reduce((best, candidate) => candidate.force > best.force ? candidate : best);
+    if (assembled.force >= forceFor(camp)) front = [...assembled.units].sort(order);
   }
   // Commit a clearing party through the entire camp. Falling creep HP must not
   // immediately release its fighters; those units finish the remaining battle.

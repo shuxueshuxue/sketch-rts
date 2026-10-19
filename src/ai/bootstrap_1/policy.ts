@@ -39,6 +39,7 @@ import { lootRecovery, planLootItemCommands } from './loot-recovery';
 import { summonedRaids } from './summoned-raids';
 import { mountedField } from './mounted-field';
 import { expansionMissionUnitIds, migrateExpansionClaims, prepareExpansionMission } from './expansion-mission';
+import { withLandRoadReuse } from './safe-land-route';
 import { expansionGarrison, garrisonRecoveryCommands, maintainExpansionGarrisons } from './expansion-garrison';
 
 export const BOOTSTRAP_VERSIONS = ['v9_archer', 'v9_summoner', 'v9_knight'] as const;
@@ -194,7 +195,7 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
 }
 
 export function planBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion, options: AiPolicyContext) {
-  return planAiCommandEntriesFromScripts(snapshot, owner, bootstrapScripts(version), bootstrapPolicyContext(snapshot, owner, version, options));
+  return withLandRoadReuse(() => planAiCommandEntriesFromScripts(snapshot, owner, bootstrapScripts(version), bootstrapPolicyContext(snapshot, owner, version, options)));
 }
 
 export function researchPrerequisites(wants: readonly V6Want[], player: PlayerState): V6Want[] {
