@@ -635,14 +635,16 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     // Reserve payload for the expedition's engineers; geometric reservations below also leave actual floor space.
     if (mission.purpose === "settle")
         room -= 75 * Math.max(0, 2 - workerCount - crew.filter(unit => unit.kind === "worker").length);
-    const soldiers = orderCrew(own.filter(unit => !unit.deck && unit.kind !== "worker" && unitMover(unit.kind) === "land" && !unit.expiresTick && !attached.has(unit.id) && sameGround(map, unit, loadGround) && unit.order.type !== "board" && unit.order.type !== "cast"), loadGround, boat);
+    const availableSoldiers = own.filter(unit => !unit.deck && unit.kind !== "worker" && unitMover(unit.kind) === "land" && !unit.expiresTick && !attached.has(unit.id) && sameGround(map, unit, loadGround) && unit.order.type !== "board" && unit.order.type !== "cast");
+    // Crew selection can keep only a mission's rider. The rest still defend this ground; they are not passengers.
+    const soldiers = orderCrew([...availableSoldiers], loadGround, boat);
     // Load engineers first. Reserving only their weight did not reserve floor
     // space: nearby infantry filled the deck before distant workers arrived.
     const engineersAboard=cargo.filter(unit=>unit.kind==='worker').length;
     const engineersReady=mission.purpose!=='settle' || engineersAboard>=2
         || engineersAboard>=1 && (workerCount<2 || snapshot.tick-mission.progress!.tick>seconds(20));
     const threats = snapshot.units.filter(unit => isOpponentOwner(snapshot, owner, unit.owner, options) && sameGround(map, unit, loadGround) && combatCapability(snapshot,unit).armed);
-    let strengthLeft = strengthOf(soldiers);
+    let strengthLeft = strengthOf(availableSoldiers);
     for (const soldier of mission.purpose === "rebase" || !engineersReady ? [] : soldiers) {
         if (bodyMass(soldier) > room || (mission.purpose !== "evacuate" && strengthLeft - unitStrengthForFerry(soldier) < strengthOf(threats) * 1.3))
             continue;
