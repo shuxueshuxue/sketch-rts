@@ -44,7 +44,7 @@ function campRecoveryPatients(snapshot: GameSnapshot, owner: PlayerId, options: 
 
 /** Predict exposed camp casualties before battlefield target selection can claim them. */
 export const campRecovery: AiScript = {
-  id: 'campRecovery', phase: 'tactics',
+  id: 'campRecovery', phase: 'tactics', redirects: 'local',
   claimsUnits: (snapshot, owner, options) => new Set(campRecoveryPatients(snapshot, owner, options).map(({ patient }) => patient.id)),
   run: (snapshot, owner, options): GameCommand[] => {
     const camp = options.memory.v6?.creep;

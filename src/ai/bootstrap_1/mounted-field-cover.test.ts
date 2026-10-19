@@ -6,7 +6,7 @@ import { setBuildingBodies, snapToFootprint } from '../../shared/terrain';
 import { createAiPolicyMemory } from '../memory';
 import { runAiCommandEntriesFromScripts } from '../policy/script-runner';
 import { bootstrapPolicyContext } from './policy';
-import { mountedField, mountedFieldTargets } from './mounted-field';
+import { mountedField, mountedFieldOwns, mountedFieldPlans, mountedFieldTargets } from './mounted-field';
 import { mountedFiringPoint } from './mounted-tasks';
 
 // Field admission counts finished towers and armed non-workers as cover. An unfinished tower and the
@@ -44,3 +44,27 @@ it.each((['v9_archer', 'v9_summoner', 'v9_knight'] as const).flatMap(version =>
     const last = commands.at(-1)!;
     expect(last.type === 'move' && Math.hypot(last.x - station.x, last.y - station.y)).toBeLessThanOrEqual(MOVE_ORDER_ARRIVAL_RANGE);
   });
+
+
+it('leaves a rider with its actual commander when field orders lose an ownership conflict', () => {
+  const game = sketchScene('mounted-field-accepted-ownership').map('bareDuel').replaceDefaults()
+    .player('us', { race: 'grove', team: 'a' }).player('foe', { race: 'grove', team: 'b' })
+    .townHall('us', 500, 500).townHall('foe', 3500, 3500)
+    .unit('us', 'horseArcher', 1000, 1600, { id: 'rider' })
+    .unit('foe', 'footman', 1500, 1600, { id: 'objective' }).build().createGame();
+  const snapshot = snapshotGame(game);
+  const options = bootstrapPolicyContext(snapshot, 'us', 'v9_archer', { memory: createAiPolicyMemory(), teams: game.teams });
+  expect(mountedFieldPlans(snapshot, 'us', options).map(plan => plan.rider.id)).toEqual(['rider']);
+  let observed: boolean | undefined;
+  const entries = runAiCommandEntriesFromScripts(snapshot, 'us', [
+    { id: 'rescue', phase: 'tactics',
+      claimsUnits: () => new Set(['rider']),
+      run: () => ({ type: 'move', unitIds: ['rider'], x: 600, y: 600 }) },
+    mountedField,
+    { id: 'commander', phase: 'tactics', run(frame, owner) {
+      observed = mountedFieldOwns(frame, owner, 'rider'); return [];
+    } },
+  ], options);
+  expect(entries.map(entry => entry.scriptId)).toEqual(['rescue']);
+  expect(observed).toBe(false);
+});

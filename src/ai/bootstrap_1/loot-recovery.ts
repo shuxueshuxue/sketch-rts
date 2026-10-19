@@ -78,7 +78,7 @@ export function planLootItemCommands(snapshot: GameSnapshot, owner: PlayerId, op
 
 /** The normal command queue preserves the return trip even after an experience book is consumed. */
 export const lootRecovery: AiScript = {
-  id: 'lootRecovery', phase: 'tactics', claimsUnits: lootRecoveryUnitIds,
+  id: 'lootRecovery', phase: 'tactics', redirects: 'strategic', claimsUnits: lootRecoveryUnitIds,
   run: (snapshot, owner, options): GameCommand[] => {
     const active = liveLootTask(snapshot, owner, options);
     if (active) {

@@ -9,7 +9,7 @@ type RepairAssignment = { worker: Unit; tower: Building };
 
 export const battleRepair: AiScript = {
   id: 'battleRepair',
-  phase: 'tactics',
+  phase: 'tactics', redirects: 'local',
   run: planBattleRepairs,
   claimsUnits: (snapshot, owner, options) => new Set(repairAssignments(snapshot, owner, options).map(({ worker }) => worker.id)),
 };

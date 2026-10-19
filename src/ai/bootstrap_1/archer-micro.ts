@@ -25,7 +25,7 @@ function archerSkirmish(snapshot: GameSnapshot, owner: PlayerId, options: AiPoli
 
 export const archerMicro: AiScript = {
   id: 'skirmishPreservation',
-  phase: 'tactics',
+  phase: 'tactics', redirects: 'local',
   run(snapshot, owner, options) {
     return archerSkirmish(snapshot, owner, options)
       .map(command => command.type === 'attackMove' ? { ...command, type: 'move' as const, avoidCombat: true } : command);

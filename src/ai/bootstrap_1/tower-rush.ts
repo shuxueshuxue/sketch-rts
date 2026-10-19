@@ -142,7 +142,7 @@ function rush(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext)
 }
 
 export const summonerTowerRush: AiScript = {
-  id: JOB, phase: 'tactics',
+  id: JOB, phase: 'tactics', redirects: 'strategic',
   claimsUnits(snapshot, owner, options) {
     const plan = rush(snapshot, owner, options);
     return new Set(plan ? [...plan.casters.map(unit => unit.id), ...plan.fighters.map(unit => unit.id),
@@ -194,7 +194,7 @@ export function towerRushEngaged(options: AiPolicyContext) {
 
 /** This host advances behind towers rather than waiting for the general's separate assault pulse. */
 export const towerRushAbilities: AiScript = {
-  id: 'abilities', phase: 'tactics',
+  id: 'abilities', phase: 'tactics', redirects: 'local',
   run(snapshot, owner, options) {
     const general = options.memory.v6?.general;
     return planBootstrapAbilities(snapshot, owner, towerRushEngaged(options) && general?.stage === 'gather'

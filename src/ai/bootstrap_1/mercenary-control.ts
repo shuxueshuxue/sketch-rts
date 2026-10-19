@@ -104,7 +104,7 @@ export function mercenaryControlUnitIds(snapshot: GameSnapshot, owner: PlayerId,
   const courier = activeCourier(snapshot, owner, options);
   return new Set([...(courier ? [courier.unit.id] : []), ...campVisitors(snapshot, owner, options).map(({ unit }) => unit.id), ...returningMercenaries(snapshot, owner, options).map(({ unit }) => unit.id), ...mercenaryAssignment(snapshot, owner, options).map(({ unit }) => unit.id)]);
 }
-export const mercenaryControl = { id: 'mercenaryControl', phase: 'tactics', claimsUnits: mercenaryControlUnitIds,
+export const mercenaryControl = { id: 'mercenaryControl', phase: 'tactics', redirects: 'strategic', claimsUnits: mercenaryControlUnitIds,
   run: (snapshot, owner, options): GameCommand[] => {
     if (activeCourier(snapshot, owner, options) === undefined) delete options.memory.mercenaryCourier;
     const returns = returningMercenaries(snapshot, owner, options), returnIds = new Set(returns.map(({ unit }) => unit.id));
