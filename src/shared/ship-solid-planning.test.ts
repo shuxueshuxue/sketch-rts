@@ -80,9 +80,9 @@ it('keeps the same frozen solid geometry when a pending search is cold-restored'
     expect(sweepShipCollision(map, ship, units, previous, next)).toBeUndefined();
     previous = next;
   }
-  const legacy = JSON.parse(restored.sailing!.planningJob!);
-  legacy.version = 1; delete legacy.solids;
-  restored.sailing!.planningJob = JSON.stringify(legacy);
+  const oldJob = JSON.parse(restored.sailing!.planningJob!);
+  oldJob.version = 1; delete oldJob.solids;
+  restored.sailing!.planningJob = JSON.stringify(oldJob);
   expect(validShipPlanningJob(restored, goal, map)).toBe(false);
 });
 
