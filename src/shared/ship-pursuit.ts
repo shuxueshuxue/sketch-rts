@@ -206,7 +206,7 @@ export function shipPursuitGoal(ship: Unit, requested: Target, units: readonly U
     const parked=ships.filter(other=>other!==ship && other.owner===ship.owner && other.hp>0
       && other.sailing?.pursuit?.targetId===target.id && other.sailing.pursuit.phase==='engage'
       && Math.hypot(other.sailing.velocityX??0,other.sailing.velocityY??0)<1);
-    const approachTraffic=shipTraffic(ship,parked,Infinity);
+    const approachTraffic=shipTraffic(ship,parked,Infinity,map);
     const accessible=(candidate:{x:number;y:number})=>{
       if(!parked.length)return true;
       const heading=Math.atan2(candidate.y-ship.y,candidate.x-ship.x);

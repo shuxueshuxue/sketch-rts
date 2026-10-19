@@ -153,7 +153,7 @@ export function shipBoardingGoal(map:GameMap,units:readonly Unit[],source:Unit,t
     const pose=shipContactGoal(probe,station,[target]);if(!pose)continue;
     pose.x-=side*detSin(heading)*APPROACH_GAP;pose.y+=side*detCos(heading)*APPROACH_GAP;
     const candidate={...source,x:pose.x,y:pose.y,sailing:{...source.sailing!,heading}};
-    if(!hullFits(map,source,pose)||!shipTraffic(candidate,units.filter(ship=>ship!==source&&ship!==target))(pose,pose)||!deploymentAnchors(candidate,target))continue;
+    if(!hullFits(map,source,pose)||!shipTraffic(candidate,units.filter(ship=>ship!==source&&ship!==target),600,map)(pose,pose)||!deploymentAnchors(candidate,target))continue;
     const cost=Math.hypot(source.x-pose.x,source.y-pose.y)+Math.abs(headingDifference(source.sailing!.heading,heading))*shipProfile(source)!.length/2;
     if(cost<score){score=cost;best=pose;}
   }

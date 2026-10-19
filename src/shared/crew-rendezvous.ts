@@ -40,7 +40,7 @@ function rendezvous(map:GameMap,units:readonly Unit[],source:Unit,target:Unit,cr
     const a={...source,x:sourcePose.x,y:sourcePose.y,sailing:{...source.sailing!,heading}},b={...target,x:targetPose.x,y:targetPose.y,sailing:{...target.sailing!,heading}};
     const traffic=units.filter(unit=>unit!==source&&unit!==target);
     if(!hullFits(map,source,sourcePose)||!hullFits(map,target,targetPose)||!decksSupportCrossing(a,b,crew)
-      ||!shipTraffic(a,traffic)(sourcePose,sourcePose)||!shipTraffic(b,traffic)(targetPose,targetPose))continue;
+      ||!shipTraffic(a,traffic,600,map)(sourcePose,sourcePose)||!shipTraffic(b,traffic,600,map)(targetPose,targetPose))continue;
     const score=Math.hypot(sourcePose.x-source.x,sourcePose.y-source.y)+Math.abs(headingDifference(source.sailing!.heading,heading))*shipProfile(source)!.length/2
       +(reciprocal?Math.hypot(targetPose.x-target.x,targetPose.y-target.y)+Math.abs(headingDifference(target.sailing!.heading,heading))*shipProfile(target)!.length/2:0);
     if(score<bestScore){bestScore=score;best={sourceId:source.id,sourceX:sourcePose.x,sourceY:sourcePose.y,heading,targetX:targetPose.x,targetY:targetPose.y,reciprocal};}

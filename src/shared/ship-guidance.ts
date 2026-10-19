@@ -190,7 +190,7 @@ export function followShipRoute(ship: Unit, map: GameMap, units: readonly Unit[]
   if(!firing && !movingIntercept && points.length===1 && endGap<=surge && Math.abs(error)<=perTick(limits.turnRate)){
     surge=endGap;yaw=error;yawRate=yaw*SIM_TICKS_PER_SECOND;
   }
-  const start:ShipPose={x:ship.x,y:ship.y,heading:motion.heading},traffic=shipTraffic(ship,units);
+  const start:ShipPose={x:ship.x,y:ship.y,heading:motion.heading},traffic=shipTraffic(ship,units,600,map);
   const safe=(step:number,turn:number)=>{
     // Check a braking horizon, rather than rejecting a useful curve because
     // an unchanging helm held far into the future would eventually hit land.
