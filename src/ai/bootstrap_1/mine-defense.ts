@@ -1,3 +1,4 @@
+import { beginTerritoryThink, finishTerritoryThink, territoryPostCommands, territoryControlsHold } from './territory-pressure';
 import { harassSquadAssignment, harassSquadGuard, mountedHarassment, planHarassSquad, recordHarassSquadCommands } from './harass-squad';
 import { mercenaryControlUnitIds } from './mercenary-control';
 import { assistExpansionMission, expansionMissionCommands, expansionMissionUnitIds } from './expansion-mission';
@@ -163,6 +164,15 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
     defendedHall = covered && nearestByRoute(snapshot.map, intel.ownHalls, covered.hall, 'land');
     return covered;
   })();
+  const safeTerritory = !defense && !intel.intrusion;
+  // With every front fighter borrowed, the shared planner returns before
+  // setting a defense anchor. A stale forward post must not keep its casters
+  // walking away from the threatened home in that interval.
+  if (!safeTerritory && options.memory.territory?.objective && beforePriority?.mode === 'hold') {
+    const point = defense?.point ?? intel.intrusion?.building ?? intel.home;
+    beforePriority.target = { x: point.x, y: point.y };
+  }
+  beginTerritoryThink(snapshot, options, safeTerritory);
   const task = options.memory.landAttack;
   const living = task?.general.group?.filter(id => snapshot.units.some(unit => unit.id === id)) ?? [];
   const borrowed = living.length > 0 && living.every(id => reserved.has(id));
@@ -186,7 +196,7 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
       || snapshot.players[owner]!.gold >= BUILDING_DEFS.townHall.cost
       || snapshot.units.some(unit => unit.owner === owner && unit.kind === 'worker'
         && unit.order.type === 'build' && unit.order.buildingKind === 'townHall'),
-    chooseCamp: (...args) => expansion === undefined ? chooseBootstrapCamp(intel.home, ...args) : undefined,
+    chooseCamp: (...args) => expansion === undefined && !territoryControlsHold(snapshot, options) ? chooseBootstrapCamp(intel.home, ...args) : undefined,
     startCamp: startBootstrapCamp,
     campTerritory: 'ground',
     chooseMine: (view, world) => expansion === undefined ? bootstrapExpansionMine(view, owner, world, options) : undefined,
@@ -246,9 +256,12 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
     commands.push(...retreatV6Front(snapshot, owner, leaving, general!.target!, options)
       .map(command => ({ ...command, avoidCombat: true })));
   }
+  let assisting = false;
   if (general?.mode === 'hold') {
-    const assistance = assistExpansionMission(snapshot, owner, options, army);
-    const helping = new Set(assistance.flatMap(command => 'unitIds' in command ? command.unitIds : []));
+    const pressure = territoryPostCommands(snapshot, owner, options, intel, safeTerritory);
+    const assistance = pressure?.commands ?? assistExpansionMission(snapshot, owner, options, army);
+    assisting = pressure === undefined && assistance.length > 0;
+    const helping = new Set(pressure?.unitIds ?? assistance.flatMap(command => 'unitIds' in command ? command.unitIds : []));
     commands = commands.flatMap((command): GameCommand[] => {
       if (!('unitIds' in command)) return [command];
       const unitIds = command.unitIds.filter(id => !helping.has(id));
@@ -256,6 +269,7 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
     });
     commands.push(...assistance);
   }
+  finishTerritoryThink(snapshot, options, intel, safeTerritory, assisting);
   observeLandAttack(snapshot, options, retreatBefore);
   const road = options.memory.landAttack?.camp ? undefined : attackRoadCampCommands(snapshot, owner, options, intel, true);
   if (road !== undefined) return [...(expansion ?? []), ...road];

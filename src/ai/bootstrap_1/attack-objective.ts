@@ -1,3 +1,4 @@
+import { localPressureAttack } from './territory-pressure';
 import { constructionWorkers } from '../../shared/construction';
 import { groundTravelCost, walkingDistance } from '../../shared/terrain';
 import { routeClearsDisks } from '../../shared/route-selection';
@@ -72,7 +73,7 @@ export function chooseRoomAttack(snapshot: GameSnapshot, options: AiPolicyContex
       / unit.speed * SIM_TICKS_PER_SECOND >= remaining)) return false;
     return front.every(unit => attackArrivalTicks(snapshot, unit, hall) < remaining);
   });
-  const expansion = rising ?? expansions.find(canAttack);
+  const expansion = rising ?? expansions.find(canAttack) ?? localPressureAttack(snapshot, options, intel, expansions);
   // The first wave dismantles an income, rather than bypassing a defended
   // expansion to march around it at the distant main. Build the needed force.
   if (expansion || expansions.length && !options.memory.v6?.plays?.['attack:result:destroyed']) return expansion;
