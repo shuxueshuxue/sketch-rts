@@ -19,6 +19,10 @@ The validator merges the core and extras and uses the game's `readSoundPack`, in
 It checks event names, unit kinds, volumes, pitch, variants and the presence of referenced audio files.
 Malformed extras are a release failure; they must not silently fall back to the core.
 
+The selected War3 mortar supplement has a [source, approved clip and release recipe](../../docs/reviews/war3-mortar-20261018.zh.md).
+Use `prepare-war3-mortar.py --reviewed-clip` to copy that approved Ogg without re-encoding, overlay its patch onto a
+complete snapshot of War3, then validate and publish the complete directory as below.
+
 After review and authorization to release, use the guarded upload:
 
 ```sh
