@@ -16,6 +16,7 @@ if (!map) throw new Error(`Unknown map ${mapId}`);
 const version = (flag(args, 'version') ?? 'v9_archer') as RoomAiVersion;
 if (!ROOM_AI_VERSIONS.includes(version)) throw new Error(`Unknown version ${version}`);
 const side = Number(flag(args, 'side') ?? 1), limit = Number(flag(args, 'limit') ?? 600);
+const reinforcementMode = args.includes('--reinforcements');
 if (![1, 2].includes(side) || !Number.isInteger(limit) || limit < 1) throw new Error('Invalid side or limit');
 const out = resolve(requiredFlag(args, 'out-dir'));
 mkdirSync(out, { recursive: true });
@@ -37,6 +38,8 @@ host.resetRoom(id, map.id, { aiPlayers: room.slots.map(slot => slot.playerId),
 host.enableDebugReplay(id, { id: `${id}-initial`, label: `${map.name}: first combat crossing` });
 const seats = room.slots.filter(slot => slot.team === `team-${side}`).map(slot => slot.playerId);
 const observed = new Map<string, string>();
+const transfers: Record<string, { tick: number; unitIds: string[]; shipId: string }[]> = {};
+const returns: Record<string, number> = {};
 let end = 0, firstAll: number | undefined;
 for (let second = 1; second <= limit; second++) {
   const { snapshot } = host.tickRoom(id, 20);
@@ -45,14 +48,24 @@ for (let second = 1; second <= limit; second++) {
   for (const owner of seats) {
     const memory = runtime.memories[owner]?.naval;
     const record = memory?.firstCombatDelivery;
-    const stage = JSON.stringify({ boats: record && Object.keys(record.attempts), delivered: record?.deliveredTick,
+    const delivered = transfers[owner] ??= [];
+    for (const [shipId, mission] of Object.entries(memory?.ferries ?? {})) {
+      if (mission.purpose !== 'reinforce') continue;
+      returns[owner] = Math.max(returns[owner] ?? 0, mission.returnTrips ?? 0);
+      for (const delivery of mission.deliveries ?? []) if (!delivered.some(row => row.shipId === shipId && row.tick === delivery.tick)) {
+        delivered.push({ ...delivery, shipId });
+      }
+    }
+    const stage = JSON.stringify({ boats: record && Object.keys(record.attempts), delivered: record?.deliveredTick, transfers: delivered.length, returns: returns[owner],
       decisions: memory?.ferryDecisions && Object.fromEntries(Object.entries(memory.ferryDecisions).map(([id, decision]) => [id, decision.reason])) });
     if (stage !== observed.get(owner)) {
       observed.set(owner, stage);
       console.log(JSON.stringify({ second, owner, record, ferries: memory?.ferries }));
     }
   }
-  if (seats.every(owner => runtime!.memories[owner]?.naval?.firstCombatDelivery?.deliveredTick !== undefined)) firstAll ??= second;
+  const reached = reinforcementMode ? seats.some(owner => (transfers[owner]?.length ?? 0) >= 2 && (returns[owner] ?? 0) >= 1)
+    : seats.every(owner => runtime!.memories[owner]?.naval?.firstCombatDelivery?.deliveredTick !== undefined);
+  if (reached) firstAll ??= second;
   if (second % 30 === 0 || firstAll === second) {
     writeFileSync(join(out, `${second}.json`), JSON.stringify({ snapshot, memories: runtime.memories }));
   }
@@ -67,21 +80,24 @@ const liveChecksum = host.checksumRoom(id), replayChecksum = checksumGame(cold);
 if (liveChecksum !== replayChecksum) throw new Error(`Replay diverged: ${liveChecksum} / ${replayChecksum}`);
 writeFileSync(join(out, 'replay.json'), JSON.stringify(trace));
 const results = seats.map(owner => ({ owner, record: runtime!.memories[owner]?.naval?.firstCombatDelivery,
-  decisions: runtime!.memories[owner]?.naval?.ferryDecisions }));
+  decisions: runtime!.memories[owner]?.naval?.ferryDecisions, transfers: transfers[owner] ?? [], returnTrips: returns[owner] ?? 0 }));
 for (const result of results) {
-  if (result.record?.deliveredTick === undefined) continue;
-  const start = Math.max(0, result.record.deliveredTick - 45 * 20), finish = Math.min(end, result.record.deliveredTick + 10 * 20);
+  const deliveredTick = reinforcementMode ? result.transfers.at(-1)?.tick : result.record?.deliveredTick;
+  if (deliveredTick === undefined) continue;
+  const firstTick = reinforcementMode ? result.transfers[0]!.tick : deliveredTick;
+  const start = Math.max(0, firstTick - 45 * 20), finish = Math.min(end, deliveredTick + 10 * 20);
   const clip = { ...trace, id: `${id}-${result.owner}-landing`,
     initialSave: extractReplayFrameSave(trace, start, { id: `${id}-${result.owner}-clip-start` }),
     frames: trace.frames.filter(frame => frame.tick >= start && frame.tick < finish), checkpoints: [] };
   const checksum = checksumGame(replayTraceToTick(clip, finish));
   if (checksum !== checksumGame(replayTraceToTick(trace, finish))) throw new Error(`Clip diverged for ${result.owner}`);
   writeFileSync(join(out, `${result.owner}-landing.replay.json`), JSON.stringify(clip));
-  writeFileSync(join(out, `${result.owner}-landed.save.json`), JSON.stringify(extractReplayFrameSave(trace, result.record.deliveredTick,
+  writeFileSync(join(out, `${result.owner}-landed.save.json`), JSON.stringify(extractReplayFrameSave(trace, deliveredTick,
     { id: `${id}-${result.owner}-landed`, label: `${result.owner}: first combat landing` })));
 }
 const summary = { map: map.id, version, side, machine: { platform: process.platform, arch: process.arch, node: process.version },
   endTick: end, liveChecksum, replayChecksum, results };
 writeFileSync(join(out, 'summary.json'), JSON.stringify(summary, null, 2));
 console.log(JSON.stringify(summary));
-if (results.some(result => result.record?.deliveredTick === undefined)) process.exitCode = 1;
+if (reinforcementMode ? !results.some(result => result.transfers.length >= 2 && result.returnTrips >= 1)
+  : results.some(result => result.record?.deliveredTick === undefined)) process.exitCode = 1;

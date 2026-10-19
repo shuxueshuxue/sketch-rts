@@ -25,6 +25,7 @@ import { colonyRecoveryGoals } from './colony-recovery';
 import { armedFoes, retreatLandTravelTicks } from './safe-land-route';
 import { freeIncomeCapitalGoals } from './free-income-capital';
 import { trainingJobs } from "../../shared/building-jobs";
+import { reinforcementTransportWant } from './reinforcement-ferries';
 
 export const bootstrapEconomy: AiScript = {
   id: 'v6Economy',
@@ -115,7 +116,8 @@ const prepareMiningCover: Parameters<typeof collectV6Goals>[5] = (economy, mine,
 
 export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const goals = collectV6Goals(snapshot, owner, options, constructBootstrap,
-    (view, player, context) => colonyNavalWantWithMineEligibility(view, player, context, mountedMinePlan(view, context.memory).eligible), prepareMiningCover,
+    (view, player, context) => reinforcementTransportWant(view, player, context)
+      ?? colonyNavalWantWithMineEligibility(view, player, context, mountedMinePlan(view, context.memory).eligible), prepareMiningCover,
     (view, intel) => bootstrapExpansionMine(view, owner, intel, options),
     economy => [...healingPostGoals(economy), ...freeIncomeCapitalGoals(economy)]);
   goals.push(...controlledMercenaryGoals(snapshot, owner, options));
@@ -182,6 +184,8 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
 // Only the candidate's purchase order changes; all commands spend ordinary gold and supply.
 export function planBootstrapEconomy(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
   const goals = rankBootstrapGoals(snapshot, owner, options);
+  const nextLift = goals.find(goal => goal.id === 'naval:reinforcementTransport');
+  if (nextLift) { goals.splice(goals.indexOf(nextLift), 1); goals.unshift(nextLift); }
   const player = snapshot.players[owner]!;
   const awaitingCrew = options.memory.naval?.firstCombatDelivery?.deliveredTick === undefined
     && Object.values(options.memory.naval?.ferries ?? {}).some(mission => mission.phase === 'loading'
