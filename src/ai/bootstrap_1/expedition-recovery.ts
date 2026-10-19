@@ -23,6 +23,7 @@ import { planRiderCrossing, riderFerryCrew } from './rider-crossing';
 import { transportRecovery } from './transport-recovery';
 import { postRecoveryAssignments, postRecoveryCommands } from './front-recovery';
 import { strikersOf } from '../policy/threat-reach';
+import { planReinforcementFerries, reinforcementCrew } from './reinforcement-ferries';
 
 
 function incomingDamage(patient: Unit, foes: readonly (Unit | Building)[], window: number) {
@@ -101,6 +102,7 @@ export function expeditionRecoveryUnitIds(snapshot: GameSnapshot, owner: PlayerI
 
 /** An expedition's naval ownership also owns its land recovery orders. */
 export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
+  planReinforcementFerries(snapshot, owner, options);
   planRiderCrossing(snapshot, owner, options);
   planFirstCombatCrossing(snapshot, owner, options);
   const ferries = options.memory.naval?.ferries, cancelled: GameCommand[] = [];
@@ -120,7 +122,10 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
     ...posts.map(({ patient }) => patient.id), ...medics, ...ports.ids]);
   const mounted = new Set(options.memory.mounted?.flatMap(job => job.unitIds));
   const commands = [...cancelled, ...planNavalTacticsWithAssignments(snapshot, owner, options, {
-    orderCrew: (soldiers, shore, boat) => riderFerryCrew(snapshot, soldiers, shore, boat, options),
+    orderCrew: (soldiers, shore, boat) => riderFerryCrew(snapshot,
+      options.memory.naval?.ferries?.[boat.id]?.purpose === 'reinforce'
+        ? reinforcementCrew(snapshot, owner, options, soldiers, options.memory.naval.ferries[boat.id]!.to) : soldiers,
+      shore, boat, options),
     mineEligible: mines.eligible, targetAvailable: mines.targetAvailable,
     transportReady: boat => !shipNeedsRepair(snapshot, boat),
     troopAvailable: unit => !mounted.has(unit.id) && !reserved.has(unit.id),
