@@ -1694,6 +1694,7 @@ function updateFollowOrder(game: Game, unit: Unit) {
   const order = unit.order;
   const target = game.units.find((candidate) => candidate.id === order.targetId && !areEnemyOwners(game, candidate.owner, unit.owner));
   if (!target) {
+    setGuardPosition(game, unit);
     unit.order = { type: "idle" };
     return;
   }
@@ -1839,6 +1840,15 @@ function attackStep(game: Game, unit: Unit, order: AttackOrder, navalFrame: bool
     return;
   }
   if (!target) {
+    // A second local fight may continue, but it inherits the same station rather than today's position.
+    const replacement = station ? nearestEnemyTarget(game, unit, Math.max(AUTO_ACQUIRE_RANGE, unit.attackRange), navalFrame,
+      candidate => distance(candidate, station) <= GUARD_LEASH_RANGE) : undefined;
+    if (replacement) {
+      const next: AttackOrder = { ...order, targetId: replacement.id };
+      write(next);
+      attackStep(game, unit, next, navalFrame, write);
+      return;
+    }
     write({ type: "idle" });
     return;
   }
@@ -1999,6 +2009,7 @@ function updateGarrisonOrder(game: Game, unit: Unit) {
   applyDerivedUnitStats(game, unit);
   invalidateSeparationFrame(game);
   settleGarrisons(game);
+  setGuardPosition(game, unit);
 }
 
 /** Sets a troop down at its tower's foot toward a point (see @@@tower-garrison). */
@@ -2757,7 +2768,7 @@ function updateCastOrder(game: Game, unit: Unit) {
   const def = ABILITY_DEFS[order.ability];
   const target = order.targetId === undefined ? undefined : findStrikeTarget(game, order.targetId);
   // Done (no reason) or ended before casting (see @@@errand).
-  const end = (reason?: OrderEndReason) => { if (reason) endOrder(game, unit, reason); else unit.order = { type: "idle" }; };
+  const end = (reason?: OrderEndReason) => { if (reason) endOrder(game, unit, reason); else { setGuardPosition(game, unit); unit.order = { type: "idle" }; } };
   // Saves can contain a cast for an ability removed from the catalog.
   if (!def) return end("refused");
   if (def.behavior === "veteran") {
@@ -3991,9 +4002,9 @@ function nearestEnemyUnit(game: Game, owner: PlayerId, x: number, y: number, ran
 
 // The best enemy for a unit to strike within the range: none for a unit without a weapon, and only what it can reach
 // (see @@@reach).
-function nearestEnemyTarget(game: Game, unit: Unit, range: number, navalFrame = true): Unit | Building | undefined {
+function nearestEnemyTarget(game: Game, unit: Unit, range: number, navalFrame = true, accepts?: (target: Unit | Building) => boolean): Unit | Building | undefined {
   if (unit.attackDamage <= 0) return undefined;
-  return nearestEnemyTargetFromPoint(game, unit.owner, unit, range, unit, undefined, navalFrame);
+  return nearestEnemyTargetFromPoint(game, unit.owner, unit, range, unit, accepts, navalFrame);
 }
 
 // @@@building-reach - Buildings and ships are reached at their edges, other units at their centers: a footman's 48 reaches a

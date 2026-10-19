@@ -81,6 +81,17 @@ describe('human guard position', () => {
     expect(guard.order).toMatchObject({ type: 'attack', targetId: next.id, leashX: 1000, leashY: 1500 });
   });
 
+  it('inherits the original station when continuing into another nearby fight', () => {
+    const { game, guard } = duel();
+    const first = game.spawnUnit('enemy', 'worker', 1200, 1500);
+    for (let tick = 0; tick < 80 && guard.x < 1150; tick++) stepGame(game);
+    first.hp = 0;
+    const next = game.spawnUnit('enemy', 'worker', 1330, 1500);
+    stepGame(game); stepGame(game);
+    expect(guard.order).toMatchObject({ type: 'attack', targetId: next.id, leashX: 1000, leashY: 1500 });
+    expect(guard.guardPosition).toEqual({ x: 1000, y: 1500 });
+  });
+
   it('leaves explicit attacks and attack-moves free to pursue beyond the old station', () => {
     for (const type of ['attack', 'attackMove'] as const) {
       const { game, guard } = duel();
@@ -107,6 +118,26 @@ describe('human guard position', () => {
     for (let tick = 0; tick < 300 && recruit.order.type !== 'idle'; tick++) stepGame(game);
     expect(Math.hypot(recruit.x - 1700, recruit.y - 1500)).toBeLessThan(8);
     expect(recruit.guardPosition).toEqual({ x: recruit.x, y: recruit.y });
+  });
+
+  it('keeps queued movement authoritative and establishes the last reached station', () => {
+    const { game, guard } = duel();
+    issuePlayerCommand(game, 'player', { type: 'move', unitIds: [guard.id], x: 1400, y: 1500 });
+    issuePlayerCommand(game, 'player', { type: 'move', unitIds: [guard.id], x: 2000, y: 1500, queued: true });
+    for (let tick = 0; tick < 400; tick++) stepGame(game);
+    expect(guard.order.type).toBe('idle');
+    expect(guard.x).toBeGreaterThan(1990);
+    expect(guard.guardPosition).toEqual({ x: guard.x, y: guard.y });
+  });
+
+  it('establishes the reached tower station instead of walking back to the pre-garrison position', () => {
+    const { game, guard } = duel();
+    const tower = createBuilding('tower', 'player', 'fortifiedTower', 2000, 1500, true);
+    game.buildings.push(tower);
+    issuePlayerCommand(game, 'player', { type: 'garrison', unitIds: [guard.id], buildingId: tower.id });
+    for (let tick = 0; tick < 500; tick++) stepGame(game);
+    expect(guard.garrison?.buildingId).toBe(tower.id);
+    expect(guard.guardPosition).toEqual({ x: guard.x, y: guard.y });
   });
 
   it('persists independent station/return state and restores controller identity at checkpoints', () => {

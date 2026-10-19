@@ -7,10 +7,11 @@ type Snapshot = { tick: number; units: Soldier[] };
 export default async function (s: Scene) {
   await s.room('templeSpring');
   const soldiers = ['guard-0', 'guard-1', 'guard-2'];
-  const baits = Array.from({ length: 8 }, (_, i) => ({ id: `bait-${i}`, owner: 'enemy', kind: 'worker', x: 1650 + i * 175, y: 2000 }));
+  const baits = Array.from({ length: 8 }, (_, i) => ({ id: `bait-${i}`, owner: 'enemy', kind: 'worker', x: 1550 + i * 175, y: 2000 }));
   await s.api(`/api/rooms/${s.roomId}/reset`, { mapId: 'bareDuel', options: { players: ['player', 'enemy', 'enemy2', 'player-4'], aiPlayers: [], teams: { player: 'a', enemy: 'b', enemy2: 'a', 'player-4': 'b' },
     layout: { seed: 'human-guard-proof', kind: 'sides', idea: 'openSides', size: 4096 }, scenario: {
     replaceDefaultUnits: true,
+    replaceDefaultLandmarks: true,
     replaceDefaultResources: true, replaceDefaultMercenaryCamps: true,
     addUnits: [...soldiers.map((id, i) => ({ id, owner: 'player', kind: 'footman', x: 1200, y: 1960 + i * 40 })), ...baits],
     addBuildings: [{ id: 'guard-post', owner: 'player', kind: 'farm', x: 1450, y: 2220, complete: true }],
