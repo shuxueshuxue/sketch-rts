@@ -5153,10 +5153,18 @@
       "command": "vitest run --dir src --maxWorkers 8 --minWorkers 8",
       "filesPassed": 693,
       "testsPassed": 7757,
-      "seconds": 215.61
+      "seconds": 213.64
     },
     "tsc": true,
-    "relatedRegressions": "expedition-available-force与reinforcement-ferries共30项通过；没有依赖放宽这些断言。"
+    "relatedRegressions": "expedition-available-force与reinforcement-ferries共30项通过；没有依赖放宽这些断言。",
+    "cli": {
+      "tests": 20,
+      "files": 2,
+      "command": "vitest run --dir tools/cli",
+      "tscCommand": "tsc -p tools/cli/tsconfig.json",
+      "tscExit": 0,
+      "note": "CI发现浏览器场景host参数缺少类型，补充显式注解后重新验证CLI与完整src测试。游戏src/scripts运行时代码未变。"
+    }
   },
   "mac1": {
     "command": "SKETCH_MACHINES=~/.config/sketch/machines-naval.json bin/sketch yatu naval-island-conquest --ref HEAD --on mac1 --locale zh-CN --json",
@@ -5172,7 +5180,8 @@
       "900秒完整基地、矿和防守火力"
     ],
     "scene": "tools/cli/scenes/naval-island-conquest.ts",
-    "sceneSha256": "ab0fe0af8edba4a8ca32b523bd01ab7c2f20f342f0752e0c6f8b3123233eb31d"
+    "sceneSha256": "899f0666cc0c97e9550659acfd8bc48c855794c54e88e73d032d5b6092064507",
+    "sceneTypeAnnotation": "复现脚本补充host参数的TypeScript注解；运行时JS行为与截图生成时相同。"
   },
   "reviewFix": {
     "request": "保留安全滩头的逐批补兵，恢复碎海两席，不降低清营余量。",

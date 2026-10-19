@@ -1,7 +1,7 @@
 import type { Scene } from '../drivers/browser';
 export default async function(s: Scene) {
   const host={id:'afk-human',name:'AFK human'};
-  await s.page.evaluate(host=>localStorage.setItem('sketch-rts-user',JSON.stringify(host)),host);
+  await s.page.evaluate((host: { id: string; name: string })=>localStorage.setItem('sketch-rts-user',JSON.stringify(host)),host);
   const room:any=await s.api('/api/rooms',{id:'corner-intent-ringwater',host,mapId:'ringwater',visibility:'private',humanCount:1,aiCount:3});
   await s.api(`/api/rooms/${room.id}/start`,{userId:host.id});
   await s.api(`/api/rooms/${room.id}/pause`,{});
