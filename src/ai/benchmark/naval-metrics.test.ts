@@ -78,3 +78,19 @@ it('prices an equipped sunken warship once, including its cannon', () => {
   expect(result().enemy!.lostGold).toBe(UNIT_DEFS.warship.cost);
   expect(result().player!.enemyLostGold).toBe(UNIT_DEFS.warship.cost);
 });
+
+it('does not count repeatedly boarding and leaving a ferry on an already occupied island as a new landing or round trip', () => {
+  const { game, sample, result } = measurement();
+  const boat = createUnit('ferry', 'player', 'transport', 2900, 1500);
+  const soldier = createUnit('local-recruit', 'player', 'footman', 3500, 1500);
+  game.units = [boat, soldier]; sample(1);
+  for (let second = 2; second <= 10; second += 2) {
+    soldier.deck = { shipId: boat.id, x: 0, y: 0 }; sample(second);
+    delete soldier.deck; sample(second + 1);
+  }
+  expect(result().player!.firstLandingSecond).toBeNull();
+  expect(result().player!.firstMilitaryLandingSecond).toBeNull();
+  expect(result().player!.deliveries).toBe(0);
+  expect(result().player!.roundTrips).toBe(0);
+  expect(result().player!.landings.every(event => !event.crossed)).toBe(true);
+});

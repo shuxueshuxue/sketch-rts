@@ -1,9 +1,10 @@
 import type { BenchmarkTracker } from '../../sdk/benchmark/core';
+import { unitMover } from '../../shared/catalog';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { SHIP_HULL_COST, SHIP_WEAPONS, installedWeapons } from '../../shared/ship-equipment';
 import { isShipKind, shipProfile } from '../../shared/ship-geometry';
 import { headingDifference } from '../../shared/ship-navigation';
-import { sameGround } from '../../shared/terrain';
+import { sameGround, walkableGoal } from '../../shared/terrain';
 import { SIM_TICKS_PER_SECOND as TPS } from '../../shared/time';
 import { isTransportKind } from '../../shared/transport-role';
 import type { GameSnapshot, PlayerId, Unit, UnitKind, UnitOrder } from '../../shared/types';
@@ -31,7 +32,7 @@ export type NavalOwnerMetrics = {
   shipSeconds: number;
   deliveries: number;
   roundTrips: number;
-  landings: { second: number; shipId: string; workers: number; military: number; remote: boolean; x: number; y: number }[];
+  landings: { second: number; shipId: string; unitId: string; kind: UnitKind; workers: number; military: number; remote: boolean; crossed: boolean; from: Point; x: number; y: number }[];
   plans: IslandAttempt[];
   ships: { id: string; kind: UnitKind; bornSecond: number; sunkSecond: number | null; capturedSecond: number | null; gold: number; idleSeconds: number; stalledSeconds: number }[];
   samples: NavalShipSample[];
@@ -41,8 +42,10 @@ type ShipState = Point & { owner: PlayerId; record: ShipRecord; heading: number;
 type State = {
   owners: Record<PlayerId, NavalOwnerMetrics>; homes: Record<PlayerId, Point>;
   ships: Map<string, ShipState>; aboard: Map<string, string>;
-  // A delivery is counted once per boarding-to-unloading cycle. Returning empty still completes a round trip.
-  voyages: Map<string, { origin: Point; delivered: boolean; unitIds: Set<string> }>;
+  ground: Map<string, Point>; origins: Map<string, Point>;
+  // Count a completed excursion only after crew really reach a different land mass,
+  // the hull leaves the departure area, and it returns there. Same-island reboarding is not a voyage.
+  voyages: Map<string, { owner: string; origin: Point; ground: Point; left: boolean; delivered: boolean; unitIds: Set<string> }>;
 };
 
 /** Passive measurement only. The optional memory reader observes the actual planner, never reruns policy. */
@@ -51,32 +54,35 @@ export function createNavalMetricsTracker(options: {
   memory?: (owner: PlayerId) => AiPolicyMemory | undefined;
   // Detailed samples are optional; aggregate counters and every plan/landing are always retained.
   sampleSeconds?: number;
+  ferriesOnly?: boolean;
 } = {}): BenchmarkTracker<AiGameAgent, State, Record<PlayerId, NavalOwnerMetrics>> {
   const minutes = options.minutes ?? [3, 5, 10, 15, 20, 30, 40];
   return {
-    id: 'naval',
+    id: options.ferriesOnly ? 'navalFerries' : 'naval',
     create: ({ game, players }) => ({
       owners: Object.fromEntries(players.map(owner => [owner, emptyOwner()])),
       homes: Object.fromEntries(players.map(owner => {
         const hall = game.buildings.find(b => b.owner === owner && b.kind === 'townHall')!;
         return [owner, { x: hall.x, y: hall.y }];
       })),
-      ships: new Map(), aboard: new Map(), voyages: new Map(),
+      ships: new Map(), aboard: new Map(), voyages: new Map(), origins: new Map(),
+      ground: new Map(game.units.filter(unit => !unit.deck && unit.owner !== 'neutral' && unitMover(unit.kind) === 'land').map(unit => [unit.id, { x: unit.x, y: unit.y }])),
     }),
     afterStep(state, { after, players }) {
       const now = after.tick / TPS;
       const units = new Map(after.units.map(unit => [unit.id, unit]));
-      const hulls = after.units.filter(unit => isShipKind(unit.kind) && unit.owner in state.owners && unit.hp > 0);
       // Observe every tick: a boarding, death or unload between one-second samples must not disappear.
       const nextAboard = new Map<string, string>();
       const landed = new Map<string, Unit[]>();
       for (const unit of after.units) {
         const boat = unit.deck && units.get(unit.deck.shipId);
-        if (boat && isTransportKind(boat.kind)) {
+        if (boat && !state.origins.has(unit.id)) state.origins.set(unit.id, state.ground.get(unit.id) ?? walkableGoal(after.map, boat.x, boat.y));
+        if (boat && boat.owner in state.owners && isTransportKind(boat.kind)) {
           nextAboard.set(unit.id, boat.id);
           let voyage = state.voyages.get(boat.id);
+          if (voyage && voyage.owner !== boat.owner) { state.voyages.delete(boat.id); voyage = undefined; }
           if (!voyage) {
-            voyage = { origin: { x: boat.x, y: boat.y }, delivered: false, unitIds: new Set() };
+            voyage = { owner: boat.owner, origin: { x: boat.x, y: boat.y }, ground: { ...state.origins.get(unit.id)! }, left: false, delivered: false, unitIds: new Set() };
             state.voyages.set(boat.id, voyage);
           }
           voyage.unitIds.add(unit.id);
@@ -89,29 +95,35 @@ export function createNavalMetricsTracker(options: {
       }
       for (const [shipId, crew] of landed) {
         const boat = units.get(shipId)!;
-        const stats = state.owners[boat.owner];
-        const home = state.homes[boat.owner];
-        if (!stats || !home) continue;
-        const remote = !sameGround(after.map, home, crew[0]!);
-        const workers = crew.filter(unit => unit.kind === 'worker').length;
-        const military = crew.filter(unit => unit.kind !== 'worker' && unit.expiresTick === undefined).length;
-        stats.landings.push({ second: now, shipId, workers, military, remote, x: crew[0]!.x, y: crew[0]!.y });
-        if (remote) {
-          stats.firstLandingSecond ??= now;
-          if (military) stats.firstMilitaryLandingSecond ??= now;
+        for (const unit of crew) {
+          const stats = state.owners[unit.owner], home = state.homes[unit.owner], from = state.origins.get(unit.id);
+          if (!stats || !home || !from) continue;
+          const crossed = !sameGround(after.map, from, unit);
+          const remote = crossed && !sameGround(after.map, home, unit);
+          const workers = Number(unit.kind === 'worker'), military = Number(unit.kind !== 'worker' && unit.expiresTick === undefined);
+          stats.landings.push({ second: now, shipId, unitId: unit.id, kind: unit.kind, workers, military, remote, crossed, from: { ...from }, x: unit.x, y: unit.y });
+          if (remote) { stats.firstLandingSecond ??= now; if (military) stats.firstMilitaryLandingSecond ??= now; }
           const voyage = state.voyages.get(shipId);
-          if (voyage && !voyage.delivered) { stats.deliveries++; voyage.delivered = true; }
+          if (crossed && voyage && !sameGround(after.map, voyage.ground, unit) && !voyage.delivered) { state.owners[boat.owner]!.deliveries++; voyage.delivered = true; }
         }
       }
       state.aboard = nextAboard;
+      for (const unit of after.units) if (!unit.deck && unit.owner in state.owners && unitMover(unit.kind) === 'land') {
+        state.ground.set(unit.id, { x: unit.x, y: unit.y }); state.origins.delete(unit.id);
+      }
+      for (const id of state.origins.keys()) if (!units.has(id)) state.origins.delete(id);
       for (const [shipId, voyage] of state.voyages) {
         const boat = units.get(shipId);
-        if (!boat) { state.voyages.delete(shipId); continue; }
-        if (voyage.delivered && Math.hypot(boat.x - voyage.origin.x, boat.y - voyage.origin.y) <= 160) {
+        if (!boat || boat.owner !== voyage.owner) { state.voyages.delete(shipId); continue; }
+        const gap = Math.hypot(boat.x - voyage.origin.x, boat.y - voyage.origin.y);
+        if (gap > 160) voyage.left = true;
+        if (voyage.left && voyage.delivered && gap <= 160) {
           state.owners[boat.owner]!.roundTrips++;
           state.voyages.delete(shipId);
         } else if (!voyage.delivered && ![...nextAboard.values()].includes(shipId)) state.voyages.delete(shipId);
       }
+      if (options.ferriesOnly) return;
+      const hulls = after.units.filter(unit => isShipKind(unit.kind) && unit.owner in state.owners && unit.hp > 0);
       const liveHulls = new Set(hulls.map(hull => hull.id));
       for (const [id, previous] of state.ships) if (!liveHulls.has(id)) {
         // Captured hulls remain present. Only disappearance counts as a loss.

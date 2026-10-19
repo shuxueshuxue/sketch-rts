@@ -17,6 +17,7 @@ import type { AiPolicyMemory } from '../memory';
 import { strengthOf } from '../policy/v6/strength';
 import { navalObservedPlanner } from './naval-room-worker';
 import type { NavalRoomMatch } from './naval-room';
+import { createNavalMetricsTracker } from './naval-metrics';
 
 type Evidence = { second: number; shipId: string; riderId: string; targetId: string; gold: number; shoreGap: number; ownEligible: number; ownStrength: number; filteredStrength: number; enemyDemand: number; fullGuardSufficient: boolean };
 type Owner = { blockedSeconds: number; fullGuardSufficientSeconds: number; ships: Record<string, { gold: number; blockedSeconds: number; fullGuardSufficientSeconds: number; first: Evidence; sufficientExample?: Evidence }> };
@@ -107,7 +108,7 @@ function assetPrice(snapshot: GameSnapshot, unit: Unit) {
 
 export function runBenchmarkParallelMatch(match: NavalRoomMatch) {
   const memories: Record<string, AiPolicyMemory> = {};
-  const report = runBenchmarkMatch({ ...match, commandPlanner: navalObservedPlanner(memories) }, [createNavalLoadingDiagnostics(owner => memories[owner]) as never, createNavalTurnaroundDiagnostics(owner => memories[owner]) as never]);
+  const report = runBenchmarkMatch({ ...match, commandPlanner: navalObservedPlanner(memories) }, [createNavalLoadingDiagnostics(owner => memories[owner]) as never, createNavalTurnaroundDiagnostics(owner => memories[owner]) as never, createNavalMetricsTracker({ memory: owner => memories[owner], ferriesOnly: true }) as never]);
   if (match.naval.outDir) {
     mkdirSync(match.naval.outDir, { recursive: true });
     writeFileSync(join(match.naval.outDir, `${match.name.replaceAll(' ', '_')}.json`), JSON.stringify(report));
