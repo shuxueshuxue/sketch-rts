@@ -1,6 +1,6 @@
 # 人类玩家的持久驻点
 
-基准 `a2cff607`，实现和浏览器对照 `9339bb2a`。此次不跑胜率 benchmark。
+基准 `a2cff607`，实现和浏览器对照 `1f8a3680`。此次不跑胜率 benchmark。
 
 人类单位保存独立的 `guardPosition`，出生、明确 move / attack-move 到达、stop、hold，以及集结、登船/卸载等指令完成时建立驻点。自动索敌、受击反击、换目标及自动返回都使用这个驻点。连续的小战斗可以继续，但不能逐次把追击原点向外推。
 
@@ -67,5 +67,5 @@ node --import tsx docs/validation/human-guard-position/capture-ai.mts /tmp/guard
 ![最终驻点](returned-station.webp)
 
 ```sh
-SKETCH_MACHINES=~/.config/sketch/machines-camps.json bin/sketch shot human-guard-position --before a2cff607 --after 9339bb2a --on mac1 --locale zh-CN --out /tmp/guard-proof
+SKETCH_MACHINES=~/.config/sketch/machines-camps.json bin/sketch shot human-guard-position --before a2cff607 --after 1f8a3680 --on mac1 --locale zh-CN --out /tmp/guard-proof
 ```
