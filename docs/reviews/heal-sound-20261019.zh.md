@@ -143,5 +143,5 @@ bin/sketch yatu heal-sound --ref fix/unified-heal-sound --on mac1 --locale zh-CN
 再由女巫诅咒消灭临时灵体。在真实 Web Audio 中核对开始播放的事件、文件和上下文，
 也确认诅咒仍为 spell。两份临时 CC0 测试包分别验证旧包回退和新事件共享，
 不修改线上包，不用测试录音替主人做音色选择。
-输出 healing-old / healing-shared 截图和 heal-sound.json。
+输出 healing-old / healing-shared、summon-old / summon-shared 截图和 heal-sound.json。
 脚本已完成静态检查；本 agent 未执行浏览器，运行结果由总指挥提供。

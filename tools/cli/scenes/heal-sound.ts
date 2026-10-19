@@ -52,10 +52,7 @@ export default async function (s: Scene) {
     })()`);
     const cast = healers.map((kind, index) => ({ id: `healer-${kind}`, kind, owner: "player", x: 1000 + index * 160, y: 1000, order: { type: "move", x: 1000 + index * 160, y: 1500 } }));
     const patients = cast.map(unit => ({ id: `patient-${unit.kind}`, kind: "footman", owner: "player", x: unit.x, y: 1080, hp: 10, order: { type: "hold", x: unit.x, y: 1080 } }));
-    await s.scenario({ aiPlayers: [], scenario: { replaceDefaultUnits: true, addUnits: [...cast, ...patients,
-      { id: "control-summoner", kind: "summoner", owner: "player", x: 1400, y: 900, order: { type: "move", x: 1400, y: 1400 } },
-      { id: "control-witch", kind: "witch", owner: "enemy", x: 1450, y: 1000, order: { type: "move", x: 1450, y: 1400 } },
-    ] } });
+    await s.scenario({ aiPlayers: [], scenario: { replaceDefaultUnits: true, addUnits: [...cast, ...patients] } });
     await s.camera(1240, 1020);
     for (const kind of healers) {
       await s.page.evaluate("window.__healSoundCheck.board.stopEffects()");
@@ -69,6 +66,13 @@ export default async function (s: Scene) {
       s.must(observed.played?.url === observed.expected && observed.played?.state === "running", `${mode}: ${kind} did not start its expected healing clip: ${JSON.stringify(observed)}`);
       results.push(observed);
     }
+    await s.shot(`healing-${mode}`);
+    // Keep the curse target out of the healing fixture, where idle healers
+    // could attack it before the summon check starts.
+    await s.scenario({ aiPlayers: [], scenario: { replaceDefaultUnits: true, addUnits: [
+      { id: "control-summoner", kind: "summoner", owner: "player", x: 1400, y: 900, order: { type: "move", x: 1400, y: 1400 } },
+      { id: "control-witch", kind: "witch", owner: "enemy", x: 1450, y: 1000, order: { type: "move", x: 1450, y: 1400 } },
+    ] } });
     await s.page.evaluate("window.__healSoundCheck.board.stopEffects()");
     await s.order("player", { type: "cast", unitId: "control-summoner", ability: "summon", x: 1420, y: 940 });
     await s.tick(3); await s.wait(200);
@@ -85,7 +89,7 @@ export default async function (s: Scene) {
     s.must(removed?.url === expectedRemoval && removed.state === "running", `${mode}: summon disappearance did not start its shared clip: ${JSON.stringify(removed)}`);
     s.must(await s.page.evaluate("window.__healSoundCheck.started.some(row => row.event === 'spell' && row.kind === 'witch')"), "Curse no longer uses spell");
     results.push({ mode, removed });
-    await s.shot(`healing-${mode}`);
+    await s.shot(`summon-${mode}`);
   }
   s.record("heal-sound", { fixturesOnly: true, healers, results });
 }
