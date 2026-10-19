@@ -5,6 +5,14 @@ type Soldier = { id: string; owner: string; kind: string; x: number; y: number; 
 type Snapshot = { tick: number; units: Soldier[] };
 
 export default async function (s: Scene) {
+  const gpu = await s.page.evaluate(() => {
+    const gl = document.createElement('canvas').getContext('webgl2');
+    if (!gl) throw new Error('No WebGL2 context');
+    const info = gl.getExtension('WEBGL_debug_renderer_info');
+    return { renderer: info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER), version: gl.getParameter(gl.VERSION) };
+  });
+  s.must(!/SwiftShader|llvmpipe/i.test(gpu.renderer), `Software GPU: ${gpu.renderer}`);
+  s.record('gpu', gpu);
   await s.room('templeSpring');
   const soldiers = ['guard-0', 'guard-1', 'guard-2'];
   const baits = Array.from({ length: 8 }, (_, i) => ({ id: `bait-${i}`, owner: 'enemy', kind: 'worker', x: 1550 + i * 175, y: 2000 }));

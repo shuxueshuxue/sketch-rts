@@ -132,6 +132,18 @@ describe('human guard position', () => {
     expect(guard.guardPosition).toEqual({ x: guard.x, y: guard.y });
   });
 
+  it('starts a queued explicit move after its automatic fight instead of first detouring home', () => {
+    const { game, guard } = duel();
+    const bait = game.spawnUnit('enemy', 'worker', 1200, 1500);
+    for (let tick = 0; tick < 60 && guard.x < 1150; tick++) stepGame(game);
+    issuePlayerCommand(game, 'player', { type: 'move', unitIds: [guard.id], x: 2200, y: 1500, queued: true });
+    bait.hp = 0;
+    stepGame(game); stepGame(game);
+    expect(guard.order).toMatchObject({ type: 'move', x: 2200, y: 1500 });
+    expect(guard.order).not.toHaveProperty('returnToGuard');
+    expect(guard.guardPosition).toEqual({ x: 1000, y: 1500 });
+  });
+
   it('establishes the reached tower station instead of walking back to the pre-garrison position', () => {
     const { game, guard } = duel();
     const tower = createBuilding('tower', 'player', 'fortifiedTower', 2000, 1500, true);
@@ -140,6 +152,17 @@ describe('human guard position', () => {
     for (let tick = 0; tick < 500; tick++) stepGame(game);
     expect(guard.garrison?.buildingId).toBe(tower.id);
     expect(guard.guardPosition).toEqual({ x: guard.x, y: guard.y });
+  });
+
+  it('keeps the reached position after an explicit item pickup rather than returning to its old station', () => {
+    const { game, guard } = duel();
+    game.items.push({ id: 'loot', kind: 'guardianScroll', x: 1900, y: 1500, cooldownRemaining: 0 });
+    issuePlayerCommand(game, 'player', { type: 'pickupItem', unitId: guard.id, itemId: 'loot' });
+    for (let tick = 0; tick < 400; tick++) stepGame(game);
+    expect(game.items[0]!.carrierId).toBe(guard.id);
+    expect(guard.x).toBeGreaterThan(1800);
+    expect(guard.guardPosition).toEqual({ x: guard.x, y: guard.y });
+    expect(guard.order.type).toBe('idle');
   });
 
   it('persists independent station/return state and restores controller identity at checkpoints', () => {

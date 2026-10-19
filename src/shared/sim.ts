@@ -1146,7 +1146,7 @@ function updateConstruction(game: Game) {
     if (building.buildProgress >= building.buildTime) {
       applyDerivedBuildingStats(game, building);
       building.complete = true;
-      for (const builder of builders) builder.order = { type: "idle" };
+      for (const builder of builders) finishUnitCommand(game, builder);
       updateSupplyState(game);
     }
   }
@@ -1813,8 +1813,10 @@ function updateAttackOrder(game: Game, unit: Unit, navalFrame = true) {
   const station = order.leashX !== undefined && hasHumanGuard(game, unit) ? guardPosition(game, unit) : undefined;
   const before = station ? { x: unit.x, y: unit.y, deck: unit.deck && { ...unit.deck } } : undefined;
   attackStep(game, unit, order, navalFrame, (next) => {
+    // A queued explicit task takes precedence over an automatic trip home.
+    if (next.type === 'move' && next.returnToGuard && unit.orderQueue?.length) next = { type: 'idle' };
     if (next.type === 'idle' && order.leashX === undefined) setGuardPosition(game, unit);
-    unit.order = next.type === 'idle' && order.leashX !== undefined && hasHumanGuard(game, unit)
+    unit.order = next.type === 'idle' && !unit.orderQueue?.length && order.leashX !== undefined && hasHumanGuard(game, unit)
       && distance(unit, guardPosition(game, unit)) >= MOVE_ORDER_ARRIVAL_RANGE ? guardReturnOrder(game, unit) : next;
   });
   // Routing and siege dead-zone retreat must respect the same station as a direct pursuit step.
@@ -2076,7 +2078,7 @@ function updateBoardShipOrder(game:Game,ship:Unit) {
   }
   // Deploying completes the command. The saved connection continues to hold
   // its source station until cancelled, damaged, or a new helm order departs.
-  ship.order={type:'idle'};
+  finishUnitCommand(game, ship);
 }
 
 // @@@board-phase - Where a boarding stands, on the order itself, so the HUD, replays and tests read it instead of
@@ -2157,7 +2159,7 @@ function updateBoardOrder(game: Game, unit: Unit) {
     const goal=localToWorld(transport,point);
     if(source.id===transport.id){
       moveToward(unit,goal.x,goal.y,game.map,game.units);
-      if(distance(unit,goal)<1e-6)unit.order={type:"idle"};
+      if(distance(unit,goal)<1e-6)finishUnitCommand(game, unit);
     } else if(decksCanTransfer(source,transport,unit))moveToward(unit,goal.x,goal.y,game.map,game.units);
     return;
   }
@@ -2202,7 +2204,7 @@ function ferryUnits(game: Game, { boarding, unloading }: Ferry, starts: Readonly
     // A deferred route can hold the departure pose without reaching the
     // shore. Keep even an empty ship's unload order active during that wait.
     const planning=ship.sailing?.planningJob!==undefined || ship.sailing?.planningRequestedAtTick!==undefined;
-    if(unloadCargo(game,ship)>0 || arrived || !planning && shipPassengers(game.units,ship).length===0)ship.order={type:"idle"};
+    if(unloadCargo(game,ship)>0 || arrived || !planning && shipPassengers(game.units,ship).length===0)finishUnitCommand(game, ship);
   }
 }
 
@@ -2264,7 +2266,7 @@ function updateRepairOrder(game: Game, unit: Unit) {
   const order = unit.order;
   const building = game.buildings.find((candidate) => candidate.id === order.buildingId && candidate.owner === unit.owner);
   if (!building || building.hp <= 0) return endOrder(game, unit, "target-gone");
-  if (building.complete && building.hp >= building.maxHp) { unit.order = { type: "idle" }; return; }
+  if (building.complete && building.hp >= building.maxHp) { finishUnitCommand(game, unit); return; }
   const reached = () => buildingWorkGap(unit, building) <= BUILDING_WORK_REACH;
   if (!reached()) { errandWalk(game, unit, building, reached, "ground"); return; }
   // A site goes up with its builders' work (see updateConstruction); a standing building is mended.
@@ -2289,7 +2291,7 @@ function updateUnitRepairOrder(game: Game, worker: Unit) {
   const target = game.units.find(unit => unit.id === targetId && unit.owner === worker.owner
     && (worker.order.type !== "repairShip" || unitMover(unit.kind) === "sea"));
   if (!target) return endOrder(game, worker, "target-gone");
-  if (!unitNeedsRepair(game, target)) { worker.order = { type: "idle" }; return; }
+  if (!unitNeedsRepair(game, target)) { finishUnitCommand(game, worker); return; }
   const ship = Boolean(shipProfile(target));
   // Crew can work anywhere on their own hull; separate ground/deck units must
   // share a surface and stand within working reach.
@@ -2300,7 +2302,7 @@ function updateUnitRepairOrder(game: Game, worker: Unit) {
   };
   if (!canWorkHere()) { errandWalk(game, worker, target, canWorkHere, "ground"); return; }
   repairUnitTick(game, worker, target);
-  if (!unitNeedsRepair(game, target)) worker.order = { type: "idle" };
+  if (!unitNeedsRepair(game, target)) finishUnitCommand(game, worker);
 }
 
 function autoRepairDeckShip(game: Game, worker: Unit) {
@@ -2551,7 +2553,7 @@ function updatePickupItemOrder(game: Game, unit: Unit) {
   if (!reached()) { errandWalk(game, unit, item, reached, "ground"); return; }
   if (!freeItemSlot(game, unit, item.kind)) return endOrder(game, unit, "no-room");
   attachItemToUnit(game, item, unit);
-  unit.order = { type: "idle" };
+  finishUnitCommand(game, unit);
 }
 
 // Moves an item to a unit's position or a ship's hold or fitting (see transferRefusal). Onto an occupied carrying position
@@ -2597,7 +2599,7 @@ function updateItemErrandOrder(game: Game, unit: Unit) {
   const order = unit.order;
   if (order.type !== "itemErrand" || !isPlayerId(unit.owner)) return;
   const owner = unit.owner;
-  const end = () => { unit.order = { type: "idle" }; };
+  const end = () => finishUnitCommand(game, unit);
   const item = game.items.find(candidate => candidate.id === order.itemId);
   if (!item || item.carrierId !== unit.id) return endOrder(game, unit, "target-gone");
   const at = order.action === "use" ? itemUsePoint(game, item, order.targetId, order.x, order.y)
@@ -4357,7 +4359,12 @@ function endOrder(game: Game, unit: Unit, reason: OrderEndReason) {
   const id = `ended-${unit.id}-${game.tick}`;
   if (!game.effects.some((effect) => effect.id === id))
     game.effects.push({ id, type: "orderEnded", x: unit.x, y: unit.y, remaining: seconds(.4), duration: seconds(.4), unitId: unit.id, owner: unit.owner, sourceKind: unit.kind, orderType: unit.order.type, reason });
-  unit.order = { type: "idle" };
+  finishUnitCommand(game, unit);
+}
+
+function finishUnitCommand(game: Game, unit: Unit) {
+  setGuardPosition(game, unit);
+  unit.order = { type: 'idle' };
 }
 
 function arrive(game: Game, unit: Unit, goal: { x: number; y: number }) {
@@ -4373,7 +4380,7 @@ function guardReturnOrder(game: Game, unit: Unit): Extract<UnitOrder, { type: 'm
 }
 
 function returnToGuard(game: Game, unit: Unit): void {
-  unit.order = guardReturnOrder(game, unit);
+  unit.order = unit.orderQueue?.length ? { type: 'idle' } : guardReturnOrder(game, unit);
 }
 
 // A walk whose goal lies within a building's reach, or `within` of it, ends where the unit stands pressed against that
