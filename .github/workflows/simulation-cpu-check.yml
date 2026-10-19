@@ -109,6 +109,9 @@ jobs:
       - name: Verify mercenary trip roads and retained purchasing ownership
         run: npx vitest run src/ai/bootstrap_1/island-mercenary-return.test.ts src/ai/bootstrap_1/mercenary-trip-roads.test.ts src/ai/bootstrap_1/mercenary-control.test.ts src/ai/bootstrap_1/mercenary-goals.test.ts src/ai/bootstrap_1/mercenary-retreat-ownership.test.ts
 
+      - name: Verify coast targets have working gun stations and produce real hits
+        run: npx vitest run src/shared/ship-attack-station.test.ts src/ai/bootstrap_1/fleet-coast-target.test.ts
+
       - name: Test balanced AI duels and CPU budgets
         run: npx vitest run src/shared/sim.test.ts --testNamePattern="runs a fast two-AI duel" --maxWorkers=1 --minWorkers=1
 

@@ -1,3 +1,4 @@
+import { shipCanAttackCoastTarget } from '../../shared/ship-attack-station';
 import { miningHallSite } from "../../shared/mining-site";
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { nearestByRoute } from '../../shared/route-selection';
@@ -410,7 +411,7 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
         }
         if (waiting.length && safe) { if (ship.order.type !== "idle") commands.push({type:"stop",unitIds:[ship.id]}); continue; }
         const firingRange = combatCapability(snapshot, ship).range;
-        const local = foes.filter(target => distance(ship, target) < Math.max(900, firingRange + 150) && canReach(snapshot.map, ship, target, snapshot.units, firingRange));
+        const local = foes.filter(target => distance(ship, target) < Math.max(900, firingRange + 150) && canReach(snapshot.map, ship, target, snapshot.units, firingRange) && shipCanAttackCoastTarget(snapshot, ship, target));
         const danger = local.filter(target => "order" in target && combatCapability(snapshot,target).armed);
         const home = harbor && walkableGoal(snapshot.map, harbor.x, harbor.y, "sea");
         if (ship.hp < ship.maxHp * HURT && home && distance(ship, home) > 250) {
