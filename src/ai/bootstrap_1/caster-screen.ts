@@ -1,5 +1,6 @@
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
+import { unitMover } from '../../shared/catalog';
 import { distance } from '../policy/spatial';
 import { units } from '../policy/snapshot';
 import type { AiPolicyContext } from '../policy/types';
@@ -14,6 +15,9 @@ import { mountedMicro, mountedTargetOrder, mountedThreatReach, THINK_TICKS } fro
 export function casterMeleeMicro(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   const threats = armedFoes(snapshot, owner, options);
   return (caster: Unit, foes: Unit[]): GameCommand | undefined => {
+    // This micro searches land steering routes. Deck and gangway movement belongs to ship control, even when
+    // the passenger's unit kind normally walks: its world position can legitimately be over water.
+    if (unitMover(caster.kind) !== 'land' || caster.deck || caster.gangway) return undefined;
     if (caster.attackRange <= 100 || caster.attackDamage <= 0 || caster.order.type === 'cast'
       || foes.some(foe => foe.speed >= caster.speed)) return undefined;
     const local = threats.filter(foe => distance(caster, foe) <= Math.max(caster.attackRange,
