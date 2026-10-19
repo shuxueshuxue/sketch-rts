@@ -1,0 +1,215 @@
+{
+  "pr": 549,
+  "base": "f074681abf27ff46ea1d0f4ec75235d337220e57",
+  "runtime": "43caa0315f7bc0a7c413f8b705a1b399939d0310",
+  "conclusion": "安全 hold 累计60秒后主动前压；有局部优势就有限进攻最近分矿，全面进攻准入不足时不再反复原地等待。两份真实姿态都有实际出门，回防、既有归属和原撤退规则仍优先。",
+  "specifications": [
+    {
+      "behavior": "安全闲置累计1200 tick；短暂回防只暂停，不抹掉之前的时间。进攻、清营、协助扩张不算闲置；召唤间隙的 summoner 仍算一支闲着的军队。",
+      "proof": "territory-pressure.test.ts 的30秒闲置→30秒回防→30秒闲置；summoner真实场景跨多次回防后出门。"
+    },
+    {
+      "behavior": "普通全面进攻选择不成立时，已满足闲置条件的军队可以打最近的较弱分矿；需同时占优于当地守备和能沿地面赶到的敌军。",
+      "proof": "镜像脚本场景需实际位移；真实summoner在13147再次出击；现有撤退判断随后仍能结束进攻。"
+    },
+    {
+      "behavior": "打不下分矿时，沿实际 steering 分段前压，每段最多600；每次等队伍跟上再推进，停在目标矿厅900之外。",
+      "proof": "镜像场景真实到位并留在前哨；knight真实姿态进入敌矿1200范围。"
+    },
+    {
+      "behavior": "路线和侧向站位都能真实执行；隔河虽可走、但要长距离绕行的站位回落到前哨点。",
+      "proof": "新森林隔断脚本场景检查每个站位从前哨过去的实际路线，不只测坐标可走。"
+    },
+    {
+      "behavior": "使用general当下未被认领的兵，不另存兵员名单；既有扩张、防守、治疗等归属优先。临时借走兵后剩余两人保留既有前哨；真正回防时暂停前压，即使前排全被借走也不能让施法者继续跟着旧锚点往前走。",
+      "proof": "借兵及无可用前排的脚本场景，现有16条harass-squad和扩张/留守测试。"
+    }
+  ],
+  "implementation": {
+    "roomFunctions": [
+      "bootstrap_1/attack-objective.ts: chooseRoomAttack",
+      "bootstrap_1/mine-defense.ts: planBootstrapGeneral",
+      "bootstrap_1/territory-pressure.ts: beginTerritoryThink, finishTerritoryThink, localPressureAttack, territoryPostCommands"
+    ],
+    "sharedType": "AiPolicyMemory增加可选territory状态：闲置债、前哨几何、最近行为。slot只保存几何；不新增兵员归属表。",
+    "scope": "共享general、RETREAT_LINE、sim和v8/v9策略没有修改。命令继续来自现有v6General，服从现有unitClaims和strategic/local重定向约定。",
+    "routeWork": "复用#546已有的单次think内nativeLandRoad几何缓存；每个前哨最多试6个leader候选点，侧向9格只在前哨建立时计算并缓存；每5秒最多尝试一次下一段。找不到安全前哨时，15秒重试期间恢复原清营选择。",
+    "opponentParity": {
+      "base": "f074681a",
+      "candidate": "43caa031",
+      "poses": [
+        "summoner-safe-hold-9m10",
+        "knight-territory-10m"
+      ],
+      "owner": "p1",
+      "version": "v9",
+      "identical": true,
+      "bytes": 623,
+      "sha256": "098ebfeac60d9cd89a40107a3adfb4fc051e215924350dcfa052260b3fddc88f"
+    }
+  },
+  "realScenes": [
+    {
+      "match": "v5-final-1 / ladder-12 / summoner grove vs v9 ember",
+      "fixture": "summoner-safe-hold-9m10.json",
+      "startTick": 11000,
+      "base": "12262时marching14.43 > 当地13.90，但低于全面进攻need20.07，截止15000没有再次出击。",
+      "candidate": {
+        "forwardPostDecisionTick": 13027,
+        "limitedAttackDecisionTick": 13147,
+        "defensePauseTick": 13267,
+        "resumeTick": 13792,
+        "withdrawalTick": 14047,
+        "withdrawalReason": "general:retreat"
+      },
+      "physicalProof": "收到前压命令的至少3个真实单位，在13267前各移动超过200；截图13220展示实际队伍已出门。"
+    },
+    {
+      "match": "v5-final-1 / ladder-16 / knight ember vs v9 grove",
+      "fixture": "knight-territory-10m.json",
+      "fixtureSource": "a2cff607历史10:00姿态，双方分别在f074681a/43caa031的当前规则下重放到14:30。",
+      "base": "初始12007出击、12637撤回，此后hold到17400；16000和17400时敌矿1200范围内没有我方战斗单位。",
+      "candidate": {
+        "forwardPostDecisionTick": 13837,
+        "secondLegTick": 14857,
+        "thirdLegTick": 15412,
+        "thirdLegPhysicalArrivalTick": 15577
+      },
+      "physicalProof": "场景断言至少3个战斗单位进入矿区，2个以上实际战斗单位累计在矿区1200范围内超过45秒。100tick采样在16400达到6个；16000截图3个，17400仍有2个。",
+      "limit": "前压保持安全距离，并非承诺在这段时间拆掉分矿；全面交战仍由现有撤退规则管理。"
+    }
+  ],
+  "existingTestChanges": [
+    {
+      "test": "attack-objective.scene.test.ts",
+      "oldIntent": "进攻任务能在真实威胁时暂停/恢复，并最终真的拆掉目标；独立验证准入原因和撤回。",
+      "reason": "从3037开始的整场轨迹会被新增主动策略提前改变，固定8512等遭遇时序无法继续当不变量。",
+      "newCoverage": "自然场景改从真实11000撤回后姿态开始：所有AI继续运行，11137先回防、12262仍记录14.43/13.90/20.07的真实拒绝、后续出击与撤回。生命周期从f074681a捕获的11323活跃任务独立开始，脚本5个ravager袭击后撤走，必须暂停、恢复、再进攻、实际拆矿并记录destroyed；目标HP和单位战力未改。",
+      "activePosePreparation": "原3037姿态完整运行；首攻10507撤回时仅给敌军下实际move到3800,350并暂停其自动规划，在下一次真实出击的11323捕获。"
+    },
+    {
+      "test": "harass-squad.test.ts",
+      "oldAssertion": "完整150秒里general始终等于旧目标。",
+      "oldIntent": "局部驱赶小队不能调走主力。",
+      "newCoverage": "独立前压启动前仍要求旧目标不变；bind()每次直接运行mineDefense时新增完整general相等断言。长期场景继续验证仅3名正确射手被认领、无主力矿防接管、真实命中并击杀骑手。允许独立前压启动后主力换战略目标。",
+      "approval": "Claude172在2026-10-19 13:48同意此语义调整。"
+    }
+  ],
+  "validation": {
+    "scriptedSpecs": {
+      "file": "territory-pressure.test.ts",
+      "passed": 10
+    },
+    "realPoseSpecs": {
+      "file": "territory-pressure.scene.test.ts",
+      "passed": 2
+    },
+    "parentRed": "把最终两条真实姿态测试原样放到f074681a，2/2失败；日志red-final-parent-scenes.log。",
+    "fullSrc": {
+      "sha": "43caa031",
+      "machine": "mac1",
+      "dir": "/Users/mac1/work/sketch-cli/trees/43caa031",
+      "runId": "mvfb7gyr-9aae6f",
+      "remoteLog": "/Users/mac1/work/sketch-cli/runs/mvfb7gyr-9aae6f/land-pressure-full-src.log",
+      "command": "npx vitest run --dir src --maxWorkers 4 --minWorkers 1",
+      "status": "passed",
+      "code": 0,
+      "stderr": "",
+      "filesPassed": 690,
+      "testsPassed": 7731,
+      "testsSkipped": 1,
+      "seconds": 194.65
+    },
+    "typechecks": [
+      "npx tsc --noEmit",
+      "npx tsc -p tools/cli/tsconfig.json --noEmit"
+    ],
+    "noWinRateBench": "依照主人改后的行为规格验收，没有跑胜率bench。"
+  },
+  "performance": {
+    "method": "同机juma，ABBA顺序A1(f074)、B1(43ca)、B2(43ca)、A2(f074)。直接复用large-battle-think四军场景，逐次记录inline executor submit的完整think批次。每轮180次，两轮汇总每版360次，用nearest-rank计算p50/p95。",
+    "summary": {
+      "base": {
+        "runs": [
+          "A1",
+          "A2"
+        ],
+        "machine": "ser497065980654",
+        "cpu": "AMD EPYC 7K62 48-Core Processor",
+        "node": "v24.22.0",
+        "ref": "f074681abf27ff46ea1d0f4ec75235d337220e57",
+        "n": 360,
+        "p50": 157.66187799999898,
+        "p95": 308.30861800000093,
+        "max": 960.777261,
+        "meanRoundMs": 34794.604796,
+        "checksums": [
+          "30821755"
+        ]
+      },
+      "candidate": {
+        "runs": [
+          "B1",
+          "B2"
+        ],
+        "machine": "ser497065980654",
+        "cpu": "AMD EPYC 7K62 48-Core Processor",
+        "node": "v24.22.0",
+        "ref": "43caa0315f7bc0a7c413f8b705a1b399939d0310",
+        "n": 360,
+        "p50": 157.70590599999923,
+        "p95": 309.0206040000048,
+        "max": 1009.948484,
+        "meanRoundMs": 35085.74342499999,
+        "checksums": [
+          "30821755"
+        ]
+      },
+      "deltaPercent": {
+        "p50": 0.027925583887977723,
+        "p95": 0.2309328894607443,
+        "max": 5.117858737499836,
+        "meanRoundMs": 0.8367349786178924
+      }
+    },
+    "interpretation": "p50+0.028%、p95+0.231%、整轮+0.837%，无#546那类系统增长；max由B1单次峰值抬高5.12%，B2的max885.77反而低于两轮base。四轮checksum都是30821755。",
+    "scopeLimit": "该既有四军场景900tick=45秒，主要检查基础think成本；另收录真实knight前压激活的逐次think采样，属于不同实际轨迹的诊断数据，不当作同命令流的性能对照。"
+  },
+  "browserEvidence": {
+    "machine": "mac1",
+    "tool": "bin/sketch yatu；真实浏览器、各版本自己的dev server",
+    "method": "保存捕获姿态到临时私有房间；SDK以该版本完整AI生成并实际交付命令，将原样命令帧在live room逐tick重放。每一张拍照前逐项比较tick、全部单位id/owner/kind/坐标/HP、建筑、矿量、各方gold，必须完全一致；额外读取浏览器实际显示的snapshot，地形及相同实体指纹也必须与房间一致。保留sim的aiPlayers，单独关闭hosted自动planner，避免重复下令。",
+    "temporaryProbe": "仅浏览器证据临时副本增加save loader、2MB请求上限和一个读取客户端snapshot的只读debug getter；创建房间时使用原始地形seed。两版除这些相同probe外的运行代码分别为f074681a和43caa031。探针已从工作树恢复，不进PR。",
+    "baseProbeCommit": "b1cd34b1d1587b4d715b9f9253e78b5856ea82fe",
+    "candidateProbeCommit": "fa04a3c29a7ceac2d5f6847cc950adec255e6928",
+    "baseFrames": 6,
+    "candidateFrames": 6,
+    "photos": [
+      {
+        "version": "base",
+        "label": "summoner-departure",
+        "tick": 13220,
+        "file": "base-summoner-departure-13220.jpg"
+      },
+      {
+        "version": "base",
+        "label": "knight-forward-post",
+        "tick": 16000,
+        "file": "base-knight-forward-post-16000.jpg"
+      },
+      {
+        "version": "candidate",
+        "label": "summoner-departure",
+        "tick": 13220,
+        "file": "candidate-summoner-departure-13220.jpg"
+      },
+      {
+        "version": "candidate",
+        "label": "knight-forward-post",
+        "tick": 16000,
+        "file": "candidate-knight-forward-post-16000.jpg"
+      }
+    ],
+    "raw": "全部PNG、每帧真实世界指纹、场景驱动和源码probe差异在evidence指针所指归档内。"
+  }
+}

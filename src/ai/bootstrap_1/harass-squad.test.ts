@@ -35,7 +35,9 @@ function select(context: ReturnType<typeof captured>) {
 }
 function bind(context: ReturnType<typeof captured>) {
   const crew = select(context)!.crew;
+  const goal = structuredClone(context.memory.v6!.general);
   const entries = runAiCommandEntriesFromScripts(context.snapshot, owner, [mineDefense], context.options);
+  expect(context.memory.v6!.general).toEqual(goal);
   expect(crew.every(unit => activeUnitClaim(context.snapshot, owner, unit, context.options)?.kind === 'harassSquad')).toBe(true);
   return { crew, entries };
 }
@@ -62,7 +64,9 @@ it('uses the real three outranging archers, not the melee picked before, in the 
     if (command.type === 'attack') targets.add(command.targetId);
   }, onStep() {
     const memory = memories[owner]!;
-    expect(memory.v6!.general).toEqual(originalGoal);
+    // The local squad never redirects the general (also checked in bind()).
+    // A separate sixty-second territory task may now send the surplus forward.
+    if (!memory.territory?.lastAction) expect(memory.v6!.general).toEqual(originalGoal);
     expect(memory.miningDefense).toBeUndefined();
     if (memory.harassDefense) {
       bound = true;
