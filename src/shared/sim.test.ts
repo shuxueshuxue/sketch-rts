@@ -84,8 +84,9 @@ function expectWithinCpu(work: MatchWork, rates: MatchRates) {
   expect(work.elapsedMs, JSON.stringify({ ...work, budgetMs: Math.round(cpuBudgetMs(work, rates)) })).toBeLessThan(cpuBudgetMs(work, rates));
 }
 
-function runTwoAiDuel(mapId: MapId, ticks = 36_000) {
+function runTwoAiDuel(mapId: MapId, ticks = 36_000, setup?: (game: ReturnType<typeof createGame>) => void) {
   const game = createGame(mapId, { aiPlayers: ["player", "enemy"] });
+  setup?.(game);
   const runtime = createAiRuntime(["player", "enemy"]);
   return { game, ticks, work: stepMatch(game, runtime, 2, ticks) };
 }
@@ -2305,13 +2306,21 @@ describe("sketch RTS simulation", () => {
   });
 
   it("runs a fast two-AI duel with neutral camp clearing and mercenary combat", () => {
-    const result = runTwoAiDuel("verdantCrossroads", 48_000);
+    const result = runTwoAiDuel("verdantCrossroads", 48_000, game => {
+      // Rules 7's shorter ordinary duel never combines a controlled clear post with its hire budget.
+      // Seed that opportunity explicitly; the AI must still issue the hire and its mercenaries must score kills.
+      const camp = game.mercenaryCamps.find(camp => camp.hireKind === 'mercenary')!;
+      const guard = game.units.find(unit => unit.owner === 'player')!;
+      game.mercenaryCamps = game.mercenaryCamps.map(post => post === camp ? { ...post, x: guard.x, y: guard.y, stock: 1 } : post);
+      game.players.player.gold += camp.cost;
+    });
     const totalMercenaryKills = sumPlayerStats(result.game.match.stats.mercenaryKills);
     const totalNeutralKills = sumPlayerStats(result.game.match.stats.neutralUnitsKilled);
 
     expectTwoAiDuelBaseline(result, MATCH_RATES.verdantDuel);
     expect(result.game.mercenaryCamps.length).toBeGreaterThan(0);
     expect(totalMercenaryKills).toBeGreaterThan(0);
+    expect(result.game.mercenaryCamps.find(camp => camp.hireKind === 'mercenary')!.stock).toBe(0);
     expect(totalNeutralKills).toBeGreaterThan(0);
   });
 
