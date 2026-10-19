@@ -32,6 +32,10 @@ import { planV8Charge } from '../policy/v8/charge';
 import type { AiPolicyContext, AiScript } from '../policy/types';
 import { anchoredMiningDefense, miningRallyAssignment, planMiningRally, recordMiningRallyCommands, miningRallyOwns } from './mining-rally';
 
+import { expansionOwnsDefender, MINING_PURSUIT_RADIUS, miningLeashAssignment, miningLeashOwns, planMiningLeash, recordMiningLeashCommands } from './mining-leash';
+
+export { recordMiningGeneralCommands } from './mining-leash';
+
 type Detachment = { hall: Building; attackers: Unit[]; crew: Unit[] };
 
 function miningRaids(snapshot: GameSnapshot, intel: V6Intel) {
@@ -134,7 +138,8 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
   // Reinforcements walk to the existing staging point. Count them in the camp's force only after they arrive.
   const arrived = creep ? recruits.filter(unit => distance(unit, creep.staging) <= V7_GATHERED_RANGE) : [];
   if (creep) creep.group.push(...arrived.map(unit => unit.id));
-  const commands = planV6Army(snapshot, owner, options, intel, {
+  let defendedHall: Building | undefined, haulingDefense = false;
+  let commands = planV6Army(snapshot, owner, options, intel, {
     reinforcements: 'siege', expansionBasis: 'mines',
     // Secure a working economy; an unfunded wish alone cannot reserve a stranded host.
     reserveExpansion: activeMiningBaseCount(snapshot, owner) > 0
@@ -158,17 +163,20 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
     },
     defenseTarget: (view, world, context) => {
       const anchored = anchoredMiningDefense(view, owner, context, world);
-      if (anchored) return anchored;
+      if (anchored) { defendedHall = nearestByRoute(view.map, world.ownHalls, anchored.hall, 'land'); return anchored; }
       const mining = miningJobDefenseTarget(view, owner, world, context);
-      if (mining) return mining;
-      return coveredDefenseTarget(view, world);
+      if (mining) { haulingDefense = true; return mining; }
+      const covered = coveredDefenseTarget(view, world);
+      defendedHall = covered && nearestByRoute(view.map, world.ownHalls, covered.hall, 'land');
+      return covered;
     },
     towerWaiting: holdCoveredPost,
     waitForTowers: waitsForTowers,
     gatherAssault: intel.enemies.some(enemy => enemy.army.length > 0),
     recovery: (wounded, point) => recoverBootstrapFront(snapshot, owner, wounded, point, options),
     // A distant detour to apparently nearby attackers leaves the mining perimeter uncovered.
-    pursue: defense => walkingDistance(snapshot.map, defense.hall, defense.field)! <= distance(defense.hall, defense.field) + defense.leash!,
+    pursue: defense => (!defendedHall || distance(defense.hall, defense.field) <= MINING_PURSUIT_RADIUS)
+      && walkingDistance(snapshot.map, defense.hall, defense.field)! <= distance(defense.hall, defense.field) + defense.leash!,
   });
   if (creep && options.memory.v6?.creep === creep) {
     const camps = neutralCamps(snapshot), target = activeCamp(creep, camps)!;
@@ -179,6 +187,27 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
       { type: 'move', unitIds: walking.map(unit => unit.id), ...creep.staging }, options));
   }
   const general = options.memory.v6?.general;
+  const hall = haulingDefense ? undefined : defendedHall ?? intel.ownHalls.find(hall => hall.id === previous?.targetHallId);
+  if (hall && general?.mode === 'defend') {
+    general.targetHallId = hall.id;
+    // V9's fleeing-enemy branch has no intrusion and bypasses pursue(). It obeys the same defended-base boundary.
+    if (general.target && distance(general.target, hall) > MINING_PURSUIT_RADIUS) {
+      const point = options.memory.miningDefense?.point ?? options.memory.miningLeash?.point ?? hall;
+      const front = availableV6Army(snapshot, options, intel).filter(unit => !isBacklineKind(unit)
+        && unit.hp >= unit.maxHp * V7_WOUNDED_SHARE && !expansionOwnsDefender(snapshot, owner, options, unit));
+      const ids = new Set(front.map(unit => unit.id));
+      commands = commands.flatMap((command): GameCommand[] => {
+        if (!('unitIds' in command)) return [command];
+        const unitIds = command.unitIds.filter(id => !ids.has(id));
+        return unitIds.length ? [{ ...command, unitIds }] : [];
+      });
+      const walking = front.filter(unit => distance(unit, point) > 240);
+      const waiting = front.filter(unit => distance(unit, point) <= 240);
+      if (walking.length) commands.push({ type: 'move', unitIds: walking.map(unit => unit.id), ...point, avoidCombat: true });
+      if (waiting.length) commands.push({ type: 'holdPosition', unitIds: waiting.map(unit => unit.id) });
+      general.mode = 'guard'; general.target = point;
+    }
+  }
   if (previous?.mode === 'attack' && general?.mode !== 'attack' && options.memory.v6?.retreatedAt === snapshot.tick) {
     const ordered = new Set(commands.flatMap(command => 'unitIds' in command ? command.unitIds : []));
     const leaving = intel.army.filter(unit => !isBacklineKind(unit) && previous.group!.includes(unit.id) && !ordered.has(unit.id));
@@ -203,6 +232,15 @@ export const miningRally: AiScript = {
   run(snapshot, owner, options) { return planMiningRally(snapshot, owner, options, mainArmyIntel(snapshot, owner, options)); },
 };
 
+export const miningLeash: AiScript = {
+  id: 'miningLeash', phase: 'tactics', redirects: 'local',
+  claimsUnits(snapshot, owner, options) {
+    return new Set(miningLeashAssignment(snapshot, owner, options, mainArmyIntel(snapshot, owner, options))?.state.unitIds);
+  },
+  run: (snapshot, owner, options) => planMiningLeash(snapshot, owner, options, mainArmyIntel(snapshot, owner, options)),
+  afterPlan: (snapshot, _owner, options, entries, scripts) => recordMiningLeashCommands(snapshot, options.memory, entries, scripts),
+};
+
 export function planBootstrapCloseout(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): GameCommand[] {
   const intel = mainArmyIntel(snapshot, owner, options), job = options.memory.v6?.closeout;
   // A cleanup crew that loses its minimum force recruits again through the same ordinary selector.
@@ -219,7 +257,7 @@ export function mainArmyIntel(snapshot: GameSnapshot, owner: PlayerId, options: 
   for (const id of mobileCare.claimsUnits!(snapshot, owner, options)) crew.add(id);
   for (const { patient, walk } of postRecoveryAssignments(snapshot, owner, options)) if (!walk) crew.add(patient.id);
   for (const { spirit } of summonedMiningRaids(snapshot, owner, options)) crew.add(spirit.id);
-  const army = intel.army.filter(unit => !miningRallyOwns(snapshot, options.memory, unit.id) && !crew.has(unit.id) && !mountedFieldOwns(snapshot, owner, unit.id)
+  const army = intel.army.filter(unit => !miningRallyOwns(snapshot, options.memory, unit.id) && !miningLeashOwns(snapshot, options.memory, unit.id) && !crew.has(unit.id) && !mountedFieldOwns(snapshot, owner, unit.id)
     && !options.memory.mounted?.some(assignment => assignment.unitIds.includes(unit.id)));
   const covered = guard && intel.intrusion && distance(intel.intrusion.building, guard.hall) < 600
     && intel.intrusion.attackers.every(unit => guard.attackers.includes(unit));
