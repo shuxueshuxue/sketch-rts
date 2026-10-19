@@ -44,13 +44,13 @@ export function createNavalObstacleTracker(): BenchmarkTracker<AiGameAgent, Stat
       }
       const candidates = hulls.filter(boat => boat.sailing?.route?.points.length && hasShipPlanningWork(boat, s.units));
       if (!candidates.length) return;
-      const probeUnits = [...s.units];
-      beginShipCollisionFrame(probeUnits, s.map, [...s.buildings, ...(game.obstacles ?? [])]);
+      const probeUnits = [...s.units], probeMap = { ...s.map };
+      beginShipCollisionFrame(probeUnits, probeMap, [...s.buildings, ...(game.obstacles ?? [])]);
       for (const boat of candidates) {
         const owner = state.owners[boat.owner]!;
         owner.routeSamples++;
         const from = { x: boat.x, y: boat.y, heading: boat.sailing!.heading }, leg = boat.sailing!.route!.points[0]!;
-        const contact = sweepShipCollision(s.map, boat, probeUnits, from, leg);
+        const contact = sweepShipCollision(probeMap, boat, probeUnits, from, leg);
         if (!contact?.other || contact.kind !== 'building' && contact.kind !== 'obstacle') continue;
         const solid = contact.other as Building | Obstacle;
         const gold = shipGold(s, boat), cargoGold = shipPassengers(s.units, boat).reduce((sum, unit) => sum + UNIT_DEFS[unit.kind].cost, 0);
@@ -71,7 +71,7 @@ export function createNavalObstacleTracker(): BenchmarkTracker<AiGameAgent, Stat
           const evidence: ObstacleEvidence = { second, shipId: boat.id, shipKind: boat.kind, shipGold: gold, cargoGold,
             position: from, leg: structuredClone(leg), order: structuredClone(boat.order),
             obstruction: { id: solid.id, kind: solid.kind, ...('owner' in solid ? { owner: solid.owner } : {}), x: solid.x, y: solid.y, radius: solid.radius },
-            fraction: contact.fraction, stationarySeconds, terrainClear: hullPassageClear(s.map, boat, from, leg), shipTrafficClear: shipTraffic(boat, s.units)(from, leg) };
+            fraction: contact.fraction, stationarySeconds, terrainClear: hullPassageClear(s.map, boat, from, leg), shipTrafficClear: shipTraffic(boat, s.units, 600, s.map)(from, leg) };
           ship.episodes.push({ startSecond: second, lastSecond: second, samples: 1, maxExposedGold: gold + cargoGold, first: evidence });
         }
       }

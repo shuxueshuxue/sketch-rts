@@ -6,7 +6,7 @@ import { detCos, detSin } from "./det-math";
 import { headingDifference, shipPoseAt, type ShipPose } from "./ship-navigation";
 import { SIM_TICKS_PER_SECOND } from './time';
 import { shipMotionLimits } from './ship-handling';
-import { sweepShipCollision } from './ship-collisions';
+import { freezeShipCollisionSolids, shipCollisionMap, shipSolidsPassageClear, sweepShipCollision } from './ship-collisions';
 
 const trafficShapes=new Map<string,Point[]>();
 const trafficBases=new Map<string,Point[]>();
@@ -148,13 +148,13 @@ export function avoidanceCourse(ship:Unit,units:readonly Unit[],desiredHeading:n
   const releaseTicks=SIM_TICKS_PER_SECOND;
   const final=route?.points.length===1 ? route.points[0] : undefined;
   const brakingDistance=motion.speed*motion.speed/(2*Math.max(1e-7,shipMotionLimits(ship).acceleration));
-  const stopping=route?.targetSpeed===0 && shipTraffic(ship,units)({x:ship.x,y:ship.y,heading},
+  const stopping=route?.targetSpeed===0 && shipTraffic(ship,units,600,map)({x:ship.x,y:ship.y,heading},
     {x:ship.x+brakingDistance*detCos(heading),y:ship.y+brakingDistance*detSin(heading),heading});
   // The prediction horizon ends at a nearby clear stopping point. Extrapolating
   // our present velocity through that point would invent a later collision and
   // repeatedly steer a ferry away from its safe unloading approach.
   if(stopping || final && route!.intent!=='pursuit' && Math.hypot(final.x-ship.x,final.y-ship.y)<profile.length*.65
-    && shipTraffic(ship,units)({x:ship.x,y:ship.y,heading},final)){
+    && shipTraffic(ship,units,600,map)({x:ship.x,y:ship.y,heading},final)){
     delete route!.avoidHeading;delete route!.avoidBaseHeading;delete route!.avoidTargetId;
     delete route!.avoidTicks;delete route!.avoidSide;
     return{heading:desiredHeading,speedScale:1,active:false};
@@ -180,7 +180,7 @@ export function avoidanceCourse(ship:Unit,units:readonly Unit[],desiredHeading:n
       || (other.sailing?.speed??0)>=1 || Math.hypot(other.sailing?.velocityX??0,other.sailing?.velocityY??0)>=1)return false;
     const start={x:ship.x,y:ship.y,heading},turned={...start,heading:course};
     const distance=Math.max(profile.length,ownSpeed*ownSpeed/(2*Math.max(1e-7,shipMotionLimits(ship).acceleration)));
-    const end={x:ship.x+distance*detCos(course),y:ship.y+distance*detSin(course),heading:course},traffic=shipTraffic(ship,units,Infinity);
+    const end={x:ship.x+distance*detCos(course),y:ship.y+distance*detSin(course),heading:course},traffic=shipTraffic(ship,units,Infinity,map);
     return hullPassageClear(map,ship,start,turned) && traffic(start,turned)
       && hullPassageClear(map,ship,turned,end) && traffic(turned,end)
       && !sweepShipCollision(map,ship,units,start,turned) && !sweepShipCollision(map,ship,units,turned,end);
@@ -206,7 +206,7 @@ export function avoidanceCourse(ship:Unit,units:readonly Unit[],desiredHeading:n
     const restoringSquared=qx*qx+qy*qy,restoringClosing=dx*qx+dy*qy;
     const safeReturn=!other || restoringSquared<1 || restoringClosing>=0 || !encounterWindow(ship,other,desiredHeading,dx,dy,qx,qy,8);
     const separated=other && otherProfile && dx*rx+dy*ry>=0 && hullGap(ship,other)>Math.max(profile.beam,otherProfile.beam)*.75;
-    const stoppedFinal=final && other && Math.hypot(ox,oy)<1 && shipTraffic(ship,[ship,other])({x:ship.x,y:ship.y,heading},final);
+    const stoppedFinal=final && other && Math.hypot(ox,oy)<1 && shipTraffic(ship,[ship,other],600,map)({x:ship.x,y:ship.y,heading},final);
     const headOn=other && Math.abs(headingDifference(base,other.sailing?.heading ?? 0))>Math.PI*2/3;
     // Crossing and overtaking hulls may clear the intended course before
     // their centers exchange positions. Retaining the world heading for two
@@ -241,7 +241,7 @@ export function avoidanceCourse(ship:Unit,units:readonly Unit[],desiredHeading:n
     // Following a vessel that has stopped ends at a finite standoff. Prove
     // that final leg against its real hull instead of treating the boat as a
     // large circle and projecting our travel beyond the stopping station.
-    if(final && Math.hypot(ox,oy)<1 && shipTraffic(ship,[ship,other])({x:ship.x,y:ship.y,heading},final))continue;
+    if(final && Math.hypot(ox,oy)<1 && shipTraffic(ship,[ship,other],600,map)({x:ship.x,y:ship.y,heading},final))continue;
     // At rest the requested drive supplies a prospective velocity, allowing
     // ships beginning opposed orders to make a passing choice before contact.
     const ax=ownMotion>1?vx:ownSpeed*detCos(desiredHeading),ay=ownMotion>1?vy:ownSpeed*detSin(desiredHeading);
@@ -289,7 +289,7 @@ export function avoidanceCourse(ship:Unit,units:readonly Unit[],desiredHeading:n
 
 /** Frozen traffic geometry for one route search. The same continuous swept
  * hull used for coasts also constrains lattice positions and turns. */
-export function shipTraffic(ship:Unit,units:readonly Unit[],range=600) {
+export function shipTraffic(ship:Unit,units:readonly Unit[],range=600,map=shipCollisionMap(units),solids=map?freezeShipCollisionSolids(map):[]) {
   const ownProfile=shipProfile(ship)!,hull=ownProfile.hull,radius=polygonRadius(hull);
   const bodies=[] as {other:Unit;center:Point;radius:number;profile:NonNullable<ReturnType<typeof shipProfile>>;heading:number;outline?:Point[]}[];
   for(const other of shipsIn(units)){
@@ -354,6 +354,7 @@ export function shipTraffic(ship:Unit,units:readonly Unit[],range=600) {
   const start={x:0,y:0},end={x:0,y:0};
   let curves:Map<string,boolean>|undefined;
   const clear=(from:ShipPose,to:ShipPose,padding=0):boolean=>{
+    if(!shipSolidsPassageClear(ship,from,to,solids))return false;
     if(!bodies.length)return true;
     if(to.pivot || Math.abs(to.curvature??0)>1e-9){
       // Entrance and curve-simplification checks can repeat the same complete
@@ -383,14 +384,14 @@ export function shipTraffic(ship:Unit,units:readonly Unit[],range=600) {
     }
     return true;
   };
-  return Object.assign(clear,{hasTraffic:bodies.length>0});
+  return Object.assign(clear,{hasTraffic:bodies.length>0||solids.length>0});
 }
 
 /** Only a reciprocal boarding appointment reserves a partner's future pose
  * during strategic planning. Actual helm and motion checks always call
  * shipTraffic against the live hull, so this cannot permit a ship crossing. */
-export function reservationTraffic(ship:Unit,units:readonly Unit[],range=600) {
-  return shipTraffic(ship,reservedUnits(ship,units),range);
+export function reservationTraffic(ship:Unit,units:readonly Unit[],range=600,map=shipCollisionMap(units)) {
+  return shipTraffic(ship,reservedUnits(ship,units),range,map);
 }
 /** The hulls a reservation view sees: a reciprocal partner stands at its appointed pose. */
 export function reservedUnits(ship:Unit,units:readonly Unit[]):readonly Unit[] {

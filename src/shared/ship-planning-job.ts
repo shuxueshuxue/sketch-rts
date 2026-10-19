@@ -5,11 +5,13 @@ import { windAt, updateWindField, WIND_CHANGE_INTERVAL_TICKS } from './wind-fiel
 import type { ShipCourseGoal } from './sailing';
 import type { GameMap, Unit } from './types';
 import { hasShipPlanningWork } from './ship-planning-budget';
+import { freezeShipCollisionSolids } from './ship-collisions';
+import type { Point } from './ship-geometry';
 
 /** `exact`: a maneuver search whose route the executor follows pose by pose; `precise`: a requested attitude or berth.
  * Both search the heading lattice to `target` (else the goal) without voyage smoothing. */
 export type ShipPlanningMode = 'exact' | 'precise';
-type VoyageJob = { version:1; phase:'direct'|'reference'|'refine'|'finished'; ship:Unit; traffic:Unit[]; goal:ShipCourseGoal;
+type VoyageJob = { version:2; phase:'direct'|'reference'|'refine'|'finished'; ship:Unit; traffic:Unit[]; solids:Point[][]; goal:ShipCourseGoal;
   windKey:string; guard:string; anchor?:ShipPose; recovery?:boolean; limited?:boolean; partial?:boolean; points?:ShipPose[]; searchSteps?:number; search?:ShipRouteSearchState; refinement?:VoyageRefinementState;
   mode?:ShipPlanningMode; target?:ShipCourseGoal };
 const decoded=new WeakMap<Unit,{source:string;job:VoyageJob}>();
@@ -28,7 +30,7 @@ function trafficReach(ship:Unit,mode:ShipPlanningMode|undefined,end:{x:number;y:
 }
 function trafficView(job:VoyageJob):ReturnType<typeof shipTraffic> {
   let traffic=trafficViews.get(job);
-  if(!traffic){traffic=shipTraffic(job.ship,job.traffic,trafficReach(job.ship,job.mode,searchGoal(job)));trafficViews.set(job,traffic);}
+  if(!traffic){traffic=shipTraffic(job.ship,job.traffic,trafficReach(job.ship,job.mode,searchGoal(job)),undefined,job.solids);trafficViews.set(job,traffic);}
   return traffic;
 }
 function voyageReference(job:VoyageJob):boolean {
@@ -129,7 +131,7 @@ function read(ship:Unit):VoyageJob|undefined {
   const cached=decoded.get(ship);if(cached?.source===source)return cached.job;
   try {
     const job=JSON.parse(source) as VoyageJob;
-    if(job.version!==1 || !['direct','reference','refine','finished'].includes(job.phase) || !job.ship?.sailing
+    if(job.version!==2 || !Array.isArray(job.solids) || !['direct','reference','refine','finished'].includes(job.phase) || !job.ship?.sailing
       || !Array.isArray(job.traffic) || !Number.isFinite(job.goal?.x) || !Number.isFinite(job.goal?.y)
       || job.searchSteps!==undefined && (!Number.isSafeInteger(job.searchSteps) || job.searchSteps<0))return;
     decoded.set(ship,{source,job});return job;
@@ -158,8 +160,9 @@ export function beginShipPlanningJob(ship:Unit,goal:ShipCourseGoal,map:GameMap,u
     id:source.id,owner:source.owner,kind:source.kind,hp:source.hp,maxHp:source.maxHp,x:source.x,y:source.y,
     radius:source.radius,cargoCapacity:source.cargoCapacity,deckScale:source.deckScale,
     sailing:{heading:source.sailing?.heading??0}})) as Unit);
-  const limited=shipTraffic(frozen,traffic,reach).hasTraffic;
-  save(ship,{version:1,phase:'direct',ship:frozen,traffic,goal:{...goal},windKey:windAt(map,ship).key,guard:guard(ship),
+  const solids=freezeShipCollisionSolids(map);
+  const limited=shipTraffic(frozen,traffic,reach,undefined,solids).hasTraffic;
+  save(ship,{version:2,phase:'direct',ship:frozen,traffic,solids,goal:{...goal},windKey:windAt(map,ship).key,guard:guard(ship),
     ...(anchor?{anchor:{...anchor}}:{}),...(recovery?{recovery:true}:{}),...(limited?{limited:true}:{}),
     ...(mode?{mode}:{}),...(target?{target:{...target}}:{})});
 }

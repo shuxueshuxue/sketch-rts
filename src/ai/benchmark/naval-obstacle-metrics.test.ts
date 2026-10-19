@@ -4,6 +4,7 @@ import { createNavalObstacleTracker } from './naval-obstacle-metrics';
 import { createGame, snapshotGame } from '../../shared/sim';
 import { createUnit } from '../../shared/map';
 import { beginShipCollisionFrame, sweepShipCollision } from '../../shared/ship-collisions';
+import { shipTraffic } from '../../shared/ship-avoidance';
 import type { GameMap, Unit } from '../../shared/types';
 
 function scene(index: number) {
@@ -27,11 +28,13 @@ it.each([0, 1, 2, 3])('observes the saved shipyard contact without replacing the
   beginShipCollisionFrame(game.units, game.map, []);
   const from = { x: ship.x, y: ship.y, heading: ship.sailing!.heading };
   expect(sweepShipCollision(game.map, ship, game.units, from, fixture.firstLeg)).toBeUndefined();
+  expect(shipTraffic(ship, [], 600, game.map)(from, fixture.firstLeg)).toBe(true);
   game.tick = 20;
   const before = snapshotGame(game);
   sample(1);
   expect(snapshotGame(game)).toEqual(before);
   expect(sweepShipCollision(game.map, ship, game.units, from, fixture.firstLeg)).toBeUndefined();
+  expect(shipTraffic(ship, [], 600, game.map)(from, fixture.firstLeg)).toBe(true);
   expect(result().immediateBlockSeconds).toBe(1);
   expect(result().ships[ship.id]!.episodes[0]!.first.obstruction.kind).toBe('shipyard');
 });

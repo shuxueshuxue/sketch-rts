@@ -165,7 +165,7 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
     // ship now: a berth beside a hull more than 600 off was planned through that hull, and the ship ran its bow into it
     // and fell into exact replanning at a crawl.
     const end=contact ?? point;
-    const traffic=reservationTraffic(ship,strategicUnits,precision ? 600+Math.hypot(end.x-ship.x,end.y-ship.y) : 600);
+    const traffic=reservationTraffic(ship,strategicUnits,precision ? 600+Math.hypot(end.x-ship.x,end.y-ship.y) : 600,map);
     const planner=allowCruise && !precision ? planVoyageRoute : planShipRoute;
     // A nearby firing station requests a soft hull attitude, not an exact
     // berth or a full-speed turning circle. Each control step still sweeps
@@ -221,7 +221,7 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
           || completed.points.some(candidate=>candidate.exact) && !singleForwardExact && !turnThenForward))return false;
         if(turnThenForward){
           // Certified as the single forward leg's turn is, below.
-          const turned={...start,heading:forward.heading},liveTraffic=reservationTraffic(ship,units),onward=completed.points[1]!;
+          const turned={...start,heading:forward.heading},liveTraffic=reservationTraffic(ship,units,600,map),onward=completed.points[1]!;
           if(!hullPassageClear(map,ship,start,turned) || !hullPassageClear(map,ship,turned,onward)
             || !liveTraffic(start,turned) || !liveTraffic(turned,onward))return false;
         }
@@ -230,7 +230,7 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
           // before there is room for a sailing circle. Certify that turn
           // against every live hull, then return the ahead leg to cruise.
           // Partial, astern and multi-maneuver recoveries remain rejected.
-          const turned={...start,heading:forward.heading},liveTraffic=reservationTraffic(ship,units);
+          const turned={...start,heading:forward.heading},liveTraffic=reservationTraffic(ship,units,600,map);
           if(!hullPassageClear(map,ship,start,turned) || !hullPassageClear(map,ship,turned,forward)
             || !liveTraffic(start,turned) || !liveTraffic(turned,forward))return false;
           const {exact:_,...onward}=forward;
@@ -258,7 +258,7 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
             || (first.x-origin.x)*detCos(first.heading)+(first.y-origin.y)*detSin(first.heading)<-1e-7;
           const liveUnits=maneuver?units:strategicUnits;
           if(!hullPassageClear(map,ship,origin,first))return false;
-          if(!reservationTraffic(probe,liveUnits.filter(unit=>unit!==ship))(origin,first)){
+          if(!reservationTraffic(probe,liveUnits.filter(unit=>unit!==ship),600,map)(origin,first)){
             // A coastal voyage plans past moving companions as passing
             // traffic, but its maneuver must clear every live hull. A
             // companion under way clears it soon; one stopped without a route
@@ -268,7 +268,7 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
             // Plan the replacement around every live hull, from the live pose.
             if(maneuver && !completed.anchor && units.some(other=>other!==ship && !strategicUnits.includes(other)
               && !other.sailing?.route?.points.length && Math.abs(other.sailing?.speed??0)<=1
-              && !reservationTraffic(probe,[other])(origin,first))){
+              && !reservationTraffic(probe,[other],600,map)(origin,first))){
               beginShipPlanningJob(ship,point,map,reservedUnits(ship,units),undefined,recoveryOnly);
               tryAdmitShipPlan(ship);
             }
@@ -334,7 +334,7 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
       // fresh voyage. Distant underway companions still leave the coast open.
       const liveUnits=units.filter(other=>!voyageCompanion(other,bearing)
         || !coastalVoyage && closeDepartureLeader(other,bearing));
-      return hullPassageClear(map,ship,start,first) && reservationTraffic(ship,liveUnits)(start,first);
+      return hullPassageClear(map,ship,start,first) && reservationTraffic(ship,liveUnits,600,map)(start,first);
     };
     const weatherOnly=!!route && windChange && !due && !enteringBerth && point.heading===undefined
       && route.cruise===true && route.intent===point.intent && route.targetId===point.targetId && route.points.length>0
@@ -354,7 +354,7 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
       // Wind does not change an exact maneuver's geometry. Reassess its
       // physical first leg and propulsion now, rather than stopping it for
       // a new coast search before the waiting hull has any room to turn.
-      const first=route!.points[0]!,turned={...start,heading:first.heading},traffic=reservationTraffic(ship,units);
+      const first=route!.points[0]!,turned={...start,heading:first.heading},traffic=reservationTraffic(ship,units,600,map);
       const clear=!first.pivot && hullPassageClear(map,ship,start,turned) && hullPassageClear(map,ship,turned,first)
         && traffic(start,turned) && traffic(turned,first);
       const course=coursePerformance(ship,map,first.heading,{assumeTrimmed:true});
@@ -438,7 +438,7 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
             +(route.points[0]!.y-ship.y)*detSin(route.points[0]!.heading)<-1e-7)
       && (completedExactLeg || (route.age??0)>=SIM_TICKS_PER_SECOND
         && ((route.age??0)%SIM_TICKS_PER_SECOND===0 || motion.planningRequestedAtTick!==undefined))){
-      const traffic=shipTraffic(ship,units);
+      const traffic=shipTraffic(ship,units,600,map);
       if(hasShipPlanningFrame(ship)){
         if(replan(true,undefined,true))route=motion.route!;
         else if(motion.planningJob && holdsShipPlanningOrigin(ship)){
@@ -473,7 +473,7 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
         const next=route.points[index];
         if(next && !route.points.slice(0,index+1).some(point=>point.pivot)){
           const bearing=Math.atan2(point.y-ship.y,point.x-ship.x);
-          const traffic=shipTraffic(ship,units.filter(other=>!voyageCompanion(other,bearing,true)),Infinity);
+          const traffic=shipTraffic(ship,units.filter(other=>!voyageCompanion(other,bearing,true)),Infinity,map);
           const departure=movingPursuit ? planBeatDeparture(map,ship,next,traffic,route.tackHeading) : undefined;
           const tack=!departure ? shipTackRoute(map,ship,next,traffic,route.tackHeading) : undefined;
           if(departure){
@@ -498,7 +498,7 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
               // A bounded tack replaces the old departure, too. Reusing its
               // original turn arc would send us back to where we set sail.
               const onward={...ship,x:finish.x,y:finish.y,sailing:{...motion,heading:finish.heading}};
-              const suffix=planVoyageRoute(map,onward,{x:next.x,y:next.y},shipTraffic(onward,units.filter(unit=>unit!==ship),Infinity),1024);
+              const suffix=planVoyageRoute(map,onward,{x:next.x,y:next.y},shipTraffic(onward,units.filter(unit=>unit!==ship),Infinity,map),1024);
               route.points.splice(0,index+1,...tack,...suffix.points);
               route.partial ||= suffix.partial;
               route.end=route.points.at(-1)??finish;
@@ -511,7 +511,7 @@ export function sailToward(ship:Unit,point:ShipCourseGoal,map:GameMap,units:read
       if(cruise===true){route.blockedTicks=0;return;}
       if(cruise==='maneuver'){
         const first=route.points[0],turned=first && {...start,heading:first.heading};
-        const traffic=shipTraffic(ship,units);
+        const traffic=shipTraffic(ship,units,600,map);
         if(first?.exact && !first.pivot && turned && hullPassageClear(map,ship,start,turned)
           && hullPassageClear(map,ship,turned,first) && traffic(start,turned) && traffic(turned,first))route.cruise=false;
         else if(!replan(false)){motion.speed=0;return;}

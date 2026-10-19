@@ -13,7 +13,7 @@ const budgets = new WeakMap<Unit, MotionBudget>();
 /** One budget for propulsion, aiming turns and impulses in the whole step.
  * Simulation may supply its complete current hull view, including dead hulls;
  * direct callers retain a full scan, even after replacing array members. */
-export function beginShipMotionFrame(units: readonly Unit[], map?: GameMap, solids: readonly (Building | Obstacle)[] = [], vessels: readonly Unit[] = units) {
+export function beginShipMotionFrame(units: readonly Unit[], map?: GameMap, solids?: readonly (Building | Obstacle)[], vessels: readonly Unit[] = units) {
   for (const ship of vessels) if (isShipKind(ship.kind)) {
     const budget = budgets.get(ship);
     if (budget) { budget.yaw = 0; budget.distance = 0; budget.astern = 0; }
