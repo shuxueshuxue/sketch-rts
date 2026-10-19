@@ -1,0 +1,112 @@
+{
+  "base": "2002452bf749b19963d0014671092020d7694287",
+  "beforeRebase": "d88e0d2db0f56edb92c78a6b787cb44280e388a1",
+  "testedCodeCommit": "a614ad8a19a7e2d5af9e7dcfa67b55cba07b1b00",
+  "merge": {
+    "memory": "Retain expansionMission and harassSquad kinds, expansionMineId and returning claim metadata, harassDefense task metadata, all inherited naval firstCombatDelivery/ferryDecisions fields and advance ferry purpose.",
+    "claimIntegration": "Harassment release now calls #538 clearUnitClaim, preserving construction-screen membership. Its test sets expansionMineId on the same claim and reads expansionMissionUnitIds; no landExpansion.unitIds list is reintroduced.",
+    "tactics": "No selection, firepower, pursuit or departure thresholds changed during rebase."
+  },
+  "fullSrc": {
+    "machine": "juma",
+    "command": "node_modules/.bin/vitest run --dir src --maxWorkers=4 --minWorkers=1",
+    "exitCode": 1,
+    "passedFiles": 674,
+    "totalFiles": 675,
+    "passedTests": 7526,
+    "skippedTests": 1,
+    "totalTests": 7598,
+    "assertionFailures": 0,
+    "unhandledErrors": 1,
+    "durationSeconds": 661.35,
+    "error": "Worker exited unexpectedly; painted-card-batches.test.ts was the sole unfinished file (71 tests). Kernel log records global OOM killing node (vitest 3) at 06:48:24 UTC with about 9.6 GiB anonymous RSS.",
+    "retry": "Local isolated retry was stopped at about 8.3 GiB RSS to avoid another host OOM; the exact same source/file was rerun on A100."
+  },
+  "recovery": {
+    "sha": "a614ad8a19a7e2d5af9e7dcfa67b55cba07b1b00",
+    "dir": "/codegeex/jeffry/sketch-rts-defense/trees/a614ad8a19a7e2d5af9e7dcfa67b55cba07b1b00",
+    "log": "/codegeex/jeffry/sketch-rts-defense/runs/mvewl7up-081da3/painted-card-batches.log",
+    "code": 0,
+    "machine": "a100",
+    "command": "node_modules/.bin/vitest run src/client/world3d/painted-card-batches.test.ts --maxWorkers=1 --minWorkers=1",
+    "passedFiles": 1,
+    "passedTests": 71,
+    "durationSeconds": 135.47
+  },
+  "combined": {
+    "filesCovered": 675,
+    "passedTests": 7597,
+    "skippedTests": 1,
+    "assertionFailures": 0,
+    "singleInvocationPassed": false,
+    "note": "Complete src invocation plus successful isolated recovery of the file lost to OOM; no tests or timeout limits changed."
+  },
+  "commandStreams": {
+    "schedule": "both full AI stacks, thinkInterval=15, normal phases and 3-tick delivery delay",
+    "sources": {
+      "main": "2002452bf749b19963d0014671092020d7694287",
+      "before": "d88e0d2db0f56edb92c78a6b787cb44280e388a1",
+      "after": "a614ad8a19a7e2d5af9e7dcfa67b55cba07b1b00"
+    },
+    "scenarios": [
+      {
+        "name": "rally-14m48",
+        "mainEqualAfter": true,
+        "beforeEqualAfter": true,
+        "counts": {
+          "main": 1512,
+          "before": 1512,
+          "after": 1512
+        },
+        "hashes": {
+          "main": "52bfa241fb43217f89e06fc611264dae4bc8cb2870cf99495c9f78689e29af1e",
+          "before": "52bfa241fb43217f89e06fc611264dae4bc8cb2870cf99495c9f78689e29af1e",
+          "after": "52bfa241fb43217f89e06fc611264dae4bc8cb2870cf99495c9f78689e29af1e"
+        },
+        "fixtureSha256": "7f679adb93206a5a79258985db8a29c0336806ef05dae86cc41e4fb61d38c1d7",
+        "differences": {}
+      },
+      {
+        "name": "pursuit-19m50",
+        "mainEqualAfter": true,
+        "beforeEqualAfter": true,
+        "counts": {
+          "main": 856,
+          "before": 856,
+          "after": 856
+        },
+        "hashes": {
+          "main": "525d851ecb0d8162d82480d37f8ad9e70420342706d2c59838be62e37cb20e0e",
+          "before": "525d851ecb0d8162d82480d37f8ad9e70420342706d2c59838be62e37cb20e0e",
+          "after": "525d851ecb0d8162d82480d37f8ad9e70420342706d2c59838be62e37cb20e0e"
+        },
+        "fixtureSha256": "efb2ac9273ca1a719b124cd9a77d68a8ccf8a3a2b449cd62011570bc81e6d275",
+        "differences": {}
+      },
+      {
+        "name": "worker-32m36",
+        "mainEqualAfter": true,
+        "beforeEqualAfter": true,
+        "counts": {
+          "main": 1454,
+          "before": 1454,
+          "after": 1454
+        },
+        "hashes": {
+          "main": "aa185b400d6f9d6b5c6409e8bc92de552fed31b8de051c0f180cd9d503630d08",
+          "before": "aa185b400d6f9d6b5c6409e8bc92de552fed31b8de051c0f180cd9d503630d08",
+          "after": "aa185b400d6f9d6b5c6409e8bc92de552fed31b8de051c0f180cd9d503630d08"
+        },
+        "fixtureSha256": "06cbef36868aed0c406f863b0e447c5f5dac3656f3755ce7c97715a0cbd2ffda",
+        "differences": {}
+      }
+    ],
+    "allThreeVariantsByteIdentical": true,
+    "totalCommandsPerVariant": 3822
+  },
+  "checks": {
+    "typecheck": "tsc --noEmit passed",
+    "diff": "git diff --check passed"
+  },
+  "rawEvidence": "rebase.evidence.json includes the full src log, A100 recovery log, kernel OOM evidence, all nine command streams, source drivers and range-diff."
+}
