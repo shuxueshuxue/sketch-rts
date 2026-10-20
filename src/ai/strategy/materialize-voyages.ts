@@ -10,10 +10,11 @@ import type { AllocationMethodQuoteInput, AllocationPrecondition, ExecutableMeth
 import type { CrossingEta, LandId } from './types';
 import { landIdAt, regionIndex, seaIdAt } from './regions';
 import { actionTargetArrival } from './unit-arrivals';
+import { plannedVoyageArrival, plannedVoyageContext } from './planned-voyage-arrival';
 
 type Group = { key: string; source: LandId; crossing: CrossingEta; units: Unit[]; arrivalTicks: number };
 type Result = { voyages: PlannedVoyage[]; actions: ExecutableMethod['actions'][number][]; spends: PlannedAllocationSpend[];
-  missing: AllocationPrecondition[]; latestArrivalTicks: number };
+  missing: AllocationPrecondition[]; latestArrivalTicks: number | null };
 const byId = (a: { id: string }, b: { id: string }) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 
 /** Specialize only a supplied bundle. Future hulls are packing prototypes,
@@ -26,15 +27,61 @@ export function materializeVoyages(input: AllocationMethodQuoteInput, actionId: 
   if (!action) throw new Error(`Missing transport action ${actionId}`);
   const target = action.target, selected = new Set(input.unitIds), passengers = new Set(passengerIds);
   const result: Result = { voyages: [], actions: [], spends: [], missing: [], latestArrivalTicks: 0 };
-  const missing = (code: string, ids: readonly string[], kind: AllocationPrecondition['kind'] = 'route') => {
-    result.missing.push({ id: `${actionId}/${code}:${ids.join(',')}`, kind, status: 'unmet',
+  const missing = (code: string, ids: readonly string[], kind: AllocationPrecondition['kind'] = 'route',
+    status: AllocationPrecondition['status'] = 'unmet') => {
+    result.missing.push({ id: `${actionId}/${code}:${ids.join(',')}`, kind, status,
       reason: { code, factIds: [...ids], values: {} }, demand: null, subgoalIds: [] });
   };
   const actors = new Map(snapshot.units.map(unit => [unit.id, unit]));
   const facts = new Map(situation.units.map(unit => [unit.id, unit]));
+  const retained = new Set<string>(), keptActions = new Set<string>();
+  const keepAction = (id: string) => {
+    if (keptActions.has(id)) return;
+    keptActions.add(id);
+    const prior = method.actions.find(action => action.id === id);
+    if (!prior) { missing('fixed-voyage-production-action-missing', [id], 'production'); return; }
+    for (const dependency of prior.dependsOn) keepAction(dependency);
+    result.actions.push(prior);
+    for (const spendId of prior.spendIds) {
+      const spend = method.spends.find(spend => spend.spendId === spendId);
+      if (spend) result.spends.push(spend);
+      else missing('fixed-voyage-production-spend-missing', [id, spendId], 'budget');
+    }
+  };
+  // Once native execution or paid production starts, this is the original
+  // voyage, not another global crossing candidate. Its manifest and geometry
+  // survive partial unloading, a newly born hull and a serialized fork.
+  for (const voyage of method.voyagePlans ?? []) {
+    if (voyage.actionId !== actionId || !plannedVoyageContext(input, voyage).committed) continue;
+    for (const id of voyage.unitIds) retained.add(id);
+    if (voyage.ship.kind === 'production') keepAction(voyage.ship.actionId);
+    const invalid = voyage.unitIds.filter(id => !passengers.has(id) || !selected.has(id)
+      || !actors.has(id) || actors.get(id)!.owner !== situation.owner || actors.get(id)!.hp <= 0);
+    if (invalid.length) { missing('fixed-voyage-manifest-no-longer-granted', invalid, 'handoff'); continue; }
+    if (voyage.ship.kind === 'existing' && !selected.has(voyage.ship.unitId)) {
+      missing('fixed-voyage-hull-not-granted', [voyage.ship.unitId], 'transport'); continue;
+    }
+    let current = voyage.crossing, latestCrossingTicks = -1;
+    for (const id of voyage.unitIds) {
+      const arrival = plannedVoyageArrival(input, voyage, actors.get(id)!, target);
+      if (!('ticks' in arrival)) {
+        missing(arrival.reason.code, [voyage.id, id], arrival.reason.code.includes('production') ? 'production' : 'route',
+          arrival.status === 'unreachable' ? 'unmet' : 'unknown');
+        continue;
+      }
+      result.latestArrivalTicks = Math.max(result.latestArrivalTicks ?? 0, arrival.ticks);
+      if (arrival.crossings[0] && arrival.ticks > latestCrossingTicks) {
+        latestCrossingTicks = arrival.ticks;
+        current = { ...arrival.crossings[0], departure: { ...voyage.departure.point }, landing: { ...voyage.destination.point },
+          landingGround: { ...voyage.landingGround.point } };
+      }
+    }
+    result.voyages.push({ ...voyage, crossing: current });
+  }
   const groups = new Map<string, Group>();
   const destinations = target.landId;
   for (const id of [...passengers].sort()) {
+    if (retained.has(id)) continue;
     const unit = actors.get(id), fact = facts.get(id);
     if (!unit || unit.owner !== situation.owner || unit.hp <= 0 || !selected.has(id)) { missing('transport-member-unavailable', [id]); continue; }
     if (unitMover(unit.kind) !== 'land') continue;
@@ -52,7 +99,7 @@ export function materializeVoyages(input: AllocationMethodQuoteInput, actionId: 
     const exact = groups.get(variant) ?? { key: variant, source: fact.location.landId, crossing, units: [], arrivalTicks: 0 };
     exact.units.push(unit); groups.set(variant, exact);
     exact.arrivalTicks = Math.max(exact.arrivalTicks, arrival.ticks);
-    result.latestArrivalTicks = Math.max(result.latestArrivalTicks, arrival.ticks);
+    result.latestArrivalTicks = Math.max(result.latestArrivalTicks ?? 0, arrival.ticks);
   }
   const shores = groups.size ? regionIndex(snapshot.map).shoresByLand : undefined;
   for (const group of [...groups.values()].sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0)) {
@@ -126,7 +173,7 @@ export function materializeVoyages(input: AllocationMethodQuoteInput, actionId: 
         const earlier = result.actions.filter(action => action.executor === 'strategy.train-transport' && action.target.entityId === at.entityId).at(-1);
         const waitingSlots = result.actions.filter(action => action.executor === 'strategy.train-transport' && action.target.entityId === at.entityId
           && !input.executions.some(execution => execution.token.actionId === action.id && execution.status === 'complete')).length;
-        if (crossing.requiresNewShip) result.latestArrivalTicks = Math.max(result.latestArrivalTicks,
+        if (crossing.requiresNewShip) result.latestArrivalTicks = Math.max(result.latestArrivalTicks ?? 0,
           group.arrivalTicks + waitingSlots * UNIT_DEFS.transport.trainTime);
         result.actions.push({ id: hull.productionId, executor: 'strategy.train-transport', intent: { kind: 'train-transport' },
           production: prior?.production ?? { producer: { kind: 'existing', buildingId: at.entityId! },
@@ -146,5 +193,6 @@ export function materializeVoyages(input: AllocationMethodQuoteInput, actionId: 
   // not re-invented as another transport when it becomes a physical candidate.
   result.spends = [...new Map(result.spends.map(spend => [spend.spendId, spend])).values()];
   result.actions = [...new Map(result.actions.map(action => [action.id, action])).values()];
+  if (result.missing.length) result.latestArrivalTicks = null;
   return result;
 }

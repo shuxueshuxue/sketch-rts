@@ -81,7 +81,7 @@ export const conquestMethodProvider: AllocationMethodProvider = {
       if (step.executor === 'strategy.transport') {
         const members = step.intent.kind === 'deliver-workers' ? workers : fighters;
         const plan = materializeVoyages(input, step.id, ids(members));
-        latestArrival = Math.max(latestArrival, plan.latestArrivalTicks);
+        latestArrival = Math.max(latestArrival, plan.latestArrivalTicks ?? 0);
         const parentDependencies = step.dependsOn.filter(id => !['strategy.train-transport', 'strategy.assemble'].includes(stepKinds.get(id) ?? ''));
         missing.push(...plan.missing); spends.push(...plan.spends); voyages.push(...plan.voyages);
         if (!plan.voyages.length && !plan.missing.length) { replaced.set(step.id, parentDependencies); continue; }
@@ -102,7 +102,7 @@ export const conquestMethodProvider: AllocationMethodProvider = {
     }
     const dependencies = (id: string): readonly string[] => replaced.has(id) ? replaced.get(id)!.flatMap(dependencies) : [id];
     const final = [...new Map(actions.map(step => [step.id, { ...step, dependsOn: [...new Set(step.dependsOn.flatMap(dependencies))] }])).values()];
-    const planned = { ...method, actions: final, voyagePlans: voyages, estimatedTicks: latestArrival,
+    const planned = { ...method, actions: final, voyagePlans: voyages, estimatedTicks: missing.length ? null : latestArrival,
       spends: [...new Map(spends.map(spend => [spend.spendId, spend])).values()],
       preconditions: [...method.preconditions.filter(condition => !condition.id.includes('/materialized:') && !condition.id.includes('/workforce:')), ...missing.map(condition => ({ ...condition,
         id: `${method.id}/materialized:${condition.id}` }))] };

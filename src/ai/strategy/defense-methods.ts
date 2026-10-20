@@ -18,7 +18,7 @@ import { arrivalWeightedForce } from './arrival-force';
 import { materializeVoyages } from './materialize-voyages';
 import { unitMover } from '../../shared/catalog';
 import { bodyMass } from '../../shared/physical-body';
-import { actionTargetArrival } from './unit-arrivals';
+import { allocatedMemberArrival } from './planned-voyage-arrival';
 
 const reason = (code: string, factIds: readonly string[] = [], values: AllocationReason['values'] = {}): AllocationReason => ({ code, factIds, values });
 const defenderKinds: readonly Method['kind'][] = ['local-squad', 'main-army-recall', 'wait-in-cover', 'cross-sea-reinforcement', 'evacuation'];
@@ -127,7 +127,7 @@ export const defenseMethodProvider: AllocationMethodProvider = {
     const etas = new Map<string, number>();
     let latest = 0;
     for (const unit of selected) {
-      const fact = facts.get(unit.id), arrival = fact && actionTargetArrival(fact, responseId, method.actions.at(-1)!.target, situation.assets);
+      const fact = facts.get(unit.id), arrival = allocatedMemberArrival(input, unit, method.actions.at(-1)!.target, responseId);
       if (method.voyagePlans?.length && fact?.roles.includes('transport')) continue;
       const sameLand = fact?.location.kind === 'land' && fact.location.landId === objective.target.landId;
       if (!fact || (!evacuation && (fact.roles.includes('worker') || fact.roles.includes('transport') || fact.roles.includes('warship')))
