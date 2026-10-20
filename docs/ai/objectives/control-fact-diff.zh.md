@@ -29,3 +29,11 @@
 固定航次查询、新的共同估值窗口、补员曲线和待校准伤亡模型尚未被这些只读金标调用，因此本表不替它们重立数值基准。它们在正式入口的新增输出必须另做同等逐字段审计。没有上述事实阶段解释的变化视为 bug，不能直接更新金标。
 
 完整机器表：[control-fact-diff.json.gz](control-fact-diff.json.gz)，SHA256 `ef44123b1f6577692bb19a093f52691df919ab345dc917815c116874819b3ad0`。解压后 `changes[]` 每行包含阶段、帧、JSON Pointer、旧值和新值（共 27695 叶）；`stages[]` 保留各阶段全部引用哈希；`reproduction` 内含本次精确隔离脚本、生成器和校验列表。基线阶段差异为 0，最终两份新引用文件与主工作树逐字节相同。
+
+## 团队关系补充修正
+
+冷审计另查出部分调用未传 `snapshot.teams`，把盟友厅列为 AttackSite、把盟友兵列为未知敌援。策略层现统一通过 `ownership.ts` 读取快照团队；显式房间团队覆盖快照。原生几何 helper 也从同一入口取得团队参数。盟友不属于敌方，但不因此成为可租用的己方资源。修正范围包括已合入的只读 LAND/NAVAL/Situation、实际入侵归属、营地及据点风险、航次 exposure 和正式执行器；不改兵力、伤亡或折现参数。
+
+新增 [team-relation-frames.json.gz](../../../src/ai/strategy/fixtures/team-relation-frames.json.gz) 保存 main `646cf9a0` 十一图中全部六个组队配置的 26 个活跃席位，取各席约 9000 tick 的真实 think 前态。碎海、环水、神泉殿、龟湖、双岸为 2 对 2，蓝宝为 3 对 3；其余五图为双人对战。枚举使用 `initial.activePlayers`，不计快照中的未激活占位玩家。每局用原命令完整重放至 18000 tick，snapshot/canonical/checksum 三项匹配；夹具内保留逐帧文件哈希、原始包与提取器哈希。合并压缩夹具 SHA256 为 `5916d656549dd0d5edcd29a02abe0140b938453bcc1615b32a9d67ce2cf735b3`。
+
+`ownership.scene.test.ts` 对所有组队席位断言盟友不进入 AttackSite、威胁、已知或未知敌援、营地交战池及航次暴露，并静态禁止其他 strategy 模块直接调用 policy 敌我比较。此处是新增事实的不变式证据；上一节的历史逐字段表保持原样，不能据此改写未重新审计的控制报价金标。
