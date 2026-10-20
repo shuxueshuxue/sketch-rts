@@ -75,7 +75,7 @@ export const CREEP_STAGING_TURNS = [0, 30, -30, 60, -60, 90, -90].map((degrees) 
 // natural's guard is cleared wherever the natural is), and a target farther off needs a real army (v7-far-attack).
 export const V7_HOME_REACH = 1_500;
 
-export type Camp = { center: Point; creeps: Unit[]; strength: number; reach: number };
+export type Camp = { center: Point; creeps: readonly Unit[]; strength: number; reach: number };
 
 type CreepState = NonNullable<V6PolicyMemory["creep"]>;
 

@@ -1,3 +1,6 @@
+import { unitAutoAcquireRadius, NEUTRAL_LEASH_RANGE, NEUTRAL_DAMAGE_RESPONSE_RANGE, NEUTRAL_RETURN_STOP_RANGE, NEUTRAL_ASSIST_RANGE } from './combat-acquisition';
+export { AUTO_ACQUIRE_RANGE } from './combat-acquisition';
+import { AUTO_ACQUIRE_RANGE } from './combat-acquisition';
 import { continuingShipAim, shipAttackStation, shipCanAttackCoastTarget } from './ship-attack-station';
 import { simulationObservationActive, observeCommand, observeDamage, observeKill, observeRemoval } from './sim/observation';
 export { observeSimulation } from './sim/observation';
@@ -181,15 +184,10 @@ const MOON_WELL_HEAL_EFFECT_DURATION = seconds(1.1);
 const REPAIR_FULL_COST_FRACTION = 0.35;
 const REPAIR_HP_PER_SECOND = UNIT_DEFS.footman.attackDamage / (UNIT_DEFS.footman.attackCooldown/seconds(1));
 const REPAIR_HAMMER_EFFECT_DURATION = seconds(3);
-export const AUTO_ACQUIRE_RANGE = 230;
 // Projectile rates are distance per second; only flight duration is quantized to simulation ticks.
 const PROJECTILE_SPEED = 360; // Distance per second.
-const NEUTRAL_LEASH_RANGE = 650;
 // @@@neutral-damage-response - Damage response must cover any legal ranged hit before leash cleanup can erase the aggro.
 // A new long-range siege weapon must not expand every creep's pursuit radius.
-const NEUTRAL_DAMAGE_RESPONSE_RANGE = NEUTRAL_LEASH_RANGE;
-const NEUTRAL_RETURN_STOP_RANGE = 8;
-const NEUTRAL_ASSIST_RANGE = 360;
 // @@@player-aggro - Player units answer damage the way neutral camps do: the hit unit turns on its attacker and idle
 // soldiers of the same owner nearby come to help, so a shooter parked outside acquisition range is no longer free damage.
 // Only self-directed behaviour answers. A move, an explicit attack or a worker job is a command and is never overridden,
@@ -1604,7 +1602,7 @@ function updateUnits(game: Game, defenses: ShipDefenseFrame, navalFrame: boolean
     if (unit.kind !== "worker") {
       // Only a self-directed chase returns to its station. A shove alone must leave an idle unit where it lands.
       // A troop on a tower's top takes up only what it can strike from there (see @@@tower-garrison).
-      const target = nearestEnemyTarget(game, unit, unit.owner === "neutral" ? 150 : unit.garrison ? unit.attackRange : AUTO_ACQUIRE_RANGE, navalUnitFrame);
+      const target = nearestEnemyTarget(game, unit, unitAutoAcquireRadius(game, unit, 'idle', navalUnitFrame), navalUnitFrame);
       if (target) unit.order = { type: "attack", targetId: target.id, ...automaticLeash(game, unit) };
     }
 
@@ -1782,9 +1780,7 @@ function updateAttackMoveOrder(game: Game, unit: Unit, navalFrame = true) {
     unit.order = destination;
   }
 
-  const profile=navalFrame ? shipProfile(unit) : undefined;
-  const acquisition=profile ? Math.max(unit.attackRange,Math.min(700,Math.max(AUTO_ACQUIRE_RANGE,unit.attackRange+profile.length*.4+100)))
-    : unitRules(game,unit).weapon ? Math.max(AUTO_ACQUIRE_RANGE,unit.attackRange) : AUTO_ACQUIRE_RANGE;
+  const acquisition = unitAutoAcquireRadius(game, unit, 'attackMove', navalFrame);
   const target = nearestEnemyTarget(game, unit, acquisition, navalFrame);
   if (target) {
     unit.order = { ...order, targetId: target.id };
