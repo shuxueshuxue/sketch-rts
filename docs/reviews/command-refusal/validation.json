@@ -1,0 +1,64 @@
+{
+  "productionBase": "f5f4baafc64228fc64324f249cb3b5dd8d00a76c",
+  "full": {
+    "command": "npx vitest run --dir src --maxWorkers 2 --minWorkers 1",
+    "source": "b59e5073414212ff8e1625c893d7307dc0617b58",
+    "files": 716,
+    "passedFiles": 715,
+    "failedFiles": 1,
+    "passedTests": 7926,
+    "failedTests": 1,
+    "skippedTests": 1,
+    "durationSeconds": 1523.5,
+    "failure": "naval.test.ts still loaded its old /Unknown/ wording assertion; actual refusal correctly reported ownership. No gameplay assertion failed."
+  },
+  "navalRerun": {
+    "command": "npx vitest run src/shared/naval.test.ts --maxWorkers 1 --minWorkers 1",
+    "source": "9623b321c45db6ce1217838cc110879bbb9c36bb",
+    "passedFiles": 1,
+    "passedTests": 21,
+    "failedTests": 0,
+    "durationSeconds": 8.57,
+    "change": "Assert structured ownership facts. Keep unreachable shore, HP and gold assertions unchanged."
+  },
+  "currentCoverage": {
+    "files": 716,
+    "passedTests": 7927,
+    "skippedTests": 1,
+    "method": "Complete source suite plus the corrected naval file rerun; not a second all-green full invocation."
+  },
+  "rootTypecheck": {
+    "command": "npx tsc --noEmit -p .",
+    "source": "d0c2a0030673d8fade1938940d8398a05f6fb2c1",
+    "exitCode": 0
+  },
+  "guardRecordings": {
+    "versions": [
+      "v9_archer",
+      "v9_summoner",
+      "v9_knight"
+    ],
+    "statesPerRecording": 2401,
+    "totalStates": 7203,
+    "projection": "Only added refusal/waiting receipts and their metadata are omitted for the older guard-rule proof. Positions, orders, resources, old effects and IDs retain their goldens."
+  },
+  "unchangedHashGoldens": [
+    "fresh-game canonical checksums",
+    "duels",
+    "plan-trace"
+  ],
+  "loadSensitiveTests": {
+    "presets": "passed in full invocation",
+    "large-battle-think": "passed in full invocation"
+  },
+  "mainRegression": {
+    "source": "a389ec26",
+    "test": "reports insufficient gold without replacing an order or spending an entity id",
+    "result": "failed because effects was empty"
+  },
+  "browser": "yatu-results.json",
+  "logSha256": {
+    "full": "44772a4a5e675dab1b983bc42964bc3406b34064b3746b17c18269353efa5f0e",
+    "navalRerun": "457916e244ee60c6cf07f8153a285c3d7dd804fe74a5bce25a8329265abb3e03"
+  }
+}
