@@ -94,7 +94,7 @@ export class AiDeathLedger {
     this.rememberIdentities(this.game);
     const previous = this.contexts.get(owner);
     const empty = createAiPolicyMemory(), base = deathTaskIndex(this.game, owner, empty);
-    const index = { ...base, byUnit: new Map(facts.tasks), general: facts.general ?? undefined, generalClearingTargets:()=>facts.generalClearingTargetIds ?? undefined };
+    const index = { ...base, byUnit: new Map(facts.tasks), general: facts.general ?? undefined, hallPerimeter:(id?:string)=>facts.hallPerimeters.find(([hall])=>hall===id)?.[1]??null, generalClearingTargets:()=>facts.generalClearingTargetIds ?? undefined };
     const memory = { unitClaims: facts.claims };
     this.contexts.set(owner, { memory, index, priorAttack: new Set(facts.priorAttack) });
     if (worn?.reason === 'general:retreat:worn' && worn.tick >= (previous ? tick - 15 : tick))

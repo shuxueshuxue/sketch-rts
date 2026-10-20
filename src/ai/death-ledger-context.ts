@@ -159,19 +159,24 @@ export type AiDeathThinkContext = {
   general: Pick<NonNullable<ReturnType<typeof deathTaskIndex>['general']>, 'group' | 'mode' | 'targetHallId' | 'stage'> | null;
   claims: Record<string, { localRetreat?: boolean; kind: string }>;
   generalClearingTargetIds: string[] | null;
+  hallPerimeters: [string, NonNullable<AiDeathTask['perimeter']>][];
   priorAttack: string[]; worn: { reason: string; tick: number } | null;
   units: Pick<Unit, 'id' | 'kind' | 'x' | 'y' | 'hp' | 'maxHp' | 'order' | 'deck'>[];
 };
 
 export function projectDeathThinkContext(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory): AiDeathThinkContext {
   const index = deathTaskIndex(snapshot, owner, memory), general = index.general;
-  const clearing = (index as typeof index & {generalClearingTargets?:()=>string[]|undefined}).generalClearingTargets;
-  const ownedUnits=snapshot.units.filter(u=>u.owner===owner&&u.hp>0),own=new Set(ownedUnits.map(u=>u.id));
-  return structuredClone({ tick: snapshot.tick, owner, tasks: [...index.byUnit].filter(([id])=>own.has(id)),
+  const hallPerimeters:AiDeathThinkContext['hallPerimeters']=[];
+  const hallId=general&&['defend','guard'].includes(general.mode)?general.targetHallId:undefined;
+  const perimeter=hallId?index.hallPerimeter(hallId):null;
+  if(hallId&&perimeter)hallPerimeters.push([hallId,perimeter]);
+  const ownedUnits=snapshot.units.filter(u=>u.owner===owner&&u.hp>0);
+  return structuredClone({ tick: snapshot.tick, owner, tasks: [...index.byUnit],
     general: general ? { mode:general.mode, ...(general.group ? {group:general.group} : {}),
       ...(general.targetHallId ? {targetHallId:general.targetHallId} : {}), ...(general.stage ? {stage:general.stage} : {}) } : null,
-    claims: Object.fromEntries(Object.entries(memory.unitClaims).filter(([id])=>own.has(id)).map(([id, claim]) => [id, { kind: claim.kind, localRetreat: !!claim.localRetreat }])),
-    generalClearingTargetIds: clearing?.() ?? null,
+    claims: Object.fromEntries(Object.entries(memory.unitClaims).map(([id, claim]) => [id, { kind: claim.kind, localRetreat: !!claim.localRetreat }])),
+    hallPerimeters,
+    generalClearingTargetIds: general?.mode==='creep' ? index.generalClearingTargets()??null : null,
     priorAttack: memory.landAttack?.general.group ?? memory.v6?.general?.group ?? [],
     worn: memory.landAttackResult ? { tick: memory.landAttackResult.tick, reason: memory.landAttackResult.reason } : null,
     units: ownedUnits.map(({id, kind, x, y, hp, maxHp, order, deck}) =>

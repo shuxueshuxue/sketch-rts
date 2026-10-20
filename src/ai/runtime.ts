@@ -137,7 +137,9 @@ export function createInlineAiThinkExecutor(runtime: AiRuntimeState): AiThinkExe
   return {
     observe(next) { observer = next; },
     submit(game, job, check) {
-      const result = planAiCommandFrame(game, job.requests, { ...(runtime.policyMode ? { policyMode: runtime.policyMode } : {}), ...(observer ? { observer } : {}) });
+      const result = observer
+        ? planAiCommandFrame(game, job.requests, { ...(runtime.policyMode ? { policyMode: runtime.policyMode } : {}), observer })
+        : planAiCommandFrame(game, job.requests, runtime.policyMode ? { policyMode: runtime.policyMode } : {});
       const commands = result.commands.map((entry) => ({ playerId: entry.playerId, command: entry.command }));
       check(commands);
       if (commands.length > 0) planned.set(job.deliveryTick, [...(planned.get(job.deliveryTick) ?? []), ...commands]);

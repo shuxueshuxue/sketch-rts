@@ -31,3 +31,13 @@ it('does no trace or attribution construction and sends no diagnostic reply with
  host.think(message);expect(projection).not.toHaveBeenCalled();expect(builder).not.toHaveBeenCalled();
  expect(replies).toHaveLength(1);expect(replies[0]).not.toHaveProperty('observations');
 });
+it('retains a defense perimeter from the think snapshot after the hall is removed',async()=>{
+ const {AiDeathLedger}=await import('../death-ledger');const {createBuilding}=await import('../../shared/map');
+ const {createAiPolicyMemory}=await import('../memory');const {strikeUnit,stepGame}=await import('../../shared/sim');
+ const game=createGame('bareDuel',{aiPlayers:[]});game.units=[];game.buildings=[];game.scriptedVictory=true;delete game.map.terrain;
+ const unit=game.spawnUnit('player','footman',1400,500),enemy=game.spawnUnit('enemy','footman',1450,500),hall=createBuilding('hall','player','townHall',500,500,true);game.buildings.push(hall);
+ const memory=createAiPolicyMemory();memory.v6={general:{mode:'defend',targetHallId:hall.id,group:[unit.id]}} as NonNullable<typeof memory.v6>;
+ const facts=structuredClone(context.projectDeathThinkContext(snapshotGame(game),'player',memory)),ledger=new AiDeathLedger(game,{owners:['player']});
+ ledger.recordThinkContext(facts);game.buildings=[];strikeUnit(game,enemy,unit,99999,'spell');stepGame(game);
+ expect(ledger.records()[0]?.assignment.task?.perimeter).toEqual({x:500,y:500,radius:650});ledger.dispose();
+});

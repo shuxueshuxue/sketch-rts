@@ -60,7 +60,9 @@ export function createAiThinkClientExecutor(runtime: AiRuntimeState, game: Game,
     submit(current, job) {
       const snapshot = snapshotGame(current);
       const { terrain: _terrain, landmarks: _landmarks, ...map } = snapshot.map;
-      channel.send({ type: "think", session, tick: job.tick, deliveryTick: job.deliveryTick, snapshot: { ...snapshot, map }, requests: job.requests.map(wireRequest), ...(observer ? { observe: generation } : {}) });
+      const message: Extract<AiThinkMessage, {type:"think"}> = { type: "think", session, tick: job.tick, deliveryTick: job.deliveryTick, snapshot: { ...snapshot, map }, requests: job.requests.map(wireRequest) };
+      if(observer)message.observe=generation;
+      channel.send(message);
       running.set(job.deliveryTick, new Set(job.requests.map((request) => request.playerId)));
     },
     thinking(owner) {
