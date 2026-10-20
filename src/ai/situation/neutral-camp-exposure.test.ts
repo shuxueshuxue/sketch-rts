@@ -40,6 +40,22 @@ it('refreshes deaths and homes without retaining a stale camp member or inventin
   facts = neutralCampExposure(snapshot);
   expect(facts.camps).toHaveLength(1); expect(facts.camps[0]!.memberIds).toHaveLength(2);
 });
+it('reuses unchanged frozen camps across new snapshot wrappers and rebuilds only the changed camp', () => {
+  const snapshot = snapshotGame(scene());
+  snapshot.map.terrain = { cols: 1, rows: 1, cell: 3200, cells: '.' };
+  snapshot.units[0]!.orderQueue = [{ type: 'move', x: 400, y: 500 }];
+  const first = neutralCampExposure(snapshot), next = structuredClone(snapshot);
+  next.map.terrain = snapshot.map.terrain; next.tick += 15;
+  const stable = neutralCampExposure(next);
+  expect(stable.tick).toBe(next.tick); expect(stable.camps).toBe(first.camps);
+  next.units[0]!.orderQueue = [{ type: 'move', x: 450, y: 500 }];
+  const changed = neutralCampExposure(next);
+  expect(changed.camps[0]).not.toBe(first.camps[0]);
+  expect(changed.camps[1]).toBe(first.camps[1]);
+  expect(first.camps[0]!.camp.creeps[0]!.orderQueue).toEqual([{ type: 'move', x: 400, y: 500 }]);
+  expect(changed.camps[0]!.camp.creeps[0]!.orderQueue).toEqual([{ type: 'move', x: 450, y: 500 }]);
+  expect(neutralCampExposure(structuredClone(next))).toEqual(changed);
+});
 it('uses native acquisition modes rather than treating every cold camp as a 650-radius ban', () => {
   const snapshot = snapshotGame(scene()), unit = snapshot.units.at(-1)!;
   expect(unitAutoAcquireRadius(snapshot, unit, 'idle')).toBe(230);
