@@ -1,9 +1,10 @@
-import type { GameCommand, GameSnapshot, PlayerId, TrainableUnitKind, UnitOrder } from '../../shared/types';
+import type { GameCommand, GameSnapshot, PlayerId, TrainableUnitKind, Unit, UnitOrder } from '../../shared/types';
+import type { FixedVoyage } from './arrivals';
 import type { VoyageRiskStages } from './voyage-risk';
 import type { ExecutorReason } from '../executor-reasons';
 import type { DecisionFacts } from './decision';
 import type { AssignmentId, AssignmentStage, BudgetEntry, Effect, LandId, Location, Method, MethodId, Objective,
-  ObjectiveId, Precondition, ResourceDemand, Situation, Subgoal, Target, UnitRole, Utility, CrossingEta, ValuationContext, ValuationQuotation } from './types';
+  ObjectiveId, Precondition, ResourceDemand, Situation, Subgoal, Target, UnitRole, Utility, CrossingEta, ValuationContext, ValuationQuotation, Arrival } from './types';
 
 /** Formal control contracts. No executor registration or behavior is enabled by these types. */
 export type ActionId = string;
@@ -412,6 +413,9 @@ export type AllocationMethodQuoteInput = Readonly<{
   /** One deterministic batch, keyed by materialized PlannedVoyage.id; quotes
    * never advance observation memory themselves. Missing risk stays unknown. */
   voyageRisks?: ReadonlyMap<string, VoyageRiskStages>;
+  /** Same transaction's shared query, bound to the physical hull and original
+   * shores. Providers never construct an independent route evaluator. */
+  fixedVoyageArrival?: (unit: Unit, target: Target, voyage: FixedVoyage) => DecisionFacts<Arrival>;
   valuation?: ValuationContext;
 }>;
 export interface AllocationMethodProvider {
