@@ -38,7 +38,9 @@ export type MiningWorkforceForecast = Readonly<{
 export type MiningForecastInput = Readonly<{
   snapshot: GameSnapshot; situation: DecisionFacts<Situation>; mineId: string; hallReadyTicks: number;
   engineerId: string | null; window: ValuationWindow; calibration?: MiningWorkforceCalibration;
-  /** Net cash after this method's hall/hulls and other reservations; omitted reserves an unlaid hall. */
+  /** Net cash from this method's declared spend ledger after hall/hulls and other
+   * reservations. A finite negative balance is unfunded capital, not zero cash.
+   * Omitted reserves an unlaid hall's native full price. */
   availableGold?: number; explicitWorkerIds?: readonly string[];
   allowedUnitIds?: readonly string[]; unavailableUnitIds?: readonly string[];
   allowedProduction?: readonly Pick<ProductionUse, 'buildingId' | 'lane'>[];
@@ -203,8 +205,8 @@ export function forecastMiningWorkforce(input: MiningForecastInput): MiningWorkf
   const stock = snapshot.players[owner]!;
   // Reserve an unlaid hall's full cash capital before optional recruitment.
   // A negative balance is a funding wait, never negative spendable money.
-  const budget = input.availableGold === undefined ? stock.gold - (targetHall ? 0 : BUILDING_DEFS.townHall.cost)
-    : finite(input.availableGold, 'available gold');
+  const budget = input.availableGold === undefined ? stock.gold - (targetHall ? 0 : BUILDING_DEFS.townHall.cost) : input.availableGold;
+  if (!Number.isFinite(budget)) throw new Error(`Invalid mining forecast available gold: ${budget}`);
   const rate = situation.assets.filter(a => a.kind === 'mine' && a.owner === owner && a.id !== mineId).reduce((sum, a) => sum + a.incomeGoldPerTick, 0);
   const queuedSupply = snapshot.buildings.filter(b => b.owner === owner).reduce((sum, b) => sum + b.queue.reduce((total, q) => total
     + ('unitKind' in q ? UNIT_DEFS[q.unitKind].supplyUsed : 0), 0), 0);
