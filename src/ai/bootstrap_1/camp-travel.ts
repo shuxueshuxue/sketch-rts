@@ -116,7 +116,14 @@ export function planCampTravel(snapshot: GameSnapshot, unit: Unit, goal: Point, 
     }
     return contacts;
   };
-  const contacts = contactsOn(direct.points.length ? direct.points : [unit, goal])
+  const roadContacts = contactsOn(direct.points.length ? direct.points : [unit, goal]);
+  // Native steering can stop short of a requested resource/site. Occupying that
+  // site is a distinct effect: keep its contact evidence rather than creating
+  // a clearing child from an unrelated soft pursuit on the approach.
+  const arrivalContacts = contactsOn([goal]).filter(contact => !roadContacts.some(road => road.camp === contact.camp
+    && road.memberId === contact.memberId && road.reason === contact.reason))
+    .map(contact => ({ ...contact, segment: Math.max(0, direct.points.length - 1), arrivalTicks: direct.ticks }));
+  const contacts = [...roadContacts, ...arrivalContacts]
     .sort((a, b) => a.segment - b.segment || a.arrivalTicks - b.arrivalTicks);
   const roleExposure = (points: readonly Point[]) => unit.kind === 'worker'
     ? workerExposure(snapshot, unit, points, { foes: workerFoes, allowDeparture: true }) : [];

@@ -6,6 +6,9 @@ import { planCampTravel } from './camp-travel';
 import { threatRoadCommands } from './threat-roads';
 import { createBuilding } from '../../shared/map';
 import { workerExposure } from '../situation/worker-exposure';
+import { readFileSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
+import { routeCampNavigation } from './camp-navigation';
 
 it('executes the admitted native detour, rather than steering straight through the camp', () => {
   const game = createGame('bareDuel', { aiPlayers: [] }); game.units = []; game.buildings = []; delete game.map.terrain;
@@ -56,4 +59,16 @@ it('checks enemy towers and troops in the same role envelope when selecting a ca
   expect(plan.kind).toBe('detour');
   expect(workerExposure(snapshot, worker, plan.road!.points, { allowDeparture: true })).toEqual([]);
   expect(workerExposure(snapshot, worker, { x: 1000, y: 1200 }).some(exposure => exposure.foe.id === 'enemy-tower')).toBe(true);
+});
+
+it('keeps real arrival evidence when native steering stops short of an exposed resource', () => {
+  const frame = JSON.parse(gunzipSync(readFileSync(new URL('../fixtures/camp-pineshade-arrival-5347.json.gz', import.meta.url))).toString());
+  const worker = frame.snapshot.units.find((unit: { id: string }) => unit.id === 'unit-p1-worker-3');
+  const mine = frame.snapshot.resources.find((resource: { id: string }) => resource.id === 'gold-gen-2');
+  const plan = planCampTravel(frame.snapshot, worker, mine, { parentId: 'resource-arrival' });
+  expect(plan.kind).toBe('clear-camp');
+  expect(plan.contacts.some(contact => contact.reason !== 'active-pursuit')).toBe(true);
+  expect(plan.subgoal?.target.point).toEqual(plan.contacts.find(contact => contact.reason !== 'active-pursuit')!.camp.camp.center);
+  expect(() => routeCampNavigation(frame.snapshot, frame.owner, { memory: frame.memory }, [{ scriptId: 'economy',
+    command: { type: 'mine', unitIds: [worker.id], resourceId: mine.id } }], new Map())).not.toThrow();
 });
