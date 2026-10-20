@@ -47,7 +47,7 @@ export class AiPlanOverlay {
       if(input.matches('[data-plan-seek]'))this.adapter?.seekReplay?.(Number(input.value));
     });
     this.root.addEventListener('wheel',event=>{
-      if(!(event.target as Element).closest('[data-plan-timeline]'))return;
+      if(!(event.target as Element).closest('[data-plan-timeline]')||(!event.ctrlKey&&!event.altKey))return;
       event.preventDefault();this.zoom(event.deltaY<0?.7:1.4);
     },{passive:false});
     let markedClick=false;
@@ -144,9 +144,14 @@ export class AiPlanOverlay {
     };
     const gaps: [number,number][]=[];let cursor=from;
     for(const c of [...this.history.coverage.values()].sort((a,b)=>a.from-b.from)){if(c.from>cursor)gaps.push([cursor,Math.min(c.from,to)]);cursor=Math.max(cursor,Math.min(c.to??max,max));}if(cursor<to)gaps.push([cursor,to]);
+    const detailsOpen=this.root.querySelector<HTMLDetailsElement>('.plan-panel details')?.open??false;
+    const panelScroll=this.root.querySelector('.plan-panel')?.scrollTop??0,lanesScroll=this.root.querySelector('.plan-lanes')?.scrollTop??0;
     this.root.innerHTML=`<header><span><small>FIELD NOTES · ${range?'REPLAY':'LIVE'}</small><strong>阵前手记</strong></span><em>${clock(tick)} · ${range?'已录制回放':'当前战况'}</em>${range?'':`<button data-action="record">${this.recording?'■ 停止录制':'● 录制'}</button><button data-action="replay">查看录制</button>`}<button data-action="export">导出</button><label class="plan-import">打开录制<input type="file" accept=".json,application/json" hidden></label><button data-action="close" aria-label="关闭手记">×</button></header>
       <aside class="plan-panel"><small>意图 → 行动 → 结果</small><h2>把打算与结果对上</h2><p class="plan-muted">${range?'拖动时间轴，地图与计划同步回看。':'观战：全部计划 · 联机：仅自己 · 单机：可随时关闭'}</p>${!recorded?'<div class="plan-unrecorded">未记录<br><small>该时段没有采集计划，不补建、不插值。</small></div>':''}${this.panel(tick)}<details><summary>当前目标 · ${this.lastNodes.length}</summary>${this.lastNodes.map(({trace,node})=>`<button class="plan-list" data-goal="${escape(node.id)}" data-owner="${escape(trace.owner)}"><span>${escape(trace.owner)} · ${icons[node.kind]} ${escape(node.label)}</span><small>${escape(status[node.status])} · 分数 ${node.utility.score??'—'}</small></button>`).join('')||'<p>等待下一次 AI 思考。</p>'}</details><footer>虚线：打算怎么走 · 实线：记录到的足迹<br>归因仍保留其证据和推断标识。</footer></aside>
       <section class="plan-timeline" data-plan-timeline><div class="plan-time-tools"><button data-action="fold">收起 / 展开时间轴</button><button data-action="fit">全局</button><button data-action="tasks">${this.showTasks?'隐藏事务':'显示事务'}</button><button data-action="zoom-in">＋</button><button data-action="zoom-out">−</button><button data-action="left">←</button><button data-action="right">→</button><span>${clock(from)} — ${clock(to)}</span></div><div class="plan-lanes">${lanes.map(lane).join('')||'<p class="plan-unrecorded">未记录 · 打开视图以后才开始采集。</p>'}</div>${range?`<input data-plan-seek aria-label="回放进度" type="range" min="${range.from}" max="${range.to}" value="${tick}" step="1">`:'<p class="plan-live-note">实时观战只显示到当前时刻；主动录制后可以回看。</p>'}<div class="plan-key">× 战损（正常）　<span class="suspicious">? 存疑</span>　<span class="abnormal">! 异常</span>　· 未归因　▧ 建筑损失　／斜线区域：未记录</div></section>`;
+    const details=this.root.querySelector<HTMLDetailsElement>('.plan-panel details');if(details)details.open=detailsOpen;
+    const panel=this.root.querySelector('.plan-panel');if(panel)panel.scrollTop=panelScroll;
+    const laneList=this.root.querySelector('.plan-lanes');if(laneList)laneList.scrollTop=lanesScroll;
     const input=this.root.querySelector<HTMLInputElement>('input[type=file]');
     if(input)input.onchange=()=>{const file=input.files?.[0];if(file)void file.text().then(text=>this.options.openReplay(JSON.parse(text) as DebugReplayTrace)).catch(e=>this.error(e));};
   }
