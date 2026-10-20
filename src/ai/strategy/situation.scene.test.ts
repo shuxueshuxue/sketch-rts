@@ -67,6 +67,22 @@ describe('read-only situation over exact contract event frames', () => {
     const threat = situation.lands.find(land => land.id === home.target.landId)!.threats.find(threat => threat.siteId === home.id)!;
     expect(threat.attackers.length).toBeGreaterThan(0);
   });
+  it('forecasts an observed enemy unloading order without treating its passengers as landed', () => {
+    const frame = scene('Nd'), ship = frame.snapshot.units.find(unit => unit.id === 'unit-enemy-transport-2302')!;
+    const opponent = Object.keys(frame.snapshot.players).find(owner => owner !== frame.owner
+      && frame.snapshot.teams?.[owner] !== frame.snapshot.teams?.[frame.owner])!;
+    const mission = frame.memory.naval!.ferries![ship.id]!;
+    const passengers = frame.snapshot.units.filter(unit => unit.deck?.shipId === ship.id || unit.cabin?.shipId === ship.id);
+    ship.owner = opponent; ship.x = mission.from.x; ship.y = mission.from.y;
+    ship.order = { type: 'unload', ...mission.from };
+    for (const unit of passengers) unit.owner = opponent;
+    const situation = assess(frame), ids = new Set(passengers.filter(unit => unit.kind !== 'worker' && unit.attackDamage > 0).map(unit => unit.id));
+    const threat = situation.lands.flatMap(land => land.threats).find(threat => threat.siteId === 'building-enemy-townHall-1622')!;
+    expect(threat.attackers.some(attacker => ids.has(attacker.unitId))).toBe(true);
+    expect(situation.units.filter(unit => ids.has(unit.id)).every(unit => unit.location.kind === 'aboard')).toBe(true);
+    expect(threat.attackers.filter(attacker => ids.has(attacker.unitId)).every(attacker =>
+      attacker.arrival.status === 'reachable' && attacker.arrival.crossings.length === 1)).toBe(true);
+  });
 
   it('makes Ne borrowing and every crossing phase explicit, without declaring a busy boat free', () => {
     const situation = assess(scene('Ne'));

@@ -1255,6 +1255,40 @@ export function groundTravelCost(map: Pick<GameMap, 'terrain'>, from: Point, goa
   return cost >= UNREACHED ? undefined : cost * terrain.cell / (STRAIGHT * GROUND_WEIGHT);
 }
 
+export type GroundDistanceField = Readonly<{
+  /** Weighted eight-neighbour grid forecast, not a traced/smoothed steering road. */
+  cost(from: Point): number | undefined;
+}>;
+const distanceFields = new WeakMap<TerrainRuntime, { revision: number; fields: Map<number, GroundDistanceField> }>();
+
+/** One building-aware goal field serves every actor. Uses the same footprint
+ * overlay, goal seeds, no-corner-cut steps and pace weights as native steering.
+ * A geometry revision discards the old field; peek never builds one. */
+export function groundDistanceField(map: Pick<GameMap, 'terrain'>, goal: Point, peek = false): GroundDistanceField | undefined {
+  const terrain = map.terrain;
+  if (!terrain) return { cost: from => Math.hypot(from.x - goal.x, from.y - goal.y) };
+  const state = routing(map, terrain, 'land'), ground = runtime(terrain, 'land');
+  const target = padAt(state, goal.x, goal.y), revision = groundRevision(map);
+  if (target < 0 || ground.walk[target] !== 1) return undefined;
+  let cache = distanceFields.get(state);
+  if (cache?.revision !== revision) distanceFields.set(state, cache = { revision, fields: new Map() });
+  const known = cache.fields.get(target);
+  if (known || peek) return known;
+  const box = { left: 0, top: 0, width: state.width, height: state.walk.length / state.width };
+  const { seeds, costs } = goalSeeds(state, ground, target, box);
+  const field = growBox(state, box, seeds, costs), scale = terrain.cell / (STRAIGHT * GROUND_WEIGHT);
+  const answer: GroundDistanceField = { cost(from) {
+    let at = padAt(state, from.x, from.y);
+    if (at < 0 || ground.walk[at] !== 1) return undefined;
+    if (state.walk[at] !== 1) at = nearestWalkable(state, at);
+    if (at < 0 || field.dist[at]! >= UNREACHED) return undefined;
+    return field.dist[at]! * scale;
+  } };
+  if (cache.fields.size >= 64) cache.fields.delete(cache.fields.keys().next().value!);
+  cache.fields.set(target, answer);
+  return answer;
+}
+
 // @@@ground-wholes - A mover's cells fall into wholes, each joined by its walks and cut off from every other: an island's
 // land is a whole of its own, and so is a lake's water. Whether two points stand in one whole is sameGround; how many
 // wholes there are, groundWholes (a ladder map's land is one: the generator keeps no open ground a start cannot reach).
@@ -1281,15 +1315,23 @@ export function groundWholeAt(map: Pick<GameMap, "terrain">, point: Point, mover
   return wholesOf(state).labels[at] || undefined;
 }
 
+/** Anchors recorded while labeling the existing components; no second scan or numbering. */
+export function groundWholeAnchors(map: Pick<GameMap, 'terrain'>, mover: Mover = 'land') {
+  if (!map.terrain) return [{ label: 1, point: { x: 0, y: 0 } }];
+  return wholesOf(runtime(map.terrain, mover)).anchors.map((point, index) => ({ label: index + 1, point: { ...point } }));
+}
+
 function wholesOf(state: TerrainRuntime) {
   if (state.wholes) return state.wholes;
   const { walk, offsets, terrain, width } = state;
   const labels = new Int32Array(walk.length);
   const queue = new Int32Array(walk.length);
+  const anchors: Point[] = [];
   let count = 0;
   for (let seed = 0; seed < walk.length; seed += 1) {
     if (walk[seed] !== 1 || labels[seed] !== 0) continue;
     count += 1;
+    anchors.push(centerOf(state, seed));
     labels[seed] = count;
     let tail = 0;
     queue[tail++] = seed;
@@ -1311,7 +1353,7 @@ function wholesOf(state: TerrainRuntime) {
     deep[labels[((index - col) / terrain.cols + 1) * width + col + 1]!]! += 1;
   }
   deep[0] = 0;
-  state.wholes = { labels, count, deep };
+  state.wholes = { labels, count, deep, anchors };
   return state.wholes;
 }
 
@@ -1491,7 +1533,7 @@ type TerrainRuntime = {
   // The routing of walks (see @@@flow-tiles), built when first asked for.
   tiles?: Tiles | undefined;
   // Which whole of the mover's ground every cell belongs to (see @@@ground-wholes), worked out the first time it is asked.
-  wholes?: { labels: Int32Array; count: number; deep: Int32Array };
+  wholes?: { labels: Int32Array; count: number; deep: Int32Array; anchors: Point[] };
   // The sea's shore spots by a shipyard's radius (see shoreSpots), worked out the first time each is asked.
   shores?: Map<number, Point[]>;
   // Nearest-of fields by their candidates' cells, the least recently used first (see @@@nearest-field).

@@ -3,6 +3,8 @@ import { createAiPolicyMemory } from './memory';
 import { buildAiPlanTrace, type AiPlanTrace } from './plan-trace';
 import type { GameSnapshot } from '../shared/types';
 import type { AiDeathLedger } from './death-ledger';
+import { buildStrategyPlanTrace, type ObjectiveFamily } from './strategy/plan';
+import type { StrategyPlanTrace } from './strategy/types';
 
 export type AiPlanTraceOptions = AiOwnerPlannerOptions & { deathLedger?: AiDeathLedger };
 
@@ -10,9 +12,11 @@ export type AiPlanTraceOptions = AiOwnerPlannerOptions & { deathLedger?: AiDeath
  * The caller retains previous traces outside AI memory. Observers live outside the planner and simulation.
  */
 export function planAiOwnerCommandEntriesWithTrace<Source extends string = string>(snapshot: GameSnapshot,
-  request: AiOwnerPlannerRequest<Source>, options: AiPlanTraceOptions = {}, previous?: AiPlanTrace) {
+  request: AiOwnerPlannerRequest<Source>, options: AiPlanTraceOptions = {}, previous?: AiPlanTrace,
+  families?: readonly ObjectiveFamily[]) {
   const { deathLedger, ...plannerOptions } = options;
   let memory = request.memory ?? options.memory;
+  let strategy: StrategyPlanTrace | undefined;
   const provider = options.memoryProvider;
   // Observe the existing get/set boundary, including a read-only provider that
   // has no memory yet. Do not reread it after think or create a second policy memory.
@@ -23,10 +27,15 @@ export function planAiOwnerCommandEntriesWithTrace<Source extends string = strin
       provider?.set?.(owner, value);
     },
   };
-  const commands = planAiOwnerCommandEntries(snapshot, request, { ...plannerOptions, memoryProvider });
+  const commands = planAiOwnerCommandEntries(snapshot, request, { ...plannerOptions, memoryProvider, observeBootstrapPlan(context) {
+    options.observeBootstrapPlan?.(context);
+    memory = context.memory;
+    strategy = buildStrategyPlanTrace(snapshot, request.playerId, context, previous?.strategy, families);
+  } });
   const observedMemory = memory ?? createAiPolicyMemory();
   deathLedger?.recordThink(snapshot, request.playerId, observedMemory);
-  const trace = buildAiPlanTrace(snapshot, request.playerId, observedMemory,
+  const baseTrace = buildAiPlanTrace(snapshot, request.playerId, observedMemory,
     request.version ?? options.version ?? DEFAULT_AI_PLANNER_VERSION, previous);
+  const trace = strategy ? { ...baseTrace, strategy } : baseTrace;
   return { commands, trace: deathLedger ? deathLedger.withPlanTrace(trace, trace.previousTick ?? -1) : trace };
 }

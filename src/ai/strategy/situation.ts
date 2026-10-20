@@ -12,6 +12,7 @@ import { isOpponentOwner } from '../policy/ownership';
 import { distance } from '../policy/spatial';
 import { effectiveCombatRating, TOWER_STRENGTH, unitStrength } from '../policy/v6/strength';
 import { createArrivalQuery } from './arrivals';
+import { createPlanningDistanceQuery } from './distance-fields';
 import { unitCommitments, unitRoles } from './commitments';
 import { landIdAt, regionIndex, seaIdAt, unitLocation } from './regions';
 import { forceSuccessProbability, STRATEGY_PARAMETERS } from './utility';
@@ -25,10 +26,11 @@ const point = (entity: { x: number; y: number }) => ({ x: entity.x, y: entity.y 
 /** Read-only world assessment. All routing shares the caller's owner-think scope.
  * The previous value is observational history, never a serialized policy task. */
 export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory, previous?: Situation,
-  teams = snapshot.teams): Situation {
+  teams = snapshot.teams, fieldBuildBudget = Infinity): Situation {
   const tick = snapshot.tick, horizonTicks = STRATEGY_PARAMETERS.utilityHorizonTicks;
-  const regions = regionIndex(snapshot.map), options = { memory, ...(teams ? { teams } : {}) };
-  const query = createArrivalQuery(snapshot, owner, memory), live = snapshot.units.filter(unit => unit.hp > 0);
+  const regions = regionIndex(snapshot.map, Number.isFinite(fieldBuildBudget) ? 8 : Infinity, tick), options = { memory, ...(teams ? { teams } : {}) };
+  const distances = createPlanningDistanceQuery(snapshot, fieldBuildBudget);
+  const query = createArrivalQuery(snapshot, owner, memory, distances, fieldBuildBudget, regions), live = snapshot.units.filter(unit => unit.hp > 0);
   const byId = new Map(live.map(unit => [unit.id, unit]));
   const own = live.filter(unit => unit.owner === owner);
   const recovering = new Map(postRecoveryAssignments(snapshot, owner, options)
@@ -146,15 +148,31 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
     const candidates = live.filter(unit => foe(unit.owner) && unitMover(unit.kind) === 'land' && !unit.deck && !unit.cabin
       && landIdAt(snapshot.map, unit) === land
       && distance(unit, site.target.point) <= unit.speed * STRATEGY_PARAMETERS.threatHorizonTicks / SIM_TICKS_PER_SECOND + 240);
-    const incoming = incomingLandArmy(snapshot, owner, options, site.target.point, STRATEGY_PARAMETERS.threatHorizonTicks, candidates);
-    const attackers = incoming.map(({ unit, ticks }) => ({ unitId: unit.id, strength: strength(unit),
-      arrival: { status: 'reachable' as const, ticks, landTicks: ticks, crossings: [], evidence: [evidence('policy.incomingLandArmy', 'Shared native steering and arrival-range forecast')] } }));
+    const field = distances.field(site.target.point);
+    const incoming = incomingLandArmy(snapshot, owner, options, site.target.point, STRATEGY_PARAMETERS.threatHorizonTicks, candidates,
+      unit => { const cost = field?.field.cost(unit); return cost === undefined ? undefined
+        : { ticks: Math.ceil(cost / unit.speed * SIM_TICKS_PER_SECOND), endpoint: site.target.point }; });
+    const attackers: SiteThreat['attackers'][number][] = incoming.map(({ unit, ticks }) => ({ unitId: unit.id, strength: strength(unit),
+      arrival: { status: 'reachable' as const, ticks, landTicks: ticks, crossings: [], evidence: [evidence('policy.incomingLandArmy',
+        `Shared arrival admission using building-aware weighted goal field; geometry built ${field?.builtTick}`, field?.builtTick)] } }));
+    if (!field) for (const unit of candidates) if (unit.kind !== 'worker' && unit.attackDamage > 0) attackers.push({ unitId: unit.id, strength: strength(unit),
+      arrival: { status: 'unknown', reason: { code: 'threat-geometry-refresh-pending', detail: 'Coarse same-land threat candidate; arrival field is pending, not confirmed inside the response window', evidence: [] } } });
+    for (const passenger of live.filter(unit => foe(unit.owner) && unit.kind !== 'worker' && unit.attackDamage > 0 && (unit.deck || unit.cabin))) {
+      const boat = byId.get(passenger.deck?.shipId ?? passenger.cabin!.shipId);
+      if (!boat || boat.order.type !== 'unload' || landIdAt(snapshot.map, walkableGoal(snapshot.map, boat.order.x, boat.order.y)) !== land) continue;
+      const arrival = query.arrival(passenger, site.target);
+      if ('ticks' in arrival && arrival.ticks <= STRATEGY_PARAMETERS.threatHorizonTicks || arrival.status === 'unknown')
+        attackers.push({ unitId: passenger.id, strength: strength(passenger), arrival });
+    }
     for (const ship of live.filter(unit => foe(unit.owner) && unitMover(unit.kind) === 'sea')) {
       const weapon = combatCapability(snapshot, ship);
       if (weapon.armed && distance(ship, site.target.point) <= weapon.range) attackers.push({ unitId: ship.id, strength: strength(ship),
         arrival: { status: 'reachable', ticks: 0, landTicks: 0, crossings: [], evidence: [evidence('shared.combatCapability', 'Present working battery in potential range; firing arcs/line of fire are execution concerns')] } });
     }
-    const present = attackers.filter(attacker => distance(byId.get(attacker.unitId)!, site.target.point) <= STATION_RANGE);
+    const present = attackers.filter(attacker => {
+      const unit = byId.get(attacker.unitId)!;
+      return !unit.deck && !unit.cabin && distance(unit, site.target.point) <= STATION_RANGE;
+    });
     const presentIds = new Set(present.map(attacker => attacker.unitId));
     const defenders = own.filter(unit => !unit.deck && !unit.cabin && unitMover(unit.kind) === 'land'
       && landIdAt(snapshot.map, unit) === land && distance(unit, site.target.point) <= STATION_RANGE);
@@ -164,13 +182,18 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
     return { siteId: site.id, horizonTicks: STRATEGY_PARAMETERS.threatHorizonTicks, attackers,
       arrivedStrength: present.reduce((sum, attacker) => sum + attacker.strength, 0),
       incomingStrength: attackers.filter(attacker => !presentIds.has(attacker.unitId)).reduce((sum, attacker) => sum + attacker.strength, 0),
-      friendlyOnStationStrength: friendly, firstArrivalTicks: present.length ? 0 : incoming[0]?.ticks ?? null,
-      lossProbability: attackers.length ? forceSuccessProbability(attackers.reduce((sum, attacker) => sum + attacker.strength, 0), friendly) : 0,
+      friendlyOnStationStrength: friendly, firstArrivalTicks: present.length ? 0 : attackers.reduce<number | null>((minimum, attacker) =>
+        'ticks' in attacker.arrival ? Math.min(minimum ?? attacker.arrival.ticks, attacker.arrival.ticks) : minimum, null),
+      lossProbability: attackers.some(attacker => attacker.arrival.status === 'unknown') ? null : attackers.length ? forceSuccessProbability(attackers.reduce((sum, attacker) => sum + attacker.strength, 0), friendly) : 0,
       evidence: [evidence('strategy.situation', 'All sites use the same terrain component, physical station radius and shared 45-second arrival forecast')] };
   });
   const limitations: Reason[] = [{ code: 'forecast-not-execution', detail: 'ETAs exclude combat, body congestion and future wind changes; success probabilities and staffed income are declared heuristics', evidence: [] },
     { code: 'unified-budget-not-migrated', detail: 'Existing modules have no per-objective reservation ledger; method costs are proposals, not reserved cash', evidence: [] },
     { code: 'route-opportunities-partial', detail: 'Only retained actual pressure points are projected; missing new pressure-point geometry remains unknown', evidence: [] }];
+  if (distances.deferred) limitations.push({ code: 'geometry-refresh-pending', detail: `${distances.built} new fields built; ${distances.deferred} distinct goal queries deferred by the per-think rebuild budget; unknown threat is not safety`, evidence: [] });
+  if (regions.scannedRows < regions.totalRows) limitations.push({ code: 'shore-index-refresh-pending',
+    detail: `${regions.scannedRows}/${regions.totalRows} terrain rows indexed; every land/sea component is already present; missing crossing geometry is unknown`,
+    evidence: [evidence('strategy.regionIndex', 'Incremental immutable-terrain shore scan', regions.scannedAtTick)] });
   if (optional.length > MAX_OPTIONAL_TARGETS) limitations.push({ code: 'candidate-target-limit', detail: `Forecast ${MAX_OPTIONAL_TARGETS}/${optional.length} optional targets plus every owned site; omitted ETA is unknown`, evidence: [] });
   if (harassers.length > MAX_HARASS_TARGETS) limitations.push({ code: 'harasser-target-limit', detail: `Forecast ${MAX_HARASS_TARGETS}/${harassers.length} current harassment targets in stable order; omitted ETA is unknown`, evidence: [] });
   return { tick, owner, horizonTicks, assets, units, opportunities: opportunities.sort((a, b) => a.id.localeCompare(b.id)),

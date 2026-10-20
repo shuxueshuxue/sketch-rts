@@ -1,5 +1,5 @@
 import { unitMover } from '../../shared/catalog';
-import { groundWholeAt, type Terrain } from '../../shared/terrain';
+import { groundWholeAnchors, groundWholeAt, type Terrain } from '../../shared/terrain';
 import type { GameMap, Unit } from '../../shared/types';
 import type { LandId, Location, Point, SeaId } from './types';
 
@@ -16,23 +16,31 @@ export type RegionIndex = Readonly<{
   lands: ReadonlyMap<LandId, Point>;
   seas: ReadonlyMap<SeaId, Point>;
   shores: readonly Shore[];
+  scannedRows: number;
+  totalRows: number;
+  scannedAtTick: number;
 }>;
-const indices = new WeakMap<Terrain, RegionIndex>();
+type MutableIndex = { lands: Map<LandId, Point>; seas: Map<SeaId, Point>; shores: Shore[]; scannedRows: number; totalRows: number; scannedAtTick: number };
+const indices = new WeakMap<Terrain, MutableIndex>();
 
 /** Enumerates labels from the one terrain connectivity implementation, once per
  * immutable terrain. Buildings never change these IDs; roads still check bodies. */
-export function regionIndex(map: GameMap): RegionIndex {
+export function regionIndex(map: GameMap, rowBudget = Infinity, tick = 0): RegionIndex {
   if (!map.terrain) return { lands: new Map([['land:1', { x: 0, y: 0 }]]),
-    seas: new Map([['sea:1', { x: 0, y: 0 }]]), shores: [] };
-  const terrain = map.terrain, known = indices.get(terrain);
-  if (known) return known;
-  const lands = new Map<LandId, Point>(), seas = new Map<SeaId, Point>(), shores: Shore[] = [];
-  for (let row = 0; row < terrain.rows; row++) {
+    seas: new Map([['sea:1', { x: 0, y: 0 }]]), shores: [], scannedRows: 0, totalRows: 0, scannedAtTick: tick };
+  const terrain = map.terrain;
+  let result = indices.get(terrain);
+  if (!result) indices.set(terrain, result = {
+    lands: new Map(groundWholeAnchors(map).map(({ label, point }) => [`land:${label}` as LandId, point])),
+    seas: new Map(groundWholeAnchors(map, 'sea').map(({ label, point }) => [`sea:${label}` as SeaId, point])),
+    shores: [], scannedRows: 0, totalRows: terrain.rows, scannedAtTick: tick,
+  });
+  const { shores } = result, end = Math.min(terrain.rows, result.scannedRows + rowBudget);
+  if (end > result.scannedRows) result.scannedAtTick = tick;
+  for (let row = result.scannedRows; row < end; row++) {
     for (let col = 0; col < terrain.cols; col++) {
       const point = { x: (col + .5) * terrain.cell, y: (row + .5) * terrain.cell };
       const land = landIdAt(map, point), sea = seaIdAt(map, point);
-      if (land && !lands.has(land)) lands.set(land, point);
-      if (sea && !seas.has(sea)) seas.set(sea, point);
       if (land && sea) shores.push({ landId: land, seaId: sea, ground: point, water: point });
       // Landing needs a land/water contact, not enough land to place a shipyard.
       // Small islands may have a usable beach and no legal shipyard footprint.
@@ -43,8 +51,7 @@ export function regionIndex(map: GameMap): RegionIndex {
       }
     }
   }
-  const result = { lands, seas, shores };
-  indices.set(terrain, result);
+  result.scannedRows = end;
   return result;
 }
 

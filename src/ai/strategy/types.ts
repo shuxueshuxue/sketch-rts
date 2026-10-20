@@ -166,6 +166,10 @@ export type Objective = Readonly<{
   rank: number;
   reasons: readonly Reason[];
   methodIds: readonly MethodId[];
+  /** Supporting objectives share the parent's payoff; do not sum it twice. */
+  supportsObjectiveIds?: readonly ObjectiveId[];
+  /** Different plans establishing the same effect; their payoffs are alternatives. */
+  alternativeObjectiveIds?: readonly ObjectiveId[];
   stability: Readonly<{ minimumStayUntilTick: number; challengerId: ObjectiveId | null; challengerThinks: number }>;
 }>;
 
