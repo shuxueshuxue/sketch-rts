@@ -21,7 +21,7 @@ it('keeps a construction action through the actual detour and resumes it only af
   for (const entry of first) issueCommand(game, entry.command);
   const prior = campNavigationContinuations(memory);
   expect(routeCampNavigation(snapshotGame(game), 'player', { memory }, [], prior)).toEqual([]);
-  for (let tick = 0; tick < 1000 && game.units.find(unit => unit.id === worker.id)?.order.type !== 'idle'; tick++) stepGame(game);
+  for (let tick = 0; tick < 1000 && (worker.order.type !== 'idle' || worker.orderQueue?.length); tick++) stepGame(game);
   snapshot = snapshotGame(game);
   const resumed = routeCampNavigation(snapshot, 'player', { memory }, [], campNavigationContinuations(memory));
   expect(resumed).toContainEqual({ scriptId: 'builder', command });
@@ -57,4 +57,52 @@ it('preserves a deliberate native attack-move onto a guard while checking transi
   const command = { type: 'attackMove' as const, unitIds: [fighter.id], x: guard.x, y: guard.y };
   const entries = [{ scriptId: 'engagement', command }];
   expect(routeCampNavigation(snapshotGame(game), 'player', { memory: createAiPolicyMemory() }, entries, new Map())).toEqual(entries);
+});
+
+it('does not resume an earlier navigation goal after a later local escape supersedes its queued order', () => {
+  const game = createGame('bareDuel', { aiPlayers: [] }); game.units = []; game.buildings = []; delete game.map.terrain;
+  const worker = game.spawnUnit('player', 'worker', 500, 1000); game.spawnUnit('neutral', 'wildling', 1000, 1000);
+  const memory = createAiPolicyMemory();
+  const escape = { type: 'move' as const, unitIds: [worker.id], x: 200, y: 1200, avoidCombat: true };
+  const entries = routeCampNavigation(snapshotGame(game), 'player', { memory }, [
+    { scriptId: 'builder', command: { type: 'build', unitId: worker.id, buildingKind: 'farm', x: 1500, y: 1000 } },
+    { scriptId: 'local-rescue', command: escape },
+  ], new Map());
+  expect(entries.at(-1)?.command).toEqual(escape);
+  expect(memory.unitClaims[worker.id]?.campTravel).toBeUndefined();
+  for (const entry of entries) issueCommand(game, entry.command);
+  expect(routeCampNavigation(snapshotGame(game), 'player', { memory }, [], campNavigationContinuations(memory))).toEqual([]);
+});
+
+it('retains a blocked build while already standing at a safe rally point', () => {
+  const game = createGame('bareDuel', { aiPlayers: [] }); game.units = []; game.buildings = []; delete game.map.terrain;
+  const worker = game.spawnUnit('player', 'worker', 500, 1000); game.spawnUnit('neutral', 'ogreMage', 1000, 1000);
+  const memory = createAiPolicyMemory();
+  const command = { type: 'build' as const, unitId: worker.id, buildingKind: 'farm' as const, x: 1000, y: 1000 };
+  const entries = routeCampNavigation(snapshotGame(game), 'player', { memory }, [{ scriptId: 'builder', command }], new Map());
+  expect(entries).toEqual([{ scriptId: 'builder', command: { type: 'holdPosition', unitIds: [worker.id] } }]);
+  expect(memory.unitClaims[worker.id]?.campTravel?.command).toEqual(command);
+  expect(memory.unitClaims[worker.id]?.campTravel?.subgoal?.status).toBe('blocked');
+});
+
+it('issues a relocated hold after arrival so the native guard point is the actual station', () => {
+  const game = createGame('bareDuel', { aiPlayers: [] }); game.units = []; game.buildings = []; delete game.map.terrain;
+  const archer = game.spawnUnit('player', 'archer', 700, 1000); game.spawnUnit('neutral', 'wildling', 1000, 1000);
+  archer.attackRange = 320;
+  const memory = createAiPolicyMemory(), ranges = new Map([['station', 60]]);
+  const entries = routeCampNavigation(snapshotGame(game), 'player', { memory },
+    [{ scriptId: 'station', command: { type: 'holdPosition', unitIds: [archer.id] } }], new Map(), ranges);
+  expect(entries.some(entry => entry.command.type === 'move')).toBe(true);
+  expect(entries.some(entry => entry.command.type === 'holdPosition')).toBe(false);
+  // Another party finishes the blocker during this walk. Isolate the native
+  // hold's position binding from further changes in camp pursuit geometry.
+  game.units = game.units.filter(unit => unit.owner !== 'neutral');
+  for (const entry of entries) issueCommand(game, entry.command);
+  for (let tick = 0; tick < 100 && archer.order.type !== 'idle'; tick++) stepGame(game);
+  const arrived = { x: archer.x, y: archer.y };
+  const resumed = routeCampNavigation(snapshotGame(game), 'player', { memory }, [], campNavigationContinuations(memory), ranges);
+  expect(resumed).toContainEqual({ scriptId: 'station', command: { type: 'holdPosition', unitIds: [archer.id] } });
+  for (const entry of resumed) issueCommand(game, entry.command);
+  expect(archer.order).toMatchObject({ type: 'hold', ...arrived });
+  expect(arrived.x).toBeLessThan(700);
 });

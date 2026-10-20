@@ -146,8 +146,8 @@ export function territoryPostCommands(snapshot: GameSnapshot, owner: PlayerId, o
     recordPlay(v6Memory(options), 'territory:post');
   }
   const commands: GameCommand[] = [];
-  for (const { unit, point } of walking) commands.push(resolveAiCommandIntent(snapshot, owner,
-    { type: 'attackMove', unitIds: [unit.id], ...point }, options));
+  for (const { unit, point } of walking) commands.push(withNavigationIntent(resolveAiCommandIntent(snapshot, owner,
+    { type: 'attackMove', unitIds: [unit.id], ...point }, options), { arrivalRange: 60, station: true }));
   const waiting = holding.filter(unit => unit.order.type !== 'hold' && unit.order.type !== 'attack');
   if (waiting.length) commands.push({ type: 'holdPosition', unitIds: waiting.map(unit => unit.id) });
   // Suppress old rally commands for the whole current party, including units
@@ -171,3 +171,4 @@ export function finishTerritoryThink(snapshot: GameSnapshot, options: AiPolicyCo
     && (!isBacklineKind(unit) || unit.kind === 'summoner'));
   state.idle = safe && mode === 'hold' && !state.objective && !assisting && fighters.length >= 3;
 }
+import { withNavigationIntent } from '../policy/navigation-intent';

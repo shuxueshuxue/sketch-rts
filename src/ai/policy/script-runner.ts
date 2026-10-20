@@ -1,3 +1,4 @@
+import { copyNavigationIntent, navigationIntent } from './navigation-intent';
 import { ABILITY_DEFS, BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS } from "../../shared/catalog";
 import type { GameCommand, GameSnapshot, PlayerId } from "../../shared/types";
 import { createAiPolicyMemory } from "../memory";
@@ -56,7 +57,7 @@ function runScriptsWithContext(snapshot: GameSnapshot, owner: PlayerId, scripts:
     script.onCommands?.(snapshot, owner, policyOptions, scriptCommands);
     if (scriptCommands.length > 0) {
       recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams, preserveHireCampClaims, preserveSkirmishRetreatClaims, ...(script.redirects ? { redirects: script.redirects } : {}) });
-      commands.push(...scriptCommands.map((command) => ({ scriptId: script.id, command })));
+      commands.push(...scriptCommands.map((command) => commandEntry(script.id, command)));
       spent += scriptCommands.reduce((total, command) => total + purchaseCost(snapshot, owner, command), 0);
       reserveOrderedUnits(scriptCommands, movedUnitIds, snapshot);
       if (script.id === "economy") continue;
@@ -75,7 +76,7 @@ function runScriptsWithContext(snapshot: GameSnapshot, owner: PlayerId, scripts:
     if (scriptCommands.length === 0) continue;
     recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams, preserveHireCampClaims, preserveSkirmishRetreatClaims, ...(script.redirects ? { redirects: script.redirects } : {}) });
     reserveOrderedUnits(scriptCommands, movedUnitIds, snapshot);
-    commands.push(...scriptCommands.map((command) => ({ scriptId: script.id, command })));
+    commands.push(...scriptCommands.map((command) => commandEntry(script.id, command)));
   }
 
   for (const script of scripts) script.afterPlan?.(snapshot, owner, policyOptions, commands, scripts);
@@ -105,7 +106,7 @@ function withoutUnitsClaimedElsewhere(commands: GameCommand[], claims: ReadonlyM
   return commands.flatMap((command): GameCommand[] => {
     if (command.type === "move" || command.type === "holdPosition" || command.type === "attackMove" || command.type === "attack" || command.type === "aim" || command.type === "setStance" || (command.type === "repair" || command.type === "repairShip" || command.type === "repairUnit") || command.type === "mine") {
       const unitIds = command.unitIds.filter(free);
-      return unitIds.length > 0 ? [{ ...command, unitIds }] : [];
+      return unitIds.length > 0 ? [copyNavigationIntent(command, { ...command, unitIds })] : [];
     }
     if (command.type === "pickupItem" || command.type === "build") return free(command.unitId) ? [command] : [];
     if (command.type === "cast" && ABILITY_DEFS[command.ability].behavior === "charge") return free(command.unitId) ? [command] : [];
@@ -123,16 +124,16 @@ function removeOrderedUnitConflicts(commands: GameCommand[], movedUnitIds: Set<s
   for (const command of commands) {
     if (command.type === "attack") {
       const unitIds = command.unitIds.filter((unitId) => !movedUnitIds.has(unitId));
-      if (unitIds.length > 0) filtered.push({ ...command, unitIds });
+      if (unitIds.length > 0) filtered.push(copyNavigationIntent(command, { ...command, unitIds }));
     } else if (command.type === "attackMove") {
       const unitIds = command.unitIds.filter((unitId) => !movedUnitIds.has(unitId));
-      if (unitIds.length >= minimumAttackMoveUnits(command)) filtered.push({ ...command, unitIds });
+      if (unitIds.length >= minimumAttackMoveUnits(command)) filtered.push(copyNavigationIntent(command, { ...command, unitIds }));
     } else if (command.type === "move" || command.type === "aim" || command.type === "holdPosition") {
       const unitIds = command.unitIds.filter((unitId) => !movedUnitIds.has(unitId));
-      if (unitIds.length > 0) filtered.push({ ...command, unitIds });
+      if (unitIds.length > 0) filtered.push(copyNavigationIntent(command, { ...command, unitIds }));
     } else if ((command.type === "repair" || command.type === "repairShip" || command.type === "repairUnit" || command.type === "mine")) {
       const unitIds = command.unitIds.filter((unitId) => !movedUnitIds.has(unitId));
-      if (unitIds.length > 0) filtered.push({ ...command, unitIds });
+      if (unitIds.length > 0) filtered.push(copyNavigationIntent(command, { ...command, unitIds }));
     } else if (command.type === "cast") {
       if (!movedUnitIds.has(command.unitId)) filtered.push(command);
     } else {
@@ -154,4 +155,9 @@ function reserveOrderedUnits(commands: GameCommand[], movedUnitIds: Set<string>,
     const radius = target && !("order" in target) && "radius" in target ? target.radius : 0;
     if (def.behavior === "charge" || (caster && target && target.x !== undefined && target.y !== undefined && Math.hypot(caster.x - target.x, caster.y - target.y) > def.range + radius)) movedUnitIds.add(command.unitId);
   }
+}
+
+function commandEntry(scriptId: string, command: GameCommand): AiCommandEntry {
+  const navigation = navigationIntent(command);
+  return { scriptId, command, ...(navigation ? { navigation } : {}) };
 }

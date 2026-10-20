@@ -5,7 +5,8 @@ import type { Building, GameSnapshot, PlayerId, Unit } from '../../shared/types'
 import { distance, type Point } from '../policy/spatial';
 import type { AiPolicyContext } from '../policy/types';
 import { isEnemyOwner } from '../policy/ownership';
-import { castThreatReach, mountedThreatReach, THINK_TICKS } from './mounted-micro';
+import { mountedThreatReach, retreatThreatReach, THINK_TICKS } from '../policy/threat-reach';
+export { retreatThreatReach } from '../policy/threat-reach';
 
 import { withNavalShoreReuse } from '../policy/naval-shore-reuse';
 import { nativeLandRoad, withNativeLandRoadReuse } from '../policy/land-road';
@@ -89,12 +90,6 @@ export function retreatLandRoad(snapshot: GameSnapshot, unit: Unit, goal: Point,
     return routeLeavesDisks(points, disks);
   });
   return clear ? { points, ticks } : undefined;
-}
-
-/** Avoid-combat movement suppresses native normal fire; active casts remain possible within the next think. */
-export function retreatThreatReach(snapshot: GameSnapshot, foe: Unit | Building, patient: Unit | Building, horizon: number) {
-  return 'order' in foe && foe.order.type === 'move' && foe.order.avoidCombat
-    ? castThreatReach(snapshot, foe, patient, Math.min(horizon, THINK_TICKS)) : mountedThreatReach(snapshot, foe, patient, horizon);
 }
 
 function landThreatDisks(snapshot: GameSnapshot, unit: Unit, foes: readonly (Unit | Building)[], ticks: number) {

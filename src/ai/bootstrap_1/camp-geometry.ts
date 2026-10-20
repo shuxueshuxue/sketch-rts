@@ -5,6 +5,8 @@ import { walkableGoal, walkingDistance } from '../../shared/terrain';
 import { recordPlay, v6Memory } from '../policy/v6/memory';
 import { withinRangeOf, type Point } from '../policy/spatial';
 import { chooseCreepCamp, creepForce, CREEP_ASSEMBLED_RANGE, CREEP_ROUTE_CLEARANCE, CREEP_STAGING_TURNS, stagingClear, stagingPoint, type Camp, type chooseV7Camp, type startV7Creep } from '../policy/v7/creep';
+import { neutralCampPointContacts } from '../situation/neutral-camp-contact';
+import { neutralCampExposure } from '../situation/neutral-camp-exposure';
 
 /** Every fighter's approach and the camp's return road must clear other camps. */
 export const chooseBootstrapCamp = (home: Point, ...args: Parameters<typeof chooseV7Camp>) => {
@@ -18,6 +20,7 @@ export const chooseBootstrapCamp = (home: Point, ...args: Parameters<typeof choo
 
 /** The expansion assembles on this same safe approach while its remaining recruits are training. */
 export function bootstrapCampApproach(snapshot: GameSnapshot, home: Point, group: Unit[], camp: Camp, from: Point, all: Camp[]) {
+  const facts = neutralCampExposure(snapshot);
   const disks = all.filter(other => other !== camp).flatMap(other => other.creeps.map(creep =>
     ({ x: creep.x, y: creep.y, radius: CREEP_ROUTE_CLEARANCE })));
   const retreat = groundApproachRoute(snapshot.map, camp.center, home);
@@ -26,6 +29,11 @@ export function bootstrapCampApproach(snapshot: GameSnapshot, home: Point, group
     const raw = stagingPoint(camp, from, turn);
     const staging = walkableGoal(snapshot.map, raw.x, raw.y);
     if (!stagingClear(staging, all, camp)) continue;
+    // Terrain projection can snap an otherwise distant rendezvous into this
+    // very camp. Assembly ends idle, so check its native acquisition as well as
+    // other camps before calling this a safe staging point.
+    if (group.some(unit => neutralCampPointContacts(snapshot, unit, staging, { facts, arrivalMode: 'idle' })
+      .some(contact => contact.reason !== 'active-pursuit'))) continue;
     const returning = groundApproachRoute(snapshot.map, staging, home);
     if (returning === undefined || !routeClearsDisks([staging, ...returning], disks)) continue;
     const roads = group.map(unit => ({ unit, points: groundApproachRoute(snapshot.map, unit, staging),

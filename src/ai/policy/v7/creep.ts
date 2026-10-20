@@ -9,6 +9,7 @@ import { isV7Policy } from "../versions";
 import { recordPlay, v6Memory } from "../v6/memory";
 import { enemyPowerNear, type V6Intel } from "../v6/intel";
 import { combatRating, strengthOf } from "../v6/strength";
+import { withNavigationIntent } from '../navigation-intent';
 
 // @@@v7-creeping - V7 creeps the way a player does: it picks a camp its gathered group beats, walks there on a route that
 // passes no other camp, waits outside the camp until the group stands together, goes in together and stays until the
@@ -211,7 +212,9 @@ export function continueV7Creep(snapshot: GameSnapshot, owner: PlayerId, front: 
   const commands: GameCommand[] = [];
   if (state.stage === "gather") {
     const walking = group.filter((unit) => distance(unit, staging) > V7_GATHERED_RANGE && !heading(unit, staging, "move"));
-    if (walking.length > 0) commands.push(resolveAiCommandIntent(snapshot, owner, { type: "move", unitIds: walking.map((unit) => unit.id), x: staging.x, y: staging.y }, options));
+    if (walking.length > 0) commands.push(withNavigationIntent(resolveAiCommandIntent(snapshot, owner,
+      { type: "move", unitIds: walking.map((unit) => unit.id), x: staging.x, y: staging.y }, options),
+    { arrivalRange: V7_GATHERED_RANGE, station: true }));
     return { commands, point: staging };
   }
   // In the camp: the badly wounded step back to the staging point (the creeps leash home), the rest fight on.

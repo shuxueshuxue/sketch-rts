@@ -60,6 +60,7 @@ export type AiScript = {
 };
 
 export type AiCommandEntry = {
+  navigation?: import('./navigation-intent').AiNavigationIntent;
   scriptId: string;
   command: GameCommand;
 };

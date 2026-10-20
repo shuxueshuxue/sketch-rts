@@ -3,13 +3,17 @@ import { sameGround } from '../../shared/terrain';
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import type { AiPolicyMemory, AiPolicyUnitClaim } from '../memory';
 import { deathTaskIndex } from '../death-ledger-context';
-import { clearUnitClaim, recordUnitTaskClaim } from '../policy/claims';
+import { clearUnitClaim, isDefenseTaskClaim, recordUnitTaskClaim } from '../policy/claims';
+import { readV6Intel } from '../policy/v6/intel';
 import type { AiCommandEntry, AiPolicyContext } from '../policy/types';
 import { creepForce, forceFor } from '../policy/v7/creep';
 import { neutralCampExposure } from '../situation/neutral-camp-exposure';
 import { neutralCampPointContacts } from '../situation/neutral-camp-contact';
 import { planCampTravel } from './camp-travel';
 import { threatRoadCommands } from './threat-roads';
+import { neutralCampObjectiveBlockers } from '../situation/neutral-camp-objectives';
+import { campObjectivePoints } from './camp-objective-points';
+import { workerExposure } from '../situation/worker-exposure';
 
 type Point = { x: number; y: number };
 type Transit = NonNullable<AiPolicyUnitClaim['campTravel']>;
@@ -36,8 +40,9 @@ function solo(command: GameCommand, id: string): GameCommand {
   return 'unitIds' in command ? { ...command, unitIds: [id] } : command;
 }
 function ongoing(unit: Unit, transit: Transit) {
-  return (unit.order.type === 'move' || unit.order.type === 'attackMove')
-    && ([unit.order, ...(unit.orderQueue ?? [])].some(order => (order.type === 'move' || order.type === 'attackMove') && gap(order, transit.stop) < 30));
+  // Native movement spends one tick idle between dequeuing legs. A queued final
+  // leg is still in flight during that tick, or while attack-move is fighting.
+  return [unit.order, ...(unit.orderQueue ?? [])].some(order => (order.type === 'move' || order.type === 'attackMove') && gap(order, transit.stop) < 30);
 }
 
 /** Shared execution boundary for land travel and stations, regardless of executor.
@@ -48,8 +53,12 @@ function ongoing(unit: Unit, transit: Transit) {
 export function routeCampNavigation(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, entries: readonly AiCommandEntry[], previous: ReadonlyMap<string, Transit>, stationRanges: ReadonlyMap<string, number> = new Map()): AiCommandEntry[] {
   previous = new Map([...previous, ...campNavigationContinuations(options.memory)]);
   const facts = neutralCampExposure(snapshot);
-  if (!facts.camps.length) return [...entries];
+  if (!facts.camps.length && !previous.size) return [...entries];
   const byId = new Map(snapshot.units.map(unit => [unit.id, unit])), input = [...entries];
+  const targets = campObjectivePoints(snapshot, owner, options, entries, stationRanges);
+  const safetyPatient = snapshot.units.find(unit => unit.owner === owner && unit.kind === 'worker');
+  const blockingCamps = safetyPatient ? neutralCampObjectiveBlockers(facts, targets,
+    (guard, point) => workerExposure(snapshot, safetyPatient, point, { foes: [guard] }).length > 0) : new Map();
   const commanded = new Set(input.flatMap(entry => actors(entry.command)));
   // Resume non-queueable construction only after the actual admitted walk arrives.
   // Clearing continuations are retried when their explicit members are gone.
@@ -57,14 +66,16 @@ export function routeCampNavigation(snapshot: GameSnapshot, owner: PlayerId, opt
     const unit = byId.get(id);
     if (!unit || !aliveLand(unit, owner) || commanded.has(id)) continue;
     const blocked = transit.clearingIds?.some(member => byId.get(member)?.hp! > 0);
-    if (!blocked && !transit.clearingIds && transit.command.type !== 'build' && !ongoing(unit, transit) && gap(unit, transit.stop) <= 30) {
+    const deferred = transit.command.type === 'build' || transit.command.type === 'holdPosition';
+    if (!blocked && !transit.clearingIds && !deferred && !ongoing(unit, transit) && gap(unit, transit.stop) <= 30) {
       const claim = options.memory.unitClaims[id];
       if (claim?.kind === 'campTravel') clearUnitClaim(options.memory, id); else if (claim) delete claim.campTravel;
       continue;
     }
-    if (blocked && !ongoing(unit, transit)) input.push({ scriptId: transit.scriptId, command: solo(transit.command, id) });
-    else if (!blocked && !ongoing(unit, transit) && (transit.command.type === 'build' || transit.clearingIds))
-      input.push({ scriptId: transit.scriptId, command: solo(transit.command, id) });
+    // An active clearing child is executed by the clearing action, which owns
+    // its actual assembly and fight. Navigation resumes only after it finishes.
+    if (!blocked && !ongoing(unit, transit) && (deferred || transit.clearingIds))
+      input.push({ scriptId: transit.scriptId, command: solo(transit.command, id), ...(transit.navigation ? { navigation: transit.navigation } : {}) });
   }
   const scheduled = new Set(input.flatMap(entry => actors(entry.command)));
   const tasks = deathTaskIndex(snapshot, owner, options.memory);
@@ -89,9 +100,15 @@ export function routeCampNavigation(snapshot: GameSnapshot, owner: PlayerId, opt
     input.push({ scriptId: 'campNavigation', command: { type: 'move', unitIds: [unit.id], x: unit.x, y: unit.y } });
   }
   const output: AiCommandEntry[] = [];
+  const authored = new Map<string, Set<GameCommand>>();
+  const childExecution = (id: string, entry: AiCommandEntry) => {
+    const execution = options.memory.unitClaims[id]?.campTravel?.execution;
+    return execution?.scriptId === entry.scriptId && key(execution.command) === key(entry.command);
+  };
   for (const entry of input) {
     const command = entry.command, ids = actors(command);
     if (!['move', 'attackMove', 'build', 'board', 'mine', 'repair', 'repairUnit', 'repairShip', 'holdPosition'].includes(command.type)) {
+      for (const id of ids) if (childExecution(id, entry)) authored.set(id, new Set([command]));
       output.push(entry); continue;
     }
     const begin = output.length; let rewritten = false;
@@ -100,7 +117,7 @@ export function routeCampNavigation(snapshot: GameSnapshot, owner: PlayerId, opt
       || transit.clearingIds?.some(id => ids.some(actor => previous.get(actor)?.clearingIds?.includes(id)))).map(([id]) => id);
     const goal = ids[0] && byId.get(ids[0]) ? commandGoal(snapshot, byId.get(ids[0])!, command) : undefined;
     const alreadyCommitted = goal ? snapshot.units.filter(friend => aliveLand(friend, owner) && friend.kind !== 'worker'
-      && ((friend.order.type === 'move' || friend.order.type === 'attackMove') && gap(friend.order, goal) < 30
+      && ((friend.order.type === 'move' || friend.order.type === 'attackMove') && gap(friend.order, goal) < Math.max(30, stationRanges.get(entry.scriptId) ?? 0)
         || ['idle', 'hold'].includes(friend.order.type) && friend.arrivedAt && gap(friend.arrivedAt, goal) < 30 && gap(friend, goal) < 240)) : [];
     const party = [...new Map([...ids, ...linked].map(id => byId.get(id)).filter((unit): unit is Unit => !!unit && aliveLand(unit, owner))
       .concat(alreadyCommitted).map(unit => [unit.id, unit])).values()];
@@ -111,32 +128,38 @@ export function routeCampNavigation(snapshot: GameSnapshot, owner: PlayerId, opt
         continue;
       }
       const old = previous.get(id), ownCommand = solo(command, id);
+      if (isDefenseTaskClaim(options.memory.unitClaims[id]) && readV6Intel(snapshot, owner, options).intrusion) {
+        output.push({ ...entry, command: ownCommand }); continue;
+      }
+      if (childExecution(id, entry)) {
+        output.push({ ...entry, command: ownCommand }); authored.set(id, new Set([ownCommand])); rewritten = true; continue;
+      }
+      // Moving escorts emit successive waypoints for one parent. Finish the
+      // admitted native road before following the parent's newer waypoint;
+      // emergency/local orders and a changed task still replace it normally.
+      if (old?.navigation?.parentMethodId && entry.navigation?.parentMethodId === old.navigation.parentMethodId
+        && !entry.navigation.station && !old.clearingIds && entry.scriptId === old.scriptId
+        && old.command.type === command.type && ongoing(unit, old)) {
+        const claim = options.memory.unitClaims[id]; if (claim) claim.campTravel = old;
+        rewritten = true; continue;
+      }
       if (old && entry.scriptId === old.scriptId && key(old.command) === key(command) && ongoing(unit, old)) {
         const claim = options.memory.unitClaims[id]; if (claim) claim.campTravel = old;
         rewritten = true; continue;
       }
-      const clearing = old?.clearingIds?.map(id => byId.get(id)).filter((unit): unit is Unit => !!unit && unit.hp > 0);
-      if (old && old.scriptId === entry.scriptId && key(old.command) === key(command) && clearing?.length) {
-        const camp = facts.camps.find(camp => camp.memberIds.includes(clearing[0]!.id));
-        if (camp && unit.kind !== 'worker' && creepForce(party, camp.camp) >= forceFor(camp.camp)) {
-          rewritten = true;
-          output.push({ scriptId: entry.scriptId, command: command.type === 'attackMove' ? ownCommand : { type: 'attack', unitIds: [id], targetId: clearing[0]!.id } });
-          if (!options.memory.unitClaims[id]) recordUnitTaskClaim(snapshot, options.memory, id, { kind: 'campTravel', targetId: old.subgoal?.parentMethodId ?? old.scriptId, x: old.stop.x, y: old.stop.y });
-          options.memory.unitClaims[id]!.campTravel = { ...old, ...(old.subgoal ? { subgoal: { ...old.subgoal, status: 'active' } } : {}) };
-          continue;
-        }
-      }
       const sourceGoal = entry.scriptId === 'campNavigation' ? old?.command ?? ownCommand : ownCommand;
-      const parentId = `${entry.scriptId}:${key(sourceGoal)}`;
+      const parentId = entry.navigation?.parentMethodId ?? `${entry.scriptId}:${key(sourceGoal)}`;
+      const stationRadius = entry.navigation?.arrivalRange ?? stationRanges.get(entry.scriptId) ?? 0;
       const arrivalMode = command.type === 'holdPosition' ? 'hold' : command.type === 'attackMove' ? 'attackMove' : 'idle';
       const exempt = exemptions(id);
       // An attack-move aimed at a live guard is an explicit engagement, just as
       // an attack by targetId is. A move/hold staging near it is not.
       if (command.type === 'attackMove') for (const camp of facts.camps)
         if (camp.members.some(member => gap(member.point, command) <= 1)) for (const member of camp.memberIds) exempt.add(member);
-      const plan = planCampTravel(snapshot, unit, destination, { parentId, party, facts, exemptMemberIds: exempt,
-        arrivalRange: command.type === 'holdPosition' || entry.scriptId === 'campNavigation' ? 160
-          : command.type === 'move' || command.type === 'attackMove' ? stationRanges.get(entry.scriptId) ?? 0 : 0,
+      const plan = planCampTravel(snapshot, unit, destination, { parentId, party, facts, exemptMemberIds: exempt, blockingCamps,
+        waypoint: entry.navigation?.station === false,
+        arrivalRange: entry.scriptId === 'campNavigation' && command.type === 'move' && gap(unit, command) < 1 ? 160 : command.type === 'holdPosition' ? stationRadius
+          : command.type === 'move' || command.type === 'attackMove' ? stationRadius : 0,
         movingMode: command.type === 'attackMove' ? 'attackMove' : 'move', arrivalMode });
       if (plan.kind === 'direct' || plan.kind === 'exposed' || plan.kind === 'unreachable') {
         if (entry.scriptId === 'campNavigation') { rewritten = true; continue; }
@@ -149,36 +172,31 @@ export function routeCampNavigation(snapshot: GameSnapshot, owner: PlayerId, opt
         continue;
       }
       const transit: Transit = { scriptId: entry.scriptId, command: sourceGoal, stop: { x: plan.goal.x, y: plan.goal.y }, sinceTick: old?.sinceTick ?? snapshot.tick,
+        ...(entry.navigation ? { navigation: entry.navigation } : {}),
         delayGold: plan.delayGold, exposureGold: plan.exposureGold,
         ...(plan.subgoal ? { subgoal: plan.subgoal, clearingIds: [...plan.contacts[0]!.camp.memberIds] } : {}) };
       let changed: GameCommand[];
       if (plan.kind === 'clear-camp') {
-        const camp = plan.contacts[0]!.camp;
-        if (creepForce(party, camp.camp) >= forceFor(camp.camp) && unit.kind !== 'worker') {
-          // A sufficient combat advance already performs this prerequisite:
-          // native attack-move engages the blocker and continues the parent.
-          changed = command.type === 'attackMove' ? [ownCommand]
-            : [{ type: 'attack', unitIds: [id], targetId: camp.memberIds[0]! }];
-        } else {
-          // A prerequisite has a force demand, not an order to drift into the camp.
-          // Search around the actual current position; retain the original parent.
           const refuge = planCampTravel(snapshot, unit, unit, { parentId, party, facts, arrivalRange: 480, valueGoldPerTick: 0 });
           if (refuge.kind === 'clear-camp' || !refuge.road) changed = [{ type: 'holdPosition', unitIds: [id] }];
           else {
             transit.stop = { ...refuge.goal };
             changed = threatRoadCommands(unit, { ...refuge.road, points: refuge.road.points as [Point, ...Point[]] });
+            if (!changed.length) changed = [{ type: 'holdPosition', unitIds: [id] }];
           }
-        }
       } else {
         changed = threatRoadCommands(unit, { ...plan.road!, points: plan.road!.points as [Point, ...Point[]] });
         if (command.type === 'attackMove') changed = changed.map(leg => leg.type === 'move'
           ? { type: 'attackMove', unitIds: leg.unitIds, x: leg.x, y: leg.y, queued: leg.queued ?? false } : leg);
-        if (command.type !== 'build' && command.type !== 'move' && command.type !== 'attackMove' && command.type !== 'holdPosition') {
-          changed.push({ ...ownCommand, ...(command.type === 'attackMove' ? plan.goal : {}), queued: true } as GameCommand);
+        // A native queued hold captures today's position. Issue it after arrival
+        // instead, so its guard point is the station we actually admitted.
+        if (command.type !== 'build' && command.type !== 'holdPosition' && command.type !== 'move' && command.type !== 'attackMove') {
+          changed.push({ ...ownCommand, queued: true } as GameCommand);
         }
       }
       if (!changed.length) { output.push({ ...entry, command: ownCommand }); continue; }
       rewritten = true;
+      authored.set(id, new Set(changed));
       output.push(...changed.map(next => ({ scriptId: entry.scriptId, command: next })));
       const claim = options.memory.unitClaims[id];
       if (!claim) recordUnitTaskClaim(snapshot, options.memory, id, { kind: 'campTravel', targetId: parentId, x: destination.x, y: destination.y });
@@ -187,6 +205,20 @@ export function routeCampNavigation(snapshot: GameSnapshot, owner: PlayerId, opt
       options.memory.unitClaims[id]!.expiresTick = Math.max(options.memory.unitClaims[id]!.expiresTick, snapshot.tick + (plan.road?.ticks ?? 0) + 300);
     }
     if (!rewritten) output.splice(begin, output.length - begin, entry);
+  }
+  // Local recovery is allowed to override an earlier strategic command in the
+  // same plan. Bind navigation only to the final effective order, never to an
+  // earlier proposal which the actual command stream has already superseded.
+  const lastOrder = new Map<string, GameCommand>();
+  for (const { command } of output) {
+    if ('queued' in command && command.queued) continue;
+    if (!['move', 'attackMove', 'attack', 'holdPosition', 'stop', 'follow', 'build', 'board', 'mine', 'repair', 'repairUnit', 'repairShip', 'garrison', 'cast', 'pickupItem'].includes(command.type)) continue;
+    for (const id of actors(command)) lastOrder.set(id, command);
+  }
+  for (const [id, command] of lastOrder) {
+    const claim = options.memory.unitClaims[id];
+    if (!claim?.campTravel || authored.get(id)?.has(command)) continue;
+    if (claim.kind === 'campTravel') clearUnitClaim(options.memory, id); else delete claim.campTravel;
   }
   return output;
 }

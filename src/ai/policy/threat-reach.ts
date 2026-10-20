@@ -14,6 +14,12 @@ export const THINK_TICKS = 15;
 
 type Threat = Unit | Building;
 
+/** Suppressed ordinary fire does not suppress an active spell or carried attack. */
+export function retreatThreatReach(snapshot: GameSnapshot, foe: Threat, patient: Unit | Building, horizon: number) {
+  return 'order' in foe && foe.order.type === 'move' && foe.order.avoidCombat
+    ? castThreatReach(snapshot, foe, patient, Math.min(horizon, THINK_TICKS)) : mountedThreatReach(snapshot, foe, patient, horizon);
+}
+
 export function chargeMinimum(foe: Unit, rider: Pick<Unit, 'x' | 'y'>, horizon: number) {
   return unitAbilities(foe).flatMap(ability => {
     const rules = ABILITY_DEFS[ability];

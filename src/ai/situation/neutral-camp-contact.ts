@@ -6,7 +6,7 @@ import { neutralCampExposure, unitAutoAcquireRadius, type NeutralCampExposure, t
 
 type Point = Readonly<{ x: number; y: number }>;
 export type CampContact = Readonly<{
-  camp: NeutralCampExposure; memberId: string; reason: 'camp-alert' | 'self-acquire' | 'active-pursuit';
+  camp: NeutralCampExposure; memberId: string; reason: 'camp-alert' | 'self-acquire' | 'active-pursuit' | 'worker-exposure';
   point: Point; segment: number; distance: number; radius: number; arrivalTicks: number;
 }>;
 export type CampContactOptions = Readonly<{
@@ -18,6 +18,28 @@ export type CampContactOptions = Readonly<{
   facts?: NeutralCampExposureFacts;
 }>;
 const gap = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y);
+const envelopes = new WeakMap<NeutralCampExposure, { minX: number; maxX: number; minY: number; maxY: number;
+  bodyRadius: number; alert: number; pursuit: number; attack: number; speed: number }>();
+function envelope(camp: NeutralCampExposure) {
+  let bounds = envelopes.get(camp);
+  if (!bounds) {
+    bounds = { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity,
+      bodyRadius: 0, alert: 0, pursuit: 0, attack: 0, speed: 0 };
+    camp.members.forEach((member, i) => {
+      const guard = camp.camp.creeps[i]!;
+      bounds!.minX = Math.min(bounds!.minX, member.point.x); bounds!.maxX = Math.max(bounds!.maxX, member.point.x);
+      bounds!.minY = Math.min(bounds!.minY, member.point.y); bounds!.maxY = Math.max(bounds!.maxY, member.point.y);
+      bounds!.bodyRadius = Math.max(bounds!.bodyRadius, guard.radius);
+      bounds!.alert = Math.max(bounds!.alert, member.alertRadius);
+      if (member.active) {
+        bounds!.pursuit = Math.max(bounds!.pursuit, member.pursuitRadius);
+        bounds!.attack = Math.max(bounds!.attack, guard.attackRange); bounds!.speed = Math.max(bounds!.speed, guard.speed);
+      }
+    });
+    envelopes.set(camp, bounds);
+  }
+  return bounds;
+}
 function closest(point: Point, from: Point, to: Point): Point {
   const dx = to.x - from.x, dy = to.y - from.y;
   const t = Math.max(0, Math.min(1, ((point.x - from.x) * dx + (point.y - from.y) * dy) / (dx * dx + dy * dy || 1)));
@@ -32,18 +54,20 @@ function computeRouteContacts(snapshot: GameSnapshot, unit: Unit, road: readonly
   const facts = options.facts ?? neutralCampExposure(snapshot), contacts: CampContact[] = [];
   if (!road.length) return contacts;
   const at = (point: Point) => ({ ...unit, x: point.x, y: point.y });
+  const movingAcquire = unit.attackDamage > 0 ? unitAutoAcquireRadius(snapshot, unit, options.movingMode ?? 'move') : 0;
+  const arrivingAcquire = unit.attackDamage > 0 ? unitAutoAcquireRadius(snapshot, unit, options.arrivalMode ?? 'idle') : 0;
   const end = road.at(-1)!;
   const bounds = road.reduce((box, point) => ({ minX: Math.min(box.minX, point.x), maxX: Math.max(box.maxX, point.x),
     minY: Math.min(box.minY, point.y), maxY: Math.max(box.maxY, point.y) }), { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity });
   for (const camp of facts.camps) {
     if (measurement) measurement.camps++;
     if (camp.memberIds.some(id => options.exemptMemberIds?.has(id))) continue;
-    // Native camp reach is the home grouping envelope; activated guards can move
-    // away from it. Include that measured displacement before the broad phase.
-    const displacement = Math.max(0, ...camp.members.map(member => gap(member.point, camp.camp.center)));
-    const radius = Math.max(camp.camp.reach, displacement) + Math.max(0, ...camp.members.map(member => member.pursuitRadius)) + unit.attackRange + unit.radius;
-    if (camp.camp.center.x + radius < bounds.minX || camp.camp.center.x - radius > bounds.maxX
-      || camp.camp.center.y + radius < bounds.minY || camp.camp.center.y - radius > bounds.maxY) continue;
+    // Cache only the immutable fact's current member envelope. A cold camp has
+    // no 650-radius pursuit disk; moving/activated/dead members get fresh facts.
+    const box = envelope(camp), radius = Math.max(Math.max(box.alert, movingAcquire, arrivingAcquire) + unit.radius + box.bodyRadius,
+      Math.min(box.pursuit, box.attack + box.speed * (options.horizonTicks ?? 100) / SIM_TICKS_PER_SECOND));
+    if (box.maxX + radius < bounds.minX || box.minX - radius > bounds.maxX
+      || box.maxY + radius < bounds.minY || box.minY - radius > bounds.maxY) continue;
     if (measurement) measurement.nearCamps++;
     for (let memberIndex = 0; memberIndex < camp.members.length; memberIndex++) {
       const member = camp.members[memberIndex]!, guard = camp.camp.creeps[memberIndex]!;
@@ -56,7 +80,6 @@ function computeRouteContacts(snapshot: GameSnapshot, unit: Unit, road: readonly
         contacts.push(Object.freeze({ camp, memberId: member.id, reason, point: Object.freeze({ ...point }),
           segment, distance, radius, arrivalTicks: Math.ceil(Math.max(0, distance - guard.attackRange) / Math.max(1, guard.speed) * SIM_TICKS_PER_SECOND) }));
       };
-      const movingAcquire = unit.attackDamage > 0 ? unitAutoAcquireRadius(snapshot, unit, options.movingMode ?? 'move') : 0;
       for (let segment = 1; segment < road.length; segment++) {
         const point = closest(member.point, road[segment - 1]!, road[segment]!);
         if (!member.returning) add('camp-alert', point, strikeReach(guard, unit, member.alertRadius), segment);
@@ -67,7 +90,6 @@ function computeRouteContacts(snapshot: GameSnapshot, unit: Unit, road: readonly
             add('active-pursuit', point, limit, segment);
         }
       }
-      const arrivingAcquire = unit.attackDamage > 0 ? unitAutoAcquireRadius(snapshot, unit, options.arrivalMode ?? 'idle') : 0;
       if (!member.returning) add('camp-alert', end, strikeReach(guard, unit, member.alertRadius), road.length - 1);
       if (arrivingAcquire > 0) add('self-acquire', end, strikeReach(unit, guard, arrivingAcquire), road.length - 1, true);
       if (member.active && gap(end, member.home) <= member.pursuitRadius && gap(end, member.responseOrigin) <= member.responseRadius)

@@ -5,24 +5,18 @@ import type { AiPolicyMemory, WorkerEvacuation } from '../memory';
 import { activeUnitClaim, recordUnitTaskClaim } from '../policy/claims';
 import { distance } from '../policy/spatial';
 import type { AiPolicyContext } from '../policy/types';
-import { armedFoes, retreatLandRoad, retreatThreatReach, safeLandTravelTicks } from './safe-land-route';
+import { armedFoes, retreatLandRoad, safeLandTravelTicks } from './safe-land-route';
 import { miningJobOrder } from './mining-jobs';
-import { THINK_TICKS } from './mounted-micro';
+import { workerExposure } from '../situation/worker-exposure';
 import { mineClaimedByAlly } from '../policy/mine-claims';
 
 type WorkerSafetyPlan = { worker: Unit; released: boolean; state: WorkerEvacuation; commands: GameCommand[] };
 const proposals = new WeakMap<AiPolicyMemory, { tick: number; plans: WorkerSafetyPlan[] }>();
 type Threat = Unit | Building;
-// Start before the next volley, with enough room for a worker to leave the firing lane.
-const CLEARANCE = 160;
 const ARRIVAL = 80;
 
 function endangered(snapshot: GameSnapshot, worker: Unit, point: { x: number; y: number }, foes: Threat[]) {
-  const patient = { ...worker, ...point };
-  return foes.some(foe => {
-    const reach = retreatThreatReach(snapshot, foe, patient, THINK_TICKS);
-    return reach > 0 && distance(foe, point) <= reach + CLEARANCE;
-  });
+  return workerExposure(snapshot, worker, point, { foes }).length > 0;
 }
 
 function evacuation(snapshot: GameSnapshot, owner: PlayerId, worker: Unit, foes: Threat[], options: AiPolicyContext) {
@@ -59,7 +53,7 @@ export function workerSafetyPlans(snapshot: GameSnapshot, owner: PlayerId, optio
     const previous = claim?.kind === 'workerSafety' ? claim.evacuation : undefined;
     // The hauling escort below handles melee interception. Ranged fire needs an immediate withdrawal,
     // even with a standing hall or a friendly army nearby; neither stops a volley hitting the workers.
-    const exposed = endangered(snapshot, worker, worker, previous ? foes : foes.filter(foe => foe.attackRange > 80));
+    const exposed = workerExposure(snapshot, worker, worker, { foes, starting: !previous }).length > 0;
     if (!previous && !exposed) return [];
     const job = miningJobOrder(worker);
     const origin = previous?.origin ?? { x: worker.x, y: worker.y };

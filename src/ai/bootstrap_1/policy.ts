@@ -12,7 +12,7 @@ import { bootstrapExpansionMine } from './expansion-target';
 import { activeMiningBaseCount } from '../policy/expansion-model';
 import { AI_SCRIPT_LIBRARY, V9_AI_STACK, V7_AI_STACK, V8_AI_STACK, planAiCommandEntriesFromScripts } from '../policy/core';
 import { isOpponentOwner } from '../policy/ownership';
-import type { AiPolicyContext } from '../policy/types';
+import type { AiPolicyContext, AiScript } from '../policy/types';
 import { V6_STRATEGIES, v7Phases, type V6Strategy, type V6Want } from '../policy/v6/doctrine';
 import { V8_STRATEGIES } from '../policy/v8/doctrine';
 import { ARCHER_DOCTRINES } from './archer-doctrine';
@@ -181,7 +181,7 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: Bootstra
   return { wants, guard };
 }
 
-export function bootstrapScripts(version: BootstrapAiVersion) {
+export function bootstrapScripts(version: BootstrapAiVersion): AiScript[] {
   const family = version === 'v9_archer' ? V9_AI_STACK : version === 'v9_knight' ? V8_AI_STACK : V7_AI_STACK;
   return family.filter(script => script !== AI_SCRIPT_LIBRARY.v6Closeout).flatMap(script => {
     if (script === AI_SCRIPT_LIBRARY.items) return [{ ...script, run: planLootItemCommands }];
@@ -190,7 +190,7 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
     if (script === AI_SCRIPT_LIBRARY.v6General) return [
       campPrerequisite, summonedRaids,
       { ...AI_SCRIPT_LIBRARY.v6Closeout, run: planBootstrapCloseout },
-      { ...script, run: planBootstrapGeneral, landStationRadius: 160, onCommands: recordMiningGeneralCommands,
+      { ...script, run: planBootstrapGeneral, landStationRadius: 60, onCommands: recordMiningGeneralCommands,
         claimsUnits(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
           return new Set([...script.claimsUnits!(snapshot, owner, options),
             ...(options.memory.landExpansion?.paused ? [] : expansionMissionUnitIds(options.memory))]);
@@ -210,7 +210,7 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
     if (script === AI_SCRIPT_LIBRARY.abilities) return version === 'v9_summoner'
       ? [medicalRecovery, towerRushAbilities, summonerTowerRush] : [medicalRecovery, bootstrapAbilities];
     // Ferry and rescue assignments keep priority over local repair work.
-    return script === AI_SCRIPT_LIBRARY.naval ? [{ ...script, run: planBootstrapNaval, landStationRadius: 160,
+    return script === AI_SCRIPT_LIBRARY.naval ? [{ ...script, run: planBootstrapNaval, landStationRadius: 60,
       claimsUnits(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
         const riders = mountedTasks.claimsUnits!(snapshot, owner, options);
         const recovering = expeditionRecoveryUnitIds(snapshot, owner, options);

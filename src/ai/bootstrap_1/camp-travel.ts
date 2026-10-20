@@ -10,12 +10,17 @@ import { creepForce, forceFor, type Camp } from '../policy/v7/creep';
 import { neutralCampExposure, type NeutralCampExposureFacts } from '../situation/neutral-camp-exposure';
 import { neutralCampPointContacts, neutralCampRouteContacts, type CampContact } from '../situation/neutral-camp-contact';
 import type { Subgoal } from '../strategy/types';
+import type { NeutralCampExposure } from '../situation/neutral-camp-exposure';
+import type { CampObjectivePoint } from '../situation/neutral-camp-objectives';
+import { workerExposure, workerExposureRadius } from '../situation/worker-exposure';
 import { landDiskRouter } from './threat-roads';
+import { bootstrapCampApproach } from './camp-geometry';
+import { averagePoint } from '../policy/spatial';
 
 type Point = { x: number; y: number };
 type Road = NonNullable<ReturnType<typeof nativeLandRoad>>;
 export type CampTravelPlan = {
-  kind: 'direct' | 'exposed' | 'detour' | 'relocate' | 'clear-camp' | 'unreachable';
+  kind: 'direct' | 'exposed' | 'detour' | 'relocate' | 'approach' | 'clear-camp' | 'unreachable';
   goal: Point; road: Road | null; contacts: readonly CampContact[];
   delayGold: number; exposureGold: number; subgoal: Subgoal | null;
 };
@@ -24,6 +29,9 @@ export type CampTravelOptions = {
   arrivalRange?: number; movingMode?: 'move' | 'attackMove'; arrivalMode?: 'idle' | 'hold' | 'attackMove' | 'move';
   /** Opportunity value of delaying the parent objective, not a fixed detour distance cap. */
   valueGoldPerTick?: number;
+  blockingCamps?: ReadonlyMap<NeutralCampExposure, readonly CampObjectivePoint[]>;
+  /** A moving parent's look-ahead point, rather than a site to occupy. */
+  waypoint?: boolean;
 };
 
 /** A route and an arrival point compete against clearing their blocker. No camp
@@ -39,14 +47,24 @@ export function planCampTravel(snapshot: GameSnapshot, unit: Unit, goal: Point, 
   if (!direct) return result('unreachable', null, []);
   const contactOptions = { facts, ...(options.exemptMemberIds ? { exemptMemberIds: options.exemptMemberIds } : {}),
     movingMode: options.movingMode ?? 'move', arrivalMode: options.arrivalMode ?? 'idle', horizonTicks: 100 } as const;
-  const contacts = [...neutralCampRouteContacts(snapshot, unit, direct.points.length ? direct.points : [unit, goal], contactOptions)]
+  const contactsOn = (points: readonly Point[]) => {
+    const contacts = [...neutralCampRouteContacts(snapshot, unit, points, contactOptions)];
+    if (unit.kind === 'worker') for (const exposure of workerExposure(snapshot, unit, points, { facts })) {
+      const camp = facts.camps.find(camp => camp.memberIds.includes(exposure.foe.id));
+      if (!camp || camp.memberIds.some(id => options.exemptMemberIds?.has(id))) continue;
+      contacts.push({ camp, memberId: exposure.foe.id, reason: 'worker-exposure', ...exposure, arrivalTicks: 0 });
+    }
+    return contacts;
+  };
+  const contacts = contactsOn(direct.points.length ? direct.points : [unit, goal])
     .sort((a, b) => a.segment - b.segment || a.arrivalTicks - b.arrivalTicks);
   if (!contacts.length) return result('direct', direct, contacts);
   const camps = [...new Set(contacts.map(contact => contact.camp))];
   const partyGold = party.reduce((sum, member) => sum + UNIT_DEFS[member.kind].cost, 0);
+  const movingGold = UNIT_DEFS[unit.kind].cost;
   const atRisk = (camp: Camp) => {
     const force = creepForce(party, camp);
-    return partyGold * Math.min(1, forceFor(camp) / Math.max(force, .01)) ** 2;
+    return movingGold * Math.min(1, forceFor(camp) / Math.max(force, .01)) ** 2;
   };
   const exposureGold = Math.max(0, ...camps.map(camp => atRisk(camp.camp)));
   const contactRisk = (contact: CampContact) => {
@@ -61,22 +79,38 @@ export function planCampTravel(snapshot: GameSnapshot, unit: Unit, goal: Point, 
   // Saturated mine income prices the parent delay; committed troops also have an opportunity cost.
   const delayRate = options.valueGoldPerTick ?? GOLD_MINE_RULES.goldPerTrip / GOLD_MINE_RULES.entrySeconds / SIM_TICKS_PER_SECOND
     + partyGold / (60 * SIM_TICKS_PER_SECOND);
-  const first = [...contacts].sort((a, b) => a.segment - b.segment || a.arrivalTicks - b.arrivalTicks)[0]!.camp;
+  // A possible pursuit never creates a clearing prerequisite. If a later
+  // certain trigger exists, clear that camp rather than the earlier forecast.
+  const certain = contacts.filter(contact => contact.reason !== 'active-pursuit');
+  const first = (certain.find(contact => options.blockingCamps?.has(contact.camp)) ?? certain[0] ?? contacts[0])!.camp;
+  const blockedTargets = options.blockingCamps?.get(first);
   // Clearing is a rendezvous and a fight. Distant soldiers cannot contribute
   // instant damage merely because the parent command lists them.
-  const arriving = party.filter(member => member.kind !== 'worker' && member.attackDamage > 0)
-    .map(member => ({ member, road: nativeLandRoad(snapshot, member, first.camp.center) }))
-    .filter(entry => entry.road).sort((a, b) => a.road!.ticks - b.road!.ticks);
+  const combatants = party.filter(member => member.kind !== 'worker' && member.attackDamage > 0 && member.hp >= member.maxHp * .35);
+  const home = snapshot.buildings.find(building => building.owner === unit.owner && building.kind === 'townHall') ?? unit;
+  const approach = combatants.length ? bootstrapCampApproach(snapshot, home, [...combatants], first.camp,
+    averagePoint(combatants), facts.camps.map(camp => camp.camp)) : undefined;
+  const staging = approach?.staging;
+  const arriving = staging ? combatants
+    .map(member => ({ member, road: nativeLandRoad(snapshot, member, staging) }))
+    .filter(entry => entry.road).sort((a, b) => a.road!.ticks - b.road!.ticks)
+    : [];
   const clearing: Unit[] = []; let rendezvous = 0;
   for (const entry of arriving) {
     if (creepForce(clearing, first.camp) >= forceFor(first.camp)) break;
+    if (entry.member.expiresTick !== undefined && entry.member.expiresTick <= snapshot.tick + entry.road!.ticks) continue;
     clearing.push(entry.member);
-    rendezvous = Math.max(rendezvous, Math.max(0, entry.road!.ticks - entry.member.attackRange / Math.max(1, entry.member.speed) * SIM_TICKS_PER_SECOND));
+    rendezvous = Math.max(rendezvous, entry.road!.ticks);
   }
   const dps = clearing.reduce((sum, member) => sum + member.attackDamage / Math.max(1, member.attackCooldown), 0);
-  const clearTicks = creepForce(clearing, first.camp) >= forceFor(first.camp)
-    ? Math.ceil(rendezvous + first.camp.creeps.reduce((sum, guard) => sum + guard.hp, 0) / Math.max(.01, dps)) : null;
-  const subgoal: Subgoal = {
+  const advance = staging ? Math.max(0, ...clearing.map(member => {
+    const road = nativeLandRoad(snapshot, { ...member, ...staging }, first.camp.center);
+    return road ? Math.max(0, road.ticks - member.attackRange / Math.max(1, member.speed) * SIM_TICKS_PER_SECOND) : Infinity;
+  })) : Infinity;
+  const finishTicks = Math.ceil(rendezvous + advance + first.camp.creeps.reduce((sum, guard) => sum + guard.hp, 0) / Math.max(.01, dps));
+  const lastsThroughClearing = clearing.every(member => member.expiresTick === undefined || member.expiresTick > snapshot.tick + finishTicks);
+  const clearTicks = creepForce(clearing, first.camp) >= forceFor(first.camp) && lastsThroughClearing && Number.isFinite(finishTicks) ? finishTicks : null;
+  let subgoal: Subgoal = {
     id: `${options.parentId}/clear:${first.memberIds.join(',')}`, parentMethodId: options.parentId, kind: 'clear-camp',
     target: { point: first.camp.center }, demands: [{ kind: 'force', metric: 'camp-force', strength: forceFor(first.camp),
       roles: ['frontline', 'ranged'], at: { point: first.camp.center }, neededByTick: null, permanent: true }], dependsOn: [],
@@ -84,11 +118,21 @@ export function planCampTravel(snapshot: GameSnapshot, unit: Unit, goal: Point, 
     reasons: [{ code: 'camp-exposure', detail: '父目标保留；实际行走路线或到岗索敌会触发未清营地，先比较绕行、换点与清营',
       evidence: [{ source: 'neutralCampRouteContacts', tick: snapshot.tick, certainty: 'recorded', detail: contacts.map(contact => contact.reason).join(',') }] }],
   };
+  if (blockedTargets?.length) subgoal = { ...subgoal, reasons: [...subgoal.reasons, { code: 'objective-blocking-camp',
+    detail: `清营是这些已承诺目标的前置：${blockedTargets.map(target => target.id).join(',')}`,
+    evidence: [{ source: 'neutralCampObjectiveBlockers/workerExposure', tick: snapshot.tick, certainty: 'recorded',
+      detail: blockedTargets.map(target => target.id).join(',') }] }] };
   const onward = nativeLandRoad(snapshot, { ...unit, x: first.camp.center.x, y: first.camp.center.y }, goal)?.ticks ?? direct.ticks;
-  const clearCost = Math.max(0, (clearTicks ?? 15 * SIM_TICKS_PER_SECOND) + onward - direct.ticks) * delayRate;
-  const endpointTriggers = neutralCampPointContacts(snapshot, unit, goal, contactOptions).some(contact => contact.reason !== 'active-pursuit');
-  let best: CampTravelPlan = endpointTriggers
-    ? result('clear-camp', direct, contacts, clearCost, exposureGold, subgoal)
+  const clearCost = clearTicks === null ? 0 : Math.max(0, clearTicks + onward - direct.ticks) * delayRate;
+  const clearingContacts = [...certain.filter(contact => contact.camp === first), ...contacts.filter(contact => contact.camp !== first)];
+  if (blockedTargets?.length && certain.some(contact => contact.camp === first))
+    return result('clear-camp', direct, clearingContacts, clearCost, exposureGold, subgoal);
+  const endpointTriggers = contactsOn([goal]).some(contact => contact.reason !== 'active-pursuit');
+  // Transit exposure is a priced alternative. A worker's admission must also
+  // agree with its evacuation veto; occupying an exposed post needs clearing.
+  const needsClear = endpointTriggers || unit.kind === 'worker' && certain.length > 0;
+  let best: CampTravelPlan = needsClear && exposureGold > 0
+    ? result('clear-camp', direct, clearingContacts, clearCost, exposureGold, subgoal)
     : result('exposed', direct, contacts, 0, observedRisk(contacts));
   // Passing a camp can be cheaper than delaying a high-value objective. Occupying
   // its acquisition zone still needs a clearing prerequisite, not an unsafe post.
@@ -107,17 +151,21 @@ export function planCampTravel(snapshot: GameSnapshot, unit: Unit, goal: Point, 
   });
   const safeEnds = destinations.filter(point => point.x >= 0 && point.y >= 0 && point.x <= snapshot.map.width && point.y <= snapshot.map.height
     && isOpenGround(snapshot.map, point.x, point.y)
-    && !neutralCampPointContacts(snapshot, unit, point, contactOptions).some(contact => contact.reason !== 'active-pursuit'))
+    && !contactsOn([point]).some(contact => contact.reason !== 'active-pursuit'))
     .sort((a, b) => neutralCampPointContacts(snapshot, unit, a, contactOptions).length - neutralCampPointContacts(snapshot, unit, b, contactOptions).length
       || Math.hypot(a.x - unit.x, a.y - unit.y) - Math.hypot(b.x - unit.x, b.y - unit.y)).slice(0, 4);
   // Cold alert/current-position disks find a detour; pursuit remains a cost in the subsequent contact query.
   const disks = facts.camps.filter(camp => !camp.memberIds.some(id => options.exemptMemberIds?.has(id)))
-    .flatMap(camp => camp.members.filter(member => !member.returning).map(member => ({ ...member.point, radius: Math.max(member.alertRadius, unitAutoAcquireRadius(snapshot, unit, options.movingMode ?? 'move')) + unit.radius + 24 })));
+    .flatMap(camp => camp.members.filter(member => !member.returning).map(member => {
+      const guard = camp.camp.creeps.find(guard => guard.id === member.id)!;
+      return { ...member.point, radius: Math.max(Math.max(member.alertRadius, unitAutoAcquireRadius(snapshot, unit, options.movingMode ?? 'move')) + unit.radius,
+        unit.kind === 'worker' ? workerExposureRadius(snapshot, unit, guard) : 0) + 24 };
+    }));
   let router: ReturnType<typeof landDiskRouter> | undefined;
   for (const point of safeEnds) {
     let candidate = nativeLandRoad(snapshot, unit, point);
     if (!candidate) continue;
-    let encounters = neutralCampRouteContacts(snapshot, unit, candidate.points.length ? candidate.points : [unit, point], contactOptions);
+    let encounters = contactsOn(candidate.points.length ? candidate.points : [unit, point]);
     if (blocking(encounters, point)) {
       const detour = (router ??= landDiskRouter(snapshot, unit, disks))(point);
       if (!detour) continue;
@@ -126,12 +174,39 @@ export function planCampTravel(snapshot: GameSnapshot, unit: Unit, goal: Point, 
         { ...unit, ...detour.points[index]! }, end));
       if (legs.some(leg => !leg)) continue;
       candidate = { points: [unit, ...legs.flatMap(leg => leg!.points.slice(1))], ticks: legs.reduce((sum, leg) => sum + leg!.ticks, 0) };
-      encounters = neutralCampRouteContacts(snapshot, unit, candidate.points.length ? candidate.points : [unit, point], contactOptions);
+      encounters = contactsOn(candidate.points.length ? candidate.points : [unit, point]);
       if (blocking(encounters, point)) continue;
     }
     const risk = observedRisk(encounters);
     const delayGold = Math.max(0, candidate.ticks - direct.ticks) * delayRate;
-    if (delayGold + risk < best.delayGold + best.exposureGold) best = result(point === goal ? 'detour' : 'relocate', candidate, encounters, delayGold, risk, null, point);
+    const bestCost = best.subgoal?.estimatedTicks === null ? Infinity : best.delayGold + best.exposureGold;
+    if (delayGold + risk < bestCost) best = result(point === goal ? 'detour' : 'relocate', candidate, encounters, delayGold, risk, null, point);
+  }
+  // A moving parent's waypoint can cease to exist before a clearing party
+  // assembles. When no clearing ETA is funded, make safe progress along the
+  // actual road first; only an exhausted approach needs the prerequisite.
+  if (options.waypoint && !blockedTargets?.length && best.kind === 'clear-camp' && best.subgoal?.estimatedTicks === null) {
+    const prefix: Point[] = [{ x: unit.x, y: unit.y }];
+    const clear = (points: Point[]) => !contactsOn(points).some(contact => contact.reason !== 'active-pursuit');
+    if (clear(prefix)) for (const end of direct.points.slice(1)) {
+      const start = prefix.at(-1)!;
+      if (clear([...prefix, end])) { prefix.push(end); continue; }
+      let low = 0, high = 1;
+      for (let step = 0; step < 8; step++) {
+        const middle = (low + high) / 2, point = { x: start.x + (end.x - start.x) * middle, y: start.y + (end.y - start.y) * middle };
+        if (clear([...prefix, point])) low = middle; else high = middle;
+      }
+      const fraction = Math.max(0, low - 32 / Math.max(1, Math.hypot(end.x - start.x, end.y - start.y)));
+      if (fraction > 0) prefix.push({ x: start.x + (end.x - start.x) * fraction, y: start.y + (end.y - start.y) * fraction });
+      break;
+    }
+    if (prefix.length > 1 && Math.hypot(prefix.at(-1)!.x - unit.x, prefix.at(-1)!.y - unit.y) > 60) {
+      const legs = prefix.slice(1).map((end, index) => nativeLandRoad(snapshot, { ...unit, ...prefix[index]! }, end));
+      if (legs.every(leg => leg)) {
+        const road: Road = { points: [unit, ...legs.flatMap(leg => leg!.points.slice(1))], ticks: legs.reduce((sum, leg) => sum + leg!.ticks, 0) };
+        if (clear(road.points)) return result('approach', road, contactsOn(road.points), 0, 0, null, road.points.at(-1)!);
+      }
+    }
   }
   return best;
 }

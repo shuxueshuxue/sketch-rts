@@ -247,6 +247,14 @@ export function setUnitClaim(memory: AiPolicyMemory, unitId: string, claim: AiPo
   memory.unitClaims[unitId] = mineId ? { ...claim, expansionMineId: claim.expansionMineId ?? mineId } : claim;
 }
 
+/** Refresh a parent's lease without cancelling its in-flight action. Actual
+ * accepted orders use setUnitClaim/clearUnitClaim and can replace that action. */
+export function renewUnitClaim(memory: AiPolicyMemory, unitId: string, claim: AiPolicyUnitClaim) {
+  const previous = memory.unitClaims[unitId];
+  const continuation = previous?.targetId === claim.targetId ? previous.campTravel : undefined;
+  setUnitClaim(memory, unitId, continuation ? { ...claim, campTravel: continuation } : claim);
+}
+
 export function clearUnitClaim(memory: AiPolicyMemory, unitId: string) {
   const claim = memory.unitClaims[unitId];
   if (!claim?.expansionMineId) { delete memory.unitClaims[unitId]; return; }

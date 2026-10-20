@@ -29,3 +29,17 @@ it('retains the parent and emits a force prerequisite when an arrival needs the 
   expect(plan.subgoal?.demands[0]).toMatchObject({ kind: 'force', metric: 'camp-force' });
   expect(plan.subgoal?.status).toBe('blocked');
 });
+
+it('prices possible pursuit without creating a mandatory clearing prerequisite', () => {
+  const game = createGame('bareDuel', { aiPlayers: [] }); game.units = []; game.buildings = []; delete game.map.terrain;
+  const worker = game.spawnUnit('player', 'worker', 700, 1500);
+  const guard = game.spawnUnit('neutral', 'wildling', 1000, 1000);
+  guard.order = { type: 'attack', targetId: 'another-passerby', leashX: 1000, leashY: 1000 };
+  const snapshot = snapshotGame(game);
+  const plan = planCampTravel(snapshot, worker, { x: 700, y: 1000 }, { parentId: 'build', valueGoldPerTick: 1 });
+  expect(plan.contacts.some(contact => contact.reason === 'active-pursuit')).toBe(true);
+  expect(plan.contacts.every(contact => contact.reason === 'active-pursuit')).toBe(true);
+  expect(plan.kind).toBe('exposed');
+  expect(plan.subgoal).toBeNull();
+  expect(plan.exposureGold).toBeGreaterThan(0);
+});

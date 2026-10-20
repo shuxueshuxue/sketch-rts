@@ -20,9 +20,13 @@ import { bootstrapCampApproach, campRecruitRoadClear, chooseBootstrapCamp, start
 import { miningJobDefenseTarget } from './mining-job-defense';
 import { mineClaimedByAlly } from '../policy/mine-claims';
 import { miningRallyAssignment } from './mining-rally';
-import { activeUnitClaim, clearUnitClaim, forgetExpansionMember, isMineRallyClaim, recordUnitTaskClaim, setUnitClaim } from '../policy/claims';
+import { activeUnitClaim, clearUnitClaim, forgetExpansionMember, isMineRallyClaim, recordUnitTaskClaim, renewUnitClaim, setUnitClaim } from '../policy/claims';
 import type { AiPolicyMemory, MiningMissionMemory } from '../memory';
 import { expansionGarrisonReady } from './expansion-garrison';
+import { issuedUnitRoad, retainedUnitAction } from '../policy/unit-action';
+import { withNavigationIntent } from '../policy/navigation-intent';
+
+const MINING_SCREEN_ARRIVAL = 180;
 
 export function expansionMissionUnitIds(memory: AiPolicyMemory) {
   const mineId = memory.landExpansion?.mineId;
@@ -138,7 +142,7 @@ export function prepareExpansionMission(snapshot: GameSnapshot, owner: PlayerId,
       forgetExpansionMember(memory, id);
     }
     // Only the camp's required force, or the builder's small escort, owns this task.
-    for (const id of members) setUnitClaim(memory, id, { kind: 'expansion', targetId: target.id,
+    for (const id of members) renewUnitClaim(memory, id, { kind: 'expansion', targetId: target.id,
       x: target.x, y: target.y, sinceTick: snapshot.tick, expiresTick: snapshot.tick + 30, expansionMineId: target.id });
   }
   return task;
@@ -274,18 +278,22 @@ export function planMiningScreen(snapshot: GameSnapshot, owner: PlayerId, option
   const destination = task.stage === 'assemble' ? task.staging ?? home : mine;
   const point = walkableGoal(snapshot.map, destination.x, destination.y);
   memory.general = { mode: 'hold', target: point, holdingSince: task.sinceTick };
-  const builder = task.stage === 'escort' ? snapshot.units.find(unit => unit.owner === owner && unit.order.type === 'build'
-    && unit.order.buildingKind === 'townHall' && distance(unit.order, mine) < GOLD_MINE_RULES.baseRange) : undefined;
+  const builder = task.stage === 'escort' ? snapshot.units.find(unit => {
+    const action = retainedUnitAction(unit, options.memory);
+    return unit.owner === owner && action.type === 'build'
+      && action.buildingKind === 'townHall' && distance(action, mine) < GOLD_MINE_RULES.baseRange;
+  }) : undefined;
   const escorts = builder ? [...front].sort((a, b) => distance(a, builder) - distance(b, builder)).slice(0, 3) : [];
-  const road = builder?.order.type === 'build' ? groundSteeringRoute(snapshot.map, builder, builder.order) : [];
+  const road = builder ? issuedUnitRoad(snapshot, builder) : [];
   const escortPoint = builder ? routePrefix(builder, road, 220).at(-1) ?? builder : point;
   // A small escort follows the builder's actual steering road.
   return [{ units: front.filter(unit => !escorts.includes(unit)), point }, { units: escorts, point: escortPoint }]
     .flatMap(({ units, point }): GameCommand[] => {
-      const moving = units.filter(unit => distance(unit, point) > 180
+      const moving = units.filter(unit => distance(unit, point) > MINING_SCREEN_ARRIVAL
         && !((unit.order.type === 'attackMove' || unit.order.type === 'move') && distance(unit.order, point) < 100));
-      return moving.length ? [resolveAiCommandIntent(snapshot, owner,
-        { type: task.stage === 'assemble' ? 'move' : 'attackMove', unitIds: moving.map(unit => unit.id), x: point.x, y: point.y }, options)] : [];
+      return moving.length ? [withNavigationIntent(resolveAiCommandIntent(snapshot, owner,
+        { type: task.stage === 'assemble' ? 'move' : 'attackMove', unitIds: moving.map(unit => unit.id), x: point.x, y: point.y }, options),
+      { arrivalRange: MINING_SCREEN_ARRIVAL, station: task.stage === 'assemble', parentMethodId: `mining:${mine.id}:${task.stage}` })] : [];
     });
 }
 

@@ -32,7 +32,9 @@ export type AiPolicyUnitClaim = {
   garrisonTemporary?: boolean;
   /** Actual queued navigation, and the parent action it will resume. No second ownership roster. */
   campTravel?: { scriptId: string; command: GameCommand; stop: { x: number; y: number }; sinceTick: number;
-    delayGold: number; exposureGold: number; clearingIds?: string[]; subgoal?: import('./strategy/types').Subgoal };
+    delayGold: number; exposureGold: number; clearingIds?: string[]; subgoal?: import('./strategy/types').Subgoal;
+    clearingStage?: 'gather' | 'engage'; execution?: { scriptId: string; command: GameCommand };
+    navigation?: import('./policy/navigation-intent').AiNavigationIntent };
 
 };
 
