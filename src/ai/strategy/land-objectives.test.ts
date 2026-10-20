@@ -173,13 +173,29 @@ describe('land objective proposals over one shared Situation', () => {
     expect(attack.utility.successProbability).toBeLessThan(noResponder.utility.successProbability);
   });
 
-  it('does not mistake unknown enemy response for an undefended objective', () => {
+  it.each(['missing', 'geometry-refresh-pending', 'cohort-refinement-pending'])(
+    'does not mistake a %s enemy ETA for an undefended objective', code => {
     const { context, situation } = example();
-    const uncertain = { ...situation, units: situation.units.map(unit => unit.owner === 'foe' ? { ...unit, arrivals: [] } : unit) };
+    const uncertain = { ...situation, units: situation.units.map(unit => unit.owner === 'foe' ? { ...unit,
+      arrivals: code === 'missing' ? [] : unit.arrivals.map(record => ({ ...record, arrival: {
+        status: 'unknown' as const, reason: { code, detail: 'Deferred computation is not proof of no reinforcements', evidence: [] },
+      } })) } : unit) };
     const attack = goals(uncertain, context).find(goal => goal.kind === 'AttackSite')!;
     expect(attack.status).toBe('blocked');
     expect(attack.utility.successProbability).toBe(0);
     expect(attack.reasons.some(item => item.code === 'enemy-response-unknown')).toBe(true);
+  });
+
+  it('retains unknown enemy reinforcements even when the selected mine has a neutral camp', () => {
+    const { context, situation } = example();
+    const creep = { ...context.snapshot.units.find(unit => unit.id === 'responder')!, id: 'camp-creep', owner: 'neutral',
+      x: 1600, y: 600, homeX: 1600, homeY: 600 };
+    context.snapshot.units.push(creep);
+    const uncertain = { ...situation, units: situation.units.map(unit => unit.owner === 'foe' ? { ...unit, arrivals: [] } : unit) };
+    const expansion = goals(uncertain, context).find(goal => goal.kind === 'ExpandLand')!;
+    expect(expansion.reasons.some(reason => reason.code === 'enemy-response-unknown')).toBe(true);
+    expect(expansion.utility.successProbability).toBe(0);
+    expect(expansion.status).toBe('blocked');
   });
 
   it('keeps conditional crossings as transport prerequisites, not instantly available troops', () => {

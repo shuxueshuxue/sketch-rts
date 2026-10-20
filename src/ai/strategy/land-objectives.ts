@@ -351,7 +351,7 @@ class LandModel {
       // proves that even straight maximum-speed travel exceeds the whole response window.
       return !arrival || arrival.status === 'unknown' && arrival.reason.code !== 'beyond-evaluation-window';
     });
-    if (!camp && unknownResponse) condition('force', 'unknown', 'enemy-response-unknown',
+    if (unknownResponse) condition('force', 'unknown', 'enemy-response-unknown',
       '部分敌军没有到目标的 ETA，不能把未知援军当成零；成功率只给保守下界', null);
     const crossings = new Map<string, { crossing: Extract<Arrival, { ticks: number }>['crossings'][number]; units: Unit[] }>();
     for (const fighter of crew) {
