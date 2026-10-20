@@ -59,6 +59,8 @@ wait-income 与 build-hall 引用同一个 ID。描述性的 gold demand 不再�
 `AllocationMethodProvider.buildMethods` 消费数值 Situation、目标和该目标既有行动/阻塞，给出可执行子图；
 前置不满足时保留具体需求和替代方案。留守交接是落厅后的完成效果，不能作为所有扩张的出发准入。
 `quote` 只评估分配器传入的成员与预算，不能暗加别的兵。候选成员必须来自结构化数据，不能解析 reason 文案。
+`materialize` 可将方法骨架按候选成员和船只具体化，生成实际载荷所需的船数、支出和前置子图；
+随后必须对具体方法重新 quote，并在提交抢占前核清完整成本，不能先承诺“一艘船”再发现需要两艘。
 
 `MethodAllocationQuote` 把 feasible 与 blocked 分开。可行项有真实效用；blocked 的当前 utility 为 null，
 带缺失前置、可知的条件潜在效用，未知时仍为 null。不能用 0 或负无穷混进可行排序。
@@ -98,6 +100,15 @@ wait-income 与 build-hall 引用同一个 ID。描述性的 gold demand 不再�
 
 航次保存真实乘客与计划船员的区别。每次 think 重新评估继续、停装、返航或改目的地，
 按已经走过的航程和剩余路线定切换成本；已上船的兵不能瞬间变成岸上回防兵。
+`departure/destination` 保留水侧航点，`departureGround/landingGround` 是同一次规划已经验证陆块的陆侧点，
+执行器直接消费并核实，不再从水侧点另猜岸。清营 refuge 复用这个实际陆点。
+
+共享 `arrivalWeightedForce` 对每批相同 ETA 的成员重评整个队伍，按到达顺序折算整组边际；
+在岗兵完整计入，在途贡献按 `1/(1+ETA/评价窗)` 折算。同一成员不能同时出现在两组。
+防守概率使用折算后的有效兵力及实际塔掩护，资源占用成本仍按真实获配队伍和耗时计。
+
+attack-site、contest-route、counter-harass、recover-site 的最终执行 intent 在第 3 步陆地切片才启用，
+本切片不会据类型存在就注册这些执行器。第 2 步合并前再逐项审计其余字段的实际消费者与测试。
 
 ## 观测与死亡归因
 
