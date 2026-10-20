@@ -8,6 +8,8 @@
 
 新 head 的陆地相关 10 个测试 suite／114 项通过，包含三个房间版本的默认 inline/worker-host 零构造与 WithTrace 正对照。七个真实帧的完整计划、运行时观察计划、观察历史以及命令／完整 policy／世界摘要与 rebase 前 `b12b275b` 逐字节一致，旧金标未更新；根 tsc 通过。
 
+新 head 的 A100 全量 src 共 8157 项，8154 项通过；两条 frozen baseline 断言因导出的源码树没有原始 Git 对象失败，一条 think-worker 是已知的 A100 tsx worker 加载超时。这两个文件在有完整 Git 仓库的 juma 单独重跑 11/11 通过，没有余下的代码断言失败。全量运行前逐一校验 1541 个 src/scripts Git blob 全部一致；未通过该校验的早期准备运行已中止，不计入这张表。
+
 默认关闭观察/控制路径的性能直接沿用已冻结、串行三轮 ABBA 的陆地 AV 数据；它测量的是 `3d9b8f41`，不是本次 rebase 后的新 head。两者的生产差异仅为显式观察入口的活动矿收入修复及 #564 合入 main 后的接线基线；上述零构造回归已在新 head 重跑。源代码关系和原始数据见 [共享冻结收据](situation-default-path.evidence.json)，48 文件／23.47 MB 的不可变包保留全部 18 次 run。
 
 | 蓝宝默认路径 | main646 中位数 | 冻结陆地 AV 中位数 | 变化 |
