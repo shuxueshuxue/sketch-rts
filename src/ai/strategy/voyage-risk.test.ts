@@ -169,10 +169,16 @@ describe('bounded native voyage exposure', () => {
     const quote = transportExpectedLoss({ snapshot: game, shipId: 'ferry', boardingPassengerIds: ['waiting'], shipResidualGold: 240,
       stages: { approach: doomed, loaded: safe } });
     expect(quote).toMatchObject({ status: 'known', successProbability: 0, passengerLossGold: 75, hullLossGold: 240,
-      expectedLossGold: 315, waitingSinkingProbability: 0 });
+      expectedLossGold: 315, waitingSinkingProbability: 0,
+      passengerLosses: [{ unitId: 'aboard', valueGold: 75 }, { unitId: 'waiting', valueGold: 0 }] });
     const loadedLoss = transportExpectedLoss({ snapshot: game, shipId: 'ferry', boardingPassengerIds: ['waiting'], shipResidualGold: 240,
       stages: { approach: safe, loaded: doomed } });
     expect(loadedLoss).toMatchObject({ status: 'known', passengerLossGold: 175, expectedLossGold: 415 });
+    const mixed = transportExpectedLoss({ snapshot: game, shipId: 'ferry', boardingPassengerIds: ['waiting'], shipResidualGold: 240,
+      stages: { approach: { ...safe, survivalProbability: .8 }, loaded: { ...safe, survivalProbability: .5 } } });
+    expect(mixed).toMatchObject({ status: 'known', passengerLosses: [
+      { unitId: 'aboard', valueGold: 45 }, { unitId: 'waiting', valueGold: 40 }] });
+    if (mixed.status === 'known') expect(mixed.passengerLosses.reduce((sum, loss) => sum + loss.valueGold, 0)).toBeCloseTo(mixed.passengerLossGold, 12);
   });
 
   it('resumes the real Ne native route cursor identically in a cold fork', () => {
