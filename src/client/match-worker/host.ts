@@ -62,9 +62,13 @@ export function createMatchThreadHost(post: (event: MatchThreadEvent) => void) {
           }
           return;
         }
-        if (message.type === 'recordReplay') { void (message.enabled ? local?.startRecording() : local?.stopRecording())?.catch(report); return; }
+        if (message.type === 'recordReplay') {
+          const operation=local ? (message.enabled?local.startRecording():local.stopRecording()) : Promise.reject(new Error('No local match to record'));
+          void operation.then(()=>post({type:'replayRecording',requestId:message.requestId}),error=>post({type:'replayRecording',requestId:message.requestId,error:String(error)}));return;
+        }
         if (message.type === 'readReplay') {
-          void local?.recordedReplay().then(trace => post({type:'replayData',requestId:message.requestId,trace}),error =>
+          const operation=local?local.recordedReplay():replay?Promise.resolve(replay):Promise.reject(new Error('No debug recording'));
+          void operation.then(trace => post({type:'replayData',requestId:message.requestId,trace}),error =>
             post({type:'replayData',requestId:message.requestId,error:String(error)}));
           return;
         }

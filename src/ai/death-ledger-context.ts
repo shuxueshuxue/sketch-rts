@@ -158,16 +158,19 @@ export type AiDeathThinkContext = {
   tasks: [string, AiDeathTask[]][];
   general: Pick<NonNullable<ReturnType<typeof deathTaskIndex>['general']>, 'group' | 'mode' | 'targetHallId' | 'stage'> | null;
   claims: Record<string, { localRetreat?: boolean; kind: string }>;
+  generalClearingTargetIds: string[] | null;
   priorAttack: string[]; worn: { reason: string; tick: number } | null;
   units: Pick<Unit, 'id' | 'kind' | 'x' | 'y' | 'hp' | 'maxHp' | 'order' | 'deck'>[];
 };
 
 export function projectDeathThinkContext(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory): AiDeathThinkContext {
   const index = deathTaskIndex(snapshot, owner, memory), general = index.general;
+  const clearing = (index as typeof index & {generalClearingTargets?:()=>string[]|undefined}).generalClearingTargets;
   return structuredClone({ tick: snapshot.tick, owner, tasks: [...index.byUnit],
     general: general ? { mode:general.mode, ...(general.group ? {group:general.group} : {}),
       ...(general.targetHallId ? {targetHallId:general.targetHallId} : {}), ...(general.stage ? {stage:general.stage} : {}) } : null,
     claims: Object.fromEntries(Object.entries(memory.unitClaims).map(([id, claim]) => [id, { kind: claim.kind, localRetreat: !!claim.localRetreat }])),
+    generalClearingTargetIds: clearing?.() ?? null,
     priorAttack: memory.landAttack?.general.group ?? memory.v6?.general?.group ?? [],
     worn: memory.landAttackResult ? { tick: memory.landAttackResult.tick, reason: memory.landAttackResult.reason } : null,
     units: snapshot.units.filter(u => u.owner === owner && u.hp > 0).map(({id, kind, x, y, hp, maxHp, order, deck}) =>

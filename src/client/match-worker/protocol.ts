@@ -33,7 +33,7 @@ export type MatchThreadInit =
 export type MatchThreadMessage =
   | MatchThreadInit
   | { type: "seekReplay"; tick: number }
-  | { type: "recordReplay"; enabled: boolean }
+  | { type: "recordReplay"; enabled: boolean; requestId: number }
   | { type: "readReplay"; requestId: number }
   | { type: "observePlans"; enabled: boolean }
   | { type: "advance"; now: number }
@@ -50,6 +50,7 @@ type CastCommand = Extract<GameCommand, { type: "cast" }>;
 export type MatchThreadSnapshot = Omit<GameSnapshot, "map"> & { map: Omit<GameMap, "terrain" | "landmarks"> };
 
 export type MatchThreadEvent =
+  | { type: "replayRecording"; requestId:number; error?: string }
   | { type: "replayData"; requestId: number; trace?: DebugReplayTrace; error?: string }
   | { type: "aiPlans"; packet: AiPlanPacket }
   // `ai`: how the match's AI thread has been thinking since the last snapshot (the ?perf=1 readout).

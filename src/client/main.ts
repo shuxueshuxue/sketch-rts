@@ -1,3 +1,4 @@
+import { assertCurrentRulesVersion } from '../shared/rules-version';
 import { AiPlanOverlay } from './ai-plan-overlay';
 import { MatchThreadGameAdapter } from './match-worker/adapter';
 import type { DebugReplayTrace } from '../shared/replay';
@@ -343,7 +344,10 @@ let lastPlanReplay: DebugReplayTrace | undefined;
 const aiPlanOverlay = new AiPlanOverlay({ getAdapter:()=>activeGameAdapter, getSnapshot:()=>snapshot,
   isMatch:()=>!menuOpen && !!snapshot && activeGameAdapter!==baseGameAdapter,
   project:worldToScreen,center:centerCameraOnWorld,canvas,openReplay:openPlanReplay });
-function openPlanReplay(trace: DebugReplayTrace) {
+async function openPlanReplay(trace: DebugReplayTrace) {
+  if(trace.schemaVersion!==1 || !trace.initialSave?.snapshot)throw new Error('Invalid debug recording');
+  assertCurrentRulesVersion(trace.rulesVersion,'Replay');
+  await ensureMatchResources();
   const threads=createBrowserMatchThreads({ai:false});
   const adapter=new MatchThreadGameAdapter(threads.port,{type:'replay',trace},trace.initialSave.snapshot,{
     playerId:'spectator-replay',spectating:true,onError:message=>showInvalidCommand(message),onClose:()=>threads.terminate()});
@@ -1007,7 +1011,7 @@ function renderMainMenu() {
     }),
     menuButton(i18n.locale==='zh'?'打开调试录制':'Open debug recording', '', 'data-open-plan-replay', () => {
       const input=document.createElement('input');input.type='file';input.accept='.json,application/json';
-      input.onchange=()=>{const file=input.files?.[0];if(file)void file.text().then(text=>{openPlanReplay(JSON.parse(text) as DebugReplayTrace);})
+      input.onchange=()=>{const file=input.files?.[0];if(file)void file.text().then(text=>openPlanReplay(JSON.parse(text) as DebugReplayTrace))
         .catch(error=>{menuStatus.textContent=String(error);});};input.click();
     }),
     menuButton(t("home.settings"), "", "data-open-profile", () => {

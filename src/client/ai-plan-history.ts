@@ -1,14 +1,14 @@
 import {applyAiPlanDelta, type AiPlanPacket, type AiPlanBuildingLoss} from '../ai/plan-stream';
 import type {AiPlanNode, AiPlanTrace} from '../ai/plan-trace';
 import type {AiUnitDeathRecord} from '../ai/death-ledger-types';
-export type PlanBand = {owner:string;id:string;label:string;from:number;to:number;status:string;segments:{from:number;to:number;phase:string;reason:string}[]};
+export type PlanBand = {owner:string;id:string;label:string;kind:string;from:number;to:number;status:string;segments:{from:number;to:number;phase:string;reason:string}[]};
 export class AiPlanHistory {
   readonly frames = new Map<string,AiPlanTrace[]>();
   readonly bands: PlanBand[] = [];
   readonly deaths: AiUnitDeathRecord[] = [];
   readonly buildings: AiPlanBuildingLoss[] = [];
   readonly coverage = new Map<number,{from:number;to:number|null}>();
-  readonly paths = new Map<string,{tick:number;x:number;y:number;session:number}[]>();
+  readonly paths = new Map<string,{tick:number;x:number;y:number;session:number;goals:string[]}[]>();
   private current = new Map<string,{trace:AiPlanTrace;session:number}>();
   revision=0;
   receive(packet:AiPlanPacket) {
@@ -25,11 +25,16 @@ export class AiPlanHistory {
     if(!trace)return;
     this.current.set(trace.owner,{trace,session:packet.session});
     const frames=this.frames.get(trace.owner)??[];frames.push(trace);this.frames.set(trace.owner,frames);
-    for(const p of packet.positions??[]){const points=this.paths.get(p.id)??[];points.push({...p,tick:packet.tick,session:packet.session});this.paths.set(p.id,points);}
+    for(const p of packet.positions??[]){const points=this.paths.get(p.id)??[];points.push({...p,tick:packet.tick,session:packet.session,goals:trace.nodes.filter(n=>trace.roots.includes(n.id)&&n.resources.unitIds.includes(p.id)).map(n=>n.id)});this.paths.set(p.id,points);}
+    if(before?.session===packet.session)for(const oldId of before.trace.roots)if(!trace.roots.includes(oldId)){
+      const ended=this.bands.find(b=>b.owner===trace.owner&&b.id===oldId&&b.status!=='done'&&b.status!=='abandoned'&&b.status!=='released');
+      if(ended){ended.to=packet.tick;ended.status='released';}
+    }
     for(const id of trace.roots){
       const node=trace.nodes.find(n=>n.id===id);if(!node)continue;
-      let band=this.bands.find(b=>b.owner===trace.owner&&b.id===id&&b.from>=(this.coverage.get(packet.session)?.from??packet.tick));
-      if(!band){band={owner:trace.owner,id,label:node.label,from:packet.tick,to:packet.tick,status:node.status,segments:[]};this.bands.push(band);}
+      let band=this.bands.find(b=>b.owner===trace.owner&&b.id===id&&b.status!=='released'&&b.from>=(this.coverage.get(packet.session)?.from??packet.tick));
+      if(!band){band={owner:trace.owner,id,label:node.label,kind:node.kind,from:packet.tick,to:packet.tick,status:node.status,segments:[]};this.bands.push(band);}
+      if(band.status==='done'||band.status==='abandoned')continue;
       band.to=packet.tick;band.status=node.status;
       const phase=trace.nodes.find(n=>node.children.includes(n.id))?.label??node.reasons[0]?.code??node.status;
       const reason=node.reasons.map(r=>r.detail).join('；');
@@ -61,4 +66,13 @@ export function deathStyle(death:AiUnitDeathRecord){
     :disposition==='suspicious'?{kind:'suspicious',label:'存疑',icon:'?',color:'#a97720'}
     :disposition==='abnormal'?{kind:'abnormal',label:'异常',icon:'!',color:'#af443b'}
     :{kind:'unattributed',label:disposition==='lifecycle'?'存活到期':'未归因',icon:'·',color:'#777d80'};
+}
+
+/** Pack time intervals without hiding simultaneous events under one another. */
+export function planTimelineRows<T>(items:readonly T[],start:(item:T)=>number,end:(item:T)=>number,gap:number){
+  const ends:number[]=[];
+  return [...items].sort((a,b)=>start(a)-start(b)).map(item=>{
+    let row=ends.findIndex(last=>last+gap<=start(item));if(row<0)row=ends.length;
+    ends[row]=end(item);return {item,row};
+  });
 }

@@ -1,7 +1,11 @@
-import {applyAiPlanDelta} from '../../../src/ai/plan-stream';
+import {pathToFileURL} from 'node:url';
+import {writeFileSync} from 'node:fs';
+import {gzipSync} from 'node:zlib';
+import {createHash} from 'node:crypto';
 import type {Scene} from '../drivers/browser';
 
 export default async function(s:Scene){
+ const {applyAiPlanDelta}=await import(pathToFileURL(`${process.cwd()}/src/ai/plan-stream.ts`).href);
  const gpu=await s.page.evaluate(()=>{const gl=document.createElement('canvas').getContext('webgl2')!;const ext=gl.getExtension('WEBGL_debug_renderer_info');return ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);});
  s.must(!/SwiftShader|llvmpipe/i.test(gpu),`Software GPU: ${gpu}`);
  const created:any=await s.api('/api/rooms',{host:{id:'plan-proof-host',name:'Plan proof'},mapId:'twoShores',visibility:'public',humanCount:1,aiCount:3,layoutSeed:'plan-overlay-1'});
@@ -31,17 +35,31 @@ export default async function(s:Scene){
  await s.wait(3000);await s.shot('spectator-plans');
  const browser=s.page.context(),cdp=await browser.newCDPSession(s.page);
  const metrics:any[]=[];
+ await s.page.click('[data-action=record]'); // Close recording before profiling: closed rounds have both gates off.
+ const output=JSON.parse(process.argv[2]!).out;
+
  for(const open of [false,true,false,true]){
    if(open!==await s.page.locator('.ai-plan-toggle').getAttribute('aria-expanded').then((v:string)=>v==='true'))await s.page.click(open?'.ai-plan-toggle':'[data-action=close]');
    await s.wait(2000);
    const events:any[]=[];const collect=(event:any)=>events.push(...event.value);cdp.on('Tracing.dataCollected',collect);
-   await cdp.send('Tracing.start',{categories:'devtools.timeline,blink.user_timing',transferMode:'ReportEvents'});await s.wait(6000);
+   await cdp.send('Tracing.start',{categories:'devtools.timeline,blink.user_timing',transferMode:'ReportEvents'});
+   let advanced=0;const deadline=Date.now()+6000;
+   while(Date.now()<deadline){const started=Date.now();await s.api(`/api/rooms/${id}/tick`,{ticks:1});advanced++;await s.wait(Math.max(0,50-(Date.now()-started)));}
+
    const complete=new Promise(done=>cdp.once('Tracing.tracingComplete',done));await cdp.send('Tracing.end');await complete;cdp.off('Tracing.dataCollected',collect);
    const times=events.filter(e=>e.name==='FireAnimationFrame'&&e.ph==='X').map(e=>(e.tdur??e.dur??0)/1000).sort((a,b)=>a-b);
    const spans=events.filter(e=>String(e.name).startsWith('ai-plan:'));
-   metrics.push({open,frames:times.length,jsMedianMs:times[Math.floor(times.length*.5)],jsP95Ms:times[Math.floor(times.length*.95)],jsMaxMs:times.at(-1),planTimingEvents:spans.length});
+   const file=`trace-${metrics.length}-${open?'open':'closed'}.json.gz`,compressed=gzipSync(JSON.stringify({traceEvents:events}));
+   writeFileSync(`${output}/${file}`,compressed);
+   const measures:Record<string,number[]>={},pending=new Map<string,any>();
+   for(const e of spans){const key=`${e.name}:${e.id2?.local??e.id??''}:${e.pid}:${e.tid}`;
+     if(e.ph==='b'||e.ph==='B')pending.set(key,e);
+     else if(e.ph==='e'||e.ph==='E'){const start=pending.get(key);if(start){(measures[e.name]??=[]).push((e.ts-start.ts)/1000);pending.delete(key);}}
+     else if(e.ph==='X')(measures[e.name]??=[]).push((e.dur??0)/1000);
+   }
+   const planMs=Object.fromEntries(Object.entries(measures).map(([name,values])=>{values.sort((a,b)=>a-b);return [name,{count:values.length,median:values[Math.floor(values.length*.5)],p95:values[Math.floor(values.length*.95)],max:values.at(-1)}];}));
+   metrics.push({open,recording:false,advancedTicks:advanced,file,sha256:createHash('sha256').update(compressed).digest('hex'),planMs,frames:times.length,jsMedianMs:times[Math.floor(times.length*.5)],jsP95Ms:times[Math.floor(times.length*.95)],jsMaxMs:times.at(-1),planTimingEvents:spans.length});
  }
- await s.page.click('[data-action=record]'); // Stop recording before replaying: both observation gates are independently operable.
  const replay:any=await s.api(`/api/rooms/${id}/debug-replay?viewer=spectator-proof`);
  const packets=replay.aiPlans?.packets??[];
  s.must(packets.some((p:any)=>p.type==='trace'&&p.baseTick!==null),'No incremental plans recorded');

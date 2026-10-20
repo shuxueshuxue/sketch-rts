@@ -77,3 +77,12 @@ it('stops all projection work when recording and viewing both stop, and resumes 
  const close=observer.subscribe(p=>packets.push(p));advance();
  expect(packets.filter(p=>p.type==='trace')[0]).toMatchObject({baseTick:null});close();spy.mockRestore();
 });
+
+it('does not let an observation consumer discard an already planned command',()=>{
+ const game=createGame('bareDuel',{aiPlayers:['enemy']}),runtime=createAiRuntime(['enemy']);
+ const executor=createInlineAiThinkExecutor(runtime);const log=vi.spyOn(console,'error').mockImplementation(()=>{});
+ executor.observe!(()=>{throw new Error('diagnostic consumer');});
+ const commands:any[]=[];
+ expect(()=>executor.submit(game,{tick:0,deliveryTick:0,requests:[{playerId:'enemy',memory:runtime.memories.enemy!}]},frame=>commands.push(...frame))).not.toThrow();
+ expect(commands.some(c=>c.command.type==='mine')).toBe(true);expect(log).toHaveBeenCalled();log.mockRestore();
+});

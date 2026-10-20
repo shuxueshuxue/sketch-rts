@@ -40,7 +40,7 @@ export function createAiThinkClientExecutor(runtime: AiRuntimeState, game: Game,
         if (observer) for (const observation of reply.observations ?? []) {
           if (observation.delta.session !== generation) continue;
           const trace = applyAiPlanDelta(previous!.get(observation.delta.owner), observation.delta);
-          if (trace) { previous!.set(trace.owner, trace); observer({trace, context:observation.context}); }
+          if (trace) { previous!.set(trace.owner, trace); try { observer({trace, context:observation.context}); } catch(error) { console.error('AI plan consumer failed',error); } }
         }
         arrived.set(reply.deliveryTick, [...(arrived.get(reply.deliveryTick) ?? []), ...reply.commands]);
         report.thinks += 1;

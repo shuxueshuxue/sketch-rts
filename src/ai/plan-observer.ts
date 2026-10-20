@@ -1,7 +1,7 @@
 import { AiDeathLedger } from './death-ledger';
 import type { AiThinkExecutor, AiThinkObservation } from './runtime';
 import { compareAiPlanTraces, type AiPlanTrace } from './plan-trace';
-import { diffAiPlan, type AiPlanPacket, type AiPlanRecording } from './plan-stream';
+import { diffAiPlan, type AiPlanPacket, type AiPlanRecording, type AiPlanDelta } from './plan-stream';
 import type { Game } from '../shared/sim';
 import type { PlayerId, Building } from '../shared/types';
 
@@ -10,6 +10,7 @@ export class AiPlanObserver {
   private ledger: AiDeathLedger | undefined;
   private listeners = new Set<(packet: AiPlanPacket) => void>();
   private previous: Map<PlayerId, AiPlanTrace> | undefined;
+  private positions: Map<PlayerId,NonNullable<AiPlanDelta['positions']>> | undefined;
   private buildings: Building[] | undefined;
   private deathCount = 0;
   private session = 0;
@@ -18,13 +19,15 @@ export class AiPlanObserver {
   private recording?: AiPlanRecording;
   constructor(private game: Game, private owners: PlayerId[], private executor?: AiThinkExecutor) {}
 
+  readonly errors: string[] = [];
+  private error(error:unknown) { this.errors.push(String(error)); console.error('AI plan observer failed',error); }
   get active() { return !!this.ledger; }
   subscribe(listener: (packet: AiPlanPacket) => void): () => void {
     this.listeners.add(listener);
     if (!this.active) this.start();
     else {
       listener({type: 'coverage', session: this.session, from: this.from, to: null});
-      for (const trace of this.previous!.values()) listener(diffAiPlan(undefined, trace, this.session));
+      for (const trace of this.previous!.values()) listener(this.baseline(trace));
     }
     return () => { listener({type:'coverage',session:this.session,from:this.from,to:this.game.tick}); this.listeners.delete(listener); this.maybeStop(); };
   }
@@ -36,17 +39,18 @@ export class AiPlanObserver {
       if (!this.active) this.start();
       else {
         this.recording.packets.push({type: 'coverage', session: this.session, from: this.game.tick, to: null});
-        for (const trace of this.previous!.values()) this.recording.packets.push(diffAiPlan(undefined, trace, this.session));
+        for (const trace of this.previous!.values()) this.recording.packets.push(this.baseline(trace));
       }
     } else { this.maybeStop(true); }
   }
   recordingData(): AiPlanRecording | undefined { return this.recording && structuredClone(this.recording); }
   private emit(packet: AiPlanPacket) {
     if (this.isRecording) this.recording!.packets.push(packet);
-    for (const listener of this.listeners) listener(packet);
+    for (const listener of this.listeners) { try { listener(packet); } catch(error) { this.error(error); } }
   }
+  private baseline(trace:AiPlanTrace):AiPlanDelta{return {...diffAiPlan(undefined,trace,this.session),positions:this.positions?.get(trace.owner)??[]};}
   private start() {
-    this.session++; this.from = this.game.tick; this.previous = new Map(); this.deathCount = 0;
+    this.session++; this.from = this.game.tick; this.previous = new Map(); this.positions = new Map(); this.deathCount = 0;
     this.buildings = [...this.game.buildings];
     this.ledger = new AiDeathLedger(this.game, {owners: this.owners});
     this.executor?.observe?.(observation => this.think(observation));
@@ -58,11 +62,17 @@ export class AiPlanObserver {
     const previous = this.previous!.get(trace.owner);
     const current = {...trace, previousTick: previous?.tick ?? null, changes: compareAiPlanTraces(previous, trace)};
     const allocated = new Set(trace.nodes.flatMap(n => n.resources.unitIds));
-    this.emit({...diffAiPlan(previous,current,this.session),positions:context.units.filter(u=>allocated.has(u.id)).map(({id,x,y})=>({id,x,y}))});
+    const positions=context.units.filter(u=>allocated.has(u.id)).map(({id,x,y})=>({id,x,y}));
+    this.positions!.set(trace.owner,positions);
+    this.emit({...diffAiPlan(previous,current,this.session),positions});
     this.previous!.set(trace.owner, current);
   }
   /** Called after native simulation steps, only while subscribed or recording. */
   step() {
+    if (!this.ledger) return;
+    try { this.observeStep(); } catch(error) { this.error(error); this.stop(); }
+  }
+  private observeStep() {
     if (!this.ledger) return;
     const deaths = this.ledger.recordsFrom(this.deathCount);
     this.deathCount += deaths.length;
@@ -88,7 +98,7 @@ export class AiPlanObserver {
     if (!this.ledger) return;
     this.emit({type:'coverage',session:this.session,from:this.from,to:this.game.tick});
     this.executor?.observe?.(); this.ledger.dispose(); this.ledger = undefined;
-    this.previous = undefined; this.buildings = undefined;
+    this.previous = undefined; this.positions=undefined; this.buildings = undefined;
   }
   dispose() { this.listeners.clear(); this.recordingEnabled = false; this.stop(); }
 }

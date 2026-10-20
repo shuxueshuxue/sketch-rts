@@ -36,6 +36,8 @@ export class MatchThreadGameAdapter implements GameAdapter {
   private replayRequests = new Map<number, {resolve: (trace:DebugReplayTrace)=>void;reject:(error:Error)=>void}>();
   private requestSequence = 0;
   private recorded = false;
+  private replayTrace: DebugReplayTrace | undefined;
+  private recordingRequests = new Map<number,{resolve:()=>void;reject:(error:Error)=>void}>();
   private casts: CastCommand[] = [];
   private closed = false;
   private planListener: ((packet: AiPlanPacket) => void) | undefined;
@@ -44,8 +46,8 @@ export class MatchThreadGameAdapter implements GameAdapter {
 
   constructor(private readonly port: MatchThreadPort, init: MatchThreadInit, initial: GameSnapshot, private readonly options: MatchThreadAdapterOptions, transfer: Transferable[] = []) {
     this.snapshot = this.reported = initial;
-    if (init.type === 'replay') this.replayRange = {from:init.trace.initialSave.snapshot.tick,
-      to:init.trace.throughTick ?? init.trace.checkpoints.at(-1)?.tick ?? initial.tick};
+    if (init.type === 'replay') { this.replayTrace=init.trace; this.replayRange = {from:init.trace.initialSave.snapshot.tick,
+      to:init.trace.throughTick ?? init.trace.checkpoints.at(-1)?.tick ?? initial.tick}; }
     this.ground = { landmarks: initial.map.landmarks, ...(initial.map.terrain ? { terrain: initial.map.terrain } : {}) };
     port.onmessage = ({ data }) => this.receive(data);
     port.postMessage(init, transfer);
@@ -53,9 +55,16 @@ export class MatchThreadGameAdapter implements GameAdapter {
 
   seekReplay(tick: number) { if (this.replayRange) this.port.postMessage({type:'seekReplay',tick:Math.max(this.replayRange.from,Math.min(this.replayRange.to,Math.round(tick)))}); }
   hasRecording() { return this.recorded; }
-  async startRecording() { this.recorded=true; this.port.postMessage({type:'recordReplay',enabled:true}); }
-  async stopRecording() { this.port.postMessage({type:'recordReplay',enabled:false}); }
+  async startRecording() { await this.changeRecording(true);this.recorded=true; }
+  async stopRecording() { await this.changeRecording(false); }
+  private changeRecording(enabled:boolean):Promise<void>{
+    if(this.closed)return Promise.reject(new Error('Match is closed'));
+    if(this.replayTrace)return Promise.reject(new Error('A replay cannot record a live match'));
+    return new Promise((resolve,reject)=>{const requestId=++this.requestSequence;this.recordingRequests.set(requestId,{resolve,reject});this.port.postMessage({type:'recordReplay',enabled,requestId});});
+  }
   recordedReplay(): Promise<DebugReplayTrace> {
+    if(this.replayTrace)return Promise.resolve(this.replayTrace);
+    if(this.closed)return Promise.reject(new Error('Match is closed'));
     return new Promise((resolve,reject) => { const requestId = ++this.requestSequence;
       this.replayRequests.set(requestId,{resolve,reject}); this.port.postMessage({type:'readReplay',requestId}); });
   }
@@ -104,12 +113,15 @@ export class MatchThreadGameAdapter implements GameAdapter {
   close(): void {
     if (this.closed) return;
     this.closed = true;
+    for(const request of [...this.replayRequests.values(),...this.recordingRequests.values()])request.reject(new Error('Match is closed'));
+    this.replayRequests.clear();this.recordingRequests.clear();
     this.port.postMessage({ type: "close" });
     this.options.onClose?.();
   }
 
   private receive(event: MatchThreadEvent): void {
     if (this.closed) return;
+    if(event.type==='replayRecording'){const request=this.recordingRequests.get(event.requestId);this.recordingRequests.delete(event.requestId);if(event.error)request?.reject(new Error(event.error));else request?.resolve();return;}
     if (event.type === 'replayData') {
       const request = this.replayRequests.get(event.requestId); this.replayRequests.delete(event.requestId);
       if (event.trace) request?.resolve(event.trace); else request?.reject(new Error(event.error ?? 'Replay unavailable'));

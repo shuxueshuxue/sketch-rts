@@ -1,4 +1,4 @@
-import { planAiOwnerCommandEntriesWithTrace } from './plan-trace-planner';
+import { buildAiPlanTrace } from './plan-trace';
 import type { AiPlanTrace } from './plan-trace';
 import { projectDeathThinkContext, type AiDeathThinkContext } from './death-ledger-context';
 import { createAiPolicyMemory, type AiPolicyMemory, type AiScript, type AiScriptVersion, type PresetAiPolicyOptions } from "./policy";
@@ -194,11 +194,18 @@ function planAiCommandFrameRequestsFromSnapshot<Source extends string = string>(
   for (const request of requests) {
     const options = { ...policyOptions, ...(memoryProvider ? { memoryProvider } : {}) };
     if (observer) {
-      let context!: AiDeathThinkContext;
-      const result = planAiOwnerCommandEntriesWithTrace(snapshot, request, { ...options,
-        observeMemory: memory => { context = projectDeathThinkContext(snapshot, request.playerId, memory); } });
-      planned.push(...result.commands);
-      observer({ trace: result.trace, context });
+      let memory = request.memory ?? policyOptions.memory;
+      const observingProvider: AiMemoryProvider = {
+        get(owner) { const value = memoryProvider?.get(owner); if(owner===request.playerId && value) memory=value; return value; },
+        set(owner,value) { if(owner===request.playerId)memory=value; memoryProvider?.set?.(owner,value); },
+      };
+      // Commit commands before touching diagnostics. An output/consumer fault must never discard a completed think.
+      planned.push(...planAiOwnerCommandEntries(snapshot,request,{...options,memoryProvider:observingProvider}));
+      try {
+        const observed = memory ?? createAiPolicyMemory();
+        observer({trace:buildAiPlanTrace(snapshot,request.playerId,observed,request.version??DEFAULT_AI_PLANNER_VERSION),
+          context:projectDeathThinkContext(snapshot,request.playerId,observed)});
+      } catch(error) { console.error('AI plan observation failed',error); }
     } else planned.push(...planAiOwnerCommandEntries(snapshot, request, options));
   }
 

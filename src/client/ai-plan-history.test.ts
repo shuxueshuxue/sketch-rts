@@ -14,3 +14,15 @@ it('labels gaps as unrecorded and never carries an earlier plan across one, incl
  expect(history.at('enemy',95)).toBeUndefined();expect(history.at('enemy',120)?.tick).toBe(100);
  expect(history.at('enemy',150)).toBeUndefined();
 });
+it('ends a completed band once and distinguishes disappearance from abandonment',()=>{
+ const h=new AiPlanHistory();h.receive({type:'coverage',session:1,from:0,to:null});
+ const s=snapshotGame(createGame('bareDuel'));const mem:any={jobs:[],unitClaims:{},landExpansion:{mineId:s.resources[0]!.id,sinceTick:0,stage:'assemble',interruptions:[]}};
+ let previous:any;
+ for(const tick of [0,15,30,45]){s.tick=tick;if(tick>=15)mem.landExpansion.stage='complete';const trace=buildAiPlanTrace(s,'player',mem,'v9_archer',previous);h.receive(diffAiPlan(previous,trace,1));previous=trace;}
+ expect(h.bands.find(b=>b.label==='建立分矿')?.to).toBe(15);
+});
+it('keeps every simultaneous death clickable on its own row',async()=>{
+ const {planTimelineRows}=await import('./ai-plan-history');
+ const rows=planTimelineRows([{tick:100},{tick:100},{tick:103},{tick:125}],e=>e.tick,e=>e.tick,20);
+ expect(rows.map(r=>r.row)).toEqual([0,1,2,0]);
+});
