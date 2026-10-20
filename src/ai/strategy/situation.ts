@@ -65,10 +65,16 @@ const descriptions = {
   threat: (tick: number) => [factEvidence('strategy.situation', 'All sites use the same terrain component, physical station radius and shared 45-second arrival forecast', tick)],
 };
 
+// Diagnostic only. Neither publication, utility nor control may read this
+// process counter; it is deliberately absent from memory and strategy traces.
+let constructionCount = 0;
+export function situationConstructionCount(): number { return constructionCount; }
+
 /** Read-only world assessment. All routing shares the caller's owner-think scope.
  * The previous value is observational history, never a serialized policy task. */
 export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory, previous?: SituationHistory,
   teams = snapshot.teams, fieldBuildBudget = Infinity, observation?: SituationObservation, preparation?: StrategyObservationMemory): Situation {
+  constructionCount++;
   const tick = snapshot.tick, horizonTicks = STRATEGY_PARAMETERS.utilityHorizonTicks;
   const regions = regionIndex(snapshot.map, Infinity, tick), options = { memory, ...(teams ? { teams } : {}) };
   const distances = createPlanningDistanceQuery(snapshot, fieldBuildBudget, 'land', preparation);

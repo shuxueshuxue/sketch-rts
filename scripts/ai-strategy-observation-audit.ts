@@ -10,7 +10,7 @@ import type { AiScriptVersion } from '../src/shared/types';
 // Run isolated source archives in A/B/B/A order on the same host. The ordinary
 // command boundary and delivery delay stay intact; observation lives outside Game.
 const args = process.argv.slice(2), root = resolve(requiredFlag(args, 'source-root'));
-for (const name of ['source-root', 'mode', 'out', 'ticks', 'detail', 'case', 'measure-from', 'measure-until'])
+for (const name of ['source-root', 'mode', 'out', 'ticks', 'detail', 'case', 'measure-from', 'measure-until', 'observe'])
   if (args.filter(value => value === `--${name}`).length > 1) throw new Error(`Repeated --${name} would make the audit ambiguous`);
 const mode = flag(args, 'mode') ?? 'large', output = requiredFlag(args, 'out');
 const ticks = Number(flag(args, 'ticks') ?? (mode === 'ocean' ? 30000 : mode === 'map' ? 18000 : 900));
@@ -30,6 +30,10 @@ const { planAiOwnerCommandEntriesWithTrace } = await load('ai/plan-trace-planner
 const { planAiOwnerCommandEntries } = await load('ai/planner-context.ts');
 const decisionPlanner = detail === 'decision' && existsSync(resolve(root, 'src/ai/strategy-decision-planner.ts'))
   ? (await load('ai/strategy-decision-planner.ts')).planAiOwnerCommandEntriesWithDecision : undefined;
+const hasSituationEvaluator = existsSync(resolve(root, 'src/ai/strategy/situation.ts'));
+const situationCount = hasSituationEvaluator ? (await load('ai/strategy/situation.ts')).situationConstructionCount : () => 0;
+if (typeof situationCount !== 'function') throw new Error('Source lacks the diagnostic Situation construction counter');
+const initialSituationCount = situationCount();
 const started = new Date().toISOString();
 const policyMemories = (memories: Record<string, unknown>) => Object.fromEntries(Object.entries(memories).map(([owner, memory]) => {
   const { strategy: _observation, ...policy } = memory as Record<string, unknown>; return [owner, policy];
@@ -133,11 +137,14 @@ const runtime = new CommandFrameRuntime({ game, roomId: 'strategy-audit', reject
   aiPlanner: runtimeModule.createPresetAiRuntimeFramePlanner(game, ai, { executor }) });
 const initialChecksum = checksumGame(game), startTick = game.tick, cpu = process.cpuUsage();
 for (let tick = 0; tick < ticks && !game.match.winner; tick++) runtime.tick();
+const situationConstructions = situationCount() - initialSituationCount;
+if (!observe && situationConstructions !== 0) throw new Error(`Default room path constructed ${situationConstructions} Situations`);
 const used = process.cpuUsage(cpu), sorted = [...thinkSamples].sort((a, b) => a - b);
 if (!timedFrames.length) throw new Error('No AI think samples: check seat/controller setup before measuring');
 const windowSamples = timedFrames.filter(sample => sample.tick >= measureFromTick && sample.tick < measureUntilTick).map(sample => sample.ms).sort((a, b) => a - b);
 if (!windowSamples.length) throw new Error('No think samples in the requested measurement window');
 const result = { sourceRoot: root, mode, observe, detail, host: hostname(), cpu: cpus()[0]?.model, node: process.version, started,
+  hasSituationEvaluator, situationConstructions,
   recorderFile: fileURLToPath(import.meta.url), recorderSha256: createHash('sha256').update(readFileSync(new URL(import.meta.url))).digest('hex'),
   affinity: readFileSync('/proc/self/status', 'utf8').match(/Cpus_allowed_list:\s*([^\n]+)/)?.[1],
   map: game.map.id, startTick, finalTick: game.tick, initialChecksum, finalChecksum: checksumGame(game),
