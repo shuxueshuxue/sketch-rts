@@ -49,3 +49,13 @@ it('restarts an open view on room reset and releases the last subscription on di
  expect(reset).toBeGreaterThan(-1);expect(packets.slice(reset+1).some(p=>p.type==='trace'&&p.baseTick===null)).toBe(true);
  socket.close();host.closeRoom(room.id,'host');
 });
+it('keeps room frames and every tick checksum identical when recording and subscription are added',()=>{
+ const run=(observe:boolean)=>{
+  const host=createRoomHost({autoTick:false}),room=host.createRoom({id:'same-room',host:{id:'host',name:'Host'},mapId:'bareDuel',layoutSeed:'same-world'});host.startRoom(room.id);
+  const frames:string[]=[];host.observeRoomFrames(room.id,event=>frames.push(JSON.stringify(event.frame)));
+  const stop=observe?host.subscribeAiPlans(room.id,()=>{}):undefined;if(observe)host.enableDebugReplay(room.id,{id:'hash-proof'});
+  const hashes:string[]=[];for(let i=0;i<90;i++){host.tickRoom(room.id,1);hashes.push(host.checksumRoom(room.id));}
+  stop?.();if(observe)host.stopDebugReplay(room.id);host.closeRoom(room.id,'host');return {frames,hashes};
+ };
+ expect(run(true)).toEqual(run(false));
+});

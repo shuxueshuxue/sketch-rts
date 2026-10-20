@@ -5,8 +5,9 @@ import type { PlayerId } from '../shared/types';
 /** Output journal. Deltas are scoped to one owner and observation session, never to simulation state. */
 export type AiPlanDelta = {
   type: 'trace'; session: number; owner: PlayerId; tick: number; baseTick: number | null;
-  header: Omit<AiPlanTrace, 'nodes' | 'deathLedger'>;
+  header: Partial<Omit<AiPlanTrace, 'nodes' | 'deathLedger'>> & Pick<AiPlanTrace,'tick'|'owner'>;
   upsert: AiPlanNode[]; remove: string[];
+  order?: string[];
   positions?: {id:string;x:number;y:number}[];
 };
 export type AiPlanBuildingLoss = { id: string; owner: PlayerId; kind: string; tick: number; x: number; y: number };
@@ -19,7 +20,10 @@ export function diffAiPlan(previous: AiPlanTrace | undefined, trace: AiPlanTrace
   const before = new Map(previous?.nodes.map(n => [n.id, JSON.stringify(n)]));
   const ids = new Set(trace.nodes.map(n => n.id));
   const {nodes, deathLedger: _ledger, ...header} = trace;
-  return { type: 'trace', session, owner: trace.owner, tick: trace.tick, baseTick: previous?.tick ?? null, header,
+  const changedHeader = previous ? Object.fromEntries(Object.entries(header).filter(([key,value]) =>
+    JSON.stringify(value) !== JSON.stringify(previous[key as keyof AiPlanTrace]))) : header;
+  return { type: 'trace', session, owner: trace.owner, tick: trace.tick, baseTick: previous?.tick ?? null, header:{...changedHeader,tick:trace.tick,owner:trace.owner},
+    ...(previous && JSON.stringify(previous.nodes.map(n=>n.id))!==JSON.stringify(nodes.map(n=>n.id)) ? {order:nodes.map(n=>n.id)} : {}),
     upsert: nodes.filter(n => before.get(n.id) !== JSON.stringify(n)), remove: [...before.keys()].filter(id => !ids.has(id)) };
 }
 
@@ -29,7 +33,9 @@ export function applyAiPlanDelta(previous: AiPlanTrace | undefined, delta: AiPla
   const nodes = new Map((delta.baseTick === null ? [] : previous!.nodes).map(n => [n.id, n]));
   for (const id of delta.remove) nodes.delete(id);
   for (const node of delta.upsert) nodes.set(node.id, node);
-  return { ...delta.header, nodes: [...nodes.values()] };
+  const header = {...(delta.baseTick===null?{}:previous),...delta.header};
+  if(header.schemaVersion!==1 || !header.roots || !header.bank || !header.changes || !header.limitations || !header.plannerVersion || !header.origin || header.previousTick===undefined)return undefined;
+  return {...header, nodes:delta.order ? delta.order.flatMap(id=>nodes.has(id)?[nodes.get(id)!]:[]) : [...nodes.values()]} as AiPlanTrace;
 }
 
 export function filterAiPlanPacket(packet: AiPlanPacket, owner?: PlayerId): AiPlanPacket | undefined {

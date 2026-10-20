@@ -1,3 +1,4 @@
+import {applyAiPlanDelta} from '../../../src/ai/plan-stream';
 import type {Scene} from '../drivers/browser';
 
 export default async function(s:Scene){
@@ -20,7 +21,13 @@ export default async function(s:Scene){
  const result:any=await s.api(`/api/rooms/${id}/tick`,{ticks:4800});const tick=result.snapshot.tick;
  await s.page.waitForFunction((t:number)=>((window as any).__sketchRtsView?.tick??-1)>=t,tick,{timeout:180000});
  await s.page.waitForSelector('.plan-band',{timeout:60000});
- const focus=await s.page.evaluate(()=>{const list=document.querySelector<HTMLElement>('.plan-list[data-goal]');list?.click();return list?.textContent;});
+ const liveRecording:any=await s.api(`/api/rooms/${id}/debug-replay?viewer=spectator-proof`);
+ const current=new Map<string,any>(),interesting:any[]=[];
+ for(const packet of liveRecording.aiPlans.packets){if(packet.type!=='trace')continue;const trace=applyAiPlanDelta(current.get(packet.owner),packet);if(!trace)continue;current.set(trace.owner,trace);
+   for(const node of trace.nodes)if(trace.roots.includes(node.id)&&node.status==='active'&&node.resources.unitIds.length>=3&&node.target.position)interesting.push({tick:trace.tick,owner:trace.owner,id:node.id,label:node.label,position:node.target.position});}
+ const liveGoal=[...current.values()].flatMap(trace=>trace.nodes.filter((node:any)=>trace.roots.includes(node.id)&&node.status==='active'&&node.resources.unitIds.length>0&&node.target.position).map((node:any)=>({owner:trace.owner,...node}))).sort((a:any,b:any)=>b.resources.unitIds.length-a.resources.unitIds.length)[0];
+ if(liveGoal){await s.page.locator('.plan-panel details summary').click();await s.page.locator('.plan-list[data-owner="'+liveGoal.owner+'"][data-goal="'+liveGoal.id+'"]').click();}
+ const focus=liveGoal?.label;
  await s.wait(3000);await s.shot('spectator-plans');
  const browser=s.page.context(),cdp=await browser.newCDPSession(s.page);
  const metrics:any[]=[];
@@ -40,9 +47,16 @@ export default async function(s:Scene){
  s.must(packets.some((p:any)=>p.type==='trace'&&p.baseTick!==null),'No incremental plans recorded');
  await s.page.click('[data-action=replay]');
  await s.page.waitForSelector('[data-plan-seek]',{timeout:60000});
- const seek=Math.round((replay.initialSave.snapshot.tick+replay.throughTick)/2);
+ s.must(interesting.length>0,'No allocated goal in the actual recording');
+ const chosen=interesting[Math.floor(interesting.length*.7)]!;
+ const seek=chosen.tick;
+
  await s.page.locator('[data-plan-seek]').evaluate((input:HTMLInputElement,t:number)=>{input.value=String(t);input.dispatchEvent(new Event('input',{bubbles:true}));},seek);
- await s.page.waitForFunction((t:number)=>(window as any).__sketchRtsView?.tick===t,seek,{timeout:180000});await s.wait(1500);await s.shot('replay-scrub');
+ await s.page.waitForFunction((t:number)=>(window as any).__sketchRtsView?.tick===t,seek,{timeout:180000});await s.wait(1500);
+ await s.page.locator('.plan-panel details summary').click();
+ await s.page.locator('.plan-list[data-owner="'+chosen.owner+'"][data-goal="'+chosen.id+'"]').click();
+ s.must(!await s.page.locator('.plan-empty').count(),'Replay lost recorded plan nodes');
+ await s.wait(500);await s.shot('replay-scrub');
  s.must(await s.page.locator('.plan-gap').count()>0,'Missing unrecorded prefix');
- s.record('ai-plan-overlay',{gpu,tick,seek,focus,metrics,traffic,packets:packets.length,recordingFrom:replay.initialSave.snapshot.tick,recordingThrough:replay.throughTick,deathRecords:packets.flatMap((p:any)=>p.type==='events'?p.deaths:[]).length});
+ s.record('ai-plan-overlay',{gpu,tick,seek,chosen,focus,metrics,traffic,packets:packets.length,recordingFrom:replay.initialSave.snapshot.tick,recordingThrough:replay.throughTick,deathRecords:packets.flatMap((p:any)=>p.type==='events'?p.deaths:[]).length});
 }

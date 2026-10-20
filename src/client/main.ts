@@ -1636,6 +1636,7 @@ function activateStartedMatch(adapter: GameAdapter, nextSnapshot: GameSnapshot, 
 }
 
 function disconnectActiveMatch(close = true) {
+  aiPlanOverlay.detach();
   minimapPresentation.reset();
   combatPresentation.reset();projectileOrigins.reset();
   focusedStatusProjection = undefined;

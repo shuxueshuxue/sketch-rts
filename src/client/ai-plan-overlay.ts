@@ -65,6 +65,7 @@ export class AiPlanOverlay {
     else {this.stop?.();this.stop=undefined;const tick=this.options.getSnapshot()?.tick??0;
       for(const c of this.history.coverage.values())if(c.to===null)c.to=tick;}
   }
+  detach(){this.stop?.();this.stop=undefined;this.adapter=undefined;}
   private bind(){
     const adapter=this.options.getAdapter();
     if(this.adapter!==adapter){this.stop?.();this.adapter=adapter;this.stop=undefined;this.recording=false;this.history=new AiPlanHistory();this.selected=undefined;this.death=undefined;this.viewFrom=0;this.viewTo=undefined;this.nodeTick=-1;}
@@ -128,7 +129,7 @@ export class AiPlanOverlay {
     const lanes=[...this.history.frames.keys()];
     const bandHtml=(owner:string)=>this.history.bands.filter(b=>b.owner===owner&&b.to>=from&&b.from<=to).map((b,i)=>{
       const left=pct(b.from),right=pct(Math.max(b.to,b.from+10));
-      return `<button class="plan-band ${escape(b.status)}" data-goal="${escape(b.id)}" data-owner="${escape(owner)}" style="left:${left}%;width:${Math.max(.6,right-left)}%;top:${i%3*23+21}px" title="${escape(b.label)} · ${clock(b.from)}–${clock(b.to)} · ${escape(status[b.status])}">${b.segments.map((s,j)=>`<span style="left:${(s.from-b.from)/Math.max(1,b.to-b.from)*100}%;width:${Math.max(2,(s.to-s.from)/Math.max(1,b.to-b.from)*100)}%;opacity:${.4+j%3*.2}" title="${escape(s.phase+'：'+s.reason)}"></span>`).join('')}<b>${escape(b.label)}</b><i>${b.status==='done'?'✓':b.status==='abandoned'?'×':b.status==='blocked'?'!':'›'}</i></button>`;
+      return `<button class="plan-band ${escape(b.status)}" data-goal="${escape(b.id)}" data-owner="${escape(owner)}" data-start="${b.from}" style="left:${left}%;width:${Math.max(.6,right-left)}%;top:${i%3*23+21}px" title="${escape(b.label)} · ${clock(b.from)}–${clock(b.to)} · ${escape(status[b.status])}">${b.segments.map((s,j)=>`<span style="left:${(s.from-b.from)/Math.max(1,b.to-b.from)*100}%;width:${Math.max(2,(s.to-s.from)/Math.max(1,b.to-b.from)*100)}%;opacity:${.4+j%3*.2}" title="${escape(s.phase+'：'+s.reason)}"></span>`).join('')}<b>${escape(b.label)}</b><i>${b.status==='done'?'✓':b.status==='abandoned'?'×':b.status==='blocked'?'!':'›'}</i></button>`;
     }).join('');
     const events=(owner:string)=>[...this.history.deaths.filter(d=>d.owner===owner&&d.actualDeath).map(d=>({tick:d.tick,id:d.id,style:deathStyle(d),title:`${d.unit.kind} · ${deathStyle(d).label}`})),...this.history.buildings.filter(b=>b.owner===owner).map(b=>({tick:b.tick,id:`building:${b.id}`,style:{kind:'building',icon:'▧'},title:`建筑损失 · ${b.kind}`}))].filter(e=>e.tick>=from&&e.tick<=to).map((e,i)=>`<button class="plan-event ${e.style.kind}" style="left:${pct(e.tick)}%;top:${92+i%2*16}px" data-event="${escape(e.id)}" data-tick="${e.tick}" title="${clock(e.tick)} ${escape(e.title)}">${e.style.icon}</button>`).join('');
     const gaps: [number,number][]=[];let cursor=from;
@@ -162,7 +163,7 @@ export class AiPlanOverlay {
     if(action==='fit'){this.viewFrom=0;this.viewTo=undefined;this.paintedRevision=-1;}
     if(action==='zoom-in')this.zoom(.6);if(action==='zoom-out')this.zoom(1.6);
     if(action==='left'||action==='right'){const span=(this.viewTo??this.options.getSnapshot()?.tick??1200)-this.viewFrom,move=span*(action==='left'?-.3:.3);this.viewFrom=Math.max(0,this.viewFrom+move);this.viewTo=this.viewFrom+span;this.paintedRevision=-1;}
-    if(element.dataset.goal){this.selected={owner:element.dataset.owner!,id:element.dataset.goal};this.death=undefined;this.paintedRevision=-1;const goal=this.history.at(this.selected.owner,this.options.getSnapshot()?.tick??0)?.nodes.find(n=>n.id===this.selected!.id);if(goal?.target.position)this.options.center(goal.target.position);}
+    if(element.dataset.goal){if(element.dataset.start)this.adapter?.seekReplay?.(Number(element.dataset.start));this.selected={owner:element.dataset.owner!,id:element.dataset.goal};this.death=undefined;this.paintedRevision=-1;const goal=this.history.at(this.selected.owner,this.options.getSnapshot()?.tick??0)?.nodes.find(n=>n.id===this.selected!.id);if(goal?.target.position)this.options.center(goal.target.position);}
     if(element.dataset.event){const tick=Number(element.dataset.tick);this.adapter?.seekReplay?.(tick);const death=this.history.deaths.find(d=>d.id===element.dataset.event);this.death=death;if(death)this.options.center(death.unit);else{const building=this.history.buildings.find(b=>`building:${b.id}`===element.dataset.event);if(building)this.options.center(building);}this.paintedRevision=-1;}
   }
   private zoom(factor:number){const end=this.viewTo??this.adapter?.replayRange?.to??this.options.getSnapshot()?.tick??1200,span=Math.max(200,(end-this.viewFrom)*factor),center=(end+this.viewFrom)/2;this.viewFrom=Math.max(0,center-span/2);this.viewTo=this.viewFrom+span;this.paintedRevision=-1;}

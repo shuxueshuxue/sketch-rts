@@ -66,7 +66,7 @@ export class LocalGameAdapter implements GameAdapter {
   }
   async recordedReplay(): Promise<DebugReplayTrace> {
     if (!this.replay) throw new Error('No debug recording; unrecorded periods cannot be reconstructed');
-    if (this.recording) recordReplayCheckpoint(this.replay, this.game);
+    if (this.recording) recordReplayCheckpoint(this.replay!, this.game);
     const aiPlans = this.plans?.recordingData();
     return structuredClone({...this.replay, throughTick:this.recording ? this.game.tick : this.replay.throughTick ?? this.game.tick, ...(aiPlans ? {aiPlans} : {})});
   }
@@ -120,7 +120,7 @@ export class LocalGameAdapter implements GameAdapter {
   private applyAndStep(commands: CommandEnvelope[]): void {
     this.snapshot = undefined;
     this.frameRuntime.tick(commands, this.recording ? {onFrame:frame => recordReplayFrame(this.replay!, {source:'browser',frame})} : {});
-    if (this.recording && this.game.tick % 120 === 0) recordReplayCheckpoint(this.replay, this.game);
+    if (this.recording && this.game.tick % 120 === 0) recordReplayCheckpoint(this.replay!, this.game);
     this.plans?.step();
     if (this.room && this.game.match.winner) {
       if (!this.options.finishRoom) throw new Error(`Local room ${this.room.id} finished without a lifecycle finisher`);
