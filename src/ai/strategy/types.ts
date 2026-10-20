@@ -1,0 +1,312 @@
+import type { AiPolicyMemory } from '../memory';
+import type { GameCommand, GameSnapshot, PlayerId, TrainableUnitKind, UnitKind, UnitOrder } from '../../shared/types';
+
+/** Output contracts only: no policy registration, commands, memory or save fields.
+ * The only component source is terrain.groundWholeAt(map, point, mover): use its
+ * raw positive label with the mover prefix below; undefined is an unknown Location.
+ * Labels are scoped to one map and mover, and exclude building obstructions. */
+export type LandId = `land:${number}`;
+export type SeaId = `sea:${number}`;
+export type ObjectiveId = string;
+export type MethodId = string;
+export type AssignmentId = string;
+export type Point = Readonly<{ x: number; y: number }>;
+export type Evidence = Readonly<{
+  source: string;
+  tick: number;
+  certainty: 'recorded' | 'inferred' | 'unknown';
+  detail: string;
+}>;
+export type Reason = Readonly<{ code: string; detail: string; evidence: readonly Evidence[] }>;
+
+/** Component IDs use terrain connectivity, never a map ID or a home/island label. */
+export type Location =
+  | Readonly<{ kind: 'land'; landId: LandId; point: Point }>
+  | Readonly<{ kind: 'sea'; seaId: SeaId; point: Point }>
+  | Readonly<{ kind: 'aboard'; shipId: string; seaId: SeaId; compartment: 'deck' | 'cabin'; point: Point }>
+  | Readonly<{ kind: 'unknown'; point: Point; reason: Reason }>;
+export type Target = Readonly<{ entityId?: string; landId?: LandId; seaId?: SeaId; point: Point }>;
+
+/** Relative tick durations. Infinity/NaN must not be used to encode an unavailable route. */
+export type Arrival =
+  | Readonly<{ status: 'reachable'; ticks: number; landTicks: number; crossings: readonly (CrossingEta & Readonly<{ requiresNewShip: false }>)[]; evidence: readonly Evidence[] }>
+  | Readonly<{ status: 'conditional'; ticks: number; landTicks: number; crossings: readonly CrossingEta[]; unmet: readonly Reason[]; evidence: readonly Evidence[] }>
+  | Readonly<{ status: 'unreachable' | 'unknown'; reason: Reason }>;
+export type CrossingEta = Readonly<{
+  seaId: SeaId;
+  shipId: string | null;
+  departure: Point;
+  landing: Point;
+  /** Additional wait after the embarkation walk, excluding time already spent walking. */
+  waitTicks: number;
+  boardingTicks: number;
+  sailingTicks: number;
+  unloadingTicks: number;
+  /** A newly built ship is a method prerequisite, not an already available hull. */
+  requiresNewShip: boolean;
+}>;
+export type UnitRole = 'frontline' | 'ranged' | 'caster' | 'healer' | 'worker' | 'transport' | 'warship';
+export type Commitment = Readonly<{
+  source: string;
+  objectiveId: ObjectiveId | null;
+  taskId: string;
+  role: UnitRole;
+  evidence: Evidence;
+}>;
+export type SituationUnit = Readonly<{
+  id: string;
+  owner: PlayerId;
+  kind: UnitKind;
+  location: Location;
+  hp: number;
+  maxHp: number;
+  /** Existing V6 field-strength currency; camp clearing is assessed per target. */
+  strength: number;
+  roles: readonly UnitRole[];
+  expiresTick: number | null;
+  /** Input commitments may overlap: observation must expose, not silently resolve, a conflict. */
+  commitments: readonly Commitment[];
+  arrivals: readonly Readonly<{ targetId: string; arrival: Arrival }>[];
+}>;
+export type Asset = Readonly<{
+  id: string;
+  owner: PlayerId;
+  kind: 'hall' | 'mine' | 'tower' | 'production' | 'worker' | 'shipyard';
+  target: Target;
+  hp: number | null;
+  complete: boolean;
+  replacementGold: number;
+  remainingGold: number;
+  incomeGoldPerTick: number;
+  discountedValueGold: number;
+}>;
+export type SiteThreat = Readonly<{
+  siteId: string;
+  horizonTicks: number;
+  attackers: readonly Readonly<{ unitId: string; arrival: Arrival; strength: number }>[];
+  arrivedStrength: number;
+  /** Not yet at the site; disjoint from arrivedStrength. */
+  incomingStrength: number;
+  friendlyOnStationStrength: number;
+  firstArrivalTicks: number | null;
+  lossProbability: number | null;
+  evidence: readonly Evidence[];
+}>;
+export type LandSituation = Readonly<{
+  id: LandId;
+  anchor: Point;
+  assetIds: readonly string[];
+  unitIds: readonly string[];
+  adjacentSeaIds: readonly SeaId[];
+  threats: readonly SiteThreat[];
+}>;
+export type SeaSituation = Readonly<{
+  id: SeaId;
+  anchor: Point;
+  transportIds: readonly string[];
+  warshipIds: readonly string[];
+  shipyardIds: readonly string[];
+  voyages: readonly Readonly<{ shipId: string; taskId: string; target: Target; freeInTicks: number | null; evidence: Evidence }>[];
+}>;
+export type Opportunity = Readonly<{
+  id: string;
+  kind: 'neutral-mine' | 'weak-site' | 'construction' | 'army-away' | 'route';
+  target: Target;
+  valueGold: number;
+  evidence: readonly Evidence[];
+}>;
+export type Situation = Readonly<{
+  tick: number;
+  owner: PlayerId;
+  horizonTicks: number;
+  lands: readonly LandSituation[];
+  seas: readonly SeaSituation[];
+  /** Assets and units live once here; region lists contain IDs, not additional value to sum. */
+  assets: readonly Asset[];
+  units: readonly SituationUnit[];
+  opportunities: readonly Opportunity[];
+  economy: Readonly<{ cashGold: number; predictedIncomeGold: number; horizonTicks: number; ledger: readonly BudgetEntry[] }>;
+  limitations: readonly Reason[];
+}>;
+
+export type ObjectiveKind = 'DefendSite' | 'RecoverSite' | 'ExpandLand' | 'ConquerIsland'
+  | 'ReinforceFront' | 'AttackSite' | 'ContestRoute' | 'CounterHarass' | 'Evacuate';
+export type Effect =
+  | Readonly<{ kind: 'site-safe'; siteId: string; throughTick: number }>
+  | Readonly<{ kind: 'mining-established'; mineId: string; completeHall: true; garrisonHandoff: true }>
+  | Readonly<{ kind: 'force-present'; landId: LandId; minimumStrength: number; throughTick: number }>
+  | Readonly<{ kind: 'entity-destroyed'; entityId: string }>
+  | Readonly<{ kind: 'route-controlled'; target: Target }>
+  | Readonly<{ kind: 'harassment-ended'; unitId: string; siteId: string }>
+  | Readonly<{ kind: 'assets-evacuated'; unitIds: readonly string[]; destination: Target }>;
+/** All terms share the evaluator's declared gold-equivalent scale and time horizon. */
+export type UtilityTerm = Readonly<{ code: string; value: number; explanation: string }>;
+export type Utility = Readonly<{
+  horizonTicks: number;
+  benefit: readonly UtilityTerm[];
+  cost: readonly UtilityTerm[];
+  successProbability: number;
+  persistenceBonus: number;
+  /** (sum(benefit) - sum(cost)) * successProbability + persistenceBonus. */
+  score: number;
+  evidence: readonly Evidence[];
+}>;
+export type Objective = Readonly<{
+  id: ObjectiveId;
+  kind: ObjectiveKind;
+  owner: PlayerId;
+  target: Target;
+  effects: readonly Effect[];
+  utility: Utility;
+  status: 'candidate' | 'active' | 'blocked' | 'complete' | 'failed' | 'abandoned';
+  sinceTick: number;
+  /** Zero until the collector ranks all families; observe ranking is not an order. */
+  rank: number;
+  reasons: readonly Reason[];
+  methodIds: readonly MethodId[];
+  stability: Readonly<{ minimumStayUntilTick: number; challengerId: ObjectiveId | null; challengerThinks: number }>;
+}>;
+
+export type ResourceDemand =
+  | Readonly<{ kind: 'force'; metric: 'field-strength' | 'camp-force'; strength: number; roles: readonly UnitRole[]; at: Target; neededByTick: number | null; permanent: boolean }>
+  | Readonly<{ kind: 'transport'; seaId: SeaId; payloadMass: number; departure: Point; landing: Point }>
+  | Readonly<{ kind: 'gold'; amount: number }>
+  | Readonly<{ kind: 'production'; buildingId: string | null; unitKind: TrainableUnitKind; count: number }>
+  | Readonly<{ kind: 'workers'; count: number; at: Target }>
+  | Readonly<{ kind: 'supply'; amount: number }>;
+export type Precondition = Readonly<{
+  id: string;
+  kind: 'route' | 'force' | 'transport' | 'shore-safe' | 'budget' | 'production' | 'workers' | 'supply' | 'handoff';
+  status: 'met' | 'unmet' | 'unknown';
+  reason: Reason;
+  demand: ResourceDemand | null;
+  /** IDs of alternative subgoals which can establish this condition. */
+  subgoalIds: readonly string[];
+}>;
+export type Subgoal = Readonly<{
+  id: string;
+  parentMethodId: MethodId;
+  kind: 'borrow-force' | 'train-force' | 'obtain-transport' | 'build-shipyard' | 'train-transport'
+    | 'clear-beachhead' | 'change-landing' | 'deliver-force' | 'clear-camp' | 'deliver-workers'
+    | 'build-hall' | 'establish-garrison' | 'build-production' | 'provide-supply' | 'wait-income' | 'recover' | 'evacuate';
+  target: Target;
+  demands: readonly ResourceDemand[];
+  dependsOn: readonly string[];
+  estimatedTicks: number | null;
+  status: 'proposed' | 'blocked' | 'active' | 'complete' | 'failed' | 'abandoned';
+  reasons: readonly Reason[];
+}>;
+export type Method = Readonly<{
+  id: MethodId;
+  objectiveId: ObjectiveId;
+  kind: 'local-squad' | 'main-army-recall' | 'wait-in-cover' | 'cross-sea-reinforcement'
+    | 'direct-conquest' | 'staged-beachhead' | 'land-expansion' | 'land-attack'
+    | 'route-pressure' | 'counter-harassment' | 'recovery' | 'evacuation';
+  preconditions: readonly Precondition[];
+  subgoals: readonly Subgoal[];
+  demands: readonly ResourceDemand[];
+  estimatedTicks: number | null;
+  status: 'candidate' | 'selected' | 'blocked' | 'complete' | 'failed' | 'abandoned';
+  reasons: readonly Reason[];
+}>;
+
+export type AssignmentStage = 'assigned' | 'en-route' | 'on-station';
+export type Assignment = Readonly<{
+  id: AssignmentId;
+  objectiveId: ObjectiveId;
+  methodId: MethodId | null;
+  unitId: string;
+  role: UnitRole;
+  target: Target;
+  sinceTick: number;
+  minimumStayUntilTick: number;
+  arrival: Arrival;
+  /** Projected old tasks are not commitments created by the new allocator. */
+  authority: 'observed' | 'proposed' | 'committed';
+  evidence: readonly Evidence[];
+}> & (
+  | Readonly<{ stage: AssignmentStage }>
+  | Readonly<{ stage: 'life-saving-interruption'; resumeStage: AssignmentStage; interruption: Readonly<{
+    kind: 'worker-safety' | 'shell-evasion' | 'retreat' | 'healing'; sinceTick: number; executor: string; reason: Reason;
+  }> }>
+);
+export type PreemptionEvent = Readonly<{
+  tick: number;
+  fromObjectiveId: ObjectiveId;
+  toObjectiveId: ObjectiveId;
+  assignmentIds: readonly AssignmentId[];
+  unitIds: readonly string[];
+  marginalBenefit: number;
+  displacedLoss: number;
+  switchingCost: number;
+  reason: Reason;
+  /** A borrower cannot silently count borrowed units as casualties of the old objective. */
+  handoff: 'pending' | 'shrink' | 'pause' | 'fail';
+}>;
+export type BudgetEntry = Readonly<{
+  id: string;
+  objectiveId: ObjectiveId | null;
+  methodId: MethodId | null;
+  subgoalId: string | null;
+  gold: number;
+  state: 'proposed' | 'reserved' | 'spent' | 'released';
+  authority: 'observed' | 'proposed' | 'committed';
+  sinceTick: number;
+  releaseWhen: readonly ('spent' | 'completed' | 'failed' | 'abandoned' | 'expired')[];
+  releasedTick: number | null;
+  evidence: readonly Evidence[];
+}>;
+
+/** Shared join contract for the death ledger; damage sources/classification belong to that ledger. */
+export type DeathAttributionContext = Readonly<{
+  objectiveId: ObjectiveId | null;
+  methodId: MethodId | null;
+  assignmentId: AssignmentId | null;
+  task: Readonly<{ source: string; id: string }> | null;
+  assignmentStage: Assignment['stage'] | null;
+  executor: string | null;
+  provenance: 'assignment' | 'inferred' | 'unknown';
+  /** Preserve conflicting old-task evidence rather than inventing one certain objective. */
+  commitments: readonly Commitment[];
+  order: Readonly<UnitOrder>;
+  issuedCommand: Readonly<GameCommand> | null;
+  orderTick: number | null;
+  location: Location;
+  /** Unknown must be explicit; lack of an allocation is not evidence of a normal combat death. */
+  evidence: readonly Evidence[];
+}>;
+export type StrategyPlanTrace = Readonly<{
+  schemaVersion: 1;
+  tick: number;
+  owner: PlayerId;
+  mode: 'observe' | 'control';
+  situation: Situation;
+  objectives: readonly Objective[];
+  methods: readonly Method[];
+  assignments: readonly Assignment[];
+  preemptions: readonly PreemptionEvent[];
+  budget: readonly BudgetEntry[];
+  limitations: readonly Reason[];
+}>;
+export type PlanningContext = Readonly<{ snapshot: GameSnapshot; owner: PlayerId; memory: AiPolicyMemory }>;
+export interface SituationEvaluator {
+  /** Borrowed inputs: do not mutate serialized state; per-think query reuse is allowed. */
+  evaluate(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory, previous?: Situation): Situation;
+}
+export interface ObjectiveGenerator {
+  generate(situation: Situation, context: PlanningContext, previous: readonly Objective[]): readonly Objective[];
+}
+export interface MethodPlanner {
+  decompose(situation: Situation, objective: Objective, context: PlanningContext): readonly Method[];
+}
+
+export type AllocationResult = Readonly<{
+  assignments: readonly Assignment[];
+  preemptions: readonly PreemptionEvent[];
+  budget: readonly BudgetEntry[];
+  unmet: readonly Readonly<{ objectiveId: ObjectiveId; demand: ResourceDemand; reason: Reason }>[];
+}>;
+export interface Allocator {
+  allocate(situation: Situation, objectives: readonly Objective[], methods: readonly Method[],
+    previous: AllocationResult): AllocationResult;
+}
