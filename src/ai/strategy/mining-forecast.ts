@@ -4,9 +4,10 @@ import { GOLD_MINE_RULES, miningIncomeRate } from '../../shared/mining';
 import type { Building, GameSnapshot, Unit } from '../../shared/types';
 import { unitArrival } from './unit-arrivals';
 import { MINING_WORKFORCE_CALIBRATION } from './mining-forecast-calibration';
+import { canonicalProductionUses, productionUsesOverlap } from './production-use';
 import { discountedFlow, discountedValue } from './utility';
 import type { DecisionFacts } from './decision';
-import type { MiningCapacity, Situation, SituationUnit, ValuationWindow } from './types';
+import type { MiningCapacity, ProductionUse, Situation, SituationUnit, ValuationWindow } from './types';
 
 export type MiningWorkforceCalibration = Readonly<{
   id: string; dispatchTicks: number; localBirthToEntryTicks: number;
@@ -29,6 +30,7 @@ export type MiningWorkforceForecast = Readonly<{
   status: 'estimated' | 'unknown'; mineId: string; hallReadyTicks: number;
   workers: readonly MiningWorkerProjection[]; surplusWorkerIds: readonly string[];
   training: readonly MiningTrainingProjection[]; segments: readonly MiningForecastSegment[];
+  production: readonly ProductionUse[];
   trainingGold: number; presentTrainingGold: number; queueTicks: number;
   incomeGold: number | null; unknown: readonly Readonly<{ code: string; entityIds: readonly string[] }>[];
   calibration: MiningWorkforceCalibration; knownEffectsLowerBound: true;
@@ -39,6 +41,8 @@ export type MiningForecastInput = Readonly<{
   /** Net cash after this method's hall/hulls and other reservations; omitted reserves an unlaid hall. */
   availableGold?: number; explicitWorkerIds?: readonly string[];
   allowedUnitIds?: readonly string[]; unavailableUnitIds?: readonly string[];
+  allowedProduction?: readonly Pick<ProductionUse, 'buildingId' | 'lane'>[];
+  unavailableProduction?: readonly ProductionUse[];
   /** Older captures can supply the identical native capacity explicitly. */
   capacity?: MiningCapacity;
 }>;
@@ -81,6 +85,19 @@ export function forecastMiningWorkforce(input: MiningForecastInput): MiningWorkf
   const mine = snapshot.resources.find(mine => mine.id === mineId), capacity = input.capacity ?? asset?.miningCapacity;
   const unknown: { code: string; entityIds: string[] }[] = [];
   const workers: MiningWorkerProjection[] = [], training: MiningTrainingProjection[] = [];
+  const unavailableProduction = canonicalProductionUses(input.unavailableProduction);
+  const productionAllowed = (buildingId: string) => !input.allowedProduction
+    || input.allowedProduction.some(use => use.buildingId === buildingId && use.lane === 'training');
+  const trainingUse = (buildingId: string, fromTicks: number, throughTicks: number): ProductionUse =>
+    ({ buildingId, lane: 'training', fromTicks, throughTicks });
+  const nextTrainingStart = (buildingId: string, earliest: number) => {
+    let start = earliest;
+    for (const use of unavailableProduction) {
+      if (use.buildingId === buildingId && use.lane === 'training'
+        && start < use.throughTicks && use.fromTicks < start + UNIT_DEFS.worker.trainTime) start = use.throughTicks;
+    }
+    return start;
+  };
   const finish = (): MiningWorkforceForecast => {
     const arrivals = workers.map(worker => worker.arrivalTicks).sort((a, b) => a - b);
     const productive = workers.map(worker => Math.max(ready, worker.arrivalTicks + (worker.source === 'stationed' ? 0 : calibration.firstDeliveryTicks)));
@@ -94,6 +111,8 @@ export function forecastMiningWorkforce(input: MiningForecastInput): MiningWorkf
     });
     return { status: capacity && mine && workers.length ? 'estimated' : 'unknown', mineId, hallReadyTicks: ready,
       workers, surplusWorkerIds: workers.filter(w => w.source === 'surplus').map(w => w.unitId), training, segments,
+      production: canonicalProductionUses(training.filter(t => t.completesInTicks > t.startsInTicks)
+        .map(t => trainingUse(t.producerId, t.startsInTicks, t.completesInTicks))),
       trainingGold: training.reduce((sum, t) => sum + t.gold, 0),
       presentTrainingGold: training.reduce((sum, t) => sum + discountedValue(t.gold, t.startsInTicks, window), 0),
       queueTicks: training.filter(t => !t.paid).reduce((sum, t) => sum + t.queueTicks, 0),
@@ -103,7 +122,7 @@ export function forecastMiningWorkforce(input: MiningForecastInput): MiningWorkf
   if (!mine || !asset || !capacity) { unknown.push({ code: 'mining-capacity-missing', entityIds: [mineId] }); return finish(); }
   if (!asset.target.landId) { unknown.push({ code: 'mine-ground-unknown', entityIds: [mineId] }); return finish(); }
   const facts = new Map(situation.units.map(unit => [unit.id, unit]));
-  // unitArrival's legacy public type includes explanations, but this numerical
+  // unitArrival's previous public type includes explanations, but this numerical
   // lookup consumes only the compact row and never reads those properties.
   const arrivalOf = (id: string) => { const fact = facts.get(id); return fact && unitArrival(fact as SituationUnit, mineId); };
   const unavailable = new Set(input.unavailableUnitIds ?? []), allowed = input.allowedUnitIds && new Set(input.allowedUnitIds);
@@ -160,15 +179,26 @@ export function forecastMiningWorkforce(input: MiningForecastInput): MiningWorkf
       const starts = next; next += queued.remaining;
       if ('unitKind' in queued && queued.unitKind === 'worker' && workers.length < capacity.standardWorkers) {
         if (!queued.id) { unknown.push({ code: 'paid-worker-job-id-unknown', entityIds: [hall.id] }); continue; }
+        // A paid job still finishes in its real queue. Removing its production
+        // from this offer removes the adopted worker, never moves/cancels the job.
+        if (!productionAllowed(hall.id) || next > starts
+          && productionUsesOverlap([trainingUse(hall.id, starts, next)], unavailableProduction)) {
+          unknown.push({ code: 'paid-worker-production-unavailable', entityIds: [hall.id, queued.id] }); continue;
+        }
         const id = queued.id, arrivalTicks = Math.max(ready, next + travel);
         training.push({ id, jobId: id, producerId: hall.id, lane: 'training', paid: true, gold: 0, startsInTicks: starts, completesInTicks: next,
           onStationTicks: arrivalTicks, queueTicks: queued.remaining, routeBasisUnitId: local ? null : basis!.unit.id });
         workers.push({ unitId: id, source: 'paid-queue', arrivalTicks, producerId: hall.id, conditional: false });
       }
     }
-    producers.push({ id: hall.id, next, travel, basis: local ? null : basis!.unit.id, hall });
+    if (productionAllowed(hall.id)) producers.push({ id: hall.id, next, travel, basis: local ? null : basis!.unit.id, hall });
+    else if (workers.length < capacity.standardWorkers) unknown.push({ code: 'worker-production-not-allowed', entityIds: [hall.id] });
   }
-  if (!targetHall) producers.push({ id: `planned-hall:${mineId}`, next: ready, travel: calibration.localBirthToEntryTicks, basis: null, hall: null });
+  if (!targetHall) {
+    const id = `planned-hall:${mineId}`;
+    if (productionAllowed(id)) producers.push({ id, next: ready, travel: calibration.localBirthToEntryTicks, basis: null, hall: null });
+    else if (workers.length < capacity.standardWorkers) unknown.push({ code: 'worker-production-not-allowed', entityIds: [id] });
+  }
   const queuedWorkers = ownHalls.reduce((sum, hall) => sum + hall.queue.filter(q => 'unitKind' in q && q.unitKind === 'worker').length, 0);
   const stock = snapshot.players[owner]!;
   // Reserve an unlaid hall's full cash capital before optional recruitment.
@@ -189,7 +219,7 @@ export function forecastMiningWorkforce(input: MiningForecastInput): MiningWorkf
   const fundingTime = (required: number): number | null => {
     if (required <= budget) return 0;
     const tax = miningIncomeRate(stock.supplyUsed);
-    const incomeEvents = workers.map(w => w.arrivalTicks + (w.source === 'stationed' ? 0 : calibration.firstDeliveryTicks));
+    const incomeEvents = workers.map(w => Math.max(ready, w.arrivalTicks + (w.source === 'stationed' ? 0 : calibration.firstDeliveryTicks)));
     const ends = [...new Set([0, ...incomeEvents, window.horizonTicks])].filter(t => t <= window.horizonTicks).sort((a, b) => a - b);
     let money = budget, ore = mine.amount;
     for (let index = 0; index + 1 < ends.length; index++) {
@@ -211,10 +241,13 @@ export function forecastMiningWorkforce(input: MiningForecastInput): MiningWorkf
     if (supplyReady === undefined) { unknown.push({ code: 'worker-supply-required', entityIds: [] }); break; }
     const funding = fundingTime(spent + UNIT_DEFS.worker.cost);
     if (funding === null) { unknown.push({ code: 'worker-training-income-unknown', entityIds: [] }); break; }
-    producers.sort((a, b) => Math.max(a.next, funding, supplyReady) + a.travel - Math.max(b.next, funding, supplyReady) - b.travel || a.id.localeCompare(b.id));
-    const producer = producers[0]!, starts = Math.max(producer.next, funding, supplyReady), complete = starts + UNIT_DEFS.worker.trainTime;
+    const startsAt = (producer: Producer) => nextTrainingStart(producer.id, Math.max(producer.next, funding, supplyReady));
+    producers.sort((a, b) => startsAt(a) + a.travel - startsAt(b) - b.travel || a.id.localeCompare(b.id));
+    const producer = producers[0]!, starts = startsAt(producer), complete = starts + UNIT_DEFS.worker.trainTime;
     const onStationTicks = Math.max(ready, complete + producer.travel), id = `train-worker:${mineId}:${workers.length}`;
-    if (onStationTicks + calibration.firstDeliveryTicks >= window.horizonTicks) break;
+    if (onStationTicks + calibration.firstDeliveryTicks >= window.horizonTicks) {
+      unknown.push({ code: 'worker-training-outside-window', entityIds: [producer.id] }); break;
+    }
     training.push({ id, jobId: null, producerId: producer.id, lane: 'training', paid: false, gold: UNIT_DEFS.worker.cost, startsInTicks: starts,
       completesInTicks: complete, onStationTicks, queueTicks: UNIT_DEFS.worker.trainTime, routeBasisUnitId: producer.basis });
     workers.push({ unitId: id, source: 'train-worker', arrivalTicks: onStationTicks, producerId: producer.id, conditional: false });
