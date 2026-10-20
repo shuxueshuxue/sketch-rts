@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createUnit } from '../../shared/map';
 import { UNIT_DEFS } from '../../shared/catalog';
-import { casualtySurvivors, focusedCasualties } from './focused-casualties';
+import { casualtySurvivors, experimentalMixedCasualties, focusedCasualties } from './focused-casualties';
 
 const party = () => ['a', 'b', 'c', 'd', 'e'].map(id => createUnit(id, 'us', 'emberRavager', 1000, 1000));
 
@@ -59,5 +59,45 @@ describe('one focused casualty and wound model', () => {
     expect(() => focusedCasualties(units, Infinity)).toThrow();
     expect(() => focusedCasualties(units, -1)).toThrow();
     expect(focusedCasualties(units, 0).survivors).toHaveLength(units.length);
+  });
+});
+
+describe('experimental global damage mixture', () => {
+  it('uses physical proportional HP damage at zero and the exact existing focus model at one', () => {
+    const units = party(); units[0]!.hp = 30;
+    const damage = 200, totalHp = units.reduce((sum, unit) => sum + unit.hp, 0);
+    const spread = experimentalMixedCasualties(units, damage, 0);
+    expect(spread.deadUnitIds).toEqual([]); expect(spread.expectedLossGold).toBe(0);
+    for (const survivor of spread.survivors) expect(survivor.hp)
+      .toBeCloseTo(units.find(unit => unit.id === survivor.unitId)!.hp * (1 - damage / totalHp), 10);
+    expect(experimentalMixedCasualties(units, damage, 1)).toEqual(focusedCasualties(units, damage));
+  });
+
+  it('keeps one conserved damage, death price and surviving HP ledger for every mixture', () => {
+    const units = party(); units[0]!.hp = 30.1081; units[1]!.hp = 92.199821; units[1]!.expiresTick = 1000;
+    const initialHp = units.reduce((sum, unit) => sum + unit.hp, 0), before = JSON.stringify(units);
+    for (const alpha of [0, .1, .25, .5, .75, 1]) for (const exposure of [0, 25.1248, 120, 200, initialHp, initialHp + 80]) {
+      const value = experimentalMixedCasualties(units, exposure, alpha), dead = new Set(value.deadUnitIds);
+      const lost = units.filter(unit => dead.has(unit.id)).reduce((sum, unit) => sum + unit.hp, 0)
+        + value.survivors.reduce((sum, unit) => sum + unit.damage, 0);
+      expect(lost).toBeCloseTo(Math.min(exposure, initialHp), 9);
+      expect(value.expectedHpLost + value.unappliedDamage).toBeCloseTo(exposure, 9);
+      expect(value.expectedLossGold).toBe(units.filter(unit => dead.has(unit.id) && unit.expiresTick === undefined)
+        .reduce((sum, unit) => sum + UNIT_DEFS[unit.kind].cost, 0));
+      expect(value.survivors.reduce((sum, unit) => sum + unit.hp, 0)).toBeCloseTo(initialHp - value.expectedHpLost, 9);
+      expect(experimentalMixedCasualties([...units].reverse(), exposure, alpha)).toEqual(value);
+      expect(experimentalMixedCasualties(JSON.parse(before), exposure, alpha)).toEqual(value);
+    }
+    expect(JSON.stringify(units)).toBe(before);
+  });
+
+  it('prices only deaths, retains explicit recovery and rejects invalid global parameters', () => {
+    const units = party(), recovery = [{ unitId: 'a', hpPerTick: 2, startsInTicks: 10 }];
+    const value = experimentalMixedCasualties(units, 25, .5, recovery);
+    expect(value.expectedLossGold).toBe(0);
+    expect(value.wounds.find(wound => wound.unitId === 'a')!.readyInTicks)
+      .toBe(10 + Math.ceil(value.wounds.find(wound => wound.unitId === 'a')!.missingHp / 2));
+    expect(value.wounds.find(wound => wound.unitId === 'b')!.readyInTicks).toBeNull();
+    for (const alpha of [-.1, 1.1, NaN, Infinity]) expect(() => experimentalMixedCasualties(units, 25, alpha)).toThrow();
   });
 });

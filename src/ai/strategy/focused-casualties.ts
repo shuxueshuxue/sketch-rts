@@ -48,6 +48,32 @@ export function focusedCasualties(units: readonly Unit[], damageExposure: number
     deadUnitIds, permanentDeadUnitIds, survivors, wounds };
 }
 
+/** Calibration only: not selected by any production quotation. First spread
+ * (1-alpha) of capped damage in proportion to current HP, then focus the rest
+ * on the remaining lowest-HP members. Endpoints are physical proportional
+ * damage and pure focus, not fractional catalog losses. Both phases conserve
+ * one HP budget; the existing casualty/recovery model settles actual deaths.
+ * The ordering is part of this experimental model and must be held fixed when
+ * fitting one global alpha with leave-one-map-out validation. */
+export function experimentalMixedCasualties(units: readonly Unit[], damageExposure: number, alpha: number,
+  recovery: readonly RecoveryService[] = []): ReturnType<typeof focusedCasualties> {
+  if (!Number.isFinite(alpha) || alpha < 0 || alpha > 1) throw new Error('Invalid casualty mixture alpha');
+  const focused = focusedCasualties(units, damageExposure, recovery);
+  const ordered = units.slice().sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+  const totalHp = ordered.reduce((sum, unit) => sum + unit.hp, 0);
+  if (alpha === 1 || damageExposure === 0 || damageExposure >= totalHp) return focused;
+  const applied = Math.min(totalHp, damageExposure), proportion = (1 - alpha) * applied;
+  const originals = new Map(units.map(unit => [unit.id, unit]));
+  const spread = ordered.map(unit => ({ ...unit, hp: unit.hp - proportion * unit.hp / totalHp }));
+  const distributed = totalHp - spread.reduce((sum, unit) => sum + unit.hp, 0);
+  const settled = focusedCasualties(spread, Math.max(0, applied - distributed), recovery);
+  const damage = (unitId: string, hp: number) => originals.get(unitId)!.hp - hp;
+  return { ...settled, damageExposure, expectedHpLost: applied, unappliedDamage: damageExposure - applied,
+    survivors: settled.survivors.map(unit => ({ ...unit, damage: damage(unit.unitId, unit.hp) })),
+    wounds: settled.wounds.map(wound => ({ ...wound, battleDamage: damage(wound.unitId,
+      settled.survivors.find(unit => unit.unitId === wound.unitId)!.hp) })) };
+}
+
 /** Assessment copies only. The original entities and their HP are untouched. */
 export function casualtySurvivors(units: readonly Unit[], casualties: ReturnType<typeof focusedCasualties>): Unit[] {
   const byId = new Map(units.map(unit => [unit.id, unit]));
