@@ -6,7 +6,11 @@ import { attackDamageProfile } from '../../shared/damage-types';
 import { shipProfile, shareShipProfile } from '../../shared/ship-geometry';
 import { shipMotionLimits } from '../../shared/ship-handling';
 import { shipLaunchPose, shipLaunchPrototype } from '../../shared/ship-launch';
-import { planVoyageRoute, shipPoseAt, headingDifference, type ShipPose } from '../../shared/ship-navigation';
+import { advanceShipPlanningJob, beginShipPlanningJob } from '../../shared/ship-planning-job';
+import { fnv1a } from '../../shared/sim/checksum';
+import { standingBodies } from '../../shared/structure-bodies';
+import { setBuildingBodies } from '../../shared/terrain';
+import { shipPoseAt, headingDifference, type ShipPose } from '../../shared/ship-navigation';
 import { coursePerformance } from '../../shared/ship-wind';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { isRangedUnit } from '../../shared/unit-weapon-class';
@@ -21,15 +25,19 @@ export const VOYAGE_RISK_SAMPLE_SPACING = 32;
 export const VOYAGE_RISK_SAMPLES_PER_THINK = 256;
 export const VOYAGE_RISK_ROUTE_PLANS_PER_THINK = 2;
 export const VOYAGE_RISK_MEMORY_BYTES = 16 * 1024;
-const ENTRY_LIMIT = 16, ROUTE_SEARCH_BUDGET = 512, COAST_BUCKET = 256;
+const ENTRY_LIMIT = 16, COAST_BUCKET = 256;
 export type VoyageRiskRequest = Readonly<{
   id: string; seaId: SeaId; destination: Point;
   shipId?: string; productionBuildingId?: string;
+  /** Native end pose of the preceding leg, conditional on that leg succeeding. */
+  start?: ShipPose;
   /** A point list from the native helm/planner, never a straight-line substitute. */
   route?: Readonly<{ points: readonly ShipPose[]; partial: boolean }>;
 }>;
 type Progress = { id: string; key: string; cursor: number; total: number; damage: number; boundarySeconds: number; computedTick: number };
-export type VoyageRiskMemory = { version: 1; owner: PlayerId; tick: number; routeIds: string[]; entries: Progress[] };
+type NativeRouteProgress = { id: string; inputs: string; job: string; ready: boolean };
+export type VoyageRiskMemory = { version: 1; owner: PlayerId; tick: number; routeIds: string[]; entries: Progress[];
+  nativeRoutes?: NativeRouteProgress[] };
 export type VoyageRisk = Readonly<
   { status: 'known'; survivalProbability: number; expectedDamage: number; expectedHpLoss: number;
     damageErrorBound: number; samples: number; totalSamples: number; computedTick: number;
@@ -39,6 +47,14 @@ export type VoyageRisk = Readonly<
 type Weapon = Readonly<{ range: number; minRange: number; dps: number }>;
 type Threat = Readonly<{ id: string; x: number; y: number; seaId?: SeaId; ranged: boolean; weapons: readonly Weapon[] }>;
 type Coast = Map<string, readonly Point[]>;
+const terrainVersions = new WeakMap<object, { cells: string; key: string }>();
+function terrainVersion(snapshot: GameSnapshot) {
+  const terrain = snapshot.map.terrain;
+  if (!terrain) return `open:${snapshot.map.width}:${snapshot.map.height}`;
+  let saved = terrainVersions.get(terrain);
+  if (!saved || saved.cells !== terrain.cells) { saved = { cells: terrain.cells, key: `${terrain.cols}:${terrain.rows}:${terrain.cell}:${fnv1a(terrain.cells)}` }; terrainVersions.set(terrain, saved); }
+  return saved.key;
+}
 const coastIndices = new WeakMap<object, { cells: string; index: Coast }>();
 const keyOf = (x: number, y: number) => `${Math.floor(x / COAST_BUCKET)}:${Math.floor(y / COAST_BUCKET)}`;
 
@@ -106,6 +122,17 @@ function threatsFor(snapshot: GameSnapshot, actors: ReturnType<typeof threatActo
     }).filter(weapon => weapon.dps > 0),
   })).filter(threat => threat.weapons.length > 0);
 }
+const nativeRouteHolders = new WeakMap<NativeRouteProgress, Unit>();
+function nativeRouteHolder(entry: NativeRouteProgress): Unit {
+  let holder = nativeRouteHolders.get(entry);
+  if (!holder) {
+    // The native job already contains its minimal frozen navigation-only unit.
+    holder = JSON.parse(entry.job).ship as Unit;
+    holder.sailing!.planningJob = entry.job;
+    nativeRouteHolders.set(entry, holder);
+  }
+  return holder;
+}
 type Leg = { from: ShipPose; to: ShipPose; length: number; samples: number; offset: number };
 function routeLegs(ship: Unit, points: readonly ShipPose[]) {
   let from = { x: ship.x, y: ship.y, heading: ship.sailing?.heading ?? 0 }, offset = 0;
@@ -139,15 +166,25 @@ export function assessVoyageRisks(snapshot: GameSnapshot, owner: PlayerId, reque
   if (memory.version !== 1 || memory.owner !== owner) throw new Error('Voyage risk memory owner/version mismatch');
   const advance = memory.tick !== snapshot.tick;
   if (advance) { memory.tick = snapshot.tick; memory.routeIds = []; }
+  memory.nativeRoutes ??= [];
+  const bodies = standingBodies(snapshot);
+  setBuildingBodies(snapshot.map, bodies);
+  const bodyTuples = bodies.map(body => [body.x, body.y, body.radius]).sort((a, b) => a[0]! - b[0]! || a[1]! - b[1]! || a[2]! - b[2]!);
+  const geometryVersion = `${terrainVersion(snapshot)}:${bodyTuples.length}:${fnv1a(JSON.stringify(bodyTuples))}`;
   let samplesUsed = 0, routePlans = 0;
   const results = new Map<string, VoyageRisk>(), coast = coastIndex(snapshot), actors = threatActors(snapshot, owner);
   const ordered = [...requests].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
   if (new Set(ordered.map(request => request.id)).size !== ordered.length) throw new Error('Duplicate voyage risk request ID');
   const live = new Set(ordered.map(request => request.id));
   memory.entries = memory.entries.filter(entry => live.has(entry.id));
+  memory.nativeRoutes = memory.nativeRoutes.filter(entry => live.has(entry.id));
   for (const request of ordered) {
     if (request.id.length > 256) throw new Error('Voyage risk request identity exceeds 256 characters');
-    const ship = hullFor(snapshot, owner, request), profile = ship && shipProfile(ship);
+    const origin = hullFor(snapshot, owner, request);
+    const ship = origin && request.start ? { ...origin, x: request.start.x, y: request.start.y,
+      sailing: { ...origin.sailing!, heading: request.start.heading } } : origin;
+    if (origin && ship !== origin) shareShipProfile(origin, ship!);
+    const profile = ship && shipProfile(ship);
     if (!ship || !profile || seaIdAt(snapshot.map, request.destination) !== request.seaId) {
       results.set(request.id, unknown('voyage-hull-producer-or-basin-unknown')); continue;
     }
@@ -162,10 +199,36 @@ export function assessVoyageRisks(snapshot: GameSnapshot, owner: PlayerId, reque
     if (!route && helm?.goalX === request.destination.x && helm.goalY === request.destination.y)
       route = { points: helm.points, partial: helm.partial ?? false };
     if (!route) {
-      if (!memory.routeIds.includes(request.id) && (!advance || memory.routeIds.length >= VOYAGE_RISK_ROUTE_PLANS_PER_THINK)) { results.set(request.id, unknown('voyage-native-route-deferred', threats)); continue; }
-      if (!memory.routeIds.includes(request.id)) memory.routeIds.push(request.id);
-      routePlans++;
-      route = planVoyageRoute(snapshot.map, ship, request.destination, undefined, ROUTE_SEARCH_BUDGET);
+      const inputs = JSON.stringify([ship.x, ship.y, ship.sailing?.heading ?? 0, shipMotionLimits(ship), profile.hull,
+        ship.order, ship.orderQueue ?? [], snapshot.map.wind ?? null, request.destination, geometryVersion]);
+      let entry: NativeRouteProgress | undefined = memory.nativeRoutes.find(entry => entry.id === request.id);
+      if (entry?.inputs !== inputs) {
+        memory.nativeRoutes = memory.nativeRoutes.filter(entry => entry.id !== request.id);
+        if (!advance || memory.routeIds.length >= VOYAGE_RISK_ROUTE_PLANS_PER_THINK) {
+          results.set(request.id, unknown('voyage-native-route-deferred', threats)); continue;
+        }
+        const planner = { ...ship, sailing: { ...ship.sailing! } };
+        beginShipPlanningJob(planner, request.destination, snapshot.map, snapshot.units);
+        entry = { id: request.id, inputs, job: planner.sailing.planningJob!, ready: false };
+        if (memory.nativeRoutes.length >= ENTRY_LIMIT || observationJsonBytes(memory) + observationJsonBytes(entry) > VOYAGE_RISK_MEMORY_BYTES - 256) {
+          results.set(request.id, unknown('voyage-risk-memory-budget-exceeded', threats)); continue;
+        }
+        memory.nativeRoutes.push(entry);
+      }
+      const planner = nativeRouteHolder(entry);
+      if (!entry.ready && (!advance || memory.routeIds.includes(request.id) || memory.routeIds.length >= VOYAGE_RISK_ROUTE_PLANS_PER_THINK)) {
+        results.set(request.id, unknown('voyage-native-route-deferred', threats)); continue;
+      }
+      const planned = advanceShipPlanningJob(planner, snapshot.map);
+      if (!entry.ready) { memory.routeIds.push(request.id); routePlans++; }
+      entry.job = planner.sailing!.planningJob ?? '';
+      entry.ready = Boolean(planned);
+      if (observationJsonBytes(memory) > VOYAGE_RISK_MEMORY_BYTES - 256) {
+        memory.nativeRoutes = memory.nativeRoutes.filter(item => item !== entry);
+        results.set(request.id, unknown('voyage-risk-memory-budget-exceeded', threats)); continue;
+      }
+      if (!planned) { results.set(request.id, unknown('voyage-native-route-deferred', threats)); continue; }
+      route = planned;
     }
     if (route.partial || Math.hypot((route.points.at(-1)?.x ?? ship.x) - request.destination.x,
       (route.points.at(-1)?.y ?? ship.y) - request.destination.y) > 1e-5) {
@@ -240,4 +303,32 @@ export function voyageExpectedLoss(input: Readonly<{
   const passengerGold = passengers.reduce((sum, passenger) => sum + passenger.catalogGold, 0), lossProbability = 1 - survivalProbability;
   return { status: 'known' as const, passengers, passengerGold, hullLossGold: lossProbability * shipResidualGold,
     passengerLossGold: lossProbability * passengerGold, expectedLossGold: lossProbability * (shipResidualGold + passengerGold) };
+}
+
+export type VoyageRiskStages = Readonly<{ approach: VoyageRisk; loaded: VoyageRisk }>;
+/** An empty approach cannot sink people still waiting on the beach. Actual
+ * initial passengers, however, are exposed in both legs. Leg probabilities
+ * are conditional static-exposure proxies; later combat is another branch. */
+export function transportExpectedLoss(input: Readonly<{
+  snapshot: GameSnapshot; shipId?: string; boardingPassengerIds: readonly string[];
+  shipResidualGold: number; stages: VoyageRiskStages;
+}>) {
+  const { approach, loaded } = input.stages;
+  if (approach.status !== 'known' || loaded.status !== 'known') return {
+    status: 'unknown' as const, reasonCode: 'voyage-stage-risk-unknown',
+    unknownLegs: [approach.status !== 'known' ? 'approach' : null, loaded.status !== 'known' ? 'loaded' : null].filter(value => value !== null),
+  };
+  const initial = new Set(input.snapshot.units.filter(unit => input.shipId && unit.hp > 0
+    && (unit.deck?.shipId === input.shipId || unit.cabin?.shipId === input.shipId)).map(unit => unit.id));
+  const valuation = voyageExpectedLoss({ snapshot: input.snapshot, ...(input.shipId ? { shipId: input.shipId } : {}),
+    passengerIds: input.boardingPassengerIds, shipResidualGold: input.shipResidualGold, survivalProbability: 1 });
+  if (valuation.status !== 'known') return valuation;
+  const successProbability = approach.survivalProbability * loaded.survivalProbability;
+  const waitingSinkingProbability = approach.survivalProbability * (1 - loaded.survivalProbability);
+  const initialPassengerGold = valuation.passengers.filter(passenger => initial.has(passenger.unitId)).reduce((sum, passenger) => sum + passenger.catalogGold, 0);
+  const waitingPassengerGold = valuation.passengerGold - initialPassengerGold;
+  const hullLossGold = (1 - successProbability) * input.shipResidualGold;
+  const passengerLossGold = (1 - successProbability) * initialPassengerGold + waitingSinkingProbability * waitingPassengerGold;
+  return { status: 'known' as const, successProbability, waitingSinkingProbability, initialPassengerGold, waitingPassengerGold,
+    hullLossGold, passengerLossGold, expectedLossGold: hullLossGold + passengerLossGold };
 }
