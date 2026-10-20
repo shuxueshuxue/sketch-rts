@@ -1,6 +1,6 @@
 import type { GameCommand } from '../../shared/types';
 
-export type AiNavigationIntent = Readonly<{ arrivalRange: number; station: boolean; parentMethodId?: string }>;
+export type AiNavigationIntent = Readonly<{ arrivalRange: number; station: boolean; parentMethodId?: string; purpose?: 'defense' }>;
 const intents = new WeakMap<GameCommand, AiNavigationIntent>();
 
 /** Execution metadata belongs to the accepted AI entry, not the sim command. */

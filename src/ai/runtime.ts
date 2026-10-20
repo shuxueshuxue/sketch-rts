@@ -5,7 +5,7 @@ import { snapshotGame, type Game } from "../shared/sim";
 import { normalizeCommandFrameEntries, type CommandFrameRuntimeAiPlanner } from "../shared/sim/command-frame-runtime";
 import { PLANNER_COMMAND_DELAY_TICKS, plannerPhase, plannerThinksAt } from "../shared/sim/planner-schedule";
 import type { CommandEnvelope } from "../shared/net/types";
-import type { GameSnapshot, PlayerId } from "../shared/types";
+import type { GameCommand, GameSnapshot, PlayerId } from "../shared/types";
 
 export const DEFAULT_AI_THINK_INTERVAL = 15;
 export const DEFAULT_AI_SCRIPT_VERSION: AiScriptVersion = DEFAULT_AI_PLANNER_VERSION;
@@ -34,6 +34,7 @@ export type AiCommandFrameRequest<Source extends string = string> = {
   version?: AiScriptVersion;
   scripts?: AiScript[];
   memory?: AiPolicyMemory;
+  overridingCommands?: GameCommand[];
   disabledBehaviors?: PresetAiPolicyOptions["disabledBehaviors"];
 };
 
@@ -150,7 +151,12 @@ export type AiFramePlannerOptions = {
 export function createPresetAiRuntimeFramePlanner(game: Game, runtime: AiRuntimeState, options: AiFramePlannerOptions = {}): CommandFrameRuntimeAiPlanner<AiRuntimeFramePlannerState> {
   const delay = options.commandDelayTicks ?? PLANNER_COMMAND_DELAY_TICKS;
   const executor = options.executor ?? createInlineAiThinkExecutor(runtime);
+  const overrides = new Map<PlayerId, GameCommand[]>();
   return {
+    observeExternalCommands(commands) {
+      for (const entry of commands) if (runtime.controlledPlayers.includes(entry.playerId))
+        overrides.set(entry.playerId, [...(overrides.get(entry.playerId) ?? []), entry.command]);
+    },
     checkpoint: () => ({ ...runtime.lastThink }),
     restore: (lastThink) => {
       runtime.lastThink = lastThink;
@@ -158,7 +164,13 @@ export function createPresetAiRuntimeFramePlanner(game: Game, runtime: AiRuntime
     plan: (check, settle) => {
       // A player still thinking skips its turn, as a person thinks again once done (see @@@planner-schedule).
       const owners = dueAiOwners(game, runtime).filter((owner) => !executor.thinking(owner));
-      if (owners.length > 0) executor.submit(game, { tick: game.tick, deliveryTick: game.tick + delay, requests: claimThink(game, runtime, owners) }, check);
+      if (owners.length > 0) {
+        const requests = claimThink(game, runtime, owners).map(request => {
+          const overridingCommands = overrides.get(request.playerId); overrides.delete(request.playerId);
+          return overridingCommands ? { ...request, overridingCommands } : request;
+        });
+        executor.submit(game, { tick: game.tick, deliveryTick: game.tick + delay, requests }, check);
+      }
       return executor.take(game.tick, settle);
     },
   };

@@ -8,6 +8,7 @@ import { shoppingUnitIds } from './shopping';
 import { campRecruitRoadClear, chooseBootstrapCamp, startBootstrapCamp } from './camp-geometry';
 import { routeAssaultCampCommands } from './assault-camp-roads';
 import { armedFoes } from './safe-land-route';
+import { navigationIntent, withNavigationIntent } from '../policy/navigation-intent';
 import { postRecoveryAssignments, recoverBootstrapFront } from './front-recovery';
 import { coveredDefenseTarget, holdCoveredPost } from './covered-defense';
 import { miningJobDefenseTarget } from './mining-job-defense';
@@ -165,6 +166,18 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
     return covered;
   })();
   const safeTerritory = !defense && !intel.intrusion;
+  if (safeTerritory) {
+    // The defense planner must be allowed to actually recall clearing force.
+    // It remains unavailable to ordinary attacks/holds; accepted defense orders
+    // alone can preempt the child's interruptible claim in the runner.
+    const free = army.filter(unit => {
+      const travel = activeUnitClaim(snapshot, owner, unit, options)?.campTravel;
+      return !travel?.clearingIds?.length || travel.incidentalClear;
+    });
+    army.splice(0, army.length, ...free);
+    intel.army = army; intel.power = strengthOf(army);
+    if (army.length) intel.armyCenter = averagePoint(army);
+  }
   // With every front fighter borrowed, the shared planner returns before
   // setting a defense anchor. A stale forward post must not keep its casters
   // walking away from the threatened home in that interval.
@@ -278,6 +291,9 @@ export function planBootstrapGeneral(snapshot: GameSnapshot, owner: PlayerId, op
     ? routeAssaultCampCommands(snapshot, commands,
       intel.army.filter(unit => !isBacklineKind(unit) && general.group!.includes(unit.id)).map(unit => unit.id), general.target!,
       armedFoes(snapshot, owner, options)) : commands;
+  if (!safeTerritory && (general?.mode === 'defend' || general?.mode === 'guard')) for (const command of routed)
+    if (['move', 'attackMove', 'attack', 'holdPosition'].includes(command.type)) withNavigationIntent(command,
+      { arrivalRange: 0, station: false, ...navigationIntent(command), purpose: 'defense' });
   return [...(expansion ?? []), ...routed];
 }
 

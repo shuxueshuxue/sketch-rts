@@ -185,3 +185,5 @@ twoShores / enemy2 的 `emberRavager-1092` 在 **9097–9187**，naval recovery 
 对 (e)“局部占优、目标空虚，却没有任何模块去做”，**本轮没有核出满足路线、到达、留守及可响应援军全部前置的确定遗漏**。L5 / L6 单列为“缺计划链”，不冒充能直接拿下的机会；四局 15 分钟样本也不能给出 240 局发生率或胜率结论。
 
 原始证据在同目录 [land-contract.evidence.json](land-contract.evidence.json) 指向的 A100 对象。包内 `README.zh.md` 说明重放入口、逐次 think 字段、实际交付日志和 SHA256 清单；`analysis/incidents.json` 是这八条实录的入口。这个 draft 仅增加文档和证据指针，留待三线契约汇总后再定统一战略层。
+
+2026-10-20 暴露路线改造另记录一个分配器待办：`rankBootstrapGoals`/扩张任务仍以本土 intrusion 整体暂停扩张，没有比较实际回防缺口和其余清营/建设资源。召唤 `summoner-safe-hold-9m10` 分叉的 tick 11137、11692 可复现。路线改造只使未被实际防守认领或改令的清营成员继续前置，不重写这个总开关。工人撤离后的父行动空缺、外部改令及 main 11 图 57 次安全否决后重派的口径见 [防守契约的交接缺口](defense-contract.zh.md#暴露路线改造发现的交接缺口2026-10-20)。

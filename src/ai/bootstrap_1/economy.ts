@@ -68,9 +68,13 @@ function productionWaveSupply(snapshot: GameSnapshot, owner: PlayerId, options: 
 
 // One pending construction of each kind: a walking colony builder does not lock home tech.
 const constructBootstrap: typeof issueV6Construction = (economy, kind, point, used, play) => {
-  if (Object.values(economy.options.memory.unitClaims).some(claim => claim.campTravel?.command.type === 'build'
-    && claim.campTravel.command.buildingKind === kind)) return undefined;
-  economy = { ...economy, workers: economy.workers.filter(worker => !economy.options.memory.unitClaims[worker.id]?.campTravel) };
+  if (Object.values(economy.options.memory.unitClaims).some(claim => {
+    const parent = claim.interruption?.parent ?? claim.campTravel?.command;
+    return parent?.type === 'build' && parent.buildingKind === kind;
+  })) return undefined;
+  economy = { ...economy, workers: economy.workers.filter(worker => {
+    const claim = economy.options.memory.unitClaims[worker.id]; return !claim?.campTravel && !claim?.interruption;
+  }) };
   if (used.size || economy.workers.some(worker => worker.order.type === 'build' && worker.order.buildingKind === kind)) return undefined;
   // Let miners deliver their current load, then reuse free builders before interrupting a five-worker lane.
   const ready = availableV6ConstructionWorkers(economy, point, used).filter(worker => worker.carryingGold === 0);
@@ -144,6 +148,10 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
   const siege = options.requestedVersion === 'v7' ? towerRushGoal(snapshot, owner, options) : undefined;
   if (siege) goals.push(siege);
   const task = options.memory.landExpansion;
+  const retainedHall = Object.values(options.memory.unitClaims).some(claim => {
+    const parent = claim.interruption?.parent ?? claim.campTravel?.command;
+    return parent?.type === 'build' && parent.buildingKind === 'townHall';
+  });
   // Once the screen is sufficient, finish its paid mining objective before optional tech and extra recruitment.
   const ranked = ageV6Goals(snapshot, options, goals.map(goal => task && !task.paused
     && ['clear', 'escort'].includes(task.stage) && goal.id.startsWith('bases:') ? { ...goal, priority: 90 } : goal));
@@ -200,6 +208,10 @@ export function rankBootstrapGoals(snapshot: GameSnapshot, owner: PlayerId, opti
     }
     return [{ ...goal, productionReserve: Math.max(productionReserve, goal.id === `unit:${healer}` ? 0 : recoveryReserve) }];
   }).filter(goal => {
+    // The admitted parent already owns this next hall and its reservation.
+    // Quoting another saving goal here would reserve the same capital twice,
+    // even though constructBootstrap correctly refuses the duplicate order.
+    if (retainedHall && goal.id.startsWith('bases:')) return false;
     if (task?.paused && goal.id.startsWith('bases:')) return false;
     // Being near an outlying farm or a forward tower does not itself threaten a mining hall.
     if (goal.id.startsWith('worker@') && missingMiningWorkers(snapshot, owner, towerRushConstructionCrew(snapshot, owner, options), options) <= 0) return false;

@@ -95,5 +95,6 @@ function wireRequest(request: AiCommandFrameRequest & { scriptIds?: string[] }):
     ...(request.version ? { version: request.version } : {}),
     ...(request.scriptIds ? { scriptIds: request.scriptIds } : {}),
     ...(request.disabledBehaviors ? { disabledBehaviors: request.disabledBehaviors } : {}),
+    ...(request.overridingCommands ? { overridingCommands: request.overridingCommands } : {}),
   };
 }

@@ -9,11 +9,21 @@ import { walkableGoal } from '../../shared/terrain';
 export function campObjectivePoints(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext,
   entries: readonly AiCommandEntry[], stationRanges: ReadonlyMap<string, number>): CampObjectivePoint[] {
   const targets: CampObjectivePoint[] = [];
-  const add = (id: string, point: { x: number; y: number } | undefined) => { if (point) targets.push({ id, x: point.x, y: point.y }); };
+  const add = (id: string, point: { x: number; y: number } | undefined, kind: CampObjectivePoint['kind'] = 'site') => {
+    if (point) targets.push({ id, x: point.x, y: point.y, ...(kind ? { kind } : {}) });
+  };
   for (const hall of snapshot.buildings) if (hall.owner === owner && hall.kind === 'townHall' && hall.hp > 0) add(`hall:${hall.id}`, hall);
   const orders = [...snapshot.units.filter(unit => unit.owner === owner).map(unit => unit.order), ...entries.map(entry => entry.command),
-    ...Object.values(options.memory.unitClaims).flatMap(claim => claim.campTravel ? [claim.campTravel.command] : [])];
+    ...Object.values(options.memory.unitClaims).flatMap(claim => claim.interruption ? [claim.interruption.parent] : claim.campTravel ? [claim.campTravel.command] : [])];
   for (const order of orders) if (order.type === 'build') add(`build:${order.buildingKind}:${order.x}:${order.y}`, order);
+  // A route that has no acceptable alternative already declared this camp a
+  // prerequisite. Passing armies can supply that shared effect in their march.
+  for (const claim of Object.values(options.memory.unitClaims)) {
+    if (claim.campTravel?.childOnly) continue;
+    const child = claim.campTravel?.subgoal;
+    if (child?.kind === 'clear-camp' && !['abandoned', 'failed', 'complete'].includes(child.status))
+      add(`prerequisite:${child.id}`, child.target.point, 'clearance');
+  }
   // A march waypoint is not a promised station. Native hold orders and task
   // anchors below are; ships' water goals are projected onto the actual shore.
   for (const entry of entries) if ((stationRanges.get(entry.scriptId) ?? 0) > 0 && entry.command.type === 'holdPosition')

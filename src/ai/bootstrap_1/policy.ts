@@ -1,5 +1,6 @@
 import { campPrerequisite } from './camp-prerequisite';
 import { campNavigationContinuations, routeCampNavigation } from './camp-navigation';
+import { prepareLifeSavingInterruptions } from '../policy/life-saving-interruption';
 import { canResearchAt, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap, trainingBuildingFor, unitMover } from '../../shared/catalog';
 import { shopping } from './shopping';
 import type { BootstrapAiVersion, GameSnapshot, PlayerId, PlayerState, Unit } from '../../shared/types';
@@ -224,6 +225,7 @@ export function bootstrapScripts(version: BootstrapAiVersion): AiScript[] {
 
 export function planBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion, options: AiPolicyContext) {
   return withLandRoadReuse(() => {
+    prepareLifeSavingInterruptions(snapshot, owner, options.memory);
     const previous = campNavigationContinuations(options.memory);
     const context = bootstrapPolicyContext(snapshot, owner, version, options);
     const scripts = bootstrapScripts(version);

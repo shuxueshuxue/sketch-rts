@@ -13,6 +13,21 @@ export type AiPolicyUnitClaimKind = "mercenary" | "creep" | "expansion" | "attac
 export type WorkerEvacuation = { origin: { x: number; y: number }; resourceId?: string;
   shelter: { x: number; y: number }; safeResourceId?: string };
 
+/** A vacancy in an admitted parent action, not another unit ownership roster. */
+export type LifeSavingInterruption = {
+  phase: 'life-saving-interruption' | 'resuming';
+  parent: Extract<GameCommand, { type: 'build' }>;
+  scriptId: string;
+  sinceTick: number;
+  interruptedBy: string;
+  threatIds: string[];
+  resourceId?: string;
+  /** Native orders still serving this parent (rescue or admitted continuation). */
+  binding: GameCommand[];
+  /** Admitted continuation awaiting an observed native order (e.g. unfunded build). */
+  pendingBinding?: GameCommand[];
+};
+
 export type AiPolicyUnitClaim = {
   kind: AiPolicyUnitClaimKind;
   targetId: string;
@@ -24,6 +39,7 @@ export type AiPolicyUnitClaim = {
   returning?: boolean;
   resumeKind?: 'mineRally' | 'mineGuard';
   evacuation?: WorkerEvacuation;
+  interruption?: LifeSavingInterruption;
   localRetreat?: { x: number; y: number };
   // Construction-screen membership survives the shorter ordinary movement claim.
   // expansionMission is the membership-only kind when that movement claim has ended.
@@ -32,8 +48,13 @@ export type AiPolicyUnitClaim = {
   garrisonTemporary?: boolean;
   /** Actual queued navigation, and the parent action it will resume. No second ownership roster. */
   campTravel?: { scriptId: string; command: GameCommand; stop: { x: number; y: number }; sinceTick: number;
+    /** Borrowed clearing force has no construction action of its own to resume. */
+    childOnly?: boolean;
+    /** The parent's native attack-move clears in passing; no second assembly. */
+    incidentalClear?: boolean;
     delayGold: number; exposureGold: number; clearingIds?: string[]; subgoal?: import('./strategy/types').Subgoal;
-    clearingStage?: 'gather' | 'engage'; execution?: { scriptId: string; command: GameCommand };
+    clearingStage?: 'gather' | 'engage'; clearingSinceTick?: number; clearingStaging?: { x: number; y: number };
+    execution?: { scriptId: string; command: GameCommand };
     navigation?: import('./policy/navigation-intent').AiNavigationIntent };
 
 };
@@ -118,6 +139,9 @@ export type NavalPlanMemory = {
 };
 
 export type AiPolicyMemory = {
+  /** Current think only; plan trace retains the observation history externally. */
+  navigationEvents?: { tick: number; unitId: string; kind: 'avoidance-retain' | 'avoidance-admit' | 'avoidance-resume' | 'avoidance-stage' | 'avoidance-end'; interruptedBy: string;
+    parent: Extract<GameCommand, { type: 'build' }>; threatIds: string[]; waypointCount: number; reason: string }[];
   territory?: {
     idleTicks: number; lastTick: number; idle: boolean; retryUntil?: number;
     objective?: { targetId: string; point: { x: number; y: number }; sinceTick: number; reachedTick?: number; nextStepCheck?: number; slots?: { x: number; y: number }[] } | undefined;

@@ -1,7 +1,7 @@
 import type { Unit } from '../../shared/types';
 import type { NeutralCampExposure, NeutralCampExposureFacts } from './neutral-camp-exposure';
 
-export type CampObjectivePoint = Readonly<{ id: string; x: number; y: number }>;
+export type CampObjectivePoint = Readonly<{ id: string; x: number; y: number; kind?: 'site' | 'clearance' }>;
 
 /** Classify facts against real commitments. The consumer supplies its existing
  * safety predicate: this layer invents neither camp IDs nor another safe radius.

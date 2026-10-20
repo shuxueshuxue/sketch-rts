@@ -3,6 +3,7 @@ import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../shared/typ
 import type { createSnapshotQuery } from "../../sdk/snapshot-query";
 import type { AiPolicyMemory, AiPolicyUnitClaim } from "../memory";
 import { aiSnapshotQuery } from "./snapshot";
+import { changesUnitAction, endLifeSavingInterruption } from './life-saving-interruption';
 
 type Point = {
   x: number;
@@ -39,7 +40,7 @@ export function pruneAiPolicyMemory(snapshot: GameSnapshot, owner: PlayerId, mem
     // Membership follows the mission, not its short movement lease. The old construction
     // roster likewise survived a foundation, local micro and a temporary defense pause.
     if (claim.expansionMineId && claim.expansionMineId !== memory.landExpansion?.mineId) forgetExpansionMember(memory, unitId);
-    if (claim.kind !== 'expansionMission' && (claim.expiresTick < snapshot.tick
+    if (!claim.interruption && claim.kind !== 'expansionMission' && (claim.expiresTick < snapshot.tick
       || objectiveClaimAbandoned(unit, claim, snapshot.tick) || !claimTargetExists(query, owner, claim))) clearUnitClaim(memory, unitId);
   }
   pruneStrategicExpansionClaim(query, owner, memory);
@@ -51,6 +52,13 @@ export function recordAiMemoryForCommands(snapshot: GameSnapshot, scriptId: stri
     // Only accepted orders reach this function. Local fighting keeps its task; a strategic task transfers it.
     const moving = ['move', 'attackMove', 'attack', 'holdPosition', 'follow', 'aim', 'board', 'garrison'].includes(command.type);
     const actors = 'unitIds' in command ? command.unitIds : 'unitId' in command ? [command.unitId] : [];
+    if (options.redirects !== 'local' && changesUnitAction(command)) for (const id of actors)
+      endLifeSavingInterruption(snapshot, memory, id, 'strategic-order');
+    if (command.type === 'build') for (const [id, claim] of Object.entries(memory.unitClaims)) {
+      const parent = claim.interruption?.parent;
+      if (parent?.buildingKind === command.buildingKind && distance(parent, command) < 1)
+        endLifeSavingInterruption(snapshot, memory, id, 'replacement-build');
+    }
     for (const id of actors) {
       const claim = memory.unitClaims[id];
       if (!isDefenseTaskClaim(claim)) continue;
@@ -244,7 +252,9 @@ export function ordinaryUnitClaim(memory: AiPolicyMemory | undefined, unitId: st
 /** Changing a local order does not erase the construction screen's membership. */
 export function setUnitClaim(memory: AiPolicyMemory, unitId: string, claim: AiPolicyUnitClaim) {
   const mineId = memory.unitClaims[unitId]?.expansionMineId;
-  memory.unitClaims[unitId] = mineId ? { ...claim, expansionMineId: claim.expansionMineId ?? mineId } : claim;
+  const interruption = memory.unitClaims[unitId]?.interruption;
+  memory.unitClaims[unitId] = { ...claim, ...(mineId ? { expansionMineId: claim.expansionMineId ?? mineId } : {}),
+    ...(interruption ? { interruption } : {}) };
 }
 
 /** Refresh a parent's lease without cancelling its in-flight action. Actual
@@ -257,6 +267,7 @@ export function renewUnitClaim(memory: AiPolicyMemory, unitId: string, claim: Ai
 
 export function clearUnitClaim(memory: AiPolicyMemory, unitId: string) {
   const claim = memory.unitClaims[unitId];
+  if (claim?.interruption) return;
   if (!claim?.expansionMineId) { delete memory.unitClaims[unitId]; return; }
   memory.unitClaims[unitId] = { kind: 'expansionMission', targetId: claim.expansionMineId,
     x: claim.x, y: claim.y, sinceTick: claim.sinceTick, expiresTick: claim.expiresTick,
@@ -341,7 +352,7 @@ function upsertMemoryJob(memory: AiPolicyMemory, id: string, kind: string, tick:
 
 export function activeUnitClaim(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, options: ClaimPolicyOptions) {
   const claim = ordinaryUnitClaim(options.memory, unit.id);
-  if (!claim || claim.expiresTick < snapshot.tick || unit.owner !== owner) return undefined;
+  if (!claim || !claim.interruption && claim.expiresTick < snapshot.tick || unit.owner !== owner) return undefined;
   if (objectiveClaimAbandoned(unit, claim, snapshot.tick)) return undefined;
   return claimTargetExists(aiSnapshotQuery(snapshot), owner, claim) ? claim : undefined;
 }
@@ -357,6 +368,7 @@ function objectiveClaimAbandoned(unit: Unit, claim: AiPolicyUnitClaim, currentTi
 }
 
 function claimTargetExists(query: ReturnType<typeof createSnapshotQuery>, owner: PlayerId, claim: AiPolicyUnitClaim) {
+  if (claim.interruption) return true;
   if (['mineRally', 'mineLeash', 'mineGuard'].includes(claim.kind)) return query.buildingsFor(owner).some(building => building.id === claim.targetId);
   if (claim.kind === 'workerSafety') return query.unitById(claim.targetId)?.owner === owner;
   if (claim.kind === "mercenary") return Boolean(query.mercenaryCampById(claim.targetId));

@@ -80,7 +80,9 @@ it('retains a blocked build while already standing at a safe rally point', () =>
   const memory = createAiPolicyMemory();
   const command = { type: 'build' as const, unitId: worker.id, buildingKind: 'farm' as const, x: 1000, y: 1000 };
   const entries = routeCampNavigation(snapshotGame(game), 'player', { memory }, [{ scriptId: 'builder', command }], new Map());
-  expect(entries).toEqual([{ scriptId: 'builder', command: { type: 'holdPosition', unitIds: [worker.id] } }]);
+  expect(entries).toEqual([{ scriptId: 'builder', command: { type: 'move', unitIds: [worker.id], x: worker.x, y: worker.y, avoidCombat: true } }]);
+  for (const entry of entries) issueCommand(game, entry.command);
+  expect(worker.order).toEqual({ type: 'move', x: worker.x, y: worker.y, avoidCombat: true });
   expect(memory.unitClaims[worker.id]?.campTravel?.command).toEqual(command);
   expect(memory.unitClaims[worker.id]?.campTravel?.subgoal?.status).toBe('blocked');
 });
@@ -105,4 +107,25 @@ it('issues a relocated hold after arrival so the native guard point is the actua
   for (const entry of resumed) issueCommand(game, entry.command);
   expect(archer.order).toMatchObject({ type: 'hold', ...arrived });
   expect(arrived.x).toBeLessThan(700);
+});
+
+it('lets an assembled passing host clear an existing construction prerequisite without a second assembly or rewriting its march', () => {
+  const game = createGame('bareDuel', { aiPlayers: [] }); game.units = []; game.buildings = []; delete game.map.terrain;
+  const worker = game.spawnUnit('player', 'worker', 500, 1100);
+  game.spawnUnit('neutral', 'wildling', 1000, 1000);
+  const fighters = Array.from({ length: 4 }, (_, index) => game.spawnUnit('player', 'footman', 500, 1000 + index * 25));
+  const memory = createAiPolicyMemory(), snapshot = snapshotGame(game);
+  routeCampNavigation(snapshot, 'player', { memory }, [{ scriptId: 'builder', command:
+    { type: 'build', unitId: worker.id, buildingKind: 'farm', x: 1000, y: 1000 } }], new Map());
+  expect(memory.unitClaims[worker.id]?.campTravel?.subgoal?.kind).toBe('clear-camp');
+  const command = { type: 'attackMove' as const, unitIds: fighters.map(unit => unit.id), x: 1500, y: 1000 };
+  const entries = [{ scriptId: 'march', command }];
+  const output = routeCampNavigation(snapshot, 'player', { memory }, entries, campNavigationContinuations(memory));
+  expect(output).toContainEqual(entries[0]);
+  expect(output.filter(entry => entry.scriptId === 'march')).toEqual(entries);
+  expect(fighters.every(unit => memory.unitClaims[unit.id]?.campTravel?.incidentalClear)).toBe(true);
+  for (const entry of output) issueCommand(game, entry.command);
+  for (let tick = 0; tick < 700; tick++) stepGame(game);
+  expect(game.units.some(unit => unit.owner === 'neutral')).toBe(false);
+  expect(fighters.every(unit => unit.hp > 0)).toBe(true);
 });

@@ -8,6 +8,7 @@ import type { AiPolicyContext } from '../policy/types';
 import { armedFoes, retreatLandRoad, safeLandTravelTicks } from './safe-land-route';
 import { miningJobOrder } from './mining-jobs';
 import { workerExposure } from '../situation/worker-exposure';
+import { issuedUnitRoad } from '../policy/unit-action';
 import { mineClaimedByAlly } from '../policy/mine-claims';
 
 type WorkerSafetyPlan = { worker: Unit; released: boolean; state: WorkerEvacuation; commands: GameCommand[] };
@@ -53,7 +54,10 @@ export function workerSafetyPlans(snapshot: GameSnapshot, owner: PlayerId, optio
     const previous = claim?.kind === 'workerSafety' ? claim.evacuation : undefined;
     // The hauling escort below handles melee interception. Ranged fire needs an immediate withdrawal,
     // even with a standing hall or a friendly army nearby; neither stops a volley hitting the workers.
-    const exposed = workerExposure(snapshot, worker, worker, { foes, starting: !previous }).length > 0;
+    const escaping = worker.order.type === 'move' && worker.order.avoidCombat
+      || worker.order.type === 'idle' && worker.orderQueue?.[0]?.type === 'move' && worker.orderQueue[0].avoidCombat;
+    const exposed = workerExposure(snapshot, worker, escaping ? issuedUnitRoad(snapshot, worker) : worker,
+      { foes, starting: !previous, allowDeparture: !!escaping }).length > 0;
     if (!previous && !exposed) return [];
     const job = miningJobOrder(worker);
     const origin = previous?.origin ?? { x: worker.x, y: worker.y };
@@ -61,7 +65,7 @@ export function workerSafetyPlans(snapshot: GameSnapshot, owner: PlayerId, optio
     const original = snapshot.resources.find(mine => mine.id === resourceId && mine.amount > 0);
     const released = previous && !exposed && !endangered(snapshot, worker, original ?? origin, foes);
     if (released) {
-      const commands: GameCommand[] = original && !mineClaimedByAlly(snapshot, owner, original, options)
+      const commands: GameCommand[] = !claim?.interruption && original && !mineClaimedByAlly(snapshot, owner, original, options)
         ? [{ type: 'mine', unitIds: [worker.id], resourceId: original.id }] : [];
       return [{ worker, released: true, state: previous, commands }];
     }
@@ -73,15 +77,16 @@ export function workerSafetyPlans(snapshot: GameSnapshot, owner: PlayerId, optio
     const state: WorkerEvacuation = { origin, ...(resourceId ? { resourceId } : {}), ...destination };
     const commands: GameCommand[] = [];
     if (!(state.safeResourceId && job?.resourceId === state.safeResourceId && !exposed)) {
-      const walking = worker.order.type === 'move' && worker.order.avoidCombat
-        && distance(worker.order, state.shelter) <= ARRIVAL / 2;
+      const walking = [worker.order, ...(worker.orderQueue ?? [])].some(order => order.type === 'move' && order.avoidCombat
+        && distance(order, state.shelter) <= ARRIVAL / 2);
       if (distance(worker, state.shelter) > ARRIVAL) {
         if (!walking) {
           commands.push({ type: 'move', unitIds: [worker.id], ...state.shelter, avoidCombat: true });
           if (state.safeResourceId) commands.push({ type: 'mine', unitIds: [worker.id], resourceId: state.safeResourceId, queued: true });
         }
       } else if (state.safeResourceId) commands.push({ type: 'mine', unitIds: [worker.id], resourceId: state.safeResourceId });
-      else if (worker.order.type !== 'hold') commands.push({ type: 'holdPosition', unitIds: [worker.id] });
+      else if (worker.order.type !== 'idle' && !walking)
+        commands.push({ type: 'move', unitIds: [worker.id], x: worker.x, y: worker.y, avoidCombat: true });
     }
     return [{ worker, released: false, state, commands }];
   });
@@ -107,6 +112,6 @@ export function finishWorkerSafetyPlans(snapshot: GameSnapshot, _owner: PlayerId
   const proposal = proposals.get(options.memory); proposals.delete(options.memory);
   if (!proposal || proposal.tick !== snapshot.tick) return;
   for (const plan of proposal.plans) if (plan.released && options.memory.unitClaims[plan.worker.id]?.kind === 'workerSafety') {
-    delete options.memory.unitClaims[plan.worker.id];
+    if (!options.memory.unitClaims[plan.worker.id]?.interruption) delete options.memory.unitClaims[plan.worker.id];
   }
 }

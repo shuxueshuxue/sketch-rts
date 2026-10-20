@@ -39,7 +39,7 @@ export function deathTaskIndex(snapshot: GameSnapshot, owner: PlayerId, memory: 
     return hall ? { x: hall.x, y: hall.y, radius: 650 } : null;
   };
   for (const [id, claim] of Object.entries(memory.unitClaims)) {
-    if (claim.kind !== 'expansionMission' && claim.expiresTick < snapshot.tick) continue;
+    if (!claim.interruption && claim.kind !== 'expansionMission' && claim.expiresTick < snapshot.tick) continue;
     const defense = DEFENSE.has(claim.kind), clearing = claim.kind === 'creep';
     const perimeter = defense ? hallPerimeter(claim.kind === 'harassSquad' ? memory.harassDefense?.hallId : claim.targetId) : null;
     const clearingTask = memory.v6?.creep?.group.includes(id) ? `camp:${memory.v6.creep.center.x}:${memory.v6.creep.center.y}` : undefined;
@@ -56,7 +56,7 @@ export function deathTaskIndex(snapshot: GameSnapshot, owner: PlayerId, memory: 
     }
     add([id], claimedTask);
     const travel = claim.campTravel;
-    if (travel?.subgoal?.status === 'active' && travel.clearingIds) add([id], {
+    if (travel?.subgoal?.status === 'active' && travel.execution && travel.clearingIds) add([id], {
       ...task(travel.subgoal.id, 'clear-camp', travel.clearingIds[0], 'engage', 'unitClaims.campTravel.subgoal', true, true),
       clearingTargetIds: [...travel.clearingIds],
     }, true);

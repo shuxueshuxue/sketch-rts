@@ -29,6 +29,11 @@ function runScriptsWithContext(snapshot: GameSnapshot, owner: PlayerId, scripts:
   const preserveSkirmishRetreatClaims = (policyOptions.requestedVersion ?? policyOptions.version) === "v2";
   pruneAiPolicyMemory(snapshot, owner, policyOptions.memory);
   const claims = unitClaims(snapshot, owner, scripts, policyOptions);
+  const interruptible = new Map(scripts.map(script => [script.id, script.interruptibleBy]));
+  const canInterrupt = (command: GameCommand, id: string) => {
+    const purpose = navigationIntent(command)?.purpose, claimedBy = claims.get(id);
+    return !!purpose && !!claimedBy && !!interruptible.get(claimedBy)?.includes(purpose);
+  };
   const commands: AiCommandEntry[] = [];
   const movedUnitIds = new Set(snapshot.units.filter(unit => unit.owner === owner && unit.order.type === "board").map(unit => unit.id));
   const economyScripts = policyOptions.policyMode === "combat" ? [] : scripts.filter((candidate) => candidate.phase === "economy");
@@ -36,7 +41,11 @@ function runScriptsWithContext(snapshot: GameSnapshot, owner: PlayerId, scripts:
   // @@@combat-policy-mode - Combat benchmarks exercise shared tactical scripts without economy, base-building, or map-control commands polluting the signal.
   const pendingCost = snapshot.units.reduce((total, unit) => total + (unit.owner === owner && unit.order.type === "build" ? BUILDING_DEFS[unit.order.buildingKind].cost : 0), 0)
     + snapshot.units.reduce((sum, unit) => {
-      const command = policyOptions.memory.unitClaims[unit.id]?.campTravel?.command;
+      const claim = policyOptions.memory.unitClaims[unit.id], travel = claim?.campTravel;
+      // One construction reservation belongs to the parent worker. Borrowed
+      // clearing force carries its own child action, never copies this price.
+      const command = claim?.interruption?.phase === 'resuming' ? claim.interruption.parent
+        : travel?.clearingIds?.length && travel.subgoal?.status === 'blocked' ? undefined : travel?.command;
       return sum + (unit.owner === owner && unit.order.type !== 'build' && command?.type === 'build' ? BUILDING_DEFS[command.buildingKind].cost : 0);
     }, 0);
   const economySnapshot = pendingCost ? withAiGoldBudget(snapshot, owner, Math.max(0, snapshot.players[owner]!.gold - pendingCost)) : snapshot;
@@ -53,10 +62,11 @@ function runScriptsWithContext(snapshot: GameSnapshot, owner: PlayerId, scripts:
   for (const script of economyScripts) {
     const reserve = script.id === "v6Economy" || script.id === "economy" && isV6Policy(policyOptions) ? 0 : script.id === "economy" || script.id === "navalEconomy" ? shopReserve : navalReserve + shopReserve;
     const budget = budgetAfter(reserve);
-    const scriptCommands = withoutUnitsClaimedElsewhere(asCommands(script.run(budget, owner, policyOptions)), claims, script.id);
+    const scriptCommands = withoutUnitsClaimedElsewhere(asCommands(script.run(budget, owner, policyOptions)), claims, script.id, canInterrupt);
     script.onCommands?.(snapshot, owner, policyOptions, scriptCommands);
     if (scriptCommands.length > 0) {
       recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams, preserveHireCampClaims, preserveSkirmishRetreatClaims, ...(script.redirects ? { redirects: script.redirects } : {}) });
+      script.afterCommands?.(snapshot, owner, policyOptions, scriptCommands);
       commands.push(...scriptCommands.map((command) => commandEntry(script.id, command)));
       spent += scriptCommands.reduce((total, command) => total + purchaseCost(snapshot, owner, command), 0);
       reserveOrderedUnits(scriptCommands, movedUnitIds, snapshot);
@@ -66,15 +76,16 @@ function runScriptsWithContext(snapshot: GameSnapshot, owner: PlayerId, scripts:
   }
 
   for (const script of scripts.filter((candidate) => candidate.phase === "tactics")) {
-    const rawScriptCommands = withoutUnitsClaimedElsewhere(asCommands(script.run(script.id === "shopping" ? budgetAfter(0) : snapshot, owner, policyOptions)), claims, script.id);
+    const rawScriptCommands = withoutUnitsClaimedElsewhere(asCommands(script.run(script.id === "shopping" ? budgetAfter(0) : snapshot, owner, policyOptions)), claims, script.id, canInterrupt);
     // The script still runs: it may update its memory even without issuing a
     // command. Empty results need no conflict copies or command bookkeeping.
     const scriptCommands = runnerOptions.commandConflictBypassScriptIds?.has(script.id)
       ? rawScriptCommands
-      : removeOrderedUnitConflicts(rawScriptCommands, movedUnitIds, (command) => runnerOptions.minimumAttackMoveUnits?.(script.id, command, snapshot, owner, policyOptions) ?? 1);
+      : removeOrderedUnitConflicts(rawScriptCommands, movedUnitIds, (command) => runnerOptions.minimumAttackMoveUnits?.(script.id, command, snapshot, owner, policyOptions) ?? 1, canInterrupt);
     script.onCommands?.(snapshot, owner, policyOptions, scriptCommands);
     if (scriptCommands.length === 0) continue;
     recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams, preserveHireCampClaims, preserveSkirmishRetreatClaims, ...(script.redirects ? { redirects: script.redirects } : {}) });
+    script.afterCommands?.(snapshot, owner, policyOptions, scriptCommands);
     reserveOrderedUnits(scriptCommands, movedUnitIds, snapshot);
     commands.push(...scriptCommands.map((command) => commandEntry(script.id, command)));
   }
@@ -100,10 +111,10 @@ function unitClaims(snapshot: GameSnapshot, owner: PlayerId, scripts: AiScript[]
   return claims;
 }
 
-function withoutUnitsClaimedElsewhere(commands: GameCommand[], claims: ReadonlyMap<string, string>, scriptId: string): GameCommand[] {
+function withoutUnitsClaimedElsewhere(commands: GameCommand[], claims: ReadonlyMap<string, string>, scriptId: string, canInterrupt: (command: GameCommand, id: string) => boolean): GameCommand[] {
   if (claims.size === 0) return commands;
-  const free = (unitId: string) => (claims.get(unitId) ?? scriptId) === scriptId;
   return commands.flatMap((command): GameCommand[] => {
+    const free = (unitId: string) => (claims.get(unitId) ?? scriptId) === scriptId || canInterrupt(command, unitId);
     if (command.type === "move" || command.type === "holdPosition" || command.type === "attackMove" || command.type === "attack" || command.type === "aim" || command.type === "setStance" || (command.type === "repair" || command.type === "repairShip" || command.type === "repairUnit") || command.type === "mine") {
       const unitIds = command.unitIds.filter(free);
       return unitIds.length > 0 ? [copyNavigationIntent(command, { ...command, unitIds })] : [];
@@ -119,23 +130,25 @@ function asCommands(result: GameCommand | GameCommand[] | undefined): GameComman
   return Array.isArray(result) ? result : [result];
 }
 
-function removeOrderedUnitConflicts(commands: GameCommand[], movedUnitIds: Set<string>, minimumAttackMoveUnits: (command: Extract<GameCommand, { type: "attackMove" }>) => number): GameCommand[] {
+function removeOrderedUnitConflicts(commands: GameCommand[], movedUnitIds: Set<string>, minimumAttackMoveUnits: (command: Extract<GameCommand, { type: "attackMove" }>) => number,
+  canInterrupt: (command: GameCommand, id: string) => boolean): GameCommand[] {
   const filtered: GameCommand[] = [];
   for (const command of commands) {
+    const free = (id: string) => !movedUnitIds.has(id) || canInterrupt(command, id);
     if (command.type === "attack") {
-      const unitIds = command.unitIds.filter((unitId) => !movedUnitIds.has(unitId));
+      const unitIds = command.unitIds.filter(free);
       if (unitIds.length > 0) filtered.push(copyNavigationIntent(command, { ...command, unitIds }));
     } else if (command.type === "attackMove") {
-      const unitIds = command.unitIds.filter((unitId) => !movedUnitIds.has(unitId));
+      const unitIds = command.unitIds.filter(free);
       if (unitIds.length >= minimumAttackMoveUnits(command)) filtered.push(copyNavigationIntent(command, { ...command, unitIds }));
     } else if (command.type === "move" || command.type === "aim" || command.type === "holdPosition") {
-      const unitIds = command.unitIds.filter((unitId) => !movedUnitIds.has(unitId));
+      const unitIds = command.unitIds.filter(free);
       if (unitIds.length > 0) filtered.push(copyNavigationIntent(command, { ...command, unitIds }));
     } else if ((command.type === "repair" || command.type === "repairShip" || command.type === "repairUnit" || command.type === "mine")) {
-      const unitIds = command.unitIds.filter((unitId) => !movedUnitIds.has(unitId));
+      const unitIds = command.unitIds.filter(free);
       if (unitIds.length > 0) filtered.push(copyNavigationIntent(command, { ...command, unitIds }));
     } else if (command.type === "cast") {
-      if (!movedUnitIds.has(command.unitId)) filtered.push(command);
+      if (free(command.unitId)) filtered.push(command);
     } else {
       filtered.push(command);
     }

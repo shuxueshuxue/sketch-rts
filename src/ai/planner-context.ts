@@ -1,13 +1,14 @@
 import { AI_SCRIPT_LIBRARY, AI_SCRIPT_VERSIONS, SKETCH_RTS_PRESET_AI_STACK, createAiPolicyMemory, planAiCommandEntriesFromScripts, type AiPolicyMemory, type AiScript, type AiScriptVersion, type PresetAiPolicyOptions } from "./policy";
 import { planV2ProdAiCommandEntries } from "./policy-v2prod/core";
 import type { CommandFrameEntry } from "../sdk/commands/frame";
-import type { GameSnapshot, PlayerId } from "../shared/types";
+import type { GameCommand, GameSnapshot, PlayerId } from "../shared/types";
 import { campNavigationContinuations, routeCampNavigation } from './bootstrap_1/camp-navigation';
 import { bootstrapPolicyContext, bootstrapScripts, isBootstrapVersion } from "./bootstrap_1/policy";
 import { planVeteranSkillCommands } from "./veteran-skills";
 import { standingBodies } from "../shared/structure-bodies";
 import { setBuildingBodies } from "../shared/terrain";
 import { withLandRoadReuse } from "./bootstrap_1/safe-land-route";
+import { prepareLifeSavingInterruptions, recordNavigationOverrides } from './policy/life-saving-interruption';
 
 export const DEFAULT_AI_PLANNER_VERSION: AiScriptVersion = "v2";
 
@@ -23,6 +24,8 @@ export type AiOwnerPlannerRequest<Source extends string = string> = {
   scripts?: AiScript[];
   scriptIds?: string[];
   memory?: AiPolicyMemory;
+  /** Accepted outside orders since the previous think, including identical orders. */
+  overridingCommands?: GameCommand[];
   disabledBehaviors?: PresetAiPolicyOptions["disabledBehaviors"];
   policyMode?: PresetAiPolicyOptions["policyMode"];
 };
@@ -49,6 +52,7 @@ export function planAiOwnerCommandEntries<Source extends string = string>(snapsh
   const { memoryProvider, ...policyOptions } = options;
   const version = request.version ?? options.version ?? DEFAULT_AI_PLANNER_VERSION;
   const memory = request.memory ?? options.memory ?? memoryForOwner(owner, memoryProvider);
+  if (request.overridingCommands) recordNavigationOverrides(snapshot, memory, request.overridingCommands);
   const policyMode = request.policyMode ?? options.policyMode;
   const disabledBehaviors = request.disabledBehaviors ?? options.disabledBehaviors;
   const withVeteranSkills = (entries: CommandFrameEntry<Source>[]): CommandFrameEntry<Source>[] => {
@@ -65,6 +69,7 @@ export function planAiOwnerCommandEntries<Source extends string = string>(snapsh
   };
   if (isBootstrapVersion(version)) {
     return withLandRoadReuse(() => {
+      prepareLifeSavingInterruptions(snapshot, owner, memory);
       const previous = campNavigationContinuations(memory);
       const scripts = request.scripts || request.scriptIds ? scriptsForRequest(request, version) : bootstrapScripts(version);
       const context = bootstrapPolicyContext(snapshot, owner, version, {

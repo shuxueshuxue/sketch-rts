@@ -1,6 +1,6 @@
 import type { AiScriptVersion, PresetAiPolicyOptions } from "../policy";
 import type { CommandEnvelope } from "../../shared/net/types";
-import type { GameMap, GameSnapshot, PlayerId } from "../../shared/types";
+import type { GameCommand, GameMap, GameSnapshot, PlayerId } from "../../shared/types";
 
 // @@@think-thread - Messages between a match and the thread its AI thinks on (a Web Worker in a browser, a worker
 // thread on the server). The thread keeps what a think needs between thinks: the map's terrain, whose navigation caches
@@ -12,6 +12,7 @@ export type AiThinkWireRequest = {
   version?: AiScriptVersion;
   scriptIds?: string[];
   disabledBehaviors?: PresetAiPolicyOptions["disabledBehaviors"];
+  overridingCommands?: GameCommand[];
 };
 
 // The world copy without the map's fixed ground (terrain, scenery), which the thread was given when the match opened.

@@ -4,6 +4,8 @@ import { nativeLandRoad } from '../policy/land-road';
 import { neutralCampRouteContacts } from '../situation/neutral-camp-contact';
 import { planCampTravel } from './camp-travel';
 import { threatRoadCommands } from './threat-roads';
+import { createBuilding } from '../../shared/map';
+import { workerExposure } from '../situation/worker-exposure';
 
 it('executes the admitted native detour, rather than steering straight through the camp', () => {
   const game = createGame('bareDuel', { aiPlayers: [] }); game.units = []; game.buildings = []; delete game.map.terrain;
@@ -42,4 +44,16 @@ it('prices possible pursuit without creating a mandatory clearing prerequisite',
   expect(plan.kind).toBe('exposed');
   expect(plan.subgoal).toBeNull();
   expect(plan.exposureGold).toBeGreaterThan(0);
+});
+
+it('checks enemy towers and troops in the same role envelope when selecting a camp detour', () => {
+  const game = createGame('bareDuel', { aiPlayers: [] }); game.units = []; game.buildings = []; delete game.map.terrain;
+  const worker = game.spawnUnit('player', 'worker', 500, 1000);
+  game.spawnUnit('neutral', 'wildling', 1000, 1000);
+  game.spawnUnit('enemy', 'archer', 1300, 1250);
+  game.buildings.push(createBuilding('enemy-tower', 'enemy', 'defenseTower', 1000, 1350, true));
+  const snapshot = snapshotGame(game), plan = planCampTravel(snapshot, worker, { x: 2000, y: 1000 }, { parentId: 'construction' });
+  expect(plan.kind).toBe('detour');
+  expect(workerExposure(snapshot, worker, plan.road!.points, { allowDeparture: true })).toEqual([]);
+  expect(workerExposure(snapshot, worker, { x: 1000, y: 1200 }).some(exposure => exposure.foe.id === 'enemy-tower')).toBe(true);
 });

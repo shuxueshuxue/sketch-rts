@@ -49,10 +49,7 @@ function roadClear(snapshot: GameSnapshot, unit: Unit, goal: Point, foes: readon
   return clear;
 }
 
-export function armedFoes(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
-  return [...snapshot.units, ...snapshot.buildings].filter(foe => foe.hp > 0 && foe.attackDamage > 0
-    && isEnemyOwner(snapshot, owner, foe.owner, options));
-}
+export { armedFoes } from '../policy/armed-foes';
 
 /** Earliest physical contact is a lower bound; a rescuer's road time is a separate measure. */
 export function earliestThreatContactTicks(snapshot: GameSnapshot, foe: Unit, unit: Unit) {

@@ -190,6 +190,26 @@ export function buildAiPlanTrace(snapshot: GameSnapshot, owner: PlayerId, memory
   }
 
   const navigationGroups = new Map<string, { ids: string[]; travel: NonNullable<AiPolicyMemory['unitClaims'][string]['campTravel']> }>();
+  for (const [id, claim] of claims) if (claim.interruption) {
+    const state = claim.interruption, running = state.phase === 'resuming' && !state.pendingBinding;
+    add({ id: `navigation-vacancy:${id}:${state.sinceTick}`, kind: 'task', label: '施工父行动的救命中断',
+      source: 'unitClaims.interruption', status: running ? 'active' : 'blocked', target: target(undefined, state.parent), sinceTick: state.sinceTick,
+      resources: { unitIds: units([id]), gold: { reserved: null, required: BUILDING_DEFS[state.parent.buildingKind].cost } },
+      reasons: [reason('life-saving-interruption', running ? '实际已续行；父施工目标继续' : state.pendingBinding
+        ? '安全续行已下达，尚未观察到执行；空缺保留' : '单位仍在避险，父施工目标保留空缺，不算正在施工', 'unitClaims.interruption')],
+      requirements: [{ code: 'native-continuation', detail: '实际订单已经兑现父行动的安全续行', met: running }],
+    });
+  }
+  for (const event of memory.navigationEvents ?? []) if (event.tick === snapshot.tick) {
+    add({ id: `navigation:${event.kind}:${event.unitId}:${event.tick}`, kind: 'task',
+      label: event.kind === 'avoidance-retain' ? '避险保留父行动空缺' : event.kind === 'avoidance-end' ? '结束避险父行动'
+        : event.kind === 'avoidance-stage' ? '实际前往安全清营集结点'
+        : event.kind === 'avoidance-admit' ? '已下达安全移动，等待实际执行' : '已观察到避险后续行', source: 'navigationEvents',
+      status: 'done', target: target(undefined, event.parent), sinceTick: event.tick,
+      resources: { unitIds: [event.unitId], gold: { reserved: null, required: null } },
+      reasons: [reason(event.kind, `${event.reason}；执行器 ${event.interruptedBy}；${event.waypointCount} 条拐点；威胁 ${event.threatIds.join(',')}`, 'navigationEvents', event.tick)],
+    });
+  }
   for (const [id, claim] of claims) if (claim.campTravel) {
     const travel = claim.campTravel, key = travel.subgoal?.id ?? `${travel.scriptId}:${JSON.stringify(travel.stop)}`;
     const group = navigationGroups.get(key) ?? { ids: [], travel }; group.ids.push(id); navigationGroups.set(key, group);

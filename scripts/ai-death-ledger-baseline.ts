@@ -46,6 +46,8 @@ const loop = runAiGameLoop({ ...config, commandPlanner({ game, snapshot, owner, 
   const measured = contactModule.withNeutralCampContactMeasurement?.(plan);
   const entries = measured ? measured.result : plan();
   const planned = performance.now();
+  if (owners.includes(owner)) for (const event of memories[owner]?.navigationEvents ?? [])
+    if (event.tick === snapshot.tick) log('navigation-events', { owner, ...event });
   let trace: AiPlanTrace | undefined;
   if (ledger && owners.includes(owner)) {
     ledger.recordThink(snapshot, owner, memories[owner]!);
