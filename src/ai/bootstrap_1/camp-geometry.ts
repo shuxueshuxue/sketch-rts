@@ -4,15 +4,23 @@ import { MOVE_ORDER_ARRIVAL_RANGE } from '../../shared/movement-rules';
 import { walkableGoal, walkingDistance } from '../../shared/terrain';
 import { recordPlay, v6Memory } from '../policy/v6/memory';
 import { withinRangeOf, type Point } from '../policy/spatial';
-import { chooseCreepCamp, creepForce, CREEP_ASSEMBLED_RANGE, CREEP_ROUTE_CLEARANCE, CREEP_STAGING_TURNS, stagingClear, stagingPoint, type Camp, type chooseV7Camp, type startV7Creep } from '../policy/v7/creep';
+import { assessCreepCamp, creepForce, CREEP_ASSEMBLED_RANGE, CREEP_ROUTE_CLEARANCE, CREEP_STAGING_TURNS, stagingClear, stagingPoint, type Camp, type CreepAssessment, type chooseV7Camp, type startV7Creep } from '../policy/v7/creep';
+import { recordExecutorReason } from '../executor-reasons';
 
 /** Every fighter's approach and the camp's return road must clear other camps. */
 export const chooseBootstrapCamp = (home: Point, ...args: Parameters<typeof chooseV7Camp>) => {
+  return assessBootstrapCamp(home, ...args).choice;
+};
+export const assessBootstrapCamp = (home: Point, ...args: Parameters<typeof chooseV7Camp>): CreepAssessment => {
   const [snapshot, front, camps, candidates, options, expansionMine] = args;
-  if (front.length === 0) return undefined;
+  if (front.length === 0) {
+    recordExecutorReason(options, { executor: 'creep.selection', outcome: 'blocked', reason: 'no-clearing-units',
+      targetIds: candidates.flatMap(camp => camp.creeps.map(unit => unit.id)), unitIds: [] });
+    return { reason: 'no-clearing-units' };
+  }
   const nearby = withinRangeOf(front, CREEP_ASSEMBLED_RANGE);
   const group = front.map(nearby).sort((a, b) => creepForce(b) - creepForce(a))[0]!;
-  return chooseCreepCamp(snapshot, group, camps, candidates, options,
+  return assessCreepCamp(snapshot, group, camps, candidates, options,
     (camp, from, all) => bootstrapCampApproach(snapshot, home, group, camp, from, all), expansionMine);
 };
 

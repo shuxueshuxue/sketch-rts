@@ -7,6 +7,7 @@ import { planVeteranSkillCommands } from "./veteran-skills";
 import { standingBodies } from "../shared/structure-bodies";
 import { setBuildingBodies } from "../shared/terrain";
 import { withLandRoadReuse } from "./bootstrap_1/safe-land-route";
+import { beginExecutorReasons } from './executor-reasons';
 
 export const DEFAULT_AI_PLANNER_VERSION: AiScriptVersion = "v2";
 
@@ -71,6 +72,7 @@ export function planAiOwnerCommandEntries<Source extends string = string>(snapsh
         ...(disabledBehaviors ? { disabledBehaviors } : {}),
         memory,
       });
+      context.executorReason = beginExecutorReasons(memory, snapshot.tick);
       return withVeteranSkills(planAiCommandEntriesFromScripts(snapshot, owner, scripts, context).map(entry => ({
         playerId: owner,
         ...(request.source !== undefined ? { source: request.source } : {}),
