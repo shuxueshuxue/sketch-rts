@@ -1,6 +1,7 @@
+import type { CommandRefusal } from "../../shared/command-refusal";
 import type { DebugReplayTrace } from '../../shared/replay';
 import type { AiPlanPacket } from '../../ai/plan-stream';
-import { commandRejection } from "../../shared/sim/command-frame-runtime";
+import { CommandAdmissionError, commandRejectionDetail } from "../../shared/sim/command-frame-runtime";
 import { bindGangwayCrewRules } from "../../shared/ship-gangway";
 import type { ClientNetMessage, ServerNetMessage } from "../../shared/net/types";
 import type { GameCommand, GameMap, GameSnapshot, PlayerId } from "../../shared/types";
@@ -21,7 +22,7 @@ export type MatchThreadAdapterOptions = {
   spectating?: boolean;
   now?: () => number;
   onEnded?: (snapshot: GameSnapshot) => void;
-  onError?: (message: string) => void;
+  onError?: (message: string, refusal?: CommandRefusal) => void;
   onNet?: (message: ClientNetMessage) => void;
   onClose?: () => void;
 };
@@ -78,8 +79,8 @@ export class MatchThreadGameAdapter implements GameAdapter {
     if (this.closed) throw new Error("Local match is closed");
     if (this.options.spectating) throw new Error("Spectators cannot issue commands.");
     if (this.options.checkCommands) {
-      const rejection = commandRejection(this.snapshot, { playerId: this.options.playerId, command }, "admission");
-      if (rejection) throw new Error(`Local command rejected: ${rejection}`);
+      const rejection = commandRejectionDetail(this.snapshot, { playerId: this.options.playerId, command }, "admission");
+      if (rejection) throw new CommandAdmissionError(`Local command rejected: ${rejection.message}`, rejection);
     }
     this.port.postMessage({ type: "command", command });
   }
@@ -138,7 +139,7 @@ export class MatchThreadGameAdapter implements GameAdapter {
     } else if (event.type === "net") {
       this.options.onNet?.(event.message);
     } else {
-      this.options.onError?.(event.message);
+      this.options.onError?.(event.message, event.refusal);
     }
   }
 

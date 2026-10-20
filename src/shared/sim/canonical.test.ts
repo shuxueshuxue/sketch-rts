@@ -47,7 +47,8 @@ describe("canonical game state", () => {
     // Fresh-game goldens also include the closer 216-unit initial mine layout, and each mine's start amount.
     // Per-player camp budgets give each start at least two green camps, changing the seeded ladder's initial state.
     // Version 22 adds the current aim target; fresh games have no aim, so these goldens stay the same.
-    expect(CHECKSUM_VERSION).toBe(22);
+    // Version 23 adds refusal payloads; fresh games have no refused orders.
+    expect(CHECKSUM_VERSION).toBe(23);
     // Repeat creation to catch accidental dependence on a process-global random stream.
     for (let repeat = 0; repeat < 2; repeat += 1) {
       expect(checksumGame(createGame("bareDuel", { aiPlayers: [] }))).toBe("24665fcc");

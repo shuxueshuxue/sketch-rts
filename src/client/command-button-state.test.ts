@@ -144,7 +144,7 @@ describe("order buttons read the sim's own check", () => {
 
   it("greys a research the player cannot pay for, as it greys training", () => {
     const cost = UPGRADE_DEFS.weaponTraining.levels[0]!.cost;
-    expect(state(scene(cost - 1), research)).toEqual({ visible: true, enabled: false, reason: "gold" });
+    expect(state(scene(cost - 1), research)).toMatchObject({ visible: true, enabled: false, reason: "gold", refusal: { reason: "gold", detail: { required: cost, available: cost - 1 } } });
     expect(state(scene(cost), research)).toEqual({ visible: true, enabled: true });
     expect(state(scene(UNIT_DEFS.footman.cost - 1), { type: "train", buildingId: "barracks", unitKind: "footman" })).toMatchObject({ enabled: false, reason: "gold" });
   });
@@ -152,7 +152,7 @@ describe("order buttons read the sim's own check", () => {
   it("greys a locked tier with the cap it waits for, and full supply counting the queue", () => {
     const early = scene(1000);
     early.players.player!.supplyCap = 8;
-    expect(state(early, { type: "train", buildingId: "stables", unitKind: "knight" })).toEqual({ visible: true, enabled: false, reason: "tier", supplyCap: TIER_SUPPLY_CAP[3] });
+    expect(state(early, { type: "train", buildingId: "stables", unitKind: "knight" })).toMatchObject({ visible: true, enabled: false, reason: "tier", supplyCap: TIER_SUPPLY_CAP[3], refusal: { reason: "supply-tier", detail: { requiredCap: TIER_SUPPLY_CAP[3], currentCap: 8 } } });
     const full = scene(1000);
     full.players.player!.supplyCap = full.players.player!.supplyUsed;
     expect(state(full, { type: "train", buildingId: "barracks", unitKind: "footman" })).toMatchObject({ enabled: false, reason: "supply" });
@@ -167,6 +167,6 @@ describe("order buttons read the sim's own check", () => {
     Object.assign(scout, { x: CAMP.x + reach + 10 });
     expect(state(snapshot, { type: "hire", campId: "camp" })).toMatchObject({ enabled: false, reason: "position" });
     snapshot.mercenaryCamps[0]!.cooldownRemaining = 35;
-    expect(state(snapshot, { type: "hire", campId: "camp" })).toEqual({ visible: true, enabled: false, reason: "cooldown", cooldownTicks: 35, cooldownLength: CAMP.cooldown });
+    expect(state(snapshot, { type: "hire", campId: "camp" })).toMatchObject({ visible: true, enabled: false, reason: "cooldown", cooldownTicks: 35, cooldownLength: CAMP.cooldown, refusal: { reason: "cooldown", detail: { remainingTicks: 35 } } });
   });
 });

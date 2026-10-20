@@ -1,6 +1,6 @@
-import { buildingPlacementBlocker, terrainBlocksPlacement } from "../shared/build-placement";
+import type { CommandRefusal } from "../shared/command-refusal";
 import { BUILDING_DEFS } from "../shared/catalog";
-import { commandValidationError } from "../shared/sim/command-validation";
+import { checkCommandLegality } from "../shared/sim/command-validation";
 import type { BuildingKind, GameCommand, GameSnapshot, PlayerId } from "../shared/types";
 
 export type BuildPlacement = {
@@ -24,18 +24,18 @@ export type BuildPlacementResult = { command: Extract<GameCommand, { type: "buil
 /** `owner` is the local player: a seat other than the first plays as another player id. */
 export function buildPlacementCommand(snapshot: GameSnapshot, placement: BuildPlacement, point: { x: number; y: number }, owner: PlayerId): BuildPlacementResult {
   const command = { type: "build" as const, unitId: placement.workerId, buildingKind: placement.buildingKind, x: point.x, y: point.y };
-  const error = commandValidationError(snapshot, owner, command);
-  return error ? { refusal: placementRefusal(snapshot, placement, point, owner, error) } : { command };
+  const error = checkCommandLegality(snapshot, owner, command);
+  return error ? { refusal: placementRefusal(snapshot, placement, error.refusal!, error.message) } : { command };
 }
 
-// The validation's own checks for a placement, asked in its order (see checkCommandLegality's build).
-function placementRefusal(snapshot: GameSnapshot, placement: BuildPlacement, point: { x: number; y: number }, owner: PlayerId, message: string): PlacementRefusal {
-  const kind = placement.buildingKind;
-  if (!snapshot.units.some((unit) => unit.id === placement.workerId && unit.owner === owner && unit.kind === "worker")) return { reason: "worker" };
-  const blocker = buildingPlacementBlocker(snapshot, kind, point);
-  if (blocker) return { reason: "tooClose", blocker: blocker.kind };
-  if (terrainBlocksPlacement(snapshot.map, kind, point)) return { reason: BUILDING_DEFS[kind].shore ? "shore" : "ground" };
-  const cost = BUILDING_DEFS[kind].cost;
-  if ((snapshot.players[owner]?.gold ?? 0) < cost) return { reason: "gold", cost };
+// Presentation of shared facts only: never re-run a placement rule in the client.
+function placementRefusal(snapshot: GameSnapshot, placement: BuildPlacement, cause: CommandRefusal, message: string): PlacementRefusal {
+  if (cause.reason === "ownership" || cause.reason === "unit-ineligible" && cause.detail.required === "worker" || cause.reason === "issuer-gone" || cause.reason === "condition-unmet" && cause.detail.category === "gone") return { reason: "worker" };
+  if (cause.reason === "site-occupied") {
+    const blocker = snapshot.buildings.find(building => building.id === cause.detail.blockerId) ?? snapshot.obstacles?.find(obstacle => obstacle.id === cause.detail.blockerId);
+    if (blocker) return { reason: "tooClose", blocker: blocker.kind };
+  }
+  if (cause.reason === "site-terrain") return { reason: BUILDING_DEFS[placement.buildingKind].shore ? "shore" : "ground" };
+  if (cause.reason === "gold") return { reason: "gold", cost: cause.detail.required };
   return { reason: "other", message };
 }

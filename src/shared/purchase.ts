@@ -1,4 +1,5 @@
-import { canEquip, freeItemSlot, ITEM_DEFS, shipHoldSlots, shipItemMass } from "./equipment";
+import type { CommandRefusal } from "./command-refusal";
+import { canEquip, freeItemSlot, equipmentSpaceRefusal, ITEM_DEFS, shipHoldSlots, shipItemMass } from "./equipment";
 import { bodyMass } from "./physical-body";
 import { distanceToHull, shipProfile } from "./ship-geometry";
 import { isInCabin } from "./ship-cabin";
@@ -20,6 +21,7 @@ type Result = {
   placement: PurchasePlacement;
 } | {
   refusal: string;
+  cause?: CommandRefusal;
 };
 
 export function purchaseRecipientInRange(unit: Unit, seller: PurchaseSeller): boolean {
@@ -45,7 +47,7 @@ export function findPurchaseRecipient(snapshot: Pick<GameSnapshot, "units">, own
 export function purchasePlacement(snapshot: Pick<GameSnapshot, "units" | "items">, owner: PlayerId, seller: PurchaseSeller, kind: ItemKind, recipientId: string): Result {
   const recipient = snapshot.units.find(unit => unit.id === recipientId && unit.hp > 0 && unit.owner === owner);
   if (!recipient)
-    return { refusal: "Choose a living unit or ship of yours" };
+    return { refusal: "Choose a living unit or ship of yours", cause: { reason: "ownership", detail: { entityId: recipientId, requiredRelation: "own" } } };
   if (isInCabin(recipient))
     return { refusal: "Leave the cabin before receiving equipment" };
   const profile = shipProfile(recipient);
@@ -68,5 +70,5 @@ export function purchasePlacement(snapshot: Pick<GameSnapshot, "units" | "items"
   if (!canEquip(recipient))
     return { refusal: "This unit cannot carry equipment" };
   const slot = freeItemSlot(snapshot, recipient, kind);
-  return slot ? { placement: { unitId: recipient.id, slot } } : { refusal: "The recipient has no compatible free position" };
+  return slot ? { placement: { unitId: recipient.id, slot } } : { refusal: "The recipient has no compatible free position", cause: equipmentSpaceRefusal(snapshot, recipient, kind)! };
 }

@@ -1,3 +1,4 @@
+import type { CommandRefusal } from "../command-refusal";
 import type { AiPlanPacket } from '../../ai/plan-stream';
 import type { GameCommand, GameSnapshot, PlayerId, RoomState } from "../types";
 
@@ -84,6 +85,6 @@ export type ServerNetMessage =
   | { type: "frame"; rulesVersion: number; frame: CommandFrame; epoch: RoomEpoch }
   | { type: "checkpoint"; rulesVersion: number; checkpoint: CheckpointFrame; epoch: RoomEpoch }
   | { type: "desync"; rulesVersion: number; roomId: string; tick: number; checksums: Record<string, string>; epoch: RoomEpoch }
-  | { type: "error"; roomId: string; message: string; clientSeq?: number }
+  | { type: "error"; roomId: string; message: string; clientSeq?: number; refusal?: CommandRefusal }
   | { type: "chat"; message: ChatMessage }
   | { type: "room"; room: RoomState };

@@ -1,3 +1,4 @@
+import { refusalFromError } from "../shared/command-refusal";
 import { randomUUID } from "node:crypto";
 import { aiPlanAudience, filterRoomAiPlanPacket } from "./ai-plan-visibility";
 import { RULES_VERSION, assertCurrentRulesVersion } from "../shared/rules-version";
@@ -171,7 +172,8 @@ export class RoomNetHub {
       try {
         this.acceptCommand(message);
       } catch (error) {
-        this.send(socketRoomId, socket, { type: "error", roomId: socketRoomId, message: errorMessage(error), ...(message.clientSeq !== undefined ? { clientSeq: message.clientSeq } : {}) });
+        const refusal = refusalFromError(error);
+        this.send(socketRoomId, socket, { type: "error", roomId: socketRoomId, message: errorMessage(error), ...(refusal ? { refusal } : {}), ...(message.clientSeq !== undefined ? { clientSeq: message.clientSeq } : {}) });
       }
       return;
     }

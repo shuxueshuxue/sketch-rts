@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createGame, issueCommand, issuePlayerCommand, snapshotGame, restoreSnapshotIntoGame, stepGame } from './sim';
+import { createGame, tryPlayerCommand, issueCommand, issuePlayerCommand, snapshotGame, restoreSnapshotIntoGame, stepGame } from './sim';
 import { BUILDING_DEFS, UNIT_DEFS } from './catalog';
 import { createBuilding } from './map';
 
@@ -53,7 +53,9 @@ describe('training cancellation',()=>{
     expect(first).not.toBe(second);
     const cancel={type:'cancelTraining',buildingId:hall.id,jobId:second} as const;
     expect(()=>issuePlayerCommand(game,'enemy',cancel)).toThrow();
-    issueCommand(game,cancel);issueCommand(game,cancel);
+    issueCommand(game,cancel);
+    // Repeated cancellation now reports a refusal, preserving the original no-double-refund check.
+    expect(tryPlayerCommand(game,'player',cancel)).toMatchObject({ok:false,refusal:{reason:'condition-unmet',detail:{category:'state'}}});
     expect(hall.queue.map(j=>j.id)).toEqual([first]);
     expect(game.players.player.gold).toBe(1000-UNIT_DEFS.worker.cost);
     expect(game.players.player.supplyUsed).toBe(initialSupply+UNIT_DEFS.worker.supplyUsed);

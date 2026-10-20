@@ -1,0 +1,216 @@
+
+ RUN  v2.1.9 /tmp/camps-review-red-817a6301
+
+ ❯ src/shared/sim/command-refusal-feedback.test.ts (14 tests | 3 failed | 11 skipped) 43ms
+   × structured private refusal receipts > delivers an AI planner mixed hold through admission and frames without throwing or adding receipts 34ms
+     → expected [ { …(13) } ] to deeply equal []
+   × structured private refusal receipts > does not construct AI stale-issuer, transient or waiting receipts 5ms
+     → expected [ { …(11) }, { …(11) }, { …(11) } ] to deeply equal []
+   × structured private refusal receipts > retains the original AI arrival effect without enriching it with player receipt fields 4ms
+     → expected { …(14) } to not have property "commandType"
+ ❯ src/shared/sim/ai-guard-compatibility.test.ts (4 tests | 3 failed) 150ms
+   × preserves the guard-only all-AI v9_archer recording with the later aiming buffer disabled 94ms
+     → v9_archer AI feedback at tick 19: expected true to be false // Object.is equality
+   × preserves the guard-only all-AI v9_summoner recording with the later aiming buffer disabled 28ms
+     → v9_summoner AI feedback at tick 19: expected true to be false // Object.is equality
+   × preserves the guard-only all-AI v9_knight recording with the later aiming buffer disabled 21ms
+     → v9_knight AI feedback at tick 19: expected true to be false // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/shared/sim/ai-guard-compatibility.test.ts > preserves the guard-only all-AI v9_archer recording with the later aiming buffer disabled
+AssertionError: v9_archer AI feedback at tick 19: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/shared/sim/ai-guard-compatibility.test.ts:42:123
+     40|   for (let tick = 0; tick < fixture.checksums.length; tick++) {
+     41|     expect(game.effects.some(effect => effect.commandType !== undefine…
+     42|       || effect.id.startsWith('refused-') || effect.id.startsWith('wai…
+       |                                                                                                                           ^
+     43|     expect(guardProofChecksum(game), `${subject} tick ${tick}`).toBe(f…
+     44|     if (tick === fixture.checksums.length - 1) break;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/shared/sim/ai-guard-compatibility.test.ts > preserves the guard-only all-AI v9_summoner recording with the later aiming buffer disabled
+AssertionError: v9_summoner AI feedback at tick 19: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/shared/sim/ai-guard-compatibility.test.ts:42:123
+     40|   for (let tick = 0; tick < fixture.checksums.length; tick++) {
+     41|     expect(game.effects.some(effect => effect.commandType !== undefine…
+     42|       || effect.id.startsWith('refused-') || effect.id.startsWith('wai…
+       |                                                                                                                           ^
+     43|     expect(guardProofChecksum(game), `${subject} tick ${tick}`).toBe(f…
+     44|     if (tick === fixture.checksums.length - 1) break;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  src/shared/sim/ai-guard-compatibility.test.ts > preserves the guard-only all-AI v9_knight recording with the later aiming buffer disabled
+AssertionError: v9_knight AI feedback at tick 19: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/shared/sim/ai-guard-compatibility.test.ts:42:123
+     40|   for (let tick = 0; tick < fixture.checksums.length; tick++) {
+     41|     expect(game.effects.some(effect => effect.commandType !== undefine…
+     42|       || effect.id.startsWith('refused-') || effect.id.startsWith('wai…
+       |                                                                                                                           ^
+     43|     expect(guardProofChecksum(game), `${subject} tick ${tick}`).toBe(f…
+     44|     if (tick === fixture.checksums.length - 1) break;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  src/shared/sim/command-refusal-feedback.test.ts > structured private refusal receipts > delivers an AI planner mixed hold through admission and frames without throwing or adding receipts
+AssertionError: expected [ { …(13) } ] to deeply equal []
+
+- Expected
++ Received
+
+- Array []
++ Array [
++   Object {
++     "commandType": "holdPosition",
++     "duration": 16,
++     "feedbackStatus": "rejected",
++     "id": "refused-player-holdPosition-unit-player-worker-1000--unit-ineligible-0",
++     "owner": "player",
++     "reason": "refused",
++     "refusal": Object {
++       "detail": Object {
++         "required": "hold-capable",
++       },
++       "reason": "unit-ineligible",
++     },
++     "remaining": 15,
++     "sourceKind": "worker",
++     "type": "orderEnded",
++     "unitId": "unit-player-worker-1000",
++     "x": 1500,
++     "y": 1500,
++   },
++ ]
+
+ ❯ src/shared/sim/command-refusal-feedback.test.ts:111:26
+    109|     expect(soldier.order).toEqual({ type: 'hold', x: soldier.x, y: sol…
+    110|     expect(worker.order.type).toBe('idle');
+    111|     expect(game.effects).toEqual([]);
+       |                          ^
+    112|   });
+    113| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  src/shared/sim/command-refusal-feedback.test.ts > structured private refusal receipts > does not construct AI stale-issuer, transient or waiting receipts
+AssertionError: expected [ { …(11) }, { …(11) }, { …(11) } ] to deeply equal []
+
+- Expected
++ Received
+
+- Array []
++ Array [
++   Object {
++     "commandType": "stop",
++     "duration": 16,
++     "feedbackStatus": "rejected",
++     "id": "refused-player-stop-dead--issuer-gone-0",
++     "owner": "player",
++     "reason": "refused",
++     "refusal": Object {
++       "detail": Object {
++         "entityId": "dead",
++       },
++       "reason": "issuer-gone",
++     },
++     "remaining": 16,
++     "type": "orderEnded",
++     "x": 0,
++     "y": 0,
++   },
++   Object {
++     "commandType": "stop",
++     "duration": 16,
++     "feedbackStatus": "rejected",
++     "id": "refused-player-stop-also-dead--issuer-gone-0",
++     "owner": "player",
++     "reason": "refused",
++     "refusal": Object {
++       "detail": Object {
++         "entityId": "also-dead",
++       },
++       "reason": "issuer-gone",
++     },
++     "remaining": 16,
++     "type": "orderEnded",
++     "x": 0,
++     "y": 0,
++   },
++   Object {
++     "commandType": "train",
++     "duration": 16,
++     "feedbackStatus": "rejected",
++     "id": "refused-player-train-barracks-barracks-gold-0",
++     "owner": "player",
++     "reason": "refused",
++     "refusal": Object {
++       "detail": Object {
++         "available": 0,
++         "required": 100,
++       },
++       "reason": "gold",
++     },
++     "remaining": 16,
++     "type": "orderEnded",
++     "x": 1700,
++     "y": 1500,
++   },
++ ]
+
+ ❯ src/shared/sim/command-refusal-feedback.test.ts:127:26
+    125|       { playerId: 'player', command: { type: 'train', buildingId: 'bar…
+    126|     ] });
+    127|     expect(game.effects).toEqual([]);
+       |                          ^
+    128|     worker.order = { type: 'build', buildingKind: 'farm', x: 1560, y: …
+    129|     stepGame(game);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  src/shared/sim/command-refusal-feedback.test.ts > structured private refusal receipts > retains the original AI arrival effect without enriching it with player receipt fields
+AssertionError: expected { …(14) } to not have property "commandType"
+
+- Expected: 
+undefined
+
++ Received: 
+"cast"
+
+ ❯ src/shared/sim/command-refusal-feedback.test.ts:141:24
+    139|     const effect = game.effects.find(effect => effect.type === 'orderE…
+    140|     expect(effect).toMatchObject({ unitId: unit.id, orderType: 'cast',…
+    141|     expect(effect).not.toHaveProperty('commandType');
+       |                        ^
+    142|     expect(effect).not.toHaveProperty('feedbackStatus');
+    143|     expect(effect).not.toHaveProperty('refusal');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+ Test Files  2 failed (2)
+      Tests  6 failed | 1 passed | 11 skipped (18)
+   Start at  15:40:35
+   Duration  5.72s (transform 3.34s, setup 0ms, collect 4.88s, tests 194ms, environment 1ms, prepare 198ms)
+

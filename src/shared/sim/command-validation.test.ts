@@ -87,7 +87,7 @@ describe("command admission validation", () => {
     expect(commandValidationError(game, 'player', command)).toContain('exposed walking crew');
     crew.hp = crew.maxHp;
     source.sailing!.gangwayCooldownUntilTick = game.tick + seconds(20);
-    expect(checkCommandLegality(game, 'player', command)).toEqual({ message: 'Boarding is cooling down', transient: true, reason: 'cooldown' });
+    expect(checkCommandLegality(game, 'player', command)).toEqual({ message: 'Boarding is cooling down', transient: true, reason: 'cooldown', refusal: { reason: 'condition-unmet', detail: { category: 'cooldown' } } });
     expect(commandValidationError(game, 'player', { type: 'cancelBoardShip', unitIds: [source.id] })).toBeUndefined();
     game.tick += seconds(20);
     expect(commandValidationError(game, 'player', command)).toBeUndefined();

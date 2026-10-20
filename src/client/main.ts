@@ -1,3 +1,9 @@
+import { unitAbilities } from "../shared/unit-abilities";
+import './command-refusal-feedback.css';
+import { CommandRefusalBar } from './command-refusal-bar';
+import { CommandRefusalFeedback, type RefusalNotice } from './command-refusal-feedback';
+import { commandRefusalText } from './command-refusal-text';
+import { refusalFromError, type CommandRefusal } from '../shared/command-refusal';
 import { assertCurrentRulesVersion } from '../shared/rules-version';
 import { AiPlanOverlay } from './ai-plan-overlay';
 import { debugToolsEnabled } from './debug-tools';
@@ -44,7 +50,7 @@ import { chatKeyIntent, normalizeChatText } from "./chat-controller";
 import { chargeRiderFor, chargeWindow, type ChargeWindow } from "./charge-targeting";
 import { abilityUnitTargetMatches, castCommandForSelection, preferredAbilityCaster, readyAbilityCasters } from "./ability-targeting";
 import { abilityCommandState, autocastToggle, booleanCommandState, ENABLED_COMMAND_STATE, HIDDEN_COMMAND_STATE, legalityCommandState, sharedStance, stanceCommandState, stanceFighters, stanceMenuCommandState, type CommandButtonState } from "./command-button-state";
-import { checkCommandLegality } from "../shared/sim/command-validation";
+import { refusalFor, checkCommandAvailability, checkCommandLegality } from "../shared/sim/command-validation";
 import { BRACE_DAMAGE_SHARE, KNOCKBACK, LUNGE_PACE, MAX_SHOVE, SHOCK_DAMAGE_TAKEN } from "../shared/push";
 import {
   controlGroupCenter,
@@ -198,6 +204,8 @@ const mapList = requireElement<HTMLDivElement>("[data-map-list]");
 const goldLabel = requireElement<HTMLSpanElement>("[data-gold]");
 const supplyLabel = requireElement<HTMLSpanElement>("[data-supply]");
 const statusLabel = requireElement<HTMLDivElement>("[data-status]");
+const refusalFeedback = new CommandRefusalFeedback();
+const refusalBar = new CommandRefusalBar();
 const chatMessages = requireElement<HTMLDivElement>("[data-chat-messages]");
 const chatForm = requireElement<HTMLFormElement>("[data-chat-form]");
 const chatInput = requireElement<HTMLInputElement>("[data-chat-input]");
@@ -208,7 +216,7 @@ const forfeitButton = requireElement<HTMLButtonElement>("[data-forfeit-match]");
 const hudActions = requireElement<HTMLDivElement>(".hud-actions");
 const commandDock = requireElement<HTMLDivElement>("[data-command-dock]");
 const itemDock = requireElement<HTMLDivElement>("[data-item-dock]");
-const equipmentPanel=new EquipmentPanel(()=>i18n,sendCommand,(item,carrier)=>{if(isInCabin(carrier)){showInvalidCommand(i18n.locale==='zh'?'返回甲板后再使用物品':'Return to deck before using items');return;}if(item.cooldownRemaining>0){showInvalidCommand(t("status.itemRecharging",{item:labelKind(item.kind)}));return;}if(["lightningRod","stormStaff","breachCharge","ivoryTower"].includes(item.kind)){equipmentPanel.close();beginItemTargeting({item,carrier});}else sendCommand({type:"useItem",unitId:carrier.id,itemId:item.id});});
+const equipmentPanel=new EquipmentPanel(()=>i18n,sendCommand,(item,carrier)=>{const blocked = snapshot && checkCommandAvailability(snapshot, localPlayerId, { type: "useItem", unitId: carrier.id, itemId: item.id }); if (blocked?.refusal) { showCommandRefusal(blocked.refusal); return; }if(["lightningRod","stormStaff","breachCharge","ivoryTower"].includes(item.kind)){equipmentPanel.close();beginItemTargeting({item,carrier});}else sendCommand({type:"useItem",unitId:carrier.id,itemId:item.id});});
 const tooltipLayer = requireElement<HTMLDivElement>("[data-tooltip-layer]");
 const virtualPointerElement = requireElement<HTMLDivElement>("[data-virtual-pointer]");
 const pointerLockGate = requireElement<HTMLDivElement>("[data-pointer-lock-gate]");
@@ -320,8 +328,9 @@ const deploymentRuntime = createDeploymentRuntime(deploymentModeFromEnv(import.m
     statusLabel.textContent = t("app.connectedGuide");
     renderMainMenu();
   },
-  onRuntimeError(message) {
-    statusLabel.innerHTML = `<span class="error">${escapeHtml(message)}</span>`;
+  onRuntimeError(message, refusal) {
+    if (refusal) showCommandRefusal(refusal);
+    else showInvalidCommand(message);
   },
 });
 const roomSetupSession = new RoomSetupSession({
@@ -820,6 +829,7 @@ function commandButtonStateLabel(state: CommandButtonState) {
 }
 
 function commandButtonStateRequirement(state: CommandButtonState) {
+  if (state.refusal) return commandRefusalText(state.refusal, i18n.locale);
   if(state.detail)return state.detail;
   if (state.cooldownTicks !== undefined) return t("hud.commandCooldown", { time: formatRemaining(state.cooldownTicks) });
   if (state.reason === "stock") return t("hud.commandNoStock");
@@ -831,7 +841,8 @@ function commandButtonStateRequirement(state: CommandButtonState) {
 }
 
 function showCommandUnavailable(state: CommandButtonState, fallback: string) {
-  showInvalidCommand(commandButtonStateRequirement(state) ?? fallback);
+  if (state.refusal) showCommandRefusal(state.refusal);
+  else showInvalidCommand(commandButtonStateRequirement(state) ?? fallback);
 }
 
 function showTooltipFromEvent(event: Event) {
@@ -1631,6 +1642,7 @@ function activateStartedMatch(adapter: GameAdapter, nextSnapshot: GameSnapshot, 
   activeChat = chat;
   activeChatUnsubscribe = chat.onMessage(renderChatMessage);
   resetChatOverlay();
+  refusalFeedback.reset(); refusalBar.reset();
   snapshot = nextSnapshot;
   // The match opens on the player's own base, wherever its seat put it; a spectator, with none, on the map's middle.
   const entities = [...nextSnapshot.buildings, ...nextSnapshot.units];
@@ -1643,6 +1655,7 @@ function activateStartedMatch(adapter: GameAdapter, nextSnapshot: GameSnapshot, 
 
 function disconnectActiveMatch(close = true) {
   aiPlanOverlay.detach();
+  refusalFeedback.reset(); refusalBar.reset();
   minimapPresentation.reset();
   combatPresentation.reset();projectileOrigins.reset();
   focusedStatusProjection = undefined;
@@ -1679,6 +1692,7 @@ function syncActiveGameAdapterSnapshot() {
   if (!view.snapshot) return false;
   if (snapshot && view.snapshot !== snapshot) playCues(soundCues(snapshot, view.snapshot, localPlayerId));
   snapshot = view.snapshot;
+  for (const notice of refusalFeedback.consume(snapshot.effects, matchViewer(), performance.now())) presentCommandRefusal(notice);
   selectedIds = view.selectedIds;
   focusedSelectionId = view.focusedSelectionId;
   selectedCampId = view.selectedCampId;
@@ -2027,10 +2041,27 @@ function onKeyDown(event: KeyboardEvent) {
 
 function sendCommand(command: GameCommand) {
   try {
+    if (snapshot) {
+      const error = checkCommandLegality(snapshot, localPlayerId, command);
+      if (error?.refusal) {
+        if ("unitIds" in command && command.unitIds.length) {
+          const groups = new Map<CommandRefusal["reason"], { refusal: CommandRefusal; count: number }>();
+          for (const unitId of command.unitIds) {
+            const cause = refusalFor(snapshot, localPlayerId, command, { unitId }) ?? error.refusal;
+            const group = groups.get(cause.reason);
+            if (group) group.count++; else groups.set(cause.reason, { refusal: cause, count: 1 });
+          }
+          for (const group of groups.values()) showCommandRefusal(group.refusal, group.count);
+        } else showCommandRefusal(error.refusal);
+        return false;
+      }
+    }
     activeGameAdapter.sendCommand(command);
     return true;
   } catch (error) {
-    showInvalidCommand(error instanceof Error ? error.message : String(error));
+    const refusal = refusalFromError(error);
+    if (refusal) showCommandRefusal(refusal);
+    else showInvalidCommand(error instanceof Error ? error.message : String(error));
     return false;
   }
 }
@@ -2086,7 +2117,17 @@ function resetChatOverlay() {
   closeChatInput();
 }
 
+function presentCommandRefusal(notice: RefusalNotice) {
+  refusalBar.show(notice, i18n.locale);
+  if (notice.sound) soundboard.play("error");
+}
+
+function showCommandRefusal(refusal: CommandRefusal, count = 1) {
+  presentCommandRefusal(refusalFeedback.reject(refusal, localPlayerId, performance.now(), count));
+}
+
 function showInvalidCommand(message: string) {
+  refusalBar.showText(message);
   statusLabel.innerHTML = `<span class="error">${escapeHtml(message)}</span>`;
 }
 
@@ -2266,7 +2307,7 @@ function issueContextCommandAtWorld(world: Point, queued = false) {
       showInvalidCommand(t("status.pickupNeedsFocus"));
       return;
     }
-    sendCommand({ type: "pickupItem", unitId: command.unitId, itemId: command.itemId, queued });
+    if (!sendCommand({ type: "pickupItem", unitId: command.unitId, itemId: command.itemId, queued })) return;
     statusLabel.textContent = t("status.itemPickup", { item: labelKind(target.item.kind) });
     return;
   }
@@ -2277,7 +2318,7 @@ function issueContextCommandAtWorld(world: Point, queued = false) {
   }
   const deckShip=target?.kind==='unit'?(shipProfile(target.unit)?target.unit:target.unit.deck?snapshot.units.find(unit=>unit.id===target.unit.deck!.shipId):undefined):undefined;
   if (target && command) {
-    sendCommand(command);
+    if (!sendCommand(command)) return;
     // The units an attack leaves out cannot come within reach (see @@@context-reach): they walk there.
     const walkers = command.type === "attack" ? selectedUnits.filter((unit) => !command.unitIds.includes(unit.id)) : [];
     if (walkers.length) sendContextMove(world, walkers, deckShip, queued);
@@ -2479,7 +2520,7 @@ function canBuild(kind: BuildingKind) {
 
 function canTrain(unitKind: TrainableUnitKind) {
   const player = currentPlayerState();
-  return !commandMode && !openPalette && Boolean(player && focusedPlayerBuildings().some((building) => building.complete && canTrainAt(player.race, building.kind, unitKind)));
+  return !commandMode && !openPalette && Boolean(player && focusedPlayerBuildings().some((building) => canTrainAt(player.race, building.kind, unitKind)));
 }
 
 function canResearch(upgradeKind: UpgradeKind) {
@@ -2496,7 +2537,12 @@ function canHireMercenary() {
 
 function abilityButtonState(ability: AbilityKind): CommandButtonState {
   if (commandMode || openPalette) return HIDDEN_COMMAND_STATE;
-  return abilityCommandState(focusedPlayerUnits(), ability, selectedPlayerUnits(), activeGameAdapter.pendingCasts?.());
+  const state = abilityCommandState(focusedPlayerUnits(), ability, selectedPlayerUnits(), activeGameAdapter.pendingCasts?.());
+  if (!state.visible || !snapshot) return state;
+  const casters = selectedPlayerUnits().filter(unit => unitAbilities(unit).includes(ability));
+  const checks = casters.map(unit => checkCommandAvailability(snapshot!, localPlayerId, { type: "cast", unitId: unit.id, ability }));
+  const blocked = checks.length && checks.every(Boolean) ? checks[0] : undefined;
+  return blocked ? { ...state, ...legalityCommandState(blocked) } : state;
 }
 
 function stanceMenuButtonState(): CommandButtonState {
@@ -2553,7 +2599,7 @@ function trainButtonState(unitKind: TrainableUnitKind): CommandButtonState {
 // A building's upgrade (see @@@building-upgrade) is offered while none is under way; the job then shows as a
 // progress button of the work queue.
 function focusedUpgradable(to: BuildingKind) {
-  return !commandMode && !openPalette ? focusedPlayerBuildings().find((building) => BUILDING_DEFS[to].upgradeFrom === building.kind && building.complete && !upgradeJob(building)) : undefined;
+  return !commandMode && !openPalette ? focusedPlayerBuildings().find((building) => BUILDING_DEFS[to].upgradeFrom === building.kind && !upgradeJob(building)) : undefined;
 }
 
 function upgradeButtonState(to: BuildingKind): CommandButtonState {
@@ -2565,7 +2611,7 @@ function upgradeFocusedBuilding(to: BuildingKind) {
   const building = focusedUpgradable(to);
   if (!building) return;
   const state = upgradeButtonState(to);
-  if (!state.enabled) { showInvalidCommand(state.detail ?? t("command.upgradeSpecific", { building: labelKind(to) })); return; }
+  if (!state.enabled) { showCommandUnavailable(state, t("command.upgradeSpecific", { building: labelKind(to) })); return; }
   if (sendCommand({ type: "upgradeBuilding", buildingId: building.id, to })) statusLabel.textContent = t("status.upgradeStarted", { building: labelKind(to) });
 }
 
@@ -2699,10 +2745,12 @@ function confirmBuildPlacement(point: Point) {
   const world = screenToWorld(point);
   const result = buildPlacementCommand(snapshot, commandMode.placement, world, localPlayerId);
   if ("refusal" in result) {
-    showInvalidCommand(placementRefusalText(result.refusal, commandMode.placement.buildingKind));
+    const cause = refusalFor(snapshot, localPlayerId, { type: "build", unitId: commandMode.placement.workerId, buildingKind: commandMode.placement.buildingKind, ...world });
+    if (cause) showCommandRefusal(cause);
+    else showInvalidCommand(placementRefusalText(result.refusal, commandMode.placement.buildingKind));
     return;
   }
-  sendCommand(result.command);
+  if (!sendCommand(result.command)) return;
   statusLabel.textContent = t("status.foundationPlaced", { building: labelKind(commandMode.placement.buildingKind) });
   clearCommandModeClasses();
   commandMode = undefined;
@@ -2721,7 +2769,7 @@ function issueAttackMoveAt(point: Point, queued = false) {
     return;
   }
   const world = screenToWorld(point);
-  sendCommand({ type: "attackMove", unitIds, x: world.x, y: world.y, queued });
+  if (!sendCommand({ type: "attackMove", unitIds, x: world.x, y: world.y, queued })) return;
   statusLabel.textContent = t("status.attackMoveOrdered");
   clearCommandModeClasses();
   commandMode = undefined;
@@ -2735,27 +2783,10 @@ function issueSpellAt(point: Point, queued = false) {
   const world = screenToWorld(point);
   const def = ABILITY_DEFS[ability];
   const pointTarget = def.behavior === "summon" || (def.behavior === "weapon" && def.target === "point");
-  const target = pointTarget ? undefined : def.behavior === "weapon"
-    ? (hitUnit(world, unit => abilityUnitTargetMatches(snapshot!, ability, unit) && ["enemy", "creep"].includes(relationTo(snapshot!, localPlayerId, unit.owner)))
-      ?? buildingAt(snapshot.buildings, world, building => relationTo(snapshot!, localPlayerId, building.owner) === "enemy"))
-    : hitUnit(world, unit => abilityUnitTargetMatches(snapshot!, ability, unit) && [def.behavior === "heal" ? "own" : "enemy", def.behavior === "heal" ? "ally" : "creep"].includes(relationTo(snapshot!, localPlayerId, unit.owner)));
-  if (!pointTarget && !target) {
-    showInvalidCommand(t("status.spellNeedsTarget", { ability: labelKind(ability) }));
-    return;
-  }
+  const target = pointTarget ? undefined : hitUnit(world, () => true) ?? buildingAt(snapshot.buildings, world, () => true);
   const pending = activeGameAdapter.pendingCasts?.();
-  const ready = readyAbilityCasters(selectedPlayerUnits(), ability, pending);
-  if (!ready.length) {
-    showInvalidCommand(t("status.spellNeedsCaster", { ability: labelKind(ability) }));
-    return;
-  }
-  const reach = chargeWindow(ability);
-  if (reach && target && !chargeRiderFor(ready, target, reach, casterId)) {
-    showInvalidCommand(t("status.chargeTooClose", { ability: labelKind(ability), min: reach!.minRange }));
-    return;
-  }
-  const command = castCommandForSelection(snapshot, localPlayerId, selectedPlayerUnits(), ability, target ? { targetId: target.id } : world, casterId, queued, pending);
-  if (!command) { showInvalidCommand(t("status.spellNeedsTarget", { ability: labelKind(ability) })); return; }
+  const command = castCommandForSelection(snapshot, localPlayerId, selectedPlayerUnits(), ability, target ? { targetId: target.id } : world, casterId, queued, pending)
+    ?? { type: "cast" as const, unitId: casterId, ability, ...(target ? { targetId: target.id } : world), queued };
   if (!sendCommand(command)) return;
   statusLabel.textContent = t("status.spellOrdered", { ability: labelKind(ability) });
   clearCommandModeClasses();
@@ -2779,48 +2810,11 @@ function issueItemAt(point: Point) {
   if (!commandMode || commandMode.type !== "item" || !snapshot) return;
   const { kind, itemId, unitId } = commandMode.targeting;
   const world = screenToWorld(point);
-  if (kind === "stormStaff") {
-    const target = hitUnit(world, (unit) => unit.owner !== localPlayerId);
-    sendCommand(target ? { type: "useItem", unitId, itemId, x: target.x, y: target.y } : { type: "useItem", unitId, itemId, x: world.x, y: world.y });
-    statusLabel.textContent = t("status.itemUsed", { item: labelKind(kind) });
-    clearCommandModeClasses();
-    commandMode = undefined;
-    updateHud();
-    return;
-  }
-  if (kind === "ivoryTower") {
-    sendCommand({ type: "useItem", unitId, itemId, x: world.x, y: world.y });
-    statusLabel.textContent = t("status.itemUsed", { item: labelKind(kind) });
-    clearCommandModeClasses();
-    commandMode = undefined;
-    updateHud();
-    return;
-  }
-  if (kind === "lightningRod") {
-    const target = hitUnit(world, (unit) => unit.owner !== localPlayerId);
-    if (!target) {
-      showInvalidCommand(t("status.itemEnemyUnitTarget", { item: labelKind(kind) }));
-      return;
-    }
-    sendCommand({ type: "useItem", unitId, itemId, targetId: target.id });
-    statusLabel.textContent = t("status.itemUsed", { item: labelKind(kind) });
-    clearCommandModeClasses();
-    commandMode = undefined;
-    updateHud();
-    return;
-  }
-  if (kind === "breachCharge") {
-    const target = hitBuilding(world, (building) => building.owner !== localPlayerId);
-    if (!target) {
-      showInvalidCommand(t("status.itemEnemyBuildingTarget", { item: labelKind(kind) }));
-      return;
-    }
-    sendCommand({ type: "useItem", unitId, itemId, targetId: target.id });
-    statusLabel.textContent = t("status.itemUsed", { item: labelKind(kind) });
-    clearCommandModeClasses();
-    commandMode = undefined;
-    updateHud();
-  }
+  const target = hitUnit(world, () => true) ?? hitBuilding(world, () => true);
+  const at = kind === "stormStaff" || kind === "ivoryTower" ? world : target ? { targetId: target.id } : world;
+  if (!sendCommand({ type: "useItem", unitId, itemId, ...at })) return;
+  statusLabel.textContent = t("status.itemUsed", { item: labelKind(kind) });
+  clearCommandModeClasses(); commandMode = undefined; updateHud();
 }
 
 function cancelCommandMode() {
@@ -2876,7 +2870,7 @@ function train(unitKind: TrainableUnitKind) {
 
 function focusedTrainingBuilding(unitKind: TrainableUnitKind) {
   const player = currentPlayerState();
-  return player && focusedPlayerBuildings().find((candidate) => candidate.complete && canTrainAt(player.race, candidate.kind, unitKind));
+  return player && focusedPlayerBuildings().find((candidate) => canTrainAt(player.race, candidate.kind, unitKind));
 }
 
 function focusedResearch(upgradeKind: UpgradeKind) {
@@ -3611,7 +3605,8 @@ function renderItemDock() {
     drawCommandPortrait(button, {type:"item",kind:item.kind,...(item.weaponKind?{weaponKind:item.weaponKind}:{})});
     const cooldownText = item.cooldownRemaining > 0 ? t("hud.itemRecharging", { time: formatRemaining(item.cooldownRemaining) }) : "";
     button.setAttribute("aria-label", `${labelKind(item.kind)} (Alt+${digit})${cooldownText}`);
-    applyTooltip(button, itemTooltip(item.kind, hotkey, i18n));
+    const unavailable = snapshot && checkCommandAvailability(snapshot, localPlayerId, { type: "useItem", unitId: item.carrierId!, itemId: item.id });
+    applyTooltip(button, withTooltipRequirement(itemTooltip(item.kind, hotkey, i18n), unavailable?.refusal ? commandRefusalText(unavailable.refusal, i18n.locale) : undefined));
     cooldown.hidden = item.cooldownRemaining <= 0;
     applyCooldownSweep(button, item.cooldownRemaining, itemCooldownLength(item.kind));
     setText(cooldown, button.dataset.cooldownLabel ?? "");
@@ -3640,15 +3635,8 @@ function useCarriedItem(itemId: string) {
   if (!snapshot) return;
   const entry = carriedItemsForSelection(snapshot, inventoryCarriers()).find(({ item }) => item.id === itemId);
   if (!entry) return;
-  if(isInCabin(entry.carrier)){showInvalidCommand(i18n.locale==='zh'?'返回甲板后再使用物品':'Return to deck before using items');return;}
-  if (ITEM_DEFS[entry.item.kind].passive) {
-    showInvalidCommand(t("status.itemPassive", { item: labelKind(entry.item.kind) }));
-    return;
-  }
-  if (entry.item.cooldownRemaining > 0) {
-    showInvalidCommand(t("status.itemRecharging", { item: labelKind(entry.item.kind) }));
-    return;
-  }
+  const unavailable = checkCommandAvailability(snapshot, localPlayerId, { type: "useItem", unitId: entry.carrier.id, itemId });
+  if (unavailable?.refusal) { showCommandRefusal(unavailable.refusal); return; }
   if (entry.item.kind === "lightningRod" || entry.item.kind === "stormStaff" || entry.item.kind === "breachCharge" || entry.item.kind === "ivoryTower") {
     beginItemTargeting(entry);
     return;
@@ -4082,6 +4070,33 @@ function updateHoverCursor(hoveredId?: string) {
     mode: commandMode?.type === 'build' ? 'placement' : commandMode ? 'targeting' : 'inspect',
     pointerLocked: document.pointerLockElement === canvas,
   });
+  let hint: string | undefined;
+  if (!menuOpen && snapshot && lastMouse && pointerOnCanvas(lastMouse) && !isInsideRect(lastMouse, minimapRect())) {
+    const world = screenToWorld(lastMouse), selected = selectedPlayerUnits();
+    const target = visualPointerTarget(world);
+    let command: GameCommand | undefined;
+    if (commandMode?.type === 'spell') {
+      command = { type: 'cast', unitId: commandMode.targeting.casterId, ability: commandMode.targeting.ability,
+        ...(target?.kind === 'unit' ? { targetId: target.unit.id } : target?.kind === 'building' ? { targetId: target.building.id } : world) };
+    } else if (commandMode?.type === 'item') {
+      command = { type: 'useItem', unitId: commandMode.targeting.unitId, itemId: commandMode.targeting.itemId,
+        ...(target?.kind === 'unit' ? { targetId: target.unit.id } : target?.kind === 'building' ? { targetId: target.building.id } : world) };
+    } else if (!commandMode && selected.length && target && target.kind !== 'item') {
+      const context = targetCommand(snapshot, localPlayerId, selected, target);
+      if (context && !('refusal' in context)) command = context;
+    } else if (!commandMode && target?.kind === 'item' && selected.length) command = { type: 'pickupItem', unitId: selected[0]!.id, itemId: target.item.id };
+    if (command) {
+      const cause = refusalFor(snapshot, localPlayerId, command);
+      if (cause) hint = commandRefusalText(cause, i18n.locale);
+      else if ('unitIds' in command) {
+        const intent = command;
+        const refused = command.unitIds.map(unitId => refusalFor(snapshot!, localPlayerId, intent, { unitId })).filter((cause): cause is CommandRefusal => !!cause);
+        if (refused.length) hint = `${refused.length}/${command.unitIds.length} · ${commandRefusalText(refused[0]!, i18n.locale)}`;
+      }
+    }
+  }
+  refusalBar.hover(hint, lastMouse);
+  if (hint) hoverCursor = { ...hoverCursor, nativeCursor: 'not-allowed' };
   if (canvas.style.cursor !== hoverCursor.nativeCursor) canvas.style.cursor = hoverCursor.nativeCursor;
   if (!hoverCursor.iconUrl) {
     virtualPointerElement.classList.remove('relation-cursor'); virtualPointerElement.style.backgroundImage = '';

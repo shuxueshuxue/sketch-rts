@@ -25,7 +25,7 @@ it.each(cases)('gets a real $race $kind past a shell using its terrain arrival (
     return col < 49 ? 'm' : '.';
   }).join('') };
   setBuildingBodies(game.map, game.buildings);
-  issuePlayerCommand(game, 'us', { type: 'holdPosition', unitIds: ['target'] });
+  issuePlayerCommand(game, 'us', { type: kind === 'worker' ? 'stop' : 'holdPosition', unitIds: ['target'] });
   issuePlayerCommand(game, 'foe', { type: 'attack', unitIds: ['gun'], targetId: 'target' });
   for (let tick = 0; tick < 600 && !game.projectiles.length; tick++) stepGame(game);
   expect(game.projectiles).toHaveLength(1);
