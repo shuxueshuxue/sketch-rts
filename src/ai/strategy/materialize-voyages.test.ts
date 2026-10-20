@@ -103,6 +103,35 @@ function nativeBerthInput() {
 }
 
 describe('candidate-specific native voyage materialization', () => {
+  it('keeps a real already-aboard passenger distinct from an unobserved departure land', () => {
+    const { input, actionId } = nativeBerthInput();
+    const passenger = input.snapshot.units.find(unit => unit.owner === input.situation.owner && unit.deck)!;
+    const shipId = passenger.deck!.shipId;
+    const request = { ...input, unitIds: [passenger.id, shipId] }, before = JSON.stringify(request);
+    const plan = materializeVoyages(request, actionId, [passenger.id]);
+    expect(plan.voyages).toEqual([]);
+    expect(plan.missing).toContainEqual(expect.objectContaining({ status: 'unknown', kind: 'transport',
+      reason: expect.objectContaining({ code: 'aboard-voyage-binding-unknown', factIds: [passenger.id, shipId] }) }));
+    expect(plan.missing.some(condition => condition.reason.code === 'departure-land-unobserved')).toBe(false);
+    expect(materializeVoyages(JSON.parse(JSON.stringify(request)), actionId, [passenger.id])).toEqual(plan);
+    expect(JSON.stringify(request)).toBe(before);
+  });
+
+  it.each(['missing', 'unknown', 'sea'] as const)('reports the actual %s departure fact separately', kind => {
+    const { input, actionId, crossing } = nativeBerthInput(), id = input.unitIds[0]!;
+    const situation: AllocationMethodQuoteInput['situation'] = { ...input.situation,
+      units: input.situation.units.flatMap(unit => unit.id !== id ? [unit] : kind === 'missing' ? [] : [{ ...unit,
+        location: kind === 'sea' ? { kind: 'sea' as const, seaId: crossing.seaId, point: crossing.departure }
+          : { kind: 'unknown' as const, point: crossing.departure,
+            reason: { code: 'terrain-component-unknown', detail: 'No component fact', evidence: [] } } }]) };
+    const plan = materializeVoyages({ ...input, situation }, actionId);
+    const code = kind === 'missing' ? 'transport-member-fact-missing'
+      : kind === 'unknown' ? 'departure-location-unknown' : 'departure-at-sea-without-carrier';
+    expect(plan.missing).toContainEqual(expect.objectContaining({ status: kind === 'sea' ? 'unmet' : 'unknown',
+      reason: expect.objectContaining({ code, factIds: [id] }) }));
+    expect(plan.missing.some(condition => condition.reason.code === 'departure-land-unobserved')).toBe(false);
+  });
+
   it('preserves explicit native water poses and land points in the real 4180 geometry', () => {
     const { input, actionId, crossing } = nativeBerthInput(), before = JSON.stringify(input);
     const plan = materializeVoyages(input, actionId);

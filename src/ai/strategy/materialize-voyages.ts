@@ -93,7 +93,23 @@ export function materializeVoyages(input: AllocationMethodQuoteInput, actionId: 
     if (!unit || unit.owner !== situation.owner || unit.hp <= 0 || !selected.has(id)) { missing('transport-member-unavailable', [id]); continue; }
     if (unitMover(unit.kind) !== 'land') continue;
     if (fact?.location.kind === 'land' && fact.location.landId === destinations) continue;
-    if (!fact || fact.location.kind !== 'land') { missing('departure-land-unobserved', [id]); continue; }
+    if (!fact) { missing('transport-member-fact-missing', [id], 'route', 'unknown'); continue; }
+    if (fact.location.kind !== 'land') {
+      if (fact.location.kind === 'aboard') {
+        // A retained binding was handled above through its fixed-hull query.
+        // A new aboard origin has no embarkation shore. Do not invent a land
+        // point merely to satisfy the current two-ground-point contract.
+        const shipId = unit.deck?.shipId ?? unit.cabin?.shipId;
+        if (shipId !== fact.location.shipId || !actors.has(fact.location.shipId))
+          missing('aboard-location-support-mismatch', [id, fact.location.shipId], 'transport', 'unknown');
+        else if (!selected.has(shipId))
+          missing('aboard-hull-not-in-candidate-bundle', [id, shipId], 'transport');
+        else missing('aboard-voyage-binding-unknown', [id, shipId], 'transport', 'unknown');
+      } else if (fact.location.kind === 'sea')
+        missing('departure-at-sea-without-carrier', [id], 'transport');
+      else missing('departure-location-unknown', [id], 'route', 'unknown');
+      continue;
+    }
     // A resource row is interchangeable only when it names this exact point.
     // A defensive post offset from the hall requires its own action ETA row.
     const arrival = actionTargetArrival(fact, actionId, target, situation.assets);
