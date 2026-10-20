@@ -1,4 +1,10 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["../../scripts/build-room-baseline.ts", "../../scripts/verify-room-baseline.ts"]
+  "include": [
+    "../../scripts/build-room-baseline.ts",
+    "../../scripts/verify-room-baseline.ts",
+    "../../scripts/ai-room-ab.ts",
+    "./room-ab-run.ts",
+    "../../scripts/verify-room-ab-isolation.ts"
+  ]
 }

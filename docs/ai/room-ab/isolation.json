@@ -1,0 +1,41 @@
+{
+  "pass": true,
+  "cases": [
+    {
+      "map": "greystonePass",
+      "baselineInputChecks": 400,
+      "sameObjectProbeChecks": 400,
+      "livePlain": {
+        "equal": true,
+        "thinks": 400,
+        "inputChecks": 0,
+        "byteComparison": "every-command-and-memory-on-the-identical-mixed-match-snapshot-stream"
+      },
+      "liveInterposed": {
+        "equal": true,
+        "thinks": 400,
+        "inputChecks": 400,
+        "byteComparison": "every-command-and-memory-on-the-identical-mixed-match-snapshot-stream"
+      },
+      "observerOnOffEqual": true
+    },
+    {
+      "map": "sapphireArchipelago",
+      "baselineInputChecks": 1200,
+      "sameObjectProbeChecks": 1200,
+      "livePlain": {
+        "equal": true,
+        "thinks": 1200,
+        "inputChecks": 0,
+        "byteComparison": "every-command-and-memory-on-the-identical-mixed-match-snapshot-stream"
+      },
+      "liveInterposed": {
+        "equal": true,
+        "thinks": 1200,
+        "inputChecks": 1200,
+        "byteComparison": "every-command-and-memory-on-the-identical-mixed-match-snapshot-stream"
+      },
+      "observerOnOffEqual": true
+    }
+  ]
+}
