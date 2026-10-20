@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { createBuilding } from '../../shared/map';
+import { createBuilding, createUnit } from '../../shared/map';
 import { createGame } from '../../shared/sim';
+import { creepForce } from '../policy/v7/creep';
+import { structureRating } from '../policy/v6/strength';
 import { assessDefenseResponse } from './defense-response';
 import type { Situation, SituationUnit } from './types';
 
@@ -23,6 +25,20 @@ function fixture() {
 }
 
 describe('same-window defense response without the priced cohort', () => {
+  it('uses camp currency and native static protection when explicitly requested', () => {
+    const { input, unit } = fixture();
+    const a = createUnit('other-1', 'player', 'footman', 1000, 1000);
+    const b = createUnit('other-2', 'player', 'footman', 1000, 1000);
+    input.snapshot.units = [a, b];
+    const tower = createBuilding('cover', 'player', 'defenseTower', 800, 1000, true);
+    input.snapshot.buildings.push(tower);
+    const situation = { ...input.situation, units: [unit(a.id, 99999, 100), unit(b.id, 99999, 300)] };
+    const required = structureRating(tower) + creepForce([a]) * 1.5;
+    const value = assessDefenseResponse({ ...input, situation, metric: 'camp-force', actualMobileOpponentForce: required });
+    expect(value.staticForce).toBe(structureRating(tower));
+    expect(value.response).toEqual({ status: 'known', ticks: 300 });
+    expect(value.responseForce).toBeCloseTo(structureRating(tower) + creepForce([a, b]));
+  });
   it('waits for an adequate other group instead of counting the priced defender or the first fast scout', () => {
     const { input } = fixture();
     const response = assessDefenseResponse(input);
