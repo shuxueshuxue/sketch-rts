@@ -24,15 +24,9 @@ afterAll(() => definitions.forEach((rules, index) => {
   else rules.aimRangeBuffer = buffers[index];
 }));
 
-// Rules 9 deliberately adds receipts for previously silent refusals and waits. Strip only that presentation state
-// when checking this older guard proof: entity positions, orders, resources, old effects and ids must still match.
+// Human-only receipts add no AI effects: compare the complete state, including every original effect.
 function guardProofChecksum(game: Game) {
-  const effects = game.effects.filter(effect => !effect.id.startsWith('refused-') && !effect.id.startsWith('waiting-'))
-    .map(effect => {
-      const { commandType, feedbackStatus, refusal, ...prior } = effect;
-      return prior;
-    });
-  return checksumGameForVersion({ ...game, effects }, 21);
+  return checksumGameForVersion(game, 21);
 }
 
 // Actual room-AI commands captured on main a2cff607; no current planner replaces the recording.

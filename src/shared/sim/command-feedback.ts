@@ -3,9 +3,15 @@ import type { Game } from '../sim';
 import type { GameCommand, PlayerId, Unit, UnitOrder } from '../types';
 import { seconds } from '../time';
 
+/** Seat identity is deterministic on every peer; AI's stale plans do not need player-facing receipts. */
+export function receivesCommandFeedback(game: Pick<Game, 'aiPlayers'>, owner: PlayerId): boolean {
+  return !game.aiPlayers.includes(owner);
+}
+
 /** A receipt never changes an order, a resource or the entity counter. All peers derive it from the same frame. */
 export function emitCommandRefusal(game: Game, owner: PlayerId, command: GameCommand, refusal: CommandRefusal,
   unit?: Unit, status: 'rejected' | 'waiting' = 'rejected') {
+  if (!receivesCommandFeedback(game, owner)) return;
   const target = 'buildingId' in command ? command.buildingId : 'targetId' in command ? command.targetId
     : 'itemId' in command ? command.itemId : 'resourceId' in command ? command.resourceId : undefined;
   const source = unit ?? ('buildingId' in command ? game.buildings.find(building => building.id === command.buildingId) : undefined);

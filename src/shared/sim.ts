@@ -1,5 +1,5 @@
 import { summonPlacement } from "./sim/summon-placement";
-import { commandForOrder, emitCommandRefusal, clearWaitingReceipts } from "./sim/command-feedback";
+import { commandForOrder, emitCommandRefusal, clearWaitingReceipts, receivesCommandFeedback } from "./sim/command-feedback";
 import { isRangedUnit } from "./unit-weapon-class";
 import { weaponClass } from "./weapon-class";
 import { unitAutoAcquireRadius, NEUTRAL_LEASH_RANGE, NEUTRAL_DAMAGE_RESPONSE_RANGE, NEUTRAL_RETURN_STOP_RANGE, NEUTRAL_ASSIST_RANGE } from './combat-acquisition';
@@ -479,6 +479,17 @@ const COMMAND_TAKEN: CommandResult = { ok: true };
 export function tryPlayerCommand(game: Game, owner: PlayerId, command: GameCommand): CommandResult {
   const refusal = checkCommandLegality(game, owner, command);
   if (refusal) {
+    if (!receivesCommandFeedback(game, owner)) {
+      // Preserve the tower rejection effect that already existed for AI before player-facing receipts.
+      if (command.type === "garrison") {
+        const tower = game.buildings.find(building => building.id === command.buildingId);
+        if (tower) for (const unit of unitsByIds(game, command.unitIds, owner)) {
+          const cause = garrisonRefusal(game, tower, unit);
+          if (cause) rejectGarrison(game, unit, cause, command);
+        }
+      }
+      return { ok: false, ...refusal };
+    }
     const ids = "unitIds" in command ? command.unitIds : "unitId" in command ? [command.unitId] : [];
     const ownUnit = ownUnitLookup(game.units, owner, ids.length);
     const actors = ids.map(ownUnit).filter((unit): unit is Unit => !!unit);
@@ -768,7 +779,7 @@ function applyPlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
       for (const unit of unitsByIds(game, command.unitIds, owner)) {
         if (unit.garrison?.buildingId === tower.id) continue;
         const cause = garrisonRefusal({ ...game, units: [...game.units, ...reserved] }, tower, unit);
-        if (cause) { emitCommandRefusal(game, owner, command, cause, unit); continue; }
+        if (cause) { rejectGarrison(game, unit, cause, command); continue; }
         assignUnitOrder(unit, { type: "garrison", buildingId: tower.id }, command.queued);
         reserved.push({ ...unit, garrison: { buildingId: tower.id } });
       }
@@ -2665,9 +2676,11 @@ function updateItemErrandOrder(game: Game, unit: Unit) {
   const reach = order.action === "use" ? itemUseReach(item.kind)! : ERRAND_REACH;
   const reached = () => distance(unit, at) <= reach;
   if (!reached()) { errandWalk(game, unit, at, reached, "walk"); return; }
-  const command = commandForOrder(unit)!;
-  const refusal = refusalFor(game, owner, command, { phase: "arrival" });
-  if (refusal) return endOrder(game, unit, "refused", refusal);
+  if (receivesCommandFeedback(game, owner)) {
+    const command = commandForOrder(unit)!;
+    const refusal = refusalFor(game, owner, command, { phase: "arrival" });
+    if (refusal) return endOrder(game, unit, "refused", refusal);
+  }
   end();
   // Within reach the errand is the order as given there; one its rules refuse now (a friend's slots filled meanwhile)
   // ends with the item still carried.
@@ -2833,8 +2846,8 @@ function updateCastOrder(game: Game, unit: Unit) {
   // Saves can contain a cast for an ability removed from the catalog.
   if (!def) return end("refused");
   if (def.behavior === "veteran") {
-    if (!unitAbilities(unit).includes(order.ability) || abilityCooldown(unit, order.ability) > 0 || !applyVeteranAbility(game, unit, def, false)) return end("refused");
-    return end();
+    const cast = unitAbilities(unit).includes(order.ability) && abilityCooldown(unit, order.ability) <= 0 && applyVeteranAbility(game, unit, def, false);
+    return end(!cast && isPlayerId(unit.owner) && receivesCommandFeedback(game, unit.owner) ? "refused" : undefined);
   }
   if (order.targetId !== undefined && (!target || target.hp <= 0 || areEnemyOwners(game, target.owner, unit.owner) !== (def.behavior !== "heal"))) return end("target-gone");
   if (target && isUnit(target) && !matchesUnitTarget(target, def.targets, game)) return end("refused");
@@ -2845,7 +2858,7 @@ function updateCastOrder(game: Game, unit: Unit) {
   const reached = () => distance(unit, at) <= def.range + (def.behavior === "weapon" && target && !isUnit(target) ? target.radius : 0);
   // As near as it can come (its point or unit beyond its ground, see @@@reach) and still out of range: no cast.
   if (!reached()) { errandWalk(game, unit, at, reached, "walk"); return; }
-  if (isPlayerId(unit.owner)) {
+  if (isPlayerId(unit.owner) && receivesCommandFeedback(game, unit.owner)) {
     const refusal = refusalFor(game, unit.owner, commandForOrder(unit)!, { phase: "arrival" });
     if (refusal) return endOrder(game, unit, "refused", refusal);
   }
@@ -2865,7 +2878,10 @@ function updateCastOrder(game: Game, unit: Unit) {
   }
   else if (def.behavior === "heal" && target && isUnit(target)) applyHeal(game, unit, order.ability, target, def);
   else if (def.behavior === "curse" && target && isUnit(target)) applyCurse(game, unit, order.ability, target, def);
-  else if (def.behavior === "summon" && !applySummon(game, unit, order.ability, at.x, at.y, def)) return end("blocked");
+  else if (def.behavior === "summon") {
+    const cast = applySummon(game, unit, order.ability, at.x, at.y, def);
+    if (!cast && isPlayerId(unit.owner) && receivesCommandFeedback(game, unit.owner)) return end("blocked");
+  }
   else if (def.behavior === "charge" && target && isUnit(target) && distance(unit, target) >= def.minRange && canReach(game.map, unit, target, game.units)) {
     // The charge's own rule sees to what follows it (see endCharge): the next queued order, else attacking its unit.
     startCharge(game, unit, order.ability, target, def, false);
@@ -4418,15 +4434,30 @@ function errandWalk(game: Game, unit: Unit, goal: { x: number; y: number }, reac
 // An order ended before it was done, and why (see @@@errand). The effect is presentation: its id is the unit's and the
 // tick's, so the entity counter does not move.
 function endOrder(game: Game, unit: Unit, reason: OrderEndReason, refusal?: import("./command-refusal").CommandRefusal) {
-  const command = commandForOrder(unit);
-  refusal ??= command && isPlayerId(unit.owner) ? refusalFor(game, unit.owner, command, { phase: "arrival" }) ?? undefined : undefined;
-  refusal ??= reason === "unreachable" ? { reason: "unreachable", detail: {} }
-    : reason === "target-gone" && command && "targetId" in command ? { reason: "target-gone", detail: { targetId: command.targetId } }
-    : { reason: "condition-unmet", detail: { category: reason === "no-room" || reason === "blocked" ? "occupied" : "state" } };
+  const feedback = isPlayerId(unit.owner) && receivesCommandFeedback(game, unit.owner);
+  const command = feedback ? commandForOrder(unit) : undefined;
+  if (feedback) {
+    refusal ??= command && isPlayerId(unit.owner) ? refusalFor(game, unit.owner, command, { phase: "arrival" }) ?? undefined : undefined;
+    refusal ??= reason === "unreachable" ? { reason: "unreachable", detail: {} }
+      : reason === "target-gone" && command && "targetId" in command ? { reason: "target-gone", detail: { targetId: command.targetId } }
+      : { reason: "condition-unmet", detail: { category: reason === "no-room" || reason === "blocked" ? "occupied" : "state" } };
+  }
   const id = `ended-${unit.id}-${game.tick}`;
   if (!game.effects.some((effect) => effect.id === id))
-    game.effects.push({ id, type: "orderEnded", x: unit.x, y: unit.y, remaining: seconds(.4), duration: seconds(.4), unitId: unit.id, owner: unit.owner, sourceKind: unit.kind, orderType: unit.order.type, reason, feedbackStatus: "rejected", ...(command ? { commandType: command.type } : {}), refusal });
+    game.effects.push({ id, type: "orderEnded", x: unit.x, y: unit.y, remaining: seconds(.4), duration: seconds(.4), unitId: unit.id, owner: unit.owner, sourceKind: unit.kind, orderType: unit.order.type, reason, ...(feedback ? { feedbackStatus: "rejected" as const } : {}), ...(command ? { commandType: command.type } : {}), ...(refusal ? { refusal } : {}) });
   finishUnitCommand(game, unit);
+}
+
+function rejectGarrison(game: Game, unit: Unit, refusal: import("./command-refusal").GarrisonRefusal,
+  command: Extract<GameCommand, { type: "garrison" }>) {
+  if (isPlayerId(unit.owner) && receivesCommandFeedback(game, unit.owner)) {
+    emitCommandRefusal(game, unit.owner, command, refusal, unit);
+    return;
+  }
+  const id = `ended-${unit.id}-${game.tick}-garrison`;
+  if (!game.effects.some(effect => effect.id === id)) game.effects.push({ id, type: "orderEnded", x: unit.x, y: unit.y,
+    remaining: seconds(.4), duration: seconds(.4), unitId: unit.id, owner: unit.owner, sourceKind: unit.kind,
+    orderType: "garrison", reason: refusal.reason === "tower-full" ? "no-room" : refusal.reason === "garrison-ownership" ? "target-gone" : "refused", refusal });
 }
 
 function finishUnitCommand(game: Game, unit: Unit) {
