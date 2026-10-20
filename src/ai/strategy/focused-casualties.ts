@@ -74,6 +74,65 @@ export function experimentalMixedCasualties(units: readonly Unit[], damageExposu
       settled.survivors.find(unit => unit.unitId === wound.unitId)!.hp) })) };
 }
 
+/** Mechanism calibration only. The order and reaction-window burst are facts
+ * supplied from the initial combat geometry, never observed future victims.
+ * The only fitted values are engagementShare and retreatHpRatio. A selected
+ * fighter takes sustained damage down to the retreat boundary, then at most
+ * one reaction-window burst before withdrawing. Overkill is spent on that
+ * victim; it cannot be redirected to another soldier. Damage left after the
+ * selected front withdraws is avoided, not pushed into the unengaged rear. */
+export function experimentalRetreatCasualties(input: Readonly<{
+  units: readonly Unit[]; damageExposure: number; engagementOrder: readonly string[];
+  exposureKind: 'damage-potential' | 'effective-hp';
+  burstByUnit: readonly Readonly<{ unitId: string; damage: number }>[];
+  engagementShare: number; retreatHpRatio: number;
+}>, recovery: readonly RecoveryService[] = []) {
+  const { units, damageExposure, engagementShare, retreatHpRatio } = input;
+  const baseline = focusedCasualties(units, 0, recovery);
+  if (!Number.isFinite(damageExposure) || damageExposure < 0 || !Number.isFinite(engagementShare)
+    || engagementShare < 0 || engagementShare > 1 || !Number.isFinite(retreatHpRatio) || retreatHpRatio < 0 || retreatHpRatio > 1
+    || input.exposureKind !== 'damage-potential' && input.exposureKind !== 'effective-hp')
+    throw new Error('Invalid casualty retreat parameters');
+  const byId = new Map(units.map(unit => [unit.id, unit])), order = new Set(input.engagementOrder);
+  if (order.size !== input.engagementOrder.length || input.engagementOrder.some(id => !byId.get(id) || byId.get(id)!.hp <= 0))
+    throw new Error('Invalid casualty engagement order');
+  const bursts = new Map<string, number>();
+  for (const burst of input.burstByUnit) {
+    if (!byId.has(burst.unitId) || bursts.has(burst.unitId) || !Number.isFinite(burst.damage) || burst.damage < 0)
+      throw new Error('Invalid casualty reaction burst');
+    bursts.set(burst.unitId, burst.damage);
+  }
+  if (input.engagementOrder.some(id => !bursts.has(id))) throw new Error('Missing casualty reaction burst');
+  const engagedUnitIds = input.engagementOrder.slice(0, Math.ceil(input.engagementOrder.length * engagementShare));
+  const engaged = new Set(engagedUnitIds), damage = new Map<string, number>(), withdrawnUnitIds: string[] = [];
+  let left = damageExposure, overkillDamage = 0;
+  for (const id of engagedUnitIds) {
+    const unit = byId.get(id)!, threshold = unit.maxHp * retreatHpRatio;
+    const sustained = Math.min(left, Math.max(0, unit.hp - threshold));
+    let hp = unit.hp - sustained;
+    left -= sustained;
+    if (hp > 0 && hp <= threshold) {
+      const burst = Math.min(left, bursts.get(id)!), effective = Math.min(hp, burst);
+      // An effective-HP audit already removed overkill from its input budget.
+      const spent = input.exposureKind === 'effective-hp' ? effective : burst;
+      left -= spent; overkillDamage += spent - effective;
+      hp -= effective;
+      if (hp > 0) withdrawnUnitIds.push(id);
+    }
+    damage.set(id, unit.hp - hp);
+  }
+  // Settlement, catalog death price and recovery stay in the same shared model.
+  const settled = units.slice().sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+    .map(unit => focusedCasualties([unit], damage.get(unit.id) ?? 0, recovery.filter(service => service.unitId === unit.id)));
+  return { ...baseline, damageExposure, exposureKind: input.exposureKind,
+    expectedHpLost: settled.reduce((sum, part) => sum + part.expectedHpLost, 0),
+    expectedLossGold: settled.reduce((sum, part) => sum + part.expectedLossGold, 0),
+    unappliedDamage: overkillDamage + left, overkillDamage, avoidedDamage: left,
+    deadUnitIds: settled.flatMap(part => part.deadUnitIds), permanentDeadUnitIds: settled.flatMap(part => part.permanentDeadUnitIds),
+    survivors: settled.flatMap(part => part.survivors), wounds: settled.flatMap(part => part.wounds),
+    engagedUnitIds, withdrawnUnitIds, unengagedUnitIds: baseline.survivors.filter(unit => !engaged.has(unit.unitId)).map(unit => unit.unitId) };
+}
+
 /** Assessment copies only. The original entities and their HP are untouched. */
 export function casualtySurvivors(units: readonly Unit[], casualties: ReturnType<typeof focusedCasualties>): Unit[] {
   const byId = new Map(units.map(unit => [unit.id, unit]));

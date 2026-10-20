@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createUnit } from '../../shared/map';
 import { UNIT_DEFS } from '../../shared/catalog';
-import { casualtySurvivors, experimentalMixedCasualties, focusedCasualties } from './focused-casualties';
+import { casualtySurvivors, experimentalMixedCasualties, experimentalRetreatCasualties, focusedCasualties } from './focused-casualties';
 
 const party = () => ['a', 'b', 'c', 'd', 'e'].map(id => createUnit(id, 'us', 'emberRavager', 1000, 1000));
 
@@ -99,5 +99,49 @@ describe('experimental global damage mixture', () => {
       .toBe(10 + Math.ceil(value.wounds.find(wound => wound.unitId === 'a')!.missingHp / 2));
     expect(value.wounds.find(wound => wound.unitId === 'b')!.readyInTicks).toBeNull();
     for (const alpha of [-.1, 1.1, NaN, Infinity]) expect(() => experimentalMixedCasualties(units, 25, alpha)).toThrow();
+  });
+});
+
+describe('experimental engagement and retreat mechanism', () => {
+  const frame = (burst: number) => ({ units: party().slice(0, 3).map(unit => ({ ...unit, hp: 100, maxHp: 100 })),
+    damageExposure: 150, exposureKind: 'damage-potential' as const,
+    engagementOrder: ['b', 'a', 'c'], burstByUnit: ['a', 'b', 'c'].map(unitId => ({ unitId, damage: burst })),
+    engagementShare: 1 / 3, retreatHpRatio: .35 });
+
+  it('withdraws a wounded front member and never redirects leftover damage into the unengaged rear', () => {
+    const input = frame(10), before = JSON.stringify(input), result = experimentalRetreatCasualties(input);
+    expect(result).toMatchObject({ engagedUnitIds: ['b'], withdrawnUnitIds: ['b'], unengagedUnitIds: ['a', 'c'],
+      deadUnitIds: [], expectedLossGold: 0, expectedHpLost: 75, avoidedDamage: 75, overkillDamage: 0, unappliedDamage: 75 });
+    expect(result.survivors.map(unit => [unit.unitId, unit.hp])).toEqual([['a', 100], ['b', 25], ['c', 100]]);
+    expect(JSON.stringify(input)).toBe(before);
+  });
+
+  it('charges an actual burst kill, retaining overkill instead of charging it to another unit', () => {
+    const result = experimentalRetreatCasualties(frame(50));
+    expect(result).toMatchObject({ deadUnitIds: ['b'], permanentDeadUnitIds: ['b'], withdrawnUnitIds: [], expectedHpLost: 100,
+      expectedLossGold: UNIT_DEFS.emberRavager.cost, avoidedDamage: 35, overkillDamage: 15, unappliedDamage: 50 });
+    expect(result.expectedHpLost + result.overkillDamage + result.avoidedDamage).toBe(result.damageExposure);
+    expect(experimentalRetreatCasualties({ ...frame(50), exposureKind: 'effective-hp' })).toMatchObject({
+      deadUnitIds: ['b'], expectedHpLost: 100, overkillDamage: 0, avoidedDamage: 50 });
+  });
+
+  it('keeps limited wounds, explicit recovery and serialized initial geometry consistent', () => {
+    const input = { ...frame(10), damageExposure: 10 }, recovery = [{ unitId: 'b', hpPerTick: 2, startsInTicks: 3 }];
+    const result = experimentalRetreatCasualties(input, recovery);
+    expect(result.withdrawnUnitIds).toEqual([]);
+    expect(result.wounds).toEqual([{ unitId: 'b', missingHp: 10, battleDamage: 10,
+      startsInTicks: 3, durationTicks: 5, readyInTicks: 8 }]);
+    expect(experimentalRetreatCasualties(JSON.parse(JSON.stringify(input)), recovery)).toEqual(result);
+    expect(experimentalRetreatCasualties({ ...input, units: [...input.units].reverse() }, recovery)).toEqual(result);
+    const none = experimentalRetreatCasualties({ ...input, engagementShare: 0 });
+    expect(none).toMatchObject({ expectedHpLost: 0, avoidedDamage: 10, expectedLossGold: 0 });
+  });
+
+  it('rejects missing burst evidence and an invented or duplicated combatant', () => {
+    const input = frame(10);
+    expect(() => experimentalRetreatCasualties({ ...input, burstByUnit: [] })).toThrow(/Missing/);
+    expect(() => experimentalRetreatCasualties({ ...input, engagementOrder: ['b', 'b'] })).toThrow(/order/);
+    expect(() => experimentalRetreatCasualties({ ...input, engagementOrder: ['future-member'] })).toThrow(/order/);
+    expect(() => experimentalRetreatCasualties({ ...input, engagementShare: 1.1 })).toThrow();
   });
 });
