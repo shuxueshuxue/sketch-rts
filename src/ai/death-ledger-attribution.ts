@@ -4,7 +4,7 @@ import type { UnitOrder } from '../shared/types';
 import type { AiUnitDeathRecord } from './death-ledger-types';
 import type { DeathAttributionContext, Evidence, Location, UnitRole } from './strategy/types';
 
-/** Projects legacy evidence into the common join contract without inventing allocator IDs. */
+/** Projects previous evidence into the common join contract without inventing allocator IDs. */
 export function deathAttributionContext(record: Pick<AiUnitDeathRecord,
   'tick' | 'unit' | 'location' | 'assignment' | 'currentOrder' | 'currentOrderIssuer'>): DeathAttributionContext {
   const { unit, assignment, currentOrderIssuer: issuer } = record;

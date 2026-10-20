@@ -11,6 +11,7 @@ import type { AiDeathLedger } from '../src/ai/death-ledger';
 import type { AiPolicyMemory } from '../src/ai/memory';
 import type { AiPlanTrace } from '../src/ai/plan-trace';
 import type { AiGameRunInput } from '../src/ai/game-runner';
+import type { Building } from '../src/shared/types';
 
 const [base, caseFile, out, mode] = process.argv.slice(2);
 if (!base || !caseFile || !out || !['control', 'observe'].includes(mode!)) throw new Error('Expected source-tree case.json output-dir control|observe');
@@ -26,6 +27,7 @@ const memories: Record<string, AiPolicyMemory> = {}, memoryProvider = createAiMe
 const previous: Record<string, AiPlanTrace> = {}, durations: { tick: number; owner: string; plannerMs: number; observerMs: number; totalMs: number }[] = [];
 const fds = new Map<string, number>(), plannedHash = createHash('sha256'), commandHash = createHash('sha256');
 let ledger: AiDeathLedger | undefined, plannedCount = 0, commandCount = 0, worldTick = -1, finalGame: Parameters<typeof checksumGame>[0];
+let buildingsBefore: Building[] = [];
 mkdirSync(out, { recursive: true });
 const log = (name: string, row: unknown) => {
   let fd = fds.get(name);
@@ -70,7 +72,12 @@ const loop = runAiGameLoop({ ...config, commandPlanner({ game, snapshot, owner, 
     const row = { tick, owner, source, scriptId, command };
     commandHash.update(JSON.stringify(row) + '\n'); commandCount++; log('commands', row);
   },
+  beforeStep({ game }) { buildingsBefore = [...game.buildings]; },
   onStep({ game }) {
+    const liveBuildings = new Set(game.buildings.map(building => building.id));
+    for (const building of buildingsBefore) if (building.hp <= 0 && !liveBuildings.has(building.id)) log('building-losses', {
+      tick: game.tick, id: building.id, owner: building.owner, kind: building.kind, x: building.x, y: building.y,
+      hp: building.hp, evidence: 'nonpositive-hp-and-native-removal', killer: null });
     if (game.tick % 1200 === 0) log('checksums', { tick: game.tick, checksum: checksumGame(game) });
   },
 });

@@ -69,8 +69,12 @@ export class AiDeathLedger {
   }
 
   private sample(state: UnitHistory, unit: Pick<Unit, 'hp' | 'maxHp'>, tick: number, source: AiUnitDeathRecord['health'][number]['source']) {
+    const previous = state.health.at(-1);
+    if (previous?.tick === tick && previous.source === source && previous.hp === unit.hp && previous.maxHp === unit.maxHp) return;
     state.health.push({ tick, hp: unit.hp, maxHp: unit.maxHp, source });
-    state.health = state.health.filter(point => point.tick >= tick - HISTORY_TICKS).slice(-HEALTH_POINTS);
+    let remove = Math.max(0, state.health.length - HEALTH_POINTS);
+    while (remove < state.health.length && state.health[remove]!.tick < tick - HISTORY_TICKS) remove++;
+    if (remove) state.health.splice(0, remove);
   }
 
   /** Copies only selected task facts and health points; does not call selectors or alter their caches. */
@@ -247,7 +251,7 @@ export class AiDeathLedger {
           && ship.hp > 0 && isTransportKind(ship.kind)).map(ship => ship.id),
         evacuationAssigned: assignment.task?.kind === 'workerSafety' || assignment.task?.stage?.startsWith('evacuate:') === true,
         escapeRoute: 'not-evaluated', switches: state.switches, wornRetreatTick: state.wornTick },
-      limitations: ['legacy-task-and-arrival-inference', 'formal-method-utility-and-combat-range-not-recorded',
+      limitations: ['previous-task-and-arrival-inference', 'formal-method-utility-and-combat-range-not-recorded',
         'local-ratio-is-a-diagnostic-not-a-fight-simulation', 'escape-route-not-evaluated', 'health-history-sampled-and-bounded',
         ...(!source ? ['fatal-source-not-recorded'] : !source.present && !remembered ? ['original-source-kind-unresolved'] : []),
         ...(currentOrderIssuer?.executor ? [] : ['current-order-executor-not-recorded']), 'issued-order-history-limited-to-64'],

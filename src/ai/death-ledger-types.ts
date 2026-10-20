@@ -30,7 +30,7 @@ export type AiDeathAssignment = {
   state: 'unassigned' | 'assigned' | 'en-route' | 'on-station' | 'emergency-interruption';
   stateAttribution: 'inferred';
   evidence: string[];
-  /** No formal objective acceptance range exists in the legacy modules. */
+  /** No formal objective acceptance range exists in the previous modules. */
   plannedBalanceRange: null;
 };
 
@@ -73,7 +73,7 @@ export type AiUnitDeathRecord = {
     source: ObservedSource; profile: Observed<DamageProfile>; damage: number; hits: number;
   }[] };
   assignment: AiDeathAssignment;
-  /** Shared strategy-layer join schema. Legacy task membership does not create formal allocations. */
+  /** Shared strategy-layer join schema. Previous task membership does not create formal allocations. */
   attributionContext: DeathAttributionContext;
   currentOrder: ObservedUnit['order'];
   /** Can differ from the last issued command when a later command was queued or instantaneous. */
