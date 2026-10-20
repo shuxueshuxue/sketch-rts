@@ -8,6 +8,13 @@ import { observationMemory } from './observation-memory';
 const map = (): GameMap => ({ id: 'bareDuel', name: 'Goal field test', landmarks: [], width: 1000, height: 500,
   terrain: { cols: 20, rows: 10, cell: 50, cells: '.'.repeat(200) } });
 describe('event-refreshed planning goal fields', () => {
+  it('does not change a retained field when its detached computation buffer is reused', () => {
+    const world = map(), goal = { x: 875, y: 125 }, from = { x: 125, y: 125 };
+    const old = groundDistanceField(world, goal)!, before = old.cost(from);
+    for (const next of [{ x: 125, y: 375 }, { x: 475, y: 275 }, { x: 875, y: 375 }]) groundDistanceField(world, next);
+    expect(old.cost(from)).toBe(before);
+    expect(old.road(from, goal)).toEqual([from, goal]);
+  });
   it('reuses one building-aware field for all actors and refreshes on construction', () => {
     const world = map(), goal = { x: 875, y: 125 }, from = { x: 125, y: 125 };
     const clear = groundDistanceField(world, goal)!;

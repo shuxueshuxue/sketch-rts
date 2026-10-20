@@ -1288,6 +1288,20 @@ const distanceFieldWork = new WeakMap<GroundDistanceField, number>();
 const pendingDistanceFields = new WeakMap<TerrainRuntime, { revision: number; jobs: Map<number, { flow: BoxFlow; progress: number }> }>();
 export const GOAL_DISTANCE_FIELD_LIMIT: Readonly<Record<Mover, number>> = { land: 24, sea: 32 };
 export const PENDING_GOAL_DISTANCE_FIELD_LIMIT = 8;
+type GoalScratch = { dist: Int32Array; buckets: number[][] };
+const goalScratch = new WeakMap<TerrainRuntime, GoalScratch[]>();
+const emptyGoalNext = new Int32Array(0);
+function takeGoalScratch(state: TerrainRuntime, cells: number): GoalScratch {
+  const pool = goalScratch.get(state), index = pool?.findIndex(value => value.dist.length === cells) ?? -1;
+  return index >= 0 ? pool!.splice(index, 1)[0]! : { dist: new Int32Array(cells), buckets: Array.from({ length: BUCKETS }, () => []) };
+}
+function releaseGoalScratch(state: TerrainRuntime, value: GoalScratch) {
+  let pool = goalScratch.get(state);
+  if (!pool) goalScratch.set(state, pool = []);
+  for (const bucket of value.buckets) bucket.length = 0;
+  if (pool.length >= 2) pool.shift();
+  pool.push(value);
+}
 const fieldStorage = new WeakMap<GroundDistanceField, { cells: number; distanceBytes: number; descentBytes: number }>();
 /** Diagnostic byte counts only; no array or mutable cache is exposed. */
 export function goalDistanceFieldStorage(field: GroundDistanceField) {
@@ -1320,11 +1334,14 @@ export function moverDistanceField(map: Pick<GameMap, 'terrain'>, goal: Point, m
   if (known || peek) return known;
   const box = goalDistanceBox(ground, target);
   const { seeds, costs } = goalSeeds(state, ground, target, box);
-  const field = beginBoxFlow(state, box, seeds, costs, { dist: new Int32Array(box.width * box.height), next: new Int32Array(0) },
-    Array.from({ length: BUCKETS }, () => []));
+  const scratch = takeGoalScratch(state, box.width * box.height);
+  const field = beginBoxFlow(state, box, seeds, costs, { dist: scratch.dist, next: emptyGoalNext }, scratch.buckets);
   growBoxInto(state, box, seeds, costs, field, field);
   const scale = terrain.cell / (STRAIGHT * GROUND_WEIGHT);
   const answer = distanceFieldAnswer(state, ground, field, scale);
+  // Never recycle an answer's own array: old callers may still hold it. Only
+  // the detached Int32 work buffer of a compact answer can re-enter the pool.
+  if (fieldStorage.get(answer)!.distanceBytes < field.dist.byteLength) releaseGoalScratch(state, scratch);
   distanceFieldWork.set(answer, field.work);
   if (cache.fields.size >= GOAL_DISTANCE_FIELD_LIMIT[mover]) cache.fields.delete(cache.fields.keys().next().value!);
   cache.fields.set(target, answer);
@@ -1396,10 +1413,13 @@ export function prepareMoverDistanceField(map: Pick<GameMap, 'terrain'>, goal: P
   if (!retained) {
     const box = goalDistanceBox(ground, target);
     const { seeds, costs } = goalSeeds(state, ground, target, box);
-    const flow = beginBoxFlow(state, box, seeds, costs, { dist: new Int32Array(box.width * box.height), next: new Int32Array(0) },
-      Array.from({ length: BUCKETS }, () => []));
     // Limit abandoned candidates' sidecar geometry, independently of game state.
-    if (pending.jobs.size >= PENDING_GOAL_DISTANCE_FIELD_LIMIT) pending.jobs.delete(pending.jobs.keys().next().value!);
+    if (pending.jobs.size >= PENDING_GOAL_DISTANCE_FIELD_LIMIT) {
+      const oldest = pending.jobs.keys().next().value!, abandoned = pending.jobs.get(oldest)!;
+      pending.jobs.delete(oldest); releaseGoalScratch(state, abandoned.flow);
+    }
+    const scratch = takeGoalScratch(state, box.width * box.height);
+    const flow = beginBoxFlow(state, box, seeds, costs, { dist: scratch.dist, next: emptyGoalNext }, scratch.buckets);
     pending.jobs.set(target, retained = { flow, progress: 0 });
   }
   const job = retained.flow;
@@ -1410,6 +1430,7 @@ export function prepareMoverDistanceField(map: Pick<GameMap, 'terrain'>, goal: P
   if (job.pending || job.seeded < job.order.length) return { field: undefined, work: throughWork, complete: false };
   pending.jobs.delete(target);
   const field = distanceFieldAnswer(state, ground, job, terrain.cell / (STRAIGHT * GROUND_WEIGHT));
+  if (fieldStorage.get(field)!.distanceBytes < job.dist.byteLength) releaseGoalScratch(state, job);
   distanceFieldWork.set(field, retained.progress);
   const cache = distanceFields.get(state)!;
   if (cache.fields.size >= GOAL_DISTANCE_FIELD_LIMIT[mover]) cache.fields.delete(cache.fields.keys().next().value!);

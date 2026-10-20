@@ -4,6 +4,7 @@ import type { Terrain } from '../../shared/terrain';
 import type { GameSnapshot, PlayerId } from '../../shared/types';
 import type { AiPolicyMemory } from '../memory';
 import type { Asset, Objective, Opportunity, Point, Situation } from './types';
+import { observationJsonBytes } from './observation-json-bytes';
 
 export type PreviousObjective = Pick<Objective, 'id' | 'sinceTick' | 'stability'> & { utility: Pick<Objective['utility'], 'score'> };
 export type SituationHistory = Pick<Situation, 'tick' | 'owner' | 'assets' | 'opportunities'>;
@@ -21,7 +22,6 @@ export type StrategyObservationMemory = {
 export const OBSERVATION_FIELD_LIMIT = 64;
 export const OBSERVATION_HISTORY_LIMIT = 256;
 export const OBSERVATION_BYTE_LIMIT = 64 * 1024;
-const encoder = new TextEncoder();
 const versions = new WeakMap<Terrain, { cells: string; key: string }>();
 /** Preserve every original field, including any nested fields named strategy. */
 export function originalPolicyMemory(memory: AiPolicyMemory) {
@@ -70,14 +70,22 @@ export function retainObservationHistory(state: StrategyObservationMemory, situa
   // Explicit serialization bound, independent of map area or number of entities.
   // Drop historical quotations before useful geometry progress. A gap is retained
   // as unknown; it cannot create a recovered-site history or a zero handoff cost.
-  while (encoder.encode(JSON.stringify({ observation: state })).byteLength > OBSERVATION_BYTE_LIMIT) {
-    state.truncated = true;
-    if (state.history.objectives.length) state.history.objectives.pop();
-    else if (state.history.lostSites.length) state.history.lostSites.shift();
-    else if (state.history.assets.length) state.history.assets.pop();
-    else if (state.crossings.length) state.crossings.shift();
-    else if (state.fields.land.length) state.fields.land.pop();
-    else if (state.fields.sea.length) state.fields.sea.pop();
+  let bytes = observationJsonBytes(state) + 16; // {"observation": ... }
+  if (bytes > OBSERVATION_BYTE_LIMIT && !state.truncated) {
+    state.truncated = true; bytes = observationJsonBytes(state) + 16;
+  }
+  const discard = (values: unknown[], first = false) => {
+    const comma = values.length > 1 ? 1 : 0;
+    const removed = first ? values.shift() : values.pop();
+    bytes -= observationJsonBytes(removed) + comma;
+  };
+  while (bytes > OBSERVATION_BYTE_LIMIT) {
+    if (state.history.objectives.length) discard(state.history.objectives);
+    else if (state.history.lostSites.length) discard(state.history.lostSites, true);
+    else if (state.history.assets.length) discard(state.history.assets);
+    else if (state.crossings.length) discard(state.crossings, true);
+    else if (state.fields.land.length) discard(state.fields.land);
+    else if (state.fields.sea.length) discard(state.fields.sea);
     else throw new Error('Strategy observation identity exceeds its serialization budget');
   }
 }
