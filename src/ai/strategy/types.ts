@@ -70,6 +70,17 @@ export type SituationUnit = Readonly<{
   commitments: readonly Commitment[];
   arrivals: readonly Readonly<{ targetId: string; arrival: Arrival }>[];
 }>;
+/** Native production limits, distinct from current income or a staffing forecast.
+ * The cap is before upkeep. standardWorkers is an economy allocation target,
+ * not a claim that every worker produces cap / standardWorkers on every route. */
+export type MiningCapacity = Readonly<{
+  goldPerTickCap: number;
+  standardWorkers: number;
+  staffedWorkerIds: readonly string[];
+  goldPerTrip: number;
+  gatherTicks: number;
+  entryIntervalTicks: number;
+}>;
 export type Asset = Readonly<{
   id: string;
   owner: PlayerId;
@@ -80,6 +91,8 @@ export type Asset = Readonly<{
   replacementGold: number;
   remainingGold: number;
   incomeGoldPerTick: number;
+  /** Mine-only physical facts. A prospective staffing curve is quoted separately. */
+  miningCapacity?: MiningCapacity;
   discountedValueGold: number;
 }>;
 export type SiteThreat = Readonly<{
@@ -235,7 +248,7 @@ export type Subgoal = Readonly<{
   parentMethodId: MethodId;
   kind: 'borrow-force' | 'train-force' | 'obtain-transport' | 'build-shipyard' | 'train-transport'
     | 'clear-beachhead' | 'change-landing' | 'deliver-force' | 'clear-camp' | 'deliver-workers'
-    | 'build-hall' | 'establish-garrison' | 'build-production' | 'provide-supply' | 'wait-income' | 'recover' | 'evacuate';
+    | 'build-hall' | 'start-mining' | 'establish-garrison' | 'build-production' | 'provide-supply' | 'wait-income' | 'recover' | 'evacuate';
   target: Target;
   demands: readonly ResourceDemand[];
   dependsOn: readonly string[];
