@@ -1,3 +1,4 @@
+import { assignmentClearsCamp } from './death-ledger-engagement';
 import type { AiDeathCategory, AiUnitDeathRecord, AiDeathClassificationV1, AiDeathEngagement, AiDeathDisposition } from './death-ledger-types';
 
 /** Versioned diagnostics over observations. These thresholds never feed the policy. */
@@ -63,6 +64,11 @@ export function classifyAiDeath(record: Omit<AiUnitDeathRecord, 'classification'
     const structural = (['recent-reassignment', 'out-of-bounds', 'post-worn-abandonment'] as const).find(tag => tags.includes(tag));
     if (structural) return result('suspicious', structural, '交战中出现结构性诊断，列为存疑待复核；不宣称其造成死亡');
     return result('normal', 'combat-loss', '附近有交战对手，窗口内有实际受伤或输出；撤退失败和局部劣势保留子标签，不单独判异常');
+  }
+  if (record.killer?.owner === 'neutral' && !assignmentClearsCamp(record.assignment, record.killer.id)
+    && [record.assignment.task, ...record.assignment.otherTaskCandidates].some(task => task?.clearing && task.clearingTargetIds !== undefined)) {
+    if (!tags.includes('neutral-outside-clearing')) tags.push('neutral-outside-clearing');
+    return result('abnormal', 'neutral-outside-clearing', '致死野怪不属于任何明确清营任务的目标营地；附近另有目标营地不构成交战交换证据');
   }
   if (engagement.status === 'unknown') return result('unattributed', 'unattributed', '交战证据不足，单列未知，不并入正常/存疑/异常');
   const outside = (['friendly-source', 'neutral-outside-clearing', 'logistics-transit', 'idle',

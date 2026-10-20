@@ -69,6 +69,18 @@ describe('death classification v2', () => {
     expect(classifyAiDeath(record, infer()).disposition).toBe('normal');
   });
 
+  it('preserves an older clearing export without target IDs, including unknown exchanges', () => {
+    const { record } = casualty();
+    record.killer = { ...record.killer!, owner: 'neutral' };
+    record.assignment.task = { id: 'previous-clear', kind: 'clear-camp', targetId: null, stage: 'engage', source: 'v6.general',
+      attribution: 'inferred', methodId: null, utility: null, combat: true, clearing: true, perimeter: null };
+    const original = structuredClone(record), engagement = { ...record.classification.engagement, status: 'unknown' as const,
+      receivedDamage: 0, dealtDamage: null };
+    expect(classifyAiDeath(record, engagement)).toMatchObject({ disposition: 'unattributed', primary: 'unattributed' });
+    expect(classifyAiDeath(record, { ...engagement, status: 'engaged' })).toMatchObject({ disposition: 'normal', primary: 'combat-loss' });
+    expect(record).toEqual(original);
+  });
+
   it('does not count unrelated neutral wounds as an exchange with nearby player opponents', () => {
     const { record, identities, teams } = casualty();
     record.killer = { ...record.killer!, owner: 'neutral' };
