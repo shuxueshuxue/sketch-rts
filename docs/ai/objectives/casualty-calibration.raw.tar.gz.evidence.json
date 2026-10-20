@@ -1,0 +1,8 @@
+{
+  "sha256": "6e0e0067fa699d77e941e4c736ffcf6e4c52a0501f54605f39fbe31de4c3a542",
+  "bytes": 6418585,
+  "name": "casualty-calibration.raw.tar.gz",
+  "kind": "file",
+  "machine": "a100",
+  "pushed": "6685a6cacaa719f997932a317bc966b7aca36825"
+}
