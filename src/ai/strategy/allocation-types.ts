@@ -150,6 +150,8 @@ export type VoyageAllocation = Readonly<{
   expectedFreeTick: number | null;
   /** Absolute embarkation completion; null/absent when this stage is unquoted. */
   expectedLoadedTick?: number | null;
+  /** Source think of the loading forecast, retained with the prediction. */
+  loadingForecastTick?: number | null;
   decision: 'continue' | 'stop-loading' | 'return' | 'redirect';
 }>;
 /** Candidate geometry and manifest chosen by materialize. The allocator may
