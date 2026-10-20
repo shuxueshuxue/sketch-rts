@@ -1,7 +1,10 @@
-import { unitMover } from '../../shared/catalog';
+import { UNIT_DEFS, unitMover } from '../../shared/catalog';
+import { combatCapability } from '../../shared/combat-capabilities';
+import { strikeGap } from '../../shared/combat-geometry';
 import { walkableGoal } from '../../shared/terrain';
+import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { GameSnapshot, PlayerId, Unit } from '../../shared/types';
-import { strengthOf } from '../policy/v6/strength';
+import { strengthOf, structureRating } from '../policy/v6/strength';
 import { creepForce, forceFor, type Camp } from '../policy/v7/creep';
 import { isOpponentOwner } from '../policy/ownership';
 import { distance } from '../policy/spatial';
@@ -11,6 +14,7 @@ import { landIdAt } from './regions';
 import { strategicTargetCamp } from './target-camp';
 import type { Situation, Target } from './types';
 import { unitArrival } from './unit-arrivals';
+import { assetSurvivalProbability, forceSuccessProbability } from './utility';
 
 export type AllocatedForceTarget =
   | Readonly<{ metric: 'field-strength'; requiredForce: number }>
@@ -113,4 +117,101 @@ export function assessAllocatedCampEngagement(input: TargetReinforcementInput & 
     knownOpponentForce: weighted.effectiveForce, actualOpponentForce: unknownEnemyIds.length ? null : weighted.effectiveForce,
     knownOurForce, ourForce: unknownEnemyIds.length ? null : knownOurForce,
     requiredForce: unknownEnemyIds.length ? null : weighted.effectiveForce + margin, margin, opposition };
+}
+
+/** Use the actual target's strike surface when it exists. Structures remain
+ * structures, never members of a navigational neutral camp. */
+export function targetCoveringTowers(snapshot: GameSnapshot, owner: PlayerId, target: Target, side: 'own' | 'opponent', plannedAssetRadius = 0) {
+  if (!Number.isFinite(plannedAssetRadius) || plannedAssetRadius < 0) throw new Error('Invalid planned asset radius');
+  const actualTarget = snapshot.buildings.find(building => building.id === target.entityId)
+    ?? (plannedAssetRadius ? { ...target.point, radius: plannedAssetRadius } : target.point);
+  return snapshot.buildings.filter(tower => tower.complete && tower.hp > 0 && tower.attackDamage > 0
+    && (side === 'own' ? tower.owner === owner : isOpponentOwner(snapshot, owner, tower.owner, {}))
+    && strikeGap(tower, actualTarget) <= tower.attackRange);
+}
+
+/** A bounded, monotone forecast of the first battle, not the economic holding
+ * window. New arrivals may prolong a fight, but a unit cannot join before the
+ * preceding forecast reaches its ETA. Lifetimes use the same engagement facts.
+ * An iteration limit is unknown, not an accepted last approximation. */
+export function assessAllocatedCampBattle(input: Omit<TargetReinforcementInput, 'windowTicks'> & Readonly<{
+  unitIds: readonly string[]; maxIterations?: number }>) {
+  const { snapshot, situation, target, battleStartTicks } = input;
+  const maxIterations = input.maxIterations ?? 8;
+  if (!Number.isInteger(maxIterations) || maxIterations < 1 || maxIterations > 32) throw new Error('Invalid camp battle iteration bound');
+  const selected = new Set(input.unitIds), ours = snapshot.units.filter(unit => selected.has(unit.id)
+    && unit.owner === situation.owner && unit.hp > 0 && unit.attackDamage > 0);
+  const dps = ours.reduce((sum, unit) => sum + combatCapability(snapshot, unit).dps, 0);
+  const camp = strategicTargetCamp(snapshot, target), towers = targetCoveringTowers(snapshot, situation.owner, target, 'opponent');
+  let durationTicks = Math.max(1, dps > 0 ? Math.ceil((camp?.creeps.reduce((sum, unit) => sum + unit.hp, 0) ?? 0)
+    / dps * SIM_TICKS_PER_SECOND) : 1);
+  let engagement = assessAllocatedCampEngagement({ ...input, windowTicks: durationTicks });
+  let converged = false, iterations = 0;
+  for (; iterations < maxIterations; iterations++) {
+    engagement = assessAllocatedCampEngagement({ ...input, windowTicks: durationTicks });
+    const next = dps > 0 ? Math.max(1, Math.ceil(engagement.opposition.creeps.reduce((sum, unit) => sum + unit.hp, 0)
+      / dps * SIM_TICKS_PER_SECOND)) : durationTicks;
+    if (next <= durationTicks) { converged = true; iterations++; break; }
+    durationTicks = next;
+  }
+  if (!converged) engagement = assessAllocatedCampEngagement({ ...input, windowTicks: durationTicks });
+  const opponentForce = engagement.actualOpponentForce === null ? null : engagement.actualOpponentForce
+    + towers.reduce((sum, tower) => sum + structureRating(tower), 0);
+  const ourForce = engagement.ourForce === null ? null : towers.length ? creepForce(ours) : engagement.ourForce;
+  const expires = ours.filter(unit => unit.expiresTick !== undefined && unit.expiresTick <= snapshot.tick + battleStartTicks + durationTicks);
+  const status = converged && dps > 0 && engagement.status === 'known' && !expires.length ? 'known' as const : 'unknown' as const;
+  const probability = status === 'known' ? forceSuccessProbability(ourForce!, opponentForce!) : null;
+  const availability = new Map(engagement.enemyAvailability.map(entry => [entry.unitId, entry]));
+  const frontRange = ours.length ? Math.min(...ours.map(unit => unit.attackRange)) : 0;
+  // Proportional HP exposure is a stated attrition heuristic. The same forecast
+  // produces both the loss cost and permanent survivors used by the hall quote;
+  // no second probability multiplier or departure margin enters this estimate.
+  const damage = engagement.opposition.creeps.reduce((sum, opponent) => {
+    const life = availability.get(opponent.id);
+    const seconds = ((life?.throughTicks ?? battleStartTicks + durationTicks) - (life?.fromTicks ?? battleStartTicks)) / SIM_TICKS_PER_SECOND;
+    const approach = Math.max(0, frontRange - opponent.attackRange) / Math.max(1, opponent.speed);
+    const original = snapshot.units.find(unit => unit.id === opponent.id)!;
+    return sum + combatCapability(snapshot, original).dps * Math.max(0, seconds - approach);
+  }, towers.reduce((sum, tower) => sum + tower.attackDamage / Math.max(1, tower.attackCooldown) * durationTicks, 0));
+  const hp = ours.reduce((sum, unit) => sum + unit.hp, 0), lossShare = Math.min(1, damage / Math.max(1, hp));
+  const permanent = ours.filter(unit => unit.expiresTick === undefined);
+  return { status, reasonCode: !converged ? 'camp-battle-iteration-limit' : !dps ? 'allocated-battle-dps-unavailable'
+    : expires.length ? 'allocated-cohort-expires-during-battle' : engagement.status === 'unknown' ? 'battle-enemy-arrival-unknown' : 'camp-battle-converged',
+    converged, iterations, battleStartTicks, durationTicks, battleUntilTicks: battleStartTicks + durationTicks, dps,
+    engagement, coveringTowerIds: towers.map(tower => tower.id).sort(), actualOpponentForce: opponentForce,
+    knownOurForce: ourForce, ourForce: status === 'known' ? ourForce : null,
+    requiredForce: opponentForce === null ? null : opponentForce + engagement.margin, successProbability: probability,
+    expiringOwnIds: expires.map(unit => unit.id).sort(),
+    attrition: { damageExposure: damage, expectedHpLost: hp * lossShare, lossShare,
+      expectedLossGold: ours.reduce((sum, unit) => sum + UNIT_DEFS[unit.kind].cost, 0) * lossShare,
+      permanentUnitIds: permanent.map(unit => unit.id).sort(),
+      survivors: permanent.map(unit => ({ unitId: unit.id, hp: unit.hp * (1 - lossShare), maxHp: unit.maxHp })),
+      survivingCampForce: creepForce(permanent) * (1 - lossShare), survivingFieldForce: strengthOf(permanent) * (1 - lossShare) } };
+}
+
+/** Conditional on winning the first fight: those opponents have been resolved.
+ * Later actual player arrivals and local structure fire price the new asset.
+ * The income comparison window is separate from this asset's own completion ETA. */
+export function assessPostBattleSiteRisk(input: TargetReinforcementInput & Readonly<{
+  excludedEnemyIds: readonly string[]; survivingPermanentCampForce: number; plannedAssetRadius: number }>) {
+  if (!Number.isFinite(input.survivingPermanentCampForce) || input.survivingPermanentCampForce < 0)
+    throw new Error('Invalid surviving permanent camp force');
+  const excluded = new Set(input.excludedEnemyIds), reinforcement = targetEnemyReinforcements(input);
+  const onStation = reinforcement.onStation.filter(unit => !excluded.has(unit.id));
+  const arriving = reinforcement.arriving.filter(entry => !excluded.has(entry.unit.id));
+  const unknownEnemyIds = reinforcement.unknownEnemyIds.filter(id => !excluded.has(id));
+  const availability = reinforcement.availability.filter(entry => !excluded.has(entry.unitId));
+  const shares = new Map(availability.map(entry => [entry.unitId, entry.share]));
+  const weighted = arrivalWeightedForce(onStation, arriving, input.windowTicks,
+    group => group.reduce((sum, unit) => sum + creepForce([unit]) * (shares.get(unit.id) ?? 1), 0));
+  const ownTowers = targetCoveringTowers(input.snapshot, input.situation.owner, input.target, 'own', input.plannedAssetRadius);
+  const hostileTowers = targetCoveringTowers(input.snapshot, input.situation.owner, input.target, 'opponent', input.plannedAssetRadius);
+  const ownForce = input.survivingPermanentCampForce + ownTowers.reduce((sum, tower) => sum + structureRating(tower), 0);
+  const opponentForce = weighted.effectiveForce + hostileTowers.reduce((sum, tower) => sum + structureRating(tower), 0);
+  const status = unknownEnemyIds.length ? 'unknown' as const : 'known' as const;
+  const survivalProbability = assetSurvivalProbability(status === 'known' ? { status, ourForce: ownForce, opponentForce } : { status });
+  return { status, survivalProbability, ownForce, opponentForce, unknownEnemyIds,
+    memberIds: [...onStation, ...arriving.map(entry => entry.unit)].map(unit => unit.id).sort(), availability,
+    ownTowerIds: ownTowers.map(tower => tower.id).sort(), hostileTowerIds: hostileTowers.map(tower => tower.id).sort(),
+    battleStartTicks: input.battleStartTicks, throughTicks: input.battleStartTicks + input.windowTicks };
 }
