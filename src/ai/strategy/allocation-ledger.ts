@@ -1,5 +1,5 @@
 import { BUILDING_DEFS, UNIT_DEFS } from '../../shared/catalog';
-import type { GameCommand, GameSnapshot, UnitOrder } from '../../shared/types';
+import type { GameCommand, GameSnapshot, Unit, UnitOrder } from '../../shared/types';
 import { purchaseCost } from '../policy/script-runner';
 import type { ActionToken, AllocationBudget, AllocationPayment, AllocationUnmetDemand, CommandAdmission,
   ExecutableMethod, ExecutionAction, IssuedActionCommand, StrategyAllocationMemory } from './allocation-types';
@@ -148,6 +148,19 @@ export function matchesAllocationOrder(command: GameCommand, order: UnitOrder): 
   if (command.type === 'cast') return (order.type === 'cast' || order.type === 'charge')
     && order.targetId === command.targetId && (order.type === 'charge' || order.ability === command.ability
       && order.x === command.x && order.y === command.y);
+  return false;
+}
+
+/** Native transitions may replace board by a deck relation and build by repair
+ * of the new foundation. These are observed task progress, not a new issuer. */
+export function advancesAllocationCommand(snapshot: GameSnapshot, unit: Unit, command: GameCommand): boolean {
+  if (matchesAllocationOrder(command, unit.order) && unit.order.type !== 'idle') return true;
+  if (command.type === 'board') return unit.deck?.shipId === command.transportId || unit.cabin?.shipId === command.transportId;
+  if (command.type === 'build' && unit.order.type === 'repair') {
+    const id = unit.order.buildingId;
+    return snapshot.buildings.some(building => building.id === id && building.owner === unit.owner
+      && building.kind === command.buildingKind && Math.hypot(building.x - command.x, building.y - command.y) < 1);
+  }
   return false;
 }
 

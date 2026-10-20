@@ -1,6 +1,6 @@
 import type { GameCommand, GameSnapshot, Unit, UnitOrder } from '../../shared/types';
 import type { ActionToken, AllocationEvent, IncumbentOrderReceipt, StrategyAllocationMemory } from './allocation-types';
-import { matchesAllocationOrder } from './allocation-ledger';
+import { advancesAllocationCommand } from './allocation-ledger';
 import { incumbentCommandActor, type IncumbentCommandActor } from './incumbent-command-source';
 import { STRATEGY_ALLOCATION_LIMITS } from './control';
 
@@ -20,14 +20,7 @@ export function copyNativeOrder(order: Readonly<UnitOrder>): UnitOrder {
   return copy(order) as UnitOrder;
 }
 function advancing(snapshot: GameSnapshot, unit: Unit, receipt: IncumbentOrderReceipt): boolean {
-  if (matchesAllocationOrder(receipt.command, unit.order) && unit.order.type !== 'idle') return true;
-  if (receipt.command.type === 'board') return unit.deck?.shipId === receipt.command.transportId || unit.cabin?.shipId === receipt.command.transportId;
-  if (receipt.command.type === 'build' && unit.order.type === 'repair') {
-    const command = receipt.command, buildingId = unit.order.buildingId;
-    return snapshot.buildings.some(building => building.id === buildingId && building.owner === unit.owner
-      && building.kind === command.buildingKind && Math.hypot(building.x - command.x, building.y - command.y) < 1);
-  }
-  return false;
+  return advancesAllocationCommand(snapshot, unit, receipt.command);
 }
 
 /** Called only with the runner's final accepted subset. The sidecar identity
