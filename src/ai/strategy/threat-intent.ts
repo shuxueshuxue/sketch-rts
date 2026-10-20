@@ -1,5 +1,5 @@
 import type { GameSnapshot, PlayerId, Unit } from '../../shared/types';
-import { isOpponentOwner } from '../policy/ownership';
+import { strategyIsOpponent } from './ownership';
 import { distance } from '../policy/spatial';
 import { landIdAt } from './regions';
 import type { Asset, SiteThreat } from './types';
@@ -10,7 +10,7 @@ const SITE_RANGE = 650;
 
 /** Current orders assign an intrusion to one site. Geometric arrival facts are
  * unchanged: cancelling this order may still threaten any other reachable site. */
-export function createThreatIntentQuery(snapshot: GameSnapshot, owner: PlayerId, sites: readonly Site[]) {
+export function createThreatIntentQuery(snapshot: GameSnapshot, owner: PlayerId, sites: readonly Site[], teams = snapshot.teams) {
   const entities = new Map([...snapshot.buildings, ...snapshot.units].map(entity => [entity.id, entity]));
   const actual = new Map<string, Omit<Intent, 'kind'>>();
   const nearest = (point: { x: number; y: number }, reach = SITE_RANGE) => {
@@ -20,7 +20,7 @@ export function createThreatIntentQuery(snapshot: GameSnapshot, owner: PlayerId,
         || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))[0];
   };
   for (const unit of snapshot.units) {
-    if (unit.hp <= 0 || !isOpponentOwner(snapshot, owner, unit.owner, {})) continue;
+    if (unit.hp <= 0 || !strategyIsOpponent(snapshot, owner, unit.owner, teams)) continue;
     const order = unit.order;
     let site: Site | undefined, basis: Intent['basis'] = 'potential-route';
     if ((order.type === 'attack' || order.type === 'attackMove') && order.targetId) {

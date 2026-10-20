@@ -12,7 +12,7 @@ import type { AiPolicyMemory } from '../memory';
 import { incomingLandArmy } from '../policy/land-arrivals';
 import { postRecoveryAssignments } from '../bootstrap_1/front-recovery';
 import { mobileCare } from '../bootstrap_1/mobile-care';
-import { isOpponentOwner } from '../policy/ownership';
+import { strategyIsOpponent } from './ownership';
 import { distance } from '../policy/spatial';
 import { effectiveCombatRating, TOWER_STRENGTH, unitStrength } from '../policy/v6/strength';
 import { createArrivalQuery, crossingCandidateId, EXACT_CROSSING_CANDIDATES } from './arrivals';
@@ -94,7 +94,7 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
     ? mobileCare.claimsUnits!(snapshot, owner, { ...options, memory: structuredClone(memory) }) : new Set<string>();
   const acceptedHealing = new Map(observation?.healing.map(entry => [entry.unitId, entry.executor]));
   const enemies = new Set([...new Set(live.map(unit => unit.owner).concat(snapshot.buildings.map(building => building.owner)))]
-    .filter(other => isOpponentOwner(snapshot, owner, other, options)));
+    .filter(other => strategyIsOpponent(snapshot, owner, other, teams)));
   const foe = (other: string) => enemies.has(other);
   const weapons = new Map<Unit, ReturnType<typeof combatCapability>>();
   const weapon = (unit: Unit) => { let value = weapons.get(unit); if (!value) {
@@ -151,7 +151,7 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
       explanationRecipe(descriptions.mine, { id: mine.id, amount: mine.remainingGold, tick })));
   }
   for (const hall of halls.filter(hall => foe(hall.owner))) {
-    const guards = live.filter(unit => unit.owner !== 'neutral' && !isOpponentOwner(snapshot, hall.owner, unit.owner, options)
+    const guards = live.filter(unit => unit.owner !== 'neutral' && !strategyIsOpponent(snapshot, hall.owner, unit.owner, teams)
       && !unit.deck && !unit.cabin && unitMover(unit.kind) === 'land' && unit.kind !== 'worker' && distance(unit, hall) <= STATION_RANGE);
     const kind = !hall.complete ? 'construction' : 'weak-site';
     const hallId = hall.id, complete = hall.complete, guardCount = guards.length;
@@ -311,7 +311,7 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
     return row;
   });
   const threatEvidence = explanationRecipe(descriptions.threat, tick);
-  const threatIntent = createThreatIntentQuery(snapshot, owner, sites);
+  const threatIntent = createThreatIntentQuery(snapshot, owner, sites, teams);
   const threats: SiteThreat[] = sites.map(site => {
     const land = site.target.landId;
     const candidates = live.filter(unit => foe(unit.owner) && unitMover(unit.kind) === 'land' && !unit.deck && !unit.cabin

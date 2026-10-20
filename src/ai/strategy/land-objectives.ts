@@ -4,7 +4,7 @@ import { bodyMass } from '../../shared/physical-body';
 import { constructionWorkers } from '../../shared/construction';
 import { resolveUnitDamage, unitAttackDamageProfile } from '../../shared/damage';
 import type { Unit } from '../../shared/types';
-import { isOpponentOwner } from '../policy/ownership';
+import { strategyIsOpponent } from './ownership';
 import { creepForce, forceFor, neutralCamps, EXPANSION_GUARD_RANGE, type Camp } from '../policy/v7/creep';
 import { combatRating, structureRating } from '../policy/v6/strength';
 import type {
@@ -100,7 +100,7 @@ class LandModel {
     this.retained.tick = situation.tick;
     observations.set(context.memory, this.retained);
   }
-  foe(owner: string) { return isOpponentOwner(this.context.snapshot, this.context.owner, owner, {}); }
+  foe(owner: string) { return strategyIsOpponent(this.context.snapshot, this.context.owner, owner, this.context.teams); }
   mining(kind: LandKind) { return kind === 'ExpandLand' || kind === 'RecoverSite'; }
   income(asset: Asset | undefined) {
     return asset ? Math.max(0, Math.min(asset.remainingGold, asset.incomeGoldPerTick * HORIZON)) : 0;

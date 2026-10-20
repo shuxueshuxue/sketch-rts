@@ -9,7 +9,7 @@ import { bodyMass } from '../../shared/physical-body';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { GameSnapshot, Unit } from '../../shared/types';
 import { distance } from '../policy/spatial';
-import { isOpponentOwner } from '../policy/ownership';
+import { strategyIsOpponent } from './ownership';
 import { isBacklineKind } from '../policy/v6/backline';
 import { creepForce, forceFor } from '../policy/v7/creep';
 import { strategicTargetCamp } from './target-camp';
@@ -293,8 +293,7 @@ export function decomposeNavalObjective(situation: Situation, objective: Objecti
         return actor ? neutralCampPointContacts(context.snapshot, actor, ground, { facts: campFacts(context), horizonTicks: situation.horizonTicks }) : [];
       });
       const exposed = new Set(contacts.map(contact => contact.memberId));
-      const opposition = situation.units.filter(unit => unit.owner === 'neutral' ? exposed.has(unit.id) : isOpponentOwner(context.snapshot, context.owner, unit.owner,
-        context.snapshot.teams ? { teams: context.snapshot.teams } : {}))
+      const opposition = situation.units.filter(unit => unit.owner === 'neutral' ? exposed.has(unit.id) : strategyIsOpponent(context.snapshot, context.owner, unit.owner, context.teams))
         .filter(unit => unit.owner === 'neutral' || unit.location.kind === 'land' && unit.location.landId === target.landId && distance(unit.location.point, ground) <= 400);
       const beachReady = sumStrength([...force.present, ...force.selected]) >= sumStrength(opposition) * 1.4;
       const clearBeach = beachReady ? null : add('clear-beachhead', shore,

@@ -16,7 +16,7 @@ import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { isRangedUnit } from '../../shared/unit-weapon-class';
 import { weaponDamage } from '../../shared/weapons';
 import type { Building, GameSnapshot, PlayerId, Unit } from '../../shared/types';
-import { isEnemyOwner } from '../policy/ownership';
+import { strategyIsOpponent } from './ownership';
 import { regionIndex, seaIdAt } from './regions';
 import type { Point, SeaId } from './types';
 import { observationJsonBytes } from './observation-json-bytes';
@@ -104,7 +104,7 @@ function threatActors(snapshot: GameSnapshot, owner: PlayerId) {
   // One entity pass. Neutral ranged weapons are also real hull hazards; this
   // does not regroup camps or replace the shared camp response facts.
   for (const body of [...snapshot.units, ...snapshot.buildings] as (Unit | Building)[]) {
-    if (body.hp <= 0 || !isEnemyOwner(snapshot, owner, body.owner, {}) || 'complete' in body && !body.complete
+    if (body.hp <= 0 || !(body.owner === 'neutral' || strategyIsOpponent(snapshot, owner, body.owner)) || 'complete' in body && !body.complete
       || 'order' in body && body.cabin) continue;
     const hull = 'order' in body && shipProfile(body);
     const ranged = !('order' in body) || isRangedUnit(body);
