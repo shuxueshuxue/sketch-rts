@@ -110,7 +110,7 @@ export type SeaSituation = Readonly<{
 }>;
 export type Opportunity = Readonly<{
   id: string;
-  kind: 'neutral-mine' | 'weak-site' | 'construction' | 'army-away' | 'route';
+  kind: 'neutral-mine' | 'weak-site' | 'construction' | 'army-away' | 'route' | 'lost-site';
   target: Target;
   valueGold: number;
   evidence: readonly Evidence[];
