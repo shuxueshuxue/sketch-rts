@@ -93,12 +93,17 @@ it('uses both legs for shore waiters and independent certainty for people alread
   expect(partial.reason.values.rescueArrivalProbability).toBeCloseTo((.5 * .8 + .8) / 2);
   const refuge = input.method.actions.at(-1)!.target;
   const situation = { ...input.situation, units: input.situation.units.map(unit => unit.id === 'worker-b'
-    ? { ...unit, location: { kind: 'land' as const, landId: refuge.landId!, point: refuge.point } } : unit) };
+    ? { ...unit, location: { kind: 'land' as const, landId: refuge.landId!, point: refuge.point } } : unit),
+    lands: input.situation.lands.map(land => ({ ...land, threats: [...land.threats,
+      { siteId: refuge.entityId!, horizonTicks: 2400, attackers: [], arrivedStrength: 0, incomingStrength: 0,
+        friendlyOnStationStrength: 0, firstArrivalTicks: null, lossProbability: 0 }] })) };
   const snapshot = { ...input.snapshot, units: input.snapshot.units.map(unit => unit.id === 'worker-b'
     ? { ...unit, x: refuge.point.x, y: refuge.point.y } : unit) };
   const arrived = defenseMethodProvider.quote({ ...input, snapshot, situation, voyageRisks: risks });
   expect(arrived.status).toBe('feasible'); if (arrived.status !== 'feasible') return;
   expect(arrived.reason.values.rescueArrivalProbability).toBeCloseTo((.5 * .8 + 1) / 2);
+  expect(arrived.utility.benefit[0]!.value).toBeCloseTo(discountedValue(75 * .5 * .8, 100, valuationWindow(100)));
+  expect(arrived.reason.values['inPlaceP/worker-b']).toBe(1);
 });
 
 it('gives no saving gain to the already safe idle worker in the real gull 3630 frame', () => {
@@ -148,4 +153,17 @@ it('keeps unknown original-site enemy arrivals instead of turning them into zero
   expect(quote.status).toBe('blocked');
   expect(quote.missingPreconditions.some(condition => condition.reason.code === 'evacuation-in-place-survival-unknown'
     && condition.status === 'unknown')).toBe(true);
+});
+
+it('keeps a current refuge with missing local threat facts unknown', () => {
+  const input = rescueInput(), refuge = input.method.actions.at(-1)!.target;
+  const snapshot = { ...input.snapshot, units: input.snapshot.units.map(unit => unit.id === 'worker-b'
+    ? { ...unit, x: refuge.point.x, y: refuge.point.y } : unit) };
+  const situation = { ...input.situation, units: input.situation.units.map(unit => unit.id === 'worker-b'
+    ? { ...unit, location: { kind: 'land' as const, landId: refuge.landId!, point: refuge.point } } : unit) };
+  const quote = defenseMethodProvider.quote({ ...input, snapshot, situation });
+  expect(quote.status).toBe('blocked');
+  expect(quote.reason.values['inPlaceP/worker-b']).toBe(null);
+  expect(quote.missingPreconditions.some(condition => condition.reason.code === 'evacuation-in-place-survival-unknown'
+    && condition.reason.factIds.includes('worker-b'))).toBe(true);
 });

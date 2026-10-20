@@ -3,9 +3,9 @@ import { strikeGap } from '../../shared/combat-geometry';
 import type { GameSnapshot } from '../../shared/types';
 import { averagePoint, distance } from '../policy/spatial';
 import { assessAllocatedDefenseBattle, assessAllocatedForce } from './allocated-force';
-import { assessDefenseResponse, currentInPlaceDefense } from './defense-response';
+import { assessDefenseResponse } from './defense-response';
 import { allocatedVoyageValue, voyageCostAfterPreservedAssets } from './allocated-voyage-value';
-import { defenseProtectionValue, defenseThreatScenarios, defenseInPlaceSurvival } from './defense-risk';
+import { defenseProtectionValue, defenseThreatScenarios } from './defense-risk';
 import type { AllocationMethodProvider, AllocationReason, AllocationUtility, ExecutableMethod,
   ForceQuotation, MethodAllocationQuote, AllocationPrecondition } from './allocation-types';
 import type { DecisionFacts } from './decision';
@@ -22,6 +22,7 @@ import { evacuationSubjectIds } from './evacuation-subjects';
 import { casualtyUnitValues, sumUnitValues } from './allocated-unit-values';
 import { assertUnitValueSides } from './unit-value-ledger';
 import { evacuationShelter } from './evacuation-shelter';
+import { evacuationInPlace } from './evacuation-in-place';
 
 const reason = (code: string, factIds: readonly string[] = [], values: AllocationReason['values'] = {}): AllocationReason => ({ code, factIds, values });
 const defenderKinds: readonly Method['kind'][] = ['local-squad', 'main-army-recall', 'wait-in-cover', 'cross-sea-reinforcement', 'evacuation'];
@@ -197,13 +198,16 @@ export const defenseMethodProvider: AllocationMethodProvider = {
     const scenarios = mobileScenarios.status === 'unknown' ? mobileScenarios
       : { ...mobileScenarios, scenarios: mobileScenarios.scenarios.map(scenario => ({ ...scenario,
         force: scenario.force + response.hostileStaticForce })) };
-    const inPlaceDefense = evacuation ? currentInPlaceDefense({ snapshot, situation, target: objective.target, excludedUnitIds: unitIds }) : null;
-    const inPlace = evacuation ? defenseInPlaceSurvival({ threat: threat ? scenarios : null, defendingForce: inPlaceDefense!.totalForce }) : null;
-    if (inPlace?.status === 'unknown') {
+    const inPlace = evacuation ? evacuationInPlace({ snapshot, situation, unitIds: cohort.map(unit => unit.id), destination: chosenShelter,
+      arrivedUnitIds: stationed, responseEligibleUnitIds: input.responseEligibleUnitIds
+        ?? situation.units.filter(unit => unit.owner === situation.owner && !unit.commitments.length).map(unit => unit.id),
+      excludedUnitIds: [...unitIds, ...(input.valuation?.unavailableUnitIds ?? [])] }) : null;
+    for (const [id, risk] of inPlace?.byUnit ?? []) if (risk.status === 'unknown') {
       missing ??= 'evacuation-in-place-survival-unknown';
-      conditions.push({ id: `${method.id}/in-place-survival`, kind: 'shore-safe', status: 'unknown',
-        reason: reason('evacuation-in-place-survival-unknown', [targetId, ...inPlace.unknownIds]),
-        demand: { kind: 'workers', count: subjects?.length ?? 1, at: objective.target }, subgoalIds: [] });
+      conditions.push({ id: `${method.id}/in-place-survival/${id}`, kind: 'shore-safe', status: 'unknown',
+        reason: reason('evacuation-in-place-survival-unknown', [id, ...risk.unknownIds]),
+        demand: { kind: 'workers', count: 1, at: inPlace!.targets.get(id) ?? { entityId: id,
+          point: facts.get(id)?.location.point ?? objective.target.point } }, subgoalIds: [] });
     }
     const actualOpposition = Math.max(response.hostileStaticForce, ...scenarios.scenarios.map(scenario => scenario.force));
     if (!evacuation && scenarios.status === 'unknown') missing ??= scenarios.reasonCode;
@@ -255,7 +259,9 @@ export const defenseMethodProvider: AllocationMethodProvider = {
     const expectedSavedGold = savedUnitValues.reduce((sum, entry) => sum + entry.valueGold
       * (stationed.includes(entry.unitId) ? 1 : voyages.passengerArrivalProbabilities.get(entry.unitId) ?? 1), 0);
     const savedValueGold = savedUnitValues.reduce((sum, entry) => sum + entry.valueGold, 0);
-    const inPlacePreservationGold = inPlace?.status === 'known' ? savedValueGold * inPlace.survivalProbability : null;
+    const inPlacePreservationGold = inPlace && savedUnitValues.every(entry => inPlace.byUnit.get(entry.unitId)?.status === 'known')
+      ? savedUnitValues.reduce((sum, entry) => sum + entry.valueGold * inPlace.byUnit.get(entry.unitId)!.survivalProbability!, 0) : null;
+    const inPlaceProbabilities = Object.fromEntries([...(inPlace?.byUnit ?? [])].map(([id, risk]) => [`inPlaceP/${id}`, risk.survivalProbability]));
     // The marginal benefit already integrates every person's two outcomes.
     // Catalog identity remains a nonnegative price reference, not a second
     // permanent loss. A worse escape may have a negative benefit; never clip it.
@@ -296,8 +302,8 @@ export const defenseMethodProvider: AllocationMethodProvider = {
       availableForce: weighted.effectiveForce, actualOpposition, successProbability: probability,
       staticProtection: protection && protection.benefitGold > 0 ? protection.staticBaselineGold / protection.benefitGold : 0,
       actualIntrusionCount: scenarios.actualIds.length, potentialRedirectCount: scenarios.redirects.length,
-      transitSurvival, rescueArrivalProbability, inPlaceSurvivalProbability: inPlace?.survivalProbability ?? null,
-      expectedSavedGold, inPlacePreservationGold,
+      transitSurvival, rescueArrivalProbability, inPlaceSurvivalProbability: inPlacePreservationGold === null || !savedValueGold ? null : inPlacePreservationGold / savedValueGold,
+      expectedSavedGold, inPlacePreservationGold, ...inPlaceProbabilities,
       otherResponseTicks: response.response.status === 'known' ? response.response.ticks : null,
       latestArrivalTicks: latest, opponentUnknown: opponentUnknown.length });
     return missing ? { methodId: method.id, status: 'blocked', force, valuation, utility: null, potentialUtility: null,
