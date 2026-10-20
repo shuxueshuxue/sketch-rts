@@ -3,7 +3,7 @@ import { sameGround } from '../../shared/terrain';
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import type { AiPolicyMemory, AiPolicyUnitClaim } from '../memory';
 import { deathTaskIndex } from '../death-ledger-context';
-import { isDefenseTaskClaim, recordUnitTaskClaim } from '../policy/claims';
+import { clearUnitClaim, recordUnitTaskClaim } from '../policy/claims';
 import type { AiCommandEntry, AiPolicyContext } from '../policy/types';
 import { creepForce, forceFor } from '../policy/v7/creep';
 import { neutralCampExposure } from '../situation/neutral-camp-exposure';
@@ -45,7 +45,7 @@ function ongoing(unit: Unit, transit: Transit) {
  * remains a continuation; an impassable camp creates an explicit force prerequisite.
  * This runs on the runner's accepted entries, so rejected intent never binds a unit.
  */
-export function routeCampNavigation(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, entries: readonly AiCommandEntry[], previous: ReadonlyMap<string, Transit>): AiCommandEntry[] {
+export function routeCampNavigation(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, entries: readonly AiCommandEntry[], previous: ReadonlyMap<string, Transit>, stationRanges: ReadonlyMap<string, number> = new Map()): AiCommandEntry[] {
   previous = new Map([...previous, ...campNavigationContinuations(options.memory)]);
   const facts = neutralCampExposure(snapshot);
   if (!facts.camps.length) return [...entries];
@@ -57,6 +57,11 @@ export function routeCampNavigation(snapshot: GameSnapshot, owner: PlayerId, opt
     const unit = byId.get(id);
     if (!unit || !aliveLand(unit, owner) || commanded.has(id)) continue;
     const blocked = transit.clearingIds?.some(member => byId.get(member)?.hp! > 0);
+    if (!blocked && !transit.clearingIds && transit.command.type !== 'build' && !ongoing(unit, transit) && gap(unit, transit.stop) <= 30) {
+      const claim = options.memory.unitClaims[id];
+      if (claim?.kind === 'campTravel') clearUnitClaim(options.memory, id); else if (claim) delete claim.campTravel;
+      continue;
+    }
     if (blocked && !ongoing(unit, transit)) input.push({ scriptId: transit.scriptId, command: solo(transit.command, id) });
     else if (!blocked && !ongoing(unit, transit) && (transit.command.type === 'build' || transit.clearingIds))
       input.push({ scriptId: transit.scriptId, command: solo(transit.command, id) });
@@ -71,7 +76,16 @@ export function routeCampNavigation(snapshot: GameSnapshot, owner: PlayerId, opt
     if (!aliveLand(unit, owner) || scheduled.has(unit.id) || exemptions(unit.id).size) continue;
     const auto = unit.order.type === 'idle' || unit.order.type === 'hold'
       || unit.order.type === 'attack' && unit.order.leashX !== undefined && byId.get(unit.order.targetId)?.owner === 'neutral';
-    if (!auto || !neutralCampPointContacts(snapshot, unit, unit, { facts }).length) continue;
+    if (!auto) continue;
+    const contacts = neutralCampPointContacts(snapshot, unit, unit, { facts, arrivalMode: unit.order.type === 'hold' ? 'hold' : 'idle' });
+    if (!contacts.length) continue;
+    const cover = snapshot.units.filter(friend => aliveLand(friend, owner) && friend.kind !== 'worker' && friend.attackDamage > 0
+      && friend.hp >= friend.maxHp * .6 && gap(friend, unit) <= 300
+      && ['idle', 'hold', 'attack', 'attackMove'].includes(friend.order.type)
+      && !(friend.order.type === 'attack' && byId.get(friend.order.targetId)?.owner !== 'neutral'));
+    // An assembled force can take an incidental camp in place. Evacuating each
+    // of its idle members independently would dismantle a valid attack assembly.
+    if (contacts.every(contact => creepForce(cover, contact.camp.camp) >= forceFor(contact.camp.camp))) continue;
     input.push({ scriptId: 'campNavigation', command: { type: 'move', unitIds: [unit.id], x: unit.x, y: unit.y } });
   }
   const output: AiCommandEntry[] = [];
@@ -84,7 +98,12 @@ export function routeCampNavigation(snapshot: GameSnapshot, owner: PlayerId, opt
     if (command.type === 'move' && command.avoidCombat || 'queued' in command && command.queued || !ids.length) { output.push(entry); continue; }
     const linked = [...previous].filter(([, transit]) => transit.scriptId === entry.scriptId && key(transit.command) === key(command)
       || transit.clearingIds?.some(id => ids.some(actor => previous.get(actor)?.clearingIds?.includes(id)))).map(([id]) => id);
-    const party = [...new Set([...ids, ...linked])].map(id => byId.get(id)).filter((unit): unit is Unit => !!unit && aliveLand(unit, owner));
+    const goal = ids[0] && byId.get(ids[0]) ? commandGoal(snapshot, byId.get(ids[0])!, command) : undefined;
+    const alreadyCommitted = goal ? snapshot.units.filter(friend => aliveLand(friend, owner) && friend.kind !== 'worker'
+      && ((friend.order.type === 'move' || friend.order.type === 'attackMove') && gap(friend.order, goal) < 30
+        || ['idle', 'hold'].includes(friend.order.type) && friend.arrivedAt && gap(friend.arrivedAt, goal) < 30 && gap(friend, goal) < 240)) : [];
+    const party = [...new Map([...ids, ...linked].map(id => byId.get(id)).filter((unit): unit is Unit => !!unit && aliveLand(unit, owner))
+      .concat(alreadyCommitted).map(unit => [unit.id, unit])).values()];
     for (const id of ids) {
       const unit = byId.get(id), destination = unit && commandGoal(snapshot, unit, command);
       if (!unit || !aliveLand(unit, owner) || !destination || !sameGround(snapshot.map, unit, destination)) {
@@ -101,8 +120,8 @@ export function routeCampNavigation(snapshot: GameSnapshot, owner: PlayerId, opt
         const camp = facts.camps.find(camp => camp.memberIds.includes(clearing[0]!.id));
         if (camp && unit.kind !== 'worker' && creepForce(party, camp.camp) >= forceFor(camp.camp)) {
           rewritten = true;
-          output.push({ scriptId: entry.scriptId, command: { type: 'attack', unitIds: [id], targetId: clearing[0]!.id } });
-          if (!isDefenseTaskClaim(options.memory.unitClaims[id])) recordUnitTaskClaim(snapshot, options.memory, id, { kind: 'creep', targetId: clearing[0]!.id, ...camp.camp.center });
+          output.push({ scriptId: entry.scriptId, command: command.type === 'attackMove' ? ownCommand : { type: 'attack', unitIds: [id], targetId: clearing[0]!.id } });
+          if (!options.memory.unitClaims[id]) recordUnitTaskClaim(snapshot, options.memory, id, { kind: 'campTravel', targetId: old.subgoal?.parentMethodId ?? old.scriptId, x: old.stop.x, y: old.stop.y });
           options.memory.unitClaims[id]!.campTravel = { ...old, ...(old.subgoal ? { subgoal: { ...old.subgoal, status: 'active' } } : {}) };
           continue;
         }
@@ -116,25 +135,30 @@ export function routeCampNavigation(snapshot: GameSnapshot, owner: PlayerId, opt
       if (command.type === 'attackMove') for (const camp of facts.camps)
         if (camp.members.some(member => gap(member.point, command) <= 1)) for (const member of camp.memberIds) exempt.add(member);
       const plan = planCampTravel(snapshot, unit, destination, { parentId, party, facts, exemptMemberIds: exempt,
-        arrivalRange: command.type === 'holdPosition' || entry.scriptId === 'campNavigation' ? 160 : 0,
+        arrivalRange: command.type === 'holdPosition' || entry.scriptId === 'campNavigation' ? 160
+          : command.type === 'move' || command.type === 'attackMove' ? stationRanges.get(entry.scriptId) ?? 0 : 0,
         movingMode: command.type === 'attackMove' ? 'attackMove' : 'move', arrivalMode });
       if (plan.kind === 'direct' || plan.kind === 'exposed' || plan.kind === 'unreachable') {
+        if (entry.scriptId === 'campNavigation') { rewritten = true; continue; }
         output.push({ ...entry, command: ownCommand });
-        if (old?.resumeClaim && old.scriptId === entry.scriptId && key(old.command) === key(command)) options.memory.unitClaims[id] = { ...old.resumeClaim };
-        const retained = options.memory.unitClaims[id]; if (retained) delete retained.campTravel;
+        const retained = options.memory.unitClaims[id];
+        if (retained?.kind === 'campTravel') clearUnitClaim(options.memory, id);
+        else if (retained) delete retained.campTravel;
         if (ownCommand.type === 'build') recordUnitTaskClaim(snapshot, options.memory, id,
           { kind: 'build', targetId: `build:${ownCommand.buildingKind}:${Math.round(ownCommand.x)}:${Math.round(ownCommand.y)}`, x: ownCommand.x, y: ownCommand.y });
         continue;
       }
       const transit: Transit = { scriptId: entry.scriptId, command: sourceGoal, stop: { x: plan.goal.x, y: plan.goal.y }, sinceTick: old?.sinceTick ?? snapshot.tick,
         delayGold: plan.delayGold, exposureGold: plan.exposureGold,
-        ...(old?.resumeClaim ? { resumeClaim: old.resumeClaim } : options.memory.unitClaims[id] ? { resumeClaim: (({ campTravel: _, ...claim }) => claim)(options.memory.unitClaims[id]!) } : {}),
         ...(plan.subgoal ? { subgoal: plan.subgoal, clearingIds: [...plan.contacts[0]!.camp.memberIds] } : {}) };
       let changed: GameCommand[];
       if (plan.kind === 'clear-camp') {
         const camp = plan.contacts[0]!.camp;
         if (creepForce(party, camp.camp) >= forceFor(camp.camp) && unit.kind !== 'worker') {
-          changed = [{ type: 'attack', unitIds: [id], targetId: camp.memberIds[0]! }];
+          // A sufficient combat advance already performs this prerequisite:
+          // native attack-move engages the blocker and continues the parent.
+          changed = command.type === 'attackMove' ? [ownCommand]
+            : [{ type: 'attack', unitIds: [id], targetId: camp.memberIds[0]! }];
         } else {
           // A prerequisite has a force demand, not an order to drift into the camp.
           // Search around the actual current position; retain the original parent.
@@ -158,10 +182,7 @@ export function routeCampNavigation(snapshot: GameSnapshot, owner: PlayerId, opt
       output.push(...changed.map(next => ({ scriptId: entry.scriptId, command: next })));
       const claim = options.memory.unitClaims[id];
       if (!claim) recordUnitTaskClaim(snapshot, options.memory, id, { kind: 'campTravel', targetId: parentId, x: destination.x, y: destination.y });
-      // A deliberate clearing action is visible as such to the death ledger.
-      if (changed[0]?.type === 'attack' && !isDefenseTaskClaim(options.memory.unitClaims[id])) recordUnitTaskClaim(snapshot, options.memory, id,
-        { kind: 'creep', targetId: changed[0].targetId, ...plan.contacts[0]!.camp.camp.center });
-      if (changed[0]?.type === 'attack' && transit.subgoal) transit.subgoal = { ...transit.subgoal, status: 'active' };
+      if ((changed[0]?.type === 'attack' || changed[0]?.type === 'attackMove') && transit.subgoal) transit.subgoal = { ...transit.subgoal, status: 'active' };
       options.memory.unitClaims[id]!.campTravel = transit;
       options.memory.unitClaims[id]!.expiresTick = Math.max(options.memory.unitClaims[id]!.expiresTick, snapshot.tick + (plan.road?.ticks ?? 0) + 300);
     }

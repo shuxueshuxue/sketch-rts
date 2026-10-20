@@ -39,7 +39,8 @@ export function planCampTravel(snapshot: GameSnapshot, unit: Unit, goal: Point, 
   if (!direct) return result('unreachable', null, []);
   const contactOptions = { facts, ...(options.exemptMemberIds ? { exemptMemberIds: options.exemptMemberIds } : {}),
     movingMode: options.movingMode ?? 'move', arrivalMode: options.arrivalMode ?? 'idle', horizonTicks: 100 } as const;
-  const contacts = neutralCampRouteContacts(snapshot, unit, direct.points.length ? direct.points : [unit, goal], contactOptions);
+  const contacts = [...neutralCampRouteContacts(snapshot, unit, direct.points.length ? direct.points : [unit, goal], contactOptions)]
+    .sort((a, b) => a.segment - b.segment || a.arrivalTicks - b.arrivalTicks);
   if (!contacts.length) return result('direct', direct, contacts);
   const camps = [...new Set(contacts.map(contact => contact.camp))];
   const partyGold = party.reduce((sum, member) => sum + UNIT_DEFS[member.kind].cost, 0);
@@ -48,14 +49,33 @@ export function planCampTravel(snapshot: GameSnapshot, unit: Unit, goal: Point, 
     return partyGold * Math.min(1, forceFor(camp) / Math.max(force, .01)) ** 2;
   };
   const exposureGold = Math.max(0, ...camps.map(camp => atRisk(camp.camp)));
+  const contactRisk = (contact: CampContact) => {
+    if (contact.reason !== 'active-pursuit') return atRisk(contact.camp.camp);
+    const member = contact.camp.members.find(member => member.id === contact.memberId)!;
+    const homeMargin = Math.max(0, member.pursuitRadius - Math.hypot(contact.point.x - member.home.x, contact.point.y - member.home.y)) / member.pursuitRadius;
+    const responseMargin = Math.max(0, member.responseRadius - Math.hypot(contact.point.x - member.responseOrigin.x, contact.point.y - member.responseOrigin.y)) / member.responseRadius;
+    const closing = Math.max(0, contact.radius - contact.distance) / Math.max(1, contact.radius);
+    return atRisk(contact.camp.camp) * Math.min(homeMargin, responseMargin) * closing * (member.activeTargetId === unit.id ? 1 : .35);
+  };
+  const observedRisk = (encounters: readonly CampContact[]) => Math.max(0, ...encounters.map(contactRisk));
   // Saturated mine income prices the parent delay; committed troops also have an opportunity cost.
   const delayRate = options.valueGoldPerTick ?? GOLD_MINE_RULES.goldPerTrip / GOLD_MINE_RULES.entrySeconds / SIM_TICKS_PER_SECOND
     + partyGold / (60 * SIM_TICKS_PER_SECOND);
   const first = [...contacts].sort((a, b) => a.segment - b.segment || a.arrivalTicks - b.arrivalTicks)[0]!.camp;
-  const clearingForce = creepForce(party, first.camp);
-  const dps = party.filter(member => member.kind !== 'worker').reduce((sum, member) => sum + member.attackDamage / Math.max(1, member.attackCooldown), 0);
-  const clearTicks = clearingForce >= forceFor(first.camp)
-    ? Math.ceil(first.camp.creeps.reduce((sum, guard) => sum + guard.hp, 0) / Math.max(.01, dps)) : null;
+  // Clearing is a rendezvous and a fight. Distant soldiers cannot contribute
+  // instant damage merely because the parent command lists them.
+  const arriving = party.filter(member => member.kind !== 'worker' && member.attackDamage > 0)
+    .map(member => ({ member, road: nativeLandRoad(snapshot, member, first.camp.center) }))
+    .filter(entry => entry.road).sort((a, b) => a.road!.ticks - b.road!.ticks);
+  const clearing: Unit[] = []; let rendezvous = 0;
+  for (const entry of arriving) {
+    if (creepForce(clearing, first.camp) >= forceFor(first.camp)) break;
+    clearing.push(entry.member);
+    rendezvous = Math.max(rendezvous, Math.max(0, entry.road!.ticks - entry.member.attackRange / Math.max(1, entry.member.speed) * SIM_TICKS_PER_SECOND));
+  }
+  const dps = clearing.reduce((sum, member) => sum + member.attackDamage / Math.max(1, member.attackCooldown), 0);
+  const clearTicks = creepForce(clearing, first.camp) >= forceFor(first.camp)
+    ? Math.ceil(rendezvous + first.camp.creeps.reduce((sum, guard) => sum + guard.hp, 0) / Math.max(.01, dps)) : null;
   const subgoal: Subgoal = {
     id: `${options.parentId}/clear:${first.memberIds.join(',')}`, parentMethodId: options.parentId, kind: 'clear-camp',
     target: { point: first.camp.center }, demands: [{ kind: 'force', metric: 'camp-force', strength: forceFor(first.camp),
@@ -64,10 +84,12 @@ export function planCampTravel(snapshot: GameSnapshot, unit: Unit, goal: Point, 
     reasons: [{ code: 'camp-exposure', detail: '父目标保留；实际行走路线或到岗索敌会触发未清营地，先比较绕行、换点与清营',
       evidence: [{ source: 'neutralCampRouteContacts', tick: snapshot.tick, certainty: 'recorded', detail: contacts.map(contact => contact.reason).join(',') }] }],
   };
-  const clearCost = (clearTicks ?? 15 * SIM_TICKS_PER_SECOND) * delayRate;
-  let best: CampTravelPlan = neutralCampPointContacts(snapshot, unit, goal, contactOptions).length
+  const onward = nativeLandRoad(snapshot, { ...unit, x: first.camp.center.x, y: first.camp.center.y }, goal)?.ticks ?? direct.ticks;
+  const clearCost = Math.max(0, (clearTicks ?? 15 * SIM_TICKS_PER_SECOND) + onward - direct.ticks) * delayRate;
+  const endpointTriggers = neutralCampPointContacts(snapshot, unit, goal, contactOptions).some(contact => contact.reason !== 'active-pursuit');
+  let best: CampTravelPlan = endpointTriggers
     ? result('clear-camp', direct, contacts, clearCost, exposureGold, subgoal)
-    : result('exposed', direct, contacts, 0, exposureGold);
+    : result('exposed', direct, contacts, 0, observedRisk(contacts));
   // Passing a camp can be cheaper than delaying a high-value objective. Occupying
   // its acquisition zone still needs a clearing prerequisite, not an unsafe post.
 
@@ -107,7 +129,7 @@ export function planCampTravel(snapshot: GameSnapshot, unit: Unit, goal: Point, 
       encounters = neutralCampRouteContacts(snapshot, unit, candidate.points.length ? candidate.points : [unit, point], contactOptions);
       if (blocking(encounters, point)) continue;
     }
-    const risk = encounters.length ? Math.max(...encounters.map(contact => atRisk(contact.camp.camp))) * .25 : 0;
+    const risk = observedRisk(encounters);
     const delayGold = Math.max(0, candidate.ticks - direct.ticks) * delayRate;
     if (delayGold + risk < best.delayGold + best.exposureGold) best = result(point === goal ? 'detour' : 'relocate', candidate, encounters, delayGold, risk, null, point);
   }

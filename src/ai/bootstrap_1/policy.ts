@@ -139,7 +139,7 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: Bootstra
   const dependencies = new Map<string, { ids: string[]; members: string[] }>();
   for (const [id, claim] of Object.entries(options.memory.unitClaims)) {
     const travel = claim.campTravel;
-    if (!travel?.clearingIds?.length) continue;
+    if (!travel?.clearingIds?.length || travel.subgoal?.status !== 'blocked') continue;
     const key = travel.clearingIds.join(',');
     const task = dependencies.get(key) ?? { ids: [], members: travel.clearingIds };
     task.ids.push(id); dependencies.set(key, task);
@@ -190,7 +190,7 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
     if (script === AI_SCRIPT_LIBRARY.v6General) return [
       campPrerequisite, summonedRaids,
       { ...AI_SCRIPT_LIBRARY.v6Closeout, run: planBootstrapCloseout },
-      { ...script, run: planBootstrapGeneral, onCommands: recordMiningGeneralCommands,
+      { ...script, run: planBootstrapGeneral, landStationRadius: 160, onCommands: recordMiningGeneralCommands,
         claimsUnits(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
           return new Set([...script.claimsUnits!(snapshot, owner, options),
             ...(options.memory.landExpansion?.paused ? [] : expansionMissionUnitIds(options.memory))]);
@@ -210,7 +210,7 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
     if (script === AI_SCRIPT_LIBRARY.abilities) return version === 'v9_summoner'
       ? [medicalRecovery, towerRushAbilities, summonerTowerRush] : [medicalRecovery, bootstrapAbilities];
     // Ferry and rescue assignments keep priority over local repair work.
-    return script === AI_SCRIPT_LIBRARY.naval ? [{ ...script, run: planBootstrapNaval,
+    return script === AI_SCRIPT_LIBRARY.naval ? [{ ...script, run: planBootstrapNaval, landStationRadius: 160,
       claimsUnits(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
         const riders = mountedTasks.claimsUnits!(snapshot, owner, options);
         const recovering = expeditionRecoveryUnitIds(snapshot, owner, options);
@@ -226,8 +226,9 @@ export function planBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, v
   return withLandRoadReuse(() => {
     const previous = campNavigationContinuations(options.memory);
     const context = bootstrapPolicyContext(snapshot, owner, version, options);
-    const entries = planAiCommandEntriesFromScripts(snapshot, owner, bootstrapScripts(version), context);
-    return routeCampNavigation(snapshot, owner, context, entries, previous);
+    const scripts = bootstrapScripts(version);
+    const entries = planAiCommandEntriesFromScripts(snapshot, owner, scripts, context);
+    return routeCampNavigation(snapshot, owner, context, entries, previous, new Map(scripts.map(script => [script.id, script.landStationRadius ?? 0])));
   });
 }
 

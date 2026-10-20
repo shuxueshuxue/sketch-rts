@@ -15,7 +15,7 @@ function recruits(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCont
   const groups = new Map<string, { travel: Travel; members: Unit[] }>();
   for (const unit of snapshot.units) {
     const travel = options.memory.unitClaims[unit.id]?.campTravel;
-    if (unit.owner !== owner || !travel?.clearingIds?.length || unit.hp <= 0) continue;
+    if (unit.owner !== owner || !travel?.clearingIds?.length || travel.subgoal?.status !== 'blocked' || unit.hp <= 0) continue;
     const key = travel.clearingIds.join(',');
     const group = groups.get(key) ?? { travel, members: [] }; group.members.push(unit); groups.set(key, group);
   }
@@ -53,7 +53,7 @@ export const campPrerequisite: AiScript = {
     for (const choice of selections.get(options) ?? []) {
       const issued = entries.find(entry => entry.scriptId === 'campPrerequisite' && entry.command.type === 'move' && entry.command.unitIds.includes(choice.unit.id));
       if (!issued || issued.command.type !== 'move') continue;
-      recordUnitTaskClaim(snapshot, options.memory, choice.unit.id, { kind: 'creep', targetId: choice.targetId, ...choice.travel.stop });
+      recordUnitTaskClaim(snapshot, options.memory, choice.unit.id, { kind: 'campTravel', targetId: choice.travel.subgoal?.parentMethodId ?? choice.targetId, x: choice.travel.stop.x, y: choice.travel.stop.y });
       options.memory.unitClaims[choice.unit.id]!.campTravel = { ...choice.travel, scriptId: 'campPrerequisite',
         command: { type: 'move', unitIds: [choice.unit.id], ...choice.travel.stop }, sinceTick: snapshot.tick };
     }

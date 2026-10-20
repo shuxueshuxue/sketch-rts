@@ -73,7 +73,7 @@ export function planAiOwnerCommandEntries<Source extends string = string>(snapsh
         ...(disabledBehaviors ? { disabledBehaviors } : {}),
         memory,
       });
-      return withVeteranSkills(routeCampNavigation(snapshot, owner, context, planAiCommandEntriesFromScripts(snapshot, owner, scripts, context), previous).map(entry => ({
+      return withVeteranSkills(routeCampNavigation(snapshot, owner, context, planAiCommandEntriesFromScripts(snapshot, owner, scripts, context), previous, new Map(scripts.map(script => [script.id, script.landStationRadius ?? 0]))).map(entry => ({
         playerId: owner,
         ...(request.source !== undefined ? { source: request.source } : {}),
         scriptId: entry.scriptId,

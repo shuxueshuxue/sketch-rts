@@ -29,12 +29,12 @@ it('keeps a construction action through the actual detour and resumes it only af
 });
 
 it('rechecks a stopped real landing party against current camp positions and chooses another station', () => {
-  const frame = JSON.parse(gunzipSync(readFileSync(new URL('../fixtures/camp-exposure-twoShores-p2-11422.json.gz', import.meta.url))).toString());
+  const frame = JSON.parse(gunzipSync(readFileSync(new URL('../fixtures/camp-exposure-twoShores-p2-12547.json.gz', import.meta.url))).toString());
   const game = createGame('twoShores', { players: ['p0', 'p1', 'p2', 'p3'], aiPlayers: [] });
   restoreSnapshotIntoGame(game, frame.snapshot, frame.nextId);
   const snapshot = snapshotGame(game), members = snapshot.units.filter(unit => unit.owner === frame.owner && !unit.deck && unit.kind !== 'worker' && unitMover(unit.kind) === 'land');
   // Use the original landing frame; verify a present exposed station, rather than a fabricated distant camp.
-  const exposed = members.find(unit => neutralCampPointContacts(snapshot, unit, unit).length);
+  const exposed = members.find(unit => neutralCampPointContacts(snapshot, unit, unit).some(contact => contact.reason !== 'active-pursuit'));
   expect(exposed).toBeDefined();
   if (!exposed) return;
   const plan = planCampTravel(snapshot, exposed, exposed, { parentId: 'island-station', party: members, arrivalRange: 480, valueGoldPerTick: 0 });

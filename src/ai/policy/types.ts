@@ -49,6 +49,8 @@ export type AiScript = {
   run: LocalScript;
   // Local orders support the current task; strategic orders assign a different task. Undeclared scripts redirect.
   redirects?: 'strategic' | 'local';
+  /** Maximum displacement of an assembly/escort station; travel keeps the executor's acceptance radius. */
+  landStationRadius?: number;
   // Units only this script may move or send to attack; every other script's orders for them are dropped.
   claimsUnits?: (snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) => ReadonlySet<string>;
   // Commit this script's assignments from accepted orders before the next script reads them.
