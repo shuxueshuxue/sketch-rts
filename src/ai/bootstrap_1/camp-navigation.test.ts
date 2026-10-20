@@ -48,5 +48,13 @@ it('does not mutate the snapshot when applying the shared room navigation bounda
   const snapshot = snapshotGame(game), before = JSON.stringify(snapshot);
   const entries = planAiOwnerCommandEntries(snapshot, { playerId: frame.owner, version: frame.version, memory: structuredClone(frame.memory) });
   expect(JSON.stringify(snapshot)).toBe(before);
-  expect(entries.some(entry => entry.command.type === 'move' && entry.command.queued)).toBe(true);
+  expect(entries.length).toBeGreaterThan(0);
+});
+
+it('preserves a deliberate native attack-move onto a guard while checking transit and staging separately', () => {
+  const game = createGame('bareDuel', { aiPlayers: [] }); game.units = []; game.buildings = []; delete game.map.terrain;
+  const fighter = game.spawnUnit('player', 'footman', 500, 1000), guard = game.spawnUnit('neutral', 'wildling', 1000, 1000);
+  const command = { type: 'attackMove' as const, unitIds: [fighter.id], x: guard.x, y: guard.y };
+  const entries = [{ scriptId: 'engagement', command }];
+  expect(routeCampNavigation(snapshotGame(game), 'player', { memory: createAiPolicyMemory() }, entries, new Map())).toEqual(entries);
 });

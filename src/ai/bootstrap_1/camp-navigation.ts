@@ -81,7 +81,7 @@ export function routeCampNavigation(snapshot: GameSnapshot, owner: PlayerId, opt
       output.push(entry); continue;
     }
     const begin = output.length; let rewritten = false;
-    if ('queued' in command && command.queued || !ids.length) { output.push(entry); continue; }
+    if (command.type === 'move' && command.avoidCombat || 'queued' in command && command.queued || !ids.length) { output.push(entry); continue; }
     const linked = [...previous].filter(([, transit]) => transit.scriptId === entry.scriptId && key(transit.command) === key(command)
       || transit.clearingIds?.some(id => ids.some(actor => previous.get(actor)?.clearingIds?.includes(id)))).map(([id]) => id);
     const party = [...new Set([...ids, ...linked])].map(id => byId.get(id)).filter((unit): unit is Unit => !!unit && aliveLand(unit, owner));
@@ -110,9 +110,14 @@ export function routeCampNavigation(snapshot: GameSnapshot, owner: PlayerId, opt
       const sourceGoal = entry.scriptId === 'campNavigation' ? old?.command ?? ownCommand : ownCommand;
       const parentId = `${entry.scriptId}:${key(sourceGoal)}`;
       const arrivalMode = command.type === 'holdPosition' ? 'hold' : command.type === 'attackMove' ? 'attackMove' : 'idle';
-      const flexible = command.type === 'move' || command.type === 'attackMove' || command.type === 'holdPosition';
-      const plan = planCampTravel(snapshot, unit, destination, { parentId, party, facts, exemptMemberIds: exemptions(id),
-        arrivalRange: flexible ? 220 : 0, arrivalMode });
+      const exempt = exemptions(id);
+      // An attack-move aimed at a live guard is an explicit engagement, just as
+      // an attack by targetId is. A move/hold staging near it is not.
+      if (command.type === 'attackMove') for (const camp of facts.camps)
+        if (camp.members.some(member => gap(member.point, command) <= 1)) for (const member of camp.memberIds) exempt.add(member);
+      const plan = planCampTravel(snapshot, unit, destination, { parentId, party, facts, exemptMemberIds: exempt,
+        arrivalRange: command.type === 'holdPosition' || entry.scriptId === 'campNavigation' ? 160 : 0,
+        movingMode: command.type === 'attackMove' ? 'attackMove' : 'move', arrivalMode });
       if (plan.kind === 'direct' || plan.kind === 'exposed' || plan.kind === 'unreachable') {
         output.push({ ...entry, command: ownCommand });
         if (old?.resumeClaim && old.scriptId === entry.scriptId && key(old.command) === key(command)) options.memory.unitClaims[id] = { ...old.resumeClaim };
@@ -142,7 +147,9 @@ export function routeCampNavigation(snapshot: GameSnapshot, owner: PlayerId, opt
         }
       } else {
         changed = threatRoadCommands(unit, { ...plan.road!, points: plan.road!.points as [Point, ...Point[]] });
-        if (command.type !== 'build' && command.type !== 'move' && command.type !== 'holdPosition') {
+        if (command.type === 'attackMove') changed = changed.map(leg => leg.type === 'move'
+          ? { type: 'attackMove', unitIds: leg.unitIds, x: leg.x, y: leg.y, queued: leg.queued ?? false } : leg);
+        if (command.type !== 'build' && command.type !== 'move' && command.type !== 'attackMove' && command.type !== 'holdPosition') {
           changed.push({ ...ownCommand, ...(command.type === 'attackMove' ? plan.goal : {}), queued: true } as GameCommand);
         }
       }

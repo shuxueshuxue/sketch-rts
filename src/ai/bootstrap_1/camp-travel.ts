@@ -1,3 +1,4 @@
+import { unitAutoAcquireRadius } from '../../shared/combat-acquisition';
 import { UNIT_DEFS } from '../../shared/catalog';
 import { detCos, detSin } from '../../shared/det-math';
 import { GOLD_MINE_RULES } from '../../shared/mining';
@@ -20,7 +21,7 @@ export type CampTravelPlan = {
 };
 export type CampTravelOptions = {
   parentId: string; party?: readonly Unit[]; facts?: NeutralCampExposureFacts; exemptMemberIds?: ReadonlySet<string>;
-  arrivalRange?: number; arrivalMode?: 'idle' | 'hold' | 'attackMove' | 'move';
+  arrivalRange?: number; movingMode?: 'move' | 'attackMove'; arrivalMode?: 'idle' | 'hold' | 'attackMove' | 'move';
   /** Opportunity value of delaying the parent objective, not a fixed detour distance cap. */
   valueGoldPerTick?: number;
 };
@@ -37,7 +38,7 @@ export function planCampTravel(snapshot: GameSnapshot, unit: Unit, goal: Point, 
     subgoal: Subgoal | null = null, destination = goal): CampTravelPlan => ({ kind, goal: { x: destination.x, y: destination.y }, road, contacts, delayGold, exposureGold, subgoal });
   if (!direct) return result('unreachable', null, []);
   const contactOptions = { facts, ...(options.exemptMemberIds ? { exemptMemberIds: options.exemptMemberIds } : {}),
-    arrivalMode: options.arrivalMode ?? 'idle', horizonTicks: 100 } as const;
+    movingMode: options.movingMode ?? 'move', arrivalMode: options.arrivalMode ?? 'idle', horizonTicks: 100 } as const;
   const contacts = neutralCampRouteContacts(snapshot, unit, direct.points.length ? direct.points : [unit, goal], contactOptions);
   if (!contacts.length) return result('direct', direct, contacts);
   const camps = [...new Set(contacts.map(contact => contact.camp))];
@@ -89,7 +90,7 @@ export function planCampTravel(snapshot: GameSnapshot, unit: Unit, goal: Point, 
       || Math.hypot(a.x - unit.x, a.y - unit.y) - Math.hypot(b.x - unit.x, b.y - unit.y)).slice(0, 4);
   // Cold alert/current-position disks find a detour; pursuit remains a cost in the subsequent contact query.
   const disks = facts.camps.filter(camp => !camp.memberIds.some(id => options.exemptMemberIds?.has(id)))
-    .flatMap(camp => camp.members.filter(member => !member.returning).map(member => ({ ...member.point, radius: member.alertRadius + 24 })));
+    .flatMap(camp => camp.members.filter(member => !member.returning).map(member => ({ ...member.point, radius: Math.max(member.alertRadius, unitAutoAcquireRadius(snapshot, unit, options.movingMode ?? 'move')) + unit.radius + 24 })));
   let router: ReturnType<typeof landDiskRouter> | undefined;
   for (const point of safeEnds) {
     let candidate = nativeLandRoad(snapshot, unit, point);
