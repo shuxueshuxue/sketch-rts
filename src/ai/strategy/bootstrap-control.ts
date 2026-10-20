@@ -22,12 +22,12 @@ import { observeWorkerSafetyInterruption } from './executors/worker-safety';
 import { createStrategyAllocationMemory } from './control';
 import { importExecutedIncumbents, incumbentTasks, withFormalCommitments } from './incumbent-import';
 import { handoffIncumbent } from './incumbent-handoff';
-import { incumbentCommandActor, inheritIncumbentCommand } from './incumbent-command-source';
 import { incumbentDisposition, recordCandidateReassignment, recordIncumbentCommands } from './incumbent-evidence';
 import { importedMiningLossUpperBound } from './imported-loss-bound';
 import { createStrategyCommandGateway, type StrategyCommandProposal } from './command-gateway';
 import { FactWorkQueue, withFactWork } from './fact-work';
 import { boundObservationMemory, observationMemory } from './observation-memory';
+import { isLifeSavingScript, recordScriptSafetyInterruptions } from './script-safety';
 
 export type AllocationCandidateRequest = Readonly<{ objectiveId: string; methodId: string; phase: 'skeleton' | 'gross' | 'net';
   /** These are proposed bundles, not an assertion that authority was granted. */
@@ -42,25 +42,12 @@ export type BootstrapStrategyOutput = Readonly<{ decision: StrategyDecision; pro
 const providers = [defenseMethodProvider, conquestMethodProvider];
 const compare = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;
 
-function scriptProposals(scriptId: string, commands: readonly GameCommand[], authority: StrategyAllocationMemory,
+function scriptProposals(scriptId: string, commands: readonly GameCommand[],
   nextId: () => string): StrategyCommandProposal[] {
-  return commands.flatMap(command => {
-    const actor = incumbentCommandActor(command);
-    const ids = 'unitIds' in command ? command.unitIds : 'unitId' in command ? [command.unitId] : [];
-    const groups = new Map<string, { action: StrategyCommandProposal['action']; ids: string[] }>();
-    for (const id of ids) {
-      const lease = authority.leases[`unit:${id}`];
-      const own = actor && lease?.origin === 'imported-task' && lease.incumbentTask?.source === actor.source
-        && lease.incumbentTask.taskId === actor.taskId ? lease.action : null;
-      const key = own ? `${own.actionId}:${own.generation}` : '';
-      const group = groups.get(key) ?? { action: own, ids: [] };
-      group.ids.push(id); groups.set(key, group);
-    }
-    if (!ids.length) groups.set('', { action: null, ids: [] });
-    return [...groups.values()].map(group => ({ id: nextId(), source: group.action ? 'executor' as const : 'script' as const,
-      executor: scriptId, action: group.action, allocationRevision: group.action ? authority.revision : null, purpose: 'task' as const,
-      command: 'unitIds' in command ? inheritIncumbentCommand(command, { ...command, unitIds: group.ids }) : command }));
-  });
+  // Imported bookkeeping neither turns a native producer into a formal
+  // executor nor splits its bulk commands or charges a fictional budget.
+  return commands.map(command => ({ id: nextId(), source: 'script', executor: scriptId,
+    action: null, allocationRevision: null, purpose: isLifeSavingScript(scriptId) ? 'life-saving' : 'task', command }));
 }
 
 /** Replacing these native unit orders has no cash fee and neither cancels a
@@ -166,7 +153,7 @@ function controlledBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, ve
   const rejected: CommandAdmission[] = [];
   const oldEntries = planAiCommandEntriesFromScripts(snapshot, owner, scripts, context, {
     admitCommands(script, commands) {
-      const result = preflight.admit(scriptProposals(script.id, commands, authority, nextId));
+      const result = preflight.admit(scriptProposals(script.id, commands, nextId));
       rejected.push(...result.admissions.filter(item => item.status === 'rejected'));
       return result.accepted.map(item => item.command);
     },
@@ -192,7 +179,7 @@ function controlledBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, ve
     }
     for (const reason of feedback.reasons) context.executorReason?.(reason);
   }
-  const scriptFinal = oldEntries.flatMap(entry => scriptProposals(entry.scriptId, [entry.command], authority, nextId));
+  const scriptFinal = oldEntries.flatMap(entry => scriptProposals(entry.scriptId, [entry.command], nextId));
   // Final admission includes afterPlan output. Preflight never records issued
   // orders or spends money; only the final admitted subset becomes provenance.
   let memory = authority;
@@ -201,6 +188,7 @@ function controlledBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, ve
   const result = gateway.admit([...formal.filter(item => item.purpose === 'life-saving'), ...scriptFinal,
     ...formal.filter(item => item.purpose !== 'life-saving')]);
   memory = recordAllocationCommands(memory, snapshot, result.admissions);
+  memory = recordScriptSafetyInterruptions(memory, snapshot, situation, result.admissions);
   for (const scriptId of [...new Set(result.accepted.map(item => item.executor))].sort(compare))
     memory = recordIncumbentCommands(memory, snapshot, scriptId, result.accepted.filter(item => item.executor === scriptId).map(item => item.command), nextId);
   memory = pruneAllocationProvenance(advanceAllocationLeases(settleAllocationState(memory, snapshot), snapshot)); policy.strategyAllocation = memory;

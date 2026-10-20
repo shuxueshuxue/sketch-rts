@@ -1,8 +1,9 @@
 import type { GameCommand, GameSnapshot, PlayerId } from '../../shared/types';
 import type { ActionGrant, ActionToken, CommandAdmission, ExclusiveResourceKey, StrategyAllocationMemory } from './allocation-types';
 import { sameAction } from './control';
-import { inheritIncumbentCommand } from './incumbent-command-source';
+import { incumbentCommandActor, inheritIncumbentCommand } from './incumbent-command-source';
 import { allocationCommandCost, reservedAllocationGold } from './allocation-ledger';
+import { isLifeSavingScript } from './script-safety';
 
 export type StrategyCommandProposal = Readonly<{
   id: string;
@@ -43,9 +44,9 @@ function operands(snapshot: GameSnapshot, command: GameCommand): Operands {
   return { units, queues, dependencies };
 }
 
-/** A transaction-local gateway. Raw script authority can never command a leased
- * resource. A supported incumbent adapter must explicitly bind its real token,
- * just like every other executor. No simulator legality rule is copied here. */
+/** A transaction-local gateway. Formal grants are exclusive; imported tasks
+ * retain the original producer's native authority. Local rescue services can
+ * interrupt either without changing the parent. Native legality is not copied. */
 type StrategyGatewayInput = Readonly<{ snapshot: GameSnapshot; owner: PlayerId;
   memory: StrategyAllocationMemory; grants: readonly ActionGrant[]; queuedTick: number | null }>;
 export function createStrategyCommandGateway(input: StrategyGatewayInput) {
@@ -58,7 +59,11 @@ export function createStrategyCommandGateway(input: StrategyGatewayInput) {
     ? grants.find(grant => grant.revision === memory.revision && sameAction(grant.action, proposal.action!)) : undefined;
   const allows = (key: ExclusiveResourceKey, proposal: StrategyCommandProposal) => {
     const lease = memory.leases[key];
-    if (proposal.source === 'script') return !lease;
+    if (proposal.source === 'script' && proposal.purpose === 'life-saving' && isLifeSavingScript(proposal.executor)) return true;
+    const actor = incumbentCommandActor(proposal.command);
+    const importedOwner = lease?.origin === 'imported-task' && (memory.executions[lease.action.actionId]?.executor === proposal.executor
+      || actor && lease.incumbentTask?.source === actor.source && lease.incumbentTask.taskId === actor.taskId);
+    if (proposal.source === 'script') return !lease || !!importedOwner;
     const grant = grantFor(proposal), action = proposal.action && memory.executions[proposal.action.actionId];
     const order = key.startsWith('unit:') ? memory.issuedOrders[key.slice(5)] : undefined;
     const service = proposal.purpose === 'life-saving' && order?.observedTick === snapshot.tick
@@ -76,7 +81,8 @@ export function createStrategyCommandGateway(input: StrategyGatewayInput) {
   let reservedGold = reservedAllocationGold(memory);
   const usedBudgetGold = new Map<string, number>();
   return { admit(proposals: readonly StrategyCommandProposal[]) {
-  for (const proposal of proposals) if (proposal.purpose === 'life-saving' && grantFor(proposal)) {
+  for (const proposal of proposals) if (proposal.purpose === 'life-saving'
+    && (grantFor(proposal) || proposal.source === 'script' && isLifeSavingScript(proposal.executor))) {
     for (const id of operands(snapshot, proposal.command).units) if (allows(`unit:${id}`, proposal)) interruptions.add(id);
   }
   const admissions: GatewayAdmission[] = [], accepted: StrategyCommandProposal[] = [];
