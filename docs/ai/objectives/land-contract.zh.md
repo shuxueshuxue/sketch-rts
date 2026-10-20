@@ -185,3 +185,11 @@ twoShores / enemy2 的 `emberRavager-1092` 在 **9097–9187**，naval recovery 
 对 (e)“局部占优、目标空虚，却没有任何模块去做”，**本轮没有核出满足路线、到达、留守及可响应援军全部前置的确定遗漏**。L5 / L6 单列为“缺计划链”，不冒充能直接拿下的机会；四局 15 分钟样本也不能给出 240 局发生率或胜率结论。
 
 原始证据在同目录 [land-contract.evidence.json](land-contract.evidence.json) 指向的 A100 对象。包内 `README.zh.md` 说明重放入口、逐次 think 字段、实际交付日志和 SHA256 清单；`analysis/incidents.json` 是这八条实录的入口。这个 draft 仅增加文档和证据指针，留待三线契约汇总后再定统一战略层。
+
+## 控制连续诊断中的过期建造 claim（待后续清理）
+
+冻结控制源码 `70ae44e6` 的鸥岛 p0/tick3630，`unit-p0-worker-1012` 仍有 `unitClaims.build`，targetId 为 `build:build:townHall:1616:2224`。原生订单已经是 `idle`，对应 `building-p0-townHall-1167` 已 `complete=true`、建造进度 `560/560`，工人为满血 `70/70`。claim 存在不等于仍有施工承诺；迁移期 incumbent 读取必须核对当前原生订单与目标世界状态，不能据此补造施工、发令回执或机会损失。旧模块清理此过期 claim 的缺口留作后续工作，本切片不改其清理行为。
+
+该帧中前矿及主厅的 SiteThreat 都没有攻击者，已到/在途敌力均为零。旧控制报价却给“把安全工人撤回主厅”正资产收益，tick3630 获得撤离租用、3633 原生命令落地。反事实修正的回归应为零撤离 grant，保持原生 idle，允许经济模块正常接管；不能写成继续建造已经完工的矿厅。
+
+原始完整 snapshot 与 think 前 memory 保存在 [gullIsland-control-3630.json.gz](../../../src/ai/strategy/fixtures/gullIsland-control-3630.json.gz)。它由原始命令重放提取，继续重放至4500的 snapshot、canonical、checksum 三项均与原始导出一致。来源为 A100 `continuous-diagnostic-70ae44e6` 两局包，SHA256 `03ff1a8da1f4b8f4fbfc26979b2441bf90affc047be1f66e3881ca258a713243`；该包只供连续诊断，不是行为验收通过证明。
