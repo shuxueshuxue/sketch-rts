@@ -204,3 +204,11 @@ SKETCH_MACHINES=/root/.config/sketch/machines-naval.json \
 ```
 
 包内 `work/naval-objectives/review/conflict-ledger.jsonl.gz` 保留全部争用候选和已接纳切换的逐条后果；`proof/frames/*/replay-lifecycle.json` 是精确事件时刻；`work/naval-objectives/opportunity.json` 是蓝宝的资源/claim 可行性查询。完整包 `native/runs/<map>/thinks.jsonl.gz` 才是所有 16,800 次 think 的未筛选记录，不能只看摘要来推断某类事件从未发生。
+
+## 分配器接线复核：旧 ferry 泊位契约缺口（待办）
+
+2026-10-20 对 main `0552ff21` 的只读核查确认：`policy/naval.ts` 的 `coastOnWater` 用 terrain 的 `walkableGoal` / `shoreSpots` 选择水点；`ferryOrders` 将其写入 `mission.from`，装载前先向该点移动。真正下达原生 board 后，sim 才调用 `shared/naval.ts` 的 `boardingBerth`，另求船体姿态与陆地点。旧任务没有把这份姿态、陆点及完整航路作为同一个已验证泊位保存，属于规划与执行几何未同源的契约缺口。本控制切片只修正式方法的共享泊位事实，未改旧 ferry 策略；旧任务的统一应在后续迁移时处理。
+
+这不等于已证实旧 ferry 也选中了船厂矩形内的 `(1648,2480)`。用冻结连续诊断 `70ae44e6` 的真实蓝宝 p4 / tick 4180、4495 快照，只调用与 main 逐字相同的 `coastOnWater`，从主厅得到的均是 `(1552,2640)`，位于船厂外；4180 全部 7 个自有厅／陆兵源点的查询也未落入船厂矩形。实际旧任务保存的 `from=(1515.8040695718294,2512)`，阶段是 return。因此这两帧没有复现相同碰撞，不把新报价的 partial 航路归罪于旧 ferry，也不据此估算发生率或损失。原始水点在当前船头角度下未通过 terrain 的 `hullFits`，但这既不检查建筑碰撞，也不能证明所有转向都不可达。
+
+[独立只读证据](main-ferry-berth-audit.evidence.json) 保存两帧、原生重放哈希来源、main 源文件、探针与逐项输出，77,636 bytes，SHA-256 `eb57d5c38d5b41cba0ec53e3f1bea01ea3c7f93f6c1df8bc68cafbceacb45b97`。探针没有运行 AI 或新对局；它证明上述调用和坐标边界，不作为实际停滞的因果证明。
