@@ -9,7 +9,7 @@ import { creepForce, forceFor, type Camp } from '../policy/v7/creep';
 import { isOpponentOwner } from '../policy/ownership';
 import { averagePoint, distance } from '../policy/spatial';
 import { arrivalWeightedForce } from './arrival-force';
-import { casualtySurvivors, focusedCasualties } from './focused-casualties';
+import { calibratedCasualties, casualtySurvivors } from './focused-casualties';
 import type { DecisionFacts } from './decision';
 import { landIdAt } from './regions';
 import { strategicTargetCamp } from './target-camp';
@@ -154,7 +154,7 @@ export function assessAllocatedDefenseBattle(input: Readonly<{ snapshot: GameSna
     + input.towers.reduce((sum, tower) => sum + tower.attackDamage * SIM_TICKS_PER_SECOND / Math.max(1, tower.attackCooldown), 0);
   const durationTicks = enemyHp > 0 ? enemyHp / Math.max(1, ourDps) * SIM_TICKS_PER_SECOND : input.towers.length ? input.windowTicks : 0;
   const damageExposure = enemyDps * durationTicks / SIM_TICKS_PER_SECOND;
-  return { ourDps, enemyHp, enemyDps, durationTicks, damageExposure, casualties: focusedCasualties(input.units, damageExposure) };
+  return { ourDps, enemyHp, enemyDps, durationTicks, damageExposure, casualties: calibratedCasualties(input.units, damageExposure) };
 }
 
 /** The executor's physical counterpart of the forecast. Only actual granted,
@@ -211,7 +211,7 @@ export function assessAllocatedCampBattle(input: Omit<TargetReinforcementInput, 
   const probability = status === 'known' ? forceSuccessProbability(ourForce!, opponentForce!) : null;
   const availability = new Map(engagement.enemyAvailability.map(entry => [entry.unitId, entry]));
   const frontRange = ours.length ? Math.min(...ours.map(unit => unit.attackRange)) : 0;
-  // Exposure estimates damage only. One shared focus-fire model turns it into
+  // Exposure estimates damage only. One shared calibrated model turns it into
   // exact deaths and wounded survivors; departure margins never enter loss cost.
   const damage = engagement.opposition.creeps.reduce((sum, opponent) => {
     const life = availability.get(opponent.id);
@@ -220,7 +220,7 @@ export function assessAllocatedCampBattle(input: Omit<TargetReinforcementInput, 
     const original = snapshot.units.find(unit => unit.id === opponent.id)!;
     return sum + combatCapability(snapshot, original).dps * Math.max(0, seconds - approach);
   }, towers.reduce((sum, tower) => sum + tower.attackDamage / Math.max(1, tower.attackCooldown) * durationTicks, 0));
-  const casualties = focusedCasualties(ours, damage);
+  const casualties = calibratedCasualties(ours, damage);
   const hp = ours.reduce((sum, unit) => sum + unit.hp, 0), lossShare = casualties.expectedHpLost / Math.max(1, hp);
   const permanent = casualtySurvivors(ours, casualties).filter(unit => unit.expiresTick === undefined);
   return { status, reasonCode: !converged ? 'camp-battle-iteration-limit' : !dps ? 'allocated-battle-dps-unavailable'
