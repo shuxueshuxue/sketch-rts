@@ -50,6 +50,9 @@ export type CrossingEta = Readonly<{
   /** Additional wait after the embarkation walk, excluding time already spent walking. */
   waitTicks: number;
   boardingTicks: number;
+  /** Absolute completion forecast of embarkation, evaluated in this snapshot.
+   * Absent for already loaded units or an unquoted loading schedule. */
+  expectedLoadedTick?: number;
   sailingTicks: number;
   unloadingTicks: number;
   /** A newly built ship is a method prerequisite, not an already available hull. */
