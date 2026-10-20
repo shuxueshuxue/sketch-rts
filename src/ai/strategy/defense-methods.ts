@@ -1,15 +1,19 @@
 import { UNIT_DEFS } from '../../shared/catalog';
+import { combatCapability } from '../../shared/combat-capabilities';
+import { strikeGap } from '../../shared/combat-geometry';
+import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { sameGround } from '../../shared/terrain';
 import type { GameSnapshot } from '../../shared/types';
 import { averagePoint, distance } from '../policy/spatial';
-import { TOWER_STRENGTH } from '../policy/v6/strength';
+import { TOWER_STRENGTH, structureRating } from '../policy/v6/strength';
+import { isOpponentOwner } from '../policy/ownership';
 import { assessAllocatedForce } from './allocated-force';
 import type { AllocationMethodProvider, AllocationReason, AllocationUtility, ExecutableMethod,
   ForceQuotation, MethodAllocationQuote } from './allocation-types';
 import type { DecisionFacts } from './decision';
 import { defenseCoverPost, defenseGatherPost } from './executors/defend-site';
 import type { Method, Objective, ResourceDemand, Situation, Target } from './types';
-import { forceSuccessProbability, forceTimeGold } from './utility';
+import { discountedFlow, discountedValue, forceSuccessProbability, resolveValuation, valuationWindow } from './utility';
 import { unitArrival } from './unit-arrivals';
 import { siteCollapseAfter } from './naval-objectives';
 import { arrivalWeightedForce } from './arrival-force';
@@ -138,10 +142,34 @@ export const defenseMethodProvider: AllocationMethodProvider = {
     if (unknown.length) missing = 'response-arrival-unknown';
     const validIds = new Set([...stationed, ...enRoute]);
     const cohort = selected.filter(unit => validIds.has(unit.id));
-    const demand = requiredDefense(situation, objective);
-    const covering = method.kind === 'wait-in-cover' ? snapshot.buildings.filter(tower => tower.owner === situation.owner
+    const threatWindow = threat?.horizonTicks ?? situation.horizonTicks;
+    const opponentUnknown: string[] = [], opponentEta = new Map<string, number>(), coverage = new Map<string, number>();
+    const opponentStrength = new Map((threat?.attackers ?? []).map(attacker => [attacker.unitId, attacker.strength]));
+    const opponents = (threat?.attackers ?? []).flatMap(attacker => {
+      const unit = snapshot.units.find(unit => unit.id === attacker.unitId && unit.hp > 0);
+      if (!unit || unit.expiresTick !== undefined && unit.expiresTick <= snapshot.tick) return [];
+      const arrival = attacker.arrival;
+      if (!('ticks' in arrival) || arrival.crossings.some(crossing => crossing.requiresNewShip)) { opponentUnknown.push(unit.id); return []; }
+      if (arrival.ticks >= threatWindow) return [];
+      const available = Math.min(threatWindow, (unit.expiresTick ?? Infinity) - snapshot.tick) - arrival.ticks;
+      if (available <= 0) return [];
+      opponentEta.set(unit.id, arrival.ticks); coverage.set(unit.id, available / (threatWindow - arrival.ticks)); return [unit];
+    });
+    const enemyWeighted = arrivalWeightedForce(opponents.filter(unit => opponentEta.get(unit.id) === 0),
+      opponents.filter(unit => opponentEta.get(unit.id)! > 0).map(unit => ({ unit, etaTicks: opponentEta.get(unit.id)! })), threatWindow,
+      group => group.reduce((sum, unit) => sum + opponentStrength.get(unit.id)! * coverage.get(unit.id)!, 0));
+    const site = situation.assets.find(asset => asset.id === targetId);
+    const actualSite = snapshot.buildings.find(building => building.id === targetId) ?? objective.target.point;
+    const hostileTowers = snapshot.buildings.filter(tower => tower.complete && tower.hp > 0 && tower.attackDamage > 0
+      && isOpponentOwner(snapshot, situation.owner, tower.owner, {}) && strikeGap(tower, actualSite) <= tower.attackRange);
+    const actualOpposition = enemyWeighted.effectiveForce + hostileTowers.reduce((sum, tower) => sum + structureRating(tower), 0);
+    const minimum = objective.effects.find(effect => effect.kind === 'force-present');
+    // One departure margin. Success probability below sees actual opposition.
+    const demand = Math.max(minimum?.kind === 'force-present' ? minimum.minimumStrength : 1, actualOpposition * 1.25);
+    if (opponentUnknown.length) missing = 'defense-opposition-arrival-unknown';
+    const covering = snapshot.buildings.filter(tower => tower.owner === situation.owner
       && tower.complete && tower.hp > 0 && tower.attackDamage > 0
-      && distance(tower, method.actions.at(-1)!.target.point) + 80 <= tower.attackRange) : [];
+      && strikeGap(tower, method.actions.at(-1)!.target.point) + 80 <= tower.attackRange);
     const coverForce = covering.reduce((sum, tower) => sum + TOWER_STRENGTH * tower.hp / tower.maxHp, 0);
     if (method.kind === 'wait-in-cover' && !covering.length) missing = 'no-reachable-tower-cover';
     const total = assessAllocatedForce(situation.owner, cohort, { metric: 'field-strength', requiredForce: Math.max(0, demand - coverForce) });
@@ -152,29 +180,51 @@ export const defenseMethodProvider: AllocationMethodProvider = {
     const force: ForceQuotation | null = evacuation ? null : { metric: 'field-strength', target: objective.target,
       onStationUnitIds: stationed, enRouteUnitIds: enRoute, unavailableUnitIds: unavailable, unknownUnitIds: unknown,
       onStationForce: weighted.onStationForce, effectiveForce: weighted.effectiveForce, discountedEnRouteForce: weighted.discountedEnRouteForce,
-      requiredForce: total.requiredForce, evaluationUntilTick: situation.tick + situation.horizonTicks };
+      requiredForce: total.requiredForce, evaluationUntilTick: situation.tick + threatWindow };
     if (!evacuation && weighted.effectiveForce < total.requiredForce) missing ??= 'insufficient-timely-defense-force';
-    const site = situation.assets.find(asset => asset.id === targetId);
-    if (threat && latest > siteCollapseAfter(snapshot, threat, site?.hp ?? 0)) missing ??= 'response-arrives-after-site-collapse';
+    if (threat && latest > siteCollapseAfter(snapshot, threat, site?.hp ?? 0) && weighted.effectiveForce < total.requiredForce)
+      missing ??= 'response-arrives-after-site-collapse';
     if (evacuation && (!at || !cohort.length)) missing ??= at ? 'no-granted-evacuees' : 'no-reachable-evacuation-shelter';
-    const utilityBase = objective.conditionalQuote?.potentialUtility ?? objective.utility;
-    const benefit = evacuation ? [{ code: 'workers-saved', value: cohort.length * UNIT_DEFS.worker.cost }]
-      : utilityBase.benefit.map(term => ({ code: term.code, value: term.value }));
-    const cost = [...utilityBase.cost.filter(term => term.code !== 'force-time' && term.code !== 'new-transport').map(term => ({ code: term.code, value: term.value })),
-      { code: 'force-time', value: forceTimeGold(total.force, latest) },
-      ...method.spends.filter(spend => spend.includedUtilityTermCodes.includes('new-transport')).map(spend => ({ code: 'new-transport',
-        value: Math.max(0, spend.amountGold - input.budgets.filter(budget => budget.spendId === spend.spendId)
-          .reduce((paid, budget) => Math.max(paid, budget.paidGold), 0)) }))];
-    const probability = evacuation ? 1 : forceSuccessProbability(weighted.effectiveForce + coverForce, demand / 1.25);
-    const utility: AllocationUtility = { horizonTicks: utilityBase.horizonTicks, benefit, cost,
-      successProbability: probability, persistenceBonus: utilityBase.persistenceBonus,
+    const duration = Math.max(latest, ...objective.effects.flatMap(effect => effect.kind === 'site-safe' || effect.kind === 'force-present'
+      ? [Math.max(0, effect.throughTick - situation.tick)] : []));
+    const window = valuationWindow(duration, input.valuation), valuation = resolveValuation({ objectiveId: objective.id,
+      methodId: method.id, unitIds, window }, input.valuation);
+    const opportunity = valuation.opportunity;
+    if (valuation.phase === 'net' && opportunity?.status !== 'known') missing ??= 'committed-opportunity-cost-unknown';
+    // No ungranted army is promised as a defending garrison. Existing static
+    // cover is the counterfactual protection if this cohort is sent elsewhere.
+    const staticProtection = actualOpposition > 0 ? forceSuccessProbability(coverForce, actualOpposition) : 1;
+    const assets = situation.assets.filter(asset => asset.target.landId === objective.target.landId
+      && distance(asset.target.point, objective.target.point) <= 650
+      && (asset.owner === situation.owner || site?.kind === 'hall' && asset.kind === 'mine'));
+    const atRisk = assets.reduce((sum, asset) => sum + (asset.kind === 'mine'
+      ? discountedFlow({ goldPerTick: asset.incomeGoldPerTick, remainingGold: asset.remainingGold, startsInTicks: 0, window })
+      : discountedValue(asset.replacementGold, latest, window)), 0);
+    const benefit = evacuation ? [{ code: 'workers-saved', value: discountedValue(cohort.length * UNIT_DEFS.worker.cost, latest, window) }]
+      : [{ code: 'protected-assets', value: atRisk }];
+    const enemyHp = opponents.reduce((sum, unit) => sum + unit.hp * coverage.get(unit.id)!, 0);
+    const ourDps = cohort.reduce((sum, unit) => sum + combatCapability(snapshot, unit).dps, 0);
+    const enemyDps = opponents.reduce((sum, unit) => sum + combatCapability(snapshot, unit).dps * coverage.get(unit.id)!, 0)
+      + hostileTowers.reduce((sum, tower) => sum + tower.attackDamage * SIM_TICKS_PER_SECOND / Math.max(1, tower.attackCooldown), 0);
+    const fightSeconds = enemyHp / Math.max(1, ourDps);
+    const lossShare = Math.min(1, enemyDps * fightSeconds / Math.max(1, cohort.reduce((sum, unit) => sum + unit.hp, 0)));
+    const cost = [...(evacuation ? [] : [{ code: 'static-protection-baseline', value: atRisk * staticProtection }]),
+      { code: 'combat-attrition', value: evacuation ? 0
+      : discountedValue(cohort.reduce((sum, unit) => sum + UNIT_DEFS[unit.kind].cost, 0) * lossShare, latest, window) },
+      ...(opportunity?.status === 'known' ? [{ code: 'bundle-opportunity', value: opportunity.gold }] : [])];
+    if (method.voyagePlans?.length) missing ??= 'transport-asset-risk-unknown';
+    const probability = evacuation || actualOpposition === 0 ? 1 : forceSuccessProbability(weighted.effectiveForce + coverForce, actualOpposition);
+    const persistenceBonus = objective.utility.persistenceBonus;
+    const utility: AllocationUtility = { horizonTicks: window.horizonTicks, benefit, cost,
+      successProbability: probability, persistenceBonus,
       score: probability * benefit.reduce((sum, term) => sum + term.value, 0)
-        - cost.reduce((sum, term) => sum + term.value, 0) + utilityBase.persistenceBonus };
+        - cost.reduce((sum, term) => sum + term.value, 0) + persistenceBonus };
     const why = reason(missing ?? 'allocated-defense-cohort-feasible', [...requested], { requiredForce: total.requiredForce,
-      availableForce: weighted.effectiveForce, latestArrivalTicks: latest });
-    return missing ? { methodId: method.id, status: 'blocked', force, utility: null, potentialUtility: utility,
+      availableForce: weighted.effectiveForce, actualOpposition, successProbability: probability, staticProtection,
+      latestArrivalTicks: latest, opponentUnknown: opponentUnknown.length });
+    return missing ? { methodId: method.id, status: 'blocked', force, valuation, utility: null, potentialUtility: null,
       reason: why, missingPreconditions: [{ id: `${method.id}/${missing}`, kind: missing.includes('force') ? 'force' : 'route',
-        status: unknown.length ? 'unknown' : 'unmet', reason: why, demand: method.demands[0] ?? null, subgoalIds: [] }] }
-      : { methodId: method.id, status: 'feasible', force, utility, potentialUtility: null, missingPreconditions: [], reason: why };
+        status: missing.includes('unknown') ? 'unknown' : 'unmet', reason: why, demand: method.demands[0] ?? null, subgoalIds: [] }] }
+      : { methodId: method.id, status: 'feasible', force, valuation, utility, potentialUtility: null, missingPreconditions: [], reason: why };
   },
 };
