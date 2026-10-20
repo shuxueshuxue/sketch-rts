@@ -148,3 +148,12 @@ it('can finance later recruits from explicitly forecast new-mine income without 
   expect(result.trainingGold).toBe(result.training.length * 75);
   expect(result.workers.every(w => w.source !== 'train-worker' || result.training.some(t => t.id === w.unitId))).toBe(true);
 });
+
+it('does not book an established miner as expansion income before the actual new hall can be ready', () => {
+  const input = example(1), worker = input.snapshot.units.find(u => u.id === 'spare-0')!;
+  worker.order = { type: 'mine', resourceId: 'new', phase: 'gather', timer: 60 }; worker.mineSlot = 'new';
+  const forecast = forecastMiningWorkforce({ ...input, hallReadyTicks: input.window.horizonTicks + 1 });
+  expect(forecast.workers.find(w => w.unitId === worker.id)?.source).toBe('stationed');
+  expect(forecast.segments).toEqual([]);
+  expect(forecast.incomeGold).toBe(0);
+});
