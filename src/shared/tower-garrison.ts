@@ -51,9 +51,9 @@ export function garrisonUsed(snapshot: Snapshot, tower: Pick<Building, "id">) {
 /** The single eligibility/room rule read by commands, AI legality and the arrival check. */
 export function garrisonRefusal(snapshot: Snapshot, tower: Building, unit: Unit): GarrisonRefusal | undefined {
   const buildingId = tower.id;
-  if (isMechanicalUnit(unit, snapshot)) return { reason: "garrison-mechanical", detail: { buildingId } };
+  if (!canStandOnTower(unit, snapshot)) return { reason: isMechanicalUnit(unit, snapshot) ? "garrison-mechanical" : "garrison-ineligible", detail: { buildingId } };
   if (tower.owner !== unit.owner) return { reason: "garrison-ownership", detail: { buildingId, owner: tower.owner } };
-  if (!isFortifiedTower(tower) || tower.hp <= 0 || !canStandOnTower(unit, snapshot)) return { reason: "garrison-ineligible", detail: { buildingId } };
+  if (!isFortifiedTower(tower) || tower.hp <= 0) return { reason: "garrison-ineligible", detail: { buildingId } };
   const troops = towerGarrison(snapshot.units, tower).filter(other => other.id !== unit.id);
   const used = troops.reduce((total, other) => total + garrisonSupply(snapshot, other), 0), required = garrisonSupply(snapshot, unit);
   if (used + required > TOWER_GARRISON.supply) return { reason: "tower-full", detail: { buildingId, used, capacity: TOWER_GARRISON.supply, required } };

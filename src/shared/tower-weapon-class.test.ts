@@ -102,6 +102,15 @@ it("removes an older saved melee research bonus on restore without changing heal
 });
 
 describe("tower admission and whole bodies", () => {
+  it("reads mechanical eligibility from the current unit definition, including variants", () => {
+    const { game, tower } = field(); game.variants = {
+      machine: resolveVariant({ base: "footman", unitClass: "mechanical" }),
+      living: resolveVariant({ base: "golem", unitClass: "nonMechanical" }),
+    };
+    const machine = spawnVariantUnit(game, "player", "machine", 1000, 1100), living = spawnVariantUnit(game, "player", "living", 1100, 1100);
+    expect(canStandOnTower(machine, game)).toBe(false); expect(garrisonRoomFor(game, tower, machine)).toBe(false);
+    expect(canStandOnTower(living, game)).toBe(true); expect(garrisonRoomFor(game, tower, living)).toBe(true);
+  });
   it.each(["ballista", "catapult", "siegeRam", "golem", "organGun"] as const)("explicitly refuses a %s without cancelling its previous orders", kind => {
     const { game, tower } = field(); const unit = game.spawnUnit("player", kind, 1000, 1100);
     unit.order = { type: "move", x: 1500, y: 1100 }; unit.orderQueue = [{ type: "hold", x: 1500, y: 1100 }];
