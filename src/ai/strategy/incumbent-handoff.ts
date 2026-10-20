@@ -19,7 +19,20 @@ export function handoffIncumbent(snapshot: GameSnapshot, owner: PlayerId, memory
   const reason = transfer === 'candidate-reassigned' ? transfer : 'higher-priority-preemption';
   let remaining: string[] = [], targets: string[] = [];
   const expansion = memory.landExpansion;
-  if (expansion && sameActor(actor, landExpansionActor(expansion))) {
+  if (actor.source === 'miningDefense') {
+    const belongs = (id: string) => {
+      const claim = memory.unitClaims[id];
+      return claim?.targetId === actor.taskId && ['mineGuard', 'mineRally', 'mineLeash'].includes(claim.kind);
+    };
+    const members = new Set(Object.keys(memory.unitClaims).filter(belongs));
+    for (const lease of Object.values(memory.strategyAllocation?.leases ?? {}))
+      if (lease.resourceKey.startsWith('unit:') && lease.incumbentTask && sameActor(lease.incumbentTask, actor))
+        members.add(lease.resourceKey.slice(5));
+    for (const id of unitIds) if (belongs(id)) clearUnitClaim(memory, id);
+    remaining = [...members].filter(id => !removed.has(id) && alive.has(id) && strategyLeaseAllows(memory, id, actor));
+    // The post and everyone else remain intact; selectors consult the new lease.
+    targets = [actor.taskId];
+  } else if (expansion && sameActor(actor, landExpansionActor(expansion))) {
     const members = new Set(Object.entries(memory.unitClaims).filter(([, claim]) => claim.expansionMineId === expansion.mineId
       || claim.kind === 'expansion' && claim.targetId === expansion.mineId).map(([id]) => id));
     for (const id of expansion.combat?.creep?.group ?? []) members.add(id);
