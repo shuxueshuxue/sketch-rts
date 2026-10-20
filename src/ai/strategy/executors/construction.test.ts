@@ -10,6 +10,7 @@ import type { ActionIntent, ExecutorInput } from '../allocation-types';
 import { landIdAt, seaIdAt } from '../regions';
 import { buildHallExecutor } from './build-hall';
 import { trainTransportExecutor } from './train-transport';
+import { trainWorkerExecutor } from './train-worker';
 import { assembleExecutor } from './assemble';
 import { waitIncomeExecutor } from './wait-income';
 import { establishForceExecutor } from './establish-force';
@@ -29,7 +30,8 @@ function request(frameId: string, kind: ActionIntent['kind'], targetId: string, 
     status: 'active', sinceTick: snapshot.tick, rank: 1, reasons: [], methodIds: [methodId],
     stability: { minimumStayUntilTick: snapshot.tick, challengerId: null, challengerThinks: 0 } },
     method: { id: methodId, objectiveId, kind: 'staged-beachhead', preconditions: [], subgoals: [], demands: [], estimatedTicks: null, status: 'selected', reasons: [] },
-    execution: { token, objectiveId, methodId, executor: `strategy.${kind}`, intent: { kind: kind as 'train-transport' | 'build-hall' },
+    execution: { token, objectiveId, methodId, executor: `strategy.${kind}`,
+      intent: kind === 'clear-camp' ? { kind, memberIds: [] } : { kind },
       target, dependsOn: [], completionEffects: [], status: 'active', phase: 'ready', sinceTick: snapshot.tick, lastProgressTick: snapshot.tick, state: {} },
     grant: { revision: 1, action: token, objectiveId, methodId, assignments: [], voyages: [], orders: [], commands: [], orderOverrides: [],
       leases: resources.map(resourceKey => ({ id: `lease:${resourceKey}`, resourceKey: resourceKey as `unit:${string}` | `queue:${string}`,
@@ -39,6 +41,49 @@ function request(frameId: string, kind: ActionIntent['kind'], targetId: string, 
 }
 
 describe('allocated construction in native event frames', () => {
+  it('pays once for an explicitly leased sapphire worker queue and admits only an actual native birth', () => {
+    const frameId = 'Ne-sapphireArchipelago-player-4-17991', frame = frames[frameId]!;
+    const hallId = 'building-player-4-townhall';
+    let input = request(frameId, 'train-worker', hallId, [`queue:${hallId}`], 75);
+    const first = trainWorkerExecutor.execute(input);
+    expect(first.status).toBe('active');
+    expect(first.commands).toEqual([{ command: { type: 'train', buildingId: hallId, unitKind: 'worker' }, purpose: 'task' }]);
+    expect(first.payments ?? []).toEqual([]);
+    const game = createGame(frame.snapshot.map.id, { players: frame.activePlayers });
+    restoreSnapshotIntoGame(game, structuredClone(frame.snapshot), frame.nextId);
+    game.activePlayers = [...frame.activePlayers];
+    issueCommandFrame(game, first.commands.map(entry => ({ command: entry.command, playerId: frame.owner, scriptId: 'strategy.train-worker' })));
+    stepGame(game);
+    input = { ...input, snapshot: snapshotGame(game), execution: { ...input.execution, state: first.state, phase: first.phase },
+      grant: { ...input.grant, commands: [{ id: 'accepted-worker-training', action: input.execution.token, executor: 'strategy.train-worker',
+        purpose: 'task', acceptedTick: frame.snapshot.tick, command: first.commands[0]!.command,
+        worldBefore: { kind: 'production', buildingId: hallId, jobs: [] } }] } };
+    let result = trainWorkerExecutor.execute(input);
+    expect(result.phase).toBe('training');
+    expect(result.payments).toEqual([{ budgetId: 'budget', amountGold: 75, proof: { kind: 'production', buildingId: hallId,
+      jobId: game.buildings.find(building => building.id === hallId)!.queue[0]!.id ?? null,
+      acceptedCommandId: 'accepted-worker-training', unitKind: 'worker', queueIndex: 0 } }]);
+    expect(trainWorkerExecutor.execute({ ...input, grant: { ...input.grant,
+      budgets: input.grant.budgets.map(budget => ({ ...budget, paidGold: 75, state: 'spent' })) } }).payments).toEqual([]);
+    const cancelled = structuredClone(input), hall = cancelled.snapshot.buildings.find(building => building.id === hallId)!;
+    hall.queue = [];
+    const otherBirth = { ...cancelled.snapshot.units.find(unit => unit.owner === frame.owner && unit.kind === 'worker')!,
+      id: 'unrelated-new-worker', x: hall.x + 100, y: hall.y };
+    cancelled.snapshot.units.push(otherBirth);
+    const interrupted = trainWorkerExecutor.execute({ ...cancelled, execution: { ...cancelled.execution, state: result.state } });
+    expect(interrupted.status).toBe('blocked');
+    expect(interrupted.reasons[0]?.reason).toBe('production-job-ended-before-observed-completion');
+    for (let ticks = 0; ticks < 600 && result.status !== 'complete'; ticks += 15) {
+      for (let step = 0; step < 15; step++) stepGame(game);
+      input = { ...input, snapshot: snapshotGame(game), execution: { ...input.execution, state: result.state, phase: result.phase } };
+      result = trainWorkerExecutor.execute(input);
+    }
+    expect(result).toMatchObject({ status: 'complete', phase: 'worker-trained' });
+    expect(game.units.find(unit => unit.id === result.state.createdUnitId)).toMatchObject({ owner: frame.owner, kind: 'worker' });
+    expect(result.state.createdShipId).toBeUndefined();
+    expect(trainWorkerExecutor.execute(JSON.parse(JSON.stringify(input)))).toEqual(result);
+  });
+
   it('trains exactly one sapphire transport and waits for the native hull birth across a JSON fork', () => {
     const frameId = 'Ne-sapphireArchipelago-player-4-17991', frame = frames[frameId]!;
     let input = request(frameId, 'train-transport', 'building-player-4-shipyard-1410', ['queue:building-player-4-shipyard-1410'], 240);
