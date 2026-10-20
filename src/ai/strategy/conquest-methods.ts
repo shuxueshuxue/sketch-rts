@@ -50,12 +50,12 @@ export const conquestMethodProvider: AllocationMethodProvider = {
     const capital: ResourceDemand = { kind: 'gold', amount: BUILDING_DEFS.townHall.cost }, spendId = `${objective.id}/hall-capital`;
     const deliver = `${id}/deliver-force`, clear = `${id}/clear-camp`, engineer = `${id}/deliver-workers`, wait = `${id}/wait-hall-capital`, build = `${id}/build-hall`;
     const actions = [action(deliver, 'strategy.transport', { kind: 'deliver-force' }, objective.target, [demand])];
-    const clearingIntent = camp ? { kind: 'clear-camp' as const, memberIds: camp.creeps.map(unit => unit.id).sort() }
-      : priorClear?.intent.kind === 'clear-camp' ? priorClear.intent : undefined;
+    const clearingIntent = conquest ? camp ? { kind: 'clear-camp' as const, memberIds: camp.creeps.map(unit => unit.id).sort() }
+      : priorClear?.intent.kind === 'clear-camp' ? priorClear.intent : { kind: 'clear-camp' as const, memberIds: [] } : undefined;
     if (clearingIntent) actions.push(action(clear, 'strategy.clear-camp', clearingIntent, objective.target, [demand], [deliver]));
     const cleared = clearingIntent ? clear : deliver;
+    if (conquest) actions.push(action(engineer, 'strategy.transport', { kind: 'deliver-workers' }, objective.target, [worker], [cleared]));
     if (needsBuild) {
-      actions.push(action(engineer, 'strategy.transport', { kind: 'deliver-workers' }, objective.target, [worker], [cleared]));
       if (hallCapital) actions.push(action(wait, 'strategy.wait-income', { kind: 'wait-income' }, objective.target, [capital], [cleared], [spendId]));
       actions.push(action(build, 'strategy.build-hall', { kind: 'build-hall' }, objective.target, [worker, ...(hallCapital ? [capital] : [])],
         [engineer, ...(hallCapital ? [wait] : [])], hallCapital ? [spendId] : []));
@@ -64,9 +64,11 @@ export const conquestMethodProvider: AllocationMethodProvider = {
       { kind: 'establish-garrison' }, objective.target,
       [conquest ? { kind: 'force', metric: 'field-strength', strength: 1, roles: ['frontline', 'ranged'], at: objective.target, neededByTick: null, permanent: true } : demand],
       [needsBuild ? build : cleared]);
-    actions.push({ ...terminal, completionEffects: objective.effects });
+    actions.push({ ...terminal, completionEffects: conquest ? [] : objective.effects });
+    if (conquest) actions.push({ ...action(`${id}/start-mining`, 'strategy.start-mining', { kind: 'start-mining' },
+      objective.target, [worker], [terminal.id, needsBuild ? build : engineer]), completionEffects: objective.effects });
     return [{ id, objectiveId: objective.id, providerId: this.id, preference: 0, kind: conquest ? 'staged-beachhead' : 'cross-sea-reinforcement',
-      demands: [demand, ...(needsBuild ? [worker] : [])], actions,
+      demands: [demand, ...(conquest ? [worker] : [])], actions,
       spends: needsBuild && hallCapital ? [{ spendId, amountGold: BUILDING_DEFS.townHall.cost,
         includedUtilityTermCodes: ['hall-after-clearing'], externalReservationIds: ['naval:islandHall'] }] : [],
       preconditions: [], subgoals: [], estimatedTicks: null, status: 'candidate', reasons: [] }];
@@ -102,7 +104,7 @@ export const conquestMethodProvider: AllocationMethodProvider = {
           departure: voyage.departure.point, landing: voyage.destination.point }))];
         actions.push({ ...step, demands, dependsOn: [...new Set(dependencies)], unitIds: ids(members) });
       } else actions.push({ ...step, unitIds: step.executor === 'strategy.wait-income' ? []
-        : ids(step.executor === 'strategy.build-hall' ? workers : fighters) });
+        : ids(step.executor === 'strategy.build-hall' || step.executor === 'strategy.start-mining' ? workers : fighters) });
     }
     const dependencies = (id: string): readonly string[] => replaced.has(id) ? replaced.get(id)!.flatMap(dependencies) : [id];
     const final = [...new Map(actions.map(step => [step.id, { ...step, dependsOn: [...new Set(step.dependsOn.flatMap(dependencies))] }])).values()];
