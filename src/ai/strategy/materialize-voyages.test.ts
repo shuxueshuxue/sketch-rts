@@ -3,6 +3,7 @@ import { gunzipSync } from 'node:zlib';
 import { describe, expect, it, vi } from 'vitest';
 import { createUnit } from '../../shared/map';
 import { boardUnit } from '../../shared/decks';
+import { shipLaunchPose, shipLaunchPrototype } from '../../shared/ship-launch';
 import { standingBodies } from '../../shared/structure-bodies';
 import { setBuildingBodies } from '../../shared/terrain';
 import type { GameSnapshot } from '../../shared/types';
@@ -13,6 +14,8 @@ import type { Arrival, Target } from './types';
 import { buildStrategyDecision } from './decision';
 import { materializeVoyages } from './materialize-voyages';
 import { allocatedMemberArrival } from './planned-voyage-arrival';
+import { landIdAt, regionIndex } from './regions';
+import { nativeVoyageBerth } from './voyage-berth';
 
 function sapphire(): AllocationMethodQuoteInput {
   const frame: { snapshot: GameSnapshot; memory: AiPolicyMemory; owner: string } = JSON.parse(gunzipSync(readFileSync(
@@ -59,7 +62,82 @@ function launched() {
   return { ...context, input, boat, crew, query, travel };
 }
 
+function nativeBerthInput() {
+  const frame: { snapshot: GameSnapshot; memory: AiPolicyMemory; owner: string } = JSON.parse(gunzipSync(readFileSync(
+    new URL('./fixtures/sapphire-control-p4-4180.json.gz', import.meta.url))).toString());
+  const { snapshot } = frame;
+  setBuildingBodies(snapshot.map, standingBodies(snapshot));
+  const decision = buildStrategyDecision(snapshot, frame.owner, { memory: frame.memory }, undefined, undefined, Infinity);
+  const objective = decision.objectives.find(objective => objective.kind === 'ConquerIsland' && objective.target.entityId === 'gold-satellite-3')!;
+  const regions = regionIndex(snapshot.map), candidate = regions.shores.find(shore => shore.water.x === 1648 && shore.water.y === 2480)!;
+  const yard = snapshot.buildings.find(building => building.owner === frame.owner && building.kind === 'shipyard')!;
+  const hull = shipLaunchPrototype(yard, 'transport'), launch = shipLaunchPose(snapshot, yard, hull)!;
+  hull.x = launch.x; hull.y = launch.y;
+  hull.sailing = { heading: launch.heading, speed: 0, load: 0, balance: 0 };
+  const passenger = snapshot.units.find(unit => unit.owner === frame.owner && unit.kind === 'worker'
+    && !unit.deck && !unit.cabin && landIdAt(snapshot.map, unit) === candidate.landId)!;
+  const departure = nativeVoyageBerth(snapshot, passenger, hull, candidate);
+  let landing: ReturnType<typeof nativeVoyageBerth> | undefined;
+  for (const shore of regions.shores) {
+    if (shore.landId !== objective.target.landId || shore.seaId !== candidate.seaId) continue;
+    const berth = nativeVoyageBerth(snapshot, passenger, hull, shore);
+    if (berth.status === 'known') { landing = berth; break; }
+  }
+  if (departure.status !== 'known' || landing?.status !== 'known') throw new Error('Expected native berths in the real 4180 frame');
+  const crossing = { seaId: candidate.seaId, shipId: null, productionBuildingId: yard.id, requiresNewShip: true,
+    departure: departure.shore.water, departureGround: departure.shore.ground, departureHeading: departure.heading,
+    landing: landing.shore.water, landingGround: landing.shore.ground, landingHeading: landing.heading,
+    waitTicks: 0, boardingTicks: 0, sailingTicks: 100, unloadingTicks: 0 };
+  const id = `${objective.id}/method:native-points`, actionId = `${id}/deliver`;
+  const method: ExecutableMethod = { id, objectiveId: objective.id, providerId: 'test', kind: 'staged-beachhead', preference: 0,
+    preconditions: [], subgoals: [], demands: [], estimatedTicks: 100, status: 'candidate', reasons: [], spends: [],
+    actions: [{ id: actionId, executor: 'strategy.transport', intent: { kind: 'deliver-workers' }, target: objective.target,
+      demands: [], dependsOn: [], spendIds: [], completionEffects: [] }] };
+  // Inject an already quoted numerical row: this checks the materialization
+  // contract, not a new claim about native travel time or allocator behavior.
+  const arrival: Arrival = { status: 'conditional', ticks: 100, landTicks: 0, crossings: [crossing], unmet: [], evidence: [] };
+  const situation = { ...decision.situation, units: decision.situation.units.map(unit => unit.id === passenger.id
+    ? { ...unit, arrivals: [{ targetId: actionId, arrival }] } : unit) };
+  const input: AllocationMethodQuoteInput = { snapshot, situation, objective, method, unitIds: [passenger.id], budgets: [], executions: [] };
+  return { input, actionId, crossing };
+}
+
 describe('candidate-specific native voyage materialization', () => {
+  it('preserves explicit native water poses and land points in the real 4180 geometry', () => {
+    const { input, actionId, crossing } = nativeBerthInput(), before = JSON.stringify(input);
+    const plan = materializeVoyages(input, actionId);
+    expect(plan.missing).toEqual([]); expect(plan.voyages).toHaveLength(1);
+    expect(plan.voyages[0]).toMatchObject({ departure: { point: crossing.departure }, destination: { point: crossing.landing },
+      departureGround: { point: crossing.departureGround }, landingGround: { point: crossing.landingGround }, crossing });
+    const cold: AllocationMethodQuoteInput = JSON.parse(JSON.stringify(input));
+    expect(materializeVoyages(cold, actionId)).toEqual(plan);
+    expect(JSON.stringify(input)).toBe(before);
+    const turned = { ...input, situation: { ...input.situation, units: input.situation.units.map(unit => input.unitIds.includes(unit.id)
+      ? { ...unit, arrivals: [{ targetId: actionId, arrival: { status: 'conditional' as const, ticks: 100, landTicks: 0,
+        crossings: [{ ...crossing, departureHeading: crossing.departureHeading + .1 }], unmet: [], evidence: [] } }] } : unit) } };
+    const refreshed = materializeVoyages(turned, actionId);
+    expect(refreshed.spends).toEqual(plan.spends);
+    expect(refreshed.voyages.map(voyage => voyage.id)).toEqual(plan.voyages.map(voyage => voyage.id));
+  });
+
+  it('rejects an explicit land point on the wrong island instead of repairing its geometry', () => {
+    const { input, actionId, crossing } = nativeBerthInput();
+    const situation = { ...input.situation, units: input.situation.units.map(unit => input.unitIds.includes(unit.id)
+      ? { ...unit, arrivals: [{ targetId: actionId, arrival: { status: 'conditional' as const, ticks: 100, landTicks: 0,
+        crossings: [{ ...crossing, departureGround: crossing.landingGround }], unmet: [], evidence: [] } }] } : unit) };
+    const plan = materializeVoyages({ ...input, situation }, actionId);
+    expect(plan.voyages).toEqual([]);
+    expect(plan.missing.some(condition => condition.reason.code === 'crossing-ground-pair-unverified')).toBe(true);
+  });
+
+  it('keeps bound native pose fields when refreshing a retained voyage through an older arrival row', () => {
+    const { input, actionId, voyage } = launched();
+    const crossing = { ...voyage.crossing, departureGround: voyage.departureGround.point, departureHeading: .2, landingHeading: .7 };
+    const plan = materializeVoyages({ ...input, method: { ...input.method, voyagePlans: [{ ...voyage, crossing }] } }, actionId);
+    expect(plan.missing).toEqual([]);
+    expect(plan.voyages[0]!.crossing).toMatchObject({ departureGround: voyage.departureGround.point, departureHeading: .2, landingHeading: .7 });
+  });
+
   it('keeps the original paid producer and spend while a retained hull has not been born', () => {
     const { input, actionId, voyage } = committed(), before = JSON.stringify(input), plan = materializeVoyages(input, actionId);
     expect(plan.voyages).toEqual([voyage]);

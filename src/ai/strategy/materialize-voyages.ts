@@ -16,6 +16,10 @@ type Group = { key: string; source: LandId; crossing: CrossingEta; units: Unit[]
 type Result = { voyages: PlannedVoyage[]; actions: ExecutableMethod['actions'][number][]; spends: PlannedAllocationSpend[];
   missing: AllocationPrecondition[]; latestArrivalTicks: number | null };
 const byId = (a: { id: string }, b: { id: string }) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+// Ground bindings distinguish manifests; an observed heading alone is not a
+// new production request, and the native command API does not bind it.
+const nativePoseKey = (crossing: CrossingEta) => crossing.departureGround
+  ? `/native:${crossing.departureGround.x},${crossing.departureGround.y}/${crossing.landingGround?.x},${crossing.landingGround?.y}` : '';
 
 /** Specialize only a supplied bundle. Future hulls are packing prototypes,
  * never entities or fulfilled transport capacity. The exact chosen shore pair
@@ -72,8 +76,11 @@ export function materializeVoyages(input: AllocationMethodQuoteInput, actionId: 
       result.latestArrivalTicks = Math.max(result.latestArrivalTicks ?? 0, arrival.ticks);
       if (arrival.crossings[0] && arrival.ticks > latestCrossingTicks) {
         latestCrossingTicks = arrival.ticks;
-        current = { ...arrival.crossings[0], departure: { ...voyage.departure.point }, landing: { ...voyage.destination.point },
-          landingGround: { ...voyage.landingGround.point } };
+        current = { ...voyage.crossing, ...arrival.crossings[0], departure: { ...voyage.departure.point }, landing: { ...voyage.destination.point },
+          landingGround: { ...voyage.landingGround.point },
+          ...(voyage.crossing.departureGround ? { departureGround: { ...voyage.departureGround.point } } : {}),
+          ...(voyage.crossing.departureHeading !== undefined ? { departureHeading: voyage.crossing.departureHeading } : {}),
+          ...(voyage.crossing.landingHeading !== undefined ? { landingHeading: voyage.crossing.landingHeading } : {}) };
       }
     }
     result.voyages.push({ ...voyage, crossing: current });
@@ -93,7 +100,7 @@ export function materializeVoyages(input: AllocationMethodQuoteInput, actionId: 
     if (!arrival || !('crossings' in arrival)) { missing('transport-route-unquoted', [id]); continue; }
     if (arrival.crossings.length !== 1) { missing('transport-needs-unplanned-intermediate-crossing', [id]); continue; }
     const crossing = arrival.crossings[0]!;
-    const key = `${fact.location.landId}/${crossing.seaId}/${destinations}/${crossing.departure.x},${crossing.departure.y}/${crossing.landing.x},${crossing.landing.y}`;
+    const key = `${fact.location.landId}/${crossing.seaId}/${destinations}/${crossing.departure.x},${crossing.departure.y}/${crossing.landing.x},${crossing.landing.y}${nativePoseKey(crossing)}`;
     // Different published ship choices require independently priced manifests.
     const variant = `${key}/${crossing.requiresNewShip ? 'production' : crossing.shipId}`;
     const exact = groups.get(variant) ?? { key: variant, source: fact.location.landId, crossing, units: [], arrivalTicks: 0 };
@@ -104,9 +111,21 @@ export function materializeVoyages(input: AllocationMethodQuoteInput, actionId: 
   const shores = groups.size ? regionIndex(snapshot.map).shoresByLand : undefined;
   for (const group of [...groups.values()].sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0)) {
     const crossing = group.crossing;
-    const departure = shores?.get(group.source)?.get(crossing.seaId)?.find(shore => distance(shore.water, crossing.departure) < 1e-6);
-    const landing = destinations && shores?.get(destinations)?.get(crossing.seaId)?.find(shore => distance(shore.water, crossing.landing) < 1e-6);
-    if (!departure || !landing || crossing.landingGround && distance(landing.ground, crossing.landingGround) > 1e-6) {
+    // Native hull centres need not be original shore-cell centres. The shared
+    // query owns this pair; never repair one of its land points by projection.
+    // Missing explicit departure ground denotes the previous fixture format.
+    const explicit = crossing.departureGround !== undefined;
+    const departure = explicit ? { water: crossing.departure, ground: crossing.departureGround! }
+      : shores?.get(group.source)?.get(crossing.seaId)?.find(shore => distance(shore.water, crossing.departure) < 1e-6);
+    const landing = explicit ? crossing.landingGround && { water: crossing.landing, ground: crossing.landingGround }
+      : destinations && shores?.get(destinations)?.get(crossing.seaId)?.find(shore => distance(shore.water, crossing.landing) < 1e-6);
+    if (!departure || !landing || ![departure.water, departure.ground, landing.water, landing.ground]
+      .every(point => Number.isFinite(point.x) && Number.isFinite(point.y))
+      || landIdAt(snapshot.map, departure.ground) !== group.source || landIdAt(snapshot.map, landing.ground) !== destinations
+      || seaIdAt(snapshot.map, departure.water) !== crossing.seaId || seaIdAt(snapshot.map, landing.water) !== crossing.seaId
+      || crossing.departureHeading !== undefined && !Number.isFinite(crossing.departureHeading)
+      || crossing.landingHeading !== undefined && !Number.isFinite(crossing.landingHeading)
+      || !explicit && crossing.landingGround && distance(landing.ground, crossing.landingGround) > 1e-6) {
       missing('crossing-ground-pair-unverified', group.units.map(unit => unit.id)); continue;
     }
     const produced = input.executions.filter(execution => execution.methodId === method.id && execution.executor === 'strategy.train-transport'
@@ -142,7 +161,7 @@ export function materializeVoyages(input: AllocationMethodQuoteInput, actionId: 
       hulls.push({ unit: existing, ids: [], productionId: production?.token.actionId ?? null });
     }
     const packed: Unit[] = existing ? shipPassengers(snapshot.units, existing).map(unit => ({ ...unit })) : [];
-    const routeId = `${group.source}:${crossing.seaId}:${crossing.departure.x},${crossing.departure.y}:${crossing.landing.x},${crossing.landing.y}`;
+    const routeId = `${group.source}:${crossing.seaId}:${crossing.departure.x},${crossing.departure.y}:${crossing.landing.x},${crossing.landing.y}${nativePoseKey(crossing)}`;
     for (const unit of [...group.units].sort((a, b) => b.radius - a.radius || byId(a, b))) {
       let hull = hulls.find(hull => {
         if (unit.deck?.shipId === hull.unit.id) return true;
