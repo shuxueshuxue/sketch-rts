@@ -50,6 +50,48 @@ function defendedPost(): AllocationMethodQuoteInput {
 }
 
 describe('defense protection and whole-bundle valuation', () => {
+  it('does not revive the removed Ne worker from a previously concrete local evacuation', () => {
+    const frame = JSON.parse(gunzipSync(readFileSync(new URL('../bootstrap_1/fixtures/strategy-allocation-frames.json.gz', import.meta.url))).toString())
+      .frames['Ne-sapphireArchipelago-player-4-17991'];
+    const snapshot = frame.snapshot as AllocationMethodQuoteInput['snapshot'];
+    setBuildingBodies(snapshot.map, standingBodies(snapshot));
+    const decision = buildStrategyDecision(snapshot, frame.owner, { memory: frame.memory }, undefined, undefined, Infinity);
+    const workerId = 'unit-player-4-worker-1980';
+    const worker = snapshot.units.find(unit => unit.id === workerId)!, subject = snapshot.units.find(unit => unit.id === 'unit-player-4-worker-3')!;
+    expect(worker.kind).toBe('worker');
+    const refuge = decision.situation.assets.find(asset => asset.owner === frame.owner && asset.kind === 'hall' && asset.complete
+      && asset.target.landId === landIdAt(snapshot.map, worker))!;
+    // The runtime collector's Evacuate proposal is newer than the frozen
+    // read-only goal generator here. Its named subject and refuge use this
+    // unchanged real world; no unit is spawned or moved for the regression.
+    const objective: AllocationMethodQuoteInput['objective'] = { id: 'Evacuate:player-4:unit-player-4-worker-3',
+      owner: frame.owner, kind: 'Evacuate', target: { entityId: subject.id, landId: landIdAt(snapshot.map, subject)!,
+        point: { x: subject.x, y: subject.y } }, effects: [{ kind: 'assets-evacuated', unitIds: [subject.id], destination: refuge.target }],
+      utility: { horizonTicks: 2400, benefit: [], cost: [], successProbability: 1, persistenceBonus: 0, score: 0 },
+      status: 'candidate', sinceTick: snapshot.tick, rank: 1, reasons: [], methodIds: [],
+      stability: { minimumStayUntilTick: snapshot.tick, challengerId: null, challengerThinks: 0 } };
+    const skeleton = defenseMethodProvider.buildMethods({ snapshot, situation: decision.situation, objective,
+      previous: null, executions: [], blocked: [] })[0]!;
+    const method = { ...skeleton, actions: skeleton.actions.filter(action => action.executor !== 'strategy.transport')
+      .map(action => ({ ...action, unitIds: [workerId] })) };
+    const input: AllocationMethodQuoteInput = { snapshot, situation: decision.situation, objective, method,
+      unitIds: [], budgets: [], executions: [] };
+    const before = JSON.stringify(input), removed = defenseMethodProvider.materialize!(input);
+    expect(removed.actions.flatMap(action => action.unitIds ?? [])).toEqual([]);
+    expect(defenseMethodProvider.materialize!({ ...input, method: removed })).toEqual(removed);
+    const cold: AllocationMethodQuoteInput = JSON.parse(before);
+    setBuildingBodies(cold.snapshot.map, standingBodies(cold.snapshot));
+    expect(defenseMethodProvider.materialize!(cold)).toEqual(removed);
+    expect(JSON.stringify(input)).toBe(before);
+  });
+
+  it('rebinds a previously concrete local defense to the current counterfactual subset', () => {
+    const input = defendedPost(), unitIds = input.unitIds.slice(1);
+    const method = { ...input.method, actions: input.method.actions.map(action => ({ ...action, unitIds: input.unitIds })) };
+    const reduced = defenseMethodProvider.materialize!({ ...input, method, unitIds });
+    expect(reduced.actions.flatMap(action => action.unitIds ?? [])).toEqual(unitIds);
+  });
+
   it('rematerializes the real E01 local shipyard cohort after its unnecessary deliver action was removed', () => {
     const frame = JSON.parse(gunzipSync(readFileSync(new URL('../bootstrap_1/fixtures/strategy-allocation-frames.json.gz', import.meta.url))).toString())
       .frames['gullIsland-p0-9930'];
