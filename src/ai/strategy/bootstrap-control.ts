@@ -26,6 +26,8 @@ import { incumbentCommandActor, inheritIncumbentCommand } from './incumbent-comm
 import { incumbentDisposition, recordCandidateReassignment, recordIncumbentCommands } from './incumbent-evidence';
 import { importedMiningLossUpperBound } from './imported-loss-bound';
 import { createStrategyCommandGateway, type StrategyCommandProposal } from './command-gateway';
+import { FactWorkQueue, withFactWork } from './fact-work';
+import { boundObservationMemory, observationMemory } from './observation-memory';
 
 export type AllocationCandidateRequest = Readonly<{ objectiveId: string; methodId: string; phase: 'skeleton' | 'gross' | 'net';
   /** These are proposed bundles, not an assertion that authority was granted. */
@@ -76,6 +78,15 @@ function nativeSwitchCost(snapshot: GameSnapshot, resources: readonly string[]):
  * order through the same authority. Observations project this exact evaluation. */
 export function planControlledBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion,
   scripts: AiScript[], options: AiPolicyContext, observation: 'none' | 'facts' | 'trace' = 'none') {
+  const preparation = observationMemory(snapshot, owner, options.memory);
+  const work = new FactWorkQueue(snapshot.tick, undefined, preparation.factWork);
+  return withFactWork(work, () => {
+    try { return controlledBootstrapCommands(snapshot, owner, version, scripts, options, observation); }
+    finally { preparation.factWork = work.flush(); boundObservationMemory(preparation); }
+  });
+}
+function controlledBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion,
+  scripts: AiScript[], options: AiPolicyContext, observation: 'none' | 'facts' | 'trace') {
   const policy = options.memory;
   const observed = observation === 'trace';
   const evaluation = observed ? buildObservedStrategyDecision(snapshot, owner, options) : buildStrategyDecision(snapshot, owner, options);
@@ -108,7 +119,7 @@ export function planControlledBootstrapCommands(snapshot: GameSnapshot, owner: P
         missingPreconditions: request.quote.missingPreconditions },
       stageRisks: (request.method.voyagePlans ?? []).map(voyage => ({ voyageId: voyage.id, risk: request.voyageRisks?.get(voyage.id) ?? null })) }) }
       : {}),
-    prepareVoyageRisks: materialized => prepareAllocationVoyageRisks(snapshot, owner, policy, materialized),
+    prepareVoyageRisks: (materialized, quotes) => prepareAllocationVoyageRisks(snapshot, owner, policy, materialized, quotes),
     switchingCost: request => nativeSwitchCost(snapshot, request.resourceKeys),
     handoffImported(requests) {
       const draft = structuredClone(policy), acknowledgements = [];

@@ -983,6 +983,10 @@ export const SHIP_PLANNING_SLICE_WORK=SLICE_WORK;
  * changes search order, stopping points, routes or cache admission. */
 export type ShipRouteWorkReceipt={logicalWork:number;expandedStates:number};
 const SEARCH_WORK={expansion:1,trafficExpansion:4,connector:300,entrance:1,entranceFit:300,entranceCell:400,arc:500,target:300,open:10};
+/** A static, finite-cap continuation stops before its next operation after
+ * SLICE_WORK. Its largest indivisible operation is an entrance + fit + cell.
+ * Callers reserving this amount can meter actual work without overspending. */
+export const SHIP_STATIC_ROUTE_SLICE_MAX_WORK=SLICE_WORK-1+SEARCH_WORK.entrance+SEARCH_WORK.entranceFit+SEARCH_WORK.entranceCell;
 type LiveSearch={reached:Map<number,{id:number;cost:number;parent:number}>;traffic:Map<number,boolean>;frontier:Frontier;
   potentials:Map<number,number>;prefixes:Map<number,ShipPose[]>;entrances:Map<number,ShipPose[][]>};
 /** A continued search this process owns keeps its graph here between slices,

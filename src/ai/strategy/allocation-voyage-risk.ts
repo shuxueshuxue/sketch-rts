@@ -1,17 +1,33 @@
 import type { GameSnapshot, PlayerId } from '../../shared/types';
 import type { AiPolicyMemory } from '../memory';
-import type { ExecutableMethod } from './allocation-types';
+import type { ExecutableMethod, MethodAllocationQuote } from './allocation-types';
 import { boundObservationMemory, observationMemory } from './observation-memory';
 import { assessVoyageRisks, type VoyageRisk, type VoyageRiskRequest, type VoyageRiskStages } from './voyage-risk';
+import { CRITICAL_FACT_CANDIDATES, currentFactWork } from './fact-work';
 
 /** One physical batch for all materialized candidate bundles. The risk of the
  * hull's route does not depend on which passengers are being priced. Passenger
  * losses remain the quote's responsibility, using these same two leg facts. */
 export function prepareAllocationVoyageRisks(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory,
-  methods: readonly ExecutableMethod[]): ReadonlyMap<string, VoyageRiskStages> {
+  methods: readonly ExecutableMethod[], quotes?: readonly MethodAllocationQuote[]): ReadonlyMap<string, VoyageRiskStages> {
   const requests = new Map<string, VoyageRiskRequest>(), pairs = new Map<string, { approach: string; loaded: string }>();
   const unknowns = new Map<string, VoyageRisk>();
   const executions = memory.strategyAllocation?.executions ?? {};
+  const active = new Set(Object.values(executions).filter(action => action.status === 'active' || action.status === 'blocked').map(action => action.objectiveId));
+  // A concrete voyage already has a known coarse crossing and a named bundle.
+  // Do not prioritize candidates with a known unmet force/worker prerequisite
+  // or a known nonpositive quote. Missing detailed risk stays a fact request.
+  const candidates = [...new Set(methods.filter((method, index) => {
+    const quote = quotes?.[index];
+    if (!method.voyagePlans?.length) return false;
+    if (!quote) return true;
+    return quote.status === 'feasible' ? quote.utility.score > 0
+      : quote.missingPreconditions.every(condition => condition.status === 'unknown');
+  }).map(method => method.objectiveId))]
+    .sort((a, b) => Number(active.has(b)) - Number(active.has(a)) || (a < b ? -1 : a > b ? 1 : 0));
+  const priority = new Set([...active, ...candidates.filter(id => !active.has(id)).slice(0, CRITICAL_FACT_CANDIDATES)]);
+  currentFactWork()?.prioritizePoints(methods.filter(method => priority.has(method.objectiveId))
+    .flatMap(method => method.voyagePlans?.flatMap(voyage => [voyage.departure.point, voyage.destination.point]) ?? []));
   const add = (request: VoyageRiskRequest) => {
     const previous = requests.get(request.id);
     if (previous && JSON.stringify(previous) !== JSON.stringify(request)) throw new Error('Conflicting physical voyage risk identities');
@@ -46,7 +62,7 @@ export function prepareAllocationVoyageRisks(snapshot: GameSnapshot, owner: Play
   }
   const observation = observationMemory(snapshot, owner, memory);
   const state = observation.voyageRisks ??= { version: 1, owner, tick: snapshot.tick - 1, routeIds: [], entries: [] };
-  const published = requests.size ? assessVoyageRisks(snapshot, owner, [...requests.values()], state).results : new Map<string, VoyageRisk>();
+  const published = requests.size ? assessVoyageRisks(snapshot, owner, [...requests.values()], state, observation).results : new Map<string, VoyageRisk>();
   if (!requests.size) { state.tick = snapshot.tick; state.routeIds = []; state.entries = []; state.nativeRoutes = []; }
   const result = new Map<string, VoyageRiskStages>();
   for (const [id, pair] of pairs) {

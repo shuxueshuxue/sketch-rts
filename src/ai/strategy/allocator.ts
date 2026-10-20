@@ -239,11 +239,20 @@ function assignMethod(input: StrategyAllocationInput, memory: StrategyAllocation
       ? plannedVoyageArrival(request, plan, unit, plan.landingGround) : undefined);
     const expectedFreeTick = arrivals.length && arrivals.every(arrival => arrival?.status === 'reachable')
       ? tick + Math.max(...arrivals.map(arrival => arrival!.status === 'reachable' ? arrival!.ticks : 0)) : null;
+    const pendingLoads = plan.unitIds.flatMap((id, index) => {
+      const location = situation.units.find(unit => unit.id === id)?.location;
+      if (passengers.includes(id) || location?.kind === 'land' && location.landId === plan.landingGround.landId) return [];
+      const arrival = arrivals[index];
+      return [arrival?.status === 'reachable'
+        ? arrival.crossings.find(crossing => crossing.shipId === shipId)?.expectedLoadedTick : undefined];
+    });
+    const expectedLoadedTick = pendingLoads.length ? pendingLoads.every(value => typeof value === 'number' && Number.isFinite(value))
+      ? Math.max(...pendingLoads as number[]) : null : prior?.expectedLoadedTick ?? null;
     voyages[plan.id] = { id: plan.id, objectiveId: objective.id, action: next.executions[plan.actionId]!.token,
       shipAssignmentId: shipAssignment.id, crewAssignmentIds: plan.unitIds.map(id => `assignment:${id}`), passengerIds: passengers,
       departure: plan.departure, destination: plan.destination, departureGround: plan.departureGround, landingGround: plan.landingGround,
       phase: prior?.phase === 'return' ? 'return' : plannedVoyageContext(request, plan).phase, startedTick: prior?.startedTick ?? tick,
-      expectedFreeTick, decision: prior?.decision ?? 'continue' };
+      expectedFreeTick, expectedLoadedTick, decision: prior?.decision ?? 'continue' };
   }
   const own = Object.values(assignments).filter(assignment => assignment.objectiveId === objective.id);
   next = { ...next, leases, assignments, voyages, objectives: { ...next.objectives, [objective.id]: {
@@ -350,7 +359,7 @@ export function allocateStrategy(input: StrategyAllocationInput): StrategyAlloca
     }
   }
   if (input.prepareVoyageRisks) {
-    input = { ...input, voyageRisks: input.prepareVoyageRisks(offers.map(offer => offer.method)) };
+    input = { ...input, voyageRisks: input.prepareVoyageRisks(offers.map(offer => offer.method), offers.map(offer => offer.gross)) };
     for (const offer of offers) {
       const result = reprice(input, memory, offer.provider, offer, { phase: 'gross' });
       offer.method = result.method; offer.gross = result.quote;

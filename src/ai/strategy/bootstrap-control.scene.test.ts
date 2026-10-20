@@ -40,6 +40,9 @@ describe('the real bootstrap control entry before behavioral acceptance', () => 
     const numerical = structuredClone(frames[name]!), observed = structuredClone(frames[name]!);
     const snapshotBefore = digest(numerical.snapshot), evaluator = vi.spyOn(situation, 'evaluateSituation');
     const commands = plan(numerical);
+    const work = numerical.memory.strategy!.observation.factWork!;
+    expect(work.used).toBeLessThanOrEqual(6144);
+    expect(work.services.reduce((sum, service) => sum + service.work, 0)).toBe(work.used);
     expect(evaluator).toHaveBeenCalledTimes(1);
     let output: BootstrapStrategyOutput | undefined;
     const visible = plan(observed, { observeBootstrapPlan(_context, _entries, actual) { output = actual; } });

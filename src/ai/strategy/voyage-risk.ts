@@ -20,6 +20,9 @@ import { strategyIsOpponent } from './ownership';
 import { regionIndex, seaIdAt } from './regions';
 import type { Point, SeaId } from './types';
 import { observationJsonBytes } from './observation-json-bytes';
+import { currentFactWork } from './fact-work';
+import { pointRoute } from './point-routes';
+import type { StrategyObservationMemory } from './observation-memory';
 
 export const VOYAGE_RISK_SAMPLE_SPACING = 32;
 export const VOYAGE_RISK_SAMPLES_PER_THINK = 256;
@@ -94,9 +97,10 @@ function hullFor(snapshot: GameSnapshot, owner: PlayerId, request: VoyageRiskReq
   const yard = snapshot.buildings.find(building => building.id === request.productionBuildingId && building.kind === 'shipyard'
     && building.owner === owner && building.hp > 0 && building.complete);
   if (!yard) return undefined;
-  const prototype = shipLaunchPrototype(yard, 'transport'), pose = shipLaunchPose(snapshot, yard, prototype);
+  const prototype = shipLaunchPrototype(yard, 'transport'), pose = shipLaunchPose(currentFactWork() ? { ...snapshot, units: [] } : snapshot, yard, prototype);
   if (!pose || seaIdAt(snapshot.map, pose) !== request.seaId) return undefined;
-  const ship = { ...prototype, x: pose.x, y: pose.y, sailing: { heading: pose.heading, speed: 0, load: 0, balance: 0 } };
+  const ship = { ...prototype, ...(currentFactWork() ? { id: `route-prototype:${yard.id}` } : {}), x: pose.x, y: pose.y,
+    sailing: { heading: pose.heading, speed: 0, load: 0, balance: 0 } };
   shareShipProfile(prototype, ship); return ship;
 }
 function threatActors(snapshot: GameSnapshot, owner: PlayerId) {
@@ -165,7 +169,8 @@ function known(progress: Progress | undefined, ship: Unit, threats: readonly Thr
 /** Batch once per think, in stable ID order. Only serialized progress decides
  * publication. Repeated gross/net queries in this tick cannot spend more work;
  * terrain/weapon caches merely accelerate the same answer. */
-export function assessVoyageRisks(snapshot: GameSnapshot, owner: PlayerId, requests: readonly VoyageRiskRequest[], memory: VoyageRiskMemory) {
+export function assessVoyageRisks(snapshot: GameSnapshot, owner: PlayerId, requests: readonly VoyageRiskRequest[], memory: VoyageRiskMemory,
+  observation?: StrategyObservationMemory) {
   if (memory.version !== 1 || memory.owner !== owner) throw new Error('Voyage risk memory owner/version mismatch');
   const advance = memory.tick !== snapshot.tick;
   if (advance) { memory.tick = snapshot.tick; memory.routeIds = []; }
@@ -206,6 +211,14 @@ export function assessVoyageRisks(snapshot: GameSnapshot, owner: PlayerId, reque
     const helm = ship.sailing?.route;
     if (!route && helm?.goalX === request.destination.x && helm.goalY === request.destination.y)
       route = { points: helm.points, partial: helm.partial ?? false };
+    if (!route && currentFactWork() && observation) {
+      const fact = pointRoute(snapshot, observation, ship, ship, request.destination,
+        !!request.productionBuildingId || !!request.previousLegId);
+      if (fact.status !== 'complete') {
+        results.set(request.id, unknown(fact.reasonCode ?? 'voyage-native-point-route-pending', threats)); continue;
+      }
+      route = fact.route;
+    }
     if (!route) {
       const inputs = JSON.stringify([ship.x, ship.y, ship.sailing?.heading ?? 0, shipMotionLimits(ship), profile.hull,
         ship.order, ship.orderQueue ?? [], snapshot.map.wind ?? null, request.destination, geometryVersion]);

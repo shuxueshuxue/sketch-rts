@@ -447,7 +447,7 @@ export type StrategyAllocationInput = Readonly<{
   voyageRisks?: ReadonlyMap<string, VoyageRiskStages>;
   /** Framework batch after candidate materialization, before final gross/net
    * pricing. Called once; providers cannot advance sampling themselves. */
-  prepareVoyageRisks?: (methods: readonly ExecutableMethod[]) => ReadonlyMap<string, VoyageRiskStages>;
+  prepareVoyageRisks?: (methods: readonly ExecutableMethod[], quotes: readonly MethodAllocationQuote[]) => ReadonlyMap<string, VoyageRiskStages>;
   fixedVoyageArrival?: AllocationMethodQuoteInput['fixedVoyageArrival'];
   /** Verified optimistic target envelope only for imported-task leases. */
   importedUpperBound?: (objectiveId: string, window: ValuationWindow) => ImportedLossUpperBound | null;
