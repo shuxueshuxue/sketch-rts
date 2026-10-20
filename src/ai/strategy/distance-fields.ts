@@ -1,4 +1,4 @@
-import { moverDistanceField, prepareMoverDistanceField, type GroundDistanceField, type Mover } from '../../shared/terrain';
+import { moverDistanceField, prepareMoverDistanceField, retainGoalDistanceField, type GroundDistanceField, type Mover } from '../../shared/terrain';
 import type { GameSnapshot } from '../../shared/types';
 import type { Point } from './types';
 import { OBSERVATION_FIELD_LIMIT, type StrategyObservationMemory } from './observation-memory';
@@ -31,6 +31,7 @@ export function createPlanningDistanceQuery(snapshot: GameSnapshot, buildBudget 
         built++;
       }
       if (!field) { deferred++; row.set(goal.x, null); return null; }
+      retainGoalDistanceField(snapshot.map, goal, mover);
       const result = { field, builtTick: entry?.readyTick ?? snapshot.tick };
       row.set(goal.x, result); return result;
     },

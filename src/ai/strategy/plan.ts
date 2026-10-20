@@ -4,6 +4,7 @@ import type { GameSnapshot, PlayerId } from '../../shared/types';
 import { distance } from '../policy/spatial';
 import { snapshotUnitIndex } from './world-index';
 import { withStrategyFrame } from './frame-reuse';
+import { withGoalDistanceFieldLease } from '../../shared/terrain';
 import { generateNavalObjectives, decomposeNavalObjective } from './naval-objectives';
 import { evaluateSituation } from './situation';
 import { observationHistory, observationMemory, retainObservationHistory } from './observation-memory';
@@ -23,7 +24,8 @@ export const NAVAL_OBJECTIVE_FAMILY: ObjectiveFamily = { id: 'naval', generate: 
 
 export function buildStrategyPlanTrace(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext,
   _previous?: StrategyPlanTrace, families: readonly ObjectiveFamily[] = [NAVAL_OBJECTIVE_FAMILY], observation?: SituationObservation, fieldBuildBudget = 1): StrategyPlanTrace {
-  return withStrategyFrame(() => assembleStrategyPlanTrace(snapshot, owner, options, families, observation, fieldBuildBudget));
+  return withGoalDistanceFieldLease(snapshot.map, owner, snapshot.tick,
+    () => withStrategyFrame(() => assembleStrategyPlanTrace(snapshot, owner, options, families, observation, fieldBuildBudget)));
 }
 
 function assembleStrategyPlanTrace(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext,

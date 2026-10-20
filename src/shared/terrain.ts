@@ -1283,11 +1283,99 @@ export type GroundDistanceField = Readonly<{
   /** Smoothed descent of this same field; does not start a second route search. */
   road(from: Point, goal: Point): readonly Point[] | undefined;
 }>;
-const distanceFields = new WeakMap<TerrainRuntime, { revision: number; fields: Map<number, GroundDistanceField> }>();
+type GoalFieldCache = {
+  revision: number;
+  fields: Map<number, GroundDistanceField>;
+  leases: Map<string, { tick: number; targets: ReadonlySet<number> }>;
+  evictions: number;
+  overflowInsertions: number;
+  overflowThinks: number;
+  peakFields: number;
+  peakOverflow: number;
+};
+const distanceFields = new WeakMap<TerrainRuntime, GoalFieldCache>();
 const distanceFieldWork = new WeakMap<GroundDistanceField, number>();
 const pendingDistanceFields = new WeakMap<TerrainRuntime, { revision: number; jobs: Map<number, { flow: BoxFlow; progress: number }> }>();
-export const GOAL_DISTANCE_FIELD_LIMIT: Readonly<Record<Mover, number>> = { land: 24, sea: 32 };
+// Eleven complete maps and the 25-minute archipelago peak at 25 land / 30 sea
+// fields, including old/new target overlap. Pins count against these limits.
+export const GOAL_DISTANCE_FIELD_LIMIT: Readonly<Record<Mover, number>> = { land: 32, sea: 32 };
 export const PENDING_GOAL_DISTANCE_FIELD_LIMIT = 8;
+export const GOAL_DISTANCE_FIELD_LEASE_TICKS = 30;
+type GoalFieldLease = { cache: GoalFieldCache; mover: Mover; targets: Set<number> };
+let currentGoalFieldLease: { owner: string; tick: number; fields: Map<TerrainRuntime, GoalFieldLease> } | undefined;
+
+function goalFieldCache(state: TerrainRuntime, revision: number): GoalFieldCache {
+  let cache = distanceFields.get(state);
+  if (cache?.revision !== revision) distanceFields.set(state, cache = { revision, fields: new Map(), leases: new Map(),
+    evictions: 0, overflowInsertions: 0, overflowThinks: 0, peakFields: 0, peakOverflow: 0 });
+  return cache;
+}
+function trimGoalFields(cache: GoalFieldCache, mover: Mover, protect?: number) {
+  const limit = GOAL_DISTANCE_FIELD_LIMIT[mover];
+  if (cache.fields.size <= limit) { cache.peakFields = Math.max(cache.peakFields, cache.fields.size); return; }
+  const active = currentGoalFieldLease;
+  const current = active && [...active.fields.values()].find(entry => entry.cache === cache)?.targets;
+  const pinned = (target: number) => current?.has(target)
+    || [...cache.leases.values()].some(lease => lease.targets.has(target));
+  for (const target of cache.fields.keys()) {
+    if (cache.fields.size <= limit) break;
+    if (target === protect || pinned(target)) continue;
+    cache.fields.delete(target); cache.evictions++;
+  }
+  cache.peakFields = Math.max(cache.peakFields, cache.fields.size);
+  if (cache.fields.size > limit) {
+    if (protect !== undefined) cache.overflowInsertions++;
+    cache.peakOverflow = Math.max(cache.peakOverflow, cache.fields.size - limit);
+  }
+}
+
+/** Cache residency only: keep each owner's most recent successful requests,
+ * including the previous set until the current synchronous think completes.
+ * No publication state, snapshot, memory or field array is retained here.
+ * An owner absent for two default think intervals releases its lease. */
+export function withGoalDistanceFieldLease<T>(map: Pick<GameMap, 'terrain'>, owner: string, tick: number, run: () => T): T {
+  if (!map.terrain) return run();
+  const previous = currentGoalFieldLease;
+  const scope = { owner, tick, fields: new Map<TerrainRuntime, GoalFieldLease>() };
+  for (const mover of ['land', 'sea'] as const) {
+    const state = routing(map, map.terrain, mover), revision = mover === 'land' ? groundRevision(map) : 0;
+    const cache = goalFieldCache(state, revision);
+    for (const [id, lease] of cache.leases) if (tick < lease.tick || tick - lease.tick > GOAL_DISTANCE_FIELD_LEASE_TICKS) cache.leases.delete(id);
+    scope.fields.set(state, { cache, mover, targets: new Set() });
+  }
+  currentGoalFieldLease = scope;
+  try { return run(); }
+  finally {
+    for (const { cache, targets } of scope.fields.values()) {
+      if (targets.size) cache.leases.set(owner, { tick, targets });
+      else cache.leases.delete(owner);
+    }
+    currentGoalFieldLease = previous;
+    for (const { cache, mover } of scope.fields.values()) {
+      trimGoalFields(cache, mover);
+      if (cache.fields.size > GOAL_DISTANCE_FIELD_LIMIT[mover]) cache.overflowThinks++;
+    }
+  }
+}
+
+/** Called only after deterministic publication admitted the field. */
+export function retainGoalDistanceField(map: Pick<GameMap, 'terrain'>, goal: Point, mover: Mover) {
+  if (!currentGoalFieldLease || !map.terrain) return;
+  const state = routing(map, map.terrain, mover), lease = currentGoalFieldLease.fields.get(state);
+  if (lease) lease.targets.add(padAt(state, goal.x, goal.y));
+}
+
+/** On-demand diagnostic counters and native storage; never serialized as facts. */
+export function goalDistanceFieldCacheStats(map: Pick<GameMap, 'terrain'>, mover: Mover) {
+  const cache = map.terrain && distanceFields.get(routing(map, map.terrain, mover));
+  let distanceBytes = 0, descentBytes = 0;
+  if (cache) for (const field of cache.fields.values()) {
+    const storage = fieldStorage.get(field)!; distanceBytes += storage.distanceBytes; descentBytes += storage.descentBytes;
+  }
+  return { fields: cache?.fields.size ?? 0, evictions: cache?.evictions ?? 0,
+    overflowInsertions: cache?.overflowInsertions ?? 0, overflowThinks: cache?.overflowThinks ?? 0,
+    peakFields: cache?.peakFields ?? 0, peakOverflow: cache?.peakOverflow ?? 0, distanceBytes, descentBytes };
+}
 type GoalScratch = { dist: Int32Array; buckets: number[][] };
 const goalScratch = new WeakMap<TerrainRuntime, GoalScratch[]>();
 const emptyGoalNext = new Int32Array(0);
@@ -1328,8 +1416,7 @@ export function moverDistanceField(map: Pick<GameMap, 'terrain'>, goal: Point, m
   const state = routing(map, terrain, mover), ground = runtime(terrain, mover);
   const target = padAt(state, goal.x, goal.y), revision = mover === 'land' ? groundRevision(map) : 0;
   if (target < 0 || ground.walk[target] !== 1) return undefined;
-  let cache = distanceFields.get(state);
-  if (cache?.revision !== revision) distanceFields.set(state, cache = { revision, fields: new Map() });
+  const cache = goalFieldCache(state, revision);
   const known = cache.fields.get(target);
   if (known || peek) return known;
   const box = goalDistanceBox(ground, target);
@@ -1343,8 +1430,8 @@ export function moverDistanceField(map: Pick<GameMap, 'terrain'>, goal: Point, m
   // the detached Int32 work buffer of a compact answer can re-enter the pool.
   if (fieldStorage.get(answer)!.distanceBytes < field.dist.byteLength) releaseGoalScratch(state, scratch);
   distanceFieldWork.set(answer, field.work);
-  if (cache.fields.size >= GOAL_DISTANCE_FIELD_LIMIT[mover]) cache.fields.delete(cache.fields.keys().next().value!);
   cache.fields.set(target, answer);
+  trimGoalFields(cache, mover, target);
   return answer;
 }
 function distanceFieldAnswer(state: TerrainRuntime, ground: TerrainRuntime, source: Pick<BoxField, 'box' | 'dist'>, scale: number): GroundDistanceField {
@@ -1444,8 +1531,8 @@ export function prepareMoverDistanceField(map: Pick<GameMap, 'terrain'>, goal: P
   if (fieldStorage.get(field)!.distanceBytes < job.dist.byteLength) releaseGoalScratch(state, job);
   distanceFieldWork.set(field, retained.progress);
   const cache = distanceFields.get(state)!;
-  if (cache.fields.size >= GOAL_DISTANCE_FIELD_LIMIT[mover]) cache.fields.delete(cache.fields.keys().next().value!);
   cache.fields.set(target, field);
+  trimGoalFields(cache, mover, target);
   return { field: retained.progress <= throughWork ? field : undefined,
     work: Math.min(retained.progress, throughWork), complete: retained.progress <= throughWork };
 }
