@@ -40,7 +40,7 @@ npm run build
 SKETCH_MACHINES=~/.config/sketch/machines-camps.json bin/sketch yatu ai-plan-overlay --ref HEAD --on mac1 --locale zh-CN --json
 ```
 
-全量验证曾在本分支基于 `6750430b` 时通过：705 文件、7832 项测试通过，1 项跳过。rebase 到 `8333fae3` 后，死亡账本、跨线程、通路、房间、历史及包边界等 14 文件 127 项通过；最后的关闭快路径调整另跑 4 文件 42 项通过。构建和文件大小检查通过。
+最终实现 `dac70204` 的根 `tsc --noEmit` 和完整 `vitest run --dir src --maxWorkers 2 --minWorkers 1` 均通过：709 文件、7872 项测试通过，1 项跳过。presets、large-battle-think、painted-card-batches 本轮直接通过，无需重跑。新增权限回归覆盖多人局自声明 spectator 的实时订阅及录制读取、同房间赛后开放、受限连接重置和 none 权限；客户端测试区分「赛后开放」与采集缺口。此前构建通过，文件大小检查通过。
 
 ## mac1 真 GPU 证据
 
