@@ -97,7 +97,11 @@ export const defenseMethodProvider: AllocationMethodProvider = {
     const travel = input.method.actions.find(action => action.executor === 'strategy.transport') ?? {
       id: `${input.method.id}/deliver`, executor: 'strategy.transport', intent: { kind: 'deliver-force' as const }, target: defend.target,
       demands: input.method.demands, dependsOn: [], spendIds: [], completionEffects: [] };
-    const plan = materializeVoyages(input, travel.id, units.map(unit => unit.id));
+    // A previous local bundle may have removed its unnecessary delivery step.
+    // Rebuild the candidate skeleton before specializing the current bundle.
+    const voyageInput = input.method.actions.some(action => action.id === travel.id) ? input
+      : { ...input, method: { ...input.method, actions: [travel, ...input.method.actions] } };
+    const plan = materializeVoyages(voyageInput, travel.id, units.map(unit => unit.id));
     const assembling = plan.voyages.map(voyage => ({ id: `${voyage.id}/assemble`, executor: 'strategy.assemble',
       intent: { kind: 'borrow-force' as const }, target: voyage.departureGround, demands: [], dependsOn: [], spendIds: [],
       completionEffects: [], unitIds: voyage.unitIds }));
