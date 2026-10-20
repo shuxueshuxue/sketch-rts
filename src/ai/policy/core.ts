@@ -1093,7 +1093,7 @@ function nextV5LateUpgradeKind(snapshot: GameSnapshot, owner: PlayerId, options:
   if (v5LateUpgradeResearchable(snapshot, owner, "rangeTraining")) {
     const level = upgradeLevel(snapshot, owner, "rangeTraining");
     const rangedUnits = upgradeBenefitingUnits(snapshot, owner, "rangeTraining");
-    if (rangedUnits.length >= 5 + level * 2 || player.gold > 1_250 + level * 420) return "rangeTraining";
+    if (rangedUnits.length > 0 && (rangedUnits.length >= 5 + level * 2 || player.gold > 1_250 + level * 420)) return "rangeTraining";
   }
   if (v5LateUpgradeResearchable(snapshot, owner, "speedTraining")) {
     const level = upgradeLevel(snapshot, owner, "speedTraining");

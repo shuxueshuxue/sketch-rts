@@ -269,7 +269,7 @@ describe("sketch RTS simulation", () => {
     stepMany(game, UNIT_DEFS.raider.trainTime + 1);
     const futureRaider = game.units.find((unit) => unit.owner === "player" && unit.kind === "raider")!;
     expect(futureRaider.speed).toBeCloseTo(Math.round(UNIT_DEFS.raider.speed * faster * 100) / 100, 5);
-    expect(futureRaider.attackRange).toBe(Math.round(UNIT_DEFS.raider.attackRange * 1.15));
+    expect(futureRaider.attackRange).toBe(UNIT_DEFS.raider.attackRange);
   });
 
   it("heals starred non-mechanical mercenaries with leadership while excluding mechanical bodies and rookies", () => {

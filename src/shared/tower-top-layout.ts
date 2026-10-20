@@ -3,6 +3,7 @@ import type { Building, Unit } from "./types";
 
 type Circle = { x: number; y: number; radius: number };
 const EPS = 1e-7;
+const layouts = new WeakMap<object, { key: string; result: ReadonlyMap<string, { x: number; y: number }> | undefined }>();
 // A bounded, deterministic search: at most four troops (each costs at least one supply).
 const DIRECTIONS = Array.from({ length: 16 }, (_, i) => ({ x: detCos(i * Math.PI / 8), y: detSin(i * Math.PI / 8) }));
 function intersections(a: Circle, b: Circle): { x: number; y: number }[] {
@@ -17,6 +18,9 @@ function intersections(a: Circle, b: Circle): { x: number; y: number }[] {
 /** Fit whole bodies inside the circular top, without overlap. The same layout admits and seats troops. */
 export function towerTopLayout(tower: Pick<Building, "x" | "y" | "radius">, troops: readonly Pick<Unit, "id" | "radius">[]) {
   const sorted = [...troops].sort((a, b) => b.radius - a.radius || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const key = JSON.stringify([tower.x, tower.y, tower.radius, sorted.map(unit => [unit.id, unit.radius])]);
+  const cached = layouts.get(tower);
+  if (cached?.key === key) return cached.result;
   const placed: Circle[] = [];
   const search = (index: number): boolean => {
     if (index === sorted.length) return true;
@@ -38,6 +42,7 @@ export function towerTopLayout(tower: Pick<Building, "x" | "y" | "radius">, troo
     }
     return false;
   };
-  if (!search(0)) return undefined;
-  return new Map(sorted.map((unit, i) => [unit.id, { x: tower.x + placed[i]!.x, y: tower.y + placed[i]!.y }]));
+  const result = search(0) ? new Map(sorted.map((unit, i) => [unit.id, { x: tower.x + placed[i]!.x, y: tower.y + placed[i]!.y }])) : undefined;
+  layouts.set(tower, { key, result });
+  return result;
 }

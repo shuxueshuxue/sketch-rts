@@ -11,7 +11,7 @@ export function canonicalGameState(game: Game) {
     match: game.match,
     map: game.map,
     players: game.players,
-    units: game.units.map(withoutWeaponClass),
+    units: game.units,
     buildings: game.buildings,
     resources: game.resources,
     mercenaryCamps: game.mercenaryCamps,
@@ -36,7 +36,8 @@ function canonicalize(value: unknown): unknown {
   if (Array.isArray(value)) return canonicalizeArray(value);
   return Object.fromEntries(
     Object.entries(value)
-      .filter(([, entry]) => entry !== undefined)
+      // weaponRules determines attackClass; this derived cache is not independent saved state.
+      .filter(([key, entry]) => entry !== undefined && key !== "attackClass")
       .sort(([left], [right]) => compareCodeUnits(left, right))
       .map(([key, entry]) => [key, canonicalize(entry)]),
   );
@@ -66,11 +67,4 @@ function roundNumber(value: number) {
   if (!Number.isFinite(value)) return value;
   const rounded = Math.round(value * NUMBER_PRECISION) / NUMBER_PRECISION;
   return Object.is(rounded, -0) ? 0 : rounded;
-}
-
-// This is a cache of weaponRules, not independent simulation state. Keep existing checksum formats stable.
-function withoutWeaponClass(unit: import("../types").Unit): Omit<import("../types").Unit, "attackClass"> {
-  const { attackClass: _derived, ...state } = unit;
-  if (state.cargo) state.cargo = state.cargo.map(withoutWeaponClass);
-  return state;
 }

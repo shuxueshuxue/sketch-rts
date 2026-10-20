@@ -9,7 +9,7 @@ export default async function(s: Scene) {
     addBuildings: [0, 1, 2, 3].map(i => ({ id: `tower-${i}`, kind: "fortifiedTower", owner: "player", x: 1600 + i * 350, y: 2000, complete: true })),
     addUnits: ["ballista", "footman", "knight", "ancientStag"].map((kind, i) => ({ id: kind, kind, owner: "player", x: 1600 + i * 350, y: 2100 })),
   } } });
-  await s.tick(1);
+  await s.reload(); await s.tick(1);
   for (const [i, kind] of ["footman", "knight", "ancientStag"].entries()) await s.order("player", { type: "garrison", unitIds: [kind], buildingId: `tower-${i + 1}` });
   await s.tick(120);
   const snapshot = await s.snapshot() as Snap;
@@ -18,12 +18,15 @@ export default async function(s: Scene) {
     return { id, unit, tower, extent: Math.hypot(unit.x - tower.x, unit.y - tower.y) + unit.radius };
   });
   for (const body of bodies) {
-    await s.camera(body.tower.x, body.tower.y, .7); await s.select([body.id]); await s.wait(900); await s.shot(`${body.id}-on-tower-zoomed-out`);
+    await s.camera(body.tower.x, body.tower.y, .7); await s.select([body.id]); await s.wait(900); await s.shot(`${body.id.replace("ancientStag", "ancient-stag")}-on-tower-zoomed-out`);
   }
   await s.camera(1600, 2000, .7); await s.select(["ballista"]);
   const accepted = await s.command({ type: "garrison", unitIds: ["ballista"], buildingId: "tower-0" });
   await s.wait(250); await s.shot("ballista-garrison-refusal");
-  s.record("tower-bodies", { bodies, ballistaCommandAccepted: accepted, status: await s.readDom("[data-status]") });
+  const status = await s.readDom("[data-status]");
+  await s.tick(120);
+  const final = await s.snapshot() as Snap;
+  s.record("tower-bodies", { bodies, commandQueued: accepted, status, ballista: final.units.find(unit => unit.id === "ballista") });
   s.must(bodies.every(body => body.unit.garrison && body.extent <= body.tower.radius + 1e-6), "an occupant's body overhangs the tower top");
-  s.must(accepted === false, "a mechanical ballista was allowed to climb");
+  s.must(status.some(line => line.text.includes("Mechanical units cannot garrison towers")) && !final.units.find(unit => unit.id === "ballista")?.garrison, "a mechanical ballista was not explicitly refused");
 }

@@ -146,7 +146,7 @@ describe('guardian scroll area balance', () => {
 
 describe('guardian balance rules boundary', () => {
   it('identifies current rules and refuses replay/network simulation of rules 4', () => {
-    expect(RULES_VERSION).toBe(7);
+    expect(RULES_VERSION).toBe(8);
     expect(GUARDIAN_SCROLL.radius).toBe(180);
     expect(() => assertCurrentRulesVersion(4, 'Old replay')).toThrow('Cross-version simulation is not supported');
     expect(() => assertCurrentRulesVersion(RULES_VERSION, 'Current replay')).not.toThrow();

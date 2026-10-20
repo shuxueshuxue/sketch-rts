@@ -1,7 +1,8 @@
+import { RULES_VERSION, assertCurrentRulesVersion, savedRulesVersion } from "./rules-version";
 import { describe, expect, it } from "vitest";
 import { UNIT_DEFS, resolveVariant } from "./catalog";
 import { createBuilding } from "./map";
-import { createGame, issuePlayerCommand, refreshUnitStats, restoreSnapshotIntoGame, snapshotGame, spawnVariantUnit, stepGame, tryPlayerCommand } from "./sim";
+import { createGame, issuePlayerCommand, refreshUnitStats, restoreSnapshotIntoGame, snapshotGame, spawnVariantUnit, stepGame, strikeUnit, tryPlayerCommand } from "./sim";
 import { canStandOnTower, garrisonRoomFor, towerTopLayout } from "./tower-garrison";
 import { isRangedUnit } from "./unit-weapon-class";
 import { rollVeteranSkillChoices } from "./veteran-skills";
@@ -29,6 +30,11 @@ function resident(game: Game) {
   advance(game); up.attackDamage = 0; return up;
 }
 
+it("versions the changed gameplay rules while keeping older saves readable", () => {
+  expect(RULES_VERSION).toBe(8); expect(savedRulesVersion(7)).toBe(7);
+  expect(() => assertCurrentRulesVersion(7, "Old replay")).toThrow(/Cross-version simulation/);
+});
+
 describe("weapon category before range bonuses", () => {
   it.each(["knight", "raider", "lancer"] as const)("keeps a fully range-trained %s melee, at its original reach, unable to hit the top", kind => {
     const { game } = field(); const up = resident(game);
@@ -37,6 +43,7 @@ describe("weapon category before range bonuses", () => {
     down.veteranSkill = "veteranSiegeDrill"; refreshUnitStats(game, down);
     expect(down.attackRange).toBe(UNIT_DEFS[kind].attackRange);
     expect(isRangedUnit(down)).toBe(false);
+    down.attackRange = 999; // A transient live range must never redefine the weapon.
     expect(strikeReach(down, up)).toBe(-Infinity);
     issuePlayerCommand(game, "enemy", { type: "attack", unitIds: [down.id], targetId: up.id });
     advance(game);
@@ -77,7 +84,21 @@ describe("weapon category before range bonuses", () => {
     for (let seed = 0; seed < 30; seed++) expect(rollVeteranSkillChoices(unit.kind, unit.id, seed, "mechanical", isRangedUnit(unit))).not.toContain("veteranSiegeDrill");
     unit.hands = {}; refreshUnitStats(game, unit); advance(game, 1);
     expect(unit.attackRange).toBeCloseTo(UNIT_DEFS.ballista.attackRange * 1.1);
+    // Exercise the sim's actual offer generation after wielding a melee weapon.
+    unit.hands = { right: sword.id }; refreshUnitStats(game, unit);
+    delete unit.veteranSkill; unit.xp = 100_000;
+    const victim = game.spawnUnit("enemy", "worker", 1300, 1000);
+    strikeUnit(game, unit, victim, 1000, "melee");
+    expect(unit.level).toBe(3); expect(unit.veteranSkillChoices).not.toContain("veteranSiegeDrill");
   });
+});
+
+it("removes an older saved melee research bonus on restore without changing health", () => {
+  const { game } = field(); const unit = game.spawnUnit("player", "knight", 1200, 1000);
+  game.players.player!.upgrades.rangeTraining = 3;
+  const snapshot = snapshotGame(game); delete snapshot.units[0]!.attackClass; snapshot.units[0]!.attackRange = 97; snapshot.units[0]!.hp = 111;
+  const copy = field().game; restoreSnapshotIntoGame(copy, snapshot, game.nextId);
+  expect(copy.units[0]!.attackRange).toBe(UNIT_DEFS.knight.attackRange); expect(copy.units[0]!.hp).toBe(111);
 });
 
 describe("tower admission and whole bodies", () => {

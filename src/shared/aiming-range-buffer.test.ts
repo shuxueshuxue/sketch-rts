@@ -200,6 +200,6 @@ describe('aiming range motion buffer', () => {
     expect(restored.units[0]!.aim?.targetId).toBe(target.id);
     expect(shooter.aim?.targetId).toBe(target.id);
     expect(savedRulesVersion(6)).toBe(6);
-    expect(RULES_VERSION).toBe(7);
+    expect(RULES_VERSION).toBe(8);
   });
 });

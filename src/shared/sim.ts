@@ -1063,6 +1063,9 @@ export function restoreSnapshotIntoGame(game: Game, snapshot: GameSnapshot, next
   const colors=assignPlayerColors(Object.keys(game.players),Object.fromEntries(Object.entries(game.players).map(([owner,player])=>[owner,player.color])));
   for(const [owner,player] of Object.entries(game.players))player.color=colors[owner]!;
   if (snapshot.teams) game.activePlayers = Object.keys(snapshot.teams).filter(owner => snapshot.players[owner] !== undefined);
+  const unclassified = new Set<string>();
+  const remember = (unit: Unit) => { if (unit.attackClass === undefined) unclassified.add(unit.id); unit.cargo?.forEach(remember); };
+  snapshot.units.forEach(remember);
   game.units = cloneSnapshotValue(snapshot.units).map(withUnitShape);
   game.buildings = cloneSnapshotValue(snapshot.buildings);
   game.resources = cloneSnapshotValue(snapshot.resources);
@@ -1103,7 +1106,13 @@ export function restoreSnapshotIntoGame(game: Game, snapshot: GameSnapshot, next
   }
   game.nextId = nextId;
   normalizeEquipment(game);
-  const classify = (unit: Unit) => { unit.attackClass = weaponClass(weaponRules(game, unit)); unit.cargo?.forEach(classify); };
+  const classify = (unit: Unit) => {
+    const rules = weaponRules(game, unit), older = unclassified.has(unit.id);
+    unit.attackClass = weaponClass(rules);
+    // Saves made before weapon classification may retain a research bonus on a melee weapon.
+    if (older && !isRangedUnit(unit)) unit.attackRange = rules.attackRange;
+    unit.cargo?.forEach(classify);
+  };
   game.units.forEach(classify);
   keepShipsOnWater(game.map,game.units);
   syncDecks(game.units);
@@ -3267,7 +3276,7 @@ function applyFlameCloak(game: Game, carrier: Unit, item: WorldItem) {
   let burned = false;
   forEachNearbyUnit(game, carrier, FLAME_CLOAK.radius, (target) => {
     if (distance(target, carrier) > FLAME_CLOAK.radius || !areEnemyOwners(game, carrier.owner, target.owner)) return;
-    applyAttackDamage(game, carrier, target, FLAME_CLOAK.damage*outgoingDamageMultiplier(game,carrier), ITEM_DAMAGE_PROFILES.flameCloak);
+    applyAttackDamage(game, carrier, target, FLAME_CLOAK.damage*outgoingDamageMultiplier(game,carrier), ITEM_DAMAGE_PROFILES.flameCloak, "melee");
     addEffect(game, "flameBurn", target.x, target.y, FLAME_CLOAK_VISUAL_DURATION);
     burned = true;
   });
@@ -3494,7 +3503,7 @@ function applyWeaponAttack(game: Game, attacker: Unit | Building, target: Unit |
     launchProjectile(game, attacker, target, buildingTargetDamage(attacker, target, damage));
     return;
   }
-  // Range upgrades extend a melee weapon; they do not turn it into a projectile or change its armor interaction.
+  // Delivery follows the unmodified weapon; a numerical range change cannot turn a blow into a projectile.
   applyAttackDamage(game, attacker, target, damage);
 }
 
@@ -3536,7 +3545,7 @@ function launchProjectile(game: Game, attacker: Unit | Building, target: Unit | 
   });
 }
 
-function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number, profile?: DamageProfile) {
+function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number, profile?: DamageProfile, visual?: "melee" | "projectile") {
   profile ??= isUnit(attacker) ? unitAttackDamageProfile(game, attacker) : attackDamageProfile(attacker.kind);
   const dealt = profile.origin === "spell" ? damage : attackDamageAgainstTarget(game, attacker, target, buildingTargetDamage(attacker, target, damage));
   const taken = applyDamage(game, attacker, target, dealt, undefined, undefined, 0, profile);
@@ -3545,7 +3554,7 @@ function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit |
   if (profile.delivery === "melee" && profile.origin !== "spell" && isUnit(attacker) && isUnit(target)) stanceBlow(attacker, target, dealt);
   const from = { x: attacker.x, y: attacker.y };
   const to = { x: target.x, y: target.y };
-  const kind: WorldEffect["type"] = profile.delivery === "melee" ? "melee" : "projectile";
+  const kind: WorldEffect["type"] = visual ?? (profile.delivery === "melee" ? "melee" : "projectile");
   addEffect(game, kind, to.x, to.y, kind === "projectile" ? 22 : 16, { fromX: from.x, fromY: from.y, toX: to.x, toY: to.y, fromHeight: combatVisualHeight(game,attacker), toHeight: combatVisualHeight(game,target), ...(isUnit(attacker)?{sourceId: attacker.id, actionMode: profile.origin === "spell" ? "cast" as const : "attack" as const}:{}) });
   addHitEffect(game, target, taken, attacker);
 }
