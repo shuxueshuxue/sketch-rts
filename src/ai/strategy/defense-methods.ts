@@ -13,6 +13,9 @@ import { forceSuccessProbability, forceTimeGold } from './utility';
 import { unitArrival } from './unit-arrivals';
 import { siteCollapseAfter } from './naval-objectives';
 import { arrivalWeightedForce } from './arrival-force';
+import { materializeVoyages } from './materialize-voyages';
+import { unitMover } from '../../shared/catalog';
+import { bodyMass } from '../../shared/physical-body';
 
 const reason = (code: string, factIds: readonly string[] = [], values: AllocationReason['values'] = {}): AllocationReason => ({ code, factIds, values });
 const defenderKinds: readonly Method['kind'][] = ['local-squad', 'main-army-recall', 'wait-in-cover', 'cross-sea-reinforcement', 'evacuation'];
@@ -79,6 +82,28 @@ export const defenseMethodProvider: AllocationMethodProvider = {
     if (input.objective.kind !== 'DefendSite') return [];
     return defenderKinds.map((kind, preference) => method(input, kind, preference));
   },
+  materialize(input) {
+    if (input.method.kind !== 'cross-sea-reinforcement') return input.method;
+    const wanted = new Set(input.unitIds), units = input.snapshot.units.filter(unit => wanted.has(unit.id)
+      && unit.owner === input.situation.owner && unit.hp > 0 && unitMover(unit.kind) === 'land' && unit.kind !== 'worker');
+    const defend = input.method.actions.at(-1)!;
+    const travel = input.method.actions.find(action => action.executor === 'strategy.transport') ?? {
+      id: `${input.method.id}/deliver`, executor: 'strategy.transport', intent: { kind: 'deliver-force' as const }, target: defend.target,
+      demands: input.method.demands, dependsOn: [], spendIds: [], completionEffects: [] };
+    const plan = materializeVoyages(input, travel.id, units.map(unit => unit.id));
+    const assembling = plan.voyages.map(voyage => ({ id: `${voyage.id}/assemble`, executor: 'strategy.assemble',
+      intent: { kind: 'borrow-force' as const }, target: voyage.departureGround, demands: [], dependsOn: [], spendIds: [],
+      completionEffects: [], unitIds: voyage.unitIds }));
+    const dependencies = [...assembling.map(action => action.id), ...plan.voyages.flatMap(voyage => voyage.ship.kind === 'production' ? [voyage.ship.actionId] : [])];
+    const demands: ResourceDemand[] = [...travel.demands.filter(demand => demand.kind !== 'transport'), ...plan.voyages.map(voyage => ({ kind: 'transport' as const, seaId: voyage.crossing.seaId,
+      payloadMass: voyage.unitIds.reduce((sum, id) => sum + bodyMass(units.find(unit => unit.id === id)!), 0),
+      departure: voyage.departure.point, landing: voyage.destination.point }))];
+    const needsTravel = plan.voyages.length > 0 || plan.missing.length > 0;
+    return { ...input.method, voyagePlans: plan.voyages, spends: plan.spends, preconditions: plan.missing, estimatedTicks: plan.latestArrivalTicks,
+      actions: [...plan.actions, ...assembling,
+        ...(needsTravel ? [{ ...travel, demands, dependsOn: dependencies, unitIds: units.map(unit => unit.id) }] : []),
+        { ...defend, dependsOn: needsTravel ? [travel.id] : [], unitIds: units.map(unit => unit.id) }] };
+  },
   quote(input): MethodAllocationQuote {
     const { snapshot, situation, objective, method, unitIds } = input;
     const requested = new Set(unitIds), selected = snapshot.units.filter(unit => requested.has(unit.id)
@@ -94,6 +119,7 @@ export const defenseMethodProvider: AllocationMethodProvider = {
     let latest = 0;
     for (const unit of selected) {
       const fact = facts.get(unit.id), arrival = fact && unitArrival(fact, responseId);
+      if (!evacuation && method.kind === 'cross-sea-reinforcement' && fact?.roles.includes('transport')) continue;
       const sameLand = fact?.location.kind === 'land' && fact.location.landId === objective.target.landId;
       if (!fact || (!evacuation && (fact.roles.includes('worker') || fact.roles.includes('transport') || fact.roles.includes('warship')))
         || (evacuation && unit.kind !== 'worker')) { unavailable.push(unit.id); continue; }
@@ -103,10 +129,11 @@ export const defenseMethodProvider: AllocationMethodProvider = {
         && distance(unit, method.actions.at(-1)!.target.point) <= 240) { stationed.push(unit.id); continue; }
       if (!arrival || arrival.status === 'unknown') { unknown.push(unit.id); continue; }
       if (!('ticks' in arrival)) { unavailable.push(unit.id); continue; }
-      if (arrival.status === 'conditional') missing = 'response-route-prerequisites-unmet';
+      if (arrival.status === 'conditional' && !method.voyagePlans?.length) missing = 'response-route-prerequisites-unmet';
       latest = Math.max(latest, arrival.ticks); enRoute.push(unit.id); etas.set(unit.id, arrival.ticks);
     }
     if (selected.length !== requested.size) missing = 'allocated-unit-no-longer-present';
+    if (method.preconditions.some(condition => condition.status !== 'met')) missing = method.preconditions.find(condition => condition.status !== 'met')!.reason.code;
     if (unavailable.length) missing = 'allocated-units-ineligible-for-method';
     if (unknown.length) missing = 'response-arrival-unknown';
     const validIds = new Set([...stationed, ...enRoute]);
@@ -133,8 +160,11 @@ export const defenseMethodProvider: AllocationMethodProvider = {
     const utilityBase = objective.conditionalQuote?.potentialUtility ?? objective.utility;
     const benefit = evacuation ? [{ code: 'workers-saved', value: cohort.length * UNIT_DEFS.worker.cost }]
       : utilityBase.benefit.map(term => ({ code: term.code, value: term.value }));
-    const cost = [...utilityBase.cost.filter(term => term.code !== 'force-time').map(term => ({ code: term.code, value: term.value })),
-      { code: 'force-time', value: forceTimeGold(total.force, latest) }];
+    const cost = [...utilityBase.cost.filter(term => term.code !== 'force-time' && term.code !== 'new-transport').map(term => ({ code: term.code, value: term.value })),
+      { code: 'force-time', value: forceTimeGold(total.force, latest) },
+      ...method.spends.filter(spend => spend.includedUtilityTermCodes.includes('new-transport')).map(spend => ({ code: 'new-transport',
+        value: Math.max(0, spend.amountGold - input.budgets.filter(budget => budget.spendId === spend.spendId)
+          .reduce((paid, budget) => Math.max(paid, budget.paidGold), 0)) }))];
     const probability = evacuation ? 1 : forceSuccessProbability(weighted.effectiveForce + coverForce, demand / 1.25);
     const utility: AllocationUtility = { horizonTicks: utilityBase.horizonTicks, benefit, cost,
       successProbability: probability, persistenceBonus: utilityBase.persistenceBonus,

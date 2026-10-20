@@ -22,7 +22,7 @@ export const trainTransportExecutor: StrategyExecutor = {
     const job = yard.queue.find(job => 'unitKind' in job && isTransportKind(job.unitKind));
     const command = grant.commands.find(entry => entry.command.type === 'train' && entry.command.buildingId === yard.id
       && isTransportKind(entry.command.unitKind) && sameAction(entry.action, execution.token));
-    if (execution.state.observedJobId && !job) {
+    if (execution.state.observedProduction === true && !job) {
       const sea = execution.target.seaId ?? seaIdAt(snapshot.map, walkableGoal(snapshot.map, yard.x, yard.y, 'sea'));
       const born = hulls.filter(unit => !known.includes(unit.id) && distance(unit, yard) <= 500
         && sea !== undefined && seaIdAt(snapshot.map, unit) === sea);
@@ -30,8 +30,15 @@ export const trainTransportExecutor: StrategyExecutor = {
         state: { ...execution.state, createdShipId: born[0]!.id } };
       return blockedExecutor(input, born.length ? 'trained-transport-birth-ambiguous' : 'training-job-ended-without-observed-transport');
     }
-    if (job && command) return { ...base, status: 'active', phase: 'training',
-      state: { ...execution.state, knownHullIds: execution.state.knownHullIds ?? hulls.map(unit => unit.id), observedJobId: job.id ?? command.id } };
+    if (job && 'unitKind' in job && command) {
+      const budget = grant.budgets.find(budget => sameAction(budget.action, execution.token) && budget.objectiveId === input.objective.id
+        && budget.state === 'reserved' && budget.amountGold - budget.paidGold >= UNIT_DEFS.transport.cost);
+      return { ...base, status: 'active', phase: 'training',
+        state: { ...execution.state, knownHullIds: execution.state.knownHullIds ?? hulls.map(unit => unit.id),
+          observedProduction: true, observedNativeJobId: job.id ?? null, observedCommandId: command.id },
+        payments: budget ? [{ budgetId: budget.id, amountGold: UNIT_DEFS.transport.cost, proof: { kind: 'production', buildingId: yard.id,
+          jobId: job.id ?? null, acceptedCommandId: command.id, unitKind: job.unitKind, queueIndex: yard.queue.indexOf(job) } }] : [] };
+    }
     if (command) return { ...base, status: 'active', phase: 'await-training-start' };
     if (yard.queue.length) return blockedExecutor(input, 'shipyard-queue-occupied');
     if (!grant.budgets.some(budget => sameAction(budget.action, execution.token) && budget.objectiveId === input.objective.id
