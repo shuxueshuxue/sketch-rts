@@ -1,0 +1,416 @@
+{
+  "provenance": {
+    "input": "src/ai/bootstrap_1/fixtures/ring-beachhead-15m.json",
+    "inputSha256": "88c94fc66697a6ba69733a62eb6b025d664768f74b503a49ed8010048a3fcc24",
+    "baseCommit": "883f57c5",
+    "startTick": 18000,
+    "endTick": 19800,
+    "thinkInterval": 15,
+    "secondsPerTick": 0.05,
+    "description": "原生环水群岛房间的 15 分钟真实存档，保留 AFK 人类、全部 AI、单位、资源、订单和任务，续跑 90 秒。"
+  },
+  "performance": {
+    "thinks": 360,
+    "nodesPerTrace": 12.477777777777778,
+    "plannerMs": 15274.156791999996,
+    "traceMs": 174.10391800003322,
+    "plannerMeanMs": 42.4282133111111,
+    "traceMeanMs": 0.48362199444453674,
+    "overheadPercent": 1.1398594395156532
+  },
+  "frames": [
+    {
+      "tick": 18015,
+      "owners": {
+        "enemy": {
+          "thinkTick": 18000,
+          "nodeCount": 11,
+          "roots": [
+            {
+              "id": "expansion:gold-gen-9:11130",
+              "kind": "expansion",
+              "status": "blocked",
+              "reason": "home-threat"
+            },
+            {
+              "id": "attack-result:building-enemy2-townHall-1641:17430",
+              "kind": "attack",
+              "status": "abandoned",
+              "reason": "withdrew"
+            },
+            {
+              "id": "defense:building-enemy-townHall-3324",
+              "kind": "defense",
+              "status": "active",
+              "reason": "phase:fight"
+            },
+            {
+              "id": "delivery:10935",
+              "kind": "delivery",
+              "status": "active",
+              "reason": "await-delivery"
+            },
+            {
+              "id": "ferry:unit-enemy-transport-4748:17505",
+              "kind": "transport",
+              "status": "blocked",
+              "reason": "home-raid-reserve"
+            }
+          ]
+        },
+        "enemy2": {
+          "thinkTick": 18005,
+          "nodeCount": 10,
+          "roots": [
+            {
+              "id": "expansion:gold-gen-9:10640",
+              "kind": "expansion",
+              "status": "active",
+              "reason": "stage:escort"
+            },
+            {
+              "id": "attack-result:building-enemy-townHall-3324:16085",
+              "kind": "attack",
+              "status": "abandoned",
+              "reason": "withdrew"
+            },
+            {
+              "id": "claim:mineGuard:building-enemy2-townHall-1641",
+              "kind": "defense",
+              "status": "active",
+              "reason": "arrived"
+            },
+            {
+              "id": "claim:build:build:defenseTower:3464:1936",
+              "kind": "task",
+              "status": "active",
+              "reason": "en-route"
+            },
+            {
+              "id": "delivery:12290",
+              "kind": "delivery",
+              "status": "active",
+              "reason": "await-delivery"
+            },
+            {
+              "id": "ferry:unit-enemy2-transport-6467:13820",
+              "kind": "transport",
+              "status": "blocked",
+              "reason": "approaching-load"
+            }
+          ]
+        },
+        "player-4": {
+          "thinkTick": 18010,
+          "nodeCount": 13,
+          "roots": [
+            {
+              "id": "expansion:gold-gen-9:10960",
+              "kind": "expansion",
+              "status": "active",
+              "reason": "stage:escort"
+            },
+            {
+              "id": "island:gold-gen-8:18010",
+              "kind": "island",
+              "status": "blocked",
+              "reason": "await-engineer-transport"
+            },
+            {
+              "id": "attack-result:building-enemy2-townHall-3567:17785",
+              "kind": "attack",
+              "status": "abandoned",
+              "reason": "withdrew"
+            },
+            {
+              "id": "claim:expansionGarrison:building-player-4-townHall-2510",
+              "kind": "defense",
+              "status": "active",
+              "reason": "en-route"
+            },
+            {
+              "id": "claim:expansionGarrison:building-player-4-townHall-1574",
+              "kind": "defense",
+              "status": "active",
+              "reason": "en-route"
+            },
+            {
+              "id": "claim:build:build:farm:4474:1050",
+              "kind": "task",
+              "status": "active",
+              "reason": "en-route"
+            },
+            {
+              "id": "delivery:10960",
+              "kind": "delivery",
+              "status": "done",
+              "reason": "delivered"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "tick": 18600,
+      "owners": {
+        "enemy": {
+          "thinkTick": 18585,
+          "nodeCount": 12,
+          "roots": [
+            {
+              "id": "expansion:gold-gen-9:11130",
+              "kind": "expansion",
+              "status": "blocked",
+              "reason": "home-threat"
+            },
+            {
+              "id": "attack-result:building-enemy2-townHall-1641:17430",
+              "kind": "attack",
+              "status": "abandoned",
+              "reason": "withdrew"
+            },
+            {
+              "id": "defense:building-enemy-townHall-3324",
+              "kind": "defense",
+              "status": "active",
+              "reason": "phase:fight"
+            },
+            {
+              "id": "delivery:10935",
+              "kind": "delivery",
+              "status": "active",
+              "reason": "await-delivery"
+            },
+            {
+              "id": "ferry:unit-enemy-transport-4748:17505",
+              "kind": "transport",
+              "status": "blocked",
+              "reason": "retry-delay"
+            }
+          ]
+        },
+        "enemy2": {
+          "thinkTick": 18590,
+          "nodeCount": 10,
+          "roots": [
+            {
+              "id": "expansion:gold-gen-9:10640",
+              "kind": "expansion",
+              "status": "active",
+              "reason": "stage:escort"
+            },
+            {
+              "id": "attack-result:building-enemy-townHall-3324:16085",
+              "kind": "attack",
+              "status": "abandoned",
+              "reason": "withdrew"
+            },
+            {
+              "id": "claim:build:build:townHall:3088:4656",
+              "kind": "task",
+              "status": "active",
+              "reason": "en-route"
+            },
+            {
+              "id": "delivery:12290",
+              "kind": "delivery",
+              "status": "active",
+              "reason": "await-delivery"
+            },
+            {
+              "id": "ferry:unit-enemy2-transport-6467:13820",
+              "kind": "transport",
+              "status": "blocked",
+              "reason": "approaching-load"
+            },
+            {
+              "id": "pressure:building-enemy-townHall-3324:18575",
+              "kind": "pressure",
+              "status": "active",
+              "reason": "advancing"
+            }
+          ]
+        },
+        "player-4": {
+          "thinkTick": 18595,
+          "nodeCount": 14,
+          "roots": [
+            {
+              "id": "expansion:gold-gen-9:10960",
+              "kind": "expansion",
+              "status": "active",
+              "reason": "stage:escort"
+            },
+            {
+              "id": "island:gold-gen-8:18010",
+              "kind": "island",
+              "status": "blocked",
+              "reason": "await-engineer-transport"
+            },
+            {
+              "id": "attack-result:building-enemy2-townHall-3567:17785",
+              "kind": "attack",
+              "status": "abandoned",
+              "reason": "withdrew"
+            },
+            {
+              "id": "claim:expansionGarrison:building-player-4-townHall-2510",
+              "kind": "defense",
+              "status": "active",
+              "reason": "en-route"
+            },
+            {
+              "id": "claim:expansionGarrison:building-player-4-townHall-1574",
+              "kind": "defense",
+              "status": "active",
+              "reason": "en-route"
+            },
+            {
+              "id": "delivery:10960",
+              "kind": "delivery",
+              "status": "done",
+              "reason": "delivered"
+            },
+            {
+              "id": "ferry:unit-player-4-carrier-7876:18115",
+              "kind": "transport",
+              "status": "active",
+              "reason": "phase:loading"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "tick": 19800,
+      "owners": {
+        "enemy": {
+          "thinkTick": 19785,
+          "nodeCount": 12,
+          "roots": [
+            {
+              "id": "expansion:gold-gen-9:11130",
+              "kind": "expansion",
+              "status": "blocked",
+              "reason": "home-threat"
+            },
+            {
+              "id": "attack-result:building-enemy2-townHall-1641:17430",
+              "kind": "attack",
+              "status": "abandoned",
+              "reason": "withdrew"
+            },
+            {
+              "id": "defense:building-enemy-townHall-3324",
+              "kind": "defense",
+              "status": "active",
+              "reason": "phase:fight"
+            },
+            {
+              "id": "delivery:10935",
+              "kind": "delivery",
+              "status": "active",
+              "reason": "await-delivery"
+            },
+            {
+              "id": "ferry:unit-enemy-transport-4748:18990",
+              "kind": "transport",
+              "status": "blocked",
+              "reason": "home-raid-reserve"
+            }
+          ]
+        },
+        "enemy2": {
+          "thinkTick": 19790,
+          "nodeCount": 10,
+          "roots": [
+            {
+              "id": "expansion:gold-gen-9:10640",
+              "kind": "expansion",
+              "status": "active",
+              "reason": "stage:escort"
+            },
+            {
+              "id": "attack-result:building-enemy-townHall-3324:16085",
+              "kind": "attack",
+              "status": "abandoned",
+              "reason": "withdrew"
+            },
+            {
+              "id": "claim:build:build:defenseTower:3568:1864",
+              "kind": "task",
+              "status": "active",
+              "reason": "en-route"
+            },
+            {
+              "id": "delivery:12290",
+              "kind": "delivery",
+              "status": "active",
+              "reason": "await-delivery"
+            },
+            {
+              "id": "ferry:unit-enemy2-transport-6467:13820",
+              "kind": "transport",
+              "status": "blocked",
+              "reason": "approaching-load"
+            },
+            {
+              "id": "pressure:building-enemy-townHall-3324:18575",
+              "kind": "pressure",
+              "status": "done",
+              "reason": "reached"
+            }
+          ]
+        },
+        "player-4": {
+          "thinkTick": 19795,
+          "nodeCount": 14,
+          "roots": [
+            {
+              "id": "expansion:gold-gen-9:10960",
+              "kind": "expansion",
+              "status": "active",
+              "reason": "stage:escort"
+            },
+            {
+              "id": "island:gold-gen-8:18010",
+              "kind": "island",
+              "status": "blocked",
+              "reason": "saving-hall-capital"
+            },
+            {
+              "id": "attack-result:building-enemy2-townHall-3567:17785",
+              "kind": "attack",
+              "status": "abandoned",
+              "reason": "withdrew"
+            },
+            {
+              "id": "claim:expansionGarrison:building-player-4-townHall-1574",
+              "kind": "defense",
+              "status": "active",
+              "reason": "en-route"
+            },
+            {
+              "id": "delivery:10960",
+              "kind": "delivery",
+              "status": "done",
+              "reason": "delivered"
+            },
+            {
+              "id": "ferry:unit-player-4-carrier-7876:18115",
+              "kind": "transport",
+              "status": "active",
+              "reason": "phase:sailing"
+            },
+            {
+              "id": "pressure:building-enemy2-townHall-3567:19150",
+              "kind": "pressure",
+              "status": "done",
+              "reason": "reached"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
