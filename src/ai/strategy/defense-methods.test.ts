@@ -14,6 +14,8 @@ import type { DecisionFacts } from './decision';
 import { landIdAt } from './regions';
 import type { Objective, Situation } from './types';
 import { forceSuccessProbability, quoteOpportunityCost } from './utility';
+import { assertUnitValueSides } from './unit-value-ledger';
+import { createUnit } from '../../shared/map';
 
 function defendedPost(): AllocationMethodQuoteInput {
   const scene = sketchScene('defense-value-counterfactual').map('bareDuel').replaceDefaults()
@@ -227,6 +229,7 @@ describe('defense protection and whole-bundle valuation', () => {
     const input = defendedPost(), before = JSON.stringify(input), quote = defenseMethodProvider.quote(input);
     expect(quote.status).toBe('feasible');
     const utility = quote.utility!;
+    expect(() => assertUnitValueSides(utility)).not.toThrow();
     expect(quote.reason.values.actualOpposition).toBe(1);
     expect(utility.successProbability).toBe(forceSuccessProbability(quote.force!.effectiveForce + 1.3, 1));
     expect(quote.force!.requiredForce).toBe(0);
@@ -237,6 +240,18 @@ describe('defense protection and whole-bundle valuation', () => {
     expect(zero.status).toBe('feasible');
     expect(zero.utility!.score).toBeCloseTo(0);
     expect(JSON.stringify(input)).toBe(before);
+  });
+
+  it('identifies a protected worker benefit without also charging that worker as a combat loss', () => {
+    const input = defendedPost(), worker = createUnit('protected-worker', 'us', 'worker', 1350, 1400);
+    const quote = defenseMethodProvider.quote({ ...input, snapshot: { ...input.snapshot, units: [...input.snapshot.units, worker] },
+      situation: { ...input.situation, assets: [...input.situation.assets, { id: worker.id, owner: worker.owner, kind: 'worker',
+        target: { entityId: worker.id, landId: input.objective.target.landId!, point: worker }, hp: worker.hp, complete: true,
+        replacementGold: 75, remainingGold: 0, incomeGoldPerTick: 0, discountedValueGold: 75 }] } });
+    expect(quote.status).toBe('feasible');
+    expect(quote.utility!.benefit.flatMap(term => term.catalogUnitValues ?? []).map(entry => entry.unitId)).toContain(worker.id);
+    expect(quote.utility!.cost.flatMap(term => term.catalogUnitValues ?? []).some(entry => entry.unitId === worker.id)).toBe(false);
+    expect(() => assertUnitValueSides(quote.utility!)).not.toThrow();
   });
 
   it('uses the allocator response pool without erasing an idle reservation commitment', () => {

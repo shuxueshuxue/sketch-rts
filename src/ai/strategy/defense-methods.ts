@@ -5,7 +5,7 @@ import type { GameSnapshot } from '../../shared/types';
 import { averagePoint, distance } from '../policy/spatial';
 import { assessAllocatedDefenseBattle, assessAllocatedForce } from './allocated-force';
 import { assessDefenseResponse } from './defense-response';
-import { allocatedVoyageValue } from './allocated-voyage-value';
+import { allocatedVoyageValue, voyageCostAfterPreservedAssets } from './allocated-voyage-value';
 import { defenseProtectionValue, defenseThreatScenarios } from './defense-risk';
 import type { AllocationMethodProvider, AllocationReason, AllocationUtility, ExecutableMethod,
   ForceQuotation, MethodAllocationQuote } from './allocation-types';
@@ -20,6 +20,8 @@ import { unitMover } from '../../shared/catalog';
 import { bodyMass } from '../../shared/physical-body';
 import { allocatedMemberArrival } from './planned-voyage-arrival';
 import { evacuationSubjectIds } from './evacuation-subjects';
+import { casualtyUnitValues, sumUnitValues } from './allocated-unit-values';
+import { assertUnitValueSides } from './unit-value-ledger';
 
 const reason = (code: string, factIds: readonly string[] = [], values: AllocationReason['values'] = {}): AllocationReason => ({ code, factIds, values });
 const defenderKinds: readonly Method['kind'][] = ['local-squad', 'main-army-recall', 'wait-in-cover', 'cross-sea-reinforcement', 'evacuation'];
@@ -235,18 +237,27 @@ export const defenseMethodProvider: AllocationMethodProvider = {
     const voyages = allocatedVoyageValue(input);
     if (voyages.unknown.length) missing ??= voyages.unknown[0]!.code;
     const transitSurvival = [...voyages.actions.values()].reduce((p, wave) => p * wave.survivalProbability, 1);
-    const benefit = evacuation ? [{ code: 'workers-saved', value: discountedValue(cohort.length * UNIT_DEFS.worker.cost, latest, window) }]
-      : [{ code: 'protected-assets', value: protection?.benefitGold ?? 0 }];
-    const attrition = (party: typeof cohort) => scenarios.scenarios.reduce((sum, scenario) => {
+    const savedUnitValues = evacuation ? cohort.map(unit => ({ unitId: unit.id, valueGold: discountedValue(UNIT_DEFS.worker.cost, latest, window) })) : [];
+    const benefit = evacuation ? [{ code: 'workers-saved', value: savedUnitValues.reduce((sum, entry) => sum + entry.valueGold, 0), catalogUnitValues: savedUnitValues }]
+      : [{ code: 'protected-assets', value: protection?.benefitGold ?? 0, catalogUnitValues: assets.filter(asset => asset.kind === 'worker')
+        .map(asset => ({ unitId: asset.id, valueGold: discountedValue(asset.replacementGold, latest, window) })) }];
+    const preserved = new Set(benefit.flatMap(term => term.catalogUnitValues.map(entry => entry.unitId)));
+    const combatUnitValues: { unitId: string; valueGold: number }[][] = [];
+    const combatLoss = (party: typeof cohort, branchProbability: number) => scenarios.scenarios.reduce((sum, scenario) => {
       const battle = assessAllocatedDefenseBattle({ snapshot, units: party,
         opponents: opponents.filter(unit => scenario.unitIds.includes(unit.id)).map(unit => ({ unit, share: coverage.get(unit.id)! })),
         towers: hostileTowers, windowTicks: threatWindow });
+      combatUnitValues.push(casualtyUnitValues(party, battle.casualties.permanentDeadUnitIds).map(entry => ({ ...entry,
+        valueGold: discountedValue(entry.valueGold * branchProbability * scenario.probability, latest, window) })));
       return sum + scenario.probability * battle.casualties.expectedLossGold;
     }, 0);
+    const combatGold = evacuation ? 0 : transitSurvival * combatLoss(cohort, transitSurvival)
+      + (1 - transitSurvival) * combatLoss(cohort.filter(unit => stationed.includes(unit.id)), 1 - transitSurvival);
+    const voyageCost = voyageCostAfterPreservedAssets([...voyages.actions.values()], preserved);
+    const voyageUnitValues = voyageCost.catalogUnitValues.map(entry => ({ ...entry, valueGold: discountedValue(entry.valueGold, latest, window) }));
     const cost = [...(evacuation ? [] : [{ code: 'static-protection-baseline', value: protection?.staticBaselineGold ?? 0 }]),
-      { code: 'combat-attrition', value: evacuation ? 0
-      : discountedValue(transitSurvival * attrition(cohort) + (1 - transitSurvival) * attrition(cohort.filter(unit => stationed.includes(unit.id))), latest, window) },
-      { code: 'voyage-hull-and-passengers', value: discountedValue([...voyages.actions.values()].reduce((sum, wave) => sum + wave.expectedLossGold, 0), latest, window) },
+      { code: 'combat-attrition', value: discountedValue(combatGold, latest, window), catalogUnitValues: sumUnitValues(combatUnitValues) },
+      { code: 'voyage-hull-and-passengers', value: discountedValue(voyageCost.expectedLossGold, latest, window), catalogUnitValues: voyageUnitValues },
       ...(opportunity?.status === 'known' ? [{ code: 'bundle-opportunity', value: opportunity.gold }] : [])];
     const probability = evacuation ? cohort.length ? (stationed.length + transitSurvival * enRoute.length) / cohort.length : 0
       : transitSurvival * (protection?.successProbability ?? 0) + (1 - transitSurvival) * (noArrivalProtection?.successProbability ?? 0);
@@ -255,6 +266,7 @@ export const defenseMethodProvider: AllocationMethodProvider = {
       successProbability: probability, persistenceBonus,
       score: probability * benefit.reduce((sum, term) => sum + term.value, 0)
         - cost.reduce((sum, term) => sum + term.value, 0) + persistenceBonus };
+    assertUnitValueSides(utility);
     const why = reason(missing ?? 'allocated-defense-cohort-feasible', [...requested], { requiredForce: total.requiredForce,
       availableForce: weighted.effectiveForce, actualOpposition, successProbability: probability,
       staticProtection: protection && protection.benefitGold > 0 ? protection.staticBaselineGold / protection.benefitGold : 0,
