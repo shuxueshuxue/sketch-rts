@@ -1,6 +1,7 @@
 import type { GameCommand, GameSnapshot, PlayerId } from '../../shared/types';
 import type { ActionGrant, ActionToken, CommandAdmission, ExclusiveResourceKey, StrategyAllocationMemory } from './allocation-types';
 import { sameAction } from './control';
+import { inheritIncumbentCommand } from './incumbent-command-source';
 
 export type StrategyCommandProposal = Readonly<{
   id: string;
@@ -100,14 +101,14 @@ export function admitStrategyCommands(input: Readonly<{ snapshot: GameSnapshot; 
       record(proposal, command, 'command-building-not-owned-or-present'); continue;
     }
     const dependencyDenied = used.dependencies.some(key => !allows(key, proposal));
-    if (dependencyDenied || used.queues.some(id => !allows(`queue:${id}`, proposal))) {
+    if (dependencyDenied || used.queues.some(id => !allows(command.type === 'research' ? `research:${id}` : `queue:${id}`, proposal))) {
       record(proposal, command, 'command-dependent-resource-not-granted'); continue;
     }
     const denied = used.units.filter(id => deniedUnit(id));
     if (denied.length && 'unitIds' in command) {
       const rejectedIds = new Set(denied), permitted = command.unitIds.filter(id => !rejectedIds.has(id));
-      record(proposal, { ...command, unitIds: denied }, deniedUnit(denied[0]!)!);
-      if (permitted.length) record(proposal, { ...command, unitIds: permitted });
+      record(proposal, inheritIncumbentCommand(command, { ...command, unitIds: denied }), deniedUnit(denied[0]!)!);
+      if (permitted.length) record(proposal, inheritIncumbentCommand(command, { ...command, unitIds: permitted }));
     } else if (denied.length) record(proposal, command, deniedUnit(denied[0]!)!);
     else record(proposal, command);
   }

@@ -71,6 +71,12 @@ export function retainObservationHistory(state: StrategyObservationMemory, situa
     objectives: objectives.slice(0, OBSERVATION_HISTORY_LIMIT).map(({ id, sinceTick, stability, utility, rank }) =>
       ({ id, sinceTick, stability: { ...stability }, utility: { score: rank === null ? null : utility.score } })),
   };
+  boundObservationMemory(state);
+}
+
+/** Also used after control-only action targets extend the same publication
+ * ledger. Explanations or process caches never determine this trimming. */
+export function boundObservationMemory(state: StrategyObservationMemory) {
   // Explicit serialization bound, independent of map area or number of entities.
   // Drop historical quotations before useful geometry progress. A gap is retained
   // as unknown; it cannot create a recovered-site history or a zero handoff cost.
@@ -84,9 +90,9 @@ export function retainObservationHistory(state: StrategyObservationMemory, situa
     bytes -= observationJsonBytes(removed) + comma;
   };
   while (bytes > OBSERVATION_BYTE_LIMIT) {
-    if (state.history.objectives.length) discard(state.history.objectives);
-    else if (state.history.lostSites.length) discard(state.history.lostSites, true);
-    else if (state.history.assets.length) discard(state.history.assets);
+    if (state.history?.objectives.length) discard(state.history.objectives);
+    else if (state.history?.lostSites.length) discard(state.history.lostSites, true);
+    else if (state.history?.assets.length) discard(state.history.assets);
     else if (state.crossings.length) discard(state.crossings, true);
     else if (state.fields.land.length) discard(state.fields.land);
     else if (state.fields.sea.length) discard(state.fields.sea);

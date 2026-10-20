@@ -10,7 +10,7 @@ export type ActionId = string;
 export type AllocationEventId = string;
 export type AllocationLeaseId = string;
 /** A hull, worker and combatant all use the same physical-unit key. */
-export type ExclusiveResourceKey = `unit:${string}` | `queue:${string}`;
+export type ExclusiveResourceKey = `unit:${string}` | `queue:${string}` | `research:${string}`;
 export type JsonValue = null | boolean | number | string | readonly JsonValue[] | { readonly [key: string]: JsonValue };
 export type ExecutionState = Readonly<Record<string, JsonValue>>;
 /** Generation changes on replacement/restart, not on each think or budget refresh. */
@@ -222,6 +222,21 @@ export type IssuedActionCommand = Readonly<{
     jobs: readonly Readonly<{ id: string | null; unitKind: TrainableUnitKind | null }>[] }>
     | Readonly<{ kind: 'construction'; buildingIds: readonly string[] }>;
 }>;
+/** An accepted command from a real old producer branch, before adoption. This
+ * is provenance, not a lease or an inferred former intention. Bulk commands are
+ * projected to this unit only, retaining the shared actual command id. */
+export type IncumbentOrderReceipt = Readonly<{
+  unitId: string;
+  commandId: string;
+  executor: string;
+  task: Readonly<{ source: string; taskId: string }>;
+  acceptedTick: number;
+  command: GameCommand;
+  observedTick: number | null;
+  observedOrder: Readonly<UnitOrder> | null;
+}>;
+export type CandidateSwitchRecord = Readonly<{ revision: number; tick: number; fromTaskId: string;
+  toObjectiveId: ObjectiveId; diagnosedRevision: number | null }>;
 export type AllocationPayment = Readonly<{
   budgetId: string;
   amountGold: number;
@@ -271,6 +286,8 @@ type EventHeader = Readonly<{ id: AllocationEventId; tick: number; revision: num
 export type AllocationEvent = EventHeader & (
   | Readonly<{ kind: 'incumbent-adopted'; leaseIds: readonly AllocationLeaseId[] }>
   | Readonly<{ kind: 'preempted'; quotation: PreemptionQuotation; handoff: 'pending' | 'shrink' | 'pause' | 'fail' }>
+  | Readonly<{ kind: 'candidate-reassigned'; fromTask: Readonly<{ source: string; taskId: string }>;
+    unitIds: readonly string[]; repeatedUnitIds: readonly string[] }>
   | Readonly<{ kind: 'interrupted' | 'resumed'; assignmentId: AssignmentId; vacancyId: string }>
   | Readonly<{ kind: 'vacancy-filled'; vacancyId: string; assignmentIds: readonly AssignmentId[] }>
   | Readonly<{ kind: 'assignment-stage'; assignmentId: AssignmentId; from: AssignmentStage; to: AssignmentStage }>
@@ -294,6 +311,9 @@ export type StrategyAllocationMemory = Readonly<{
   nextActionGeneration: number;
   nextEventSequence: number;
   objectives: Readonly<Record<ObjectiveId, ObjectiveAllocation>>;
+  /** Concrete, numerical plans survive forks and hull birth. An active voyage
+   * must not lose its manifest because a later query starts aboard the ship. */
+  methods: Readonly<Record<MethodId, ExecutableMethod>>;
   executions: Readonly<Record<ActionId, ExecutionAction>>;
   leases: Readonly<Record<ExclusiveResourceKey, ResourceLease>>;
   assignments: Readonly<Record<AssignmentId, FormalAssignment>>;
@@ -303,6 +323,8 @@ export type StrategyAllocationMemory = Readonly<{
   issuedOrders: Readonly<Record<string, IssuedActionOrder>>;
   /** Commands are stored once by id, retained only while an order or blocked parent references them. */
   issuedCommands: Readonly<Record<string, IssuedActionCommand>>;
+  incumbentOrders: Readonly<Record<string, IncumbentOrderReceipt>>;
+  candidateSwitches: Readonly<Record<string, CandidateSwitchRecord>>;
   blocked: Readonly<Record<string, SafetyBlockedQuote>>;
   unmet: readonly AllocationUnmetDemand[];
   /** Bounded recent journal + unacknowledged handoffs; never a previous-memory chain. */
