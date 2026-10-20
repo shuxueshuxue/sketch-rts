@@ -17,12 +17,12 @@ describe('incumbent handoff in the real sapphire assemble reservation', () => {
     expect(task.stage).toBe('assemble');
     expect(task.combat).toEqual({});
     for (const id of units) expect(memory.unitClaims[id]?.targetId).toBe(task.mineId);
-    const result = handoffIncumbent(snapshot, owner, memory, landExpansionActor(task), units, 'preemption:test');
+    const result = handoffIncumbent(snapshot, owner, memory, landExpansionActor(task), units, 'candidate:test', 'candidate-reassigned');
     expect(result?.disposition).toBe('pause');
-    expect(result?.reason.reason).toBe('higher-priority-preemption');
+    expect(result?.reason.reason).toBe('candidate-reassigned');
     for (const id of units) expect(memory.unitClaims[id]).toBeUndefined();
     expect(task.paused).toBe(true);
-    expect(task.reason).toBe('higher-priority-preemption');
+    expect(task.reason).toBe('candidate-reassigned');
     expect(snapshot.units.filter(unit => units.includes(unit.id)).every(unit => unit.order.type === 'idle')).toBe(true);
   });
 

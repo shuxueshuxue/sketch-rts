@@ -10,11 +10,13 @@ type Actor = { source: string; taskId: string };
 const sameActor = (a: Actor, b: Actor) => a.source === b.source && a.taskId === b.taskId;
 export type IncumbentHandoff = { eventId: string; disposition: 'shrink' | 'pause' | 'fail'; reason: ExecutorReason };
 
-/** Called inside the allocator transaction after ownership changes, before old
- * prepare. A reservation without a combat group is still real ownership. */
+/** Called after the allocator has verified the kind of resource transfer,
+ * before old prepare. Candidate reservations are not interrupted executions. */
 export function handoffIncumbent(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory,
-  actor: Actor, unitIds: readonly string[], eventId: string): IncumbentHandoff | null {
+  actor: Actor, unitIds: readonly string[], eventId: string,
+  transfer: 'preempted' | 'candidate-reassigned' = 'preempted'): IncumbentHandoff | null {
   const removed = new Set(unitIds), alive = new Set(snapshot.units.filter(unit => unit.owner === owner && unit.hp > 0).map(unit => unit.id));
+  const reason = transfer === 'candidate-reassigned' ? transfer : 'higher-priority-preemption';
   let remaining: string[] = [], targets: string[] = [];
   const expansion = memory.landExpansion;
   if (expansion && sameActor(actor, landExpansionActor(expansion))) {
@@ -28,7 +30,7 @@ export function handoffIncumbent(snapshot: GameSnapshot, owner: PlayerId, memory
     }
     if (expansion.combat?.creep) expansion.combat.creep.group = expansion.combat.creep.group.filter(id => !removed.has(id));
     remaining = [...members].filter(id => !removed.has(id) && alive.has(id) && strategyLeaseAllows(memory, id, actor));
-    expansion.reason = 'higher-priority-preemption';
+    expansion.reason = reason;
     if (!remaining.length) { expansion.paused = true; expansion.pausedAt ??= snapshot.tick; }
     targets = [expansion.mineId];
   } else if (actor.source === 'expansionGarrison' && memory.expansionGarrisons?.[actor.taskId]
@@ -61,12 +63,12 @@ export function handoffIncumbent(snapshot: GameSnapshot, owner: PlayerId, memory
       const mine = snapshot.resources.find(mine => mine.id === conquest.mineId);
       remaining = mine ? snapshot.units.filter(unit => unit.owner === owner && unit.hp > 0 && !unit.deck && !unit.cabin
         && !removed.has(unit.id) && sameGround(snapshot.map, unit, mine) && strategyLeaseAllows(memory, unit.id, actor)).map(unit => unit.id) : [];
-      conquest.reason = 'higher-priority-preemption';
+      conquest.reason = reason;
       if (!remaining.length) { conquest.paused = true; conquest.pausedAt ??= snapshot.tick; }
       targets = [conquest.mineId];
     }
   }
   return { eventId, disposition: remaining.length ? 'shrink' : 'pause', reason: { executor: actor.source,
-    outcome: remaining.length ? 'candidate-rejected' : 'paused', reason: 'higher-priority-preemption',
+    outcome: remaining.length ? 'candidate-rejected' : 'paused', reason,
     taskId: actor.taskId, targetIds: targets, unitIds: [...unitIds] } };
 }
