@@ -88,4 +88,21 @@ node --import tsx scripts/verify-room-baseline.ts \
 各 case 输出 command/memory/final snapshot 摘要，矩阵汇总在 `matrix.json`。重跑必须使用新的输出目录，
 并逐项比较摘要，不能只比较命令数量或胜负。
 
-实际执行结果、主机、退出码、哈希和原始驱动版本记录在本 PR 的验证摘要与 evidence 指针中。
+## 执行结果
+
+[验证摘要](room-baseline-646c/validation.json)：A100 / Node 24.22.0，66 个满席配置均到达 6000 tick，
+86,400 次 think、33,484 条命令逐字节相同，完整 memory 字节也逐次相同。八份中后期帧另外比较 18 次
+think、72 条命令，全部一致。三 worker 倒序复跑相对于六 worker 正序首轮的 73 个共同 case，
+command/memory/final snapshot 三项摘要全部一致，包含全部 66 个完整配置。
+
+首轮进程退出 1 的原因是 `defense-worker-32m36.json` 没有保存版本字段，验证器拒绝空跑；66 个完整配置与
+另外七份帧已通过，没有命令差异。最终驱动从该帧原来的 `worker-safety.test.ts:31` 明确声明 knight 版本，
+完整 74 项退出 0。原驱动、失败记录、最终驱动与两轮日志均保留在原始证据中。
+
+Juma 和 A100 独立构建的 ESM/source map 哈希相同。ESM 1,560,385 字节，source map 3,988,404 字节；
+两份 A100 evidence store 对象也已读回核对 SHA。根 `tsc`、工具 `tsc` 与 18 项定向测试（3 文件）退出码均为 0。
+本次验证范围为上述对拍、类型检查和定向测试，未运行全量 src 测试。CI 的 plan-trace 检查通过；初次 sizes job 在 checkout 阶段
+5 分钟超时，文件检查尚未执行；本地同一大小检查通过，没有新增/修改文件超过 1536 KB。
+
+[原始证据指针](room-baseline-646c/validation-raw.tar.gz.evidence.json) 保存完整 case 摘要、两轮日志、
+执行过的驱动、manifest、构建回执和退出码。当前源码/工具接口封存在 `a7df48c0`，后续提交只补验收文档和证据。

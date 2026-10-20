@@ -1,0 +1,231 @@
+{
+  "schema": 1,
+  "sourceCommit": "646cf9a0513459d16e6b12007d4945148bb29651",
+  "verifiedCodeCommit": "a7df48c0f5e7a859dfab00ff73583ed6d4e3d99f",
+  "artifact": {
+    "file": "planner.mjs",
+    "sha256": "c230b8f35ef198a86e9e72b2309a1b392e9fa2250a7689f25711fec28f94f581",
+    "bytes": 1560385
+  },
+  "sourceMap": {
+    "file": "planner.mjs.map",
+    "sha256": "ce909ef19c0c3fe964760725603e8c8c3e5b687e42af8cc454b6b5e5cbfcb7b6",
+    "bytes": 3988404
+  },
+  "sourceFiles": 263,
+  "host": "develop-20261012121540-anbh4",
+  "node": "v24.22.0",
+  "driverSha256": "611940e76774f07ed80e9ebce03e580ae972710540a1281454c085430bd6395e",
+  "final": {
+    "exit": 0,
+    "roomCases": 66,
+    "realFrameCases": 8,
+    "ticksPerRoomCase": 6000,
+    "roomThinks": 86400,
+    "roomCommands": 33484,
+    "frameThinks": 18,
+    "frameCommands": 72,
+    "workers": 3,
+    "order": "reverse",
+    "allCommandBytesEqual": true,
+    "allMemoryBytesEqual": true
+  },
+  "repeat": {
+    "pilotWorkers": 6,
+    "pilotOrder": "forward",
+    "commonCases": 73,
+    "roomCases": 66,
+    "commandMemorySnapshotDigestsEqual": true,
+    "pilotExit": 1,
+    "pilotFailure": "defense-worker-32m36 fixture lacks a saved version; final driver uses its existing worker-safety.test.ts configuration",
+    "pilotDriverSha256": "3f8f666d5ede781504aee5c3bef8db031eabe4dbbd58c2e104b6f27fb7f12532"
+  },
+  "checks": {
+    "tsc": 0,
+    "tools-tsc": 0,
+    "focused": 0
+  },
+  "focused": {
+    "files": 3,
+    "testsPassed": 18
+  },
+  "build": {
+    "a100ManifestRebuildExit": 0,
+    "artifact": {
+      "file": "planner.mjs",
+      "sha256": "c230b8f35ef198a86e9e72b2309a1b392e9fa2250a7689f25711fec28f94f581",
+      "bytes": 1560385
+    },
+    "sourceMap": {
+      "file": "planner.mjs.map",
+      "sha256": "ce909ef19c0c3fe964760725603e8c8c3e5b687e42af8cc454b6b5e5cbfcb7b6",
+      "bytes": 3988404
+    },
+    "jumaRebuildMatches": true,
+    "jumaReceipt": {
+      "directory": "/root/work/sketch-sound/work/room-baseline-646c/cache/c230b8f35ef198a86e9e72b2309a1b392e9fa2250a7689f25711fec28f94f581",
+      "artifact": {
+        "file": "planner.mjs",
+        "sha256": "c230b8f35ef198a86e9e72b2309a1b392e9fa2250a7689f25711fec28f94f581",
+        "bytes": 1560385
+      },
+      "sourceMap": {
+        "file": "planner.mjs.map",
+        "sha256": "ce909ef19c0c3fe964760725603e8c8c3e5b687e42af8cc454b6b5e5cbfcb7b6",
+        "bytes": 3988404
+      },
+      "sourceFiles": 263
+    }
+  },
+  "maps": [
+    {
+      "map": "brokenSea",
+      "cases": 6,
+      "ticksPerCase": 6000,
+      "thinks": 9600,
+      "commands": 1073,
+      "byteEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "map": "greystonePass",
+      "cases": 6,
+      "ticksPerCase": 6000,
+      "thinks": 4800,
+      "commands": 4068,
+      "byteEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "map": "gullIsland",
+      "cases": 6,
+      "ticksPerCase": 6000,
+      "thinks": 4800,
+      "commands": 2065,
+      "byteEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "map": "pineshade",
+      "cases": 6,
+      "ticksPerCase": 6000,
+      "thinks": 4800,
+      "commands": 2125,
+      "byteEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "map": "reedwater",
+      "cases": 6,
+      "ticksPerCase": 6000,
+      "thinks": 4800,
+      "commands": 1795,
+      "byteEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "map": "ringwater",
+      "cases": 6,
+      "ticksPerCase": 6000,
+      "thinks": 9600,
+      "commands": 3568,
+      "byteEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "map": "sapphireArchipelago",
+      "cases": 6,
+      "ticksPerCase": 6000,
+      "thinks": 14400,
+      "commands": 2302,
+      "byteEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "map": "templeSpring",
+      "cases": 6,
+      "ticksPerCase": 6000,
+      "thinks": 9600,
+      "commands": 3951,
+      "byteEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "map": "turtleLake",
+      "cases": 6,
+      "ticksPerCase": 6000,
+      "thinks": 9600,
+      "commands": 5448,
+      "byteEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "map": "twoShores",
+      "cases": 6,
+      "ticksPerCase": 6000,
+      "thinks": 9600,
+      "commands": 4460,
+      "byteEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "map": "veiledHill",
+      "cases": 6,
+      "ticksPerCase": 6000,
+      "thinks": 4800,
+      "commands": 2629,
+      "byteEqual": true,
+      "memoryEqual": true
+    }
+  ],
+  "frames": [
+    {
+      "name": "broken-beachhead-15m",
+      "tick": 18000,
+      "thinks": 3,
+      "commands": 4
+    },
+    {
+      "name": "defense-worker-32m36",
+      "tick": 39120,
+      "thinks": 1,
+      "commands": 11
+    },
+    {
+      "name": "executor-broken-sea-9585",
+      "tick": 9585,
+      "thinks": 1,
+      "commands": 1
+    },
+    {
+      "name": "knight-territory-10m",
+      "tick": 12000,
+      "thinks": 1,
+      "commands": 9
+    },
+    {
+      "name": "ring-beachhead-15m",
+      "tick": 18000,
+      "thinks": 3,
+      "commands": 14
+    },
+    {
+      "name": "sapphire-beachhead-15m",
+      "tick": 18000,
+      "thinks": 5,
+      "commands": 6
+    },
+    {
+      "name": "summoner-active-sortie-9m26",
+      "tick": 11323,
+      "thinks": 1,
+      "commands": 9
+    },
+    {
+      "name": "temple-beachhead-15m",
+      "tick": 18000,
+      "thinks": 3,
+      "commands": 18
+    }
+  ]
+}
