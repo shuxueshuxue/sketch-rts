@@ -163,7 +163,11 @@ export type Effect =
   | Readonly<{ kind: 'harassment-ended'; unitId: string; siteId: string }>
   | Readonly<{ kind: 'assets-evacuated'; unitIds: readonly string[]; destination: Target }>;
 /** All terms share the evaluator's declared gold-equivalent scale and time horizon. */
-export type UtilityTerm = Readonly<{ code: string; value: number; explanation: string }>;
+/** Catalogued unit assets represented by this numerical term. Keep identity
+ * outside prose so preserved value and permanent loss cannot charge it twice. */
+export type CatalogUnitValue = Readonly<{ unitId: string; valueGold: number }>;
+export type UtilityTerm = Readonly<{ code: string; value: number; explanation: string;
+  catalogUnitValues?: readonly CatalogUnitValue[] }>;
 export type Utility = Readonly<{
   horizonTicks: number;
   /** Costs incurred only on success are negative benefit terms. */
@@ -395,6 +399,7 @@ export type BlockedObjectiveQuote = Readonly<{
     unknown: readonly Reason[]; alreadyIncludedUtilityCodes: readonly string[] }>[];
 }>;
 export type PlanningContext = Readonly<{ snapshot: GameSnapshot; owner: PlayerId; memory: AiPolicyMemory;
+  teams?: NonNullable<GameSnapshot['teams']>;
   valuation?: ValuationContext }>;
 /** Outcomes already accepted by the ordinary planner; no second policy pass. */
 export type SituationObservation = Readonly<{
