@@ -60,5 +60,19 @@
   "logSha256": {
     "full": "44772a4a5e675dab1b983bc42964bc3406b34064b3746b17c18269353efa5f0e",
     "navalRerun": "457916e244ee60c6cf07f8153a285c3d7dd804fe74a5bce25a8329265abb3e03"
+  },
+  "afterMainRebase": {
+    "main": "d81b1cba",
+    "source": "c339fa757340e9fa5446dc23fb2f2946479534c6",
+    "preRebaseHead": "63abfcee7fae434ed0306f561ebd0515a54b992f",
+    "srcTree": "9f18c9ac3e42ba809252177e21e526c174b66aab",
+    "srcUnchangedFromPreRebase": true,
+    "baseChanges": "Only tower proof documentation and its screenshot scene changed after the tested production interface.",
+    "rootTypecheckExitCode": 0,
+    "testCommand": "npx vitest run src/shared/sim/command-refusal-feedback.test.ts src/shared/naval.test.ts src/client/command-refusal-feedback.test.ts src/shared/unit-body-form.test.ts --maxWorkers 2 --minWorkers 1",
+    "passedFiles": 4,
+    "passedTests": 44,
+    "failedTests": 0,
+    "durationSeconds": 8.58
   }
 }

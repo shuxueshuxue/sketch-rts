@@ -30,6 +30,6 @@ mac1，1600×900，中文，真实浏览器鼠标/键盘输入。已逐张查看
 
 完整 src 共执行 716 个文件：7,926 项通过、1 项旧英文断言失败、1 项跳过。将该断言改成检查精确 ownership 后，naval 整文件 21 项复跑全过；原有不可修复、HP 和金币断言保留。合并覆盖为 7,927 项通过、1 项跳过；这是完整执行加受影响文件复测，详见 [验证记录](validation.json)。根 tsc 退出 0；presets 和 large-battle 本轮全过，未放宽性能阈值。
 
-本 PR 依赖 #567 的上塔规则，生产接口按 f5f4baaf 对齐。前置合并后再 rebase main，不自行合并。
+已 rebase 到 main d81b1cba（#567）。与 rebase 前的最终分支相比，`src` 树完全相同；前置新增差异仅为塔的截图文档和截图场景。rebase 后根 tsc 退出 0，拒绝回执、naval、客户端反馈及体态分类四文件 44 项复跑全过。未自行合并。
 
 原审计表见 [审计](../command-refusal-audit.zh.md)，词表草案见 [词表](../command-refusal-vocabulary.zh.md)。
