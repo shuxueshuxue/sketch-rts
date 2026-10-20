@@ -23,9 +23,9 @@
   },
   "currentCoverage": {
     "files": 716,
-    "passedTests": 7927,
+    "passedTests": 7928,
     "skippedTests": 1,
-    "method": "Complete source suite plus the corrected naval file rerun; not a second all-green full invocation."
+    "method": "Complete source suite plus corrected naval rerun and snapshot isolation regression; not a second all-green full invocation."
   },
   "rootTypecheck": {
     "command": "npx tsc --noEmit -p .",
@@ -74,5 +74,19 @@
     "passedTests": 44,
     "failedTests": 0,
     "durationSeconds": 8.58
+  },
+  "snapshotIsolation": {
+    "source": "d76e1c821ce3021dfba9060d6ee8472fc73b26f9",
+    "issue": "Shallow effect copies shared refusal.detail with the live simulation.",
+    "fix": "Copy the structured refusal payload while publishing snapshots; saved restoration already deep-copies effects.",
+    "simulationValuesUnchanged": true,
+    "redTest": "detaches refusal facts from the simulation and from another snapshot",
+    "redResult": "Failed before the copy was added: snapshot refusal was the same object as the simulation refusal.",
+    "testCommand": "npx vitest run src/shared/sim/command-refusal-feedback.test.ts src/shared/sim/snapshot-unit-copy.test.ts src/shared/sim/restore.test.ts src/shared/sim/determinism.test.ts src/shared/savegame.test.ts src/shared/sim/canonical.test.ts src/client/match-worker/match-thread.test.ts src/ai/plan-trace.test.ts src/ai/plan-trace-history.test.ts src/shared/sim/ai-guard-compatibility.test.ts --maxWorkers 2 --minWorkers 1",
+    "passedFiles": 10,
+    "passedTests": 85,
+    "failedTests": 0,
+    "rootTypecheckExitCode": 0,
+    "logSha256": "be0fba792a5697b0db2f7159d2db89b75f9c2c155452b74dfcee750be06181b0"
   }
 }
