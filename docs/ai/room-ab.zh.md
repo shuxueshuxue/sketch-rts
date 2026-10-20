@@ -84,6 +84,13 @@ checksum 和 memory 哈希。生成物只放缓存或 evidence store；仓库只
 `position-games.csv`、`position-pairs.csv`、`position-maps.csv` 分别给逐局、逐种子配对、逐图口径；
 `seats.csv` 最后一列也含完整逐席 position。旧证据没有收入观测和终局资产时，重汇总明确返回 unavailable，不能补成零；需重跑。
 
+无需重跑策略即可核对原始事件、死亡账本、原生损失计数、终局资产、矿点和收入窗口：
+
+```sh
+node --import tsx scripts/verify-room-ab-position.ts --out /path/to/completed-run
+# 可选 --compare /path/to/older-run，要求同名对局的七项命令/世界/memory 哈希完全相同。
+```
+
 ## 行为指标的定义与限制
 
 原始观测为 `version: 1`，发布指标为 `version: 2`；任务归因明确标为 inferred，读取正常规划后保留的任务事实，不再次运行选择器或裁剪 claim。
