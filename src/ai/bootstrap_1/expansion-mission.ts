@@ -26,6 +26,7 @@ import type { AiPolicyMemory, MiningMissionMemory } from '../memory';
 import { expansionGarrisonReady } from './expansion-garrison';
 import { strategyLeaseAllows } from '../strategy/control';
 import { landExpansionActor } from '../strategy/incumbent-actors';
+import { bindIncumbentCommands } from '../strategy/incumbent-command-source';
 
 export function expansionMissionUnitIds(memory: AiPolicyMemory) {
   const mineId = memory.landExpansion?.mineId;
@@ -225,12 +226,13 @@ export function expansionMissionCommands(snapshot: GameSnapshot, owner: PlayerId
 
 function planExpansionScreen(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel): GameCommand[] {
   const task = options.memory.landExpansion!;
+  const context = { ...options, strategyActor: landExpansionActor(task) };
   const members = new Set(expansionMissionUnitIds(options.memory));
-  const front = availableV6Army(snapshot, options, intel).filter(unit => members.has(unit.id)).filter(unit => {
+  const front = availableV6Army(snapshot, context, intel).filter(unit => members.has(unit.id)).filter(unit => {
     const claim = activeUnitClaim(snapshot, owner, unit, options);
     return !isMineRallyClaim(claim) && claim?.kind !== 'mineLeash' && claim?.kind !== 'expansionGarrison' && claim?.kind !== 'harassSquad';
   }).filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0);
-  return planMiningScreen(snapshot, owner, options, intel, task, front);
+  return bindIncumbentCommands(planMiningScreen(snapshot, owner, context, intel, task, front), context.strategyActor);
 }
 
 /** Land and overseas mining missions share their clearing, staging and escort behavior. */
@@ -341,6 +343,6 @@ export function assistExpansionMission(snapshot: GameSnapshot, owner: PlayerId, 
   const helping = front.filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0 && unit.hp >= unit.maxHp * .35
     && routeClearsDisks(groundSteeringRoute(snapshot.map, unit, point), disks)
     && unit.order.type !== 'attack');
-  return helping.length ? [resolveAiCommandIntent(snapshot, owner, { type: state.stage === 'gather' ? 'move' : 'attackMove',
-    unitIds: helping.map(unit => unit.id), ...point }, options)] : [];
+  return helping.length ? bindIncumbentCommands([resolveAiCommandIntent(snapshot, owner, { type: state.stage === 'gather' ? 'move' : 'attackMove',
+    unitIds: helping.map(unit => unit.id), ...point }, options)], landExpansionActor(task)) : [];
 }
