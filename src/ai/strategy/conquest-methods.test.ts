@@ -27,6 +27,23 @@ function sapphire(): AllocationMethodQuoteInput {
     unitIds: [...[3661, 5287, 5642, 5789, 5909].map(id => `unit-player-4-emberRavager-${id}`), 'unit-player-4-worker-3'] };
 }
 describe('executable conquest methods from the real sapphire shortfall', () => {
+  it('quotes a worker-only engineering bundle as a known clearing-force shortfall, not unknown DPS', () => {
+    const original = sapphire(), input = { ...original, unitIds: ['unit-player-4-worker-3'] };
+    const method = conquestMethodProvider.materialize!(input), before = JSON.stringify({ ...input, method });
+    const quoted = conquestMethodProvider.quote({ ...input, method });
+    expect(quoted.status).toBe('blocked');
+    expect(quoted.reason.values.assembledForce).toBe(0);
+    expect(quoted.reason.values.battleProbability).toBe(0);
+    const condition = quoted.missingPreconditions.find(condition => condition.reason.code === 'clearing-force');
+    expect(condition).toMatchObject({ kind: 'force', status: 'unmet', reason: { values: { allocatedForce: 0 } },
+      demand: { kind: 'force', metric: 'camp-force' } });
+    expect(condition?.reason.values.requiredForce).toBeGreaterThan(0);
+    expect(condition?.reason.values.deficit).toBe(condition?.reason.values.requiredForce);
+    expect(condition?.demand?.kind === 'force' && condition.demand.strength).toBe(condition?.reason.values.requiredForce);
+    expect(quoted.missingPreconditions.some(condition => condition.reason.code === 'allocated-battle-dps-unavailable')).toBe(false);
+    expect(JSON.stringify({ ...input, method })).toBe(before);
+  });
+
   it('plans four borrowed soldiers, parallel assembly and native production, clearing, then one hall spend', () => {
     const input = sapphire(), method = conquestMethodProvider.materialize!(input);
     const training = method.actions.find(action => action.intent.kind === 'train-transport')!;

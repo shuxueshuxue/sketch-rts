@@ -26,6 +26,28 @@ function sapphire() {
 }
 
 describe('allocated cohort force', () => {
+  it('keeps an empty clearing cohort known zero while a worker has its actual catalog DPS', () => {
+    const game = sketchScene('known-empty-clearing-force').map('bareDuel').replaceDefaults()
+      .player('us', { team: 'a' }).unit('us', 'worker', 1000, 1000)
+      .unit('neutral', 'ogreWarrior', 1500, 1500).build().createGame();
+    const snapshot = snapshotGame(game), worker = snapshot.units.find(unit => unit.owner === 'us')!;
+    const target: Target = { entityId: 'camp', landId: landIdAt(snapshot.map, worker)!, point: { x: 1500, y: 1500 } };
+    const situation: Situation = { tick: snapshot.tick, owner: 'us', horizonTicks: 2400, lands: [], seas: [], assets: [],
+      opportunities: [], limitations: [], economy: { cashGold: 0, predictedIncomeGold: 0, horizonTicks: 2400, ledger: [] }, units: [] };
+    const empty = assessAllocatedCampBattle({ snapshot, situation, target, unitIds: [], battleStartTicks: 0 });
+    expect(empty).toMatchObject({ status: 'known', reasonCode: 'allocated-clearing-force-empty', dps: 0, ourForce: 0, successProbability: 0 });
+    expect(empty.requiredForce).toBeGreaterThan(0);
+    expect(empty.attrition.expectedLossGold).toBe(0);
+    const enemy = { ...snapshot.units.find(unit => unit.owner === 'neutral')!, id: 'unquoted-enemy', owner: 'foe' };
+    const unresolvedEnemy = assessAllocatedCampBattle({ snapshot: { ...snapshot, units: [...snapshot.units, enemy] },
+      situation, target, unitIds: [], battleStartTicks: 0 });
+    expect(unresolvedEnemy).toMatchObject({ status: 'unknown', reasonCode: 'battle-enemy-arrival-unknown', ourForce: 0 });
+    const armedWorker = assessAllocatedCampBattle({ snapshot, situation, target, unitIds: [worker.id], battleStartTicks: 0 });
+    expect(armedWorker.dps).toBe(combatCapability(snapshot, worker).dps);
+    expect(armedWorker.dps).toBeGreaterThan(0);
+    expect(armedWorker.status).toBe('known');
+  });
+
   it('quotes the real sapphire landed party and its four proposed reinforcements as whole groups', () => {
     const data = JSON.parse(gunzipSync(readFileSync(new URL('../bootstrap_1/fixtures/strategy-allocation-frames.json.gz', import.meta.url))).toString()) as {
       frames: Record<string, { snapshot: GameSnapshot; owner: PlayerId }>;

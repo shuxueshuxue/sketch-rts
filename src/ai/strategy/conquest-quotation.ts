@@ -21,8 +21,16 @@ export function quoteConquestMethod(input: AllocationMethodQuoteInput): MethodAl
     reason: { code, factIds: ids, values: {} }, demand: method.demands[0] ?? null, subgoalIds: [] });
   if (facts.members.length !== new Set(input.unitIds).size) add('allocated-member-no-longer-present', input.unitIds, 'force');
   const actualForce = facts.cleared ? facts.survivingPermanentCampForce : facts.battle.ourForce;
-  const requirement = Math.max(1, facts.cleared ? 0 : facts.battle.requiredForce ?? 0);
-  if (actualForce !== null && actualForce < requirement) add('insufficient-assembled-clearing-force', facts.fighters.map(unit => unit.id), 'force');
+  const declaredForce = method.demands.reduce((maximum, demand) => demand.kind === 'force' ? Math.max(maximum, demand.strength) : maximum, 0);
+  const requirement = Math.max(1, facts.cleared ? 0 : facts.battle.requiredForce ?? declaredForce);
+  if (actualForce !== null && actualForce < requirement) missing.push({
+    id: `${method.id}/clearing-force`, kind: 'force', status: 'unmet',
+    reason: { code: actualForce === 0 ? 'clearing-force' : 'insufficient-assembled-clearing-force',
+      factIds: facts.fighters.map(unit => unit.id), values: { allocatedForce: actualForce, requiredForce: requirement,
+        deficit: requirement - actualForce } },
+    demand: { kind: 'force', metric: 'camp-force', strength: requirement, roles: ['frontline', 'ranged'],
+      at: objective.target, neededByTick: null, permanent: true }, subgoalIds: [],
+  });
   facts.unknown.forEach(value => add(value.code, value.ids));
   const assessment = (group: readonly Unit[]) => assessAllocatedForce(situation.owner, group,
     { metric: 'camp-force', camp: facts.battle.engagement.opposition, requiredForce: requirement }).force;
