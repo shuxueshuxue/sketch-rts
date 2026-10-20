@@ -2,8 +2,10 @@ import { BUILDING_DEFS, unitMover } from '../../shared/catalog';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { distance } from '../policy/spatial';
-import { assessAllocatedCampBattle, assessAllocatedForce, assessPostBattleSiteRisk } from './allocated-force';
+import { creepForce } from '../policy/v7/creep';
+import { assessAllocatedCampBattle, assessAllocatedForce, assessPostBattleSiteRisk, targetEnemyReinforcements } from './allocated-force';
 import type { AllocationMethodQuoteInput } from './allocation-types';
+import { assessDefenseResponse } from './defense-response';
 import { miningCapacity } from './mining-capacity';
 import { forecastMiningWorkforce } from './mining-forecast';
 import { landIdAt } from './regions';
@@ -66,10 +68,19 @@ export function conquestFacts(input: AllocationMethodQuoteInput) {
   const survivingPermanentCampForce = cleared ? assessAllocatedForce(situation.owner, fighters,
     { metric: 'camp-force', camp: { center: objective.target.point, creeps: [], strength: 0, reach: 0 } }).force
     : battle.attrition.survivingCampForce;
-  const siteRisk = assessPostBattleSiteRisk({ snapshot, situation, target: objective.target,
+  const post = { snapshot, situation, target: objective.target,
     battleStartTicks: hallReadyTicks, windowTicks: Math.max(1, window.horizonTicks - hallReadyTicks),
     excludedEnemyIds: cleared ? [] : battle.engagement.memberIds, survivingPermanentCampForce,
-    plannedAssetRadius: BUILDING_DEFS.townHall.radius });
+    plannedAssetRadius: BUILDING_DEFS.townHall.radius };
+  const reinforcements = targetEnemyReinforcements(post), resolved = new Set(post.excludedEnemyIds);
+  const response = assessDefenseResponse({ snapshot, situation, target: objective.target,
+    arrivalTargetId: objective.target.entityId ?? objective.id, metric: 'camp-force',
+    plannedAssetRadius: BUILDING_DEFS.townHall.radius, windowTicks: window.horizonTicks,
+    eligibleUnitIds: situation.units.filter(unit => unit.owner === situation.owner && !unit.commitments.length).map(unit => unit.id),
+    excludedUnitIds: [...input.unitIds, ...(input.valuation?.unavailableUnitIds ?? [])],
+    actualMobileOpponentForce: creepForce([...reinforcements.onStation, ...reinforcements.arriving.map(entry => entry.unit)]
+      .filter(unit => !resolved.has(unit.id))) });
+  const siteRisk = assessPostBattleSiteRisk({ ...post, response: response.response });
   if (siteRisk.status === 'unknown') unknown.push({ code: 'post-clearing-site-risk-unknown', ids: siteRisk.unknownEnemyIds });
   const mineId = objective.target.entityId ?? '';
   const capacity = situation.assets.find(asset => asset.id === mineId)?.miningCapacity ?? miningCapacity(
@@ -83,5 +94,5 @@ export function conquestFacts(input: AllocationMethodQuoteInput) {
   if (forecast.status === 'unknown' || forecast.incomeGold === null) unknown.push({ code: 'mining-workforce-income-unknown', ids: [mineId] });
   return { members, fighters, workers, hall, onStation, arrivals, unknown, latestArrivalTicks, battle, cleared,
     clearingUntilTicks, engineerArrivalTicks, transportCapital, hallCapital, netCapitalCash, fundingTicks,
-    hallReadyTicks, window, survivingPermanentCampForce, siteRisk, forecast };
+    hallReadyTicks, window, survivingPermanentCampForce, response, siteRisk, forecast };
 }
