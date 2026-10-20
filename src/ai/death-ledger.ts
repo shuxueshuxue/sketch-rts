@@ -83,6 +83,7 @@ export class AiDeathLedger {
 
   /** Copies only selected task facts and health points; does not call selectors or alter their caches. */
   recordThink(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory) {
+    if (!this.owners.has(owner)) return;
     this.recordThinkContext(projectDeathThinkContext(snapshot, owner, memory));
   }
 

@@ -76,3 +76,13 @@ export function planTimelineRows<T>(items:readonly T[],start:(item:T)=>number,en
     ends[row]=end(item);return {item,row};
   });
 }
+
+/** Link only an explicitly recorded task identity, never nearby units or positions. */
+export function planDeathMatches(owner:string,node:AiPlanNode,death:AiUnitDeathRecord,fromTick:number){
+  if(death.owner!==owner||!death.actualDeath||death.tick<fromTick)return false;
+  const id=death.assignment.task?.id;
+  if(!id)return false;
+  if(id===node.id)return true;
+  return (node.source==='landExpansion' && id===`expansion:${node.target.entityId}`)
+    || (node.source==='landAttack' && id===`attack:${node.target.entityId}`);
+}

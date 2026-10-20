@@ -33,6 +33,7 @@ export default async function(s:Scene){
  const liveGoal=[...current.values()].flatMap(trace=>trace.nodes.filter((node:any)=>trace.roots.includes(node.id)&&node.status==='active'&&node.resources.unitIds.length>0&&node.target.position).map((node:any)=>({owner:trace.owner,...node}))).sort((a:any,b:any)=>b.resources.unitIds.length-a.resources.unitIds.length)[0];
  if(liveGoal){if(!await s.page.locator('.plan-panel details').evaluate((e:HTMLDetailsElement)=>e.open))await s.page.locator('.plan-panel details summary').click();await s.page.locator('.plan-list[data-owner="'+liveGoal.owner+'"][data-goal="'+liveGoal.id+'"]').click();}
  const focus=liveGoal?.label;
+ if(liveGoal)await s.camera(liveGoal.target.position.x,liveGoal.target.position.y,.7);
  await s.wait(3000);await s.shot('spectator-plans');
  const browser=s.page.context(),cdp=await browser.newCDPSession(s.page);
  const metrics:any[]=[];
@@ -77,6 +78,7 @@ export default async function(s:Scene){
  if(!await s.page.locator('.plan-panel details').evaluate((e:HTMLDetailsElement)=>e.open))await s.page.locator('.plan-panel details summary').click();
  await s.page.locator('.plan-list[data-owner="'+chosen.owner+'"][data-goal="'+chosen.id+'"]').click();
  s.must(!await s.page.locator('.plan-empty').count(),'Replay lost recorded plan nodes');
+ await s.camera(chosen.position.x,chosen.position.y,.7);
  await s.wait(500);await s.shot('replay-scrub');
  s.must(await s.page.locator('.plan-gap').count()>0,'Missing unrecorded prefix');
  s.record('ai-plan-overlay',{gpu,tick,seek,requestedSeek,chosen,focus,metrics,traffic,packets:packets.length,recordingFrom:replay.initialSave.snapshot.tick,recordingThrough:replay.throughTick,deathRecords:packets.flatMap((p:any)=>p.type==='events'?p.deaths:[]).length});

@@ -25,5 +25,6 @@ export type AiThinkMessage =
   | { type: "close"; session: string };
 
 export type AiThinkReply =
-  | { session: string; deliveryTick: number; commands: CommandEnvelope[]; thinkMs: number; observations?: {delta: AiPlanDelta; context: AiDeathThinkContext}[] }
+  | { kind: 'observation'; session: string; deliveryTick:number; observations: {delta: AiPlanDelta; context: AiDeathThinkContext}[] }
+  | { session: string; deliveryTick: number; commands: CommandEnvelope[]; thinkMs: number }
   | { session: string; deliveryTick: number; error: string };

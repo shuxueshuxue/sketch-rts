@@ -166,14 +166,15 @@ export type AiDeathThinkContext = {
 export function projectDeathThinkContext(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory): AiDeathThinkContext {
   const index = deathTaskIndex(snapshot, owner, memory), general = index.general;
   const clearing = (index as typeof index & {generalClearingTargets?:()=>string[]|undefined}).generalClearingTargets;
-  return structuredClone({ tick: snapshot.tick, owner, tasks: [...index.byUnit],
+  const ownedUnits=snapshot.units.filter(u=>u.owner===owner&&u.hp>0),own=new Set(ownedUnits.map(u=>u.id));
+  return structuredClone({ tick: snapshot.tick, owner, tasks: [...index.byUnit].filter(([id])=>own.has(id)),
     general: general ? { mode:general.mode, ...(general.group ? {group:general.group} : {}),
       ...(general.targetHallId ? {targetHallId:general.targetHallId} : {}), ...(general.stage ? {stage:general.stage} : {}) } : null,
-    claims: Object.fromEntries(Object.entries(memory.unitClaims).map(([id, claim]) => [id, { kind: claim.kind, localRetreat: !!claim.localRetreat }])),
+    claims: Object.fromEntries(Object.entries(memory.unitClaims).filter(([id])=>own.has(id)).map(([id, claim]) => [id, { kind: claim.kind, localRetreat: !!claim.localRetreat }])),
     generalClearingTargetIds: clearing?.() ?? null,
     priorAttack: memory.landAttack?.general.group ?? memory.v6?.general?.group ?? [],
     worn: memory.landAttackResult ? { tick: memory.landAttackResult.tick, reason: memory.landAttackResult.reason } : null,
-    units: snapshot.units.filter(u => u.owner === owner && u.hp > 0).map(({id, kind, x, y, hp, maxHp, order, deck}) =>
+    units: ownedUnits.map(({id, kind, x, y, hp, maxHp, order, deck}) =>
       ({id, kind, x, y, hp, maxHp, order, ...(deck ? {deck} : {})})),
   });
 }
