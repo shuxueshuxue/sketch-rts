@@ -89,10 +89,10 @@ export const defenseMethodProvider: AllocationMethodProvider = {
   },
   materialize(input) {
     const evacuation = input.method.kind === 'evacuation';
-    if (input.method.kind !== 'cross-sea-reinforcement' && (!evacuation || !input.method.actions.some(action => action.executor === 'strategy.transport')))
-      return input.method;
     const wanted = new Set(input.unitIds), units = input.snapshot.units.filter(unit => wanted.has(unit.id)
       && unit.owner === input.situation.owner && unit.hp > 0 && unitMover(unit.kind) === 'land' && (evacuation ? unit.kind === 'worker' : unit.kind !== 'worker'));
+    if (input.method.kind !== 'cross-sea-reinforcement' && (!evacuation || !input.method.actions.some(action => action.executor === 'strategy.transport')))
+      return { ...input.method, actions: input.method.actions.map(action => ({ ...action, unitIds: units.map(unit => unit.id) })) };
     const defend = input.method.actions.at(-1)!;
     const travel = input.method.actions.find(action => action.executor === 'strategy.transport') ?? {
       id: `${input.method.id}/deliver`, executor: 'strategy.transport', intent: { kind: 'deliver-force' as const }, target: defend.target,
