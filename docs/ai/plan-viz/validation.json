@@ -1,0 +1,53 @@
+{
+  "baseCommit": "883f57c5",
+  "node": "v24.22.0",
+  "tests": {
+    "command": "npx vitest run src/ai/plan-trace.test.ts src/ai/planner-context.test.ts --maxWorkers 1 --minWorkers 1",
+    "filesPassed": 2,
+    "testsPassed": 16
+  },
+  "build": {
+    "command": "npm run build",
+    "result": "passed"
+  },
+  "browser": {
+    "protocol": "file:",
+    "localFontsLoaded": true,
+    "twoVariantsIndividuallyInspected": true,
+    "allThreeMomentsAndExpandedTree": "checked",
+    "singlePlayerPlanOff": {
+      "goals": 0,
+      "intentMarkers": 0,
+      "intentArrows": 0,
+      "planTree": "hidden",
+      "timeline": "hidden"
+    },
+    "multiplayerSelfOnly": {
+      "visibleOwners": [
+        "player-4"
+      ],
+      "otherOwnerTabsDisabled": true
+    },
+    "multiplayerPostMatchBeforeEnd": {
+      "goals": 0,
+      "intentMarkers": 0,
+      "timeline": "hidden"
+    },
+    "multiplayerPostMatchAfterEnd": {
+      "visibleOwners": [
+        "enemy",
+        "enemy2",
+        "player-4"
+      ]
+    },
+    "serverAuthorization": "not implemented; these controls preview display policy only",
+    "chooserImagesLoad": true,
+    "desktopHorizontalOverflow": false
+  },
+  "screenshots": {
+    "preview-desk.webp": "9940b13f6ae9e9129f6ff14f6a1c3c8b3ef5f09eefa9c4a62d67321d230e5f6b",
+    "preview-ink.webp": "4c8378a7152e1f8b8d5bdeac90d7b35c9e307964c35e366277aae5fc38f78e6f"
+  },
+  "commandEquivalence": "UTF-8 command bytes, final policy memory and world JSON match in independently replayed native naval frames; also tested live, frozen and bootstrap planners",
+  "gameIntegration": "not started, per task scope"
+}

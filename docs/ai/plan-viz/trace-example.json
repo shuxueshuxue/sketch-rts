@@ -1,0 +1,661 @@
+{
+  "schemaVersion": 1,
+  "tick": 18010,
+  "owner": "player-4",
+  "plannerVersion": "v9_knight",
+  "origin": "module-state",
+  "bank": {
+    "gold": 154.54,
+    "supplyUsed": 85,
+    "supplyCap": 96
+  },
+  "roots": [
+    "expansion:gold-gen-9:10960",
+    "island:gold-gen-8:18010",
+    "attack-result:building-enemy2-townHall-3567:17785",
+    "claim:expansionGarrison:building-player-4-townHall-2510",
+    "claim:expansionGarrison:building-player-4-townHall-1574",
+    "claim:build:build:farm:4474:1050",
+    "delivery:10960"
+  ],
+  "nodes": [
+    {
+      "selected": true,
+      "target": {
+        "entityId": "gold-gen-9",
+        "position": {
+          "x": 3197,
+          "y": 4837
+        }
+      },
+      "utility": {
+        "score": null,
+        "source": "not-recorded",
+        "terms": []
+      },
+      "reasons": [
+        {
+          "code": "stage:escort",
+          "detail": "当前阶段：escort",
+          "source": "landExpansion"
+        }
+      ],
+      "requirements": [],
+      "resources": {
+        "unitIds": [
+          "unit-player-4-ashChieftain-5637",
+          "unit-player-4-ashChieftain-9994",
+          "unit-player-4-emberRavager-7201"
+        ],
+        "gold": {
+          "reserved": null,
+          "required": 400
+        }
+      },
+      "children": [
+        "expansion:gold-gen-9:10960/stage:escort",
+        "claim:expansion:gold-gen-9"
+      ],
+      "id": "expansion:gold-gen-9:10960",
+      "kind": "expansion",
+      "label": "建立分矿",
+      "source": "landExpansion",
+      "status": "active",
+      "sinceTick": 10960
+    },
+    {
+      "selected": true,
+      "target": {
+        "entityId": "gold-gen-9",
+        "position": {
+          "x": 3197,
+          "y": 4837
+        }
+      },
+      "utility": {
+        "score": null,
+        "source": "not-recorded",
+        "terms": []
+      },
+      "reasons": [
+        {
+          "code": "stage:escort",
+          "detail": "当前阶段：escort",
+          "source": "landExpansion"
+        }
+      ],
+      "requirements": [],
+      "resources": {
+        "unitIds": [
+          "unit-player-4-ashChieftain-5637",
+          "unit-player-4-ashChieftain-9994",
+          "unit-player-4-emberRavager-7201"
+        ],
+        "gold": {
+          "reserved": null,
+          "required": null
+        }
+      },
+      "children": [],
+      "id": "expansion:gold-gen-9:10960/stage:escort",
+      "kind": "task",
+      "label": "护送工程队",
+      "source": "landExpansion",
+      "status": "active"
+    },
+    {
+      "selected": true,
+      "target": {
+        "entityId": "gold-gen-8",
+        "position": {
+          "x": 6106,
+          "y": 3328
+        }
+      },
+      "utility": {
+        "score": null,
+        "source": "not-recorded",
+        "terms": []
+      },
+      "reasons": [
+        {
+          "code": "await-engineer-transport",
+          "detail": "await-engineer-transport",
+          "source": "naval.conquests"
+        }
+      ],
+      "requirements": [
+        {
+          "code": "await-engineer-transport",
+          "detail": "await-engineer-transport",
+          "met": false
+        }
+      ],
+      "resources": {
+        "unitIds": [],
+        "gold": {
+          "reserved": null,
+          "required": 400
+        }
+      },
+      "children": [
+        "island:gold-gen-8:18010/stage:escort",
+        "ferry:unit-player-4-transport-4770:18010"
+      ],
+      "id": "island:gold-gen-8:18010",
+      "kind": "island",
+      "label": "夺岛建矿",
+      "source": "naval.conquests",
+      "status": "blocked",
+      "sinceTick": 18010
+    },
+    {
+      "selected": true,
+      "target": {
+        "entityId": "gold-gen-8",
+        "position": {
+          "x": 6106,
+          "y": 3328
+        }
+      },
+      "utility": {
+        "score": null,
+        "source": "not-recorded",
+        "terms": []
+      },
+      "reasons": [
+        {
+          "code": "await-engineer-transport",
+          "detail": "await-engineer-transport",
+          "source": "naval.conquests"
+        }
+      ],
+      "requirements": [
+        {
+          "code": "await-engineer-transport",
+          "detail": "await-engineer-transport",
+          "met": false
+        }
+      ],
+      "resources": {
+        "unitIds": [],
+        "gold": {
+          "reserved": null,
+          "required": null
+        }
+      },
+      "children": [],
+      "id": "island:gold-gen-8:18010/stage:escort",
+      "kind": "task",
+      "label": "护送工程队",
+      "source": "naval.conquests",
+      "status": "blocked"
+    },
+    {
+      "selected": false,
+      "target": {
+        "entityId": "building-enemy2-townHall-3567",
+        "position": {
+          "x": 3280,
+          "y": 1680
+        }
+      },
+      "utility": {
+        "score": null,
+        "source": "not-recorded",
+        "terms": []
+      },
+      "reasons": [
+        {
+          "code": "withdrew",
+          "detail": "general:retreat:incoming",
+          "source": "landAttackResult",
+          "recordedTick": 17785
+        }
+      ],
+      "requirements": [],
+      "resources": {
+        "unitIds": [],
+        "gold": {
+          "reserved": null,
+          "required": null
+        }
+      },
+      "children": [],
+      "id": "attack-result:building-enemy2-townHall-3567:17785",
+      "kind": "attack",
+      "label": "上一次进攻结果",
+      "source": "landAttackResult",
+      "status": "abandoned"
+    },
+    {
+      "selected": true,
+      "target": {
+        "entityId": "building-player-4-townHall-2510",
+        "position": {
+          "x": 5008,
+          "y": 3600
+        }
+      },
+      "utility": {
+        "score": null,
+        "source": "not-recorded",
+        "terms": []
+      },
+      "reasons": [
+        {
+          "code": "en-route",
+          "detail": "0/2 名已到位；0 名正在回位",
+          "source": "unitClaims.expansionGarrison"
+        }
+      ],
+      "requirements": [],
+      "resources": {
+        "unitIds": [
+          "unit-player-4-emberRavager-1074",
+          "unit-player-4-emberRavager-1098"
+        ],
+        "gold": {
+          "reserved": null,
+          "required": null
+        }
+      },
+      "children": [],
+      "id": "claim:expansionGarrison:building-player-4-townHall-2510",
+      "kind": "defense",
+      "label": "分矿驻军",
+      "source": "unitClaims.expansionGarrison",
+      "status": "active",
+      "sinceTick": 8455
+    },
+    {
+      "selected": true,
+      "target": {
+        "entityId": "gold-gen-9",
+        "position": {
+          "x": 3197,
+          "y": 4837
+        }
+      },
+      "utility": {
+        "score": null,
+        "source": "not-recorded",
+        "terms": []
+      },
+      "reasons": [
+        {
+          "code": "en-route",
+          "detail": "0/3 名已到位；0 名正在回位",
+          "source": "unitClaims.expansion"
+        }
+      ],
+      "requirements": [],
+      "resources": {
+        "unitIds": [
+          "unit-player-4-ashChieftain-5637",
+          "unit-player-4-ashChieftain-9994",
+          "unit-player-4-emberRavager-7201"
+        ],
+        "gold": {
+          "reserved": null,
+          "required": null
+        }
+      },
+      "children": [],
+      "id": "claim:expansion:gold-gen-9",
+      "kind": "expansion",
+      "label": "扩张行军",
+      "source": "unitClaims.expansion",
+      "status": "active",
+      "sinceTick": 18010
+    },
+    {
+      "selected": true,
+      "target": {
+        "entityId": "building-player-4-townHall-1574",
+        "position": {
+          "x": 5040,
+          "y": 2576
+        }
+      },
+      "utility": {
+        "score": null,
+        "source": "not-recorded",
+        "terms": []
+      },
+      "reasons": [
+        {
+          "code": "en-route",
+          "detail": "0/2 名已到位；0 名正在回位",
+          "source": "unitClaims.expansionGarrison"
+        }
+      ],
+      "requirements": [],
+      "resources": {
+        "unitIds": [
+          "unit-player-4-emberRavager-11057",
+          "unit-player-4-emberRavager-4842"
+        ],
+        "gold": {
+          "reserved": null,
+          "required": null
+        }
+      },
+      "children": [],
+      "id": "claim:expansionGarrison:building-player-4-townHall-1574",
+      "kind": "defense",
+      "label": "分矿驻军",
+      "source": "unitClaims.expansionGarrison",
+      "status": "active",
+      "sinceTick": 15280
+    },
+    {
+      "selected": true,
+      "target": {
+        "entityId": "build:farm:4474:1050",
+        "position": {
+          "x": 4474.314575050762,
+          "y": 1050.314575050762
+        }
+      },
+      "utility": {
+        "score": null,
+        "source": "not-recorded",
+        "terms": []
+      },
+      "reasons": [
+        {
+          "code": "en-route",
+          "detail": "0/1 名已到位；0 名正在回位",
+          "source": "unitClaims.build"
+        }
+      ],
+      "requirements": [],
+      "resources": {
+        "unitIds": [
+          "unit-player-4-worker-2"
+        ],
+        "gold": {
+          "reserved": null,
+          "required": null
+        }
+      },
+      "children": [],
+      "id": "claim:build:build:farm:4474:1050",
+      "kind": "task",
+      "label": "施工任务",
+      "source": "unitClaims.build",
+      "status": "active",
+      "sinceTick": 17935
+    },
+    {
+      "selected": false,
+      "target": {},
+      "utility": {
+        "score": null,
+        "source": "not-recorded",
+        "terms": []
+      },
+      "reasons": [
+        {
+          "code": "delivered",
+          "detail": "实际登陆 tick 12085",
+          "source": "naval.firstCombatDelivery",
+          "recordedTick": 12085
+        }
+      ],
+      "requirements": [],
+      "resources": {
+        "unitIds": [],
+        "gold": {
+          "reserved": null,
+          "required": null
+        }
+      },
+      "children": [
+        "delivery:10960/unit-player-4-transport-4770:10960"
+      ],
+      "id": "delivery:10960",
+      "kind": "delivery",
+      "label": "首次战斗部队登陆",
+      "source": "naval.firstCombatDelivery",
+      "status": "done"
+    },
+    {
+      "selected": false,
+      "target": {
+        "entityId": "gold-gen-8",
+        "position": {
+          "x": 6106,
+          "y": 3328
+        }
+      },
+      "utility": {
+        "score": null,
+        "source": "not-recorded",
+        "terms": []
+      },
+      "reasons": [
+        {
+          "code": "delivered",
+          "detail": "delivered",
+          "source": "naval.firstCombatDelivery.attempts",
+          "recordedTick": 12085
+        }
+      ],
+      "requirements": [],
+      "resources": {
+        "unitIds": [
+          "unit-player-4-ashChieftain-4564",
+          "unit-player-4-emberRavager-1056",
+          "unit-player-4-emberRavager-1956",
+          "unit-player-4-emberRavager-2078",
+          "unit-player-4-priest-3078",
+          "unit-player-4-transport-4770"
+        ],
+        "gold": {
+          "reserved": null,
+          "required": null
+        }
+      },
+      "children": [],
+      "id": "delivery:10960/unit-player-4-transport-4770:10960",
+      "kind": "transport",
+      "label": "登陆航次",
+      "source": "naval.firstCombatDelivery.attempts",
+      "status": "done"
+    },
+    {
+      "selected": true,
+      "target": {
+        "entityId": "gold-gen-8",
+        "position": {
+          "x": 6106,
+          "y": 3328
+        }
+      },
+      "utility": {
+        "score": null,
+        "source": "not-recorded",
+        "terms": []
+      },
+      "reasons": [
+        {
+          "code": "approaching-load",
+          "detail": "approaching-load",
+          "source": "naval.ferryDecisions",
+          "recordedTick": 18010
+        }
+      ],
+      "requirements": [
+        {
+          "code": "approaching-load",
+          "detail": "approaching-load",
+          "met": false
+        }
+      ],
+      "resources": {
+        "unitIds": [
+          "unit-player-4-transport-4770"
+        ],
+        "gold": {
+          "reserved": null,
+          "required": null
+        }
+      },
+      "children": [
+        "ferry:unit-player-4-transport-4770:18010/phase:loading"
+      ],
+      "id": "ferry:unit-player-4-transport-4770:18010",
+      "kind": "transport",
+      "label": "渡运 · settle",
+      "source": "naval.ferries",
+      "status": "blocked",
+      "sinceTick": 18010
+    },
+    {
+      "selected": true,
+      "target": {
+        "entityId": "gold-gen-8",
+        "position": {
+          "x": 6106,
+          "y": 3328
+        }
+      },
+      "utility": {
+        "score": null,
+        "source": "not-recorded",
+        "terms": []
+      },
+      "reasons": [
+        {
+          "code": "approaching-load",
+          "detail": "approaching-load",
+          "source": "naval.ferryDecisions",
+          "recordedTick": 18010
+        }
+      ],
+      "requirements": [
+        {
+          "code": "approaching-load",
+          "detail": "approaching-load",
+          "met": false
+        }
+      ],
+      "resources": {
+        "unitIds": [
+          "unit-player-4-transport-4770"
+        ],
+        "gold": {
+          "reserved": null,
+          "required": null
+        }
+      },
+      "children": [],
+      "id": "ferry:unit-player-4-transport-4770:18010/phase:loading",
+      "kind": "task",
+      "label": "装载部队",
+      "source": "naval.ferries.phase",
+      "status": "blocked"
+    }
+  ],
+  "previousTick": null,
+  "changes": [
+    {
+      "nodeId": "expansion:gold-gen-9:10960",
+      "label": "建立分矿",
+      "kind": "added",
+      "after": "active",
+      "detail": "首次观察到此计划元素"
+    },
+    {
+      "nodeId": "expansion:gold-gen-9:10960/stage:escort",
+      "label": "护送工程队",
+      "kind": "added",
+      "after": "active",
+      "detail": "首次观察到此计划元素"
+    },
+    {
+      "nodeId": "island:gold-gen-8:18010",
+      "label": "夺岛建矿",
+      "kind": "added",
+      "after": "blocked",
+      "detail": "首次观察到此计划元素"
+    },
+    {
+      "nodeId": "island:gold-gen-8:18010/stage:escort",
+      "label": "护送工程队",
+      "kind": "added",
+      "after": "blocked",
+      "detail": "首次观察到此计划元素"
+    },
+    {
+      "nodeId": "attack-result:building-enemy2-townHall-3567:17785",
+      "label": "上一次进攻结果",
+      "kind": "added",
+      "after": "abandoned",
+      "detail": "首次观察到此计划元素"
+    },
+    {
+      "nodeId": "claim:expansionGarrison:building-player-4-townHall-2510",
+      "label": "分矿驻军",
+      "kind": "added",
+      "after": "active",
+      "detail": "首次观察到此计划元素"
+    },
+    {
+      "nodeId": "claim:expansion:gold-gen-9",
+      "label": "扩张行军",
+      "kind": "added",
+      "after": "active",
+      "detail": "首次观察到此计划元素"
+    },
+    {
+      "nodeId": "claim:expansionGarrison:building-player-4-townHall-1574",
+      "label": "分矿驻军",
+      "kind": "added",
+      "after": "active",
+      "detail": "首次观察到此计划元素"
+    },
+    {
+      "nodeId": "claim:build:build:farm:4474:1050",
+      "label": "施工任务",
+      "kind": "added",
+      "after": "active",
+      "detail": "首次观察到此计划元素"
+    },
+    {
+      "nodeId": "delivery:10960",
+      "label": "首次战斗部队登陆",
+      "kind": "added",
+      "after": "done",
+      "detail": "首次观察到此计划元素"
+    },
+    {
+      "nodeId": "delivery:10960/unit-player-4-transport-4770:10960",
+      "label": "登陆航次",
+      "kind": "added",
+      "after": "done",
+      "detail": "首次观察到此计划元素"
+    },
+    {
+      "nodeId": "ferry:unit-player-4-transport-4770:18010",
+      "label": "渡运 · settle",
+      "kind": "added",
+      "after": "blocked",
+      "detail": "首次观察到此计划元素"
+    },
+    {
+      "nodeId": "ferry:unit-player-4-transport-4770:18010/phase:loading",
+      "label": "装载部队",
+      "kind": "added",
+      "after": "blocked",
+      "detail": "首次观察到此计划元素"
+    }
+  ],
+  "limitations": [
+    "utility-not-recorded",
+    "per-goal-gold-reservations-not-recorded",
+    "module-state-not-an-htn-search"
+  ]
+}
