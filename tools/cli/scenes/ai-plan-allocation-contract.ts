@@ -54,6 +54,15 @@ export default async function (s: Scene) {
   await seek(50);
   await s.page.waitForSelector('.plan-strategy');
   // Label the evidence, rather than presenting a synthetic transaction as a real match decision.
+  await s.page.evaluate(() => {
+    const watermark = document.createElement('div');
+    watermark.dataset.planContractWatermark = '';
+    watermark.textContent = '人工样例\n非真实 AI 决策';
+    Object.assign(watermark.style, { position: 'fixed', left: '20%', top: '33%', zIndex: '1400',
+      pointerEvents: 'none', whiteSpace: 'pre-line', textAlign: 'center', color: '#664c32', opacity: '.28',
+      font: '700 52px/1.55 serif', letterSpacing: '.15em', transform: 'rotate(-16deg)' });
+    document.body.append(watermark);
+  });
   const labelFixture = () => s.page.locator('.ai-plan-overlay header em').evaluate((element: HTMLElement) => {
     element.textContent = '契约样例 · 人工分配数据 · 非真实 AI 决策';
   });
