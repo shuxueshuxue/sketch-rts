@@ -26,6 +26,9 @@ export type SimulationKillEvent = {
   readonly unit: ObservedUnit;
   readonly cause: 'damage' | 'sinking';
 };
+export type ObservedBuilding = Observed<Pick<Building, 'id' | 'owner' | 'kind' | 'x' | 'y' | 'hp' | 'maxHp' | 'radius' | 'complete'>>;
+export type SimulationBuildingDamageEvent = Omit<SimulationDamageEvent, 'target'> & { readonly target: ObservedBuilding };
+export type SimulationBuildingKillEvent = { readonly tick: number; readonly source: ObservedSource; readonly building: ObservedBuilding };
 export type SimulationRemovalEvent = {
   readonly tick: number;
   readonly unit: ObservedUnit;
@@ -42,6 +45,8 @@ export type SimulationObservation = {
   label?: string;
   damage?(event: SimulationDamageEvent): void;
   kill?(event: SimulationKillEvent): void;
+  buildingDamage?(event: SimulationBuildingDamageEvent): void;
+  buildingKill?(event: SimulationBuildingKillEvent): void;
   removed?(event: SimulationRemovalEvent): void;
   command?(event: SimulationCommandEvent): void;
   /** Diagnostics cannot interrupt simulation, including when an observer throws. */
@@ -102,7 +107,7 @@ function reportObserverError(listener: SimulationObservation, kind: string, erro
   });
 }
 
-function publish<K extends 'damage' | 'kill' | 'removed' | 'command'>(listeners: Set<SimulationObservation>, kind: K,
+function publish<K extends 'damage' | 'kill' | 'removed' | 'command' | 'buildingDamage' | 'buildingKill'>(listeners: Set<SimulationObservation>, kind: K,
   event: Parameters<NonNullable<SimulationObservation[K]>>[0]) {
   for (const listener of [...listeners]) {
     try { (listener[kind] as ((value: typeof event) => void) | undefined)?.(event); }
@@ -117,15 +122,33 @@ function publish<K extends 'damage' | 'kill' | 'removed' | 'command'>(listeners:
 export function observeDamage(game: Game, source: Unit | Building, target: Unit | Building | Obstacle,
   damage: number, hpBefore: number, profile: DamageProfile) {
   const listeners = subscriptions.get(game);
-  if (!listeners || !('order' in target) || ![...listeners].some(listener => listener.damage)) return;
+  if (!listeners) return;
+  if (!('order' in target)) {
+    if ('complete' in target && [...listeners].some(listener => listener.buildingDamage))
+      publish(listeners, 'buildingDamage', Object.freeze({ tick: game.tick, source: sourceView(game, source),
+        target: buildingView(target), damage, hpBefore, profile: frozenCopy(profile) }));
+    return;
+  }
+  if (![...listeners].some(listener => listener.damage)) return;
   publish(listeners, 'damage', Object.freeze({ tick: game.tick, source: sourceView(game, source),
     target: unitView(target), damage, hpBefore, profile: frozenCopy(profile) }));
 }
 
 export function observeKill(game: Game, source: Unit | Building, unit: Unit | Building, cause: SimulationKillEvent['cause']) {
   const listeners = subscriptions.get(game);
-  if (!listeners || !('order' in unit) || ![...listeners].some(listener => listener.kill)) return;
+  if (!listeners) return;
+  if (!('order' in unit)) {
+    if ([...listeners].some(listener => listener.buildingKill)) publish(listeners, 'buildingKill', Object.freeze({
+      tick: game.tick, source: sourceView(game, source), building: buildingView(unit) }));
+    return;
+  }
+  if (![...listeners].some(listener => listener.kill)) return;
   publish(listeners, 'kill', Object.freeze({ tick: game.tick, source: sourceView(game, source), unit: unitView(unit), cause }));
+}
+
+function buildingView(building: Building): ObservedBuilding {
+  const { id, owner, kind, x, y, hp, maxHp, radius, complete } = building;
+  return Object.freeze({ id, owner, kind, x, y, hp, maxHp, radius, complete });
 }
 
 export function observeRemoval(game: Game, unit: Unit, reason: SimulationRemovalEvent['reason']) {
