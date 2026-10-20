@@ -24,6 +24,8 @@ import { miningRallyAssignment } from './mining-rally';
 import { activeUnitClaim, clearUnitClaim, forgetExpansionMember, isMineRallyClaim, recordUnitTaskClaim, setUnitClaim } from '../policy/claims';
 import type { AiPolicyMemory, MiningMissionMemory } from '../memory';
 import { expansionGarrisonReady } from './expansion-garrison';
+import { strategyLeaseAllows } from '../strategy/control';
+import { landExpansionActor } from '../strategy/incumbent-actors';
 
 export function expansionMissionUnitIds(memory: AiPolicyMemory) {
   const mineId = memory.landExpansion?.mineId;
@@ -37,6 +39,7 @@ export function migrateExpansionClaims(snapshot: GameSnapshot, memory: AiPolicyM
   if (!task?.unitIds) return;
   const mine = snapshot.resources.find(mine => mine.id === task.mineId);
   for (const id of task.unitIds) {
+    if (!strategyLeaseAllows(memory, id, landExpansionActor(task))) continue;
     const claim = memory.unitClaims[id];
     if (claim) claim.expansionMineId = task.mineId;
     else recordUnitTaskClaim(snapshot, memory, id, { kind: 'expansionMission', targetId: task.mineId,
@@ -107,7 +110,8 @@ export function prepareExpansionMission(snapshot: GameSnapshot, owner: PlayerId,
     // A purchasing visit is optional. Recall the opening courier to the expansion screen; ferries and medical care
     // keep their existing ownership. Claims below prevent another shopping trip from immediately replacing this one.
     const courier = memory.mercenaryCourier && snapshot.units.find(unit => unit.id === memory.mercenaryCourier!.unitId);
-    if (courier && !defending.has(courier.id) && !courier.deck && courier.hp === courier.maxHp && courier.order.type !== 'board') {
+    if (courier && !defending.has(courier.id) && !courier.deck && courier.hp === courier.maxHp && courier.order.type !== 'board'
+      && strategyLeaseAllows(memory, courier.id, landExpansionActor(task))) {
       delete memory.mercenaryCourier;
       setUnitClaim(memory, courier.id, { kind: 'expansion', targetId: next.id, x: next.x, y: next.y,
         sinceTick: snapshot.tick, expiresTick: snapshot.tick + 30, expansionMineId: next.id });
@@ -140,12 +144,13 @@ export function prepareExpansionMission(snapshot: GameSnapshot, owner: PlayerId,
     if (task.pausedAt !== undefined && task.combat?.creep) task.combat.creep.since += snapshot.tick - task.pausedAt;
     delete task.pausedAt;
     delete task.paused;
+    const actor = landExpansionActor(task);
     const alive = new Set(snapshot.units.filter(unit => unit.owner === owner && !defending.has(unit.id)
-      && !unit.deck && unit.order.type !== 'board').map(unit => unit.id));
+      && !unit.deck && unit.order.type !== 'board' && strategyLeaseAllows(memory, unit.id, actor)).map(unit => unit.id));
     const retained = expansionMissionUnitIds(memory);
     for (const id of retained) if (!alive.has(id)) forgetExpansionMember(memory, id);
     const assault = new Set(memory.landAttack?.general.group);
-    const pool = availableV6Army(snapshot, options, intel)
+    const pool = availableV6Army(snapshot, { ...options, strategyActor: actor }, intel)
       .filter(unit => !defending.has(unit.id) && !isBacklineKind(unit) && unit.attackDamage > 0
         && (!assault.has(unit.id) || retained.includes(unit.id) || activeMiningBaseCount(snapshot, owner) === 0));
     const members = selectExpansionScreen(snapshot, options, pool, retained.filter(id => alive.has(id)), intel);
