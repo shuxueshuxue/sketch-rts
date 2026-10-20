@@ -41,6 +41,11 @@ export type SimulationCommandEvent = {
   readonly owner: PlayerId;
   readonly command: Observed<GameCommand>;
 };
+/** Actual mining delivery, after population upkeep and cent rounding; excludes bounties/refunds. */
+export type SimulationMiningIncomeEvent = {
+  readonly tick: number; readonly owner: PlayerId; readonly unitId: string; readonly resourceId: string;
+  readonly buildingId: string; readonly carriedGold: number; readonly creditedGold: number;
+};
 export type SimulationObservation = {
   label?: string;
   damage?(event: SimulationDamageEvent): void;
@@ -49,6 +54,7 @@ export type SimulationObservation = {
   buildingKill?(event: SimulationBuildingKillEvent): void;
   removed?(event: SimulationRemovalEvent): void;
   command?(event: SimulationCommandEvent): void;
+  miningIncome?(event: SimulationMiningIncomeEvent): void;
   /** Diagnostics cannot interrupt simulation, including when an observer throws. */
   error?(error: unknown): void;
 };
@@ -107,7 +113,7 @@ function reportObserverError(listener: SimulationObservation, kind: string, erro
   });
 }
 
-function publish<K extends 'damage' | 'kill' | 'removed' | 'command' | 'buildingDamage' | 'buildingKill'>(listeners: Set<SimulationObservation>, kind: K,
+function publish<K extends 'damage' | 'kill' | 'removed' | 'command' | 'buildingDamage' | 'buildingKill' | 'miningIncome'>(listeners: Set<SimulationObservation>, kind: K,
   event: Parameters<NonNullable<SimulationObservation[K]>>[0]) {
   for (const listener of [...listeners]) {
     try { (listener[kind] as ((value: typeof event) => void) | undefined)?.(event); }
@@ -161,4 +167,11 @@ export function observeCommand(game: Game, owner: PlayerId, command: GameCommand
   const listeners = subscriptions.get(game);
   if (!listeners || ![...listeners].some(listener => listener.command)) return;
   publish(listeners, 'command', Object.freeze({ tick: game.tick, owner, command: frozenCopy(command) }));
+}
+
+export function observeMiningIncome(game: Game, owner: PlayerId, unitId: string, resourceId: string,
+  buildingId: string, carriedGold: number, creditedGold: number) {
+  const listeners = subscriptions.get(game);
+  if (!listeners || ![...listeners].some(listener => listener.miningIncome)) return;
+  publish(listeners, 'miningIncome', Object.freeze({ tick: game.tick, owner, unitId, resourceId, buildingId, carriedGold, creditedGold }));
 }
