@@ -1,0 +1,201 @@
+{
+  "sourceCommit": "bf9a472b02712457d2b5f4198d82ca87c8846de0",
+  "controlCommit": "276e5d29",
+  "interval": [
+    0,
+    18000
+  ],
+  "baselineDirectory": "/codegeex/jeffry/sketch-rts-defense/runs/mvg8usdr-e3f0b0/death-ledger-v2-4407d152/ui-twoShores",
+  "controlSummary": "/codegeex/jeffry/sketch-rts-defense/runs/mvg8usdr-e3f0b0/death-ledger/twoShores/A1/summary.json",
+  "observerEquivalence": {
+    "producer": "Codex 37, ai-death-ledger-baseline.ts",
+    "receiptPairsIndependentlyCompared": true,
+    "equal": true,
+    "plannedCount": 15792,
+    "commandCount": 15792,
+    "hashes": {
+      "plannedSha256": "74a0aafa058ef5a1b894799a5cac44cd3c64e472c55c6e744048bc408ce9ceb6",
+      "commandSha256": "d2c34fc63e9b2b68c1f9a58f2ad31959071a8ac5f64eba08fff2d08233c71f3a",
+      "canonicalSha256": "1bab288c8d6a0511431193f6b6ce83696e3216c92688bbf259f92e3e94947990",
+      "snapshotSha256": "4cd4a827322422af06c3b7f70873b6993da7f484b7b72d9366d6107b66f7c7cd",
+      "memorySha256": "57979d56bfced13d71d47eff6f4d532ba3730797cbaea1aa4a1e2d2b05152c4b"
+    }
+  },
+  "reconciliation": {
+    "passed": true,
+    "errors": [],
+    "combatDeaths": 35,
+    "normal": 16,
+    "abnormal": 16,
+    "excludedLiveExpirations": 33,
+    "exactBuildingLossTicks": [
+      5383,
+      7236
+    ],
+    "suspicious": 2,
+    "unattributed": 1
+  },
+  "tests": {
+    "command": "npx vitest run src/ai/plan-trace-history.test.ts src/ai/plan-viz-ledger.test.ts src/ai/plan-trace.test.ts src/ai/planner-context.test.ts src/sdk/package-boundaries.test.ts --maxWorkers 1 --minWorkers 1",
+    "files": 5,
+    "passed": 41,
+    "typecheck": true,
+    "build": "npm run build passed"
+  },
+  "browser": {
+    "protocol": "file:",
+    "viewport": [
+      1600,
+      1200
+    ],
+    "localFonts": true,
+    "defaultWindow": [
+      0,
+      18000
+    ],
+    "aiLanes": 4,
+    "visibleDeathBuckets": {
+      "normal": 16,
+      "suspicious": 2,
+      "abnormal": 16,
+      "unattributed": 1
+    },
+    "normalExample": {
+      "tick": 10326,
+      "unit": "unit-p2-footman-1073",
+      "primary": "combat-loss",
+      "tags": [
+        "retreat-or-treatment",
+        "retreat-failed"
+      ],
+      "v1Disposition": "abnormal",
+      "v2Disposition": "normal",
+      "dealtDamage": null
+    },
+    "suspiciousExample": {
+      "tick": 14892,
+      "unit": "unit-p2-raider-10500",
+      "primary": "recent-reassignment",
+      "tags": [
+        "recent-reassignment",
+        "logistics-transit"
+      ],
+      "markerShape": "diamond",
+      "markerColor": "brass"
+    },
+    "abnormalExample": {
+      "tick": 3351,
+      "unit": "unit-p1-footman-1090",
+      "primary": "neutral-outside-clearing",
+      "tags": [
+        "retreat-or-treatment",
+        "neutral-outside-clearing",
+        "outmatched"
+      ],
+      "markerShape": "filled-circle",
+      "markerGlyph": "!"
+    },
+    "unattributedExample": {
+      "tick": 17795,
+      "unit": "unit-p0-emberRavager-1095",
+      "primary": "unattributed",
+      "engagement": "unknown",
+      "notFoldedIntoAbnormal": true
+    },
+    "mainCategoryAndAllChildTagsShown": true,
+    "engagementEvidenceAndMissingOutgoingDamageShown": true,
+    "suspiciousMapMarkerActualClick": true,
+    "fullWindowUnattributedActualClick": true,
+    "adjacentLossMarksAutoStack": true,
+    "phaseClick": {
+      "tick": 6937,
+      "reason": "mine-threat",
+      "durationSeconds": 18
+    },
+    "visibility": {
+      "soloDefault": false,
+      "soloHiddenLayers": [
+        "goals",
+        "markers",
+        "routes",
+        "lanes",
+        "shortcuts",
+        "attribution"
+      ],
+      "onlineOwners": [
+        "p0"
+      ],
+      "disabledOpponentTabs": [
+        "p1",
+        "p2",
+        "p3"
+      ],
+      "postmatchReplayOwners": [
+        "p0",
+        "p1",
+        "p2",
+        "p3"
+      ]
+    },
+    "horizontalOverflow": false,
+    "consoleErrorsSinceFinalNavigation": 0,
+    "serverAuthorization": "not implemented; static mockup previews display policy only"
+  },
+  "screenshots": {
+    "preview-timeline-abandoned.webp": {
+      "sha256": "249cc810a12a7333cf049de1a96ddb7593235d8b37dbfad877f164425ea80bbf",
+      "individuallyReviewed": true
+    },
+    "preview-timeline-building.webp": {
+      "sha256": "4939dd6d1e246da4d05d60f056c8a0f980c8b2e0d48293e9dbac31eab17901e8",
+      "individuallyReviewed": true
+    },
+    "preview-timeline-death.webp": {
+      "sha256": "a8cc69b7091b4974cbc9db79c85a0dc603a3e97a01c60dac4c0a37aa5f2057a2",
+      "individuallyReviewed": true
+    },
+    "preview-timeline-defense.webp": {
+      "sha256": "2cae0d355f8b8dd319a37c9ec598955fb3e09a0052752a5f1be2fafbd159d226",
+      "individuallyReviewed": true
+    },
+    "preview-timeline-normal.webp": {
+      "sha256": "e59064e88707f9a49626dfd5b3b611fd14a1ef13636e3fbdd2dd93a91fe3c2ad",
+      "individuallyReviewed": true
+    },
+    "preview-timeline-overview.webp": {
+      "sha256": "c75c3ce61535dfd94bb0152569217e6c105c6e2ed9dae007fc3835504e7b1bd6",
+      "individuallyReviewed": true
+    },
+    "preview-timeline-suspicious.webp": {
+      "sha256": "ec7261ba86ebf8311855a7fd671b2f44af1b9af511f2fa11d8c147de1dbc91d0",
+      "individuallyReviewed": true
+    },
+    "preview-timeline-unattributed.webp": {
+      "sha256": "73903f66e78fb8aa777050f8b473879246ab1313d691edc5882021f15f16dad3",
+      "individuallyReviewed": true
+    }
+  },
+  "evidenceArchive": {
+    "machine": "a100",
+    "sha256": "83be3140b8e3fc496474096278ed2021da4bf7b7983ada8a204a9c2ff736e341",
+    "directory": "/codegeex/jeffry/sketch-rts-evidence/sha256/83be3140b8e3fc496474096278ed2021da4bf7b7983ada8a204a9c2ff736e341",
+    "pointerPath": "docs/ai/objectives/death-ledger-v2.evidence.json",
+    "providedBy": 561,
+    "pointerCommit": "24e974d8b50c37dafc477012c3c849a746c83292"
+  },
+  "classificationSourceCommit": "4407d1522301537b652ba64f9dc09f794e223149",
+  "classificationVersion": 2,
+  "classificationMode": "offline-reclassification-no-simulation",
+  "rawObservationSha256": "d2ce40e8c5adf6098ec9c1b5415116c84aa65d4002123d2cd36513abcd36d7ca",
+  "rawObservationHashesMatch": true,
+  "unchangedWorldFileSha256": {
+    "initial.json": "f646c0d8cfc309aa970a07cab77d255ce1c1893b2d465769601f16fcf9fced71",
+    "final.json": "0656d1c45ff7ae44a112e912e0ccd9d53fb820dc2250e7d4f0e8af24108f3ee9",
+    "worlds.jsonl.gz": "753d13783d1264cbab7e5f8b03e0a04167d9eb04cde5da96e1c14e35c12ae6d0",
+    "building-losses.jsonl.gz": "f99235eb0ed26e7e05a6baad1467004c9435fbd891f4f9dabe2e5553d32cba1a"
+  },
+  "originalV1RecordsCompared": 68,
+  "originalV1ClassificationsUnchanged": true,
+  "originalRawRecordsUnchanged": true,
+  "verificationBaseCommit": "24e974d8b50c37dafc477012c3c849a746c83292"
+}

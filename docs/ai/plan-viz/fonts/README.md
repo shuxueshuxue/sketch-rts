@@ -16,7 +16,7 @@ Noto CJK 的 Sans / Serif 仅裁出本样稿使用的文字，WOFF2 内保留原
 子集生成使用 fontTools：
 
 ```sh
-pyftsubset <源 OTF> --text-file=<三个 HTML、viewer.js、sample-data.js 的文字并集> \
+pyftsubset <源 OTF> --text-file=<本目录所有 HTML 和 JS 的文字并集> \
   --output-file=<plan-sans.woff2 或 plan-serif.woff2> --flavor=woff2 \
   --name-IDs='*' --name-languages='*' --no-hinting
 ```

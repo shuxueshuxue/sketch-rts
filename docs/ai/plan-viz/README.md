@@ -1,4 +1,77 @@
-# AI 计划链：数据契约与两版样稿
+# AI 计划链：阵前手记与数据契约
+
+直接打开 **[第二版：阵前手记 · 意图与回声 / timeline.html](timeline.html)**。双击即可离线使用，当前仍是样稿。
+
+![0–15 分钟总览](preview-timeline-overview.webp)
+
+## 第二版：先看全局，再放大一个目标的始末
+
+采用“阵前手记”的墨线战图。默认时间窗覆盖真实双岸对局的 **0:00–15:00**，四名 AI 各有一条泳道。拖选泳道空白可放大；“平移”、左右按钮、整局导航窗和两端手柄可移动或缩放；“查看全局”恢复完整记录。双击目标也能放大它的全过程。游标、播放、战图和面板同步，位置与决策都只取不晚于当前游标的记录。
+
+每个目标的条带内按真实阶段分段，用不同墨色区分集结、清营、护送、施工、整队、交战、装船和航渡。受阻阶段加斜纹并直接写原因和持续时间；悬停边界显示准确起止时间与切换原因，点阶段回到该时刻。没有阶段记录就写“阶段未记录”。末端徽记区分 ✓ 完成、◇ 放弃、✕ 明确失败、↗ 被抢占；当前抢占数据尚未接入，不把 claim 换人猜成抢占。`/` 只代表模块释放，结果未知。首次观察已经结束的目标仅画“结果记录”，不伪装成观察到完整过程。
+
+![扩张全过程与受阻阶段](preview-timeline-defense.webp)
+
+右侧按 **为什么 → 怎么做 → 派了谁 → 进展 → 结果** 展开。效用的收益、成本、成功概率、坚持加分和总分保持“—”；方法、ETA、预期效果、预留资金没有正式数据时也保持为空。父子节点的兵力名单取并集。地图虚线是记录目标的意图方向，实线是选中单位的实际采样轨迹；没有把直线当成导航计划。原始样本未记录逐单位 claim 的到岗时刻，因此本版不从位置或群组比例推断到岗和 ETA。
+
+| 快捷示例 | 同局记录中的事实 |
+|---|---|
+| 3:59–6:07，金旗建立分矿 | 集结 → 清营整队与接战 → 护送 → 施工；5:46 起因 `mine-threat` 暂停 18 秒，随后恢复并完成。 |
+| 8:01，赤旗放弃进攻 | `landAttackResult` 明确记录 `withdrew`，细因 `general:retreat:incoming`；不是根据目标消失猜测放弃。 |
+| 8:36，金旗步兵战损（正常） | 清营交战中撤退失败，遭碎石魔像击杀；主分类 `combat-loss`，子标签保留 `retreat-or-treatment` 和 `retreat-failed`，不因撤退而升级为异常。 |
+| 12:24，金旗掠袭者存疑 | 交战中，阵亡前 10 秒内推断任务有切换；主分类 `recent-reassignment`，仅列待复核，不宣称切换造成死亡。 |
+| 14:49，赤旗余烬劫掠者未归因 | 附近有敌军但只有野怪伤害，主动伤害未采集；交战证据不足，单列未知，不混入异常。 |
+| 2:47，青旗步兵异常阵亡 | 扩张途中，`campRecovery` 交付避战移动，遭食人魔战士致命攻击；v2 主分类为非清营时死于野怪，撤退 / 治疗和局部劣势保留子标签。 |
+| 4:29 与 6:01，防御塔损失 | 逐 tick 观察到 HP ≤ 0 且被原生移除；击杀者与任务归属未记录，保持“—”。 |
+
+![异常阵亡与账本归因](preview-timeline-death.webp)
+
+![明确放弃的进攻](preview-timeline-abandoned.webp)
+
+![正常战损与撤退失败子标签](preview-timeline-normal.webp)
+
+![存疑：近期切换任务](preview-timeline-suspicious.webp)
+
+![未归因：证据不足](preview-timeline-unattributed.webp)
+
+![精确建筑损失](preview-timeline-building.webp)
+
+死亡标记可从战图、泳道和“逐条查看本窗事件”进入。正常战损用绿色 ×，存疑用赭黄色菱形 ?，异常用朱红实心 !；未归因单列灰色标记，不混入异常。地图展示游标前 60 秒及当前选中事件，时间轴仍保留整个窗口的事件，拥挤的事件自动分行，避免正常战损遮住存疑或未归因标记。详情先显示 v2 主分类与全部子标签，再列交战判定、证据与缺口、任务与步骤、到岗状态、当前订单执行器、最后下令、致命来源、局部战力、血量轨迹与伤害构成。**分类直接来自 Codex 37 的 `AiDeathLedger` v2，界面不自行分类；子标签不等于严重程度。** 账本当前的任务归因和诊断仍有 `inferred` 来源标记，界面明确写“推断（账本）”；正式 objective/method/assignment ID 为空时不补造。
+
+当前记录有 **35 次战斗阵亡（16 正常、2 存疑、16 异常、1 未归因）和 2 次建筑损失**。另有 33 次召唤物活着到期移除，保留在账本汇总，不计作战斗阵亡。250 段根目标与执行记录中，观察到 38 次明确完成、6 次放弃或失败、109 次阶段或原因变化。执行任务与短暂 claim 默认折叠，可展开。死亡只连到同一席位、同一个已观察任务的明确账本归属；其余保留未归属，不强行摊到附近目标。
+
+可见性使用已确定的规则：**观战和回放全部可见；单机可开关、默认关；联机只看自己，对手在赛后回放查看。** 样稿以赤旗为“自己”。切换会同时裁剪目标目录、标记、轨迹、泳道、事件、快捷入口和归因。离线文件本身包含完整数据，这只是显示规则；接入联机时仍需由服务端裁剪。
+
+### 第二版的数据与验证
+
+样本来自 Codex 37 的 #561 双岸 v2 离线重分类。模拟提交仍为 **`bf9a472b02712457d2b5f4198d82ca87c8846de0`**，对照 main **`276e5d29`**；分类提交单独记录为 **`4407d1522301537b652ba64f9dc09f794e223149`**。没有重跑对局，initial / final / worlds / building-losses 与 v1 逐字节一致。A100 最终目录：
+
+```text
+/codegeex/jeffry/sketch-rts-defense/runs/mvg8usdr-e3f0b0/death-ledger-v2-4407d152/ui-twoShores
+```
+
+原始文件也已封包到 A100 内容寻址归档 `/codegeex/jeffry/sketch-rts-evidence/sha256/83be3140b8e3fc496474096278ed2021da4bf7b7983ada8a204a9c2ff736e341`，含本样本、main 对照、README 和逐文件 SHA256SUMS；[v2 来源指针](https://github.com/shuxueshuxue/sketch-rts/blob/24e974d8b50c37dafc477012c3c849a746c83292/docs/ai/objectives/death-ledger-v2.evidence.json)由 #561 提供。
+
+同局 `initial.json`、`final.json`、`worlds/traces/deaths/building-losses.jsonl.gz` 与 `summary.json`，覆盖 tick 0–18000。4,804 份 trace、4,800 条原始世界采样，离线投影保留 1,531 帧（约每秒一帧，另保留任务变化时刻）。目标结果与阶段由真实 trace 推导，死亡和建筑损失取原始账本与精确观察，不改对局或决策。
+
+`timeline-data-*.js` 是节点去重后的 gzip/base64 离线载荷，`timeline-loader.js` 用浏览器原生 `DecompressionStream` 解包，无模块请求、服务器、CDN 或网络依赖。需要浏览器支持该原生解压接口，本次使用 Chrome 验证 `file://` 打开。未压缩投影约 12.6 MB，压缩后约 0.92 MB，按文件大小限制分片。计数、哈希与示例在 [timeline-summary.json](timeline-summary.json)，验证凭据在 [timeline-validation.json](timeline-validation.json)。
+
+```sh
+# 从同一个导出目录导入，不再运行一套界面的死亡推断：
+LEDGER_SAMPLE=/path/to/ui-twoShores
+npx tsx scripts/ai-plan-viz-ledger-import.ts "$LEDGER_SAMPLE" /tmp/ai-plan-viz-full-match.json bf9a472b02712457d2b5f4198d82ca87c8846de0
+npx tsx scripts/ai-plan-viz-timeline-build.ts /tmp/ai-plan-viz-full-match.json
+npx vitest run src/ai/plan-trace-history.test.ts src/ai/plan-viz-ledger.test.ts src/ai/plan-trace.test.ts src/ai/planner-context.test.ts src/sdk/package-boundaries.test.ts --maxWorkers 1 --minWorkers 1
+npx tsc --noEmit
+```
+
+原始导出的 15,792 条计划命令与实际交付数量一致。生产者已验证同局观察开启 / 关闭的计划命令、交付命令、canonical、snapshot 和 AI memory 五项哈希均与 main 对照一致；本样稿核对对应 receipt，并将五项值保留在验证文件。原生死亡损失对账通过。导入器要求 diagnosticVersion / frame schemaVersion 均为 2，并重算去除分类字段后的原始观测哈希，与 v2 receipt 比对；拒绝把 v1 标签直接当当前严重程度。原 v1 分类及全部子标签仍完整保留。导入与构建脚本只读文件，不运行模拟或规划器；原有逐字节命令一致性测试仍覆盖 trace 输出入口。
+
+本轮测试覆盖完整 15 分钟的时间不越界、真实目标闭环、阶段与受阻时长、明确结果和单纯消失的区别、缩放和平移边界、死亡账本原样导入、旧任务与未来任务不串归因、活着到期不算阵亡、历史升级种类与乘员船只引用，以及全部可见性规则。浏览器以 `file://` 验证实际拖选、平移、导航手柄、正常、存疑、异常及未归因死亡、建筑损失、目标闭环、阶段边界、播放与权限切换；最终截图逐张查看。没有改游戏线程、战斗规则或 AI 决策；游戏观战 / 回放叠加层是下一步。
+
+## 第一轮样稿与数据契约（保留作比较）
+
+以下两版是第一轮历史方案，其中的可见性选项用于当时挑选；第二版使用上面的固定规则。
 
 先打开 [index.html](index.html) 选风格，或直接双击：
 
