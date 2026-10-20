@@ -84,7 +84,9 @@ if (mode === 'late') {
   if (fixture.memories) ai.memories = structuredClone(fixture.memories);
   else for (const owner of aiPlayers) ai.memories[owner].naval = { ferries: structuredClone(fixture.ferries?.[owner] ?? {}) };
 }
+const warmStarted = performance.now();
 sim.warmGameCaches(game);
+const warmMs = performance.now() - warmStarted;
 const commandsHash = createHash('sha256'), traceHash = createHash('sha256'), previous = new Map();
 const planned = new Map(), thinkSamples: number[] = [], timeline: unknown[] = [];
 const timedFrames: { tick: number; owners: string[]; ms: number; units: number; ships: number; yards: number }[] = [];
@@ -144,7 +146,7 @@ const result = { sourceRoot: root, mode, observe, detail, host: hostname(), cpu:
   policyMemoriesSha256: createHash('sha256').update(JSON.stringify(policyMemories(ai.memories))).digest('hex'),
   observationSha256: createHash('sha256').update(JSON.stringify(Object.fromEntries(Object.entries(ai.memories)
     .map(([owner, memory]) => [owner, memory.strategy])))).digest('hex'),
-  maxRssKiB: process.resourceUsage().maxRSS,
+  warmMs, maxRssKiB: process.resourceUsage().maxRSS,
   cpuMs: (used.user + used.system) / 1000, thinkMs: { n: sorted.length,
     mean: sorted.reduce((a, b) => a + b, 0) / sorted.length,
     p50: sorted[Math.floor(sorted.length * .5)], p95: sorted[Math.floor(sorted.length * .95)], max: sorted.at(-1) },

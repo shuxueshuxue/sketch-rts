@@ -34,6 +34,9 @@ describe('serialized strategy publication independent of process caches', () => 
     expect(history.lostSites.length).toBeGreaterThan(0);
     expect(history.objectives.length).toBeGreaterThan(0);
   }, 60000);
+  it('keeps startup geography warmup outside serialized publication order and trace bytes', () => {
+    for (const mode of [{}, { factsOnly: true }]) expect(processRun({ ...mode, warm: 'startup' })).toEqual(processRun(mode));
+  }, 60000);
   it('restarts from the serialized mid-frame memory without a previous trace and reproduces the continuation exactly', () => {
     const continuous = processRun(), memory = JSON.parse(continuous.saved[5]!);
     const fork = processRun({ memory, start: 6, steps: 6 });

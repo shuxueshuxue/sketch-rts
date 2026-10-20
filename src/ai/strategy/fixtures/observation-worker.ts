@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { setBuildingBodies, moverDistanceField } from '../../../shared/terrain';
+import { setBuildingBodies, moverDistanceField, warmTerrainRouting } from '../../../shared/terrain';
 import { standingBodies } from '../../../shared/structure-bodies';
 import type { GameSnapshot } from '../../../shared/types';
 import type { AiPolicyMemory } from '../../memory';
@@ -12,7 +12,7 @@ import { observationMemory } from '../observation-memory';
 import { buildObservedStrategyDecision, buildStrategyDecision, projectStrategyTrace } from '../decision';
 
 type Input = { snapshot: GameSnapshot; owner: string; memory: AiPolicyMemory;
-  warm?: 'other-owner' | 'reverse'; start?: number; steps: number; dropHallId?: string; tiny?: boolean; decision?: boolean; factsOnly?: boolean };
+  warm?: 'other-owner' | 'reverse' | 'startup'; start?: number; steps: number; dropHallId?: string; tiny?: boolean; decision?: boolean; factsOnly?: boolean };
 const input = JSON.parse(readFileSync(0, 'utf8')) as Input;
 const { snapshot, owner, memory } = input, initialTick = snapshot.tick;
 if (input.tiny) {
@@ -34,7 +34,8 @@ function tinyArrival(stateMemory: AiPolicyMemory, budget: number) {
   return query.arrival(fighter, target);
 }
 setBuildingBodies(snapshot.map, standingBodies(snapshot));
-if (input.warm) {
+if (input.warm === 'startup') warmTerrainRouting(snapshot.map, standingBodies(snapshot));
+else if (input.warm) {
   if (input.tiny) tinyArrival(structuredClone(memory), Infinity);
   for (const other of Object.keys(snapshot.players).filter(other => other !== owner))
     evaluateSituation(snapshot, other, { jobs: [], unitClaims: {} });

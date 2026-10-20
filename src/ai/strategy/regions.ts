@@ -1,5 +1,5 @@
 import { unitMover } from '../../shared/catalog';
-import { groundWholeAnchors, groundWholeAt, groundShoreContacts, type Terrain } from '../../shared/terrain';
+import { groundWholeAt, groundRegionIndex, type GroundRegionIndex, type GroundShore } from '../../shared/terrain';
 import type { GameMap, Unit } from '../../shared/types';
 import type { LandId, Location, Point, SeaId } from './types';
 import { deferredRecord } from './explanations';
@@ -19,47 +19,11 @@ export const seaIdAt = (map: GameMap, point: Point): SeaId | undefined => {
   const label = groundWholeAt(map, point, 'sea');
   return label === undefined ? undefined : seaName(label);
 };
-export type Shore = Readonly<{ landId: LandId; seaId: SeaId; ground: Point; water: Point }>;
-export type RegionIndex = Readonly<{
-  lands: ReadonlyMap<LandId, Point>;
-  seas: ReadonlyMap<SeaId, Point>;
-  shores: readonly Shore[];
-  shoresByLand: ReadonlyMap<LandId, ReadonlyMap<SeaId, readonly Shore[]>>;
-  scannedRows: number;
-  totalRows: number;
-  scannedAtTick: number;
-}>;
-type MutableIndex = { lands: Map<LandId, Point>; seas: Map<SeaId, Point>; shores: Shore[]; shoresByLand: Map<LandId, Map<SeaId, Shore[]>>; scannedRows: number; totalRows: number; scannedAtTick: number };
-const indices = new WeakMap<Terrain, MutableIndex>();
-
-/** Enumerates labels from the one terrain connectivity implementation, once per
- * immutable terrain. Buildings never change these IDs; roads still check bodies. */
-export function regionIndex(map: GameMap, rowBudget = Infinity, tick = 0): RegionIndex {
-  if (!map.terrain) return { lands: new Map([['land:1', { x: 0, y: 0 }]]),
-    seas: new Map([['sea:1', { x: 0, y: 0 }]]), shores: [], shoresByLand: new Map(), scannedRows: 0, totalRows: 0, scannedAtTick: tick };
-  const terrain = map.terrain;
-  let result = indices.get(terrain);
-  if (!result) indices.set(terrain, result = {
-    lands: new Map(groundWholeAnchors(map).map(({ label, point }) => [`land:${label}` as LandId, point])),
-    seas: new Map(groundWholeAnchors(map, 'sea').map(({ label, point }) => [`sea:${label}` as SeaId, point])),
-    shores: [], shoresByLand: new Map(), scannedRows: 0, totalRows: terrain.rows, scannedAtTick: tick,
-  });
-  const end = Math.min(terrain.rows, result.scannedRows + rowBudget);
-  const add = (shore: Shore) => {
-    result!.shores.push(shore);
-    let seas = result!.shoresByLand.get(shore.landId);
-    if (!seas) result!.shoresByLand.set(shore.landId, seas = new Map());
-    let contacts = seas.get(shore.seaId);
-    if (!contacts) seas.set(shore.seaId, contacts = []);
-    contacts.push(shore);
-  };
-  if (end > result.scannedRows) result.scannedAtTick = tick;
-  for (const contact of groundShoreContacts(map, result.scannedRows, end)) add({
-    landId: `land:${contact.land}`, seaId: `sea:${contact.sea}`, ground: contact.ground, water: contact.water,
-  });
-  result.scannedRows = end;
-  return result;
-}
+// Geography is prepared by terrain's existing game warmup, before the first
+// think. These are views of that one index, with no AI publication progress.
+export type Shore = GroundShore;
+export type RegionIndex = GroundRegionIndex;
+export const regionIndex = groundRegionIndex;
 
 type LocationFact = { x: number; y: number; mover: 'land' | 'sea'; shipId: string | undefined; cabin: boolean; location: Location };
 const locations = new WeakMap<object, Map<string, LocationFact>>();

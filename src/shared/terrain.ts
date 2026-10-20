@@ -1501,6 +1501,54 @@ export function groundShoreContacts(map: Pick<GameMap, 'terrain'>, firstRow: num
   return contacts;
 }
 
+export type GroundShore = Readonly<{
+  landId: `land:${number}`; seaId: `sea:${number}`; ground: Point; water: Point;
+}>;
+export type GroundRegionIndex = Readonly<{
+  lands: ReadonlyMap<`land:${number}`, Point>;
+  seas: ReadonlyMap<`sea:${number}`, Point>;
+  shores: readonly GroundShore[];
+  shoresByLand: ReadonlyMap<`land:${number}`, ReadonlyMap<`sea:${number}`, readonly GroundShore[]>>;
+  scannedRows: number; totalRows: number; scannedAtTick: number;
+}>;
+type MutableRegionIndex = {
+  lands: Map<`land:${number}`, Point>; seas: Map<`sea:${number}`, Point>;
+  shores: GroundShore[];
+  shoresByLand: Map<`land:${number}`, Map<`sea:${number}`, GroundShore[]>>;
+  scannedRows: number; totalRows: number; scannedAtTick: number;
+};
+const groundRegionIndices = new WeakMap<Terrain, MutableRegionIndex>();
+
+/** Static geographic facts from the same mover labels used by sameGround.
+ * Warm these with the map; no owner, planning request or publication state is read. */
+export function groundRegionIndex(map: Pick<GameMap, 'terrain'>, rowBudget = Infinity, tick = 0): GroundRegionIndex {
+  const terrain = map.terrain;
+  if (!terrain) return { lands: new Map([['land:1', { x: 0, y: 0 }]]),
+    seas: new Map([['sea:1', { x: 0, y: 0 }]]), shores: [], shoresByLand: new Map(),
+    scannedRows: 0, totalRows: 0, scannedAtTick: tick };
+  let result = groundRegionIndices.get(terrain);
+  if (!result) groundRegionIndices.set(terrain, result = {
+    lands: new Map(groundWholeAnchors(map).map(({ label, point }) => [`land:${label}` as const, point])),
+    seas: new Map(groundWholeAnchors(map, 'sea').map(({ label, point }) => [`sea:${label}` as const, point])),
+    shores: [], shoresByLand: new Map(), scannedRows: 0, totalRows: terrain.rows, scannedAtTick: tick,
+  });
+  if (result.scannedRows === terrain.rows) return result;
+  const end = Math.min(terrain.rows, result.scannedRows + rowBudget);
+  if (end > result.scannedRows) result.scannedAtTick = tick;
+  for (const contact of groundShoreContacts(map, result.scannedRows, end)) {
+    const shore: GroundShore = { landId: `land:${contact.land}`, seaId: `sea:${contact.sea}`,
+      ground: contact.ground, water: contact.water };
+    result.shores.push(shore);
+    let seas = result.shoresByLand.get(shore.landId);
+    if (!seas) result.shoresByLand.set(shore.landId, seas = new Map());
+    let contacts = seas.get(shore.seaId);
+    if (!contacts) seas.set(shore.seaId, contacts = []);
+    contacts.push(shore);
+  }
+  result.scannedRows = end;
+  return result;
+}
+
 function wholesOf(state: TerrainRuntime) {
   if (state.wholes) return state.wholes;
   const { walk, offsets, terrain, width } = state;
@@ -1651,7 +1699,7 @@ export function setBuildingBodies(map: Pick<GameMap, "terrain">, bodies: readonl
 }
 
 // @@@terrain-warmup - What a game's first walks would build from its terrain and the buildings it starts with, built
-// before its first tick instead: each mover's wholes, the sea's clearance and tiles (they first served a ship's launch
+// before its first tick instead: each mover's wholes and their static coast index, the sea's clearance and tiles (they first served a ship's launch
 // steer at minute eight, 33 ms inside one tick), the sea's shore spots for the given radii, and the building copy with
 // its tiles and clearance. Each is a cache of a pure function of the cells (see @@@terrain-runtime). The copy waits beside
 // the map until the first setBuildingBodies hands it these bodies: until then walks read the bare land, as they would cold.
@@ -1662,6 +1710,7 @@ export function warmTerrainRouting(map: Pick<GameMap, "terrain">, bodies: readon
   wholesOf(runtime(terrain, "land"));
   const sea = runtime(terrain, "sea");
   wholesOf(sea);
+  groundRegionIndex(map);
   if (!sea.clearance) fillClearance(sea);
   tilesOf(sea);
   for (const radius of shoreRadii) shoreSpots(map, radius);
