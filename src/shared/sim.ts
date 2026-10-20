@@ -1,4 +1,7 @@
 import { continuingShipAim, shipAttackStation, shipCanAttackCoastTarget } from './ship-attack-station';
+import { simulationObservationActive, observeCommand, observeDamage, observeKill, observeRemoval } from './sim/observation';
+export { observeSimulation } from './sim/observation';
+export type { SimulationObservation, SimulationDamageEvent, SimulationKillEvent, SimulationRemovalEvent, SimulationCommandEvent } from './sim/observation';
 import { standingBodies, standsAsSeen, type StructureBody } from "./structure-bodies";
 import { automaticLeash, guardPosition, GUARD_LEASH_RANGE, hasHumanGuard, setGuardPosition } from './guard-position';
 import { addGold, roundGold } from "./gold";
@@ -475,6 +478,7 @@ export function tryPlayerCommand(game: Game, owner: PlayerId, command: GameComma
   const refusal = checkCommandLegality(game, owner, command);
   if (refusal) return { ok: false, ...refusal };
   applyPlayerCommand(game, owner, command);
+  if (simulationObservationActive) observeCommand(game, owner, command);
   return COMMAND_TAKEN;
 }
 
@@ -3635,6 +3639,7 @@ function applyDamage(game: Game, attacker: Unit | Building, target: Unit | Build
     }
   }
   game.observer?.hit(attacker, target, taken, hpBefore);
+  if (simulationObservationActive) observeDamage(game, attacker, target, taken, hpBefore, profile);
   if (hpBefore > 0 && isUnit(target) && target.owner === "neutral") triggerNeutralAssist(game, target, attacker);
   if (hpBefore > 0 && isPlayerId(target.owner)) triggerPlayerAggro(game, target, attacker);
   if (hpBefore > 0 && target.hp <= 0) {
@@ -3754,9 +3759,10 @@ function neutralHomeOrCurrentPoint(unit: Unit) {
   return unit.homeX !== undefined && unit.homeY !== undefined ? { x: unit.homeX, y: unit.homeY } : { x: unit.x, y: unit.y };
 }
 
-function recordKill(game: Game, attacker: Unit | Building, target: Unit | Building) {
+function recordKill(game: Game, attacker: Unit | Building, target: Unit | Building, cause: 'damage' | 'sinking' = 'damage') {
   // Those aboard a sunk transport drown with it, at the hand that sank it (see @@@transport).
-  if(isUnit(target) && shipProfile(target))for(const passenger of shipPassengers(game.units,target)){if(passenger.hp>0){passenger.hp=0;recordKill(game,attacker,passenger);}}
+  if(isUnit(target) && shipProfile(target))for(const passenger of shipPassengers(game.units,target)){if(passenger.hp>0){passenger.hp=0;recordKill(game,attacker,passenger,'sinking');}}
+  if (simulationObservationActive) observeKill(game, attacker, target, cause);
   // A wreck or friendly impact causes losses, but never grants its own crew
   // kills, experience or a bounty for crashing.
   if(!areEnemyOwners(game,attacker.owner,target.owner))return;
@@ -4095,6 +4101,7 @@ function findStrikeTarget(game: Game, targetId: string): Unit | Building | Obsta
 function removeExpiredUnits(game: Game) {
   if (!game.units.some(unit => unit.expiresTick !== undefined && unit.expiresTick <= game.tick)) return;
   const expiredUnits = game.units.filter((unit) => unit.expiresTick !== undefined && unit.expiresTick <= game.tick);
+  if (simulationObservationActive) for (const unit of expiredUnits) observeRemoval(game, unit, 'expired');
   dropItemsFromDeadUnits(game, expiredUnits);
   const expiredIds = new Set(expiredUnits.map((unit) => unit.id));
   game.units = game.units.filter((unit) => !expiredIds.has(unit.id));
@@ -4113,6 +4120,7 @@ function removeDead(game: Game) {
   const wrecks=new Set(deadUnits.filter(unit=>shipProfile(unit)).map(unit=>unit.id));
   if(wrecks.size)for(const passenger of game.units)if(passenger.deck && wrecks.has(passenger.deck.shipId) && passenger.hp>0){passenger.hp=0;deadUnits.push(passenger);}
   const deadBuildings = game.buildings.filter((building) => building.hp <= 0);
+  if (simulationObservationActive) for (const unit of deadUnits) observeRemoval(game, unit, 'death');
   for (const unit of deadUnits) incrementStat(game.match.stats.unitsLost, unit.owner, 1);
   // Capture only primitive presentation facts before the original drop path
   // clears carrierId. These records never feed combat or inventory decisions.
@@ -4250,6 +4258,7 @@ export function addWorldEffect(game: Game, type: WorldEffect["type"], x: number,
 export function removeUnit(game: Game, unitId: string) {
   const unit = game.units.find((candidate) => candidate.id === unitId);
   if (!unit) return;
+  if (simulationObservationActive) observeRemoval(game, unit, 'script-exit');
   dropItemsFromDeadUnits(game, [unit]);
   game.units = game.units.filter((candidate) => candidate.id !== unitId);
   invalidateSeparationFrame(game);
