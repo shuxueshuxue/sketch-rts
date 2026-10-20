@@ -6,7 +6,7 @@ import { snapshotGame } from '../../shared/sim';
 import type { GameSnapshot, PlayerId } from '../../shared/types';
 import { neutralCamps, creepForce } from '../policy/v7/creep';
 import { strengthOf } from '../policy/v6/strength';
-import { assessAllocatedCampBattle, assessAllocatedCampEngagement, assessAllocatedForce, assessPostBattleSiteRisk, assessPresentCampEngagement } from './allocated-force';
+import { assessAllocatedCampBattle, assessAllocatedCampEngagement, assessAllocatedDefenseBattle, assessAllocatedForce, assessPostBattleSiteRisk, assessPresentCampEngagement } from './allocated-force';
 import { combatCapability } from '../../shared/combat-capabilities';
 import { BUILDING_DEFS, UNIT_DEFS } from '../../shared/catalog';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
@@ -70,6 +70,22 @@ describe('allocated cohort force', () => {
 });
 
 describe('shared camp engagement facts', () => {
+  it('keeps defensive wounds free and exposes the exact battle damage used by the quote', () => {
+    const snapshot = snapshotGame(sketchScene('defense-damage-wounds').map('bareDuel').replaceDefaults()
+      .player('us', { team: 'a' }).player('foe', { team: 'b' })
+      .unit('us', 'emberRavager', 1200, 1400).unit('foe', 'footman', 1450, 1400).build().createGame());
+    const ours = snapshot.units.filter(unit => unit.owner === 'us'), enemy = snapshot.units.find(unit => unit.owner === 'foe')!;
+    const weak = { ...enemy, hp: 1 }, input = { snapshot, units: ours, opponents: [{ unit: weak, share: 1 }], towers: [], windowTicks: 2400 };
+    const before = JSON.stringify(input), battle = assessAllocatedDefenseBattle(input);
+    expect(battle.damageExposure).toBeGreaterThan(0);
+    expect(battle.casualties).toMatchObject({ deadUnitIds: [], expectedLossGold: 0 });
+    expect(battle.casualties.survivors[0]!.hp).toBeLessThan(ours[0]!.hp);
+    expect(battle.casualties.expectedHpLost).toBe(battle.damageExposure);
+    expect(assessAllocatedDefenseBattle({ ...input, opponents: [] })).toMatchObject({ durationTicks: 0, damageExposure: 0 });
+    expect(assessAllocatedDefenseBattle(JSON.parse(JSON.stringify(input)))).toEqual(battle);
+    expect(JSON.stringify(input)).toBe(before);
+  });
+
   it('uses exactly the forecast combat currency when every participant has physically arrived', () => {
     const scene = sketchScene('present-camp-force').map('bareDuel').replaceDefaults()
       .player('us', { team: 'a' }).player('foe', { team: 'b' })

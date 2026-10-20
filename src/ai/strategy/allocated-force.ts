@@ -3,7 +3,7 @@ import { combatCapability } from '../../shared/combat-capabilities';
 import { strikeGap } from '../../shared/combat-geometry';
 import { sameGround, walkableGoal } from '../../shared/terrain';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
-import type { GameSnapshot, PlayerId, Unit } from '../../shared/types';
+import type { Building, GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { strengthOf, structureRating } from '../policy/v6/strength';
 import { creepForce, forceFor, type Camp } from '../policy/v7/creep';
 import { isOpponentOwner } from '../policy/ownership';
@@ -138,6 +138,23 @@ function campBattleForces(owner: PlayerId, ours: readonly Unit[], opposition: Re
   const actualOpponentForce = opposition.strength + towers.reduce((sum, tower) => sum + structureRating(tower), 0);
   const ourForce = towers.length ? creepForce(ours) : assessAllocatedForce(owner, ours, { metric: 'camp-force', camp: opposition }).force;
   return { actualOpponentForce, ourForce, requiredForce: actualOpponentForce + margin };
+}
+
+/** The same damage forecast for one actual defending cohort and one mutually
+ * exclusive enemy army. Scenario probabilities belong to the caller; they must
+ * not be turned into fractional soldiers before estimating a fight. */
+export function assessAllocatedDefenseBattle(input: Readonly<{ snapshot: GameSnapshot; units: readonly Unit[];
+  opponents: readonly Readonly<{ unit: Unit; share: number }>[]; towers: readonly Building[]; windowTicks: number }>) {
+  if (!Number.isFinite(input.windowTicks) || input.windowTicks <= 0
+    || input.opponents.some(entry => !Number.isFinite(entry.share) || entry.share < 0 || entry.share > 1))
+    throw new Error('Invalid defense battle window or availability');
+  const ourDps = input.units.reduce((sum, unit) => sum + combatCapability(input.snapshot, unit).dps, 0);
+  const enemyHp = input.opponents.reduce((sum, entry) => sum + entry.unit.hp * entry.share, 0);
+  const enemyDps = input.opponents.reduce((sum, entry) => sum + combatCapability(input.snapshot, entry.unit).dps * entry.share, 0)
+    + input.towers.reduce((sum, tower) => sum + tower.attackDamage * SIM_TICKS_PER_SECOND / Math.max(1, tower.attackCooldown), 0);
+  const durationTicks = enemyHp > 0 ? enemyHp / Math.max(1, ourDps) * SIM_TICKS_PER_SECOND : input.towers.length ? input.windowTicks : 0;
+  const damageExposure = enemyDps * durationTicks / SIM_TICKS_PER_SECOND;
+  return { ourDps, enemyHp, enemyDps, durationTicks, damageExposure, casualties: focusedCasualties(input.units, damageExposure) };
 }
 
 /** The executor's physical counterpart of the forecast. Only actual granted,
