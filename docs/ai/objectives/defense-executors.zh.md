@@ -32,7 +32,7 @@
 
 运输执行先原生 move 船到计划 water 的一船半径内，再向获配乘客下原生 board；已接受且仍指向同一点的 move 不重复下单。board 后保留这条计划 move，不补 stop：stop 会使船变成 idle，再被原生接人逻辑带向另一个拟议泊位。装载成功只认实际 `deck.shipId` / cabin 和计划船一致，且该船仍在 water 容差内；不要求工人停在浅水／甲板上的 ground，也不因 order.berth 的拟议坐标或 shore 偏差失败。ground 只作步行 ETA。已观测船到位后，装载期间实际船漂出一船半径，行动报 failed、`berth-mismatch` 并保存实际位置、计划位置和容差；多航次聚合保留顶层 failed，不再吞成 active。
 
-真实 4180 手设 grant 的完整公开命令回归每 15 tick 调用正式 executor，4255 首次接纳 board，4555 首次观察工人已上 1151，船偏差 32，小于半径 36。这里没有手改位置、姿态或扩大容差，但它仍是执行协议场景，不是分配器自然获批的场景验收。`loadReceipts` 按成员记录首次有效装载预测的 forecastTick、绝对 predictedLoadedTick、observedLoadedTick 和有符号误差；首次预报不随重报覆盖，另保留一份最新修订，人数受 manifest 约束。初次观察已在船上的成员不补造历史装载时间，预测缺失时误差为 null；观察时间有一个 think 的量化误差。预测字段的算术回归使用显式注入值，不冒充实测 ETA 精度。
+真实 4180 手设 grant 的完整公开命令回归每 15 tick 调用正式 executor，4255 首次接纳 board，4555 首次观察工人已上 1151，船偏差 32，小于半径 36。这里没有手改位置、姿态或扩大容差，但它仍是执行协议场景，不是分配器自然获批的场景验收。`loadReceipts` 按成员记录首次有效装载预测的 forecastTick、绝对 predictedLoadedTick、observedLoadedTick 和有符号误差；首次预报不随重报覆盖，另保留一份最新修订，人数受 manifest 约束。初次观察已在船上的成员不补造历史装载时间，预测缺失时误差为 null；观察时间有一个 think 的量化误差。预测字段的算术回归使用显式注入值，不冒充实测 ETA 精度。 [冻结执行协议证据](native-loading-5ce36ab3.evidence.json)（44334 bytes，SHA-256 `0a959a9bee1b82bc00416131d7dd5f7e9c82e1581c1f8752605717d88d8c3921`）保存真实帧、完整命令／逐 think 时间线、固定源码驱动、19 项相关验证与根 tsc 收据；同一最终执行器两文件的 9 项测试在修前独立树 73b1ffcf 为 6 失败、3 通过。
 
 `nativeProductionExecutor` 共用造船与造工人的队列、预算、支付和出生校验。一次生产只消费获配的 training 队列；研究队列原生并行，不由它占用。接受 train 不等于付款；付款须有新原生队列项。队列结束还须观测到唯一的新生单位，早于已观测剩余工期的消失不能认成出生。船保留 `createdShipId`，生产共同给 `createdUnitId`，框架只在真实出生之后把单位加入父方法。
 
