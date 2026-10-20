@@ -432,6 +432,17 @@ export type StrategyAllocationInput = Readonly<{
   methods: readonly ExecutableMethod[];
   providers: readonly AllocationMethodProvider[];
   previous: StrategyAllocationMemory | null;
+  /** Already published once for this think; provider quotes are read-only. */
+  voyageRisks?: ReadonlyMap<string, VoyageRiskStages>;
+  /** Current, explicit switching quote. Missing/unknown prices cannot authorize
+   * taking an executed incumbent's resource. */
+  switchingCost?: (request: Readonly<{ fromObjectiveId: string; toObjectiveId: string;
+    resourceKeys: readonly ExclusiveResourceKey[] }>) => number | null;
+  /** Imported producers must acknowledge cleanup before resource ownership
+   * changes. The caller operates on its isolated transaction memory. */
+  handoffImported?: (requests: readonly Readonly<{ leases: readonly ResourceLease[];
+    resourceKeys: readonly ExclusiveResourceKey[]; eventId: string }>[]) =>
+    readonly Readonly<{ eventId: string; disposition: 'shrink' | 'pause' | 'fail' }>[] | null;
 }>;
 export type StrategyAllocationDecision = Readonly<{
   memory: StrategyAllocationMemory;
