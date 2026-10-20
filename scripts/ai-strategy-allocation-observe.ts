@@ -1,5 +1,5 @@
 /** Full allocation behavior evidence; not a win-rate benchmark.
- * tsx scripts/ai-strategy-allocation-observe.ts <source-tree> <case.json> <output-dir> <control|observe>
+ * tsx scripts/ai-strategy-allocation-observe.ts <source-tree> <case.json> <output-dir> <control|observe> [default|strategy]
  * Native commands, before/after task memory, positions, death ledger and physical
  * building milestones share one clock. Analysis is separate from the timed think.
  */
@@ -13,9 +13,12 @@ import type { AiPolicyMemory } from '../src/ai/memory';
 import type { AiPlanTrace } from '../src/ai/plan-trace';
 import type { AiGameRunInput } from '../src/ai/game-runner';
 import type { Building } from '../src/shared/types';
+import type { BootstrapStrategyOutput } from '../src/ai/strategy/bootstrap-control';
 
-const [base, caseFile, out, mode] = process.argv.slice(2);
-if (!base || !caseFile || !out || !['control', 'observe'].includes(mode!)) throw new Error('Expected source-tree case.json output-dir control|observe');
+const [base, caseFile, out, mode, controller = 'default'] = process.argv.slice(2);
+if (!base || !caseFile || !out || !['control', 'observe'].includes(mode!) || !['default', 'strategy'].includes(controller))
+  throw new Error('Expected source-tree case.json output-dir control|observe [default|strategy]');
+const strategyControl = controller === 'strategy';
 const config = JSON.parse(readFileSync(caseFile, 'utf8')) as AiGameRunInput & { source: string };
 const { runAiGameLoop } = await import(`${base}/src/ai/game-runner.ts`) as typeof import('../src/ai/game-runner');
 const { createAiMemoryProvider, planAiOwnerCommandEntries } = await import(`${base}/src/ai/planner-context.ts`) as typeof import('../src/ai/planner-context');
@@ -42,13 +45,21 @@ const loop = runAiGameLoop({ ...config, commandPlanner({ game, snapshot, owner, 
   // Keep the exact previous task state before the ordinary think can overwrite it.
   // JSON serialization is outside the planner timer and invokes no policy selector.
   log('memory-before', { tick: snapshot.tick, owner, memory: memories[owner] ?? null });
+  let strategy: BootstrapStrategyOutput | undefined;
+  const observerOptions: Pick<import('../src/ai/planner-context').AiOwnerPlannerOptions, 'observeBootstrapPlan'> = ledger && owners.includes(owner)
+    ? { observeBootstrapPlan(_context, _entries, actual) { strategy = actual; } } : {};
   const start = performance.now();
-  const entries = planAiOwnerCommandEntries(snapshot, { playerId: owner, source, version: agent.version }, { memoryProvider, teams });
+  const entries = planAiOwnerCommandEntries(snapshot, { playerId: owner, source, version: agent.version }, { memoryProvider, teams,
+    ...(strategyControl ? { strategyControl: true } : {}),
+    ...observerOptions });
   const planned = performance.now();
   let trace: AiPlanTrace | undefined;
   if (ledger && owners.includes(owner)) {
     ledger.recordThink(snapshot, owner, memories[owner]!);
-    const projected = buildAiPlanTrace(snapshot, owner, memories[owner]!, agent.version, previous[owner]);
+    const baseTrace = buildAiPlanTrace(snapshot, owner, memories[owner]!, agent.version, previous[owner]);
+    // This is the transaction which just issued these orders. Projection cannot
+    // construct another Situation or advance the voyage-risk continuation.
+    const projected = strategy?.project ? { ...baseTrace, strategy: strategy.project() } : baseTrace;
     trace = ledger.withPlanTrace(projected, projected.previousTick ?? -1); previous[owner] = trace;
   }
   const end = performance.now();
@@ -68,11 +79,35 @@ const loop = runAiGameLoop({ ...config, commandPlanner({ game, snapshot, owner, 
       resources: snapshot.resources.map(mine => ({ id: mine.id, x: mine.x, y: mine.y, amount: mine.amount })), match: snapshot.match });
   }
   if (trace) log('traces', trace);
+  if (strategy && mode === 'observe') {
+    // Raw demand is retained even when no arrival row/field/shortlist entry
+    // exists. Offline joins must not mistake an absent request for instant work.
+    const decision = strategy.decision, authority = memories[owner]?.strategyAllocation;
+    const compactArrival = (arrival: import('../src/ai/strategy/decision').DecisionFacts<import('../src/ai/strategy/types').Arrival>) =>
+      'ticks' in arrival ? { status: arrival.status, ticks: arrival.ticks,
+        crossings: arrival.crossings.map(crossing => ({ seaId: crossing.seaId,
+          departure: crossing.departure, landing: crossing.landing, requiresNewShip: crossing.requiresNewShip })) }
+        : { status: arrival.status, reason: arrival.reason.code };
+    log('fact-requests', { tick: snapshot.tick, owner,
+      objectives: decision.objectives.map(objective => ({ id: objective.id, kind: objective.kind, target: objective.target,
+        status: objective.status, score: objective.utility.score, reasons: objective.reasons.map(reason => reason.code) })),
+      candidateMethods: decision.methods.map(method => ({ id: method.id, objectiveId: method.objectiveId, status: method.status,
+        preconditions: method.preconditions.map(condition => ({ id: condition.id, status: condition.status, reason: condition.reason.code, demand: condition.demand })),
+        subgoals: method.subgoals.map(goal => ({ id: goal.id, target: goal.target, status: goal.status, demands: goal.demands })) })),
+      formalMethods: Object.values(authority?.methods ?? {}).map(method => ({ id: method.id, objectiveId: method.objectiveId,
+        actions: method.actions.map(action => ({ id: action.id, target: action.target, unitIds: action.unitIds,
+          execution: authority?.executions[action.id]?.status ?? null })) })),
+      unitArrivals: decision.situation.units.map(unit => ({ id: unit.id, owner: unit.owner, location: unit.location, roles: unit.roles,
+        arrivals: unit.arrivals.map(row => ({ targetId: row.targetId, ...compactArrival(row.arrival) })) })),
+      allocation: { leases: Object.values(authority?.leases ?? {}), unmet: authority?.unmet ?? [],
+        blocked: Object.values(authority?.blocked ?? {}), events: authority?.events ?? [] } });
+    log('fact-publications', { tick: snapshot.tick, owner, observation: memories[owner]?.strategy?.observation });
+  }
   return entries;
 } }, {
   beforeLoop({ game }) {
     finalGame = game;
-    writeFileSync(`${out}/initial.json`, JSON.stringify({ source: config.source, config, snapshot: snapshotGame(game),
+    writeFileSync(`${out}/initial.json`, JSON.stringify({ source: config.source, config, strategyControl, snapshot: snapshotGame(game),
       nextId: game.nextId, activePlayers: game.activePlayers }));
     if (Ledger) ledger = new Ledger(game, { owners });
     for (const unit of game.units) {
@@ -126,7 +161,7 @@ if (ledger) for (const owner of owners) {
 const summaries = Object.fromEntries(owners.map(owner => [owner, ledger?.summary(owner) ?? null]));
 const reconciled = owners.every(owner => ledger === undefined
   || ledger.summary(owner).nativeLosses === (loop.snapshot.match.stats.unitsLost[owner] ?? 0));
-const receipt = { source: config.source, mode, name: config.name, mapId: config.mapId, owners, tick: loop.snapshot.tick,
+const receipt = { source: config.source, mode, strategyControl, name: config.name, mapId: config.mapId, owners, tick: loop.snapshot.tick,
   host: hostname(), node: process.version,
   plannedCount, commandCount, plannedSha256: plannedHash.digest('hex'), commandSha256: commandHash.digest('hex'),
   snapshotSha256: sha(loop.snapshot), memorySha256: sha(memories), canonicalSha256: sha(canonicalGameState(finalGame!)),
