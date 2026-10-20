@@ -38,7 +38,78 @@ ledger.dispose();
 
 沉船乘员单独记录，继承沉船击杀者与致死 profile，不捏造乘员受到的直接命中。存活召唤物到期、脚本退场和投降单列；到期帧被杀的召唤物仍是实际死亡，但原生 `unitsLost` 因先处理到期而不增加，两个计数均保留。
 
-## 分类口径 v1
+## 分类口径 v2
+
+先判交战，再给主分类。交战需同时满足：附近有交战对手，并且本单位在保存的 15 秒窗口内实际受过对手阵营伤害或输出过伤害。附近半径为 900；原生致死时战力 ID 提供在场证据，worlds 只补身份，不用事后位置。活着的击杀者在原生致死事件中的位置补足隔岸舰船等跨地形威胁，不把已死亡来源的旧坐标当作当前在场。塔本身不充当“附近战斗单位”；明确清营时野怪才是交战对手，其余野怪伤害不能冒充与附近玩家军队的交战。沉船乘员继承船体证据。
+
+| 主层 | 判定 | 主类别与子标签 |
+| --- | --- | --- |
+| 战损 normal | 已确认交战，未触发下列结构性诊断 | 主类别 combat-loss；保留 retreat-failed、outmatched、accepted-engagement 等子标签 |
+| 存疑 suspicious | 已确认交战，出现结构性诊断 | recent-reassignment、out-of-bounds、post-worn-abandonment；按此顺序取主类别，其他标签保留 |
+| 异常 abnormal | 确认交战之外，存在任务/处境诊断 | friendly-source、neutral-outside-clearing、logistics-transit、idle、isolated-without-evacuation-plan、exposed-worker；按此顺序取主类别 |
+| 未知 unattributed | 交战证据不足，或交战外没有足够诊断 | 独立列，不并入前三层 |
+| 生命周期 lifecycle | 存活到期、脚本退场或行政移除 | 仍独立列，不并入前三层 |
+
+每条 `classification.v1` 原样保留旧完整分类，`classification.tags` 保留全部原标签，并在交战撤退死亡时追加 `retreat-failed`。旧 `retreat-or-treatment`、`outmatched` 等标签不再直接把战损判为异常。主分类和汇总为 `diagnosticVersion:2`，trace 账本为 `schemaVersion:2`；五个互斥统计桶可相加，子标签不可相加。
+
+`classification.engagement` 保存窗口、附近对手 ID、收到/输出伤害、船体继承、证据来源和缺口。v1 没有完整输出伤害事件，离线重分类的 `dealtDamage` 始终为 null。若只知附近有敌军、只记录到非对手伤害且缺输出证据，保持未知；不把“没记到输出”说成“没有输出”。新在线观测记录实际对单位输出的伤害作为正证据，未记录到输出时也不冒充完整零输出。
+
+### v2 同一原始数据的重分类基线
+
+本次没有创建或推进模拟，没有重跑对局。343 次实际死亡、205 次存活到期保持原样；原始观测、v1 分类及非账本 trace 逐条相同，所有原始命令/世界/记忆哈希不变。v1 的 329 次“异常”重新分为：正常 152、存疑 75、异常 73、未知 29；原 14 次正常仍为正常。
+
+| 主层 | 数量 | 单位目录金 |
+| --- | ---: | ---: |
+| 战损（正常） | 166 | 16,675 |
+| 存疑 | 75 | 7,260 |
+| 异常 | 73 | 7,745 |
+| 未知（单列） | 29 | 2,935 |
+| 生命周期（单列） | 205 | 0 |
+
+75 次存疑中，61 次主类为 recent-reassignment、14 次为 out-of-bounds，post-worn-abandonment 为 0（该分支由脚本测试覆盖）。73 次确认的交战外异常均为 neutral-outside-clearing；其他交战外类别在这批数据中没有主分类记录。29 次未知均缺少足以确认与附近玩家部队交战的历史输出证据，不是漏记死亡或不知道击杀者。
+
+| 地图 | 正常 数/金 | 存疑 数/金 | 异常 数/金 | 未知 数/金 | 存活到期 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| brokenSea | 33/3165 | 0/0 | 3/360 | 8/350 | 6 |
+| greystonePass | 1/120 | 0/0 | 2/215 | 1/115 | 0 |
+| gullIsland | 5/585 | 0/0 | 5/510 | 11/1320 | 0 |
+| pineshade | 11/1435 | 11/1545 | 4/450 | 2/210 | 0 |
+| reedwater | 29/3775 | 7/825 | 4/450 | 4/510 | 0 |
+| ringwater | 14/1425 | 5/350 | 8/885 | 0/0 | 31 |
+| sapphireArchipelago | 18/2960 | 2/175 | 3/340 | 0/0 | 38 |
+| templeSpring | 10/685 | 19/1690 | 16/1425 | 1/190 | 28 |
+| turtleLake | 27/630 | 29/2445 | 4/410 | 1/120 | 69 |
+| twoShores | 16/1685 | 2/230 | 16/1690 | 1/120 | 33 |
+| veiledHill | 2/210 | 0/0 | 8/1010 | 0/0 | 0 |
+
+各层按 tick 排序的前三例（完整订单、击杀者、血量和证据在包内）：
+
+| 层 | 地图 / tick | 单位 | 目录金 | 证据摘要 |
+| --- | --- | --- | ---: | --- |
+| 战损（正常） | greystonePass / 8297 | unit-p0-emberRavager-1070 | 120 | 交战撤退失败，保留 retreat-failed/outmatched |
+| 战损（正常） | brokenSea / 9438 | unit-p2-worker-1 | 75 | 敌军交战中死亡，保留 exposed-worker |
+| 战损（正常） | brokenSea / 9608 | unit-p0-worker-1 | 75 | 敌军交战中死亡，保留 exposed-worker |
+| 存疑 | turtleLake / 10086 | unit-p2-spirit-5777 | 0 | recent-reassignment；时间关联不证明致死原因 |
+| 存疑 | turtleLake / 10108 | unit-p2-spirit-6202 | 0 | recent-reassignment；时间关联不证明致死原因 |
+| 存疑 | reedwater / 10942 | unit-p1-lancer-1568 | 110 | recent-reassignment；时间关联不证明致死原因 |
+| 异常 | turtleLake / 3013 | unit-p2-footman-1073 | 100 | 非清营任务被野怪击杀，未确认附近交战对手 |
+| 异常 | veiledHill / 3202 | unit-p0-emberRavager-1067 | 120 | 非清营任务被野怪击杀，未确认附近交战对手 |
+| 异常 | veiledHill / 3234 | unit-p0-emberRavager-1049 | 120 | 非清营任务被野怪击杀，未确认附近交战对手 |
+| 未知（单列） | greystonePass / 6853 | unit-p1-archer-1697 | 115 | 附近有敌军，仅有非对手伤害，历史输出未记录 |
+| 未知（单列） | reedwater / 9844 | unit-p0-priest-1736 | 135 | 附近有敌军，仅有非对手伤害，历史输出未记录 |
+| 未知（单列） | reedwater / 9946 | unit-p0-priest-1691 | 135 | 附近有敌军，仅有非对手伤害，历史输出未记录 |
+
+这条交战定义同样适用于工人：工人在敌军交战中被杀时归战损，原 exposed-worker 和建造/跑腿任务证据保留，不能只看“正常”就丢掉经济单位损失。
+
+[新 v2 证据指针](death-ledger-v2.evidence.json) 包含全部重分类记录、每图/每席位新汇总、v1→v2 转移表、逐层示例和独立校验器。原始 v1 包保持不动：[原始证据指针](death-ledger-baseline.evidence.json)。复算命令：
+
+```sh
+tsx scripts/ai-death-ledger-reclassify.ts <source-tree> <v1-root> <new-output> <classification-sha> <source-evidence-sha>
+```
+
+各图 receipt 的 `source` 与 `simulationSource` 仍指原模拟版本，`classificationSource` 指此次分类源码，不把离线复算说成重跑对局。双岸 v2 的 initial/final/worlds/建筑损失逐字节保留，final tick 为 18000；source 仍 bf9a472b，classificationSource 为 4407d152。26 项死亡/分类/公开观测测试、17 项计划链/包边界测试及 TypeScript 检查通过。下方 ABBA 和全量测试是原观测 v1 的验证记录，此次不冒充重新测量。
+
+## v1 历史口径（不再作为主分类）
 
 分类函数独立于策略，既不向 AI 提供评分，也不下命令。每条只有一个主类别，按下表顺序取第一个；标签可重叠，所以标签计数不能相加。正常、异常与生命周期三组可相加；金额为单位目录价，未加装备、招募附加费，也不是实际支付成本。
 
@@ -61,14 +132,14 @@ ledger.dispose();
 
 0.6 只是可重复的基线诊断线，后续应由目标记录的可接受交战范围替换。局部战力复用有效战力估计，不模拟整场战斗，也不证明远处援军能及时抵达。孤立诊断没有计算撤离路线；`escapeRoute:'not-evaluated'`，不能解释成“所有撤离路线都不可行”。缺正式任务、首次观察之前的订单和看不见的致死来源都保持未知。
 
-## 基线与验收
+## 原始观测基线与验收（v1 历史记录）
 
 生成命令：`tsx scripts/ai-death-ledger-baseline.ts <source-tree> <case.json> <output-dir> <control|observe>`。所有地图从正常初始局面运行 18,000 ticks（15 分钟），正常席位数、相同 think 间隔与命令延时；不评胜率。每图同机依次 A/B/B/A，A 是只读层前的 main，B 开启账本与计划链。固定保存完整 planner entries、实际交付流、逐分钟校验和、末态 canonical/snapshot/memory 哈希。
 
 最终采集目录包括 `initial.json`、`worlds.jsonl.gz`、`traces.jsonl.gz`、`deaths.jsonl.gz`、`planned.jsonl.gz`、`commands.jsonl.gz`、`timings.jsonl.gz`、`checksums.jsonl.gz`、`final.json`、`summary.json`。worlds 在每个 think tick 只保存一次全体位置/血量/订单与建筑状态；traces 按席位保存，末尾有结束投影；deaths 是全部记录。完整统计、所有异常明细和每条证据均保留在 A100 包中，便于后续迁移逐单位比较。
 
 
-### 11 图结果（2026-10-20）
+### 11 图原始 v1 结果（2026-10-20）
 
 正常初始局面的 36 个房间 AI 席位各运行 15 分钟。共记录 548 条：实际死亡 343、存活召唤物到期 205；推断正常 14、异常诊断 329，异常单位目录价合计 34,495 金。实际死亡逐席位与原生 `unitsLost` 对账一致，击杀者均可还原；包含 11 艘船和 3 名沉船乘员。全部记录在增量 trace 中恰好出现一次，终帧汇总与每局 summary 一致，无订阅错误。
 
