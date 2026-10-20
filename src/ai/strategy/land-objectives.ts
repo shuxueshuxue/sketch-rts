@@ -140,7 +140,9 @@ class LandModel {
     const active = this.context.memory.landExpansion;
     if (active && active.stage !== 'complete' && !lost.has(active.mineId)) {
       const mine = this.assets.get(active.mineId);
-      if (mine) add('ExpandLand', mine.id, mine.target);
+      if (mine && !result.has(identity('ExpandLand', this.context.owner, mine.id)))
+        add('ExpandLand', mine.id, mine.target, this.situation.opportunities.find(opportunity =>
+          opportunity.kind === 'neutral-mine' && opportunity.target.entityId === mine.id));
     }
     const siteThreats = this.situation.lands.flatMap(land => land.threats);
     const workerIds = new Set(this.own.filter(unit => unit.roles.includes('worker')).map(unit => unit.id));
@@ -225,7 +227,7 @@ class LandModel {
         building.hp, building.complete, building.radius, building.attackRange, building.attackDamage, building.attackCooldown,
         building.buildProgress, building.buildTime, building.complete ? 0 : constructionWorkers(this.context.snapshot, building).length]),
       assets: s.assets.filter(asset => relevantAssets.has(asset.id)).map(asset => [asset.id, asset.owner, asset.kind, asset.target,
-        asset.complete, asset.replacementGold, asset.discountedValueGold, this.income(asset)]),
+        asset.complete, asset.replacementGold, asset.discountedValueGold, this.income(asset), asset.remainingGold === 0]),
       threats: threats.map(threat => [threat.siteId, threat.arrivedStrength, threat.incomingStrength, threat.friendlyOnStationStrength,
         threat.lossProbability, threat.attackers.map(attacker => [attacker.unitId, attacker.strength, arrival(attacker.arrival)])]),
       guards: ownHall && this.own.filter(unit => unit.expiresTick === null && frontRole(unit) && !interruption(unit)
@@ -449,7 +451,14 @@ class LandModel {
     const benefit: LandTermFact[] = [], cost: LandTermFact[] = [];
     if (mining) {
       const opportunityValue = Math.max(0, ...candidate.opportunities.map(opportunity => opportunity.valueGold));
-      benefit.push(term('mining-income', discountGold(Math.max(income, opportunityValue), completed), '新增矿的评价窗收入；同矿 RecoverSite/ExpandLand 共用 mining-established 效果'));
+      const incomeKnown = income > 0 || mine?.remainingGold === 0 || candidate.opportunities.some(opportunity =>
+        opportunity.kind === 'neutral-mine' || opportunity.kind === 'lost-site');
+      if (incomeKnown) benefit.push(term('mining-income', discountGold(Math.max(income, opportunityValue), completed),
+        '新增矿的评价窗收入；同矿 RecoverSite/ExpandLand 共用 mining-established 效果'));
+      // No numerical benefit term is safer than a fabricated zero. This economic
+      // prerequisite has no cash demand, so it cannot create a wait-income action.
+      else condition('budget', 'unknown', 'mining-income-unknown',
+        '矿口缺少潜在收入机会与实际开采收入，未来收益未知；不能把遗漏的估值当成零', null);
       const hall = this.context.snapshot.buildings.find(building => building.owner === s.owner && building.kind === 'townHall'
         && gap(building, candidate.target.point) <= GOLD_MINE_RULES.baseRange);
       if (!hall) benefit.push(term('hall-after-clear', -BUILDING_DEFS.townHall.cost, '成功清营后才支付矿厅；既有落基不重复付费'));
