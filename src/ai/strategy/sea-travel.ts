@@ -7,9 +7,9 @@ import type { GameSnapshot, Unit } from '../../shared/types';
 import { createPlanningDistanceQuery } from './distance-fields';
 import type { Point } from './types';
 
-type Estimate = Readonly<{ status: 'known'; ticks: number; computedTick: number } | { status: 'pending' | 'unreachable' }>;
+type Estimate = Readonly<{ status: 'known'; ticks: number; computedTick: number; geometryTick: number | null } | { status: 'pending' | 'unreachable' }>;
 const pending: Estimate = { status: 'pending' }, unreachable: Estimate = { status: 'unreachable' };
-type SeaFacts = { roads: Map<string, readonly Point[] | undefined>; prices: Map<string, Estimate> };
+type SeaFacts = { roads: Map<string, { points: readonly Point[] | undefined; computedTick: number }>; prices: Map<string, Estimate> };
 // Terrain identity is the sea-basin geometry version. Terrain is immutable; a
 // replacement terrain gets its own namespace. Buildings do not change this grid.
 const facts = new WeakMap<Terrain, SeaFacts>();
@@ -34,7 +34,7 @@ export function createSeaTravelQuery(snapshot: GameSnapshot, buildBudget = Infin
   let work = 0;
   function travel(ship: Unit, from: Point, to: Point, future = false): Estimate {
     stats.requests++;
-    if (gap(from, to) <= 1e-7) return { status: 'known', ticks: 0, computedTick: snapshot.tick };
+    if (gap(from, to) <= 1e-7) return { status: 'known', ticks: 0, computedTick: snapshot.tick, geometryTick: null };
     const limits = shipMotionLimits(ship);
     if (!(limits.speed > 0) || !(limits.turnRate > 0)) return unreachable;
     const fixed = future || from.x !== ship.x || from.y !== ship.y;
@@ -48,18 +48,19 @@ export function createSeaTravelQuery(snapshot: GameSnapshot, buildBudget = Infin
       return hit;
     }
     const knownRoad = cache === 'reuse' && shared?.roads.has(roadKey);
-    let road = knownRoad ? shared!.roads.get(roadKey) : undefined;
+    const roadRecord = knownRoad ? shared!.roads.get(roadKey) : undefined;
+    let road = roadRecord?.points, geometryTick = roadRecord?.computedTick ?? snapshot.tick;
     // One budget token covers a new fixed leg's geometry and pricing. A cached
     // road reprices only when its exact motion/wind projection changes.
     if (fixed && work >= buildBudget) return pending;
     if (!fixed || !knownRoad) {
       const field = fields.field(to);
       if (!field) return pending;
-      road = field.field.road(from, to);
+      geometryTick = field.builtTick; road = field.field.road(from, to);
       if (road && gap(road.at(-1)!, to) > 240) road = undefined;
       if (fixed) {
         stats.geometryBuilds++;
-        if (cache === 'reuse' && shared) retain(shared.roads, roadKey, road, 512);
+        if (cache === 'reuse' && shared) retain(shared.roads, roadKey, { points: road, computedTick: geometryTick }, 512);
       }
     }
     if (!road) { if (cache === 'reuse') local.set(key, unreachable); return unreachable; }
@@ -90,7 +91,7 @@ export function createSeaTravelQuery(snapshot: GameSnapshot, buildBudget = Infin
     const ticks = Math.ceil(seconds * SIM_TICKS_PER_SECOND);
     if (!Number.isFinite(ticks)) throw new Error(`Non-finite strategy sailing ETA for ${ship.id}`);
     stats.pricings++;
-    const result: Estimate = { status: 'known', ticks, computedTick: snapshot.tick };
+    const result: Estimate = { status: 'known', ticks, computedTick: snapshot.tick, geometryTick };
     if (cache === 'reuse') {
       local.set(key, result);
       if (fixed && shared) retain(shared.prices, key, result, 1024);

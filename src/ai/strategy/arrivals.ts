@@ -29,9 +29,9 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
   const nearestCache = new WeakMap<readonly Shore[], Map<string, readonly Shore[]>>();
   const departuresByRegion = new Map<string, readonly Shore[]>();
   const seaTravel = createSeaTravelQuery(snapshot, seaBuildBudget);
-  const crossingTables = new Map<string, { choices: CrossingChoice[]; pending: boolean; ages: number[] }>();
+  const crossingTables = new Map<string, { choices: CrossingChoice[]; pending: boolean; ages: number[]; quoteAges: number[] }>();
   let pendingGeometry = false;
-  const usedFieldTicks = new Set<number>();
+  const usedFieldTicks = new Set<number>(), usedQuoteTicks = new Set<number>();
   const reasons = new Map<string, Reason>();
   const reason = (code: string, detail: string): Reason => {
     const key = `${code}:${detail}`; let value = reasons.get(key);
@@ -60,7 +60,8 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
     const result = seaTravel.travel(ship, from, to, future);
     if (result.status === 'pending') pendingGeometry = true;
     if (result.status !== 'known') return undefined;
-    usedFieldTicks.add(result.computedTick); return result.ticks;
+    if (result.geometryTick !== null) usedFieldTicks.add(result.geometryTick);
+    usedQuoteTicks.add(result.computedTick); return result.ticks;
   }
 
   function nearest(shores: readonly Shore[], point: Point): readonly Shore[] {
@@ -118,6 +119,7 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
     if (known) {
       if (known.pending) pendingGeometry = true;
       for (const tick of known.ages) usedFieldTicks.add(tick);
+      for (const tick of known.quoteAges) usedQuoteTicks.add(tick);
       return known.choices;
     }
     const choices: CrossingChoice[] = [], targetField = distances.field(target.point);
@@ -171,7 +173,7 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
       }
     }
     if (regions.scannedRows < regions.totalRows && !choices.length) pendingGeometry = true;
-    crossingTables.set(key, { choices, pending: pendingGeometry, ages: [...usedFieldTicks] });
+    crossingTables.set(key, { choices, pending: pendingGeometry, ages: [...usedFieldTicks], quoteAges: [...usedQuoteTicks] });
     return choices;
   }
 
@@ -256,12 +258,14 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
     arrival(unit: Unit, target: Target): Arrival {
       const key = `${unit.id}:${target.point.x}:${target.point.y}`;
       if (!answers.has(key)) {
-        pendingGeometry = false; usedFieldTicks.clear();
+        pendingGeometry = false; usedFieldTicks.clear(); usedQuoteTicks.clear();
         let answer = compute(unit, target);
         if (pendingGeometry && !('ticks' in answer)) answer = { status: 'unknown', reason: reason('geometry-refresh-pending',
           'The deterministic per-think field rebuild budget is exhausted; this route is not zero ETA or proven unreachable') };
         if ('ticks' in answer) answer = { ...answer, evidence: [...answer.evidence, ...[...usedFieldTicks].sort((a, b) => a - b)
-          .map(tick => evidence(tick, 'terrain.goalField.built', `Geometry computed at tick ${tick}; actors and arrival speeds sampled at ${snapshot.tick}`))] };
+          .map(tick => evidence(tick, 'terrain.goalField.built', `Geometry computed at tick ${tick}; actors and arrival speeds sampled at ${snapshot.tick}`)),
+          ...[...usedQuoteTicks].sort((a, b) => a - b).map(tick => evidence(tick, 'strategy.seaQuote.computed',
+            `Motion/wind quote computed at tick ${tick}; cached quotes require identical computational inputs`))] };
         answers.set(key, answer);
       }
       const answer = answers.get(key)!;
