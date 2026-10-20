@@ -38,6 +38,8 @@ it.each(['v9_archer', 'v9_summoner', 'v9_knight'])('preserves the guard-only all
   const game = createGame(fixture.mapId, fixture.options);
   let index = 0;
   for (let tick = 0; tick < fixture.checksums.length; tick++) {
+    expect(game.effects.some(effect => effect.commandType !== undefined || effect.feedbackStatus !== undefined
+      || effect.id.startsWith('refused-') || effect.id.startsWith('waiting-')), `${subject} AI feedback at tick ${tick}`).toBe(false);
     expect(guardProofChecksum(game), `${subject} tick ${tick}`).toBe(fixture.checksums[tick]);
     if (tick === fixture.checksums.length - 1) break;
     const commands = [];

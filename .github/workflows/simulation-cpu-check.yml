@@ -47,8 +47,8 @@ jobs:
         run: npx vitest run src/shared/generated-camp-budget.test.ts src/shared/map-pool.test.ts
       - name: Verify guardian scroll reduction, presentation and rules boundaries
         run: npx vitest run src/shared/guardian-scroll.test.ts src/shared/shipbuilding.test.ts src/shared/sim/canonical.test.ts src/client/tooltips.test.ts src/client/status-presentation.test.ts src/client/guardian-scroll-visual.test.ts
-      - name: Verify human guard stations and unchanged all-AI command replays
-        run: npx vitest run src/shared/sim/guard-position.test.ts src/shared/sim/ai-guard-compatibility.test.ts src/shared/sim/snapshot-unit-copy.test.ts src/shared/sim/restore.test.ts src/sdk/game-runner.test.ts src/client/net/lockstep-client.test.ts src/shared/player-aggro.test.ts src/shared/push.test.ts src/story/director.test.ts src/client/menu-forest-horde.test.ts src/client/menu-scenes.test.ts src/campaigns/ashen-march/campaign.test.ts
+      - name: Verify human feedback, guard stations and unchanged all-AI command replays
+        run: npx vitest run src/shared/sim/command-refusal-feedback.test.ts src/shared/sim/guard-position.test.ts src/shared/sim/ai-guard-compatibility.test.ts src/shared/sim/snapshot-unit-copy.test.ts src/shared/sim/restore.test.ts src/sdk/game-runner.test.ts src/client/net/lockstep-client.test.ts src/shared/player-aggro.test.ts src/shared/push.test.ts src/story/director.test.ts src/client/menu-forest-horde.test.ts src/client/menu-scenes.test.ts src/campaigns/ashen-march/campaign.test.ts
       - name: Verify ranged aim continuation and naval firing constraints
         run: npx vitest run src/shared/aiming-range-buffer.test.ts src/shared/aiming.test.ts src/shared/aiming-invalidation.test.ts src/shared/ship-fire-control.test.ts src/shared/ship-attack-station.test.ts src/shared/sim/canonical.test.ts src/story/director.test.ts
       - name: Verify passive naval room measurements and real crossings

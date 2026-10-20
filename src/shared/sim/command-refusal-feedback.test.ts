@@ -85,6 +85,7 @@ describe('structured private refusal receipts', () => {
     const command: GameCommand = { type: 'holdPosition', unitIds: [...soldiers.map(unit => unit.id), worker.id] };
     const runtime = new CommandFrameRuntime({ game, roomId: 'mixed-hold', rejectionLabel: 'Rejected' });
     expect(() => runtime.admit([{ playerId: 'player', command }])).not.toThrow();
+    expect(game.effects).toEqual([]);
     expect(() => applyCommandFrame(game, { roomId: 'mixed-hold', sequence: 0, tick: game.tick,
       commands: [{ playerId: 'player', command }] })).not.toThrow();
     for (const soldier of soldiers) expect(soldier.order).toEqual({ type: 'hold', x: soldier.x, y: soldier.y });
@@ -131,7 +132,7 @@ describe('structured private refusal receipts', () => {
   });
 
   it('retains the original AI arrival effect without enriching it with player receipt fields', () => {
-    const game = field(), unit = game.spawnUnit('player', 'footman', 1500, 1500);
+    const game = field(), unit = game.spawnUnit('player', 'priest', 1500, 1500);
     game.aiPlayers = ['player'];
     unit.order = { type: 'cast', ability: 'heal', targetId: 'gone' };
     stepGame(game);

@@ -23,9 +23,9 @@
   },
   "currentCoverage": {
     "files": 716,
-    "passedTests": 7928,
+    "passedTests": 7932,
     "skippedTests": 1,
-    "method": "Complete source suite plus corrected naval rerun and snapshot isolation regression; not a second all-green full invocation."
+    "method": "Complete source suite plus corrected naval rerun, snapshot isolation regression and four review regressions; not a second all-green full invocation."
   },
   "rootTypecheck": {
     "command": "npx tsc --noEmit -p .",
@@ -40,7 +40,7 @@
     ],
     "statesPerRecording": 2401,
     "totalStates": 7203,
-    "projection": "Only added refusal/waiting receipts and their metadata are omitted for the older guard-rule proof. Positions, orders, resources, old effects and IDs retain their goldens."
+    "projection": "No effect filtering. Compare complete effects against the earlier guard-rule recording using its checksum version and the zero aiming buffer required by that historical proof."
   },
   "unchangedHashGoldens": [
     "fresh-game canonical checksums",
@@ -128,6 +128,111 @@
       "rootTypecheck": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "tests": "ae9cfff06fed67c2d06fd3606521c49ddfc78d5961c30d31c5718998066ab3db",
       "browser": "1b97b450d88f98ad4d083230ba7bbe20580f1fa45f5e5ccbeb151f7eb134b40c"
+    }
+  },
+  "reviewRegressions": {
+    "source": "737b507f",
+    "tests": [
+      "human mixed hold: read-only admission, lockstep apply, soldiers hold, worker keeps order/queue and gets exactly one receipt",
+      "AI planner mixed hold: delivered through SDK admission/frame path, partial execution, no receipt",
+      "AI stale issuers, transient gold failure and waiting: no new receipts",
+      "AI arrival: original orderEnded format retained without new payload"
+    ],
+    "rootTypecheckExitCode": 0,
+    "scriptTypecheckExitCode": 0,
+    "testCommand": "npx vitest run src/shared/sim/command-refusal-feedback.test.ts src/shared/sim/ai-guard-compatibility.test.ts src/ai/plan-trace.test.ts src/ai/plan-trace-history.test.ts src/shared/tower-weapon-class.test.ts src/shared/sim/command-frame-runtime.test.ts src/sdk/commands/frame.test.ts --maxWorkers 2 --minWorkers 1",
+    "passedFiles": 7,
+    "passedTests": 76,
+    "failedTests": 0,
+    "red": {
+      "source": "817a6301",
+      "failedTests": 6,
+      "passedTests": 1,
+      "skippedTests": 11,
+      "reason": "Three new AI receipt checks and three complete-effect historical recordings fail before the human-seat gate; the failures are assertions, not setup errors.",
+      "log": "review-red-test.txt"
+    },
+    "logSha256": {
+      "tests": "750d56e8b211443eeda271cd56e8a05624262e0e25d9162fcc20fb6bacd387b0",
+      "red": "3f70cd0f1cfdb7d07148d866c0ff91b101a11cfe5a6ba57e12b8d75c5c8323d9",
+      "rootTypecheck": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "scriptTypecheck": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "additionalBoundaries": "46c9da42d3738775a0c2be3736789ee09d0d7966d0e7c92b8c4deda08dd47b48",
+      "finalReceipts": "23fa4399c7d1e703fd52a717f8e789b73b240d95e7dd0e9fb032015a04f501ab",
+      "finalRootTypecheck": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "finalGuard": "3db32d536b26069a41b5bd49ef0225366b3a00a530007ae1aed85a66216aa0cf"
+    },
+    "finalReceiptRerun": {
+      "passedFiles": 1,
+      "passedTests": 14,
+      "failedTests": 0,
+      "rootTypecheckExitCode": 0,
+      "fixtureChange": "Use a priest for the missing heal target and assert admission has no effects before applying the mixed hold frame."
+    },
+    "additionalBoundaries": {
+      "passedFiles": 11,
+      "passedTests": 97,
+      "failedTests": 0,
+      "durationSeconds": 8.76
+    },
+    "packageBoundaries": {
+      "passedFiles": 1,
+      "passedTests": 7,
+      "failedTests": 0
+    },
+    "finalGuardRerun": {
+      "passedFiles": 1,
+      "passedTests": 4,
+      "failedTests": 0,
+      "checks": "Every historical tick explicitly forbids all new feedback fields and receipt IDs, then checks the unfiltered effect state."
+    }
+  },
+  "allAiParity": {
+    "main": "9e90ebf2",
+    "candidateRuntime": "737b507f",
+    "maps": 11,
+    "aiSeats": 36,
+    "ticksPerMap": 18000,
+    "ticksPerArm": 198011,
+    "arms": [
+      "main",
+      "plain",
+      "trace"
+    ],
+    "workers": 6,
+    "traceCount": 43200,
+    "effectsPerArm": 140784,
+    "newAiReceipts": 0,
+    "effectsFiltered": false,
+    "rawChecksumSequencesByteEqual": true,
+    "otherHashesEqual": [
+      "plannedSha256",
+      "commandSha256",
+      "canonicalSha256",
+      "snapshotSha256",
+      "memorySha256"
+    ],
+    "details": "ai-parity.json",
+    "artifact": {
+      "path": "/codegeex/jeffry/sketch-rts-camps/command-refusal-ai-737b507f/evidence.tar.gz",
+      "machine": "a100",
+      "sha256": "d26a9c577a3b94e1f0d2493057c7ab686b6682c9c7271675459d77f504e1d521",
+      "bytes": 12164029,
+      "manifestSha256": "01914dbc44b9ebb5f4cd73b0bfadb9265b5eb0b4eacd387a37bae16ddb860b6e",
+      "sourceMain": "9e90ebf2",
+      "sourceCandidate": "737b507f",
+      "files": 116,
+      "ticksPerArm": 198011,
+      "traceCount": 43200
+    },
+    "independentValidation": {
+      "artifactSha256": "d26a9c577a3b94e1f0d2493057c7ab686b6682c9c7271675459d77f504e1d521",
+      "manifestFilesVerified": 116,
+      "mapsVerified": 11,
+      "ticksPerArm": 198011,
+      "rawSequencesByteEqual": true,
+      "newAiReceipts": 0,
+      "traceCount": 43200
     }
   }
 }
