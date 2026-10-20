@@ -1,0 +1,9 @@
+{
+  "sha256": "a007d8a184c45f8bcebf040d1a8cfd879f51aa2708e3633a90183e40439f8664",
+  "bytes": 215259242,
+  "name": "death-ledger-clearing",
+  "kind": "dir",
+  "machine": "a100",
+  "pushed": "157decc9d0d3321bc4e84feadea4e44c9ce93ecd",
+  "pr": 563
+}
