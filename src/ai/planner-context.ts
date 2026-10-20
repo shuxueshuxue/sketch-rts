@@ -8,6 +8,7 @@ import { standingBodies } from "../shared/structure-bodies";
 import { setBuildingBodies } from "../shared/terrain";
 import { withLandRoadReuse } from "./bootstrap_1/safe-land-route";
 import { beginExecutorReasons } from './executor-reasons';
+import type { AiPolicyContext } from './policy/types';
 
 export const DEFAULT_AI_PLANNER_VERSION: AiScriptVersion = "v2";
 
@@ -29,6 +30,8 @@ export type AiOwnerPlannerRequest<Source extends string = string> = {
 
 export type AiOwnerPlannerOptions = PresetAiPolicyOptions & {
   memoryProvider?: AiMemoryProvider;
+  /** Read-only output hook inside the existing owner-think geometry reuse scope. */
+  observeBootstrapPlan?: (context: AiPolicyContext, entries: readonly CommandFrameEntry[]) => void;
 };
 
 export function createAiMemoryProvider(memories: Record<PlayerId, AiPolicyMemory> = {}): AiMemoryProvider {
@@ -46,7 +49,7 @@ export function planAiOwnerCommandEntries<Source extends string = string>(snapsh
   // The same bodies the sim stands on its map (see @@@structure-body): any other list restamps the shared overlay, and
   // every think redid the pathing it was handed.
   setBuildingBodies(snapshot.map, standingBodies(snapshot));
-  const { memoryProvider, ...policyOptions } = options;
+  const { memoryProvider, observeBootstrapPlan, ...policyOptions } = options;
   const version = request.version ?? options.version ?? DEFAULT_AI_PLANNER_VERSION;
   const memory = request.memory ?? options.memory ?? memoryForOwner(owner, memoryProvider);
   const policyMode = request.policyMode ?? options.policyMode;
@@ -73,12 +76,14 @@ export function planAiOwnerCommandEntries<Source extends string = string>(snapsh
         memory,
       });
       context.executorReason = beginExecutorReasons(memory, snapshot.tick);
-      return withVeteranSkills(planAiCommandEntriesFromScripts(snapshot, owner, scripts, context).map(entry => ({
+      const entries = withVeteranSkills(planAiCommandEntriesFromScripts(snapshot, owner, scripts, context).map(entry => ({
         playerId: owner,
         ...(request.source !== undefined ? { source: request.source } : {}),
         scriptId: entry.scriptId,
         command: entry.command,
       })));
+      observeBootstrapPlan?.(context, entries);
+      return entries;
     });
   }
   // @@@frozen-v2-prod-brain - Production V2 is a frozen policy artifact that still plays through the live simulation core.

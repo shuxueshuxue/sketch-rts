@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
+import { originalPolicyMemory } from './strategy/observation-memory';
 import { boardUnit } from '../shared/decks';
 import { createBuilding } from '../shared/map';
 import { createGame, removeUnit, stepGame, strikeUnit, tryPlayerCommand } from '../shared/sim';
@@ -196,7 +197,8 @@ describe('read-only AI death ledger', () => {
     const ordinary = planAiOwnerCommandEntries(a, request, { memory: ma });
     const result = planAiOwnerCommandEntriesWithTrace(b, request, { memory: mb, deathLedger: ledger });
     expect(JSON.stringify(result.commands)).toBe(JSON.stringify(ordinary));
-    expect(mb).toEqual(ma);
+    expect(originalPolicyMemory(mb)).toEqual(ma);
+    expect(mb.strategy?.observation.owner).toBe('player');
     expect(checksumGame(b)).toBe(before);
     expect(result.trace.deathLedger).toMatchObject({ owner: 'player', summary: { events: 0 } });
     const enemy = b.units.find(unit => unit.owner === 'enemy')!, own = b.units.find(unit => unit.owner === 'player')!;

@@ -664,22 +664,32 @@ function growBox(state: TerrainRuntime, box: Box, seeds: number[], costs?: numbe
   return growBoxInto(state, box, seeds, costs, { dist: new Int32Array(size), next: new Int32Array(size) });
 }
 
-function growBoxInto(state: TerrainRuntime, box: Box, seeds: number[], costs: number[] | undefined, arrays: Pick<Field, 'dist' | 'next'>): BoxField {
+type BoxFlow = { state: TerrainRuntime; box: Box; dist: Int32Array; next: Int32Array; buckets: number[][];
+  order: number[]; seeds: number[]; costs: number[] | undefined; seeded: number; pending: number; cost: number; work: number };
+function beginBoxFlow(state: TerrainRuntime, box: Box, seeds: number[], costs: number[] | undefined,
+  arrays: Pick<Field, 'dist' | 'next'>, buckets: number[][]): BoxFlow {
+  arrays.dist.fill(UNREACHED); arrays.next.fill(UNKNOWN);
+  const order = seeds.map((_, index) => index);
+  if (costs) order.sort((a, b) => costs[a]! - costs[b]! || a - b);
+  return { state, box, ...arrays, buckets, order, seeds, costs, seeded: 0, pending: 0, work: 0,
+    cost: costs && order.length ? costs[order[0]!]! : 0 };
+}
+function growBoxInto(state: TerrainRuntime, box: Box, seeds: number[], costs: number[] | undefined, arrays: Pick<Field, 'dist' | 'next'>, resume?: BoxFlow, workBudget = Infinity): BoxField {
   const { walk, offsets, width, weight } = state;
   const columns = box.width;
   const rows = box.height;
   const localOffsets = [1, columns, -1, -columns, columns + 1, columns - 1, -columns - 1, -columns + 1];
   const origin = box.top * width + box.left;
   const { dist, next } = arrays;
-  dist.fill(UNREACHED);
-  next.fill(UNKNOWN);
-  const buckets = state.boxBuckets;
-  const order = seeds.map((_, index) => index);
-  if (costs) order.sort((a, b) => costs[a]! - costs[b]! || a - b);
+  if (!resume) { dist.fill(UNREACHED); next.fill(UNKNOWN); }
+  const buckets = resume?.buckets ?? state.boxBuckets;
+  const order = resume?.order ?? seeds.map((_, index) => index);
+  if (costs && !resume) order.sort((a, b) => costs[a]! - costs[b]! || a - b);
   const costOf = (index: number) => (costs ? costs[order[index]!]! : 0);
-  let seeded = 0;
-  let pending = 0;
-  for (let cost = order.length > 0 ? costOf(0) : 0; pending > 0 || seeded < order.length; cost += 1) {
+  let seeded = resume?.seeded ?? 0, pending = resume?.pending ?? 0, work = 0;
+  let cost = resume?.cost ?? (order.length > 0 ? costOf(0) : 0);
+  flow: for (; pending > 0 || seeded < order.length; cost += 1) {
+    if (resume && work >= workBudget) break;
     if (pending === 0) cost = costOf(seeded);
     for (; seeded < order.length && costOf(seeded) === cost; seeded += 1) {
       const index = local(box, seeds[order[seeded]!]!, width);
@@ -690,6 +700,8 @@ function growBoxInto(state: TerrainRuntime, box: Box, seeds: number[], costs: nu
     }
     const bucket = buckets[cost % BUCKETS]!;
     while (bucket.length > 0) {
+      if (resume && work >= workBudget) break flow;
+      if (resume) work++;
       const index = bucket.pop()!;
       pending -= 1;
       if (dist[index] !== cost) continue;
@@ -729,32 +741,42 @@ function growBoxInto(state: TerrainRuntime, box: Box, seeds: number[], costs: nu
       }
     }
   }
+  if (resume) { resume.seeded = seeded; resume.pending = pending; resume.cost = cost; resume.work = work; }
   return { box, dist, next };
 }
 
 // The neighbour one step down a box field (the fixed order of directions breaks ties), or -1 at its bottom; remembered.
 function downhill(state: TerrainRuntime, field: BoxField, at: number) {
-  const { walk, offsets, width } = state;
+  const { offsets, width } = state;
   const { box } = field;
   const index = local(box, at, width);
   if (index < 0) return -1;
   const known = field.next[index]!;
   if (known !== UNKNOWN) return known;
+  const direction = downhillDirection(state, box, field.dist, at, index);
+  const best = direction < 0 ? -1 : at + offsets[direction]!;
+  field.next[index] = best;
+  return best;
+}
+
+// Both native steering and compact observation fields use this exact descent
+// and tie order. Only their memoized representation differs: cell id or direction.
+function downhillDirection(state: TerrainRuntime, box: Box, dist: Int32Array | Uint16Array, at: number, index: number) {
+  const { walk, offsets } = state;
   const col = index % box.width;
   const row = (index - col) / box.width;
   let best = -1;
-  let bestCost = field.dist[index]!;
+  let bestCost = dist[index]!;
   for (let direction = 0; direction < 8; direction += 1) {
     const stepCol = col + STEP_COLS[direction]!;
     const stepRow = row + STEP_ROWS[direction]!;
     if (stepCol < 0 || stepRow < 0 || stepCol >= box.width || stepRow >= box.height) continue;
     const step = at + offsets[direction]!;
     const there = stepRow * box.width + stepCol;
-    if (walk[step] !== 1 || field.dist[there]! >= bestCost || !stepAllowed(state, at, direction)) continue;
-    bestCost = field.dist[there]!;
-    best = step;
+    if (walk[step] !== 1 || dist[there]! >= bestCost || !stepAllowed(state, at, direction)) continue;
+    bestCost = dist[there]!;
+    best = direction;
   }
-  field.next[index] = best;
   return best;
 }
 
@@ -1255,6 +1277,266 @@ export function groundTravelCost(map: Pick<GameMap, 'terrain'>, from: Point, goa
   return cost >= UNREACHED ? undefined : cost * terrain.cell / (STRAIGHT * GROUND_WEIGHT);
 }
 
+export type GroundDistanceField = Readonly<{
+  /** Weighted eight-neighbour grid forecast, not a traced/smoothed steering road. */
+  cost(from: Point): number | undefined;
+  /** Smoothed descent of this same field; does not start a second route search. */
+  road(from: Point, goal: Point): readonly Point[] | undefined;
+}>;
+type GoalFieldCache = {
+  revision: number;
+  fields: Map<number, GroundDistanceField>;
+  leases: Map<string, { tick: number; targets: ReadonlySet<number> }>;
+  evictions: number;
+  overflowInsertions: number;
+  overflowThinks: number;
+  peakFields: number;
+  peakOverflow: number;
+};
+const distanceFields = new WeakMap<TerrainRuntime, GoalFieldCache>();
+const distanceFieldWork = new WeakMap<GroundDistanceField, number>();
+const pendingDistanceFields = new WeakMap<TerrainRuntime, { revision: number; jobs: Map<number, { flow: BoxFlow; progress: number }> }>();
+// Eleven complete maps and the 25-minute archipelago peak at 25 land / 30 sea
+// fields, including old/new target overlap. Pins count against these limits.
+export const GOAL_DISTANCE_FIELD_LIMIT: Readonly<Record<Mover, number>> = { land: 32, sea: 32 };
+export const PENDING_GOAL_DISTANCE_FIELD_LIMIT = 8;
+export const GOAL_DISTANCE_FIELD_LEASE_TICKS = 30;
+type GoalFieldLease = { cache: GoalFieldCache; mover: Mover; targets: Set<number> };
+let currentGoalFieldLease: { owner: string; tick: number; fields: Map<TerrainRuntime, GoalFieldLease> } | undefined;
+
+function goalFieldCache(state: TerrainRuntime, revision: number): GoalFieldCache {
+  let cache = distanceFields.get(state);
+  if (cache?.revision !== revision) distanceFields.set(state, cache = { revision, fields: new Map(), leases: new Map(),
+    evictions: 0, overflowInsertions: 0, overflowThinks: 0, peakFields: 0, peakOverflow: 0 });
+  return cache;
+}
+function trimGoalFields(cache: GoalFieldCache, mover: Mover, protect?: number) {
+  const limit = GOAL_DISTANCE_FIELD_LIMIT[mover];
+  if (cache.fields.size <= limit) { cache.peakFields = Math.max(cache.peakFields, cache.fields.size); return; }
+  const active = currentGoalFieldLease;
+  const current = active && [...active.fields.values()].find(entry => entry.cache === cache)?.targets;
+  const pinned = (target: number) => current?.has(target)
+    || [...cache.leases.values()].some(lease => lease.targets.has(target));
+  for (const target of cache.fields.keys()) {
+    if (cache.fields.size <= limit) break;
+    if (target === protect || pinned(target)) continue;
+    cache.fields.delete(target); cache.evictions++;
+  }
+  cache.peakFields = Math.max(cache.peakFields, cache.fields.size);
+  if (cache.fields.size > limit) {
+    if (protect !== undefined) cache.overflowInsertions++;
+    cache.peakOverflow = Math.max(cache.peakOverflow, cache.fields.size - limit);
+  }
+}
+
+/** Cache residency only: keep each owner's most recent successful requests,
+ * including the previous set until the current synchronous think completes.
+ * No publication state, snapshot, memory or field array is retained here.
+ * An owner absent for two default think intervals releases its lease. */
+export function withGoalDistanceFieldLease<T>(map: Pick<GameMap, 'terrain'>, owner: string, tick: number, run: () => T): T {
+  if (!map.terrain) return run();
+  const previous = currentGoalFieldLease;
+  const scope = { owner, tick, fields: new Map<TerrainRuntime, GoalFieldLease>() };
+  for (const mover of ['land', 'sea'] as const) {
+    const state = routing(map, map.terrain, mover), revision = mover === 'land' ? groundRevision(map) : 0;
+    const cache = goalFieldCache(state, revision);
+    for (const [id, lease] of cache.leases) if (tick < lease.tick || tick - lease.tick > GOAL_DISTANCE_FIELD_LEASE_TICKS) cache.leases.delete(id);
+    scope.fields.set(state, { cache, mover, targets: new Set() });
+  }
+  currentGoalFieldLease = scope;
+  try { return run(); }
+  finally {
+    for (const { cache, targets } of scope.fields.values()) {
+      if (targets.size) cache.leases.set(owner, { tick, targets });
+      else cache.leases.delete(owner);
+    }
+    currentGoalFieldLease = previous;
+    for (const { cache, mover } of scope.fields.values()) {
+      trimGoalFields(cache, mover);
+      if (cache.fields.size > GOAL_DISTANCE_FIELD_LIMIT[mover]) cache.overflowThinks++;
+    }
+  }
+}
+
+/** Called only after deterministic publication admitted the field. */
+export function retainGoalDistanceField(map: Pick<GameMap, 'terrain'>, goal: Point, mover: Mover) {
+  if (!currentGoalFieldLease || !map.terrain) return;
+  const state = routing(map, map.terrain, mover), lease = currentGoalFieldLease.fields.get(state);
+  if (lease) lease.targets.add(padAt(state, goal.x, goal.y));
+}
+
+/** On-demand diagnostic counters and native storage; never serialized as facts. */
+export function goalDistanceFieldCacheStats(map: Pick<GameMap, 'terrain'>, mover: Mover) {
+  const cache = map.terrain && distanceFields.get(routing(map, map.terrain, mover));
+  let distanceBytes = 0, descentBytes = 0;
+  if (cache) for (const field of cache.fields.values()) {
+    const storage = fieldStorage.get(field)!; distanceBytes += storage.distanceBytes; descentBytes += storage.descentBytes;
+  }
+  return { fields: cache?.fields.size ?? 0, evictions: cache?.evictions ?? 0,
+    overflowInsertions: cache?.overflowInsertions ?? 0, overflowThinks: cache?.overflowThinks ?? 0,
+    peakFields: cache?.peakFields ?? 0, peakOverflow: cache?.peakOverflow ?? 0, distanceBytes, descentBytes };
+}
+type GoalScratch = { dist: Int32Array; buckets: number[][] };
+const goalScratch = new WeakMap<TerrainRuntime, GoalScratch[]>();
+const emptyGoalNext = new Int32Array(0);
+function takeGoalScratch(state: TerrainRuntime, cells: number): GoalScratch {
+  const pool = goalScratch.get(state), index = pool?.findIndex(value => value.dist.length === cells) ?? -1;
+  return index >= 0 ? pool!.splice(index, 1)[0]! : { dist: new Int32Array(cells), buckets: Array.from({ length: BUCKETS }, () => []) };
+}
+function releaseGoalScratch(state: TerrainRuntime, value: GoalScratch) {
+  let pool = goalScratch.get(state);
+  if (!pool) goalScratch.set(state, pool = []);
+  for (const bucket of value.buckets) bucket.length = 0;
+  if (pool.length >= 2) pool.shift();
+  pool.push(value);
+}
+const fieldStorage = new WeakMap<GroundDistanceField, { cells: number; distanceBytes: number; descentBytes: number }>();
+/** Diagnostic byte counts only; no array or mutable cache is exposed. */
+export function goalDistanceFieldStorage(field: GroundDistanceField) {
+  const value = fieldStorage.get(field); return value && { ...value };
+}
+
+// A walk cannot leave its terrain component. Buildings may only remove cells
+// from it, so restricting the flow to this bounding box preserves every route,
+// seed, queue removal and cost while avoiding arrays for other islands/basins.
+function goalDistanceBox(ground: TerrainRuntime, target: number): Box {
+  const wholes = wholesOf(ground);
+  return wholes.bounds[wholes.labels[target]! - 1]!;
+}
+
+/** One building-aware goal field serves every actor. Uses the same footprint
+ * overlay, goal seeds, no-corner-cut steps and pace weights as native steering.
+ * A geometry revision discards the old field; peek never builds one. */
+export function groundDistanceField(map: Pick<GameMap, 'terrain'>, goal: Point, peek = false): GroundDistanceField | undefined {
+  return moverDistanceField(map, goal, 'land', peek);
+}
+export function moverDistanceField(map: Pick<GameMap, 'terrain'>, goal: Point, mover: Mover, peek = false): GroundDistanceField | undefined {
+  const terrain = map.terrain;
+  if (!terrain) return { cost: from => Math.hypot(from.x - goal.x, from.y - goal.y), road: (from, goal) => [from, goal] };
+  const state = routing(map, terrain, mover), ground = runtime(terrain, mover);
+  const target = padAt(state, goal.x, goal.y), revision = mover === 'land' ? groundRevision(map) : 0;
+  if (target < 0 || ground.walk[target] !== 1) return undefined;
+  const cache = goalFieldCache(state, revision);
+  const known = cache.fields.get(target);
+  if (known || peek) return known;
+  const box = goalDistanceBox(ground, target);
+  const { seeds, costs } = goalSeeds(state, ground, target, box);
+  const scratch = takeGoalScratch(state, box.width * box.height);
+  const field = beginBoxFlow(state, box, seeds, costs, { dist: scratch.dist, next: emptyGoalNext }, scratch.buckets);
+  growBoxInto(state, box, seeds, costs, field, field);
+  const scale = terrain.cell / (STRAIGHT * GROUND_WEIGHT);
+  const answer = distanceFieldAnswer(state, ground, field, scale);
+  // Never recycle an answer's own array: old callers may still hold it. Only
+  // the detached Int32 work buffer of a compact answer can re-enter the pool.
+  if (fieldStorage.get(answer)!.distanceBytes < field.dist.byteLength) releaseGoalScratch(state, scratch);
+  distanceFieldWork.set(answer, field.work);
+  cache.fields.set(target, answer);
+  trimGoalFields(cache, mover, target);
+  return answer;
+}
+function distanceFieldAnswer(state: TerrainRuntime, ground: TerrainRuntime, source: Pick<BoxField, 'box' | 'dist'>, scale: number): GroundDistanceField {
+  const { box } = source;
+  let maximum = 0;
+  for (let index = 0; index < source.dist.length; index++) {
+    const value = source.dist[index]!;
+    if (value < UNREACHED && value > maximum) maximum = value;
+  }
+  // Exact integers, no quantization or saturation. An unusually long maze
+  // retains Int32; 65535 is reserved only in the compact representation.
+  let dist: Int32Array | Uint16Array = source.dist;
+  if (maximum < 65535) {
+    const packed = new Uint16Array(source.dist.length);
+    for (let index = 0; index < source.dist.length; index++) {
+      const value = source.dist[index]!;
+      packed[index] = value >= UNREACHED ? 65535 : value;
+    }
+    dist = packed;
+  }
+  const unreached = dist instanceof Uint16Array ? 65535 : UNREACHED;
+  const storage = { cells: dist.length, distanceBytes: dist.byteLength, descentBytes: 0 };
+  const cellOf = (from: Point) => {
+    let at = padAt(state, from.x, from.y);
+    if (at < 0 || ground.walk[at] !== 1) return -1;
+    if (state.walk[at] !== 1) at = nearestWalkable(state, at);
+    const index = at < 0 ? -1 : local(box, at, state.width);
+    return index < 0 || dist[index]! >= unreached ? -1 : at;
+  };
+  let directions: Int8Array | undefined;
+  const answer: GroundDistanceField = { cost(from) {
+    const at = cellOf(from);
+    return at < 0 ? undefined : dist[local(box, at, state.width)]! * scale;
+  }, road(from, goal) {
+    let at = cellOf(from);
+    if (at < 0) return undefined;
+    if (clearSegment(state, from.x, from.y, goal.x, goal.y)) return [from, goal];
+    if (!directions) { directions = new Int8Array(dist.length).fill(UNKNOWN); storage.descentBytes = directions.byteLength; }
+    const cells: Point[] = [from];
+    for (let step = 0; step < dist.length; step++) {
+      const index = local(box, at, state.width);
+      let direction = directions[index]!;
+      if (direction === UNKNOWN) directions[index] = direction = downhillDirection(state, box, dist, at, index);
+      if (direction < 0) break;
+      at += state.offsets[direction]!; cells.push(centerOf(state, at));
+    }
+    if (clearSegment(state, cells.at(-1)!.x, cells.at(-1)!.y, goal.x, goal.y)) cells.push(goal);
+    const road = [from];
+    for (let index = 0; index < cells.length - 1;) {
+      let next = Math.min(cells.length - 1, index + LOOKAHEAD);
+      while (next > index + 1 && !clearSegment(state, cells[index]!.x, cells[index]!.y, cells[next]!.x, cells[next]!.y)) next--;
+      road.push(cells[next]!); index = next;
+    }
+    return road;
+  } };
+  fieldStorage.set(answer, storage); return answer;
+}
+
+/** Reconstruct the answer after an absolute, deterministic number of queue removals.
+ * A warm cache may avoid computation, but cannot publish a field before that work
+ * allowance completes the native search. A cold fork rebuilds the same prefix. */
+export function prepareMoverDistanceField(map: Pick<GameMap, 'terrain'>, goal: Point, mover: Mover, throughWork: number):
+  { field: GroundDistanceField | undefined; work: number; complete: boolean } {
+  const known = moverDistanceField(map, goal, mover, true);
+  if (known) {
+    const required = distanceFieldWork.get(known) ?? 0;
+    return { field: required <= throughWork ? known : undefined, work: Math.min(required, throughWork), complete: required <= throughWork };
+  }
+  if (!map.terrain) return { field: known, work: 0, complete: true };
+  const terrain = map.terrain, state = routing(map, terrain, mover), ground = runtime(terrain, mover);
+  const target = padAt(state, goal.x, goal.y), revision = mover === 'land' ? groundRevision(map) : 0;
+  if (target < 0 || ground.walk[target] !== 1) return { field: undefined, work: 0, complete: true };
+  if (throughWork <= 0) return { field: undefined, work: 0, complete: false };
+  let pending = pendingDistanceFields.get(state);
+  if (pending?.revision !== revision) pendingDistanceFields.set(state, pending = { revision, jobs: new Map() });
+  let retained = pending.jobs.get(target);
+  if (!retained) {
+    const box = goalDistanceBox(ground, target);
+    const { seeds, costs } = goalSeeds(state, ground, target, box);
+    // Limit abandoned candidates' sidecar geometry, independently of game state.
+    if (pending.jobs.size >= PENDING_GOAL_DISTANCE_FIELD_LIMIT) {
+      const oldest = pending.jobs.keys().next().value!, abandoned = pending.jobs.get(oldest)!;
+      pending.jobs.delete(oldest); releaseGoalScratch(state, abandoned.flow);
+    }
+    const scratch = takeGoalScratch(state, box.width * box.height);
+    const flow = beginBoxFlow(state, box, seeds, costs, { dist: scratch.dist, next: emptyGoalNext }, scratch.buckets);
+    pending.jobs.set(target, retained = { flow, progress: 0 });
+  }
+  const job = retained.flow;
+  if (retained.progress < throughWork) {
+    growBoxInto(state, job.box, job.seeds, job.costs, job, job, throughWork - retained.progress);
+    retained.progress += job.work;
+  }
+  if (job.pending || job.seeded < job.order.length) return { field: undefined, work: throughWork, complete: false };
+  pending.jobs.delete(target);
+  const field = distanceFieldAnswer(state, ground, job, terrain.cell / (STRAIGHT * GROUND_WEIGHT));
+  if (fieldStorage.get(field)!.distanceBytes < job.dist.byteLength) releaseGoalScratch(state, job);
+  distanceFieldWork.set(field, retained.progress);
+  const cache = distanceFields.get(state)!;
+  cache.fields.set(target, field);
+  trimGoalFields(cache, mover, target);
+  return { field: retained.progress <= throughWork ? field : undefined,
+    work: Math.min(retained.progress, throughWork), complete: retained.progress <= throughWork };
+}
+
 // @@@ground-wholes - A mover's cells fall into wholes, each joined by its walks and cut off from every other: an island's
 // land is a whole of its own, and so is a lake's water. Whether two points stand in one whole is sameGround; how many
 // wholes there are, groundWholes (a ladder map's land is one: the generator keeps no open ground a start cannot reach).
@@ -1281,20 +1563,99 @@ export function groundWholeAt(map: Pick<GameMap, "terrain">, point: Point, mover
   return wholesOf(state).labels[at] || undefined;
 }
 
+/** Anchors recorded while labeling the existing components; no second scan or numbering. */
+export function groundWholeAnchors(map: Pick<GameMap, 'terrain'>, mover: Mover = 'land') {
+  if (!map.terrain) return [{ label: 1, point: { x: 0, y: 0 } }];
+  return wholesOf(runtime(map.terrain, mover)).anchors.map((point, index) => ({ label: index + 1, point: { ...point } }));
+}
+
+/** Land/water contacts from the original component labels. Shallow cells can
+ * belong to both movers; sea-only cells meet land through cardinal neighbours.
+ * This is landing geometry, not a shipyard footprint or a hull passage test. */
+export function groundShoreContacts(map: Pick<GameMap, 'terrain'>, firstRow: number, endRow: number) {
+  const contacts: { land: number; sea: number; ground: Point; water: Point }[] = [];
+  if (!map.terrain) return contacts;
+  const land = runtime(map.terrain, 'land'), sea = runtime(map.terrain, 'sea');
+  const lands = wholesOf(land).labels, seas = wholesOf(sea).labels, { width, terrain } = land;
+  for (let row = Math.max(0, firstRow); row < Math.min(endRow, terrain.rows); row++) for (let col = 0; col < terrain.cols; col++) {
+    const at = (row + 1) * width + col + 1, seaLabel = seas[at]!;
+    if (!seaLabel) continue;
+    const water = { x: (col + .5) * terrain.cell, y: (row + .5) * terrain.cell };
+    if (lands[at]) contacts.push({ land: lands[at]!, sea: seaLabel, ground: water, water });
+    else for (const step of [-1, 1, -width, width]) if (lands[at + step]) contacts.push({
+      land: lands[at + step]!, sea: seaLabel, ground: centerOf(land, at + step), water });
+  }
+  return contacts;
+}
+
+export type GroundShore = Readonly<{
+  landId: `land:${number}`; seaId: `sea:${number}`; ground: Point; water: Point;
+}>;
+export type GroundRegionIndex = Readonly<{
+  lands: ReadonlyMap<`land:${number}`, Point>;
+  seas: ReadonlyMap<`sea:${number}`, Point>;
+  shores: readonly GroundShore[];
+  shoresByLand: ReadonlyMap<`land:${number}`, ReadonlyMap<`sea:${number}`, readonly GroundShore[]>>;
+  scannedRows: number; totalRows: number; scannedAtTick: number;
+}>;
+type MutableRegionIndex = {
+  lands: Map<`land:${number}`, Point>; seas: Map<`sea:${number}`, Point>;
+  shores: GroundShore[];
+  shoresByLand: Map<`land:${number}`, Map<`sea:${number}`, GroundShore[]>>;
+  scannedRows: number; totalRows: number; scannedAtTick: number;
+};
+const groundRegionIndices = new WeakMap<Terrain, MutableRegionIndex>();
+
+/** Static geographic facts from the same mover labels used by sameGround.
+ * Warm these with the map; no owner, planning request or publication state is read. */
+export function groundRegionIndex(map: Pick<GameMap, 'terrain'>, rowBudget = Infinity, tick = 0): GroundRegionIndex {
+  const terrain = map.terrain;
+  if (!terrain) return { lands: new Map([['land:1', { x: 0, y: 0 }]]),
+    seas: new Map([['sea:1', { x: 0, y: 0 }]]), shores: [], shoresByLand: new Map(),
+    scannedRows: 0, totalRows: 0, scannedAtTick: tick };
+  let result = groundRegionIndices.get(terrain);
+  if (!result) groundRegionIndices.set(terrain, result = {
+    lands: new Map(groundWholeAnchors(map).map(({ label, point }) => [`land:${label}` as const, point])),
+    seas: new Map(groundWholeAnchors(map, 'sea').map(({ label, point }) => [`sea:${label}` as const, point])),
+    shores: [], shoresByLand: new Map(), scannedRows: 0, totalRows: terrain.rows, scannedAtTick: tick,
+  });
+  if (result.scannedRows === terrain.rows) return result;
+  const end = Math.min(terrain.rows, result.scannedRows + rowBudget);
+  if (end > result.scannedRows) result.scannedAtTick = tick;
+  for (const contact of groundShoreContacts(map, result.scannedRows, end)) {
+    const shore: GroundShore = { landId: `land:${contact.land}`, seaId: `sea:${contact.sea}`,
+      ground: contact.ground, water: contact.water };
+    result.shores.push(shore);
+    let seas = result.shoresByLand.get(shore.landId);
+    if (!seas) result.shoresByLand.set(shore.landId, seas = new Map());
+    let contacts = seas.get(shore.seaId);
+    if (!contacts) seas.set(shore.seaId, contacts = []);
+    contacts.push(shore);
+  }
+  result.scannedRows = end;
+  return result;
+}
+
 function wholesOf(state: TerrainRuntime) {
   if (state.wholes) return state.wholes;
   const { walk, offsets, terrain, width } = state;
   const labels = new Int32Array(walk.length);
   const queue = new Int32Array(walk.length);
+  const anchors: Point[] = [];
+  const bounds: Box[] = [];
   let count = 0;
   for (let seed = 0; seed < walk.length; seed += 1) {
     if (walk[seed] !== 1 || labels[seed] !== 0) continue;
     count += 1;
+    anchors.push(centerOf(state, seed));
+    let left = seed % width, right = left, top = Math.floor(seed / width), bottom = top;
     labels[seed] = count;
     let tail = 0;
     queue[tail++] = seed;
     for (let head = 0; head < tail; head += 1) {
       const at = queue[head]!;
+      const col = at % width, row = Math.floor(at / width);
+      left = Math.min(left, col); right = Math.max(right, col); top = Math.min(top, row); bottom = Math.max(bottom, row);
       for (let direction = 0; direction < 8; direction += 1) {
         const next = at + offsets[direction]!;
         if (walk[next] !== 1 || labels[next] !== 0 || !stepAllowed(state, at, direction)) continue;
@@ -1302,6 +1663,7 @@ function wholesOf(state: TerrainRuntime) {
         queue[tail++] = next;
       }
     }
+    bounds.push({ left, top, width: right - left + 1, height: bottom - top + 1 });
   }
   // Each whole's deep water (see @@@open-water), by its label.
   const deep = new Int32Array(count + 1);
@@ -1311,7 +1673,7 @@ function wholesOf(state: TerrainRuntime) {
     deep[labels[((index - col) / terrain.cols + 1) * width + col + 1]!]! += 1;
   }
   deep[0] = 0;
-  state.wholes = { labels, count, deep };
+  state.wholes = { labels, count, deep, anchors, bounds };
   return state.wholes;
 }
 
@@ -1424,7 +1786,7 @@ export function setBuildingBodies(map: Pick<GameMap, "terrain">, bodies: readonl
 }
 
 // @@@terrain-warmup - What a game's first walks would build from its terrain and the buildings it starts with, built
-// before its first tick instead: each mover's wholes, the sea's clearance and tiles (they first served a ship's launch
+// before its first tick instead: each mover's wholes and their static coast index, the sea's clearance and tiles (they first served a ship's launch
 // steer at minute eight, 33 ms inside one tick), the sea's shore spots for the given radii, and the building copy with
 // its tiles and clearance. Each is a cache of a pure function of the cells (see @@@terrain-runtime). The copy waits beside
 // the map until the first setBuildingBodies hands it these bodies: until then walks read the bare land, as they would cold.
@@ -1435,6 +1797,7 @@ export function warmTerrainRouting(map: Pick<GameMap, "terrain">, bodies: readon
   wholesOf(runtime(terrain, "land"));
   const sea = runtime(terrain, "sea");
   wholesOf(sea);
+  groundRegionIndex(map);
   if (!sea.clearance) fillClearance(sea);
   tilesOf(sea);
   for (const radius of shoreRadii) shoreSpots(map, radius);
@@ -1491,7 +1854,7 @@ type TerrainRuntime = {
   // The routing of walks (see @@@flow-tiles), built when first asked for.
   tiles?: Tiles | undefined;
   // Which whole of the mover's ground every cell belongs to (see @@@ground-wholes), worked out the first time it is asked.
-  wholes?: { labels: Int32Array; count: number; deep: Int32Array };
+  wholes?: { labels: Int32Array; count: number; deep: Int32Array; anchors: Point[]; bounds: Box[] };
   // The sea's shore spots by a shipyard's radius (see shoreSpots), worked out the first time each is asked.
   shores?: Map<number, Point[]>;
   // Nearest-of fields by their candidates' cells, the least recently used first (see @@@nearest-field).

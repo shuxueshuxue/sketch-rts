@@ -12,6 +12,7 @@ import { createAiThinkPool } from "./node-pool";
 import type { AiThinkMessage, AiThinkReply } from "./protocol";
 import type { Game } from "../../shared/sim";
 import { PLANNER_COMMAND_DELAY_TICKS } from "../../shared/sim/planner-schedule";
+import { groundRegionIndex } from "../../shared/terrain";
 
 const TICKS = 600;
 
@@ -51,6 +52,17 @@ afterAll(() => pool.close());
 
 describe("AI think thread", () => {
   const inline = playMatch();
+
+  it("prepares the worker's own static geography when its room opens, before any think", () => {
+    const map = structuredClone(createGame("sapphireArchipelago", { aiPlayers: [] }).map);
+    expect(groundRegionIndex(map, 0).scannedRows).toBe(0);
+    const before = JSON.stringify(map), host = createAiThinkHost(), replies: AiThinkReply[] = [];
+    host.open({ type: "open", session: "static-geography", map }, reply => replies.push(reply));
+    expect(groundRegionIndex(map, 0).scannedRows).toBe(map.terrain!.rows);
+    expect(JSON.stringify(map)).toBe(before);
+    expect(replies).toEqual([]);
+    host.close({ type: "close", session: "static-geography" });
+  });
 
   it("plays the same match when every think crosses as a copied message", () => {
     expect(inline.frames.length).toBeGreaterThan(10);

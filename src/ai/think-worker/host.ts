@@ -5,6 +5,7 @@ import {DEFAULT_AI_PLANNER_VERSION} from '../planner-context';
 import { createAiPolicyMemory, type AiPolicyMemory, type PresetAiPolicyOptions } from "../policy";
 import { planAiCommandFrameFromSnapshot } from "../runtime";
 import { checkCommandLegality } from "../../shared/sim/command-validation";
+import { groundRegionIndex } from "../../shared/terrain";
 import type { GameMap, GameSnapshot, PlayerId } from "../../shared/types";
 import type { AiThinkMessage, AiThinkReply } from "./protocol";
 
@@ -23,6 +24,9 @@ export function createAiThinkHost() {
   const sessions = new Map<string, Session>();
   return {
     open(message: Extract<AiThinkMessage, { type: "open" }>, send: (reply: AiThinkReply) => void) {
+      // The worker receives its own cloned Terrain; the simulation thread's
+      // warmup cannot populate this isolate's static map facts.
+      groundRegionIndex(message.map);
       sessions.set(message.session, { map: message.map, ...(message.policyMode ? { policyMode: message.policyMode } : {}), memories: {}, send });
     },
     think(message: Extract<AiThinkMessage, { type: "think" }>) {

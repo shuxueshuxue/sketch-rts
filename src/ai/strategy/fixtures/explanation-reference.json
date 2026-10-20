@@ -1,0 +1,26 @@
+{
+  "source": "6eb6e345",
+  "steps": 12,
+  "cases": [
+    {
+      "event": "E01",
+      "sha256": "0281c4ac9ab09306c443038ef21062d4045ee7f44b26c97dc1085f4e323d336a"
+    },
+    {
+      "event": "E02",
+      "sha256": "187b16643644abeed875f1242dc53e098057ed010ac93dc7d636ea0e3c12b3eb"
+    },
+    {
+      "event": "E05",
+      "sha256": "210623e9bbd629bd57dde95033869c9c14daed961e5aa179aefb9fba832f11df"
+    },
+    {
+      "event": "Nd",
+      "sha256": "3d5ae8d6f3c92cf66aff37f2ec7e790cceb782c9e33ac0776177ad8ac1f9965f"
+    },
+    {
+      "event": "Ne",
+      "sha256": "02ba6bf1e4ee8bf7637cdff1a34f2d06f57c607fd833555b4827bbd2257bcf04"
+    }
+  ]
+}
