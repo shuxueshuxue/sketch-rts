@@ -101,7 +101,18 @@ export function deathTaskIndex(snapshot: GameSnapshot, owner: PlayerId, memory: 
     if (conquest.combat?.creep) add(conquest.combat.creep.group, clearingTask(task(`island:${conquest.mineId}:${conquest.sinceTick}`, 'island', conquest.mineId,
       conquest.stage, 'naval.conquests.combat.creep', true, true), conquest.combat.creep), true);
   }
-  return { byUnit, general: memory.v6?.general, task, hallPerimeter };
+  const generalClearingTargets = () => {
+    const general = memory.v6?.general, state = memory.v6?.creep, at = general?.target;
+    if (!at) return undefined;
+    const samePoint = (point: { x: number; y: number }) => Math.hypot(point.x - at.x, point.y - at.y) < 1;
+    // V7 stores either the staging point or camp center in general.target.
+    if (state && (samePoint(state.staging) || samePoint(state.center))) return targetCamp(state);
+    // V6 stores a camp's first home point. Preserve its inferred clearing
+    // meaning if old memory has no resolvable target, rather than disabling it.
+    return (camps ??= neutralCamps(snapshot)).find(camp => samePoint(camp.center)
+      || camp.creeps.some(unit => samePoint({ x: unit.homeX ?? unit.x, y: unit.homeY ?? unit.y })))?.creeps.map(unit => unit.id);
+  };
+  return { byUnit, general: memory.v6?.general, task, hallPerimeter, generalClearingTargets };
 }
 
 export function inferDeathAssignment(snapshot: GameSnapshot, unit: Unit, memory: AiPolicyMemory,
@@ -114,11 +125,15 @@ export function inferDeathAssignment(snapshot: GameSnapshot, unit: Unit, memory:
   if (order.type === 'board' && !candidates.some(candidate => candidate.kind === 'transport')) put(index.task(
     `boarding:${order.transportId}`, 'transport', order.transportId, 'boarding', 'order.board'), true);
   if (unit.deck && !candidates.length) put(index.task(`aboard:${unit.deck.shipId}`, 'aboard', unit.deck.shipId, 'aboard', 'unit.deck'));
-  if (general && (general.group?.includes(unit.id) || lastOrder?.executor === 'v6General') && unit.kind !== 'worker') put(index.task(
-    ['defend', 'guard'].includes(general.mode) ? `defense:${general.targetHallId ?? 'unknown'}` : general.mode === 'attack'
-      ? `attack:${general.targetHallId ?? 'unknown'}` : `general:${general.mode}`, general.mode === 'creep' ? 'clear-camp' : general.mode,
-    general.targetHallId, general.stage ?? general.mode, 'v6.general', ['attack', 'defend', 'guard', 'creep'].includes(general.mode),
-    false, ['defend', 'guard'].includes(general.mode) ? index.hallPerimeter(general.targetHallId) : null));
+  if (general && (general.group?.includes(unit.id) || lastOrder?.executor === 'v6General') && unit.kind !== 'worker') {
+    const value = index.task(
+      ['defend', 'guard'].includes(general.mode) ? `defense:${general.targetHallId ?? 'unknown'}` : general.mode === 'attack'
+        ? `attack:${general.targetHallId ?? 'unknown'}` : `general:${general.mode}`, general.mode === 'creep' ? 'clear-camp' : general.mode,
+      general.targetHallId, general.stage ?? general.mode, 'v6.general', ['attack', 'defend', 'guard', 'creep'].includes(general.mode),
+      general.mode === 'creep', ['defend', 'guard'].includes(general.mode) ? index.hallPerimeter(general.targetHallId) : null);
+    if (value.clearing) value.clearingTargetIds = index.generalClearingTargets();
+    put(value);
+  }
   if (order.type === 'mine') put(index.task(`mining:${order.resourceId}`, 'mining', order.resourceId, order.phase, 'order.mine'));
   if (order.type === 'build') put(index.task(`build:${order.buildingKind}:${order.x}:${order.y}`, 'construction', undefined, 'build', 'order.build'));
   if (!candidates.length && (order.type === 'attack' || order.type === 'attackMove') && unitMover(unit.kind) === 'sea') put(index.task(

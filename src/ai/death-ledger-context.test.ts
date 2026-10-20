@@ -16,6 +16,17 @@ describe('real clearing membership attribution', () => {
     expect(samples.filter(sample => sample.sameCamp)).toHaveLength(23);
     expect(samples.filter(sample => !sample.sameCamp)).toHaveLength(1);
   });
+  it('retains general creeping and resolves its recorded target without a parallel task', () => {
+    const sample = samples.find(sample => sample.sameCamp)!;
+    const snapshot = { ...snapshotGame(createGame('bareDuel', { aiPlayers: [] })), tick: sample.tick,
+      units: sample.neutrals, buildings: [] } as unknown as GameSnapshot;
+    const unit = structuredClone(sample.record.unit) as unknown as Unit, memory = createAiPolicyMemory();
+    const target = sample.neutrals.find(other => other.id === sample.record.killer!.id)!;
+    memory.v6 = { general: { mode: 'creep', target: { x: target.homeX!, y: target.homeY! }, group: [unit.id] } };
+    const assignment = inferDeathAssignment(snapshot, unit, memory, deathTaskIndex(snapshot, unit.owner, memory), null);
+    expect(assignment.task).toMatchObject({ id: 'general:creep', clearing: true, source: 'v6.general' });
+    expect(assignment.task!.clearingTargetIds).toContain(target.id);
+  });
   for (const sample of samples) it(`${sample.map} ${sample.tick} ${sample.record.unit.id}`, () => {
     const record = structuredClone(sample.record) as unknown as AiUnitDeathRecord;
     const memory = Object.assign(createAiPolicyMemory(), structuredClone(sample.memory));
