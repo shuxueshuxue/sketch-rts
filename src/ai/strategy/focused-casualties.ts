@@ -76,9 +76,10 @@ export function experimentalMixedCasualties(units: readonly Unit[], damageExposu
 
 /** Mechanism calibration only. The order and reaction-window burst are facts
  * supplied from the initial combat geometry, never observed future victims.
- * The only fitted values are engagementShare and retreatHpRatio. A selected
+ * Fitted values are engagementShare, retreatHpRatio and retreatExposureTicks. A selected
  * fighter takes sustained damage down to the retreat boundary, then at most
- * one reaction-window burst before withdrawing. Overkill is spent on that
+ * one reaction-window burst plus the explicit pursuit rate during escape.
+ * A withdrawal command is not proof of immediate safety. Overkill is spent on that
  * victim; it cannot be redirected to another soldier. Damage left after the
  * selected front withdraws is avoided, not pushed into the unengaged rear. */
 export function experimentalRetreatCasualties(input: Readonly<{
@@ -86,11 +87,17 @@ export function experimentalRetreatCasualties(input: Readonly<{
   exposureKind: 'damage-potential' | 'effective-hp';
   burstByUnit: readonly Readonly<{ unitId: string; damage: number }>[];
   engagementShare: number; retreatHpRatio: number;
+  /** Zero reproduces the one-window hypothesis for the comparison table. */
+  retreatExposureTicks?: number;
+  /** Sustained weapon damage only; already flying projectiles are not a DPS. */
+  pursuitByUnit?: readonly Readonly<{ unitId: string; damagePerTick: number }>[];
 }>, recovery: readonly RecoveryService[] = []) {
   const { units, damageExposure, engagementShare, retreatHpRatio } = input;
+  const retreatExposureTicks = input.retreatExposureTicks ?? 0;
   const baseline = focusedCasualties(units, 0, recovery);
   if (!Number.isFinite(damageExposure) || damageExposure < 0 || !Number.isFinite(engagementShare)
     || engagementShare < 0 || engagementShare > 1 || !Number.isFinite(retreatHpRatio) || retreatHpRatio < 0 || retreatHpRatio > 1
+    || !Number.isFinite(retreatExposureTicks) || retreatExposureTicks < 0
     || input.exposureKind !== 'damage-potential' && input.exposureKind !== 'effective-hp')
     throw new Error('Invalid casualty retreat parameters');
   const byId = new Map(units.map(unit => [unit.id, unit])), order = new Set(input.engagementOrder);
@@ -103,6 +110,13 @@ export function experimentalRetreatCasualties(input: Readonly<{
     bursts.set(burst.unitId, burst.damage);
   }
   if (input.engagementOrder.some(id => !bursts.has(id))) throw new Error('Missing casualty reaction burst');
+  const pursuit = new Map<string, number>();
+  for (const fact of input.pursuitByUnit ?? []) {
+    if (!byId.has(fact.unitId) || pursuit.has(fact.unitId) || !Number.isFinite(fact.damagePerTick) || fact.damagePerTick < 0
+      || !Number.isFinite(fact.damagePerTick * retreatExposureTicks)) throw new Error('Invalid casualty pursuit rate');
+    pursuit.set(fact.unitId, fact.damagePerTick);
+  }
+  if (retreatExposureTicks > 0 && input.engagementOrder.some(id => !pursuit.has(id))) throw new Error('Missing casualty pursuit rate');
   const engagedUnitIds = input.engagementOrder.slice(0, Math.ceil(input.engagementOrder.length * engagementShare));
   const engaged = new Set(engagedUnitIds), damage = new Map<string, number>(), withdrawnUnitIds: string[] = [];
   let left = damageExposure, overkillDamage = 0;
@@ -112,7 +126,7 @@ export function experimentalRetreatCasualties(input: Readonly<{
     let hp = unit.hp - sustained;
     left -= sustained;
     if (hp > 0 && hp <= threshold) {
-      const burst = Math.min(left, bursts.get(id)!), effective = Math.min(hp, burst);
+      const burst = Math.min(left, bursts.get(id)! + (pursuit.get(id) ?? 0) * retreatExposureTicks), effective = Math.min(hp, burst);
       // An effective-HP audit already removed overkill from its input budget.
       const spent = input.exposureKind === 'effective-hp' ? effective : burst;
       left -= spent; overkillDamage += spent - effective;
@@ -124,7 +138,7 @@ export function experimentalRetreatCasualties(input: Readonly<{
   // Settlement, catalog death price and recovery stay in the same shared model.
   const settled = units.slice().sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
     .map(unit => focusedCasualties([unit], damage.get(unit.id) ?? 0, recovery.filter(service => service.unitId === unit.id)));
-  return { ...baseline, damageExposure, exposureKind: input.exposureKind,
+  return { ...baseline, damageExposure, exposureKind: input.exposureKind, retreatExposureTicks,
     expectedHpLost: settled.reduce((sum, part) => sum + part.expectedHpLost, 0),
     expectedLossGold: settled.reduce((sum, part) => sum + part.expectedLossGold, 0),
     unappliedDamage: overkillDamage + left, overkillDamage, avoidedDamage: left,

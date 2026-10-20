@@ -144,4 +144,17 @@ describe('experimental engagement and retreat mechanism', () => {
     expect(() => experimentalRetreatCasualties({ ...input, engagementOrder: ['future-member'] })).toThrow(/order/);
     expect(() => experimentalRetreatCasualties({ ...input, engagementShare: 1.1 })).toThrow();
   });
+
+  it('continues taking explicit pursuit damage after a retreat command without repeating flying impacts', () => {
+    const input = frame(10), pursuitByUnit = input.units.map(unit => ({ unitId: unit.id, damagePerTick: .5 }));
+    expect(experimentalRetreatCasualties({ ...input, pursuitByUnit, retreatExposureTicks: 0 }))
+      .toEqual(experimentalRetreatCasualties(input));
+    const chased = experimentalRetreatCasualties({ ...input, pursuitByUnit, retreatExposureTicks: 60 });
+    expect(chased).toMatchObject({ deadUnitIds: ['b'], expectedLossGold: UNIT_DEFS.emberRavager.cost,
+      expectedHpLost: 100, overkillDamage: 5, avoidedDamage: 45 });
+    expect(chased.expectedHpLost + chased.overkillDamage + chased.avoidedDamage).toBe(input.damageExposure);
+    expect(() => experimentalRetreatCasualties({ ...input, retreatExposureTicks: 60 })).toThrow(/pursuit/);
+    expect(() => experimentalRetreatCasualties({ ...input, pursuitByUnit, retreatExposureTicks: -1 })).toThrow();
+    expect(experimentalRetreatCasualties(JSON.parse(JSON.stringify({ ...input, pursuitByUnit, retreatExposureTicks: 60 })))).toEqual(chased);
+  });
 });
