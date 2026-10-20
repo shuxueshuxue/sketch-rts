@@ -43,6 +43,7 @@ import { engagementTargets } from "./engagements";
 import { readV6Intel } from "./v6/intel";
 import { TOWER_STRENGTH, effectiveCombatRating, strengthOf } from "./v6/strength";
 import { canSupply, playerState } from "./world-model";
+import { recordExecutorReason } from '../executor-reasons';
 function ferryCapacity(unit:Unit){return isTransportKind(unit.kind) ? carries(unit) : 0;}
 export const REINFORCEMENT_DISPATCH_SIZE = 6;
 
@@ -559,7 +560,12 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     let mission = ferries[boat.id];
     const priorDecision = memory.ferryDecisions?.[boat.id]?.reason;
     const own = units(snapshot, owner), map = snapshot.map;
-    const decision = (reason: string, blocked = true) => ferryDecision(options, snapshot.tick, boat.id, reason, blocked);
+    const decision = (reason: string, blocked = true) => {
+        ferryDecision(options, snapshot.tick, boat.id, reason, blocked);
+        if (blocked) recordExecutorReason(options, { executor: 'ferry', outcome: 'blocked', reason,
+            ...(mission ? { taskId: `ferry:${boat.id}:${mission.sinceTick}` } : {}),
+            targetIds: [boat.id, ...(mission ? [mission.targetId] : [])] });
+    };
     decision(mission?.phase ?? 'planning', false);
     const halls = buildings(snapshot, owner).filter(building => building.kind === "townHall" && building.complete);
     if (!halls.length) {
@@ -630,7 +636,11 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
         || Math.abs(headingDifference(progress.heading,boat.sailing!.heading))*shipProfile(boat)!.length/2>32)
         mission.progress={tick:snapshot.tick,x:boat.x,y:boat.y,heading:boat.sailing!.heading,phase:mission.phase,crew:aboardIds};
     else if(snapshot.tick-progress.tick>seconds(40)){
-        const reason = priorDecision ?? 'stalled-route';
+        // Lack of physical progress does not establish a route failure. Keep
+        // actionable gates (notably landing-defense, read by retry recovery).
+        const reason = priorDecision === 'loading' ? 'no-loading-progress'
+            : priorDecision === 'sailing' ? 'no-sailing-progress'
+            : priorDecision === 'return' ? 'no-return-progress' : priorDecision ?? 'no-physical-progress';
         decision(`stalled:${reason}`);
         const failures = (memory.ferryFailures ??= {})[boat.id] ??= {};
         failures[mission.targetId] = { attempts: (failures[mission.targetId]?.attempts ?? 0) + 1,
@@ -670,7 +680,7 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
         const held = mine && (mineClaimedByAlly(snapshot, owner, mine, options)
             || snapshot.buildings.some(building => distance(building, mine) < 400 && isOpponentOwner(snapshot, owner, building.owner, options)));
         if (held) {
-            decision('colony-claimed');
+            decision(mine && mineClaimedByAlly(snapshot, owner, mine, options) ? 'ally-mine-claim' : 'enemy-building-at-colony');
             // Settlers are not an invasion force. Re-evaluate a real assault
             // after returning the workers, rather than landing them at a hall.
             return cancelFerry(snapshot,boat,mission,options);
@@ -679,7 +689,7 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
     if (mission.purpose === "settle") {
         const mine = snapshot.resources.find(resource => resource.id === mission!.targetId);
         if (!mine || mine.amount <= 0 || !island || buildings(snapshot, owner).some(building => building.kind === "townHall" && distance(building, mine) < GOLD_MINE_RULES.baseRange)) {
-            decision('colony-unavailable');
+            decision(!mine ? 'mine-missing' : mine.amount <= 0 ? 'mine-exhausted' : !island ? 'colony-plan-unavailable' : 'colony-established');
             return cancelFerry(snapshot, boat, mission, options);
         }
     }
@@ -841,7 +851,11 @@ function ferryCommands(snapshot: GameSnapshot, owner: PlayerId, options: AiPolic
 }
 function unitStrengthForFerry(unit: Unit) { return strengthOf([unit]); }
 
-export function cancelFerry(snapshot: GameSnapshot, boat: Unit, mission: NonNullable<NonNullable<AiPolicyContext["memory"]["naval"]>["ferries"]>[string], options: AiPolicyContext): GameCommand[] {
+export function cancelFerry(snapshot: GameSnapshot, boat: Unit, mission: NonNullable<NonNullable<AiPolicyContext["memory"]["naval"]>["ferries"]>[string], options: AiPolicyContext, explicitReason?: string): GameCommand[] {
+    const decision = options.memory.naval?.ferryDecisions?.[boat.id];
+    recordExecutorReason(options, { executor: 'ferry', outcome: 'abandoned',
+        reason: explicitReason ?? (decision?.tick === snapshot.tick ? decision.reason : 'cancellation-cause-not-recorded'),
+        taskId: `ferry:${boat.id}:${mission.sinceTick}`, targetIds: [boat.id, mission.targetId] });
     const boarding = snapshot.units.filter(unit => unit.order.type === "board" && unit.order.transportId === boat.id);
     mission.phase = "return";
     mission.crewIds = [];

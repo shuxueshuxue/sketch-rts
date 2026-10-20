@@ -115,7 +115,7 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
     if (mission?.purpose === 'rebase' && mission.phase !== 'return'
       && snapshot.resources.some(mine => mine.id === mission.targetId && mine.amount === 0)) {
       // The ordinary ferry return owns the hull; cancellation releases its pending boarders.
-      cancelled.push(...cancelFerry(snapshot, boat, mission, options).filter(command => command.type === 'stop'));
+      cancelled.push(...cancelFerry(snapshot, boat, mission, options, 'mine-exhausted').filter(command => command.type === 'stop'));
     }
   }
   const mines = mountedMinePlan(snapshot, options.memory);

@@ -9,6 +9,8 @@ import { isV7Policy } from "../versions";
 import { recordPlay, v6Memory } from "../v6/memory";
 import { enemyPowerNear, type V6Intel } from "../v6/intel";
 import { combatRating, strengthOf } from "../v6/strength";
+import { recordExecutorReason } from '../../executor-reasons';
+import { activeUnitClaim, isDefenseTaskClaim } from '../claims';
 
 // @@@v7-creeping - V7 creeps the way a player does: it picks a camp its gathered group beats, walks there on a route that
 // passes no other camp, waits outside the camp until the group stands together, goes in together and stays until the
@@ -176,34 +178,67 @@ export function activeCamp(state: CreepState | undefined, camps: Camp[]): Camp |
 
 export type CreepChoice = { camp: Camp; why: "expansion" | "creep"; staging: Point; group: Unit[] };
 export type CampApproach = (camp: Camp, from: Point, camps: Camp[]) => { staging: Point; travelDistance: number } | undefined;
+export type CreepBlockReason = 'no-clearing-units' | 'clearing-party-not-gathered' | 'insufficient-clearing-force'
+  | 'camp-retry-delay' | 'clearing-geometry-blocked' | 'no-expansion-guard' | 'no-camp-candidate'
+  | 'insufficient-voluntary-clearing-margin' | 'multiple-clearing-blockers';
+export type CreepAssessment = { choice: CreepChoice; reason?: never } | { choice?: never; reason: CreepBlockReason };
+
+/** Missing from the available pool does not prove that the units died. */
+export function unavailableClearingReason(snapshot: GameSnapshot, owner: PlayerId, ids: readonly string[], options: AiPolicyContext) {
+  const living = snapshot.units.filter(unit => ids.includes(unit.id) && unit.owner === owner && unit.hp > 0);
+  if (!living.length) return 'clearing-group-no-longer-present';
+  if (living.some(unit => isDefenseTaskClaim(activeUnitClaim(snapshot, owner, unit, options)))) return 'defense-task-recall';
+  if (living.some(unit => unit.deck || unit.order.type === 'board')) return 'transport-reassignment';
+  return 'clearing-group-unavailable';
+}
 
 // Carry on with the camp under way. Returns undefined once it is cleared or given up (memory says which).
-export function continueV7Creep(snapshot: GameSnapshot, owner: PlayerId, front: Unit[], camps: Camp[], intel: V6Intel, options: AiPolicyContext): { commands: GameCommand[]; point: Point } | undefined {
+export function continueV7Creep(snapshot: GameSnapshot, owner: PlayerId, front: Unit[], camps: Camp[], intel: V6Intel, options: AiPolicyContext,
+  onStopped?: (reason: string) => void): { commands: GameCommand[]; point: Point } | undefined {
   const memory = v6Memory(options);
   const state = memory.creep;
   if (!state) return undefined;
   const camp = activeCamp(state, camps);
   const group = front.filter((unit) => state.group.includes(unit.id));
   if (!camp || group.length === 0) {
+    if (camp) {
+      const reason = unavailableClearingReason(snapshot, owner, state.group, options);
+      recordExecutorReason(options, { executor: 'creep.execution', outcome: 'abandoned', reason,
+        targetIds: camp.creeps.map(unit => unit.id), unitIds: [...state.group] });
+      onStopped?.(reason);
+    }
     delete memory.creep;
     if (!camp) recordPlay(memory, "creep:cleared");
     return undefined;
   }
   const force = creepForce(group, camp);
-  const giveUp = (why: string) => {
+  const shortfallReason = (base: string) => {
+    const available = new Set(group.map(unit => unit.id));
+    const absent = state.group.filter(id => !available.has(id));
+    if (absent.length) {
+      const why = unavailableClearingReason(snapshot, owner, absent, options);
+      if (why === 'defense-task-recall' || why === 'transport-reassignment') return `${base}-with-${why}`;
+    }
+    return base;
+  };
+  const giveUp = (why: string, reason: string) => {
+    recordExecutorReason(options, { executor: 'creep.execution', outcome: 'abandoned', reason,
+      targetIds: camp.creeps.map(unit => unit.id), unitIds: [...state.group] });
+    onStopped?.(reason);
     memory.creepRetry = { center: camp.center, until: snapshot.tick + RETRY_TICKS };
     delete memory.creep;
     recordPlay(memory, `creep:${why}`);
     return undefined;
   };
-  if (campContested(intel, camp.center, group) || campContested(intel, averagePoint(group), group)) return giveUp("enemy");
-  if (state.stage === "engage" && force < camp.strength * ABORT_SHARE) return giveUp("abort");
+  if (campContested(intel, camp.center, group)) return giveUp("enemy", 'enemy-force-at-camp');
+  if (campContested(intel, averagePoint(group), group)) return giveUp("enemy", 'enemy-force-at-clearing-party');
+  if (state.stage === "engage" && force < camp.strength * ABORT_SHARE) return giveUp("abort", shortfallReason('engaged-clearing-force-below-minimum'));
   const staging = state.staging;
   if (state.stage === "gather") {
     const gathered = group.filter((unit) => distance(unit, staging) <= V7_GATHERED_RANGE).length;
     if (gathered >= group.length * GATHERED_SHARE || snapshot.tick - state.since >= GATHER_TICKS) {
       // Worn on the way (a camp or an enemy met en route): the group does not go in short of the force the camp calls for.
-      if (force < forceFor(camp) * ARRIVAL_SHARE) return giveUp("worn");
+      if (force < forceFor(camp) * ARRIVAL_SHARE) return giveUp("worn", shortfallReason('arrival-clearing-force-below-minimum'));
       state.stage = "engage";
       state.since = snapshot.tick;
     }
@@ -235,20 +270,44 @@ export function chooseV7Camp(snapshot: GameSnapshot, front: Unit[], camps: Camp[
 
 /** Strength and task selection use explicitly supplied approach geometry. */
 export function chooseCreepCamp(snapshot: GameSnapshot, front: Unit[], camps: Camp[], candidates: Camp[], options: AiPolicyContext, approach: CampApproach, expansionMine: Point | undefined): CreepChoice | undefined {
-  if (front.length === 0) return undefined;
+  return assessCreepCamp(snapshot, front, camps, candidates, options, approach, expansionMine).choice;
+}
+
+/** The decision and its explanation share the same gates and computed geometry. */
+export function assessCreepCamp(snapshot: GameSnapshot, front: Unit[], camps: Camp[], candidates: Camp[], options: AiPolicyContext, approach: CampApproach, expansionMine: Point | undefined): CreepAssessment {
+  const failed = (reason: CreepBlockReason, camp?: Camp): CreepAssessment => {
+    recordExecutorReason(options, { executor: 'creep.selection', outcome: 'blocked', reason,
+      targetIds: (camp ? [camp] : candidates).flatMap(item => item.creeps.map(unit => unit.id)), unitIds: front.map(unit => unit.id) });
+    return { reason };
+  };
+  if (front.length === 0) return failed('no-clearing-units');
   const memory = v6Memory(options);
   const from = averagePoint(front);
   // Scattered units walk their own routes: the group assembles first (the general holds it at the rally point).
-  if (front.some((unit) => distance(unit, from) > CREEP_ASSEMBLED_RANGE)) return undefined;
+  if (front.some((unit) => distance(unit, from) > CREEP_ASSEMBLED_RANGE)) return failed('clearing-party-not-gathered');
   const retry = memory.creepRetry && memory.creepRetry.until > snapshot.tick ? memory.creepRetry : undefined;
-  const open = candidates.filter((camp) => forceFor(camp) <= creepForce(front, camp) && (!retry || distance(camp.center, retry.center) > CAMP_LINK))
+  const rejected = new Map<Camp, CreepBlockReason>();
+  const reject = (camp: Camp, reason: CreepBlockReason) => {
+    rejected.set(camp, reason);
+    recordExecutorReason(options, { executor: 'creep.selection', outcome: 'candidate-rejected', reason,
+      targetIds: camp.creeps.map(unit => unit.id), unitIds: front.map(unit => unit.id) });
+    return false;
+  };
+  const open = candidates.filter((camp) => {
+    if (!(forceFor(camp) <= creepForce(front, camp))) return reject(camp, 'insufficient-clearing-force');
+    if (retry && !(distance(camp.center, retry.center) > CAMP_LINK)) return reject(camp, 'camp-retry-delay');
+    return true;
+  })
     .flatMap(camp => {
       const geometry = approach(camp, from, camps);
+      if (!geometry) reject(camp, 'clearing-geometry-blocked');
       return geometry ? [{ camp, ...geometry }] : [];
     });
   if (expansionMine) {
     const guard = open.find(({ camp }) => distance(camp.center, expansionMine) <= EXPANSION_GUARD_RANGE);
-    return guard ? { camp: guard.camp, staging: guard.staging, group: front, why: "expansion" } : undefined;
+    if (guard) return { choice: { camp: guard.camp, staging: guard.staging, group: front, why: "expansion" } };
+    const blocked = candidates.find(camp => distance(camp.center, expansionMine) <= EXPANSION_GUARD_RANGE);
+    return failed(blocked ? rejected.get(blocked) ?? 'no-expansion-guard' : 'no-expansion-guard', blocked);
   }
   // @@@v7-creep-voluntary-margin - A camp taken for its own sake (stars, gold, items) is only worth it without losses: it
   // asks a wider margin than the expansion's guard, which the economy waits on. Every soldier a camp costs before 5:00 is
@@ -256,7 +315,10 @@ export function chooseCreepCamp(snapshot: GameSnapshot, front: Unit[], camps: Ca
   const easy = open.filter(({ camp }) => camp.strength + VOLUNTARY_MARGIN <= creepForce(front, camp));
   // The strongest camp the group beats, nearer ones first (V6's order).
   const best = easy.sort((a, b) => b.camp.strength - b.travelDistance / 500 - (a.camp.strength - a.travelDistance / 500))[0];
-  return best ? { camp: best.camp, staging: best.staging, group: front, why: "creep" } : undefined;
+  if (best) return { choice: { camp: best.camp, staging: best.staging, group: front, why: "creep" } };
+  if (open.length) return failed('insufficient-voluntary-clearing-margin');
+  const reasons = [...new Set(rejected.values())];
+  return failed(reasons.length === 1 ? reasons[0]! : candidates.length ? 'multiple-clearing-blockers' : 'no-camp-candidate');
 }
 
 export function startV7Creep(snapshot: GameSnapshot, front: Unit[], choice: CreepChoice, options: AiPolicyContext) {

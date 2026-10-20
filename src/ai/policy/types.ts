@@ -37,6 +37,9 @@ export type PresetAiPolicyOptions = {
 
 export type AiPolicyContext = PresetAiPolicyOptions & {
   memory: AiPolicyMemory;
+  /** Output only; neither callback nor its records enter memory/checkpoints. */
+  executorReason?: import('../executor-reasons').ExecutorReasonSink;
+  executorTaskId?: string;
   /** The room expansion's existing force request, before optional purchases. */
   expansionRecruit?: { unit: TrainableUnitKind; count: number } | undefined;
 };

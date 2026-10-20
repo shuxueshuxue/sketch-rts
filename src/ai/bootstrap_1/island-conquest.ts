@@ -17,7 +17,8 @@ import type { AiPolicyContext } from '../policy/types';
 import { isBacklineKind } from '../policy/v6/backline';
 import { readV6IntelAt } from '../policy/v6/intel';
 import { v6Memory } from '../policy/v6/memory';
-import { neutralCamps, EXPANSION_GUARD_RANGE, creepForce, forceFor } from '../policy/v7/creep';
+import { neutralCamps, EXPANSION_GUARD_RANGE, creepForce, forceFor, unavailableClearingReason } from '../policy/v7/creep';
+import { recordExecutorReason } from '../executor-reasons';
 import { V7_WOUNDED_SHARE } from '../policy/v6/general';
 import { expansionGarrisonReady } from './expansion-garrison';
 import { planMiningScreen } from './expansion-mission';
@@ -70,7 +71,10 @@ export function prepareIslandConquests(snapshot: GameSnapshot, owner: PlayerId, 
     const hall = mine && snapshot.buildings.find(building => building.kind === 'townHall' && distance(building, mine) <= GOLD_MINE_RULES.baseRange);
     if (!mine || hall && isOpponentOwner(snapshot, owner, hall.owner, options) || mineClaimedByAlly(snapshot, owner, mine, options)) {
       task.abandonedTick ??= snapshot.tick;
-      task.reason = !mine ? 'mine-exhausted' : hall ? 'mine-occupied' : 'ally-mine-claim';
+      task.reason = !mine ? snapshot.resources.some(resource => resource.id === task.mineId) ? 'mine-exhausted' : 'mine-missing'
+        : hall && isOpponentOwner(snapshot, owner, hall.owner, options) ? 'enemy-mine-occupied' : 'ally-mine-claim';
+      recordExecutorReason(options, { executor: 'island.prepare', outcome: 'abandoned', reason: task.reason,
+        taskId: `island:${task.mineId}:${task.sinceTick}`, targetIds: [task.mineId] });
       continue;
     }
     if (hall?.owner === owner) {
@@ -82,7 +86,10 @@ export function prepareIslandConquests(snapshot: GameSnapshot, owner: PlayerId, 
     const party = own.filter(unit => sameGround(snapshot.map, unit, mine));
     const inbound = Object.values(naval.ferries ?? {}).some(mission => mission.targetId === mine.id && mission.phase !== 'return');
     if (!party.length && !inbound) {
-      task.abandonedTick ??= snapshot.tick; task.reason = 'landing-party-lost'; continue;
+      task.abandonedTick ??= snapshot.tick; task.reason = 'no-landed-party-or-inbound-ferry';
+      recordExecutorReason(options, { executor: 'island.prepare', outcome: 'abandoned', reason: task.reason,
+        taskId: `island:${task.mineId}:${task.sinceTick}`, targetIds: [task.mineId] });
+      continue;
     }
     delete task.abandonedTick;
     const guard = neutralCamps(snapshot).find(camp => distance(camp.center, mine) <= EXPANSION_GUARD_RANGE);
@@ -100,13 +107,23 @@ export function planConquestEngineers(snapshot: GameSnapshot, owner: PlayerId, o
   if (!naval?.conquests) return;
   const own = snapshot.units.filter(unit => unit.owner === owner && unit.hp > 0);
   const home = snapshot.buildings.find(building => building.owner === owner && building.kind === 'townHall' && building.complete);
-  if (!home) return;
+  const unavailable = (reason: string) => {
+    for (const task of Object.values(naval.conquests!)) {
+      if (task.abandonedTick !== undefined || task.stage !== 'escort') continue;
+      const mine = snapshot.resources.find(mine => mine.id === task.mineId);
+      if (!mine || own.some(unit => unit.kind === 'worker' && !unit.deck && sameGround(snapshot.map, unit, mine))
+        || Object.values(naval.ferries ?? {}).some(mission => mission.targetId === mine.id && mission.purpose === 'settle' && mission.phase !== 'return')) continue;
+      recordExecutorReason(options, { executor: 'island.engineers', outcome: 'blocked', reason,
+        taskId: `island:${task.mineId}:${task.sinceTick}`, targetIds: [task.mineId] });
+    }
+  };
+  if (!home) { unavailable('no-complete-home-for-engineers'); return; }
   const workers = own.filter(unit => unit.kind === 'worker' && !unit.deck && sameGround(snapshot.map, unit, home)
     && (unit.order.type === 'mine' || unit.order.type === 'idle') && ferryCrewTaskAvailable(unit, options));
   const reserveMiners = snapshot.resources.some(mine => mine.amount > 0 && sameGround(snapshot.map, mine, home)
     && snapshot.buildings.some(hall => hall.owner === owner && hall.kind === 'townHall'
       && distance(hall, mine) < GOLD_MINE_RULES.baseRange)) ? 3 : 0;
-  if (workers.length <= reserveMiners) return;
+  if (workers.length <= reserveMiners) { unavailable('no-surplus-engineer'); return; }
   const ferries = naval.ferries ??= {}, reserved = navalServices(snapshot, owner, options).reserved;
   for (const task of Object.values(naval.conquests)) {
     if (task.abandonedTick !== undefined || task.stage !== 'escort') continue;
@@ -120,7 +137,12 @@ export function planConquestEngineers(snapshot: GameSnapshot, owner: PlayerId, o
       && (naval.ferryRetryUntil?.[ship.id] ?? 0) <= snapshot.tick && ferryTargetAvailable(naval, ship.id, mine.id)
       && sameGround(snapshot.map, ship, task.landing, 'sea'));
     const from = boat && coastOnWater(snapshot, home, boat);
-    if (!boat || !from || outgunned(snapshot, owner, options, task.landing, own)) continue;
+    if (!boat || !from || outgunned(snapshot, owner, options, task.landing, own)) {
+      recordExecutorReason(options, { executor: 'island.engineers', outcome: 'blocked',
+        reason: !boat ? 'no-eligible-engineer-transport' : !from ? 'engineer-load-coast-unavailable' : 'engineer-landing-water-outgunned',
+        taskId: `island:${task.mineId}:${task.sinceTick}`, targetIds: [task.mineId] });
+      continue;
+    }
     ferries[boat.id] = { purpose: 'settle', targetId: mine.id, from, to: { ...task.landing },
       phase: 'loading', crewIds: [], sinceTick: snapshot.tick };
     task.reason = 'engineers-dispatched';
@@ -172,28 +194,50 @@ export function planConquestReinforcements(snapshot: GameSnapshot, owner: Player
     if (!mine || !camps.some(camp => distance(camp.center, mine) <= EXPANSION_GUARD_RANGE)
       || mineClaimedByAlly(snapshot, owner, mine, options)
       || Object.values(ferries).some(mission => mission.reinforcementTaskId === mine.id)) continue;
-    for (const boat of own.filter(ship => isTransportKind(ship.kind) && !reserved.has(ship.id)
+    const boats = own.filter(ship => isTransportKind(ship.kind) && !reserved.has(ship.id)
       && naval.outfit?.shipId !== ship.id && !shipNeedsRepair(snapshot, ship)
       && !shipPassengers(snapshot.units, ship).length
       && !own.some(unit => unit.order.type === 'board' && unit.order.transportId === ship.id)
       && (!ferries[ship.id] || ferries[ship.id]!.phase === 'return')
       && (naval.ferryRetryUntil?.[ship.id] ?? 0) <= snapshot.tick
-      && sameGround(snapshot.map, ship, task.landing, 'sea'))) {
+      && sameGround(snapshot.map, ship, task.landing, 'sea'));
+    if (!boats.length) recordExecutorReason(options, { executor: 'island.reinforcements', outcome: 'candidate-rejected', reason: 'no-eligible-reinforcement-transport',
+      taskId: `island:${task.mineId}:${task.sinceTick}`, targetIds: [task.mineId] });
+    for (const boat of boats) {
       const crew = reinforcementCrew(snapshot, owner, options, own, task.landing)
         .filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0);
       const from = crew[0] && coastOnWater(snapshot, crew[0], boat);
-      if (!from || !landingSafe(snapshot, owner, options, boat, task.landing)
-        || outgunned(snapshot, owner, options, task.landing, own)) continue;
+      if (!from) {
+        recordExecutorReason(options, { executor: 'island.reinforcements', outcome: 'blocked', reason: crew.length ? 'reinforcement-load-coast-unavailable' : 'no-eligible-reinforcement-crew',
+          taskId: `island:${task.mineId}:${task.sinceTick}`, targetIds: [task.mineId, boat.id] });
+        continue;
+      }
+      if (!landingSafe(snapshot, owner, options, boat, task.landing)) {
+        recordExecutorReason(options, { executor: 'island.reinforcements', outcome: 'blocked', reason: 'reinforcement-landing-defense',
+          taskId: `island:${task.mineId}:${task.sinceTick}`, targetIds: [task.mineId, boat.id] });
+        continue;
+      }
+      if (outgunned(snapshot, owner, options, task.landing, own)) {
+        recordExecutorReason(options, { executor: 'island.reinforcements', outcome: 'blocked', reason: 'reinforcement-landing-water-outgunned',
+          taskId: `island:${task.mineId}:${task.sinceTick}`, targetIds: [task.mineId, boat.id] });
+        continue;
+      }
       // A restored save may retain failures from checking the inland mine.
       // Reconsider that gate only once the actual beachhead is safe again.
       const failure = naval.ferryFailures?.[boat.id]?.[mine.id];
       if (failure?.reason === 'landing-defense') delete naval.ferryFailures![boat.id]![mine.id];
-      if (!ferryTargetAvailable(naval, boat.id, mine.id)) continue;
+      if (!ferryTargetAvailable(naval, boat.id, mine.id)) {
+        recordExecutorReason(options, { executor: 'island.reinforcements', outcome: 'blocked', reason: 'target-retries-exhausted',
+          taskId: `island:${task.mineId}:${task.sinceTick}`, targetIds: [task.mineId, boat.id] });
+        continue;
+      }
       const previous = ferries[boat.id];
       ferries[boat.id] = { purpose: 'reinforce', reinforcementTaskId: mine.id, targetId: mine.id,
         from, to: { ...task.landing }, phase: 'loading', crewIds: [], sinceTick: snapshot.tick,
         deliveries: [], returnTrips: 0 };
       if (!conquestReinforcementCrew(snapshot, owner, options, own, boat).length) {
+        recordExecutorReason(options, { executor: 'island.reinforcements', outcome: 'blocked', reason: 'no-additional-clearing-payload',
+          taskId: `island:${task.mineId}:${task.sinceTick}`, targetIds: [task.mineId, boat.id] });
         if (previous) ferries[boat.id] = previous; else delete ferries[boat.id];
         continue;
       }
@@ -219,19 +263,24 @@ export function islandConquestCommands(snapshot: GameSnapshot, owner: PlayerId, 
   for (const task of Object.values(options.memory.naval?.conquests ?? {})) {
     if (task.abandonedTick !== undefined || task.stage === 'complete' || task.stage === 'build') continue;
     const crew = conquestCrew(snapshot, owner, options, task);
-    if (!crew.length) continue;
+    if (!crew.length) {
+      const ids = task.combat?.creep?.group ?? [];
+      const reason = ids.length ? unavailableClearingReason(snapshot, owner, ids, options) : 'no-conquest-screen-units';
+      task.reason = `blocked:${reason}`;
+      recordExecutorReason(options, { executor: 'island.screen', outcome: 'blocked', reason,
+        taskId: `island:${task.mineId}:${task.sinceTick}`, targetIds: [task.mineId], unitIds: ids });
+      continue;
+    }
     const anchor = walkableGoal(snapshot.map, task.landing.x, task.landing.y);
     const intel = readV6IntelAt(snapshot, owner, options, anchor), shared = v6Memory(options);
     const state = { ...shared, ...task.combat };
     delete state.general;
     if (!task.combat?.creep) delete state.creep;
     if (!task.combat?.creepRetry) delete state.creepRetry;
-    const mission = { ...options, memory: { ...options.memory, v6: state } };
+    const mission = { ...options, executorTaskId: `island:${task.mineId}:${task.sinceTick}`, memory: { ...options.memory, v6: state } };
     commands.push(...planMiningScreen(snapshot, owner, mission, intel, task,
       crew.filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0)));
     task.combat = { ...(state.creep ? { creep: state.creep } : {}), ...(state.creepRetry ? { creepRetry: state.creepRetry } : {}) };
-    if (task.stage === 'clear') task.reason = 'clearing-camp';
-    else if (task.stage === 'assemble') task.reason = 'await-clearing-force';
     for (const unit of crew) unitIds.add(unit.id);
   }
   return { commands, unitIds };

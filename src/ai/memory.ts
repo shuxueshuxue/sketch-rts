@@ -70,6 +70,8 @@ export type MiningMissionMemory = {
   mineId: string;
   sinceTick: number;
   stage: 'fund' | 'assemble' | 'clear' | 'escort' | 'build' | 'complete';
+  /** Diagnostic only; never used to choose units, stages, orders or retries. */
+  reason?: string;
   staging?: { x: number; y: number };
   stagingCheckedTick?: number;
   roadCamp?: { x: number; y: number };
