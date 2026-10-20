@@ -50,6 +50,33 @@ function defendedPost(): AllocationMethodQuoteInput {
 }
 
 describe('defense protection and whole-bundle valuation', () => {
+  it('rematerializes the real E01 local shipyard cohort after its unnecessary deliver action was removed', () => {
+    const frame = JSON.parse(gunzipSync(readFileSync(new URL('../bootstrap_1/fixtures/strategy-allocation-frames.json.gz', import.meta.url))).toString())
+      .frames['gullIsland-p0-9930'];
+    const snapshot = frame.snapshot as AllocationMethodQuoteInput['snapshot'];
+    setBuildingBodies(snapshot.map, standingBodies(snapshot));
+    const decision = buildStrategyDecision(snapshot, frame.owner, { memory: frame.memory }, undefined, undefined, Infinity);
+    const objective = decision.objectives.find(goal => goal.id === 'DefendSite:p0:building-p0-shipyard-1409')!;
+    expect(objective).toBeDefined();
+    const method = defenseMethodProvider.buildMethods({ snapshot, situation: decision.situation, objective,
+      previous: null, executions: [], blocked: [] }).find(method => method.kind === 'cross-sea-reinforcement')!;
+    const unitIds = decision.situation.units.filter(unit => unit.owner === frame.owner && unit.location.kind === 'land'
+      && unit.location.landId === objective.target.landId && !unit.roles.some(role => ['worker', 'transport', 'warship'].includes(role)))
+      .map(unit => unit.id);
+    expect(unitIds.length).toBeGreaterThan(0);
+    const input: AllocationMethodQuoteInput = { snapshot, situation: decision.situation, objective, method, unitIds, budgets: [], executions: [] };
+    const first = defenseMethodProvider.materialize!(input);
+    expect(first.actions.some(action => action.executor === 'strategy.transport')).toBe(false);
+    const before = JSON.stringify({ ...input, method: first });
+    const second = defenseMethodProvider.materialize!({ ...input, method: first });
+    expect(second).toEqual(first);
+    expect(defenseMethodProvider.materialize!({ ...input, method: second })).toEqual(first);
+    const cold: AllocationMethodQuoteInput = JSON.parse(before);
+    setBuildingBodies(cold.snapshot.map, standingBodies(cold.snapshot));
+    expect(defenseMethodProvider.materialize!(cold)).toEqual(first);
+    expect(JSON.stringify({ ...input, method: first })).toBe(before);
+  });
+
   it('keeps the real E02 island-worker evacuation behind explicit transport instead of a cross-water walk', () => {
     const frame = JSON.parse(gunzipSync(readFileSync(new URL('../bootstrap_1/fixtures/strategy-allocation-frames.json.gz', import.meta.url))).toString())
       .frames['gullIsland-p0-17505'];
