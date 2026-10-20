@@ -97,4 +97,34 @@ describe('whole-bundle opportunity oracle', () => {
     expect(createOpportunityOracle([], { effectKeysFor: () => [], unpricedProductionFor: () => ['queue-owner'] })({ ...request, unitIds: [], production }))
       .toMatchObject({ status: 'unknown', objectiveIds: ['queue-owner'] });
   });
+
+  it('uses an explicit migration envelope without turning an unavailable exact value into zero', () => {
+    const bound = { targetId: 'mine', gold: 450, window, components: [{ code: 'full-potential', valueGold: 450, factIds: ['mine'] }] };
+    const oracle = createOpportunityOracle([], { effectKeysFor: () => [], unpricedCommitmentsFor: () => ['imported'],
+      importedUpperBoundFor: (id, requestedWindow) => id === 'imported' ? { unitIds: request.unitIds,
+        bound: { ...bound, window: requestedWindow } } : null });
+    const quote = oracle(request);
+    expect(quote).toMatchObject({ status: 'known', gold: 450,
+      displacements: [{ objectiveId: 'imported', marginalGold: 450, withoutResourcesGold: null, basis: 'upper-bound', upperBound: bound }] });
+    expect(JSON.stringify(oracle(JSON.parse(JSON.stringify(request))))).toBe(JSON.stringify(quote));
+    expect(createOpportunityOracle([], { effectKeysFor: () => [], unpricedCommitmentsFor: () => ['missing'],
+      importedUpperBoundFor: () => null })(request)).toMatchObject({ status: 'unknown', objectiveIds: ['missing'] });
+    expect(() => createOpportunityOracle([], { effectKeysFor: () => [], unpricedCommitmentsFor: () => ['imported'],
+      importedUpperBoundFor: () => ({ unitIds: request.unitIds, bound: { ...bound, window: valuationWindow(1) } }) })(request))
+      .toThrow('Invalid imported task loss upper bound');
+  });
+
+  it('retains every actual displacement when a speculative whole group overlaps two commitments', () => {
+    const sources = [source({ id: 'old/a', objectiveId: 'old-a', committed: true, unitIds: ['a'],
+      quote: ids => ids.length ? { status: 'feasible', score: 100, coverage: 'complete' } : { status: 'not-runnable', reasonCode: 'no-members' } }),
+    source({ id: 'old/b', objectiveId: 'old-b', committed: true, unitIds: ['b'],
+      quote: ids => ids.length ? { status: 'feasible', score: 100, coverage: 'complete' } : { status: 'not-runnable', reasonCode: 'no-members' } }),
+    source({ id: 'next', objectiveId: 'next', unitIds: ['a', 'b'],
+      quote: ids => ids.length ? { status: 'feasible', score: 150, coverage: 'complete' } : { status: 'not-runnable', reasonCode: 'no-members' } })];
+    const options = { effectKeysFor: () => [] }, oracle = createOpportunityOracle(sources, options);
+    const value = oracle(request);
+    expect(value).toMatchObject({ status: 'known', gold: 200,
+      displacements: [{ objectiveId: 'old-a', marginalGold: 100 }, { objectiveId: 'old-b', marginalGold: 100 }] });
+    expect(createOpportunityOracle([...sources].reverse(), options)(request)).toEqual(value);
+  });
 });

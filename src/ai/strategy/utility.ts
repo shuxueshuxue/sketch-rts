@@ -140,6 +140,7 @@ export function quoteOpportunityCost(window: ValuationWindow, alternatives: read
   checkedWindow(window);
   const unknown = new Set(unpricedCommittedObjectiveIds);
   const candidates: Extract<OpportunityCostQuote, { status: 'known' }>['alternatives'][number][] = [];
+  const displacements: typeof candidates = [];
   for (const alternative of alternatives) {
     const before = finite(alternative.withResourcesGold, 'alternative utility');
     const ids = [...new Set(alternative.unitIds)].sort();
@@ -151,16 +152,31 @@ export function quoteOpportunityCost(window: ValuationWindow, alternatives: read
     } else if (alternative.withoutResourcesGold !== null) {
       throw new Error('Unavailable strategy alternative has a numeric utility');
     }
-    if (alternative.committed && alternative.withoutResourcesStatus === 'unknown') {
+    const bound = alternative.upperBound;
+    if (bound) {
+      if (!alternative.committed || !sameValuationWindow(bound.window, window)
+        || bound.gold !== before || bound.gold !== bound.components.reduce((sum, term) => sum + finite(term.valueGold, 'loss bound component', 0), 0)
+        || !bound.targetId || alternative.withoutResourcesGold !== null)
+        throw new Error('Invalid imported task loss upper bound');
+      finite(bound.gold, 'imported loss upper bound', 0);
+    }
+    if (alternative.committed && alternative.withoutResourcesStatus === 'unknown' && !bound) {
       unknown.add(alternative.objectiveId);
       continue;
     }
     const after = alternative.withoutResourcesStatus === 'feasible' ? Math.max(0, alternative.withoutResourcesGold!) : 0;
-    const marginalGold = Math.max(0, before - after);
-    if (marginalGold > 0) candidates.push({ objectiveId: alternative.objectiveId, unitIds: ids,
+    const marginalGold = bound ? bound.gold : Math.max(0, before - after);
+    const priced = { objectiveId: alternative.objectiveId, unitIds: ids,
       ...(production.length ? { production } : {}),
       marginalGold, withResourcesGold: before, withoutResourcesGold: alternative.withoutResourcesGold,
-      basis: alternative.withoutResourcesStatus === 'unknown' ? 'conservative-bound' : 'exact' });
+      basis: bound ? 'upper-bound' as const : alternative.withoutResourcesStatus === 'unknown' ? 'conservative-bound' as const : 'exact' as const,
+      ...(bound ? { upperBound: bound } : {}) };
+    if (marginalGold > 0) candidates.push(priced);
+    if (alternative.committed) {
+      const previous = displacements.findIndex(value => value.objectiveId === priced.objectiveId);
+      if (previous < 0) displacements.push(priced);
+      else if (displacements[previous]!.marginalGold < priced.marginalGold) displacements[previous] = priced;
+    }
   }
   if (unknown.size) return { window, status: 'unknown', objectiveIds: [...unknown].sort(),
     reason: { code: 'committed-opportunity-cost-unknown' } };
@@ -175,9 +191,14 @@ export function quoteOpportunityCost(window: ValuationWindow, alternatives: read
     production.push(...candidate.production ?? []);
     return true;
   });
-  return { window, status: 'known', gold: finite(selected.reduce((sum, item) => sum + item.marginalGold, 0),
+  // Actual leases are disjoint authority. A high speculative alternative that
+  // overlaps several old tasks must not hide their combined displacement loss.
+  // This floor preserves that loss without charging the same units twice.
+  displacements.sort((a, b) => a.objectiveId < b.objectiveId ? -1 : a.objectiveId > b.objectiveId ? 1 : 0);
+  return { window, status: 'known', gold: finite(Math.max(selected.reduce((sum, item) => sum + item.marginalGold, 0),
+    displacements.reduce((sum, item) => sum + item.marginalGold, 0)),
     'bundle opportunity cost', 0), basis: selected.length ? 'feasible-bundle-quotes' : 'no-positive-feasible-alternative',
-    alternatives: selected };
+    alternatives: selected, ...(displacements.length ? { displacements } : {}) };
 }
 
 /** Gross passes never call the opportunity oracle. Net quotes may enter the

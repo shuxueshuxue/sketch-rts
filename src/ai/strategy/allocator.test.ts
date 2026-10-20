@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createGame, snapshotGame } from '../../shared/sim';
 import { createUnit } from '../../shared/map';
-import type { AllocationMethodProvider, ExecutableMethod, MethodAllocationQuote, StrategyAllocationInput } from './allocation-types';
+import type { AllocationMethodProvider, ExecutableMethod, MethodAllocationQuote, StrategyAllocationInput, StrategyAllocationMemory } from './allocation-types';
 import { allocateStrategy } from './allocator';
 import { allocationResponseCandidates } from './allocation-eligibility';
 import { createStrategyAllocationMemory } from './control';
@@ -85,6 +85,40 @@ describe('deterministic whole-bundle allocation', () => {
     expect(result.memory.events.some(event => event.kind === 'preempted')).toBe(false);
     expect(result.memory.objectives.single).toBeDefined();
     expect(result.memory.leases['unit:two']?.objectiveId).toBe('single');
+  });
+
+  it('admits only imported losses by a same-window upper bound and records its composition', () => {
+    const { input } = fixture();
+    const initial = allocateStrategy({ ...input, objectives: input.objectives.slice(0, 1), methods: input.methods.slice(0, 1) });
+    const previous = { ...initial.memory, leases: Object.fromEntries(Object.entries(initial.memory.leases).map(([key, lease]) => [key,
+      { ...lease, origin: 'imported-task' as const, incumbentTask: { source: 'naval.ferries', taskId: 'observed-old-ferry' } }])) };
+    const later: StrategyAllocationInput = { ...input, objectives: input.objectives.slice(1), methods: input.methods.slice(1), previous,
+      snapshot: { ...input.snapshot, tick: 500 }, situation: { ...input.situation, tick: 500 }, switchingCost: () => 50,
+      handoffImported: requests => requests.map(request => ({ eventId: request.eventId, disposition: 'shrink' })) };
+    const bounded = (gold: number): NonNullable<StrategyAllocationInput['importedUpperBound']> => (_id, window) => ({
+      targetId: 'mine', gold, window, components: [{ code: 'full-potential', valueGold: gold, factIds: ['mine'] }] });
+    const unknown = allocateStrategy(later);
+    expect(unknown.memory.leases['unit:one']!.objectiveId).toBe('pair');
+    let memory: StrategyAllocationMemory = previous;
+    for (let think = 0; think < 3; think++) {
+      const request = { ...later, previous: memory, snapshot: { ...later.snapshot, tick: 500 + think * 15 },
+        situation: { ...later.situation, tick: 500 + think * 15 }, importedUpperBound: bounded(100) };
+      const result = allocateStrategy(request);
+      expect(JSON.stringify(allocateStrategy({ ...request, previous: JSON.parse(JSON.stringify(memory)) }))).toBe(JSON.stringify(result));
+      memory = result.memory;
+    }
+    expect(memory.leases['unit:one']!.objectiveId).toBe('single');
+    expect(memory.events.find(event => event.kind === 'preempted')).toMatchObject({ kind: 'preempted',
+      quotation: { marginalBenefitGold: 300, displacedLossGold: 100, switchingCostGold: 50,
+        displacedLoss: { kind: 'upper-bound', bound: { targetId: 'mine', gold: 100,
+          components: [{ code: 'full-potential', valueGold: 100, factIds: ['mine'] }] } } } });
+    const ready = { ...previous, objectives: { pair: { ...previous.objectives.pair!, challengerId: 'single', challengerThinks: 2 } } };
+    expect(allocateStrategy({ ...later, previous: ready, importedUpperBound: bounded(250) }).memory.leases['unit:one']!.objectiveId).toBe('pair');
+    expect(allocateStrategy({ ...later, previous: ready, importedUpperBound: bounded(0) }).memory.leases['unit:one']!.objectiveId).toBe('single');
+    let calls = 0;
+    const formal = allocateStrategy({ ...later, previous: initial.memory, importedUpperBound: (...args) => { calls++; return bounded(0)(...args); } });
+    expect(calls).toBe(0);
+    expect(formal.memory.leases['unit:one']!.objectiveId).toBe('pair');
   });
 
   it('keeps unknown/blocked prerequisites outside feasible allocation and rejects hidden recruitment', () => {

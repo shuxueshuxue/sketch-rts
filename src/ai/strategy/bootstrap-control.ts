@@ -22,6 +22,7 @@ import { importExecutedIncumbents, incumbentTasks, withFormalCommitments } from 
 import { handoffIncumbent } from './incumbent-handoff';
 import { incumbentCommandActor, inheritIncumbentCommand } from './incumbent-command-source';
 import { incumbentDisposition, recordCandidateReassignment, recordIncumbentCommands } from './incumbent-evidence';
+import { importedMiningLossUpperBound } from './imported-loss-bound';
 import { createStrategyCommandGateway, type StrategyCommandProposal } from './command-gateway';
 
 export type BootstrapStrategyOutput = Readonly<{ decision: StrategyDecision; project?: () => StrategyPlanTrace }>;
@@ -78,6 +79,10 @@ export function planControlledBootstrapCommands(snapshot: GameSnapshot, owner: P
   let handoffPolicy: typeof policy | undefined;
   const allocation = withAllocationArrivalQuery(snapshot, owner, policy, fixedVoyageArrival => allocateStrategy({ snapshot,
     situation, objectives: evaluation.objectives, methods, providers, previous: imported, fixedVoyageArrival,
+    importedUpperBound: (objectiveId, window) => {
+      const targetId = imported.objectives[objectiveId]?.target.entityId;
+      return targetId ? importedMiningLossUpperBound(situation, evaluation.objectives, targetId, window) : null;
+    },
     prepareVoyageRisks: materialized => prepareAllocationVoyageRisks(snapshot, owner, policy, materialized),
     switchingCost: request => nativeSwitchCost(snapshot, request.resourceKeys),
     handoffImported(requests) {

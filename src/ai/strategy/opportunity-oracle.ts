@@ -1,4 +1,4 @@
-import type { OpportunityAlternative, OpportunityRequest, OpportunityCostQuote, ValuationWindow, ProductionUse } from './types';
+import type { ImportedLossUpperBound, OpportunityAlternative, OpportunityRequest, OpportunityCostQuote, ValuationWindow, ProductionUse } from './types';
 import { quoteOpportunityCost } from './utility';
 import { canonicalProductionUses, productionUsesOverlap } from './production-use';
 
@@ -27,6 +27,8 @@ export function createOpportunityOracle(sources: readonly BundleValuationSource[
   effectKeysFor: (objectiveId: string) => readonly string[];
   unpricedCommitmentsFor?: (unitIds: readonly string[]) => readonly string[];
   unpricedProductionFor?: (uses: readonly ProductionUse[]) => readonly string[];
+  importedUpperBoundFor?: (objectiveId: string, window: ValuationWindow) => Readonly<{
+    unitIds: readonly string[]; bound: ImportedLossUpperBound }> | null;
 }>): (request: OpportunityRequest) => OpportunityCostQuote {
   if (new Set(sources.map(source => source.id)).size !== sources.length) throw new Error('Duplicate strategy valuation source');
   const ordered = [...sources].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
@@ -70,6 +72,9 @@ export function createOpportunityOracle(sources: readonly BundleValuationSource[
         withResourcesGold: before.score, withoutResourcesGold: after.status === 'feasible' ? after.score : null,
         withoutResourcesStatus: after.status, committed: source.committed };
       const marginal = Math.max(0, before.score - (after.status === 'feasible' ? Math.max(0, after.score) : 0));
+      // A speculative substitute cannot erase the receipt-backed loss needed
+      // to admit a real handoff, even when their terminal effects coincide.
+      if (source.committed) { alternatives.push(alternative); continue; }
       // Methods with the same effect are substitutes. Preserve the best offer;
       // effects may contain several keys, so remove any replaced offer once.
       const duplicate = source.effectKeys.map(key => effects.get(key)).filter(value => value !== undefined);
@@ -82,6 +87,13 @@ export function createOpportunityOracle(sources: readonly BundleValuationSource[
       alternatives.push(alternative);
       const entry = { alternative, marginal };
       for (const key of source.effectKeys) effects.set(key, entry);
+    }
+    for (const objectiveId of [...unknown].sort()) {
+      const candidate = options.importedUpperBoundFor?.(objectiveId, request.window);
+      if (!candidate) continue;
+      alternatives.push({ objectiveId, unitIds: candidate.unitIds, committed: true,
+        withResourcesGold: candidate.bound.gold, withoutResourcesGold: null, withoutResourcesStatus: 'unknown', upperBound: candidate.bound });
+      unknown.delete(objectiveId);
     }
     return quoteOpportunityCost(request.window, alternatives, [...unknown]);
   };

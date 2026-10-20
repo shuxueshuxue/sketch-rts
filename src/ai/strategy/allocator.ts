@@ -1,5 +1,5 @@
 import type { AllocationEta, AllocationMethodProvider, AllocationMethodQuoteInput, ExecutableMethod,
-  FormalAssignment, MethodAllocationQuote, ResourceLease, StrategyAllocationDecision,
+  FormalAssignment, MethodAllocationQuote, PreemptionQuotation, ResourceLease, StrategyAllocationDecision,
   StrategyAllocationInput, StrategyAllocationMemory } from './allocation-types';
 import { allocationGrants, advanceAllocationGraph, appendAllocationEvent, actionDependencySatisfied,
   observeAllocationOrders, pruneAllocationProvenance, settleAllocationState, advanceAllocationLeases } from './allocation-lifecycle';
@@ -363,6 +363,15 @@ export function allocateStrategy(input: StrategyAllocationInput): StrategyAlloca
       return lease && !sources.some(source => source.objectiveId === lease.objectiveId && source.committed && productionUsesOverlap(source.production ?? [], [use]))
         ? [lease.objectiveId] : [];
     }))],
+    importedUpperBoundFor: (id, window) => {
+      const leases = Object.values(memory.leases).filter(lease => lease.objectiveId === id);
+      // An unavailable formal-plan quote cannot be replaced with the migration
+      // envelope. Only already adopted, actual producer orders qualify.
+      if (!leases.length || leases.some(lease => lease.origin !== 'imported-task' || !lease.incumbentTask)) return null;
+      const bound = input.importedUpperBound?.(id, window);
+      return bound ? { bound, unitIds: leases.filter(lease => lease.resourceKey.startsWith('unit:'))
+        .map(lease => lease.resourceKey.slice(5)).sort() } : null;
+    },
   });
   for (const offer of offers) {
     if (offer.gross.status !== 'feasible') continue;
@@ -409,12 +418,14 @@ export function allocateStrategy(input: StrategyAllocationInput): StrategyAlloca
     if (conflicts.some(lease => selected.has(lease.objectiveId))) continue;
     let failed = false, switchingGold = 0;
     const transfers: { fromId: string; taken: ResourceLease[]; resourceKeys: ResourceLease['resourceKey'][];
-      cost: number; loss: number; eventId: string }[] = [];
+      cost: number; loss: number; displacedLoss: NonNullable<PreemptionQuotation['displacedLoss']>; eventId: string }[] = [];
     for (const fromId of [...new Set(conflicts.map(lease => lease.objectiveId))].sort()) {
       const taken = conflicts.filter(lease => lease.objectiveId === fromId), resourceKeys = taken.map(lease => lease.resourceKey).sort();
       const cost = input.switchingCost?.({ fromObjectiveId: fromId, toObjectiveId: offer.objective.id, resourceKeys });
       const alternate = quote.valuation?.opportunity;
-      const loss = alternate?.status === 'known' ? alternate.alternatives.find(alternative => alternative.objectiveId === fromId)?.marginalGold : undefined;
+      const priced = alternate?.status === 'known' ? (alternate.displacements ?? alternate.alternatives)
+        .find(alternative => alternative.objectiveId === fromId) : undefined;
+      const loss = priced?.marginalGold;
       if (cost === undefined || cost === null || loss === undefined || !Number.isFinite(cost) || cost < 0
         || quote.utility.score <= cost) { failed = true; break; }
       switchingGold += cost;
@@ -428,7 +439,12 @@ export function allocateStrategy(input: StrategyAllocationInput): StrategyAlloca
         memory = { ...memory, objectives: { ...memory.objectives, [fromId]: { ...old, challengerId: offer.objective.id, challengerThinks } } };
         if (tick < old.minimumStayUntilTick || challengerThinks < STRATEGY_PARAMETERS.challengerThinks) { failed = true; break; }
       }
-      transfers.push({ fromId, taken, resourceKeys, cost, loss,
+      const displacedLoss: NonNullable<PreemptionQuotation['displacedLoss']> = priced?.upperBound
+        ? { kind: 'upper-bound', bound: priced.upperBound } : { kind: 'remaining-utility' };
+      if (displacedLoss.kind === 'upper-bound' && taken.some(lease => lease.origin !== 'imported-task')) {
+        failed = true; break;
+      }
+      transfers.push({ fromId, taken, resourceKeys, cost, loss, displacedLoss,
         eventId: `${owner}:allocation:${memory.nextEventSequence + transfers.length}` });
     }
     if (failed || switchingGold >= quote.utility.score && transfers.length) continue;
@@ -439,15 +455,16 @@ export function allocateStrategy(input: StrategyAllocationInput): StrategyAlloca
     // No authority changes occur until every displacement price and producer
     // acknowledgement is available for this entire bundle.
     for (const transfer of transfers) {
-      const { fromId, taken, resourceKeys, cost, loss } = transfer;
+      const { fromId, taken, resourceKeys, cost, loss, displacedLoss } = transfer;
       const token = memory.executions[taken[0]!.action.actionId]?.token ?? taken[0]!.action;
       const remaining = Object.values(memory.assignments).filter(assignment => assignment.objectiveId === fromId
         && !resourceKeys.includes(`unit:${assignment.unitId}`));
       const handoff = acknowledgements.find(ack => ack.eventId === transfer.eventId)?.disposition ?? (remaining.length ? 'shrink' : 'pause');
       memory = appendAllocationEvent(memory, { objectiveId: fromId, methodId: taken[0]!.methodId, action: token, kind: 'preempted', handoff,
         quotation: { fromObjectiveId: fromId, toObjectiveId: offer.objective.id, resourceKeys,
-          marginalBenefitGold: quote.utility.score + loss, displacedLossGold: loss, switchingCostGold: cost,
-          reason: { code: 'same-window-marginal-reallocation', factIds: resourceKeys, values: {} } },
+          marginalBenefitGold: quote.utility.score + loss, displacedLossGold: loss, displacedLoss, switchingCostGold: cost,
+          reason: { code: displacedLoss.kind === 'upper-bound' ? 'same-window-imported-loss-upper-bound' : 'same-window-marginal-reallocation',
+            factIds: resourceKeys, values: {} } },
         reason: { code: 'higher-marginal-utility-after-switching', factIds: resourceKeys, values: {} } }, tick);
       const leases = { ...memory.leases }, assignments = { ...memory.assignments };
       for (const lease of taken) { delete leases[lease.resourceKey]; delete assignments[`assignment:${lease.resourceKey.slice(5)}`]; }

@@ -61,7 +61,7 @@ const stats = Object.fromEntries(owners.map(owner => [owner, { combatUnitSeconds
   interruptedForceSeconds: 0, outwardForceSeconds: 0, taskUnknownForceSeconds: 0,
   aba: { formalCombat: null as number | null, inferredCombatCandidates: 0, inferredWorkerErrands: 0,
     nativeOrderSupportedCombatCandidates: 0, uncorroboratedCombatChanges: 0 }, formalCompletedObjectives: null as number | null,
-  nativeNewCompletedHalls: 0, preemptions: {} as Record<string, number>, candidateReassignments: 0,
+  nativeNewCompletedHalls: 0, preemptions: {} as Record<string, number>, upperBoundPreemptions: 0, candidateReassignments: 0,
   maximumAllocationBytes: 0, hallsLostWithArmyElsewhere: 0 }]));
 const outward = (task: AiDeathTask | null) => !!task && (task.clearing || ['attack', 'attack-site', 'raid', 'island',
   'contest-route', 'counter-harass', 'naval-combat'].includes(task.kind));
@@ -121,6 +121,7 @@ function observeThink(snapshot: GameSnapshot, owner: string) {
   for (const event of allocation.events) if (!seenEvents.has(event.id)) {
     seenEvents.add(event.id); emit({ owner, kind: 'allocation-event', event });
     if (event.kind === 'preempted') stats[owner]!.preemptions[event.reason.code] = (stats[owner]!.preemptions[event.reason.code] ?? 0) + 1;
+    if (event.kind === 'preempted' && event.quotation.displacedLoss?.kind === 'upper-bound') stats[owner]!.upperBoundPreemptions++;
     const kind: string = event.kind;
     if (kind === 'candidate-reassigned') stats[owner]!.candidateReassignments++;
   }

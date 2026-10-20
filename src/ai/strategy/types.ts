@@ -186,6 +186,13 @@ export type ValuationWindow = Readonly<{ taskTicks: number; holdingTicks: number
 /** Half-open relative tick interval. Native training and research advance in
  * independent lanes, even when they belong to the same building. */
 export type ProductionUse = Readonly<{ buildingId: string; lane: 'training' | 'research'; fromTicks: number; throughTicks: number }>;
+/** Migration-only bound on an executed old task, not its invented exact value. */
+export type ImportedLossUpperBound = Readonly<{ targetId: string; gold: number; window: ValuationWindow;
+  components: readonly Readonly<{ code: string; valueGold: number; factIds: readonly string[] }>[] }>;
+export type PricedOpportunityAlternative = Readonly<{ objectiveId: ObjectiveId; unitIds: readonly string[];
+  production?: readonly ProductionUse[]; marginalGold: number; withResourcesGold: number;
+  withoutResourcesGold: number | null; basis: 'exact' | 'conservative-bound' | 'upper-bound';
+  upperBound?: ImportedLossUpperBound }>;
 export type OpportunityAlternative = Readonly<{
   objectiveId: ObjectiveId;
   unitIds: readonly string[];
@@ -194,11 +201,13 @@ export type OpportunityAlternative = Readonly<{
   withoutResourcesGold: number | null;
   withoutResourcesStatus: 'feasible' | 'not-runnable' | 'unknown';
   committed: boolean;
+  upperBound?: ImportedLossUpperBound;
 }>;
 export type OpportunityCostQuote = Readonly<{ window: ValuationWindow }> & (
   | Readonly<{ status: 'known'; gold: number; basis: 'feasible-bundle-quotes' | 'no-positive-feasible-alternative';
-    alternatives: readonly Readonly<{ objectiveId: ObjectiveId; unitIds: readonly string[]; production?: readonly ProductionUse[]; marginalGold: number;
-      withResourcesGold: number; withoutResourcesGold: number | null; basis: 'exact' | 'conservative-bound' }>[] }>
+    alternatives: readonly PricedOpportunityAlternative[];
+    /** All actual displacements survive portfolio deduplication for admission. */
+    displacements?: readonly PricedOpportunityAlternative[] }>
   | Readonly<{ status: 'unknown'; objectiveIds: readonly ObjectiveId[]; reason: Readonly<{ code: string }> }>
 );
 export type OpportunityRequest = Readonly<{ objectiveId: ObjectiveId; methodId: MethodId | null;

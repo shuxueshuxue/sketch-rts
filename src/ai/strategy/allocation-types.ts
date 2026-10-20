@@ -4,7 +4,8 @@ import type { VoyageRiskStages } from './voyage-risk';
 import type { ExecutorReason } from '../executor-reasons';
 import type { DecisionFacts } from './decision';
 import type { AssignmentId, AssignmentStage, BudgetEntry, Effect, LandId, Location, Method, MethodId, Objective,
-  ObjectiveId, Precondition, ResourceDemand, Situation, Subgoal, Target, UnitRole, Utility, CrossingEta, ValuationContext, ValuationQuotation, Arrival } from './types';
+  ObjectiveId, Precondition, ResourceDemand, Situation, Subgoal, Target, UnitRole, Utility, CrossingEta, ValuationContext,
+  ValuationQuotation, ValuationWindow, ImportedLossUpperBound, Arrival } from './types';
 
 /** Formal control contracts. No executor registration or behavior is enabled by these types. */
 export type ActionId = string;
@@ -279,6 +280,7 @@ export type PreemptionQuotation = Readonly<{
   /** null blocks stealing; an unpriced incumbent does not cost zero. */
   marginalBenefitGold: number | null;
   displacedLossGold: number | null;
+  displacedLoss?: Readonly<{ kind: 'remaining-utility' } | { kind: 'upper-bound'; bound: ImportedLossUpperBound }>;
   switchingCostGold: number | null;
   reason: AllocationReason;
 }>;
@@ -445,6 +447,8 @@ export type StrategyAllocationInput = Readonly<{
    * pricing. Called once; providers cannot advance sampling themselves. */
   prepareVoyageRisks?: (methods: readonly ExecutableMethod[]) => ReadonlyMap<string, VoyageRiskStages>;
   fixedVoyageArrival?: AllocationMethodQuoteInput['fixedVoyageArrival'];
+  /** Verified optimistic target envelope only for imported-task leases. */
+  importedUpperBound?: (objectiveId: string, window: ValuationWindow) => ImportedLossUpperBound | null;
   /** Current, explicit switching quote. Missing/unknown prices cannot authorize
    * taking an executed incumbent's resource. */
   switchingCost?: (request: Readonly<{ fromObjectiveId: string; toObjectiveId: string;
