@@ -329,6 +329,8 @@ export function transportExpectedLoss(input: Readonly<{
   const waitingPassengerGold = valuation.passengerGold - initialPassengerGold;
   const hullLossGold = (1 - successProbability) * input.shipResidualGold;
   const passengerLossGold = (1 - successProbability) * initialPassengerGold + waitingSinkingProbability * waitingPassengerGold;
+  const passengerLosses = valuation.passengers.map(passenger => ({ unitId: passenger.unitId,
+    valueGold: passenger.catalogGold * (initial.has(passenger.unitId) ? 1 - successProbability : waitingSinkingProbability) }));
   return { status: 'known' as const, successProbability, waitingSinkingProbability, initialPassengerGold, waitingPassengerGold,
-    hullLossGold, passengerLossGold, expectedLossGold: hullLossGold + passengerLossGold };
+    hullLossGold, passengerLossGold, passengerLosses, expectedLossGold: hullLossGold + passengerLossGold };
 }
