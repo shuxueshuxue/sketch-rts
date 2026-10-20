@@ -14,9 +14,10 @@ import { isBacklineKind } from '../policy/v6/backline';
 import { recordPlay, v6Memory } from '../policy/v6/memory';
 import { v6Doctrine } from '../policy/v6/select';
 import { strengthOf } from '../policy/v6/strength';
-import { activeCamp, campContested, continueV7Creep, creepForce, forceFor, neutralCamps, CREEP_ASSEMBLED_RANGE, V7_GATHERED_RANGE, CREEP_ROUTE_CLEARANCE, EXPANSION_GUARD_RANGE } from '../policy/v7/creep';
+import { activeCamp, campContested, continueV7Creep, creepForce, forceFor, neutralCamps, unavailableClearingReason, CREEP_ASSEMBLED_RANGE, V7_GATHERED_RANGE, CREEP_ROUTE_CLEARANCE, EXPANSION_GUARD_RANGE } from '../policy/v7/creep';
 import { bootstrapExpansionMine } from './expansion-target';
-import { bootstrapCampApproach, campRecruitRoadClear, chooseBootstrapCamp, startBootstrapCamp } from './camp-geometry';
+import { assessBootstrapCamp, bootstrapCampApproach, campRecruitRoadClear, startBootstrapCamp } from './camp-geometry';
+import { recordExecutorReason } from '../executor-reasons';
 import { miningJobDefenseTarget } from './mining-job-defense';
 import { mineClaimedByAlly } from '../policy/mine-claims';
 import { miningRallyAssignment } from './mining-rally';
@@ -49,6 +50,7 @@ export function prepareExpansionMission(snapshot: GameSnapshot, owner: PlayerId,
   const memory = options.memory, v6 = v6Memory(options);
   migrateExpansionClaims(snapshot, memory);
   let task = memory.landExpansion;
+  if (task) delete task.reason;
   // Arrived defenders return to the general's combat view, but still belong to the mine defense.
   // Neither retaining yesterday's escorts nor recruiting today may take them from that task.
   const defending = new Set(snapshot.units.filter(unit => {
@@ -63,6 +65,9 @@ export function prepareExpansionMission(snapshot: GameSnapshot, owner: PlayerId,
     if (task) {
       if (task.stage !== 'fund') recordPlay(v6, 'expansion:needsFunds');
       task.stage = 'fund';
+      task.reason = 'saving-hall-capital';
+      recordExecutorReason(options, { executor: 'expansion.prepare', outcome: 'blocked', reason: 'insufficient-hall-capital',
+        taskId: `expansion:${task.mineId}:${task.sinceTick}`, targetIds: [task.mineId] });
       // No expedition can depart without capital. Release ownership too, so the mine-defense
       // leash does not mistake these now-free soldiers for an active construction screen.
       for (const id of expansionMissionUnitIds(memory)) {
@@ -80,15 +85,23 @@ export function prepareExpansionMission(snapshot: GameSnapshot, owner: PlayerId,
     task.stage = hall.complete ? 'complete' : 'build';
     // Prepare the post during construction, while the expedition already covers this mine.
     const ready = expansionGarrisonReady(snapshot, owner, options, task.mineId);
+    task.reason = !hall.complete ? 'building-hall' : ready ? 'garrison-established' : 'await-garrison';
     if (hall.complete && !ready) return task;
   }
   if (!task || task.stage === 'complete' || !mine || hall && hall.owner !== owner || mineClaimedByAlly(snapshot, owner, mine, options)) {
+    if (task && task.stage !== 'complete') recordExecutorReason(options, { executor: 'expansion.prepare', outcome: 'abandoned',
+      reason: !mine ? snapshot.resources.some(resource => resource.id === task!.mineId) ? 'mine-exhausted' : 'mine-missing'
+        : hall && hall.owner !== owner ? 'mine-occupied' : 'ally-mine-claim',
+      taskId: `expansion:${task.mineId}:${task.sinceTick}`, targetIds: [task.mineId] });
     const { strategy } = v6Doctrine(snapshot, owner, options);
     const phase = strategy.phases[Math.min(v6.phase ?? 0, strategy.phases.length - 1)];
     const wanted = Math.max(0, ...(phase?.wants ?? []).map(want => 'bases' in want ? want.bases : 0));
     if (wanted <= activeMiningBaseCount(snapshot, owner)) return undefined;
     const next = bootstrapExpansionMine(snapshot, owner, intel, options);
-    if (!next) return undefined;
+    if (!next) {
+      recordExecutorReason(options, { executor: 'expansion.prepare', outcome: 'blocked', reason: 'no-eligible-expansion-target' });
+      return undefined;
+    }
     for (const id of expansionMissionUnitIds(memory)) forgetExpansionMember(memory, id);
     task = memory.landExpansion = { mineId: next.id, sinceTick: snapshot.tick, stage: 'assemble', interruptions: [] };
     // A purchasing visit is optional. Recall the opening courier to the expansion screen; ferries and medical care
@@ -112,6 +125,9 @@ export function prepareExpansionMission(snapshot: GameSnapshot, owner: PlayerId,
   const miningThreat = rally ?? miningJobDefenseTarget(snapshot, owner, intel, options);
   const reason = homeThreat ? 'home-threat' : miningThreat ? 'mining-threat' : mineThreat ? 'mine-threat' : undefined;
   if (reason) {
+    task.reason = `paused:${reason}`;
+    recordExecutorReason(options, { executor: 'expansion.prepare', outcome: 'paused', reason,
+      taskId: `expansion:${task.mineId}:${task.sinceTick}`, targetIds: [task.mineId] });
     if (!task.paused) {
       task.interruptions.push({ tick: snapshot.tick, reason,
         ...((homeThreat ?? mineThreat) ? { targetId: (homeThreat ?? mineThreat)!.id } : {}) });
@@ -190,7 +206,7 @@ export function expansionMissionCommands(snapshot: GameSnapshot, owner: PlayerId
   const state = { ...shared };
   delete state.general; delete state.creep; delete state.creepRetry;
   Object.assign(state, task.combat);
-  const mission = { ...options, memory: { ...options.memory, v6: state } };
+  const mission = { ...options, executorTaskId: `expansion:${task.mineId}:${task.sinceTick}`, memory: { ...options.memory, v6: state } };
   const contestedBefore = shared.plays['creep:enemy'] ?? 0;
   const commands = planExpansionScreen(snapshot, owner, mission, intel);
   if ((shared.plays['creep:enemy'] ?? 0) > contestedBefore) {
@@ -216,15 +232,28 @@ function planExpansionScreen(snapshot: GameSnapshot, owner: PlayerId, options: A
 export function planMiningScreen(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, intel: V6Intel,
   task: MiningMissionMemory, front: Unit[]): GameCommand[] {
   const mine = snapshot.resources.find(mine => mine.id === task.mineId)!, memory = v6Memory(options), home = intel.home;
-  if (!front.length) return [];
+  if (!front.length) {
+    const ids = task.combat?.creep?.group ?? [];
+    const reason = ids.length ? unavailableClearingReason(snapshot, owner, ids, options) : 'no-mining-screen-units';
+    task.reason = `blocked:${reason}`;
+    recordExecutorReason(options, { executor: 'mining.screen', outcome: 'blocked', reason, targetIds: [task.mineId], unitIds: ids });
+    return [];
+  }
   const camps = neutralCamps(snapshot), guard = camps.find(camp => distance(camp.center, mine) <= EXPANSION_GUARD_RANGE);
   if (guard) {
+    let blockedReason: string | undefined;
     const active = memory.creep && activeCamp(memory.creep, camps);
     if (task.roadCamp && (!active || distance(active.center, task.roadCamp) > 300)) delete task.roadCamp;
-    if (memory.creep && active !== guard && !task.roadCamp) delete memory.creep;
+    if (memory.creep && active !== guard && !task.roadCamp) {
+      if (active) recordExecutorReason(options, { executor: 'mining.screen', outcome: 'abandoned', reason: 'clearing-target-superseded',
+        targetIds: active.creeps.map(unit => unit.id), unitIds: [...memory.creep.group] });
+      delete memory.creep;
+    }
     if (!memory.creep) {
       const fighting = front.filter(unit => unit.hp >= unit.maxHp * V7_WOUNDED_SHARE);
-      let choice = chooseBootstrapCamp(home, snapshot, fighting, camps, [guard], options, mine);
+      const assessment = assessBootstrapCamp(home, snapshot, fighting, camps, [guard], options, mine);
+      let choice = assessment.choice;
+      blockedReason = assessment.reason;
       if (!choice && Object.keys(options.memory.expansionGarrisons ?? {}).length > 0) {
         // A camp on the expedition's actual road is part of reaching this mine.
         // Keep the mine as the parent objective; do not wait forever merely
@@ -237,7 +266,7 @@ export function planMiningScreen(snapshot: GameSnapshot, owner: PlayerId, option
           .filter(item => item.at >= 0).sort((a, b) => a.at - b.at);
         const blocker = blockers[0]?.camp;
         if (blocker && !campContested(intel, blocker.center, front)) {
-          choice = chooseBootstrapCamp(home, snapshot, fighting, camps, [blocker], options, blocker.center);
+          choice = assessBootstrapCamp(home, snapshot, fighting, camps, [blocker], options, blocker.center).choice;
           if (choice) { task.roadCamp = { ...blocker.center }; recordPlay(memory, 'expansion:clearRoad'); }
         }
       }
@@ -248,7 +277,7 @@ export function planMiningScreen(snapshot: GameSnapshot, owner: PlayerId, option
       && unit.hp >= unit.maxHp * V7_WOUNDED_SHARE && !['cast', 'charge'].includes(unit.order.type)) : [];
     const arrived = state ? recruits.filter(unit => distance(unit, state.staging) <= V7_GATHERED_RANGE) : [];
     state?.group.push(...arrived.map(unit => unit.id));
-    const under = continueV7Creep(snapshot, owner, front, camps, intel, options);
+    const under = continueV7Creep(snapshot, owner, front, camps, intel, options, reason => { blockedReason = reason; });
     if (under) {
       const walking = state && target ? recruits.filter(unit => !arrived.includes(unit)
         && campRecruitRoadClear(snapshot, unit, state.staging, camps, target)
@@ -256,13 +285,19 @@ export function planMiningScreen(snapshot: GameSnapshot, owner: PlayerId, option
       if (walking.length) under.commands.push(resolveAiCommandIntent(snapshot, owner,
         { type: 'move', unitIds: walking.map(unit => unit.id), ...state!.staging }, options));
       task.stage = 'clear';
+      task.reason = state?.stage === 'gather' ? 'gathering-clearing-party' : 'clearing-camp';
       memory.general = { mode: 'creep', target: under.point };
       return under.commands;
     }
     task.stage = 'assemble';
+    task.reason = blockedReason === 'insufficient-clearing-force' ? 'await-clearing-force' : `blocked:${blockedReason ?? 'clearing-party-unavailable'}`;
   } else {
+    const active = activeCamp(memory.creep, camps);
+    if (active) recordExecutorReason(options, { executor: 'mining.screen', outcome: 'abandoned', reason: 'clearing-prerequisite-no-longer-needed',
+      targetIds: active.creeps.map(unit => unit.id), unitIds: [...memory.creep!.group] });
     delete memory.creep; delete task.roadCamp;
     if (task.stage !== 'build') task.stage = 'escort';
+    task.reason ??= task.stage === 'build' ? 'building-hall' : 'escorting-construction-site';
   }
   // Assemble on the camp's safe approach while recruits arrive. Once clear, stay with the mine.
   if (task.stage === 'assemble' && front.length >= 3 && !task.staging

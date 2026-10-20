@@ -3,6 +3,7 @@ import type { GameSnapshot, PlayerId } from '../shared/types';
 import type { AiPolicyMemory, MiningMissionMemory } from './memory';
 import type { StrategyPlanTrace } from './strategy/types';
 import type { AiDeathLedgerFrame } from './death-ledger-types';
+import { executorReasonsAt, type ExecutorReason } from './executor-reasons';
 
 /** Output only. Never stored in policy memory, snapshots, saves or command frames. */
 export type AiPlanStatus = 'active' | 'blocked' | 'done' | 'abandoned';
@@ -64,6 +65,8 @@ export type AiPlanTrace = {
   readonly strategy?: StrategyPlanTrace;
   /** Opt-in external simulation observation; never retained in policy memory. */
   deathLedger?: AiDeathLedgerFrame;
+  /** Exact blocked/abandoned branches from this think, held outside policy memory. */
+  executorReasons?: ExecutorReason[];
 };
 
 const STAGES = ['fund', 'assemble', 'clear', 'escort', 'build', 'complete'] as const;
@@ -107,20 +110,22 @@ export function buildAiPlanTrace(snapshot: GameSnapshot, owner: PlayerId, memory
   const mining = (task: MiningMissionMemory, kind: 'expansion' | 'island', source: string,
     extra?: { reason: string; abandonedTick?: number; landing: { x: number; y: number } }) => {
     const id = `${kind}:${task.mineId}:${task.sinceTick}`;
+    const recordedReason = task.reason ?? extra?.reason;
+    const waiting = recordedReason !== undefined && /^(await-|saving-|blocked:)/.test(recordedReason);
     const status: AiPlanStatus = extra?.abandonedTick !== undefined ? 'abandoned'
       : task.stage === 'complete' ? 'done' : task.paused || task.stage === 'fund' ? 'blocked'
-      : extra && /^(await-|saving-)/.test(extra.reason) ? 'blocked' : 'active';
+      : waiting ? 'blocked' : 'active';
     const last = task.interruptions.at(-1);
     const root = add({ id, kind, label: kind === 'island' ? '夺岛建矿' : '建立分矿', source, status,
       target: target(task.mineId, extra?.landing), sinceTick: task.sinceTick,
       resources: { unitIds: units([...expansionUnits(task.mineId), ...(task.combat?.creep?.group ?? [])]),
         gold: { reserved: null, required: task.stage === 'complete' ? 0 : BUILDING_DEFS.townHall.cost } },
-      reasons: [reason(task.paused ? last?.reason ?? 'paused' : extra?.reason ?? `stage:${task.stage}`,
-        task.paused ? `任务暂停：${last?.reason ?? '原因未记录'}` : extra?.reason ?? `当前阶段：${task.stage}`,
+      reasons: [reason(task.paused ? last?.reason ?? 'paused' : recordedReason ?? `stage:${task.stage}`,
+        task.paused ? `任务暂停：${last?.reason ?? '原因未记录'}` : recordedReason ?? `当前阶段：${task.stage}`,
         source, task.paused ? last?.tick : undefined)],
       requirements: task.paused ? [{ code: 'resume-after-threat', detail: '等待记录中的威胁解除', met: false }]
         : task.stage === 'fund' ? [{ code: 'town-hall-capital', detail: '等待建城资金', met: false }]
-        : extra && /^(await-|saving-)/.test(extra.reason) ? [{ code: extra.reason, detail: extra.reason, met: false }] : [],
+        : waiting ? [{ code: recordedReason, detail: recordedReason, met: false }] : [],
     });
     missions.set(task.mineId, root);
     const index = STAGES.indexOf(task.stage);
@@ -235,6 +240,8 @@ export function buildAiPlanTrace(snapshot: GameSnapshot, owner: PlayerId, memory
     roots, nodes, previousTick: previous?.owner === owner && previous.tick < snapshot.tick ? previous.tick : null, changes: [],
     limitations: ['utility-not-recorded', 'per-goal-gold-reservations-not-recorded', 'module-state-not-an-htn-search'],
   };
+  const executorReasons = executorReasonsAt(memory, snapshot.tick);
+  if (executorReasons) trace.executorReasons = executorReasons;
   trace.changes = compareAiPlanTraces(trace.previousTick !== null ? previous : undefined, trace);
   return trace;
 }
