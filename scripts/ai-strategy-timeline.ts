@@ -52,7 +52,7 @@ const loop = runAiGameLoop({ ...config, commandPlanner({ snapshot, owner, agent,
 });
 const sha = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const sorted = [...durations].sort((a, b) => a - b);
-const receipt = { source: config.source, name: config.name, mapId: config.mapId, owners: Object.keys(config.agents), tick: loop.snapshot.tick,
+const receipt = { source: config.source, codeRoot: base, name: config.name, mapId: config.mapId, owners: Object.keys(config.agents), tick: loop.snapshot.tick,
   host: hostname(), node: process.version, plannedCount, commandCount,
   plannedSha256: plannedHash.digest('hex'), commandSha256: commandHash.digest('hex'), snapshotSha256: sha(loop.snapshot),
   memorySha256: sha(Object.fromEntries(Object.entries(memories).map(([owner, memory]) => {

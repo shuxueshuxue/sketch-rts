@@ -1350,10 +1350,21 @@ export function moverDistanceField(map: Pick<GameMap, 'terrain'>, goal: Point, m
 function distanceFieldAnswer(state: TerrainRuntime, ground: TerrainRuntime, source: Pick<BoxField, 'box' | 'dist'>, scale: number): GroundDistanceField {
   const { box } = source;
   let maximum = 0;
-  for (const value of source.dist) if (value < UNREACHED && value > maximum) maximum = value;
+  for (let index = 0; index < source.dist.length; index++) {
+    const value = source.dist[index]!;
+    if (value < UNREACHED && value > maximum) maximum = value;
+  }
   // Exact integers, no quantization or saturation. An unusually long maze
   // retains Int32; 65535 is reserved only in the compact representation.
-  const dist = maximum < 65535 ? Uint16Array.from(source.dist, value => value >= UNREACHED ? 65535 : value) : source.dist;
+  let dist: Int32Array | Uint16Array = source.dist;
+  if (maximum < 65535) {
+    const packed = new Uint16Array(source.dist.length);
+    for (let index = 0; index < source.dist.length; index++) {
+      const value = source.dist[index]!;
+      packed[index] = value >= UNREACHED ? 65535 : value;
+    }
+    dist = packed;
+  }
   const unreached = dist instanceof Uint16Array ? 65535 : UNREACHED;
   const storage = { cells: dist.length, distanceBytes: dist.byteLength, descentBytes: 0 };
   const cellOf = (from: Point) => {
