@@ -4,10 +4,14 @@ type Unit = { id: string; x: number; y: number; radius: number; garrison?: { bui
 type Snap = { units: Unit[]; buildings: { id: string; x: number; y: number; radius: number }[]; effects: unknown[] };
 export default async function(s: Scene) {
   await s.room("templeSpring");
-  await s.api(`/api/rooms/${s.roomId}/reset`, { mapId: "bareDuel", options: { aiPlayers: [], scenario: {
+  const enemy = Object.keys((await s.snapshot() as Snap & { players: Record<string, unknown> }).players).find(owner => owner !== "player")!;
+  // The same open clearing as tower-trained-melee: tree canopies must not hide the platform in the proof shots.
+  const sites = [{ kind: "knight", x: 1200, y: 3800 }, { kind: "footman", x: 1200, y: 3560 },
+    { kind: "archer", x: 1600, y: 3560 }, { kind: "priest", x: 2000, y: 3560 }, { kind: "ogreLord", x: 1600, y: 3800 }];
+  await s.api(`/api/rooms/${s.roomId}/reset`, { mapId: "bareDuel", options: { players: ["player", enemy, "ally", "rival"], teams: { player: "a", [enemy]: "b", ally: "a", rival: "b" }, aiPlayers: [], layout: { seed: "ranged-aim-buffer", kind: "sides", idea: "openSides", size: 4096 }, races: { player: "grove", [enemy]: "grove" }, scenario: {
     replaceDefaultUnits: true, replaceDefaultMercenaryCamps: true,
-    addBuildings: [0, 1, 2, 3, 4].map(i => ({ id: `tower-${i}`, kind: "fortifiedTower", owner: "player", x: 1440 + i * 320, y: 2000, complete: true })),
-    addUnits: ["knight", "footman", "archer", "priest", "ogreLord"].map((kind, i) => ({ id: kind, kind, owner: "player", x: 1440 + i * 320, y: 2100 })),
+    addBuildings: sites.map((site, i) => ({ id: `tower-${i}`, kind: "fortifiedTower", owner: "player", x: site.x, y: site.y, complete: true })),
+    addUnits: sites.map(site => ({ id: site.kind, kind: site.kind, owner: "player", x: site.x, y: site.y + 100 })),
   } } });
   await s.reload(); await s.tick(1);
   const footKinds = ["footman", "archer", "priest", "ogreLord"];
@@ -21,7 +25,7 @@ export default async function(s: Scene) {
   for (const body of bodies) {
     await s.camera(body.tower.x, body.tower.y, .7); await s.select([body.id]); await s.wait(900); await s.shot(`${body.id.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`)}-on-tower-zoomed-out`);
   }
-  await s.camera(1440, 2000, .7); await s.select(["knight"]);
+  await s.camera(sites[0]!.x, sites[0]!.y, .7); await s.select(["knight"]);
   const accepted = await s.command({ type: "garrison", unitIds: ["knight"], buildingId: "tower-0" });
   await s.wait(250); await s.shot("knight-garrison-refusal");
   const status = await s.readDom("[data-status]");
