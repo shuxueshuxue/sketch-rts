@@ -6,7 +6,7 @@ import { unitAutoAcquireRadius, NEUTRAL_LEASH_RANGE, NEUTRAL_DAMAGE_RESPONSE_RAN
 export { AUTO_ACQUIRE_RANGE } from './combat-acquisition';
 import { AUTO_ACQUIRE_RANGE } from './combat-acquisition';
 import { continuingShipAim, shipAttackStation, shipCanAttackCoastTarget } from './ship-attack-station';
-import { simulationObservationActive, observeCommand, observeDamage, observeKill, observeRemoval } from './sim/observation';
+import { simulationObservationActive, observeCommand, observeDamage, observeKill, observeRemoval, observeMiningIncome } from './sim/observation';
 export { observeSimulation } from './sim/observation';
 export type { SimulationObservation, SimulationDamageEvent, SimulationKillEvent, SimulationRemovalEvent, SimulationCommandEvent } from './sim/observation';
 import { standingBodies, standsAsSeen, type StructureBody } from "./structure-bodies";
@@ -2023,7 +2023,9 @@ function updateMineOrder(game: Game, unit: Unit) {
   if (distance(unit, townHall) > TOWN_HALL_DROP_RANGE) { moveToward(unit, townHall.x, townHall.y, game.map, game.units); return; }
   if (isPlayerId(unit.owner)) {
     const player = playerState(game, unit.owner);
-    player.gold = addGold(player.gold, upkeepGoldIncome(unit.carryingGold, player.supplyUsed));
+    const creditedGold = upkeepGoldIncome(unit.carryingGold, player.supplyUsed);
+    player.gold = addGold(player.gold, creditedGold);
+    if (simulationObservationActive) observeMiningIncome(game, unit.owner, unit.id, order.resourceId, townHall.id, unit.carryingGold, creditedGold);
   }
   unit.carryingGold = 0;
   unit.order = resource && resource.amount > 0 ? { type: "mine", resourceId: resource.id, phase: "toMine", timer: 0 } : { type: "idle" };

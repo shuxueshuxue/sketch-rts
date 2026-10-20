@@ -1,0 +1,9 @@
+{
+  "sha256": "7d2f9d175c04b7e052a374921e0d779cd6dc162100287fbdaaa1b748f315322b",
+  "bytes": 478951048,
+  "name": "acceptance",
+  "kind": "dir",
+  "machine": "a100",
+  "pushed": "2de7b1ef58169e967f406a898708a36ce5e9451e",
+  "pr": 579
+}

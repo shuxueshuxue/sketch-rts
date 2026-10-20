@@ -16,7 +16,7 @@ export function roomAbCases(options: {
   a: RoomAbVersion; b: RoomAbVersion; seeds: readonly string[]; minutes: number;
   maps?: readonly string[]; modes?: readonly ('ffa' | 'duel')[];
 }): RoomAbCase[] {
-  if (!(options.minutes >= 15 && options.minutes <= 25) || !Number.isFinite(options.minutes)) throw new Error('minutes must be between 15 and 25');
+  if (!(options.minutes >= 15 && options.minutes <= 40) || !Number.isFinite(options.minutes)) throw new Error('minutes must be between 15 and 40');
   if (!options.seeds.length || new Set(options.seeds).size !== options.seeds.length) throw new Error('Use a nonempty list of distinct seeds');
   const result: RoomAbCase[] = [];
   for (const mapId of options.maps ?? ROOM_AB_MAPS) {

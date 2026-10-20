@@ -5,6 +5,7 @@
     "../../scripts/verify-room-baseline.ts",
     "../../scripts/ai-room-ab.ts",
     "./room-ab-run.ts",
-    "../../scripts/verify-room-ab-isolation.ts"
+    "../../scripts/verify-room-ab-isolation.ts",
+    "../../scripts/verify-room-ab-position.ts"
   ]
 }
