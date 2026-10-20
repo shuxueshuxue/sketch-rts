@@ -1,7 +1,7 @@
 import type { GameCommand, Unit } from '../../../shared/types';
 import { unitMover } from '../../../shared/catalog';
 import { isOpenGround, sameGround, walkingDistance } from '../../../shared/terrain';
-import { isOpponentOwner } from '../../policy/ownership';
+import { strategyIsOpponent } from '../ownership';
 import { distance } from '../../policy/spatial';
 import { strengthOf } from '../../policy/v6/strength';
 import { MINING_RALLY_RADIUS } from '../../bootstrap_1/mining-rally';
@@ -62,7 +62,7 @@ export const defendSiteExecutor: StrategyExecutor = {
     const cohort = granted.filter(unit => !unit.deck && !unit.cabin && unitMover(unit.kind) === 'land' && unit.kind !== 'worker');
     const active = cohort.filter(unit => !input.grant.assignments.some(assignment => assignment.unitId === unit.id && assignment.interruption));
     const foes = snapshot.units.filter(unit => unit.hp > 0 && !unit.deck && !unit.cabin && unit.attackDamage > 0
-      && unitMover(unit.kind) === 'land' && isOpponentOwner(snapshot, owner, unit.owner, {}) && distance(unit, site) <= 1400
+      && unitMover(unit.kind) === 'land' && strategyIsOpponent(snapshot, owner, unit.owner) && distance(unit, site) <= 1400
       && sameGround(snapshot.map, unit, site));
     const waiting = execution.intent.kind === 'wait-in-cover';
     const point = statePoint(execution.state, 'post') ?? execution.target.point;
@@ -80,7 +80,7 @@ export const defendSiteExecutor: StrategyExecutor = {
     const underAttack = protectedEntities.some(entity => {
       const before = isRecord(previousHp) ? previousHp[entity.id] : undefined;
       return typeof before === 'number' && entity.hp < before
-        || snapshot.projectiles.some(shot => shot.targetId === entity.id && isOpponentOwner(snapshot, owner, shot.owner, {}))
+        || snapshot.projectiles.some(shot => shot.targetId === entity.id && strategyIsOpponent(snapshot, owner, shot.owner))
         || foes.some(foe => aimedAt(foe, entity.id) && distance(foe, entity) <= foe.attackRange + foe.radius + entity.radius);
     });
     const arrived = units.filter(unit => distance(unit, point) <= MINING_RALLY_RADIUS);

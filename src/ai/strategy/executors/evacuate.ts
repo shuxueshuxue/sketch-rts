@@ -5,6 +5,7 @@ import { workerThreatAt } from '../../bootstrap_1/worker-safety';
 import type { ExecutorFeedback, StrategyExecutor } from '../allocation-types';
 import { blockedExecutor, executorFeedback, grantedUnits, validExecutorGrant } from '../executor-grants';
 import { evacuationSubjectIds } from '../evacuation-subjects';
+import { strategyTeamOptions } from '../ownership';
 
 export const evacuateExecutor: StrategyExecutor = {
   id: 'strategy.evacuate',
@@ -21,7 +22,7 @@ export const evacuateExecutor: StrategyExecutor = {
       && building.hp > 0 && building.complete);
     if (destination.entityId && !shelter) return { ...base, status: 'failed', reasons: [{ executor: this.id,
       outcome: 'abandoned', reason: 'evacuation-shelter-no-longer-valid', taskId: execution.token.actionId }] };
-    const foes = armedFoes(snapshot, owner, {}), commands: ExecutorFeedback['commands'][number][] = [];
+    const foes = armedFoes(snapshot, owner, strategyTeamOptions(snapshot)), commands: ExecutorFeedback['commands'][number][] = [];
     for (const worker of workers) {
       if (worker.deck || worker.cabin || !sameGround(snapshot.map, worker, destination.point)) return blockedExecutor(input, 'evacuation-requires-transport', workers.map(unit => unit.id));
       if (foes.some(foe => workerThreatAt(snapshot, worker, destination.point, foe))) return blockedExecutor(input, 'evacuation-shelter-exposed', workers.map(unit => unit.id));

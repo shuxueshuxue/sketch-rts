@@ -6,7 +6,7 @@ import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { Building, GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { strengthOf, structureRating } from '../policy/v6/strength';
 import { creepForce, forceFor, type Camp } from '../policy/v7/creep';
-import { isOpponentOwner } from '../policy/ownership';
+import { strategyIsOpponent } from './ownership';
 import { averagePoint, distance } from '../policy/spatial';
 import { arrivalWeightedForce } from './arrival-force';
 import { calibratedCasualties, casualtySurvivors } from './focused-casualties';
@@ -54,7 +54,7 @@ export function targetEnemyReinforcements(input: TargetReinforcementInput) {
   const candidates: Unit[] = [];
   for (const unit of snapshot.units) {
     if (unit.owner === 'neutral' || unit.hp <= 0 || unit.kind === 'worker' || unitMover(unit.kind) !== 'land' || unit.attackDamage <= 0
-      || !isOpponentOwner(snapshot, situation.owner, unit.owner, {})) continue;
+      || !strategyIsOpponent(snapshot, situation.owner, unit.owner)) continue;
     const carrier = unit.deck?.shipId ?? unit.cabin?.shipId, boat = carrier ? byId.get(carrier) : undefined;
     const aboardHeadingHere = boat?.order.type === 'unload' && landIdAt(snapshot.map,
       walkableGoal(snapshot.map, boat.order.x, boat.order.y)) === targetLand;
@@ -129,7 +129,7 @@ export function targetCoveringTowers(snapshot: GameSnapshot, owner: PlayerId, ta
   const actualTarget = snapshot.buildings.find(building => building.id === target.entityId)
     ?? (plannedAssetRadius ? { ...target.point, radius: plannedAssetRadius } : target.point);
   return snapshot.buildings.filter(tower => tower.complete && tower.hp > 0 && tower.attackDamage > 0
-    && (side === 'own' ? tower.owner === owner : isOpponentOwner(snapshot, owner, tower.owner, {}))
+    && (side === 'own' ? tower.owner === owner : strategyIsOpponent(snapshot, owner, tower.owner))
     && strikeGap(tower, actualTarget) <= tower.attackRange);
 }
 
@@ -170,7 +170,7 @@ export function assessPresentCampEngagement(input: Readonly<{ snapshot: GameSnap
   const ours = snapshot.units.filter(unit => ids.has(unit.id) && unit.owner === owner && unit.hp > 0 && unit.kind !== 'worker'
     && unit.attackDamage > 0 && unitMover(unit.kind) === 'land' && !unit.deck && !unit.cabin && sameGround(snapshot.map, unit, center));
   const hostile = snapshot.units.filter(unit => unit.hp > 0 && !unit.deck && !unit.cabin && unit.kind !== 'worker'
-    && unit.attackDamage > 0 && unitMover(unit.kind) === 'land' && isOpponentOwner(snapshot, owner, unit.owner, {})
+    && unit.attackDamage > 0 && unitMover(unit.kind) === 'land' && strategyIsOpponent(snapshot, owner, unit.owner)
     && sameGround(snapshot.map, unit, center) && distance(unit, center) <= (input.radius ?? 650));
   const towers = targetCoveringTowers(snapshot, owner, { ...target, point: center }, 'opponent');
   const opposition: Camp = { center, creeps: [...guards, ...hostile], strength: camp.strength + creepForce(hostile), reach: 0 };
