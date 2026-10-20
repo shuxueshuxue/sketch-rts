@@ -23,6 +23,7 @@ import type { Arrival, Asset, Effect, Method, Objective, ObjectiveKind, Planning
 import type { PreviousObjective } from './observation-memory';
 import type { DecisionFacts } from './decision';
 import { capturesExplanations, deferredEvidence, lazyValue, projectedCopy, projectedProperty, projectedValueReader } from './explanations';
+import { currentSiteThreatIsClear } from './protection-activation';
 
 const STATION_RANGE = 650;
 const byId = (a: { id: string }, b: { id: string }) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
@@ -158,8 +159,20 @@ export function generateNavalObjectives(situation: Situation, context: PlanningC
   const threats = situation.lands.flatMap(land => land.threats);
   const deficits = new Map<string, { target: Target; strength: number; minimumStrength: number; utility: Utility; parentId: string; reasons: Reason[] }>();
   const held = new Set(situation.units.flatMap(unit => unit.commitments.filter(task => task.source.startsWith('unitClaims.')).map(task => task.objectiveId)));
-  for (const threat of threats.filter(threat => threat.attackers.length > 0 || held.has(objectiveId('DefendSite', context.owner, threat.siteId)))) {
+  for (const objective of Object.values(context.memory.strategyAllocation?.objectives ?? {}))
+    if (!['complete', 'failed', 'abandoned'].includes(objective.status)) held.add(objective.objectiveId);
+  for (const threat of threats.filter(threat => threat.attackers.length > 0 || held.has(objectiveId('DefendSite', context.owner, threat.siteId))
+    || held.has(objectiveId('Evacuate', context.owner, threat.siteId)))) {
     const site = situation.assets.find(asset => asset.id === threat.siteId)!;
+    if (currentSiteThreatIsClear(context.snapshot, situation, site.target)) {
+      const clear = [reason(tick, 'current-site-threat-cleared', 'The current SiteThreat has no actual or potential attackers and no covering hostile tower')];
+      const utility = strategyUtility({ benefit: [], cost: [], successProbability: 1, evidence: [] });
+      if (held.has(objectiveId('DefendSite', context.owner, site.id))) objectives.push(createObjective(situation, previous, 'DefendSite', site.target,
+        [{ kind: 'site-safe', siteId: site.id, throughTick: tick + threat.horizonTicks }], utility, clear, 'complete'));
+      if (held.has(objectiveId('Evacuate', context.owner, site.id))) objectives.push(createObjective(situation, previous, 'Evacuate', site.target,
+        [], utility, clear, 'abandoned'));
+      continue;
+    }
     const enemy = threat.arrivedStrength + threat.incomingStrength, present = stationed(situation, site.target);
     const incoming = candidates(situation, site.id, present).filter(unit => duration(route(unit, site.id))! <= threat.horizonTicks);
     const collapseTicks = collapseAfter(context, threat, site.hp ?? 0);

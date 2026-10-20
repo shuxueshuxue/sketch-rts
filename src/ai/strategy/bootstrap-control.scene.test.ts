@@ -19,6 +19,23 @@ const plan = (frame: Frame, options: AiOwnerPlannerOptions = {}) => planAiOwnerC
 afterEach(() => vi.restoreAllMocks());
 
 describe('the real bootstrap control entry before behavioral acceptance', () => {
+  it('does not evacuate the safe idle worker in the first erroneous continuous grant frame', () => {
+    const source: Frame = JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/gullIsland-control-3630.json.gz', import.meta.url))).toString());
+    const frame = structuredClone(source), original = structuredClone(source);
+    const worker = frame.snapshot.units.find(unit => unit.id === 'unit-p0-worker-1012')!;
+    expect(worker.order).toEqual({ type: 'idle' });
+    expect(frame.snapshot.buildings.find(building => building.id === 'building-p0-townHall-1167')?.complete).toBe(true);
+    let output: BootstrapStrategyOutput | undefined;
+    const commands = plan(frame, { observeBootstrapPlan(_context, _entries, actual) { output = actual; } });
+    const baseline = plan(original, { strategyControl: false });
+    expect(commands.some(entry => entry.scriptId === 'strategy.evacuate')).toBe(false);
+    expect(frame.memory.strategyAllocation!.leases[`unit:${worker.id}`]).toBeUndefined();
+    expect(Object.values(frame.memory.strategyAllocation!.leases).filter(lease => lease.origin === 'allocator')).toEqual([]);
+    expect(commands).toEqual(baseline);
+    const defended = output!.decision.objectives.find(objective => objective.id === 'DefendSite:p0:building-p0-townHall-1167');
+    expect(defended?.status).toBe('complete');
+    expect(defended?.reasons.map(reason => reason.code)).toContain('current-site-threat-cleared');
+  }, 60000);
   it.each(['gullIsland-p0-9930', 'Ne-sapphireArchipelago-player-4-17991'])('evaluates %s once and projects the same accepted think', name => {
     const numerical = structuredClone(frames[name]!), observed = structuredClone(frames[name]!);
     const snapshotBefore = digest(numerical.snapshot), evaluator = vi.spyOn(situation, 'evaluateSituation');

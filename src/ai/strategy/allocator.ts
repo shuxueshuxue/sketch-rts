@@ -14,6 +14,7 @@ import type { DecisionFacts } from './decision';
 import type { Effect, Objective, SituationUnit, ValuationContext } from './types';
 import { assertUnitValueSides } from './unit-value-ledger';
 import { allocationResponseCandidates } from './allocation-eligibility';
+import { currentSiteThreatIsClear } from './protection-activation';
 
 /** A fixed prefix bound limits speculative group quotes, not committed forces.
  * Every prefix is repriced as a whole group, including camp-force interactions. */
@@ -308,6 +309,22 @@ export function allocateStrategy(input: StrategyAllocationInput): StrategyAlloca
   const firstEventSequence = memory.nextEventSequence;
   memory = { ...memory, evaluatedTick: tick, revision: memory.revision + 1, unmet: [] };
   memory = observeAllocationOrders(memory, input.snapshot);
+  for (const objective of input.objectives) {
+    const prior = memory.objectives[objective.id];
+    if (!prior || terminal(prior.status) || !['DefendSite', 'Evacuate'].includes(objective.kind)
+      || !terminal(objective.status) || !currentSiteThreatIsClear(input.snapshot, input.situation, objective.target)) continue;
+    const executions = { ...memory.executions };
+    const status = objective.kind === 'DefendSite' ? 'complete' as const : 'abandoned' as const;
+    for (const id of prior.actionIds) if (executions[id] && !terminal(executions[id]!.status)) executions[id] = {
+      ...executions[id]!, status, phase: 'current-site-threat-cleared', lastProgressTick: tick };
+    const leases = Object.values(memory.leases).filter(lease => lease.objectiveId === objective.id);
+    memory = appendAllocationEvent({ ...memory, executions, objectives: { ...memory.objectives, [objective.id]: {
+      ...prior, status, committedUtilityGold: null, challengerId: null, challengerThinks: 0 } } }, {
+      objectiveId: objective.id, methodId: prior.methodId, action: executions[prior.actionIds[0]!]!.token,
+      kind: 'parent-invalidated', releasedLeaseIds: leases.map(lease => lease.id),
+      releasedBudgetIds: Object.values(memory.budgets).filter(budget => budget.objectiveId === objective.id && budget.state !== 'released').map(budget => budget.id),
+      reason: { code: 'current-site-threat-cleared', factIds: objective.target.entityId ? [objective.target.entityId] : [], values: {} } }, tick);
+  }
   memory = settleAllocationState(memory, input.snapshot);
   memory = advanceAllocationLeases(memory, input.snapshot);
   memory = handoffCompletedGarrisons(input, memory);

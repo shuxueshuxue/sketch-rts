@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createGame, snapshotGame } from '../../shared/sim';
-import { createUnit } from '../../shared/map';
+import { createBuilding, createUnit } from '../../shared/map';
 import type { AllocationMethodProvider, ExecutableMethod, MethodAllocationQuote, StrategyAllocationInput, StrategyAllocationMemory } from './allocation-types';
 import { allocateStrategy } from './allocator';
 import { allocationResponseCandidates } from './allocation-eligibility';
@@ -209,6 +209,29 @@ describe('deterministic whole-bundle allocation', () => {
         arrivals: [{ targetId: 'post', arrival: { status: 'reachable', ticks: 50, landTicks: 50, crossings: [] } }] })) } });
     expect(result.memory.leases['unit:one']).toEqual(first.memory.leases['unit:one']);
     expect(result.memory.assignments['assignment:one']!.eta).toEqual({ status: 'known', forecastTick: 15, arrivalTick: 65 });
+  });
+
+  it.each(['DefendSite', 'Evacuate'] as const)('releases %s authority when this think proves the site threat has cleared', kind => {
+    const { input } = fixture(), first = allocateStrategy({ ...input, objectives: input.objectives.slice(1), methods: input.methods.slice(1) });
+    const objective = { ...input.objectives[1]!, kind, status: kind === 'DefendSite' ? 'complete' as const : 'abandoned' as const };
+    const clear = { siteId: 'post', horizonTicks: 900, attackers: [], arrivedStrength: 0, incomingStrength: 0,
+      friendlyOnStationStrength: 0, firstArrivalTicks: null, lossProbability: 0 };
+    const later = { ...input, objectives: [objective], previous: first.memory, snapshot: { ...input.snapshot, tick: 15 },
+      situation: { ...input.situation, tick: 15, lands: [{ id: 'land:1' as const, anchor: objective.target.point,
+        assetIds: [], unitIds: ['one', 'two'], adjacentSeaIds: [], threats: [clear] }] } };
+    const result = allocateStrategy(later);
+    expect(result.memory.leases).toEqual({});
+    expect(result.memory.assignments).toEqual({});
+    expect(result.memory.objectives.single!.status).toBe(objective.status);
+    expect(result.events).toEqual(expect.arrayContaining([expect.objectContaining({ kind: 'parent-invalidated',
+      reason: { code: 'current-site-threat-cleared', factIds: ['post'], values: {} } })]));
+    expect(JSON.stringify(allocateStrategy({ ...later, previous: JSON.parse(JSON.stringify(first.memory)) }))).toBe(JSON.stringify(result));
+    const missing = allocateStrategy({ ...later, situation: { ...later.situation, lands: [] } });
+    expect(missing.memory.leases['unit:one']).toBeDefined();
+    const tower = createBuilding('hostile-cover', 'enemy', 'defenseTower', 1100, 1000, true);
+    const underTower = allocateStrategy({ ...later, snapshot: { ...later.snapshot,
+      buildings: [...later.snapshot.buildings, tower] } });
+    expect(underTower.memory.leases['unit:one']).toBeDefined();
   });
 
   it('releases a terminal graph and records a disappeared assignee as a vacancy without inventing a preemption', () => {

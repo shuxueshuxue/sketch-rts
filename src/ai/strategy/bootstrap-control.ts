@@ -77,7 +77,8 @@ export function planControlledBootstrapCommands(snapshot: GameSnapshot, owner: P
     policy.strategyAllocation ?? createStrategyAllocationMemory(owner, snapshot.tick));
   policy.strategyAllocation = imported;
   const occupied = withFormalCommitments(evaluation.situation, imported);
-  const methods = evaluation.objectives.flatMap(objective => providers.flatMap(provider => provider.buildMethods({ snapshot,
+  const methods = evaluation.objectives.filter(objective => !['complete', 'failed', 'abandoned'].includes(objective.status))
+    .flatMap(objective => providers.flatMap(provider => provider.buildMethods({ snapshot,
     situation: occupied, objective, previous: imported.objectives[objective.id] ?? null,
     executions: Object.values(imported.executions), blocked: Object.values(imported.blocked) })));
   const situation = withAllocationMethodArrivals(snapshot, owner, policy, occupied, methods);
