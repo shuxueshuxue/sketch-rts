@@ -1,0 +1,65 @@
+{
+  "baseCommit": "3c0844e3",
+  "interval": [
+    18000,
+    19800
+  ],
+  "observerOnOff": {
+    "equal": true,
+    "commands": 2182,
+    "commandSha256": "d98d1021686535fbecf9a7fb6ceb8d45781aaa261d4573fa9a8f757cfc386774",
+    "finalWorldSha256": "72e57de2538599c6ec303bbc012bb8f4a1b3e5421537a0d4f88f9ff864b9fe53"
+  },
+  "tests": {
+    "files": 4,
+    "passed": 29,
+    "typecheck": true
+  },
+  "browser": {
+    "protocol": "file:",
+    "viewport": [
+      1600,
+      1200
+    ],
+    "localFonts": true,
+    "rangeDrag": {
+      "fromTick": 18600,
+      "toTick": 19507,
+      "mapTime": "16:15",
+      "goalReason": "saving-hall-capital"
+    },
+    "deathMarkerClick": true,
+    "visibility": {
+      "soloDefault": false,
+      "soloHiddenLayers": [
+        "goals",
+        "routes",
+        "lanes",
+        "death-attribution"
+      ],
+      "onlineOwners": [
+        "player-4"
+      ],
+      "postmatchReplayOwners": 3
+    },
+    "executorBandsExpanded": 52,
+    "laneBlankDrag": {
+      "toTick": 19229,
+      "mapTime": "16:01",
+      "goalReason": "saving-hall-capital"
+    },
+    "deathFocus": {
+      "unit": "unit-enemy2-horseArcher-3643",
+      "routeOwner": "enemy2",
+      "unrelatedIntentPaths": 0
+    },
+    "playPause": true,
+    "consoleErrors": 0,
+    "screenshotsReviewed": [
+      "preview-timeline-defense.webp",
+      "preview-timeline-overview.webp",
+      "preview-timeline-death.webp"
+    ],
+    "opponentShortcutsHiddenOnline": true
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "provenance": {
+    "input": "src/ai/bootstrap_1/fixtures/ring-beachhead-15m.json",
+    "inputSha256": "88c94fc66697a6ba69733a62eb6b025d664768f74b503a49ed8010048a3fcc24",
+    "baseCommit": "3c0844e3",
+    "startTick": 18000,
+    "endTick": 19800,
+    "thinkInterval": 15,
+    "frameInterval": 20,
+    "secondsPerTick": 0.05,
+    "description": "真实原生环水群岛存档的连续 90 秒；不编辑单位、资源、订单或 AI 状态。",
+    "commandCount": 2182,
+    "commandSha256": "d98d1021686535fbecf9a7fb6ceb8d45781aaa261d4573fa9a8f757cfc386774",
+    "finalWorldSha256": "72e57de2538599c6ec303bbc012bb8f4a1b3e5421537a0d4f88f9ff864b9fe53"
+  },
+  "frames": 91,
+  "thinks": 360,
+  "nodeVersions": 1612,
+  "deaths": 1,
+  "buildingsLost": 0,
+  "inferredReviews": 1,
+  "limitations": [
+    "效用分解、方法选择、预计到达、预期效果及抢占交接尚无正式数据。",
+    "伤亡时间/位置与致命击打来源是观察事实；目标/阶段归因与疑似异常分类为推断。",
+    "消失的目标只标记记录释放，不推断为完成、失败或被抢占。",
+    "实际路径每秒采样；虚线仅为记录目标方向，不冒充寻路计划。"
+  ]
+}
