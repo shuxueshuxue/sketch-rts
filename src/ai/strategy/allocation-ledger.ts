@@ -86,7 +86,8 @@ export function recordAllocationCommands(memory: StrategyAllocationMemory, snaps
     const command: IssuedActionCommand = { id: admission.commandId, action: admission.action, executor: admission.executor,
       purpose: admission.purpose, acceptedTick: snapshot.tick, command: structuredClone(admission.command), ...(baseline ? { worldBefore: baseline } : {}) };
     issuedCommands[command.id] = command;
-    const unitIds = 'unitIds' in admission.command ? admission.command.unitIds : 'unitId' in admission.command ? [admission.command.unitId] : [];
+    const unitIds = commandSetsNativeOrder(admission.command)
+      ? 'unitIds' in admission.command ? admission.command.unitIds : 'unitId' in admission.command ? [admission.command.unitId] : [] : [];
     for (const unitId of unitIds) issuedOrders[unitId] = { commandId: command.id, action: command.action, executor: command.executor,
       purpose: command.purpose, unitId, acceptedTick: snapshot.tick, observedTick: null, observedOrder: null };
   }
@@ -135,11 +136,24 @@ export function matchesAllocationOrder(command: GameCommand, order: UnitOrder): 
   if (command.type === 'move' || command.type === 'attackMove' || command.type === 'unload' || command.type === 'aim')
     return order.type === command.type && order.x === command.x && order.y === command.y;
   if (command.type === 'attack' || command.type === 'follow') return order.type === command.type && order.targetId === command.targetId;
+  if (command.type === 'repairShip' || command.type === 'repairUnit' || command.type === 'boardShip')
+    return order.type === command.type && order.targetId === command.targetId;
   if (command.type === 'board') return order.type === 'board' && order.transportId === command.transportId;
   if (command.type === 'mine') return order.type === 'mine' && order.resourceId === command.resourceId;
   if (command.type === 'build') return order.type === 'build' && order.buildingKind === command.buildingKind && order.x === command.x && order.y === command.y;
   if (command.type === 'repair' || command.type === 'garrison') return order.type === command.type && order.buildingId === command.buildingId;
   if (command.type === 'holdPosition') return order.type === 'hold';
   if (command.type === 'stop') return order.type === 'idle';
+  if (command.type === 'pickupItem') return order.type === 'pickupItem' && order.itemId === command.itemId;
+  if (command.type === 'cast') return (order.type === 'cast' || order.type === 'charge')
+    && order.targetId === command.targetId && (order.type === 'charge' || order.ability === command.ability
+      && order.x === command.x && order.y === command.y);
   return false;
+}
+
+/** Stance/autocast/equipment and instant skills do not replace a native order.
+ * Recording them as its issuer would destroy the actual parent lineage. */
+export function commandSetsNativeOrder(command: GameCommand): boolean {
+  return ['move', 'attackMove', 'attack', 'follow', 'stop', 'holdPosition', 'aim', 'mine',
+    'repair', 'repairUnit', 'repairShip', 'build', 'garrison', 'board', 'boardShip', 'unload', 'pickupItem', 'cast'].includes(command.type);
 }

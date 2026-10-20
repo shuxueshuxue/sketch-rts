@@ -42,6 +42,15 @@ export function withUnitArrivals<T extends object>(unit: T, facts: UnitArrivalFa
   return Object.defineProperty(unit, 'arrivals', arrayProjection) as T & Pick<SituationUnit, 'arrivals'>;
 }
 
+/** Numerical control rows use the identical storage and reader without
+ * manufacturing explanatory fields or rendering the compatibility array. */
+export function withDecisionUnitArrivals<T extends object>(unit: T,
+  facts: Omit<UnitArrivalFacts, 'values'> & { values: readonly (DecisionFacts<Arrival> | undefined)[] }):
+  T & DecisionFacts<Pick<SituationUnit, 'arrivals'>> {
+  Object.defineProperty(unit, storedArrivals, { value: facts });
+  return Object.defineProperty(unit, 'arrivals', arrayProjection) as T & DecisionFacts<Pick<SituationUnit, 'arrivals'>>;
+}
+
 /** The decision path does not allocate the compatibility array or entry pairs.
  * Deserialized/plain scene inputs continue to use their ordinary array. */
 export function unitArrival(unit: SituationUnit, targetId: string): Arrival | undefined;

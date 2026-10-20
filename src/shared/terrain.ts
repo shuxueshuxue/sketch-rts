@@ -1336,6 +1336,11 @@ function trimGoalFields(cache: GoalFieldCache, mover: Mover, protect?: number) {
 export function withGoalDistanceFieldLease<T>(map: Pick<GameMap, 'terrain'>, owner: string, tick: number, run: () => T): T {
   if (!map.terrain) return run();
   const previous = currentGoalFieldLease;
+  // The control transaction contains assessment, action targets and executor
+  // queries. Nested assessments must extend the outer owner's live set rather
+  // than replacing it on return and unpinning fields still used by that think.
+  if (previous?.owner === owner && previous.tick === tick
+    && (['land', 'sea'] as const).every(mover => previous.fields.has(routing(map, map.terrain!, mover)))) return run();
   const scope = { owner, tick, fields: new Map<TerrainRuntime, GoalFieldLease>() };
   for (const mover of ['land', 'sea'] as const) {
     const state = routing(map, map.terrain, mover), revision = mover === 'land' ? groundRevision(map) : 0;

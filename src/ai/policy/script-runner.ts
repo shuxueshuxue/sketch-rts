@@ -9,12 +9,14 @@ import { navalBudgetReserve } from "./naval";
 import { shopErrandCost } from "./v9/shop";
 import { SHIP_WEAPONS } from "../../shared/ship-equipment";
 import { withAiGoldBudget } from './snapshot';
+import { inheritIncumbentCommand } from '../strategy/incumbent-command-source';
 import { planCombatReadiness, readinessUnitIds, withCombatReadinessReuse } from "./combat-readiness";
 
 export type ScriptRunnerOptions = {
   /** Formal resource authority runs before claims/order filters and before any
    * onCommands callback or order/budget bookkeeping. Ordinary policies omit it. */
   admitCommands?: (script: AiScript, commands: GameCommand[]) => GameCommand[];
+  onAdmittedCommands?: (script: AiScript, commands: readonly GameCommand[]) => void;
   commandConflictBypassScriptIds?: ReadonlySet<string>;
   minimumAttackMoveUnits?: (scriptId: string, command: Extract<GameCommand, { type: "attackMove" }>, snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) => number;
 };
@@ -54,6 +56,7 @@ function runScriptsWithContext(snapshot: GameSnapshot, owner: PlayerId, scripts:
     const budget = budgetAfter(reserve);
     const proposed = asCommands(script.run(budget, owner, policyOptions));
     const scriptCommands = withoutUnitsClaimedElsewhere(towerOrders(runnerOptions.admitCommands?.(script, proposed) ?? proposed, snapshot, owner), claims, script.id);
+    runnerOptions.onAdmittedCommands?.(script, scriptCommands);
     script.onCommands?.(snapshot, owner, policyOptions, scriptCommands);
     if (scriptCommands.length > 0) {
       recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams, preserveHireCampClaims, preserveSkirmishRetreatClaims, ...(script.redirects ? { redirects: script.redirects } : {}) });
@@ -73,6 +76,7 @@ function runScriptsWithContext(snapshot: GameSnapshot, owner: PlayerId, scripts:
     const scriptCommands = runnerOptions.commandConflictBypassScriptIds?.has(script.id)
       ? rawScriptCommands
       : removeOrderedUnitConflicts(rawScriptCommands, movedUnitIds, (command) => runnerOptions.minimumAttackMoveUnits?.(script.id, command, snapshot, owner, policyOptions) ?? 1);
+    runnerOptions.onAdmittedCommands?.(script, scriptCommands);
     script.onCommands?.(snapshot, owner, policyOptions, scriptCommands);
     if (scriptCommands.length === 0) continue;
     recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams, preserveHireCampClaims, preserveSkirmishRetreatClaims, ...(script.redirects ? { redirects: script.redirects } : {}) });
@@ -107,7 +111,7 @@ function withoutUnitsClaimedElsewhere(commands: GameCommand[], claims: ReadonlyM
   return commands.flatMap((command): GameCommand[] => {
     if (command.type === "move" || command.type === "holdPosition" || command.type === "attackMove" || command.type === "attack" || command.type === "aim" || command.type === "setStance" || (command.type === "repair" || command.type === "repairShip" || command.type === "repairUnit") || command.type === "mine") {
       const unitIds = command.unitIds.filter(free);
-      return unitIds.length > 0 ? [{ ...command, unitIds }] : [];
+      return unitIds.length > 0 ? [inheritIncumbentCommand(command, { ...command, unitIds })] : [];
     }
     if (command.type === "pickupItem" || command.type === "build") return free(command.unitId) ? [command] : [];
     if (command.type === "cast" && ABILITY_DEFS[command.ability].behavior === "charge") return free(command.unitId) ? [command] : [];
@@ -125,16 +129,16 @@ function removeOrderedUnitConflicts(commands: GameCommand[], movedUnitIds: Set<s
   for (const command of commands) {
     if (command.type === "attack") {
       const unitIds = command.unitIds.filter((unitId) => !movedUnitIds.has(unitId));
-      if (unitIds.length > 0) filtered.push({ ...command, unitIds });
+      if (unitIds.length > 0) filtered.push(inheritIncumbentCommand(command, { ...command, unitIds }));
     } else if (command.type === "attackMove") {
       const unitIds = command.unitIds.filter((unitId) => !movedUnitIds.has(unitId));
-      if (unitIds.length >= minimumAttackMoveUnits(command)) filtered.push({ ...command, unitIds });
+      if (unitIds.length >= minimumAttackMoveUnits(command)) filtered.push(inheritIncumbentCommand(command, { ...command, unitIds }));
     } else if (command.type === "move" || command.type === "aim" || command.type === "holdPosition") {
       const unitIds = command.unitIds.filter((unitId) => !movedUnitIds.has(unitId));
-      if (unitIds.length > 0) filtered.push({ ...command, unitIds });
+      if (unitIds.length > 0) filtered.push(inheritIncumbentCommand(command, { ...command, unitIds }));
     } else if ((command.type === "repair" || command.type === "repairShip" || command.type === "repairUnit" || command.type === "mine")) {
       const unitIds = command.unitIds.filter((unitId) => !movedUnitIds.has(unitId));
-      if (unitIds.length > 0) filtered.push({ ...command, unitIds });
+      if (unitIds.length > 0) filtered.push(inheritIncumbentCommand(command, { ...command, unitIds }));
     } else if (command.type === "cast") {
       if (!movedUnitIds.has(command.unitId)) filtered.push(command);
     } else {
@@ -165,6 +169,6 @@ function towerOrders(commands: GameCommand[], snapshot: GameSnapshot, owner: Pla
     const tower = snapshot.buildings.find(building => building.id === command.buildingId);
     if (!tower) return [];
     const unitIds = snapshot.units.filter(unit => unit.owner === owner && command.unitIds.includes(unit.id) && garrisonRoomFor(snapshot, tower, unit)).map(unit => unit.id);
-    return unitIds.length ? [{ ...command, unitIds }] : [];
+    return unitIds.length ? [inheritIncumbentCommand(command, { ...command, unitIds })] : [];
   });
 }

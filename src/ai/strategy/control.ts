@@ -11,8 +11,8 @@ export function sameAction(left: ActionToken, right: ActionToken): boolean {
 
 export function createStrategyAllocationMemory(owner: PlayerId, tick: number): StrategyAllocationMemory {
   return { version: 1, owner, evaluatedTick: tick - 1, revision: 0, nextActionGeneration: 1, nextEventSequence: 1,
-    objectives: {}, executions: {}, leases: {}, assignments: {}, budgets: {}, voyages: {}, vacancies: {},
-    issuedOrders: {}, issuedCommands: {}, blocked: {}, unmet: [], events: [] };
+    objectives: {}, methods: {}, executions: {}, leases: {}, assignments: {}, budgets: {}, voyages: {}, vacancies: {},
+    issuedOrders: {}, issuedCommands: {}, incumbentOrders: {}, candidateSwitches: {}, blocked: {}, unmet: [], events: [] };
 }
 
 /** Selection admission, before a task writes membership or claims. Command
@@ -33,6 +33,7 @@ export function strategyLeaseAllows(memory: Pick<AiPolicyMemory, 'strategyAlloca
 export const STRATEGY_ALLOCATION_LIMITS = Object.freeze({
   bytes: 256 * 1024,
   objectives: 64,
+  methods: 64,
   executions: 256,
   leases: 512,
   assignments: 512,
@@ -41,6 +42,8 @@ export const STRATEGY_ALLOCATION_LIMITS = Object.freeze({
   vacancies: 128,
   issuedOrders: 512,
   issuedCommands: 256,
+  incumbentOrders: 512,
+  candidateSwitches: 512,
   blocked: 64,
   unmet: 256,
   events: 256,
@@ -51,8 +54,8 @@ export const STRATEGY_ALLOCATION_LIMITS = Object.freeze({
  * rejects values which JSON would silently coerce (nonfinite, undefined),
  * callbacks, class instances and reference cycles. No world graph is allowed. */
 export function assertStrategyAllocationBounds(memory: StrategyAllocationMemory): number {
-  for (const key of ['objectives', 'executions', 'leases', 'assignments', 'budgets', 'voyages', 'vacancies',
-    'issuedOrders', 'issuedCommands', 'blocked', 'unmet', 'events'] as const) {
+  for (const key of ['objectives', 'methods', 'executions', 'leases', 'assignments', 'budgets', 'voyages', 'vacancies',
+    'issuedOrders', 'issuedCommands', 'incumbentOrders', 'candidateSwitches', 'blocked', 'unmet', 'events'] as const) {
     const count = Array.isArray(memory[key]) ? memory[key].length : Object.keys(memory[key]).length;
     if (count > STRATEGY_ALLOCATION_LIMITS[key]) throw new Error(`Strategy allocation ${key} limit exceeded: ${count}`);
   }
