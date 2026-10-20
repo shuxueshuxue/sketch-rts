@@ -7,7 +7,7 @@ import type { GameCommand, GameSnapshot, PlayerId, Unit } from '../shared/types'
 import type { AiPolicyMemory } from './memory';
 import { createAiPolicyMemory } from './memory';
 import { effectiveCombatRating, structureRating } from './policy/v6/strength';
-import { deathTaskIndex, inferDeathAssignment, treatmentOrder, projectDeathThinkContext, type AiDeathThinkContext } from './death-ledger-context';
+import { deathTaskIndex, inferDeathAssignment, treatmentOrder, projectDeathThinkContext, sameDeathAssignmentGoal, type AiDeathThinkContext } from './death-ledger-context';
 import { classifyAiDeath } from './death-ledger-classification';
 import { inferAiDeathEngagement, isAiDeathOpponent } from './death-ledger-engagement';
 import { summarizeAiDeaths } from './death-ledger-summary';
@@ -109,7 +109,9 @@ export class AiDeathLedger {
 
   private assign(state: UnitHistory, assignment: AiDeathAssignment) {
     const before = state.assignment?.task?.id ?? null, after = assignment.task?.id ?? null;
-    if (state.assignment && before !== after) state.switches.push({ tick: assignment.observedTick, from: before, to: after, attribution: 'inferred' });
+    if (state.assignment && !sameDeathAssignmentGoal(state.assignment.task, assignment.task)) state.switches.push({ tick: assignment.observedTick, from: before, to: after,
+      attribution: state.assignment.task?.attribution === 'assignment' && assignment.task?.attribution === 'assignment'
+        ? 'assignment' : 'inferred' });
     state.switches = state.switches.filter(change => change.tick >= assignment.observedTick - HISTORY_TICKS);
     state.assignment = assignment;
   }
@@ -249,8 +251,10 @@ export class AiDeathLedger {
     const assignment = state.assignment ?? { observedTick: event.tick, task: null, otherTaskCandidates: [],
       state: 'unassigned', stateAttribution: 'inferred', evidence: [], plannedBalanceRange: null } as AiDeathAssignment;
     const perimeter = assignment.task?.perimeter;
-    const retreating = currentOrder.type === 'move' && currentOrder.avoidCombat === true
-      || ['mineLeash', 'retreat', 'workerSafety'].includes(assignment.task?.kind ?? '');
+    const formal = assignment.task?.formal;
+    const retreating = formal ? !!formal.interruption || assignment.task?.kind === 'evacuate'
+      : currentOrder.type === 'move' && currentOrder.avoidCombat === true
+        || ['mineLeash', 'retreat', 'workerSafety'].includes(assignment.task?.kind ?? '');
     const treatment = treatmentOrder(currentOrderIssuer ?? state.order) && ['move', 'idle', 'hold'].includes(currentOrder.type);
     const landLabel = onLand ? groundWholeAt(this.game.map, unit) : undefined;
     const seaLabel = !onLand ? groundWholeAt(this.game.map, unit, 'sea') : undefined;
@@ -277,9 +281,11 @@ export class AiDeathLedger {
         ? Math.hypot(unit.x - perimeter.x, unit.y - perimeter.y) > perimeter.radius : null,
         onHomeGround, safeOwnSitesOnGround: safeSites, ownTransportIds: this.game.units.filter(ship => ship.owner === unit.owner
           && ship.hp > 0 && isTransportKind(ship.kind)).map(ship => ship.id),
-        evacuationAssigned: assignment.task?.kind === 'workerSafety' || assignment.task?.stage?.startsWith('evacuate:') === true,
+        evacuationAssigned: assignment.task?.kind === 'workerSafety' || assignment.task?.kind === 'evacuate'
+          || assignment.task?.stage?.startsWith('evacuate:') === true,
         escapeRoute: 'not-evaluated', switches: state.switches, wornRetreatTick: state.wornTick },
-      limitations: ['previous-task-and-arrival-inference', 'formal-method-utility-and-combat-range-not-recorded',
+      limitations: [...(formal ? ['formal-assignment-observed-at-last-think', 'planned-combat-range-not-recorded']
+        : ['previous-task-and-arrival-inference', 'formal-method-utility-and-combat-range-not-recorded']),
         'local-ratio-is-a-diagnostic-not-a-fight-simulation', 'escape-route-not-evaluated', 'health-history-sampled-and-bounded',
         ...(!source ? ['fatal-source-not-recorded'] : !source.present && !remembered ? ['original-source-kind-unresolved'] : []),
         ...(currentOrderIssuer?.executor ? [] : ['current-order-executor-not-recorded']), 'issued-order-history-limited-to-64'],
