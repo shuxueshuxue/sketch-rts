@@ -151,6 +151,23 @@ it('can finance later recruits from explicitly forecast new-mine income without 
   expect(result.workers.every(w => w.source !== 'train-worker' || result.training.some(t => t.id === w.unitId))).toBe(true);
 });
 
+it('repays declared ship and hall capital shortfall before financing optional worker training', () => {
+  const input = example(1);
+  input.snapshot.players.us!.gold = 424;
+  const availableGold = 424 - 240 - 400;
+  const result = forecastMiningWorkforce({ ...input, availableGold });
+  const first = result.training.find(t => !t.paid)!;
+  expect(availableGold).toBe(-216);
+  expect(first).toBeDefined();
+  // The engineer first delivers at tick 183: 61 old-mine gold before that,
+  // then (75 + 216 - 61) / (1/3 + 1/15) = 575 more ticks to fund recruitment.
+  expect(first.startsInTicks).toBeCloseTo(758);
+  expect(first.startsInTicks).toBeGreaterThan(forecastMiningWorkforce({ ...input, availableGold: 0 }).training[0]!.startsInTicks);
+  expect(result.trainingGold).toBe(result.training.length * 75);
+  expect(() => forecastMiningWorkforce({ ...input, availableGold: -Infinity })).toThrow(/available gold/);
+  expect(() => forecastMiningWorkforce({ ...input, availableGold: NaN })).toThrow(/available gold/);
+});
+
 it('does not book an established miner as expansion income before the actual new hall can be ready', () => {
   const input = example(1), worker = input.snapshot.units.find(u => u.id === 'spare-0')!;
   worker.order = { type: 'mine', resourceId: 'new', phase: 'gather', timer: 60 }; worker.mineSlot = 'new';
