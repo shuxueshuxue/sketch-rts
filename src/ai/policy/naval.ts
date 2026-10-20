@@ -44,6 +44,8 @@ import { readV6Intel } from "./v6/intel";
 import { TOWER_STRENGTH, effectiveCombatRating, strengthOf } from "./v6/strength";
 import { canSupply, playerState } from "./world-model";
 import { recordExecutorReason } from '../executor-reasons';
+import { strategyLeaseAllows } from '../strategy/control';
+import { navalFerryActor } from '../strategy/incumbent-actors';
 function ferryCapacity(unit:Unit){return isTransportKind(unit.kind) ? carries(unit) : 0;}
 export const REINFORCEMENT_DISPATCH_SIZE = 6;
 
@@ -52,7 +54,8 @@ export function ferryCrewTaskAvailable(unit: Unit, options: AiPolicyContext) {
     const claim = options.memory.unitClaims[unit.id];
     // Keep the upcoming squad claim protected when reading persisted memory as well.
     const taskKind: string | undefined = claim?.kind;
-    return !isDefenseTaskClaim(claim) && taskKind !== 'harassSquad';
+    return !isDefenseTaskClaim(claim) && taskKind !== 'harassSquad'
+        && strategyLeaseAllows(options.memory, unit.id, options.strategyActor);
 }
 
 type Point = {
@@ -514,6 +517,9 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
         if (ready.length) commands.push({type:"attackMove",unitIds:ready.map(unit=>unit.id),x:target.x,y:target.y});
     }
     for (const transport of own.filter(unit => ferryCapacity(unit) > 0)) {
+        const incumbent = options.memory.naval?.ferries?.[transport.id];
+        const ferryOptions = incumbent ? { ...options, strategyActor: navalFerryActor(transport.id, incumbent.sinceTick) } : options;
+        if (!strategyLeaseAllows(options.memory, transport.id, ferryOptions.strategyActor)) continue;
         if (transport.id === outfit?.shipId || services.reserved.has(transport.id)) {
             ferryDecision(options, snapshot.tick, transport.id, transport.id === outfit?.shipId ? 'outfitting' : 'port-service');
             continue;
@@ -521,7 +527,7 @@ export function planNavalTacticsWithAssignments(snapshot: GameSnapshot, owner: P
         const reachable = islandPlans(snapshot, owner, options, eligible).find(candidate =>
             sameGround(snapshot.map, candidate.landing, transport, 'sea')
             && ferryTargetAvailable(navalMemory(options), transport.id, candidate.mine.id));
-        commands.push(...ferryCommands(snapshot, owner, options, transport, reachable, assault, orderCrew, transportReady));
+        commands.push(...ferryCommands(snapshot, owner, ferryOptions, transport, reachable, assault, orderCrew, transportReady));
     }
     for (const worker of own.filter(unit => unit.deck && !isInCabin(unit) && unit.kind === "worker" && unit.order.type === "idle")) {
         const hull = own.find(ship => ship.id === worker.deck!.shipId);
