@@ -73,9 +73,11 @@ export type AiUnitDeathRecord = {
   }[] };
   assignment: AiDeathAssignment;
   currentOrder: ObservedUnit['order'];
+  /** Can differ from the last issued command when a later command was queued or instantaneous. */
+  currentOrderIssuer: AiIssuedOrder | null;
   lastIssuedOrder: AiIssuedOrder | null;
   /** Automatic acquisition/queued transitions can differ from the last issued command. */
-  currentOrderSource: 'matches-last-issued' | 'derived-or-unrecorded';
+  currentOrderSource: 'matches-last-issued' | 'matches-earlier-issued' | 'derived-or-unrecorded';
   location: { space: 'land' | 'sea' | 'deck' | 'cabin' | 'garrison';
     landId: `land:${number}` | null; seaId: `sea:${number}` | null; carrierId: string | null };
   health: { tick: number; hp: number; maxHp: number; source: 'think' | 'damage-before' | 'damage-after' | 'removal' }[];

@@ -23,8 +23,9 @@ function last<T>(values: readonly T[], predicate: (value: T) => boolean): T | un
 type UnitHistory = {
   health: AiUnitDeathRecord['health']; damage: SimulationDamageEvent[]; kill: SimulationKillEvent | null;
   assignment: AiDeathAssignment | null; switches: AiUnitDeathRecord['context']['switches'];
-  order: AiIssuedOrder | null; wornTick: number | null; balance: AiDeathBalance | null;
+  order: AiIssuedOrder | null; orders: AiIssuedOrder[]; wornTick: number | null; balance: AiDeathBalance | null;
   sinkingProfile: SimulationDamageEvent['profile'] | null;
+  pendingMetadata: boolean;
 };
 type OwnerContext = { memory: AiPolicyMemory; index: ReturnType<typeof deathTaskIndex>; priorAttack: Set<string> };
 
@@ -48,7 +49,7 @@ export class AiDeathLedger {
     this.stop = observeSimulation(game, {
       label: 'AiDeathLedger',
       damage: event => this.onDamage(event), kill: event => this.onKill(event), removed: event => this.onRemoval(event),
-      command: event => this.recordIssuedCommand(event.tick, event.owner, event.command as GameCommand),
+      command: event => this.recordActualCommand(event.tick, event.owner, event.command as GameCommand),
       error: error => this.errors.push(error instanceof Error ? error.message : String(error)),
     });
   }
@@ -57,7 +58,7 @@ export class AiDeathLedger {
 
   private history(id: string): UnitHistory {
     let state = this.histories.get(id);
-    if (!state) { state = { health: [], damage: [], kill: null, assignment: null, switches: [], order: null, wornTick: null, balance: null, sinkingProfile: null }; this.histories.set(id, state); }
+    if (!state) { state = { health: [], damage: [], kill: null, assignment: null, switches: [], order: null, orders: [], wornTick: null, balance: null, sinkingProfile: null, pendingMetadata: false }; this.histories.set(id, state); }
     return state;
   }
 
@@ -95,20 +96,43 @@ export class AiDeathLedger {
     state.assignment = assignment;
   }
 
-  /** Native commands arrive with executor=null. SDK/server afterIssue can enrich the same issued command with its script ID. */
+  /** Enrich only an actually applied native command. Frame afterIssue hooks can also
+   * run for a transient refusal, and can retain operands removed by frame narrowing.
+   * Those hooks must not manufacture an order or replace its actual live operands.
+   */
   recordIssuedCommand(tick: number, owner: PlayerId, command: GameCommand, executor?: string, source?: string) {
+    if (!this.owners.has(owner)) return;
+    const ids = 'unitIds' in command ? command.unitIds : 'unitId' in command ? [command.unitId] : [];
+    const shape = (value: GameCommand) => JSON.stringify('unitIds' in value ? { ...value, unitIds: [] } : value);
+    for (const id of ids) {
+      const state = this.histories.get(id);
+      if (!state?.pendingMetadata || !state.order || state.order.tick !== tick || shape(state.order.command) !== shape(command)) continue;
+      state.pendingMetadata = false;
+      state.order = { ...state.order, executor: executor ?? null, source: source ?? null,
+        attribution: executor === undefined ? 'sim-command-without-executor' : 'recorded-issued-command' };
+      state.orders[state.orders.length - 1] = state.order;
+      this.refreshAssignment(owner, id, state);
+    }
+  }
+
+  private recordActualCommand(tick: number, owner: PlayerId, command: GameCommand) {
     if (!this.owners.has(owner)) return;
     if (command.type === 'forfeit') this.forfeited.add(owner);
     if (!MOTION.has(command.type)) return;
     const ids = 'unitIds' in command ? command.unitIds : 'unitId' in command ? [command.unitId] : [];
     for (const id of ids) {
       const state = this.history(id);
-      state.order = { tick, command: structuredClone(command), executor: executor ?? null, source: source ?? null,
-        attribution: executor === undefined ? 'sim-command-without-executor' : 'recorded-issued-command' };
-      const unit = this.game.units.find(candidate => candidate.id === id && candidate.owner === owner);
-      const context = this.contexts.get(owner);
-      if (unit && context) this.assign(state, inferDeathAssignment(this.game, unit, context.memory, context.index, state.order));
+      state.order = { tick, command: structuredClone(command), executor: null, source: null, attribution: 'sim-command-without-executor' };
+      state.orders.push(state.order); if (state.orders.length > 64) state.orders.shift();
+      state.pendingMetadata = true;
+      this.refreshAssignment(owner, id, state);
     }
+  }
+
+  private refreshAssignment(owner: PlayerId, id: string, state: UnitHistory) {
+    const unit = this.game.units.find(candidate => candidate.id === id && candidate.owner === owner);
+    const context = this.contexts.get(owner);
+    if (unit && context) this.assign(state, inferDeathAssignment(this.game, unit, context.memory, context.index, state.order));
   }
 
   private onDamage(event: SimulationDamageEvent) {
@@ -159,14 +183,18 @@ export class AiDeathLedger {
     this.seen.add(unit.id);
     const state = this.history(unit.id), context = this.contexts.get(unit.owner);
     const live = this.game.units.find(candidate => candidate.id === unit.id);
-    if (live) {
-      const memory = context?.memory ?? createAiPolicyMemory();
-      this.assign(state, inferDeathAssignment(this.game, live, memory, context?.index ?? deathTaskIndex(this.game, unit.owner, memory), state.order));
-    }
     this.sample(state, unit, event.tick, 'removal');
     const actualDeath = unit.hp <= 0;
     const kill = actualDeath ? state.kill : null;
     const fatal = actualDeath ? last(state.damage, hit => hit.hpBefore > 0 && hit.target.hp <= 0) : undefined;
+    const currentOrder = fatal?.target.order ?? unit.order;
+    const currentOrderIssuer = last(state.orders, order => this.matchesOrder(currentOrder, order)) ?? null;
+    if (live) {
+      const memory = context?.memory ?? createAiPolicyMemory();
+      const atHit = { ...live, order: structuredClone(currentOrder) as Unit['order'] };
+      this.assign(state, inferDeathAssignment(this.game, atHit, memory,
+        context?.index ?? deathTaskIndex(this.game, unit.owner, memory), currentOrderIssuer));
+    }
     const diedTick = actualDeath ? kill?.tick ?? fatal?.tick ?? event.tick : event.tick;
     const source = kill?.source ?? fatal?.source ?? null;
     const remembered = source && this.identities.get(source.id);
@@ -188,10 +216,9 @@ export class AiDeathLedger {
     const assignment = state.assignment ?? { observedTick: event.tick, task: null, otherTaskCandidates: [],
       state: 'unassigned', stateAttribution: 'inferred', evidence: [], plannedBalanceRange: null } as AiDeathAssignment;
     const perimeter = assignment.task?.perimeter;
-    const currentOrder = fatal?.target.order ?? unit.order;
     const retreating = currentOrder.type === 'move' && currentOrder.avoidCombat === true
       || ['mineLeash', 'retreat', 'workerSafety'].includes(assignment.task?.kind ?? '');
-    const treatment = treatmentOrder(state.order) && ['move', 'idle', 'hold'].includes(currentOrder.type);
+    const treatment = treatmentOrder(currentOrderIssuer ?? state.order) && ['move', 'idle', 'hold'].includes(currentOrder.type);
     const landLabel = onLand ? groundWholeAt(this.game.map, unit) : undefined;
     const seaLabel = !onLand ? groundWholeAt(this.game.map, unit, 'sea') : undefined;
     const base: Omit<AiUnitDeathRecord, 'classification'> = {
@@ -202,8 +229,9 @@ export class AiDeathLedger {
       killer, killerKindAttribution: !source ? null : source.present ? 'observed-live-entity' : remembered ? 'previously-observed-entity' : 'unresolved-source',
       fatalDamageProfile: profile ?? null,
       damageWindow: { fromTick: Math.max(0, event.tick - HISTORY_TICKS), toTick: event.tick, sources: [...groups.values()] },
-      assignment, currentOrder, lastIssuedOrder: state.order,
-      currentOrderSource: this.matchesOrder(currentOrder, state.order) ? 'matches-last-issued' : 'derived-or-unrecorded',
+      assignment, currentOrder, currentOrderIssuer, lastIssuedOrder: state.order,
+      currentOrderSource: !currentOrderIssuer ? 'derived-or-unrecorded'
+        : currentOrderIssuer === state.order ? 'matches-last-issued' : 'matches-earlier-issued',
       location: { space: unit.cabin ? 'cabin' : unit.deck ? 'deck' : unit.garrison ? 'garrison' : unitMover(unit.kind) === 'sea' ? 'sea' : 'land',
         landId: landLabel === undefined ? null : `land:${landLabel}`,
         seaId: seaLabel === undefined ? null : `sea:${seaLabel}`,
@@ -221,7 +249,7 @@ export class AiDeathLedger {
       limitations: ['legacy-task-and-arrival-inference', 'formal-method-utility-and-combat-range-not-recorded',
         'local-ratio-is-a-diagnostic-not-a-fight-simulation', 'escape-route-not-evaluated', 'health-history-sampled-and-bounded',
         ...(!source ? ['fatal-source-not-recorded'] : !source.present && !remembered ? ['original-source-kind-unresolved'] : []),
-        ...(state.order?.executor ? [] : ['order-executor-not-recorded'])],
+        ...(currentOrderIssuer?.executor ? [] : ['current-order-executor-not-recorded']), 'issued-order-history-limited-to-64'],
     };
     this.rows.push(structuredClone({ ...base, classification: classifyAiDeath(base) }));
     this.histories.delete(unit.id);
@@ -231,8 +259,11 @@ export class AiDeathLedger {
     if (!issued) return false;
     const command = issued.command;
     if (command.type === 'holdPosition') return order.type === 'hold';
+    if (command.type === 'stop') return order.type === 'idle';
     if (command.type !== order.type) return false;
     if ('targetId' in command && (!('targetId' in order) || command.targetId !== order.targetId)) return false;
+    if ('resourceId' in command && (!('resourceId' in order) || command.resourceId !== order.resourceId)) return false;
+    if ('transportId' in command && (!('transportId' in order) || command.transportId !== order.transportId)) return false;
     if ('x' in command && typeof command.x === 'number' && typeof command.y === 'number'
       && (!('x' in order) || typeof order.x !== 'number' || typeof order.y !== 'number'
         || Math.hypot(command.x - order.x, command.y - order.y) > 1)) return false;

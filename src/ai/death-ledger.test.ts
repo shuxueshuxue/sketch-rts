@@ -89,6 +89,31 @@ describe('read-only AI death ledger', () => {
     expect(record.lastIssuedOrder!.executor).toBe('mobileCare');
   });
 
+  it('does not attribute a refused frame intent to its executor, and retains narrowed actual operands', () => {
+    const game = battle(), unit = game.spawnUnit('player', 'footman', 500, 500), enemy = game.spawnUnit('enemy', 'footman', 600, 500);
+    const ledger = observe(game);
+    const actual = { type: 'move' as const, unitIds: [unit.id], x: 700, y: 700 };
+    tryPlayerCommand(game, 'player', actual);
+    ledger.recordIssuedCommand(0, 'player', { ...actual, unitIds: [unit.id, 'already-dead'] }, 'actual-executor');
+    // A frame hook fires but the native simulation never applies this different intent.
+    ledger.recordIssuedCommand(0, 'player', { ...actual, x: 1200 }, 'refused-executor');
+    ledger.recordIssuedCommand(0, 'player', actual, 'also-refused-identical-intent');
+    strikeUnit(game, enemy, unit, 99999, 'spell'); stepGame(game);
+    expect(ledger.records()[0]!.lastIssuedOrder).toMatchObject({ executor: 'actual-executor', command: actual });
+  });
+
+  it('attributes the current order to its earlier executor when the last command is still queued', () => {
+    const game = battle(), unit = game.spawnUnit('player', 'footman', 500, 500), enemy = game.spawnUnit('enemy', 'footman', 600, 500);
+    const ledger = observe(game);
+    const move = { type: 'move' as const, unitIds: [unit.id], x: 900, y: 900 };
+    tryPlayerCommand(game, 'player', move); ledger.recordIssuedCommand(0, 'player', move, 'first-executor');
+    const queued = { type: 'move' as const, unitIds: [unit.id], x: 1200, y: 1200, queued: true };
+    tryPlayerCommand(game, 'player', queued); ledger.recordIssuedCommand(0, 'player', queued, 'queued-executor');
+    strikeUnit(game, enemy, unit, 99999, 'spell'); stepGame(game);
+    expect(ledger.records()[0]).toMatchObject({ currentOrder: { x: 900, y: 900 },
+      currentOrderIssuer: { executor: 'first-executor' }, lastIssuedOrder: { executor: 'queued-executor' }, currentOrderSource: 'matches-earlier-issued' });
+  });
+
   it('attributes transport passengers, including indirect sinking damage, and counts each native loss once', () => {
     const game = battle(), ship = game.spawnUnit('player', 'transport', 500, 500), crew = game.spawnUnit('player', 'archer', 500, 500);
     expect(boardUnit(ship, crew, game.units)).toBe(true);
