@@ -37,3 +37,5 @@
 新增 [team-relation-frames.json.gz](../../../src/ai/strategy/fixtures/team-relation-frames.json.gz) 保存 main `646cf9a0` 十一图中全部六个组队配置的 26 个活跃席位，取各席约 9000 tick 的真实 think 前态。碎海、环水、神泉殿、龟湖、双岸为 2 对 2，蓝宝为 3 对 3；其余五图为双人对战。枚举使用 `initial.activePlayers`，不计快照中的未激活占位玩家。每局用原命令完整重放至 18000 tick，snapshot/canonical/checksum 三项匹配；夹具内保留逐帧文件哈希、原始包与提取器哈希。合并压缩夹具 SHA256 为 `5916d656549dd0d5edcd29a02abe0140b938453bcc1615b32a9d67ce2cf735b3`。
 
 `ownership.scene.test.ts` 对所有组队席位断言盟友不进入 AttackSite、威胁、已知或未知敌援、营地交战池及航次暴露，并静态禁止其他 strategy 模块直接调用 policy 敌我比较。此处是新增事实的不变式证据；上一节的历史逐字段表保持原样，不能据此改写未重新审计的控制报价金标。
+
+团队修正使旧冻结 Situation 的四份 LAND 直接报价变化：L3 为 230 叶、L4 为 364 叶、L5-threat 为 364 叶、L5-front 为 328 叶；L1/L2/L6 为零，共 1286 叶（objectives 490、methods 796）。同一原始输入上，仅通过统一入口恢复旧 `foe()` 的空团队判定，七份历史 LAND 哈希全部精确恢复；因而本轮没有混入其他估值或路线变化。原始 `land-explanation-reference.json` 保持不动，新引用为 `team-land-explanation-reference.json`，同时绑定旧文件哈希与原始 gzip 哈希。完整 [team-land-fact-diff.json.gz](team-land-fact-diff.json.gz) 包含每条 JSON Pointer 的前后值、唯一团队原因和可复现生成器，SHA256 `0ce1704acceec46c62779fcbb838e292db3abfa98bc9a408452ca61abf29cd09`。完整 collector 与观察记忆的既有引用本轮未变。

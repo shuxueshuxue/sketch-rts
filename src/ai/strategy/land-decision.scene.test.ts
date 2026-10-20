@@ -13,6 +13,7 @@ import { arrivalColumns, unitArrivalFacts, withUnitArrivals } from './unit-arriv
 import type { PlanningContext, Situation } from './types';
 import reference from './fixtures/land-explanation-reference.json';
 import collectorReference from './fixtures/control-land-explanation-reference.json';
+import teamReference from './fixtures/team-land-explanation-reference.json';
 
 type Frame = { event: string; context: PlanningContext; situation: Situation };
 // Test-only ownership: deliberately mutate cloned inputs after evaluation.
@@ -58,8 +59,13 @@ describe('land numerical decisions and requested explanation projection', () => 
       expect(row.previousPlanSha256).toBe(previous.planSha256);
       expect(row.previousObservationSha256).toBe(previous.observationSha256);
     }
+    expect(teamReference.inputSha256).toBe(collectorReference.inputSha256);
+    expect(createHash('sha256').update(readFileSync(new URL('./fixtures/land-explanation-reference.json', import.meta.url))).digest('hex'))
+      .toBe(teamReference.previousReferenceSha256);
+    for (const row of teamReference.cases)
+      expect(row.previousLandSha256).toBe(reference.cases.find(previous => previous.event === row.event)!.landSha256);
   });
-  it.each(reference.cases)('$event preserves every land explanation byte across cold/warm and decision/observation modes', row => {
+  it.each(teamReference.cases)('$event preserves every audited team-aware land explanation across cold/warm and decision/observation modes', row => {
     const frame = scene(row.event), expected = observe(structuredClone(frame));
     expect(digest(expected)).toBe(row.landSha256);
     // No reason text, evidence, or label is a numerical dependency, even on a cold build.
