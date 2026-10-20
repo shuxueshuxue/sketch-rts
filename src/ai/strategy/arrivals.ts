@@ -115,7 +115,8 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
     const route = pointRoute(snapshot, preparation, ship, from, to, future);
     if (route.status !== 'complete') return ship;
     const heading = route.route.points.at(-1)?.heading ?? ship.sailing?.heading ?? 0;
-    const result = { ...ship, x: to.x, y: to.y, sailing: { ...ship.sailing!, heading } };
+    const end = route.route.points.at(-1) ?? from;
+    const result = { ...ship, x: end.x, y: end.y, sailing: { ...ship.sailing!, heading } };
     shareShipProfile(ship, result); return result;
   }
   let pendingGeometry = false;
@@ -334,7 +335,7 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
             // admission order; control defers a dependent leg until the
             // native approach endpoint/heading is actually published.
             const sailingTicks = currentFactWork() && approach === undefined ? undefined
-              : seaTime(cruising, departure.water, landing.water, true);
+              : seaTime(cruising, currentFactWork() ? cruising : departure.water, landing.water, true);
             if (approach === undefined || sailingTicks === undefined) continue;
             choices.push({ from: departure, to: landing, afterCost: nativeAfterCost, readyTicks: free.ticks + approach, unmet: free.unmet,
               crossing: { seaId: sea, shipId: requiresNewShip ? null : ship.id, ...(requiresNewShip && yard ? { productionBuildingId: yard.id } : {}), departure: { ...departure.water }, landing: { ...landing.water }, landingGround: { ...landing.ground },
@@ -483,6 +484,25 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
     if (usedFieldTicks.size) usedFieldTicks.clear();
     if (usedQuoteTicks.size) usedQuoteTicks.clear();
   }
+  function fixedLoading(unit: Unit, voyage: FixedVoyage) {
+    const ship = byId.get(voyage.shipId), source = landIdAt(snapshot.map, unit);
+    if (unit.owner !== owner || unit.hp <= 0 || unitMover(unit.kind) !== 'land'
+      || !ship || ship.owner !== owner || ship.hp <= 0 || !isTransportKind(ship.kind))
+      return { status: 'unknown' as const, reasonCode: 'loading-member-or-hull-unavailable' };
+    if (unit.deck?.shipId === ship.id || unit.cabin?.shipId === ship.id)
+      return { status: 'already-loaded' as const };
+    if (unit.deck || unit.cabin || voyage.phase !== 'loading' || source !== voyage.departureGround.landId
+      || landIdAt(snapshot.map, voyage.departureGround.point) !== source
+      || seaIdAt(snapshot.map, ship) !== voyage.seaId || seaIdAt(snapshot.map, voyage.departure) !== voyage.seaId)
+      return { status: 'unknown' as const, reasonCode: 'loading-origin-or-phase-unverified' };
+    const walkTicks = landTime(unit, voyage.departureGround.point), approachTicks = seaTime(ship, ship, voyage.departure);
+    if (walkTicks === undefined || approachTicks === undefined)
+      return { status: 'unknown' as const, reasonCode: 'loading-route-unpublished' };
+    // Formal loading waits for the hull, then issues board. Existing incumbent
+    // ferry predictions above retain their own concurrent move/board protocol.
+    return { status: 'known' as const, forecastTick: snapshot.tick, walkTicks, approachTicks,
+      boardingTicks: GANGWAY_SETUP_TICKS, expectedLoadedTick: snapshot.tick + approachTicks + walkTicks + GANGWAY_SETUP_TICKS };
+  }
   function fixedVoyage(unit: Unit, target: Target, voyage: FixedVoyage): Arrival {
     const destination = target.landId ?? landIdAt(snapshot.map, target.point);
     if (unit.owner !== owner || unit.hp <= 0 || unitMover(unit.kind) !== 'land')
@@ -513,19 +533,19 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
       return unknown('voyage-sea-pair-mismatch', 'The assigned hull and both retained water points must belong to the same sea');
     if (!support && (source !== voyage.departureGround.landId || voyage.phase !== 'loading'))
       return unknown('voyage-passenger-not-at-loading', 'An unboarded passenger cannot use a departed voyage or a different origin');
-    const after = landTime(unit, target.point, voyage.landingGround.point);
-    const walk = support ? 0 : landTime(unit, voyage.departureGround.point);
-    const approach = support ? 0 : seaTime(ship, ship, voyage.departure);
+    const after = landTime(unit, target.point, voyage.landingGround.point), loading = !support ? fixedLoading(unit, voyage) : undefined;
+    const walk = support ? 0 : loading?.status === 'known' ? loading.walkTicks : undefined;
+    const approach = support ? 0 : loading?.status === 'known' ? loading.approachTicks : undefined;
     const cruising = support || approach === undefined ? ship : afterApproach(ship, ship, voyage.departure, false);
-    const sail = seaTime(cruising, support ? ship : voyage.departure, voyage.landing, !support);
+    const sail = seaTime(cruising, support ? ship : currentFactWork() ? cruising : voyage.departure, voyage.landing, !support);
     if (walk === undefined || after === undefined || approach === undefined || sail === undefined)
       return unavailable('voyage-road-blocked', 'The fixed sailing, loading or inland leg is not available');
     const crossing: CrossingEta & { requiresNewShip: false } = {
       shipId: ship.id, seaId: voyage.seaId,
       departure: support ? { x: ship.x, y: ship.y } : { ...voyage.departure }, landing: { ...voyage.landing },
-      landingGround: { ...voyage.landingGround.point }, waitTicks: Math.max(0, approach - walk),
+      landingGround: { ...voyage.landingGround.point }, waitTicks: approach,
       boardingTicks: support ? 0 : GANGWAY_SETUP_TICKS, sailingTicks: sail,
-      ...(!support && currentFactWork() ? { expectedLoadedTick: snapshot.tick + Math.max(walk, approach) + GANGWAY_SETUP_TICKS } : {}),
+      ...(!support && currentFactWork() ? { expectedLoadedTick: snapshot.tick + approach + walk + GANGWAY_SETUP_TICKS } : {}),
       unloadingTicks: GANGWAY_SETUP_TICKS, requiresNewShip: false,
     };
     return projectedProperty({ status: 'reachable' as const,
@@ -562,6 +582,9 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
   return {
     crossingChoices: crossingTable,
     stats,
+    /** Stage-only projection of the same query; never substitute final arrival
+     * or a fabricated historic loading time for an unavailable forecast. */
+    fixedVoyageLoading(unit: Unit, voyage: FixedVoyage) { resetGeometry(); return fixedLoading(unit, voyage); },
     setCrossingShortlist(ids: readonly string[]) { shortlisted = true; for (const id of ids) shortlist.add(id); },
     fixedVoyageArrival(unit: Unit, target: Target, voyage: FixedVoyage): Arrival {
       resetGeometry();

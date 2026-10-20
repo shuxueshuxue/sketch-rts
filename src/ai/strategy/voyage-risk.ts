@@ -207,7 +207,7 @@ export function assessVoyageRisks(snapshot: GameSnapshot, owner: PlayerId, reque
     if (request.previousLegId && !start) {
       results.set(request.id, unknown('voyage-previous-native-leg-deferred', threats)); continue;
     }
-    let route = request.route;
+    let route = request.route, arrivalTolerance = 1e-5;
     const helm = ship.sailing?.route;
     if (!route && helm?.goalX === request.destination.x && helm.goalY === request.destination.y)
       route = { points: helm.points, partial: helm.partial ?? false };
@@ -218,6 +218,7 @@ export function assessVoyageRisks(snapshot: GameSnapshot, owner: PlayerId, reque
         results.set(request.id, unknown(fact.reasonCode ?? 'voyage-native-point-route-pending', threats)); continue;
       }
       route = fact.route;
+      arrivalTolerance = ship.radius;
     }
     if (!route) {
       const inputs = JSON.stringify([ship.x, ship.y, ship.sailing?.heading ?? 0, shipMotionLimits(ship), profile.hull,
@@ -252,7 +253,7 @@ export function assessVoyageRisks(snapshot: GameSnapshot, owner: PlayerId, reque
       route = planned;
     }
     if (route.partial || Math.hypot((route.points.at(-1)?.x ?? ship.x) - request.destination.x,
-      (route.points.at(-1)?.y ?? ship.y) - request.destination.y) > 1e-5) {
+      (route.points.at(-1)?.y ?? ship.y) - request.destination.y) > arrivalTolerance) {
       results.set(request.id, unknown('voyage-native-route-incomplete', threats)); continue;
     }
     endpoints.set(request.id, route.points.at(-1) ?? { x: ship.x, y: ship.y, heading: ship.sailing?.heading ?? 0 });

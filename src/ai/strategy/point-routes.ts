@@ -19,7 +19,8 @@ export type PointRouteMemory = { entries: Entry[] };
 export const POINT_ROUTE_MEMORY_BYTES = 32 * 1024;
 export const POINT_ROUTE_LIMIT = 16;
 export type PointRouteFact = Readonly<
-  { status: 'complete'; route: Route; ticks: number; computedTick: number; work: number }
+  { status: 'complete'; route: Route; ticks: number; computedTick: number; work: number;
+    basis: 'continued-native-search' | 'observed-native-route' | 'observed-at-berth' }
   | { status: 'pending' | 'static-infeasible' | 'transient-blocked'; reasonCode: string; work: number }>;
 const clearStatic = Object.assign(() => true, { hasTraffic: false });
 
@@ -32,6 +33,21 @@ export function pointRoute(snapshot: GameSnapshot, observation: StrategyObservat
   from: Point, goal: Point, future = false): PointRouteFact {
   const queue = currentFactWork();
   if (!queue) throw new Error('Point routes require the shared think work ledger');
+  const liveOrigin = from.x === ship.x && from.y === ship.y;
+  const at = Math.hypot(from.x - goal.x, from.y - goal.y);
+  if (at < 1e-7 || !future && liveOrigin && at <= ship.radius)
+    return { status: 'complete', route: { points: [], partial: false }, ticks: 0, computedTick: snapshot.tick,
+      work: 0, basis: 'observed-at-berth' };
+  const helm = ship.sailing?.route;
+  if (!future && liveOrigin && helm && !helm.partial && helm.goalX === goal.x && helm.goalY === goal.y
+    && Math.hypot((helm.points.at(-1)?.x ?? ship.x) - goal.x, (helm.points.at(-1)?.y ?? ship.y) - goal.y) <= ship.radius) {
+    // The simulation has already published this hull's remaining native
+    // course. Reuse that observed course instead of restarting a new search
+    // every time the moving origin changes. Never accept a partial suffix.
+    const route = { points: helm.points, partial: false };
+    return { status: 'complete', route, ticks: pointRouteTicks(snapshot, ship, route.points),
+      computedTick: snapshot.tick, work: 0, basis: 'observed-native-route' };
+  }
   const memory = observation.pointRoutes ??= { entries: [] };
   const pose = { ...ship, x: from.x, y: from.y, sailing: { ...ship.sailing! } };
   delete pose.sailing.route; delete pose.sailing.planningJob;
@@ -99,7 +115,8 @@ export function pointRoute(snapshot: GameSnapshot, observation: StrategyObservat
     }
   }
   progress.publishedTick ??= snapshot.tick;
-  return { status: 'complete', route, ticks: pointRouteTicks(snapshot, pose, route.points), computedTick: snapshot.tick, work: progress.work };
+  return { status: 'complete', route, ticks: pointRouteTicks(snapshot, pose, route.points), computedTick: snapshot.tick,
+    work: progress.work, basis: 'continued-native-search' };
 }
 
 /** Reprice the native point list with this hull's actual limits and wind.
@@ -118,6 +135,6 @@ function pointRouteTicks(snapshot: GameSnapshot, ship: Unit, points: readonly Sh
     seconds += length / speed + turn / limits.turnRate;
     pose.x = point.x; pose.y = point.y; previous = point;
   }
-  seconds += limits.speed / Math.max(1, limits.acceleration);
+  seconds += Math.max(0, limits.speed - (ship.sailing?.speed ?? 0)) / Math.max(1, limits.acceleration);
   return Math.ceil(seconds * SIM_TICKS_PER_SECOND);
 }
