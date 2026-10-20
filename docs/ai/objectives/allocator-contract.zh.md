@@ -61,6 +61,10 @@ wait-income 与 build-hall 引用同一个 ID。描述性的 gold demand 不再�
 `quote` 只评估分配器传入的成员与预算，不能暗加别的兵。候选成员必须来自结构化数据，不能解析 reason 文案。
 `materialize` 可将方法骨架按候选成员和船只具体化，生成实际载荷所需的船数、支出和前置子图；
 随后必须对具体方法重新 quote，并在提交抢占前核清完整成本，不能先承诺“一艘船”再发现需要两艘。
+具体化通过 `voyagePlans` 给出逐船 manifest、水侧点、同次验证的陆侧点及真实船/生产前置引用。
+每个行动的 `unitIds` 是候选 bundle 的明确子集；缺省只是尚未绑定的骨架，不允许执行器全军选人。
+`materialize` 与 `quote` 都显式接收本方法现有 executions，真实出生的 createdShipId 才能解析生产引用，
+已经执行过的 action token、state 和 semantic spendId 在重具体化时保留。
 
 `MethodAllocationQuote` 把 feasible 与 blocked 分开。可行项有真实效用；blocked 的当前 utility 为 null，
 带缺失前置、可知的条件潜在效用，未知时仍为 null。不能用 0 或负无穷混进可行排序。
@@ -92,6 +96,14 @@ wait-income 与 build-hall 引用同一个 ID。描述性的 gold demand 不再�
 `IssuedActionCommand` 按 ID 存一次，`IssuedActionOrder` 记录实际单位订单与来源命令的关联。
 接受提案不等于订单已经在世界生效，故 observedOrder 可以为空。后续 safety 只能捕获实际被打断的订单，
 不能从已经被覆盖的旧意图恢复。
+`CommandAdmission` 记录实际 source、执行器、父 token、修订号、purpose 和接受/拒绝原因；
+只存在于本次事务的 trace，不形成保存上一轮完整解释的链。未知投递 tick 保持 null。
+runner 的可选 admission hook 在旧 claim/order 过滤与 onCommands/记账之前运行，所有命令类型共用闸口。
+
+现金只为当前可运行阶段预留：蓝宝 N(e) 的 424 金能先付 240 金造船，后续 400 金矿厅等待收入，
+不能以完整链资本 640 金为由阻断第一步。完整链成本仍进入报价。同一矿厅的 wait-income/build-hall
+引用同一 spendId，不重复预留。`payments` 必须带接受命令和原生队列/地基证据；
+队列无 native id 时用命令前基线及真实新增位置验证，不能把 commandId 冒充 native jobId。
 
 救命动作可以立即执行，但保留 A 的租用，产生 unavailable/vacancy；下一 think 统一补位。
 `SafetyBlockedQuote` 必须带有效父 token、实际原订单及下令器、被占工人/单位租用、未支付预算、
@@ -109,6 +121,16 @@ wait-income 与 build-hall 引用同一个 ID。描述性的 gold demand 不再�
 
 attack-site、contest-route、counter-harass、recover-site 的最终执行 intent 在第 3 步陆地切片才启用，
 本切片不会据类型存在就注册这些执行器。第 2 步合并前再逐项审计其余字段的实际消费者与测试。
+
+2026-10-20 17:45 的 incumbent 边界：只有真实来源可核对、当前订单仍在推进的旧任务才导入 committed lease。
+仅刷新的 claim 加 idle 订单属于 observed/proposed；可行新方案选走后发 candidate-reassigned，旧任务清理预留，
+不伪造零金抢占损失，也不计入 preempted。候选重分配在 8 次 think 内重复时单列来回改派诊断。
+旧存档缺少真实 commandId/执行器/接受 tick 时保持 unknown，不能补造已执行的来源。
+
+当前分支已实现但尚未注册控制入口的组件包括统一闸口和分阶段资本/原生支付校验。
+E01 原生场景验证六个 board 订单只接受正式回防，旧脚本 onCommands 收到空集；
+N(e) 场景验证分阶段资金、原生支付、旧队列不能重复抵账及 JSON fork 一致。
+这些组件测试不代表整个分配器已完成行为或性能验收。
 
 ## 观测与死亡归因
 
