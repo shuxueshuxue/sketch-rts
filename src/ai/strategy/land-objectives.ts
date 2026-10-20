@@ -30,6 +30,13 @@ const campCache = new WeakMap<PlanningContext['snapshot'], { tick: number; camps
 // A proposal and its methods share one assessment during this immutable observation pass.
 // Weak keys keep this cache out of saved policy state and release it with the trace.
 const assessments = new WeakMap<Objective, { situation: Situation; context: PlanningContext; model: LandModel; value: Assessment }>();
+type RetainedAssessment = { key: string; tick: number; value: Assessment };
+type ObservationCache = { map: PlanningContext['snapshot']['map']; owner: string; tick: number; goals: Map<string, RetainedAssessment> };
+// Observational memoization, outside serialized policy memory. Match reset/map/owner changes
+// discard it; each entry retains only its candidate cohort, not an entire world snapshot.
+const observations = new WeakMap<PlanningContext['memory'], ObservationCache>();
+const sameMap = (a: ObservationCache['map'], b: ObservationCache['map']) => a.id === b.id && a.width === b.width
+  && a.height === b.height && a.terrain === b.terrain && a.landmarks === b.landmarks;
 const gap = (a: Target['point'], b: Target['point']) => Math.hypot(a.x - b.x, a.y - b.y);
 const term = (code: string, value: number, explanation: string): UtilityTerm => ({ code, value, explanation });
 const identity = (kind: ObjectiveKind, owner: string, target: string) => `${kind}:${owner}:${target}`;
@@ -54,6 +61,7 @@ class LandModel {
   readonly own: SituationUnit[];
   readonly units: Map<string, SituationUnit>;
   readonly assets: Map<string, Asset>;
+  readonly retained: ObservationCache;
   constructor(readonly situation: Situation, readonly context: PlanningContext) {
     if (situation.owner !== context.owner || situation.tick !== context.snapshot.tick)
       throw new Error('Land objective Situation and context must describe the same owner/tick');
@@ -61,6 +69,13 @@ class LandModel {
     this.units = new Map(situation.units.map(unit => [unit.id, unit]));
     this.own = situation.units.filter(unit => unit.owner === context.owner && unit.hp > 0);
     this.assets = new Map(situation.assets.map(asset => [asset.id, asset]));
+    const previous = observations.get(context.memory);
+    // snapshotGame copies the map wrapper, but retains its geometry. Wind and that
+    // wrapper's identity are not facts used by a land quotation; the shared ETA is.
+    this.retained = previous && sameMap(previous.map, context.snapshot.map) && previous.owner === context.owner && previous.tick <= situation.tick
+      ? previous : { map: context.snapshot.map, owner: context.owner, tick: situation.tick, goals: new Map() };
+    this.retained.tick = situation.tick;
+    observations.set(context.memory, this.retained);
   }
   foe(owner: string) { return isOpponentOwner(this.context.snapshot, this.context.owner, owner, {}); }
   mining(kind: LandKind) { return kind === 'ExpandLand' || kind === 'RecoverSite'; }
@@ -117,8 +132,16 @@ class LandModel {
       }
     }
     const activeId = this.context.memory.landAttack?.targetId;
+    const coarse = (candidate: Candidate) => {
+      const key = candidate.kind === 'ContestRoute' ? candidate.opportunities[0]?.id ?? candidate.key : candidate.key;
+      const etas = this.own.filter(unit => battleRole(unit) && !interruption(unit)).map(unit => arrivalAt(unit, key)).filter(knownArrival);
+      const eta = etas.length ? Math.min(...etas.map(arrival => arrival.ticks)) : HORIZON;
+      return Math.max(this.assets.get(candidate.key)?.replacementGold ?? 0,
+        this.income(this.mineFor(candidate.target)), ...candidate.opportunities.map(op => op.valueGold), 0) / (1 + eta / HORIZON);
+    };
+    const coarseValues = new Map([...result.values()].map(candidate => [candidate, coarse(candidate)]));
     return [...result.values()].sort((a, b) => Number(b.key === activeId || b.key === active?.mineId)
-      - Number(a.key === activeId || a.key === active?.mineId) || a.key.localeCompare(b.key))
+      - Number(a.key === activeId || a.key === active?.mineId) || coarseValues.get(b)! - coarseValues.get(a)! || a.key.localeCompare(b.key))
       .filter((candidate, index, all) => all.slice(0, index).filter(other => other.kind === candidate.kind).length < CANDIDATES_PER_KIND);
   }
   camp(target: Target): Camp | undefined {
@@ -128,6 +151,64 @@ class LandModel {
       campCache.set(this.context.snapshot, cached);
     }
     return cached.camps.find(camp => gap(camp.center, target.point) <= EXPANSION_GUARD_RANGE);
+  }
+  /** Exact input projection of this quotation, without observation timestamps or
+   * unrelated positions/orders. ETA/HP/claims/deadlines are never rounded. */
+  factKey(candidate: Candidate, pool: Fighter[], potential: Fighter[], enemyPool: SituationUnit[],
+    camp: Camp | undefined, towers: PlanningContext['snapshot']['buildings'], previous: readonly Objective[], unknownRoutes: number) {
+    const s = this.situation, targetKey = candidate.kind === 'ContestRoute' ? candidate.opportunities[0]?.id ?? candidate.key : candidate.key;
+    const arrival = (a: Arrival | undefined) => !a ? null : 'ticks' in a
+      ? [a.status, a.ticks, a.landTicks, a.crossings, a.status === 'conditional' ? a.unmet.map(reason => reason.code) : []]
+      : [a.status, a.reason.code];
+    const stats = (unit: Unit | undefined) => unit ? [unit.id, unit.kind, unit.hp, unit.maxHp, unit.attackDamage, unit.attackCooldown,
+      unit.attackRange, unit.speed, unit.level, unit.radius, unit.bodyRadius, unit.gearMass] : null;
+    const threats = s.lands.flatMap(land => land.threats);
+    const sites = threats.flatMap(threat => { const site = this.assets.get(threat.siteId); return site?.owner === s.owner ? [site] : []; });
+    const relevantAssets = new Set([candidate.key, this.mineFor(candidate.target)?.id, ...sites.map(site => site.id)]);
+    if (candidate.kind === 'CounterHarass') for (const site of sites) for (const asset of s.assets)
+      if (asset.owner === s.owner && asset.target.landId === site.target.landId && gap(asset.target.point, site.target.point) <= 650)
+        relevantAssets.add(asset.id);
+    const ownHall = this.mining(candidate.kind) ? this.context.snapshot.buildings.find(building => building.owner === s.owner
+      && building.kind === 'townHall' && gap(building, candidate.target.point) <= GOLD_MINE_RULES.baseRange) : undefined;
+    const occupiedHall = this.mining(candidate.kind) ? this.context.snapshot.buildings.find(building => building.kind === 'townHall'
+      && this.foe(building.owner) && gap(building, candidate.target.point) <= GOLD_MINE_RULES.baseRange) : undefined;
+    const buildings = new Map([...towers, ...this.context.snapshot.buildings.filter(building => building.id === candidate.key
+      || building.id === ownHall?.id || building.id === occupiedHall?.id || ownHall && building.owner === s.owner && building.attackDamage > 0
+      && gap(building, ownHall) <= building.attackRange + ownHall.radius)].map(building => [building.id, building]));
+    const borrowedIds = new Set(pool.filter(fighter => fighter.borrowed).flatMap(fighter => fighter.unit.commitments
+      .map(claim => claim.objectiveId).filter(id => id !== identity(candidate.kind, s.owner, candidate.key))));
+    const reserved = s.economy.ledger.filter(entry => entry.objectiveId !== identity(candidate.kind, s.owner, candidate.key)
+      && entry.state === 'reserved' && entry.authority !== 'proposed').reduce((sum, entry) => sum + entry.gold, 0);
+    return JSON.stringify({ candidate: [candidate.kind, candidate.key, candidate.target,
+      candidate.opportunities.map(op => [op.kind, op.valueGold, op.evidence.map(item => [item.source, item.detail])])],
+      pool: pool.map(fighter => [stats(fighter.raw), fighter.unit.strength, fighter.unit.roles,
+        fighter.unit.expiresTick === null ? null : fighter.unit.expiresTick - s.tick,
+        fighter.unit.location.kind, 'landId' in fighter.unit.location ? fighter.unit.location.landId : null,
+        [candidate.target, ...sites.map(site => site.target)].map(site => gap(fighter.unit.location.point, site.point) <= 650),
+        fighter.unit.commitments.map(claim => [claim.source, claim.taskId, claim.objectiveId]), arrival(arrivalAt(fighter.unit, targetKey))]),
+      interruptions: potential.filter(fighter => fighter.interrupted).map(fighter => fighter.unit.id), unknownRoutes,
+      enemy: enemyPool.flatMap(unit => { const a = arrivalAt(unit, targetKey); return knownArrival(a) && a.status === 'reachable' && a.ticks <= HORIZON
+        ? [[unit.id, unit.strength, unit.expiresTick === null ? null : unit.expiresTick - s.tick, arrival(a), stats(this.raw.get(unit.id)!)]]
+        : !a || a.status === 'unknown' ? [[unit.id, arrival(a)]] : []; }),
+      camp: camp && [camp.center, camp.strength, camp.creeps.map(unit => [stats(unit), unit.expiresTick === undefined ? null : unit.expiresTick - s.tick])],
+      buildings: [...buildings.values()].map(building => [building.id, building.kind, building.owner, building.x, building.y,
+        building.hp, building.complete, building.radius, building.attackRange, building.attackDamage, building.attackCooldown,
+        building.buildProgress, building.buildTime, building.complete ? 0 : constructionWorkers(this.context.snapshot, building).length]),
+      assets: s.assets.filter(asset => relevantAssets.has(asset.id)).map(asset => [asset.id, asset.owner, asset.kind, asset.target,
+        asset.complete, asset.replacementGold, asset.discountedValueGold, this.income(asset)]),
+      threats: threats.map(threat => [threat.siteId, threat.arrivedStrength, threat.incomingStrength, threat.friendlyOnStationStrength,
+        threat.lossProbability, threat.attackers.map(attacker => [attacker.unitId, attacker.strength, arrival(attacker.arrival)])]),
+      guards: ownHall && this.own.filter(unit => unit.expiresTick === null && frontRole(unit) && !interruption(unit)
+        && unit.location.kind === 'land' && unit.location.landId === candidate.target.landId
+        && gap(unit.location.point, candidate.target.point) <= 650).map(unit => [unit.id, unit.strength, unit.commitments.map(claim => claim.objectiveId)]),
+      workers: this.mining(candidate.kind) && this.own.some(unit => unit.roles.includes('worker') && !interruption(unit)
+        && (() => { const a = arrivalAt(unit, candidate.key); return knownArrival(a) && a.status === 'reachable' && a.ticks < HORIZON; })()),
+      funded: !this.mining(candidate.kind) || !!ownHall || s.economy.cashGold - reserved >= BUILDING_DEFS.townHall.cost,
+      displaced: [...borrowedIds].filter((id): id is string => id !== null).sort().map(id => [id,
+        previous.find(objective => objective.id === id)?.utility.score ?? null,
+        s.units.filter(unit => unit.commitments.some(claim => claim.objectiveId === id)).reduce((sum, unit) => sum + unit.strength, 0)]),
+      counter: candidate.kind === 'CounterHarass' ? [this.raw.get(candidate.key), pool.map(fighter => fighter.raw),
+        this.context.snapshot.items, this.context.snapshot.variants, this.context.snapshot.players[s.owner]!.race] : null });
   }
   assess(candidate: Candidate, previous: readonly Objective[]): Assessment {
     const s = this.situation, id = identity(candidate.kind, s.owner, candidate.key), mining = this.mining(candidate.kind);
@@ -145,7 +226,7 @@ class LandModel {
     }
     const harasser = candidate.kind === 'CounterHarass' ? this.raw.get(candidate.key) : undefined;
     const targets = camp?.creeps ?? (harasser ? [harasser] : this.context.snapshot.buildings.filter(building => building.id === candidate.key));
-    const pool = potential.filter(fighter => !fighter.interrupted
+    let pool = potential.filter(fighter => !fighter.interrupted
       && (!mining || frontRole(fighter.unit)));
     const canIntercept = (fighter: Fighter) => !harasser || fighter.raw.attackRange > harasser.attackRange
       || fighter.raw.speed >= harasser.speed;
@@ -159,8 +240,12 @@ class LandModel {
       const lasting = fighters.reduce((sum, fighter) => sum + combatRating(fighter.raw) * fighter.coverage, 0);
       return full > 0 ? creepForce(fighters.map(fighter => fighter.raw), camp) * lasting / full : 0;
     };
-    const volley = (fighters: Fighter[]) => harasser ? fighters.filter(canIntercept).reduce((sum, fighter) => sum
-      + resolveUnitDamage(this.context.snapshot, harasser, fighter.raw.attackDamage, unitAttackDamageProfile(this.context.snapshot, fighter.raw)).damage, 0) : 0;
+    const shotDamage = new Map<string, number>();
+    const volley = (fighters: Fighter[]) => harasser ? fighters.filter(canIntercept).reduce((sum, fighter) => {
+      if (!shotDamage.has(fighter.unit.id)) shotDamage.set(fighter.unit.id, resolveUnitDamage(this.context.snapshot, harasser,
+        fighter.raw.attackDamage, unitAttackDamageProfile(this.context.snapshot, fighter.raw)).damage);
+      return sum + shotDamage.get(fighter.unit.id)!;
+    }, 0) : 0;
     // Combat work is a stated estimate. ETA and response reachability remain shared Situation facts.
     const workTicks = (fighters: Fighter[]) => candidate.kind === 'ContestRoute' ? HORIZON : Math.max(1,
       targets.reduce((sum, target) => sum + target.hp, 0) / Math.max(1e-6,
@@ -179,6 +264,30 @@ class LandModel {
     const towers = this.context.snapshot.buildings.filter(building => this.foe(building.owner)
       && building.complete && building.attackDamage > 0 && gap(building, candidate.target.point) <= building.attackRange + building.radius);
     const towerPower = towers.reduce((sum, building) => sum + structureRating(building), 0);
+    // A permanent-force lower bound cannot overstate a prefix's camp capacity.
+    // Stop before inspecting later soldiers once this prefix covers even every
+    // possible responder in the whole window. Summons cannot shorten this bound.
+    if (!harasser) {
+      const upper = camp ? forceFor(camp) : enemyPool.reduce((sum, unit) => {
+        const a = arrivalAt(unit, arrivalKey);
+        return sum + (knownArrival(a) && a.status === 'reachable' && a.ticks <= HORIZON ? unit.strength : 0);
+      }, towerPower);
+      let power = 0, front = false, end = 0;
+      for (const fighter of pool) {
+        end++; front ||= frontRole(fighter.unit) && fighter.unit.expiresTick === null;
+        if (fighter.unit.expiresTick === null) power += camp ? combatRating(fighter.raw) : fighter.unit.strength;
+        if (front && power >= upper) break;
+      }
+      pool = pool.slice(0, end);
+    }
+    const key = this.factKey(candidate, pool, potential, enemyPool, camp, towers, previous, unknownRoutes);
+    const retained = this.retained.goals.get(id);
+    if (retained?.key === key) return { ...retained.value,
+      preconditions: retained.value.preconditions.map(condition => ({ ...condition,
+        demand: condition.demand?.kind === 'force' && condition.demand.neededByTick !== null
+          ? { ...condition.demand, neededByTick: s.tick + (retained.value.eta ?? 0) } : condition.demand })),
+      reasons: retained.tick === s.tick ? retained.value.reasons : [...retained.value.reasons,
+        reason(s, 'assessment-reused', `相关事实未变；沿用 tick ${retained.tick} 的精算，ETA 与伤亡没有按时间桶取整`)] };
     const earliest = pool[0]?.eta ?? HORIZON;
     let required = camp ? forceFor(camp) : responding(Math.min(HORIZON, earliest + workTicks(pool)))
       .reduce((sum, unit) => sum + unit.strength, 0) + towerPower;
@@ -187,12 +296,14 @@ class LandModel {
     let crew: Fighter[] = [], duration = workTicks(pool), eta: number | null = null;
     for (let pass = 0; pass < 2; pass++) {
       crew = [];
+      let fieldPower = 0;
       for (const fighter of pool) {
         fighter.coverage = fighter.unit.expiresTick === null ? 1
           : Math.max(0, Math.min(1, (fighter.unit.expiresTick - s.tick - fighter.eta) / duration));
         if (fighter.coverage <= 0) continue;
         crew.push(fighter);
-        if (crew.some(item => frontRole(item.unit)) && measure(crew) >= required && (!harasser || volley(crew) * 2 >= harasser.hp)) break;
+        fieldPower += fighter.unit.strength * fighter.coverage;
+        if (crew.some(item => frontRole(item.unit)) && (camp ? measure(crew) : fieldPower) >= required && (!harasser || volley(crew) * 2 >= harasser.hp)) break;
       }
       eta = crew.length ? Math.max(...crew.map(fighter => fighter.eta)) : null;
       duration = workTicks(crew);
@@ -202,12 +313,16 @@ class LandModel {
     for (const fighter of crew) fighter.coverage = fighter.unit.expiresTick === null ? 1
       : Math.max(0, Math.min(1, (fighter.unit.expiresTick - s.tick - fighter.eta) / duration));
     crew = crew.filter(fighter => fighter.coverage > 0);
+    let currentPower = measure(crew);
     for (const fighter of pool) {
-      if (measure(crew) >= required && crew.some(item => frontRole(item.unit)) && (!harasser || volley(crew) * 2 >= harasser.hp)) break;
+      if (currentPower >= required && crew.some(item => frontRole(item.unit)) && (!harasser || volley(crew) * 2 >= harasser.hp)) break;
       if (crew.includes(fighter)) continue;
       fighter.coverage = fighter.unit.expiresTick === null ? 1
         : Math.max(0, Math.min(1, (fighter.unit.expiresTick - s.tick - fighter.eta) / duration));
-      if (fighter.coverage > 0) crew.push(fighter);
+      if (fighter.coverage > 0) {
+        crew.push(fighter);
+        currentPower = camp ? measure(crew) : currentPower + fighter.unit.strength * fighter.coverage;
+      }
     }
     eta = crew.length ? Math.max(...crew.map(fighter => fighter.eta)) : null;
     duration = workTicks(crew);
@@ -357,7 +472,8 @@ class LandModel {
     }, 0);
     cost.push(term('expected-attrition', Math.min(price, price * damage / Math.max(1, exposedHp))
       * (1 - forceSuccessProbability(power, required)), '交战窗口火力暴露与战力比给出的风险估计，非实际死亡归因'));
-    const displaced = new Set(borrowed.flatMap(fighter => fighter.unit.commitments.map(item => item.objectiveId).filter((id): id is string => id !== null)));
+    const displaced = new Set(borrowed.flatMap(fighter => fighter.unit.commitments.map(item => item.objectiveId)
+      .filter((oldId): oldId is string => oldId !== null && oldId !== id)));
     for (const oldId of [...displaced].sort()) {
       const old = previous.find(objective => objective.id === oldId);
       const committed = s.units.filter(unit => unit.commitments.some(item => item.objectiveId === oldId));
@@ -386,14 +502,18 @@ class LandModel {
     ev.push(...candidate.opportunities.flatMap(opportunity => opportunity.evidence),
       evidence(s, `有效/待借/需求：${available}/${power}/${required}；仅消费 Situation 的 ETA 与敌援事实`));
     reasons.push(reason(s, 'observation-only-cohort', `这里只报价候选队伍：${crew.map(fighter => fighter.unit.id).join(', ')}；没有创建分配或修改 claim`));
-    return { candidate, id, crew, required, power, available, eta, duration, camp, occupation, preconditions, benefit, cost, evidence: ev, reasons };
+    const valueAssessment = { candidate, id, crew, required, power, available, eta, duration, camp, occupation, preconditions, benefit, cost, evidence: ev, reasons };
+    this.retained.goals.set(id, { key, tick: s.tick, value: valueAssessment });
+    return valueAssessment;
   }
 }
 
 /** Proposals only. Neither this function nor decompose writes memory or issues commands. */
 export function generateLandObjectives(situation: Situation, context: PlanningContext, previousObjectives: readonly Objective[] = []): readonly Objective[] {
   const model = new LandModel(situation, context);
-  return model.candidates().map(candidate => {
+  const candidates = model.candidates(), retainedIds = new Set(candidates.map(candidate => identity(candidate.kind, situation.owner, candidate.key)));
+  for (const id of model.retained.goals.keys()) if (!retainedIds.has(id)) model.retained.goals.delete(id);
+  return candidates.map(candidate => {
     const a = model.assess(candidate, previousObjectives), old = previousObjectives.find(objective => objective.id === a.id);
     const live = candidate.kind === 'AttackSite' ? context.memory.landAttack?.targetId === candidate.key
       : candidate.kind === 'ContestRoute' ? context.memory.territory?.objective?.targetId === candidate.key
