@@ -6,7 +6,10 @@ import { snapshotGame } from '../../shared/sim';
 import type { GameSnapshot, PlayerId } from '../../shared/types';
 import { neutralCamps, creepForce } from '../policy/v7/creep';
 import { strengthOf } from '../policy/v6/strength';
-import { assessAllocatedCampEngagement, assessAllocatedForce } from './allocated-force';
+import { assessAllocatedCampBattle, assessAllocatedCampEngagement, assessAllocatedForce, assessPostBattleSiteRisk } from './allocated-force';
+import { combatCapability } from '../../shared/combat-capabilities';
+import { BUILDING_DEFS } from '../../shared/catalog';
+import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { buildStrategyDecision } from './decision';
 import { landIdAt } from './regions';
 import { strategicTargetCamp } from './target-camp';
@@ -67,6 +70,47 @@ describe('allocated cohort force', () => {
 });
 
 describe('shared camp engagement facts', () => {
+  it('converges actual reinforcement waves and keeps later asset threats outside the first fight', () => {
+    const game = sketchScene('camp-battle-waves').map('bareDuel').replaceDefaults()
+      .player('us', { team: 'a' }).player('foe', { team: 'b' })
+      .unit('us', 'archer', 1000, 1000).unit('us', 'archer', 1050, 1000)
+      .unit('neutral', 'ogreWarrior', 1500, 1500)
+      .unit('foe', 'footman', 1600, 1600).unit('foe', 'footman', 1650, 1600)
+      .unit('foe', 'footman', 1700, 1600).unit('foe', 'footman', 1750, 1600).build().createGame();
+    const snapshot = snapshotGame(game), target: Target = { entityId: 'mine', landId: 'land:1', point: { x: 1500, y: 1500 } };
+    const ours = snapshot.units.filter(unit => unit.owner === 'us'), enemies = snapshot.units.filter(unit => unit.owner === 'foe');
+    const dps = ours.reduce((sum, unit) => sum + combatCapability(snapshot, unit).dps, 0), camp = strategicTargetCamp(snapshot, target)!;
+    const initialTicks = Math.ceil(camp.creeps.reduce((sum, unit) => sum + unit.hp, 0) / dps * SIM_TICKS_PER_SECOND);
+    const extension = Math.ceil(enemies[0]!.hp / dps * SIM_TICKS_PER_SECOND), starts = 20;
+    const etas = [starts + initialTicks - 1, starts + initialTicks + Math.floor(extension / 2),
+      starts + initialTicks + Math.floor(1.5 * extension), starts + initialTicks + 3 * extension + 100];
+    const situation: Situation = { tick: snapshot.tick, owner: 'us', horizonTicks: 2400, lands: [], seas: [], assets: [],
+      opportunities: [], limitations: [], economy: { cashGold: 0, predictedIncomeGold: 0, horizonTicks: 2400, ledger: [] },
+      units: enemies.map((unit, i) => ({ id: unit.id, owner: unit.owner, kind: unit.kind,
+        location: { kind: 'land', landId: 'land:1', point: unit }, hp: unit.hp, maxHp: unit.maxHp, strength: 999999,
+        roles: ['frontline'], expiresTick: null, commitments: [], arrivals: [{ targetId: 'mine',
+          arrival: { status: 'reachable', ticks: etas[i]!, landTicks: etas[i]!, crossings: [], evidence: [] } }] })) };
+    const input = { snapshot, situation, target, unitIds: ours.map(unit => unit.id), battleStartTicks: starts };
+    const before = JSON.stringify(input), battle = assessAllocatedCampBattle(input);
+    expect(battle).toMatchObject({ status: 'known', converged: true, reasonCode: 'camp-battle-converged' });
+    expect(battle.iterations).toBeGreaterThan(2);
+    expect(battle.engagement.enRouteEnemyIds).toEqual(enemies.slice(0, 3).map(unit => unit.id).sort());
+    expect(battle.engagement.memberIds).not.toContain(enemies[3]!.id);
+    expect(battle.battleUntilTicks).toBeLessThan(etas[3]!);
+    expect(assessAllocatedCampBattle({ ...input, maxIterations: 1 })).toMatchObject({ status: 'unknown',
+      converged: false, reasonCode: 'camp-battle-iteration-limit', successProbability: null, ourForce: null });
+    const post = assessPostBattleSiteRisk({ snapshot, situation, target, battleStartTicks: battle.battleUntilTicks,
+      windowTicks: 1000, excludedEnemyIds: battle.engagement.memberIds,
+      survivingPermanentCampForce: battle.attrition.survivingCampForce, plannedAssetRadius: BUILDING_DEFS.townHall.radius });
+    expect(post.memberIds).toEqual([enemies[3]!.id]);
+    expect(post.opponentForce).toBeGreaterThan(0);
+    expect(post.ownForce).toBe(battle.attrition.survivingCampForce);
+    expect(battle.attrition.survivors.reduce((sum, unit) => sum + unit.hp, 0))
+      .toBeCloseTo(ours.reduce((sum, unit) => sum + unit.hp, 0) - battle.attrition.expectedHpLost);
+    expect(assessAllocatedCampBattle(JSON.parse(JSON.stringify(input)))).toEqual(battle);
+    expect(JSON.stringify(input)).toBe(before);
+  });
+
   it('keeps the real sapphire guards, departure margin and same-cohort force separate without mutating the frame', () => {
     const frame = sapphire(), { snapshot, owner } = frame;
     const decision = buildStrategyDecision(snapshot, owner, { memory: frame.memory }, undefined, undefined, Infinity);
