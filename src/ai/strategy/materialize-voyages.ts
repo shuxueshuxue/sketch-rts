@@ -9,7 +9,7 @@ import { distance } from '../policy/spatial';
 import type { AllocationMethodQuoteInput, AllocationPrecondition, ExecutableMethod, PlannedAllocationSpend, PlannedVoyage } from './allocation-types';
 import type { CrossingEta, LandId } from './types';
 import { landIdAt, regionIndex, seaIdAt } from './regions';
-import { unitArrival } from './unit-arrivals';
+import { actionTargetArrival } from './unit-arrivals';
 
 type Group = { key: string; source: LandId; crossing: CrossingEta; units: Unit[]; arrivalTicks: number };
 type Result = { voyages: PlannedVoyage[]; actions: ExecutableMethod['actions'][number][]; spends: PlannedAllocationSpend[];
@@ -21,7 +21,7 @@ const byId = (a: { id: string }, b: { id: string }) => a.id < b.id ? -1 : a.id >
  * travels with the proposal into the allocator and native execution. */
 export function materializeVoyages(input: AllocationMethodQuoteInput, actionId: string,
   passengerIds: readonly string[] = input.unitIds): Result {
-  const { snapshot, situation, method, objective } = input;
+  const { snapshot, situation, method } = input;
   const action = method.actions.find(action => action.id === actionId);
   if (!action) throw new Error(`Missing transport action ${actionId}`);
   const target = action.target, selected = new Set(input.unitIds), passengers = new Set(passengerIds);
@@ -42,8 +42,7 @@ export function materializeVoyages(input: AllocationMethodQuoteInput, actionId: 
     if (!fact || fact.location.kind !== 'land') { missing('departure-land-unobserved', [id]); continue; }
     // A resource row is interchangeable only when it names this exact point.
     // A defensive post offset from the hall requires its own action ETA row.
-    const arrival = unitArrival(fact, actionId) ?? (target.entityId === objective.target.entityId
-      && distance(target.point, objective.target.point) < 1e-6 ? unitArrival(fact, target.entityId ?? '') : undefined);
+    const arrival = actionTargetArrival(fact, actionId, target, situation.assets);
     if (!arrival || !('crossings' in arrival)) { missing('transport-route-unquoted', [id]); continue; }
     if (arrival.crossings.length !== 1) { missing('transport-needs-unplanned-intermediate-crossing', [id]); continue; }
     const crossing = arrival.crossings[0]!;
