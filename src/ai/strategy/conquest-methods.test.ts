@@ -29,9 +29,12 @@ describe('executable conquest methods from the real sapphire shortfall', () => {
     const clearing = method.actions.find(action => action.intent.kind === 'clear-camp')!;
     const wait = method.actions.find(action => action.intent.kind === 'wait-income')!;
     const build = method.actions.find(action => action.intent.kind === 'build-hall')!;
+    const mining = method.actions.find(action => action.intent.kind === 'start-mining')!;
     expect(method.voyagePlans).toHaveLength(1);
     expect(method.voyagePlans![0]!.unitIds).toHaveLength(4);
     expect(training.dependsOn).toEqual([]);
+    expect(training.unitIds).toEqual([]);
+    expect(method.actions.every(action => action.unitIds !== undefined)).toBe(true);
     expect(assembly.dependsOn).toEqual([]);
     expect(assembly.unitIds).toEqual(method.voyagePlans![0]!.unitIds);
     expect(deliver.dependsOn).toEqual(expect.arrayContaining([training.id, assembly.id]));
@@ -40,6 +43,10 @@ describe('executable conquest methods from the real sapphire shortfall', () => {
     expect(wait.dependsOn).toContain(clearing.id);
     expect(build.dependsOn).toEqual(expect.arrayContaining([clearing.id, wait.id]));
     expect(wait.spendIds).toEqual(build.spendIds);
+    expect(mining.unitIds).toEqual(['unit-player-4-worker-3']);
+    expect(mining.dependsOn).toEqual(expect.arrayContaining([build.id, `${method.id}/garrison`]));
+    expect(method.actions.find(action => action.id === `${method.id}/garrison`)!.completionEffects).toEqual([]);
+    expect(mining.completionEffects).toEqual(input.objective.effects);
     expect(method.spends.map(spend => spend.amountGold).sort((a, b) => a - b)).toEqual([240, 400]);
     expect(input.situation.economy.cashGold).toBe(424);
     const quoted = conquestMethodProvider.quote({ ...input, method });
