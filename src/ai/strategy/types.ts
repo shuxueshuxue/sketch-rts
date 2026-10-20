@@ -41,6 +41,10 @@ export type CrossingEta = Readonly<{
   productionBuildingId?: string;
   departure: Point;
   landing: Point;
+  /** Same native boarding berth used by the execution grant. */
+  departureGround?: Point;
+  departureHeading?: number;
+  landingHeading?: number;
   /** Actual land-side unload point, distinct from the boat's water-side stop. */
   landingGround?: Point;
   /** Additional wait after the embarkation walk, excluding time already spent walking. */
