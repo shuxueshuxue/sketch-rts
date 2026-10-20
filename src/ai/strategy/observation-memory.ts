@@ -1,3 +1,4 @@
+import type { VoyageRiskMemory } from './voyage-risk';
 import { standingBodies } from '../../shared/structure-bodies';
 import { fnv1a } from '../../shared/sim/checksum';
 import type { Terrain } from '../../shared/terrain';
@@ -17,6 +18,8 @@ export type StrategyObservationMemory = {
   landBodies: string;
   fields: { land: FieldProgress[]; sea: FieldProgress[] };
   crossings: { key: string; fieldTicks: number[]; quotedTick: number }[];
+  /** Bounded deterministic route-exposure publication, never route arrays. */
+  voyageRisks?: VoyageRiskMemory;
   truncated?: true;
   history?: { tick: number; assets: Asset[]; lostSites: Opportunity[]; objectives: PreviousObjective[] };
 };
