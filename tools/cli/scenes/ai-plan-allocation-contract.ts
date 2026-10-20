@@ -62,6 +62,12 @@ export default async function (s: Scene) {
     s.must(html.includes(text), `Missing allocation detail: ${text}`);
   }
   await s.camera(fixture.first.x + 150, fixture.first.y + 100, .9);
+  const target = fixture.allocation.objectives[0].target.point;
+  const marker = await s.page.evaluate((point: {x:number;y:number}) =>
+    (window as any).__sketchRtsDebug.screenOf(point.x, point.y), target);
+  await s.page.mouse.click(marker.x, marker.y);
+  s.must(await s.page.locator('.plan-strategy').getAttribute('data-objective') === 'defense',
+    'A same-position candidate stole the committed marker click');
   await s.wait(500); await s.shot('allocation-contract-intent');
   await s.page.locator('.plan-assignment').first().scrollIntoViewIfNeeded();
   await s.wait(300); await s.shot('allocation-contract-assignment');

@@ -31,6 +31,7 @@ export class AiPlanOverlay {
   private viewTo:number|undefined;
   private hits:{x:number;y:number;action:()=>void}[]=[];
   private lastNodes:ReturnType<AiPlanHistory['nodes']>=[];
+  private mapNodes:ReturnType<AiPlanHistory['nodes']>=[];
   private nodeTick=-1;
   constructor(private options:{getAdapter:()=>GameAdapter;getSnapshot:()=>GameSnapshot|null|undefined;isMatch:()=>boolean;
     project:(point:Point)=>Point;center:(point:Point)=>void;openReplay:(trace:DebugReplayTrace)=>void|Promise<void>;canvas:HTMLCanvasElement}) {
@@ -55,7 +56,7 @@ export class AiPlanOverlay {
     options.canvas.addEventListener('mousedown',event=>{
       if(!this.opened||event.button!==0)return;
       const rect=options.canvas.getBoundingClientRect();
-      const hit=this.hits.find(p=>Math.hypot(p.x-event.clientX+rect.left,p.y-event.clientY+rect.top)<17);
+      const hit=[...this.hits].reverse().find(p=>Math.hypot(p.x-event.clientX+rect.left,p.y-event.clientY+rect.top)<17);
       if(hit){markedClick=true;event.stopImmediatePropagation();event.preventDefault();hit.action();}
     },true);
   }
@@ -81,10 +82,14 @@ export class AiPlanOverlay {
     if(!this.opened)return;
     this.bind();const snapshot=this.options.getSnapshot();if(!snapshot)return;
     const started=performance.now(),tick=snapshot.tick;
-    if(this.nodeTick!==tick){this.lastNodes=this.history.nodes(tick);this.nodeTick=tick;}
+    if(this.nodeTick!==tick){
+      this.lastNodes=this.history.nodes(tick);this.nodeTick=tick;
+      // Quotes can share a site with a committed objective. Paint the actual grant above them.
+      this.mapNodes=[...this.lastNodes].sort((a,b)=>Number(!!a.node.strategy?.allocation)-Number(!!b.node.strategy?.allocation));
+    }
     this.hits=[];ctx.save();ctx.lineWidth=1.5;ctx.font='600 13px system-ui';
     const selected=this.lastNodes.find(({trace,node})=>trace.owner===this.selected?.owner&&node.id===this.selected?.id);
-    for(const {trace,node} of this.lastNodes){
+    for(const {trace,node} of this.mapNodes){
       if(node.kind==='task'&&!node.strategy&&!this.showTasks)continue;
       const target=node.target.position;if(!target)continue;
       const blocked=node.status==='blocked'||!!node.strategy&&node.requirements.some(condition=>condition.met!==true);
