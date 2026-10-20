@@ -277,7 +277,7 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
             const approach = seaTime(ship, free.point, from.water, requiresNewShip), sailingTicks = seaTime(ship, from.water, to.water, true);
             if (approach === undefined || sailingTicks === undefined) continue;
             choices.push({ from, to, afterCost, readyTicks: free.ticks + approach, unmet: free.unmet,
-              crossing: { seaId: sea, shipId: requiresNewShip ? null : ship.id, departure: { ...from.water }, landing: { ...to.water }, landingGround: { ...to.ground },
+              crossing: { seaId: sea, shipId: requiresNewShip ? null : ship.id, ...(requiresNewShip && yard ? { productionBuildingId: yard.id } : {}), departure: { ...from.water }, landing: { ...to.water }, landingGround: { ...to.ground },
                 boardingTicks: GANGWAY_SETUP_TICKS, sailingTicks, unloadingTicks: GANGWAY_SETUP_TICKS, requiresNewShip } });
           }
         }
