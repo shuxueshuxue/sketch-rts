@@ -66,4 +66,23 @@ describe('executable conquest methods from the real sapphire shortfall', () => {
     expect(method.voyagePlans).toEqual([]);
     expect(method.spends.map(spend => spend.amountGold)).toEqual([400]);
   });
+
+  it('does not silently replace a quoted production yard when another real shipyard is still available', () => {
+    const input = sapphire();
+    const situation = { ...input.situation, units: input.situation.units.map(unit => ({ ...unit,
+      arrivals: unit.arrivals.map(row => {
+        if (row.targetId !== input.objective.target.entityId) return row;
+        const arrival = row.arrival;
+        if (arrival.status === 'reachable') return { ...row, arrival: { ...arrival, crossings: arrival.crossings.map(crossing => ({ ...crossing,
+          productionBuildingId: 'declared-shipyard-no-longer-present' })) } };
+        if (arrival.status === 'conditional') return { ...row, arrival: { ...arrival, crossings: arrival.crossings.map(crossing => ({ ...crossing,
+          productionBuildingId: 'declared-shipyard-no-longer-present' })) } };
+        return row;
+      }) })) };
+    expect(input.snapshot.buildings.some(building => building.id === 'building-player-4-shipyard-1410' && building.complete)).toBe(true);
+    const method = conquestMethodProvider.materialize!({ ...input, situation });
+    expect(method.preconditions.some(condition => condition.reason.code === 'quoted-shipyard-unavailable')).toBe(true);
+    expect(method.actions.some(action => action.executor === 'strategy.train-transport')).toBe(false);
+    expect(method.voyagePlans).toEqual([]);
+  });
 });
