@@ -32,8 +32,8 @@ export type ActionIntent =
 export type AllocationReason = Readonly<{ code: string; factIds: readonly string[];
   values: Readonly<Record<string, string | number | boolean | null>> }>;
 export type AllocationUtility = Omit<Utility, 'benefit' | 'cost' | 'evidence'> & Readonly<{
-  benefit: readonly Readonly<{ code: string; value: number }>[];
-  cost: readonly Readonly<{ code: string; value: number }>[];
+  benefit: readonly Omit<Utility['benefit'][number], 'explanation'>[];
+  cost: readonly Omit<Utility['cost'][number], 'explanation'>[];
 }>;
 export type AllocationPrecondition = Omit<Precondition, 'reason'> & Readonly<{ reason: AllocationReason }>;
 export type AllocationLocation = Exclude<Location, { kind: 'unknown' }>
