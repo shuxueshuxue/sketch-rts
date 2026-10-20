@@ -207,8 +207,11 @@ export function assessAllocatedCampBattle(input: Omit<TargetReinforcementInput, 
   const opponentForce = engagement.actualOpponentForce === null ? null : rated.actualOpponentForce;
   const ourForce = engagement.ourForce === null ? null : rated.ourForce;
   const expires = ours.filter(unit => unit.expiresTick !== undefined && unit.expiresTick <= snapshot.tick + battleStartTicks + durationTicks);
-  const status = converged && dps > 0 && engagement.status === 'known' && !expires.length ? 'known' as const : 'unknown' as const;
-  const probability = status === 'known' ? forceSuccessProbability(ourForce!, opponentForce!) : null;
+  // Empty/non-attacking cohorts have a fully known zero DPS. They cannot clear
+  // the site, but waiting for another weapon fact will never change that zero.
+  const dpsKnown = Number.isFinite(dps) && dps >= 0;
+  const status = converged && dpsKnown && engagement.status === 'known' && !expires.length ? 'known' as const : 'unknown' as const;
+  const probability = status === 'known' ? dps === 0 && opponentForce! > 0 ? 0 : forceSuccessProbability(ourForce!, opponentForce!) : null;
   const availability = new Map(engagement.enemyAvailability.map(entry => [entry.unitId, entry]));
   const frontRange = ours.length ? Math.min(...ours.map(unit => unit.attackRange)) : 0;
   // Exposure estimates damage only. One shared calibrated model turns it into
@@ -223,11 +226,12 @@ export function assessAllocatedCampBattle(input: Omit<TargetReinforcementInput, 
   const casualties = calibratedCasualties(ours, damage);
   const hp = ours.reduce((sum, unit) => sum + unit.hp, 0), lossShare = casualties.expectedHpLost / Math.max(1, hp);
   const permanent = casualtySurvivors(ours, casualties).filter(unit => unit.expiresTick === undefined);
-  return { status, reasonCode: !converged ? 'camp-battle-iteration-limit' : !dps ? 'allocated-battle-dps-unavailable'
-    : expires.length ? 'allocated-cohort-expires-during-battle' : engagement.status === 'unknown' ? 'battle-enemy-arrival-unknown' : 'camp-battle-converged',
+  return { status, reasonCode: !converged ? 'camp-battle-iteration-limit' : !dpsKnown ? 'allocated-battle-dps-unavailable'
+    : expires.length ? 'allocated-cohort-expires-during-battle' : engagement.status === 'unknown' ? 'battle-enemy-arrival-unknown'
+      : dps === 0 ? 'allocated-clearing-force-empty' : 'camp-battle-converged',
     converged, iterations, battleStartTicks, durationTicks, battleUntilTicks: battleStartTicks + durationTicks, dps,
     engagement, coveringTowerIds: towers.map(tower => tower.id).sort(), actualOpponentForce: opponentForce,
-    knownOurForce: ourForce, ourForce: status === 'known' ? ourForce : null,
+    knownOurForce: ourForce, ourForce: dpsKnown && dps === 0 ? 0 : status === 'known' ? ourForce : null,
     requiredForce: opponentForce === null ? null : opponentForce + engagement.margin, successProbability: probability,
     expiringOwnIds: expires.map(unit => unit.id).sort(),
     attrition: { ...casualties, lossShare,
