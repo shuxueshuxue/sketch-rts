@@ -6,8 +6,9 @@ import { snapshotGame } from '../../shared/sim';
 import { setBuildingBodies } from '../../shared/terrain';
 import { standingBodies } from '../../shared/structure-bodies';
 import { strengthOf } from '../policy/v6/strength';
-import type { AllocationMethodQuoteInput } from './allocation-types';
+import type { AllocationMethodQuoteInput, ExecutorInput } from './allocation-types';
 import { defenseMethodProvider } from './defense-methods';
+import { evacuateExecutor } from './executors/evacuate';
 import { buildStrategyDecision } from './decision';
 import type { DecisionFacts } from './decision';
 import { landIdAt } from './regions';
@@ -49,33 +50,50 @@ function defendedPost(): AllocationMethodQuoteInput {
   return { snapshot, situation, objective, method, unitIds: party.map(unit => unit.id), executions: [], budgets: [] };
 }
 
+function namedNeEvacuation(): AllocationMethodQuoteInput {
+  const frame = JSON.parse(gunzipSync(readFileSync(new URL('../bootstrap_1/fixtures/strategy-allocation-frames.json.gz', import.meta.url))).toString())
+    .frames['Ne-sapphireArchipelago-player-4-17991'];
+  const snapshot = frame.snapshot as AllocationMethodQuoteInput['snapshot'];
+  setBuildingBodies(snapshot.map, standingBodies(snapshot));
+  const decision = buildStrategyDecision(snapshot, frame.owner, { memory: frame.memory }, undefined, undefined, Infinity);
+  const workerId = 'unit-player-4-worker-1980';
+  const worker = snapshot.units.find(unit => unit.id === workerId)!, subject = snapshot.units.find(unit => unit.id === 'unit-player-4-worker-3')!;
+  expect(worker.kind).toBe('worker');
+  const refuge = decision.situation.assets.find(asset => asset.owner === frame.owner && asset.kind === 'hall' && asset.complete
+    && asset.target.landId === landIdAt(snapshot.map, worker))!;
+  // The runtime collector's Evacuate proposal is newer than the frozen
+  // read-only goal generator here. Its named subject and refuge use this
+  // unchanged real world; no unit is spawned or moved for the regression.
+  const objective: AllocationMethodQuoteInput['objective'] = { id: 'Evacuate:player-4:unit-player-4-worker-3',
+    owner: frame.owner, kind: 'Evacuate', target: { entityId: subject.id, landId: landIdAt(snapshot.map, subject)!,
+      point: { x: subject.x, y: subject.y } }, effects: [{ kind: 'assets-evacuated', unitIds: [subject.id], destination: refuge.target }],
+    utility: { horizonTicks: 2400, benefit: [], cost: [], successProbability: 1, persistenceBonus: 0, score: 0 },
+    status: 'candidate', sinceTick: snapshot.tick, rank: 1, reasons: [], methodIds: [],
+    stability: { minimumStayUntilTick: snapshot.tick, challengerId: null, challengerThinks: 0 } };
+  const skeleton = defenseMethodProvider.buildMethods({ snapshot, situation: decision.situation, objective,
+    previous: null, executions: [], blocked: [] })[0]!;
+  const method = { ...skeleton, actions: skeleton.actions.filter(action => action.executor !== 'strategy.transport')
+    .map(action => ({ ...action, unitIds: [workerId] })) };
+  return { snapshot, situation: decision.situation, objective, method,
+    unitIds: [workerId], budgets: [], executions: [] };
+}
+
+function evacuationGrant(input: AllocationMethodQuoteInput): ExecutorInput {
+  const action = input.method.actions.at(-1)!, token = { actionId: action.id, generation: 1 };
+  return { snapshot: input.snapshot, owner: input.situation.owner, objective: input.objective, method: input.method,
+    execution: { token, objectiveId: input.objective.id, methodId: input.method.id, executor: action.executor, intent: action.intent,
+      target: action.target, dependsOn: action.dependsOn, completionEffects: action.completionEffects,
+      status: 'active', phase: 'evacuating', sinceTick: input.snapshot.tick, lastProgressTick: input.snapshot.tick, state: {} },
+    grant: { revision: 1, action: token, objectiveId: input.objective.id, methodId: input.method.id,
+      leases: input.unitIds.map(id => ({ id: `lease:${id}`, resourceKey: `unit:${id}`, objectiveId: input.objective.id,
+        methodId: input.method.id, action: token, sinceTick: input.snapshot.tick, minimumStayUntilTick: input.snapshot.tick,
+        origin: 'allocator', incumbentTask: null })),
+      assignments: [], budgets: [], voyages: [], orders: [], commands: [], orderOverrides: [] }, events: [] };
+}
+
 describe('defense protection and whole-bundle valuation', () => {
   it('does not revive the removed Ne worker from a previously concrete local evacuation', () => {
-    const frame = JSON.parse(gunzipSync(readFileSync(new URL('../bootstrap_1/fixtures/strategy-allocation-frames.json.gz', import.meta.url))).toString())
-      .frames['Ne-sapphireArchipelago-player-4-17991'];
-    const snapshot = frame.snapshot as AllocationMethodQuoteInput['snapshot'];
-    setBuildingBodies(snapshot.map, standingBodies(snapshot));
-    const decision = buildStrategyDecision(snapshot, frame.owner, { memory: frame.memory }, undefined, undefined, Infinity);
-    const workerId = 'unit-player-4-worker-1980';
-    const worker = snapshot.units.find(unit => unit.id === workerId)!, subject = snapshot.units.find(unit => unit.id === 'unit-player-4-worker-3')!;
-    expect(worker.kind).toBe('worker');
-    const refuge = decision.situation.assets.find(asset => asset.owner === frame.owner && asset.kind === 'hall' && asset.complete
-      && asset.target.landId === landIdAt(snapshot.map, worker))!;
-    // The runtime collector's Evacuate proposal is newer than the frozen
-    // read-only goal generator here. Its named subject and refuge use this
-    // unchanged real world; no unit is spawned or moved for the regression.
-    const objective: AllocationMethodQuoteInput['objective'] = { id: 'Evacuate:player-4:unit-player-4-worker-3',
-      owner: frame.owner, kind: 'Evacuate', target: { entityId: subject.id, landId: landIdAt(snapshot.map, subject)!,
-        point: { x: subject.x, y: subject.y } }, effects: [{ kind: 'assets-evacuated', unitIds: [subject.id], destination: refuge.target }],
-      utility: { horizonTicks: 2400, benefit: [], cost: [], successProbability: 1, persistenceBonus: 0, score: 0 },
-      status: 'candidate', sinceTick: snapshot.tick, rank: 1, reasons: [], methodIds: [],
-      stability: { minimumStayUntilTick: snapshot.tick, challengerId: null, challengerThinks: 0 } };
-    const skeleton = defenseMethodProvider.buildMethods({ snapshot, situation: decision.situation, objective,
-      previous: null, executions: [], blocked: [] })[0]!;
-    const method = { ...skeleton, actions: skeleton.actions.filter(action => action.executor !== 'strategy.transport')
-      .map(action => ({ ...action, unitIds: [workerId] })) };
-    const input: AllocationMethodQuoteInput = { snapshot, situation: decision.situation, objective, method,
-      unitIds: [], budgets: [], executions: [] };
+    const input = { ...namedNeEvacuation(), unitIds: [] };
     const before = JSON.stringify(input), removed = defenseMethodProvider.materialize!(input);
     expect(removed.actions.flatMap(action => action.unitIds ?? [])).toEqual([]);
     expect(defenseMethodProvider.materialize!({ ...input, method: removed })).toEqual(removed);
@@ -83,6 +101,43 @@ describe('defense protection and whole-bundle valuation', () => {
     setBuildingBodies(cold.snapshot.map, standingBodies(cold.snapshot));
     expect(defenseMethodProvider.materialize!(cold)).toEqual(removed);
     expect(JSON.stringify(input)).toBe(before);
+  });
+
+  it('cannot substitute another real Ne worker for the named evacuation subject', () => {
+    const input = namedNeEvacuation(), before = JSON.stringify(input);
+    const materialized = defenseMethodProvider.materialize!(input);
+    expect(materialized.actions.flatMap(action => action.unitIds ?? [])).toEqual([]);
+    expect(materialized.actions.at(-1)!.completionEffects).toEqual(input.objective.effects);
+    const quote = defenseMethodProvider.quote({ ...input, method: materialized });
+    expect(quote.status).toBe('blocked');
+    expect(quote.reason.code).toBe('evacuation-subject-not-granted');
+    expect(quote.missingPreconditions[0]!.kind).toBe('workers');
+    const result = evacuateExecutor.execute(evacuationGrant(input));
+    expect(result.status).toBe('blocked');
+    expect(result.reasons[0]!.reason).toBe('evacuation-subject-not-granted');
+    expect(result.commands).toEqual([]);
+    expect(JSON.stringify(input)).toBe(before);
+  });
+
+  it('keeps a generic DefendSite evacuation fallback scoped to its granted workers', () => {
+    const named = namedNeEvacuation(), objective = { ...named.objective, kind: 'DefendSite' as const, effects: [] };
+    const input = { ...named, objective };
+    const materialized = defenseMethodProvider.materialize!(input);
+    expect(materialized.actions.at(-1)!.unitIds).toEqual(input.unitIds);
+    const result = evacuateExecutor.execute(evacuationGrant(input));
+    expect(result.reasons.some(reason => reason.reason === 'evacuation-subject-not-granted')).toBe(false);
+    expect(result.commands.flatMap(entry => 'unitIds' in entry.command ? entry.command.unitIds : [])
+      .every(id => input.unitIds.includes(id))).toBe(true);
+  });
+
+  it('keeps the named Ne subject when it is actually granted without adding the other worker', () => {
+    const input = { ...namedNeEvacuation(), unitIds: ['unit-player-4-worker-3'] };
+    const materialized = defenseMethodProvider.materialize!(input);
+    expect(materialized.actions.at(-1)!.unitIds).toEqual(input.unitIds);
+    const result = evacuateExecutor.execute(evacuationGrant({ ...input, method: materialized }));
+    expect(result.reasons.some(reason => reason.reason === 'evacuation-subject-not-granted')).toBe(false);
+    expect(result.commands.flatMap(entry => 'unitIds' in entry.command ? entry.command.unitIds : [])
+      .every(id => input.unitIds.includes(id))).toBe(true);
   });
 
   it('rebinds a previously concrete local defense to the current counterfactual subset', () => {

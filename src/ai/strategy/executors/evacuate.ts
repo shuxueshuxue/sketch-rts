@@ -4,13 +4,18 @@ import { armedFoes, retreatLandRoad } from '../../bootstrap_1/safe-land-route';
 import { workerThreatAt } from '../../bootstrap_1/worker-safety';
 import type { ExecutorFeedback, StrategyExecutor } from '../allocation-types';
 import { blockedExecutor, executorFeedback, grantedUnits, validExecutorGrant } from '../executor-grants';
+import { evacuationSubjectIds } from '../evacuation-subjects';
 
 export const evacuateExecutor: StrategyExecutor = {
   id: 'strategy.evacuate',
   execute(input) {
     if (!validExecutorGrant(input)) return blockedExecutor(input, 'invalid-action-grant');
     const { snapshot, owner, execution } = input, destination = execution.target;
-    const base = executorFeedback(input), workers = grantedUnits(input).filter(unit => unit.kind === 'worker');
+    const subjects = evacuationSubjectIds(input.objective);
+    const base = executorFeedback(input), workers = grantedUnits(input).filter(unit => unit.kind === 'worker'
+      && (!subjects || subjects.includes(unit.id)));
+    const missing = subjects?.filter(id => !workers.some(worker => worker.id === id));
+    if (missing?.length) return blockedExecutor(input, 'evacuation-subject-not-granted', missing);
     if (!workers.length) return blockedExecutor(input, 'no-granted-evacuees');
     const shelter = snapshot.buildings.find(building => building.id === destination.entityId && building.owner === owner
       && building.hp > 0 && building.complete);
