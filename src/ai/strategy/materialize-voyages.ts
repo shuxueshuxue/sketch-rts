@@ -130,6 +130,8 @@ export function materializeVoyages(input: AllocationMethodQuoteInput, actionId: 
         if (crossing.requiresNewShip) result.latestArrivalTicks = Math.max(result.latestArrivalTicks,
           group.arrivalTicks + waitingSlots * UNIT_DEFS.transport.trainTime);
         result.actions.push({ id: hull.productionId, executor: 'strategy.train-transport', intent: { kind: 'train-transport' },
+          production: prior?.production ?? { producer: { kind: 'existing', buildingId: at.entityId! },
+            unitKind: 'transport', request: { kind: 'submit', spendId } },
           target: at, unitIds: [], dependsOn: earlier ? [earlier.id] : [], demands: [{ kind: 'production', buildingId: at.entityId ?? null, unitKind: 'transport', count: 1 },
             { kind: 'gold', amount: UNIT_DEFS.transport.cost }, { kind: 'supply', amount: UNIT_DEFS.transport.supplyUsed }],
           spendIds: [spendId], completionEffects: [] });

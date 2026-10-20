@@ -41,6 +41,56 @@ function request(frameId: string, kind: ActionIntent['kind'], targetId: string, 
 }
 
 describe('allocated construction in native event frames', () => {
+  it('adopts a paid native worker job without submitting or paying again, including a JSON fork', () => {
+    const frameId = 'Ne-sapphireArchipelago-player-4-17991', frame = frames[frameId]!, hallId = 'building-player-4-townhall';
+    const game = createGame(frame.snapshot.map.id, { players: frame.activePlayers });
+    restoreSnapshotIntoGame(game, structuredClone(frame.snapshot), frame.nextId);
+    game.activePlayers = [...frame.activePlayers];
+    issueCommandFrame(game, [{ playerId: frame.owner, scriptId: 'economy', command: { type: 'train', buildingId: hallId, unitKind: 'worker' } }]);
+    stepGame(game);
+    const native = game.buildings.find(building => building.id === hallId)!.queue[0]!;
+    expect(native.id).toBeTruthy();
+    let input = request(frameId, 'train-worker', hallId, [`queue:${hallId}`], 75);
+    input = { ...input, snapshot: snapshotGame(game), execution: { ...input.execution,
+      production: { producer: { kind: 'existing', buildingId: hallId }, unitKind: 'worker',
+        request: { kind: 'adopt-paid', jobId: native.id!, queueIndex: 0, observedTick: game.tick, remainingTicks: native.remaining } } } };
+    const first = trainWorkerExecutor.execute(input);
+    expect(first).toMatchObject({ status: 'active', phase: 'training', commands: [], payments: [] });
+    expect(trainWorkerExecutor.execute(JSON.parse(JSON.stringify(input)))).toEqual(first);
+    const unidentified = { ...input, execution: { ...input.execution, production: { ...input.execution.production!,
+      request: { kind: 'adopt-paid' as const, jobId: null, queueIndex: 0, observedTick: game.tick, remainingTicks: native.remaining } } } };
+    expect(trainWorkerExecutor.execute(unidentified).reasons[0]?.reason).toBe('paid-production-job-identity-unknown');
+    const replaced = structuredClone(input);
+    replaced.snapshot.buildings.find(building => building.id === hallId)!.queue[0]!.id = 'different-native-job';
+    expect(trainWorkerExecutor.execute(replaced).reasons[0]?.reason).toBe('paid-production-job-no-longer-observed');
+    const discontinuous = structuredClone(input);
+    discontinuous.snapshot.buildings.find(building => building.id === hallId)!.queue[0]!.remaining++;
+    expect(trainWorkerExecutor.execute(discontinuous).reasons[0]?.reason).toBe('paid-production-job-continuity-mismatch');
+    let result = first;
+    for (let ticks = 0; ticks < 600 && result.status !== 'complete'; ticks += 15) {
+      for (let step = 0; step < 15; step++) stepGame(game);
+      input = { ...input, snapshot: snapshotGame(game), execution: { ...input.execution, state: result.state } };
+      result = trainWorkerExecutor.execute(input);
+      expect(result.commands).toEqual([]);
+      expect(result.payments ?? []).toEqual([]);
+    }
+    expect(result.status).toBe('complete');
+    expect(game.units.find(unit => unit.id === result.state.createdUnitId)).toMatchObject({ owner: frame.owner, kind: 'worker' });
+  });
+
+  it('requires the exact production result and registered spend instead of borrowing another queue or budget', () => {
+    const hallId = 'building-player-4-townhall';
+    const input = request('Ne-sapphireArchipelago-player-4-17991', 'train-worker', hallId, [`queue:${hallId}`], 75);
+    const bound = { ...input, execution: { ...input.execution, production: { producer: { kind: 'existing' as const, buildingId: hallId },
+      unitKind: 'worker' as const, request: { kind: 'submit' as const, spendId: 'another-production-capital' } } } };
+    expect(trainWorkerExecutor.execute(bound).reasons[0]?.reason).toBe('no-granted-worker-capital');
+    expect(trainWorkerExecutor.execute({ ...bound, execution: { ...bound.execution, production: { ...bound.execution.production,
+      producer: { kind: 'existing', buildingId: 'another-town-hall' } } } }).reasons[0]?.reason).toBe('production-binding-producer-mismatch');
+    const unresolved = { ...bound, execution: { ...bound.execution, target: { point: input.execution.target.point },
+      production: { ...bound.execution.production, producer: { kind: 'action-result' as const, actionId: 'build-parent' } } } };
+    expect(trainWorkerExecutor.execute(unresolved).reasons[0]?.reason).toBe('production-parent-result-unresolved');
+  });
+
   it('pays once for an explicitly leased sapphire worker queue and admits only an actual native birth', () => {
     const frameId = 'Ne-sapphireArchipelago-player-4-17991', frame = frames[frameId]!;
     const hallId = 'building-player-4-townhall';
