@@ -1,3 +1,7 @@
+import { diffAiPlan } from '../plan-stream';
+import {buildAiPlanTrace,type AiPlanTrace} from '../plan-trace';
+import {projectDeathThinkContext} from '../death-ledger-context';
+import {DEFAULT_AI_PLANNER_VERSION} from '../planner-context';
 import { createAiPolicyMemory, type AiPolicyMemory, type PresetAiPolicyOptions } from "../policy";
 import { planAiCommandFrameFromSnapshot } from "../runtime";
 import { checkCommandLegality } from "../../shared/sim/command-validation";
@@ -10,6 +14,7 @@ type Session = {
   map: GameMap;
   policyMode?: PresetAiPolicyOptions["policyMode"];
   memories: Partial<Record<PlayerId, AiPolicyMemory>>;
+  observed?: {generation: number; previous: Map<PlayerId, AiPlanTrace>};
   send: (reply: AiThinkReply) => void;
 };
 
@@ -38,6 +43,18 @@ export function createAiThinkHost() {
           if (legality && !legality.transient) throw new Error(`AI think rejected ${entry.playerId} ${entry.command.type}: ${legality.message}`);
         }
         session.send({ session: message.session, deliveryTick: message.deliveryTick, commands: envelopes, thinkMs: performance.now() - started });
+        if (message.observe === undefined) delete session.observed;
+        else if (session.observed?.generation !== message.observe) session.observed = {generation:message.observe,previous:new Map()};
+        // Commands leave first. Diagnostics do not extend this think's command-delivery path.
+        if(session.observed) try {
+          const observations=requests.map(request=>{
+            const trace=buildAiPlanTrace(snapshot,request.playerId,request.memory,request.version??DEFAULT_AI_PLANNER_VERSION);
+            const previous=session.observed!.previous.get(trace.owner);
+            const result={delta:diffAiPlan(previous,trace,message.observe!),context:projectDeathThinkContext(snapshot,trace.owner,request.memory)};
+            session.observed!.previous.set(trace.owner,trace);return result;
+          });
+          session.send({kind:'observation',session:message.session,deliveryTick:message.deliveryTick,observations});
+        } catch(error) { console.error('AI plan projection failed',error); }
       } catch (error) {
         session.send({ session: message.session, deliveryTick: message.deliveryTick, error: error instanceof Error ? error.stack ?? error.message : String(error) });
       }

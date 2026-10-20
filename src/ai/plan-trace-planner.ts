@@ -7,7 +7,7 @@ import type { AiDeathLedger } from './death-ledger';
 export type AiPlanTraceOptions = AiOwnerPlannerOptions & { deathLedger?: AiDeathLedger };
 
 /** Opt-in observation at the existing think boundary; executes the ordinary planner exactly once.
- * The caller retains previous traces outside AI memory. No runtime/network/UI integration yet.
+ * The caller retains previous traces outside AI memory. Observers live outside the planner and simulation.
  */
 export function planAiOwnerCommandEntriesWithTrace<Source extends string = string>(snapshot: GameSnapshot,
   request: AiOwnerPlannerRequest<Source>, options: AiPlanTraceOptions = {}, previous?: AiPlanTrace) {

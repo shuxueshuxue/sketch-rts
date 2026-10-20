@@ -1,0 +1,115 @@
+{
+  "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Ultra, Unspecified Version)",
+  "tick": 4860,
+  "seek": 3926,
+  "requestedSeek": 3926,
+  "chosen": {
+    "tick": 3926,
+    "owner": "player-4",
+    "id": "expansion:gold-gen-4:2531",
+    "label": "建立分矿",
+    "position": {
+      "x": 4601,
+      "y": 5747
+    }
+  },
+  "focus": "建立分矿",
+  "metrics": [
+    {
+      "open": false,
+      "recording": false,
+      "advancedTicks": 115,
+      "file": "trace-0-closed.json.gz",
+      "sha256": "c78a3caf5e1bbfe64ad89631b2d351086904984f7e181a02de33d7381ba26df8",
+      "planMs": {},
+      "frames": 84,
+      "jsMedianMs": 3.769,
+      "jsP95Ms": 7.741,
+      "jsMaxMs": 9.517,
+      "planTimingEvents": 0
+    },
+    {
+      "open": true,
+      "recording": false,
+      "advancedTicks": 115,
+      "file": "trace-1-open.json.gz",
+      "sha256": "ecb28145be4c9cb4c26ae8e4ae3fd3eff3c95e4767683c33722ea3d3d6bd3b27",
+      "planMs": {
+        "ai-plan:draw": {
+          "count": 55,
+          "median": 0.101,
+          "p95": 3.5,
+          "max": 4.801
+        },
+        "ai-plan:receive": {
+          "count": 21,
+          "median": 0.1,
+          "p95": 0.201,
+          "max": 0.299
+        }
+      },
+      "frames": 69,
+      "jsMedianMs": 5.106,
+      "jsP95Ms": 8.723,
+      "jsMaxMs": 9.765,
+      "planTimingEvents": 176
+    },
+    {
+      "open": false,
+      "recording": false,
+      "advancedTicks": 115,
+      "file": "trace-2-closed.json.gz",
+      "sha256": "c4e602377d571d5490cc89b01de206c83ecdf95972df30cf0204d9ac54960669",
+      "planMs": {},
+      "frames": 75,
+      "jsMedianMs": 4.626,
+      "jsP95Ms": 7.867,
+      "jsMaxMs": 8.948,
+      "planTimingEvents": 0
+    },
+    {
+      "open": true,
+      "recording": false,
+      "advancedTicks": 115,
+      "file": "trace-3-open.json.gz",
+      "sha256": "7e1c1b987085ff18128acf76b28388f6aa44fcd2be554c870c70a5757eb99151",
+      "planMs": {
+        "ai-plan:receive": {
+          "count": 20,
+          "median": 0.1,
+          "p95": 0.201,
+          "max": 0.201
+        },
+        "ai-plan:draw": {
+          "count": 55,
+          "median": 0.1,
+          "p95": 3.699,
+          "max": 5.301
+        }
+      },
+      "frames": 72,
+      "jsMedianMs": 4.75,
+      "jsP95Ms": 8.29,
+      "jsMaxMs": 12.178,
+      "planTimingEvents": 178
+    }
+  ],
+  "traffic": {
+    "bytes": 1327376,
+    "packets": 1355,
+    "baselines": 12,
+    "deltas": 1330,
+    "nodes": 908
+  },
+  "packets": 1290,
+  "recordingFrom": 60,
+  "recordingThrough": 4860,
+  "deathRecords": 8,
+  "captureCommit": "df67f2144bd288f404cf9de4feec3f717382eca7",
+  "scene": "tools/cli/scenes/ai-plan-overlay.ts",
+  "run": "mvgf5gml-b75c69",
+  "reviewedScreenshots": [
+    "spectator-plans-desktop.png",
+    "replay-scrub-desktop.png"
+  ]
+}

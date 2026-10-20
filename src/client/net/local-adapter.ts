@@ -1,4 +1,8 @@
-import { createPresetAiRuntimeFramePlanner, type AiRuntimeState, type AiRuntimeFramePlannerState, type AiThinkExecutor, type AiThinkExecutorFactory } from "../../ai/runtime";
+import { createDebugReplayTrace, recordReplayFrame, recordReplayCheckpoint, type DebugReplayTrace } from '../../shared/replay';
+import { createSaveGameRecord } from '../../shared/savegame';
+import { AiPlanObserver } from '../../ai/plan-observer';
+import type { AiPlanPacket } from '../../ai/plan-stream';
+import { createInlineAiThinkExecutor, createPresetAiRuntimeFramePlanner, type AiRuntimeState, type AiRuntimeFramePlannerState, type AiThinkExecutor, type AiThinkExecutorFactory } from "../../ai/runtime";
 import type { CommandEnvelope } from "../../shared/net/types";
 import { snapshotGame, type Game } from "../../shared/sim";
 import { CommandFrameRuntime } from "../../shared/sim/command-frame-runtime";
@@ -24,6 +28,9 @@ export class LocalGameAdapter implements GameAdapter {
   private snapshot: GameSnapshot | undefined;
   private readonly frameRuntime: CommandFrameRuntime<AiRuntimeFramePlannerState>;
   private readonly thinkExecutor: AiThinkExecutor | undefined;
+  private replay?: DebugReplayTrace;
+  private recording = false;
+  private plans?: AiPlanObserver;
   private queued: CommandEnvelope[] = [];
 
   constructor(
@@ -33,13 +40,42 @@ export class LocalGameAdapter implements GameAdapter {
   ) {
     this.lastUpdate = this.now();
     this.room = options.room;
-    this.thinkExecutor = options.aiRuntime && options.aiThinkExecutor ? options.aiThinkExecutor(options.aiRuntime, game) : undefined;
+    this.thinkExecutor = options.aiRuntime ? options.aiThinkExecutor?.(options.aiRuntime, game) ?? createInlineAiThinkExecutor(options.aiRuntime) : undefined;
     this.frameRuntime = new CommandFrameRuntime({
       game,
       roomId: this.room?.id ?? "local",
       rejectionLabel: "Local command rejected",
       ...(options.aiRuntime ? { aiPlanner: createPresetAiRuntimeFramePlanner(this.game, options.aiRuntime, this.thinkExecutor ? { executor: this.thinkExecutor } : {}) } : {}),
     });
+  }
+
+  hasRecording() { return !!this.replay; }
+  async startRecording(): Promise<void> {
+    if (this.recording) return;
+    if (!this.room) throw new Error('Recording requires a match room');
+    const initialSave = createSaveGameRecord(this.game, this.room, {id:'local-debug'}, new Date(), this.options.aiRuntime?.controlledPlayers ?? [], this.options.aiRuntime?.versions ?? {});
+    this.recording = true;
+    this.replay = createDebugReplayTrace({id:'local-debug',initialSave});
+    this.plans ??= new AiPlanObserver(this.game, this.options.aiRuntime?.controlledPlayers ?? [], this.thinkExecutor);
+    this.plans.record(true);
+  }
+  async stopRecording(): Promise<void> {
+    if (!this.recording) return;
+    this.thinkExecutor?.poll?.();
+    recordReplayCheckpoint(this.replay!,this.game);this.replay!.throughTick=this.game.tick;
+    this.plans?.record(false);this.recording=false;
+  }
+  async recordedReplay(): Promise<DebugReplayTrace> {
+    if (!this.replay) throw new Error('No debug recording; unrecorded periods cannot be reconstructed');
+    this.thinkExecutor?.poll?.();
+    if (this.recording) recordReplayCheckpoint(this.replay!, this.game);
+    const aiPlans = this.plans?.recordingData();
+    return structuredClone({...this.replay, throughTick:this.recording ? this.game.tick : this.replay.throughTick ?? this.game.tick, ...(aiPlans ? {aiPlans} : {})});
+  }
+
+  subscribePlans(listener: (packet: AiPlanPacket) => void) {
+    this.plans ??= new AiPlanObserver(this.game, this.options.aiRuntime?.controlledPlayers ?? [], this.thinkExecutor);
+    return this.plans.subscribe(listener);
   }
 
   // A player's command lands on the next tick, as a hosted room's lands on a later one; a rejection is reported now.
@@ -78,13 +114,16 @@ export class LocalGameAdapter implements GameAdapter {
   close(): void {
     if (this.closed) return;
     this.closed = true;
+    this.plans?.dispose();
     this.thinkExecutor?.close?.();
     this.options.onClose?.();
   }
 
   private applyAndStep(commands: CommandEnvelope[]): void {
     this.snapshot = undefined;
-    this.frameRuntime.tick(commands);
+    this.frameRuntime.tick(commands, this.recording ? {onFrame:frame => recordReplayFrame(this.replay!, {source:'browser',frame})} : {});
+    if (this.recording && this.game.tick % 120 === 0) recordReplayCheckpoint(this.replay!, this.game);
+    this.plans?.step();
     if (this.room && this.game.match.winner) {
       if (!this.options.finishRoom) throw new Error(`Local room ${this.room.id} finished without a lifecycle finisher`);
       this.room = this.options.finishRoom(snapshotGame(this.game));

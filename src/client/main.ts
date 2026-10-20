@@ -1,3 +1,7 @@
+import { assertCurrentRulesVersion } from '../shared/rules-version';
+import { AiPlanOverlay } from './ai-plan-overlay';
+import { MatchThreadGameAdapter } from './match-worker/adapter';
+import type { DebugReplayTrace } from '../shared/replay';
 import {ProjectileOriginTracker} from './projectile-origins';
 import { CombatPresentationTracker } from "./combat-presentation";
 import { appearanceFor, appearanceForKind, appearanceKey } from "./art/unit-appearance";
@@ -336,6 +340,23 @@ const roomSetupSession = new RoomSetupSession({
   },
 });
 const baseGameAdapter = deploymentRuntime.initialAdapter();
+let lastPlanReplay: DebugReplayTrace | undefined;
+const aiPlanOverlay = new AiPlanOverlay({ getAdapter:()=>activeGameAdapter, getSnapshot:()=>snapshot,
+  isMatch:()=>!menuOpen && !!snapshot && activeGameAdapter!==baseGameAdapter,
+  project:worldToScreen,center:centerCameraOnWorld,canvas,openReplay:openPlanReplay });
+async function openPlanReplay(trace: DebugReplayTrace) {
+  if(trace.schemaVersion!==1 || !trace.initialSave?.snapshot)throw new Error('Invalid debug recording');
+  assertCurrentRulesVersion(trace.rulesVersion,'Replay');
+  await ensureMatchResources();
+  const threads=createBrowserMatchThreads({ai:false});
+  const adapter=new MatchThreadGameAdapter(threads.port,{type:'replay',trace},trace.initialSave.snapshot,{
+    playerId:'spectator-replay',spectating:true,onError:message=>showInvalidCommand(message),onClose:()=>threads.terminate()});
+  spectatingRoom=true;localPlayerId='spectator-replay';currentRoomId=undefined;
+  activateStartedMatch(adapter,trace.initialSave.snapshot,{send(){},onMessage:()=>()=>{}});
+  menuOpen=false;mainMenu.classList.add('hidden');shell.classList.remove('menu-open');
+  adapter.seekReplay(trace.initialSave.snapshot.tick);
+}
+
 activeGameAdapter = baseGameAdapter;
 const commandButtons: CommandButton[] = [
   createVeteranLearnButton(),
@@ -988,6 +1009,11 @@ function renderMainMenu() {
     menuButton(t("home.rooms.label"), "", "data-open-room-browser", () => {
       openMenuRoute({ screen: "rooms" });
     }),
+    menuButton(i18n.locale==='zh'?'打开调试录制':'Open debug recording', '', 'data-open-plan-replay', () => {
+      const input=document.createElement('input');input.type='file';input.accept='.json,application/json';
+      input.onchange=()=>{const file=input.files?.[0];if(file)void file.text().then(text=>openPlanReplay(JSON.parse(text) as DebugReplayTrace))
+        .catch(error=>{menuStatus.textContent=String(error);});};input.click();
+    }),
     menuButton(t("home.settings"), "", "data-open-profile", () => {
       openMenuRoute({ screen: "profile" });
     }),
@@ -1292,6 +1318,7 @@ function renderResultsMenu() {
   const completedRoom = currentRoom;
   panel.querySelector("[data-rematch]")?.addEventListener("click", () => void createReplayRoom(completedRoom));
   panel.querySelector("[data-return-home]")?.addEventListener("click", returnHome);
+  if (lastPlanReplay) panel.append(menuButton(i18n.locale==='zh'?'查看已录制回放':'View recorded replay','', 'data-view-plan-replay',()=>openPlanReplay(lastPlanReplay!)));
   mapList.replaceChildren(panel);
 }
 
@@ -1612,11 +1639,12 @@ function activateStartedMatch(adapter: GameAdapter, nextSnapshot: GameSnapshot, 
   syncMatchActions();
 }
 
-function disconnectActiveMatch() {
+function disconnectActiveMatch(close = true) {
+  aiPlanOverlay.detach();
   minimapPresentation.reset();
   combatPresentation.reset();projectileOrigins.reset();
   focusedStatusProjection = undefined;
-  if (activeGameAdapter !== baseGameAdapter) activeGameAdapter.close();
+  if (close && activeGameAdapter !== baseGameAdapter) activeGameAdapter.close();
   activeChatUnsubscribe?.();
   activeChatUnsubscribe = undefined;
   activeChat = undefined;
@@ -1667,7 +1695,12 @@ function syncBeforeCommandProjection() {
 
 function openResults(room: RoomState) {
   clearRoomWatch();
-  disconnectActiveMatch();
+  const leaving = activeGameAdapter;
+  if (leaving.hasRecording?.()) {
+    void leaving.recordedReplay!().then(trace=>{lastPlanReplay=trace;if(menuView==='results')renderResultsMenu();})
+      .finally(()=>leaving.close()).catch(()=>{});
+    disconnectActiveMatch(false);
+  } else disconnectActiveMatch();
   releasePointerLockForMenu();
   currentRoom = room;
   currentRoomId = undefined;
@@ -1795,7 +1828,7 @@ function hasMouse() {
 }
 
 function syncPointerLockGate() {
-  if(equipmentPanel.isOpen()){hidePointerLockGate();return;}
+  if(equipmentPanel.isOpen()||aiPlanOverlay.isOpen){hidePointerLockGate();return;}
   if (!shouldBlockBattlefieldForPointerLock({ menuOpen, hasSnapshot: Boolean(snapshot), isLocked: document.pointerLockElement === canvas, armed: pointerLockArmed, unavailable: pointerLockUnavailable || !hasMouse() })) {
     hidePointerLockGate();
     return;
@@ -2080,7 +2113,7 @@ function onInterfaceClick(event: MouseEvent) {
 
 function onMouseDown(event: MouseEvent) {
   suppressCanvasMouseDefault(event);
-  if (pointerLockArmed && event.button === 0) {
+  if (!aiPlanOverlay.isOpen && pointerLockArmed && event.button === 0) {
     pointerLockArmed = false;
     pointerLockUnavailable = true;
     hidePointerLockGate();
@@ -3647,6 +3680,7 @@ function trainIcon(kind: TrainableUnitKind) {
 function draw() {
   if(!visualsReady)return;
   if (menuOpen) {
+    aiPlanOverlay.draw(ctx);
     updateHoverCursor();
     // The scene paints at its own pace and keeps its last picture between (see @@@menu-scenes).
     menuBackdrop.draw(ctx, canvas.clientWidth, canvas.clientHeight, performance.now(), reducedUnitMotion.matches,frame=>worldPresentation.draw(frame,'home'));
@@ -3696,6 +3730,7 @@ function draw() {
   // path rather than inferring a publication from tick or collection lengths.
   const localView = currentRoomId && deploymentRuntime.isLocalRoom(currentRoomId);
   drawMinimap(minimapPresentation.read(snapshot, localView ? snapshot : undefined));
+  aiPlanOverlay.draw(ctx);
 }
 
 // The build mode's preview stands where the sim will lay the building (see snapToFootprint), on the cells it would take:
