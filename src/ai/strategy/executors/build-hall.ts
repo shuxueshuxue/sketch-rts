@@ -18,13 +18,19 @@ export const buildHallExecutor: StrategyExecutor = {
       && sameGround(snapshot.map, building, mine) && distance(building, mine) <= GOLD_MINE_RULES.baseRange);
     if (hall && hall.owner !== owner) return { ...base, status: 'failed', reasons: [{ executor: this.id, outcome: 'abandoned', reason: 'construction-site-occupied-by-other-owner' }] };
     const progress: ExecutorFeedback['progress'][number][] = [];
+    const accepted = hall && input.grant.commands.find(entry => sameAction(entry.action, execution.token)
+      && entry.command.type === 'build' && entry.command.buildingKind === 'townHall' && distance(entry.command, hall) < 1);
+    const capital = input.grant.budgets.find(budget => sameAction(budget.action, execution.token) && budget.objectiveId === input.objective.id
+      && budget.state === 'reserved' && budget.amountGold - budget.paidGold >= BUILDING_DEFS.townHall.cost);
+    const payments: ExecutorFeedback['payments'] = accepted && hall && capital ? [{ budgetId: capital.id, amountGold: BUILDING_DEFS.townHall.cost,
+      proof: { kind: 'foundation', buildingId: hall.id, acceptedCommandId: accepted.id } }] : [];
     if (hall && execution.state.hallId !== hall.id) progress.push({ kind: 'hall-founded', unitIds: [], entityIds: [hall.id], basis: 'observed-world' });
     if (hall?.complete) return { ...base, status: 'complete', phase: 'hall-complete', state: { ...execution.state, hallId: hall.id },
-      progress: [...progress, { kind: 'hall-complete', unitIds: [], entityIds: [hall.id], basis: 'observed-world' }] };
+      payments, progress: [...progress, { kind: 'hall-complete', unitIds: [], entityIds: [hall.id], basis: 'observed-world' }] };
     const workers = grantedUnits(input).filter(unit => unit.kind === 'worker' && !unit.deck && !unit.cabin
       && sameGround(snapshot.map, unit, mine) && !input.grant.assignments.some(assignment => assignment.unitId === unit.id && assignment.interruption));
     if (!workers.length) return blockedExecutor(input, 'no-granted-construction-worker-on-target-land');
-    if (hall) return { ...base, status: 'active', phase: 'constructing', state: { ...execution.state, hallId: hall.id }, progress,
+    if (hall) return { ...base, status: 'active', phase: 'constructing', state: { ...execution.state, hallId: hall.id }, progress, payments,
       commands: workers.filter(unit => !(unit.order.type === 'repair' && unit.order.buildingId === hall.id)
         && !(unit.order.type === 'build' && distance(unit.order, hall) < 1)).map(unit => ({
         command: { type: 'repair', unitIds: [unit.id], buildingId: hall.id }, purpose: 'task' })) };
