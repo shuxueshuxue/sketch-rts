@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createGame, snapshotGame } from '../../shared/sim';
 import { createBuilding, createUnit } from '../../shared/map';
-import type { AllocationMethodProvider, ExecutableMethod, MethodAllocationQuote, StrategyAllocationInput, StrategyAllocationMemory } from './allocation-types';
+import type { AllocationMethodProvider, ExecutableMethod, MethodAllocationQuote, PlannedVoyage, StrategyAllocationInput, StrategyAllocationMemory } from './allocation-types';
 import { allocateStrategy } from './allocator';
 import { allocationResponseCandidates } from './allocation-eligibility';
 import { createStrategyAllocationMemory } from './control';
@@ -62,6 +62,45 @@ describe('deterministic whole-bundle allocation', () => {
     expect(result.grants).toHaveLength(1);
     expect(result.grants[0]!.assignments[0]).toMatchObject({ unitId: 'one', stage: 'on-station', eta: { status: 'known' } });
     expect(JSON.stringify(input.snapshot)).toBe(before);
+  });
+
+  it('publishes loading-stage epochs without requiring later legs and preserves them after actual boarding', () => {
+    const { input, method } = fixture(), tick = 100;
+    const departure = { point: { x: 1000, y: 1000 }, landId: 'land:1' as const };
+    const destination = { entityId: 'post', point: { x: 3000, y: 1000 }, landId: 'land:2' as const };
+    const crossing = { seaId: 'sea:1' as const, shipId: 'two', departure: departure.point, landing: destination.point,
+      waitTicks: 0, boardingTicks: 30, sailingTicks: 100, unloadingTicks: 0, requiresNewShip: false as const };
+    const voyage: PlannedVoyage = { id: 'physical-voyage', actionId: 'single/act', ship: { kind: 'existing', unitId: 'two' },
+      unitIds: ['one'], departure, destination, departureGround: departure, landingGround: destination, crossing, required: true };
+    const original = method('single');
+    const transport: ExecutableMethod = { ...original, voyagePlans: [voyage], actions: original.actions.map(action => ({ ...action,
+      executor: 'strategy.transport', intent: { kind: 'load' }, target: destination,
+      demands: [...action.demands, { kind: 'transport', payloadMass: 1, seaId: 'sea:1',
+        departure: departure.point, landing: destination.point }] })) };
+    const request: StrategyAllocationInput = { ...input, snapshot: { ...input.snapshot, tick,
+      units: [input.snapshot.units[0]!, createUnit('two', 'player', 'transport', 1000, 1000)] },
+      situation: { ...input.situation, tick, units: input.situation.units.map(unit => ({ ...unit,
+        ...(unit.id === 'two' ? { kind: 'transport' as const, roles: ['transport' as const] } : {}),
+        arrivals: [{ targetId: 'post', arrival: { status: 'reachable', ticks: 200, landTicks: 0, crossings: [crossing] } }] })) },
+      objectives: [{ ...input.objectives[1]!, kind: 'ConquerIsland', target: destination }], methods: [transport],
+      providers: [{ ...input.providers[0]!, materialize: value => ({ ...value.method,
+        voyagePlans: value.unitIds.includes('one') && value.unitIds.includes('two') ? [voyage] : [] }) }],
+      fixedVoyageArrival: () => ({ status: 'unknown', reason: { code: 'later-leg-unpublished', detail: 'later-leg-unpublished', evidence: [] } }),
+      fixedVoyageLoading: () => ({ status: 'known', forecastTick: tick, walkTicks: 50, approachTicks: 20,
+        boardingTicks: 30, expectedLoadedTick: tick + 100 }) };
+    const first = allocateStrategy(request);
+    expect(first.memory.voyages[voyage.id]).toMatchObject({ expectedFreeTick: null, expectedLoadedTick: 200, loadingForecastTick: 100 });
+    const later = { ...request, previous: first.memory, snapshot: { ...request.snapshot, tick: 115 }, situation: { ...request.situation, tick: 115 } };
+    const stale = allocateStrategy(later);
+    expect(stale.memory.voyages[voyage.id]).toMatchObject({ expectedLoadedTick: null, loadingForecastTick: null });
+    const missing = allocateStrategy({ ...later, fixedVoyageLoading: () => ({ status: 'unknown', reasonCode: 'loading-route-unpublished' }) });
+    expect(missing.memory.voyages[voyage.id]).toMatchObject({ expectedLoadedTick: null, loadingForecastTick: null });
+    const boarded: StrategyAllocationInput = { ...later, snapshot: { ...later.snapshot,
+      units: later.snapshot.units.map(unit => unit.id === 'one' ? { ...unit, deck: { shipId: 'two', x: 0, y: 0 } } : unit) },
+      situation: { ...later.situation, units: later.situation.units.map(unit => unit.id === 'one'
+        ? { ...unit, location: { kind: 'aboard', shipId: 'two', compartment: 'deck', point: departure.point, seaId: 'sea:1' } } : unit) } };
+    expect(allocateStrategy(boarded).memory.voyages[voyage.id]).toMatchObject({ expectedLoadedTick: 200, loadingForecastTick: 100 });
+    expect(allocateStrategy({ ...boarded, previous: JSON.parse(JSON.stringify(first.memory)) })).toEqual(allocateStrategy(boarded));
   });
 
   it('reproduces reversed offer order, repeated same tick and a serialized mid-game continuation', () => {

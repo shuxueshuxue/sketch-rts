@@ -105,8 +105,8 @@ function controlledBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, ve
     phase: 'skeleton', unitIds: [], actions: method.actions.map(action => ({ actionId: action.id, target: action.target,
       unitIds: action.unitIds ?? null })), voyages: [], quotation: null, stageRisks: [] });
   let handoffPolicy: typeof policy | undefined;
-  const allocation = withAllocationArrivalQuery(snapshot, owner, policy, fixedVoyageArrival => allocateStrategy({ snapshot,
-    situation, objectives: evaluation.objectives, methods, providers, previous: imported, fixedVoyageArrival,
+  const allocation = withAllocationArrivalQuery(snapshot, owner, policy, (fixedVoyageArrival, fixedVoyageLoading) => allocateStrategy({ snapshot,
+    situation, objectives: evaluation.objectives, methods, providers, previous: imported, fixedVoyageArrival, fixedVoyageLoading,
     importedUpperBound: (objectiveId, window) => {
       const targetId = imported.objectives[objectiveId]?.target.entityId;
       return targetId ? importedMiningLossUpperBound(situation, evaluation.objectives, targetId, window) : null;

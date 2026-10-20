@@ -68,6 +68,11 @@ export type FixedVoyage = Readonly<{
   landingGround: Target & Readonly<{ landId: LandId }>;
   phase: 'loading' | 'sailing' | 'unloading' | 'return';
 }>;
+export type FixedVoyageLoading =
+  | Readonly<{ status: 'known'; forecastTick: number; walkTicks: number; approachTicks: number;
+    boardingTicks: number; expectedLoadedTick: number }>
+  | Readonly<{ status: 'already-loaded' }>
+  | Readonly<{ status: 'unknown'; reasonCode: string }>;
 const retainedTables = new WeakMap<StrategyObservationMemory, Map<string, CrossingChoice[]>>();
 export function crossingCandidateId(snapshot: GameSnapshot, unit: Unit, target: Target): string | undefined {
   const destination = target.landId ?? landIdAt(snapshot.map, target.point);
@@ -484,7 +489,7 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
     if (usedFieldTicks.size) usedFieldTicks.clear();
     if (usedQuoteTicks.size) usedQuoteTicks.clear();
   }
-  function fixedLoading(unit: Unit, voyage: FixedVoyage) {
+  function fixedLoading(unit: Unit, voyage: FixedVoyage): FixedVoyageLoading {
     const ship = byId.get(voyage.shipId), source = landIdAt(snapshot.map, unit);
     if (unit.owner !== owner || unit.hp <= 0 || unitMover(unit.kind) !== 'land'
       || !ship || ship.owner !== owner || ship.hp <= 0 || !isTransportKind(ship.kind))

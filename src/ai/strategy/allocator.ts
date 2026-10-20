@@ -239,9 +239,17 @@ function assignMethod(input: StrategyAllocationInput, memory: StrategyAllocation
       ? plannedVoyageArrival(request, plan, unit, plan.landingGround) : undefined);
     const expectedFreeTick = arrivals.length && arrivals.every(arrival => arrival?.status === 'reachable')
       ? tick + Math.max(...arrivals.map(arrival => arrival!.status === 'reachable' ? arrival!.ticks : 0)) : null;
+    const context = plannedVoyageContext(request, plan);
     const pendingLoads = plan.unitIds.flatMap((id, index) => {
       const location = situation.units.find(unit => unit.id === id)?.location;
       if (passengers.includes(id) || location?.kind === 'land' && location.landId === plan.landingGround.landId) return [];
+      const unit = snapshot.units.find(unit => unit.id === id);
+      if (input.fixedVoyageLoading) {
+        const forecast = unit && input.fixedVoyageLoading(unit, { shipId, seaId: plan.crossing.seaId,
+          departure: plan.departure.point, landing: plan.destination.point,
+          departureGround: plan.departureGround, landingGround: plan.landingGround, phase: context.phase });
+        return [forecast?.status === 'known' && forecast.forecastTick === tick ? forecast.expectedLoadedTick : undefined];
+      }
       const arrival = arrivals[index];
       return [arrival?.status === 'reachable'
         ? arrival.crossings.find(crossing => crossing.shipId === shipId)?.expectedLoadedTick : undefined];

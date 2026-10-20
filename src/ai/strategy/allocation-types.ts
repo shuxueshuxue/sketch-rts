@@ -1,5 +1,5 @@
 import type { GameCommand, GameSnapshot, PlayerId, TrainableUnitKind, Unit, UnitOrder } from '../../shared/types';
-import type { FixedVoyage } from './arrivals';
+import type { FixedVoyage, FixedVoyageLoading } from './arrivals';
 import type { VoyageRiskStages } from './voyage-risk';
 import type { ExecutorReason } from '../executor-reasons';
 import type { DecisionFacts } from './decision';
@@ -451,6 +451,8 @@ export type StrategyAllocationInput = Readonly<{
    * pricing. Called once; providers cannot advance sampling themselves. */
   prepareVoyageRisks?: (methods: readonly ExecutableMethod[], quotes: readonly MethodAllocationQuote[]) => ReadonlyMap<string, VoyageRiskStages>;
   fixedVoyageArrival?: AllocationMethodQuoteInput['fixedVoyageArrival'];
+  /** Same query's loading stage, independent of unpublished later legs. */
+  fixedVoyageLoading?: (unit: Unit, voyage: FixedVoyage) => FixedVoyageLoading;
   /** Verified optimistic target envelope only for imported-task leases. */
   importedUpperBound?: (objectiveId: string, window: ValuationWindow) => ImportedLossUpperBound | null;
   /** Optional observation of the exact materialized request, never a second
