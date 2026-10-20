@@ -36,8 +36,13 @@ export function planViewNodes(trace: AiPlanTrace): PlanViewNode[] {
       selected: !!allocation, target: { position: target.point, ...(target.entityId ? { entityId: target.entityId } : {}) },
       utility: { score: quote?.utility.score ?? null, source: quote ? 'planner' : 'not-recorded', terms: [] },
       reasons: (quote?.reasons ?? []).map(reason => ({ code: reason.code, detail: reason.detail, source: 'strategy' })),
-      requirements: (strategy?.blockedObjectives.find(row => row.objectiveId === objectiveId)?.missingPreconditions ?? [])
-        .map(condition => ({ code: condition.preconditionId, detail: condition.reason.detail, met: condition.status === 'unmet' ? false : null })),
+      requirements: [
+        ...(strategy?.blockedObjectives.find(row => row.objectiveId === objectiveId)?.missingPreconditions ?? [])
+          .map(condition => ({ code: condition.preconditionId, detail: condition.reason.detail, met: condition.status === 'unmet' ? false : null })),
+        ...(strategy?.allocation?.blocked.filter(row => row.objectiveId === objectiveId) ?? [])
+          .flatMap(row => row.missingPreconditions.map(condition => ({ code: condition.id,
+            detail: allocationReason(condition.reason), met: condition.status === 'met' ? true : condition.status === 'unmet' ? false : null }))),
+      ],
       resources: { unitIds: [...new Set(assignments.map(row => row.unitId))], gold: { reserved: null, required: null } },
       children: [], sinceTick: allocation?.sinceTick ?? quote!.sinceTick,
       strategy: { objectiveId, ...(quote ? { quote } : {}), ...(allocation ? { allocation } : {}) },

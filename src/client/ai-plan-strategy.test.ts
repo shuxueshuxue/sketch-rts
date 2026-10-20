@@ -13,6 +13,7 @@ it('joins formal troops by objective without turning observed tasks or candidate
   const candidate = nodes.find(node => node.id === strategyGoalId('candidate-only'))!;
   expect(formal.resources.unitIds).toEqual([first.id]);
   expect(formal.strategy?.allocation?.committedUtilityGold).toBe(120);
+  expect(formal.requirements.some(condition => condition.met === false && condition.code === 'shore-safe')).toBe(true);
   expect(candidate.resources.unitIds).toEqual([]);
   expect(candidate.resources.unitIds).not.toContain(second.id);
   expect(candidate.strategy?.allocation).toBeUndefined();

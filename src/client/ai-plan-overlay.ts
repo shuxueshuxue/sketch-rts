@@ -87,7 +87,8 @@ export class AiPlanOverlay {
     for(const {trace,node} of this.lastNodes){
       if(node.kind==='task'&&!node.strategy&&!this.showTasks)continue;
       const target=node.target.position;if(!target)continue;
-      const at=this.options.project(target),color=node.status==='blocked'?'#a97720':node.status==='abandoned'||node.status==='failed'?'#9e5146':node.strategy&&!node.strategy.allocation?'#8a816e':'#405d68';
+      const blocked=node.status==='blocked'||!!node.strategy&&node.requirements.some(condition=>condition.met!==true);
+      const at=this.options.project(target),color=blocked?'#a97720':node.status==='abandoned'||node.status==='failed'?'#9e5146':node.strategy&&!node.strategy.allocation?'#8a816e':'#405d68';
       const focused=selected?.node===node;
       ctx.strokeStyle=color;ctx.fillStyle=color;
       for(const id of (focused?node.resources.unitIds.slice(0,48):[])){
@@ -102,9 +103,9 @@ export class AiPlanOverlay {
           for(const p of path){if(!p.goals.includes(node.id)){lastSession=-1;lastTick=-Infinity;continue;}const q=this.options.project(p);if(lastSession!==p.session||p.tick-lastTick>30)ctx.moveTo(q.x,q.y);else ctx.lineTo(q.x,q.y);lastSession=p.session;lastTick=p.tick;}ctx.stroke();
         }
       }
-      ctx.globalAlpha=1;ctx.setLineDash([]);ctx.fillStyle='#f2ead9';ctx.beginPath();ctx.arc(at.x,at.y,focused?15:12,0,Math.PI*2);ctx.fill();ctx.strokeStyle=color;ctx.stroke();ctx.fillStyle=color;ctx.textAlign='center';ctx.fillText(node.status==='blocked'?'!':icons[node.kind]??'·',at.x,at.y+5);
+      ctx.globalAlpha=1;ctx.setLineDash([]);ctx.fillStyle='#f2ead9';ctx.beginPath();ctx.arc(at.x,at.y,focused?15:12,0,Math.PI*2);ctx.fill();ctx.strokeStyle=color;ctx.stroke();ctx.fillStyle=color;ctx.textAlign='center';ctx.fillText(blocked?'!':icons[node.kind]??'·',at.x,at.y+5);
       ctx.textAlign='left';ctx.fillText(node.label,at.x+19,at.y+4);
-      if(node.status==='blocked'){ctx.font='11px system-ui';ctx.fillText((node.requirements[0]?.detail??node.reasons[0]?.code??'受阻').slice(0,34),at.x+19,at.y+20);ctx.font='600 13px system-ui';}
+      if(blocked){ctx.font='11px system-ui';ctx.fillText((node.requirements[0]?.detail??node.reasons[0]?.code??'受阻').slice(0,34),at.x+19,at.y+20);ctx.font='600 13px system-ui';}
       this.hits.push({...at,action:()=>{this.selected={owner:trace.owner,id:node.id};this.death=undefined;this.scrollPanelTop();this.paintedRevision=-1;}});
     }
     for(const death of this.history.deaths){
