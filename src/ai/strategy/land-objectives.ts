@@ -6,7 +6,7 @@ import { resolveUnitDamage, unitAttackDamageProfile } from '../../shared/damage'
 import type { Unit } from '../../shared/types';
 import { isOpponentOwner } from '../policy/ownership';
 import { creepForce, forceFor, neutralCamps, EXPANSION_GUARD_RANGE, type Camp } from '../policy/v7/creep';
-import { structureRating } from '../policy/v6/strength';
+import { combatRating, structureRating } from '../policy/v6/strength';
 import type {
   Arrival, Asset, Evidence, IdleForce, Method, Objective, ObjectiveKind, Opportunity, PlanningContext,
   Precondition, Reason, ResourceDemand, Situation, SituationUnit, Subgoal, Target, UtilityTerm,
@@ -147,9 +147,14 @@ class LandModel {
       || fighter.raw.speed >= harasser.speed;
     pool.sort((a, b) => Number(canIntercept(b)) - Number(canIntercept(a))
       || Number(a.borrowed) - Number(b.borrowed) || a.eta - b.eta || a.unit.id.localeCompare(b.unit.id));
-    const measure = (fighters: Fighter[]) => camp ? creepForce(fighters.map(fighter => ({ ...fighter.raw,
-      hp: fighter.raw.hp * fighter.coverage, attackDamage: fighter.raw.attackDamage * fighter.coverage })), camp)
-      : fighters.reduce((sum, fighter) => sum + fighter.unit.strength * fighter.coverage, 0);
+    const measure = (fighters: Fighter[]) => {
+      if (!camp) return fighters.reduce((sum, fighter) => sum + fighter.unit.strength * fighter.coverage, 0);
+      // Preserve the existing camp/range rating, then apply a combat-rating-weighted
+      // lifetime share once. Scaling both HP and damage would penalize expiry twice.
+      const full = fighters.reduce((sum, fighter) => sum + combatRating(fighter.raw), 0);
+      const lasting = fighters.reduce((sum, fighter) => sum + combatRating(fighter.raw) * fighter.coverage, 0);
+      return full > 0 ? creepForce(fighters.map(fighter => fighter.raw), camp) * lasting / full : 0;
+    };
     const volley = (fighters: Fighter[]) => harasser ? fighters.filter(canIntercept).reduce((sum, fighter) => sum
       + resolveUnitDamage(this.context.snapshot, harasser, fighter.raw.attackDamage, unitAttackDamageProfile(this.context.snapshot, fighter.raw)).damage, 0) : 0;
     // Combat work is a stated estimate. ETA and response reachability remain shared Situation facts.
