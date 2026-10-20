@@ -143,11 +143,13 @@ export type Effect =
 export type UtilityTerm = Readonly<{ code: string; value: number; explanation: string }>;
 export type Utility = Readonly<{
   horizonTicks: number;
+  /** Costs incurred only on success are negative benefit terms. */
   benefit: readonly UtilityTerm[];
+  /** Expected committed costs, including failed attempts, are not discounted by success. */
   cost: readonly UtilityTerm[];
   successProbability: number;
   persistenceBonus: number;
-  /** (sum(benefit) - sum(cost)) * successProbability + persistenceBonus. */
+  /** successProbability * sum(benefit) - sum(cost) + persistenceBonus. */
   score: number;
   evidence: readonly Evidence[];
 }>;
@@ -275,6 +277,17 @@ export type DeathAttributionContext = Readonly<{
   /** Unknown must be explicit; lack of an allocation is not evidence of a normal combat death. */
   evidence: readonly Evidence[];
 }>;
+/** Adjustable force not serving a positive-utility objective. Each unit appears
+ * once; costs are alternatives, not additional costs to charge every candidate. */
+export type IdleForce = Readonly<{
+  unitIds: readonly string[];
+  /** Nonnegative gold equivalent of the best feasible attack/pressure forgone;
+   * the idle alternative has utility -opportunityCostGold. */
+  opportunityCostGold: number;
+  /** Null when no feasible positive alternative is known; explain in reason. */
+  alternativeObjectiveId: ObjectiveId | null;
+  reason: Reason;
+}>;
 export type StrategyPlanTrace = Readonly<{
   schemaVersion: 1;
   tick: number;
@@ -286,6 +299,7 @@ export type StrategyPlanTrace = Readonly<{
   assignments: readonly Assignment[];
   preemptions: readonly PreemptionEvent[];
   budget: readonly BudgetEntry[];
+  idleForces: readonly IdleForce[];
   limitations: readonly Reason[];
 }>;
 export type PlanningContext = Readonly<{ snapshot: GameSnapshot; owner: PlayerId; memory: AiPolicyMemory }>;
