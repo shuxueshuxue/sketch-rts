@@ -65,7 +65,7 @@ describe('land objective proposals over one shared Situation', () => {
       assets: [...situation.assets].reverse(), opportunities: [...situation.opportunities].reverse() };
     const next = generateLandObjectives(later, { ...context, snapshot: { ...context.snapshot, tick: later.tick } }, first);
     expect(next.map(goal => goal.id).sort()).toEqual(first.map(goal => goal.id).sort());
-    expect(next.every(goal => goal.rank === 0 && goal.sinceTick === situation.tick)).toBe(true);
+    expect(next.every(goal => goal.rank === null && goal.sinceTick === situation.tick)).toBe(true);
   });
 
   it('does not change frozen policy state, Situation, orders or previous plans', () => {
@@ -111,6 +111,45 @@ describe('land objective proposals over one shared Situation', () => {
     expect(objective.status).toBe('blocked');
     expect(methods[0]!.preconditions).toContainEqual(expect.objectContaining({ kind: 'workers', status: 'unknown' }));
     expect(methods.flatMap(method => method.subgoals).some(child => child.kind === 'deliver-workers')).toBe(false);
+  });
+
+  it('separates an unaffordable expansion from its conditional payoff without charging hall capital twice', () => {
+    const { context, situation } = example();
+    const funded = goals(situation, context).find(goal => goal.kind === 'ExpandLand')!;
+    expect(funded.status).toBe('candidate');
+    const poor = { ...situation, economy: { ...situation.economy, cashGold: 399 } };
+    const blocked = goals(poor, context).find(goal => goal.kind === 'ExpandLand')!;
+    expect(blocked.utility.score).toBeNull();
+    expect(blocked.rank).toBeNull();
+    expect(blocked.conditionalQuote!.potentialUtility!.score).toBe(funded.utility.score);
+    expect(blocked.conditionalQuote!.assumptions).toContainEqual(expect.objectContaining({ code: 'hall-capital' }));
+    expect(blocked.conditionalQuote!.includedPrerequisiteUtilityCodes).toEqual(['hall-after-clear']);
+  });
+
+  it('keeps the potential value unknown when own route or enemy-response facts are missing', () => {
+    const { context, situation } = example();
+    const pending = { ...situation, units: situation.units.map(unit => ({ ...unit, arrivals: [] })) };
+    for (const goal of goals(pending, context)) {
+      expect(goal.status).toBe('blocked');
+      expect(goal.utility.score).toBeNull();
+      expect(goal.rank).toBeNull();
+      expect(goal.conditionalQuote!.potentialUtility).toBeNull();
+      expect(goal.conditionalQuote!.assumptions.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('does not price nullable prior task utility as a known zero-cost handoff', () => {
+    const { context, situation } = example();
+    const previous = goals(situation, context).map(goal => ({ id: goal.id, sinceTick: goal.sinceTick,
+      stability: goal.stability, utility: { score: null } }));
+    const occupied = { ...situation, units: situation.units.map(unit => unit.owner === 'us' && unit.kind !== 'worker'
+      ? { ...unit, commitments: [{ source: 'landExpansion', taskId: 'mine', objectiveId: 'ExpandLand:us:mine',
+        role: 'frontline' as const, evidence: { source: 'claim', tick: 900, certainty: 'recorded' as const, detail: unit.id } }] } : unit) };
+    const attack = generateLandObjectives(occupied, context, previous).find(goal => goal.kind === 'AttackSite')!;
+    expect(attack.utility.score).toBeNull();
+    expect(attack.utility.cost.some(term => term.code.startsWith('handoff:'))).toBe(false);
+    expect(attack.reasons.some(reason => reason.code === 'borrow-opportunity-cost-unknown')).toBe(true);
+    expect(attack.conditionalQuote!.potentialUtility).toBeNull();
   });
 
   it('keeps an active attack group occupied even when its actual order happens to be hold (L2)', () => {
@@ -178,7 +217,7 @@ describe('land objective proposals over one shared Situation', () => {
     const attack = goals({ ...away, opportunities: [...away.opportunities, opportunity] }, context).find(goal => goal.kind === 'AttackSite')!;
     expect(attack.utility.benefit.find(item => item.code === 'pressure')!.value).toBeGreaterThan(0);
     expect(attack.utility.benefit.find(item => item.code === 'timing-window')!.value).toBeGreaterThan(0);
-    expect(attack.utility.score).toBeGreaterThan(baseline.utility.score);
+    expect(attack.utility.score).toBeGreaterThan(baseline.utility.score!);
     expect(attack.target.entityId).toBe('enemy-hall');
   });
 

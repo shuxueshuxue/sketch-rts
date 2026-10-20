@@ -27,7 +27,7 @@
 
 ## L1–L6 的真实帧
 
-原始世界来自 [陆地契约证据包](land-contract.evidence.json)，均为执行 owner think **之前**的完整快照。测试夹具同时保存来源 SHA256、evaluator 提交和统一 Situation；没有在测试里另写 ETA 或威胁算法。原始模拟版本是 883f57c5，统一 Situation 来自性能候选 535471ef 的完整单帧入口（基于 main 8333fae3，包含真实医疗投影和骚扰者 ETA）。
+原始世界来自 [陆地契约证据包](land-contract.evidence.json)，均为执行 owner think **之前**的完整快照。测试夹具同时保存来源 SHA256、evaluator 提交和统一 Situation；没有在测试里另写 ETA 或威胁算法。原始模拟版本是 883f57c5，统一 Situation 来自接口提交 679464e1 的完整单帧入口（基于 main bc33a34a，包含真实医疗投影和骚扰者 ETA）。
 
 | 事件 / tick | 核验结果 |
 | --- | --- |
@@ -40,13 +40,15 @@
 
 L3 的执行器归因取自原始逐 think 记录：14010 和 14025 是 **mobileCare** 的 accepted move，14040 才是 expansionGarrison 的返回命令。它不是 postRecoveryAssignments 当前选中的患者；不能仅凭血线或避战 move 猜执行器。
 
-联合 collector 的 rank 是所有报价按效用排序，不代表选择或承诺。运行时逐兵 ETA 有预算，缺失/unknown 的目标可能以零成功率、零已知占用成本得到 0 分；这会排在承担已知成本的负分方案前。535471ef 的 L3 中，未知进攻 0 分排在驻守约 −8.19 分之前；L6 的未知主城进攻排第一，gold-gen-4 仍是最佳开矿候选，但缺常驻兵、工人 ETA 和预算而 blocked。测试分别核验正效用可行防守的相对顺序、未知前置、任务身份，以及补兵计划链，不把上述裸排序解释为已经出兵或借到了守军。
+联合 collector 将报价分为两段。`feasibleObjectiveIds` 只列当前可行目标，按效用排名；blocked 目标的 `utility.score` 和 `rank` 均为 null，在 `blockedObjectives` 单列缺失前置、条件潜在值、假设和各替代方法的前置成本，不用 0 或非有限数作为排序哨兵。根 `objectives` 保留唯一实体表，观察到的旧任务与救命中断仍可关联到不可行目标。
+
+已命名队伍、路线、敌援和借调原目标的机会成本明确时，前置满足后的潜在效用可按同一公式报价；例如只缺矿厅本金时，不再重复扣已经列为负收益的 400 金。需要尚未定义的新兵/反制兵、未知几何或敌援、未知原任务价值时，`potentialUtility` 保留 null 并记录原因，不拿需求强度虚构新兵已到岗。borrow/train 的前置成本逐 method 列出；`hall-after-clear`、`missing-worker` 等已计入项通过代码引用去重。最小历史只消费 id、承诺起点、稳定性和 nullable 的已知效用分数，条件潜在值不用于借兵损失。
 
 ## 验证与边界
 
-七帧的完整输入 JSON 在观察前后相同；重复观察结果相同。每帧在旧 planner 前加上陆地观察，输出命令、完整任务 memory 与世界快照的 SHA256 均和未观察版本相同。
+陆地函数对七帧的完整输入 JSON 均无修改；重复观察结果相同。在旧 planner 前单独加陆地函数时，命令、完整 memory 与世界快照哈希不变。联合 WithTrace 的框架只新增 `memory.strategy.observation`，用于确定性几何公布进度及最小报价历史；命令、世界快照和所有原 policy 字段仍逐字节相同。陆地函数本身不写观察命名空间。独立进程还核验了冷缓存、其他 owner 预热、逆序预热和中途序列化 fork 的完整 trace/观察历史一致。
 
-初版完整 src：7794/7795 通过，唯一失败在 A100 的 think-worker 子线程解析 `./host`，是已知 Node/tsx 环境问题；这四项在 juma 单独全部通过（6.16 秒，测试本体 1.33 秒）。后续新增的场景/模型测试另行通过，具体数量及最终检查见 PR 验收记录。
+初版完整 src：7794/7795 通过，唯一失败在 A100 的 think-worker 子线程解析 `./host`，是已知 Node/tsx 环境问题；这四项在 juma 单独全部通过（6.16 秒，测试本体 1.33 秒）。679464e1 上的正式接线通过 98 项模型、事件帧、两段报价、共享 collector 和跨进程一致性测试，根 tsc 通过；后续完整 src 和最终性能数据见 PR 验收记录。
 
 性能使用同机 ABBA，分别记录四军场景和后期海图的每次 think。为单独量陆地模块，两组先在计时区外取得同一份 Situation，再比较旧 planner 与“陆地报价/分解/闲置 + 旧 planner”；这项数据不代表 evaluator 免费，框架的总耗时由共享局势 PR 另列。原始逐 think 数据和命令哈希放 A100 证据包。
 
