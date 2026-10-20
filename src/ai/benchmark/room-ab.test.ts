@@ -23,6 +23,12 @@ it('represents each family as both races over three seeds even in the smallest r
   expect(rows.every(row => row.seats.length === row.nativeSeats)).toBe(true);
 });
 
+it('allows 40-minute long samples, retaining the 15-minute minimum and rejecting invalid limits', () => {
+  const options = { a: 'room-current' as const, b: 'room-current' as const, seeds: ['long'], maps: ['greystonePass'] };
+  expect(roomAbCases({ ...options, minutes: 40 }).every(item => item.maxTicks === 48000)).toBe(true);
+  for (const minutes of [14.99, 40.01, NaN, Infinity]) expect(() => roomAbCases({ ...options, minutes })).toThrow('15 and 40');
+});
+
 it('uses tied ranks at timeout and for simultaneous final building losses', () => {
   expect(roomAbRanks([
     { owner: 'a', hasBuildings: true, lastBuildingLossTick: null },

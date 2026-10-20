@@ -17,7 +17,7 @@ node --import tsx scripts/ai-room-ab.ts \
 `room-current` 使用各席位原来的 archer/summoner/knight 流派；也可指定 `v9_archer` 等已有具名 policy 版本。
 冻结版本始终使用原三个流派的轮换阵容。每个种子保留同一份阵容，种族按座位交替，三个种子覆盖三流派 × 两种族。
 `--maps` 接逗号分隔的既有地图 ID，默认固定的 11 图；`--modes ffa` 只跑主口径。
-时限只接受 15–25 个模拟分钟；每局可以因原生胜负条件提早结束。worker 是独立 Node 进程，不共享 memory 或地图。
+时限接受 15–40 个模拟分钟，默认 20；40 分钟用于少量长局抽样。每局可以因原生胜负条件提早结束。worker 是独立 Node 进程，不共享 memory 或地图。
 
 主口径是 **地图原生满席 FFA**，用房间的 `createRoom/roomToGameSetup` 生成。每席都是独立阵营；A/B 仅为报表
 中的策略组，组内照样互相攻击。每种子两局，A/B 交替占席、再轮换一个出生位；地图 seed、流派、种族、owner ID
@@ -47,6 +47,42 @@ node --import tsx scripts/ai-room-ab.ts --summarize \
 
 摘要包含完整命令流、最终 snapshot、canonical state、
 checksum 和 memory 哈希。生成物只放缓存或 evidence store；仓库只留小型摘要和证据指针。
+
+## 终局局面：分项比较
+
+建筑存续的原生胜负保持原样。`positions.primaryTimeoutFfa` 只比较真正到达时限的满席局；
+`allEndFfa` 另外保留所有终局（包括提前分胜负的局）。辅助两席各有对应分组，不与满席合并。
+这些指标各自统计 A 胜出 / B 胜出 / 相等 / 无法比较，**没有加权总分，也不另造一个胜负条件**。
+
+| 指标 | 口径 |
+| --- | --- |
+| `killedUnitGold` / `killedBuildingGold` / `killedGold` | 原生致死来源归属的敌方单位/建筑目录价；含对同策略组内其他席位的战果，因为 FFA 中他们仍是敌人。 |
+| `lostUnitGold` / `lostBuildingGold` / `lostGold` | 本方单位/建筑损失的目录价，包括中立、友伤、无法归因的损失；不以杀敌数倒推。 |
+| `exchangeNetGold` / `exchangeRatio` | 杀敌价值减损失价值、杀敌价值除损失价值。比值先合并本组杀敌/损失再相除，不能平均席位比值。 |
+| `crossKilledGold` / `crossLostGold` / `crossExchangeNetGold` / `crossExchangeRatio` | 另列严格的 A→B / B→A 交换，不把 A→A 或 B→B 算进来；中立、友伤和无来源损失也不计入跨组交换。 |
+| `aliveUnitGold` / `aliveBuildingGold` | 终局 HP>0 的全部单位/建筑，按种类的目录价相加；工人、船上乘员、塔上单位都计入。 |
+| `heldMines` / `heldMineReserves` | 剩余量>0 的矿，320 范围内同陆块存在存活已完工矿厅，且只有一个席位符合；一个席位多个矿厅只计一次。双方同时符合是 contested，双方都不加，保留矿点明细；空矿单列 exhausted。 |
+| `miningGoldPerMinute` | 终局前 60 模拟秒实际交金收入，扣除人口 upkeep 并按分结算；由 sim 的到账位置只读观测，不含赏金、退款、出生金币或开支。不足 60 秒的提前终局按实际窗口折算，并保留窗口秒数与收入。 |
+| `enemyMiningHallsDestroyed` / `ownMiningHallsLost` | 原生 townHall 致死边界的敌方摧毁数 / 己方损失数；包括原始矿厅、扩张矿厅及在建矿厅，不是敌建筑附近停留时间的代理。 |
+
+目录价固定使用运行时 `UNIT_DEFS[kind].cost` / `BUILDING_DEFS[kind].cost`，不按剩余 HP 折价，
+不加老兵、升级或身上装备的估价；船按该船种的目录价，乘员各自计值。零价格的召唤物/怪物仍为零。
+在建建筑也按整座目录价，逐席额外给 `unfinishedBuildingGold`，便于识别未兑现资产。
+单位损失遵守原生 removal 的 `countedAsLoss`：自然到期、脚本移除不计战损；即使同 tick 曾收到致死伤害而被原生归为到期，也不授予交换价值。
+正常沉船乘员由原生 sinking 来源分别归属，不重复计算船体。
+
+损失类指标越小越好，其他越大越好。每局先取两组的**总和**（两组席数相同），差值始终写 A−B；
+损失的胜出方向反转，但不改写差值。每个种子两次出生位轮转的配对差值为 `(delta0+delta1)/2`。
+报告保留逐图、逐种子配对差值、均值、最小值、最大值和分别的胜出计数；跨图不把金币、矿数和时间混成一个数。
+
+比值为 0/0 时明确写 `no-exchange`，不填 0；正数/0 写 `no-loss`，高于有限比值。
+没有有限差值的配对从数值均值中排除，数量在 `finitePairs` 和 unavailable 中显示。
+自对打还逐项校验轮转前后的 A/B 原始值镜像，覆盖这些不能相减的比值。
+
+每局新增 `position.jsonl.gz`（单位/建筑损失、精确来源、目录价、采矿到账）和 `final.json.gz`（完整终局快照）。
+`summary.json` 的 `position` 含逐席资产/交换/矿点归属/收入窗口，汇总的 `positions` 含逐局与配对比较。
+`position-games.csv`、`position-pairs.csv`、`position-maps.csv` 分别给逐局、逐种子配对、逐图口径；
+`seats.csv` 最后一列也含完整逐席 position。旧证据没有收入观测和终局资产时，重汇总明确返回 unavailable，不能补成零；需重跑。
 
 ## 行为指标的定义与限制
 

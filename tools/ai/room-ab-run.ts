@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { createReadStream, createWriteStream, openSync, writeSync, closeSync, writeFileSync, unlinkSync, mkdirSync } from 'node:fs';
 import { pipeline } from 'node:stream/promises';
-import { createGzip } from 'node:zlib';
+import { createGzip, gzipSync } from 'node:zlib';
 import { join } from 'node:path';
 import { runAiGameLoop } from '../../src/ai/game-runner';
 import { createAiMemoryProvider, planAiOwnerCommandEntries } from '../../src/ai/planner-context';
@@ -11,6 +11,7 @@ import { projectDeathThinkContext } from '../../src/ai/death-ledger-context';
 import { projectRoomBaseline646cContext } from '../../src/ai/benchmark/room-baseline-646c-context';
 import { AiDeathLedger } from '../../src/ai/death-ledger';
 import { RoomAbMetrics } from '../../src/ai/benchmark/room-ab-metrics';
+import { RoomAbPosition } from '../../src/ai/benchmark/room-ab-position';
 import { canonicalRoomAbClearings } from '../../src/ai/benchmark/room-ab-clearings';
 import { roomAbRanks, type RoomAbCase } from '../../src/ai/benchmark/room-ab';
 import { createRoom, roomToGameSetup } from '../../src/shared/rooms';
@@ -49,7 +50,8 @@ export async function runRoomAbMatch(input: { item: RoomAbCase; cache: string; o
   } else options = { layout: { ...map.layout, seed: item.layoutSeed } };
   const agents = Object.fromEntries(item.seats.map(seat => [seat.owner, { controller: 'internal-ai' as const,
     version: seat.family, race: seat.race, team: seat.owner }]));
-  let ledger: AiDeathLedger | undefined, metrics: RoomAbMetrics | undefined, thinks = 0, commands = 0, inputChecks = 0;
+  let ledger: AiDeathLedger | undefined, metrics: RoomAbMetrics | undefined, position: RoomAbPosition | undefined;
+  let thinks = 0, commands = 0, inputChecks = 0;
   const plannedHash = createHash('sha256'), commandHash = createHash('sha256');
   const observed = input.observed !== false;
   let initialHash = '', initialSnapshot: GameSnapshot | undefined;
@@ -76,7 +78,11 @@ export async function runRoomAbMatch(input: { item: RoomAbCase; cache: string; o
     beforeLoop({ game }) {
       const initial = snapshotGame(game); initialHash = sha(initial); initialSnapshot = initial;
       writeFileSync(join(out, 'initial.json'), JSON.stringify({ snapshot: initial, nextId: game.nextId, activePlayers: game.activePlayers }), { flag: 'wx' });
-      if (observed) { ledger = new AiDeathLedger(game, { owners: item.seats.map(s => s.owner) }); metrics = new RoomAbMetrics(game, item.seats.map(s => s.owner)); }
+      if (observed) {
+        ledger = new AiDeathLedger(game, { owners: item.seats.map(s => s.owner) });
+        metrics = new RoomAbMetrics(game, item.seats.map(s => s.owner));
+        position = new RoomAbPosition(game, Object.fromEntries(item.seats.map(s => [s.owner, s.side])), event => log('position', event));
+      }
     },
     onCommand({ tick, owner, source, scriptId, command }) {
       const row = { tick, owner, source, scriptId, command };
@@ -86,19 +92,21 @@ export async function runRoomAbMatch(input: { item: RoomAbCase; cache: string; o
     onStep() { metrics?.step(); },
   });
   const rawMetrics = metrics?.finish();
+  const positionReport = position?.finish() ?? null;
+  writeFileSync(join(out, 'final.json.gz'), gzipSync(JSON.stringify(loop.snapshot)), { flag: 'wx' });
   const metricsReport = rawMetrics ? canonicalRoomAbClearings(rawMetrics, initialSnapshot!) : null;
   const deaths = ledger?.records() ?? [];
   for (const row of deaths) log('deaths', row);
   const deathSummaries = Object.fromEntries(item.seats.map(s => [s.owner, ledger?.summary(s.owner) ?? null]));
   const reconciled = item.seats.every(s => !ledger || deathSummaries[s.owner]!.nativeLosses === (loop.game.match.stats.unitsLost[s.owner] ?? 0));
-  const errors = [...(ledger?.errors ?? []), ...(metricsReport?.errors ?? [])];
+  const errors = [...(ledger?.errors ?? []), ...(metricsReport?.errors ?? []), ...(positionReport?.errors ?? [])];
   const ranks = metricsReport ? roomAbRanks(Object.entries(metricsReport.seats).map(([owner, m]) => ({ owner, ...m }))) : null;
   const finalMemory = Object.fromEntries(item.seats.map(s => [s.owner, s.brain === 'room-baseline-646c' ? baseline.memory(s.owner) : memories[s.owner]]));
   const report = { item, artifactSha256: ROOM_BASELINE_MANIFEST.artifact.sha256, tick: loop.game.tick,
     winner: loop.game.match.winner, timeout: !loop.game.match.winner, initialSha256: initialHash,
     plannedSha256: plannedHash.digest('hex'), commandSha256: commandHash.digest('hex'), snapshotSha256: sha(loop.snapshot),
     canonicalSha256: sha(canonicalGameState(loop.game)), checksum: checksumGame(loop.game), memorySha256: sha(finalMemory),
-    thinks, commands, inputChecks, observed, ranks, metrics: metricsReport, deathSummaries, reconciled, errors,
+    thinks, commands, inputChecks, observed, ranks, metrics: metricsReport, position: positionReport, deathSummaries, reconciled, errors,
     nativeStats: loop.game.match.stats, elapsedMs: loop.elapsedMs, cpuMs: loop.cpuMs, maxRssKiB: process.resourceUsage().maxRSS };
   ledger?.dispose();
   for (const [name, fd] of fds) {

@@ -10,6 +10,7 @@ import { AI_SCRIPT_VERSIONS } from '../src/ai/policy';
 import { formatRoomAbCsv } from '../src/ai/benchmark/room-ab-csv';
 import { summarizeRoomAbResponses } from '../src/ai/benchmark/room-ab-responses';
 import { canonicalRoomAbClearings } from '../src/ai/benchmark/room-ab-clearings';
+import { summarizeRoomAbPositions, ROOM_AB_POSITION_METRICS } from '../src/ai/benchmark/room-ab-position-report';
 import { ROOM_BASELINE_MANIFEST } from '../src/ai/frozen/room-baseline';
 import { runRoomAbMatch, sha, type RoomAbReport } from '../tools/ai/room-ab-run';
 import type { GameSnapshot } from '../src/shared/types';
@@ -30,7 +31,9 @@ if (config.modes?.some(mode => mode !== 'ffa' && mode !== 'duel')) throw new Err
 let cases = roomAbCases(config);
 if (args.includes('--reverse')) cases.reverse();
 const files = ['scripts/ai-room-ab.ts', 'tools/ai/room-ab-run.ts', 'src/ai/benchmark/room-ab.ts',
-  'src/ai/benchmark/room-ab-csv.ts', 'src/ai/benchmark/room-ab-responses.ts', 'src/ai/benchmark/room-ab-clearings.ts', 'src/ai/benchmark/room-ab-metrics.ts', 'src/ai/benchmark/room-baseline-646c-context.ts', 'src/ai/benchmark/room-baseline-646c-memory.ts'];
+  'src/ai/benchmark/room-ab-csv.ts', 'src/ai/benchmark/room-ab-responses.ts', 'src/ai/benchmark/room-ab-clearings.ts', 'src/ai/benchmark/room-ab-metrics.ts',
+  'src/ai/benchmark/room-ab-position.ts', 'src/ai/benchmark/room-ab-position-report.ts', 'src/shared/sim/observation.ts', 'src/shared/sim.ts',
+  'src/ai/benchmark/room-baseline-646c-context.ts', 'src/ai/benchmark/room-baseline-646c-memory.ts'];
 const provenance = { sourceCommit: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
   sourceDiffSha256: sha(execFileSync('git', ['diff', 'HEAD'], { encoding: 'utf8' })),
   files: Object.fromEntries(files.map(path => [path, createHash('sha256').update(readFileSync(path)).digest('hex')])),
@@ -96,7 +99,9 @@ if (selected) {
       commandEqual: left!.commandSha256 === right!.commandSha256, plannedEqual: left!.plannedSha256 === right!.plannedSha256,
       snapshotEqual: left!.snapshotSha256 === right!.snapshotSha256, memoryEqual: left!.memorySha256 === right!.memorySha256 };
   });
+  const positions = summarizeRoomAbPositions(reports);
   const summary = { config, provenance: savedMatrix?.provenance ?? provenance, reportProvenance: provenance, results, primaryFfa: aggregate(reports.filter(r => r.item.mode === 'ffa')),
+    positions,
     guardAssociationAudit,
     seatMetrics: reports.flatMap(r => r.item.seats.map(s => ({ case: r.item.name, owner: s.owner, side: s.side,
       rank: r.ranks![s.owner], ...r.metrics!.seats[s.owner]! }))),
@@ -111,14 +116,37 @@ if (selected) {
   writeFileSync(join(reportOut, 'summary.json'), JSON.stringify(summary, null, 2) + '\n', { flag: 'wx' });
   const columns = ['case', 'mode', 'map', 'seed', 'rotation', 'owner', 'side', 'brain', 'family', 'race', 'tick', 'winner', 'rank', 'alive',
     'idleArmyUnitSeconds', 'abaSwitches', 'firstExpansion', 'firstIslandClearStart', 'firstIslandClearComplete', 'firstEnemySortie',
-    'completed', 'completedBy15m', 'sitesDestroyed', 'sitesDestroyedWithArmyElsewhere', 'siteResponses', 'preemptions', 'pressureFraction', 'deaths'];
+    'completed', 'completedBy15m', 'sitesDestroyed', 'sitesDestroyedWithArmyElsewhere', 'siteResponses', 'preemptions', 'pressureFraction', 'deaths', 'position'];
   const csv = formatRoomAbCsv([columns, ...reports.flatMap(r => r.item.seats.map(s => { const m = r.metrics!.seats[s.owner]!; return [r.item.name, r.item.mode, r.item.mapId, r.item.seed,
     r.item.rotation, s.owner, s.side, s.brain, s.family, s.race, r.tick, r.winner, r.ranks![s.owner], m.hasBuildings,
     m.idleArmyUnitSeconds, m.abaSwitches, m.firstExpansion, m.firstIslandClearStart, m.firstIslandClearComplete, m.firstEnemySortie,
     JSON.stringify(m.completed), JSON.stringify(m.completedBy15m), m.sitesDestroyed, m.sitesDestroyedWithArmyElsewhere,
     JSON.stringify(summarizeRoomAbResponses(r.metrics!.responses.filter(row => row.owner === s.owner))), m.preemptions === null ? 'unknown' : m.preemptions,
-    m.pressureSeconds / m.observedSeconds, JSON.stringify(r.deathSummaries[s.owner])]; }))]);
+    m.pressureSeconds / m.observedSeconds, JSON.stringify(r.deathSummaries[s.owner]), JSON.stringify(r.position?.seats[s.owner] ?? null)]; }))]);
   writeFileSync(join(reportOut, 'seats.csv'), csv, { flag: 'wx' });
-  console.log(JSON.stringify({ primaryFfa: summary.primaryFfa, auxiliaryDuel: summary.auxiliaryDuel, symmetry: summary.symmetry, reconciled: summary.reconciled }));
-  if (!summary.reconciled || !summary.pairedWorldsEqual || summary.symmetry === false) process.exitCode = 1;
+  if (positions.available) {
+    writeFileSync(join(reportOut, 'position-games.csv'), formatRoomAbCsv([
+      ['case', 'map', 'mode', 'timeout', 'metric', 'A', 'B', 'A_minus_B', 'winner'],
+      ...positions.matches.flatMap(m => Object.entries(m.comparisons).map(([key, c]) =>
+        [m.case, m.mapId, m.mode, m.timeout, key, JSON.stringify(c.a), JSON.stringify(c.b), c.delta, c.winner])),
+    ]), { flag: 'wx' });
+    writeFileSync(join(reportOut, 'position-pairs.csv'), formatRoomAbCsv([
+      ['pair', 'map', 'mode', 'both_timeout', 'metric', 'paired_A_minus_B', 'winner', 'mirrored'],
+      ...positions.pairs.flatMap(p => Object.entries(p.metrics).map(([key, m]) =>
+        [p.pair, p.mapId, p.mode, p.timeoutPair, key, m.delta, m.winner, m.mirror])),
+    ]), { flag: 'wx' });
+    writeFileSync(join(reportOut, 'position-maps.csv'), formatRoomAbCsv([
+      ['map', 'scope', 'metric', 'higher_is_better', 'games', 'A_wins', 'B_wins', 'ties', 'unavailable', 'pairs',
+        'finite_pairs', 'mean_paired_A_minus_B', 'min_paired_A_minus_B', 'max_paired_A_minus_B', 'A_pair_wins', 'B_pair_wins', 'pair_ties'],
+      ...positions.maps.flatMap(m => (['timeoutFfa', 'allEndFfa', 'auxiliaryDuel'] as const).flatMap(scope =>
+        Object.entries(m[scope].metrics).map(([key, v]) => [m.mapId, scope, key, v.higherIsBetter, m[scope].games,
+          v.games.aWins, v.games.bWins, v.games.ties, v.games.unavailable, m[scope].pairs, v.finitePairs,
+          v.meanPairedDelta, v.minPairedDelta, v.maxPairedDelta, v.paired.aWins, v.paired.bWins, v.paired.ties]))),
+    ]), { flag: 'wx' });
+    if (Object.keys(positions.allEndFfa.metrics).length !== Object.keys(ROOM_AB_POSITION_METRICS).length) throw new Error('Missing metric');
+  } else console.warn('Position metrics unavailable in older evidence; rerun matches to record mining deliveries and terminal assets.');
+  const positionSymmetry = positions.available && config.a === config.b ? positions.mirrored && positions.finitePairedDeltasZero : null;
+  console.log(JSON.stringify({ primaryFfa: summary.primaryFfa, auxiliaryDuel: summary.auxiliaryDuel, symmetry: summary.symmetry,
+    positionSymmetry, reconciled: summary.reconciled }));
+  if (!summary.reconciled || !summary.pairedWorldsEqual || summary.symmetry === false || positionSymmetry === false) process.exitCode = 1;
 }
