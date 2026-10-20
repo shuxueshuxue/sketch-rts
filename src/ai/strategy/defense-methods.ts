@@ -3,9 +3,9 @@ import { strikeGap } from '../../shared/combat-geometry';
 import type { GameSnapshot } from '../../shared/types';
 import { averagePoint, distance } from '../policy/spatial';
 import { assessAllocatedDefenseBattle, assessAllocatedForce } from './allocated-force';
-import { assessDefenseResponse } from './defense-response';
+import { assessDefenseResponse, currentInPlaceDefense } from './defense-response';
 import { allocatedVoyageValue, voyageCostAfterPreservedAssets } from './allocated-voyage-value';
-import { defenseProtectionValue, defenseThreatScenarios } from './defense-risk';
+import { defenseProtectionValue, defenseThreatScenarios, defenseInPlaceSurvival } from './defense-risk';
 import type { AllocationMethodProvider, AllocationReason, AllocationUtility, ExecutableMethod,
   ForceQuotation, MethodAllocationQuote, AllocationPrecondition } from './allocation-types';
 import type { DecisionFacts } from './decision';
@@ -179,21 +179,32 @@ export const defenseMethodProvider: AllocationMethodProvider = {
       opponents.filter(unit => opponentEta.get(unit.id)! > 0).map(unit => ({ unit, etaTicks: opponentEta.get(unit.id)! })), threatWindow,
       group => group.reduce((sum, unit) => sum + opponentStrength.get(unit.id)! * coverage.get(unit.id)!, 0));
     const site = situation.assets.find(asset => asset.id === targetId);
-    const response = assessDefenseResponse({ snapshot, situation, target: method.actions.at(-1)!.target, arrivalTargetId: responseId,
+    const response = assessDefenseResponse({ snapshot, situation, target: evacuation ? objective.target : method.actions.at(-1)!.target, arrivalTargetId: evacuation ? targetId : responseId,
       eligibleUnitIds: input.responseEligibleUnitIds
         ?? situation.units.filter(unit => unit.owner === situation.owner && !unit.commitments.length).map(unit => unit.id),
       excludedUnitIds: [...unitIds, ...(input.valuation?.unavailableUnitIds ?? [])],
       actualMobileOpponentForce: enemyWeighted.effectiveForce, windowTicks: threatWindow });
     // Arrival and finite summon life are priced before the mutually exclusive
     // army scenarios. A redirect probability is never multiplied into a unit.
-    const scopedThreat = threat ? { ...threat, attackers: threat.attackers.filter(attacker => coverage.has(attacker.unitId)).map(attacker => ({ ...attacker,
-      strength: attacker.strength * coverage.get(attacker.unitId)! / (1 + opponentEta.get(attacker.unitId)! / threatWindow) })) }
+    const scopedThreat = threat ? { ...threat, attackers: threat.attackers.flatMap(attacker => coverage.has(attacker.unitId) ? [{ ...attacker,
+      strength: attacker.strength * coverage.get(attacker.unitId)! / (1 + opponentEta.get(attacker.unitId)! / threatWindow) }]
+      // A missing arrival/intent cannot prove that staying is safe. Preserve
+      // the original unknown row for the shared scenario evaluator.
+      : evacuation && opponentUnknown.includes(attacker.unitId) ? [attacker] : []) }
       : { siteId: targetId, horizonTicks: threatWindow, attackers: [], arrivedStrength: 0, incomingStrength: 0,
         friendlyOnStationStrength: 0, firstArrivalTicks: null, lossProbability: 0 };
     const mobileScenarios = defenseThreatScenarios(scopedThreat, response.response);
     const scenarios = mobileScenarios.status === 'unknown' ? mobileScenarios
       : { ...mobileScenarios, scenarios: mobileScenarios.scenarios.map(scenario => ({ ...scenario,
         force: scenario.force + response.hostileStaticForce })) };
+    const inPlaceDefense = evacuation ? currentInPlaceDefense({ snapshot, situation, target: objective.target, excludedUnitIds: unitIds }) : null;
+    const inPlace = evacuation ? defenseInPlaceSurvival({ threat: threat ? scenarios : null, defendingForce: inPlaceDefense!.totalForce }) : null;
+    if (inPlace?.status === 'unknown') {
+      missing ??= 'evacuation-in-place-survival-unknown';
+      conditions.push({ id: `${method.id}/in-place-survival`, kind: 'shore-safe', status: 'unknown',
+        reason: reason('evacuation-in-place-survival-unknown', [targetId, ...inPlace.unknownIds]),
+        demand: { kind: 'workers', count: subjects?.length ?? 1, at: objective.target }, subgoalIds: [] });
+    }
     const actualOpposition = Math.max(response.hostileStaticForce, ...scenarios.scenarios.map(scenario => scenario.force));
     if (!evacuation && scenarios.status === 'unknown') missing ??= scenarios.reasonCode;
     const hostileTowers = snapshot.buildings.filter(tower => response.hostileTowerIds.includes(tower.id));
@@ -241,7 +252,15 @@ export const defenseMethodProvider: AllocationMethodProvider = {
     if (voyages.unknown.length) missing ??= voyages.unknown[0]!.code;
     const transitSurvival = [...voyages.actions.values()].reduce((p, wave) => p * wave.survivalProbability, 1);
     const savedUnitValues = evacuation ? cohort.map(unit => ({ unitId: unit.id, valueGold: discountedValue(UNIT_DEFS.worker.cost, latest, window) })) : [];
-    const benefit = evacuation ? [{ code: 'workers-saved', value: savedUnitValues.reduce((sum, entry) => sum + entry.valueGold, 0), catalogUnitValues: savedUnitValues }]
+    const expectedSavedGold = savedUnitValues.reduce((sum, entry) => sum + entry.valueGold
+      * (stationed.includes(entry.unitId) ? 1 : voyages.passengerArrivalProbabilities.get(entry.unitId) ?? 1), 0);
+    const savedValueGold = savedUnitValues.reduce((sum, entry) => sum + entry.valueGold, 0);
+    const inPlacePreservationGold = inPlace?.status === 'known' ? savedValueGold * inPlace.survivalProbability : null;
+    // The marginal benefit already integrates every person's two outcomes.
+    // Catalog identity remains a nonnegative price reference, not a second
+    // permanent loss. A worse escape may have a negative benefit; never clip it.
+    const benefit = evacuation ? [{ code: 'workers-preservation-gain',
+      value: inPlacePreservationGold === null ? 0 : expectedSavedGold - inPlacePreservationGold, catalogUnitValues: savedUnitValues }]
       : [{ code: 'protected-assets', value: protection?.benefitGold ?? 0, catalogUnitValues: assets.filter(asset => asset.kind === 'worker')
         .map(asset => ({ unitId: asset.id, valueGold: discountedValue(asset.replacementGold, latest, window) })) }];
     const preserved = new Set(benefit.flatMap(term => term.catalogUnitValues.map(entry => entry.unitId)));
@@ -262,13 +281,10 @@ export const defenseMethodProvider: AllocationMethodProvider = {
       { code: 'combat-attrition', value: discountedValue(combatGold, latest, window), catalogUnitValues: sumUnitValues(combatUnitValues) },
       { code: 'voyage-hull-and-passengers', value: discountedValue(voyageCost.expectedLossGold, latest, window), catalogUnitValues: voyageUnitValues },
       ...(opportunity?.status === 'known' ? [{ code: 'bundle-opportunity', value: opportunity.gold }] : [])];
-    // Rescued assets are additive: another hull sinking does not erase a
-    // person who reaches refuge. A shore waiter needs both approach and loaded
-    // legs to succeed, whereas a person already at refuge has arrived for sure.
-    const expectedSavedGold = savedUnitValues.reduce((sum, entry) => sum + entry.valueGold
-      * (stationed.includes(entry.unitId) ? 1 : voyages.passengerArrivalProbabilities.get(entry.unitId) ?? 1), 0);
-    const savedValueGold = savedUnitValues.reduce((sum, entry) => sum + entry.valueGold, 0);
-    const probability = evacuation ? savedValueGold ? expectedSavedGold / savedValueGold : 0
+    // Partial rescue and staying are already integrated in the benefit.
+    // Physical arrival probability is reported separately below.
+    const rescueArrivalProbability = savedValueGold > 0 ? expectedSavedGold / savedValueGold : 0;
+    const probability = evacuation ? 1
       : transitSurvival * (protection?.successProbability ?? 0) + (1 - transitSurvival) * (noArrivalProtection?.successProbability ?? 0);
     const persistenceBonus = objective.utility.persistenceBonus;
     const utility: AllocationUtility = { horizonTicks: window.horizonTicks, benefit, cost,
@@ -280,7 +296,8 @@ export const defenseMethodProvider: AllocationMethodProvider = {
       availableForce: weighted.effectiveForce, actualOpposition, successProbability: probability,
       staticProtection: protection && protection.benefitGold > 0 ? protection.staticBaselineGold / protection.benefitGold : 0,
       actualIntrusionCount: scenarios.actualIds.length, potentialRedirectCount: scenarios.redirects.length,
-      transitSurvival,
+      transitSurvival, rescueArrivalProbability, inPlaceSurvivalProbability: inPlace?.survivalProbability ?? null,
+      expectedSavedGold, inPlacePreservationGold,
       otherResponseTicks: response.response.status === 'known' ? response.response.ticks : null,
       latestArrivalTicks: latest, opponentUnknown: opponentUnknown.length });
     return missing ? { methodId: method.id, status: 'blocked', force, valuation, utility: null, potentialUtility: null,
