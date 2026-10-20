@@ -55,6 +55,7 @@ export function createAiThinkClientExecutor(runtime: AiRuntimeState, game: Game,
   const due = (tick: number) => [...running.keys()].some((delivery) => delivery <= tick);
   let report = emptyAiThinkReport();
   return {
+    poll: collect,
     observe(next) { observer = next; generation++; previous = next ? new Map() : undefined; },
     submit(current, job) {
       const snapshot = snapshotGame(current);

@@ -98,9 +98,9 @@ export class AiPlanOverlay {
         ctx.beginPath();ctx.moveTo(from.x,from.y);ctx.lineTo(at.x,at.y);ctx.stroke();
         const angle=Math.atan2(at.y-from.y,at.x-from.x);ctx.beginPath();ctx.moveTo(at.x,at.y);ctx.lineTo(at.x-10*Math.cos(angle-.4),at.y-10*Math.sin(angle-.4));ctx.lineTo(at.x-10*Math.cos(angle+.4),at.y-10*Math.sin(angle+.4));ctx.closePath();ctx.fill();
         if(focused){
-          const path=this.history.points(id,Math.max(this.viewFrom,trace.tick-600),tick).filter(p=>p.goals.includes(node.id));
-          ctx.globalAlpha=.65;ctx.setLineDash([]);ctx.beginPath();let lastSession=-1;
-          for(const p of path){const q=this.options.project(p);if(lastSession!==p.session)ctx.moveTo(q.x,q.y);else ctx.lineTo(q.x,q.y);lastSession=p.session;}ctx.stroke();
+          const path=this.history.points(id,Math.max(this.viewFrom,trace.tick-600,node.sinceTick??this.history.bands.filter(b=>b.owner===trace.owner&&b.id===node.id&&b.from<=trace.tick).at(-1)?.from??0),tick);
+          ctx.globalAlpha=.65;ctx.setLineDash([]);ctx.beginPath();let lastSession=-1,lastTick=-Infinity;
+          for(const p of path){if(!p.goals.includes(node.id)){lastSession=-1;lastTick=-Infinity;continue;}const q=this.options.project(p);if(lastSession!==p.session||p.tick-lastTick>30)ctx.moveTo(q.x,q.y);else ctx.lineTo(q.x,q.y);lastSession=p.session;lastTick=p.tick;}ctx.stroke();
         }
       }
       ctx.globalAlpha=1;ctx.setLineDash([]);ctx.fillStyle='#f2ead9';ctx.beginPath();ctx.arc(at.x,at.y,focused?15:12,0,Math.PI*2);ctx.fill();ctx.strokeStyle=color;ctx.stroke();ctx.fillStyle=color;ctx.textAlign='center';ctx.fillText(node.status==='blocked'?'!':icons[node.kind]??'·',at.x,at.y+5);
@@ -169,10 +169,10 @@ export class AiPlanOverlay {
     const deaths=this.history.deaths.filter(d=>d.tick<=tick&&planDeathMatches(trace.owner,node,d,node.sinceTick??band?.from??trace.tick));
     return `<article><div class="plan-goal-title"><span>${icons[node.kind]}</span><div><small>${escape(trace.owner)} · ${escape(status[node.status])}</small><h3>${escape(node.label)}</h3></div><b>${node.utility.score??'—'}</b></div>
       <h4>01　为什么选它</h4>${node.utility.terms.length?node.utility.terms.map(t=>`<p>${escape(t.name)} <b>${t.value}</b> · ${escape(t.explanation)}</p>`).join(''):'<p class="plan-muted">收益 —　成本 —　成功概率 —<br>坚持加分 — · 待接入</p>'}<p>${node.reasons.map(r=>escape(r.detail)).join('<br>')}</p>
-      <h4>02　怎么做</h4><p class="plan-muted">方法：${escape(node.source)} · ${escape(status[node.status])}</p>${tree(node.children)}${node.requirements.map(r=>`<p>${r.met===true?'✓':r.met===false?'!':'—'} ${escape(r.detail)}</p>`).join('')}
+      <h4>02　怎么做</h4><p class="plan-muted">方法：— · 来源：${escape(node.source)} · ${escape(status[node.status])}</p>${tree(node.children)}${node.requirements.map(r=>`<p>${r.met===true?'✓':r.met===false?'!':'—'} ${escape(r.detail)}</p>`).join('')}
       <h4>03　派了谁</h4><p>${node.resources.unitIds.length} 名 · 预留金币 ${node.resources.gold.reserved??'—'} / 需求 ${node.resources.gold.required??'—'}</p><div class="plan-unit-ids">${node.resources.unitIds.map(escape).join(' · ')||'没有记录单位分配'}</div><div class="plan-compare"><span>预计到达<br><b>—</b></span><span>实际到达<br><b>${node.reasons.some(r=>r.code==='arrived')?'已到位（时刻未记录）':'—'}</b></span></div>
       <h4>04　执行得怎样</h4>${trace.changes.filter(c=>c.nodeId===node.id).map(c=>`<p>${clock(trace.tick)} · ${escape(c.detail)}</p>`).join('')||'<p>本次思考没有记录到变化。</p>'}<p class="plan-muted">抢占关系：待接入</p>
-      <h4>05　结果如何</h4><div class="plan-compare"><span>预期效果<br><b>—</b></span><span>实际结果<br><b>${escape(status[node.status])}</b></span></div><p>本目标账本归属 ${deaths.length} 次阵亡（推断）</p>${deaths.slice(-4).map(d=>`<button class="plan-list" data-event="${escape(d.id)}" data-tick="${d.tick}">${deathStyle(d).icon} ${clock(d.tick)} · ${escape(d.unit.kind)} · ${deathStyle(d).label}</button>`).join('')}</article>`;
+      <h4>05　结果如何</h4><div class="plan-compare"><span>预期效果<br><b>—</b></span><span>结果（模块记录）<br><b>${escape(status[node.status])}</b></span></div><p>本目标账本归属 ${deaths.length} 次阵亡（推断）</p>${deaths.slice(-4).map(d=>`<button class="plan-list" data-event="${escape(d.id)}" data-tick="${d.tick}">${deathStyle(d).icon} ${clock(d.tick)} · ${escape(d.unit.kind)} · ${deathStyle(d).label}</button>`).join('')}</article>`;
   }
   private async click(event:Event){
     const element=(event.target as Element).closest<HTMLElement>('button');if(!element)return;

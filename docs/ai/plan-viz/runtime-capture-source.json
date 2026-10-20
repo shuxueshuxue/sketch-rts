@@ -1,0 +1,22 @@
+{
+  "captureCommit": "b236842338dfc0310ccbc97b1705f04863fada44",
+  "run": "mvgdz8oh-8d4674",
+  "transport": "ssh",
+  "sshConfig": "~/YellowPage/ssh_config",
+  "host": "zhipu-a100-102",
+  "archive": "/codegeex/jeffry/sketch-rts-camps/evidence/sha256/53dabafc323163c563852c17bee77bf2fc269c6b5692edf2a39e30a37e84c5cd",
+  "sha256": "53dabafc323163c563852c17bee77bf2fc269c6b5692edf2a39e30a37e84c5cd",
+  "bytes": 1777308,
+  "format": "tar.gz",
+  "contents": [
+    "SOURCE.json",
+    "SHA256SUMS",
+    "spectator-plans-desktop.png",
+    "replay-scrub-desktop.png",
+    "trace-0-closed.json.gz",
+    "trace-1-open.json.gz",
+    "trace-2-closed.json.gz",
+    "trace-3-open.json.gz",
+    "ai-plan-overlay.json"
+  ]
+}

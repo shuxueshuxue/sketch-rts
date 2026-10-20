@@ -61,11 +61,13 @@ export class LocalGameAdapter implements GameAdapter {
   }
   async stopRecording(): Promise<void> {
     if (!this.recording) return;
+    this.thinkExecutor?.poll?.();
     recordReplayCheckpoint(this.replay!,this.game);this.replay!.throughTick=this.game.tick;
     this.plans?.record(false);this.recording=false;
   }
   async recordedReplay(): Promise<DebugReplayTrace> {
     if (!this.replay) throw new Error('No debug recording; unrecorded periods cannot be reconstructed');
+    this.thinkExecutor?.poll?.();
     if (this.recording) recordReplayCheckpoint(this.replay!, this.game);
     const aiPlans = this.plans?.recordingData();
     return structuredClone({...this.replay, throughTick:this.recording ? this.game.tick : this.replay.throughTick ?? this.game.tick, ...(aiPlans ? {aiPlans} : {})});

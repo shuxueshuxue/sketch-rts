@@ -106,6 +106,8 @@ export type AiThinkObservation = { trace: AiPlanTrace; context: AiDeathThinkCont
 export type AiThinkObserver = (observation: AiThinkObservation) => void;
 export type AiThinkExecutor = {
   observe?(observer?: AiThinkObserver): void;
+  // Collect already arrived replies without consuming or applying queued commands.
+  poll?(): void;
   // `check` rejects a command that is illegal in the world it was planned from.
   submit(game: Game, job: AiThinkJob, check: (commands: CommandEnvelope[]) => void): void;
   // Whether a think of this owner is still running.

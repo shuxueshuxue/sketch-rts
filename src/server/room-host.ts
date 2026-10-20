@@ -465,6 +465,7 @@ export function createRoomHost(options: RoomHostOptions = {}) {
     stopDebugReplay(roomId: string): void {
       const hosted = getHosted(roomId);
       if (!hosted.debugReplay || hosted.debugReplay.stopped) return;
+      hosted.thinkExecutor?.poll?.();
       hosted.plans?.record(false);
       const trace = hosted.history.debugReplayTrace(hosted.debugReplay), aiPlans = hosted.plans?.recordingData();
       hosted.debugReplay.stopped = {...trace,throughTick:hosted.game?.tick ?? aiPlans?.throughTick ?? trace.initialSave.snapshot.tick,
@@ -475,6 +476,7 @@ export function createRoomHost(options: RoomHostOptions = {}) {
     readDebugReplay(roomId: string, viewer?: PlayerId): DebugReplayTrace {
       const hosted = getHosted(roomId);
       if (!hosted.debugReplay) throw new Error(`Room ${roomId} is not recording a debug replay`);
+      hosted.thinkExecutor?.poll?.();
       const trace = hosted.debugReplay.stopped ? structuredClone(hosted.debugReplay.stopped) : hosted.history.debugReplayTrace(hosted.debugReplay);
       const plans = trace.aiPlans ?? hosted.plans?.recordingData();
       const own = aiPlanAudience(hosted.room,viewer);
