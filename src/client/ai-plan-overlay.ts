@@ -4,10 +4,9 @@ import type {GameAdapter} from './game-adapter';
 import type {GameSnapshot} from '../shared/types';
 import type {DebugReplayTrace} from '../shared/replay';
 import type {AiUnitDeathRecord} from '../ai/death-ledger-types';
+import {allocationEventId, allocationEventLabel, allocationReason, planStatus as status, strategyGoalId} from './ai-plan-strategy';
+import {planHtml as escape, planClock as clock, strategyPlanPanel} from './ai-plan-strategy-panel';
 
-const escape=(s:unknown)=>String(s??'—').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
-const clock=(tick:number)=>`${Math.floor(tick/1200)}:${String(Math.floor(tick/20)%60).padStart(2,'0')}`;
-const status:Record<string,string>={active:'执行中',blocked:'受阻',done:'完成',abandoned:'放弃',released:'不再保留（结果未记录）'};
 const icons:Record<string,string>={island:'⚑',expansion:'⌂',defense:'◇',attack:'⚔',pressure:'➶',transport:'⚓',delivery:'⚑',task:'·'};
 type Point={x:number;y:number};
 
@@ -86,9 +85,9 @@ export class AiPlanOverlay {
     this.hits=[];ctx.save();ctx.lineWidth=1.5;ctx.font='600 13px system-ui';
     const selected=this.lastNodes.find(({trace,node})=>trace.owner===this.selected?.owner&&node.id===this.selected?.id);
     for(const {trace,node} of this.lastNodes){
-      if(node.kind==='task'&&!this.showTasks)continue;
+      if(node.kind==='task'&&!node.strategy&&!this.showTasks)continue;
       const target=node.target.position;if(!target)continue;
-      const at=this.options.project(target),color=node.status==='blocked'?'#a97720':node.status==='abandoned'?'#9e5146':'#405d68';
+      const at=this.options.project(target),color=node.status==='blocked'?'#a97720':node.status==='abandoned'||node.status==='failed'?'#9e5146':node.strategy&&!node.strategy.allocation?'#8a816e':'#405d68';
       const focused=selected?.node===node;
       ctx.strokeStyle=color;ctx.fillStyle=color;
       for(const id of (focused?node.resources.unitIds.slice(0,48):[])){
@@ -105,7 +104,7 @@ export class AiPlanOverlay {
       }
       ctx.globalAlpha=1;ctx.setLineDash([]);ctx.fillStyle='#f2ead9';ctx.beginPath();ctx.arc(at.x,at.y,focused?15:12,0,Math.PI*2);ctx.fill();ctx.strokeStyle=color;ctx.stroke();ctx.fillStyle=color;ctx.textAlign='center';ctx.fillText(node.status==='blocked'?'!':icons[node.kind]??'·',at.x,at.y+5);
       ctx.textAlign='left';ctx.fillText(node.label,at.x+19,at.y+4);
-      if(node.status==='blocked'){ctx.font='11px system-ui';ctx.fillText(node.reasons[0]?.code??'受阻',at.x+19,at.y+20);ctx.font='600 13px system-ui';}
+      if(node.status==='blocked'){ctx.font='11px system-ui';ctx.fillText((node.requirements[0]?.detail??node.reasons[0]?.code??'受阻').slice(0,34),at.x+19,at.y+20);ctx.font='600 13px system-ui';}
       this.hits.push({...at,action:()=>{this.selected={owner:trace.owner,id:node.id};this.death=undefined;this.scrollPanelTop();this.paintedRevision=-1;}});
     }
     for(const death of this.history.deaths){
@@ -135,13 +134,26 @@ export class AiPlanOverlay {
       const bandRows=Math.max(1,...bands.map(b=>b.row+1));
       const bandHtml=bands.map(({item:b,row})=>{
         const left=pct(b.from),right=pct(Math.max(b.to,b.from+10));
-        return `<button class="plan-band ${escape(b.status)}" data-goal="${escape(b.id)}" data-owner="${escape(owner)}" data-start="${b.from}" style="left:${left}%;width:${Math.max(.6,right-left)}%;top:${row*22+8}px" title="${escape(b.label)} · ${clock(b.from)}–${clock(b.to)} · ${escape(status[b.status])}">${b.segments.map((s,j)=>`<span style="left:${(s.from-b.from)/Math.max(1,b.to-b.from)*100}%;width:${Math.max(2,(s.to-s.from)/Math.max(1,b.to-b.from)*100)}%;opacity:${.4+j%3*.2}" title="${escape(s.phase+'：'+s.reason)}"></span>`).join('')}<b>${escape(b.label)}</b><i>${b.status==='done'?'✓':b.status==='abandoned'?'×':b.status==='blocked'?'!':b.status==='released'?'·':'›'}</i></button>`;
+        return `<button class="plan-band ${escape(b.status)}" data-goal="${escape(b.id)}" data-owner="${escape(owner)}" data-start="${b.from}" style="left:${left}%;width:${Math.max(.6,right-left)}%;top:${row*22+8}px" title="${escape(b.label)} · ${clock(b.from)}–${clock(b.to)} · ${escape(status[b.status])}">${b.segments.map((s,j)=>`<span style="left:${(s.from-b.from)/Math.max(1,b.to-b.from)*100}%;width:${Math.max(2,(s.to-s.from)/Math.max(1,b.to-b.from)*100)}%;opacity:${.4+j%3*.2}" title="${escape(s.phase+'：'+s.reason)}"></span>`).join('')}<b>${escape(b.label)}</b><i>${b.status==='done'||b.status==='complete'?'✓':b.status==='abandoned'||b.status==='failed'?'×':b.status==='blocked'?'!':b.status==='released'?'·':'›'}</i></button>`;
       }).join('');
-      const allEvents=[...this.history.deaths.filter(d=>d.owner===owner&&d.actualDeath).map(d=>({tick:d.tick,id:d.id,style:deathStyle(d),title:`${d.unit.kind} · ${deathStyle(d).label}`})),...this.history.buildings.filter(b=>b.owner===owner).map(b=>({tick:b.tick,id:`building:${b.id}`,style:{kind:'building',icon:'▧'},title:`建筑损失 · ${b.kind}`}))].filter(e=>e.tick>=from&&e.tick<=to);
+      const allocationEvents = this.history.allocationEvents.filter(entry => entry.owner === owner);
+      const allEvents=[...this.history.deaths.filter(d=>d.owner===owner&&d.actualDeath).map(d=>({tick:d.tick,seekTick:d.tick,id:d.id,style:deathStyle(d),title:`${d.unit.kind} · ${deathStyle(d).label}`})),...this.history.buildings.filter(b=>b.owner===owner).map(b=>({tick:b.tick,seekTick:b.tick,id:`building:${b.id}`,style:{kind:'building',icon:'▧'},title:`建筑损失 · ${b.kind}`})),
+        ...allocationEvents.map(entry => ({ tick: entry.event.tick, seekTick: entry.observedTick, id: allocationEventId(entry),
+          style: { kind: entry.event.kind === 'preempted' || entry.event.kind === 'lease-transferred' ? 'preemption' : 'allocation', icon: entry.event.kind === 'preempted' || entry.event.kind === 'lease-transferred' ? '⇄' : '◆' },
+          title: `${allocationEventLabel(entry.event)} · ${allocationReason(entry.event.reason)}` }))].filter(e=>e.tick>=from&&e.tick<=to);
       const events=planTimelineRows(allEvents,e=>e.tick,e=>e.tick,gap);
       const eventRows=Math.max(0,...events.map(e=>e.row+1));
-      const eventHtml=events.map(({item:e,row})=>`<button class="plan-event ${e.style.kind}" style="left:${pct(e.tick)}%;top:${12+bandRows*22+row*16}px" data-event="${escape(e.id)}" data-tick="${e.tick}" title="${clock(e.tick)} ${escape(e.title)}">${e.style.icon}</button>`).join('');
-      return `<div class="plan-lane" style="height:${Math.max(58,bandRows*22+eventRows*16+21)}px"><label>${escape(owner)}</label><div class="plan-track">${gaps.map(([a,b])=>`<span class="plan-gap" style="left:${pct(a)}%;width:${pct(b)-pct(a)}%">未记录</span>`).join('')}${bandHtml}${eventHtml}<i class="plan-cursor" style="left:${pct(tick)}%"></i></div></div>`;
+      const eventHtml=events.map(({item:e,row})=>`<button class="plan-event ${e.style.kind}" style="left:${pct(e.tick)}%;top:${12+bandRows*22+row*16}px" data-event="${escape(e.id)}" data-tick="${e.seekTick}" title="${clock(e.tick)} ${escape(e.title)}">${e.style.icon}</button>`).join('');
+      const arrows = allocationEvents.flatMap(({event}) => {
+        const handoff = event.kind === 'preempted' ? event.quotation : event.kind === 'lease-transferred' ? event : undefined;
+        if (!handoff || event.tick < from || event.tick > to) return [];
+        const bandAt = (id:string) => bands.find(({item}) => item.id === strategyGoalId(id) && item.from <= event.tick && item.to >= event.tick);
+        const source = bandAt(handoff.fromObjectiveId), target = bandAt(handoff.toObjectiveId);
+        if (!source || !target) return [];
+        return [`<path d="M ${(pct(event.tick)-.5)*plotWidth/100} ${source.row*22+18} L ${(pct(event.tick)+.5)*plotWidth/100} ${target.row*22+18}" vector-effect="non-scaling-stroke" marker-end="url(#plan-arrow-${escape(owner)})"/>`];
+      }).join('');
+      const arrowHtml = arrows ? `<svg class="plan-handoffs" viewBox="0 0 ${plotWidth} ${Math.max(58,bandRows*22+eventRows*16+21)}" preserveAspectRatio="none"><defs><marker id="plan-arrow-${escape(owner)}" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6"/></marker></defs>${arrows}</svg>` : '';
+      return `<div class="plan-lane" style="height:${Math.max(58,bandRows*22+eventRows*16+21)}px"><label>${escape(owner)}</label><div class="plan-track">${gaps.map(([a,b])=>`<span class="plan-gap" style="left:${pct(a)}%;width:${pct(b)-pct(a)}%">未记录</span>`).join('')}${bandHtml}${arrowHtml}${eventHtml}<i class="plan-cursor" style="left:${pct(tick)}%"></i></div></div>`;
     };
     const gaps: [number,number][]=[];let cursor=from;
     for(const c of [...this.history.coverage.values()].filter(c=>!c.availability).sort((a,b)=>a.from-b.from)){if(c.from>cursor)gaps.push([cursor,Math.min(c.from,to)]);cursor=Math.max(cursor,Math.min(c.to??max,max));}if(cursor<to)gaps.push([cursor,to]);
@@ -167,6 +179,8 @@ export class AiPlanOverlay {
     }).join('');
     const band=this.history.bands.filter(b=>b.owner===trace.owner&&b.id===node.id&&b.from<=trace.tick).at(-1);
     const deaths=this.history.deaths.filter(d=>d.tick<=tick&&planDeathMatches(trace.owner,node,d,node.sinceTick??band?.from??trace.tick));
+    if (node.strategy) return strategyPlanPanel(trace,node,this.history.eventsAt(tick))
+      + `<section><h4>本目标的阵亡</h4><p>账本目标关联 ${deaths.length} 次 · 保留原归因标识</p>${deaths.slice(-6).map(d=>`<button class="plan-list" data-event="${escape(d.id)}" data-tick="${d.tick}">${deathStyle(d).icon} ${clock(d.tick)} · ${escape(d.unit.kind)} · ${deathStyle(d).label} · ${escape(d.attributionContext.provenance)}</button>`).join('')}</section>`;
     const progress=(this.history.frames.get(trace.owner)??[]).filter(frame=>frame.tick<=tick&&frame.tick>=(node.sinceTick??band?.from??trace.tick))
       .flatMap(frame=>frame.changes.filter(change=>change.nodeId===node.id||change.nodeId.startsWith(`${node.id}/`))
         .map(change=>({tick:frame.tick,detail:change.detail,kind:change.kind,id:change.nodeId})));
@@ -190,8 +204,20 @@ export class AiPlanOverlay {
     if(action==='fit'){this.viewFrom=0;this.viewTo=undefined;this.paintedRevision=-1;}
     if(action==='zoom-in')this.zoom(.6);if(action==='zoom-out')this.zoom(1.6);
     if(action==='left'||action==='right'){const span=(this.viewTo??this.options.getSnapshot()?.tick??1)-this.viewFrom,move=span*(action==='left'?-.3:.3);this.window(this.viewFrom+move,span);}
-    if(element.dataset.goal){if(element.dataset.start)this.adapter?.seekReplay?.(Number(element.dataset.start));this.selected={owner:element.dataset.owner!,id:element.dataset.goal};this.death=undefined;this.paintedRevision=-1;const goal=this.history.at(this.selected.owner,element.dataset.start?Number(element.dataset.start):this.options.getSnapshot()?.tick??0)?.nodes.find(n=>n.id===this.selected!.id);if(goal?.target.position)this.options.center(goal.target.position);}
-    if(element.dataset.event){const tick=Number(element.dataset.tick);this.adapter?.seekReplay?.(tick);const death=this.history.deaths.find(d=>d.id===element.dataset.event);this.death=death;if(death)this.options.center(death.unit);else{const building=this.history.buildings.find(b=>`building:${b.id}`===element.dataset.event);if(building)this.options.center(building);}this.paintedRevision=-1;}
+    if(element.dataset.goal){if(element.dataset.start)this.adapter?.seekReplay?.(Number(element.dataset.start));this.selected={owner:element.dataset.owner!,id:element.dataset.goal};this.death=undefined;this.paintedRevision=-1;const goal=this.history.nodes(element.dataset.start?Number(element.dataset.start):this.options.getSnapshot()?.tick??0).find(entry=>entry.trace.owner===this.selected!.owner&&entry.node.id===this.selected!.id)?.node;if(goal?.target.position)this.options.center(goal.target.position);}
+    if(element.dataset.event){
+      const tick=Number(element.dataset.tick);this.adapter?.seekReplay?.(tick);
+      const death=this.history.deaths.find(d=>d.id===element.dataset.event);this.death=death;
+      if(death)this.options.center(death.unit);
+      else{
+        const building=this.history.buildings.find(b=>`building:${b.id}`===element.dataset.event);if(building)this.options.center(building);
+        const allocation=this.history.allocationEvents.find(entry=>allocationEventId(entry)===element.dataset.event);
+        if(allocation){this.selected={owner:allocation.owner,id:strategyGoalId(allocation.event.objectiveId)};
+          const goal=this.history.nodes(tick).find(entry=>entry.trace.owner===this.selected!.owner&&entry.node.id===this.selected!.id)?.node;
+          if(goal?.target.position)this.options.center(goal.target.position);}
+      }
+      this.paintedRevision=-1;
+    }
     if(element.dataset.goal||element.dataset.event)this.scrollPanelTop();
   }
   private scrollPanelTop(){const panel=this.root.querySelector('.plan-panel');if(panel)panel.scrollTop=0;}

@@ -74,6 +74,7 @@ export class AiPlanObserver {
     const previous = this.previous!.get(trace.owner);
     const current = {...trace, previousTick: previous?.tick ?? null, changes: compareAiPlanTraces(previous, trace)};
     const allocated = new Set(trace.nodes.flatMap(n => n.resources.unitIds));
+    for (const assignment of trace.strategy?.allocation?.assignments ?? []) allocated.add(assignment.unitId);
     const positions=context.units.filter(u=>allocated.has(u.id)).map(({id,x,y})=>({id,x,y}));
     this.positions!.set(trace.owner,positions);
     this.emit({...diffAiPlan(previous,current,this.session),positions});

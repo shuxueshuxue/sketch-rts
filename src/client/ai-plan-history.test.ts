@@ -48,7 +48,7 @@ it('preserves optional strategy through network deltas and recorded history, inc
     situation: { tick: 0, owner: base.owner, horizonTicks: 1200, lands: [], seas: [], assets: [], units: [],
       opportunities: [], economy: { cashGold: base.bank.gold, predictedIncomeGold: 0, horizonTicks: 1200, ledger: [] },
       limitations: [] },
-    objectives: [], methods: [], assignments: [], preemptions: [], budget: [], idleForces: [],
+    objectives: [], feasibleObjectiveIds: [], blockedObjectives: [], methods: [], assignments: [], preemptions: [], budget: [], idleForces: [],
     limitations: [{ code: 'transport-test', detail: 'Keep output facts unchanged', evidence: [] }],
   };
   const unit = snapshot.units.find(unit => unit.owner === base.owner)!;
