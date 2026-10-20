@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
+import type { GameSnapshot } from '../../shared/types';
 import { describe, expect, it } from 'vitest';
 import { createBuilding, createUnit } from '../../shared/map';
 import { createGame } from '../../shared/sim';
@@ -9,7 +12,7 @@ import { resolveUnitDamage } from '../../shared/damage';
 import { attackDamageProfile } from '../../shared/damage-types';
 import { observationJsonBytes } from './observation-json-bytes';
 import { assessVoyageRisks, VOYAGE_RISK_MEMORY_BYTES, VOYAGE_RISK_SAMPLES_PER_THINK,
-  voyageExpectedLoss, type VoyageRiskMemory, type VoyageRiskRequest } from './voyage-risk';
+  transportExpectedLoss, voyageExpectedLoss, type VoyageRiskMemory, type VoyageRiskRequest } from './voyage-risk';
 
 function world() {
   const game = createGame('bareDuel', { aiPlayers: [] });
@@ -155,6 +158,42 @@ describe('bounded native voyage exposure', () => {
     expect(quote.expectedLossGold).toBe(.25 * (240 + 100 + 75));
     expect(voyageExpectedLoss({ snapshot: game, passengerIds: ['missing'], shipResidualGold: 240, survivalProbability: 1 }))
       .toMatchObject({ status: 'unknown', reasonCode: 'voyage-passenger-value-unknown' });
+  });
+
+  it('does not charge shore-waiting passengers when the empty approach sinks', () => {
+    const game = world(), waiting = createUnit('waiting', 'player', 'footman', 1000, 2000), aboard = createUnit('aboard', 'player', 'worker', 1000, 2000);
+    aboard.deck = { shipId: 'ferry', x: 0, y: 0 }; game.units.push(waiting, aboard);
+    const safe = assessVoyageRisks(game, 'player', [request(game)], state()).results.get('route')!;
+    expect(safe.status).toBe('known'); if (safe.status !== 'known') return;
+    const doomed = { ...safe, survivalProbability: 0, expectedDamage: game.units[0]!.hp, expectedHpLoss: game.units[0]!.hp };
+    const quote = transportExpectedLoss({ snapshot: game, shipId: 'ferry', boardingPassengerIds: ['waiting'], shipResidualGold: 240,
+      stages: { approach: doomed, loaded: safe } });
+    expect(quote).toMatchObject({ status: 'known', successProbability: 0, passengerLossGold: 75, hullLossGold: 240,
+      expectedLossGold: 315, waitingSinkingProbability: 0 });
+    const loadedLoss = transportExpectedLoss({ snapshot: game, shipId: 'ferry', boardingPassengerIds: ['waiting'], shipResidualGold: 240,
+      stages: { approach: safe, loaded: doomed } });
+    expect(loadedLoss).toMatchObject({ status: 'known', passengerLossGold: 175, expectedLossGold: 415 });
+  });
+
+  it('resumes the real Ne native route cursor identically in a cold fork', () => {
+    const pack = JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/objective-event-frames.json.gz', import.meta.url))).toString());
+    const frame: { snapshot: GameSnapshot; owner: string } = pack.cases.find((entry: { event: string }) => entry.event === 'Ne');
+    const snapshot = frame.snapshot, memory = { ...state(), owner: frame.owner };
+    const query: VoyageRiskRequest = { id: 'Ne-native', productionBuildingId: 'building-player-4-shipyard-1410',
+      seaId: 'sea:1', destination: { x: 3344, y: 7216 } };
+    const first = assessVoyageRisks(snapshot, frame.owner, [query], memory);
+    expect(first.results.get(query.id)).toMatchObject({ status: 'unknown', reasonCode: 'voyage-native-route-deferred' });
+    expect(memory.nativeRoutes).toHaveLength(1);
+    snapshot.tick += 15;
+    assessVoyageRisks(snapshot, frame.owner, [query], memory);
+    expect(JSON.parse(memory.nativeRoutes![0]!.job).searchSteps).toBeGreaterThan(0);
+    const forkMemory = JSON.parse(JSON.stringify(memory)) as VoyageRiskMemory;
+    const forkWorld = JSON.parse(JSON.stringify(snapshot)) as GameSnapshot;
+    snapshot.tick += 15; forkWorld.tick = snapshot.tick;
+    const hot = assessVoyageRisks(snapshot, frame.owner, [query], memory);
+    const cold = assessVoyageRisks(forkWorld, frame.owner, [query], forkMemory);
+    expect(bytes(hot, memory)).toBe(bytes(cold, forkMemory));
+    expect(JSON.parse(memory.nativeRoutes![0]!.job).searchSteps).toBeGreaterThan(1);
   });
 
 });

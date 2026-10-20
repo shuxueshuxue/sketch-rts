@@ -18,7 +18,7 @@ export type StrategyObservationMemory = {
   landBodies: string;
   fields: { land: FieldProgress[]; sea: FieldProgress[] };
   crossings: { key: string; fieldTicks: number[]; quotedTick: number }[];
-  /** Bounded deterministic route-exposure publication, never route arrays. */
+  /** Bounded native planning cursor and exposure publication; no distance-field arrays. */
   voyageRisks?: VoyageRiskMemory;
   truncated?: true;
   history?: { tick: number; assets: Asset[]; lostSites: Opportunity[]; objectives: PreviousObjective[] };
