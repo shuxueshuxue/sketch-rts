@@ -38,7 +38,7 @@ node --import tsx scripts/ai-room-ab.ts \
 
 每局保存初始 snapshot/nextId、压缩的计划/实际交付命令、归一化保留任务事实、全部死亡账本行，以及 `summary.json`。
 汇总 `summary.json` 有主/辅助/逐图分组；标准 CSV `seats.csv` 每席一行，JSON 单元格的引号按 RFC 4180 转义。
-已有对局可在不重跑策略或 sim 的情况下重新生成报表，来源矩阵与报表生成器的提交/哈希分别保留：
+已有对局可在不重跑策略或 sim 的情况下重新生成报表，来源矩阵与报表生成器的提交/哈希分别保留；旧 v1 明细也会统一规范成 v2，逐席位指标在 `seatMetrics` 和 CSV 中：
 
 ```sh
 node --import tsx scripts/ai-room-ab.ts --summarize \
@@ -50,9 +50,9 @@ checksum 和 memory 哈希。生成物只放缓存或 evidence store；仓库只
 
 ## 行为指标的定义与限制
 
-本版测量器 `version: 1`，任务归因明确标为 inferred，读取正常规划后保留的任务事实，不再次运行选择器或裁剪 claim。
+原始观测为 `version: 1`，发布指标为 `version: 2`；任务归因明确标为 inferred，读取正常规划后保留的任务事实，不再次运行选择器或裁剪 claim。
 冻结 memory 使用固定 646c 的输出 schema 和只读 decoder，不让未来的 live selector 重新解释基线意图。里程碑记录 tick，20 tick 为一秒。
-发布汇总前，另用原始怪物成员和矿点复核所有岛屿清营目标都在 #570 的 450 守矿关联范围内；不合格则拒绝生成汇总。
+发布前用原始怪物成员和矿点按 #570 的 450 守矿关联范围归类。路营清除保留在明细里，排除出夺岛里程碑和完成数；成员或矿点无法定位则拒绝生成汇总。规范化只读取已结束对局的结果，不修改原始观测。
 
 | 指标 | 定义 |
 | --- | --- |

@@ -11,6 +11,7 @@ import { projectDeathThinkContext } from '../../src/ai/death-ledger-context';
 import { projectRoomBaseline646cContext } from '../../src/ai/benchmark/room-baseline-646c-context';
 import { AiDeathLedger } from '../../src/ai/death-ledger';
 import { RoomAbMetrics } from '../../src/ai/benchmark/room-ab-metrics';
+import { canonicalRoomAbClearings } from '../../src/ai/benchmark/room-ab-clearings';
 import { roomAbRanks, type RoomAbCase } from '../../src/ai/benchmark/room-ab';
 import { createRoom, roomToGameSetup } from '../../src/shared/rooms';
 import { MAP_POOL } from '../../src/shared/map-pool';
@@ -51,7 +52,7 @@ export async function runRoomAbMatch(input: { item: RoomAbCase; cache: string; o
   let ledger: AiDeathLedger | undefined, metrics: RoomAbMetrics | undefined, thinks = 0, commands = 0, inputChecks = 0;
   const plannedHash = createHash('sha256'), commandHash = createHash('sha256');
   const observed = input.observed !== false;
-  let initialHash = '';
+  let initialHash = '', initialSnapshot: GameSnapshot | undefined;
   const loop = runAiGameLoop({ name: item.name, mapId: map.id, agents, options, maxTicks: input.maxTicks ?? item.maxTicks,
     thinkInterval: 15, commandPlanner({ snapshot, owner, agent, source, teams }) {
       const seat = item.seats.find(s => s.owner === owner)!, frozen = seat.brain === 'room-baseline-646c';
@@ -73,7 +74,7 @@ export async function runRoomAbMatch(input: { item: RoomAbCase; cache: string; o
       return entries as CommandFrameEntry<'internal-ai'>[];
     } }, {
     beforeLoop({ game }) {
-      const initial = snapshotGame(game); initialHash = sha(initial);
+      const initial = snapshotGame(game); initialHash = sha(initial); initialSnapshot = initial;
       writeFileSync(join(out, 'initial.json'), JSON.stringify({ snapshot: initial, nextId: game.nextId, activePlayers: game.activePlayers }), { flag: 'wx' });
       if (observed) { ledger = new AiDeathLedger(game, { owners: item.seats.map(s => s.owner) }); metrics = new RoomAbMetrics(game, item.seats.map(s => s.owner)); }
     },
@@ -84,7 +85,8 @@ export async function runRoomAbMatch(input: { item: RoomAbCase; cache: string; o
     },
     onStep() { metrics?.step(); },
   });
-  const metricsReport = metrics?.finish() ?? null;
+  const rawMetrics = metrics?.finish();
+  const metricsReport = rawMetrics ? canonicalRoomAbClearings(rawMetrics, initialSnapshot!) : null;
   const deaths = ledger?.records() ?? [];
   for (const row of deaths) log('deaths', row);
   const deathSummaries = Object.fromEntries(item.seats.map(s => [s.owner, ledger?.summary(s.owner) ?? null]));
