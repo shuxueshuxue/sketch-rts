@@ -120,7 +120,7 @@ describe('shared camp engagement facts', () => {
     unloading!.cabin = { shipId: ships[0]!.id };
     noUnload!.cabin = { shipId: ships[1]!.id };
     const reachable = (ticks: number): Arrival => ({ status: 'reachable', ticks, landTicks: ticks, crossings: [], evidence: [] });
-    const entries = new Map<string, Arrival>([[present!.id, reachable(5)], [incoming!.id, reachable(110)],
+    const entries = new Map<string, Arrival>([[present!.id, reachable(5)], [incoming!.id, reachable(60)],
       [unknown!.id, { status: 'unknown', reason: { code: 'beyond-evaluation-window', detail: '', evidence: [] } }],
       [unreachable!.id, { status: 'unreachable', reason: { code: 'geometry', detail: '', evidence: [] } }],
       [late!.id, reachable(111)], [otherLand!.id, { status: 'unknown', reason: { code: 'unobserved', detail: '', evidence: [] } }],
@@ -142,11 +142,29 @@ describe('shared camp engagement facts', () => {
     expect(assessed.enRouteEnemyIds).toEqual([incoming!.id]);
     expect(assessed.memberIds).not.toContain(unreachable!.id);
     expect(assessed.memberIds).not.toContain(late!.id);
-    expect(assessed.knownOpponentForce).toBeCloseTo(camp.strength + creepForce([present!, unloading!]) + creepForce([incoming!]) / 2);
+    expect(assessed.knownOpponentForce).toBeCloseTo(camp.strength + creepForce([present!, unloading!]) + creepForce([incoming!]) / 1.5);
     expect(assessed.knownOurForce).toBe(creepForce(snapshot.units.filter(unit => unit.owner === 'us'), assessed.opposition));
     expect(assessed.actualOpponentForce).toBeNull();
     expect(assessed.ourForce).toBeNull();
     expect(assessed.requiredForce).toBeNull();
+
+    // These counterfactual lifetimes vary only the recorded units' lifetime;
+    // expired enemies cannot remain in either the rating or free-volley HP pool.
+    present!.expiresTick = snapshot.tick + 5;
+    incoming!.expiresTick = snapshot.tick + 50;
+    unknown!.expiresTick = snapshot.tick + 5;
+    unloading!.expiresTick = snapshot.tick + 60;
+    const temporary = assessAllocatedCampEngagement({ snapshot, situation, target,
+      unitIds: snapshot.units.filter(unit => unit.owner === 'us').map(unit => unit.id), battleStartTicks: 10, windowTicks: 100 });
+    expect(temporary.status).toBe('known');
+    expect(temporary.memberIds).not.toContain(present!.id);
+    expect(temporary.memberIds).not.toContain(incoming!.id);
+    expect(temporary.unknownEnemyIds).toEqual([]);
+    expect(temporary.enemyAvailability).toEqual([{ unitId: unloading!.id, fromTicks: 10, throughTicks: 60, share: .5 }]);
+    expect(temporary.actualOpponentForce).toBeCloseTo(camp.strength + creepForce([unloading!]) / 2);
+    expect(temporary.opposition.creeps.find(unit => unit.id === unloading!.id)?.hp).toBe(unloading!.hp / 2);
+    expect(temporary.ourForce).toBe(creepForce(snapshot.units.filter(unit => unit.owner === 'us'), temporary.opposition));
+    expect(unloading!.hp).toBe(unloading!.maxHp);
   });
 
   it('has finite cohort force after the last guard dies instead of dividing free volleys by zero', () => {
