@@ -171,9 +171,13 @@ export type Utility = Readonly<{
 /** Common valuation epoch: now through task completion plus a holding period.
  * Every compared cash flow and alternative uses this exact window/rate. */
 export type ValuationWindow = Readonly<{ taskTicks: number; holdingTicks: number; horizonTicks: number; discountTicks: number }>;
+/** Half-open relative tick interval. Native training and research advance in
+ * independent lanes, even when they belong to the same building. */
+export type ProductionUse = Readonly<{ buildingId: string; lane: 'training' | 'research'; fromTicks: number; throughTicks: number }>;
 export type OpportunityAlternative = Readonly<{
   objectiveId: ObjectiveId;
   unitIds: readonly string[];
+  production?: readonly ProductionUse[];
   withResourcesGold: number;
   withoutResourcesGold: number | null;
   withoutResourcesStatus: 'feasible' | 'not-runnable' | 'unknown';
@@ -181,12 +185,12 @@ export type OpportunityAlternative = Readonly<{
 }>;
 export type OpportunityCostQuote = Readonly<{ window: ValuationWindow }> & (
   | Readonly<{ status: 'known'; gold: number; basis: 'feasible-bundle-quotes' | 'no-positive-feasible-alternative';
-    alternatives: readonly Readonly<{ objectiveId: ObjectiveId; unitIds: readonly string[]; marginalGold: number;
+    alternatives: readonly Readonly<{ objectiveId: ObjectiveId; unitIds: readonly string[]; production?: readonly ProductionUse[]; marginalGold: number;
       withResourcesGold: number; withoutResourcesGold: number | null; basis: 'exact' | 'conservative-bound' }>[] }>
   | Readonly<{ status: 'unknown'; objectiveIds: readonly ObjectiveId[]; reason: Readonly<{ code: string }> }>
 );
 export type OpportunityRequest = Readonly<{ objectiveId: ObjectiveId; methodId: MethodId | null;
-  unitIds: readonly string[]; window: ValuationWindow }>;
+  unitIds: readonly string[]; production?: readonly ProductionUse[]; window: ValuationWindow }>;
 export type ValuationContext = Readonly<{
   phase: 'gross' | 'net';
   holdingTicks?: number;
@@ -198,10 +202,13 @@ export type ValuationContext = Readonly<{
   unavailableUnitIds?: readonly string[];
   /** Explicit original cohort when repricing a marginal alternative. */
   allowedUnitIds?: readonly string[];
+  unavailableProduction?: readonly ProductionUse[];
+  /** Repricing may move a job in time, but cannot invent an ungranted factory. */
+  allowedProduction?: readonly Pick<ProductionUse, 'buildingId' | 'lane'>[];
   opportunity?: (request: OpportunityRequest) => OpportunityCostQuote;
 }>;
 export type ValuationQuotation = Readonly<{ phase: 'gross' | 'net'; window: ValuationWindow;
-  unitIds: readonly string[]; opportunity: OpportunityCostQuote | null }>;
+  unitIds: readonly string[]; production?: readonly ProductionUse[]; opportunity: OpportunityCostQuote | null }>;
 export type Objective = Readonly<{
   id: ObjectiveId;
   kind: ObjectiveKind;
