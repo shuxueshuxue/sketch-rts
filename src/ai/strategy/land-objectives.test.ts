@@ -266,4 +266,51 @@ describe('land objective proposals over one shared Situation', () => {
       expect(method.subgoals.filter(child => ['borrow-force', 'train-force'].includes(child.kind))).toHaveLength(1);
     }
   });
+
+  it('keeps a permanent-frontline subgoal when short-lived summons could clear but cannot hand over the mine', () => {
+    const { context, situation } = example();
+    const summons = { ...situation, units: situation.units.map(unit => unit.owner === 'us' && !unit.roles.includes('worker')
+      ? { ...unit, expiresTick: situation.tick + 1800 } : unit) };
+    const objective = goals(summons, context).find(goal => goal.kind === 'ExpandLand')!;
+    const methods = decomposeLandObjective(summons, objective, context);
+    expect(objective.status).toBe('blocked');
+    expect(methods.flatMap(method => method.subgoals)).toContainEqual(expect.objectContaining({
+      kind: 'train-force', demands: [expect.objectContaining({ kind: 'force', permanent: true, strength: 1 })],
+    }));
+  });
+
+  it('does not price an entire route occupation as one tick of work', () => {
+    const { context, situation } = example();
+    const objective = goals(situation, context).find(goal => goal.kind === 'ContestRoute')!;
+    const method = decomposeLandObjective(situation, objective, context)[0]!;
+    expect(method.estimatedTicks).toBeGreaterThanOrEqual(HORIZON);
+    expect(objective.utility.cost.find(term => term.code === 'force-time')!.value).toBeGreaterThan(100);
+  });
+
+  it('distinguishes a proven out-of-window enemy from a missing route', () => {
+    const { context, situation } = example();
+    const outside = changedUnit(situation, 'responder', { arrivals: [{ targetId: 'enemy-hall', arrival: {
+      status: 'unknown', reason: { code: 'beyond-evaluation-window', detail: 'Straight maximum-speed travel exceeds 2400 ticks', evidence: [] },
+    } }] });
+    const goal = goals(outside, context).find(goal => goal.kind === 'AttackSite')!;
+    expect(goal.reasons.some(reason => reason.code === 'enemy-response-unknown')).toBe(false);
+    expect(goal.utility.successProbability).toBe(1);
+  });
+
+  it('requires a stationed defense commitment for handoff, rather than a passing army', () => {
+    const { context, situation, assets } = example();
+    const ownHall = { ...context.snapshot.buildings.find(building => building.id === 'home')!, id: 'new-hall', x: 1600, y: 600 };
+    const founded = { ...context, snapshot: { ...context.snapshot, buildings: [...context.snapshot.buildings, ownHall] } };
+    const near = { ...situation, assets: [...assets, { ...assets[1]!, id: ownHall.id,
+      target: { ...assets[0]!.target, entityId: ownHall.id } }], units: situation.units.map(unit => unit.id === 'fighter-0'
+      ? { ...unit, location: { kind: 'land' as const, landId: 'land:1' as const, point: { x: 1600, y: 600 } } } : unit) };
+    const handoff = (s: Situation) => {
+      const objective = goals(s, founded).find(goal => goal.kind === 'ExpandLand')!;
+      return decomposeLandObjective(s, objective, founded)[0]!.preconditions.find(condition => condition.kind === 'handoff')!;
+    };
+    expect(handoff(near).status).toBe('unmet');
+    const committed = changedUnit(near, 'fighter-0', { commitments: [{ source: 'unitClaims.expansionGarrison', taskId: 'guard',
+      objectiveId: 'DefendSite:us:new-hall', role: 'frontline', evidence: { source: 'claim', tick: 1000, certainty: 'recorded', detail: 'Stationed' } }] });
+    expect(handoff(committed).status).toBe('met');
+  });
 });

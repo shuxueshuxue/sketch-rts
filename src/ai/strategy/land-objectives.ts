@@ -27,6 +27,9 @@ const HORIZON = PARAMETERS.utilityHorizonTicks;
 // Observation is bounded before any target-specific combat calculations. No route query occurs here.
 const CANDIDATES_PER_KIND = 4;
 const campCache = new WeakMap<PlanningContext['snapshot'], { tick: number; camps: Camp[] }>();
+// A proposal and its methods share one assessment during this immutable observation pass.
+// Weak keys keep this cache out of saved policy state and release it with the trace.
+const assessments = new WeakMap<Objective, { situation: Situation; context: PlanningContext; value: Assessment }>();
 const gap = (a: Target['point'], b: Target['point']) => Math.hypot(a.x - b.x, a.y - b.y);
 const term = (code: string, value: number, explanation: string): UtilityTerm => ({ code, value, explanation });
 const identity = (kind: ObjectiveKind, owner: string, target: string) => `${kind}:${owner}:${target}`;
@@ -149,9 +152,9 @@ class LandModel {
     const volley = (fighters: Fighter[]) => harasser ? fighters.filter(canIntercept).reduce((sum, fighter) => sum
       + resolveUnitDamage(this.context.snapshot, harasser, fighter.raw.attackDamage, unitAttackDamageProfile(this.context.snapshot, fighter.raw)).damage, 0) : 0;
     // Combat work is a stated estimate. ETA and response reachability remain shared Situation facts.
-    const workTicks = (fighters: Fighter[]) => Math.min(HORIZON, Math.max(1,
+    const workTicks = (fighters: Fighter[]) => candidate.kind === 'ContestRoute' ? HORIZON : Math.max(1,
       targets.reduce((sum, target) => sum + target.hp, 0) / Math.max(1e-6,
-        fighters.reduce((sum, fighter) => sum + fighter.raw.attackDamage / Math.max(1, fighter.raw.attackCooldown), 0))));
+        fighters.reduce((sum, fighter) => sum + fighter.raw.attackDamage / Math.max(1, fighter.raw.attackCooldown), 0)));
     const enemyPool = this.situation.units.filter(unit => this.foe(unit.owner) && unit.hp > 0 && battleRole(unit));
     const responding = (window: number) => enemyPool.filter(unit => {
       const arrival = arrivalAt(unit, arrivalKey);
@@ -204,15 +207,19 @@ class LandModel {
     condition('route', !candidate.target.landId ? 'unknown' : eta === null ? unknownRoutes ? 'unknown' : 'unmet' : 'met',
       !candidate.target.landId ? 'target-ground-unknown' : eta === null ? 'arrival-unavailable' : 'arrival-recorded',
       eta === null ? 'Situation 没有一支可按时到达的队伍；没有把缺少 ETA 当成零' : `统一到达记录；目标响应窗口 ${responseWindow} tick`, null);
-    const forceEnough = crew.some(fighter => frontRole(fighter.unit)) && available >= required && available > 0;
+    const permanentFront = crew.some(fighter => frontRole(fighter.unit) && fighter.unit.expiresTick === null && !fighter.borrowed);
+    const forceEnough = crew.some(fighter => frontRole(fighter.unit)) && available >= required && available > 0
+      && (!mining || permanentFront);
     condition('force', forceEnough ? 'met' : 'unmet', 'sustained-force',
-      `可兑现 ${available.toFixed(3)}；含待借调 ${power.toFixed(3)}；需要 ${required.toFixed(3)}。到期召唤物按到达后寿命折算`,
+      `可兑现 ${available.toFixed(3)}；含待借调 ${power.toFixed(3)}；需要 ${required.toFixed(3)}。到期召唤物按到达后寿命折算${mining && !permanentFront ? '；缺少能完成清营后护送/留守的常驻前排' : ''}`,
       { kind: 'force', metric: camp ? 'camp-force' : 'field-strength', strength: Math.max(1, required),
         roles: mining ? ['frontline', 'ranged', 'caster'] : ['frontline', 'ranged'], at: candidate.target,
         neededByTick: eta === null ? null : s.tick + eta, permanent: mining });
     const unknownResponse = enemyPool.some(unit => {
       const arrival = arrivalAt(unit, arrivalKey);
-      return !arrival || arrival.status === 'unknown';
+      // This explicit lower bound is stronger than an unknown route: the shared evaluator
+      // proves that even straight maximum-speed travel exceeds the whole response window.
+      return !arrival || arrival.status === 'unknown' && arrival.reason.code !== 'beyond-evaluation-window';
     });
     if (!camp && unknownResponse) condition('force', 'unknown', 'enemy-response-unknown',
       '部分敌军没有到目标的 ETA，不能把未知援军当成零；成功率只给保守下界', null);
@@ -253,15 +260,24 @@ class LandModel {
       condition('budget', hall || s.economy.cashGold - reservedElsewhere >= BUILDING_DEFS.townHall.cost ? 'met' : 'unmet', 'hall-capital',
         hall ? '矿厅已经支付，不重复扣费' : '清营之后需要矿厅本金', { kind: 'gold', amount: hall ? 0 : BUILDING_DEFS.townHall.cost });
       const guards = this.own.filter(unit => unit.expiresTick === null && frontRole(unit) && unit.location.kind === 'land'
-        && unit.location.landId === candidate.target.landId && gap(unit.location.point, candidate.target.point) <= 650 && !interruption(unit));
-      condition('handoff', hall?.complete && guards.length ? 'met' : 'unmet', 'actual-garrison-handoff',
+        && unit.location.landId === candidate.target.landId && gap(unit.location.point, candidate.target.point) <= 650 && !interruption(unit)
+        && unit.commitments.some(claim => claim.objectiveId === identity('DefendSite', s.owner, hall?.id ?? '')));
+      const guardPower = guards.reduce((sum, unit) => sum + unit.strength, 0);
+      const staticPower = hall ? this.context.snapshot.buildings.filter(building => building.owner === s.owner && building.complete
+        && building.attackDamage > 0 && gap(building, hall) <= building.attackRange + hall.radius
+        && gap(building, candidate.target.point) <= building.attackRange).reduce((sum, building) => sum + structureRating(building), 0) : 0;
+      const defense = hall && s.lands.flatMap(land => land.threats).find(threat => threat.siteId === hall.id);
+      const raid = defense ? [...defense.attackers].filter(attacker => knownArrival(attacker.arrival))
+        .sort((a, b) => (a.arrival as Extract<Arrival, {ticks: number}>).ticks - (b.arrival as Extract<Arrival, {ticks: number}>).ticks
+          || a.unitId.localeCompare(b.unitId)).slice(0, 2).reduce((sum, attacker) => sum + attacker.strength, 0) : 0;
+      condition('handoff', hall?.complete && guardPower + staticPower > 0 && guardPower + staticPower >= raid ? 'met' : 'unmet', 'actual-garrison-handoff',
         '完成效果需要实际矿厅与当地防守交接；分配名单或已登陆施法者不等于就绪',
         { kind: 'force', metric: 'field-strength', strength: 1, roles: ['frontline', 'ranged'], at: candidate.target,
           neededByTick: null, permanent: true });
     }
     const value = this.assets.get(candidate.key), mine = mining ? value : this.mineFor(candidate.target);
-    const income = this.income(mine), completed = Math.min(HORIZON, (eta ?? HORIZON) + duration
-      + (mining ? BUILDING_DEFS.townHall.buildTime : 0));
+    const income = this.income(mine), completed = (eta ?? HORIZON) + duration
+      + (mining ? BUILDING_DEFS.townHall.buildTime : 0);
     const benefit: UtilityTerm[] = [], cost: UtilityTerm[] = [];
     if (mining) {
       const opportunityValue = Math.max(0, ...candidate.opportunities.map(opportunity => opportunity.valueGold));
@@ -291,8 +307,17 @@ class LandModel {
         'Situation 提供的真实前压点与压制估值；没有拿敌厅中心替代路口'));
     } else {
       const affected = this.situation.lands.flatMap(land => land.threats).filter(threat => threat.attackers.some(attacker => attacker.unitId === candidate.key));
-      const saved = affected.reduce((sum, threat) => sum + (this.assets.get(threat.siteId)?.discountedValueGold ?? 0)
-        * (threat.lossProbability ?? 0), 0);
+      const protectedAssets = new Map<string, number>();
+      for (const threat of affected) {
+        const site = this.assets.get(threat.siteId);
+        if (!site) continue;
+        for (const asset of s.assets.filter(asset => asset.owner === s.owner && asset.target.landId === site.target.landId
+          && gap(asset.target.point, site.target.point) <= 650 && ['hall', 'mine', 'worker'].includes(asset.kind))) {
+          const atRisk = (asset.kind === 'mine' ? this.income(asset) : asset.discountedValueGold) * (threat.lossProbability ?? 0);
+          protectedAssets.set(asset.id, Math.max(protectedAssets.get(asset.id) ?? 0, atRisk));
+        }
+      }
+      const saved = [...protectedAssets.values()].reduce((sum, value) => sum + value, 0);
       benefit.push(term('saved-mining', discountGold(saved, eta ?? HORIZON), '驱离也能保护工人与收入；与 DefendSite 共享 site-safe 效果，不重复兑现'));
       const rider = this.raw.get(candidate.key);
       const counters = crew.filter(fighter => rider && (fighter.raw.attackRange > rider.attackRange
@@ -362,7 +387,7 @@ export function generateLandObjectives(situation: Situation, context: PlanningCo
       : situation.lands.flatMap(land => land.threats).filter(threat => threat.attackers.some(attacker => attacker.unitId === candidate.key))
         .flatMap(threat => [{ kind: 'site-safe' as const, siteId: threat.siteId, throughTick: situation.tick + HORIZON },
           { kind: 'harassment-ended' as const, unitId: candidate.key, siteId: threat.siteId }]);
-    return { id: a.id, kind: candidate.kind, owner: situation.owner, target: candidate.target, effects,
+    const objective: Objective = { id: a.id, kind: candidate.kind, owner: situation.owner, target: candidate.target, effects,
       utility: strategyUtility({ benefit: a.benefit, cost: a.cost, successProbability: incompleteResponse ? 0 : forceSuccessProbability(a.power, a.required),
         persistenceBonus, evidence: a.evidence }), status: blocked ? 'blocked' : live ? 'active' : 'candidate',
       sinceTick: old?.sinceTick ?? (live ? candidate.kind === 'AttackSite' ? context.memory.landAttack!.sinceTick
@@ -371,6 +396,8 @@ export function generateLandObjectives(situation: Situation, context: PlanningCo
       methodIds: methodVariants(a).map(variant => `${a.id}/method:${variant}`),
       stability: old ? { ...old.stability } : { minimumStayUntilTick: live ? situation.tick + PARAMETERS.minimumStayTicks : situation.tick,
         challengerId: null, challengerThinks: 0 } };
+    assessments.set(objective, { situation, context, value: a });
+    return objective;
   });
 }
 
@@ -378,7 +405,8 @@ export function decomposeLandObjective(situation: Situation, objective: Objectiv
   if (!['ExpandLand', 'RecoverSite', 'AttackSite', 'ContestRoute', 'CounterHarass'].includes(objective.kind)) return [];
   const model = new LandModel(situation, context), candidate = model.candidates().find(candidate => identity(candidate.kind, situation.owner, candidate.key) === objective.id);
   if (!candidate) return [];
-  const a = model.assess(candidate, []);
+  const cached = assessments.get(objective);
+  const a = cached?.situation === situation && cached.context === context ? cached.value : model.assess(candidate, []);
   return methodVariants(a).map(variant => {
   const id = `${objective.id}/method:${variant}`, subgoals: Subgoal[] = [];
   const add = (kind: Subgoal['kind'], demands: ResourceDemand[], dependsOn: string[], reasons: Reason[], target = candidate.target) => {
@@ -393,7 +421,9 @@ export function decomposeLandObjective(situation: Situation, objective: Objectiv
       const demands = condition.demand ? [condition.demand] : [];
       if (condition.reason.code === 'clear-enemy-occupation') subgoalIds.push(add('clear-beachhead', [], [], [condition.reason], a.occupation));
       else if (condition.kind === 'force' && condition.demand) {
-        subgoalIds.push(add(variant === 'train' ? 'train-force' : 'borrow-force', demands, [], [condition.reason]));
+        const deficit = condition.demand.kind === 'force' ? [{ ...condition.demand,
+          strength: Math.max(model.mining(candidate.kind) ? 1 : 0, condition.demand.strength - a.available) }] : demands;
+        subgoalIds.push(add(variant === 'train' ? 'train-force' : 'borrow-force', deficit, [], [condition.reason]));
       } else if (condition.kind === 'workers') subgoalIds.push(add('deliver-workers', demands, [], [condition.reason]));
       else if (condition.kind === 'budget') subgoalIds.push(add('wait-income', demands, [], [condition.reason]));
       else if (condition.kind === 'production') subgoalIds.push(add('train-force', demands, [], [condition.reason]));
