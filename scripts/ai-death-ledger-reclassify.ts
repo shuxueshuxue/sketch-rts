@@ -98,7 +98,7 @@ for (const entry of input.maps) {
 }
 const uiSource = `${root}/ui-twoShores`, uiDest = `${out}/ui-twoShores`;
 await reclassify(uiSource, uiDest, 'ui-twoShores');
-for (const file of ['initial.json', 'worlds.jsonl.gz', 'building-losses.jsonl.gz']) if (existsSync(`${uiSource}/${file}`)) copyFileSync(`${uiSource}/${file}`, `${uiDest}/${file}`);
+for (const file of ['initial.json', 'final.json', 'worlds.jsonl.gz', 'building-losses.jsonl.gz']) if (existsSync(`${uiSource}/${file}`)) copyFileSync(`${uiSource}/${file}`, `${uiDest}/${file}`);
 const summary = summarizeAiDeaths(all), tiers = ['normal', 'suspicious', 'abnormal', 'unattributed'] as const;
 const examples = Object.fromEntries(tiers.map(tier => [tier, mapped.filter(item => item.record.classification.disposition === tier)
   .sort((a, b) => a.record.tick - b.record.tick || a.map.localeCompare(b.map)).slice(0, 3)]));

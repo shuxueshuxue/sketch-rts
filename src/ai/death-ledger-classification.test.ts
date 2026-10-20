@@ -60,11 +60,22 @@ describe('death classification v2', () => {
     const { record, identities, teams, enemy } = casualty();
     const neutral = { ...enemy, owner: 'neutral', entityType: 'unit' as const };
     identities.set(enemy.id, neutral); record.killer = { ...record.killer!, owner: 'neutral' };
+    for (const hit of record.damageWindow.sources) hit.source = { ...hit.source, owner: 'neutral' };
     const infer = () => inferAiDeathEngagement(record, { identities, teams, dealtDamage: null, provenance: 'reclassified-native-records' });
     expect(classifyAiDeath(record, infer())).toMatchObject({ disposition: 'abnormal', primary: 'neutral-outside-clearing' });
     record.assignment.task = { id: 'clear', kind: 'clear', targetId: 'camp', stage: null, source: 'test', attribution: 'inferred',
       methodId: null, utility: null, combat: true, clearing: true, perimeter: null };
     expect(classifyAiDeath(record, infer()).disposition).toBe('normal');
+  });
+
+  it('does not count unrelated neutral wounds as an exchange with nearby player opponents', () => {
+    const { record, identities, teams } = casualty();
+    record.killer = { ...record.killer!, owner: 'neutral' };
+    for (const hit of record.damageWindow.sources) hit.source = { ...hit.source, owner: 'neutral' };
+    const infer = (dealtDamage: number | null) => inferAiDeathEngagement(record, { identities, teams, dealtDamage, provenance: 'reclassified-native-records' });
+    expect(infer(null)).toMatchObject({ status: 'unknown', receivedDamage: 0 });
+    expect(classifyAiDeath(record, infer(null)).disposition).toBe('unattributed');
+    expect(classifyAiDeath(record, infer(0))).toMatchObject({ disposition: 'abnormal', primary: 'neutral-outside-clearing' });
   });
 
   it('reclassifies the same facts without altering any original observation or v1 label', () => {
