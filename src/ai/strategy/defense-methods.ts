@@ -256,8 +256,15 @@ export const defenseMethodProvider: AllocationMethodProvider = {
     if (voyages.unknown.length) missing ??= voyages.unknown[0]!.code;
     const transitSurvival = [...voyages.actions.values()].reduce((p, wave) => p * wave.survivalProbability, 1);
     const savedUnitValues = evacuation ? cohort.map(unit => ({ unitId: unit.id, valueGold: discountedValue(UNIT_DEFS.worker.cost, latest, window) })) : [];
-    const expectedSavedGold = savedUnitValues.reduce((sum, entry) => sum + entry.valueGold
-      * (stationed.includes(entry.unitId) ? 1 : voyages.passengerArrivalProbabilities.get(entry.unitId) ?? 1), 0);
+    const arrivalProbabilities = new Map(savedUnitValues.map(entry => [entry.unitId,
+      stationed.includes(entry.unitId) ? 1 : voyages.passengerArrivalProbabilities.get(entry.unitId) ?? 1]));
+    // Already being here is not immunity from this site's danger. Continuing
+    // the same evacuation changes neither local exposure nor survival, so both
+    // outcomes consume exactly the same current-site risk for arrived people.
+    const postRescueProbabilities = new Map(savedUnitValues.map(entry => [entry.unitId, stationed.includes(entry.unitId)
+      ? inPlace?.byUnit.get(entry.unitId)?.survivalProbability ?? null : arrivalProbabilities.get(entry.unitId)!]));
+    const expectedSavedGold = savedUnitValues.every(entry => postRescueProbabilities.get(entry.unitId) !== null)
+      ? savedUnitValues.reduce((sum, entry) => sum + entry.valueGold * postRescueProbabilities.get(entry.unitId)!, 0) : null;
     const savedValueGold = savedUnitValues.reduce((sum, entry) => sum + entry.valueGold, 0);
     const inPlacePreservationGold = inPlace && savedUnitValues.every(entry => inPlace.byUnit.get(entry.unitId)?.status === 'known')
       ? savedUnitValues.reduce((sum, entry) => sum + entry.valueGold * inPlace.byUnit.get(entry.unitId)!.survivalProbability!, 0) : null;
@@ -266,7 +273,7 @@ export const defenseMethodProvider: AllocationMethodProvider = {
     // Catalog identity remains a nonnegative price reference, not a second
     // permanent loss. A worse escape may have a negative benefit; never clip it.
     const benefit = evacuation ? [{ code: 'workers-preservation-gain',
-      value: inPlacePreservationGold === null ? 0 : expectedSavedGold - inPlacePreservationGold, catalogUnitValues: savedUnitValues }]
+      value: inPlacePreservationGold === null || expectedSavedGold === null ? 0 : expectedSavedGold - inPlacePreservationGold, catalogUnitValues: savedUnitValues }]
       : [{ code: 'protected-assets', value: protection?.benefitGold ?? 0, catalogUnitValues: assets.filter(asset => asset.kind === 'worker')
         .map(asset => ({ unitId: asset.id, valueGold: discountedValue(asset.replacementGold, latest, window) })) }];
     const preserved = new Set(benefit.flatMap(term => term.catalogUnitValues.map(entry => entry.unitId)));
@@ -289,7 +296,8 @@ export const defenseMethodProvider: AllocationMethodProvider = {
       ...(opportunity?.status === 'known' ? [{ code: 'bundle-opportunity', value: opportunity.gold }] : [])];
     // Partial rescue and staying are already integrated in the benefit.
     // Physical arrival probability is reported separately below.
-    const rescueArrivalProbability = savedValueGold > 0 ? expectedSavedGold / savedValueGold : 0;
+    const rescueArrivalProbability = savedValueGold > 0 ? savedUnitValues.reduce((sum, entry) => sum
+      + entry.valueGold * arrivalProbabilities.get(entry.unitId)!, 0) / savedValueGold : 0;
     const probability = evacuation ? 1
       : transitSurvival * (protection?.successProbability ?? 0) + (1 - transitSurvival) * (noArrivalProtection?.successProbability ?? 0);
     const persistenceBonus = objective.utility.persistenceBonus;
@@ -304,6 +312,7 @@ export const defenseMethodProvider: AllocationMethodProvider = {
       actualIntrusionCount: scenarios.actualIds.length, potentialRedirectCount: scenarios.redirects.length,
       transitSurvival, rescueArrivalProbability, inPlaceSurvivalProbability: inPlacePreservationGold === null || !savedValueGold ? null : inPlacePreservationGold / savedValueGold,
       expectedSavedGold, inPlacePreservationGold, ...inPlaceProbabilities,
+      ...Object.fromEntries([...postRescueProbabilities].map(([id, probability]) => [`postRescueP/${id}`, probability])),
       otherResponseTicks: response.response.status === 'known' ? response.response.ticks : null,
       latestArrivalTicks: latest, opponentUnknown: opponentUnknown.length });
     return missing ? { methodId: method.id, status: 'blocked', force, valuation, utility: null, potentialUtility: null,

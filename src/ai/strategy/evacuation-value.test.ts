@@ -167,3 +167,32 @@ it('keeps a current refuge with missing local threat facts unknown', () => {
   expect(quote.missingPreconditions.some(condition => condition.reason.code === 'evacuation-in-place-survival-unknown'
     && condition.reason.factIds.includes('worker-b'))).toBe(true);
 });
+
+it('gives an arrived worker no remaining rescue gain under the same local threat', () => {
+  const input = rescueInput(), refuge = input.method.actions.at(-1)!.target;
+  const template = input.snapshot.units.find(unit => unit.kind === 'footman')!;
+  const guard = { ...template, id: 'refuge-guard', owner: 'us', x: refuge.point.x, y: refuge.point.y };
+  const enemy = { ...template, id: 'refuge-threat', owner: 'foe', x: refuge.point.x + 100, y: refuge.point.y };
+  const snapshot = { ...input.snapshot, units: [...input.snapshot.units.map(unit => unit.id === 'worker-b'
+    ? { ...unit, x: refuge.point.x, y: refuge.point.y } : unit), guard, enemy] };
+  const fact = input.situation.units.find(unit => unit.id === 'threat')!;
+  const situation = { ...input.situation,
+    units: [...input.situation.units.map(unit => unit.id === 'worker-b'
+      ? { ...unit, location: { kind: 'land' as const, landId: refuge.landId!, point: refuge.point } } : unit),
+    { ...fact, id: guard.id, owner: 'us', strength: 4, location: { kind: 'land' as const, landId: refuge.landId!, point: refuge.point } },
+    { ...fact, id: enemy.id, owner: 'foe', strength: 1, location: { kind: 'land' as const, landId: refuge.landId!, point: { x: enemy.x, y: enemy.y } } }],
+    lands: input.situation.lands.map(land => ({ ...land, threats: [...land.threats,
+      { siteId: refuge.entityId!, horizonTicks: 2400, arrivedStrength: 1, incomingStrength: 0,
+        friendlyOnStationStrength: 4, firstArrivalTicks: 0, lossProbability: .1,
+        attackers: [{ unitId: enemy.id, strength: 1, arrival: { status: 'reachable' as const, ticks: 0, landTicks: 0, crossings: [] },
+          intent: { kind: 'actual-intrusion' as const, actualSiteId: refuge.entityId!, redirectGroupId: enemy.id, basis: 'hostile-presence' as const } }] }] })) };
+  const actual = { ...input, snapshot, situation }, before = JSON.stringify(actual);
+  const quote = defenseMethodProvider.quote(actual);
+  expect(quote.status).toBe('feasible'); if (quote.status !== 'feasible') return;
+  expect(quote.utility.benefit[0]!.value).toBeCloseTo(discountedValue(75 * .8, 100, valuationWindow(100)));
+  expect(quote.reason.values['inPlaceP/worker-b']).toBeGreaterThan(0);
+  expect(quote.reason.values['inPlaceP/worker-b']).toBeLessThan(1);
+  expect(quote.reason.values['postRescueP/worker-b']).toBe(quote.reason.values['inPlaceP/worker-b']);
+  expect(quote.reason.values.rescueArrivalProbability).toBeCloseTo((.8 + 1) / 2);
+  expect(JSON.stringify(actual)).toBe(before);
+});
