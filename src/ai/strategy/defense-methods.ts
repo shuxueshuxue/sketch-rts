@@ -1,12 +1,9 @@
 import { UNIT_DEFS } from '../../shared/catalog';
-import { combatCapability } from '../../shared/combat-capabilities';
 import { strikeGap } from '../../shared/combat-geometry';
-import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { sameGround } from '../../shared/terrain';
 import type { GameSnapshot } from '../../shared/types';
 import { averagePoint, distance } from '../policy/spatial';
-import { assessAllocatedForce } from './allocated-force';
-import { focusedCasualties } from './focused-casualties';
+import { assessAllocatedDefenseBattle, assessAllocatedForce } from './allocated-force';
 import { assessDefenseResponse } from './defense-response';
 import { allocatedVoyageValue } from './allocated-voyage-value';
 import { defenseProtectionValue, defenseThreatScenarios } from './defense-risk';
@@ -230,13 +227,10 @@ export const defenseMethodProvider: AllocationMethodProvider = {
     const benefit = evacuation ? [{ code: 'workers-saved', value: discountedValue(cohort.length * UNIT_DEFS.worker.cost, latest, window) }]
       : [{ code: 'protected-assets', value: protection?.benefitGold ?? 0 }];
     const attrition = (party: typeof cohort) => scenarios.scenarios.reduce((sum, scenario) => {
-      const ourDps = party.reduce((sum, unit) => sum + combatCapability(snapshot, unit).dps, 0);
-      const enemies = opponents.filter(unit => scenario.unitIds.includes(unit.id));
-      const enemyHp = enemies.reduce((sum, unit) => sum + unit.hp * coverage.get(unit.id)!, 0);
-      const enemyDps = enemies.reduce((sum, unit) => sum + combatCapability(snapshot, unit).dps * coverage.get(unit.id)!, 0)
-        + hostileTowers.reduce((sum, tower) => sum + tower.attackDamage * SIM_TICKS_PER_SECOND / Math.max(1, tower.attackCooldown), 0);
-      const fightSeconds = enemyHp > 0 ? enemyHp / Math.max(1, ourDps) : hostileTowers.length ? threatWindow / SIM_TICKS_PER_SECOND : 0;
-      return sum + scenario.probability * focusedCasualties(party, enemyDps * fightSeconds).expectedLossGold;
+      const battle = assessAllocatedDefenseBattle({ snapshot, units: party,
+        opponents: opponents.filter(unit => scenario.unitIds.includes(unit.id)).map(unit => ({ unit, share: coverage.get(unit.id)! })),
+        towers: hostileTowers, windowTicks: threatWindow });
+      return sum + scenario.probability * battle.casualties.expectedLossGold;
     }, 0);
     const cost = [...(evacuation ? [] : [{ code: 'static-protection-baseline', value: protection?.staticBaselineGold ?? 0 }]),
       { code: 'combat-attrition', value: evacuation ? 0
