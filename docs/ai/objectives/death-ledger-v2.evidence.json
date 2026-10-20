@@ -1,0 +1,9 @@
+{
+  "sha256": "83be3140b8e3fc496474096278ed2021da4bf7b7983ada8a204a9c2ff736e341",
+  "bytes": 29858306,
+  "name": "death-ledger-v2",
+  "kind": "dir",
+  "machine": "a100",
+  "pushed": "4407d1522301537b652ba64f9dc09f794e223149",
+  "pr": 561
+}

@@ -1273,6 +1273,14 @@ export function groundWholes(map: Pick<GameMap, "terrain">, mover: Mover = "land
   return map.terrain ? wholesOf(runtime(map.terrain, mover)).count : 1;
 }
 
+/** Terrain-only connected component, shared by read-only strategic/observation tools. */
+export function groundWholeAt(map: Pick<GameMap, "terrain">, point: Point, mover: Mover = 'land'): number | undefined {
+  if (!map.terrain) return 1;
+  const state = runtime(map.terrain, mover), at = padAt(state, point.x, point.y);
+  if (at < 0) return undefined;
+  return wholesOf(state).labels[at] || undefined;
+}
+
 function wholesOf(state: TerrainRuntime) {
   if (state.wholes) return state.wholes;
   const { walk, offsets, terrain, width } = state;

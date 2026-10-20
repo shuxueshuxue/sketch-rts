@@ -2,12 +2,16 @@ import { DEFAULT_AI_PLANNER_VERSION, planAiOwnerCommandEntries, type AiMemoryPro
 import { createAiPolicyMemory } from './memory';
 import { buildAiPlanTrace, type AiPlanTrace } from './plan-trace';
 import type { GameSnapshot } from '../shared/types';
+import type { AiDeathLedger } from './death-ledger';
+
+export type AiPlanTraceOptions = AiOwnerPlannerOptions & { deathLedger?: AiDeathLedger };
 
 /** Opt-in observation at the existing think boundary; executes the ordinary planner exactly once.
  * The caller retains previous traces outside AI memory. No runtime/network/UI integration yet.
  */
 export function planAiOwnerCommandEntriesWithTrace<Source extends string = string>(snapshot: GameSnapshot,
-  request: AiOwnerPlannerRequest<Source>, options: AiOwnerPlannerOptions = {}, previous?: AiPlanTrace) {
+  request: AiOwnerPlannerRequest<Source>, options: AiPlanTraceOptions = {}, previous?: AiPlanTrace) {
+  const { deathLedger, ...plannerOptions } = options;
   let memory = request.memory ?? options.memory;
   const provider = options.memoryProvider;
   // Observe the existing get/set boundary, including a read-only provider that
@@ -19,8 +23,10 @@ export function planAiOwnerCommandEntriesWithTrace<Source extends string = strin
       provider?.set?.(owner, value);
     },
   };
-  const commands = planAiOwnerCommandEntries(snapshot, request, { ...options, memoryProvider });
-  const trace = buildAiPlanTrace(snapshot, request.playerId, memory ?? createAiPolicyMemory(),
+  const commands = planAiOwnerCommandEntries(snapshot, request, { ...plannerOptions, memoryProvider });
+  const observedMemory = memory ?? createAiPolicyMemory();
+  deathLedger?.recordThink(snapshot, request.playerId, observedMemory);
+  const trace = buildAiPlanTrace(snapshot, request.playerId, observedMemory,
     request.version ?? options.version ?? DEFAULT_AI_PLANNER_VERSION, previous);
-  return { commands, trace };
+  return { commands, trace: deathLedger ? deathLedger.withPlanTrace(trace, trace.previousTick ?? -1) : trace };
 }

@@ -2,6 +2,7 @@ import { BUILDING_DEFS } from '../shared/catalog';
 import type { GameSnapshot, PlayerId } from '../shared/types';
 import type { AiPolicyMemory, MiningMissionMemory } from './memory';
 import type { StrategyPlanTrace } from './strategy/types';
+import type { AiDeathLedgerFrame } from './death-ledger-types';
 
 /** Output only. Never stored in policy memory, snapshots, saves or command frames. */
 export type AiPlanStatus = 'active' | 'blocked' | 'done' | 'abandoned';
@@ -61,6 +62,8 @@ export type AiPlanTrace = {
   /** Optional formal planner output; observe proposals never write policy memory or command frames.
    * Existing module-state nodes remain valid when no strategy evaluator is attached. */
   readonly strategy?: StrategyPlanTrace;
+  /** Opt-in external simulation observation; never retained in policy memory. */
+  deathLedger?: AiDeathLedgerFrame;
 };
 
 const STAGES = ['fund', 'assemble', 'clear', 'escort', 'build', 'complete'] as const;
