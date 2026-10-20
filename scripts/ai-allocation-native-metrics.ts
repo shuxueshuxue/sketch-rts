@@ -9,6 +9,7 @@ import { createHash } from 'node:crypto';
 import { closeSync, createReadStream, existsSync, openSync, readFileSync, writeFileSync, writeSync } from 'node:fs';
 import { createInterface } from 'node:readline';
 import { createGunzip } from 'node:zlib';
+import { fileURLToPath } from 'node:url';
 import type { AiPolicyMemory } from '../src/ai/memory';
 import type { AiDeathTask, AiIssuedOrder } from '../src/ai/death-ledger-types';
 import { deathTaskIndex, inferDeathAssignment, sameDeathAssignmentGoal } from '../src/ai/death-ledger-context';
@@ -171,7 +172,9 @@ closeSync(timeline);
 const sha = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const checks = { snapshot: sha(snapshotGame(game)) === original.snapshotSha256,
   canonical: sha(canonicalGameState(game)) === original.canonicalSha256, checksum: checksumGame(game) === original.checksum };
-const result = { schemaVersion: 1, source: original.source, mapId: original.mapId, ticks: game.tick, checks,
+const result = { schemaVersion: 1, source: original.source, replayTree: tree,
+  analysisFileSha256: createHash('sha256').update(readFileSync(fileURLToPath(import.meta.url))).digest('hex'),
+  mapId: original.mapId, ticks: game.tick, checks,
   definitions: { force: 'native V6 field strength, live armed land units, integrated once per sim tick; ships reported by transport membership only',
     idle: 'native idle/hold with no retained task; assigned idle/hold is separate and may be legitimate guarding',
     aba: 'three distinct retained objective transitions; inferred candidates kept separate from formal assignment authority',
