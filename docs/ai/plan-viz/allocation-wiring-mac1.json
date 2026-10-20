@@ -1,7 +1,9 @@
 {
   "contract": {
-    "source": "abf677a6971a18160e14d8d84202f703a9a70d72",
+    "source": "f5c25a3492afa45c25dcd6728e8acb39ae4450b4",
     "kind": "synthetic-contract-fixture",
+    "watermark": "browser-rendered",
+    "rawGroup": "contract-watermarked",
     "summary": {
       "evidence": "synthetic-contract-fixture",
       "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Ultra, Unspecified Version)",
@@ -252,12 +254,12 @@
   "rawArchive": "/codegeex/jeffry/sketch-rts-camps/plan-allocation-fe15e971/browser-evidence",
   "files": {
     "allocation-contract-intent.png": {
-      "sha256": "2fe8efb5ac35fee20af98eb126e9d5c37b5388ab9e97d25ccba7900872bfafd6",
-      "bytes": 332781
+      "sha256": "9fada4e1b1ec00a25fdba64a16722212bb39f6012a0c07fcd4c5622f4a434d4a",
+      "bytes": 352310
     },
     "allocation-contract-assignment.png": {
-      "sha256": "01eb7d34dc6743e92d9a207bc2ecbb4c97c1b95b3ad22a1ace5fbdc2cfd6962a",
-      "bytes": 328441
+      "sha256": "8f119e8b34053b1db9ef1f00aa6d8813fd182977ed93157b014b84209a35dd37",
+      "bytes": 347814
     },
     "allocation-wiring-spectator.png": {
       "sha256": "025bc54fa4591df4ccc016630d1aace4abe0b72bb0f4ad9ca6ff4de114158a85",

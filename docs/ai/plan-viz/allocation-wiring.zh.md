@@ -40,7 +40,9 @@ SKETCH_MACHINES=~/.config/sketch/machines-camps.json bin/sketch yatu ai-plan-ove
 
 ## mac1 截图与 trace
 
-下面两图是 `abf677a6` 的人工契约样例，已逐张检查。点击同位置目标会命中正式分配，不被候选报价覆盖。
+本 PR 保持 draft。合并顺序是 #564/#562 → #575 与真实控制实现 → 本 PR rebase 到 main，并在 mac1 至少一局真实海图观战中，用实际分配数据重新验证和截图。以下人工样例不作为正式控制切片的合并证据。
+
+下面两图是 `f5c25a34` 的人工契约样例，在真实浏览器内绘制“人工样例 / 非真实 AI 决策”水印后重截，已逐张检查。点击同位置目标会命中正式分配，不被候选报价覆盖。
 
 ![人工契约样例：效用、受阻目标与抢占时间轴](allocation-contract-intent.png)
 ![人工契约样例：到岗、救命中断、预算与资源不足](allocation-contract-assignment.png)
@@ -59,4 +61,4 @@ SKETCH_MACHINES=~/.config/sketch/machines-camps.json bin/sketch yatu ai-plan-ove
 
 绘制计时的中位数都为 0.1 ms。分支有墙钟尖峰：p95 为 4.199 / 27.4 ms，最大 50.3 ms；该最大样本所在帧墙钟为 55.421 ms、线程 CPU 为 4.328 ms，包含大量非 CPU 时间，尚未细分等待或调度原因。保留原始值，不把墙钟尖峰隐藏掉。这组样本只检验既有模块回退通路，不能据此承诺正式战略表接通后的完整负载成本。
 
-[原始计量和逐图 SHA256](allocation-wiring-mac1.json)包含两组 trace 的 SHA256、完整指标及归档位置；原 PNG、Chrome trace 和场景结果存于 camps 范围的 `browser-evidence/{base,ref,contract}`。
+[原始计量和逐图 SHA256](allocation-wiring-mac1.json)包含两组 trace 的 SHA256、完整指标及归档位置；原 PNG、Chrome trace 和场景结果存于 camps 范围的 `browser-evidence/{base,ref,contract,contract-watermarked}`。
