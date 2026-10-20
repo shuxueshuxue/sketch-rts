@@ -1,3 +1,4 @@
+import type { CommandRefusal } from "../shared/command-refusal";
 import { abilityCooldown } from "../shared/ability-cooldowns";
 import { autocastEnabled, canAutocast } from "../shared/autocast";
 import { unitAbilities } from "../shared/unit-abilities";
@@ -21,6 +22,7 @@ export type CommandButtonState = {
   cooldownLength?: number;
   reason?: CommandButtonDisabledReason;
   detail?:string;
+  refusal?: CommandRefusal;
   // The supply cap a locked unit waits for (reason "tier").
   supplyCap?: number;
   // A spell the player can switch to autocast (right-click on its button), and how it stands.
@@ -106,6 +108,7 @@ export function legalityCommandState(refusal: CommandLegalityError | undefined):
   if (!refusal) return ENABLED_COMMAND_STATE;
   return {
     visible: true, enabled: false, reason: refusal.reason,
+    ...(refusal.refusal ? { refusal: refusal.refusal } : {}),
     ...(refusal.cooldownTicks !== undefined ? { cooldownTicks: refusal.cooldownTicks } : {}),
     ...(refusal.cooldownLength !== undefined ? { cooldownLength: refusal.cooldownLength } : {}),
     ...(refusal.supplyCap !== undefined ? { supplyCap: refusal.supplyCap } : {}),

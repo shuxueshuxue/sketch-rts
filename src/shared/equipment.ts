@@ -1,4 +1,5 @@
 import { weaponClass } from "./weapon-class";
+import type { CommandRefusal } from "./command-refusal";
 import { ERRAND_REACH } from "./approach";
 import { invalidateItemIndex, itemIndex } from "./item-index";
 import { SHIP_WEAPONS, isShipEquipment, shipMounts } from "./ship-equipment";
@@ -61,6 +62,13 @@ export function itemSlot(snapshot: Pick<GameSnapshot, 'items'>, unit: Unit, item
             occupied.add(slot);
     }
     return undefined;
+}
+export function equipmentSpaceRefusal(snapshot: Pick<GameSnapshot, 'items'>, unit: Unit, kind: ItemKind): import('./command-refusal').CommandRefusal | null {
+    if (freeItemSlot(snapshot, unit, kind)) return null;
+    const occupied = new Set(itemsFor(snapshot, unit).flatMap(item => ITEM_DEFS[item.kind].span === 4 ? [...CARRY_SLOTS] : [itemSlot(snapshot, unit, item)]));
+    return CARRY_SLOTS.every(slot => occupied.has(slot))
+        ? { reason: 'inventory-full', detail: { unitId: unit.id } }
+        : { reason: 'inventory-incompatible', detail: { unitId: unit.id, itemKind: kind } };
 }
 export function freeItemSlot(snapshot: Pick<GameSnapshot, 'items'>, unit: Unit, kind: ItemKind): EquipmentSlot | undefined {
     const carried = itemsFor(snapshot, unit);
@@ -202,18 +210,21 @@ export function transferRefusal(snapshot: GameSnapshot, owner: PlayerId, itemId:
     }
 }
 // Whether a carrier may hand a carried item to another unit of its owner's, one that can carry it and has room for it.
-export function giveRefusal(snapshot: Pick<GameSnapshot, 'units' | 'items'>, owner: PlayerId, unitId: string, itemId: string, targetId: string): string | undefined {
+export function giveRefusalDetail(snapshot: Pick<GameSnapshot, 'units' | 'items'>, owner: PlayerId, unitId: string, itemId: string, targetId: string): { message: string; cause: CommandRefusal } | undefined {
     const unit = snapshot.units.find(unit => unit.id === unitId && unit.owner === owner && unit.hp > 0);
     const item = snapshot.items.find(item => item.id === itemId);
     if (!unit || !item || item.carrierId !== unit.id)
-        return 'Item or carrier is no longer available';
+        return { message: "Item or carrier is no longer available", cause: { reason: "item-not-carried", detail: { itemId, unitId } } };
     const target = snapshot.units.find(unit => unit.id === targetId && unit.owner === owner && unit.hp > 0);
     if (!target || target.id === unit.id)
-        return 'Choose another unit of yours';
+        return { message: "Choose another unit of yours", cause: { reason: "ownership", detail: { entityId: targetId, requiredRelation: "own" } } };
     if (!canEquip(target) || shipProfile(target))
-        return 'This unit cannot carry equipment';
+        return { message: "This unit cannot carry equipment", cause: { reason: "condition-unmet", detail: { category: "rules" } } };
     if (!freeItemSlot(snapshot, target, item.kind))
-        return 'That unit has no free position for it';
+        return { message: "That unit has no free position for it", cause: equipmentSpaceRefusal(snapshot, target, item.kind)! };
+}
+export function giveRefusal(snapshot: Pick<GameSnapshot, "units" | "items">, owner: PlayerId, unitId: string, itemId: string, targetId: string): string | undefined {
+    return giveRefusalDetail(snapshot, owner, unitId, itemId, targetId)?.message;
 }
 export function dropRefusal(snapshot: Pick<GameSnapshot,'units'|'items'>, owner: PlayerId, unitId: string, itemId: string): string | undefined {
     const unit = snapshot.units.find(unit => unit.id === unitId && unit.owner === owner && unit.hp > 0);

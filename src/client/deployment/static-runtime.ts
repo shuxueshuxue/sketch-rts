@@ -1,3 +1,4 @@
+import type { CommandRefusal } from "../../shared/command-refusal";
 import { createAiRuntime, type AiThinkExecutorFactory } from "../../ai/runtime";
 import { createChatMessage } from "../../shared/chat";
 import type { ChatMessage } from "../../shared/net/types";
@@ -20,7 +21,7 @@ export type StaticSoloDeploymentRuntimeOptions = {
   // Where a page-thread match's AI thinks (see @@@think-thread); on the page's thread when absent.
   aiThinkExecutor?: AiThinkExecutorFactory;
   onRuntimeReady?: () => void;
-  onRuntimeError?: (message: string) => void;
+  onRuntimeError?: (message: string, refusal?: CommandRefusal) => void;
 };
 
 type LocalMatchAdapter = LocalGameAdapter | MatchThreadGameAdapter;

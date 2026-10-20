@@ -24,7 +24,8 @@ it.each((['v9_archer', 'v9_summoner', 'v9_knight'] as const).flatMap(version =>
       index % 128 === wall && (road === 'closed' || Math.floor(index / 128) < 40) ? 'T' : '.').join('') };
     for (const building of game.buildings) Object.assign(building, snapToFootprint(game.map, building.radius, building));
     setBuildingBodies(game.map, game.buildings);
-    issuePlayerCommand(game, 'foe', { type: 'holdPosition', unitIds: ['target'] });
+    // Worker hold was ignored; stop retains the same idle raid target without issuing an ineligible command.
+    issuePlayerCommand(game, 'foe', { type: 'stop', unitIds: ['target'] });
     let raids = 0, campOrders = 0;
     for (let tick = 0; tick < 2400 && game.units.some(unit => road === 'closed'
       ? unit.id === 'safe-camp' || unit.id === 'second-camp' : unit.id === 'target'); tick++) {

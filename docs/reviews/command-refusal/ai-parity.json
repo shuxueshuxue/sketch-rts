@@ -1,0 +1,2819 @@
+{
+  "main": "9e90ebf2",
+  "candidate": "737b507f",
+  "workers": 6,
+  "maps": [
+    {
+      "map": "brokenSea",
+      "tick": 18000,
+      "checksums": 18001,
+      "effectsCreated": {
+        "main": 6538,
+        "plain": 6538,
+        "trace": 6538
+      },
+      "peakEffects": {
+        "main": 50,
+        "plain": 50,
+        "trace": 50
+      },
+      "newReceipts": {
+        "main": 0,
+        "plain": 0,
+        "trace": 0
+      },
+      "traceCount": 4800,
+      "differences": {
+        "plain": [],
+        "trace": []
+      },
+      "firstChecksumDifference": {
+        "plain": null,
+        "trace": null
+      },
+      "summaries": {
+        "main": {
+          "source": "9e90ebf2",
+          "mode": "plain",
+          "config": {
+            "name": "death-brokenSea",
+            "mapId": "brokenSea",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_knight"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              },
+              "p2": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "grove",
+                "version": "v9_summoner"
+              },
+              "p3": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "d4b8c3b8214f255857391cfb90bda5abb93dbccf94abc2c305fa09022029f979",
+          "finalChecksum": "cce1f426",
+          "canonicalSha256": "8fa1ee94643956ddca467418c5294747d936093263251e083788459620992f38",
+          "snapshotSha256": "4de73fa4625109c34397624cf319234f906d683c38dbd0e6b9df1ae968425fd9",
+          "memorySha256": "7d2fa856192982cafe390e00c7603fdb0da5011edba4285162fee6e55c24b071",
+          "plannedCount": 5461,
+          "plannedSha256": "ed7cc7e39e078b1483f4165ff410f59a3ddc0f95637b44b412fbb0b0fa1ff5f2",
+          "commandCount": 5461,
+          "commandSha256": "4a612bd8317a379b96b85e06ef716bc33f115286edd1e541fc7640e261d3f239",
+          "effectsCreated": 6538,
+          "peakEffects": 50,
+          "finalEffects": 18,
+          "effectTypes": {
+            "mine": 175,
+            "build": 51,
+            "repair": 829,
+            "board": 90,
+            "move": 2044,
+            "attack": 751,
+            "unload": 73,
+            "projectile": 504,
+            "hit": 981,
+            "muzzleFlash": 161,
+            "siegeBolt": 161,
+            "siegeImpact": 159,
+            "goldBounty": 22,
+            "bloodlust": 14,
+            "melee": 289,
+            "queuedMine": 38,
+            "itemReceived": 1,
+            "summon": 24,
+            "heal": 160,
+            "orderEnded": 11
+          },
+          "newReceipts": 0,
+          "traceCount": 0,
+          "traceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ledgerErrors": []
+        },
+        "plain": {
+          "source": "737b507f",
+          "mode": "plain",
+          "config": {
+            "name": "death-brokenSea",
+            "mapId": "brokenSea",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_knight"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              },
+              "p2": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "grove",
+                "version": "v9_summoner"
+              },
+              "p3": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "d4b8c3b8214f255857391cfb90bda5abb93dbccf94abc2c305fa09022029f979",
+          "finalChecksum": "cce1f426",
+          "canonicalSha256": "8fa1ee94643956ddca467418c5294747d936093263251e083788459620992f38",
+          "snapshotSha256": "4de73fa4625109c34397624cf319234f906d683c38dbd0e6b9df1ae968425fd9",
+          "memorySha256": "7d2fa856192982cafe390e00c7603fdb0da5011edba4285162fee6e55c24b071",
+          "plannedCount": 5461,
+          "plannedSha256": "ed7cc7e39e078b1483f4165ff410f59a3ddc0f95637b44b412fbb0b0fa1ff5f2",
+          "commandCount": 5461,
+          "commandSha256": "4a612bd8317a379b96b85e06ef716bc33f115286edd1e541fc7640e261d3f239",
+          "effectsCreated": 6538,
+          "peakEffects": 50,
+          "finalEffects": 18,
+          "effectTypes": {
+            "mine": 175,
+            "build": 51,
+            "repair": 829,
+            "board": 90,
+            "move": 2044,
+            "attack": 751,
+            "unload": 73,
+            "projectile": 504,
+            "hit": 981,
+            "muzzleFlash": 161,
+            "siegeBolt": 161,
+            "siegeImpact": 159,
+            "goldBounty": 22,
+            "bloodlust": 14,
+            "melee": 289,
+            "queuedMine": 38,
+            "itemReceived": 1,
+            "summon": 24,
+            "heal": 160,
+            "orderEnded": 11
+          },
+          "newReceipts": 0,
+          "traceCount": 0,
+          "traceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ledgerErrors": []
+        },
+        "trace": {
+          "source": "737b507f",
+          "mode": "trace",
+          "config": {
+            "name": "death-brokenSea",
+            "mapId": "brokenSea",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_knight"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              },
+              "p2": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "grove",
+                "version": "v9_summoner"
+              },
+              "p3": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "d4b8c3b8214f255857391cfb90bda5abb93dbccf94abc2c305fa09022029f979",
+          "finalChecksum": "cce1f426",
+          "canonicalSha256": "8fa1ee94643956ddca467418c5294747d936093263251e083788459620992f38",
+          "snapshotSha256": "4de73fa4625109c34397624cf319234f906d683c38dbd0e6b9df1ae968425fd9",
+          "memorySha256": "7d2fa856192982cafe390e00c7603fdb0da5011edba4285162fee6e55c24b071",
+          "plannedCount": 5461,
+          "plannedSha256": "ed7cc7e39e078b1483f4165ff410f59a3ddc0f95637b44b412fbb0b0fa1ff5f2",
+          "commandCount": 5461,
+          "commandSha256": "4a612bd8317a379b96b85e06ef716bc33f115286edd1e541fc7640e261d3f239",
+          "effectsCreated": 6538,
+          "peakEffects": 50,
+          "finalEffects": 18,
+          "effectTypes": {
+            "mine": 175,
+            "build": 51,
+            "repair": 829,
+            "board": 90,
+            "move": 2044,
+            "attack": 751,
+            "unload": 73,
+            "projectile": 504,
+            "hit": 981,
+            "muzzleFlash": 161,
+            "siegeBolt": 161,
+            "siegeImpact": 159,
+            "goldBounty": 22,
+            "bloodlust": 14,
+            "melee": 289,
+            "queuedMine": 38,
+            "itemReceived": 1,
+            "summon": 24,
+            "heal": 160,
+            "orderEnded": 11
+          },
+          "newReceipts": 0,
+          "traceCount": 4800,
+          "traceSha256": "466a8e88319061c05f13f2ed6bc5b4bb6448644c9cd3f033570947368c3e2f54",
+          "ledgerErrors": []
+        }
+      }
+    },
+    {
+      "map": "greystonePass",
+      "tick": 18000,
+      "checksums": 18001,
+      "effectsCreated": {
+        "main": 6033,
+        "plain": 6033,
+        "trace": 6033
+      },
+      "peakEffects": {
+        "main": 62,
+        "plain": 62,
+        "trace": 62
+      },
+      "newReceipts": {
+        "main": 0,
+        "plain": 0,
+        "trace": 0
+      },
+      "traceCount": 2400,
+      "differences": {
+        "plain": [],
+        "trace": []
+      },
+      "firstChecksumDifference": {
+        "plain": null,
+        "trace": null
+      },
+      "summaries": {
+        "main": {
+          "source": "9e90ebf2",
+          "mode": "plain",
+          "config": {
+            "name": "death-greystonePass",
+            "mapId": "greystonePass",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_knight"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "304addd3da2781e576c46e08cb06d28fb25ee240f36088f70816d863a8cbdc42",
+          "finalChecksum": "1bdcf042",
+          "canonicalSha256": "5d3da807d7e9e9b7a017270b66490c43be1ee4d6fd94dedab78aad005b335202",
+          "snapshotSha256": "158d4f1f1a4e21885e67a12baa50f5da3942bc76090f827d21f28be9c9a172bc",
+          "memorySha256": "6ccead78a09cc11e56da566376c4b5328fa2df7a8e65e022883d6fbdad204ad9",
+          "plannedCount": 5443,
+          "plannedSha256": "cce3ddc2e2d73713c83cc304402b67a36b7297bfa5f8c22ba3547e0febb004c6",
+          "commandCount": 5443,
+          "commandSha256": "5c7c9c0279d9b8d4ecf72312e2db9221588d4b39f62a23259bedf18bab7aa83d",
+          "effectsCreated": 6033,
+          "peakEffects": 62,
+          "finalEffects": 57,
+          "effectTypes": {
+            "mine": 84,
+            "build": 46,
+            "repair": 712,
+            "orderEnded": 5,
+            "move": 2915,
+            "attack": 828,
+            "attackTarget": 168,
+            "bloodlust": 6,
+            "melee": 146,
+            "hit": 326,
+            "projectile": 176,
+            "goldBounty": 22,
+            "heal": 112,
+            "summon": 4,
+            "queuedMove": 468,
+            "experienceBurst": 2,
+            "itemReceived": 7,
+            "guardianField": 2,
+            "siegeBolt": 4
+          },
+          "newReceipts": 0,
+          "traceCount": 0,
+          "traceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ledgerErrors": []
+        },
+        "plain": {
+          "source": "737b507f",
+          "mode": "plain",
+          "config": {
+            "name": "death-greystonePass",
+            "mapId": "greystonePass",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_knight"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "304addd3da2781e576c46e08cb06d28fb25ee240f36088f70816d863a8cbdc42",
+          "finalChecksum": "1bdcf042",
+          "canonicalSha256": "5d3da807d7e9e9b7a017270b66490c43be1ee4d6fd94dedab78aad005b335202",
+          "snapshotSha256": "158d4f1f1a4e21885e67a12baa50f5da3942bc76090f827d21f28be9c9a172bc",
+          "memorySha256": "6ccead78a09cc11e56da566376c4b5328fa2df7a8e65e022883d6fbdad204ad9",
+          "plannedCount": 5443,
+          "plannedSha256": "cce3ddc2e2d73713c83cc304402b67a36b7297bfa5f8c22ba3547e0febb004c6",
+          "commandCount": 5443,
+          "commandSha256": "5c7c9c0279d9b8d4ecf72312e2db9221588d4b39f62a23259bedf18bab7aa83d",
+          "effectsCreated": 6033,
+          "peakEffects": 62,
+          "finalEffects": 57,
+          "effectTypes": {
+            "mine": 84,
+            "build": 46,
+            "repair": 712,
+            "orderEnded": 5,
+            "move": 2915,
+            "attack": 828,
+            "attackTarget": 168,
+            "bloodlust": 6,
+            "melee": 146,
+            "hit": 326,
+            "projectile": 176,
+            "goldBounty": 22,
+            "heal": 112,
+            "summon": 4,
+            "queuedMove": 468,
+            "experienceBurst": 2,
+            "itemReceived": 7,
+            "guardianField": 2,
+            "siegeBolt": 4
+          },
+          "newReceipts": 0,
+          "traceCount": 0,
+          "traceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ledgerErrors": []
+        },
+        "trace": {
+          "source": "737b507f",
+          "mode": "trace",
+          "config": {
+            "name": "death-greystonePass",
+            "mapId": "greystonePass",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_knight"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "304addd3da2781e576c46e08cb06d28fb25ee240f36088f70816d863a8cbdc42",
+          "finalChecksum": "1bdcf042",
+          "canonicalSha256": "5d3da807d7e9e9b7a017270b66490c43be1ee4d6fd94dedab78aad005b335202",
+          "snapshotSha256": "158d4f1f1a4e21885e67a12baa50f5da3942bc76090f827d21f28be9c9a172bc",
+          "memorySha256": "6ccead78a09cc11e56da566376c4b5328fa2df7a8e65e022883d6fbdad204ad9",
+          "plannedCount": 5443,
+          "plannedSha256": "cce3ddc2e2d73713c83cc304402b67a36b7297bfa5f8c22ba3547e0febb004c6",
+          "commandCount": 5443,
+          "commandSha256": "5c7c9c0279d9b8d4ecf72312e2db9221588d4b39f62a23259bedf18bab7aa83d",
+          "effectsCreated": 6033,
+          "peakEffects": 62,
+          "finalEffects": 57,
+          "effectTypes": {
+            "mine": 84,
+            "build": 46,
+            "repair": 712,
+            "orderEnded": 5,
+            "move": 2915,
+            "attack": 828,
+            "attackTarget": 168,
+            "bloodlust": 6,
+            "melee": 146,
+            "hit": 326,
+            "projectile": 176,
+            "goldBounty": 22,
+            "heal": 112,
+            "summon": 4,
+            "queuedMove": 468,
+            "experienceBurst": 2,
+            "itemReceived": 7,
+            "guardianField": 2,
+            "siegeBolt": 4
+          },
+          "newReceipts": 0,
+          "traceCount": 2400,
+          "traceSha256": "47bd0a61f9b3d975c0479c9b6abe559fe4b3841ea39c3460f46e85a713e7ed5d",
+          "ledgerErrors": []
+        }
+      }
+    },
+    {
+      "map": "gullIsland",
+      "tick": 18000,
+      "checksums": 18001,
+      "effectsCreated": {
+        "main": 8588,
+        "plain": 8588,
+        "trace": 8588
+      },
+      "peakEffects": {
+        "main": 51,
+        "plain": 51,
+        "trace": 51
+      },
+      "newReceipts": {
+        "main": 0,
+        "plain": 0,
+        "trace": 0
+      },
+      "traceCount": 2400,
+      "differences": {
+        "plain": [],
+        "trace": []
+      },
+      "firstChecksumDifference": {
+        "plain": null,
+        "trace": null
+      },
+      "summaries": {
+        "main": {
+          "source": "9e90ebf2",
+          "mode": "plain",
+          "config": {
+            "name": "death-gullIsland",
+            "mapId": "gullIsland",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_knight"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "eb297945088fa15b11f686dc80af6e60c837fec69e9aefc6e6512315823b825b",
+          "finalChecksum": "a04ce574",
+          "canonicalSha256": "cc7b442461e7217f18c92fe2fc27a1fe3732c3188b267ab89ee860ffa7009624",
+          "snapshotSha256": "5ed30c5552bbeff3df6fe13fa2d0b3c2d3e85a907dc53dfd80c9f44f220fe2d7",
+          "memorySha256": "e5bda710e4eca2b35151fb82eda94e005a917560add88e50eab8ec3f02ac9b15",
+          "plannedCount": 7186,
+          "plannedSha256": "a91dbc1e53ddf4ada68e9bf6dbdbda7d74ab5ed81180f6860fc6dd723be9fb60",
+          "commandCount": 7186,
+          "commandSha256": "5c4a74142ffce28278f9c659da924cedb09eff1341d439e2f295526bad54c62d",
+          "effectsCreated": 8588,
+          "peakEffects": 51,
+          "finalEffects": 30,
+          "effectTypes": {
+            "mine": 131,
+            "build": 44,
+            "repair": 800,
+            "move": 3359,
+            "attack": 1497,
+            "attackTarget": 568,
+            "bloodlust": 9,
+            "projectile": 671,
+            "hit": 909,
+            "melee": 187,
+            "goldBounty": 20,
+            "heal": 142,
+            "board": 14,
+            "queuedMove": 112,
+            "experienceBurst": 2,
+            "unload": 7,
+            "queuedMine": 36,
+            "orderEnded": 16,
+            "scorch": 9,
+            "siegeBolt": 55
+          },
+          "newReceipts": 0,
+          "traceCount": 0,
+          "traceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ledgerErrors": []
+        },
+        "plain": {
+          "source": "737b507f",
+          "mode": "plain",
+          "config": {
+            "name": "death-gullIsland",
+            "mapId": "gullIsland",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_knight"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "eb297945088fa15b11f686dc80af6e60c837fec69e9aefc6e6512315823b825b",
+          "finalChecksum": "a04ce574",
+          "canonicalSha256": "cc7b442461e7217f18c92fe2fc27a1fe3732c3188b267ab89ee860ffa7009624",
+          "snapshotSha256": "5ed30c5552bbeff3df6fe13fa2d0b3c2d3e85a907dc53dfd80c9f44f220fe2d7",
+          "memorySha256": "e5bda710e4eca2b35151fb82eda94e005a917560add88e50eab8ec3f02ac9b15",
+          "plannedCount": 7186,
+          "plannedSha256": "a91dbc1e53ddf4ada68e9bf6dbdbda7d74ab5ed81180f6860fc6dd723be9fb60",
+          "commandCount": 7186,
+          "commandSha256": "5c4a74142ffce28278f9c659da924cedb09eff1341d439e2f295526bad54c62d",
+          "effectsCreated": 8588,
+          "peakEffects": 51,
+          "finalEffects": 30,
+          "effectTypes": {
+            "mine": 131,
+            "build": 44,
+            "repair": 800,
+            "move": 3359,
+            "attack": 1497,
+            "attackTarget": 568,
+            "bloodlust": 9,
+            "projectile": 671,
+            "hit": 909,
+            "melee": 187,
+            "goldBounty": 20,
+            "heal": 142,
+            "board": 14,
+            "queuedMove": 112,
+            "experienceBurst": 2,
+            "unload": 7,
+            "queuedMine": 36,
+            "orderEnded": 16,
+            "scorch": 9,
+            "siegeBolt": 55
+          },
+          "newReceipts": 0,
+          "traceCount": 0,
+          "traceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ledgerErrors": []
+        },
+        "trace": {
+          "source": "737b507f",
+          "mode": "trace",
+          "config": {
+            "name": "death-gullIsland",
+            "mapId": "gullIsland",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_knight"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "eb297945088fa15b11f686dc80af6e60c837fec69e9aefc6e6512315823b825b",
+          "finalChecksum": "a04ce574",
+          "canonicalSha256": "cc7b442461e7217f18c92fe2fc27a1fe3732c3188b267ab89ee860ffa7009624",
+          "snapshotSha256": "5ed30c5552bbeff3df6fe13fa2d0b3c2d3e85a907dc53dfd80c9f44f220fe2d7",
+          "memorySha256": "e5bda710e4eca2b35151fb82eda94e005a917560add88e50eab8ec3f02ac9b15",
+          "plannedCount": 7186,
+          "plannedSha256": "a91dbc1e53ddf4ada68e9bf6dbdbda7d74ab5ed81180f6860fc6dd723be9fb60",
+          "commandCount": 7186,
+          "commandSha256": "5c4a74142ffce28278f9c659da924cedb09eff1341d439e2f295526bad54c62d",
+          "effectsCreated": 8588,
+          "peakEffects": 51,
+          "finalEffects": 30,
+          "effectTypes": {
+            "mine": 131,
+            "build": 44,
+            "repair": 800,
+            "move": 3359,
+            "attack": 1497,
+            "attackTarget": 568,
+            "bloodlust": 9,
+            "projectile": 671,
+            "hit": 909,
+            "melee": 187,
+            "goldBounty": 20,
+            "heal": 142,
+            "board": 14,
+            "queuedMove": 112,
+            "experienceBurst": 2,
+            "unload": 7,
+            "queuedMine": 36,
+            "orderEnded": 16,
+            "scorch": 9,
+            "siegeBolt": 55
+          },
+          "newReceipts": 0,
+          "traceCount": 2400,
+          "traceSha256": "5b4049cb4cf73b1f7f1335bc2dc2ab7e3b3b1aef16330767ecdc031b09a13b24",
+          "ledgerErrors": []
+        }
+      }
+    },
+    {
+      "map": "pineshade",
+      "tick": 18000,
+      "checksums": 18001,
+      "effectsCreated": {
+        "main": 10154,
+        "plain": 10154,
+        "trace": 10154
+      },
+      "peakEffects": {
+        "main": 120,
+        "plain": 120,
+        "trace": 120
+      },
+      "newReceipts": {
+        "main": 0,
+        "plain": 0,
+        "trace": 0
+      },
+      "traceCount": 2400,
+      "differences": {
+        "plain": [],
+        "trace": []
+      },
+      "firstChecksumDifference": {
+        "plain": null,
+        "trace": null
+      },
+      "summaries": {
+        "main": {
+          "source": "9e90ebf2",
+          "mode": "plain",
+          "config": {
+            "name": "death-pineshade",
+            "mapId": "pineshade",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_knight"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "282be27533e574867793fbe3ee8abf310888fd53f8843fde0b7ad81a3ad8ec06",
+          "finalChecksum": "0e3cff36",
+          "canonicalSha256": "3d31aa85b5e11d10d5db9513415c49437ee5c7a73cf6bc78147ab249e3d0cf38",
+          "snapshotSha256": "df274bcad0b1dfee00d32eb2c261596dde41d6abee1f460ceabf13cf7a14c227",
+          "memorySha256": "9976bf63887bc6318e15affc0dfc85843aac5c6bb7d488ed67642592dc0c64bd",
+          "plannedCount": 9407,
+          "plannedSha256": "99197a6db6c3c059060ec034b09c7c45dfb22fe486105c95b7298b54736f777e",
+          "commandCount": 9407,
+          "commandSha256": "258e5e927152be3fd648bc21b0b15df454dc8d0a0c090797368ff2b5239c9185",
+          "effectsCreated": 10154,
+          "peakEffects": 120,
+          "finalEffects": 18,
+          "effectTypes": {
+            "mine": 165,
+            "build": 44,
+            "repair": 705,
+            "orderEnded": 19,
+            "move": 4447,
+            "attack": 1047,
+            "attackTarget": 526,
+            "bloodlust": 7,
+            "projectile": 571,
+            "hit": 830,
+            "melee": 216,
+            "goldBounty": 24,
+            "summon": 6,
+            "heal": 277,
+            "queuedMine": 79,
+            "queuedMove": 1123,
+            "experienceBurst": 2,
+            "storm": 7,
+            "flameBurn": 16,
+            "siegeBolt": 36,
+            "scorch": 7
+          },
+          "newReceipts": 0,
+          "traceCount": 0,
+          "traceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ledgerErrors": []
+        },
+        "plain": {
+          "source": "737b507f",
+          "mode": "plain",
+          "config": {
+            "name": "death-pineshade",
+            "mapId": "pineshade",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_knight"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "282be27533e574867793fbe3ee8abf310888fd53f8843fde0b7ad81a3ad8ec06",
+          "finalChecksum": "0e3cff36",
+          "canonicalSha256": "3d31aa85b5e11d10d5db9513415c49437ee5c7a73cf6bc78147ab249e3d0cf38",
+          "snapshotSha256": "df274bcad0b1dfee00d32eb2c261596dde41d6abee1f460ceabf13cf7a14c227",
+          "memorySha256": "9976bf63887bc6318e15affc0dfc85843aac5c6bb7d488ed67642592dc0c64bd",
+          "plannedCount": 9407,
+          "plannedSha256": "99197a6db6c3c059060ec034b09c7c45dfb22fe486105c95b7298b54736f777e",
+          "commandCount": 9407,
+          "commandSha256": "258e5e927152be3fd648bc21b0b15df454dc8d0a0c090797368ff2b5239c9185",
+          "effectsCreated": 10154,
+          "peakEffects": 120,
+          "finalEffects": 18,
+          "effectTypes": {
+            "mine": 165,
+            "build": 44,
+            "repair": 705,
+            "orderEnded": 19,
+            "move": 4447,
+            "attack": 1047,
+            "attackTarget": 526,
+            "bloodlust": 7,
+            "projectile": 571,
+            "hit": 830,
+            "melee": 216,
+            "goldBounty": 24,
+            "summon": 6,
+            "heal": 277,
+            "queuedMine": 79,
+            "queuedMove": 1123,
+            "experienceBurst": 2,
+            "storm": 7,
+            "flameBurn": 16,
+            "siegeBolt": 36,
+            "scorch": 7
+          },
+          "newReceipts": 0,
+          "traceCount": 0,
+          "traceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ledgerErrors": []
+        },
+        "trace": {
+          "source": "737b507f",
+          "mode": "trace",
+          "config": {
+            "name": "death-pineshade",
+            "mapId": "pineshade",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_knight"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "282be27533e574867793fbe3ee8abf310888fd53f8843fde0b7ad81a3ad8ec06",
+          "finalChecksum": "0e3cff36",
+          "canonicalSha256": "3d31aa85b5e11d10d5db9513415c49437ee5c7a73cf6bc78147ab249e3d0cf38",
+          "snapshotSha256": "df274bcad0b1dfee00d32eb2c261596dde41d6abee1f460ceabf13cf7a14c227",
+          "memorySha256": "9976bf63887bc6318e15affc0dfc85843aac5c6bb7d488ed67642592dc0c64bd",
+          "plannedCount": 9407,
+          "plannedSha256": "99197a6db6c3c059060ec034b09c7c45dfb22fe486105c95b7298b54736f777e",
+          "commandCount": 9407,
+          "commandSha256": "258e5e927152be3fd648bc21b0b15df454dc8d0a0c090797368ff2b5239c9185",
+          "effectsCreated": 10154,
+          "peakEffects": 120,
+          "finalEffects": 18,
+          "effectTypes": {
+            "mine": 165,
+            "build": 44,
+            "repair": 705,
+            "orderEnded": 19,
+            "move": 4447,
+            "attack": 1047,
+            "attackTarget": 526,
+            "bloodlust": 7,
+            "projectile": 571,
+            "hit": 830,
+            "melee": 216,
+            "goldBounty": 24,
+            "summon": 6,
+            "heal": 277,
+            "queuedMine": 79,
+            "queuedMove": 1123,
+            "experienceBurst": 2,
+            "storm": 7,
+            "flameBurn": 16,
+            "siegeBolt": 36,
+            "scorch": 7
+          },
+          "newReceipts": 0,
+          "traceCount": 2400,
+          "traceSha256": "058cdea5018deab71d7fbfdd674ca1cb4fe466f1c407c3f1f5ba437636b85307",
+          "ledgerErrors": []
+        }
+      }
+    },
+    {
+      "map": "reedwater",
+      "tick": 18000,
+      "checksums": 18001,
+      "effectsCreated": {
+        "main": 10938,
+        "plain": 10938,
+        "trace": 10938
+      },
+      "peakEffects": {
+        "main": 71,
+        "plain": 71,
+        "trace": 71
+      },
+      "newReceipts": {
+        "main": 0,
+        "plain": 0,
+        "trace": 0
+      },
+      "traceCount": 2400,
+      "differences": {
+        "plain": [],
+        "trace": []
+      },
+      "firstChecksumDifference": {
+        "plain": null,
+        "trace": null
+      },
+      "summaries": {
+        "main": {
+          "source": "9e90ebf2",
+          "mode": "plain",
+          "config": {
+            "name": "death-reedwater",
+            "mapId": "reedwater",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_knight"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "8536c8772ea5bdde8b9c31f533ceca378118fb7ad6e30e3196f1ac22ed3c6192",
+          "finalChecksum": "495ace58",
+          "canonicalSha256": "59adc1efa557d85ae5b7bbaa339d3d642dcc3de91746bc51e84015be1d730e29",
+          "snapshotSha256": "8f2b1ba10faee6d482f673ef1e0e77a5ab34a1c5ce6fe6b231f9ce3774803eb0",
+          "memorySha256": "68657ea2d4550de3fdb3ab98e87a555bfbfbf7fdef40b9a07f4138d4721bb0cd",
+          "plannedCount": 9752,
+          "plannedSha256": "a4e31a49247c93635f2d9af7111ab1051069a57e6b15c36dfb35c3d65c75e708",
+          "commandCount": 9752,
+          "commandSha256": "d97bbaa290e57236468e1cfa143c84918b9a607fe266db26b37904fa27406def",
+          "effectsCreated": 10938,
+          "peakEffects": 71,
+          "finalEffects": 55,
+          "effectTypes": {
+            "mine": 169,
+            "build": 43,
+            "repair": 820,
+            "attack": 735,
+            "move": 5527,
+            "attackTarget": 418,
+            "projectile": 693,
+            "hit": 1138,
+            "melee": 327,
+            "goldBounty": 23,
+            "heal": 310,
+            "bloodlust": 3,
+            "queuedMove": 502,
+            "scorch": 15,
+            "chainLightning": 15,
+            "queuedMine": 90,
+            "orderEnded": 13,
+            "siegeBolt": 87,
+            "guardianField": 2,
+            "shellFlight": 4,
+            "siegeImpact": 4
+          },
+          "newReceipts": 0,
+          "traceCount": 0,
+          "traceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ledgerErrors": []
+        },
+        "plain": {
+          "source": "737b507f",
+          "mode": "plain",
+          "config": {
+            "name": "death-reedwater",
+            "mapId": "reedwater",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_knight"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "8536c8772ea5bdde8b9c31f533ceca378118fb7ad6e30e3196f1ac22ed3c6192",
+          "finalChecksum": "495ace58",
+          "canonicalSha256": "59adc1efa557d85ae5b7bbaa339d3d642dcc3de91746bc51e84015be1d730e29",
+          "snapshotSha256": "8f2b1ba10faee6d482f673ef1e0e77a5ab34a1c5ce6fe6b231f9ce3774803eb0",
+          "memorySha256": "68657ea2d4550de3fdb3ab98e87a555bfbfbf7fdef40b9a07f4138d4721bb0cd",
+          "plannedCount": 9752,
+          "plannedSha256": "a4e31a49247c93635f2d9af7111ab1051069a57e6b15c36dfb35c3d65c75e708",
+          "commandCount": 9752,
+          "commandSha256": "d97bbaa290e57236468e1cfa143c84918b9a607fe266db26b37904fa27406def",
+          "effectsCreated": 10938,
+          "peakEffects": 71,
+          "finalEffects": 55,
+          "effectTypes": {
+            "mine": 169,
+            "build": 43,
+            "repair": 820,
+            "attack": 735,
+            "move": 5527,
+            "attackTarget": 418,
+            "projectile": 693,
+            "hit": 1138,
+            "melee": 327,
+            "goldBounty": 23,
+            "heal": 310,
+            "bloodlust": 3,
+            "queuedMove": 502,
+            "scorch": 15,
+            "chainLightning": 15,
+            "queuedMine": 90,
+            "orderEnded": 13,
+            "siegeBolt": 87,
+            "guardianField": 2,
+            "shellFlight": 4,
+            "siegeImpact": 4
+          },
+          "newReceipts": 0,
+          "traceCount": 0,
+          "traceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ledgerErrors": []
+        },
+        "trace": {
+          "source": "737b507f",
+          "mode": "trace",
+          "config": {
+            "name": "death-reedwater",
+            "mapId": "reedwater",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_knight"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "8536c8772ea5bdde8b9c31f533ceca378118fb7ad6e30e3196f1ac22ed3c6192",
+          "finalChecksum": "495ace58",
+          "canonicalSha256": "59adc1efa557d85ae5b7bbaa339d3d642dcc3de91746bc51e84015be1d730e29",
+          "snapshotSha256": "8f2b1ba10faee6d482f673ef1e0e77a5ab34a1c5ce6fe6b231f9ce3774803eb0",
+          "memorySha256": "68657ea2d4550de3fdb3ab98e87a555bfbfbf7fdef40b9a07f4138d4721bb0cd",
+          "plannedCount": 9752,
+          "plannedSha256": "a4e31a49247c93635f2d9af7111ab1051069a57e6b15c36dfb35c3d65c75e708",
+          "commandCount": 9752,
+          "commandSha256": "d97bbaa290e57236468e1cfa143c84918b9a607fe266db26b37904fa27406def",
+          "effectsCreated": 10938,
+          "peakEffects": 71,
+          "finalEffects": 55,
+          "effectTypes": {
+            "mine": 169,
+            "build": 43,
+            "repair": 820,
+            "attack": 735,
+            "move": 5527,
+            "attackTarget": 418,
+            "projectile": 693,
+            "hit": 1138,
+            "melee": 327,
+            "goldBounty": 23,
+            "heal": 310,
+            "bloodlust": 3,
+            "queuedMove": 502,
+            "scorch": 15,
+            "chainLightning": 15,
+            "queuedMine": 90,
+            "orderEnded": 13,
+            "siegeBolt": 87,
+            "guardianField": 2,
+            "shellFlight": 4,
+            "siegeImpact": 4
+          },
+          "newReceipts": 0,
+          "traceCount": 2400,
+          "traceSha256": "7db585716400645c4d93f4aca4cf226af316b9ff73336ae5a71890a4a68e3cf0",
+          "ledgerErrors": []
+        }
+      }
+    },
+    {
+      "map": "ringwater",
+      "tick": 18000,
+      "checksums": 18001,
+      "effectsCreated": {
+        "main": 17098,
+        "plain": 17098,
+        "trace": 17098
+      },
+      "peakEffects": {
+        "main": 171,
+        "plain": 171,
+        "trace": 171
+      },
+      "newReceipts": {
+        "main": 0,
+        "plain": 0,
+        "trace": 0
+      },
+      "traceCount": 4800,
+      "differences": {
+        "plain": [],
+        "trace": []
+      },
+      "firstChecksumDifference": {
+        "plain": null,
+        "trace": null
+      },
+      "summaries": {
+        "main": {
+          "source": "9e90ebf2",
+          "mode": "plain",
+          "config": {
+            "name": "death-ringwater",
+            "mapId": "ringwater",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_knight"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              },
+              "p2": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "grove",
+                "version": "v9_summoner"
+              },
+              "p3": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "e46e955e5e2cca913550972d608ae281357d583f4aa521eb024166e30e7d7b77",
+          "finalChecksum": "ef00ed75",
+          "canonicalSha256": "0bbd4f67526d44856a796e4108c5268e849422ff78c68d679adf32c071d53758",
+          "snapshotSha256": "b86229abb3fd8f55a0fbbf77a451f6719f38a83f549c841131d8a6e4a2b91e86",
+          "memorySha256": "edf7d66ac96ca4f85c4fc1a24a3c1d2fc4e950b6697ae0e51fac2ed1f326e768",
+          "plannedCount": 15415,
+          "plannedSha256": "fbf8251c2cfa0f00baf77622b364ae6d69d54ff3ef5b18c622bd88f767a75e1b",
+          "commandCount": 15415,
+          "commandSha256": "6328a63a6491a7588d1c465899af96cdb4ca11615d48d043d004b831831ad077",
+          "effectsCreated": 17098,
+          "peakEffects": 171,
+          "finalEffects": 39,
+          "effectTypes": {
+            "mine": 220,
+            "build": 90,
+            "repair": 1421,
+            "move": 7513,
+            "attack": 2046,
+            "attackTarget": 281,
+            "bloodlust": 6,
+            "melee": 511,
+            "hit": 1093,
+            "projectile": 585,
+            "goldBounty": 37,
+            "heal": 328,
+            "queuedMove": 2732,
+            "summon": 60,
+            "itemReceived": 10,
+            "orderEnded": 9,
+            "board": 59,
+            "unload": 54,
+            "flameBurn": 13,
+            "guardianField": 5,
+            "queuedMine": 22,
+            "scorch": 1,
+            "curse": 2
+          },
+          "newReceipts": 0,
+          "traceCount": 0,
+          "traceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ledgerErrors": []
+        },
+        "plain": {
+          "source": "737b507f",
+          "mode": "plain",
+          "config": {
+            "name": "death-ringwater",
+            "mapId": "ringwater",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_knight"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              },
+              "p2": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "grove",
+                "version": "v9_summoner"
+              },
+              "p3": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "e46e955e5e2cca913550972d608ae281357d583f4aa521eb024166e30e7d7b77",
+          "finalChecksum": "ef00ed75",
+          "canonicalSha256": "0bbd4f67526d44856a796e4108c5268e849422ff78c68d679adf32c071d53758",
+          "snapshotSha256": "b86229abb3fd8f55a0fbbf77a451f6719f38a83f549c841131d8a6e4a2b91e86",
+          "memorySha256": "edf7d66ac96ca4f85c4fc1a24a3c1d2fc4e950b6697ae0e51fac2ed1f326e768",
+          "plannedCount": 15415,
+          "plannedSha256": "fbf8251c2cfa0f00baf77622b364ae6d69d54ff3ef5b18c622bd88f767a75e1b",
+          "commandCount": 15415,
+          "commandSha256": "6328a63a6491a7588d1c465899af96cdb4ca11615d48d043d004b831831ad077",
+          "effectsCreated": 17098,
+          "peakEffects": 171,
+          "finalEffects": 39,
+          "effectTypes": {
+            "mine": 220,
+            "build": 90,
+            "repair": 1421,
+            "move": 7513,
+            "attack": 2046,
+            "attackTarget": 281,
+            "bloodlust": 6,
+            "melee": 511,
+            "hit": 1093,
+            "projectile": 585,
+            "goldBounty": 37,
+            "heal": 328,
+            "queuedMove": 2732,
+            "summon": 60,
+            "itemReceived": 10,
+            "orderEnded": 9,
+            "board": 59,
+            "unload": 54,
+            "flameBurn": 13,
+            "guardianField": 5,
+            "queuedMine": 22,
+            "scorch": 1,
+            "curse": 2
+          },
+          "newReceipts": 0,
+          "traceCount": 0,
+          "traceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ledgerErrors": []
+        },
+        "trace": {
+          "source": "737b507f",
+          "mode": "trace",
+          "config": {
+            "name": "death-ringwater",
+            "mapId": "ringwater",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_knight"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              },
+              "p2": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "grove",
+                "version": "v9_summoner"
+              },
+              "p3": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "e46e955e5e2cca913550972d608ae281357d583f4aa521eb024166e30e7d7b77",
+          "finalChecksum": "ef00ed75",
+          "canonicalSha256": "0bbd4f67526d44856a796e4108c5268e849422ff78c68d679adf32c071d53758",
+          "snapshotSha256": "b86229abb3fd8f55a0fbbf77a451f6719f38a83f549c841131d8a6e4a2b91e86",
+          "memorySha256": "edf7d66ac96ca4f85c4fc1a24a3c1d2fc4e950b6697ae0e51fac2ed1f326e768",
+          "plannedCount": 15415,
+          "plannedSha256": "fbf8251c2cfa0f00baf77622b364ae6d69d54ff3ef5b18c622bd88f767a75e1b",
+          "commandCount": 15415,
+          "commandSha256": "6328a63a6491a7588d1c465899af96cdb4ca11615d48d043d004b831831ad077",
+          "effectsCreated": 17098,
+          "peakEffects": 171,
+          "finalEffects": 39,
+          "effectTypes": {
+            "mine": 220,
+            "build": 90,
+            "repair": 1421,
+            "move": 7513,
+            "attack": 2046,
+            "attackTarget": 281,
+            "bloodlust": 6,
+            "melee": 511,
+            "hit": 1093,
+            "projectile": 585,
+            "goldBounty": 37,
+            "heal": 328,
+            "queuedMove": 2732,
+            "summon": 60,
+            "itemReceived": 10,
+            "orderEnded": 9,
+            "board": 59,
+            "unload": 54,
+            "flameBurn": 13,
+            "guardianField": 5,
+            "queuedMine": 22,
+            "scorch": 1,
+            "curse": 2
+          },
+          "newReceipts": 0,
+          "traceCount": 4800,
+          "traceSha256": "3dc70b2d1aeebfa97522e0878533c79cad33c8d8cc1dc25153baea8a94821c28",
+          "ledgerErrors": []
+        }
+      }
+    },
+    {
+      "map": "sapphireArchipelago",
+      "tick": 18000,
+      "checksums": 18001,
+      "effectsCreated": {
+        "main": 7456,
+        "plain": 7456,
+        "trace": 7456
+      },
+      "peakEffects": {
+        "main": 51,
+        "plain": 51,
+        "trace": 51
+      },
+      "newReceipts": {
+        "main": 0,
+        "plain": 0,
+        "trace": 0
+      },
+      "traceCount": 7200,
+      "differences": {
+        "plain": [],
+        "trace": []
+      },
+      "firstChecksumDifference": {
+        "plain": null,
+        "trace": null
+      },
+      "summaries": {
+        "main": {
+          "source": "9e90ebf2",
+          "mode": "plain",
+          "config": {
+            "name": "death-sapphireArchipelago",
+            "mapId": "sapphireArchipelago",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_archer"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              },
+              "p2": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "grove",
+                "version": "v9_summoner"
+              },
+              "p3": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              },
+              "p4": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_archer"
+              },
+              "p5": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "5f9fc06542c335e8406c310e01219c2c75211d9999ee000d9fc03fd2a2e3fd84",
+          "finalChecksum": "a28c5c47",
+          "canonicalSha256": "fa990163ea38c6fd339754c4f0d28e223ff86a55cf2ba831de95549b74ac8139",
+          "snapshotSha256": "f8702671a76273df808561b21493c428474e366e01bfd29685694c9b7826103d",
+          "memorySha256": "2fcf789508c867358ff1ab3eb4a4c841a651bbd3721b556e48c6f42e5ce993bc",
+          "plannedCount": 4296,
+          "plannedSha256": "210a85bf42961caee136396b8b09e64908d9497bf0a10b55c01f79cd9481911a",
+          "commandCount": 4294,
+          "commandSha256": "31fb88e1a6f64e80adb4f81d6ce254555e2a8f232ece65a3900c74f3a739dda1",
+          "effectsCreated": 7456,
+          "peakEffects": 51,
+          "finalEffects": 9,
+          "effectTypes": {
+            "mine": 247,
+            "build": 97,
+            "repair": 1456,
+            "move": 2531,
+            "queuedMine": 75,
+            "attack": 188,
+            "board": 104,
+            "unload": 89,
+            "projectile": 756,
+            "hit": 1285,
+            "attackTarget": 45,
+            "melee": 148,
+            "goldBounty": 29,
+            "muzzleFlash": 78,
+            "siegeBolt": 78,
+            "siegeImpact": 76,
+            "burningGround": 35,
+            "orderEnded": 4,
+            "summon": 46,
+            "heal": 77,
+            "flameBurn": 12
+          },
+          "newReceipts": 0,
+          "traceCount": 0,
+          "traceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ledgerErrors": []
+        },
+        "plain": {
+          "source": "737b507f",
+          "mode": "plain",
+          "config": {
+            "name": "death-sapphireArchipelago",
+            "mapId": "sapphireArchipelago",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_archer"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              },
+              "p2": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "grove",
+                "version": "v9_summoner"
+              },
+              "p3": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              },
+              "p4": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_archer"
+              },
+              "p5": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "5f9fc06542c335e8406c310e01219c2c75211d9999ee000d9fc03fd2a2e3fd84",
+          "finalChecksum": "a28c5c47",
+          "canonicalSha256": "fa990163ea38c6fd339754c4f0d28e223ff86a55cf2ba831de95549b74ac8139",
+          "snapshotSha256": "f8702671a76273df808561b21493c428474e366e01bfd29685694c9b7826103d",
+          "memorySha256": "2fcf789508c867358ff1ab3eb4a4c841a651bbd3721b556e48c6f42e5ce993bc",
+          "plannedCount": 4296,
+          "plannedSha256": "210a85bf42961caee136396b8b09e64908d9497bf0a10b55c01f79cd9481911a",
+          "commandCount": 4294,
+          "commandSha256": "31fb88e1a6f64e80adb4f81d6ce254555e2a8f232ece65a3900c74f3a739dda1",
+          "effectsCreated": 7456,
+          "peakEffects": 51,
+          "finalEffects": 9,
+          "effectTypes": {
+            "mine": 247,
+            "build": 97,
+            "repair": 1456,
+            "move": 2531,
+            "queuedMine": 75,
+            "attack": 188,
+            "board": 104,
+            "unload": 89,
+            "projectile": 756,
+            "hit": 1285,
+            "attackTarget": 45,
+            "melee": 148,
+            "goldBounty": 29,
+            "muzzleFlash": 78,
+            "siegeBolt": 78,
+            "siegeImpact": 76,
+            "burningGround": 35,
+            "orderEnded": 4,
+            "summon": 46,
+            "heal": 77,
+            "flameBurn": 12
+          },
+          "newReceipts": 0,
+          "traceCount": 0,
+          "traceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ledgerErrors": []
+        },
+        "trace": {
+          "source": "737b507f",
+          "mode": "trace",
+          "config": {
+            "name": "death-sapphireArchipelago",
+            "mapId": "sapphireArchipelago",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_archer"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              },
+              "p2": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "grove",
+                "version": "v9_summoner"
+              },
+              "p3": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              },
+              "p4": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_archer"
+              },
+              "p5": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "5f9fc06542c335e8406c310e01219c2c75211d9999ee000d9fc03fd2a2e3fd84",
+          "finalChecksum": "a28c5c47",
+          "canonicalSha256": "fa990163ea38c6fd339754c4f0d28e223ff86a55cf2ba831de95549b74ac8139",
+          "snapshotSha256": "f8702671a76273df808561b21493c428474e366e01bfd29685694c9b7826103d",
+          "memorySha256": "2fcf789508c867358ff1ab3eb4a4c841a651bbd3721b556e48c6f42e5ce993bc",
+          "plannedCount": 4296,
+          "plannedSha256": "210a85bf42961caee136396b8b09e64908d9497bf0a10b55c01f79cd9481911a",
+          "commandCount": 4294,
+          "commandSha256": "31fb88e1a6f64e80adb4f81d6ce254555e2a8f232ece65a3900c74f3a739dda1",
+          "effectsCreated": 7456,
+          "peakEffects": 51,
+          "finalEffects": 9,
+          "effectTypes": {
+            "mine": 247,
+            "build": 97,
+            "repair": 1456,
+            "move": 2531,
+            "queuedMine": 75,
+            "attack": 188,
+            "board": 104,
+            "unload": 89,
+            "projectile": 756,
+            "hit": 1285,
+            "attackTarget": 45,
+            "melee": 148,
+            "goldBounty": 29,
+            "muzzleFlash": 78,
+            "siegeBolt": 78,
+            "siegeImpact": 76,
+            "burningGround": 35,
+            "orderEnded": 4,
+            "summon": 46,
+            "heal": 77,
+            "flameBurn": 12
+          },
+          "newReceipts": 0,
+          "traceCount": 7200,
+          "traceSha256": "635c932c0d0ba00621183977e36aab39fd50327edf516cacb61efb46c91fe24c",
+          "ledgerErrors": []
+        }
+      }
+    },
+    {
+      "map": "templeSpring",
+      "tick": 18000,
+      "checksums": 18001,
+      "effectsCreated": {
+        "main": 19931,
+        "plain": 19931,
+        "trace": 19931
+      },
+      "peakEffects": {
+        "main": 98,
+        "plain": 98,
+        "trace": 98
+      },
+      "newReceipts": {
+        "main": 0,
+        "plain": 0,
+        "trace": 0
+      },
+      "traceCount": 4800,
+      "differences": {
+        "plain": [],
+        "trace": []
+      },
+      "firstChecksumDifference": {
+        "plain": null,
+        "trace": null
+      },
+      "summaries": {
+        "main": {
+          "source": "9e90ebf2",
+          "mode": "plain",
+          "config": {
+            "name": "death-templeSpring",
+            "mapId": "templeSpring",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_knight"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              },
+              "p2": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "grove",
+                "version": "v9_summoner"
+              },
+              "p3": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "d516f19939c9976dd4bd0a5cda4d4f6d60f0ab38206fb25bf9b3919e6c9ec870",
+          "finalChecksum": "b245d3cc",
+          "canonicalSha256": "8e5845828f8bbbbf19a54654aeef1fbd0dbd3816d40699e7fe13db22e9c4af02",
+          "snapshotSha256": "e14a792b6ce6aec74d0d75a07ecd9330934d8b971a5d03b51a98cdbce4896cfd",
+          "memorySha256": "9b78fdecccfb691bae9906efd398060fa3a98171bf2530629917c8cb84e62c6c",
+          "plannedCount": 17993,
+          "plannedSha256": "98c780bb9eb99d2bccea2f4e7252762e2ddef906db46422d72179c5a6ad15a20",
+          "commandCount": 17992,
+          "commandSha256": "d7bd70f63bbe50ae862c6b8f112b2e62df0a50ff3a1bd46179ee4d5953a033b1",
+          "effectsCreated": 19931,
+          "peakEffects": 98,
+          "finalEffects": 55,
+          "effectTypes": {
+            "mine": 213,
+            "build": 92,
+            "repair": 1490,
+            "move": 12244,
+            "attack": 1412,
+            "attackTarget": 314,
+            "bloodlust": 15,
+            "melee": 546,
+            "hit": 1172,
+            "projectile": 582,
+            "goldBounty": 33,
+            "summon": 57,
+            "heal": 143,
+            "queuedMove": 1410,
+            "board": 40,
+            "itemReceived": 7,
+            "orderEnded": 56,
+            "unload": 35,
+            "queuedMine": 13,
+            "chainLightning": 8,
+            "stomp": 4,
+            "siegeBolt": 44,
+            "scorch": 1
+          },
+          "newReceipts": 0,
+          "traceCount": 0,
+          "traceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ledgerErrors": []
+        },
+        "plain": {
+          "source": "737b507f",
+          "mode": "plain",
+          "config": {
+            "name": "death-templeSpring",
+            "mapId": "templeSpring",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_knight"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              },
+              "p2": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "grove",
+                "version": "v9_summoner"
+              },
+              "p3": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "d516f19939c9976dd4bd0a5cda4d4f6d60f0ab38206fb25bf9b3919e6c9ec870",
+          "finalChecksum": "b245d3cc",
+          "canonicalSha256": "8e5845828f8bbbbf19a54654aeef1fbd0dbd3816d40699e7fe13db22e9c4af02",
+          "snapshotSha256": "e14a792b6ce6aec74d0d75a07ecd9330934d8b971a5d03b51a98cdbce4896cfd",
+          "memorySha256": "9b78fdecccfb691bae9906efd398060fa3a98171bf2530629917c8cb84e62c6c",
+          "plannedCount": 17993,
+          "plannedSha256": "98c780bb9eb99d2bccea2f4e7252762e2ddef906db46422d72179c5a6ad15a20",
+          "commandCount": 17992,
+          "commandSha256": "d7bd70f63bbe50ae862c6b8f112b2e62df0a50ff3a1bd46179ee4d5953a033b1",
+          "effectsCreated": 19931,
+          "peakEffects": 98,
+          "finalEffects": 55,
+          "effectTypes": {
+            "mine": 213,
+            "build": 92,
+            "repair": 1490,
+            "move": 12244,
+            "attack": 1412,
+            "attackTarget": 314,
+            "bloodlust": 15,
+            "melee": 546,
+            "hit": 1172,
+            "projectile": 582,
+            "goldBounty": 33,
+            "summon": 57,
+            "heal": 143,
+            "queuedMove": 1410,
+            "board": 40,
+            "itemReceived": 7,
+            "orderEnded": 56,
+            "unload": 35,
+            "queuedMine": 13,
+            "chainLightning": 8,
+            "stomp": 4,
+            "siegeBolt": 44,
+            "scorch": 1
+          },
+          "newReceipts": 0,
+          "traceCount": 0,
+          "traceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ledgerErrors": []
+        },
+        "trace": {
+          "source": "737b507f",
+          "mode": "trace",
+          "config": {
+            "name": "death-templeSpring",
+            "mapId": "templeSpring",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_knight"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              },
+              "p2": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "grove",
+                "version": "v9_summoner"
+              },
+              "p3": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "d516f19939c9976dd4bd0a5cda4d4f6d60f0ab38206fb25bf9b3919e6c9ec870",
+          "finalChecksum": "b245d3cc",
+          "canonicalSha256": "8e5845828f8bbbbf19a54654aeef1fbd0dbd3816d40699e7fe13db22e9c4af02",
+          "snapshotSha256": "e14a792b6ce6aec74d0d75a07ecd9330934d8b971a5d03b51a98cdbce4896cfd",
+          "memorySha256": "9b78fdecccfb691bae9906efd398060fa3a98171bf2530629917c8cb84e62c6c",
+          "plannedCount": 17993,
+          "plannedSha256": "98c780bb9eb99d2bccea2f4e7252762e2ddef906db46422d72179c5a6ad15a20",
+          "commandCount": 17992,
+          "commandSha256": "d7bd70f63bbe50ae862c6b8f112b2e62df0a50ff3a1bd46179ee4d5953a033b1",
+          "effectsCreated": 19931,
+          "peakEffects": 98,
+          "finalEffects": 55,
+          "effectTypes": {
+            "mine": 213,
+            "build": 92,
+            "repair": 1490,
+            "move": 12244,
+            "attack": 1412,
+            "attackTarget": 314,
+            "bloodlust": 15,
+            "melee": 546,
+            "hit": 1172,
+            "projectile": 582,
+            "goldBounty": 33,
+            "summon": 57,
+            "heal": 143,
+            "queuedMove": 1410,
+            "board": 40,
+            "itemReceived": 7,
+            "orderEnded": 56,
+            "unload": 35,
+            "queuedMine": 13,
+            "chainLightning": 8,
+            "stomp": 4,
+            "siegeBolt": 44,
+            "scorch": 1
+          },
+          "newReceipts": 0,
+          "traceCount": 4800,
+          "traceSha256": "e44b2216b18a7f4a567964ee545cd64ee82483ff8d52dfeaa268e09097fd384e",
+          "ledgerErrors": []
+        }
+      }
+    },
+    {
+      "map": "turtleLake",
+      "tick": 18000,
+      "checksums": 18001,
+      "effectsCreated": {
+        "main": 27372,
+        "plain": 27372,
+        "trace": 27372
+      },
+      "peakEffects": {
+        "main": 151,
+        "plain": 151,
+        "trace": 151
+      },
+      "newReceipts": {
+        "main": 0,
+        "plain": 0,
+        "trace": 0
+      },
+      "traceCount": 4800,
+      "differences": {
+        "plain": [],
+        "trace": []
+      },
+      "firstChecksumDifference": {
+        "plain": null,
+        "trace": null
+      },
+      "summaries": {
+        "main": {
+          "source": "9e90ebf2",
+          "mode": "plain",
+          "config": {
+            "name": "death-turtleLake",
+            "mapId": "turtleLake",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_archer"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              },
+              "p2": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "grove",
+                "version": "v9_summoner"
+              },
+              "p3": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "d8963214fdbab43bf091b11753515608ba3d8a680ac5522016131bcfc787de43",
+          "finalChecksum": "06f43cc6",
+          "canonicalSha256": "afcb13e34018074fc4da0195bda9e94b488585d2e1536ea5008751662a58d3a7",
+          "snapshotSha256": "84966a4362b456bb7a7b7c73828ee64a56a902fa27001aab03424f8b2fced7dd",
+          "memorySha256": "9f8cf1aafce33d8a7b32914318c36eb5d6836e32789614c069f12382d222c058",
+          "plannedCount": 27559,
+          "plannedSha256": "47f264bcc6970864d9d466bd13971f847c7b84c4f9725d5094e61d35e7ba1f63",
+          "commandCount": 27559,
+          "commandSha256": "daf2522204b00b4eae5ed26f6c9b2b4587161678b489a0076aae15ec04f7281c",
+          "effectsCreated": 27372,
+          "peakEffects": 151,
+          "finalEffects": 59,
+          "effectTypes": {
+            "mine": 504,
+            "build": 87,
+            "repair": 1401,
+            "orderEnded": 25,
+            "move": 13625,
+            "attack": 3539,
+            "attackTarget": 849,
+            "bloodlust": 13,
+            "melee": 403,
+            "hit": 1718,
+            "projectile": 1066,
+            "goldBounty": 35,
+            "burningGround": 32,
+            "heal": 436,
+            "summon": 109,
+            "queuedMove": 3199,
+            "experienceBurst": 4,
+            "queuedMine": 298,
+            "flameBurn": 5,
+            "curse": 7,
+            "siegeBolt": 17
+          },
+          "newReceipts": 0,
+          "traceCount": 0,
+          "traceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ledgerErrors": []
+        },
+        "plain": {
+          "source": "737b507f",
+          "mode": "plain",
+          "config": {
+            "name": "death-turtleLake",
+            "mapId": "turtleLake",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_archer"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              },
+              "p2": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "grove",
+                "version": "v9_summoner"
+              },
+              "p3": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "d8963214fdbab43bf091b11753515608ba3d8a680ac5522016131bcfc787de43",
+          "finalChecksum": "06f43cc6",
+          "canonicalSha256": "afcb13e34018074fc4da0195bda9e94b488585d2e1536ea5008751662a58d3a7",
+          "snapshotSha256": "84966a4362b456bb7a7b7c73828ee64a56a902fa27001aab03424f8b2fced7dd",
+          "memorySha256": "9f8cf1aafce33d8a7b32914318c36eb5d6836e32789614c069f12382d222c058",
+          "plannedCount": 27559,
+          "plannedSha256": "47f264bcc6970864d9d466bd13971f847c7b84c4f9725d5094e61d35e7ba1f63",
+          "commandCount": 27559,
+          "commandSha256": "daf2522204b00b4eae5ed26f6c9b2b4587161678b489a0076aae15ec04f7281c",
+          "effectsCreated": 27372,
+          "peakEffects": 151,
+          "finalEffects": 59,
+          "effectTypes": {
+            "mine": 504,
+            "build": 87,
+            "repair": 1401,
+            "orderEnded": 25,
+            "move": 13625,
+            "attack": 3539,
+            "attackTarget": 849,
+            "bloodlust": 13,
+            "melee": 403,
+            "hit": 1718,
+            "projectile": 1066,
+            "goldBounty": 35,
+            "burningGround": 32,
+            "heal": 436,
+            "summon": 109,
+            "queuedMove": 3199,
+            "experienceBurst": 4,
+            "queuedMine": 298,
+            "flameBurn": 5,
+            "curse": 7,
+            "siegeBolt": 17
+          },
+          "newReceipts": 0,
+          "traceCount": 0,
+          "traceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ledgerErrors": []
+        },
+        "trace": {
+          "source": "737b507f",
+          "mode": "trace",
+          "config": {
+            "name": "death-turtleLake",
+            "mapId": "turtleLake",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_archer"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              },
+              "p2": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "grove",
+                "version": "v9_summoner"
+              },
+              "p3": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "d8963214fdbab43bf091b11753515608ba3d8a680ac5522016131bcfc787de43",
+          "finalChecksum": "06f43cc6",
+          "canonicalSha256": "afcb13e34018074fc4da0195bda9e94b488585d2e1536ea5008751662a58d3a7",
+          "snapshotSha256": "84966a4362b456bb7a7b7c73828ee64a56a902fa27001aab03424f8b2fced7dd",
+          "memorySha256": "9f8cf1aafce33d8a7b32914318c36eb5d6836e32789614c069f12382d222c058",
+          "plannedCount": 27559,
+          "plannedSha256": "47f264bcc6970864d9d466bd13971f847c7b84c4f9725d5094e61d35e7ba1f63",
+          "commandCount": 27559,
+          "commandSha256": "daf2522204b00b4eae5ed26f6c9b2b4587161678b489a0076aae15ec04f7281c",
+          "effectsCreated": 27372,
+          "peakEffects": 151,
+          "finalEffects": 59,
+          "effectTypes": {
+            "mine": 504,
+            "build": 87,
+            "repair": 1401,
+            "orderEnded": 25,
+            "move": 13625,
+            "attack": 3539,
+            "attackTarget": 849,
+            "bloodlust": 13,
+            "melee": 403,
+            "hit": 1718,
+            "projectile": 1066,
+            "goldBounty": 35,
+            "burningGround": 32,
+            "heal": 436,
+            "summon": 109,
+            "queuedMove": 3199,
+            "experienceBurst": 4,
+            "queuedMine": 298,
+            "flameBurn": 5,
+            "curse": 7,
+            "siegeBolt": 17
+          },
+          "newReceipts": 0,
+          "traceCount": 4800,
+          "traceSha256": "f40e7b6d51906584efcdee7cb35f0baa90ba10a5e7d070b12b0d03d45d3e87ee",
+          "ledgerErrors": []
+        }
+      }
+    },
+    {
+      "map": "twoShores",
+      "tick": 18000,
+      "checksums": 18001,
+      "effectsCreated": {
+        "main": 19198,
+        "plain": 19198,
+        "trace": 19198
+      },
+      "peakEffects": {
+        "main": 155,
+        "plain": 155,
+        "trace": 155
+      },
+      "newReceipts": {
+        "main": 0,
+        "plain": 0,
+        "trace": 0
+      },
+      "traceCount": 4800,
+      "differences": {
+        "plain": [],
+        "trace": []
+      },
+      "firstChecksumDifference": {
+        "plain": null,
+        "trace": null
+      },
+      "summaries": {
+        "main": {
+          "source": "9e90ebf2",
+          "mode": "plain",
+          "config": {
+            "name": "death-twoShores",
+            "mapId": "twoShores",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_archer"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              },
+              "p2": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "grove",
+                "version": "v9_summoner"
+              },
+              "p3": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "2f7fffe5b272f0ed0ff3ffe6db80fbf31ce1d9fe96b9f185decf121491c2dc3f",
+          "finalChecksum": "3799e673",
+          "canonicalSha256": "4645a7f2b167e6c0016b3269c105e3915d17754a98eabdfc2472dc1e8a11483f",
+          "snapshotSha256": "77457d4dac10a149a6ece59d7cb0132bd65744241cd79aeef3751bb93d529599",
+          "memorySha256": "a3568f11314e90c2e0d95918815a5767ec0ef7e5fae32ddd6d247ca62b52faab",
+          "plannedCount": 17138,
+          "plannedSha256": "0d78796cb14d31ebc5412bbbfe77b92c8e333876b83661cb659fb106fe970530",
+          "commandCount": 17138,
+          "commandSha256": "eae28c53ef5148a138d5e70aedc002a2c7ca1b18594685b70efda4e2f22009a0",
+          "effectsCreated": 19198,
+          "peakEffects": 155,
+          "finalEffects": 26,
+          "effectTypes": {
+            "mine": 247,
+            "build": 90,
+            "repair": 1605,
+            "orderEnded": 17,
+            "move": 6725,
+            "attack": 2859,
+            "bloodlust": 15,
+            "projectile": 940,
+            "hit": 1565,
+            "melee": 490,
+            "goldBounty": 39,
+            "attackTarget": 287,
+            "summon": 42,
+            "burningGround": 27,
+            "heal": 281,
+            "queuedMove": 3832,
+            "experienceBurst": 4,
+            "queuedMine": 59,
+            "board": 41,
+            "unload": 26,
+            "chargeTrail": 3,
+            "storm": 1,
+            "chargeImpact": 1,
+            "curse": 2
+          },
+          "newReceipts": 0,
+          "traceCount": 0,
+          "traceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ledgerErrors": []
+        },
+        "plain": {
+          "source": "737b507f",
+          "mode": "plain",
+          "config": {
+            "name": "death-twoShores",
+            "mapId": "twoShores",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_archer"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              },
+              "p2": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "grove",
+                "version": "v9_summoner"
+              },
+              "p3": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "2f7fffe5b272f0ed0ff3ffe6db80fbf31ce1d9fe96b9f185decf121491c2dc3f",
+          "finalChecksum": "3799e673",
+          "canonicalSha256": "4645a7f2b167e6c0016b3269c105e3915d17754a98eabdfc2472dc1e8a11483f",
+          "snapshotSha256": "77457d4dac10a149a6ece59d7cb0132bd65744241cd79aeef3751bb93d529599",
+          "memorySha256": "a3568f11314e90c2e0d95918815a5767ec0ef7e5fae32ddd6d247ca62b52faab",
+          "plannedCount": 17138,
+          "plannedSha256": "0d78796cb14d31ebc5412bbbfe77b92c8e333876b83661cb659fb106fe970530",
+          "commandCount": 17138,
+          "commandSha256": "eae28c53ef5148a138d5e70aedc002a2c7ca1b18594685b70efda4e2f22009a0",
+          "effectsCreated": 19198,
+          "peakEffects": 155,
+          "finalEffects": 26,
+          "effectTypes": {
+            "mine": 247,
+            "build": 90,
+            "repair": 1605,
+            "orderEnded": 17,
+            "move": 6725,
+            "attack": 2859,
+            "bloodlust": 15,
+            "projectile": 940,
+            "hit": 1565,
+            "melee": 490,
+            "goldBounty": 39,
+            "attackTarget": 287,
+            "summon": 42,
+            "burningGround": 27,
+            "heal": 281,
+            "queuedMove": 3832,
+            "experienceBurst": 4,
+            "queuedMine": 59,
+            "board": 41,
+            "unload": 26,
+            "chargeTrail": 3,
+            "storm": 1,
+            "chargeImpact": 1,
+            "curse": 2
+          },
+          "newReceipts": 0,
+          "traceCount": 0,
+          "traceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ledgerErrors": []
+        },
+        "trace": {
+          "source": "737b507f",
+          "mode": "trace",
+          "config": {
+            "name": "death-twoShores",
+            "mapId": "twoShores",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_archer"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              },
+              "p2": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "grove",
+                "version": "v9_summoner"
+              },
+              "p3": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "2f7fffe5b272f0ed0ff3ffe6db80fbf31ce1d9fe96b9f185decf121491c2dc3f",
+          "finalChecksum": "3799e673",
+          "canonicalSha256": "4645a7f2b167e6c0016b3269c105e3915d17754a98eabdfc2472dc1e8a11483f",
+          "snapshotSha256": "77457d4dac10a149a6ece59d7cb0132bd65744241cd79aeef3751bb93d529599",
+          "memorySha256": "a3568f11314e90c2e0d95918815a5767ec0ef7e5fae32ddd6d247ca62b52faab",
+          "plannedCount": 17138,
+          "plannedSha256": "0d78796cb14d31ebc5412bbbfe77b92c8e333876b83661cb659fb106fe970530",
+          "commandCount": 17138,
+          "commandSha256": "eae28c53ef5148a138d5e70aedc002a2c7ca1b18594685b70efda4e2f22009a0",
+          "effectsCreated": 19198,
+          "peakEffects": 155,
+          "finalEffects": 26,
+          "effectTypes": {
+            "mine": 247,
+            "build": 90,
+            "repair": 1605,
+            "orderEnded": 17,
+            "move": 6725,
+            "attack": 2859,
+            "bloodlust": 15,
+            "projectile": 940,
+            "hit": 1565,
+            "melee": 490,
+            "goldBounty": 39,
+            "attackTarget": 287,
+            "summon": 42,
+            "burningGround": 27,
+            "heal": 281,
+            "queuedMove": 3832,
+            "experienceBurst": 4,
+            "queuedMine": 59,
+            "board": 41,
+            "unload": 26,
+            "chargeTrail": 3,
+            "storm": 1,
+            "chargeImpact": 1,
+            "curse": 2
+          },
+          "newReceipts": 0,
+          "traceCount": 4800,
+          "traceSha256": "f32a512304e8edf7dddd5a73383fc478b4cad41ba5ad93d59e589bd5ec821180",
+          "ledgerErrors": []
+        }
+      }
+    },
+    {
+      "map": "veiledHill",
+      "tick": 18000,
+      "checksums": 18001,
+      "effectsCreated": {
+        "main": 7478,
+        "plain": 7478,
+        "trace": 7478
+      },
+      "peakEffects": {
+        "main": 72,
+        "plain": 72,
+        "trace": 72
+      },
+      "newReceipts": {
+        "main": 0,
+        "plain": 0,
+        "trace": 0
+      },
+      "traceCount": 2400,
+      "differences": {
+        "plain": [],
+        "trace": []
+      },
+      "firstChecksumDifference": {
+        "plain": null,
+        "trace": null
+      },
+      "summaries": {
+        "main": {
+          "source": "9e90ebf2",
+          "mode": "plain",
+          "config": {
+            "name": "death-veiledHill",
+            "mapId": "veiledHill",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_archer"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "cc302a1f4fce54d652d9e95811b8bd9410e4f4147aca445dc68c255121c0ef90",
+          "finalChecksum": "8612574a",
+          "canonicalSha256": "8e7c6f10d36bdf98e28178930169af62c4ac5ae6b6e02670c1c3948daf4c1b78",
+          "snapshotSha256": "6cc4b359fa716d1b84fdc0debedba38142a46239d4c25f33593f647760505ebe",
+          "memorySha256": "3404f164485b5e641e6b31e61322a0c4bafa3b422ae8b15634996e2068761953",
+          "plannedCount": 9911,
+          "plannedSha256": "3b65558c5f7c203c6eec62202881a3930185715420323c32ad2f82cf1c61fe1b",
+          "commandCount": 9910,
+          "commandSha256": "20353154941e05badc3d8ffe599535c0fe938273baa553b697ae3e36d24b9bd0",
+          "effectsCreated": 7478,
+          "peakEffects": 72,
+          "finalEffects": 21,
+          "effectTypes": {
+            "mine": 102,
+            "build": 38,
+            "repair": 657,
+            "orderEnded": 17,
+            "move": 3592,
+            "attack": 501,
+            "bloodlust": 5,
+            "melee": 101,
+            "hit": 659,
+            "projectile": 457,
+            "goldBounty": 21,
+            "burningGround": 17,
+            "chainLightning": 15,
+            "queuedMove": 696,
+            "heal": 281,
+            "summon": 6,
+            "attackTarget": 274,
+            "flameBurn": 9,
+            "experienceBurst": 2,
+            "itemReceived": 3,
+            "queuedMine": 4,
+            "siegeBolt": 15,
+            "shellFlight": 3,
+            "siegeImpact": 3
+          },
+          "newReceipts": 0,
+          "traceCount": 0,
+          "traceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ledgerErrors": []
+        },
+        "plain": {
+          "source": "737b507f",
+          "mode": "plain",
+          "config": {
+            "name": "death-veiledHill",
+            "mapId": "veiledHill",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_archer"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "cc302a1f4fce54d652d9e95811b8bd9410e4f4147aca445dc68c255121c0ef90",
+          "finalChecksum": "8612574a",
+          "canonicalSha256": "8e7c6f10d36bdf98e28178930169af62c4ac5ae6b6e02670c1c3948daf4c1b78",
+          "snapshotSha256": "6cc4b359fa716d1b84fdc0debedba38142a46239d4c25f33593f647760505ebe",
+          "memorySha256": "3404f164485b5e641e6b31e61322a0c4bafa3b422ae8b15634996e2068761953",
+          "plannedCount": 9911,
+          "plannedSha256": "3b65558c5f7c203c6eec62202881a3930185715420323c32ad2f82cf1c61fe1b",
+          "commandCount": 9910,
+          "commandSha256": "20353154941e05badc3d8ffe599535c0fe938273baa553b697ae3e36d24b9bd0",
+          "effectsCreated": 7478,
+          "peakEffects": 72,
+          "finalEffects": 21,
+          "effectTypes": {
+            "mine": 102,
+            "build": 38,
+            "repair": 657,
+            "orderEnded": 17,
+            "move": 3592,
+            "attack": 501,
+            "bloodlust": 5,
+            "melee": 101,
+            "hit": 659,
+            "projectile": 457,
+            "goldBounty": 21,
+            "burningGround": 17,
+            "chainLightning": 15,
+            "queuedMove": 696,
+            "heal": 281,
+            "summon": 6,
+            "attackTarget": 274,
+            "flameBurn": 9,
+            "experienceBurst": 2,
+            "itemReceived": 3,
+            "queuedMine": 4,
+            "siegeBolt": 15,
+            "shellFlight": 3,
+            "siegeImpact": 3
+          },
+          "newReceipts": 0,
+          "traceCount": 0,
+          "traceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "ledgerErrors": []
+        },
+        "trace": {
+          "source": "737b507f",
+          "mode": "trace",
+          "config": {
+            "name": "death-veiledHill",
+            "mapId": "veiledHill",
+            "maxTicks": 18000,
+            "thinkInterval": 15,
+            "agents": {
+              "p0": {
+                "controller": "external-agent",
+                "team": "home",
+                "race": "ember",
+                "version": "v9_archer"
+              },
+              "p1": {
+                "controller": "external-agent",
+                "team": "enemy",
+                "race": "grove",
+                "version": "v9_archer"
+              }
+            },
+            "source": "276e5d29"
+          },
+          "tick": 18000,
+          "checksumCount": 18001,
+          "checksumSequenceSha256": "cc302a1f4fce54d652d9e95811b8bd9410e4f4147aca445dc68c255121c0ef90",
+          "finalChecksum": "8612574a",
+          "canonicalSha256": "8e7c6f10d36bdf98e28178930169af62c4ac5ae6b6e02670c1c3948daf4c1b78",
+          "snapshotSha256": "6cc4b359fa716d1b84fdc0debedba38142a46239d4c25f33593f647760505ebe",
+          "memorySha256": "3404f164485b5e641e6b31e61322a0c4bafa3b422ae8b15634996e2068761953",
+          "plannedCount": 9911,
+          "plannedSha256": "3b65558c5f7c203c6eec62202881a3930185715420323c32ad2f82cf1c61fe1b",
+          "commandCount": 9910,
+          "commandSha256": "20353154941e05badc3d8ffe599535c0fe938273baa553b697ae3e36d24b9bd0",
+          "effectsCreated": 7478,
+          "peakEffects": 72,
+          "finalEffects": 21,
+          "effectTypes": {
+            "mine": 102,
+            "build": 38,
+            "repair": 657,
+            "orderEnded": 17,
+            "move": 3592,
+            "attack": 501,
+            "bloodlust": 5,
+            "melee": 101,
+            "hit": 659,
+            "projectile": 457,
+            "goldBounty": 21,
+            "burningGround": 17,
+            "chainLightning": 15,
+            "queuedMove": 696,
+            "heal": 281,
+            "summon": 6,
+            "attackTarget": 274,
+            "flameBurn": 9,
+            "experienceBurst": 2,
+            "itemReceived": 3,
+            "queuedMine": 4,
+            "siegeBolt": 15,
+            "shellFlight": 3,
+            "siegeImpact": 3
+          },
+          "newReceipts": 0,
+          "traceCount": 2400,
+          "traceSha256": "ea43fe96608a376572fd06b6d3bf8dbf7d5ab4ec611ce68f0cdcf16518a43f0d",
+          "ledgerErrors": []
+        }
+      }
+    }
+  ],
+  "allEqual": true,
+  "newReceipts": 0,
+  "artifact": {
+    "path": "/codegeex/jeffry/sketch-rts-camps/command-refusal-ai-737b507f/evidence.tar.gz",
+    "machine": "a100",
+    "sha256": "d26a9c577a3b94e1f0d2493057c7ab686b6682c9c7271675459d77f504e1d521",
+    "bytes": 12164029,
+    "manifestSha256": "01914dbc44b9ebb5f4cd73b0bfadb9265b5eb0b4eacd387a37bae16ddb860b6e",
+    "sourceMain": "9e90ebf2",
+    "sourceCandidate": "737b507f",
+    "files": 116,
+    "ticksPerArm": 198011,
+    "traceCount": 43200
+  },
+  "independentValidation": {
+    "artifactSha256": "d26a9c577a3b94e1f0d2493057c7ab686b6682c9c7271675459d77f504e1d521",
+    "manifestFilesVerified": 116,
+    "mapsVerified": 11,
+    "ticksPerArm": 198011,
+    "rawSequencesByteEqual": true,
+    "newAiReceipts": 0,
+    "traceCount": 43200
+  }
+}

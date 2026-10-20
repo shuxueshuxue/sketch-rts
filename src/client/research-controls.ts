@@ -62,7 +62,6 @@ export function researchProgressButtonsForSelection(buildings: Building[], playe
 
 function canResearchAtBuilding(building: Building, upgradeKind: UpgradeKind, race: RaceId) {
   return (
-    building.complete &&
     building.researchQueue.every((job) => job.upgradeKind !== upgradeKind) &&
     canResearchAt(race, building.kind, upgradeKind)
   );

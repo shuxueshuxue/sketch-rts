@@ -8,7 +8,6 @@ import { towerTopLift } from "./tower-presentation";
 import { isFortifiedTower } from "../shared/tower-garrison";
 import { circleInPolygon, worldToLocal, shipProfile } from "../shared/ship-geometry";
 import { areEnemyOwners } from "../shared/sim/command-validation";
-import { canReach } from "../shared/naval";
 import type { Building, GameCommand, GameSnapshot, Obstacle, Owner, PlayerId, ResourceNode, Unit, WorldItem } from "../shared/types";
 
 type Point = { x: number; y: number };
@@ -105,14 +104,12 @@ export function pointerTarget(snapshot: Pick<GameSnapshot, "items" | "resources"
 // in Warcraft III: workers mine a mine and repair own damaged buildings or mechanical units; soldiers board an own transport (see
 // @@@transport) and climb onto an own fortified tower (see @@@tower-garrison); an enemy's or the creeps' unit or building, or rocks or a gate, is attacked; an ally's unit is followed
 // (see @@@follow). Anything else (an own unit or building, an ally's building, a mine for soldiers) is a move there.
-// @@@context-reach - An attack goes to the selected units that can come within reach of the target, by the sim's own
-// test (canReach: a footman reaches no ship out on deep water; crew on a deck are left to boarding); the others are
-// walked there (the caller moves them).
-// When none can, the click is refused with the reason, instead of an order the whole selection could never carry out.
+// @@@context-reach - Preserve the selected actors in the attack intent. The shared rule entry judges reachability;
+// actors that cannot reach the target receive a refusal and keep their existing orders.
 export type ContextRefusal = { refusal: "unreachable" };
 
 export function targetCommand(
-  snapshot: Pick<GameSnapshot, "teams" | "map" | "units"> & Partial<Pick<GameSnapshot,"items" | "variants">>,
+  snapshot: GameSnapshot,
   owner: PlayerId,
   selected: readonly Unit[],
   target: Exclude<PointerTarget, { kind: "item" }>,
@@ -120,7 +117,7 @@ export function targetCommand(
 ): GameCommand | ContextRefusal | undefined {
   const ids = (units: readonly Unit[]) => units.map((unit) => unit.id);
   const workers = selected.filter((unit) => unit.kind === "worker");
-  if (target.kind === "resource") return workers.length > 0 ? { type: "mine", unitIds: ids(workers), resourceId: target.resource.id, queued } : undefined;
+  if (target.kind === "resource") return workers.length > 0 ? { type: "mine", unitIds: ids(selected), resourceId: target.resource.id, queued } : undefined;
   if (target.kind === "obstacle") return { type: "attack", unitIds: ids(selected), targetId: target.obstacle.id, queued };
   const thing = target.kind === "unit" ? target.unit : target.building;
   const relation = relationTo(snapshot, owner, thing.owner);
@@ -132,13 +129,12 @@ export function targetCommand(
     if(relation==='enemy' || relation==='creep' || selected.some(unit=>unit.deck))return undefined;
   }
   if (relation === "enemy" || relation === "creep") {
-    // Crew on a deck reach across by boarding, which their own order sees to: they keep the attack as given.
-    const strikers = selected.filter((unit) => unit.deck || canReach(snapshot.map, unit, thing, snapshot.units));
-    return strikers.length ? { type: "attack", unitIds: ids(strikers), targetId: thing.id, queued } : { refusal: "unreachable" };
+    // Preserve every selected actor; shared refusalFor decides reachability and emits per-unit receipts.
+    return { type: "attack", unitIds: ids(selected), targetId: thing.id, queued };
   }
   if (target.kind === "building") {
     const damaged = relation === "own" && target.building.hp < target.building.maxHp;
-    if (damaged && workers.length > 0) return { type: "repair", unitIds: ids(workers), buildingId: target.building.id, queued };
+    if (damaged && workers.length > 0) return { type: "repair", unitIds: ids(selected), buildingId: target.building.id, queued };
     // An own fortified tower takes up the troops that can stand on its top (see @@@tower-garrison).
     const climbers = relation === "own" && isFortifiedTower(target.building) ? selected.filter(unit => unit.garrison?.buildingId !== target.building.id) : [];
     return climbers.length ? { type: "garrison", unitIds: ids(climbers), buildingId: target.building.id, queued } : undefined;
@@ -146,7 +142,7 @@ export function targetCommand(
   if (relation === "ally") return { type: "follow", unitIds: ids(selected), targetId: thing.id, queued };
   if (isShipKind(target.unit.kind) && selected.length && selected.every(unit => unit.deck?.shipId === target.unit.id)) return undefined;
   if (unitNeedsRepair({ ...snapshot, items: snapshot.items ?? [] }, target.unit) && workers.length)
-    return { type: "repairUnit", unitIds: ids(workers), targetId: target.unit.id, queued };
+    return { type: "repairUnit", unitIds: ids(selected), targetId: target.unit.id, queued };
   const boarders = selected.filter((unit) => !UNIT_DEFS[unit.kind].naval && !unit.deck);
-  return isShipKind(target.unit.kind) && boarders.length > 0 ? { type: "board", unitIds: ids(boarders), transportId: target.unit.id, queued } : undefined;
+  return isShipKind(target.unit.kind) && boarders.length > 0 ? { type: "board", unitIds: ids(selected), transportId: target.unit.id, queued } : undefined;
 }

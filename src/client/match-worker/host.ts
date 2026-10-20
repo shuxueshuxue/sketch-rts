@@ -1,3 +1,4 @@
+import { refusalFromError } from "../../shared/command-refusal";
 import { replaySnapshotToTick, type DebugReplayTrace } from '../../shared/replay';
 import { createAiRuntime, type AiThinkExecutor, type AiThinkExecutorFactory } from "../../ai/runtime";
 import { createAiThinkClientExecutor } from "../../ai/think-worker/client";
@@ -101,7 +102,7 @@ export function createMatchThreadHost(post: (event: MatchThreadEvent) => void) {
             playerId: message.playerId,
             engine: new SimulationEngine(warmedGame(message.mapId, message.options)),
             transport: { send: (net) => post({ type: "net", message: net }), onMessage: (handler) => { netHandlers.push(handler); }, close() {} },
-            onError: (error) => post({ type: "error", message: error }),
+            onError: (error, refusal) => post({ type: "error", message: error, ...(refusal ? { refusal } : {}) }),
           });
           return;
         }
@@ -117,7 +118,8 @@ export function createMatchThreadHost(post: (event: MatchThreadEvent) => void) {
             if (local) local.sendCommand(message.command);
             else lockstep?.sendCommand(message.command);
           } catch (error) {
-            post({ type: "rejected", message: error instanceof Error ? error.message : String(error) });
+            const refusal = refusalFromError(error);
+            post({ type: "rejected", message: error instanceof Error ? error.message : String(error), ...(refusal ? { refusal } : {}) });
           }
           return;
         }

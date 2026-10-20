@@ -6,6 +6,18 @@ import { CHECKSUM_VERSION, checksumGame } from "./sim/checksum";
 import { createGame, issuePlayerCommand, refreshUnitStats, stepGame } from "./sim";
 
 describe("savegame runtime sync metadata", () => {
+  it("loads a rules-eight/checksum-22 save with an old coarse order receipt", () => {
+    const game = createGame("bareDuel", { aiPlayers: [] });
+    game.effects.push({ id: "old-receipt", type: "orderEnded", owner: "player", x: 100, y: 100, duration: 8, remaining: 8, reason: "refused" });
+    const room = { ...createRoom({ id: "prior-rules", host: { id: "host", name: "Host" }, mapId: "bareDuel" }), status: "inMatch" as const };
+    const save = createSaveGameRecord(game, room, { id: "prior-rules" });
+    save.rulesVersion = 8; save.runtime.checksumVersion = 22;
+    const restored = restoreGameFromSave(save);
+    expect(restored.effects.find(effect => effect.id === "old-receipt")).toEqual(game.effects[0]);
+    expect(restored.tick).toBe(game.tick); stepGame(restored);
+    expect(restored.tick).toBe(game.tick + 1);
+  });
+
   it.each([11, 12])("replans a version-%s coastal voyage without changing its order or physical pose", version => {
     const game=createGame("bareDuel",{aiPlayers:[]});
     game.units=[];game.items=[];game.buildings=[];game.resources=[];game.scriptedVictory=true;

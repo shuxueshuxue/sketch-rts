@@ -66,7 +66,7 @@ function rightClick(snapshot: GameSnapshot, selected: Unit[], at: { x: number; y
 }
 
 describe("right-click orders", () => {
-  it.each(["golem", "rubbleGolem", "rockGolem", "graniteGolem", "siegeRam", "ballista", "catapult", "organGun"] as const)("orders only workers to repair an own damaged %s", kind => {
+  it.each(["golem", "rubbleGolem", "rockGolem", "graniteGolem", "siegeRam", "ballista", "catapult", "organGun"] as const)("preserves all selected actors for shared repair admission on a damaged %s", kind => {
     const game = createGame("bareDuel", { aiPlayers: [] });
     const worker = game.spawnUnit("player", "worker", 900, 900);
     const soldier = game.spawnUnit("player", "footman", 930, 900);
@@ -74,7 +74,7 @@ describe("right-click orders", () => {
     mechanical.hp -= 30;
     const snapshot = snapshotGame(game);
     expect(targetCommand(snapshot, "player", [worker, soldier], { kind: "unit", unit: mechanical }, true)).toEqual({
-      type: "repairUnit", unitIds: [worker.id], targetId: mechanical.id, queued: true,
+      type: "repairUnit", unitIds: [worker.id, soldier.id], targetId: mechanical.id, queued: true,
     });
     expect(targetCommand(snapshot, "player", [soldier], { kind: "unit", unit: mechanical })).toBeUndefined();
     mechanical.hp = mechanical.maxHp;
@@ -116,7 +116,7 @@ describe("right-click orders", () => {
     const snapshot = snapshotGame(game);
     expect(rightClick(snapshot, [worker], ally)).toEqual({ type: "follow", unitIds: [worker.id], targetId: ally.id, queued: false });
     expect(rightClick(snapshot, [worker], foe)).toEqual({ type: "attack", unitIds: [worker.id], targetId: foe.id, queued: false });
-    expect(rightClick(snapshot, [worker, soldier], mine)).toEqual({ type: "mine", unitIds: [worker.id], resourceId: mine.id, queued: false });
+    expect(rightClick(snapshot, [worker, soldier], mine)).toEqual({ type: "mine", unitIds: [worker.id, soldier.id], resourceId: mine.id, queued: false });
     // A soldier has nothing to do at a mine: a move there.
     expect(rightClick(snapshot, [soldier], mine)).toBeUndefined();
   });
@@ -179,7 +179,7 @@ it('sends troops up an own fortified tower and points at them on its top', () =>
   tower.kind = 'fortifiedTower';
   expect(targetCommand(snapshotGame(game), 'player', [archer, worker], { kind: 'building', building: tower })).toEqual({ type: 'garrison', unitIds: [archer.id, worker.id], buildingId: tower.id, queued: false });
   tower.hp -= 50;
-  expect(targetCommand(snapshotGame(game), 'player', [archer, worker], { kind: 'building', building: tower })).toMatchObject({ type: 'repair', unitIds: [worker.id] });
+  expect(targetCommand(snapshotGame(game), 'player', [archer, worker], { kind: 'building', building: tower })).toMatchObject({ type: 'repair', unitIds: [archer.id, worker.id] });
   archer.garrison = { buildingId: tower.id }; archer.x = tower.x - 14; archer.y = tower.y - 14;
   const snapshot = snapshotGame(game), point = unitPointerPosition(snapshot.units, archer, false, snapshot.buildings);
   expect(point.y).toBeLessThan(archer.y - 30);
@@ -199,13 +199,13 @@ describe("an attack on a target across water (see @@@context-reach)", () => {
   it("goes to the units that can strike it, and leaves the rest to walk", () => {
     const { game, footman, archer } = channel(5);
     const foe = game.spawnUnit("enemy", "footman", 15.5 * 32, 640);
-    expect(targetCommand(snapshotGame(game), "player", [footman, archer], { kind: "unit", unit: foe })).toEqual({ type: "attack", unitIds: [archer.id], targetId: foe.id, queued: false });
+    expect(targetCommand(snapshotGame(game), "player", [footman, archer], { kind: "unit", unit: foe })).toEqual({ type: "attack", unitIds: [footman.id, archer.id], targetId: foe.id, queued: false });
   });
 
   it("is refused when none can, instead of an attack nobody carries out", () => {
     const { game, footman, archer } = channel(20);
     const foe = game.spawnUnit("enemy", "footman", 1100, 640);
-    expect(targetCommand(snapshotGame(game), "player", [footman, archer], { kind: "unit", unit: foe })).toEqual({ refusal: "unreachable" });
+    expect(targetCommand(snapshotGame(game), "player", [footman, archer], { kind: "unit", unit: foe })).toEqual({ type: "attack", unitIds: [footman.id, archer.id], targetId: foe.id, queued: false });
   });
 });
 

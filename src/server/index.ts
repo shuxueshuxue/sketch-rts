@@ -1,3 +1,4 @@
+import { refusalFromError } from "../shared/command-refusal";
 import express, { type Response } from "express";
 import { createServer, type IncomingMessage } from "node:http";
 import { randomUUID } from "node:crypto";
@@ -382,7 +383,8 @@ router.post("/api/rooms/:roomId/command", (request, response) => {
   try {
     response.json(roomHost.commandRoom(request.params.roomId, body.playerId, body.command));
   } catch (error) {
-    response.status(400).json({ error: errorMessage(error) });
+    const refusal = refusalFromError(error);
+    response.status(400).json({ error: errorMessage(error), ...(refusal ? { refusal } : {}) });
   }
 });
 
@@ -395,7 +397,8 @@ router.post("/api/rooms/:roomId/commands", (request, response) => {
   try {
     response.json(roomHost.commandRooms(request.params.roomId, body.commands as CommandEnvelope[]));
   } catch (error) {
-    response.status(400).json({ error: errorMessage(error) });
+    const refusal = refusalFromError(error);
+    response.status(400).json({ error: errorMessage(error), ...(refusal ? { refusal } : {}) });
   }
 });
 
@@ -423,7 +426,8 @@ router.post("/api/rooms/:roomId/command-tick", (request, response) => {
     const result = roomHost.commandTickRoom(request.params.roomId, body.commands as CommandEnvelope[], body.ticks, roomNetHub.queuedFrames(request.params.roomId));
     response.json(result);
   } catch (error) {
-    response.status(400).json({ error: errorMessage(error) });
+    const refusal = refusalFromError(error);
+    response.status(400).json({ error: errorMessage(error), ...(refusal ? { refusal } : {}) });
   }
 });
 

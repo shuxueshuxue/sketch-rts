@@ -1,3 +1,4 @@
+import type { CommandRefusal } from "../../shared/command-refusal";
 import { createGame, snapshotGame, warmGameCaches } from "../../shared/sim";
 import { SimulationEngine } from "../../shared/sim/engine";
 import { MatchThreadGameAdapter } from "../match-worker/adapter";
@@ -29,7 +30,7 @@ export type ServerDeploymentRuntimeOptions = {
   fetchJson?: <T>(path: string, body?: unknown) => Promise<T>;
   createRoomTransport?: (roomId: string) => RoomTransport;
   createRoomEventSource?: (path: string) => RoomEventSource;
-  onRuntimeError?: (message: string) => void;
+  onRuntimeError?: (message: string, refusal?: CommandRefusal) => void;
   // A thread for a hosted match's lockstep simulation (see @@@match-thread); without it it runs on the page's thread.
   matchThreads?: MatchThreadFactory;
 };
@@ -39,7 +40,7 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
   private readonly fetchJson: <T>(path: string, body?: unknown) => Promise<T>;
   private readonly createRoomTransport: (roomId: string) => RoomTransport;
   private readonly createRoomEventSource: (path: string) => RoomEventSource;
-  private readonly onRuntimeError: ((message: string) => void) | undefined;
+  private readonly onRuntimeError: ((message: string, refusal?: CommandRefusal) => void) | undefined;
   private readonly matchThreads: MatchThreadFactory | undefined;
   private readonly publicBasePath: string;
   private readonly emptyAdapter = new EmptyGameAdapter();

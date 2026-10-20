@@ -1,3 +1,4 @@
+import type { CommandRefusal } from "../../shared/command-refusal";
 import { RULES_VERSION, assertCurrentRulesVersion } from "../../shared/rules-version";
 import { CommandFrameBuffer } from "../../shared/net/frame-buffer";
 import { LOCKSTEP_CHECKSUM_EVERY_TICKS } from "../../shared/net/cadence";
@@ -17,7 +18,7 @@ export type LockstepClientOptions = {
   engine: SimulationEngine;
   transport: NetTransport;
   checksumEveryTicks?: number;
-  onError?: (message: string) => void;
+  onError?: (message: string, refusal?: CommandRefusal) => void;
 };
 
 export class LockstepClient {
@@ -157,7 +158,7 @@ export class LockstepClient {
     }
     if (message.type === "error" && message.roomId === this.options.roomId) {
       if (message.clientSeq !== undefined) this.castsAwaitingFrame.delete(message.clientSeq);
-      this.options.onError?.(message.message);
+      this.options.onError?.(message.message, message.refusal);
     }
   }
 

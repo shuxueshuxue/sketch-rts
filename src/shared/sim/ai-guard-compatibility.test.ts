@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { UNIT_DEFS } from '../catalog';
 import { SHIP_WEAPONS } from '../ship-equipment';
-import { createGame } from '../sim';
+import { createGame, type Game } from '../sim';
 import { advanceCommandFrameTick } from './command-frame-runtime';
 import { checksumGameForVersion } from './checksum';
 import { runGameLoop } from '../../sdk/game-runner';
@@ -24,6 +24,11 @@ afterAll(() => definitions.forEach((rules, index) => {
   else rules.aimRangeBuffer = buffers[index];
 }));
 
+// Human-only receipts add no AI effects: compare the complete state, including every original effect.
+function guardProofChecksum(game: Game) {
+  return checksumGameForVersion(game, 21);
+}
+
 // Actual room-AI commands captured on main a2cff607; no current planner replaces the recording.
 it.each(['v9_archer', 'v9_summoner', 'v9_knight'])('preserves the guard-only all-AI %s recording with the later aiming buffer disabled', subject => {
   const fixture = JSON.parse(readFileSync(new URL(`./fixtures/guard-ai-${subject}.json`, import.meta.url), 'utf8')) as Recording;
@@ -33,7 +38,9 @@ it.each(['v9_archer', 'v9_summoner', 'v9_knight'])('preserves the guard-only all
   const game = createGame(fixture.mapId, fixture.options);
   let index = 0;
   for (let tick = 0; tick < fixture.checksums.length; tick++) {
-    expect(checksumGameForVersion(game, 21), `${subject} tick ${tick}`).toBe(fixture.checksums[tick]);
+    expect(game.effects.some(effect => effect.commandType !== undefined || effect.feedbackStatus !== undefined
+      || effect.id.startsWith('refused-') || effect.id.startsWith('waiting-')), `${subject} AI feedback at tick ${tick}`).toBe(false);
+    expect(guardProofChecksum(game), `${subject} tick ${tick}`).toBe(fixture.checksums[tick]);
     if (tick === fixture.checksums.length - 1) break;
     const commands = [];
     while (fixture.commands[index]?.tick === tick) {
@@ -53,5 +60,5 @@ it('identifies both external SDK agents as AI seats before their first simulated
   const { game } = runGameLoop({ name: 'external-controller-identity', mapId: fixture.mapId,
     options: { ...fixture.options, aiPlayers: [] }, agents, maxTicks: 1, thinkInterval: 15 });
   expect(game.aiPlayers).toEqual(fixture.options.players);
-  expect(checksumGameForVersion(game, 21)).toBe(fixture.checksums[1]);
+  expect(guardProofChecksum(game)).toBe(fixture.checksums[1]);
 });

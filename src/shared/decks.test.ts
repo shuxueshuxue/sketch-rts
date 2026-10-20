@@ -4,7 +4,7 @@ import { UNIT_DEFS } from "./catalog";
 import { boardUnit,canBoard,deckLoad,deckPointFits,deckPlacement,deckStaticPathExists,moveOnDeck,restoreCargoDecks,syncDecks } from "./decks";
 import { bodyMass } from "./physical-body";
 import { localToWorld,shipPassengers,shipProfile } from "./ship-geometry";
-import { createGame,issuePlayerCommand,snapshotGame,stepGame,restoreSnapshotIntoGame } from "./sim";
+import { createGame,tryPlayerCommand,issuePlayerCommand,snapshotGame,stepGame,restoreSnapshotIntoGame } from "./sim";
 import { checksumGame } from "./sim/checksum";
 import { cabinDoor } from './ship-cabin';
 
@@ -85,7 +85,8 @@ describe("physical decks",()=>{
     caster.abilityCooldowns=undefined;
     for(let i=0;i<20;i++)boardUnit(hull,game.spawnUnit("player","spirit",900,900),game.units);
     const count=game.units.filter(unit=>unit.kind==="spirit").length;
-    issuePlayerCommand(game,"player",{type:"cast",unitId:caster.id,ability:"summon",x:caster.x,y:caster.y});
+    // The blocked summon still consumes no cooldown or entity; its former silent failure now has a receipt.
+    expect(tryPlayerCommand(game,"player",{type:"cast",unitId:caster.id,ability:"summon",x:caster.x,y:caster.y})).toMatchObject({ok:false,refusal:{reason:"condition-unmet",detail:{category:"occupied"}}});
     expect(game.units.filter(unit=>unit.kind==="spirit")).toHaveLength(count);
     expect(caster.abilityCooldowns).toBeUndefined();
   });

@@ -28,7 +28,8 @@ export { canonicalGameState, type CanonicalGameState } from "./canonical";
 // 20: the tick a ship's hull was last struck by an enemy, which slows its repair.
 // 21: human seat identity and persistent guard stations; all-AI state hashes stay unchanged.
 // 22: aim records identify the target allowed to finish the current ranged windup.
-export const CHECKSUM_VERSION = 22;
+// 23: structured command refusal receipts and explicit rejected/waiting feedback state.
+export const CHECKSUM_VERSION = 23;
 
 export function checksumGame(game: Game): string {
   return fnv1a(JSON.stringify(canonicalGameState(game)));
@@ -38,7 +39,11 @@ export function checksumGame(game: Game): string {
 export function checksumGameForVersion(game: Game, version: number): string {
   // Version 19 changed only how an upgrade under way and a fortified tower are kept; a game with neither hashes the same.
   if (version === CHECKSUM_VERSION) return checksumGame(game);
-  const checkedGame = { ...game };
+  const checkedGame = { ...game, effects: game.effects.map(effect => {
+    const { commandType, feedbackStatus, ...prior } = effect;
+    return prior;
+  }) };
+  if (version === 22) return checksumGame(checkedGame);
   checkedGame.units = game.units.map(withoutAimTarget);
   checkedGame.items = game.items.map(withoutAimTarget);
   if (version === 21) return checksumGame(checkedGame);

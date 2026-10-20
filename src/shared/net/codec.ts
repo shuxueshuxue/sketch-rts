@@ -1,3 +1,4 @@
+import { isCommandRefusal } from "../command-refusal";
 import type { ChatMessage, CheckpointFrame, CheckpointRequestClass, CheckpointRequestReason, ClientNetMessage, CommandFrame, RoomSyncEvent, RoomSyncEventKind, ServerNetMessage } from "./types";
 import type { RoomState } from "../types";
 import { checkpointRequestClass } from "./checkpoint-semantics";
@@ -118,7 +119,8 @@ function decodeDesyncMessage(message: Record<string, unknown>): ServerNetMessage
 function decodeErrorMessage(message: Record<string, unknown>): ServerNetMessage {
   if (!isString(message.roomId) || !isString(message.message)) throw new Error("Malformed server error message");
   if (message.clientSeq !== undefined && (!Number.isInteger(message.clientSeq) || Number(message.clientSeq) < 0)) throw new Error("Malformed server error sequence");
-  return { type: "error", roomId: message.roomId, message: message.message, ...(message.clientSeq !== undefined ? { clientSeq: Number(message.clientSeq) } : {}) };
+  if (message.refusal !== undefined && !isCommandRefusal(message.refusal)) throw new Error("Malformed command refusal");
+  return { type: "error", ...(isCommandRefusal(message.refusal) ? { refusal: message.refusal } : {}), roomId: message.roomId, message: message.message, ...(message.clientSeq !== undefined ? { clientSeq: Number(message.clientSeq) } : {}) };
 }
 
 function decodeServerChatMessage(message: Record<string, unknown>): ServerNetMessage {

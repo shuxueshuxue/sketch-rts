@@ -211,7 +211,7 @@ describe("veteran progression in the shared simulation", () => {
       const pivot = mountedWeaponPose(ship, cannon)!.pivot;
       const target = game.spawnUnit("enemy", "worker", pivot.x + SHIP_WEAPONS.shipCannon.range * rangeShare, pivot.y);
       issuePlayerCommand(game, "player", { type: "holdPosition", unitIds: [ship.id] });
-      issuePlayerCommand(game, "enemy", { type: "holdPosition", unitIds: [target.id] });
+      // A worker cannot hold position; leave this firing-range probe idle, as the former no-op did.
       const shots = new Set<string>();
       for (let tick = 0; tick < seconds(2); tick += 1) {
         stepGame(game);

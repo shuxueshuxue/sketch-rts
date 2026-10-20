@@ -1,0 +1,68 @@
+{
+  "run": "mvglpsu5-7c9ee8",
+  "afterSource": "9623b321c45db6ce1217838cc110879bbb9c36bb",
+  "beforeSource": "a389ec26",
+  "soundPack": "cc0",
+  "after": {
+    "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Ultra, Unspecified Version)",
+    "errorTones": 4,
+    "records": [
+      {
+        "name": "tower-refused",
+        "expected": "机械单位不能登上防御塔",
+        "text": "机械单位不能登上防御塔",
+        "passed": true
+      },
+      {
+        "name": "gold-refused",
+        "expected": "金币不足，还差 100",
+        "text": "机械单位不能登上防御塔\n金币不足，还差 100",
+        "passed": true
+      },
+      {
+        "name": "cooldown-refused",
+        "expected": "冷却中，还剩",
+        "text": "金币不足，还差 100\n冷却中，还剩 12 秒",
+        "passed": true
+      },
+      {
+        "name": "inventory-refused",
+        "expected": "背包已满",
+        "text": "冷却中，还剩 12 秒\n背包已满",
+        "passed": true
+      }
+    ],
+    "tick": 15
+  },
+  "before": {
+    "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Ultra, Unspecified Version)",
+    "errorTones": 0,
+    "records": [
+      {
+        "name": "tower-refused",
+        "expected": "机械单位不能登上防御塔",
+        "text": "",
+        "passed": false
+      },
+      {
+        "name": "gold-refused",
+        "expected": "金币不足，还差 100",
+        "text": "",
+        "passed": false
+      },
+      {
+        "name": "cooldown-refused",
+        "expected": "冷却中，还剩",
+        "text": "",
+        "passed": false
+      },
+      {
+        "name": "inventory-refused",
+        "expected": "背包已满",
+        "text": "",
+        "passed": false
+      }
+    ],
+    "tick": 15
+  }
+}

@@ -1,3 +1,4 @@
+import type { CommandRefusal } from "../../shared/command-refusal";
 import type { DebugReplayTrace } from '../../shared/replay';
 import type { AiPlanPacket } from '../../ai/plan-stream';
 import type { AiScriptVersion } from "../../ai/policy";
@@ -57,7 +58,7 @@ export type MatchThreadEvent =
   | { type: "snapshot"; snapshot: MatchThreadSnapshot; pendingCasts?: CastCommand[]; ai?: AiThinkReport }
   | { type: "ended"; snapshot: MatchThreadSnapshot }
   // A command the live game refused although the page's latest snapshot allowed it.
-  | { type: "rejected"; message: string }
-  | { type: "error"; message: string }
+  | { type: "rejected"; message: string; refusal?: CommandRefusal }
+  | { type: "error"; message: string; refusal?: CommandRefusal }
   // Lockstep: what the match sends to the room's server.
   | { type: "net"; message: ClientNetMessage };

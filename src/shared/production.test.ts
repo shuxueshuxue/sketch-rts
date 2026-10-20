@@ -84,7 +84,7 @@ describe('shared units and race production', () => {
     const { game, building } = productionGame(race, trainingBuildingFor(race, 'summoner')!);
     game.players.player!.supplyCap = 41;
     const command = { type: 'train', buildingId: building.id, unitKind: 'summoner' } as const;
-    expect(checkCommandLegality(snapshotGame(game), 'player', command)).toEqual({ message: 'Need a supply cap of 42 to train summoner', transient: true, reason: 'tier', supplyCap: 42 });
+    expect(checkCommandLegality(snapshotGame(game), 'player', command)).toEqual({ message: 'Need a supply cap of 42 to train summoner', transient: true, reason: 'tier', supplyCap: 42, refusal: { reason: 'supply-tier', detail: { requiredCap: 42, currentCap: 41 } } });
     expect(() => issueCommand(game, command)).toThrow('Need a supply cap of 42');
   });
 

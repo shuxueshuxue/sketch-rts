@@ -8,7 +8,7 @@ import { shipBodyClearAtPose } from './ship-collisions';
 import { PREVIOUS_SHIP_TRAIN_COST } from './ship-equipment';
 import { SHIP_KINDS, SHIP_SIZE_MULTIPLIER, SHIP_SIZE_VERSION, type ShipKind } from './ship-geometry';
 import { hullFits } from './ship-navigation';
-import { createGame, issuePlayerCommand, stepGame } from './sim';
+import { createGame, tryPlayerCommand, issuePlayerCommand, stepGame } from './sim';
 import { CHECKSUM_VERSION, checksumGame } from './sim/checksum';
 import type { GameMap } from './types';
 
@@ -53,6 +53,7 @@ function savedPrices(save: SaveGameRecord) {
 }
 
 describe('ship training payments and cancellation', () => {
+  // Completed/repeated cancellation is refused with a receipt; all original payment/refund assertions remain.
   it.each(SHIP_KINDS)('%s records the complete current price and refunds each clicked job exactly once', kind => {
     const context = scene(), { game, dock } = context;
     const first = train(context, kind), second = train(context, kind), cost = UNIT_DEFS[kind].cost;
@@ -62,13 +63,13 @@ describe('ship training payments and cancellation', () => {
 
     const cancel = { type: 'cancelTraining', buildingId: dock.id, jobId: first.id! } as const;
     issuePlayerCommand(game, 'player', cancel);
-    issuePlayerCommand(game, 'player', cancel);
+    expect(tryPlayerCommand(game, 'player', cancel)).toMatchObject({ ok: false, refusal: { reason: 'condition-unmet', detail: { category: 'state' } } });
     expect(dock.queue).toEqual([second]);
     expect(game.players.player.gold).toBe(STARTING_GOLD - cost);
     expect(game.match.stats.goldSpent.player).toBe(cost);
 
     issuePlayerCommand(game, 'player', { ...cancel, jobId: second.id! });
-    issuePlayerCommand(game, 'player', { ...cancel, jobId: second.id! });
+    expect(tryPlayerCommand(game, 'player', { ...cancel, jobId: second.id! })).toMatchObject({ ok: false, refusal: { reason: 'condition-unmet', detail: { category: 'state' } } });
     expect(dock.queue).toHaveLength(0);
     expect(game.players.player.gold).toBe(STARTING_GOLD);
     expect(game.match.stats.goldSpent.player).toBe(0);
@@ -85,13 +86,13 @@ describe('ship training payments and cancellation', () => {
 
     const cancel = { type: 'cancelTraining', buildingId: dock.id, jobId: first!.id! } as const;
     issuePlayerCommand(restored, 'player', cancel);
-    issuePlayerCommand(restored, 'player', cancel);
+    expect(tryPlayerCommand(restored, 'player', cancel)).toMatchObject({ ok: false, refusal: { reason: 'condition-unmet', detail: { category: 'state' } } });
     expect(dock.queue).toEqual([second]);
     expect(restored.players.player.gold).toBe(STARTING_GOLD - previous);
     expect(restored.match.stats.goldSpent.player).toBe(previous);
 
     issuePlayerCommand(restored, 'player', { ...cancel, jobId: second!.id! });
-    issuePlayerCommand(restored, 'player', { ...cancel, jobId: second!.id! });
+    expect(tryPlayerCommand(restored, 'player', { ...cancel, jobId: second!.id! })).toMatchObject({ ok: false, refusal: { reason: 'condition-unmet', detail: { category: 'state' } } });
     expect(dock.queue).toHaveLength(0);
     expect(restored.players.player.gold).toBe(STARTING_GOLD);
     expect(restored.match.stats.goldSpent.player).toBe(0);
@@ -123,7 +124,7 @@ describe('ship training payments and cancellation', () => {
     expect(restored.players.player.gold).toBe(balance);
     expect(restored.match.stats.goldSpent.player).toBe(PREVIOUS_SHIP_TRAIN_COST[kind]);
 
-    issuePlayerCommand(restored, 'player', { type: 'cancelTraining', buildingId: dock.id, jobId: job.id! });
+    expect(tryPlayerCommand(restored, 'player', { type: 'cancelTraining', buildingId: dock.id, jobId: job.id! })).toMatchObject({ ok: false, refusal: { reason: 'condition-unmet', detail: { category: 'state' } } });
     expect(restored.players.player.gold).toBe(balance);
     expect(JSON.stringify(saved)).toBe(source);
   });
@@ -149,7 +150,7 @@ describe('ship training payments and cancellation', () => {
       const cancel = { type: 'cancelTraining', buildingId: dock.id, jobId: job.id! } as const;
       for (const replay of [game, restored]) {
         issuePlayerCommand(replay, 'player', cancel);
-        issuePlayerCommand(replay, 'player', cancel);
+        expect(tryPlayerCommand(replay, 'player', cancel)).toMatchObject({ ok: false, refusal: { reason: 'condition-unmet', detail: { category: 'state' } } });
       }
       expect(checksumGame(restored)).toBe(checksumGame(game));
     }
