@@ -44,6 +44,14 @@ const runtime = createSdkCommandFrameRuntime(game), owners: string[] = original.
 const memory = new Map<string, AiPolicyMemory>(), tasks = new Map<string, AiDeathTask | null>();
 const issued = new Map<string, AiIssuedOrder>(), previousTask = new Map<string, AiDeathTask>();
 const histories = new Map<string, string[]>(), seenEvents = new Set<string>(), completed = new Set<string>();
+type OrderChange = { tick: number; source: string | null; executor: string; command: GameCommand; before: Unit['order']; after: Unit['order'] };
+const nativeOrderChanges = new Map<string, OrderChange>(), supportedTasks = new Map<string, AiDeathTask>();
+const observedTicks = new Map<string, number>();
+// Navigation internals and cooldowns are not new destinations. Retain only the
+// public native action/target when checking whether a command changed orders.
+const orderGoal = (order: Unit['order']) => JSON.stringify(Object.fromEntries(
+  ['type', 'targetId', 'transportId', 'resourceId', 'buildingId', 'buildingKind', 'x', 'y', 'avoidCombat']
+    .filter(key => key in order).map(key => [key, order[key as keyof typeof order]])));
 const initialHalls = new Set(game.buildings.filter(building => building.kind === 'townHall' && building.complete).map(building => building.id));
 const laterHalls = new Set<string>();
 const timeline = openSync(`${output}.timeline.jsonl`, 'w');
@@ -51,7 +59,8 @@ const emit = (row: unknown) => writeSync(timeline, JSON.stringify(row) + '\n');
 const stats = Object.fromEntries(owners.map(owner => [owner, { combatUnitSeconds: 0, combatForceSeconds: 0,
   idleUnitSeconds: 0, idleForceSeconds: 0, assignedIdleForceSeconds: 0, inTransitForceSeconds: 0,
   interruptedForceSeconds: 0, outwardForceSeconds: 0, taskUnknownForceSeconds: 0,
-  aba: { assignment: 0, inferred: 0 }, formalCompletedObjectives: null as number | null,
+  aba: { formalCombat: null as number | null, inferredCombatCandidates: 0, inferredWorkerErrands: 0,
+    nativeOrderSupportedCombatCandidates: 0, uncorroboratedCombatChanges: 0 }, formalCompletedObjectives: null as number | null,
   nativeNewCompletedHalls: 0, preemptions: {} as Record<string, number>, candidateReassignments: 0,
   maximumAllocationBytes: 0, hallsLostWithArmyElsewhere: 0 }]));
 const outward = (task: AiDeathTask | null) => !!task && (task.clearing || ['attack', 'attack-site', 'raid', 'island',
@@ -59,20 +68,50 @@ const outward = (task: AiDeathTask | null) => !!task && (task.clearing || ['atta
 function observeThink(snapshot: GameSnapshot, owner: string) {
   const state = memory.get(owner); if (!state || !stats[owner]) return;
   const index = deathTaskIndex(snapshot, owner, state);
+  const lastObservedTick = observedTicks.get(owner) ?? -1;
+  const append = (channel: string, unitId: string, task: AiDeathTask) => {
+    const key = `${channel}:${unitId}`, history = histories.get(key) ?? [];
+    if (history.at(-1) === task.id) return false;
+    const aba = history.length > 1 && history.at(-2) === task.id;
+    history.push(task.id); if (history.length > 3) history.shift(); histories.set(key, history);
+    return aba;
+  };
   for (const unit of snapshot.units.filter(unit => unit.owner === owner && unit.hp > 0)) {
     const assignment = inferDeathAssignment(snapshot, unit, state, index, issued.get(unit.id) ?? null);
     const task = assignment.task; tasks.set(unit.id, task);
     if (!task || assignment.state === 'emergency-interruption' && task.attribution !== 'assignment') continue;
+    const combatant = unit.kind !== 'worker' && unit.attackDamage > 0 && unitMover(unit.kind) === 'land';
+    const orderChange = nativeOrderChanges.get(unit.id);
+    const currentChange = orderChange && orderChange.tick > lastObservedTick ? orderChange : null;
+    // This corroborates a retained candidate with a real changed native order;
+    // it does not invent a strategic receipt for old exports lacking one.
+    const beforeSupported = supportedTasks.get(unit.id);
+    if (combatant && task.attribution === 'inferred' && currentChange && !sameDeathAssignmentGoal(beforeSupported, task)) {
+      const aba = append('native-order-supported', unit.id, task);
+      if (aba) stats[owner]!.aba.nativeOrderSupportedCombatCandidates++;
+      supportedTasks.set(unit.id, task);
+      emit({ tick: snapshot.tick, owner, unitId: unit.id, kind: 'order-supported-candidate-transition',
+        from: beforeSupported?.id ?? null, to: task.id, aba, authority: 'inferred', orderChange: currentChange });
+    }
     const before = previousTask.get(unit.id);
     if (sameDeathAssignmentGoal(before, task)) continue;
-    const history = histories.get(unit.id) ?? [], aba = history.length > 1 && history.at(-2) === task.id;
-    if (aba) stats[owner]!.aba[task.attribution]++;
-    history.push(task.id); if (history.length > 3) history.shift(); histories.set(unit.id, history); previousTask.set(unit.id, task);
+    const aba = append(task.attribution, unit.id, task);
+    if (combatant && task.attribution === 'assignment') {
+      stats[owner]!.aba.formalCombat ??= 0;
+      if (aba) stats[owner]!.aba.formalCombat++;
+    } else if (combatant) {
+      if (aba) stats[owner]!.aba.inferredCombatCandidates++;
+      if (!currentChange) stats[owner]!.aba.uncorroboratedCombatChanges++;
+    } else if (unit.kind === 'worker' && task.attribution === 'inferred' && aba) stats[owner]!.aba.inferredWorkerErrands++;
+    previousTask.set(unit.id, task);
     emit({ tick: snapshot.tick, owner, unitId: unit.id, kind: 'objective-transition', from: before?.id ?? null,
-      to: task.id, authority: task.attribution, source: task.source, aba, nativeOrder: unit.order });
+      to: task.id, authority: task.attribution, source: task.source, combatant, aba, nativeOrder: unit.order,
+      orderChange: currentChange });
   }
+  observedTicks.set(owner, snapshot.tick);
   const allocation = state.strategyAllocation;
   if (!allocation) return;
+  stats[owner]!.aba.formalCombat ??= 0;
   stats[owner]!.formalCompletedObjectives ??= 0;
   stats[owner]!.maximumAllocationBytes = Math.max(stats[owner]!.maximumAllocationBytes, Buffer.byteLength(JSON.stringify(allocation)));
   for (const objective of Object.values(allocation.objectives)) if (objective.status === 'complete' && !completed.has(objective.objectiveId)) {
@@ -116,7 +155,23 @@ while (game.tick < original.tick) {
     for (const id of ids) issued.set(id, { tick: game.tick, command: row.command, executor: row.scriptId, source: row.source, attribution: 'recorded-issued-command' });
     nextCommand = await commands.next();
   }
-  if (entries.length) runtime.issue(entries, {}, { checksum: false });
+  if (entries.length) {
+    let before = new Map<string, Unit['order']>();
+    runtime.issue(entries, {
+      beforeIssue(entry) {
+        const ids = 'unitIds' in entry.command ? entry.command.unitIds : 'unitId' in entry.command ? [entry.command.unitId] : [];
+        before = new Map(game.units.filter(unit => ids.includes(unit.id)).map(unit => [unit.id, structuredClone(unit.order)]));
+      },
+      afterIssue(entry) {
+        for (const unit of game.units) {
+          const previous = before.get(unit.id);
+          if (previous && orderGoal(previous) !== orderGoal(unit.order)) nativeOrderChanges.set(unit.id, {
+            tick: game.tick, source: entry.source ?? null, executor: entry.scriptId, command: structuredClone(entry.command),
+            before: previous, after: structuredClone(unit.order) });
+        }
+      },
+    }, { checksum: false });
+  }
   if (changed.size) { const snapshot = snapshotGame(game); for (const owner of changed) observeThink(snapshot, owner); }
   for (const unit of game.units) {
     const row = stats[unit.owner];
@@ -172,12 +227,12 @@ closeSync(timeline);
 const sha = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const checks = { snapshot: sha(snapshotGame(game)) === original.snapshotSha256,
   canonical: sha(canonicalGameState(game)) === original.canonicalSha256, checksum: checksumGame(game) === original.checksum };
-const result = { schemaVersion: 1, source: original.source, replayTree: tree,
+const result = { schemaVersion: 2, source: original.source, replayTree: tree,
   analysisFileSha256: createHash('sha256').update(readFileSync(fileURLToPath(import.meta.url))).digest('hex'),
   mapId: original.mapId, ticks: game.tick, checks,
   definitions: { force: 'native V6 field strength, live armed land units, integrated once per sim tick; ships reported by transport membership only',
     idle: 'native idle/hold with no retained task; assigned idle/hold is separate and may be legitimate guarding',
-    aba: 'three distinct retained objective transitions; inferred candidates kept separate from formal assignment authority',
+    aba: 'formal combat objectives only where assignments exist; old inferred combat candidates, worker errands and native-order-supported candidates are separate. A changed native order corroborates a candidate but does not prove strategic ownership. Unknown formal baseline is null, never zero',
     offenseShare: 'outward retained task force seconds divided by all live land combat force seconds; inference is not actual firing',
     aid: 'first new physically landed soldier within 240 of captured task post; center fallback explicitly labelled; arrival alone does not prove its task',
     siteAttack: 'native per-step net hall HP decrease, lower bound when repair masks damage; episode ends after 5 seconds quiet with no nearby hostile',
