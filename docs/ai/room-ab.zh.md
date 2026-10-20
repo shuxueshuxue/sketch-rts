@@ -93,4 +93,35 @@ node --import tsx scripts/verify-room-ab-isolation.ts \
 
 ## 基线自对打报告
 
-验收摘要及原始证据在完成运行后附于本节。压倒性胜出的门槛由 owner 另行确定，工具不擅设门槛。
+A100 / Node 24.22.0，三个种子，每局上限 20 分钟。78 局均退出 0：66 局原生满席，加 12 局额外两席。
+辅助统计复用 30 局原生两席，共 42 局；不能把 66 和 42 相加当作独立执行次数。
+
+| 口径 | 局数 | A 胜 / B 胜 / 超时平局 | A/B 平均名次 | A/B 最终存活率 |
+| --- | ---: | ---: | ---: | ---: |
+| 满席 FFA（主） | 66 | 1 / 1 / 64 | 2.3889 / 2.3889 | 98.15% / 98.15% |
+| 两席（辅助） | 42 | 1 / 1 / 40 | 1.5 / 1.5 | 97.62% / 97.62% |
+
+39 组交换出生位的 initial/planned/command/final snapshot/memory 摘要全部一致；原始执行共 383,760 次 think、
+1,483,026 条交付记录、1,870,200 tick。死亡账本全部与原生损失对账一致。240 行逐席位 CSV 的 28 列及 JSON 单元格均已读回验证。
+可判胜负的只有一个交换组（两局），这些结果验证工具与标签对称性，不足以估计策略胜率置信区间。压倒性胜出的门槛仍由 owner 确定。
+
+最终的 4800 次带深哈希的 baseline 调用均未改变 snapshot/map；两臂重放各比较 1600 帧现役输出，命令字节和 memory 相同。
+两图各 6000 tick 的观测器开/关对局，其计划、交付命令、memory、snapshot、canonical state 与 checksum 也全部一致。
+
+首轮在不支持的环海两席布局退出 1，失败记录保留；修正矩阵后完整重跑，42 个共同 case 的七项摘要全部相同。
+清营复核发现蓝宝群岛同一交换组的两条记录距目标矿点 935.33，实际是路营：88 条观测中 86 条守矿记录有效，
+两条路营记录单列并排除夺岛里程碑/完成数。该修正仅在对局结束后规范化数据，原始记录保留；修正前后另外两局
+完整 15 分钟对局的命令、世界、校验和 memory 全部相同。
+
+执行矩阵的代码封存在 `60c21495`，发布指标与最终校验封存在 `14915902`。v1 原始明细重出为 v2，来源与报告器的哈希分别保留。
+全量 src 在 `bb50c974` 上 720 文件、7951 项通过，退出 0；其后的 shared/policy/bootstrap 目录树完全相同。
+最终版本根 tsc、工具 tsc、25 项定向测试及完整 CLI 冒烟退出码均为 0，没有修改现有 AI/对战断言。
+
+[逐图与配对摘要](room-ab/selfplay-summary.json)、[完整验收索引](room-ab/validation.json)、[隔离摘要](room-ab/isolation.json)。
+[原始证据指针](room-ab/acceptance.evidence.json) 包括所有对局、原生命令/事实/死亡明细、v2 报告、两轮失败/成功日志、
+隔离语料、检查日志与校验脚本，保存在 A100 内容寻址 evidence store；不把原始生成物放进 Git。
+
+```sh
+SKETCH_MACHINES=~/.config/sketch/machines-sound.json bin/sketch evidence get \
+  docs/ai/room-ab/acceptance.evidence.json --out work/room-ab/acceptance
+```

@@ -4,7 +4,7 @@
 `v9_summoner`、`v9_knight`；三者都走 `planner-context.ts` 的 bootstrap 分支。它们的实际脚本来自
 V9/V7/V8 栈，再由 `bootstrap_1` 替换和插入模块。上下文里的 `version: 'v2'` 不等于只运行裸 V2。
 
-本 PR 只冻结和验证 planner。满席 FFA 对打、排名/存活/胜局统计及自对打对称性报告属于后续 PR。
+冻结 PR 只封存和验证 planner。满席 FFA 对打、排名/存活/胜局统计及自对打对称性报告见[对打工具说明](room-ab.zh.md)。
 线上默认 AI、房间可选版本、sim 规则与校验版本均未改变。
 
 ## 产物与边界

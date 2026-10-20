@@ -1,0 +1,300 @@
+{
+  "sources": {
+    "matrixCommit": "60c2149521027e07a59502e4a180c2553a2a8b23",
+    "reportAndFinalChecksCommit": "1491590235cc53090270d5a3192cb541b9c4f586",
+    "fullSrcCommit": "bb50c974d73ea2531b9f2fb6c410b9e1fb264ea7",
+    "fullSrcTests": 7951,
+    "finalFocusedTests": 25,
+    "fullSrcExit": 0,
+    "rootTscExit": 0,
+    "toolsTscExit": 0,
+    "sharedTrees": {
+      "bb50c974": "e417f6e04da2d45246bfb437457b76ba41f9f545",
+      "60c21495": "e417f6e04da2d45246bfb437457b76ba41f9f545",
+      "1491590235cc53090270d5a3192cb541b9c4f586": "e417f6e04da2d45246bfb437457b76ba41f9f545"
+    },
+    "livePolicyTrees": {
+      "bb50c974": "095d7753ca90de01f058326515d518aaf0932685",
+      "60c21495": "095d7753ca90de01f058326515d518aaf0932685",
+      "1491590235cc53090270d5a3192cb541b9c4f586": "095d7753ca90de01f058326515d518aaf0932685"
+    },
+    "bootstrapTrees": {
+      "bb50c974": "c9998a799a18d631835c6518f2b6ad070573c638",
+      "60c21495": "c9998a799a18d631835c6518f2b6ad070573c638",
+      "1491590235cc53090270d5a3192cb541b9c4f586": "c9998a799a18d631835c6518f2b6ad070573c638"
+    }
+  },
+  "execution": {
+    "cases": 78,
+    "pilotCommon": 42,
+    "pilotCommonEqual": true,
+    "comparisons": [
+      {
+        "case": "ffa-brokenSea-s0-r0",
+        "equal": true
+      },
+      {
+        "case": "ffa-brokenSea-s0-r1",
+        "equal": true
+      },
+      {
+        "case": "ffa-ringwater-s0-r0",
+        "equal": true
+      },
+      {
+        "case": "ffa-reedwater-s0-r0",
+        "equal": true
+      },
+      {
+        "case": "ffa-greystonePass-s2-r1",
+        "equal": true
+      },
+      {
+        "case": "ffa-ringwater-s1-r1",
+        "equal": true
+      },
+      {
+        "case": "ffa-gullIsland-s1-r0",
+        "equal": true
+      },
+      {
+        "case": "ffa-pineshade-s2-r1",
+        "equal": true
+      },
+      {
+        "case": "ffa-ringwater-s0-r1",
+        "equal": true
+      },
+      {
+        "case": "duel-brokenSea-s1-r1",
+        "equal": true
+      },
+      {
+        "case": "ffa-brokenSea-s1-r0",
+        "equal": true
+      },
+      {
+        "case": "ffa-greystonePass-s1-r1",
+        "equal": true
+      },
+      {
+        "case": "ffa-reedwater-s2-r0",
+        "equal": true
+      },
+      {
+        "case": "ffa-brokenSea-s2-r1",
+        "equal": true
+      },
+      {
+        "case": "ffa-gullIsland-s2-r0",
+        "equal": true
+      },
+      {
+        "case": "ffa-greystonePass-s0-r0",
+        "equal": true
+      },
+      {
+        "case": "duel-brokenSea-s0-r1",
+        "equal": true
+      },
+      {
+        "case": "duel-brokenSea-s1-r0",
+        "equal": true
+      },
+      {
+        "case": "ffa-gullIsland-s1-r1",
+        "equal": true
+      },
+      {
+        "case": "duel-brokenSea-s2-r1",
+        "equal": true
+      },
+      {
+        "case": "ffa-gullIsland-s0-r0",
+        "equal": true
+      },
+      {
+        "case": "ffa-pineshade-s2-r0",
+        "equal": true
+      },
+      {
+        "case": "ffa-gullIsland-s2-r1",
+        "equal": true
+      },
+      {
+        "case": "ffa-reedwater-s1-r1",
+        "equal": true
+      },
+      {
+        "case": "duel-brokenSea-s0-r0",
+        "equal": true
+      },
+      {
+        "case": "ffa-reedwater-s1-r0",
+        "equal": true
+      },
+      {
+        "case": "ffa-ringwater-s1-r0",
+        "equal": true
+      },
+      {
+        "case": "ffa-brokenSea-s2-r0",
+        "equal": true
+      },
+      {
+        "case": "ffa-greystonePass-s2-r0",
+        "equal": true
+      },
+      {
+        "case": "ffa-reedwater-s2-r1",
+        "equal": true
+      },
+      {
+        "case": "ffa-greystonePass-s1-r0",
+        "equal": true
+      },
+      {
+        "case": "ffa-pineshade-s1-r1",
+        "equal": true
+      },
+      {
+        "case": "ffa-brokenSea-s1-r1",
+        "equal": true
+      },
+      {
+        "case": "ffa-pineshade-s1-r0",
+        "equal": true
+      },
+      {
+        "case": "ffa-pineshade-s0-r0",
+        "equal": true
+      },
+      {
+        "case": "ffa-ringwater-s2-r1",
+        "equal": true
+      },
+      {
+        "case": "duel-brokenSea-s2-r0",
+        "equal": true
+      },
+      {
+        "case": "ffa-greystonePass-s0-r1",
+        "equal": true
+      },
+      {
+        "case": "ffa-ringwater-s2-r0",
+        "equal": true
+      },
+      {
+        "case": "ffa-gullIsland-s0-r1",
+        "equal": true
+      },
+      {
+        "case": "ffa-reedwater-s0-r1",
+        "equal": true
+      },
+      {
+        "case": "ffa-pineshade-s0-r1",
+        "equal": true
+      }
+    ],
+    "csvRows": 240,
+    "csvColumns": 28,
+    "jsonCellsValid": true,
+    "guardAssociations": 86,
+    "excludedRoadCampRecords": [
+      {
+        "case": "ffa-sapphireArchipelago-s1-r1",
+        "id": "player-6/gold-mainland-3/guard-5-0,guard-5-1,guard-5-2,guard-5-3",
+        "owner": "player-6",
+        "mineId": "gold-mainland-3",
+        "distance": 935.3297248563107,
+        "association": "road-camp"
+      },
+      {
+        "case": "ffa-sapphireArchipelago-s1-r0",
+        "id": "player-6/gold-mainland-3/guard-5-0,guard-5-1,guard-5-2,guard-5-3",
+        "owner": "player-6",
+        "mineId": "gold-mainland-3",
+        "distance": 935.3297248563107,
+        "association": "road-camp"
+      }
+    ],
+    "thinks": 383760,
+    "commands": 1483026,
+    "totalTicks": 1870200,
+    "seatMetricRows": 240,
+    "smokeCommandAndWorldComparison": [
+      {
+        "case": "ffa-brokenSea-s0-r0",
+        "equal": true
+      },
+      {
+        "case": "ffa-brokenSea-s0-r1",
+        "equal": true
+      }
+    ],
+    "isolationPass": true
+  },
+  "isolation": {
+    "pass": true,
+    "cases": [
+      {
+        "map": "greystonePass",
+        "baselineInputChecks": 400,
+        "sameObjectProbeChecks": 400,
+        "livePlain": {
+          "equal": true,
+          "thinks": 400,
+          "inputChecks": 0,
+          "byteComparison": "every-command-and-memory-on-the-identical-mixed-match-snapshot-stream"
+        },
+        "liveInterposed": {
+          "equal": true,
+          "thinks": 400,
+          "inputChecks": 400,
+          "byteComparison": "every-command-and-memory-on-the-identical-mixed-match-snapshot-stream"
+        },
+        "observerOnOffEqual": true
+      },
+      {
+        "map": "sapphireArchipelago",
+        "baselineInputChecks": 1200,
+        "sameObjectProbeChecks": 1200,
+        "livePlain": {
+          "equal": true,
+          "thinks": 1200,
+          "inputChecks": 0,
+          "byteComparison": "every-command-and-memory-on-the-identical-mixed-match-snapshot-stream"
+        },
+        "liveInterposed": {
+          "equal": true,
+          "thinks": 1200,
+          "inputChecks": 1200,
+          "byteComparison": "every-command-and-memory-on-the-identical-mixed-match-snapshot-stream"
+        },
+        "observerOnOffEqual": true
+      }
+    ]
+  },
+  "evidence": {
+    "acceptance.evidence.json": {
+      "sha256": "591ada6825778708f8d5613815102109a2ce68d21b878552b0959bd797f6c04b",
+      "bytes": 475549246,
+      "name": "acceptance",
+      "kind": "dir",
+      "machine": "a100",
+      "pushed": "1491590235cc53090270d5a3192cb541b9c4f586",
+      "pr": 578
+    },
+    "isolation.evidence.json": {
+      "sha256": "74fb53baaa851f4049b7b05589b8c1dd4c9c4fa3b1c6b356dbe46b998887e386",
+      "bytes": 11283802,
+      "name": "isolation-final",
+      "kind": "dir",
+      "machine": "a100",
+      "pushed": "1491590235cc53090270d5a3192cb541b9c4f586",
+      "pr": 578
+    }
+  }
+}
