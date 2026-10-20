@@ -8,7 +8,7 @@ import { distanceToHull } from './ship-geometry';
 import { keepShipsOnWater } from "./sailing";
 import { describe, expect, it } from "vitest";
 import { createGame, issuePlayerCommand, snapshotGame, stepGame, type Game } from "./sim";
-import { commandValidationError, narrowFrameCommandToLiveOperands } from "./sim/command-validation";
+import { checkCommandLegality, commandValidationError, narrowFrameCommandToLiveOperands } from "./sim/command-validation";
 import { applyCommandFrame } from "./sim/frame";
 import { isWalkable, sameGround, type Terrain } from "./terrain";
 import type { ScenarioBuildingSeed, ScenarioUnitSeed } from "./types";
@@ -367,6 +367,8 @@ describe("stable shore rendezvous and ship repair", () => {
     run(sim,200);
     expect(unit(sim,"ship")!.hp).toBe(50); expect(sim.players.player!.gold).toBe(gold);
     unit(sim,"ship")!.owner="enemy";
-    expect(commandValidationError(snapshotGame(sim),"player",{type:"repairShip",unitIds:["worker"],targetId:"ship"})).toMatch(/Unknown/);
+    // An existing enemy hull now reports ownership rather than pretending that the target is missing.
+    expect(checkCommandLegality(snapshotGame(sim), "player", { type: "repairShip", unitIds: ["worker"], targetId: "ship" })?.refusal)
+      .toEqual({ reason: "ownership", detail: { entityId: "ship", requiredRelation: "own" } });
   });
 });
