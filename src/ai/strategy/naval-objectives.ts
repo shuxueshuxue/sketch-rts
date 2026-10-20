@@ -11,7 +11,8 @@ import type { GameSnapshot, Unit } from '../../shared/types';
 import { distance } from '../policy/spatial';
 import { isOpponentOwner } from '../policy/ownership';
 import { isBacklineKind } from '../policy/v6/backline';
-import { creepForce, EXPANSION_GUARD_RANGE, forceFor } from '../policy/v7/creep';
+import { creepForce, forceFor } from '../policy/v7/creep';
+import { strategicTargetCamp } from './target-camp';
 import { neutralCampExposure } from '../situation/neutral-camp-exposure';
 import { neutralCampPointContacts } from '../situation/neutral-camp-contact';
 import { objectiveId } from './commitments';
@@ -60,7 +61,7 @@ function campFacts(context: PlanningContext) {
   return frameMemo(campDomain, context.snapshot, () => neutralCampExposure(context.snapshot));
 }
 function campAt(context: PlanningContext, target: Target) {
-  return campFacts(context).camps.find(exposure => distance(exposure.camp.center, target.point) <= EXPANSION_GUARD_RANGE)?.camp;
+  return strategicTargetCamp(context.snapshot, target, campFacts(context));
 }
 function stationed(situation: Situation, target: Target) {
   return situation.units.filter(unit => unit.owner === situation.owner && !unit.roles.includes('worker')

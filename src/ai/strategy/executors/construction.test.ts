@@ -10,6 +10,9 @@ import type { ActionIntent, ExecutorInput } from '../allocation-types';
 import { landIdAt, seaIdAt } from '../regions';
 import { buildHallExecutor } from './build-hall';
 import { trainTransportExecutor } from './train-transport';
+import { assembleExecutor } from './assemble';
+import { waitIncomeExecutor } from './wait-income';
+import { establishForceExecutor } from './establish-force';
 
 type Frame = { snapshot: GameSnapshot; owner: string; nextId: number; activePlayers: string[] };
 const frames: Record<string, Frame> = JSON.parse(gunzipSync(readFileSync(
@@ -42,6 +45,7 @@ describe('allocated construction in native event frames', () => {
     const first = trainTransportExecutor.execute(input);
     expect(first.commands).toEqual([{ command: { type: 'train', buildingId: 'building-player-4-shipyard-1410', unitKind: 'transport' }, purpose: 'task' }]);
     expect(first.status).toBe('active');
+    expect(first.payments ?? []).toEqual([]);
     const game = createGame(frame.snapshot.map.id, { players: frame.activePlayers });
     restoreSnapshotIntoGame(game, structuredClone(frame.snapshot), frame.nextId);
     game.activePlayers = [...frame.activePlayers];
@@ -53,6 +57,9 @@ describe('allocated construction in native event frames', () => {
     const training = trainTransportExecutor.execute(input);
     expect(training.phase).toBe('training');
     expect(training.commands).toEqual([]);
+    expect(training.payments).toEqual([{ budgetId: 'budget', amountGold: 240, proof: { kind: 'production',
+      buildingId: 'building-player-4-shipyard-1410', jobId: game.buildings.find(building => building.id === 'building-player-4-shipyard-1410')!.queue[0]!.id ?? null,
+      acceptedCommandId: 'accepted-train', unitKind: 'transport', queueIndex: 0 } }]);
     input = { ...input, execution: { ...input.execution, state: training.state, phase: training.phase } };
     const fork: ExecutorInput = JSON.parse(JSON.stringify(input));
     expect(trainTransportExecutor.execute(fork)).toEqual(trainTransportExecutor.execute(input));
@@ -91,5 +98,33 @@ describe('allocated construction in native event frames', () => {
     expect(result.progress).toEqual([{ kind: 'hall-founded', unitIds: [], entityIds: ['building-p0-townHall-9337'], basis: 'observed-world' }]);
     expect(result.commands).toEqual([]);
     expect(JSON.stringify(input)).toBe(before);
+  });
+
+  it('moves only the four awarded soldiers toward assembly while their hull is being produced', () => {
+    const units = [5287, 5642, 5789, 5909].map(id => `unit-player-4-emberRavager-${id}`);
+    const input = request('Ne-sapphireArchipelago-player-4-17991', 'borrow-force', 'building-player-4-shipyard-1410', units.map(id => `unit:${id}`), 0);
+    const result = assembleExecutor.execute(input);
+    expect(result.status).toBe('active');
+    expect(result.commands.flatMap(entry => 'unitIds' in entry.command ? entry.command.unitIds : []).sort()).toEqual(units.sort());
+    expect(result.commands.every(entry => entry.command.type === 'move' && entry.command.avoidCombat)).toBe(true);
+    expect(result.progress).toEqual([]);
+    const fork: ExecutorInput = JSON.parse(JSON.stringify(input));
+    setBuildingBodies(fork.snapshot.map, standingBodies(fork.snapshot));
+    expect(assembleExecutor.execute(fork)).toEqual(result);
+  });
+
+  it('requires reserved hall capital and physical island presence, independently of current cash or borrowed strength', () => {
+    const input = request('Ne-sapphireArchipelago-player-4-17991', 'wait-income', 'gold-satellite-2', [], 0);
+    expect(input.snapshot.players[input.owner]!.gold).toBe(424);
+    expect(waitIncomeExecutor.execute(input).status).toBe('blocked');
+    const funded = request('Ne-sapphireArchipelago-player-4-17991', 'wait-income', 'gold-satellite-2', [], 400);
+    expect(waitIncomeExecutor.execute(funded).status).toBe('complete');
+    const units = [3661, 5287, 5642, 5789, 5909].map(id => `unit:unit-player-4-emberRavager-${id}`);
+    const party = request('Ne-sapphireArchipelago-player-4-17991', 'establish-garrison', 'gold-satellite-2', units, 0);
+    const result = establishForceExecutor.execute({ ...party, execution: { ...party.execution,
+      completionEffects: [{ kind: 'force-present', landId: party.execution.target.landId!, minimumStrength: 3, throughTick: party.snapshot.tick + 2400 }] } });
+    expect(result.status).toBe('blocked');
+    expect(result.reasons[0]?.reason).toBe('insufficient-reinforcement-force-actually-landed');
+    expect(result.progress).toEqual([]);
   });
 });

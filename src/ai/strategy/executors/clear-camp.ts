@@ -1,5 +1,5 @@
 import { unitMover } from '../../../shared/catalog';
-import { sameGround, walkableGoal } from '../../../shared/terrain';
+import { sameGround, walkableGoal, walkingDistance } from '../../../shared/terrain';
 import { bootstrapCampApproach } from '../../bootstrap_1/camp-geometry';
 import { isOpponentOwner } from '../../policy/ownership';
 import { averagePoint, distance } from '../../policy/spatial';
@@ -28,7 +28,7 @@ export const clearCampExecutor: StrategyExecutor = {
     const center = averagePoint(creeps.map(unit => ({ x: unit.homeX ?? unit.x, y: unit.homeY ?? unit.y })));
     const camp: Camp = { center, creeps, strength: strengthOf(creeps), reach: Math.max(...creeps.map(unit =>
       distance(center, { x: unit.homeX ?? unit.x, y: unit.homeY ?? unit.y }))) };
-    const cohort = grantedUnits(input).filter(unit => unitMover(unit.kind) === 'land' && !unit.deck && unit.attackDamage > 0
+    const cohort = grantedUnits(input).filter(unit => unitMover(unit.kind) === 'land' && !unit.deck && !unit.cabin && unit.attackDamage > 0
       && unit.kind !== 'worker' && sameGround(snapshot.map, unit, center)
       && !input.grant.assignments.some(assignment => assignment.unitId === unit.id && assignment.interruption));
     const power = assessAllocatedForce(owner, cohort, { metric: 'camp-force', camp });
@@ -36,7 +36,15 @@ export const clearCampExecutor: StrategyExecutor = {
     const preemptions = input.events.filter(event => event.kind === 'preempted' && sameAction(event.action, execution.token));
     const handoffs: ExecutorFeedback['handoffs'] = preemptions.map(event => ({ eventId: event.id,
       disposition: power.sufficient ? 'shrink' : 'pause' }));
-    const fail = (reason: string): ExecutorFeedback => ({ ...blockedExecutor(input, reason, cohort.map(unit => unit.id)), handoffs });
+    const fail = (reason: string): ExecutorFeedback => {
+      const refuge = point(execution.state.staging) ?? point(execution.state.refuge);
+      const leaving = engaged && refuge ? cohort.filter(unit => unit.order.type !== 'cast' && unit.order.type !== 'charge'
+        && walkingDistance(snapshot.map, unit, refuge) !== undefined) : [];
+      return { ...blockedExecutor(input, reason, cohort.map(unit => unit.id)), handoffs,
+        ...(leaving.length && refuge ? { phase: 'retreat', commands: leaving.filter(unit => !(unit.order.type === 'move'
+          && unit.order.avoidCombat && distance(unit.order, refuge) < 40)).map(unit => ({ command: {
+            type: 'move' as const, unitIds: [unit.id], ...refuge, avoidCombat: true }, purpose: 'life-saving' as const })) } : {}) };
+    };
     if (!cohort.length) return fail(preemptions.length ? 'clearing-party-preempted' : 'no-granted-clearing-units-on-target-land');
     if (!engaged && !power.sufficient) return fail(preemptions.length ? 'clearing-force-insufficient-after-preemption' : 'insufficient-clearing-force');
     if (engaged && power.force < camp.strength * .5) return fail('engaged-clearing-force-below-minimum');
