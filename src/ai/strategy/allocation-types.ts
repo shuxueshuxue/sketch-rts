@@ -1,7 +1,7 @@
 import type { GameCommand, GameSnapshot, PlayerId, UnitOrder } from '../../shared/types';
 import type { ExecutorReason } from '../executor-reasons';
 import type { DecisionFacts } from './decision';
-import type { AssignmentId, AssignmentStage, BudgetEntry, Effect, Location, Method, MethodId, Objective,
+import type { AssignmentId, AssignmentStage, BudgetEntry, Effect, LandId, Location, Method, MethodId, Objective,
   ObjectiveId, Precondition, ResourceDemand, Situation, Subgoal, Target, UnitRole, Utility } from './types';
 
 /** Formal control contracts. No executor registration or behavior is enabled by these types. */
@@ -130,6 +130,10 @@ export type VoyageAllocation = Readonly<{
   passengerIds: readonly string[];
   departure: Target;
   destination: Target;
+  /** Verified land-side points of this same crossing, never a fresh projection
+   * of the water point on an executor's next think. */
+  departureGround: Target & Readonly<{ landId: LandId }>;
+  landingGround: Target & Readonly<{ landId: LandId }>;
   phase: 'loading' | 'sailing' | 'unloading' | 'return';
   startedTick: number;
   expectedFreeTick: number | null;
@@ -328,14 +332,24 @@ export interface StrategyExecutor {
   /** May inspect the world, but selects/commands only granted units, ships and budget. */
   execute(input: ExecutorInput): ExecutorFeedback;
 }
+export type AllocationMethodQuoteInput = Readonly<{
+  snapshot: GameSnapshot;
+  situation: DecisionFacts<Situation>;
+  objective: DecisionFacts<Objective>;
+  method: ExecutableMethod;
+  unitIds: readonly string[];
+  budgets: readonly AllocationBudget[];
+}>;
 export interface AllocationMethodProvider {
   readonly id: string;
   buildMethods(input: Readonly<{ snapshot: GameSnapshot; situation: DecisionFacts<Situation>; objective: DecisionFacts<Objective>;
     previous: ObjectiveAllocation | null; executions: readonly ExecutionAction[];
     blocked: readonly SafetyBlockedQuote[] }>): readonly ExecutableMethod[];
+  /** Specialize a skeleton using the supplied candidate bundle. Hull count,
+   * capital and dependencies are re-quoted before any lease changes hands. */
+  materialize?(input: AllocationMethodQuoteInput): ExecutableMethod;
   /** Reprice this supplied bundle, including target-specific camp force; never add hidden members. */
-  quote(input: Readonly<{ snapshot: GameSnapshot; situation: DecisionFacts<Situation>; objective: DecisionFacts<Objective>;
-    method: ExecutableMethod; unitIds: readonly string[]; budgets: readonly AllocationBudget[] }>): MethodAllocationQuote;
+  quote(input: AllocationMethodQuoteInput): MethodAllocationQuote;
 }
 export type StrategyAllocationInput = Readonly<{
   snapshot: GameSnapshot;
