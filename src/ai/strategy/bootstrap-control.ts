@@ -5,7 +5,7 @@ import { bootstrapDoctrineContext, prepareBootstrapLandMission, prepareBootstrap
 import { buildObservedStrategyDecision, buildStrategyDecision, projectStrategyTrace,
   type ObservedStrategyDecision, type StrategyDecision } from './decision';
 import type { CommandAdmission, ExecutorFeedback, ExecutorInput, StrategyAllocationMemory } from './allocation-types';
-import type { StrategyPlanTrace } from './types';
+import type { StrategyPlanTrace, Target } from './types';
 import { allocateStrategy } from './allocator';
 import { allocationGrants, applyExecutorFeedback, pruneAllocationProvenance, settleAllocationState, advanceAllocationLeases } from './allocation-lifecycle';
 import { recordAllocationCommands } from './allocation-ledger';
@@ -25,7 +25,12 @@ import { incumbentDisposition, recordCandidateReassignment, recordIncumbentComma
 import { importedMiningLossUpperBound } from './imported-loss-bound';
 import { createStrategyCommandGateway, type StrategyCommandProposal } from './command-gateway';
 
-export type BootstrapStrategyOutput = Readonly<{ decision: StrategyDecision; project?: () => StrategyPlanTrace }>;
+export type AllocationCandidateRequest = Readonly<{ objectiveId: string; methodId: string; phase: 'skeleton' | 'gross' | 'net';
+  /** These are proposed bundles, not an assertion that authority was granted. */
+  unitIds: readonly string[]; actions: readonly Readonly<{ actionId: string; target: Target; unitIds: readonly string[] | null }>[] }>;
+export type BootstrapStrategyOutput = Readonly<{ decision: StrategyDecision; project?: () => StrategyPlanTrace;
+  /** Same-think sidecar; never stored in memory or the plan trace. */
+  candidateRequests?: readonly AllocationCandidateRequest[] }>;
 const providers = [defenseMethodProvider, conquestMethodProvider];
 const compare = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;
 
@@ -76,6 +81,11 @@ export function planControlledBootstrapCommands(snapshot: GameSnapshot, owner: P
     situation: occupied, objective, previous: imported.objectives[objective.id] ?? null,
     executions: Object.values(imported.executions), blocked: Object.values(imported.blocked) })));
   const situation = withAllocationMethodArrivals(snapshot, owner, policy, occupied, methods);
+  const candidateRequests = observation === 'none' ? undefined : new Map<string, AllocationCandidateRequest>();
+  const recordCandidate = (request: AllocationCandidateRequest) => candidateRequests?.set(JSON.stringify(request), request);
+  if (candidateRequests) for (const method of methods) recordCandidate({ objectiveId: method.objectiveId, methodId: method.id,
+    phase: 'skeleton', unitIds: [], actions: method.actions.map(action => ({ actionId: action.id, target: action.target,
+      unitIds: action.unitIds ?? null })) });
   let handoffPolicy: typeof policy | undefined;
   const allocation = withAllocationArrivalQuery(snapshot, owner, policy, fixedVoyageArrival => allocateStrategy({ snapshot,
     situation, objectives: evaluation.objectives, methods, providers, previous: imported, fixedVoyageArrival,
@@ -83,6 +93,10 @@ export function planControlledBootstrapCommands(snapshot: GameSnapshot, owner: P
       const targetId = imported.objectives[objectiveId]?.target.entityId;
       return targetId ? importedMiningLossUpperBound(situation, evaluation.objectives, targetId, window) : null;
     },
+    ...(candidateRequests ? { observeCandidate: request => recordCandidate({ objectiveId: request.objectiveId,
+      methodId: request.method.id, phase: request.phase, unitIds: request.unitIds,
+      actions: request.method.actions.map(action => ({ actionId: action.id, target: action.target, unitIds: action.unitIds ?? null })) }) }
+      : {}),
     prepareVoyageRisks: materialized => prepareAllocationVoyageRisks(snapshot, owner, policy, materialized),
     switchingCost: request => nativeSwitchCost(snapshot, request.resourceKeys),
     handoffImported(requests) {
@@ -170,7 +184,8 @@ export function planControlledBootstrapCommands(snapshot: GameSnapshot, owner: P
   memory = pruneAllocationProvenance(advanceAllocationLeases(settleAllocationState(memory, snapshot), snapshot)); policy.strategyAllocation = memory;
   const admissions = [...rejected, ...result.admissions];
   const entries: AiCommandEntry[] = result.accepted.map(item => ({ scriptId: item.executor, command: item.command }));
-  const output: BootstrapStrategyOutput = { decision: { ...evaluation, situation }, ...(observed ? { project: () => ({
-    ...projectStrategyTrace(evaluation as ObservedStrategyDecision), allocation: projectStrategyAllocation(memory, admissions) }) } : {}) };
+  const output: BootstrapStrategyOutput = { decision: { ...evaluation, mode: 'control', situation },
+    ...(candidateRequests ? { candidateRequests: [...candidateRequests.values()] } : {}), ...(observed ? { project: () => ({
+    ...projectStrategyTrace(evaluation as ObservedStrategyDecision), mode: 'control', allocation: projectStrategyAllocation(memory, admissions) }) } : {}) };
   return { entries, context, strategy: output };
 }

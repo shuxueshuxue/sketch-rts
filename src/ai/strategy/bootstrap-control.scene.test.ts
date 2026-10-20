@@ -33,6 +33,12 @@ describe('the real bootstrap control entry before behavioral acceptance', () => 
     const beforeProjection = JSON.stringify(observed.memory);
     expect(output?.project).toBeDefined();
     const trace = output!.project!();
+    expect(trace.mode).toBe('control');
+    expect(output!.decision.mode).toBe('control');
+    expect(output!.candidateRequests?.some(request => request.phase === 'skeleton')).toBe(true);
+    expect(output!.candidateRequests?.some(request => request.phase === 'gross')).toBe(true);
+    for (const request of output!.candidateRequests ?? []) for (const id of request.unitIds)
+      expect(output!.decision.situation.units.find(unit => unit.id === id)?.hp).toBeGreaterThan(0);
     expect(trace.allocation?.revision).toBe(observed.memory.strategyAllocation!.revision);
     expect(JSON.stringify(observed.memory)).toBe(beforeProjection);
     expect(evaluator).toHaveBeenCalledTimes(2);

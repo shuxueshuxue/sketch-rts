@@ -65,6 +65,7 @@ function reprice(input: StrategyAllocationInput, memory: StrategyAllocationMemor
     if (voyage.unitIds.some(id => !permitted.has(id)) || voyage.ship.kind === 'existing' && !permitted.has(voyage.ship.unitId))
       throw new Error('Materialized voyage recruited outside the quoted bundle');
   }
+  input.observeCandidate?.({ objectiveId: offer.objective.id, method, unitIds: offer.unitIds, phase: valuation.phase });
   const quote = provider.quote({ ...request, method });
   if (quote.utility) assertUnitValueSides(quote.utility);
   if (quote.potentialUtility) assertUnitValueSides(quote.potentialUtility);

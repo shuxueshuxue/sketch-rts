@@ -449,6 +449,10 @@ export type StrategyAllocationInput = Readonly<{
   fixedVoyageArrival?: AllocationMethodQuoteInput['fixedVoyageArrival'];
   /** Verified optimistic target envelope only for imported-task leases. */
   importedUpperBound?: (objectiveId: string, window: ValuationWindow) => ImportedLossUpperBound | null;
+  /** Optional observation of the exact materialized request, never a second
+   * provider evaluation. The receiver cannot participate in admission. */
+  observeCandidate?: (request: Readonly<{ objectiveId: string; method: ExecutableMethod;
+    unitIds: readonly string[]; phase: 'gross' | 'net' }>) => void;
   /** Current, explicit switching quote. Missing/unknown prices cannot authorize
    * taking an executed incumbent's resource. */
   switchingCost?: (request: Readonly<{ fromObjectiveId: string; toObjectiveId: string;

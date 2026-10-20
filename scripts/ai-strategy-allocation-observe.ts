@@ -89,6 +89,9 @@ const loop = runAiGameLoop({ ...config, commandPlanner({ game, snapshot, owner, 
           departure: crossing.departure, landing: crossing.landing, requiresNewShip: crossing.requiresNewShip })) }
         : { status: arrival.status, reason: arrival.reason.code };
     log('fact-requests', { tick: snapshot.tick, owner,
+      // Exact provider skeletons and quoted bundles, captured during the same
+      // evaluation even if no formal method or Arrival row was granted.
+      allocatorCandidates: strategy.candidateRequests ?? null,
       objectives: decision.objectives.map(objective => ({ id: objective.id, kind: objective.kind, target: objective.target,
         status: objective.status, score: objective.utility.score, reasons: objective.reasons.map(reason => reason.code) })),
       candidateMethods: decision.methods.map(method => ({ id: method.id, objectiveId: method.objectiveId, status: method.status,
@@ -98,6 +101,7 @@ const loop = runAiGameLoop({ ...config, commandPlanner({ game, snapshot, owner, 
         actions: method.actions.map(action => ({ id: action.id, target: action.target, unitIds: action.unitIds,
           execution: authority?.executions[action.id]?.status ?? null })) })),
       unitArrivals: decision.situation.units.map(unit => ({ id: unit.id, owner: unit.owner, location: unit.location, roles: unit.roles,
+        hp: unit.hp, commitments: unit.commitments,
         arrivals: unit.arrivals.map(row => ({ targetId: row.targetId, ...compactArrival(row.arrival) })) })),
       allocation: { leases: Object.values(authority?.leases ?? {}), unmet: authority?.unmet ?? [],
         blocked: Object.values(authority?.blocked ?? {}), events: authority?.events ?? [] } });
