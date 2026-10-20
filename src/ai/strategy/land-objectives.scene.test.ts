@@ -22,6 +22,12 @@ describe('land objective observation on L1–L6 contract frames', () => {
     const result = observe(frame);
     expect(JSON.stringify(frame)).toBe(before);
     expect(observe(frame)).toEqual(result);
+    const tick = frame.situation.tick + 15;
+    const later = { ...frame, context: { ...frame.context, snapshot: { ...frame.context.snapshot, tick } },
+      situation: { ...frame.situation, tick } };
+    // Same real posture one think later: cache history is outside the fork,
+    // so complete proposals/methods/idle evidence must equal a cold observer.
+    expect(observe(later)).toEqual(observe(structuredClone(later)));
     expect(result.objectives.every(goal => goal.rank === 0)).toBe(true);
     expect(result.methods.every(method => ['candidate', 'blocked'].includes(method.status))).toBe(true);
     expect(result.idle.flatMap(force => force.unitIds).length).toBe(new Set(result.idle.flatMap(force => force.unitIds)).size);

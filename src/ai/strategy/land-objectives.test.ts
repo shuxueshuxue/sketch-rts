@@ -5,7 +5,7 @@ import { UNIT_DEFS } from '../../shared/catalog';
 import { createAiPolicyMemory } from '../memory';
 import { unitStrength } from '../policy/v6/strength';
 import { generateLandObjectives, decomposeLandObjective, landIdleForces } from './land-objectives';
-import type { Arrival, Asset, Opportunity, PlanningContext, Situation, SituationUnit, UnitRole } from './types';
+import type { Arrival, Asset, Objective, Opportunity, PlanningContext, Situation, SituationUnit, UnitRole } from './types';
 
 const HORIZON = 2400;
 function frozen<T>(value: T): T {
@@ -52,6 +52,8 @@ function changedUnit(situation: Situation, id: string, change: Partial<Situation
   return { ...situation, units: situation.units.map(unit => unit.id === id ? { ...unit, ...change } : unit) };
 }
 const goals = (situation: Situation, context: PlanningContext) => generateLandObjectives(situation, context, []);
+const coldGoals = (situation: Situation, context: PlanningContext, previous: readonly Objective[]) =>
+  generateLandObjectives(situation, { ...context, memory: structuredClone(context.memory) }, previous);
 
 describe('land objective proposals over one shared Situation', () => {
   it('keeps stable effect IDs, independent of rank, time and input enumeration', () => {
@@ -84,6 +86,31 @@ describe('land objective proposals over one shared Situation', () => {
     expect(attack.utility.successProbability).toBe(0);
     expect(decomposeLandObjective(absent, attack, context)[0]!.estimatedTicks).toBeNull();
     expect(landIdleForces(absent, [attack]).every(item => item.alternativeObjectiveId === null && item.opportunityCostGold === 0)).toBe(true);
+  });
+
+  it('does not turn an unquoted own army into a confirmed training or borrowing deficit', () => {
+    const { context, situation } = example();
+    const pending = { ...situation, units: situation.units.map(unit => unit.owner === 'us' && unit.kind !== 'worker'
+      ? { ...unit, arrivals: [] } : unit) };
+    const objectives = goals(pending, context);
+    for (const objective of objectives) {
+      const methods = decomposeLandObjective(pending, objective, context);
+      expect(objective.status).toBe('blocked');
+      expect(objective.utility.successProbability).toBe(0);
+      expect(methods.every(method => method.preconditions.some(condition => condition.kind === 'force'
+        && condition.status === 'unknown' && condition.demand === null))).toBe(true);
+      expect(methods.flatMap(method => method.subgoals).some(child => ['train-force', 'borrow-force'].includes(child.kind))).toBe(false);
+    }
+  });
+
+  it('distinguishes an unquoted existing worker from a confirmed engineer shortfall', () => {
+    const { context, situation } = example();
+    const pending = changedUnit(situation, 'builder', { arrivals: [] });
+    const objective = goals(pending, context).find(goal => goal.kind === 'ExpandLand')!;
+    const methods = decomposeLandObjective(pending, objective, context);
+    expect(objective.status).toBe('blocked');
+    expect(methods[0]!.preconditions).toContainEqual(expect.objectContaining({ kind: 'workers', status: 'unknown' }));
+    expect(methods.flatMap(method => method.subgoals).some(child => child.kind === 'deliver-workers')).toBe(false);
   });
 
   it('keeps an active attack group occupied even when its actual order happens to be hold (L2)', () => {
@@ -374,14 +401,14 @@ describe('land objective proposals over one shared Situation', () => {
     expect(restarted.stability.minimumStayUntilTick).toBe(2200);
   });
 
-  it('reuses unchanged facts across thinks and retimes relative arrival demands', () => {
+  it('keeps a cold fork identical at a later think while retiming relative arrival demands', () => {
     const { context, situation } = example(), first = goals(situation, context);
     const later = { ...situation, tick: 1015 }, ctx = { ...context, snapshot: { ...context.snapshot,
       map: { ...context.snapshot.map, wind: { direction: 1, speed: 4 } }, tick: later.tick } };
     const next = generateLandObjectives(later, ctx, first), goal = next.find(goal => goal.kind === 'AttackSite')!;
-    expect(goal.reasons).toContainEqual(expect.objectContaining({ code: 'assessment-reused' }));
-    expect(goal.utility.evidence.find(item => item.source === 'land-objectives')!.tick).toBe(1000);
-    expect(goal.utility).toEqual(first.find(previous => previous.id === goal.id)!.utility);
+    expect(next).toEqual(coldGoals(later, ctx, first));
+    expect(goal.utility.evidence.find(item => item.source === 'land-objectives')!.tick).toBe(1015);
+    expect(goal.utility.score).toBe(first.find(previous => previous.id === goal.id)!.utility.score);
     const demand = decomposeLandObjective(later, goal, ctx)[0]!.demands.find(demand => demand.kind === 'force')!;
     expect(demand).toEqual(expect.objectContaining({ neededByTick: 1075 }));
     expect(generateLandObjectives(later, ctx, first)).toEqual(next);
@@ -393,10 +420,13 @@ describe('land objective proposals over one shared Situation', () => {
       { ...context, snapshot: { ...context.snapshot, tick } }, first).find(goal => goal.kind === 'AttackSite')!;
     context.snapshot.units.find(unit => unit.id === 'fighter-3')!.hp *= .5;
     const unused = changedUnit(situation, 'fighter-3', { hp: 50, strength: .5 });
-    expect(assess(unused, 1015).reasons.some(reason => reason.code === 'assessment-reused')).toBe(true);
+    expect(assess(unused, 1015).utility.score).toBe(first.find(goal => goal.kind === 'AttackSite')!.utility.score);
     context.snapshot.units.find(unit => unit.id === 'fighter-0')!.hp *= .25;
     const needed = changedUnit(unused, 'fighter-0', { hp: 20, strength: .2 });
-    expect(assess(needed, 1030).reasons.some(reason => reason.code === 'assessment-reused')).toBe(false);
+    const updated = assess(needed, 1030);
+    expect(updated).toEqual(coldGoals({ ...needed, tick: 1030 }, { ...context, snapshot: { ...context.snapshot, tick: 1030 } }, first)
+      .find(goal => goal.kind === 'AttackSite'));
+    expect(updated.utility.score).not.toBe(first.find(goal => goal.kind === 'AttackSite')!.utility.score);
   });
 
   it('invalidates a retained expansion when reserved spending crosses its hall budget', () => {
@@ -404,7 +434,7 @@ describe('land objective proposals over one shared Situation', () => {
     const poor = { ...situation, tick: 1015, economy: { ...situation.economy, cashGold: 399 } };
     const ctx = { ...context, snapshot: { ...context.snapshot, tick: poor.tick } };
     const goal = generateLandObjectives(poor, ctx, first).find(goal => goal.kind === 'ExpandLand')!;
-    expect(goal.reasons.some(reason => reason.code === 'assessment-reused')).toBe(false);
+    expect(goal).toEqual(coldGoals(poor, ctx, first).find(goal => goal.kind === 'ExpandLand'));
     expect(decomposeLandObjective(poor, goal, ctx)[0]!.preconditions).toContainEqual(expect.objectContaining({ kind: 'budget', status: 'unmet' }));
   });
 
@@ -415,7 +445,7 @@ describe('land objective proposals over one shared Situation', () => {
       ? { ...building, x: 1600, y: 600 } : building) };
     const later = { ...situation, tick: snapshot.tick };
     const goal = generateLandObjectives(later, { ...context, snapshot }, first).find(goal => goal.kind === 'ExpandLand')!;
-    expect(goal.reasons.some(reason => reason.code === 'assessment-reused')).toBe(false);
+    expect(goal).toEqual(coldGoals(later, { ...context, snapshot }, first).find(goal => goal.kind === 'ExpandLand'));
     expect(decomposeLandObjective(later, goal, { ...context, snapshot })[0]!.subgoals).toContainEqual(expect.objectContaining({
       kind: 'clear-beachhead', target: expect.objectContaining({ entityId: enemy.id }),
     }));
@@ -427,7 +457,9 @@ describe('land objective proposals over one shared Situation', () => {
       ? { ...unit, commitments: ['landAttack', 'expansionMission'].map((source, i) => ({ source, taskId: source,
         objectiveId: i ? 'ExpandLand:us:mine' : id, role: 'frontline' as const,
         evidence: { source, tick: 990, certainty: 'recorded' as const, detail: unit.id } })) } : unit) };
-    const previous = goals(situation, context).map(goal => ({ ...goal, utility: { ...goal.utility, score: 100 } }));
+    // Exactly the serializable strategy history; no dependence on a full old trace.
+    const previous = goals(situation, context).map(goal => ({ id: goal.id, sinceTick: goal.sinceTick,
+      stability: goal.stability, utility: { score: 100 } }));
     const attack = generateLandObjectives(occupied, context, previous).find(goal => goal.id === id)!;
     expect(attack.utility.cost.some(term => term.code === `handoff:${id}`)).toBe(false);
     expect(attack.utility.cost.find(term => term.code === 'handoff:ExpandLand:us:mine')!.value).toBeGreaterThan(0);
@@ -441,14 +473,16 @@ describe('land objective proposals over one shared Situation', () => {
     const quote = (s: Situation, tick: number) => generateLandObjectives({ ...s, tick },
       { ...context, snapshot: { ...context.snapshot, tick } }, first).find(goal => goal.kind === 'AttackSite')!;
     const delay = quote(delayed, 1015);
-    expect(delay.reasons.some(reason => reason.code === 'assessment-reused')).toBe(false);
+    expect(delay).toEqual(coldGoals({ ...delayed, tick: 1015 },
+      { ...context, snapshot: { ...context.snapshot, tick: 1015 } }, first).find(goal => goal.kind === 'AttackSite'));
     const demand = decomposeLandObjective({ ...delayed, tick: 1015 }, delay,
       { ...context, snapshot: { ...context.snapshot, tick: 1015 } })[0]!.demands.find(demand => demand.kind === 'force')!;
     expect(demand).toEqual(expect.objectContaining({ neededByTick: 1075.125 }));
     const patient = changedUnit(delayed, unit.id, { commitments: [{ source: 'mobileCare.claimsUnits', taskId: 'treatment',
       objectiveId: null, role: 'frontline', evidence: { source: 'mobileCare', tick: 1020, certainty: 'recorded', detail: unit.id } }] });
     const interrupted = quote(patient, 1030);
-    expect(interrupted.reasons.some(reason => reason.code === 'assessment-reused')).toBe(false);
+    expect(interrupted).toEqual(coldGoals({ ...patient, tick: 1030 },
+      { ...context, snapshot: { ...context.snapshot, tick: 1030 } }, first).find(goal => goal.kind === 'AttackSite'));
     expect(interrupted.reasons.find(reason => reason.code === 'observation-only-cohort')!.detail).not.toContain(unit.id);
   });
 });
