@@ -112,10 +112,11 @@ describe('land objective proposals over one shared Situation', () => {
     expect(landIdleForces(occupied, [pressure])).toEqual([]);
   });
 
-  it('keeps patients unavailable despite an overlapping garrison claim (L3/L4)', () => {
+  it.each(['mobileCare.claimsUnits', 'mobileCare.accepted-plan', 'frontRecovery.postRecoveryAssignments', 'frontRecovery.accepted-plan'])(
+    'keeps patients unavailable during %s despite an overlapping garrison claim (L3/L4)', source => {
     const { context, situation } = example();
     const patients = { ...situation, units: situation.units.map(unit => unit.owner === 'us' && unit.kind !== 'worker'
-      ? { ...unit, commitments: [{ source: 'mobileCare', objectiveId: 'DefendSite:us:home', taskId: 'treatment', role: 'frontline' as const,
+      ? { ...unit, commitments: [{ source, objectiveId: 'DefendSite:us:home', taskId: 'treatment', role: 'frontline' as const,
         evidence: { source: 'follow', tick: 990, certainty: 'recorded' as const, detail: 'distant medic' } }] } : unit) };
     const result = goals(patients, context);
     expect(result.every(goal => goal.utility.successProbability === 0)).toBe(true);
