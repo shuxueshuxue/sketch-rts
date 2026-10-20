@@ -1,4 +1,4 @@
-import { UNIT_DEFS, unitMover } from '../../shared/catalog';
+import { unitMover } from '../../shared/catalog';
 import { combatCapability } from '../../shared/combat-capabilities';
 import { strikeGap } from '../../shared/combat-geometry';
 import { sameGround, walkableGoal } from '../../shared/terrain';
@@ -9,6 +9,7 @@ import { creepForce, forceFor, type Camp } from '../policy/v7/creep';
 import { isOpponentOwner } from '../policy/ownership';
 import { averagePoint, distance } from '../policy/spatial';
 import { arrivalWeightedForce } from './arrival-force';
+import { casualtySurvivors, focusedCasualties } from './focused-casualties';
 import type { DecisionFacts } from './decision';
 import { landIdAt } from './regions';
 import { strategicTargetCamp } from './target-camp';
@@ -191,9 +192,8 @@ export function assessAllocatedCampBattle(input: Omit<TargetReinforcementInput, 
   const probability = status === 'known' ? forceSuccessProbability(ourForce!, opponentForce!) : null;
   const availability = new Map(engagement.enemyAvailability.map(entry => [entry.unitId, entry]));
   const frontRange = ours.length ? Math.min(...ours.map(unit => unit.attackRange)) : 0;
-  // Proportional HP exposure is a stated attrition heuristic. The same forecast
-  // produces both the loss cost and permanent survivors used by the hall quote;
-  // no second probability multiplier or departure margin enters this estimate.
+  // Exposure estimates damage only. One shared focus-fire model turns it into
+  // exact deaths and wounded survivors; departure margins never enter loss cost.
   const damage = engagement.opposition.creeps.reduce((sum, opponent) => {
     const life = availability.get(opponent.id);
     const seconds = ((life?.throughTicks ?? battleStartTicks + durationTicks) - (life?.fromTicks ?? battleStartTicks)) / SIM_TICKS_PER_SECOND;
@@ -201,8 +201,9 @@ export function assessAllocatedCampBattle(input: Omit<TargetReinforcementInput, 
     const original = snapshot.units.find(unit => unit.id === opponent.id)!;
     return sum + combatCapability(snapshot, original).dps * Math.max(0, seconds - approach);
   }, towers.reduce((sum, tower) => sum + tower.attackDamage / Math.max(1, tower.attackCooldown) * durationTicks, 0));
-  const hp = ours.reduce((sum, unit) => sum + unit.hp, 0), lossShare = Math.min(1, damage / Math.max(1, hp));
-  const permanent = ours.filter(unit => unit.expiresTick === undefined);
+  const casualties = focusedCasualties(ours, damage);
+  const hp = ours.reduce((sum, unit) => sum + unit.hp, 0), lossShare = casualties.expectedHpLost / Math.max(1, hp);
+  const permanent = casualtySurvivors(ours, casualties).filter(unit => unit.expiresTick === undefined);
   return { status, reasonCode: !converged ? 'camp-battle-iteration-limit' : !dps ? 'allocated-battle-dps-unavailable'
     : expires.length ? 'allocated-cohort-expires-during-battle' : engagement.status === 'unknown' ? 'battle-enemy-arrival-unknown' : 'camp-battle-converged',
     converged, iterations, battleStartTicks, durationTicks, battleUntilTicks: battleStartTicks + durationTicks, dps,
@@ -210,11 +211,9 @@ export function assessAllocatedCampBattle(input: Omit<TargetReinforcementInput, 
     knownOurForce: ourForce, ourForce: status === 'known' ? ourForce : null,
     requiredForce: opponentForce === null ? null : opponentForce + engagement.margin, successProbability: probability,
     expiringOwnIds: expires.map(unit => unit.id).sort(),
-    attrition: { damageExposure: damage, expectedHpLost: hp * lossShare, lossShare,
-      expectedLossGold: ours.reduce((sum, unit) => sum + UNIT_DEFS[unit.kind].cost, 0) * lossShare,
+    attrition: { ...casualties, lossShare,
       permanentUnitIds: permanent.map(unit => unit.id).sort(),
-      survivors: permanent.map(unit => ({ unitId: unit.id, hp: unit.hp * (1 - lossShare), maxHp: unit.maxHp })),
-      survivingCampForce: creepForce(permanent) * (1 - lossShare), survivingFieldForce: strengthOf(permanent) * (1 - lossShare) } };
+      survivingCampForce: creepForce(permanent), survivingFieldForce: strengthOf(permanent) } };
 }
 
 /** Conditional on winning the first fight: those opponents have been resolved.
