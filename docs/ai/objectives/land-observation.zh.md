@@ -86,6 +86,8 @@ L3 的执行器归因取自原始逐 think 记录：14010 和 14025 是 **mobile
 
 c648e634 紧凑 ETA 适配通过 7 文件 126 项测试，根 tsc 通过。七帧完整陆地与联合 collector 的固定金标无需更新，运行时计划、观察历史及命令/policy/世界摘要也继续和 32e2eaba 适配前记录相同；共享 NAVAL 金标和默认 LAND 跨进程冷暖/fork 均通过。本次 rebase 保留共享 withStrategyFrame 作用域，plan.ts 相对共享基线仍仅增加陆地 family 导入及默认列表项。
 
+本分支现已 rebase 到框架 35676cad／main 646cf9a0，保留 withGoalDistanceFieldLease、withStrategyFrame 和 startup 预热；陆地模块计算源码未改。9 文件 137 项相关测试与根 tsc 通过，A100 4 workers 完整 src：735 个文件中 734 个通过，8126 项通过，耗时 495.8 秒；唯一失败是已知 think-worker 的 30 秒超时，该文件在 juma 单独 6/6 通过，没有其他断言失败。七帧完整计划/运行时计划/观察历史旧金标无需更新，命令及世界摘要也不变。跨 main 的原 policy 哈希只因 #574 新增 landExpansion.reason（七帧）及 L5-front 的既有夺岛 reason 精确化而变化；新 main 内普通/观察规划完整 policy 仍逐字节一致，未在这项对照中删除诊断字段。
+
 内存验收使用 12:37 校准口径：GC 后每房间存活 heapUsed + external 增量 ≤30 MiB；真实 room host 的 4 worker／8 房间服务树峰值由 main/candidate 各跑三次，整体增量 ≤15%。旧单房间 maxRSS 差仅作历史结果。最终录制器路径/SHA、Node、评估边界与保存的模块历史在两端保持一致；本轮尚未启动该验收。
 
 最终性能等待共享局势性能版定稿后做同机 ABBA，分别记录四军场景和后期海图的每次 think，并单列陆地增量。历史初版先在计时区外取得同一份 Situation，再比较旧 planner 与“陆地报价/分解/闲置 + 旧 planner”：四军 p95 230.56→233.74 毫秒，海图 44.53→53.14 毫秒，后者未达线，此后才加入候选裁剪与事实缓存。该历史表不能作为当前版本或框架总耗时的验收。原始逐 think 数据、命令哈希及本轮验证见 [A100 证据包](land-observation.evidence.json)。
