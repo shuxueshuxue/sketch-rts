@@ -17,14 +17,17 @@ import { discountGold, forceSuccessProbability, forceTimeGold, STRATEGY_PARAMETE
 import type { Arrival, Asset, Effect, Method, Objective, ObjectiveKind, PlanningContext, Precondition, Reason,
   ResourceDemand, Situation, SituationUnit, SiteThreat, Subgoal, Target, Utility } from './types';
 import type { PreviousObjective } from './observation-memory';
+import { deferredEvidence, lazyValue, projectedCopy, projectedProperty, projectedValueReader } from './explanations';
 
 const STATION_RANGE = 650;
 const byId = (a: { id: string }, b: { id: string }) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 const sumStrength = (units: readonly SituationUnit[]) => units.reduce((sum, unit) => sum + unit.strength, 0);
 const route = (unit: SituationUnit, targetId: string) => unit.arrivals.find(entry => entry.targetId === targetId)?.arrival;
 const duration = (arrival: Arrival | undefined) => arrival && 'ticks' in arrival ? arrival.ticks : undefined;
-const reason = (tick: number, code: string, detail: string, source = 'strategy.naval-objectives'): Reason => ({ code, detail,
-  evidence: [{ source, tick, certainty: 'inferred', detail }] });
+const reason = (tick: number, code: string, detail: string | (() => string), source = 'strategy.naval-objectives'): Reason => {
+  const text = lazyValue(typeof detail === 'function' ? detail : () => detail);
+  return deferredEvidence(projectedProperty({ code }, 'detail', text), () => [{ source, tick, certainty: 'inferred', detail: text() }]);
+};
 const fieldDemand = (target: Target, strength: number, permanent = false): ResourceDemand => ({ kind: 'force', metric: 'field-strength',
   strength, roles: ['frontline', 'ranged'], at: target, neededByTick: null, permanent });
 const cache = new WeakMap<PlanningContext['snapshot'], NeutralCampExposureFacts>();
@@ -128,8 +131,10 @@ function createObjective(situation: Situation, previous: readonly PreviousObject
   const since = sinceTick ?? old?.sinceTick ?? situation.tick;
   const persistenceBonus = status === 'active' ? Math.min(STRATEGY_PARAMETERS.maximumPersistenceGold,
     Math.max(0, utility.score) * STRATEGY_PARAMETERS.persistenceBenefitShare) : 0;
+  const repriced = strategyUtility({ benefit: utility.benefit, cost: utility.cost, horizonTicks: utility.horizonTicks,
+    successProbability: utility.successProbability, persistenceBonus, evidence: projectedValueReader(utility, 'evidence') });
   return { id, kind, owner: situation.owner, target: { ...target, point: { ...target.point } }, effects,
-    utility: { ...strategyUtility({ ...utility, persistenceBonus }), ...(status === 'blocked' ? { score: null } : {}) },
+    utility: projectedCopy(repriced, { score: status === 'blocked' ? null : repriced.score }),
     ...(status === 'blocked' ? { conditionalQuote: { potentialUtility: null,
       assumptions: [reason(situation.tick, 'conditional-valuation-unknown', 'The force, route or response after missing prerequisites is not priced; current troops do not establish a conditional success quote')],
       includedPrerequisiteUtilityCodes: [] } } : {}),
@@ -157,7 +162,7 @@ export function generateNavalObjectives(situation: Situation, context: PlanningC
     const value = atRiskValue(situation, site) * (threat.lossProbability ?? 0);
     const utility = strategyUtility({ benefit: [{ code: 'asset-loss-prevented', value, explanation: 'Replacement value and mine income at risk, weighted by the current local loss forecast' }],
       cost: [{ code: 'force-time', value: unknownThreat ? 0 : forceTimeGold(Math.min(enemy, available), threat.horizonTicks), explanation: 'Expected force occupation, paid even if the defense fails' }],
-      successProbability: unknownThreat ? 0 : forceSuccessProbability(available, enemy), evidence: threat.evidence });
+      successProbability: unknownThreat ? 0 : forceSuccessProbability(available, enemy), evidence: projectedValueReader(threat, 'evidence') });
     const reasons = [reason(tick, 'site-under-threat', `${site.id}: on station ${threat.friendlyOnStationStrength}; enemy ${enemy}; estimated collapse ${Math.ceil(collapseTicks)} ticks`),
       reason(tick, timely.length ? 'timely-response-candidates' : 'no-timely-response', timely.length ? timely.map(unit => unit.id).join(', ') : 'No forecast force arrives before the current-HP/DPS deadline; this is not a promise the site can be saved')];
     if (unknownThreat) reasons.push(reason(tick, 'threat-geometry-pending', 'Coarse attacker presence is recorded; a pending arrival field must not become a safety claim or a successful defense quote'));
@@ -179,7 +184,7 @@ export function generateNavalObjectives(situation: Situation, context: PlanningC
       objectives.push(createObjective(situation, previous, 'Evacuate', site.target,
         shelter ? [{ kind: 'assets-evacuated', unitIds: workers.map(worker => worker.id), destination: shelter.target }] : [],
         strategyUtility({ benefit: [{ code: 'workers-saved', value: workers.length * UNIT_DEFS.worker.cost, explanation: 'Paid workers at the threatened site' }],
-          cost: [], successProbability: reachable ? 1 : 0, evidence: threat.evidence }),
+          cost: [], successProbability: reachable ? 1 : 0, evidence: projectedValueReader(threat, 'evidence') }),
         [reason(tick, reachable ? 'evacuation-route-forecast' : 'evacuation-prerequisites-unmet', shelter ? `Shelter ${shelter.id}; boats and ETA must be feasible before abandonment` : 'No shelter site is known')], reachable ? 'candidate' : 'blocked'));
     }
   }

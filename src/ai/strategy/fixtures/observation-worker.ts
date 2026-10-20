@@ -9,9 +9,10 @@ import { createArrivalQuery, crossingCandidateId } from '../arrivals';
 import { createPlanningDistanceQuery } from '../distance-fields';
 import { regionIndex, landIdAt } from '../regions';
 import { observationMemory } from '../observation-memory';
+import { buildObservedStrategyDecision, buildStrategyDecision, projectStrategyTrace } from '../decision';
 
 type Input = { snapshot: GameSnapshot; owner: string; memory: AiPolicyMemory;
-  warm?: 'other-owner' | 'reverse'; start?: number; steps: number; dropHallId?: string; tiny?: boolean };
+  warm?: 'other-owner' | 'reverse'; start?: number; steps: number; dropHallId?: string; tiny?: boolean; decision?: boolean; factsOnly?: boolean };
 const input = JSON.parse(readFileSync(0, 'utf8')) as Input;
 const { snapshot, owner, memory } = input, initialTick = snapshot.tick;
 if (input.tiny) {
@@ -47,7 +48,11 @@ for (let index = input.start ?? 0; index < (input.start ?? 0) + input.steps; ind
   snapshot.tick = initialTick + index * 15;
   if (input.dropHallId && index >= 4) snapshot.buildings = snapshot.buildings.filter(building => building.id !== input.dropHallId);
   setBuildingBodies(snapshot.map, standingBodies(snapshot));
-  const trace = input.tiny ? tinyArrival(memory, 1) : buildStrategyPlanTrace(snapshot, owner, { memory }, undefined, undefined, { healing: [] });
+  const trace = input.tiny ? tinyArrival(memory, 1) : input.factsOnly
+    ? buildStrategyDecision(snapshot, owner, { memory }, undefined, { healing: [] })
+    : input.decision
+    ? projectStrategyTrace(buildObservedStrategyDecision(snapshot, owner, { memory }, undefined, { healing: [] }))
+    : buildStrategyPlanTrace(snapshot, owner, { memory }, undefined, undefined, { healing: [] });
   rows.push(JSON.stringify(trace)); saved.push(JSON.stringify(memory));
 }
 process.stdout.write(JSON.stringify({ rows, saved }));

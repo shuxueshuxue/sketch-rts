@@ -1,5 +1,6 @@
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { Utility } from './types';
+import { copiedEvidenceProjection, deferredEvidence, deferredRecord, projectedCopy, valueReader } from './explanations';
 
 /** A shared gold-equivalent scale for every objective family; never map-specific. */
 export const STRATEGY_PARAMETERS = Object.freeze({
@@ -44,7 +45,8 @@ export function forceTimeGold(strength: number, occupiedTicks: number): number {
     * occupiedTicks / STRATEGY_PARAMETERS.utilityHorizonTicks, 'force time cost', 0);
 }
 
-type UtilityInput = Pick<Utility, 'benefit' | 'cost' | 'successProbability' | 'evidence'>
+type UtilityInput = Pick<Utility, 'benefit' | 'cost' | 'successProbability'>
+  & { evidence: Utility['evidence'] | (() => Utility['evidence']) }
   & Partial<Pick<Utility, 'horizonTicks' | 'persistenceBonus'>>;
 
 /** Failed attempts still incur their expected costs. A success-only expense is
@@ -52,12 +54,12 @@ type UtilityInput = Pick<Utility, 'benefit' | 'cost' | 'successProbability' | 'e
 export function strategyUtility(input: UtilityInput): Utility {
   const probability = finite(input.successProbability, 'success probability', 0);
   if (probability > 1) throw new Error(`Invalid strategy success probability: ${probability}`);
-  const benefit = input.benefit.map(term => ({ ...term, value: finite(term.value, `benefit ${term.code}`) }));
-  const cost = input.cost.map(term => ({ ...term, value: finite(term.value, `cost ${term.code}`, 0) }));
+  const benefit = input.benefit.map(term => deferredRecord(projectedCopy(term, { value: finite(term.value, `benefit ${term.code}`) })));
+  const cost = input.cost.map(term => deferredRecord(projectedCopy(term, { value: finite(term.value, `cost ${term.code}`, 0) })));
   const persistenceBonus = finite(input.persistenceBonus ?? 0, 'persistence bonus', 0);
   const horizonTicks = finite(input.horizonTicks ?? STRATEGY_PARAMETERS.utilityHorizonTicks, 'utility horizon', 1);
   const score = finite(probability * benefit.reduce((sum, term) => sum + term.value, 0)
     - cost.reduce((sum, term) => sum + term.value, 0) + persistenceBonus, 'utility score');
-  return { horizonTicks, benefit, cost, successProbability: probability, persistenceBonus, score,
-    evidence: input.evidence.map(item => ({ ...item })) };
+  const source = typeof input.evidence === 'function' ? input.evidence : valueReader(input.evidence);
+  return deferredEvidence({ horizonTicks, benefit, cost, successProbability: probability, persistenceBonus, score }, copiedEvidenceProjection(source));
 }

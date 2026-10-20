@@ -48,4 +48,21 @@ describe('serialized strategy publication independent of process caches', () => 
     const fork = processRun({ tiny: true, memory, start: 10, steps: 10 });
     expect(fork.rows).toEqual(continuous.rows.slice(10)); expect(fork.saved).toEqual(continuous.saved.slice(10));
   }, 60000);
+  it('preserves decision projections and saved history in independent warm processes and a restarted process', () => {
+    const continuous = processRun({ decision: true });
+    expect(processRun({ decision: true, warm: 'other-owner' })).toEqual(continuous);
+    expect(processRun({ decision: true, warm: 'reverse' })).toEqual(continuous);
+    const fork = processRun({ decision: true, memory: JSON.parse(continuous.saved[5]!), start: 6, steps: 6 });
+    expect(fork.rows).toEqual(continuous.rows.slice(6)); expect(fork.saved).toEqual(continuous.saved.slice(6));
+  }, 60000);
+  it('keeps unobserved decision facts and observation history deterministic without collecting trace projections', () => {
+    const observed = processRun({ decision: true }), continuous = processRun({ factsOnly: true });
+    const strip = (key: string, value: unknown) => ['evidence', 'detail', 'explanation'].includes(key) ? undefined : value;
+    expect(continuous.rows).toEqual(observed.rows.map(row => JSON.stringify(JSON.parse(row), strip)));
+    expect(continuous.saved).toEqual(observed.saved);
+    expect(processRun({ factsOnly: true, warm: 'other-owner' })).toEqual(continuous);
+    expect(processRun({ factsOnly: true, warm: 'reverse' })).toEqual(continuous);
+    const fork = processRun({ factsOnly: true, memory: JSON.parse(continuous.saved[5]!), start: 6, steps: 6 });
+    expect(fork.rows).toEqual(continuous.rows.slice(6)); expect(fork.saved).toEqual(continuous.saved.slice(6));
+  }, 60000);
 });

@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { hostname, cpus } from 'node:os';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -10,11 +10,15 @@ import type { AiScriptVersion } from '../src/shared/types';
 // Run isolated source archives in A/B/B/A order on the same host. The ordinary
 // command boundary and delivery delay stay intact; observation lives outside Game.
 const args = process.argv.slice(2), root = resolve(requiredFlag(args, 'source-root'));
+for (const name of ['source-root', 'mode', 'out', 'ticks', 'detail', 'case', 'measure-from', 'measure-until'])
+  if (args.filter(value => value === `--${name}`).length > 1) throw new Error(`Repeated --${name} would make the audit ambiguous`);
 const mode = flag(args, 'mode') ?? 'large', output = requiredFlag(args, 'out');
 const ticks = Number(flag(args, 'ticks') ?? (mode === 'ocean' ? 30000 : mode === 'map' ? 18000 : 900));
 const measureFromTick = Number(flag(args, 'measure-from') ?? 0);
 const measureUntilTick = Number(flag(args, 'measure-until') ?? Infinity);
 const observe = flag(args, 'observe') !== 'false';
+const detail = flag(args, 'detail') ?? 'trace';
+if (!['decision', 'trace', 'complete'].includes(detail)) throw new Error(`Unknown strategy detail ${detail}`);
 const load = (path: string) => import(pathToFileURL(resolve(root, 'src', path)).href);
 const sim = await load('shared/sim.ts'), runtimeModule = await load('ai/runtime.ts');
 const { poolMap } = await load('shared/map-pool.ts');
@@ -23,6 +27,9 @@ const { isOpenGround, sameGround } = await load('shared/terrain.ts');
 const { checksumGame } = await load('shared/sim/checksum.ts');
 const { CommandFrameRuntime, normalizeCommandFrameEntries } = await load('shared/sim/command-frame-runtime.ts');
 const { planAiOwnerCommandEntriesWithTrace } = await load('ai/plan-trace-planner.ts');
+const { planAiOwnerCommandEntries } = await load('ai/planner-context.ts');
+const decisionPlanner = detail === 'decision' && existsSync(resolve(root, 'src/ai/strategy-decision-planner.ts'))
+  ? (await load('ai/strategy-decision-planner.ts')).planAiOwnerCommandEntriesWithDecision : undefined;
 const started = new Date().toISOString();
 const policyMemories = (memories: Record<string, unknown>) => Object.fromEntries(Object.entries(memories).map(([owner, memory]) => {
   const { strategy: _observation, ...policy } = memory as Record<string, unknown>; return [owner, policy];
@@ -79,6 +86,7 @@ if (mode === 'late') {
 }
 sim.warmGameCaches(game);
 const commandsHash = createHash('sha256'), traceHash = createHash('sha256'), previous = new Map();
+const decisions = new Map();
 const planned = new Map(), thinkSamples: number[] = [], timeline: unknown[] = [];
 const timedFrames: { tick: number; owners: string[]; ms: number; units: number; ships: number; yards: number }[] = [];
 const executor = {
@@ -86,8 +94,15 @@ const executor = {
     const start = performance.now(), snapshot = sim.snapshotGame(current);
     const entries = job.requests.flatMap(request => {
       if (!observe) return runtimeModule.planAiCommandFrameFromSnapshot(snapshot, [request], { teams: current.teams }).commands;
+      if (detail === 'decision') {
+        const result = decisionPlanner ? decisionPlanner(snapshot, request, { teams: current.teams })
+          : { commands: planAiOwnerCommandEntries(snapshot, request, { teams: current.teams }), decision: undefined };
+        decisions.set(request.playerId, result.decision);
+        return result.commands.map((entry: any) => ({ ...entry, playerId: request.playerId }));
+      }
       const result = planAiOwnerCommandEntriesWithTrace(snapshot, request, { teams: current.teams }, previous.get(request.playerId));
       previous.set(request.playerId, result.trace);
+      if (detail === 'complete') traceHash.update(JSON.stringify(result.trace));
       return result.commands.map((entry: any) => ({ ...entry, playerId: request.playerId }));
     });
     const commands = normalizeCommandFrameEntries(entries).map((entry: any) => ({ playerId: entry.playerId, command: entry.command }));
@@ -100,7 +115,7 @@ const executor = {
     commandsHash.update(JSON.stringify({ tick: job.tick, commands }));
     if (commands.length) planned.set(job.deliveryTick, [...(planned.get(job.deliveryTick) ?? []), ...commands]);
     for (const request of job.requests) {
-      const strategy = previous.get(request.playerId)?.strategy;
+      const strategy = detail === 'decision' ? decisions.get(request.playerId) : previous.get(request.playerId)?.strategy;
       if (!strategy) continue;
       const row = { tick: job.tick, owner: request.playerId,
         objectives: strategy.objectives, methods: strategy.methods, assignments: strategy.assignments,
@@ -118,7 +133,8 @@ for (let tick = 0; tick < ticks && !game.match.winner; tick++) runtime.tick();
 const used = process.cpuUsage(cpu), sorted = [...thinkSamples].sort((a, b) => a - b);
 if (!timedFrames.length) throw new Error('No AI think samples: check seat/controller setup before measuring');
 const windowSamples = timedFrames.filter(sample => sample.tick >= measureFromTick && sample.tick < measureUntilTick).map(sample => sample.ms).sort((a, b) => a - b);
-const result = { sourceRoot: root, mode, observe, host: hostname(), cpu: cpus()[0]?.model, node: process.version, started,
+if (!windowSamples.length) throw new Error('No think samples in the requested measurement window');
+const result = { sourceRoot: root, mode, observe, detail, host: hostname(), cpu: cpus()[0]?.model, node: process.version, started,
   affinity: readFileSync('/proc/self/status', 'utf8').match(/Cpus_allowed_list:\s*([^\n]+)/)?.[1],
   map: game.map.id, startTick, finalTick: game.tick, initialChecksum, finalChecksum: checksumGame(game),
   commandsSha256: commandsHash.digest('hex'), tracesSha256: traceHash.digest('hex'),

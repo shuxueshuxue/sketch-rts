@@ -6,6 +6,7 @@ import { evaluateSituation } from './situation';
 import { observationHistory, observationMemory, retainObservationHistory } from './observation-memory';
 import type { Assignment, BudgetEntry, IdleForce, MethodPlanner, ObjectiveGenerator, PlanningContext,
   Reason, Situation, SituationObservation, StrategyPlanTrace, Target, BlockedObjectiveQuote } from './types';
+import { copiedDiagnosticRecord, deferredEvidence, deferredRecord, oneEvidenceProjection, projectedCopy, projectedValueReader } from './explanations';
 
 /** Explicit read-only inputs, not a mutable global registry. A family owns no
  * evaluator; every family consumes exactly the same assessed Situation. */
@@ -29,7 +30,7 @@ export function buildStrategyPlanTrace(snapshot: GameSnapshot, owner: PlayerId, 
   const methods = generated.flatMap(({ family, objective }) => family.decompose(situation, objective, context));
   const idOrder = (a: { id: string }, b: { id: string }) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
   const rows = generated.map(({ objective }) => ({ ...objective,
-    utility: { ...objective.utility, score: objective.status === 'blocked' ? null : objective.utility.score },
+    utility: projectedCopy(objective.utility, { score: objective.status === 'blocked' ? null : objective.utility.score }),
     methodIds: methods.filter(method => method.objectiveId === objective.id).map(method => method.id) }));
   const feasible = rows.filter(objective => ['candidate', 'active'].includes(objective.status) && objective.utility.score !== null)
     .sort((a, b) => b.utility.score! - a.utility.score! || idOrder(a, b));
@@ -61,12 +62,13 @@ export function buildStrategyPlanTrace(snapshot: GameSnapshot, owner: PlayerId, 
   const assignments: Assignment[] = [];
   for (const unit of situation.units.filter(unit => unit.owner === owner)) for (const task of unit.commitments) {
     if (!task.objectiveId) continue;
+    const taskEvidence = projectedValueReader(task, 'evidence');
     const objective = objectives.find(objective => objective.id === task.objectiveId);
     const claim = options.memory.unitClaims[unit.id];
     const asset = situation.assets.find(asset => task.objectiveId === `${task.objectiveId!.split(':')[0]}:${owner}:${asset.id}`);
     const target: Target = objective?.target ?? asset?.target ?? { point: { ...unit.location.point } };
     const arrival = unit.arrivals.find(entry => entry.targetId === target.entityId)?.arrival ?? { status: 'unknown' as const,
-      reason: { code: 'assignment-route-unobserved', detail: 'No evaluated route to this retained task target; not zero ETA', evidence: [] } };
+      reason: deferredRecord({ code: 'assignment-route-unobserved', detail: 'No evaluated route to this retained task target; not zero ETA', evidence: [] }) };
     const raw = snapshot.units.find(actor => actor.id === unit.id)!;
     const followTarget = raw.order.type === 'follow' ? raw.order.targetId : null;
     const onStation = unit.location.kind === 'land' && unit.location.landId === target.landId && distance(unit.location.point, target.point) <= 650;
@@ -75,14 +77,14 @@ export function buildStrategyPlanTrace(snapshot: GameSnapshot, owner: PlayerId, 
       : unit.commitments.some(commitment => ['frontRecovery.postRecoveryAssignments', 'mobileCare.claimsUnits', 'frontRecovery.accepted-plan', 'mobileCare.accepted-plan'].includes(commitment.source)) ? 'healing' as const
       : raw.order.type === 'move' && raw.order.avoidCombat && (claim?.kind === 'retreat' || raw.hp < raw.maxHp * .5) ? 'retreat' as const
       : followTarget && unit.hp < unit.maxHp && snapshot.units.some(healer => healer.id === followTarget && ['priest', 'fieldMedic'].includes(healer.kind)) ? 'healing' as const : undefined;
-    const common = { id: `observed:${task.objectiveId}:${task.source}:${task.taskId}:${unit.id}`, objectiveId: task.objectiveId, methodId: null,
+    const common = deferredEvidence({ id: `observed:${task.objectiveId}:${task.source}:${task.taskId}:${unit.id}`, objectiveId: task.objectiveId, methodId: null,
       unitId: unit.id, role: task.role, target: { ...target, point: { ...target.point } }, sinceTick: claim?.sinceTick ?? objective?.sinceTick ?? snapshot.tick,
-      minimumStayUntilTick: objective?.stability.minimumStayUntilTick ?? snapshot.tick, arrival, authority: 'observed' as const, evidence: [task.evidence] };
-    assignments.push(interruption ? { ...common, stage: 'life-saving-interruption', resumeStage: stage,
-      interruption: { kind: interruption, sinceTick: snapshot.tick, executor: 'inferred-current-order', reason: { code: interruption,
-        detail: 'Local interruption inferred from current order/claim; original task membership is retained', evidence: [task.evidence] } } }
-      : { ...common, stage });
-    if (!objective) limitations.push({ code: 'unregistered-objective-family', detail: `${task.objectiveId}: ownership observed; its generator is not attached to this trace`, evidence: [task.evidence] });
+      minimumStayUntilTick: objective?.stability.minimumStayUntilTick ?? snapshot.tick, arrival, authority: 'observed' as const }, oneEvidenceProjection(taskEvidence));
+    assignments.push(interruption ? projectedCopy(common, { stage: 'life-saving-interruption' as const, resumeStage: stage,
+      interruption: { kind: interruption, sinceTick: snapshot.tick, executor: 'inferred-current-order', reason: deferredEvidence(deferredRecord({ code: interruption,
+        detail: 'Local interruption inferred from current order/claim; original task membership is retained' }), oneEvidenceProjection(taskEvidence)) } })
+      : projectedCopy(common, { stage }));
+    if (!objective) limitations.push(deferredEvidence({ code: 'unregistered-objective-family', detail: `${task.objectiveId}: ownership observed; its generator is not attached to this trace` }, oneEvidenceProjection(taskEvidence)));
   }
   const budget: BudgetEntry[] = methods.flatMap(method => method.subgoals.flatMap(subgoal => subgoal.demands.flatMap((demand, index) =>
     demand.kind === 'gold' ? [{ id: `${subgoal.id}/gold:${index}`, objectiveId: method.objectiveId, methodId: method.id,
@@ -102,7 +104,8 @@ export function buildStrategyPlanTrace(snapshot: GameSnapshot, owner: PlayerId, 
     detail: 'The bounded observation ledger discarded older facts; absent historical objectives and lost sites remain unknown', evidence: [] });
   return { schemaVersion: 1, tick: snapshot.tick, owner, mode: 'observe', situation, objectives, methods, assignments,
     feasibleObjectiveIds: feasible.map(objective => objective.id), blockedObjectives,
-    preemptions: [], budget, idleForces, limitations };
+    preemptions: [], budget: budget.map(value => deferredRecord(value)),
+    idleForces: idleForces.map(quote => ({ ...quote, reason: copiedDiagnosticRecord(quote.reason) })), limitations: limitations.map(value => deferredRecord(value)) };
 }
 
 /** Families quote alternatives against the complete objective set. A quote's

@@ -13,12 +13,26 @@ import { createPlanningDistanceQuery } from './distance-fields';
 import { createSeaTravelQuery } from './sea-travel';
 import { landIdAt, regionIndex, seaIdAt, type RegionIndex, type Shore } from './regions';
 import type { Arrival, CrossingEta, Evidence, Point, Reason, Target, LandId, SeaId } from './types';
+import { capturesExplanations, deferredRecord, explanationForMemory, explanationRecipe, projectedProperty, projectedValueReader } from './explanations';
 import type { StrategyObservationMemory } from './observation-memory';
 
 const evidence = (tick: number, source: string, detail: string): Evidence => ({ tick, source, detail, certainty: 'inferred' });
-const unavailable = (code: string, detail: string): Arrival => ({ status: 'unreachable', reason: { code, detail, evidence: [] } });
+const unavailable = (code: string, detail: string): Arrival => ({ status: 'unreachable', reason: deferredRecord({ code, detail, evidence: [] }) });
 type CrossingChoice = { from: Shore; to: Shore; afterCost: number; readyTicks: number;
   crossing: Omit<CrossingEta, 'waitTicks'>; unmet: readonly Reason[] };
+const arrivalDescriptions = {
+  passenger: (tick: number) => [evidence(tick, 'strategy.arrivals', 'Live passenger; terrain sea route, hull/wind rates, gangway setup and native inland steering; congestion is not forecast')],
+  land: (tick: number) => [evidence(tick, 'terrain.groundDistanceField', 'Shared building-aware goal seeds and weighted grid; excludes smoothing, subcell rounding, combat and body delays')],
+  ferry: (tick: number) => [evidence(tick, 'memory.naval.ferries', 'Existing crew follows its actual embarkation and landing points, not a new hypothetical voyage')],
+  crossing: (tick: number) => [evidence(tick, 'strategy.crossingTable', 'Cohort departure/factory approach and sea table shared; individual walking overlaps ship preparation, followed by boarding, sailing, unload and inland walking')],
+};
+function arrivalProvenance({ base, fieldTicks, quoteTicks, tick }: { base: () => readonly Evidence[]; fieldTicks: readonly number[]; quoteTicks: readonly number[]; tick: number }) {
+  return [...base(), ...fieldTicks.map(built => evidence(built, 'terrain.goalField.built', `Geometry computed at tick ${built}; actors and arrival speeds sampled at ${tick}`)),
+    ...quoteTicks.map(quoted => evidence(quoted, 'strategy.seaQuote.computed', `Motion/wind quote computed at tick ${quoted}; cached quotes require identical computational inputs`))];
+}
+function storedChoices(choices: readonly CrossingChoice[]): CrossingChoice[] {
+  return choices.map(choice => ({ ...choice, unmet: choice.unmet.map(explanationForMemory) }));
+}
 export const EXACT_CROSSING_CANDIDATES = 2;
 const retainedTables = new WeakMap<StrategyObservationMemory, Map<string, CrossingChoice[]>>();
 export function crossingCandidateId(snapshot: GameSnapshot, unit: Unit, target: Target): string | undefined {
@@ -32,13 +46,24 @@ export function crossingCandidateId(snapshot: GameSnapshot, unit: Unit, target: 
  * not promises that body avoidance, combat or a future build will finish on time. */
 export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory,
   distances = createPlanningDistanceQuery(snapshot), seaBuildBudget = Infinity, regions: RegionIndex = regionIndex(snapshot.map), preparation?: StrategyObservationMemory) {
+  const tick = snapshot.tick;
+  const descriptions = {
+    passenger: explanationRecipe(arrivalDescriptions.passenger, tick), land: explanationRecipe(arrivalDescriptions.land, tick),
+    ferry: explanationRecipe(arrivalDescriptions.ferry, tick), crossing: explanationRecipe(arrivalDescriptions.crossing, tick),
+  };
+  const explained = new Map<() => readonly Evidence[], Map<string, () => readonly Evidence[]>>();
   const byId = new Map(snapshot.units.map(unit => [unit.id, unit]));
-  const answers = new Map<string, Arrival>();
-  const landTimes = new Map<string, number | undefined>();
-  const landAges = new Map<string, number>(), pendingLand = new Set<string>();
+  const answers = new Map<string, Map<number, Arrival>>();
+  type LandTime = { x: number; y: number; speed: number; ticks: number | undefined; pending: boolean; builtTick: number | undefined };
+  const landTimes = new Map<string, Map<number, LandTime>>();
+  const points = new Map<number, Map<number, number>>(); let nextPoint = 0;
+  function pointKey(point: Point): number {
+    let row = points.get(point.y); if (!row) points.set(point.y, row = new Map());
+    let value = row.get(point.x); if (value === undefined) row.set(point.x, value = nextPoint++); return value;
+  }
   const ferries = memory.naval?.ferries ?? {};
   const shoresByLand = regions.shoresByLand;
-  const nearestCache = new WeakMap<readonly Shore[], Map<string, readonly Shore[]>>();
+  const nearestCache = new WeakMap<readonly Shore[], Map<number, readonly Shore[]>>();
   const departuresByRegion = new Map<string, readonly Shore[]>();
   const seaTravel = createSeaTravelQuery(snapshot, seaBuildBudget, 'reuse', preparation);
   const crossingTables = new Map<string, { choices: CrossingChoice[]; pending: boolean; ages: number[]; quoteAges: number[] }>();
@@ -47,24 +72,26 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
   const reasons = new Map<string, Reason>();
   const reason = (code: string, detail: string): Reason => {
     const key = `${code}:${detail}`; let value = reasons.get(key);
-    if (!value) reasons.set(key, value = { code, detail, evidence: [evidence(snapshot.tick, 'strategy.arrivals', detail)] });
+    if (!value) reasons.set(key, value = deferredRecord({ code, detail, evidence: [evidence(snapshot.tick, 'strategy.arrivals', detail)] }, true));
     return value;
   };
 
   function landTime(unit: Unit, point: Point, from: Point = unit): number | undefined {
-    const key = `${unit.id}:${from.x}:${from.y}:${unit.speed}:${point.x}:${point.y}`;
-    if (landTimes.has(key)) {
-      if (pendingLand.has(key)) pendingGeometry = true;
-      const age = landAges.get(key); if (age !== undefined) usedFieldTicks.add(age);
-      return landTimes.get(key);
+    const key = pointKey(point);
+    let times = landTimes.get(unit.id); if (!times) landTimes.set(unit.id, times = new Map());
+    const known = times.get(key);
+    if (known && known.x === from.x && known.y === from.y && known.speed === unit.speed) {
+      if (known.pending) pendingGeometry = true;
+      if (known.builtTick !== undefined) usedFieldTicks.add(known.builtTick);
+      return known.ticks;
     }
     if (!Number.isFinite(unit.speed) || unit.speed <= 0) throw new Error(`Invalid strategy walking speed ${unit.id}: ${unit.speed}`);
     const field = distances.field(point);
-    if (!field) { pendingGeometry = true; pendingLand.add(key); }
-    if (field) { usedFieldTicks.add(field.builtTick); landAges.set(key, field.builtTick); }
+    if (!field) pendingGeometry = true;
+    else usedFieldTicks.add(field.builtTick);
     const cost = field?.field.cost(from);
     const ticks = cost === undefined ? undefined : Math.ceil(cost / unit.speed * SIM_TICKS_PER_SECOND);
-    landTimes.set(key, ticks);
+    times.set(key, { x: from.x, y: from.y, speed: unit.speed, ticks, pending: !field, builtTick: field?.builtTick });
     return ticks;
   }
 
@@ -79,7 +106,7 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
   function nearest(shores: readonly Shore[], point: Point): readonly Shore[] {
     let points = nearestCache.get(shores);
     if (!points) nearestCache.set(shores, points = new Map());
-    const key = `${point.x}:${point.y}`, known = points.get(key);
+    const key = pointKey(point), known = points.get(key);
     if (known) return known;
     let first: Shore | undefined, second: Shore | undefined, best = Infinity, next = Infinity;
     // Terrain shores are already in stable row/column order. Keep two minima,
@@ -163,10 +190,11 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
         stats.reconstructions++;
         const complete = createArrivalQuery(snapshot, owner, memory, undefined, Infinity, regions);
         choices = complete.crossingChoices(unit, source, destination, target).map(choice => ({ ...choice,
-          unmet: choice.unmet.map(reason => ({ ...reason, evidence: reason.evidence.map(item => ({ ...item, tick: publication.quotedTick })) })) }));
+          unmet: choice.unmet.map(value => { const reason = explanationForMemory(value); return { ...reason, evidence: reason.evidence.map(item => ({ ...item, tick: publication.quotedTick })) }; }) }));
         if (persistent!.size >= 32) persistent!.delete(persistent!.keys().next().value!);
-        persistent!.set(publicationKey, choices);
+        persistent!.set(publicationKey, storedChoices(choices));
       } else stats.persistentHits++;
+      choices = choices.map(choice => ({ ...choice, unmet: choice.unmet.map(value => deferredRecord({ ...value }, true)) }));
       for (const tick of publication.fieldTicks) usedFieldTicks.add(tick);
       usedQuoteTicks.add(snapshot.tick);
       crossingTables.set(key, { choices, pending: false, ages: publication.fieldTicks, quoteAges: [snapshot.tick] });
@@ -232,7 +260,7 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
       }
       preparation.crossings.push({ key: publicationKey, fieldTicks: [...usedFieldTicks].sort((a, b) => a - b), quotedTick: snapshot.tick });
       if (persistent!.size >= 32) persistent!.delete(persistent!.keys().next().value!);
-      persistent!.set(publicationKey, choices);
+      persistent!.set(publicationKey, storedChoices(choices));
     }
     return result;
   }
@@ -306,11 +334,11 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
       const crossing: CrossingEta & { requiresNewShip: false } = { seaId: sea, shipId: ship.id,
         departure: { x: ship.x, y: ship.y }, landing: { ...landing.water }, landingGround: { ...landing.ground }, waitTicks: 0, boardingTicks: 0,
         sailingTicks, unloadingTicks: GANGWAY_SETUP_TICKS, requiresNewShip: false };
-      const common = { ticks: sailingTicks + crossing.unloadingTicks + landTicks, landTicks, crossings: [crossing],
-        evidence: [evidence(snapshot.tick, 'strategy.arrivals', 'Live passenger; terrain sea route, hull/wind rates, gangway setup and native inland steering; congestion is not forecast')] };
-      return direct ? { status: 'reachable', ...common } : { status: 'conditional', ...common,
-        unmet: [unit.owner === owner ? reason('redirect-voyage', `Redirect ${ship.id} from its recorded destination ${redirectTarget}`)
-          : reason('opponent-voyage-unobserved', `Physical crossing forecast only; ${ship.id}'s intended landing and release schedule are unknown`)] };
+      const answer = projectedProperty({ status: direct ? 'reachable' as const : 'conditional' as const,
+        ticks: sailingTicks + crossing.unloadingTicks + landTicks, landTicks, crossings: [crossing] }, 'evidence', descriptions.passenger);
+      if (direct) return answer as Extract<Arrival, { status: 'reachable' }>;
+      return Object.assign(answer, { unmet: [unit.owner === owner ? reason('redirect-voyage', `Redirect ${ship.id} from its recorded destination ${redirectTarget}`)
+        : reason('opponent-voyage-unobserved', `Physical crossing forecast only; ${ship.id}'s intended landing and release schedule are unknown`)] }) as Extract<Arrival, { status: 'conditional' }>;
     }
     if (unitMover(unit.kind) !== 'land') return unavailable('not-land-force', 'This hull does not itself become a land defender');
     const source = landIdAt(snapshot.map, unit);
@@ -318,8 +346,7 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
     if (source === destination) {
       const ticks = landTime(unit, target.point);
       return ticks === undefined ? unavailable('native-road-unreachable', 'Native building-aware steering cannot reach the requested site')
-        : { status: 'reachable', ticks, landTicks: ticks, crossings: [],
-          evidence: [evidence(snapshot.tick, 'terrain.groundDistanceField', 'Shared building-aware goal seeds and weighted grid; excludes smoothing, subcell rounding, combat and body delays')] };
+        : projectedProperty({ status: 'reachable' as const, ticks, landTicks: ticks, crossings: [] }, 'evidence', descriptions.land);
     }
     if (unit.owner !== owner) return { status: 'unknown', reason: reason('opponent-transport-plan-unobserved',
       'No retained foreign ferry schedule is observable; do not assume its boat is free or invent a foreign build order') };
@@ -335,8 +362,8 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
         const crossing: CrossingEta & { requiresNewShip: false } = { seaId: sea, shipId, departure: { ...mission.from }, landing: { ...mission.to }, landingGround: { ...landing },
           waitTicks: Math.max(0, approach - walk), boardingTicks: GANGWAY_SETUP_TICKS, sailingTicks: sail,
           unloadingTicks: GANGWAY_SETUP_TICKS, requiresNewShip: false };
-        return { status: 'reachable', ticks: walk + crossing.waitTicks + crossing.boardingTicks + sail + crossing.unloadingTicks + after,
-          landTicks: walk + after, crossings: [crossing], evidence: [evidence(snapshot.tick, 'memory.naval.ferries', 'Existing crew follows its actual embarkation and landing points, not a new hypothetical voyage')] };
+        return projectedProperty({ status: 'reachable' as const, ticks: walk + crossing.waitTicks + crossing.boardingTicks + sail + crossing.unloadingTicks + after,
+          landTicks: walk + after, crossings: [crossing] }, 'evidence', descriptions.ferry);
       }
     }
     let best: { choice: CrossingChoice; walk: number; after: number; wait: number; ticks: number } | undefined;
@@ -349,10 +376,10 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
     }
     if (!best) return { status: 'unknown', reason: reason('no-direct-crossing', `No direct evaluated sea crossing from ${source} to ${destination}; a multi-hop plan is not evaluated`) };
     const crossing = { ...best.choice.crossing, waitTicks: best.wait };
-    const common = { ticks: best.ticks, landTicks: best.walk + best.after, evidence: [evidence(snapshot.tick, 'strategy.crossingTable',
-      'Cohort departure/factory approach and sea table shared; individual walking overlaps ship preparation, followed by boarding, sailing, unload and inland walking')] };
-    return best.choice.unmet.length || crossing.requiresNewShip ? { status: 'conditional', ...common, crossings: [crossing], unmet: best.choice.unmet }
-      : { status: 'reachable', ...common, crossings: [crossing as CrossingEta & { requiresNewShip: false }] };
+    const conditional = best.choice.unmet.length > 0 || crossing.requiresNewShip;
+    const answer = projectedProperty({ status: conditional ? 'conditional' as const : 'reachable' as const, ticks: best.ticks, landTicks: best.walk + best.after }, 'evidence', descriptions.crossing);
+    return conditional ? Object.assign(answer, { crossings: [crossing], unmet: best.choice.unmet }) as Extract<Arrival, { status: 'conditional' }>
+      : Object.assign(answer, { crossings: [crossing as CrossingEta & { requiresNewShip: false }] }) as Extract<Arrival, { status: 'reachable' }>;
   }
 
   return {
@@ -360,8 +387,9 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
     stats,
     setCrossingShortlist(ids: readonly string[]) { shortlisted = true; for (const id of ids) shortlist.add(id); },
     arrival(unit: Unit, target: Target): Arrival {
-      const key = `${unit.id}:${target.point.x}:${target.point.y}`;
-      if (!answers.has(key)) {
+      const key = pointKey(target.point);
+      let unitAnswers = answers.get(unit.id); if (!unitAnswers) answers.set(unit.id, unitAnswers = new Map());
+      if (!unitAnswers.has(key)) {
         pendingGeometry = false; usedFieldTicks.clear(); usedQuoteTicks.clear();
         const candidate = shortlisted && unit.owner === owner ? crossingCandidateId(snapshot, unit, target) : undefined;
         let answer: Arrival = candidate && !shortlist.has(candidate) && !isPublished(candidate)
@@ -370,13 +398,22 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
           : compute(unit, target);
         if (pendingGeometry && !('ticks' in answer)) answer = { status: 'unknown', reason: reason('geometry-refresh-pending',
           'The deterministic per-think field rebuild budget is exhausted; this route is not zero ETA or proven unreachable') };
-        if ('ticks' in answer) answer = { ...answer, evidence: [...answer.evidence, ...[...usedFieldTicks].sort((a, b) => a - b)
-          .map(tick => evidence(tick, 'terrain.goalField.built', `Geometry computed at tick ${tick}; actors and arrival speeds sampled at ${snapshot.tick}`)),
-          ...[...usedQuoteTicks].sort((a, b) => a - b).map(tick => evidence(tick, 'strategy.seaQuote.computed',
-            `Motion/wind quote computed at tick ${tick}; cached quotes require identical computational inputs`))] };
-        answers.set(key, answer);
+        if ('ticks' in answer && capturesExplanations()) {
+          const base = projectedValueReader(answer, 'evidence');
+          let projections = explained.get(base);
+          if (!projections) explained.set(base, projections = new Map());
+          const fieldTicks = [...usedFieldTicks].sort((a, b) => a - b), quoteTicks = [...usedQuoteTicks].sort((a, b) => a - b);
+          const provenance = `${fieldTicks.join(',')}/${quoteTicks.join(',')}`;
+          let read = projections.get(provenance);
+          if (!read) {
+            read = explanationRecipe(arrivalProvenance, { base, fieldTicks, quoteTicks, tick });
+            projections.set(provenance, read);
+          }
+          answer = projectedProperty(answer, 'evidence', read);
+        }
+        unitAnswers.set(key, answer);
       }
-      const answer = answers.get(key)!;
+      const answer = unitAnswers.get(key)!;
       return unit.expiresTick !== undefined && 'ticks' in answer && unit.expiresTick <= snapshot.tick + answer.ticks
         ? unavailable('expires-before-arrival', `${unit.id} expires before reaching this effect`) : answer;
     },

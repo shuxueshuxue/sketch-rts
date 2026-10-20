@@ -5,6 +5,7 @@ import type { GameSnapshot, PlayerId } from '../../shared/types';
 import type { AiPolicyMemory } from '../memory';
 import type { Asset, Objective, Opportunity, Point, Situation } from './types';
 import { observationJsonBytes } from './observation-json-bytes';
+import { explanationForMemory } from './explanations';
 
 export type PreviousObjective = Pick<Objective, 'id' | 'sinceTick' | 'stability'> & { utility: Pick<Objective['utility'], 'score'> };
 export type SituationHistory = Pick<Situation, 'tick' | 'owner' | 'assets' | 'opportunities'>;
@@ -63,7 +64,7 @@ export function retainObservationHistory(state: StrategyObservationMemory, situa
   state.history = {
     tick: situation.tick,
     assets: situation.assets.filter(asset => asset.kind === 'hall' || asset.kind === 'mine').slice(0, OBSERVATION_HISTORY_LIMIT),
-    lostSites: situation.opportunities.filter(opportunity => opportunity.kind === 'lost-site').slice(0, OBSERVATION_HISTORY_LIMIT),
+    lostSites: situation.opportunities.filter(opportunity => opportunity.kind === 'lost-site').slice(0, OBSERVATION_HISTORY_LIMIT).map(explanationForMemory),
     objectives: objectives.slice(0, OBSERVATION_HISTORY_LIMIT).map(({ id, sinceTick, stability, utility, rank }) =>
       ({ id, sinceTick, stability: { ...stability }, utility: { score: rank === null ? null : utility.score } })),
   };

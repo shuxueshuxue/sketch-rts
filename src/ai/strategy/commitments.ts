@@ -6,14 +6,25 @@ import type { AiPolicyMemory } from '../memory';
 import { isDefenseTaskClaim } from '../policy/claims';
 import { landIdAt } from './regions';
 import type { Commitment, ObjectiveKind, UnitRole } from './types';
+import { explanationRecipe, projectedProperty } from './explanations';
+
+const membershipEvidence = ({ source, tick, unitId }: { source: string; tick: number; unitId: string }) =>
+  ({ source, tick, certainty: 'inferred' as const, detail: `Retained membership of ${unitId}; not a new strategic assignment` });
+const healingEvidence = ({ source, tick }: { source: string; tick: number }) =>
+  ({ source, tick, certainty: 'recorded' as const, detail: 'Healing order accepted in this plan; delivery is separate from the unit current order' });
 
 export const objectiveId = (kind: ObjectiveKind, owner: PlayerId, targetId: string) => `${kind}:${owner}:${targetId}`;
-export function unitRoles(unit: Unit): UnitRole[] {
-  if (unit.kind === 'worker') return ['worker'];
-  if (unitMover(unit.kind) === 'sea') return isTransportKind(unit.kind) ? ['transport'] : ['warship'];
-  if (unit.kind === 'priest' || unit.kind === 'fieldMedic') return ['healer', 'ranged'];
-  if (unit.kind === 'summoner' || unit.kind === 'witch' || unit.kind === 'ashHexer') return ['caster', 'ranged'];
-  return unit.attackRange > 100 ? ['ranged'] : ['frontline'];
+const roleSets = {
+  worker: ['worker'], transport: ['transport'], warship: ['warship'],
+  healer: ['healer', 'ranged'], caster: ['caster', 'ranged'], ranged: ['ranged'], frontline: ['frontline'],
+} as const;
+for (const roles of Object.values(roleSets)) Object.freeze(roles);
+export function unitRoles(unit: Unit): readonly UnitRole[] {
+  if (unit.kind === 'worker') return roleSets.worker;
+  if (unitMover(unit.kind) === 'sea') return isTransportKind(unit.kind) ? roleSets.transport : roleSets.warship;
+  if (unit.kind === 'priest' || unit.kind === 'fieldMedic') return roleSets.healer;
+  if (unit.kind === 'summoner' || unit.kind === 'witch' || unit.kind === 'ashHexer') return roleSets.caster;
+  return unit.attackRange > 100 ? roleSets.ranged : roleSets.frontline;
 }
 
 /** Project every retained ownership source, including overlaps. No expiring,
@@ -21,11 +32,11 @@ export function unitRoles(unit: Unit): UnitRole[] {
 export function unitCommitments(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory, unit: Unit,
   recovery?: { postId: string; walk: boolean }, mobileHealing = false, acceptedHealingExecutor?: string): Commitment[] {
   if (unit.owner !== owner) return [];
+  const tick = snapshot.tick, unitId = unit.id;
   const results: Commitment[] = [], role = unitRoles(unit)[0]!;
-  const add = (source: string, taskId: string, kind?: ObjectiveKind, targetId?: string) => results.push({
-    source, taskId, objectiveId: kind && targetId ? objectiveId(kind, owner, targetId) : null, role,
-    evidence: { source, tick: snapshot.tick, certainty: 'inferred', detail: `Retained membership of ${unit.id}; not a new strategic assignment` },
-  });
+  const add = (source: string, taskId: string, kind?: ObjectiveKind, targetId?: string) => results.push(projectedProperty({
+    source, taskId, objectiveId: kind && targetId ? objectiveId(kind, owner, targetId) : null, role }, 'evidence',
+    explanationRecipe(membershipEvidence, { source, tick, unitId })));
   const claim = memory.unitClaims[unit.id];
   if (claim && (claim.kind === 'expansionMission' || claim.expiresTick >= snapshot.tick)) {
     const kind: ObjectiveKind | undefined = claim.kind === 'expansion' || claim.kind === 'expansionMission' ? 'ExpandLand'
@@ -48,9 +59,8 @@ export function unitCommitments(snapshot: GameSnapshot, owner: PlayerId, memory:
     if (task?.unitId === unit.id) add(source, source);
   if (recovery) add('frontRecovery.postRecoveryAssignments', `healing:${recovery.postId}:${recovery.walk ? 'walking' : 'recovering'}`);
   if (mobileHealing) add('mobileCare.claimsUnits', `mobileCare:${unit.id}`);
-  if (acceptedHealingExecutor) results.push({ source: `${acceptedHealingExecutor}.accepted-plan`, taskId: `healing:${unit.id}`,
-    objectiveId: null, role, evidence: { source: `${acceptedHealingExecutor}.accepted-plan`, tick: snapshot.tick, certainty: 'recorded',
-      detail: 'Healing order accepted in this plan; delivery is separate from the unit current order' } });
+  if (acceptedHealingExecutor) results.push(projectedProperty({ source: `${acceptedHealingExecutor}.accepted-plan`, taskId: `healing:${unit.id}`,
+    objectiveId: null, role }, 'evidence', explanationRecipe(healingEvidence, { source: `${acceptedHealingExecutor}.accepted-plan`, tick })));
   if (unit.order.type === 'follow' && unit.hp < unit.maxHp) {
     const targetId = unit.order.targetId;
     if (snapshot.units.some(healer => healer.id === targetId && ['priest', 'fieldMedic'].includes(healer.kind)))
