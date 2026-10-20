@@ -17,6 +17,12 @@ export function nativeProductionExecutor(kind: 'worker' | 'transport'): Strategy
       if (!validExecutorGrant(input)) return blockedExecutor(input, 'invalid-action-grant');
       const { snapshot, owner, execution, grant } = input, base = executorFeedback(input);
       if (execution.intent.kind !== intent) return blockedExecutor(input, 'production-intent-mismatch');
+      const binding = execution.production;
+      if (binding && binding.unitKind !== kind) return blockedExecutor(input, 'production-binding-unit-kind-mismatch');
+      if (binding?.producer.kind === 'existing' && binding.producer.buildingId !== execution.target.entityId)
+        return blockedExecutor(input, 'production-binding-producer-mismatch');
+      if (binding?.producer.kind === 'action-result' && !execution.target.entityId)
+        return blockedExecutor(input, 'production-parent-result-unresolved');
       const queueIds = new Set(grant.leases.filter(lease => lease.resourceKey.startsWith('queue:')
         && lease.objectiveId === input.objective.id && sameAction(lease.action, execution.token))
         .map(lease => lease.resourceKey.slice(6)));
@@ -30,9 +36,16 @@ export function nativeProductionExecutor(kind: 'worker' | 'transport'): Strategy
       const baseline = command?.worldBefore?.kind === 'production' ? command.worldBefore.jobs
         : Array.isArray(execution.state.nativeQueueBefore) ? execution.state.nativeQueueBefore : undefined;
       const observed = execution.state.observedNativeJobId;
+      const adoption = binding?.request.kind === 'adopt-paid' ? binding.request : undefined;
+      // A queue index is a location, not job identity. Until the public boundary
+      // supplies continuous no-ID evidence it cannot authorize paid adoption.
+      if (adoption && !adoption.jobId) return blockedExecutor(input, 'paid-production-job-identity-unknown');
+      if (adoption && (adoption.observedTick > snapshot.tick || adoption.remainingTicks < 0))
+        return blockedExecutor(input, 'paid-production-observation-invalid');
       const job = building.queue.find((job, index) => {
         if (!('unitKind' in job) || job.unitKind !== kind) return false;
         if (typeof observed === 'string') return job.id === observed;
+        if (adoption) return job.id === adoption.jobId;
         if (!baseline) return false;
         return job.id ? !baseline.some(previous => previous && typeof previous === 'object' && 'id' in previous && previous.id === job.id)
           : index >= baseline.length;
@@ -49,7 +62,19 @@ export function nativeProductionExecutor(kind: 'worker' | 'transport'): Strategy
         return blockedExecutor(input, born.length ? `trained-${name}-birth-ambiguous` : `training-job-ended-without-observed-${name}`);
       }
       const capital = grant.budgets.find(budget => sameAction(budget.action, execution.token) && budget.objectiveId === input.objective.id
+        && (binding?.request.kind !== 'submit' || budget.spendId === binding.request.spendId)
         && budget.state === 'reserved' && budget.amountGold - budget.paidGold >= UNIT_DEFS[kind].cost);
+      if (adoption) {
+        if (!job) return blockedExecutor(input, 'paid-production-job-no-longer-observed');
+        const elapsed = snapshot.tick - adoption.observedTick;
+        // Native waiting slots may not advance until earlier jobs finish. A
+        // matching ID must still have a possible remaining-time trajectory.
+        if (job.remaining > adoption.remainingTicks || job.remaining < Math.max(0, adoption.remainingTicks - elapsed))
+          return blockedExecutor(input, 'paid-production-job-continuity-mismatch');
+        return { ...base, status: 'active', phase: 'training',
+          state: { ...execution.state, [knownKey]: execution.state[knownKey] ?? units.map(unit => unit.id), observedProduction: true,
+            observedNativeJobId: job.id ?? null, productionObservedTick: snapshot.tick, nativeRemainingTicks: job.remaining }, payments: [] };
+      }
       if (job && 'unitKind' in job && command) return { ...base, status: 'active', phase: 'training',
         state: { ...execution.state, [knownKey]: execution.state[knownKey] ?? units.map(unit => unit.id), observedProduction: true,
           observedNativeJobId: job.id ?? null, observedCommandId: command.id,
