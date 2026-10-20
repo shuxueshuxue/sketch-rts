@@ -5,6 +5,10 @@ import { setBuildingBodies } from '../../../shared/terrain';
 import { standingBodies } from '../../../shared/structure-bodies';
 import type { GameSnapshot } from '../../../shared/types';
 import { neutralCamps } from '../../policy/v7/creep';
+import { sketchScene } from '../../../sdk/scene';
+import { snapshotGame } from '../../../shared/sim';
+import { strengthOf } from '../../policy/v6/strength';
+import { assessPresentCampEngagement } from '../allocated-force';
 import type { ExecutorInput } from '../allocation-types';
 import { clearCampExecutor } from './clear-camp';
 
@@ -28,6 +32,63 @@ function clearing(snapshot: GameSnapshot, owner: string, mineId: string, unitIds
 }
 
 describe('allocated island clearing', () => {
+  function contested() {
+    const scene = sketchScene('allocated-contested-beachhead').map('bareDuel').replaceDefaults()
+      .player('us', { team: 'a' }).player('foe', { team: 'b' }).goldMine('mine', 1400, 1400, 10000)
+      .unit('neutral', 'ogreWarrior', 1400, 1400);
+    for (let i = 0; i < 12; i++) scene.unit('us', 'emberRavager', 1100 + i * 3, 1400);
+    for (let i = 0; i < 8; i++) scene.unit('foe', 'footman', 1450 + i * 3, 1400);
+    const snapshot = snapshotGame(scene.build().createGame());
+    const ours = snapshot.units.filter(unit => unit.owner === 'us'), camp = neutralCamps(snapshot)[0]!;
+    const request = clearing(snapshot, 'us', 'mine', ours.map(unit => unit.id), camp.creeps.map(unit => unit.id));
+    const input: ExecutorInput = { ...request, execution: { ...request.execution,
+      state: { staging: { x: 1100, y: 1400 }, refuge: { x: 1000, y: 1400 } } } };
+    return { snapshot, ours, camp, input };
+  }
+
+  it('accepts the same sufficient whole party instead of applying a separate half-army veto', () => {
+    const { snapshot, ours, input } = contested();
+    const power = assessPresentCampEngagement({ snapshot, owner: 'us', target: input.execution.target,
+      unitIds: ours.map(unit => unit.id), campMemberIds: input.execution.intent.kind === 'clear-camp' ? input.execution.intent.memberIds : [] });
+    expect(strengthOf(power.hostile)).toBeGreaterThan(strengthOf(ours) * .5);
+    expect(power.sufficient).toBe(true);
+    const result = clearCampExecutor.execute(input);
+    expect(result.status).toBe('active');
+    expect(result.phase).toBe('engage');
+    expect(result.commands.some(proposal => proposal.command.type === 'attack')).toBe(true);
+    expect(result.commands.flatMap(proposal => 'unitIds' in proposal.command ? proposal.command.unitIds : [])
+      .every(id => ours.some(unit => unit.id === id))).toBe(true);
+  });
+
+  it('continues the real player fight after the last neutral guard dies and only completes an empty beachhead', () => {
+    const { snapshot, camp, input } = contested();
+    camp.creeps.forEach(unit => { unit.hp = 0; });
+    const engaged: ExecutorInput = { ...input, execution: { ...input.execution, phase: 'engage' } };
+    const active = clearCampExecutor.execute(engaged), enemies = snapshot.units.filter(unit => unit.owner === 'foe');
+    expect(active.status).toBe('active');
+    expect(active.state.remainingPlayerThreatIds).toEqual(enemies.map(unit => unit.id).sort());
+    expect(active.progress).toEqual([]);
+    expect(active.commands.some(({ command }) => {
+      return command.type === 'attack' && enemies.some(unit => unit.id === command.targetId);
+    })).toBe(true);
+    enemies.forEach(unit => { unit.hp = 0; });
+    expect(clearCampExecutor.execute(engaged)).toMatchObject({ status: 'complete', phase: 'beachhead-clear' });
+  });
+
+  it('only gathers until the granted force physically reaches staging and never recruits nearby ungranted soldiers', () => {
+    const { ours, input } = contested();
+    ours.slice(1).forEach(unit => { unit.x = 2000; });
+    const gathering = clearCampExecutor.execute(input);
+    expect(gathering).toMatchObject({ status: 'active', phase: 'gather' });
+    expect(gathering.commands.filter(proposal => proposal.command.type === 'move').length).toBeGreaterThan(0);
+    expect(gathering.commands.every(proposal => proposal.command.type !== 'move' || proposal.command.avoidCombat)).toBe(true);
+    expect(gathering.commands.every(proposal => proposal.command.type !== 'attack')).toBe(true);
+    const reduced = clearCampExecutor.execute({ ...input, grant: { ...input.grant,
+      leases: input.grant.leases.filter(lease => lease.resourceKey === `unit:${ours[0]!.id}`) } });
+    expect(reduced).toMatchObject({ status: 'blocked', commands: [] });
+    expect(reduced.reasons[0]?.reason).toBe('insufficient-clearing-force');
+  });
+
   it('does not let the lone sapphire soldier charge while four borrowed soldiers are still on another island', () => {
     const frame: { snapshot: GameSnapshot; owner: string } = JSON.parse(gunzipSync(readFileSync(
       new URL('../../bootstrap_1/fixtures/strategy-allocation-frames.json.gz', import.meta.url))).toString()).frames['Ne-sapphireArchipelago-player-4-17991'];
