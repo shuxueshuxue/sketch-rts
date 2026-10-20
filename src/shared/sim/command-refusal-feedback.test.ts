@@ -37,6 +37,22 @@ describe('structured private refusal receipts', () => {
     expect(worker.order).toEqual(before); expect(game.nextId).toBe(nextId);
   });
 
+  it('detaches refusal facts from the simulation and from another snapshot', () => {
+    const game = field(), worker = game.spawnUnit('player', 'worker', 1500, 1500);
+    game.players.player!.gold = 1;
+    tryPlayerCommand(game, 'player', { type: 'build', unitId: worker.id, buildingKind: 'farm', x: 1800, y: 1800 });
+    const before = canonicalGameState(game), first = snapshotGame(game), second = snapshotGame(game);
+    const original = game.effects.find(effect => effect.refusal)?.refusal;
+    const copied = first.effects.find(effect => effect.refusal)?.refusal;
+    const other = second.effects.find(effect => effect.refusal)?.refusal;
+    if (copied?.reason !== 'gold' || other?.reason !== 'gold') throw new Error('Expected gold refusal facts');
+    expect(copied).not.toBe(original);
+    expect(copied.detail).not.toBe(original?.detail);
+    copied.detail.available = 999;
+    expect(other.detail.available).toBe(1);
+    expect(canonicalGameState(game)).toEqual(before);
+  });
+
   it('reports the shared cooldown and inventory facts at the actual rejection', () => {
     const game = field(), priest = game.spawnUnit('player', 'priest', 1500, 1500);
     priest.abilityCooldowns = { heal: 47 };

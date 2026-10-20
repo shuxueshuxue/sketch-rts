@@ -1051,7 +1051,10 @@ export function snapshotGame(game: Game): GameSnapshot {
       ...(projectile.damageProfile ? { damageProfile: { ...projectile.damageProfile } } : {}),
       ...(projectile.weapon ? { weapon: { ...projectile.weapon, ...(projectile.weapon.damageProfile ? { damageProfile: { ...projectile.weapon.damageProfile } } : {}) } } : {}),
     })),
-    effects: game.effects.map(effect => ({ ...effect, ...(effect.damageProfile ? { damageProfile: { ...effect.damageProfile } } : {}) })),
+    effects: game.effects.map(effect => ({ ...effect,
+      ...(effect.damageProfile ? { damageProfile: { ...effect.damageProfile } } : {}),
+      ...(effect.refusal ? { refusal: cloneSnapshotValue(effect.refusal) } : {}),
+    })),
     ...(game.corpses ? { corpses: game.corpses.map(corpse => ({ ...corpse, ...(corpse.deck?{deck:{...corpse.deck}}:{}) })) } : {}),
     // A variant's rules are replaced whole when they change, never edited, so the snapshot may share them.
     ...(game.variants ? { variants: { ...game.variants } } : {}),
