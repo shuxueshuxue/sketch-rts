@@ -67,8 +67,11 @@ describe('parallel granted voyages in the real ringwater frame', () => {
     expect(result.state.pendingVoyageIds).toEqual(request.grant.voyages.map(voyage => voyage.id));
     const commanded = result.commands.flatMap(entry => 'unitIds' in entry.command ? entry.command.unitIds : []);
     expect(commanded).toContain('unit-enemy-transport-2302');
-    expect(result.commands.some(entry => entry.command.type === 'board' && entry.command.transportId === 'unit-enemy-transport-6029')).toBe(true);
-    expect(result.state.voyages).toMatchObject({ 'voyage:unit-enemy-transport-6029': { status: 'active', phase: 'loading' } });
+    expect(result.commands.some(entry => entry.command.type === 'board' && entry.command.transportId === 'unit-enemy-transport-6029')).toBe(false);
+    // Its already accepted move still targets the grant: do not reset that
+    // native route or board before the hull reaches the quoted berth.
+    expect(result.commands.some(entry => entry.command.type === 'move' && entry.command.unitIds.includes('unit-enemy-transport-6029'))).toBe(false);
+    expect(result.state.voyages).toMatchObject({ 'voyage:unit-enemy-transport-6029': { status: 'active', phase: 'rendezvous' } });
     expect(result.progress.filter(event => event.kind === 'loaded').flatMap(event => event.unitIds)).toHaveLength(7);
     expect(result.progress.some(event => event.kind === 'sailed' || event.kind === 'unloaded')).toBe(false);
     expect(JSON.stringify(request)).toBe(before);
@@ -84,5 +87,25 @@ describe('parallel granted voyages in the real ringwater frame', () => {
     expect(result.status).toBe('blocked');
     expect(result.reasons[0]?.reason).toBe('duplicate-unit-in-parallel-voyages');
     expect(result.commands).toEqual([]);
+  });
+
+  it('propagates a failed boarding berth alongside another active voyage', () => {
+    const request = parallel(), voyage = request.grant.voyages[1]!;
+    const boatId = request.grant.assignments.find(assignment => assignment.id === voyage.shipAssignmentId)!.unitId;
+    const crewId = request.grant.assignments.find(assignment => assignment.id === voyage.crewAssignmentIds[0])!.unitId;
+    const boat = request.snapshot.units.find(unit => unit.id === boatId)!, person = request.snapshot.units.find(unit => unit.id === crewId)!;
+    Object.assign(boat, { x: voyage.departure.point.x + boat.radius * 4, y: voyage.departure.point.y }); boat.order = { type: 'idle' };
+    Object.assign(person, voyage.departureGround.point);
+    const interrupted = { ...request, execution: { ...request.execution, state: { voyages: { [voyage.id]: { rendezvousEstablished: true } } } } };
+    const before = JSON.stringify(interrupted), result = transportExecutor.execute(interrupted);
+    expect(result.status).toBe('failed');
+    expect(result.reasons.some(reason => reason.reason === 'berth-mismatch')).toBe(true);
+    expect(result.commands).toEqual([]);
+    expect(result.state.voyages).toMatchObject({ [voyage.id]: { status: 'failed', phase: 'berth-mismatch' },
+      [request.grant.voyages[0]!.id]: { status: 'active' } });
+    expect(JSON.stringify(interrupted)).toBe(before);
+    const cold: ExecutorInput = JSON.parse(JSON.stringify(interrupted));
+    setBuildingBodies(cold.snapshot.map, standingBodies(cold.snapshot));
+    expect(transportExecutor.execute(cold)).toEqual(result);
   });
 });
