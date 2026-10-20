@@ -129,6 +129,9 @@ describe('read-only AI death ledger', () => {
     expect(passenger).toMatchObject({ cause: 'sinking', killer: { id: enemy.id }, location: { space: 'deck', carrierId: ship.id },
       fatalDamageProfile: { delivery: 'effect' }, assignment: { task: { kind: 'transport' } } });
     expect(passenger.classification.tags).toContain('logistics-transit');
+    expect(passenger.context.balance).toEqual(ledger.records().find(row => row.unit.id === ship.id)!.context.balance);
+    expect(passenger.context.balance.own).toBeGreaterThan(0);
+    expect(passenger.context.balance.ownIds).toContain(crew.id);
     expect(ledger.summary().nativeLosses).toBe(game.match.stats.unitsLost.player);
   });
 

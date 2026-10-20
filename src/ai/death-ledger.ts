@@ -154,8 +154,13 @@ export class AiDeathLedger {
     if (!this.owners.has(event.unit.owner)) return;
     const state = this.history(event.unit.id);
     state.kill = event;
-    if (event.cause === 'sinking' && event.unit.deck)
-      state.sinkingProfile = last(this.history(event.unit.deck.shipId).damage, hit => hit.target.hp <= 0)?.profile ?? null;
+    if (event.cause === 'sinking' && event.unit.deck) {
+      const carrier = this.history(event.unit.deck.shipId);
+      state.sinkingProfile = last(carrier.damage, hit => hit.target.hp <= 0)?.profile ?? null;
+      // The hull hit samples force before the native sinking code zeroes every passenger.
+      // Cleanup would otherwise describe the already-dead crew as zero friendly force.
+      state.balance = carrier.balance;
+    }
   }
 
   private localBalance(unit: ObservedUnit, hpBefore?: number): AiDeathBalance {
