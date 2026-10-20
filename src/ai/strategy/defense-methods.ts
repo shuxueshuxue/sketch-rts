@@ -1,6 +1,5 @@
 import { UNIT_DEFS } from '../../shared/catalog';
 import { strikeGap } from '../../shared/combat-geometry';
-import { sameGround } from '../../shared/terrain';
 import type { GameSnapshot } from '../../shared/types';
 import { averagePoint, distance } from '../policy/spatial';
 import { assessAllocatedDefenseBattle, assessAllocatedForce } from './allocated-force';
@@ -8,7 +7,7 @@ import { assessDefenseResponse } from './defense-response';
 import { allocatedVoyageValue, voyageCostAfterPreservedAssets } from './allocated-voyage-value';
 import { defenseProtectionValue, defenseThreatScenarios } from './defense-risk';
 import type { AllocationMethodProvider, AllocationReason, AllocationUtility, ExecutableMethod,
-  ForceQuotation, MethodAllocationQuote } from './allocation-types';
+  ForceQuotation, MethodAllocationQuote, AllocationPrecondition } from './allocation-types';
 import type { DecisionFacts } from './decision';
 import { defenseCoverPost, defenseGatherPost } from './executors/defend-site';
 import type { Method, Objective, ResourceDemand, Situation, Target } from './types';
@@ -22,6 +21,7 @@ import { allocatedMemberArrival } from './planned-voyage-arrival';
 import { evacuationSubjectIds } from './evacuation-subjects';
 import { casualtyUnitValues, sumUnitValues } from './allocated-unit-values';
 import { assertUnitValueSides } from './unit-value-ledger';
+import { evacuationShelter } from './evacuation-shelter';
 
 const reason = (code: string, factIds: readonly string[] = [], values: AllocationReason['values'] = {}): AllocationReason => ({ code, factIds, values });
 const defenderKinds: readonly Method['kind'][] = ['local-squad', 'main-army-recall', 'wait-in-cover', 'cross-sea-reinforcement', 'evacuation'];
@@ -40,20 +40,10 @@ function requiredDefense(situation: DecisionFacts<Situation>, objective: Decisio
     (threat ? threat.arrivedStrength + threat.incomingStrength : 0) * 1.25);
 }
 
-function shelter(snapshot: GameSnapshot, situation: DecisionFacts<Situation>, objective: DecisionFacts<Objective>): Target | undefined {
-  const effect = objective.effects.find(effect => effect.kind === 'assets-evacuated');
-  if (effect?.kind === 'assets-evacuated') return effect.destination;
-  return situation.assets.filter(asset => asset.owner === situation.owner && asset.kind === 'hall' && asset.complete
-    && asset.id !== objective.target.entityId
-    && !situation.lands.flatMap(land => land.threats).some(threat => threat.siteId === asset.id
-      && threat.arrivedStrength + threat.incomingStrength > threat.friendlyOnStationStrength))
-    .sort((a, b) => Number(sameGround(snapshot.map, b.target.point, objective.target.point)) - Number(sameGround(snapshot.map, a.target.point, objective.target.point))
-      || distance(a.target.point, objective.target.point) - distance(b.target.point, objective.target.point))[0]?.target;
-}
-
 function method(input: Parameters<AllocationMethodProvider['buildMethods']>[0], kind: Method['kind'], preference: number): ExecutableMethod {
   const { snapshot, situation, objective } = input, id = `${objective.id}/method:${kind}`;
-  const destination = kind === 'evacuation' ? shelter(snapshot, situation, objective) : undefined;
+  const refuge = kind === 'evacuation' ? evacuationShelter(snapshot, situation, objective, id) : undefined;
+  const destination = refuge?.target;
   const attackerIds = new Set(threatAt(situation, objective)?.attackers.map(attacker => attacker.unitId));
   const attackers = snapshot.units.filter(unit => attackerIds.has(unit.id));
   const field = attackers.length ? averagePoint(attackers) : objective.target.point;
@@ -72,7 +62,7 @@ function method(input: Parameters<AllocationMethodProvider['buildMethods']>[0], 
     && destination.landId !== objective.target.landId ? `${id}/deliver` : undefined;
   const finish = `${id}/${kind === 'evacuation' ? 'evacuate' : 'defend'}`;
   return { id, objectiveId: objective.id, kind, providerId: 'strategy.defense-methods', preference, spends: [],
-    demands, preconditions: [], subgoals: [], estimatedTicks: null, status: 'candidate', reasons: [], actions: [
+    demands, preconditions: refuge?.condition ? [refuge.condition] : [], subgoals: [], estimatedTicks: null, status: 'candidate', reasons: [], actions: [
       ...(travel ? [{ id: travel, executor: 'strategy.transport', intent: { kind: kind === 'evacuation' ? 'deliver-workers' as const : 'deliver-force' as const }, target: at,
         dependsOn: [], demands, spendIds: [], completionEffects: [] }] : []),
       { id: finish, executor: kind === 'evacuation' ? 'strategy.evacuate' : 'strategy.defend-site',
@@ -92,6 +82,12 @@ export const defenseMethodProvider: AllocationMethodProvider = {
   },
   materialize(input) {
     const evacuation = input.method.kind === 'evacuation';
+    if (evacuation) {
+      const refuge = evacuationShelter(input.snapshot, input.situation, input.objective, input.method.id, input.method.actions.at(-1)!.target);
+      input = { ...input, method: { ...input.method, preconditions: [
+        ...input.method.preconditions.filter(condition => condition.id !== `${input.method.id}/shelter`),
+        ...(refuge.condition ? [refuge.condition] : [])] } };
+    }
     const subjects = evacuation ? evacuationSubjectIds(input.objective) : undefined;
     const wanted = new Set(input.unitIds), units = input.snapshot.units.filter(unit => wanted.has(unit.id)
       && unit.owner === input.situation.owner && unit.hp > 0 && unitMover(unit.kind) === 'land'
@@ -115,7 +111,7 @@ export const defenseMethodProvider: AllocationMethodProvider = {
       payloadMass: voyage.unitIds.reduce((sum, id) => sum + bodyMass(units.find(unit => unit.id === id)!), 0),
       departure: voyage.departure.point, landing: voyage.destination.point }))];
     const needsTravel = plan.voyages.length > 0 || plan.missing.length > 0;
-    return { ...input.method, voyagePlans: plan.voyages, spends: plan.spends, preconditions: plan.missing, estimatedTicks: plan.latestArrivalTicks,
+    return { ...input.method, voyagePlans: plan.voyages, spends: plan.spends, preconditions: [...input.method.preconditions.filter(condition => condition.id === `${input.method.id}/shelter`), ...plan.missing], estimatedTicks: plan.latestArrivalTicks,
       actions: [...plan.actions, ...assembling,
         ...(needsTravel ? [{ ...travel, demands, dependsOn: dependencies, unitIds: units.map(unit => unit.id) }] : []),
         { ...defend, dependsOn: needsTravel ? [travel.id] : [], unitIds: units.map(unit => unit.id) }] };
@@ -132,8 +128,14 @@ export const defenseMethodProvider: AllocationMethodProvider = {
     const chosenShelter = method.actions.at(-1)!.target;
     const at = evacuation ? snapshot.buildings.some(building => building.id === chosenShelter.entityId && building.owner === situation.owner
       && building.hp > 0 && building.complete && building.id !== objective.target.entityId) ? chosenShelter : undefined : objective.target;
+    const refuge = evacuation ? evacuationShelter(snapshot, situation, objective, method.id, chosenShelter) : undefined;
+    const conditions: AllocationPrecondition[] = [...method.preconditions.filter(condition => condition.status !== 'met'
+      && (!evacuation || condition.id !== `${method.id}/shelter`)).map(condition => {
+        const data: Partial<AllocationReason> = condition.reason;
+        return { ...condition, reason: { code: data.code!, factIds: data.factIds ?? [], values: data.values ?? {} } };
+      }), ...(refuge?.condition ? [refuge.condition] : [])];
     let missing: string | undefined;
-    const unavailable: string[] = [], unknown: string[] = [], stationed: string[] = [], enRoute: string[] = [];
+    const routeUnreachable: string[] = [], unavailable: string[] = [], unknown: string[] = [], stationed: string[] = [], enRoute: string[] = [];
     const etas = new Map<string, number>();
     let latest = 0;
     for (const unit of selected) {
@@ -147,14 +149,15 @@ export const defenseMethodProvider: AllocationMethodProvider = {
       if (fact.location.kind === 'land' && fact.location.landId === method.actions.at(-1)!.target.landId
         && distance(unit, method.actions.at(-1)!.target.point) <= 240) { stationed.push(unit.id); continue; }
       if (!arrival || arrival.status === 'unknown') { unknown.push(unit.id); continue; }
-      if (!('ticks' in arrival)) { unavailable.push(unit.id); continue; }
+      if (!('ticks' in arrival)) { (evacuation ? routeUnreachable : unavailable).push(unit.id); continue; }
       if (arrival.status === 'conditional' && !method.voyagePlans?.length) missing = 'response-route-prerequisites-unmet';
       latest = Math.max(latest, arrival.ticks); enRoute.push(unit.id); etas.set(unit.id, arrival.ticks);
     }
     if (selected.length !== requested.size) missing = 'allocated-unit-no-longer-present';
-    if (method.preconditions.some(condition => condition.status !== 'met')) missing = method.preconditions.find(condition => condition.status !== 'met')!.reason.code;
+    if (conditions.length) missing = conditions[0]!.reason.code;
     if (unavailable.length) missing = 'allocated-units-ineligible-for-method';
     if (unknown.length) missing = 'response-arrival-unknown';
+    if (routeUnreachable.length) missing = 'evacuation-shelter-route-unreachable';
     const validIds = new Set([...stationed, ...enRoute]);
     const cohort = selected.filter(unit => validIds.has(unit.id));
     if (subjects?.some(id => !selected.some(unit => unit.id === id && unit.kind === 'worker')))
@@ -215,7 +218,7 @@ export const defenseMethodProvider: AllocationMethodProvider = {
     if (!evacuation && weighted.effectiveForce < total.requiredForce) missing ??= 'insufficient-timely-defense-force';
     if (!evacuation && threat && latest > siteCollapseAfter(snapshot, threat, site?.hp ?? 0) && weighted.effectiveForce < total.requiredForce)
       missing ??= 'response-arrives-after-site-collapse';
-    if (evacuation && (!at || !cohort.length)) missing ??= at ? 'no-granted-evacuees' : 'no-reachable-evacuation-shelter';
+    if (evacuation && (!at || !cohort.length)) missing ??= at ? 'no-granted-evacuees' : 'evacuation-shelter-unavailable';
     const duration = Math.max(latest, ...objective.effects.flatMap(effect => effect.kind === 'site-safe' || effect.kind === 'force-present'
       ? [Math.max(0, effect.throughTick - situation.tick)] : []));
     const window = valuationWindow(duration, input.valuation), valuation = resolveValuation({ objectiveId: objective.id,
@@ -281,9 +284,9 @@ export const defenseMethodProvider: AllocationMethodProvider = {
       otherResponseTicks: response.response.status === 'known' ? response.response.ticks : null,
       latestArrivalTicks: latest, opponentUnknown: opponentUnknown.length });
     return missing ? { methodId: method.id, status: 'blocked', force, valuation, utility: null, potentialUtility: null,
-      reason: why, missingPreconditions: [{ id: `${method.id}/${missing}`,
+      reason: why, missingPreconditions: [...conditions, ...(conditions.some(condition => condition.reason.code === missing) ? [] : [{ id: `${method.id}/${missing}`,
         kind: missing === 'evacuation-subject-not-granted' ? 'workers' : missing.includes('force') ? 'force' : 'route',
-        status: missing.includes('unknown') ? 'unknown' : 'unmet', reason: why, demand: method.demands[0] ?? null, subgoalIds: [] }] }
+        status: missing.includes('unknown') ? 'unknown' : 'unmet', reason: why, demand: method.demands[0] ?? null, subgoalIds: [] } as AllocationPrecondition])] }
       : { methodId: method.id, status: 'feasible', force, valuation, utility, potentialUtility: null, missingPreconditions: [], reason: why };
   },
 };
