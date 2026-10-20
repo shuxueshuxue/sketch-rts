@@ -54,7 +54,7 @@ for (const item of matrix.cases) {
     }
   }
   for await (const death of rows<AiUnitDeathRecord>(join(folder, 'deaths.jsonl.gz'))) {
-    const seat = expected[death.owner]; if (!seat || !death.actualDeath) continue;
+    const seat = expected[death.owner]; if (!seat || !death.countedAsNativeLoss) continue;
     seat.ledgerLossGold += death.catalogGold; seat.ledgerLosses++;
   }
   must(JSON.stringify(roomAbMinePositions(final)) === JSON.stringify(report.position.mines), `${item.name}: mine audit differs`);
