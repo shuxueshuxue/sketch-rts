@@ -66,12 +66,13 @@ function reprice(input: StrategyAllocationInput, memory: StrategyAllocationMemor
     if (voyage.unitIds.some(id => !permitted.has(id)) || voyage.ship.kind === 'existing' && !permitted.has(voyage.ship.unitId))
       throw new Error('Materialized voyage recruited outside the quoted bundle');
   }
-  input.observeCandidate?.({ objectiveId: offer.objective.id, method, unitIds: offer.unitIds, phase: valuation.phase });
   const quote = provider.quote({ ...request, method });
   if (quote.utility) assertUnitValueSides(quote.utility);
   if (quote.potentialUtility) assertUnitValueSides(quote.potentialUtility);
   if (quote.methodId !== method.id || quote.status === 'feasible' && !Number.isFinite(quote.utility.score))
     throw new Error('Invalid allocation method quote');
+  input.observeCandidate?.({ objectiveId: offer.objective.id, method, unitIds: offer.unitIds, phase: valuation.phase, quote,
+    ...(input.voyageRisks ? { voyageRisks: input.voyageRisks } : {}) });
   return { method, quote };
 }
 function candidateBundles(input: StrategyAllocationInput, memory: StrategyAllocationMemory, method: ExecutableMethod): readonly string[][] {

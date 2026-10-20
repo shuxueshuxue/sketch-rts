@@ -452,7 +452,8 @@ export type StrategyAllocationInput = Readonly<{
   /** Optional observation of the exact materialized request, never a second
    * provider evaluation. The receiver cannot participate in admission. */
   observeCandidate?: (request: Readonly<{ objectiveId: string; method: ExecutableMethod;
-    unitIds: readonly string[]; phase: 'gross' | 'net' }>) => void;
+    unitIds: readonly string[]; phase: 'gross' | 'net'; quote: MethodAllocationQuote;
+    voyageRisks?: ReadonlyMap<string, VoyageRiskStages> }>) => void;
   /** Current, explicit switching quote. Missing/unknown prices cannot authorize
    * taking an executed incumbent's resource. */
   switchingCost?: (request: Readonly<{ fromObjectiveId: string; toObjectiveId: string;

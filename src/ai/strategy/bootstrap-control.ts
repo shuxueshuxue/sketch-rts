@@ -4,7 +4,9 @@ import { planAiCommandEntriesFromScripts } from '../policy/core';
 import { bootstrapDoctrineContext, prepareBootstrapLandMission, prepareBootstrapSites } from '../bootstrap_1/policy';
 import { buildObservedStrategyDecision, buildStrategyDecision, projectStrategyTrace,
   type ObservedStrategyDecision, type StrategyDecision } from './decision';
-import type { CommandAdmission, ExecutorFeedback, ExecutorInput, StrategyAllocationMemory } from './allocation-types';
+import type { AllocationPrecondition, AllocationReason, CommandAdmission, ExecutorFeedback, ExecutorInput,
+  PlannedVoyage, StrategyAllocationMemory } from './allocation-types';
+import type { VoyageRiskStages } from './voyage-risk';
 import type { StrategyPlanTrace, Target } from './types';
 import { allocateStrategy } from './allocator';
 import { allocationGrants, applyExecutorFeedback, pruneAllocationProvenance, settleAllocationState, advanceAllocationLeases } from './allocation-lifecycle';
@@ -27,7 +29,11 @@ import { createStrategyCommandGateway, type StrategyCommandProposal } from './co
 
 export type AllocationCandidateRequest = Readonly<{ objectiveId: string; methodId: string; phase: 'skeleton' | 'gross' | 'net';
   /** These are proposed bundles, not an assertion that authority was granted. */
-  unitIds: readonly string[]; actions: readonly Readonly<{ actionId: string; target: Target; unitIds: readonly string[] | null }>[] }>;
+  unitIds: readonly string[]; actions: readonly Readonly<{ actionId: string; target: Target; unitIds: readonly string[] | null }>[];
+  voyages: readonly PlannedVoyage[];
+  quotation: Readonly<{ status: 'feasible' | 'blocked'; score: number | null; reason: AllocationReason;
+    missingPreconditions: readonly AllocationPrecondition[] }> | null;
+  stageRisks: readonly Readonly<{ voyageId: string; risk: VoyageRiskStages | null }>[] }>;
 export type BootstrapStrategyOutput = Readonly<{ decision: StrategyDecision; project?: () => StrategyPlanTrace;
   /** Same-think sidecar; never stored in memory or the plan trace. */
   candidateRequests?: readonly AllocationCandidateRequest[] }>;
@@ -86,7 +92,7 @@ export function planControlledBootstrapCommands(snapshot: GameSnapshot, owner: P
   const recordCandidate = (request: AllocationCandidateRequest) => candidateRequests?.set(JSON.stringify(request), request);
   if (candidateRequests) for (const method of methods) recordCandidate({ objectiveId: method.objectiveId, methodId: method.id,
     phase: 'skeleton', unitIds: [], actions: method.actions.map(action => ({ actionId: action.id, target: action.target,
-      unitIds: action.unitIds ?? null })) });
+      unitIds: action.unitIds ?? null })), voyages: [], quotation: null, stageRisks: [] });
   let handoffPolicy: typeof policy | undefined;
   const allocation = withAllocationArrivalQuery(snapshot, owner, policy, fixedVoyageArrival => allocateStrategy({ snapshot,
     situation, objectives: evaluation.objectives, methods, providers, previous: imported, fixedVoyageArrival,
@@ -96,7 +102,11 @@ export function planControlledBootstrapCommands(snapshot: GameSnapshot, owner: P
     },
     ...(candidateRequests ? { observeCandidate: request => recordCandidate({ objectiveId: request.objectiveId,
       methodId: request.method.id, phase: request.phase, unitIds: request.unitIds,
-      actions: request.method.actions.map(action => ({ actionId: action.id, target: action.target, unitIds: action.unitIds ?? null })) }) }
+      actions: request.method.actions.map(action => ({ actionId: action.id, target: action.target, unitIds: action.unitIds ?? null })),
+      voyages: request.method.voyagePlans ?? [],
+      quotation: { status: request.quote.status, score: request.quote.utility?.score ?? null, reason: request.quote.reason,
+        missingPreconditions: request.quote.missingPreconditions },
+      stageRisks: (request.method.voyagePlans ?? []).map(voyage => ({ voyageId: voyage.id, risk: request.voyageRisks?.get(voyage.id) ?? null })) }) }
       : {}),
     prepareVoyageRisks: materialized => prepareAllocationVoyageRisks(snapshot, owner, policy, materialized),
     switchingCost: request => nativeSwitchCost(snapshot, request.resourceKeys),
