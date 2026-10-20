@@ -69,6 +69,107 @@ export function advanceAllocationGraph(memory: StrategyAllocationMemory): Strate
   return { ...memory, executions };
 }
 
+/** Terminal graphs release authority together. Keep sixteen recent terminal
+ * graphs for diagnosis; live graphs and pending handoffs are never truncated.
+ * A disappeared unit leaves a real vacancy, without inventing a battle death. */
+export function settleAllocationState(memory: StrategyAllocationMemory, snapshot: GameSnapshot): StrategyAllocationMemory {
+  let next = advanceAllocationGraph(memory);
+  const present = new Set(snapshot.units.flatMap(unit => [unit, ...(unit.cargo ?? [])])
+    .filter(unit => unit.owner === memory.owner && unit.hp > 0).map(unit => unit.id));
+  const leases = { ...next.leases }, assignments = { ...next.assignments }, vacancies = { ...next.vacancies };
+  for (const assignment of Object.values(assignments)) if (!present.has(assignment.unitId)) {
+    delete assignments[assignment.id]; delete leases[`unit:${assignment.unitId}`];
+    const action = next.methods[assignment.methodId]?.actions.find(action => action.id === assignment.action.actionId);
+    const demand = action?.demands.find(demand => demand.kind === 'workers' || demand.kind === 'force');
+    if (demand) {
+      const id = `vacancy:${assignment.id}:${assignment.action.generation}`;
+      vacancies[id] = { id, objectiveId: assignment.objectiveId, action: assignment.action, assignmentId: assignment.id,
+        sinceTick: vacancies[id]?.sinceTick ?? snapshot.tick, replacementAssignmentIds: [],
+        demand: demand.kind === 'workers' ? { ...demand, count: 1 } : demand,
+        reason: { code: 'observed-assignee-no-longer-present', factIds: [assignment.unitId], values: {} } };
+    }
+  }
+  const objectives = { ...next.objectives }, budgets = { ...next.budgets };
+  for (const [id, objective] of Object.entries(objectives)) {
+    const actions = objective.actionIds.map(id => next.executions[id]).filter((action): action is ExecutionAction => !!action);
+    const pendingGarrison = actions.some(action => action.executor === 'strategy.establish-garrison'
+      && action.status === 'complete' && typeof action.state.hallId === 'string' && !action.state.leasesTransferredTo
+      && Object.values(assignments).some(assignment => sameAction(assignment.action, action.token)));
+    if (!['complete', 'failed', 'abandoned'].includes(objective.status) && actions.length
+      && actions.every(action => terminal(action.status)) && !pendingGarrison) {
+      const status = actions.every(action => action.status === 'complete') ? 'complete'
+        : actions.some(action => action.status === 'failed') ? 'failed' : 'abandoned';
+      objectives[id] = { ...objective, status, committedUtilityGold: null, assignmentIds: [] };
+    } else objectives[id] = { ...objective, assignmentIds: Object.values(assignments)
+      .filter(assignment => assignment.objectiveId === id).map(assignment => assignment.id).sort() };
+    if (['complete', 'failed', 'abandoned'].includes(objectives[id]!.status)) {
+      for (const lease of Object.values(leases)) if (lease.objectiveId === id) delete leases[lease.resourceKey];
+      for (const assignment of Object.values(assignments)) if (assignment.objectiveId === id) delete assignments[assignment.id];
+      for (const budget of Object.values(budgets)) if (budget.objectiveId === id && budget.state !== 'released')
+        budgets[budget.id] = { ...budget, state: 'released', releasedTick: snapshot.tick };
+    }
+  }
+  const ended = Object.values(objectives).filter(objective => ['complete', 'failed', 'abandoned'].includes(objective.status))
+    .sort((a, b) => Math.max(...b.actionIds.map(id => next.executions[id]?.lastProgressTick ?? b.sinceTick))
+      - Math.max(...a.actionIds.map(id => next.executions[id]?.lastProgressTick ?? a.sinceTick))
+      || (a.objectiveId < b.objectiveId ? -1 : 1));
+  const pending = new Set(next.events.flatMap(event => event.kind === 'preempted' && event.handoff === 'pending'
+    ? [event.quotation.fromObjectiveId, event.quotation.toObjectiveId] : []));
+  const discard = new Set(ended.slice(16).filter(objective => !pending.has(objective.objectiveId)).map(objective => objective.objectiveId));
+  for (const id of discard) delete objectives[id];
+  const keep = <T extends { objectiveId: string }>(values: Readonly<Record<string, T>>) => Object.fromEntries(Object.entries(values)
+    .filter(([, entry]) => !discard.has(entry.objectiveId)));
+  const liveParent = (token: ActionToken) => {
+    const execution = next.executions[token.actionId];
+    return !!execution && sameAction(execution.token, token) && !terminal(execution.status);
+  };
+  const voyages = Object.fromEntries(Object.entries(next.voyages).filter(([, voyage]) => liveParent(voyage.action)));
+  const remainingVacancies = Object.fromEntries(Object.entries(vacancies).filter(([, vacancy]) => liveParent(vacancy.action)));
+  next = { ...next, objectives, leases, assignments, budgets: keep(budgets), methods: keep(next.methods),
+    executions: keep(next.executions), voyages, vacancies: remainingVacancies };
+  return next;
+}
+
+/** Move the same authority along its committed dependency graph even if the
+ * current whole-plan price is temporarily unknown. A required unload wave
+ * transfers landed troops while optional passengers and their hull keep sailing. */
+export function advanceAllocationLeases(memory: StrategyAllocationMemory, snapshot: GameSnapshot): StrategyAllocationMemory {
+  let next = advanceAllocationGraph(memory);
+  const assignments = { ...next.assignments }, leases = { ...next.leases };
+  const actors = new Map(snapshot.units.flatMap(unit => [unit, ...(unit.cargo ?? [])]).map(unit => [unit.id, unit]));
+  for (const lease of Object.values(leases)) if (!lease.resourceKey.startsWith('unit:')) {
+    const action = next.executions[lease.action.actionId];
+    if (action && sameAction(action.token, lease.action) && terminal(action.status)) delete leases[lease.resourceKey];
+  }
+  for (const assignment of Object.values(assignments)) {
+    const unit = actors.get(assignment.unitId), method = next.methods[assignment.methodId], current = next.executions[assignment.action.actionId];
+    if (!unit || !method || !current || !sameAction(current.token, assignment.action)) continue;
+    const future = method.actions.filter(action => !terminal(next.executions[action.id]!.status)
+      && (action.unitIds ? action.unitIds.includes(unit.id) : action.demands.some(demand => unit.kind === 'worker'
+        ? demand.kind === 'workers' : demand.kind === 'force')));
+    const runnable = future.filter(action => ['ready', 'active', 'blocked'].includes(next.executions[action.id]!.status));
+    const aboard = !!(unit.deck || unit.cabin);
+    const successor = runnable.find(action => action.id !== current.token.actionId
+      && (!aboard || action.executor === 'strategy.transport')
+      && (terminal(current.status) || action.dependsOn.includes(current.token.actionId) && actionDependencySatisfied(current)));
+    if (successor) {
+      const execution = next.executions[successor.id]!, lease = leases[`unit:${unit.id}`];
+      if (!lease) continue;
+      leases[lease.resourceKey] = { ...lease, action: execution.token };
+      assignments[assignment.id] = { ...assignment, action: execution.token, target: execution.target,
+        stage: aboard ? 'en-route' : 'assigned', eta: { status: 'unknown', forecastTick: snapshot.tick, arrivalTick: null,
+          reason: { code: 'dependency-handoff-awaits-current-arrival', factIds: [unit.id, successor.id], values: {} } } };
+      next = appendAllocationEvent(next, { objectiveId: assignment.objectiveId, methodId: assignment.methodId,
+        action: execution.token, kind: 'lease-transferred', fromObjectiveId: assignment.objectiveId, toObjectiveId: assignment.objectiveId,
+        leaseIds: [lease.id], assignmentIds: [assignment.id], reason: { code: 'observed-dependency-lease-handoff', factIds: [unit.id], values: {} } }, snapshot.tick);
+    } else if (terminal(current.status) && !future.length && current.executor !== 'strategy.establish-garrison'
+      && current.executor !== 'strategy.start-mining') {
+      delete assignments[assignment.id]; delete leases[`unit:${unit.id}`];
+    }
+  }
+  return { ...next, assignments, leases };
+}
+
 /** Reconstruct grants solely from the serializable authority. No provider or
  * explanation cache participates, so restored workers see identical grants. */
 export function allocationGrants(memory: StrategyAllocationMemory): ActionGrant[] {
@@ -179,7 +280,9 @@ export function pruneAllocationProvenance(memory: StrategyAllocationMemory): Str
   for (const command of latest.values()) protectedCommands.add(command.id);
   const issuedCommands = Object.fromEntries(Object.entries(memory.issuedCommands).filter(([id, command]) => protectedCommands.has(id)
     ));
-  const next = { ...memory, blocked, issuedOrders, issuedCommands, events: retainAllocationEvents(memory.events) };
+  const budgets = Object.fromEntries(Object.entries(memory.budgets).filter(([, budget]) => budget.state !== 'released'
+    || memory.methods[budget.methodId] || live(budget.action)));
+  const next = { ...memory, budgets, blocked, issuedOrders, issuedCommands, events: retainAllocationEvents(memory.events) };
   assertStrategyAllocationBounds(next);
   return next;
 }

@@ -20,7 +20,7 @@ export type AiThinkWireRequest = {
 export type AiThinkWireSnapshot = Omit<GameSnapshot, "map"> & { map: Omit<GameMap, "terrain" | "landmarks"> };
 
 export type AiThinkMessage =
-  | { type: "open"; session: string; map: GameMap; policyMode?: PresetAiPolicyOptions["policyMode"] }
+  | { type: "open"; session: string; map: GameMap; policyMode?: PresetAiPolicyOptions["policyMode"]; strategyControl?: boolean }
   | { type: "think"; session: string; tick: number; deliveryTick: number; snapshot: AiThinkWireSnapshot; requests: AiThinkWireRequest[]; observe?: number }
   | { type: "close"; session: string };
 

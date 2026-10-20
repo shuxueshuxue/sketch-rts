@@ -14,6 +14,7 @@ type Session = {
   // @@@think-thread). Each think refreshes its changing fields (the wind) in place.
   map: GameMap;
   policyMode?: PresetAiPolicyOptions["policyMode"];
+  strategyControl?: boolean;
   memories: Partial<Record<PlayerId, AiPolicyMemory>>;
   observed?: {generation: number; previous: Map<PlayerId, AiPlanTrace>};
   send: (reply: AiThinkReply) => void;
@@ -27,7 +28,8 @@ export function createAiThinkHost() {
       // The worker receives its own cloned Terrain; the simulation thread's
       // warmup cannot populate this isolate's static map facts.
       groundRegionIndex(message.map);
-      sessions.set(message.session, { map: message.map, ...(message.policyMode ? { policyMode: message.policyMode } : {}), memories: {}, send });
+      sessions.set(message.session, { map: message.map, ...(message.policyMode ? { policyMode: message.policyMode } : {}),
+        ...(message.strategyControl !== undefined ? { strategyControl: message.strategyControl } : {}), memories: {}, send });
     },
     think(message: Extract<AiThinkMessage, { type: "think" }>) {
       const session = sessions.get(message.session);
@@ -39,7 +41,14 @@ export function createAiThinkHost() {
         Object.assign(map, message.snapshot.map);
         const snapshot: GameSnapshot = { ...message.snapshot, map: session.map };
         const requests = message.requests.map((request) => ({ ...request, memory: session.memories[request.playerId] ??= createAiPolicyMemory() }));
-        const { commands } = planAiCommandFrameFromSnapshot(snapshot, requests, { ...(snapshot.teams ? { teams: snapshot.teams } : {}), ...(session.policyMode ? { policyMode: session.policyMode } : {}) });
+        const strategies = new Map<string, import('../strategy/bootstrap-control').BootstrapStrategyOutput>();
+        const { commands } = planAiCommandFrameFromSnapshot(snapshot, requests, { ...(snapshot.teams ? { teams: snapshot.teams } : {}),
+          ...(session.policyMode ? { policyMode: session.policyMode } : {}),
+          ...(session.strategyControl !== undefined ? { strategyControl: session.strategyControl } : {}),
+          ...(message.observe !== undefined ? { observeBootstrapPlan(context, _entries, actual) {
+            if (actual) strategies.set(actual.decision.owner, actual);
+          } } : {}),
+        });
         const envelopes = commands.map((entry) => ({ playerId: entry.playerId, command: entry.command }));
         // A command that is illegal in the world it was planned from is an AI fault, as on the match's thread.
         for (const entry of envelopes) {
@@ -52,7 +61,9 @@ export function createAiThinkHost() {
         // Commands leave first. Diagnostics do not extend this think's command-delivery path.
         if(session.observed) try {
           const observations=requests.map(request=>{
-            const trace=buildAiPlanTrace(snapshot,request.playerId,request.memory,request.version??DEFAULT_AI_PLANNER_VERSION);
+            const base=buildAiPlanTrace(snapshot,request.playerId,request.memory,request.version??DEFAULT_AI_PLANNER_VERSION);
+            const strategy=strategies.get(request.playerId);
+            const trace=strategy?.project?{...base,strategy:strategy.project()}:base;
             const previous=session.observed!.previous.get(trace.owner);
             const result={delta:diffAiPlan(previous,trace,message.observe!),context:projectDeathThinkContext(snapshot,trace.owner,request.memory)};
             session.observed!.previous.set(trace.owner,trace);return result;

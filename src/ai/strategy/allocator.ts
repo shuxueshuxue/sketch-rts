@@ -2,13 +2,14 @@ import type { AllocationEta, AllocationMethodProvider, AllocationMethodQuoteInpu
   FormalAssignment, MethodAllocationQuote, ResourceLease, StrategyAllocationDecision,
   StrategyAllocationInput, StrategyAllocationMemory } from './allocation-types';
 import { allocationGrants, advanceAllocationGraph, appendAllocationEvent, actionDependencySatisfied,
-  observeAllocationOrders, pruneAllocationProvenance } from './allocation-lifecycle';
+  observeAllocationOrders, pruneAllocationProvenance, settleAllocationState, advanceAllocationLeases } from './allocation-lifecycle';
 import { reserveAllocationSpends } from './allocation-ledger';
 import { assertStrategyAllocationBounds, createStrategyAllocationMemory, sameAction } from './control';
 import { createOpportunityOracle, type BundleValuationSource } from './opportunity-oracle';
 import { unitArrival } from './unit-arrivals';
 import { productionUsesOverlap } from './production-use';
 import { STRATEGY_PARAMETERS } from './utility';
+import { plannedVoyageArrival, plannedVoyageContext } from './planned-voyage-arrival';
 import type { DecisionFacts } from './decision';
 import type { Effect, Objective, SituationUnit, ValuationContext } from './types';
 
@@ -56,7 +57,7 @@ function reprice(input: StrategyAllocationInput, memory: StrategyAllocationMemor
     throw new Error('Materialized method changed its identity');
   const permitted = new Set(offer.unitIds);
   for (const action of method.actions) for (const id of action.unitIds ?? []) if (!permitted.has(id))
-    throw new Error(`Materialized action recruited an ungranted unit ${id}`);
+    throw new Error(`Materialized action ${action.id} recruited an ungranted unit ${id}`);
   for (const voyage of method.voyagePlans ?? []) {
     if (voyage.unitIds.some(id => !permitted.has(id)) || voyage.ship.kind === 'existing' && !permitted.has(voyage.ship.unitId))
       throw new Error('Materialized voyage recruited outside the quoted bundle');
@@ -74,11 +75,22 @@ function candidateBundles(input: StrategyAllocationInput, memory: StrategyAlloca
       if (typeof id === 'string' && owned.some(unit => unit.id === id)) existing.push(id);
   }
   const targetId = method.actions.at(-1)?.id ?? '', objective = input.objectives.find(objective => objective.id === method.objectiveId)!;
+  const namedWorkers = new Set(objective.effects.flatMap(effect => effect.kind === 'assets-evacuated' ? effect.unitIds : []));
+  const localDefense = objective.kind === 'DefendSite' && ['local-squad', 'main-army-recall', 'wait-in-cover'].includes(method.kind);
   const eta = (unit: DecisionFacts<SituationUnit>) => {
     const arrival = unitArrival(unit, targetId) ?? unitArrival(unit, objective.target.entityId ?? '');
     return arrival && 'ticks' in arrival ? arrival.ticks : null;
   };
   const eligible = owned.filter(unit => {
+    if (localDefense && !unit.roles.some(role => ['worker', 'transport', 'warship'].includes(role))) {
+      if (unit.location.kind !== 'land' || unit.location.landId !== objective.target.landId) return false;
+      if (method.kind === 'local-squad' && Math.hypot(unit.location.point.x - objective.target.point.x,
+        unit.location.point.y - objective.target.point.y) > 650) return false;
+    }
+    if (method.kind === 'evacuation' && unit.roles.includes('worker') && namedWorkers.size && !namedWorkers.has(unit.id)) return false;
+    if (method.kind === 'evacuation' && unit.roles.includes('worker') && !namedWorkers.size
+      && (unit.location.kind !== 'land' || unit.location.landId !== objective.target.landId
+        || Math.hypot(unit.location.point.x - objective.target.point.x, unit.location.point.y - objective.target.point.y) > 650)) return false;
     const lease = memory.leases[`unit:${unit.id}`];
     if (lease?.objectiveId === method.objectiveId) return true;
     // Proposed reservations are not authority. Actual unpriced execution stays
@@ -108,7 +120,8 @@ function candidateBundles(input: StrategyAllocationInput, memory: StrategyAlloca
   const base = [...new Set(existing)];
   // Workers and hulls enter the same explicit bundle; transport providers may
   // not add an available boat or an economic worker during materialization.
-  if (workers && !base.some(id => auxiliaries.some(unit => unit.id === id)) && auxiliaries[0]) base.push(auxiliaries[0].id);
+  if (workers && combat && !base.some(id => auxiliaries.some(unit => unit.id === id)) && auxiliaries[0]) base.push(auxiliaries[0].id);
+  if (workers && !combat && namedWorkers.size) base.push(...auxiliaries.filter(unit => namedWorkers.has(unit.id)).map(unit => unit.id));
   const withHulls = (ids: readonly string[]) => {
     const result = new Set(ids);
     for (const id of ids) {
@@ -121,10 +134,10 @@ function candidateBundles(input: StrategyAllocationInput, memory: StrategyAlloca
   };
   const choices = new Map<string, string[]>();
   const push = (ids: readonly string[]) => { const list = withHulls(ids); choices.set(list.join('\0'), list); };
-  const additions = force.filter(unit => !base.includes(unit.id));
+  const additions = (combat ? force : workers ? auxiliaries : []).filter(unit => !base.includes(unit.id));
   // Include the full eligible prefix as well as small bundles. A large threat
   // must not be declared impossible just because the quote count is bounded.
-  const sizes = [...new Set([0, 1, 2, 3, 4, 6, 8, 12, 16, 24, 32, additions.length]
+  const sizes = [...new Set([0, 1, 2, 3, 4, 5, 6, 8, 12, 16, 24, additions.length]
     .map(size => Math.min(size, additions.length)))].sort((a, b) => a - b);
   if (sizes.length > ALLOCATION_BUNDLE_QUOTES_PER_METHOD) throw new Error('Allocation quote schedule exceeds its bound');
   for (const size of sizes) push([...base, ...additions.slice(0, size).map(unit => unit.id)]);
@@ -144,8 +157,9 @@ function assignMethod(input: StrategyAllocationInput, memory: StrategyAllocation
   const { snapshot, situation } = input, tick = snapshot.tick, method = clean(offer.method), objective = offer.objective;
   const executions = { ...memory.executions };
   let generation = memory.nextActionGeneration;
+  const restart = !!memory.objectives[objective.id] && terminal(memory.objectives[objective.id]!.status);
   for (const action of method.actions) {
-    const old = executions[action.id];
+    const old = restart ? undefined : executions[action.id];
     if (old && old.methodId !== method.id) throw new Error('Two allocation methods share an action id');
     executions[action.id] = { ...old, token: old?.token ?? { actionId: action.id, generation: generation++ }, objectiveId: objective.id,
       methodId: method.id, executor: action.executor, intent: action.intent, target: action.target, dependsOn: [...action.dependsOn],
@@ -212,11 +226,16 @@ function assignMethod(input: StrategyAllocationInput, memory: StrategyAllocation
     const shipAssignment = assignments[`assignment:${shipId}`];
     if (!shipAssignment) continue;
     const prior = voyages[plan.id], passengers = snapshot.units.filter(unit => unit.deck?.shipId === shipId || unit.cabin?.shipId === shipId).map(unit => unit.id).sort();
+    const request = quoteInput(input, next, offer, { phase: 'gross' });
+    const arrivals = plan.unitIds.map(id => snapshot.units.find(unit => unit.id === id)).map(unit => unit
+      ? plannedVoyageArrival(request, plan, unit, plan.landingGround) : undefined);
+    const expectedFreeTick = arrivals.length && arrivals.every(arrival => arrival?.status === 'reachable')
+      ? tick + Math.max(...arrivals.map(arrival => arrival!.status === 'reachable' ? arrival!.ticks : 0)) : null;
     voyages[plan.id] = { id: plan.id, objectiveId: objective.id, action: next.executions[plan.actionId]!.token,
       shipAssignmentId: shipAssignment.id, crewAssignmentIds: plan.unitIds.map(id => `assignment:${id}`), passengerIds: passengers,
       departure: plan.departure, destination: plan.destination, departureGround: plan.departureGround, landingGround: plan.landingGround,
-      phase: prior?.phase === 'return' ? 'return' : passengers.length ? 'sailing' : prior?.phase ?? 'loading', startedTick: prior?.startedTick ?? tick,
-      expectedFreeTick: offer.gross.force?.evaluationUntilTick ?? null, decision: prior?.decision ?? 'continue' };
+      phase: prior?.phase === 'return' ? 'return' : plannedVoyageContext(request, plan).phase, startedTick: prior?.startedTick ?? tick,
+      expectedFreeTick, decision: prior?.decision ?? 'continue' };
   }
   const own = Object.values(assignments).filter(assignment => assignment.objectiveId === objective.id);
   next = { ...next, leases, assignments, voyages, objectives: { ...next.objectives, [objective.id]: {
@@ -236,6 +255,42 @@ function assignMethod(input: StrategyAllocationInput, memory: StrategyAllocation
   return next;
 }
 
+/** A completed expansion's garrison is an observed continuation, not a free
+ * pool followed by a new recruitment. Transfer the identical cohort before
+ * ordinary competition; an unpriced defense remains committed/unknown. */
+function handoffCompletedGarrisons(input: StrategyAllocationInput, memory: StrategyAllocationMemory): StrategyAllocationMemory {
+  for (const action of Object.values(memory.executions).sort((a, b) => compare(a.token.actionId, b.token.actionId))) {
+    if (action.executor !== 'strategy.establish-garrison' || action.status !== 'complete'
+      || typeof action.state.hallId !== 'string' || action.state.leasesTransferredTo) continue;
+    const objective = input.objectives.find(objective => objective.kind === 'DefendSite' && objective.target.entityId === action.state.hallId);
+    const method = objective && input.methods.filter(method => method.objectiveId === objective.id && method.kind === 'local-squad')
+      .sort((a, b) => a.preference - b.preference || compare(a.id, b.id))[0];
+    if (!objective || !method || terminal(objective.status)) continue;
+    const provider = input.providers.find(provider => provider.id === method.providerId);
+    if (!provider) continue;
+    const assignments = Object.values(memory.assignments).filter(assignment => sameAction(assignment.action, action.token));
+    const unitIds = assignments.map(assignment => assignment.unitId).sort();
+    if (!unitIds.length) continue;
+    const result = reprice(input, memory, provider, { objective, method, unitIds }, { phase: 'gross' });
+    const leases = { ...memory.leases }, nextAssignments = { ...memory.assignments };
+    const priorLeases = assignments.map(assignment => memory.leases[`unit:${assignment.unitId}`]!);
+    for (const assignment of assignments) { delete leases[`unit:${assignment.unitId}`]; delete nextAssignments[assignment.id]; }
+    memory = { ...memory, leases, assignments: nextAssignments };
+    memory = assignMethod(input, memory, { objective, provider, method: result.method, unitIds, gross: result.quote });
+    const nextAssignment = memory.assignments[assignments[0]!.id];
+    if (!nextAssignment || nextAssignment.objectiveId !== objective.id) throw new Error('Garrison continuation lost its existing cohort');
+    memory = { ...memory, executions: { ...memory.executions, [action.token.actionId]: {
+      ...memory.executions[action.token.actionId]!, state: { ...action.state, leasesTransferredTo: objective.id } } },
+      objectives: { ...memory.objectives, [action.objectiveId]: { ...memory.objectives[action.objectiveId]!,
+        assignmentIds: Object.values(memory.assignments).filter(assignment => assignment.objectiveId === action.objectiveId).map(assignment => assignment.id).sort() } } };
+    memory = appendAllocationEvent(memory, { objectiveId: objective.id, methodId: result.method.id, action: nextAssignment.action,
+      kind: 'lease-transferred', fromObjectiveId: action.objectiveId, toObjectiveId: objective.id,
+      leaseIds: priorLeases.map(lease => lease.id), assignmentIds: assignments.map(assignment => assignment.id),
+      reason: { code: 'observed-expansion-garrison-to-defense', factIds: unitIds, values: {} } }, input.snapshot.tick);
+  }
+  return memory;
+}
+
 /** Greedy whole-bundle allocation. Quote data is local to one transaction;
  * memory stores only the committed graph, not the speculative search tree. */
 export function allocateStrategy(input: StrategyAllocationInput): StrategyAllocationDecision {
@@ -244,9 +299,22 @@ export function allocateStrategy(input: StrategyAllocationInput): StrategyAlloca
   let memory = clean(input.previous ? structuredClone(input.previous) : createStrategyAllocationMemory(owner, tick));
   if (memory.evaluatedTick === tick) return { memory, grants: allocationGrants(memory), events: [], unmet: memory.unmet };
   if (memory.evaluatedTick > tick) throw new Error('Allocation cannot move backwards in simulation time');
+  const firstEventSequence = memory.nextEventSequence;
   memory = { ...memory, evaluatedTick: tick, revision: memory.revision + 1, unmet: [] };
   memory = observeAllocationOrders(memory, input.snapshot);
-  const firstEventSequence = memory.nextEventSequence, offers: Offer[] = [];
+  memory = settleAllocationState(memory, input.snapshot);
+  memory = advanceAllocationLeases(memory, input.snapshot);
+  memory = handoffCompletedGarrisons(input, memory);
+  // A temporarily unknown quote must not preserve yesterday's relative ETA.
+  // Keep the commitment, but refresh its current physical facts independently.
+  memory = { ...memory, assignments: Object.fromEntries(Object.entries(memory.assignments).map(([id, assignment]) => {
+    const unit = input.situation.units.find(unit => unit.id === assignment.unitId), method = memory.methods[assignment.methodId];
+    return [id, unit && method?.actions.some(action => action.id === assignment.action.actionId)
+      ? { ...assignment, eta: currentEta(unit, method, assignment.action.actionId, tick),
+        lastLocation: unit.location.kind === 'unknown' ? { ...unit.location,
+          reason: { code: unit.location.reason.code, factIds: [unit.id], values: {} } } : clean(unit.location) } : assignment];
+  })) };
+  const offers: Offer[] = [];
   for (const method of ordered(input.methods)) {
     const objective = input.objectives.find(objective => objective.id === method.objectiveId);
     if (!objective || terminal(objective.status)) continue;
@@ -255,6 +323,13 @@ export function allocateStrategy(input: StrategyAllocationInput): StrategyAlloca
     for (const unitIds of candidateBundles(input, memory, method)) {
       const result = reprice(input, memory, provider, { objective, method, unitIds }, { phase: 'gross' });
       offers.push({ objective, method: result.method, provider, unitIds, gross: result.quote });
+    }
+  }
+  if (input.prepareVoyageRisks) {
+    input = { ...input, voyageRisks: input.prepareVoyageRisks(offers.map(offer => offer.method)) };
+    for (const offer of offers) {
+      const result = reprice(input, memory, offer.provider, offer, { phase: 'gross' });
+      offer.method = result.method; offer.gross = result.quote;
     }
   }
   const sources: BundleValuationSource[] = offers.filter(offer => offer.gross.status === 'feasible').map((offer, index) => ({
@@ -308,6 +383,22 @@ export function allocateStrategy(input: StrategyAllocationInput): StrategyAlloca
     const quote = offer.net!;
     if (quote.status !== 'feasible' || quote.utility.score <= 0 || selected.has(offer.objective.id)
       || offer.objective.effects.some(effect => effects.has(allocationEffectKey(effect)))) continue;
+    const existingObjective = memory.objectives[offer.objective.id];
+    let replacing: { methodId: string; resources: ResourceLease['resourceKey'][] } | undefined;
+    if (existingObjective && !terminal(existingObjective.status) && existingObjective.methodId !== offer.method.id) {
+      const held = Object.values(memory.leases).filter(lease => lease.objectiveId === offer.objective.id);
+      const currentMembers = Object.values(memory.assignments).filter(assignment => assignment.objectiveId === offer.objective.id)
+        .map(assignment => assignment.unitId).sort().join('\0');
+      const old = offers.find(old => old.method.id === existingObjective.methodId && [...old.unitIds].sort().join('\0') === currentMembers
+        && old.net?.status === 'feasible');
+      const resources = held.map(lease => lease.resourceKey).sort();
+      const cost = input.switchingCost?.({ fromObjectiveId: offer.objective.id, toObjectiveId: offer.objective.id, resourceKeys: resources });
+      const inFlight = Object.values(memory.executions).some(action => action.methodId === existingObjective.methodId
+        && !terminal(action.status) && (!!action.production && action.status !== 'waiting' || action.executor === 'strategy.transport' && action.status === 'active'));
+      if (old?.net?.status !== 'feasible' || cost === undefined || cost === null || !Number.isFinite(cost) || cost < 0
+        || tick < existingObjective.minimumStayUntilTick || quote.utility.score <= old.net.utility.score + cost || inFlight) continue;
+      replacing = { methodId: existingObjective.methodId, resources };
+    }
     const conflicts = Object.values(memory.leases).filter(lease => lease.resourceKey.startsWith('unit:')
       && offer.unitIds.includes(lease.resourceKey.slice(5)) && lease.objectiveId !== offer.objective.id);
     if (conflicts.some(lease => selected.has(lease.objectiveId))) continue;
@@ -359,6 +450,21 @@ export function allocateStrategy(input: StrategyAllocationInput): StrategyAlloca
       memory = { ...memory, leases, assignments, ...(prior ? { objectives: { ...memory.objectives, [fromId]: { ...prior,
         assignmentIds: remaining.map(assignment => assignment.id).sort(), committedUtilityGold: null,
         challengerId: null, challengerThinks: 0, status: handoff === 'shrink' ? prior.status : 'paused' } } } : {}) };
+    }
+    if (replacing) {
+      const oldActions = Object.values(memory.executions).filter(action => action.methodId === replacing!.methodId);
+      const leases = { ...memory.leases }, assignments = { ...memory.assignments }, budgets = { ...memory.budgets };
+      const oldLeaseIds = replacing.resources.map(key => leases[key]!.id);
+      for (const key of replacing.resources) { delete leases[key]; if (key.startsWith('unit:')) delete assignments[`assignment:${key.slice(5)}`]; }
+      for (const budget of Object.values(budgets)) if (budget.methodId === replacing.methodId)
+        budgets[budget.id] = { ...budget, state: 'released', releasedTick: tick };
+      memory = appendAllocationEvent(memory, { objectiveId: offer.objective.id, methodId: replacing.methodId,
+        action: oldActions[0]!.token, kind: 'parent-invalidated', releasedLeaseIds: oldLeaseIds,
+        releasedBudgetIds: Object.values(budgets).filter(budget => budget.methodId === replacing!.methodId).map(budget => budget.id),
+        reason: { code: 'same-objective-method-replaced-after-current-requote', factIds: replacing.resources, values: {} } }, tick);
+      memory = { ...memory, leases, assignments, budgets,
+        methods: Object.fromEntries(Object.entries(memory.methods).filter(([id]) => id !== replacing!.methodId)),
+        executions: Object.fromEntries(Object.entries(memory.executions).filter(([, action]) => action.methodId !== replacing!.methodId)) };
     }
     memory = assignMethod(input, memory, offer); selected.add(offer.objective.id);
     for (const effect of offer.objective.effects) effects.add(allocationEffectKey(effect));

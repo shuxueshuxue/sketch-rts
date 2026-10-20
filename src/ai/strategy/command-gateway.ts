@@ -11,6 +11,8 @@ export type StrategyCommandProposal = Readonly<{
   action: ActionToken | null;
   allocationRevision: number | null;
   purpose: 'task' | 'life-saving';
+  /** A service may interrupt only the actual order of this same parent. */
+  interruptedCommandId?: string;
   command: GameCommand;
 }>;
 export type GatewayAdmission = CommandAdmission;
@@ -58,7 +60,11 @@ export function createStrategyCommandGateway(input: StrategyGatewayInput) {
     const lease = memory.leases[key];
     if (proposal.source === 'script') return !lease;
     const grant = grantFor(proposal), action = proposal.action && memory.executions[proposal.action.actionId];
-    return !!(lease && grant && action && action.executor === proposal.executor
+    const order = key.startsWith('unit:') ? memory.issuedOrders[key.slice(5)] : undefined;
+    const service = proposal.purpose === 'life-saving' && order?.observedTick === snapshot.tick
+      && order.observedOrder !== null && order.commandId === proposal.interruptedCommandId
+      && proposal.action && sameAction(order.action, proposal.action);
+    return !!(lease && grant && action && (action.executor === proposal.executor || service)
       && grant.objectiveId === action.objectiveId && grant.methodId === action.methodId
       && sameAction(action.token, lease.action) && proposal.action
       && sameAction(lease.action, proposal.action) && (['active', 'ready'].includes(action.status)

@@ -144,7 +144,8 @@ describe('deterministic whole-bundle allocation', () => {
     const { input } = fixture(), point = { x: 3000, y: 1000 };
     const target = { entityId: 'post', landId: 'land:1' as const, point };
     const request = { ...input, objectives: input.objectives.slice(1).map(goal => ({ ...goal, target })),
-      methods: input.methods.slice(1).map(method => ({ ...method, actions: method.actions.map(action => ({ ...action, target })) })) };
+      methods: input.methods.slice(1).map(method => ({ ...method, kind: 'main-army-recall' as const,
+        actions: method.actions.map(action => ({ ...action, target })) })) };
     const first = allocateStrategy(request), assignment = Object.values(first.memory.assignments)[0]!;
     expect(assignment.stage).toBe('assigned');
     const execution = first.memory.executions[assignment.action.actionId]!;
@@ -161,5 +162,67 @@ describe('deterministic whole-bundle allocation', () => {
       situation: { ...next.situation, tick: 30, units: next.situation.units.map(unit => unit.id === assignment.unitId
         ? { ...unit, location: { kind: 'land' as const, landId: 'land:1' as const, point } } : unit) } });
     expect(arrived.memory.assignments[assignment.id]!.stage).toBe('on-station');
+  });
+
+  it('keeps a temporarily unpriced commitment while refreshing its current ETA', () => {
+    const { input, provider } = fixture(), first = allocateStrategy({ ...input, objectives: input.objectives.slice(1), methods: input.methods.slice(1) });
+    const blocked: AllocationMethodProvider = { ...provider, quote(request) { return { methodId: request.method.id,
+      status: 'blocked', utility: null, potentialUtility: null, force: null, missingPreconditions: [],
+      reason: { code: 'new-route-still-evaluating', factIds: [], values: {} } }; } };
+    const result = allocateStrategy({ ...input, previous: first.memory, providers: [blocked], snapshot: { ...input.snapshot, tick: 15 },
+      situation: { ...input.situation, tick: 15, units: input.situation.units.map(unit => ({ ...unit,
+        arrivals: [{ targetId: 'post', arrival: { status: 'reachable', ticks: 50, landTicks: 50, crossings: [] } }] })) } });
+    expect(result.memory.leases['unit:one']).toEqual(first.memory.leases['unit:one']);
+    expect(result.memory.assignments['assignment:one']!.eta).toEqual({ status: 'known', forecastTick: 15, arrivalTick: 65 });
+  });
+
+  it('releases a terminal graph and records a disappeared assignee as a vacancy without inventing a preemption', () => {
+    const { input } = fixture(), first = allocateStrategy({ ...input, objectives: input.objectives.slice(1), methods: input.methods.slice(1) });
+    const action = Object.values(first.memory.executions)[0]!;
+    const complete = allocateStrategy({ ...input, methods: [], objectives: [], snapshot: { ...input.snapshot, tick: 15 },
+      previous: { ...first.memory, executions: { [action.token.actionId]: { ...action, status: 'complete' } } } });
+    expect(complete.memory.leases).toEqual({}); expect(complete.memory.assignments).toEqual({});
+    expect(complete.memory.objectives.single!.status).toBe('complete');
+    const missing = allocateStrategy({ ...input, methods: [], objectives: [], snapshot: { ...input.snapshot, tick: 15,
+      units: input.snapshot.units.filter(unit => unit.id !== 'one') }, situation: { ...input.situation, tick: 15,
+      units: input.situation.units.filter(unit => unit.id !== 'one') }, previous: first.memory });
+    expect(missing.memory.leases['unit:one']).toBeUndefined();
+    expect(Object.values(missing.memory.vacancies)[0]!.reason.code).toBe('observed-assignee-no-longer-present');
+    expect(missing.events.some(event => event.kind === 'preempted')).toBe(false);
+  });
+
+  it('requires a fresh old-method price and explicit switch cost before replacing an active method', () => {
+    const { input, provider } = fixture(), methods = input.methods.slice(0, 1);
+    const first = allocateStrategy({ ...input, objectives: input.objectives.slice(0, 1), methods });
+    const replacement = { ...methods[0]!, id: `${methods[0]!.id}/replacement`, actions: methods[0]!.actions.map(action => ({ ...action, id: `${action.id}/replacement` })) };
+    const repricing: AllocationMethodProvider = { ...provider, quote(request) {
+      const quote = provider.quote(request);
+      return quote.status === 'feasible' && request.method.id === replacement.id ? { ...quote,
+        utility: { ...quote.utility, score: quote.utility.score! + 200,
+          benefit: [...quote.utility.benefit, { code: 'better-current-post', value: 200 }] } } : quote;
+    } };
+    const later = { ...input, objectives: input.objectives.slice(0, 1), methods: [...methods, replacement], providers: [repricing],
+      previous: first.memory, snapshot: { ...input.snapshot, tick: 500 }, situation: { ...input.situation, tick: 500 } };
+    expect(allocateStrategy(later).memory.objectives.pair!.methodId).toBe(methods[0]!.id);
+    const switched = allocateStrategy({ ...later, switchingCost: () => 0 });
+    expect(switched.memory.objectives.pair!.methodId).toBe(replacement.id);
+    expect(switched.memory.executions[methods[0]!.actions[0]!.id]).toBeUndefined();
+    expect(Object.values(switched.memory.leases).every(lease => lease.methodId === replacement.id)).toBe(true);
+    expect(switched.events.some(event => event.reason.code === 'same-objective-method-replaced-after-current-requote')).toBe(true);
+  });
+
+  it('hands a completed expansion garrison to formal defense without an idle interval or a priced preemption', () => {
+    const { input } = fixture(), first = allocateStrategy({ ...input, objectives: input.objectives.slice(0, 1), methods: input.methods.slice(0, 1) });
+    const old = Object.values(first.memory.executions)[0]!;
+    const previous = { ...first.memory, executions: { [old.token.actionId]: { ...old, executor: 'strategy.establish-garrison',
+      status: 'complete' as const, state: { hallId: 'post' } } } };
+    const transferred = allocateStrategy({ ...input, previous, objectives: input.objectives.slice(1), methods: input.methods.slice(1),
+      snapshot: { ...input.snapshot, tick: 15 }, situation: { ...input.situation, tick: 15 } });
+    expect(Object.values(transferred.memory.leases).map(lease => lease.id).sort()).toEqual(Object.values(first.memory.leases).map(lease => lease.id).sort());
+    expect(Object.values(transferred.memory.leases).every(lease => lease.objectiveId === 'single')).toBe(true);
+    expect(transferred.memory.executions[old.token.actionId]!.state.leasesTransferredTo).toBe('single');
+    expect(transferred.events.find(event => event.reason.code === 'observed-expansion-garrison-to-defense')).toMatchObject({
+      kind: 'lease-transferred', fromObjectiveId: 'pair', toObjectiveId: 'single' });
+    expect(transferred.events.some(event => event.kind === 'preempted')).toBe(false);
   });
 });

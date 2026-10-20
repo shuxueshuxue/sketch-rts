@@ -31,6 +31,9 @@ export type VoyageRiskRequest = Readonly<{
   shipId?: string; productionBuildingId?: string;
   /** Native end pose of the preceding leg, conditional on that leg succeeding. */
   start?: ShipPose;
+  /** Start from the exact native endpoint of this earlier request in the same
+   * batch. A deferred/partial previous route cannot become a straight segment. */
+  previousLegId?: string;
   /** A point list from the native helm/planner, never a straight-line substitute. */
   route?: Readonly<{ points: readonly ShipPose[]; partial: boolean }>;
 }>;
@@ -41,7 +44,7 @@ export type VoyageRiskMemory = { version: 1; owner: PlayerId; tick: number; rout
 export type VoyageRisk = Readonly<
   { status: 'known'; survivalProbability: number; expectedDamage: number; expectedHpLoss: number;
     damageErrorBound: number; samples: number; totalSamples: number; computedTick: number;
-    basis: 'no-capable-basin-enemy' | 'native-route-exposure'; threatIds: readonly string[] }
+    basis: 'no-capable-basin-enemy' | 'native-route-exposure' | 'completed-before-evaluation'; threatIds: readonly string[] }
   | { status: 'unknown'; reasonCode: string; samples: number; totalSamples: number; threatIds: readonly string[] }
 >;
 type Weapon = Readonly<{ range: number; minRange: number; dps: number }>;
@@ -172,7 +175,8 @@ export function assessVoyageRisks(snapshot: GameSnapshot, owner: PlayerId, reque
   const bodyTuples = bodies.map(body => [body.x, body.y, body.radius]).sort((a, b) => a[0]! - b[0]! || a[1]! - b[1]! || a[2]! - b[2]!);
   const geometryVersion = `${terrainVersion(snapshot)}:${bodyTuples.length}:${fnv1a(JSON.stringify(bodyTuples))}`;
   let samplesUsed = 0, routePlans = 0;
-  const results = new Map<string, VoyageRisk>(), coast = coastIndex(snapshot), actors = threatActors(snapshot, owner);
+  const results = new Map<string, VoyageRisk>(), endpoints = new Map<string, ShipPose>();
+  const coast = coastIndex(snapshot), actors = threatActors(snapshot, owner);
   const ordered = [...requests].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
   if (new Set(ordered.map(request => request.id)).size !== ordered.length) throw new Error('Duplicate voyage risk request ID');
   const live = new Set(ordered.map(request => request.id));
@@ -181,8 +185,9 @@ export function assessVoyageRisks(snapshot: GameSnapshot, owner: PlayerId, reque
   for (const request of ordered) {
     if (request.id.length > 256) throw new Error('Voyage risk request identity exceeds 256 characters');
     const origin = hullFor(snapshot, owner, request);
-    const ship = origin && request.start ? { ...origin, x: request.start.x, y: request.start.y,
-      sailing: { ...origin.sailing!, heading: request.start.heading } } : origin;
+    const start = request.previousLegId ? endpoints.get(request.previousLegId) : request.start;
+    const ship = origin && start ? { ...origin, x: start.x, y: start.y,
+      sailing: { ...origin.sailing!, heading: start.heading } } : origin;
     if (origin && ship !== origin) shareShipProfile(origin, ship!);
     const profile = ship && shipProfile(ship);
     if (!ship || !profile || seaIdAt(snapshot.map, request.destination) !== request.seaId) {
@@ -193,6 +198,9 @@ export function assessVoyageRisks(snapshot: GameSnapshot, owner: PlayerId, reque
     if (!threats.length) {
       memory.entries = memory.entries.filter(entry => entry.id !== request.id);
       results.set(request.id, known(undefined, ship, [], snapshot.tick)); continue;
+    }
+    if (request.previousLegId && !start) {
+      results.set(request.id, unknown('voyage-previous-native-leg-deferred', threats)); continue;
     }
     let route = request.route;
     const helm = ship.sailing?.route;
@@ -234,6 +242,7 @@ export function assessVoyageRisks(snapshot: GameSnapshot, owner: PlayerId, reque
       (route.points.at(-1)?.y ?? ship.y) - request.destination.y) > 1e-5) {
       results.set(request.id, unknown('voyage-native-route-incomplete', threats)); continue;
     }
+    endpoints.set(request.id, route.points.at(-1) ?? { x: ship.x, y: ship.y, heading: ship.sailing?.heading ?? 0 });
     const { legs, samples } = routeLegs(ship, route.points);
     const key = JSON.stringify([request.seaId, ship.kind, ship.hp, ship.x, ship.y, ship.sailing?.heading ?? 0,
       profile.hull, shipMotionLimits(ship), ship.sailing?.speed ?? 0, ship.sailing?.velocityX ?? null, ship.sailing?.velocityY ?? null, snapshot.map.wind ?? null, route.points, threats]);
