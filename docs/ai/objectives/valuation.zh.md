@@ -13,3 +13,9 @@
 只认可核实的拆厅、断矿、施工延迟等收益，不再用敌军战力乘响应时间编造 pressure 收益。旧 ETA 中 `beyond-evaluation-window` 只证明超过旧评价窗；新窗口更长时，没有结构化下界就保留 unknown。
 
 公共接口是纯只读的 `types.ts`、`utility.ts`，不依赖控制实现。`PlanningContext.valuation` 给出 gross/net、共同 window 和整组机会成本回调；`unavailableUnitIds` 用于给同一候选重报价，不能暗中拿别的目标的兵补满。Objective/MethodQuoteFacts 的 valuation 元数据保留所用资源与窗口。只有完整 net 报价可用于正式分配；gross 不是已扣除机会成本的承诺收益。
+
+## 原生生产通道的机会成本
+
+`ProductionUse` 显式记录 buildingId、lane、相对当前 think 的半开占用区间 `[fromTicks, throughTicks)`。training 对应原生 `building.queue`，research 对应 `researchQueue`，两者在同一 tick 独立推进；同一建筑不自动意味着互斥。只将同建筑、同通道、时间重叠的生产作为次优方案资源冲突，现金仍由共用预算竞争。
+
+两轮 oracle 支持只有生产资源的请求。重报原方法时保持同一单位组，并将请求占用区间作为 `unavailableProduction` 传入，报价方必须按实际队列接续/延后结果重算。没有已核实替代训练用途时不收固定队列时间费；已有真实承诺但无法重报时保留 unknown。既付原生队列不得取消或重复收费，其等待时间仍计入真实完工 ETA。

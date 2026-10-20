@@ -1,6 +1,7 @@
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { OpportunityAlternative, OpportunityCostQuote, OpportunityRequest, Utility, ValuationContext,
-  ValuationQuotation, ValuationWindow } from './types';
+  ValuationQuotation, ValuationWindow, ProductionUse } from './types';
+import { canonicalProductionUses, productionUsesOverlap } from './production-use';
 import { copiedEvidenceProjection, deferredEvidence, deferredRecord, projectedCopy, valueReader } from './explanations';
 
 /** A shared gold-equivalent scale for every objective family; never map-specific. */
@@ -142,7 +143,8 @@ export function quoteOpportunityCost(window: ValuationWindow, alternatives: read
   for (const alternative of alternatives) {
     const before = finite(alternative.withResourcesGold, 'alternative utility');
     const ids = [...new Set(alternative.unitIds)].sort();
-    if (!ids.length) throw new Error('Strategy alternative has no shared resources');
+    const production = canonicalProductionUses(alternative.production);
+    if (!ids.length && !production.length) throw new Error('Strategy alternative has no shared resources');
     if (alternative.withoutResourcesStatus === 'feasible') {
       if (alternative.withoutResourcesGold === null) throw new Error('Feasible strategy alternative has no reduced-team quote');
       finite(alternative.withoutResourcesGold, 'reduced-team alternative utility');
@@ -156,6 +158,7 @@ export function quoteOpportunityCost(window: ValuationWindow, alternatives: read
     const after = alternative.withoutResourcesStatus === 'feasible' ? Math.max(0, alternative.withoutResourcesGold!) : 0;
     const marginalGold = Math.max(0, before - after);
     if (marginalGold > 0) candidates.push({ objectiveId: alternative.objectiveId, unitIds: ids,
+      ...(production.length ? { production } : {}),
       marginalGold, withResourcesGold: before, withoutResourcesGold: alternative.withoutResourcesGold,
       basis: alternative.withoutResourcesStatus === 'unknown' ? 'conservative-bound' : 'exact' });
   }
@@ -163,11 +166,13 @@ export function quoteOpportunityCost(window: ValuationWindow, alternatives: read
     reason: { code: 'committed-opportunity-cost-unknown' } };
   candidates.sort((a, b) => b.marginalGold - a.marginalGold
     || (a.objectiveId < b.objectiveId ? -1 : a.objectiveId > b.objectiveId ? 1 : 0));
-  const units = new Set<string>(), objectives = new Set<string>();
+  const units = new Set<string>(), objectives = new Set<string>(), production: ProductionUse[] = [];
   const selected = candidates.filter(candidate => {
-    if (objectives.has(candidate.objectiveId) || candidate.unitIds.some(id => units.has(id))) return false;
+    if (objectives.has(candidate.objectiveId) || candidate.unitIds.some(id => units.has(id))
+      || productionUsesOverlap(candidate.production ?? [], production)) return false;
     objectives.add(candidate.objectiveId);
     for (const id of candidate.unitIds) units.add(id);
+    production.push(...candidate.production ?? []);
     return true;
   });
   return { window, status: 'known', gold: finite(selected.reduce((sum, item) => sum + item.marginalGold, 0),
@@ -180,14 +185,16 @@ export function quoteOpportunityCost(window: ValuationWindow, alternatives: read
 export function resolveValuation(request: OpportunityRequest, context?: ValuationContext): ValuationQuotation {
   checkedWindow(request.window);
   const unitIds = [...new Set(request.unitIds)].sort();
+  const production = canonicalProductionUses(request.production);
+  const resources = { unitIds, ...(production.length ? { production } : {}) };
   const phase = context?.phase ?? 'gross';
-  if (phase === 'gross') return { phase, window: request.window, unitIds, opportunity: null };
-  const opportunity = context?.opportunity?.({ ...request, unitIds }) ?? {
+  if (phase === 'gross') return { phase, window: request.window, ...resources, opportunity: null };
+  const opportunity = context?.opportunity?.({ ...request, ...resources }) ?? {
     window: request.window, status: 'unknown' as const, objectiveIds: [], reason: { code: 'opportunity-quoter-unavailable' } };
   checkedWindow(opportunity.window);
   if (!sameValuationWindow(request.window, opportunity.window)) throw new Error('Strategy opportunity quote uses a different valuation window');
   if (opportunity.status === 'known') finite(opportunity.gold, 'opportunity cost', 0);
-  return { phase, window: request.window, unitIds, opportunity };
+  return { phase, window: request.window, ...resources, opportunity };
 }
 
 type UtilityInput = Pick<Utility, 'benefit' | 'cost' | 'successProbability'>

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createOpportunityOracle, type BundleValuationSource } from './opportunity-oracle';
 import { valuationWindow } from './utility';
+import { canonicalProductionUses } from './production-use';
 
 const window = valuationWindow(1000);
 const request = { objectiveId: 'island', methodId: 'ferry', unitIds: ['a', 'b', 'c', 'd'], window };
@@ -56,5 +57,44 @@ describe('whole-bundle opportunity oracle', () => {
     warm({ ...request, window: valuationWindow(1) });
     const restored = JSON.parse(JSON.stringify(request));
     expect(JSON.stringify(warm(request))).toBe(JSON.stringify(createOpportunityOracle([source()], { effectKeysFor: () => [] })(restored)));
+  });
+
+  it('reprices overlapping training time without inventing a per-tick fee', () => {
+    const production = [{ buildingId: 'hall', lane: 'training' as const, fromTicks: 100, throughTicks: 300 }];
+    const calls: unknown[] = [];
+    const queue = source({ unitIds: [], production, quote(ids, valueWindow, unavailable) {
+      calls.push({ ids, valueWindow, unavailable });
+      return { status: 'feasible', score: unavailable?.length ? 80 : 200, coverage: 'complete' };
+    } });
+    const oracle = createOpportunityOracle([queue], { effectKeysFor: () => [] });
+    const value = oracle({ ...request, unitIds: [], production });
+    expect(value).toMatchObject({ status: 'known', gold: 120, alternatives: [{ unitIds: [], production }] });
+    expect(calls).toEqual([{ ids: [], valueWindow: window, unavailable: [] },
+      { ids: [], valueWindow: window, unavailable: production }]);
+    expect(oracle({ ...request, unitIds: [], production })).toEqual(value);
+    expect(calls).toHaveLength(2);
+  });
+
+  it('keeps native parallel research and later training slots independent', () => {
+    const queue = source({ unitIds: [], production: [{ buildingId: 'hall', lane: 'training', fromTicks: 100, throughTicks: 300 }] });
+    const oracle = createOpportunityOracle([queue], { effectKeysFor: () => [] });
+    expect(oracle({ ...request, unitIds: [], production: [{ buildingId: 'hall', lane: 'research', fromTicks: 100, throughTicks: 300 }] }))
+      .toMatchObject({ status: 'known', gold: 0 });
+    expect(oracle({ ...request, unitIds: [], production: [{ buildingId: 'hall', lane: 'training', fromTicks: 300, throughTicks: 500 }] }))
+      .toMatchObject({ status: 'known', gold: 0 });
+    expect(canonicalProductionUses([{ buildingId: 'hall', lane: 'training', fromTicks: 100, throughTicks: 200 },
+      { buildingId: 'hall', lane: 'training', fromTicks: 200, throughTicks: 300 }]))
+      .toEqual([{ buildingId: 'hall', lane: 'training', fromTicks: 100, throughTicks: 300 }]);
+    expect(() => canonicalProductionUses([{ buildingId: 'hall', lane: 'training', fromTicks: 1, throughTicks: Infinity }])).toThrow(/Invalid/);
+  });
+
+  it('preserves unknown committed production instead of treating the occupied lane as free', () => {
+    const production = [{ buildingId: 'hall', lane: 'training' as const, fromTicks: 0, throughTicks: 100 }];
+    const queue = source({ unitIds: [], production, committed: true, quote: (_ids, _window, unavailable) => unavailable?.length
+      ? { status: 'unknown', reasonCode: 'delayed-income-unpriced' } : { status: 'feasible', score: 200, coverage: 'complete' } });
+    expect(createOpportunityOracle([queue], { effectKeysFor: () => [] })({ ...request, unitIds: [], production }))
+      .toMatchObject({ status: 'unknown', objectiveIds: ['home'] });
+    expect(createOpportunityOracle([], { effectKeysFor: () => [], unpricedProductionFor: () => ['queue-owner'] })({ ...request, unitIds: [], production }))
+      .toMatchObject({ status: 'unknown', objectiveIds: ['queue-owner'] });
   });
 });
