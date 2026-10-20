@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createUnit } from '../../shared/map';
 import { UNIT_DEFS } from '../../shared/catalog';
-import { casualtySurvivors, focusedCasualties } from './focused-casualties';
+import { calibratedCasualties, CALIBRATED_CASUALTY_FOCUS_SHARE, casualtySurvivors, focusedCasualties } from './focused-casualties';
 
 const party = () => ['a', 'b', 'c', 'd', 'e'].map(id => createUnit(id, 'us', 'emberRavager', 1000, 1000));
 
@@ -59,5 +59,30 @@ describe('one focused casualty and wound model', () => {
     expect(() => focusedCasualties(units, Infinity)).toThrow();
     expect(() => focusedCasualties(units, -1)).toThrow();
     expect(focusedCasualties(units, 0).survivors).toHaveLength(units.length);
+  });
+});
+
+describe('selected global calibrated casualty mixture', () => {
+  it('uses the one calibrated focus share and carries light wounds without inventing deaths', () => {
+    const units = party(), before = JSON.stringify(units), result = calibratedCasualties(units, 200);
+    expect(CALIBRATED_CASUALTY_FOCUS_SHARE).toBe(.19);
+    expect(result).toMatchObject({ deadUnitIds: [], expectedLossGold: 0, expectedHpLost: 200 });
+    expect(result.survivors[0]!.hp).toBeCloseTo(47.6, 10);
+    expect(result.survivors.slice(1).every(unit => Math.abs(unit.hp - 85.6) < 1e-10)).toBe(true);
+    expect(focusedCasualties(units, 200).permanentDeadUnitIds).toHaveLength(1);
+    expect(calibratedCasualties([...units].reverse(), 200)).toEqual(result);
+    expect(calibratedCasualties(JSON.parse(before), 200)).toEqual(result);
+    expect(JSON.stringify(units)).toBe(before);
+  });
+
+  it('charges only calibrated deaths and conserves damage with the exact surviving cohort', () => {
+    const units = party(), result = calibratedCasualties(units, 400);
+    expect(result).toMatchObject({ deadUnitIds: ['a'], permanentDeadUnitIds: ['a'], expectedLossGold: UNIT_DEFS.emberRavager.cost });
+    expect(result.survivors[0]!.hp).toBeCloseTo(30.4, 10);
+    expect(casualtySurvivors(units, result).reduce((sum, unit) => sum + unit.hp, 0)).toBeCloseTo(190, 10);
+    expect(result.wounds.every(wound => wound.readyInTicks === null)).toBe(true);
+    const totalHp = units.reduce((sum, unit) => sum + unit.hp, 0);
+    expect(calibratedCasualties(units, totalHp + 25)).toMatchObject({ survivors: [], unappliedDamage: 25,
+      expectedHpLost: totalHp, expectedLossGold: UNIT_DEFS.emberRavager.cost * 5 });
   });
 });
