@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { arrivalColumns, mapUnitArrivals, unitArrival, withUnitArrivals } from './unit-arrivals';
+import { actionTargetArrival, arrivalColumns, mapUnitArrivals, unitArrival, withUnitArrivals } from './unit-arrivals';
 import type { Arrival } from './types';
 
 it('queries owned facts without constructing the array view, and reads a saved plain view identically', () => {
@@ -14,6 +14,10 @@ it('queries owned facts without constructing the array view, and reads a saved p
   expect(unitArrival(unit, 'mine')).toBe(arrival);
   expect(unitArrival(unit, 'pending')).toBeUndefined();
   expect(mapUnitArrivals(unit, (targetId, arrival) => [targetId, arrival.status])).toEqual([['mine', 'reachable']]);
+  const target = { entityId: 'mine', point: { x: 100, y: 100 }, landId: 'land:1' as const };
+  expect(actionTargetArrival(unit, 'evacuation', target, [{ id: 'mine', target }])).toBe(arrival);
+  expect(actionTargetArrival(unit, 'rally', { ...target, point: { x: 200, y: 100 } }, [{ id: 'mine', target }])).toBeUndefined();
+  expect(actionTargetArrival(unit, 'evacuation', { ...target, landId: 'land:2' }, [{ id: 'mine', target }])).toBeUndefined();
   expect(projections).toBe(0);
   const saved = JSON.parse(JSON.stringify(unit));
   expect(projections).toBe(1);

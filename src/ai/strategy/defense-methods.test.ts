@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
 import { sketchScene } from '../../sdk/scene';
 import { snapshotGame } from '../../shared/sim';
 import { setBuildingBodies } from '../../shared/terrain';
@@ -6,6 +8,7 @@ import { standingBodies } from '../../shared/structure-bodies';
 import { strengthOf } from '../policy/v6/strength';
 import type { AllocationMethodQuoteInput } from './allocation-types';
 import { defenseMethodProvider } from './defense-methods';
+import { buildStrategyDecision } from './decision';
 import type { DecisionFacts } from './decision';
 import { landIdAt } from './regions';
 import type { Objective, Situation } from './types';
@@ -47,6 +50,34 @@ function defendedPost(): AllocationMethodQuoteInput {
 }
 
 describe('defense protection and whole-bundle valuation', () => {
+  it('keeps the real E02 island-worker evacuation behind explicit transport instead of a cross-water walk', () => {
+    const frame = JSON.parse(gunzipSync(readFileSync(new URL('../bootstrap_1/fixtures/strategy-allocation-frames.json.gz', import.meta.url))).toString())
+      .frames['gullIsland-p0-17505'];
+    const snapshot = frame.snapshot as AllocationMethodQuoteInput['snapshot'];
+    setBuildingBodies(snapshot.map, standingBodies(snapshot));
+    const decision = buildStrategyDecision(snapshot, frame.owner, { memory: frame.memory }, undefined, undefined, Infinity);
+    const source = decision.situation.assets.find(asset => asset.id === 'building-p0-townHall-9337')!;
+    const refuge = decision.situation.assets.find(asset => asset.owner === frame.owner && asset.kind === 'hall'
+      && asset.complete && asset.target.landId !== source.target.landId)!;
+    expect(refuge).toBeDefined();
+    const objective: AllocationMethodQuoteInput['objective'] = { id: 'E02-evacuate', owner: frame.owner, kind: 'Evacuate', target: source.target,
+      effects: [{ kind: 'assets-evacuated', unitIds: ['unit-p0-worker-1'], destination: refuge.target }],
+      utility: { horizonTicks: 2400, benefit: [], cost: [], successProbability: 1, persistenceBonus: 0, score: 0 },
+      status: 'candidate', sinceTick: snapshot.tick, rank: 1, reasons: [], methodIds: [],
+      stability: { minimumStayUntilTick: snapshot.tick, challengerId: null, challengerThinks: 0 } };
+    const method = defenseMethodProvider.buildMethods({ snapshot, situation: decision.situation, objective, previous: null, executions: [], blocked: [] })[0]!;
+    const input: AllocationMethodQuoteInput = { snapshot, situation: decision.situation, objective, method,
+      unitIds: ['unit-p0-worker-1'], budgets: [], executions: [] };
+    const materialized = defenseMethodProvider.materialize!(input), transport = materialized.actions.find(action => action.executor === 'strategy.transport')!;
+    expect(transport.intent.kind).toBe('deliver-workers');
+    expect(materialized.actions.at(-1)!.dependsOn).toContain(transport.id);
+    expect(materialized.actions.at(-1)!.target).toEqual(refuge.target);
+    expect(materialized.actions.flatMap(action => action.unitIds ?? []).every(id => input.unitIds.includes(id))).toBe(true);
+    // The old ferry/hull is not ours merely because it is physically nearby.
+    expect(materialized.preconditions.length + (materialized.voyagePlans?.length ?? 0)).toBeGreaterThan(0);
+    expect(defenseMethodProvider.quote({ ...input, method: materialized }).status).toBe('blocked');
+  });
+
   it('does not charge a second site the full enemy army or invent intent for older captures', () => {
     const input = defendedPost();
     const potential = { ...input.situation, lands: input.situation.lands.map(land => ({ ...land, threats: land.threats.map(threat => ({ ...threat,
