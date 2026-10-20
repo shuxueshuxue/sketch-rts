@@ -7,6 +7,8 @@ import { arrivalColumns, withUnitArrivals } from './unit-arrivals';
 import { miningCapacity } from './mining-capacity';
 import { discountedMiningSegments, forecastMiningWorkforce, type MiningForecastInput } from './mining-forecast';
 import { valuationWindow, discountedFlow } from './utility';
+import { createOpportunityOracle } from './opportunity-oracle';
+import { productionUsesOverlap } from './production-use';
 
 const calibration = { id: 'test-measured-services', dispatchTicks: 28, localBirthToEntryTicks: 102,
   firstDeliveryTicks: 105, workerCountMae: 1, workerCountP90Error: 2 };
@@ -121,9 +123,9 @@ it('appends to real paid training jobs while research advances in its independen
   expect(concurrent.training.find(t => t.id === 'paid-old-worker')).toMatchObject({ jobId: 'paid-old-worker', lane: 'training', gold: 0 });
   expect(concurrent.training.filter(t => t.producerId === 'home' && !t.paid).every(t => t.startsInTicks >= 90)).toBe(true);
   home.queue[0] = { unitKind: 'worker', remaining: 90, paidGold: 75 };
-  const legacy = forecastMiningWorkforce(input);
-  expect(legacy.unknown).toContainEqual({ code: 'paid-worker-job-id-unknown', entityIds: ['home'] });
-  expect(legacy.training.every(t => !t.paid)).toBe(true);
+  const previous = forecastMiningWorkforce(input);
+  expect(previous.unknown).toContainEqual({ code: 'paid-worker-job-id-unknown', entityIds: ['home'] });
+  expect(previous.training.every(t => !t.paid)).toBe(true);
 });
 
 it('reads compact decision facts without constructing explanations or compatibility arrival arrays', () => {
@@ -156,4 +158,78 @@ it('does not book an established miner as expansion income before the actual new
   expect(forecast.workers.find(w => w.unitId === worker.id)?.source).toBe('stationed');
   expect(forecast.segments).toEqual([]);
   expect(forecast.incomeGold).toBe(0);
+});
+
+it('does not finance recruitment with new-mine income before the actual hall readiness', () => {
+  const input = example(1), worker = input.snapshot.units.find(u => u.id === 'spare-0')!;
+  worker.order = { type: 'mine', resourceId: 'new', phase: 'gather', timer: 60 }; worker.mineSlot = 'new';
+  const situation = { ...input.situation, assets: input.situation.assets.map(asset => asset.id === 'old'
+    ? { ...asset, incomeGoldPerTick: 0 } : asset) };
+  const result = forecastMiningWorkforce({ ...input, situation, hallReadyTicks: 2000, window: valuationWindow(2000), availableGold: 0 });
+  expect(result.training.length).toBeGreaterThan(0);
+  expect(result.training.every(t => t.startsInTicks > 2000)).toBe(true);
+});
+
+it('keeps recruitment inside the allowed production cohort, including a proposed hall', () => {
+  const input = example(1), allowedProduction = [{ buildingId: 'home', lane: 'training' as const }];
+  const result = forecastMiningWorkforce({ ...input, allowedProduction });
+  expect(result.training).toHaveLength(4);
+  expect(result.training.every(t => t.producerId === 'home')).toBe(true);
+  expect(result.production.every(use => use.buildingId === 'home' && use.lane === 'training')).toBe(true);
+  const excluded = forecastMiningWorkforce({ ...input, allowedProduction: [{ buildingId: 'home', lane: 'research' }] });
+  expect(excluded.training).toEqual([]);
+  expect(excluded.workers.map(w => w.unitId)).toEqual(['spare-0']);
+  expect(excluded.unknown).toContainEqual({ code: 'worker-production-not-allowed', entityIds: ['planned-hall:new'] });
+});
+
+it('waits for contiguous free training time while independent research and touching slots do not conflict', () => {
+  const input = example(4), allowedProduction = [{ buildingId: 'planned-hall:new', lane: 'training' as const }];
+  const unavailableProduction = [
+    { buildingId: 'planned-hall:new', lane: 'training' as const, fromTicks: 0, throughTicks: 140 },
+    { buildingId: 'planned-hall:new', lane: 'training' as const, fromTicks: 200, throughTicks: 400 }];
+  const before = JSON.stringify(input);
+  const result = forecastMiningWorkforce({ ...input, allowedProduction, unavailableProduction });
+  expect(result.training).toHaveLength(1);
+  expect(result.training[0]).toMatchObject({ startsInTicks: 400, completesInTicks: 540, gold: 75 });
+  expect(result.production).toEqual([{ buildingId: 'planned-hall:new', lane: 'training', fromTicks: 400, throughTicks: 540 }]);
+  expect(productionUsesOverlap(result.production, unavailableProduction)).toBe(false);
+  expect(forecastMiningWorkforce({ ...input, allowedProduction,
+    unavailableProduction: [{ buildingId: 'planned-hall:new', lane: 'training', fromTicks: 140, throughTicks: 400 }] })
+    .training[0]).toMatchObject({ startsInTicks: 0, completesInTicks: 140 });
+  expect(forecastMiningWorkforce({ ...input, allowedProduction,
+    unavailableProduction: unavailableProduction.map(use => ({ ...use, lane: 'research' })) }))
+    .toEqual(forecastMiningWorkforce({ ...input, allowedProduction }));
+  expect(JSON.stringify(input)).toBe(before);
+});
+
+it('does not shift, cancel or adopt a real paid job when its queue use is removed from the offer', () => {
+  const input = example(4), home = input.snapshot.buildings.find(h => h.id === 'home')!;
+  home.queue.push({ id: 'already-paid', unitKind: 'worker', remaining: 70, paidGold: 75 });
+  const before = JSON.stringify(input), allowedProduction = [{ buildingId: 'home', lane: 'training' as const }];
+  const normal = forecastMiningWorkforce({ ...input, allowedProduction });
+  expect(normal.production).toEqual([{ buildingId: 'home', lane: 'training', fromTicks: 0, throughTicks: 70 }]);
+  const removed = forecastMiningWorkforce({ ...input, allowedProduction,
+    unavailableProduction: [{ buildingId: 'home', lane: 'training', fromTicks: 0, throughTicks: 70 }] });
+  expect(removed.workers.some(w => w.unitId === 'already-paid')).toBe(false);
+  expect(removed.training).toHaveLength(1);
+  expect(removed.training[0]).toMatchObject({ paid: false, startsInTicks: 70, gold: 75 });
+  expect(removed.unknown).toContainEqual({ code: 'paid-worker-production-unavailable', entityIds: ['home', 'already-paid'] });
+  expect(JSON.stringify(input)).toBe(before);
+});
+
+it('lets the whole-bundle oracle price the mining income lost to overlapping production without recruiting replacements', () => {
+  const input = example(4), allowedProduction = [{ buildingId: 'planned-hall:new', lane: 'training' as const }];
+  const original = forecastMiningWorkforce({ ...input, allowedProduction });
+  const calls: number[] = [];
+  const oracle = createOpportunityOracle([{ id: 'expansion-method', objectiveId: 'expansion', unitIds: [],
+    production: original.production, effectKeys: ['mining:new'], committed: false, quote: (_ids, window, unavailableProduction) => {
+      const forecast = forecastMiningWorkforce({ ...input, allowedProduction, unavailableProduction: unavailableProduction ?? [], window });
+      calls.push(forecast.training.length);
+      return { status: 'feasible', score: forecast.incomeGold! - forecast.presentTrainingGold, coverage: 'known-effects' };
+    } }], { effectKeysFor: () => ['other-production'] });
+  const quote = oracle({ objectiveId: 'other', methodId: 'occupy-queue', unitIds: [], window: input.window,
+    production: [{ buildingId: 'planned-hall:new', lane: 'training', fromTicks: 0, throughTicks: input.window.horizonTicks }] });
+  expect(quote.status).toBe('known');
+  expect(quote.status === 'known' && quote.gold).toBeGreaterThan(0);
+  expect(calls).toEqual([1, 0]);
 });
