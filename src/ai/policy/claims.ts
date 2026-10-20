@@ -1,3 +1,4 @@
+import { endWorkerContinuation, prepareWorkerContinuation } from './worker-continuation';
 import { GOLD_MINE_RULES } from "../../shared/mining";
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../shared/types";
 import type { createSnapshotQuery } from "../../sdk/snapshot-query";
@@ -35,7 +36,12 @@ export function pruneAiPolicyMemory(snapshot: GameSnapshot, owner: PlayerId, mem
   const query = aiSnapshotQuery(snapshot);
   for (const [unitId, claim] of Object.entries(memory.unitClaims)) {
     const unit = query.unitById(unitId);
-    if (!unit || unit.owner !== owner) { delete memory.unitClaims[unitId]; continue; }
+    if (!unit || unit.owner !== owner) { endWorkerContinuation(snapshot, memory, unitId, 'unit-unavailable'); delete memory.unitClaims[unitId]; continue; }
+    if (claim.evacuation?.continuation) {
+      prepareWorkerContinuation(snapshot, unit, memory);
+      if (memory.unitClaims[unitId]?.evacuation?.continuation) continue;
+      if (memory.unitClaims[unitId] !== claim) continue;
+    }
     // Membership follows the mission, not its short movement lease. The old construction
     // roster likewise survived a foundation, local micro and a temporary defense pause.
     if (claim.expansionMineId && claim.expansionMineId !== memory.landExpansion?.mineId) forgetExpansionMember(memory, unitId);
@@ -333,7 +339,7 @@ function upsertMemoryJob(memory: AiPolicyMemory, id: string, kind: string, tick:
 
 export function activeUnitClaim(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, options: ClaimPolicyOptions) {
   const claim = ordinaryUnitClaim(options.memory, unit.id);
-  if (!claim || claim.expiresTick < snapshot.tick || unit.owner !== owner) return undefined;
+  if (!claim || (!claim.evacuation?.continuation && claim.expiresTick < snapshot.tick) || unit.owner !== owner) return undefined;
   if (objectiveClaimAbandoned(unit, claim, snapshot.tick)) return undefined;
   return claimTargetExists(aiSnapshotQuery(snapshot), owner, claim) ? claim : undefined;
 }

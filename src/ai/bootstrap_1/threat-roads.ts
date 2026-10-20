@@ -19,6 +19,11 @@ export function threatLandRouter(snapshot: GameSnapshot, unit: Unit, foes: reado
       + ('order' in foe ? foe.speed * THINK_TICKS / SIM_TICKS_PER_SECOND : 0);
     return radius > 0 ? [{ x: foe.x, y: foe.y, radius }] : [];
   });
+  return landDiskRouter(snapshot, unit, disks);
+}
+
+/** Shared geometry only; callers supply their own role's exposure disks. */
+export function landDiskRouter(snapshot: GameSnapshot, unit: Unit, disks: readonly (Point & { radius: number })[]): Router {
   let key = `${unit.id}:${unit.x}:${unit.y}:${unit.radius}:${unit.speed}:${disks.length}`;
   for (const disk of disks) key += `:${disk.x},${disk.y},${disk.radius}`;
   let cache = routers.get(snapshot);

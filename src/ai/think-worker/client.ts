@@ -2,7 +2,7 @@ import { applyAiPlanDelta } from '../plan-stream';
 import type { AiPlanTrace } from '../plan-trace';
 import { snapshotGame, type Game } from "../../shared/sim";
 import type { CommandEnvelope } from "../../shared/net/types";
-import { emptyAiThinkReport, type AiCommandFrameRequest, type AiRuntimeState, type AiThinkExecutor, type AiThinkObserver } from "../runtime";
+import { withoutOverriddenWorkerOrders, emptyAiThinkReport, type AiCommandFrameRequest, type AiRuntimeState, type AiThinkExecutor, type AiThinkObserver } from "../runtime";
 import type { AiThinkMessage, AiThinkReply, AiThinkWireRequest } from "./protocol";
 import type { PlayerId } from "../../shared/types";
 
@@ -31,6 +31,7 @@ export function createAiThinkClientExecutor(runtime: AiRuntimeState, game: Game,
   const running = new Map<number, Set<PlayerId>>();
   const arrived = new Map<number, CommandEnvelope[]>();
   const failed = new Map<number, string>();
+  const overridden = new Map<number, CommandEnvelope[]>();
   const collect = () => {
     for (const reply of channel.drain()) {
       if (reply.session !== session) continue;
@@ -43,9 +44,10 @@ export function createAiThinkClientExecutor(runtime: AiRuntimeState, game: Game,
         continue;
       }
       running.delete(reply.deliveryTick);
+      const superseded = overridden.get(reply.deliveryTick); overridden.delete(reply.deliveryTick);
       if ("error" in reply) failed.set(reply.deliveryTick, reply.error);
       else {
-        arrived.set(reply.deliveryTick, [...(arrived.get(reply.deliveryTick) ?? []), ...reply.commands]);
+        arrived.set(reply.deliveryTick, [...(arrived.get(reply.deliveryTick) ?? []), ...(superseded ? withoutOverriddenWorkerOrders(reply.commands, superseded) : reply.commands)]);
         report.thinks += 1;
         report.thinkMs += reply.thinkMs;
         report.slowestMs = Math.max(report.slowestMs, reply.thinkMs);
@@ -56,6 +58,10 @@ export function createAiThinkClientExecutor(runtime: AiRuntimeState, game: Game,
   let report = emptyAiThinkReport();
   return {
     poll: collect,
+    cancelWorkerOrders(commands) {
+      for (const tick of running.keys()) overridden.set(tick, [...(overridden.get(tick) ?? []), ...structuredClone(commands)]);
+      for (const [tick, entries] of arrived) arrived.set(tick, withoutOverriddenWorkerOrders(entries, commands));
+    },
     observe(next) { observer = next; generation++; previous = next ? new Map() : undefined; },
     submit(current, job) {
       const snapshot = snapshotGame(current);
@@ -109,6 +115,7 @@ function wireRequest(request: AiCommandFrameRequest & { scriptIds?: string[] }):
   if (request.scripts) throw new Error(`AI scripts given as functions cannot think on another thread (${request.playerId})`);
   return {
     playerId: request.playerId,
+    ...(request.overridingCommands?.length ? { overridingCommands: request.overridingCommands } : {}),
     ...(request.version ? { version: request.version } : {}),
     ...(request.scriptIds ? { scriptIds: request.scriptIds } : {}),
     ...(request.disabledBehaviors ? { disabledBehaviors: request.disabledBehaviors } : {}),

@@ -1,3 +1,5 @@
+import { BUILDING_DEFS } from '../../shared/catalog';
+import { snapToFootprint } from '../../shared/terrain';
 import { isRangedUnit } from "../../shared/unit-weapon-class";
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { groundSteeringRoute, nearestByRoute } from '../../shared/route-selection';
@@ -6,24 +8,21 @@ import type { AiPolicyMemory, WorkerEvacuation } from '../memory';
 import { activeUnitClaim, recordUnitTaskClaim } from '../policy/claims';
 import { distance } from '../policy/spatial';
 import type { AiPolicyContext } from '../policy/types';
-import { armedFoes, retreatLandRoad, retreatThreatReach, safeLandTravelTicks } from './safe-land-route';
+import { armedFoes, retreatLandRoad, safeLandTravelTicks } from './safe-land-route';
 import { miningJobOrder } from './mining-jobs';
-import { THINK_TICKS } from './mounted-micro';
+import { workerExposure } from '../situation/worker-exposure';
+import { commandActors, changesWorkerAction, continuationEvent, endWorkerContinuation, newWorkerContinuation, workerContinuationCommands } from '../policy/worker-continuation';
+import type { AiCommandEntry } from '../policy/types';
 import { mineClaimedByAlly } from '../policy/mine-claims';
 
-type WorkerSafetyPlan = { worker: Unit; released: boolean; state: WorkerEvacuation; commands: GameCommand[] };
+type WorkerSafetyPlan = { worker: Unit; released: boolean; state: WorkerEvacuation; commands: GameCommand[]; resuming?: boolean };
 const proposals = new WeakMap<AiPolicyMemory, { tick: number; plans: WorkerSafetyPlan[] }>();
 type Threat = Unit | Building;
 // Start before the next volley, with enough room for a worker to leave the firing lane.
-const CLEARANCE = 160;
 const ARRIVAL = 80;
 
 function endangered(snapshot: GameSnapshot, worker: Unit, point: { x: number; y: number }, foes: Threat[]) {
-  const patient = { ...worker, ...point };
-  return foes.some(foe => {
-    const reach = retreatThreatReach(snapshot, foe, patient, THINK_TICKS);
-    return reach > 0 && distance(foe, point) <= reach + CLEARANCE;
-  });
+  return workerExposure(snapshot, worker, point, { foes }).length > 0;
 }
 
 function evacuation(snapshot: GameSnapshot, owner: PlayerId, worker: Unit, foes: Threat[], options: AiPolicyContext) {
@@ -62,11 +61,16 @@ export function workerSafetyPlans(snapshot: GameSnapshot, owner: PlayerId, optio
     // even with a standing hall or a friendly army nearby; neither stops a volley hitting the workers.
     const exposed = endangered(snapshot, worker, worker, previous ? foes : foes.filter(foe => !('order' in foe) || isRangedUnit(foe)));
     if (!previous && !exposed) return [];
+    const continuation = previous?.continuation;
+    if (continuation) {
+      const commands = workerContinuationCommands(snapshot, worker, continuation, foes);
+      if (commands) return [{ worker, released: false, state: previous, commands, resuming: true }];
+    }
     const job = miningJobOrder(worker);
     const origin = previous?.origin ?? { x: worker.x, y: worker.y };
     const resourceId = previous?.resourceId ?? job?.resourceId;
     const original = snapshot.resources.find(mine => mine.id === resourceId && mine.amount > 0);
-    const released = previous && !exposed && !endangered(snapshot, worker, original ?? origin, foes);
+    const released = previous && !continuation && !exposed && !endangered(snapshot, worker, original ?? origin, foes);
     if (released) {
       const commands: GameCommand[] = original && !mineClaimedByAlly(snapshot, owner, original, options)
         ? [{ type: 'mine', unitIds: [worker.id], resourceId: original.id }] : [];
@@ -77,7 +81,7 @@ export function workerSafetyPlans(snapshot: GameSnapshot, owner: PlayerId, optio
       && (!previous.safeResourceId || safeMine && !endangered(snapshot, worker, safeMine, foes));
     const destination = existing ? previous : evacuation(snapshot, owner, worker, foes, options);
     if (!destination) return [];
-    const state: WorkerEvacuation = { origin, ...(resourceId ? { resourceId } : {}), ...destination };
+    const state: WorkerEvacuation = { origin, ...(resourceId ? { resourceId } : {}), ...destination, ...(continuation ? { continuation } : {}) };
     const commands: GameCommand[] = [];
     if (!(state.safeResourceId && job?.resourceId === state.safeResourceId && !exposed)) {
       const walking = worker.order.type === 'move' && worker.order.avoidCombat
@@ -110,10 +114,44 @@ export function recordWorkerSafetyAcceptedCommands(snapshot: GameSnapshot, _owne
   }
 }
 
-export function finishWorkerSafetyPlans(snapshot: GameSnapshot, _owner: PlayerId, options: AiPolicyContext) {
+export function finishWorkerSafetyPlans(snapshot: GameSnapshot, _owner: PlayerId, options: AiPolicyContext, entries: readonly AiCommandEntry[]) {
   const proposal = proposals.get(options.memory); proposals.delete(options.memory);
   if (!proposal || proposal.tick !== snapshot.tick) return;
-  for (const plan of proposal.plans) if (plan.released && options.memory.unitClaims[plan.worker.id]?.kind === 'workerSafety') {
-    delete options.memory.unitClaims[plan.worker.id];
+  const memory = options.memory;
+  for (const plan of proposal.plans) {
+    const actions = entries.filter(entry => changesWorkerAction(entry.command) && commandActors(entry.command).includes(plan.worker.id));
+    const roots = actions.filter(entry => !('queued' in entry.command && entry.command.queued));
+    const last = roots.at(-1);
+    if (last && last.scriptId !== 'miningJobSafety') {
+      if (plan.state.continuation && !memory.unitClaims[plan.worker.id]?.evacuation?.continuation)
+        continuationEvent(snapshot, memory, plan.worker.id, plan.state.continuation, 'end', 'plan-order-replaced');
+      endWorkerContinuation(snapshot, memory, plan.worker.id, 'plan-order-replaced'); continue;
+    }
+    const admitted = actions.filter(entry => entry.scriptId === 'miningJobSafety').map(entry => entry.command);
+    const actualInterruption = admitted.some(command => command.type === 'move' || command.type === 'mine');
+    const existing = plan.state.continuation;
+    // Capture only the native order that this admitted safety action interrupts.
+    const state = existing ?? (actualInterruption ? newWorkerContinuation(snapshot, plan.worker, admitted) : undefined);
+    if (state && (existing || admitted.length)) {
+      if (!existing) continuationEvent(snapshot, memory, plan.worker.id, state, 'retain', 'accepted-safety-interruption');
+      if (admitted.length) {
+        state.pending = structuredClone(admitted);
+        state.phase = plan.resuming ? 'resuming' : 'life-saving-interruption';
+        if (plan.resuming) continuationEvent(snapshot, memory, plan.worker.id, state, 'admit', 'same-exposure-route-passed');
+      }
+      const evacuation = { ...plan.state, continuation: state };
+      recordUnitTaskClaim(snapshot, memory, plan.worker.id, { kind: 'workerSafety', targetId: plan.worker.id,
+        x: evacuation.shelter.x, y: evacuation.shelter.y, evacuation });
+    } else if (plan.released && memory.unitClaims[plan.worker.id]?.kind === 'workerSafety') delete memory.unitClaims[plan.worker.id];
+  }
+  // A new economic order for the same site supersedes the saved parent. Do not
+  // suppress, rewrite, fund or otherwise change that ordinary dispatch.
+  for (const entry of entries) if (entry.scriptId !== 'miningJobSafety' && entry.command.type === 'build') {
+    const command = entry.command, point = snapToFootprint(snapshot.map, BUILDING_DEFS[command.buildingKind].radius, command);
+    for (const [id, claim] of Object.entries(memory.unitClaims)) {
+      const parent = claim.evacuation?.continuation?.parent;
+      if (parent?.buildingKind === command.buildingKind && Math.hypot(parent.x - point.x, parent.y - point.y) < 1e-6)
+        endWorkerContinuation(snapshot, memory, id, 'new-site-order');
+    }
   }
 }

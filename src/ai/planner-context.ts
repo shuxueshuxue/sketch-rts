@@ -1,7 +1,8 @@
+import { recordWorkerCommandOverrides } from './policy/worker-continuation';
 import { AI_SCRIPT_LIBRARY, AI_SCRIPT_VERSIONS, SKETCH_RTS_PRESET_AI_STACK, createAiPolicyMemory, planAiCommandEntriesFromScripts, type AiPolicyMemory, type AiScript, type AiScriptVersion, type PresetAiPolicyOptions } from "./policy";
 import { planV2ProdAiCommandEntries } from "./policy-v2prod/core";
 import type { CommandFrameEntry } from "../sdk/commands/frame";
-import type { GameSnapshot, PlayerId } from "../shared/types";
+import type { GameCommand, GameSnapshot, PlayerId } from "../shared/types";
 import { bootstrapPolicyContext, bootstrapScripts, isBootstrapVersion } from "./bootstrap_1/policy";
 import { planVeteranSkillCommands } from "./veteran-skills";
 import { standingBodies } from "../shared/structure-bodies";
@@ -17,6 +18,7 @@ export type AiMemoryProvider = {
 
 export type AiOwnerPlannerRequest<Source extends string = string> = {
   playerId: PlayerId;
+  overridingCommands?: readonly GameCommand[];
   source?: Source;
   version?: AiScriptVersion;
   scripts?: AiScript[];
@@ -48,6 +50,7 @@ export function planAiOwnerCommandEntries<Source extends string = string>(snapsh
   const { memoryProvider, ...policyOptions } = options;
   const version = request.version ?? options.version ?? DEFAULT_AI_PLANNER_VERSION;
   const memory = request.memory ?? options.memory ?? memoryForOwner(owner, memoryProvider);
+  if (request.overridingCommands?.length) recordWorkerCommandOverrides(snapshot, memory, request.overridingCommands);
   const policyMode = request.policyMode ?? options.policyMode;
   const disabledBehaviors = request.disabledBehaviors ?? options.disabledBehaviors;
   const withVeteranSkills = (entries: CommandFrameEntry<Source>[]): CommandFrameEntry<Source>[] => {

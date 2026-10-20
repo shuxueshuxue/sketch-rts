@@ -2,7 +2,7 @@ import type { AiDeathThinkContext } from '../death-ledger-context';
 import type { AiPlanDelta } from '../plan-stream';
 import type { AiScriptVersion, PresetAiPolicyOptions } from "../policy";
 import type { CommandEnvelope } from "../../shared/net/types";
-import type { GameMap, GameSnapshot, PlayerId } from "../../shared/types";
+import type { GameCommand, GameMap, GameSnapshot, PlayerId } from "../../shared/types";
 
 // @@@think-thread - Messages between a match and the thread its AI thinks on (a Web Worker in a browser, a worker
 // thread on the server). The thread keeps what a think needs between thinks: the map's terrain, whose navigation caches
@@ -11,6 +11,7 @@ import type { GameMap, GameSnapshot, PlayerId } from "../../shared/types";
 // A request as it crosses: its memory lives on the thinking thread, and scripts given as functions cannot cross.
 export type AiThinkWireRequest = {
   playerId: PlayerId;
+  overridingCommands?: GameCommand[];
   version?: AiScriptVersion;
   scriptIds?: string[];
   disabledBehaviors?: PresetAiPolicyOptions["disabledBehaviors"];

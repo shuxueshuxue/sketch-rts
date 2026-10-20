@@ -1,3 +1,4 @@
+import { commandActors, changesWorkerAction } from './policy/worker-continuation';
 import { buildAiPlanTrace } from './plan-trace';
 import type { AiPlanTrace } from './plan-trace';
 import { projectDeathThinkContext, type AiDeathThinkContext } from './death-ledger-context';
@@ -8,7 +9,7 @@ import { snapshotGame, type Game } from "../shared/sim";
 import { normalizeCommandFrameEntries, type CommandFrameRuntimeAiPlanner } from "../shared/sim/command-frame-runtime";
 import { PLANNER_COMMAND_DELAY_TICKS, plannerPhase, plannerThinksAt } from "../shared/sim/planner-schedule";
 import type { CommandEnvelope } from "../shared/net/types";
-import type { GameSnapshot, PlayerId } from "../shared/types";
+import type { GameCommand, GameSnapshot, PlayerId } from "../shared/types";
 
 export const DEFAULT_AI_THINK_INTERVAL = 15;
 export const DEFAULT_AI_SCRIPT_VERSION: AiScriptVersion = DEFAULT_AI_PLANNER_VERSION;
@@ -33,6 +34,7 @@ export type AiRuntimeResult<Source extends string = string> = {
 
 export type AiCommandFrameRequest<Source extends string = string> = {
   playerId: PlayerId;
+  overridingCommands?: GameCommand[];
   source?: Source;
   version?: AiScriptVersion;
   scripts?: AiScript[];
@@ -42,7 +44,11 @@ export type AiCommandFrameRequest<Source extends string = string> = {
 
 export type AiRuntimeIssuedCommand<Source extends string = string> = CommandFrameEntry<Source>;
 
-export type AiRuntimeFramePlannerState = Partial<Record<PlayerId, number>>;
+type LastThink = Partial<Record<PlayerId, number>>;
+export type AiRuntimeFramePlannerState = LastThink | {
+  kind: 'ai-runtime-with-overrides'; lastThink: LastThink;
+  overrides: Partial<Record<PlayerId, GameCommand[]>>;
+};
 
 export function createAiRuntime(
   players: PlayerId[],
@@ -108,6 +114,7 @@ export type AiThinkExecutor = {
   observe?(observer?: AiThinkObserver): void;
   // Collect already arrived replies without consuming or applying queued commands.
   poll?(): void;
+  cancelWorkerOrders?(commands: readonly CommandEnvelope[]): void;
   // `check` rejects a command that is illegal in the world it was planned from.
   submit(game: Game, job: AiThinkJob, check: (commands: CommandEnvelope[]) => void): void;
   // Whether a think of this owner is still running.
@@ -136,6 +143,9 @@ export function createInlineAiThinkExecutor(runtime: AiRuntimeState): AiThinkExe
   let observer: AiThinkObserver | undefined;
   return {
     observe(next) { observer = next; },
+    cancelWorkerOrders(commands) {
+      for (const [tick, entries] of planned) planned.set(tick, withoutOverriddenWorkerOrders(entries, commands));
+    },
     submit(game, job, check) {
       const result = observer
         ? planAiCommandFrame(game, job.requests, { ...(runtime.policyMode ? { policyMode: runtime.policyMode } : {}), observer })
@@ -162,15 +172,35 @@ export type AiFramePlannerOptions = {
 export function createPresetAiRuntimeFramePlanner(game: Game, runtime: AiRuntimeState, options: AiFramePlannerOptions = {}): CommandFrameRuntimeAiPlanner<AiRuntimeFramePlannerState> {
   const delay = options.commandDelayTicks ?? PLANNER_COMMAND_DELAY_TICKS;
   const executor = options.executor ?? createInlineAiThinkExecutor(runtime);
+  let overrides: Partial<Record<PlayerId, GameCommand[]>> = {};
   return {
-    checkpoint: () => ({ ...runtime.lastThink }),
-    restore: (lastThink) => {
-      runtime.lastThink = lastThink;
+    observeExternalCommands(commands) {
+      const workerOrders = commands.flatMap(entry => {
+        if (!runtime.controlledPlayers.includes(entry.playerId) || !changesWorkerAction(entry.command)) return [];
+        const ids = commandActors(entry.command).filter(id => game.units.some(unit => unit.id === id && unit.owner === entry.playerId && unit.kind === 'worker'));
+        if (!ids.length) return [];
+        const command = 'unitIds' in entry.command ? { ...entry.command, unitIds: ids } : entry.command;
+        (overrides[entry.playerId] ??= []).push(structuredClone(command));
+        return [{ playerId: entry.playerId, command }];
+      });
+      if (workerOrders.length) executor.cancelWorkerOrders?.(workerOrders);
+    },
+    checkpoint: () => ({ kind: 'ai-runtime-with-overrides', lastThink: { ...runtime.lastThink }, overrides: structuredClone(overrides) }),
+    restore: state => {
+      if (state.kind === 'ai-runtime-with-overrides' && typeof state.lastThink === 'object') {
+        const saved = state as Exclude<AiRuntimeFramePlannerState, LastThink>;
+        runtime.lastThink = { ...saved.lastThink }; overrides = structuredClone(saved.overrides);
+      } else { runtime.lastThink = { ...state } as LastThink; overrides = {}; }
     },
     plan: (check, settle) => {
       // A player still thinking skips its turn, as a person thinks again once done (see @@@planner-schedule).
       const owners = dueAiOwners(game, runtime).filter((owner) => !executor.thinking(owner));
-      if (owners.length > 0) executor.submit(game, { tick: game.tick, deliveryTick: game.tick + delay, requests: claimThink(game, runtime, owners) }, check);
+      if (owners.length > 0) {
+        const requests = claimThink(game, runtime, owners).map(request => ({ ...request,
+          ...(overrides[request.playerId]?.length ? { overridingCommands: overrides[request.playerId] } : {}) }));
+        executor.submit(game, { tick: game.tick, deliveryTick: game.tick + delay, requests }, check);
+        for (const owner of owners) delete overrides[owner];
+      }
       return executor.take(game.tick, settle);
     },
   };
@@ -238,4 +268,18 @@ function cloneScriptIdsByPlayer(value: Partial<Record<PlayerId, string[]>>) {
 
 function cloneDisabledBehaviorsByPlayer(value: Partial<Record<PlayerId, NonNullable<PresetAiPolicyOptions["disabledBehaviors"]>>>) {
   return Object.fromEntries(Object.entries(value).map(([owner, disabled]) => [owner, disabled ? [...disabled] : disabled])) as Partial<Record<PlayerId, NonNullable<PresetAiPolicyOptions["disabledBehaviors"]>>>;
+}
+
+/** An outside worker order supersedes older in-flight AI movement for that actor.
+ * Other units in a group and non-order commands keep their original delivery. */
+export function withoutOverriddenWorkerOrders(entries: readonly CommandEnvelope[], overrides: readonly CommandEnvelope[]): CommandEnvelope[] {
+  return entries.flatMap(entry => {
+    if (!changesWorkerAction(entry.command)) return [entry];
+    const replaced = new Set(overrides.filter(override => override.playerId === entry.playerId).flatMap(override => [...commandActors(override.command)]));
+    if ('unitIds' in entry.command) {
+      const unitIds = entry.command.unitIds.filter(id => !replaced.has(id));
+      return unitIds.length ? [{ ...entry, command: { ...entry.command, unitIds } }] : [];
+    }
+    return commandActors(entry.command).some(id => replaced.has(id)) ? [] : [entry];
+  });
 }

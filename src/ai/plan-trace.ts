@@ -64,6 +64,7 @@ export type AiPlanTrace = {
   readonly strategy?: StrategyPlanTrace;
   /** Opt-in external simulation observation; never retained in policy memory. */
   deathLedger?: AiDeathLedgerFrame;
+  workerContinuations?: NonNullable<AiPolicyMemory['workerContinuationEvents']>;
 };
 
 const STAGES = ['fund', 'assemble', 'clear', 'escort', 'build', 'complete'] as const;
@@ -189,6 +190,15 @@ export function buildAiPlanTrace(snapshot: GameSnapshot, owner: PlayerId, memory
     }, parent);
   }
 
+  for (const [id, claim] of claims) {
+    const state = claim.evacuation?.continuation;
+    if (!state) continue;
+    add({ id: `worker-parent:${id}:${state.sinceTick}`, kind: 'task', label: '避险中保留施工行动', source: 'unitClaims.workerSafety.continuation',
+      status: 'blocked', target: target(undefined, state.parent), sinceTick: state.sinceTick,
+      reasons: [reason(state.phase, state.phase === 'resuming' ? '已准入安全路线，等待原生父行动确认' : '救命中断保留空缺；逐think重查同口径安全路线', 'workerSafety')],
+      resources: { unitIds: units([id]), gold: { reserved: null, required: BUILDING_DEFS[state.parent.buildingKind].cost } },
+    });
+  }
   const naval = memory.naval;
   const first = naval?.firstCombatDelivery;
   if (first) {
@@ -235,6 +245,8 @@ export function buildAiPlanTrace(snapshot: GameSnapshot, owner: PlayerId, memory
     roots, nodes, previousTick: previous?.owner === owner && previous.tick < snapshot.tick ? previous.tick : null, changes: [],
     limitations: ['utility-not-recorded', 'per-goal-gold-reservations-not-recorded', 'module-state-not-an-htn-search'],
   };
+  const events = memory.workerContinuationEvents?.filter(event => event.tick === snapshot.tick);
+  if (events?.length) trace.workerContinuations = structuredClone(events);
   trace.changes = compareAiPlanTraces(trace.previousTick !== null ? previous : undefined, trace);
   return trace;
 }

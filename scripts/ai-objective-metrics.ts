@@ -82,7 +82,6 @@ function observeObjectiveStep(game: typeof finalGame) {
 
 mkdirSync(out, { recursive: true });
 const log = (name: string, row: unknown) => {
-  if (!['commands','timings','deaths'].includes(name)) return;
   let fd = fds.get(name);
   if (fd === undefined) { fd = openSync(`${out}/${name}.jsonl`, 'w'); fds.set(name, fd); }
   writeSync(fd, JSON.stringify(row) + '\n');
@@ -94,6 +93,8 @@ const loop = runAiGameLoop({ ...config, commandPlanner({ game, snapshot, owner, 
   const entries = measured ? measured.result : plan();
   observeObjectiveThink(snapshot, owner);
   const planned = performance.now();
+  if (owners.includes(owner)) for (const event of memories[owner]?.workerContinuationEvents ?? [])
+    if (event.tick === snapshot.tick) log('worker-continuations', { owner, ...event });
   if (owners.includes(owner)) for (const event of memories[owner]?.navigationEvents ?? [])
     if (event.tick === snapshot.tick) log('navigation-events', { owner, ...event });
   let trace: AiPlanTrace | undefined;
@@ -154,7 +155,7 @@ const loop = runAiGameLoop({ ...config, commandPlanner({ game, snapshot, owner, 
         milestones[building.owner]!.expansion ??= game.tick;
         objectiveMilestones[building.owner]!.firstExpansion??=game.tick;
         if (groundWholeAt(game.map, building, 'land') !== homeGround.get(building.owner)) milestones[building.owner]!.island ??= game.tick;
-        log('occupation', { tick: game.tick, owner: building.owner, buildingId: building.id,
+        log('occupation', { tick: game.tick, owner: building.owner, buildingId: building.id, x: building.x, y: building.y,
           ground: groundWholeAt(game.map, building, 'land'), homeGround: homeGround.get(building.owner) });
       }
     }

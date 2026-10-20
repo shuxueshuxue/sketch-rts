@@ -6,6 +6,8 @@ import { partitionDeliveredPlannerCommands } from "./planner-schedule";
 import type { GameCommand, GameSnapshot } from "../types";
 
 export type CommandFrameRuntimeAiPlanner<State = unknown> = {
+  // Accepted outside orders are observed separately from AI delivery, outside Game state.
+  observeExternalCommands?: (commands: readonly CommandEnvelope[]) => void;
   checkpoint: () => State;
   restore: (state: State) => void;
   // Plans the owners due on this tick, checking each fresh plan with `check`, and returns the commands that land on it:
@@ -99,6 +101,7 @@ export class CommandFrameRuntime<State = unknown> {
   private completeFrame(commands: CommandEnvelope[], options: RuntimeFrameOptions): CommandFrame | undefined {
     const normalizedCommands = normalizeCommandFrameEntries(commands);
     this.validate(normalizedCommands, { purpose: "apply", rejectionLabel: options.rejectionLabel });
+    if (normalizedCommands.length) this.options.aiPlanner?.observeExternalCommands?.(normalizedCommands);
     const aiCommands = options.includeAi === false ? [] : this.planAiCommands(options.settleAi ?? false);
     const completedCommands = normalizeCommandFrameEntries([...normalizedCommands, ...aiCommands]);
     if (options.frame) return { ...options.frame, commands: completedCommands };

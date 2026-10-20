@@ -1,4 +1,4 @@
-import type { ItemKind, PlayerId } from "../shared/types";
+import type { GameCommand, ItemKind, PlayerId } from "../shared/types";
 
 export type AiJobState = {
   id: string;
@@ -10,8 +10,22 @@ export type AiJobState = {
 export type AiPolicyUnitClaimKind = "mercenary" | "creep" | "expansion" | "attack" | "harass" | "retreat" | "build"
   | "mineRally" | "mineLeash" | "mineGuard" | "workerSafety" | "expansionGarrison" | "expansionMission" | "harassSquad";
 
+export type WorkerContinuation = {
+  parent: Extract<GameCommand, { type: 'build' }>;
+  phase: 'life-saving-interruption' | 'resuming';
+  sinceTick: number;
+  threatIds: string[];
+  resourceId?: string;
+  // Native orders may still be executing the preceding admitted chain until delivery.
+  binding: GameCommand[];
+  pending?: GameCommand[];
+};
+export type WorkerContinuationEvent = {
+  tick: number; unitId: string; kind: 'retain' | 'admit' | 'resume' | 'end'; reason: string;
+  parent: WorkerContinuation['parent']; threatIds: string[];
+};
 export type WorkerEvacuation = { origin: { x: number; y: number }; resourceId?: string;
-  shelter: { x: number; y: number }; safeResourceId?: string };
+  shelter: { x: number; y: number }; safeResourceId?: string; continuation?: WorkerContinuation };
 
 export type AiPolicyUnitClaim = {
   kind: AiPolicyUnitClaimKind;
@@ -112,6 +126,7 @@ export type NavalPlanMemory = {
 };
 
 export type AiPolicyMemory = {
+  workerContinuationEvents?: WorkerContinuationEvent[];
   territory?: {
     idleTicks: number; lastTick: number; idle: boolean; retryUntil?: number;
     objective?: { targetId: string; point: { x: number; y: number }; sinceTick: number; reachedTick?: number; nextStepCheck?: number; slots?: { x: number; y: number }[] } | undefined;
