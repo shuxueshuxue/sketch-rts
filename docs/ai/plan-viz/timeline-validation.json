@@ -188,5 +188,13 @@
       "sha256": "5ee7c715d92a48625d1d8bbe3dac8414485cf5b4f111d7e15767b9dfb3713bc6",
       "individuallyReviewed": true
     }
+  },
+  "evidenceArchive": {
+    "machine": "a100",
+    "sha256": "8dae90fbca47850ea1608aecdd4388652400094ecc54b1673934dc809d379e1b",
+    "directory": "/codegeex/jeffry/sketch-rts-evidence/sha256/8dae90fbca47850ea1608aecdd4388652400094ecc54b1673934dc809d379e1b",
+    "pointerCommit": "46a08b3b181c85f96ed5713291bcd481faf00515",
+    "pointerPath": "docs/ai/objectives/death-ledger-baseline.evidence.json",
+    "providedBy": 561
   }
 }

@@ -44,6 +44,8 @@
 /codegeex/jeffry/sketch-rts-defense/runs/mvg8usdr-e3f0b0/death-ledger/ui-twoShores
 ```
 
+原始文件也已封包到 A100 内容寻址归档 `/codegeex/jeffry/sketch-rts-evidence/sha256/8dae90fbca47850ea1608aecdd4388652400094ecc54b1673934dc809d379e1b`，含本样本、main 对照、README 和逐文件 SHA256SUMS；[来源指针](https://github.com/shuxueshuxue/sketch-rts/blob/46a08b3b181c85f96ed5713291bcd481faf00515/docs/ai/objectives/death-ledger-baseline.evidence.json)由 #561 提供。
+
 同局 `initial.json`、`final.json`、`worlds/traces/deaths/building-losses.jsonl.gz` 与 `summary.json`，覆盖 tick 0–18000。4,804 份 trace、4,800 条原始世界采样，离线投影保留 1,531 帧（约每秒一帧，另保留任务变化时刻）。目标结果与阶段由真实 trace 推导，死亡和建筑损失取原始账本与精确观察，不改对局或决策。
 
 `timeline-data-*.js` 是节点去重后的 gzip/base64 离线载荷，`timeline-loader.js` 用浏览器原生 `DecompressionStream` 解包，无模块请求、服务器、CDN 或网络依赖。需要浏览器支持该原生解压接口，本次使用 Chrome 验证 `file://` 打开。未压缩投影约 12.6 MB，压缩后约 0.92 MB，按文件大小限制分片。计数、哈希与示例在 [timeline-summary.json](timeline-summary.json)，验证凭据在 [timeline-validation.json](timeline-validation.json)。
