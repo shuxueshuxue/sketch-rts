@@ -8,6 +8,7 @@ import { setBuildingBodies } from '../../shared/terrain';
 import { standingBodies } from '../../shared/structure-bodies';
 import { regionIndex, landIdAt } from './regions';
 import { nativeVoyageBerth } from './voyage-berth';
+import { boardingBerth } from '../../shared/naval';
 
 it('replaces the real p4/4180 water cell inside the yard with a native hull-clear boarding berth', () => {
   const frame: { snapshot: GameSnapshot; owner: string } = JSON.parse(gunzipSync(readFileSync(
@@ -29,6 +30,10 @@ it('replaces the real p4/4180 water cell inside the yard with a native hull-clea
   expect(result.shore.water).not.toEqual(candidate.water);
   expect(hullFits(snapshot.map, hull, { ...result.shore.water, heading: result.heading })).toBe(true);
   expect(landIdAt(snapshot.map, result.shore.ground)).toBe(candidate.landId);
+  const native = boardingBerth(snapshot.map, { ...passenger, ...result.shore.ground },
+    { ...hull, ...result.shore.water, sailing: { ...hull.sailing!, heading: result.heading } });
+  expect(native).toMatchObject({ ...result.shore.water, shore: result.shore.ground });
+  expect(nativeVoyageBerth(snapshot, passenger, hull, result.shore)).toEqual(result);
   const restored: GameSnapshot = JSON.parse(JSON.stringify(snapshot));
   expect(nativeVoyageBerth(restored, JSON.parse(JSON.stringify(passenger)), JSON.parse(JSON.stringify(hull)), candidate)).toEqual(result);
 });
