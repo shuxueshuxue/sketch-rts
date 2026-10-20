@@ -1,4 +1,5 @@
-import { TOWER_STRENGTH } from '../policy/v6/strength';
+import { structureRating, TOWER_STRENGTH } from '../policy/v6/strength';
+import { creepForce } from '../policy/v7/creep';
 import type { GameSnapshot } from '../../shared/types';
 import type { DecisionFacts } from './decision';
 import { targetCoveringTowers } from './allocated-force';
@@ -13,17 +14,20 @@ export function assessDefenseResponse(input: Readonly<{
   snapshot: GameSnapshot; situation: DecisionFacts<Situation>; target: Target; arrivalTargetId: string;
   eligibleUnitIds: readonly string[]; excludedUnitIds: readonly string[];
   actualMobileOpponentForce: number; windowTicks: number;
+  metric?: 'field-strength' | 'camp-force'; plannedAssetRadius?: number;
 }>) {
   const { snapshot, situation, target, windowTicks } = input;
   if (!Number.isFinite(input.actualMobileOpponentForce) || input.actualMobileOpponentForce < 0
     || !Number.isFinite(windowTicks) || windowTicks <= 0) throw new Error('Invalid counterfactual defense window/force');
-  const ownTowers = targetCoveringTowers(snapshot, situation.owner, target, 'own');
-  const hostileTowers = targetCoveringTowers(snapshot, situation.owner, target, 'opponent');
-  const towerForce = (towers: typeof ownTowers) => towers.reduce((sum, tower) => sum + TOWER_STRENGTH * Math.max(0, tower.hp / Math.max(1, tower.maxHp)), 0);
+  const ownTowers = targetCoveringTowers(snapshot, situation.owner, target, 'own', input.plannedAssetRadius);
+  const hostileTowers = targetCoveringTowers(snapshot, situation.owner, target, 'opponent', input.plannedAssetRadius);
+  const towerForce = (towers: typeof ownTowers) => towers.reduce((sum, tower) => sum + (input.metric === 'camp-force'
+    ? structureRating(tower) : TOWER_STRENGTH * Math.max(0, tower.hp / Math.max(1, tower.maxHp))), 0);
   const staticForce = towerForce(ownTowers), hostileStaticForce = towerForce(hostileTowers);
   const requiredForce = input.actualMobileOpponentForce + hostileStaticForce;
   const excluded = new Set(input.excludedUnitIds), eligible = new Set(input.eligibleUnitIds);
   const arrivals: { unitId: string; ticks: number; force: number }[] = [], unknownUnitIds: string[] = [];
+  const actors = new Map(snapshot.units.map(unit => [unit.id, unit]));
   for (const unit of situation.units) {
     if (unit.owner !== situation.owner || unit.hp <= 0 || unit.strength <= 0 || !eligible.has(unit.id) || excluded.has(unit.id)
       || unit.roles.includes('worker') || unit.roles.includes('transport') || unit.roles.includes('warship')) continue;
@@ -32,7 +36,9 @@ export function assessDefenseResponse(input: Readonly<{
       && typeof arrival.lowerBoundTicks === 'number' && arrival.lowerBoundTicks > windowTicks) continue;
     if (!arrival || arrival.status === 'unknown' || arrival.status === 'conditional') { unknownUnitIds.push(unit.id); continue; }
     if (!('ticks' in arrival) || arrival.ticks > windowTicks || unit.expiresTick !== null && unit.expiresTick <= snapshot.tick + arrival.ticks) continue;
-    arrivals.push({ unitId: unit.id, ticks: arrival.ticks, force: unit.strength });
+    const actor = actors.get(unit.id);
+    if (input.metric === 'camp-force' && !actor) { unknownUnitIds.push(unit.id); continue; }
+    arrivals.push({ unitId: unit.id, ticks: arrival.ticks, force: input.metric === 'camp-force' ? creepForce([actor!]) : unit.strength });
   }
   arrivals.sort((a, b) => a.ticks - b.ticks || (a.unitId < b.unitId ? -1 : a.unitId > b.unitId ? 1 : 0));
   let force = staticForce, response: DefenseResponse = { status: 'none' };

@@ -16,6 +16,8 @@ import { strategicTargetCamp } from './target-camp';
 import type { Situation, Target } from './types';
 import { unitArrival } from './unit-arrivals';
 import { assetSurvivalProbability, forceSuccessProbability } from './utility';
+import { defenseThreatScenarios, type DefenseResponse } from './defense-risk';
+import { createThreatIntentQuery } from './threat-intent';
 
 export type AllocatedForceTarget =
   | Readonly<{ metric: 'field-strength'; requiredForce: number }>
@@ -220,7 +222,10 @@ export function assessAllocatedCampBattle(input: Omit<TargetReinforcementInput, 
  * Later actual player arrivals and local structure fire price the new asset.
  * The income comparison window is separate from this asset's own completion ETA. */
 export function assessPostBattleSiteRisk(input: TargetReinforcementInput & Readonly<{
-  excludedEnemyIds: readonly string[]; survivingPermanentCampForce: number; plannedAssetRadius: number }>) {
+  excludedEnemyIds: readonly string[]; survivingPermanentCampForce: number; plannedAssetRadius: number;
+  /** Other adequate support, excluding this priced cohort, in the same camp
+   * metric. An omitted response never proves a potential attack certain. */
+  response?: DefenseResponse }>) {
   if (!Number.isFinite(input.survivingPermanentCampForce) || input.survivingPermanentCampForce < 0)
     throw new Error('Invalid surviving permanent camp force');
   const excluded = new Set(input.excludedEnemyIds), reinforcement = targetEnemyReinforcements(input);
@@ -235,9 +240,27 @@ export function assessPostBattleSiteRisk(input: TargetReinforcementInput & Reado
   const hostileTowers = targetCoveringTowers(input.snapshot, input.situation.owner, input.target, 'opponent', input.plannedAssetRadius);
   const ownForce = input.survivingPermanentCampForce + ownTowers.reduce((sum, tower) => sum + structureRating(tower), 0);
   const opponentForce = weighted.effectiveForce + hostileTowers.reduce((sum, tower) => sum + structureRating(tower), 0);
-  const status = unknownEnemyIds.length ? 'unknown' as const : 'known' as const;
-  const survivalProbability = assetSurvivalProbability(status === 'known' ? { status, ourForce: ownForce, opponentForce } : { status });
+  const siteId = input.target.entityId ?? `prospective:${input.target.point.x}:${input.target.point.y}`;
+  const sites = input.situation.assets.filter(asset => asset.owner === input.situation.owner && ['hall', 'mine'].includes(asset.kind));
+  const intent = createThreatIntentQuery(input.snapshot, input.situation.owner,
+    [...sites.filter(site => site.id !== siteId), { id: siteId, target: input.target }]);
+  const incoming = new Map(arriving.map(entry => [entry.unit.id, entry.etaTicks]));
+  const facts = new Map(input.situation.units.map(unit => [unit.id, unit]));
+  const scenarios = defenseThreatScenarios({ siteId, horizonTicks: input.windowTicks,
+    attackers: [...onStation, ...arriving.map(entry => entry.unit)].map(unit => ({ unitId: unit.id,
+      // A potential redirect is a race from the observed pose, not proof it
+      // started moving while the first fight and hall construction took place.
+      arrival: unitArrival(facts.get(unit.id)!, input.target.entityId ?? '')!, intent: intent(unit, siteId),
+      strength: creepForce([unit]) * (shares.get(unit.id) ?? 1) / (1 + (incoming.get(unit.id) ?? 0) / input.windowTicks) })),
+    arrivedStrength: 0, incomingStrength: 0, friendlyOnStationStrength: 0, firstArrivalTicks: null, lossProbability: null },
+  input.response ?? { status: 'unknown' });
+  const status = unknownEnemyIds.length || scenarios.status === 'unknown' ? 'unknown' as const : 'known' as const;
+  const hostileStatic = hostileTowers.reduce((sum, tower) => sum + structureRating(tower), 0);
+  const survivalProbability = status === 'known' ? scenarios.scenarios.reduce((sum, scenario) => sum
+    + scenario.probability * assetSurvivalProbability({ status: 'known', ourForce: ownForce,
+      opponentForce: scenario.force + hostileStatic })!, 0) : null;
   return { status, survivalProbability, ownForce, opponentForce, unknownEnemyIds,
+    scenarios, actualOpponentForce: scenarios.actualForce + hostileStatic,
     memberIds: [...onStation, ...arriving.map(entry => entry.unit)].map(unit => unit.id).sort(), availability,
     ownTowerIds: ownTowers.map(tower => tower.id).sort(), hostileTowerIds: hostileTowers.map(tower => tower.id).sort(),
     battleStartTicks: input.battleStartTicks, throughTicks: input.battleStartTicks + input.windowTicks };
