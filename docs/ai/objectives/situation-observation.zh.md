@@ -79,14 +79,28 @@ strategy 的执行接线只覆盖 bootstrap 三个 policy：`v9_archer`、`v9_su
 `(3×(24+32)+4×8×2+4×2×2)×102400 = 25395200` 字节（24.22 MiB），其中最后一项是每 mover 两个搜索备用缓冲；
 若所有完成场都触发 Int32 回退，数组上界为 35.16 MiB。
 这只是当前几何缓存的数组上界，不能当作整房间新增内存已满足 30 MiB。
-逐图 maxRSS 对照仍未过线；同 tick 的 heap snapshot 与分配/保留路径另行定位剩余来源。
+单进程逐图 maxRSS 的历史试验与最新服务器拓扑验收分开记录，不把整图数组上界当作验收结论。
 
 服务器由 `src/server/index.ts` 创建共享 think 线程池，默认最多 4 线程，房间按 session 轮转到线程上。
 每房间 open 消息单独传入 map，`host.ts` 按 session 保留；跨线程消息克隆后的 Terrain 对象各自作缓存键，
-相同地图 ID 的不同房间也不会共享距离场。将来常开时的总增量须按 N 个房间估计，不能只乘线程数。
-验收使用同 Node、同 recorder、逐图独立 worker 完整对局的 maxRSS 差，目标每房间不超过 30 MiB；
-GC 后 heap/external 只作归因，不替代峰值验收。fork 全帧录制另局进行，内存对照关闭该录制。
-main 和候选使用同一冻结录制器，每张图先跑 main AA，两版各至少三次，报告中位数、范围和 MAD；噪声跨过门槛时不报通过。
+相同地图 ID 的不同房间也不会共享距离场。常驻的场、数值行和任务历史按房间累加；
+V8 堆扩容造成的瞬时分配峰值按 worker isolate 计，不按房间数重复相乘。
+
+当前内存验收分成两项：11 图完整对局结束后，GC 后每房间 `heapUsed + external` 的增量不超过 30 MiB；
+另用真实 `createRoomHost` / `createAiThinkPool` 起 4 个 worker、8 个同时存活房间，
+八方河湾、蓝宝、双岸、龟湖各 2 间，每间 1 个空闲人类席位，其余默认房间 AI。
+main AA 先列噪声，两版各三次完整 18000 tick，报告服务进程树峰值的中位数、范围和 MAD；
+候选整体峰值相对 main 增幅不超过 15%。同一 Node、冻结驱动和源档案运行，不开启 fork 全帧录制。
+驱动只把 worker 的 planner 导入重定向到显式 decision 观察边界，原 room host、线程池、session、消息复制和交付校验都保留；
+交付 tick 等待 worker 回答，避免主机负载改变命令流。八间房各自的完整 frame 哈希及终局 checksum 必须相同。
+GC 诊断另局进行，不拿强制 GC 后的峰值代替服务峰值或 think 性能。
+
+ETA 数值行以共享目标列和紧凑 values 保存；生产查询使用 `unitArrival`，只有完整投影或兼容调用读取 `arrivals` 数组时才创建原格式的条目。
+读取旧 JSON 场景仍兼容普通数组。共享 getter 不捕获 evaluator 或 snapshot。
+单次 evaluator 已持有这份结果，不再额外按 unit/goal 保存一份答案和直接陆路时间 memo；
+跨人共享的装船腿、航行表和公开重复查询 API 仍保留数值复用。
+响应名单和其他解释字符串只在明确观察边界生成，返回的读取器只持有已生成的字符串，不保留格式化闭包所处的世界。
+
 receipt 记录并校验录制器绝对路径和 SHA256，另列模拟循环内 maxRSS 与最终校验哈希后的进程 maxRSS。
 录制器不保留上一轮完整 strategy；模块变化只读取小型 module-state 历史，战略历史从 memory 恢复。
 

@@ -78,6 +78,13 @@ const loop = runAiGameLoop({ ...config, commandPlanner({ snapshot, owner, agent,
   },
 });
 const loopMaxRssKiB = process.resourceUsage().maxRSS, loopMemory = process.memoryUsage();
+let postGcMemory: ReturnType<typeof process.memoryUsage> | undefined;
+if (process.env.STRATEGY_GC_RECEIPT) {
+  if (!global.gc) throw new Error('Live-memory diagnostic requires --expose-gc');
+  // A separate live-memory run, never used for peak-RSS or latency acceptance.
+  for (let pass = 0; pass < 3; pass++) { global.gc(); await new Promise<void>(done => setImmediate(done)); }
+  postGcMemory = process.memoryUsage();
+}
 const sha = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const sorted = [...durations].sort((a, b) => a - b);
 const receipt = { source: config.source, codeRoot: base, detail, completeTraceSha256: completeTraceHash.digest('hex'),
@@ -91,7 +98,7 @@ const receipt = { source: config.source, codeRoot: base, detail, completeTraceSh
     const { strategy: _observation, ...policy } = memory; return [owner, policy];
   }))), observationSha256: observationHash.digest('hex'), maximumObservationBytes,
   canonicalSha256: sha(canonicalGameState(finalGame!)), checksum: checksumGame(finalGame!), maxRssKiB: process.resourceUsage().maxRSS,
-  loopMaxRssKiB, loopMemory,
+  loopMaxRssKiB, loopMemory, ...(postGcMemory ? { postGcMemory } : {}),
   thinkMs: { n: sorted.length, p50: sorted[Math.floor(sorted.length * .5)], p95: sorted[Math.floor(sorted.length * .95)], max: sorted.at(-1) },
   elapsedMs: loop.elapsedMs, cpuMs: loop.cpuMs };
 writeFileSync(`${out}/summary.json`, JSON.stringify(receipt, null, 2));

@@ -1,3 +1,4 @@
+import { arrivalColumns, EMPTY_UNIT_ARRIVALS, unitArrivalFacts, withUnitArrivals, type UnitArrivalFacts } from './unit-arrivals';
 import { snapshotUnitIndex } from './world-index';
 import { BUILDING_DEFS, UNIT_DEFS, unitMover } from '../../shared/catalog';
 import { combatCapability } from '../../shared/combat-capabilities';
@@ -21,22 +22,21 @@ import type { Arrival, Asset, Evidence, Opportunity, Reason, Situation, Situatio
 import type { SituationHistory, StrategyObservationMemory } from './observation-memory';
 import { capturesExplanations, deferredEvidence, deferredRecord, explanationRecipe } from './explanations';
 
-const EMPTY_ARRIVALS: SituationUnit['arrivals'] = Object.freeze([]);
 const decisionUnitFacts = new WeakMap<AiPolicyMemory, Map<string, SituationUnit>>();
 const idleUnitFacts = new WeakMap<object, Map<string, SituationUnit>>();
 /** Reuse only immutable, tick-independent numerical rows. No raw world object,
  * ownership reader or current-call explanation is retained by this cache. */
 function stableUnitFacts(snapshot: GameSnapshot, unit: Unit, location: SituationUnit['location'], strength: number,
-  roles: SituationUnit['roles'], commitments: SituationUnit['commitments'], arrivals: SituationUnit['arrivals'], prior?: SituationUnit): SituationUnit {
-  const cacheable = location.kind !== 'unknown' && !commitments.length && !arrivals.length;
+  roles: SituationUnit['roles'], commitments: SituationUnit['commitments'], arrivals: UnitArrivalFacts, prior?: SituationUnit): SituationUnit {
+  const cacheable = location.kind !== 'unknown' && !commitments.length && !arrivals.count;
   const key = snapshot.map.terrain ?? snapshot.map;
   let values = cacheable ? idleUnitFacts.get(key) : undefined;
   if (cacheable && !values) idleUnitFacts.set(key, values = new Map());
   const old = prior ?? values?.get(unit.id), expiresTick = unit.expiresTick ?? null;
   if (old && old.owner === unit.owner && old.kind === unit.kind && old.location === location && old.hp === unit.hp
-    && old.maxHp === unit.maxHp && old.strength === strength && old.roles === roles && old.expiresTick === expiresTick && old.commitments === commitments && old.arrivals === arrivals) return old;
-  const row: SituationUnit = { id: unit.id, owner: unit.owner, kind: unit.kind, location, hp: unit.hp, maxHp: unit.maxHp,
-    strength, roles, expiresTick, commitments, arrivals };
+    && old.maxHp === unit.maxHp && old.strength === strength && old.roles === roles && old.expiresTick === expiresTick && old.commitments === commitments && unitArrivalFacts(old) === arrivals) return old;
+  const row: SituationUnit = withUnitArrivals({ id: unit.id, owner: unit.owner, kind: unit.kind, location, hp: unit.hp, maxHp: unit.maxHp,
+    strength, roles, expiresTick, commitments }, arrivals);
   if (values) {
     if (!old && values.size >= 2048) values.delete(values.keys().next().value!);
     values.set(unit.id, row);
@@ -72,7 +72,7 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
   const tick = snapshot.tick, horizonTicks = STRATEGY_PARAMETERS.utilityHorizonTicks;
   const regions = regionIndex(snapshot.map, Infinity, tick), options = { memory, ...(teams ? { teams } : {}) };
   const distances = createPlanningDistanceQuery(snapshot, fieldBuildBudget, 'land', preparation);
-  const query = createArrivalQuery(snapshot, owner, memory, distances, fieldBuildBudget, regions, preparation);
+  const query = createArrivalQuery(snapshot, owner, memory, distances, fieldBuildBudget, regions, preparation, false);
   const { liveUnits: live, live: byId } = snapshotUnitIndex(snapshot);
   const locations = new Map<string, SituationUnit['location']>();
   for (const unit of live) locations.set(unit.id, unitLocation(snapshot.map, unit, byId, tick));
@@ -265,19 +265,27 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
   const beyondWindow: Arrival = { status: 'unknown', reason: { code: 'beyond-evaluation-window',
     detail: `Even a straight maximum-speed journey exceeds ${horizonTicks} ticks`, evidence: [] } };
   deferredRecord(beyondWindow.reason);
-  function arrivalsFor(unit: Unit, old: SituationUnit['arrivals'] = EMPTY_ARRIVALS): SituationUnit['arrivals'] {
-    if (unit.owner !== owner && !foe(unit.owner) || unit.kind === 'worker' && unit.owner !== owner || unitMover(unit.kind) === 'sea') return EMPTY_ARRIVALS;
-    let arrivals: { targetId: string; arrival: Arrival }[] | undefined, count = 0;
-    for (const [targetId, destination] of targetEntries) {
-      if (bounded && unit.owner === owner && !candidatesByTarget.get(targetId)!.has(unit.id)
+  const columns = arrivalColumns(targetEntries.map(([id]) => id));
+  function arrivalsFor(unit: Unit, old = EMPTY_UNIT_ARRIVALS): UnitArrivalFacts {
+    if (unit.owner !== owner && !foe(unit.owner) || unit.kind === 'worker' && unit.owner !== owner || unitMover(unit.kind) === 'sea') return EMPTY_UNIT_ARRIVALS;
+    const sameColumns = old.columns.ids.length === columns.ids.length && old.columns.ids.every((id, index) => columns.ids[index] === id);
+    const previous = sameColumns ? old.values : EMPTY_UNIT_ARRIVALS.values;
+    let values: (Arrival | undefined)[] | undefined, count = 0;
+    for (let index = 0; index < targetEntries.length; index++) {
+      const [targetId, destination] = targetEntries[index]!;
+      let arrival: Arrival | undefined;
+      if (!(bounded && unit.owner === owner && !candidatesByTarget.get(targetId)!.has(unit.id)
         && !(retainedIds.has(targetId) && (memory.landAttack?.general.group?.includes(unit.id)
-          || memory.landExpansion?.combat?.creep?.group.includes(unit.id)))) continue;
-      const lowerBound = distance(unit, destination.point) * SIM_TICKS_PER_SECOND / Math.max(unit.speed, UNIT_DEFS.transport.speed);
-      const arrival = lowerBound > horizonTicks ? beyondWindow : query.arrival(unit, destination);
-      if (!arrivals && old[count]?.targetId === targetId && old[count]!.arrival === arrival) { count++; continue; }
-      arrivals ??= old.slice(0, count); arrivals.push({ targetId, arrival }); count++;
+          || memory.landExpansion?.combat?.creep?.group.includes(unit.id))))) {
+        const lowerBound = distance(unit, destination.point) * SIM_TICKS_PER_SECOND / Math.max(unit.speed, UNIT_DEFS.transport.speed);
+        arrival = lowerBound > horizonTicks ? beyondWindow : query.arrival(unit, destination);
+        count++;
+      }
+      if (!values && previous[index] === arrival) continue;
+      values ??= previous.slice(0, index); values[index] = arrival;
     }
-    return arrivals ?? (count === old.length ? old : count ? old.slice(0, count) : EMPTY_ARRIVALS);
+    if (!count) return EMPTY_UNIT_ARRIVALS;
+    return values || !sameColumns ? { columns: sameColumns ? old.columns : columns, values: values ?? [], count } : old;
   }
   const unitCommitments = createUnitCommitmentQuery(snapshot, owner, memory);
   let priorUnits = capturesExplanations() ? undefined : decisionUnitFacts.get(memory);
@@ -286,7 +294,7 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
     const old = priorUnits?.get(unit.id);
     const row = stableUnitFacts(snapshot, unit, locations.get(unit.id)!, strength(unit), unitRoles(unit),
       unitCommitments(unit, recovering.get(unit.id), mobilePatients.has(unit.id), acceptedHealing.get(unit.id)),
-      arrivalsFor(unit, old?.arrivals), old);
+      arrivalsFor(unit, old && unitArrivalFacts(old)), old);
     if (priorUnits && row.location.kind !== 'unknown') {
       if (!old && priorUnits.size >= 2048) priorUnits.delete(priorUnits.keys().next().value!);
       priorUnits.set(unit.id, row);

@@ -9,6 +9,7 @@ import { withNativeLandRoadReuse } from '../policy/land-road';
 import { evaluateSituation } from './situation';
 import { createArrivalQuery } from './arrivals';
 import { landIdAt } from './regions';
+import { decisionProjection } from './explanations';
 
 type Scene = { event: string; owner: string; snapshot: GameSnapshot; memory: AiPolicyMemory };
 const scenes: Scene[] = JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/objective-event-frames.json.gz', import.meta.url))).toString()).cases;
@@ -19,6 +20,21 @@ const assess = (frame: Scene) => {
 };
 
 describe('read-only situation over exact contract event frames', () => {
+  it.each(['E02', 'Nd', 'Ne'])('keeps %s route bytes identical without a duplicate unit/goal memo', event => {
+    const frame = scene(event), situation = assess(frame);
+    const targets = situation.assets.filter(asset => asset.kind === 'hall' || asset.kind === 'mine').slice(0, 6).map(asset => asset.target);
+    const actors = frame.snapshot.units.filter(unit => unit.owner === frame.owner && unit.kind !== 'worker' && unit.hp > 0).slice(0, 12);
+    const evaluate = (memoize: boolean) => {
+      const projected = decisionProjection(() => {
+        const query = createArrivalQuery(frame.snapshot, frame.owner, frame.memory, undefined, Infinity, undefined, undefined, memoize);
+        return { rows: actors.map(unit => targets.map(target => query.arrival(unit, target))) };
+      });
+      return JSON.stringify(projected.explain!());
+    };
+    expect(actors.length).toBeGreaterThan(0);
+    expect(targets.length).toBeGreaterThan(0);
+    expect(evaluate(false)).toBe(evaluate(true));
+  });
   it('projects L3 actual mobile care above half health without losing its guard task', () => {
     const frame: Scene = JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/recovery-L3.json.gz', import.meta.url))).toString());
     const before = JSON.stringify(frame), situation = assess(frame);

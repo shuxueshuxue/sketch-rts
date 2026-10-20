@@ -31,8 +31,13 @@
 
 判断明确超线时使用 `min(candidate) − max(main) > 30 MiB`；样本范围横跨门槛则只记为不确定。碎海完整解释的 main 有一次大离群值，未删除样本，也没有用它抵消其他地图的超线。
 
-同 tick 强制 GC 后松荫林的存活堆只多约 2.7 MiB；采样估计额外分配约 2.11 GiB/15 分钟。它说明要继续定位瞬时分配和堆峰值，不能拿存活堆代替 maxRSS 验收。
+同 tick 强制 GC 后松荫林的存活堆只多约 2.7 MiB；采样估计额外分配约 2.11 GiB/15 分钟。它说明要继续定位瞬时分配和堆峰值，这两种成本应按实际服务器的房间/worker 拓扑分别计量。
 
 后续已拆开决策与解释、压缩精确距离场、复用数值行和 ETA、将原始快照索引与清营评估改为同步作用域，并把观察评估移到普通 planner 返回之后。最新 AL 录制器不保留上一轮完整 strategy，receipt 带录制器绝对路径和 SHA；main/candidate 都要在这个同一版本下重跑。松荫林 AL 三次试验的纯决策中位增量仍约 74 MiB，且 `loopMaxRssKiB == maxRssKiB`；释放旧 strategy 和最终哈希都不是主要来源。因此仍未通过，不转 ready。
 
 原始三次数字、范围、MAD 和 main receipt 地址见 [测量记录](situation-memory.evidence.json)；A100 原始目录 `/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/` 保留每局 receipt、命令/世界哈希、分配采样与私有 heap snapshot。旧实验不覆盖、不充当新版验收。
+
+
+2026-10-20 12:36 UTC 校准验收口径：上述逐房间进程 maxRSS 表全部保留为历史诊断，不再用其 30 MiB 差值判定当前结果。
+新的两项门槛是 11 图 GC 后每房间存活 `heapUsed + external` 增量 ≤30 MiB，以及真实 4 worker / 8 room 服务进程树峰值增幅 ≤15%。
+服务树对照先列 main AA，main/candidate 各三次；原始完整 trace 录制不启用。当前仍等待这两项完整数据，未报通过。

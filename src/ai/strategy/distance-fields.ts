@@ -5,11 +5,11 @@ import { OBSERVATION_FIELD_LIMIT, type StrategyObservationMemory } from './obser
 
 export function createPlanningDistanceQuery(snapshot: GameSnapshot, buildBudget = Infinity, mover: Mover = 'land', observation?: StrategyObservationMemory) {
   let built = 0, deferred = 0, work = 0;
-  const queries = new Map<string, { field: GroundDistanceField; builtTick: number } | null>();
+  const queries = new Map<number, Map<number, { field: GroundDistanceField; builtTick: number } | null>>();
   return {
     field(goal: Point) {
-      const key = `${goal.x}:${goal.y}`;
-      if (queries.has(key)) return queries.get(key)!;
+      let row = queries.get(goal.y); if (!row) queries.set(goal.y, row = new Map());
+      if (row.has(goal.x)) return row.get(goal.x)!;
       const entries = observation?.fields[mover];
       let entry = entries?.find(entry => entry.goal.x === goal.x && entry.goal.y === goal.y);
       if (entries && !entry) {
@@ -30,9 +30,9 @@ export function createPlanningDistanceQuery(snapshot: GameSnapshot, buildBudget 
         if (result.complete) entry.readyTick = snapshot.tick;
         built++;
       }
-      if (!field) { deferred++; queries.set(key, null); return null; }
+      if (!field) { deferred++; row.set(goal.x, null); return null; }
       const result = { field, builtTick: entry?.readyTick ?? snapshot.tick };
-      queries.set(key, result); return result;
+      row.set(goal.x, result); return result;
     },
     get built() { return built; },
     get work() { return work; },

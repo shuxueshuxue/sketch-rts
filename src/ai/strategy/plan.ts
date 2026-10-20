@@ -1,3 +1,4 @@
+import { unitArrival } from './unit-arrivals';
 import type { AiPolicyContext } from '../policy/types';
 import type { GameSnapshot, PlayerId } from '../../shared/types';
 import { distance } from '../policy/spatial';
@@ -79,7 +80,7 @@ function assembleStrategyPlanTrace(snapshot: GameSnapshot, owner: PlayerId, opti
     const prefix = `${separator < 0 ? task.objectiveId : task.objectiveId.slice(0, separator)}:${owner}:`;
     const asset = !objective && task.objectiveId.startsWith(prefix) ? assetsById.get(task.objectiveId.slice(prefix.length)) : undefined;
     const target: Target = objective?.target ?? asset?.target ?? { point: { ...unit.location.point } };
-    const arrival = unit.arrivals.find(entry => entry.targetId === target.entityId)?.arrival ?? { status: 'unknown' as const,
+    const arrival = (target.entityId ? unitArrival(unit, target.entityId) : undefined) ?? { status: 'unknown' as const,
       reason: deferredRecord({ code: 'assignment-route-unobserved', detail: 'No evaluated route to this retained task target; not zero ETA', evidence: [] }) };
     const raw = actors.get(unit.id)!;
     const followTarget = raw.order.type === 'follow' ? raw.order.targetId : null;

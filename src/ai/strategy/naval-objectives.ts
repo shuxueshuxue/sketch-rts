@@ -1,3 +1,4 @@
+import { unitArrival } from './unit-arrivals';
 import { snapshotUnitIndex } from './world-index';
 import { frameMemo } from './frame-reuse';
 import { BUILDING_DEFS, UNIT_DEFS } from '../../shared/catalog';
@@ -19,15 +20,18 @@ import { discountGold, forceSuccessProbability, forceTimeGold, STRATEGY_PARAMETE
 import type { Arrival, Asset, Effect, Method, Objective, ObjectiveKind, PlanningContext, Precondition, Reason,
   ResourceDemand, Situation, SituationUnit, SiteThreat, Subgoal, Target, Utility } from './types';
 import type { PreviousObjective } from './observation-memory';
-import { deferredEvidence, lazyValue, projectedCopy, projectedProperty, projectedValueReader } from './explanations';
+import { capturesExplanations, deferredEvidence, lazyValue, projectedCopy, projectedProperty, projectedValueReader } from './explanations';
 
 const STATION_RANGE = 650;
 const byId = (a: { id: string }, b: { id: string }) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 const sumStrength = (units: readonly SituationUnit[]) => units.reduce((sum, unit) => sum + unit.strength, 0);
-const route = (unit: SituationUnit, targetId: string) => unit.arrivals.find(entry => entry.targetId === targetId)?.arrival;
+const route = unitArrival;
 const duration = (arrival: Arrival | undefined) => arrival && 'ticks' in arrival ? arrival.ticks : undefined;
 const reason = (tick: number, code: string, detail: string | (() => string), source = 'strategy.naval-objectives'): Reason => {
-  const text = lazyValue(typeof detail === 'function' ? detail : () => detail);
+  // Consume a formatter only at the observed boundary. The retained reader
+  // owns its string, never the formatter's current world or force selection.
+  const rendered = capturesExplanations() ? typeof detail === 'function' ? detail() : detail : '';
+  const text = lazyValue(() => rendered);
   return deferredEvidence(projectedProperty({ code }, 'detail', text), () => [{ source, tick, certainty: 'inferred', detail: text() }]);
 };
 const fieldDemand = (target: Target, strength: number, permanent = false): ResourceDemand => ({ kind: 'force', metric: 'field-strength',
@@ -128,7 +132,7 @@ function createObjective(situation: Situation, previous: readonly PreviousObject
   const since = sinceTick ?? old?.sinceTick ?? situation.tick;
   const persistenceBonus = status === 'active' ? Math.min(STRATEGY_PARAMETERS.maximumPersistenceGold,
     Math.max(0, utility.score) * STRATEGY_PARAMETERS.persistenceBenefitShare) : 0;
-  const repriced = strategyUtility({ benefit: utility.benefit, cost: utility.cost, horizonTicks: utility.horizonTicks,
+  const repriced = persistenceBonus === utility.persistenceBonus ? utility : strategyUtility({ benefit: utility.benefit, cost: utility.cost, horizonTicks: utility.horizonTicks,
     successProbability: utility.successProbability, persistenceBonus, evidence: projectedValueReader(utility, 'evidence') });
   return { id, kind, owner: situation.owner, target: { ...target, point: { ...target.point } }, effects,
     utility: projectedCopy(repriced, { score: status === 'blocked' ? null : repriced.score }),
@@ -160,8 +164,8 @@ export function generateNavalObjectives(situation: Situation, context: PlanningC
     const utility = strategyUtility({ benefit: [{ code: 'asset-loss-prevented', value, explanation: 'Replacement value and mine income at risk, weighted by the current local loss forecast' }],
       cost: [{ code: 'force-time', value: unknownThreat ? 0 : forceTimeGold(Math.min(enemy, available), threat.horizonTicks), explanation: 'Expected force occupation, paid even if the defense fails' }],
       successProbability: unknownThreat ? 0 : forceSuccessProbability(available, enemy), evidence: projectedValueReader(threat, 'evidence') });
-    const reasons = [reason(tick, 'site-under-threat', `${site.id}: on station ${threat.friendlyOnStationStrength}; enemy ${enemy}; estimated collapse ${Math.ceil(collapseTicks)} ticks`),
-      reason(tick, timely.length ? 'timely-response-candidates' : 'no-timely-response', timely.length ? timely.map(unit => unit.id).join(', ') : 'No forecast force arrives before the current-HP/DPS deadline; this is not a promise the site can be saved')];
+    const reasons = [reason(tick, 'site-under-threat', () => `${site.id}: on station ${threat.friendlyOnStationStrength}; enemy ${enemy}; estimated collapse ${Math.ceil(collapseTicks)} ticks`),
+      reason(tick, timely.length ? 'timely-response-candidates' : 'no-timely-response', () => timely.length ? timely.map(unit => unit.id).join(', ') : 'No forecast force arrives before the current-HP/DPS deadline; this is not a promise the site can be saved')];
     if (unknownThreat) reasons.push(reason(tick, 'threat-geometry-pending', 'Coarse attacker presence is recorded; a pending arrival field must not become a safety claim or a successful defense quote'));
     objectives.push(createObjective(situation, previous, 'DefendSite', site.target,
       [{ kind: 'site-safe', siteId: site.id, throughTick: tick + threat.horizonTicks }], utility, reasons,
@@ -182,7 +186,7 @@ export function generateNavalObjectives(situation: Situation, context: PlanningC
         shelter ? [{ kind: 'assets-evacuated', unitIds: workers.map(worker => worker.id), destination: shelter.target }] : [],
         strategyUtility({ benefit: [{ code: 'workers-saved', value: workers.length * UNIT_DEFS.worker.cost, explanation: 'Paid workers at the threatened site' }],
           cost: [], successProbability: reachable ? 1 : 0, evidence: projectedValueReader(threat, 'evidence') }),
-        [reason(tick, reachable ? 'evacuation-route-forecast' : 'evacuation-prerequisites-unmet', shelter ? `Shelter ${shelter.id}; boats and ETA must be feasible before abandonment` : 'No shelter site is known')], reachable ? 'candidate' : 'blocked'));
+        [reason(tick, reachable ? 'evacuation-route-forecast' : 'evacuation-prerequisites-unmet', () => shelter ? `Shelter ${shelter.id}; boats and ETA must be feasible before abandonment` : 'No shelter site is known')], reachable ? 'candidate' : 'blocked'));
     }
   }
   const mines = new Map(situation.opportunities.filter(opportunity => opportunity.kind === 'neutral-mine')
@@ -212,7 +216,7 @@ export function generateNavalObjectives(situation: Situation, context: PlanningC
     objectives.push(createObjective(situation, previous, 'ConquerIsland', target,
       [{ kind: 'mining-established', mineId, completeHall: true, garrisonHandoff: true }], utility,
       [reason(tick, complete ? 'physical-colony-established' : force.unknownForce ? 'clearing-arrivals-unknown' : force.force >= force.required ? 'clearing-plan-candidates' : 'clearing-force-deficit',
-        `${mineId}: present camp force ${force.presentForce}, proposed batch ${force.selected.map(unit => unit.id).join(', ') || 'none'}, combined ${force.force}, required ${force.required}`)],
+        () => `${mineId}: present camp force ${force.presentForce}, proposed batch ${force.selected.map(unit => unit.id).join(', ') || 'none'}, combined ${force.force}, required ${force.required}`)],
       complete ? 'complete' : task?.abandonedTick !== undefined ? 'abandoned'
         : force.unknownForce || force.force < force.required ? 'blocked' : task ? 'active' : 'candidate', task?.sinceTick));
     const deficit = Math.max(0, force.required - force.presentForce);
@@ -222,7 +226,7 @@ export function generateNavalObjectives(situation: Situation, context: PlanningC
     if (!complete && task?.abandonedTick === undefined && task && fieldDeficit > (deficits.get(target.landId)?.strength ?? 0))
       deficits.set(target.landId, { target, strength: fieldDeficit, minimumStrength: sumStrength(stationed(situation, target)) + fieldDeficit,
         utility, parentId: objectiveId('ConquerIsland', situation.owner, mineId),
-        reasons: [reason(tick, 'named-clearing-deficit', `${mineId}: ${deficit} camp-force missing; not a six-idle-unit dispatch threshold`)] });
+        reasons: [reason(tick, 'named-clearing-deficit', () => `${mineId}: ${deficit} camp-force missing; not a six-idle-unit dispatch threshold`)] });
   }
   for (const [landId, deficit] of deficits) {
     const target: Target = { ...deficit.target, point: { ...deficit.target.point }, landId: deficit.target.landId! };
@@ -241,13 +245,13 @@ export function decomposeNavalObjective(situation: Situation, objective: Objecti
   if (objective.status === 'complete' || objective.status === 'abandoned') return [];
   const id = `${objective.id}/method:${objective.kind === 'ConquerIsland' ? 'staged-beachhead' : objective.kind === 'Evacuate' ? 'evacuation' : 'cross-sea-reinforcement'}`;
   const preconditions: Precondition[] = [], subgoals: Subgoal[] = [], demands: ResourceDemand[] = [];
-  const add = (kind: Subgoal['kind'], target: Target, resources: readonly ResourceDemand[], dependsOn: readonly string[] = [], detail: string = kind) => {
+  const add = (kind: Subgoal['kind'], target: Target, resources: readonly ResourceDemand[], dependsOn: readonly string[] = [], detail: string | (() => string) = kind) => {
     const stepId = `${id}/${kind}:${subgoals.length}`;
     subgoals.push({ id: stepId, parentMethodId: id, kind, target, demands: resources, dependsOn,
       estimatedTicks: null, status: 'proposed', reasons: [reason(situation.tick, kind, detail)] });
     return stepId;
   };
-  const require = (kind: Precondition['kind'], met: boolean, demand: ResourceDemand | null, children: readonly string[], detail: string) => {
+  const require = (kind: Precondition['kind'], met: boolean, demand: ResourceDemand | null, children: readonly string[], detail: string | (() => string)) => {
     preconditions.push({ id: `${id}/requires:${preconditions.length}`, kind, status: met ? 'met' : 'unmet',
       reason: reason(situation.tick, kind, detail), demand, subgoalIds: children });
   };
@@ -256,9 +260,9 @@ export function decomposeNavalObjective(situation: Situation, objective: Objecti
     const demand: ResourceDemand = { kind: 'force', metric: force.camp ? 'camp-force' : 'field-strength', strength: force.required,
       roles: ['frontline', 'ranged'], at: target, neededByTick: null, permanent: true };
     demands.push(demand);
-    const borrow = force.selected.length ? add('borrow-force', target, [demand], [], `Candidate batch: ${force.selected.map(unit => unit.id).join(', ')}; existing commitments need allocator handoff`) : null;
-    const training = force.force < force.required && !force.unknownForce ? add('train-force', target, [demand], [], `Missing ${force.required - force.force} clearing force; production, supply and budget remain prerequisites`) : null;
-    require('force', force.presentForce >= force.required, demand, [borrow, training].filter((id): id is string => id !== null), `On-station ${force.presentForce}; required ${force.required}`);
+    const borrow = force.selected.length ? add('borrow-force', target, [demand], [], () => `Candidate batch: ${force.selected.map(unit => unit.id).join(', ')}; existing commitments need allocator handoff`) : null;
+    const training = force.force < force.required && !force.unknownForce ? add('train-force', target, [demand], [], () => `Missing ${force.required - force.force} clearing force; production, supply and budget remain prerequisites`) : null;
+    require('force', force.presentForce >= force.required, demand, [borrow, training].filter((id): id is string => id !== null), () => `On-station ${force.presentForce}; required ${force.required}`);
     const crossings = force.selected.flatMap(unit => { const arrival = route(unit, target.entityId!); return arrival && 'crossings' in arrival ? arrival.crossings : []; });
     const crossing = crossings[0];
     let transport: string | null = null;
@@ -274,8 +278,8 @@ export function decomposeNavalObjective(situation: Situation, objective: Objecti
         transport = add('train-transport', { point: crossing.departure, seaId: crossing.seaId },
           [needed, { kind: 'gold', amount: UNIT_DEFS.transport.cost }, { kind: 'supply', amount: UNIT_DEFS.transport.supplyUsed }], build ? [build] : []);
       } else transport = add('obtain-transport', { point: crossing.departure, seaId: crossing.seaId }, [needed], [],
-        `Request ${crossing.shipId}; a live stream needs explicit release before reuse`);
-      require('transport', false, needed, [transport], `Wait ${crossing.waitTicks}, board ${crossing.boardingTicks}, sail ${crossing.sailingTicks}, unload ${crossing.unloadingTicks} ticks`);
+        () => `Request ${crossing.shipId}; a live stream needs explicit release before reuse`);
+      require('transport', false, needed, [transport], () => `Wait ${crossing.waitTicks}, board ${crossing.boardingTicks}, sail ${crossing.sailingTicks}, unload ${crossing.unloadingTicks} ticks`);
       const ground = crossing.landingGround ?? walkableGoal(context.snapshot.map, crossing.landing.x, crossing.landing.y);
       const shore = { ...target, point: { ...ground } };
       const contacts = force.selected.flatMap(unit => {
@@ -290,7 +294,7 @@ export function decomposeNavalObjective(situation: Situation, objective: Objecti
       const clearBeach = beachReady ? null : add('clear-beachhead', shore,
         [fieldDemand(shore, sumStrength(opposition) * 1.4, true)], [], 'Clear the actual unload shore, not the inland mine point');
       require('shore-safe', beachReady, null, clearBeach ? [clearBeach] : [],
-        `Actual landing ground; shared neutral contacts ${contacts.map(contact => `${contact.memberId}:${contact.reason}`).join(',') || 'none'}; enemy movement remains uncertain`);
+        () => `Actual landing ground; shared neutral contacts ${contacts.map(contact => `${contact.memberId}:${contact.reason}`).join(',') || 'none'}; enemy movement remains uncertain`);
     }
     const selectedRoutes = force.selected.map(unit => route(unit, target.entityId!));
     if (force.unknownForce) preconditions.push({ id: `${id}/requires:unquoted-force-arrivals`, kind: 'route', status: 'unknown',
@@ -300,7 +304,7 @@ export function decomposeNavalObjective(situation: Situation, objective: Objecti
       null, [], 'Each proposed existing soldier needs an evaluated route; untrained reinforcements have no invented ETA');
     const occupied = force.selected.filter(unit => unit.commitments.length);
     require('handoff', occupied.length === 0, null, borrow ? [borrow] : [],
-      occupied.length ? occupied.map(unit => `${unit.id}: ${unit.commitments.map(task => task.taskId).join(',')}`).join('; ') : 'No retained task needs to release the proposed batch');
+      () => occupied.length ? occupied.map(unit => `${unit.id}: ${unit.commitments.map(task => task.taskId).join(',')}`).join('; ') : 'No retained task needs to release the proposed batch');
     const deliver = force.presentForce < force.required ? add('deliver-force', target, [demand], [borrow, training, transport].filter((id): id is string => id !== null)) : null;
     const clear = force.camp ? add('clear-camp', target, [demand], deliver ? [deliver] : []) : deliver;
     const hall = hallAt(context, target);
@@ -314,7 +318,7 @@ export function decomposeNavalObjective(situation: Situation, objective: Objecti
       const firstBoatGold = crossing?.requiresNewShip ? UNIT_DEFS.transport.cost : 0;
       const capitalReady = situation.economy.cashGold - firstBoatGold >= BUILDING_DEFS.townHall.cost;
       const wait = capitalReady ? null : add('wait-income', target, [capital], [], 'Hall capital is a later stage; buying the boat does not simultaneously reserve the same cash for the hall');
-      require('budget', capitalReady, capital, wait ? [wait] : [], `Cash ${situation.economy.cashGold}, first hull ${firstBoatGold}, later hall ${BUILDING_DEFS.townHall.cost}; predicted income is not reserved cash`);
+      require('budget', capitalReady, capital, wait ? [wait] : [], () => `Cash ${situation.economy.cashGold}, first hull ${firstBoatGold}, later hall ${BUILDING_DEFS.townHall.cost}; predicted income is not reserved cash`);
       const build = add('build-hall', target, [capital, { kind: 'workers', count: 1, at: target }],
         [clear, engineer, wait].filter((id): id is string => id !== null));
       add('establish-garrison', target, [fieldDemand(target, 1, true)], [build]);
@@ -341,14 +345,14 @@ export function decomposeNavalObjective(situation: Situation, objective: Objecti
     ];
     return groups.map(group => {
       const methodId = `${objective.id}/method:${group.kind}`, power = sumStrength(group.units);
-      const eligible = group.units.map(unit => `${unit.id}${unit.commitments.length ? ` releases ${unit.commitments.map(task => task.taskId).join(',')}` : ''}`).join('; ');
+      const eligible = () => group.units.map(unit => `${unit.id}${unit.commitments.length ? ` releases ${unit.commitments.map(task => task.taskId).join(',')}` : ''}`).join('; ');
       const fetch: Subgoal = { id: `${methodId}/borrow-force`, parentMethodId: methodId, kind: 'borrow-force', target: objective.target,
         demands: [demand], dependsOn: [], estimatedTicks: null, status: power >= required ? 'proposed' : 'blocked',
-        reasons: [reason(situation.tick, 'response-candidates', eligible || 'No evaluated response force in this alternative')] };
+        reasons: [reason(situation.tick, 'response-candidates', () => eligible() || 'No evaluated response force in this alternative')] };
       const deliver: Subgoal = { ...fetch, id: `${methodId}/deliver-force`, kind: 'deliver-force', dependsOn: [fetch.id] };
       return { id: methodId, objectiveId: objective.id, kind: group.kind, demands: [demand],
         preconditions: [{ id: `${methodId}/force`, kind: 'force' as const, status: power >= required ? 'met' as const : 'unmet' as const,
-          reason: reason(situation.tick, 'response-deficit', `Forecast ${power}; needed ${required}; candidates are alternatives, never jointly allocated twice`), demand, subgoalIds: required > 0 ? [fetch.id] : [] }],
+          reason: reason(situation.tick, 'response-deficit', () => `Forecast ${power}; needed ${required}; candidates are alternatives, never jointly allocated twice`), demand, subgoalIds: required > 0 ? [fetch.id] : [] }],
         subgoals: required > 0 ? [fetch, deliver] : [], estimatedTicks: group.units.length ? Math.max(...group.units.map(unit => duration(route(unit, objective.target.entityId!))!)) : null,
         status: power >= required ? 'candidate' as const : 'blocked' as const, reasons: objective.reasons };
     });

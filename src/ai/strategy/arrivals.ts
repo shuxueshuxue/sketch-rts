@@ -65,7 +65,8 @@ export function crossingCandidateId(snapshot: GameSnapshot, unit: Unit, target: 
 /** One think's reusable route queries. Durations are forecasts of stated routes,
  * not promises that body avoidance, combat or a future build will finish on time. */
 export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory,
-  distances = createPlanningDistanceQuery(snapshot), seaBuildBudget = Infinity, regions: RegionIndex = regionIndex(snapshot.map), preparation?: StrategyObservationMemory) {
+  distances = createPlanningDistanceQuery(snapshot), seaBuildBudget = Infinity, regions: RegionIndex = regionIndex(snapshot.map), preparation?: StrategyObservationMemory,
+  memoize = true) {
   const tick = snapshot.tick;
   const descriptions = {
     passenger: explanationRecipe(arrivalDescriptions.passenger, tick), land: explanationRecipe(arrivalDescriptions.land, tick),
@@ -99,10 +100,16 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
   const unknown = (code: string, detail: string): Arrival => capturesExplanations()
     ? { status: 'unknown', reason: reason(code, detail) } : nonArrival('unknown', code);
 
-  function landTime(unit: Unit, point: Point, from: Point = unit): number | undefined {
-    const key = pointKey(point);
-    let times = landTimes.get(key); if (!times) landTimes.set(key, times = new Map());
-    const known = times.get(unit.id);
+  function landTime(unit: Unit, point: Point, from: Point = unit, retain = true): number | undefined {
+    // A direct unit/goal row is consumed once by the evaluator and already
+    // owned by its compact result table. Only shared embarkation legs need a
+    // second numerical memo here.
+    let times: Map<string, LandTime> | undefined;
+    if (retain) {
+      const key = pointKey(point);
+      times = landTimes.get(key); if (!times) landTimes.set(key, times = new Map());
+    }
+    const known = times?.get(unit.id);
     if (known && known.x === from.x && known.y === from.y && known.speed === unit.speed) {
       if (known.pending) pendingGeometry = true;
       if (known.builtTick !== undefined) usedFieldTicks.add(known.builtTick);
@@ -114,7 +121,7 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
     else usedFieldTicks.add(field.builtTick);
     const cost = field?.field.cost(from);
     const ticks = cost === undefined ? undefined : Math.ceil(cost / unit.speed * SIM_TICKS_PER_SECOND);
-    times.set(unit.id, { x: from.x, y: from.y, speed: unit.speed, ticks, pending: !field, builtTick: field?.builtTick });
+    times?.set(unit.id, { x: from.x, y: from.y, speed: unit.speed, ticks, pending: !field, builtTick: field?.builtTick });
     return ticks;
   }
 
@@ -367,7 +374,7 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
     const source = landIdAt(snapshot.map, unit);
     if (!source) return unavailable('origin-ground-unknown', 'The unit has no traversable land label');
     if (source === destination) {
-      const ticks = landTime(unit, target.point);
+      const ticks = landTime(unit, target.point, unit, memoize);
       return ticks === undefined ? unavailable('native-road-unreachable', 'Native building-aware steering cannot reach the requested site')
         : walkingArrival(ticks, descriptions.land);
     }
@@ -405,38 +412,42 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
       : Object.assign(answer, { crossings: [crossing as CrossingEta & { requiresNewShip: false }] }) as Extract<Arrival, { status: 'reachable' }>;
   }
 
+  function calculate(unit: Unit, target: Target): Arrival {
+    pendingGeometry = false; usedFieldTicks.clear(); usedQuoteTicks.clear();
+    const candidate = shortlisted && unit.owner === owner ? crossingCandidateId(snapshot, unit, target) : undefined;
+    let answer: Arrival = candidate && !shortlist.has(candidate) && !isPublished(candidate)
+      ? unknown('crossing-candidate-not-shortlisted',
+        `Outside the top ${EXACT_CROSSING_CANDIDATES} coarse crossing candidates; not zero ETA or proof of unreachability`)
+      : compute(unit, target);
+    if (pendingGeometry && !('ticks' in answer)) answer = unknown('geometry-refresh-pending',
+      'The deterministic per-think field rebuild budget is exhausted; this route is not zero ETA or proven unreachable');
+    if ('ticks' in answer && capturesExplanations()) {
+      const base = projectedValueReader(answer, 'evidence');
+      let projections = explained.get(base);
+      if (!projections) explained.set(base, projections = new Map());
+      const fieldTicks = [...usedFieldTicks].sort((a, b) => a - b), quoteTicks = [...usedQuoteTicks].sort((a, b) => a - b);
+      const provenance = `${fieldTicks.join(',')}/${quoteTicks.join(',')}`;
+      let read = projections.get(provenance);
+      if (!read) {
+        read = explanationRecipe(arrivalProvenance, { base, fieldTicks, quoteTicks, tick });
+        projections.set(provenance, read);
+      }
+      answer = projectedProperty(answer, 'evidence', read);
+    }
+    return answer;
+  }
   return {
     crossingChoices: crossingTable,
     stats,
     setCrossingShortlist(ids: readonly string[]) { shortlisted = true; for (const id of ids) shortlist.add(id); },
     arrival(unit: Unit, target: Target): Arrival {
-      const key = pointKey(target.point);
-      let unitAnswers = answers.get(key); if (!unitAnswers) answers.set(key, unitAnswers = new Map());
-      if (!unitAnswers.has(unit.id)) {
-        pendingGeometry = false; usedFieldTicks.clear(); usedQuoteTicks.clear();
-        const candidate = shortlisted && unit.owner === owner ? crossingCandidateId(snapshot, unit, target) : undefined;
-        let answer: Arrival = candidate && !shortlist.has(candidate) && !isPublished(candidate)
-          ? unknown('crossing-candidate-not-shortlisted',
-            `Outside the top ${EXACT_CROSSING_CANDIDATES} coarse crossing candidates; not zero ETA or proof of unreachability`)
-          : compute(unit, target);
-        if (pendingGeometry && !('ticks' in answer)) answer = unknown('geometry-refresh-pending',
-          'The deterministic per-think field rebuild budget is exhausted; this route is not zero ETA or proven unreachable');
-        if ('ticks' in answer && capturesExplanations()) {
-          const base = projectedValueReader(answer, 'evidence');
-          let projections = explained.get(base);
-          if (!projections) explained.set(base, projections = new Map());
-          const fieldTicks = [...usedFieldTicks].sort((a, b) => a - b), quoteTicks = [...usedQuoteTicks].sort((a, b) => a - b);
-          const provenance = `${fieldTicks.join(',')}/${quoteTicks.join(',')}`;
-          let read = projections.get(provenance);
-          if (!read) {
-            read = explanationRecipe(arrivalProvenance, { base, fieldTicks, quoteTicks, tick });
-            projections.set(provenance, read);
-          }
-          answer = projectedProperty(answer, 'evidence', read);
-        }
+      let answer: Arrival;
+      if (memoize) {
+        const key = pointKey(target.point);
+        let unitAnswers = answers.get(key); if (!unitAnswers) answers.set(key, unitAnswers = new Map());
+        answer = unitAnswers.get(unit.id) ?? calculate(unit, target);
         unitAnswers.set(unit.id, answer);
-      }
-      const answer = unitAnswers.get(unit.id)!;
+      } else answer = calculate(unit, target);
       return unit.expiresTick !== undefined && 'ticks' in answer && unit.expiresTick <= snapshot.tick + answer.ticks
         ? unavailable('expires-before-arrival', `${unit.id} expires before reaching this effect`) : answer;
     },
