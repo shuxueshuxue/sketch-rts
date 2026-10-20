@@ -1,6 +1,7 @@
 import { BUILDING_DEFS } from '../shared/catalog';
 import type { GameSnapshot, PlayerId } from '../shared/types';
 import type { AiPolicyMemory, MiningMissionMemory } from './memory';
+import type { StrategyPlanTrace } from './strategy/types';
 
 /** Output only. Never stored in policy memory, snapshots, saves or command frames. */
 export type AiPlanStatus = 'active' | 'blocked' | 'done' | 'abandoned';
@@ -57,6 +58,9 @@ export type AiPlanTrace = {
   previousTick: number | null;
   changes: AiPlanChange[];
   limitations: string[];
+  /** Optional formal planner output; observe proposals never write policy memory or command frames.
+   * Existing module-state nodes remain valid when no strategy evaluator is attached. */
+  readonly strategy?: StrategyPlanTrace;
 };
 
 const STAGES = ['fund', 'assemble', 'clear', 'escort', 'build', 'complete'] as const;
