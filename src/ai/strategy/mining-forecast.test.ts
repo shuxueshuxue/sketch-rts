@@ -2,7 +2,7 @@ import { expect, it } from 'vitest';
 import { sketchScene } from '../../sdk/scene';
 import { snapshotGame } from '../../shared/sim';
 import { UNIT_DEFS } from '../../shared/catalog';
-import type { Situation } from './types';
+import type { Arrival, Situation } from './types';
 import { arrivalColumns, withUnitArrivals } from './unit-arrivals';
 import { miningCapacity } from './mining-capacity';
 import { discountedMiningSegments, forecastMiningWorkforce, type MiningForecastInput } from './mining-forecast';
@@ -130,7 +130,7 @@ it('reads compact decision facts without constructing explanations or compatibil
   const input = example(), columns = arrivalColumns(['new']);
   const units = input.situation.units.map(unit => {
     const { arrivals, ...facts } = unit;
-    const compact = withUnitArrivals(facts, { columns, values: arrivals.map(row => row.arrival), count: 1 });
+    const compact = withUnitArrivals(facts, { columns, values: arrivals.map(row => row.arrival as Arrival), count: 1 });
     Object.defineProperty(compact, 'arrivals', { get() { throw Error('Compatibility array must stay cold'); } });
     return compact;
   });
