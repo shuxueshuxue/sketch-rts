@@ -21,13 +21,19 @@ const { createAiMemoryProvider, planAiOwnerCommandEntries } = await import(`${ba
 const { buildAiPlanTrace } = await import(`${base}/src/ai/plan-trace.ts`) as typeof import('../src/ai/plan-trace');
 const { canonicalGameState, checksumGame } = await import(`${base}/src/shared/sim/checksum.ts`) as typeof import('../src/shared/sim/checksum');
 const { snapshotGame } = await import(`${base}/src/shared/sim.ts`) as typeof import('../src/shared/sim');
+const { groundWholeAt } = await import(`${base}/src/shared/terrain.ts`) as typeof import('../src/shared/terrain');
+const contactModule = await import(`${base}/src/ai/situation/neutral-camp-contact.ts`) as typeof import('../src/ai/situation/neutral-camp-contact');
 const { AiDeathLedger: Ledger } = mode === 'observe' ? await import(`${base}/src/ai/death-ledger.ts`) as typeof import('../src/ai/death-ledger') : { AiDeathLedger: undefined };
 const owners = Object.keys(config.agents).filter(owner => config.agents[owner]!.version.startsWith('v9_'));
 const memories: Record<string, AiPolicyMemory> = {}, memoryProvider = createAiMemoryProvider(memories);
-const previous: Record<string, AiPlanTrace> = {}, durations: { tick: number; owner: string; plannerMs: number; observerMs: number; totalMs: number }[] = [];
+const previous: Record<string, AiPlanTrace> = {}, durations: { tick: number; owner: string; plannerMs: number; observerMs: number; totalMs: number; contactMs: number; contactCalls: number; contactCamps: number; contactNearCamps: number; reachQueries: number }[] = [];
 const fds = new Map<string, number>(), plannedHash = createHash('sha256'), commandHash = createHash('sha256');
 let ledger: AiDeathLedger | undefined, plannedCount = 0, commandCount = 0, worldTick = -1, finalGame: Parameters<typeof checksumGame>[0];
 let buildingsBefore: Building[] = [];
+const homeSites = new Map<string, { x: number; y: number }[]>();
+const born = new Set<string>(), completed = new Set<string>(), homeGround = new Map<string, number | undefined>();
+const milestones: Record<string, { expansion: number | null; island: number | null; attack: number | null }> = {};
+for (const owner of owners) milestones[owner] = { expansion: null, island: null, attack: null };
 mkdirSync(out, { recursive: true });
 const log = (name: string, row: unknown) => {
   let fd = fds.get(name);
@@ -36,7 +42,9 @@ const log = (name: string, row: unknown) => {
 };
 const loop = runAiGameLoop({ ...config, commandPlanner({ game, snapshot, owner, agent, source, teams }) {
   const start = performance.now();
-  const entries = planAiOwnerCommandEntries(snapshot, { playerId: owner, source, version: agent.version }, { memoryProvider, teams });
+  const plan = () => planAiOwnerCommandEntries(snapshot, { playerId: owner, source, version: agent.version }, { memoryProvider, teams });
+  const measured = contactModule.withNeutralCampContactMeasurement?.(plan);
+  const entries = measured ? measured.result : plan();
   const planned = performance.now();
   let trace: AiPlanTrace | undefined;
   if (ledger && owners.includes(owner)) {
@@ -45,7 +53,9 @@ const loop = runAiGameLoop({ ...config, commandPlanner({ game, snapshot, owner, 
     trace = ledger.withPlanTrace(projected, projected.previousTick ?? -1); previous[owner] = trace;
   }
   const end = performance.now();
-  durations.push({ tick: snapshot.tick, owner, plannerMs: planned - start, observerMs: end - planned, totalMs: end - start });
+  durations.push({ tick: snapshot.tick, owner, plannerMs: planned - start, observerMs: end - planned, totalMs: end - start, contactMs: measured?.measurement.elapsedMs ?? 0,
+    contactCalls: measured?.measurement.calls ?? 0, contactCamps: measured?.measurement.camps ?? 0,
+    contactNearCamps: measured?.measurement.nearCamps ?? 0, reachQueries: measured?.measurement.reachQueries ?? 0 });
   const row = { tick: snapshot.tick, owner, entries }, bytes = JSON.stringify(row) + '\n';
   plannedHash.update(bytes); plannedCount += entries.length; log('planned', row);
   if (snapshot.tick !== worldTick) {
@@ -63,17 +73,43 @@ const loop = runAiGameLoop({ ...config, commandPlanner({ game, snapshot, owner, 
 } }, {
   beforeLoop({ game }) {
     finalGame = game;
+    for (const unit of game.units) { born.add(unit.id); log('births', { tick: game.tick, id: unit.id, owner: unit.owner, kind: unit.kind }); }
+    for (const building of game.buildings) if (building.complete) {
+      completed.add(building.id);
+      if (building.kind === 'townHall' && building.owner !== 'neutral') {
+        homeGround.set(building.owner, groundWholeAt(game.map, building, 'land'));
+        homeSites.set(building.owner, [...homeSites.get(building.owner) ?? [], { x: building.x, y: building.y }]);
+      }
+    }
     writeFileSync(`${out}/initial.json`, JSON.stringify({ source: config.source, config, snapshot: snapshotGame(game),
       nextId: game.nextId, activePlayers: game.activePlayers }));
     if (Ledger) ledger = new Ledger(game, { owners });
   },
   onCommand({ tick, owner, source, scriptId, command }) {
     ledger?.recordIssuedCommand(tick, owner, command, scriptId, source);
+    const target = command.type === 'attack' ? [...finalGame.units, ...finalGame.buildings].find(entity => entity.id === command.targetId)
+      : command.type === 'attackMove' ? finalGame.buildings.find(entity => entity.owner !== 'neutral' && entity.owner !== owner
+        && config.agents[entity.owner]?.team !== config.agents[owner]?.team && Math.hypot(entity.x - command.x, entity.y - command.y) <= 650) : undefined;
+    if (milestones[owner] && target && target.owner !== 'neutral' && target.owner !== owner
+      && config.agents[target.owner]?.team !== config.agents[owner]?.team) milestones[owner]!.attack ??= tick;
     const row = { tick, owner, source, scriptId, command };
     commandHash.update(JSON.stringify(row) + '\n'); commandCount++; log('commands', row);
   },
   beforeStep({ game }) { buildingsBefore = [...game.buildings]; },
   onStep({ game }) {
+    for (const unit of game.units) if (!born.has(unit.id)) {
+      born.add(unit.id); log('births', { tick: game.tick, id: unit.id, owner: unit.owner, kind: unit.kind });
+    }
+    for (const building of game.buildings) if (building.complete && !completed.has(building.id)) {
+      completed.add(building.id);
+      if (building.kind === 'townHall' && milestones[building.owner]
+        && (homeSites.get(building.owner) ?? []).every(site => Math.hypot(site.x - building.x, site.y - building.y) > 300)) {
+        milestones[building.owner]!.expansion ??= game.tick;
+        if (groundWholeAt(game.map, building, 'land') !== homeGround.get(building.owner)) milestones[building.owner]!.island ??= game.tick;
+        log('occupation', { tick: game.tick, owner: building.owner, buildingId: building.id,
+          ground: groundWholeAt(game.map, building, 'land'), homeGround: homeGround.get(building.owner) });
+      }
+    }
     const liveBuildings = new Set(game.buildings.map(building => building.id));
     for (const building of buildingsBefore) if (building.hp <= 0 && !liveBuildings.has(building.id)) log('building-losses', {
       tick: game.tick, id: building.id, owner: building.owner, kind: building.kind, x: building.x, y: building.y,
@@ -101,7 +137,12 @@ const receipt = { source: config.source, mode, name: config.name, mapId: config.
   plannedCount, commandCount, plannedSha256: plannedHash.digest('hex'), commandSha256: commandHash.digest('hex'),
   snapshotSha256: sha(loop.snapshot), memorySha256: sha(memories), canonicalSha256: sha(canonicalGameState(finalGame!)),
   checksum: checksumGame(finalGame!), summaries, reconciled, errors: ledger?.errors ?? [],
+  milestones, campContacts: { totalMs: durations.reduce((sum, row) => sum + row.contactMs, 0),
+    calls: durations.reduce((sum, row) => sum + row.contactCalls, 0), p95: quantile(durations.map(row => row.contactMs), .95),
+    max: Math.max(0, ...durations.map(row => row.contactMs)), coarseCamps: durations.reduce((sum, row) => sum + row.contactCamps, 0),
+    nearCamps: durations.reduce((sum, row) => sum + row.contactNearCamps, 0), reachQueries: durations.reduce((sum, row) => sum + row.reachQueries, 0) },
   timing: { planner: timing('plannerMs'), observer: timing('observerMs'), total: timing('totalMs') }, elapsedMs: loop.elapsedMs, cpuMs: loop.cpuMs };
+writeFileSync(`${out}/milestones.json`, JSON.stringify(milestones, null, 2));
 writeFileSync(`${out}/summary.json`, JSON.stringify(receipt, null, 2));
 writeFileSync(`${out}/final.json`, JSON.stringify({ snapshot: loop.snapshot, memories, nextId: finalGame!.nextId }));
 ledger?.dispose();
