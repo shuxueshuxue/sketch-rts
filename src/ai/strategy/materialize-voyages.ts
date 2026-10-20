@@ -69,10 +69,21 @@ export function materializeVoyages(input: AllocationMethodQuoteInput, actionId: 
     if (!crossing.requiresNewShip && (!existing || existing.owner !== situation.owner || !isTransportKind(existing.kind))) {
       missing('quoted-transport-not-in-candidate-bundle', crossing.shipId ? [crossing.shipId] : [], 'transport'); continue;
     }
-    const yard = snapshot.buildings.filter(building => building.owner === situation.owner && building.hp > 0 && building.kind === 'shipyard'
-      && landIdAt(snapshot.map, building) === group.source
-      && seaIdAt(snapshot.map, walkableGoal(snapshot.map, building.x, building.y, 'sea')) === crossing.seaId)
-      .sort((a, b) => distance(a, departure.ground) - distance(b, departure.ground) || byId(a, b))[0];
+    const declaredProducer = 'productionBuildingId' in crossing ? crossing.productionBuildingId : undefined;
+    if (crossing.requiresNewShip && declaredProducer !== undefined && typeof declaredProducer !== 'string') {
+      missing('quoted-shipyard-reference-invalid', group.units.map(unit => unit.id), 'production'); continue;
+    }
+    const yard = typeof declaredProducer === 'string'
+      ? snapshot.buildings.find(building => building.id === declaredProducer && building.owner === situation.owner
+        && building.hp > 0 && building.kind === 'shipyard'
+        && seaIdAt(snapshot.map, walkableGoal(snapshot.map, building.x, building.y, 'sea')) === crossing.seaId)
+      : snapshot.buildings.filter(building => building.owner === situation.owner && building.hp > 0 && building.kind === 'shipyard'
+        && landIdAt(snapshot.map, building) === group.source
+        && seaIdAt(snapshot.map, walkableGoal(snapshot.map, building.x, building.y, 'sea')) === crossing.seaId)
+        .sort((a, b) => distance(a, departure.ground) - distance(b, departure.ground) || byId(a, b))[0];
+    if (crossing.requiresNewShip && declaredProducer !== undefined && !yard) {
+      missing('quoted-shipyard-unavailable', [String(declaredProducer)], 'production'); continue;
+    }
     if (crossing.requiresNewShip && !yard) { missing('build-shipyard-required', group.units.map(unit => unit.id), 'production'); continue; }
     if (yard && !yard.complete && crossing.requiresNewShip) { missing('shipyard-not-yet-complete', [yard.id], 'production'); continue; }
     const hulls: { unit: Unit; ids: string[]; productionId: string | null }[] = [];
