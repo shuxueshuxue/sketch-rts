@@ -72,7 +72,7 @@ function computeReadinessPlan(snapshot: GameSnapshot, owner: PlayerId, options: 
   for (const unit of own) {
     if (["board", "cast", "charge", "move"].includes(unit.order.type)) continue;
     const nearby = foes.filter(enemy => distance(unit, enemy) < 300 && canReach(snapshot.map, unit, enemy));
-    if (canTakeStance(unit.kind)) {
+    if (canTakeStance(unit)) {
       const order = unit.order;
       const target = order.type === "attack" || order.type === "attackMove" ? snapshot.units.find(enemy => enemy.id === order.targetId) : undefined;
       const protectedFriend = own.some(friend => friend !== unit && friend.attackRange > 100 && distance(friend, unit) < 140

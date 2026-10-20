@@ -1,3 +1,4 @@
+import { isRangedUnit } from "../../shared/unit-weapon-class";
 import { UNIT_DEFS } from "../../shared/catalog";
 import { unitAbilities } from "../../shared/unit-abilities";
 import { autocastEnabled, canAutocast } from "../../shared/autocast";
@@ -82,7 +83,6 @@ const WAYPOINT_REACHED = 150;
 const SPREAD = 550;
 // A melee unit farther than this from the focus target fights whatever is nearest instead of walking through the line.
 const MELEE_REACH = 200;
-const RANGED = 90;
 
 export function createSquadMemory(): SquadMemory {
   return { state: "advance", since: 0 };
@@ -233,7 +233,7 @@ function fight(snapshot: GameSnapshot, squad: readonly Unit[], foes: readonly Un
   const nearest = new Map<string, string[]>();
   for (const unit of fighters) {
     const current = (unit.order as { targetId?: string }).targetId;
-    if (unit.attackRange > RANGED || distance(unit, target) <= MELEE_REACH + unit.attackRange) {
+    if (isRangedUnit(unit) || distance(unit, target) <= MELEE_REACH + unit.attackRange) {
       if (!(unit.order.type === "attack" && current === target.id)) onFocus.push(unit.id);
       continue;
     }

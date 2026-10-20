@@ -1,3 +1,4 @@
+import { isRangedUnit } from "../../shared/unit-weapon-class";
 import { createUnit } from '../../shared/map';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { landSpawnPoint } from '../../shared/production-spawn';
@@ -21,7 +22,7 @@ export function mountedRecruitment(snapshot: GameSnapshot, owner: PlayerId, opti
   const own = snapshot.units.filter(unit => unit.owner === owner && unit.expiresTick === undefined);
   if (own.filter(unit => unit.kind !== 'worker' && !unit.deck).length < 6) return [];
   if (own.some(unit => unit.kind === 'horseArcher')) return [
-    { upgrade: 'rangeTraining', level: 1, priority: 58 }, { upgrade: 'speedTraining', level: 1, priority: 57 },
+    ...(own.some(unit => unit.kind === 'horseArcher' && isRangedUnit(unit)) ? [{ upgrade: 'rangeTraining' as const, level: 1, priority: 58 }] : []), { upgrade: 'speedTraining', level: 1, priority: 57 },
   ];
   if (snapshot.buildings.some(building => building.owner === owner && trainingJobs(building).some(job => job.unitKind === 'horseArcher'))) return [];
   const camps = neutralCamps(snapshot);

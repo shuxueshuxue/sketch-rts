@@ -97,7 +97,7 @@ export function stanceCommandState(units: readonly Unit[], stance: MeleeStance, 
 }
 
 export function stanceFighters(units: readonly Unit[]) {
-  return units.filter((unit) => !isInCabin(unit) && canTakeStance(unit.kind));
+  return units.filter((unit) => !isInCabin(unit) && canTakeStance(unit));
 }
 
 // An order the card offers (train, research, hire, buy), greyed exactly when the sim would refuse it, for the reason the

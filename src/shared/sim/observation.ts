@@ -5,7 +5,7 @@ import type { Building, GameCommand, Obstacle, PlayerId, Unit } from '../types';
 export type Observed<T> = T extends readonly (infer V)[] ? readonly Observed<V>[]
   : T extends object ? { readonly [K in keyof T]: Observed<T[K]> } : T;
 export type ObservedUnit = Observed<Pick<Unit, 'id' | 'owner' | 'kind' | 'x' | 'y' | 'hp' | 'maxHp'
-  | 'attackDamage' | 'attackRange' | 'attackCooldown' | 'level' | 'speed' | 'order' | 'orderQueue'
+  | 'attackDamage' | 'attackRange' | 'attackClass' | 'attackCooldown' | 'level' | 'speed' | 'order' | 'orderQueue'
   | 'deck' | 'cabin' | 'garrison' | 'expiresTick'>>;
 export type ObservedSource = Observed<Pick<Unit | Building, 'id' | 'owner' | 'kind' | 'x' | 'y'>> & {
   readonly entityType: 'unit' | 'building';
@@ -80,10 +80,10 @@ function frozenCopy<T>(value: T): Observed<T> {
 }
 
 function unitView(unit: Unit): ObservedUnit {
-  const { id, owner, kind, x, y, hp, maxHp, attackDamage, attackRange, attackCooldown, level,
+  const { id, owner, kind, x, y, hp, maxHp, attackDamage, attackRange, attackClass, attackCooldown, level,
     speed, order, orderQueue, deck, cabin, garrison, expiresTick } = unit;
   return frozenCopy({ id, owner, kind, x, y, hp, maxHp, attackDamage, attackRange, attackCooldown, level,
-    speed, order, ...(orderQueue ? { orderQueue } : {}), ...(deck ? { deck } : {}),
+    speed, order, ...(attackClass ? { attackClass } : {}), ...(orderQueue ? { orderQueue } : {}), ...(deck ? { deck } : {}),
     ...(cabin ? { cabin } : {}), ...(garrison ? { garrison } : {}),
     ...(expiresTick !== undefined ? { expiresTick } : {}) });
 }

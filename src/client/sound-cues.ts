@@ -1,6 +1,6 @@
 import type { AttackKind } from "../shared/attack-presentation";
 import { UNIT_DEFS } from "../shared/catalog";
-import { RANGED_ATTACK_RANGE_THRESHOLD } from "../shared/sim";
+import { weaponClass } from "../shared/weapon-class";
 import type { GameSnapshot, PlayerId, UnitKind, WorldEffect } from "../shared/types";
 import type { SoundEvent } from "./sound";
 
@@ -59,5 +59,5 @@ export function soundCues(before: GameSnapshot, after: GameSnapshot, listener: P
 }
 
 function meleeStriker(kind: NonNullable<WorldEffect["sourceKind"]>): kind is UnitKind {
-  return kind in UNIT_DEFS && UNIT_DEFS[kind as UnitKind].attackRange <= RANGED_ATTACK_RANGE_THRESHOLD;
+  return kind in UNIT_DEFS && weaponClass(UNIT_DEFS[kind as UnitKind]) === "melee";
 }

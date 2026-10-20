@@ -1,3 +1,4 @@
+import { weaponClass } from "./weapon-class";
 import { unitRules } from './catalog';
 import { aimingRange } from './aiming';
 import { carryingHull, strikeGap } from './combat-geometry';
@@ -20,7 +21,7 @@ type Target = Unit | Building | Obstacle;
 export function continuingShipAim(world: World, ship: Unit, target: Target, blockers: readonly Unit[]): boolean {
   const rules = unitRules(world, ship);
   if (rules.intrinsicAttack) {
-    const range = aimingRange(ship.aim, ship.attackRange, target.id, rules.aimRangeBuffer);
+    const range = aimingRange(ship.aim, ship.attackRange, target.id, rules.aimRangeBuffer, weaponClass(rules) === "ranged");
     const gap = strikeGap(ship, target);
     if (gap > ship.attackRange && gap <= range) return true;
   }

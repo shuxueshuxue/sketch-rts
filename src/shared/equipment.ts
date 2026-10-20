@@ -1,3 +1,4 @@
+import { weaponClass } from "./weapon-class";
 import { ERRAND_REACH } from "./approach";
 import { invalidateItemIndex, itemIndex } from "./item-index";
 import { SHIP_WEAPONS, isShipEquipment, shipMounts } from "./ship-equipment";
@@ -42,7 +43,7 @@ export function canEquip(unit: Unit) { return HUMANOIDS.has(unit.kind) || unit.o
 export function isCarrySlot(slot: EquipmentSlot): boolean { return (CARRY_SLOTS as readonly string[]).includes(slot); }
 export function itemHands(item: WorldItem) {
     if (item.kind === 'issuedWeapon')
-        return (UNIT_DEFS[item.weaponKind!]?.attackRange ?? 0) > 80 ? 2 : 1;
+        return weaponClass(UNIT_DEFS[item.weaponKind!] ?? { attackRange: 0 }) === "ranged" ? 2 : 1;
     return ITEM_DEFS[item.kind].hands ?? 1;
 }
 export function itemsFor(snapshot: Pick<GameSnapshot, 'items'>, unit: Unit) { return itemIndex(snapshot.items).byCarrier.get(unit.id) ?? []; }

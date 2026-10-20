@@ -93,7 +93,7 @@ export const VETERAN_SKILLS: Record<VeteranSkillId, VeteranSkillDef> = {
   },
   veteranSiegeDrill: {
     id: "veteranSiegeDrill", name: { zh: "测距训练", en: "Rangefinding" }, icon: "⌖", pool: "specialist",
-    description: { zh: "被动：自身攻击射程提高 10%；最小射程保持不变。", en: "Passive: gain 10% attack range. Minimum range is unchanged." },
+    description: { zh: "被动：自身攻击射程提高 10%；最小射程保持不变；仅远程武器生效。", en: "Passive: gain 10% attack range. Minimum range is unchanged. Ranged weapons only." },
     effect: { type: "passive", modifiers: { attackRangeMultiplier: 1.1 } },
   },
   veteranEndurance: {
@@ -176,7 +176,7 @@ export function veteranSkillFitsUnitClass(skill: VeteranSkillId, unitClass: Unit
 }
 
 /** No global RNG: unrelated births, commands and drawing the panel cannot advance this stream. */
-export function rollVeteranSkillChoices(kind: UnitKind, unitId: string, seed: string | number = 0, unitClass?: UnitClass): [VeteranSkillId, VeteranSkillId, VeteranSkillId] {
+export function rollVeteranSkillChoices(kind: UnitKind, unitId: string, seed: string | number = 0, unitClass?: UnitClass, rangedWeapon = true): [VeteranSkillId, VeteranSkillId, VeteranSkillId] {
   let state = 2166136261;
   // JSON retains component boundaries, including unusual IDs containing separators.
   const key = JSON.stringify(["veteran-skills-v1", seed, unitId, kind]);
@@ -195,7 +195,7 @@ export function rollVeteranSkillChoices(kind: UnitKind, unitId: string, seed: st
     }
     return result;
   };
-  const specialist = (VETERAN_SPECIALIST_SKILLS[kind] ?? []).filter(skill => unitClass === undefined || veteranSkillFitsUnitClass(skill, unitClass));
+  const specialist = (VETERAN_SPECIALIST_SKILLS[kind] ?? []).filter(skill => (skill !== "veteranSiegeDrill" || rangedWeapon) && (unitClass === undefined || veteranSkillFitsUnitClass(skill, unitClass)));
   const specialistCount = specialist.length === 0 ? 0 : Math.min(specialist.length, random() < .5 ? 1 : 2);
   // Common slots come first, so users can compare the general alternatives in a stable position.
   const choices = [

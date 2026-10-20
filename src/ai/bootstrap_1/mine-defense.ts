@@ -1,3 +1,4 @@
+import { isRangedUnit } from "../../shared/unit-weapon-class";
 import { beginTerritoryThink, finishTerritoryThink, territoryPostCommands, territoryControlsHold } from './territory-pressure';
 import { harassSquadAssignment, harassSquadGuard, mountedHarassment, planHarassSquad, recordHarassSquadCommands } from './harass-squad';
 import { mercenaryControlUnitIds } from './mercenary-control';
@@ -92,7 +93,7 @@ function detachment(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCo
         && (unit.expiresTick === undefined || unit.expiresTick > snapshot.tick + ticks))
       .map(({ unit }) => unit);
     const fighters = nearby.filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0);
-    const crew = fighters.filter(unit => unit.attackRange <= 80).slice(0, 2);
+    const crew = fighters.filter(unit => !isRangedUnit(unit)).slice(0, 2);
     if (attackers.some(unit => unit.expiresTick !== undefined)) {
       const dispeller = nearby.find(unit => UNIT_DEFS[unit.kind].abilities.includes('curse'));
       if (dispeller) crew.push(dispeller);

@@ -1,3 +1,4 @@
+import { isRangedUnit } from "../../shared/unit-weapon-class";
 import { ABILITY_DEFS } from '../../shared/catalog';
 import { abilityCooldown } from '../../shared/ability-cooldowns';
 import { sameGround } from '../../shared/terrain';
@@ -24,11 +25,11 @@ export function chargeMinimum(foe: Unit, rider: Pick<Unit, 'x' | 'y'>, horizon: 
 
 export function mountedThreatReach(snapshot: GameSnapshot, foe: Threat, rider: Pick<Unit, 'x' | 'y' | 'radius'>, horizon: number) {
   if (!('order' in foe)) return foe.attackRange + rider.radius;
-  const withinChargeMinimum = foe.attackRange <= 80 && unitAbilities(foe).some(ability => {
+  const withinChargeMinimum = !isRangedUnit(foe) && unitAbilities(foe).some(ability => {
     const rules = ABILITY_DEFS[ability];
     return rules.behavior === 'charge' && abilityCooldown(foe, ability) <= horizon && distance(rider, foe) < rules.minRange;
   });
-  const weaponReach = foe.attackRange <= 80 && !withinChargeMinimum ? foe.attackRange + foe.radius + rider.radius : foe.attackRange;
+  const weaponReach = !isRangedUnit(foe) && !withinChargeMinimum ? foe.attackRange + foe.radius + rider.radius : foe.attackRange;
   return Math.max(weaponReach, castThreatReach(snapshot, foe, rider, horizon));
 }
 

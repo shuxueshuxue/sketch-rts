@@ -1,3 +1,4 @@
+import { isRangedUnit } from "./unit-weapon-class";
 import { weaponRules } from "./equipment";
 import { hasSpell, unitRules, type WeaponDef } from "./catalog";
 import { shipProfile } from "./ship-geometry";
@@ -13,7 +14,7 @@ export function deckHullDamageShare(game: GameSnapshot, source: Unit | Building,
     const rules = weaponRules(game, source);
     if (rules.weapon)
         return rules.weapon.hullDamageShare ?? DECK_HULL_DAMAGE[rules.weapon.delivery];
-    return rules.attackRange <= 80 ? DECK_HULL_DAMAGE.melee : hasSpell(source.kind) ? DECK_HULL_DAMAGE.spell : DECK_HULL_DAMAGE.arrow;
+    return !isRangedUnit(source) ? DECK_HULL_DAMAGE.melee : hasSpell(source.kind) ? DECK_HULL_DAMAGE.spell : DECK_HULL_DAMAGE.arrow;
 }
 export function passengerDamageMultiplier(game: GameSnapshot, source: Unit) {
     const hull = source.deck && game.units.find(unit => unit.id === source.deck!.shipId && unit.hp > 0);

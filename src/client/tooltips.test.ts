@@ -206,7 +206,7 @@ describe("gameplay tooltips", () => {
       requirements: expect.arrayContaining(["Research at Stables / Cinder Spire.", "Affects combat units."]),
       hotkey: "M",
     });
-    expect(upgradeTooltip("rangeTraining", "r", 2).stats).toEqual(expect.arrayContaining(["+35% unit range"]));
+    expect(upgradeTooltip("rangeTraining", "r", 2).stats).toEqual(expect.arrayContaining(["+35% ranged weapon reach"]));
     expect(upgradeTooltip("leadership", "l", 2)).toMatchObject({
       stats: expect.arrayContaining(["+3/7/12 HP/s at 1/2/3 stars"]),
       requirements: expect.arrayContaining(["Affects non-mechanical starred units."]),

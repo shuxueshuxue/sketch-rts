@@ -1,3 +1,4 @@
+import { isRangedUnit } from "./unit-weapon-class";
 import { abilityCooldown, withAbilityCooldown } from "./ability-cooldowns";
 import { ABILITY_DEFS } from "./catalog";
 import { combatCapability } from "./combat-capabilities";
@@ -85,7 +86,7 @@ export function buildVeteranFrame(snapshot: VeteranSnapshot, nearby?: VeteranNea
       moveSpeedMultiplier: (passive.moveSpeedMultiplier ?? 1) * (aura.moveSpeedMultiplier ?? 1),
       attackSpeedMultiplier: (passive.attackSpeedMultiplier ?? 1) * (aura.attackSpeedMultiplier ?? 1),
       aimSpeedMultiplier: (passive.aimSpeedMultiplier ?? 1) * (aura.aimSpeedMultiplier ?? 1),
-      attackRangeMultiplier: (passive.attackRangeMultiplier ?? 1) * (aura.attackRangeMultiplier ?? 1),
+      attackRangeMultiplier: isRangedUnit(unit) ? (passive.attackRangeMultiplier ?? 1) * (aura.attackRangeMultiplier ?? 1) : 1,
       regenPerSecond: canReceiveHealing(unit, snapshot) ? (passive.regenPerSecond ?? 0) + (aura.regenPerSecond ?? 0) : 0,
     });
   }

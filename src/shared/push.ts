@@ -1,3 +1,5 @@
+import { isRangedUnit } from "./unit-weapon-class";
+import { weaponClass } from "./weapon-class";
 import { UNIT_DEFS, unitMover } from "./catalog";
 import { groundUnder, openStep } from "./terrain";
 import { advanceShip } from "./ship-motion";
@@ -34,11 +36,10 @@ export const BRACE_DAMAGE_SHARE = 0.9;
 export const SHOCK_DAMAGE_TAKEN = 1.1;
 // The lunge's average speed is at most this many times the striker's own walking speed.
 export const LUNGE_PACE = 2.5;
-const MELEE_RANGE = 90;
 
-export function canTakeStance(kind: UnitKind) {
-  const def = UNIT_DEFS[kind];
-  return kind !== "worker" && def.attackDamage > 0 && def.attackRange <= MELEE_RANGE;
+export function canTakeStance(unit: UnitKind | Unit) {
+  const kind = typeof unit === "string" ? unit : unit.kind, def = UNIT_DEFS[kind];
+  return kind !== "worker" && def.attackDamage > 0 && !(typeof unit === "string" ? weaponClass(def) === "ranged" : isRangedUnit(unit));
 }
 
 export function isMeleeStance(value: unknown): value is MeleeStance {

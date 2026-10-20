@@ -1,3 +1,4 @@
+import { isRangedUnit } from "../../shared/unit-weapon-class";
 import { casterMeleeMicro } from './caster-screen';
 import type { GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { sameGround } from '../../shared/terrain';
@@ -13,7 +14,7 @@ import { v6AssaultStagePoint } from '../policy/v6/general';
 
 function advancingScreen(front: Unit[], center: Point, target: Point) {
   const toward = { x: target.x - center.x, y: target.y - center.y };
-  return front.filter(unit => unit.attackRange <= 80
+  return front.filter(unit => !isRangedUnit(unit)
     && (unit.x - center.x) * toward.x + (unit.y - center.y) * toward.y > 0);
 }
 
