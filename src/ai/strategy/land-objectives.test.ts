@@ -323,4 +323,23 @@ describe('land objective proposals over one shared Situation', () => {
       objectiveId: 'DefendSite:us:new-hall', role: 'frontline', evidence: { source: 'claim', tick: 1000, certainty: 'recorded', detail: 'Stationed' } }] });
     expect(handoff(committed).status).toBe('met');
   });
+
+  it('also proposes interception for a ground raider actually attacking a worker', () => {
+    const { context, situation } = example();
+    context.snapshot.units.find(unit => unit.id === 'responder')!.order = { type: 'attack', targetId: 'builder' };
+    const threatened: Situation = { ...situation, lands: [{ ...situation.lands[0]!, threats: [{ siteId: 'home', horizonTicks: 900,
+      attackers: [{ unitId: 'responder', arrival: route(0), strength: 1 }], arrivedStrength: 1, incomingStrength: 0,
+      friendlyOnStationStrength: 0, firstArrivalTicks: 0, lossProbability: 1, evidence: [] }] }] };
+    expect(goals(threatened, context)).toContainEqual(expect.objectContaining({ id: 'CounterHarass:us:responder' }));
+  });
+
+  it('discounts a defending summon which expires during the battle, on the enemy side too', () => {
+    const { context, situation } = example();
+    const whole = goals(situation, context).find(goal => goal.kind === 'AttackSite')!;
+    const expiring = changedUnit(situation, 'responder', { expiresTick: situation.tick + 65 });
+    const short = goals(expiring, context).find(goal => goal.kind === 'AttackSite')!;
+    expect(short.utility.successProbability).toBeGreaterThan(whole.utility.successProbability);
+    expect(short.utility.cost.find(term => term.code === 'expected-attrition')!.value)
+      .toBeLessThan(whole.utility.cost.find(term => term.code === 'expected-attrition')!.value);
+  });
 });

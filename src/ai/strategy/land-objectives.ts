@@ -103,12 +103,14 @@ class LandModel {
       if (mine) add('ExpandLand', mine.id, mine.target);
     }
     const siteThreats = this.situation.lands.flatMap(land => land.threats);
+    const workerIds = new Set(this.own.filter(unit => unit.roles.includes('worker')).map(unit => unit.id));
     for (const threat of siteThreats) {
       const site = this.assets.get(threat.siteId);
       if (site?.owner !== this.context.owner) continue;
       for (const attacker of threat.attackers) {
         const unit = this.situation.units.find(unit => unit.id === attacker.unitId), raw = this.raw.get(attacker.unitId);
-        if (unit && raw?.kind === 'horseArcher' && this.foe(unit.owner) && unit.location.kind === 'land')
+        const harassing = raw?.kind === 'horseArcher' || raw?.order.type === 'attack' && workerIds.has(raw.order.targetId);
+        if (unit && harassing && this.foe(unit.owner) && unit.location.kind === 'land')
           add('CounterHarass', unit.id, { entityId: unit.id, landId: unit.location.landId, point: { ...unit.location.point } });
       }
     }
@@ -166,10 +168,15 @@ class LandModel {
       const arrival = arrivalAt(unit, arrivalKey);
       return knownArrival(arrival) && arrival.status === 'reachable' && arrival.ticks <= window
         && (unit.expiresTick === null || unit.expiresTick > s.tick + arrival.ticks);
+    }).map(unit => {
+      const arrival = arrivalAt(unit, arrivalKey) as Extract<Arrival, { ticks: number }>;
+      const coverage = unit.expiresTick === null ? 1 : Math.min(1,
+        (unit.expiresTick - s.tick - arrival.ticks) / Math.max(1, window - arrival.ticks));
+      return coverage === 1 ? unit : { ...unit, strength: unit.strength * coverage };
     });
-    const towerPower = this.context.snapshot.buildings.filter(building => this.foe(building.owner)
-      && building.complete && building.attackDamage > 0 && gap(building, candidate.target.point) <= building.attackRange + building.radius)
-      .reduce((sum, building) => sum + structureRating(building), 0);
+    const towers = this.context.snapshot.buildings.filter(building => this.foe(building.owner)
+      && building.complete && building.attackDamage > 0 && gap(building, candidate.target.point) <= building.attackRange + building.radius);
+    const towerPower = towers.reduce((sum, building) => sum + structureRating(building), 0);
     const earliest = pool[0]?.eta ?? HORIZON;
     let required = camp ? forceFor(camp) : responding(Math.min(HORIZON, earliest + workTicks(pool)))
       .reduce((sum, unit) => sum + unit.strength, 0) + towerPower;
@@ -337,8 +344,15 @@ class LandModel {
     cost.push(term('force-time', forceTimeGold(crew.reduce((sum, fighter) => sum + fighter.unit.strength * fighter.coverage, 0),
       Math.min(HORIZON, (eta ?? 0) + duration)), '兵力在途与执行占用，成功失败都产生'));
     const exposedHp = crew.reduce((sum, fighter) => sum + fighter.raw.hp, 0), price = crew.reduce((sum, fighter) => sum + UNIT_DEFS[fighter.raw.kind].cost, 0);
-    const firing = [...responders.map(unit => this.raw.get(unit.id)).filter((unit): unit is Unit => !!unit), ...targets.filter(target => target.attackDamage > 0)];
-    const damage = firing.reduce((sum, unit) => sum + unit.attackDamage / Math.max(1, unit.attackCooldown) * duration, 0);
+    const firing = new Map([...responders.map(unit => this.raw.get(unit.id)).filter((unit): unit is Unit => !!unit),
+      ...towers, ...targets.filter(target => target.attackDamage > 0)].map(source => [source.id, source]));
+    const damage = [...firing.values()].reduce((sum, source) => {
+      const unit = this.situation.units.find(unit => unit.id === source.id), arrival = unit && arrivalAt(unit, arrivalKey);
+      const starts = knownArrival(arrival) ? Math.max(eta ?? 0, arrival.ticks) : eta ?? 0;
+      const ends = unit?.expiresTick === null || unit?.expiresTick === undefined ? (eta ?? 0) + duration
+        : Math.min((eta ?? 0) + duration, unit.expiresTick - s.tick);
+      return sum + source.attackDamage / Math.max(1, source.attackCooldown) * Math.max(0, ends - starts);
+    }, 0);
     cost.push(term('expected-attrition', Math.min(price, price * damage / Math.max(1, exposedHp))
       * (1 - forceSuccessProbability(power, required)), '交战窗口火力暴露与战力比给出的风险估计，非实际死亡归因'));
     const displaced = new Set(borrowed.flatMap(fighter => fighter.unit.commitments.map(item => item.objectiveId).filter((id): id is string => id !== null)));
@@ -351,8 +365,9 @@ class LandModel {
       cost.push(term(`handoff:${oldId}`, Math.max(0, old?.utility.score ?? 0) * Math.min(1, taken / Math.max(1e-6, total)),
         old ? '按被借战力占原承诺的份额估算机会损失；非实际授权' : '原目标效用未知，不能把借调视为已获准'));
     }
-    // Only the incremental exposure from withdrawing this cohort is charged. SiteThreat is supplied
-    // by the common evaluator; no unit is separately forecast as both a responder and a counterraid.
+    // Only the incremental exposure from withdrawing this cohort is charged. SiteThreat is
+    // supplied by the common evaluator. The maximum prices one potential counterraid rather
+    // than adding every site's alternative outcome as if all of them occurred together.
     let exposure = 0;
     for (const threat of s.lands.flatMap(land => land.threats)) {
       const site = this.assets.get(threat.siteId);

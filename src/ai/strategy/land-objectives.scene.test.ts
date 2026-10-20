@@ -57,7 +57,9 @@ describe('land objective observation on L1–L6 contract frames', () => {
       const frame = scene(event!), result = observe(frame);
       const unit = frame.situation.units.find(unit => unit.id === id)!;
       expect(unit.commitments.some(claim => claim.objectiveId === 'DefendSite:player:building-player-townHall-5459')).toBe(true);
+      expect(unit.commitments.some(claim => /mobileCare|retreat/.test(claim.source))).toBe(true);
       expect(result.idle.flatMap(force => force.unitIds)).not.toContain(id);
+      for (const objective of result.objectives) expect(objective.reasons.find(reason => reason.code === 'observation-only-cohort')!.detail).not.toContain(id);
     });
 
   it('L5 keeps overseas mining under its existing parent, including after a caster has landed', () => {
