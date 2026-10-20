@@ -23,6 +23,8 @@ import { V7_WOUNDED_SHARE } from '../policy/v6/general';
 import { expansionGarrisonReady } from './expansion-garrison';
 import { planMiningScreen } from './expansion-mission';
 import { reinforcementCrew } from './reinforcement-ferries';
+import { strategyLeaseAllows } from '../strategy/control';
+import { islandConquestActor } from '../strategy/incumbent-actors';
 
 function permanentLand(unit: Unit) {
   return unit.hp > 0 && !unit.deck && unitMover(unit.kind) === 'land' && unit.expiresTick === undefined
@@ -254,6 +256,7 @@ function conquestCrew(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicy
   const mounted = new Set(options.memory.mounted?.flatMap(job => job.unitIds));
   return snapshot.units.filter(unit => unit.owner === owner && permanentLand(unit) && unit.kind !== 'worker'
     && sameGround(snapshot.map, unit, mine) && !mounted.has(unit.id)
+    && strategyLeaseAllows(options.memory, unit.id, islandConquestActor(task))
     && !isDefenseTaskClaim(activeUnitClaim(snapshot, owner, unit, options)));
 }
 

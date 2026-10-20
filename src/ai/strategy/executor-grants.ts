@@ -1,9 +1,7 @@
 import type { Unit } from '../../shared/types';
-import type { ExecutorFeedback, ExecutorInput, ActionToken } from './allocation-types';
-
-export function sameAction(a: ActionToken, b: ActionToken) {
-  return a.actionId === b.actionId && a.generation === b.generation;
-}
+import type { ExecutorFeedback, ExecutorInput } from './allocation-types';
+import { sameAction } from './control';
+export { sameAction } from './control';
 
 export function validExecutorGrant(input: ExecutorInput) {
   return sameAction(input.execution.token, input.grant.action)
