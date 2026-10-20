@@ -1,4 +1,5 @@
 import type { GameCommand, GameSnapshot, PlayerId, TrainableUnitKind, UnitOrder } from '../../shared/types';
+import type { VoyageRisk } from './voyage-risk';
 import type { ExecutorReason } from '../executor-reasons';
 import type { DecisionFacts } from './decision';
 import type { AssignmentId, AssignmentStage, BudgetEntry, Effect, LandId, Location, Method, MethodId, Objective,
@@ -386,6 +387,9 @@ export type AllocationMethodQuoteInput = Readonly<{
   /** Real current action records, including observed production results. The
    * caller supplies these on each transaction; providers keep no hidden history. */
   executions: readonly ExecutionAction[];
+  /** One deterministic batch, keyed by materialized PlannedVoyage.id; quotes
+   * never advance observation memory themselves. Missing risk stays unknown. */
+  voyageRisks?: ReadonlyMap<string, VoyageRisk>;
   valuation?: ValuationContext;
 }>;
 export interface AllocationMethodProvider {
