@@ -19,6 +19,11 @@ export function threatLandRouter(snapshot: GameSnapshot, unit: Unit, foes: reado
       + ('order' in foe ? foe.speed * THINK_TICKS / SIM_TICKS_PER_SECOND : 0);
     return radius > 0 ? [{ x: foe.x, y: foe.y, radius }] : [];
   });
+  return landDiskRouter(snapshot, unit, disks);
+}
+
+/** One native waypoint router for callers with different observed threat facts. */
+export function landDiskRouter(snapshot: GameSnapshot, unit: Unit, disks: readonly (Point & { radius: number })[]): Router {
   let key = `${unit.id}:${unit.x}:${unit.y}:${unit.radius}:${unit.speed}:${disks.length}`;
   for (const disk of disks) key += `:${disk.x},${disk.y},${disk.radius}`;
   let cache = routers.get(snapshot);
@@ -60,6 +65,6 @@ function straighten(from: Point, path: readonly Point[], clear: (from: Point, to
 
 /** Queued native waypoints preserve the admitted detour rather than replanning straight through cover. */
 export function threatRoadCommands(unit: Unit, road: Road): GameCommand[] {
-  return road.points.slice(1).map((point, index) => ({ type: 'move', unitIds: [unit.id], ...point,
+  return road.points.slice(1).map((point, index) => ({ type: 'move', unitIds: [unit.id], x: point.x, y: point.y,
     avoidCombat: true, queued: index > 0 }));
 }

@@ -2,6 +2,7 @@ import { AI_SCRIPT_LIBRARY, AI_SCRIPT_VERSIONS, SKETCH_RTS_PRESET_AI_STACK, crea
 import { planV2ProdAiCommandEntries } from "./policy-v2prod/core";
 import type { CommandFrameEntry } from "../sdk/commands/frame";
 import type { GameSnapshot, PlayerId } from "../shared/types";
+import { campNavigationContinuations, routeCampNavigation } from './bootstrap_1/camp-navigation';
 import { bootstrapPolicyContext, bootstrapScripts, isBootstrapVersion } from "./bootstrap_1/policy";
 import { planVeteranSkillCommands } from "./veteran-skills";
 import { standingBodies } from "../shared/structure-bodies";
@@ -64,6 +65,7 @@ export function planAiOwnerCommandEntries<Source extends string = string>(snapsh
   };
   if (isBootstrapVersion(version)) {
     return withLandRoadReuse(() => {
+      const previous = campNavigationContinuations(memory);
       const scripts = request.scripts || request.scriptIds ? scriptsForRequest(request, version) : bootstrapScripts(version);
       const context = bootstrapPolicyContext(snapshot, owner, version, {
         ...policyOptions,
@@ -71,7 +73,7 @@ export function planAiOwnerCommandEntries<Source extends string = string>(snapsh
         ...(disabledBehaviors ? { disabledBehaviors } : {}),
         memory,
       });
-      return withVeteranSkills(planAiCommandEntriesFromScripts(snapshot, owner, scripts, context).map(entry => ({
+      return withVeteranSkills(routeCampNavigation(snapshot, owner, context, planAiCommandEntriesFromScripts(snapshot, owner, scripts, context), previous).map(entry => ({
         playerId: owner,
         ...(request.source !== undefined ? { source: request.source } : {}),
         scriptId: entry.scriptId,

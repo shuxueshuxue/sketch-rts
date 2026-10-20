@@ -28,18 +28,29 @@ function closest(point: Point, from: Point, to: Point): Point {
  * possible active pursuit remain separate facts so routes can compare their costs.
  * Reachability uses the same native surface rules at the actual proposed point.
  */
-export function neutralCampRouteContacts(snapshot: GameSnapshot, unit: Unit, road: readonly Point[], options: CampContactOptions = {}): readonly CampContact[] {
+function computeRouteContacts(snapshot: GameSnapshot, unit: Unit, road: readonly Point[], options: CampContactOptions = {}): readonly CampContact[] {
   const facts = options.facts ?? neutralCampExposure(snapshot), contacts: CampContact[] = [];
   if (!road.length) return contacts;
   const at = (point: Point) => ({ ...unit, x: point.x, y: point.y });
   const end = road.at(-1)!;
+  const bounds = road.reduce((box, point) => ({ minX: Math.min(box.minX, point.x), maxX: Math.max(box.maxX, point.x),
+    minY: Math.min(box.minY, point.y), maxY: Math.max(box.maxY, point.y) }), { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity });
   for (const camp of facts.camps) {
+    if (measurement) measurement.camps++;
     if (camp.memberIds.some(id => options.exemptMemberIds?.has(id))) continue;
+    // Native camp reach is the home grouping envelope; activated guards can move
+    // away from it. Include that measured displacement before the broad phase.
+    const displacement = Math.max(0, ...camp.members.map(member => gap(member.point, camp.camp.center)));
+    const radius = Math.max(camp.camp.reach, displacement) + Math.max(0, ...camp.members.map(member => member.pursuitRadius)) + unit.attackRange + unit.radius;
+    if (camp.camp.center.x + radius < bounds.minX || camp.camp.center.x - radius > bounds.maxX
+      || camp.camp.center.y + radius < bounds.minY || camp.camp.center.y - radius > bounds.maxY) continue;
+    if (measurement) measurement.nearCamps++;
     for (let memberIndex = 0; memberIndex < camp.members.length; memberIndex++) {
       const member = camp.members[memberIndex]!, guard = camp.camp.creeps[memberIndex]!;
       const add = (reason: CampContact['reason'], point: Point, radius: number, segment: number, playerAttacks = false) => {
         const distance = gap(member.point, point);
         if (distance > radius) return;
+        if (measurement) measurement.reachQueries++;
         const patient = at(point);
         if (!canReach(snapshot.map, playerAttacks ? patient : guard, playerAttacks ? guard : patient, snapshot.units)) return;
         contacts.push(Object.freeze({ camp, memberId: member.id, reason, point: Object.freeze({ ...point }),
@@ -64,6 +75,20 @@ export function neutralCampRouteContacts(snapshot: GameSnapshot, unit: Unit, roa
     }
   }
   return Object.freeze(contacts);
+}
+
+export type NeutralCampContactMeasurement = { calls: number; elapsedMs: number; camps: number; nearCamps: number; reachQueries: number };
+let measurement: NeutralCampContactMeasurement | undefined;
+/** Opt-in profiling outside policy state; the ordinary path never reads the clock. */
+export function withNeutralCampContactMeasurement<T>(run: () => T): { result: T; measurement: NeutralCampContactMeasurement } {
+  const previous = measurement, own = { calls: 0, elapsedMs: 0, camps: 0, nearCamps: 0, reachQueries: 0 };
+  measurement = own;
+  try { return { result: run(), measurement: own }; } finally { measurement = previous; }
+}
+export function neutralCampRouteContacts(snapshot: GameSnapshot, unit: Unit, road: readonly Point[], options: CampContactOptions = {}): readonly CampContact[] {
+  if (!measurement) return computeRouteContacts(snapshot, unit, road, options);
+  const start = performance.now(); measurement.calls++;
+  try { return computeRouteContacts(snapshot, unit, road, options); } finally { measurement.elapsedMs += performance.now() - start; }
 }
 
 export function neutralCampPointContacts(snapshot: GameSnapshot, unit: Unit, point: Point, options: CampContactOptions = {}) {

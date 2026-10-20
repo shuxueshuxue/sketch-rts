@@ -68,6 +68,9 @@ function productionWaveSupply(snapshot: GameSnapshot, owner: PlayerId, options: 
 
 // One pending construction of each kind: a walking colony builder does not lock home tech.
 const constructBootstrap: typeof issueV6Construction = (economy, kind, point, used, play) => {
+  if (Object.values(economy.options.memory.unitClaims).some(claim => claim.campTravel?.command.type === 'build'
+    && claim.campTravel.command.buildingKind === kind)) return undefined;
+  economy = { ...economy, workers: economy.workers.filter(worker => !economy.options.memory.unitClaims[worker.id]?.campTravel) };
   if (used.size || economy.workers.some(worker => worker.order.type === 'build' && worker.order.buildingKind === kind)) return undefined;
   // Let miners deliver their current load, then reuse free builders before interrupting a five-worker lane.
   const ready = availableV6ConstructionWorkers(economy, point, used).filter(worker => worker.carryingGold === 0);

@@ -189,6 +189,22 @@ export function buildAiPlanTrace(snapshot: GameSnapshot, owner: PlayerId, memory
     }, parent);
   }
 
+  const navigationGroups = new Map<string, { ids: string[]; travel: NonNullable<AiPolicyMemory['unitClaims'][string]['campTravel']> }>();
+  for (const [id, claim] of claims) if (claim.campTravel) {
+    const travel = claim.campTravel, key = travel.subgoal?.id ?? `${travel.scriptId}:${JSON.stringify(travel.stop)}`;
+    const group = navigationGroups.get(key) ?? { ids: [], travel }; group.ids.push(id); navigationGroups.set(key, group);
+  }
+  for (const [key, { ids, travel }] of navigationGroups) {
+    const dependency = travel.subgoal;
+    add({ id: `navigation:${key}`, kind: 'task', label: dependency ? '先清除行军阻碍' : '按安全拐点行军', source: 'unitClaims.campTravel',
+      status: dependency?.status === 'blocked' ? 'blocked' : 'active', target: target(undefined, dependency?.target?.point ?? travel.stop),
+      sinceTick: travel.sinceTick, resources: { unitIds: units(ids), gold: { reserved: null, required: null } },
+      reasons: [reason(dependency ? 'clear-camp-prerequisite' : 'camp-detour',
+        `父行动 ${travel.scriptId}/${travel.command.type} 保留；延误代价 ${travel.delayGold.toFixed(1)} 金，暴露代价 ${travel.exposureGold.toFixed(1)} 金`, 'unitClaims.campTravel')],
+      requirements: dependency?.demands.map(demand => ({ code: demand.kind, detail: JSON.stringify(demand), met: dependency.status !== 'blocked' })) ?? [],
+    });
+  }
+
   const naval = memory.naval;
   const first = naval?.firstCombatDelivery;
   if (first) {

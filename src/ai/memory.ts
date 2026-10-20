@@ -1,4 +1,4 @@
-import type { ItemKind, PlayerId } from "../shared/types";
+import type { GameCommand, ItemKind, PlayerId } from "../shared/types";
 
 export type AiJobState = {
   id: string;
@@ -8,7 +8,7 @@ export type AiJobState = {
 };
 
 export type AiPolicyUnitClaimKind = "mercenary" | "creep" | "expansion" | "attack" | "harass" | "retreat" | "build"
-  | "mineRally" | "mineLeash" | "mineGuard" | "workerSafety" | "expansionGarrison" | "expansionMission" | "harassSquad";
+  | "mineRally" | "mineLeash" | "mineGuard" | "workerSafety" | "expansionGarrison" | "expansionMission" | "harassSquad" | "campTravel";
 
 export type WorkerEvacuation = { origin: { x: number; y: number }; resourceId?: string;
   shelter: { x: number; y: number }; safeResourceId?: string };
@@ -30,6 +30,10 @@ export type AiPolicyUnitClaim = {
   expansionMineId?: string;
   // Healthy soldiers cover construction temporarily; recovering guards keep the post after healing.
   garrisonTemporary?: boolean;
+  /** Actual queued navigation, and the parent action it will resume. No second ownership roster. */
+  campTravel?: { scriptId: string; command: GameCommand; stop: { x: number; y: number }; sinceTick: number;
+    delayGold: number; exposureGold: number; resumeClaim?: Omit<AiPolicyUnitClaim, 'campTravel'>; clearingIds?: string[]; subgoal?: import('./strategy/types').Subgoal };
+
 };
 
 export type AiStrategicPlan = {

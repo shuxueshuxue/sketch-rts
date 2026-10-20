@@ -33,7 +33,11 @@ function runScriptsWithContext(snapshot: GameSnapshot, owner: PlayerId, scripts:
   const economyScripts = policyOptions.policyMode === "combat" ? [] : scripts.filter((candidate) => candidate.phase === "economy");
 
   // @@@combat-policy-mode - Combat benchmarks exercise shared tactical scripts without economy, base-building, or map-control commands polluting the signal.
-  const pendingCost = snapshot.units.reduce((total, unit) => total + (unit.owner === owner && unit.order.type === "build" ? BUILDING_DEFS[unit.order.buildingKind].cost : 0), 0);
+  const pendingCost = snapshot.units.reduce((total, unit) => total + (unit.owner === owner && unit.order.type === "build" ? BUILDING_DEFS[unit.order.buildingKind].cost : 0), 0)
+    + snapshot.units.reduce((sum, unit) => {
+      const command = policyOptions.memory.unitClaims[unit.id]?.campTravel?.command;
+      return sum + (unit.owner === owner && unit.order.type !== 'build' && command?.type === 'build' ? BUILDING_DEFS[command.buildingKind].cost : 0);
+    }, 0);
   const economySnapshot = pendingCost ? withAiGoldBudget(snapshot, owner, Math.max(0, snapshot.players[owner]!.gold - pendingCost)) : snapshot;
   const navalReserve = navalBudgetReserve(economySnapshot, owner, policyOptions);
   const shopReserve = shopErrandCost(economySnapshot, owner, policyOptions) ?? 0;

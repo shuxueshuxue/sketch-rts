@@ -1,3 +1,5 @@
+import { campPrerequisite } from './camp-prerequisite';
+import { campNavigationContinuations, routeCampNavigation } from './camp-navigation';
 import { canResearchAt, UNIT_DEFS, UPGRADE_DEFS, requiredSupplyCap, trainingBuildingFor, unitMover } from '../../shared/catalog';
 import { shopping } from './shopping';
 import type { BootstrapAiVersion, GameSnapshot, PlayerId, PlayerState, Unit } from '../../shared/types';
@@ -132,7 +134,29 @@ function supportWants(snapshot: GameSnapshot, owner: PlayerId, version: Bootstra
   if (foes.filter(unit => UNIT_DEFS[unit.kind].abilities.includes('charge')).length >= 4
     || version === 'v9_summoner' && foes.some(unit => UNIT_DEFS[unit.kind].weapon?.delivery === 'shell'
       || UNIT_DEFS[unit.kind].weapon?.maxHits! > 1)) counters.push({ unit: grove ? 'lancer' : 'ashWarden', count: 4, priority: 64 });
-  const guard = expansionGuardWant(snapshot, owner, version, options);
+  const strategies = BOOTSTRAP_DOCTRINES[version].filter(strategy => strategy.race === snapshot.players[owner]!.race);
+  const doctrine = strategies.find(strategy => strategy.id === options.memory.v6?.doctrine?.strategyId) ?? strategies[0]!;
+  const dependencies = new Map<string, { ids: string[]; members: string[] }>();
+  for (const [id, claim] of Object.entries(options.memory.unitClaims)) {
+    const travel = claim.campTravel;
+    if (!travel?.clearingIds?.length) continue;
+    const key = travel.clearingIds.join(',');
+    const task = dependencies.get(key) ?? { ids: [], members: travel.clearingIds };
+    task.ids.push(id); dependencies.set(key, task);
+  }
+  const camps = neutralCamps(snapshot);
+  const missing = Math.max(0, ...[...dependencies.values()].map(task => {
+    const camp = camps.find(camp => camp.creeps.some(unit => task.members.includes(unit.id)));
+    if (!camp) return 0;
+    const crew = snapshot.units.filter(unit => task.ids.includes(unit.id));
+    return forceFor(camp) - creepForce(crew, camp);
+  }));
+  const standIn = doctrine.standIn, definition = UNIT_DEFS[standIn];
+  const rating = combatRating({ kind: standIn, hp: definition.hp, maxHp: definition.hp, attackDamage: definition.attackDamage,
+    attackCooldown: definition.attackCooldown } as Unit);
+  const prerequisite: V6Want[] = missing > 0 ? [{ unit: standIn,
+    count: army.filter(unit => unit.kind === standIn).length + Math.ceil(missing / Math.max(.1, rating)), priority: 81 }] : [];
+  const guard = [...expansionGuardWant(snapshot, owner, version, options), ...prerequisite];
   const expansion = roomExpansionTarget(snapshot, owner, army);
   if (army.length < 10) return { wants: [...(expansion ? [{ bases: expansion, priority: 76 }] : []), ...guard, ...counters, ...medical, ...mounted], guard };
   const main = version === 'v9_knight' ? (grove ? 'knight' : 'ashChieftain')
@@ -164,7 +188,7 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
     if (script === AI_SCRIPT_LIBRARY.shopping) return [shopping];
     if (script === AI_SCRIPT_LIBRARY.battlefield) return [campRecovery, frontRecovery, miningRally, miningLeash, expansionGarrison, mountedField, script];
     if (script === AI_SCRIPT_LIBRARY.v6General) return [
-      summonedRaids,
+      campPrerequisite, summonedRaids,
       { ...AI_SCRIPT_LIBRARY.v6Closeout, run: planBootstrapCloseout },
       { ...script, run: planBootstrapGeneral, onCommands: recordMiningGeneralCommands,
         claimsUnits(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
@@ -199,7 +223,12 @@ export function bootstrapScripts(version: BootstrapAiVersion) {
 }
 
 export function planBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion, options: AiPolicyContext) {
-  return withLandRoadReuse(() => planAiCommandEntriesFromScripts(snapshot, owner, bootstrapScripts(version), bootstrapPolicyContext(snapshot, owner, version, options)));
+  return withLandRoadReuse(() => {
+    const previous = campNavigationContinuations(options.memory);
+    const context = bootstrapPolicyContext(snapshot, owner, version, options);
+    const entries = planAiCommandEntriesFromScripts(snapshot, owner, bootstrapScripts(version), context);
+    return routeCampNavigation(snapshot, owner, context, entries, previous);
+  });
 }
 
 export function researchPrerequisites(wants: readonly V6Want[], player: PlayerState): V6Want[] {

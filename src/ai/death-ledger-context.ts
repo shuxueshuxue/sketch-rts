@@ -55,6 +55,11 @@ export function deathTaskIndex(snapshot: GameSnapshot, owner: PlayerId, memory: 
         .find(camp => camp.creeps.some(unit => unit.id === target.id))?.creeps.map(unit => unit.id) ?? [] : [];
     }
     add([id], claimedTask);
+    const travel = claim.campTravel;
+    if (travel?.subgoal?.status === 'active' && travel.clearingIds) add([id], {
+      ...task(travel.subgoal.id, 'clear-camp', travel.clearingIds[0], 'engage', 'unitClaims.campTravel.subgoal', true, true),
+      clearingTargetIds: [...travel.clearingIds],
+    }, true);
     if (claim.expansionMineId) add([id], task(`expansion:${claim.expansionMineId}`, 'expansion', claim.expansionMineId,
       memory.landExpansion?.stage, 'unitClaims.expansionMineId', true));
   }
