@@ -4,6 +4,7 @@ import { workerEscapeDestination, workerThreatAt } from '../../bootstrap_1/worke
 import { neutralCampExposure } from '../../situation/neutral-camp-exposure';
 import type { ExecutorFeedback, ExecutorInput, SafetyBlockedQuote, SafetyObstacle, AllocationReason } from '../allocation-types';
 import { executorFeedback, grantedUnits, sameAction, validExecutorGrant } from '../executor-grants';
+import { strategyTeamOptions } from '../ownership';
 
 const reason = (code: string, factIds: readonly string[] = []): AllocationReason => ({ code, factIds, values: {} });
 
@@ -12,7 +13,8 @@ const reason = (code: string, factIds: readonly string[] = []): AllocationReason
 export function observeWorkerSafetyInterruption(input: ExecutorInput): ExecutorFeedback | null {
   if (!validExecutorGrant(input)) return null;
   const { snapshot, owner, grant, execution } = input;
-  const foes = armedFoes(snapshot, owner, {}).filter(foe => !('order' in foe && (foe.deck || foe.cabin)));
+  const options = strategyTeamOptions(snapshot);
+  const foes = armedFoes(snapshot, owner, options).filter(foe => !('order' in foe && (foe.deck || foe.cabin)));
   const commands: ExecutorFeedback['commands'][number][] = [], blocked: SafetyBlockedQuote[] = [];
   for (const worker of grantedUnits(input).filter(unit => unit.kind === 'worker' && !unit.deck && !unit.cabin && !unit.garrison)) {
     const order = grant.orders.find(order => order.unitId === worker.id && order.purpose === 'task'
@@ -41,7 +43,7 @@ export function observeWorkerSafetyInterruption(input: ExecutorInput): ExecutorF
         to: { point: { x: segment.at(-1)!.x, y: segment.at(-1)!.y } },
         reason: reason('worker-current-steering-segment-exposed', threats.map(foe => foe.id)) },
     ];
-    const escape = workerEscapeDestination(snapshot, owner, worker, foes, {});
+    const escape = workerEscapeDestination(snapshot, owner, worker, foes, options);
     if (escape) commands.push({ command: { type: 'move', unitIds: [worker.id], ...escape.shelter, avoidCombat: true }, purpose: 'life-saving' });
     const why = reason(escape ? 'parent-action-interrupted-by-worker-safety' : 'worker-safety-has-no-safe-escape', threats.map(foe => foe.id));
     blocked.push({ id: `${execution.token.actionId}:${execution.token.generation}:safety:${worker.id}`,
