@@ -142,3 +142,9 @@ A100 / Node v22.23.3；固定 main 的真实15分钟完整帧，逐席位执行�
 ## 原始证据包
 
 [完整证据指针](death-ledger-routes.evidence.json)对应 A100 内容寻址包，SHA-256 `0d1e7d4c7a57ac831793147a7daa5477e4d852181b1743b2f9d64f28159a67f6`，309,879,222 字节。用 `bin/sketch evidence get docs/ai/objectives/death-ledger-routes.evidence.json` 取回；内含同配置11图的原始对照与候选、修正指标的22组同流观测及22组原生命令回放、逐条双向翻转、因果干预帧、两轮ABBA和完整测试日志。代码来源为上述冻结SHA，文档补录不改变模拟结果。
+
+### 可复用的观测入口
+
+`npx tsx scripts/ai-objective-metrics.ts <不可变源码目录> <case.json> <输出目录> observe` 重新运行同一配置，仅观测 `objectiveMilestones` 的扩张、显式夺岛清营、对敌出击分列；同时输出五项SHA、账本及最终checksum。此脚本的阶段归属来自现有任务记忆，明确标记 inferred，计时不用于上文纯planner ABBA。`case.json` 使用 `AiGameRunInput`，含 `source`、`thinkInterval` 和 `maxTicks`。原生自动索敌可能没有显式清营命令，因此清营的最终两列以如下回放为准。
+
+`npx tsx scripts/ai-objective-clearing-replay.ts <不可变源码目录> <原导出目录> <输出.json>` 读取原始 `initial.json / summary.json / commands.jsonl.gz / traces.jsonl.gz`，逐tick执行保存的命令，不运行AI。它记录目标营原生接敌/清空和其他参与席位，只有本方接敌过才计入本方清空；最终snapshot/canonical/checksum有一项不一致即失败退出。组合观测的 `firstExpansion / firstEnemySortie` 与回放的 `firstIslandClearAttackOrder / firstIslandClearComplete`，不再输出旧650范围“出击”代理。
