@@ -1,3 +1,4 @@
+import { assignedConstruction } from './construction-assignment';
 import { garrisonRoomFor } from "../../shared/tower-garrison";
 import { ABILITY_DEFS, BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS } from "../../shared/catalog";
 import type { GameCommand, GameSnapshot, PlayerId } from "../../shared/types";
@@ -34,7 +35,10 @@ function runScriptsWithContext(snapshot: GameSnapshot, owner: PlayerId, scripts:
   const economyScripts = policyOptions.policyMode === "combat" ? [] : scripts.filter((candidate) => candidate.phase === "economy");
 
   // @@@combat-policy-mode - Combat benchmarks exercise shared tactical scripts without economy, base-building, or map-control commands polluting the signal.
-  const pendingCost = snapshot.units.reduce((total, unit) => total + (unit.owner === owner && unit.order.type === "build" ? BUILDING_DEFS[unit.order.buildingKind].cost : 0), 0);
+  const pendingCost = snapshot.units.reduce((total, unit) => {
+    const site = unit.owner === owner ? assignedConstruction(snapshot, unit, policyOptions.memory) : undefined;
+    return total + (site ? BUILDING_DEFS[site.buildingKind].cost : 0);
+  }, 0);
   const economySnapshot = pendingCost ? withAiGoldBudget(snapshot, owner, Math.max(0, snapshot.players[owner]!.gold - pendingCost)) : snapshot;
   const navalReserve = navalBudgetReserve(economySnapshot, owner, policyOptions);
   const shopReserve = shopErrandCost(economySnapshot, owner, policyOptions) ?? 0;

@@ -5,6 +5,7 @@ import { CommandFrameRuntime } from '../shared/sim/command-frame-runtime';
 import { createAiRuntime, createPresetAiRuntimeFramePlanner } from './runtime';
 import { planAiOwnerCommandEntries } from './planner-context';
 import { miningJobSafety } from './bootstrap_1/mining-job-defense';
+import { createAiThinkClientExecutor } from './think-worker/client';
 import { createAiThinkHost } from './think-worker/host';
 import type { AiThinkMessage, AiThinkReply } from './think-worker/protocol';
 
@@ -69,4 +70,29 @@ it('does not deliver an older rescue order after an accepted player override dur
   const delivery=runtime.completeAndApply([]);
   expect(delivery?.commands??[]).toEqual([]);
   expect(game.units.find(unit=>unit.id==='builder')!.order).toMatchObject({type:'move',x:600,y:600});
+});
+
+
+it('cancels delayed rescue delivery and forwards the override across the copied client/host channel',()=>{
+  const game=start(),ai=createAiRuntime(['us'],{version:'v9_archer',policyMode:'combat'});
+  const host=createAiThinkHost(),inbox:AiThinkReply[]=[],sent:AiThinkMessage[]=[];
+  const executor=createAiThinkClientExecutor(ai,game,{
+    send(message){const copy=structuredClone(message);sent.push(copy);
+      if(copy.type==='open')host.open(copy,reply=>inbox.push(structuredClone(reply)));
+      else if(copy.type==='think')host.think(copy);else host.close(copy);},
+    drain(){return inbox.splice(0);},close(){},
+  },'copied-rescue');
+  const planner=createPresetAiRuntimeFramePlanner(game,ai,{executor,commandDelayTicks:5});
+  const runtime=new CommandFrameRuntime({game,roomId:'copied-rescue',rejectionLabel:'test',aiPlanner:planner});
+  runtime.completeAndApply([]);
+  game.tick=1;
+  const command={type:'move' as const,unitIds:['builder'],x:600,y:600};
+  runtime.completeAndApply([{playerId:'us',command}]);
+  game.units=game.units.filter(unit=>unit.id!=='raider');game.tick=5;
+  expect(runtime.completeAndApply([])?.commands??[]).toEqual([]);
+  game.tick=15;runtime.completeAndApply([]);
+  const last=sent.filter((message):message is Extract<AiThinkMessage,{type:'think'}>=>message.type==='think').at(-1)!;
+  expect(last.requests[0]!.overridingCommands).toEqual([command]);
+  game.tick=20;
+  expect(runtime.completeAndApply([])?.commands??[]).toEqual([]);
 });

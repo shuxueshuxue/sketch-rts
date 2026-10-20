@@ -50,3 +50,24 @@ it('allows the normal economy to dispatch to the same point on the next think af
   expect(economicThink().map(entry=>entry.command)).toContainEqual(farm);
   expect(memory.unitClaims.builder?.evacuation?.continuation).toBeUndefined();
 });
+
+it('keeps the same unpaid construction budget for native and retained responsibility, and releases it on cancellation',async()=>{
+  const {runAiCommandEntriesFromScripts}=await import('./script-runner');
+  const game=sketchScene('construction-budget').map('bareDuel').replaceDefaults().player('us')
+    .townHall('us',500,500).unit('us','worker',600,500,{id:'builder'}).build().createGame();
+  game.players.us!.gold=500;
+  const worker=game.units.find(unit=>unit.id==='builder')!,memory=createAiPolicyMemory();
+  const parent={type:'build' as const,unitId:worker.id,buildingKind:'townHall' as const,x:1500,y:1500};
+  const received:number[]=[];
+  const scripts=[{id:'budget-consumer',phase:'economy' as const,run(snapshot:ReturnType<typeof snapshotGame>){received.push(snapshot.players.us!.gold);return [];}}];
+  worker.order=parent;
+  runAiCommandEntriesFromScripts(snapshotGame(game),'us',scripts,{memory});
+  worker.order={type:'idle'};
+  memory.unitClaims[worker.id]={kind:'workerSafety',targetId:worker.id,x:600,y:500,sinceTick:0,expiresTick:1,
+    evacuation:{origin:{x:600,y:500},shelter:{x:600,y:500},continuation:{parent,phase:'life-saving-interruption',sinceTick:0,threatIds:[],binding:[]}}};
+  runAiCommandEntriesFromScripts(snapshotGame(game),'us',scripts,{memory});
+  recordWorkerCommandOverrides(snapshotGame(game),memory,[{type:'move',unitIds:[worker.id],x:700,y:500}]);
+  runAiCommandEntriesFromScripts(snapshotGame(game),'us',scripts,{memory});
+  expect(received).toEqual([100,100,500]);
+  expect(game.players.us!.gold).toBe(500);
+});
