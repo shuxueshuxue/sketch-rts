@@ -25,6 +25,7 @@ import { planMiningScreen } from './expansion-mission';
 import { reinforcementCrew } from './reinforcement-ferries';
 import { strategyLeaseAllows } from '../strategy/control';
 import { islandConquestActor } from '../strategy/incumbent-actors';
+import { bindIncumbentCommands } from '../strategy/incumbent-command-source';
 
 function permanentLand(unit: Unit) {
   return unit.hp > 0 && !unit.deck && unitMover(unit.kind) === 'land' && unit.expiresTick === undefined
@@ -280,9 +281,10 @@ export function islandConquestCommands(snapshot: GameSnapshot, owner: PlayerId, 
     delete state.general;
     if (!task.combat?.creep) delete state.creep;
     if (!task.combat?.creepRetry) delete state.creepRetry;
-    const mission = { ...options, executorTaskId: `island:${task.mineId}:${task.sinceTick}`, memory: { ...options.memory, v6: state } };
-    commands.push(...planMiningScreen(snapshot, owner, mission, intel, task,
-      crew.filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0)));
+    const actor = islandConquestActor(task);
+    const mission = { ...options, strategyActor: actor, executorTaskId: `island:${task.mineId}:${task.sinceTick}`, memory: { ...options.memory, v6: state } };
+    commands.push(...bindIncumbentCommands(planMiningScreen(snapshot, owner, mission, intel, task,
+      crew.filter(unit => !isBacklineKind(unit) && unit.attackDamage > 0)), actor));
     task.combat = { ...(state.creep ? { creep: state.creep } : {}), ...(state.creepRetry ? { creepRetry: state.creepRetry } : {}) };
     for (const unit of crew) unitIds.add(unit.id);
   }
