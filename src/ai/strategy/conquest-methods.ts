@@ -1,27 +1,19 @@
-import { BUILDING_DEFS, UNIT_DEFS, unitMover } from '../../shared/catalog';
-import { combatCapability } from '../../shared/combat-capabilities';
-import { GOLD_MINE_RULES } from '../../shared/mining';
+import { BUILDING_DEFS, unitMover } from '../../shared/catalog';
 import { bodyMass } from '../../shared/physical-body';
-import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { Unit } from '../../shared/types';
-import { distance } from '../policy/spatial';
 import { assessAllocatedForce } from './allocated-force';
 import type { AllocationMethodProvider, AllocationMethodQuoteInput, AllocationPrecondition, AllocationReason,
-  AllocationUtility, ExecutableMethod, ForceQuotation, PlannedVoyage } from './allocation-types';
-import { arrivalWeightedForce } from './arrival-force';
+  ExecutableMethod, PlannedVoyage } from './allocation-types';
 import { materializeVoyages } from './materialize-voyages';
-import { landIdAt } from './regions';
+import { materializeMiningWorkforce } from './materialize-mining-workforce';
+import { conquestFacts, conquestHallAt } from './conquest-facts';
+import { quoteConquestMethod } from './conquest-quotation';
 import { strategicTargetCamp } from './target-camp';
 import type { ResourceDemand, Target } from './types';
-import { unitArrival } from './unit-arrivals';
-import { discountGold, forceSuccessProbability, forceTimeGold } from './utility';
+import { defenseMethodProvider } from './defense-methods';
 
 const reason = (code: string, factIds: readonly string[] = [], values: AllocationReason['values'] = {}): AllocationReason => ({ code, factIds, values });
 const ids = (units: readonly Unit[]) => units.map(unit => unit.id).sort();
-function hallAt(input: Pick<AllocationMethodQuoteInput, 'snapshot' | 'situation' | 'objective'>) {
-  return input.snapshot.buildings.find(building => building.owner === input.situation.owner && building.hp > 0 && building.kind === 'townHall'
-    && landIdAt(input.snapshot.map, building) === input.objective.target.landId && distance(building, input.objective.target.point) <= GOLD_MINE_RULES.baseRange);
-}
 function forceDemand(input: Pick<AllocationMethodQuoteInput, 'snapshot' | 'objective'>): ResourceDemand {
   const camp = input.objective.kind === 'ConquerIsland' ? strategicTargetCamp(input.snapshot, input.objective.target) : undefined;
   const required = camp ? assessAllocatedForce(input.objective.owner, [], { metric: 'camp-force', camp }).requiredForce
@@ -40,7 +32,7 @@ export const conquestMethodProvider: AllocationMethodProvider = {
     const { objective, snapshot } = input;
     if (objective.kind !== 'ConquerIsland' && objective.kind !== 'ReinforceFront') return [];
     const conquest = objective.kind === 'ConquerIsland', id = `${objective.id}/method:${conquest ? 'staged-beachhead' : 'cross-sea-reinforcement'}`;
-    const demand = forceDemand(input), camp = conquest ? strategicTargetCamp(snapshot, objective.target) : undefined, hall = hallAt(input);
+    const demand = forceDemand(input), camp = conquest ? strategicTargetCamp(snapshot, objective.target) : undefined, hall = conquestHallAt(input);
     const priorClear = input.executions.find(execution => execution.methodId === id && execution.intent.kind === 'clear-camp');
     const priorBuild = input.executions.find(execution => execution.methodId === id && execution.executor === 'strategy.build-hall');
     const retainBuild = priorBuild && !['complete', 'failed', 'abandoned'].includes(priorBuild.status);
@@ -83,7 +75,9 @@ export const conquestMethodProvider: AllocationMethodProvider = {
     let latestArrival = 0;
     const stepKinds = new Map(method.actions.map(step => [step.id, step.executor]));
     const replaced = new Map<string, readonly string[]>();
-    for (const step of method.actions.filter(step => step.executor !== 'strategy.train-transport' && step.executor !== 'strategy.assemble')) {
+    const miningTerminal = `${method.id}/start-mining`;
+    for (const step of method.actions.filter(step => step.executor !== 'strategy.train-transport' && step.executor !== 'strategy.assemble'
+      && step.executor !== 'strategy.train-worker' && (step.executor !== 'strategy.start-mining' || step.id === miningTerminal))) {
       if (step.executor === 'strategy.transport') {
         const members = step.intent.kind === 'deliver-workers' ? workers : fighters;
         const plan = materializeVoyages(input, step.id, ids(members));
@@ -108,71 +102,28 @@ export const conquestMethodProvider: AllocationMethodProvider = {
     }
     const dependencies = (id: string): readonly string[] => replaced.has(id) ? replaced.get(id)!.flatMap(dependencies) : [id];
     const final = [...new Map(actions.map(step => [step.id, { ...step, dependsOn: [...new Set(step.dependsOn.flatMap(dependencies))] }])).values()];
-    return { ...method, actions: final, voyagePlans: voyages, estimatedTicks: latestArrival,
+    const planned = { ...method, actions: final, voyagePlans: voyages, estimatedTicks: latestArrival,
       spends: [...new Map(spends.map(spend => [spend.spendId, spend])).values()],
-      preconditions: [...method.preconditions.filter(condition => !condition.id.includes('/materialized:')), ...missing.map(condition => ({ ...condition,
+      preconditions: [...method.preconditions.filter(condition => !condition.id.includes('/materialized:') && !condition.id.includes('/workforce:')), ...missing.map(condition => ({ ...condition,
         id: `${method.id}/materialized:${condition.id}` }))] };
+    if (input.objective.kind !== 'ConquerIsland') return planned;
+    const facts = conquestFacts({ ...input, method: planned });
+    const workforce = materializeMiningWorkforce({ ...input, method: { ...planned,
+      actions: [...planned.actions, ...method.actions.filter(action => action.executor === 'strategy.train-worker')] } }, facts.forecast,
+      miningTerminal, planned.actions.find(action => action.executor === 'strategy.build-hall')?.id ?? null, `${method.id}/garrison`);
+    return { ...planned, actions: [...planned.actions.filter(action => action.id !== miningTerminal), ...workforce.actions],
+      spends: [...new Map([...planned.spends, ...workforce.spends].map(spend => [spend.spendId, spend])).values()],
+      preconditions: [...planned.preconditions, ...workforce.missing.map(condition => ({ ...condition, id: `${method.id}/workforce:${condition.id}` }))] };
   },
   quote(input) {
-    const { snapshot, situation, objective, method } = input, requested = new Set(input.unitIds);
-    const raw = snapshot.units.filter(unit => unit.owner === situation.owner && unit.hp > 0 && requested.has(unit.id));
-    const fighters = raw.filter(unit => unitMover(unit.kind) === 'land' && unit.kind !== 'worker' && unit.attackDamage > 0 && unit.expiresTick === undefined);
-    const camp = objective.kind === 'ConquerIsland' ? strategicTargetCamp(snapshot, objective.target) : undefined, demand = forceDemand(input);
-    const requiredForce = demand.kind === 'force' ? demand.strength : 1;
-    const assessment = (group: readonly Unit[]) => assessAllocatedForce(situation.owner, group,
-      camp ? { metric: 'camp-force', camp } : { metric: 'field-strength', requiredForce });
-    const total = assessment(fighters), onStation: Unit[] = [], enRoute: { unit: Unit; etaTicks: number }[] = [], unknown: string[] = [], unavailable: string[] = [];
-    const facts = new Map(situation.units.map(unit => [unit.id, unit]));
-    let latest = 0;
-    for (const unit of fighters) {
-      const fact = facts.get(unit.id);
-      if (fact?.location.kind === 'land' && fact.location.landId === objective.target.landId && distance(unit, objective.target.point) <= 650) { onStation.push(unit); continue; }
-      const arrival = fact && unitArrival(fact, objective.target.entityId ?? '');
-      if (!arrival || arrival.status === 'unknown') { unknown.push(unit.id); continue; }
-      if (!('ticks' in arrival)) { unavailable.push(unit.id); continue; }
-      enRoute.push({ unit, etaTicks: arrival.ticks }); latest = Math.max(latest, arrival.ticks);
-    }
-    latest = Math.max(latest, method.estimatedTicks ?? 0);
-    const weighted = arrivalWeightedForce(onStation, enRoute, situation.horizonTicks, group => assessment(group).force);
-    const force: ForceQuotation = { metric: camp ? 'camp-force' : 'field-strength', target: objective.target,
-      onStationUnitIds: ids(onStation), enRouteUnitIds: enRoute.map(entry => entry.unit.id), unavailableUnitIds: unavailable, unknownUnitIds: unknown,
-      onStationForce: weighted.onStationForce, effectiveForce: weighted.effectiveForce, discountedEnRouteForce: weighted.discountedEnRouteForce,
-      requiredForce, evaluationUntilTick: situation.tick + situation.horizonTicks };
-    const missing: AllocationPrecondition[] = method.preconditions.filter(condition => condition.status !== 'met')
-      .map(condition => ({ ...condition, reason: reason(condition.reason.code) }));
-    const add = (code: string, kind: AllocationPrecondition['kind'], factIds: readonly string[] = []) => missing.push({ id: `${method.id}/${code}`, kind,
-      status: code.includes('unknown') ? 'unknown' : 'unmet', reason: reason(code, factIds), demand, subgoalIds: [] });
-    if (raw.length !== requested.size) add('allocated-member-no-longer-present', 'force');
-    if (!total.sufficient) add('insufficient-assembled-clearing-force', 'force', ids(fighters));
-    if (unknown.length) add('clearing-route-unknown', 'route', unknown);
-    if (unavailable.length) add('clearing-route-unreachable', 'route', unavailable);
-    if (objective.kind === 'ConquerIsland' && !hallAt(input)?.complete && !raw.some(unit => unit.kind === 'worker')) add('no-allocated-construction-worker', 'workers');
-    const dps = fighters.reduce((sum, unit) => sum + combatCapability(snapshot, unit).dps, 0);
-    const combatTicks = camp && dps > 0 ? Math.ceil(camp.creeps.reduce((sum, unit) => sum + unit.hp, 0) / dps * SIM_TICKS_PER_SECOND) : 0;
-    const gatherTicks = 2 * SIM_TICKS_PER_SECOND, duration = latest + gatherTicks + combatTicks;
-    const enemyDps = camp?.creeps.reduce((sum, unit) => sum + combatCapability(snapshot, unit).dps, 0) ?? 0;
-    const expectedLossFraction = Math.min(1, enemyDps * combatTicks / SIM_TICKS_PER_SECOND / Math.max(1, fighters.reduce((sum, unit) => sum + unit.hp, 0)));
-    const attrition = fighters.reduce((sum, unit) => sum + UNIT_DEFS[unit.kind].cost, 0) * expectedLossFraction;
-    const source = objective.conditionalQuote?.potentialUtility ?? objective.utility;
-    const mine = situation.assets.find(asset => asset.id === objective.target.entityId), hall = hallAt(input);
-    const benefit = objective.kind === 'ConquerIsland' && mine ? [
-      { code: 'island-income', value: discountGold(mine.discountedValueGold, duration) },
-      { code: 'new-site-asset', value: hall ? 0 : BUILDING_DEFS.townHall.cost },
-      { code: 'hall-after-clearing', value: hall ? 0 : -BUILDING_DEFS.townHall.cost },
-    ] : source.benefit.map(term => ({ code: term.code, value: discountGold(term.value, duration) }));
-    const cost = [...source.cost.filter(term => !['force-time', 'new-transport', 'camp-attrition'].includes(term.code)).map(term => ({ code: term.code, value: term.value })),
-      { code: 'force-time', value: forceTimeGold(assessAllocatedForce(situation.owner, fighters, { metric: 'field-strength', requiredForce: 0 }).force, duration) },
-      { code: 'new-transport', value: method.spends.filter(spend => spend.includedUtilityTermCodes.includes('new-transport'))
-        .reduce((sum, spend) => sum + Math.max(0, spend.amountGold - input.budgets.filter(budget => budget.spendId === spend.spendId)
-          .reduce((paid, budget) => Math.max(paid, budget.paidGold), 0)), 0) },
-      { code: 'camp-attrition', value: attrition }];
-    const probability = forceSuccessProbability(total.force, requiredForce);
-    const utility: AllocationUtility = { horizonTicks: source.horizonTicks, benefit, cost, successProbability: probability,
-      persistenceBonus: source.persistenceBonus, score: probability * benefit.reduce((sum, term) => sum + term.value, 0)
-        - cost.reduce((sum, term) => sum + term.value, 0) + source.persistenceBonus };
-    const why = reason(missing[0]?.reason.code ?? 'assembled-cohort-and-prerequisite-plan-feasible', ids(fighters),
-      { requiredForce, assembledForce: total.force, currentEffectiveForce: weighted.effectiveForce, latestArrivalTicks: latest, combatTicks });
-    return missing.length ? { methodId: method.id, status: 'blocked', force, utility: null, potentialUtility: utility, missingPreconditions: missing, reason: why }
-      : { methodId: method.id, status: 'feasible', force, utility, potentialUtility: null, missingPreconditions: [], reason: why };
+    if (input.objective.kind === 'ConquerIsland') return quoteConquestMethod(input);
+    const site = input.situation.assets.find(asset => asset.id === input.objective.target.entityId);
+    // Owned front reinforcement uses the same site protection counterfactual.
+    // An unpriced offensive front is not force multiplied by a time fee.
+    if (site?.owner === input.situation.owner) return defenseMethodProvider.quote(input);
+    const why = reason('reinforcement-front-protection-value-unquoted', [input.objective.target.entityId ?? input.objective.id]);
+    return { methodId: input.method.id, status: 'blocked', force: null, utility: null, potentialUtility: null,
+      reason: why, missingPreconditions: [{ id: `${input.method.id}/${why.code}`, kind: 'force', status: 'unknown',
+        reason: why, demand: input.method.demands[0] ?? null, subgoalIds: [] }] };
   },
 };
