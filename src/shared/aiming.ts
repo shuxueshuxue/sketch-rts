@@ -1,21 +1,22 @@
+import { weaponClass } from "./weapon-class";
 import type { UnitDef } from "./catalog";
 import type { Unit, UnitAim } from "./types";
 import { perTick } from "./time";
 
 type Point = { x: number; y: number };
-export const RANGED_ATTACK_RANGE_THRESHOLD = 80;
+export { RANGED_ATTACK_RANGE_THRESHOLD } from "./weapon-class";
 export const DEFAULT_AIM_MOVE_TOLERANCE = 6;
 export const AIM_SPEED_MULTIPLIER = 2 / 3;
 export const DEFAULT_AIM_RANGE_BUFFER = .25;
 
 /** Finish the same windup, without turning its margin into acquisition range or the next shot's starting range. */
-export function aimingRange(aim: UnitAim | undefined, range: number, targetId: string | undefined, buffer = DEFAULT_AIM_RANGE_BUFFER) {
-  if (range <= RANGED_ATTACK_RANGE_THRESHOLD || !aim?.tracking || targetId === undefined || aim.targetId !== targetId) return range;
+export function aimingRange(aim: UnitAim | undefined, range: number, targetId: string | undefined, buffer = DEFAULT_AIM_RANGE_BUFFER, ranged = true) {
+  if (!ranged || !aim?.tracking || targetId === undefined || aim.targetId !== targetId) return range;
   return range * (1 + (Number.isFinite(buffer) ? Math.max(0, buffer) : 0));
 }
 
 function requiresAiming(rules: UnitDef) {
-  return !(rules.naval && !rules.intrinsicAttack || rules.attackDamage <= 0 || rules.attackRange <= RANGED_ATTACK_RANGE_THRESHOLD);
+  return !(rules.naval && !rules.intrinsicAttack || rules.attackDamage <= 0 || weaponClass(rules) === "melee");
 }
 
 function aimingSpeed(rules: UnitDef) {

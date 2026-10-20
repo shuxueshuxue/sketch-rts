@@ -1,3 +1,4 @@
+import { isRangedUnit } from "../../shared/unit-weapon-class";
 import { BUILDING_DEFS } from "../../shared/catalog";
 import { canReceiveHealing } from "../../shared/healing";
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../shared/types";
@@ -130,7 +131,7 @@ function skirmishRetreatPoint(snapshot: GameSnapshot, owner: PlayerId, enemies: 
 function rangedKiteCommand(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, enemies: Unit[], safePoint: Point, options: PresetAiPolicyOptions): GameCommand | undefined {
   if (options.version !== "v2" || unit.attackRange <= 100 || unit.hp >= unit.maxHp * 0.82) return undefined;
   const closeMelee = enemies
-    .filter((enemy) => enemy.attackRange <= 80 && distance(enemy, unit) <= Math.max(75, enemy.attackRange + enemy.radius + unit.radius))
+    .filter((enemy) => !isRangedUnit(enemy) && distance(enemy, unit) <= Math.max(75, enemy.attackRange + enemy.radius + unit.radius))
     .filter((enemy) => unit.hp / Math.max(1, unit.maxHp) < enemy.hp / Math.max(1, enemy.maxHp))
     .sort((a, b) => distance(a, unit) - distance(b, unit))[0];
   if (!closeMelee) return undefined;

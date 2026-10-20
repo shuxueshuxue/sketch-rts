@@ -36,7 +36,8 @@ function canonicalize(value: unknown): unknown {
   if (Array.isArray(value)) return canonicalizeArray(value);
   return Object.fromEntries(
     Object.entries(value)
-      .filter(([, entry]) => entry !== undefined)
+      // weaponRules determines attackClass; this derived cache is not independent saved state.
+      .filter(([key, entry]) => entry !== undefined && key !== "attackClass")
       .sort(([left], [right]) => compareCodeUnits(left, right))
       .map(([key, entry]) => [key, canonicalize(entry)]),
   );

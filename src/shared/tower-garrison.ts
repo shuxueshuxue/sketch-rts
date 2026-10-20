@@ -1,11 +1,15 @@
-import { RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
+import { isRangedUnit } from "./unit-weapon-class";
+import { isMechanicalUnit } from "./unit-targeting";
+import { unitBodyFormOf } from "./unit-body-form";
+import { towerTopLayout } from "./tower-top-layout";
+import type { GarrisonRefusal } from "./command-refusal";
 import { unitMover, unitRules } from "./catalog";
 import type { DamageReductionSource } from "./damage-reduction";
 import type { Building, GameSnapshot, Unit } from "./types";
 
 // @@@tower-garrison - A defense tower may be upgraded into a fortified tower (see @@@building-upgrade), each tower on its
 // own: it stands broader, its health doubles, and it strikes no more; instead its owner's troops climb onto its top, up to
-// TOWER_GARRISON.supply of supply (a troop with no supply, a summon, counts as one). Up there a troop does not walk: it
+// TOWER_GARRISON.supply of supply (a troop with no supply counts as one). Up there a troop does not walk: it
 // strikes what is within its own reach and waits for what is not, and a ranged troop reaches TOWER_GARRISON.rangeMultiplier
 // farther (see applyDerivedUnitStats). Two rules protect it until the tower falls: a melee blow never crosses between a
 // tower's top and anything else, either way (see strikeReach), and every other kind of damage, shots, spells, blasts, fire
@@ -17,8 +21,11 @@ export const TOWER_GARRISON = {
   damageTaken: 0.4,
   rangeMultiplier: 1.2,
 } as const;
-// Where the troops stand on a fortified top, from the tower's center, in garrison order.
-const TOP_SPOTS = [{ x: -14, y: -14 }, { x: 14, y: -14 }, { x: -14, y: 14 }, { x: 14, y: 14 }] as const;
+// Weapon class comes from the current weapon's unmodified definition. Changing weapons can change class;
+// technology, veterancy and tower bonuses cannot. Only ranged weapons receive range bonuses.
+// Only foot troops climb, including summoned foot troops; mounted, beast, machine and spirit forms cannot.
+// Mechanical targeting class remains ineligible even on a variant with a foot-shaped body.
+// Population and whole-body packing both limit the top.
 
 type Snapshot = Pick<GameSnapshot, "units"> & Partial<Pick<GameSnapshot, "variants">>;
 
@@ -31,8 +38,9 @@ export function garrisonSupply(snapshot: Partial<Pick<GameSnapshot, "variants">>
   return Math.max(1, unitRules(snapshot, unit).supplyUsed);
 }
 
-export function canStandOnTower(unit: Unit) {
-  return unit.hp > 0 && unitMover(unit.kind) === "land" && !unit.deck && !unit.cabin;
+export function canStandOnTower(unit: Unit, snapshot: Partial<Pick<GameSnapshot, "variants">> = {}) {
+  return unit.hp > 0 && unitBodyFormOf(unit, snapshot) === "foot" && !isMechanicalUnit(unit, snapshot)
+    && unitMover(unit.kind) === "land" && !unit.deck && !unit.cabin;
 }
 
 /** The living troops on a tower's top, in the order they stand on its spots. */
@@ -44,16 +52,27 @@ export function garrisonUsed(snapshot: Snapshot, tower: Pick<Building, "id">) {
   return towerGarrison(snapshot.units, tower).reduce((total, unit) => total + garrisonSupply(snapshot, unit), 0);
 }
 
-/** Whether this troop may climb onto this tower now. */
-export function garrisonRoomFor(snapshot: Snapshot, tower: Building, unit: Unit) {
-  return isFortifiedTower(tower) && tower.hp > 0 && tower.owner === unit.owner && canStandOnTower(unit)
-    && garrisonUsed(snapshot, tower) + garrisonSupply(snapshot, unit) <= TOWER_GARRISON.supply;
+/** The single eligibility/room rule read by commands, AI legality and the arrival check. */
+export function garrisonRefusal(snapshot: Snapshot, tower: Building, unit: Unit): GarrisonRefusal | undefined {
+  const buildingId = tower.id;
+  if (!canStandOnTower(unit, snapshot)) {
+    const bodyForm = unitBodyFormOf(unit, snapshot);
+    if (isMechanicalUnit(unit, snapshot) || bodyForm === "machine") return { reason: "garrison-mechanical", detail: { buildingId } };
+    if (bodyForm !== "foot") return { reason: "garrison-not-infantry", detail: { buildingId, bodyForm } };
+    return { reason: "garrison-ineligible", detail: { buildingId } };
+  }
+  if (tower.owner !== unit.owner) return { reason: "garrison-ownership", detail: { buildingId, owner: tower.owner } };
+  if (!isFortifiedTower(tower) || tower.hp <= 0) return { reason: "garrison-ineligible", detail: { buildingId } };
+  const troops = towerGarrison(snapshot.units, tower).filter(other => other.id !== unit.id);
+  const used = troops.reduce((total, other) => total + garrisonSupply(snapshot, other), 0), required = garrisonSupply(snapshot, unit);
+  if (used + required > TOWER_GARRISON.supply) return { reason: "tower-full", detail: { buildingId, used, capacity: TOWER_GARRISON.supply, required } };
+  if (!towerTopLayout(tower, [...troops, unit])) return { reason: "garrison-body-size", detail: { buildingId, radius: unit.radius, towerRadius: tower.radius } };
 }
 
-export function towerTopSpot(tower: Pick<Building, "x" | "y">, index: number) {
-  const spot = TOP_SPOTS[index % TOP_SPOTS.length]!;
-  return { x: tower.x + spot.x, y: tower.y + spot.y };
+export function garrisonRoomFor(snapshot: Snapshot, tower: Building, unit: Unit) {
+  return !garrisonRefusal(snapshot, tower, unit);
 }
+export { towerTopLayout };
 
 /** The tower's foot toward a point: where a troop climbs on and where it is set down. */
 export function towerFoot(tower: Pick<Building, "x" | "y" | "radius">, unit: Pick<Unit, "radius">, toward: { x: number; y: number }) {
@@ -62,9 +81,9 @@ export function towerFoot(tower: Pick<Building, "x" | "y" | "radius">, unit: Pic
   return length === 0 ? { x: tower.x, y: tower.y + reach } : { x: tower.x + dx / length * reach, y: tower.y + dy / length * reach };
 }
 
-/** A ranged troop on a tower's top reaches farther (see @@@tower-garrison); `baseRange` is its range before stars. */
-export function garrisonRangeMultiplier(unit: Pick<Unit, "garrison">, baseRange: number) {
-  return unit.garrison && baseRange > RANGED_ATTACK_RANGE_THRESHOLD ? TOWER_GARRISON.rangeMultiplier : 1;
+/** A ranged troop on a tower's top reaches farther (see @@@tower-garrison); classification precedes every bonus. */
+export function garrisonRangeMultiplier(unit: Pick<Unit, "kind" | "attackClass" | "garrison">) {
+  return unit.garrison && isRangedUnit(unit) ? TOWER_GARRISON.rangeMultiplier : 1;
 }
 
 /** A garrison's shelter against everything but a melee blow, which never reaches it (see strikeReach). */

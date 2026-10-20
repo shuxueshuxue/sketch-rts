@@ -1,3 +1,4 @@
+import { isRangedUnit } from "../../../shared/unit-weapon-class";
 import { SIM_TICKS_PER_SECOND } from "../../../shared/time";
 import type { GameCommand, GameSnapshot, PlayerId, Unit } from "../../../shared/types";
 import { aimingProfile } from "../../../shared/aiming";
@@ -65,12 +66,12 @@ export function planCasterScreen(snapshot: GameSnapshot, owner: PlayerId, option
     const local = threatsNear(caster);
     const quarry = local.filter(enemy => distance(caster, enemy) <= caster.attackRange).sort((a, b) => distance(caster, a) - distance(caster, b))[0];
     if (quarry && caster.hp >= caster.maxHp * .6 && screen.length >= MIN_SCREEN && caster.order.type !== "cast" && caster.order.type !== "board"
-      && screen.filter(guard => guard.attackRange <= 80 && distance(guard, quarry) + guard.radius + caster.radius < distance(caster, quarry)).length >= 2
+      && screen.filter(guard => !isRangedUnit(guard) && distance(guard, quarry) + guard.radius + caster.radius < distance(caster, quarry)).length >= 2
       && !towers.some(tower => distance(caster, tower) <= tower.attackRange)) {
       const profile = aimingProfile(UNIT_DEFS[caster.kind])!;
       const reticle = caster.aim ?? caster;
       const shotSeconds = caster.cooldown / SIM_TICKS_PER_SECOND + Math.hypot(quarry.x - reticle.x, quarry.y - reticle.y) / profile.speed;
-      const contactSeconds = Math.min(...local.filter(enemy => enemy.attackRange <= 80).map(enemy => Math.max(0, distance(caster, enemy) - enemy.attackRange - enemy.radius - caster.radius) / Math.max(2, enemy.speed)));
+      const contactSeconds = Math.min(...local.filter(enemy => !isRangedUnit(enemy)).map(enemy => Math.max(0, distance(caster, enemy) - enemy.attackRange - enemy.radius - caster.radius) / Math.max(2, enemy.speed)));
       if (contactSeconds > shotSeconds + 0.15) {
         if (caster.order.type !== "attack" || caster.order.targetId !== quarry.id) commands.push({ type: "attack", unitIds: [caster.id], targetId: quarry.id });
         continue;

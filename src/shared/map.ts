@@ -1,3 +1,4 @@
+import { weaponClass } from "./weapon-class";
 import { BUILDING_DEFS, UNIT_DEFS, constructionStartHp } from "./catalog";
 import { detCos, detSin } from "./det-math";
 import { seconds } from "./time";
@@ -277,6 +278,7 @@ export function createUnit(
     speed: stats.speed,
     attackDamage: stats.attackDamage,
     attackRange: stats.attackRange,
+    attackClass: weaponClass(stats),
     attackCooldown: stats.attackCooldown,
     cooldown: 0,
     radius: stats.radius * (isShipKind(kind) ? SHIP_SIZE_MULTIPLIER : 1),

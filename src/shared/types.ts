@@ -1,3 +1,4 @@
+import type { CommandRefusal } from "./command-refusal";
 import type { BUILDING_RULES, UNIT_RULES, RACE_TECH_RULES, VariantRules, WeaponDef } from "./catalog";
 import type { AttackKind } from "./attack-presentation";
 import type { MAP_IDS } from "./map-ids";
@@ -118,6 +119,7 @@ export type WorldEffect = {
   /** orderEnded: the order that ended and why (see @@@errand). */
   orderType?: UnitOrder["type"];
   reason?: OrderEndReason;
+  refusal?: CommandRefusal;
   /** A volley aims one gesture at an area while individual missiles fan out. */
   actionToX?: number;
   actionToY?: number;
@@ -230,6 +232,8 @@ export type Unit = {
   speed: number;
   attackDamage: number;
   attackRange: number;
+  /** Current unmodified weapon class; range bonuses never change it. Derived with attackRange. */
+  attackClass?: "melee" | "ranged";
   attackCooldown: number;
   // Ticks until the weapon can fire again (the repair interval for a worker repairing).
   cooldown: number;

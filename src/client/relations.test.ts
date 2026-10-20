@@ -208,3 +208,12 @@ describe("an attack on a target across water (see @@@context-reach)", () => {
     expect(targetCommand(snapshotGame(game), "player", [footman, archer], { kind: "unit", unit: foe })).toEqual({ refusal: "unreachable" });
   });
 });
+
+// Ineligible members reach the shared command check so each gets a specific refusal, rather than a silent move.
+it("keeps a mechanical tower click as an explicit garrison request", () => {
+  const game = createGame("bareDuel", { aiPlayers: [] });
+  const tower = createBuilding("tower", "player", "fortifiedTower", 1000, 1000, true);
+  game.buildings.push(tower);
+  const ballista = game.spawnUnit("player", "ballista", 1000, 1100);
+  expect(targetCommand(snapshotGame(game), "player", [ballista], { kind: "building", building: tower })).toEqual({ type: "garrison", unitIds: [ballista.id], buildingId: tower.id, queued: false });
+});

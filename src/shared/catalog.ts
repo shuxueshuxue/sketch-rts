@@ -1,4 +1,4 @@
-import { SHIP_HULL_COST, SHIP_WEAPONS } from "./ship-equipment";
+import { SHIP_HULL_COST, SHIP_WEAPONS } from "./ship-weapon-defs";
 import type { AttackKind } from "./attack-presentation";
 import type { Mover } from "./terrain";
 import type { AbilityKind, BuildingKind, MercenaryUnitKind, RaceId, TrainableUnitKind, UnitKind, UpgradeKind } from "./types";
@@ -7,6 +7,7 @@ import { seconds } from "./time";
 import { VETERAN_ACTIVE_SKILL_IDS, VETERAN_SKILLS, type VeteranActiveSkillId } from "./veteran-skills";
 import type { DamageProfile } from "./damage-types";
 import type { UnitClass, UnitTargetFilter } from "./unit-targeting";
+import type { UnitBodyForm } from "./unit-body-form";
 import { TRANSPORT_COMBAT } from './transport-role';
 
 export const MERCENARY_HIRE_RANGE = 220;
@@ -35,6 +36,7 @@ export type WeaponDef = {
 // a unit can have different producers without duplicating its combat behavior or statistics.
 export type UnitDef = {
   unitClass: UnitClass;
+  bodyForm: UnitBodyForm;
   hp: number;
   /** Movement distance per second. */
   speed: number;
@@ -187,53 +189,53 @@ export type RaceDef = {
 
 // Ranged basic attacks, including hired troops, creeps and naval guns, use 80% of their former reach.
 export const UNIT_RULES = {
-  worker: { hp: 70, speed: 60, radius: 15, attackDamage: 10, attackRange: 36, attackCooldown: seconds(1.7), cost: 75, trainTime: seconds(7), supplyUsed: 1, abilities: [] },
-  footman: { hp: 145, speed: 62, radius: 18, attackDamage: 16, attackRange: 48, attackCooldown: seconds(1.1), cost: 100, trainTime: seconds(8), supplyUsed: 2, abilities: [] },
-  archer: { hp: 83, speed: 60, radius: 16, attackDamage: 13, attackRange: 319.2, aimSpeed: 480, attackCooldown: seconds(1.5), cost: 115, trainTime: seconds(7.75), supplyUsed: 2, abilities: [] },
+  worker: { bodyForm: "foot", hp: 70, speed: 60, radius: 15, attackDamage: 10, attackRange: 36, attackCooldown: seconds(1.7), cost: 75, trainTime: seconds(7), supplyUsed: 1, abilities: [] },
+  footman: { bodyForm: "foot", hp: 145, speed: 62, radius: 18, attackDamage: 16, attackRange: 48, attackCooldown: seconds(1.1), cost: 100, trainTime: seconds(8), supplyUsed: 2, abilities: [] },
+  archer: { bodyForm: "foot", hp: 83, speed: 60, radius: 16, attackDamage: 13, attackRange: 319.2, aimSpeed: 480, attackCooldown: seconds(1.5), cost: 115, trainTime: seconds(7.75), supplyUsed: 2, abilities: [] },
   // The cavalry strikes from the saddle with a reach a little under the lancer's 74 (it had a footman's, 48 and 52).
-  horseArcher: { hp: 109, speed: 90, radius: 19, attackDamage: 10, attackRange: 264, aimSpeed: 600, attackCooldown: seconds(1.5), cost: 150, trainTime: seconds(10), supplyUsed: 2, abilities: [], tier: 2, aimMoveTolerance: 72 },
-  raider: { hp: 115, speed: 82, radius: 18, attackDamage: 14, attackRange: 72, attackCooldown: seconds(1), cost: 115, trainTime: seconds(8.5), supplyUsed: 2, abilities: ["charge"], tier: 2 },
-  lancer: { hp: 130, speed: 68, radius: 18, attackDamage: 18, attackRange: 74, attackCooldown: seconds(1.4), cost: 110, trainTime: seconds(8.75), supplyUsed: 2, abilities: [] },
-  ashWarden: { hp: 165, speed: 60, radius: 19, attackDamage: 15, attackRange: 52, attackCooldown: seconds(1.15), cost: 120, trainTime: seconds(9), supplyUsed: 2, abilities: [] },
-  emberRavager: { hp: 118, speed: 76, radius: 18, attackDamage: 20, attackRange: 52, attackCooldown: seconds(1.25), cost: 120, trainTime: seconds(9), supplyUsed: 2, abilities: [] },
-  cinderRunner: { hp: 96, speed: 87, radius: 17, attackDamage: 14, attackRange: 48, attackCooldown: seconds(0.95), cost: 110, trainTime: seconds(8), supplyUsed: 2, abilities: [] },
-  sparkArcher: { hp: 85, speed: 63, radius: 16, attackDamage: 9, attackRange: 288, aimSpeed: 540, attackCooldown: seconds(1.35), cost: 110, trainTime: seconds(7.25), supplyUsed: 2, abilities: [] },
-  ashHexer: { hp: 82, speed: 64, radius: 16, attackDamage: 7, attackRange: 240, aimSpeed: 520, attackCooldown: seconds(1.7), cost: 140, trainTime: seconds(9), supplyUsed: 2, abilities: ["ashCurse"], tier: 2 },
-  knight: { hp: 220, speed: 72, radius: 22, attackDamage: 24, attackRange: 72, attackCooldown: seconds(1.3), cost: 190, trainTime: seconds(11.5), supplyUsed: 3, abilities: ["charge"], armor: "heavy", tier: 3 },
-  priest: { hp: 90, speed: 60, radius: 16, attackDamage: 7, attackRange: 201.6, aimSpeed: 440, attackCooldown: seconds(1.8), cost: 135, trainTime: seconds(9.25), supplyUsed: 2, abilities: ["heal"], tier: 2 },
-  summoner: { hp: 95, speed: 56, radius: 17, attackDamage: 8, attackRange: 218.4, aimSpeed: 400, attackCooldown: seconds(1.9), cost: 180, trainTime: seconds(10.5), supplyUsed: 2, abilities: ["summon"], tier: 2 },
-  witch: { hp: 92, speed: 62, radius: 16, attackDamage: 8, attackRange: 252, aimSpeed: 480, attackCooldown: seconds(1.7), cost: 145, trainTime: seconds(9.75), supplyUsed: 2, abilities: ["curse"], tier: 2 },
-  golem: { unitClass: "mechanical", hp: 340, speed: 42, radius: 28, attackDamage: 34, attackRange: 58, attackCooldown: seconds(2.1), cost: 230, trainTime: seconds(14), supplyUsed: 4, abilities: [], armor: "heavy", tier: 3 },
+  horseArcher: { bodyForm: "mounted", hp: 109, speed: 90, radius: 19, attackDamage: 10, attackRange: 264, aimSpeed: 600, attackCooldown: seconds(1.5), cost: 150, trainTime: seconds(10), supplyUsed: 2, abilities: [], tier: 2, aimMoveTolerance: 72 },
+  raider: { bodyForm: "mounted", hp: 115, speed: 82, radius: 18, attackDamage: 14, attackRange: 72, attackCooldown: seconds(1), cost: 115, trainTime: seconds(8.5), supplyUsed: 2, abilities: ["charge"], tier: 2 },
+  lancer: { bodyForm: "foot", hp: 130, speed: 68, radius: 18, attackDamage: 18, attackRange: 74, attackCooldown: seconds(1.4), cost: 110, trainTime: seconds(8.75), supplyUsed: 2, abilities: [] },
+  ashWarden: { bodyForm: "foot", hp: 165, speed: 60, radius: 19, attackDamage: 15, attackRange: 52, attackCooldown: seconds(1.15), cost: 120, trainTime: seconds(9), supplyUsed: 2, abilities: [] },
+  emberRavager: { bodyForm: "foot", hp: 118, speed: 76, radius: 18, attackDamage: 20, attackRange: 52, attackCooldown: seconds(1.25), cost: 120, trainTime: seconds(9), supplyUsed: 2, abilities: [] },
+  cinderRunner: { bodyForm: "foot", hp: 96, speed: 87, radius: 17, attackDamage: 14, attackRange: 48, attackCooldown: seconds(0.95), cost: 110, trainTime: seconds(8), supplyUsed: 2, abilities: [] },
+  sparkArcher: { bodyForm: "foot", hp: 85, speed: 63, radius: 16, attackDamage: 9, attackRange: 288, aimSpeed: 540, attackCooldown: seconds(1.35), cost: 110, trainTime: seconds(7.25), supplyUsed: 2, abilities: [] },
+  ashHexer: { bodyForm: "foot", hp: 82, speed: 64, radius: 16, attackDamage: 7, attackRange: 240, aimSpeed: 520, attackCooldown: seconds(1.7), cost: 140, trainTime: seconds(9), supplyUsed: 2, abilities: ["ashCurse"], tier: 2 },
+  knight: { bodyForm: "mounted", hp: 220, speed: 72, radius: 22, attackDamage: 24, attackRange: 72, attackCooldown: seconds(1.3), cost: 190, trainTime: seconds(11.5), supplyUsed: 3, abilities: ["charge"], armor: "heavy", tier: 3 },
+  priest: { bodyForm: "foot", hp: 90, speed: 60, radius: 16, attackDamage: 7, attackRange: 201.6, aimSpeed: 440, attackCooldown: seconds(1.8), cost: 135, trainTime: seconds(9.25), supplyUsed: 2, abilities: ["heal"], tier: 2 },
+  summoner: { bodyForm: "foot", hp: 95, speed: 56, radius: 17, attackDamage: 8, attackRange: 218.4, aimSpeed: 400, attackCooldown: seconds(1.9), cost: 180, trainTime: seconds(10.5), supplyUsed: 2, abilities: ["summon"], tier: 2 },
+  witch: { bodyForm: "foot", hp: 92, speed: 62, radius: 16, attackDamage: 8, attackRange: 252, aimSpeed: 480, attackCooldown: seconds(1.7), cost: 145, trainTime: seconds(9.75), supplyUsed: 2, abilities: ["curse"], tier: 2 },
+  golem: { bodyForm: "machine", unitClass: "mechanical", hp: 340, speed: 42, radius: 28, attackDamage: 34, attackRange: 58, attackCooldown: seconds(2.1), cost: 230, trainTime: seconds(14), supplyUsed: 4, abilities: [], armor: "heavy", tier: 3 },
   // Ember's heavies, raised in the ashen hall and heavy-armored like the grove's knight and golem, but built for
   // other jobs. The chieftain hunts casters and what they summon (half again as much damage to both); the revenant is
   // light for an elite and burns its wounds away, back to full health in about twenty seconds.
-  ashChieftain: { hp: 210, speed: 66, radius: 20, attackDamage: 22, attackRange: 52, attackCooldown: seconds(1.2), cost: 190, trainTime: seconds(11), supplyUsed: 3, abilities: [], armor: "heavy", casterSlayer: 1.5, tier: 3 },
-  cinderRevenant: { hp: 150, speed: 70, radius: 19, attackDamage: 21, attackRange: 52, attackCooldown: seconds(1.15), cost: 210, trainTime: seconds(12), supplyUsed: 3, abilities: [], armor: "heavy", regenPerSecond: 7, tier: 3 },
-  spirit: { hp: 85, speed: 70, radius: 15, attackDamage: 13, attackRange: 55, attackCooldown: seconds(1.2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, abilities: [] },
-  mercenary: { hp: 155, speed: 74, radius: 18, attackDamage: 28, attackRange: 62, attackCooldown: seconds(0.9), cost: 160, trainTime: seconds(0.05), supplyUsed: 2, abilities: [] },
-  contractArcher: { hp: 93, speed: 64, radius: 16, attackDamage: 19, attackRange: 352.8, aimSpeed: 600, attackCooldown: seconds(1.35), cost: 145, trainTime: seconds(0.05), supplyUsed: 2, abilities: [] },
-  fieldMedic: { hp: 105, speed: 62, radius: 16, attackDamage: 8, attackRange: 210.4, aimSpeed: 480, attackCooldown: seconds(1.7), cost: 155, trainTime: seconds(0.05), supplyUsed: 2, abilities: ["heal"] },
-  wildling: { hp: 76, speed: 76, radius: 15, attackDamage: 10, attackRange: 42, attackCooldown: seconds(2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 1, abilities: [] },
-  mossGnawer: { hp: 54, speed: 84, radius: 13, attackDamage: 8, attackRange: 34, attackCooldown: seconds(1.3), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 1, abilities: [] },
-  thornSlinger: { hp: 83, speed: 68, radius: 18, attackDamage: 13, attackRange: 132, aimSpeed: 400, attackCooldown: seconds(1.7), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 2, abilities: [] },
-  barkMender: { hp: 68, speed: 64, radius: 18, attackDamage: 7, attackRange: 88, aimSpeed: 400, attackCooldown: seconds(2.1), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 2, abilities: ["heal"] },
-  stonebackBrute: { hp: 210, speed: 72, radius: 24, attackDamage: 28, attackRange: 48, attackCooldown: seconds(1.9), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 3, abilities: [] },
-  gladeWitch: { hp: 110, speed: 66, radius: 22, attackDamage: 13, attackRange: 120, aimSpeed: 440, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 3, abilities: ["curse"] },
+  ashChieftain: { bodyForm: "foot", hp: 210, speed: 66, radius: 20, attackDamage: 22, attackRange: 52, attackCooldown: seconds(1.2), cost: 190, trainTime: seconds(11), supplyUsed: 3, abilities: [], armor: "heavy", casterSlayer: 1.5, tier: 3 },
+  cinderRevenant: { bodyForm: "foot", hp: 150, speed: 70, radius: 19, attackDamage: 21, attackRange: 52, attackCooldown: seconds(1.15), cost: 210, trainTime: seconds(12), supplyUsed: 3, abilities: [], armor: "heavy", regenPerSecond: 7, tier: 3 },
+  spirit: { bodyForm: "spirit", hp: 85, speed: 70, radius: 15, attackDamage: 13, attackRange: 55, attackCooldown: seconds(1.2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, abilities: [] },
+  mercenary: { bodyForm: "foot", hp: 155, speed: 74, radius: 18, attackDamage: 28, attackRange: 62, attackCooldown: seconds(0.9), cost: 160, trainTime: seconds(0.05), supplyUsed: 2, abilities: [] },
+  contractArcher: { bodyForm: "foot", hp: 93, speed: 64, radius: 16, attackDamage: 19, attackRange: 352.8, aimSpeed: 600, attackCooldown: seconds(1.35), cost: 145, trainTime: seconds(0.05), supplyUsed: 2, abilities: [] },
+  fieldMedic: { bodyForm: "foot", hp: 105, speed: 62, radius: 16, attackDamage: 8, attackRange: 210.4, aimSpeed: 480, attackCooldown: seconds(1.7), cost: 155, trainTime: seconds(0.05), supplyUsed: 2, abilities: ["heal"] },
+  wildling: { bodyForm: "foot", hp: 76, speed: 76, radius: 15, attackDamage: 10, attackRange: 42, attackCooldown: seconds(2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 1, abilities: [] },
+  mossGnawer: { bodyForm: "beast", hp: 54, speed: 84, radius: 13, attackDamage: 8, attackRange: 34, attackCooldown: seconds(1.3), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 1, abilities: [] },
+  thornSlinger: { bodyForm: "foot", hp: 83, speed: 68, radius: 18, attackDamage: 13, attackRange: 132, aimSpeed: 400, attackCooldown: seconds(1.7), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 2, abilities: [] },
+  barkMender: { bodyForm: "foot", hp: 68, speed: 64, radius: 18, attackDamage: 7, attackRange: 88, aimSpeed: 400, attackCooldown: seconds(2.1), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 2, abilities: ["heal"] },
+  stonebackBrute: { bodyForm: "beast", hp: 210, speed: 72, radius: 24, attackDamage: 28, attackRange: 48, attackCooldown: seconds(1.9), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 3, abilities: [] },
+  gladeWitch: { bodyForm: "foot", hp: 110, speed: 66, radius: 22, attackDamage: 13, attackRange: 120, aimSpeed: 440, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 3, abilities: ["curse"] },
   // @@@ships - Both races can board every ship. Troop ferry passengers deal half damage;
   // warships have sturdier hulls and a cannon. Deck space and mass determine crew capacity.
-  transport: { unitClass: "mechanical", hp: 337.5, speed: 64, radius: 30, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: SHIP_HULL_COST.transport, trainTime: seconds(12), supplyUsed: 1, abilities: [], naval: true, ...TRANSPORT_COMBAT },
-  warship: { unitClass: "mechanical", hp: 400, speed: 60, radius: 28, attackDamage: 20, attackRange: 312, aimSpeed: 440, attackCooldown: seconds(2), cost: SHIP_HULL_COST.warship + SHIP_WEAPONS.shipCannon.cost, trainTime: seconds(14), supplyUsed: 3, abilities: [], naval: true, weapon: SHIP_WEAPONS.shipCannon.weapon },
+  transport: { bodyForm: "machine", unitClass: "mechanical", hp: 337.5, speed: 64, radius: 30, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: SHIP_HULL_COST.transport, trainTime: seconds(12), supplyUsed: 1, abilities: [], naval: true, ...TRANSPORT_COMBAT },
+  warship: { bodyForm: "machine", unitClass: "mechanical", hp: 400, speed: 60, radius: 28, attackDamage: 20, attackRange: 312, aimSpeed: 440, attackCooldown: seconds(2), cost: SHIP_HULL_COST.warship + SHIP_WEAPONS.shipCannon.cost, trainTime: seconds(14), supplyUsed: 3, abilities: [], naval: true, weapon: SHIP_WEAPONS.shipCannon.weapon },
   // Four removable cannons are included in the purchase; the hull has no extra intrinsic shot.
-  shipOfTheLine: { unitClass: "mechanical", hp: 925, speed: 46, radius: 48, attackDamage: 20, attackRange: 312, aimSpeed: 440, attackCooldown: seconds(2), cost: SHIP_HULL_COST.shipOfTheLine + SHIP_WEAPONS.shipCannon.cost * 4, trainTime: seconds(30), supplyUsed: 7, abilities: [], naval: true, armor: "heavy", tier: 3, weapon: SHIP_WEAPONS.shipCannon.weapon },
-  cutter: { unitClass: "mechanical", hp: 137.5, speed: 84, radius: 24, attackDamage: 10, attackRange: 264, aimSpeed: 540, attackCooldown: seconds(1.3), cost: SHIP_HULL_COST.cutter, trainTime: seconds(9), supplyUsed: 2, abilities: [], naval: true, intrinsicAttack: true },
-  bombardShip: { unitClass: "mechanical", hp: 325, speed: 44, radius: 32, attackDamage: 36, attackRange: 576, aimSpeed: 400, attackCooldown: seconds(3.6), cost: SHIP_HULL_COST.bombardShip + SHIP_WEAPONS.shipMortar.cost, trainTime: seconds(19), supplyUsed: 4, abilities: [], naval: true, tier: 2, weapon: { presentation: "mortar", delivery: "shell", radius: 75, minRange: 180, buildingMultiplier: 2 } },
-  fireShip: { unitClass: "mechanical", hp: 425, speed: 70, radius: 28, attackDamage: 10, attackRange: 144, aimSpeed: 480, attackCooldown: seconds(1.2), cost: SHIP_HULL_COST.fireShip + SHIP_WEAPONS.flameProjector.cost, trainTime: seconds(15), supplyUsed: 3, abilities: ["incendiaryFlume"], naval: true, weapon: { presentation: "flame", delivery: "cone", coneAngle: 0.85, buildingMultiplier: 0.7 } },
-  carrier: { unitClass: "mechanical", hp: 600, speed: 54, radius: 38, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: SHIP_HULL_COST.carrier, trainTime: seconds(18), supplyUsed: 3, abilities: [], naval: true, ...TRANSPORT_COMBAT, tier: 2 },
-  siegeRam: { unitClass: "mechanical", hp: 420, speed: 50, radius: 26, attackDamage: 22, attackRange: 64, attackCooldown: seconds(1.8), cost: 240, trainTime: seconds(16), supplyUsed: 3, abilities: [], armor: "heavy", tier: 2, weapon: { presentation: "melee", delivery: "ram", buildingMultiplier: 3.3 } },
-  ballista: { unitClass: "mechanical", hp: 150, speed: 46, radius: 24, attackDamage: 27, attackRange: 472, aimSpeed: 420, attackCooldown: seconds(2.4), cost: 300, trainTime: seconds(15), supplyUsed: 3, abilities: ["pinningBolt"], tier: 2, weapon: { presentation: "bolt", delivery: "bolt", radius: 18, maxHits: 3, pierceShare: 0.7, buildingMultiplier: 0.75, navalMultiplier: 1.4 } },
-  catapult: { unitClass: "mechanical", hp: 180, speed: 38, radius: 27, attackDamage: 38, attackRange: 608, aimSpeed: 360, attackCooldown: seconds(3.8), cost: 390, trainTime: seconds(19), supplyUsed: 4, abilities: [], tier: 2, weapon: { presentation: "stone", delivery: "shell", radius: 90, minRange: 180, buildingMultiplier: 2 } },
-  organGun: { unitClass: "mechanical", hp: 190, speed: 46, radius: 25, attackDamage: 12, attackRange: 304, aimSpeed: 480, attackCooldown: seconds(2.5), cost: 350, trainTime: seconds(17), supplyUsed: 3, abilities: [], tier: 2, weapon: { presentation: "grapeshot", delivery: "cone", coneAngle: 0.42, burst: 3, buildingMultiplier: 0.45 } },
-  ancientStag: { hp: 360, speed: 88, radius: 32, attackDamage: 38, attackRange: 68, attackCooldown: seconds(1.5), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 5, abilities: [] },
+  shipOfTheLine: { bodyForm: "machine", unitClass: "mechanical", hp: 925, speed: 46, radius: 48, attackDamage: 20, attackRange: 312, aimSpeed: 440, attackCooldown: seconds(2), cost: SHIP_HULL_COST.shipOfTheLine + SHIP_WEAPONS.shipCannon.cost * 4, trainTime: seconds(30), supplyUsed: 7, abilities: [], naval: true, armor: "heavy", tier: 3, weapon: SHIP_WEAPONS.shipCannon.weapon },
+  cutter: { bodyForm: "machine", unitClass: "mechanical", hp: 137.5, speed: 84, radius: 24, attackDamage: 10, attackRange: 264, aimSpeed: 540, attackCooldown: seconds(1.3), cost: SHIP_HULL_COST.cutter, trainTime: seconds(9), supplyUsed: 2, abilities: [], naval: true, intrinsicAttack: true },
+  bombardShip: { bodyForm: "machine", unitClass: "mechanical", hp: 325, speed: 44, radius: 32, attackDamage: 36, attackRange: 576, aimSpeed: 400, attackCooldown: seconds(3.6), cost: SHIP_HULL_COST.bombardShip + SHIP_WEAPONS.shipMortar.cost, trainTime: seconds(19), supplyUsed: 4, abilities: [], naval: true, tier: 2, weapon: { presentation: "mortar", delivery: "shell", radius: 75, minRange: 180, buildingMultiplier: 2 } },
+  fireShip: { bodyForm: "machine", unitClass: "mechanical", hp: 425, speed: 70, radius: 28, attackDamage: 10, attackRange: 144, aimSpeed: 480, attackCooldown: seconds(1.2), cost: SHIP_HULL_COST.fireShip + SHIP_WEAPONS.flameProjector.cost, trainTime: seconds(15), supplyUsed: 3, abilities: ["incendiaryFlume"], naval: true, weapon: { presentation: "flame", delivery: "cone", coneAngle: 0.85, buildingMultiplier: 0.7 } },
+  carrier: { bodyForm: "machine", unitClass: "mechanical", hp: 600, speed: 54, radius: 38, attackDamage: 0, attackRange: 0, attackCooldown: seconds(1), cost: SHIP_HULL_COST.carrier, trainTime: seconds(18), supplyUsed: 3, abilities: [], naval: true, ...TRANSPORT_COMBAT, tier: 2 },
+  siegeRam: { bodyForm: "machine", unitClass: "mechanical", hp: 420, speed: 50, radius: 26, attackDamage: 22, attackRange: 64, attackCooldown: seconds(1.8), cost: 240, trainTime: seconds(16), supplyUsed: 3, abilities: [], armor: "heavy", tier: 2, weapon: { presentation: "melee", delivery: "ram", buildingMultiplier: 3.3 } },
+  ballista: { bodyForm: "machine", unitClass: "mechanical", hp: 150, speed: 46, radius: 24, attackDamage: 27, attackRange: 472, aimSpeed: 420, attackCooldown: seconds(2.4), cost: 300, trainTime: seconds(15), supplyUsed: 3, abilities: ["pinningBolt"], tier: 2, weapon: { presentation: "bolt", delivery: "bolt", radius: 18, maxHits: 3, pierceShare: 0.7, buildingMultiplier: 0.75, navalMultiplier: 1.4 } },
+  catapult: { bodyForm: "machine", unitClass: "mechanical", hp: 180, speed: 38, radius: 27, attackDamage: 38, attackRange: 608, aimSpeed: 360, attackCooldown: seconds(3.8), cost: 390, trainTime: seconds(19), supplyUsed: 4, abilities: [], tier: 2, weapon: { presentation: "stone", delivery: "shell", radius: 90, minRange: 180, buildingMultiplier: 2 } },
+  organGun: { bodyForm: "machine", unitClass: "mechanical", hp: 190, speed: 46, radius: 25, attackDamage: 12, attackRange: 304, aimSpeed: 480, attackCooldown: seconds(2.5), cost: 350, trainTime: seconds(17), supplyUsed: 3, abilities: [], tier: 2, weapon: { presentation: "grapeshot", delivery: "cone", coneAngle: 0.42, burst: 3, buildingMultiplier: 0.45 } },
+  ancientStag: { bodyForm: "beast", hp: 360, speed: 88, radius: 32, attackDamage: 38, attackRange: 68, attackCooldown: seconds(1.5), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 5, abilities: [] },
   // @@@creep-families - The camp families (see shared/camps.ts), a creep's level its food power, bounty and experience by
   // level (20/35/50/68/85/100/130 gold at levels 1-8). A tier's camps are as hard as the old wildling camps of that tier:
   // health and damage were set so that a squad of two footmen to an archer sized to the tier (3, 5, 7) loses as much,
@@ -242,21 +244,21 @@ export const UNIT_RULES = {
   // @@@creep-traits), and none reaches past a tower's 480, so no creep wakes from farther than today. None is wider
   // than 28: a blow's reach is measured from center to center, and a footman (radius 18, reach 48) could not strike a
   // wider one through their bodies.
-  murlocPeon: { hp: 80, speed: 72, radius: 14, attackDamage: 11, attackRange: 40, attackCooldown: seconds(1.5), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 1, abilities: [] },
-  murlocHunter: { hp: 98, speed: 72, radius: 15, attackDamage: 13, attackRange: 120, aimSpeed: 480, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 2, abilities: [], slowOnHit: true, threat: 1.05 },
-  tidePriest: { hp: 100, speed: 64, radius: 17, attackDamage: 10, attackRange: 160, aimSpeed: 440, attackCooldown: seconds(1.9), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 3, abilities: ["heal"] },
-  deepSnapper: { hp: 350, speed: 70, radius: 26, attackDamage: 31, attackRange: 52, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 5, abilities: [], armor: "heavy", threat: 1.25 },
-  rubbleGolem: { unitClass: "mechanical", hp: 190, speed: 50, radius: 22, attackDamage: 22, attackRange: 48, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 3, abilities: [], armor: "heavy" },
-  rockGolem: { unitClass: "mechanical", hp: 235, speed: 50, radius: 25, attackDamage: 25, attackRange: 52, attackCooldown: seconds(2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 4, abilities: [], armor: "heavy", threat: 1.3 },
-  graniteGolem: { unitClass: "mechanical", hp: 390, speed: 48, radius: 28, attackDamage: 35, attackRange: 58, attackCooldown: seconds(2.2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 6, abilities: ["stomp"], armor: "heavy", threat: 1.3 },
-  ogreWarrior: { hp: 178, speed: 68, radius: 22, attackDamage: 22, attackRange: 52, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 3, abilities: [] },
-  ogreMage: { hp: 145, speed: 64, radius: 22, attackDamage: 15, attackRange: 160, aimSpeed: 400, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 4, abilities: ["bloodlust"], threat: 1.15 },
-  ogreLord: { hp: 380, speed: 68, radius: 28, attackDamage: 34, attackRange: 56, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 6, abilities: [], threat: 1.35 },
-  spiderling: { hp: 65, speed: 88, radius: 12, attackDamage: 10, attackRange: 36, attackCooldown: seconds(1.2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 1, abilities: [] },
-  venomSpider: { hp: 105, speed: 84, radius: 15, attackDamage: 13, attackRange: 44, attackCooldown: seconds(1.5), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 2, abilities: [], poisonOnHit: true, threat: 1.7 },
-  spiderQueen: { hp: 350, speed: 80, radius: 26, attackDamage: 33, attackRange: 52, attackCooldown: seconds(1.7), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 5, abilities: ["web"] },
-  dragonWhelp: { hp: 170, speed: 84, radius: 22, attackDamage: 17, attackRange: 144, aimSpeed: 540, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 4, abilities: [] },
-  redDragon: { hp: 600, speed: 80, radius: 28, attackDamage: 42, attackRange: 176, aimSpeed: 480, attackCooldown: seconds(2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 8, abilities: [], splash: true, threat: 1.3 },
+  murlocPeon: { bodyForm: "foot", hp: 80, speed: 72, radius: 14, attackDamage: 11, attackRange: 40, attackCooldown: seconds(1.5), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 1, abilities: [] },
+  murlocHunter: { bodyForm: "foot", hp: 98, speed: 72, radius: 15, attackDamage: 13, attackRange: 120, aimSpeed: 480, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 2, abilities: [], slowOnHit: true, threat: 1.05 },
+  tidePriest: { bodyForm: "foot", hp: 100, speed: 64, radius: 17, attackDamage: 10, attackRange: 160, aimSpeed: 440, attackCooldown: seconds(1.9), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 3, abilities: ["heal"] },
+  deepSnapper: { bodyForm: "beast", hp: 350, speed: 70, radius: 26, attackDamage: 31, attackRange: 52, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 5, abilities: [], armor: "heavy", threat: 1.25 },
+  rubbleGolem: { bodyForm: "machine", unitClass: "mechanical", hp: 190, speed: 50, radius: 22, attackDamage: 22, attackRange: 48, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 3, abilities: [], armor: "heavy" },
+  rockGolem: { bodyForm: "machine", unitClass: "mechanical", hp: 235, speed: 50, radius: 25, attackDamage: 25, attackRange: 52, attackCooldown: seconds(2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 4, abilities: [], armor: "heavy", threat: 1.3 },
+  graniteGolem: { bodyForm: "machine", unitClass: "mechanical", hp: 390, speed: 48, radius: 28, attackDamage: 35, attackRange: 58, attackCooldown: seconds(2.2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 6, abilities: ["stomp"], armor: "heavy", threat: 1.3 },
+  ogreWarrior: { bodyForm: "foot", hp: 178, speed: 68, radius: 22, attackDamage: 22, attackRange: 52, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 3, abilities: [] },
+  ogreMage: { bodyForm: "foot", hp: 145, speed: 64, radius: 22, attackDamage: 15, attackRange: 160, aimSpeed: 400, attackCooldown: seconds(1.8), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 4, abilities: ["bloodlust"], threat: 1.15 },
+  ogreLord: { bodyForm: "foot", hp: 380, speed: 68, radius: 28, attackDamage: 34, attackRange: 56, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 6, abilities: [], threat: 1.35 },
+  spiderling: { bodyForm: "beast", hp: 65, speed: 88, radius: 12, attackDamage: 10, attackRange: 36, attackCooldown: seconds(1.2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 1, abilities: [] },
+  venomSpider: { bodyForm: "beast", hp: 105, speed: 84, radius: 15, attackDamage: 13, attackRange: 44, attackCooldown: seconds(1.5), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 2, abilities: [], poisonOnHit: true, threat: 1.7 },
+  spiderQueen: { bodyForm: "beast", hp: 350, speed: 80, radius: 26, attackDamage: 33, attackRange: 52, attackCooldown: seconds(1.7), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 5, abilities: ["web"] },
+  dragonWhelp: { bodyForm: "beast", hp: 170, speed: 84, radius: 22, attackDamage: 17, attackRange: 144, aimSpeed: 540, attackCooldown: seconds(1.6), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 4, abilities: [] },
+  redDragon: { bodyForm: "beast", hp: 600, speed: 80, radius: 28, attackDamage: 42, attackRange: 176, aimSpeed: 480, attackCooldown: seconds(2), cost: 0, trainTime: seconds(0.05), supplyUsed: 0, creepFoodPower: 8, abilities: [], splash: true, threat: 1.3 },
 } satisfies Record<string, Omit<UnitDef, "xpReward" | "goldBounty" | "unitClass"> & { unitClass?: UnitClass }>;
 
 export const UNIT_DEFS: Record<UnitKind, UnitDef> = Object.fromEntries(
@@ -274,7 +276,7 @@ export const UNIT_DEFS: Record<UnitKind, UnitDef> = Object.fromEntries(
 // the tooltips) takes it for its base, as any subtype passes for its supertype; the sim, which knows variants, plays it
 // by its own numbers. Its abilities are its base's: a campaign's own powers are scripts (see story/). Variants live in
 // the game that uses them (Game.variants), never in these tables, so no campaign can move the balance of any other game.
-export type UnitVariantStats = Partial<Pick<UnitDef, "hp" | "speed" | "radius" | "attackDamage" | "attackRange" | "attackCooldown" | "supplyUsed" | "xpReward" | "goldBounty" | "armor" | "rangedDamageTaken" | "casterSlayer" | "regenPerSecond" | "unitClass">>;
+export type UnitVariantStats = Partial<Pick<UnitDef, "hp" | "speed" | "radius" | "attackDamage" | "attackRange" | "attackCooldown" | "supplyUsed" | "xpReward" | "goldBounty" | "armor" | "rangedDamageTaken" | "casterSlayer" | "regenPerSecond" | "unitClass" | "bodyForm">>;
 
 export type UnitVariantDef = UnitVariantStats & {
   base: UnitKind;

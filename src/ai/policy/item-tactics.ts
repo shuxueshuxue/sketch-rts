@@ -1,3 +1,4 @@
+import { isRangedUnit } from "../../shared/unit-weapon-class";
 import { EXPERIENCE_BOOK_XP, xpStarThresholds } from "../../shared/unit-value";
 import { canReceiveHealing } from "../../shared/healing";
 import { MAX_UPGRADE_LEVEL, UNIT_DEFS } from "../../shared/catalog";
@@ -136,7 +137,7 @@ function bestItemCarrier(snapshot: GameSnapshot, owner: PlayerId, item: WorldIte
 
 export function itemCarrierScore(unit: Unit, item: WorldItem, options: PresetAiPolicyOptions) {
   const health = unit.hp / Math.max(1, unit.maxHp);
-  const melee = unit.attackRange <= 80 ? 1 : 0;
+  const melee = !isRangedUnit(unit) ? 1 : 0;
   const ranged = unit.attackRange > 100 ? 1 : 0;
   const star = unit.level;
   const durable = unit.maxHp / 100;
