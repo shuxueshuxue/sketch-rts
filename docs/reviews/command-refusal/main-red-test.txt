@@ -1,0 +1,43 @@
+Base: a389ec26
+Test: reports insufficient gold without replacing an order or spending an entity id
+Copied regression to the base source; removed its unused new-API import and used an empty Vitest config.
+The test ran and failed on missing observable receipt, not on module loading.
+
+ RUN  v2.1.9 /tmp/sketch-refusal-red-main
+
+ ❯ src/shared/sim/command-refusal-feedback.test.ts (7 tests | 1 failed | 6 skipped) 63ms
+   × structured private refusal receipts > reports insufficient gold without replacing an order or spending an entity id 61ms
+     → expected [] to deep equally contain ObjectContaining{…}
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/shared/sim/command-refusal-feedback.test.ts > structured private refusal receipts > reports insufficient gold without replacing an order or spending an entity id
+AssertionError: expected [] to deep equally contain ObjectContaining{…}
+
+- Expected: 
+ObjectContaining {
+  "feedbackStatus": "rejected",
+  "owner": "player",
+  "refusal": Object {
+    "detail": Object {
+      "available": 1,
+      "required": 100,
+    },
+    "reason": "gold",
+  },
+  "type": "orderEnded",
+}
+
++ Received: 
+Array []
+
+ ❯ src/shared/sim/command-refusal-feedback.test.ts:27:26
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 skipped (7)
+   Start at  10:47:41
+   Duration  9.49s (transform 6.15s, setup 0ms, collect 8.21s, tests 63ms, environment 0ms, prepare 302ms)
+

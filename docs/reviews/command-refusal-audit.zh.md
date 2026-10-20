@@ -139,7 +139,7 @@
 
 已对齐 `src/shared/command-refusal.ts` 作为纯数据词表文件。26 可在其已授权的上塔规则 PR 中先导出 `GarrisonRefusal` 与 `CommandRefusal = GarrisonRefusal`；`types.ts` 引用 `CommandRefusal`。本线确认后扩充联合类型和客户端格式化，不来回迁文件。
 
-26 提出的五个码为 `garrison-mechanical`、`tower-full`、`garrison-body-size`、`garrison-ownership`、`garrison-ineligible`，具体 detail 见词表。26 负责整体拒绝、混选过滤和执行期的上塔拒绝产出；本线负责其余命令接入和全部客户端显示。**本草案尚未开始修改 sim/types 或实现 UI。**
+26 的最初五个码为 `garrison-mechanical`、`tower-full`、`garrison-body-size`、`garrison-ownership`、`garrison-ineligible`，后追加 `garrison-not-infantry`（mounted/beast/spirit）；具体 detail 见词表。26 负责整体拒绝、混选过滤和执行期的上塔拒绝产出；本线负责其余命令接入和全部客户端显示。本表记录实现前的审计结论；第一期实现与 mac1 对照见 [验收记录](command-refusal/README.zh.md)。
 
 ## 验证与兼容性边界
 

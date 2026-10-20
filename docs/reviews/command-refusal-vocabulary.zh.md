@@ -24,6 +24,7 @@ type CommandRefusal =
 
 | reason | detail 字段 | 中文示例 / 使用边界 |
 | --- | --- | --- |
+| `garrison-not-infantry` | `buildingId, bodyForm`（mounted/beast/spirit） | 只有徒步单位能登上防御塔。骑兵、野兽、灵体共用此码，机械保留专用码。 |
 | `garrison-mechanical` | `buildingId` | 机械单位不能登上防御塔。与 26 对齐。 |
 | `tower-full` | `buildingId, used, capacity, required` | 塔顶已满（已用 3/4，此单位需要 2）。与 26 对齐。 |
 | `garrison-body-size` | `buildingId, radius, towerRadius` | 单位体型过大，无法登塔。与 26 对齐，文案不显示内部半径。 |
@@ -104,3 +105,5 @@ type CommandRefusal =
 - 同一命令多个单位同因合并；detail 数值不同则真实显示范围或分条。金币、库存、冷却在实际拒绝时取值，不用下达时快照冒充到达后的状态。
 - waiting 使用相同原因数据，但不结束原订单。普通攻击间隔、正常瞄准、正常转船、合法排队、主动取消不自动成为错误通知。
 - 精确文案兼顾中文和英文；sim 不依赖 locale，客户端不按英文 message 做字符串匹配。
+
+第一期实际输出采用 `src/shared/command-refusal.ts` 的封闭联合类型；船只、甲板、炮位与装备的拟议细码暂不输出，用真实的 `condition-unmet.category` 粗分类保留原因，第二期再细化。界面与验收见 [第一期记录](command-refusal/README.zh.md)。
