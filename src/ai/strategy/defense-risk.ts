@@ -88,3 +88,20 @@ export function defenseProtectionValue(input: Readonly<{
     protectedGold: assetValueGold * protectedShare,
     grossGold: assetValueGold * (protectedShare - staticShare) };
 }
+
+/** Counterfactual asset survival while staying at its current site. Peaceful
+ * branches preserve the asset with probability one; real/potential armies are
+ * the same mutually exclusive SiteThreat scenarios used for protection. This
+ * is not a second combat model and does not assert an unknown site is safe. */
+export function defenseInPlaceSurvival(input: Readonly<{
+  threat: ReturnType<typeof defenseThreatScenarios> | null;
+  defendingForce: number;
+}>) {
+  if (!Number.isFinite(input.defendingForce) || input.defendingForce < 0) throw new Error('Invalid in-place defense force');
+  if (!input.threat || input.threat.status === 'unknown') return { status: 'unknown' as const, survivalProbability: null,
+    reasonCode: input.threat?.reasonCode ?? 'in-place-site-threat-unobserved', unknownIds: input.threat?.unknownIds ?? [] };
+  const protectedValue = defenseProtectionValue({ threat: input.threat, assetValueGold: 1,
+    cohortForce: 0, staticForce: input.defendingForce })!;
+  return { status: 'known' as const, survivalProbability: 1 - protectedValue.attackProbability + protectedValue.staticBaselineGold,
+    reasonCode: 'same-site-threat-in-place-survival', unknownIds: [] };
+}

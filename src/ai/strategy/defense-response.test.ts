@@ -3,7 +3,7 @@ import { createBuilding, createUnit } from '../../shared/map';
 import { createGame } from '../../shared/sim';
 import { creepForce } from '../policy/v7/creep';
 import { structureRating } from '../policy/v6/strength';
-import { assessDefenseResponse } from './defense-response';
+import { assessDefenseResponse, currentInPlaceDefense } from './defense-response';
 import type { Situation, SituationUnit } from './types';
 
 const target = { entityId: 'hall', landId: 'land:1' as const, point: { x: 1000, y: 1000 } };
@@ -25,6 +25,19 @@ function fixture() {
 }
 
 describe('same-window defense response without the priced cohort', () => {
+  it('counts only physical source-site occupants and accurate static cover once', () => {
+    const { input, unit } = fixture();
+    const tower = createBuilding('cover', 'player', 'defenseTower', 800, 1000, true);
+    input.snapshot.buildings.push(tower);
+    const mobile = unit('present', 2, 0), arriving = { ...unit('later', 50, 15), location: {
+      kind: 'land' as const, landId: 'land:1' as const, point: { x: 2000, y: 1000 } } };
+    const situation = { ...input.situation, units: [mobile, arriving, { ...unit('expires', 50, 0), expiresTick: input.snapshot.tick }] };
+    const value = currentInPlaceDefense({ ...input, situation });
+    expect(value.unitIds).toEqual(['present']); expect(value.towerIds).toEqual(['cover']);
+    expect(value).toMatchObject({ mobileForce: 2, staticForce: 1.3, totalForce: 3.3 });
+    expect(currentInPlaceDefense({ ...input, situation, excludedUnitIds: ['present'] }).totalForce).toBe(1.3);
+    expect(currentInPlaceDefense({ ...input, situation: JSON.parse(JSON.stringify(situation)) })).toEqual(value);
+  });
   it('uses camp currency and native static protection when explicitly requested', () => {
     const { input, unit } = fixture();
     const a = createUnit('other-1', 'player', 'footman', 1000, 1000);
