@@ -14,6 +14,15 @@ export type JsonValue = null | boolean | number | string | readonly JsonValue[] 
 export type ExecutionState = Readonly<Record<string, JsonValue>>;
 /** Generation changes on replacement/restart, not on each think or budget refresh. */
 export type ActionToken = Readonly<{ actionId: ActionId; generation: number }>;
+/** Production references remain symbolic until the exact foundation result is
+ * observed. An already-paid native job is adopted, never submitted twice. */
+export type ProductionBinding = Readonly<{
+  producer: Readonly<{ kind: 'existing'; buildingId: string } | { kind: 'action-result'; actionId: ActionId }>;
+  unitKind: TrainableUnitKind;
+  request: Readonly<{ kind: 'submit'; spendId: string } | { kind: 'adopt-paid'; jobId: string | null;
+    /** Baseline in the actual native training queue; nullable job IDs are not invented IDs. */
+    queueIndex: number; observedTick: number; remainingTicks: number }>;
+}>;
 export type ActionIntent =
   | Readonly<{ kind: 'clear-camp'; memberIds: readonly string[] }>
   | Readonly<{ kind: Exclude<Subgoal['kind'], 'clear-camp'> | 'defend-site' | 'recall' | 'wait-in-cover' | 'load' | 'sail' | 'unload'
@@ -177,6 +186,7 @@ export type ExecutionAction = Readonly<{
   methodId: MethodId;
   executor: string;
   intent: ActionIntent;
+  production?: ProductionBinding;
   target: Target;
   dependsOn: readonly ActionId[];
   /** Terminal handoff belongs here, never in departure admission. */
@@ -344,7 +354,7 @@ export type ExecutableMethod = DecisionFacts<Method> & Readonly<{
   preference: number;
   spends: readonly PlannedAllocationSpend[];
   voyagePlans?: readonly PlannedVoyage[];
-  actions: readonly Readonly<{ id: ActionId; executor: string; intent: ActionIntent; target: Target; dependsOn: readonly ActionId[];
+  actions: readonly Readonly<{ id: ActionId; executor: string; intent: ActionIntent; production?: ProductionBinding; target: Target; dependsOn: readonly ActionId[];
     demands: readonly ResourceDemand[]; spendIds: readonly string[]; completionEffects: readonly Effect[];
     /** Materialized bundle subset, including separate sources' assembly groups.
      * Omission is an unresolved skeleton, never permission to select globally. */
