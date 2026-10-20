@@ -39,6 +39,8 @@ describe('read-only AI death ledger', () => {
       cause: 'damage', fatalDamageProfile: { delivery: 'effect' },
       assignment: { task: { id: 'defense:hall', attribution: 'inferred', utility: null }, plannedBalanceRange: null },
       lastIssuedOrder: { executor: 'miningRally', tick: 0, attribution: 'recorded-issued-command' },
+      attributionContext: { objectiveId: null, methodId: null, assignmentId: null, provenance: 'inferred',
+        executor: 'miningRally', task: { id: 'defense:hall' }, location: { kind: 'land', landId: 'land:1' } },
       classification: { disposition: 'normal', primary: 'accepted-engagement', attribution: 'inferred' } });
     expect(record!.damageWindow.sources).toHaveLength(1);
     expect(record!.health.map(point => point.source)).toEqual(['think', 'damage-before', 'damage-after', 'removal']);

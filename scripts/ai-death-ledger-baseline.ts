@@ -6,6 +6,7 @@ import { createHash } from 'node:crypto';
 import { closeSync, createReadStream, createWriteStream, mkdirSync, openSync, readFileSync, unlinkSync, writeFileSync, writeSync } from 'node:fs';
 import { pipeline } from 'node:stream/promises';
 import { createGzip } from 'node:zlib';
+import { hostname } from 'node:os';
 import type { AiDeathLedger } from '../src/ai/death-ledger';
 import type { AiPolicyMemory } from '../src/ai/memory';
 import type { AiPlanTrace } from '../src/ai/plan-trace';
@@ -18,12 +19,13 @@ const { runAiGameLoop } = await import(`${base}/src/ai/game-runner.ts`) as typeo
 const { createAiMemoryProvider, planAiOwnerCommandEntries } = await import(`${base}/src/ai/planner-context.ts`) as typeof import('../src/ai/planner-context');
 const { buildAiPlanTrace } = await import(`${base}/src/ai/plan-trace.ts`) as typeof import('../src/ai/plan-trace');
 const { canonicalGameState, checksumGame } = await import(`${base}/src/shared/sim/checksum.ts`) as typeof import('../src/shared/sim/checksum');
+const { snapshotGame } = await import(`${base}/src/shared/sim.ts`) as typeof import('../src/shared/sim');
 const { AiDeathLedger: Ledger } = mode === 'observe' ? await import(`${base}/src/ai/death-ledger.ts`) as typeof import('../src/ai/death-ledger') : { AiDeathLedger: undefined };
 const owners = Object.keys(config.agents).filter(owner => config.agents[owner]!.version.startsWith('v9_'));
 const memories: Record<string, AiPolicyMemory> = {}, memoryProvider = createAiMemoryProvider(memories);
 const previous: Record<string, AiPlanTrace> = {}, durations: { tick: number; owner: string; plannerMs: number; observerMs: number; totalMs: number }[] = [];
 const fds = new Map<string, number>(), plannedHash = createHash('sha256'), commandHash = createHash('sha256');
-let ledger: AiDeathLedger | undefined, plannedCount = 0, commandCount = 0, finalGame: Parameters<typeof checksumGame>[0];
+let ledger: AiDeathLedger | undefined, plannedCount = 0, commandCount = 0, worldTick = -1, finalGame: Parameters<typeof checksumGame>[0];
 mkdirSync(out, { recursive: true });
 const log = (name: string, row: unknown) => {
   let fd = fds.get(name);
@@ -44,11 +46,23 @@ const loop = runAiGameLoop({ ...config, commandPlanner({ game, snapshot, owner, 
   durations.push({ tick: snapshot.tick, owner, plannerMs: planned - start, observerMs: end - planned, totalMs: end - start });
   const row = { tick: snapshot.tick, owner, entries }, bytes = JSON.stringify(row) + '\n';
   plannedHash.update(bytes); plannedCount += entries.length; log('planned', row);
+  if (snapshot.tick !== worldTick) {
+    worldTick = snapshot.tick;
+    log('worlds', { tick: snapshot.tick, players: snapshot.players, units: snapshot.units.map(unit => ({
+      id: unit.id, owner: unit.owner, kind: unit.kind, x: unit.x, y: unit.y, hp: unit.hp, maxHp: unit.maxHp,
+      order: unit.order, deck: unit.deck, cabin: unit.cabin, garrison: unit.garrison, expiresTick: unit.expiresTick,
+      attackRange: unit.attackRange, attackDamage: unit.attackDamage })),
+      buildings: snapshot.buildings.map(building => ({ id: building.id, owner: building.owner, kind: building.kind,
+        x: building.x, y: building.y, hp: building.hp, maxHp: building.maxHp, complete: building.complete })),
+      resources: snapshot.resources.map(mine => ({ id: mine.id, x: mine.x, y: mine.y, amount: mine.amount })), match: snapshot.match });
+  }
   if (trace) log('traces', trace);
   return entries;
 } }, {
   beforeLoop({ game }) {
     finalGame = game;
+    writeFileSync(`${out}/initial.json`, JSON.stringify({ source: config.source, config, snapshot: snapshotGame(game),
+      nextId: game.nextId, activePlayers: game.activePlayers }));
     if (Ledger) ledger = new Ledger(game, { owners });
   },
   onCommand({ tick, owner, source, scriptId, command }) {
@@ -67,9 +81,16 @@ const timing = (key: 'plannerMs' | 'observerMs' | 'totalMs') => ({ p50: quantile
 for (const row of durations) log('timings', row);
 const records = ledger?.records() ?? [];
 for (const row of records) log('deaths', row);
+// Close the last think→match-end interval, including casualties after the last scheduled think.
+// This end cap projects state only; it does not call the planner again.
+if (ledger) for (const owner of owners) {
+  const trace = buildAiPlanTrace(loop.snapshot, owner, memories[owner]!, config.agents[owner]!.version, previous[owner]);
+  log('traces', ledger.withPlanTrace(trace, previous[owner]?.tick ?? -1));
+}
 const summaries = Object.fromEntries(owners.map(owner => [owner, ledger?.summary(owner) ?? null]));
 const reconciled = !ledger || owners.every(owner => ledger.summary(owner).nativeLosses === (loop.snapshot.match.stats.unitsLost[owner] ?? 0));
 const receipt = { source: config.source, mode, name: config.name, mapId: config.mapId, owners, tick: loop.snapshot.tick,
+  host: hostname(), node: process.version,
   plannedCount, commandCount, plannedSha256: plannedHash.digest('hex'), commandSha256: commandHash.digest('hex'),
   snapshotSha256: sha(loop.snapshot), memorySha256: sha(memories), canonicalSha256: sha(canonicalGameState(finalGame!)),
   checksum: checksumGame(finalGame!), summaries, reconciled, errors: ledger?.errors ?? [],

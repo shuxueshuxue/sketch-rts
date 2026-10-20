@@ -9,6 +9,7 @@ import { createAiPolicyMemory } from './memory';
 import { effectiveCombatRating, structureRating } from './policy/v6/strength';
 import { deathTaskIndex, inferDeathAssignment, treatmentOrder } from './death-ledger-context';
 import { classifyAiDeath } from './death-ledger-classification';
+import { deathAttributionContext } from './death-ledger-attribution';
 import type { AiDeathAssignment, AiDeathBalance, AiDeathLedgerFrame, AiDeathSummary, AiIssuedOrder, AiUnitDeathRecord } from './death-ledger-types';
 export type * from './death-ledger-types';
 
@@ -221,7 +222,7 @@ export class AiDeathLedger {
     const treatment = treatmentOrder(currentOrderIssuer ?? state.order) && ['move', 'idle', 'hold'].includes(currentOrder.type);
     const landLabel = onLand ? groundWholeAt(this.game.map, unit) : undefined;
     const seaLabel = !onLand ? groundWholeAt(this.game.map, unit, 'sea') : undefined;
-    const base: Omit<AiUnitDeathRecord, 'classification'> = {
+    const raw: Omit<AiUnitDeathRecord, 'classification' | 'attributionContext'> = {
       id: `${unit.id}@${diedTick}`, tick: diedTick, removedTick: event.tick, owner: unit.owner, unit, catalogGold: UNIT_DEFS[unit.kind].cost,
       removal: event.reason, countedAsNativeLoss: event.countedAsLoss, actualDeath,
       cause: !actualDeath ? event.reason === 'expired' ? 'expiry' : 'script-exit'
@@ -251,6 +252,7 @@ export class AiDeathLedger {
         ...(!source ? ['fatal-source-not-recorded'] : !source.present && !remembered ? ['original-source-kind-unresolved'] : []),
         ...(currentOrderIssuer?.executor ? [] : ['current-order-executor-not-recorded']), 'issued-order-history-limited-to-64'],
     };
+    const base = { ...raw, attributionContext: deathAttributionContext(raw) };
     this.rows.push(structuredClone({ ...base, classification: classifyAiDeath(base) }));
     this.histories.delete(unit.id);
   }

@@ -1,6 +1,7 @@
 import type { DamageProfile } from '../shared/damage-types';
 import type { Observed, ObservedSource, ObservedUnit, SimulationRemovalEvent } from '../shared/sim/observation';
 import type { GameCommand, PlayerId } from '../shared/types';
+import type { DeathAttributionContext } from './strategy/types';
 
 export type AiDeathCategory = 'accepted-engagement' | 'logistics-transit' | 'idle'
   | 'retreat-or-treatment' | 'isolated-without-evacuation-plan' | 'recent-reassignment'
@@ -72,6 +73,8 @@ export type AiUnitDeathRecord = {
     source: ObservedSource; profile: Observed<DamageProfile>; damage: number; hits: number;
   }[] };
   assignment: AiDeathAssignment;
+  /** Shared strategy-layer join schema. Legacy task membership does not create formal allocations. */
+  attributionContext: DeathAttributionContext;
   currentOrder: ObservedUnit['order'];
   /** Can differ from the last issued command when a later command was queued or instantaneous. */
   currentOrderIssuer: AiIssuedOrder | null;
