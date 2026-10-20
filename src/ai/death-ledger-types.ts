@@ -20,6 +20,8 @@ export type AiDeathTask = {
   utility: number | null;
   combat: boolean;
   clearing: boolean;
+  /** Observed live members of the recorded target camp; absent only in older exports. */
+  clearingTargetIds?: string[];
   perimeter: { x: number; y: number; radius: number } | null;
 };
 

@@ -1,3 +1,4 @@
+import { activeCamp, neutralCamps } from './policy/v7/creep';
 import { unitMover } from '../shared/catalog';
 import type { GameSnapshot, PlayerId, Unit } from '../shared/types';
 import type { AiPolicyMemory } from './memory';
@@ -13,6 +14,11 @@ export function treatmentOrder(order: AiIssuedOrder | null): boolean {
 /** This indexes retained facts only. Never invokes policy selectors, pathfinders or claim pruning. */
 export function deathTaskIndex(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory) {
   const byUnit = new Map<string, AiDeathTask[]>();
+  let camps: ReturnType<typeof neutralCamps> | undefined;
+  const targetCamp = (state: NonNullable<NonNullable<AiPolicyMemory['v6']>['creep']>) =>
+    activeCamp(state, camps ??= neutralCamps(snapshot))?.creeps.map(unit => unit.id) ?? [];
+  const clearingTask = (value: AiDeathTask, state: NonNullable<NonNullable<AiPolicyMemory['v6']>['creep']>) =>
+    ({ ...value, clearingTargetIds: targetCamp(state) });
   const task = (id: string, kind: string, targetId: string | undefined, stage: string | undefined,
     source: string, combat = false, clearing = false, perimeter: AiDeathTask['perimeter'] = null): AiDeathTask =>
     ({ id, kind, targetId: targetId ?? null, stage: stage ?? null, source, combat, clearing, perimeter,
@@ -20,7 +26,11 @@ export function deathTaskIndex(snapshot: GameSnapshot, owner: PlayerId, memory: 
   const add = (ids: readonly string[] | undefined, value: AiDeathTask, first = false) => {
     for (const id of ids ?? []) {
       const entries = byUnit.get(id) ?? [];
-      if (!entries.some(entry => entry.id === value.id)) first ? entries.unshift(value) : entries.push(value);
+      const existing = entries.findIndex(entry => entry.id === value.id);
+      // Explicit task membership refines a claim with the same objective ID.
+      // Keep that ID stable, so an observation refinement is not a reassignment.
+      if (existing < 0) first ? entries.unshift(value) : entries.push(value);
+      else if (first) { entries.splice(existing, 1); entries.unshift(value); }
       byUnit.set(id, entries);
     }
   };
@@ -36,27 +46,38 @@ export function deathTaskIndex(snapshot: GameSnapshot, owner: PlayerId, memory: 
     const objective = ['mineRally', 'mineGuard', 'mineLeash', 'expansionGarrison'].includes(claim.kind) ? `defense:${claim.targetId}`
       : ['expansion', 'expansionMission'].includes(claim.kind) ? `expansion:${claim.targetId}`
       : claim.kind === 'attack' ? `attack:${claim.targetId}` : claim.kind === 'creep' && clearingTask ? clearingTask : `claim:${claim.kind}:${claim.targetId}`;
-    add([id], task(objective, claim.kind, claim.targetId,
+    const claimedTask = task(objective, claim.kind, claim.targetId,
       claim.returning ? 'returning' : claim.arrived ? 'arrived' : 'assigned', `unitClaims.${claim.kind}`,
-      defense || clearing || ['attack', 'harass'].includes(claim.kind), clearing, perimeter));
+      defense || clearing || ['attack', 'harass'].includes(claim.kind), clearing, perimeter);
+    if (clearing) {
+      const target = snapshot.units.find(unit => unit.id === claim.targetId && unit.owner === 'neutral');
+      claimedTask.clearingTargetIds = target ? (camps ??= neutralCamps(snapshot))
+        .find(camp => camp.creeps.some(unit => unit.id === target.id))?.creeps.map(unit => unit.id) ?? [] : [];
+    }
+    add([id], claimedTask);
     if (claim.expansionMineId) add([id], task(`expansion:${claim.expansionMineId}`, 'expansion', claim.expansionMineId,
-      memory.landExpansion?.stage, 'unitClaims.expansionMineId', true, memory.landExpansion?.stage === 'clear'));
+      memory.landExpansion?.stage, 'unitClaims.expansionMineId', true));
   }
   const expansion = memory.landExpansion;
   if (expansion?.combat?.creep) add(expansion.combat.creep.group,
-    task(`expansion:${expansion.mineId}`, 'expansion', expansion.mineId, expansion.combat.creep.stage,
-      'landExpansion.combat.creep', true, true), true);
-  if (memory.v6?.creep) add(memory.v6.creep.group, task(`camp:${memory.v6.creep.center.x}:${memory.v6.creep.center.y}`,
-    'clear-camp', undefined, memory.v6.creep.stage, 'v6.creep', true, true));
-  if (memory.landAttack) add(memory.landAttack.general.group, task(`attack:${memory.landAttack.targetId}`,
-    'attack', memory.landAttack.targetId, memory.landAttack.paused ?? memory.landAttack.general.stage ?? 'attack', 'landAttack', true,
-    !!memory.landAttack.camp), false);
+    clearingTask(task(`expansion:${expansion.mineId}`, 'expansion', expansion.mineId, expansion.combat.creep.stage,
+      'landExpansion.combat.creep', true, true), expansion.combat.creep), true);
+  if (memory.v6?.creep) add(memory.v6.creep.group, clearingTask(task(`camp:${memory.v6.creep.center.x}:${memory.v6.creep.center.y}`,
+    'clear-camp', undefined, memory.v6.creep.stage, 'v6.creep', true, true), memory.v6.creep), true);
+  if (memory.landAttack) {
+    const attack = memory.landAttack;
+    add(attack.general.group, task(`attack:${attack.targetId}`, 'attack', attack.targetId,
+      attack.paused ?? attack.general.stage ?? 'attack', 'landAttack', true));
+    if (attack.camp) add(attack.camp.group, clearingTask(task(`attack:${attack.targetId}`, 'attack', attack.targetId,
+      attack.camp.stage, 'landAttack.camp', true, true), attack.camp), true);
+  }
   if (memory.v6?.raid) add(memory.v6.raid.unitIds, task(`raid:${memory.v6.raid.targetHallId}`, 'raid', memory.v6.raid.targetHallId,
     memory.v6.raid.phase, 'v6.raid', true));
   if (memory.v6?.closeout) add(memory.v6.closeout.unitIds, task(`closeout:${memory.v6.closeout.targetId}`, 'attack',
     memory.v6.closeout.targetId, 'closeout', 'v6.closeout', true));
   for (const mounted of memory.mounted ?? []) add(mounted.unitIds, mounted.objective.kind === 'camp'
-    ? task(`mounted-camp:${mounted.objective.ids.join(',')}`, 'clear-camp', mounted.objective.ids[0], 'mounted', 'mounted', true, true)
+    ? { ...task(`mounted-camp:${mounted.objective.ids.join(',')}`, 'clear-camp', mounted.objective.ids[0], 'mounted', 'mounted', true, true),
+      clearingTargetIds: [...mounted.objective.ids] }
     : task(`mounted-raid:${mounted.objective.hallId}`, 'raid', mounted.objective.hallId, 'mounted', 'mounted', true));
   if (memory.support) add(memory.support.unitIds, task(`support:${memory.support.baseId}`, 'defense', memory.support.baseId, 'support', 'support', true));
   for (const [key, value] of Object.entries({ shopping: memory.shopping, shop: memory.v6?.shop,
@@ -77,8 +98,8 @@ export function deathTaskIndex(snapshot: GameSnapshot, owner: PlayerId, memory: 
   for (const conquest of Object.values(naval?.conquests ?? {})) {
     if (conquest.abandonedTick !== undefined || conquest.stage === 'complete') continue;
     // Explicit clearing membership only: do not invent a promise of every soldier on the island to every task.
-    add(conquest.combat?.creep?.group, task(`island:${conquest.mineId}:${conquest.sinceTick}`, 'island', conquest.mineId,
-      conquest.stage, 'naval.conquests.combat.creep', true, true));
+    if (conquest.combat?.creep) add(conquest.combat.creep.group, clearingTask(task(`island:${conquest.mineId}:${conquest.sinceTick}`, 'island', conquest.mineId,
+      conquest.stage, 'naval.conquests.combat.creep', true, true), conquest.combat.creep), true);
   }
   return { byUnit, general: memory.v6?.general, task, hallPerimeter };
 }
@@ -97,7 +118,7 @@ export function inferDeathAssignment(snapshot: GameSnapshot, unit: Unit, memory:
     ['defend', 'guard'].includes(general.mode) ? `defense:${general.targetHallId ?? 'unknown'}` : general.mode === 'attack'
       ? `attack:${general.targetHallId ?? 'unknown'}` : `general:${general.mode}`, general.mode === 'creep' ? 'clear-camp' : general.mode,
     general.targetHallId, general.stage ?? general.mode, 'v6.general', ['attack', 'defend', 'guard', 'creep'].includes(general.mode),
-    general.mode === 'creep', ['defend', 'guard'].includes(general.mode) ? index.hallPerimeter(general.targetHallId) : null));
+    false, ['defend', 'guard'].includes(general.mode) ? index.hallPerimeter(general.targetHallId) : null));
   if (order.type === 'mine') put(index.task(`mining:${order.resourceId}`, 'mining', order.resourceId, order.phase, 'order.mine'));
   if (order.type === 'build') put(index.task(`build:${order.buildingKind}:${order.x}:${order.y}`, 'construction', undefined, 'build', 'order.build'));
   if (!candidates.length && (order.type === 'attack' || order.type === 'attackMove') && unitMover(unit.kind) === 'sea') put(index.task(

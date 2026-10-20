@@ -25,7 +25,7 @@ function last<T>(values: readonly T[], predicate: (value: T) => boolean): T | un
 }
 type UnitHistory = {
   health: AiUnitDeathRecord['health']; damage: SimulationDamageEvent[];
-  dealt: { tick: number; damage: number; targetOwner: PlayerId }[];
+  dealt: { tick: number; damage: number; targetOwner: PlayerId; targetId: string }[];
   sinkingCarrier: { unit: ObservedUnit; damageWindow: AiUnitDeathRecord['damageWindow'] } | null; kill: SimulationKillEvent | null;
   assignment: AiDeathAssignment | null; switches: AiUnitDeathRecord['context']['switches'];
   order: AiIssuedOrder | null; orders: AiIssuedOrder[]; wornTick: number | null; balance: AiDeathBalance | null;
@@ -149,7 +149,7 @@ export class AiDeathLedger {
     if (event.source.entityType === 'unit' && this.owners.has(event.source.owner) && !this.seen.has(event.source.id) && event.damage > 0) {
       const source = this.history(event.source.id);
       source.dealt = source.dealt.filter(hit => hit.tick >= event.tick - HISTORY_TICKS);
-      source.dealt.push({ tick: event.tick, damage: event.damage, targetOwner: event.target.owner });
+      source.dealt.push({ tick: event.tick, damage: event.damage, targetOwner: event.target.owner, targetId: event.target.id });
     }
     if (!this.owners.has(event.target.owner) || event.hpBefore <= 0) return;
     const state = this.history(event.target.id);
@@ -277,7 +277,7 @@ export class AiDeathLedger {
     };
     const base = { ...raw, attributionContext: deathAttributionContext(raw) };
     const engagement = inferAiDeathEngagement(base, { identities: this.identities, teams: this.game.teams,
-      dealtDamage: state.dealt.filter(hit => hit.tick >= diedTick - HISTORY_TICKS && isAiDeathOpponent(hit.targetOwner, base, this.game.teams))
+      dealtDamage: state.dealt.filter(hit => hit.tick >= diedTick - HISTORY_TICKS && isAiDeathOpponent(hit.targetOwner, base, this.game.teams, hit.targetId))
         .reduce((sum, hit) => sum + hit.damage, 0) || null,
       ...(state.sinkingCarrier ? { carrier: state.sinkingCarrier } : {}), provenance: 'live-native-events' });
     this.rows.push(structuredClone({ ...base, classification: classifyAiDeath(base, engagement) }));
