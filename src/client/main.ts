@@ -1,5 +1,6 @@
 import { assertCurrentRulesVersion } from '../shared/rules-version';
 import { AiPlanOverlay } from './ai-plan-overlay';
+import { debugToolsEnabled } from './debug-tools';
 import { MatchThreadGameAdapter } from './match-worker/adapter';
 import type { DebugReplayTrace } from '../shared/replay';
 import {ProjectileOriginTracker} from './projectile-origins';
@@ -1009,11 +1010,12 @@ function renderMainMenu() {
     menuButton(t("home.rooms.label"), "", "data-open-room-browser", () => {
       openMenuRoute({ screen: "rooms" });
     }),
-    menuButton(i18n.locale==='zh'?'打开调试录制':'Open debug recording', '', 'data-open-plan-replay', () => {
+    // A developer entry, hidden from players (see debugToolsEnabled).
+    ...(debugToolsEnabled() ? [menuButton(i18n.locale==='zh'?'打开调试录制':'Open debug recording', '', 'data-open-plan-replay', () => {
       const input=document.createElement('input');input.type='file';input.accept='.json,application/json';
       input.onchange=()=>{const file=input.files?.[0];if(file)void file.text().then(text=>openPlanReplay(JSON.parse(text) as DebugReplayTrace))
         .catch(error=>{menuStatus.textContent=String(error);});};input.click();
-    }),
+    })] : []),
     menuButton(t("home.settings"), "", "data-open-profile", () => {
       openMenuRoute({ screen: "profile" });
     }),
@@ -1318,7 +1320,7 @@ function renderResultsMenu() {
   const completedRoom = currentRoom;
   panel.querySelector("[data-rematch]")?.addEventListener("click", () => void createReplayRoom(completedRoom));
   panel.querySelector("[data-return-home]")?.addEventListener("click", returnHome);
-  if (lastPlanReplay) panel.append(menuButton(i18n.locale==='zh'?'查看已录制回放':'View recorded replay','', 'data-view-plan-replay',()=>openPlanReplay(lastPlanReplay!)));
+  if (lastPlanReplay && debugToolsEnabled()) panel.append(menuButton(i18n.locale==='zh'?'查看已录制回放':'View recorded replay','', 'data-view-plan-replay',()=>openPlanReplay(lastPlanReplay!)));
   mapList.replaceChildren(panel);
 }
 
