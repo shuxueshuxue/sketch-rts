@@ -308,10 +308,7 @@ export class RoomNetHub {
         if (!this.planSubscriptions.has(socket)) continue;
         this.planSubscriptions.get(socket)?.();
         this.planSubscriptions.delete(socket);
-        const audience = aiPlanAudience(event.room, this.joinedPlayers.get(socket));
-        if (audience.kind !== "none") {
-          this.send(roomId, socket, { type: "aiPlans", roomId, packet: { type: "reset", tick: event.checkpoint.tick } });
-        }
+        this.send(roomId, socket, { type: "aiPlans", roomId, packet: { type: "reset", tick: event.checkpoint.tick } });
         this.subscribePlans(roomId, socket, true);
       }
     }

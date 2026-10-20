@@ -104,6 +104,12 @@ it('withholds live plans from a self-declared spectator in a seated multiplayer 
   const recorded = host.readDebugReplay(room.id, hub.planViewer(room.id, token)).aiPlans!.packets;
   expect(recorded.length).toBeGreaterThan(0);
   expect(recorded.every(packet => packet.type === 'coverage')).toBe(true);
+  const beforeReset = socket.messages.length;
+  host.resetRoom(room.id, room.mapId);
+  const resetPackets = socket.messages.slice(beforeReset).flatMap(message => message.type === 'aiPlans' ? [message.packet] : []);
+  // Reset is a content-free control: discard the old world's timeline even for a restricted viewer.
+  expect(resetPackets.map(packet => packet.type)).toEqual(['reset', 'coverage']);
+  expect(observe).not.toHaveBeenCalled();
   socket.close();
   host.closeRoom(room.id, 'host');
 });
