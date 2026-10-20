@@ -8,7 +8,7 @@ import { neutralCamps, creepForce } from '../policy/v7/creep';
 import { strengthOf } from '../policy/v6/strength';
 import { assessAllocatedCampBattle, assessAllocatedCampEngagement, assessAllocatedForce, assessPostBattleSiteRisk, assessPresentCampEngagement } from './allocated-force';
 import { combatCapability } from '../../shared/combat-capabilities';
-import { BUILDING_DEFS } from '../../shared/catalog';
+import { BUILDING_DEFS, UNIT_DEFS } from '../../shared/catalog';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { buildStrategyDecision } from './decision';
 import { landIdAt } from './regions';
@@ -158,6 +158,16 @@ describe('shared camp engagement facts', () => {
     expect(assessed.margin).toBeCloseTo(1.5);
     expect(assessed.requiredForce).toBeCloseTo(assessed.actualOpponentForce! + 1.5);
     expect(assessed.ourForce).toBe(creepForce(snapshot.units.filter(unit => unitIds.includes(unit.id)), assessed.opposition));
+    const battle = assessAllocatedCampBattle({ snapshot, situation: decision.situation, target, unitIds, battleStartTicks: 1200 });
+    expect(battle.attrition.deadUnitIds).toEqual(['unit-player-4-emberRavager-3661']);
+    expect(battle.attrition.expectedLossGold).toBe(UNIT_DEFS.emberRavager.cost);
+    expect(battle.attrition.survivors).toHaveLength(4);
+    expect(battle.attrition.wounds).toHaveLength(1);
+    expect(battle.attrition.survivors.filter(unit => unit.hp === unit.maxHp)).toHaveLength(3);
+    expect(battle.attrition.permanentUnitIds).not.toContain('unit-player-4-emberRavager-3661');
+    const survivors = battle.attrition.survivors.map(survivor => ({ ...snapshot.units.find(unit => unit.id === survivor.unitId)!, hp: survivor.hp }));
+    expect(battle.attrition.survivingCampForce).toBe(creepForce(survivors));
+    expect(battle.attrition.survivingFieldForce).toBe(strengthOf(survivors));
     expect(JSON.stringify({ snapshot, situation: decision.situation })).toBe(before);
   });
 

@@ -6,6 +6,7 @@ import { sameGround } from '../../shared/terrain';
 import type { GameSnapshot } from '../../shared/types';
 import { averagePoint, distance } from '../policy/spatial';
 import { assessAllocatedForce } from './allocated-force';
+import { focusedCasualties } from './focused-casualties';
 import { assessDefenseResponse } from './defense-response';
 import { allocatedVoyageValue } from './allocated-voyage-value';
 import { defenseProtectionValue, defenseThreatScenarios } from './defense-risk';
@@ -235,8 +236,7 @@ export const defenseMethodProvider: AllocationMethodProvider = {
       const enemyDps = enemies.reduce((sum, unit) => sum + combatCapability(snapshot, unit).dps * coverage.get(unit.id)!, 0)
         + hostileTowers.reduce((sum, tower) => sum + tower.attackDamage * SIM_TICKS_PER_SECOND / Math.max(1, tower.attackCooldown), 0);
       const fightSeconds = enemyHp > 0 ? enemyHp / Math.max(1, ourDps) : hostileTowers.length ? threatWindow / SIM_TICKS_PER_SECOND : 0;
-      const lossShare = Math.min(1, enemyDps * fightSeconds / Math.max(1, party.reduce((sum, unit) => sum + unit.hp, 0)));
-      return sum + scenario.probability * lossShare * party.reduce((sum, unit) => sum + UNIT_DEFS[unit.kind].cost, 0);
+      return sum + scenario.probability * focusedCasualties(party, enemyDps * fightSeconds).expectedLossGold;
     }, 0);
     const cost = [...(evacuation ? [] : [{ code: 'static-protection-baseline', value: protection?.staticBaselineGold ?? 0 }]),
       { code: 'combat-attrition', value: evacuation ? 0
