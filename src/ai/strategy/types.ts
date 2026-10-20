@@ -35,6 +35,8 @@ export type Arrival =
 export type CrossingEta = Readonly<{
   seaId: SeaId;
   shipId: string | null;
+  /** The exact producer used for a conditional new hull and its approach ETA. */
+  productionBuildingId?: string;
   departure: Point;
   landing: Point;
   /** Actual land-side unload point, distinct from the boat's water-side stop. */
