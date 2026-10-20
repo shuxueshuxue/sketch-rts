@@ -438,6 +438,7 @@ export type StrategyAllocationInput = Readonly<{
   previous: StrategyAllocationMemory | null;
   /** Already published once for this think; provider quotes are read-only. */
   voyageRisks?: ReadonlyMap<string, VoyageRiskStages>;
+  fixedVoyageArrival?: AllocationMethodQuoteInput['fixedVoyageArrival'];
   /** Current, explicit switching quote. Missing/unknown prices cannot authorize
    * taking an executed incumbent's resource. */
   switchingCost?: (request: Readonly<{ fromObjectiveId: string; toObjectiveId: string;
