@@ -11,12 +11,13 @@ import { mobileCare } from '../bootstrap_1/mobile-care';
 import { isOpponentOwner } from '../policy/ownership';
 import { distance } from '../policy/spatial';
 import { effectiveCombatRating, TOWER_STRENGTH, unitStrength } from '../policy/v6/strength';
-import { createArrivalQuery } from './arrivals';
+import { createArrivalQuery, crossingCandidateId, EXACT_CROSSING_CANDIDATES } from './arrivals';
 import { createPlanningDistanceQuery } from './distance-fields';
 import { unitCommitments, unitRoles } from './commitments';
 import { landIdAt, regionIndex, seaIdAt, unitLocation } from './regions';
 import { forceSuccessProbability, STRATEGY_PARAMETERS } from './utility';
 import type { Arrival, Asset, Evidence, Opportunity, Reason, Situation, SituationObservation, SiteThreat, Target } from './types';
+import type { SituationHistory, StrategyObservationMemory } from './observation-memory';
 
 const STATION_RANGE = 650;
 const MAX_OPTIONAL_TARGETS = 16;
@@ -28,12 +29,12 @@ const point = (entity: { x: number; y: number }) => ({ x: entity.x, y: entity.y 
 
 /** Read-only world assessment. All routing shares the caller's owner-think scope.
  * The previous value is observational history, never a serialized policy task. */
-export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory, previous?: Situation,
-  teams = snapshot.teams, fieldBuildBudget = Infinity, observation?: SituationObservation): Situation {
+export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory, previous?: SituationHistory,
+  teams = snapshot.teams, fieldBuildBudget = Infinity, observation?: SituationObservation, preparation?: StrategyObservationMemory): Situation {
   const tick = snapshot.tick, horizonTicks = STRATEGY_PARAMETERS.utilityHorizonTicks;
   const regions = regionIndex(snapshot.map, Infinity, tick), options = { memory, ...(teams ? { teams } : {}) };
-  const distances = createPlanningDistanceQuery(snapshot, fieldBuildBudget);
-  const query = createArrivalQuery(snapshot, owner, memory, distances, fieldBuildBudget, regions), live = snapshot.units.filter(unit => unit.hp > 0);
+  const distances = createPlanningDistanceQuery(snapshot, fieldBuildBudget, 'land', preparation);
+  const query = createArrivalQuery(snapshot, owner, memory, distances, fieldBuildBudget, regions, preparation), live = snapshot.units.filter(unit => unit.hp > 0);
   const byId = new Map(live.map(unit => [unit.id, unit]));
   const locations = new Map(live.map(unit => [unit.id, unitLocation(snapshot.map, unit, byId, tick)]));
   const unitLand = (unit: Unit) => { const location = locations.get(unit.id)!; return location.kind === 'land' ? location.landId : undefined; };
@@ -198,6 +199,30 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
     candidatesByTarget.set(id, selected);
   }
   const targetEntries = [...targets];
+  if (bounded) {
+    const crossings = new Map<string, { id: string; priority: number; upper: number; lower: number }>();
+    for (const [id, destination] of targetEntries) for (const unit of own) {
+      if (!candidatesByTarget.get(id)?.has(unit.id) || unitMover(unit.kind) !== 'land') continue;
+      const key = crossingCandidateId(snapshot, unit, destination); if (!key) continue;
+      const support = unit.deck?.shipId ?? unit.cabin?.shipId;
+      const sourcePoint = support ? byId.get(support) ?? unit : unit;
+      const lower = distance(sourcePoint, destination.point) * SIM_TICKS_PER_SECOND / Math.max(unit.speed, UNIT_DEFS.transport.speed);
+      if (lower > horizonTicks) continue;
+      const sourceSea = support ? seaIdAt(snapshot.map, sourcePoint) : undefined;
+      const sourceLand = !support && unitLand(unit);
+      const destinationSeas = regions.shoresByLand.get(destination.landId!);
+      if (!destinationSeas || !(sourceSea ? destinationSeas.has(sourceSea)
+        : [...(regions.shoresByLand.get(sourceLand || 'land:0')?.keys() ?? [])].some(sea => destinationSeas.has(sea)))) continue;
+      const priority = urgentSites.has(id) ? 2 : retainedIds.has(id) ? 1 : 0;
+      const value = opportunities.find(opportunity => opportunity.target.entityId === id)?.valueGold
+        ?? assets.find(asset => asset.id === id)?.discountedValueGold ?? 0;
+      const candidate = { id: key, priority, lower, upper: value / (1 + lower / horizonTicks) };
+      const old = crossings.get(key);
+      if (!old || lower < old.lower) crossings.set(key, candidate);
+    }
+    query.setCrossingShortlist([...crossings.values()].sort((a, b) => b.priority - a.priority || b.upper - a.upper
+      || a.lower - b.lower || compareId(a.id, b.id)).slice(0, EXACT_CROSSING_CANDIDATES).map(entry => entry.id));
+  }
   const beyondWindow: Arrival = { status: 'unknown', reason: { code: 'beyond-evaluation-window',
     detail: `Even a straight maximum-speed journey exceeds ${horizonTicks} ticks`, evidence: [] } };
   const units = live.map(unit => ({ id: unit.id, owner: unit.owner, kind: unit.kind,

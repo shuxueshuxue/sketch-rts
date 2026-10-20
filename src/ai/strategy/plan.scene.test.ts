@@ -12,7 +12,11 @@ import { planAiOwnerCommandEntriesWithTrace } from '../plan-trace-planner';
 import { generateNavalObjectives, decomposeNavalObjective } from './naval-objectives';
 import { buildStrategyPlanTrace, mergeIdleForces } from './plan';
 import { evaluateSituation } from './situation';
+import { originalPolicyMemory } from './observation-memory';
 import type { StrategyPlanTrace } from './types';
+
+const policyOnly = (value: AiPolicyMemory | Scene) => JSON.stringify('snapshot' in value
+  ? { ...value, memory: originalPolicyMemory(value.memory) } : originalPolicyMemory(value));
 
 type Scene = { event: string; owner: string; snapshot: GameSnapshot; memory: AiPolicyMemory };
 const frames: Scene[] = JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/objective-event-frames.json.gz', import.meta.url))).toString()).cases;
@@ -20,11 +24,11 @@ const plans = new Map<string, StrategyPlanTrace>();
 describe('proposed strategy plans at recorded conflict events', () => {
   beforeAll(() => {
     for (const original of frames) {
-      const frame = structuredClone(original), before = JSON.stringify(frame);
+      const frame = structuredClone(original), before = policyOnly(frame);
       setBuildingBodies(frame.snapshot.map, standingBodies(frame.snapshot));
       evaluateSituation(frame.snapshot, frame.owner, frame.memory);
-      const plan = withNativeLandRoadReuse(() => buildStrategyPlanTrace(frame.snapshot, frame.owner, { memory: frame.memory }));
-      expect(JSON.stringify(frame)).toBe(before);
+      const plan = withNativeLandRoadReuse(() => buildStrategyPlanTrace(frame.snapshot, frame.owner, { memory: frame.memory }, undefined, undefined, undefined, Infinity));
+      expect(policyOnly(frame)).toBe(before);
       plans.set(frame.event, plan);
     }
   });
@@ -33,7 +37,7 @@ describe('proposed strategy plans at recorded conflict events', () => {
     const home = plan.objectives.find(goal => goal.id === 'DefendSite:p0:building-p0-townHall-1166')!;
     const second = plan.objectives.find(goal => goal.id === 'ConquerIsland:p0:gold-gen-3')!;
     expect(home.utility.score).toBeGreaterThan(0);
-    expect(home.rank).toBeLessThan(second.rank);
+    expect(home.rank).toBeLessThan(second.rank!);
     expect(plan.methods.filter(method => method.objectiveId === home.id).map(method => method.kind))
       .toEqual(['local-squad', 'main-army-recall', 'cross-sea-reinforcement']);
   });
@@ -42,6 +46,9 @@ describe('proposed strategy plans at recorded conflict events', () => {
     const goal = plan.objectives.find(goal => goal.id === id)!;
     expect(goal.reasons.some(reason => reason.code === 'no-timely-response')).toBe(true);
     expect(goal.utility.successProbability).toBe(0);
+    expect(goal.utility.score).toBeNull(); expect(goal.rank).toBeNull();
+    expect(plan.feasibleObjectiveIds).not.toContain(goal.id);
+    expect(plan.blockedObjectives.find(quote => quote.objectiveId === id)).toMatchObject({ potentialUtility: null });
     expect(plan.objectives.find(goal => goal.id === 'Evacuate:p0:building-p0-townHall-9337')!.status).toBe('blocked');
     expect(plan.methods.filter(method => method.objectiveId === id).every(method => method.status === 'blocked')).toBe(true);
   });
@@ -103,21 +110,26 @@ describe('proposed strategy plans at recorded conflict events', () => {
   it('keeps cold runtime geometry explicitly unknown while exposing every component', () => {
     const frame = structuredClone(frames.find(frame => frame.event === 'E01')!);
     setBuildingBodies(frame.snapshot.map, standingBodies(frame.snapshot));
-    const before = JSON.stringify(frame);
+    const before = policyOnly(frame);
     const plan = withNativeLandRoadReuse(() => buildStrategyPlanTrace(frame.snapshot, frame.owner, { memory: frame.memory }));
     expect(plan.limitations.some(reason => reason.code === 'geometry-refresh-pending')).toBe(true);
+    for (const blocked of plan.objectives.filter(objective => objective.status === 'blocked')) {
+      expect(blocked.utility.score).toBeNull(); expect(blocked.rank).toBeNull();
+      expect(plan.feasibleObjectiveIds).not.toContain(blocked.id);
+      expect(plan.blockedObjectives.some(quote => quote.objectiveId === blocked.id)).toBe(true);
+    }
     expect(plan.limitations.some(reason => reason.code === 'shore-index-refresh-pending')).toBe(false);
     expect(plan.situation.units.flatMap(unit => unit.arrivals).some(entry => entry.arrival.status === 'unknown'
       && entry.arrival.reason.code === 'geometry-refresh-pending')).toBe(true);
     expect(plan.situation.lands.length).toBe(plans.get('E01')!.situation.lands.length);
     expect(plan.situation.seas.length).toBe(plans.get('E01')!.situation.seas.length);
-    expect(JSON.stringify(frame)).toBe(before);
+    expect(policyOnly(frame)).toBe(before);
   });
   it('marks L3 mobile care as a life-saving interruption of the original guard assignment', () => {
     const frame: Scene = JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/recovery-L3.json.gz', import.meta.url))).toString());
     setBuildingBodies(frame.snapshot.map, standingBodies(frame.snapshot));
     evaluateSituation(frame.snapshot, frame.owner, frame.memory);
-    const plan = withNativeLandRoadReuse(() => buildStrategyPlanTrace(frame.snapshot, frame.owner, { memory: frame.memory }));
+    const plan = withNativeLandRoadReuse(() => buildStrategyPlanTrace(frame.snapshot, frame.owner, { memory: frame.memory }, undefined, undefined, undefined, Infinity));
     const assignment = plan.assignments.find(assignment => assignment.unitId === 'unit-player-ashChieftain-3872')!;
     expect(assignment).toMatchObject({ objectiveId: 'DefendSite:player:building-player-townHall-5459',
       stage: 'life-saving-interruption', interruption: { kind: 'healing' } });
@@ -135,14 +147,14 @@ describe('proposed strategy plans at recorded conflict events', () => {
         && entry.command.unitIds.includes('unit-player-ashChieftain-3872'))).toBe(true);
       expect(result.trace.strategy!.situation.units.find(unit => unit.id === 'unit-player-ashChieftain-3872')!.commitments)
         .toContainEqual(expect.objectContaining({ source: 'mobileCare.accepted-plan', evidence: expect.objectContaining({ certainty: 'recorded' }) }));
-      expect(JSON.stringify(observed.memory)).toBe(JSON.stringify(plain.memory));
+      expect(policyOnly(observed.memory)).toBe(policyOnly(plain.memory));
       expect(JSON.stringify(observed.snapshot)).toBe(JSON.stringify(plain.snapshot));
     } finally { spy.mockRestore(); }
   });
   it('prices idle alternatives once per unit across all families', () => {
     const plan = plans.get('E01')!, prototype = plan.situation.units.find(unit => unit.owner === plan.owner && unit.location.kind === 'land' && !unit.roles.includes('worker'))!;
     const units = [{ ...prototype, id: 'a', commitments: [] }, { ...prototype, id: 'b', commitments: [] }];
-    const [first, second] = plan.objectives.filter(goal => goal.utility.score > 0);
+    const [first, second] = plan.objectives.filter(goal => goal.utility.score !== null && goal.utility.score > 0);
     const reason = { code: 'feasible-alternative', detail: 'Quoted against the complete family set', evidence: [] };
     const idle = mergeIdleForces([{ unitIds: ['a', 'b'], opportunityCostGold: 20, alternativeObjectiveId: first!.id, reason },
       { unitIds: ['a'], opportunityCostGold: 30, alternativeObjectiveId: second!.id, reason }], { ...plan.situation, units }, plan.objectives);

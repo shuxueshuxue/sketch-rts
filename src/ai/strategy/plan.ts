@@ -3,8 +3,9 @@ import type { GameSnapshot, PlayerId } from '../../shared/types';
 import { distance } from '../policy/spatial';
 import { generateNavalObjectives, decomposeNavalObjective } from './naval-objectives';
 import { evaluateSituation } from './situation';
+import { observationHistory, observationMemory, retainObservationHistory } from './observation-memory';
 import type { Assignment, BudgetEntry, IdleForce, MethodPlanner, ObjectiveGenerator, PlanningContext,
-  Reason, Situation, SituationObservation, StrategyPlanTrace, Target } from './types';
+  Reason, Situation, SituationObservation, StrategyPlanTrace, Target, BlockedObjectiveQuote } from './types';
 
 /** Explicit read-only inputs, not a mutable global registry. A family owns no
  * evaluator; every family consumes exactly the same assessed Situation. */
@@ -17,18 +18,37 @@ export type ObjectiveFamily = Readonly<{
 export const NAVAL_OBJECTIVE_FAMILY: ObjectiveFamily = { id: 'naval', generate: generateNavalObjectives, decompose: decomposeNavalObjective };
 
 export function buildStrategyPlanTrace(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext,
-  previous?: StrategyPlanTrace, families: readonly ObjectiveFamily[] = [NAVAL_OBJECTIVE_FAMILY], observation?: SituationObservation): StrategyPlanTrace {
-  const old = previous?.owner === owner && previous.tick < snapshot.tick ? previous : undefined;
+  _previous?: StrategyPlanTrace, families: readonly ObjectiveFamily[] = [NAVAL_OBJECTIVE_FAMILY], observation?: SituationObservation, fieldBuildBudget = 1): StrategyPlanTrace {
+  const preparation = observationMemory(snapshot, owner, options.memory);
+  const old = preparation.history && preparation.history.tick < snapshot.tick ? preparation.history : undefined;
   const context: PlanningContext = { snapshot, owner, memory: options.memory };
-  const situation = evaluateSituation(snapshot, owner, options.memory, old?.situation, options.teams ?? snapshot.teams, 1, observation);
+  const situation = evaluateSituation(snapshot, owner, options.memory, old && observationHistory(preparation), options.teams ?? snapshot.teams, fieldBuildBudget, observation, preparation);
   const generated = families.flatMap(family => family.generate(situation, context, old?.objectives ?? [])
     .map(objective => ({ family, objective })));
   if (new Set(generated.map(entry => entry.objective.id)).size !== generated.length) throw new Error('Duplicate strategic objective id');
   const methods = generated.flatMap(({ family, objective }) => family.decompose(situation, objective, context));
-  const candidates = generated.map(({ objective }) => ({ ...objective,
-    methodIds: methods.filter(method => method.objectiveId === objective.id).map(method => method.id) }))
-    .sort((a, b) => b.utility.score - a.utility.score || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
-    .map((objective, index) => ({ ...objective, rank: index + 1 }));
+  const idOrder = (a: { id: string }, b: { id: string }) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+  const rows = generated.map(({ objective }) => ({ ...objective,
+    utility: { ...objective.utility, score: objective.status === 'blocked' ? null : objective.utility.score },
+    methodIds: methods.filter(method => method.objectiveId === objective.id).map(method => method.id) }));
+  const feasible = rows.filter(objective => ['candidate', 'active'].includes(objective.status) && objective.utility.score !== null)
+    .sort((a, b) => b.utility.score! - a.utility.score! || idOrder(a, b));
+  const ranks = new Map(feasible.map((objective, index) => [objective.id, index + 1]));
+  const candidates = rows.sort(idOrder).map(objective => ({ ...objective, rank: ranks.get(objective.id) ?? null }));
+  const blockedObjectives: BlockedObjectiveQuote[] = candidates.filter(objective => objective.status === 'blocked').map(objective => {
+    const alternatives = methods.filter(method => method.objectiveId === objective.id);
+    return { objectiveId: objective.id,
+      missingPreconditions: alternatives.flatMap(method => method.preconditions.flatMap(condition => condition.status === 'met' ? []
+        : [{ methodId: method.id, preconditionId: condition.id, kind: condition.kind, status: condition.status, reason: condition.reason }])),
+      potentialUtility: objective.conditionalQuote?.potentialUtility ?? null,
+      potentialAssumptions: objective.conditionalQuote?.assumptions ?? objective.reasons,
+      prerequisiteCost: alternatives.map(method => ({ methodId: method.id,
+        knownGold: method.subgoals.reduce((sum, step) => sum + step.demands.reduce((sum, demand) => sum + (demand.kind === 'gold' ? demand.amount : 0), 0), 0),
+        unknown: [...method.preconditions.filter(condition => condition.status === 'unknown').map(condition => condition.reason),
+          ...method.subgoals.filter(step => step.kind === 'train-force' && !step.demands.some(demand => demand.kind === 'gold'))
+            .flatMap(step => step.reasons)],
+        alreadyIncludedUtilityCodes: objective.conditionalQuote?.includedPrerequisiteUtilityCodes ?? [] })) };
+  });
   const objectives = candidates.map(objective => {
     const mines = objective.effects.flatMap(effect => effect.kind === 'mining-established' ? [effect.mineId] : []);
     const alternatives = candidates.filter(candidate => candidate.id !== objective.id && candidate.effects.some(effect =>
@@ -77,7 +97,11 @@ export function buildStrategyPlanTrace(snapshot: GameSnapshot, owner: PlayerId, 
     opportunityCostGold: 0, alternativeObjectiveId: null, reason: { code: 'idle-alternative-unknown',
       detail: 'No land attack/pressure quotation provider attached; zero quoted cost is unknown, not proof that idling is optimal', evidence: [] } }].filter(idle => idle.unitIds.length);
   const idleForces = mergeIdleForces(idleQuotes, situation, objectives);
+  retainObservationHistory(preparation, situation, objectives);
+  if (preparation.truncated) limitations.push({ code: 'observation-history-truncated',
+    detail: 'The bounded observation ledger discarded older facts; absent historical objectives and lost sites remain unknown', evidence: [] });
   return { schemaVersion: 1, tick: snapshot.tick, owner, mode: 'observe', situation, objectives, methods, assignments,
+    feasibleObjectiveIds: feasible.map(objective => objective.id), blockedObjectives,
     preemptions: [], budget, idleForces, limitations };
 }
 
@@ -91,7 +115,8 @@ export function mergeIdleForces(quotes: readonly IdleForce[], situation: Situati
     const ids = [...new Set(quote.unitIds)];
     if (!Number.isFinite(quote.opportunityCostGold) || quote.opportunityCostGold < 0) throw new Error('Invalid idle opportunity cost');
     const alternative = objectives.find(objective => objective.id === quote.alternativeObjectiveId);
-    const cost = alternative && alternative.utility.score > 0 && !['complete', 'abandoned', 'failed'].includes(alternative.status)
+    const cost = alternative && alternative.utility.score !== null && alternative.utility.score > 0
+      && ['candidate', 'active'].includes(alternative.status)
       ? quote.opportunityCostGold / Math.max(1, ids.length) : 0;
     for (const id of ids) {
       const unit = situation.units.find(unit => unit.id === id);

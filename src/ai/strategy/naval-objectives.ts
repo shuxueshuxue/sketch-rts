@@ -1,5 +1,6 @@
 import { BUILDING_DEFS, UNIT_DEFS } from '../../shared/catalog';
 import { combatCapability } from '../../shared/combat-capabilities';
+import { walkableGoal } from '../../shared/terrain';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { bodyMass } from '../../shared/physical-body';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
@@ -7,12 +8,15 @@ import type { Unit } from '../../shared/types';
 import { distance } from '../policy/spatial';
 import { isOpponentOwner } from '../policy/ownership';
 import { isBacklineKind } from '../policy/v6/backline';
-import { creepForce, EXPANSION_GUARD_RANGE, forceFor, neutralCamps, type Camp } from '../policy/v7/creep';
+import { creepForce, EXPANSION_GUARD_RANGE, forceFor } from '../policy/v7/creep';
+import { neutralCampExposure, type NeutralCampExposureFacts } from '../situation/neutral-camp-exposure';
+import { neutralCampPointContacts } from '../situation/neutral-camp-contact';
 import { objectiveId } from './commitments';
 import { landIdAt } from './regions';
 import { discountGold, forceSuccessProbability, forceTimeGold, STRATEGY_PARAMETERS, strategyUtility } from './utility';
 import type { Arrival, Asset, Effect, Method, Objective, ObjectiveKind, PlanningContext, Precondition, Reason,
   ResourceDemand, Situation, SituationUnit, SiteThreat, Subgoal, Target, Utility } from './types';
+import type { PreviousObjective } from './observation-memory';
 
 const STATION_RANGE = 650;
 const byId = (a: { id: string }, b: { id: string }) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
@@ -23,7 +27,7 @@ const reason = (tick: number, code: string, detail: string, source = 'strategy.n
   evidence: [{ source, tick, certainty: 'inferred', detail }] });
 const fieldDemand = (target: Target, strength: number, permanent = false): ResourceDemand => ({ kind: 'force', metric: 'field-strength',
   strength, roles: ['frontline', 'ranged'], at: target, neededByTick: null, permanent });
-const cache = new WeakMap<PlanningContext['snapshot'], Camp[]>();
+const cache = new WeakMap<PlanningContext['snapshot'], NeutralCampExposureFacts>();
 const actorsBySnapshot = new WeakMap<PlanningContext['snapshot'], ReadonlyMap<string, Unit>>();
 function collapseAfter(context: PlanningContext, threat: SiteThreat, hp: number): number {
   const events = threat.attackers.flatMap(attacker => {
@@ -39,13 +43,13 @@ function collapseAfter(context: PlanningContext, threat: SiteThreat, hp: number)
   }
   return damagePerTick > 0 ? previous + remaining / damagePerTick : threat.horizonTicks;
 }
-function camps(context: PlanningContext) {
+function campFacts(context: PlanningContext) {
   let result = cache.get(context.snapshot);
-  if (!result) cache.set(context.snapshot, result = neutralCamps(context.snapshot));
+  if (!result) cache.set(context.snapshot, result = neutralCampExposure(context.snapshot));
   return result;
 }
 function campAt(context: PlanningContext, target: Target) {
-  return camps(context).find(camp => distance(camp.center, target.point) <= EXPANSION_GUARD_RANGE);
+  return campFacts(context).camps.find(exposure => distance(exposure.camp.center, target.point) <= EXPANSION_GUARD_RANGE)?.camp;
 }
 function stationed(situation: Situation, target: Target) {
   return situation.units.filter(unit => unit.owner === situation.owner && !unit.roles.includes('worker')
@@ -118,14 +122,18 @@ function atRiskValue(situation: Situation, site: Asset) {
     && asset.target.landId === site.target.landId && distance(asset.target.point, site.target.point) <= STATION_RANGE)
     .reduce((sum, asset) => sum + (asset.kind === 'mine' ? asset.discountedValueGold : asset.replacementGold), 0);
 }
-function createObjective(situation: Situation, previous: readonly Objective[], kind: ObjectiveKind, target: Target,
+function createObjective(situation: Situation, previous: readonly PreviousObjective[], kind: ObjectiveKind, target: Target,
   effects: readonly Effect[], utility: Utility, reasons: readonly Reason[], status: Objective['status'] = 'candidate', sinceTick?: number): Objective {
   const id = objectiveId(kind, situation.owner, kind === 'ReinforceFront' ? target.landId! : target.entityId ?? target.landId!), old = previous.find(objective => objective.id === id);
   const since = sinceTick ?? old?.sinceTick ?? situation.tick;
   const persistenceBonus = status === 'active' ? Math.min(STRATEGY_PARAMETERS.maximumPersistenceGold,
     Math.max(0, utility.score) * STRATEGY_PARAMETERS.persistenceBenefitShare) : 0;
   return { id, kind, owner: situation.owner, target: { ...target, point: { ...target.point } }, effects,
-    utility: strategyUtility({ ...utility, persistenceBonus }), status, sinceTick: since, rank: 0,
+    utility: { ...strategyUtility({ ...utility, persistenceBonus }), ...(status === 'blocked' ? { score: null } : {}) },
+    ...(status === 'blocked' ? { conditionalQuote: { potentialUtility: null,
+      assumptions: [reason(situation.tick, 'conditional-valuation-unknown', 'Deferred force/threat geometry does not establish the force, ETA or success probability after prerequisites')],
+      includedPrerequisiteUtilityCodes: [] } } : {}),
+    status, sinceTick: since, rank: null,
     reasons, methodIds: [], stability: { minimumStayUntilTick: old?.stability.minimumStayUntilTick
       ?? (status === 'active' ? since + STRATEGY_PARAMETERS.minimumStayTicks : situation.tick),
     challengerId: old?.stability.challengerId ?? null, challengerThinks: old?.stability.challengerThinks ?? 0 } };
@@ -133,7 +141,7 @@ function createObjective(situation: Situation, previous: readonly Objective[], k
 
 /** Candidate generation only. Positive scores are proposals, not commands or
  * ownership; an existing voyage is not proof its original objective is useful. */
-export function generateNavalObjectives(situation: Situation, context: PlanningContext, previous: readonly Objective[]): readonly Objective[] {
+export function generateNavalObjectives(situation: Situation, context: PlanningContext, previous: readonly PreviousObjective[]): readonly Objective[] {
   const objectives: Objective[] = [], tick = situation.tick;
   const threats = situation.lands.flatMap(land => land.threats);
   const deficits = new Map<string, { target: Target; strength: number; minimumStrength: number; utility: Utility; parentId: string; reasons: Reason[] }>();
@@ -155,7 +163,8 @@ export function generateNavalObjectives(situation: Situation, context: PlanningC
     if (unknownThreat) reasons.push(reason(tick, 'threat-geometry-pending', 'Coarse attacker presence is recorded; a pending arrival field must not become a safety claim or a successful defense quote'));
     objectives.push(createObjective(situation, previous, 'DefendSite', site.target,
       [{ kind: 'site-safe', siteId: site.id, throughTick: tick + threat.horizonTicks }], utility, reasons,
-      unknownThreat ? 'blocked' : context.memory.miningDefense?.hallId === site.id || held.has(objectiveId('DefendSite', context.owner, site.id)) ? 'active' : 'candidate'));
+      unknownThreat || enemy > 0 && available <= 0 ? 'blocked'
+        : context.memory.miningDefense?.hallId === site.id || held.has(objectiveId('DefendSite', context.owner, site.id)) ? 'active' : 'candidate'));
     const deficit = Math.max(0, enemy - threat.friendlyOnStationStrength);
     if (deficit > (deficits.get(site.target.landId!)?.strength ?? 0)) deficits.set(site.target.landId!, { target: site.target,
       strength: deficit, minimumStrength: enemy, utility, parentId: objectiveId('DefendSite', situation.owner, site.id), reasons });
@@ -216,7 +225,8 @@ export function generateNavalObjectives(situation: Situation, context: PlanningC
     const target: Target = { ...deficit.target, point: { ...deficit.target.point }, landId: deficit.target.landId! };
     const support = createObjective(situation, previous, 'ReinforceFront', target,
       [{ kind: 'force-present', landId: target.landId!, minimumStrength: deficit.minimumStrength, throughTick: tick + situation.horizonTicks }],
-      deficit.utility, [...deficit.reasons, reason(tick, 'supports-parent-effect', deficit.parentId)]);
+      deficit.utility, [...deficit.reasons, reason(tick, 'supports-parent-effect', deficit.parentId)],
+      objectives.find(objective => objective.id === deficit.parentId)?.status === 'blocked' ? 'blocked' : 'candidate');
     objectives.push({ ...support, supportsObjectiveIds: [deficit.parentId] });
   }
   return objectives.sort(byId);
@@ -263,14 +273,21 @@ export function decomposeNavalObjective(situation: Situation, objective: Objecti
       } else transport = add('obtain-transport', { point: crossing.departure, seaId: crossing.seaId }, [needed], [],
         `Request ${crossing.shipId}; a live stream needs explicit release before reuse`);
       require('transport', false, needed, [transport], `Wait ${crossing.waitTicks}, board ${crossing.boardingTicks}, sail ${crossing.sailingTicks}, unload ${crossing.unloadingTicks} ticks`);
-      const shore = { ...target, point: { ...crossing.landing } };
-      const opposition = situation.units.filter(unit => (unit.owner === 'neutral' || isOpponentOwner(context.snapshot, context.owner, unit.owner,
+      const ground = crossing.landingGround ?? walkableGoal(context.snapshot.map, crossing.landing.x, crossing.landing.y);
+      const shore = { ...target, point: { ...ground } };
+      const contacts = force.selected.flatMap(unit => {
+        const actor = context.snapshot.units.find(actor => actor.id === unit.id);
+        return actor ? neutralCampPointContacts(context.snapshot, actor, ground, { facts: campFacts(context), horizonTicks: situation.horizonTicks }) : [];
+      });
+      const exposed = new Set(contacts.map(contact => contact.memberId));
+      const opposition = situation.units.filter(unit => unit.owner === 'neutral' ? exposed.has(unit.id) : isOpponentOwner(context.snapshot, context.owner, unit.owner,
         context.snapshot.teams ? { teams: context.snapshot.teams } : {}))
-        && unit.location.kind === 'land' && unit.location.landId === target.landId && distance(unit.location.point, crossing.landing) <= 400);
+        .filter(unit => unit.owner === 'neutral' || unit.location.kind === 'land' && unit.location.landId === target.landId && distance(unit.location.point, ground) <= 400);
       const beachReady = sumStrength([...force.present, ...force.selected]) >= sumStrength(opposition) * 1.4;
       const clearBeach = beachReady ? null : add('clear-beachhead', shore,
         [fieldDemand(shore, sumStrength(opposition) * 1.4, true)], [], 'Clear the actual unload shore, not the inland mine point');
-      require('shore-safe', beachReady, null, clearBeach ? [clearBeach] : [], 'Forecast local opposition at the selected actual landing shore; enemy movement remains uncertain');
+      require('shore-safe', beachReady, null, clearBeach ? [clearBeach] : [],
+        `Actual landing ground; shared neutral contacts ${contacts.map(contact => `${contact.memberId}:${contact.reason}`).join(',') || 'none'}; enemy movement remains uncertain`);
     }
     const selectedRoutes = force.selected.map(unit => route(unit, target.entityId!));
     if (force.unknownForce) preconditions.push({ id: `${id}/requires:unquoted-force-arrivals`, kind: 'route', status: 'unknown',

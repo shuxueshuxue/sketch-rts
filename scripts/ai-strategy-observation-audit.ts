@@ -24,6 +24,9 @@ const { checksumGame } = await load('shared/sim/checksum.ts');
 const { CommandFrameRuntime, normalizeCommandFrameEntries } = await load('shared/sim/command-frame-runtime.ts');
 const { planAiOwnerCommandEntriesWithTrace } = await load('ai/plan-trace-planner.ts');
 const started = new Date().toISOString();
+const policyMemories = (memories: Record<string, unknown>) => Object.fromEntries(Object.entries(memories).map(([owner, memory]) => {
+  const { strategy: _observation, ...policy } = memory as Record<string, unknown>; return [owner, policy];
+}));
 let game: Game, aiPlayers: string[], versions: Record<string, AiScriptVersion>;
 if (mode === 'large') {
   const players = ['player', 'enemy', 'enemy2', 'player-4']; aiPlayers = players.slice(1);
@@ -120,6 +123,10 @@ const result = { sourceRoot: root, mode, observe, host: hostname(), cpu: cpus()[
   map: game.map.id, startTick, finalTick: game.tick, initialChecksum, finalChecksum: checksumGame(game),
   commandsSha256: commandsHash.digest('hex'), tracesSha256: traceHash.digest('hex'),
   memoriesSha256: createHash('sha256').update(JSON.stringify(ai.memories)).digest('hex'),
+  policyMemoriesSha256: createHash('sha256').update(JSON.stringify(policyMemories(ai.memories))).digest('hex'),
+  observationSha256: createHash('sha256').update(JSON.stringify(Object.fromEntries(Object.entries(ai.memories)
+    .map(([owner, memory]) => [owner, memory.strategy])))).digest('hex'),
+  maxRssKiB: process.resourceUsage().maxRSS,
   cpuMs: (used.user + used.system) / 1000, thinkMs: { n: sorted.length,
     mean: sorted.reduce((a, b) => a + b, 0) / sorted.length,
     p50: sorted[Math.floor(sorted.length * .5)], p95: sorted[Math.floor(sorted.length * .95)], max: sorted.at(-1) },

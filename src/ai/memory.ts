@@ -114,6 +114,8 @@ export type NavalPlanMemory = {
 };
 
 export type AiPolicyMemory = {
+  /** Serialized observation publication/history; does not assign units or budget. */
+  strategy?: { observation: import('./strategy/observation-memory').StrategyObservationMemory };
   territory?: {
     idleTicks: number; lastTick: number; idle: boolean; retryUntil?: number;
     objective?: { targetId: string; point: { x: number; y: number }; sinceTick: number; reachedTick?: number; nextStepCheck?: number; slots?: { x: number; y: number }[] } | undefined;

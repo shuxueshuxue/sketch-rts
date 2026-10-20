@@ -1,3 +1,4 @@
+import { originalPolicyMemory } from './strategy/observation-memory';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { runGameLoop } from '../sdk/game-runner';
@@ -117,7 +118,7 @@ describe('read-only AI plan trace', () => {
     const plain = planAiOwnerCommandEntries(structuredClone(snapshot), { ...request, memory: plainMemory });
     const traced = planAiOwnerCommandEntriesWithTrace(structuredClone(snapshot), { ...request, memory: tracedMemory });
     expect(JSON.stringify(traced.commands)).toBe(JSON.stringify(plain));
-    expect(tracedMemory).toEqual(plainMemory);
+    expect(JSON.stringify(originalPolicyMemory(tracedMemory))).toBe(JSON.stringify(plainMemory));
     expect(traced.trace.plannerVersion).toBe(version);
     const defaultPlan = planAiOwnerCommandEntries(structuredClone(snapshot), request);
     expect(JSON.stringify(planAiOwnerCommandEntriesWithTrace(structuredClone(snapshot), request).commands)).toBe(JSON.stringify(defaultPlan));
@@ -167,7 +168,7 @@ describe('read-only AI plan trace', () => {
           return result.commands;
         },
       }, { onCommand({ tick, owner, scriptId, command }) { commands.push(JSON.stringify({ tick, owner, scriptId, command })); } });
-      return { planned: Buffer.from(planned.join('\n')), commands: Buffer.from(commands.join('\n')), memory: JSON.stringify(memories), world: JSON.stringify(snapshotGame(game)), thinks, traces };
+      return { planned: Buffer.from(planned.join('\n')), commands: Buffer.from(commands.join('\n')), memory: JSON.stringify(Object.fromEntries(Object.entries(memories).map(([owner, memory]) => [owner, originalPolicyMemory(memory)]))), world: JSON.stringify(snapshotGame(game)), thinks, traces };
     };
     const plain = replay(false), traced = replay(true);
     expect(traced.thinks).toBeGreaterThan(10);

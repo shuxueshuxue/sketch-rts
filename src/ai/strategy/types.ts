@@ -37,6 +37,8 @@ export type CrossingEta = Readonly<{
   shipId: string | null;
   departure: Point;
   landing: Point;
+  /** Actual land-side unload point, distinct from the boat's water-side stop. */
+  landingGround?: Point;
   /** Additional wait after the embarkation walk, excluding time already spent walking. */
   waitTicks: number;
   boardingTicks: number;
@@ -159,11 +161,15 @@ export type Objective = Readonly<{
   owner: PlayerId;
   target: Target;
   effects: readonly Effect[];
-  utility: Utility;
+  /** An unavailable quote has score=null, never a numeric sentinel. */
+  utility: Omit<Utility, 'score'> & { score: number | null };
+  /** Conditional valuation supplied by the family, never a committed payoff. */
+  conditionalQuote?: Readonly<{ potentialUtility: Utility | null; assumptions: readonly Reason[];
+    includedPrerequisiteUtilityCodes: readonly string[] }>;
   status: 'candidate' | 'active' | 'blocked' | 'complete' | 'failed' | 'abandoned';
   sinceTick: number;
-  /** Zero until the collector ranks all families; observe ranking is not an order. */
-  rank: number;
+  /** Only feasible quotes have a rank. Blocked and terminal goals have null. */
+  rank: number | null;
   reasons: readonly Reason[];
   methodIds: readonly MethodId[];
   /** Supporting objectives share the parent's payoff; do not sum it twice. */
@@ -299,12 +305,25 @@ export type StrategyPlanTrace = Readonly<{
   mode: 'observe' | 'control';
   situation: Situation;
   objectives: readonly Objective[];
+  /** Utility order over feasible quotes only; objectives above is the unique table. */
+  feasibleObjectiveIds: readonly ObjectiveId[];
+  blockedObjectives: readonly BlockedObjectiveQuote[];
   methods: readonly Method[];
   assignments: readonly Assignment[];
   preemptions: readonly PreemptionEvent[];
   budget: readonly BudgetEntry[];
   idleForces: readonly IdleForce[];
   limitations: readonly Reason[];
+}>;
+export type BlockedObjectiveQuote = Readonly<{
+  objectiveId: ObjectiveId;
+  missingPreconditions: readonly Readonly<{ methodId: MethodId; preconditionId: string;
+    kind: Precondition['kind']; status: 'unmet' | 'unknown'; reason: Reason }>[];
+  potentialUtility: Utility | null;
+  potentialAssumptions: readonly Reason[];
+  /** Alternatives are not summed. Included terms must not be charged twice. */
+  prerequisiteCost: readonly Readonly<{ methodId: MethodId; knownGold: number;
+    unknown: readonly Reason[]; alreadyIncludedUtilityCodes: readonly string[] }>[];
 }>;
 export type PlanningContext = Readonly<{ snapshot: GameSnapshot; owner: PlayerId; memory: AiPolicyMemory }>;
 /** Outcomes already accepted by the ordinary planner; no second policy pass. */
@@ -316,7 +335,7 @@ export interface SituationEvaluator {
   evaluate(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory, previous?: Situation): Situation;
 }
 export interface ObjectiveGenerator {
-  generate(situation: Situation, context: PlanningContext, previous: readonly Objective[]): readonly Objective[];
+  generate(situation: Situation, context: PlanningContext, previous: readonly import('./observation-memory').PreviousObjective[]): readonly Objective[];
 }
 export interface MethodPlanner {
   decompose(situation: Situation, objective: Objective, context: PlanningContext): readonly Method[];

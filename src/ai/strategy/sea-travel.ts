@@ -6,10 +6,11 @@ import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { GameSnapshot, Unit } from '../../shared/types';
 import { createPlanningDistanceQuery } from './distance-fields';
 import type { Point } from './types';
+import type { StrategyObservationMemory } from './observation-memory';
 
 type Estimate = Readonly<{ status: 'known'; ticks: number; computedTick: number; geometryTick: number | null } | { status: 'pending' | 'unreachable' }>;
 const pending: Estimate = { status: 'pending' }, unreachable: Estimate = { status: 'unreachable' };
-type SeaFacts = { roads: Map<string, { points: readonly Point[] | undefined; computedTick: number }>; prices: Map<string, Estimate> };
+type SeaFacts = { roads: Map<string, readonly Point[] | undefined>; prices: Map<string, number> };
 // Terrain identity is the sea-basin geometry version. Terrain is immutable; a
 // replacement terrain gets its own namespace. Buildings do not change this grid.
 const facts = new WeakMap<Terrain, SeaFacts>();
@@ -24,14 +25,13 @@ function retain<T>(values: Map<string, T>, key: string, value: T, limit: number)
  * Fixed dock legs start aligned; a live approach also includes its actual heading.
  * Refresh mode is an audit seam: calculate the same quote without reading/writing
  * price/road caches. Both modes still share the native weighted distance field. */
-export function createSeaTravelQuery(snapshot: GameSnapshot, buildBudget = Infinity, cache: 'reuse' | 'refresh' = 'reuse') {
-  const fields = createPlanningDistanceQuery(snapshot, buildBudget, 'sea');
+export function createSeaTravelQuery(snapshot: GameSnapshot, buildBudget = Infinity, cache: 'reuse' | 'refresh' = 'reuse', observation?: StrategyObservationMemory) {
+  const fields = createPlanningDistanceQuery(snapshot, buildBudget, 'sea', observation);
   const terrain = snapshot.map.terrain;
   let shared = terrain && facts.get(terrain);
   if (terrain && !shared) facts.set(terrain, shared = { roads: new Map(), prices: new Map() });
   const local = new Map<string, Estimate>(), poses = new WeakMap<Unit, Unit>();
   const stats = { requests: 0, localHits: 0, priceHits: 0, geometryBuilds: 0, pricings: 0 };
-  let work = 0;
   function travel(ship: Unit, from: Point, to: Point, future = false): Estimate {
     stats.requests++;
     if (gap(from, to) <= 1e-7) return { status: 'known', ticks: 0, computedTick: snapshot.tick, geometryTick: null };
@@ -41,30 +41,29 @@ export function createSeaTravelQuery(snapshot: GameSnapshot, buildBudget = Infin
     const roadKey = `${from.x}:${from.y}:${to.x}:${to.y}`;
     const windKey = windAt(snapshot.map, from).key;
     const key = `${roadKey}:${ship.kind}:${limits.speed}:${limits.acceleration}:${limits.turnRate}:${windKey}:${fixed ? 'aligned' : ship.sailing?.heading ?? 0}`;
-    const hit = cache === 'reuse' && (local.get(key) ?? (fixed ? shared?.prices.get(key) : undefined));
-    if (hit) {
-      if (local.has(key)) stats.localHits++; else stats.priceHits++;
-      if (fixed && shared?.prices.has(key)) retain(shared.prices, key, hit, 1024);
-      return hit;
+    // Publication depends on this owner's serialized work, before either cache.
+    const field = fields.field(to);
+    if (!field) return pending;
+    const localHit = cache === 'reuse' && local.get(key);
+    if (localHit) { stats.localHits++; return localHit; }
+    const hit = cache === 'reuse' && fixed ? shared?.prices.get(key) : undefined;
+    if (hit !== undefined) {
+      stats.priceHits++; retain(shared!.prices, key, hit, 1024);
+      const result: Estimate = { status: 'known', ticks: hit, geometryTick: field.builtTick, computedTick: snapshot.tick };
+      local.set(key, result); return result;
     }
     const knownRoad = cache === 'reuse' && shared?.roads.has(roadKey);
-    const roadRecord = knownRoad ? shared!.roads.get(roadKey) : undefined;
-    let road = roadRecord?.points, geometryTick = roadRecord?.computedTick ?? snapshot.tick;
-    // One budget token covers a new fixed leg's geometry and pricing. A cached
-    // road reprices only when its exact motion/wind projection changes.
-    if (fixed && work >= buildBudget) return pending;
+    let road = knownRoad ? shared!.roads.get(roadKey) : undefined;
+    const geometryTick = field.builtTick;
     if (!fixed || !knownRoad) {
-      const field = fields.field(to);
-      if (!field) return pending;
-      geometryTick = field.builtTick; road = field.field.road(from, to);
+      road = field.field.road(from, to);
       if (road && gap(road.at(-1)!, to) > 240) road = undefined;
       if (fixed) {
         stats.geometryBuilds++;
-        if (cache === 'reuse' && shared) retain(shared.roads, roadKey, { points: road, computedTick: geometryTick }, 512);
+        if (cache === 'reuse' && shared) retain(shared.roads, roadKey, road, 512);
       }
     }
     if (!road) { if (cache === 'reuse') local.set(key, unreachable); return unreachable; }
-    if (fixed) work++;
     let pose = poses.get(ship);
     if (!pose) { pose = { ...ship }; shareShipProfile(ship, pose); poses.set(ship, pose); }
     pose.x = from.x; pose.y = from.y;
@@ -78,7 +77,7 @@ export function createSeaTravelQuery(snapshot: GameSnapshot, buildBudget = Infin
     const first = road[1] ?? to;
     let previous = from, heading = Math.atan2(first.y - from.y, first.x - from.x), seconds = 0;
     if (!fixed) {
-      const length = fields.field(to)!.field.cost(from)!;
+      const length = field.field.cost(from)!;
       seconds = length / speedFor(heading) + angleGap(ship.sailing?.heading ?? 0, heading) / limits.turnRate;
     } else for (const point of road.slice(1)) {
       const length = gap(previous, point); if (!length) continue;
@@ -94,7 +93,7 @@ export function createSeaTravelQuery(snapshot: GameSnapshot, buildBudget = Infin
     const result: Estimate = { status: 'known', ticks, computedTick: snapshot.tick, geometryTick };
     if (cache === 'reuse') {
       local.set(key, result);
-      if (fixed && shared) retain(shared.prices, key, result, 1024);
+      if (fixed && shared) retain(shared.prices, key, ticks, 1024);
     }
     return result;
   }

@@ -49,9 +49,9 @@ describe('sea leg pricing keyed by its complete computational inputs', () => {
     expect(backward).toEqual(createSeaTravelQuery(snapshot, Infinity, 'refresh').travel(turned, from, to));
     expect(query.travel(ship, from, to, true)).toEqual(query.travel(turned, from, to, true));
   });
-  it('uses a new namespace for replacement terrain and retains quote age on later identical facts', () => {
+  it('uses a new namespace for replacement terrain and samples quote provenance at the observation tick', () => {
     const { snapshot, ship, from, to } = frame(), quote = createSeaTravelQuery(snapshot).travel(ship, from, to, true);
-    expect(createSeaTravelQuery({ ...snapshot, tick: snapshot.tick + 15 }).travel(ship, from, to, true)).toEqual(quote);
+    expect(createSeaTravelQuery({ ...snapshot, tick: snapshot.tick + 15 }).travel(ship, from, to, true)).toEqual({ ...quote, computedTick: snapshot.tick + 15, geometryTick: snapshot.tick + 15 });
     const terrain = { ...snapshot.map.terrain!, cells: Array.from({ length: 40 }, (_, row) => '~'.repeat(20) + (row === 30 ? '~' : '.') + '~'.repeat(19)).join('') };
     const changed = { ...snapshot, map: { ...snapshot.map, terrain } }, query = createSeaTravelQuery(changed);
     const detour = query.travel(ship, from, to, true);

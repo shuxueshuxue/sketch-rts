@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { advanceMoverDistanceField, groundDistanceField, segmentWalkable, setBuildingBodies, shareBuildingBodies } from '../../shared/terrain';
+import { prepareMoverDistanceField, groundDistanceField, segmentWalkable, setBuildingBodies, shareBuildingBodies } from '../../shared/terrain';
 import type { GameMap, GameSnapshot } from '../../shared/types';
 import { createPlanningDistanceQuery } from './distance-fields';
 import { regionIndex } from './regions';
+import { observationMemory } from './observation-memory';
 
 const map = (): GameMap => ({ id: 'bareDuel', name: 'Goal field test', landmarks: [], width: 1000, height: 500,
   terrain: { cols: 20, rows: 10, cell: 50, cells: '.'.repeat(200) } });
@@ -32,11 +33,12 @@ describe('event-refreshed planning goal fields', () => {
   });
   it('defers cold fields by a deterministic count and exposes their original geometry tick', () => {
     const world = map(), snapshot = { tick: 100, map: world } as GameSnapshot;
-    const first = createPlanningDistanceQuery(snapshot, 1);
+    const state = observationMemory({ ...snapshot, buildings: [], resources: [] } as unknown as GameSnapshot, 'player', { jobs: [], unitClaims: {} });
+    const first = createPlanningDistanceQuery(snapshot, 1, 'land', state);
     expect(first.field({ x: 875, y: 125 })!.builtTick).toBe(100);
     expect(first.field({ x: 875, y: 375 })).toBeNull();
     expect(first.built).toBe(1); expect(first.deferred).toBe(1);
-    const second = createPlanningDistanceQuery({ ...snapshot, tick: 115 }, 1);
+    const second = createPlanningDistanceQuery({ ...snapshot, tick: 115 }, 1, 'land', state);
     expect(second.field({ x: 875, y: 125 })!.builtTick).toBe(100);
     expect(second.field({ x: 875, y: 375 })!.builtTick).toBe(115);
   });
@@ -48,12 +50,12 @@ describe('event-refreshed planning goal fields', () => {
     const bodies = [{ x: 750, y: 125, radius: 60 }];
     setBuildingBodies(world, bodies); setBuildingBodies(other, bodies);
     const expected = groundDistanceField(other, goal)!;
-    let result = advanceMoverDistanceField(world, goal, 'land', 31), turns = 1;
+    let result = prepareMoverDistanceField(world, goal, 'land', 31), turns = 1;
     expect(result.field).toBeUndefined(); expect(result.work).toBeLessThanOrEqual(31);
     expect(groundDistanceField(world, goal, true)).toBeUndefined();
     while (!result.field && turns < 200) {
-      result = advanceMoverDistanceField(world, goal, 'land', 31); turns++;
-      expect(result.work).toBeLessThanOrEqual(31);
+      result = prepareMoverDistanceField(world, goal, 'land', 31 * turns); turns++;
+      expect(result.work).toBeLessThanOrEqual(31 * (turns - 1));
     }
     expect(turns).toBeGreaterThan(1); expect(result.field).toBeDefined();
     for (let row = 0; row < 30; row++) for (let col = 0; col < 40; col++) {
@@ -64,9 +66,9 @@ describe('event-refreshed planning goal fields', () => {
     expect(road[0]).toEqual(from); expect(road.at(-1)).toEqual(goal);
     expect(road.slice(1).every((point, index) => segmentWalkable(world, road[index]!, point))).toBe(true);
     const pending = { x: 125, y: 125 };
-    advanceMoverDistanceField(world, pending, 'land', 1);
+    prepareMoverDistanceField(world, pending, 'land', 1);
     setBuildingBodies(world, [{ x: 475, y: 125, radius: 100 }]);
-    expect(advanceMoverDistanceField(world, pending, 'land', 1).field).toBeUndefined();
+    expect(prepareMoverDistanceField(world, pending, 'land', 1).field).toBeUndefined();
     expect(groundDistanceField(world, goal, true)).toBeUndefined();
   });
   it('enumerates all original labels immediately while scanning shores over several thinks', () => {

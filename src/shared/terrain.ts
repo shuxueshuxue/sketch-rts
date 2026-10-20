@@ -1275,7 +1275,8 @@ export type GroundDistanceField = Readonly<{
   road(from: Point, goal: Point): readonly Point[] | undefined;
 }>;
 const distanceFields = new WeakMap<TerrainRuntime, { revision: number; fields: Map<number, GroundDistanceField> }>();
-const pendingDistanceFields = new WeakMap<TerrainRuntime, { revision: number; jobs: Map<number, BoxFlow> }>();
+const distanceFieldWork = new WeakMap<GroundDistanceField, number>();
+const pendingDistanceFields = new WeakMap<TerrainRuntime, { revision: number; jobs: Map<number, { flow: BoxFlow; progress: number }> }>();
 
 /** One building-aware goal field serves every actor. Uses the same footprint
  * overlay, goal seeds, no-corner-cut steps and pace weights as native steering.
@@ -1295,8 +1296,12 @@ export function moverDistanceField(map: Pick<GameMap, 'terrain'>, goal: Point, m
   if (known || peek) return known;
   const box = { left: 0, top: 0, width: state.width, height: state.walk.length / state.width };
   const { seeds, costs } = goalSeeds(state, ground, target, box);
-  const field = growBox(state, box, seeds, costs), scale = terrain.cell / (STRAIGHT * GROUND_WEIGHT);
+  const field = beginBoxFlow(state, box, seeds, costs, { dist: new Int32Array(state.walk.length), next: new Int32Array(0) },
+    Array.from({ length: BUCKETS }, () => []));
+  growBoxInto(state, box, seeds, costs, field, field);
+  const scale = terrain.cell / (STRAIGHT * GROUND_WEIGHT);
   const answer = distanceFieldAnswer(state, ground, field.dist, scale);
+  distanceFieldWork.set(answer, field.work);
   if (cache.fields.size >= 64) cache.fields.delete(cache.fields.keys().next().value!);
   cache.fields.set(target, answer);
   return answer;
@@ -1337,37 +1342,47 @@ function distanceFieldAnswer(state: TerrainRuntime, ground: TerrainRuntime, dist
   } };
 }
 
-/** Resume the same eight-neighbour weighted flow in a bounded number of queue
- * removals. No partial distances escape: until complete, the caller gets unknown.
- * Pending work is geometry-only and never enters snapshots or AI memory. */
-export function advanceMoverDistanceField(map: Pick<GameMap, 'terrain'>, goal: Point, mover: Mover, workBudget: number):
-  { field: GroundDistanceField | undefined; work: number } {
+/** Reconstruct the answer after an absolute, deterministic number of queue removals.
+ * A warm cache may avoid computation, but cannot publish a field before that work
+ * allowance completes the native search. A cold fork rebuilds the same prefix. */
+export function prepareMoverDistanceField(map: Pick<GameMap, 'terrain'>, goal: Point, mover: Mover, throughWork: number):
+  { field: GroundDistanceField | undefined; work: number; complete: boolean } {
   const known = moverDistanceField(map, goal, mover, true);
-  if (known || !map.terrain) return { field: known, work: 0 };
+  if (known) {
+    const required = distanceFieldWork.get(known) ?? 0;
+    return { field: required <= throughWork ? known : undefined, work: Math.min(required, throughWork), complete: required <= throughWork };
+  }
+  if (!map.terrain) return { field: known, work: 0, complete: true };
   const terrain = map.terrain, state = routing(map, terrain, mover), ground = runtime(terrain, mover);
   const target = padAt(state, goal.x, goal.y), revision = mover === 'land' ? groundRevision(map) : 0;
-  if (target < 0 || ground.walk[target] !== 1 || workBudget <= 0) return { field: undefined, work: 0 };
+  if (target < 0 || ground.walk[target] !== 1) return { field: undefined, work: 0, complete: true };
+  if (throughWork <= 0) return { field: undefined, work: 0, complete: false };
   let pending = pendingDistanceFields.get(state);
   if (pending?.revision !== revision) pendingDistanceFields.set(state, pending = { revision, jobs: new Map() });
-  let job = pending.jobs.get(target);
-  if (!job) {
+  let retained = pending.jobs.get(target);
+  if (!retained) {
     const box = { left: 0, top: 0, width: state.width, height: state.walk.length / state.width };
     const { seeds, costs } = goalSeeds(state, ground, target, box);
-    job = beginBoxFlow(state, box, seeds, costs, { dist: new Int32Array(state.walk.length), next: new Int32Array(0) },
+    const flow = beginBoxFlow(state, box, seeds, costs, { dist: new Int32Array(state.walk.length), next: new Int32Array(0) },
       Array.from({ length: BUCKETS }, () => []));
     // Limit abandoned candidates' sidecar geometry, independently of game state.
     if (pending.jobs.size >= 16) pending.jobs.delete(pending.jobs.keys().next().value!);
-    pending.jobs.set(target, job);
+    pending.jobs.set(target, retained = { flow, progress: 0 });
   }
-  growBoxInto(state, job.box, job.seeds, job.costs, job, job, workBudget);
-  const work = job.work;
-  if (job.pending || job.seeded < job.order.length) return { field: undefined, work };
+  const job = retained.flow;
+  if (retained.progress < throughWork) {
+    growBoxInto(state, job.box, job.seeds, job.costs, job, job, throughWork - retained.progress);
+    retained.progress += job.work;
+  }
+  if (job.pending || job.seeded < job.order.length) return { field: undefined, work: throughWork, complete: false };
   pending.jobs.delete(target);
   const field = distanceFieldAnswer(state, ground, job.dist, terrain.cell / (STRAIGHT * GROUND_WEIGHT));
+  distanceFieldWork.set(field, retained.progress);
   const cache = distanceFields.get(state)!;
   if (cache.fields.size >= 64) cache.fields.delete(cache.fields.keys().next().value!);
   cache.fields.set(target, field);
-  return { field, work };
+  return { field: retained.progress <= throughWork ? field : undefined,
+    work: Math.min(retained.progress, throughWork), complete: retained.progress <= throughWork };
 }
 
 // @@@ground-wholes - A mover's cells fall into wholes, each joined by its walks and cut off from every other: an island's

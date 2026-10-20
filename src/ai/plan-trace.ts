@@ -60,7 +60,8 @@ export type AiPlanTrace = {
   previousTick: number | null;
   changes: AiPlanChange[];
   limitations: string[];
-  /** Optional formal planner output; observe proposals never write policy memory or command frames.
+  /** Optional formal planner output; proposals never assign resources or write commands.
+   * Only publication/history metadata persists in memory.strategy.observation.
    * Existing module-state nodes remain valid when no strategy evaluator is attached. */
   readonly strategy?: StrategyPlanTrace;
   /** Opt-in external simulation observation; never retained in policy memory. */

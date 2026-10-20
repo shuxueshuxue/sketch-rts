@@ -9,7 +9,8 @@ import type { StrategyPlanTrace } from './strategy/types';
 export type AiPlanTraceOptions = AiOwnerPlannerOptions & { deathLedger?: AiDeathLedger };
 
 /** Opt-in observation at the existing think boundary; executes the ordinary planner exactly once.
- * The caller retains previous traces outside AI memory. Observers live outside the planner and simulation.
+ * Only deterministic publication/history writes memory.strategy.observation.
+ * Previous traces are display history, not required to restore strategy facts.
  */
 export function planAiOwnerCommandEntriesWithTrace<Source extends string = string>(snapshot: GameSnapshot,
   request: AiOwnerPlannerRequest<Source>, options: AiPlanTraceOptions = {}, previous?: AiPlanTrace,
