@@ -35,10 +35,7 @@ function matches(order: UnitOrder, command: GameCommand) {
   return order.type === 'hold' && command.type === 'holdPosition';
 }
 
-/** Called before claim pruning. A real rescue is a vacancy, not a timed lease. */
-export function prepareWorkerContinuation(snapshot: GameSnapshot, unit: Unit, memory: AiPolicyMemory) {
-  const claim = memory.unitClaims[unit.id], state = claim?.evacuation?.continuation;
-  if (!state) return;
+export function workerContinuationEndReason(snapshot: GameSnapshot, unit: Unit, state: WorkerContinuation) {
   const parent = state.parent, orders = [unit.order, ...(unit.orderQueue ?? [])].filter(order => order.type !== 'idle');
   const foundation = snapshot.buildings.some(building => building.hp > 0 && building.kind === parent.buildingKind
     && Math.hypot(building.x - parent.x, building.y - parent.y) < 1e-6);
@@ -47,6 +44,15 @@ export function prepareWorkerContinuation(snapshot: GameSnapshot, unit: Unit, me
     : !isBuildPlacementClear(snapshot, parent.buildingKind, parent) ? 'site-occupied'
     : orders.some(order => ![parent, ...state.binding, ...(state.pending ?? [])].some(command => matches(order, command))) ? 'order-replaced'
     : state.phase === 'resuming' && unit.order.type === 'build' && matches(unit.order, parent) ? 'native-parent-observed' : undefined;
+  return reason;
+}
+
+/** Called before claim pruning. A real rescue is a vacancy, not a timed lease. */
+export function prepareWorkerContinuation(snapshot: GameSnapshot, unit: Unit, memory: AiPolicyMemory) {
+  const claim = memory.unitClaims[unit.id], state = claim?.evacuation?.continuation;
+  if (!state) return;
+  const orders = [unit.order, ...(unit.orderQueue ?? [])].filter(order => order.type !== 'idle');
+  const reason = workerContinuationEndReason(snapshot, unit, state);
   if (reason) { endWorkerContinuation(snapshot, memory, unit.id, reason); return; }
   if (state.pending && orders.length && orders.every(order => state.pending!.some(command => matches(order, command)))) {
     state.binding = state.pending; delete state.pending;
@@ -87,16 +93,16 @@ export function workerOrderRoad(snapshot: GameSnapshot, worker: Unit) {
 export function workerContinuationCommands(snapshot: GameSnapshot, worker: Unit, state: WorkerContinuation, foes: readonly (Unit | Building)[]): GameCommand[] | undefined {
   if (state.phase === 'resuming' && (worker.order.type === 'move' || worker.orderQueue?.some(order => order.type === 'move'))) {
     const road = workerOrderRoad(snapshot, worker);
-    if (road && !workerExposure(snapshot, worker, road, { foes, allowDeparture: true }).length) return [];
+    if (road && !workerExposure(snapshot, worker, road, { foes, allowDeparture: true, firstOnly: true }).length) return [];
   }
   const goal = { x: state.parent.x, y: state.parent.y };
   const direct = nativeLandRoad(snapshot, worker, goal);
   if (!direct || Math.hypot(direct.points.at(-1)!.x - state.parent.x, direct.points.at(-1)!.y - state.parent.y) > 1) return undefined;
-  const clear = (points: readonly Point[]) => !workerExposure(snapshot, worker, points, { foes, allowDeparture: true }).length;
+  const clear = (points: readonly Point[]) => !workerExposure(snapshot, worker, points, { foes, allowDeparture: true, firstOnly: true }).length;
   if (clear(direct.points)) {
     // A native build does not have avoidCombat. Leave the firing lane with
     // admitted retreat waypoints first; issue build when outside exposure.
-    if (!workerExposure(snapshot, worker, worker, { foes }).length) return [{ ...state.parent }];
+    if (!workerExposure(snapshot, worker, worker, { foes, firstOnly: true }).length) return [{ ...state.parent }];
     return threatRoadCommands(worker, direct);
   }
   const disks = foes.flatMap(foe => {

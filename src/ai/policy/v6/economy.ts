@@ -1,3 +1,4 @@
+import { hasAssignedConstruction } from '../construction-assignment';
 import { engineeringWant } from "../engineering";
 import {seconds,SIM_TICKS_PER_SECOND} from '../../../shared/time';
 import { adaptiveArmyWants } from "../adaptive-army";
@@ -488,7 +489,7 @@ function goal(id: string, priority: number, cost: number, save: boolean, issue: 
 // toward the enemies and its farm's search both landed across a cliff from every worker, and neither site ever began
 // (pool-elderwood-4, from 1791 s).
 function build(economy: Economy, kind: BuildingKind, point: Point, used: Set<string>, play?: string): GameCommand | undefined {
-  if (used.size || economy.workers.some(worker => worker.order.type === "build")) return undefined;
+  if (used.size || hasAssignedConstruction(economy.snapshot, economy.workers, economy.options.memory)) return undefined;
   return issueV6Construction(economy, kind, point, used, play);
 }
 

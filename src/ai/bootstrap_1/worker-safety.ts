@@ -22,7 +22,7 @@ type Threat = Unit | Building;
 const ARRIVAL = 80;
 
 function endangered(snapshot: GameSnapshot, worker: Unit, point: { x: number; y: number }, foes: Threat[]) {
-  return workerExposure(snapshot, worker, point, { foes }).length > 0;
+  return workerExposure(snapshot, worker, point, { foes, firstOnly: true }).length > 0;
 }
 
 function evacuation(snapshot: GameSnapshot, owner: PlayerId, worker: Unit, foes: Threat[], options: AiPolicyContext) {

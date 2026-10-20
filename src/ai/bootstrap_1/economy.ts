@@ -1,3 +1,4 @@
+import { hasAssignedConstruction } from '../policy/construction-assignment';
 import { missingMiningWorkers } from './workforce';
 import { BUILDING_DEFS, UNIT_DEFS, canTrainAt, requiredSupplyCap, trainableUnitsAt, unitMover } from '../../shared/catalog';
 import { GOLD_MINE_RULES } from '../../shared/mining';
@@ -68,7 +69,7 @@ function productionWaveSupply(snapshot: GameSnapshot, owner: PlayerId, options: 
 
 // One pending construction of each kind: a walking colony builder does not lock home tech.
 const constructBootstrap: typeof issueV6Construction = (economy, kind, point, used, play) => {
-  if (used.size || economy.workers.some(worker => worker.order.type === 'build' && worker.order.buildingKind === kind)) return undefined;
+  if (used.size || hasAssignedConstruction(economy.snapshot, economy.workers, economy.options.memory, site => site.buildingKind === kind)) return undefined;
   // Let miners deliver their current load, then reuse free builders before interrupting a five-worker lane.
   const ready = availableV6ConstructionWorkers(economy, point, used).filter(worker => worker.carryingGold === 0);
   const issue = (workers: Unit[]) => issueV6Construction({ ...economy,
@@ -94,7 +95,7 @@ const constructBootstrap: typeof issueV6Construction = (economy, kind, point, us
 const prepareMiningCover: Parameters<typeof collectV6Goals>[5] = (economy, mine, priority, target) => {
   const { snapshot, owner, intel, own } = economy;
   // An issued hall construction already owns this expansion, including its walk to the site.
-  if (economy.workers.some(worker => worker.order.type === 'build' && worker.order.buildingKind === 'townHall')) return [];
+  if (hasAssignedConstruction(economy.snapshot, economy.workers, economy.options.memory, site => site.buildingKind === 'townHall')) return [];
   if (enemyExpansionPower(snapshot, intel, mine, BUILDING_DEFS.defenseTower.attackRange + GOLD_MINE_RULES.baseRange) === 0) {
     const free = v6ExpansionGoal(economy, mine, priority, target), foes = armedFoes(snapshot, owner, economy.options);
     const workers = economy.workers.filter(worker => retreatLandTravelTicks(snapshot, worker, free.point, foes) !== undefined);

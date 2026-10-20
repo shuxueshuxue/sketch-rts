@@ -20,7 +20,7 @@ export function workerExposureRadius(snapshot: GameSnapshot, worker: Unit, foe: 
  * Initial ranged-only evacuation remains unchanged. Retained actions use every
  * armed hostile, including neutral units, enemy soldiers and towers. */
 export function workerExposure(snapshot: GameSnapshot, worker: Unit, path: Point | readonly Point[], options: {
-  foes?: readonly Threat[]; initial?: boolean; allowDeparture?: boolean;
+  foes?: readonly Threat[]; initial?: boolean; allowDeparture?: boolean; firstOnly?: boolean;
 } = {}): readonly WorkerExposure[] {
   const points = Array.isArray(path) ? path : [path as Point];
   if (!points.length) return [];
@@ -29,6 +29,15 @@ export function workerExposure(snapshot: GameSnapshot, worker: Unit, path: Point
   for (const foe of foes) {
     if (foe.hp <= 0 || foe.attackDamage <= 0 || 'order' in foe && foe.deck
       || options.initial && 'order' in foe && !isRangedUnit(foe)) continue;
+    if (points.length === 1) {
+      const point = points[0]!, radius = workerExposureRadius(snapshot, worker, foe, point);
+      const distance = Math.hypot(foe.x-point.x,foe.y-point.y);
+      if (radius > 0 && distance <= radius) {
+        result.push({foe,point,segment:0,distance,radius});
+        if (options.firstOnly) return result;
+      }
+      continue;
+    }
     const contacts: WorkerExposure[] = [];
     // Threat reach is constant between charge minimum-range circles. Check the
     // closest point plus both sides of those crossings, not just the closest
@@ -62,7 +71,7 @@ export function workerExposure(snapshot: GameSnapshot, worker: Unit, path: Point
       && startGap <= workerExposureRadius(snapshot, worker, foe, start)
       && Math.hypot(foe.x - end.x, foe.y - end.y) > workerExposureRadius(snapshot, worker, foe, end)
       && contacts.every(contact => contact.distance >= startGap - 1e-6);
-    if (!leaving && contacts.length) result.push(contacts[0]!);
+    if (!leaving && contacts.length) { result.push(contacts[0]!); if (options.firstOnly) return result; }
   }
   return result;
 }

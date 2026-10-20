@@ -16,6 +16,7 @@ const original = JSON.parse(readFileSync(`${folder}/summary.json`, 'utf8'));
 const { createGame, restoreSnapshotIntoGame, snapshotGame } = await import(`${tree}/src/shared/sim.ts`) as typeof import('../src/shared/sim');
 const { createSdkCommandFrameRuntime } = await import(`${tree}/src/sdk/commands/frame.ts`) as typeof import('../src/sdk/commands/frame');
 const { canonicalGameState, checksumGame } = await import(`${tree}/src/shared/sim/checksum.ts`) as typeof import('../src/shared/sim/checksum');
+const { GOLD_MINE_RULES } = await import(`${tree}/src/shared/mining.ts`) as typeof import('../src/shared/mining');
 const { neutralCamps, EXPANSION_GUARD_RANGE } = await import(`${tree}/src/ai/policy/v7/creep.ts`) as typeof import('../src/ai/policy/v7/creep');
 const load = <T>(name: string): T[] => gunzipSync(readFileSync(`${folder}/${name}.jsonl.gz`)).toString().trim().split('\n').filter(Boolean).map(line => JSON.parse(line));
 const commands = load<{ tick: number; owner: string; source: string; scriptId: string; command: GameCommand }>('commands');
@@ -28,6 +29,8 @@ game.activePlayers = initial.activePlayers;
 const runtime = createSdkCommandFrameRuntime(game);
 const tasks = new Map<string, { owner: string; mineId: string; memberIds: string[]; firstAttackOrder: number | null;
   completed: number | null; observedOtherActors: string[] }>();
+const completedHalls = new Set(game.buildings.filter(building => building.complete).map(building => building.id));
+const townHalls: { tick: number; owner: string; id: string; x: number; y: number; mineId: string | null }[] = [];
 let commandIndex = 0, goalIndex = 0;
 while (game.tick < original.tick) {
   while (goalIndex < goals.length && goals[goalIndex]!.tick <= game.tick) {
@@ -49,6 +52,12 @@ while (game.tick < original.tick) {
   }
   if (entries.length) runtime.issue(entries, {}, { checksum: false });
   runtime.tick();
+  for (const building of game.buildings) if (building.kind === 'townHall' && building.complete && !completedHalls.has(building.id)) {
+    completedHalls.add(building.id);
+    const mine = game.resources.filter(resource => Math.hypot(resource.x-building.x,resource.y-building.y) <= GOLD_MINE_RULES.baseRange)
+      .sort((a,b) => Math.hypot(a.x-building.x,a.y-building.y)-Math.hypot(b.x-building.x,b.y-building.y))[0];
+    townHalls.push({tick:game.tick,owner:building.owner,id:building.id,x:building.x,y:building.y,mineId:mine?.id??null});
+  }
   for (const task of tasks.values()) {
     if (task.completed !== null) continue;
     const attackers = game.units.filter(unit => unit.hp > 0 && unit.kind !== 'worker' && unit.order.type === 'attack'
@@ -70,7 +79,7 @@ for (const task of tasks.values()) {
   if (task.completed !== null) metric.firstIslandClearComplete = metric.firstIslandClearComplete === null ? task.completed : Math.min(metric.firstIslandClearComplete, task.completed);
 }
 const result = { source: original.source, map: original.mapId, tick: game.tick, provenance: 'existing-task-guard-association-and-native-attack-orders',
-  checks, metrics, tasks: [...tasks.values()] };
+  checks, metrics, townHalls, tasks: [...tasks.values()] };
 writeFileSync(out, JSON.stringify(result, null, 2));
 console.log(JSON.stringify({ map: original.mapId, checks, metrics }));
 if (Object.values(checks).some(value => !value)) process.exitCode = 1;
