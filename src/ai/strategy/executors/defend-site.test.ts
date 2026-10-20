@@ -72,6 +72,15 @@ describe('granted defense at the real E01 home raid', () => {
     expect(result.reasons[0]?.reason).toBe('invalid-action-grant');
   });
 
+  it('never counts cabin passengers as physically defending a land post', () => {
+    const request = input();
+    for (const unit of request.snapshot.units.filter(unit => recalled.includes(unit.id))) unit.cabin = { shipId: 'unit-p0-transport-1665' };
+    const result = defendSiteExecutor.execute(request);
+    expect(result.commands).toEqual([]);
+    expect(result.progress).toEqual([]);
+    expect(result.reasons[0]?.reason).toBe('defenders-in-transit');
+  });
+
   it('preserves its physical post and decisions through a JSON fork while the native world advances', () => {
     let request = input();
     const game = createGame(frame.snapshot.map.id, { players: frame.activePlayers });

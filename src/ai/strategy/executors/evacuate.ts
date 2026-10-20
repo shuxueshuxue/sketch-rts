@@ -18,7 +18,7 @@ export const evacuateExecutor: StrategyExecutor = {
       outcome: 'abandoned', reason: 'evacuation-shelter-no-longer-valid', taskId: execution.token.actionId }] };
     const foes = armedFoes(snapshot, owner, {}), commands: ExecutorFeedback['commands'][number][] = [];
     for (const worker of workers) {
-      if (worker.deck || !sameGround(snapshot.map, worker, destination.point)) return blockedExecutor(input, 'evacuation-requires-transport', workers.map(unit => unit.id));
+      if (worker.deck || worker.cabin || !sameGround(snapshot.map, worker, destination.point)) return blockedExecutor(input, 'evacuation-requires-transport', workers.map(unit => unit.id));
       if (foes.some(foe => workerThreatAt(snapshot, worker, destination.point, foe))) return blockedExecutor(input, 'evacuation-shelter-exposed', workers.map(unit => unit.id));
       if (distance(worker, destination.point) <= 240) continue;
       const road = retreatLandRoad(snapshot, worker, destination.point, foes);
