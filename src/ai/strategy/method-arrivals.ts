@@ -4,6 +4,7 @@ import { withGoalDistanceFieldLease } from '../../shared/terrain';
 import type { GameSnapshot } from '../../shared/types';
 import type { AiPolicyMemory } from '../memory';
 import { distance } from '../policy/spatial';
+import { strategyIsOpponent } from './ownership';
 import type { ExecutableMethod } from './allocation-types';
 import { createArrivalQuery, crossingCandidateId, EXACT_CROSSING_CANDIDATES } from './arrivals';
 import type { DecisionFacts } from './decision';
@@ -14,6 +15,7 @@ import { boundObservationMemory, observationMemory } from './observation-memory'
 import { regionIndex } from './regions';
 import type { Situation, SituationUnit } from './types';
 import { arrivalColumns, unitArrivalFacts, withDecisionUnitArrivals } from './unit-arrivals';
+import { forceSuccessProbability } from './utility';
 
 /** A control-only continuation of the same shared arrival evaluator. The key is
  * the actual action id and post, never the associated hall/mine's centre. */
@@ -25,14 +27,23 @@ export function withAllocationMethodArrivals(snapshot: GameSnapshot, owner: stri
     const preparation = observationMemory(snapshot, owner, memory), regions = regionIndex(snapshot.map);
     const distances = createPlanningDistanceQuery(snapshot, fieldBudget, 'land', preparation);
     const query = createArrivalQuery(snapshot, owner, memory, distances, fieldBudget, regions, preparation);
-    const live = new Map(snapshot.units.filter(unit => unit.owner === owner && unit.hp > 0).map(unit => [unit.id, unit]));
+    const live = new Map(snapshot.units.filter(unit => unit.hp > 0).map(unit => [unit.id, unit]));
     const units = new Map(situation.units.map(unit => [unit.id, unit]));
     const actionObjective = new Map(methods.flatMap(method => method.actions.map(action => [action.id, method.objectiveId] as const)));
     const threatened = new Set(situation.lands.flatMap(land => land.threats.filter(threat => threat.arrivedStrength > 0).map(threat => threat.siteId)));
-    const goals = methods.flatMap(method => method.actions).filter(action =>
-      action.target.landId && ['strategy.defend-site', 'strategy.evacuate', 'strategy.assemble'].includes(action.executor))
+    const retained = new Set([memory.landExpansion?.mineId, ...Object.values(memory.naval?.conquests ?? {})
+      .filter(task => task.abandonedTick === undefined).map(task => task.mineId)]);
+    const actions = methods.flatMap(method => method.actions).filter(action => action.target.landId);
+    // Production skeletons do not yet contain assemble nodes. Publish routes
+    // to the actual transport/clear/build points before bundle specialization.
+    // Entity aliases are separate goals at their exact asset point; an offset
+    // defense post must never overwrite the hall-centre row.
+    const entities = new Set(actions.flatMap(action => action.target.entityId ? [action.target.entityId] : []));
+    const goals = [...actions, ...situation.assets.filter(asset => asset.target.landId && entities.has(asset.id))
+      .map(asset => ({ id: asset.id, target: asset.target }))]
       .sort((a, b) => Number(Boolean(memory.strategyAllocation?.executions[b.id])) - Number(Boolean(memory.strategyAllocation?.executions[a.id]))
         || Number(threatened.has(b.target.entityId ?? '')) - Number(threatened.has(a.target.entityId ?? ''))
+        || Number(retained.has(b.target.entityId)) - Number(retained.has(a.target.entityId))
         || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
     // Methods sharing a post share one field. The cap counts physical targets,
     // not duplicate method ids for the same point.
@@ -44,28 +55,34 @@ export function withAllocationMethodArrivals(snapshot: GameSnapshot, owner: stri
       points.add(point); return true;
     });
     const candidates = new Map<string, Set<string>>();
-    const crossings = new Map<string, number>();
+    const crossings = new Map<string, { lower: number; priority: number }>();
     for (const action of targets) {
-      const pool = [...live.values()].filter(unit => unitMover(unit.kind) === 'land'
-        && (action.intent.kind === 'evacuate' ? unit.kind === 'worker' : unit.kind !== 'worker'))
+      const pool = [...live.values()].filter(unit => {
+        if (unitMover(unit.kind) !== 'land') return false;
+        if (unit.owner === owner) return true;
+        const location = units.get(unit.id)?.location;
+        return unit.kind !== 'worker' && strategyIsOpponent(snapshot, owner, unit.owner)
+          && (location?.kind === 'land' && location.landId === action.target.landId || !!(unit.deck || unit.cabin));
+      })
         .sort((a, b) => distance(a, action.target.point) - distance(b, action.target.point) || (a.id < b.id ? -1 : 1));
       const selected = new Set<string>(), origins = new Map<string, number>();
       for (const unit of pool) {
         const fact = units.get(unit.id)!;
-        const origin = fact.location.kind === 'land' ? fact.location.landId : fact.location.kind === 'aboard' ? fact.location.shipId : 'unknown';
+        const origin = `${fact.location.kind === 'land' ? fact.location.landId : fact.location.kind === 'aboard' ? fact.location.shipId : 'unknown'}:${unit.kind === 'worker' ? 'worker' : 'combat'}`;
         const count = origins.get(origin) ?? 0;
         const leased = memory.strategyAllocation?.leases[`unit:${unit.id}`]?.objectiveId === actionObjective.get(action.id);
-        if (count >= ALLOCATION_ETA_CANDIDATES_PER_LAND && !leased) continue;
+        if (unit.owner === owner && count >= ALLOCATION_ETA_CANDIDATES_PER_LAND && !leased) continue;
         selected.add(unit.id); origins.set(origin, count + 1);
         const key = crossingCandidateId(snapshot, unit, action.target);
-        if (key) {
+        if (key && unit.owner === owner) {
           const lower = distance(fact.location.point, action.target.point) * SIM_TICKS_PER_SECOND / Math.max(unit.speed, UNIT_DEFS.transport.speed);
-          const old = crossings.get(key); if (old === undefined || lower < old) crossings.set(key, lower);
+          const priority = Number(retained.has(action.target.entityId)) + 2 * Number(threatened.has(action.target.entityId ?? ''));
+          const old = crossings.get(key); if (old === undefined || lower < old.lower) crossings.set(key, { lower, priority });
         }
       }
       candidates.set(action.id, selected);
     }
-    query.setCrossingShortlist([...crossings].sort(([a, x], [b, y]) => x - y || (a < b ? -1 : 1))
+    query.setCrossingShortlist([...crossings].sort(([a, x], [b, y]) => y.priority - x.priority || x.lower - y.lower || (a < b ? -1 : 1))
       .slice(0, EXACT_CROSSING_CANDIDATES).map(([id]) => id));
     const projected = situation.units.map(unit => {
       const actor = live.get(unit.id);
@@ -86,6 +103,27 @@ export function withAllocationMethodArrivals(snapshot: GameSnapshot, owner: stri
       { columns: arrivalColumns(ids), values, count: values.filter(Boolean).length }) satisfies DecisionFacts<SituationUnit>;
     });
     boundObservationMemory(preparation);
-    return { ...situation, units: projected };
+    const refreshed = new Map(projected.map(unit => [unit.id, unit]));
+    const lands = situation.lands.map(land => ({ ...land, threats: land.threats.map(threat => {
+      if (!targets.some(target => target.id === threat.siteId)) return threat;
+      const asset = situation.assets.find(asset => asset.id === threat.siteId)!;
+      const attackers = threat.attackers.map(attacker => {
+        const row = refreshed.get(attacker.unitId), stored = row && unitArrivalFacts(row);
+        const index = stored?.columns.index.get(threat.siteId), arrival = index === undefined ? undefined : stored!.values[index];
+        return arrival ? { ...attacker, arrival } : attacker;
+      });
+      const present = new Set(attackers.filter(attacker => {
+        const unit = live.get(attacker.unitId);
+        return unit && !unit.deck && !unit.cabin && distance(unit, asset.target.point) <= 650;
+      }).map(attacker => attacker.unitId));
+      return { ...threat, attackers, arrivedStrength: attackers.filter(attacker => present.has(attacker.unitId)).reduce((sum, attacker) => sum + attacker.strength, 0),
+        incomingStrength: attackers.filter(attacker => !present.has(attacker.unitId) && attacker.arrival.status !== 'unreachable')
+          .reduce((sum, attacker) => sum + attacker.strength, 0),
+        firstArrivalTicks: present.size ? 0 : attackers.reduce<number | null>((minimum, attacker) =>
+          'ticks' in attacker.arrival ? Math.min(minimum ?? attacker.arrival.ticks, attacker.arrival.ticks) : minimum, null),
+        lossProbability: attackers.some(attacker => attacker.arrival.status === 'unknown') ? null : attackers.length
+          ? forceSuccessProbability(attackers.reduce((sum, attacker) => sum + attacker.strength, 0), threat.friendlyOnStationStrength) : 0 };
+    }) }));
+    return { ...situation, units: projected, lands };
   }, false).facts));
 }
