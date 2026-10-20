@@ -64,6 +64,7 @@ describe('parallel granted voyages in the real ringwater frame', () => {
     const request = parallel(), before = JSON.stringify(request), result = transportExecutor.execute(request);
     expect(result.status).toBe('active');
     expect(Object.keys(result.state.voyages!)).toHaveLength(2);
+    expect(result.state.pendingVoyageIds).toEqual(request.grant.voyages.map(voyage => voyage.id));
     const commanded = result.commands.flatMap(entry => 'unitIds' in entry.command ? entry.command.unitIds : []);
     expect(commanded).toContain('unit-enemy-transport-2302');
     expect(result.commands.some(entry => entry.command.type === 'board' && entry.command.transportId === 'unit-enemy-transport-6029')).toBe(true);
