@@ -497,5 +497,13 @@
       "bytes": 529873,
       "sha256": "372d4646a9bcd99b98a7b38e225644587a615875bc33a9b378ea80a10321edea"
     }
-  ]
+  ],
+  "code": "0b9af330187e4b2a35fae8bf8186e1cf12ef8287",
+  "archivePointer": "mining-workforce-forecast.archive.evidence.json",
+  "rawDirectoryScope": "Original replay/capture outputs; fitted scripts and model results are in the immutable archive.",
+  "validation": {
+    "relatedPassed": 22,
+    "rootTsc": 0,
+    "additionalBoundary": "already mining workers do not book expansion income before actual hall readiness or outside the requesting window"
+  }
 }
