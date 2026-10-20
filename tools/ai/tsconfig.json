@@ -1,0 +1,4 @@
+{
+  "extends": "../../tsconfig.json",
+  "include": ["../../scripts/build-room-baseline.ts", "../../scripts/verify-room-baseline.ts"]
+}

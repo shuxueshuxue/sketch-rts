@@ -7,6 +7,9 @@ on:
       - src/shared/**
       - src/ai/**
       - src/sdk/**
+      - tools/ai/**
+      - scripts/build-room-baseline.ts
+      - scripts/verify-room-baseline.ts
       - .github/workflows/simulation-cpu-check.yml
   workflow_dispatch:
 
@@ -28,6 +31,12 @@ jobs:
           node-version: "20"
           cache: npm
       - run: npm ci
+      - name: Fetch pinned room planner sources for manifest checks (no bundle build)
+        run: git fetch --no-tags --depth=1 origin 646cf9a0513459d16e6b12007d4945148bb29651
+      - name: Verify frozen room manifest and runtime import boundary without an artifact
+        run: npx vitest run src/ai/frozen/room-baseline.test.ts --maxWorkers 1 --minWorkers 1
+      - name: Typecheck frozen room build and parity tools
+        run: npx tsc --noEmit -p tools/ai/tsconfig.json
       - name: Verify output-only plan traces preserve command bytes and policy memory
         run: npx vitest run src/ai/plan-trace.test.ts src/ai/plan-trace-history.test.ts src/ai/plan-viz-ledger.test.ts src/ai/planner-context.test.ts --maxWorkers 1 --minWorkers 1
   duels:
