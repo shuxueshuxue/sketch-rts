@@ -6,7 +6,7 @@ import { snapshotGame } from '../../shared/sim';
 import type { GameSnapshot, PlayerId } from '../../shared/types';
 import { neutralCamps, creepForce } from '../policy/v7/creep';
 import { strengthOf } from '../policy/v6/strength';
-import { assessAllocatedCampBattle, assessAllocatedCampEngagement, assessAllocatedForce, assessPostBattleSiteRisk } from './allocated-force';
+import { assessAllocatedCampBattle, assessAllocatedCampEngagement, assessAllocatedForce, assessPostBattleSiteRisk, assessPresentCampEngagement } from './allocated-force';
 import { combatCapability } from '../../shared/combat-capabilities';
 import { BUILDING_DEFS } from '../../shared/catalog';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
@@ -70,6 +70,35 @@ describe('allocated cohort force', () => {
 });
 
 describe('shared camp engagement facts', () => {
+  it('uses exactly the forecast combat currency when every participant has physically arrived', () => {
+    const scene = sketchScene('present-camp-force').map('bareDuel').replaceDefaults()
+      .player('us', { team: 'a' }).player('foe', { team: 'b' })
+      .unit('neutral', 'ogreWarrior', 1400, 1400).unit('foe', 'footman', 1450, 1400);
+    for (let i = 0; i < 6; i++) scene.unit('us', 'emberRavager', 1200 + i * 5, 1400);
+    const snapshot = snapshotGame(scene.build().createGame()), camp = neutralCamps(snapshot)[0]!;
+    const ours = snapshot.units.filter(unit => unit.owner === 'us'), enemy = snapshot.units.find(unit => unit.owner === 'foe')!;
+    const target: Target = { entityId: 'mine', landId: landIdAt(snapshot.map, camp.center)!, point: camp.center };
+    const situation: Situation = { tick: snapshot.tick, owner: 'us', horizonTicks: 2400, lands: [], seas: [], assets: [],
+      opportunities: [], limitations: [], economy: { cashGold: 0, predictedIncomeGold: 0, horizonTicks: 2400, ledger: [] },
+      units: [{ id: enemy.id, owner: enemy.owner, kind: enemy.kind, location: { kind: 'land', landId: target.landId!, point: enemy },
+        hp: enemy.hp, maxHp: enemy.maxHp, strength: 999999, roles: ['frontline'], expiresTick: null, commitments: [],
+        arrivals: [{ targetId: 'mine', arrival: { status: 'reachable', ticks: 0, landTicks: 0, crossings: [], evidence: [] } }] }] };
+    const before = JSON.stringify({ snapshot, situation });
+    const physical = assessPresentCampEngagement({ snapshot, owner: 'us', target, unitIds: ours.map(unit => unit.id),
+      campMemberIds: camp.creeps.map(unit => unit.id) });
+    const forecast = assessAllocatedCampBattle({ snapshot, situation, target, unitIds: ours.map(unit => unit.id), battleStartTicks: 0 });
+    expect(forecast.status).toBe('known');
+    expect(physical.actualOpponentForce).toBe(forecast.actualOpponentForce);
+    expect(physical.ourForce).toBe(forecast.ourForce);
+    expect(physical.requiredForce).toBe(forecast.requiredForce);
+    expect(physical.camp.creeps).toEqual(camp.creeps);
+    expect(physical.camp.creeps).not.toContain(enemy);
+    expect(physical.hostile).toEqual([enemy]);
+    expect(assessPresentCampEngagement({ snapshot, owner: 'us', target, unitIds: [], campMemberIds: camp.creeps.map(unit => unit.id) }))
+      .toMatchObject({ ours: [], ourForce: 0, sufficient: false });
+    expect(JSON.stringify({ snapshot, situation })).toBe(before);
+  });
+
   it('converges actual reinforcement waves and keeps later asset threats outside the first fight', () => {
     const game = sketchScene('camp-battle-waves').map('bareDuel').replaceDefaults()
       .player('us', { team: 'a' }).player('foe', { team: 'b' })
