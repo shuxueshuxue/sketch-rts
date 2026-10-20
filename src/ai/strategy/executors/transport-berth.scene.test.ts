@@ -149,10 +149,11 @@ it('loads onto the planned hull through the full public native command chain in 
 it('keeps the first real loading forecast when later quotations revise it',()=>{
   const {input:initial,frame}=request4180(), voyage=initial.grant.voyages[0]!, expected=initial.snapshot.tick+400;
   // Forecast numbers are injected to test receipt identity, not fitted ETA accuracy.
-  const input={...initial,grant:{...initial.grant,voyages:[{...voyage,expectedLoadedTick:expected}]}};
+  const epoch=initial.snapshot.tick-30, revisedEpoch=initial.snapshot.tick-15;
+  const input={...initial,grant:{...initial.grant,voyages:[{...voyage,expectedLoadedTick:expected,loadingForecastTick:epoch}]}};
   const first=transportExecutor.execute(input);
   const revised=atRendezvous({...input,execution:{...input.execution,state:first.state},
-    grant:{...input.grant,voyages:[{...voyage,expectedLoadedTick:expected+100}]}});
+    grant:{...input.grant,voyages:[{...voyage,expectedLoadedTick:expected+100,loadingForecastTick:revisedEpoch}]}});
   const boarding=transportExecutor.execute(revised);
   const game=createGame(input.snapshot.map.id,{players:frame.activePlayers,aiPlayers:[]});
   restoreSnapshotIntoGame(game,revised.snapshot,frame.nextId);game.activePlayers=frame.activePlayers;
@@ -163,8 +164,54 @@ it('keeps the first real loading forecast when later quotations revise it',()=>{
   const snapshot=snapshotGame(game);setBuildingBodies(snapshot.map,standingBodies(snapshot));
   const result=transportExecutor.execute({...revised,snapshot,execution:{...revised.execution,state:boarding.state}});
   expect(result.state.voyages).toMatchObject({[voyage.id]:{
-    expectedLoadedTick:expected,loadingForecastTick:input.snapshot.tick,
-    latestLoadingPrediction:{expectedLoadedTick:expected+100},
-    loadReceipts:{'unit-p4-worker-2':{forecastTick:input.snapshot.tick,predictedLoadedTick:expected,
+    expectedLoadedTick:expected,loadingForecastTick:epoch,
+    latestLoadingPrediction:{forecastTick:revisedEpoch,expectedLoadedTick:expected+100},
+    loadReceipts:{'unit-p4-worker-2':{forecastTick:epoch,predictedLoadedTick:expected,
       observedLoadedTick:game.tick,errorTicks:game.tick-expected,aboardAtStart:false}}}});
+});
+
+it('retains a forecast epoch across thinks and records a new epoch even when its expected tick is unchanged',()=>{
+  const {input:initial}=request4180(), voyage=initial.grant.voyages[0]!, expected=initial.snapshot.tick+400;
+  const epoch=initial.snapshot.tick-30;
+  const input={...initial,grant:{...initial.grant,voyages:[{...voyage,expectedLoadedTick:expected,loadingForecastTick:epoch}]}};
+  const first=transportExecutor.execute(input);
+  const retained=fork({...input,execution:{...input.execution,state:first.state}});
+  retained.snapshot.tick+=15;
+  const before=JSON.stringify(retained), replay=transportExecutor.execute(retained);
+  expect(replay.state.voyages).toMatchObject({[voyage.id]:{
+    expectedLoadedTick:expected,loadingForecastTick:epoch,
+    latestLoadingPrediction:{forecastTick:epoch,expectedLoadedTick:expected},
+  }});
+  expect(JSON.stringify(retained)).toBe(before);
+  expect(transportExecutor.execute(fork(retained))).toEqual(replay);
+  const freshEpoch=retained.snapshot.tick;
+  const refreshed=transportExecutor.execute({...retained,execution:{...retained.execution,state:replay.state},
+    grant:{...retained.grant,voyages:[{...voyage,expectedLoadedTick:expected,loadingForecastTick:freshEpoch}]}});
+  expect(refreshed.state.voyages).toMatchObject({[voyage.id]:{
+    expectedLoadedTick:expected,loadingForecastTick:epoch,
+    latestLoadingPrediction:{forecastTick:freshEpoch,expectedLoadedTick:expected},
+  }});
+  const unknown=transportExecutor.execute({...retained,execution:{...retained.execution,state:refreshed.state},
+    grant:{...retained.grant,voyages:[voyage]}});
+  expect(unknown.state.voyages).toMatchObject({[voyage.id]:{
+    expectedLoadedTick:expected,loadingForecastTick:epoch,
+    latestLoadingPrediction:{forecastTick:freshEpoch,expectedLoadedTick:expected},
+  }});
+});
+
+it('does not turn an expected tick without its source epoch into a loading prediction or error sample',()=>{
+  const {input:initial}=request4180(), voyage=initial.grant.voyages[0]!, expected=initial.snapshot.tick+400;
+  const input={...initial,grant:{...initial.grant,voyages:[{...voyage,expectedLoadedTick:expected}]}};
+  const first=transportExecutor.execute(input);
+  expect(first.commands).toEqual(transportExecutor.execute(initial).commands);
+  expect(first.state.voyages).toMatchObject({[voyage.id]:{
+    expectedLoadedTick:null,loadingForecastTick:null,latestLoadingPrediction:null,
+  }});
+  const aboard=atRendezvous({...input,execution:{...input.execution,state:first.state}});
+  aboard.snapshot.tick+=15;
+  aboard.snapshot.units.find(unit=>unit.id==='unit-p4-worker-2')!.deck={shipId:'unit-p4-transport-1151',x:0,y:0};
+  const result=transportExecutor.execute(aboard);
+  expect(result.state.voyages).toMatchObject({[voyage.id]:{loadReceipts:{'unit-p4-worker-2':{
+    forecastTick:null,predictedLoadedTick:null,observedLoadedTick:aboard.snapshot.tick,errorTicks:null,aboardAtStart:false,
+  }}}});
 });

@@ -13,6 +13,11 @@ function ids(value: JsonValue | undefined): readonly string[] {
 function isState(value: JsonValue | undefined): value is ExecutionState {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
+function loadingPrediction(expectedLoadedTick: JsonValue | undefined, forecastTick: JsonValue | undefined) {
+  return typeof expectedLoadedTick === 'number' && Number.isFinite(expectedLoadedTick)
+    && typeof forecastTick === 'number' && Number.isFinite(forecastTick)
+    ? { expectedLoadedTick, forecastTick } : null;
+}
 
 /** Native board/unload commands own rendezvous, deck packing and navigation.
  * Strategic departure, destination and manifest come only from the grant. */
@@ -53,14 +58,16 @@ function executeVoyage(input: Parameters<StrategyExecutor['execute']>[0]): Execu
       ...(newLoaded.length ? [{ kind: 'loaded' as const, unitIds: newLoaded.map(unit => unit.id), entityIds: [boat.id], basis: 'observed-world' as const }] : []),
       ...(newLanded.length ? [{ kind: 'unloaded' as const, unitIds: newLanded.map(unit => unit.id), entityIds: [boat.id], basis: 'observed-world' as const }] : []),
     ];
-    const predictedLoadedTick = typeof execution.state.expectedLoadedTick === 'number' ? execution.state.expectedLoadedTick
-      : voyage.expectedLoadedTick ?? null;
-    const forecastTick = typeof execution.state.loadingForecastTick === 'number' ? execution.state.loadingForecastTick
-      : predictedLoadedTick === null ? null : snapshot.tick;
-    const previousPrediction = isState(execution.state.latestLoadingPrediction) ? execution.state.latestLoadingPrediction : null;
-    const latestPrediction = voyage.expectedLoadedTick == null ? previousPrediction
-      : previousPrediction?.expectedLoadedTick === voyage.expectedLoadedTick ? previousPrediction
-        : { forecastTick: snapshot.tick, expectedLoadedTick: voyage.expectedLoadedTick };
+    // A retained absolute ETA is not a new forecast on every think. Both the
+    // first sample and its latest revision retain the query's source epoch.
+    const currentPrediction = loadingPrediction(voyage.expectedLoadedTick, voyage.loadingForecastTick);
+    const firstPrediction = loadingPrediction(execution.state.expectedLoadedTick, execution.state.loadingForecastTick)
+      ?? currentPrediction;
+    const predictedLoadedTick = firstPrediction?.expectedLoadedTick ?? null, forecastTick = firstPrediction?.forecastTick ?? null;
+    const previous = execution.state.latestLoadingPrediction;
+    const previousPrediction = isState(previous) ? loadingPrediction(previous.expectedLoadedTick, previous.forecastTick) : null;
+    const latestPrediction = currentPrediction && (!previousPrediction || currentPrediction.forecastTick >= previousPrediction.forecastTick)
+      ? currentPrediction : previousPrediction;
     const receipts = isState(execution.state.loadReceipts) ? execution.state.loadReceipts : {};
     const newReceipts = Object.fromEntries(newLoaded.map(unit => [unit.id, {
       forecastTick, predictedLoadedTick, observedLoadedTick: snapshot.tick,
