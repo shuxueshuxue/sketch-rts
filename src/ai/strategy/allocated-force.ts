@@ -1,13 +1,13 @@
 import { UNIT_DEFS, unitMover } from '../../shared/catalog';
 import { combatCapability } from '../../shared/combat-capabilities';
 import { strikeGap } from '../../shared/combat-geometry';
-import { walkableGoal } from '../../shared/terrain';
+import { sameGround, walkableGoal } from '../../shared/terrain';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { strengthOf, structureRating } from '../policy/v6/strength';
 import { creepForce, forceFor, type Camp } from '../policy/v7/creep';
 import { isOpponentOwner } from '../policy/ownership';
-import { distance } from '../policy/spatial';
+import { averagePoint, distance } from '../policy/spatial';
 import { arrivalWeightedForce } from './arrival-force';
 import type { DecisionFacts } from './decision';
 import { landIdAt } from './regions';
@@ -130,6 +130,34 @@ export function targetCoveringTowers(snapshot: GameSnapshot, owner: PlayerId, ta
     && strikeGap(tower, actualTarget) <= tower.attackRange);
 }
 
+function campBattleForces(owner: PlayerId, ours: readonly Unit[], opposition: Readonly<Camp>, margin: number,
+  towers: ReturnType<typeof targetCoveringTowers>) {
+  const actualOpponentForce = opposition.strength + towers.reduce((sum, tower) => sum + structureRating(tower), 0);
+  const ourForce = towers.length ? creepForce(ours) : assessAllocatedForce(owner, ours, { metric: 'camp-force', camp: opposition }).force;
+  return { actualOpponentForce, ourForce, requiredForce: actualOpponentForce + margin };
+}
+
+/** The executor's physical counterpart of the forecast. Only actual granted,
+ * landed members count; no ETA, unarrived reinforcement or remembered hold is
+ * cashed out. Players outside the post's leash remain a parent-plan concern. */
+export function assessPresentCampEngagement(input: Readonly<{ snapshot: GameSnapshot; owner: PlayerId;
+  target: Target; unitIds: readonly string[]; campMemberIds: readonly string[]; radius?: number }>) {
+  const { snapshot, owner, target } = input, ids = new Set(input.unitIds), members = new Set(input.campMemberIds);
+  const guards = snapshot.units.filter(unit => unit.owner === 'neutral' && unit.hp > 0 && members.has(unit.id));
+  const center = guards.length ? averagePoint(guards.map(unit => ({ x: unit.homeX ?? unit.x, y: unit.homeY ?? unit.y }))) : target.point;
+  const camp: Camp = { center, creeps: guards, strength: strengthOf(guards), reach: Math.max(0,
+    ...guards.map(unit => distance(center, { x: unit.homeX ?? unit.x, y: unit.homeY ?? unit.y }))) };
+  const ours = snapshot.units.filter(unit => ids.has(unit.id) && unit.owner === owner && unit.hp > 0 && unit.kind !== 'worker'
+    && unit.attackDamage > 0 && unitMover(unit.kind) === 'land' && !unit.deck && !unit.cabin && sameGround(snapshot.map, unit, center));
+  const hostile = snapshot.units.filter(unit => unit.hp > 0 && !unit.deck && !unit.cabin && unit.kind !== 'worker'
+    && unit.attackDamage > 0 && unitMover(unit.kind) === 'land' && isOpponentOwner(snapshot, owner, unit.owner, {})
+    && sameGround(snapshot.map, unit, center) && distance(unit, center) <= (input.radius ?? 650));
+  const towers = targetCoveringTowers(snapshot, owner, { ...target, point: center }, 'opponent');
+  const opposition: Camp = { center, creeps: [...guards, ...hostile], strength: camp.strength + creepForce(hostile), reach: 0 };
+  const force = campBattleForces(owner, ours, opposition, guards.length ? forceFor(camp) - camp.strength : 0, towers);
+  return { camp, ours, hostile, towers, ...force, sufficient: ours.length > 0 && force.ourForce >= force.requiredForce };
+}
+
 /** A bounded, monotone forecast of the first battle, not the economic holding
  * window. New arrivals may prolong a fight, but a unit cannot join before the
  * preceding forecast reaches its ETA. Lifetimes use the same engagement facts.
@@ -155,9 +183,9 @@ export function assessAllocatedCampBattle(input: Omit<TargetReinforcementInput, 
     durationTicks = next;
   }
   if (!converged) engagement = assessAllocatedCampEngagement({ ...input, windowTicks: durationTicks });
-  const opponentForce = engagement.actualOpponentForce === null ? null : engagement.actualOpponentForce
-    + towers.reduce((sum, tower) => sum + structureRating(tower), 0);
-  const ourForce = engagement.ourForce === null ? null : towers.length ? creepForce(ours) : engagement.ourForce;
+  const rated = campBattleForces(situation.owner, ours, engagement.opposition, engagement.margin, towers);
+  const opponentForce = engagement.actualOpponentForce === null ? null : rated.actualOpponentForce;
+  const ourForce = engagement.ourForce === null ? null : rated.ourForce;
   const expires = ours.filter(unit => unit.expiresTick !== undefined && unit.expiresTick <= snapshot.tick + battleStartTicks + durationTicks);
   const status = converged && dps > 0 && engagement.status === 'known' && !expires.length ? 'known' as const : 'unknown' as const;
   const probability = status === 'known' ? forceSuccessProbability(ourForce!, opponentForce!) : null;
