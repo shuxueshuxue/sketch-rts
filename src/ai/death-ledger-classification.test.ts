@@ -41,6 +41,7 @@ describe('death classification v2', () => {
     for (const identity of [{ ...enemy, entityType: 'building' as const }, { ...enemy, entityType: 'unit' as const, owner: 'player' },
       { ...enemy, entityType: 'unit' as const, owner: 'neutral' }]) {
       identities.set(enemy.id, identity);
+      record.killer = { ...record.killer!, ...identity };
       const engagement = inferAiDeathEngagement(record, { identities, teams, dealtDamage: null, provenance: 'reclassified-native-records' });
       expect(engagement.status).toBe('outside-combat');
     }
@@ -52,7 +53,7 @@ describe('death classification v2', () => {
     expect(infer(12).status).toBe('engaged');
     expect(infer(0).status).toBe('outside-combat');
     expect(infer(null).status).toBe('unknown');
-    identities.clear(); expect(infer(12).status).toBe('unknown');
+    identities.clear(); record.killer = null; expect(infer(12).status).toBe('unknown');
     expect(classifyAiDeath(record, infer(null)).disposition).toBe('unattributed');
   });
 
@@ -76,6 +77,15 @@ describe('death classification v2', () => {
     expect(infer(null)).toMatchObject({ status: 'unknown', receivedDamage: 0 });
     expect(classifyAiDeath(record, infer(null)).disposition).toBe('unattributed');
     expect(classifyAiDeath(record, infer(0))).toMatchObject({ disposition: 'abnormal', primary: 'neutral-outside-clearing' });
+  });
+
+  it('includes a live ship killing a shore unit even when the walking-ground force estimate omits it', () => {
+    const { record, identities, teams } = casualty();
+    record.context.balance.hostileIds = [];
+    record.killer = { ...record.killer!, kind: 'warship', x: record.unit.x + 200, y: record.unit.y };
+    const engagement = inferAiDeathEngagement(record, { identities, teams, dealtDamage: null, provenance: 'reclassified-native-records' });
+    expect(engagement).toMatchObject({ status: 'engaged', opponentIds: [record.killer.id] });
+    expect(classifyAiDeath(record, engagement).disposition).toBe('normal');
   });
 
   it('reclassifies the same facts without altering any original observation or v1 label', () => {

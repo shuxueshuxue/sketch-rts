@@ -30,6 +30,14 @@ export function inferAiDeathEngagement(record: DeathFacts, options: {
     if (!isAiDeathOpponent(identity.owner, record, teams)) continue;
     opponentIds.push(id);
   }
+  // The force estimator excludes some cross-ground threats (e.g. a ship firing
+  // at a unit on shore). A live killer's native position is direct evidence of
+  // proximity even when it cannot share the victim's walking ground.
+  const killer = record.killer;
+  if (killer?.present && killer.entityType === 'unit' && killer.kind !== 'worker'
+    && isAiDeathOpponent(killer.owner, record, teams)
+    && Math.hypot(killer.x - record.unit.x, killer.y - record.unit.y) <= record.context.balance.radius
+    && !opponentIds.includes(killer.id)) opponentIds.push(killer.id);
   const inherited = record.cause === 'sinking' && options.carrier;
   const damageWindow = inherited ? options.carrier!.damageWindow : record.damageWindow;
   const receivedDamage = damageWindow.sources.filter(hit => isAiDeathOpponent(hit.source.owner, record, teams))
@@ -45,6 +53,7 @@ export function inferAiDeathEngagement(record: DeathFacts, options: {
     evidence: ['native-fatal-hit-force-ids', 'unit-identities-and-team-relations', 'bounded-damage-window-includes-fatal-hit',
       ...(inherited ? ['sinking-inherits-hull-engagement'] : []),
       ...(options.dealtDamage === null ? ['outgoing-damage-not-recorded-in-v1'] : ['outgoing-damage-observed']),
-      'neutral-opponent-requires-clearing-task', 'damage-exchange-must-involve-an-opponent'],
+      'neutral-opponent-requires-clearing-task', 'damage-exchange-must-involve-an-opponent',
+      'live-killer-position-includes-cross-ground-threats'],
   };
 }
