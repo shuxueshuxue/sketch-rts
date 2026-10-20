@@ -239,6 +239,14 @@ D02 **16620（13:51）**，`unit-p1-horseArcher-2736` 已进入 `building-p0-tow
 - **E01/E02：已有滩头不足 → 给它凑清场/驻守资源 → 再开第二运输目标；岛厅后来受袭 → 增援/撤出/放弃。** 当前表现为旧任务长期等兵、船继续第二目标、最终施工资产丢失。各个局部动作存在，但没有统一计划在它们之间分配。
 - **D07 tick 17505–17985：两个大陆矿任务等工程师，钱、工人和船厂存在，运输资源却被维护/另一任务占用。** 17505 时有 820 金、6 名本土采矿工人、已完工 `building-p0-shipyard-1038`；原工程师 `unit-p0-worker-1` 已在 9608 死亡。运输船 `unit-p0-transport-1086` 仍为 reinforce/loading、crewIds 空，ferryDecisions 为 port-service；另有战舰 outfit 和一名 ravager 卡在换船 ships-apart。到截止，两项仍 await-engineer-transport，至少 **480 tick / 24 秒**未接上送工人链。**17505 时目标附近仍有敌军，不能宣称此时安全可建；17985 附近敌兵离开但仍有敌兵营。** 缺的是“重评安全 → 解除/完成维护 → 可用运输 → 工程师与保护就位”的整体资源计划，而非没写过 planConquestEngineers。[现有工程师条件，island-conquest.ts:98](https://github.com/shuxueshuxue/sketch-rts/blob/883f57c5/src/ai/bootstrap_1/island-conquest.ts#L98)。
 
+## 后续实验发现的施工交接缺口（未合入行为）
+
+工人救命中断的三版实验见 [工人续行对照](./worker-continuation-evaluation.zh.md)。它补充了 Assignment 从“救命中断”恢复前必须兑现的接口：保留施工责任后，经济去重、未支付预算、已有护送都要看见同一父行动；责任存在不等于工人在原地点，更不等于路线已经安全。
+
+真实召唤帧中，工人在 11077 被 camp9 逼退。只给经济增加保留父行动的占位后，`planMiningScreen` 仍只从 native build 找 builder；12247 原三名护卫不再走 builder 的实际 steering 前缀，改去矿中心。main 的 camp9 在 13286 清完、14137 的 think 已观察到第四矿完工；实验 C 到 15000 仍未完成。16 名工人的实际路线都受同营或敌塔影响，不能靠反复换工人兑现该目标。父行动需要显式报告“路线受阻，需要先清障/护送”，由父计划决定资源与前置，不能仅在 memory 留着责任和预算。
+
+另一个既有交接是 `prepareExpansionMission` 读取全局 intrusion 后暂停整项扩张（此帧 11137、11407）。这是防守与扩张之间的资源争用，后续分配器应按实际认领/回防命令表示离岗和空缺。实验没有改写该全局开关，也没有新增清营借兵规则。上述续行候选仍有原场景失败、目标延误和异常死亡上升，不能作为已完成的生产契约。
+
 ## 证据位置与复核
 
 原始证据位于 A100 的本 lane 目录：
