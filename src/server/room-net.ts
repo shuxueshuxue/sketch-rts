@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+import { aiPlanAudience, filterRoomAiPlanPacket } from "./ai-plan-visibility";
 import { RULES_VERSION, assertCurrentRulesVersion } from "../shared/rules-version";
 import { decodeClientNetMessage, encodeNetMessage } from "../shared/net/codec";
 import { createChatMessage } from "../shared/chat";
@@ -36,6 +38,10 @@ type RoomNetState = {
 
 export class RoomNetHub {
   private rooms = new Map<string, RoomNetState>();
+  private readonly planAccess = new Map<string, { roomId: string; playerId: PlayerId }>();
+  private readonly socketPlanAccess = new WeakMap<RoomNetSocket, string>();
+  private readonly planSubscriptions = new WeakMap<RoomNetSocket, () => void>();
+  private readonly joinedPlayers = new WeakMap<RoomNetSocket, PlayerId>();
   private readonly compatibleSockets = new WeakSet<RoomNetSocket>();
 
   constructor(private readonly options: RoomNetHubOptions) {}
@@ -50,7 +56,14 @@ export class RoomNetHub {
         this.send(roomId, socket, { type: "error", roomId, message: errorMessage(error) });
       }
     });
-    socket.on("close", () => { state.sockets.delete(socket); this.compatibleSockets.delete(socket); });
+    socket.on("close", () => {
+      this.planSubscriptions.get(socket)?.();
+      this.planSubscriptions.delete(socket);
+      this.clearPlanAccess(socket);
+      this.joinedPlayers.delete(socket);
+      state.sockets.delete(socket);
+      this.compatibleSockets.delete(socket);
+    });
   }
 
   // The frames the room's connected pages have queued commands for, for a tick asked for over the API (see
@@ -130,12 +143,16 @@ export class RoomNetHub {
     const message = decodeClientNetMessage(raw);
     if (message.roomId !== socketRoomId) throw new Error(`Client message room ${message.roomId} does not match socket room ${socketRoomId}`);
     if (message.type === "join") {
+      this.planSubscriptions.get(socket)?.();
+      this.planSubscriptions.delete(socket);
+      this.clearPlanAccess(socket);
       this.compatibleSockets.delete(socket);
       const state = this.stateFor(message.roomId);
       try { assertCurrentRulesVersion(message.rulesVersion, "Client"); }
       catch (error) { state.sockets.delete(socket); throw error; }
       state.sockets.add(socket);
       this.compatibleSockets.add(socket);
+      this.joinedPlayers.set(socket, message.playerId);
       const room = this.options.roomHost.getRoom(message.roomId);
       if (room.status === "errored") {
         this.send(message.roomId, socket, { type: "room", room });
@@ -146,6 +163,10 @@ export class RoomNetHub {
       return;
     }
     if (!this.compatibleSockets.has(socket)) throw new Error("Join with matching rules version before sending game messages");
+    if (message.type === "aiPlans") {
+      this.subscribePlans(socketRoomId, socket, message.enabled);
+      return;
+    }
     if (message.type === "command") {
       try {
         this.acceptCommand(message);
@@ -170,6 +191,51 @@ export class RoomNetHub {
     if (message.type === "requestCheckpoint") {
       this.sendCheckpointWithFrames(socket, message);
     }
+  }
+
+  planViewer(roomId: string, token: string | undefined): PlayerId | undefined {
+    const access = token ? this.planAccess.get(token) : undefined;
+    return access?.roomId === roomId ? access.playerId : undefined;
+  }
+
+  private clearPlanAccess(socket: RoomNetSocket): void {
+    const token = this.socketPlanAccess.get(socket);
+    if (token) this.planAccess.delete(token);
+    this.socketPlanAccess.delete(socket);
+  }
+
+  private subscribePlans(roomId: string, socket: RoomNetSocket, enabled: boolean): void {
+    this.planSubscriptions.get(socket)?.();
+    this.planSubscriptions.delete(socket);
+    if (!enabled) return;
+    const player = this.joinedPlayers.get(socket)!;
+    const room = this.options.roomHost.getRoom(roomId);
+    const seated = room.slots.some(slot => slot.playerId === player && slot.controller === "human");
+    if (!seated && !player.startsWith("spectator-")) throw new Error("Only a seated player or spectator can observe plans");
+    this.clearPlanAccess(socket);
+    const token = randomUUID();
+    this.planAccess.set(token, { roomId, playerId: player });
+    this.socketPlanAccess.set(socket, token);
+    const audience = aiPlanAudience(room, player);
+    if (audience.kind === "none") {
+      if (audience.reason === "after-match") {
+        this.send(roomId, socket, {
+          type: "aiPlans", roomId, accessToken: token,
+          packet: { type: "coverage", session: 0, from: this.options.roomHost.currentTick(roomId), to: null, availability: "after-match" },
+        });
+        // A restricted view must not itself turn on diagnostic construction.
+        this.planSubscriptions.set(socket, () => {});
+      }
+      return;
+    }
+    let first = true;
+    const stop = this.options.roomHost.subscribeAiPlans(roomId, packet => {
+      const filtered = filterRoomAiPlanPacket(packet, aiPlanAudience(this.options.roomHost.getRoom(roomId), player));
+      if (!filtered) return;
+      this.send(roomId, socket, { type: "aiPlans", roomId, packet: filtered, ...(first ? { accessToken: token } : {}) });
+      first = false;
+    });
+    this.planSubscriptions.set(socket, stop);
   }
 
   private acceptCommand(message: Extract<ClientNetMessage, { type: "command" }>): void {
@@ -237,6 +303,15 @@ export class RoomNetHub {
     this.broadcast(roomId, { type: "room", room: event.room });
     if (event.room.status === "errored") this.broadcast(roomId, { type: "error", roomId, message: roomFailureMessage(event.room) });
     if (event.checkpoint) this.broadcast(roomId, { type: "checkpoint", rulesVersion: RULES_VERSION, checkpoint: event.checkpoint, epoch: state.epoch });
+    if (event.checkpoint) {
+      for (const socket of state.sockets) {
+        if (!this.planSubscriptions.has(socket)) continue;
+        this.planSubscriptions.get(socket)?.();
+        this.planSubscriptions.delete(socket);
+        this.send(roomId, socket, { type: "aiPlans", roomId, packet: { type: "reset", tick: event.checkpoint.tick } });
+        this.subscribePlans(roomId, socket, true);
+      }
+    }
   }
 
   private createCoordinator(roomId: string): LockstepRoomCoordinator {

@@ -1,3 +1,4 @@
+import type { AiPlanPacket } from '../../ai/plan-stream';
 import type { GameCommand, GameSnapshot, PlayerId, RoomState } from "../types";
 
 export type ChatMessage = {
@@ -69,6 +70,7 @@ export type RoomSyncSummary = {
 export type RoomEpoch = number;
 
 export type ClientNetMessage =
+  | { type: "aiPlans"; roomId: string; enabled: boolean }
   | { type: "join"; rulesVersion: number; roomId: string; playerId: PlayerId }
   | { type: "command"; roomId: string; playerId: PlayerId; command: GameCommand; clientSeq?: number; epoch: RoomEpoch }
   | { type: "chat"; roomId: string; playerId: PlayerId; senderName: string; text: string }
@@ -77,6 +79,7 @@ export type ClientNetMessage =
   | { type: "requestCheckpoint"; roomId: string; playerId: PlayerId; tick?: number; reason?: CheckpointRequestReason; clientTick?: number; clientChecksum?: string; epoch: RoomEpoch };
 
 export type ServerNetMessage =
+  | { type: "aiPlans"; roomId: string; packet: AiPlanPacket; accessToken?: string }
   | { type: "hello"; rulesVersion: number; roomId: string; playerId: PlayerId; tick: number; epoch: RoomEpoch }
   | { type: "frame"; rulesVersion: number; frame: CommandFrame; epoch: RoomEpoch }
   | { type: "checkpoint"; rulesVersion: number; checkpoint: CheckpointFrame; epoch: RoomEpoch }

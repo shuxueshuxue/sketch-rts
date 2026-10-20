@@ -1,7 +1,16 @@
+import type { AiPlanPacket } from '../ai/plan-stream';
+import type { DebugReplayTrace } from '../shared/replay';
 import type { GameCommand, GameSnapshot } from "../shared/types";
 import type { LockstepClient } from "./net/lockstep-client";
 
 export type GameAdapter = {
+  subscribePlans?(listener: (packet: AiPlanPacket) => void): () => void;
+  startRecording?(): Promise<void>;
+  hasRecording?(): boolean;
+  stopRecording?(): Promise<void>;
+  recordedReplay?(): Promise<DebugReplayTrace>;
+  seekReplay?(tick: number): void;
+  replayRange?: { from: number; to: number };
   sendCommand(command: GameCommand): void;
   pendingCasts?(): readonly Extract<GameCommand, { type: "cast" }>[];
   currentSnapshot(): GameSnapshot | undefined;
