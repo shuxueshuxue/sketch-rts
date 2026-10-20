@@ -12,6 +12,7 @@ import type { Method, Objective, ResourceDemand, Situation, Target } from './typ
 import { forceSuccessProbability, forceTimeGold } from './utility';
 import { unitArrival } from './unit-arrivals';
 import { siteCollapseAfter } from './naval-objectives';
+import { arrivalWeightedForce } from './arrival-force';
 
 const reason = (code: string, factIds: readonly string[] = [], values: AllocationReason['values'] = {}): AllocationReason => ({ code, factIds, values });
 const defenderKinds: readonly Method['kind'][] = ['local-squad', 'main-army-recall', 'wait-in-cover', 'cross-sea-reinforcement', 'evacuation'];
@@ -82,25 +83,28 @@ export const defenseMethodProvider: AllocationMethodProvider = {
     const { snapshot, situation, objective, method, unitIds } = input;
     const requested = new Set(unitIds), selected = snapshot.units.filter(unit => requested.has(unit.id)
       && unit.owner === situation.owner && unit.hp > 0);
-    const targetId = objective.target.entityId ?? objective.id;
+    const targetId = objective.target.entityId ?? objective.id, responseId = method.actions.at(-1)!.id;
+    const threat = threatAt(situation, objective);
     const facts = new Map(situation.units.filter(unit => requested.has(unit.id)).map(unit => [unit.id, unit]));
     const evacuation = method.kind === 'evacuation';
     const at = evacuation ? shelter(snapshot, situation, objective) : objective.target;
     let missing: string | undefined;
     const unavailable: string[] = [], unknown: string[] = [], stationed: string[] = [], enRoute: string[] = [];
+    const etas = new Map<string, number>();
     let latest = 0;
     for (const unit of selected) {
-      const fact = facts.get(unit.id), arrival = fact && unitArrival(fact, evacuation ? at?.entityId ?? '' : targetId);
+      const fact = facts.get(unit.id), arrival = fact && unitArrival(fact, responseId);
       const sameLand = fact?.location.kind === 'land' && fact.location.landId === objective.target.landId;
       if (!fact || (!evacuation && (fact.roles.includes('worker') || fact.roles.includes('transport') || fact.roles.includes('warship')))
         || (evacuation && unit.kind !== 'worker')) { unavailable.push(unit.id); continue; }
       if (!evacuation && method.kind !== 'cross-sea-reinforcement' && !sameLand) { unavailable.push(unit.id); continue; }
       if (!evacuation && method.kind === 'local-squad' && distance(unit, objective.target.point) > 650) { unavailable.push(unit.id); continue; }
-      if (sameLand && distance(unit, method.actions.at(-1)!.target.point) <= 240 && !evacuation) { stationed.push(unit.id); continue; }
+      if (fact.location.kind === 'land' && fact.location.landId === method.actions.at(-1)!.target.landId
+        && distance(unit, method.actions.at(-1)!.target.point) <= 240) { stationed.push(unit.id); continue; }
       if (!arrival || arrival.status === 'unknown') { unknown.push(unit.id); continue; }
       if (!('ticks' in arrival)) { unavailable.push(unit.id); continue; }
       if (arrival.status === 'conditional') missing = 'response-route-prerequisites-unmet';
-      latest = Math.max(latest, arrival.ticks); enRoute.push(unit.id);
+      latest = Math.max(latest, arrival.ticks); enRoute.push(unit.id); etas.set(unit.id, arrival.ticks);
     }
     if (selected.length !== requested.size) missing = 'allocated-unit-no-longer-present';
     if (unavailable.length) missing = 'allocated-units-ineligible-for-method';
@@ -114,13 +118,16 @@ export const defenseMethodProvider: AllocationMethodProvider = {
     const coverForce = covering.reduce((sum, tower) => sum + TOWER_STRENGTH * tower.hp / tower.maxHp, 0);
     if (method.kind === 'wait-in-cover' && !covering.length) missing = 'no-reachable-tower-cover';
     const total = assessAllocatedForce(situation.owner, cohort, { metric: 'field-strength', requiredForce: Math.max(0, demand - coverForce) });
-    const here = assessAllocatedForce(situation.owner, cohort.filter(unit => stationed.includes(unit.id)), { metric: 'field-strength', requiredForce: total.requiredForce });
+    const weighted = arrivalWeightedForce(cohort.filter(unit => stationed.includes(unit.id)),
+      cohort.filter(unit => enRoute.includes(unit.id)).map(unit => ({ unit, etaTicks: etas.get(unit.id)! })),
+      threat?.horizonTicks ?? situation.horizonTicks,
+      group => assessAllocatedForce(situation.owner, group, { metric: 'field-strength', requiredForce: total.requiredForce }).force);
     const force: ForceQuotation | null = evacuation ? null : { metric: 'field-strength', target: objective.target,
       onStationUnitIds: stationed, enRouteUnitIds: enRoute, unavailableUnitIds: unavailable, unknownUnitIds: unknown,
-      onStationForce: here.force, effectiveForce: total.force, discountedEnRouteForce: total.force - here.force,
+      onStationForce: weighted.onStationForce, effectiveForce: weighted.effectiveForce, discountedEnRouteForce: weighted.discountedEnRouteForce,
       requiredForce: total.requiredForce, evaluationUntilTick: situation.tick + situation.horizonTicks };
-    if (!evacuation && !total.sufficient) missing ??= 'insufficient-defense-force';
-    const threat = threatAt(situation, objective), site = situation.assets.find(asset => asset.id === targetId);
+    if (!evacuation && weighted.effectiveForce < total.requiredForce) missing ??= 'insufficient-timely-defense-force';
+    const site = situation.assets.find(asset => asset.id === targetId);
     if (threat && latest > siteCollapseAfter(snapshot, threat, site?.hp ?? 0)) missing ??= 'response-arrives-after-site-collapse';
     if (evacuation && (!at || !cohort.length)) missing ??= at ? 'no-granted-evacuees' : 'no-reachable-evacuation-shelter';
     const utilityBase = objective.conditionalQuote?.potentialUtility ?? objective.utility;
@@ -128,13 +135,13 @@ export const defenseMethodProvider: AllocationMethodProvider = {
       : utilityBase.benefit.map(term => ({ code: term.code, value: term.value }));
     const cost = [...utilityBase.cost.filter(term => term.code !== 'force-time').map(term => ({ code: term.code, value: term.value })),
       { code: 'force-time', value: forceTimeGold(total.force, latest) }];
-    const probability = evacuation ? 1 : forceSuccessProbability(total.force + coverForce, demand / 1.25);
+    const probability = evacuation ? 1 : forceSuccessProbability(weighted.effectiveForce + coverForce, demand / 1.25);
     const utility: AllocationUtility = { horizonTicks: utilityBase.horizonTicks, benefit, cost,
       successProbability: probability, persistenceBonus: utilityBase.persistenceBonus,
       score: probability * benefit.reduce((sum, term) => sum + term.value, 0)
         - cost.reduce((sum, term) => sum + term.value, 0) + utilityBase.persistenceBonus };
     const why = reason(missing ?? 'allocated-defense-cohort-feasible', [...requested], { requiredForce: total.requiredForce,
-      availableForce: total.force, latestArrivalTicks: latest });
+      availableForce: weighted.effectiveForce, latestArrivalTicks: latest });
     return missing ? { methodId: method.id, status: 'blocked', force, utility: null, potentialUtility: utility,
       reason: why, missingPreconditions: [{ id: `${method.id}/${missing}`, kind: missing.includes('force') ? 'force' : 'route',
         status: unknown.length ? 'unknown' : 'unmet', reason: why, demand: method.demands[0] ?? null, subgoalIds: [] }] }
