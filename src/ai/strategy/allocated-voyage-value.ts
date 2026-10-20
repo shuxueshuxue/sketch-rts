@@ -22,6 +22,7 @@ export function voyageCostAfterPreservedAssets(waves: readonly Pick<VoyageWave,
  * by the method's caller, rather than charging an impossible simultaneous loss. */
 export function allocatedVoyageValue(input: AllocationMethodQuoteInput) {
   const actions = new Map<string, VoyageWave>();
+  const passengerArrivalProbabilities = new Map<string, number>();
   const unknown: { code: string; ids: readonly string[] }[] = [];
   const byId = new Map(input.snapshot.units.map(unit => [unit.id, unit]));
   const hullActions = new Map<string, string>();
@@ -52,6 +53,8 @@ export function allocatedVoyageValue(input: AllocationMethodQuoteInput) {
     const loss = transportExpectedLoss({ snapshot: input.snapshot, ...(typeof shipId === 'string' ? { shipId } : {}),
       boardingPassengerIds: voyage.unitIds, shipResidualGold: residual, stages });
     if (loss.status !== 'known') { unknown.push({ code: loss.reasonCode, ids: [voyage.id] }); continue; }
+    for (const id of voyage.unitIds) passengerArrivalProbabilities.set(id,
+      (passengerArrivalProbabilities.get(id) ?? 1) * loss.successProbability);
     const group = actions.get(voyage.actionId) ?? { actionId: voyage.actionId, survivalProbability: 1, expectedLossGold: 0,
       hullLossGold: 0, passengerLosses: [], catalogUnitValues: [], voyageIds: [] };
     if (voyage.required) group.survivalProbability *= loss.successProbability;
@@ -61,5 +64,5 @@ export function allocatedVoyageValue(input: AllocationMethodQuoteInput) {
       ...(typeof shipId === 'string' ? [[{ unitId: shipId, valueGold: loss.hullLossGold }]] : [])]);
     group.voyageIds.push(voyage.id); actions.set(voyage.actionId, group);
   }
-  return { status: unknown.length ? 'unknown' as const : 'known' as const, actions, unknown };
+  return { status: unknown.length ? 'unknown' as const : 'known' as const, actions, passengerArrivalProbabilities, unknown };
 }
