@@ -1,3 +1,5 @@
+import type { AiDeathThinkContext } from '../death-ledger-context';
+import type { AiPlanDelta } from '../plan-stream';
 import type { AiScriptVersion, PresetAiPolicyOptions } from "../policy";
 import type { CommandEnvelope } from "../../shared/net/types";
 import type { GameMap, GameSnapshot, PlayerId } from "../../shared/types";
@@ -19,9 +21,9 @@ export type AiThinkWireSnapshot = Omit<GameSnapshot, "map"> & { map: Omit<GameMa
 
 export type AiThinkMessage =
   | { type: "open"; session: string; map: GameMap; policyMode?: PresetAiPolicyOptions["policyMode"] }
-  | { type: "think"; session: string; tick: number; deliveryTick: number; snapshot: AiThinkWireSnapshot; requests: AiThinkWireRequest[] }
+  | { type: "think"; session: string; tick: number; deliveryTick: number; snapshot: AiThinkWireSnapshot; requests: AiThinkWireRequest[]; observe?: number }
   | { type: "close"; session: string };
 
 export type AiThinkReply =
-  | { session: string; deliveryTick: number; commands: CommandEnvelope[]; thinkMs: number }
+  | { session: string; deliveryTick: number; commands: CommandEnvelope[]; thinkMs: number; observations?: {delta: AiPlanDelta; context: AiDeathThinkContext}[] }
   | { session: string; deliveryTick: number; error: string };

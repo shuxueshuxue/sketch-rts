@@ -1,3 +1,5 @@
+import type { DebugReplayTrace } from '../../shared/replay';
+import type { AiPlanPacket } from '../../ai/plan-stream';
 import type { AiScriptVersion } from "../../ai/policy";
 import type { AiThinkReport } from "../../ai/runtime";
 import type { ClientNetMessage, ServerNetMessage } from "../../shared/net/types";
@@ -10,6 +12,7 @@ import type { GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, Playe
 // not one frame budget at a time. The worker builds the same game from the same setup.
 
 export type MatchThreadInit =
+  | { type: "replay"; trace: DebugReplayTrace }
   | {
       type: "local";
       room?: RoomState;
@@ -29,6 +32,10 @@ export type MatchThreadInit =
 
 export type MatchThreadMessage =
   | MatchThreadInit
+  | { type: "seekReplay"; tick: number }
+  | { type: "recordReplay"; enabled: boolean }
+  | { type: "readReplay"; requestId: number }
+  | { type: "observePlans"; enabled: boolean }
   | { type: "advance"; now: number }
   | { type: "command"; command: GameCommand }
   // Lockstep: what the room's server sent, and the transport opening.
@@ -43,6 +50,8 @@ type CastCommand = Extract<GameCommand, { type: "cast" }>;
 export type MatchThreadSnapshot = Omit<GameSnapshot, "map"> & { map: Omit<GameMap, "terrain" | "landmarks"> };
 
 export type MatchThreadEvent =
+  | { type: "replayData"; requestId: number; trace?: DebugReplayTrace; error?: string }
+  | { type: "aiPlans"; packet: AiPlanPacket }
   // `ai`: how the match's AI thread has been thinking since the last snapshot (the ?perf=1 readout).
   | { type: "snapshot"; snapshot: MatchThreadSnapshot; pendingCasts?: CastCommand[]; ai?: AiThinkReport }
   | { type: "ended"; snapshot: MatchThreadSnapshot }

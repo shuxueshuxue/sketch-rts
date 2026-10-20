@@ -7,7 +7,7 @@ import type { GameCommand, GameSnapshot, PlayerId, Unit } from '../shared/types'
 import type { AiPolicyMemory } from './memory';
 import { createAiPolicyMemory } from './memory';
 import { effectiveCombatRating, structureRating } from './policy/v6/strength';
-import { deathTaskIndex, inferDeathAssignment, treatmentOrder } from './death-ledger-context';
+import { deathTaskIndex, inferDeathAssignment, treatmentOrder, projectDeathThinkContext, type AiDeathThinkContext } from './death-ledger-context';
 import { classifyAiDeath } from './death-ledger-classification';
 import { inferAiDeathEngagement, isAiDeathOpponent } from './death-ledger-engagement';
 import { summarizeAiDeaths } from './death-ledger-summary';
@@ -32,7 +32,7 @@ type UnitHistory = {
   sinkingProfile: SimulationDamageEvent['profile'] | null;
   pendingMetadata: boolean;
 };
-type OwnerContext = { memory: AiPolicyMemory; index: ReturnType<typeof deathTaskIndex>; priorAttack: Set<string> };
+type OwnerContext = { memory: { unitClaims: AiDeathThinkContext['claims'] }; index: Omit<ReturnType<typeof deathTaskIndex>, 'general'> & { general: AiDeathThinkContext['general'] | undefined }; priorAttack: Set<string> };
 
 /** Pure observation. The object and its histories belong to the caller, never to Game or AI memory.
  * Hook recordThink after the ordinary planner and recordIssuedCommand at the command frame's afterIssue boundary.
@@ -83,18 +83,26 @@ export class AiDeathLedger {
 
   /** Copies only selected task facts and health points; does not call selectors or alter their caches. */
   recordThink(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory) {
+    this.recordThinkContext(projectDeathThinkContext(snapshot, owner, memory));
+  }
+
+  /** The same facts can arrive from a thinking thread; no policy memory crosses the boundary. */
+  recordThinkContext(facts: AiDeathThinkContext) {
+    const {owner, tick, units, worn} = facts;
     if (!this.owners.has(owner)) return;
-    this.rememberIdentities(snapshot);
-    const previous = this.contexts.get(owner), index = deathTaskIndex(snapshot, owner, memory);
-    const current = { memory, index, priorAttack: new Set(memory.landAttack?.general.group ?? memory.v6?.general?.group ?? []) };
-    this.contexts.set(owner, current);
-    const worn = memory.landAttackResult;
-    if (worn?.reason === 'general:retreat:worn' && worn.tick >= (previous ? snapshot.tick - 15 : snapshot.tick))
+    this.rememberIdentities(this.game);
+    const previous = this.contexts.get(owner);
+    const empty = createAiPolicyMemory(), base = deathTaskIndex(this.game, owner, empty);
+    const index = { ...base, byUnit: new Map(facts.tasks), general: facts.general ?? undefined };
+    const memory = { unitClaims: facts.claims };
+    this.contexts.set(owner, { memory, index, priorAttack: new Set(facts.priorAttack) });
+    if (worn?.reason === 'general:retreat:worn' && worn.tick >= (previous ? tick - 15 : tick))
       for (const id of previous?.priorAttack ?? []) this.history(id).wornTick = worn.tick;
-    for (const unit of snapshot.units) if (unit.owner === owner && unit.hp > 0) {
+    for (const unit of units) {
+      if (this.seen.has(unit.id)) continue;
       const state = this.history(unit.id);
-      this.assign(state, inferDeathAssignment(snapshot, unit, memory, index, state.order));
-      this.sample(state, unit, snapshot.tick, 'think');
+      this.assign(state, inferDeathAssignment({tick}, unit, memory, index, state.order));
+      this.sample(state, unit, tick, 'think');
     }
   }
 
@@ -217,7 +225,7 @@ export class AiDeathLedger {
       const memory = context?.memory ?? createAiPolicyMemory();
       const atHit = { ...live, order: structuredClone(currentOrder) as Unit['order'] };
       this.assign(state, inferDeathAssignment(this.game, atHit, memory,
-        context?.index ?? deathTaskIndex(this.game, unit.owner, memory), currentOrderIssuer));
+        context?.index ?? deathTaskIndex(this.game, unit.owner, createAiPolicyMemory()), currentOrderIssuer));
     }
     const diedTick = actualDeath ? kill?.tick ?? fatal?.tick ?? event.tick : event.tick;
     const source = kill?.source ?? fatal?.source ?? null;
@@ -300,6 +308,8 @@ export class AiDeathLedger {
   }
 
   records(owner?: PlayerId): AiUnitDeathRecord[] { return structuredClone(this.rows.filter(row => owner === undefined || row.owner === owner)); }
+
+  recordsFrom(index: number): AiUnitDeathRecord[] { return structuredClone(this.rows.slice(index)); }
 
   summary(owner?: PlayerId, throughTick = this.game.tick): AiDeathSummary {
     return summarizeAiDeaths(this.rows, owner, throughTick);

@@ -466,9 +466,14 @@ router.post("/api/rooms/:roomId/debug-replay", (request, response) => {
   }
 });
 
+router.post("/api/rooms/:roomId/debug-replay/stop", (request, response) => {
+  try { roomHost.stopDebugReplay(request.params.roomId); response.json({ok:true}); }
+  catch(error) { response.status(400).json({error:errorMessage(error)}); }
+});
+
 router.get("/api/rooms/:roomId/debug-replay", (request, response) => {
   try {
-    response.json(roomHost.readDebugReplay(request.params.roomId));
+    response.json(roomHost.readDebugReplay(request.params.roomId, typeof request.query.viewer === "string" ? request.query.viewer : undefined));
   } catch (error) {
     response.status(404).json({ error: errorMessage(error) });
   }

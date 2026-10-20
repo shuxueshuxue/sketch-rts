@@ -1,3 +1,5 @@
+import type { DebugReplayTrace } from '../../shared/replay';
+import type { AiPlanPacket } from '../../ai/plan-stream';
 import { commandRejection } from "../../shared/sim/command-frame-runtime";
 import { bindGangwayCrewRules } from "../../shared/ship-gangway";
 import type { ClientNetMessage, ServerNetMessage } from "../../shared/net/types";
@@ -30,16 +32,37 @@ type CastCommand = Extract<GameCommand, { type: "cast" }>;
 export class MatchThreadGameAdapter implements GameAdapter {
   private snapshot: GameSnapshot;
   private reported: GameSnapshot;
+  replayRange?: {from:number;to:number};
+  private replayRequests = new Map<number, {resolve: (trace:DebugReplayTrace)=>void;reject:(error:Error)=>void}>();
+  private requestSequence = 0;
+  private recorded = false;
   private casts: CastCommand[] = [];
   private closed = false;
+  private planListener: ((packet: AiPlanPacket) => void) | undefined;
   // The page's own fixed ground, kept on every snapshot that arrives without it (see MatchThreadSnapshot).
   private readonly ground: Pick<GameMap, "terrain" | "landmarks">;
 
   constructor(private readonly port: MatchThreadPort, init: MatchThreadInit, initial: GameSnapshot, private readonly options: MatchThreadAdapterOptions, transfer: Transferable[] = []) {
     this.snapshot = this.reported = initial;
+    if (init.type === 'replay') this.replayRange = {from:init.trace.initialSave.snapshot.tick,
+      to:init.trace.throughTick ?? init.trace.checkpoints.at(-1)?.tick ?? initial.tick};
     this.ground = { landmarks: initial.map.landmarks, ...(initial.map.terrain ? { terrain: initial.map.terrain } : {}) };
     port.onmessage = ({ data }) => this.receive(data);
     port.postMessage(init, transfer);
+  }
+
+  seekReplay(tick: number) { if (this.replayRange) this.port.postMessage({type:'seekReplay',tick:Math.max(this.replayRange.from,Math.min(this.replayRange.to,Math.round(tick)))}); }
+  hasRecording() { return this.recorded; }
+  async startRecording() { this.recorded=true; this.port.postMessage({type:'recordReplay',enabled:true}); }
+  async stopRecording() { this.port.postMessage({type:'recordReplay',enabled:false}); }
+  recordedReplay(): Promise<DebugReplayTrace> {
+    return new Promise((resolve,reject) => { const requestId = ++this.requestSequence;
+      this.replayRequests.set(requestId,{resolve,reject}); this.port.postMessage({type:'readReplay',requestId}); });
+  }
+  subscribePlans(listener: (packet: AiPlanPacket) => void): () => void {
+    this.planListener = listener;
+    this.port.postMessage({type:'observePlans', enabled:true});
+    return () => { this.planListener = undefined; this.port.postMessage({type:'observePlans',enabled:false}); };
   }
 
   sendCommand(command: GameCommand): void {
@@ -87,6 +110,12 @@ export class MatchThreadGameAdapter implements GameAdapter {
 
   private receive(event: MatchThreadEvent): void {
     if (this.closed) return;
+    if (event.type === 'replayData') {
+      const request = this.replayRequests.get(event.requestId); this.replayRequests.delete(event.requestId);
+      if (event.trace) request?.resolve(event.trace); else request?.reject(new Error(event.error ?? 'Replay unavailable'));
+      return;
+    }
+    if (event.type === 'aiPlans') { this.planListener?.(event.packet); return; }
     if (event.type === "snapshot") {
       this.snapshot = this.withGround(event.snapshot);
       this.casts = event.pendingCasts ?? [];

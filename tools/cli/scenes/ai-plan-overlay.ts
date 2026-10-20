@@ -1,0 +1,48 @@
+import type {Scene} from '../drivers/browser';
+
+export default async function(s:Scene){
+ const gpu=await s.page.evaluate(()=>{const gl=document.createElement('canvas').getContext('webgl2')!;const ext=gl.getExtension('WEBGL_debug_renderer_info');return ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);});
+ s.must(!/SwiftShader|llvmpipe/i.test(gpu),`Software GPU: ${gpu}`);
+ const created:any=await s.api('/api/rooms',{host:{id:'plan-proof-host',name:'Plan proof'},mapId:'twoShores',visibility:'public',humanCount:1,aiCount:3,layoutSeed:'plan-overlay-1'});
+ const id=created.id,players=created.slots.map((slot:any)=>slot.playerId);
+ await s.api(`/api/rooms/${id}/start`,{userId:'plan-proof-host'});
+ await s.api(`/api/rooms/${id}/pause`,{});
+ await s.api(`/api/rooms/${id}/reset`,{mapId:'twoShores',options:{players,aiPlayers:players,aiVersions:Object.fromEntries(players.map((p:string)=>[p,'v9_archer'])),layout:{seed:'pool-twoShores-1',kind:'sides',idea:'twoShores'},races:Object.fromEntries(players.map((p:string)=>[p,'grove']))}});
+ await s.api(`/api/rooms/${id}/tick`,{ticks:60});
+ const traffic:{bytes:number;packets:number;baselines:number;deltas:number;nodes:number}={bytes:0,packets:0,baselines:0,deltas:0,nodes:0};
+ s.page.on('websocket',(ws:any)=>ws.on('framereceived',(event:any)=>{try{const m=JSON.parse(String(event.payload));if(m.type==='aiPlans'){traffic.bytes+=Buffer.byteLength(String(event.payload));traffic.packets++;if(m.packet.type==='trace'){if(m.packet.baseTick===null)traffic.baselines++;else traffic.deltas++;traffic.nodes+=m.packet.upsert.length;}}}catch{}}));
+ await s.page.goto(new URL(`?room=${id}`,s.page.url()).href,{waitUntil:'load'});
+ await s.page.waitForSelector('[data-watch-room]',{timeout:180000});await s.page.click('[data-watch-room]');
+ await s.page.waitForFunction(()=>((window as any).__sketchRtsView?.tick??-1)>=60,null,{timeout:180000});
+ await s.page.waitForFunction(()=>!!(window as any).__sketchRtsDebug?.ready(),null,{timeout:180000});
+ await s.page.click('.ai-plan-toggle');await s.page.click('[data-action=record]');
+ // A single real four-player AI match. The server settles thinks; the browser consumes the same authoritative frames.
+ const result:any=await s.api(`/api/rooms/${id}/tick`,{ticks:4800});const tick=result.snapshot.tick;
+ await s.page.waitForFunction((t:number)=>((window as any).__sketchRtsView?.tick??-1)>=t,tick,{timeout:180000});
+ await s.page.waitForSelector('.plan-band',{timeout:60000});
+ const focus=await s.page.evaluate(()=>{const list=document.querySelector<HTMLElement>('.plan-list[data-goal]');list?.click();return list?.textContent;});
+ await s.wait(3000);await s.shot('spectator-plans');
+ const browser=s.page.context(),cdp=await browser.newCDPSession(s.page);
+ const metrics:any[]=[];
+ for(const open of [false,true,false,true]){
+   if(open!==await s.page.locator('.ai-plan-toggle').getAttribute('aria-expanded').then((v:string)=>v==='true'))await s.page.click(open?'.ai-plan-toggle':'[data-action=close]');
+   await s.wait(2000);
+   const events:any[]=[];const collect=(event:any)=>events.push(...event.value);cdp.on('Tracing.dataCollected',collect);
+   await cdp.send('Tracing.start',{categories:'devtools.timeline,blink.user_timing',transferMode:'ReportEvents'});await s.wait(6000);
+   const complete=new Promise(done=>cdp.once('Tracing.tracingComplete',done));await cdp.send('Tracing.end');await complete;cdp.off('Tracing.dataCollected',collect);
+   const times=events.filter(e=>e.name==='FireAnimationFrame'&&e.ph==='X').map(e=>(e.tdur??e.dur??0)/1000).sort((a,b)=>a-b);
+   const spans=events.filter(e=>String(e.name).startsWith('ai-plan:'));
+   metrics.push({open,frames:times.length,jsMedianMs:times[Math.floor(times.length*.5)],jsP95Ms:times[Math.floor(times.length*.95)],jsMaxMs:times.at(-1),planTimingEvents:spans.length});
+ }
+ await s.page.click('[data-action=record]'); // Stop recording before replaying: both observation gates are independently operable.
+ const replay:any=await s.api(`/api/rooms/${id}/debug-replay?viewer=spectator-proof`);
+ const packets=replay.aiPlans?.packets??[];
+ s.must(packets.some((p:any)=>p.type==='trace'&&p.baseTick!==null),'No incremental plans recorded');
+ await s.page.click('[data-action=replay]');
+ await s.page.waitForSelector('[data-plan-seek]',{timeout:60000});
+ const seek=Math.round((replay.initialSave.snapshot.tick+replay.throughTick)/2);
+ await s.page.locator('[data-plan-seek]').evaluate((input:HTMLInputElement,t:number)=>{input.value=String(t);input.dispatchEvent(new Event('input',{bubbles:true}));},seek);
+ await s.page.waitForFunction((t:number)=>(window as any).__sketchRtsView?.tick===t,seek,{timeout:180000});await s.wait(1500);await s.shot('replay-scrub');
+ s.must(await s.page.locator('.plan-gap').count()>0,'Missing unrecorded prefix');
+ s.record('ai-plan-overlay',{gpu,tick,seek,focus,metrics,traffic,packets:packets.length,recordingFrom:replay.initialSave.snapshot.tick,recordingThrough:replay.throughTick,deathRecords:packets.flatMap((p:any)=>p.type==='events'?p.deaths:[]).length});
+}

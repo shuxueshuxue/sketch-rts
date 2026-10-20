@@ -1,3 +1,4 @@
+import { replaySnapshotToTick, type DebugReplayTrace } from '../../shared/replay';
 import { createAiRuntime, type AiThinkExecutor, type AiThinkExecutorFactory } from "../../ai/runtime";
 import { createAiThinkClientExecutor } from "../../ai/think-worker/client";
 import type { AiThinkReply } from "../../ai/think-worker/protocol";
@@ -13,6 +14,8 @@ import type { MatchThreadEvent, MatchThreadMessage, MatchThreadSnapshot } from "
 /** The match thread's side (see @@@match-thread): the same adapters a page would run, driven by the page's messages. */
 export function createMatchThreadHost(post: (event: MatchThreadEvent) => void) {
   let now = 0;
+  let replay: DebugReplayTrace | undefined;
+  let stopPlans: (() => void) | undefined;
   let local: LocalGameAdapter | undefined;
   let lockstep: LockstepClient | undefined;
   const netHandlers: ((message: ServerNetMessage) => void)[] = [];
@@ -46,6 +49,25 @@ export function createMatchThreadHost(post: (event: MatchThreadEvent) => void) {
   return {
     handle(message: MatchThreadMessage) {
       try {
+        if (message.type === 'replay') { replay = message.trace; return; }
+        if (message.type === 'seekReplay') {
+          if (replay) post({type:'snapshot',snapshot:withoutGround(replaySnapshotToTick(replay,message.tick))});
+          return;
+        }
+        if (message.type === 'observePlans') {
+          stopPlans?.(); stopPlans = undefined;
+          if (message.enabled) {
+            if (local) stopPlans = local.subscribePlans(packet => post({type:'aiPlans',packet}));
+            else if (replay) for (const packet of replay.aiPlans?.packets ?? []) post({type:'aiPlans',packet});
+          }
+          return;
+        }
+        if (message.type === 'recordReplay') { void (message.enabled ? local?.startRecording() : local?.stopRecording())?.catch(report); return; }
+        if (message.type === 'readReplay') {
+          void local?.recordedReplay().then(trace => post({type:'replayData',requestId:message.requestId,trace}),error =>
+            post({type:'replayData',requestId:message.requestId,error:String(error)}));
+          return;
+        }
         if (message.type === "local") {
           now = message.now;
           const room = message.room;
@@ -108,6 +130,7 @@ export function createMatchThreadHost(post: (event: MatchThreadEvent) => void) {
           return;
         }
         closed = true;
+        stopPlans?.();
         local?.close();
         lockstep?.close();
       } catch (error) {

@@ -115,8 +115,8 @@ export function deathTaskIndex(snapshot: GameSnapshot, owner: PlayerId, memory: 
   return { byUnit, general: memory.v6?.general, task, hallPerimeter, generalClearingTargets };
 }
 
-export function inferDeathAssignment(snapshot: GameSnapshot, unit: Unit, memory: AiPolicyMemory,
-  index: ReturnType<typeof deathTaskIndex>, lastOrder: AiIssuedOrder | null): AiDeathAssignment {
+export function inferDeathAssignment(snapshot: Pick<GameSnapshot, 'tick'>, unit: Pick<Unit, 'id' | 'kind' | 'x' | 'y' | 'order' | 'deck'>, memory: { unitClaims: Record<string, { localRetreat?: unknown; kind: string }> },
+  index: Omit<ReturnType<typeof deathTaskIndex>, 'general'> & { general: AiDeathThinkContext['general'] | undefined }, lastOrder: AiIssuedOrder | null): AiDeathAssignment {
   const candidates = [...(index.byUnit.get(unit.id) ?? [])];
   const order = unit.order, general = index.general, claim = memory.unitClaims[unit.id];
   const put = (value: AiDeathTask, first = false) => {
@@ -150,4 +150,27 @@ export function inferDeathAssignment(snapshot: GameSnapshot, unit: Unit, memory:
     state: emergency ? 'emergency-interruption' : !current ? 'unassigned'
       : ['move', 'board', 'follow'].includes(order.type) ? 'en-route' : near === true || order.type === 'hold' ? 'on-station' : 'assigned',
     stateAttribution: 'inferred', evidence: candidates.map(candidate => candidate.source), plannedBalanceRange: null };
+}
+
+/** Serializable retained facts, not policy memory. Only constructed for an active observer. */
+export type AiDeathThinkContext = {
+  tick: number; owner: PlayerId;
+  tasks: [string, AiDeathTask[]][];
+  general: Pick<NonNullable<ReturnType<typeof deathTaskIndex>['general']>, 'group' | 'mode' | 'targetHallId' | 'stage'> | null;
+  claims: Record<string, { localRetreat?: boolean; kind: string }>;
+  priorAttack: string[]; worn: { reason: string; tick: number } | null;
+  units: Pick<Unit, 'id' | 'kind' | 'x' | 'y' | 'hp' | 'maxHp' | 'order' | 'deck'>[];
+};
+
+export function projectDeathThinkContext(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory): AiDeathThinkContext {
+  const index = deathTaskIndex(snapshot, owner, memory), general = index.general;
+  return structuredClone({ tick: snapshot.tick, owner, tasks: [...index.byUnit],
+    general: general ? { mode:general.mode, ...(general.group ? {group:general.group} : {}),
+      ...(general.targetHallId ? {targetHallId:general.targetHallId} : {}), ...(general.stage ? {stage:general.stage} : {}) } : null,
+    claims: Object.fromEntries(Object.entries(memory.unitClaims).map(([id, claim]) => [id, { kind: claim.kind, localRetreat: !!claim.localRetreat }])),
+    priorAttack: memory.landAttack?.general.group ?? memory.v6?.general?.group ?? [],
+    worn: memory.landAttackResult ? { tick: memory.landAttackResult.tick, reason: memory.landAttackResult.reason } : null,
+    units: snapshot.units.filter(u => u.owner === owner && u.hp > 0).map(({id, kind, x, y, hp, maxHp, order, deck}) =>
+      ({id, kind, x, y, hp, maxHp, order, ...(deck ? {deck} : {})})),
+  });
 }

@@ -4,14 +4,14 @@ import { buildAiPlanTrace, type AiPlanTrace } from './plan-trace';
 import type { GameSnapshot } from '../shared/types';
 import type { AiDeathLedger } from './death-ledger';
 
-export type AiPlanTraceOptions = AiOwnerPlannerOptions & { deathLedger?: AiDeathLedger };
+export type AiPlanTraceOptions = AiOwnerPlannerOptions & { deathLedger?: AiDeathLedger; observeMemory?: (memory: ReturnType<typeof createAiPolicyMemory>) => void };
 
 /** Opt-in observation at the existing think boundary; executes the ordinary planner exactly once.
- * The caller retains previous traces outside AI memory. No runtime/network/UI integration yet.
+ * The caller retains previous traces outside AI memory. Observers live outside the planner and simulation.
  */
 export function planAiOwnerCommandEntriesWithTrace<Source extends string = string>(snapshot: GameSnapshot,
   request: AiOwnerPlannerRequest<Source>, options: AiPlanTraceOptions = {}, previous?: AiPlanTrace) {
-  const { deathLedger, ...plannerOptions } = options;
+  const { deathLedger, observeMemory, ...plannerOptions } = options;
   let memory = request.memory ?? options.memory;
   const provider = options.memoryProvider;
   // Observe the existing get/set boundary, including a read-only provider that
@@ -25,6 +25,7 @@ export function planAiOwnerCommandEntriesWithTrace<Source extends string = strin
   };
   const commands = planAiOwnerCommandEntries(snapshot, request, { ...plannerOptions, memoryProvider });
   const observedMemory = memory ?? createAiPolicyMemory();
+  observeMemory?.(observedMemory);
   deathLedger?.recordThink(snapshot, request.playerId, observedMemory);
   const trace = buildAiPlanTrace(snapshot, request.playerId, observedMemory,
     request.version ?? options.version ?? DEFAULT_AI_PLANNER_VERSION, previous);

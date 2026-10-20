@@ -1,3 +1,4 @@
+import type { AiPlanRecording } from '../ai/plan-stream';
 import { RULES_VERSION, assertCurrentRulesVersion } from "./rules-version";
 import { restoreGameFromSave, type SaveGameRecord } from "./savegame";
 import { snapshotGame, type Game } from "./sim";
@@ -22,6 +23,8 @@ export type DebugReplayCheckpoint = {
 };
 
 export type DebugReplayTrace = {
+  aiPlans?: AiPlanRecording;
+  throughTick?: number;
   schemaVersion: typeof DEBUG_REPLAY_SCHEMA_VERSION;
   rulesVersion?: number;
   id: string;

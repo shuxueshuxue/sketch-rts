@@ -1,7 +1,10 @@
+import { aiPlanAudience } from './ai-plan-visibility';
+import { AiPlanObserver } from '../ai/plan-observer';
+import { filterAiPlanPacket, type AiPlanPacket } from '../ai/plan-stream';
 import { createRoomLifecycleHost } from "../shared/room-lifecycle";
 import type { CreateRoomInput, GrandStressRoomOptions, SlotPatch } from "../shared/rooms";
 import { createSaveGameRecord, restoreGameFromSave, type SaveGameInput, type SaveGameRecord } from "../shared/savegame";
-import { createAiRuntime, createPresetAiRuntimeFramePlanner, type AiRuntimeFramePlannerState, type AiRuntimeState, type AiThinkExecutor, type AiThinkExecutorFactory } from "../ai/runtime";
+import { createAiRuntime, createInlineAiThinkExecutor, createPresetAiRuntimeFramePlanner, type AiRuntimeFramePlannerState, type AiRuntimeState, type AiThinkExecutor, type AiThinkExecutorFactory } from "../ai/runtime";
 import type { AiScript, AiScriptVersion } from "../ai/policy";
 import { createGame, snapshotGame, warmGameCaches, type Game } from "../shared/sim";
 import { CommandFrameRuntime } from "../shared/sim/command-frame-runtime";
@@ -65,8 +68,9 @@ type HostedRoom = {
   frameRuntime?: CommandFrameRuntime<AiRuntimeFramePlannerState>;
   // Where the frame runtime's AI thinks; it belongs to that runtime and is closed with it.
   thinkExecutor?: AiThinkExecutor;
+  plans?: AiPlanObserver;
   thinkExecutors?: AiThinkExecutorFactory;
-  debugReplay?: { id: string; label?: string; initialSave: SaveGameRecord };
+  debugReplay?: { id: string; label?: string; initialSave: SaveGameRecord; stopped?: DebugReplayTrace };
   frameListeners: Set<HostedRoomFrameListener>;
   lifecycleListeners: Set<HostedRoomLifecycleListener>;
 };
@@ -440,19 +444,42 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       return save;
     },
 
+    subscribeAiPlans(roomId: string, listener: (packet: AiPlanPacket) => void): () => void {
+      const {hosted, game} = getLiveGame(roomId);
+      hosted.plans ??= new AiPlanObserver(game, hosted.aiRuntime?.controlledPlayers ?? [], hosted.thinkExecutor);
+      return hosted.plans.subscribe(listener);
+    },
+
     enableDebugReplay(roomId: string, input: SaveGameInput): DebugReplayTrace {
       const { hosted, game } = getLiveGame(roomId);
+      if (hosted.debugReplay && !hosted.debugReplay.stopped) return this.readDebugReplay(roomId);
       const initialSave = createSaveGameRecord(game, hosted.room, input, new Date(), hosted.aiRuntime?.controlledPlayers ?? [], hosted.aiRuntime?.versions ?? {});
       hosted.debugReplay = { id: input.id, ...(input.label ? { label: input.label } : {}), initialSave };
       hosted.history.retainFramesFrom(initialSave.snapshot.tick);
+      hosted.plans ??= new AiPlanObserver(game, hosted.aiRuntime?.controlledPlayers ?? [], hosted.thinkExecutor);
+      hosted.plans.record(true);
       hosted.history.recordCheckpoint(createHostedCheckpoint(hosted, game));
       return hosted.history.debugReplayTrace(hosted.debugReplay);
     },
 
-    readDebugReplay(roomId: string): DebugReplayTrace {
+    stopDebugReplay(roomId: string): void {
+      const hosted = getHosted(roomId);
+      if (!hosted.debugReplay || hosted.debugReplay.stopped) return;
+      hosted.plans?.record(false);
+      const trace = hosted.history.debugReplayTrace(hosted.debugReplay), aiPlans = hosted.plans?.recordingData();
+      hosted.debugReplay.stopped = {...trace,throughTick:hosted.game?.tick ?? aiPlans?.throughTick ?? trace.initialSave.snapshot.tick,
+        ...(aiPlans ? {aiPlans} : {})};
+      hosted.history.releaseReplayFrames();
+    },
+
+    readDebugReplay(roomId: string, viewer?: PlayerId): DebugReplayTrace {
       const hosted = getHosted(roomId);
       if (!hosted.debugReplay) throw new Error(`Room ${roomId} is not recording a debug replay`);
-      return hosted.history.debugReplayTrace(hosted.debugReplay);
+      const trace = hosted.debugReplay.stopped ?? hosted.history.debugReplayTrace(hosted.debugReplay);
+      const plans = hosted.debugReplay.stopped?.aiPlans ?? hosted.plans?.recordingData();
+      const own = aiPlanAudience(hosted.room,viewer);
+      return {...trace, throughTick: hosted.debugReplay.stopped?.throughTick ?? hosted.game?.tick ?? plans?.throughTick ?? trace.initialSave.snapshot.tick,
+        ...(plans ? {aiPlans: {...plans, packets: plans.packets.flatMap(p => { const filtered = filterAiPlanPacket(p, own); return filtered ? [filtered] : []; })}} : {})};
     },
 
     replayDebugToTick(roomId: string, tick: number): GameSnapshot {
@@ -616,6 +643,7 @@ function advanceHostedRoomTickUnchecked(hosted: HostedRoom, game: Game, input: {
   // whole world is hashed only on the ticks lockstep clients compare (see @@@lockstep-cadence), not on every tick.
   if (hosted.history.wantsCheckpoint(game.tick)) hosted.history.recordCheckpoint(createHostedCheckpoint(hosted, game));
   const completedFrame = hosted.frameRuntime.tick(commands, { ...frameOptions, onFrame: (frame) => hosted.history.recordFrame(input.source, frame) });
+  hosted.plans?.step();
   const matchEnded = Boolean(game.match.winner);
   if (matchEnded) {
     hosted.history.recordCheckpoint(createHostedCheckpoint(hosted, game));
@@ -648,6 +676,7 @@ function warmedGame(game: Game): Game {
 }
 
 function releaseThinkExecutor(hosted: HostedRoom) {
+  hosted.plans?.dispose();
   hosted.thinkExecutor?.close?.();
   delete hosted.thinkExecutor;
 }
@@ -663,7 +692,8 @@ function notifyHostedRoomLifecycle(hosted: HostedRoom, event: HostedRoomLifecycl
 function createHostedFrameRuntime(hosted: HostedRoom, game: Game): CommandFrameRuntime<AiRuntimeFramePlannerState> {
   // A new frame runtime starts a new AI (memory and all); the old one's thinking session goes with it.
   releaseThinkExecutor(hosted);
-  if (hosted.aiRuntime && hosted.thinkExecutors) hosted.thinkExecutor = hosted.thinkExecutors(hosted.aiRuntime, game);
+  if (hosted.aiRuntime) hosted.thinkExecutor = hosted.thinkExecutors?.(hosted.aiRuntime, game) ?? createInlineAiThinkExecutor(hosted.aiRuntime);
+  delete hosted.plans;
   return new CommandFrameRuntime({
     game,
     roomId: hosted.room.id,

@@ -129,7 +129,7 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
     const setup = liveRoomToGameSetup(room);
     const game = createGame(setup.mapId, setup.options);
     const transport = this.createRoomTransport(room.id);
-    let adapter: LockstepRoomGameAdapter | MatchThreadGameAdapter;
+    let adapter: GameAdapter;
     let join: () => void;
     if (this.matchThreads) {
       // The lockstep simulation runs on its own thread; the socket, chat and room events stay on the page.
@@ -141,7 +141,7 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
         onNet: (message) => transport.send(message),
         onClose: () => { transport.close(); threads.terminate(); },
       });
-      transport.onMessage((message: ServerNetMessage) => threaded.forward(message));
+      transport.onMessage((message: ServerNetMessage) => { if (message.type !== "aiPlans") threaded.forward(message); });
       adapter = threaded;
       join = () => threaded.join();
     } else {
@@ -156,6 +156,19 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
       adapter = new LockstepRoomGameAdapter(client, { spectating });
       join = () => client.join();
     }
+    let planListener: Parameters<NonNullable<GameAdapter['subscribePlans']>>[0] | undefined;
+    transport.onMessage(message => { if (message.type === 'aiPlans') planListener?.(message.packet);
+      if (message.type === 'hello' && planListener) transport.send({type:'aiPlans',roomId:room.id,enabled:true}); });
+    adapter.subscribePlans = listener => {
+      planListener = listener;
+      transport.send({type:'aiPlans',roomId:room.id,enabled:true});
+      return () => { planListener = undefined; transport.send({type:'aiPlans',roomId:room.id,enabled:false}); };
+    };
+    let recorded = false;
+    adapter.hasRecording = () => recorded;
+    adapter.startRecording = async () => { await this.fetchJson(this.path(`/api/rooms/${encodeURIComponent(room.id)}/debug-replay`),{id:`plan-${room.id}`}); recorded = true; };
+    adapter.stopRecording = async () => { await this.fetchJson(this.path(`/api/rooms/${encodeURIComponent(room.id)}/debug-replay/stop`),{}); };
+    adapter.recordedReplay = () => this.fetchJson(this.path(`/api/rooms/${encodeURIComponent(room.id)}/debug-replay?viewer=${encodeURIComponent(playerId)}`));
     const chat = createTransportChat(transport, room.id, playerId);
     transport.onMessage((message: ServerNetMessage) => {
       if (message.type === "room") onRoom(message.room);
@@ -163,7 +176,7 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
     if (transport.onOpen) transport.onOpen(join);
     else join();
     this.matches.set(room.id, { adapter, spectating });
-    return { room, playerId, adapter, chat, snapshot: adapter.currentSnapshot() };
+    return { room, playerId, adapter, chat, snapshot: adapter.currentSnapshot()! };
   }
 
   canForfeitMatch(roomId: string): boolean {

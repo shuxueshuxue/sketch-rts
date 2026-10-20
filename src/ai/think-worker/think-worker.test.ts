@@ -1,3 +1,5 @@
+import { AiPlanObserver } from '../plan-observer';
+import type { AiPlanPacket } from '../plan-stream';
 import { afterAll, describe, expect, it } from "vitest";
 import { createGame } from "../../shared/sim";
 import { checksumGame } from "../../shared/sim/checksum";
@@ -58,6 +60,20 @@ describe("AI think thread", () => {
   it("plays the same match with its thinks on a worker thread", () => {
     expect(playMatch(pool.executor)).toEqual(inline);
   }, 60_000);
+
+  it("preserves every delivered command with incremental observation crossing both thread boundaries", () => {
+    const packets: AiPlanPacket[] = [];
+    const observed: AiThinkExecutorFactory = (runtime, game) => {
+      const executor = copiedHost(runtime, game);
+      const observer = new AiPlanObserver(game, runtime.controlledPlayers, executor);
+      observer.subscribe(packet => packets.push(packet));
+      const close = executor.close;
+      executor.close = () => { observer.dispose(); close?.(); };
+      return executor;
+    };
+    expect(playMatch(observed)).toEqual(inline);
+    expect(packets.some(p => p.type === 'trace' && p.baseTick !== null)).toBe(true);
+  });
 
   it("lands a think that arrives late on the first tick after it arrives, and waits for it only when settling", () => {
     // A thinking thread that answers only when let: thinks wait in its inbox until `answer` runs them.

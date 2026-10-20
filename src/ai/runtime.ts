@@ -1,3 +1,6 @@
+import { planAiOwnerCommandEntriesWithTrace } from './plan-trace-planner';
+import type { AiPlanTrace } from './plan-trace';
+import { projectDeathThinkContext, type AiDeathThinkContext } from './death-ledger-context';
 import { createAiPolicyMemory, type AiPolicyMemory, type AiScript, type AiScriptVersion, type PresetAiPolicyOptions } from "./policy";
 import { DEFAULT_AI_PLANNER_VERSION, planAiOwnerCommandEntries, type AiMemoryProvider } from "./planner-context";
 import type { CommandFrameEntry } from "../sdk/commands/frame";
@@ -99,7 +102,10 @@ export type AiThinkJob = { tick: number; deliveryTick: number; requests: AiComma
 
 // Where thinks run: right here (createInlineAiThinkExecutor) or beside the simulation on another thread. A think's commands
 // land on its delivery tick, or on the first tick after a slow think arrives (see @@@planner-schedule).
+export type AiThinkObservation = { trace: AiPlanTrace; context: AiDeathThinkContext };
+export type AiThinkObserver = (observation: AiThinkObservation) => void;
 export type AiThinkExecutor = {
+  observe?(observer?: AiThinkObserver): void;
   // `check` rejects a command that is illegal in the world it was planned from.
   submit(game: Game, job: AiThinkJob, check: (commands: CommandEnvelope[]) => void): void;
   // Whether a think of this owner is still running.
@@ -125,9 +131,11 @@ export type AiThinkExecutorFactory = (runtime: AiRuntimeState, game: Game) => Ai
 
 export function createInlineAiThinkExecutor(runtime: AiRuntimeState): AiThinkExecutor {
   const planned = new Map<number, CommandEnvelope[]>();
+  let observer: AiThinkObserver | undefined;
   return {
+    observe(next) { observer = next; },
     submit(game, job, check) {
-      const result = planAiCommandFrame(game, job.requests, runtime.policyMode ? { policyMode: runtime.policyMode } : {});
+      const result = planAiCommandFrame(game, job.requests, { ...(runtime.policyMode ? { policyMode: runtime.policyMode } : {}), ...(observer ? { observer } : {}) });
       const commands = result.commands.map((entry) => ({ playerId: entry.playerId, command: entry.command }));
       check(commands);
       if (commands.length > 0) planned.set(job.deliveryTick, [...(planned.get(job.deliveryTick) ?? []), ...commands]);
@@ -170,21 +178,28 @@ export function planAiRuntimeCommandEntries(game: Game, runtime: AiRuntimeState,
   return planAiCommandFrame(game, requests, { ...(runtime.policyMode ? { policyMode: runtime.policyMode } : {}), ...options }).commands;
 }
 
-export function planAiCommandFrame<Source extends string = string>(game: Game, requests: AiCommandFrameRequest<Source>[], options: PresetAiPolicyOptions & { memoryProvider?: AiMemoryProvider } = {}): AiRuntimeResult<Source> {
+export function planAiCommandFrame<Source extends string = string>(game: Game, requests: AiCommandFrameRequest<Source>[], options: PresetAiPolicyOptions & { memoryProvider?: AiMemoryProvider; observer?: AiThinkObserver } = {}): AiRuntimeResult<Source> {
   return planAiCommandFrameFromSnapshot(snapshotGame(game), requests, { teams: game.teams, ...options });
 }
 
-export function planAiCommandFrameFromSnapshot<Source extends string = string>(snapshot: GameSnapshot, requests: AiCommandFrameRequest<Source>[], options: PresetAiPolicyOptions & { memoryProvider?: AiMemoryProvider } = {}): AiRuntimeResult<Source> {
+export function planAiCommandFrameFromSnapshot<Source extends string = string>(snapshot: GameSnapshot, requests: AiCommandFrameRequest<Source>[], options: PresetAiPolicyOptions & { memoryProvider?: AiMemoryProvider; observer?: AiThinkObserver } = {}): AiRuntimeResult<Source> {
   if (snapshot.match.winner) return { commands: [] };
-  const { memoryProvider, ...policyOptions } = options;
-  return { commands: normalizeCommandFrameEntries(planAiCommandFrameRequestsFromSnapshot(snapshot, requests, policyOptions, memoryProvider)) };
+  const { memoryProvider, observer, ...policyOptions } = options;
+  return { commands: normalizeCommandFrameEntries(planAiCommandFrameRequestsFromSnapshot(snapshot, requests, policyOptions, memoryProvider, observer)) };
 }
 
-function planAiCommandFrameRequestsFromSnapshot<Source extends string = string>(snapshot: GameSnapshot, requests: AiCommandFrameRequest<Source>[], policyOptions: PresetAiPolicyOptions = {}, memoryProvider?: AiMemoryProvider) {
+function planAiCommandFrameRequestsFromSnapshot<Source extends string = string>(snapshot: GameSnapshot, requests: AiCommandFrameRequest<Source>[], policyOptions: PresetAiPolicyOptions = {}, memoryProvider?: AiMemoryProvider, observer?: AiThinkObserver) {
   const planned: AiRuntimeIssuedCommand<Source>[] = [];
   // @@@shared-ai-frame - All requests of one think reason over one world frame; replay/SDK equivalence depends on this.
   for (const request of requests) {
-    planned.push(...planAiOwnerCommandEntries(snapshot, request, { ...policyOptions, ...(memoryProvider ? { memoryProvider } : {}) }));
+    const options = { ...policyOptions, ...(memoryProvider ? { memoryProvider } : {}) };
+    if (observer) {
+      let context!: AiDeathThinkContext;
+      const result = planAiOwnerCommandEntriesWithTrace(snapshot, request, { ...options,
+        observeMemory: memory => { context = projectDeathThinkContext(snapshot, request.playerId, memory); } });
+      planned.push(...result.commands);
+      observer({ trace: result.trace, context });
+    } else planned.push(...planAiOwnerCommandEntries(snapshot, request, options));
   }
 
   return planned;

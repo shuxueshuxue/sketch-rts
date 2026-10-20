@@ -10,6 +10,10 @@ export function encodeNetMessage(message: ClientNetMessage | ServerNetMessage): 
 export function decodeClientNetMessage(raw: string): ClientNetMessage {
   const message = parseNetMessage(raw);
   if (!hasType(message)) throw new Error("Net message must be an object with a string type");
+  if (message.type === "aiPlans") {
+    if (!isString(message.roomId) || typeof message.enabled !== 'boolean') throw new Error('Malformed plan subscription');
+    return {type:'aiPlans',roomId:message.roomId,enabled:message.enabled};
+  }
   if (message.type === "join") return decodeJoinMessage(message);
   if (message.type === "command") return decodeClientCommandMessage(message);
   if (message.type === "chat") return decodeClientChatMessage(message);
@@ -22,6 +26,11 @@ export function decodeClientNetMessage(raw: string): ClientNetMessage {
 export function decodeServerNetMessage(raw: string): ServerNetMessage {
   const message = parseNetMessage(raw);
   if (!hasType(message)) throw new Error("Net message must be an object with a string type");
+  if (message.type === "aiPlans") {
+    if (!isString(message.roomId) || !isRecord(message.packet)
+      || !['trace', 'events', 'coverage', 'reset'].includes(String(message.packet.type))) throw new Error('Malformed plan packet');
+    return message as unknown as ServerNetMessage;
+  }
   if (message.type === "hello") return decodeHelloMessage(message);
   if (message.type === "frame") return decodeFrameMessage(message);
   if (message.type === "checkpoint") return decodeCheckpointMessage(message);

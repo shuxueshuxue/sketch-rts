@@ -32,6 +32,8 @@ export class RoomHistoryLog {
     this.trim();
   }
 
+  releaseReplayFrames() { delete this.retainFromTick; this.trim(); }
+
   // Whether the world before this tick's frame is worth a checkpoint: the recent window's interval, or a debug replay's
   // sparse checkpoint (see @@@room-history-checkpoint-policy).
   wantsCheckpoint(tick: number): boolean {
