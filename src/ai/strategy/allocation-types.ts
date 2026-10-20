@@ -1,8 +1,8 @@
-import type { GameCommand, GameSnapshot, PlayerId, UnitOrder } from '../../shared/types';
+import type { GameCommand, GameSnapshot, PlayerId, TrainableUnitKind, UnitOrder } from '../../shared/types';
 import type { ExecutorReason } from '../executor-reasons';
 import type { DecisionFacts } from './decision';
 import type { AssignmentId, AssignmentStage, BudgetEntry, Effect, LandId, Location, Method, MethodId, Objective,
-  ObjectiveId, Precondition, ResourceDemand, Situation, Subgoal, Target, UnitRole, Utility } from './types';
+  ObjectiveId, Precondition, ResourceDemand, Situation, Subgoal, Target, UnitRole, Utility, CrossingEta } from './types';
 
 /** Formal control contracts. No executor registration or behavior is enabled by these types. */
 export type ActionId = string;
@@ -139,6 +139,21 @@ export type VoyageAllocation = Readonly<{
   expectedFreeTick: number | null;
   decision: 'continue' | 'stop-loading' | 'return' | 'redirect';
 }>;
+/** Candidate geometry and manifest chosen by materialize. The allocator may
+ * grant this exact plan; it must not reselect a shore or invent a passenger.
+ * Production references become physical hulls only after observed birth. */
+export type PlannedVoyage = Readonly<{
+  id: string;
+  actionId: ActionId;
+  ship: Readonly<{ kind: 'existing'; unitId: string }> | Readonly<{ kind: 'production'; actionId: ActionId }>;
+  unitIds: readonly string[];
+  departure: Target;
+  destination: Target;
+  departureGround: Target & Readonly<{ landId: LandId }>;
+  landingGround: Target & Readonly<{ landId: LandId }>;
+  crossing: CrossingEta;
+  required: boolean;
+}>;
 export type ObjectiveAllocation = Readonly<{
   objectiveId: ObjectiveId;
   methodId: MethodId;
@@ -191,6 +206,17 @@ export type IssuedActionCommand = Readonly<{
   purpose: IssuedActionOrder['purpose'];
   acceptedTick: number;
   command: GameCommand;
+  /** Minimal admission-time baseline for proving a later world payment. */
+  worldBefore?: Readonly<{ kind: 'production'; buildingId: string;
+    jobs: readonly Readonly<{ id: string | null; unitKind: TrainableUnitKind | null }>[] }>
+    | Readonly<{ kind: 'construction'; buildingIds: readonly string[] }>;
+}>;
+export type AllocationPayment = Readonly<{
+  budgetId: string;
+  amountGold: number;
+  proof: Readonly<{ kind: 'production'; buildingId: string; jobId: string | null;
+    acceptedCommandId: string; unitKind: TrainableUnitKind; queueIndex: number }>
+    | Readonly<{ kind: 'foundation'; buildingId: string; acceptedCommandId: string }>;
 }>;
 
 export type SafetyObstacle =
@@ -307,6 +333,9 @@ export type ExecutorFeedback = Readonly<{
     unitIds: readonly string[]; entityIds: readonly string[]; basis: 'observed-world' }>[];
   reasons: readonly ExecutorReason[];
   blocked: readonly SafetyBlockedQuote[];
+  /** A receipt is checked against the native queue/foundation and the captured
+   * pre-command baseline. Command admission alone is never a payment. */
+  payments?: readonly AllocationPayment[];
   handoffs: readonly Readonly<{ eventId: AllocationEventId; disposition: 'shrink' | 'pause' | 'fail' }>[];
 }>;
 export type ExecutableMethod = DecisionFacts<Method> & Readonly<{
@@ -314,8 +343,12 @@ export type ExecutableMethod = DecisionFacts<Method> & Readonly<{
   /** Stable preference within this objective, not a global defense/island priority. */
   preference: number;
   spends: readonly PlannedAllocationSpend[];
+  voyagePlans?: readonly PlannedVoyage[];
   actions: readonly Readonly<{ id: ActionId; executor: string; intent: ActionIntent; target: Target; dependsOn: readonly ActionId[];
-    demands: readonly ResourceDemand[]; spendIds: readonly string[]; completionEffects: readonly Effect[] }>[];
+    demands: readonly ResourceDemand[]; spendIds: readonly string[]; completionEffects: readonly Effect[];
+    /** Materialized bundle subset, including separate sources' assembly groups.
+     * Omission is an unresolved skeleton, never permission to select globally. */
+    unitIds?: readonly string[] }>[];
 }>;
 type MethodQuoteFacts = Readonly<{
   methodId: MethodId;
@@ -339,6 +372,9 @@ export type AllocationMethodQuoteInput = Readonly<{
   method: ExecutableMethod;
   unitIds: readonly string[];
   budgets: readonly AllocationBudget[];
+  /** Real current action records, including observed production results. The
+   * caller supplies these on each transaction; providers keep no hidden history. */
+  executions: readonly ExecutionAction[];
 }>;
 export interface AllocationMethodProvider {
   readonly id: string;
@@ -371,11 +407,14 @@ export interface StrategyAllocator {
 }
 export type CommandAdmission = Readonly<{
   commandId: string;
-  action: ActionToken;
-  allocationRevision: number;
+  source: 'script' | 'executor';
+  executor: string;
+  action: ActionToken | null;
+  allocationRevision: number | null;
+  purpose: IssuedActionOrder['purpose'];
   command: GameCommand;
 }> & (
-  | Readonly<{ status: 'accepted'; queuedTick: number }>
+  | Readonly<{ status: 'accepted'; admittedTick: number; queuedTick: number | null }>
   | Readonly<{ status: 'rejected'; reason: ExecutorReason }>
 );
 export type StrategyAllocationTrace = Readonly<{
@@ -389,6 +428,8 @@ export type StrategyAllocationTrace = Readonly<{
   blocked: readonly SafetyBlockedQuote[];
   unmet: readonly AllocationUnmetDemand[];
   events: readonly AllocationEvent[];
+  /** Current transaction, reconstructed from input; not a retained trace chain. */
+  commandAdmissions?: readonly CommandAdmission[];
   /** Compatibility projection, not another pool of spendable gold. */
   budgetProjection: readonly BudgetEntry[];
 }>;

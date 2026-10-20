@@ -12,6 +12,9 @@ import { withAiGoldBudget } from './snapshot';
 import { planCombatReadiness, readinessUnitIds, withCombatReadinessReuse } from "./combat-readiness";
 
 export type ScriptRunnerOptions = {
+  /** Formal resource authority runs before claims/order filters and before any
+   * onCommands callback or order/budget bookkeeping. Ordinary policies omit it. */
+  admitCommands?: (script: AiScript, commands: GameCommand[]) => GameCommand[];
   commandConflictBypassScriptIds?: ReadonlySet<string>;
   minimumAttackMoveUnits?: (scriptId: string, command: Extract<GameCommand, { type: "attackMove" }>, snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) => number;
 };
@@ -49,7 +52,8 @@ function runScriptsWithContext(snapshot: GameSnapshot, owner: PlayerId, scripts:
   for (const script of economyScripts) {
     const reserve = script.id === "v6Economy" || script.id === "economy" && isV6Policy(policyOptions) ? 0 : script.id === "economy" || script.id === "navalEconomy" ? shopReserve : navalReserve + shopReserve;
     const budget = budgetAfter(reserve);
-    const scriptCommands = withoutUnitsClaimedElsewhere(towerOrders(asCommands(script.run(budget, owner, policyOptions)), snapshot, owner), claims, script.id);
+    const proposed = asCommands(script.run(budget, owner, policyOptions));
+    const scriptCommands = withoutUnitsClaimedElsewhere(towerOrders(runnerOptions.admitCommands?.(script, proposed) ?? proposed, snapshot, owner), claims, script.id);
     script.onCommands?.(snapshot, owner, policyOptions, scriptCommands);
     if (scriptCommands.length > 0) {
       recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams, preserveHireCampClaims, preserveSkirmishRetreatClaims, ...(script.redirects ? { redirects: script.redirects } : {}) });
@@ -62,7 +66,8 @@ function runScriptsWithContext(snapshot: GameSnapshot, owner: PlayerId, scripts:
   }
 
   for (const script of scripts.filter((candidate) => candidate.phase === "tactics")) {
-    const rawScriptCommands = withoutUnitsClaimedElsewhere(towerOrders(asCommands(script.run(script.id === "shopping" ? budgetAfter(0) : snapshot, owner, policyOptions)), snapshot, owner), claims, script.id);
+    const proposed = asCommands(script.run(script.id === "shopping" ? budgetAfter(0) : snapshot, owner, policyOptions));
+    const rawScriptCommands = withoutUnitsClaimedElsewhere(towerOrders(runnerOptions.admitCommands?.(script, proposed) ?? proposed, snapshot, owner), claims, script.id);
     // The script still runs: it may update its memory even without issuing a
     // command. Empty results need no conflict copies or command bookkeeping.
     const scriptCommands = runnerOptions.commandConflictBypassScriptIds?.has(script.id)
@@ -79,7 +84,7 @@ function runScriptsWithContext(snapshot: GameSnapshot, owner: PlayerId, scripts:
   return commands;
 }
 
-function purchaseCost(snapshot: GameSnapshot, owner: PlayerId, command: GameCommand): number {
+export function purchaseCost(snapshot: GameSnapshot, owner: PlayerId, command: GameCommand): number {
   if (command.type === "build") return BUILDING_DEFS[command.buildingKind].cost;
   if (command.type === "train") return UNIT_DEFS[command.unitKind].cost;
   if (command.type === "research") return UPGRADE_DEFS[command.upgradeKind].levels[snapshot.players[owner]!.upgrades[command.upgradeKind] ?? 0]?.cost ?? 0;
