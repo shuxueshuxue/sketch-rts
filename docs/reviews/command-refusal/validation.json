@@ -88,5 +88,46 @@
     "failedTests": 0,
     "rootTypecheckExitCode": 0,
     "logSha256": "be0fba792a5697b0db2f7159d2db89b75f9c2c155452b74dfcee750be06181b0"
+  },
+  "afterDebugMenuRebase": {
+    "main": "9e90ebf2",
+    "source": "5d6ddae3ba7e41addf0e7d392eb2ee67961dcc78",
+    "previousHead": "e8258ca1b1249bee8857419df6162665058f5e43",
+    "srcChangesFromPreviousHead": [
+      "src/client/debug-tools.ts",
+      "src/client/main.ts"
+    ],
+    "baseChanges": "Main added debug menu gates, objective metric analysis scripts and documentation; refusal simulation and client implementation remain unchanged.",
+    "homeEntryGate": "debugToolsEnabled()",
+    "resultsEntryGate": "lastPlanReplay && debugToolsEnabled()",
+    "rootTypecheckExitCode": 0,
+    "testCommand": "npx vitest run src/shared/sim/command-refusal-feedback.test.ts src/client/command-refusal-feedback.test.ts src/client/menu-scenes.test.ts --maxWorkers 2 --minWorkers 1",
+    "passedFiles": 3,
+    "passedTests": 29,
+    "failedTests": 0,
+    "durationSeconds": 11.85,
+    "browser": {
+      "command": "SKETCH_MACHINES=~/.config/sketch/machines-camps.json bin/sketch yatu debug-menu-hidden --ref HEAD --on mac1 --locale zh-CN --json",
+      "scene": "tools/cli/scenes/debug-menu-hidden.ts",
+      "machine": "mac1",
+      "ok": true,
+      "errors": [],
+      "checks": [
+        "ordinary home hides entry",
+        "?debug=1 shows entry",
+        "?debug=0 hides entry again in the same tab"
+      ],
+      "screenshotsViewed": [
+        "home-player-desktop.png",
+        "home-debug-desktop.png"
+      ],
+      "runDirectory": "/root/.cache/sketch-cli/runs/mvgted6w-68ea20/5d6ddae",
+      "resultsEntryVerification": "Source inspection: lastPlanReplay && debugToolsEnabled(); unchanged from main #571."
+    },
+    "logSha256": {
+      "rootTypecheck": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tests": "ae9cfff06fed67c2d06fd3606521c49ddfc78d5961c30d31c5718998066ab3db",
+      "browser": "1b97b450d88f98ad4d083230ba7bbe20580f1fa45f5e5ccbeb151f7eb134b40c"
+    }
   }
 }
