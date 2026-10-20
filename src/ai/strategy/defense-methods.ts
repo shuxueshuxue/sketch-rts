@@ -175,7 +175,8 @@ export const defenseMethodProvider: AllocationMethodProvider = {
       group => group.reduce((sum, unit) => sum + opponentStrength.get(unit.id)! * coverage.get(unit.id)!, 0));
     const site = situation.assets.find(asset => asset.id === targetId);
     const response = assessDefenseResponse({ snapshot, situation, target: method.actions.at(-1)!.target, arrivalTargetId: responseId,
-      eligibleUnitIds: situation.units.filter(unit => unit.owner === situation.owner && !unit.commitments.length).map(unit => unit.id),
+      eligibleUnitIds: input.responseEligibleUnitIds
+        ?? situation.units.filter(unit => unit.owner === situation.owner && !unit.commitments.length).map(unit => unit.id),
       excludedUnitIds: [...unitIds, ...(input.valuation?.unavailableUnitIds ?? [])],
       actualMobileOpponentForce: enemyWeighted.effectiveForce, windowTicks: threatWindow });
     // Arrival and finite summon life are priced before the mutually exclusive

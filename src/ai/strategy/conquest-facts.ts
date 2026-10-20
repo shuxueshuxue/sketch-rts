@@ -76,7 +76,8 @@ export function conquestFacts(input: AllocationMethodQuoteInput) {
   const response = assessDefenseResponse({ snapshot, situation, target: objective.target,
     arrivalTargetId: objective.target.entityId ?? objective.id, metric: 'camp-force',
     plannedAssetRadius: BUILDING_DEFS.townHall.radius, windowTicks: window.horizonTicks,
-    eligibleUnitIds: situation.units.filter(unit => unit.owner === situation.owner && !unit.commitments.length).map(unit => unit.id),
+    eligibleUnitIds: input.responseEligibleUnitIds
+      ?? situation.units.filter(unit => unit.owner === situation.owner && !unit.commitments.length).map(unit => unit.id),
     excludedUnitIds: [...input.unitIds, ...(input.valuation?.unavailableUnitIds ?? [])],
     actualMobileOpponentForce: creepForce([...reinforcements.onStation, ...reinforcements.arriving.map(entry => entry.unit)]
       .filter(unit => !resolved.has(unit.id))) });
