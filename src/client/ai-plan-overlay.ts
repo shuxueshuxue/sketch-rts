@@ -167,11 +167,15 @@ export class AiPlanOverlay {
     }).join('');
     const band=this.history.bands.filter(b=>b.owner===trace.owner&&b.id===node.id&&b.from<=trace.tick).at(-1);
     const deaths=this.history.deaths.filter(d=>d.tick<=tick&&planDeathMatches(trace.owner,node,d,node.sinceTick??band?.from??trace.tick));
+    const progress=(this.history.frames.get(trace.owner)??[]).filter(frame=>frame.tick<=tick&&frame.tick>=(node.sinceTick??band?.from??trace.tick))
+      .flatMap(frame=>frame.changes.filter(change=>change.nodeId===node.id||change.nodeId.startsWith(`${node.id}/`))
+        .map(change=>({tick:frame.tick,detail:change.detail,kind:change.kind,id:change.nodeId})));
+    const recent=[...new Map(progress.map(event=>[`${event.tick}:${event.id}:${event.kind}`,event])).values()].slice(-5);
     return `<article><div class="plan-goal-title"><span>${icons[node.kind]}</span><div><small>${escape(trace.owner)} · ${escape(status[node.status])}</small><h3>${escape(node.label)}</h3></div><b>${node.utility.score??'—'}</b></div>
       <h4>01　为什么选它</h4>${node.utility.terms.length?node.utility.terms.map(t=>`<p>${escape(t.name)} <b>${t.value}</b> · ${escape(t.explanation)}</p>`).join(''):'<p class="plan-muted">收益 —　成本 —　成功概率 —<br>坚持加分 — · 待接入</p>'}<p>${node.reasons.map(r=>escape(r.detail)).join('<br>')}</p>
       <h4>02　怎么做</h4><p class="plan-muted">方法：— · 来源：${escape(node.source)} · ${escape(status[node.status])}</p>${tree(node.children)}${node.requirements.map(r=>`<p>${r.met===true?'✓':r.met===false?'!':'—'} ${escape(r.detail)}</p>`).join('')}
       <h4>03　派了谁</h4><p>${node.resources.unitIds.length} 名 · 预留金币 ${node.resources.gold.reserved??'—'} / 需求 ${node.resources.gold.required??'—'}</p><div class="plan-unit-ids">${node.resources.unitIds.map(escape).join(' · ')||'没有记录单位分配'}</div><div class="plan-compare"><span>预计到达<br><b>—</b></span><span>实际到达<br><b>${node.reasons.some(r=>r.code==='arrived')?'已到位（时刻未记录）':'—'}</b></span></div>
-      <h4>04　执行得怎样</h4>${trace.changes.filter(c=>c.nodeId===node.id).map(c=>`<p>${clock(trace.tick)} · ${escape(c.detail)}</p>`).join('')||'<p>本次思考没有记录到变化。</p>'}<p class="plan-muted">抢占关系：待接入</p>
+      <h4>04　执行得怎样</h4>${recent.map(event=>`<p>${clock(event.tick)} · ${escape(event.detail)}</p>`).join('')||'<p>该目标还没有记录到进展事件。</p>'}<p class="plan-muted">抢占关系：待接入</p>
       <h4>05　结果如何</h4><div class="plan-compare"><span>预期效果<br><b>—</b></span><span>结果（模块记录）<br><b>${escape(status[node.status])}</b></span></div><p>本目标账本归属 ${deaths.length} 次阵亡（推断）</p>${deaths.slice(-4).map(d=>`<button class="plan-list" data-event="${escape(d.id)}" data-tick="${d.tick}">${deathStyle(d).icon} ${clock(d.tick)} · ${escape(d.unit.kind)} · ${deathStyle(d).label}</button>`).join('')}</article>`;
   }
   private async click(event:Event){
