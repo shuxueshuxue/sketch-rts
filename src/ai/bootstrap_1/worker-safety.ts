@@ -10,6 +10,7 @@ import { armedFoes, retreatLandRoad, retreatThreatReach, safeLandTravelTicks } f
 import { miningJobOrder } from './mining-jobs';
 import { THINK_TICKS } from './mounted-micro';
 import { mineClaimedByAlly } from '../policy/mine-claims';
+import type { TeamPolicyOptions } from '../policy/ownership';
 
 type WorkerSafetyPlan = { worker: Unit; released: boolean; state: WorkerEvacuation; commands: GameCommand[] };
 const proposals = new WeakMap<AiPolicyMemory, { tick: number; plans: WorkerSafetyPlan[] }>();
@@ -18,15 +19,17 @@ type Threat = Unit | Building;
 const CLEARANCE = 160;
 const ARRIVAL = 80;
 
-function endangered(snapshot: GameSnapshot, worker: Unit, point: { x: number; y: number }, foes: Threat[]) {
+export function workerThreatAt(snapshot: GameSnapshot, worker: Unit, point: { x: number; y: number }, foe: Threat) {
   const patient = { ...worker, ...point };
-  return foes.some(foe => {
-    const reach = retreatThreatReach(snapshot, foe, patient, THINK_TICKS);
-    return reach > 0 && distance(foe, point) <= reach + CLEARANCE;
-  });
+  const reach = retreatThreatReach(snapshot, foe, patient, THINK_TICKS);
+  return reach > 0 && distance(foe, point) <= reach + CLEARANCE;
 }
 
-function evacuation(snapshot: GameSnapshot, owner: PlayerId, worker: Unit, foes: Threat[], options: AiPolicyContext) {
+function endangered(snapshot: GameSnapshot, worker: Unit, point: { x: number; y: number }, foes: readonly Threat[]) {
+  return foes.some(foe => workerThreatAt(snapshot, worker, point, foe));
+}
+
+export function workerEscapeDestination(snapshot: GameSnapshot, owner: PlayerId, worker: Unit, foes: readonly Threat[], options: TeamPolicyOptions) {
   const posts = snapshot.buildings.filter(post => post.owner === owner && post.complete && post.hp >= post.maxHp * .5
     && (post.kind === 'townHall' || post.kind === 'defenseTower'));
   const shelters = posts.flatMap(post => {
@@ -75,7 +78,7 @@ export function workerSafetyPlans(snapshot: GameSnapshot, owner: PlayerId, optio
     const safeMine = snapshot.resources.find(mine => mine.id === previous?.safeResourceId && mine.amount > 0);
     const existing = previous && !endangered(snapshot, worker, previous.shelter, foes)
       && (!previous.safeResourceId || safeMine && !endangered(snapshot, worker, safeMine, foes));
-    const destination = existing ? previous : evacuation(snapshot, owner, worker, foes, options);
+    const destination = existing ? previous : workerEscapeDestination(snapshot, owner, worker, foes, options);
     if (!destination) return [];
     const state: WorkerEvacuation = { origin, ...(resourceId ? { resourceId } : {}), ...destination };
     const commands: GameCommand[] = [];
