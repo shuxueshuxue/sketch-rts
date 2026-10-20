@@ -43,6 +43,7 @@ export function targetEnemyReinforcements(input: TargetReinforcementInput) {
   if (!targetLand) throw new Error('Camp engagement target has no known land component');
   const byId = new Map(snapshot.units.map(unit => [unit.id, unit])), facts = new Map(situation.units.map(unit => [unit.id, unit]));
   const onStation: Unit[] = [], arriving: { unit: Unit; etaTicks: number }[] = [], unknownEnemyIds: string[] = [];
+  const availability: { unitId: string; fromTicks: number; throughTicks: number; share: number }[] = [];
   const candidates: Unit[] = [];
   for (const unit of snapshot.units) {
     if (unit.owner === 'neutral' || unit.hp <= 0 || unit.kind === 'worker' || unitMover(unit.kind) !== 'land' || unit.attackDamage <= 0
@@ -51,6 +52,7 @@ export function targetEnemyReinforcements(input: TargetReinforcementInput) {
     const aboardHeadingHere = boat?.order.type === 'unload' && landIdAt(snapshot.map,
       walkableGoal(snapshot.map, boat.order.x, boat.order.y)) === targetLand;
     if (carrier ? !aboardHeadingHere : landIdAt(snapshot.map, unit) !== targetLand) continue;
+    if (unit.expiresTick !== undefined && unit.expiresTick <= snapshot.tick + battleStartTicks) continue;
     candidates.push(unit);
     const fact = facts.get(unit.id), arrival = fact && unitArrival(fact, target.entityId ?? '');
     // A computation cut off at an earlier horizon is not a proof that the
@@ -61,12 +63,19 @@ export function targetEnemyReinforcements(input: TargetReinforcementInput) {
     }
     if (!Number.isFinite(arrival.ticks) || arrival.ticks < 0) throw new Error(`Invalid enemy arrival: ${unit.id}`);
     if (arrival.ticks > battleStartTicks + windowTicks) continue;
+    const fromTicks = Math.max(battleStartTicks, arrival.ticks);
+    const throughTicks = Math.min(battleStartTicks + windowTicks, (unit.expiresTick ?? Infinity) - snapshot.tick);
+    if (throughTicks <= fromTicks) continue;
+    availability.push({ unitId: unit.id, fromTicks, throughTicks,
+      share: (throughTicks - fromTicks) / (battleStartTicks + windowTicks - fromTicks || windowTicks) });
     if (arrival.ticks <= battleStartTicks) onStation.push(unit);
     else arriving.push({ unit, etaTicks: arrival.ticks - battleStartTicks });
   }
   const byUnitId = (a: Unit, b: Unit) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
   return { candidateEnemies: candidates.sort(byUnitId), onStation: onStation.sort(byUnitId),
-    arriving: arriving.sort((a, b) => a.etaTicks - b.etaTicks || byUnitId(a.unit, b.unit)), unknownEnemyIds: unknownEnemyIds.sort() };
+    arriving: arriving.sort((a, b) => a.etaTicks - b.etaTicks || byUnitId(a.unit, b.unit)),
+    availability: availability.sort((a, b) => a.unitId < b.unitId ? -1 : a.unitId > b.unitId ? 1 : 0),
+    unknownEnemyIds: unknownEnemyIds.sort() };
 }
 
 /** The guard and arriving player troops share the combat-rating currency.
@@ -79,12 +88,20 @@ export function assessAllocatedCampEngagement(input: TargetReinforcementInput & 
   const selected = new Set(input.unitIds), ours = snapshot.units.filter(unit => selected.has(unit.id) && unit.owner === situation.owner && unit.hp > 0);
   const onStation = [...guards, ...reinforcement.onStation];
   const knownMembers = [...onStation, ...arriving.map(entry => entry.unit)].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+  const shares = new Map(reinforcement.availability.map(entry => [entry.unitId, entry.share]));
   // Preserve the camp's existing actual rating. Player reinforcements use the
   // camp combat metric, not SituationUnit.strength (the field/price currency).
   const weighted = arrivalWeightedForce(onStation, arriving, windowTicks,
-    group => (original?.strength ?? 0) + creepForce(group.filter(unit => unit.owner !== 'neutral')));
+    group => (original?.strength ?? 0) + group.filter(unit => unit.owner !== 'neutral')
+      .reduce((sum, unit) => sum + creepForce([unit]) * (shares.get(unit.id) ?? 1), 0));
   const center = original?.center ?? target.point;
-  const opposition: Readonly<Camp> = { center, creeps: knownMembers, strength: weighted.effectiveForce,
+  // A temporary summon contributes only the HP/damage available during this
+  // fight. These assessment copies are never simulation entities or route facts.
+  const projectedMembers = knownMembers.map(unit => {
+    const share = shares.get(unit.id) ?? 1;
+    return share < 1 ? { ...unit, hp: unit.hp * share, attackDamage: unit.attackDamage * share } : unit;
+  });
+  const opposition: Readonly<Camp> = { center, creeps: projectedMembers, strength: weighted.effectiveForce,
     reach: Math.max(0, ...knownMembers.map(unit => distance(unit, center))) };
   const knownOurForce = assessAllocatedForce(situation.owner, ours, { metric: 'camp-force', camp: opposition }).force;
   const margin = original ? forceFor(original) - original.strength : 0;
@@ -92,6 +109,7 @@ export function assessAllocatedCampEngagement(input: TargetReinforcementInput & 
     memberIds: knownMembers.map(unit => unit.id), candidateEnemyIds: reinforcement.candidateEnemies.map(unit => unit.id),
     onStationEnemyIds: onStation.map(unit => unit.id).sort(), enRouteEnemyIds: arriving.map(entry => entry.unit.id).sort(),
     unknownEnemyIds: unknownEnemyIds.sort(),
+    enemyAvailability: reinforcement.availability,
     knownOpponentForce: weighted.effectiveForce, actualOpponentForce: unknownEnemyIds.length ? null : weighted.effectiveForce,
     knownOurForce, ourForce: unknownEnemyIds.length ? null : knownOurForce,
     requiredForce: unknownEnemyIds.length ? null : weighted.effectiveForce + margin, margin, opposition };
