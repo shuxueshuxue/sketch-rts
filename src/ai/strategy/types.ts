@@ -303,6 +303,8 @@ export type StrategyPlanTrace = Readonly<{
   tick: number;
   owner: PlayerId;
   mode: 'observe' | 'control';
+  /** Present only for the formal controller; observation assignments remain distinguishable. */
+  allocation?: import('./allocation-types').StrategyAllocationTrace;
   situation: Situation;
   objectives: readonly Objective[];
   /** Utility order over feasible quotes only; objectives above is the unique table. */
