@@ -1,0 +1,175 @@
+import { BUILDING_DEFS, UNIT_DEFS, unitMover } from '../../shared/catalog';
+import { combatCapability } from '../../shared/combat-capabilities';
+import { GOLD_MINE_RULES, miningIncomeRate } from '../../shared/mining';
+import { SIM_TICKS_PER_SECOND } from '../../shared/time';
+import { walkableGoal } from '../../shared/terrain';
+import type { GameSnapshot, PlayerId, Unit } from '../../shared/types';
+import type { AiPolicyMemory } from '../memory';
+import { incomingLandArmy } from '../policy/land-arrivals';
+import { isOpponentOwner } from '../policy/ownership';
+import { distance } from '../policy/spatial';
+import { effectiveCombatRating, TOWER_STRENGTH, unitStrength } from '../policy/v6/strength';
+import { createArrivalQuery } from './arrivals';
+import { unitCommitments, unitRoles } from './commitments';
+import { landIdAt, regionIndex, seaIdAt, unitLocation } from './regions';
+import { forceSuccessProbability, STRATEGY_PARAMETERS } from './utility';
+import type { Arrival, Asset, Evidence, Opportunity, Reason, Situation, SiteThreat, Target } from './types';
+
+const STATION_RANGE = 650;
+const MAX_OPTIONAL_TARGETS = 16;
+const point = (entity: { x: number; y: number }) => ({ x: entity.x, y: entity.y });
+
+/** Read-only world assessment. All routing shares the caller's owner-think scope.
+ * The previous value is observational history, never a serialized policy task. */
+export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory, previous?: Situation,
+  teams = snapshot.teams): Situation {
+  const tick = snapshot.tick, horizonTicks = STRATEGY_PARAMETERS.utilityHorizonTicks;
+  const regions = regionIndex(snapshot.map), options = { memory, ...(teams ? { teams } : {}) };
+  const query = createArrivalQuery(snapshot, owner, memory), live = snapshot.units.filter(unit => unit.hp > 0);
+  const byId = new Map(live.map(unit => [unit.id, unit]));
+  const own = live.filter(unit => unit.owner === owner);
+  const foe = (other: string) => isOpponentOwner(snapshot, owner, other, options);
+  const strength = (unit: Unit) => unitMover(unit.kind) === 'sea' ? effectiveCombatRating(snapshot, unit) : unitStrength(unit);
+  const evidence = (source: string, detail: string, at = tick): Evidence => ({ source, detail, tick: at, certainty: 'inferred' });
+  const target = (entity: { id: string; x: number; y: number; kind?: string }): Target => {
+    const landId = landIdAt(snapshot.map, entity);
+    const seaId = seaIdAt(snapshot.map, entity.kind === 'shipyard' ? walkableGoal(snapshot.map, entity.x, entity.y, 'sea') : entity);
+    return { entityId: entity.id, point: point(entity), ...(landId ? { landId } : {}), ...(seaId ? { seaId } : {}) };
+  };
+  const halls = snapshot.buildings.filter(building => building.hp > 0 && building.kind === 'townHall');
+  const assets: Asset[] = snapshot.buildings.filter(building => building.hp > 0).map(building => ({
+    id: building.id, owner: building.owner, kind: building.kind === 'townHall' ? 'hall'
+      : building.kind === 'defenseTower' ? 'tower' : building.kind === 'shipyard' ? 'shipyard' : 'production',
+    target: target(building), hp: building.hp, complete: building.complete,
+    replacementGold: BUILDING_DEFS[building.kind].cost, remainingGold: 0, incomeGoldPerTick: 0,
+    discountedValueGold: BUILDING_DEFS[building.kind].cost * (building.complete ? 1 : Math.min(1, building.buildProgress / Math.max(1, building.buildTime))),
+  }));
+  for (const worker of live.filter(unit => unit.kind === 'worker')) assets.push({ id: worker.id, owner: worker.owner,
+    kind: 'worker', target: target(worker), hp: worker.hp, complete: true, replacementGold: UNIT_DEFS.worker.cost,
+    remainingGold: 0, incomeGoldPerTick: 0, discountedValueGold: UNIT_DEFS.worker.cost });
+  for (const mine of snapshot.resources) {
+    const hall = halls.find(hall => hall.complete && landIdAt(snapshot.map, hall) === landIdAt(snapshot.map, mine)
+      && distance(hall, mine) <= GOLD_MINE_RULES.baseRange);
+    const workers = hall ? live.filter(unit => unit.owner === hall.owner && unit.kind === 'worker' && !unit.deck && !unit.cabin
+      && unit.order.type === 'mine' && unit.order.resourceId === mine.id && landIdAt(snapshot.map, unit) === landIdAt(snapshot.map, mine)) : [];
+    // Forecast current staffed income; an unowned mine has potential value but
+    // does not contribute fictitious cash to the owner's budget.
+    const capacity = GOLD_MINE_RULES.goldPerTrip / GOLD_MINE_RULES.entrySeconds / SIM_TICKS_PER_SECOND;
+    const income = hall && mine.amount > 0 ? capacity * Math.min(1, workers.length / GOLD_MINE_RULES.workstations)
+      * miningIncomeRate(snapshot.players[hall.owner]?.supplyUsed ?? 0) : 0;
+    assets.push({ id: mine.id, owner: hall?.owner ?? 'neutral', kind: 'mine', target: target(mine), hp: null, complete: Boolean(hall),
+      replacementGold: 0, remainingGold: mine.amount, incomeGoldPerTick: income,
+      discountedValueGold: Math.min(mine.amount, (hall ? income : capacity) * horizonTicks) });
+  }
+  const opportunities: Opportunity[] = [];
+  for (const mine of assets.filter(asset => asset.kind === 'mine' && asset.owner === 'neutral' && asset.remainingGold > 0)) {
+    // An unfinished hall has already committed its site; it is not a fresh,
+    // unclaimed neutral resource for another colony to buy a second time.
+    if (halls.some(hall => distance(hall, mine.target.point) <= GOLD_MINE_RULES.baseRange)) continue;
+    opportunities.push({ id: `mine:${mine.id}`, kind: 'neutral-mine', target: mine.target, valueGold: mine.discountedValueGold,
+      evidence: [evidence('snapshot.resources', `${mine.id} has ${mine.remainingGold} gold and no hall at its mine mouth`)] });
+  }
+  for (const hall of halls.filter(hall => foe(hall.owner))) {
+    const guards = live.filter(unit => unit.owner !== 'neutral' && !isOpponentOwner(snapshot, hall.owner, unit.owner, options)
+      && !unit.deck && !unit.cabin && unitMover(unit.kind) === 'land' && unit.kind !== 'worker' && distance(unit, hall) <= STATION_RANGE);
+    const kind = !hall.complete ? 'construction' : 'weak-site';
+    opportunities.push({ id: `${kind}:${hall.id}`, kind, target: target(hall), valueGold: BUILDING_DEFS.townHall.cost,
+      evidence: [evidence('snapshot.buildings', `${hall.id}: complete=${hall.complete}; ${guards.length} local land guards; arriving reinforcements are separate`)] });
+    if (!guards.length) opportunities.push({ id: `army-away:${hall.id}`, kind: 'army-away', target: target(hall),
+      valueGold: BUILDING_DEFS.townHall.cost, evidence: [evidence('snapshot.units', `No land defender within ${STATION_RANGE} of ${hall.id}; not proof that the site is safe`)] });
+  }
+  const post = memory.territory?.objective;
+  if (post && snapshot.buildings.some(building => building.id === post.targetId && building.hp > 0)) {
+    const landId = landIdAt(snapshot.map, post.point);
+    opportunities.push({ id: `route:${post.targetId}`, kind: 'route', target: { entityId: post.targetId,
+      point: point(post.point), ...(landId ? { landId } : {}) },
+    valueGold: 0, evidence: [evidence('memory.territory.objective', 'Actual retained pressure point; its ETA is keyed by this opportunity id')] });
+  }
+  if (previous?.owner === owner && previous.tick < tick) {
+    const lost = previous.assets.filter(asset => asset.owner === owner && asset.kind === 'hall' && !assets.some(now => now.id === asset.id));
+    for (const hall of lost) {
+      const mine = previous.assets.find(asset => asset.kind === 'mine' && asset.owner === owner
+        && asset.target.landId === hall.target.landId && distance(asset.target.point, hall.target.point) <= GOLD_MINE_RULES.baseRange);
+      const current = mine && assets.find(asset => asset.id === mine.id && asset.remainingGold > 0 && asset.owner !== owner);
+      if (current) opportunities.push({ id: `lost-site:${current.id}`, kind: 'lost-site', target: current.target,
+        valueGold: current.discountedValueGold, evidence: [evidence('previous.situation.assets', `${hall.id} existed at tick ${previous.tick}`, previous.tick),
+          evidence('snapshot.buildings', `${hall.id} is absent at tick ${tick}; associated mine ${current.id}`)] });
+    }
+    for (const old of previous.opportunities.filter(opportunity => opportunity.kind === 'lost-site')) {
+      if (!opportunities.some(opportunity => opportunity.id === old.id)
+        && assets.some(asset => asset.id === old.target.entityId && asset.remainingGold > 0 && asset.owner !== owner)) opportunities.push({ ...old,
+          target: { ...old.target, point: point(old.target.point) }, evidence: old.evidence.map(item => ({ ...item })) });
+    }
+  }
+
+  const ownHalls = halls.filter(hall => hall.owner === owner);
+  const sites = assets.filter(asset => asset.owner === owner && asset.target.landId && (asset.kind === 'hall'
+    || !ownHalls.some(hall => landIdAt(snapshot.map, hall) === asset.target.landId && distance(hall, asset.target.point) <= STATION_RANGE)));
+  const retainedIds = new Set([memory.landAttack?.targetId, memory.landExpansion?.mineId,
+    ...Object.values(memory.naval?.conquests ?? {}).filter(task => task.abandonedTick === undefined).map(task => task.mineId)]);
+  const optional = opportunities.filter(opportunity => opportunity.kind !== 'army-away')
+    .sort((a, b) => Number(retainedIds.has(b.target.entityId)) - Number(retainedIds.has(a.target.entityId))
+      || b.valueGold - a.valueGold || a.id.localeCompare(b.id));
+  const targets = new Map<string, Target>(sites.map(site => [site.id, site.target]));
+  for (const entity of [...snapshot.resources, ...snapshot.buildings]) if (retainedIds.has(entity.id)) targets.set(entity.id, target(entity));
+  for (const opportunity of optional.slice(0, MAX_OPTIONAL_TARGETS)) targets.set(opportunity.kind === 'route' ? opportunity.id : opportunity.target.entityId!, opportunity.target);
+  const units = live.map(unit => ({ id: unit.id, owner: unit.owner, kind: unit.kind,
+    location: unitLocation(snapshot.map, unit, byId, tick), hp: unit.hp, maxHp: unit.maxHp, strength: strength(unit),
+    roles: unitRoles(unit), expiresTick: unit.expiresTick ?? null, commitments: unitCommitments(snapshot, owner, memory, unit),
+    arrivals: unit.owner === 'neutral' || unit.kind === 'worker' && unit.owner !== owner || unitMover(unit.kind) === 'sea' ? []
+      : [...targets].map(([targetId, destination]) => {
+        const lowerBound = distance(unit, destination.point) * SIM_TICKS_PER_SECOND / Math.max(unit.speed, UNIT_DEFS.transport.speed);
+        const arrival: Arrival = lowerBound > horizonTicks ? { status: 'unknown', reason: { code: 'beyond-evaluation-window',
+          detail: `Even a straight maximum-speed journey exceeds ${horizonTicks} ticks`, evidence: [] } } : query.arrival(unit, destination);
+        return { targetId, arrival };
+      }),
+  }));
+  const threats: SiteThreat[] = sites.map(site => {
+    const land = site.target.landId;
+    const candidates = live.filter(unit => foe(unit.owner) && unitMover(unit.kind) === 'land' && !unit.deck && !unit.cabin
+      && landIdAt(snapshot.map, unit) === land
+      && distance(unit, site.target.point) <= unit.speed * STRATEGY_PARAMETERS.threatHorizonTicks / SIM_TICKS_PER_SECOND + 240);
+    const incoming = incomingLandArmy(snapshot, owner, options, site.target.point, STRATEGY_PARAMETERS.threatHorizonTicks, candidates);
+    const attackers = incoming.map(({ unit, ticks }) => ({ unitId: unit.id, strength: strength(unit),
+      arrival: { status: 'reachable' as const, ticks, landTicks: ticks, crossings: [], evidence: [evidence('policy.incomingLandArmy', 'Shared native steering and arrival-range forecast')] } }));
+    for (const ship of live.filter(unit => foe(unit.owner) && unitMover(unit.kind) === 'sea')) {
+      const weapon = combatCapability(snapshot, ship);
+      if (weapon.armed && distance(ship, site.target.point) <= weapon.range) attackers.push({ unitId: ship.id, strength: strength(ship),
+        arrival: { status: 'reachable', ticks: 0, landTicks: 0, crossings: [], evidence: [evidence('shared.combatCapability', 'Present working battery in potential range; firing arcs/line of fire are execution concerns')] } });
+    }
+    const present = attackers.filter(attacker => distance(byId.get(attacker.unitId)!, site.target.point) <= STATION_RANGE);
+    const presentIds = new Set(present.map(attacker => attacker.unitId));
+    const defenders = own.filter(unit => !unit.deck && !unit.cabin && unitMover(unit.kind) === 'land'
+      && landIdAt(snapshot.map, unit) === land && distance(unit, site.target.point) <= STATION_RANGE);
+    const staticStrength = snapshot.buildings.filter(building => building.owner === owner && building.kind === 'defenseTower'
+      && building.complete && building.hp > 0 && distance(building, site.target.point) <= STATION_RANGE).length * TOWER_STRENGTH;
+    const friendly = defenders.reduce((sum, unit) => sum + strength(unit), 0) + staticStrength;
+    return { siteId: site.id, horizonTicks: STRATEGY_PARAMETERS.threatHorizonTicks, attackers,
+      arrivedStrength: present.reduce((sum, attacker) => sum + attacker.strength, 0),
+      incomingStrength: attackers.filter(attacker => !presentIds.has(attacker.unitId)).reduce((sum, attacker) => sum + attacker.strength, 0),
+      friendlyOnStationStrength: friendly, firstArrivalTicks: present.length ? 0 : incoming[0]?.ticks ?? null,
+      lossProbability: attackers.length ? forceSuccessProbability(attackers.reduce((sum, attacker) => sum + attacker.strength, 0), friendly) : 0,
+      evidence: [evidence('strategy.situation', 'All sites use the same terrain component, physical station radius and shared 45-second arrival forecast')] };
+  });
+  const limitations: Reason[] = [{ code: 'forecast-not-execution', detail: 'ETAs exclude combat, body congestion and future wind changes; success probabilities and staffed income are declared heuristics', evidence: [] },
+    { code: 'unified-budget-not-migrated', detail: 'Existing modules have no per-objective reservation ledger; method costs are proposals, not reserved cash', evidence: [] },
+    { code: 'route-opportunities-partial', detail: 'Only retained actual pressure points are projected; missing new pressure-point geometry remains unknown', evidence: [] }];
+  if (optional.length > MAX_OPTIONAL_TARGETS) limitations.push({ code: 'candidate-target-limit', detail: `Forecast ${MAX_OPTIONAL_TARGETS}/${optional.length} optional targets plus every owned site; omitted ETA is unknown`, evidence: [] });
+  return { tick, owner, horizonTicks, assets, units, opportunities: opportunities.sort((a, b) => a.id.localeCompare(b.id)),
+    lands: [...regions.lands].map(([id, anchor]) => ({ id, anchor: point(anchor), assetIds: assets.filter(asset => asset.target.landId === id).map(asset => asset.id),
+      unitIds: units.filter(unit => unit.location.kind === 'land' && unit.location.landId === id).map(unit => unit.id),
+      adjacentSeaIds: [...new Set(regions.shores.filter(shore => shore.landId === id).map(shore => shore.seaId))],
+      threats: threats.filter(threat => assets.find(asset => asset.id === threat.siteId)?.target.landId === id) })),
+    seas: [...regions.seas].map(([id, anchor]) => ({ id, anchor: point(anchor), transportIds: units.filter(unit => unit.owner === owner
+      && unit.location.kind === 'sea' && unit.location.seaId === id && unit.roles.includes('transport')).map(unit => unit.id),
+      warshipIds: units.filter(unit => unit.owner === owner && unit.location.kind === 'sea' && unit.location.seaId === id && unit.roles.includes('warship')).map(unit => unit.id),
+      shipyardIds: assets.filter(asset => asset.owner === owner && asset.kind === 'shipyard' && asset.target.seaId === id).map(asset => asset.id),
+      voyages: Object.entries(memory.naval?.ferries ?? {}).flatMap(([shipId, task]) => {
+        const ship = byId.get(shipId);
+        return ship && seaIdAt(snapshot.map, ship) === id ? [{ shipId, taskId: `ferry:${shipId}:${task.sinceTick}`,
+          target: { entityId: task.targetId, point: point(task.phase === 'return' ? task.from : task.to) }, freeInTicks: query.freeInTicks(ship),
+          evidence: evidence('memory.naval.ferries', 'Forecast of the next unload; an active stream still requires explicit release') }] : [];
+      }) })),
+    economy: { cashGold: snapshot.players[owner]?.gold ?? 0, predictedIncomeGold: assets.filter(asset => asset.owner === owner)
+      .reduce((sum, asset) => sum + Math.min(asset.remainingGold, asset.incomeGoldPerTick * horizonTicks), 0), horizonTicks, ledger: [] }, limitations };
+}
