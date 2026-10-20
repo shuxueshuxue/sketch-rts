@@ -14,6 +14,7 @@ import type {
 import { discountGold, forceSuccessProbability, forceTimeGold, STRATEGY_PARAMETERS as PARAMETERS, strategyUtility } from './utility';
 import type { PreviousObjective } from './observation-memory';
 import { projectedCopy } from './explanations';
+import { unitArrival as arrivalAt } from './unit-arrivals';
 import { landAssessmentEvidence, landReason as reason, projectLandReason, projectLandTerm, reasonFact,
   termFact as term, type LandReasonFact, type LandTermFact, type LandText } from './land-explanations';
 
@@ -69,7 +70,6 @@ const interruption = (unit: SituationUnit) => unit.commitments.some(item => /car
 const battleRole = (unit: SituationUnit) => unit.roles.some(role => ['frontline', 'ranged', 'caster'].includes(role));
 const frontRole = (unit: SituationUnit) => !unit.roles.includes('caster') && !unit.roles.includes('healer')
   && unit.roles.some(role => role === 'frontline' || role === 'ranged');
-const arrivalAt = (unit: SituationUnit, target: string) => unit.arrivals.find(item => item.targetId === target)?.arrival;
 const unquoted = (arrival: Arrival | undefined) => !arrival || arrival.status === 'unknown'
   && arrival.reason.code !== 'beyond-evaluation-window';
 function knownArrival(arrival: Arrival | undefined): arrival is Extract<Arrival, { ticks: number }> {

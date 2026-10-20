@@ -9,6 +9,7 @@ import { decisionProjection } from './explanations';
 import { buildObservedStrategyDecision, buildStrategyDecision, projectStrategyTrace } from './decision';
 import { buildStrategyPlanTrace } from './plan';
 import * as utility from './utility';
+import { arrivalColumns, unitArrivalFacts, withUnitArrivals } from './unit-arrivals';
 import type { PlanningContext, Situation } from './types';
 import reference from './fixtures/land-explanation-reference.json';
 
@@ -61,6 +62,29 @@ describe('land numerical decisions and requested explanation projection', () => 
       expect(JSON.stringify(projected.explain!())).toBe(JSON.stringify(expected));
       expect(JSON.stringify(decisionProjection(() => observe(frame), false).facts)).toBe(numerical(expected));
     } finally { work.mockRestore(); }
+  });
+
+  it.each(reference.cases)('$event consumes compact arrival rows without materializing the public array', row => {
+    const frame = scene(row.event), expected = JSON.stringify(observe(structuredClone(frame)));
+    const columns = arrivalColumns([...new Set(frame.situation.units.flatMap(unit => unit.arrivals.map(entry => entry.targetId)))]);
+    let arrayReads = 0;
+    const units = frame.situation.units.map(({ arrivals, ...facts }) => {
+      const values = columns.ids.map(targetId => arrivals.find(entry => entry.targetId === targetId)?.arrival);
+      const unit = withUnitArrivals(facts, { columns, values, count: arrivals.length });
+      Object.defineProperty(unit, 'arrivals', { enumerable: true, get() {
+        arrayReads++; throw new Error('Land quotation materialized the compatibility arrival array');
+      } });
+      return unit;
+    });
+    const compact: Frame = { ...frame, situation: { ...frame.situation, units } };
+    const numericalFacts = decisionProjection(() => observe(compact), false).facts;
+    verifyFacts(numericalFacts);
+    expect(JSON.stringify(numericalFacts)).toBe(numerical(JSON.parse(expected)));
+    const projected = decisionProjection(() => observe(compact));
+    expect(JSON.stringify(projected.explain!())).toBe(expected);
+    expect(JSON.stringify(decisionProjection(() => observe(compact), false).facts)).toBe(JSON.stringify(numericalFacts));
+    expect(arrayReads).toBe(0);
+    expect(units.every(unit => !Object.hasOwn(unitArrivalFacts(unit)!, 'rendered'))).toBe(true);
   });
 
   it('rebinds a warm assessment at the next think and projects the original evaluation after its inputs change', () => {
