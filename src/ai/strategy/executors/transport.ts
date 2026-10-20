@@ -1,6 +1,4 @@
-import { UNIT_DEFS } from '../../../shared/catalog';
-import { BOARDING_GAP } from '../../../shared/naval';
-import { distanceToHull, shipPassengers } from '../../../shared/ship-geometry';
+import { shipPassengers } from '../../../shared/ship-geometry';
 import { isTransportKind } from '../../../shared/transport-role';
 import { sameGround } from '../../../shared/terrain';
 import { convoyCanCarry } from '../../policy/convoy-load';
@@ -55,12 +53,54 @@ function executeVoyage(input: Parameters<StrategyExecutor['execute']>[0]): Execu
       ...(newLoaded.length ? [{ kind: 'loaded' as const, unitIds: newLoaded.map(unit => unit.id), entityIds: [boat.id], basis: 'observed-world' as const }] : []),
       ...(newLanded.length ? [{ kind: 'unloaded' as const, unitIds: newLanded.map(unit => unit.id), entityIds: [boat.id], basis: 'observed-world' as const }] : []),
     ];
-    const state = { ...execution.state,
+    const predictedLoadedTick = typeof execution.state.expectedLoadedTick === 'number' ? execution.state.expectedLoadedTick
+      : voyage.expectedLoadedTick ?? null;
+    const forecastTick = typeof execution.state.loadingForecastTick === 'number' ? execution.state.loadingForecastTick
+      : predictedLoadedTick === null ? null : snapshot.tick;
+    const previousPrediction = isState(execution.state.latestLoadingPrediction) ? execution.state.latestLoadingPrediction : null;
+    const latestPrediction = voyage.expectedLoadedTick == null ? previousPrediction
+      : previousPrediction?.expectedLoadedTick === voyage.expectedLoadedTick ? previousPrediction
+        : { forecastTick: snapshot.tick, expectedLoadedTick: voyage.expectedLoadedTick };
+    const receipts = isState(execution.state.loadReceipts) ? execution.state.loadReceipts : {};
+    const newReceipts = Object.fromEntries(newLoaded.map(unit => [unit.id, {
+      forecastTick, predictedLoadedTick, observedLoadedTick: snapshot.tick,
+      // The first observation may already be aboard; its prior load time is
+      // unknown, so it is not an ETA-error sample for this execution.
+      errorTicks: execution.state.loadingObserved === true && predictedLoadedTick !== null ? snapshot.tick - predictedLoadedTick : null,
+      aboardAtStart: execution.state.loadingObserved !== true,
+    }]));
+    let state: ExecutionState = { ...execution.state, loadingObserved: true, expectedLoadedTick: predictedLoadedTick,
+      loadingForecastTick: forecastTick, latestLoadingPrediction: latestPrediction,
+      loadReceipts: { ...receipts, ...newReceipts },
       loadedIds: [...new Set([...previouslyLoaded, ...loaded.map(unit => unit.id)])],
       landedIds: [...new Set([...previouslyLanded, ...newLanded.map(unit => unit.id)])] };
     if (landed.length === crew.length)
       return { ...base, status: returning ? 'abandoned' : 'complete', phase: returning ? 'returned' : 'delivered', state, progress };
     const commands: ExecutorFeedback['commands'][number][] = [];
+    const tolerance = boat.radius, waterError = distance(boat, voyage.departure.point), boatReady = waterError <= tolerance;
+    const loading = !returning && voyage.phase === 'loading' && execution.state.departurePose === undefined;
+    if (loading) {
+      state = { ...state, berthCheck: { tick: snapshot.tick, tolerance, waterError,
+        plannedWater: { ...voyage.departure.point }, actualWater: { x: boat.x, y: boat.y } } };
+      if (shipAssignment?.interruption)
+        return { ...blockedExecutor(input, 'transport-in-life-saving-interruption', [boat.id]), state, progress };
+      // A proposed native berth is not the ship's actual position. Judge the
+      // observed hull after rendezvous, including when native movement loads a
+      // passenger directly onto the deck without a separate board order.
+      if (!boatReady && execution.state.rendezvousEstablished === true)
+        return { ...base, status: 'failed', phase: 'berth-mismatch', state, progress,
+          reasons: [{ executor: execution.executor, outcome: 'abandoned', reason: 'berth-mismatch', taskId: execution.token.actionId,
+            unitIds: [boat.id], targetIds: [voyage.id] }] };
+      if (!boatReady) {
+        for (const unit of crew) if (!cargoIds.has(unit.id) && (unit.order.type === 'board'
+          || unit.order.type === 'move' && unit.order.deckShipId === boat.id))
+          commands.push({ command: { type: 'holdPosition', unitIds: [unit.id] }, purpose: 'task' });
+        if (!(boat.order.type === 'move' && distance(boat.order, voyage.departure.point) < 1e-6))
+          commands.push({ command: { type: 'move', unitIds: [boat.id], ...voyage.departure.point, avoidCombat: true }, purpose: 'task' });
+        return { ...base, status: 'active', phase: 'rendezvous', state, commands, progress };
+      }
+      state = { ...state, rendezvousEstablished: true };
+    }
     if (returning || loaded.length + landed.length === crew.length) {
       const origin = execution.state.departurePose;
       const started = origin && typeof origin === 'object' && 'x' in origin && 'y' in origin
@@ -82,14 +122,10 @@ function executeVoyage(input: Parameters<StrategyExecutor['execute']>[0]): Execu
     if (!convoyCanCarry(snapshot, [boat], [...loaded, ...waiting])) return { ...blockedExecutor(input, 'assigned-manifest-does-not-fit-deck', waiting.map(unit => unit.id)), state, progress };
     const wrongGround = waiting.filter(unit => unit.deck || unit.cabin || !sameGround(snapshot.map, unit, departure));
     if (wrongGround.length) return { ...blockedExecutor(input, 'passengers-not-on-departure-land', wrongGround.map(unit => unit.id)), state, progress };
+    const first = waiting.find(unit => unit.order.type !== 'cast');
+    if (!first) return { ...blockedExecutor(input, 'no-available-shore-boarder', waiting.map(unit => unit.id)), state, progress };
     for (const unit of waiting) if (unit.order.type !== 'cast' && !(unit.order.type === 'board' && unit.order.transportId === boat.id))
       commands.push({ command: { type: 'board', unitIds: [unit.id], transportId: boat.id }, purpose: 'task' });
-    if (distanceToHull(boat, departure) > UNIT_DEFS.worker.radius + BOARDING_GAP
-      && !(boat.order.type === 'move' && distance(boat.order, voyage.departure.point) < 40))
-      commands.push({ command: { type: 'move', unitIds: [boat.id], ...voyage.departure.point, avoidCombat: true }, purpose: 'task' });
-    else if (distanceToHull(boat, departure) <= UNIT_DEFS.worker.radius + BOARDING_GAP
-      && boat.order.type !== 'idle' && boat.order.type !== 'hold')
-      commands.push({ command: { type: 'stop', unitIds: [boat.id] }, purpose: 'task' });
     return { ...base, status: 'active', phase: 'loading', state, commands, progress };
 }
 
@@ -131,14 +167,15 @@ export const transportExecutor: StrategyExecutor = {
     });
     const missing = requiredStatuses.some(status => status === undefined);
     const blocked = missing || results.some(result => result.feedback.status === 'blocked');
+    const failed = results.some(result => result.feedback.status === 'failed');
     const complete = requiredStatuses.every(status => status === 'complete');
     const abandoned = requiredStatuses.length > 0 && requiredStatuses.every(status => status === 'complete' || status === 'abandoned') && !complete;
     const base = executorFeedback(input);
-    return { ...base, status: complete ? 'complete' : abandoned ? 'abandoned' : blocked ? 'blocked' : 'active',
-      phase: complete ? 'delivered' : abandoned ? 'returned' : 'parallel-voyages',
+    return { ...base, status: failed ? 'failed' : complete ? 'complete' : abandoned ? 'abandoned' : blocked ? 'blocked' : 'active',
+      phase: failed ? 'failed-voyage' : complete ? 'delivered' : abandoned ? 'returned' : 'parallel-voyages',
       state: { ...input.execution.state, voyages: states, requiredVoyageIds: [...required],
         pendingVoyageIds: results.filter(result => !['complete', 'abandoned', 'failed'].includes(result.feedback.status)).map(result => result.voyage.id) },
-      commands: results.flatMap(result => result.feedback.commands), progress: results.flatMap(result => result.feedback.progress),
+      commands: failed ? [] : results.flatMap(result => result.feedback.commands), progress: results.flatMap(result => result.feedback.progress),
       reasons: [...results.flatMap(result => result.feedback.reasons),
         ...(missing ? blockedExecutor(input, 'required-voyage-not-granted').reasons : [])] };
   },
