@@ -270,7 +270,7 @@ export type AllocationEvent = EventHeader & (
   | Readonly<{ kind: 'voyage-reevaluated'; voyageId: string; decision: VoyageAllocation['decision'] }>
   | Readonly<{ kind: 'action-finished'; outcome: 'complete' | 'failed' | 'abandoned' }>
   | Readonly<{ kind: 'progress'; progress: 'loaded' | 'sailed' | 'unloaded' | 'camp-cleared' | 'hall-founded'
-      | 'hall-complete' | 'garrison-arrived'; unitIds: readonly string[]; entityIds: readonly string[] }>
+      | 'hall-complete' | 'garrison-arrived' | 'mining-started'; unitIds: readonly string[]; entityIds: readonly string[] }>
 );
 
 /** The complete save/fork authority, separate from strategy.observation.
