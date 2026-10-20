@@ -65,4 +65,56 @@ ledger.dispose();
 
 生成命令：`tsx scripts/ai-death-ledger-baseline.ts <source-tree> <case.json> <output-dir> <control|observe>`。所有地图从正常初始局面运行 18,000 ticks（15 分钟），正常席位数、相同 think 间隔与命令延时；不评胜率。每图同机依次 A/B/B/A，A 是只读层前的 main，B 开启账本与计划链。固定保存完整 planner entries、实际交付流、逐分钟校验和、末态 canonical/snapshot/memory 哈希。
 
-每个 `B1` 目录包括 `initial.json`、`worlds.jsonl.gz`、`traces.jsonl.gz`、`deaths.jsonl.gz`、`planned.jsonl.gz`、`commands.jsonl.gz`、`timings.jsonl.gz`、`checksums.jsonl.gz`、`final.json`、`summary.json`。worlds 在每个 think tick 只保存一次全体位置/血量/订单与建筑状态；traces 按席位保存，末尾有结束投影；deaths 是全部记录。完整统计、所有异常明细和每条证据均保留在 A100 包中，便于后续迁移逐单位比较。
+最终采集目录包括 `initial.json`、`worlds.jsonl.gz`、`traces.jsonl.gz`、`deaths.jsonl.gz`、`planned.jsonl.gz`、`commands.jsonl.gz`、`timings.jsonl.gz`、`checksums.jsonl.gz`、`final.json`、`summary.json`。worlds 在每个 think tick 只保存一次全体位置/血量/订单与建筑状态；traces 按席位保存，末尾有结束投影；deaths 是全部记录。完整统计、所有异常明细和每条证据均保留在 A100 包中，便于后续迁移逐单位比较。
+
+
+### 11 图结果（2026-10-20）
+
+正常初始局面的 36 个房间 AI 席位各运行 15 分钟。共记录 548 条：实际死亡 343、存活召唤物到期 205；推断正常 14、异常诊断 329，异常单位目录价合计 34,495 金。实际死亡逐席位与原生 `unitsLost` 对账一致，击杀者均可还原；包含 11 艘船和 3 名沉船乘员。全部记录在增量 trace 中恰好出现一次，终帧汇总与每局 summary 一致，无订阅错误。
+
+| 地图 | 死亡/原生计数 | 存活到期 | 推断正常 | 异常诊断 | 异常目录金 | 建筑损失 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| brokenSea | 44/44 | 6 | 0 | 44 | 3875 | 6 |
+| greystonePass | 4/4 | 0 | 0 | 4 | 450 | 2 |
+| gullIsland | 21/21 | 0 | 0 | 21 | 2415 | 2 |
+| pineshade | 28/28 | 0 | 0 | 28 | 3640 | 3 |
+| reedwater | 44/44 | 0 | 1 | 43 | 5440 | 7 |
+| ringwater | 27/27 | 31 | 0 | 27 | 2660 | 2 |
+| sapphireArchipelago | 23/23 | 38 | 1 | 22 | 3475 | 1 |
+| templeSpring | 46/46 | 28 | 2 | 44 | 3990 | 4 |
+| turtleLake | 61/61 | 69 | 8 | 53 | 3605 | 6 |
+| twoShores | 35/35 | 33 | 2 | 33 | 3725 | 2 |
+| veiledHill | 10/10 | 0 | 0 | 10 | 1220 | 0 |
+
+| 异常主类别 | 数量 | 目录金 |
+| --- | ---: | ---: |
+| retreat-or-treatment | 142 | 18215 |
+| recent-reassignment | 50 | 4270 |
+| neutral-outside-clearing | 37 | 3080 |
+| out-of-bounds | 35 | 4120 |
+| logistics-transit | 26 | 2825 |
+| unattributed | 14 | 350 |
+| isolated-without-evacuation-plan | 12 | 760 |
+| outmatched | 12 | 635 |
+| idle | 1 | 240 |
+
+这 329 条是 v1 诊断命中，不等于 329 个已证实的策略错误。缺少正式效用与许可战力范围时，撤退、越界和近期换目标只能提供可复查的线索，不能单独证明换令致死。后续比较必须保持诊断版本一致，或用同一版规则重算双方原始记录。`analysis/abnormal-deaths.jsonl.gz` 为每条异常保存地图、tick、席位、单位、任务、实际订单/执行器、来源、战力及中文说明和完整记录。
+
+### 只读与耗时
+
+11 图按 A/B/B/A 完整运行，共 44 局；A 为 main `276e5d29`，B 为 `8d2e9f21`。完整 planner entries、实际命令流、末态 snapshot/memory/canonical 五项 SHA-256 逐项一致，最终和逐分钟模拟校验和也一致。最终导出再次与四臂核对：9 图用 `bf9a472b`（`final/<map>/B3`）；碎海、蓝宝群岛用 `b7b203a3`（`final-sinking/<map>/B4`），修正沉船乘员继承船体沉没前的战力，不使用清理后为零的己方战力。其余地图没有乘员沉船事件，因此输出不受该修正影响。
+
+think ABBA 独立使用真实 15 分钟帧：双岸 188 单位、蓝宝群岛 214 单位，分别按 4/6 个席位逐个执行原 planner，然后把账本和 trace 的同步成本计入该次 think。每臂热身 80 轮、采样 240 轮；每轮重置原 memory，不强制 GC，JSON 输出在计时外。A1+A2 与 B1+B2 的每次 think 合并统计如下，机器为 A100 / Node v22.23.3。
+
+| 场景 | A p95 / max (ms) | B p95 / max (ms) | p95 / max 增幅 |
+| --- | --- | --- | --- |
+| 双岸 188 单位 | 37.576 / 49.696 | 38.705 / 50.568 | +3.00% / +1.75% |
+| 蓝宝群岛 214 单位 | 26.759 / 37.620 | 27.351 / 38.016 | +2.21% / +1.05% |
+
+四臂命令与 memory 哈希一致，前后模拟校验和不变。耗时取最终 `bf9a472b`，最后的沉船回调修正不进入这些静态 think 帧。初版蓝宝 max 曾增加 49.5%；改为原地裁剪、合并同 tick 同来源同血量点后，重跑得到表中结果。两轮原始数据均保留，不能把初版失败藏入最终通过结果。
+
+### 验证与证据
+
+A100 完整 `vitest run --dir src`：7,792/7,793 通过（`bf9a472b`）。唯一失败为 think-worker 启动超时；同机 main 对照和候选各单跑均为 3/4、同一失败，本机 Node 24 单跑 4/4。此处只陈述对照结果，不推定具体根因。最后的沉船修正后，账本 12 项与 sim 公开观测 6 项全过，TypeScript 检查通过。canonical/固定命令流、地形标签、计划链测试与原防守四个快照场景通过；生产 build 通过。
+
+[完整证据指针](death-ledger-baseline.evidence.json) 对应 A100 内容寻址包；用 `bin/sketch evidence get docs/ai/objectives/death-ledger-baseline.evidence.json` 取回。包内 `README.zh.md` 说明来源与复跑方法，`analysis/summary.json` 含逐图/逐席位汇总，`SHA256SUMS` 覆盖全部成员。`ui-twoShores` 为 Codex 27 已接入的 0–15 分钟样本：4804 traces、35 阵亡、33 存活到期、2 个按真实清理边界记录的建筑损失；对照是 `twoShores/A1/summary.json`。
