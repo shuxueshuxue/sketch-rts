@@ -1997,7 +1997,7 @@ function updateGarrisonOrder(game: Game, unit: Unit) {
   if (unit.garrison) { unit.order = { type: "idle" }; return; }
   if (!tower) return endOrder(game, unit, "target-gone");
   const refusal = garrisonRefusal(game, tower, unit);
-  if (refusal) return endOrder(game, unit, refusal.reason === "tower-full" || refusal.reason === "garrison-body-size" ? "no-room" : "refused", refusal);
+  if (refusal) return endOrder(game, unit, refusal.reason === "tower-full" ? "no-room" : refusal.reason === "garrison-ownership" ? "target-gone" : "refused", refusal);
   // A troop climbs on from beside the tower's walls, as a worker builds and mends from there (see buildingWorkGap).
   const reached = () => buildingWorkGap(unit, tower) <= BUILDING_WORK_REACH;
   if (!reached()) { errandWalk(game, unit, tower, reached, "walk"); return; }
@@ -4994,5 +4994,5 @@ function rejectGarrison(game: Game, unit: Unit, refusal: import("./command-refus
   const id = `ended-${unit.id}-${game.tick}-garrison`;
   if (!game.effects.some(effect => effect.id === id)) game.effects.push({ id, type: "orderEnded", x: unit.x, y: unit.y,
     remaining: seconds(.4), duration: seconds(.4), unitId: unit.id, owner: unit.owner, sourceKind: unit.kind,
-    orderType: "garrison", reason: refusal.reason === "tower-full" || refusal.reason === "garrison-body-size" ? "no-room" : "refused", refusal });
+    orderType: "garrison", reason: refusal.reason === "tower-full" ? "no-room" : refusal.reason === "garrison-ownership" ? "target-gone" : "refused", refusal });
 }

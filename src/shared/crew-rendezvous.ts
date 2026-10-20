@@ -4,7 +4,7 @@ import { gangwaySurface } from './ship-gangway';
 import { shipContactGoal, shipTraffic } from './ship-avoidance';
 import { headingDifference, hullFits, type ShipPose } from './ship-navigation';
 import { hullGap, shipProfile, shipsIn } from './ship-geometry';
-import { isRangedUnit } from './weapon-class';
+import { isRangedUnit } from './unit-weapon-class';
 import type { GameMap, Unit, UnitOrder } from './types';
 
 export type CrewRendezvous = {

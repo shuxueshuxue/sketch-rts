@@ -155,7 +155,7 @@ function reserveOrderedUnits(commands: GameCommand[], movedUnitIds: Set<string>,
 
 /** Planning uses the same admission rule as execution, before claims and orders are recorded. */
 function towerOrders(commands: GameCommand[], snapshot: GameSnapshot, owner: PlayerId): GameCommand[] {
-  return commands.flatMap(command => {
+  return commands.flatMap((command): GameCommand[] => {
     if (command.type !== "garrison") return [command];
     const tower = snapshot.buildings.find(building => building.id === command.buildingId);
     if (!tower) return [];

@@ -6,7 +6,7 @@ export default async function(s: Scene) {
   await s.room("templeSpring");
   const enemy = Object.keys((await s.snapshot() as Snap).players).find(owner => owner !== "player")!;
   await s.api(`/api/rooms/${s.roomId}/reset`, { mapId: "bareDuel", options: { aiPlayers: [], scenario: {
-    replaceDefaultUnits: true, replaceDefaultBuildings: true, replaceDefaultMercenaryCamps: true,
+    replaceDefaultUnits: true, replaceDefaultMercenaryCamps: true,
     players: { [enemy]: { upgrades: { rangeTraining: 3 } } },
     addBuildings: [0, 1, 2].map(i => ({ id: `tower-${i}`, kind: "fortifiedTower", owner: "player", x: 1600 + i * 400, y: 2000, complete: true })),
     addUnits: ["knight", "raider", "lancer"].flatMap((kind, i) => [

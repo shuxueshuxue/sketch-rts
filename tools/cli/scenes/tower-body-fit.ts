@@ -5,7 +5,7 @@ type Snap = { units: Unit[]; buildings: { id: string; x: number; y: number; radi
 export default async function(s: Scene) {
   await s.room("templeSpring");
   await s.api(`/api/rooms/${s.roomId}/reset`, { mapId: "bareDuel", options: { aiPlayers: [], scenario: {
-    replaceDefaultUnits: true, replaceDefaultBuildings: true, replaceDefaultMercenaryCamps: true,
+    replaceDefaultUnits: true, replaceDefaultMercenaryCamps: true,
     addBuildings: [0, 1, 2, 3].map(i => ({ id: `tower-${i}`, kind: "fortifiedTower", owner: "player", x: 1600 + i * 350, y: 2000, complete: true })),
     addUnits: ["ballista", "footman", "knight", "ancientStag"].map((kind, i) => ({ id: kind, kind, owner: "player", x: 1600 + i * 350, y: 2100 })),
   } } });

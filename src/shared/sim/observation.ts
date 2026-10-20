@@ -82,7 +82,7 @@ function frozenCopy<T>(value: T): Observed<T> {
 function unitView(unit: Unit): ObservedUnit {
   const { id, owner, kind, x, y, hp, maxHp, attackDamage, attackRange, attackClass, attackCooldown, level,
     speed, order, orderQueue, deck, cabin, garrison, expiresTick } = unit;
-  return frozenCopy({ id, owner, kind, x, y, hp, maxHp, attackDamage, attackRange, attackClass, attackCooldown, level,
+  return frozenCopy({ id, owner, kind, x, y, hp, maxHp, attackDamage, attackRange, attackCooldown, level,
     speed, order, ...(attackClass ? { attackClass } : {}), ...(orderQueue ? { orderQueue } : {}), ...(deck ? { deck } : {}),
     ...(cabin ? { cabin } : {}), ...(garrison ? { garrison } : {}),
     ...(expiresTick !== undefined ? { expiresTick } : {}) });
