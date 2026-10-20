@@ -399,6 +399,10 @@ export function generateLandObjectives(situation: Situation, context: PlanningCo
       : candidate.kind === 'ContestRoute' ? context.memory.territory?.objective?.targetId === candidate.key
       : candidate.kind === 'CounterHarass' ? context.memory.harassDefense?.targetId === candidate.key
       : context.memory.landExpansion?.mineId === candidate.key;
+    const committedSince = !live ? null : candidate.kind === 'AttackSite' ? context.memory.landAttack!.sinceTick
+      : candidate.kind === 'ContestRoute' ? context.memory.territory!.objective!.sinceTick
+      : model.mining(candidate.kind) ? context.memory.landExpansion!.sinceTick : null;
+    const sinceTick = committedSince ?? old?.sinceTick ?? situation.tick;
     const blocked = a.preconditions.some(condition => condition.status !== 'met' && condition.kind !== 'handoff');
     const incompleteResponse = a.preconditions.some(condition => condition.reason.code === 'enemy-response-unknown');
     const persistenceBonus = live && a.power > 0 && a.eta !== null && !incompleteResponse ? Math.min(PARAMETERS.maximumPersistenceGold,
@@ -413,11 +417,10 @@ export function generateLandObjectives(situation: Situation, context: PlanningCo
     const objective: Objective = { id: a.id, kind: candidate.kind, owner: situation.owner, target: candidate.target, effects,
       utility: strategyUtility({ benefit: a.benefit, cost: a.cost, successProbability: incompleteResponse ? 0 : forceSuccessProbability(a.power, a.required),
         persistenceBonus, evidence: a.evidence }), status: blocked ? 'blocked' : live ? 'active' : 'candidate',
-      sinceTick: old?.sinceTick ?? (live ? candidate.kind === 'AttackSite' ? context.memory.landAttack!.sinceTick
-        : candidate.kind === 'ContestRoute' ? context.memory.territory!.objective!.sinceTick
-        : model.mining(candidate.kind) ? context.memory.landExpansion!.sinceTick : situation.tick : situation.tick), rank: 0, reasons: a.reasons,
+      sinceTick, rank: 0, reasons: a.reasons,
       methodIds: methodVariants(a).map(variant => `${a.id}/method:${variant}`),
-      stability: old ? { ...old.stability } : { minimumStayUntilTick: live ? situation.tick + PARAMETERS.minimumStayTicks : situation.tick,
+      stability: live && old?.sinceTick === sinceTick ? { ...old.stability }
+        : { minimumStayUntilTick: live ? sinceTick + PARAMETERS.minimumStayTicks : situation.tick,
         challengerId: null, challengerThinks: 0 } };
     assessments.set(objective, { situation, context, model, value: a });
     return objective;

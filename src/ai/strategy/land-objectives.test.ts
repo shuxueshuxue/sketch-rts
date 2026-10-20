@@ -342,4 +342,18 @@ describe('land objective proposals over one shared Situation', () => {
     expect(short.utility.cost.find(term => term.code === 'expected-attrition')!.value)
       .toBeLessThan(whole.utility.cost.find(term => term.code === 'expected-attrition')!.value);
   });
+
+  it('uses the real commitment start instead of renewing an old goal stay on observation', () => {
+    const { context, situation } = example(), previous = goals(situation, context);
+    context.memory.landAttack = { targetId: 'enemy-hall', sinceTick: 1200, general: {} };
+    const later = { ...situation, tick: 2000 }, ctx = { ...context, snapshot: { ...context.snapshot, tick: later.tick } };
+    const active = generateLandObjectives(later, ctx, previous).find(goal => goal.kind === 'AttackSite')!;
+    expect(active.sinceTick).toBe(1200);
+    expect(active.stability.minimumStayUntilTick).toBe(1500);
+    context.memory.landAttack.sinceTick = 1900;
+    const restarted = generateLandObjectives(later, ctx, [active]).find(goal => goal.kind === 'AttackSite')!;
+    expect(restarted.id).toBe(active.id);
+    expect(restarted.sinceTick).toBe(1900);
+    expect(restarted.stability.minimumStayUntilTick).toBe(2200);
+  });
 });
