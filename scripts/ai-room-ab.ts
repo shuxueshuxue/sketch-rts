@@ -8,8 +8,10 @@ import { fileURLToPath } from 'node:url';
 import { roomAbCases, type RoomAbVersion, type RoomAbCase } from '../src/ai/benchmark/room-ab';
 import { AI_SCRIPT_VERSIONS } from '../src/ai/policy';
 import { formatRoomAbCsv } from '../src/ai/benchmark/room-ab-csv';
+import { summarizeRoomAbResponses } from '../src/ai/benchmark/room-ab-responses';
 import { ROOM_BASELINE_MANIFEST } from '../src/ai/frozen/room-baseline';
 import { runRoomAbMatch, sha, type RoomAbReport } from '../tools/ai/room-ab-run';
+import type { GameSnapshot } from '../src/shared/types';
 const args = process.argv.slice(2);
 const arg = (key: string) => { const i = args.indexOf(key); return i < 0 ? undefined : args[i + 1]; };
 const out = resolve(arg('--out') ?? 'work/room-ab');
@@ -27,7 +29,7 @@ if (config.modes?.some(mode => mode !== 'ffa' && mode !== 'duel')) throw new Err
 let cases = roomAbCases(config);
 if (args.includes('--reverse')) cases.reverse();
 const files = ['scripts/ai-room-ab.ts', 'tools/ai/room-ab-run.ts', 'src/ai/benchmark/room-ab.ts',
-  'src/ai/benchmark/room-ab-csv.ts', 'src/ai/benchmark/room-ab-metrics.ts', 'src/ai/benchmark/room-baseline-646c-context.ts', 'src/ai/benchmark/room-baseline-646c-memory.ts'];
+  'src/ai/benchmark/room-ab-csv.ts', 'src/ai/benchmark/room-ab-responses.ts', 'src/ai/benchmark/room-ab-metrics.ts', 'src/ai/benchmark/room-baseline-646c-context.ts', 'src/ai/benchmark/room-baseline-646c-memory.ts'];
 const provenance = { sourceCommit: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
   sourceDiffSha256: sha(execFileSync('git', ['diff', 'HEAD'], { encoding: 'utf8' })),
   files: Object.fromEntries(files.map(path => [path, createHash('sha256').update(readFileSync(path)).digest('hex')])),
@@ -69,6 +71,21 @@ if (selected) {
   const reports = cases.map(item => JSON.parse(readFileSync(join(out, item.name, 'summary.json'), 'utf8')) as RoomAbReport);
   if (results.length !== cases.length || results.some(r => r.exit !== 0) || reports.some((r, i) => sha(r.item) !== sha(cases[i])
     || r.artifactSha256 !== ROOM_BASELINE_MANIFEST.artifact.sha256 || !r.observed)) throw new Error('Incomplete or mismatched match evidence');
+  // #570's target-camp association is the mine guard, not an arbitrary road camp.
+  // Retained conquest memory should already have selected it; verify that assumption before publishing metrics.
+  const guardAssociationAudit = reports.map(r => {
+    const initial = JSON.parse(readFileSync(join(out, r.item.name, 'initial.json'), 'utf8')).snapshot as GameSnapshot;
+    const units = new Map(initial.units.map(u => [u.id, u]));
+    const checks = r.metrics!.clearings.map(c => {
+      const members = c.memberIds.map(id => units.get(id)).filter((u): u is GameSnapshot['units'][number] => !!u);
+      const mine = initial.resources.find(m => m.id === c.mineId);
+      const x = members.reduce((sum, u) => sum + (u.homeX ?? u.x), 0) / members.length;
+      const y = members.reduce((sum, u) => sum + (u.homeY ?? u.y), 0) / members.length;
+      return { id: c.id, guard: !!mine && members.length === c.memberIds.length && Math.hypot(x - mine.x, y - mine.y) <= 450 };
+    });
+    return { case: r.item.name, checks, valid: checks.every(c => c.guard) };
+  });
+  if (guardAssociationAudit.some(row => !row.valid)) throw new Error('Island clearing is not the recorded mine guard; refusing misleading milestones');
   function aggregate(group: RoomAbReport[]) {
     return { games: group.length, decisive: group.filter(r => r.winner).length, timeouts: group.filter(r => !r.winner).length,
       cohorts: Object.fromEntries((['A', 'B'] as const).map(side => {
@@ -88,6 +105,9 @@ if (selected) {
       snapshotEqual: left!.snapshotSha256 === right!.snapshotSha256, memoryEqual: left!.memorySha256 === right!.memorySha256 };
   });
   const summary = { config, provenance: savedMatrix?.provenance ?? provenance, reportProvenance: provenance, results, primaryFfa: aggregate(reports.filter(r => r.item.mode === 'ffa')),
+    guardAssociationAudit,
+    seatResponses: reports.flatMap(r => r.item.seats.map(s => ({ case: r.item.name, owner: s.owner, side: s.side,
+      ...summarizeRoomAbResponses(r.metrics!.responses.filter(row => row.owner === s.owner)) }))),
     auxiliaryDuel: aggregate(reports.filter(r => r.item.seats.length === 2)),
     maps: cases.filter((c, i) => cases.findIndex(other => other.mapId === c.mapId) === i).map(c => ({ mapId: c.mapId,
       ffa: aggregate(reports.filter(r => r.item.mapId === c.mapId && r.item.mode === 'ffa')),
@@ -96,11 +116,14 @@ if (selected) {
     reconciled: reports.every(r => r.reconciled && !r.errors.length) };
   writeFileSync(join(reportOut, 'summary.json'), JSON.stringify(summary, null, 2) + '\n', { flag: 'wx' });
   const columns = ['case', 'mode', 'map', 'seed', 'rotation', 'owner', 'side', 'brain', 'family', 'race', 'tick', 'winner', 'rank', 'alive',
-    'idleArmyUnitSeconds', 'abaSwitches', 'firstExpansion', 'firstIslandClearStart', 'firstIslandClearComplete', 'firstEnemySortie', 'completed', 'sitesDestroyed', 'pressureFraction', 'deaths'];
+    'idleArmyUnitSeconds', 'abaSwitches', 'firstExpansion', 'firstIslandClearStart', 'firstIslandClearComplete', 'firstEnemySortie',
+    'completed', 'completedBy15m', 'sitesDestroyed', 'sitesDestroyedWithArmyElsewhere', 'siteResponses', 'preemptions', 'pressureFraction', 'deaths'];
   const csv = formatRoomAbCsv([columns, ...reports.flatMap(r => r.item.seats.map(s => { const m = r.metrics!.seats[s.owner]!; return [r.item.name, r.item.mode, r.item.mapId, r.item.seed,
     r.item.rotation, s.owner, s.side, s.brain, s.family, s.race, r.tick, r.winner, r.ranks![s.owner], m.hasBuildings,
     m.idleArmyUnitSeconds, m.abaSwitches, m.firstExpansion, m.firstIslandClearStart, m.firstIslandClearComplete, m.firstEnemySortie,
-    JSON.stringify(m.completed), m.sitesDestroyed, m.pressureSeconds / m.observedSeconds, JSON.stringify(r.deathSummaries[s.owner])]; }))]);
+    JSON.stringify(m.completed), JSON.stringify(m.completedBy15m), m.sitesDestroyed, m.sitesDestroyedWithArmyElsewhere,
+    JSON.stringify(summarizeRoomAbResponses(r.metrics!.responses.filter(row => row.owner === s.owner))), m.preemptions === null ? 'unknown' : m.preemptions,
+    m.pressureSeconds / m.observedSeconds, JSON.stringify(r.deathSummaries[s.owner])]; }))]);
   writeFileSync(join(reportOut, 'seats.csv'), csv, { flag: 'wx' });
   console.log(JSON.stringify({ primaryFfa: summary.primaryFfa, auxiliaryDuel: summary.auxiliaryDuel, symmetry: summary.symmetry, reconciled: summary.reconciled }));
   if (!summary.reconciled || !summary.pairedWorldsEqual || summary.symmetry === false) process.exitCode = 1;

@@ -42,3 +42,15 @@ it('escapes JSON, commas, quotes and newlines as RFC 4180 CSV cells', () => {
   expect(formatRoomAbCsv([['a,b', 'say "yes"', '{"count":1}', 'two\nlines', null]]))
     .toBe('"a,b","say ""yes""","{""count"":1}","two\nlines",""\r\n');
 });
+
+it('reports unanswered site attacks as censored instead of zero-second responses', async () => {
+  const { summarizeRoomAbResponses } = await import('./room-ab-responses');
+  expect(summarizeRoomAbResponses([
+    { start: 100, arrival: 100, endReason: 'arrived' },
+    { start: 100, arrival: 140, endReason: 'destroyed' },
+    { start: 100, arrival: null, endReason: 'quiet' },
+    { start: 100, arrival: null, endReason: 'match-end' },
+  ])).toEqual({ episodes: 4, arrivals: 2, censored: 2, meanSeconds: 1, medianSeconds: 1,
+    censoredReasons: { quiet: 1, 'match-end': 1 }, delaysSeconds: [0, 2] });
+  expect(summarizeRoomAbResponses([]).meanSeconds).toBeNull();
+});
