@@ -1,4 +1,4 @@
-import type { Arrival, SituationUnit } from './types';
+import type { Arrival, SituationUnit, Target } from './types';
 import type { DecisionFacts } from './decision';
 
 export type ArrivalColumns = Readonly<{ ids: readonly string[]; index: ReadonlyMap<string, number> }>;
@@ -60,6 +60,18 @@ export function unitArrival(unit: SituationUnit | DecisionFacts<SituationUnit>, 
   if (!facts) return unit.arrivals.find(entry => entry.targetId === targetId)?.arrival;
   const index = facts.columns.index.get(targetId);
   return index === undefined ? undefined : facts.values[index];
+}
+
+/** An action may share an asset row only at its exact published point. A
+ * post offset from a hall never borrows the ETA to that hall's center. */
+export function actionTargetArrival(unit: DecisionFacts<SituationUnit>, actionId: string, target: Target,
+  assets: readonly Readonly<{ id: string; target: Target }>[]) {
+  const exact = unitArrival(unit, actionId);
+  if (exact) return exact;
+  const asset = target.entityId && assets.find(asset => asset.id === target.entityId
+    && asset.target.landId === target.landId && asset.target.seaId === target.seaId
+    && Math.hypot(asset.target.point.x - target.point.x, asset.target.point.y - target.point.y) < 1e-6);
+  return asset ? unitArrival(unit, asset.id) : undefined;
 }
 
 export function mapUnitArrivals<T>(unit: SituationUnit, project: (targetId: string, arrival: Arrival) => T): T[] {
