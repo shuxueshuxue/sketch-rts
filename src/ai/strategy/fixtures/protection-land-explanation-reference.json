@@ -1,0 +1,89 @@
+{
+  "baselineHead": "70ae44e6e38a51d6a3568a13a910e39920ecf976",
+  "evaluatedHead": "a92490cf27318e184ebae6d70de520bfd752ffbb",
+  "inputSha256": "788a6f639480f0a9ca3ca8c9d8b41b67f2a775f2ad9c599597311b789ac2eaba",
+  "previousReferenceSha256": "d05c0ddf664d95e9d2b832afda2a7fd23b34b56feb131bb32e4be6d93c771148",
+  "previousFixture": "control-land-explanation-reference.json",
+  "cause": "current-site-threat-cleared",
+  "cases": [
+    {
+      "event": "L1",
+      "landSha256": "62520c98a68430c2e0a716b288a5058fd982da7e66c5690e615249cfb68c59bb",
+      "planSha256": "1caeef19bf6bdacfd08fc831077a8af4f4c53a11b2a90cf33e9d7dacb3cc67b7",
+      "observationSha256": "a56bbfd780667e0852c450a1f477a828c68460c859bb002a6e36416fa5557168",
+      "previousPlanSha256": "1caeef19bf6bdacfd08fc831077a8af4f4c53a11b2a90cf33e9d7dacb3cc67b7",
+      "previousObservationSha256": "a56bbfd780667e0852c450a1f477a828c68460c859bb002a6e36416fa5557168",
+      "originalPolicySha256": "b9c2665ea05cbe4bebbf2a0553f42a9105c8841b467830bc4bde7c47ddab015c",
+      "clearedObjectiveIds": [],
+      "changedLeaves": 0
+    },
+    {
+      "event": "L2",
+      "landSha256": "bf45f72818b4465df49d1cf6d24e8c5b04a8a5b853fa7dc3b87af3972352cc6f",
+      "planSha256": "3f75fb85880a352a4f2d2b92663b07bbcb5d7886d37ba5905e95bb3e24de560a",
+      "observationSha256": "1d1b32500c4df5831a49cecb59392abf65f8fa0969d30d3e25fe6497cd4c4bda",
+      "previousPlanSha256": "8798e6037a5e28abbb6f8aa9fac5aa49b6abca20af8cdfd1d4d40310fd5480f9",
+      "previousObservationSha256": "a0b53029fdda12e9d0023b94063ef2c3be4a051f457e63c043c94a72f9179933",
+      "originalPolicySha256": "f0ca7bcb7f7a921cdb691ad1e113554d06d9bf689d357e901509c776d1b6e368",
+      "clearedObjectiveIds": [
+        "DefendSite:player:building-player-townHall-1934"
+      ],
+      "changedLeaves": 24
+    },
+    {
+      "event": "L3",
+      "landSha256": "7a6aa49fddefbd351f0b659eddc6a0f602a37ef69380c84d566beae4c61cb197",
+      "planSha256": "2520506ff0d6e3f896eab5274a2a576cfc063313452d67cbc53150b6e1aaaa12",
+      "observationSha256": "106213e3e5b229ab7ba2f7e18d6d1a7aea779b4c7556df7832d15e012fb6d4fa",
+      "previousPlanSha256": "2520506ff0d6e3f896eab5274a2a576cfc063313452d67cbc53150b6e1aaaa12",
+      "previousObservationSha256": "106213e3e5b229ab7ba2f7e18d6d1a7aea779b4c7556df7832d15e012fb6d4fa",
+      "originalPolicySha256": "b80a41eb75adb403a35a47c4ee6c0c9c4d6709f2f3e51c28e0eb58ca04cccc44",
+      "clearedObjectiveIds": [],
+      "changedLeaves": 0
+    },
+    {
+      "event": "L4",
+      "landSha256": "94c30c6de74337d7204c24874f62b7f5be93a29f96617a760f3d0066aa39a864",
+      "planSha256": "131b2b99f441ad9e026586a853d55dad586c249dc55f7a0e9f4602e6a752d487",
+      "observationSha256": "736b3a339849b7b4989d6436f6836ce96e2977dd6450d15dce01651f6f7da097",
+      "previousPlanSha256": "131b2b99f441ad9e026586a853d55dad586c249dc55f7a0e9f4602e6a752d487",
+      "previousObservationSha256": "736b3a339849b7b4989d6436f6836ce96e2977dd6450d15dce01651f6f7da097",
+      "originalPolicySha256": "c5e4168301fbcfb0490d6028542d2bb4413c0d51c77fdb9219786401a4f7a853",
+      "clearedObjectiveIds": [],
+      "changedLeaves": 0
+    },
+    {
+      "event": "L5-threat",
+      "landSha256": "e28bfb1f76d5d7c5f3ac849ff08abc674edd9ba22059badeab4ef4fdf5e7080d",
+      "planSha256": "5862c63fa661ec2b47ea720451471c962c8d507a1d3357c0031e9137dd373354",
+      "observationSha256": "15d456bef643eb774c06110b69a20d70d6a4ced9a139c39746628ae3ae883017",
+      "previousPlanSha256": "5862c63fa661ec2b47ea720451471c962c8d507a1d3357c0031e9137dd373354",
+      "previousObservationSha256": "15d456bef643eb774c06110b69a20d70d6a4ced9a139c39746628ae3ae883017",
+      "originalPolicySha256": "36494ecdcb9130514abe31abac234b0c1eee662e935b5c98b5763389f2671e06",
+      "clearedObjectiveIds": [],
+      "changedLeaves": 0
+    },
+    {
+      "event": "L5-front",
+      "landSha256": "55cf47b8ae909a8481c7cab26249a0976a5b4790f816dd5ac831ea24f5050be6",
+      "planSha256": "9c66ab8f5ddd29fd2010cf16180f3af77f634ea00a51dcc310a3653b7e2893f8",
+      "observationSha256": "5ad4403af176d6f5e2358de01565847cf7b728833c3c0d2531f691a867af6648",
+      "previousPlanSha256": "9c66ab8f5ddd29fd2010cf16180f3af77f634ea00a51dcc310a3653b7e2893f8",
+      "previousObservationSha256": "5ad4403af176d6f5e2358de01565847cf7b728833c3c0d2531f691a867af6648",
+      "originalPolicySha256": "1cb151e6c4830c88a6d4b29a36fe0d96d47b2e767f1086222b727ed24e21a59f",
+      "clearedObjectiveIds": [],
+      "changedLeaves": 0
+    },
+    {
+      "event": "L6",
+      "landSha256": "cc9b6b743bbe18d91e88e7022e3e4d32459bf8e84a2bc7a92445a444ec219a74",
+      "planSha256": "bb96069e548d32283895975b8ca2ff100f63d814e50377fdf0393c3b6186f94a",
+      "observationSha256": "eac4ac73a0dfc63eee0399b5dcccc5a9ee2aeeb831060adaa37bb723b131fcae",
+      "previousPlanSha256": "bb96069e548d32283895975b8ca2ff100f63d814e50377fdf0393c3b6186f94a",
+      "previousObservationSha256": "eac4ac73a0dfc63eee0399b5dcccc5a9ee2aeeb831060adaa37bb723b131fcae",
+      "originalPolicySha256": "364bb2eb76eee0642bdefed929a2eb729357996854029388367ab3c1f3ce2e98",
+      "clearedObjectiveIds": [],
+      "changedLeaves": 0
+    }
+  ]
+}

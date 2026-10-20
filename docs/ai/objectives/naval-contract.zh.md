@@ -212,3 +212,19 @@ SKETCH_MACHINES=/root/.config/sketch/machines-naval.json \
 这不等于已证实旧 ferry 也选中了船厂矩形内的 `(1648,2480)`。用冻结连续诊断 `70ae44e6` 的真实蓝宝 p4 / tick 4180、4495 快照，只调用与 main 逐字相同的 `coastOnWater`，从主厅得到的均是 `(1552,2640)`，位于船厂外；4180 全部 7 个自有厅／陆兵源点的查询也未落入船厂矩形。实际旧任务保存的 `from=(1515.8040695718294,2512)`，阶段是 return。因此这两帧没有复现相同碰撞，不把新报价的 partial 航路归罪于旧 ferry，也不据此估算发生率或损失。原始水点在当前船头角度下未通过 terrain 的 `hullFits`，但这既不检查建筑碰撞，也不能证明所有转向都不可达。
 
 [独立只读证据](main-ferry-berth-audit.evidence.json) 保存两帧、原生重放哈希来源、main 源文件、探针与逐项输出，77,636 bytes，SHA-256 `eb57d5c38d5b41cba0ec53e3f1bea01ea3c7f93f6c1df8bc68cafbceacb45b97`。探针没有运行 AI 或新对局；它证明上述调用和坐标边界，不作为实际停滞的因果证明。
+
+## 控制查询的统一工作账本与点航段（候选，尚未行为验收）
+
+控制 think 的 Situation、方法 ETA、固定航次与航次风险共用 `STRATEGY_FACT_WORK_PER_THINK=6144` 的逻辑工作账本。查询登记继续任务，think 结束依次推进关键航段、已有距离场、后台距离场；同一物理请求在几个入口出现只登记一次。关键集合包含已有正式动作及前 `CRITICAL_FACT_CANDIDATES=4` 个已具体化航次的候选目标；已知兵力／工人等前置不满足或已知净值非正的候选不进入这四个位置。没有具体航次的未知粗筛不冒充关键事实。`observation.factWork` 保留每次 think 的限额、合计逻辑工作及逐请求服务量。完整结果在下一次 think 可读取，重复同 tick 调用不再领取额度。
+
+关键航段复用 `advanceShipRouteSearch` 的有限上限继续搜索，计入 prepare、connector、entrance 和实际扩展，避免 Infinity 分支的整海场预处理。原生 700 名义切片会在不可分操作之后暂停；静态有限搜索预留上界 1400，并按实际工作收费，不能拿「700×切片数」证明未超总额。原生搜索、试探顺序与碰撞规则未改。完整海场仍保留为后台／只读查询，不再阻塞控制的具体航段。
+
+静态几何以地形、建筑、起终点和船体描述区分，原生搜索成本还依赖的操纵参数、起始方向与风也参与失效；ETA 按当前船的真实速率、转向和风重新计价。原生 partial 不公布 ETA，记为精确点对的 static-infeasible，候选遍历继续尝试其余已枚举合法泊位。实际现船的交通遮挡单列 transient-blocked；未来生产船不把当前可移动船体冻结成未来的永久路障。预测不模拟敌船未来机动或追击。搜索图合计限 32 KiB／16 个请求，超出明确保留 memory/entry-budget unknown，不能冒充已证实的静态不可达。
+
+[冻结几何工作量探针](point-route-work-distribution.json.gz)（SHA-256 `3af3de48ec3fa01b5e8672db2c2b67abd4b30615ee56cce0ebf1aa734f5d958e`）含蓝宝、碎海、双岸的真实 9000 tick 地图、合法泊位、冷暖／双向共 12 项及逐 think 工作明细。蓝宝正向完整路需 11910 工作，公布时经过 45 tick；碎海反向完整路需 4600 工作，经过 15 tick。服务峰值 5540，冷暖的路线哈希和逻辑工作相同；完整路 ETA 1275、753 均不小于对应海场估计 838、569。其余 8 项返回 partial/static-infeasible，全部保留，没有从分母删除或填成数值航程；双岸原帧无 ferry，明确只是地图候选。此冻结几何微探针不是连续行为结果，更不能据此宣称真正 eligible 的关键事实 p95≤10 秒、max≤30 秒已通过。
+
+`CrossingEta.expectedLoadedTick` 是本次查询根据实际登船步行、等待和 gangway 阶段给出的绝对装载完成预测；正式航次只在每名未上船成员的同一固定航次均有该预测时取最大值，否则保持 null。全程到达 ETA 和 `expectedFreeTick` 不替代它。实际执行保留首次有效预报、最新修订和原生实载观察时刻，不能拿最后一次重报洗掉误差。
+
+## 当前威胁解除的 collector 差异
+
+[逐字段因果表](clear-threat-collector-fact-diff.json.gz)（SHA-256 `cef5e0048f3f435b654090ca3ce1d67c8dda1faf91c765fde1fbc4d726454e6e`）先在 `70ae44e6` 重现原 7 帧完整 plan／observation SHA，再对新事实求差。7 帧 Situation 均逐字相同；仅 L2 有 24 个按 ID 对齐的变化叶：1934 厅当前无实际／潜在敌人且无覆盖敌塔，旧 DefendSite 从 active 结束为 complete，删除其 3 个方法，释放最短停留，排序与 observation 的历史 score 随之调整。其他独立目标除排序外、其他方法均断言逐字一致。原 `control-land-explanation-reference.json` 和所有输入未覆盖；新 `protection-land-explanation-reference.json` 通过旧文件 SHA 及逐帧旧哈希接续该证据链。没有对应当前事实的变化不得纳入新引用。

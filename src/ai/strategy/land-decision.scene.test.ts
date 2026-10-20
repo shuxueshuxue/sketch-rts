@@ -14,6 +14,7 @@ import type { PlanningContext, Situation } from './types';
 import reference from './fixtures/land-explanation-reference.json';
 import collectorReference from './fixtures/control-land-explanation-reference.json';
 import teamReference from './fixtures/team-land-explanation-reference.json';
+import protectionReference from './fixtures/protection-land-explanation-reference.json';
 
 type Frame = { event: string; context: PlanningContext; situation: Situation };
 // Test-only ownership: deliberately mutate cloned inputs after evaluation.
@@ -64,6 +65,14 @@ describe('land numerical decisions and requested explanation projection', () => 
       .toBe(teamReference.previousReferenceSha256);
     for (const row of teamReference.cases)
       expect(row.previousLandSha256).toBe(reference.cases.find(previous => previous.event === row.event)!.landSha256);
+    expect(protectionReference.inputSha256).toBe(collectorReference.inputSha256);
+    expect(createHash('sha256').update(readFileSync(new URL('./fixtures/control-land-explanation-reference.json', import.meta.url))).digest('hex'))
+      .toBe(protectionReference.previousReferenceSha256);
+    for (const row of protectionReference.cases) {
+      const previous = collectorReference.cases.find(previous => previous.event === row.event)!;
+      expect(row.previousPlanSha256).toBe(previous.planSha256);
+      expect(row.previousObservationSha256).toBe(previous.observationSha256);
+    }
   });
   it.each(teamReference.cases)('$event preserves every audited team-aware land explanation across cold/warm and decision/observation modes', row => {
     const frame = scene(row.event), expected = observe(structuredClone(frame));
@@ -124,7 +133,7 @@ describe('land numerical decisions and requested explanation projection', () => 
     expect(JSON.stringify(captured.explain!())).toBe(expected);
   });
 
-  it.each(collectorReference.cases)('$event retains the audited collector facts with the default land family', row => {
+  it.each(protectionReference.cases)('$event retains the audited collector facts with the default land family', row => {
     const frame = scene(row.event), fullContext = structuredClone(frame.context), observedContext = structuredClone(frame.context);
     const build = (context: PlanningContext) => {
       const { snapshot, owner, memory } = context;
