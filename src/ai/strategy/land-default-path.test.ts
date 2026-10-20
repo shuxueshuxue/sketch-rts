@@ -14,6 +14,7 @@ afterEach(() => vi.restoreAllMocks());
 const versions = ['v9_knight', 'v9_archer', 'v9_summoner'] as const;
 
 it.each(versions)('%s never constructs Situation or land quotes on the default inline room path', version => {
+  const constructionsBefore = situationModule.situationConstructionCount();
   const situation = vi.spyOn(situationModule, 'evaluateSituation');
   const land = vi.spyOn(LAND_OBJECTIVE_FAMILY, 'generate');
   const game = createGame('bareDuel', { aiPlayers: ['enemy'], aiVersions: { enemy: version } });
@@ -31,6 +32,7 @@ it.each(versions)('%s never constructs Situation or land quotes on the default i
     expect(thinks.mock.calls.length).toBeGreaterThan(1);
     expect(observer.active).toBe(false);
     expect(situation.mock.calls.length).toBe(0);
+    expect(situationModule.situationConstructionCount() - constructionsBefore).toBe(0);
     expect(land.mock.calls.length).toBe(0);
     expect(ai.memories.enemy?.strategy?.observation).toBeUndefined();
     expect(ai.memories.enemy).not.toHaveProperty('strategyAllocation');
@@ -40,6 +42,7 @@ it.each(versions)('%s never constructs Situation or land quotes on the default i
 });
 
 it.each(versions)('%s never constructs Situation or land quotes on the unobserved room worker host', version => {
+  const constructionsBefore = situationModule.situationConstructionCount();
   const situation = vi.spyOn(situationModule, 'evaluateSituation');
   const land = vi.spyOn(LAND_OBJECTIVE_FAMILY, 'generate');
   const game = createGame('bareDuel', { aiPlayers: ['enemy'], aiVersions: { enemy: version } });
@@ -55,6 +58,7 @@ it.each(versions)('%s never constructs Situation or land quotes on the unobserve
     expect(replies[0]).not.toHaveProperty('error');
     expect(replies[0]).not.toHaveProperty('observations');
     expect(situation.mock.calls.length).toBe(0);
+    expect(situationModule.situationConstructionCount() - constructionsBefore).toBe(0);
     expect(land.mock.calls.length).toBe(0);
   } finally {
     host.close({ type: 'close', session: 'land-default-worker' });
@@ -62,6 +66,7 @@ it.each(versions)('%s never constructs Situation or land quotes on the unobserve
 });
 
 it('counts both Situation construction and the default land family when explicitly requested with WithTrace', () => {
+  const constructionsBefore = situationModule.situationConstructionCount();
   const situation = vi.spyOn(situationModule, 'evaluateSituation');
   const land = vi.spyOn(LAND_OBJECTIVE_FAMILY, 'generate');
   const snapshot = snapshotGame(createGame('bareDuel', { aiPlayers: ['enemy'] }));
@@ -70,5 +75,6 @@ it('counts both Situation construction and the default land family when explicit
     { playerId: 'enemy', version: 'v9_archer', memory: ai.memories.enemy! });
   expect(result.trace.strategy).toBeDefined();
   expect(situation.mock.calls.length).toBe(1);
+  expect(situationModule.situationConstructionCount() - constructionsBefore).toBe(1);
   expect(land.mock.calls.length).toBe(1);
 });

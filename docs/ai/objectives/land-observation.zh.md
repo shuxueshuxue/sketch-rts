@@ -86,7 +86,9 @@ L3 的执行器归因取自原始逐 think 记录：14010 和 14025 是 **mobile
 
 c648e634 紧凑 ETA 适配通过 7 文件 126 项测试，根 tsc 通过。七帧完整陆地与联合 collector 的固定金标无需更新，运行时计划、观察历史及命令/policy/世界摘要也继续和 32e2eaba 适配前记录相同；共享 NAVAL 金标和默认 LAND 跨进程冷暖/fork 均通过。本次 rebase 保留共享 withStrategyFrame 作用域，plan.ts 相对共享基线仍仅增加陆地 family 导入及默认列表项。
 
-本分支现已 rebase 到框架 35676cad／main 646cf9a0，保留 withGoalDistanceFieldLease、withStrategyFrame 和 startup 预热；陆地模块计算源码未改。9 文件 137 项相关测试与根 tsc 通过，A100 4 workers 完整 src：735 个文件中 734 个通过，8126 项通过，耗时 495.8 秒；唯一失败是已知 think-worker 的 30 秒超时，该文件在 juma 单独 6/6 通过，没有其他断言失败。七帧完整计划/运行时计划/观察历史旧金标无需更新，命令及世界摘要也不变。跨 main 的原 policy 哈希只因 #574 新增 landExpansion.reason（七帧）及 L5-front 的既有夺岛 reason 精确化而变化；新 main 内普通/观察规划完整 policy 仍逐字节一致，未在这项对照中删除诊断字段。
+首次 rebase 到框架 35676cad／main 646cf9a0 时，保留 withGoalDistanceFieldLease、withStrategyFrame 和 startup 预热；陆地模块计算源码未改。9 文件 137 项相关测试与根 tsc 通过，A100 4 workers 完整 src：735 个文件中 734 个通过，8126 项通过，耗时 495.8 秒；唯一失败是已知 think-worker 的 30 秒超时，该文件在 juma 单独 6/6 通过，没有其他断言失败。七帧完整计划/运行时计划/观察历史旧金标无需更新，命令及世界摘要也不变。跨 main 的原 policy 哈希只因 #574 新增 landExpansion.reason（七帧）及 L5-front 的既有夺岛 reason 精确化而变化；新 main 内普通/观察规划完整 policy 仍逐字节一致，未在这项对照中删除诊断字段。
+
+本轮再 rebase 到 a5d53439（main 仍为 646cf9a0），接入仅供诊断的 `situationConstructionCount()`。11 文件 148 项关键测试与根 tsc 通过；三版本 inline／worker host 的真实构造计数差为 0，WithTrace 正对照为 1。七帧完整计划、运行时计划、观察历史和命令／policy／世界摘要与此前 35676cad 记录继续逐字节一致。陆地计算源码和共享默认 family 差异未变，计数不进入记忆、trace 或决策。
 
 内存验收使用 12:37 校准口径：GC 后每房间存活 heapUsed + external 增量 ≤30 MiB；真实 room host 的 4 worker／8 房间服务树峰值由 main/candidate 各跑三次，整体增量 ≤15%。旧单房间 maxRSS 差仅作历史结果。最终录制器路径/SHA、Node、评估边界与保存的模块历史在两端保持一致；本轮尚未启动该验收。
 
