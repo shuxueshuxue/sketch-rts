@@ -4,7 +4,7 @@ import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { Building, GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import { distance, type Point } from '../policy/spatial';
 import type { AiPolicyContext } from '../policy/types';
-import { isEnemyOwner } from '../policy/ownership';
+import { isEnemyOwner, type TeamPolicyOptions } from '../policy/ownership';
 import { castThreatReach, mountedThreatReach, THINK_TICKS } from './mounted-micro';
 
 import { withNavalShoreReuse } from '../policy/naval-shore-reuse';
@@ -48,7 +48,7 @@ function roadClear(snapshot: GameSnapshot, unit: Unit, goal: Point, foes: readon
   return clear;
 }
 
-export function armedFoes(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
+export function armedFoes(snapshot: GameSnapshot, owner: PlayerId, options: TeamPolicyOptions) {
   return [...snapshot.units, ...snapshot.buildings].filter(foe => foe.hp > 0 && foe.attackDamage > 0
     && isEnemyOwner(snapshot, owner, foe.owner, options));
 }

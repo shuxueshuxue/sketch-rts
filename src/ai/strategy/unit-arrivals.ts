@@ -1,4 +1,5 @@
 import type { Arrival, SituationUnit } from './types';
+import type { DecisionFacts } from './decision';
 
 export type ArrivalColumns = Readonly<{ ids: readonly string[]; index: ReadonlyMap<string, number> }>;
 export type UnitArrivalFacts = Readonly<{
@@ -19,7 +20,7 @@ export function arrivalColumns(ids: readonly string[]): ArrivalColumns {
   return { ids, index };
 }
 
-export function unitArrivalFacts(unit: SituationUnit): UnitArrivalFacts | undefined { return (unit as StoredUnit)[storedArrivals]; }
+export function unitArrivalFacts(unit: object): UnitArrivalFacts | undefined { return (unit as StoredUnit)[storedArrivals]; }
 
 function materialize(this: StoredUnit): readonly Entry[] {
   const facts = this[storedArrivals]!;
@@ -43,7 +44,9 @@ export function withUnitArrivals<T extends object>(unit: T, facts: UnitArrivalFa
 
 /** The decision path does not allocate the compatibility array or entry pairs.
  * Deserialized/plain scene inputs continue to use their ordinary array. */
-export function unitArrival(unit: SituationUnit, targetId: string): Arrival | undefined {
+export function unitArrival(unit: SituationUnit, targetId: string): Arrival | undefined;
+export function unitArrival(unit: DecisionFacts<SituationUnit>, targetId: string): DecisionFacts<Arrival> | undefined;
+export function unitArrival(unit: SituationUnit | DecisionFacts<SituationUnit>, targetId: string): Arrival | DecisionFacts<Arrival> | undefined {
   const facts = unitArrivalFacts(unit);
   if (!facts) return unit.arrivals.find(entry => entry.targetId === targetId)?.arrival;
   const index = facts.columns.index.get(targetId);

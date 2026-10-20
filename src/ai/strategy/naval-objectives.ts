@@ -7,7 +7,7 @@ import { walkableGoal } from '../../shared/terrain';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { bodyMass } from '../../shared/physical-body';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
-import type { Unit } from '../../shared/types';
+import type { GameSnapshot, Unit } from '../../shared/types';
 import { distance } from '../policy/spatial';
 import { isOpponentOwner } from '../policy/ownership';
 import { isBacklineKind } from '../policy/v6/backline';
@@ -20,6 +20,7 @@ import { discountGold, forceSuccessProbability, forceTimeGold, STRATEGY_PARAMETE
 import type { Arrival, Asset, Effect, Method, Objective, ObjectiveKind, PlanningContext, Precondition, Reason,
   ResourceDemand, Situation, SituationUnit, SiteThreat, Subgoal, Target, Utility } from './types';
 import type { PreviousObjective } from './observation-memory';
+import type { DecisionFacts } from './decision';
 import { capturesExplanations, deferredEvidence, lazyValue, projectedCopy, projectedProperty, projectedValueReader } from './explanations';
 
 const STATION_RANGE = 650;
@@ -38,10 +39,14 @@ const fieldDemand = (target: Target, strength: number, permanent = false): Resou
   strength, roles: ['frontline', 'ranged'], at: target, neededByTick: null, permanent });
 const campDomain = Symbol('strategy-frame-camps');
 function collapseAfter(context: PlanningContext, threat: SiteThreat, hp: number): number {
+  return siteCollapseAfter(context.snapshot, threat, hp);
+}
+/** Common optimistic arrival deadline, before any unobserved defender damage. */
+export function siteCollapseAfter(snapshot: GameSnapshot, threat: DecisionFacts<SiteThreat>, hp: number): number {
   const events = threat.attackers.flatMap(attacker => {
-    const unit = context.snapshot.units.find(unit => unit.id === attacker.unitId);
+    const unit = snapshot.units.find(unit => unit.id === attacker.unitId);
     return unit && 'ticks' in attacker.arrival ? [{ tick: attacker.arrival.ticks,
-      dps: combatCapability(context.snapshot, unit).dps / SIM_TICKS_PER_SECOND }] : [];
+      dps: combatCapability(snapshot, unit).dps / SIM_TICKS_PER_SECOND }] : [];
   }).sort((a, b) => a.tick - b.tick);
   let previous = 0, damagePerTick = 0, remaining = hp;
   for (const event of events) {
