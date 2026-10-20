@@ -114,12 +114,36 @@ describe('offline plan history chronology and visibility', () => {
     expect(html).not.toContain('match-ended');
   });
 
+  it('gives the three severity tiers different symbols and colors, and never folds unassigned evidence into abnormal', () => {
+    const tiers = ['normal', 'suspicious', 'abnormal'].map(key => model.deathClass(key));
+    expect(new Set(tiers.map(s => s.color)).size).toBe(3);
+    expect(new Set(tiers.map(s => s.glyph)).size).toBe(3);
+    expect(model.deathClass('unattributed').id).toBe('unattributed');
+    expect(model.deathClass('future-category').id).toBe('unknown');
+    const events = ['normal', 'normal', 'suspicious', 'abnormal', 'unattributed'].map(disposition =>
+      ({ type: 'death', attribution: { disposition } }));
+    expect(model.deathCounts([...events, { type: 'building-loss' }])).toEqual({
+      normal: 2, suspicious: 1, abnormal: 1, unattributed: 1, unknown: 0,
+    });
+  });
+
+  it('keeps adjacent loss marks independently clickable when a full match compresses their positions', () => {
+    const unknown = { tick: 17795, id: 'unattributed' }, normal = { tick: 17863, id: 'normal' };
+    const full = model.lossRows([normal, unknown], 18000, 1377);
+    expect(full.placements.map((p: any) => [p.event.id, p.row])).toEqual([['unattributed', 0], ['normal', 1]]);
+    expect(model.lossRows([unknown, normal], 1200, 1377).rows).toBe(1);
+    expect([normal, unknown].map(e => e.tick)).toEqual([17863, 17795]);
+  });
+
   it('keeps real missing values and inferred attribution honest in the shipped sample', () => {
     expect(data.frames[0].tick).toBe(0);
     expect(data.frames.at(-1).tick).toBe(18000);
     expect(history).toHaveLength(4804);
     expect(data.provenance.sourceCommit).toBe('bf9a472b02712457d2b5f4198d82ca87c8846de0');
-    expect(data.ledgerSource).toMatchObject({ module: 'src/ai/death-ledger.ts', reconciled: true, excludedLifecycleEvents: 33 });
+    expect(data.provenance).toMatchObject({ simulationSourceCommit: 'bf9a472b02712457d2b5f4198d82ca87c8846de0',
+      classificationSourceCommit: '4407d1522301537b652ba64f9dc09f794e223149', classificationVersion: 2,
+      classificationMode: 'offline-reclassification-no-simulation', rawObservationHashesMatch: true });
+    expect(data.ledgerSource).toMatchObject({ module: 'src/ai/death-ledger.ts', schemaVersion: 2, reconciled: true, excludedLifecycleEvents: 33 });
     for (const t of history) for (const n of t.nodes) {
       expect(n.utility.score).toBeNull();
       expect(n.utility.terms).toEqual([]);
@@ -127,14 +151,16 @@ describe('offline plan history chronology and visibility', () => {
     }
     const deaths = data.events.filter((e: any) => e.type === 'death');
     expect(deaths).toHaveLength(35);
-    expect(deaths.filter((e: any) => e.attribution.disposition === 'normal')).toHaveLength(2);
-    expect(deaths.filter((e: any) => e.attribution.disposition === 'abnormal')).toHaveLength(33);
+    expect(model.deathCounts(deaths)).toEqual({ normal: 16, suspicious: 2, abnormal: 16, unattributed: 1, unknown: 0 });
     for (const event of deaths) {
       expect(event.ledger.actualDeath).toBe(true);
       expect(event.attribution.disposition).toBe(event.ledger.classification.disposition);
       expect(event.attribution.category).toBe(event.ledger.classification.primary);
       expect(event.ledger.assignment.stateAttribution).toBe('inferred');
       expect(event.ledger.attributionContext.objectiveId).toBeNull();
+      expect(event.ledger.classification.diagnosticVersion).toBe(2);
+      expect(event.ledger.classification.v1.diagnosticVersion).toBe(1);
+      for (const tag of event.ledger.classification.v1.tags) expect(event.ledger.classification.tags).toContain(tag);
     }
     expect(data.events.filter((e: any) => e.type === 'building-loss').map((e: any) => [e.tick, e.owner, e.hp, e.evidence, e.killer])).toEqual([
       [5383, 'p0', -20, 'nonpositive-hp-and-native-removal', null],
@@ -153,9 +179,14 @@ describe('offline plan history chronology and visibility', () => {
     const interrupted = bands.find((b: any) => b.key === data.highlights.find((h: any) => h.id === 'goal-interrupted').bandKey);
     expect(interrupted.outcome).toBe('abandoned');
     expect(interrupted.result.source).toBe('landAttackResult');
-    for (const label of ['正常战损', '异常阵亡', '建筑损失']) {
+    for (const label of ['正常战损', '存疑阵亡', '异常阵亡', '未归因阵亡', '建筑损失']) {
       const highlight = data.highlights.find((h: any) => h.label === label);
       expect(data.events.find((e: any) => e.id === highlight.eventId).tick).toBe(highlight.tick);
     }
+    const normalId = data.highlights.find((h: any) => h.label === '正常战损').eventId;
+    expect(data.events.find((e: any) => e.id === normalId).ledger.classification).toMatchObject({
+      disposition: 'normal', primary: 'combat-loss', tags: ['retreat-or-treatment', 'retreat-failed'],
+      v1: { disposition: 'abnormal' }, engagement: { status: 'engaged', dealtDamage: null },
+    });
   });
 });

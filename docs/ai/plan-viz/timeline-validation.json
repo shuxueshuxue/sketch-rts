@@ -5,7 +5,7 @@
     0,
     18000
   ],
-  "baselineDirectory": "/codegeex/jeffry/sketch-rts-defense/runs/mvg8usdr-e3f0b0/death-ledger/ui-twoShores",
+  "baselineDirectory": "/codegeex/jeffry/sketch-rts-defense/runs/mvg8usdr-e3f0b0/death-ledger-v2-4407d152/ui-twoShores",
   "controlSummary": "/codegeex/jeffry/sketch-rts-defense/runs/mvg8usdr-e3f0b0/death-ledger/twoShores/A1/summary.json",
   "observerEquivalence": {
     "producer": "Codex 37, ai-death-ledger-baseline.ts",
@@ -25,18 +25,20 @@
     "passed": true,
     "errors": [],
     "combatDeaths": 35,
-    "normal": 2,
-    "abnormal": 33,
+    "normal": 16,
+    "abnormal": 16,
     "excludedLiveExpirations": 33,
     "exactBuildingLossTicks": [
       5383,
       7236
-    ]
+    ],
+    "suspicious": 2,
+    "unattributed": 1
   },
   "tests": {
     "command": "npx vitest run src/ai/plan-trace-history.test.ts src/ai/plan-viz-ledger.test.ts src/ai/plan-trace.test.ts src/ai/planner-context.test.ts src/sdk/package-boundaries.test.ts --maxWorkers 1 --minWorkers 1",
     "files": 5,
-    "passed": 37,
+    "passed": 41,
     "typecheck": true,
     "build": "npm run build passed"
   },
@@ -52,86 +54,63 @@
       18000
     ],
     "aiLanes": 4,
-    "fullViewGoalBands": 68,
-    "rangeSelection": {
-      "from": [
-        0,
-        18000
-      ],
-      "to": [
-        3137,
-        10327
-      ],
-      "actualPointerDrag": true
+    "visibleDeathBuckets": {
+      "normal": 16,
+      "suspicious": 2,
+      "abnormal": 16,
+      "unattributed": 1
     },
-    "pan": {
-      "from": [
-        3137,
-        10327
+    "normalExample": {
+      "tick": 10326,
+      "unit": "unit-p2-footman-1073",
+      "primary": "combat-loss",
+      "tags": [
+        "retreat-or-treatment",
+        "retreat-failed"
       ],
-      "to": [
-        4181,
-        11371
-      ],
-      "spanPreserved": true
+      "v1Disposition": "abnormal",
+      "v2Disposition": "normal",
+      "dealtDamage": null
     },
-    "navigationResize": {
-      "from": [
-        4181,
-        11371
+    "suspiciousExample": {
+      "tick": 14892,
+      "unit": "unit-p2-raider-10500",
+      "primary": "recent-reassignment",
+      "tags": [
+        "recent-reassignment",
+        "logistics-transit"
       ],
-      "to": [
-        4181,
-        12613
-      ],
-      "startPreserved": true
+      "markerShape": "diamond",
+      "markerColor": "brass"
     },
-    "navigationPan": {
-      "from": [
-        4181,
-        12613
-      ],
-      "to": [
-        2916,
-        11348
-      ],
-      "spanPreserved": true
-    },
-    "phaseClick": {
-      "tick": 6937,
-      "mapTime": "5:46",
-      "reason": "mine-threat",
-      "tooltip": "5:46—6:04 / 18秒"
-    },
-    "explicitGoalOutcome": {
-      "tick": 9630,
-      "status": "abandoned",
-      "source": "landAttackResult",
-      "reason": "withdrew"
-    },
-    "abnormalDeath": {
+    "abnormalExample": {
       "tick": 3351,
       "unit": "unit-p1-footman-1090",
-      "classification": "retreat-or-treatment",
-      "routeCount": 1,
-      "unrelatedIntentRoutes": 0
+      "primary": "neutral-outside-clearing",
+      "tags": [
+        "retreat-or-treatment",
+        "neutral-outside-clearing",
+        "outmatched"
+      ],
+      "markerShape": "filled-circle",
+      "markerGlyph": "!"
     },
-    "normalDeath": {
-      "tick": 9789,
-      "unit": "unit-p2-spirit-4457",
-      "classification": "accepted-engagement"
+    "unattributedExample": {
+      "tick": 17795,
+      "unit": "unit-p0-emberRavager-1095",
+      "primary": "unattributed",
+      "engagement": "unknown",
+      "notFoldedIntoAbnormal": true
     },
-    "buildingLoss": {
-      "tick": 5383,
-      "hp": -20,
-      "evidence": "nonpositive-hp-and-native-removal",
-      "killer": null
-    },
-    "fullEventList": 37,
-    "eventListClickTick": 3510,
-    "playPause": {
-      "beforeTick": 5383,
-      "afterTick": 6727
+    "mainCategoryAndAllChildTagsShown": true,
+    "engagementEvidenceAndMissingOutgoingDamageShown": true,
+    "suspiciousMapMarkerActualClick": true,
+    "fullWindowUnattributedActualClick": true,
+    "adjacentLossMarksAutoStack": true,
+    "phaseClick": {
+      "tick": 6937,
+      "reason": "mine-threat",
+      "durationSeconds": 18
     },
     "visibility": {
       "soloDefault": false,
@@ -140,11 +119,9 @@
         "markers",
         "routes",
         "lanes",
-        "events",
         "shortcuts",
         "attribution"
       ],
-      "soloOnLanes": 4,
       "onlineOwners": [
         "p0"
       ],
@@ -153,11 +130,12 @@
         "p2",
         "p3"
       ],
-      "onlineShortcuts": [
-        "goal-interrupted",
-        "building:building-p0-defenseTower-2200:5383"
-      ],
-      "postmatchReplayLanes": 4
+      "postmatchReplayOwners": [
+        "p0",
+        "p1",
+        "p2",
+        "p3"
+      ]
     },
     "horizontalOverflow": false,
     "consoleErrorsSinceFinalNavigation": 0,
@@ -165,36 +143,59 @@
   },
   "screenshots": {
     "preview-timeline-abandoned.webp": {
-      "sha256": "66c62448d042f2d7832fa6fa377d592355a98f571cb9be059941d598c9813ab2",
+      "sha256": "249cc810a12a7333cf049de1a96ddb7593235d8b37dbfad877f164425ea80bbf",
       "individuallyReviewed": true
     },
     "preview-timeline-building.webp": {
-      "sha256": "10f34210359e163c99b270d5e73346779f979bf0eb09025113c86aec6f5f6427",
+      "sha256": "4939dd6d1e246da4d05d60f056c8a0f980c8b2e0d48293e9dbac31eab17901e8",
       "individuallyReviewed": true
     },
     "preview-timeline-death.webp": {
-      "sha256": "bac4d478fdfb1b41be3d27431615860c1afd568edd61be029bcaeebd2d56bc7f",
+      "sha256": "a8cc69b7091b4974cbc9db79c85a0dc603a3e97a01c60dac4c0a37aa5f2057a2",
       "individuallyReviewed": true
     },
     "preview-timeline-defense.webp": {
-      "sha256": "08d0ae03c9463db41c6c574eb6e4423a48d3d3e0fd59c65a67e41fa65d31bc8c",
+      "sha256": "2cae0d355f8b8dd319a37c9ec598955fb3e09a0052752a5f1be2fafbd159d226",
       "individuallyReviewed": true
     },
     "preview-timeline-normal.webp": {
-      "sha256": "7ce20071a78c490df455c38870dece63baf2a45dfc999675502782561cd66666",
+      "sha256": "e59064e88707f9a49626dfd5b3b611fd14a1ef13636e3fbdd2dd93a91fe3c2ad",
       "individuallyReviewed": true
     },
     "preview-timeline-overview.webp": {
-      "sha256": "5ee7c715d92a48625d1d8bbe3dac8414485cf5b4f111d7e15767b9dfb3713bc6",
+      "sha256": "c75c3ce61535dfd94bb0152569217e6c105c6e2ed9dae007fc3835504e7b1bd6",
+      "individuallyReviewed": true
+    },
+    "preview-timeline-suspicious.webp": {
+      "sha256": "ec7261ba86ebf8311855a7fd671b2f44af1b9af511f2fa11d8c147de1dbc91d0",
+      "individuallyReviewed": true
+    },
+    "preview-timeline-unattributed.webp": {
+      "sha256": "73903f66e78fb8aa777050f8b473879246ab1313d691edc5882021f15f16dad3",
       "individuallyReviewed": true
     }
   },
   "evidenceArchive": {
     "machine": "a100",
-    "sha256": "8dae90fbca47850ea1608aecdd4388652400094ecc54b1673934dc809d379e1b",
-    "directory": "/codegeex/jeffry/sketch-rts-evidence/sha256/8dae90fbca47850ea1608aecdd4388652400094ecc54b1673934dc809d379e1b",
-    "pointerCommit": "46a08b3b181c85f96ed5713291bcd481faf00515",
-    "pointerPath": "docs/ai/objectives/death-ledger-baseline.evidence.json",
-    "providedBy": 561
-  }
+    "sha256": "83be3140b8e3fc496474096278ed2021da4bf7b7983ada8a204a9c2ff736e341",
+    "directory": "/codegeex/jeffry/sketch-rts-evidence/sha256/83be3140b8e3fc496474096278ed2021da4bf7b7983ada8a204a9c2ff736e341",
+    "pointerPath": "docs/ai/objectives/death-ledger-v2.evidence.json",
+    "providedBy": 561,
+    "pointerCommit": "24e974d8b50c37dafc477012c3c849a746c83292"
+  },
+  "classificationSourceCommit": "4407d1522301537b652ba64f9dc09f794e223149",
+  "classificationVersion": 2,
+  "classificationMode": "offline-reclassification-no-simulation",
+  "rawObservationSha256": "d2ce40e8c5adf6098ec9c1b5415116c84aa65d4002123d2cd36513abcd36d7ca",
+  "rawObservationHashesMatch": true,
+  "unchangedWorldFileSha256": {
+    "initial.json": "f646c0d8cfc309aa970a07cab77d255ce1c1893b2d465769601f16fcf9fced71",
+    "final.json": "0656d1c45ff7ae44a112e912e0ccd9d53fb820dc2250e7d4f0e8af24108f3ee9",
+    "worlds.jsonl.gz": "753d13783d1264cbab7e5f8b03e0a04167d9eb04cde5da96e1c14e35c12ae6d0",
+    "building-losses.jsonl.gz": "f99235eb0ed26e7e05a6baad1467004c9435fbd891f4f9dabe2e5553d32cba1a"
+  },
+  "originalV1RecordsCompared": 68,
+  "originalV1ClassificationsUnchanged": true,
+  "originalRawRecordsUnchanged": true,
+  "verificationBaseCommit": "24e974d8b50c37dafc477012c3c849a746c83292"
 }

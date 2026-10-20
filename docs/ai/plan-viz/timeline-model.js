@@ -9,6 +9,27 @@ function at(rows, tick) {
 function allowed(mode, solo, own, owners) {
  return mode==='solo'&&!solo?[]:mode==='online'?[own]:[...owners];
 }
+const deathClasses={
+ normal:{id:'normal',label:'战损（正常）',glyph:'×',color:'var(--green)'},
+ suspicious:{id:'suspicious',label:'存疑',glyph:'?',color:'var(--brass)'},
+ abnormal:{id:'abnormal',label:'异常',glyph:'!',color:'var(--red)'},
+ unattributed:{id:'unattributed',label:'未归因',glyph:'·',color:'var(--muted)'},
+};
+function deathClass(disposition){return deathClasses[disposition]||{id:'unknown',label:'分类未知',glyph:'·',color:'var(--muted)'};}
+function deathCounts(events){
+ const counts={normal:0,suspicious:0,abnormal:0,unattributed:0,unknown:0};
+ for(const e of events)if(e.type==='death')counts[deathClass(e.attribution?.disposition).id]++;
+ return counts;
+}
+function lossRows(events,span,width){
+ const tails=[],gap=span*20/Math.max(1,width);
+ const placements=[...events].sort((a,b)=>a.tick-b.tick).map(event=>{
+  let row=tails.findIndex(tick=>event.tick-tick>=gap);
+  if(row<0){row=tails.length;tails.push(event.tick);}else tails[row]=event.tick;
+  return {event,row};
+ });
+ return {placements,rows:Math.max(1,tails.length)};
+}
 function related(trace, id, seen=new Set()) {
  if(seen.has(id))return [];seen.add(id);
  const node=trace?.nodes.find(n=>n.id===id);
@@ -73,5 +94,5 @@ function arrival(history, unitId, tick, claim) {
  const prior=rows.filter(t=>t.tick<first.tick).some(t=>t.claims?.some(c=>same(c)&&c.arrived===false));
  return {tick:first.tick,beforeObservation:!prior};
 }
-window.PLAN_TIMELINE_MODEL={at,allowed,related,bands,arrival,assignedClaim,phase,fitWindow,zoomWindow,panWindow,phaseLabels};
+window.PLAN_TIMELINE_MODEL={at,allowed,related,bands,arrival,assignedClaim,phase,fitWindow,zoomWindow,panWindow,phaseLabels,deathClass,deathCounts,lossRows};
 })();
