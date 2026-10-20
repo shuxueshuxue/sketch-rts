@@ -259,7 +259,13 @@ export const defenseMethodProvider: AllocationMethodProvider = {
       { code: 'combat-attrition', value: discountedValue(combatGold, latest, window), catalogUnitValues: sumUnitValues(combatUnitValues) },
       { code: 'voyage-hull-and-passengers', value: discountedValue(voyageCost.expectedLossGold, latest, window), catalogUnitValues: voyageUnitValues },
       ...(opportunity?.status === 'known' ? [{ code: 'bundle-opportunity', value: opportunity.gold }] : [])];
-    const probability = evacuation ? cohort.length ? (stationed.length + transitSurvival * enRoute.length) / cohort.length : 0
+    // Rescued assets are additive: another hull sinking does not erase a
+    // person who reaches refuge. A shore waiter needs both approach and loaded
+    // legs to succeed, whereas a person already at refuge has arrived for sure.
+    const expectedSavedGold = savedUnitValues.reduce((sum, entry) => sum + entry.valueGold
+      * (stationed.includes(entry.unitId) ? 1 : voyages.passengerArrivalProbabilities.get(entry.unitId) ?? 1), 0);
+    const savedValueGold = savedUnitValues.reduce((sum, entry) => sum + entry.valueGold, 0);
+    const probability = evacuation ? savedValueGold ? expectedSavedGold / savedValueGold : 0
       : transitSurvival * (protection?.successProbability ?? 0) + (1 - transitSurvival) * (noArrivalProtection?.successProbability ?? 0);
     const persistenceBonus = objective.utility.persistenceBonus;
     const utility: AllocationUtility = { horizonTicks: window.horizonTicks, benefit, cost,
