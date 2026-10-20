@@ -11,11 +11,14 @@ import type { AiScriptVersion } from '../src/shared/types';
 // command boundary and delivery delay stay intact; observation lives outside Game.
 const args = process.argv.slice(2), root = resolve(requiredFlag(args, 'source-root'));
 const mode = flag(args, 'mode') ?? 'large', output = requiredFlag(args, 'out');
-const ticks = Number(flag(args, 'ticks') ?? (mode === 'map' ? 18000 : 900));
+const ticks = Number(flag(args, 'ticks') ?? (mode === 'ocean' ? 30000 : mode === 'map' ? 18000 : 900));
+const measureFromTick = Number(flag(args, 'measure-from') ?? 0);
+const measureUntilTick = Number(flag(args, 'measure-until') ?? Infinity);
 const observe = flag(args, 'observe') !== 'false';
 const load = (path: string) => import(pathToFileURL(resolve(root, 'src', path)).href);
 const sim = await load('shared/sim.ts'), runtimeModule = await load('ai/runtime.ts');
 const { poolMap } = await load('shared/map-pool.ts');
+const { unitMover } = await load('shared/catalog.ts');
 const { isOpenGround, sameGround } = await load('shared/terrain.ts');
 const { checksumGame } = await load('shared/sim/checksum.ts');
 const { CommandFrameRuntime, normalizeCommandFrameEntries } = await load('shared/sim/command-frame-runtime.ts');
@@ -43,6 +46,14 @@ if (mode === 'large') {
       ...point, order: { type: 'attackMove' as const, ...centre } }));
   });
   game = sim.createGame('templeSpring', { ...setup, scenario: { players: Object.fromEntries(players.map(owner => [owner, { gold: 20000 }])), addUnits } });
+} else if (mode === 'ocean') {
+  const config = JSON.parse(readFileSync(requiredFlag(args, 'case'), 'utf8'));
+  aiPlayers = Object.keys(config.agents);
+  versions = Object.fromEntries(aiPlayers.map(owner => [owner, config.agents[owner].version]));
+  game = sim.createGame(config.mapId, { ...config.options, players: aiPlayers, aiPlayers,
+    teams: Object.fromEntries(aiPlayers.map(owner => [owner, config.agents[owner].team])),
+    races: Object.fromEntries(aiPlayers.map(owner => [owner, config.agents[owner].race])) });
+  for (const unit of game.units) if (aiPlayers.includes(unit.owner)) delete unit.guardPosition;
 } else if (mode === 'late') {
   const fixture = JSON.parse(readFileSync(requiredFlag(args, 'snapshot'), 'utf8')), snapshot = fixture.snapshot;
   const players = Object.keys(snapshot.players); aiPlayers = players.slice(1);
@@ -66,6 +77,7 @@ if (mode === 'late') {
 sim.warmGameCaches(game);
 const commandsHash = createHash('sha256'), traceHash = createHash('sha256'), previous = new Map();
 const planned = new Map(), thinkSamples: number[] = [], timeline: unknown[] = [];
+const timedFrames: { tick: number; owners: string[]; ms: number; units: number; ships: number; yards: number }[] = [];
 const executor = {
   submit(current: Game, job: { tick: number; deliveryTick: number; requests: any[] }, check: (commands: any[]) => void) {
     const start = performance.now(), snapshot = sim.snapshotGame(current);
@@ -77,7 +89,11 @@ const executor = {
     });
     const commands = normalizeCommandFrameEntries(entries).map((entry: any) => ({ playerId: entry.playerId, command: entry.command }));
     check(commands);
-    thinkSamples.push(performance.now() - start);
+    const elapsed = performance.now() - start;
+    thinkSamples.push(elapsed);
+    timedFrames.push({ tick: job.tick, owners: job.requests.map(request => request.playerId), ms: elapsed,
+      units: snapshot.units.length, ships: snapshot.units.filter(unit => unitMover(unit.kind) === 'sea').length,
+      yards: snapshot.buildings.filter(building => building.kind === 'shipyard' && building.hp > 0).length });
     commandsHash.update(JSON.stringify({ tick: job.tick, commands }));
     if (commands.length) planned.set(job.deliveryTick, [...(planned.get(job.deliveryTick) ?? []), ...commands]);
     for (const request of job.requests) {
@@ -97,6 +113,8 @@ const runtime = new CommandFrameRuntime({ game, roomId: 'strategy-audit', reject
 const initialChecksum = checksumGame(game), startTick = game.tick, cpu = process.cpuUsage();
 for (let tick = 0; tick < ticks && !game.match.winner; tick++) runtime.tick();
 const used = process.cpuUsage(cpu), sorted = [...thinkSamples].sort((a, b) => a - b);
+if (!timedFrames.length) throw new Error('No AI think samples: check seat/controller setup before measuring');
+const windowSamples = timedFrames.filter(sample => sample.tick >= measureFromTick && sample.tick < measureUntilTick).map(sample => sample.ms).sort((a, b) => a - b);
 const result = { sourceRoot: root, mode, observe, host: hostname(), cpu: cpus()[0]?.model, node: process.version, started,
   affinity: readFileSync('/proc/self/status', 'utf8').match(/Cpus_allowed_list:\s*([^\n]+)/)?.[1],
   map: game.map.id, startTick, finalTick: game.tick, initialChecksum, finalChecksum: checksumGame(game),
@@ -105,6 +123,9 @@ const result = { sourceRoot: root, mode, observe, host: hostname(), cpu: cpus()[
   cpuMs: (used.user + used.system) / 1000, thinkMs: { n: sorted.length,
     mean: sorted.reduce((a, b) => a + b, 0) / sorted.length,
     p50: sorted[Math.floor(sorted.length * .5)], p95: sorted[Math.floor(sorted.length * .95)], max: sorted.at(-1) },
-  thinkSamples, timeline };
+  measurement: { fromTick: measureFromTick, untilTick: Number.isFinite(measureUntilTick) ? measureUntilTick : null,
+    thinkMs: { n: windowSamples.length, mean: windowSamples.reduce((a, b) => a + b, 0) / Math.max(1, windowSamples.length),
+      p50: windowSamples[Math.floor(windowSamples.length * .5)], p95: windowSamples[Math.floor(windowSamples.length * .95)], max: windowSamples.at(-1) } },
+  thinkSamples, timedFrames, timeline };
 writeFileSync(output, JSON.stringify(result));
-console.log(JSON.stringify({ out: output, ...result, thinkSamples: undefined, timeline: undefined }));
+console.log(JSON.stringify({ out: output, ...result, thinkSamples: undefined, timedFrames: undefined, timeline: undefined }));

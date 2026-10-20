@@ -664,22 +664,32 @@ function growBox(state: TerrainRuntime, box: Box, seeds: number[], costs?: numbe
   return growBoxInto(state, box, seeds, costs, { dist: new Int32Array(size), next: new Int32Array(size) });
 }
 
-function growBoxInto(state: TerrainRuntime, box: Box, seeds: number[], costs: number[] | undefined, arrays: Pick<Field, 'dist' | 'next'>): BoxField {
+type BoxFlow = { state: TerrainRuntime; box: Box; dist: Int32Array; next: Int32Array; buckets: number[][];
+  order: number[]; seeds: number[]; costs: number[] | undefined; seeded: number; pending: number; cost: number; work: number };
+function beginBoxFlow(state: TerrainRuntime, box: Box, seeds: number[], costs: number[] | undefined,
+  arrays: Pick<Field, 'dist' | 'next'>, buckets: number[][]): BoxFlow {
+  arrays.dist.fill(UNREACHED); arrays.next.fill(UNKNOWN);
+  const order = seeds.map((_, index) => index);
+  if (costs) order.sort((a, b) => costs[a]! - costs[b]! || a - b);
+  return { state, box, ...arrays, buckets, order, seeds, costs, seeded: 0, pending: 0, work: 0,
+    cost: costs && order.length ? costs[order[0]!]! : 0 };
+}
+function growBoxInto(state: TerrainRuntime, box: Box, seeds: number[], costs: number[] | undefined, arrays: Pick<Field, 'dist' | 'next'>, resume?: BoxFlow, workBudget = Infinity): BoxField {
   const { walk, offsets, width, weight } = state;
   const columns = box.width;
   const rows = box.height;
   const localOffsets = [1, columns, -1, -columns, columns + 1, columns - 1, -columns - 1, -columns + 1];
   const origin = box.top * width + box.left;
   const { dist, next } = arrays;
-  dist.fill(UNREACHED);
-  next.fill(UNKNOWN);
-  const buckets = state.boxBuckets;
-  const order = seeds.map((_, index) => index);
-  if (costs) order.sort((a, b) => costs[a]! - costs[b]! || a - b);
+  if (!resume) { dist.fill(UNREACHED); next.fill(UNKNOWN); }
+  const buckets = resume?.buckets ?? state.boxBuckets;
+  const order = resume?.order ?? seeds.map((_, index) => index);
+  if (costs && !resume) order.sort((a, b) => costs[a]! - costs[b]! || a - b);
   const costOf = (index: number) => (costs ? costs[order[index]!]! : 0);
-  let seeded = 0;
-  let pending = 0;
-  for (let cost = order.length > 0 ? costOf(0) : 0; pending > 0 || seeded < order.length; cost += 1) {
+  let seeded = resume?.seeded ?? 0, pending = resume?.pending ?? 0, work = 0;
+  let cost = resume?.cost ?? (order.length > 0 ? costOf(0) : 0);
+  flow: for (; pending > 0 || seeded < order.length; cost += 1) {
+    if (resume && work >= workBudget) break;
     if (pending === 0) cost = costOf(seeded);
     for (; seeded < order.length && costOf(seeded) === cost; seeded += 1) {
       const index = local(box, seeds[order[seeded]!]!, width);
@@ -690,6 +700,8 @@ function growBoxInto(state: TerrainRuntime, box: Box, seeds: number[], costs: nu
     }
     const bucket = buckets[cost % BUCKETS]!;
     while (bucket.length > 0) {
+      if (resume && work >= workBudget) break flow;
+      if (resume) work++;
       const index = bucket.pop()!;
       pending -= 1;
       if (dist[index] !== cost) continue;
@@ -729,6 +741,7 @@ function growBoxInto(state: TerrainRuntime, box: Box, seeds: number[], costs: nu
       }
     }
   }
+  if (resume) { resume.seeded = seeded; resume.pending = pending; resume.cost = cost; resume.work = work; }
   return { box, dist, next };
 }
 
@@ -1258,17 +1271,23 @@ export function groundTravelCost(map: Pick<GameMap, 'terrain'>, from: Point, goa
 export type GroundDistanceField = Readonly<{
   /** Weighted eight-neighbour grid forecast, not a traced/smoothed steering road. */
   cost(from: Point): number | undefined;
+  /** Smoothed descent of this same field; does not start a second route search. */
+  road(from: Point, goal: Point): readonly Point[] | undefined;
 }>;
 const distanceFields = new WeakMap<TerrainRuntime, { revision: number; fields: Map<number, GroundDistanceField> }>();
+const pendingDistanceFields = new WeakMap<TerrainRuntime, { revision: number; jobs: Map<number, BoxFlow> }>();
 
 /** One building-aware goal field serves every actor. Uses the same footprint
  * overlay, goal seeds, no-corner-cut steps and pace weights as native steering.
  * A geometry revision discards the old field; peek never builds one. */
 export function groundDistanceField(map: Pick<GameMap, 'terrain'>, goal: Point, peek = false): GroundDistanceField | undefined {
+  return moverDistanceField(map, goal, 'land', peek);
+}
+export function moverDistanceField(map: Pick<GameMap, 'terrain'>, goal: Point, mover: Mover, peek = false): GroundDistanceField | undefined {
   const terrain = map.terrain;
-  if (!terrain) return { cost: from => Math.hypot(from.x - goal.x, from.y - goal.y) };
-  const state = routing(map, terrain, 'land'), ground = runtime(terrain, 'land');
-  const target = padAt(state, goal.x, goal.y), revision = groundRevision(map);
+  if (!terrain) return { cost: from => Math.hypot(from.x - goal.x, from.y - goal.y), road: (from, goal) => [from, goal] };
+  const state = routing(map, terrain, mover), ground = runtime(terrain, mover);
+  const target = padAt(state, goal.x, goal.y), revision = mover === 'land' ? groundRevision(map) : 0;
   if (target < 0 || ground.walk[target] !== 1) return undefined;
   let cache = distanceFields.get(state);
   if (cache?.revision !== revision) distanceFields.set(state, cache = { revision, fields: new Map() });
@@ -1277,16 +1296,78 @@ export function groundDistanceField(map: Pick<GameMap, 'terrain'>, goal: Point, 
   const box = { left: 0, top: 0, width: state.width, height: state.walk.length / state.width };
   const { seeds, costs } = goalSeeds(state, ground, target, box);
   const field = growBox(state, box, seeds, costs), scale = terrain.cell / (STRAIGHT * GROUND_WEIGHT);
-  const answer: GroundDistanceField = { cost(from) {
-    let at = padAt(state, from.x, from.y);
-    if (at < 0 || ground.walk[at] !== 1) return undefined;
-    if (state.walk[at] !== 1) at = nearestWalkable(state, at);
-    if (at < 0 || field.dist[at]! >= UNREACHED) return undefined;
-    return field.dist[at]! * scale;
-  } };
+  const answer = distanceFieldAnswer(state, ground, field.dist, scale);
   if (cache.fields.size >= 64) cache.fields.delete(cache.fields.keys().next().value!);
   cache.fields.set(target, answer);
   return answer;
+}
+function distanceFieldAnswer(state: TerrainRuntime, ground: TerrainRuntime, dist: Int32Array, scale: number): GroundDistanceField {
+  const cellOf = (from: Point) => {
+    let at = padAt(state, from.x, from.y);
+    if (at < 0 || ground.walk[at] !== 1) return -1;
+    if (state.walk[at] !== 1) at = nearestWalkable(state, at);
+    return at < 0 || dist[at]! >= UNREACHED ? -1 : at;
+  };
+  let descent: BoxField | undefined;
+  return { cost(from) {
+    const at = cellOf(from);
+    return at < 0 ? undefined : dist[at]! * scale;
+  }, road(from, goal) {
+    let at = cellOf(from);
+    if (at < 0) return undefined;
+    if (clearSegment(state, from.x, from.y, goal.x, goal.y)) return [from, goal];
+    if (!descent) {
+      const next = new Int32Array(dist.length); next.fill(UNKNOWN);
+      descent = { box: { left: 0, top: 0, width: state.width, height: state.walk.length / state.width }, dist, next };
+    }
+    const cells: Point[] = [from];
+    for (let step = 0; step < dist.length; step++) {
+      const next = downhill(state, descent, at);
+      if (next < 0) break;
+      at = next; cells.push(centerOf(state, at));
+    }
+    if (clearSegment(state, cells.at(-1)!.x, cells.at(-1)!.y, goal.x, goal.y)) cells.push(goal);
+    const road = [from];
+    for (let index = 0; index < cells.length - 1;) {
+      let next = Math.min(cells.length - 1, index + LOOKAHEAD);
+      while (next > index + 1 && !clearSegment(state, cells[index]!.x, cells[index]!.y, cells[next]!.x, cells[next]!.y)) next--;
+      road.push(cells[next]!); index = next;
+    }
+    return road;
+  } };
+}
+
+/** Resume the same eight-neighbour weighted flow in a bounded number of queue
+ * removals. No partial distances escape: until complete, the caller gets unknown.
+ * Pending work is geometry-only and never enters snapshots or AI memory. */
+export function advanceMoverDistanceField(map: Pick<GameMap, 'terrain'>, goal: Point, mover: Mover, workBudget: number):
+  { field: GroundDistanceField | undefined; work: number } {
+  const known = moverDistanceField(map, goal, mover, true);
+  if (known || !map.terrain) return { field: known, work: 0 };
+  const terrain = map.terrain, state = routing(map, terrain, mover), ground = runtime(terrain, mover);
+  const target = padAt(state, goal.x, goal.y), revision = mover === 'land' ? groundRevision(map) : 0;
+  if (target < 0 || ground.walk[target] !== 1 || workBudget <= 0) return { field: undefined, work: 0 };
+  let pending = pendingDistanceFields.get(state);
+  if (pending?.revision !== revision) pendingDistanceFields.set(state, pending = { revision, jobs: new Map() });
+  let job = pending.jobs.get(target);
+  if (!job) {
+    const box = { left: 0, top: 0, width: state.width, height: state.walk.length / state.width };
+    const { seeds, costs } = goalSeeds(state, ground, target, box);
+    job = beginBoxFlow(state, box, seeds, costs, { dist: new Int32Array(state.walk.length), next: new Int32Array(0) },
+      Array.from({ length: BUCKETS }, () => []));
+    // Limit abandoned candidates' sidecar geometry, independently of game state.
+    if (pending.jobs.size >= 16) pending.jobs.delete(pending.jobs.keys().next().value!);
+    pending.jobs.set(target, job);
+  }
+  growBoxInto(state, job.box, job.seeds, job.costs, job, job, workBudget);
+  const work = job.work;
+  if (job.pending || job.seeded < job.order.length) return { field: undefined, work };
+  pending.jobs.delete(target);
+  const field = distanceFieldAnswer(state, ground, job.dist, terrain.cell / (STRAIGHT * GROUND_WEIGHT));
+  const cache = distanceFields.get(state)!;
+  if (cache.fields.size >= 64) cache.fields.delete(cache.fields.keys().next().value!);
+  cache.fields.set(target, field);
+  return { field, work };
 }
 
 // @@@ground-wholes - A mover's cells fall into wholes, each joined by its walks and cut off from every other: an island's
@@ -1319,6 +1400,25 @@ export function groundWholeAt(map: Pick<GameMap, "terrain">, point: Point, mover
 export function groundWholeAnchors(map: Pick<GameMap, 'terrain'>, mover: Mover = 'land') {
   if (!map.terrain) return [{ label: 1, point: { x: 0, y: 0 } }];
   return wholesOf(runtime(map.terrain, mover)).anchors.map((point, index) => ({ label: index + 1, point: { ...point } }));
+}
+
+/** Land/water contacts from the original component labels. Shallow cells can
+ * belong to both movers; sea-only cells meet land through cardinal neighbours.
+ * This is landing geometry, not a shipyard footprint or a hull passage test. */
+export function groundShoreContacts(map: Pick<GameMap, 'terrain'>, firstRow: number, endRow: number) {
+  const contacts: { land: number; sea: number; ground: Point; water: Point }[] = [];
+  if (!map.terrain) return contacts;
+  const land = runtime(map.terrain, 'land'), sea = runtime(map.terrain, 'sea');
+  const lands = wholesOf(land).labels, seas = wholesOf(sea).labels, { width, terrain } = land;
+  for (let row = Math.max(0, firstRow); row < Math.min(endRow, terrain.rows); row++) for (let col = 0; col < terrain.cols; col++) {
+    const at = (row + 1) * width + col + 1, seaLabel = seas[at]!;
+    if (!seaLabel) continue;
+    const water = { x: (col + .5) * terrain.cell, y: (row + .5) * terrain.cell };
+    if (lands[at]) contacts.push({ land: lands[at]!, sea: seaLabel, ground: water, water });
+    else for (const step of [-1, 1, -width, width]) if (lands[at + step]) contacts.push({
+      land: lands[at + step]!, sea: seaLabel, ground: centerOf(land, at + step), water });
+  }
+  return contacts;
 }
 
 function wholesOf(state: TerrainRuntime) {

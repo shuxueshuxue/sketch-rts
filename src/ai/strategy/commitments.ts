@@ -19,7 +19,7 @@ export function unitRoles(unit: Unit): UnitRole[] {
 /** Project every retained ownership source, including overlaps. No expiring,
  * releasing, refreshing claims or assigning troops in this observation pass. */
 export function unitCommitments(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory, unit: Unit,
-  recovery?: { postId: string; walk: boolean }, mobileHealing = false): Commitment[] {
+  recovery?: { postId: string; walk: boolean }, mobileHealing = false, acceptedHealingExecutor?: string): Commitment[] {
   if (unit.owner !== owner) return [];
   const results: Commitment[] = [], role = unitRoles(unit)[0]!;
   const add = (source: string, taskId: string, kind?: ObjectiveKind, targetId?: string) => results.push({
@@ -48,7 +48,10 @@ export function unitCommitments(snapshot: GameSnapshot, owner: PlayerId, memory:
     if (task?.unitId === unit.id) add(source, source);
   if (recovery) add('frontRecovery.postRecoveryAssignments', `healing:${recovery.postId}:${recovery.walk ? 'walking' : 'recovering'}`);
   if (mobileHealing) add('mobileCare.claimsUnits', `mobileCare:${unit.id}`);
-  if (unit.order.type === 'follow') {
+  if (acceptedHealingExecutor) results.push({ source: `${acceptedHealingExecutor}.accepted-plan`, taskId: `healing:${unit.id}`,
+    objectiveId: null, role, evidence: { source: `${acceptedHealingExecutor}.accepted-plan`, tick: snapshot.tick, certainty: 'recorded',
+      detail: 'Healing order accepted in this plan; delivery is separate from the unit current order' } });
+  if (unit.order.type === 'follow' && unit.hp < unit.maxHp) {
     const targetId = unit.order.targetId;
     if (snapshot.units.some(healer => healer.id === targetId && ['priest', 'fieldMedic'].includes(healer.kind)))
       add('mobileCare.inferred-order', `healing:${targetId}`);

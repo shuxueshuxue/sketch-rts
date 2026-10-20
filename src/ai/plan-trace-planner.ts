@@ -27,10 +27,12 @@ export function planAiOwnerCommandEntriesWithTrace<Source extends string = strin
       provider?.set?.(owner, value);
     },
   };
-  const commands = planAiOwnerCommandEntries(snapshot, request, { ...plannerOptions, memoryProvider, observeBootstrapPlan(context) {
-    options.observeBootstrapPlan?.(context);
+  const commands = planAiOwnerCommandEntries(snapshot, request, { ...plannerOptions, memoryProvider, observeBootstrapPlan(context, entries) {
+    options.observeBootstrapPlan?.(context, entries);
     memory = context.memory;
-    strategy = buildStrategyPlanTrace(snapshot, request.playerId, context, previous?.strategy, families);
+    const healing = entries.flatMap(entry => ['mobileCare', 'frontRecovery'].includes(entry.scriptId ?? '') && 'unitIds' in entry.command
+      ? entry.command.unitIds.map(unitId => ({ unitId, executor: entry.scriptId! })) : []);
+    strategy = buildStrategyPlanTrace(snapshot, request.playerId, context, previous?.strategy, families, { healing });
   } });
   const observedMemory = memory ?? createAiPolicyMemory();
   deathLedger?.recordThink(snapshot, request.playerId, observedMemory);

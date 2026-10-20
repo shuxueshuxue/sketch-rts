@@ -1,49 +1,43 @@
 import { BUILDING_DEFS, UNIT_DEFS, unitMover } from '../../shared/catalog';
 import { GANGWAY_SETUP_TICKS } from '../../shared/ship-gangway';
-import { shipMotionLimits } from '../../shared/ship-handling';
-import { shareShipProfile } from '../../shared/ship-geometry';
-import { coursePerformance } from '../../shared/ship-wind';
-import { groundSteeringRoute } from '../../shared/route-selection';
-import { steerPoint, walkableGoal, walkingDistance, type Terrain } from '../../shared/terrain';
+import { walkableGoal } from '../../shared/terrain';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { isTransportKind } from '../../shared/transport-role';
 import type { GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import type { AiPolicyMemory } from '../memory';
 import { distance } from '../policy/spatial';
 import { createPlanningDistanceQuery } from './distance-fields';
+import { createSeaTravelQuery } from './sea-travel';
 import { landIdAt, regionIndex, seaIdAt, type RegionIndex, type Shore } from './regions';
-import type { Arrival, CrossingEta, Evidence, Point, Reason, Target } from './types';
+import type { Arrival, CrossingEta, Evidence, Point, Reason, Target, LandId, SeaId } from './types';
 
 const evidence = (tick: number, source: string, detail: string): Evidence => ({ tick, source, detail, certainty: 'inferred' });
 const unavailable = (code: string, detail: string): Arrival => ({ status: 'unreachable', reason: { code, detail, evidence: [] } });
-const angleGap = (a: number, b: number) => Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b)));
-const seaGeometry = new WeakMap<Terrain, Map<string, readonly Point[] | undefined>>();
-const futureVoyages = new WeakMap<Terrain, Map<string, number>>();
+type CrossingChoice = { from: Shore; to: Shore; afterCost: number; readyTicks: number;
+  crossing: Omit<CrossingEta, 'waitTicks'>; unmet: readonly Reason[] };
 
 /** One think's reusable route queries. Durations are forecasts of stated routes,
  * not promises that body avoidance, combat or a future build will finish on time. */
 export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory,
   distances = createPlanningDistanceQuery(snapshot), seaBuildBudget = Infinity, regions: RegionIndex = regionIndex(snapshot.map)) {
   const byId = new Map(snapshot.units.map(unit => [unit.id, unit]));
-  const answers = new Map<string, Arrival>(), seaTimes = new Map<string, number | undefined>();
+  const answers = new Map<string, Arrival>();
   const landTimes = new Map<string, number | undefined>();
   const landAges = new Map<string, number>(), pendingLand = new Set<string>();
   const ferries = memory.naval?.ferries ?? {};
-  const shoresByLand = new Map<string, Map<string, Shore[]>>();
+  const shoresByLand = regions.shoresByLand;
   const nearestCache = new WeakMap<readonly Shore[], Map<string, readonly Shore[]>>();
   const departuresByRegion = new Map<string, readonly Shore[]>();
+  const seaTravel = createSeaTravelQuery(snapshot, seaBuildBudget);
+  const crossingTables = new Map<string, { choices: CrossingChoice[]; pending: boolean; ages: number[] }>();
   let pendingGeometry = false;
-  let builtSeaTables = 0;
   const usedFieldTicks = new Set<number>();
-  for (const shore of regions.shores) {
-    let seas = shoresByLand.get(shore.landId);
-    if (!seas) shoresByLand.set(shore.landId, seas = new Map());
-    const entries = seas.get(shore.seaId) ?? [];
-    if (!seas.has(shore.seaId)) seas.set(shore.seaId, entries);
-    entries.push(shore);
-  }
-  const reason = (code: string, detail: string): Reason => ({ code, detail,
-    evidence: [evidence(snapshot.tick, 'strategy.arrivals', detail)] });
+  const reasons = new Map<string, Reason>();
+  const reason = (code: string, detail: string): Reason => {
+    const key = `${code}:${detail}`; let value = reasons.get(key);
+    if (!value) reasons.set(key, value = { code, detail, evidence: [evidence(snapshot.tick, 'strategy.arrivals', detail)] });
+    return value;
+  };
 
   function landTime(unit: Unit, point: Point): number | undefined {
     const key = `${unit.id}:${unit.x}:${unit.y}:${unit.speed}:${point.x}:${point.y}`;
@@ -63,77 +57,10 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
   }
 
   function seaTime(ship: Unit, from: Point, to: Point, future = false): number | undefined {
-    if (distance(from, to) <= 1e-7) return 0;
-    const key = `${ship.id}:${from.x}:${from.y}:${to.x}:${to.y}:${future}`;
-    if (seaTimes.has(key)) return seaTimes.get(key);
-    const limits = shipMotionLimits(ship);
-    if (!(limits.speed > 0) || !(limits.turnRate > 0)) { seaTimes.set(key, undefined); return; }
-    const fixedOrigin = future || from.x !== ship.x || from.y !== ship.y;
-    const pose = { ...ship };
-    shareShipProfile(ship, pose);
-    const speedFor = (course: number) => {
-      const wind = coursePerformance(pose, snapshot.map, course, { assumeTrimmed: true });
-      return wind.noGo ? Math.max(wind.auxiliarySpeed,
-        coursePerformance(pose, snapshot.map, course + wind.beatAngle, { assumeTrimmed: true }).targetSpeed * Math.cos(wind.beatAngle),
-        coursePerformance(pose, snapshot.map, course - wind.beatAngle, { assumeTrimmed: true }).targetSpeed * Math.cos(wind.beatAngle))
-        : Math.max(wind.auxiliarySpeed, wind.targetSpeed);
-    };
-    if (!fixedOrigin) {
-      // A live hull queries one destination field. Do not trace its whole road
-      // for each candidate passenger. The initial course samples the hull polar;
-      // future dock-to-dock legs below retain their full course table.
-      const length = walkingDistance(snapshot.map, from, to, 'sea');
-      if (length === undefined) { seaTimes.set(key, undefined); return; }
-      const next = steerPoint(snapshot.map, from, to, 'sea'), course = Math.atan2(next.y - from.y, next.x - from.x);
-      const ticks = Math.ceil((length / speedFor(course) + angleGap(ship.sailing?.heading ?? 0, course) / limits.turnRate
-        + limits.speed / Math.max(1, limits.acceleration)) * SIM_TICKS_PER_SECOND);
-      if (!Number.isFinite(ticks)) throw new Error(`Non-finite strategy sailing ETA for ${ship.id}`);
-      seaTimes.set(key, ticks); return ticks;
-    }
-    const terrain = snapshot.map.terrain;
-    let geometry = terrain ? seaGeometry.get(terrain) : undefined;
-    if (terrain && !geometry) seaGeometry.set(terrain, geometry = new Map());
-    const geometryKey = `${from.x}:${from.y}:${to.x}:${to.y}`;
-    let route: readonly Point[] | undefined;
-    if (fixedOrigin && geometry?.has(geometryKey)) route = geometry.get(geometryKey);
-    else {
-      if (builtSeaTables >= seaBuildBudget) { pendingGeometry = true; return; }
-      builtSeaTables++;
-      route = walkingDistance(snapshot.map, from, to, 'sea') === undefined ? undefined : groundSteeringRoute(snapshot.map, from, to, 'sea');
-      if (route && distance(route.at(-1)!, to) > 240) route = undefined;
-      if (fixedOrigin && geometry) {
-        if (geometry.size >= 512) geometry.clear();
-        geometry.set(geometryKey, route);
-      }
-    }
-    if (!route) { seaTimes.set(key, undefined); return; }
-    // Future dock-to-dock legs do not know their departure helm orientation.
-    // Align the first course and retain turn costs at all subsequent corners;
-    // live approaches still start at the actual recorded heading.
-    const first = route[1] ?? to;
-    let previous = from, heading = fixedOrigin ? Math.atan2(first.y - from.y, first.x - from.x) : ship.sailing?.heading ?? 0, seconds = 0;
-    const wind = snapshot.map.wind;
-    const signature = `${geometryKey}:${ship.kind}:${ship.deckScale ?? 0}:${limits.speed}:${limits.acceleration}:${limits.turnRate}:${wind?.direction}:${wind?.speed}:${wind?.changedAtTick}`;
-    let voyages = terrain ? futureVoyages.get(terrain) : undefined;
-    if (terrain && !voyages) futureVoyages.set(terrain, voyages = new Map());
-    const cached = fixedOrigin ? voyages?.get(signature) : undefined;
-    if (cached !== undefined) { seaTimes.set(key, cached); return cached; }
-    for (const point of route.slice(1)) {
-      const length = distance(previous, point);
-      if (!length) continue;
-      const course = Math.atan2(point.y - previous.y, point.x - previous.x);
-      pose.x = previous.x; pose.y = previous.y;
-      // Positive upwind VMG is supplied by the same hull polar used by movement.
-      const speed = speedFor(course);
-      seconds += length / speed + angleGap(heading, course) / limits.turnRate;
-      heading = course; previous = point;
-    }
-    seconds += limits.speed / Math.max(1, limits.acceleration);
-    const ticks = Math.ceil(seconds * SIM_TICKS_PER_SECOND);
-    if (!Number.isFinite(ticks)) throw new Error(`Non-finite strategy sailing ETA for ${ship.id}`);
-    if (fixedOrigin && voyages) { if (voyages.size >= 1024) voyages.clear(); voyages.set(signature, ticks); }
-    seaTimes.set(key, ticks);
-    return ticks;
+    const result = seaTravel.travel(ship, from, to, future);
+    if (result.status === 'pending') pendingGeometry = true;
+    if (result.status !== 'known') return undefined;
+    usedFieldTicks.add(result.computedTick); return result.ticks;
   }
 
   function nearest(shores: readonly Shore[], point: Point): readonly Shore[] {
@@ -172,7 +99,8 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
       const times = mission.crewIds.flatMap(id => {
         const unit = byId.get(id);
         if (!unit || unit.deck || unit.cabin) return [];
-        const shore = shoresByLand.get(landIdAt(snapshot.map, unit) ?? '')?.get(seaIdAt(snapshot.map, ship) ?? '') ?? [];
+        const land = landIdAt(snapshot.map, unit), sea = seaIdAt(snapshot.map, ship);
+        const shore = land && sea ? shoresByLand.get(land)?.get(sea) ?? [] : [];
         const ground = nearest(shore, mission.from)[0]?.ground;
         const time = ground && landTime(unit, ground);
         return time === undefined ? [] : [time];
@@ -181,6 +109,70 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
     }
     const free = { point, ticks, unmet: [reason('borrow-transport', `Release ${ship.id} from ${mission.purpose}:${mission.targetId} after its current voyage`)] };
     freeTimes.set(ship.id, free); return free;
+  }
+
+  const prototypes = new Map<string, Unit>();
+  function crossingTable(unit: Unit, source: LandId, destination: LandId, target: Target) {
+    const key = `${unit.owner}:${source}:${destination}:${target.point.x}:${target.point.y}`;
+    const known = crossingTables.get(key);
+    if (known) {
+      if (known.pending) pendingGeometry = true;
+      for (const tick of known.ages) usedFieldTicks.add(tick);
+      return known.choices;
+    }
+    const choices: CrossingChoice[] = [], targetField = distances.field(target.point);
+    if (!targetField) pendingGeometry = true;
+    else {
+      usedFieldTicks.add(targetField.builtTick);
+      for (const [seaKey, shores] of shoresByLand.get(source) ?? []) {
+        const sea = shores[0]!.seaId, departureKey = `${unit.owner}:${source}:${sea}`;
+        if (!departuresByRegion.has(departureKey)) {
+          const anchor = snapshot.buildings.find(building => building.owner === unit.owner && building.kind === 'shipyard'
+            && landIdAt(snapshot.map, building) === source && seaIdAt(snapshot.map, walkableGoal(snapshot.map, building.x, building.y, 'sea')) === sea)
+            ?? snapshot.buildings.find(building => building.owner === unit.owner && building.kind === 'townHall' && landIdAt(snapshot.map, building) === source)
+            ?? unit;
+          departuresByRegion.set(departureKey, nearest(shores, anchor));
+        }
+        const landings = nearest(shoresByLand.get(destination)?.get(seaKey) ?? [], target.point);
+        if (!landings.length) continue;
+        const actual = snapshot.units.filter(ship => ship.owner === unit.owner && ship.hp > 0 && isTransportKind(ship.kind) && seaIdAt(snapshot.map, ship) === sea);
+        for (const from of departuresByRegion.get(departureKey)!) for (const to of landings) {
+          const afterCost = targetField.field.cost(to.ground);
+          if (afterCost === undefined) continue;
+          const yard = snapshot.buildings.filter(building => building.owner === unit.owner && building.kind === 'shipyard' && building.hp > 0
+            && seaIdAt(snapshot.map, walkableGoal(snapshot.map, building.x, building.y, 'sea')) === sea)
+            .sort((a, b) => Number(landIdAt(snapshot.map, b) === source) - Number(landIdAt(snapshot.map, a) === source)
+              || distance(a, from.water) - distance(b, from.water) || a.id.localeCompare(b.id))[0];
+          const factoryPoint = yard ? walkableGoal(snapshot.map, yard.x, yard.y, 'sea') : from.water;
+          const prototypeKey = `${unit.owner}:${sea}:${factoryPoint.x}:${factoryPoint.y}`;
+          let prototype = prototypes.get(prototypeKey);
+          if (!prototype) { prototype = { ...unit, id: `proposed-transport:${unit.owner}:${source}:${sea}`, kind: 'transport', ...factoryPoint,
+            speed: UNIT_DEFS.transport.speed, radius: UNIT_DEFS.transport.radius, hp: UNIT_DEFS.transport.hp, maxHp: UNIT_DEFS.transport.hp,
+            shipParts: undefined, sailing: { heading: 0, speed: 0, load: 0, balance: 0 } };
+          delete prototype.deckScale; delete prototype.cargoCapacity; delete prototype.fittings;
+          delete prototype.variant; delete prototype.bodyRadius;
+          prototypes.set(prototypeKey, prototype); }
+          for (const ship of [...actual, prototype]) {
+            const requiresNewShip = ship === prototype;
+            const free = requiresNewShip ? { point: factoryPoint, ticks: UNIT_DEFS.transport.trainTime,
+              unmet: [reason('obtain-transport', `Build a transport in ${sea}; launch congestion remains an execution prerequisite`)] } : freeShip(ship);
+            if (!free) continue;
+            if (requiresNewShip && !yard) { free.ticks += BUILDING_DEFS.shipyard.buildTime;
+              free.unmet.push(reason('build-shipyard', `Establish production in ${sea}; worker access and funding remain prerequisites`));
+            } else if (requiresNewShip && yard) free.ticks += Math.max(0, yard.complete ? 0 : yard.buildTime - yard.buildProgress)
+              + yard.queue.reduce((sum, job) => sum + job.remaining, 0);
+            const approach = seaTime(ship, free.point, from.water, requiresNewShip), sailingTicks = seaTime(ship, from.water, to.water, true);
+            if (approach === undefined || sailingTicks === undefined) continue;
+            choices.push({ from, to, afterCost, readyTicks: free.ticks + approach, unmet: free.unmet,
+              crossing: { seaId: sea, shipId: requiresNewShip ? null : ship.id, departure: { ...from.water }, landing: { ...to.water },
+                boardingTicks: GANGWAY_SETUP_TICKS, sailingTicks, unloadingTicks: GANGWAY_SETUP_TICKS, requiresNewShip } });
+          }
+        }
+      }
+    }
+    if (regions.scannedRows < regions.totalRows && !choices.length) pendingGeometry = true;
+    crossingTables.set(key, { choices, pending: pendingGeometry, ages: [...usedFieldTicks] });
+    return choices;
   }
 
   function compute(unit: Unit, target: Target): Arrival {
@@ -244,66 +236,20 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
           landTicks: walk + after, crossings: [crossing], evidence: [evidence(snapshot.tick, 'memory.naval.ferries', 'Existing crew follows its actual embarkation and landing points, not a new hypothetical voyage')] };
       }
     }
-    const sourceShores = shoresByLand.get(source);
-    const possible: Arrival[] = [];
-    for (const [seaKey, shores] of sourceShores ?? []) {
-      const sea = shores[0]!.seaId;
-      const departureKey = `${unit.owner}:${source}:${sea}`;
-      if (!departuresByRegion.has(departureKey)) {
-        // A voyage gathers a cohort at one shared embarkation point. Choosing a
-        // different coastline for every soldier both invents extra boat trips
-        // and repeats the same geometry hundreds of times.
-        const anchor = snapshot.buildings.find(building => building.owner === unit.owner && building.kind === 'shipyard'
-          && landIdAt(snapshot.map, building) === source && seaIdAt(snapshot.map, walkableGoal(snapshot.map, building.x, building.y, 'sea')) === sea)
-          ?? snapshot.buildings.find(building => building.owner === unit.owner && building.kind === 'townHall' && landIdAt(snapshot.map, building) === source)
-          ?? snapshot.units.find(candidate => candidate.owner === unit.owner && !candidate.deck && !candidate.cabin && landIdAt(snapshot.map, candidate) === source)!;
-        departuresByRegion.set(departureKey, nearest(shores, anchor));
-      }
-      const departures = departuresByRegion.get(departureKey)!;
-      const landings = nearest(shoresByLand.get(destination)?.get(seaKey) ?? [], target.point);
-      if (!landings.length) continue;
-      const actual = snapshot.units.filter(ship => ship.owner === unit.owner && ship.hp > 0 && isTransportKind(ship.kind)
-        && seaIdAt(snapshot.map, ship) === sea);
-      for (const from of departures) for (const to of landings) {
-        const walk = landTime(unit, from.ground), after = landTime({ ...unit, ...to.ground }, target.point);
-        if (walk === undefined || after === undefined) continue;
-        const prototype: Unit = { ...unit, id: `proposed-transport:${unit.owner}:${source}:${sea}`,
-          kind: 'transport' as const, ...from.water, speed: UNIT_DEFS.transport.speed, radius: UNIT_DEFS.transport.radius,
-          hp: UNIT_DEFS.transport.hp, maxHp: UNIT_DEFS.transport.hp, shipParts: undefined,
-          sailing: { heading: 0, speed: 0, load: 0, balance: 0 } };
-        delete prototype.deckScale; delete prototype.cargoCapacity; delete prototype.fittings;
-        delete prototype.variant; delete prototype.bodyRadius;
-        const prototypes = [...actual, prototype];
-        for (const ship of prototypes) {
-          const requiresNewShip = ship === prototype;
-          const free = requiresNewShip ? { point: from.water, ticks: UNIT_DEFS.transport.trainTime,
-            unmet: [reason('obtain-transport', `Build a transport in ${sea}`)] } : freeShip(ship);
-          if (!free) continue;
-          const yard = snapshot.buildings.find(building => building.owner === unit.owner && building.kind === 'shipyard'
-            && seaIdAt(snapshot.map, walkableGoal(snapshot.map, building.x, building.y, 'sea')) === sea);
-          if (requiresNewShip && !yard) {
-            free.ticks += BUILDING_DEFS.shipyard.buildTime;
-            free.unmet.push(reason('build-shipyard', `Establish production in ${sea}; worker access and funding remain prerequisites`));
-          } else if (requiresNewShip && yard) {
-            free.ticks += Math.max(0, yard.complete ? 0 : yard.buildTime - yard.buildProgress)
-              + yard.queue.reduce((sum, job) => sum + job.remaining, 0);
-          }
-          const approach = seaTime(ship, free.point, from.water), sailingTicks = seaTime(ship, from.water, to.water, true);
-          if (approach === undefined || sailingTicks === undefined) continue;
-          const waitTicks = Math.max(0, free.ticks + approach - walk);
-          const crossing: CrossingEta = { seaId: sea, shipId: requiresNewShip ? null : ship.id,
-            departure: { ...from.water }, landing: { ...to.water }, waitTicks,
-            boardingTicks: GANGWAY_SETUP_TICKS, sailingTicks, unloadingTicks: GANGWAY_SETUP_TICKS, requiresNewShip };
-          const ticks = walk + waitTicks + crossing.boardingTicks + sailingTicks + crossing.unloadingTicks + after;
-          const common = { ticks, landTicks: walk + after, crossings: [crossing],
-            evidence: [evidence(snapshot.tick, 'strategy.arrivals', 'Wait after simultaneous walking/boat approach, gangway setup, terrain sea route with hull/wind rates, unload and inland steering; no congestion prediction')] };
-          possible.push(free.unmet.length || requiresNewShip ? { status: 'conditional', ...common, unmet: free.unmet }
-            : { status: 'reachable', ...common, crossings: [crossing as CrossingEta & { requiresNewShip: false }] });
-        }
-      }
+    let best: { choice: CrossingChoice; walk: number; after: number; wait: number; ticks: number } | undefined;
+    for (const choice of crossingTable(unit, source, destination, target)) {
+      const walk = landTime(unit, choice.from.ground);
+      if (walk === undefined) continue;
+      const after = Math.ceil(choice.afterCost / unit.speed * SIM_TICKS_PER_SECOND), wait = Math.max(0, choice.readyTicks - walk);
+      const ticks = walk + wait + choice.crossing.boardingTicks + choice.crossing.sailingTicks + choice.crossing.unloadingTicks + after;
+      if (!best || ticks < best.ticks) best = { choice, walk, after, wait, ticks };
     }
-    return possible.sort((a, b) => ('ticks' in a ? a.ticks : Infinity) - ('ticks' in b ? b.ticks : Infinity))[0]
-      ?? { status: 'unknown', reason: reason('no-direct-crossing', `No direct evaluated sea crossing from ${source} to ${destination}; a multi-hop plan is not evaluated`) };
+    if (!best) return { status: 'unknown', reason: reason('no-direct-crossing', `No direct evaluated sea crossing from ${source} to ${destination}; a multi-hop plan is not evaluated`) };
+    const crossing = { ...best.choice.crossing, waitTicks: best.wait };
+    const common = { ticks: best.ticks, landTicks: best.walk + best.after, evidence: [evidence(snapshot.tick, 'strategy.crossingTable',
+      'Cohort departure/factory approach and sea table shared; individual walking overlaps ship preparation, followed by boarding, sailing, unload and inland walking')] };
+    return best.choice.unmet.length || crossing.requiresNewShip ? { status: 'conditional', ...common, crossings: [crossing], unmet: best.choice.unmet }
+      : { status: 'reachable', ...common, crossings: [crossing as CrossingEta & { requiresNewShip: false }] };
   }
 
   return {
@@ -315,7 +261,7 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
         if (pendingGeometry && !('ticks' in answer)) answer = { status: 'unknown', reason: reason('geometry-refresh-pending',
           'The deterministic per-think field rebuild budget is exhausted; this route is not zero ETA or proven unreachable') };
         if ('ticks' in answer) answer = { ...answer, evidence: [...answer.evidence, ...[...usedFieldTicks].sort((a, b) => a - b)
-          .map(tick => evidence(tick, 'terrain.groundDistanceField.built', `Geometry computed at tick ${tick}; actors and arrival speeds sampled at ${snapshot.tick}`))] };
+          .map(tick => evidence(tick, 'terrain.goalField.built', `Geometry computed at tick ${tick}; actors and arrival speeds sampled at ${snapshot.tick}`))] };
         answers.set(key, answer);
       }
       const answer = answers.get(key)!;
@@ -323,5 +269,6 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
         ? unavailable('expires-before-arrival', `${unit.id} expires before reaching this effect`) : answer;
     },
     freeInTicks(ship: Unit): number | null { return freeShip(ship)?.ticks ?? null; },
+    get deferredSeaQueries() { return seaTravel.deferredFields; },
   };
 }

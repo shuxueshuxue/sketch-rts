@@ -307,6 +307,10 @@ export type StrategyPlanTrace = Readonly<{
   limitations: readonly Reason[];
 }>;
 export type PlanningContext = Readonly<{ snapshot: GameSnapshot; owner: PlayerId; memory: AiPolicyMemory }>;
+/** Outcomes already accepted by the ordinary planner; no second policy pass. */
+export type SituationObservation = Readonly<{
+  healing: readonly Readonly<{ unitId: string; executor: string }>[];
+}>;
 export interface SituationEvaluator {
   /** Borrowed inputs: do not mutate serialized state; per-think query reuse is allowed. */
   evaluate(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory, previous?: Situation): Situation;

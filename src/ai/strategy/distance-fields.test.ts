@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { groundDistanceField, setBuildingBodies, shareBuildingBodies } from '../../shared/terrain';
+import { advanceMoverDistanceField, groundDistanceField, segmentWalkable, setBuildingBodies, shareBuildingBodies } from '../../shared/terrain';
 import type { GameMap, GameSnapshot } from '../../shared/types';
 import { createPlanningDistanceQuery } from './distance-fields';
 import { regionIndex } from './regions';
@@ -39,6 +39,35 @@ describe('event-refreshed planning goal fields', () => {
     const second = createPlanningDistanceQuery({ ...snapshot, tick: 115 }, 1);
     expect(second.field({ x: 875, y: 125 })!.builtTick).toBe(100);
     expect(second.field({ x: 875, y: 375 })!.builtTick).toBe(115);
+  });
+  it('resumes the native weighted flow within a fixed work budget and agrees at every cell', () => {
+    const world = map();
+    world.terrain = { cols: 40, rows: 30, cell: 25,
+      cells: Array.from({ length: 30 }, (_, row) => '.'.repeat(18) + (row === 18 ? '.' : '~') + '.'.repeat(21)).join('') };
+    const other = structuredClone(world), goal = { x: 875, y: 125 };
+    const bodies = [{ x: 750, y: 125, radius: 60 }];
+    setBuildingBodies(world, bodies); setBuildingBodies(other, bodies);
+    const expected = groundDistanceField(other, goal)!;
+    let result = advanceMoverDistanceField(world, goal, 'land', 31), turns = 1;
+    expect(result.field).toBeUndefined(); expect(result.work).toBeLessThanOrEqual(31);
+    expect(groundDistanceField(world, goal, true)).toBeUndefined();
+    while (!result.field && turns < 200) {
+      result = advanceMoverDistanceField(world, goal, 'land', 31); turns++;
+      expect(result.work).toBeLessThanOrEqual(31);
+    }
+    expect(turns).toBeGreaterThan(1); expect(result.field).toBeDefined();
+    for (let row = 0; row < 30; row++) for (let col = 0; col < 40; col++) {
+      const from = { x: (col + .5) * 25, y: (row + .5) * 25 };
+      expect(result.field!.cost(from)).toBe(expected.cost(from));
+    }
+    const from = { x: 125, y: 125 }, road = result.field!.road(from, goal)!;
+    expect(road[0]).toEqual(from); expect(road.at(-1)).toEqual(goal);
+    expect(road.slice(1).every((point, index) => segmentWalkable(world, road[index]!, point))).toBe(true);
+    const pending = { x: 125, y: 125 };
+    advanceMoverDistanceField(world, pending, 'land', 1);
+    setBuildingBodies(world, [{ x: 475, y: 125, radius: 100 }]);
+    expect(advanceMoverDistanceField(world, pending, 'land', 1).field).toBeUndefined();
+    expect(groundDistanceField(world, goal, true)).toBeUndefined();
   });
   it('enumerates all original labels immediately while scanning shores over several thinks', () => {
     const world = map();

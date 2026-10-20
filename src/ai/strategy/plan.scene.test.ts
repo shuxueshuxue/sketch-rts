@@ -1,11 +1,15 @@
 import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { setBuildingBodies } from '../../shared/terrain';
 import { standingBodies } from '../../shared/structure-bodies';
 import type { GameSnapshot } from '../../shared/types';
 import type { AiPolicyMemory } from '../memory';
 import { withNativeLandRoadReuse } from '../policy/land-road';
+import { mobileCare } from '../bootstrap_1/mobile-care';
+import { planAiOwnerCommandEntries } from '../planner-context';
+import { planAiOwnerCommandEntriesWithTrace } from '../plan-trace-planner';
+import { generateNavalObjectives, decomposeNavalObjective } from './naval-objectives';
 import { buildStrategyPlanTrace, mergeIdleForces } from './plan';
 import { evaluateSituation } from './situation';
 import type { StrategyPlanTrace } from './types';
@@ -72,6 +76,18 @@ describe('proposed strategy plans at recorded conflict events', () => {
     const support = plan.objectives.find(candidate => candidate.supportsObjectiveIds?.includes(goal.id))!;
     expect(support.utility.score).toBe(goal.utility.score);
   });
+  it('does not invent a training deficit when possible clearing troops have unquoted routes', () => {
+    const frame = structuredClone(frames.find(frame => frame.event === 'Ne')!);
+    const assessed = evaluateSituation(frame.snapshot, frame.owner, frame.memory);
+    const situation = { ...assessed, units: assessed.units.map(unit => unit.owner === frame.owner ? { ...unit, arrivals: [] } : unit) };
+    const context = { snapshot: frame.snapshot, owner: frame.owner, memory: frame.memory };
+    const goal = generateNavalObjectives(situation, context, []).find(goal => goal.id === 'ConquerIsland:player-4:gold-satellite-2')!;
+    expect(goal.status).toBe('blocked');
+    expect(goal.reasons.some(reason => reason.code === 'clearing-arrivals-unknown')).toBe(true);
+    const method = decomposeNavalObjective(situation, goal, context)[0]!;
+    expect(method.preconditions.some(condition => condition.status === 'unknown' && condition.reason.code === 'clearing-arrivals-unknown')).toBe(true);
+    expect(method.subgoals.some(step => step.kind === 'train-force')).toBe(false);
+  });
   it('keeps all subgoal links local and all plan numbers finite', () => {
     for (const plan of plans.values()) {
       expect(plan.mode).toBe('observe');
@@ -90,7 +106,7 @@ describe('proposed strategy plans at recorded conflict events', () => {
     const before = JSON.stringify(frame);
     const plan = withNativeLandRoadReuse(() => buildStrategyPlanTrace(frame.snapshot, frame.owner, { memory: frame.memory }));
     expect(plan.limitations.some(reason => reason.code === 'geometry-refresh-pending')).toBe(true);
-    expect(plan.limitations.some(reason => reason.code === 'shore-index-refresh-pending')).toBe(true);
+    expect(plan.limitations.some(reason => reason.code === 'shore-index-refresh-pending')).toBe(false);
     expect(plan.situation.units.flatMap(unit => unit.arrivals).some(entry => entry.arrival.status === 'unknown'
       && entry.arrival.reason.code === 'geometry-refresh-pending')).toBe(true);
     expect(plan.situation.lands.length).toBe(plans.get('E01')!.situation.lands.length);
@@ -105,6 +121,23 @@ describe('proposed strategy plans at recorded conflict events', () => {
     const assignment = plan.assignments.find(assignment => assignment.unitId === 'unit-player-ashChieftain-3872')!;
     expect(assignment).toMatchObject({ objectiveId: 'DefendSite:player:building-player-townHall-5459',
       stage: 'life-saving-interruption', interruption: { kind: 'healing' } });
+  });
+  it('projects L3 accepted healing orders without running another mobile-care selection', () => {
+    const load = (): Scene => JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/recovery-L3.json.gz', import.meta.url))).toString());
+    const plain = load(), observed = load(), spy = vi.spyOn(mobileCare as Required<Pick<typeof mobileCare, 'claimsUnits'>>, 'claimsUnits');
+    try {
+      const commands = planAiOwnerCommandEntries(plain.snapshot, { playerId: plain.owner, version: 'v9_knight', memory: plain.memory });
+      const selections = spy.mock.calls.length; spy.mockClear();
+      const result = planAiOwnerCommandEntriesWithTrace(observed.snapshot, { playerId: observed.owner, version: 'v9_knight', memory: observed.memory });
+      expect(result.commands).toEqual(commands);
+      expect(spy.mock.calls.length).toBe(selections);
+      expect(result.commands.some(entry => entry.scriptId === 'mobileCare' && 'unitIds' in entry.command
+        && entry.command.unitIds.includes('unit-player-ashChieftain-3872'))).toBe(true);
+      expect(result.trace.strategy!.situation.units.find(unit => unit.id === 'unit-player-ashChieftain-3872')!.commitments)
+        .toContainEqual(expect.objectContaining({ source: 'mobileCare.accepted-plan', evidence: expect.objectContaining({ certainty: 'recorded' }) }));
+      expect(JSON.stringify(observed.memory)).toBe(JSON.stringify(plain.memory));
+      expect(JSON.stringify(observed.snapshot)).toBe(JSON.stringify(plain.snapshot));
+    } finally { spy.mockRestore(); }
   });
   it('prices idle alternatives once per unit across all families', () => {
     const plan = plans.get('E01')!, prototype = plan.situation.units.find(unit => unit.owner === plan.owner && unit.location.kind === 'land' && !unit.roles.includes('worker'))!;

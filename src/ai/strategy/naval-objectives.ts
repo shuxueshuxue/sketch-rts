@@ -24,6 +24,7 @@ const reason = (tick: number, code: string, detail: string, source = 'strategy.n
 const fieldDemand = (target: Target, strength: number, permanent = false): ResourceDemand => ({ kind: 'force', metric: 'field-strength',
   strength, roles: ['frontline', 'ranged'], at: target, neededByTick: null, permanent });
 const cache = new WeakMap<PlanningContext['snapshot'], Camp[]>();
+const actorsBySnapshot = new WeakMap<PlanningContext['snapshot'], ReadonlyMap<string, Unit>>();
 function collapseAfter(context: PlanningContext, threat: SiteThreat, hp: number): number {
   const events = threat.attackers.flatMap(attacker => {
     const unit = context.snapshot.units.find(unit => unit.id === attacker.unitId);
@@ -55,6 +56,8 @@ function candidates(situation: Situation, targetId: string, present: readonly Si
   return situation.units.filter(unit => unit.owner === situation.owner && !ids.has(unit.id) && unit.strength > 0
     && !unit.roles.some(role => role === 'worker' || role === 'transport' || role === 'warship')
     && unit.hp >= unit.maxHp * .35 && (!permanent || unit.expiresTick === null)
+    && !unit.commitments.some(task => task.source.startsWith('mobileCare.') || task.source.startsWith('frontRecovery.')
+      || task.source === 'retreat.inferred-order' || task.source === 'unitClaims.workerSafety')
     && duration(route(unit, targetId)) !== undefined
     && (unit.expiresTick === null || unit.expiresTick > situation.tick + duration(route(unit, targetId))! + 30 * SIM_TICKS_PER_SECOND))
     .sort((a, b) => duration(route(a, targetId))! - duration(route(b, targetId))! || byId(a, b));
@@ -72,9 +75,10 @@ function conquestForce(situation: Situation, context: PlanningContext, target: T
   return values.get(key)!;
 }
 function assessConquestForce(situation: Situation, context: PlanningContext, target: Target) {
-  const raw = new Map(context.snapshot.units.map(unit => [unit.id, unit]));
+  let raw = actorsBySnapshot.get(context.snapshot);
+  if (!raw) actorsBySnapshot.set(context.snapshot, raw = new Map(context.snapshot.units.map(unit => [unit.id, unit])));
   const combatants = (units: readonly SituationUnit[]) => units.flatMap(unit => {
-    const actor = raw.get(unit.id);
+    const actor = raw!.get(unit.id);
     return actor && unit.expiresTick === null && !isBacklineKind(actor) && actor.attackDamage > 0
       && actor.hp >= actor.maxHp * .35 ? [actor] : [];
   });
@@ -100,7 +104,14 @@ function assessConquestForce(situation: Situation, context: PlanningContext, tar
   }).sort((a, b) => Number(b.force >= required) - Number(a.force >= required) || a.eta - b.eta
     || (a.selected[0]?.id ?? '').localeCompare(b.selected[0]?.id ?? ''));
   const best = batches[0] ?? { selected: [], force: presentForce, eta: 0 };
-  return { present, presentForce, camp, required, ...best };
+  const presentIds = new Set(present.map(unit => unit.id));
+  const unknownForce = best.force < required && situation.units.some(unit => unit.owner === context.owner
+    && !presentIds.has(unit.id) && unit.strength > 0 && !unit.roles.some(role => ['worker', 'transport', 'warship'].includes(role))
+    && combatants([unit]).length > 0 && !unit.commitments.some(task => task.source.startsWith('mobileCare.')
+      || task.source.startsWith('frontRecovery.') || task.source === 'retreat.inferred-order' || task.source === 'unitClaims.workerSafety')
+    && (() => { const arrival = route(unit, target.entityId!); return !arrival || arrival.status === 'unknown'
+      && arrival.reason.code !== 'beyond-evaluation-window'; })());
+  return { present, presentForce, camp, required, unknownForce, ...best };
 }
 function atRiskValue(situation: Situation, site: Asset) {
   return situation.assets.filter(asset => (asset.owner === situation.owner || site.kind === 'hall' && asset.kind === 'mine')
@@ -189,9 +200,9 @@ export function generateNavalObjectives(situation: Situation, context: PlanningC
       successProbability: forceSuccessProbability(force.force, force.required), evidence: [] });
     objectives.push(createObjective(situation, previous, 'ConquerIsland', target,
       [{ kind: 'mining-established', mineId, completeHall: true, garrisonHandoff: true }], utility,
-      [reason(tick, complete ? 'physical-colony-established' : force.force >= force.required ? 'clearing-plan-candidates' : 'clearing-force-deficit',
+      [reason(tick, complete ? 'physical-colony-established' : force.unknownForce ? 'clearing-arrivals-unknown' : force.force >= force.required ? 'clearing-plan-candidates' : 'clearing-force-deficit',
         `${mineId}: present camp force ${force.presentForce}, proposed batch ${force.selected.map(unit => unit.id).join(', ') || 'none'}, combined ${force.force}, required ${force.required}`)],
-      complete ? 'complete' : task?.abandonedTick !== undefined ? 'abandoned' : task ? 'active' : 'candidate', task?.sinceTick));
+      complete ? 'complete' : task?.abandonedTick !== undefined ? 'abandoned' : force.unknownForce ? 'blocked' : task ? 'active' : 'candidate', task?.sinceTick));
     const deficit = Math.max(0, force.required - force.presentForce);
     // Camp force is not field strength. Price the specific proposed batch's
     // marginal camp contribution in the common field-strength currency.
@@ -233,7 +244,7 @@ export function decomposeNavalObjective(situation: Situation, objective: Objecti
       roles: ['frontline', 'ranged'], at: target, neededByTick: null, permanent: true };
     demands.push(demand);
     const borrow = force.selected.length ? add('borrow-force', target, [demand], [], `Candidate batch: ${force.selected.map(unit => unit.id).join(', ')}; existing commitments need allocator handoff`) : null;
-    const training = force.force < force.required ? add('train-force', target, [demand], [], `Missing ${force.required - force.force} clearing force; production, supply and budget remain prerequisites`) : null;
+    const training = force.force < force.required && !force.unknownForce ? add('train-force', target, [demand], [], `Missing ${force.required - force.force} clearing force; production, supply and budget remain prerequisites`) : null;
     require('force', force.presentForce >= force.required, demand, [borrow, training].filter((id): id is string => id !== null), `On-station ${force.presentForce}; required ${force.required}`);
     const crossings = force.selected.flatMap(unit => { const arrival = route(unit, target.entityId!); return arrival && 'crossings' in arrival ? arrival.crossings : []; });
     const crossing = crossings[0];
@@ -262,6 +273,9 @@ export function decomposeNavalObjective(situation: Situation, objective: Objecti
       require('shore-safe', beachReady, null, clearBeach ? [clearBeach] : [], 'Forecast local opposition at the selected actual landing shore; enemy movement remains uncertain');
     }
     const selectedRoutes = force.selected.map(unit => route(unit, target.entityId!));
+    if (force.unknownForce) preconditions.push({ id: `${id}/requires:unquoted-force-arrivals`, kind: 'route', status: 'unknown',
+      reason: reason(situation.tick, 'clearing-arrivals-unknown', 'Some potential permanent fighters have deferred or unquoted routes; do not turn uncomputed arrival into a confirmed training deficit'),
+      demand: null, subgoalIds: [] });
     require('route', force.presentForce >= force.required || selectedRoutes.length > 0 && selectedRoutes.every(arrival => arrival && 'ticks' in arrival),
       null, [], 'Each proposed existing soldier needs an evaluated route; untrained reinforcements have no invented ETA');
     const occupied = force.selected.filter(unit => unit.commitments.length);

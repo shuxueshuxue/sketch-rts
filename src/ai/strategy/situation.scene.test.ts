@@ -63,6 +63,10 @@ describe('read-only situation over exact contract event frames', () => {
     const crew = situation.units.filter(unit => unit.location.kind === 'aboard' && unit.location.shipId === 'unit-enemy-transport-2302');
     expect(crew.filter(unit => !unit.roles.includes('worker')).length).toBe(6);
     expect(crew.every(unit => unit.commitments.some(task => task.source === 'naval.ferries'))).toBe(true);
+    for (const worker of crew.filter(unit => unit.roles.includes('worker'))) {
+      expect(situation.assets.find(asset => asset.id === worker.id)!.target.landId).toBeUndefined();
+      expect(situation.lands.flatMap(land => land.threats).some(threat => threat.siteId === worker.id)).toBe(false);
+    }
     const home = situation.assets.find(asset => asset.id === 'building-enemy-townHall-1622')!;
     const threat = situation.lands.find(land => land.id === home.target.landId)!.threats.find(threat => threat.siteId === home.id)!;
     expect(threat.attackers.length).toBeGreaterThan(0);

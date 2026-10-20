@@ -4,7 +4,7 @@ import { distance } from '../policy/spatial';
 import { generateNavalObjectives, decomposeNavalObjective } from './naval-objectives';
 import { evaluateSituation } from './situation';
 import type { Assignment, BudgetEntry, IdleForce, MethodPlanner, ObjectiveGenerator, PlanningContext,
-  Reason, Situation, StrategyPlanTrace, Target } from './types';
+  Reason, Situation, SituationObservation, StrategyPlanTrace, Target } from './types';
 
 /** Explicit read-only inputs, not a mutable global registry. A family owns no
  * evaluator; every family consumes exactly the same assessed Situation. */
@@ -17,10 +17,10 @@ export type ObjectiveFamily = Readonly<{
 export const NAVAL_OBJECTIVE_FAMILY: ObjectiveFamily = { id: 'naval', generate: generateNavalObjectives, decompose: decomposeNavalObjective };
 
 export function buildStrategyPlanTrace(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext,
-  previous?: StrategyPlanTrace, families: readonly ObjectiveFamily[] = [NAVAL_OBJECTIVE_FAMILY]): StrategyPlanTrace {
+  previous?: StrategyPlanTrace, families: readonly ObjectiveFamily[] = [NAVAL_OBJECTIVE_FAMILY], observation?: SituationObservation): StrategyPlanTrace {
   const old = previous?.owner === owner && previous.tick < snapshot.tick ? previous : undefined;
   const context: PlanningContext = { snapshot, owner, memory: options.memory };
-  const situation = evaluateSituation(snapshot, owner, options.memory, old?.situation, options.teams ?? snapshot.teams, 1);
+  const situation = evaluateSituation(snapshot, owner, options.memory, old?.situation, options.teams ?? snapshot.teams, 1, observation);
   const generated = families.flatMap(family => family.generate(situation, context, old?.objectives ?? [])
     .map(objective => ({ family, objective })));
   if (new Set(generated.map(entry => entry.objective.id)).size !== generated.length) throw new Error('Duplicate strategic objective id');
@@ -52,9 +52,9 @@ export function buildStrategyPlanTrace(snapshot: GameSnapshot, owner: PlayerId, 
     const onStation = unit.location.kind === 'land' && unit.location.landId === target.landId && distance(unit.location.point, target.point) <= 650;
     const stage = onStation ? 'on-station' : unit.location.kind === 'aboard' || ['move', 'attackMove', 'attack', 'board', 'follow'].includes(raw.order.type) ? 'en-route' : 'assigned';
     const interruption = claim?.kind === 'workerSafety' ? 'worker-safety' as const
-      : unit.commitments.some(commitment => ['frontRecovery.postRecoveryAssignments', 'mobileCare.claimsUnits'].includes(commitment.source)) ? 'healing' as const
+      : unit.commitments.some(commitment => ['frontRecovery.postRecoveryAssignments', 'mobileCare.claimsUnits', 'frontRecovery.accepted-plan', 'mobileCare.accepted-plan'].includes(commitment.source)) ? 'healing' as const
       : raw.order.type === 'move' && raw.order.avoidCombat && (claim?.kind === 'retreat' || raw.hp < raw.maxHp * .5) ? 'retreat' as const
-      : followTarget && snapshot.units.some(healer => healer.id === followTarget && ['priest', 'fieldMedic'].includes(healer.kind)) ? 'healing' as const : undefined;
+      : followTarget && unit.hp < unit.maxHp && snapshot.units.some(healer => healer.id === followTarget && ['priest', 'fieldMedic'].includes(healer.kind)) ? 'healing' as const : undefined;
     const common = { id: `observed:${task.objectiveId}:${task.source}:${task.taskId}:${unit.id}`, objectiveId: task.objectiveId, methodId: null,
       unitId: unit.id, role: task.role, target: { ...target, point: { ...target.point } }, sinceTick: claim?.sinceTick ?? objective?.sinceTick ?? snapshot.tick,
       minimumStayUntilTick: objective?.stability.minimumStayUntilTick ?? snapshot.tick, arrival, authority: 'observed' as const, evidence: [task.evidence] };

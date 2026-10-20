@@ -31,7 +31,7 @@ export type AiOwnerPlannerRequest<Source extends string = string> = {
 export type AiOwnerPlannerOptions = PresetAiPolicyOptions & {
   memoryProvider?: AiMemoryProvider;
   /** Read-only output hook inside the existing owner-think geometry reuse scope. */
-  observeBootstrapPlan?: (context: AiPolicyContext) => void;
+  observeBootstrapPlan?: (context: AiPolicyContext, entries: readonly CommandFrameEntry[]) => void;
 };
 
 export function createAiMemoryProvider(memories: Record<PlayerId, AiPolicyMemory> = {}): AiMemoryProvider {
@@ -82,7 +82,7 @@ export function planAiOwnerCommandEntries<Source extends string = string>(snapsh
         scriptId: entry.scriptId,
         command: entry.command,
       })));
-      observeBootstrapPlan?.(context);
+      observeBootstrapPlan?.(context, entries);
       return entries;
     });
   }
