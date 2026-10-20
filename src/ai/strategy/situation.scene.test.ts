@@ -17,6 +17,15 @@ const assess = (frame: Scene) => {
 };
 
 describe('read-only situation over exact contract event frames', () => {
+  it('projects L3 actual mobile care above half health without losing its guard task', () => {
+    const frame: Scene = JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/recovery-L3.json.gz', import.meta.url))).toString());
+    const before = JSON.stringify(frame), situation = assess(frame);
+    const patient = situation.units.find(unit => unit.id === 'unit-player-ashChieftain-3872')!;
+    expect(patient.hp / patient.maxHp).toBeGreaterThan(.7);
+    expect(patient.commitments).toContainEqual(expect.objectContaining({ source: 'mobileCare.claimsUnits' }));
+    expect(patient.commitments.some(task => task.source.startsWith('unitClaims.'))).toBe(true);
+    expect(JSON.stringify(frame)).toBe(before);
+  });
   it.each(['E01', 'E02', 'E05', 'Nd', 'Ne'])('preserves the full %s world and task memory and uses shared component IDs', event => {
     const frame = scene(event), before = JSON.stringify(frame);
     const situation = assess(frame);

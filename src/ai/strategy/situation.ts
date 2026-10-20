@@ -6,6 +6,8 @@ import { walkableGoal } from '../../shared/terrain';
 import type { GameSnapshot, PlayerId, Unit } from '../../shared/types';
 import type { AiPolicyMemory } from '../memory';
 import { incomingLandArmy } from '../policy/land-arrivals';
+import { postRecoveryAssignments } from '../bootstrap_1/front-recovery';
+import { mobileCare } from '../bootstrap_1/mobile-care';
 import { isOpponentOwner } from '../policy/ownership';
 import { distance } from '../policy/spatial';
 import { effectiveCombatRating, TOWER_STRENGTH, unitStrength } from '../policy/v6/strength';
@@ -29,6 +31,12 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
   const query = createArrivalQuery(snapshot, owner, memory), live = snapshot.units.filter(unit => unit.hp > 0);
   const byId = new Map(live.map(unit => [unit.id, unit]));
   const own = live.filter(unit => unit.owner === owner);
+  const recovering = new Map(postRecoveryAssignments(snapshot, owner, options)
+    .map(({ patient, post, walk }) => [patient.id, { postId: post.id, walk }]));
+  // The existing mobile-care selector prunes ferry state through navalUnitIds.
+  // Evaluate that exact selector on an isolated memory, never the live policy.
+  const mobilePatients = own.some(unit => unit.kind !== 'worker' && unit.hp < unit.maxHp)
+    ? mobileCare.claimsUnits!(snapshot, owner, { ...options, memory: structuredClone(memory) }) : new Set<string>();
   const foe = (other: string) => isOpponentOwner(snapshot, owner, other, options);
   const strength = (unit: Unit) => unitMover(unit.kind) === 'sea' ? effectiveCombatRating(snapshot, unit) : unitStrength(unit);
   const evidence = (source: string, detail: string, at = tick): Evidence => ({ source, detail, tick: at, certainty: 'inferred' });
@@ -124,7 +132,7 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
   for (const harasser of harassers.slice(0, MAX_HARASS_TARGETS)) targets.set(harasser.id, target(harasser));
   const units = live.map(unit => ({ id: unit.id, owner: unit.owner, kind: unit.kind,
     location: unitLocation(snapshot.map, unit, byId, tick), hp: unit.hp, maxHp: unit.maxHp, strength: strength(unit),
-    roles: unitRoles(unit), expiresTick: unit.expiresTick ?? null, commitments: unitCommitments(snapshot, owner, memory, unit),
+    roles: unitRoles(unit), expiresTick: unit.expiresTick ?? null, commitments: unitCommitments(snapshot, owner, memory, unit, recovering.get(unit.id), mobilePatients.has(unit.id)),
     arrivals: unit.owner === 'neutral' || unit.kind === 'worker' && unit.owner !== owner || unitMover(unit.kind) === 'sea' ? []
       : [...targets].map(([targetId, destination]) => {
         const lowerBound = distance(unit, destination.point) * SIM_TICKS_PER_SECOND / Math.max(unit.speed, UNIT_DEFS.transport.speed);

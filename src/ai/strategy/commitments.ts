@@ -18,7 +18,8 @@ export function unitRoles(unit: Unit): UnitRole[] {
 
 /** Project every retained ownership source, including overlaps. No expiring,
  * releasing, refreshing claims or assigning troops in this observation pass. */
-export function unitCommitments(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory, unit: Unit): Commitment[] {
+export function unitCommitments(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory, unit: Unit,
+  recovery?: { postId: string; walk: boolean }, mobileHealing = false): Commitment[] {
   if (unit.owner !== owner) return [];
   const results: Commitment[] = [], role = unitRoles(unit)[0]!;
   const add = (source: string, taskId: string, kind?: ObjectiveKind, targetId?: string) => results.push({
@@ -45,6 +46,8 @@ export function unitCommitments(snapshot: GameSnapshot, owner: PlayerId, memory:
     mounted.objective.kind === 'raid' ? 'AttackSite' : undefined, mounted.objective.kind === 'raid' ? mounted.objective.hallId : undefined);
   for (const [source, task] of [['shopping', memory.shopping], ['loot', memory.loot], ['mercenaryCourier', memory.mercenaryCourier], ['v6.shop', memory.v6?.shop]] as const)
     if (task?.unitId === unit.id) add(source, source);
+  if (recovery) add('frontRecovery.postRecoveryAssignments', `healing:${recovery.postId}:${recovery.walk ? 'walking' : 'recovering'}`);
+  if (mobileHealing) add('mobileCare.claimsUnits', `mobileCare:${unit.id}`);
   if (unit.order.type === 'follow') {
     const targetId = unit.order.targetId;
     if (snapshot.units.some(healer => healer.id === targetId && ['priest', 'fieldMedic'].includes(healer.kind)))
