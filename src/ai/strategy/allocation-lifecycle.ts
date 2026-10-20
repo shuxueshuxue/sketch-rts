@@ -1,8 +1,24 @@
 import type { GameSnapshot } from '../../shared/types';
 import type { ActionGrant, ActionToken, AllocationEvent, AllocationReason, ExecutionAction,
   ExecutorFeedback, StrategyAllocationMemory } from './allocation-types';
-import { applyAllocationPayments } from './allocation-ledger';
+import { advancesAllocationCommand, applyAllocationPayments } from './allocation-ledger';
 import { assertStrategyAllocationBounds, sameAction, STRATEGY_ALLOCATION_LIMITS } from './control';
+import { copyNativeOrder, INCUMBENT_RECEIPT_WAIT_TICKS } from './incumbent-evidence';
+
+/** Acceptance is not movement. Refresh lineage from the current native world
+ * before safety services or assignment-stage accounting consume it. */
+export function observeAllocationOrders(memory: StrategyAllocationMemory, snapshot: GameSnapshot): StrategyAllocationMemory {
+  const units = new Map(snapshot.units.filter(unit => unit.owner === memory.owner && unit.hp > 0).map(unit => [unit.id, unit]));
+  const issuedOrders: Record<string, StrategyAllocationMemory['issuedOrders'][string]> = {};
+  for (const [id, order] of Object.entries(memory.issuedOrders)) {
+    const unit = units.get(id), command = memory.issuedCommands[order.commandId], action = memory.executions[order.action.actionId];
+    if (!unit || !command || !action || !sameAction(command.action, order.action) || !sameAction(action.token, order.action)) continue;
+    if (advancesAllocationCommand(snapshot, unit, command.command)) issuedOrders[id] = { ...order,
+      observedTick: snapshot.tick, observedOrder: copyNativeOrder(unit.order) };
+    else if (order.observedTick === null && snapshot.tick - order.acceptedTick <= INCUMBENT_RECEIPT_WAIT_TICKS) issuedOrders[id] = order;
+  }
+  return { ...memory, issuedOrders };
+}
 
 const terminal = (status: ExecutionAction['status']) => ['complete', 'failed', 'abandoned'].includes(status);
 /** Required unloads are an observed milestone. Optional voyages retain their

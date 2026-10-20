@@ -2,6 +2,7 @@ import type { GameCommand, GameSnapshot, PlayerId } from '../../shared/types';
 import type { ActionGrant, ActionToken, CommandAdmission, ExclusiveResourceKey, StrategyAllocationMemory } from './allocation-types';
 import { sameAction } from './control';
 import { inheritIncumbentCommand } from './incumbent-command-source';
+import { allocationCommandCost, reservedAllocationGold } from './allocation-ledger';
 
 export type StrategyCommandProposal = Readonly<{
   id: string;
@@ -43,9 +44,10 @@ function operands(snapshot: GameSnapshot, command: GameCommand): Operands {
 /** A transaction-local gateway. Raw script authority can never command a leased
  * resource. A supported incumbent adapter must explicitly bind its real token,
  * just like every other executor. No simulator legality rule is copied here. */
-export function admitStrategyCommands(input: Readonly<{ snapshot: GameSnapshot; owner: PlayerId;
-  memory: StrategyAllocationMemory; grants: readonly ActionGrant[]; proposals: readonly StrategyCommandProposal[]; queuedTick: number | null }>) {
-  const { snapshot, owner, memory, grants, proposals, queuedTick } = input;
+type StrategyGatewayInput = Readonly<{ snapshot: GameSnapshot; owner: PlayerId;
+  memory: StrategyAllocationMemory; grants: readonly ActionGrant[]; queuedTick: number | null }>;
+export function createStrategyCommandGateway(input: StrategyGatewayInput) {
+  const { snapshot, owner, memory, grants, queuedTick } = input;
   const units = new Map(snapshot.units.flatMap(unit => [unit, ...(unit.cargo ?? [])]).map(unit => [unit.id, unit]));
   const buildings = new Map(snapshot.buildings.map(building => [building.id, building]));
   const events = new Map(memory.events.map(event => [event.id, event]));
@@ -64,6 +66,10 @@ export function admitStrategyCommands(input: Readonly<{ snapshot: GameSnapshot; 
       && grant.leases.some(given => given.id === lease.id && given.resourceKey === key));
   };
   const interruptions = new Set<string>();
+  let cashGold = snapshot.players[owner]?.gold ?? 0;
+  let reservedGold = reservedAllocationGold(memory);
+  const usedBudgetGold = new Map<string, number>();
+  return { admit(proposals: readonly StrategyCommandProposal[]) {
   for (const proposal of proposals) if (proposal.purpose === 'life-saving' && grantFor(proposal)) {
     for (const id of operands(snapshot, proposal.command).units) if (allows(`unit:${id}`, proposal)) interruptions.add(id);
   }
@@ -71,10 +77,27 @@ export function admitStrategyCommands(input: Readonly<{ snapshot: GameSnapshot; 
   const record = (proposal: StrategyCommandProposal, command: GameCommand, code?: string) => {
     const header = { commandId: proposal.id, source: proposal.source, executor: proposal.executor,
       action: proposal.action, allocationRevision: proposal.allocationRevision, purpose: proposal.purpose, command };
+    const price = code ? 0 : allocationCommandCost(snapshot, owner, command);
+    const grant = grantFor(proposal), budgetKey = proposal.action ? `${proposal.action.actionId}:${proposal.action.generation}` : '';
+    const budgetGold = grant ? [...new Set(grant.budgets.map(given => given.id))].reduce((sum, id) => {
+      const budget = memory.budgets[id];
+      return sum + (budget && proposal.action && sameAction(budget.action, proposal.action) && budget.state === 'reserved'
+        && budget.objectiveId === grant.objectiveId && budget.methodId === grant.methodId ? budget.amountGold - budget.paidGold : 0);
+    }, 0) : 0;
+    if (!code && price > 0) {
+      if (proposal.source === 'executor' && price > budgetGold - (usedBudgetGold.get(budgetKey) ?? 0)) code = 'command-capital-not-granted';
+      else if (price > cashGold || proposal.source === 'script' && price > Math.max(0, cashGold - reservedGold)) code = 'command-cash-owned-by-another-action';
+    }
     if (code) admissions.push({ ...header, status: 'rejected', reason: { executor: proposal.executor,
       outcome: 'candidate-rejected', reason: code, unitIds: operands(snapshot, command).units,
       ...(proposal.action ? { taskId: proposal.action.actionId } : {}) } });
-    else { admissions.push({ ...header, status: 'accepted', admittedTick: snapshot.tick, queuedTick }); accepted.push({ ...proposal, command }); }
+    else {
+      cashGold -= price;
+      if (proposal.source === 'executor') {
+        reservedGold -= price; usedBudgetGold.set(budgetKey, (usedBudgetGold.get(budgetKey) ?? 0) + price);
+      }
+      admissions.push({ ...header, status: 'accepted', admittedTick: snapshot.tick, queuedTick }); accepted.push({ ...proposal, command });
+    }
   };
   for (const proposal of proposals) {
     const command = proposal.command, used = operands(snapshot, command);
@@ -113,4 +136,12 @@ export function admitStrategyCommands(input: Readonly<{ snapshot: GameSnapshot; 
     else record(proposal, command);
   }
   return { accepted, admissions };
+  } };
+}
+
+/** Single-batch convenience. A runner which admits script-by-script uses one
+ * createStrategyCommandGateway for the entire think and submits rescue
+ * proposals before the corresponding task proposals. */
+export function admitStrategyCommands(input: StrategyGatewayInput & Readonly<{ proposals: readonly StrategyCommandProposal[] }>) {
+  return createStrategyCommandGateway(input).admit(input.proposals);
 }
