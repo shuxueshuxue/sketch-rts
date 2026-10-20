@@ -3,6 +3,7 @@ import { createGame, snapshotGame } from '../../shared/sim';
 import { createUnit } from '../../shared/map';
 import type { AllocationMethodProvider, ExecutableMethod, MethodAllocationQuote, StrategyAllocationInput } from './allocation-types';
 import { allocateStrategy } from './allocator';
+import { allocationResponseCandidates } from './allocation-eligibility';
 import { createStrategyAllocationMemory } from './control';
 import { recordAllocationCommands } from './allocation-ledger';
 import type { DecisionFacts } from './decision';
@@ -225,4 +226,22 @@ describe('deterministic whole-bundle allocation', () => {
       kind: 'lease-transferred', fromObjectiveId: 'pair', toObjectiveId: 'single' });
     expect(transferred.events.some(event => event.kind === 'preempted')).toBe(false);
   });
+});
+
+
+it('keeps proposed idle reservations eligible without erasing their observation facts', () => {
+  const { input } = fixture();
+  const situation = { ...input.situation, units: input.situation.units.map(unit => ({ ...unit, commitments: [{
+    source: 'landExpansion', taskId: 'candidate', objectiveId: 'old-candidate', role: 'frontline' as const }] })) };
+  const snapshot = structuredClone(input.snapshot), memory = createStrategyAllocationMemory('player', snapshot.tick);
+  snapshot.units[0]!.order = { type: 'idle' };
+  snapshot.units[1]!.order = { type: 'move', x: 1200, y: 1000 };
+  expect(allocationResponseCandidates(snapshot, situation, memory)).toEqual(['one']);
+  expect(situation.units.every(unit => unit.commitments.length === 1)).toBe(true);
+  const held = { ...memory, leases: { 'unit:one': { id: 'lease:one', resourceKey: 'unit:one' as const,
+    objectiveId: 'guard', methodId: 'guard/method', action: { actionId: 'guard/act', generation: 1 },
+    sinceTick: snapshot.tick, minimumStayUntilTick: snapshot.tick, origin: 'allocator' as const, incumbentTask: null } } };
+  expect(allocationResponseCandidates(snapshot, situation, held)).toEqual([]);
+  const fork = JSON.parse(JSON.stringify(held));
+  expect(allocationResponseCandidates(snapshot, situation, fork)).toEqual([]);
 });

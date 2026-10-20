@@ -12,6 +12,8 @@ import { STRATEGY_PARAMETERS } from './utility';
 import { plannedVoyageArrival, plannedVoyageContext } from './planned-voyage-arrival';
 import type { DecisionFacts } from './decision';
 import type { Effect, Objective, SituationUnit, ValuationContext } from './types';
+import { assertUnitValueSides } from './unit-value-ledger';
+import { allocationResponseCandidates } from './allocation-eligibility';
 
 /** A fixed prefix bound limits speculative group quotes, not committed forces.
  * Every prefix is repriced as a whole group, including camp-force interactions. */
@@ -45,6 +47,7 @@ function quoteInput(input: StrategyAllocationInput, memory: StrategyAllocationMe
   valuation: ValuationContext): AllocationMethodQuoteInput {
   return { snapshot: input.snapshot, situation: input.situation, objective: offer.objective, method: offer.method,
     unitIds: offer.unitIds, budgets: Object.values(memory.budgets).filter(budget => budget.methodId === offer.method.id),
+    responseEligibleUnitIds: allocationResponseCandidates(input.snapshot, input.situation, memory),
     executions: Object.values(memory.executions).filter(action => action.methodId === offer.method.id), valuation,
     ...(input.voyageRisks ? { voyageRisks: input.voyageRisks } : {}),
     ...(input.fixedVoyageArrival ? { fixedVoyageArrival: input.fixedVoyageArrival } : {}) };
@@ -63,12 +66,15 @@ function reprice(input: StrategyAllocationInput, memory: StrategyAllocationMemor
       throw new Error('Materialized voyage recruited outside the quoted bundle');
   }
   const quote = provider.quote({ ...request, method });
+  if (quote.utility) assertUnitValueSides(quote.utility);
+  if (quote.potentialUtility) assertUnitValueSides(quote.potentialUtility);
   if (quote.methodId !== method.id || quote.status === 'feasible' && !Number.isFinite(quote.utility.score))
     throw new Error('Invalid allocation method quote');
   return { method, quote };
 }
 function candidateBundles(input: StrategyAllocationInput, memory: StrategyAllocationMemory, method: ExecutableMethod): readonly string[][] {
   const owned = input.situation.units.filter(unit => unit.owner === input.situation.owner && unit.hp > 0);
+  const free = new Set(allocationResponseCandidates(input.snapshot, input.situation, memory));
   const existing = Object.values(memory.assignments).filter(assignment => assignment.methodId === method.id).map(assignment => assignment.unitId);
   for (const action of Object.values(memory.executions).filter(action => action.methodId === method.id)) {
     for (const id of [action.state.createdUnitId, action.state.createdShipId])
@@ -95,8 +101,7 @@ function candidateBundles(input: StrategyAllocationInput, memory: StrategyAlloca
     if (lease?.objectiveId === method.objectiveId) return true;
     // Proposed reservations are not authority. Actual unpriced execution stays
     // out of a free pool until an explicit imported lease/quote can represent it.
-    const actual = input.snapshot.units.find(actor => actor.id === unit.id);
-    return !!lease || unit.commitments.length === 0 || actual?.order.type === 'idle' && !actual.deck && !actual.cabin;
+    return !!lease || free.has(unit.id);
   }).sort((a, b) => {
     const x = eta(a), y = eta(b);
     const priority = (id: string) => {

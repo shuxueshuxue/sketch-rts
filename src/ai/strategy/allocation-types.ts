@@ -407,6 +407,9 @@ export type AllocationMethodQuoteInput = Readonly<{
   method: ExecutableMethod;
   unitIds: readonly string[];
   budgets: readonly AllocationBudget[];
+  /** Explicit counterfactual pool from current authority and native orders.
+   * Idle proposed reservations remain visible commitments, but are not leases. */
+  responseEligibleUnitIds?: readonly string[];
   /** Real current action records, including observed production results. The
    * caller supplies these on each transaction; providers keep no hidden history. */
   executions: readonly ExecutionAction[];
