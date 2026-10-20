@@ -17,7 +17,11 @@ export type Evidence = Readonly<{
   certainty: 'recorded' | 'inferred' | 'unknown';
   detail: string;
 }>;
-export type Reason = Readonly<{ code: string; detail: string; evidence: readonly Evidence[] }>;
+export type Reason = Readonly<{ code: string; detail: string; evidence: readonly Evidence[];
+  /** Structured decision provenance survives projection without parsing prose. */
+  factIds?: readonly string[];
+  values?: Readonly<Record<string, string | number | boolean | null>>;
+}>;
 
 /** Component IDs use terrain connectivity, never a map ID or a home/island label. */
 export type Location =

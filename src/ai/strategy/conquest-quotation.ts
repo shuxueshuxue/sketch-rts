@@ -14,7 +14,8 @@ import { assertUnitValueSides } from './unit-value-ledger';
 export function quoteConquestMethod(input: AllocationMethodQuoteInput): MethodAllocationQuote {
   const { method, objective, situation, snapshot } = input, facts = conquestFacts(input);
   const missing: AllocationPrecondition[] = method.preconditions.filter(condition => condition.status !== 'met')
-    .map(condition => ({ ...condition, reason: { code: condition.reason.code, factIds: [], values: {} } }));
+    .map(condition => ({ ...condition, reason: { code: condition.reason.code,
+      factIds: condition.reason.factIds ?? [], values: condition.reason.values ?? {} } }));
   const add = (code: string, ids: readonly string[] = [], kind: AllocationPrecondition['kind'] = 'route') => missing.push({
     id: `${method.id}/${code}:${ids.join(',')}`, kind, status: /unknown|unpublished|unquoted|unobserved/.test(code) ? 'unknown' : 'unmet',
     reason: { code, factIds: ids, values: {} }, demand: method.demands[0] ?? null, subgoalIds: [] });
