@@ -6,6 +6,7 @@ import { snapshotUnitIndex } from './world-index';
 import { withStrategyFrame } from './frame-reuse';
 import { withGoalDistanceFieldLease } from '../../shared/terrain';
 import { generateNavalObjectives, decomposeNavalObjective } from './naval-objectives';
+import { LAND_OBJECTIVE_FAMILY } from './land-objectives';
 import { evaluateSituation } from './situation';
 import { observationHistory, observationMemory, retainObservationHistory } from './observation-memory';
 import type { Assignment, BudgetEntry, IdleForce, MethodPlanner, ObjectiveGenerator, PlanningContext,
@@ -23,7 +24,7 @@ export type ObjectiveFamily = Readonly<{
 export const NAVAL_OBJECTIVE_FAMILY: ObjectiveFamily = { id: 'naval', generate: generateNavalObjectives, decompose: decomposeNavalObjective };
 
 export function buildStrategyPlanTrace(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext,
-  _previous?: StrategyPlanTrace, families: readonly ObjectiveFamily[] = [NAVAL_OBJECTIVE_FAMILY], observation?: SituationObservation, fieldBuildBudget = 1): StrategyPlanTrace {
+  _previous?: StrategyPlanTrace, families: readonly ObjectiveFamily[] = [NAVAL_OBJECTIVE_FAMILY, LAND_OBJECTIVE_FAMILY], observation?: SituationObservation, fieldBuildBudget = 1): StrategyPlanTrace {
   return withGoalDistanceFieldLease(snapshot.map, owner, snapshot.tick,
     () => withStrategyFrame(() => assembleStrategyPlanTrace(snapshot, owner, options, families, observation, fieldBuildBudget)));
 }

@@ -53,7 +53,7 @@ describe('decision facts and requested explanations', () => {
     const frame = frames.find(frame => frame.event === row.event)!;
     for (const decision of [false, true]) {
       const bytes = execFileSync(process.execPath, ['--import', 'tsx', fileURLToPath(new URL('./fixtures/observation-worker.ts', import.meta.url))], {
-        input: JSON.stringify({ ...frame, steps: reference.steps, decision }), maxBuffer: 64 * 1024 * 1024,
+        input: JSON.stringify({ ...frame, steps: reference.steps, decision, navalOnly: true }), maxBuffer: 64 * 1024 * 1024,
       });
       expect(createHash('sha256').update(bytes).digest('hex'), `decision=${decision}`).toBe(row.sha256);
     }

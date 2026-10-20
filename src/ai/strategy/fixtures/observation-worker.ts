@@ -3,7 +3,7 @@ import { setBuildingBodies, moverDistanceField, warmTerrainRouting } from '../..
 import { standingBodies } from '../../../shared/structure-bodies';
 import type { GameSnapshot } from '../../../shared/types';
 import type { AiPolicyMemory } from '../../memory';
-import { buildStrategyPlanTrace } from '../plan';
+import { buildStrategyPlanTrace, NAVAL_OBJECTIVE_FAMILY } from '../plan';
 import { evaluateSituation } from '../situation';
 import { createArrivalQuery, crossingCandidateId } from '../arrivals';
 import { createPlanningDistanceQuery } from '../distance-fields';
@@ -12,9 +12,10 @@ import { observationMemory } from '../observation-memory';
 import { buildObservedStrategyDecision, buildStrategyDecision, projectStrategyTrace } from '../decision';
 
 type Input = { snapshot: GameSnapshot; owner: string; memory: AiPolicyMemory;
-  warm?: 'other-owner' | 'reverse' | 'startup'; start?: number; steps: number; dropHallId?: string; tiny?: boolean; decision?: boolean; factsOnly?: boolean };
+  warm?: 'other-owner' | 'reverse' | 'startup'; start?: number; steps: number; dropHallId?: string; tiny?: boolean; decision?: boolean; factsOnly?: boolean; navalOnly?: boolean };
 const input = JSON.parse(readFileSync(0, 'utf8')) as Input;
 const { snapshot, owner, memory } = input, initialTick = snapshot.tick;
+const families = input.navalOnly ? [NAVAL_OBJECTIVE_FAMILY] : undefined;
 if (input.tiny) {
   const fighter = structuredClone(snapshot.units.find(unit => unit.owner === owner && unit.kind === 'emberRavager')!);
   const boat = structuredClone(snapshot.units.find(unit => unit.owner === owner && unit.kind === 'transport')!);
@@ -40,7 +41,7 @@ else if (input.warm) {
   for (const other of Object.keys(snapshot.players).filter(other => other !== owner))
     evaluateSituation(snapshot, other, { jobs: [], unitClaims: {} });
   const seeded = structuredClone(memory);
-  buildStrategyPlanTrace(snapshot, owner, { memory: seeded }, undefined, undefined, { healing: [] }, Infinity);
+  buildStrategyPlanTrace(snapshot, owner, { memory: seeded }, undefined, families, { healing: [] }, Infinity);
   if (input.warm === 'reverse') for (const mover of ['sea', 'land'] as const)
     for (const entry of [...seeded.strategy!.observation.fields[mover]].reverse()) moverDistanceField(snapshot.map, entry.goal, mover);
 }
@@ -50,10 +51,10 @@ for (let index = input.start ?? 0; index < (input.start ?? 0) + input.steps; ind
   if (input.dropHallId && index >= 4) snapshot.buildings = snapshot.buildings.filter(building => building.id !== input.dropHallId);
   setBuildingBodies(snapshot.map, standingBodies(snapshot));
   const trace = input.tiny ? tinyArrival(memory, 1) : input.factsOnly
-    ? buildStrategyDecision(snapshot, owner, { memory }, undefined, { healing: [] })
+    ? buildStrategyDecision(snapshot, owner, { memory }, families, { healing: [] })
     : input.decision
-    ? projectStrategyTrace(buildObservedStrategyDecision(snapshot, owner, { memory }, undefined, { healing: [] }))
-    : buildStrategyPlanTrace(snapshot, owner, { memory }, undefined, undefined, { healing: [] });
+    ? projectStrategyTrace(buildObservedStrategyDecision(snapshot, owner, { memory }, families, { healing: [] }))
+    : buildStrategyPlanTrace(snapshot, owner, { memory }, undefined, families, { healing: [] });
   rows.push(JSON.stringify(trace)); saved.push(JSON.stringify(memory));
 }
 process.stdout.write(JSON.stringify({ rows, saved }));
