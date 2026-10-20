@@ -6,6 +6,7 @@ import { hostname } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { roomAbCases, type RoomAbVersion, type RoomAbCase } from '../src/ai/benchmark/room-ab';
+import { AI_SCRIPT_VERSIONS } from '../src/ai/policy';
 import { ROOM_BASELINE_MANIFEST } from '../src/ai/frozen/room-baseline';
 import { runRoomAbMatch, sha, type RoomAbReport } from '../tools/ai/room-ab-run';
 const args = process.argv.slice(2);
@@ -13,7 +14,7 @@ const arg = (key: string) => { const i = args.indexOf(key); return i < 0 ? undef
 const out = resolve(arg('--out') ?? 'work/room-ab');
 const cache = resolve(arg('--cache') ?? 'work/room-baseline-646c/cache');
 const selected = arg('--case');
-const allowed = new Set(['room-baseline-646c', 'room-current', 'v9_archer', 'v9_summoner', 'v9_knight']);
+const allowed = new Set(['room-baseline-646c', 'room-current', 'v2-prod', 'v9_archer', 'v9_summoner', 'v9_knight', ...Object.keys(AI_SCRIPT_VERSIONS)]);
 function version(key: string, fallback: RoomAbVersion): RoomAbVersion {
   const value = arg(key) ?? fallback; if (!allowed.has(value)) throw new Error(`Unknown brain ${value}`); return value as RoomAbVersion;
 }

@@ -1,10 +1,10 @@
 import { MAP_POOL } from '../../shared/map-pool';
-import type { BootstrapAiVersion, RaceId } from '../../shared/types';
+import type { AiScriptVersion, BootstrapAiVersion, RaceId } from '../../shared/types';
 
 export const ROOM_AB_MAPS = ['brokenSea', 'greystonePass', 'gullIsland', 'pineshade', 'reedwater', 'ringwater',
   'sapphireArchipelago', 'templeSpring', 'turtleLake', 'twoShores', 'veiledHill'] as const;
 export const ROOM_AB_FAMILIES: readonly BootstrapAiVersion[] = ['v9_archer', 'v9_summoner', 'v9_knight'];
-export type RoomAbVersion = 'room-baseline-646c' | 'room-current' | BootstrapAiVersion;
+export type RoomAbVersion = 'room-baseline-646c' | 'room-current' | AiScriptVersion;
 export type RoomAbSeat = { owner: string; side: 'A' | 'B'; brain: RoomAbVersion; family: BootstrapAiVersion; race: RaceId };
 export type RoomAbCase = {
   name: string; pair: string; mapId: string; mode: 'ffa' | 'duel'; nativeSeats: number; seed: string; layoutSeed: string;

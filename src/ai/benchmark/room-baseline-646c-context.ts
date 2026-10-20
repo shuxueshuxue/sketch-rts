@@ -133,7 +133,7 @@ export function projectRoomBaseline646cContext(snapshot: GameSnapshot, owner: Pl
 // Copied from 646c v7/creep: geometric grouping only; no live policy selection or strength calls.
 type Camp = { center: { x: number; y: number }; creeps: Unit[] };
 const home = (u: Unit) => ({ x: u.homeX ?? u.x, y: u.homeY ?? u.y });
-const distance = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y);
+const distance = (a: { x: number; y: number }, b: { x: number; y: number }) => hypot2(a.x - b.x, a.y - b.y);
 function neutralCamps(snapshot: GameSnapshot): Camp[] {
   const unseen = new Set(snapshot.units.filter(u => u.owner === 'neutral' && u.attackDamage > 0));
   const camps: Camp[] = [];
@@ -151,4 +151,13 @@ function neutralCamps(snapshot: GameSnapshot): Camp[] {
 }
 function activeCamp(state: { center: { x: number; y: number }; reach: number }, camps: Camp[]) {
   return camps.find(camp => camp.creeps.some(u => distance(home(u), state.center) <= 300 + state.reach));
+}
+
+// Pinned 646c shared/hypot implementation (diagnostic geometry only).
+function hypot2(x: number, y: number): number {
+  const absX = Math.abs(x), absY = Math.abs(y);
+  if (absX === Infinity || absY === Infinity) return Infinity;
+  const max = Math.max(absX, absY); if (max === 0) return 0;
+  const a = absX / max, b = absY / max;
+  return Math.sqrt(a * a + b * b) * max;
 }
