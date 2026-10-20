@@ -19,6 +19,7 @@ import { postRecoveryAssignments } from './front-recovery';
 import { incomingLandArmy } from '../policy/land-arrivals';
 import { strategyLeaseAllows } from '../strategy/control';
 import { expansionGarrisonActor } from '../strategy/incumbent-actors';
+import { bindIncumbentCommands, inheritIncumbentCommand } from '../strategy/incumbent-command-source';
 
 const POST_RANGE = 240;
 const PERIMETER = 650;
@@ -218,10 +219,10 @@ export const expansionGarrison: AiScript = {
         const returning = moving.filter(unit => activeUnitClaim(snapshot, owner, unit, options)?.kind === 'expansionGarrison'
           || unit.hp < unit.maxHp * RECOVERING_SHARE);
         const joining = moving.filter(unit => !returning.includes(unit));
-        return [
+        return bindIncumbentCommands([
           ...(joining.length ? [{ type: 'attackMove' as const, unitIds: joining.map(unit => unit.id), ...point }] : []),
           ...(returning.length ? [{ type: 'move' as const, unitIds: returning.map(unit => unit.id), ...point, avoidCombat: true }] : []),
-        ];
+        ], expansionGarrisonActor(hall.id));
       });
   },
   onCommands(snapshot, owner, options, commands) {
@@ -252,9 +253,9 @@ export function garrisonRecoveryCommands(snapshot: GameSnapshot, owner: PlayerId
     });
     if (!local.length) return [command];
     const remaining = command.unitIds.filter(id => !local.some(({ unit }) => unit.id === id));
-    return [ ...(remaining.length ? [{ ...command, unitIds: remaining }] : []),
-      ...local.map(({ unit, claim, point }): GameCommand => distance(unit, claim) <= POST_RANGE
+    return [ ...(remaining.length ? [inheritIncumbentCommand(command, { ...command, unitIds: remaining })] : []),
+      ...local.flatMap(({ unit, claim, point }): GameCommand[] => bindIncumbentCommands([distance(unit, claim) <= POST_RANGE
         ? { type: 'holdPosition', unitIds: [unit.id] }
-        : { type: 'move', unitIds: [unit.id], x: point.x, y: point.y, avoidCombat: true }) ];
+        : { type: 'move', unitIds: [unit.id], x: point.x, y: point.y, avoidCombat: true }], expansionGarrisonActor(claim.targetId))) ];
   });
 }

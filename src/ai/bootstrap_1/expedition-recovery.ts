@@ -25,6 +25,7 @@ import { postRecoveryAssignments, postRecoveryCommands } from './front-recovery'
 import { strikersOf } from '../policy/threat-reach';
 import { planReinforcementFerries, reinforcementCrew } from './reinforcement-ferries';
 import { conquestReinforcementCrew, islandConquestCommands, planConquestEngineers, planConquestReinforcements, prepareIslandConquests } from './island-conquest';
+import { inheritIncumbentCommand } from '../strategy/incumbent-command-source';
 
 
 function incomingDamage(patient: Unit, foes: readonly (Unit | Building)[], window: number) {
@@ -147,7 +148,7 @@ export function planBootstrapNaval(snapshot: GameSnapshot, owner: PlayerId, opti
     if ('unitId' in command) return reserved.has(command.unitId) ? [] : [command];
     if (!('unitIds' in command)) return [command];
     const unitIds = command.unitIds.filter(id => !reserved.has(id));
-    return unitIds.length ? [{ ...command, unitIds }] : [];
+    return unitIds.length ? [inheritIncumbentCommand(command, { ...command, unitIds })] : [];
   }), ...postRecoveryCommands(posts), ...retreat, ...unmedicated.map(({ patient, cover }): GameCommand =>
     ({ type: 'move', unitIds: [patient.id], ...cover, avoidCombat: true })), ...healing, ...ports.commands];
 }
