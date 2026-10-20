@@ -1,12 +1,12 @@
 {
-  "captureCommit": "b236842338dfc0310ccbc97b1705f04863fada44",
-  "run": "mvgdz8oh-8d4674",
+  "captureCommit": "df67f2144bd288f404cf9de4feec3f717382eca7",
+  "run": "mvgf5gml-b75c69",
   "transport": "ssh",
   "sshConfig": "~/YellowPage/ssh_config",
   "host": "zhipu-a100-102",
-  "archive": "/codegeex/jeffry/sketch-rts-camps/evidence/sha256/53dabafc323163c563852c17bee77bf2fc269c6b5692edf2a39e30a37e84c5cd",
-  "sha256": "53dabafc323163c563852c17bee77bf2fc269c6b5692edf2a39e30a37e84c5cd",
-  "bytes": 1777308,
+  "archive": "/codegeex/jeffry/sketch-rts-camps/evidence/sha256/37b6d78e9bc66e9fa33f90775df339131a121054555861af086f95c9c46e8866",
+  "sha256": "37b6d78e9bc66e9fa33f90775df339131a121054555861af086f95c9c46e8866",
+  "bytes": 1667390,
   "format": "tar.gz",
   "contents": [
     "SOURCE.json",
