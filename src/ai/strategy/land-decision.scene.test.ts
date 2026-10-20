@@ -15,9 +15,15 @@ import reference from './fixtures/land-explanation-reference.json';
 
 type Frame = { event: string; context: PlanningContext; situation: Situation };
 // Test-only ownership: deliberately mutate cloned inputs after evaluation.
-type Mutable<T> = T extends object ? { -readonly [Key in keyof T]: Mutable<T[Key]> } : T;
+type Mutable<T> = T extends (...args: never[]) => unknown ? T
+  : T extends object ? { -readonly [Key in keyof T]: Mutable<T[Key]> } : T;
+// Only Situation needs a writable view; the snapshot and policy memory already
+// permit these mutations. Keep the full planning context's native types intact.
+type MutableFrame = Omit<Frame, 'situation'> & { situation: Mutable<Situation> };
 const frames: Frame[] = JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/land-objective-event-frames.json.gz', import.meta.url))).toString()).cases;
-const scene = (event: string) => structuredClone(frames.find(frame => frame.event === event)!) as Mutable<Frame>;
+// The clone owns every nested value. Cross unknown to avoid recursively
+// comparing the entire read-only planning/allocation graph for this test cast.
+const scene = (event: string) => structuredClone(frames.find(frame => frame.event === event)!) as unknown as MutableFrame;
 const digest = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const numerical = (value: unknown) => JSON.stringify(value, (key, item) => ['evidence', 'detail', 'explanation'].includes(key) ? undefined : item);
 function observe({ situation, context }: Frame) {
