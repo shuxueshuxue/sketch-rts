@@ -136,7 +136,8 @@ export const transportExecutor: StrategyExecutor = {
     const base = executorFeedback(input);
     return { ...base, status: complete ? 'complete' : abandoned ? 'abandoned' : blocked ? 'blocked' : 'active',
       phase: complete ? 'delivered' : abandoned ? 'returned' : 'parallel-voyages',
-      state: { ...input.execution.state, voyages: states, requiredVoyageIds: [...required] },
+      state: { ...input.execution.state, voyages: states, requiredVoyageIds: [...required],
+        pendingVoyageIds: results.filter(result => !['complete', 'abandoned', 'failed'].includes(result.feedback.status)).map(result => result.voyage.id) },
       commands: results.flatMap(result => result.feedback.commands), progress: results.flatMap(result => result.feedback.progress),
       reasons: [...results.flatMap(result => result.feedback.reasons),
         ...(missing ? blockedExecutor(input, 'required-voyage-not-granted').reasons : [])] };
