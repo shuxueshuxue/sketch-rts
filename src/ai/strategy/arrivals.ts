@@ -184,7 +184,9 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
   const prototypes = new Map<string, Unit>();
   const shortlist = new Set<string>();
   let shortlisted = false;
-  const stats = { crossingBuilds: 0, passengerBuilds: 0, persistentHits: 0, reconstructions: 0 };
+  const stats = { crossingBuilds: 0, passengerBuilds: 0, persistentHits: 0, reconstructions: 0,
+    foreignUnknownBuilds: 0, foreignUnknownHits: 0 };
+  const foreignCrossings = new Map<PlayerId, Map<LandId, Arrival>>();
   let version: string | undefined;
   function logisticsVersion() {
     if (version !== undefined) return version;
@@ -412,8 +414,13 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
       : Object.assign(answer, { crossings: [crossing as CrossingEta & { requiresNewShip: false }] }) as Extract<Arrival, { status: 'reachable' }>;
   }
 
+  function resetGeometry() {
+    pendingGeometry = false;
+    if (usedFieldTicks.size) usedFieldTicks.clear();
+    if (usedQuoteTicks.size) usedQuoteTicks.clear();
+  }
   function calculate(unit: Unit, target: Target): Arrival {
-    pendingGeometry = false; usedFieldTicks.clear(); usedQuoteTicks.clear();
+    resetGeometry();
     const candidate = shortlisted && unit.owner === owner ? crossingCandidateId(snapshot, unit, target) : undefined;
     let answer: Arrival = candidate && !shortlist.has(candidate) && !isPublished(candidate)
       ? unknown('crossing-candidate-not-shortlisted',
@@ -440,7 +447,21 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
     crossingChoices: crossingTable,
     stats,
     setCrossingShortlist(ids: readonly string[]) { shortlisted = true; for (const id of ids) shortlist.add(id); },
-    arrival(unit: Unit, target: Target): Arrival {
+    arrival(unit: Unit, target: Target, origin?: LandId): Arrival {
+      // Situation already resolves each actor's actual terrain component. Only
+      // unmounted foreign actors on another land share this intent-only fact;
+      // local walks and observed passenger voyages still use their own geometry.
+      if (origin && target.landId && origin !== target.landId && unit.owner !== owner
+        && !unit.deck && !unit.cabin && unitMover(unit.kind) === 'land') {
+        resetGeometry();
+        let targets = foreignCrossings.get(unit.owner);
+        if (!targets) foreignCrossings.set(unit.owner, targets = new Map());
+        const known = targets.get(target.landId);
+        if (known) { stats.foreignUnknownHits++; return known; }
+        const answer = unknown('opponent-transport-plan-unobserved',
+          'No retained foreign ferry schedule is observable; do not assume its boat is free or invent a foreign build order');
+        targets.set(target.landId, answer); stats.foreignUnknownBuilds++; return answer;
+      }
       let answer: Arrival;
       if (memoize) {
         const key = pointKey(target.point);

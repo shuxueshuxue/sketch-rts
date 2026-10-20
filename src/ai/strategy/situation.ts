@@ -278,7 +278,7 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
         && !(retainedIds.has(targetId) && (memory.landAttack?.general.group?.includes(unit.id)
           || memory.landExpansion?.combat?.creep?.group.includes(unit.id))))) {
         const lowerBound = distance(unit, destination.point) * SIM_TICKS_PER_SECOND / Math.max(unit.speed, UNIT_DEFS.transport.speed);
-        arrival = lowerBound > horizonTicks ? beyondWindow : query.arrival(unit, destination);
+        arrival = lowerBound > horizonTicks ? beyondWindow : query.arrival(unit, destination, unitLand(unit));
         count++;
       }
       if (!values && previous[index] === arrival) continue;
