@@ -248,11 +248,12 @@ function assignMethod(input: StrategyAllocationInput, memory: StrategyAllocation
     });
     const expectedLoadedTick = pendingLoads.length ? pendingLoads.every(value => typeof value === 'number' && Number.isFinite(value))
       ? Math.max(...pendingLoads as number[]) : null : prior?.expectedLoadedTick ?? null;
+    const loadingForecastTick = pendingLoads.length ? expectedLoadedTick === null ? null : tick : prior?.loadingForecastTick ?? null;
     voyages[plan.id] = { id: plan.id, objectiveId: objective.id, action: next.executions[plan.actionId]!.token,
       shipAssignmentId: shipAssignment.id, crewAssignmentIds: plan.unitIds.map(id => `assignment:${id}`), passengerIds: passengers,
       departure: plan.departure, destination: plan.destination, departureGround: plan.departureGround, landingGround: plan.landingGround,
       phase: prior?.phase === 'return' ? 'return' : plannedVoyageContext(request, plan).phase, startedTick: prior?.startedTick ?? tick,
-      expectedFreeTick, expectedLoadedTick, decision: prior?.decision ?? 'continue' };
+      expectedFreeTick, expectedLoadedTick, loadingForecastTick, decision: prior?.decision ?? 'continue' };
   }
   const own = Object.values(assignments).filter(assignment => assignment.objectiveId === objective.id);
   next = { ...next, leases, assignments, voyages, objectives: { ...next.objectives, [objective.id]: {
