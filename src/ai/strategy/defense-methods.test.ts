@@ -239,6 +239,21 @@ describe('defense protection and whole-bundle valuation', () => {
     expect(JSON.stringify(input)).toBe(before);
   });
 
+  it('uses the allocator response pool without erasing an idle reservation commitment', () => {
+    const original = defendedPost(), reserve = original.unitIds.slice(-2);
+    const arrival = { status: 'reachable' as const, ticks: 0, landTicks: 0, crossings: [], evidence: [] };
+    const input = { ...original,
+      snapshot: { ...original.snapshot, buildings: original.snapshot.buildings.filter(building => building.kind !== 'defenseTower') },
+      unitIds: original.unitIds.slice(0, -2), situation: { ...original.situation, units: original.situation.units.map(unit => reserve.includes(unit.id)
+        ? { ...unit, arrivals: [{ targetId: original.method.actions.at(-1)!.id, arrival }],
+          commitments: [{ source: 'unitClaims.expansion', taskId: 'idle-reservation', objectiveId: null, role: unit.roles[0]! }] } : unit) } };
+    const before = JSON.stringify(input);
+    expect(defenseMethodProvider.quote(input).reason.values.otherResponseTicks).toBeNull();
+    expect(defenseMethodProvider.quote({ ...input, responseEligibleUnitIds: reserve }).reason.values.otherResponseTicks).toBe(0);
+    expect(defenseMethodProvider.quote({ ...input, responseEligibleUnitIds: [] }).reason.values.otherResponseTicks).toBeNull();
+    expect(JSON.stringify(input)).toBe(before);
+  });
+
   it('does not reuse an incumbent risk discount and charges only the collector actual alternative', () => {
     const input = defendedPost(), original = defenseMethodProvider.quote(input);
     const changed: DecisionFacts<Situation> = { ...input.situation, lands: input.situation.lands.map(land => ({ ...land,
