@@ -1,3 +1,4 @@
+import { isRangedUnit } from "../../shared/unit-weapon-class";
 import { clearUnitClaim } from './claims';
 import { unitControlsMercenaryCamp } from '../../shared/mercenary-camp';
 import { GOLD_MINE_RULES } from "../../shared/mining";
@@ -1071,7 +1072,7 @@ function nextUpgradeKind(snapshot: GameSnapshot, owner: PlayerId, options: Prese
 // speed lets archers walk away from mercenaries. Those two go first once there are shooters to carry them.
 function nextV5ShooterUpgradeKind(snapshot: GameSnapshot, owner: PlayerId, options: PresetAiPolicyOptions): UpgradeKind | undefined {
   if (!isV5ShooterCorePolicy(options)) return undefined;
-  const shooters = combatUnits(snapshot, owner).filter((unit) => unit.attackRange > 100 && unit.attackDamage > 0).length;
+  const shooters = upgradeBenefitingUnits(snapshot, owner, "rangeTraining").filter(unit => unit.attackDamage > 0).length;
   for (const upgradeKind of ["rangeTraining", "speedTraining"] as const) {
     if (!v5LateUpgradeResearchable(snapshot, owner, upgradeKind)) continue;
     if (shooters >= V5_SHOOTER_UPGRADE_BASE + upgradeLevel(snapshot, owner, upgradeKind) * V5_SHOOTER_UPGRADE_STEP) return upgradeKind;
@@ -1091,7 +1092,7 @@ function nextV5LateUpgradeKind(snapshot: GameSnapshot, owner: PlayerId, options:
   }
   if (v5LateUpgradeResearchable(snapshot, owner, "rangeTraining")) {
     const level = upgradeLevel(snapshot, owner, "rangeTraining");
-    const rangedUnits = army.filter((unit) => unit.attackRange >= 120);
+    const rangedUnits = upgradeBenefitingUnits(snapshot, owner, "rangeTraining");
     if (rangedUnits.length >= 5 + level * 2 || player.gold > 1_250 + level * 420) return "rangeTraining";
   }
   if (v5LateUpgradeResearchable(snapshot, owner, "speedTraining")) {
@@ -1114,7 +1115,7 @@ function usesEarlyWeaponTiming(snapshot: GameSnapshot, owner: PlayerId) {
 
 function upgradeBenefitingUnits(snapshot: GameSnapshot, owner: PlayerId, upgradeKind: UpgradeKind) {
   const affected = new Set<string>(UPGRADE_DEFS[upgradeKind].affectedUnitKinds);
-  return units(snapshot, owner).filter((unit) => affected.has(unit.kind));
+  return units(snapshot, owner).filter((unit) => affected.has(unit.kind) && (upgradeKind !== "rangeTraining" || isRangedUnit(unit)));
 }
 
 function upgradeAvailable(snapshot: GameSnapshot, owner: PlayerId, upgradeKind: UpgradeKind) {

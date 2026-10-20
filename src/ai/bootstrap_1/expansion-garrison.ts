@@ -1,3 +1,4 @@
+import { isRangedUnit } from "../../shared/unit-weapon-class";
 import { BUILDING_DEFS, unitMover } from '../../shared/catalog';
 import { isBuildPlacementClear } from '../../shared/build-placement';
 import { GOLD_MINE_RULES } from '../../shared/mining';
@@ -88,7 +89,7 @@ function guardPool(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyCon
   }).sort((a, b) => {
     // Crippled frontliners cannot help the next camp; recovering shooters can
     // still clear it from range. Keep those melee survivors at the mining post first.
-    const role = (unit: Unit) => unit.hp >= unit.maxHp * RECOVERING_SHARE ? 2 : unit.attackRange <= 80 ? 0 : 1;
+    const role = (unit: Unit) => unit.hp >= unit.maxHp * RECOVERING_SHARE ? 2 : !isRangedUnit(unit) ? 0 : 1;
     return role(a) - role(b) || a.hp / a.maxHp - b.hp / b.maxHp || distance(a, site.hall) - distance(b, site.hall);
   });
 }

@@ -1,3 +1,4 @@
+import { isRangedUnit } from "./unit-weapon-class";
 import { RULES_VERSION, savedRulesVersion } from "./rules-version";
 import { canonicalizeSavedUnits, assertCanonicalSavedKinds } from "./unit-save-migration";
 import { createGame, refreshUnitStats, restoreSnapshotIntoGame, snapshotGame, type Game } from "./sim";
@@ -138,7 +139,7 @@ export function restoreGameFromSave(save: SaveGameRecord): Game {
       refreshUnitStats(game, unit);
       unit.hp = Math.min(hp, unit.maxHp);
       if (unit.level >= 3 && unit.expiresTick === undefined && !unit.veteranSkillChoices) {
-        unit.veteranSkillChoices = rollVeteranSkillChoices(unit.kind, unit.id, `${game.map.terrain?.ecology?.seed ?? game.map.id}:${game.tick}`, unitClassOf(unit, game));
+        unit.veteranSkillChoices = rollVeteranSkillChoices(unit.kind, unit.id, `${game.map.terrain?.ecology?.seed ?? game.map.id}:${game.tick}`, unitClassOf(unit, game), isRangedUnit(unit));
       }
     }
   }
@@ -160,7 +161,7 @@ function upgradeUnitClassSkillChoices(game: Game): void {
     const lostSkill = unit.veteranSkill && !eligible(unit.veteranSkill);
     if (lostSkill) delete unit.veteranSkill;
     if (lostSkill && !unit.veteranSkillChoices) {
-      unit.veteranSkillChoices = rollVeteranSkillChoices(unit.kind, unit.id, `${game.map.terrain?.ecology?.seed ?? game.map.id}:${game.tick}`, unitClass);
+      unit.veteranSkillChoices = rollVeteranSkillChoices(unit.kind, unit.id, `${game.map.terrain?.ecology?.seed ?? game.map.id}:${game.tick}`, unitClass, isRangedUnit(unit));
     }
     const choices = unit.veteranSkillChoices;
     if (!choices?.some(skill => !eligible(skill))) continue;

@@ -1,3 +1,4 @@
+import { isRangedUnit } from "../shared/unit-weapon-class";
 import { unitMover } from '../shared/catalog';
 import { isTransportKind } from '../shared/transport-role';
 import type { UnitOrder } from '../shared/types';
@@ -20,7 +21,7 @@ export function deathAttributionContext(record: Pick<AiUnitDeathRecord,
     detail: 'groundWholeAt 未返回可用陆块/海域标签；原始位置/船舱/驻守信息仍保留在账本', evidence: [] } };
   const role: UnitRole = unit.kind === 'worker' ? 'worker' : unitMover(unit.kind) === 'sea'
     ? isTransportKind(unit.kind) ? 'transport' : 'warship' : ['priest', 'fieldMedic'].includes(unit.kind)
-      ? 'healer' : unit.attackRange > 80 ? 'ranged' : 'frontline';
+      ? 'healer' : isRangedUnit(unit) ? 'ranged' : 'frontline';
   const tasks = [assignment.task, ...assignment.otherTaskCandidates].filter(task => task !== null);
   if (!issuer?.executor) evidence.push({ source: 'sim.command', tick: record.tick, certainty: 'unknown',
     detail: '当前订单没有可匹配的实际下令执行器；自动接敌和队列转换未冒充已记录执行器' });

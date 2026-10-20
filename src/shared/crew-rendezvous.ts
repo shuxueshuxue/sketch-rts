@@ -4,7 +4,7 @@ import { gangwaySurface } from './ship-gangway';
 import { shipContactGoal, shipTraffic } from './ship-avoidance';
 import { headingDifference, hullFits, type ShipPose } from './ship-navigation';
 import { hullGap, shipProfile, shipsIn } from './ship-geometry';
-import { RANGED_ATTACK_RANGE_THRESHOLD } from './aiming';
+import { isRangedUnit } from './weapon-class';
 import type { GameMap, Unit, UnitOrder } from './types';
 
 export type CrewRendezvous = {
@@ -83,7 +83,7 @@ export function boardingHoldShips(units:readonly Unit[]) {
       // Crossing the center seam changes deck parent before the whole body is
       // safely inside the receiver. Keep the original berth until arrival.
       if(source?.id===target?.id && order.rendezvous)source=byId.get(order.rendezvous.sourceId);
-    } else if((order.type==='attack' || order.type==='attackMove') && order.targetId && crew.attackRange<=RANGED_ATTACK_RANGE_THRESHOLD) {
+    } else if((order.type==='attack' || order.type==='attackMove') && order.targetId && !isRangedUnit(crew)) {
       const opponent=byId.get(order.targetId);
       target=opponent?.deck?byId.get(opponent.deck.shipId):opponent;
       // Boarders remain a boarding battle after both fighters step onto one

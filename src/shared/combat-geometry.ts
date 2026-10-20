@@ -1,7 +1,7 @@
 import { detCos, detSin } from "./det-math";
 import { hypot2 } from "./hypot";
 import { shipProfile, type Point } from "./ship-geometry";
-import { RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
+import { isRangedUnit } from "./unit-weapon-class";
 import type { Building, Obstacle, Unit } from "./types";
 
 export type StrikeTarget = Unit | Building | Obstacle | Point;
@@ -82,16 +82,15 @@ export function strikeGap(from: Point, target: StrikeTarget) {
 // @@@contact-reach - A melee blow lands on any unit its striker stands pressed against, as in Warcraft III, where melee
 // range is counted between the two bodies' edges. Range here counts between centers (troops are aimed at their centers),
 // and bodies never overlap, so a short reach could never touch a broad body: a worker (reach 36, body 15) pushed an
-// ogre (body 22) across the map without one blow. A melee striker (a reach the sim does not aim: see
-// RANGED_ATTACK_RANGE_THRESHOLD) reaches a unit at least as far as their two bodies touching, and a little more; aimed
+// ogre (body 22) across the map without one blow. A melee striker (classified from its unmodified weapon definition) reaches a unit at least as far as their two bodies touching, and a little more; aimed
 // weapons, buildings and hulls keep their reach. Every range test of a strike reads this.
 export const CONTACT_SLACK = 4;
 // A melee blow never crosses between a fortified tower's top and anything off it, either way (see @@@tower-garrison): such a
 // target is out of reach at any distance, whatever range a search asks with, so neither a strike, a chase nor a target
 // search ever takes it up.
-export function strikeReach(attacker: { radius: number; attackRange: number; garrison?: { buildingId: string } | undefined }, target: StrikeTarget, range = attacker.attackRange) {
-  if (attacker.attackRange <= RANGED_ATTACK_RANGE_THRESHOLD && attacker.garrison?.buildingId !== ("order" in target ? target.garrison?.buildingId : undefined)) return -Infinity;
-  if (range > RANGED_ATTACK_RANGE_THRESHOLD || !("order" in target) || shipProfile(target)) return range;
+export function strikeReach(attacker: Pick<Unit, "kind" | "attackClass" | "radius" | "attackRange" | "garrison">, target: StrikeTarget, range = attacker.attackRange) {
+  if (!isRangedUnit(attacker) && attacker.garrison?.buildingId !== ("order" in target ? target.garrison?.buildingId : undefined)) return -Infinity;
+  if (isRangedUnit(attacker) || !("order" in target) || shipProfile(target)) return range;
   return Math.max(range, attacker.radius + target.radius + CONTACT_SLACK);
 }
 

@@ -1,3 +1,4 @@
+import { garrisonRoomFor } from "../../shared/tower-garrison";
 import { ABILITY_DEFS, BUILDING_DEFS, UNIT_DEFS, UPGRADE_DEFS } from "../../shared/catalog";
 import type { GameCommand, GameSnapshot, PlayerId } from "../../shared/types";
 import { createAiPolicyMemory } from "../memory";
@@ -48,7 +49,7 @@ function runScriptsWithContext(snapshot: GameSnapshot, owner: PlayerId, scripts:
   for (const script of economyScripts) {
     const reserve = script.id === "v6Economy" || script.id === "economy" && isV6Policy(policyOptions) ? 0 : script.id === "economy" || script.id === "navalEconomy" ? shopReserve : navalReserve + shopReserve;
     const budget = budgetAfter(reserve);
-    const scriptCommands = withoutUnitsClaimedElsewhere(asCommands(script.run(budget, owner, policyOptions)), claims, script.id);
+    const scriptCommands = withoutUnitsClaimedElsewhere(towerOrders(asCommands(script.run(budget, owner, policyOptions)), snapshot, owner), claims, script.id);
     script.onCommands?.(snapshot, owner, policyOptions, scriptCommands);
     if (scriptCommands.length > 0) {
       recordAiMemoryForCommands(snapshot, script.id, scriptCommands, policyOptions.memory, { owner, teams: policyOptions.teams, preserveHireCampClaims, preserveSkirmishRetreatClaims, ...(script.redirects ? { redirects: script.redirects } : {}) });
@@ -61,7 +62,7 @@ function runScriptsWithContext(snapshot: GameSnapshot, owner: PlayerId, scripts:
   }
 
   for (const script of scripts.filter((candidate) => candidate.phase === "tactics")) {
-    const rawScriptCommands = withoutUnitsClaimedElsewhere(asCommands(script.run(script.id === "shopping" ? budgetAfter(0) : snapshot, owner, policyOptions)), claims, script.id);
+    const rawScriptCommands = withoutUnitsClaimedElsewhere(towerOrders(asCommands(script.run(script.id === "shopping" ? budgetAfter(0) : snapshot, owner, policyOptions)), snapshot, owner), claims, script.id);
     // The script still runs: it may update its memory even without issuing a
     // command. Empty results need no conflict copies or command bookkeeping.
     const scriptCommands = runnerOptions.commandConflictBypassScriptIds?.has(script.id)
@@ -150,4 +151,15 @@ function reserveOrderedUnits(commands: GameCommand[], movedUnitIds: Set<string>,
     const radius = target && !("order" in target) && "radius" in target ? target.radius : 0;
     if (def.behavior === "charge" || (caster && target && target.x !== undefined && target.y !== undefined && Math.hypot(caster.x - target.x, caster.y - target.y) > def.range + radius)) movedUnitIds.add(command.unitId);
   }
+}
+
+/** Planning uses the same admission rule as execution, before claims and orders are recorded. */
+function towerOrders(commands: GameCommand[], snapshot: GameSnapshot, owner: PlayerId): GameCommand[] {
+  return commands.flatMap(command => {
+    if (command.type !== "garrison") return [command];
+    const tower = snapshot.buildings.find(building => building.id === command.buildingId);
+    if (!tower) return [];
+    const unitIds = snapshot.units.filter(unit => unit.owner === owner && command.unitIds.includes(unit.id) && garrisonRoomFor(snapshot, tower, unit)).map(unit => unit.id);
+    return unitIds.length ? [{ ...command, unitIds }] : [];
+  });
 }

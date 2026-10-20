@@ -1,4 +1,4 @@
-import { SHIP_HULL_COST, SHIP_WEAPONS } from "./ship-equipment";
+import { SHIP_HULL_COST, SHIP_WEAPONS } from "./ship-weapon-defs";
 import type { AttackKind } from "./attack-presentation";
 import type { Mover } from "./terrain";
 import type { AbilityKind, BuildingKind, MercenaryUnitKind, RaceId, TrainableUnitKind, UnitKind, UpgradeKind } from "./types";

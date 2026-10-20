@@ -1,3 +1,5 @@
+import { isRangedUnit } from "./unit-weapon-class";
+import { weaponClass } from "./weapon-class";
 import { unitAutoAcquireRadius, NEUTRAL_LEASH_RANGE, NEUTRAL_DAMAGE_RESPONSE_RANGE, NEUTRAL_RETURN_STOP_RANGE, NEUTRAL_ASSIST_RANGE } from './combat-acquisition';
 export { AUTO_ACQUIRE_RANGE } from './combat-acquisition';
 import { AUTO_ACQUIRE_RANGE } from './combat-acquisition';
@@ -33,7 +35,7 @@ import { BREACH_CHARGE, FLAME_CLOAK, GUARDIAN_SCROLL, IVORY_TOWER_HP_SHARE, LIGH
 import { EXPERIENCE_BOOK_XP, VETERANCY_GAIN_PER_STAR, killXpReward, xpStarThresholds } from "./unit-value";
 import { automaticTargetAllowed, combatTargetScore, combatVictimId, shouldSwitchCombatTarget, type TargetThreat } from "./combat-target";
 import { crewBeforeHulls, boltIntersection, inWeaponCone, weaponDamage } from "./weapons";
-import { aimingRange, aimAt, aimingProfile, invalidateMovedAim, markAimShot, RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
+import { aimingRange, aimAt, aimingProfile, invalidateMovedAim, markAimShot } from "./aiming";
 export { RANGED_ATTACK_RANGE_THRESHOLD } from "./aiming";
 import type { WeaponDef } from "./catalog";
 import { ABILITY_DEFS, BUILDING_DEFS, DOCK_REPAIR, SUPPORT_BUILDING_HEAL, POISON_DAMAGE, POISON_TICKS, SLOW_PACE, SLOW_TICKS, SPLASH_RADIUS, SPLASH_SHARE, MAX_UPGRADE_LEVEL, MERCENARY_UNIT_KINDS, RACE_DEFS, UNIT_DEFS, UPGRADE_DEFS, UPGRADE_KINDS, canTrainAt, canResearchAt, constructionStartHp, hasSpell, isHealingBuildingKind, maxUpgradeLevel, requiredSupplyCap, unitMover, unitRules, type UnitDef } from "./catalog";
@@ -92,7 +94,7 @@ import { BOOTS_SPEED, HEALING_SCROLL_HEAL, HEALING_SCROLL_RADIUS, IVORY_TOWER_RE
 import { poolMap } from "./map-pool";
 import { perTick, seconds, SIM_TICKS_PER_SECOND } from "./time";
 import { ownUnitLookup } from "./unit-lookup";
-import { canStandOnTower, garrisonRangeMultiplier, garrisonRoomFor, isFortifiedTower, towerFoot, towerGarrison, towerTopSpot } from "./tower-garrison";
+import { canStandOnTower, garrisonRangeMultiplier, garrisonRefusal, garrisonRoomFor, isFortifiedTower, towerFoot, towerGarrison, towerTopLayout } from "./tower-garrison";
 import { isTrainingJob, trainingJobs } from "./building-jobs";
 import type { AbilityKind, Building, BuildingKind, GameCommand, GameMap, GameSetupOptions, GameSnapshot, MapId, MatchState, Obstacle, Owner, PlayerId, PlayerNumberMap, PlayerState, PlayerStateMap, Projectile, RallyTarget, ScenarioOverride, ScenarioPlayerSeed, SettledUnitOrder, TrainableUnitKind, TrainingJob, Unit, UnitKind, UnitOrder, UnitStatusEffect, UpgradeJob, UpgradeKind, WorldEffect, WorldItem } from "./types";
 
@@ -474,7 +476,16 @@ const COMMAND_TAKEN: CommandResult = { ok: true };
 // and nothing runs between it and the apply, so it reads the game itself rather than a copy of the world.
 export function tryPlayerCommand(game: Game, owner: PlayerId, command: GameCommand): CommandResult {
   const refusal = checkCommandLegality(game, owner, command);
-  if (refusal) return { ok: false, ...refusal };
+  if (refusal) {
+    if (command.type === "garrison") {
+      const tower = game.buildings.find(building => building.id === command.buildingId);
+      if (tower) for (const unit of unitsByIds(game, command.unitIds, owner)) {
+        const cause = garrisonRefusal(game, tower, unit);
+        if (cause) rejectGarrison(game, unit, cause);
+      }
+    }
+    return { ok: false, ...refusal };
+  }
   applyPlayerCommand(game, owner, command);
   if (simulationObservationActive) observeCommand(game, owner, command);
   return COMMAND_TAKEN;
@@ -679,7 +690,7 @@ function applyPlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
 
   if (command.type === "setStance") {
     for (const unit of unitsByIds(game, command.unitIds, owner)) {
-      if (canTakeStance(unit.kind)) unit.stance = command.stance === "pursue" ? undefined : command.stance;
+      if (canTakeStance(unit)) unit.stance = command.stance === "pursue" ? undefined : command.stance;
     }
     return;
   }
@@ -739,9 +750,17 @@ function applyPlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
   }
 
   if (command.type === "garrison" || command.type === "ungarrison") {
-    const tower = game.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner)!;
+    const tower = game.buildings.find((candidate) => candidate.id === command.buildingId)!;
     if (command.type === "garrison") {
-      for (const unit of unitsByIds(game, command.unitIds, owner)) if (canStandOnTower(unit) && unit.garrison?.buildingId !== tower.id) assignUnitOrder(unit, { type: "garrison", buildingId: tower.id }, command.queued);
+      // Reserve each admitted body while judging this selection; rejected troops keep their previous orders.
+      const reserved: Unit[] = [];
+      for (const unit of unitsByIds(game, command.unitIds, owner)) {
+        if (unit.garrison?.buildingId === tower.id) continue;
+        const cause = garrisonRefusal({ ...game, units: [...game.units, ...reserved] }, tower, unit);
+        if (cause) { rejectGarrison(game, unit, cause); continue; }
+        assignUnitOrder(unit, { type: "garrison", buildingId: tower.id }, command.queued);
+        reserved.push({ ...unit, garrison: { buildingId: tower.id } });
+      }
     } else for (const unit of towerGarrison(game.units, tower)) {
       leaveTower(game, unit, unit);
       assignUnitOrder(unit, { type: "idle" });
@@ -1084,6 +1103,8 @@ export function restoreSnapshotIntoGame(game: Game, snapshot: GameSnapshot, next
   }
   game.nextId = nextId;
   normalizeEquipment(game);
+  const classify = (unit: Unit) => { unit.attackClass = weaponClass(weaponRules(game, unit)); unit.cargo?.forEach(classify); };
+  game.units.forEach(classify);
   keepShipsOnWater(game.map,game.units);
   syncDecks(game.units);
   invalidateGameRuntimeCaches(game);
@@ -1586,7 +1607,7 @@ function updateUnits(game: Game, defenses: ShipDefenseFrame, navalFrame: boolean
       const defense=defenses.get(unit.id);
       if(defense?.target){
         const target=navalCombatTarget(game,unit,defense.target);
-        const range=aimingRange(unit.aim,unit.attackRange,target.id,weaponRules(game,unit).aimRangeBuffer);
+        const range=aimingRange(unit.aim,unit.attackRange,target.id,weaponRules(game,unit).aimRangeBuffer, isRangedUnit(unit));
         navigateShipAttack(game,unit,target);
         if(unitRules(game,unit).intrinsicAttack && unit.cooldown===0 && targetGap(unit,target)<=strikeReach(unit,target,range)
           && aimAt(unit,weaponRules(game,unit),strikePoint(unit,target),game.tick,veteranAimSpeed(game,unit),target.id)){
@@ -1731,7 +1752,7 @@ function updateHoldOrder(game: Game, unit: Unit, navalFrame = true) {
   if (unit.cooldown > 0 || unit.attackDamage <= 0) return;
   const target = continuingAimTarget(game, unit, navalFrame) ?? nearestEnemyTarget(game, unit, unit.attackRange, navalFrame);
   if (!target) return;
-  const range = aimingRange(unit.aim, unit.attackRange, target.id, weaponRules(game, unit).aimRangeBuffer);
+  const range = aimingRange(unit.aim, unit.attackRange, target.id, weaponRules(game, unit).aimRangeBuffer, isRangedUnit(unit));
   if (!aimAt(unit, weaponRules(game, unit), strikePoint(unit,target), game.tick, veteranAimSpeed(game, unit), target.id)) return;
   applyWeaponAttack(game, unit, target, Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(game, unit))), range);
   markAimShot(unit);
@@ -1742,7 +1763,7 @@ function continuingAimTarget(game: Game, unit: Unit, navalFrame: boolean) {
   const target = unit.aim?.tracking && unit.aim.targetId ? findTarget(game, unit.aim.targetId) : undefined;
   if (!target || target.hp <= 0 || !areEnemyOwners(game, unit.owner, target.owner)) return undefined;
   if (navalFrame && !automaticTargetAllowed(game.units, unit.owner, target)) return undefined;
-  const range = aimingRange(unit.aim, unit.attackRange, target.id, weaponRules(game, unit).aimRangeBuffer);
+  const range = aimingRange(unit.aim, unit.attackRange, target.id, weaponRules(game, unit).aimRangeBuffer, isRangedUnit(unit));
   return range > unit.attackRange && targetGap(unit, target, navalFrame) <= strikeReach(unit, target, range)
     && canReach(game.map, unit, target, game.units) ? target : undefined;
 }
@@ -1795,7 +1816,7 @@ function updateAttackMoveOrder(game: Game, unit: Unit, navalFrame = true) {
 function attackMoveTowardTarget(game: Game, unit: Unit, target: Unit | Building, navalFrame = true) {
   if (navalFrame) target = navalCombatTarget(game, unit, target);
   const gap = targetGap(unit, target, navalFrame);
-  const range = aimingRange(unit.aim, unit.attackRange, target.id, weaponRules(game, unit).aimRangeBuffer);
+  const range = aimingRange(unit.aim, unit.attackRange, target.id, weaponRules(game, unit).aimRangeBuffer, isRangedUnit(unit));
   const ship = navalFrame && Boolean(shipProfile(unit));
   if (ship) navigateShipAttack(game, unit, target);
   else if (backOutOfDeadZone(game, unit, target, false)) return;
@@ -1879,7 +1900,7 @@ function attackStep(game: Game, unit: Unit, order: AttackOrder, navalFrame: bool
     if (target.id !== order.targetId) write({ ...order, targetId: target.id });
   }
   const gap = targetGap(unit, target, navalFrame);
-  const range = aimingRange(unit.aim, unit.attackRange, target.id, weaponRules(game, unit).aimRangeBuffer);
+  const range = aimingRange(unit.aim, unit.attackRange, target.id, weaponRules(game, unit).aimRangeBuffer, isRangedUnit(unit));
   const ship = navalFrame && Boolean(shipProfile(unit));
   if (station && distance(target, station) > GUARD_LEASH_RANGE) { write(guardReturnOrder(game, unit)); return; }
   if (!ship && backOutOfDeadZone(game, unit, target, false)) return;
@@ -1974,7 +1995,9 @@ function updateGarrisonOrder(game: Game, unit: Unit) {
   if (order.type !== "garrison") return;
   const tower = game.buildings.find((building) => building.id === order.buildingId);
   if (unit.garrison) { unit.order = { type: "idle" }; return; }
-  if (!tower || !isFortifiedTower(tower) || tower.hp <= 0 || tower.owner !== unit.owner) return endOrder(game, unit, "target-gone");
+  if (!tower) return endOrder(game, unit, "target-gone");
+  const refusal = garrisonRefusal(game, tower, unit);
+  if (refusal) return endOrder(game, unit, refusal.reason === "tower-full" || refusal.reason === "garrison-body-size" ? "no-room" : "refused", refusal);
   // A troop climbs on from beside the tower's walls, as a worker builds and mends from there (see buildingWorkGap).
   const reached = () => buildingWorkGap(unit, tower) <= BUILDING_WORK_REACH;
   if (!reached()) { errandWalk(game, unit, tower, reached, "walk"); return; }
@@ -2018,7 +2041,14 @@ function settleGarrisons(game: Game) {
   for (const [id, troops] of towers) {
     const tower = game.buildings.find((building) => building.id === id)!;
     troops.sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
-    troops.forEach((unit, index) => Object.assign(unit, towerTopSpot(tower, index)));
+    // Imported saves or a changed variant may no longer fit. Put invalid occupants down safely.
+    for (let i = troops.length - 1; i >= 0; i--) if (!canStandOnTower(troops[i]!, game)) leaveTower(game, troops.splice(i, 1)[0]!, tower);
+    let layout = towerTopLayout(tower, troops);
+    while (!layout && troops.length) {
+      leaveTower(game, troops.pop()!, tower);
+      layout = towerTopLayout(tower, troops);
+    }
+    for (const unit of troops) Object.assign(unit, layout!.get(unit.id)!);
   }
 }
 
@@ -2047,7 +2077,7 @@ function updateBoardShipOrder(game:Game,ship:Unit) {
     const automaticAttack=crewOrder.type==='attack' && crewOrder.leashX!==undefined
       && (crewOrder.targetId===target.id || automaticTarget?.deck?.shipId===target.id);
     if(crew.owner!==ship.owner || crew.kind==='worker' || !gangwayCrewEligible(crew,game)
-      || unitRules(game,crew).attackRange>RANGED_ATTACK_RANGE_THRESHOLD || crew.attackDamage<=0
+      || isRangedUnit(crew) || crew.attackDamage<=0
       || !['idle','hold'].includes(crew.order.type) && !automaticAttack || crew.orderQueue?.length)continue;
     assignUnitOrder(crew,{type:'board',transportId:target.id});
   }
@@ -2081,7 +2111,7 @@ function updateBoardOrder(game: Game, unit: Unit) {
     // A defended entry is a fight, not an unreachable ferry destination.
     // Retain the boarding order so clearing the lane resumes the crossing.
     if(unit.kind!=='worker' && areEnemyOwners(game,unit.owner,transport.owner) && unit.attackDamage>0
-      && unitRules(game,unit).attackRange<=RANGED_ATTACK_RANGE_THRESHOLD) {
+      && !isRangedUnit(unit)) {
       // Answer the reachable front rank before pursuing a higher-priority
       // shooter whose route is sealed by that defender's body. Nobody in reach:
       // off the quarry's deck, an enemy who crossed onto our own deck is
@@ -2881,7 +2911,7 @@ function updateChargeOrder(game: Game, unit: Unit) {
     // The impact is a blow of the rider's weapon: like every strike it waits on the weapon's one clock.
     if (unit.cooldown > 0) return;
     const damage = Math.max(1, Math.round(unit.attackDamage * outgoingDamageMultiplier(game, unit) * def.damageMultiplier));
-    applyAttackDamage(game, unit, target, damage, unit.attackRange);
+    applyAttackDamage(game, unit, target, damage);
     addEffect(game, "chargeImpact", target.x, target.y, CHARGE_IMPACT_TICKS, { fromX: unit.x, fromY: unit.y, toX: target.x, toY: target.y, owner: unit.owner, sourceKind: unit.kind, unitId: unit.id, sourceId: unit.id, actionMode: "attack", fromHeight:combatVisualHeight(game,unit),toHeight:combatVisualHeight(game,target) });
     unit.cooldown = attackCooldownOf(game, unit);
     endCharge(unit, order.resume);
@@ -3147,7 +3177,7 @@ function activateItem(
     if (carrier.owner === "neutral") return;
     const target = targetId ? game.buildings.find((building) => building.id === targetId && areEnemyOwners(game, carrier.owner, building.owner)) : undefined;
     if (!target || distance(carrier, target) > BREACH_CHARGE.range) return;
-    applyAttackDamage(game, carrier, target, BREACH_CHARGE.damage, BREACH_CHARGE.range, ITEM_DAMAGE_PROFILES.breachCharge);
+    applyAttackDamage(game, carrier, target, BREACH_CHARGE.damage, ITEM_DAMAGE_PROFILES.breachCharge);
     consumeItem(game, item);
     return;
   }
@@ -3199,7 +3229,7 @@ function applyChainLightning(game: Game, carrier: Unit, item: WorldItem, firstTa
   let damage = LIGHTNING_ROD.damage;
   for (let bounce = 0; bounce < LIGHTNING_ROD.hits; bounce += 1) {
     struck.add(current.id);
-    applyAttackDamage(game, carrier, current, damage*outgoingDamageMultiplier(game,carrier), 240, ITEM_DAMAGE_PROFILES.lightningRod);
+    applyAttackDamage(game, carrier, current, damage*outgoingDamageMultiplier(game,carrier), ITEM_DAMAGE_PROFILES.lightningRod);
     addEffect(game, "chainLightning", current.x, current.y, 28, { fromX: carrier.x, fromY: carrier.y, toX: current.x, toY: current.y });
     const next = nearestChainTarget(game, carrier, current, struck, LIGHTNING_ROD.bounceRange);
     if (!next) break;
@@ -3226,7 +3256,7 @@ function nearestChainTarget(game: Game, carrier: Unit, from: Unit, struck: Set<s
 function applyStormStaff(game: Game, carrier: Unit, item: WorldItem, x: number, y: number) {
   forEachNearbyUnit(game, { x, y }, STORM_STAFF.radius, (target) => {
     if (distance(target, { x, y }) > STORM_STAFF.radius || !areEnemyOwners(game, carrier.owner, target.owner)) return;
-    applyAttackDamage(game, carrier, target, STORM_STAFF.impactDamage*outgoingDamageMultiplier(game,carrier), STORM_STAFF.range, ITEM_DAMAGE_PROFILES.stormStaff);
+    applyAttackDamage(game, carrier, target, STORM_STAFF.impactDamage*outgoingDamageMultiplier(game,carrier), ITEM_DAMAGE_PROFILES.stormStaff);
   });
   addEffect(game, "storm", x, y, STORM_STAFF.duration, { sourceId: carrier.id, actionMode: "cast", fromX: carrier.x, fromY: carrier.y, toX: x, toY: y, owner: carrier.owner, unitId: carrier.id, damage: STORM_STAFF.pulseDamage*outgoingDamageMultiplier(game,carrier), damageProfile: { ...ITEM_DAMAGE_PROFILES.stormStaff }, radius: STORM_STAFF.radius, tickEvery: STORM_STAFF.pulseEvery });
   item.cooldownRemaining = STORM_STAFF.cooldown;
@@ -3237,7 +3267,7 @@ function applyFlameCloak(game: Game, carrier: Unit, item: WorldItem) {
   let burned = false;
   forEachNearbyUnit(game, carrier, FLAME_CLOAK.radius, (target) => {
     if (distance(target, carrier) > FLAME_CLOAK.radius || !areEnemyOwners(game, carrier.owner, target.owner)) return;
-    applyAttackDamage(game, carrier, target, FLAME_CLOAK.damage*outgoingDamageMultiplier(game,carrier), 70, ITEM_DAMAGE_PROFILES.flameCloak);
+    applyAttackDamage(game, carrier, target, FLAME_CLOAK.damage*outgoingDamageMultiplier(game,carrier), ITEM_DAMAGE_PROFILES.flameCloak);
     addEffect(game, "flameBurn", target.x, target.y, FLAME_CLOAK_VISUAL_DURATION);
     burned = true;
   });
@@ -3272,7 +3302,7 @@ function applyWorldEffectTick(game: Game, effect: WorldEffect) {
   if (effect.remaining !== effect.duration && effect.remaining % effect.tickEvery !== 0) return;
   forEachNearbyUnit(game, effect, effect.radius, (target) => {
     if (distance(target, effect) > effect.radius! || !areEnemyOwners(game, effect.owner!, target.owner)) return;
-    applyAttackDamage(game, scriptSource({ id: effect.unitId ?? effect.id, owner: effect.owner!, x: effect.x, y: effect.y }), target, effect.damage!, 260, effect.damageProfile ?? DAMAGE_PROFILES.STORM);
+    applyAttackDamage(game, scriptSource({ id: effect.unitId ?? effect.id, owner: effect.owner!, x: effect.x, y: effect.y }), target, effect.damage!, effect.damageProfile ?? DAMAGE_PROFILES.STORM);
   });
 }
 
@@ -3459,13 +3489,13 @@ function applyWeaponAttack(game: Game, attacker: Unit | Building, target: Unit |
     fireWeapon(game, attacker, target, damage, weapon, attackRange);
     return;
   }
-  const baseRange = isUnit(attacker) ? weaponRules(game, attacker).attackRange : attackRange;
-  if (baseRange > RANGED_ATTACK_RANGE_THRESHOLD) {
+  const ranged = isUnit(attacker) ? isRangedUnit(attacker) : weaponClass(BUILDING_DEFS[attacker.kind]) === "ranged";
+  if (ranged) {
     launchProjectile(game, attacker, target, buildingTargetDamage(attacker, target, damage));
     return;
   }
   // Range upgrades extend a melee weapon; they do not turn it into a projectile or change its armor interaction.
-  applyAttackDamage(game, attacker, target, damage, baseRange);
+  applyAttackDamage(game, attacker, target, damage);
 }
 
 function launchProjectile(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number) {
@@ -3506,7 +3536,7 @@ function launchProjectile(game: Game, attacker: Unit | Building, target: Unit | 
   });
 }
 
-function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number, attackRange: number, profile?: DamageProfile) {
+function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit | Building | Obstacle, damage: number, profile?: DamageProfile) {
   profile ??= isUnit(attacker) ? unitAttackDamageProfile(game, attacker) : attackDamageProfile(attacker.kind);
   const dealt = profile.origin === "spell" ? damage : attackDamageAgainstTarget(game, attacker, target, buildingTargetDamage(attacker, target, damage));
   const taken = applyDamage(game, attacker, target, dealt, undefined, undefined, 0, profile);
@@ -3515,7 +3545,7 @@ function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit |
   if (profile.delivery === "melee" && profile.origin !== "spell" && isUnit(attacker) && isUnit(target)) stanceBlow(attacker, target, dealt);
   const from = { x: attacker.x, y: attacker.y };
   const to = { x: target.x, y: target.y };
-  const kind: WorldEffect["type"] = attackRange > RANGED_ATTACK_RANGE_THRESHOLD ? "projectile" : "melee";
+  const kind: WorldEffect["type"] = profile.delivery === "melee" ? "melee" : "projectile";
   addEffect(game, kind, to.x, to.y, kind === "projectile" ? 22 : 16, { fromX: from.x, fromY: from.y, toX: to.x, toY: to.y, fromHeight: combatVisualHeight(game,attacker), toHeight: combatVisualHeight(game,target), ...(isUnit(attacker)?{sourceId: attacker.id, actionMode: profile.origin === "spell" ? "cast" as const : "attack" as const}:{}) });
   addHitEffect(game, target, taken, attacker);
 }
@@ -3524,7 +3554,7 @@ function applyAttackDamage(game: Game, attacker: Unit | Building, target: Unit |
 // full health the blow took, and the kind of who struck it (a weapon's blow; a spell's or a gone shooter's has none) so
 // the client can sound the blow.
 function addHitEffect(game: Game, target: Unit | Building | Obstacle, taken: number, striker?: Unit | Building, attackKind?: AttackKind, visualOrigin?: {x:number;y:number}) {
-  attackKind ??= striker ? isUnit(striker) && weaponRules(game,striker).attackRange<=RANGED_ATTACK_RANGE_THRESHOLD ? "melee" : innateMissile(striker.kind) : undefined;
+  attackKind ??= striker ? isUnit(striker) && !isRangedUnit(striker) ? "melee" : innateMissile(striker.kind) : undefined;
   const origin=visualOrigin??striker;
   const deck=isUnit(target)&&target.deck;
   const hull=deck ? game.units.find(unit=>unit.id===deck.shipId) : undefined;
@@ -3657,7 +3687,7 @@ function withDeckDamageBatch(game: Game, body: () => void) {
 /** Ship orders address the fighting deck and remain on the hull after its last passenger dies. */
 function navalCombatTarget(game: Game, attacker: Unit | Building, target: Unit | Building, crewRange=Infinity): Unit | Building {
   if (!isUnit(target) || !shipProfile(target)) return target;
-  const home=isUnit(attacker) && attacker.deck && unitRules(game,attacker).attackRange<=RANGED_ATTACK_RANGE_THRESHOLD
+  const home=isUnit(attacker) && attacker.deck && !isRangedUnit(attacker)
     ? game.units.find(ship=>ship.id===attacker.deck!.shipId) : undefined;
   // Boarders remain combatants when they cross the seam onto our own deck.
   // A hull-targeted melee order must answer them before striking an empty hull.
@@ -3825,7 +3855,7 @@ function applyXpLevel(game: Game, unit: Unit) {
   if (nextLevel <= unit.level) return;
   unit.level = Math.min(MAX_UPGRADE_LEVEL, nextLevel);
   if (unit.level === 3 && unit.owner !== "neutral" && unit.expiresTick === undefined && !unit.veteranSkillChoices) {
-    unit.veteranSkillChoices = rollVeteranSkillChoices(unit.kind, unit.id, `${game.map.terrain?.ecology?.seed ?? game.map.id}:${game.tick}`, unitClassOf(unit, game));
+    unit.veteranSkillChoices = rollVeteranSkillChoices(unit.kind, unit.id, `${game.map.terrain?.ecology?.seed ?? game.map.id}:${game.tick}`, unitClassOf(unit, game), isRangedUnit(unit));
   }
   applyDerivedUnitStats(game, unit);
 }
@@ -3840,12 +3870,13 @@ function applyDerivedUnitStats(game: Game, unit: Unit) {
   unit.attackDamage = Math.round(base.attackDamage);
   unit.maxHp = Math.round(base.maxHp * multiplier);
   unit.speed = base.speed * (heavy ? .45 : 1) * (veterans?.moveSpeedMultiplier ?? 1);
-  unit.attackRange = base.attackRange * (veterans?.attackRangeMultiplier ?? 1) * garrisonRangeMultiplier(unit, base.attackRange);
+  unit.attackRange = base.attackRange * (isRangedUnit(unit) ? veterans?.attackRangeMultiplier ?? 1 : 1) * garrisonRangeMultiplier(unit);
   unit.hp = Math.min(unit.maxHp, Math.max(1, unit.hp + unit.maxHp - previousMaxHp));
 }
 
 function nonStarUnitStats(game: Game, unit: Unit) {
   const stats = weaponRules(game, unit);
+  unit.attackClass = weaponClass(stats);
   unit.attackCooldown=stats.attackCooldown;
   let attackDamage = stats.attackDamage;
   let maxHp = stats.hp;
@@ -3865,7 +3896,7 @@ function nonStarUnitStats(game: Game, unit: Unit) {
         // Each technology stores cumulative levels; combine independent technologies once.
         if (level === (upgrades[upgradeKind] ?? 0) - 1) speed = roundUnitScalar(speed * levelDef.speedMultiplier);
       }
-      if (levelDef.attackRangeMultiplier) attackRange = Math.round(stats.attackRange * levelDef.attackRangeMultiplier);
+      if (levelDef.attackRangeMultiplier && isRangedUnit(unit)) attackRange = Math.round(stats.attackRange * levelDef.attackRangeMultiplier);
     }
   }
   if (itemsFor(game,unit).some((item) => item.kind === "speedBoots" && itemEquipped(game,unit,item))) speed = roundUnitScalar(speed * BOOTS_SPEED);
@@ -3997,7 +4028,7 @@ function nearestEnemyTargetFromPoint(game: Game, owner: Owner, point: { x: numbe
   let best: Unit | Building | undefined;
   let bestScore = Number.NEGATIVE_INFINITY;
   // A melee striker reaches a unit its body touches (see @@@contact-reach): the search reaches as far as the broadest.
-  const contact = attacker && range <= RANGED_ATTACK_RANGE_THRESHOLD ? attacker.radius + MAX_UNIT_RADIUS + CONTACT_SLACK : 0;
+  const contact = attacker && !isRangedUnit(attacker) ? attacker.radius + MAX_UNIT_RADIUS + CONTACT_SLACK : 0;
   // Only the native frame certificate supplies false. Births, cabins, hulls,
   // observers and custom factories retain the complete target rules.
   forEachNearbyEnemyUnit(game, owner, point, Math.max(range, contact) + (navalFrame ? game.shipReachPadding ?? shipReachPadding(game.units) : 0), (candidate) => {
@@ -4205,6 +4236,7 @@ export function spawnVariantUnit(game: Game, owner: Owner, variant: string, x: n
 // After the unit's variant rules changed: its numbers again, keeping the share of health it had.
 export function refreshUnitStats(game: Game, unit: Unit) {
   const rules = unitRules(game, unit);
+  unit.attackClass = weaponClass(weaponRules(game, unit));
   const share = unit.hp / Math.max(1, unit.maxHp);
   if (unit.variant !== undefined) takeVariantFrame(unit, rules);
   if (isPlayerId(unit.owner)) applyDerivedUnitStats(game, unit);
@@ -4236,7 +4268,7 @@ export function strikeUnit(game: Game, source: Unit | Building | { id: string; o
     return;
   }
   const baseProfile = isUnit(attacker) ? unitAttackDamageProfile(game, attacker) : attackDamageProfile(attacker.kind);
-  applyAttackDamage(game, attacker, target, dealt, style === "ranged" ? RANGED_ATTACK_RANGE_THRESHOLD + 1 : 0, { ...baseProfile, delivery: style });
+  applyAttackDamage(game, attacker, target, dealt, { ...baseProfile, delivery: style });
 }
 
 // A source no longer on the field (a caster dead before its fire fell) strikes as its side, from where it stood: an
@@ -4336,10 +4368,10 @@ function errandWalk(game: Game, unit: Unit, goal: { x: number; y: number }, reac
 
 // An order ended before it was done, and why (see @@@errand). The effect is presentation: its id is the unit's and the
 // tick's, so the entity counter does not move.
-function endOrder(game: Game, unit: Unit, reason: OrderEndReason) {
+function endOrder(game: Game, unit: Unit, reason: OrderEndReason, refusal?: import("./command-refusal").CommandRefusal) {
   const id = `ended-${unit.id}-${game.tick}`;
   if (!game.effects.some((effect) => effect.id === id))
-    game.effects.push({ id, type: "orderEnded", x: unit.x, y: unit.y, remaining: seconds(.4), duration: seconds(.4), unitId: unit.id, owner: unit.owner, sourceKind: unit.kind, orderType: unit.order.type, reason });
+    game.effects.push({ id, type: "orderEnded", x: unit.x, y: unit.y, remaining: seconds(.4), duration: seconds(.4), unitId: unit.id, owner: unit.owner, sourceKind: unit.kind, orderType: unit.order.type, reason, ...(refusal ? { refusal } : {}) });
   finishUnitCommand(game, unit);
 }
 
@@ -4955,4 +4987,12 @@ function clamp(value: number, min: number, max: number) {
 
 function isNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
+}
+
+/** A rejected command does not cancel the unit's previous order or consume an entity id. */
+function rejectGarrison(game: Game, unit: Unit, refusal: import("./command-refusal").GarrisonRefusal) {
+  const id = `ended-${unit.id}-${game.tick}-garrison`;
+  if (!game.effects.some(effect => effect.id === id)) game.effects.push({ id, type: "orderEnded", x: unit.x, y: unit.y,
+    remaining: seconds(.4), duration: seconds(.4), unitId: unit.id, owner: unit.owner, sourceKind: unit.kind,
+    orderType: "garrison", reason: refusal.reason === "tower-full" || refusal.reason === "garrison-body-size" ? "no-room" : "refused", refusal });
 }

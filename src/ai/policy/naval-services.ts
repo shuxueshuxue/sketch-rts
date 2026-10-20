@@ -1,3 +1,4 @@
+import { isRangedUnit } from "../../shared/unit-weapon-class";
 import { canBoard } from "../../shared/decks";
 import { combatCapability } from "../../shared/combat-capabilities";
 import { isShipKind, shipPassengers, shipProfile } from "../../shared/ship-geometry";
@@ -123,7 +124,7 @@ export function navalServices(
       (crew) =>
         crew.owner === owner &&
         crew.kind !== "worker" &&
-        crew.attackRange <= 80 &&
+        !isRangedUnit(crew) &&
         !isInCabin(crew) &&
         !result.reserved.has(crew.id) &&
         crew.order.type !== "board",

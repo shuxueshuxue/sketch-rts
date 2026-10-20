@@ -1,3 +1,4 @@
+import { isRangedUnit } from "../unit-weapon-class";
 import { unitControlsMercenaryCamp } from '../mercenary-camp';
 import { canReceiveHealing } from '../healing';
 import { SHIP_WEAPONS, installedWeapons } from "../ship-equipment";
@@ -23,7 +24,7 @@ import { ownUnitLookup } from "../unit-lookup";
 import { purchasePlacement } from "../purchase";
 import { isStunned, unitAbilities } from "../unit-abilities";
 import { canEnterCabin, isInCabin, cabinExitPoint } from '../ship-cabin';
-import { TOWER_GARRISON, canStandOnTower, garrisonSupply, garrisonUsed, isFortifiedTower, towerGarrison } from "../tower-garrison";
+import { garrisonRefusal, isFortifiedTower, towerGarrison } from "../tower-garrison";
 import { trainingJobs, upgradeJob } from "../building-jobs";
 
 // @@@command-refusal - Why an order is refused right now, in the player's terms. This check is the one place a command
@@ -43,6 +44,7 @@ export type CommandRefusalReason = "gold" | "supply" | "tier" | "stock" | "coold
   | "gone" | "target" | "range" | "unreachable" | "occupied" | "state" | "rules";
 
 export type CommandLegalityError = {
+  refusal?: import("../command-refusal").CommandRefusal;
   message: string;
   transient: boolean;
   reason: CommandRefusalReason;
@@ -204,6 +206,7 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     if (unit.level < 3 || unit.expiresTick !== undefined || (unit.variant !== undefined && snapshot.variants?.[unit.variant]?.heroic)) return commandError("Only a permanent three-star non-hero unit may learn a veteran skill", "state");
     const choices = unit.veteranSkillChoices;
     if (!choices || choices.length !== 3 || new Set(choices).size !== 3 || !choices.includes(command.skill)) return commandError("Skill is not one of this unit's three veteran choices", "rules");
+    if (command.skill === "veteranSiegeDrill" && !isRangedUnit(unit)) return commandError("Rangefinding requires a ranged weapon", "rules");
     if (!veteranSkillFitsUnitClass(command.skill, unitClassOf(unit, snapshot))) return commandError("Veteran skill cannot affect this unit class", "rules");
     return undefined;
   }
@@ -219,7 +222,7 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
   if (command.type === "setStance") {
     const missing = missingUnitError(snapshot, owner, command.unitIds);
     if (missing) return missing;
-    return snapshot.units.some((unit) => command.unitIds.includes(unit.id) && canTakeStance(unit.kind)) ? undefined : commandError("None of those units fights in melee", "rules");
+    return snapshot.units.some((unit) => command.unitIds.includes(unit.id) && canTakeStance(unit)) ? undefined : commandError("None of those units fights in melee", "rules");
   }
   if(command.type === "transferItem"){const message=transferRefusal(snapshot,owner,command.itemId,command.destination);return message?commandError(message, "state", true):undefined;}
   if(command.type === "wieldItem"){const message=wieldRefusal(snapshot,owner,command.unitId,command.itemId,command.hand);return message?commandError(message, "state", true):undefined;}
@@ -248,14 +251,20 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     return goldRefusal(snapshot, owner, BUILDING_DEFS[command.to].cost);
   }
   if (command.type === "garrison" || command.type === "ungarrison") {
-    const tower = snapshot.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner);
+    const tower = snapshot.buildings.find((candidate) => candidate.id === command.buildingId);
     if (!tower || !isFortifiedTower(tower)) return commandError(`Unknown ${owner} fortified tower ${command.buildingId}`, "gone", true);
+    if (command.type === "ungarrison" && tower.owner !== owner) return commandError("You can only ungarrison your own tower", "rules");
     if (command.type === "ungarrison") return towerGarrison(snapshot.units, tower).length ? undefined : commandError("No troops on this tower", "state", true);
     const missing = missingUnitError(snapshot, owner, command.unitIds);
     if (missing) return missing;
-    const troops = snapshot.units.filter((unit) => command.unitIds.includes(unit.id) && unit.owner === owner && canStandOnTower(unit) && unit.garrison?.buildingId !== tower.id);
+    const troops = snapshot.units.filter(unit => command.unitIds.includes(unit.id) && unit.owner === owner && unit.garrison?.buildingId !== tower.id);
     if (!troops.length) return commandError("No troops that can stand on this tower", "rules", true);
-    return troops.some((unit) => garrisonUsed(snapshot, tower) + garrisonSupply(snapshot, unit) <= TOWER_GARRISON.supply) ? undefined : refusal("The tower's top is full", "position");
+    if (troops.some(unit => !garrisonRefusal(snapshot, tower, unit))) return undefined;
+    const cause = garrisonRefusal(snapshot, tower, troops[0]!)!;
+    const messages = { "garrison-mechanical": "Mechanical units cannot garrison towers", "tower-full": "The tower's top is full",
+      "garrison-body-size": "This unit's body does not fit on the tower's top", "garrison-ownership": "You can only garrison your own tower",
+      "garrison-ineligible": "This unit cannot stand on a tower" };
+    return { ...refusal(messages[cause.reason], cause.reason === "tower-full" || cause.reason === "garrison-body-size" ? "position" : "rules"), refusal: cause };
   }
   return command satisfies never;
 }

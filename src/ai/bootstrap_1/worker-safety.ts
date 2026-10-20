@@ -1,3 +1,4 @@
+import { isRangedUnit } from "../../shared/unit-weapon-class";
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { groundSteeringRoute, nearestByRoute } from '../../shared/route-selection';
 import type { Building, GameCommand, GameSnapshot, PlayerId, Unit } from '../../shared/types';
@@ -59,7 +60,7 @@ export function workerSafetyPlans(snapshot: GameSnapshot, owner: PlayerId, optio
     const previous = claim?.kind === 'workerSafety' ? claim.evacuation : undefined;
     // The hauling escort below handles melee interception. Ranged fire needs an immediate withdrawal,
     // even with a standing hall or a friendly army nearby; neither stops a volley hitting the workers.
-    const exposed = endangered(snapshot, worker, worker, previous ? foes : foes.filter(foe => foe.attackRange > 80));
+    const exposed = endangered(snapshot, worker, worker, previous ? foes : foes.filter(foe => !('order' in foe) || isRangedUnit(foe)));
     if (!previous && !exposed) return [];
     const job = miningJobOrder(worker);
     const origin = previous?.origin ?? { x: worker.x, y: worker.y };

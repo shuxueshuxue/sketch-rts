@@ -1,3 +1,4 @@
+import { isRangedUnit } from "../../shared/unit-weapon-class";
 import { SIM_TICKS_PER_SECOND } from "../../shared/time";
 import { canReceiveHealing } from "../../shared/healing";
 import { BUILDING_DEFS, healingBuildingKindForRace, isHealingBuildingKind } from "../../shared/catalog";
@@ -243,7 +244,7 @@ const STUTTER_HEALERS: ReadonlySet<string> = new Set(["priest", "fieldMedic"]);
 function v5StutterStepCommand(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, enemies: Unit[], safePoint: Point, options: PresetAiPolicyOptions): GameCommand | undefined {
   if (unit.attackRange <= 100 || unit.attackDamage <= 0 || STUTTER_HEALERS.has(unit.kind)) return undefined;
   const threat = enemies
-    .filter((enemy) => enemy.attackRange <= 80 && withinRange(enemy, unit, enemy.attackRange + enemy.radius + unit.radius + STUTTER_THREAT_MARGIN))
+    .filter((enemy) => !isRangedUnit(enemy) && withinRange(enemy, unit, enemy.attackRange + enemy.radius + unit.radius + STUTTER_THREAT_MARGIN))
     .sort((a, b) => distance(a, unit) - distance(b, unit))[0];
   if (!threat) return undefined;
   const profile = aimingProfile(UNIT_DEFS[unit.kind]);
@@ -273,7 +274,7 @@ function rangedKiteCommand(snapshot: GameSnapshot, owner: PlayerId, unit: Unit, 
   if (isV5HybridPolicy(options)) return v5StutterStepCommand(snapshot, owner, unit, enemies, safePoint, options);
   if (options.version !== "v2" || unit.attackRange <= 100 || unit.hp >= unit.maxHp * 0.82) return undefined;
   const closeMelee = enemies
-    .filter((enemy) => enemy.attackRange <= 80 && withinRange(enemy, unit, Math.max(75, enemy.attackRange + enemy.radius + unit.radius)))
+    .filter((enemy) => !isRangedUnit(enemy) && withinRange(enemy, unit, Math.max(75, enemy.attackRange + enemy.radius + unit.radius)))
     .filter((enemy) => unit.hp / Math.max(1, unit.maxHp) < enemy.hp / Math.max(1, enemy.maxHp))
     .sort((a, b) => distance(a, unit) - distance(b, unit))[0];
   if (!closeMelee) return undefined;

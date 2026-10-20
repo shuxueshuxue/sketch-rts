@@ -11,7 +11,7 @@ export function canonicalGameState(game: Game) {
     match: game.match,
     map: game.map,
     players: game.players,
-    units: game.units,
+    units: game.units.map(withoutWeaponClass),
     buildings: game.buildings,
     resources: game.resources,
     mercenaryCamps: game.mercenaryCamps,
@@ -66,4 +66,11 @@ function roundNumber(value: number) {
   if (!Number.isFinite(value)) return value;
   const rounded = Math.round(value * NUMBER_PRECISION) / NUMBER_PRECISION;
   return Object.is(rounded, -0) ? 0 : rounded;
+}
+
+// This is a cache of weaponRules, not independent simulation state. Keep existing checksum formats stable.
+function withoutWeaponClass(unit: import("../types").Unit): Omit<import("../types").Unit, "attackClass"> {
+  const { attackClass: _derived, ...state } = unit;
+  if (state.cargo) state.cargo = state.cargo.map(withoutWeaponClass);
+  return state;
 }
