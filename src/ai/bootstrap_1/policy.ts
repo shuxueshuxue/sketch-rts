@@ -211,9 +211,20 @@ export function researchPrerequisites(wants: readonly V6Want[], player: PlayerSt
 }
 
 export function bootstrapPolicyContext(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion, options: AiPolicyContext): AiPolicyContext {
+  prepareBootstrapSites(snapshot, owner, options);
+  const context = bootstrapDoctrineContext(snapshot, owner, version, options);
+  prepareBootstrapLandMission(snapshot, owner, context);
+  return context;
+}
+
+/** The controlling entry establishes formal leases before these incumbent hooks. */
+export function prepareBootstrapSites(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
   migrateExpansionClaims(snapshot, options.memory);
   prepareIslandConquests(snapshot, owner, options);
   maintainExpansionGarrisons(snapshot, owner, options);
+}
+
+export function bootstrapDoctrineContext(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion, options: AiPolicyContext): AiPolicyContext {
   const { wants, guard } = supportWants(snapshot, owner, version, options);
   const expansion = wants.filter(want => 'bases' in want);
   const player = snapshot.players[owner]!;
@@ -228,6 +239,9 @@ export function bootstrapPolicyContext(snapshot: GameSnapshot, owner: PlayerId, 
     armyWants: wants.filter(want => !('bases' in want)),
     expansionRecruit: guard.find(want => 'unit' in want),
   };
-  prepareExpansionMission(snapshot, owner, context, mainArmyIntel(snapshot, owner, context));
   return context;
+}
+
+export function prepareBootstrapLandMission(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext) {
+  return prepareExpansionMission(snapshot, owner, options, mainArmyIntel(snapshot, owner, options));
 }

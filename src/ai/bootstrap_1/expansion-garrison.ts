@@ -17,6 +17,8 @@ import { readV6Intel } from '../policy/v6/intel';
 import { strengthOf, TOWER_STRENGTH } from '../policy/v6/strength';
 import { postRecoveryAssignments } from './front-recovery';
 import { incomingLandArmy } from '../policy/land-arrivals';
+import { strategyLeaseAllows } from '../strategy/control';
+import { expansionGarrisonActor } from '../strategy/incumbent-actors';
 
 const POST_RANGE = 240;
 const PERIMETER = 650;
@@ -74,7 +76,8 @@ function establishedDefense(snapshot: GameSnapshot, owner: PlayerId, options: Ai
 function guardPool(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext, site: Site) {
   const healingElsewhere = new Set(postRecoveryAssignments(snapshot, owner, options)
     .filter(care => distance(care.point, site.hall) > PERIMETER).map(care => care.patient.id));
-  return availableV6Army(snapshot, options, { ...readV6Intel(snapshot, owner, options), home: site.hall }).filter(unit => {
+  const actor = expansionGarrisonActor(site.hall.id);
+  return availableV6Army(snapshot, { ...options, strategyActor: actor }, { ...readV6Intel(snapshot, owner, options), home: site.hall }).filter(unit => {
     const claim = ordinaryUnitClaim(options.memory, unit.id);
     const ownGuard = claim?.kind === 'expansionGarrison' && claim.targetId === site.hall.id;
     return unit.owner === owner && unit.hp > 0 && !unit.deck && unit.order.type !== 'board'
@@ -153,7 +156,7 @@ export function maintainExpansionGarrisons(snapshot: GameSnapshot, owner: Player
   for (const [id, claim] of Object.entries(memory.unitClaims)) {
     if (claim.kind !== 'expansionGarrison') continue;
     const unit = snapshot.units.find(unit => unit.id === id && unit.owner === owner && !unit.deck && unit.order.type !== 'board');
-    if (!unit || retired.has(claim.targetId)) delete memory.unitClaims[id];
+    if (!unit || retired.has(claim.targetId) || !strategyLeaseAllows(memory, id, expansionGarrisonActor(claim.targetId))) delete memory.unitClaims[id];
     else if (memory.expansionGarrisons?.[claim.targetId]) recordUnitTaskClaim(snapshot, memory, id, claim);
     // A serialized task without our post record belongs to its original issuer.
   }
