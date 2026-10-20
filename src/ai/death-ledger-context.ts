@@ -1,0 +1,114 @@
+import { unitMover } from '../shared/catalog';
+import type { GameSnapshot, PlayerId, Unit } from '../shared/types';
+import type { AiPolicyMemory } from './memory';
+import type { AiDeathAssignment, AiDeathTask, AiIssuedOrder } from './death-ledger-types';
+
+const DEFENSE = new Set(['mineRally', 'mineGuard', 'mineLeash', 'expansionGarrison', 'harassSquad']);
+const TREATMENT = new Set(['frontRecovery', 'campRecovery', 'mobileCare', 'medicalRecovery']);
+
+export function treatmentOrder(order: AiIssuedOrder | null): boolean {
+  return order?.executor !== null && order?.executor !== undefined && TREATMENT.has(order.executor);
+}
+
+/** This indexes retained facts only. Never invokes policy selectors, pathfinders or claim pruning. */
+export function deathTaskIndex(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory) {
+  const byUnit = new Map<string, AiDeathTask[]>();
+  const task = (id: string, kind: string, targetId: string | undefined, stage: string | undefined,
+    source: string, combat = false, clearing = false, perimeter: AiDeathTask['perimeter'] = null): AiDeathTask =>
+    ({ id, kind, targetId: targetId ?? null, stage: stage ?? null, source, combat, clearing, perimeter,
+      attribution: 'inferred', methodId: null, utility: null });
+  const add = (ids: readonly string[] | undefined, value: AiDeathTask, first = false) => {
+    for (const id of ids ?? []) {
+      const entries = byUnit.get(id) ?? [];
+      if (!entries.some(entry => entry.id === value.id)) first ? entries.unshift(value) : entries.push(value);
+      byUnit.set(id, entries);
+    }
+  };
+  const hallPerimeter = (hallId?: string) => {
+    const hall = snapshot.buildings.find(building => building.id === hallId);
+    return hall ? { x: hall.x, y: hall.y, radius: 650 } : null;
+  };
+  for (const [id, claim] of Object.entries(memory.unitClaims)) {
+    if (claim.kind !== 'expansionMission' && claim.expiresTick < snapshot.tick) continue;
+    const defense = DEFENSE.has(claim.kind), clearing = claim.kind === 'creep';
+    const perimeter = defense ? hallPerimeter(claim.kind === 'harassSquad' ? memory.harassDefense?.hallId : claim.targetId) : null;
+    const clearingTask = memory.v6?.creep?.group.includes(id) ? `camp:${memory.v6.creep.center.x}:${memory.v6.creep.center.y}` : undefined;
+    const objective = ['mineRally', 'mineGuard', 'mineLeash', 'expansionGarrison'].includes(claim.kind) ? `defense:${claim.targetId}`
+      : ['expansion', 'expansionMission'].includes(claim.kind) ? `expansion:${claim.targetId}`
+      : claim.kind === 'attack' ? `attack:${claim.targetId}` : claim.kind === 'creep' && clearingTask ? clearingTask : `claim:${claim.kind}:${claim.targetId}`;
+    add([id], task(objective, claim.kind, claim.targetId,
+      claim.returning ? 'returning' : claim.arrived ? 'arrived' : 'assigned', `unitClaims.${claim.kind}`,
+      defense || clearing || ['attack', 'harass'].includes(claim.kind), clearing, perimeter));
+    if (claim.expansionMineId) add([id], task(`expansion:${claim.expansionMineId}`, 'expansion', claim.expansionMineId,
+      memory.landExpansion?.stage, 'unitClaims.expansionMineId', true, memory.landExpansion?.stage === 'clear'));
+  }
+  const expansion = memory.landExpansion;
+  if (expansion?.combat?.creep) add(expansion.combat.creep.group,
+    task(`expansion:${expansion.mineId}`, 'expansion', expansion.mineId, expansion.combat.creep.stage,
+      'landExpansion.combat.creep', true, true), true);
+  if (memory.v6?.creep) add(memory.v6.creep.group, task(`camp:${memory.v6.creep.center.x}:${memory.v6.creep.center.y}`,
+    'clear-camp', undefined, memory.v6.creep.stage, 'v6.creep', true, true));
+  if (memory.landAttack) add(memory.landAttack.general.group, task(`attack:${memory.landAttack.targetId}`,
+    'attack', memory.landAttack.targetId, memory.landAttack.paused ?? memory.landAttack.general.stage ?? 'attack', 'landAttack', true,
+    !!memory.landAttack.camp), false);
+  if (memory.v6?.raid) add(memory.v6.raid.unitIds, task(`raid:${memory.v6.raid.targetHallId}`, 'raid', memory.v6.raid.targetHallId,
+    memory.v6.raid.phase, 'v6.raid', true));
+  if (memory.v6?.closeout) add(memory.v6.closeout.unitIds, task(`closeout:${memory.v6.closeout.targetId}`, 'attack',
+    memory.v6.closeout.targetId, 'closeout', 'v6.closeout', true));
+  for (const mounted of memory.mounted ?? []) add(mounted.unitIds, mounted.objective.kind === 'camp'
+    ? task(`mounted-camp:${mounted.objective.ids.join(',')}`, 'clear-camp', mounted.objective.ids[0], 'mounted', 'mounted', true, true)
+    : task(`mounted-raid:${mounted.objective.hallId}`, 'raid', mounted.objective.hallId, 'mounted', 'mounted', true));
+  if (memory.support) add(memory.support.unitIds, task(`support:${memory.support.baseId}`, 'defense', memory.support.baseId, 'support', 'support', true));
+  for (const [key, value] of Object.entries({ shopping: memory.shopping, shop: memory.v6?.shop,
+    loot: memory.loot, mercenaryCourier: memory.mercenaryCourier })) if (value) add([value.unitId],
+      task(`errand:${key}:${value.unitId}`, 'errand', undefined, key, key), true);
+
+  const naval = memory.naval;
+  for (const [shipId, ferry] of Object.entries(naval?.ferries ?? {})) {
+    const passengers = snapshot.units.filter(unit => unit.owner === owner && (unit.deck?.shipId === shipId
+      || unit.order.type === 'board' && unit.order.transportId === shipId)).map(unit => unit.id);
+    add([shipId, ...ferry.crewIds, ...(ferry.payloadIds ?? []), ...passengers],
+      task(`ferry:${shipId}:${ferry.sinceTick}`, 'transport', ferry.targetId, `${ferry.purpose}:${ferry.phase}`, 'naval.ferries'), true);
+  }
+  for (const [shipId, combat] of Object.entries(naval?.combat ?? {})) add([shipId, ...snapshot.units.filter(unit => unit.deck?.shipId === shipId).map(unit => unit.id)],
+    task(`naval-combat:${shipId}`, 'naval-combat', combat.targetId, 'engage', 'naval.combat', true));
+  if (naval?.outfit) add([naval.outfit.shipId, ...(naval.outfit.workerId ? [naval.outfit.workerId] : [])],
+    task(`outfit:${naval.outfit.shipId}`, 'errand', naval.outfit.shipId, 'outfit', 'naval.outfit'), true);
+  for (const conquest of Object.values(naval?.conquests ?? {})) {
+    if (conquest.abandonedTick !== undefined || conquest.stage === 'complete') continue;
+    // Explicit clearing membership only: do not invent a promise of every soldier on the island to every task.
+    add(conquest.combat?.creep?.group, task(`island:${conquest.mineId}:${conquest.sinceTick}`, 'island', conquest.mineId,
+      conquest.stage, 'naval.conquests.combat.creep', true, true));
+  }
+  return { byUnit, general: memory.v6?.general, task, hallPerimeter };
+}
+
+export function inferDeathAssignment(snapshot: GameSnapshot, unit: Unit, memory: AiPolicyMemory,
+  index: ReturnType<typeof deathTaskIndex>, lastOrder: AiIssuedOrder | null): AiDeathAssignment {
+  const candidates = [...(index.byUnit.get(unit.id) ?? [])];
+  const order = unit.order, general = index.general, claim = memory.unitClaims[unit.id];
+  const put = (value: AiDeathTask, first = false) => {
+    if (!candidates.some(candidate => candidate.id === value.id)) first ? candidates.unshift(value) : candidates.push(value);
+  };
+  if (order.type === 'board' && !candidates.some(candidate => candidate.kind === 'transport')) put(index.task(
+    `boarding:${order.transportId}`, 'transport', order.transportId, 'boarding', 'order.board'), true);
+  if (unit.deck && !candidates.length) put(index.task(`aboard:${unit.deck.shipId}`, 'aboard', unit.deck.shipId, 'aboard', 'unit.deck'));
+  if (general && (general.group?.includes(unit.id) || lastOrder?.executor === 'v6General') && unit.kind !== 'worker') put(index.task(
+    ['defend', 'guard'].includes(general.mode) ? `defense:${general.targetHallId ?? 'unknown'}` : general.mode === 'attack'
+      ? `attack:${general.targetHallId ?? 'unknown'}` : `general:${general.mode}`, general.mode === 'creep' ? 'clear-camp' : general.mode,
+    general.targetHallId, general.stage ?? general.mode, 'v6.general', ['attack', 'defend', 'guard', 'creep'].includes(general.mode),
+    general.mode === 'creep', ['defend', 'guard'].includes(general.mode) ? index.hallPerimeter(general.targetHallId) : null));
+  if (order.type === 'mine') put(index.task(`mining:${order.resourceId}`, 'mining', order.resourceId, order.phase, 'order.mine'));
+  if (order.type === 'build') put(index.task(`build:${order.buildingKind}:${order.x}:${order.y}`, 'construction', undefined, 'build', 'order.build'));
+  if (!candidates.length && (order.type === 'attack' || order.type === 'attackMove') && unitMover(unit.kind) === 'sea') put(index.task(
+    `naval-field:${unit.id}`, 'naval-combat', order.targetId, 'engage', 'order.attack', true));
+  const current = candidates[0] ?? null;
+  const emergency = !!claim?.localRetreat || claim?.kind === 'workerSafety' || claim?.kind === 'retreat'
+    || order.type === 'move' && order.avoidCombat === true
+    || treatmentOrder(lastOrder) && ['move', 'idle', 'hold'].includes(order.type);
+  const near = current?.perimeter ? Math.hypot(unit.x - current.perimeter.x, unit.y - current.perimeter.y) <= current.perimeter.radius : undefined;
+  return { observedTick: snapshot.tick, task: current, otherTaskCandidates: candidates.slice(1),
+    state: emergency ? 'emergency-interruption' : !current ? 'unassigned'
+      : ['move', 'board', 'follow'].includes(order.type) ? 'en-route' : near === true || order.type === 'hold' ? 'on-station' : 'assigned',
+    stateAttribution: 'inferred', evidence: candidates.map(candidate => candidate.source), plannedBalanceRange: null };
+}
