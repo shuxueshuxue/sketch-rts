@@ -27,6 +27,24 @@
 
 闲置另列 `idleForces`，不伪造 HoldReserve 目标。每兵只记一次：既有驻守、在途、医疗承诺的单位不算可调空闲；有真实可达的正效用备选时，闲置效用为放弃它的负收益；没有这样的备选，alternativeObjectiveId 为 null、原因标为 unknown，不把零报价解释成闲置没有成本。collector 对全部 family 的报价统一去重和排序，陆地函数不自行抢占。
 
+## 机会证据中的事实与缓存失效
+
+文案确实编码了会变的事实。`id/kind/target/valueGold` 只是完整 `factKey` 的 `candidate` 部分，不能把它当成全部输入。以下逐项对应当前公开的 [机会生产器](../../../src/ai/strategy/situation.ts#L97) 与 [完整缓存键](../../../src/ai/strategy/land-objectives.ts#L160)：
+
+| 证据中的事实 | 结构化依赖与失效路径 |
+| --- | --- |
+| neutral-mine：矿 ID、剩余矿金 | `candidate.key/op.id/op.target` 标识矿；`op.valueGold`、`assets.discountedValueGold` 和资产的评价窗收入标识实际收益。余额在评价窗收益上限之上小幅减少时，数值报价不变，可复用，但证据刷新；降到收益上限以下会改变价值键，归零会移除机会 |
+| neutral-mine：矿口没有矿厅 | producer 每次重新检查矿口；出现厅会移除中立机会。若既有扩张任务仍需继续交接，候选可保留，但 `buildings` 中己方厅/占矿敌厅的 ID、owner、位置、完工和施工字段改变，触发重算；已经落基的厅不重复付费 |
+| weak-site / construction：厅 ID、complete | `op.id/op.kind` 区分施工与完工；`buildings.complete/buildProgress/buildTime/施工工人数` 和 `assets.complete/discountedValueGold` 覆盖当前资产及能否赶上施工窗口 |
+| weak-site / construction：650 内本地陆军人数 | 报价使用可响应成员的 ID、战力、HP、寿命和 ETA，均在 `enemy` 键中；人数跨过零时会增删 `army-away` 机会，也改变 `candidate.opportunities`。人数非零的变化若未改变响应成员、ETA、战力或机会集合，就只改变解释，不改变计算输入，无需额外重算 |
+| army-away：650 内没有陆地守军 | 由真实守军检查生成/移除此 kind 的机会；不能仅靠这段话证明据点安全。敌援仍由 `enemy` 的结构化 Arrival、战力和寿命另算；原文“援军另算”没有藏入 ETA 或战力数字 |
+| route：已有真实前压点、目标厅仍存在、ETA 用机会 ID | `candidate.target/op.target` 覆盖点位与陆块，`op.id` 是 ETA 键，`pool/enemy` 中的 Arrival 覆盖状态、精确时间和跨海前置。目标厅消失或任务点撤销会移除机会，候选重建后清掉旧缓存 |
+| lost-site：原厅曾存在、现在消失、原厅 ID、关联矿、前后 tick | producer 用序列化的历史资产与当前资产确认失地，才生成 `lost-site`，进而生成关联矿的 RecoverSite。关联矿/价值变化由 kind、target、资产键覆盖，夺回或资源耗尽移除机会。对同一矿，原厅 ID 和证据观察 tick 仅作历史归因，不参与当前收益/风险；缓存命中仍取当前证据，保留原始历史 tick |
+
+清营状态和路线可达性没有藏在上述机会文案里：营地的存在、成员、HP/攻击属性、战力和寿命由 `camp` 键覆盖；到达状态、时间、crossing 与 unknown/unreachable 的决策 code 由 Arrival 投影覆盖。无需从解释恢复这些事实。本次核对未发现缺少结构化覆盖的数值依赖，未新增决策字段。
+
+新增单变量回归只改变同一敌兵到敌厅的 ETA：从实际交战窗口之外移入窗口之内，两值都在 120 秒评价窗内；其余单位战力、完整快照、机会四字段及文案不变。断言确实重算、成功概率和效用改变，并与冷观察一致，专门验证机会键之外的 `enemy.arrival` 依赖。
+
 ## L1–L6 的真实帧
 
 原始世界来自 [陆地契约证据包](land-contract.evidence.json)，均为执行 owner think **之前**的完整快照。测试夹具同时保存来源 SHA256、evaluator 提交和统一 Situation；没有在测试里另写 ETA 或威胁算法。原始模拟版本是 883f57c5，统一 Situation 来自接口提交 679464e1 的完整单帧入口（基于 main bc33a34a，包含真实医疗投影和骚扰者 ETA）。

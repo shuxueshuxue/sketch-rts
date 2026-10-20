@@ -496,6 +496,29 @@ describe('land objective proposals over one shared Situation', () => {
     } finally { numericalWork.mockRestore(); }
   });
 
+  it('invalidates for an enemy reinforcement ETA alone while opportunity facts and evidence stay unchanged', () => {
+    const { context, situation } = example();
+    const hall = context.snapshot.buildings.find(building => building.id === 'enemy-hall')!;
+    const fighter = context.snapshot.units.find(unit => unit.id === 'fighter-0')!;
+    const distantTicks = Math.ceil(60 + hall.hp * fighter.attackCooldown / fighter.attackDamage) + 1;
+    expect(distantTicks).toBeLessThan(HORIZON);
+    const responder = situation.units.find(unit => unit.id === 'responder')!;
+    const distant = changedUnit(situation, responder.id, { arrivals: responder.arrivals.map(record => record.targetId === 'enemy-hall'
+      ? { ...record, arrival: route(distantTicks) } : record) });
+    const first = goals(distant, context).find(goal => goal.kind === 'AttackSite')!;
+    // Only the defender's ETA moves into the battle window. Its strength, the
+    // complete snapshot, target, opportunity fields and explanation are identical.
+    expect(situation.opportunities).toBe(distant.opportunities);
+    const numericalWork = vi.spyOn(utility, 'forceTimeGold');
+    try {
+      const warm = goals(situation, context), attack = warm.find(goal => goal.id === first.id)!;
+      expect(numericalWork).toHaveBeenCalled();
+      expect(attack.utility.successProbability).toBeLessThan(first.utility.successProbability);
+      expect(attack.utility.score).not.toBe(first.utility.score);
+      expect(warm).toEqual(coldGoals(situation, context, []));
+    } finally { numericalWork.mockRestore(); }
+  });
+
   it('ignores changes in a later unused soldier but recalculates when the sufficient prefix changes', () => {
     const { context, situation } = example(), first = goals(situation, context);
     const assess = (s: Situation, tick: number) => generateLandObjectives({ ...s, tick },
