@@ -1,0 +1,913 @@
+{
+  "status": "not-passed",
+  "candidate": "32e2eaba",
+  "control": "bc33a34a",
+  "node": "v24.22.0",
+  "recorder": "AE/scripts/ai-strategy-timeline.ts",
+  "note": "Historical recorder retains last strategy per owner. Not a current-recorder acceptance result.",
+  "root": "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020",
+  "rows": [
+    {
+      "phase": "comparison",
+      "detail": "decision",
+      "map": "pineshade",
+      "sameBehavior": true,
+      "main": {
+        "medianKiB": 426148,
+        "minKiB": 408240,
+        "maxKiB": 440932,
+        "rangeKiB": 32692,
+        "madKiB": 14784,
+        "samplesKiB": [
+          440932,
+          426148,
+          408240
+        ]
+      },
+      "candidate": {
+        "medianKiB": 495504,
+        "minKiB": 494028,
+        "maxKiB": 522308,
+        "rangeKiB": 28280,
+        "madKiB": 1476,
+        "samplesKiB": [
+          522308,
+          495504,
+          494028
+        ]
+      },
+      "medianDeltaKiB": 69356,
+      "observedDeltaEnvelopeKiB": [
+        53096,
+        114068
+      ],
+      "gate": "outside",
+      "baselineReceipts": [
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-decision/pineshade/A1/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-decision/pineshade/A2/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AE3-decision/pineshade/A3/summary.json"
+      ]
+    },
+    {
+      "phase": "comparison",
+      "detail": "decision",
+      "map": "reedwater",
+      "sameBehavior": true,
+      "main": {
+        "medianKiB": 408444,
+        "minKiB": 401800,
+        "maxKiB": 429924,
+        "rangeKiB": 28124,
+        "madKiB": 6644,
+        "samplesKiB": [
+          429924,
+          401800,
+          408444
+        ]
+      },
+      "candidate": {
+        "medianKiB": 475116,
+        "minKiB": 464708,
+        "maxKiB": 519172,
+        "rangeKiB": 54464,
+        "madKiB": 10408,
+        "samplesKiB": [
+          519172,
+          464708,
+          475116
+        ]
+      },
+      "medianDeltaKiB": 66672,
+      "observedDeltaEnvelopeKiB": [
+        34784,
+        117372
+      ],
+      "gate": "outside",
+      "baselineReceipts": [
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-decision/reedwater/A1/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-decision/reedwater/A2/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AE3-decision/reedwater/A3/summary.json"
+      ]
+    },
+    {
+      "phase": "comparison",
+      "detail": "decision",
+      "map": "greystonePass",
+      "sameBehavior": true,
+      "main": {
+        "medianKiB": 452256,
+        "minKiB": 448632,
+        "maxKiB": 455872,
+        "rangeKiB": 7240,
+        "madKiB": 3616,
+        "samplesKiB": [
+          455872,
+          448632,
+          452256
+        ]
+      },
+      "candidate": {
+        "medianKiB": 503724,
+        "minKiB": 502008,
+        "maxKiB": 531868,
+        "rangeKiB": 29860,
+        "madKiB": 1716,
+        "samplesKiB": [
+          531868,
+          502008,
+          503724
+        ]
+      },
+      "medianDeltaKiB": 51468,
+      "observedDeltaEnvelopeKiB": [
+        46136,
+        83236
+      ],
+      "gate": "outside",
+      "baselineReceipts": [
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-decision/greystonePass/A1/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-decision/greystonePass/A2/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AE3-decision/greystonePass/A3/summary.json"
+      ]
+    },
+    {
+      "phase": "comparison",
+      "detail": "complete",
+      "map": "pineshade",
+      "sameBehavior": true,
+      "main": {
+        "medianKiB": 427684,
+        "minKiB": 406584,
+        "maxKiB": 455332,
+        "rangeKiB": 48748,
+        "madKiB": 21100,
+        "samplesKiB": [
+          455332,
+          427684,
+          406584
+        ]
+      },
+      "candidate": {
+        "medianKiB": 520916,
+        "minKiB": 511824,
+        "maxKiB": 572136,
+        "rangeKiB": 60312,
+        "madKiB": 9092,
+        "samplesKiB": [
+          572136,
+          511824,
+          520916
+        ]
+      },
+      "medianDeltaKiB": 93232,
+      "observedDeltaEnvelopeKiB": [
+        56492,
+        165552
+      ],
+      "gate": "outside",
+      "baselineReceipts": [
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-complete/pineshade/A1/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-complete/pineshade/A2/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AE3-complete/pineshade/A3/summary.json"
+      ]
+    },
+    {
+      "phase": "comparison",
+      "detail": "decision",
+      "map": "veiledHill",
+      "sameBehavior": true,
+      "main": {
+        "medianKiB": 521612,
+        "minKiB": 518212,
+        "maxKiB": 536504,
+        "rangeKiB": 18292,
+        "madKiB": 3400,
+        "samplesKiB": [
+          536504,
+          518212,
+          521612
+        ]
+      },
+      "candidate": {
+        "medianKiB": 548660,
+        "minKiB": 545252,
+        "maxKiB": 603656,
+        "rangeKiB": 58404,
+        "madKiB": 3408,
+        "samplesKiB": [
+          603656,
+          545252,
+          548660
+        ]
+      },
+      "medianDeltaKiB": 27048,
+      "observedDeltaEnvelopeKiB": [
+        8748,
+        85444
+      ],
+      "gate": "overlap",
+      "baselineReceipts": [
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-decision/veiledHill/A1/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-decision/veiledHill/A2/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AE3-decision/veiledHill/A3/summary.json"
+      ]
+    },
+    {
+      "phase": "comparison",
+      "detail": "decision",
+      "map": "gullIsland",
+      "sameBehavior": true,
+      "main": {
+        "medianKiB": 594288,
+        "minKiB": 571952,
+        "maxKiB": 595672,
+        "rangeKiB": 23720,
+        "madKiB": 1384,
+        "samplesKiB": [
+          595672,
+          571952,
+          594288
+        ]
+      },
+      "candidate": {
+        "medianKiB": 656160,
+        "minKiB": 634576,
+        "maxKiB": 661040,
+        "rangeKiB": 26464,
+        "madKiB": 4880,
+        "samplesKiB": [
+          656160,
+          634576,
+          661040
+        ]
+      },
+      "medianDeltaKiB": 61872,
+      "observedDeltaEnvelopeKiB": [
+        38904,
+        89088
+      ],
+      "gate": "outside",
+      "baselineReceipts": [
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-decision/gullIsland/A1/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-decision/gullIsland/A2/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AE3-decision/gullIsland/A3/summary.json"
+      ]
+    },
+    {
+      "phase": "comparison",
+      "detail": "complete",
+      "map": "greystonePass",
+      "sameBehavior": true,
+      "main": {
+        "medianKiB": 447120,
+        "minKiB": 428708,
+        "maxKiB": 448320,
+        "rangeKiB": 19612,
+        "madKiB": 1200,
+        "samplesKiB": [
+          448320,
+          447120,
+          428708
+        ]
+      },
+      "candidate": {
+        "medianKiB": 506708,
+        "minKiB": 503632,
+        "maxKiB": 515164,
+        "rangeKiB": 11532,
+        "madKiB": 3076,
+        "samplesKiB": [
+          506708,
+          503632,
+          515164
+        ]
+      },
+      "medianDeltaKiB": 59588,
+      "observedDeltaEnvelopeKiB": [
+        55312,
+        86456
+      ],
+      "gate": "outside",
+      "baselineReceipts": [
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-complete/greystonePass/A1/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-complete/greystonePass/A2/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AE3-complete/greystonePass/A3/summary.json"
+      ]
+    },
+    {
+      "phase": "comparison",
+      "detail": "complete",
+      "map": "reedwater",
+      "sameBehavior": true,
+      "main": {
+        "medianKiB": 409032,
+        "minKiB": 407876,
+        "maxKiB": 409380,
+        "rangeKiB": 1504,
+        "madKiB": 348,
+        "samplesKiB": [
+          409032,
+          407876,
+          409380
+        ]
+      },
+      "candidate": {
+        "medianKiB": 497700,
+        "minKiB": 495300,
+        "maxKiB": 503640,
+        "rangeKiB": 8340,
+        "madKiB": 2400,
+        "samplesKiB": [
+          497700,
+          495300,
+          503640
+        ]
+      },
+      "medianDeltaKiB": 88668,
+      "observedDeltaEnvelopeKiB": [
+        85920,
+        95764
+      ],
+      "gate": "outside",
+      "baselineReceipts": [
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-complete/reedwater/A1/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-complete/reedwater/A2/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AE3-complete/reedwater/A3/summary.json"
+      ]
+    },
+    {
+      "phase": "comparison",
+      "detail": "complete",
+      "map": "gullIsland",
+      "sameBehavior": true,
+      "main": {
+        "medianKiB": 574836,
+        "minKiB": 574016,
+        "maxKiB": 577788,
+        "rangeKiB": 3772,
+        "madKiB": 820,
+        "samplesKiB": [
+          577788,
+          574016,
+          574836
+        ]
+      },
+      "candidate": {
+        "medianKiB": 672848,
+        "minKiB": 658860,
+        "maxKiB": 673644,
+        "rangeKiB": 14784,
+        "madKiB": 796,
+        "samplesKiB": [
+          673644,
+          658860,
+          672848
+        ]
+      },
+      "medianDeltaKiB": 98012,
+      "observedDeltaEnvelopeKiB": [
+        81072,
+        99628
+      ],
+      "gate": "outside",
+      "baselineReceipts": [
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-complete/gullIsland/A1/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-complete/gullIsland/A2/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AE3-complete/gullIsland/A3/summary.json"
+      ]
+    },
+    {
+      "phase": "comparison",
+      "detail": "decision",
+      "map": "turtleLake",
+      "sameBehavior": true,
+      "main": {
+        "medianKiB": 472948,
+        "minKiB": 456852,
+        "maxKiB": 509820,
+        "rangeKiB": 52968,
+        "madKiB": 16096,
+        "samplesKiB": [
+          509820,
+          472948,
+          456852
+        ]
+      },
+      "candidate": {
+        "medianKiB": 539540,
+        "minKiB": 532820,
+        "maxKiB": 570160,
+        "rangeKiB": 37340,
+        "madKiB": 6720,
+        "samplesKiB": [
+          570160,
+          532820,
+          539540
+        ]
+      },
+      "medianDeltaKiB": 66592,
+      "observedDeltaEnvelopeKiB": [
+        23000,
+        113308
+      ],
+      "gate": "overlap",
+      "baselineReceipts": [
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-decision/turtleLake/A1/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-decision/turtleLake/A2/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AE3-decision/turtleLake/A3/summary.json"
+      ]
+    },
+    {
+      "phase": "comparison",
+      "detail": "decision",
+      "map": "brokenSea",
+      "sameBehavior": true,
+      "main": {
+        "medianKiB": 845064,
+        "minKiB": 844768,
+        "maxKiB": 883324,
+        "rangeKiB": 38556,
+        "madKiB": 296,
+        "samplesKiB": [
+          883324,
+          844768,
+          845064
+        ]
+      },
+      "candidate": {
+        "medianKiB": 919716,
+        "minKiB": 914792,
+        "maxKiB": 946720,
+        "rangeKiB": 31928,
+        "madKiB": 4924,
+        "samplesKiB": [
+          946720,
+          919716,
+          914792
+        ]
+      },
+      "medianDeltaKiB": 74652,
+      "observedDeltaEnvelopeKiB": [
+        31468,
+        101952
+      ],
+      "gate": "outside",
+      "baselineReceipts": [
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-decision/brokenSea/A1/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-decision/brokenSea/A2/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AE3-decision/brokenSea/A3/summary.json"
+      ]
+    },
+    {
+      "phase": "comparison",
+      "detail": "complete",
+      "map": "veiledHill",
+      "sameBehavior": true,
+      "main": {
+        "medianKiB": 527812,
+        "minKiB": 516944,
+        "maxKiB": 546544,
+        "rangeKiB": 29600,
+        "madKiB": 10868,
+        "samplesKiB": [
+          527812,
+          546544,
+          516944
+        ]
+      },
+      "candidate": {
+        "medianKiB": 563960,
+        "minKiB": 562016,
+        "maxKiB": 566264,
+        "rangeKiB": 4248,
+        "madKiB": 1944,
+        "samplesKiB": [
+          566264,
+          562016,
+          563960
+        ]
+      },
+      "medianDeltaKiB": 36148,
+      "observedDeltaEnvelopeKiB": [
+        15472,
+        49320
+      ],
+      "gate": "overlap",
+      "baselineReceipts": [
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-complete/veiledHill/A1/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-complete/veiledHill/A2/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AE3-complete/veiledHill/A3/summary.json"
+      ]
+    },
+    {
+      "phase": "comparison",
+      "detail": "complete",
+      "map": "turtleLake",
+      "sameBehavior": true,
+      "main": {
+        "medianKiB": 474632,
+        "minKiB": 463852,
+        "maxKiB": 500564,
+        "rangeKiB": 36712,
+        "madKiB": 10780,
+        "samplesKiB": [
+          474632,
+          500564,
+          463852
+        ]
+      },
+      "candidate": {
+        "medianKiB": 568328,
+        "minKiB": 562092,
+        "maxKiB": 569692,
+        "rangeKiB": 7600,
+        "madKiB": 1364,
+        "samplesKiB": [
+          568328,
+          562092,
+          569692
+        ]
+      },
+      "medianDeltaKiB": 93696,
+      "observedDeltaEnvelopeKiB": [
+        61528,
+        105840
+      ],
+      "gate": "outside",
+      "baselineReceipts": [
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-complete/turtleLake/A1/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-complete/turtleLake/A2/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AE3-complete/turtleLake/A3/summary.json"
+      ]
+    },
+    {
+      "phase": "comparison",
+      "detail": "decision",
+      "map": "twoShores",
+      "sameBehavior": true,
+      "main": {
+        "medianKiB": 664848,
+        "minKiB": 661744,
+        "maxKiB": 666204,
+        "rangeKiB": 4460,
+        "madKiB": 1356,
+        "samplesKiB": [
+          666204,
+          661744,
+          664848
+        ]
+      },
+      "candidate": {
+        "medianKiB": 736152,
+        "minKiB": 728904,
+        "maxKiB": 766652,
+        "rangeKiB": 37748,
+        "madKiB": 7248,
+        "samplesKiB": [
+          766652,
+          736152,
+          728904
+        ]
+      },
+      "medianDeltaKiB": 71304,
+      "observedDeltaEnvelopeKiB": [
+        62700,
+        104908
+      ],
+      "gate": "outside",
+      "baselineReceipts": [
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-decision/twoShores/A1/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-decision/twoShores/A2/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AE3-decision/twoShores/A3/summary.json"
+      ]
+    },
+    {
+      "phase": "comparison",
+      "detail": "decision",
+      "map": "sapphireArchipelago",
+      "sameBehavior": true,
+      "main": {
+        "medianKiB": 886508,
+        "minKiB": 865108,
+        "maxKiB": 914580,
+        "rangeKiB": 49472,
+        "madKiB": 21400,
+        "samplesKiB": [
+          914580,
+          865108,
+          886508
+        ]
+      },
+      "candidate": {
+        "medianKiB": 974336,
+        "minKiB": 966108,
+        "maxKiB": 1005244,
+        "rangeKiB": 39136,
+        "madKiB": 8228,
+        "samplesKiB": [
+          1005244,
+          974336,
+          966108
+        ]
+      },
+      "medianDeltaKiB": 87828,
+      "observedDeltaEnvelopeKiB": [
+        51528,
+        140136
+      ],
+      "gate": "outside",
+      "baselineReceipts": [
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-decision/sapphireArchipelago/A1/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-decision/sapphireArchipelago/A2/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AE3-decision/sapphireArchipelago/A3/summary.json"
+      ]
+    },
+    {
+      "phase": "comparison",
+      "detail": "decision",
+      "map": "ringwater",
+      "sameBehavior": true,
+      "main": {
+        "medianKiB": 756400,
+        "minKiB": 742136,
+        "maxKiB": 759080,
+        "rangeKiB": 16944,
+        "madKiB": 2680,
+        "samplesKiB": [
+          756400,
+          742136,
+          759080
+        ]
+      },
+      "candidate": {
+        "medianKiB": 855412,
+        "minKiB": 804608,
+        "maxKiB": 896284,
+        "rangeKiB": 91676,
+        "madKiB": 40872,
+        "samplesKiB": [
+          855412,
+          804608,
+          896284
+        ]
+      },
+      "medianDeltaKiB": 99012,
+      "observedDeltaEnvelopeKiB": [
+        45528,
+        154148
+      ],
+      "gate": "outside",
+      "baselineReceipts": [
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-decision/ringwater/A1/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-decision/ringwater/A2/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AE3-decision/ringwater/A3/summary.json"
+      ]
+    },
+    {
+      "phase": "comparison",
+      "detail": "complete",
+      "map": "twoShores",
+      "sameBehavior": true,
+      "main": {
+        "medianKiB": 659068,
+        "minKiB": 640168,
+        "maxKiB": 665448,
+        "rangeKiB": 25280,
+        "madKiB": 6380,
+        "samplesKiB": [
+          640168,
+          665448,
+          659068
+        ]
+      },
+      "candidate": {
+        "medianKiB": 754976,
+        "minKiB": 754408,
+        "maxKiB": 761272,
+        "rangeKiB": 6864,
+        "madKiB": 568,
+        "samplesKiB": [
+          761272,
+          754408,
+          754976
+        ]
+      },
+      "medianDeltaKiB": 95908,
+      "observedDeltaEnvelopeKiB": [
+        88960,
+        121104
+      ],
+      "gate": "outside",
+      "baselineReceipts": [
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-complete/twoShores/A1/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-complete/twoShores/A2/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AE3-complete/twoShores/A3/summary.json"
+      ]
+    },
+    {
+      "phase": "comparison",
+      "detail": "decision",
+      "map": "templeSpring",
+      "sameBehavior": true,
+      "main": {
+        "medianKiB": 763032,
+        "minKiB": 753312,
+        "maxKiB": 764580,
+        "rangeKiB": 11268,
+        "madKiB": 1548,
+        "samplesKiB": [
+          763032,
+          764580,
+          753312
+        ]
+      },
+      "candidate": {
+        "medianKiB": 821756,
+        "minKiB": 803824,
+        "maxKiB": 837144,
+        "rangeKiB": 33320,
+        "madKiB": 15388,
+        "samplesKiB": [
+          837144,
+          803824,
+          821756
+        ]
+      },
+      "medianDeltaKiB": 58724,
+      "observedDeltaEnvelopeKiB": [
+        39244,
+        83832
+      ],
+      "gate": "outside",
+      "baselineReceipts": [
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-decision/templeSpring/A1/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-decision/templeSpring/A2/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AE3-decision/templeSpring/A3/summary.json"
+      ]
+    },
+    {
+      "phase": "comparison",
+      "detail": "complete",
+      "map": "brokenSea",
+      "sameBehavior": true,
+      "main": {
+        "medianKiB": 861296,
+        "minKiB": 835168,
+        "maxKiB": 1169428,
+        "rangeKiB": 334260,
+        "madKiB": 26128,
+        "samplesKiB": [
+          1169428,
+          835168,
+          861296
+        ]
+      },
+      "candidate": {
+        "medianKiB": 944908,
+        "minKiB": 900148,
+        "maxKiB": 989372,
+        "rangeKiB": 89224,
+        "madKiB": 44464,
+        "samplesKiB": [
+          900148,
+          989372,
+          944908
+        ]
+      },
+      "medianDeltaKiB": 83612,
+      "observedDeltaEnvelopeKiB": [
+        -269280,
+        154204
+      ],
+      "gate": "overlap",
+      "baselineReceipts": [
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-complete/brokenSea/A1/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-complete/brokenSea/A2/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AE3-complete/brokenSea/A3/summary.json"
+      ]
+    },
+    {
+      "phase": "comparison",
+      "detail": "complete",
+      "map": "sapphireArchipelago",
+      "sameBehavior": true,
+      "main": {
+        "medianKiB": 875320,
+        "minKiB": 871404,
+        "maxKiB": 879248,
+        "rangeKiB": 7844,
+        "madKiB": 3916,
+        "samplesKiB": [
+          875320,
+          879248,
+          871404
+        ]
+      },
+      "candidate": {
+        "medianKiB": 979616,
+        "minKiB": 976384,
+        "maxKiB": 1062592,
+        "rangeKiB": 86208,
+        "madKiB": 3232,
+        "samplesKiB": [
+          979616,
+          976384,
+          1062592
+        ]
+      },
+      "medianDeltaKiB": 104296,
+      "observedDeltaEnvelopeKiB": [
+        97136,
+        191188
+      ],
+      "gate": "outside",
+      "baselineReceipts": [
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-complete/sapphireArchipelago/A1/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-complete/sapphireArchipelago/A2/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AE3-complete/sapphireArchipelago/A3/summary.json"
+      ]
+    },
+    {
+      "phase": "comparison",
+      "detail": "complete",
+      "map": "ringwater",
+      "sameBehavior": true,
+      "main": {
+        "medianKiB": 751336,
+        "minKiB": 737968,
+        "maxKiB": 791712,
+        "rangeKiB": 53744,
+        "madKiB": 13368,
+        "samplesKiB": [
+          737968,
+          751336,
+          791712
+        ]
+      },
+      "candidate": {
+        "medianKiB": 875064,
+        "minKiB": 834228,
+        "maxKiB": 881380,
+        "rangeKiB": 47152,
+        "madKiB": 6316,
+        "samplesKiB": [
+          834228,
+          875064,
+          881380
+        ]
+      },
+      "medianDeltaKiB": 123728,
+      "observedDeltaEnvelopeKiB": [
+        42516,
+        143412
+      ],
+      "gate": "outside",
+      "baselineReceipts": [
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-complete/ringwater/A1/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-complete/ringwater/A2/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AE3-complete/ringwater/A3/summary.json"
+      ]
+    },
+    {
+      "phase": "comparison",
+      "detail": "complete",
+      "map": "templeSpring",
+      "sameBehavior": true,
+      "main": {
+        "medianKiB": 740932,
+        "minKiB": 729544,
+        "maxKiB": 746172,
+        "rangeKiB": 16628,
+        "madKiB": 5240,
+        "samplesKiB": [
+          729544,
+          740932,
+          746172
+        ]
+      },
+      "candidate": {
+        "medianKiB": 825852,
+        "minKiB": 815084,
+        "maxKiB": 968112,
+        "rangeKiB": 153028,
+        "madKiB": 10768,
+        "samplesKiB": [
+          968112,
+          825852,
+          815084
+        ]
+      },
+      "medianDeltaKiB": 84920,
+      "observedDeltaEnvelopeKiB": [
+        68912,
+        238568
+      ],
+      "gate": "outside",
+      "baselineReceipts": [
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-complete/templeSpring/A1/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AD3-complete/templeSpring/A2/summary.json",
+        "/codegeex/jeffry/sketch-rts-naval/strategy-observation-20261020/timelines-AE3-complete/templeSpring/A3/summary.json"
+      ]
+    }
+  ]
+}

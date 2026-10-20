@@ -65,13 +65,13 @@ export function groundApproachRoute(map: Pick<GameMap, 'terrain'>, from: Point, 
 }
 
 /** Native steering waypoints include building occupancy; downhill flow fields finish at their reachable endpoint. */
-export function groundSteeringRoute(map: Pick<GameMap, 'terrain'>, from: Point, goal: Point): [Point, ...Point[]] {
+export function groundSteeringRoute(map: Pick<GameMap, 'terrain'>, from: Point, goal: Point, mover: Mover = 'land'): [Point, ...Point[]] {
   const route: [Point, ...Point[]] = [from];
-  let point = from, next = steerPoint(map, point, goal);
+  let point = from, next = steerPoint(map, point, goal, mover);
   while (next.x !== point.x || next.y !== point.y) {
     route.push(next);
     point = next;
-    next = steerPoint(map, point, goal);
+    next = steerPoint(map, point, goal, mover);
   }
   return route;
 }

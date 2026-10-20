@@ -1,5 +1,5 @@
 import { NEUTRAL_ALERT_RANGE, NEUTRAL_ASSIST_RANGE, NEUTRAL_DAMAGE_RESPONSE_RANGE, NEUTRAL_LEASH_RANGE, NEUTRAL_RETURN_STOP_RANGE } from '../../shared/combat-acquisition';
-import type { GameMap, GameSnapshot, Unit } from '../../shared/types';
+import type { GameSnapshot, Unit } from '../../shared/types';
 import { neutralCamps, type Camp } from '../policy/v7/creep';
 import { strengthOf } from '../policy/v6/strength';
 export { unitAutoAcquireRadius } from '../../shared/combat-acquisition';
@@ -17,9 +17,24 @@ export type NeutralCampExposure = Readonly<{
 export type NeutralCampExposureFacts = Readonly<{ tick: number; camps: readonly NeutralCampExposure[] }>;
 
 type Group = { ids: readonly string[]; center: Camp['center']; reach: number };
-const geometry = new WeakMap<GameMap, { key: string; groups: readonly Group[] }>();
-const states = new WeakMap<readonly Unit[], { key: string; camps: readonly NeutralCampExposure[] }>();
+// Snapshot map wrappers and unit lists are replaced every think. Grouping is a
+// terrain-scoped fact; keep one current dynamic value, never a history of frames.
+const geometry = new WeakMap<object, { key: string; groups: readonly Group[] }>();
+const states = new WeakMap<object, { groups: readonly Group[]; camps: readonly NeutralCampExposure[] }>();
 const frames = new WeakMap<GameSnapshot, NeutralCampExposureFacts>();
+
+function sameRecord(a: unknown, b: unknown): boolean {
+  if (Object.is(a, b)) return true;
+  if (!a || !b || typeof a !== 'object' || typeof b !== 'object') return false;
+  if (Array.isArray(a) !== Array.isArray(b) || Array.isArray(a) && a.length !== (b as unknown[]).length) return false;
+  let count = 0, previous = 0;
+  for (const key in a) if (Object.hasOwn(a, key)) {
+    if (!Object.hasOwn(b, key) || !sameRecord((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key])) return false;
+    count++;
+  }
+  for (const key in b) if (Object.hasOwn(b, key)) previous++;
+  return count === previous;
+}
 
 /** Shared situation facts, independent of owner, task, route or policy memory.
  * Home grouping is recomputed only on membership/home changes; moving, wounded,
@@ -28,26 +43,27 @@ const frames = new WeakMap<GameSnapshot, NeutralCampExposureFacts>();
  */
 export function neutralCampExposure(snapshot: GameSnapshot): NeutralCampExposureFacts {
   const neutrals = snapshot.units.filter(unit => unit.owner === 'neutral' && unit.attackDamage > 0 && unit.hp > 0);
+  const namespace = snapshot.map.terrain ?? snapshot.map;
   const groupKey = neutrals.map(unit => `${unit.id}:${unit.homeX ?? unit.x}:${unit.homeY ?? unit.y}`).join('|');
-  const stateKey = neutrals.map(unit => {
-    const order = unit.order;
-    return `${unit.id}:${unit.kind}:${unit.x}:${unit.y}:${unit.hp}:${unit.maxHp}:${unit.level}:${unit.speed}:${unit.attackDamage}:${unit.attackRange}:${unit.attackCooldown}:${order.type}:`
-      + (order.type === 'attack' ? `${order.targetId}:${order.leashX}:${order.leashY}`
-        : order.type === 'move' ? `${order.x}:${order.y}` : '');
-  }).join('|') + '#' + groupKey;
-  let retained = states.get(snapshot.units);
-  if (!retained || retained.key !== stateKey) {
-    let layout = geometry.get(snapshot.map);
+  let retained = states.get(namespace);
+  {
+    let layout = geometry.get(namespace);
     if (!layout || layout.key !== groupKey) {
       layout = { key: groupKey, groups: neutralCamps({ ...snapshot, units: neutrals }).map(camp =>
         ({ ids: Object.freeze(camp.creeps.map(unit => unit.id)), center: Object.freeze({ ...camp.center }), reach: camp.reach })) };
-      geometry.set(snapshot.map, layout);
+      geometry.set(namespace, layout);
     }
-    const byId = new Map(neutrals.map(unit => [unit.id, unit]));
-    const camps = layout.groups.map(group => {
+    const byId = new Map<string, Unit>();
+    for (const unit of neutrals) byId.set(unit.id, unit);
+    let changed = retained?.groups !== layout.groups;
+    const camps = layout.groups.map((group, index) => {
+      const previous = retained?.groups === layout.groups ? retained.camps[index] : undefined;
+      if (previous && previous.camp.creeps.every(unit => sameRecord(byId.get(unit.id), unit))) return previous;
+      changed = true;
       const creeps = Object.freeze(group.ids.map(id => {
         const unit = byId.get(id)!;
-        return Object.freeze({ ...unit, order: Object.freeze({ ...unit.order }) });
+        const copy = structuredClone(unit);
+        Object.freeze(copy.order); return Object.freeze(copy);
       }));
       const members = creeps.map(unit => {
         const point = Object.freeze({ x: unit.x, y: unit.y });
@@ -64,9 +80,9 @@ export function neutralCampExposure(snapshot: GameSnapshot): NeutralCampExposure
       return Object.freeze({ camp: Object.freeze({ center: group.center, creeps, reach: group.reach, strength: strengthOf(creeps) }),
         memberIds: group.ids, members: Object.freeze(members) });
     });
-    retained = { key: stateKey, camps: Object.freeze(camps) }; states.set(snapshot.units, retained);
+    if (changed) { retained = { groups: layout.groups, camps: Object.freeze(camps) }; states.set(namespace, retained); }
   }
   const previous = frames.get(snapshot);
-  if (previous && previous.tick === snapshot.tick && previous.camps === retained.camps) return previous;
-  const facts = Object.freeze({ tick: snapshot.tick, camps: retained.camps }); frames.set(snapshot, facts); return facts;
+  if (previous && previous.tick === snapshot.tick && previous.camps === retained!.camps) return previous;
+  const facts = Object.freeze({ tick: snapshot.tick, camps: retained!.camps }); frames.set(snapshot, facts); return facts;
 }
