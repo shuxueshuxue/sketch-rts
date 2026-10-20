@@ -32,7 +32,8 @@ function defendedPost(): AllocationMethodQuoteInput {
     assets: [{ id: hall.id, owner: 'us', kind: 'hall', target, hp: hall.hp, complete: true,
       replacementGold: 400, remainingGold: 0, incomeGoldPerTick: 0, discountedValueGold: 400 }],
     lands: [{ id: target.landId, anchor: target.point, assetIds: [hall.id], unitIds: party.map(unit => unit.id), adjacentSeaIds: [],
-      threats: [{ siteId: hall.id, horizonTicks: 900, attackers: [{ unitId: enemy.id, arrival, strength: 1 }],
+      threats: [{ siteId: hall.id, horizonTicks: 900, attackers: [{ unitId: enemy.id, arrival, strength: 1,
+        intent: { kind: 'actual-intrusion', actualSiteId: hall.id, redirectGroupId: 'native-enemy', basis: 'native-target' } }],
         arrivedStrength: 1, incomingStrength: 0, friendlyOnStationStrength: strengthOf(party), firstArrivalTicks: 0,
         lossProbability: .01, evidence: [] }] }] };
   const objective: Objective = { id: 'defend-hall', kind: 'DefendSite', owner: 'us', target,
@@ -46,6 +47,27 @@ function defendedPost(): AllocationMethodQuoteInput {
 }
 
 describe('defense protection and whole-bundle valuation', () => {
+  it('does not charge a second site the full enemy army or invent intent for older captures', () => {
+    const input = defendedPost();
+    const potential = { ...input.situation, lands: input.situation.lands.map(land => ({ ...land, threats: land.threats.map(threat => ({ ...threat,
+      attackers: threat.attackers.map(attacker => ({ ...attacker, arrival: { ...attacker.arrival, ticks: 100 }, intent: { kind: 'potential-redirect' as const,
+        actualSiteId: 'other-front-mine', redirectGroupId: 'native-enemy', basis: 'native-target' as const } })) })) })) };
+    const redirect = defenseMethodProvider.quote({ ...input, situation: potential });
+    expect(redirect.status).toBe('feasible');
+    expect(redirect.reason.values.actualIntrusionCount).toBe(0);
+    expect(redirect.reason.values.potentialRedirectCount).toBe(1);
+    // The remaining real tower is enough to respond even with this entire
+    // quoted cohort removed. Its protection cannot be sold a second time.
+    expect(redirect.reason.values.otherResponseTicks).toBe(0);
+    expect(redirect.utility!.score).toBe(0);
+    const oldCapture = { ...input.situation, lands: input.situation.lands.map(land => ({ ...land, threats: land.threats.map(threat => ({ ...threat,
+      attackers: threat.attackers.map(({ intent: _intent, ...attacker }) => attacker) })) })) };
+    const unknown = defenseMethodProvider.quote({ ...input, situation: oldCapture });
+    expect(unknown.status).toBe('blocked');
+    expect(unknown.reason.code).toBe('defense-response-or-intent-unknown');
+    expect(unknown.utility).toBeNull();
+  });
+
   it('prices actual opposition once and subtracts the static-only counterfactual exactly', () => {
     const input = defendedPost(), before = JSON.stringify(input), quote = defenseMethodProvider.quote(input);
     expect(quote.status).toBe('feasible');
