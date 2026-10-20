@@ -12,9 +12,11 @@ export type AiPlanDelta = {
   positions?: {id:string;x:number;y:number}[];
 };
 export type AiPlanBuildingLoss = { id: string; owner: PlayerId; kind: string; tick: number; x: number; y: number };
+export type AiPlanAudience = { kind: 'all' } | { kind: 'owner'; owner: PlayerId }
+  | { kind: 'none'; reason?: 'after-match' };
 export type AiPlanPacket = {type:'reset';tick:number} | AiPlanDelta
   | { type: 'events'; tick: number; deaths: AiUnitDeathRecord[]; buildings: AiPlanBuildingLoss[] }
-  | { type: 'coverage'; session: number; from: number; to: number | null };
+  | { type: 'coverage'; session: number; from: number; to: number | null; availability?: 'after-match' };
 export type AiPlanRecording = { packets: AiPlanPacket[]; throughTick: number };
 
 export function diffAiPlan(previous: AiPlanTrace | undefined, trace: AiPlanTrace, session: number): AiPlanDelta {
@@ -42,8 +44,10 @@ export function applyAiPlanDelta(previous: AiPlanTrace | undefined, delta: AiPla
   return {...header, nodes:delta.order ? delta.order.flatMap(id=>nodes.has(id)?[nodes.get(id)!]:[]) : [...nodes.values()]} as AiPlanTrace;
 }
 
-export function filterAiPlanPacket(packet: AiPlanPacket, owner?: PlayerId): AiPlanPacket | undefined {
-  if (!owner || packet.type === 'coverage' || packet.type === 'reset') return packet;
+export function filterAiPlanPacket(packet: AiPlanPacket, audience: AiPlanAudience): AiPlanPacket | undefined {
+  if (audience.kind === 'none') return undefined;
+  if (audience.kind === 'all' || packet.type === 'coverage' || packet.type === 'reset') return packet;
+  const owner = audience.owner;
   if (packet.type === 'trace') return packet.owner === owner ? packet : undefined;
   const deaths = packet.deaths.filter(d => d.owner === owner), buildings = packet.buildings.filter(b => b.owner === owner);
   return deaths.length || buildings.length ? { ...packet, deaths, buildings } : undefined;

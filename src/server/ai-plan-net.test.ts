@@ -1,9 +1,10 @@
-import {it,expect} from 'vitest';
+import {it,expect,vi} from 'vitest';
 import {createRoomHost} from './room-host';
 import {RoomNetHub,type RoomNetSocket} from './room-net';
 import {RULES_VERSION} from '../shared/rules-version';
 import {decodeServerNetMessage} from '../shared/net/codec';
 import type {ServerNetMessage} from '../shared/net/types';
+import { filterAiPlanPacket } from '../ai/plan-stream';
 class Socket implements RoomNetSocket{
   messages:ServerNetMessage[]=[];handlers=new Map<string,Function>();
   send(raw:string){this.messages.push(decodeServerNetMessage(raw));}
@@ -70,4 +71,59 @@ it('binds recorded plan access to the joined socket and room, never a caller sup
  expect(hub.planViewer(room.id,token.accessToken)).toBe('player');
  expect(hub.planViewer('another-room',token.accessToken)).toBeUndefined();expect(hub.planViewer(room.id,'spectator-forged')).toBeUndefined();
  socket.close();expect(hub.planViewer(room.id,token.accessToken)).toBeUndefined();host.closeRoom(room.id,'host');
+});
+
+function multiplayerPlanRoom(id: string) {
+  // These AIs still emit think traces; no pending build commands obscure the match-ending fixture.
+  const host = createRoomHost({ autoTick: false, aiScripts: [] });
+  const room = host.createRoom({ id, host: { id: 'host', name: 'Host' }, mapId: 'verdantCrossroads', humanCount: 2, aiCount: 2 });
+  host.joinRoom(room.id, { id: 'guest', name: 'Guest' });
+  for (const slot of host.getRoom(room.id).slots) {
+    host.updateSlot(room.id, slot.id, { ready: true, team: slot.controller === 'human' ? 'team-1' : 'team-2' });
+  }
+  host.startRoom(room.id);
+  const observe = vi.spyOn(host, 'subscribeAiPlans');
+  const hub = new RoomNetHub({ roomHost: host }), socket = new Socket();
+  hub.connect(room.id, socket);
+  socket.receive({ type: 'join', rulesVersion: RULES_VERSION, roomId: room.id, playerId: 'spectator-forged' });
+  socket.receive({ type: 'aiPlans', roomId: room.id, enabled: true });
+  host.enableDebugReplay(room.id, { id: 'multiplayer-proof' });
+  host.tickRoom(room.id, 40);
+  const access = socket.messages.find(message => message.type === 'aiPlans' && message.accessToken);
+  if (access?.type !== 'aiPlans' || !access.accessToken) throw new Error('No plan access token');
+  return { host, room, hub, socket, observe, token: access.accessToken };
+}
+
+it('withholds live plans from a self-declared spectator in a seated multiplayer room, including replay reads', () => {
+  const { host, room, hub, socket, token, observe } = multiplayerPlanRoom('multiplayer-plans');
+  expect(observe).not.toHaveBeenCalled();
+  const packets = socket.messages.flatMap(message => message.type === 'aiPlans' ? [message.packet] : []);
+  expect(packets.length).toBeGreaterThan(0);
+  expect(packets.every(packet => packet.type === 'coverage')).toBe(true);
+  expect(packets.some(packet => packet.type === 'coverage' && 'availability' in packet && packet.availability === 'after-match')).toBe(true);
+  const recorded = host.readDebugReplay(room.id, hub.planViewer(room.id, token)).aiPlans!.packets;
+  expect(recorded.length).toBeGreaterThan(0);
+  expect(recorded.every(packet => packet.type === 'coverage')).toBe(true);
+  socket.close();
+  host.closeRoom(room.id, 'host');
+});
+
+it('opens the recorded opponent plans to the same spectator after the multiplayer match ends', () => {
+  const { host, room, hub, socket, token } = multiplayerPlanRoom('ended-multiplayer-plans');
+  expect(host.readDebugReplay(room.id, hub.planViewer(room.id, token)).aiPlans!.packets.some(packet => packet.type === 'trace')).toBe(false);
+  host.commandTickRoom(room.id, [
+    { playerId: 'enemy2', command: { type: 'forfeit' } },
+    { playerId: 'player-4', command: { type: 'forfeit' } },
+  ], 1);
+  expect(host.getRoom(room.id).status).toBe('ended');
+  const packets = host.readDebugReplay(room.id, hub.planViewer(room.id, token)).aiPlans!.packets;
+  expect(packets.some(packet => packet.type === 'trace' && packet.owner === 'enemy2')).toBe(true);
+  expect(packets.some(packet => packet.type === 'trace' && packet.owner === 'player-4')).toBe(true);
+  socket.close();
+  host.closeRoom(room.id, 'host');
+});
+
+it('gives an explicit none audience no packets, including coverage', () => {
+  expect(filterAiPlanPacket({ type: 'coverage', session: 1, from: 0, to: null }, { kind: 'none' })).toBeUndefined();
+  expect(filterAiPlanPacket({ type: 'reset', tick: 0 }, { kind: 'none' })).toBeUndefined();
 });

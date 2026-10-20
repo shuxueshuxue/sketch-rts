@@ -7,14 +7,14 @@ export class AiPlanHistory {
   readonly bands: PlanBand[] = [];
   readonly deaths: AiUnitDeathRecord[] = [];
   readonly buildings: AiPlanBuildingLoss[] = [];
-  readonly coverage = new Map<number,{from:number;to:number|null}>();
+  readonly coverage = new Map<number,{from:number;to:number|null;availability?:'after-match'}>();
   readonly paths = new Map<string,{tick:number;x:number;y:number;session:number;goals:string[]}[]>();
   private current = new Map<string,{trace:AiPlanTrace;session:number}>();
   revision=0;
   receive(packet:AiPlanPacket) {
     this.revision++;
     if(packet.type==='reset'){this.frames.clear();this.bands.length=0;this.deaths.length=0;this.buildings.length=0;this.coverage.clear();this.paths.clear();this.current.clear();return;}
-    if(packet.type==='coverage'){this.coverage.set(packet.session,{from:packet.from,to:packet.to});return;}
+    if(packet.type==='coverage'){this.coverage.set(packet.session,{from:packet.from,to:packet.to,...(packet.availability?{availability:packet.availability}:{})});return;}
     if(packet.type==='events'){
       for(const death of packet.deaths) if(!this.deaths.some(d=>d.id===death.id))this.deaths.push(death);
       for(const b of packet.buildings)if(!this.buildings.some(d=>d.id===b.id&&d.tick===b.tick))this.buildings.push(b);
@@ -48,14 +48,15 @@ export class AiPlanHistory {
     const bound=(tick:number)=>{let lo=0,hi=points.length;while(lo<hi){const mid=(lo+hi)>>>1;if(points[mid]!.tick<tick)lo=mid+1;else hi=mid;}return lo;};
     return points.slice(bound(from),bound(to+1));
   }
-  recorded(tick:number){return [...this.coverage.values()].some(c=>tick>=c.from&&(c.to===null||tick<=c.to));}
+  recorded(tick:number){return [...this.coverage.values()].some(c=>!c.availability&&tick>=c.from&&(c.to===null||tick<=c.to));}
+  availableAfterMatch(tick:number){return !this.recorded(tick)&&[...this.coverage.values()].some(c=>c.availability==='after-match'&&tick>=c.from&&(c.to===null||tick<=c.to));}
   at(owner:string,tick:number):AiPlanTrace|undefined {
     if(!this.recorded(tick))return;
     const frames=this.frames.get(owner)??[];let lo=0,hi=frames.length;
     while(lo<hi){const mid=(lo+hi)>>>1;if(frames[mid]!.tick<=tick)lo=mid+1;else hi=mid;}
     const frame=frames[lo-1];
     // A baseline before a closed gap does not become a record of a later opening.
-    const interval=[...this.coverage.values()].find(c=>tick>=c.from&&(c.to===null||tick<=c.to));
+    const interval=[...this.coverage.values()].find(c=>!c.availability&&tick>=c.from&&(c.to===null||tick<=c.to));
     return frame&&interval&&frame.tick>=interval.from?frame:undefined;
   }
   nodes(tick:number):{trace:AiPlanTrace;node:AiPlanNode}[]{return [...this.frames.keys()].flatMap(owner=>{const trace=this.at(owner,tick);return trace?trace.roots.flatMap(id=>{const node=trace.nodes.find(n=>n.id===id);return node?[{trace,node}]:[];}):[];});}

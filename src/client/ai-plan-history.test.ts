@@ -26,3 +26,13 @@ it('keeps every simultaneous death clickable on its own row',async()=>{
  const rows=planTimelineRows([{tick:100},{tick:100},{tick:103},{tick:125}],e=>e.tick,e=>e.tick,20);
  expect(rows.map(r=>r.row)).toEqual([0,1,2,0]);
 });
+
+it('distinguishes multiplayer after-match access from an observed plan interval', () => {
+  const history = new AiPlanHistory();
+  history.receive({ type: 'coverage', session: 0, from: 20, to: null, availability: 'after-match' });
+  expect(history.availableAfterMatch(30)).toBe(true);
+  expect(history.recorded(30)).toBe(false);
+  expect(history.nodes(30)).toEqual([]);
+  history.receive({ type: 'reset', tick: 0 });
+  expect(history.availableAfterMatch(30)).toBe(false);
+});

@@ -1,6 +1,6 @@
-import { aiPlanAudience } from './ai-plan-visibility';
+import { aiPlanAudience, filterRoomAiPlanPacket } from "./ai-plan-visibility";
 import { AiPlanObserver } from '../ai/plan-observer';
-import { filterAiPlanPacket, type AiPlanPacket } from '../ai/plan-stream';
+import type { AiPlanPacket } from '../ai/plan-stream';
 import { createRoomLifecycleHost } from "../shared/room-lifecycle";
 import type { CreateRoomInput, GrandStressRoomOptions, SlotPatch } from "../shared/rooms";
 import { createSaveGameRecord, restoreGameFromSave, type SaveGameInput, type SaveGameRecord } from "../shared/savegame";
@@ -445,7 +445,7 @@ export function createRoomHost(options: RoomHostOptions = {}) {
     },
 
     subscribeAiPlans(roomId: string, listener: (packet: AiPlanPacket) => void): () => void {
-      const {hosted, game} = getLiveGame(roomId);
+      const { hosted, game } = getLiveGame(roomId);
       hosted.plans ??= new AiPlanObserver(game, hosted.aiRuntime?.controlledPlayers ?? [], hosted.thinkExecutor);
       return hosted.plans.subscribe(listener);
     },
@@ -467,9 +467,13 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       if (!hosted.debugReplay || hosted.debugReplay.stopped) return;
       hosted.thinkExecutor?.poll?.();
       hosted.plans?.record(false);
-      const trace = hosted.history.debugReplayTrace(hosted.debugReplay), aiPlans = hosted.plans?.recordingData();
-      hosted.debugReplay.stopped = {...trace,throughTick:hosted.game?.tick ?? aiPlans?.throughTick ?? trace.initialSave.snapshot.tick,
-        ...(aiPlans ? {aiPlans} : {})};
+      const trace = hosted.history.debugReplayTrace(hosted.debugReplay);
+      const aiPlans = hosted.plans?.recordingData();
+      hosted.debugReplay.stopped = {
+        ...trace,
+        throughTick: hosted.game?.tick ?? aiPlans?.throughTick ?? trace.initialSave.snapshot.tick,
+        ...(aiPlans ? { aiPlans } : {}),
+      };
       hosted.history.releaseReplayFrames();
     },
 
@@ -479,9 +483,20 @@ export function createRoomHost(options: RoomHostOptions = {}) {
       hosted.thinkExecutor?.poll?.();
       const trace = hosted.debugReplay.stopped ? structuredClone(hosted.debugReplay.stopped) : hosted.history.debugReplayTrace(hosted.debugReplay);
       const plans = trace.aiPlans ?? hosted.plans?.recordingData();
-      const own = aiPlanAudience(hosted.room,viewer);
-      return {...trace, throughTick: hosted.debugReplay.stopped?.throughTick ?? hosted.game?.tick ?? plans?.throughTick ?? trace.initialSave.snapshot.tick,
-        ...(plans ? {aiPlans: {...plans, packets: plans.packets.flatMap(p => { const filtered = filterAiPlanPacket(p, own); return filtered ? [filtered] : []; })}} : {})};
+      const audience = aiPlanAudience(hosted.room, viewer);
+      return {
+        ...trace,
+        throughTick: hosted.debugReplay.stopped?.throughTick ?? hosted.game?.tick ?? plans?.throughTick ?? trace.initialSave.snapshot.tick,
+        ...(plans ? {
+          aiPlans: {
+            ...plans,
+            packets: plans.packets.flatMap(packet => {
+              const filtered = filterRoomAiPlanPacket(packet, audience);
+              return filtered ? [filtered] : [];
+            }),
+          },
+        } : {}),
+      };
     },
 
     replayDebugToTick(roomId: string, tick: number): GameSnapshot {
