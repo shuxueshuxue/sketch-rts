@@ -29,7 +29,7 @@ const CANDIDATES_PER_KIND = 4;
 const campCache = new WeakMap<PlanningContext['snapshot'], { tick: number; camps: Camp[] }>();
 // A proposal and its methods share one assessment during this immutable observation pass.
 // Weak keys keep this cache out of saved policy state and release it with the trace.
-const assessments = new WeakMap<Objective, { situation: Situation; context: PlanningContext; value: Assessment }>();
+const assessments = new WeakMap<Objective, { situation: Situation; context: PlanningContext; model: LandModel; value: Assessment }>();
 const gap = (a: Target['point'], b: Target['point']) => Math.hypot(a.x - b.x, a.y - b.y);
 const term = (code: string, value: number, explanation: string): UtilityTerm => ({ code, value, explanation });
 const identity = (kind: ObjectiveKind, owner: string, target: string) => `${kind}:${owner}:${target}`;
@@ -52,11 +52,13 @@ function knownArrival(arrival: Arrival | undefined): arrival is Extract<Arrival,
 class LandModel {
   readonly raw: Map<string, Unit>;
   readonly own: SituationUnit[];
+  readonly units: Map<string, SituationUnit>;
   readonly assets: Map<string, Asset>;
   constructor(readonly situation: Situation, readonly context: PlanningContext) {
     if (situation.owner !== context.owner || situation.tick !== context.snapshot.tick)
       throw new Error('Land objective Situation and context must describe the same owner/tick');
     this.raw = new Map(context.snapshot.units.map(unit => [unit.id, unit]));
+    this.units = new Map(situation.units.map(unit => [unit.id, unit]));
     this.own = situation.units.filter(unit => unit.owner === context.owner && unit.hp > 0);
     this.assets = new Map(situation.assets.map(asset => [asset.id, asset]));
   }
@@ -108,7 +110,7 @@ class LandModel {
       const site = this.assets.get(threat.siteId);
       if (site?.owner !== this.context.owner) continue;
       for (const attacker of threat.attackers) {
-        const unit = this.situation.units.find(unit => unit.id === attacker.unitId), raw = this.raw.get(attacker.unitId);
+        const unit = this.units.get(attacker.unitId), raw = this.raw.get(attacker.unitId);
         const harassing = raw?.kind === 'horseArcher' || raw?.order.type === 'attack' && workerIds.has(raw.order.targetId);
         if (unit && harassing && this.foe(unit.owner) && unit.location.kind === 'land')
           add('CounterHarass', unit.id, { entityId: unit.id, landId: unit.location.landId, point: { ...unit.location.point } });
@@ -347,7 +349,7 @@ class LandModel {
     const firing = new Map([...responders.map(unit => this.raw.get(unit.id)).filter((unit): unit is Unit => !!unit),
       ...towers, ...targets.filter(target => target.attackDamage > 0)].map(source => [source.id, source]));
     const damage = [...firing.values()].reduce((sum, source) => {
-      const unit = this.situation.units.find(unit => unit.id === source.id), arrival = unit && arrivalAt(unit, arrivalKey);
+      const unit = this.units.get(source.id), arrival = unit && arrivalAt(unit, arrivalKey);
       const starts = knownArrival(arrival) ? Math.max(eta ?? 0, arrival.ticks) : eta ?? 0;
       const ends = unit?.expiresTick === null || unit?.expiresTick === undefined ? (eta ?? 0) + duration
         : Math.min((eta ?? 0) + duration, unit.expiresTick - s.tick);
@@ -417,17 +419,19 @@ export function generateLandObjectives(situation: Situation, context: PlanningCo
       methodIds: methodVariants(a).map(variant => `${a.id}/method:${variant}`),
       stability: old ? { ...old.stability } : { minimumStayUntilTick: live ? situation.tick + PARAMETERS.minimumStayTicks : situation.tick,
         challengerId: null, challengerThinks: 0 } };
-    assessments.set(objective, { situation, context, value: a });
+    assessments.set(objective, { situation, context, model, value: a });
     return objective;
   });
 }
 
 export function decomposeLandObjective(situation: Situation, objective: Objective, context: PlanningContext): readonly Method[] {
   if (!['ExpandLand', 'RecoverSite', 'AttackSite', 'ContestRoute', 'CounterHarass'].includes(objective.kind)) return [];
-  const model = new LandModel(situation, context), candidate = model.candidates().find(candidate => identity(candidate.kind, situation.owner, candidate.key) === objective.id);
-  if (!candidate) return [];
   const cached = assessments.get(objective);
-  const a = cached?.situation === situation && cached.context === context ? cached.value : model.assess(candidate, []);
+  const reusable = cached?.situation === situation && cached.context === context ? cached : undefined;
+  const model = reusable?.model ?? new LandModel(situation, context);
+  const candidate = reusable?.value.candidate ?? model.candidates().find(candidate => identity(candidate.kind, situation.owner, candidate.key) === objective.id);
+  if (!candidate) return [];
+  const a = reusable?.value ?? model.assess(candidate, []);
   return methodVariants(a).map(variant => {
   const id = `${objective.id}/method:${variant}`, subgoals: Subgoal[] = [];
   const add = (kind: Subgoal['kind'], demands: ResourceDemand[], dependsOn: string[], reasons: Reason[], target = candidate.target) => {
@@ -495,3 +499,8 @@ export function landIdleForces(situation: Situation, objectives: readonly Object
     reason: reason(situation, objective ? 'positive-alternative-forgone' : 'no-known-positive-alternative',
       objective ? `闲置放弃可行目标 ${objective.id}；这是闲置备选的负效用，不是给该目标重复加分` : '没有可核实的正效用备选；不凭缺失 ETA 虚造机会成本', objective ? 'inferred' : 'unknown') }));
 }
+
+/** Plug this family into the shared plan collector; it owns no evaluator or allocator. */
+export const LAND_OBJECTIVE_FAMILY = {
+  id: 'land', generate: generateLandObjectives, decompose: decomposeLandObjective, idleForces: landIdleForces,
+} as const;
