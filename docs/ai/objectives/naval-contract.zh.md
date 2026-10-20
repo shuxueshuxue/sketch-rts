@@ -225,6 +225,8 @@ SKETCH_MACHINES=/root/.config/sketch/machines-naval.json \
 
 `CrossingEta.expectedLoadedTick` 是本次查询根据实际登船步行、等待和 gangway 阶段给出的绝对装载完成预测；正式航次只在每名未上船成员的同一固定航次均有该预测时取最大值，否则保持 null。全程到达 ETA 和 `expectedFreeTick` 不替代它。实际执行保留首次有效预报、最新修订和原生实载观察时刻，不能拿最后一次重报洗掉误差。
 
+部分装载不代表接人航段已完成。仍有成员在岸上且船未进入计划 water 的一船半径容差时，风险批次保留「当前位置→接人点→登陆点」两段，并让 loaded 请求消费同批 approach 的原生终点；已在船的乘客按同一两段存活率计损，岸上候船者只在成功接近后承担载人段沉船损失。船已到接人点才可以把 approach 记为已完成；全部剩余成员已在船上（已实际卸下者不再算待接人）时，才直接从船当前位置报价后腿。真实 4180 的两名在船、一名岸上、船距接人点 90.51 大于半径 36 的反例，修前错误略过接人航段，修后首请求与后腿原生起点均按执行路径保留。该回归是共享风险端口验证，不是自然 grant 或已兑现的经济损失测量。
+
 ## 当前威胁解除的 collector 差异
 
 [逐字段因果表](clear-threat-collector-fact-diff.json.gz)（SHA-256 `cef5e0048f3f435b654090ca3ce1d67c8dda1faf91c765fde1fbc4d726454e6e`）先在 `70ae44e6` 重现原 7 帧完整 plan／observation SHA，再对新事实求差。7 帧 Situation 均逐字相同；仅 L2 有 24 个按 ID 对齐的变化叶：1934 厅当前无实际／潜在敌人且无覆盖敌塔，旧 DefendSite 从 active 结束为 complete，删除其 3 个方法，释放最短停留，排序与 observation 的历史 score 随之调整。其他独立目标除排序外、其他方法均断言逐字一致。原 `control-land-explanation-reference.json` 和所有输入未覆盖；新 `protection-land-explanation-reference.json` 通过旧文件 SHA 及逐帧旧哈希接续该证据链。没有对应当前事实的变化不得纳入新引用。

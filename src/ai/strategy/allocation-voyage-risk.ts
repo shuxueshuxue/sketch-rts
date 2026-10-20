@@ -4,6 +4,7 @@ import type { ExecutableMethod, MethodAllocationQuote } from './allocation-types
 import { boundObservationMemory, observationMemory } from './observation-memory';
 import { assessVoyageRisks, type VoyageRisk, type VoyageRiskRequest, type VoyageRiskStages } from './voyage-risk';
 import { CRITICAL_FACT_CANDIDATES, currentFactWork } from './fact-work';
+import { landIdAt } from './regions';
 
 /** One physical batch for all materialized candidate bundles. The risk of the
  * hull's route does not depend on which passengers are being priced. Passenger
@@ -44,17 +45,24 @@ export function prepareAllocationVoyageRisks(snapshot: GameSnapshot, owner: Play
       continue;
     }
     const hull = shipId ? snapshot.units.find(unit => unit.id === shipId) : undefined;
-    const alreadyLoaded = !!hull && voyage.unitIds.some(id => snapshot.units.some(unit => unit.id === id
-      && (unit.deck?.shipId === hull.id || unit.cabin?.shipId === hull.id)));
+    const cargo = (id: string) => snapshot.units.some(unit => unit.id === id && hull
+      && (unit.deck?.shipId === hull.id || unit.cabin?.shipId === hull.id));
+    const alreadyLoaded = !!hull && voyage.unitIds.some(cargo) && voyage.unitIds.every(id => cargo(id)
+      || snapshot.units.some(unit => unit.id === id && !unit.deck && !unit.cabin
+        && landIdAt(snapshot.map, unit) === voyage.landingGround.landId));
     const identity = { seaId: voyage.crossing.seaId, ...(shipId ? { shipId } : { productionBuildingId: producer! }) };
-    if (alreadyLoaded) {
-      // An embarked manifest has already survived its approach. Do not send
-      // the physical ship back to the original departure for valuation.
+    const atPickup = !!hull && Math.hypot(hull.x - voyage.departure.point.x, hull.y - voyage.departure.point.y) <= hull.radius;
+    if (alreadyLoaded || atPickup) {
+      // Current cargo alone does not complete a pickup. Until the remaining
+      // manifest boards, the executor first visits the planned water point;
+      // those already aboard are exposed during that approach too.
       const safe: VoyageRisk = { status: 'known', survivalProbability: 1, expectedDamage: 0, expectedHpLoss: 0,
         damageErrorBound: 0, samples: 0, totalSamples: 0, computedTick: snapshot.tick,
         basis: 'completed-before-evaluation', threatIds: [] };
       unknowns.set(approach, safe);
-      add({ id: loaded, ...identity, destination: voyage.destination.point });
+      add({ id: loaded, ...identity, destination: voyage.destination.point,
+        ...(!alreadyLoaded ? { start: { ...voyage.departure.point,
+          heading: voyage.crossing.departureHeading ?? hull!.sailing?.heading ?? 0 } } : {}) });
     } else {
       add({ id: approach, ...identity, destination: voyage.departure.point });
       add({ id: loaded, ...identity, destination: voyage.destination.point, previousLegId: approach });
