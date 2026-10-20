@@ -12,9 +12,9 @@ const reason = (code: string, factIds: readonly string[] = []): AllocationReason
 export function observeWorkerSafetyInterruption(input: ExecutorInput): ExecutorFeedback | null {
   if (!validExecutorGrant(input)) return null;
   const { snapshot, owner, grant, execution } = input;
-  const foes = armedFoes(snapshot, owner, {}).filter(foe => !('order' in foe && foe.deck));
+  const foes = armedFoes(snapshot, owner, {}).filter(foe => !('order' in foe && (foe.deck || foe.cabin)));
   const commands: ExecutorFeedback['commands'][number][] = [], blocked: SafetyBlockedQuote[] = [];
-  for (const worker of grantedUnits(input).filter(unit => unit.kind === 'worker' && !unit.deck && !unit.garrison)) {
+  for (const worker of grantedUnits(input).filter(unit => unit.kind === 'worker' && !unit.deck && !unit.cabin && !unit.garrison)) {
     const order = grant.orders.find(order => order.unitId === worker.id && order.purpose === 'task'
       && sameAction(order.action, execution.token) && order.observedTick === snapshot.tick
       && order.observedOrder !== null && JSON.stringify(order.observedOrder) === JSON.stringify(worker.order));

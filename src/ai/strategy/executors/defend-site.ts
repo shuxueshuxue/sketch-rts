@@ -59,9 +59,9 @@ export const defendSiteExecutor: StrategyExecutor = {
     if (!site) return { ...base, status: 'failed', reasons: [{ executor: this.id, outcome: 'abandoned',
       reason: 'defended-site-no-longer-present', taskId: execution.token.actionId }] };
     const granted = grantedUnits(input);
-    const cohort = granted.filter(unit => !unit.deck && unitMover(unit.kind) === 'land' && unit.kind !== 'worker');
+    const cohort = granted.filter(unit => !unit.deck && !unit.cabin && unitMover(unit.kind) === 'land' && unit.kind !== 'worker');
     const active = cohort.filter(unit => !input.grant.assignments.some(assignment => assignment.unitId === unit.id && assignment.interruption));
-    const foes = snapshot.units.filter(unit => unit.hp > 0 && !unit.deck && unit.attackDamage > 0
+    const foes = snapshot.units.filter(unit => unit.hp > 0 && !unit.deck && !unit.cabin && unit.attackDamage > 0
       && unitMover(unit.kind) === 'land' && isOpponentOwner(snapshot, owner, unit.owner, {}) && distance(unit, site) <= 1400
       && sameGround(snapshot.map, unit, site));
     const waiting = execution.intent.kind === 'wait-in-cover';
@@ -73,7 +73,8 @@ export const defendSiteExecutor: StrategyExecutor = {
     if (!units.length) return { ...blockedExecutor(input, active.length ? 'defense-route-unreachable'
       : cohort.length ? 'defenders-in-life-saving-interruption' : granted.length ? 'defenders-in-transit' : 'no-granted-defenders'),
       handoffs: handoffs(input, active) };
-    const protectedEntities = [site, ...snapshot.units.filter(unit => unit.owner === owner && unit.kind === 'worker' && distance(unit, site) <= 650)];
+    const protectedEntities = [site, ...snapshot.units.filter(unit => unit.owner === owner && unit.kind === 'worker'
+      && !unit.deck && !unit.cabin && sameGround(snapshot.map, unit, site) && distance(unit, site) <= 650)];
     const previousHp = execution.state.protectedHp;
     const hp = Object.fromEntries(protectedEntities.map(entity => [entity.id, entity.hp]));
     const underAttack = protectedEntities.some(entity => {
