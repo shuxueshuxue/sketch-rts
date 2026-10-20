@@ -182,8 +182,11 @@ class LandModel {
       .map(claim => claim.objectiveId).filter(id => id !== identity(candidate.kind, s.owner, candidate.key))));
     const reserved = s.economy.ledger.filter(entry => entry.objectiveId !== identity(candidate.kind, s.owner, candidate.key)
       && entry.state === 'reserved' && entry.authority !== 'proposed').reduce((sum, entry) => sum + entry.gold, 0);
+    // Opportunity identity, kind, geometry and price are decision facts. Evidence
+    // is projected from the current Situation below; wording must neither force
+    // a recomputation nor materialize a lazy explanation while building this key.
     return JSON.stringify({ candidate: [candidate.kind, candidate.key, candidate.target,
-      candidate.opportunities.map(op => [op.kind, op.valueGold, op.evidence.map(item => [item.source, item.detail])])],
+      candidate.opportunities.map(op => [op.id, op.kind, op.target, op.valueGold])],
       pool: pool.map(fighter => [stats(fighter.raw), fighter.unit.strength, fighter.unit.roles,
         fighter.unit.expiresTick === null ? null : fighter.unit.expiresTick - s.tick,
         fighter.unit.location.kind, 'landId' in fighter.unit.location ? fighter.unit.location.landId : null,

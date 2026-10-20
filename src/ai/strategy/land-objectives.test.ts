@@ -1,10 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { sketchScene } from '../../sdk/scene';
 import { snapshotGame } from '../../shared/sim';
 import { UNIT_DEFS } from '../../shared/catalog';
 import { createAiPolicyMemory } from '../memory';
 import { unitStrength } from '../policy/v6/strength';
 import { generateLandObjectives, decomposeLandObjective, landIdleForces } from './land-objectives';
+import * as utility from './utility';
 import type { Arrival, Asset, Objective, Opportunity, PlanningContext, Situation, SituationUnit, UnitRole } from './types';
 
 const HORIZON = 2400;
@@ -451,6 +452,48 @@ describe('land objective proposals over one shared Situation', () => {
     const demand = decomposeLandObjective(later, goal, ctx)[0]!.demands.find(demand => demand.kind === 'force')!;
     expect(demand).toEqual(expect.objectContaining({ neededByTick: 1075 }));
     expect(generateLandObjectives(later, ctx, first)).toEqual(next);
+  });
+
+  it('materializes lazy opportunity evidence only for the trace, never for the numerical cache key', () => {
+    const { context, situation } = example();
+    let projections = 0;
+    const source = { source: 'lazy-opportunity', tick: situation.tick, certainty: 'recorded' as const, detail: 'Current mine evidence' };
+    const lazy: Situation = { ...situation, opportunities: situation.opportunities.map(opportunity => opportunity.kind !== 'neutral-mine'
+      ? opportunity : { ...opportunity, get evidence() { projections++; return [source]; } }) };
+    const first = goals(lazy, context);
+    expect(projections).toBe(1);
+    expect(first.find(goal => goal.kind === 'ExpandLand')!.utility.evidence).toContainEqual(source);
+    expect(goals(lazy, context)).toEqual(first);
+    expect(projections).toBe(2);
+  });
+
+  it('reuses numerical quotations after explanation text changes while projecting the current evidence', () => {
+    const { context, situation } = example(), first = goals(situation, context);
+    const source = { source: 'renamed-explanation', tick: situation.tick, certainty: 'inferred' as const, detail: 'Reworded current evidence' };
+    const explained = { ...situation, opportunities: situation.opportunities.map(opportunity => ({ ...opportunity, evidence: [source] })) };
+    const numericalWork = vi.spyOn(utility, 'forceTimeGold');
+    try {
+      const warm = goals(explained, context);
+      expect(numericalWork).not.toHaveBeenCalled();
+      expect(warm.find(goal => goal.kind === 'ContestRoute')!.utility.evidence).toContainEqual(source);
+      expect(warm.map(goal => ({ ...goal.utility, evidence: [] }))).toEqual(first.map(goal => ({ ...goal.utility, evidence: [] })));
+      expect(warm).toEqual(coldGoals(explained, context, []));
+    } finally { numericalWork.mockRestore(); }
+  });
+
+  it('recalculates changed opportunity value and pressure geometry even when the explanation stays identical', () => {
+    const { context, situation } = example(), first = goals(situation, context);
+    const changed = { ...situation, opportunities: situation.opportunities.map(opportunity => opportunity.kind !== 'route'
+      ? opportunity : { ...opportunity, valueGold: opportunity.valueGold + 600,
+        target: { ...opportunity.target, point: { x: 1999, y: 600 } } }) };
+    const numericalWork = vi.spyOn(utility, 'forceTimeGold');
+    try {
+      const warm = goals(changed, context), pressure = warm.find(goal => goal.kind === 'ContestRoute')!;
+      expect(numericalWork).toHaveBeenCalled();
+      expect(pressure.target.point).toEqual({ x: 1999, y: 600 });
+      expect(pressure.utility.score).not.toBe(first.find(goal => goal.id === pressure.id)!.utility.score);
+      expect(warm).toEqual(coldGoals(changed, context, []));
+    } finally { numericalWork.mockRestore(); }
   });
 
   it('ignores changes in a later unused soldier but recalculates when the sufficient prefix changes', () => {
