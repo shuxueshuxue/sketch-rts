@@ -31,7 +31,9 @@ export type Target = Readonly<{ entityId?: string; landId?: LandId; seaId?: SeaI
 export type Arrival =
   | Readonly<{ status: 'reachable'; ticks: number; landTicks: number; crossings: readonly (CrossingEta & Readonly<{ requiresNewShip: false }>)[]; evidence: readonly Evidence[] }>
   | Readonly<{ status: 'conditional'; ticks: number; landTicks: number; crossings: readonly CrossingEta[]; unmet: readonly Reason[]; evidence: readonly Evidence[] }>
-  | Readonly<{ status: 'unreachable' | 'unknown'; reason: Reason }>;
+  | Readonly<{ status: 'unreachable' | 'unknown'; reason: Reason;
+    /** Physical lower bound, not an ETA estimate or proof for a longer window. */
+    lowerBoundTicks?: number }>;
 export type CrossingEta = Readonly<{
   seaId: SeaId;
   shipId: string | null;
