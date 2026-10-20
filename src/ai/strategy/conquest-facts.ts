@@ -9,7 +9,7 @@ import { assessDefenseResponse } from './defense-response';
 import { miningCapacity } from './mining-capacity';
 import { forecastMiningWorkforce } from './mining-forecast';
 import { landIdAt } from './regions';
-import { unitArrival } from './unit-arrivals';
+import { allocatedMemberArrival } from './planned-voyage-arrival';
 import { valuationWindow } from './utility';
 
 export function conquestHallAt(input: Pick<AllocationMethodQuoteInput, 'snapshot' | 'situation' | 'objective'>) {
@@ -33,7 +33,7 @@ export function conquestFacts(input: AllocationMethodQuoteInput) {
     const here = fact?.location.kind === 'land' && fact.location.landId === objective.target.landId
       && distance(unit, objective.target.point) <= (unit.kind === 'worker' ? GOLD_MINE_RULES.baseRange : 240);
     if (here) { onStation.add(unit.id); arrivals.set(unit.id, 0); continue; }
-    const arrival = fact && unitArrival(fact, objective.target.entityId ?? '');
+    const arrival = allocatedMemberArrival(input, unit, objective.target, objective.target.entityId ?? '');
     if (!arrival || !('ticks' in arrival)) { unknown.push({ code: arrival?.status === 'unreachable' ? 'conquest-member-route-unreachable' : 'conquest-member-route-unknown', ids: [unit.id] }); continue; }
     if (arrival.status === 'conditional' && !method.voyagePlans?.some(voyage => voyage.unitIds.includes(unit.id)))
       unknown.push({ code: 'conquest-member-transport-unmaterialized', ids: [unit.id] });
