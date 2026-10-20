@@ -1,0 +1,76 @@
+{
+  "executionCommit": "adf77087eee1016ac1234f907541ff0de083b8d9",
+  "auditCommit": "2de7b1ef58169e967f406a898708a36ce5e9451e",
+  "srcTree": "4fe7991b82be424594f790b60ac907c55138012e",
+  "checks": {
+    "checks/full-src.exit": 0,
+    "checks/root-tsc.exit": 0,
+    "checks/tools-tsc.exit": 0,
+    "checks-audit/focused.exit": 0,
+    "checks-audit/root-tsc.exit": 0,
+    "checks-audit/tools-tsc.exit": 0,
+    "checks-audit-current/root-tsc.exit": 0,
+    "checks-audit-current/tools-tsc.exit": 0
+  },
+  "fullSrc": {
+    "files": 721,
+    "tests": 7967,
+    "exit": 0
+  },
+  "focusedTests": 53,
+  "games": 78,
+  "nativeFfa": 66,
+  "timeouts": 64,
+  "oldRunAllSevenHashesEqual": true,
+  "auditEvents": 336332,
+  "isolation": {
+    "pass": true,
+    "cases": [
+      {
+        "map": "greystonePass",
+        "baselineInputChecks": 400,
+        "sameObjectProbeChecks": 400,
+        "livePlain": {
+          "equal": true,
+          "thinks": 400,
+          "inputChecks": 0,
+          "byteComparison": "every-command-and-memory-on-the-identical-mixed-match-snapshot-stream"
+        },
+        "liveInterposed": {
+          "equal": true,
+          "thinks": 400,
+          "inputChecks": 400,
+          "byteComparison": "every-command-and-memory-on-the-identical-mixed-match-snapshot-stream"
+        },
+        "observerOnOffEqual": true
+      },
+      {
+        "map": "sapphireArchipelago",
+        "baselineInputChecks": 1200,
+        "sameObjectProbeChecks": 1200,
+        "livePlain": {
+          "equal": true,
+          "thinks": 1200,
+          "inputChecks": 0,
+          "byteComparison": "every-command-and-memory-on-the-identical-mixed-match-snapshot-stream"
+        },
+        "liveInterposed": {
+          "equal": true,
+          "thinks": 1200,
+          "inputChecks": 1200,
+          "byteComparison": "every-command-and-memory-on-the-identical-mixed-match-snapshot-stream"
+        },
+        "observerOnOffEqual": true
+      }
+    ]
+  },
+  "long40Ticks": [
+    48000,
+    48000
+  ],
+  "long40Audit": true,
+  "reportRegenerationEqual": true,
+  "olderEvidenceExplicitlyUnavailable": true,
+  "positionMirrored": true,
+  "allFinitePairedDeltasZero": true
+}

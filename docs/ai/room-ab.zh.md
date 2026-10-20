@@ -50,13 +50,16 @@ checksum 和 memory 哈希。生成物只放缓存或 evidence store；仓库只
 
 ## 终局局面：分项比较
 
+11 图基线自对打的逐图差值、分项胜出局数及审计见 [终局指标报告](room-ab/position-metrics.zh.md)。
+
 建筑存续的原生胜负保持原样。`positions.primaryTimeoutFfa` 只比较真正到达时限的满席局；
 `allEndFfa` 另外保留所有终局（包括提前分胜负的局）。辅助两席各有对应分组，不与满席合并。
 这些指标各自统计 A 胜出 / B 胜出 / 相等 / 无法比较，**没有加权总分，也不另造一个胜负条件**。
+超时配对均值只纳入两局都超时的种子；其中一局提前分胜负的种子仍完整保留在 `allEndFfa`，避免只看超时子集遗漏胜局。
 
 | 指标 | 口径 |
 | --- | --- |
-| `killedUnitGold` / `killedBuildingGold` / `killedGold` | 原生致死来源归属的敌方单位/建筑目录价；含对同策略组内其他席位的战果，因为 FFA 中他们仍是敌人。 |
+| `killedUnitGold` / `killedBuildingGold` / `killedGold` | 原生致死来源归属的敌对单位/建筑目录价（包括中立）；含对同策略组内其他席位的战果，因为 FFA 中他们仍是敌人。 |
 | `lostUnitGold` / `lostBuildingGold` / `lostGold` | 本方单位/建筑损失的目录价，包括中立、友伤、无法归因的损失；不以杀敌数倒推。 |
 | `exchangeNetGold` / `exchangeRatio` | 杀敌价值减损失价值、杀敌价值除损失价值。比值先合并本组杀敌/损失再相除，不能平均席位比值。 |
 | `crossKilledGold` / `crossLostGold` / `crossExchangeNetGold` / `crossExchangeRatio` | 另列严格的 A→B / B→A 交换，不把 A→A 或 B→B 算进来；中立、友伤和无来源损失也不计入跨组交换。 |

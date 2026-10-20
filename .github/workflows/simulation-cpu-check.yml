@@ -12,6 +12,7 @@ on:
       - scripts/verify-room-baseline.ts
       - scripts/ai-room-ab.ts
       - scripts/verify-room-ab-isolation.ts
+      - scripts/verify-room-ab-position.ts
       - .github/workflows/simulation-cpu-check.yml
   workflow_dispatch:
 
@@ -40,7 +41,7 @@ jobs:
       - name: Typecheck frozen room build and parity tools
         run: npx tsc --noEmit -p tools/ai/tsconfig.json
       - name: Verify room A/B schedules and observational metrics (no artifact needed)
-        run: npx vitest run src/ai/benchmark/room-ab.test.ts src/ai/benchmark/room-ab-metrics.test.ts src/shared/sim/observation.test.ts --maxWorkers 1 --minWorkers 1
+        run: npx vitest run src/ai/benchmark/room-ab.test.ts src/ai/benchmark/room-ab-metrics.test.ts src/ai/benchmark/room-ab-position.test.ts src/shared/sim/observation.test.ts --maxWorkers 1 --minWorkers 1
       - name: Verify output-only plan traces preserve command bytes and policy memory
         run: npx vitest run src/ai/plan-trace.test.ts src/ai/plan-trace-history.test.ts src/ai/plan-viz-ledger.test.ts src/ai/planner-context.test.ts --maxWorkers 1 --minWorkers 1
   duels:
