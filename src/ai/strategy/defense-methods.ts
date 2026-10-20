@@ -5,15 +5,15 @@ import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { sameGround } from '../../shared/terrain';
 import type { GameSnapshot } from '../../shared/types';
 import { averagePoint, distance } from '../policy/spatial';
-import { TOWER_STRENGTH, structureRating } from '../policy/v6/strength';
-import { isOpponentOwner } from '../policy/ownership';
 import { assessAllocatedForce } from './allocated-force';
+import { assessDefenseResponse } from './defense-response';
+import { defenseProtectionValue, defenseThreatScenarios } from './defense-risk';
 import type { AllocationMethodProvider, AllocationReason, AllocationUtility, ExecutableMethod,
   ForceQuotation, MethodAllocationQuote } from './allocation-types';
 import type { DecisionFacts } from './decision';
 import { defenseCoverPost, defenseGatherPost } from './executors/defend-site';
 import type { Method, Objective, ResourceDemand, Situation, Target } from './types';
-import { discountedFlow, discountedValue, forceSuccessProbability, resolveValuation, valuationWindow } from './utility';
+import { discountedFlow, discountedValue, resolveValuation, valuationWindow } from './utility';
 import { unitArrival } from './unit-arrivals';
 import { siteCollapseAfter } from './naval-objectives';
 import { arrivalWeightedForce } from './arrival-force';
@@ -159,10 +159,23 @@ export const defenseMethodProvider: AllocationMethodProvider = {
       opponents.filter(unit => opponentEta.get(unit.id)! > 0).map(unit => ({ unit, etaTicks: opponentEta.get(unit.id)! })), threatWindow,
       group => group.reduce((sum, unit) => sum + opponentStrength.get(unit.id)! * coverage.get(unit.id)!, 0));
     const site = situation.assets.find(asset => asset.id === targetId);
-    const actualSite = snapshot.buildings.find(building => building.id === targetId) ?? objective.target.point;
-    const hostileTowers = snapshot.buildings.filter(tower => tower.complete && tower.hp > 0 && tower.attackDamage > 0
-      && isOpponentOwner(snapshot, situation.owner, tower.owner, {}) && strikeGap(tower, actualSite) <= tower.attackRange);
-    const actualOpposition = enemyWeighted.effectiveForce + hostileTowers.reduce((sum, tower) => sum + structureRating(tower), 0);
+    const response = assessDefenseResponse({ snapshot, situation, target: method.actions.at(-1)!.target, arrivalTargetId: responseId,
+      eligibleUnitIds: situation.units.filter(unit => unit.owner === situation.owner && !unit.commitments.length).map(unit => unit.id),
+      excludedUnitIds: [...unitIds, ...(input.valuation?.unavailableUnitIds ?? [])],
+      actualMobileOpponentForce: enemyWeighted.effectiveForce, windowTicks: threatWindow });
+    // Arrival and finite summon life are priced before the mutually exclusive
+    // army scenarios. A redirect probability is never multiplied into a unit.
+    const scopedThreat = threat ? { ...threat, attackers: threat.attackers.filter(attacker => coverage.has(attacker.unitId)).map(attacker => ({ ...attacker,
+      strength: attacker.strength * coverage.get(attacker.unitId)! / (1 + opponentEta.get(attacker.unitId)! / threatWindow) })) }
+      : { siteId: targetId, horizonTicks: threatWindow, attackers: [], arrivedStrength: 0, incomingStrength: 0,
+        friendlyOnStationStrength: 0, firstArrivalTicks: null, lossProbability: 0 };
+    const mobileScenarios = defenseThreatScenarios(scopedThreat, response.response);
+    const scenarios = mobileScenarios.status === 'unknown' ? mobileScenarios
+      : { ...mobileScenarios, scenarios: mobileScenarios.scenarios.map(scenario => ({ ...scenario,
+        force: scenario.force + response.hostileStaticForce })) };
+    const actualOpposition = Math.max(response.hostileStaticForce, ...scenarios.scenarios.map(scenario => scenario.force));
+    if (scenarios.status === 'unknown') missing ??= scenarios.reasonCode;
+    const hostileTowers = snapshot.buildings.filter(tower => response.hostileTowerIds.includes(tower.id));
     const minimum = objective.effects.find(effect => effect.kind === 'force-present');
     // One departure margin. Success probability below sees actual opposition.
     const demand = Math.max(minimum?.kind === 'force-present' ? minimum.minimumStrength : 1, actualOpposition * 1.25);
@@ -170,7 +183,7 @@ export const defenseMethodProvider: AllocationMethodProvider = {
     const covering = snapshot.buildings.filter(tower => tower.owner === situation.owner
       && tower.complete && tower.hp > 0 && tower.attackDamage > 0
       && strikeGap(tower, method.actions.at(-1)!.target.point) + 80 <= tower.attackRange);
-    const coverForce = covering.reduce((sum, tower) => sum + TOWER_STRENGTH * tower.hp / tower.maxHp, 0);
+    const coverForce = response.staticForce;
     if (method.kind === 'wait-in-cover' && !covering.length) missing = 'no-reachable-tower-cover';
     const total = assessAllocatedForce(situation.owner, cohort, { metric: 'field-strength', requiredForce: Math.max(0, demand - coverForce) });
     const weighted = arrivalWeightedForce(cohort.filter(unit => stationed.includes(unit.id)),
@@ -193,34 +206,41 @@ export const defenseMethodProvider: AllocationMethodProvider = {
     if (valuation.phase === 'net' && opportunity?.status !== 'known') missing ??= 'committed-opportunity-cost-unknown';
     // No ungranted army is promised as a defending garrison. Existing static
     // cover is the counterfactual protection if this cohort is sent elsewhere.
-    const staticProtection = actualOpposition > 0 ? forceSuccessProbability(coverForce, actualOpposition) : 1;
     const assets = situation.assets.filter(asset => asset.target.landId === objective.target.landId
       && distance(asset.target.point, objective.target.point) <= 650
       && (asset.owner === situation.owner || site?.kind === 'hall' && asset.kind === 'mine'));
     const atRisk = assets.reduce((sum, asset) => sum + (asset.kind === 'mine'
       ? discountedFlow({ goldPerTick: asset.incomeGoldPerTick, remainingGold: asset.remainingGold, startsInTicks: 0, window })
       : discountedValue(asset.replacementGold, latest, window)), 0);
+    const protection = defenseProtectionValue({ threat: scenarios, assetValueGold: atRisk,
+      cohortForce: weighted.effectiveForce, staticForce: coverForce });
     const benefit = evacuation ? [{ code: 'workers-saved', value: discountedValue(cohort.length * UNIT_DEFS.worker.cost, latest, window) }]
-      : [{ code: 'protected-assets', value: atRisk }];
-    const enemyHp = opponents.reduce((sum, unit) => sum + unit.hp * coverage.get(unit.id)!, 0);
+      : [{ code: 'protected-assets', value: protection?.benefitGold ?? 0 }];
     const ourDps = cohort.reduce((sum, unit) => sum + combatCapability(snapshot, unit).dps, 0);
-    const enemyDps = opponents.reduce((sum, unit) => sum + combatCapability(snapshot, unit).dps * coverage.get(unit.id)!, 0)
-      + hostileTowers.reduce((sum, tower) => sum + tower.attackDamage * SIM_TICKS_PER_SECOND / Math.max(1, tower.attackCooldown), 0);
-    const fightSeconds = enemyHp / Math.max(1, ourDps);
-    const lossShare = Math.min(1, enemyDps * fightSeconds / Math.max(1, cohort.reduce((sum, unit) => sum + unit.hp, 0)));
-    const cost = [...(evacuation ? [] : [{ code: 'static-protection-baseline', value: atRisk * staticProtection }]),
+    const lossShare = scenarios.scenarios.reduce((sum, scenario) => {
+      const enemies = opponents.filter(unit => scenario.unitIds.includes(unit.id));
+      const enemyHp = enemies.reduce((sum, unit) => sum + unit.hp * coverage.get(unit.id)!, 0);
+      const enemyDps = enemies.reduce((sum, unit) => sum + combatCapability(snapshot, unit).dps * coverage.get(unit.id)!, 0)
+        + hostileTowers.reduce((sum, tower) => sum + tower.attackDamage * SIM_TICKS_PER_SECOND / Math.max(1, tower.attackCooldown), 0);
+      const fightSeconds = enemyHp > 0 ? enemyHp / Math.max(1, ourDps) : hostileTowers.length ? threatWindow / SIM_TICKS_PER_SECOND : 0;
+      return sum + scenario.probability * Math.min(1, enemyDps * fightSeconds / Math.max(1, cohort.reduce((sum, unit) => sum + unit.hp, 0)));
+    }, 0);
+    const cost = [...(evacuation ? [] : [{ code: 'static-protection-baseline', value: protection?.staticBaselineGold ?? 0 }]),
       { code: 'combat-attrition', value: evacuation ? 0
       : discountedValue(cohort.reduce((sum, unit) => sum + UNIT_DEFS[unit.kind].cost, 0) * lossShare, latest, window) },
       ...(opportunity?.status === 'known' ? [{ code: 'bundle-opportunity', value: opportunity.gold }] : [])];
     if (method.voyagePlans?.length) missing ??= 'transport-asset-risk-unknown';
-    const probability = evacuation || actualOpposition === 0 ? 1 : forceSuccessProbability(weighted.effectiveForce + coverForce, actualOpposition);
+    const probability = evacuation ? 1 : protection?.successProbability ?? 0;
     const persistenceBonus = objective.utility.persistenceBonus;
     const utility: AllocationUtility = { horizonTicks: window.horizonTicks, benefit, cost,
       successProbability: probability, persistenceBonus,
       score: probability * benefit.reduce((sum, term) => sum + term.value, 0)
         - cost.reduce((sum, term) => sum + term.value, 0) + persistenceBonus };
     const why = reason(missing ?? 'allocated-defense-cohort-feasible', [...requested], { requiredForce: total.requiredForce,
-      availableForce: weighted.effectiveForce, actualOpposition, successProbability: probability, staticProtection,
+      availableForce: weighted.effectiveForce, actualOpposition, successProbability: probability,
+      staticProtection: protection && protection.benefitGold > 0 ? protection.staticBaselineGold / protection.benefitGold : 0,
+      actualIntrusionCount: scenarios.actualIds.length, potentialRedirectCount: scenarios.redirects.length,
+      otherResponseTicks: response.response.status === 'known' ? response.response.ticks : null,
       latestArrivalTicks: latest, opponentUnknown: opponentUnknown.length });
     return missing ? { methodId: method.id, status: 'blocked', force, valuation, utility: null, potentialUtility: null,
       reason: why, missingPreconditions: [{ id: `${method.id}/${missing}`, kind: missing.includes('force') ? 'force' : 'route',
