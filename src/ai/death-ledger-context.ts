@@ -131,7 +131,10 @@ export function inferDeathAssignment(snapshot: GameSnapshot, unit: Unit, memory:
         ? `attack:${general.targetHallId ?? 'unknown'}` : `general:${general.mode}`, general.mode === 'creep' ? 'clear-camp' : general.mode,
       general.targetHallId, general.stage ?? general.mode, 'v6.general', ['attack', 'defend', 'guard', 'creep'].includes(general.mode),
       general.mode === 'creep', ['defend', 'guard'].includes(general.mode) ? index.hallPerimeter(general.targetHallId) : null);
-    if (value.clearing) value.clearingTargetIds = index.generalClearingTargets();
+    if (value.clearing) {
+      const targets = index.generalClearingTargets();
+      if (targets !== undefined) value.clearingTargetIds = targets;
+    }
     put(value);
   }
   if (order.type === 'mine') put(index.task(`mining:${order.resourceId}`, 'mining', order.resourceId, order.phase, 'order.mine'));

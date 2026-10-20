@@ -27,6 +27,18 @@ describe('real clearing membership attribution', () => {
     expect(assignment.task).toMatchObject({ id: 'general:creep', clearing: true, source: 'v6.general' });
     expect(assignment.task!.clearingTargetIds).toContain(target.id);
   });
+  for (const target of [undefined, { x: -9999, y: -9999 }]) it(`omits unresolved general camp IDs (${target ? 'unknown target' : 'no target'})`, () => {
+    const sample = samples.find(sample => sample.sameCamp)!;
+    const snapshot = { ...snapshotGame(createGame('bareDuel', { aiPlayers: [] })), tick: sample.tick,
+      units: sample.neutrals, buildings: [] } as unknown as GameSnapshot;
+    const unit = structuredClone(sample.record.unit) as unknown as Unit, memory = createAiPolicyMemory();
+    memory.v6 = { general: { mode: 'creep', group: [unit.id], ...(target ? { target } : {}) } };
+    const assignment = inferDeathAssignment(snapshot, unit, memory, deathTaskIndex(snapshot, unit.owner, memory), null);
+    expect(assignment.task).toMatchObject({ id: 'general:creep', clearing: true, source: 'v6.general' });
+    expect(assignment.task).not.toHaveProperty('clearingTargetIds');
+    expect(assignmentClearsCamp(assignment, sample.record.killer!.id)).toBe(true);
+    expect(JSON.parse(JSON.stringify(assignment.task))).not.toHaveProperty('clearingTargetIds');
+  });
   for (const sample of samples) it(`${sample.map} ${sample.tick} ${sample.record.unit.id}`, () => {
     const record = structuredClone(sample.record) as unknown as AiUnitDeathRecord;
     const memory = Object.assign(createAiPolicyMemory(), structuredClone(sample.memory));
