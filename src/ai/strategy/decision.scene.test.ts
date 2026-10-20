@@ -13,7 +13,8 @@ import { planAiOwnerCommandEntriesWithTrace } from '../plan-trace-planner';
 import { buildObservedStrategyDecision, buildStrategyDecision, projectStrategyTrace } from './decision';
 import { buildStrategyPlanTrace } from './plan';
 import { decisionProjection, deferredEvidence, projectedCopy } from './explanations';
-import reference from './fixtures/explanation-reference.json';
+import previousReference from './fixtures/explanation-reference.json';
+import reference from './fixtures/control-explanation-reference.json';
 
 type Frame = { event: string; snapshot: GameSnapshot; owner: string; memory: AiPolicyMemory };
 const frames: Frame[] = JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/objective-event-frames.json.gz', import.meta.url))).toString()).cases;
@@ -27,6 +28,12 @@ function verifyFacts(value: unknown, path = 'decision', visited = new WeakSet<ob
 }
 
 describe('decision facts and requested explanations', () => {
+  it('binds the fact revision to the original frames and retained historical references', () => {
+    expect(createHash('sha256').update(readFileSync(new URL('./fixtures/objective-event-frames.json.gz', import.meta.url))).digest('hex'))
+      .toBe(reference.inputSha256);
+    for (const row of reference.cases)
+      expect(row.previousSha256).toBe(previousReference.cases.find(previous => previous.event === row.event)!.sha256);
+  });
   it('does not construct evidence while copying or reading numerical facts', () => {
     let renders = 0;
     const facts = deferredEvidence({ status: 'reachable', ticks: 120 }, () => {
@@ -49,7 +56,7 @@ describe('decision facts and requested explanations', () => {
     verifyFacts(buildStrategyDecision(frame.snapshot, frame.owner, { memory: frame.memory }, undefined, { healing: [] }, Infinity));
   });
 
-  it.each(reference.cases)('preserves every explanation and memory byte from $event before the split', row => {
+  it.each(reference.cases)('preserves every explanation and memory byte for the audited $event facts', row => {
     const frame = frames.find(frame => frame.event === row.event)!;
     for (const decision of [false, true]) {
       const bytes = execFileSync(process.execPath, ['--import', 'tsx', fileURLToPath(new URL('./fixtures/observation-worker.ts', import.meta.url))], {

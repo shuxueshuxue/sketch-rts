@@ -1,0 +1,38 @@
+{
+  "sourceFacts": "native-mining-cycle/unique-intrusion/physical-arrival-bound-v1",
+  "previousFixture": "explanation-reference.json",
+  "inputSha256": "c80c47b367ccb3fdcc762912783a9d7b1965e96f335e24c78ef9f07f35ef067f",
+  "steps": 12,
+  "cases": [
+    {
+      "event": "E01",
+      "sha256": "7d66caa0c1efe5056ec50381ee13f5040214fbe9190c35f0cc0bcc0d839fbff9",
+      "previousSha256": "0281c4ac9ab09306c443038ef21062d4045ee7f44b26c97dc1085f4e323d336a",
+      "originalPolicySha256": "c717c53622d71350a6c33ad643f250c248647de9a9043ff5d5026aaa4ae78fea"
+    },
+    {
+      "event": "E02",
+      "sha256": "493bbb7c30c664fc7f7a26c45f161c48114d6dc62b823062bcff0cf3041c312a",
+      "previousSha256": "187b16643644abeed875f1242dc53e098057ed010ac93dc7d636ea0e3c12b3eb",
+      "originalPolicySha256": "13f6ad0315dfbf64c5f934e43da9a8237f4b93d3e3002a888ec4334577ecf97c"
+    },
+    {
+      "event": "E05",
+      "sha256": "5d559cd7bc82c30f1a01d469eb6b6bd346cc896d0292f72cf9fe8cd72ae7410e",
+      "previousSha256": "210623e9bbd629bd57dde95033869c9c14daed961e5aa179aefb9fba832f11df",
+      "originalPolicySha256": "c8d9cf9fbb8516a5b24685a29f15badad9871f8e2964afd2c3277bbc8bbfedf0"
+    },
+    {
+      "event": "Nd",
+      "sha256": "3db07ad8a75df87cb051cf7986ca69e85f2b3a4856be5d59ebe750ca9b957df9",
+      "previousSha256": "3d5ae8d6f3c92cf66aff37f2ec7e790cceb782c9e33ac0776177ad8ac1f9965f",
+      "originalPolicySha256": "b6f5f364bf558193685ea2d99c33caf9f39db81194817d6659f841563de9cd6d"
+    },
+    {
+      "event": "Ne",
+      "sha256": "776462a44494db804b4bcf3ac951cbfe92b292280f346ce5e3672a6bc895bd50",
+      "previousSha256": "02ba6bf1e4ee8bf7637cdff1a34f2d06f57c607fd833555b4827bbd2257bcf04",
+      "originalPolicySha256": "3332421e176519e092d5a803d68cadd7f41d3535fac6a9afd293234832427bc8"
+    }
+  ]
+}

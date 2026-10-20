@@ -12,6 +12,7 @@ import * as utility from './utility';
 import { arrivalColumns, unitArrivalFacts, withUnitArrivals } from './unit-arrivals';
 import type { PlanningContext, Situation } from './types';
 import reference from './fixtures/land-explanation-reference.json';
+import collectorReference from './fixtures/control-land-explanation-reference.json';
 
 type Frame = { event: string; context: PlanningContext; situation: Situation };
 // Test-only ownership: deliberately mutate cloned inputs after evaluation.
@@ -49,6 +50,15 @@ function denyExplanations(value: unknown) {
 }
 
 describe('land numerical decisions and requested explanation projection', () => {
+  it('binds the collector fact revision to the unchanged land frames and previous hashes', () => {
+    expect(createHash('sha256').update(readFileSync(new URL('./fixtures/land-objective-event-frames.json.gz', import.meta.url))).digest('hex'))
+      .toBe(collectorReference.inputSha256);
+    for (const row of collectorReference.cases) {
+      const previous = reference.cases.find(previous => previous.event === row.event)!;
+      expect(row.previousPlanSha256).toBe(previous.planSha256);
+      expect(row.previousObservationSha256).toBe(previous.observationSha256);
+    }
+  });
   it.each(reference.cases)('$event preserves every land explanation byte across cold/warm and decision/observation modes', row => {
     const frame = scene(row.event), expected = observe(structuredClone(frame));
     expect(digest(expected)).toBe(row.landSha256);
@@ -108,7 +118,7 @@ describe('land numerical decisions and requested explanation projection', () => 
     expect(JSON.stringify(captured.explain!())).toBe(expected);
   });
 
-  it.each(reference.cases)('$event retains the full collector goldens with the default land family', row => {
+  it.each(collectorReference.cases)('$event retains the audited collector facts with the default land family', row => {
     const frame = scene(row.event), fullContext = structuredClone(frame.context), observedContext = structuredClone(frame.context);
     const build = (context: PlanningContext) => {
       const { snapshot, owner, memory } = context;
