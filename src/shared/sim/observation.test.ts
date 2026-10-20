@@ -2,7 +2,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { boardUnit, syncDecks } from '../decks';
 import { createGame, observeSimulation, removeUnit, snapshotGame, stepGame, strikeUnit, tryPlayerCommand } from '../sim';
 import { canonicalGameState, checksumGame } from './checksum';
-import { simulationObservationActive, type SimulationDamageEvent, type SimulationKillEvent, type SimulationRemovalEvent } from './observation';
+import { createBuilding } from '../map';
+import { simulationObservationActive, type SimulationDamageEvent, type SimulationKillEvent, type SimulationRemovalEvent,
+  type SimulationBuildingDamageEvent, type SimulationBuildingKillEvent } from './observation';
 
 function battle() {
   const game = createGame('bareDuel', { aiPlayers: [] });
@@ -14,6 +16,27 @@ const stops: (() => void)[] = [];
 afterEach(() => { for (const stop of stops.splice(0)) stop(); vi.restoreAllMocks(); vi.unstubAllEnvs(); });
 
 describe('external simulation observation', () => {
+  it('records native building damage and its exact destroyer separately from unit casualties', () => {
+    const a = battle(), b = battle();
+    for (const game of [a, b]) {
+      game.spawnUnit('enemy', 'archer', 900, 900);
+      game.buildings.push(createBuilding('mine-hall', 'player', 'townHall', 500, 500, true));
+    }
+    const damage: SimulationBuildingDamageEvent[] = [], kills: SimulationBuildingKillEvent[] = [];
+    let unitKills = 0;
+    stops.push(observeSimulation(b, { buildingDamage: event => damage.push(event), buildingKill: event => kills.push(event), kill() { unitKills++; } }));
+    const hpBefore = b.buildings[0]!.hp;
+    for (const game of [a, b]) strikeUnit(game, game.units[0]!, game.buildings[0]!, 99999, 'ranged');
+    expect(damage).toHaveLength(1); expect(kills).toHaveLength(1); expect(unitKills).toBe(0);
+    expect(damage[0]).toMatchObject({ hpBefore, target: { id: 'mine-hall', kind: 'townHall' }, source: { owner: 'enemy', kind: 'archer' } });
+    expect(kills[0]).toMatchObject({ building: { id: 'mine-hall', hp: b.buildings[0]!.hp }, source: { owner: 'enemy' } });
+    expect(Object.isFrozen(damage[0]!.target)).toBe(true);
+    expect(b.match.stats.buildingsDestroyed.enemy).toBe(1);
+    stepGame(a); stepGame(b);
+    expect(snapshotGame(a)).toEqual(snapshotGame(b));
+    expect(checksumGame(a)).toBe(checksumGame(b));
+  });
+
   it('observes exact lethal boundaries including a unit born and killed between thinks', () => {
     const game = battle(), damage: SimulationDamageEvent[] = [], killed: SimulationKillEvent[] = [], removed: SimulationRemovalEvent[] = [];
     stops.push(observeSimulation(game, { damage: event => damage.push(event), kill: event => killed.push(event), removed: event => removed.push(event) }));

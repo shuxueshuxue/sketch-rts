@@ -1,0 +1,1102 @@
+{
+  "config": {
+    "a": "room-baseline-646c",
+    "b": "room-baseline-646c",
+    "seeds": [
+      "ab-0",
+      "ab-1",
+      "ab-2"
+    ],
+    "minutes": 20
+  },
+  "provenance": {
+    "sourceCommit": "60c2149521027e07a59502e4a180c2553a2a8b23",
+    "sourceDiffSha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+    "files": {
+      "scripts/ai-room-ab.ts": "c05b6e5de1054462cf879062e779b2501a7913083a6e42d39043e8a13b4266fc",
+      "tools/ai/room-ab-run.ts": "f619c737ff3419867b2254bc347486f90061c0bfd61b48117e3577dec8cd8e2d",
+      "src/ai/benchmark/room-ab.ts": "e6fd38282992166dbdf8d9d155e3f41799b2cfe97f05a63bad1666030cd90346",
+      "src/ai/benchmark/room-ab-csv.ts": "7f25dff3ea7fc8c080f4a74a0da8aa8d13caa03c9b4cfb12ec436dc8180def66",
+      "src/ai/benchmark/room-ab-metrics.ts": "080ca5dfa720135dabbb62524d141b0a7232b2a896b157917c272750c1725e81",
+      "src/ai/benchmark/room-baseline-646c-context.ts": "3d483201d6d75a10152152d68979021b1c4185a3f3a9ab6cc329b3ba80e86255",
+      "src/ai/benchmark/room-baseline-646c-memory.ts": "614ee0971f82dc52d4966a83a418930b805ff6d788ad754f7c41f44e493dd8ca"
+    },
+    "node": "v24.22.0",
+    "host": "develop-20261012121540-anbh4",
+    "artifact": {
+      "file": "planner.mjs",
+      "sha256": "c230b8f35ef198a86e9e72b2309a1b392e9fa2250a7689f25711fec28f94f581",
+      "bytes": 1560385
+    }
+  },
+  "reportProvenance": {
+    "sourceCommit": "1491590235cc53090270d5a3192cb541b9c4f586",
+    "sourceDiffSha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+    "files": {
+      "scripts/ai-room-ab.ts": "7b0e47cf655add99cdb88ef0fa45897be28e9c93e56200a3e67c6d45cd421962",
+      "tools/ai/room-ab-run.ts": "77353454d2430f530efc829bea8d396de577c0d26d9d17f9906254ea1b4efea1",
+      "src/ai/benchmark/room-ab.ts": "e6fd38282992166dbdf8d9d155e3f41799b2cfe97f05a63bad1666030cd90346",
+      "src/ai/benchmark/room-ab-csv.ts": "7f25dff3ea7fc8c080f4a74a0da8aa8d13caa03c9b4cfb12ec436dc8180def66",
+      "src/ai/benchmark/room-ab-responses.ts": "079ede7e125c96c19cb3be7b826375e8569b069d3b38f247a3115e1f7b2eecf2",
+      "src/ai/benchmark/room-ab-clearings.ts": "5f37fea01cce546a9db855b0752e135638e4dfece5e3e93606ce0d6e8cbfb2e8",
+      "src/ai/benchmark/room-ab-metrics.ts": "080ca5dfa720135dabbb62524d141b0a7232b2a896b157917c272750c1725e81",
+      "src/ai/benchmark/room-baseline-646c-context.ts": "3d483201d6d75a10152152d68979021b1c4185a3f3a9ab6cc329b3ba80e86255",
+      "src/ai/benchmark/room-baseline-646c-memory.ts": "614ee0971f82dc52d4966a83a418930b805ff6d788ad754f7c41f44e493dd8ca"
+    },
+    "node": "v24.22.0",
+    "host": "develop-20261012121540-anbh4",
+    "artifact": {
+      "file": "planner.mjs",
+      "sha256": "c230b8f35ef198a86e9e72b2309a1b392e9fa2250a7689f25711fec28f94f581",
+      "bytes": 1560385
+    }
+  },
+  "primaryFfa": {
+    "games": 66,
+    "decisive": 2,
+    "timeouts": 64,
+    "cohorts": {
+      "A": {
+        "seats": 108,
+        "wins": 1,
+        "meanRank": 2.388888888888889,
+        "normalizedRank": 0.5000000000000001,
+        "survivalRate": 0.9814814814814815,
+        "buildingPresenceSeconds": 1196.0694444439066,
+        "idleArmyUnitSeconds": 7531.381944442075,
+        "abaSwitches": 66.81481481481481,
+        "pressureFraction": 0.1554566398108903
+      },
+      "B": {
+        "seats": 108,
+        "wins": 1,
+        "meanRank": 2.388888888888889,
+        "normalizedRank": 0.5000000000000001,
+        "survivalRate": 0.9814814814814815,
+        "buildingPresenceSeconds": 1196.0694444439066,
+        "idleArmyUnitSeconds": 7531.381944442075,
+        "abaSwitches": 66.81481481481481,
+        "pressureFraction": 0.1554566398108903
+      }
+    }
+  },
+  "auxiliaryDuel": {
+    "games": 42,
+    "decisive": 2,
+    "timeouts": 40,
+    "cohorts": {
+      "A": {
+        "seats": 42,
+        "wins": 1,
+        "meanRank": 1.5,
+        "normalizedRank": 0.5,
+        "survivalRate": 0.9761904761904762,
+        "buildingPresenceSeconds": 1197.8559523804104,
+        "idleArmyUnitSeconds": 6840.138095238833,
+        "abaSwitches": 50.666666666666664,
+        "pressureFraction": 0.1735601293548635
+      },
+      "B": {
+        "seats": 42,
+        "wins": 1,
+        "meanRank": 1.5,
+        "normalizedRank": 0.5,
+        "survivalRate": 0.9761904761904762,
+        "buildingPresenceSeconds": 1197.8559523804104,
+        "idleArmyUnitSeconds": 6840.138095238833,
+        "abaSwitches": 50.666666666666664,
+        "pressureFraction": 0.1735601293548635
+      }
+    }
+  },
+  "maps": [
+    {
+      "mapId": "veiledHill",
+      "ffa": {
+        "games": 6,
+        "decisive": 2,
+        "timeouts": 4,
+        "cohorts": {
+          "A": {
+            "seats": 6,
+            "wins": 1,
+            "meanRank": 1.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 0.8333333333333334,
+            "buildingPresenceSeconds": 1184.9916666661366,
+            "idleArmyUnitSeconds": 6996.108333336947,
+            "abaSwitches": 53.333333333333336,
+            "pressureFraction": 0.26349034992799114
+          },
+          "B": {
+            "seats": 6,
+            "wins": 1,
+            "meanRank": 1.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 0.8333333333333334,
+            "buildingPresenceSeconds": 1184.9916666661366,
+            "idleArmyUnitSeconds": 6996.108333336946,
+            "abaSwitches": 53.333333333333336,
+            "pressureFraction": 0.26349034992799114
+          }
+        }
+      },
+      "duel": {
+        "games": 6,
+        "decisive": 2,
+        "timeouts": 4,
+        "cohorts": {
+          "A": {
+            "seats": 6,
+            "wins": 1,
+            "meanRank": 1.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 0.8333333333333334,
+            "buildingPresenceSeconds": 1184.9916666661366,
+            "idleArmyUnitSeconds": 6996.108333336947,
+            "abaSwitches": 53.333333333333336,
+            "pressureFraction": 0.26349034992799114
+          },
+          "B": {
+            "seats": 6,
+            "wins": 1,
+            "meanRank": 1.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 0.8333333333333334,
+            "buildingPresenceSeconds": 1184.9916666661366,
+            "idleArmyUnitSeconds": 6996.108333336946,
+            "abaSwitches": 53.333333333333336,
+            "pressureFraction": 0.26349034992799114
+          }
+        }
+      }
+    },
+    {
+      "mapId": "twoShores",
+      "ffa": {
+        "games": 6,
+        "decisive": 0,
+        "timeouts": 6,
+        "cohorts": {
+          "A": {
+            "seats": 12,
+            "wins": 0,
+            "meanRank": 2.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994563,
+            "idleArmyUnitSeconds": 8033.887499992104,
+            "abaSwitches": 148.66666666666666,
+            "pressureFraction": 0.1869027777778837
+          },
+          "B": {
+            "seats": 12,
+            "wins": 0,
+            "meanRank": 2.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994563,
+            "idleArmyUnitSeconds": 8033.887499992103,
+            "abaSwitches": 148.66666666666666,
+            "pressureFraction": 0.18690277777788367
+          }
+        }
+      },
+      "duel": {
+        "games": 0,
+        "decisive": 0,
+        "timeouts": 0,
+        "cohorts": {
+          "A": {
+            "seats": 0,
+            "wins": 0,
+            "meanRank": null,
+            "normalizedRank": null,
+            "survivalRate": null,
+            "buildingPresenceSeconds": null,
+            "idleArmyUnitSeconds": null,
+            "abaSwitches": null,
+            "pressureFraction": null
+          },
+          "B": {
+            "seats": 0,
+            "wins": 0,
+            "meanRank": null,
+            "normalizedRank": null,
+            "survivalRate": null,
+            "buildingPresenceSeconds": null,
+            "idleArmyUnitSeconds": null,
+            "abaSwitches": null,
+            "pressureFraction": null
+          }
+        }
+      }
+    },
+    {
+      "mapId": "turtleLake",
+      "ffa": {
+        "games": 6,
+        "decisive": 0,
+        "timeouts": 6,
+        "cohorts": {
+          "A": {
+            "seats": 12,
+            "wins": 0,
+            "meanRank": 2.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994563,
+            "idleArmyUnitSeconds": 7095.691666675539,
+            "abaSwitches": 107.58333333333333,
+            "pressureFraction": 0.24748958333347135
+          },
+          "B": {
+            "seats": 12,
+            "wins": 0,
+            "meanRank": 2.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994563,
+            "idleArmyUnitSeconds": 7095.691666675539,
+            "abaSwitches": 107.58333333333333,
+            "pressureFraction": 0.24748958333347126
+          }
+        }
+      },
+      "duel": {
+        "games": 0,
+        "decisive": 0,
+        "timeouts": 0,
+        "cohorts": {
+          "A": {
+            "seats": 0,
+            "wins": 0,
+            "meanRank": null,
+            "normalizedRank": null,
+            "survivalRate": null,
+            "buildingPresenceSeconds": null,
+            "idleArmyUnitSeconds": null,
+            "abaSwitches": null,
+            "pressureFraction": null
+          },
+          "B": {
+            "seats": 0,
+            "wins": 0,
+            "meanRank": null,
+            "normalizedRank": null,
+            "survivalRate": null,
+            "buildingPresenceSeconds": null,
+            "idleArmyUnitSeconds": null,
+            "abaSwitches": null,
+            "pressureFraction": null
+          }
+        }
+      }
+    },
+    {
+      "mapId": "templeSpring",
+      "ffa": {
+        "games": 6,
+        "decisive": 0,
+        "timeouts": 6,
+        "cohorts": {
+          "A": {
+            "seats": 12,
+            "wins": 0,
+            "meanRank": 2.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994563,
+            "idleArmyUnitSeconds": 7998.520833328509,
+            "abaSwitches": 87.08333333333333,
+            "pressureFraction": 0.1452187500000758
+          },
+          "B": {
+            "seats": 12,
+            "wins": 0,
+            "meanRank": 2.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994563,
+            "idleArmyUnitSeconds": 7998.520833328508,
+            "abaSwitches": 87.08333333333333,
+            "pressureFraction": 0.1452187500000758
+          }
+        }
+      },
+      "duel": {
+        "games": 0,
+        "decisive": 0,
+        "timeouts": 0,
+        "cohorts": {
+          "A": {
+            "seats": 0,
+            "wins": 0,
+            "meanRank": null,
+            "normalizedRank": null,
+            "survivalRate": null,
+            "buildingPresenceSeconds": null,
+            "idleArmyUnitSeconds": null,
+            "abaSwitches": null,
+            "pressureFraction": null
+          },
+          "B": {
+            "seats": 0,
+            "wins": 0,
+            "meanRank": null,
+            "normalizedRank": null,
+            "survivalRate": null,
+            "buildingPresenceSeconds": null,
+            "idleArmyUnitSeconds": null,
+            "abaSwitches": null,
+            "pressureFraction": null
+          }
+        }
+      }
+    },
+    {
+      "mapId": "sapphireArchipelago",
+      "ffa": {
+        "games": 6,
+        "decisive": 0,
+        "timeouts": 6,
+        "cohorts": {
+          "A": {
+            "seats": 18,
+            "wins": 0,
+            "meanRank": 3.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994568,
+            "idleArmyUnitSeconds": 8737.516666653943,
+            "abaSwitches": 4.333333333333333,
+            "pressureFraction": 0.11016898148154312
+          },
+          "B": {
+            "seats": 18,
+            "wins": 0,
+            "meanRank": 3.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994568,
+            "idleArmyUnitSeconds": 8737.516666653944,
+            "abaSwitches": 4.333333333333333,
+            "pressureFraction": 0.11016898148154311
+          }
+        }
+      },
+      "duel": {
+        "games": 6,
+        "decisive": 0,
+        "timeouts": 6,
+        "cohorts": {
+          "A": {
+            "seats": 6,
+            "wins": 0,
+            "meanRank": 1.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994563,
+            "idleArmyUnitSeconds": 7139.849999994901,
+            "abaSwitches": 11.166666666666666,
+            "pressureFraction": 0.206194444444552
+          },
+          "B": {
+            "seats": 6,
+            "wins": 0,
+            "meanRank": 1.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994563,
+            "idleArmyUnitSeconds": 7139.849999994901,
+            "abaSwitches": 11.166666666666666,
+            "pressureFraction": 0.206194444444552
+          }
+        }
+      }
+    },
+    {
+      "mapId": "ringwater",
+      "ffa": {
+        "games": 6,
+        "decisive": 0,
+        "timeouts": 6,
+        "cohorts": {
+          "A": {
+            "seats": 12,
+            "wins": 0,
+            "meanRank": 2.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994563,
+            "idleArmyUnitSeconds": 8056.929166665631,
+            "abaSwitches": 57.333333333333336,
+            "pressureFraction": 0.09465277777782632
+          },
+          "B": {
+            "seats": 12,
+            "wins": 0,
+            "meanRank": 2.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994563,
+            "idleArmyUnitSeconds": 8056.929166665631,
+            "abaSwitches": 57.333333333333336,
+            "pressureFraction": 0.09465277777782634
+          }
+        }
+      },
+      "duel": {
+        "games": 0,
+        "decisive": 0,
+        "timeouts": 0,
+        "cohorts": {
+          "A": {
+            "seats": 0,
+            "wins": 0,
+            "meanRank": null,
+            "normalizedRank": null,
+            "survivalRate": null,
+            "buildingPresenceSeconds": null,
+            "idleArmyUnitSeconds": null,
+            "abaSwitches": null,
+            "pressureFraction": null
+          },
+          "B": {
+            "seats": 0,
+            "wins": 0,
+            "meanRank": null,
+            "normalizedRank": null,
+            "survivalRate": null,
+            "buildingPresenceSeconds": null,
+            "idleArmyUnitSeconds": null,
+            "abaSwitches": null,
+            "pressureFraction": null
+          }
+        }
+      }
+    },
+    {
+      "mapId": "reedwater",
+      "ffa": {
+        "games": 6,
+        "decisive": 0,
+        "timeouts": 6,
+        "cohorts": {
+          "A": {
+            "seats": 6,
+            "wins": 0,
+            "meanRank": 1.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994563,
+            "idleArmyUnitSeconds": 5762.675000009535,
+            "abaSwitches": 101.5,
+            "pressureFraction": 0.2384375000001379
+          },
+          "B": {
+            "seats": 6,
+            "wins": 0,
+            "meanRank": 1.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994563,
+            "idleArmyUnitSeconds": 5762.675000009537,
+            "abaSwitches": 101.5,
+            "pressureFraction": 0.2384375000001379
+          }
+        }
+      },
+      "duel": {
+        "games": 6,
+        "decisive": 0,
+        "timeouts": 6,
+        "cohorts": {
+          "A": {
+            "seats": 6,
+            "wins": 0,
+            "meanRank": 1.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994563,
+            "idleArmyUnitSeconds": 5762.675000009535,
+            "abaSwitches": 101.5,
+            "pressureFraction": 0.2384375000001379
+          },
+          "B": {
+            "seats": 6,
+            "wins": 0,
+            "meanRank": 1.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994563,
+            "idleArmyUnitSeconds": 5762.675000009537,
+            "abaSwitches": 101.5,
+            "pressureFraction": 0.2384375000001379
+          }
+        }
+      }
+    },
+    {
+      "mapId": "pineshade",
+      "ffa": {
+        "games": 6,
+        "decisive": 0,
+        "timeouts": 6,
+        "cohorts": {
+          "A": {
+            "seats": 6,
+            "wins": 0,
+            "meanRank": 1.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994563,
+            "idleArmyUnitSeconds": 5406.666666675896,
+            "abaSwitches": 71.83333333333333,
+            "pressureFraction": 0.10979166666672398
+          },
+          "B": {
+            "seats": 6,
+            "wins": 0,
+            "meanRank": 1.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994563,
+            "idleArmyUnitSeconds": 5406.6666666758965,
+            "abaSwitches": 71.83333333333333,
+            "pressureFraction": 0.10979166666672396
+          }
+        }
+      },
+      "duel": {
+        "games": 6,
+        "decisive": 0,
+        "timeouts": 6,
+        "cohorts": {
+          "A": {
+            "seats": 6,
+            "wins": 0,
+            "meanRank": 1.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994563,
+            "idleArmyUnitSeconds": 5406.666666675896,
+            "abaSwitches": 71.83333333333333,
+            "pressureFraction": 0.10979166666672398
+          },
+          "B": {
+            "seats": 6,
+            "wins": 0,
+            "meanRank": 1.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994563,
+            "idleArmyUnitSeconds": 5406.6666666758965,
+            "abaSwitches": 71.83333333333333,
+            "pressureFraction": 0.10979166666672396
+          }
+        }
+      }
+    },
+    {
+      "mapId": "gullIsland",
+      "ffa": {
+        "games": 6,
+        "decisive": 0,
+        "timeouts": 6,
+        "cohorts": {
+          "A": {
+            "seats": 6,
+            "wins": 0,
+            "meanRank": 1.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994563,
+            "idleArmyUnitSeconds": 7673.883333337243,
+            "abaSwitches": 51.166666666666664,
+            "pressureFraction": 0.20446527777787363
+          },
+          "B": {
+            "seats": 6,
+            "wins": 0,
+            "meanRank": 1.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994563,
+            "idleArmyUnitSeconds": 7673.883333337243,
+            "abaSwitches": 51.166666666666664,
+            "pressureFraction": 0.2044652777778737
+          }
+        }
+      },
+      "duel": {
+        "games": 6,
+        "decisive": 0,
+        "timeouts": 6,
+        "cohorts": {
+          "A": {
+            "seats": 6,
+            "wins": 0,
+            "meanRank": 1.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994563,
+            "idleArmyUnitSeconds": 7673.883333337243,
+            "abaSwitches": 51.166666666666664,
+            "pressureFraction": 0.20446527777787363
+          },
+          "B": {
+            "seats": 6,
+            "wins": 0,
+            "meanRank": 1.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994563,
+            "idleArmyUnitSeconds": 7673.883333337243,
+            "abaSwitches": 51.166666666666664,
+            "pressureFraction": 0.2044652777778737
+          }
+        }
+      }
+    },
+    {
+      "mapId": "greystonePass",
+      "ffa": {
+        "games": 6,
+        "decisive": 0,
+        "timeouts": 6,
+        "cohorts": {
+          "A": {
+            "seats": 6,
+            "wins": 0,
+            "meanRank": 1.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994563,
+            "idleArmyUnitSeconds": 10135.841666642058,
+            "abaSwitches": 56.333333333333336,
+            "pressureFraction": 0.09968750000004822
+          },
+          "B": {
+            "seats": 6,
+            "wins": 0,
+            "meanRank": 1.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994563,
+            "idleArmyUnitSeconds": 10135.841666642058,
+            "abaSwitches": 56.333333333333336,
+            "pressureFraction": 0.09968750000004822
+          }
+        }
+      },
+      "duel": {
+        "games": 6,
+        "decisive": 0,
+        "timeouts": 6,
+        "cohorts": {
+          "A": {
+            "seats": 6,
+            "wins": 0,
+            "meanRank": 1.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994563,
+            "idleArmyUnitSeconds": 10135.841666642058,
+            "abaSwitches": 56.333333333333336,
+            "pressureFraction": 0.09968750000004822
+          },
+          "B": {
+            "seats": 6,
+            "wins": 0,
+            "meanRank": 1.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994563,
+            "idleArmyUnitSeconds": 10135.841666642058,
+            "abaSwitches": 56.333333333333336,
+            "pressureFraction": 0.09968750000004822
+          }
+        }
+      }
+    },
+    {
+      "mapId": "brokenSea",
+      "ffa": {
+        "games": 6,
+        "decisive": 0,
+        "timeouts": 6,
+        "cohorts": {
+          "A": {
+            "seats": 12,
+            "wins": 0,
+            "meanRank": 2.5,
+            "normalizedRank": 0.49999999999999994,
+            "survivalRate": 0.9166666666666666,
+            "buildingPresenceSeconds": 1172.1291666661484,
+            "idleArmyUnitSeconds": 5503.545833335131,
+            "abaSwitches": 27.083333333333332,
+            "pressureFraction": 0.10165625000005331
+          },
+          "B": {
+            "seats": 12,
+            "wins": 0,
+            "meanRank": 2.5,
+            "normalizedRank": 0.49999999999999994,
+            "survivalRate": 0.9166666666666666,
+            "buildingPresenceSeconds": 1172.1291666661484,
+            "idleArmyUnitSeconds": 5503.545833335132,
+            "abaSwitches": 27.083333333333332,
+            "pressureFraction": 0.10165625000005331
+          }
+        }
+      },
+      "duel": {
+        "games": 6,
+        "decisive": 0,
+        "timeouts": 6,
+        "cohorts": {
+          "A": {
+            "seats": 6,
+            "wins": 0,
+            "meanRank": 1.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994563,
+            "idleArmyUnitSeconds": 4765.9416666752395,
+            "abaSwitches": 9.333333333333334,
+            "pressureFraction": 0.09285416666671802
+          },
+          "B": {
+            "seats": 6,
+            "wins": 0,
+            "meanRank": 1.5,
+            "normalizedRank": 0.5,
+            "survivalRate": 1,
+            "buildingPresenceSeconds": 1199.9999999994563,
+            "idleArmyUnitSeconds": 4765.9416666752395,
+            "abaSwitches": 9.333333333333334,
+            "pressureFraction": 0.09285416666671802
+          }
+        }
+      }
+    }
+  ],
+  "pairs": [
+    {
+      "pair": "ffa-veiledHill-s2",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-veiledHill-s1",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-veiledHill-s0",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-twoShores-s2",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-twoShores-s1",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-twoShores-s0",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-turtleLake-s2",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-turtleLake-s1",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-turtleLake-s0",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-templeSpring-s2",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-templeSpring-s1",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-templeSpring-s0",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "duel-sapphireArchipelago-s2",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "duel-sapphireArchipelago-s1",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "duel-sapphireArchipelago-s0",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-sapphireArchipelago-s2",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-sapphireArchipelago-s1",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-sapphireArchipelago-s0",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-ringwater-s2",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-ringwater-s1",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-ringwater-s0",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-reedwater-s2",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-reedwater-s1",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-reedwater-s0",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-pineshade-s2",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-pineshade-s1",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-pineshade-s0",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-gullIsland-s2",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-gullIsland-s1",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-gullIsland-s0",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-greystonePass-s2",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-greystonePass-s1",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-greystonePass-s0",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "duel-brokenSea-s2",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "duel-brokenSea-s1",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "duel-brokenSea-s0",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-brokenSea-s2",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-brokenSea-s1",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    },
+    {
+      "pair": "ffa-brokenSea-s0",
+      "initialEqual": true,
+      "commandEqual": true,
+      "plannedEqual": true,
+      "snapshotEqual": true,
+      "memoryEqual": true
+    }
+  ],
+  "pairedWorldsEqual": true,
+  "symmetry": true,
+  "reconciled": true
+}
