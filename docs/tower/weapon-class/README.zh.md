@@ -1,7 +1,7 @@
 加固塔与武器分类修复
 ==================
 
-规则以 owner 最后确认的版本为准：只有非机械陆军能上塔；只有远程武器获得射程科技、测距训练和塔顶的射程加成。换武器可以改变类别，数值加成不能。原来的设计确实让近战也获得射程科技：`ORDINARY_COMBAT_UNITS` 包含近战，原 `applyWeaponAttack` 注释也明确描述过延长近战距离。这次按新决定停止这项加成。
+规则以 owner 最后确认的版本为准：只有 bodyForm 为 foot 的徒步单位能上塔；机械仍被排除；只有远程武器获得射程科技、测距训练和塔顶的射程加成。换武器可以改变类别，数值加成不能。原来的设计确实让近战也获得射程科技：`ORDINARY_COMBAT_UNITS` 包含近战，原 `applyWeaponAttack` 注释也明确描述过延长近战距离。这次按新决定停止这项加成。
 
 `weaponClass` 只比较当前武器**未加成定义**的基础射程与 80。`nonStarUnitStats` 从 `weaponRules` 得到该定义，并在计算实时属性前刷新 `Unit.attackClass`；创建单位、切换装备、variant 刷新、恢复快照也覆盖这条路径。没有缓存的旧对象按 catalog 定义读取；恢复存档时重新读取实际武器，并清掉旧近战单位保存下来的射程加成。缓存可以由已有定义、装备和手持位置完整重建，canonical 不把它作为独立状态，原 fresh-game checksum goldens 不变。玩法规则升到 **8**，拒绝把规则 7 的 replay 或客户端与新规则混用，规则 7 的存档仍可导入。
 
@@ -60,15 +60,15 @@
 上塔规则与反馈
 -------------
 
-资格政策只在 `canStandOnTower`：存活、非机械陆军，且不在甲板或舱内。`garrisonRefusal`、`garrisonRoomFor`、命令验证和 AI 计划入口共用这项政策。机械判定读取 `unitClass`，包括 variant，不列兵种白名单。
+资格政策只在 `canStandOnTower`：存活、bodyForm=foot 的非机械陆军，且不在甲板或舱内。`garrisonRefusal`、`garrisonRoomFor`、命令验证和 AI 计划入口共用这项政策。体态逐兵种显式声明，variant 可覆盖；机械判定仍读取 `unitClass`，不列兵种白名单。完整 55 兵种分类见 [body-forms.zh.md](body-forms.zh.md)。
 
 `garrisonRoomFor` 同时检查人口和 `towerTopLayout` 的整圆身体排布。排布按半径和稳定 ID 排序，约束 `距离塔心 + 单位半径 ≤ 塔半径`，并检查身体不重叠。单人站中间，混编需要重新排位；身体确实放不下就拒绝，存档中的不合格占位者会安全下塔。静态组成的布局有弱引用缓存，避免每 tick 重跑排布搜索。
 
-每个不合格成员都有结构化 `refusal={reason,detail}`：`garrison-mechanical`、`tower-full`、`garrison-body-size`、`garrison-ownership`、`garrison-ineligible`。直接 sim 命令的拒绝和混合选择的部分拒绝经 `orderEnded` 发出；拒绝不会清掉单位先前的 order/queue，也不消费 nextId。外层保留既有 reason：机械/体型是 refused，满员是 no-room，归属是 target-gone。
+每个不合格成员都有结构化 `refusal={reason,detail}`：`garrison-mechanical`、`garrison-not-infantry`（detail 携带 mounted/beast/spirit）、`tower-full`、`garrison-body-size`、`garrison-ownership`、`garrison-ineligible`。直接 sim 命令的拒绝和混合选择的部分拒绝经 `orderEnded` 发出；拒绝不会清掉单位先前的 order/queue，也不消费 nextId。外层保留既有 reason：机械/体型是 refused，满员是 no-room，归属是 target-gone。
 
 整单被客户端 preflight 或服务器 frame admission 拦住时，返回的 `CommandLegalityError` 同样携带精确 refusal，并保留现有即时提示。该边界的统一私有网络回执、翻译和提示样式由 Codex 27 的后续 PR 接入；本 PR 不往只读合法性检查里写效果，也没有改 effect-renderer 样式。
 
-验证与截图
+上一轮验证与截图（源代码 f54a61a5；新体态规则的图证正在替换）
 ----------
 
 两组场景都在 mac1 的真实 Chromium 中运行，同一份场景脚本分别运行基线和分支：
@@ -79,7 +79,7 @@ bin/sketch yatu tower-trained-melee --ref <验证的分支提交> --ref2 a389ec2
 bin/sketch yatu tower-body-fit --ref <验证的分支提交> --ref2 a389ec26 --on mac1 --json
 ```
 
-第一组通过实际研究完成一级射程科技，验证科技等级确实为 1。没有依赖 HTTP reset 会丢弃的 `scenario.players.upgrades`。主分支三个塔顶工人全部被打死；分支三个工人都保持 70 HP。满级科技及换弓由真实 sim 的单元测试覆盖。
+第一组通过实际研究完成一级射程科技，验证科技等级确实为 1。没有依赖 HTTP reset 会丢弃的 `scenario.players.upgrades`。主分支三个塔顶工人全部被打死；分支三个工人都保持 70 HP。lancer 为徒步长矛兵，knight/raider 为骑乘单位。满级科技及换弓由真实 sim 的单元测试覆盖。
 
 | 进攻者 | main 射程 / 塔顶工人结果 | 分支射程 / 塔顶工人结果 |
 | --- | --- | --- |
@@ -98,7 +98,7 @@ bin/sketch yatu tower-body-fit --ref <验证的分支提交> --ref2 a389ec26 --o
 
 既有断言变化是两项新规则所要求的：`sim.test.ts` 将新训练掠袭兵的科技后射程由 83 改为 72；`tooltips.test.ts` 将说明改为 ranged weapon reach。四个规则边界测试把当前版本由 7 改为 8，并保留规则 7 存档可读的断言。没有改变 AI 对战结果断言、删除测试或放宽超时。
 
-最终校验
+上一轮校验（源代码 f54a61a5）
 --------
 
 验证源代码为 `f54a61a5f25aa533a0f8ac57da0c6141cff5e5bb`，此后的提交只增加本文、截图、元数据与证据指针。mac1（Node 24.14.0）上根 `npx tsc --noEmit -p .` 退出 **0**；`npx vitest run --dir src --maxWorkers=2 --minWorkers=1` 为 **7900 通过、1 项既有条件跳过、0 失败，退出 0**。mac1 当前 PATH 未检测到 ffmpeg，唯一跳过项是既有 `skipIf(!hasFfmpeg())` 的 MP4 编码测试；同一项在 A100 全量中已通过。

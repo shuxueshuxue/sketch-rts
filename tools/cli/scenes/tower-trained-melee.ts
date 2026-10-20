@@ -30,6 +30,6 @@ export default async function(s: Scene) {
   const after = await s.snapshot() as Snap;
   const results = [0, 1, 2].map(i => ({ cavalry: after.units.find(unit => unit.id === `cavalry-${i}`), before: before.units.find(unit => unit.id === `top-${i}`), after: after.units.find(unit => unit.id === `top-${i}`) }));
   s.record("trained-cavalry", results);
-  s.must(results.every(result => result.after?.hp === result.before?.hp), "range-trained melee cavalry damaged a tower occupant");
+  s.must(results.every(result => result.after?.hp === result.before?.hp), "range-trained melee troops damaged a tower occupant");
   s.must(results.every(result => result.cavalry?.attackRange === (result.cavalry?.kind === "lancer" ? 74 : 72) && !result.cavalry.aim), "research changed melee reach/category");
 }

@@ -227,10 +227,10 @@ describe("tower garrison", () => {
     expect(checkCommandLegality(game, "player", { type: "garrison", unitIds: [d.id], buildingId: building.id })?.reason).toBe("position");
   });
 
-  it("counts a troop without supply as one: four spirits fill it", () => {
+  it("counts a foot troop without supply as one: four wildlings fill it", () => {
     const game = field();
     const building = tower(game);
-    const troops = garrison(game, building, ["spirit", "spirit", "spirit", "spirit", "spirit"]);
+    const troops = garrison(game, building, ["wildling", "wildling", "wildling", "wildling", "wildling"]);
     for (const unit of troops) unit.expiresTick = game.tick + 10_000;
     expect(towerGarrison(game.units, building)).toHaveLength(4);
   });

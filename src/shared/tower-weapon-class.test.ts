@@ -105,7 +105,7 @@ describe("tower admission and whole bodies", () => {
   it("reads mechanical eligibility from the current unit definition, including variants", () => {
     const { game, tower } = field(); game.variants = {
       machine: resolveVariant({ base: "footman", unitClass: "mechanical" }),
-      living: resolveVariant({ base: "golem", unitClass: "nonMechanical" }),
+      living: resolveVariant({ base: "golem", unitClass: "nonMechanical", bodyForm: "foot" }),
     };
     const machine = spawnVariantUnit(game, "player", "machine", 1000, 1100), living = spawnVariantUnit(game, "player", "living", 1100, 1100);
     expect(canStandOnTower(machine, game)).toBe(false); expect(garrisonRoomFor(game, tower, machine)).toBe(false);
@@ -122,7 +122,7 @@ describe("tower admission and whole bodies", () => {
     expect(game.effects).toContainEqual(expect.objectContaining({ type: "orderEnded", unitId: unit.id, owner: "player", orderType: "garrison", reason: "refused", refusal: { reason: "garrison-mechanical", detail: { buildingId: tower.id } } }));
   });
 
-  it.each(([["knight", "worker"], ["ancientStag"], ["spirit", "spirit", "spirit", "spirit"], ["footman", "footman"]] as UnitKind[][]).map(kinds => [kinds] as const))("packs %j inside the top without overlapping", kinds => {
+  it.each(([["ogreWarrior", "worker"], ["ogreLord"], ["wildling", "wildling", "wildling", "wildling"], ["footman", "footman"]] as UnitKind[][]).map(kinds => [kinds] as const))("packs %j inside the top without overlapping", kinds => {
     const { game, tower } = field();
     const units = kinds.map((kind, i) => game.spawnUnit("player", kind, 1000 - i * 40, 1100));
     issuePlayerCommand(game, "player", { type: "garrison", unitIds: units.map(unit => unit.id), buildingId: tower.id }); advance(game, 240);
@@ -137,7 +137,7 @@ describe("tower admission and whole bodies", () => {
 
   it("reports size, capacity and ownership separately, including each rejected member of a mixed selection", () => {
     const { game, tower } = field();
-    const large = game.spawnUnit("player", "ancientStag", 1000, 1100); large.radius = 41;
+    const large = game.spawnUnit("player", "ogreLord", 1000, 1100); large.radius = 41;
     expect(tryPlayerCommand(game, "player", { type: "garrison", unitIds: [large.id], buildingId: tower.id })).toMatchObject({ ok: false, refusal: { reason: "garrison-body-size" } });
     const enemy = game.spawnUnit("enemy", "footman", 1000, 1100);
     expect(tryPlayerCommand(game, "enemy", { type: "garrison", unitIds: [enemy.id], buildingId: tower.id })).toMatchObject({ ok: false, refusal: { reason: "garrison-ownership", detail: { owner: "player" } } });

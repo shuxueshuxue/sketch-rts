@@ -262,6 +262,7 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     if (troops.some(unit => !garrisonRefusal(snapshot, tower, unit))) return undefined;
     const cause = garrisonRefusal(snapshot, tower, troops[0]!)!;
     const messages = { "garrison-mechanical": "Mechanical units cannot garrison towers", "tower-full": "The tower's top is full",
+      "garrison-not-infantry": "Only foot troops can garrison towers",
       "garrison-body-size": "This unit's body does not fit on the tower's top", "garrison-ownership": "You can only garrison your own tower",
       "garrison-ineligible": "This unit cannot stand on a tower" };
     return { ...refusal(messages[cause.reason], cause.reason === "tower-full" || cause.reason === "garrison-body-size" ? "position" : "rules"), refusal: cause };
