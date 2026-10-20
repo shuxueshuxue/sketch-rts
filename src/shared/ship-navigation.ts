@@ -979,6 +979,9 @@ export type ShipRouteSearchState={
 const SLICE_WORK=700;
 /** One continued slice of ship planning work, shared by every phase of a job. */
 export const SHIP_PLANNING_SLICE_WORK=SLICE_WORK;
+/** Optional caller-owned observation. It never enters continuation state or
+ * changes search order, stopping points, routes or cache admission. */
+export type ShipRouteWorkReceipt={logicalWork:number;expandedStates:number};
 const SEARCH_WORK={expansion:1,trafficExpansion:4,connector:300,entrance:1,entranceFit:300,entranceCell:400,arc:500,target:300,open:10};
 type LiveSearch={reached:Map<number,{id:number;cost:number;parent:number}>;traffic:Map<number,boolean>;frontier:Frontier;
   potentials:Map<number,number>;prefixes:Map<number,ShipPose[]>;entrances:Map<number,ShipPose[][]>};
@@ -993,21 +996,21 @@ export function beginLiveShipRouteSearch():ShipRouteSearchState {
 }
 /** Internal planner-only call. General callers keep the original construction. */
 export function advanceLiveShipRouteSearch(map:SeaMap,ship:Unit,goal:Point & {heading?:number},trafficClear:(from:ShipPose,to:ShipPose)=>boolean,
-  budget:number,voyage:boolean,state:ShipRouteSearchState):RouteResult|undefined {
-  return advanceShipRouteSearchImpl(map,ship,goal,trafficClear,budget,voyage,state,livePlanningSearches.has(state));
+  budget:number,voyage:boolean,state:ShipRouteSearchState,workReceipt?:ShipRouteWorkReceipt):RouteResult|undefined {
+  return advanceShipRouteSearchImpl(map,ship,goal,trafficClear,budget,voyage,state,livePlanningSearches.has(state),workReceipt);
 }
 export function advanceShipRouteSearch(map:SeaMap,ship:Unit,goal:Point & {heading?:number},trafficClear:(from:ShipPose,to:ShipPose)=>boolean,
-  budget:number,voyage:boolean,state:ShipRouteSearchState):RouteResult|undefined {
-  return advanceShipRouteSearchImpl(map,ship,goal,trafficClear,budget,voyage,state,false);
+  budget:number,voyage:boolean,state:ShipRouteSearchState,workReceipt?:ShipRouteWorkReceipt):RouteResult|undefined {
+  return advanceShipRouteSearchImpl(map,ship,goal,trafficClear,budget,voyage,state,false,workReceipt);
 }
 function advanceShipRouteSearchImpl(map:SeaMap,ship:Unit,goal:Point & {heading?:number},trafficClear:(from:ShipPose,to:ShipPose)=>boolean,
-  budget:number,voyage:boolean,state:ShipRouteSearchState,owned:boolean):RouteResult|undefined {
+  budget:number,voyage:boolean,state:ShipRouteSearchState,owned:boolean,workReceipt?:ShipRouteWorkReceipt):RouteResult|undefined {
   if(state.phase==='done')return state.result;
   // Fallback owns no active workspace. Resume it at this caller's depth,
   // retaining nested isolation only for a real reentrant traffic callback.
   if(state.phase==='fallback'){
     const fallback=state.fallback!;
-    const unobstructed=advanceShipRouteSearchImpl(map,ship,goal,emptyTraffic,Infinity,voyage,fallback,livePlanningSearches.has(fallback));
+    const unobstructed=advanceShipRouteSearchImpl(map,ship,goal,emptyTraffic,Infinity,voyage,fallback,livePlanningSearches.has(fallback),workReceipt);
     if(!unobstructed)return;
     const end=state.path!.at(-1) ?? ship,possible=unobstructed.points.at(-1) ?? ship;
     state.result={points:state.path!,partial:!!state.deferred || unobstructed.partial || Math.hypot(end.x-possible.x,end.y-possible.y)>1e-7};
@@ -1015,11 +1018,13 @@ function advanceShipRouteSearchImpl(map:SeaMap,ship:Unit,goal:Point & {heading?:
   }
   routeSearchDepth++;
   try {
-    const result=planShipRouteImpl(map,ship,goal,trafficClear,budget,voyage,routeSearchDepth>1,state,owned);
+    const result=planShipRouteImpl(map,ship,goal,trafficClear,budget,voyage,routeSearchDepth>1,state,owned,workReceipt);
     if(result){state.result=result;state.phase='done';liveSearches.delete(state);}return result;
   }finally{routeSearchDepth--;}
 }
-function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:number}, trafficClear: (from:ShipPose,to:ShipPose)=>boolean, budget:number, voyage:boolean, nested:boolean,state?:ShipRouteSearchState,owned=false): RouteResult|undefined {
+function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:number}, trafficClear: (from:ShipPose,to:ShipPose)=>boolean, budget:number, voyage:boolean, nested:boolean,state?:ShipRouteSearchState,owned=false,workReceipt?:ShipRouteWorkReceipt): RouteResult|undefined {
+  let work=0,expandedStates=0;
+  try {
   // The real traffic provider declares an empty frozen obstacle set. Custom
   // callbacks without that declaration still receive every original check.
   const noTraffic = trafficClear === emptyTraffic || (trafficClear as {hasTraffic?:boolean}).hasTraffic === false;
@@ -1071,7 +1076,6 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
   const start = { x: ship.x, y: ship.y, heading: ship.sailing?.heading ?? 0 };
   // Logical work done in this call; a continued search pauses at the first
   // operation boundary past SLICE_WORK (see @@@ship-search-work).
-  let work=0;
   // A step whose whole region is open water sweeps only through the integral
   // field's fast path; it is priced as such. The test reads the terrain alone,
   // so every machine prices every step alike.
@@ -1273,6 +1277,7 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
     const nodeCost = cost(id);
     if (frontier.poppedCost !== nodeCost)
       continue;
+    expandedStates++;
     const h = id % DIRECTIONS, cell = Math.floor(id / DIRECTIONS), x = cell % lattice.cols, y = Math.floor(cell / lattice.cols);
     const px = (x+.5)*lattice.cell, py = (y+.5)*lattice.cell;
     const p = noTraffic ? undefined : {x:px,y:py,heading:h*ANGLE};
@@ -1335,4 +1340,7 @@ function planShipRouteImpl(map: SeaMap, ship: Unit, goal: Point & {heading?:numb
     partial=unobstructed.partial || Math.hypot(end.x-possible.x,end.y-possible.y)>1e-7;
   }
   return {points:path,partial:partial || deferred};
+  } finally {
+    if(workReceipt){workReceipt.logicalWork+=work;workReceipt.expandedStates+=expandedStates;}
+  }
 }
