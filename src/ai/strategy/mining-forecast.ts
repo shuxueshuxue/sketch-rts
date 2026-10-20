@@ -83,8 +83,8 @@ export function forecastMiningWorkforce(input: MiningForecastInput): MiningWorkf
   const workers: MiningWorkerProjection[] = [], training: MiningTrainingProjection[] = [];
   const finish = (): MiningWorkforceForecast => {
     const arrivals = workers.map(worker => worker.arrivalTicks).sort((a, b) => a - b);
-    const productive = workers.map(worker => worker.arrivalTicks + (worker.source === 'stationed' ? 0 : calibration.firstDeliveryTicks));
-    const boundaries = [...new Set([ready, ...arrivals, ...productive, window.horizonTicks])].filter(t => t <= window.horizonTicks).sort((a, b) => a - b);
+    const productive = workers.map(worker => Math.max(ready, worker.arrivalTicks + (worker.source === 'stationed' ? 0 : calibration.firstDeliveryTicks)));
+    const boundaries = [...new Set([ready, ...arrivals, ...productive, window.horizonTicks])].filter(t => t >= ready && t <= window.horizonTicks).sort((a, b) => a - b);
     const tax = miningIncomeRate(snapshot.players[owner]!.supplyUsed);
     const segments: MiningForecastSegment[] = boundaries.slice(0, -1).map((fromTicks, index) => {
       const workerCount = arrivals.filter(t => t <= fromTicks).length;
