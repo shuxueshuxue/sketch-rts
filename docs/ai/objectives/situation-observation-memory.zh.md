@@ -41,3 +41,25 @@
 2026-10-20 12:36 UTC 校准验收口径：上述逐房间进程 maxRSS 表全部保留为历史诊断，不再用其 30 MiB 差值判定当前结果。
 新的两项门槛是 11 图 GC 后每房间存活 `heapUsed + external` 增量 ≤30 MiB，以及真实 4 worker / 8 room 服务进程树峰值增幅 ≤15%。
 服务树对照先列 main AA，main/candidate 各三次；原始完整 trace 录制不启用。当前仍等待这两项完整数据，未报通过。
+
+
+当前数值版 `c648e634`，Node v24.22.0，与 main bc33a34a 使用同一 AO 录制器、原 Stage 1 配置完整运行 18000 tick。
+关闭 fork 录制；每版每图结束后执行三次 GC 并让事件循环完成清理。下表的存活增量为 `heapUsed + external`，external 已包含 arrayBuffers，不重复相加。
+11 图的计划命令、执行命令、最终 snapshot、原 policy memory、canonical state、checksum 六项全部相同。
+
+| 地图 | GC 后存活增量 MiB | heap 增量 MiB | external 增量 MiB |
+|---|---:|---:|---:|
+| brokenSea | 9.72 | 4.60 | 5.13 |
+| greystonePass | 7.79 | 3.72 | 4.06 |
+| gullIsland | 13.37 | 5.32 | 8.05 |
+| pineshade | 7.89 | 3.46 | 4.43 |
+| reedwater | 8.14 | 4.36 | 3.77 |
+| ringwater | 10.60 | 5.19 | 5.41 |
+| sapphireArchipelago | 18.12 | 6.91 | 11.22 |
+| templeSpring | 6.22 | 4.88 | 1.34 |
+| turtleLake | 4.88 | 4.05 | 0.84 |
+| twoShores | 7.05 | 4.78 | 2.27 |
+| veiledHill | 3.66 | 3.38 | 0.28 |
+
+最大蓝宝 18.12 MiB，常驻门槛通过。服务树峰值的 4 worker / 8 room、main/candidate 各三次尚未收齐，整体内存与终验 ABBA 仍待验。
+原始收据在 A100 `strategy-observation-20261020/live-AO/<map>/{V,AO}/summary.json`；汇总为 `results/live-AO-comparison.json`。
