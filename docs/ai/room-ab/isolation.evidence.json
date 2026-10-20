@@ -1,0 +1,9 @@
+{
+  "sha256": "1b1ad19025e8c8a2bffe0eb99dbe1994370eaae526be7df6977bfffc2f83dbdc",
+  "bytes": 11283698,
+  "name": "isolation",
+  "kind": "dir",
+  "machine": "a100",
+  "pushed": "bb50c974d73ea2531b9f2fb6c410b9e1fb264ea7",
+  "pr": 578
+}

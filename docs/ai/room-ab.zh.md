@@ -24,7 +24,8 @@ node --import tsx scripts/ai-room-ab.ts \
 保持不变。ID 不带 baseline/current/A/B，避免策略按标签改变行为。
 
 辅助口径是两席对局。原生两席图复用主口径结果；其他图重新生成两席布局，明确记为 `duel`，不能冒充满席房间。
-默认三种子共 102 局：66 局原生满席、36 局额外两席。11 图的两席辅助统计合计 66 局，其中 30 局复用原生两席结果。
+默认三种子共 78 局：66 局原生满席、12 局额外两席。辅助对局仅覆盖支持两席的七图，合计 42 局，其中 30 局复用原生两席结果。
+环海、神泉殿、龟湖和双岸只支持四席布局，辅助两席明确跳过；满席主口径仍覆盖全部 11 图。
 
 当前胜负规则以建筑存续为准。时限到达时所有有建筑的席位并列，其余按最后一次清空建筑的时间排位，同时清空并列。
 允许清空后重建；不把首次清空永久判负。报告给出组内席位平均名次、归一化名次、最终存活比例、建筑存续秒数和原生胜局。
@@ -33,10 +34,18 @@ node --import tsx scripts/ai-room-ab.ts \
 ## 可复核输出
 
 `matrix.json` 固定配置、每局阵容、Git 提交、工作树 diff 哈希、驱动/测量器逐文件哈希、Node/主机和冻结产物哈希。
-子进程启动前核对同一来源；已有输出拒绝覆盖。`--case NAME` 可运行矩阵中的单项。
+子进程启动前核对同一来源；已有输出拒绝覆盖。`--case NAME` 可运行矩阵中的单项；`--reverse` 反向调度。某局失败后等待已启动的子进程收尾，停止派发后续局，保存 `matrix-status.json` 并返回非零。
 
 每局保存初始 snapshot/nextId、压缩的计划/实际交付命令、归一化保留任务事实、全部死亡账本行，以及 `summary.json`。
-汇总 `summary.json` 有主/辅助/逐图分组；`seats.csv` 每席一行。摘要包含完整命令流、最终 snapshot、canonical state、
+汇总 `summary.json` 有主/辅助/逐图分组；标准 CSV `seats.csv` 每席一行，JSON 单元格的引号按 RFC 4180 转义。
+已有对局可在不重跑策略或 sim 的情况下重新生成报表，来源矩阵与报表生成器的提交/哈希分别保留：
+
+```sh
+node --import tsx scripts/ai-room-ab.ts --summarize \
+  --out /path/to/completed-run --report-out /path/to/new-report-directory
+```
+
+摘要包含完整命令流、最终 snapshot、canonical state、
 checksum 和 memory 哈希。生成物只放缓存或 evidence store；仓库只留小型摘要和证据指针。
 
 ## 行为指标的定义与限制

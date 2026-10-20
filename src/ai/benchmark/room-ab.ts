@@ -25,6 +25,9 @@ export function roomAbCases(options: {
     for (const mode of options.modes ?? ['ffa', 'duel']) {
       // The native two-seat room already supplies the auxiliary duel. Do not play it twice.
       if (mode === 'duel' && map.players === 2 && (options.modes ?? ['ffa', 'duel']).includes('ffa')) continue;
+      // These named ring/sides layouts require four physical starts. Only islandStarts
+      // also has a native two-seat generator; never invent a different map for a duel.
+      if (mode === 'duel' && map.players !== 2 && map.layout.idea !== 'islandStarts') continue;
       const count = mode === 'duel' ? 2 : map.players;
       for (const [seedIndex, seed] of options.seeds.entries()) for (const rotation of [0, 1] as const) {
         const pair = `${mode}-${map.id}-s${seedIndex}`;
