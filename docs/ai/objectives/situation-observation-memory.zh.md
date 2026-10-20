@@ -1,4 +1,4 @@
-# 战略观察内存对照：未通过的测量基线
+# 战略观察内存对照
 
 这份表记录 `32e2eaba`（实验源目录 AE）与 main `bc33a34a` 的完整 15 分钟对照。它使用当时的 AE 录制器，仍保留每席上一轮完整 strategy；不是后续录制器或最新实现的验收结果。两版都由同一录制器驱动，每图 main 先跑 AA，两版各三次，Node v24.22.0。
 
@@ -40,7 +40,7 @@
 
 2026-10-20 12:36 UTC 校准验收口径：上述逐房间进程 maxRSS 表全部保留为历史诊断，不再用其 30 MiB 差值判定当前结果。
 新的两项门槛是 11 图 GC 后每房间存活 `heapUsed + external` 增量 ≤30 MiB，以及真实 4 worker / 8 room 服务进程树峰值增幅 ≤15%。
-服务树对照先列 main AA，main/candidate 各三次；原始完整 trace 录制不启用。当前仍等待这两项完整数据，未报通过。
+服务树对照先列 main AA，main/candidate 各三次；原始完整 trace 录制不启用。下面分别列出新口径的数据，前面的单进程结果仅作历史诊断。
 
 
 当前数值版 `c648e634`，Node v24.22.0，与 main bc33a34a 使用同一 AO 录制器、原 Stage 1 配置完整运行 18000 tick。
@@ -61,5 +61,19 @@
 | twoShores | 7.05 | 4.78 | 2.27 |
 | veiledHill | 3.66 | 3.38 | 0.28 |
 
-最大蓝宝 18.12 MiB，常驻门槛通过。服务树峰值的 4 worker / 8 room、main/candidate 各三次尚未收齐，整体内存与终验 ABBA 仍待验。
+最大蓝宝 18.12 MiB，常驻门槛通过。
 原始收据在 A100 `strategy-observation-20261020/live-AO/<map>/{V,AO}/summary.json`；汇总为 `results/live-AO-comparison.json`。
+
+真实服务使用 `createRoomHost` 和 `createAiThinkPool`，4 个 think worker 同时服务 8 个房间：八方河湾、蓝宝群岛、双岸、龟湖各两间。每房一席空人类，其余为房间默认 AI。两版都使用同一个驱动，只在候选 worker 的 planner 导入边界启用纯数值观察；交付 tick 等待 worker 完成，避免机器负载改变命令到达顺序。驱动不保留完整 strategy，也不强制 GC。
+
+| 版本 | 三次服务树峰值 MiB | 中位数 MiB | 极差 / MAD MiB |
+|---|---|---:|---:|
+| main bc33a34a | 2983.18 / 2964.96 / 2975.30 | 2975.30 | 18.22 / 7.88 |
+| c648e634 | 3095.39 / 3079.33 / 3081.37 | 3081.37 | 16.07 / 2.04 |
+
+中位增幅为 **3.56%**；即使取候选最大值与 main 最小值，增幅也只有 **4.40%**，低于 15% 门槛。六次运行的逐帧哈希和最终校验全部相同。双岸的两间房在 tick 17018（14 分 11 秒）自然结束，其余六间跑满 18000 tick；峰值覆盖八房同时进行的阶段。
+
+峰值按 20 ms 采样的进程树 RSS 与 Node 内核记录的进程 maxRSS 两者较大值计算。worker_threads 的堆都属于服务进程，未按线程重复相加。main AA 与候选三次的选择在候选启动前写入 schedule；被停止的原顺序调度器没有进入汇总。
+
+两项内存门槛均通过。这组验收仍固定在 bc33a34a/c648e634；后续 rebase 的新 main 校验和耗时对照另列，不能用旧 sim 的命令哈希代替。
+原始汇总：A100 `results/host-AO-comparison.json`；控制收据 `host-AO/{A1,A2,A3}`，候选收据 `host-AO-parallel/{C1,C2,C3}`。驱动 `scripts/ai-strategy-room-host-audit.ts` 的 SHA256 为 `2efe2c3b314781faffeaa0778dd9177d51e9ddc9f751be9db35363f6b134576c`。
