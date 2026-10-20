@@ -155,6 +155,40 @@ export type Utility = Readonly<{
   score: number;
   evidence: readonly Evidence[];
 }>;
+/** Common valuation epoch: now through task completion plus a holding period.
+ * Every compared cash flow and alternative uses this exact window/rate. */
+export type ValuationWindow = Readonly<{ taskTicks: number; holdingTicks: number; horizonTicks: number; discountTicks: number }>;
+export type OpportunityAlternative = Readonly<{
+  objectiveId: ObjectiveId;
+  unitIds: readonly string[];
+  withResourcesGold: number;
+  withoutResourcesGold: number | null;
+  withoutResourcesStatus: 'feasible' | 'not-runnable' | 'unknown';
+  committed: boolean;
+}>;
+export type OpportunityCostQuote = Readonly<{ window: ValuationWindow }> & (
+  | Readonly<{ status: 'known'; gold: number; basis: 'feasible-bundle-quotes' | 'no-positive-feasible-alternative';
+    alternatives: readonly Readonly<{ objectiveId: ObjectiveId; unitIds: readonly string[]; marginalGold: number;
+      withResourcesGold: number; withoutResourcesGold: number | null; basis: 'exact' | 'conservative-bound' }>[] }>
+  | Readonly<{ status: 'unknown'; objectiveIds: readonly ObjectiveId[]; reason: Readonly<{ code: string }> }>
+);
+export type OpportunityRequest = Readonly<{ objectiveId: ObjectiveId; methodId: MethodId | null;
+  unitIds: readonly string[]; window: ValuationWindow }>;
+export type ValuationContext = Readonly<{
+  phase: 'gross' | 'net';
+  holdingTicks?: number;
+  discountTicks?: number;
+  /** Override when repricing an alternative in the requesting bundle's window. */
+  window?: ValuationWindow;
+  /** Requote an alternative after removing these resources. It may not silently
+   * replace them with another objective's ungranted cohort. */
+  unavailableUnitIds?: readonly string[];
+  /** Explicit original cohort when repricing a marginal alternative. */
+  allowedUnitIds?: readonly string[];
+  opportunity?: (request: OpportunityRequest) => OpportunityCostQuote;
+}>;
+export type ValuationQuotation = Readonly<{ phase: 'gross' | 'net'; window: ValuationWindow;
+  unitIds: readonly string[]; opportunity: OpportunityCostQuote | null }>;
 export type Objective = Readonly<{
   id: ObjectiveId;
   kind: ObjectiveKind;
@@ -172,6 +206,7 @@ export type Objective = Readonly<{
   rank: number | null;
   reasons: readonly Reason[];
   methodIds: readonly MethodId[];
+  valuation?: ValuationQuotation;
   /** Supporting objectives share the parent's payoff; do not sum it twice. */
   supportsObjectiveIds?: readonly ObjectiveId[];
   /** Different plans establishing the same effect; their payoffs are alternatives. */
@@ -277,6 +312,10 @@ export type DeathAttributionContext = Readonly<{
   task: Readonly<{ source: string; id: string }> | null;
   assignmentStage: Assignment['stage'] | null;
   executor: string | null;
+  action?: Readonly<{ actionId: string; generation: number }>;
+  executionPhase?: string;
+  plannedExecutor?: string;
+  allocationRevision?: number;
   provenance: 'assignment' | 'inferred' | 'unknown';
   /** Preserve conflicting old-task evidence rather than inventing one certain objective. */
   commitments: readonly Commitment[];
@@ -327,7 +366,8 @@ export type BlockedObjectiveQuote = Readonly<{
   prerequisiteCost: readonly Readonly<{ methodId: MethodId; knownGold: number;
     unknown: readonly Reason[]; alreadyIncludedUtilityCodes: readonly string[] }>[];
 }>;
-export type PlanningContext = Readonly<{ snapshot: GameSnapshot; owner: PlayerId; memory: AiPolicyMemory }>;
+export type PlanningContext = Readonly<{ snapshot: GameSnapshot; owner: PlayerId; memory: AiPolicyMemory;
+  valuation?: ValuationContext }>;
 /** Outcomes already accepted by the ordinary planner; no second policy pass. */
 export type SituationObservation = Readonly<{
   healing: readonly Readonly<{ unitId: string; executor: string }>[];
