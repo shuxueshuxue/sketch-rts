@@ -1,0 +1,501 @@
+{
+  "source": "646cf9a0513459d16e6b12007d4945148bb29651",
+  "originalCollector": "93b79fe11c9bcc8efe61ebac12eac4897a71585b",
+  "rawHost": "zhipu-a100-102",
+  "rawDirectory": "/codegeex/jeffry/sketch-rts-land-mining/20261020",
+  "originalInputs": "/codegeex/jeffry/sketch-rts-defense/runs/allocator-defense-20261020/baseline-646cf9a0",
+  "allNativeReplayChecksPassed": true,
+  "maps": [
+    {
+      "map": "veiledHill",
+      "checks": {
+        "snapshot": true,
+        "canonical": true,
+        "checksum": true
+      },
+      "episodes": 5
+    },
+    {
+      "map": "greystonePass",
+      "checks": {
+        "snapshot": true,
+        "canonical": true,
+        "checksum": true
+      },
+      "episodes": 4
+    },
+    {
+      "map": "twoShores",
+      "checks": {
+        "snapshot": true,
+        "canonical": true,
+        "checksum": true
+      },
+      "episodes": 11
+    },
+    {
+      "map": "pineshade",
+      "checks": {
+        "snapshot": true,
+        "canonical": true,
+        "checksum": true
+      },
+      "episodes": 4
+    },
+    {
+      "map": "ringwater",
+      "checks": {
+        "snapshot": true,
+        "canonical": true,
+        "checksum": true
+      },
+      "episodes": 8
+    },
+    {
+      "map": "reedwater",
+      "checks": {
+        "snapshot": true,
+        "canonical": true,
+        "checksum": true
+      },
+      "episodes": 4
+    },
+    {
+      "map": "templeSpring",
+      "checks": {
+        "snapshot": true,
+        "canonical": true,
+        "checksum": true
+      },
+      "episodes": 8
+    },
+    {
+      "map": "sapphireArchipelago",
+      "checks": {
+        "snapshot": true,
+        "canonical": true,
+        "checksum": true
+      },
+      "episodes": 4
+    },
+    {
+      "map": "brokenSea",
+      "checks": {
+        "snapshot": true,
+        "canonical": true,
+        "checksum": true
+      },
+      "episodes": 2
+    },
+    {
+      "map": "turtleLake",
+      "checks": {
+        "snapshot": true,
+        "canonical": true,
+        "checksum": true
+      },
+      "episodes": 10
+    },
+    {
+      "map": "gullIsland",
+      "checks": {
+        "snapshot": true,
+        "canonical": true,
+        "checksum": true
+      },
+      "episodes": 6
+    }
+  ],
+  "parameters": {
+    "dispatchTicks": 28,
+    "localBirthToEntry": {
+      "n": 25,
+      "medianTicks": 102,
+      "p90Ticks": 120,
+      "maxTicks": 217
+    },
+    "firstEntryToDelivery": {
+      "n": 352,
+      "medianTicks": 105.0,
+      "p90Ticks": 150,
+      "maxTicks": 2250
+    }
+  },
+  "leaveOneMapOut": {
+    "completion": {
+      "episodes": 66,
+      "points": 10078,
+      "mae": 0.3492756499305418,
+      "p90": 1,
+      "max": 5,
+      "byMap": [
+        {
+          "map": "brokenSea",
+          "episodes": 2,
+          "mae": 1.5125
+        },
+        {
+          "map": "greystonePass",
+          "episodes": 4,
+          "mae": 0.1453125
+        },
+        {
+          "map": "gullIsland",
+          "episodes": 6,
+          "mae": 0.25190839694656486
+        },
+        {
+          "map": "pineshade",
+          "episodes": 4,
+          "mae": 0.2140625
+        },
+        {
+          "map": "reedwater",
+          "episodes": 4,
+          "mae": 0.6953125
+        },
+        {
+          "map": "ringwater",
+          "episodes": 8,
+          "mae": 0.1686182669789227
+        },
+        {
+          "map": "sapphireArchipelago",
+          "episodes": 4,
+          "mae": 0.5754385964912281
+        },
+        {
+          "map": "templeSpring",
+          "episodes": 8,
+          "mae": 0.40859375
+        },
+        {
+          "map": "turtleLake",
+          "episodes": 10,
+          "mae": 0.3253012048192771
+        },
+        {
+          "map": "twoShores",
+          "episodes": 11,
+          "mae": 0.31523750771128933
+        },
+        {
+          "map": "veiledHill",
+          "episodes": 5,
+          "mae": 0.0995850622406639
+        }
+      ]
+    },
+    "planning30And60SecondsBefore": {
+      "episodes": 132,
+      "points": 20156,
+      "mae": 0.9059833300257988,
+      "p90": 4,
+      "max": 5,
+      "byMap": [
+        {
+          "map": "brokenSea",
+          "episodes": 4,
+          "mae": 1.965625
+        },
+        {
+          "map": "greystonePass",
+          "episodes": 8,
+          "mae": 0.5390625
+        },
+        {
+          "map": "gullIsland",
+          "episodes": 12,
+          "mae": 1.2188295165394403
+        },
+        {
+          "map": "pineshade",
+          "episodes": 8,
+          "mae": 0.725
+        },
+        {
+          "map": "reedwater",
+          "episodes": 8,
+          "mae": 1.13515625
+        },
+        {
+          "map": "ringwater",
+          "episodes": 16,
+          "mae": 0.6291959406713505
+        },
+        {
+          "map": "sapphireArchipelago",
+          "episodes": 8,
+          "mae": 0.6473684210526316
+        },
+        {
+          "map": "templeSpring",
+          "episodes": 16,
+          "mae": 0.819140625
+        },
+        {
+          "map": "turtleLake",
+          "episodes": 20,
+          "mae": 1.0107799619530755
+        },
+        {
+          "map": "twoShores",
+          "episodes": 22,
+          "mae": 0.9518815545959285
+        },
+        {
+          "map": "veiledHill",
+          "episodes": 10,
+          "mae": 0.8955739972337483
+        }
+      ]
+    }
+  },
+  "files": [
+    {
+      "name": "brokenSea-frames.json.gz",
+      "bytes": 30987,
+      "sha256": "8aa6037b3c6d51521f539d195be43db1121a925354c1ac696af5f119c0e8ba0c"
+    },
+    {
+      "name": "brokenSea-planning-frames.json.gz",
+      "bytes": 60523,
+      "sha256": "1696244e58207bfd6b62b9cca79467d47967f5d462db7d5af8db0bb4f2e39fa6"
+    },
+    {
+      "name": "brokenSea.json.gz",
+      "bytes": 507539,
+      "sha256": "461d9903407b48210b2833e83384b3c403524382eeefbb1f396b995e3df8ae58"
+    },
+    {
+      "name": "calibrate.py",
+      "bytes": 2150,
+      "sha256": "0041aeb3f0650a2b3c96924ae274ee660a145f9caca7f070a2d5cb822fdad3b9"
+    },
+    {
+      "name": "calibration-measurements.json",
+      "bytes": 39016,
+      "sha256": "0b26d6817ff5ba0fcaef498f11e5578e151595b5c979afade606fa790f435886"
+    },
+    {
+      "name": "capture-frames.mts",
+      "bytes": 4483,
+      "sha256": "eb2120d1d18433a73ac0d92726f915f3098ab611063bae95d3665dc55a727956"
+    },
+    {
+      "name": "capture-planning-frames.mts",
+      "bytes": 4270,
+      "sha256": "d8d88e9e31cfcdcdb6fba8fe68f994205f88becd6c7e29fc865c1988c18ebd97"
+    },
+    {
+      "name": "evaluate-model.mts",
+      "bytes": 5024,
+      "sha256": "90575e85b79573fd786067efa60592c2ad82646e6af3bf2ac33e0b777baf4414"
+    },
+    {
+      "name": "evaluate-planning-model.mts",
+      "bytes": 5296,
+      "sha256": "6c05739aa0bf7e7245037747d4989015d462a9a8fcd6b9dab733f72c5aeca9c9"
+    },
+    {
+      "name": "fit-eta.mts",
+      "bytes": 2290,
+      "sha256": "9f5dc098399d7ccdc1d7f1e9dc68e1fa7807944c15741b7639d594b8709e575b"
+    },
+    {
+      "name": "fit-planning-eta.mts",
+      "bytes": 2360,
+      "sha256": "945f4d75c1fbdb3c20a5c8777167bbc0d4564f5c689576fe138a8fa2e82ee6e2"
+    },
+    {
+      "name": "greystonePass-frames.json.gz",
+      "bytes": 39355,
+      "sha256": "ad59c6eb504c1efe742674c14d55fbc71b0f39c96c52f15fba37490f11e6b359"
+    },
+    {
+      "name": "greystonePass-planning-frames.json.gz",
+      "bytes": 73613,
+      "sha256": "f7108861e580bcd5cd7d4041aacf1ce4bd75f75ed0c374ad3ca670674a9ba0f6"
+    },
+    {
+      "name": "greystonePass.json.gz",
+      "bytes": 512787,
+      "sha256": "36abb8d9a57de03813e4999339603846ec572d9970c9692bfcbef86a26e07be6"
+    },
+    {
+      "name": "gullIsland-frames.json.gz",
+      "bytes": 77754,
+      "sha256": "f865b9a0614552648421d0df9a526396c7c6ac3871953d0ce62a9eb59205eceb"
+    },
+    {
+      "name": "gullIsland-planning-frames.json.gz",
+      "bytes": 151531,
+      "sha256": "896f40f237803b8fef742e533bd2a0b024e670b7c239286a74d27e655a0ef8be"
+    },
+    {
+      "name": "gullIsland.json.gz",
+      "bytes": 548799,
+      "sha256": "b67ece90db67cc6626e4473a7dc8e548d4a7b4d2e25da87f70d7e88d9375f238"
+    },
+    {
+      "name": "model-evaluation.json",
+      "bytes": 1049733,
+      "sha256": "a6ea58722aaeac07c1e7e1a56266a4f7963eca59343f9f69554b66733ac3b296"
+    },
+    {
+      "name": "pineshade-frames.json.gz",
+      "bytes": 47531,
+      "sha256": "ed1795617cdc932c8231acbe04c2ac4d6d8a4207bcd27fc94b01e9e71e7c5dda"
+    },
+    {
+      "name": "pineshade-planning-frames.json.gz",
+      "bytes": 91558,
+      "sha256": "7e21f93f8f5b440e12acadb96dc71b86f525ec60ce1ba24e8a69aa86950e47a7"
+    },
+    {
+      "name": "pineshade.json.gz",
+      "bytes": 513565,
+      "sha256": "c346a50e070b34a9055315bc36e172881831fcd3ea1a578a2f4c58177b4dda74"
+    },
+    {
+      "name": "planning-model-evaluation.json",
+      "bytes": 2213391,
+      "sha256": "fd3ce2f09c53edfec2df661bacaaba5380903597b90f691ade220cedec4373e1"
+    },
+    {
+      "name": "reedwater-frames.json.gz",
+      "bytes": 47646,
+      "sha256": "b2e1011c241f6663c31d8a49a9f09ac4b72fd1bfc3f2174fb970d0e8238392d3"
+    },
+    {
+      "name": "reedwater-planning-frames.json.gz",
+      "bytes": 86293,
+      "sha256": "60c6a7085ba1dcb83626aac0b1162d81f93ebf7d6801709c6122810954fb613b"
+    },
+    {
+      "name": "reedwater.json.gz",
+      "bytes": 490817,
+      "sha256": "25536fc3e897adf848e40643fdb7e7a979021108838dd1d3e6caaa806a143b6d"
+    },
+    {
+      "name": "replay.mts",
+      "bytes": 4565,
+      "sha256": "59220d593bd5ea8566227110cdfb3a32e97c69c890483fdfa40a601bb7f0ee87"
+    },
+    {
+      "name": "ringwater-frames.json.gz",
+      "bytes": 147127,
+      "sha256": "58f1ae80375f5b4f3338ef7e3af1774150b5933872ec49e4b077981f7813f545"
+    },
+    {
+      "name": "ringwater-planning-frames.json.gz",
+      "bytes": 281714,
+      "sha256": "4b30f3e92c25062bf0d1d4a9238f8cb03f8fa8f5f2a9a97d2bfee4d5ffe35d0a"
+    },
+    {
+      "name": "ringwater.json.gz",
+      "bytes": 1351000,
+      "sha256": "4c45b4507224ee4341cf39a2e73bcbc460d3dfe1eabc1dc91b348cb9c433fcb7"
+    },
+    {
+      "name": "run-frames.py",
+      "bytes": 1386,
+      "sha256": "86d6cb0ace3fd4b518ad043d93ca236dc8bcae09c6562f6d92dc3d6f3ff3c086"
+    },
+    {
+      "name": "run-planning-frames.py",
+      "bytes": 1422,
+      "sha256": "608121a25ae63e60c38d27265fa0981997a3ef731d5fac0da8b382709dde1386"
+    },
+    {
+      "name": "run.py",
+      "bytes": 1363,
+      "sha256": "181fb7ee4ef6a99aa0c381293b0457068114c6390157c3cbf00077d487f57a8f"
+    },
+    {
+      "name": "sapphireArchipelago-frames.json.gz",
+      "bytes": 106560,
+      "sha256": "d9bece22d69ecf0ca8cae89925542867273d153a61fbe148560d30bfc420a22f"
+    },
+    {
+      "name": "sapphireArchipelago-planning-frames.json.gz",
+      "bytes": 207801,
+      "sha256": "cfb0e56aadc79f9809599fc806f748aa4f492817177ceb5b9a56663d827cdd1d"
+    },
+    {
+      "name": "sapphireArchipelago.json.gz",
+      "bytes": 1236168,
+      "sha256": "d3f05e9453b00a27de6f7541d895c69911fc5ec23100dc6e8f5bd37402e1ed47"
+    },
+    {
+      "name": "shared-arrival-inputs.json",
+      "bytes": 73300,
+      "sha256": "b91efaa82b276d9ba4ee703a3c1759a06c3c16879aa031c4ca8ddb3ebf45d2d5"
+    },
+    {
+      "name": "shared-planning-arrival-inputs.json",
+      "bytes": 117305,
+      "sha256": "b5e782dd4fc9c6e1573cfdf9892a94767c8e721c3abf95abba458a58fb436363"
+    },
+    {
+      "name": "templeSpring-frames.json.gz",
+      "bytes": 147814,
+      "sha256": "526aca7132602c7bc596f66bc84680819e185395c349e5fbff8140df800518b8"
+    },
+    {
+      "name": "templeSpring-planning-frames.json.gz",
+      "bytes": 282496,
+      "sha256": "aa199584d8f3f94a3917eb73d361e17a1c2ac1cae91fd6d465e4f27b7576c0a4"
+    },
+    {
+      "name": "templeSpring.json.gz",
+      "bytes": 1277592,
+      "sha256": "f37b3fdf495783ea25324a923f12fb08d9e643224109bdd4b3a1f588b08417f1"
+    },
+    {
+      "name": "turtleLake-frames.json.gz",
+      "bytes": 203492,
+      "sha256": "562adde986518c49cd2433d55452c6fc0d1fe611308ae7bc00c46fe93cb1959e"
+    },
+    {
+      "name": "turtleLake-planning-frames.json.gz",
+      "bytes": 379566,
+      "sha256": "7c5ad5a73a32c76aec1e782315a41d6e59436d8d2fde0aae8b0496c8690bf026"
+    },
+    {
+      "name": "turtleLake.json.gz",
+      "bytes": 1900778,
+      "sha256": "575141f2abfd2d07af51577bc83ae7ab062358483c0de02023321a96b3ccac37"
+    },
+    {
+      "name": "twoShores-frames.json.gz",
+      "bytes": 231090,
+      "sha256": "3807541494772726039a1c6ef336c2cacb7609b6aa05c19cf20849500dafd2f8"
+    },
+    {
+      "name": "twoShores-planning-frames.json.gz",
+      "bytes": 434926,
+      "sha256": "959d4224bc3fb626bc2252e3b48f3a5c911c5dbf58efdb18296eac72d7552119"
+    },
+    {
+      "name": "twoShores.json.gz",
+      "bytes": 2242512,
+      "sha256": "1d6ae33e938e6290949cbf5608c2bbd78ace05785016168346005bc93542a8ac"
+    },
+    {
+      "name": "veiledHill-frames.json.gz",
+      "bytes": 53509,
+      "sha256": "e3dcc85c21dcdcf127b17781042cdf5081bf6b9ba7722eac45016d83d685603f"
+    },
+    {
+      "name": "veiledHill-planning-frames.json.gz",
+      "bytes": 103942,
+      "sha256": "568dda3350e324893e624dd1773c02ae3a497b5c786efa1465fc5d03e31a7cdc"
+    },
+    {
+      "name": "veiledHill.json.gz",
+      "bytes": 529873,
+      "sha256": "372d4646a9bcd99b98a7b38e225644587a615875bc33a9b378ea80a10321edea"
+    }
+  ]
+}
