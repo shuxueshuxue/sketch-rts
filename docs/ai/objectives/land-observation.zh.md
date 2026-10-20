@@ -27,6 +27,14 @@
 
 闲置另列 `idleForces`，不伪造 HoldReserve 目标。每兵只记一次：既有驻守、在途、医疗承诺的单位不算可调空闲；有真实可达的正效用备选时，闲置效用为放弃它的负收益；没有这样的备选，alternativeObjectiveId 为 null、原因标为 unknown，不把零报价解释成闲置没有成本。collector 对全部 family 的报价统一去重和排序，陆地函数不自行抢占。
 
+## 数值入口与按需解释
+
+接入共享接口 `32e2eaba` 后，`buildStrategyDecision` 的陆地结果图不携带 evidence/detail/explanation，也不读取或格式化这些字段；需要观察时由 `buildObservedStrategyDecision` 保存本次投影，再用 `projectStrategyTrace` 生成完整解释。数值判断仍读取 Reason.code、UtilityTerm.code 和 commitment.source。blocked 的 utility 拷贝通过 projectedCopy 保留解释投影，不能用对象展开提前触发 getter。
+
+跨 think 缓存只保存数值、稳定 ID、需求和小型文字配方，清掉 Candidate/Opportunity、SituationUnit、原始单位及投影读取器引用。每次命中都按当前 Situation 重绑兵和机会证据，并推进本帧的推理 tick 与相对到达期限。动态文字在观察请求时才格式化；配方只持有当次捕获的数字/ID，不回读后续世界。纯数值→观察→纯数值、跨 think 与调用后输入突变均有真实帧测试。
+
+旧共享解释金标原本仅含 NAVAL family，本 PR 在这组测试的 worker 输入显式指定 navalOnly；其他默认接线和跨进程冷暖/fork 测试继续包含 LAND family。另固定七帧陆地与完整 collector 的适配前金标，不通过更新旧期望来掩盖差异。
+
 ## 机会证据中的事实与缓存失效
 
 文案确实编码了会变的事实。`id/kind/target/valueGold` 只是完整 `factKey` 的 `candidate` 部分，不能把它当成全部输入。以下逐项对应当前公开的 [机会生产器](../../../src/ai/strategy/situation.ts#L97) 与 [完整缓存键](../../../src/ai/strategy/land-objectives.ts#L160)：
@@ -71,6 +79,8 @@ L3 的执行器归因取自原始逐 think 记录：14010 和 14025 是 **mobile
 679464e1 上的正式接线（代码 887cedd8）通过 98 项模型、事件帧、两段报价、共享 collector 和跨进程一致性测试，根 tsc 通过。完整 src 在 A100 以 4 workers 运行，714 个文件中 712 个通过，7960 项通过，耗时 471 秒。剩余两处为环境/副本问题：think-worker 的已知 30 秒超时，以及缓存副本缺少 `docs/ai/plan-viz/timeline-model.js` 导致 plan-trace-history 未收集；两文件在 juma 分别 4/4、12/12 通过。没有新的断言失败。
 
 机会键去除解释依赖后（7872fcab），同一套相关测试增至 101 项并全部通过，根 tsc 通过。七帧的完整联合计划、运行时计划、观察历史和命令/policy/世界摘要均与 887cedd8 逐字节一致；本次不改公共字段、默认接线或执行器。
+
+惰性解释接口适配（共享基线 32e2eaba）通过 6 文件 117 项测试，根 tsc 通过。七帧的完整陆地、联合 collector、运行时计划、观察历史与命令/policy/世界摘要，均和本次适配前的 fce46006 逐字节一致。新测试固定适配前摘要，覆盖全字段解释拒读、纯数值/完整投影互换、输入突变后的原始解释，以及默认陆地接线的冷暖、fork 与未采集解释模式一致性。
 
 最终性能等待共享局势性能版定稿后做同机 ABBA，分别记录四军场景和后期海图的每次 think，并单列陆地增量。历史初版先在计时区外取得同一份 Situation，再比较旧 planner 与“陆地报价/分解/闲置 + 旧 planner”：四军 p95 230.56→233.74 毫秒，海图 44.53→53.14 毫秒，后者未达线，此后才加入候选裁剪与事实缓存。该历史表不能作为当前版本或框架总耗时的验收。原始逐 think 数据、命令哈希及本轮验证见 [A100 证据包](land-observation.evidence.json)。
 

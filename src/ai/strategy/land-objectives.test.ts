@@ -461,7 +461,7 @@ describe('land objective proposals over one shared Situation', () => {
     const lazy: Situation = { ...situation, opportunities: situation.opportunities.map(opportunity => opportunity.kind !== 'neutral-mine'
       ? opportunity : { ...opportunity, get evidence() { projections++; return [source]; } }) };
     const first = goals(lazy, context);
-    expect(projections).toBe(1);
+    expect(projections).toBe(0);
     expect(first.find(goal => goal.kind === 'ExpandLand')!.utility.evidence).toContainEqual(source);
     expect(goals(lazy, context)).toEqual(first);
     expect(projections).toBe(2);

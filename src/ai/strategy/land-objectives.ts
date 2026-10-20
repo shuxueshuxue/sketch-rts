@@ -13,6 +13,9 @@ import type {
 } from './types';
 import { discountGold, forceSuccessProbability, forceTimeGold, STRATEGY_PARAMETERS as PARAMETERS, strategyUtility } from './utility';
 import type { PreviousObjective } from './observation-memory';
+import { projectedCopy } from './explanations';
+import { landAssessmentEvidence, landReason as reason, projectLandReason, projectLandTerm, reasonFact,
+  termFact as term, type LandReasonFact, type LandTermFact, type LandText } from './land-explanations';
 
 type LandKind = Extract<ObjectiveKind, 'ExpandLand' | 'RecoverSite' | 'AttackSite' | 'ContestRoute' | 'CounterHarass'>;
 type Candidate = { kind: LandKind; key: string; target: Target; opportunities: Opportunity[] };
@@ -20,8 +23,30 @@ type Fighter = { unit: SituationUnit; raw: Unit; eta: number; coverage: number; 
 type Assessment = {
   candidate: Candidate; id: string; crew: Fighter[]; required: number; power: number; available: number;
   eta: number | null; duration: number; camp: Camp | undefined; occupation: Target | undefined; preconditions: Precondition[];
-  benefit: UtilityTerm[]; cost: UtilityTerm[]; evidence: Evidence[]; reasons: Reason[];
+  benefit: UtilityTerm[]; cost: UtilityTerm[]; evidence: () => readonly Evidence[]; reasons: Reason[];
 };
+type ConditionFact = Omit<Precondition, 'reason'> & { reason: LandReasonFact };
+type AssessmentFacts = Omit<Assessment, 'preconditions' | 'benefit' | 'cost' | 'evidence' | 'reasons'> & {
+  preconditions: ConditionFact[]; benefit: LandTermFact[]; cost: LandTermFact[]; reasons: LandReasonFact[];
+};
+type CachedAssessment = Omit<AssessmentFacts, 'candidate' | 'camp' | 'crew'> & {
+  crew: (Omit<Fighter, 'unit' | 'raw'> & { id: string })[];
+};
+function projectAssessment(facts: AssessmentFacts, situation: Situation): Assessment {
+  const projected = new Map<LandReasonFact, Reason>();
+  const projectReason = (fact: LandReasonFact) => {
+    let value = projected.get(fact);
+    if (!value) { value = projectLandReason(fact, situation.tick); projected.set(fact, value); }
+    return value;
+  };
+  return { ...facts,
+    preconditions: facts.preconditions.map(condition => ({ ...condition, reason: projectReason(condition.reason),
+      demand: condition.demand?.kind === 'force' && condition.demand.neededByTick !== null
+        ? { ...condition.demand, neededByTick: situation.tick + (facts.eta ?? 0) } : condition.demand })),
+    benefit: facts.benefit.map(projectLandTerm), cost: facts.cost.map(projectLandTerm),
+    evidence: landAssessmentEvidence(facts.candidate.opportunities, situation.tick, facts.available, facts.power, facts.required),
+    reasons: facts.reasons.map(projectReason) };
+}
 const methodVariants = (a: Assessment) => a.preconditions.some(item => item.kind === 'force' && item.demand && item.status === 'unmet')
   ? ['borrow', 'train'] as const : ['current'] as const;
 const HORIZON = PARAMETERS.utilityHorizonTicks;
@@ -31,20 +56,15 @@ const campCache = new WeakMap<PlanningContext['snapshot'], { tick: number; camps
 // A proposal and its methods share one assessment during this immutable observation pass.
 // Weak keys keep this cache out of saved policy state and release it with the trace.
 const assessments = new WeakMap<Objective, { situation: Situation; context: PlanningContext; model: LandModel; value: Assessment }>();
-type RetainedAssessment = { key: string; value: Assessment };
+type RetainedAssessment = { key: string; value: CachedAssessment };
 type ObservationCache = { map: PlanningContext['snapshot']['map']; owner: string; tick: number; goals: Map<string, RetainedAssessment> };
 // Observational memoization, outside serialized policy memory. Match reset/map/owner changes
-// discard it; each entry retains only its candidate cohort, not an entire world snapshot.
+// discard it; each entry retains only owned values and cohort IDs, not a world snapshot.
 const observations = new WeakMap<PlanningContext['memory'], ObservationCache>();
 const sameMap = (a: ObservationCache['map'], b: ObservationCache['map']) => a.id === b.id && a.width === b.width
   && a.height === b.height && a.terrain === b.terrain && a.landmarks === b.landmarks;
 const gap = (a: Target['point'], b: Target['point']) => Math.hypot(a.x - b.x, a.y - b.y);
-const term = (code: string, value: number, explanation: string): UtilityTerm => ({ code, value, explanation });
 const identity = (kind: ObjectiveKind, owner: string, target: string) => `${kind}:${owner}:${target}`;
-const evidence = (situation: Situation, detail: string, source = 'land-objectives', certainty: Evidence['certainty'] = 'inferred'): Evidence =>
-  ({ source, tick: situation.tick, certainty, detail });
-const reason = (situation: Situation, code: string, detail: string, certainty: Evidence['certainty'] = 'inferred'): Reason =>
-  ({ code, detail, evidence: [evidence(situation, detail, 'land-objectives', certainty)] });
 const interruption = (unit: SituationUnit) => unit.commitments.some(item => /care|recover|healing|retreat|safety|shell/i.test(item.source));
 const battleRole = (unit: SituationUnit) => unit.roles.some(role => ['frontline', 'ranged', 'caster'].includes(role));
 const frontRole = (unit: SituationUnit) => !unit.roles.includes('caster') && !unit.roles.includes('healer')
@@ -296,15 +316,8 @@ class LandModel {
     // Cache residency must not become observable history: a cold fork quotes the
     // same present facts and evidence ticks as a warm observer. Original external
     // evidence comes from this Situation, never from the cached opportunity.
-    const currentReason = (item: Reason): Reason => ({ ...item,
-      evidence: item.evidence.map(entry => ({ ...entry, tick: s.tick })) });
-    if (retained?.key === key) return { ...retained.value, candidate,
-      preconditions: retained.value.preconditions.map(condition => ({ ...condition, reason: currentReason(condition.reason),
-        demand: condition.demand?.kind === 'force' && condition.demand.neededByTick !== null
-          ? { ...condition.demand, neededByTick: s.tick + (retained.value.eta ?? 0) } : condition.demand })),
-      evidence: [...candidate.opportunities.flatMap(opportunity => opportunity.evidence),
-        { ...retained.value.evidence[retained.value.evidence.length - 1]!, tick: s.tick }],
-      reasons: retained.value.reasons.map(currentReason) };
+    if (retained?.key === key) return projectAssessment({ ...retained.value, candidate, camp,
+      crew: retained.value.crew.map(({ id, ...fighter }) => ({ ...fighter, unit: this.units.get(id)!, raw: this.raw.get(id)! })) }, s);
     const earliest = pool[0]?.eta ?? HORIZON;
     let required = camp ? forceFor(camp) : responding(Math.min(HORIZON, earliest + workTicks(pool)))
       .reduce((sum, unit) => sum + unit.strength, 0) + towerPower;
@@ -345,15 +358,15 @@ class LandModel {
     duration = workTicks(crew);
     const responseWindow = Math.min(HORIZON, (eta ?? HORIZON) + duration), responders = responding(responseWindow);
     const power = measure(crew), available = measure(crew.filter(fighter => !fighter.borrowed));
-    const preconditions: Precondition[] = [], reasons: Reason[] = [], ev: Evidence[] = [];
-    const condition = (kind: Precondition['kind'], status: Precondition['status'], code: string, detail: string, demand: ResourceDemand | null) => {
-      const item = reason(s, code, detail, status === 'unknown' ? 'unknown' : 'inferred');
+    const preconditions: ConditionFact[] = [], reasons: LandReasonFact[] = [];
+    const condition = (kind: Precondition['kind'], status: Precondition['status'], code: string, detail: LandText, demand: ResourceDemand | null) => {
+      const item = reasonFact(code, detail, status === 'unknown' ? 'unknown' : 'inferred');
       preconditions.push({ id: `${id}/${code}`, kind, status, reason: item, demand, subgoalIds: [] });
       if (status !== 'met') reasons.push(item);
     };
     condition('route', !candidate.target.landId ? 'unknown' : eta === null ? unknownRoutes ? 'unknown' : 'unmet' : 'met',
       !candidate.target.landId ? 'target-ground-unknown' : eta === null ? 'arrival-unavailable' : 'arrival-recorded',
-      eta === null ? 'Situation 没有一支可按时到达的队伍；没有把缺少 ETA 当成零' : `统一到达记录；目标响应窗口 ${responseWindow} tick`, null);
+      eta === null ? 'Situation 没有一支可按时到达的队伍；没有把缺少 ETA 当成零' : ['统一到达记录；目标响应窗口 ', responseWindow, ' tick'], null);
     const permanentFront = crew.some(fighter => frontRole(fighter.unit) && fighter.unit.expiresTick === null && !fighter.borrowed);
     const forceEnough = crew.some(fighter => frontRole(fighter.unit)) && available >= required && available > 0
       && (!mining || permanentFront);
@@ -362,7 +375,9 @@ class LandModel {
     const unknownForce = !forceEnough && unquotedFighters.some(unit => mining && !permanentFront
       ? unit.expiresTick === null : crew.some(fighter => frontRole(fighter.unit)) || frontRole(unit));
     condition('force', forceEnough ? 'met' : unknownForce ? 'unknown' : 'unmet', unknownForce ? 'own-force-arrivals-unknown' : 'sustained-force',
-      `可兑现 ${available.toFixed(3)}；含待借调 ${power.toFixed(3)}；需要 ${required.toFixed(3)}。到期召唤物按到达后寿命折算${mining && !permanentFront ? '；已报价队伍缺少能完成清营后护送/留守的常驻前排' : ''}${unknownForce ? '；仍有可能补足的兵未完成 ETA，不能据此确认训练缺口' : ''}`,
+      ['可兑现 ', { fixed: available }, '；含待借调 ', { fixed: power }, '；需要 ', { fixed: required }, '。到期召唤物按到达后寿命折算',
+        mining && !permanentFront ? '；已报价队伍缺少能完成清营后护送/留守的常驻前排' : '',
+        unknownForce ? '；仍有可能补足的兵未完成 ETA，不能据此确认训练缺口' : ''],
       unknownForce ? null : { kind: 'force', metric: camp ? 'camp-force' : 'field-strength', strength: Math.max(1, required),
         roles: mining ? ['frontline', 'ranged', 'caster'] : ['frontline', 'ranged'], at: candidate.target,
         neededByTick: eta === null ? null : s.tick + eta, permanent: mining });
@@ -390,14 +405,14 @@ class LandModel {
       { kind: 'transport', seaId: crossing.seaId, payloadMass: units.reduce((sum, unit) => sum + bodyMass(unit), 0),
         departure: { ...crossing.departure }, landing: { ...crossing.landing } });
     const borrowed = crew.filter(fighter => fighter.borrowed);
-    if (borrowed.length) reasons.push(reason(s, 'borrow-requires-handoff', `不能当空闲兵使用：${borrowed.map(fighter => fighter.unit.id).join(', ')}`));
-    if (potential.some(fighter => fighter.interrupted)) reasons.push(reason(s, 'life-saving-unavailable',
-      `治疗/撤退/救命中的兵不兑现为到岗力量：${potential.filter(fighter => fighter.interrupted).map(fighter => fighter.unit.id).join(', ')}`));
+    if (borrowed.length) reasons.push(reasonFact('borrow-requires-handoff', ['不能当空闲兵使用：', { ids: borrowed.map(fighter => fighter.unit.id) }]));
+    if (potential.some(fighter => fighter.interrupted)) reasons.push(reasonFact('life-saving-unavailable',
+      ['治疗/撤退/救命中的兵不兑现为到岗力量：', { ids: potential.filter(fighter => fighter.interrupted).map(fighter => fighter.unit.id) }]));
     const occupied = mining ? this.context.snapshot.buildings.find(building => building.kind === 'townHall'
       && this.foe(building.owner) && gap(building, candidate.target.point) <= GOLD_MINE_RULES.baseRange) : undefined;
     const occupation = occupied ? { ...candidate.target, entityId: occupied.id, point: { x: occupied.x, y: occupied.y } } : undefined;
     if (mining) {
-      if (occupation) condition('force', 'unmet', 'clear-enemy-occupation', `需要先摧毁占矿据点 ${occupation.entityId}，不能直接在敌厅旁施工`, null);
+      if (occupation) condition('force', 'unmet', 'clear-enemy-occupation', ['需要先摧毁占矿据点 ', occupation.entityId!, '，不能直接在敌厅旁施工'], null);
       const workers = this.own.filter(unit => unit.roles.includes('worker')).filter(unit => {
         const arrival = arrivalAt(unit, candidate.key);
         return knownArrival(arrival) && arrival.status === 'reachable' && arrival.ticks < HORIZON && !interruption(unit);
@@ -431,7 +446,7 @@ class LandModel {
     const value = this.assets.get(candidate.key), mine = mining ? value : this.mineFor(candidate.target);
     const income = this.income(mine), completed = (eta ?? HORIZON) + duration
       + (mining ? BUILDING_DEFS.townHall.buildTime : 0);
-    const benefit: UtilityTerm[] = [], cost: UtilityTerm[] = [];
+    const benefit: LandTermFact[] = [], cost: LandTermFact[] = [];
     if (mining) {
       const opportunityValue = Math.max(0, ...candidate.opportunities.map(opportunity => opportunity.valueGold));
       benefit.push(term('mining-income', discountGold(Math.max(income, opportunityValue), completed), '新增矿的评价窗收入；同矿 RecoverSite/ExpandLand 共用 mining-established 效果'));
@@ -501,11 +516,11 @@ class LandModel {
     const displaced = new Set(borrowed.flatMap(fighter => fighter.unit.commitments.map(item => item.objectiveId)
       .filter((oldId): oldId is string => oldId !== null && oldId !== id)));
     if (borrowed.some(fighter => fighter.unit.commitments.some(claim => claim.objectiveId === null)))
-      reasons.push(reason(s, 'borrow-opportunity-cost-unknown', '部分旧执行任务尚无目标身份，不能把其机会成本当成零'));
+      reasons.push(reasonFact('borrow-opportunity-cost-unknown', '部分旧执行任务尚无目标身份，不能把其机会成本当成零'));
     for (const oldId of [...displaced].sort()) {
       const old = previous.find(objective => objective.id === oldId);
       if (old?.utility.score === null || old?.utility.score === undefined) {
-        reasons.push(reason(s, 'borrow-opportunity-cost-unknown', `${oldId} 没有已确认的可行报价；不能用条件潜在值或零代替借兵机会成本`));
+        reasons.push(reasonFact('borrow-opportunity-cost-unknown', [oldId, ' 没有已确认的可行报价；不能用条件潜在值或零代替借兵机会成本']));
         continue;
       }
       const committed = s.units.filter(unit => unit.commitments.some(item => item.objectiveId === oldId));
@@ -531,13 +546,16 @@ class LandModel {
       exposure = Math.max(exposure, Math.max(0, increase) * site.discountedValueGold);
     }
     cost.push(term('departure-exposure', exposure, '撤走这份兵力新增的据点风险；相互替代的回援/反袭不重复相加'));
-    ev.push(...candidate.opportunities.flatMap(opportunity => opportunity.evidence),
-      evidence(s, `有效/待借/需求：${available}/${power}/${required}；仅消费 Situation 的 ETA 与敌援事实`));
-    reasons.push(reason(s, 'observation-only-cohort', `这里只报价候选队伍：${crew.map(fighter => fighter.unit.id).join(', ')}；没有创建分配或修改 claim`));
-    const valueAssessment = { candidate, id, crew, required, power, available, eta, duration, camp, occupation, preconditions, benefit, cost, evidence: ev, reasons };
-    this.retained.goals.set(id, { key, value: valueAssessment });
-    return valueAssessment;
+    reasons.push(reasonFact('observation-only-cohort', ['这里只报价候选队伍：', { ids: crew.map(fighter => fighter.unit.id) }, '；没有创建分配或修改 claim']));
+    const facts = { candidate, id, crew, required, power, available, eta, duration, camp, occupation, preconditions, benefit, cost, reasons };
+    const { candidate: _candidate, camp: _camp, crew: _crew, ...retainedFacts } = facts;
+    // Retain only owned facts and cohort IDs. Current-call projection readers,
+    // Situation rows and raw world entities must never cross the think boundary.
+    this.retained.goals.set(id, { key, value: { ...retainedFacts,
+      crew: crew.map(({ unit, eta, coverage, borrowed, interrupted }) => ({ id: unit.id, eta, coverage, borrowed, interrupted })) } });
+    return projectAssessment(facts, s);
   }
+
   conditionalQuote(a: Assessment, utility: Utility): NonNullable<Objective['conditionalQuote']> {
     const s = this.situation, missing = a.preconditions.filter(condition => condition.status !== 'met');
     const assumptions = missing.map(condition => condition.reason);
@@ -590,7 +608,7 @@ export function generateLandObjectives(situation: Situation, context: PlanningCo
     const utility = strategyUtility({ benefit: a.benefit, cost: a.cost,
       successProbability: incompleteForce ? 0 : forceSuccessProbability(a.power, a.required), persistenceBonus, evidence: a.evidence });
     const objective: Objective = { id: a.id, kind: candidate.kind, owner: situation.owner, target: candidate.target, effects,
-      utility: blocked ? { ...utility, score: null } : utility,
+      utility: blocked ? projectedCopy(utility, { score: null }) : utility,
       ...(blocked ? { conditionalQuote: model.conditionalQuote(a, utility) } : {}),
       status: blocked ? 'blocked' : live ? 'active' : 'candidate',
       sinceTick, rank: null, reasons: a.reasons,
@@ -677,7 +695,7 @@ export function landIdleForces(situation: Situation, objectives: readonly Object
     opportunityCostGold: objective ? Math.max(0, objective.utility.score!) : 0,
     alternativeObjectiveId: objective?.id ?? null,
     reason: reason(situation, objective ? 'positive-alternative-forgone' : 'no-known-positive-alternative',
-      objective ? `闲置放弃可行目标 ${objective.id}；这是闲置备选的负效用，不是给该目标重复加分` : '没有可核实的正效用备选；不凭缺失 ETA 虚造机会成本', objective ? 'inferred' : 'unknown') }));
+      objective ? ['闲置放弃可行目标 ', objective.id, '；这是闲置备选的负效用，不是给该目标重复加分'] : '没有可核实的正效用备选；不凭缺失 ETA 虚造机会成本', objective ? 'inferred' : 'unknown') }));
 }
 
 /** Plug this family into the shared plan collector; it owns no evaluator or allocator. */
