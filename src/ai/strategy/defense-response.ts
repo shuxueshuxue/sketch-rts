@@ -6,6 +6,26 @@ import { targetCoveringTowers } from './allocated-force';
 import type { DefenseResponse } from './defense-risk';
 import type { Situation, Target } from './types';
 import { unitArrival } from './unit-arrivals';
+import { distance } from '../policy/spatial';
+
+/** Physical occupants only. A possible future response is not already
+ * protecting an evacuee. Recompute native tower coverage once instead of
+ * adding it to SiteThreat.friendlyOnStationStrength, which already includes
+ * a coarse tower term. Field and camp currencies remain separate. */
+export function currentInPlaceDefense(input: Readonly<{ snapshot: GameSnapshot;
+  situation: DecisionFacts<Situation>; target: Target; excludedUnitIds?: readonly string[] }>) {
+  const excluded = new Set(input.excludedUnitIds ?? []);
+  const units = input.situation.units.filter(unit => unit.owner === input.situation.owner && unit.hp > 0
+    && unit.location.kind === 'land' && unit.location.landId === input.target.landId
+    && !unit.roles.some(role => ['worker', 'transport', 'warship'].includes(role))
+    && !excluded.has(unit.id) && (unit.expiresTick === null || unit.expiresTick > input.snapshot.tick)
+    && distance(unit.location.point, input.target.point) <= 650);
+  const towers = targetCoveringTowers(input.snapshot, input.situation.owner, input.target, 'own');
+  const mobileForce = units.reduce((sum, unit) => sum + unit.strength, 0);
+  const staticForce = towers.reduce((sum, tower) => sum + TOWER_STRENGTH * Math.max(0, tower.hp / Math.max(1, tower.maxHp)), 0);
+  return { unitIds: units.map(unit => unit.id).sort(), towerIds: towers.map(tower => tower.id).sort(),
+    mobileForce, staticForce, totalForce: mobileForce + staticForce };
+}
 
 /** Counterfactual response, from an explicit eligible pool with the priced
  * cohort removed. It is a forecast, never permission to recruit or command.

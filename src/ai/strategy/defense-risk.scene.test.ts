@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { GameSnapshot } from '../../shared/types';
 import { landIdAt } from './regions';
 import { createThreatIntentQuery } from './threat-intent';
-import { defenseProtectionValue, defenseThreatScenarios, redirectProbability } from './defense-risk';
+import { defenseInPlaceSurvival, defenseProtectionValue, defenseThreatScenarios, redirectProbability } from './defense-risk';
 import type { SiteThreat } from './types';
 
 const original: { snapshot: GameSnapshot; owner: string } = JSON.parse(gunzipSync(readFileSync(
@@ -78,5 +78,24 @@ describe('actual and redirect risk at the E01 two-hall raid', () => {
     expect(redirectProbability(75, { status: 'unknown' })).toBeNull();
     expect(redirectProbability(Number.MAX_VALUE, { status: 'known', ticks: Number.MAX_VALUE })).toBe(.5);
     expect(() => redirectProbability(-1, { status: 'none' })).toThrow(/Invalid/);
+  });
+
+  it('preserves safe assets in place and prices the same actual or potential army scenarios', () => {
+    const empty: SiteThreat = { siteId: home, horizonTicks: 900, attackers: [], arrivedStrength: 0, incomingStrength: 0,
+      friendlyOnStationStrength: 0, firstArrivalTicks: null, lossProbability: 0, evidence: [] };
+    expect(defenseInPlaceSurvival({ threat: defenseThreatScenarios(empty, { status: 'none' }), defendingForce: 0 }))
+      .toMatchObject({ status: 'known', survivalProbability: 1 });
+    const threat = { ...empty, attackers: [{ unitId: 'foe', strength: 4,
+      arrival: { status: 'reachable' as const, ticks: 300, landTicks: 300, crossings: [], evidence: [] },
+      intent: { kind: 'potential-redirect' as const, actualSiteId: front, redirectGroupId: front, basis: 'potential-route' as const } }] };
+    const potential = defenseThreatScenarios(threat, { status: 'known', ticks: 150 });
+    expect(defenseInPlaceSurvival({ threat: potential, defendingForce: 4 }).survivalProbability).toBeCloseTo(5 / 6);
+    const actual = defenseThreatScenarios({ ...threat, attackers: threat.attackers.map(attacker => ({ ...attacker,
+      intent: { ...attacker.intent, kind: 'actual-intrusion' as const, actualSiteId: home } })) }, { status: 'none' });
+    expect(defenseInPlaceSurvival({ threat: actual, defendingForce: 4 }).survivalProbability).toBe(.5);
+    expect(defenseInPlaceSurvival({ threat: defenseThreatScenarios(threat, { status: 'unknown' }), defendingForce: 4 }).status).toBe('unknown');
+    expect(defenseInPlaceSurvival({ threat: null, defendingForce: 4 }).status).toBe('unknown');
+    expect(JSON.stringify(defenseInPlaceSurvival({ threat: JSON.parse(JSON.stringify(potential)), defendingForce: 4 })))
+      .toBe(JSON.stringify(defenseInPlaceSurvival({ threat: potential, defendingForce: 4 })));
   });
 });
