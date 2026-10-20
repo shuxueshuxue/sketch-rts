@@ -1,19 +1,44 @@
 {
-  "baseCommit": "3c0844e3",
+  "sourceCommit": "bf9a472b02712457d2b5f4198d82ca87c8846de0",
+  "controlCommit": "276e5d29",
   "interval": [
-    18000,
-    19800
+    0,
+    18000
   ],
-  "observerOnOff": {
+  "baselineDirectory": "/codegeex/jeffry/sketch-rts-defense/runs/mvg8usdr-e3f0b0/death-ledger/ui-twoShores",
+  "controlSummary": "/codegeex/jeffry/sketch-rts-defense/runs/mvg8usdr-e3f0b0/death-ledger/twoShores/A1/summary.json",
+  "observerEquivalence": {
+    "producer": "Codex 37, ai-death-ledger-baseline.ts",
+    "receiptPairsIndependentlyCompared": true,
     "equal": true,
-    "commands": 2182,
-    "commandSha256": "d98d1021686535fbecf9a7fb6ceb8d45781aaa261d4573fa9a8f757cfc386774",
-    "finalWorldSha256": "72e57de2538599c6ec303bbc012bb8f4a1b3e5421537a0d4f88f9ff864b9fe53"
+    "plannedCount": 15792,
+    "commandCount": 15792,
+    "hashes": {
+      "plannedSha256": "74a0aafa058ef5a1b894799a5cac44cd3c64e472c55c6e744048bc408ce9ceb6",
+      "commandSha256": "d2c34fc63e9b2b68c1f9a58f2ad31959071a8ac5f64eba08fff2d08233c71f3a",
+      "canonicalSha256": "1bab288c8d6a0511431193f6b6ce83696e3216c92688bbf259f92e3e94947990",
+      "snapshotSha256": "4cd4a827322422af06c3b7f70873b6993da7f484b7b72d9366d6107b66f7c7cd",
+      "memorySha256": "57979d56bfced13d71d47eff6f4d532ba3730797cbaea1aa4a1e2d2b05152c4b"
+    }
+  },
+  "reconciliation": {
+    "passed": true,
+    "errors": [],
+    "combatDeaths": 35,
+    "normal": 2,
+    "abnormal": 33,
+    "excludedLiveExpirations": 33,
+    "exactBuildingLossTicks": [
+      5383,
+      7236
+    ]
   },
   "tests": {
-    "files": 4,
-    "passed": 29,
-    "typecheck": true
+    "command": "npx vitest run src/ai/plan-trace-history.test.ts src/ai/plan-viz-ledger.test.ts src/ai/plan-trace.test.ts src/ai/planner-context.test.ts src/sdk/package-boundaries.test.ts --maxWorkers 1 --minWorkers 1",
+    "files": 5,
+    "passed": 37,
+    "typecheck": true,
+    "build": "npm run build passed"
   },
   "browser": {
     "protocol": "file:",
@@ -22,44 +47,146 @@
       1200
     ],
     "localFonts": true,
-    "rangeDrag": {
-      "fromTick": 18600,
-      "toTick": 19507,
-      "mapTime": "16:15",
-      "goalReason": "saving-hall-capital"
+    "defaultWindow": [
+      0,
+      18000
+    ],
+    "aiLanes": 4,
+    "fullViewGoalBands": 68,
+    "rangeSelection": {
+      "from": [
+        0,
+        18000
+      ],
+      "to": [
+        3137,
+        10327
+      ],
+      "actualPointerDrag": true
     },
-    "deathMarkerClick": true,
+    "pan": {
+      "from": [
+        3137,
+        10327
+      ],
+      "to": [
+        4181,
+        11371
+      ],
+      "spanPreserved": true
+    },
+    "navigationResize": {
+      "from": [
+        4181,
+        11371
+      ],
+      "to": [
+        4181,
+        12613
+      ],
+      "startPreserved": true
+    },
+    "navigationPan": {
+      "from": [
+        4181,
+        12613
+      ],
+      "to": [
+        2916,
+        11348
+      ],
+      "spanPreserved": true
+    },
+    "phaseClick": {
+      "tick": 6937,
+      "mapTime": "5:46",
+      "reason": "mine-threat",
+      "tooltip": "5:46—6:04 / 18秒"
+    },
+    "explicitGoalOutcome": {
+      "tick": 9630,
+      "status": "abandoned",
+      "source": "landAttackResult",
+      "reason": "withdrew"
+    },
+    "abnormalDeath": {
+      "tick": 3351,
+      "unit": "unit-p1-footman-1090",
+      "classification": "retreat-or-treatment",
+      "routeCount": 1,
+      "unrelatedIntentRoutes": 0
+    },
+    "normalDeath": {
+      "tick": 9789,
+      "unit": "unit-p2-spirit-4457",
+      "classification": "accepted-engagement"
+    },
+    "buildingLoss": {
+      "tick": 5383,
+      "hp": -20,
+      "evidence": "nonpositive-hp-and-native-removal",
+      "killer": null
+    },
+    "fullEventList": 37,
+    "eventListClickTick": 3510,
+    "playPause": {
+      "beforeTick": 5383,
+      "afterTick": 6727
+    },
     "visibility": {
       "soloDefault": false,
       "soloHiddenLayers": [
         "goals",
+        "markers",
         "routes",
         "lanes",
-        "death-attribution"
+        "events",
+        "shortcuts",
+        "attribution"
       ],
+      "soloOnLanes": 4,
       "onlineOwners": [
-        "player-4"
+        "p0"
       ],
-      "postmatchReplayOwners": 3
+      "disabledOpponentTabs": [
+        "p1",
+        "p2",
+        "p3"
+      ],
+      "onlineShortcuts": [
+        "goal-interrupted",
+        "building:building-p0-defenseTower-2200:5383"
+      ],
+      "postmatchReplayLanes": 4
     },
-    "executorBandsExpanded": 52,
-    "laneBlankDrag": {
-      "toTick": 19229,
-      "mapTime": "16:01",
-      "goalReason": "saving-hall-capital"
+    "horizontalOverflow": false,
+    "consoleErrorsSinceFinalNavigation": 0,
+    "serverAuthorization": "not implemented; static mockup previews display policy only"
+  },
+  "screenshots": {
+    "preview-timeline-abandoned.webp": {
+      "sha256": "66c62448d042f2d7832fa6fa377d592355a98f571cb9be059941d598c9813ab2",
+      "individuallyReviewed": true
     },
-    "deathFocus": {
-      "unit": "unit-enemy2-horseArcher-3643",
-      "routeOwner": "enemy2",
-      "unrelatedIntentPaths": 0
+    "preview-timeline-building.webp": {
+      "sha256": "10f34210359e163c99b270d5e73346779f979bf0eb09025113c86aec6f5f6427",
+      "individuallyReviewed": true
     },
-    "playPause": true,
-    "consoleErrors": 0,
-    "screenshotsReviewed": [
-      "preview-timeline-defense.webp",
-      "preview-timeline-overview.webp",
-      "preview-timeline-death.webp"
-    ],
-    "opponentShortcutsHiddenOnline": true
+    "preview-timeline-death.webp": {
+      "sha256": "bac4d478fdfb1b41be3d27431615860c1afd568edd61be029bcaeebd2d56bc7f",
+      "individuallyReviewed": true
+    },
+    "preview-timeline-defense.webp": {
+      "sha256": "08d0ae03c9463db41c6c574eb6e4423a48d3d3e0fd59c65a67e41fa65d31bc8c",
+      "individuallyReviewed": true
+    },
+    "preview-timeline-normal.webp": {
+      "sha256": "7ce20071a78c490df455c38870dece63baf2a45dfc999675502782561cd66666",
+      "individuallyReviewed": true
+    },
+    "preview-timeline-overview.webp": {
+      "sha256": "5ee7c715d92a48625d1d8bbe3dac8414485cf5b4f111d7e15767b9dfb3713bc6",
+      "individuallyReviewed": true
+    }
   }
 }

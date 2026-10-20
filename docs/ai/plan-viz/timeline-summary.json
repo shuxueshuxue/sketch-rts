@@ -1,28 +1,278 @@
 {
   "provenance": {
-    "input": "src/ai/bootstrap_1/fixtures/ring-beachhead-15m.json",
-    "inputSha256": "88c94fc66697a6ba69733a62eb6b025d664768f74b503a49ed8010048a3fcc24",
-    "baseCommit": "3c0844e3",
-    "startTick": 18000,
-    "endTick": 19800,
+    "sourceCommit": "bf9a472b02712457d2b5f4198d82ca87c8846de0",
+    "baselineDirectory": "/tmp/ai-plan-viz-two-shores",
+    "initialSha256": "f646c0d8cfc309aa970a07cab77d255ce1c1893b2d465769601f16fcf9fced71",
+    "summarySha256": "cc4a0d961f5c99a93f11e5f8b1c570ea2498e555a0c28f4df604c7d5bb7a3314",
+    "startTick": 0,
+    "endTick": 18000,
     "thinkInterval": 15,
-    "frameInterval": 20,
     "secondsPerTick": 0.05,
-    "description": "真实原生环水群岛存档的连续 90 秒；不编辑单位、资源、订单或 AI 状态。",
-    "commandCount": 2182,
-    "commandSha256": "d98d1021686535fbecf9a7fb6ceb8d45781aaa261d4573fa9a8f757cfc386774",
-    "finalWorldSha256": "72e57de2538599c6ec303bbc012bb8f4a1b3e5421537a0d4f88f9ff864b9fe53"
+    "frameInterval": "1s plus task changes",
+    "commandCount": 15792,
+    "commandSha256": "d2c34fc63e9b2b68c1f9a58f2ad31959071a8ac5f64eba08fff2d08233c71f3a",
+    "plannedSha256": "74a0aafa058ef5a1b894799a5cac44cd3c64e472c55c6e744048bc408ce9ceb6",
+    "finalWorldSha256": "4cd4a827322422af06c3b7f70873b6993da7f484b7b72d9366d6107b66f7c7cd",
+    "description": "同局 0–15 分钟死亡账本、计划 trace 和世界位置的只读投影。"
   },
-  "frames": 91,
-  "thinks": 360,
-  "nodeVersions": 1612,
-  "deaths": 1,
-  "buildingsLost": 0,
-  "inferredReviews": 1,
+  "highlights": [
+    {
+      "id": "goal-complete",
+      "label": "目标闭环",
+      "tick": 7357,
+      "owner": "p2",
+      "bandKey": "p2|expansion:gold-gen-10:4792@4792",
+      "range": {
+        "from": 4592,
+        "to": 7557
+      }
+    },
+    {
+      "id": "goal-interrupted",
+      "label": "目标放弃",
+      "tick": 9630,
+      "owner": "p0",
+      "bandKey": "p0|attack:building-p1-townHall-2314:7335@7335",
+      "range": {
+        "from": 8830,
+        "to": 10130
+      }
+    },
+    {
+      "id": "unit-p2-spirit-4457@9789",
+      "label": "正常战损",
+      "eventId": "unit-p2-spirit-4457@9789",
+      "tick": 9789,
+      "owner": "p2",
+      "range": {
+        "from": 9189,
+        "to": 10389
+      }
+    },
+    {
+      "id": "unit-p1-footman-1090@3351",
+      "label": "异常阵亡",
+      "eventId": "unit-p1-footman-1090@3351",
+      "tick": 3351,
+      "owner": "p1",
+      "range": {
+        "from": 2751,
+        "to": 3951
+      }
+    },
+    {
+      "id": "building:building-p0-defenseTower-2200:5383",
+      "label": "建筑损失",
+      "eventId": "building:building-p0-defenseTower-2200:5383",
+      "tick": 5383,
+      "owner": "p0",
+      "range": {
+        "from": 4783,
+        "to": 5983
+      }
+    }
+  ],
+  "goalStatistics": {
+    "total": 250,
+    "completed": 38,
+    "abandoned": 6,
+    "phaseChanges": 109
+  },
+  "frames": 1531,
+  "thinks": 4804,
+  "nodeVersions": 6532,
+  "payloadBytes": 12585481,
+  "packedBytes": 917151,
+  "deaths": 35,
+  "normal": 2,
+  "abnormal": 33,
+  "buildingsLost": 2,
+  "ledgerSource": {
+    "module": "src/ai/death-ledger.ts",
+    "sourceCommit": "bf9a472b02712457d2b5f4198d82ca87c8846de0",
+    "schemaVersion": 1,
+    "summary": {
+      "p0": {
+        "events": 6,
+        "deaths": 6,
+        "nativeLosses": 6,
+        "aliveExpirations": 0,
+        "scriptedExits": 0,
+        "normal": {
+          "count": 0,
+          "catalogGold": 0
+        },
+        "abnormal": {
+          "count": 6,
+          "catalogGold": 730
+        },
+        "lifecycle": {
+          "count": 0,
+          "catalogGold": 0
+        },
+        "byCategory": {
+          "logistics-transit": {
+            "count": 2,
+            "catalogGold": 150
+          },
+          "retreat-or-treatment": {
+            "count": 3,
+            "catalogGold": 470
+          },
+          "outmatched": {
+            "count": 1,
+            "catalogGold": 110
+          }
+        },
+        "byTag": {
+          "logistics-transit": 3,
+          "exposed-worker": 2,
+          "retreat-or-treatment": 3,
+          "outmatched": 3,
+          "neutral-outside-clearing": 1,
+          "isolated-without-evacuation-plan": 1
+        }
+      },
+      "p1": {
+        "events": 11,
+        "deaths": 11,
+        "nativeLosses": 11,
+        "aliveExpirations": 0,
+        "scriptedExits": 0,
+        "normal": {
+          "count": 0,
+          "catalogGold": 0
+        },
+        "abnormal": {
+          "count": 11,
+          "catalogGold": 1230
+        },
+        "lifecycle": {
+          "count": 0,
+          "catalogGold": 0
+        },
+        "byCategory": {
+          "retreat-or-treatment": {
+            "count": 5,
+            "catalogGold": 555
+          },
+          "neutral-outside-clearing": {
+            "count": 2,
+            "catalogGold": 225
+          },
+          "logistics-transit": {
+            "count": 4,
+            "catalogGold": 450
+          }
+        },
+        "byTag": {
+          "retreat-or-treatment": 5,
+          "neutral-outside-clearing": 6,
+          "outmatched": 4,
+          "logistics-transit": 4,
+          "exposed-worker": 1
+        }
+      },
+      "p2": {
+        "events": 46,
+        "deaths": 13,
+        "nativeLosses": 13,
+        "aliveExpirations": 33,
+        "scriptedExits": 0,
+        "normal": {
+          "count": 2,
+          "catalogGold": 0
+        },
+        "abnormal": {
+          "count": 11,
+          "catalogGold": 1215
+        },
+        "lifecycle": {
+          "count": 33,
+          "catalogGold": 0
+        },
+        "byCategory": {
+          "accepted-engagement": {
+            "count": 2,
+            "catalogGold": 0
+          },
+          "retreat-or-treatment": {
+            "count": 5,
+            "catalogGold": 560
+          },
+          "summon-expired": {
+            "count": 33,
+            "catalogGold": 0
+          },
+          "neutral-outside-clearing": {
+            "count": 3,
+            "catalogGold": 275
+          },
+          "recent-reassignment": {
+            "count": 2,
+            "catalogGold": 230
+          },
+          "logistics-transit": {
+            "count": 1,
+            "catalogGold": 150
+          }
+        },
+        "byTag": {
+          "accepted-engagement": 2,
+          "retreat-or-treatment": 6,
+          "summon-expired": 33,
+          "neutral-outside-clearing": 6,
+          "isolated-without-evacuation-plan": 7,
+          "outmatched": 5,
+          "exposed-worker": 1,
+          "idle": 1,
+          "recent-reassignment": 2,
+          "logistics-transit": 2
+        }
+      },
+      "p3": {
+        "events": 5,
+        "deaths": 5,
+        "nativeLosses": 5,
+        "aliveExpirations": 0,
+        "scriptedExits": 0,
+        "normal": {
+          "count": 0,
+          "catalogGold": 0
+        },
+        "abnormal": {
+          "count": 5,
+          "catalogGold": 550
+        },
+        "lifecycle": {
+          "count": 0,
+          "catalogGold": 0
+        },
+        "byCategory": {
+          "retreat-or-treatment": {
+            "count": 3,
+            "catalogGold": 365
+          },
+          "neutral-outside-clearing": {
+            "count": 2,
+            "catalogGold": 185
+          }
+        },
+        "byTag": {
+          "retreat-or-treatment": 3,
+          "neutral-outside-clearing": 4,
+          "exposed-worker": 1,
+          "outmatched": 1
+        }
+      }
+    },
+    "reconciled": true,
+    "excludedLifecycleEvents": 33
+  },
   "limitations": [
     "效用分解、方法选择、预计到达、预期效果及抢占交接尚无正式数据。",
-    "伤亡时间/位置与致命击打来源是观察事实；目标/阶段归因与疑似异常分类为推断。",
-    "消失的目标只标记记录释放，不推断为完成、失败或被抢占。",
-    "实际路径每秒采样；虚线仅为记录目标方向，不冒充寻路计划。"
+    "死亡分类直接读取同局死亡账本；账本中的推断归因保留原标记，不视为正式分配事实。",
+    "消失的目标只标记记录释放；只有明确的模块结果才能关联完成或放弃。",
+    "实际路径来自世界采样；虚线仅为目标方向，不冒充寻路计划。"
   ]
 }

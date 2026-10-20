@@ -1,47 +1,65 @@
 # AI 计划链：阵前手记与数据契约
 
-现在直接打开 **[第二版：阵前手记 · 意图与回声 / timeline.html](timeline.html)**。可双击离线打开；当前为样稿，没有接入游戏。
+直接打开 **[第二版：阵前手记 · 意图与回声 / timeline.html](timeline.html)**。双击即可离线使用，当前仍是样稿。
 
-![第二版总览](preview-timeline-overview.webp)
+![0–15 分钟总览](preview-timeline-overview.webp)
 
-## 第二版：沿时间轴看意图与结果
+## 第二版：先看全局，再放大一个目标的始末
 
-以第一轮选定的“阵前手记”为底，底部是连续 90 秒的可拖动横向时间轴，每席 AI 一条泳道。拖动滑块、拖动泳道空白、点击事件或播放，战图和面板同步到该时刻。位置按最近一个不晚于游标的世界采样、任务按该 AI 最近一次 think 显示，绝不把未来状态搬到当前战图。
+采用“阵前手记”的墨线战图。默认时间窗覆盖真实双岸对局的 **0:00–15:00**，四名 AI 各有一条泳道。拖选泳道空白可放大；“平移”、左右按钮、整局导航窗和两端手柄可移动或缩放；“查看全局”恢复完整记录。双击目标也能放大它的全过程。游标、播放、战图和面板同步，位置与决策都只取不晚于当前游标的记录。
 
-每个根目标独立成带；短暂的 claim 和施工任务可通过“展开执行任务与短暂占用”一并查看。末端区分 ✓ 完成、◇ 放弃、✕ 明确战力损失导致的失败、↗ 被抢占。当前数据没有正式抢占事件，保留“待接入”；不把 claim 换人猜成抢占。斜线 `/` 仅表示模块释放记录，结果未知；同一个 claim 释放后再次出现会成为新的一段。窗前已有的完成/放弃记录画成“窗前记录”，不伪装为观察窗内的新事件。
+每个目标的条带内按真实阶段分段，用不同墨色区分集结、清营、护送、施工、整队、交战、装船和航渡。受阻阶段加斜纹并直接写原因和持续时间；悬停边界显示准确起止时间与切换原因，点阶段回到该时刻。没有阶段记录就写“阶段未记录”。末端徽记区分 ✓ 完成、◇ 放弃、✕ 明确失败、↗ 被抢占；当前抢占数据尚未接入，不把 claim 换人猜成抢占。`/` 只代表模块释放，结果未知。首次观察已经结束的目标仅画“结果记录”，不伪装成观察到完整过程。
 
-选中目标后，右侧按 **为什么 → 怎么做 → 派了谁 → 进展 → 结果** 展开，可用五个页边按钮直达。目标目录保留每个目标的效用与状态；父子任务的单位名单取并集。面板把预计与实际并排呈现，地图虚线为记录目标的意图方向，实线为选中单位每秒采样的实际轨迹。尚无正式计划导航路线，虚线不冒充寻路结果。实走轨迹可能包含单位先前的任务，图注已说明。
+![扩张全过程与受阻阶段](preview-timeline-defense.webp)
 
-到岗时间仅使用同一个 claim（单位、种类、目标、sinceTick 均一致，且 claim 目标与选中目标相同）的 `arrived` 记录；首次观察已到岗显示“≤ 时刻”。没有到岗或 ETA 记录时保持为空，不根据直线距离猜测预计到达。
+右侧按 **为什么 → 怎么做 → 派了谁 → 进展 → 结果** 展开。效用的收益、成本、成功概率、坚持加分和总分保持“—”；方法、ETA、预期效果、预留资金没有正式数据时也保持为空。父子节点的兵力名单取并集。地图虚线是记录目标的意图方向，实线是选中单位的实际采样轨迹；没有把直线当成导航计划。原始样本未记录逐单位 claim 的到岗时刻，因此本版不从位置或群组比例推断到岗和 ETA。
 
-![阵亡归因](preview-timeline-death.webp)
-
-真实记录里，青旗的骑射手在 **15:57 / tick 19142** 阵亡：最后交付执行器为 `mobileCare`，死亡时订单是避战移动，直接致命击打来自金旗灰烬酋长。死亡时间、位置、订单和致命来源是世界/观察接口的事实；目标与步骤归属、疑似异常分类是 **推断**。此单位没有活跃 claim 或保留任务归属，所以明确写“未找到保留的目标归属”，不把它挂到最近的进攻任务上。工人、移动/空闲订单、撤退相关执行器下的阵亡仅标记“疑似异常，需复核”；其他死亡也不自动视为正常战损。正式死亡账本尚未接入，局部兵力比、血量轨迹、伤害构成等保持“—”。
-
-| 连续记录的时刻 | 观察到的事实 |
+| 快捷示例 | 同局记录中的事实 |
 |---|---|
-| 15:00 | 赤旗建立分矿受 `home-threat` 阻断，同时保留矿区回防。 |
-| 15:30 | 金旗夺岛仍在等待工程队渡海，前出登陆船正在装载。 |
-| 15:57 | 青旗骑射手在避战移动期间阵亡；可在地图或青旗泳道点开。 |
-| 16:30 | 金旗夺岛变为 `saving-hall-capital`，工程队已到、资金待齐；前压记录完成。 |
+| 3:59–6:07，金旗建立分矿 | 集结 → 清营整队与接战 → 护送 → 施工；5:46 起因 `mine-threat` 暂停 18 秒，随后恢复并完成。 |
+| 8:01，赤旗放弃进攻 | `landAttackResult` 明确记录 `withdrew`，细因 `general:retreat:incoming`；不是根据目标消失猜测放弃。 |
+| 8:09，金旗灵体正常战损 | 死于碎石魔像；账本诊断为清营交战战损，保留“推断”说明，不冒充规划器已批准的战损。 |
+| 2:47，青旗步兵异常阵亡 | 扩张途中，`campRecovery` 交付避战移动，遭食人魔战士致命攻击；账本分类为撤退 / 治疗途中死亡。 |
+| 4:29 与 6:01，防御塔损失 | 逐 tick 观察到 HP ≤ 0 且被原生移除；击杀者与任务归属未记录，保持“—”。 |
 
-这个窗口有 **1 次 AI 单位阵亡、0 次 AI 建筑损失**，没有编造建筑被拆或抢占事件。建筑损失的点与详情渲染已支持；正式抢占交接可提供 `type: preemption, owner, tick, fromGoalId, toGoalId, unitIds, gold, reason`，同一泳道会在对应目标之间画箭头和资源说明。当前样本没有这类输入。效用的收益/成本/成功概率/坚持加分、方法选择、预期效果、ETA 与预留资金也仍为“— / 待接入”。AiPlanTrace 的公共契约与决策逻辑保持原样。
+![异常阵亡与账本归因](preview-timeline-death.webp)
 
-可见性采用已确定的规则：观战和回放全部可见；单机可开关、默认关；联机只显示自己（金旗为样稿示例），对手必须进入赛后回放查看。切换会同时裁剪目录、目标标记、路径、时间泳道、事件与归因。快捷事件入口也按席位过滤。静态文件包含完整样本，界面隐藏不是权限边界；游戏接入时需要服务端裁剪。
+![明确放弃的进攻](preview-timeline-abandoned.webp)
+
+![正常战损](preview-timeline-normal.webp)
+
+![精确建筑损失](preview-timeline-building.webp)
+
+死亡标记可从战图、泳道和“逐条查看本窗事件”进入。正常战损与异常阵亡使用不同颜色；地图展示游标前 60 秒及当前选中事件，时间轴仍保留整个窗口的事件。详情显示原始账本分类、任务与步骤、到岗状态、当前订单执行器、最后下令、致命来源、局部战力、血量轨迹与伤害构成。**分类直接来自 Codex 37 的 `AiDeathLedger`，界面不再自行分类。** 账本当前的任务归因和诊断仍有 `inferred` 来源标记，界面明确写“推断（账本）”；正式 objective/method/assignment ID 为空时不补造。
+
+当前记录有 **35 次战斗阵亡（2 正常、33 异常）和 2 次建筑损失**。另有 33 次召唤物活着到期移除，保留在账本汇总，不计作战斗阵亡。250 段根目标与执行记录中，观察到 38 次明确完成、6 次放弃或失败、109 次阶段或原因变化。执行任务与短暂 claim 默认折叠，可展开。死亡只连到同一席位、同一个已观察任务的明确账本归属；其余保留未归属，不强行摊到附近目标。
+
+可见性使用已确定的规则：**观战和回放全部可见；单机可开关、默认关；联机只看自己，对手在赛后回放查看。** 样稿以赤旗为“自己”。切换会同时裁剪目标目录、标记、轨迹、泳道、事件、快捷入口和归因。离线文件本身包含完整数据，这只是显示规则；接入联机时仍需由服务端裁剪。
 
 ### 第二版的数据与验证
 
-沿用下述同一个原生海图存档，在 **main 3c0844e3** 上从 tick 18000 续跑到 19800。360 次 think，91 帧世界位置；没有编辑对局。`timeline-data.js` 与 `timeline-nodes.js` 是离线交互必需的紧凑数据（节点版本去重），不是原始世界快照归档。来源与计数在 [timeline-summary.json](timeline-summary.json)，命令一致性与浏览器检查在 [timeline-validation.json](timeline-validation.json)。第一轮数据继续保留。
+样本来自 Codex 37 的 #561 最终双岸导出，代码 **`bf9a472b02712457d2b5f4198d82ca87c8846de0`**，对照 main **`276e5d29`**。A100 原始目录：
 
-```sh
-npx tsx scripts/ai-plan-viz-timeline-capture.ts /tmp/ai-plan-viz-timeline
-npx tsx scripts/ai-plan-viz-timeline-build.ts /tmp/ai-plan-viz-timeline/capture.json
-# 独立关闭 trace、伤害观察与逐帧观察，再续跑同一段：
-PLAN_VIZ_OBSERVE=0 npx tsx scripts/ai-plan-viz-timeline-capture.ts /tmp/ai-plan-viz-timeline-no-observer
-npx vitest run src/ai/plan-trace-history.test.ts src/ai/plan-trace.test.ts src/ai/planner-context.test.ts src/sdk/package-boundaries.test.ts --maxWorkers 1 --minWorkers 1
+```text
+/codegeex/jeffry/sketch-rts-defense/runs/mvg8usdr-e3f0b0/death-ledger/ui-twoShores
 ```
 
-开启/关闭观察的 **2182 条实际交付命令**（tick、owner、scriptId、完整 command）的 SHA256 均为 `d98d1021686535fbecf9a7fb6ceb8d45781aaa261d4573fa9a8f757cfc386774`；最终世界 JSON 的 SHA256 均为 `72e57de2538599c6ec303bbc012bb8f4a1b3e5421537a0d4f88f9ff864b9fe53`。29 项测试与 TypeScript 检查通过，覆盖时间不越界、消失不推断结局、claim 重获分段、到岗不跨任务串用、可见性和真实数据空值；第一轮逐字节命令测试仍通过。浏览器以 file:// 验证真实拖拽、三个泳道、52 段完整任务、阵亡点击、可见性切换、本地字体及两种路径。截图均逐张查看。
+同局 `initial.json`、`final.json`、`worlds/traces/deaths/building-losses.jsonl.gz` 与 `summary.json`，覆盖 tick 0–18000。4,804 份 trace、4,800 条原始世界采样，离线投影保留 1,531 帧（约每秒一帧，另保留任务变化时刻）。目标结果与阶段由真实 trace 推导，死亡和建筑损失取原始账本与精确观察，不改对局或决策。
+
+`timeline-data-*.js` 是节点去重后的 gzip/base64 离线载荷，`timeline-loader.js` 用浏览器原生 `DecompressionStream` 解包，无模块请求、服务器、CDN 或网络依赖。需要浏览器支持该原生解压接口，本次使用 Chrome 验证 `file://` 打开。未压缩投影约 12.6 MB，压缩后约 0.92 MB，按文件大小限制分片。计数、哈希与示例在 [timeline-summary.json](timeline-summary.json)，验证凭据在 [timeline-validation.json](timeline-validation.json)。
+
+```sh
+# 从同一个导出目录导入，不再运行一套界面的死亡推断：
+LEDGER_SAMPLE=/path/to/ui-twoShores
+npx tsx scripts/ai-plan-viz-ledger-import.ts "$LEDGER_SAMPLE" /tmp/ai-plan-viz-full-match.json bf9a472b02712457d2b5f4198d82ca87c8846de0
+npx tsx scripts/ai-plan-viz-timeline-build.ts /tmp/ai-plan-viz-full-match.json
+npx vitest run src/ai/plan-trace-history.test.ts src/ai/plan-viz-ledger.test.ts src/ai/plan-trace.test.ts src/ai/planner-context.test.ts src/sdk/package-boundaries.test.ts --maxWorkers 1 --minWorkers 1
+npx tsc --noEmit
+```
+
+原始导出的 15,792 条计划命令与实际交付数量一致。生产者已验证同局观察开启 / 关闭的计划命令、交付命令、canonical、snapshot 和 AI memory 五项哈希均与 main 对照一致；本样稿核对对应 receipt，并将五项值保留在验证文件。原生死亡损失对账通过。导入与构建脚本只读文件，不运行模拟或规划器；原有逐字节命令一致性测试仍覆盖 trace 输出入口。
+
+本轮测试覆盖完整 15 分钟的时间不越界、真实目标闭环、阶段与受阻时长、明确结果和单纯消失的区别、缩放和平移边界、死亡账本原样导入、旧任务与未来任务不串归因、活着到期不算阵亡、历史升级种类与乘员船只引用，以及全部可见性规则。浏览器以 `file://` 验证实际拖选、平移、导航手柄、正常与异常死亡、建筑损失、目标闭环、阶段边界、播放与权限切换；最终截图逐张查看。没有改游戏线程、战斗规则或 AI 决策；游戏观战 / 回放叠加层是下一步。
 
 ## 第一轮样稿与数据契约（保留作比较）
 
