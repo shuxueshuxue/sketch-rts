@@ -32,12 +32,16 @@ describe('proposed strategy plans at recorded conflict events', () => {
       plans.set(frame.event, plan);
     }
   });
-  it('ranks E01 timely home defense above starting another island voyage', () => {
+  it('ranks E01 timely home defense while keeping an understrength island voyage out of that order', () => {
     const plan = plans.get('E01')!;
     const home = plan.objectives.find(goal => goal.id === 'DefendSite:p0:building-p0-townHall-1166')!;
     const second = plan.objectives.find(goal => goal.id === 'ConquerIsland:p0:gold-gen-3')!;
     expect(home.utility.score).toBeGreaterThan(0);
-    expect(home.rank).toBeLessThan(second.rank!);
+    expect(plan.feasibleObjectiveIds).toContain(home.id);
+    expect(home.rank).not.toBeNull();
+    expect(second.status).toBe('blocked'); expect(second.rank).toBeNull();
+    expect(second.reasons.some(reason => reason.code === 'clearing-force-deficit')).toBe(true);
+    expect(plan.feasibleObjectiveIds).not.toContain(second.id);
     expect(plan.methods.filter(method => method.objectiveId === home.id).map(method => method.kind))
       .toEqual(['local-squad', 'main-army-recall', 'cross-sea-reinforcement']);
   });
@@ -94,6 +98,18 @@ describe('proposed strategy plans at recorded conflict events', () => {
     const method = decomposeNavalObjective(situation, goal, context)[0]!;
     expect(method.preconditions.some(condition => condition.status === 'unknown' && condition.reason.code === 'clearing-arrivals-unknown')).toBe(true);
     expect(method.subgoals.some(step => step.kind === 'train-force')).toBe(false);
+  });
+  it('does not rank an island as break-even when it has no existing clearing force', () => {
+    const frame = structuredClone(frames.find(frame => frame.event === 'Ne')!);
+    frame.snapshot.units = frame.snapshot.units.filter(unit => unit.owner !== frame.owner || unit.kind === 'worker');
+    setBuildingBodies(frame.snapshot.map, standingBodies(frame.snapshot));
+    const plan = buildStrategyPlanTrace(frame.snapshot, frame.owner, { memory: frame.memory }, undefined, undefined, undefined, Infinity);
+    const goal = plan.objectives.find(goal => goal.id === 'ConquerIsland:player-4:gold-satellite-2')!;
+    expect(goal.status).toBe('blocked'); expect(goal.utility.score).toBeNull(); expect(goal.rank).toBeNull();
+    expect(plan.feasibleObjectiveIds).not.toContain(goal.id);
+    expect(plan.blockedObjectives.find(quote => quote.objectiveId === goal.id)).toMatchObject({ potentialUtility: null });
+    const method = plan.methods.find(method => method.objectiveId === goal.id)!;
+    expect(method.subgoals.some(step => step.kind === 'train-force')).toBe(true);
   });
   it('keeps all subgoal links local and all plan numbers finite', () => {
     for (const plan of plans.values()) {

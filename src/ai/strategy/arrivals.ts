@@ -241,29 +241,46 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
     fieldTicks: number[]; quoteTicks: number[] }
     | { failure: Arrival; pending: boolean };
   const passengerTables = new Map<string, PassengerGeometry>();
+  const voyages = new Map<string, ReturnType<typeof inspectVoyage>>();
+  function inspectVoyage(support: string) {
+    const ship = byId.get(support), sea = ship && seaIdAt(snapshot.map, ship);
+    const mission = ship?.owner === owner ? ferries[support] : undefined;
+    const missionGround = mission && walkableGoal(snapshot.map, mission.to.x, mission.to.y);
+    const missionTarget = mission && (snapshot.resources.find(mine => mine.id === mission.targetId)
+      ?? snapshot.buildings.find(building => building.id === mission.targetId) ?? missionGround);
+    const missionLand = missionTarget && landIdAt(snapshot.map, missionTarget);
+    const unload = ship?.order.type === 'unload' ? ship.order : undefined;
+    const observedGround = unload && walkableGoal(snapshot.map, unload.x, unload.y);
+    const observedLand = observedGround && landIdAt(snapshot.map, observedGround);
+    const observedSea = unload && seaIdAt(snapshot.map, unload);
+    return { ship, sea, mission, missionGround, missionLand, unload, observedGround, observedLand, observedSea };
+  }
   function passengerGeometry(unit: Unit, target: Target, destination: LandId, support: string): PassengerGeometry {
-    const key = `${unit.owner}:${support}:${destination}:${target.point.x}:${target.point.y}`;
+    let voyage = voyages.get(support);
+    if (!voyage) voyages.set(support, voyage = inspectVoyage(support));
+    const { ship, sea, mission, missionGround, missionLand, unload, observedGround, observedLand, observedSea } = voyage;
+    const followsMission = Boolean(missionLand === destination);
+    const observedLanding = Boolean(unload && observedLand === destination && observedSea === sea);
+    const actualLanding = followsMission || observedLanding;
+    const key = `${unit.owner}:${support}:${destination}:${actualLanding ? 'observed' : `${target.point.x}:${target.point.y}`}`;
     const known = passengerTables.get(key);
     if (known) {
       if ('pending' in known && known.pending) pendingGeometry = true;
       if ('fieldTicks' in known) { for (const tick of known.fieldTicks) usedFieldTicks.add(tick); for (const tick of known.quoteTicks) usedQuoteTicks.add(tick); }
       return known;
     }
-    stats.passengerBuilds++;
-    const ship = byId.get(support), sea = ship && seaIdAt(snapshot.map, ship);
     const fail = (code: string, detail: string): PassengerGeometry => {
       const failure = { failure: unavailable(code, detail), pending: pendingGeometry };
       passengerTables.set(key, failure); return failure;
     };
     if (!ship || !sea) return fail('passenger-support-unknown', `Supporting ship ${support} is absent or off navigable water`);
-    const mission = ferries[support], unload = ship.order.type === 'unload' ? ship.order : undefined;
+    if (unit.owner !== owner && !observedLanding) {
+      const failure: PassengerGeometry = { failure: { status: 'unknown', reason: reason('opponent-voyage-unobserved',
+        `No observed unload into ${destination}; do not invent ${ship.id}'s intended landing or release schedule`) }, pending: false };
+      passengerTables.set(key, failure); return failure;
+    }
+    stats.passengerBuilds++;
     const shores = shoresByLand.get(destination)?.get(sea) ?? [];
-    const missionGround = mission && walkableGoal(snapshot.map, mission.to.x, mission.to.y);
-    const missionTarget = mission && (snapshot.resources.find(mine => mine.id === mission.targetId)
-      ?? snapshot.buildings.find(building => building.id === mission.targetId) ?? missionGround);
-    const followsMission = Boolean(missionTarget && landIdAt(snapshot.map, missionTarget) === destination);
-    const observedGround = unload && walkableGoal(snapshot.map, unload.x, unload.y);
-    const observedLanding = Boolean(unload && observedGround && landIdAt(snapshot.map, observedGround) === destination && seaIdAt(snapshot.map, unload) === sea);
     const landing = mission && missionGround && followsMission && seaIdAt(snapshot.map, mission.to) === sea
       ? { ground: missionGround, water: mission.to, landId: destination, seaId: sea }
       : observedLanding ? { ground: observedGround!, water: unload!, landId: destination, seaId: sea } : nearest(shores, target.point)[0];

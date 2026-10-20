@@ -7,6 +7,8 @@ import type { GameSnapshot } from '../../shared/types';
 import type { AiPolicyMemory } from '../memory';
 import { withNativeLandRoadReuse } from '../policy/land-road';
 import { evaluateSituation } from './situation';
+import { createArrivalQuery } from './arrivals';
+import { landIdAt } from './regions';
 
 type Scene = { event: string; owner: string; snapshot: GameSnapshot; memory: AiPolicyMemory };
 const scenes: Scene[] = JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/objective-event-frames.json.gz', import.meta.url))).toString()).cases;
@@ -86,6 +88,29 @@ describe('read-only situation over exact contract event frames', () => {
     expect(situation.units.filter(unit => ids.has(unit.id)).every(unit => unit.location.kind === 'aboard')).toBe(true);
     expect(threat.attackers.filter(attacker => ids.has(attacker.unitId)).every(attacker =>
       attacker.arrival.status === 'reachable' && attacker.arrival.crossings.length === 1)).toBe(true);
+  });
+  it('keeps a foreign landing unknown until an unload is observed, then shares its actual voyage across passengers and inland goals', () => {
+    const frame = scene('Nd'), ship = frame.snapshot.units.find(unit => unit.id === 'unit-enemy-transport-2302')!;
+    const opponent = Object.keys(frame.snapshot.players).find(owner => owner !== frame.owner
+      && frame.snapshot.teams?.[owner] !== frame.snapshot.teams?.[frame.owner])!;
+    const mission = frame.memory.naval!.ferries![ship.id]!;
+    const passengers = frame.snapshot.units.filter(unit => unit.deck?.shipId === ship.id || unit.cabin?.shipId === ship.id);
+    ship.owner = opponent; ship.x = mission.from.x; ship.y = mission.from.y;
+    ship.order = { type: 'move', ...mission.from };
+    for (const unit of passengers) unit.owner = opponent;
+    setBuildingBodies(frame.snapshot.map, standingBodies(frame.snapshot));
+    const hall = frame.snapshot.buildings.find(building => building.id === 'building-enemy-townHall-1622')!;
+    const target = { entityId: hall.id, point: { x: hall.x, y: hall.y }, landId: landIdAt(frame.snapshot.map, hall)! };
+    const unobserved = createArrivalQuery(frame.snapshot, frame.owner, frame.memory);
+    expect(unobserved.arrival(passengers[0]!, target)).toMatchObject({ status: 'unknown', reason: { code: 'opponent-voyage-unobserved' } });
+    expect(unobserved.stats.passengerBuilds).toBe(0);
+    ship.order = { type: 'unload', ...mission.from };
+    const observed = createArrivalQuery(frame.snapshot, frame.owner, frame.memory);
+    for (const unit of passengers) {
+      expect(observed.arrival(unit, target).status).toBe('reachable');
+      expect(observed.arrival(unit, { ...target, point: { x: hall.x + 10, y: hall.y } }).status).toBe('reachable');
+    }
+    expect(observed.stats.passengerBuilds).toBe(1);
   });
 
   it('makes Ne borrowing and every crossing phase explicit, without declaring a busy boat free', () => {

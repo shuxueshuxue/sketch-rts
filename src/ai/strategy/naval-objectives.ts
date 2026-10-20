@@ -131,7 +131,7 @@ function createObjective(situation: Situation, previous: readonly PreviousObject
   return { id, kind, owner: situation.owner, target: { ...target, point: { ...target.point } }, effects,
     utility: { ...strategyUtility({ ...utility, persistenceBonus }), ...(status === 'blocked' ? { score: null } : {}) },
     ...(status === 'blocked' ? { conditionalQuote: { potentialUtility: null,
-      assumptions: [reason(situation.tick, 'conditional-valuation-unknown', 'Deferred force/threat geometry does not establish the force, ETA or success probability after prerequisites')],
+      assumptions: [reason(situation.tick, 'conditional-valuation-unknown', 'The force, route or response after missing prerequisites is not priced; current troops do not establish a conditional success quote')],
       includedPrerequisiteUtilityCodes: [] } } : {}),
     status, sinceTick: since, rank: null,
     reasons, methodIds: [], stability: { minimumStayUntilTick: old?.stability.minimumStayUntilTick
@@ -211,7 +211,8 @@ export function generateNavalObjectives(situation: Situation, context: PlanningC
       [{ kind: 'mining-established', mineId, completeHall: true, garrisonHandoff: true }], utility,
       [reason(tick, complete ? 'physical-colony-established' : force.unknownForce ? 'clearing-arrivals-unknown' : force.force >= force.required ? 'clearing-plan-candidates' : 'clearing-force-deficit',
         `${mineId}: present camp force ${force.presentForce}, proposed batch ${force.selected.map(unit => unit.id).join(', ') || 'none'}, combined ${force.force}, required ${force.required}`)],
-      complete ? 'complete' : task?.abandonedTick !== undefined ? 'abandoned' : force.unknownForce ? 'blocked' : task ? 'active' : 'candidate', task?.sinceTick));
+      complete ? 'complete' : task?.abandonedTick !== undefined ? 'abandoned'
+        : force.unknownForce || force.force < force.required ? 'blocked' : task ? 'active' : 'candidate', task?.sinceTick));
     const deficit = Math.max(0, force.required - force.presentForce);
     // Camp force is not field strength. Price the specific proposed batch's
     // marginal camp contribution in the common field-strength currency.

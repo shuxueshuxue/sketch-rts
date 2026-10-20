@@ -747,27 +747,36 @@ function growBoxInto(state: TerrainRuntime, box: Box, seeds: number[], costs: nu
 
 // The neighbour one step down a box field (the fixed order of directions breaks ties), or -1 at its bottom; remembered.
 function downhill(state: TerrainRuntime, field: BoxField, at: number) {
-  const { walk, offsets, width } = state;
+  const { offsets, width } = state;
   const { box } = field;
   const index = local(box, at, width);
   if (index < 0) return -1;
   const known = field.next[index]!;
   if (known !== UNKNOWN) return known;
+  const direction = downhillDirection(state, box, field.dist, at, index);
+  const best = direction < 0 ? -1 : at + offsets[direction]!;
+  field.next[index] = best;
+  return best;
+}
+
+// Both native steering and compact observation fields use this exact descent
+// and tie order. Only their memoized representation differs: cell id or direction.
+function downhillDirection(state: TerrainRuntime, box: Box, dist: Int32Array | Uint16Array, at: number, index: number) {
+  const { walk, offsets } = state;
   const col = index % box.width;
   const row = (index - col) / box.width;
   let best = -1;
-  let bestCost = field.dist[index]!;
+  let bestCost = dist[index]!;
   for (let direction = 0; direction < 8; direction += 1) {
     const stepCol = col + STEP_COLS[direction]!;
     const stepRow = row + STEP_ROWS[direction]!;
     if (stepCol < 0 || stepRow < 0 || stepCol >= box.width || stepRow >= box.height) continue;
     const step = at + offsets[direction]!;
     const there = stepRow * box.width + stepCol;
-    if (walk[step] !== 1 || field.dist[there]! >= bestCost || !stepAllowed(state, at, direction)) continue;
-    bestCost = field.dist[there]!;
-    best = step;
+    if (walk[step] !== 1 || dist[there]! >= bestCost || !stepAllowed(state, at, direction)) continue;
+    bestCost = dist[there]!;
+    best = direction;
   }
-  field.next[index] = best;
   return best;
 }
 
@@ -1277,6 +1286,21 @@ export type GroundDistanceField = Readonly<{
 const distanceFields = new WeakMap<TerrainRuntime, { revision: number; fields: Map<number, GroundDistanceField> }>();
 const distanceFieldWork = new WeakMap<GroundDistanceField, number>();
 const pendingDistanceFields = new WeakMap<TerrainRuntime, { revision: number; jobs: Map<number, { flow: BoxFlow; progress: number }> }>();
+export const GOAL_DISTANCE_FIELD_LIMIT: Readonly<Record<Mover, number>> = { land: 24, sea: 32 };
+export const PENDING_GOAL_DISTANCE_FIELD_LIMIT = 8;
+const fieldStorage = new WeakMap<GroundDistanceField, { cells: number; distanceBytes: number; descentBytes: number }>();
+/** Diagnostic byte counts only; no array or mutable cache is exposed. */
+export function goalDistanceFieldStorage(field: GroundDistanceField) {
+  const value = fieldStorage.get(field); return value && { ...value };
+}
+
+// A walk cannot leave its terrain component. Buildings may only remove cells
+// from it, so restricting the flow to this bounding box preserves every route,
+// seed, queue removal and cost while avoiding arrays for other islands/basins.
+function goalDistanceBox(ground: TerrainRuntime, target: number): Box {
+  const wholes = wholesOf(ground);
+  return wholes.bounds[wholes.labels[target]! - 1]!;
+}
 
 /** One building-aware goal field serves every actor. Uses the same footprint
  * overlay, goal seeds, no-corner-cut steps and pace weights as native steering.
@@ -1294,42 +1318,50 @@ export function moverDistanceField(map: Pick<GameMap, 'terrain'>, goal: Point, m
   if (cache?.revision !== revision) distanceFields.set(state, cache = { revision, fields: new Map() });
   const known = cache.fields.get(target);
   if (known || peek) return known;
-  const box = { left: 0, top: 0, width: state.width, height: state.walk.length / state.width };
+  const box = goalDistanceBox(ground, target);
   const { seeds, costs } = goalSeeds(state, ground, target, box);
-  const field = beginBoxFlow(state, box, seeds, costs, { dist: new Int32Array(state.walk.length), next: new Int32Array(0) },
+  const field = beginBoxFlow(state, box, seeds, costs, { dist: new Int32Array(box.width * box.height), next: new Int32Array(0) },
     Array.from({ length: BUCKETS }, () => []));
   growBoxInto(state, box, seeds, costs, field, field);
   const scale = terrain.cell / (STRAIGHT * GROUND_WEIGHT);
-  const answer = distanceFieldAnswer(state, ground, field.dist, scale);
+  const answer = distanceFieldAnswer(state, ground, field, scale);
   distanceFieldWork.set(answer, field.work);
-  if (cache.fields.size >= 64) cache.fields.delete(cache.fields.keys().next().value!);
+  if (cache.fields.size >= GOAL_DISTANCE_FIELD_LIMIT[mover]) cache.fields.delete(cache.fields.keys().next().value!);
   cache.fields.set(target, answer);
   return answer;
 }
-function distanceFieldAnswer(state: TerrainRuntime, ground: TerrainRuntime, dist: Int32Array, scale: number): GroundDistanceField {
+function distanceFieldAnswer(state: TerrainRuntime, ground: TerrainRuntime, source: Pick<BoxField, 'box' | 'dist'>, scale: number): GroundDistanceField {
+  const { box } = source;
+  let maximum = 0;
+  for (const value of source.dist) if (value < UNREACHED && value > maximum) maximum = value;
+  // Exact integers, no quantization or saturation. An unusually long maze
+  // retains Int32; 65535 is reserved only in the compact representation.
+  const dist = maximum < 65535 ? Uint16Array.from(source.dist, value => value >= UNREACHED ? 65535 : value) : source.dist;
+  const unreached = dist instanceof Uint16Array ? 65535 : UNREACHED;
+  const storage = { cells: dist.length, distanceBytes: dist.byteLength, descentBytes: 0 };
   const cellOf = (from: Point) => {
     let at = padAt(state, from.x, from.y);
     if (at < 0 || ground.walk[at] !== 1) return -1;
     if (state.walk[at] !== 1) at = nearestWalkable(state, at);
-    return at < 0 || dist[at]! >= UNREACHED ? -1 : at;
+    const index = at < 0 ? -1 : local(box, at, state.width);
+    return index < 0 || dist[index]! >= unreached ? -1 : at;
   };
-  let descent: BoxField | undefined;
-  return { cost(from) {
+  let directions: Int8Array | undefined;
+  const answer: GroundDistanceField = { cost(from) {
     const at = cellOf(from);
-    return at < 0 ? undefined : dist[at]! * scale;
+    return at < 0 ? undefined : dist[local(box, at, state.width)]! * scale;
   }, road(from, goal) {
     let at = cellOf(from);
     if (at < 0) return undefined;
     if (clearSegment(state, from.x, from.y, goal.x, goal.y)) return [from, goal];
-    if (!descent) {
-      const next = new Int32Array(dist.length); next.fill(UNKNOWN);
-      descent = { box: { left: 0, top: 0, width: state.width, height: state.walk.length / state.width }, dist, next };
-    }
+    if (!directions) { directions = new Int8Array(dist.length).fill(UNKNOWN); storage.descentBytes = directions.byteLength; }
     const cells: Point[] = [from];
     for (let step = 0; step < dist.length; step++) {
-      const next = downhill(state, descent, at);
-      if (next < 0) break;
-      at = next; cells.push(centerOf(state, at));
+      const index = local(box, at, state.width);
+      let direction = directions[index]!;
+      if (direction === UNKNOWN) directions[index] = direction = downhillDirection(state, box, dist, at, index);
+      if (direction < 0) break;
+      at += state.offsets[direction]!; cells.push(centerOf(state, at));
     }
     if (clearSegment(state, cells.at(-1)!.x, cells.at(-1)!.y, goal.x, goal.y)) cells.push(goal);
     const road = [from];
@@ -1340,6 +1372,7 @@ function distanceFieldAnswer(state: TerrainRuntime, ground: TerrainRuntime, dist
     }
     return road;
   } };
+  fieldStorage.set(answer, storage); return answer;
 }
 
 /** Reconstruct the answer after an absolute, deterministic number of queue removals.
@@ -1361,12 +1394,12 @@ export function prepareMoverDistanceField(map: Pick<GameMap, 'terrain'>, goal: P
   if (pending?.revision !== revision) pendingDistanceFields.set(state, pending = { revision, jobs: new Map() });
   let retained = pending.jobs.get(target);
   if (!retained) {
-    const box = { left: 0, top: 0, width: state.width, height: state.walk.length / state.width };
+    const box = goalDistanceBox(ground, target);
     const { seeds, costs } = goalSeeds(state, ground, target, box);
-    const flow = beginBoxFlow(state, box, seeds, costs, { dist: new Int32Array(state.walk.length), next: new Int32Array(0) },
+    const flow = beginBoxFlow(state, box, seeds, costs, { dist: new Int32Array(box.width * box.height), next: new Int32Array(0) },
       Array.from({ length: BUCKETS }, () => []));
     // Limit abandoned candidates' sidecar geometry, independently of game state.
-    if (pending.jobs.size >= 16) pending.jobs.delete(pending.jobs.keys().next().value!);
+    if (pending.jobs.size >= PENDING_GOAL_DISTANCE_FIELD_LIMIT) pending.jobs.delete(pending.jobs.keys().next().value!);
     pending.jobs.set(target, retained = { flow, progress: 0 });
   }
   const job = retained.flow;
@@ -1376,10 +1409,10 @@ export function prepareMoverDistanceField(map: Pick<GameMap, 'terrain'>, goal: P
   }
   if (job.pending || job.seeded < job.order.length) return { field: undefined, work: throughWork, complete: false };
   pending.jobs.delete(target);
-  const field = distanceFieldAnswer(state, ground, job.dist, terrain.cell / (STRAIGHT * GROUND_WEIGHT));
+  const field = distanceFieldAnswer(state, ground, job, terrain.cell / (STRAIGHT * GROUND_WEIGHT));
   distanceFieldWork.set(field, retained.progress);
   const cache = distanceFields.get(state)!;
-  if (cache.fields.size >= 64) cache.fields.delete(cache.fields.keys().next().value!);
+  if (cache.fields.size >= GOAL_DISTANCE_FIELD_LIMIT[mover]) cache.fields.delete(cache.fields.keys().next().value!);
   cache.fields.set(target, field);
   return { field: retained.progress <= throughWork ? field : undefined,
     work: Math.min(retained.progress, throughWork), complete: retained.progress <= throughWork };
@@ -1442,16 +1475,20 @@ function wholesOf(state: TerrainRuntime) {
   const labels = new Int32Array(walk.length);
   const queue = new Int32Array(walk.length);
   const anchors: Point[] = [];
+  const bounds: Box[] = [];
   let count = 0;
   for (let seed = 0; seed < walk.length; seed += 1) {
     if (walk[seed] !== 1 || labels[seed] !== 0) continue;
     count += 1;
     anchors.push(centerOf(state, seed));
+    let left = seed % width, right = left, top = Math.floor(seed / width), bottom = top;
     labels[seed] = count;
     let tail = 0;
     queue[tail++] = seed;
     for (let head = 0; head < tail; head += 1) {
       const at = queue[head]!;
+      const col = at % width, row = Math.floor(at / width);
+      left = Math.min(left, col); right = Math.max(right, col); top = Math.min(top, row); bottom = Math.max(bottom, row);
       for (let direction = 0; direction < 8; direction += 1) {
         const next = at + offsets[direction]!;
         if (walk[next] !== 1 || labels[next] !== 0 || !stepAllowed(state, at, direction)) continue;
@@ -1459,6 +1496,7 @@ function wholesOf(state: TerrainRuntime) {
         queue[tail++] = next;
       }
     }
+    bounds.push({ left, top, width: right - left + 1, height: bottom - top + 1 });
   }
   // Each whole's deep water (see @@@open-water), by its label.
   const deep = new Int32Array(count + 1);
@@ -1468,7 +1506,7 @@ function wholesOf(state: TerrainRuntime) {
     deep[labels[((index - col) / terrain.cols + 1) * width + col + 1]!]! += 1;
   }
   deep[0] = 0;
-  state.wholes = { labels, count, deep, anchors };
+  state.wholes = { labels, count, deep, anchors, bounds };
   return state.wholes;
 }
 
@@ -1648,7 +1686,7 @@ type TerrainRuntime = {
   // The routing of walks (see @@@flow-tiles), built when first asked for.
   tiles?: Tiles | undefined;
   // Which whole of the mover's ground every cell belongs to (see @@@ground-wholes), worked out the first time it is asked.
-  wholes?: { labels: Int32Array; count: number; deep: Int32Array; anchors: Point[] };
+  wholes?: { labels: Int32Array; count: number; deep: Int32Array; anchors: Point[]; bounds: Box[] };
   // The sea's shore spots by a shipyard's radius (see shoreSpots), worked out the first time each is asked.
   shores?: Map<number, Point[]>;
   // Nearest-of fields by their candidates' cells, the least recently used first (see @@@nearest-field).
