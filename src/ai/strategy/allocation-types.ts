@@ -2,7 +2,7 @@ import type { GameCommand, GameSnapshot, PlayerId, TrainableUnitKind, UnitOrder 
 import type { ExecutorReason } from '../executor-reasons';
 import type { DecisionFacts } from './decision';
 import type { AssignmentId, AssignmentStage, BudgetEntry, Effect, LandId, Location, Method, MethodId, Objective,
-  ObjectiveId, Precondition, ResourceDemand, Situation, Subgoal, Target, UnitRole, Utility, CrossingEta } from './types';
+  ObjectiveId, Precondition, ResourceDemand, Situation, Subgoal, Target, UnitRole, Utility, CrossingEta, ValuationContext, ValuationQuotation } from './types';
 
 /** Formal control contracts. No executor registration or behavior is enabled by these types. */
 export type ActionId = string;
@@ -354,6 +354,7 @@ type MethodQuoteFacts = Readonly<{
   methodId: MethodId;
   force: ForceQuotation | null;
   reason: AllocationReason;
+  valuation?: ValuationQuotation;
 }>;
 export type MethodAllocationQuote = MethodQuoteFacts & (
   | Readonly<{ status: 'feasible'; utility: AllocationUtility; potentialUtility: null; missingPreconditions: readonly [] }>
@@ -375,6 +376,7 @@ export type AllocationMethodQuoteInput = Readonly<{
   /** Real current action records, including observed production results. The
    * caller supplies these on each transaction; providers keep no hidden history. */
   executions: readonly ExecutionAction[];
+  valuation?: ValuationContext;
 }>;
 export interface AllocationMethodProvider {
   readonly id: string;
