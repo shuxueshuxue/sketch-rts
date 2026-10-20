@@ -3,9 +3,22 @@ import { unitMover } from '../shared/catalog';
 import type { GameSnapshot, PlayerId, Unit } from '../shared/types';
 import type { AiPolicyMemory } from './memory';
 import type { AiDeathAssignment, AiDeathTask, AiIssuedOrder } from './death-ledger-types';
+import { formalDeathTasks } from './death-ledger-allocation';
 
 const DEFENSE = new Set(['mineRally', 'mineGuard', 'mineLeash', 'expansionGarrison', 'harassSquad']);
 const TREATMENT = new Set(['frontRecovery', 'campRecovery', 'mobileCare', 'medicalRecovery']);
+
+/** Importing an already executing task changes its authority, not its goal.
+ * Two different formal objective IDs always remain an observable reassignment. */
+export function sameDeathAssignmentGoal(before: AiDeathTask | null | undefined, after: AiDeathTask | null): boolean {
+  if (!before || !after) return before?.id === after?.id;
+  if (before.id === after.id) return true;
+  if (before.attribution === after.attribution || !before.targetId || before.targetId !== after.targetId) return false;
+  if (before.kind === 'transport' && after.kind === 'transport') return true;
+  if (before.clearing && after.clearing) return !!before.clearingTargetIds?.some(id => after.clearingTargetIds?.includes(id));
+  const defending = (kind: string) => DEFENSE.has(kind) || ['defense', 'defend', 'guard', 'defend-site', 'recall', 'wait-in-cover', 'establish-garrison'].includes(kind);
+  return defending(before.kind) && defending(after.kind);
+}
 
 export function treatmentOrder(order: AiIssuedOrder | null): boolean {
   return order?.executor !== null && order?.executor !== undefined && TREATMENT.has(order.executor);
@@ -112,6 +125,7 @@ export function deathTaskIndex(snapshot: GameSnapshot, owner: PlayerId, memory: 
     return (camps ??= neutralCamps(snapshot)).find(camp => samePoint(camp.center)
       || camp.creeps.some(unit => samePoint({ x: unit.homeX ?? unit.x, y: unit.homeY ?? unit.y })))?.creeps.map(unit => unit.id);
   };
+  for (const [id, value] of formalDeathTasks(snapshot, owner, memory)) add([id], value, true);
   return { byUnit, general: memory.v6?.general, task, hallPerimeter, generalClearingTargets };
 }
 
@@ -141,15 +155,18 @@ export function inferDeathAssignment(snapshot: Pick<GameSnapshot, 'tick'>, unit:
   if (order.type === 'build') put(index.task(`build:${order.buildingKind}:${order.x}:${order.y}`, 'construction', undefined, 'build', 'order.build'));
   if (!candidates.length && (order.type === 'attack' || order.type === 'attackMove') && unitMover(unit.kind) === 'sea') put(index.task(
     `naval-field:${unit.id}`, 'naval-combat', order.targetId, 'engage', 'order.attack', true));
+  const formalIndex = candidates.findIndex(candidate => candidate.attribution === 'assignment');
+  if (formalIndex > 0) candidates.unshift(candidates.splice(formalIndex, 1)[0]!);
   const current = candidates[0] ?? null;
   const emergency = !!claim?.localRetreat || claim?.kind === 'workerSafety' || claim?.kind === 'retreat'
     || order.type === 'move' && order.avoidCombat === true
     || treatmentOrder(lastOrder) && ['move', 'idle', 'hold'].includes(order.type);
   const near = current?.perimeter ? Math.hypot(unit.x - current.perimeter.x, unit.y - current.perimeter.y) <= current.perimeter.radius : undefined;
   return { observedTick: snapshot.tick, task: current, otherTaskCandidates: candidates.slice(1),
-    state: emergency ? 'emergency-interruption' : !current ? 'unassigned'
+    state: current?.formal ? current.formal.interruption ? 'emergency-interruption' : current.formal.assignmentStage
+      : emergency ? 'emergency-interruption' : !current ? 'unassigned'
       : ['move', 'board', 'follow'].includes(order.type) ? 'en-route' : near === true || order.type === 'hold' ? 'on-station' : 'assigned',
-    stateAttribution: 'inferred', evidence: candidates.map(candidate => candidate.source), plannedBalanceRange: null };
+    stateAttribution: current?.formal ? 'assignment' : 'inferred', evidence: candidates.map(candidate => candidate.source), plannedBalanceRange: null };
 }
 
 /** Serializable retained facts, not policy memory. Only constructed for an active observer. */
