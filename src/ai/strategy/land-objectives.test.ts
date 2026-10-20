@@ -279,6 +279,16 @@ describe('land objective proposals over one shared Situation', () => {
     }));
   });
 
+  it('does not turn a caster ranged-role annotation into a camp-clearing front line', () => {
+    const { context, situation } = example();
+    const casters = { ...situation, units: situation.units.map(unit => unit.owner === 'us' && !unit.roles.includes('worker')
+      ? { ...unit, roles: ['caster', 'ranged'] as UnitRole[] } : unit) };
+    const objective = goals(casters, context).find(goal => goal.kind === 'ExpandLand')!;
+    const methods = decomposeLandObjective(casters, objective, context);
+    expect(methods[0]!.preconditions).toContainEqual(expect.objectContaining({ kind: 'force', status: 'unmet' }));
+    expect(objective.reasons.find(reason => reason.code === 'observation-only-cohort')!.detail).not.toContain('fighter-');
+  });
+
   it('does not price an entire route occupation as one tick of work', () => {
     const { context, situation } = example();
     const objective = goals(situation, context).find(goal => goal.kind === 'ContestRoute')!;

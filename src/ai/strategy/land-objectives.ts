@@ -39,7 +39,8 @@ const reason = (situation: Situation, code: string, detail: string, certainty: E
   ({ code, detail, evidence: [evidence(situation, detail, 'land-objectives', certainty)] });
 const interruption = (unit: SituationUnit) => unit.commitments.some(item => /care|recover|healing|retreat|safety|shell/i.test(item.source));
 const battleRole = (unit: SituationUnit) => unit.roles.some(role => ['frontline', 'ranged', 'caster'].includes(role));
-const frontRole = (unit: SituationUnit) => unit.roles.some(role => role === 'frontline' || role === 'ranged');
+const frontRole = (unit: SituationUnit) => !unit.roles.includes('caster') && !unit.roles.includes('healer')
+  && unit.roles.some(role => role === 'frontline' || role === 'ranged');
 const arrivalAt = (unit: SituationUnit, target: string) => unit.arrivals.find(item => item.targetId === target)?.arrival;
 function knownArrival(arrival: Arrival | undefined): arrival is Extract<Arrival, { ticks: number }> {
   if (!arrival || !('ticks' in arrival)) return false;
@@ -138,10 +139,10 @@ class LandModel {
       const borrowed = arrival.status === 'conditional' || unit.commitments.some(item => item.objectiveId !== id);
       potential.push({ unit, raw, eta: arrival.ticks, coverage: 1, borrowed, interrupted: interruption(unit) });
     }
-    const targets = camp?.creeps ?? this.context.snapshot.buildings.filter(building => building.id === candidate.key);
+    const harasser = candidate.kind === 'CounterHarass' ? this.raw.get(candidate.key) : undefined;
+    const targets = camp?.creeps ?? (harasser ? [harasser] : this.context.snapshot.buildings.filter(building => building.id === candidate.key));
     const pool = potential.filter(fighter => !fighter.interrupted
       && (!mining || frontRole(fighter.unit)));
-    const harasser = candidate.kind === 'CounterHarass' ? this.raw.get(candidate.key) : undefined;
     const canIntercept = (fighter: Fighter) => !harasser || fighter.raw.attackRange > harasser.attackRange
       || fighter.raw.speed >= harasser.speed;
     pool.sort((a, b) => Number(canIntercept(b)) - Number(canIntercept(a))
