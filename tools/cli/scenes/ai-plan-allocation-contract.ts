@@ -54,7 +54,7 @@ export default async function (s: Scene) {
   await seek(50);
   await s.page.waitForSelector('.plan-strategy');
   // Label the evidence, rather than presenting a synthetic transaction as a real match decision.
-  await s.page.locator('.ai-plan-overlay header em').evaluate((element: HTMLElement) => {
+  const labelFixture = () => s.page.locator('.ai-plan-overlay header em').evaluate((element: HTMLElement) => {
     element.textContent = '契约样例 · 人工分配数据 · 非真实 AI 决策';
   });
   const html = await s.page.locator('.plan-strategy').innerText();
@@ -68,9 +68,9 @@ export default async function (s: Scene) {
   await s.page.mouse.click(marker.x, marker.y);
   s.must(await s.page.locator('.plan-strategy').getAttribute('data-objective') === 'defense',
     'A same-position candidate stole the committed marker click');
-  await s.wait(500); await s.shot('allocation-contract-intent');
+  await s.wait(500); await labelFixture(); await s.shot('allocation-contract-intent');
   await s.page.locator('.plan-assignment').first().scrollIntoViewIfNeeded();
-  await s.wait(300); await s.shot('allocation-contract-assignment');
+  await s.wait(300); await labelFixture(); await s.shot('allocation-contract-assignment');
   await seek(15);
   const early = await s.page.locator('.plan-strategy').innerText();
   s.must(!early.includes('抢占 island'), 'Replay seek exposed a not-yet-observed handoff');
