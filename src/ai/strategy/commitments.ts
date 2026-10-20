@@ -45,6 +45,13 @@ export function unitCommitments(snapshot: GameSnapshot, owner: PlayerId, memory:
     mounted.objective.kind === 'raid' ? 'AttackSite' : undefined, mounted.objective.kind === 'raid' ? mounted.objective.hallId : undefined);
   for (const [source, task] of [['shopping', memory.shopping], ['loot', memory.loot], ['mercenaryCourier', memory.mercenaryCourier], ['v6.shop', memory.v6?.shop]] as const)
     if (task?.unitId === unit.id) add(source, source);
+  if (unit.order.type === 'follow') {
+    const targetId = unit.order.targetId;
+    if (snapshot.units.some(healer => healer.id === targetId && ['priest', 'fieldMedic'].includes(healer.kind)))
+      add('mobileCare.inferred-order', `healing:${targetId}`);
+  }
+  if (unit.order.type === 'move' && unit.order.avoidCombat && (claim?.kind === 'retreat' || unit.hp < unit.maxHp * .5))
+    add('retreat.inferred-order', `retreat:${unit.id}`);
   for (const [shipId, task] of Object.entries(memory.naval?.ferries ?? {})) {
     if (unit.id !== shipId && !task.crewIds.includes(unit.id) && !task.payloadIds?.includes(unit.id)
       && unit.deck?.shipId !== shipId && unit.cabin?.shipId !== shipId

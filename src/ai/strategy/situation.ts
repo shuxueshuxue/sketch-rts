@@ -17,6 +17,7 @@ import type { Arrival, Asset, Evidence, Opportunity, Reason, Situation, SiteThre
 
 const STATION_RANGE = 650;
 const MAX_OPTIONAL_TARGETS = 16;
+const MAX_HARASS_TARGETS = 8;
 const point = (entity: { x: number; y: number }) => ({ x: entity.x, y: entity.y });
 
 /** Read-only world assessment. All routing shares the caller's owner-think scope.
@@ -113,6 +114,14 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
   const targets = new Map<string, Target>(sites.map(site => [site.id, site.target]));
   for (const entity of [...snapshot.resources, ...snapshot.buildings]) if (retainedIds.has(entity.id)) targets.set(entity.id, target(entity));
   for (const opportunity of optional.slice(0, MAX_OPTIONAL_TARGETS)) targets.set(opportunity.kind === 'route' ? opportunity.id : opportunity.target.entityId!, opportunity.target);
+  const workerIds = new Set(own.filter(unit => unit.kind === 'worker').map(unit => unit.id));
+  const harassers = live.filter(unit => foe(unit.owner) && !unit.deck && !unit.cabin && unit.attackDamage > 0
+    && (unit.id === memory.harassDefense?.targetId
+      || unit.kind === 'horseArcher' && sites.some(site => site.target.landId === landIdAt(snapshot.map, unit) && distance(unit, site.target.point) <= 750)
+      || unit.order.type === 'attack' && workerIds.has(unit.order.targetId)))
+    .sort((a, b) => Number(b.id === memory.harassDefense?.targetId) - Number(a.id === memory.harassDefense?.targetId)
+      || Number(b.kind === 'horseArcher') - Number(a.kind === 'horseArcher') || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  for (const harasser of harassers.slice(0, MAX_HARASS_TARGETS)) targets.set(harasser.id, target(harasser));
   const units = live.map(unit => ({ id: unit.id, owner: unit.owner, kind: unit.kind,
     location: unitLocation(snapshot.map, unit, byId, tick), hp: unit.hp, maxHp: unit.maxHp, strength: strength(unit),
     roles: unitRoles(unit), expiresTick: unit.expiresTick ?? null, commitments: unitCommitments(snapshot, owner, memory, unit),
@@ -155,6 +164,7 @@ export function evaluateSituation(snapshot: GameSnapshot, owner: PlayerId, memor
     { code: 'unified-budget-not-migrated', detail: 'Existing modules have no per-objective reservation ledger; method costs are proposals, not reserved cash', evidence: [] },
     { code: 'route-opportunities-partial', detail: 'Only retained actual pressure points are projected; missing new pressure-point geometry remains unknown', evidence: [] }];
   if (optional.length > MAX_OPTIONAL_TARGETS) limitations.push({ code: 'candidate-target-limit', detail: `Forecast ${MAX_OPTIONAL_TARGETS}/${optional.length} optional targets plus every owned site; omitted ETA is unknown`, evidence: [] });
+  if (harassers.length > MAX_HARASS_TARGETS) limitations.push({ code: 'harasser-target-limit', detail: `Forecast ${MAX_HARASS_TARGETS}/${harassers.length} current harassment targets in stable order; omitted ETA is unknown`, evidence: [] });
   return { tick, owner, horizonTicks, assets, units, opportunities: opportunities.sort((a, b) => a.id.localeCompare(b.id)),
     lands: [...regions.lands].map(([id, anchor]) => ({ id, anchor: point(anchor), assetIds: assets.filter(asset => asset.target.landId === id).map(asset => asset.id),
       unitIds: units.filter(unit => unit.location.kind === 'land' && unit.location.landId === id).map(unit => unit.id),
