@@ -8,7 +8,6 @@ import { towerTopLift } from "./tower-presentation";
 import { isFortifiedTower } from "../shared/tower-garrison";
 import { circleInPolygon, worldToLocal, shipProfile } from "../shared/ship-geometry";
 import { areEnemyOwners } from "../shared/sim/command-validation";
-import { canReach } from "../shared/naval";
 import type { Building, GameCommand, GameSnapshot, Obstacle, Owner, PlayerId, ResourceNode, Unit, WorldItem } from "../shared/types";
 
 type Point = { x: number; y: number };
@@ -105,10 +104,8 @@ export function pointerTarget(snapshot: Pick<GameSnapshot, "items" | "resources"
 // in Warcraft III: workers mine a mine and repair own damaged buildings or mechanical units; soldiers board an own transport (see
 // @@@transport) and climb onto an own fortified tower (see @@@tower-garrison); an enemy's or the creeps' unit or building, or rocks or a gate, is attacked; an ally's unit is followed
 // (see @@@follow). Anything else (an own unit or building, an ally's building, a mine for soldiers) is a move there.
-// @@@context-reach - An attack goes to the selected units that can come within reach of the target, by the sim's own
-// test (canReach: a footman reaches no ship out on deep water; crew on a deck are left to boarding); the others are
-// walked there (the caller moves them).
-// When none can, the click is refused with the reason, instead of an order the whole selection could never carry out.
+// @@@context-reach - Preserve the selected actors in the attack intent. The shared rule entry judges reachability;
+// actors that cannot reach the target receive a refusal and keep their existing orders.
 export type ContextRefusal = { refusal: "unreachable" };
 
 export function targetCommand(
