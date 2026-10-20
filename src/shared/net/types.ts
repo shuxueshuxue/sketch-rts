@@ -79,7 +79,7 @@ export type ClientNetMessage =
   | { type: "requestCheckpoint"; roomId: string; playerId: PlayerId; tick?: number; reason?: CheckpointRequestReason; clientTick?: number; clientChecksum?: string; epoch: RoomEpoch };
 
 export type ServerNetMessage =
-  | { type: "aiPlans"; roomId: string; packet: AiPlanPacket }
+  | { type: "aiPlans"; roomId: string; packet: AiPlanPacket; accessToken?: string }
   | { type: "hello"; rulesVersion: number; roomId: string; playerId: PlayerId; tick: number; epoch: RoomEpoch }
   | { type: "frame"; rulesVersion: number; frame: CommandFrame; epoch: RoomEpoch }
   | { type: "checkpoint"; rulesVersion: number; checkpoint: CheckpointFrame; epoch: RoomEpoch }

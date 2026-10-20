@@ -156,8 +156,9 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
       adapter = new LockstepRoomGameAdapter(client, { spectating });
       join = () => client.join();
     }
+    let planAccessToken: string | undefined;
     let planListener: Parameters<NonNullable<GameAdapter['subscribePlans']>>[0] | undefined;
-    transport.onMessage(message => { if (message.type === 'aiPlans') planListener?.(message.packet);
+    transport.onMessage(message => { if (message.type === 'aiPlans') {if(message.accessToken)planAccessToken=message.accessToken;planListener?.(message.packet);}
       if (message.type === 'hello' && planListener) transport.send({type:'aiPlans',roomId:room.id,enabled:true}); });
     adapter.subscribePlans = listener => {
       planListener = listener;
@@ -168,7 +169,7 @@ export class ServerDeploymentRuntime implements DeploymentRuntime {
     adapter.hasRecording = () => recorded;
     adapter.startRecording = async () => { await this.fetchJson(this.path(`/api/rooms/${encodeURIComponent(room.id)}/debug-replay`),{id:`plan-${room.id}`}); recorded = true; };
     adapter.stopRecording = async () => { await this.fetchJson(this.path(`/api/rooms/${encodeURIComponent(room.id)}/debug-replay/stop`),{}); };
-    adapter.recordedReplay = () => this.fetchJson(this.path(`/api/rooms/${encodeURIComponent(room.id)}/debug-replay?viewer=${encodeURIComponent(playerId)}`));
+    adapter.recordedReplay = () => this.fetchJson(this.path(`/api/rooms/${encodeURIComponent(room.id)}/debug-replay?planToken=${encodeURIComponent(planAccessToken??'')}`));
     const chat = createTransportChat(transport, room.id, playerId);
     transport.onMessage((message: ServerNetMessage) => {
       if (message.type === "room") onRoom(message.room);

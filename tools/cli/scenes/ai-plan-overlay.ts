@@ -14,8 +14,9 @@ export default async function(s:Scene){
  await s.api(`/api/rooms/${id}/pause`,{});
  await s.api(`/api/rooms/${id}/reset`,{mapId:'twoShores',options:{players,aiPlayers:players,aiVersions:Object.fromEntries(players.map((p:string)=>[p,'v9_archer'])),layout:{seed:'pool-twoShores-1',kind:'sides',idea:'twoShores'},races:Object.fromEntries(players.map((p:string)=>[p,'grove']))}});
  await s.api(`/api/rooms/${id}/tick`,{ticks:60});
+ let planAccessToken='';
  const traffic:{bytes:number;packets:number;baselines:number;deltas:number;nodes:number}={bytes:0,packets:0,baselines:0,deltas:0,nodes:0};
- s.page.on('websocket',(ws:any)=>ws.on('framereceived',(event:any)=>{try{const m=JSON.parse(String(event.payload));if(m.type==='aiPlans'){traffic.bytes+=Buffer.byteLength(String(event.payload));traffic.packets++;if(m.packet.type==='trace'){if(m.packet.baseTick===null)traffic.baselines++;else traffic.deltas++;traffic.nodes+=m.packet.upsert.length;}}}catch{}}));
+ s.page.on('websocket',(ws:any)=>ws.on('framereceived',(event:any)=>{try{const m=JSON.parse(String(event.payload));if(m.type==='aiPlans'){if(m.accessToken)planAccessToken=m.accessToken;traffic.bytes+=Buffer.byteLength(String(event.payload));traffic.packets++;if(m.packet.type==='trace'){if(m.packet.baseTick===null)traffic.baselines++;else traffic.deltas++;traffic.nodes+=m.packet.upsert.length;}}}catch{}}));
  await s.page.goto(new URL(`?room=${id}`,s.page.url()).href,{waitUntil:'load'});
  await s.page.waitForSelector('[data-watch-room]',{timeout:180000});await s.page.click('[data-watch-room]');
  await s.page.waitForFunction(()=>((window as any).__sketchRtsView?.tick??-1)>=60,null,{timeout:180000});
@@ -25,12 +26,12 @@ export default async function(s:Scene){
  const result:any=await s.api(`/api/rooms/${id}/tick`,{ticks:4800});const tick=result.snapshot.tick;
  await s.page.waitForFunction((t:number)=>((window as any).__sketchRtsView?.tick??-1)>=t,tick,{timeout:180000});
  await s.page.waitForSelector('.plan-band',{timeout:60000});
- const liveRecording:any=await s.api(`/api/rooms/${id}/debug-replay?viewer=spectator-proof`);
+ const liveRecording:any=await s.api(`/api/rooms/${id}/debug-replay?planToken=${encodeURIComponent(planAccessToken)}`);
  const current=new Map<string,any>(),interesting:any[]=[];
  for(const packet of liveRecording.aiPlans.packets){if(packet.type!=='trace')continue;const trace=applyAiPlanDelta(current.get(packet.owner),packet);if(!trace)continue;current.set(trace.owner,trace);
    for(const node of trace.nodes)if(trace.roots.includes(node.id)&&node.status==='active'&&node.resources.unitIds.length>=3&&node.target.position)interesting.push({tick:trace.tick,owner:trace.owner,id:node.id,label:node.label,position:node.target.position});}
  const liveGoal=[...current.values()].flatMap(trace=>trace.nodes.filter((node:any)=>trace.roots.includes(node.id)&&node.status==='active'&&node.resources.unitIds.length>0&&node.target.position).map((node:any)=>({owner:trace.owner,...node}))).sort((a:any,b:any)=>b.resources.unitIds.length-a.resources.unitIds.length)[0];
- if(liveGoal){await s.page.locator('.plan-panel details summary').click();await s.page.locator('.plan-list[data-owner="'+liveGoal.owner+'"][data-goal="'+liveGoal.id+'"]').click();}
+ if(liveGoal){if(!await s.page.locator('.plan-panel details').evaluate((e:HTMLDetailsElement)=>e.open))await s.page.locator('.plan-panel details summary').click();await s.page.locator('.plan-list[data-owner="'+liveGoal.owner+'"][data-goal="'+liveGoal.id+'"]').click();}
  const focus=liveGoal?.label;
  await s.wait(3000);await s.shot('spectator-plans');
  const browser=s.page.context(),cdp=await browser.newCDPSession(s.page);
@@ -60,21 +61,23 @@ export default async function(s:Scene){
    const planMs=Object.fromEntries(Object.entries(measures).map(([name,values])=>{values.sort((a,b)=>a-b);return [name,{count:values.length,median:values[Math.floor(values.length*.5)],p95:values[Math.floor(values.length*.95)],max:values.at(-1)}];}));
    metrics.push({open,recording:false,advancedTicks:advanced,file,sha256:createHash('sha256').update(compressed).digest('hex'),planMs,frames:times.length,jsMedianMs:times[Math.floor(times.length*.5)],jsP95Ms:times[Math.floor(times.length*.95)],jsMaxMs:times.at(-1),planTimingEvents:spans.length});
  }
- const replay:any=await s.api(`/api/rooms/${id}/debug-replay?viewer=spectator-proof`);
+ const replay:any=await s.api(`/api/rooms/${id}/debug-replay?planToken=${encodeURIComponent(planAccessToken)}`);
  const packets=replay.aiPlans?.packets??[];
  s.must(packets.some((p:any)=>p.type==='trace'&&p.baseTick!==null),'No incremental plans recorded');
  await s.page.click('[data-action=replay]');
  await s.page.waitForSelector('[data-plan-seek]',{timeout:60000});
  s.must(interesting.length>0,'No allocated goal in the actual recording');
  const chosen=interesting[Math.floor(interesting.length*.7)]!;
- const seek=chosen.tick;
-
- await s.page.locator('[data-plan-seek]').evaluate((input:HTMLInputElement,t:number)=>{input.value=String(t);input.dispatchEvent(new Event('input',{bubbles:true}));},seek);
+ const requestedSeek=chosen.tick;
+ const slider=s.page.locator('[data-plan-seek]'),box=await slider.boundingBox();s.must(box,'Replay slider has no box');
+ const x=box.x+8+(box.width-16)*(requestedSeek-replay.initialSave.snapshot.tick)/(replay.throughTick-replay.initialSave.snapshot.tick);
+ await s.page.mouse.move(box.x+8,box.y+box.height/2);await s.page.mouse.down();await s.page.mouse.move(x,box.y+box.height/2,{steps:12});await s.page.mouse.up();
+ const seek=await slider.inputValue().then(Number);
  await s.page.waitForFunction((t:number)=>(window as any).__sketchRtsView?.tick===t,seek,{timeout:180000});await s.wait(1500);
- await s.page.locator('.plan-panel details summary').click();
+ if(!await s.page.locator('.plan-panel details').evaluate((e:HTMLDetailsElement)=>e.open))await s.page.locator('.plan-panel details summary').click();
  await s.page.locator('.plan-list[data-owner="'+chosen.owner+'"][data-goal="'+chosen.id+'"]').click();
  s.must(!await s.page.locator('.plan-empty').count(),'Replay lost recorded plan nodes');
  await s.wait(500);await s.shot('replay-scrub');
  s.must(await s.page.locator('.plan-gap').count()>0,'Missing unrecorded prefix');
- s.record('ai-plan-overlay',{gpu,tick,seek,chosen,focus,metrics,traffic,packets:packets.length,recordingFrom:replay.initialSave.snapshot.tick,recordingThrough:replay.throughTick,deathRecords:packets.flatMap((p:any)=>p.type==='events'?p.deaths:[]).length});
+ s.record('ai-plan-overlay',{gpu,tick,seek,requestedSeek,chosen,focus,metrics,traffic,packets:packets.length,recordingFrom:replay.initialSave.snapshot.tick,recordingThrough:replay.throughTick,deathRecords:packets.flatMap((p:any)=>p.type==='events'?p.deaths:[]).length});
 }

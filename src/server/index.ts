@@ -473,7 +473,7 @@ router.post("/api/rooms/:roomId/debug-replay/stop", (request, response) => {
 
 router.get("/api/rooms/:roomId/debug-replay", (request, response) => {
   try {
-    response.json(roomHost.readDebugReplay(request.params.roomId, typeof request.query.viewer === "string" ? request.query.viewer : undefined));
+    response.json(roomHost.readDebugReplay(request.params.roomId, roomNetHub.planViewer(request.params.roomId,typeof request.query.planToken === "string" ? request.query.planToken : undefined)));
   } catch (error) {
     response.status(404).json({ error: errorMessage(error) });
   }

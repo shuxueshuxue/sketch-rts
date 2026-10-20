@@ -59,3 +59,15 @@ it('keeps room frames and every tick checksum identical when recording and subsc
  };
  expect(run(true)).toEqual(run(false));
 });
+it('binds recorded plan access to the joined socket and room, never a caller supplied viewer name',()=>{
+ const host=createRoomHost({autoTick:false}),room=host.createRoom({id:'access',host:{id:'host',name:'Host'},mapId:'bareDuel'});host.startRoom(room.id);
+ const hub=new RoomNetHub({roomHost:host}),socket=new Socket();hub.connect(room.id,socket);
+ socket.receive({type:'join',rulesVersion:RULES_VERSION,roomId:room.id,playerId:'player'});
+ socket.receive({type:'aiPlans',roomId:room.id,enabled:true});
+ const token=socket.messages.find(m=>m.type==='aiPlans'&&m.accessToken);
+ expect(token?.type==='aiPlans'&&token.accessToken).toBeTruthy();
+ if(token?.type!=='aiPlans')throw new Error('No access token');
+ expect(hub.planViewer(room.id,token.accessToken)).toBe('player');
+ expect(hub.planViewer('another-room',token.accessToken)).toBeUndefined();expect(hub.planViewer(room.id,'spectator-forged')).toBeUndefined();
+ socket.close();expect(hub.planViewer(room.id,token.accessToken)).toBeUndefined();host.closeRoom(room.id,'host');
+});

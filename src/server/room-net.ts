@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { aiPlanAudience } from './ai-plan-visibility';
 import { filterAiPlanPacket } from '../ai/plan-stream';
 import { RULES_VERSION, assertCurrentRulesVersion } from "../shared/rules-version";
@@ -38,6 +39,8 @@ type RoomNetState = {
 
 export class RoomNetHub {
   private rooms = new Map<string, RoomNetState>();
+  private readonly planAccess = new Map<string,{roomId:string;playerId:PlayerId}>();
+  private readonly socketPlanAccess = new WeakMap<RoomNetSocket,string>();
   private readonly planSubscriptions = new WeakMap<RoomNetSocket, () => void>();
   private readonly joinedPlayers = new WeakMap<RoomNetSocket, PlayerId>();
   private readonly compatibleSockets = new WeakSet<RoomNetSocket>();
@@ -54,7 +57,7 @@ export class RoomNetHub {
         this.send(roomId, socket, { type: "error", roomId, message: errorMessage(error) });
       }
     });
-    socket.on("close", () => { this.planSubscriptions.get(socket)?.(); this.joinedPlayers.delete(socket); state.sockets.delete(socket); this.compatibleSockets.delete(socket); });
+    socket.on("close", () => { this.planSubscriptions.get(socket)?.(); this.clearPlanAccess(socket); this.joinedPlayers.delete(socket); state.sockets.delete(socket); this.compatibleSockets.delete(socket); });
   }
 
   // The frames the room's connected pages have queued commands for, for a tick asked for over the API (see
@@ -135,6 +138,7 @@ export class RoomNetHub {
     if (message.roomId !== socketRoomId) throw new Error(`Client message room ${message.roomId} does not match socket room ${socketRoomId}`);
     if (message.type === "join") {
       this.planSubscriptions.get(socket)?.(); this.planSubscriptions.delete(socket);
+      this.clearPlanAccess(socket);
       this.compatibleSockets.delete(socket);
       const state = this.stateFor(message.roomId);
       try { assertCurrentRulesVersion(message.rulesVersion, "Client"); }
@@ -182,6 +186,12 @@ export class RoomNetHub {
     }
   }
 
+  planViewer(roomId:string,token:string|undefined):PlayerId|undefined{
+    const access=token?this.planAccess.get(token):undefined;
+    return access?.roomId===roomId?access.playerId:undefined;
+  }
+  private clearPlanAccess(socket:RoomNetSocket){const token=this.socketPlanAccess.get(socket);if(token)this.planAccess.delete(token);this.socketPlanAccess.delete(socket);}
+
   private subscribePlans(roomId:string,socket:RoomNetSocket,enabled:boolean):void {
       this.planSubscriptions.get(socket)?.(); this.planSubscriptions.delete(socket);
       if (enabled) {
@@ -189,9 +199,11 @@ export class RoomNetHub {
         const room = this.options.roomHost.getRoom(roomId);
         const seated = room.slots.some(slot => slot.playerId === player && slot.controller === 'human');
         if (!seated && !player.startsWith('spectator-')) throw new Error('Only a seated player or spectator can observe plans');
+        this.clearPlanAccess(socket);const token=randomUUID();this.planAccess.set(token,{roomId,playerId:player});this.socketPlanAccess.set(socket,token);
+        let first=true;
         const stop = this.options.roomHost.subscribeAiPlans(roomId, packet => {
           const filtered = filterAiPlanPacket(packet, aiPlanAudience(this.options.roomHost.getRoom(roomId),player));
-          if (filtered) this.send(roomId, socket, {type:'aiPlans',roomId:roomId,packet:filtered});
+          if (filtered) {this.send(roomId, socket, {type:'aiPlans',roomId,packet:filtered,...(first?{accessToken:token}:{})});first=false;}
         });
         this.planSubscriptions.set(socket, stop);
       }
@@ -263,6 +275,7 @@ export class RoomNetHub {
     if (event.room.status === "errored") this.broadcast(roomId, { type: "error", roomId, message: roomFailureMessage(event.room) });
     if (event.checkpoint) this.broadcast(roomId, { type: "checkpoint", rulesVersion: RULES_VERSION, checkpoint: event.checkpoint, epoch: state.epoch });
     if(event.checkpoint) for(const socket of state.sockets) if(this.planSubscriptions.has(socket)) {
+      this.planSubscriptions.get(socket)?.();this.planSubscriptions.delete(socket);
       this.send(roomId,socket,{type:'aiPlans',roomId,packet:{type:'reset',tick:event.checkpoint.tick}});
       this.subscribePlans(roomId,socket,true);
     }
