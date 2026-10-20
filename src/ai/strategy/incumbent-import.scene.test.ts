@@ -47,3 +47,31 @@ it('imports only the actual ferry producer after its accepted order advances in 
   expect(released.incumbentOrders[rider.id]).toBeUndefined();
   expect(Object.keys(released.leases)).toHaveLength(7);
 }, 60000);
+
+it('adopts a real general defense receipt without requiring a fabricated membership claim', () => {
+  const saved: { snapshot: GameSnapshot; memories: Record<string, AiPolicyMemory>; nextId: number; activePlayers: string[] }
+    = JSON.parse(readFileSync(new URL('../bootstrap_1/fixtures/defense-rally-14m48.json', import.meta.url), 'utf8'));
+  const owner = 'v9_archer', policy = saved.memories[owner]!;
+  const entries = planAiOwnerCommandEntries(saved.snapshot, { playerId: owner, version: 'v9_archer', memory: policy });
+  const defense = entries.filter(entry => incumbentCommandActor(entry.command)?.source === 'miningDefense');
+  expect(defense).toHaveLength(2);
+  let sequence = 0, authority = createStrategyAllocationMemory(owner, saved.snapshot.tick);
+  for (const entry of defense) authority = recordIncumbentCommands(authority, saved.snapshot, entry.scriptId,
+    [entry.command], () => `general-accepted:${sequence++}`);
+  for (const id of Object.keys(authority.incumbentOrders)) delete policy.unitClaims[id];
+  const game = createGame(saved.snapshot.map.id, { players: saved.activePlayers });
+  restoreSnapshotIntoGame(game, saved.snapshot, saved.nextId); game.activePlayers = [...saved.activePlayers];
+  issueCommandFrame(game, entries);
+  for (let tick = 0; tick < 15; tick++) stepGame(game);
+  const snapshot = snapshotGame(game), adopted = importExecutedIncumbents(snapshot, policy, evaluateSituation(snapshot, owner, policy), authority);
+  const leases = Object.values(adopted.leases);
+  expect(leases.length).toBeGreaterThan(0);
+  expect(leases.every(lease => lease.incumbentTask?.source === 'miningDefense'
+    && lease.incumbentTask.taskId === 'building-v9_archer-townHall-1602')).toBe(true);
+  for (const lease of leases) {
+    const id = lease.resourceKey.slice(5);
+    expect(policy.unitClaims[id]).toBeUndefined();
+    expect(adopted.incumbentOrders[id]).toMatchObject({ observedTick: snapshot.tick, executor: 'v6General' });
+  }
+  expect(Object.values(adopted.objectives).every(objective => objective.committedUtilityGold === null)).toBe(true);
+}, 60000);

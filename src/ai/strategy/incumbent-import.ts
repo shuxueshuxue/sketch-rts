@@ -3,7 +3,7 @@ import type { AiPolicyMemory } from '../memory';
 import type { ExecutableMethod, StrategyAllocationMemory } from './allocation-types';
 import { appendAllocationEvent } from './allocation-lifecycle';
 import { incumbentDisposition, observeIncumbentOrders } from './incumbent-evidence';
-import { expansionGarrisonActor, islandConquestActor, landExpansionActor, navalFerryActor } from './incumbent-actors';
+import { expansionGarrisonActor, islandConquestActor, landExpansionActor, miningDefenseActor, navalFerryActor } from './incumbent-actors';
 import type { IncumbentCommandActor } from './incumbent-command-source';
 import type { DecisionFacts } from './decision';
 import type { Situation, Target } from './types';
@@ -14,8 +14,20 @@ const key = (actor: IncumbentCommandActor) => `${actor.source}:${actor.taskId}`;
 
 /** Membership identifies a proposed task; only a real accepted/observed order
  * below can turn one of these members into a committed incumbent. */
-export function incumbentTasks(memory: AiPolicyMemory): Task[] {
+export function incumbentTasks(memory: AiPolicyMemory, authority = memory.strategyAllocation): Task[] {
   const tasks: Task[] = [];
+  const mining = new Map<string, Set<string>>();
+  const member = (hallId: string, unitId: string) => {
+    const ids = mining.get(hallId) ?? new Set<string>(); ids.add(unitId); mining.set(hallId, ids);
+  };
+  for (const [unitId, claim] of Object.entries(memory.unitClaims))
+    if (claim.targetId && ['mineGuard', 'mineRally', 'mineLeash'].includes(claim.kind)) member(claim.targetId, unitId);
+  // Local detachments need no persistent membership list. Only their actual
+  // producer receipt supplies executed members; claims alone remain proposals.
+  for (const receipt of Object.values(authority?.incumbentOrders ?? {}))
+    if (receipt.task.source === 'miningDefense') member(receipt.task.taskId, receipt.unitId);
+  for (const [hallId, unitIds] of mining) tasks.push({ actor: miningDefenseActor(hallId), targetId: hallId,
+    kind: 'local-squad', unitIds: [...unitIds].sort() });
   const expansion = memory.landExpansion;
   if (expansion) tasks.push({ actor: landExpansionActor(expansion), targetId: expansion.mineId, kind: 'land-expansion',
     unitIds: [...new Set([...(expansion.combat?.creep?.group ?? []), ...Object.entries(memory.unitClaims)
@@ -36,7 +48,7 @@ export function incumbentTasks(memory: AiPolicyMemory): Task[] {
 export function importExecutedIncumbents(snapshot: GameSnapshot, policy: AiPolicyMemory,
   situation: DecisionFacts<Situation>, previous: StrategyAllocationMemory): StrategyAllocationMemory {
   let memory = observeIncumbentOrders(previous, snapshot);
-  const tasks = incumbentTasks(policy), actors = new Map(snapshot.units.map(unit => [unit.id, unit]));
+  const tasks = incumbentTasks(policy, memory), actors = new Map(snapshot.units.map(unit => [unit.id, unit]));
   const facts = new Map(situation.units.map(unit => [unit.id, unit]));
   const leases = { ...memory.leases }, assignments = { ...memory.assignments };
   // An old task's idle/changed order cannot indefinitely hold an executed lease.
