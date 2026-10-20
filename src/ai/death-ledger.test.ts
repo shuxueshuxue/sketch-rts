@@ -149,13 +149,13 @@ describe('read-only AI death ledger', () => {
     memory.landAttack = { targetId: 'enemy-hall', sinceTick: 0, general: { mode: 'attack', group: [unit.id] } };
     const ledger = observe(game); ledger.recordThink(game, 'player', memory);
     game.tick = 15; delete memory.landAttack;
-    memory.landAttackResult = { targetId: 'enemy-hall', tick: 15, reason: 'general:retreat:worn' };
+    memory.landAttackResult = { targetId: 'enemy-hall', tick: 15, result: 'withdrew', reason: 'general:retreat:worn' };
     ledger.recordThink(game, 'player', memory);
     strikeUnit(game, enemy, unit, 99999, 'spell'); stepGame(game);
     const record = ledger.records()[0]!;
     expect(record.context).toMatchObject({ onHomeGround: false, safeOwnSitesOnGround: [], escapeRoute: 'not-evaluated', wornRetreatTick: 15 });
     expect(record.classification.tags).toEqual(expect.arrayContaining(['isolated-without-evacuation-plan', 'post-worn-abandonment']));
-    expect(record.location.landRegion).toBeGreaterThan(0);
+    expect(record.location.landId).toMatch(/^land:[1-9]/);
   });
 
   it('integrates trace observation without changing planner commands, policy memory, canonical state or opposite seats', () => {

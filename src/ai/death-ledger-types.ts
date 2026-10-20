@@ -77,7 +77,7 @@ export type AiUnitDeathRecord = {
   /** Automatic acquisition/queued transitions can differ from the last issued command. */
   currentOrderSource: 'matches-last-issued' | 'derived-or-unrecorded';
   location: { space: 'land' | 'sea' | 'deck' | 'cabin' | 'garrison';
-    landRegion: number | null; seaRegion: number | null; carrierId: string | null };
+    landId: `land:${number}` | null; seaId: `sea:${number}` | null; carrierId: string | null };
   health: { tick: number; hp: number; maxHp: number; source: 'think' | 'damage-before' | 'damage-after' | 'removal' }[];
   context: {
     retreating: boolean;

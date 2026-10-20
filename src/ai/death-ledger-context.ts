@@ -104,7 +104,8 @@ export function inferDeathAssignment(snapshot: GameSnapshot, unit: Unit, memory:
     `naval-field:${unit.id}`, 'naval-combat', order.targetId, 'engage', 'order.attack', true));
   const current = candidates[0] ?? null;
   const emergency = !!claim?.localRetreat || claim?.kind === 'workerSafety' || claim?.kind === 'retreat'
-    || order.type === 'move' && order.avoidCombat === true || treatmentOrder(lastOrder);
+    || order.type === 'move' && order.avoidCombat === true
+    || treatmentOrder(lastOrder) && ['move', 'idle', 'hold'].includes(order.type);
   const near = current?.perimeter ? Math.hypot(unit.x - current.perimeter.x, unit.y - current.perimeter.y) <= current.perimeter.radius : undefined;
   return { observedTick: snapshot.tick, task: current, otherTaskCandidates: candidates.slice(1),
     state: emergency ? 'emergency-interruption' : !current ? 'unassigned'

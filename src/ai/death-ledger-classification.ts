@@ -25,7 +25,7 @@ export function classifyAiDeath(record: Omit<AiUnitDeathRecord, 'classification'
   if (context.outsidePerimeter) add('out-of-bounds', '实际位置超过当前防守任务的基地中心 650 范围');
   if (context.wornRetreatTick !== null && record.tick - context.wornRetreatTick <= 900 && unit.expiresTick === undefined && context.balance.hostile > 0)
     add('post-worn-abandonment', '所属进攻波次近期已以 worn 撤销，永久单位仍在敌方火力附近阵亡');
-  if (context.switches.some(change => record.tick - change.tick <= DEATH_SWITCH_WINDOW))
+  if (context.switches.some(change => change.from !== null && change.to !== null && record.tick - change.tick <= DEATH_SWITCH_WINDOW))
     add('recent-reassignment', '阵亡前 10 秒内推断目标发生切换；时间关联，不证明切换导致死亡');
   if (context.retreating || context.treatment) add('retreat-or-treatment', '正在局部撤退、回收或治疗移动/等待中阵亡');
   if (task?.kind === 'transport' || task?.kind === 'errand' || currentOrder.type === 'board'
@@ -42,6 +42,8 @@ export function classifyAiDeath(record: Omit<AiUnitDeathRecord, 'classification'
   if (!record.killer || !task?.combat) {
     if (!tags.length) add('unattributed', !record.killer ? '没有观察到致死来源；保留为待查异常，未把上一击冒充击杀者' : '没有足够任务证据把这场交战视为已接受的目标交战');
   }
+  if (!tags.length && context.balance.ratio === null)
+    add('unattributed', '局部诊断范围内没有可计量敌军，不能据此确认目标接受的交战兵力比');
   if (tags.length) return result('abnormal', 'inferred');
   add('accepted-engagement', '推断属于已记录的战斗目标，未触发异常处境，局部战力满足诊断线；并非正式规划器的战损许可');
   return result('normal', 'inferred');

@@ -191,7 +191,9 @@ export class AiDeathLedger {
     const currentOrder = fatal?.target.order ?? unit.order;
     const retreating = currentOrder.type === 'move' && currentOrder.avoidCombat === true
       || ['mineLeash', 'retreat', 'workerSafety'].includes(assignment.task?.kind ?? '');
-    const treatment = treatmentOrder(state.order);
+    const treatment = treatmentOrder(state.order) && ['move', 'idle', 'hold'].includes(currentOrder.type);
+    const landLabel = onLand ? groundWholeAt(this.game.map, unit) : undefined;
+    const seaLabel = !onLand ? groundWholeAt(this.game.map, unit, 'sea') : undefined;
     const base: Omit<AiUnitDeathRecord, 'classification'> = {
       id: `${unit.id}@${diedTick}`, tick: diedTick, removedTick: event.tick, owner: unit.owner, unit, catalogGold: UNIT_DEFS[unit.kind].cost,
       removal: event.reason, countedAsNativeLoss: event.countedAsLoss, actualDeath,
@@ -203,8 +205,8 @@ export class AiDeathLedger {
       assignment, currentOrder, lastIssuedOrder: state.order,
       currentOrderSource: this.matchesOrder(currentOrder, state.order) ? 'matches-last-issued' : 'derived-or-unrecorded',
       location: { space: unit.cabin ? 'cabin' : unit.deck ? 'deck' : unit.garrison ? 'garrison' : unitMover(unit.kind) === 'sea' ? 'sea' : 'land',
-        landRegion: onLand ? groundWholeAt(this.game.map, unit) ?? null : null,
-        seaRegion: !onLand ? groundWholeAt(this.game.map, unit, 'sea') ?? null : null,
+        landId: landLabel === undefined ? null : `land:${landLabel}`,
+        seaId: seaLabel === undefined ? null : `sea:${seaLabel}`,
         carrierId: unit.deck?.shipId ?? unit.garrison?.buildingId ?? null },
       health: state.health,
       context: { retreating, treatment, killerIsAlly: killer ? killer.owner === unit.owner
