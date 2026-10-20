@@ -1,64 +1,20 @@
 {
   "baseline": "a389ec26317807cf53aab5d4b85e33c7fc388ccd",
-  "testedCode": "f54a61a5f25aa533a0f8ac57da0c6141cff5e5bb",
+  "testedProductionCommit": "f5f4baafc64228fc64324f249cb3b5dd8d00a76c",
+  "bodySceneCommit": "00643183c7b231c92deec1642f40494ec32b602f",
+  "sourceEquality": "00643183 changes only the tower-body-fit scene; src is identical to f5f4baaf.",
   "browserMachine": "mac1",
-  "screenshots": [
-    {
-      "file": "footman-on-tower-zoomed-out.webp",
-      "sourcePng": "/root/.cache/sketch-cli/runs/mvgjpkrb-62bcf5/ref1-f54a61a/footman-on-tower-zoomed-out-desktop.png",
-      "sourceSha256": "cf4665fbb68a07e5d1487a95c153f5d0a48cc57b7f9bee9249c2e3ba002ca0e9",
-      "webpSha256": "a6eb329b48f1d4c0d224f504e7bf1205fee406f6f2bb079001b1db5f6e423f05",
-      "pixels": [
-        1600,
-        900
-      ],
-      "processing": "mac1 @napi-rs/canvas WebP quality 85; no crop or content edits"
-    },
-    {
-      "file": "knight-on-tower-zoomed-out.webp",
-      "sourcePng": "/root/.cache/sketch-cli/runs/mvgjpkrb-62bcf5/ref1-f54a61a/knight-on-tower-zoomed-out-desktop.png",
-      "sourceSha256": "de4bf8d9103f2bd1704b9acc4dcd67f3ad8207e8f830cb5de1bf3bda7127d145",
-      "webpSha256": "214ea882b1118069d94e0bef5f55f3fdb0fc4f64b3ae31a365a57cff8528ec10",
-      "pixels": [
-        1600,
-        900
-      ],
-      "processing": "mac1 @napi-rs/canvas WebP quality 85; no crop or content edits"
-    },
-    {
-      "file": "ancient-stag-on-tower-zoomed-out.webp",
-      "sourcePng": "/root/.cache/sketch-cli/runs/mvgjpkrb-62bcf5/ref1-f54a61a/ancient-stag-on-tower-zoomed-out-desktop.png",
-      "sourceSha256": "e0f1c5277c15257bc78a1db886ff35efc99c30fb130849876c17e35633fd309f",
-      "webpSha256": "50f80954a0d9750fef2e6ba6a7ab0f62c53c29994dd7fb857fa4d73df9002925",
-      "pixels": [
-        1600,
-        900
-      ],
-      "processing": "mac1 @napi-rs/canvas WebP quality 85; no crop or content edits"
-    },
-    {
-      "file": "ballista-garrison-refusal.webp",
-      "sourcePng": "/root/.cache/sketch-cli/runs/mvgjpkrb-62bcf5/ref1-f54a61a/ballista-garrison-refusal-desktop.png",
-      "sourceSha256": "669c4db60218e331dc816b5e33790cc7db17c918a8afe0f900153f6bce237fc4",
-      "webpSha256": "101339bff3938a6bf4c224090b30c6fe00e921df6cff9bd52017326587261b0a",
-      "pixels": [
-        1600,
-        900
-      ],
-      "processing": "mac1 @napi-rs/canvas WebP quality 85; no crop or content edits"
-    }
-  ],
   "scenes": [
     {
       "name": "tower-trained-melee",
       "runs": [
         {
-          "sha": "f54a61a5f25aa533a0f8ac57da0c6141cff5e5bb",
+          "sha": "f5f4baafc64228fc64324f249cb3b5dd8d00a76c",
           "ok": true,
-          "pageErrors": [],
-          "localDir": "/root/.cache/sketch-cli/runs/mvgjpkqx-f5eadb/ref1-f54a61a",
-          "remoteDir": "/Users/mac1/work/sketch-cli/runs/mvgjpkqx-f5eadb/ref1-f54a61a",
-          "archiveDir": "tower-trained-melee/ref1-f54a61a",
+          "errors": [],
+          "localDir": "/root/.cache/sketch-cli/runs/mvglavsk-f58cce/ref1-f5f4baa",
+          "remoteDir": "/Users/mac1/work/sketch-cli/runs/mvglavsk-f58cce/ref1-f5f4baa",
+          "archiveDir": "tower-trained-melee/ref1-f5f4baa",
           "rangeTraining": 1,
           "results": [
             {
@@ -90,11 +46,11 @@
         {
           "sha": "a389ec26317807cf53aab5d4b85e33c7fc388ccd",
           "ok": false,
-          "pageErrors": [],
-          "localDir": "/root/.cache/sketch-cli/runs/mvgjpkqx-f5eadb/ref2-a389ec2",
-          "remoteDir": "/Users/mac1/work/sketch-cli/runs/mvgjpkqx-f5eadb/ref2-a389ec2",
+          "failure": "range-trained melee troops damaged a tower occupant",
+          "errors": [],
+          "localDir": "/root/.cache/sketch-cli/runs/mvglavsk-f58cce/ref2-a389ec2",
+          "remoteDir": "/Users/mac1/work/sketch-cli/runs/mvglavsk-f58cce/ref2-a389ec2",
           "archiveDir": "tower-trained-melee/ref2-a389ec2",
-          "failure": "range-trained melee cavalry damaged a tower occupant",
           "rangeTraining": 1,
           "results": [
             {
@@ -129,54 +85,64 @@
       "name": "tower-body-fit",
       "runs": [
         {
-          "sha": "f54a61a5f25aa533a0f8ac57da0c6141cff5e5bb",
+          "sha": "00643183c7b231c92deec1642f40494ec32b602f",
           "ok": true,
-          "pageErrors": [],
-          "localDir": "/root/.cache/sketch-cli/runs/mvgjpkrb-62bcf5/ref1-f54a61a",
-          "remoteDir": "/Users/mac1/work/sketch-cli/runs/mvgjpkrb-62bcf5/ref1-f54a61a",
-          "archiveDir": "tower-body-fit/ref1-f54a61a",
+          "errors": [],
+          "localDir": "/root/.cache/sketch-cli/runs/mvglho5d-efd8e9/ref1-0064318",
+          "remoteDir": "/Users/mac1/work/sketch-cli/runs/mvglho5d-efd8e9/ref1-0064318",
+          "archiveDir": "tower-body-fit/ref1-0064318",
           "bodies": [
             {
               "kind": "footman",
-              "x": 1936,
-              "y": 2000,
+              "x": 1200,
+              "y": 3568,
               "radius": 18,
-              "towerX": 1936,
-              "towerY": 2000,
+              "towerX": 1200,
+              "towerY": 3568,
               "towerRadius": 40,
               "extent": 18
             },
             {
-              "kind": "knight",
-              "x": 2288,
-              "y": 2000,
-              "radius": 22,
-              "towerX": 2288,
-              "towerY": 2000,
+              "kind": "archer",
+              "x": 1616,
+              "y": 3568,
+              "radius": 16,
+              "towerX": 1616,
+              "towerY": 3568,
               "towerRadius": 40,
-              "extent": 22
+              "extent": 16
             },
             {
-              "kind": "ancientStag",
-              "x": 2640,
-              "y": 2000,
-              "radius": 32,
-              "towerX": 2640,
-              "towerY": 2000,
+              "kind": "priest",
+              "x": 2000,
+              "y": 3568,
+              "radius": 16,
+              "towerX": 2000,
+              "towerY": 3568,
               "towerRadius": 40,
-              "extent": 32
+              "extent": 16
+            },
+            {
+              "kind": "ogreLord",
+              "x": 1616,
+              "y": 3792,
+              "radius": 28,
+              "towerX": 1616,
+              "towerY": 3792,
+              "towerRadius": 40,
+              "extent": 28
             }
           ],
           "status": [
             {
-              "text": "Hosted command rejected: Mechanical units cannot garrison towers",
+              "text": "Hosted command rejected: Only foot troops can garrison towers",
               "visible": true,
               "data": {
                 "status": ""
               }
             }
           ],
-          "ballista": {
+          "knight": {
             "garrison": null,
             "order": {
               "type": "idle"
@@ -186,41 +152,51 @@
         {
           "sha": "a389ec26317807cf53aab5d4b85e33c7fc388ccd",
           "ok": false,
-          "pageErrors": [],
-          "localDir": "/root/.cache/sketch-cli/runs/mvgjpkrb-62bcf5/ref2-a389ec2",
-          "remoteDir": "/Users/mac1/work/sketch-cli/runs/mvgjpkrb-62bcf5/ref2-a389ec2",
-          "archiveDir": "tower-body-fit/ref2-a389ec2",
           "failure": "an occupant's body overhangs the tower top",
+          "errors": [],
+          "localDir": "/root/.cache/sketch-cli/runs/mvglho5d-efd8e9/ref2-a389ec2",
+          "remoteDir": "/Users/mac1/work/sketch-cli/runs/mvglho5d-efd8e9/ref2-a389ec2",
+          "archiveDir": "tower-body-fit/ref2-a389ec2",
           "bodies": [
             {
               "kind": "footman",
-              "x": 1922,
-              "y": 1986,
+              "x": 1186,
+              "y": 3554,
               "radius": 18,
-              "towerX": 1936,
-              "towerY": 2000,
+              "towerX": 1200,
+              "towerY": 3568,
               "towerRadius": 40,
               "extent": 37.798989873223334
             },
             {
-              "kind": "knight",
-              "x": 2274,
-              "y": 1986,
-              "radius": 22,
-              "towerX": 2288,
-              "towerY": 2000,
+              "kind": "archer",
+              "x": 1602,
+              "y": 3554,
+              "radius": 16,
+              "towerX": 1616,
+              "towerY": 3568,
               "towerRadius": 40,
-              "extent": 41.798989873223334
+              "extent": 35.798989873223334
             },
             {
-              "kind": "ancientStag",
-              "x": 2626,
-              "y": 1986,
-              "radius": 32,
-              "towerX": 2640,
-              "towerY": 2000,
+              "kind": "priest",
+              "x": 1986,
+              "y": 3554,
+              "radius": 16,
+              "towerX": 2000,
+              "towerY": 3568,
               "towerRadius": 40,
-              "extent": 51.798989873223334
+              "extent": 35.798989873223334
+            },
+            {
+              "kind": "ogreLord",
+              "x": 1602,
+              "y": 3778,
+              "radius": 28,
+              "towerX": 1616,
+              "towerY": 3792,
+              "towerRadius": 40,
+              "extent": 47.798989873223334
             }
           ],
           "status": [
@@ -232,51 +208,116 @@
               }
             }
           ],
-          "ballista": {
-            "garrison": null,
-            "order": {
-              "type": "garrison",
+          "knight": {
+            "garrison": {
               "buildingId": "tower-0"
+            },
+            "order": {
+              "type": "idle"
             }
           }
         }
       ]
     }
   ],
+  "screenshots": [
+    {
+      "file": "footman-on-tower-zoomed-out.webp",
+      "sourcePng": "/root/.cache/sketch-cli/runs/mvglho5d-efd8e9/ref1-0064318/footman-on-tower-zoomed-out-desktop.png",
+      "sourceSha256": "033c7d535ca3af5bb73606ea8ceac5800bdbc266cbecdb9a9e1a688fdcf09147",
+      "webpSha256": "d2ede6b53773b4f215cd17b6b5d1c3ec793fdb0cb824a01205966fa8eeabc15f",
+      "pixels": [
+        1600,
+        900
+      ],
+      "processing": "mac1 @napi-rs/canvas WebP quality 85, without crop or content edits"
+    },
+    {
+      "file": "archer-on-tower-zoomed-out.webp",
+      "sourcePng": "/root/.cache/sketch-cli/runs/mvglho5d-efd8e9/ref1-0064318/archer-on-tower-zoomed-out-desktop.png",
+      "sourceSha256": "edcc5fef24e101e2187bf6335259a45de740d4143b64fba5e254ee2e946b3edb",
+      "webpSha256": "10a63c9c08625d133329b918b963c5a1ab0786b72178270a44f92a978020d059",
+      "pixels": [
+        1600,
+        900
+      ],
+      "processing": "mac1 @napi-rs/canvas WebP quality 85, without crop or content edits"
+    },
+    {
+      "file": "priest-on-tower-zoomed-out.webp",
+      "sourcePng": "/root/.cache/sketch-cli/runs/mvglho5d-efd8e9/ref1-0064318/priest-on-tower-zoomed-out-desktop.png",
+      "sourceSha256": "9436889eca4dae18176f5f72630023a729fbd9bad102d499bdfabba9ab4740d6",
+      "webpSha256": "4ddd7c46c8f9071b2be420b20572acb94567e01d52591fcecdeb7d5b465392d1",
+      "pixels": [
+        1600,
+        900
+      ],
+      "processing": "mac1 @napi-rs/canvas WebP quality 85, without crop or content edits"
+    },
+    {
+      "file": "ogre-lord-on-tower-zoomed-out.webp",
+      "sourcePng": "/root/.cache/sketch-cli/runs/mvglho5d-efd8e9/ref1-0064318/ogre-lord-on-tower-zoomed-out-desktop.png",
+      "sourceSha256": "e19e8291da4358fbefe2c30a0bcc40c6b0ae52a0c81adcb89e60b89cab5b39b3",
+      "webpSha256": "95597cfa2fecba8fcfd2d4fc3685c55ef6f58cdbe17ae5ca6fd7271297322791",
+      "pixels": [
+        1600,
+        900
+      ],
+      "processing": "mac1 @napi-rs/canvas WebP quality 85, without crop or content edits"
+    },
+    {
+      "file": "knight-garrison-refusal.webp",
+      "sourcePng": "/root/.cache/sketch-cli/runs/mvglho5d-efd8e9/ref1-0064318/knight-garrison-refusal-desktop.png",
+      "sourceSha256": "a3889e8b453b71b64f5ab451bc1bce71d023aaa77038ba3237b8edf0d57e9a62",
+      "webpSha256": "6bb428d7a1beeebb597746bef8baa00e477ffa5c9dea4b66866410f86fa9985a",
+      "pixels": [
+        1600,
+        900
+      ],
+      "processing": "mac1 @napi-rs/canvas WebP quality 85, without crop or content edits"
+    }
+  ],
   "evidence": {
     "browserPointer": "raw.evidence.json",
     "checksPointer": "checks.evidence.json",
-    "retrieveBrowser": "SKETCH_MACHINES=~/.config/sketch/machines-sound.json bin/sketch evidence get docs/tower/weapon-class/raw.evidence.json --out work/tower-browser-evidence",
     "missingUnitAfterAttack": "A dead unit is removed from the snapshot; afterHp null means it did not survive."
   },
   "checks": {
-    "machine": "mac1",
-    "node": "24.14.0",
-    "tsc": {
+    "productionAndTestsCommit": "f5f4baafc64228fc64324f249cb3b5dd8d00a76c",
+    "rootTsc": {
       "command": "npx tsc --noEmit -p .",
       "exit": 0
     },
-    "vitest": {
-      "command": "npx vitest run --dir src --maxWorkers=2 --minWorkers=1 --reporter=default --reporter=json --outputFile=<run>/vitest.json",
+    "cliTsc": {
+      "command": "npx tsc --noEmit -p tools/cli/tsconfig.json",
+      "exit": 0
+    },
+    "fullVitest": {
+      "machine": "mac1",
+      "node": "24.14.0",
+      "command": "npx vitest run --dir src --maxWorkers=2 --minWorkers=1 --reporter=default --reporter=json --outputFile=<run>/vitest-confirm.json",
       "exit": 0,
-      "total": 7901,
-      "passed": 7900,
+      "total": 7911,
+      "passed": 7910,
       "failed": 0,
       "skipped": [
         "headless recorder encodes an MP4 through ffmpeg"
       ],
-      "skipReason": "The existing skipIf(!hasFfmpeg()) condition did not find ffmpeg on mac1 PATH. This same MP4 test passed in the A100 full run."
+      "files": 714,
+      "remoteOutput": "/Users/mac1/work/sketch-cli/runs/mvgl9l32-f39ca8",
+      "exitEvidence": "vitest-confirm.exit is written on mac1 immediately after Vitest exits."
     },
-    "remoteOutput": "/Users/mac1/work/sketch-cli/runs/mvgkail6-c7ec34",
-    "testFixtures": "Exact tracked docs/ai/plan-viz content was hydrated from git archive of the tested commit, because an older CLI tree cache omitted its JS fixtures.",
-    "earlierA100Run": {
-      "node": "22.23.3",
-      "tscExit": 0,
-      "vitestExit": 1,
-      "passed": 7900,
-      "total": 7901,
-      "failure": "AI worker cannot import extensionless host; baseline a389ec26 reproduces the same error. The same worker test passes 5/5 on A100 Node 24.22.0, juma Node 24.22.0 and mac1 Node 24.14.0. No test timeout or assertion was changed.",
-      "remoteOutput": "/codegeex/jeffry/sketch-cli/runs/mvgjmx23-f6823d"
-    }
+    "mp4Coverage": {
+      "machine": "a100",
+      "node": "v24.22.0",
+      "command": "npx vitest run src/recorder/record.test.ts --maxWorkers=1 --minWorkers=1",
+      "exit": 0,
+      "passed": 6,
+      "total": 6,
+      "remoteOutput": "/codegeex/jeffry/sketch-cli/runs/mvglcikn-c8baef"
+    },
+    "fixtureHydration": "Exact tracked docs/ai/plan-viz fixtures from git archive of f5f4baaf were added to the old CLI cache. Fixture contents were not edited.",
+    "firstRunWrapperExit": 143,
+    "firstRunNote": "The first full report also completed successfully, but its evidence wrapper was terminated before saving Vitest status. The full suite was rerun with a durable remote exit-code file; the final result above is the confirmed run."
   }
 }

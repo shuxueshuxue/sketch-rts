@@ -60,52 +60,55 @@
 上塔规则与反馈
 -------------
 
-资格政策只在 `canStandOnTower`：存活、bodyForm=foot 的非机械陆军，且不在甲板或舱内。`garrisonRefusal`、`garrisonRoomFor`、命令验证和 AI 计划入口共用这项政策。体态逐兵种显式声明，variant 可覆盖；机械判定仍读取 `unitClass`，不列兵种白名单。完整 55 兵种分类见 [body-forms.zh.md](body-forms.zh.md)。
+资格政策只在 `canStandOnTower`：存活、bodyForm=foot 的非机械陆军，且不在甲板或舱内。55 种基础单位在 `UNIT_RULES` 逐行显式声明体态；没有按名字、半径、武器或来源推断。完整分类表及边界说明见 [body-forms.zh.md](body-forms.zh.md)。
 
-`garrisonRoomFor` 同时检查人口和 `towerTopLayout` 的整圆身体排布。排布按半径和稳定 ID 排序，约束 `距离塔心 + 单位半径 ≤ 塔半径`，并检查身体不重叠。单人站中间，混编需要重新排位；身体确实放不下就拒绝，存档中的不合格占位者会安全下塔。静态组成的布局有弱引用缓存，避免每 tick 重跑排布搜索。
+- foot 27：包括 lancer（长矛步兵）、工人、双足野人/鱼人/食人魔、三种永久雇佣兵。
+- mounted 3：knight、raider、horseArcher，均不能上塔。
+- beast 9、machine 15、spirit 1：均不能上塔。无足灵体单列 spirit；机械魔像即使双足也不能上塔。
+- 召唤和雇佣只表示来源，不改变体态。召唤出的 foot 单位仍按 foot 判定，永久存在的 spirit 仍不能上塔。无人口的徒步单位按 1 人口计。
 
-每个不合格成员都有结构化 `refusal={reason,detail}`：`garrison-mechanical`、`garrison-not-infantry`（detail 携带 mounted/beast/spirit）、`tower-full`、`garrison-body-size`、`garrison-ownership`、`garrison-ineligible`。直接 sim 命令的拒绝和混合选择的部分拒绝经 `orderEnded` 发出；拒绝不会清掉单位先前的 order/queue，也不消费 nextId。外层保留既有 reason：机械/体型是 refused，满员是 no-room，归属是 target-gone。
+`UnitVariantDef.bodyForm` 可覆盖；旧 variant 缺少该字段时继承 catalog 基础兵种的显式体态。`unitClass` 与体态各有用途，只改 targeting class 不会把机器形态变成步兵；机械 class 的变体即使声明 foot 也仍被拒绝。命令验证、到达检查、`garrisonRoomFor` 与 AI 计划入口共用这项政策。
 
-整单被客户端 preflight 或服务器 frame admission 拦住时，返回的 `CommandLegalityError` 同样携带精确 refusal，并保留现有即时提示。该边界的统一私有网络回执、翻译和提示样式由 Codex 27 的后续 PR 接入；本 PR 不往只读合法性检查里写效果，也没有改 effect-renderer 样式。
+`towerTopLayout` 同时检查完整身体是否能排布：按半径和稳定 ID 排序，约束 `距离塔心 + 单位半径 ≤ 塔半径`，并检查身体不重叠。单人站中间，混编重新排位；身体放不下就拒绝，旧存档中骑乘、野兽、机械或灵体占位者会安全下塔。静态组成的布局有弱引用缓存。
 
-上一轮验证与截图（源代码 f54a61a5；新体态规则的图证正在替换）
+每个不合格成员都有结构化 `refusal={reason,detail}`：`garrison-mechanical`、`garrison-not-infantry`（detail 携带 mounted/beast/spirit）、`tower-full`、`garrison-body-size`、`garrison-ownership`、`garrison-ineligible`。直接 sim 命令的拒绝和混合选择的部分拒绝经 `orderEnded` 发出，保留先前的 order/queue，也不消费 nextId。外层既有 reason：机械/非步兵/体型是 refused，满员是 no-room，归属是 target-gone。
+
+整单在客户端 preflight 或服务器 frame admission 被拦住时，`CommandLegalityError` 同样携带精确 refusal。统一私有回执、中文提示和提示样式由 Codex 27 的后续 PR 接入；本 PR 不向只读合法性检查写效果。截图中的英文 Hosted command rejected 是既有开发错误条。
+
+验证与截图
 ----------
 
-两组场景都在 mac1 的真实 Chromium 中运行，同一份场景脚本分别运行基线和分支：
+生产代码与测试为 `f5f4baafc64228fc64324f249cb3b5dd8d00a76c`；身体截图场景为 `00643183c7b231c92deec1642f40494ec32b602f`，后者只把截图地点移到空地，没有改变 src。此后的提交只更新文档、图片和证据指针。
+
+两组场景均在 mac1 的真实 Chromium 中运行，同一份脚本分别运行基线和分支：
 
 ```sh
 export SKETCH_MACHINES=~/.config/sketch/machines-sound.json
-bin/sketch yatu tower-trained-melee --ref <验证的分支提交> --ref2 a389ec26 --on mac1 --json
-bin/sketch yatu tower-body-fit --ref <验证的分支提交> --ref2 a389ec26 --on mac1 --json
+bin/sketch yatu tower-trained-melee --ref f5f4baaf --ref2 a389ec26 --on mac1 --json
+bin/sketch yatu tower-body-fit --ref 00643183 --ref2 a389ec26 --on mac1 --json
 ```
 
-第一组通过实际研究完成一级射程科技，验证科技等级确实为 1。没有依赖 HTTP reset 会丢弃的 `scenario.players.upgrades`。主分支三个塔顶工人全部被打死；分支三个工人都保持 70 HP。lancer 为徒步长矛兵，knight/raider 为骑乘单位。满级科技及换弓由真实 sim 的单元测试覆盖。
+两组均为分支通过、main 按目标断言失败，两边页面错误均为 0。第一组实际研究到一级射程科技，明确检查等级为 1；不依赖 HTTP reset 会丢弃的 scenario.players.upgrades。满级科技和换弓由真实 sim 单元测试覆盖。
 
 | 进攻者 | main 射程 / 塔顶工人结果 | 分支射程 / 塔顶工人结果 |
 | --- | --- | --- |
 | knight | 83 / 死亡 | 72 / 70 HP |
 | raider | 83 / 死亡 | 72 / 70 HP |
-| lancer | 85 / 死亡 | 74 / 70 HP |
+| lancer（徒步） | 85 / 死亡 | 74 / 70 HP |
 
-第二组按 owner 最新规则改成“弩车拒绝提示”以及步兵、骑士、最大体型非机械陆军 ancientStag 的塔顶截图，镜头缩小到 0.7。main 的骑士/古鹿身体越界；分支完整落在半径 40 内，且弩车保持在地面并看到明确提示。单人从偏移 ±14 改为居中后，身体最远点分别为 18、22、32。
+第二组展示步兵、弓箭手、牧师以及最大基础徒步体型的食人魔领主；分支单人居中后，身体最远点分别为 18、16、16、28，全部不超过塔半径 40。main 的食人魔领主越界。骑士在分支留在地面并显示拒绝原因，在 main 则仍能上塔。镜头缩小到 0.7，塔台无遮挡。
 
-- [弩车不能上塔的实际提示](ballista-garrison-refusal.webp)
 - [步兵在塔顶](footman-on-tower-zoomed-out.webp)
-- [骑士在塔顶](knight-on-tower-zoomed-out.webp)
-- [最大体型的非机械陆军在塔顶](ancient-stag-on-tower-zoomed-out.webp)
+- [弓箭手在塔顶](archer-on-tower-zoomed-out.webp)
+- [牧师在塔顶](priest-on-tower-zoomed-out.webp)
+- [最大徒步体型在塔顶](ogre-lord-on-tower-zoomed-out.webp)
+- [骑士被拒绝的提示](knight-garrison-refusal.webp)
 
-原 PNG、逐项位置/半径/HP 与执行结果的位置见 [validation.json](validation.json)。WebP 只对原截图转码，没有改画面内容。
+原 PNG、逐项位置/半径/HP、脚本和远端位置见 [validation.json](validation.json)。WebP 只对原图转码，没有改画面内容。原始浏览器记录与测试日志分别存于 [raw.evidence.json](raw.evidence.json) 和 [checks.evidence.json](checks.evidence.json)，上传后核对 SHA-256。
 
-既有断言变化是两项新规则所要求的：`sim.test.ts` 将新训练掠袭兵的科技后射程由 83 改为 72；`tooltips.test.ts` 将说明改为 ranged weapon reach。四个规则边界测试把当前版本由 7 改为 8，并保留规则 7 存档可读的断言。没有改变 AI 对战结果断言、删除测试或放宽超时。
+最终校验：根 `npx tsc --noEmit -p .` 与 CLI tsc 均退出 0。mac1（Node 24.14.0）全量 `npx vitest run --dir src --maxWorkers=2 --minWorkers=1` 为 **714 文件通过、7910 项通过、1 项既有条件跳过、0 失败，退出 0**。退出码由远端 `vitest-confirm.exit` 核对。唯一跳过项是 mac1 PATH 中没有 ffmpeg 时已有 `skipIf` 的 MP4 编码测试；同一份生产代码在 A100（Node 24.22.0）单跑录制文件为 **6/6 通过、退出 0**，涵盖该项。未新增跳过项或放宽超时。
 
-上一轮校验（源代码 f54a61a5）
---------
-
-验证源代码为 `f54a61a5f25aa533a0f8ac57da0c6141cff5e5bb`，此后的提交只增加本文、截图、元数据与证据指针。mac1（Node 24.14.0）上根 `npx tsc --noEmit -p .` 退出 **0**；`npx vitest run --dir src --maxWorkers=2 --minWorkers=1` 为 **7900 通过、1 项既有条件跳过、0 失败，退出 0**。mac1 当前 PATH 未检测到 ffmpeg，唯一跳过项是既有 `skipIf(!hasFfmpeg())` 的 MP4 编码测试；同一项在 A100 全量中已通过。
-
-先前 A100 的 Node 22.23.3 全量为 7900/7901、退出 1，唯一失败是 worker 启动无法解析无扩展名的 `host`。基线也能复现；同一份代码的该文件在 A100 Node 24.22.0、juma Node 24.22.0、mac1 Node 24.14.0 均 5/5 通过。因此保留原测试与 30 秒等待限制，最终在 mac1 重跑整套，未跳过失败项。远端旧 CLI 缓存遗漏的计划历史 JS 夹具由验证提交的 `git archive` 原样补齐，没有改夹具内容。
-
-原始浏览器证据见 [raw.evidence.json](raw.evidence.json)，类型检查与全量日志见 [checks.evidence.json](checks.evidence.json)。取回命令：
+既有断言变化：新训练掠袭兵的科技后射程从 83 改为 72、科技说明改为 ranged weapon reach、四处当前规则版本 7 改为 8（保留规则 7 存档可读）。按新的徒步规则，“无人口单位按 1 人口计”的案例从 spirit 换成同为 0 人口的 foot wildling，容量断言保留；身体排布案例换为徒步体型。没有改变 AI 对战结果断言、删除测试或放宽超时。
 
 ```sh
 export SKETCH_MACHINES=~/.config/sketch/machines-sound.json
