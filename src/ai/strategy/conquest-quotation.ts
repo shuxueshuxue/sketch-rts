@@ -8,6 +8,8 @@ import { arrivalWeightedForce } from './arrival-force';
 import { conquestFacts } from './conquest-facts';
 import type { ProductionUse } from './types';
 import { discountedValue, resolveValuation, reusableAssetCost } from './utility';
+import { casualtyUnitValues, sumUnitValues } from './allocated-unit-values';
+import { assertUnitValueSides } from './unit-value-ledger';
 
 export function quoteConquestMethod(input: AllocationMethodQuoteInput): MethodAllocationQuote {
   const { method, objective, situation, snapshot } = input, facts = conquestFacts(input);
@@ -72,17 +74,25 @@ export function quoteConquestMethod(input: AllocationMethodQuoteInput): MethodAl
     { code: 'mining-worker-recruitment', value: -facts.forecast.presentTrainingGold },
   ];
   const cost = [
-    { code: 'force-voyage-hull-and-passengers', value: discountedValue(forceWaves.reduce((sum, wave) => sum + wave.expectedLossGold, 0), facts.latestArrivalTicks, facts.window) },
+    { code: 'force-voyage-hull-and-passengers', value: discountedValue(forceWaves.reduce((sum, wave) => sum + wave.expectedLossGold, 0), facts.latestArrivalTicks, facts.window),
+      catalogUnitValues: sumUnitValues(forceWaves.map(wave => wave.catalogUnitValues.map(entry => ({ ...entry,
+        valueGold: discountedValue(entry.valueGold, facts.latestArrivalTicks, facts.window) })))) },
     { code: 'clearing-attrition-after-force-arrival', value: forceSurvival * discountedValue(facts.cleared ? 0 : facts.battle.attrition.expectedLossGold,
-      facts.clearingUntilTicks, facts.window) },
+      facts.clearingUntilTicks, facts.window), catalogUnitValues: facts.cleared ? []
+        : casualtyUnitValues(facts.fighters, facts.battle.attrition.permanentDeadUnitIds).map(entry => ({ ...entry,
+          valueGold: forceSurvival * discountedValue(entry.valueGold, facts.clearingUntilTicks, facts.window) })) },
     { code: 'worker-voyage-after-clearing', value: forceSurvival * (battleProbability ?? 0) * discountedValue(
-      workerWaves.reduce((sum, wave) => sum + wave.expectedLossGold, 0), Math.max(facts.clearingUntilTicks, facts.engineerArrivalTicks), facts.window) },
+      workerWaves.reduce((sum, wave) => sum + wave.expectedLossGold, 0), Math.max(facts.clearingUntilTicks, facts.engineerArrivalTicks), facts.window),
+      catalogUnitValues: sumUnitValues(workerWaves.map(wave => wave.catalogUnitValues.map(entry => ({ ...entry,
+        valueGold: forceSurvival * (battleProbability ?? 0) * discountedValue(entry.valueGold,
+          Math.max(facts.clearingUntilTicks, facts.engineerArrivalTicks), facts.window) })))) },
     ...(valuation.opportunity?.status === 'known' ? [{ code: 'bundle-opportunity', value: valuation.opportunity.gold }] : []),
   ];
   const persistenceBonus = objective.utility.persistenceBonus;
   const utility: AllocationUtility = { horizonTicks: facts.window.horizonTicks, benefit, cost, successProbability: probability,
     persistenceBonus, score: probability * benefit.reduce((sum, term) => sum + term.value, 0)
       - cost.reduce((sum, term) => sum + term.value, 0) + persistenceBonus };
+  assertUnitValueSides(utility);
   const reason: AllocationReason = { code: missing[0]?.reason.code ?? 'concrete-arrival-clearing-and-staffing-plan-feasible',
     factIds: facts.fighters.map(unit => unit.id), values: { requiredForce: requirement, assembledForce: actualForce,
       actualOpponentForce: facts.cleared ? 0 : facts.battle.actualOpponentForce, currentEffectiveForce: weighted.effectiveForce,

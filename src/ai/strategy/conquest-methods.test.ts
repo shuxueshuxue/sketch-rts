@@ -13,6 +13,7 @@ import { buildStrategyDecision } from './decision';
 import { conquestMethodProvider } from './conquest-methods';
 import { landIdAt } from './regions';
 import { forceSuccessProbability, quoteOpportunityCost } from './utility';
+import { assertUnitValueSides } from './unit-value-ledger';
 
 function sapphire(): AllocationMethodQuoteInput {
   const frame: { snapshot: GameSnapshot; owner: string; memory: AiPolicyMemory } = JSON.parse(gunzipSync(readFileSync(
@@ -103,6 +104,8 @@ describe('executable conquest methods from the real sapphire shortfall', () => {
       unitIds: snapshot.units.filter(unit => unit.owner === 'us').map(unit => unit.id) };
     const materialized = conquestMethodProvider.materialize!(input), quote = conquestMethodProvider.quote({ ...input, method: materialized });
     expect(quote.status).toBe('feasible');
+    expect(() => assertUnitValueSides(quote.utility!)).not.toThrow();
+    expect(quote.utility!.cost.find(term => term.code === 'clearing-attrition-after-force-arrival')!.catalogUnitValues).toEqual([]);
     expect(quote.utility!.score).toBeGreaterThan(0);
     expect(quote.reason.values.trainingGold).toBe(0);
     expect(quote.utility!.cost.some(term => term.code === 'force-time' || term.code === 'new-transport')).toBe(false);
