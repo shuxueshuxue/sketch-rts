@@ -1,0 +1,9 @@
+{
+  "sha256": "d5b3546f4ce9ae6a3b30895276f4f91aa8f25e751d47612a7d5e10479388b46c",
+  "bytes": 218704,
+  "name": "mining-forecast-production-evidence",
+  "kind": "dir",
+  "machine": "a100",
+  "pushed": "6452489463e9510e1028a42368a7d7beda6f9b9e",
+  "pr": 580
+}

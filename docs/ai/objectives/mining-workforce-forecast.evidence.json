@@ -505,5 +505,31 @@
     "relatedPassed": 22,
     "rootTsc": 0,
     "additionalBoundary": "already mining workers do not book expansion income before actual hall readiness or outside the requesting window"
+  },
+  "currentModel": {
+    "code": "6452489463e9510e1028a42368a7d7beda6f9b9e",
+    "core": "b669423b23a175473d27b2df35eab0df379f4d12",
+    "supplementPointer": "mining-workforce-production.evidence.json",
+    "validation": {
+      "relatedPassed": 36,
+      "rootTsc": 0,
+      "strategyBeforeCapitalDelta": {
+        "files": 25,
+        "passed": 235
+      },
+      "fixtureTypeOnly": {
+        "commit": "333b11b7",
+        "passed": 39
+      },
+      "holdoutByMapUnchanged": true,
+      "defaultPathAndSevenFramesPassed": 34,
+      "defaultSituationAndLandConstructionCount": 0
+    },
+    "newBoundaries": [
+      "production allowance and half-open unavailable intervals",
+      "paid job exclusion does not cancel or shift real queue",
+      "first mine income cannot fund recruits before hall readiness",
+      "declared finite negative capital balance is repaid before optional recruitment"
+    ]
   }
 }
