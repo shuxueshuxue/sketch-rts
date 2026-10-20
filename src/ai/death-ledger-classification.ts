@@ -1,16 +1,16 @@
-import type { AiDeathCategory, AiUnitDeathRecord } from './death-ledger-types';
+import type { AiDeathCategory, AiUnitDeathRecord, AiDeathClassificationV1, AiDeathEngagement, AiDeathDisposition } from './death-ledger-types';
 
 /** Versioned diagnostics over observations. These thresholds never feed the policy. */
-export const DEATH_DIAGNOSTIC_VERSION = 1;
+export const DEATH_DIAGNOSTIC_VERSION = 2;
 export const DEATH_DIAGNOSTIC_MIN_RATIO = .6;
 export const DEATH_SWITCH_WINDOW = 200;
 
-export function classifyAiDeath(record: Omit<AiUnitDeathRecord, 'classification'>): AiUnitDeathRecord['classification'] {
+export function classifyAiDeathV1(record: Omit<AiUnitDeathRecord, 'classification'>): AiDeathClassificationV1 {
   const tags: AiDeathCategory[] = [], explanations: string[] = [];
   const add = (category: AiDeathCategory, why: string) => { tags.push(category); explanations.push(why); };
-  const result = (disposition: 'normal' | 'abnormal' | 'lifecycle', attribution: 'inferred' | 'lifecycle-event'): AiUnitDeathRecord['classification'] => ({
+  const result = (disposition: 'normal' | 'abnormal' | 'lifecycle', attribution: 'inferred' | 'lifecycle-event'): AiDeathClassificationV1 => ({
     disposition, primary: tags[0]!, tags, explanations, attribution,
-    diagnosticVersion: DEATH_DIAGNOSTIC_VERSION, minimumInferredCombatRatio: DEATH_DIAGNOSTIC_MIN_RATIO,
+    diagnosticVersion: 1, minimumInferredCombatRatio: DEATH_DIAGNOSTIC_MIN_RATIO,
   });
   if (!record.actualDeath) {
     add(record.removal === 'expired' ? 'summon-expired' : 'script-exit', '原生生命周期移除；单位仍存活，不计战斗阵亡或异常战损');
@@ -47,4 +47,26 @@ export function classifyAiDeath(record: Omit<AiUnitDeathRecord, 'classification'
   if (tags.length) return result('abnormal', 'inferred');
   add('accepted-engagement', '推断属于已记录的战斗目标，未触发异常处境，局部战力满足诊断线；并非正式规划器的战损许可');
   return result('normal', 'inferred');
+}
+
+/** The v1 labels stay intact. Only the primary classification and partition change. */
+export function classifyAiDeath(record: Omit<AiUnitDeathRecord, 'classification'>, engagement: AiDeathEngagement,
+  previous = classifyAiDeathV1(record)): AiUnitDeathRecord['classification'] {
+  const v1 = structuredClone(previous), tags = [...v1.tags];
+  const result = (disposition: AiDeathDisposition, primary: AiDeathCategory, why: string): AiUnitDeathRecord['classification'] => ({
+    disposition, primary, tags, explanations: [why, ...v1.explanations], attribution: v1.attribution,
+    diagnosticVersion: DEATH_DIAGNOSTIC_VERSION, minimumInferredCombatRatio: DEATH_DIAGNOSTIC_MIN_RATIO, engagement, v1,
+  });
+  if (v1.disposition === 'lifecycle') return result('lifecycle', v1.primary, '生命周期/行政移除，不进入战损三层');
+  if (engagement.status === 'engaged') {
+    if ((record.context.retreating || record.context.treatment) && !tags.includes('retreat-failed')) tags.push('retreat-failed');
+    const structural = (['recent-reassignment', 'out-of-bounds', 'post-worn-abandonment'] as const).find(tag => tags.includes(tag));
+    if (structural) return result('suspicious', structural, '交战中出现结构性诊断，列为存疑待复核；不宣称其造成死亡');
+    return result('normal', 'combat-loss', '附近有交战对手，窗口内有实际受伤或输出；撤退失败和局部劣势保留子标签，不单独判异常');
+  }
+  if (engagement.status === 'unknown') return result('unattributed', 'unattributed', '交战证据不足，单列未知，不并入正常/存疑/异常');
+  const outside = (['friendly-source', 'neutral-outside-clearing', 'logistics-transit', 'idle',
+    'isolated-without-evacuation-plan', 'exposed-worker'] as const).find(tag => tags.includes(tag));
+  return outside ? result('abnormal', outside, '确认处于交战之外，保留原任务/处境诊断作为异常主分类')
+    : result('unattributed', 'unattributed', '交战外死亡没有足够任务诊断可归类，单列未知');
 }

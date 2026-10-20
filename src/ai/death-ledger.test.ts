@@ -41,7 +41,7 @@ describe('read-only AI death ledger', () => {
       lastIssuedOrder: { executor: 'miningRally', tick: 0, attribution: 'recorded-issued-command' },
       attributionContext: { objectiveId: null, methodId: null, assignmentId: null, provenance: 'inferred',
         executor: 'miningRally', task: { id: 'defense:hall' }, location: { kind: 'land', landId: 'land:1' } },
-      classification: { disposition: 'normal', primary: 'accepted-engagement', attribution: 'inferred' } });
+      classification: { disposition: 'normal', primary: 'combat-loss', attribution: 'inferred' } });
     expect(record!.damageWindow.sources).toHaveLength(1);
     expect(record!.health.map(point => point.source)).toEqual(['think', 'damage-before', 'damage-after', 'removal']);
     expect(record!.health.at(-1)!.hp).toBeLessThanOrEqual(0);
@@ -74,7 +74,7 @@ describe('read-only AI death ledger', () => {
     game.tick = 15; claim(memory, unit, 'mineRally', 'b', 15); ledger.recordThink(game, 'player', memory);
     strikeUnit(game, enemy, unit, 99999, 'spell'); stepGame(game);
     expect(ledger.records()[0]).toMatchObject({ context: { switches: [{ tick: 15, from: 'defense:a', to: 'defense:b', attribution: 'inferred' }] },
-      classification: { disposition: 'abnormal', primary: 'recent-reassignment' } });
+      classification: { disposition: 'suspicious', primary: 'recent-reassignment' } });
   });
 
   it('records endangered workers and retreat/treatment without pretending that claims prove arrival', () => {
@@ -142,7 +142,7 @@ describe('read-only AI death ledger', () => {
     strikeUnit(game, enemy, dead, 99999, 'spell'); removeUnit(game, extra.id); stepGame(game);
     const summary = ledger.summary();
     expect(summary).toMatchObject({ events: 3, deaths: 1, nativeLosses: 0, aliveExpirations: 1, scriptedExits: 1,
-      abnormal: { count: 1 }, lifecycle: { count: 2, catalogGold: 0 } });
+      normal: { count: 1 }, lifecycle: { count: 2, catalogGold: 0 } });
     expect(ledger.records().find(row => row.unit.id === living.id)!.classification.primary).toBe('summon-expired');
     expect(Object.values(summary.byCategory).reduce((sum, value) => sum + value.count, 0)).toBe(summary.events);
   });

@@ -9,6 +9,8 @@ import { createAiPolicyMemory } from './memory';
 import { effectiveCombatRating, structureRating } from './policy/v6/strength';
 import { deathTaskIndex, inferDeathAssignment, treatmentOrder } from './death-ledger-context';
 import { classifyAiDeath } from './death-ledger-classification';
+import { inferAiDeathEngagement } from './death-ledger-engagement';
+import { summarizeAiDeaths } from './death-ledger-summary';
 import { deathAttributionContext } from './death-ledger-attribution';
 import type { AiDeathAssignment, AiDeathBalance, AiDeathLedgerFrame, AiDeathSummary, AiIssuedOrder, AiUnitDeathRecord } from './death-ledger-types';
 export type * from './death-ledger-types';
@@ -22,7 +24,9 @@ function last<T>(values: readonly T[], predicate: (value: T) => boolean): T | un
   return undefined;
 }
 type UnitHistory = {
-  health: AiUnitDeathRecord['health']; damage: SimulationDamageEvent[]; kill: SimulationKillEvent | null;
+  health: AiUnitDeathRecord['health']; damage: SimulationDamageEvent[];
+  dealt: { tick: number; damage: number }[];
+  sinkingCarrier: { unit: ObservedUnit; damageWindow: AiUnitDeathRecord['damageWindow'] } | null; kill: SimulationKillEvent | null;
   assignment: AiDeathAssignment | null; switches: AiUnitDeathRecord['context']['switches'];
   order: AiIssuedOrder | null; orders: AiIssuedOrder[]; wornTick: number | null; balance: AiDeathBalance | null;
   sinkingProfile: SimulationDamageEvent['profile'] | null;
@@ -59,7 +63,7 @@ export class AiDeathLedger {
 
   private history(id: string): UnitHistory {
     let state = this.histories.get(id);
-    if (!state) { state = { health: [], damage: [], kill: null, assignment: null, switches: [], order: null, orders: [], wornTick: null, balance: null, sinkingProfile: null, pendingMetadata: false }; this.histories.set(id, state); }
+    if (!state) { state = { health: [], damage: [], dealt: [], sinkingCarrier: null, kill: null, assignment: null, switches: [], order: null, orders: [], wornTick: null, balance: null, sinkingProfile: null, pendingMetadata: false }; this.histories.set(id, state); }
     return state;
   }
 
@@ -141,6 +145,12 @@ export class AiDeathLedger {
   }
 
   private onDamage(event: SimulationDamageEvent) {
+    if (event.source.present) this.identities.set(event.source.id, event.source);
+    if (event.source.entityType === 'unit' && this.owners.has(event.source.owner) && !this.seen.has(event.source.id) && event.damage > 0) {
+      const source = this.history(event.source.id);
+      source.dealt = source.dealt.filter(hit => hit.tick >= event.tick - HISTORY_TICKS);
+      source.dealt.push({ tick: event.tick, damage: event.damage });
+    }
     if (!this.owners.has(event.target.owner) || event.hpBefore <= 0) return;
     const state = this.history(event.target.id);
     this.sample(state, { hp: event.hpBefore, maxHp: event.target.maxHp }, event.tick, 'damage-before');
@@ -160,6 +170,10 @@ export class AiDeathLedger {
       // The hull hit samples force before the native sinking code zeroes every passenger.
       // Cleanup would otherwise describe the already-dead crew as zero friendly force.
       state.balance = carrier.balance;
+      if (carrier.kill) state.sinkingCarrier = { unit: carrier.kill.unit,
+        damageWindow: { fromTick: Math.max(0, event.tick - HISTORY_TICKS), toTick: event.tick,
+          sources: carrier.damage.filter(hit => hit.tick >= event.tick - HISTORY_TICKS)
+            .map(hit => ({ source: hit.source, profile: hit.profile, damage: hit.damage, hits: 1 })) } };
     }
   }
 
@@ -262,7 +276,10 @@ export class AiDeathLedger {
         ...(currentOrderIssuer?.executor ? [] : ['current-order-executor-not-recorded']), 'issued-order-history-limited-to-64'],
     };
     const base = { ...raw, attributionContext: deathAttributionContext(raw) };
-    this.rows.push(structuredClone({ ...base, classification: classifyAiDeath(base) }));
+    const engagement = inferAiDeathEngagement(base, { identities: this.identities, teams: this.game.teams,
+      dealtDamage: state.dealt.filter(hit => hit.tick >= diedTick - HISTORY_TICKS).reduce((sum, hit) => sum + hit.damage, 0) || null,
+      ...(state.sinkingCarrier ? { carrier: state.sinkingCarrier } : {}), provenance: 'live-native-events' });
+    this.rows.push(structuredClone({ ...base, classification: classifyAiDeath(base, engagement) }));
     this.histories.delete(unit.id);
   }
 
@@ -284,24 +301,11 @@ export class AiDeathLedger {
   records(owner?: PlayerId): AiUnitDeathRecord[] { return structuredClone(this.rows.filter(row => owner === undefined || row.owner === owner)); }
 
   summary(owner?: PlayerId, throughTick = this.game.tick): AiDeathSummary {
-    const result: AiDeathSummary = { events: 0, deaths: 0, nativeLosses: 0, aliveExpirations: 0, scriptedExits: 0,
-      normal: { count: 0, catalogGold: 0 }, abnormal: { count: 0, catalogGold: 0 }, lifecycle: { count: 0, catalogGold: 0 }, byCategory: {}, byTag: {} };
-    for (const row of this.rows) {
-      if (row.removedTick > throughTick || owner !== undefined && row.owner !== owner) continue;
-      result.events++; result.deaths += Number(row.actualDeath); result.nativeLosses += Number(row.countedAsNativeLoss);
-      result.aliveExpirations += Number(row.removal === 'expired' && !row.actualDeath);
-      result.scriptedExits += Number(row.removal === 'script-exit');
-      const { disposition, primary, tags } = row.classification, part = result[disposition];
-      part.count++; part.catalogGold += row.actualDeath ? row.catalogGold : 0;
-      const category = result.byCategory[primary] ??= { count: 0, catalogGold: 0 };
-      category.count++; category.catalogGold += row.actualDeath ? row.catalogGold : 0;
-      for (const tag of tags) result.byTag[tag] = (result.byTag[tag] ?? 0) + 1;
-    }
-    return result;
+    return summarizeAiDeaths(this.rows, owner, throughTick);
   }
 
   frame(owner: PlayerId, throughTick = this.game.tick, sinceTick = -1): AiDeathLedgerFrame {
-    return { schemaVersion: 1, owner, throughTick, sinceTick, records: structuredClone(this.rows.filter(row => row.owner === owner
+    return { schemaVersion: 2, owner, throughTick, sinceTick, records: structuredClone(this.rows.filter(row => row.owner === owner
       && row.removedTick > sinceTick && row.removedTick <= throughTick)), summary: this.summary(owner, throughTick) };
   }
 

@@ -3,7 +3,7 @@ import type { Observed, ObservedSource, ObservedUnit, SimulationRemovalEvent } f
 import type { GameCommand, PlayerId } from '../shared/types';
 import type { DeathAttributionContext } from './strategy/types';
 
-export type AiDeathCategory = 'accepted-engagement' | 'logistics-transit' | 'idle'
+export type AiDeathCategory = 'combat-loss' | 'retreat-failed' | 'accepted-engagement' | 'logistics-transit' | 'idle'
   | 'retreat-or-treatment' | 'isolated-without-evacuation-plan' | 'recent-reassignment'
   | 'out-of-bounds' | 'neutral-outside-clearing' | 'post-worn-abandonment'
   | 'outmatched' | 'exposed-worker' | 'friendly-source' | 'unattributed' | 'summon-expired' | 'script-exit' | 'forfeit';
@@ -99,17 +99,45 @@ export type AiUnitDeathRecord = {
     switches: { tick: number; from: string | null; to: string | null; attribution: 'inferred' }[];
     wornRetreatTick: number | null;
   };
-  classification: {
-    disposition: 'normal' | 'abnormal' | 'lifecycle';
-    primary: AiDeathCategory;
-    tags: AiDeathCategory[];
-    explanations: string[];
-    attribution: 'inferred' | 'lifecycle-event';
-    diagnosticVersion: 1;
-    /** Baseline diagnostic, not a hidden policy change or a measured probability of winning. */
-    minimumInferredCombatRatio: number;
-  };
+  classification: AiDeathClassification;
   limitations: string[];
+};
+
+export type AiDeathDisposition = 'normal' | 'suspicious' | 'abnormal' | 'unattributed' | 'lifecycle';
+export type AiDeathClassificationV1 = {
+  disposition: 'normal' | 'abnormal' | 'lifecycle';
+  primary: AiDeathCategory;
+  tags: AiDeathCategory[];
+  explanations: string[];
+  attribution: 'inferred' | 'lifecycle-event';
+  diagnosticVersion: 1;
+  minimumInferredCombatRatio: number;
+};
+export type AiDeathEngagement = {
+  status: 'engaged' | 'outside-combat' | 'unknown';
+  window: { fromTick: number; toTick: number };
+  radius: number;
+  balanceTick: number;
+  opponentIds: string[];
+  unresolvedNearbyIds: string[];
+  receivedDamage: number;
+  /** Null when the original export did not record outgoing damage. Never inferred from orders. */
+  dealtDamage: number | null;
+  inheritedFromCarrier: string | null;
+  provenance: 'live-native-events' | 'reclassified-native-records';
+  evidence: string[];
+};
+export type AiDeathClassification = {
+  disposition: AiDeathDisposition;
+  primary: AiDeathCategory;
+  /** Every original v1 tag is retained, with v2 child labels appended. */
+  tags: AiDeathCategory[];
+  explanations: string[];
+  attribution: 'inferred' | 'lifecycle-event';
+  diagnosticVersion: 2;
+  minimumInferredCombatRatio: number;
+  engagement: AiDeathEngagement;
+  v1: AiDeathClassificationV1;
 };
 
 export type AiDeathSummary = {
@@ -119,7 +147,9 @@ export type AiDeathSummary = {
   aliveExpirations: number;
   scriptedExits: number;
   normal: { count: number; catalogGold: number };
+  suspicious: { count: number; catalogGold: number };
   abnormal: { count: number; catalogGold: number };
+  unattributed: { count: number; catalogGold: number };
   lifecycle: { count: number; catalogGold: number };
   /** Primary categories partition records; tags deliberately overlap. */
   byCategory: Partial<Record<AiDeathCategory, { count: number; catalogGold: number }>>;
@@ -127,7 +157,7 @@ export type AiDeathSummary = {
 };
 
 export type AiDeathLedgerFrame = {
-  schemaVersion: 1;
+  schemaVersion: 2;
   owner: PlayerId;
   throughTick: number;
   sinceTick: number;
