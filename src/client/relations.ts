@@ -112,7 +112,7 @@ export function pointerTarget(snapshot: Pick<GameSnapshot, "items" | "resources"
 export type ContextRefusal = { refusal: "unreachable" };
 
 export function targetCommand(
-  snapshot: Pick<GameSnapshot, "teams" | "map" | "units"> & Partial<Pick<GameSnapshot,"items" | "variants">>,
+  snapshot: GameSnapshot,
   owner: PlayerId,
   selected: readonly Unit[],
   target: Exclude<PointerTarget, { kind: "item" }>,
@@ -120,7 +120,7 @@ export function targetCommand(
 ): GameCommand | ContextRefusal | undefined {
   const ids = (units: readonly Unit[]) => units.map((unit) => unit.id);
   const workers = selected.filter((unit) => unit.kind === "worker");
-  if (target.kind === "resource") return workers.length > 0 ? { type: "mine", unitIds: ids(workers), resourceId: target.resource.id, queued } : undefined;
+  if (target.kind === "resource") return workers.length > 0 ? { type: "mine", unitIds: ids(selected), resourceId: target.resource.id, queued } : undefined;
   if (target.kind === "obstacle") return { type: "attack", unitIds: ids(selected), targetId: target.obstacle.id, queued };
   const thing = target.kind === "unit" ? target.unit : target.building;
   const relation = relationTo(snapshot, owner, thing.owner);
@@ -132,13 +132,12 @@ export function targetCommand(
     if(relation==='enemy' || relation==='creep' || selected.some(unit=>unit.deck))return undefined;
   }
   if (relation === "enemy" || relation === "creep") {
-    // Crew on a deck reach across by boarding, which their own order sees to: they keep the attack as given.
-    const strikers = selected.filter((unit) => unit.deck || canReach(snapshot.map, unit, thing, snapshot.units));
-    return strikers.length ? { type: "attack", unitIds: ids(strikers), targetId: thing.id, queued } : { refusal: "unreachable" };
+    // Preserve every selected actor; shared refusalFor decides reachability and emits per-unit receipts.
+    return { type: "attack", unitIds: ids(selected), targetId: thing.id, queued };
   }
   if (target.kind === "building") {
     const damaged = relation === "own" && target.building.hp < target.building.maxHp;
-    if (damaged && workers.length > 0) return { type: "repair", unitIds: ids(workers), buildingId: target.building.id, queued };
+    if (damaged && workers.length > 0) return { type: "repair", unitIds: ids(selected), buildingId: target.building.id, queued };
     // An own fortified tower takes up the troops that can stand on its top (see @@@tower-garrison).
     const climbers = relation === "own" && isFortifiedTower(target.building) ? selected.filter(unit => unit.garrison?.buildingId !== target.building.id) : [];
     return climbers.length ? { type: "garrison", unitIds: ids(climbers), buildingId: target.building.id, queued } : undefined;
@@ -146,7 +145,7 @@ export function targetCommand(
   if (relation === "ally") return { type: "follow", unitIds: ids(selected), targetId: thing.id, queued };
   if (isShipKind(target.unit.kind) && selected.length && selected.every(unit => unit.deck?.shipId === target.unit.id)) return undefined;
   if (unitNeedsRepair({ ...snapshot, items: snapshot.items ?? [] }, target.unit) && workers.length)
-    return { type: "repairUnit", unitIds: ids(workers), targetId: target.unit.id, queued };
+    return { type: "repairUnit", unitIds: ids(selected), targetId: target.unit.id, queued };
   const boarders = selected.filter((unit) => !UNIT_DEFS[unit.kind].naval && !unit.deck);
-  return isShipKind(target.unit.kind) && boarders.length > 0 ? { type: "board", unitIds: ids(boarders), transportId: target.unit.id, queued } : undefined;
+  return isShipKind(target.unit.kind) && boarders.length > 0 ? { type: "board", unitIds: ids(selected), transportId: target.unit.id, queued } : undefined;
 }

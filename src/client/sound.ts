@@ -12,8 +12,8 @@ import { UNIT_NAMES } from "../shared/unit-name-migration";
 // a compressor, a sound already playing is quieter for each copy of it, and no more than a dozen play at once.
 
 export type SoundGroup = "effects" | "ui";
-export type SoundEvent = "impact" | "melee" | "arrowShot" | "arrowHit" | "death" | "construction" | "built" | "buildingDown" | "click" | "menu" | "shipShot" | "shipHit" | "shipSink" | "spell" | "heal" | "summon" | "summonDisappear" | "board" | "unload" | "select" | "order" | "cannonShot" | "mortarShot" | "boltShot" | "flameShot" | "stoneShot" | "spellShot" | "grapeshotShot";
-export const SOUND_EVENTS: readonly SoundEvent[] = ["impact", "melee", "arrowShot", "arrowHit", "death", "construction", "built", "buildingDown", "click", "menu", "shipShot", "shipHit", "shipSink", "spell", "heal", "summon", "summonDisappear", "board", "unload", "select", "order", "cannonShot", "mortarShot", "boltShot", "flameShot", "stoneShot", "spellShot", "grapeshotShot"];
+export type SoundEvent = "error" | "impact" | "melee" | "arrowShot" | "arrowHit" | "death" | "construction" | "built" | "buildingDown" | "click" | "menu" | "shipShot" | "shipHit" | "shipSink" | "spell" | "heal" | "summon" | "summonDisappear" | "board" | "unload" | "select" | "order" | "cannonShot" | "mortarShot" | "boltShot" | "flameShot" | "stoneShot" | "spellShot" | "grapeshotShot";
+export const SOUND_EVENTS: readonly SoundEvent[] = ["error", "impact", "melee", "arrowShot", "arrowHit", "death", "construction", "built", "buildingDown", "click", "menu", "shipShot", "shipHit", "shipSink", "spell", "heal", "summon", "summonDisappear", "board", "unload", "select", "order", "cannonShot", "mortarShot", "boltShot", "flameShot", "stoneShot", "spellShot", "grapeshotShot"];
 const SHARED_EVENTS: readonly SoundEvent[] = ["heal", "summonDisappear"];
 const EVENT_GROUPS: Record<SoundEvent, SoundGroup> = {
   cannonShot: "effects", mortarShot: "effects", boltShot: "effects", flameShot: "effects", stoneShot: "effects", spellShot: "effects", grapeshotShot: "effects",
@@ -26,6 +26,7 @@ const EVENT_GROUPS: Record<SoundEvent, SoundGroup> = {
   built: "effects",
   buildingDown: "effects",
   click: "ui",
+  error: "ui",
   menu: "ui",
   shipShot: "effects", shipHit: "effects", shipSink: "effects", spell: "effects", heal: "effects", summon: "effects", summonDisappear: "effects",
   board: "effects", unload: "effects", select: "ui", order: "ui",
@@ -202,6 +203,7 @@ export class Soundboard {
     // Older packs may advertise these voiced acknowledgements. They have no
     // place in this game's generic feedback, even when a pack is still cached.
     if (event === 'select' || event === 'order') return;
+    if (event === "error" && !this.pack?.sounds.error) { this.playErrorTone(); return; }
     const fallback = event === "menu" ? "click" : event === "heal" || event === "summon" ? "spell" : event === "summonDisappear" ? "death" : event === "cannonShot" ? "shipShot" : event === "shipShot" ? "impact" : event === "shipHit" ? "impact" : event === "shipSink" ? "buildingDown" : event === "impact" ? "arrowHit" : undefined;
     const ownSound = this.pack?.sounds[event];
     const sound = ownSound ?? (fallback && this.pack?.sounds[fallback]);
@@ -218,6 +220,20 @@ export class Soundboard {
       // A suspended audio clock does not advance: expire cues in real time, including while resuming.
       if (buffer && this.pack === pack && this.ctx === ctx && performance.now() - requestedAt < 350) this.playClip(event, sound, clip, buffer, place);
     });
+  }
+
+  private playErrorTone() {
+    const ctx = this.ctx, group = this.groups.get('ui');
+    if (!ctx || !group || !this.pack || this.disposed || this.settings.muted || this.settings.ui <= 0 || ctx.state !== 'running') return;
+    const gain = ctx.createGain(), oscillator = ctx.createOscillator();
+    oscillator.type = 'triangle';
+    oscillator.frequency.setValueAtTime(330, ctx.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(190, ctx.currentTime + .14);
+    gain.gain.setValueAtTime(.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(.12, ctx.currentTime + .015);
+    gain.gain.exponentialRampToValueAtTime(.0001, ctx.currentTime + .18);
+    oscillator.connect(gain).connect(group); oscillator.start(); oscillator.stop(ctx.currentTime + .19);
+    oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
   }
 
   private playClip(event: SoundEvent, sound: PackSound, clip: PackClip, buffer: AudioBuffer, place: SoundPlace) {

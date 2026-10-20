@@ -1,3 +1,5 @@
+import { summonPlacement } from "./sim/summon-placement";
+import { commandForOrder, emitCommandRefusal, clearWaitingReceipts } from "./sim/command-feedback";
 import { isRangedUnit } from "./unit-weapon-class";
 import { weaponClass } from "./weapon-class";
 import { unitAutoAcquireRadius, NEUTRAL_LEASH_RANGE, NEUTRAL_DAMAGE_RESPONSE_RANGE, NEUTRAL_RETURN_STOP_RANGE, NEUTRAL_ASSIST_RANGE } from './combat-acquisition';
@@ -47,7 +49,7 @@ import { unitClassOf } from "./unit-targeting";
 import { veteranWeaponRange } from "./veteran-stats";
 import { buildVeteranFrame, castVeteranAbility, temporaryAttackSpeedMultiplier, type VeteranAutocastFrame, type VeteranUnitModifiers } from "./veteran-runtime";
 import { ERRAND_REACH, type OrderEndReason } from "./approach";
-import { checkCommandLegality, type CommandLegalityError } from "./sim/command-validation";
+import { refusalFor, checkCommandLegality, type CommandLegalityError } from "./sim/command-validation";
 import { resolveUnitDamage, unitAttackDamageProfile } from "./damage";
 import { attackDamageProfile, weaponDamageProfile, DAMAGE_PROFILES, ITEM_DAMAGE_PROFILES, type DamageProfile } from "./damage-types";
 import { autocastEnabled, withAutocast } from "./autocast";
@@ -70,11 +72,11 @@ import { cancelShipPlanningJob } from './ship-planning-job';
 import { DEFAULT_WIND, updateAutoTrim } from './ship-wind';
 import { hypot2 } from "./hypot";
 import { MOVE_ORDER_ARRIVAL_RANGE } from './movement-rules';
-import { cabinGroupSelection, cabinCrewMovedThisTick, enterCabinStep, hasCabinCrewMovementFrame, isCabinProtected, isInCabin, leaveCabin, updateCabinPassengers } from './ship-cabin';
+import { cabinCrewMovedThisTick, enterCabinStep, hasCabinCrewMovementFrame, isCabinProtected, isInCabin, leaveCabin, updateCabinPassengers } from './ship-cabin';
 import { updateWindField } from './wind-field';
 import { shipTraffic } from './ship-avoidance';
 import { headingDifference, hullPassageClear, nearestShipPose, type ShipPose } from "./ship-navigation";
-import { BRACE_DAMAGE_SHARE, MAX_SLIDE_STEP, PUSH_FRICTION, blowStrength, canTakeStance, isStaggered, lungeStrength, pushContact, shove, slide } from "./push";
+import { BRACE_DAMAGE_SHARE, MAX_SLIDE_STEP, PUSH_FRICTION, blowStrength, isStaggered, lungeStrength, pushContact, shove, slide } from "./push";
 import {
   createBuilding,
   createInitialBuildings,
@@ -477,13 +479,12 @@ const COMMAND_TAKEN: CommandResult = { ok: true };
 export function tryPlayerCommand(game: Game, owner: PlayerId, command: GameCommand): CommandResult {
   const refusal = checkCommandLegality(game, owner, command);
   if (refusal) {
-    if (command.type === "garrison") {
-      const tower = game.buildings.find(building => building.id === command.buildingId);
-      if (tower) for (const unit of unitsByIds(game, command.unitIds, owner)) {
-        const cause = garrisonRefusal(game, tower, unit);
-        if (cause) rejectGarrison(game, unit, cause);
-      }
-    }
+    const ids = "unitIds" in command ? command.unitIds : "unitId" in command ? [command.unitId] : [];
+    const ownUnit = ownUnitLookup(game.units, owner, ids.length);
+    const actors = ids.map(ownUnit).filter((unit): unit is Unit => !!unit);
+    if (!actors.length) emitCommandRefusal(game, owner, command, refusal.refusal!);
+    for (const unit of actors) emitCommandRefusal(game, owner, command,
+      refusalFor(game, owner, command, { unitId: unit.id }) ?? refusal.refusal!, unit);
     return { ok: false, ...refusal };
   }
   applyPlayerCommand(game, owner, command);
@@ -503,6 +504,17 @@ export function issuePlayerCommand(game: Game, owner: PlayerId, command: GameCom
   if (!result.ok) throw new CommandRefusedError(result);
 }
 
+function commandUnits(game: Game, owner: PlayerId, command: Extract<GameCommand, { unitIds: string[] }>): Unit[] {
+  const units = unitsByIds(game, command.unitIds, owner);
+  if (!["mine", "repair", "repairShip", "repairUnit", "attack", "holdPosition", "aim", "unload", "board", "enterCabin", "leaveCabin", "setStance", "setAutocast"].includes(command.type)) return units;
+  return units.filter(unit => {
+    const cause = refusalFor(game, owner, command, { unitId: unit.id });
+    if (!cause) return true;
+    emitCommandRefusal(game, owner, command, cause, unit);
+    return false;
+  });
+}
+
 function applyPlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
   // @@@forfeit - A player who concedes leaves the field: all they own falls at once, through the ordinary death path
   // (which clears decks, garrisons and carried items), and the match is decided as by any side losing its last building.
@@ -513,23 +525,24 @@ function applyPlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
     return;
   }
   if (command.type === 'enterCabin' || command.type === 'leaveCabin') {
-    const selected=unitsByIds(game,command.unitIds,owner);
-    const admitted=command.type==='enterCabin' ? new Set(cabinGroupSelection(game,selected)) : undefined;
+    const selected=commandUnits(game, owner, command);
     for (const unit of selected) {
-      if (command.type === 'leaveCabin') leaveCabin(game,unit);
-      else if (admitted!.has(unit.id)) assignUnitOrder(unit,{type:'enterCabin',shipId:unit.deck!.shipId});
+      if (command.type === 'leaveCabin') {
+        if (!leaveCabin(game, unit)) emitCommandRefusal(game, owner, command, refusalFor(game, owner, command, { unitId: unit.id }) ?? { reason: "condition-unmet", detail: { category: "occupied" } }, unit);
+      }
+      else assignUnitOrder(unit,{type:'enterCabin',shipId:unit.deck!.shipId});
     }
     return;
   }
   if(command.type==='boardShip') {
-    const ships=unitsByIds(game,command.unitIds,owner).filter(ship=>shipProfile(ship));
+    const ships=commandUnits(game, owner, command).filter(ship=>shipProfile(ship));
     if(!command.queued)cancelCrewRendezvous(game.units,new Set(ships.map(ship=>ship.id)));
     for(const ship of ships)
       assignUnitOrder(ship,{type:'boardShip',targetId:command.targetId},command.queued);
     return;
   }
   if(command.type==='cancelBoardShip') {
-    const ships=unitsByIds(game,command.unitIds,owner).filter(ship=>shipProfile(ship));
+    const ships=commandUnits(game, owner, command).filter(ship=>shipProfile(ship));
     cancelCrewRendezvous(game.units,new Set(ships.map(ship=>ship.id)));
     for(const ship of ships) {
       cancelShipBoarding(ship);
@@ -545,12 +558,12 @@ function applyPlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
     return;
   }
   if("unitIds" in command && !("queued" in command && command.queued) && ["move","attackMove","stop","holdPosition","unload","follow","aim","attack"].includes(command.type)){
-    const ships=new Set(unitsByIds(game,command.unitIds,owner).filter(ship=>shipProfile(ship)).map(ship=>ship.id));
+    const ships=new Set(commandUnits(game, owner, command).filter(ship=>shipProfile(ship)).map(ship=>ship.id));
     if(ships.size)cancelCrewRendezvous(game.units,ships);
   }
 
   if (command.type === "move") {
-    for (const unit of unitsByIds(game, command.unitIds, owner)) {
+    for (const unit of commandUnits(game, owner, command)) {
       assignUnitOrder(unit, deckPointOrder(game, unit, { type: "move", x: command.x, y: command.y, ...(command.avoidCombat ? {avoidCombat:true} : {}) }), command.queued);
     }
     addEffect(game, command.queued ? "queuedMove" : "move", command.x, command.y, command.queued ? 38 : 24, { owner });
@@ -558,7 +571,7 @@ function applyPlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
   }
 
   if (command.type === "attackMove") {
-    for (const unit of unitsByIds(game, command.unitIds, owner)) {
+    for (const unit of commandUnits(game, owner, command)) {
       assignUnitOrder(unit, deckPointOrder(game, unit, { type: unit.attackDamage > 0 ? "attackMove" : "move", x: command.x, y: command.y }), command.queued);
     }
     addEffect(game, command.queued ? "queuedAttack" : "attack", command.x, command.y, command.queued ? 42 : 28, { owner });
@@ -566,7 +579,7 @@ function applyPlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
   }
 
   if (command.type === "stop") {
-    for (const unit of unitsByIds(game, command.unitIds, owner)) {
+    for (const unit of commandUnits(game, owner, command)) {
       assignUnitOrder(unit, { type: "idle" });
       if (unit.order.type === 'idle') setGuardPosition(game, unit);
     }
@@ -574,8 +587,8 @@ function applyPlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
   }
 
   if (command.type === "aim") {
-    for (const unit of unitsByIds(game, command.unitIds, owner)) {
-      if (aimingProfile(weaponRules(game, unit))) assignUnitOrder(unit, { type: "aim", x: clamp(command.x, 0, game.map.width), y: clamp(command.y, 0, game.map.height) }, command.queued);
+    for (const unit of commandUnits(game, owner, command)) {
+      assignUnitOrder(unit, { type: "aim", x: clamp(command.x, 0, game.map.width), y: clamp(command.y, 0, game.map.height) }, command.queued);
     }
     return;
   }
@@ -584,8 +597,7 @@ function applyPlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
   // and nothing further, does not turn on an attacker out of reach, and does not dash. An idle or attack-moving unit
   // chases whoever shoots it (see player-aggro), which lets a shooter draw a whole army out after it.
   if (command.type === "holdPosition") {
-    for (const unit of unitsByIds(game, command.unitIds, owner)) {
-      if (unit.kind === "worker") continue;
+    for (const unit of commandUnits(game, owner, command)) {
       assignUnitOrder(unit, { type: "hold", x: unit.x, y: unit.y }, command.queued);
       if (!command.queued && unit.order.type === 'hold') setGuardPosition(game, unit);
     }
@@ -594,8 +606,8 @@ function applyPlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
 
   if (command.type === "attack") {
     // A unit without a weapon (a transport) has nothing to attack with.
-    for (const unit of unitsByIds(game, command.unitIds, owner)) {
-      if (unit.attackDamage > 0) assignUnitOrder(unit, { type: "attack", targetId: command.targetId }, command.queued);
+    for (const unit of commandUnits(game, owner, command)) {
+      assignUnitOrder(unit, { type: "attack", targetId: command.targetId }, command.queued);
     }
     const target = findStrikeTarget(game, command.targetId);
     if (target) addEffect(game, command.queued ? "queuedAttackTarget" : "attackTarget", target.x, target.y, command.queued ? 44 : 32, { owner });
@@ -606,7 +618,7 @@ function applyPlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
   // told otherwise, as in Warcraft III; a right-click on an ally's unit gives it (a rally point onto an own unit too).
   if (command.type === "follow") {
     const target = game.units.find((unit) => unit.id === command.targetId && !areEnemyOwners(game, unit.owner, owner))!;
-    for (const unit of unitsByIds(game, command.unitIds, owner)) {
+    for (const unit of commandUnits(game, owner, command)) {
       if (unit !== target) assignUnitOrder(unit, { type: "follow", targetId: target.id }, command.queued);
     }
     addEffect(game, command.queued ? "queuedMove" : "move", target.x, target.y, command.queued ? 38 : 24, { owner });
@@ -615,7 +627,7 @@ function applyPlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
 
   if (command.type === "mine") {
     const resource = game.resources.find((candidate) => candidate.id === command.resourceId)!;
-    for (const unit of unitsByIds(game, command.unitIds, owner).filter((unit) => unit.kind === "worker")) {
+    for (const unit of commandUnits(game, owner, command)) {
       // Reaffirming the same mine keeps the current haul and queue position.
       // Resetting gather here discarded completed work on every right-click.
       const order: UnitOrder = !command.queued && unit.order.type === "mine" && unit.order.resourceId === resource.id
@@ -629,7 +641,7 @@ function applyPlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
 
   if (command.type === "repair") {
     const building = game.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner)!;
-    for (const unit of unitsByIds(game, command.unitIds, owner).filter((unit) => unit.kind === "worker")) {
+    for (const unit of commandUnits(game, owner, command)) {
       assignUnitOrder(unit, { type: "repair", buildingId: building.id }, command.queued);
       if (unit.order.type === "repair" && unit.order.buildingId === building.id) unit.cooldown = 0;
     }
@@ -639,7 +651,7 @@ function applyPlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
   if (command.type === "repairUnit" || command.type === "repairShip") {
     const target = game.units.find(candidate => candidate.id === command.targetId && candidate.owner === owner
       && (command.type !== "repairShip" || unitMover(candidate.kind) === "sea"))!;
-    for (const worker of unitsByIds(game, command.unitIds, owner).filter(unit => unit.kind === "worker"))
+    for (const worker of commandUnits(game, owner, command))
       assignUnitOrder(worker, { type: "repairUnit", targetId: target.id }, command.queued);
     return;
   }
@@ -679,8 +691,7 @@ function applyPlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
   }
 
   if (command.type === "setAutocast") {
-    for (const unit of unitsByIds(game, command.unitIds, owner)) {
-      if (!unitAbilities(unit).includes(command.ability)) continue;
+    for (const unit of commandUnits(game, owner, command)) {
       const autocast = withAutocast(unit, command.ability, command.enabled);
       if (autocast) unit.autocast = autocast;
       else unit.autocast = undefined;
@@ -689,8 +700,8 @@ function applyPlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
   }
 
   if (command.type === "setStance") {
-    for (const unit of unitsByIds(game, command.unitIds, owner)) {
-      if (canTakeStance(unit)) unit.stance = command.stance === "pursue" ? undefined : command.stance;
+    for (const unit of commandUnits(game, owner, command)) {
+      unit.stance = command.stance === "pursue" ? undefined : command.stance;
     }
     return;
   }
@@ -709,7 +720,7 @@ function applyPlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
   // Told to board, soldiers walk to the transport, and an idle transport sails in to meet them (see @@@transport).
   if (command.type === "board") {
     const transport = game.units.find((unit) => unit.id === command.transportId && unit.hp>0 && carries(unit) > 0)!;
-    const boarders = unitsByIds(game, command.unitIds, owner).filter((unit) => canBoard(transport,unit,game.units));
+    const boarders = commandUnits(game, owner, command);
     const existing = game.units.find(unit => unit.order.type === "board" && unit.order.transportId === transport.id);
     const shoreBoarder=boarders.find(unit=>!unit.deck);
     const berth = (existing?.order.type === "board" ? existing.order.berth : undefined) ?? (shoreBoarder && boardingBerth(game.map, shoreBoarder, transport));
@@ -728,8 +739,8 @@ function applyPlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
   }
 
   if (command.type === "unload") {
-    for (const unit of unitsByIds(game, command.unitIds, owner)) {
-      if (carries(unit) > 0) assignUnitOrder(unit, { type: "unload", x: command.x, y: command.y, ...(command.avoidCombat ? {avoidCombat:true} : {}) }, command.queued);
+    for (const unit of commandUnits(game, owner, command)) {
+      assignUnitOrder(unit, { type: "unload", x: command.x, y: command.y, ...(command.avoidCombat ? {avoidCombat:true} : {}) }, command.queued);
     }
     addEffect(game, command.queued ? "queuedMove" : "move", command.x, command.y, command.queued ? 38 : 24, { owner });
     return;
@@ -757,7 +768,7 @@ function applyPlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
       for (const unit of unitsByIds(game, command.unitIds, owner)) {
         if (unit.garrison?.buildingId === tower.id) continue;
         const cause = garrisonRefusal({ ...game, units: [...game.units, ...reserved] }, tower, unit);
-        if (cause) { rejectGarrison(game, unit, cause); continue; }
+        if (cause) { emitCommandRefusal(game, owner, command, cause, unit); continue; }
         assignUnitOrder(unit, { type: "garrison", buildingId: tower.id }, command.queued);
         reserved.push({ ...unit, garrison: { buildingId: tower.id } });
       }
@@ -809,6 +820,7 @@ function applyPlayerCommand(game: Game, owner: PlayerId, command: GameCommand) {
 
 export function stepGame(game: Game) {
   if (game.match.winner) return;
+  clearWaitingReceipts(game);
   const entryFlags = navalFrameFlags(game);
   const emptyVeteranFrame = !!(entryFlags & EMPTY_VETERAN_FRAME);
   let navalFrame = !!(entryFlags & NAVAL_FRAME);
@@ -1198,7 +1210,10 @@ function updateTraining(game: Game) {
     const from=sea ? launch : landSpawnPoint(game,building,landSpawnPrototype(building,job.unitKind));
     // A paid job waits for a legal local exit. Rally direction chooses among
     // those exits rather than placing the new unit inside a body or beyond it.
-    if(!from)continue;
+    if (!from) {
+      emitCommandRefusal(game, building.owner, { type: "train", buildingId: building.id, unitKind: job.unitKind }, { reason: "condition-unmet", detail: { category: "occupied" } }, undefined, "waiting");
+      continue;
+    }
     const unit = game.spawnUnit(building.owner, job.unitKind, from.x, from.y,launch);
     building.queue.shift();
     unit.order = rallyOrderForUnit(game, building, unit);
@@ -1209,6 +1224,7 @@ function updateTraining(game: Game) {
 // against it can leave it no room, and then the gold comes back.
 function completeUpgrade(game: Game, building: Building, job: UpgradeJob) {
   if (transformBuilding(game, building, job.to)) return;
+  emitCommandRefusal(game, building.owner, { type: "upgradeBuilding", buildingId: building.id, to: job.to }, { reason: "site-occupied", detail: { buildingKind: job.to } });
   playerState(game, building.owner).gold = addGold(playerState(game, building.owner).gold, job.paidGold);
   game.match.stats.goldSpent[building.owner] = Math.max(0, (game.match.stats.goldSpent[building.owner] ?? 0) - job.paidGold);
   addEffect(game, "goldBounty", building.x, building.y, seconds(1.2), { owner: building.owner, amount: job.paidGold });
@@ -1535,6 +1551,10 @@ function updateUnits(game: Game, defenses: ShipDefenseFrame, navalFrame: boolean
     if (unit.garrison && !TOWER_TOP_ORDERS.has(unit.order.type)) leaveTower(game, unit, "x" in unit.order && unit.order.x !== undefined && unit.order.y !== undefined ? { x: unit.order.x, y: unit.order.y } : unit);
     if (unit.order.type === 'enterCabin') {
       if (!isStaggered(unit) && !isStunned(unit)) enterCabinStep(game,unit,statusPace(unit),other=>isStaggered(other)||isStunned(other)?0:statusPace(other));
+      if ((unit.order as UnitOrder).type === 'idle' && !isInCabin(unit) && isPlayerId(unit.owner)) {
+        const command = { type: 'enterCabin' as const, unitIds: [unit.id] };
+        emitCommandRefusal(game, unit.owner, command, refusalFor(game, unit.owner, command) ?? { reason: 'condition-unmet', detail: { category: 'state' } }, unit);
+      }
       continue;
     }
     // A charging rider rides its own slide (see @@@charge); any other unit off its feet (see @@@push) neither walks,
@@ -1601,6 +1621,8 @@ function updateUnits(game: Game, defenses: ShipDefenseFrame, navalFrame: boolean
         continue;
       case "board":
         updateBoardOrder(game, unit);
+        if (unit.order.type === 'board' && unit.order.phase === 'waiting' && isPlayerId(unit.owner)) emitCommandRefusal(game, unit.owner, commandForOrder(unit)!,
+          { reason: 'condition-unmet', detail: { category: 'position' } }, unit, 'waiting');
         (ferry ??= { boarding: [], unloading: [] }).boarding.push(unit);
         continue;
       case "boardShip":
@@ -2066,9 +2088,11 @@ function updateBoardShipOrder(game:Game,ship:Unit) {
   const order=ship.order;
   const target=game.units.find(unit=>unit.id===order.targetId && unit.hp>0);
   if(!target || !shipProfile(ship) || !ship.sailing) {
+    if (isPlayerId(ship.owner)) emitCommandRefusal(game, ship.owner, commandForOrder(ship)!, { reason: "target-gone", detail: { targetId: order.targetId } }, ship);
     cancelShipBoarding(ship);ship.order={type:'idle'};return;
   }
   if(!ship.sailing.gangway && !beginShipBoarding(game.map,game.units,ship,target,game.tick,game)) {
+    if (isPlayerId(ship.owner)) emitCommandRefusal(game, ship.owner, commandForOrder(ship)!, refusalFor(game, ship.owner, commandForOrder(ship)!) ?? { reason: "condition-unmet", detail: { category: "state" } }, ship);
     ship.order={type:'idle'};return;
   }
   const state=ship.sailing.gangway!;
@@ -2218,19 +2242,27 @@ function ferryUnits(game: Game, { boarding, unloading }: Ferry, starts: Readonly
     // A deferred route can hold the departure pose without reaching the
     // shore. Keep even an empty ship's unload order active during that wait.
     const planning=ship.sailing?.planningJob!==undefined || ship.sailing?.planningRequestedAtTick!==undefined;
-    if(unloadCargo(game,ship)>0 || arrived || !planning && shipPassengers(game.units,ship).length===0)finishUnitCommand(game, ship);
+    if(unloadCargo(game,ship,undefined,arrived ? "rejected" : "waiting")>0 || arrived || !planning && shipPassengers(game.units,ship).length===0)finishUnitCommand(game, ship);
   }
 }
 
 // A portrait click lands one crew member, without replacing the ship's order.
-function unloadCargo(game: Game, ship: Unit, passengerId?: string) {
+function unloadCargo(game: Game, ship: Unit, passengerId?: string, status: "rejected" | "waiting" = "rejected") {
   if(ship.cargo)restoreCargoDecks(game.units);
   const crew=shipPassengers(game.units,ship);
   let landed=0;
   crew.forEach((passenger,index)=>{
-    if(isInCabin(passenger) || passenger.owner!==ship.owner || passengerId!==undefined && passenger.id!==passengerId)return;
+    if (passengerId !== undefined && passenger.id !== passengerId) return;
+    const command = { type: 'unloadPassenger' as const, transportId: ship.id, passengerId: passenger.id };
+    if (isInCabin(passenger) || passenger.owner !== ship.owner) {
+      if (isPlayerId(ship.owner)) emitCommandRefusal(game, ship.owner, command, refusalFor(game, ship.owner, command) ?? { reason: 'condition-unmet', detail: { category: 'state' } }, passenger, status);
+      return;
+    }
     const spot=landingSpot(game.map,ship,index,crew.length,game.units,passenger);
-    if(!spot)return;
+    if (!spot) {
+      if (isPlayerId(ship.owner)) emitCommandRefusal(game, ship.owner, command, refusalFor(game, ship.owner, command) ?? { reason: 'condition-unmet', detail: { category: 'occupied' } }, passenger, status);
+      return;
+    }
     passenger.deck=undefined;
     passenger.cabin=undefined;
     passenger.aim=undefined;
@@ -2264,7 +2296,11 @@ function updateBuildOrder(game: Game, unit: Unit) {
   }
   // Revalidate at arrival: two builders cannot claim the same site, and money is paid only on breaking ground.
   if (buildingPlacementBlocker(game, order.buildingKind, order) || terrainBlocksPlacement(game.map, order.buildingKind, order)) return endOrder(game, unit, "blocked");
-  if (playerState(game, unit.owner).gold < def.cost) return; // Wait for funds, retaining the visible plan.
+  if (playerState(game, unit.owner).gold < def.cost) {
+    const command = commandForOrder(unit)!;
+    emitCommandRefusal(game, unit.owner, command, refusalFor(game, unit.owner, command)!, unit, "waiting");
+    return; // Retain the visible plan.
+  }
   spendGold(game, unit.owner, def.cost);
   const building = createBuilding(`building-${unit.owner}-${order.buildingKind}-${game.nextId++}`, unit.owner, order.buildingKind, order.x, order.y, false);
   applyDerivedBuildingStats(game, building);
@@ -2315,6 +2351,9 @@ function updateUnitRepairOrder(game: Game, worker: Unit) {
     return ship ? sameWorkSurface || !worker.deck && withinReach : sameWorkSurface && withinReach;
   };
   if (!canWorkHere()) { errandWalk(game, worker, target, canWorkHere, "ground"); return; }
+  if (worker.cooldown <= 0 && playerState(game, worker.owner).gold < 1) {
+    emitCommandRefusal(game, worker.owner, commandForOrder(worker)!, refusalFor(game, worker.owner, commandForOrder(worker)!, { phase: "arrival" })!, worker, "waiting");
+  }
   repairUnitTick(game, worker, target);
   if (!unitNeedsRepair(game, target)) finishUnitCommand(game, worker);
 }
@@ -2623,6 +2662,9 @@ function updateItemErrandOrder(game: Game, unit: Unit) {
   const reach = order.action === "use" ? itemUseReach(item.kind)! : ERRAND_REACH;
   const reached = () => distance(unit, at) <= reach;
   if (!reached()) { errandWalk(game, unit, at, reached, "walk"); return; }
+  const command = commandForOrder(unit)!;
+  const refusal = refusalFor(game, owner, command, { phase: "arrival" });
+  if (refusal) return endOrder(game, unit, "refused", refusal);
   end();
   // Within reach the errand is the order as given there; one its rules refuse now (a friend's slots filled meanwhile)
   // ends with the item still carried.
@@ -2721,7 +2763,7 @@ function castAbility(
   const def = ABILITY_DEFS[ability];
   if (def.behavior === "veteran") {
     if (queued) assignUnitOrder(caster, { type: "cast", ability }, true);
-    else applyVeteranAbility(game, caster, def, false);
+    else if (!applyVeteranAbility(game, caster, def, false)) emitCommandRefusal(game, owner, { type: "cast", unitId, ability }, { reason: "condition-unmet", detail: { category: "state" } }, caster);
     return;
   }
   const typedTarget = targetId ? findStrikeTarget(game, targetId) : undefined;
@@ -2771,7 +2813,7 @@ function castAbility(
   if (def.behavior !== "summon") throw new Error(`${ability} is cast by its creep alone`);
   if (!isNumber(x) || !isNumber(y)) throw new Error("Summon requires a target point");
   if (queued || distance(caster, { x, y }) > def.range) later({ type: "cast", ability, x, y }, { x, y });
-  else applySummon(game, caster, ability, x, y, def);
+  else if (!applySummon(game, caster, ability, x, y, def)) emitCommandRefusal(game, owner, { type: "cast", unitId, ability, x, y }, { reason: "condition-unmet", detail: { category: "occupied" } }, caster);
 }
 
 // @@@cast-order - A spell cast out of reach is walked to, as Warcraft III's are: the caster heads for the spell's point or
@@ -2788,7 +2830,7 @@ function updateCastOrder(game: Game, unit: Unit) {
   // Saves can contain a cast for an ability removed from the catalog.
   if (!def) return end("refused");
   if (def.behavior === "veteran") {
-    if (unitAbilities(unit).includes(order.ability) && abilityCooldown(unit, order.ability) <= 0) applyVeteranAbility(game, unit, def, false);
+    if (!unitAbilities(unit).includes(order.ability) || abilityCooldown(unit, order.ability) > 0 || !applyVeteranAbility(game, unit, def, false)) return end("refused");
     return end();
   }
   if (order.targetId !== undefined && (!target || target.hp <= 0 || areEnemyOwners(game, target.owner, unit.owner) !== (def.behavior !== "heal"))) return end("target-gone");
@@ -2800,6 +2842,10 @@ function updateCastOrder(game: Game, unit: Unit) {
   const reached = () => distance(unit, at) <= def.range + (def.behavior === "weapon" && target && !isUnit(target) ? target.radius : 0);
   // As near as it can come (its point or unit beyond its ground, see @@@reach) and still out of range: no cast.
   if (!reached()) { errandWalk(game, unit, at, reached, "walk"); return; }
+  if (isPlayerId(unit.owner)) {
+    const refusal = refusalFor(game, unit.owner, commandForOrder(unit)!, { phase: "arrival" });
+    if (refusal) return endOrder(game, unit, "refused", refusal);
+  }
   if (abilityCooldown(unit, order.ability) > 0) return end("refused");
   if (def.behavior === "weapon") {
     if(order.ability==='incendiaryFlume' && unit.fittings){
@@ -2816,7 +2862,7 @@ function updateCastOrder(game: Game, unit: Unit) {
   }
   else if (def.behavior === "heal" && target && isUnit(target)) applyHeal(game, unit, order.ability, target, def);
   else if (def.behavior === "curse" && target && isUnit(target)) applyCurse(game, unit, order.ability, target, def);
-  else if (def.behavior === "summon") applySummon(game, unit, order.ability, at.x, at.y, def);
+  else if (def.behavior === "summon" && !applySummon(game, unit, order.ability, at.x, at.y, def)) return end("blocked");
   else if (def.behavior === "charge" && target && isUnit(target) && distance(unit, target) >= def.minRange && canReach(game.map, unit, target, game.units)) {
     // The charge's own rule sees to what follows it (see endCharge): the next queued order, else attacking its unit.
     startCharge(game, unit, order.ability, target, def, false);
@@ -2832,20 +2878,11 @@ function applyHeal(game: Game, caster: Unit, ability: AbilityKind, target: Unit,
   addEffect(game, def.effectType, target.x, target.y, 36, { sourceKind: caster.kind, sourceId: caster.id, actionMode: "cast", fromX: caster.x, fromY: caster.y, fromHeight: combatVisualHeight(game,caster), toX: target.x, toY: target.y, toHeight: combatVisualHeight(game,target), unitId: caster.id, owner: caster.owner });
 }
 
-function syncSummonLoad(game: Game, ship: Unit, probe: Unit) {
-  return shipPassengers(game.units, ship).reduce((mass, unit) => mass + bodyMass(unit), bodyMass(probe)) > shipProfile(ship)!.loadCapacity;
-}
-
 function applySummon(game: Game, caster: Unit, ability: AbilityKind, x: number, y: number, def: Extract<(typeof ABILITY_DEFS)[AbilityKind], { behavior: "summon" }>) {
   if (distance(caster, { x, y }) > def.range) return false;
-  const ship = game.units.find(ship => {
-    const profile = shipProfile(ship);
-    return profile && ship.owner === caster.owner && circleInPolygon(worldToLocal(ship, { x, y }), 0, profile.deck);
-  });
-  if (!ship && !isWalkable(game.map, x, y)) return false;
-  const probe = ship && createUnit("summon-probe", caster.owner, def.summonKind, x, y);
-  const point = ship && probe && deckPlacement(ship, probe, game.units, worldToLocal(ship, { x, y }));
-  if (ship && (!point || syncSummonLoad(game, ship, probe!))) return false;
+  const placement = summonPlacement(game, caster, def.summonKind, { x, y });
+  if ('refusal' in placement) return false;
+  const { ship, point } = placement;
   const spirit = game.spawnUnit(caster.owner, def.summonKind, x, y);
   if (ship && point) { spirit.deck = { shipId: ship.id, ...point }; Object.assign(spirit, localToWorld(ship, point)); }
   spirit.expiresTick = game.tick + def.summonDuration;
@@ -4378,9 +4415,14 @@ function errandWalk(game: Game, unit: Unit, goal: { x: number; y: number }, reac
 // An order ended before it was done, and why (see @@@errand). The effect is presentation: its id is the unit's and the
 // tick's, so the entity counter does not move.
 function endOrder(game: Game, unit: Unit, reason: OrderEndReason, refusal?: import("./command-refusal").CommandRefusal) {
+  const command = commandForOrder(unit);
+  refusal ??= command && isPlayerId(unit.owner) ? refusalFor(game, unit.owner, command, { phase: "arrival" }) ?? undefined : undefined;
+  refusal ??= reason === "unreachable" ? { reason: "unreachable", detail: {} }
+    : reason === "target-gone" && command && "targetId" in command ? { reason: "target-gone", detail: { targetId: command.targetId } }
+    : { reason: "condition-unmet", detail: { category: reason === "no-room" || reason === "blocked" ? "occupied" : "state" } };
   const id = `ended-${unit.id}-${game.tick}`;
   if (!game.effects.some((effect) => effect.id === id))
-    game.effects.push({ id, type: "orderEnded", x: unit.x, y: unit.y, remaining: seconds(.4), duration: seconds(.4), unitId: unit.id, owner: unit.owner, sourceKind: unit.kind, orderType: unit.order.type, reason, ...(refusal ? { refusal } : {}) });
+    game.effects.push({ id, type: "orderEnded", x: unit.x, y: unit.y, remaining: seconds(.4), duration: seconds(.4), unitId: unit.id, owner: unit.owner, sourceKind: unit.kind, orderType: unit.order.type, reason, feedbackStatus: "rejected", ...(command ? { commandType: command.type } : {}), refusal });
   finishUnitCommand(game, unit);
 }
 
@@ -4996,12 +5038,4 @@ function clamp(value: number, min: number, max: number) {
 
 function isNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
-}
-
-/** A rejected command does not cancel the unit's previous order or consume an entity id. */
-function rejectGarrison(game: Game, unit: Unit, refusal: import("./command-refusal").GarrisonRefusal) {
-  const id = `ended-${unit.id}-${game.tick}-garrison`;
-  if (!game.effects.some(effect => effect.id === id)) game.effects.push({ id, type: "orderEnded", x: unit.x, y: unit.y,
-    remaining: seconds(.4), duration: seconds(.4), unitId: unit.id, owner: unit.owner, sourceKind: unit.kind,
-    orderType: "garrison", reason: refusal.reason === "tower-full" ? "no-room" : refusal.reason === "garrison-ownership" ? "target-gone" : "refused", refusal });
 }

@@ -90,6 +90,21 @@ describe("match thread", () => {
     expect(page.currentSnapshot().players.player.gold).toBe(8744);
   });
 
+  it("preserves a structured refusal across a worker admission race without adding effects", () => {
+    const setup: GameSetupOptions = { aiPlayers: [], scenario: { players: { player: { gold: 0 } } } };
+    const initial = snapshotGame(createGame("bareDuel", setup));
+    const hall = initial.buildings.find(building => building.owner === "player" && building.kind === "townHall")!;
+    // The page is one snapshot behind; only the worker knows the money was already spent.
+    initial.players.player!.gold = 500;
+    const onError = vi.fn();
+    const adapter = new MatchThreadGameAdapter(copiedThread(), { type: "local", playerId: "player", mapId: "bareDuel", options: setup,
+      aiPlayers: [], tickMs: 50, now: 0 }, initial, { playerId: "player", checkCommands: true, now: () => 0, onError });
+    adapter.sendCommand({ type: "train", buildingId: hall.id, unitKind: "worker" });
+    expect(onError).toHaveBeenCalledWith(expect.stringContaining("gold"), { reason: "gold", detail: { required: 75, available: 0 } });
+    expect(adapter.currentSnapshot().effects.some(effect => effect.refusal)).toBe(false);
+    adapter.close();
+  });
+
   it("refuses a command the latest snapshot refuses, as it is given", () => {
     const threaded = startThreaded(() => 0);
     const townHall = threaded.currentSnapshot().buildings.find((building) => building.owner === "player" && building.kind === "townHall")!;

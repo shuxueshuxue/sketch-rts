@@ -19,7 +19,8 @@ function walkingBolt(kind: typeof WALKERS[number], mirrored: boolean, delay: num
     .unit('us', kind, x(1720), 1655, { id: 'walker' }).build().createGame();
   game.map.terrain = { cell: 32, cols: 128, rows: 128, cells: '.'.repeat(128 * 128) };
   setBuildingBodies(game.map, game.buildings);
-  issuePlayerCommand(game, 'us', { type: 'holdPosition', unitIds: ['bait', 'walker'] });
+  // Workers never held position here; stop preserves that idle fixture without issuing a refused command.
+  issuePlayerCommand(game, 'us', { type: kind === 'worker' ? 'stop' : 'holdPosition', unitIds: ['bait', 'walker'] });
   issuePlayerCommand(game, 'foe', { type: 'attack', unitIds: ['gun'], targetId: 'bait' });
   for (let tick = 0; tick < 600 && !game.projectiles.length; tick++) stepGame(game);
   expect(game.projectiles).toHaveLength(1);

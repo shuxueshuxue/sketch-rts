@@ -28,6 +28,13 @@ describe("net message codec", () => {
     expect(decodeServerNetMessage(encodeNetMessage(server))).toEqual(server);
   });
 
+  it("preserves private structured refusal facts and rejects malformed numeric payloads", () => {
+    const receipt: ServerNetMessage = { type: "error", roomId: "room", clientSeq: 2, message: "Rejected",
+      refusal: { reason: "gold", detail: { required: 100, available: 5 } } };
+    expect(decodeServerNetMessage(encodeNetMessage(receipt))).toEqual(receipt);
+    expect(() => decodeServerNetMessage(JSON.stringify({ ...receipt, refusal: { reason: "gold", detail: { required: "100", available: 5 } } }))).toThrow("Malformed command refusal");
+  });
+
   it("fails loudly for malformed payloads and unknown message types", () => {
     expect(() => decodeClientNetMessage("not-json")).toThrow(/Invalid net message JSON/);
     expect(() => decodeServerNetMessage(JSON.stringify({ type: "mystery" }))).toThrow(/Unknown server net message type mystery/);

@@ -23,7 +23,8 @@ describe('human guard position', () => {
     const tick = () => { stepGame(game); farthest = Math.max(farthest, Math.hypot(guard.x - origin.x, guard.y - origin.y)); };
     for (let lure = 0; lure < 8; lure++) {
       const bait = game.spawnUnit('enemy', 'worker', 1200 + lure * 180, 1500);
-      issuePlayerCommand(game, 'enemy', { type: 'holdPosition', unitIds: [bait.id] });
+      // Worker hold was a no-op; stop keeps the lure idle without issuing an ineligible action.
+      issuePlayerCommand(game, 'enemy', { type: 'stop', unitIds: [bait.id] });
       for (let t = 0; t < 100 && guard.x < bait.x - 50; t++) tick();
       bait.hp = 0;
       tick(); tick();
@@ -214,7 +215,7 @@ describe('human guard position', () => {
     expect(restored.units[0]!.guardPosition).toEqual({ x: 1300, y: 1500 });
     expect(JSON.stringify(save)).toBe(bytes);
     expect(savedRulesVersion(5)).toBe(5);
-    expect(RULES_VERSION).toBe(8);
+    expect(RULES_VERSION).toBe(9);
     expect(() => assertCurrentRulesVersion(5, 'Replay')).toThrow('Cross-version');
   });
 });

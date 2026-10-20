@@ -124,7 +124,8 @@ describe('guardian scroll area balance', () => {
     const game = sketchScene('neutral-guardian').map('bareDuel').replaceDefaults().player('player')
       .unit('neutral', 'wildling', 1500, 1500, { id: 'carrier' })
       .item('scroll', 'guardianScroll', 0, 0, { carrierId: 'carrier' }).build().createGame();
-    expect(() => cast(game)).toThrow('Unknown player item carrier carrier');
+    expect(() => cast(game)).toThrow('This unit is not yours');
+    expect(game.effects.at(-1)?.refusal).toEqual({ reason: 'ownership', detail: { entityId: 'carrier', requiredRelation: 'own' } });
     expect(game.items.map(item => item.id)).toEqual(['scroll']);
     expect(game.effects.some(effect => effect.type === 'guardianField')).toBe(false);
     expect(game.units[0]!.effects).toEqual([]);
@@ -146,11 +147,11 @@ describe('guardian scroll area balance', () => {
 
 describe('guardian balance rules boundary', () => {
   it('identifies current rules and refuses replay/network simulation of rules 4', () => {
-    expect(RULES_VERSION).toBe(8);
+    expect(RULES_VERSION).toBe(9);
     expect(GUARDIAN_SCROLL.radius).toBe(180);
     expect(() => assertCurrentRulesVersion(4, 'Old replay')).toThrow('Cross-version simulation is not supported');
     expect(() => assertCurrentRulesVersion(RULES_VERSION, 'Current replay')).not.toThrow();
-    expect([undefined, 1, 2, 3, 4, 5, 6, 7, RULES_VERSION].map(savedRulesVersion)).toEqual([1, 1, 2, 3, 4, 5, 6, 7, 8]);
+    expect([undefined, 1, 2, 3, 4, 5, 6, 7, 8, RULES_VERSION].map(savedRulesVersion)).toEqual([1, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
   });
 
   it.each([2, 4])('imports a canonical rules-%s snapshot without recasting existing buffs or changing recorded field radius', rulesVersion => {

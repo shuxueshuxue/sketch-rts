@@ -1,6 +1,6 @@
 import type { CommandEnvelope, CommandFrame } from "../net/types";
 import { stepGame, type Game } from "../sim";
-import { checkCommandLegality, narrowFrameCommandToLiveOperands } from "./command-validation";
+import { checkCommandLegality, type CommandLegalityError, narrowFrameCommandToLiveOperands } from "./command-validation";
 import { applyCommandFrame, type CommandFrameApplyHooks } from "./frame";
 import { partitionDeliveredPlannerCommands } from "./planner-schedule";
 import type { GameCommand, GameSnapshot } from "../types";
@@ -131,8 +131,8 @@ export class CommandFrameRuntime<State = unknown> {
     if (commands.length === 0) return;
     // Validation changes nothing, so every command reads the game itself (see @@@legality-reads-live-game in sim.ts).
     for (const [index, entry] of commands.entries()) {
-      const rejection = commandRejection(this.options.game, entry, options.purpose);
-      if (rejection) throw new Error(`${options.rejectionLabel?.(entry, index) ?? this.options.rejectionLabel}: ${rejection}`);
+      const rejection = commandRejectionDetail(this.options.game, entry, options.purpose);
+      if (rejection) throw new CommandAdmissionError(`${options.rejectionLabel?.(entry, index) ?? this.options.rejectionLabel}: ${rejection.message}`, rejection);
     }
   }
 }
@@ -143,9 +143,21 @@ export class CommandFrameRuntime<State = unknown> {
  * a command against its latest snapshot before the match on its own thread checks it again).
  */
 export function commandRejection(world: Game | GameSnapshot, entry: CommandEnvelope, purpose: ValidationPurpose): string | undefined {
+  return commandRejectionDetail(world, entry, purpose)?.message;
+}
+
+export class CommandAdmissionError extends Error {
+  readonly commandRefusal;
+  constructor(message: string, legality: CommandLegalityError) {
+    super(message);
+    this.commandRefusal = legality.refusal;
+  }
+}
+
+export function commandRejectionDetail(world: Game | GameSnapshot, entry: CommandEnvelope, purpose: ValidationPurpose): CommandLegalityError | undefined {
   const game = world as Game;
   const currentCommand = narrowFrameCommandToLiveOperands(game, entry.playerId, entry.command);
   if (!currentCommand) return undefined;
   const legality = checkCommandLegality(game, entry.playerId, currentCommand);
-  return legality && (purpose === "admission" || !legality.transient) ? legality.message : undefined;
+  return legality && (purpose === "admission" || !legality.transient) ? legality : undefined;
 }

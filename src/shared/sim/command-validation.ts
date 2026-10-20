@@ -1,11 +1,13 @@
+import { summonPlacement } from "./summon-placement";
 import { isRangedUnit } from "../unit-weapon-class";
+import type { CommandRefusal, CommandRefusalCategory } from "../command-refusal";
 import { unitControlsMercenaryCamp } from '../mercenary-camp';
 import { canReceiveHealing } from '../healing';
 import { SHIP_WEAPONS, installedWeapons } from "../ship-equipment";
 import { isMechanicalUnit, matchesUnitTarget, unitClassOf } from "../unit-targeting";
 import { unitNeedsRepair } from "../unit-repair";
 import { veteranSkillFitsUnitClass } from "../veteran-skills";
-import { canEquip, dropRefusal, freeItemSlot, giveRefusal, transferRefusal, weaponRules, wieldRefusal } from "../equipment";
+import { canEquip, dropRefusal, freeItemSlot, giveRefusalDetail, transferRefusal, weaponRules, wieldRefusal, equipmentSpaceRefusal } from "../equipment";
 import { shipPassengers, shipProfile } from "../ship-geometry";
 import { shipBoardingRefusal, shipBoardingTargetRefusal } from "../ship-gangway";
 import { sameGround } from "../terrain";
@@ -23,7 +25,7 @@ import type { GameCommand, GameSnapshot, Owner, PlayerId, RallyTarget, Unit, Uni
 import { ownUnitLookup } from "../unit-lookup";
 import { purchasePlacement } from "../purchase";
 import { isStunned, unitAbilities } from "../unit-abilities";
-import { canEnterCabin, isInCabin, cabinExitPoint } from '../ship-cabin';
+import { canEnterCabin, isInCabin, cabinExitPoint, cabinGroupSelection } from '../ship-cabin';
 import { garrisonRefusal, isFortifiedTower, towerGarrison } from "../tower-garrison";
 import { trainingJobs, upgradeJob } from "../building-jobs";
 
@@ -40,8 +42,7 @@ import { trainingJobs, upgradeJob } from "../building-jobs";
 //   occupied     no room: deck space, a cabin, an equipment slot, the ground a building would stand on
 //   state        the unit or building's present state forbids it (incomplete, stunned, in a cabin, already done)
 //   rules        the catalog forbids it outright (this race, this building, this unit cannot)
-export type CommandRefusalReason = "gold" | "supply" | "tier" | "stock" | "cooldown" | "position"
-  | "gone" | "target" | "range" | "unreachable" | "occupied" | "state" | "rules";
+export type CommandRefusalReason = CommandRefusalCategory;
 
 export type CommandLegalityError = {
   refusal?: import("../command-refusal").CommandRefusal;
@@ -59,7 +60,31 @@ export function commandValidationError(snapshot: GameSnapshot, owner: PlayerId, 
   return checkCommandLegality(snapshot, owner, command)?.message;
 }
 
-export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, command: GameCommand): CommandLegalityError | undefined {
+export type RefusalCheck = { unitId?: string; phase?: "availability" | "arrival" };
+
+/** One read-only rule entry for previews, admission, partial selections and arrival revalidation. */
+export function refusalFor(snapshot: GameSnapshot, owner: PlayerId, command: GameCommand, check: RefusalCheck = {}): CommandRefusal | null {
+  if (check.unitId && "unitIds" in command) {
+    if (command.type === "enterCabin") {
+      const ids = command.unitIds;
+      const selected = snapshot.units.filter(unit => unit.owner === owner && ids.includes(unit.id));
+      if (!cabinGroupSelection(snapshot, selected).includes(check.unitId)) return { reason: "condition-unmet", detail: { category: "occupied" } };
+    }
+    command = { ...command, unitIds: [check.unitId] };
+  }
+  return checkCommandLegality(snapshot, owner, command, check.phase)?.refusal ?? null;
+}
+
+export function checkCommandAvailability(snapshot: GameSnapshot, owner: PlayerId, command: GameCommand): CommandLegalityError | undefined {
+  return checkCommandLegality(snapshot, owner, command, "availability");
+}
+
+export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, command: GameCommand, phase?: RefusalCheck["phase"]): CommandLegalityError | undefined {
+  if ("unitId" in command) {
+    const unit = snapshot.units.find(unit => unit.id === command.unitId);
+    if (unit && unit.owner !== owner) return commandError("This unit is not yours", "target", true, { reason: "ownership", detail: { entityId: unit.id, requiredRelation: "own" } });
+    if (command.type === "build" && unit && unit.kind !== "worker") return commandError("Building requires a worker", "rules", false, { reason: "unit-ineligible", detail: { required: "worker" } });
+  }
   const ids="unitIds" in command ? command.unitIds : "unitId" in command ? [command.unitId] : [];
   if (command.type !== 'enterCabin' && command.type !== 'leaveCabin' && command.type !== 'stop' && snapshot.units.some(unit => ids.includes(unit.id) && isInCabin(unit))) return commandError('Leave the cabin before acting', "state", true);
   if (command.type === 'enterCabin' || command.type === 'leaveCabin') {
@@ -79,12 +104,25 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
   if(["build","mine","repair","hire"].includes(command.type) && snapshot.units.some(unit=>ids.includes(unit.id) && unit.deck))return commandError("Disembark before working on land", "state", true);
   const player = snapshot.players[owner];
   if (!player) return commandError(`Unknown player ${owner}`, "rules");
+  if ("unitIds" in command && ["mine", "repair", "repairShip", "repairUnit", "attack", "holdPosition", "unload"].includes(command.type)) {
+    const ownUnit = ownUnitLookup(snapshot.units, owner, command.unitIds.length);
+    const selected = command.unitIds.map(ownUnit).filter((unit): unit is Unit => !!unit);
+    const causes = selected.map(unit => actorRefusal(unit, command));
+    if (causes.length && causes.every(Boolean)) {
+      const repair = command.type === "repairUnit" || command.type === "repairShip";
+      return commandError(repair ? "Unit repair requires a worker" : "These units cannot perform this action", "rules", !repair, causes[0]!);
+    }
+  }
+  if ("buildingId" in command && ["train", "research", "upgradeBuilding", "cancelTraining", "repair", "buyShipEquipment"].includes(command.type)) {
+    const building = snapshot.buildings.find(building => building.id === command.buildingId);
+    if (building && building.owner !== owner) return commandError("This building is not yours", "target", true, { reason: "ownership", detail: { entityId: building.id, requiredRelation: "own" } });
+  }
   if (command.type === "forfeit") return undefined;
   if (command.type === "aim") {
     const missing = missingUnitError(snapshot, owner, command.unitIds);
     if (missing) return missing;
     if (!Number.isFinite(command.x) || !Number.isFinite(command.y)) return commandError("Aim requires a finite point", "target");
-    return snapshot.units.some(unit => command.unitIds.includes(unit.id) && unit.owner === owner && aimingProfile(weaponRules(snapshot, unit))) ? undefined : commandError("Aim requires a ranged unit", "rules");
+    return snapshot.units.some(unit => command.unitIds.includes(unit.id) && unit.owner === owner && aimingProfile(weaponRules(snapshot, unit))) ? undefined : commandError("Aim requires a ranged unit", "rules", false, { reason: "unit-ineligible", detail: { required: "ranged" } });
   }
   if (command.type === "move" || command.type === "attackMove" || command.type === "stop" || command.type === "holdPosition" || command.type === "unload") return missingUnitError(snapshot, owner, command.unitIds);
   if (command.type === "unloadPassenger") {
@@ -123,7 +161,15 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     }
     return undefined;
   }
-  if (command.type === "attack") return missingUnitError(snapshot, owner, command.unitIds) ?? (findTarget(snapshot, command.targetId) ? undefined : commandError(`Unknown target ${command.targetId}`, "gone", true));
+  if (command.type === "attack") {
+    const missing = missingUnitError(snapshot, owner, command.unitIds);
+    if (missing) return missing;
+    const target = findTarget(snapshot, command.targetId);
+    if (!target) return commandError(`Unknown target ${command.targetId}`, "gone", true, { reason: "target-gone", detail: { targetId: command.targetId } });
+    const ownUnit = ownUnitLookup(snapshot.units, owner, command.unitIds.length);
+    return command.unitIds.some(id => { const unit = ownUnit(id); return unit && (unit.deck || canReach(snapshot.map, unit, target, snapshot.units)); }) ? undefined
+      : commandError("Target is unreachable", "unreachable", true, { reason: "unreachable", detail: { targetId: target.id } });
+  }
   if (command.type === "follow") return missingUnitError(snapshot, owner, command.unitIds) ?? (isFriendlyUnit(snapshot, owner, command.targetId) ? undefined : commandError(`Unknown friendly unit ${command.targetId}`, "gone", true));
   if (command.type === "mine") return missingUnitError(snapshot, owner, command.unitIds) ?? (snapshot.resources.some((resource) => resource.id === command.resourceId) ? undefined : commandError(`Unknown resource ${command.resourceId}`, "gone", true));
   if (command.type === "repair") {
@@ -131,6 +177,7 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     if (missing) return missing;
     const building = snapshot.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner);
     if (!building) return commandError(`Unknown ${owner} building ${command.buildingId}`, "gone", true);
+    if (phase === "arrival" && building.complete && building.hp < building.maxHp) { const gold = goldRefusal(snapshot, owner, 1); if (gold) return gold; }
     if (building.hp >= building.maxHp) return commandError(`${building.kind} is already fully repaired`, "state", true);
     return undefined;
   }
@@ -139,8 +186,11 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     if (missing) return missing;
     if (!snapshot.units.some(unit => command.unitIds.includes(unit.id) && unit.owner === owner && unit.hp > 0 && unit.kind === "worker")) return commandError("Unit repair requires a worker", "rules");
     const target = snapshot.units.find(unit => unit.id === command.targetId && unit.owner === owner && unit.hp > 0);
+    const other = snapshot.units.find(unit => unit.id === command.targetId);
+    if (other && other.owner !== owner) return commandError("This unit is not yours", "target", true, { reason: "ownership", detail: { entityId: other.id, requiredRelation: "own" } });
     if (!target || (command.type === "repairShip" && !UNIT_DEFS[target.kind].naval)) return commandError(`Unknown ${owner} ${command.type === "repairShip" ? "ship" : "unit"} ${command.targetId}`, "gone", true);
-    if (!isMechanicalUnit(target, snapshot)) return commandError("Only mechanical units can be repaired", "target");
+    if (!isMechanicalUnit(target, snapshot)) return commandError("Only mechanical units can be repaired", "target", false, { reason: "target-type", detail: { targetId: target.id, required: "mechanical" } });
+    if (phase === "arrival" && unitNeedsRepair(snapshot, target)) { const gold = goldRefusal(snapshot, owner, 1); if (gold) return gold; }
     if (!unitNeedsRepair(snapshot, target)) return commandError(`${target.kind} is already fully repaired`, "state", true);
     return undefined;
   }
@@ -149,8 +199,8 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     if (!worker) return commandError(`Unknown ${owner} worker ${command.unitId}`, "gone", true);
     if (!RACE_DEFS[player.race].buildableBuildings.includes(command.buildingKind)) return commandError(`${player.race} race cannot build ${command.buildingKind}`, "rules");
     const blocker = buildingPlacementBlocker(snapshot, command.buildingKind, command);
-    if (blocker) return commandError(`${command.buildingKind} placement is too close to ${blocker.kind}`, "occupied", true);
-    if (terrainBlocksPlacement(snapshot.map, command.buildingKind, command)) return commandError(`${command.buildingKind} placement is on blocked ground`, "target");
+    if (blocker) return commandError(`${command.buildingKind} placement is too close to ${blocker.kind}`, "occupied", true, { reason: "site-occupied", detail: { buildingKind: command.buildingKind, blockerId: blocker.id } });
+    if (terrainBlocksPlacement(snapshot.map, command.buildingKind, command)) return commandError(`${command.buildingKind} placement is on blocked ground`, "target", false, { reason: "site-terrain", detail: { buildingKind: command.buildingKind } });
     return goldRefusal(snapshot, owner, BUILDING_DEFS[command.buildingKind].cost);
   }
   if (command.type === "setRally") {
@@ -162,21 +212,27 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     if (rallyless) return commandError(`${rallyless.kind} has no training rally point`, "rules");
     return rallyTargetError(snapshot, owner, command.target);
   }
-  if (command.type === "cancelTraining") return missingBuildingError(snapshot, owner, [command.buildingId]);
+  if (command.type === "cancelTraining") {
+    const missing = missingBuildingError(snapshot, owner, [command.buildingId]);
+    if (missing) return missing;
+    return snapshot.buildings.find(building => building.id === command.buildingId)!.queue.some(job => job.id === command.jobId) ? undefined
+      : commandError("Training job has already ended", "state", true);
+  }
   if (command.type === "train") {
     const building = snapshot.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner);
     if (!building) return commandError(`Unknown ${owner} building ${command.buildingId}`, "gone", true);
-    if (!building.complete) return commandError(`Cannot train from incomplete ${building.kind}`, "state");
+    if (!building.complete) return commandError(`Cannot train from incomplete ${building.kind}`, "state", false, { reason: "building-incomplete", detail: { buildingId: building.id } });
     if (!canTrainAt(player.race, building.kind, command.unitKind)) return commandError(`${building.kind} cannot train ${command.unitKind} for ${player.race}`, "rules");
     const cap = requiredSupplyCap(command.unitKind);
-    if (player.supplyCap < cap) return refusal(`Need a supply cap of ${cap} to train ${command.unitKind}`, "tier", { supplyCap: cap });
-    if (!canSupply(snapshot, owner, command.unitKind)) return refusal(`Need more supply to train ${command.unitKind}`, "supply");
+    if (player.supplyCap < cap) return refusal(`Need a supply cap of ${cap} to train ${command.unitKind}`, "tier", { supplyCap: cap, refusal: { reason: "supply-tier", detail: { requiredCap: cap, currentCap: player.supplyCap } } });
+    const supply = supplyRefusal(snapshot, owner, command.unitKind);
+    if (supply) return supply;
     return goldRefusal(snapshot, owner, UNIT_DEFS[command.unitKind].cost);
   }
   if (command.type === "research") {
     const building = snapshot.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner);
     if (!building) return commandError(`Unknown ${owner} building ${command.buildingId}`, "gone", true);
-    if (!building.complete) return commandError(`Cannot research from incomplete ${building.kind}`, "state");
+    if (!building.complete) return commandError(`Cannot research from incomplete ${building.kind}`, "state", false, { reason: "building-incomplete", detail: { buildingId: building.id } });
     const upgrade = UPGRADE_DEFS[command.upgradeKind];
     if (!upgrade) return commandError(`Unknown upgrade ${command.upgradeKind}`, "rules");
     if (!RACE_DEFS[player.race].upgrades.includes(command.upgradeKind)) return commandError(`${player.race} race cannot research ${command.upgradeKind}`, "rules");
@@ -191,14 +247,18 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
   if (command.type === "hire") {
     const camp = snapshot.mercenaryCamps.find((candidate) => candidate.id === command.campId);
     if (!camp) return commandError(`Unknown mercenary camp ${command.campId}`, "rules");
-    if (camp.stock <= 0) return refusal(`${camp.id} has no mercenary stock`, "stock");
+    if (camp.stock <= 0) return refusal(`${camp.id} has no mercenary stock`, "stock", { refusal: { reason: "stock-empty", detail: { sellerId: camp.id } } });
     if (camp.cooldownRemaining > 0) return refusal(`${camp.id} is between hires`, "cooldown", { cooldownTicks: camp.cooldownRemaining, cooldownLength: camp.cooldown });
     if (!hasFriendlyUnitAtCamp(snapshot, owner, camp)) return refusal(`${camp.id} needs a friendly unit nearby before hiring`, "position");
-    if (!canSupply(snapshot, owner, camp.hireKind)) return refusal(`Need more supply to hire ${camp.hireKind}`, "supply");
+    const supply = supplyRefusal(snapshot, owner, camp.hireKind);
+    if (supply) return supply;
     return goldRefusal(snapshot, owner, camp.cost);
   }
-  if(command.type==="buyShipEquipment"){const dock=snapshot.buildings.find(building=>building.id===command.buildingId && building.owner===owner && building.complete && building.kind==="shipyard");if(!dock)return commandError("A completed shipyard is required", "state", true);if(command.recipientId!==undefined){const delivery=purchasePlacement(snapshot,owner,dock,command.item,command.recipientId);if("refusal" in delivery)return refusal(delivery.refusal,"position");}return goldRefusal(snapshot,owner,SHIP_WEAPONS[command.item].cost);}
-  if (command.type === "buy") return buyRefusal(snapshot, owner, command.shopId, command.item, command.recipientId);
+  if(command.type==="buyShipEquipment"){const dock=snapshot.buildings.find(building=>building.id===command.buildingId && building.owner===owner && building.complete && building.kind==="shipyard");if(!dock)return commandError("A completed shipyard is required", "state", true);if(command.recipientId!==undefined){const delivery=purchasePlacement(snapshot,owner,dock,command.item,command.recipientId);if("refusal" in delivery)return refusal(delivery.refusal,"position", { ...(delivery.cause ? { refusal: delivery.cause } : {}) });}return goldRefusal(snapshot,owner,SHIP_WEAPONS[command.item].cost);}
+  if (command.type === "buy") {
+    const error = buyRefusal(snapshot, owner, command.shopId, command.item, command.recipientId);
+    return error ? { ...error, refusal: error.refusal ?? { reason: "condition-unmet", detail: { category: error.reason } } } : undefined;
+  }
   if (command.type === "learnVeteranSkill") {
     const unit = snapshot.units.find(candidate => candidate.id === command.unitId && candidate.owner === owner && candidate.hp > 0);
     if (!unit) return commandError(`Unknown living ${owner} unit ${command.unitId}`, "gone", true);
@@ -210,7 +270,7 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     if (!veteranSkillFitsUnitClass(command.skill, unitClassOf(unit, snapshot))) return commandError("Veteran skill cannot affect this unit class", "rules");
     return undefined;
   }
-  if (command.type === "cast") return castError(snapshot, owner, command);
+  if (command.type === "cast") return phase === "availability" ? castAvailabilityError(snapshot, owner, command) : castError(snapshot, owner, command);
   if (command.type === "setAutocast") {
     if (!canAutocast(command.ability)) return commandError(`${command.ability} cannot be autocast`, "rules");
     const missing = missingUnitError(snapshot, owner, command.unitIds);
@@ -222,7 +282,7 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
   if (command.type === "setStance") {
     const missing = missingUnitError(snapshot, owner, command.unitIds);
     if (missing) return missing;
-    return snapshot.units.some((unit) => command.unitIds.includes(unit.id) && canTakeStance(unit)) ? undefined : commandError("None of those units fights in melee", "rules");
+    return snapshot.units.some((unit) => command.unitIds.includes(unit.id) && canTakeStance(unit)) ? undefined : commandError("None of those units fights in melee", "rules", false, { reason: "unit-ineligible", detail: { required: "melee" } });
   }
   if(command.type === "transferItem"){const message=transferRefusal(snapshot,owner,command.itemId,command.destination);return message?commandError(message, "state", true):undefined;}
   if(command.type === "wieldItem"){const message=wieldRefusal(snapshot,owner,command.unitId,command.itemId,command.hand);return message?commandError(message, "state", true):undefined;}
@@ -231,21 +291,38 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
     const item = snapshot.items.find((candidate) => candidate.id === command.itemId);
     if (!item) return commandError(`Unknown item ${command.itemId}`, "gone", true);
     if (item.carrierId || item.shipId) return commandError(`${item.id} is already carried`, "occupied", true);
-    const unit=snapshot.units.find(unit=>unit.id===command.unitId)!;return canEquip(unit) && freeItemSlot(snapshot,unit,item.kind) ? undefined : commandError(`${command.unitId} has no free equipment position`, "occupied", true);
+    const unit=snapshot.units.find(unit=>unit.id===command.unitId)!;return canEquip(unit) && freeItemSlot(snapshot,unit,item.kind) ? undefined : commandError(`${command.unitId} has no free equipment position`, "occupied", true, equipmentSpaceRefusal(snapshot, unit, item.kind) ?? { reason: "condition-unmet", detail: { category: "rules" } });
   }
-  if (command.type === "giveItem") { const message = giveRefusal(snapshot, owner, command.unitId, command.itemId, command.targetId); return message ? commandError(message, "state", true) : undefined; }
+  if (command.type === "giveItem") {
+    const denied = giveRefusalDetail(snapshot, owner, command.unitId, command.itemId, command.targetId);
+    return denied ? commandError(denied.message, "state", true, denied.cause) : undefined;
+  }
   if (command.type === "dropItem" || command.type === "useItem") {
     if (command.type === "dropItem") { const message = dropRefusal(snapshot, owner, command.unitId, command.itemId); return message ? commandError(message, "state", true) : undefined; }
     if (!snapshot.units.some((unit) => unit.id === command.unitId && unit.owner === owner)) return commandError(`Unknown ${owner} item carrier ${command.unitId}`, "gone", true);
     const item = snapshot.items.find((candidate) => candidate.id === command.itemId);
     if (!item) return commandError(`Unknown item ${command.itemId}`, "gone", true);
-    return item.carrierId === command.unitId ? undefined : commandError(`${command.unitId} is not carrying ${item.id}`, "state", true);
+    if (item.carrierId !== command.unitId) return commandError(`${command.unitId} is not carrying ${item.id}`, "state", true, { reason: "item-not-carried", detail: { itemId: item.id, unitId: command.unitId } });
+    if (item.cooldownRemaining > 0) return refusal("Item is cooling down", "cooldown", { cooldownTicks: item.cooldownRemaining, refusal: { reason: "cooldown", detail: { remainingTicks: item.cooldownRemaining, itemId: item.id } } });
+    if (phase === "availability" && ["lightningRod", "stormStaff", "breachCharge", "ivoryTower"].includes(item.kind)) return undefined;
+    if (item.kind === "lightningRod" && !snapshot.units.some(unit => unit.id === command.targetId && areEnemyOwners(snapshot, owner, unit.owner))) return commandError("Item requires an enemy unit", "target", false, { reason: "target-type", detail: { required: "enemy-unit", ...(command.targetId ? { targetId: command.targetId } : {}) } });
+    if (item.kind === "breachCharge" && !snapshot.buildings.some(building => building.id === command.targetId && areEnemyOwners(snapshot, owner, building.owner))) return commandError("Item requires an enemy building", "target", false, { reason: "target-type", detail: { required: "enemy-building", ...(command.targetId ? { targetId: command.targetId } : {}) } });
+    if (item.kind === "stormStaff" && !snapshot.units.some(unit => unit.id === command.targetId) && !(Number.isFinite(command.x) && Number.isFinite(command.y))) return commandError("Item requires a unit or point", "target", false, { reason: "target-type", detail: { required: "unit-or-point" } });
+    if (item.kind === "ivoryTower") {
+      if (!Number.isFinite(command.x) || !Number.isFinite(command.y)) return commandError("Tower requires a point", "target");
+      const at = { x: command.x!, y: command.y! };
+      const blocker = buildingPlacementBlocker(snapshot, "defenseTower", at);
+      if (blocker) return commandError("Tower site occupied", "occupied", true, { reason: "site-occupied", detail: { buildingKind: "defenseTower", blockerId: blocker.id } });
+      if (terrainBlocksPlacement(snapshot.map, "defenseTower", at)) return commandError("Tower terrain blocked", "target", false, { reason: "site-terrain", detail: { buildingKind: "defenseTower" } });
+    }
+    if (!["lightningRod", "stormStaff", "breachCharge", "ivoryTower", "experienceBook", "guardianScroll", "healingScroll"].includes(item.kind)) return commandError("Item is passive", "rules", false, { reason: "item-passive", detail: { itemKind: item.kind } });
+    return undefined;
   }
   if (command.type === "upgradeBuilding") {
     const building = snapshot.buildings.find((candidate) => candidate.id === command.buildingId && candidate.owner === owner);
     if (!building) return commandError(`Unknown ${owner} building ${command.buildingId}`, "gone", true);
     if (BUILDING_DEFS[command.to]?.upgradeFrom !== building.kind) return commandError(`${building.kind} cannot be upgraded to ${command.to}`, "rules");
-    if (!building.complete) return commandError(`Cannot upgrade incomplete ${building.kind}`, "state");
+    if (!building.complete) return commandError(`Cannot upgrade incomplete ${building.kind}`, "state", false, { reason: "building-incomplete", detail: { buildingId: building.id } });
     if (upgradeJob(building)) return commandError(`${building.kind} is already upgrading`, "state", true);
     if (!upgradeSite(snapshot, building, command.to)) return refusal(`No room round the ${building.kind} to stand a ${command.to}`, "occupied");
     return goldRefusal(snapshot, owner, BUILDING_DEFS[command.to].cost);
@@ -270,16 +347,30 @@ export function checkCommandLegality(snapshot: GameSnapshot, owner: PlayerId, co
   return command satisfies never;
 }
 
-function commandError(message: string, reason: CommandRefusalReason, transient = false): CommandLegalityError {
-  return { message, transient, reason };
+function actorRefusal(unit: Unit, command: GameCommand): CommandRefusal | null {
+  let required: Extract<CommandRefusal, { reason: "unit-ineligible" }>["detail"]["required"] | undefined;
+  if (["mine", "repair", "repairShip", "repairUnit"].includes(command.type) && unit.kind !== "worker") required = "worker";
+  else if (command.type === "attack" && unit.attackDamage <= 0) required = "armed";
+  else if (command.type === "holdPosition" && unit.kind === "worker") required = "hold-capable";
+  else if (command.type === "unload" && carries(unit) <= 0) required = "transport";
+  return required ? { reason: "unit-ineligible", detail: { required } } : null;
 }
 
-function refusal(message: string, reason: CommandRefusalReason, extra: Pick<CommandLegalityError, "cooldownTicks" | "cooldownLength" | "supplyCap"> = {}): CommandLegalityError {
-  return { message, transient: true, reason, ...extra };
+function commandError(message: string, reason: CommandRefusalReason, transient = false, cause?: CommandRefusal): CommandLegalityError {
+  return { message, transient, reason, refusal: cause ?? { reason: "condition-unmet", detail: { category: reason } } };
+}
+
+function refusal(message: string, reason: CommandRefusalReason, extra: Pick<CommandLegalityError, "cooldownTicks" | "cooldownLength" | "supplyCap" | "refusal"> = {}): CommandLegalityError {
+  const cause = extra.refusal ?? (reason === "cooldown" && extra.cooldownTicks !== undefined
+    ? { reason: "cooldown" as const, detail: { remainingTicks: extra.cooldownTicks } }
+    : { reason: "condition-unmet" as const, detail: { category: reason } });
+  return { message, transient: true, reason, ...extra, refusal: cause };
 }
 
 function goldRefusal(snapshot: GameSnapshot, owner: PlayerId, cost: number) {
-  return canSpendGold(snapshot, owner, cost) ? undefined : refusal(`Need ${cost} gold`, "gold");
+  return canSpendGold(snapshot, owner, cost) ? undefined : refusal(`Need ${cost} gold`, "gold", {
+    refusal: { reason: "gold", detail: { required: cost, available: snapshot.players[owner]!.gold } },
+  });
 }
 
 export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, command: GameCommand): GameCommand | undefined {
@@ -318,19 +409,19 @@ export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, co
     return { ...command, unitIds };
   }
   if (command.type === "mine") {
-    const unitIds = currentWorkerIds(game, owner, command.unitIds);
+    const unitIds = currentUnitIds(game, owner, command.unitIds);
     if (unitIds.length === 0 || !game.resources.some((resource) => resource.id === command.resourceId)) return undefined;
     return { ...command, unitIds };
   }
   if (command.type === "repair") {
-    const unitIds = currentWorkerIds(game, owner, command.unitIds);
+    const unitIds = currentUnitIds(game, owner, command.unitIds);
     const building = currentBuilding(game, owner, command.buildingId);
     if (unitIds.length === 0 || !building) return undefined;
     return { ...command, unitIds };
   }
   if (command.type === "repairShip" || command.type === "repairUnit") {
     const ownUnit = ownUnitLookup(game.units, owner, command.unitIds.length);
-    const unitIds = command.unitIds.filter(id => { const unit = ownUnit(id); return unit?.kind === "worker" && unit.hp > 0; });
+    const unitIds = command.unitIds.filter(id => { const unit = ownUnit(id); return unit && unit.hp > 0; });
     const target = currentUnit(game, owner, command.targetId);
     return unitIds.length && target && target.hp > 0 ? { ...command, unitIds } : undefined;
   }
@@ -394,17 +485,16 @@ export function narrowFrameCommandToLiveOperands(game: Game, owner: PlayerId, co
 function missingUnitError(snapshot: GameSnapshot, owner: PlayerId, unitIds: string[]) {
   const unit = ownUnitLookup(snapshot.units, owner, unitIds.length);
   const missing = unitIds.find((unitId) => !unit(unitId));
-  return missing ? commandError(`Unknown ${owner} unit ${missing}`, "gone", true) : undefined;
+  if (!missing) return undefined;
+  const exists = snapshot.units.some(unit => unit.id === missing);
+  return commandError(`Unknown ${owner} unit ${missing}`, "gone", true, exists
+    ? { reason: "ownership", detail: { entityId: missing, requiredRelation: "own" } }
+    : { reason: "issuer-gone", detail: { entityId: missing } });
 }
 
 function currentUnitIds(game: Game, owner: PlayerId, unitIds: string[]) {
   const unit = ownUnitLookup(game.units, owner, unitIds.length);
   return unitIds.filter((id) => !!unit(id));
-}
-
-function currentWorkerIds(game: Game, owner: PlayerId, unitIds: string[]) {
-  const unit = ownUnitLookup(game.units, owner, unitIds.length);
-  return unitIds.filter((id) => unit(id)?.kind === "worker");
 }
 
 function currentBuildingIds(game: Game, owner: PlayerId, buildingIds: string[]) {
@@ -444,17 +534,24 @@ function rallyTargetError(snapshot: GameSnapshot, owner: PlayerId, target: Extra
   return snapshot.units.some((unit) => unit.id === target.unitId && unit.owner === owner) ? undefined : commandError(`Unknown ${owner} rally unit ${target.unitId}`, "gone", true);
 }
 
-function castError(snapshot: GameSnapshot, owner: PlayerId, command: Extract<GameCommand, { type: "cast" }>) {
+function castAvailabilityError(snapshot: GameSnapshot, owner: PlayerId, command: Extract<GameCommand, { type: "cast" }>) {
   const caster = snapshot.units.find((unit) => unit.id === command.unitId && unit.owner === owner && unit.hp > 0);
   if (!caster) return commandError(`Unknown ${owner} caster ${command.unitId}`, "gone", true);
   if (!unitAbilities(caster).includes(command.ability)) return commandError(`${caster.kind} cannot cast ${command.ability}`, "rules");
   if (isStunned(caster)) return commandError(`${caster.kind} is stunned`, "state", true);
   if(command.ability==="incendiaryFlume" && caster.fittings && !installedWeapons(snapshot,caster).some(item=>item.kind==="flameProjector" && (item.durability ?? 1)>0))return commandError("An operational flame projector is required", "state", true);
-  if (abilityCooldown(caster, command.ability) > 0) return refusal(`${caster.kind} is on cooldown`, "cooldown", { cooldownTicks: abilityCooldown(caster, command.ability) });
+  if (abilityCooldown(caster, command.ability) > 0) return refusal(`${caster.kind} is on cooldown`, "cooldown", { cooldownTicks: abilityCooldown(caster, command.ability), refusal: { reason: "cooldown", detail: { remainingTicks: abilityCooldown(caster, command.ability), ability: command.ability } } });
+  return undefined;
+}
+
+function castError(snapshot: GameSnapshot, owner: PlayerId, command: Extract<GameCommand, { type: "cast" }>) {
+  const availability = castAvailabilityError(snapshot, owner, command);
+  if (availability) return availability;
+  const caster = snapshot.units.find(unit => unit.id === command.unitId)!;
   const definition = ABILITY_DEFS[command.ability];
   const behavior = definition.behavior;
   const unitTarget = command.targetId ? snapshot.units.find(unit => unit.id === command.targetId) : undefined;
-  if (unitTarget && !matchesUnitTarget(unitTarget, definition.targets, snapshot)) return commandError(behavior === "heal" ? "Healing cannot restore mechanical units" : "Ability cannot target this unit class", "target");
+  if (unitTarget && !matchesUnitTarget(unitTarget, definition.targets, snapshot)) return commandError(behavior === "heal" ? "Healing cannot restore mechanical units" : "Ability cannot target this unit class", "target", false, { reason: "target-type", detail: { targetId: unitTarget.id, required: definition.targets?.unitClasses?.length === 1 ? definition.targets.unitClasses[0] === "mechanical" ? "mechanical" : "non-mechanical" : "unit-or-point" } });
   if (behavior === "veteran") return undefined;
   if (behavior === "weapon") {
     const def = ABILITY_DEFS[command.ability];
@@ -463,20 +560,20 @@ function castError(snapshot: GameSnapshot, owner: PlayerId, command: Extract<Gam
     if (def.target === "enemy" && !target) return commandError("Weapon requires an enemy target", "target");
     const at = target ?? (Number.isFinite(command.x) && Number.isFinite(command.y) ? {x:command.x!, y:command.y!} : undefined);
     if (!at) return commandError("Weapon requires a target point", "target");
-    if (def.weapon.minRange && Math.hypot(at.x-caster.x,at.y-caster.y)<def.weapon.minRange) return commandError("Target is inside the weapon's minimum range", "range", true);
+    if (def.weapon.minRange && Math.hypot(at.x-caster.x,at.y-caster.y)<def.weapon.minRange) return commandError("Target is inside the weapon's minimum range", "range", true, { reason: "inside-min-range", detail: { ...(command.targetId ? { targetId: command.targetId } : {}), minimum: def.weapon.minRange, distance: Math.hypot(at.x-caster.x,at.y-caster.y) } });
     return undefined;
   }
   if (behavior === "heal") {
     const target = snapshot.units.find(unit => unit.id === command.targetId);
-    if (target && !canReceiveHealing(target, snapshot)) return commandError("Healing cannot restore mechanical units", "target");
+    if (target && !canReceiveHealing(target, snapshot)) return commandError("Healing cannot restore mechanical units", "target", false, { reason: "target-type", detail: { targetId: target.id, required: "non-mechanical" } });
     return command.targetId && snapshot.units.some((unit) => unit.id === command.targetId && !areEnemyOwners(snapshot, unit.owner, owner))
       ? undefined
-      : commandError("Heal requires an allied unit target", "target");
+      : commandError("Heal requires an allied unit target", "target", false, { reason: "target-type", detail: { ...(command.targetId ? { targetId: command.targetId } : {}), required: "friendly-unit" } });
   }
   if (behavior === "curse") {
     return command.targetId && snapshot.units.some((unit) => unit.id === command.targetId && areEnemyOwners(snapshot, unit.owner, owner))
       ? undefined
-      : commandError("Curse requires an enemy unit target", "target");
+      : commandError("Curse requires an enemy unit target", "target", false, { reason: "target-type", detail: { ...(command.targetId ? { targetId: command.targetId } : {}), required: "enemy-unit" } });
   }
   if (behavior === "charge") {
     const def = ABILITY_DEFS[command.ability];
@@ -484,9 +581,13 @@ function castError(snapshot: GameSnapshot, owner: PlayerId, command: Extract<Gam
     if (!target || def.behavior !== "charge") return commandError("Charge requires an enemy unit target", "target");
     // Farther than the window, the rider rides up to it first (see @@@cast-order); nearer, there is no room to charge.
     const gap = Math.hypot(target.x - caster.x, target.y - caster.y);
-    if (gap < def.minRange) return commandError(`Charge target must be at least ${def.minRange} away`, "range", true);
+    if (gap < def.minRange) return commandError(`Charge target must be at least ${def.minRange} away`, "range", true, { reason: "inside-min-range", detail: { targetId: target.id, minimum: def.minRange, distance: gap } });
     // A rider charges nothing it cannot come within reach of (see @@@reach): a ship out on deep water.
-    return canReach(snapshot.map, caster, target) ? undefined : commandError("Charge target is out of reach", "unreachable", true);
+    return canReach(snapshot.map, caster, target) ? undefined : commandError("Charge target is out of reach", "unreachable", true, { reason: "unreachable", detail: { targetId: target.id } });
+  }
+  if (behavior === "summon" && Number.isFinite(command.x) && Number.isFinite(command.y)) {
+    const placement = summonPlacement(snapshot, caster, definition.summonKind, { x: command.x!, y: command.y! });
+    if ('refusal' in placement) return commandError("Summon target has no space", "target", true, placement.refusal);
   }
   return Number.isFinite(command.x) && Number.isFinite(command.y) ? undefined : commandError("Summon requires a target point", "target");
 }
@@ -509,14 +610,15 @@ function canSpendGold(snapshot: GameSnapshot, owner: PlayerId, amount: number) {
 }
 
 // As the sim counts it: passengers aboard a transport too (see @@@transport).
-function canSupply(snapshot: GameSnapshot, owner: PlayerId, unitKind: UnitKind) {
+function supplyRefusal(snapshot: GameSnapshot, owner: PlayerId, unitKind: UnitKind): CommandLegalityError | undefined {
   const supply = (unit: Unit): number => unitRules(snapshot, unit).supplyUsed + (unit.cargo ?? []).reduce((total, passenger) => total + supply(passenger), 0);
   const unitSupply = snapshot.units.filter((unit) => unit.owner === owner).reduce((total, unit) => total + supply(unit), 0);
   const queuedSupply = snapshot.buildings
     .filter((building) => building.owner === owner)
     .flatMap((building) => trainingJobs(building))
     .reduce((total, job) => total + UNIT_DEFS[job.unitKind].supplyUsed, 0);
-  return unitSupply + queuedSupply + UNIT_DEFS[unitKind].supplyUsed <= snapshot.players[owner]!.supplyCap;
+  const used = unitSupply + queuedSupply, required = UNIT_DEFS[unitKind].supplyUsed, capacity = snapshot.players[owner]!.supplyCap;
+  return used + required <= capacity ? undefined : refusal(`Need more supply to train ${unitKind}`, "supply", { refusal: { reason: "supply", detail: { used, required, capacity } } });
 }
 
 function hasFriendlyUnitAtCamp(snapshot: GameSnapshot, owner: PlayerId, camp: { x: number; y: number; radius: number }) {
@@ -524,7 +626,7 @@ function hasFriendlyUnitAtCamp(snapshot: GameSnapshot, owner: PlayerId, camp: { 
 }
 
 function findTarget(snapshot: GameSnapshot, targetId: string) {
-  return snapshot.units.some((unit) => unit.id === targetId) || snapshot.buildings.some((building) => building.id === targetId) || Boolean(snapshot.obstacles?.some((obstacle) => obstacle.id === targetId));
+  return snapshot.units.find((unit) => unit.id === targetId) ?? snapshot.buildings.find((building) => building.id === targetId) ?? snapshot.obstacles?.find((obstacle) => obstacle.id === targetId);
 }
 
 function distance(a: { x: number; y: number }, b: { x: number; y: number }) {

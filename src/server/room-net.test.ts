@@ -44,6 +44,29 @@ describe("room net hub", () => {
     expect(socket.sent.map(raw => decodeServerNetMessage(raw)).at(-1)?.type).toBe("hello");
   });
 
+  it("returns a structured admission refusal only to the issuing socket", () => {
+    const roomHost = createRoomHost({ autoTick: false });
+    const room = roomHost.createRoom({ id: "private-refusal", host: hostUser, mapId: "bareDuel" });
+    roomHost.startRoom(room.id);
+    roomHost.resetRoom(room.id, "bareDuel", { aiPlayers: [], scenario: { players: { player: { gold: 0 } } } });
+    const hall = roomHost.snapshot(room.id).buildings.find(building => building.owner === "player" && building.kind === "townHall")!;
+    const hub = new RoomNetHub({ roomHost });
+    const issuer = new FakeSocket(), observer = new FakeSocket();
+    for (const [socket, playerId] of [[issuer, "player"], [observer, "spectator"]] as const) {
+      hub.connect(room.id, socket);
+      socket.emit(encodeNetMessage({ type: "join", rulesVersion: RULES_VERSION, roomId: room.id, playerId }));
+    }
+    const before = roomHost.checksumRoom(room.id);
+    issuer.emit(encodeNetMessage({ type: "command", roomId: room.id, playerId: "player", clientSeq: 9, epoch: 0,
+      command: { type: "train", buildingId: hall.id, unitKind: "worker" } }));
+    expect(issuer.sent.map(raw => decodeServerNetMessage(raw))).toContainEqual(expect.objectContaining({ type: "error", clientSeq: 9,
+      refusal: { reason: "gold", detail: { required: 75, available: 0 } } }));
+    expect(observer.sent.map(raw => decodeServerNetMessage(raw)).some(message => message.type === "error")).toBe(false);
+    expect(roomHost.checksumRoom(room.id)).toBe(before);
+    expect(roomHost.snapshot(room.id).effects.some(effect => effect.refusal)).toBe(false);
+    issuer.close(); observer.close();
+  });
+
   it("accepts client commands and broadcasts authoritative frames before ticking the room sim", () => {
     const roomHost = createRoomHost({ autoTick: false });
     const room = roomHost.createRoom({ id: "room-net", host: hostUser, mapId: "bareDuel" });

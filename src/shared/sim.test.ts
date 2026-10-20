@@ -7,7 +7,7 @@ import { createAiRuntime, type AiRuntimeState } from "../ai/runtime";
 import { runPresetAiRuntimeForTest } from "../ai/runtime-test-helpers";
 import { createBuilding, createInitialMercenaryCamps, createInitialResources } from "./map";
 import { GOLD_MINE_RULES } from "./mining";
-import { createGame, issueCommand, issuePlayerCommand, leadershipRegenPerSecond, stepGame, strikeUnit } from "./sim";
+import { createGame, tryPlayerCommand, issueCommand, issuePlayerCommand, leadershipRegenPerSecond, stepGame, strikeUnit } from "./sim";
 import { seconds, perTick } from "./time";
 import { sketchScene } from "../sdk/scene";
 import type { MapId, PlayerId, PlayerNumberMap, Unit, UnitKind } from "./types";
@@ -1972,7 +1972,8 @@ describe("sketch RTS simulation", () => {
     const barracks = game.buildings.find((building) => building.id === "breach-target-barracks")!;
     const unit = game.units.find((candidate) => candidate.id === "breach-invalid-unit-target")!;
 
-    issueCommand(game, { type: "useItem", unitId: "breach-carrier", itemId: "breach-charge", targetId: unit.id });
+    // Invalid target used to be a silent no-op. It now returns a receipt, while preserving the damage/item invariant.
+    expect(tryPlayerCommand(game, "player", { type: "useItem", unitId: "breach-carrier", itemId: "breach-charge", targetId: unit.id })).toMatchObject({ ok: false, refusal: { reason: "target-type", detail: { required: "enemy-building" } } });
     expect(unit.hp).toBe(unit.maxHp);
     expect(game.items.some((item) => item.id === "breach-charge")).toBe(true);
 

@@ -119,6 +119,8 @@ export type WorldEffect = {
   /** orderEnded: the order that ended and why (see @@@errand). */
   orderType?: UnitOrder["type"];
   reason?: OrderEndReason;
+  commandType?: GameCommand['type'];
+  feedbackStatus?: 'rejected' | 'waiting';
   refusal?: CommandRefusal;
   /** A volley aims one gesture at an area while individual missiles fan out. */
   actionToX?: number;

@@ -41,7 +41,12 @@ describe("simulation command contract", () => {
       { playerId: 'player', command: boarding },
       { playerId: 'player', command: { type: 'cancelBoardShip', unitIds: [source.id] } },
     ] });
-    expect(snapshotGame(game)).toEqual(before);
+    const { effects, ...afterState } = snapshotGame(game);
+    const { effects: beforeEffects, ...beforeState } = before;
+    expect(afterState).toEqual(beforeState);
+    expect(effects.slice(beforeEffects.length).every(effect => effect.type === 'orderEnded' && effect.owner === 'player' && effect.refusal)).toBe(true);
+    expect(effects.slice(beforeEffects.length)).toHaveLength(2);
+    expect(effects.slice(beforeEffects.length).every(effect => effect.refusal?.reason === 'ownership')).toBe(true);
   });
 
   it('enforces boarding cooldown for direct commands and drops a now cooling request from its accepted frame', () => {
@@ -59,7 +64,12 @@ describe("simulation command contract", () => {
     expect(() => issuePlayerCommand(game, 'player', command)).toThrow('Boarding is cooling down');
     applyCommandFrame(game, { roomId: 'boarding-contract', tick: game.tick, sequence: 1,
       commands: [{ playerId: 'player', command }] });
-    expect(snapshotGame(game)).toEqual(before);
+    const { effects, ...afterState } = snapshotGame(game);
+    const { effects: beforeEffects, ...beforeState } = before;
+    expect(afterState).toEqual(beforeState);
+    expect(effects.slice(beforeEffects.length).every(effect => effect.type === 'orderEnded' && effect.owner === 'player' && effect.refusal)).toBe(true);
+    expect(effects.slice(beforeEffects.length)).toHaveLength(1);
+    expect(effects.at(-1)?.refusal).toEqual({ reason: 'condition-unmet', detail: { category: 'cooldown' } });
     expect(() => issuePlayerCommand(game, 'player', { type: 'cancelBoardShip', unitIds: [source.id] })).not.toThrow();
   });
 });

@@ -31,7 +31,7 @@ function resident(game: Game) {
 }
 
 it("versions the changed gameplay rules while keeping older saves readable", () => {
-  expect(RULES_VERSION).toBe(8); expect(savedRulesVersion(7)).toBe(7);
+  expect(RULES_VERSION).toBe(9); expect(savedRulesVersion(7)).toBe(7); expect(savedRulesVersion(8)).toBe(8);
   expect(() => assertCurrentRulesVersion(7, "Old replay")).toThrow(/Cross-version simulation/);
 });
 

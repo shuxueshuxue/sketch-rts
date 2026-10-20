@@ -13,10 +13,10 @@ describe("command result", () => {
     return { game, worker, hall };
   }
 
-  it("returns a refusal with its reason and changes nothing", () => {
+  it("returns a refusal with its reason without changing the order", () => {
     const { game, worker, hall } = scene();
     const command: GameCommand = { type: "repair", unitIds: [worker.id], buildingId: hall.id };
-    expect(tryPlayerCommand(game, "player", command)).toEqual({ ok: false, message: `${hall.kind} is already fully repaired`, transient: true, reason: "state" });
+    expect(tryPlayerCommand(game, "player", command)).toEqual({ ok: false, message: `${hall.kind} is already fully repaired`, transient: true, reason: "state", refusal: { reason: "condition-unmet", detail: { category: "state" } } });
     expect(worker.order.type).toBe("idle");
     hall.hp -= 10;
     expect(tryPlayerCommand(game, "player", command)).toEqual({ ok: true });

@@ -1,0 +1,17 @@
+.command-refusal-bar {
+  position: fixed; left: 50%; bottom: max(220px, 25vh); transform: translateX(-50%);
+  z-index: 70; display: grid; gap: 4px; pointer-events: none;
+  width: max-content; max-width: min(620px, 90vw); text-align: center;
+  font: 600 16px/1.5 var(--font-body, system-ui); color: #ffe0b0;
+  text-shadow: 0 1px 3px #130c06;
+}
+.command-refusal-bar > div {
+  padding: 7px 22px; background: #30271bea; border: 1px solid #b37540;
+  border-radius: 3px; box-shadow: 0 3px 14px #0006;
+}
+.command-refusal-bar [data-status="waiting"] { color: #ead9af; border-color: #8f8059; }
+.command-refusal-hint {
+  position: fixed; z-index: 80; pointer-events: none; max-width: 310px;
+  padding: 6px 10px; color: #ffe1b4; background: #30271bf2; border: 1px solid #b37540;
+  font: 14px/1.45 var(--font-body, system-ui); border-radius: 3px;
+}

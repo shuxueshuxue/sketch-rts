@@ -37,7 +37,7 @@ describe("unit tiers", () => {
     const early = groveGame(farmsFor(advanced) - 1);
     expect(early.game.players.player!.supplyCap).toBeLessThan(advanced);
     const command = { type: "train", buildingId: early.sanctum.id, unitKind: "summoner" } as const;
-    expect(checkCommandLegality(snapshotGame(early.game), "player", command)).toEqual({ message: `Need a supply cap of ${advanced} to train summoner`, transient: true, reason: "tier", supplyCap: advanced });
+    expect(checkCommandLegality(snapshotGame(early.game), "player", command)).toEqual({ message: `Need a supply cap of ${advanced} to train summoner`, transient: true, reason: "tier", supplyCap: advanced, refusal: { reason: "supply-tier", detail: { requiredCap: advanced, currentCap: early.game.players.player!.supplyCap } } });
     expect(() => issueCommand(early.game, command)).toThrow(`Need a supply cap of ${advanced} to train summoner`);
 
     const teched = groveGame(farmsFor(advanced));
@@ -55,7 +55,7 @@ describe("unit tiers", () => {
     game.buildings.push(yard);
     const command = { type: "train", buildingId: yard.id, unitKind: "shipOfTheLine" } as const;
     expect(checkCommandLegality(snapshotGame(game), "player", command)).toEqual({
-      message: `Need a supply cap of ${TIER_SUPPLY_CAP[3]} to train shipOfTheLine`, transient: true, reason: "tier", supplyCap: TIER_SUPPLY_CAP[3],
+      message: `Need a supply cap of ${TIER_SUPPLY_CAP[3]} to train shipOfTheLine`, transient: true, reason: "tier", supplyCap: TIER_SUPPLY_CAP[3], refusal: { reason: "supply-tier", detail: { requiredCap: TIER_SUPPLY_CAP[3], currentCap: game.players.player!.supplyCap } },
     });
     game.buildings.push(createBuilding("heavy-unlock-farm", "player", "farm", 400, 1100, true));
     game.players.player!.supplyCap += BUILDING_DEFS.farm.supplyProvided;
