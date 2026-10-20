@@ -1,3 +1,5 @@
+import { snapshotUnitIndex } from './world-index';
+import { frameMemo } from './frame-reuse';
 import { BUILDING_DEFS, UNIT_DEFS } from '../../shared/catalog';
 import { combatCapability } from '../../shared/combat-capabilities';
 import { walkableGoal } from '../../shared/terrain';
@@ -9,7 +11,7 @@ import { distance } from '../policy/spatial';
 import { isOpponentOwner } from '../policy/ownership';
 import { isBacklineKind } from '../policy/v6/backline';
 import { creepForce, EXPANSION_GUARD_RANGE, forceFor } from '../policy/v7/creep';
-import { neutralCampExposure, type NeutralCampExposureFacts } from '../situation/neutral-camp-exposure';
+import { neutralCampExposure } from '../situation/neutral-camp-exposure';
 import { neutralCampPointContacts } from '../situation/neutral-camp-contact';
 import { objectiveId } from './commitments';
 import { landIdAt } from './regions';
@@ -30,8 +32,7 @@ const reason = (tick: number, code: string, detail: string | (() => string), sou
 };
 const fieldDemand = (target: Target, strength: number, permanent = false): ResourceDemand => ({ kind: 'force', metric: 'field-strength',
   strength, roles: ['frontline', 'ranged'], at: target, neededByTick: null, permanent });
-const cache = new WeakMap<PlanningContext['snapshot'], NeutralCampExposureFacts>();
-const actorsBySnapshot = new WeakMap<PlanningContext['snapshot'], ReadonlyMap<string, Unit>>();
+const campDomain = Symbol('strategy-frame-camps');
 function collapseAfter(context: PlanningContext, threat: SiteThreat, hp: number): number {
   const events = threat.attackers.flatMap(attacker => {
     const unit = context.snapshot.units.find(unit => unit.id === attacker.unitId);
@@ -47,9 +48,7 @@ function collapseAfter(context: PlanningContext, threat: SiteThreat, hp: number)
   return damagePerTick > 0 ? previous + remaining / damagePerTick : threat.horizonTicks;
 }
 function campFacts(context: PlanningContext) {
-  let result = cache.get(context.snapshot);
-  if (!result) cache.set(context.snapshot, result = neutralCampExposure(context.snapshot));
-  return result;
+  return frameMemo(campDomain, context.snapshot, () => neutralCampExposure(context.snapshot));
 }
 function campAt(context: PlanningContext, target: Target) {
   return campFacts(context).camps.find(exposure => distance(exposure.camp.center, target.point) <= EXPANSION_GUARD_RANGE)?.camp;
@@ -73,17 +72,15 @@ function hallAt(context: PlanningContext, target: Target) {
   return context.snapshot.buildings.find(hall => hall.owner === context.owner && hall.kind === 'townHall' && hall.hp > 0
     && landIdAt(context.snapshot.map, hall) === target.landId && distance(hall, target.point) <= GOLD_MINE_RULES.baseRange);
 }
-const forceCache = new WeakMap<Situation, Map<string, ReturnType<typeof assessConquestForce>>>();
+const forceDomain = Symbol('strategy-frame-conquest-forces');
 function conquestForce(situation: Situation, context: PlanningContext, target: Target) {
-  let values = forceCache.get(situation);
-  if (!values) forceCache.set(situation, values = new Map());
+  const values = frameMemo(forceDomain, situation, () => new Map<string, ReturnType<typeof assessConquestForce>>());
   const key = `${target.entityId}:${target.point.x}:${target.point.y}`;
   if (!values.has(key)) values.set(key, assessConquestForce(situation, context, target));
   return values.get(key)!;
 }
 function assessConquestForce(situation: Situation, context: PlanningContext, target: Target) {
-  let raw = actorsBySnapshot.get(context.snapshot);
-  if (!raw) actorsBySnapshot.set(context.snapshot, raw = new Map(context.snapshot.units.map(unit => [unit.id, unit])));
+  const raw = snapshotUnitIndex(context.snapshot).all;
   const combatants = (units: readonly SituationUnit[]) => units.flatMap(unit => {
     const actor = raw!.get(unit.id);
     return actor && unit.expiresTick === null && !isBacklineKind(actor) && actor.attackDamage > 0

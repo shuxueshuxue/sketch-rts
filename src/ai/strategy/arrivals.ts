@@ -1,3 +1,4 @@
+import { snapshotUnitIndex } from './world-index';
 import { BUILDING_DEFS, UNIT_DEFS, unitMover } from '../../shared/catalog';
 import { GANGWAY_SETUP_TICKS } from '../../shared/ship-gangway';
 import { walkableGoal } from '../../shared/terrain';
@@ -17,7 +18,26 @@ import { capturesExplanations, deferredRecord, explanationForMemory, explanation
 import type { StrategyObservationMemory } from './observation-memory';
 
 const evidence = (tick: number, source: string, detail: string): Evidence => ({ tick, source, detail, certainty: 'inferred' });
-const unavailable = (code: string, detail: string): Arrival => ({ status: 'unreachable', reason: deferredRecord({ code, detail, evidence: [] }) });
+const nonArrivals = { unknown: new Map<string, Arrival>(), unreachable: new Map<string, Arrival>() };
+function nonArrival(status: 'unknown' | 'unreachable', code: string): Arrival {
+  let value = nonArrivals[status].get(code);
+  if (!value) nonArrivals[status].set(code, value = Object.freeze({ status, reason: Object.freeze({ code }) }) as Arrival);
+  return value;
+}
+const unavailable = (code: string, detail: string): Arrival => capturesExplanations()
+  ? { status: 'unreachable', reason: deferredRecord({ code, detail, evidence: [] }) } : nonArrival('unreachable', code);
+const landArrivals = new Map<number, Arrival>();
+const noCrossings = Object.freeze([]);
+function walkingArrival(ticks: number, explain: () => readonly Evidence[]): Arrival {
+  if (capturesExplanations()) return projectedProperty({ status: 'reachable' as const, ticks, landTicks: ticks, crossings: [] }, 'evidence', explain);
+  let value = landArrivals.get(ticks);
+  if (!value) {
+    if (landArrivals.size >= 4096) landArrivals.delete(landArrivals.keys().next().value!);
+    landArrivals.set(ticks, value = Object.freeze(projectedProperty({ status: 'reachable' as const, ticks, landTicks: ticks,
+      crossings: noCrossings }, 'evidence', explain)));
+  }
+  return value;
+}
 type CrossingChoice = { from: Shore; to: Shore; afterCost: number; readyTicks: number;
   crossing: Omit<CrossingEta, 'waitTicks'>; unmet: readonly Reason[] };
 const arrivalDescriptions = {
@@ -52,10 +72,10 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
     ferry: explanationRecipe(arrivalDescriptions.ferry, tick), crossing: explanationRecipe(arrivalDescriptions.crossing, tick),
   };
   const explained = new Map<() => readonly Evidence[], Map<string, () => readonly Evidence[]>>();
-  const byId = new Map(snapshot.units.map(unit => [unit.id, unit]));
-  const answers = new Map<string, Map<number, Arrival>>();
+  const byId = snapshotUnitIndex(snapshot).all;
+  const answers = new Map<number, Map<string, Arrival>>();
   type LandTime = { x: number; y: number; speed: number; ticks: number | undefined; pending: boolean; builtTick: number | undefined };
-  const landTimes = new Map<string, Map<number, LandTime>>();
+  const landTimes = new Map<number, Map<string, LandTime>>();
   const points = new Map<number, Map<number, number>>(); let nextPoint = 0;
   function pointKey(point: Point): number {
     let row = points.get(point.y); if (!row) points.set(point.y, row = new Map());
@@ -76,10 +96,13 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
     return value;
   };
 
+  const unknown = (code: string, detail: string): Arrival => capturesExplanations()
+    ? { status: 'unknown', reason: reason(code, detail) } : nonArrival('unknown', code);
+
   function landTime(unit: Unit, point: Point, from: Point = unit): number | undefined {
     const key = pointKey(point);
-    let times = landTimes.get(unit.id); if (!times) landTimes.set(unit.id, times = new Map());
-    const known = times.get(key);
+    let times = landTimes.get(key); if (!times) landTimes.set(key, times = new Map());
+    const known = times.get(unit.id);
     if (known && known.x === from.x && known.y === from.y && known.speed === unit.speed) {
       if (known.pending) pendingGeometry = true;
       if (known.builtTick !== undefined) usedFieldTicks.add(known.builtTick);
@@ -91,7 +114,7 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
     else usedFieldTicks.add(field.builtTick);
     const cost = field?.field.cost(from);
     const ticks = cost === undefined ? undefined : Math.ceil(cost / unit.speed * SIM_TICKS_PER_SECOND);
-    times.set(key, { x: from.x, y: from.y, speed: unit.speed, ticks, pending: !field, builtTick: field?.builtTick });
+    times.set(unit.id, { x: from.x, y: from.y, speed: unit.speed, ticks, pending: !field, builtTick: field?.builtTick });
     return ticks;
   }
 
@@ -303,8 +326,8 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
     };
     if (!ship || !sea) return fail('passenger-support-unknown', `Supporting ship ${support} is absent or off navigable water`);
     if (unit.owner !== owner && !observedLanding) {
-      const failure: PassengerGeometry = { failure: { status: 'unknown', reason: reason('opponent-voyage-unobserved',
-        `No observed unload into ${destination}; do not invent ${ship.id}'s intended landing or release schedule`) }, pending: false };
+      const failure: PassengerGeometry = { failure: unknown('opponent-voyage-unobserved',
+        `No observed unload into ${destination}; do not invent ${ship.id}'s intended landing or release schedule`), pending: false };
       passengerTables.set(key, failure); return failure;
     }
     stats.passengerBuilds++;
@@ -346,10 +369,10 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
     if (source === destination) {
       const ticks = landTime(unit, target.point);
       return ticks === undefined ? unavailable('native-road-unreachable', 'Native building-aware steering cannot reach the requested site')
-        : projectedProperty({ status: 'reachable' as const, ticks, landTicks: ticks, crossings: [] }, 'evidence', descriptions.land);
+        : walkingArrival(ticks, descriptions.land);
     }
-    if (unit.owner !== owner) return { status: 'unknown', reason: reason('opponent-transport-plan-unobserved',
-      'No retained foreign ferry schedule is observable; do not assume its boat is free or invent a foreign build order') };
+    if (unit.owner !== owner) return unknown('opponent-transport-plan-unobserved',
+      'No retained foreign ferry schedule is observable; do not assume its boat is free or invent a foreign build order');
     const assigned = Object.entries(ferries).find(([, mission]) => mission.phase !== 'return' && mission.crewIds.includes(unit.id)
       && landIdAt(snapshot.map, snapshot.resources.find(mine => mine.id === mission.targetId)
         ?? snapshot.buildings.find(building => building.id === mission.targetId) ?? walkableGoal(snapshot.map, mission.to.x, mission.to.y)) === destination);
@@ -374,7 +397,7 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
       const ticks = walk + wait + choice.crossing.boardingTicks + choice.crossing.sailingTicks + choice.crossing.unloadingTicks + after;
       if (!best || ticks < best.ticks) best = { choice, walk, after, wait, ticks };
     }
-    if (!best) return { status: 'unknown', reason: reason('no-direct-crossing', `No direct evaluated sea crossing from ${source} to ${destination}; a multi-hop plan is not evaluated`) };
+    if (!best) return unknown('no-direct-crossing', `No direct evaluated sea crossing from ${source} to ${destination}; a multi-hop plan is not evaluated`);
     const crossing = { ...best.choice.crossing, waitTicks: best.wait };
     const conditional = best.choice.unmet.length > 0 || crossing.requiresNewShip;
     const answer = projectedProperty({ status: conditional ? 'conditional' as const : 'reachable' as const, ticks: best.ticks, landTicks: best.walk + best.after }, 'evidence', descriptions.crossing);
@@ -388,16 +411,16 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
     setCrossingShortlist(ids: readonly string[]) { shortlisted = true; for (const id of ids) shortlist.add(id); },
     arrival(unit: Unit, target: Target): Arrival {
       const key = pointKey(target.point);
-      let unitAnswers = answers.get(unit.id); if (!unitAnswers) answers.set(unit.id, unitAnswers = new Map());
-      if (!unitAnswers.has(key)) {
+      let unitAnswers = answers.get(key); if (!unitAnswers) answers.set(key, unitAnswers = new Map());
+      if (!unitAnswers.has(unit.id)) {
         pendingGeometry = false; usedFieldTicks.clear(); usedQuoteTicks.clear();
         const candidate = shortlisted && unit.owner === owner ? crossingCandidateId(snapshot, unit, target) : undefined;
         let answer: Arrival = candidate && !shortlist.has(candidate) && !isPublished(candidate)
-          ? { status: 'unknown', reason: reason('crossing-candidate-not-shortlisted',
-            `Outside the top ${EXACT_CROSSING_CANDIDATES} coarse crossing candidates; not zero ETA or proof of unreachability`) }
+          ? unknown('crossing-candidate-not-shortlisted',
+            `Outside the top ${EXACT_CROSSING_CANDIDATES} coarse crossing candidates; not zero ETA or proof of unreachability`)
           : compute(unit, target);
-        if (pendingGeometry && !('ticks' in answer)) answer = { status: 'unknown', reason: reason('geometry-refresh-pending',
-          'The deterministic per-think field rebuild budget is exhausted; this route is not zero ETA or proven unreachable') };
+        if (pendingGeometry && !('ticks' in answer)) answer = unknown('geometry-refresh-pending',
+          'The deterministic per-think field rebuild budget is exhausted; this route is not zero ETA or proven unreachable');
         if ('ticks' in answer && capturesExplanations()) {
           const base = projectedValueReader(answer, 'evidence');
           let projections = explained.get(base);
@@ -411,9 +434,9 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
           }
           answer = projectedProperty(answer, 'evidence', read);
         }
-        unitAnswers.set(key, answer);
+        unitAnswers.set(unit.id, answer);
       }
-      const answer = unitAnswers.get(key)!;
+      const answer = unitAnswers.get(unit.id)!;
       return unit.expiresTick !== undefined && 'ticks' in answer && unit.expiresTick <= snapshot.tick + answer.ticks
         ? unavailable('expires-before-arrival', `${unit.id} expires before reaching this effect`) : answer;
     },

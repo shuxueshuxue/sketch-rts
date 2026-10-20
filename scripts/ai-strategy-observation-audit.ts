@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { hostname, cpus } from 'node:os';
 import { resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { flag, requiredFlag } from './benchmark-cli';
 import type { Game, CreateGameOptions } from '../src/shared/sim';
 import type { AiScriptVersion } from '../src/shared/types';
@@ -86,22 +86,23 @@ if (mode === 'late') {
 }
 sim.warmGameCaches(game);
 const commandsHash = createHash('sha256'), traceHash = createHash('sha256'), previous = new Map();
-const decisions = new Map();
 const planned = new Map(), thinkSamples: number[] = [], timeline: unknown[] = [];
 const timedFrames: { tick: number; owners: string[]; ms: number; units: number; ships: number; yards: number }[] = [];
 const executor = {
   submit(current: Game, job: { tick: number; deliveryTick: number; requests: any[] }, check: (commands: any[]) => void) {
     const start = performance.now(), snapshot = sim.snapshotGame(current);
+    const strategies = new Map();
     const entries = job.requests.flatMap(request => {
       if (!observe) return runtimeModule.planAiCommandFrameFromSnapshot(snapshot, [request], { teams: current.teams }).commands;
       if (detail === 'decision') {
         const result = decisionPlanner ? decisionPlanner(snapshot, request, { teams: current.teams })
           : { commands: planAiOwnerCommandEntries(snapshot, request, { teams: current.teams }), decision: undefined };
-        decisions.set(request.playerId, result.decision);
+        strategies.set(request.playerId, result.decision);
         return result.commands.map((entry: any) => ({ ...entry, playerId: request.playerId }));
       }
       const result = planAiOwnerCommandEntriesWithTrace(snapshot, request, { teams: current.teams }, previous.get(request.playerId));
-      previous.set(request.playerId, result.trace);
+      const { strategy, ...moduleTrace } = result.trace;
+      previous.set(request.playerId, moduleTrace); strategies.set(request.playerId, strategy);
       if (detail === 'complete') traceHash.update(JSON.stringify(result.trace));
       return result.commands.map((entry: any) => ({ ...entry, playerId: request.playerId }));
     });
@@ -115,7 +116,7 @@ const executor = {
     commandsHash.update(JSON.stringify({ tick: job.tick, commands }));
     if (commands.length) planned.set(job.deliveryTick, [...(planned.get(job.deliveryTick) ?? []), ...commands]);
     for (const request of job.requests) {
-      const strategy = detail === 'decision' ? decisions.get(request.playerId) : previous.get(request.playerId)?.strategy;
+      const strategy = strategies.get(request.playerId);
       if (!strategy) continue;
       const row = { tick: job.tick, owner: request.playerId,
         objectives: strategy.objectives, methods: strategy.methods, assignments: strategy.assignments,
@@ -135,6 +136,7 @@ if (!timedFrames.length) throw new Error('No AI think samples: check seat/contro
 const windowSamples = timedFrames.filter(sample => sample.tick >= measureFromTick && sample.tick < measureUntilTick).map(sample => sample.ms).sort((a, b) => a - b);
 if (!windowSamples.length) throw new Error('No think samples in the requested measurement window');
 const result = { sourceRoot: root, mode, observe, detail, host: hostname(), cpu: cpus()[0]?.model, node: process.version, started,
+  recorderFile: fileURLToPath(import.meta.url), recorderSha256: createHash('sha256').update(readFileSync(new URL(import.meta.url))).digest('hex'),
   affinity: readFileSync('/proc/self/status', 'utf8').match(/Cpus_allowed_list:\s*([^\n]+)/)?.[1],
   map: game.map.id, startTick, finalTick: game.tick, initialChecksum, finalChecksum: checksumGame(game),
   commandsSha256: commandsHash.digest('hex'), tracesSha256: traceHash.digest('hex'),

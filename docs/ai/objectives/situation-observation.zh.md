@@ -1,7 +1,7 @@
 # 战略观察：局势、海陆防守和夺岛目标
 
 对应 [战略层设计](strategy-layer.zh.md) 的纯观察阶段。入口是 `planAiOwnerCommandEntriesWithTrace`；
-普通 planner 先运行一次，观察器在同一次 think 的几何复用范围内读取结果，写入 `AiPlanTrace.strategy`。
+普通 planner 先运行一次并返回已接受命令；其临时路由复用范围结束后，观察器在同一次 owner think 读取最终上下文，写入 `AiPlanTrace.strategy`。
 分配、抢占、预算和 HTN 子目标都是报价，执行器仍按现有任务运行。
 唯一新增的可序列化记忆是 `memory.strategy.observation`：确定性几何公布进度、航次事实版本，以及失矿与目标连续性的最小历史。
 场数组不进记忆；previous trace 不再承担恢复这些事实的职责。
@@ -12,6 +12,11 @@
 只有这个入口把解释读取器放在本次评估的旁表中；`projectStrategyTrace` 接受带观测类型的结果并投影完整格式，不重跑策略、路线或效用。
 格式化函数定义在模块层，只接收 tick、标量和本次复制的 ID/时间列表，避免 getter 或读取器保留整个 think 的词法上下文。
 跨 think 的航次缓存只存数值和完整值记录，不能存调用级读取器；失矿历史在写入可序列化记忆时仍保留原有归因字节。
+
+原始快照索引、单次清营评估和本次中立营查询只在 `withStrategyFrame` 的同步作用域内复用，返回或抛错立即结束其存活期。
+跨 think 的单位行和任务成员缓存只保存独立数值、ID 和已确认的地形位置；同一行的血量、位置、寿命、角色、承诺和 ETA 完全相同时才复用。
+每份 AI memory 的两种行缓存各最多 2048 个 ID；无任务无 ETA 的地形行另有最多 2048 项，已知陆路 ETA 按相同 ticks 复用最多 4096 个纯数值结果。
+容量淘汰只增加计算，不能改变答案；这些表不保存原始 unit、snapshot、调用级 reader 或解释对象。
 
 strategy 的执行接线只覆盖 bootstrap 三个 policy：`v9_archer`、`v9_summoner`、`v9_knight`。
 房间默认版本是 `src/shared/rooms.ts` 的 `v9_archer`，房间可选的另外两个版本也在覆盖内。
@@ -81,6 +86,9 @@ strategy 的执行接线只覆盖 bootstrap 三个 policy：`v9_archer`、`v9_su
 相同地图 ID 的不同房间也不会共享距离场。将来常开时的总增量须按 N 个房间估计，不能只乘线程数。
 验收使用同 Node、同 recorder、逐图独立 worker 完整对局的 maxRSS 差，目标每房间不超过 30 MiB；
 GC 后 heap/external 只作归因，不替代峰值验收。fork 全帧录制另局进行，内存对照关闭该录制。
+main 和候选使用同一冻结录制器，每张图先跑 main AA，两版各至少三次，报告中位数、范围和 MAD；噪声跨过门槛时不报通过。
+receipt 记录并校验录制器绝对路径和 SHA256，另列模拟循环内 maxRSS 与最终校验哈希后的进程 maxRSS。
+录制器不保留上一轮完整 strategy；模块变化只读取小型 module-state 历史，战略历史从 memory 恢复。
 
 跨海预测分成：到装船点的步行、等船、装载、航行、卸载、岛内步行。步行与船的准备时间重叠，
 不把同一段等待加两遍。已在 ferry 中的兵沿实际 from/to；忙船需要明确借用条件；新船需要船厂施工、

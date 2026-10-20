@@ -1,6 +1,8 @@
 import type { AiPolicyContext } from '../policy/types';
 import type { GameSnapshot, PlayerId } from '../../shared/types';
 import { distance } from '../policy/spatial';
+import { snapshotUnitIndex } from './world-index';
+import { withStrategyFrame } from './frame-reuse';
 import { generateNavalObjectives, decomposeNavalObjective } from './naval-objectives';
 import { evaluateSituation } from './situation';
 import { observationHistory, observationMemory, retainObservationHistory } from './observation-memory';
@@ -20,6 +22,11 @@ export const NAVAL_OBJECTIVE_FAMILY: ObjectiveFamily = { id: 'naval', generate: 
 
 export function buildStrategyPlanTrace(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext,
   _previous?: StrategyPlanTrace, families: readonly ObjectiveFamily[] = [NAVAL_OBJECTIVE_FAMILY], observation?: SituationObservation, fieldBuildBudget = 1): StrategyPlanTrace {
+  return withStrategyFrame(() => assembleStrategyPlanTrace(snapshot, owner, options, families, observation, fieldBuildBudget));
+}
+
+function assembleStrategyPlanTrace(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext,
+  families: readonly ObjectiveFamily[], observation: SituationObservation | undefined, fieldBuildBudget: number): StrategyPlanTrace {
   const preparation = observationMemory(snapshot, owner, options.memory);
   const old = preparation.history && preparation.history.tick < snapshot.tick ? preparation.history : undefined;
   const context: PlanningContext = { snapshot, owner, memory: options.memory };
@@ -60,23 +67,28 @@ export function buildStrategyPlanTrace(snapshot: GameSnapshot, owner: PlayerId, 
     detail: 'Scores, methods and budget below are proposals. Existing executors retain all command and ownership decisions.', evidence: [] },
   { code: 'no-formal-preemption-events', detail: 'Old modules retain no marginal-utility handoff record; inferred overlaps remain in unit commitments, not invented formal preemption events', evidence: [] }];
   const assignments: Assignment[] = [];
+  const actors = snapshotUnitIndex(snapshot).all;
+  const assetsById = new Map<string, Situation['assets'][number]>();
+  for (const asset of situation.assets) if (!assetsById.has(asset.id)) assetsById.set(asset.id, asset);
   for (const unit of situation.units.filter(unit => unit.owner === owner)) for (const task of unit.commitments) {
     if (!task.objectiveId) continue;
     const taskEvidence = projectedValueReader(task, 'evidence');
     const objective = objectives.find(objective => objective.id === task.objectiveId);
     const claim = options.memory.unitClaims[unit.id];
-    const asset = situation.assets.find(asset => task.objectiveId === `${task.objectiveId!.split(':')[0]}:${owner}:${asset.id}`);
+    const separator = task.objectiveId.indexOf(':');
+    const prefix = `${separator < 0 ? task.objectiveId : task.objectiveId.slice(0, separator)}:${owner}:`;
+    const asset = !objective && task.objectiveId.startsWith(prefix) ? assetsById.get(task.objectiveId.slice(prefix.length)) : undefined;
     const target: Target = objective?.target ?? asset?.target ?? { point: { ...unit.location.point } };
     const arrival = unit.arrivals.find(entry => entry.targetId === target.entityId)?.arrival ?? { status: 'unknown' as const,
       reason: deferredRecord({ code: 'assignment-route-unobserved', detail: 'No evaluated route to this retained task target; not zero ETA', evidence: [] }) };
-    const raw = snapshot.units.find(actor => actor.id === unit.id)!;
+    const raw = actors.get(unit.id)!;
     const followTarget = raw.order.type === 'follow' ? raw.order.targetId : null;
     const onStation = unit.location.kind === 'land' && unit.location.landId === target.landId && distance(unit.location.point, target.point) <= 650;
     const stage = onStation ? 'on-station' : unit.location.kind === 'aboard' || ['move', 'attackMove', 'attack', 'board', 'follow'].includes(raw.order.type) ? 'en-route' : 'assigned';
     const interruption = claim?.kind === 'workerSafety' ? 'worker-safety' as const
       : unit.commitments.some(commitment => ['frontRecovery.postRecoveryAssignments', 'mobileCare.claimsUnits', 'frontRecovery.accepted-plan', 'mobileCare.accepted-plan'].includes(commitment.source)) ? 'healing' as const
       : raw.order.type === 'move' && raw.order.avoidCombat && (claim?.kind === 'retreat' || raw.hp < raw.maxHp * .5) ? 'retreat' as const
-      : followTarget && unit.hp < unit.maxHp && snapshot.units.some(healer => healer.id === followTarget && ['priest', 'fieldMedic'].includes(healer.kind)) ? 'healing' as const : undefined;
+      : followTarget && unit.hp < unit.maxHp && ['priest', 'fieldMedic'].includes(actors.get(followTarget)?.kind ?? '') ? 'healing' as const : undefined;
     const common = deferredEvidence({ id: `observed:${task.objectiveId}:${task.source}:${task.taskId}:${unit.id}`, objectiveId: task.objectiveId, methodId: null,
       unitId: unit.id, role: task.role, target: { ...target, point: { ...target.point } }, sinceTick: claim?.sinceTick ?? objective?.sinceTick ?? snapshot.tick,
       minimumStayUntilTick: objective?.stability.minimumStayUntilTick ?? snapshot.tick, arrival, authority: 'observed' as const }, oneEvidenceProjection(taskEvidence));
@@ -95,7 +107,7 @@ export function buildStrategyPlanTrace(snapshot: GameSnapshot, owner: PlayerId, 
   const idleProviders = families.filter(family => family.idleForces);
   const idleQuotes = idleProviders.length ? idleProviders.flatMap(family => family.idleForces!(situation, objectives))
     : [{ unitIds: situation.units.filter(unit => unit.owner === owner && unit.location.kind === 'land' && !unit.roles.includes('worker')
-      && !unit.commitments.length && unit.hp >= unit.maxHp * .8 && snapshot.units.some(actor => actor.id === unit.id && ['idle', 'hold'].includes(actor.order.type))).map(unit => unit.id),
+      && !unit.commitments.length && unit.hp >= unit.maxHp * .8 && ['idle', 'hold'].includes(actors.get(unit.id)!.order.type)).map(unit => unit.id),
     opportunityCostGold: 0, alternativeObjectiveId: null, reason: { code: 'idle-alternative-unknown',
       detail: 'No land attack/pressure quotation provider attached; zero quoted cost is unknown, not proof that idling is optimal', evidence: [] } }].filter(idle => idle.unitIds.length);
   const idleForces = mergeIdleForces(idleQuotes, situation, objectives);

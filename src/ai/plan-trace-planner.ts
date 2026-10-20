@@ -4,7 +4,8 @@ import { buildAiPlanTrace, type AiPlanTrace } from './plan-trace';
 import type { GameSnapshot } from '../shared/types';
 import type { AiDeathLedger } from './death-ledger';
 import { buildStrategyPlanTrace, type ObjectiveFamily } from './strategy/plan';
-import type { StrategyPlanTrace } from './strategy/types';
+import type { SituationObservation, StrategyPlanTrace } from './strategy/types';
+import type { AiPolicyContext } from './policy/types';
 
 export type AiPlanTraceOptions = AiOwnerPlannerOptions & { deathLedger?: AiDeathLedger };
 
@@ -18,6 +19,7 @@ export function planAiOwnerCommandEntriesWithTrace<Source extends string = strin
   const { deathLedger, ...plannerOptions } = options;
   let memory = request.memory ?? options.memory;
   let strategy: StrategyPlanTrace | undefined;
+  let observed: { context: AiPolicyContext; observation: SituationObservation } | undefined;
   const provider = options.memoryProvider;
   // Observe the existing get/set boundary, including a read-only provider that
   // has no memory yet. Do not reread it after think or create a second policy memory.
@@ -33,8 +35,9 @@ export function planAiOwnerCommandEntriesWithTrace<Source extends string = strin
     memory = context.memory;
     const healing = entries.flatMap(entry => ['mobileCare', 'frontRecovery'].includes(entry.scriptId ?? '') && 'unitIds' in entry.command
       ? entry.command.unitIds.map(unitId => ({ unitId, executor: entry.scriptId! })) : []);
-    strategy = buildStrategyPlanTrace(snapshot, request.playerId, context, previous?.strategy, families, { healing });
+    observed = { context, observation: { healing } };
   } });
+  if (observed) strategy = buildStrategyPlanTrace(snapshot, request.playerId, observed.context, previous?.strategy, families, observed.observation);
   const observedMemory = memory ?? createAiPolicyMemory();
   deathLedger?.recordThink(snapshot, request.playerId, observedMemory);
   const baseTrace = buildAiPlanTrace(snapshot, request.playerId, observedMemory,

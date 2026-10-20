@@ -3,6 +3,7 @@ import { closeSync, createReadStream, createWriteStream, existsSync, mkdirSync, 
 import { hostname } from 'node:os';
 import { pipeline } from 'node:stream/promises';
 import { createGzip, gzipSync } from 'node:zlib';
+import { fileURLToPath } from 'node:url';
 import type { AiPolicyMemory } from '../src/ai/memory';
 import type { AiPlanTrace } from '../src/ai/plan-trace';
 import type { AiGameRunInput } from '../src/ai/game-runner';
@@ -24,7 +25,7 @@ const decisionPlanner = detail === 'decision' && existsSync(`${base}/src/ai/stra
 const { canonicalGameState, checksumGame } = await import(`${base}/src/shared/sim/checksum.ts`) as typeof import('../src/shared/sim/checksum');
 const memories: Record<string, AiPolicyMemory> = {}, memoryProvider = createAiMemoryProvider(memories);
 const previous: Record<string, AiPlanTrace> = {}, durations: number[] = [];
-const previousDecisions: Record<string, StrategyDecision | undefined> = {};
+const decisionOwners = new Set<string>();
 const plannedHash = createHash('sha256'), commandHash = createHash('sha256');
 const observationHash = createHash('sha256'), forkFrames: unknown[] = [];
 const completeTraceHash = createHash('sha256');
@@ -47,8 +48,12 @@ const loop = runAiGameLoop({ ...config, commandPlanner({ snapshot, owner, agent,
     trace = result.trace; return result.commands;
   })();
   durations.push(performance.now() - start);
-  if (trace) previous[owner] = trace;
-  if (detail === 'decision') previousDecisions[owner] = decision;
+  if (trace) {
+    // Strategic history is serialized in memory. Only the small original trace
+    // is read to describe module-state changes on the following think.
+    const { strategy: _currentSituation, ...moduleTrace } = trace; previous[owner] = moduleTrace;
+  }
+  if (detail === 'decision') decisionOwners.add(owner);
   if (detail === 'complete') completeTraceHash.update(JSON.stringify(trace) + '\n');
   const observation = JSON.stringify(memories[owner]?.strategy);
   if (observation) { observationHash.update(observation + '\n'); maximumObservationBytes = Math.max(maximumObservationBytes, Buffer.byteLength(observation)); }
@@ -72,10 +77,13 @@ const loop = runAiGameLoop({ ...config, commandPlanner({ snapshot, owner, agent,
     commandHash.update(JSON.stringify({ tick, owner, source, scriptId, command }) + '\n'); commandCount++;
   },
 });
+const loopMaxRssKiB = process.resourceUsage().maxRSS, loopMemory = process.memoryUsage();
 const sha = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const sorted = [...durations].sort((a, b) => a - b);
 const receipt = { source: config.source, codeRoot: base, detail, completeTraceSha256: completeTraceHash.digest('hex'),
-  retainedOwners: detail === 'decision' ? Object.keys(previousDecisions).length : Object.keys(previous).length,
+  recorderFile: fileURLToPath(import.meta.url), recorderSha256: createHash('sha256').update(readFileSync(new URL(import.meta.url))).digest('hex'),
+  observedOwners: detail === 'decision' ? decisionOwners.size : Object.keys(previous).length,
+  retainedOwners: detail === 'decision' ? 0 : Object.keys(previous).length, retainedStrategyRoots: 0,
   name: config.name, mapId: config.mapId, owners: Object.keys(config.agents), tick: loop.snapshot.tick,
   host: hostname(), node: process.version, plannedCount, commandCount,
   plannedSha256: plannedHash.digest('hex'), commandSha256: commandHash.digest('hex'), snapshotSha256: sha(loop.snapshot),
@@ -83,6 +91,7 @@ const receipt = { source: config.source, codeRoot: base, detail, completeTraceSh
     const { strategy: _observation, ...policy } = memory; return [owner, policy];
   }))), observationSha256: observationHash.digest('hex'), maximumObservationBytes,
   canonicalSha256: sha(canonicalGameState(finalGame!)), checksum: checksumGame(finalGame!), maxRssKiB: process.resourceUsage().maxRSS,
+  loopMaxRssKiB, loopMemory,
   thinkMs: { n: sorted.length, p50: sorted[Math.floor(sorted.length * .5)], p95: sorted[Math.floor(sorted.length * .95)], max: sorted.at(-1) },
   elapsedMs: loop.elapsedMs, cpuMs: loop.cpuMs };
 writeFileSync(`${out}/summary.json`, JSON.stringify(receipt, null, 2));

@@ -94,4 +94,25 @@ describe('decision facts and requested explanations', () => {
     expect(JSON.stringify(observed.decision)).toBe(JSON.stringify(control.trace.strategy,
       (key, value) => ['evidence', 'detail', 'explanation'].includes(key) ? undefined : value));
   });
+
+  it('rebinds changed unit facts and memberships exactly as a cold saved frame does', () => {
+    const frame = structuredClone(frames.find(frame => frame.event === 'E05')!);
+    setBuildingBodies(frame.snapshot.map, standingBodies(frame.snapshot));
+    const unit = frame.snapshot.units.find(unit => unit.owner === frame.owner && !unit.deck && !unit.cabin && unit.kind !== 'worker')!;
+    const first = buildStrategyDecision(frame.snapshot, frame.owner, { memory: frame.memory }, undefined, { healing: [] }, Infinity);
+    const initialBytes = JSON.stringify(first);
+    const changes = [() => { unit.hp *= .8; }, () => { unit.x += 32; },
+      () => { unit.expiresTick = frame.snapshot.tick + 1; },
+      () => { const claim = frame.memory.unitClaims[unit.id]; if (claim) claim.targetId += '-changed'; },
+      () => { delete frame.memory.unitClaims[unit.id]; unit.hp = 0; }];
+    for (const change of changes) {
+      change(); frame.snapshot.tick += 15;
+      const cold = structuredClone(frame);
+      setBuildingBodies(cold.snapshot.map, standingBodies(cold.snapshot));
+      const warm = buildStrategyDecision(frame.snapshot, frame.owner, { memory: frame.memory }, undefined, { healing: [] }, Infinity);
+      expect(JSON.stringify(warm)).toBe(JSON.stringify(buildStrategyDecision(cold.snapshot, cold.owner, { memory: cold.memory }, undefined, { healing: [] }, Infinity)));
+      expect(JSON.stringify(frame.memory)).toBe(JSON.stringify(cold.memory));
+      expect(JSON.stringify(first)).toBe(initialBytes);
+    }
+  });
 });
