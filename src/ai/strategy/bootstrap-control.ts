@@ -5,16 +5,16 @@ import { bootstrapDoctrineContext, prepareBootstrapLandMission, prepareBootstrap
 import { buildObservedStrategyDecision, buildStrategyDecision, projectStrategyTrace,
   type ObservedStrategyDecision, type StrategyDecision } from './decision';
 import type { AllocationPrecondition, AllocationReason, CommandAdmission, ExecutorFeedback, ExecutorInput,
-  PlannedVoyage, StrategyAllocationMemory } from './allocation-types';
+  ExecutableMethod, PlannedVoyage, StrategyAllocationMemory } from './allocation-types';
 import type { VoyageRiskStages } from './voyage-risk';
 import type { StrategyPlanTrace, Target } from './types';
 import { allocateStrategy } from './allocator';
 import { allocationGrants, applyExecutorFeedback, pruneAllocationProvenance, settleAllocationState, advanceAllocationLeases } from './allocation-lifecycle';
 import { recordAllocationCommands } from './allocation-ledger';
 import { projectStrategyAllocation } from './allocation-trace';
-import { withAllocationArrivalQuery } from './allocation-arrival-query';
+import { withAllocationArrivalQuery, withAllocationLandRoutes, type AllocationLandRouteReader } from './allocation-arrival-query';
 import { withAllocationMethodArrivals } from './method-arrivals';
-import { prepareAllocationVoyageRisks } from './allocation-voyage-risk';
+import { prepareAllocationVoyageRisks, publishedVoyageRiskReader } from './allocation-voyage-risk';
 import { defenseMethodProvider } from './defense-methods';
 import { conquestMethodProvider } from './conquest-methods';
 import { defenseAndConquestExecutors } from './executors';
@@ -33,6 +33,8 @@ import { prepareAssemblyConquestContinuation, settlePreparedAssemblyConquestCont
   type PreparedAssemblyConquestContinuation } from './assembly-conquest-continuation';
 import type { AssemblyFactsRequest } from './assembly-facts';
 import { allocationResponseCandidates } from './allocation-eligibility';
+import { withConquestAssemblyPlanning } from './conquest-rallies';
+import { withNavigationPhase } from '../../shared/navigation-audit';
 
 export type AllocationCandidateRequest = Readonly<{ objectiveId: string; methodId: string; phase: 'skeleton' | 'gross' | 'net';
   /** These are proposed bundles, not an assertion that authority was granted. */
@@ -78,34 +80,47 @@ export function planControlledBootstrapCommands(snapshot: GameSnapshot, owner: P
     finally { preparation.factWork = work.flush(); boundObservationMemory(preparation); }
   });
 }
-function controlledBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion,
-  scripts: AiScript[], options: AiPolicyContext, observation: 'none' | 'facts' | 'trace') {
+function controlledAllocation(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion,
+  options: AiPolicyContext, observation: 'none' | 'facts' | 'trace') {
   const policy = options.memory;
   const observed = observation === 'trace';
-  const evaluation = observed ? buildObservedStrategyDecision(snapshot, owner, options) : buildStrategyDecision(snapshot, owner, options);
+  // No scripts have been admitted in this think yet. Native follow/retreat
+  // orders and retained memberships remain facts; do not preview the old
+  // medical selectors just to predict which new order they might issue.
+  const services = { healing: [] };
+  const evaluation = observed ? buildObservedStrategyDecision(snapshot, owner, options, undefined, services)
+    : buildStrategyDecision(snapshot, owner, options, undefined, services);
   const imported = importExecutedIncumbents(snapshot, policy, evaluation.situation,
     policy.strategyAllocation ?? createStrategyAllocationMemory(owner, snapshot.tick));
   policy.strategyAllocation = imported;
   const occupied = withFormalCommitments(evaluation.situation, imported);
-  const methods = evaluation.objectives.filter(objective => !['complete', 'failed', 'abandoned'].includes(objective.status))
-    .flatMap(objective => providers.flatMap(provider => provider.buildMethods({ snapshot,
-    situation: occupied, objective, previous: imported.objectives[objective.id] ?? null,
-    executions: Object.values(imported.executions), blocked: Object.values(imported.blocked) })));
-  const situation = withAllocationMethodArrivals(snapshot, owner, policy, occupied, methods);
+  const methods: ExecutableMethod[] = [];
+  let situation = occupied;
   const candidateRequests = observation === 'none' ? undefined : new Map<string, AllocationCandidateRequest>();
   const recordCandidate = (request: AllocationCandidateRequest) => candidateRequests?.set(JSON.stringify(request), request);
+  let handoffPolicy: typeof policy | undefined;
+  let assemblyProjection: BootstrapStrategyOutput['assemblyFacts'];
+  let landRouteReader: AllocationLandRouteReader | undefined;
+  const allocation = withAllocationArrivalQuery(snapshot, owner, policy, (fixedVoyageArrival, fixedVoyageLoading, arrival, landRoute) => withConquestAssemblyPlanning(landRoute, () => {
+    landRouteReader = landRoute;
+    methods.push(...evaluation.objectives.filter(objective => !['complete', 'failed', 'abandoned'].includes(objective.status))
+    .flatMap(objective => providers.flatMap(provider => provider.buildMethods({ snapshot,
+    situation: occupied, objective, previous: imported.objectives[objective.id] ?? null,
+    executions: Object.values(imported.executions), blocked: Object.values(imported.blocked) }))));
+    situation = withAllocationMethodArrivals(snapshot, owner, policy, occupied, methods);
   if (candidateRequests) for (const method of methods) recordCandidate({ objectiveId: method.objectiveId, methodId: method.id,
     phase: 'skeleton', unitIds: [], actions: method.actions.map(action => ({ actionId: action.id, target: action.target,
       unitIds: action.unitIds ?? null })), voyages: [], quotation: null, stageRisks: [] });
-  let handoffPolicy: typeof policy | undefined;
-  let assemblyProjection: BootstrapStrategyOutput['assemblyFacts'];
-  const allocation = withAllocationArrivalQuery(snapshot, owner, policy, (fixedVoyageArrival, fixedVoyageLoading, arrival) => {
+
     const requests = new Map<string, AssemblyFactsRequest>();
     const requestKey = (objectiveId: string, methodId: string, unitIds: readonly string[]) =>
       JSON.stringify([objectiveId, methodId, [...unitIds].sort(compare)]);
     const assembly = createAssemblyFactsTransaction<PreparedAssemblyConquestContinuation>({ snapshot, situation, version, arrival,
       committedObjectiveIds: Object.values(imported.objectives).filter(goal => !['complete', 'failed', 'abandoned'].includes(goal.status))
         .map(goal => goal.objectiveId),
+      committedAssemblies: Object.values(imported.objectives).filter(goal => !['complete', 'failed', 'abandoned'].includes(goal.status)
+        && imported.methods[goal.methodId]?.stage === 'assembly').map(goal => ({ objectiveId: goal.objectiveId, methodId: goal.methodId,
+        unitIds: Object.values(imported.assignments).filter(assignment => assignment.objectiveId === goal.objectiveId).map(assignment => assignment.unitId) })),
       prepare(request, cohort) {
         // Retain the original complete method graph. A materialized gathering
         // coordinator is not a priced execution continuation.
@@ -116,7 +131,7 @@ function controlledBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, ve
             demand: null, subgoalIds: [] }];
           return { pathId: cohort.pathId, readyTick: cohort.readyTick, delayTicks: cohort.readyTick - snapshot.tick,
             method: null, materializedInput: null, settlement: null, missing, preparationMissing: missing,
-            assumptions: [], coverage: 'known-effects', completedInTicks: null,
+            assumptions: [], preparationAssumptions: [], coverage: 'known-effects', completedInTicks: null,
             window: request.valuation?.window ?? null, realUnitIds: cohort.realUnitIds };
         }
         return prepareAssemblyConquestContinuation({ snapshot, situation, request, cohort, skeleton,
@@ -158,10 +173,17 @@ function controlledBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, ve
       stageRisks: (request.method.voyagePlans ?? []).map(voyage => ({ voyageId: voyage.id, risk: request.voyageRisks?.get(voyage.id) ?? null })) }) }
       : {}),
     prepareVoyageRisks: (materialized, quotes) => {
+      assembly.prepareDisplacements(materialized.flatMap((method, index) => {
+        const quote = quotes[index], valuation = quote?.valuation;
+        if (!valuation || quote.status === 'blocked' && quote.missingPreconditions.some(condition => condition.status === 'unmet')) return [];
+        return [{ objectiveId: method.objectiveId, unitIds: valuation.unitIds, window: valuation.window,
+          production: valuation.production ?? [] }];
+      }));
       assembly.prioritizeFacts();
+      const all = [...materialized, ...assembly.riskMethods()];
       const published = prepareAllocationVoyageRisks(snapshot, owner, policy,
-        [...materialized, ...assembly.riskMethods()], quotes);
-      assembly.publishRisks(published); return published;
+        all, quotes);
+      assembly.publishRisks(published, publishedVoyageRiskReader(snapshot, policy, all, published)); return published;
     },
     switchingCost: request => nativeSwitchCost(snapshot, request.resourceKeys),
     handoffImported(requests) {
@@ -178,7 +200,14 @@ function controlledBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, ve
     });
     if (observation !== 'none') assemblyProjection = assembly.project();
     return decision;
-  });
+  }));
+  return { policy, observed, evaluation, imported, situation, candidateRequests, handoffPolicy, allocation, assemblyProjection,
+    landRouteReader: landRouteReader! };
+}
+function controlledBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion,
+  scripts: AiScript[], options: AiPolicyContext, observation: 'none' | 'facts' | 'trace') {
+  const { policy, observed, evaluation, situation, candidateRequests, handoffPolicy, allocation, assemblyProjection, landRouteReader }
+    = withNavigationPhase('strategy-planning', () => controlledAllocation(snapshot, owner, version, options, observation));
   if (handoffPolicy) for (const key of ['unitClaims', 'landExpansion', 'expansionGarrisons', 'naval'] as const) {
     // Only the producer's acknowledged membership transaction is adopted.
     if (handoffPolicy[key] === undefined) delete policy[key];
@@ -194,29 +223,31 @@ function controlledBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, ve
     });
     for (const objectiveId of [...new Set(members.map(id => policy.strategyAllocation!.leases[`unit:${id}`]!.objectiveId))].sort()) {
       const unitIds = members.filter(id => policy.strategyAllocation!.leases[`unit:${id}`]!.objectiveId === objectiveId);
-      const lease = policy.strategyAllocation.leases[`unit:${unitIds[0]}`]!;
-      const eventId = `${owner}:allocation:${policy.strategyAllocation.nextEventSequence}`;
+      const lease = policy.strategyAllocation!.leases[`unit:${unitIds[0]}`]!;
+      const eventId = `${owner}:allocation:${policy.strategyAllocation!.nextEventSequence}`;
       if (!handoffIncumbent(snapshot, owner, policy, task.actor, unitIds, eventId, 'candidate-reassigned'))
         throw new Error('Candidate producer did not acknowledge reassignment');
-      policy.strategyAllocation = recordCandidateReassignment({ memory: policy.strategyAllocation, snapshot, task: task.actor,
+      policy.strategyAllocation = recordCandidateReassignment({ memory: policy.strategyAllocation!, snapshot, task: task.actor,
         unitIds, objectiveId, methodId: lease.methodId, action: lease.action });
     }
   }
-  prepareBootstrapSites(snapshot, owner, options);
-  const context = bootstrapDoctrineContext(snapshot, owner, version, options);
-  prepareBootstrapLandMission(snapshot, owner, context);
-  const authority = policy.strategyAllocation, grants = allocationGrants(authority);
+  const context = withNavigationPhase('incumbent', () => {
+    prepareBootstrapSites(snapshot, owner, options);
+    const context = bootstrapDoctrineContext(snapshot, owner, version, options);
+    prepareBootstrapLandMission(snapshot, owner, context); return context;
+  });
+  const authority = policy.strategyAllocation!, grants = allocationGrants(authority);
   let sequence = 0;
   const nextId = () => `${owner}:strategy-command:${snapshot.tick}:${authority.revision}:${sequence++}`;
   const preflight = createStrategyCommandGateway({ snapshot, owner, memory: authority, grants, queuedTick: null });
   const rejected: CommandAdmission[] = [];
-  const oldEntries = planAiCommandEntriesFromScripts(snapshot, owner, scripts, context, {
+  const oldEntries = withNavigationPhase('incumbent', () => planAiCommandEntriesFromScripts(snapshot, owner, scripts, context, {
     admitCommands(script, commands) {
       const result = preflight.admit(scriptProposals(script.id, commands, nextId));
       rejected.push(...result.admissions.filter(item => item.status === 'rejected'));
       return result.accepted.map(item => item.command);
     },
-  });
+  }));
   const feedbacks: ExecutorFeedback[] = [], formal: StrategyCommandProposal[] = [];
   for (const grant of grants) {
     const execution = authority.executions[grant.action.actionId]!, executor = defenseAndConquestExecutors.find(executor => executor.id === execution.executor);
@@ -225,7 +256,8 @@ function controlledBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, ve
     // execution of their old module with a reconstructed target.
     if (!executor || !objective || !method) continue;
     const input: ExecutorInput = { snapshot, owner, objective, method, execution, grant, events: authority.events };
-    const task = executor.execute(input), safety = observeWorkerSafetyInterruption(input);
+    const { task, safety } = withNavigationPhase('strategy-planning', () => withAllocationLandRoutes(landRouteReader,
+      () => ({ task: executor.execute(input), safety: observeWorkerSafetyInterruption(input) })));
     const feedback = safety ? { ...task, status: safety.status, blocked: safety.blocked,
       commands: [...safety.commands, ...task.commands], reasons: [...safety.reasons, ...task.reasons] } : task;
     feedbacks.push(feedback);

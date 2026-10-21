@@ -230,3 +230,13 @@ SKETCH_MACHINES=/root/.config/sketch/machines-naval.json \
 ## 当前威胁解除的 collector 差异
 
 [逐字段因果表](clear-threat-collector-fact-diff.json.gz)（SHA-256 `cef5e0048f3f435b654090ca3ce1d67c8dda1faf91c765fde1fbc4d726454e6e`）先在 `70ae44e6` 重现原 7 帧完整 plan／observation SHA，再对新事实求差。7 帧 Situation 均逐字相同；仅 L2 有 24 个按 ID 对齐的变化叶：1934 厅当前无实际／潜在敌人且无覆盖敌塔，旧 DefendSite 从 active 结束为 complete，删除其 3 个方法，释放最短停留，排序与 observation 的历史 score 随之调整。其他独立目标除排序外、其他方法均断言逐字一致。原 `control-land-explanation-reference.json` 和所有输入未覆盖；新 `protection-land-explanation-reference.json` 通过旧文件 SHA 及逐帧旧哈希接续该证据链。没有对应当前事实的变化不得纳入新引用。
+
+## 2026-10-21 基础设施诊断边界
+
+`navigation-audit.scene.test.ts` 在原样十一图冷输入和 Ne 输入上调用公开控制入口。六图保留真实 9000 tick memory，另五图保留原始首帧 null，并通过原生 `createAiPolicyMemory` 初始化。夹具内逐项保存原 gzip SHA。诊断 observer 对策略规划阶段未经共享事实回调的原生陆海求路直接报错；生产默认没有 observer，不增加对局异常。事实队列的实际有限任务和此前已公布、具有工作量证明的场重建分别标记，旧脚本自身的执行另列，不能仅凭 helper 所属模块把新增选择器调用豁免。
+
+控制评估读取原生订单及已有成员关系，不再预演旧医疗选择器。五个中期原帧对照 `strategyControl` 开关后，`postRecoveryAssignments` 和 `mobileCare` 的逐操作原生调用计数相同，新增策略调用为零。正式方法和执行器共享同一 think 的 land-route reader；未公布道路保留 pending 并进入原事实队列，不回退同步求路，也不把 pending 当成已知不可达。
+
+集结抢占按同一联合情景分别准备实际 before/after cohort，经唯一航次风险批次后用同一现金流结算。后报身份仅能复用输入完全相同的已公布物理航段；船体、姿态、点位或前腿不同仍 unknown。原六兵减为五兵、两侧 readyTick 都为零的反例，正式事务损失为 `282.3379172514515 − 277.03557440745027 = 5.302342844001203` 金，不能因时间未变归零。资源 key 保留未限制与显式空集合的区别，原生产排除和同窗边界贯穿前后两侧。
+
+本轮只验证事实、记账、命令入口和回退基础设施。冷帧总闸、端口回归不替代连续门槛；最终共同头还须通过 600 tick 六哈希与两图 4500 tick 的逐席逐条 191/278 命令对照。当前固定配方不进行 18000 tick 行为验收；后续目标分解按新的声明式动作约定实施。

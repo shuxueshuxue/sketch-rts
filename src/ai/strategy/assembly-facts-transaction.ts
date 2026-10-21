@@ -5,12 +5,13 @@ import type { AssemblyFacts, AssemblyFactsReader, AssemblyFactsRequest } from '.
 import { readAssemblySupply, type AssemblyAssessmentCohort } from './assembly-supply-reader';
 import { combineAssemblyContinuations } from './assembly-continuation';
 import { adaptAssemblyDelayLoss } from './assembly-delay-adapter';
-import { valueAssemblyDelayLoss, type AssemblyReadyTime } from './assembly-delay-loss';
+import type { AssemblyReadyTime } from './assembly-delay-loss';
+import { valueAssemblyCohortLoss } from './assembly-cohort-loss';
 import { assemblyContinuationValueCap } from './assembly-value-cap';
 import { valueConquestContinuation, type ConquestContinuationInput } from './conquest-value';
 import type { DecisionFacts } from './decision';
 import type { ForceAssemblyForecast } from './force-assembly-forecast';
-import type { Situation, ValuationWindow } from './types';
+import type { ProductionUse, Situation, ValuationWindow } from './types';
 import { sameValuationWindow, valuationWindow } from './utility';
 import type { VoyageRiskStages } from './voyage-risk';
 import { CRITICAL_FACT_CANDIDATES, currentFactWork } from './fact-work';
@@ -31,11 +32,13 @@ const sorted = (values: readonly string[] | undefined) => [...new Set(values ?? 
 const keyFor = (request: AssemblyFactsRequest) => JSON.stringify({ objective: request.objective.id, method: request.methodId,
   required: request.requiredForce, target: request.campTarget, posts: request.posts.map(post => ({ ...post, unitIds: sorted(post.unitIds) }))
     .sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0), units: sorted(request.unitIds),
-  response: sorted(request.responseEligibleUnitIds), interrupted: sorted(request.interruptedUnitIds),
-  window: request.valuation?.window ?? null, allowed: sorted(request.valuation?.allowedUnitIds),
+  response: request.responseEligibleUnitIds === undefined ? null : sorted(request.responseEligibleUnitIds), interrupted: sorted(request.interruptedUnitIds),
+  window: request.valuation?.window ?? null,
+  holdingTicks: request.valuation?.holdingTicks ?? null, discountTicks: request.valuation?.discountTicks ?? null,
+  allowed: request.valuation?.allowedUnitIds === undefined ? null : sorted(request.valuation.allowedUnitIds),
   unavailable: sorted(request.valuation?.unavailableUnitIds),
   allowedProduction: request.valuation?.allowedProduction ? [...request.valuation.allowedProduction]
-    .sort((a, b) => a.buildingId.localeCompare(b.buildingId) || a.lane.localeCompare(b.lane)) : null,
+    .sort((a, b) => a.buildingId < b.buildingId ? -1 : a.buildingId > b.buildingId ? 1 : a.lane < b.lane ? -1 : a.lane > b.lane ? 1 : 0) : null,
   unavailableProduction: canonicalProductionUses(request.valuation?.unavailableProduction) });
 
 /** One shared supply/physical batch boundary for gross/net and displacement.
@@ -44,12 +47,16 @@ const keyFor = (request: AssemblyFactsRequest) => JSON.stringify({ objective: re
 export function createAssemblyFactsTransaction<Prepared extends AssemblyPathPreparation>(input: Readonly<{
   snapshot: GameSnapshot; situation: DecisionFacts<Situation>; version: BootstrapAiVersion; arrival: AllocationArrivalReader;
   committedObjectiveIds?: readonly string[];
+  committedAssemblies?: readonly Readonly<{ objectiveId: string; methodId: string; unitIds: readonly string[] }>[];
   prepare: (request: AssemblyFactsRequest, cohort: AssemblyAssessmentCohort) => Prepared;
   settle: (prepared: Prepared, risks: ReadonlyMap<string, VoyageRiskStages>) => Prepared;
   committedRequest: (objectiveId: string, methodId: string, unitIds: readonly string[]) => AssemblyFactsRequest | null;
 }>) {
   const { snapshot } = input, records = new Map<string, AssemblyRecord<Prepared>>(), supplies = new Map<string, Supply>();
   let risks: ReadonlyMap<string, VoyageRiskStages> = new Map();
+  let relatedRisks: ((methods: readonly ExecutableMethod[]) => ReadonlyMap<string, VoyageRiskStages>) | undefined;
+  const settle = (path: Prepared): Prepared => input.settle(path, path.method && relatedRisks
+    ? new Map([...risks, ...relatedRisks([path.method])]) : risks);
   const proofs = new Map<string, { quotation: ReturnType<typeof adaptAssemblyDelayLoss>;
     continuationCap: ReturnType<typeof assemblyContinuationValueCap> }>();
   const supply = (request: AssemblyFactsRequest) => {
@@ -68,7 +75,7 @@ export function createAssemblyFactsTransaction<Prepared extends AssemblyPathPrep
     // Use one explicit whole-comparison window for every empirical path.
     // There is no conditional-mean ready-time money settlement.
     const window = request.valuation?.window ?? valuationWindow(Math.max(0,
-      ...prepared.map(path => path.completedInTicks ?? path.readyTick - snapshot.tick)));
+      ...prepared.map(path => path.completedInTicks ?? path.readyTick - snapshot.tick)), request.valuation);
     if (!request.valuation?.window) {
       request = { ...request, valuation: { ...request.valuation, phase: request.valuation?.phase ?? 'gross', window } };
       value = supply(request); prepared = prepare(request, value);
@@ -83,7 +90,7 @@ export function createAssemblyFactsTransaction<Prepared extends AssemblyPathPrep
     const requiredSupplyMissing = record.supply.missing.filter(fact => fact.code === 'assembly-target-camp-unobserved'
       || forecast.completionProbability === 0);
     missing.push(...requiredSupplyMissing.map(fact => precondition(request, fact.code, fact.status, fact.factIds)));
-    const paths = record.prepared.map(path => input.settle(path, risks));
+    const paths = record.prepared.map(settle);
     record.settled = paths;
     for (const path of paths) if (!path.settlement) missing.push(...path.missing);
     for (const cohort of record.supply.cohorts) missing.push(...cohort.missing.map(fact => precondition(request, fact.code, fact.status, fact.factIds)));
@@ -107,32 +114,36 @@ export function createAssemblyFactsTransaction<Prepared extends AssemblyPathPrep
       && (fact.code !== 'assembly-conditional-support-exhausted' || fact.factIds.includes(pathId)))) return { status: 'unknown' };
     return { status: 'not-filled' };
   };
-  const delayUpperBound: NonNullable<StrategyAllocationInput['assemblyDelayLossUpperBound']> = request => {
+  type DisplacementRequest = Parameters<NonNullable<StrategyAllocationInput['assemblyDelayLossUpperBound']>>[0];
+  const displacementRequests = (request: DisplacementRequest) => {
     const base = input.committedRequest(request.objectiveId, request.methodId, request.unitIds);
-    if (!base) return { status: 'unknown', reasonCode: 'assembly-continuation-value-unknown' };
+    if (!base) return null;
     const beforeRequest: AssemblyFactsRequest = { ...base, unitIds: request.unitIds,
       valuation: { ...base.valuation, phase: 'gross', window: request.window,
         allowedUnitIds: base.valuation?.allowedUnitIds
           ? request.unitIds.filter(id => base.valuation!.allowedUnitIds!.includes(id)) : request.unitIds } };
-    const beforeSupply = supply(beforeRequest);
-    const before = [...records.values()].find(record => keyFor(record.request) === keyFor(beforeRequest)
-      && sameValuationWindow(record.window, request.window));
-    // Only the supply counterfactual is needed here. Reuse an already prepared
-    // before cash schedule when available; an absent schedule uses the proved
-    // whole cap and never launches another physical-plan batch from the oracle.
-    const afterSupply = supply({ ...beforeRequest, unitIds: request.remainingUnitIds, valuation: { ...beforeRequest.valuation!,
+    const afterRequest: AssemblyFactsRequest = { ...beforeRequest, unitIds: request.remainingUnitIds, valuation: { ...beforeRequest.valuation!,
       unavailableUnitIds: sorted([...(base.valuation?.unavailableUnitIds ?? []),
         ...request.unitIds.filter(id => !request.remainingUnitIds.includes(id))]),
-      unavailableProduction: canonicalProductionUses([...(base.valuation?.unavailableProduction ?? []), ...request.unavailableProduction]) } });
+      unavailableProduction: canonicalProductionUses([...(base.valuation?.unavailableProduction ?? []), ...request.unavailableProduction]) } };
+    return { base, beforeRequest, afterRequest };
+  };
+  const delayUpperBound: NonNullable<StrategyAllocationInput['assemblyDelayLossUpperBound']> = request => {
+    const pair = displacementRequests(request);
+    if (!pair) return { status: 'unknown', reasonCode: 'assembly-continuation-value-unknown' };
+    const { base } = pair, before = get(pair.beforeRequest), after = get(pair.afterRequest);
+    const beforeSupply = before.supply, afterSupply = after.supply;
     const cap = assemblyContinuationValueCap(snapshot, base.objective, request.window);
+    const beforePaths = before.prepared.map(settle), afterPaths = after.prepared.map(settle);
+    before.settled = beforePaths; after.settled = afterPaths;
     const paired = beforeSupply.forecast.fillScenarios.map(path => {
-      const prepared = before?.prepared.find(value => value.pathId === path.id);
-      const settled = prepared && input.settle(prepared, risks);
+      const correlated = afterSupply.forecast.fillScenarios.some(value => value.id === path.id && value.probability === path.probability);
       return { pathId: path.id, probability: path.probability,
-        before: ready(beforeSupply.forecast, path.id), after: ready(afterSupply.forecast, path.id),
-        plan: settled?.settlement ? { readyTick: settled.readyTick, coverage: settled.coverage, input: settled.settlement } : null };
+        before: ready(beforeSupply.forecast, path.id), after: correlated ? ready(afterSupply.forecast, path.id) : { status: 'unknown' as const },
+        beforeSettlement: beforePaths.find(value => value.pathId === path.id)?.settlement ?? null,
+        afterSettlement: correlated ? afterPaths.find(value => value.pathId === path.id)?.settlement ?? null : null };
     });
-    const value = valueAssemblyDelayLoss({ forecastTick: snapshot.tick, window: request.window,
+    const value = valueAssemblyCohortLoss({ forecastTick: snapshot.tick, window: request.window,
       valueCapGold: cap.status === 'known' ? cap.gold : null,
       capFactIds: cap.status === 'known' ? cap.components.flatMap(term => term.factIds) : cap.reason.factIds, scenarios: paired });
     const adapted = adaptAssemblyDelayLoss(base.objective.target.entityId ?? base.objective.id, value);
@@ -143,6 +154,19 @@ export function createAssemblyFactsTransaction<Prepared extends AssemblyPathPrep
     proofs.set(JSON.stringify(request), { quotation, continuationCap: cap }); return quotation;
   };
   return { read, delayUpperBound,
+    /** Prepare resource-overlapping committed counterfactuals before the one
+     * risk batch. Later combinations may only reuse exact published legs. */
+    prepareDisplacements(candidates: readonly Readonly<{ objectiveId: string; unitIds: readonly string[];
+      window: ValuationWindow; production: readonly ProductionUse[] }>[]) {
+      for (const committed of input.committedAssemblies ?? []) for (const candidate of candidates) {
+        if (candidate.objectiveId === committed.objectiveId
+          || !candidate.unitIds.some(id => committed.unitIds.includes(id)) && !candidate.production.length) continue;
+        const requests = displacementRequests({ ...committed,
+          remainingUnitIds: committed.unitIds.filter(id => !candidate.unitIds.includes(id)),
+          window: candidate.window, unavailableProduction: candidate.production });
+        if (requests) { get(requests.beforeRequest); get(requests.afterRequest); }
+      }
+    },
     prioritizeFacts() {
       const committed = new Set(input.committedObjectiveIds ?? []);
       const candidates = [...new Set([...records.values()].filter(record => record.request.unitIds.length
@@ -155,8 +179,9 @@ export function createAssemblyFactsTransaction<Prepared extends AssemblyPathPrep
     riskMethods: () => [...new Map([...records.values()].flatMap(record => record.prepared
       .flatMap(path => path.method && path.missing.every(condition => condition.status !== 'unmet')
         ? [[path.method.id, path.method] as const] : []))).values()],
-    publishRisks(published: ReadonlyMap<string, VoyageRiskStages>) {
-      risks = published;
+    publishRisks(published: ReadonlyMap<string, VoyageRiskStages>,
+      reuse?: (methods: readonly ExecutableMethod[]) => ReadonlyMap<string, VoyageRiskStages>) {
+      risks = published; relatedRisks = reuse;
       for (const record of records.values()) { delete record.facts; delete record.settled; }
     },
     /** Finite, numeric provenance only; never serialize projected snapshots,
@@ -177,6 +202,12 @@ export function createAssemblyFactsTransaction<Prepared extends AssemblyPathPrep
       paths: (record.settled ?? record.prepared).map(path => ({ pathId: path.pathId, readyTick: path.readyTick, methodId: path.method?.id ?? null,
         voyageIds: path.method?.voyagePlans?.map(voyage => voyage.id) ?? [], coverage: path.coverage,
         missing: path.missing, assumptions: path.assumptions })) })),
-      delayProofs: [...proofs.values()] }),
+      delayProofs: [...proofs.values()], displacementCounts: {
+        comparisons: proofs.size,
+        wholeValueCapFallbacks: [...proofs.values()].filter(proof => proof.quotation.status === 'known'
+          && proof.quotation.bound.mode === 'whole-value-cap').length,
+        scenarioContinuations: [...proofs.values()].filter(proof => proof.quotation.status === 'known'
+          && proof.quotation.bound.mode === 'scenario-continuation').length,
+      } }),
   };
 }

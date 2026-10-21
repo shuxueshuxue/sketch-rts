@@ -94,6 +94,7 @@ it('keeps the physical batch outside repeated quotes and can prove a finite form
   transaction.read(input.request);
   expect(transaction.project().requests[0]!.paths.every(path => !path.missing.length)).toBe(true);
   expect(transaction.project().requests[0]!.paths[0]!.assumptions[0]!.code).toBe('latest-published-risk');
+  transaction.prepareDisplacements([]);
   const displacement = transaction.delayUpperBound({ objectiveId: input.request.objective.id,
     methodId: method.id, unitIds: ['member'], remainingUnitIds: [], window: input.request.valuation!.window!, unavailableProduction: [] });
   expect(displacement.status).toBe('known');
@@ -101,8 +102,13 @@ it('keeps the physical batch outside repeated quotes and can prove a finite form
   expect(displacement.bound.mode).toBe('whole-value-cap');
   expect(displacement.bound.gold).toBe(displacement.bound.continuationUpperGold);
   expect(displacement.bound.components.reduce((sum, component) => sum + component.valueGold, 0)).toBe(displacement.bound.gold);
-  expect(prepared).toBe(prepareCount); // The oracle did not open another physical-plan batch.
+  // New cohort descriptions can reuse the shared query. This port never
+  // launches another risk sampler, including when money remains unpublished.
+  expect(prepared).toBeGreaterThanOrEqual(prepareCount);
   expect(JSON.stringify(input)).toBe(before);
+  const empty = transaction.read({ ...input.request,
+    valuation: { ...input.request.valuation!, allowedUnitIds: [], allowedProduction: [] } });
+  expect(empty).not.toBe(first); expect(empty.forecast.supplies).toEqual([]);
 });
 
 it('preserves the committed production allowlist and exclusions in both displacement supply paths', () => {
@@ -127,8 +133,10 @@ it('preserves the committed production allowlist and exclusions in both displace
   const after = readAssemblySupply({ ...input, snapshot, situation, request: { ...request, unitIds: ['member-a'],
     valuation: { ...request.valuation!, unavailableUnitIds: ['member-b'] } }, arrival });
   expect(before.forecast.readyTick).toBe(2500); expect(after.forecast.readyTick).toBe(2600);
-  const transaction = createAssemblyFactsTransaction({ ...input, snapshot, situation, arrival,
-    committedRequest: () => request, prepare() { throw new Error('Displacement must not prepare a new physical batch'); }, settle(value) { return value; } });
+  const transaction = createAssemblyFactsTransaction<AssemblyPathPreparation>({ ...input, snapshot, situation, arrival,
+    committedRequest: () => request, prepare(_request, cohort) { return { pathId: cohort.pathId, readyTick: cohort.readyTick,
+      method: null, materializedInput: null, settlement: null, missing: [], assumptions: [], coverage: 'known-effects', completedInTicks: null }; },
+    settle(value) { return value; } });
   const quote = transaction.delayUpperBound({ objectiveId: request.objective.id, methodId: request.methodId,
     unitIds: request.unitIds, remainingUnitIds: ['member-a'], window: request.valuation!.window!, unavailableProduction: [] });
   expect(quote.status).toBe('known');

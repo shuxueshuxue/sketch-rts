@@ -7,7 +7,7 @@ import { setBuildingBodies } from '../../shared/terrain';
 import { standingBodies } from '../../shared/structure-bodies';
 import type { AiPolicyMemory } from '../memory';
 import type { ExecutableMethod } from './allocation-types';
-import { prepareAllocationVoyageRisks } from './allocation-voyage-risk';
+import { prepareAllocationVoyageRisks, publishedVoyageRiskReader } from './allocation-voyage-risk';
 import { FactWorkQueue, withFactWork } from './fact-work';
 import { regionIndex } from './regions';
 import { nativeVoyageBerth } from './voyage-berth';
@@ -50,6 +50,28 @@ function evaluate(frame: ReturnType<typeof scene>) {
   });
   return { risk, routes: frame.memory.strategy!.observation!.pointRoutes!.entries.map(entry => JSON.parse(entry.key) as unknown[]) };
 }
+
+it('reuses a published physical leg across cohort identities without doing more planning or exposure work', () => {
+  const frame = scene(), work = new FactWorkQueue(frame.snapshot.tick);
+  withFactWork(work, () => {
+    const published = prepareAllocationVoyageRisks(frame.snapshot, frame.owner, frame.memory, [frame.method]);
+    const receipt = JSON.stringify(work.receipt), memory = JSON.stringify(frame.memory);
+    const read = publishedVoyageRiskReader(frame.snapshot, frame.memory, [frame.method], published);
+    const changedCohort = { ...frame.method, id: 'after-removal', voyagePlans: [{ ...frame.plan,
+      id: 'after-removal/voyage', unitIds: [frame.worker.id] }] };
+    expect(read([changedCohort]).get('after-removal/voyage')).toEqual(published.get(frame.plan.id));
+    const moved = { ...changedCohort, voyagePlans: [{ ...changedCohort.voyagePlans[0]!,
+      id: 'different-water-point', departure: { ...frame.plan.departure,
+        point: { x: frame.plan.departure.point.x + 64, y: frame.plan.departure.point.y } } }] };
+    expect(read([moved]).get('different-water-point')).toMatchObject({
+      approach: { status: 'unknown', reasonCode: 'voyage-counterfactual-leg-unpublished' },
+      loaded: { status: 'unknown', reasonCode: 'voyage-counterfactual-leg-unpublished' } });
+    const differentHull = { ...changedCohort, voyagePlans: [{ ...changedCohort.voyagePlans[0]!,
+      id: 'different-hull', ship: { kind: 'existing' as const, unitId: 'not-this-hull' } }] };
+    expect(read([differentHull]).get('different-hull')?.loaded).toMatchObject({ status: 'unknown' });
+    expect(JSON.stringify(frame.memory)).toBe(memory); expect(JSON.stringify(work.receipt)).toBe(receipt);
+  });
+});
 
 it('keeps the real partial manifest approach and starts the loaded leg at its native pickup endpoint', () => {
   const frame = scene(), before = JSON.stringify(frame.snapshot);
