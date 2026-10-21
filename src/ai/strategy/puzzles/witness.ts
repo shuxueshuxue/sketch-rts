@@ -102,7 +102,7 @@ export function createPuzzleWitness(puzzle: PublicPuzzleCase, world: PuzzleWorld
         if (puzzle.key === 'defense-window' && puzzle.variant === 'later'
           && game.buildings.some(b => b.owner === owner && b.kind === 'townHall' && Math.hypot(b.x - world.mine.x, b.y - world.mine.y) < 300)) stage = 'return-load';
       }
-      if (stage === 'return-load' && load(army, { x: world.landing.x, y: 1984 }, 'return')) stage = 'return-cross';
+      if (stage === 'return-load' && load(army, { x: world.landing.x, y: world.landing.y - 192 }, 'return')) stage = 'return-cross';
       if (stage === 'return-cross' && unload(army, world.departure, 'return-unload')) stage = 'defend';
       if (stage === 'defend') attack(army, world.attackers, 'late-defend');
     }
