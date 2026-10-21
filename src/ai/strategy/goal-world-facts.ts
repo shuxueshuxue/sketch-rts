@@ -18,6 +18,7 @@ import { readGoalEconomicFact, type GoalEconomicFactPorts } from './goal-economy
 import { goalPoolMemberCandidates } from './goal-pool-members';
 import { readGoalCoarseGeometryFact } from './goal-coarse-facts';
 import { goalCampId, goalCampMemberIds, goalValueKey, resolveGoalCamp } from './goal-facts';
+import { boundCache, retainCachePins, touchCache, type CacheCapacity, type CacheUse } from './bounded-cache';
 import { observationJsonBytes } from './observation-json-bytes';
 import type { GoalFact, GoalFactObservation, GoalFactReader, GoalPlanningContext } from './goal-planner-types';
 import type { Point } from './types';
@@ -27,7 +28,9 @@ import type { Point } from './types';
 export type GoalWorldFactMemory = {
   version: 1; owner: string;
   camps: string[];
-  requests: { id: string; requestedTick: number }[];
+  requests: ({ id: string; requestedTick: number } & CacheUse)[];
+  campUses?: ({ id: string } & CacheUse)[];
+  capacity?: { camps: CacheCapacity; requests: CacheCapacity; payload: CacheCapacity };
 };
 export type GoalWorldFactPorts = GoalEconomicFactPorts & Readonly<{
   landRoute: AllocationLandRouteReader;
@@ -39,10 +42,61 @@ export type GoalWorldFactPorts = GoalEconomicFactPorts & Readonly<{
 export type GoalWorldFactInput = Omit<GoalPlanningContext, 'readFact' | 'readProjectedFact'> & Readonly<{
   ports: GoalWorldFactPorts; memory: GoalWorldFactMemory;
   allowedUnitIds?: readonly string[]; interruptedUnitIds?: readonly string[];
+  /** Cache references are supplied by the composing caller, outside predicates. */
+  cacheUse?: Readonly<{ thinkSequence: number; planIds: () => readonly string[] }>;
 }>;
 
 export function createGoalWorldFactMemory(owner: string): GoalWorldFactMemory {
   return { version: 1, owner, camps: [], requests: [] };
+}
+
+export const worldCampCacheId = (campId: string) => `world-camp:${campId}`;
+type WorldCacheEntry = ({ kind: 'camp'; id: string } | { kind: 'request'; id: string; requestedTick: number }) & CacheUse;
+function worldCacheEntries(memory: GoalWorldFactMemory): WorldCacheEntry[] {
+  const uses = new Map(memory.campUses?.map(use => [use.id, use]));
+  return [...memory.camps.map(id => ({ ...uses.get(id), kind: 'camp' as const, id })),
+    ...memory.requests.map(request => ({ ...request, kind: 'request' as const }))];
+}
+function worldCachePayload(memory: GoalWorldFactMemory, entries: readonly WorldCacheEntry[]) {
+  return { version: memory.version, owner: memory.owner,
+    camps: entries.filter(entry => entry.kind === 'camp').map(entry => entry.id),
+    requests: entries.flatMap(entry => entry.kind === 'request' ? [{ id: entry.id, requestedTick: entry.requestedTick,
+      ...(entry.lastUsedThink === undefined ? {} : { lastUsedThink: entry.lastUsedThink }),
+      ...(entry.planIds?.length ? { planIds: entry.planIds } : {}) }] : []),
+    campUses: entries.flatMap(entry => entry.kind === 'camp' && (entry.lastUsedThink !== undefined || entry.planIds?.length)
+      ? [{ id: entry.id, ...(entry.lastUsedThink === undefined ? {} : { lastUsedThink: entry.lastUsedThink }),
+        ...(entry.planIds?.length ? { planIds: entry.planIds } : {}) }] : []),
+  };
+}
+const worldCacheId = (entry: WorldCacheEntry) => entry.kind === 'camp' ? worldCampCacheId(entry.id) : `world:${entry.id}`;
+
+/** Preserve both original per-kind count limits and the shared payload limit.
+ * Capacity receipts describe metadata separately from the serialized evidence
+ * payload. Referenced proof survives overflow until its plan releases it. */
+export function boundGoalWorldFactMemory(memory: GoalWorldFactMemory, thinkSequence: number) {
+  const entries = worldCacheEntries(memory), policy = {
+    id: worldCacheId, lastUsed: (entry: WorldCacheEntry) => entry.lastUsedThink
+      ?? (entry.kind === 'request' ? entry.requestedTick : 0),
+    plans: (entry: WorldCacheEntry) => entry.planIds ?? [], thinkSequence,
+  };
+  const camps = boundCache({ ...policy, kind: 'goal-world-camps', entries: entries.filter(entry => entry.kind === 'camp'),
+    maxEntries: 64, ...(memory.capacity ? { capacity: memory.capacity.camps } : {}) });
+  const requests = boundCache({ ...policy, kind: 'goal-world-requests', entries: entries.filter(entry => entry.kind === 'request'),
+    maxEntries: 64, ...(memory.capacity ? { capacity: memory.capacity.requests } : {}) });
+  const payload = boundCache({ ...policy, kind: 'goal-world-payload', entries: [...camps.entries, ...requests.entries],
+    maxBytes: 16 * 1024, bytes: retained => observationJsonBytes(worldCachePayload(memory, retained)),
+    ...(memory.capacity ? { capacity: memory.capacity.payload } : {}) });
+  Object.assign(memory, worldCachePayload(memory, payload.entries));
+  memory.capacity = { camps: camps.capacity, requests: requests.capacity, payload: payload.capacity };
+  return { ...payload, evicted: [...camps.evicted, ...requests.evicted, ...payload.evicted], capacity: memory.capacity };
+}
+
+export function retainGoalWorldFactMemory(memory: GoalWorldFactMemory,
+  references: ReadonlyMap<string, ReadonlySet<string>>, thinkSequence: number) {
+  const entries = worldCacheEntries(memory);
+  retainCachePins(entries, references, worldCacheId, thinkSequence);
+  Object.assign(memory, worldCachePayload(memory, entries));
+  return boundGoalWorldFactMemory(memory, thinkSequence);
 }
 const order = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;
 const gap = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -61,11 +115,22 @@ export function createGoalFactReader(input: GoalWorldFactInput): GoalFactReader 
   const own = snapshot.units.filter(unit => unit.owner === owner && unit.hp > 0 && unit.expiresTick === undefined
     && (!available || available.has(unit.id)) && !interrupted.has(unit.id)).sort((a, b) => order(a.id, b.id));
   const camps = neutralCampExposure(snapshot);
+  const sequence = input.cacheUse?.thinkSequence ?? tick;
+  const touchCamp = (id: string) => {
+    if (!memory.camps.includes(id)) {
+      if (!camps.camps.some(camp => goalCampId(camp.memberIds) === id)) return;
+      memory.camps.push(id);
+    }
+    const uses = memory.campUses ??= [];
+    let use = uses.find(use => use.id === id);
+    if (!use) { use = { id }; uses.push(use); }
+    touchCache(use, sequence, input.cacheUse?.planIds() ?? []);
+  };
   for (const camp of camps.camps) {
     const id = goalCampId(camp.memberIds);
     if (!memory.camps.includes(id)) memory.camps.push(id);
   }
-  while (memory.camps.length > 64 || observationJsonBytes(memory) > 16 * 1024 && memory.camps.length) memory.camps.shift();
+  boundGoalWorldFactMemory(memory, sequence);
   const context: GoalPlanningContext = { ...input, readFact: fact => read(fact) };
   const memo = new Map<string, GoalFactObservation>();
   const answer = (fact: GoalFact, met: boolean, code: string, dependencies: unknown,
@@ -75,9 +140,8 @@ export function createGoalFactReader(input: GoalWorldFactInput): GoalFactReader 
   const pending = (fact: GoalFact, code: string, dependencies: unknown): GoalFactObservation => {
     let request = memory.requests.find(request => request.id === fact.id);
     if (!request) { request = { id: fact.id, requestedTick: tick }; memory.requests.push(request); }
-    while (memory.requests.length > 64 || observationJsonBytes(memory) > 16 * 1024) {
-      if (memory.requests.length) memory.requests.shift(); else if (memory.camps.length) memory.camps.shift(); else break;
-    }
+    touchCache(request, sequence, input.cacheUse?.planIds() ?? []);
+    boundGoalWorldFactMemory(memory, sequence);
     return { fact, state: 'pending', observedTick: tick, requestId: `world:${fact.id}`, requestedTick: request.requestedTick,
       revision: goalValueKey([fact.id, code, dependencies]), reason: { code, factIds: [fact.id], values: {} }, evidence: [] };
   };
@@ -204,6 +268,12 @@ export function createGoalFactReader(input: GoalWorldFactInput): GoalFactReader 
     return null;
   }
   function read(fact: GoalFact): GoalFactObservation {
+    const p = fact.predicate;
+    if (p.kind === 'camp-cleared' || (p.kind === 'force-at' || p.kind === 'force-available') && p.metric === 'camp-force')
+      touchCamp(p.campId);
+    const request = memory.requests.find(request => request.id === fact.id);
+    if (request) touchCache(request, sequence, input.cacheUse?.planIds() ?? []);
+    boundGoalWorldFactMemory(memory, sequence);
     if (input.precision !== 'coarse' && fact.predicate.kind === 'route' && fact.predicate.mover === 'land')
       currentFactWork()?.consume(planningFieldKey('land', fact.predicate.to.point));
     const previous = memo.get(fact.id);
