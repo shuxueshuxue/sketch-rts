@@ -19,7 +19,7 @@ it('reads the branched navy plan left to right, merging shared ship and money pr
 });
 
 it('shows spending before income and the protected hall reserve using recorded balances and same-generation budgets',()=>{
-  const {plan,trace,initialGold,hallCost,buildHall}=goalNavyFixture(),events=goalGoldEvents(plan);
+  const {plan,trace,initialGold,hallCost,buildHall,trainHull}=goalNavyFixture(),events=goalGoldEvents(plan);
   expect(events.map(row=>Math.sign(row.delta))).toEqual([-1,-1,1,1,-1]);
   expect(events[1]!.after).toBe(hallCost);
   expect(events.at(-1)!.after).toBe(initialGold+events.reduce((sum,row)=>sum+row.delta,0));
@@ -29,6 +29,9 @@ it('shows spending before income and the protected hall reserve using recorded b
   expect(goalResourceBand(next,trace)).not.toContain('建大厅预留 400 金');
   const done=goalNavyFixture(3600);
   expect(goalResourceBand(done.plan,done.trace)).toContain('当前 140 金 · 已预留 0 金 · 可支配 140 金');
+  const extra={...trace.strategy.allocation.budget[0]!,id:'transport-reserve',amountGold:100,action:{actionId:trainHull.id,generation:1}};
+  const several={...trace,strategy:{...trace.strategy,allocation:{...trace.strategy.allocation,budget:[...trace.strategy.allocation.budget,extra]}}};
+  expect(goalResourceBand(plan,several)).toContain('已预留 500 金 · 可支配 310 金');
 });
 
 it('keeps cyclic records bounded and inspectable as forward reference leaves',()=>{

@@ -40,12 +40,13 @@ export function goalResourceBand(plan: GoalPlan, trace: AiPlanTrace): string {
     const start = Math.max(from, row.since), end = Math.max(start, Math.min(through, row.through ?? through));
     return `<rect class="goal-reserve" x="${x(start)}" y="78" width="${x(end)-x(start)}" height="13"/>`;
   }).join('');
+  const reserveCaption = reservations.map(row=>`${row.label}预留 ${n(row.amount)} 金${row.through==null?'':` · 预计 ${clock(row.through)} 支付`}`).join('；');
   return `<section class="goal-resource-band" data-reserved-gold="${reserved}">${header}
     <div class="goal-money-chart"><svg viewBox="0 0 800 100" preserveAspectRatio="none" role="img" aria-label="预计金币先支出后收入及当前预留"><defs><pattern id="goal-reserve-hatch" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M0 5L5 0"/></pattern></defs>
     <path class="goal-money-zero" d="M34 ${y(0)}H764"/><path class="goal-money-line" d="${path}"/>
     ${events.map(row=>`<circle class="${row.delta<0?'spend':'income'}" cx="${x(row.tick)}" cy="${y(row.after)}" r="3"><title>${clock(row.tick)} ${h(row.label)} ${row.delta>0?'+':''}${n(row.delta)} 金 · 余额 ${n(row.after)}</title></circle>`).join('')}
     ${reserveBars}</svg><span class="goal-money-first" style="top:${y(events[0]!.before)*.88-5}px">${n(events[0]!.before)}</span><span class="goal-money-last" style="top:${y(events.at(-1)!.after)*.88-5}px">${n(events.at(-1)!.after)}</span>
     <div class="goal-money-axis">${[from,(from+through)/2,through].map(tick=>`<time>${clock(tick)}</time>`).join('')}</div>
-    ${reservations.map(row=>`<span class="goal-reserve-label">${h(row.label)}预留 ${n(row.amount)} 金${row.through==null?'':` · 预计 ${clock(row.through)} 支付`}</span>`).join('')}</div>
+    ${reserveCaption?`<span class="goal-reserve-label" title="${h(reserveCaption)}">${h(reserveCaption)}</span>`:''}</div>
     <ol>${events.map(row=>`<li class="${row.delta<0?'spend':'income'}"><time>${clock(row.tick)}</time> ${h(row.label)} <b>${row.delta>0?'+':''}${n(row.delta)}</b></li>`).join('')}</ol>${all.length>48?`<small>另 ${all.length-48} 笔见结构化字段</small>`:''}</section>`;
 }
