@@ -1,7 +1,7 @@
 import { BUILDING_DEFS, TIER_SUPPLY_CAP, UNIT_DEFS } from '../../../shared/catalog';
 import { seconds } from '../../../shared/time';
 import { boardUnit } from '../../../shared/decks';
-import { stepGame } from '../../../shared/sim';
+import { issuePlayerCommand, stepGame } from '../../../shared/sim';
 import { HOME, ISLAND, MAINLAND, PUZZLE_OWNER, PUZZLE_OPPONENT, TARGET_MINE, camp, findMine, finishWorld, homeEconomy,
   cliffCoast, neutralGroup, puzzleBuilder, soldiers, targetMine, terrainWorld, type PuzzleWorld } from './world';
 
@@ -45,6 +45,10 @@ export function defenseWindowScene(later = false) {
     mine, guard, { x: 1664, y: 1800 });
   world.departure = { x: 1408, y: 1472 }; world.landing = { x: 1856, y: 2048 };
   world.attackers = world.game.units.filter(u => u.owner === PUZZLE_OPPONENT);
+  // The cold planner must see the real incoming intent, not wait until the
+  // execution runner's first think to turn idle enemies into an attack.
+  issuePlayerCommand(world.game, world.opponent, { type: 'attackMove', unitIds: world.attackers.map(unit => unit.id),
+    x: world.home.x, y: world.home.y });
   return world;
 }
 export function guardedShoreScene(strong = true) {
