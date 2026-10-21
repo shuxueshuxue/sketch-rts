@@ -1,16 +1,16 @@
 {
   "schemaVersion": 2,
   "evidence": "artificial-public-puzzle-3",
-  "source": "d5ced6379e9010792129c3bf6b4e707b47de124f",
+  "source": "45f00a38c3fba73521fcabfe30c7a4a91753e258",
   "contractSource": "8afe8a35b3474855ac4352752cd1ffe0b6c999c9",
   "page": {
     "path": "goal-navy.html",
-    "sha256": "7f924f08890dd43208d0715f69dd8c888ee975aba456f2aded1b0ba0a646ab1e"
+    "sha256": "7850cb81cc0510364397a176d78a78406f639837c14c5003f2467c99dd114722"
   },
   "checks": [
     {
-      "source": "d5ced6379e9010792129c3bf6b4e707b47de124f",
-      "rawDirectory": "/root/.cache/sketch-cli/runs/mvhndwov-a8e012/d5ced63",
+      "source": "45f00a38c3fba73521fcabfe30c7a4a91753e258",
+      "rawDirectory": "/root/.cache/sketch-cli/runs/mvhnv4mv-776fc6/45f00a3",
       "evidence": "artificial-public-puzzle-3",
       "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Ultra, Unspecified Version)",
       "alignment": {
@@ -19,21 +19,38 @@
           "rows": [
             {
               "tick": 200,
-              "nodeX": 126.37677001953125,
-              "goldX": 126.38252639770508,
-              "error": 0.005756378173828125
+              "edge": "start",
+              "nodeX": 156.0028533935547,
+              "goldX": 156.01168823242188,
+              "error": 0.0088348388671875
             },
             {
               "tick": 500,
-              "nodeX": 198.4854278564453,
-              "goldX": 198.48551177978516,
-              "error": 8.392333984375e-05
+              "edge": "start",
+              "nodeX": 249.1843719482422,
+              "goldX": 249.1868667602539,
+              "error": 0.00249481201171875
             },
             {
               "tick": 3000,
-              "nodeX": 799.3503112792969,
-              "goldX": 799.3438720703125,
-              "error": 0.006439208984375
+              "edge": "start",
+              "nodeX": 1025.6444091796875,
+              "goldX": 1025.6468200683594,
+              "error": 0.002410888671875
+            },
+            {
+              "tick": 2000,
+              "edge": "finish",
+              "nodeX": 715.0525512695312,
+              "goldX": 715.0628662109375,
+              "error": 0.01031494140625
+            },
+            {
+              "tick": 2400,
+              "edge": "finish",
+              "nodeX": 839.2814331054688,
+              "goldX": 839.2964782714844,
+              "error": 0.015045166015625
             }
           ]
         },
@@ -42,21 +59,38 @@
           "rows": [
             {
               "tick": 200,
-              "nodeX": 126.37677001953125,
-              "goldX": 126.38252639770508,
-              "error": 0.005756378173828125
+              "edge": "start",
+              "nodeX": 156.0028533935547,
+              "goldX": 156.01168823242188,
+              "error": 0.0088348388671875
             },
             {
               "tick": 500,
-              "nodeX": 198.4854278564453,
-              "goldX": 198.48551177978516,
-              "error": 8.392333984375e-05
+              "edge": "start",
+              "nodeX": 249.1843719482422,
+              "goldX": 249.1868667602539,
+              "error": 0.00249481201171875
             },
             {
               "tick": 3000,
-              "nodeX": 799.3503112792969,
-              "goldX": 799.3438720703125,
-              "error": 0.006439208984375
+              "edge": "start",
+              "nodeX": 1025.6444091796875,
+              "goldX": 1025.6468200683594,
+              "error": 0.002410888671875
+            },
+            {
+              "tick": 2000,
+              "edge": "finish",
+              "nodeX": 715.0525512695312,
+              "goldX": 715.0628662109375,
+              "error": 0.01031494140625
+            },
+            {
+              "tick": 2400,
+              "edge": "finish",
+              "nodeX": 839.2814331054688,
+              "goldX": 839.2964782714844,
+              "error": 0.015045166015625
             }
           ]
         },
@@ -65,21 +99,38 @@
           "rows": [
             {
               "tick": 200,
-              "nodeX": 82.50186920166016,
-              "goldX": 82.5182876586914,
-              "error": 0.01641845703125
+              "edge": "start",
+              "nodeX": 146.84375,
+              "goldX": 146.86517333984375,
+              "error": 0.02142333984375
             },
             {
               "tick": 500,
-              "nodeX": 258.54840087890625,
-              "goldX": 258.55267333984375,
-              "error": 0.0042724609375
+              "edge": "start",
+              "nodeX": 368.65625,
+              "goldX": 368.66290283203125,
+              "error": 0.00665283203125
             },
             {
               "tick": 3000,
-              "nodeX": 1725.5035400390625,
-              "goldX": 1725.5060424804688,
-              "error": 0.00250244140625
+              "edge": "start",
+              "nodeX": 2216.96875,
+              "goldX": 2216.9775390625,
+              "error": 0.0087890625
+            },
+            {
+              "tick": 2000,
+              "edge": "finish",
+              "nodeX": 1477.625,
+              "goldX": 1477.6517333984375,
+              "error": 0.0267333984375
+            },
+            {
+              "tick": 2400,
+              "edge": "finish",
+              "nodeX": 1773.34375,
+              "goldX": 1773.382080078125,
+              "error": 0.038330078125
             }
           ]
         },
@@ -102,7 +153,10 @@
       ],
       "checked": [
         "branched-dependencies",
-        "execution-time-default",
+        "executor-gantt-default",
+        "no-condition-boxes",
+        "no-same-lane-arrows",
+        "bar-start-and-finish-clock",
         "shared-gold-clock",
         "regression-toggle",
         "zoom-and-scroll-alignment",
@@ -121,76 +175,93 @@
       "shots": [
         {
           "path": "goal-contract-overview.png",
-          "sha256": "c0a4505e36fb75102a1d381a14b470c090f0daadbd85d1bc35530717a02b17db",
-          "bytes": 224193,
+          "sha256": "ff97a160754130cd0a9c1a09232fd6431f1cfabe2a22d618a10848b5204eecfb",
+          "bytes": 208136,
           "width": 1600,
           "height": 900
         },
         {
           "path": "goal-contract-alternatives.png",
-          "sha256": "f6b152304e7e0a4ccff00e6b639d990ad65637e9031f933a86c614df03351f12",
-          "bytes": 279608,
+          "sha256": "059ed190fad98d4eb9f053990a36265ceb61ddae87a39d0a9a479f226478f030",
+          "bytes": 261638,
           "width": 1600,
           "height": 900
         },
         {
           "path": "goal-contract-execution.png",
-          "sha256": "d683cdcc155b06e16621ceae353db5c61a895b3c3314887e71fa38ce358c2eae",
-          "bytes": 262655,
+          "sha256": "67b7531e118f6284c3c5effc597802a67a8d329dac1c83190bc89d18db3f2a5d",
+          "bytes": 245660,
           "width": 1600,
           "height": 900
         },
         {
           "path": "goal-contract-progress.png",
-          "sha256": "2a304909febf237ed9cc145d923d52a59b85b3a628ad2478be6f6f4cb725bf50",
-          "bytes": 280767,
+          "sha256": "497e14c5ebfefbab599cab96c9d4d32a2f67ee056e89ec527e34a9c42c001860",
+          "bytes": 251647,
           "width": 1600,
           "height": 900
         },
         {
           "path": "goal-contract-result.png",
-          "sha256": "44d6510ba2648c5b4a73addb597cc7348b9fd399a85b2de1e986ac65b1f982f1",
-          "bytes": 260437,
+          "sha256": "c30564b7346526f295421ed634cbbdd7e0e419de5eb68b506d3a49332ea21936",
+          "bytes": 232620,
           "width": 1600,
           "height": 900
         },
         {
           "path": "goal-contract-unrecorded.png",
-          "sha256": "653d14b3f98b1079df847ad085ca3a40b3ccd563b55a88667bc9ac5ad3ad4bec",
-          "bytes": 494646,
+          "sha256": "0d1cf6e96fdfa6a4c96caf2ea956e6c8a0cb1bca3eef8ac79d2a2b8d81000b73",
+          "bytes": 494858,
           "width": 1600,
           "height": 900
         }
       ]
     },
     {
-      "source": "d5ced6379e9010792129c3bf6b4e707b47de124f",
-      "rawDirectory": "/root/.cache/sketch-cli/runs/mvhndxlt-14a8c0/d5ced63",
+      "source": "45f00a38c3fba73521fcabfe30c7a4a91753e258",
+      "rawDirectory": "/root/.cache/sketch-cli/runs/mvhntdta-8977d0/45f00a3",
       "evidence": "artificial-public-puzzle-3",
       "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Ultra, Unspecified Version)",
-      "file": "/Users/mac1/work/sketch-cli/runs/camps-navy-preview-d5ced637/goal-navy.html",
-      "sha256": "7f924f08890dd43208d0715f69dd8c888ee975aba456f2aded1b0ba0a646ab1e",
+      "file": "/Users/mac1/work/sketch-cli/runs/camps-navy-preview-45f00a38/goal-navy.html",
+      "sha256": "7850cb81cc0510364397a176d78a78406f639837c14c5003f2467c99dd114722",
       "alignment": {
         "fitted": {
           "order": "time",
           "rows": [
             {
               "tick": 200,
-              "nodeX": 142.35463333129883,
-              "goldX": 142.36265563964844,
-              "error": 0.008022308349609375
+              "edge": "start",
+              "nodeX": 176.65003967285156,
+              "goldX": 176.65892791748047,
+              "error": 0.00888824462890625
             },
             {
               "tick": 500,
-              "nodeX": 225.82823181152344,
-              "goldX": 225.83067321777344,
-              "error": 0.00244140625
+              "edge": "start",
+              "nodeX": 284.51776123046875,
+              "goldX": 284.51837158203125,
+              "error": 0.0006103515625
             },
             {
               "tick": 3000,
-              "nodeX": 921.3946228027344,
-              "goldX": 921.3975830078125,
-              "error": 0.002960205078125
+              "edge": "start",
+              "nodeX": 1183.3546142578125,
+              "goldX": 1183.3472290039062,
+              "error": 0.00738525390625
+            },
+            {
+              "tick": 2000,
+              "edge": "finish",
+              "nodeX": 823.810791015625,
+              "goldX": 823.8157043457031,
+              "error": 0.004913330078125
+            },
+            {
+              "tick": 2400,
+              "edge": "finish",
+              "nodeX": 967.6192016601562,
+              "goldX": 967.6283264160156,
+              "error": 0.009124755859375
             }
           ]
         },
@@ -199,21 +270,38 @@
           "rows": [
             {
               "tick": 200,
-              "nodeX": 142.35463333129883,
-              "goldX": 142.36265563964844,
-              "error": 0.008022308349609375
+              "edge": "start",
+              "nodeX": 176.65003967285156,
+              "goldX": 176.65892791748047,
+              "error": 0.00888824462890625
             },
             {
               "tick": 500,
-              "nodeX": 225.82823181152344,
-              "goldX": 225.83067321777344,
-              "error": 0.00244140625
+              "edge": "start",
+              "nodeX": 284.51776123046875,
+              "goldX": 284.51837158203125,
+              "error": 0.0006103515625
             },
             {
               "tick": 3000,
-              "nodeX": 921.3946228027344,
-              "goldX": 921.3975830078125,
-              "error": 0.002960205078125
+              "edge": "start",
+              "nodeX": 1183.3546142578125,
+              "goldX": 1183.3472290039062,
+              "error": 0.00738525390625
+            },
+            {
+              "tick": 2000,
+              "edge": "finish",
+              "nodeX": 823.810791015625,
+              "goldX": 823.8157043457031,
+              "error": 0.004913330078125
+            },
+            {
+              "tick": 2400,
+              "edge": "finish",
+              "nodeX": 967.6192016601562,
+              "goldX": 967.6283264160156,
+              "error": 0.009124755859375
             }
           ]
         },
@@ -222,21 +310,38 @@
           "rows": [
             {
               "tick": 200,
-              "nodeX": 121.51032257080078,
-              "goldX": 121.5294189453125,
-              "error": 0.01909637451171875
+              "edge": "start",
+              "nodeX": 146.84375,
+              "goldX": 146.86517333984375,
+              "error": 0.02142333984375
             },
             {
               "tick": 500,
-              "nodeX": 325.3033142089844,
-              "goldX": 325.3084259033203,
-              "error": 0.0051116943359375
+              "edge": "start",
+              "nodeX": 368.65625,
+              "goldX": 368.66290283203125,
+              "error": 0.00665283203125
             },
             {
               "tick": 3000,
-              "nodeX": 2023.46337890625,
-              "goldX": 2023.4669189453125,
-              "error": 0.0035400390625
+              "edge": "start",
+              "nodeX": 2216.96875,
+              "goldX": 2216.9775390625,
+              "error": 0.0087890625
+            },
+            {
+              "tick": 2000,
+              "edge": "finish",
+              "nodeX": 1477.625,
+              "goldX": 1477.6517333984375,
+              "error": 0.0267333984375
+            },
+            {
+              "tick": 2400,
+              "edge": "finish",
+              "nodeX": 1773.34375,
+              "goldX": 1773.382080078125,
+              "error": 0.038330078125
             }
           ]
         },
@@ -244,7 +349,9 @@
       },
       "checked": [
         "file-open",
-        "branched-layout",
+        "executor-gantt-default",
+        "no-condition-boxes",
+        "bar-start-and-finish-clock",
         "human-options",
         "reserved-gold",
         "recorded-result",
@@ -256,15 +363,15 @@
       "shots": [
         {
           "path": "goal-navy-layout.png",
-          "sha256": "3d730915bfd2c9d5de31473e407da190b5511d0e2d3369fee06b0305749152fc",
-          "bytes": 161315,
+          "sha256": "40299d4209d354c8bb7c16d87e30aa5af0394e317b80dce68fada8829974de08",
+          "bytes": 140891,
           "width": 1600,
           "height": 900
         },
         {
           "path": "goal-navy-options.png",
-          "sha256": "08c1dc89b164b44fd14814d6b9bd5ca1531cd6a761eee64908890f43b3d86c1d",
-          "bytes": 199740,
+          "sha256": "c7af805c4f3d96a7d1c8891347adc11319898cc19f2b3801ead4591ff238fb11",
+          "bytes": 168976,
           "width": 1600,
           "height": 900
         }
@@ -275,12 +382,26 @@
     "rootTscExit": 0,
     "cliTscExit": 0,
     "testFiles": 10,
-    "testsPassed": 54
+    "testsPassed": 56,
+    "regressionViewsByteIdenticalAtTicks": [
+      50,
+      2100,
+      3600
+    ]
   },
   "notEvidenceOf": [
     "real planner decisions",
     "public puzzle solved by the planner",
     "real AI execution",
     "planner or full-match render performance"
+  ],
+  "unsuccessfulBrowserAttempts": [
+    {
+      "source": "45f00a38c3fba73521fcabfe30c7a4a91753e258",
+      "rawDirectory": "/root/.cache/sketch-cli/runs/mvhntepd-113845/45f00a3",
+      "failure": "Pointer missed the completed interval",
+      "browserErrors": [],
+      "resolution": "Same-source isolated rerun passed; pointer ticks 2160 / 3650 / 4000 verified."
+    }
   ]
 }
