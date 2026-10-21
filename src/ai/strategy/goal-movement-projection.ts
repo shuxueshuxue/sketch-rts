@@ -40,7 +40,9 @@ export function createGoalMovementProjection(context: GoalPlanningContext,
       }
       moved.set(id, { unit, tick, actionId });
     };
-    for (const step of [...projection.actions].sort((a, b) => a.finishTick - b.finishTick || a.action.id.localeCompare(b.action.id))) {
+    // Prefix order breaks equal finish times. A zero-time optimistic return
+    // follows the voyage which released its hull, even if its ID sorts first.
+    for (const step of [...projection.actions].sort((a, b) => a.finishTick - b.finishTick)) {
       const kind = step.action.kind, parameters = step.action.executor.parameters;
       if (kind === 'transport-force' || kind === 'transport-worker') {
         const landing = record(parameters.landing), ground = point(landing?.ground), water = point(landing?.water);
@@ -74,6 +76,7 @@ export function createGoalMovementProjection(context: GoalPlanningContext,
       relevant = p.cohort ? p.cohort.flatMap(ref => ref.kind === 'existing' ? [ref.entityId] : [])
         : [...moved].filter(([, entry]) => entry.unit.kind !== 'worker' && entry.unit.attackDamage > 0).map(([id]) => id);
     else if (p.kind === 'unit-available') relevant = [...moved].filter(([, entry]) => entry.unit.kind === p.unitKind).map(([id]) => id);
+    else if (p.kind === 'transport-at') relevant = p.transport.kind === 'existing' ? [p.transport.entityId] : [];
     else if (p.kind === 'cargo-aboard') relevant = p.units.flatMap(ref => ref.kind === 'existing' ? [ref.entityId] : []);
     else return null;
     const changes = relevant.flatMap(id => moved.has(id) ? [moved.get(id)!] : []);

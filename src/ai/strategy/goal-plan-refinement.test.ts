@@ -77,6 +77,17 @@ it('refines only the selected ready layer and its next layer, re-regresses exact
     refineSelected(second.plans[0]!);
     expect(refinement.entries).toHaveLength(count - 1);
     expect(refinement.entries.some(entry => entry.planId === 'another-plan')).toBe(true);
+    const alias = { ...retained, coarse: { ...retained.coarse, executor: { ...retained.coarse.executor,
+      parameters: { ...retained.coarse.executor.parameters, alias: 'same-region-other-logical-target' } },
+      refinementFor: { providerId: provider.id, effect: facts[2]! } },
+      exact: retained.exact.map(action => ({ ...action, id: 'already-priced-alias' })) };
+    const bounded: GoalRefinementMemory = { revision: refinement.revision, entries: [retained, alias,
+      { ...alias, coarse: { ...alias.coarse, executor: { ...alias.coarse.executor,
+        parameters: { ...alias.coarse.executor.parameters, alias: 'second-unused-alias' } } } }] };
+    createGoalPlanRefiner({ memory: bounded, providers: [provider], maxAlternativeQuotes: 1,
+      exactContext: () => ({ ...context, precision: 'exact' }) })(second.plans[0]!);
+    expect(bounded.entries.some(entry => entry.coarse.executor.parameters.alias === 'same-region-other-logical-target')).toBe(true);
+    expect(bounded.entries.some(entry => entry.coarse.executor.parameters.alias === 'second-unused-alias')).toBe(false);
     const stale = createGoalPlanRefiner({ memory: refinement, providers: [provider],
       exactContext: () => ({ ...context, precision: 'exact' }), sourceRevision: () => 'changed-native-world' })(second.plans[0]!);
     expect(stale.readyActionIds).toEqual([]);

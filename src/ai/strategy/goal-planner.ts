@@ -190,7 +190,7 @@ function regressOne(state: GoalSearchMemory, input: GoalPlannerInput, providers:
   if (observation.derived) state.requests.push(...observation.derived.allOf.map(fact => ({ fact, depth: request.depth + 1 })));
   // A currently met numeric balance can be consumed by another action. Its
   // positive-flow alternatives must remain available to repair that prefix.
-  if (observation.state === 'met' && !goalQuantity(request.fact)) return;
+  if (observation.state === 'met' && !goalQuantity(request.fact) && request.fact.predicate.kind !== 'transport-at') return;
   if (request.depth >= input.limits.maxDepth) { state.limitReason ??= 'depth-limit'; return; }
   const discovered = providers.map(provider => discoverGoalActions(provider, request.fact, input.context));
   for (const { deferred } of discovered) for (const item of deferred) {
@@ -251,7 +251,7 @@ function satisfiesUncached(factInput: GoalFact, path: Path, state: GoalSearchMem
   const quantity = goalQuantity(fact);
   let physical: GoalFactObservation | null = null;
   if (input.context.readProjectedFact && path.steps.length && ['force-at', 'force-available', 'worker-at', 'cargo-aboard',
-    'unit-available', 'interception-capability', 'camp-staging', 'route'].includes(fact.predicate.kind)) {
+    'unit-available', 'interception-capability', 'camp-staging', 'route', 'transport-at'].includes(fact.predicate.kind)) {
     const projected = physical = input.context.readProjectedFact(fact, { actions: path.steps, bindings: path.bindings });
     if (projected && !quantity) return bounded({ met: projected.state === 'met', pending: projected.state === 'pending', bindings: binding,
       tick: projected.availableTick ?? now, producers: path.steps.filter(step => step.action.effects
@@ -386,7 +386,8 @@ function composeCoarseOne(state: GoalSearchMemory, input: GoalPlannerInput, goal
     if (search.path.steps.some(step => step.action.id === id)) return;
     frame.selected = id; frame.checkpoint = search.path; frame.prerequisite = 0;
     frame.required = id === '@derived' ? [...observe(state, input, frame.fact).derived!.allOf]
-      : [...state.candidates.find(action => action.id === id)!.preconditions];
+      : [...state.candidates.find(action => action.id === id)!.preconditions]
+        .sort((a, b) => Number(a.predicate.kind === 'transport-at') - Number(b.predicate.kind === 'transport-at'));
     return;
   }
   while (frame.prerequisite < frame.required!.length && satisfies(frame.required![frame.prerequisite]!, search.path, state, input).met)

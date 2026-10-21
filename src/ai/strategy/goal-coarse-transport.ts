@@ -5,7 +5,7 @@ import { isTransportKind } from '../../shared/transport-role';
 import { goalFact, goalValueKey } from './goal-facts';
 import type { GoalGroundingReader, GoalPlanningContext, GoalTransportOption } from './goal-planner-types';
 import { seaIdAt, type RegionIndex } from './regions';
-import { chooseGoalCoarseShore, type GoalPublishedBerthReader } from './goal-selected-berths';
+import { chooseGoalCoarseDeparture, chooseGoalCoarseShore, type GoalPublishedBerthReader } from './goal-selected-berths';
 
 /** A proposal from the prepared geographic contacts. These are deliberately
  * optimistic search bounds. A chosen contact may reuse its published native
@@ -29,9 +29,10 @@ export function createGoalCoarseTransport(context: GoalPlanningContext, regions:
       if (ship.owner !== context.owner || ship.hp <= 0 || !isTransportKind(ship.kind) || ships.size && !ships.has(ship.id)) continue;
       const seaId = seaIdAt(context.snapshot.map, ship); if (!seaId || from.seaId && from.seaId !== seaId) continue;
       const end = chooseGoalCoarseShore(regions.shoresByLand.get(to.landId)?.get(seaId) ?? [], to.point, ship, members.candidates, publishedBerth);
-      const startContact = from.landId ? chooseGoalCoarseShore(regions.shoresByLand.get(from.landId)?.get(seaId) ?? [], from.point, ship, members.candidates, publishedBerth) : undefined;
       const landing = end && (end.berth ?? { ...end.shore, heading: ship.sailing?.heading ?? 0 });
-      const departure = startContact && (startContact.berth ?? { ...startContact.shore, heading: ship.sailing?.heading ?? 0 });
+      const startContact = from.landId && landing ? chooseGoalCoarseDeparture(regions.shoresByLand.get(from.landId)?.get(seaId) ?? [],
+        from.point, landing.water, ship, members.candidates, publishedBerth) : undefined;
+      const departure = startContact && (startContact.berth ?? startContact.proposal ?? { ...startContact.shore, heading: ship.sailing?.heading ?? 0 });
       if (!landing || waiting.length && !departure) continue;
       const cargo = context.snapshot.units.filter(unit => unit.hp > 0 && (unit.deck?.shipId ?? unit.cabin?.shipId) === ship.id);
       const capacity = Math.max(0, (shipProfile(ship)?.loadCapacity ?? 0) - cargo.reduce((sum, unit) => sum + bodyMass(unit), 0));

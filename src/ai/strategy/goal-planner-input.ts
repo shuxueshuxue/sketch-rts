@@ -289,7 +289,19 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
             shareShipProfile(ship, pose);
             return { id: `point:${goalValueKey([ship.kind, from, to, future])}`, fact: pointRoute(snapshot, preparation, pose, from, to, future, precision === 'coarse') };
           } });
-        const physical = { ...rawPhysical, shores: (from: import('./types').Target, to: import('./types').Target): ReturnType<typeof rawPhysical.shores> => {
+        const physical = { ...rawPhysical,
+          berth: (...args: Parameters<typeof rawPhysical.berth>) => {
+            const [passenger, hull, shore, preferredPose] = args;
+            const hullId = hull.reference.kind === 'existing' ? hull.reference.entityId : undefined;
+            const actor = snapshot.units.find(unit => unit.id === hullId);
+            const parent = selected.find(action => ['transport-force', 'transport-worker'].includes(action.kind)
+              && (action.executor.parameters.transport as GoalEntityReference | undefined)?.kind === 'existing'
+              && (action.executor.parameters.transport as { entityId: string }).entityId === hullId
+              && (action.executor.parameters.cohort as readonly GoalEntityReference[]).some(ref => ref.kind === 'existing' && ref.entityId === passenger.id));
+            const members = parent && resolveCohort(parent.executor.parameters.cohort as readonly GoalEntityReference[]);
+            const proposal = actor && members?.state === 'met' ? berthBindings.published.proposal?.(actor, members.candidates, shore) : undefined;
+            return rawPhysical.berth(passenger, hull, shore, preferredPose ?? (proposal ? { ...proposal.water, heading: proposal.heading } : undefined));
+          }, shores: (from: import('./types').Target, to: import('./types').Target): ReturnType<typeof rawPhysical.shores> => {
           if (!selected.length) return rawPhysical.shores(from, to);
           const choices = selected.filter(action => ['transport-force', 'transport-worker'].includes(action.kind)
             && (action.executor.parameters.at as import('./types').Target | undefined)?.landId === to.landId);
@@ -305,8 +317,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
           const contact = (landId: import('./types').LandId, near: import('./types').Point) => ship && members.state === 'met'
             ? chooseGoalCoarseShore(regions.shoresByLand.get(landId)?.get(seaId!) ?? [], near, ship, members.candidates, berthBindings.published)?.shore
             : undefined;
-          const logicalFrom = p.from as import('./types').Target;
-          const end = to.landId && contact(to.landId, to.point), start = from.landId && departure.ground ? contact(from.landId, logicalFrom.point) : undefined;
+          const end = to.landId && contact(to.landId, to.point), start = from.landId && departure.ground ? contact(from.landId, departure.ground) : undefined;
           return seaId && end && (!from.landId || start) ? { state: 'met', candidates: [{ id: `selected-shore:${action.id}`, seaId,
             ...(start ? { departure: start } : {}), landing: end }], factIds: [] } : { state: 'unmet',
             reason: { code: 'selected-shore-contact-invalid', factIds: [], values: {} } };
@@ -369,6 +380,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
         return goalValueKey([actorRevision(action), times]);
       };
       const refiner = createGoalPlanRefiner({ memory: refinements, providers: baseProviders, sourceRevision,
+        maxAlternativeQuotes: input.limits?.maxPlans ?? 8,
         exactContext: (_selected, plan) => makeContext(input.allowedUnitIds, input.interruptedUnitIds, [], reservedGold, 'exact', plan.actions.map(node => node.declaration)),
         prepareExact: (plan, selected, context) => contactPreparation.get(context)?.(plan, selected) });
       const prefixContexts = new WeakMap<object, GoalPlanningContext>();

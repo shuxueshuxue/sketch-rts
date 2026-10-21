@@ -76,17 +76,26 @@ export function createGoalPlanRefiner(input: Readonly<{
   exactContext: (selected: readonly GoalActionDeclaration[], plan: GoalPlan) => GoalPlanningContext;
   prepareExact?: (plan: GoalPlan, selected: GoalPlan['actions'], context: GoalPlanningContext) => GoalExactPreparation | undefined;
   sourceRevision?: (action: GoalActionDeclaration) => string;
+  /** Reuse already priced alternatives for the same active action/actors.
+   * Geometry pins still follow only the currently selected graph. */
+  maxAlternativeQuotes?: number;
 }>) {
   const { memory } = input;
   return (plan: GoalPlan): GoalPlan => {
-    // A moving world can generate a new physical choice every think. Retain
-    // quotations used by this graph, not the historical choices it replaced.
-    // Empty unresolved graphs retain their continuation until search resumes.
+    // Actor/world revisions retire old prices. A bounded set of already
+    // priced alternatives for active actors must survive switching choices;
+    // otherwise two equivalent region-pool proposals can refine forever.
     const invalidated = new Set<string>();
+    let alternatives = 0;
     if (plan.actions.length) memory.entries = memory.entries.filter(entry => {
       if (entry.planId !== undefined && entry.planId !== plan.id) return true;
       const node = plan.actions.find(node => entry.exact.some(exact => exact.id === node.declaration.id)
         || proposalKey(entry.coarse) === proposalKey(node.declaration));
+      if (!node && entry.state === 'known' && entry.exact.length && alternatives < (input.maxAlternativeQuotes ?? 0)
+        && entry.sourceRevision === input.sourceRevision?.(entry.coarse)
+        && plan.actions.some(node => entry.coarse.refinementFor && node.declaration.refinementFor
+          && entry.coarse.refinementFor.providerId === node.declaration.refinementFor.providerId
+          && sameChoice(entry.coarse, node.declaration))) { alternatives++; return true; }
       const retain = !!node && entry.sourceRevision === input.sourceRevision?.(node.declaration);
       if (retain) entry.planId = plan.id;
       else if (entry.state !== 'pending') {

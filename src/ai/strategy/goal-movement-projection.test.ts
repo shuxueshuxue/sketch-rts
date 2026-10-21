@@ -1,4 +1,5 @@
 import { expect, it } from 'vitest';
+import { createUnit } from '../../shared/map';
 import { sketchScene } from '../../sdk/scene';
 import { withNavigationAudit, withNavigationPhase } from '../../shared/navigation-audit';
 import { snapshotGame } from '../../shared/sim';
@@ -53,6 +54,25 @@ it('projects only the selected actual cohort at its landing, with future availab
         from: { ...at, point: { x: 1800, y: 2000 } } }), path))
         .toMatchObject({ state: 'unmet', reason: { code: 'projected-route-origin-mismatch' } });
       expect(project(fact, { actions: [], bindings: {} })).toBeNull();
+      // Equal-finish optimistic moves still follow prefix order. The return
+      // ID sorts before delivery but must be the hull's final location.
+      const boat = createUnit('transport', 'us', 'transport', 1000, 1000);
+      snapshot.units.push(boat);
+      const delivered = { ...action, id: 'z-delivery', executor: { ...action.executor,
+        parameters: { ...action.executor.parameters, transport: ref(boat.id) } } };
+      const returned: GoalActionDeclaration = { ...action, id: 'a-return', kind: 'position-transport',
+        executor: { executor: 'goal.position-transport', parameters: { transport: ref(boat.id), at: { point: { x: 2500, y: 2000 } } } } };
+      const seen: typeof snapshot[] = [];
+      const projectedHull = createGoalMovementProjection(context, world => {
+        seen.push(world);
+        return input => ({ fact: input, state: 'met', observedTick: snapshot.tick, revision: 'world', evidence: [],
+          reason: { code: 'observed-pose', factIds: [], values: {} } });
+      });
+      expect(projectedHull(goalFact({ kind: 'transport-at', transport: ref(boat.id), at: { seaId: 'sea:1', point: { x: 2500, y: 2000 } },
+        tolerance: 36, byTick: 200 }), { actions: [{ action: delivered, startTick: 0, finishTick: 100 },
+        { action: returned, startTick: 100, finishTick: 100 }], bindings: {} })).toMatchObject({ availableTick: 100 });
+      expect(seen[0]!.units.find(unit => unit.id === boat.id)).toMatchObject({ x: 2500, y: 2000 });
+      snapshot.units.pop();
     }));
   expect(work.receipt.used).toBe(0);
   expect(JSON.stringify(snapshot)).toBe(before);

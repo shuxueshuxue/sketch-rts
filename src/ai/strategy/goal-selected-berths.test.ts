@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { expect, it, vi } from 'vitest';
+import { withNavigationAudit, withNavigationPhase } from '../../shared/navigation-audit';
 import { createAiPolicyMemory } from '../memory';
 import type { GameSnapshot } from '../../shared/types';
 import { withGoalPlannerInput } from './goal-planner-input';
@@ -9,6 +10,41 @@ import { chooseGoalCoarseShore, createGoalSelectedBerths, type GoalSelectedBerth
 import type { GoalTransportFactPorts } from './goal-grounding-ports';
 import type { GoalGroundingReader, GoalEntityReference } from './goal-planner-types';
 import { regionIndex } from './regions';
+import { projectGoalResources } from './goal-resource-ledger';
+
+it.each(['near', 'far'] as const)('uses a current-pose dock only when its full walking and sailing bound wins (%s)', variant => {
+  const snapshot: GameSnapshot = JSON.parse(gunzipSync(readFileSync(new URL(`./fixtures/public-ship-away-${variant}.json.gz`, import.meta.url))).toString());
+  const before = JSON.stringify(snapshot), memory = createAiPolicyMemory();
+  withNavigationAudit(event => { if (event.phase === 'strategy-planning' && !event.authorization) throw Error(event.operation); },
+    () => withNavigationPhase('strategy-planning', () => withGoalPlannerInput({ snapshot, owner: 'planner', version: 'v9_knight', memory }, input => {
+      const { refineSelected: _refine, ...coarse } = input;
+      const plan = planGoals(coarse).plans[0]!;
+      const delivery = plan.actions.find(node => node.declaration.kind === 'transport-force')!;
+      const ancestors = new Set<string>();
+      const visit = (id: string) => {
+        if (ancestors.has(id)) return;
+        ancestors.add(id); plan.actions.find(node => node.id === id)?.dependsOnActionIds.forEach(visit);
+      };
+      delivery.dependsOnActionIds.forEach(visit);
+      expect(plan.actions.filter(node => ancestors.has(node.id) && node.declaration.kind === 'position-transport'))
+        .toHaveLength(variant === 'near' ? 0 : 1);
+      // The hull's original pose cannot also satisfy its return after delivery.
+      expect(plan.actions.filter(node => node.declaration.kind === 'position-transport'))
+        .toHaveLength(variant === 'near' ? 1 : 2);
+      const ledger = projectGoalResources({ epoch: snapshot.tick, initial: input.initialBalances,
+        actions: plan.actions.map(node => {
+          if (node.startTick === null || node.finishTick === null) throw Error('Expected a scheduled coarse prefix');
+          return { action: node.declaration, startTick: node.startTick, finishTick: node.finishTick };
+        }) });
+      expect(ledger.state).toBe('met');
+      if (ledger.state !== 'pending') expect(ledger.deficits).toEqual([]);
+      if (variant === 'near') {
+        const ship = snapshot.units.find(unit => unit.kind === 'transport')!;
+        expect(delivery.declaration.executor.parameters.departure).toMatchObject({ water: { x: ship.x, y: ship.y }, heading: ship.sailing!.heading });
+      }
+    })));
+  expect(JSON.stringify(snapshot)).toBe(before);
+});
 
 it('retains a selected pending contact across actor motion, retries its proof, and releases a known failed alternative', () => {
   const snapshot: GameSnapshot = JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/public-ship-away-far.json.gz', import.meta.url))).toString());
@@ -18,7 +54,9 @@ it('retains a selected pending contact across actor motion, retries its proof, a
   });
   const selected = plan.actions.filter(node => node.declaration.kind === 'position-transport').slice(0, 1);
   const position = selected[0]!, reference = position.declaration.executor.parameters.transport as GoalEntityReference;
-  const parent = plan.actions.find(node => node.declaration.kind === 'transport-worker')!;
+  const at = position.declaration.executor.parameters.at as { point: { x: number; y: number } };
+  const parent = plan.actions.find(node => ['transport-force', 'transport-worker'].includes(node.declaration.kind)
+    && JSON.stringify((node.declaration.executor.parameters.departure as { water: unknown }).water) === JSON.stringify(at.point))!;
   const ship = snapshot.units.find(unit => reference.kind === 'existing' && unit.id === reference.entityId)!;
   const cohort = parent.declaration.executor.parameters.cohort;
   if (!Array.isArray(cohort)) throw Error('expected declared cohort');
