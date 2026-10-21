@@ -93,6 +93,7 @@ const loop = runAiGameLoop({ ...config, commandPlanner({ game, snapshot, owner, 
       // Exact provider skeletons and quoted bundles, captured during the same
       // evaluation even if no formal method or Arrival row was granted.
       allocatorCandidates: strategy.candidateRequests ?? null,
+      assemblyFacts: strategy.assemblyFacts ?? null,
       objectives: decision.objectives.map(objective => ({ id: objective.id, kind: objective.kind, target: objective.target,
         status: objective.status, score: objective.utility.score, reasons: objective.reasons.map(reason => reason.code) })),
       candidateMethods: decision.methods.map(method => ({ id: method.id, objectiveId: method.objectiveId, status: method.status,

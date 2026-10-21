@@ -56,6 +56,10 @@ it('reads native paid jobs and legal exits into assessment-only cohorts without 
   const excluded = readAssemblySupply({ ...input, request: { ...input.request,
     valuation: { ...input.request.valuation!, allowedProduction: [] } }, arrival: () => ({ status: 'reachable', ticks: 20, landTicks: 20, crossings: [] }) });
   expect(excluded.forecast.completionProbability).toBe(0); expect(excluded.cohorts).toEqual([]);
+  const noMembers = readAssemblySupply({ ...input, request: { ...input.request,
+    valuation: { ...input.request.valuation!, allowedUnitIds: [], allowedProduction: [] } },
+    arrival: () => ({ status: 'reachable', ticks: 20, landTicks: 20, crossings: [] }) });
+  expect(noMembers.forecast.supplies).toEqual([]);
 });
 
 it('keeps the physical batch outside repeated quotes and can prove a finite formal cap without an unquoted cash schedule', () => {

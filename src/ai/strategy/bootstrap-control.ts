@@ -28,6 +28,11 @@ import { createStrategyCommandGateway, type StrategyCommandProposal } from './co
 import { FactWorkQueue, withFactWork } from './fact-work';
 import { boundObservationMemory, observationMemory } from './observation-memory';
 import { isLifeSavingScript, recordScriptSafetyInterruptions } from './script-safety';
+import { createAssemblyFactsTransaction } from './assembly-facts-transaction';
+import { prepareAssemblyConquestContinuation, settlePreparedAssemblyConquestContinuation,
+  type PreparedAssemblyConquestContinuation } from './assembly-conquest-continuation';
+import type { AssemblyFactsRequest } from './assembly-facts';
+import { allocationResponseCandidates } from './allocation-eligibility';
 
 export type AllocationCandidateRequest = Readonly<{ objectiveId: string; methodId: string; phase: 'skeleton' | 'gross' | 'net';
   /** These are proposed bundles, not an assertion that authority was granted. */
@@ -38,7 +43,8 @@ export type AllocationCandidateRequest = Readonly<{ objectiveId: string; methodI
   stageRisks: readonly Readonly<{ voyageId: string; risk: VoyageRiskStages | null }>[] }>;
 export type BootstrapStrategyOutput = Readonly<{ decision: StrategyDecision; project?: () => StrategyPlanTrace;
   /** Same-think sidecar; never stored in memory or the plan trace. */
-  candidateRequests?: readonly AllocationCandidateRequest[] }>;
+  candidateRequests?: readonly AllocationCandidateRequest[];
+  assemblyFacts?: ReturnType<ReturnType<typeof createAssemblyFactsTransaction>['project']> }>;
 const providers = [defenseMethodProvider, conquestMethodProvider];
 const compare = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;
 
@@ -92,8 +98,53 @@ function controlledBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, ve
     phase: 'skeleton', unitIds: [], actions: method.actions.map(action => ({ actionId: action.id, target: action.target,
       unitIds: action.unitIds ?? null })), voyages: [], quotation: null, stageRisks: [] });
   let handoffPolicy: typeof policy | undefined;
-  const allocation = withAllocationArrivalQuery(snapshot, owner, policy, (fixedVoyageArrival, fixedVoyageLoading) => allocateStrategy({ snapshot,
+  let assemblyProjection: BootstrapStrategyOutput['assemblyFacts'];
+  const allocation = withAllocationArrivalQuery(snapshot, owner, policy, (fixedVoyageArrival, fixedVoyageLoading, arrival) => {
+    const requests = new Map<string, AssemblyFactsRequest>();
+    const requestKey = (objectiveId: string, methodId: string, unitIds: readonly string[]) =>
+      JSON.stringify([objectiveId, methodId, [...unitIds].sort(compare)]);
+    const assembly = createAssemblyFactsTransaction<PreparedAssemblyConquestContinuation>({ snapshot, situation, version, arrival,
+      committedObjectiveIds: Object.values(imported.objectives).filter(goal => !['complete', 'failed', 'abandoned'].includes(goal.status))
+        .map(goal => goal.objectiveId),
+      prepare(request, cohort) {
+        // Retain the original complete method graph. A materialized gathering
+        // coordinator is not a priced execution continuation.
+        const skeleton = methods.find(method => method.id === request.methodId);
+        if (!skeleton) {
+          const missing = [{ id: `${request.methodId}/assembly-continuation-skeleton-unquoted`, kind: 'force' as const,
+            status: 'unknown' as const, reason: { code: 'assembly-continuation-skeleton-unquoted', factIds: [request.methodId], values: {} },
+            demand: null, subgoalIds: [] }];
+          return { pathId: cohort.pathId, readyTick: cohort.readyTick, delayTicks: cohort.readyTick - snapshot.tick,
+            method: null, materializedInput: null, settlement: null, missing, preparationMissing: missing,
+            assumptions: [], coverage: 'known-effects', completedInTicks: null,
+            window: request.valuation?.window ?? null, realUnitIds: cohort.realUnitIds };
+        }
+        return prepareAssemblyConquestContinuation({ snapshot, situation, request, cohort, skeleton,
+          executions: Object.values(imported.executions).filter(action => action.methodId === request.methodId),
+          budgets: Object.values(imported.budgets).filter(budget => budget.methodId === request.methodId), arrival, fixedVoyageArrival });
+      },
+      settle: settlePreparedAssemblyConquestContinuation,
+      committedRequest(objectiveId, methodId, unitIds) {
+        const quoted = requests.get(requestKey(objectiveId, methodId, unitIds));
+        if (quoted) return quoted;
+        const objective = evaluation.objectives.find(goal => goal.id === objectiveId);
+        const action = imported.methods[methodId]?.actions.find(action => action.intent.kind === 'assemble-force');
+        if (!objective || action?.intent.kind !== 'assemble-force') return null;
+        return { objective, methodId, campTarget: action.intent.campTarget, requiredForce: action.intent.requiredForce,
+          posts: action.intent.posts, unitIds, responseEligibleUnitIds: allocationResponseCandidates(snapshot, situation, imported),
+          interruptedUnitIds: Object.values(imported.assignments).filter(assignment => assignment.interruption).map(assignment => assignment.unitId) };
+      } });
+    const decision = allocateStrategy({ snapshot,
     situation, objectives: evaluation.objectives, methods, providers, previous: imported, fixedVoyageArrival, fixedVoyageLoading,
+    assemblyFacts: request => {
+      const key = requestKey(request.objective.id, request.methodId, request.unitIds);
+      // Keep the original gross resource boundary for the committed plan;
+      // counterfactual/net trial exclusions must not replace its source pool.
+      if (request.valuation?.phase === 'gross' && !request.valuation.unavailableUnitIds?.length
+        && !request.valuation.unavailableProduction?.length && !requests.has(key)) requests.set(key, request);
+      return assembly.read(request);
+    },
+    assemblyDelayLossUpperBound: assembly.delayUpperBound,
     importedUpperBound: (objectiveId, window) => {
       const targetId = imported.objectives[objectiveId]?.target.entityId;
       return targetId ? importedMiningLossUpperBound(situation, evaluation.objectives, targetId, window) : null;
@@ -106,7 +157,12 @@ function controlledBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, ve
         missingPreconditions: request.quote.missingPreconditions },
       stageRisks: (request.method.voyagePlans ?? []).map(voyage => ({ voyageId: voyage.id, risk: request.voyageRisks?.get(voyage.id) ?? null })) }) }
       : {}),
-    prepareVoyageRisks: (materialized, quotes) => prepareAllocationVoyageRisks(snapshot, owner, policy, materialized, quotes),
+    prepareVoyageRisks: (materialized, quotes) => {
+      assembly.prioritizeFacts();
+      const published = prepareAllocationVoyageRisks(snapshot, owner, policy,
+        [...materialized, ...assembly.riskMethods()], quotes);
+      assembly.publishRisks(published); return published;
+    },
     switchingCost: request => nativeSwitchCost(snapshot, request.resourceKeys),
     handoffImported(requests) {
       const draft = structuredClone(policy), acknowledgements = [];
@@ -119,7 +175,10 @@ function controlledBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, ve
       }
       handoffPolicy = draft; return acknowledgements;
     },
-  }));
+    });
+    if (observation !== 'none') assemblyProjection = assembly.project();
+    return decision;
+  });
   if (handoffPolicy) for (const key of ['unitClaims', 'landExpansion', 'expansionGarrisons', 'naval'] as const) {
     // Only the producer's acknowledged membership transaction is adopted.
     if (handoffPolicy[key] === undefined) delete policy[key];
@@ -195,6 +254,7 @@ function controlledBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, ve
   const admissions = [...rejected, ...result.admissions];
   const entries: AiCommandEntry[] = result.accepted.map(item => ({ scriptId: item.executor, command: item.command }));
   const output: BootstrapStrategyOutput = { decision: { ...evaluation, mode: 'control', situation },
+    ...(assemblyProjection ? { assemblyFacts: assemblyProjection } : {}),
     ...(candidateRequests ? { candidateRequests: [...candidateRequests.values()] } : {}), ...(observed ? { project: () => ({
     ...projectStrategyTrace(evaluation as ObservedStrategyDecision), mode: 'control', allocation: projectStrategyAllocation(memory, admissions) }) } : {}) };
   return { entries, context, strategy: output };

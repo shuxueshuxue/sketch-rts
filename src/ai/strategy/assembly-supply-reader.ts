@@ -96,6 +96,7 @@ export function readAssemblySupply(input: Readonly<{ snapshot: GameSnapshot; sit
     }
   }
   const unitSupply: ForceAssemblyInput['unitSupply'] = request.unitIds.flatMap(id => {
+    if (request.valuation?.allowedUnitIds && !request.valuation.allowedUnitIds.includes(id)) return [];
     const unit = snapshot.units.find(unit => unit.id === id && unit.owner === owner && combatant(unit));
     if (!unit || unit.deck || unit.cabin) return [];
     const post = request.posts.find(post => post.unitIds.includes(id)) ?? postAt(unit);

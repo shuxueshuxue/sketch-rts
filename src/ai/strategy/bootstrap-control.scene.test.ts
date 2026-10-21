@@ -8,6 +8,8 @@ import type { GameSnapshot } from '../../shared/types';
 import type { AiPolicyMemory } from '../memory';
 import { planAiOwnerCommandEntries, type AiOwnerPlannerOptions } from '../planner-context';
 import * as situation from './situation';
+import * as voyageRisk from './allocation-voyage-risk';
+import * as allocationQuery from './allocation-arrival-query';
 import type { BootstrapStrategyOutput } from './bootstrap-control';
 
 type Frame = { snapshot: GameSnapshot; owner: string; memory: AiPolicyMemory; nextId: number; activePlayers: string[] };
@@ -39,14 +41,17 @@ describe('the real bootstrap control entry before behavioral acceptance', () => 
   it.each(['gullIsland-p0-9930', 'Ne-sapphireArchipelago-player-4-17991'])('evaluates %s once and projects the same accepted think', name => {
     const numerical = structuredClone(frames[name]!), observed = structuredClone(frames[name]!);
     const snapshotBefore = digest(numerical.snapshot), evaluator = vi.spyOn(situation, 'evaluateSituation');
+    const batch = vi.spyOn(voyageRisk, 'prepareAllocationVoyageRisks'), query = vi.spyOn(allocationQuery, 'withAllocationArrivalQuery');
     const commands = plan(numerical);
     const work = numerical.memory.strategy!.observation.factWork!;
     expect(work.used).toBeLessThanOrEqual(6144);
     expect(work.services.reduce((sum, service) => sum + service.work, 0)).toBe(work.used);
     expect(evaluator).toHaveBeenCalledTimes(1);
+    expect(batch).toHaveBeenCalledTimes(1); expect(query).toHaveBeenCalledTimes(1);
     let output: BootstrapStrategyOutput | undefined;
     const visible = plan(observed, { observeBootstrapPlan(_context, _entries, actual) { output = actual; } });
     expect(evaluator).toHaveBeenCalledTimes(2);
+    expect(batch).toHaveBeenCalledTimes(2); expect(query).toHaveBeenCalledTimes(2);
     expect(visible).toEqual(commands);
     expect(JSON.stringify(observed.memory)).toBe(JSON.stringify(numerical.memory));
     expect(digest(numerical.snapshot)).toBe(snapshotBefore);
@@ -57,11 +62,21 @@ describe('the real bootstrap control entry before behavioral acceptance', () => 
     expect(output!.decision.mode).toBe('control');
     expect(output!.candidateRequests?.some(request => request.phase === 'skeleton')).toBe(true);
     expect(output!.candidateRequests?.some(request => request.phase === 'gross')).toBe(true);
+    expect(output!.assemblyFacts).toBeDefined();
+    if (name.startsWith('Ne-')) expect(output!.assemblyFacts!.requests.length).toBeGreaterThan(0);
+    for (const request of output!.assemblyFacts!.requests) {
+      expect(request.forecast.forecastTick).toBe(observed.snapshot.tick);
+      expect(request.calibrationId).toBe('assembly-supply-646-joint-live-tail-v2-eeac1238909c');
+      expect(request.window.horizonTicks).toBeGreaterThan(0);
+      expect('materializedInput' in request).toBe(false);
+      for (const path of request.paths) expect('materializedInput' in path).toBe(false);
+    }
     for (const request of output!.candidateRequests ?? []) for (const id of request.unitIds)
       expect(output!.decision.situation.units.find(unit => unit.id === id)?.hp).toBeGreaterThan(0);
     expect(trace.allocation?.revision).toBe(observed.memory.strategyAllocation!.revision);
     expect(JSON.stringify(observed.memory)).toBe(beforeProjection);
     expect(evaluator).toHaveBeenCalledTimes(2);
+    expect(batch).toHaveBeenCalledTimes(2); expect(query).toHaveBeenCalledTimes(2);
     // An unquoted cold route is still unknown. This entry test does not call
     // absence of a grant a successful recall or conquest.
     expect(observed.memory.strategyAllocation!.unmet.some(item => item.reason.code.includes('unknown'))).toBe(true);
