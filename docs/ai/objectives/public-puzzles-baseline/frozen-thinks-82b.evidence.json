@@ -1,0 +1,9 @@
+{
+  "sha256": "a3681371b7c11bdea501f96f7c9b8810faabdb3791b4e277dd0e74296368dbc5",
+  "bytes": 409969,
+  "name": "public-planner-puzzles-frozen-82b-20261021",
+  "kind": "dir",
+  "machine": "a100",
+  "pushed": "8f028867b1b9fb382ef5711742fc64bc614bbf2f",
+  "pr": 585
+}
