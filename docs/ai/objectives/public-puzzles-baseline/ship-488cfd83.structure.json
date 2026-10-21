@@ -1,0 +1,1091 @@
+{
+  "source": "2478e44dd55f7a5896db17b235613a12358c7c84",
+  "sharedBase": "488cfd832cd4fd0452506ca134c7ae4a7591ac85",
+  "analysisSource": "e0b2edad03f965237b4c5aed8aced852799180cc",
+  "checkerSourceSha256": "5537ec2d7149d31bd296e43658c789f91abe122d45614f8115267ca7260fc189",
+  "instruction": "Commander182 2026-10-21 18:28: last3 chosen action kinds/order/dependencies/participants; numeric deltas reported separately.",
+  "semantics": "Pure projection of the same original20 frozen observations. No AI/source/fact/navigation/simulation calls; original488 native test result and stable/hash bytes remain unchanged. Runtime predicate change is for next-round source only.",
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "originalGzipSha256": "3f52ef735693ea176d99ae4893650fca28ec3c50732d0d304656ebff7f3c0214",
+      "originalThinks": 20,
+      "originalResult": {
+        "stable": true,
+        "passed": true
+      },
+      "finalThinkNumbers": [
+        18,
+        19,
+        20
+      ],
+      "finalOriginalPlanChecks": [
+        {
+          "think": 18,
+          "passed": true,
+          "error": null,
+          "oldPlanHash": "c6b2fb864f69907524801de9ef2c334e72b2513d01d2517daa7e91cb516877fa"
+        },
+        {
+          "think": 19,
+          "passed": true,
+          "error": null,
+          "oldPlanHash": "c6b2fb864f69907524801de9ef2c334e72b2513d01d2517daa7e91cb516877fa"
+        },
+        {
+          "think": 20,
+          "passed": true,
+          "error": null,
+          "oldPlanHash": "c6b2fb864f69907524801de9ef2c334e72b2513d01d2517daa7e91cb516877fa"
+        }
+      ],
+      "structuralStable": true,
+      "newCriterionWouldPassFromSameOriginalObservations": true,
+      "selectedStructures": [
+        [
+          {
+            "goal": "ConquerIsland:planner:resource-1",
+            "actions": [
+              {
+                "kind": "assemble",
+                "executor": "strategy.assemble",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": []
+              },
+              {
+                "kind": "position-transport",
+                "executor": "strategy.transport",
+                "participants": [
+                  "existing:unit-planner-transport-1000"
+                ],
+                "predecessors": []
+              },
+              {
+                "kind": "transport-force",
+                "executor": "strategy.transport",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4",
+                  "existing:unit-planner-transport-1000"
+                ],
+                "predecessors": [
+                  0,
+                  1,
+                  5,
+                  6
+                ]
+              },
+              {
+                "kind": "assemble",
+                "executor": "strategy.assemble",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": [
+                  0,
+                  2
+                ]
+              },
+              {
+                "kind": "clear-camp",
+                "executor": "strategy.clear-camp",
+                "participants": [
+                  "existing:scene-public-planner-frame-neutral-murlocPeon-1",
+                  "existing:scene-public-planner-frame-neutral-murlocPeon-2",
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": [
+                  0,
+                  2,
+                  3
+                ]
+              },
+              {
+                "kind": "position-transport",
+                "executor": "strategy.transport",
+                "participants": [
+                  "existing:unit-planner-transport-1000"
+                ],
+                "predecessors": [
+                  1,
+                  2
+                ]
+              },
+              {
+                "kind": "transport-worker",
+                "executor": "strategy.transport",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-worker-3",
+                  "existing:unit-planner-transport-1000"
+                ],
+                "predecessors": [
+                  1,
+                  2,
+                  4,
+                  5
+                ]
+              },
+              {
+                "kind": "build",
+                "executor": "goal.build",
+                "buildingKind": "townHall",
+                "participants": [
+                  "pool:worker:[\"build\",\"townHall\",\"land:2\",{\"x\":2976,\"y\":896}]"
+                ],
+                "predecessors": [
+                  4,
+                  6
+                ]
+              },
+              {
+                "kind": "assemble",
+                "executor": "strategy.assemble",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": [
+                  0,
+                  2,
+                  3,
+                  4
+                ]
+              },
+              {
+                "kind": "hold-position",
+                "executor": "goal.hold-position",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": [
+                  0,
+                  2,
+                  3,
+                  4,
+                  7,
+                  8
+                ]
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "goal": "ConquerIsland:planner:resource-1",
+            "actions": [
+              {
+                "kind": "assemble",
+                "executor": "strategy.assemble",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": []
+              },
+              {
+                "kind": "position-transport",
+                "executor": "strategy.transport",
+                "participants": [
+                  "existing:unit-planner-transport-1000"
+                ],
+                "predecessors": []
+              },
+              {
+                "kind": "transport-force",
+                "executor": "strategy.transport",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4",
+                  "existing:unit-planner-transport-1000"
+                ],
+                "predecessors": [
+                  0,
+                  1,
+                  5,
+                  6
+                ]
+              },
+              {
+                "kind": "assemble",
+                "executor": "strategy.assemble",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": [
+                  0,
+                  2
+                ]
+              },
+              {
+                "kind": "clear-camp",
+                "executor": "strategy.clear-camp",
+                "participants": [
+                  "existing:scene-public-planner-frame-neutral-murlocPeon-1",
+                  "existing:scene-public-planner-frame-neutral-murlocPeon-2",
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": [
+                  0,
+                  2,
+                  3
+                ]
+              },
+              {
+                "kind": "position-transport",
+                "executor": "strategy.transport",
+                "participants": [
+                  "existing:unit-planner-transport-1000"
+                ],
+                "predecessors": [
+                  1,
+                  2
+                ]
+              },
+              {
+                "kind": "transport-worker",
+                "executor": "strategy.transport",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-worker-3",
+                  "existing:unit-planner-transport-1000"
+                ],
+                "predecessors": [
+                  1,
+                  2,
+                  4,
+                  5
+                ]
+              },
+              {
+                "kind": "build",
+                "executor": "goal.build",
+                "buildingKind": "townHall",
+                "participants": [
+                  "pool:worker:[\"build\",\"townHall\",\"land:2\",{\"x\":2976,\"y\":896}]"
+                ],
+                "predecessors": [
+                  4,
+                  6
+                ]
+              },
+              {
+                "kind": "assemble",
+                "executor": "strategy.assemble",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": [
+                  0,
+                  2,
+                  3,
+                  4
+                ]
+              },
+              {
+                "kind": "hold-position",
+                "executor": "goal.hold-position",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": [
+                  0,
+                  2,
+                  3,
+                  4,
+                  7,
+                  8
+                ]
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "goal": "ConquerIsland:planner:resource-1",
+            "actions": [
+              {
+                "kind": "assemble",
+                "executor": "strategy.assemble",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": []
+              },
+              {
+                "kind": "position-transport",
+                "executor": "strategy.transport",
+                "participants": [
+                  "existing:unit-planner-transport-1000"
+                ],
+                "predecessors": []
+              },
+              {
+                "kind": "transport-force",
+                "executor": "strategy.transport",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4",
+                  "existing:unit-planner-transport-1000"
+                ],
+                "predecessors": [
+                  0,
+                  1,
+                  5,
+                  6
+                ]
+              },
+              {
+                "kind": "assemble",
+                "executor": "strategy.assemble",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": [
+                  0,
+                  2
+                ]
+              },
+              {
+                "kind": "clear-camp",
+                "executor": "strategy.clear-camp",
+                "participants": [
+                  "existing:scene-public-planner-frame-neutral-murlocPeon-1",
+                  "existing:scene-public-planner-frame-neutral-murlocPeon-2",
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": [
+                  0,
+                  2,
+                  3
+                ]
+              },
+              {
+                "kind": "position-transport",
+                "executor": "strategy.transport",
+                "participants": [
+                  "existing:unit-planner-transport-1000"
+                ],
+                "predecessors": [
+                  1,
+                  2
+                ]
+              },
+              {
+                "kind": "transport-worker",
+                "executor": "strategy.transport",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-worker-3",
+                  "existing:unit-planner-transport-1000"
+                ],
+                "predecessors": [
+                  1,
+                  2,
+                  4,
+                  5
+                ]
+              },
+              {
+                "kind": "build",
+                "executor": "goal.build",
+                "buildingKind": "townHall",
+                "participants": [
+                  "pool:worker:[\"build\",\"townHall\",\"land:2\",{\"x\":2976,\"y\":896}]"
+                ],
+                "predecessors": [
+                  4,
+                  6
+                ]
+              },
+              {
+                "kind": "assemble",
+                "executor": "strategy.assemble",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": [
+                  0,
+                  2,
+                  3,
+                  4
+                ]
+              },
+              {
+                "kind": "hold-position",
+                "executor": "goal.hold-position",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": [
+                  0,
+                  2,
+                  3,
+                  4,
+                  7,
+                  8
+                ]
+              }
+            ]
+          }
+        ]
+      ],
+      "numericChanges": []
+    },
+    {
+      "puzzle": "ship-away/near",
+      "originalGzipSha256": "10eecf4908acd249c05bef9033c8c07d9c84554ab408942ae4bb4a5867872d3f",
+      "originalThinks": 20,
+      "originalResult": {
+        "stable": false,
+        "passed": false
+      },
+      "finalThinkNumbers": [
+        18,
+        19,
+        20
+      ],
+      "finalOriginalPlanChecks": [
+        {
+          "think": 18,
+          "passed": true,
+          "error": null,
+          "oldPlanHash": "fe8c5f78c3c5cc01721d555a21d9ce9903b4995921ea86a630fd7c3085e83844"
+        },
+        {
+          "think": 19,
+          "passed": true,
+          "error": null,
+          "oldPlanHash": "f0376585557d8c2583e7cb3b7fe4f4184bf22b366a0c7a0a319ed36c6bb30a65"
+        },
+        {
+          "think": 20,
+          "passed": true,
+          "error": null,
+          "oldPlanHash": "e8d881d2587108b03228073fc4fbb7f41ba7fb1703eac14a849a820bb701a546"
+        }
+      ],
+      "structuralStable": true,
+      "newCriterionWouldPassFromSameOriginalObservations": true,
+      "selectedStructures": [
+        [
+          {
+            "goal": "ConquerIsland:planner:resource-1",
+            "actions": [
+              {
+                "kind": "assemble",
+                "executor": "strategy.assemble",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": []
+              },
+              {
+                "kind": "transport-force",
+                "executor": "strategy.transport",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4",
+                  "existing:unit-planner-transport-1000"
+                ],
+                "predecessors": [
+                  0
+                ]
+              },
+              {
+                "kind": "assemble",
+                "executor": "strategy.assemble",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "kind": "clear-camp",
+                "executor": "strategy.clear-camp",
+                "participants": [
+                  "existing:scene-public-planner-frame-neutral-murlocPeon-1",
+                  "existing:scene-public-planner-frame-neutral-murlocPeon-2",
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": [
+                  0,
+                  1,
+                  2
+                ]
+              },
+              {
+                "kind": "position-transport",
+                "executor": "strategy.transport",
+                "participants": [
+                  "existing:unit-planner-transport-1000"
+                ],
+                "predecessors": [
+                  1
+                ]
+              },
+              {
+                "kind": "transport-worker",
+                "executor": "strategy.transport",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-worker-3",
+                  "existing:unit-planner-transport-1000"
+                ],
+                "predecessors": [
+                  1,
+                  3,
+                  4
+                ]
+              },
+              {
+                "kind": "build",
+                "executor": "goal.build",
+                "buildingKind": "townHall",
+                "participants": [
+                  "pool:worker:[\"build\",\"townHall\",\"land:2\",{\"x\":2976,\"y\":896}]"
+                ],
+                "predecessors": [
+                  3,
+                  5
+                ]
+              },
+              {
+                "kind": "assemble",
+                "executor": "strategy.assemble",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": [
+                  0,
+                  1,
+                  2,
+                  3
+                ]
+              },
+              {
+                "kind": "hold-position",
+                "executor": "goal.hold-position",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  6,
+                  7
+                ]
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "goal": "ConquerIsland:planner:resource-1",
+            "actions": [
+              {
+                "kind": "assemble",
+                "executor": "strategy.assemble",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": []
+              },
+              {
+                "kind": "transport-force",
+                "executor": "strategy.transport",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4",
+                  "existing:unit-planner-transport-1000"
+                ],
+                "predecessors": [
+                  0
+                ]
+              },
+              {
+                "kind": "assemble",
+                "executor": "strategy.assemble",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "kind": "clear-camp",
+                "executor": "strategy.clear-camp",
+                "participants": [
+                  "existing:scene-public-planner-frame-neutral-murlocPeon-1",
+                  "existing:scene-public-planner-frame-neutral-murlocPeon-2",
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": [
+                  0,
+                  1,
+                  2
+                ]
+              },
+              {
+                "kind": "position-transport",
+                "executor": "strategy.transport",
+                "participants": [
+                  "existing:unit-planner-transport-1000"
+                ],
+                "predecessors": [
+                  1
+                ]
+              },
+              {
+                "kind": "transport-worker",
+                "executor": "strategy.transport",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-worker-3",
+                  "existing:unit-planner-transport-1000"
+                ],
+                "predecessors": [
+                  1,
+                  3,
+                  4
+                ]
+              },
+              {
+                "kind": "build",
+                "executor": "goal.build",
+                "buildingKind": "townHall",
+                "participants": [
+                  "pool:worker:[\"build\",\"townHall\",\"land:2\",{\"x\":2976,\"y\":896}]"
+                ],
+                "predecessors": [
+                  3,
+                  5
+                ]
+              },
+              {
+                "kind": "assemble",
+                "executor": "strategy.assemble",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": [
+                  0,
+                  1,
+                  2,
+                  3
+                ]
+              },
+              {
+                "kind": "hold-position",
+                "executor": "goal.hold-position",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  6,
+                  7
+                ]
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "goal": "ConquerIsland:planner:resource-1",
+            "actions": [
+              {
+                "kind": "assemble",
+                "executor": "strategy.assemble",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": []
+              },
+              {
+                "kind": "transport-force",
+                "executor": "strategy.transport",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4",
+                  "existing:unit-planner-transport-1000"
+                ],
+                "predecessors": [
+                  0
+                ]
+              },
+              {
+                "kind": "assemble",
+                "executor": "strategy.assemble",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "kind": "clear-camp",
+                "executor": "strategy.clear-camp",
+                "participants": [
+                  "existing:scene-public-planner-frame-neutral-murlocPeon-1",
+                  "existing:scene-public-planner-frame-neutral-murlocPeon-2",
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": [
+                  0,
+                  1,
+                  2
+                ]
+              },
+              {
+                "kind": "position-transport",
+                "executor": "strategy.transport",
+                "participants": [
+                  "existing:unit-planner-transport-1000"
+                ],
+                "predecessors": [
+                  1
+                ]
+              },
+              {
+                "kind": "transport-worker",
+                "executor": "strategy.transport",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-worker-3",
+                  "existing:unit-planner-transport-1000"
+                ],
+                "predecessors": [
+                  1,
+                  3,
+                  4
+                ]
+              },
+              {
+                "kind": "build",
+                "executor": "goal.build",
+                "buildingKind": "townHall",
+                "participants": [
+                  "pool:worker:[\"build\",\"townHall\",\"land:2\",{\"x\":2976,\"y\":896}]"
+                ],
+                "predecessors": [
+                  3,
+                  5
+                ]
+              },
+              {
+                "kind": "assemble",
+                "executor": "strategy.assemble",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": [
+                  0,
+                  1,
+                  2,
+                  3
+                ]
+              },
+              {
+                "kind": "hold-position",
+                "executor": "goal.hold-position",
+                "participants": [
+                  "existing:scene-public-planner-frame-planner-footman-1",
+                  "existing:scene-public-planner-frame-planner-footman-2",
+                  "existing:scene-public-planner-frame-planner-footman-3",
+                  "existing:scene-public-planner-frame-planner-footman-4"
+                ],
+                "predecessors": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  6,
+                  7
+                ]
+              }
+            ]
+          }
+        ]
+      ],
+      "numericChanges": [
+        {
+          "path": "plans[0].actions[1].cost.value[0].gold",
+          "values": [
+            0,
+            null,
+            0
+          ],
+          "range": 0
+        },
+        {
+          "path": "plans[0].actions[1].cost.value[1].gold",
+          "values": [
+            0,
+            null,
+            0
+          ],
+          "range": 0
+        },
+        {
+          "path": "plans[0].actions[1].duration.value",
+          "values": [
+            669,
+            669,
+            719
+          ],
+          "range": 50
+        },
+        {
+          "path": "plans[0].actions[1].finishTick",
+          "values": [
+            780,
+            780,
+            830
+          ],
+          "range": 50
+        },
+        {
+          "path": "plans[0].actions[1].parameters.landing.ground.y",
+          "values": [
+            304,
+            240,
+            304
+          ],
+          "range": 64
+        },
+        {
+          "path": "plans[0].actions[2].finishTick",
+          "values": [
+            1006,
+            1006,
+            1056
+          ],
+          "range": 50
+        },
+        {
+          "path": "plans[0].actions[2].startTick",
+          "values": [
+            780,
+            780,
+            830
+          ],
+          "range": 50
+        },
+        {
+          "path": "plans[0].actions[3].finishTick",
+          "values": [
+            1248,
+            1248,
+            1298
+          ],
+          "range": 50
+        },
+        {
+          "path": "plans[0].actions[3].startTick",
+          "values": [
+            1006,
+            1006,
+            1056
+          ],
+          "range": 50
+        },
+        {
+          "path": "plans[0].actions[4].finishTick",
+          "values": [
+            780,
+            780,
+            830
+          ],
+          "range": 50
+        },
+        {
+          "path": "plans[0].actions[4].startTick",
+          "values": [
+            780,
+            780,
+            830
+          ],
+          "range": 50
+        },
+        {
+          "path": "plans[0].actions[5].finishTick",
+          "values": [
+            2203,
+            2203,
+            2253
+          ],
+          "range": 50
+        },
+        {
+          "path": "plans[0].actions[5].startTick",
+          "values": [
+            1248,
+            1248,
+            1298
+          ],
+          "range": 50
+        },
+        {
+          "path": "plans[0].actions[6].finishTick",
+          "values": [
+            2763,
+            2763,
+            2813
+          ],
+          "range": 50
+        },
+        {
+          "path": "plans[0].actions[6].startTick",
+          "values": [
+            2203,
+            2203,
+            2253
+          ],
+          "range": 50
+        },
+        {
+          "path": "plans[0].actions[7].finishTick",
+          "values": [
+            1311,
+            1311,
+            1361
+          ],
+          "range": 50
+        },
+        {
+          "path": "plans[0].actions[7].startTick",
+          "values": [
+            1248,
+            1248,
+            1298
+          ],
+          "range": 50
+        },
+        {
+          "path": "plans[0].actions[8].finishTick",
+          "values": [
+            14763,
+            14763,
+            14813
+          ],
+          "range": 50
+        },
+        {
+          "path": "plans[0].actions[8].startTick",
+          "values": [
+            2763,
+            2763,
+            2813
+          ],
+          "range": 50
+        }
+      ]
+    }
+  ]
+}
