@@ -2,11 +2,13 @@ import { expect, it } from 'vitest';
 import { snapshotGame } from '../../../shared/sim';
 import { goalCampId, goalFact, resolveGoalCamp } from '../goal-facts';
 import { planGoals } from '../goal-planner';
+import { createGoalFactReader } from '../goal-world-facts';
 import { optionalFunction, publicPuzzlePlanner } from './planner-binding';
 import { shipAwayScene } from './scenes';
 
-it('binds the public puzzle entry to the real shared planGoals export', () => {
+it('binds the public puzzle entry to the real shared search and world reader exports', () => {
   expect(publicPuzzlePlanner.planGoals).toBe(planGoals);
+  expect(publicPuzzlePlanner.createGoalFactReader).toBe(createGoalFactReader);
 });
 
 it('loads the actual shared TypeScript entry and keeps native camp identity canonical', async () => {
