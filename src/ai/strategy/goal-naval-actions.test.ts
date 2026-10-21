@@ -157,7 +157,10 @@ describe('grounded naval world-effect declarations', () => {
     expect(defend.preconditions.some(fact => fact.predicate.kind === 'force-available')).toBe(true);
     const escape = declareGoalEvacuation({ ...input, unitIds: ['worker'], shelter: input.at, throughTick: 1200, routes: [input.route] })!;
     expect(escape.effects[0]!.fact.predicate).toMatchObject({ kind: 'assets-safe', unitIds: ['worker'], at: input.at });
-    expect(escape.preconditions).toContainEqual(goalFact({ kind: 'site-safe', site: input.at, throughTick: 1200 }));
+    expect(escape.preconditions).toContainEqual(goalFact({ kind: 'site-safe', site: input.at, throughTick: input.snapshot.tick + 100 }));
+    expect(escape.effects[0]!.fact.predicate).toMatchObject({ throughTick: 1200 });
+    const safety = escape.preconditions.find(fact => fact.predicate.kind === 'site-safe')!;
+    expect(escape.preconditionWindows).toContainEqual({ factId: safety.id, through: 'finish' });
     expect(escape.flows.filter(flow => flow.resource.kind === 'unit-pool')).toEqual([]);
   });
 
@@ -179,7 +182,7 @@ describe('grounded naval world-effect declarations', () => {
       crossing: goalFact({ kind: 'route', mover: 'sea', from: input.from, to: input.at, actor: hull }),
       shoreSafe: goalFact({ kind: 'shore-safe', landId: 'land:1', landing: input.at, throughTick: 1200 }),
       duration: known(200), factIds: ['shared-berth-fact'] };
-    const action: GoalActionDeclaration = strict(() => declareGoalTransportPosition({ option, byTick: 1000,
+    const action: GoalActionDeclaration = strict(() => declareGoalTransportPosition({ option, tick: input.snapshot.tick, byTick: 1000,
       tolerance: 36, estimates }))!;
     expect(action.preconditions[0]!.predicate).not.toHaveProperty('unitId');
     expect(action.effects[0]!.fact.predicate).toMatchObject({ kind: 'transport-at', transport: hull });

@@ -1,6 +1,7 @@
 import { unitMover } from '../../shared/catalog';
 import { goalFact } from './goal-facts';
 import { strategyIsOpponent } from './ownership';
+import { withGoalSafetyPreconditionWindows } from './goal-safety-preconditions';
 import type { GoalActionDeclaration, GoalActionKind, GoalActionProvider, GoalCombatOption, GoalFact, GoalPlanningContext } from './goal-planner-types';
 
 /** Physical estimates and routes come from the shared fact/assessment ports.
@@ -32,7 +33,7 @@ function declare(input: GoalLandCombatGrounding, context: GoalPlanningContext,
   if (units.some(unit => !unit || unit.owner !== context.owner || unit.hp <= 0 || unitMover(unit.kind) !== 'land')) return null;
   const preconditions = [...new Map([force, ...(input.preconditions ?? []), ...extra].map(fact => [fact.id, fact])).values()]
     .sort((a, b) => order(a.id, b.id));
-  return {
+  return withGoalSafetyPreconditionWindows({
     id: `action:${kind}:${JSON.stringify([effect.id, preconditions.map(fact => fact.id)])}`,
     // Holding has an exact on-post force precondition. Control begins when
     // that precondition is satisfied, while the cohort stays leased through
@@ -46,7 +47,7 @@ function declare(input: GoalLandCombatGrounding, context: GoalPlanningContext,
       ...(effect.predicate.kind === 'harassment-ended' && effect.predicate.unitIds
         ? { threatUnitIds: effect.predicate.unitIds } : {}) } },
     outputs: [], reasons: [],
-  };
+  }, context.tick);
 }
 
 /** A hostile target's destruction is a world effect, not an expansion recipe.

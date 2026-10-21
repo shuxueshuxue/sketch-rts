@@ -6,6 +6,7 @@ import { declareGoalAssembly, declareGoalCampClearing, declareGoalDefense, decla
   declareGoalForceTransport, declareGoalShoreClearing, declareGoalTransportReposition,
   declareGoalWorkerTransport, goalAssemblyPostSource, type GoalNavalEstimates, type GoalNavalMember } from './goal-naval-actions';
 import { effectiveCombatRating } from '../policy/v6/strength';
+import { withGoalSafetyPreconditionWindows } from './goal-safety-preconditions';
 import type { GoalActionDeclaration, GoalActionProvider, GoalCombatOption, GoalFact, GoalPlanningContext } from './goal-planner-types';
 
 const order = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;
@@ -88,7 +89,7 @@ export const goalNavalActionProvider: GoalActionProvider = {
           const cargo = id ? context.snapshot.units.filter(unit => unit.hp > 0 && (unit.deck?.shipId ?? unit.cabin?.shipId) === id) : [];
           if (cargo.every(unit => unit.owner === context.owner)) action = declareGoalTransportReposition({ transport: predicate.transport,
             at: predicate.at, dependentUnitIds: cargo.map(unit => unit.id), tolerance: predicate.tolerance,
-            byTick: predicate.byTick, estimates, preconditions: option.preconditions });
+            tick: context.tick, byTick: predicate.byTick, estimates, preconditions: option.preconditions });
         }
       } else if (predicate.kind === 'force-at' && option.from?.landId && option.from.landId === predicate.at.landId) {
         action = declareGoalAssembly({ ...base, from: option.from, at: predicate.at,
@@ -121,7 +122,8 @@ export const goalNavalActionProvider: GoalActionProvider = {
       const augmented = withFacts(action, option.preconditions);
       if (augmented) actions.push(augmented);
     }
-    return [...new Map(actions.map(action => [action.id, action])).values()].map(action => context.precision === 'coarse'
+    return [...new Map(actions.map(action => [action.id, action])).values()]
+      .map(action => withGoalSafetyPreconditionWindows(action, context.tick)).map(action => context.precision === 'coarse'
       ? { ...action, precision: 'coarse' as const, reasons: [...action.reasons, {
         code: 'coarse-naval-conditional-quotation', factIds: action.preconditions.map(fact => fact.id),
         values: { optimisticSearchOnly: true, exactRefinementRequired: true },

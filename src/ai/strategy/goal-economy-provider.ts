@@ -2,6 +2,7 @@ import { BUILDING_DEFS, RACE_DEFS, trainingBuildingFor, unitMover } from '../../
 import { isTransportKind } from '../../shared/transport-role';
 import type { BuildingKind, TrainableUnitKind, UnitKind } from '../../shared/types';
 import { declareGoalBuilding, declareGoalTraining, declareGoalWaitIncome } from './goal-economy-actions';
+import { withGoalSafetyPreconditionWindows } from './goal-safety-preconditions';
 import type { GoalActionDeclaration, GoalActionProvider, GoalEntityReference, GoalFact, GoalPlanningContext } from './goal-planner-types';
 import type { Target } from './types';
 
@@ -39,8 +40,8 @@ function training(kind: UnitKind, count: number, near: Target, byTick: number, c
     return [...new Set([1, count])].map(batch => {
       const action = declareGoalTraining({ unitKind: kind as TrainableUnitKind, count: batch, producer: option.producer,
         at: option.at, byTick }, context);
-      return action && { ...action, preconditions: [...new Map([...action.preconditions, ...option.preconditions]
-        .map(fact => [fact.id, fact])).values()].sort((a, b) => order(a.id, b.id)) };
+      return action && withGoalSafetyPreconditionWindows({ ...action, preconditions: [...new Map([...action.preconditions, ...option.preconditions]
+        .map(fact => [fact.id, fact])).values()].sort((a, b) => order(a.id, b.id)) }, context.tick);
     });
   }));
 }
@@ -100,9 +101,9 @@ export const goalEconomyActionProvider: GoalActionProvider = {
           const producer = action.executor.parameters.producer as GoalEntityReference;
           const at = action.executor.parameters.at as Target;
           const batch = declareGoalTraining({ unitKind: kindFrom(action), count, producer, at, byTick }, context);
-          return [action, batch && { ...batch, preconditions: [...new Map([...batch.preconditions,
+          return [action, batch && withGoalSafetyPreconditionWindows({ ...batch, preconditions: [...new Map([...batch.preconditions,
             ...action.preconditions.filter(fact => fact.predicate.kind !== 'gold' && fact.predicate.kind !== 'population-room')]
-            .map(fact => [fact.id, fact])).values()].sort((a, b) => order(a.id, b.id)) }];
+            .map(fact => [fact.id, fact])).values()].sort((a, b) => order(a.id, b.id)) }, context.tick)];
         }));
     }
     return [];
