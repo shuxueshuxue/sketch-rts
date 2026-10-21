@@ -1,0 +1,193 @@
+{
+  "criterionSource": "9cb9621e2a860131457e4213418bd2db05cab9d2",
+  "checks": {
+    "source": "9cb9621e2a860131457e4213418bd2db05cab9d2",
+    "checks": {
+      "root": 0,
+      "tools": 0,
+      "contracts-sdk": 0
+    }
+  },
+  "testCounts": {
+    "ownershipContracts": 6,
+    "structuralContracts": 9,
+    "sdkBoundaries": 7
+  },
+  "evidence": {
+    "sha256": "1af81c09d192a2ae000c1d2e0356ae39b9866014512a5807afc41f91e95fce55",
+    "bytes": 20436,
+    "name": "public-planner-step-ownership-9cb9621e-20261021",
+    "kind": "dir",
+    "machine": "a100",
+    "pushed": "9cb9621e2a860131457e4213418bd2db05cab9d2",
+    "pr": 585
+  },
+  "storeShaVerified": true,
+  "historicalCorrelationDerivation": {
+    "analysisSource": "40238c9a",
+    "production": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+    "runtimeSource": "13b28abb793a956f37e49203095033a04ea22f85",
+    "derivationOnly": true,
+    "aiCalls": 0,
+    "simulationSteps": 0,
+    "cases": [
+      {
+        "puzzle": "ship-away/far",
+        "observedOriginalThinks": 560,
+        "ownership": {
+          "passed": false,
+          "steps": [
+            {
+              "step": "position-transport",
+              "status": "goal-confirmed",
+              "goalCommandCount": 6,
+              "sdkAppliedCount": 6,
+              "effectTick": 1575,
+              "scriptIds": [
+                "goal.position-transport"
+              ],
+              "entityIds": [
+                "unit-planner-transport-1000"
+              ]
+            },
+            {
+              "step": "transport-force",
+              "status": "goal-confirmed",
+              "goalCommandCount": 9,
+              "sdkAppliedCount": 9,
+              "effectTick": 2790,
+              "scriptIds": [
+                "goal.transport-force"
+              ],
+              "entityIds": [
+                "scene-public-planner-frame-planner-footman-1",
+                "scene-public-planner-frame-planner-footman-2",
+                "scene-public-planner-frame-planner-footman-3",
+                "scene-public-planner-frame-planner-footman-4"
+              ]
+            },
+            {
+              "step": "clear-camp",
+              "status": "goal-confirmed",
+              "goalCommandCount": 4,
+              "sdkAppliedCount": 4,
+              "effectTick": 3435,
+              "scriptIds": [
+                "goal.clear-camp"
+              ],
+              "entityIds": [
+                "scene-public-planner-frame-neutral-murlocPeon-1",
+                "scene-public-planner-frame-neutral-murlocPeon-2"
+              ]
+            },
+            {
+              "step": "transport-worker",
+              "status": "goal-confirmed",
+              "goalCommandCount": 61,
+              "sdkAppliedCount": 2,
+              "effectTick": 7470,
+              "scriptIds": [
+                "goal.transport-worker"
+              ],
+              "entityIds": [
+                "scene-public-planner-frame-planner-worker-1"
+              ]
+            },
+            {
+              "step": "build",
+              "status": "older-code-completed",
+              "goalCommandCount": 0,
+              "sdkAppliedCount": 0,
+              "effectTick": 8160,
+              "scriptIds": [
+                "v6Economy"
+              ],
+              "entityIds": [
+                "building-planner-townHall-1107"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "puzzle": "ship-away/near",
+        "observedOriginalThinks": 560,
+        "ownership": {
+          "passed": false,
+          "steps": [
+            {
+              "step": "position-transport",
+              "status": "goal-confirmed",
+              "goalCommandCount": 5,
+              "sdkAppliedCount": 5,
+              "effectTick": 4140,
+              "scriptIds": [
+                "goal.position-transport"
+              ],
+              "entityIds": [
+                "unit-planner-transport-1000"
+              ]
+            },
+            {
+              "step": "transport-force",
+              "status": "goal-confirmed",
+              "goalCommandCount": 9,
+              "sdkAppliedCount": 9,
+              "effectTick": 975,
+              "scriptIds": [
+                "goal.transport-force"
+              ],
+              "entityIds": [
+                "scene-public-planner-frame-planner-footman-1",
+                "scene-public-planner-frame-planner-footman-2",
+                "scene-public-planner-frame-planner-footman-3",
+                "scene-public-planner-frame-planner-footman-4"
+              ]
+            },
+            {
+              "step": "clear-camp",
+              "status": "goal-confirmed",
+              "goalCommandCount": 4,
+              "sdkAppliedCount": 4,
+              "effectTick": 1725,
+              "scriptIds": [
+                "goal.clear-camp"
+              ],
+              "entityIds": [
+                "scene-public-planner-frame-neutral-murlocPeon-1",
+                "scene-public-planner-frame-neutral-murlocPeon-2"
+              ]
+            },
+            {
+              "step": "transport-worker",
+              "status": "goal-confirmed",
+              "goalCommandCount": 47,
+              "sdkAppliedCount": 2,
+              "effectTick": 5250,
+              "scriptIds": [
+                "goal.transport-worker"
+              ],
+              "entityIds": [
+                "scene-public-planner-frame-planner-worker-1"
+              ]
+            },
+            {
+              "step": "build",
+              "status": "older-code-completed",
+              "goalCommandCount": 0,
+              "sdkAppliedCount": 0,
+              "effectTick": 6750,
+              "scriptIds": [
+                "v6Economy"
+              ],
+              "entityIds": [
+                "building-planner-townHall-1100"
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "limitations": "No full runtime under the new predicate yet. Historical source402 correlates literal native events and snapshot effects; next-round source9cb additionally requires actual SDK onCommand owner/scriptId provenance. Both old324 cases necessarily fail because goal.build was absent. Old native results and archive remain unchanged."
+}
