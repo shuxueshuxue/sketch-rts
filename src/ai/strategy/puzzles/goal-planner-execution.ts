@@ -70,5 +70,6 @@ export function createExecution(options: { evidenceFile?: string; ownershipScope
     observations() { return first && latest && first !== latest ? [first, latest] : latest ? [latest] : []; },
     statistics() { return { plannedThinks, observedThinks, firstReadyTick, firstFormalCommandTick, formalCommandCount }; },
     ownership(initialTick, commands) { return ownership?.finish(initialTick, commands); },
+    applied(event) { ownership?.applied(event); },
   };
 }
