@@ -383,6 +383,9 @@ export type ExecutorFeedback = Readonly<{
 }>;
 export type ExecutableMethod = DecisionFacts<Method> & Readonly<{
   providerId: string;
+  /** A completed gathering coordinator is a retained prerequisite, not the
+   * conquest's final effect. Existing methods omit this and execute normally. */
+  stage?: 'assembly' | 'execution';
   /** Stable preference within this objective, not a global defense/island priority. */
   preference: number;
   spends: readonly PlannedAllocationSpend[];

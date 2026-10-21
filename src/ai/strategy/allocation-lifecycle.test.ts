@@ -41,6 +41,34 @@ function fixture() {
 }
 
 describe('authority along observed execution dependencies', () => {
+  it('retains a completed assembly coordinator and cohort until the same method expands to execution', () => {
+    const { memory, snapshot } = fixture(), original = memory.methods.method!, action = original.actions[0]!;
+    const assembly: ExecutableMethod = { ...original, stage: 'assembly', actions: [{ ...action,
+      executor: 'strategy.assemble-force', intent: { kind: 'assemble-force', campTarget: action.target, requiredForce: .5,
+        posts: [{ id: 'home', target: action.target, unitIds: ['landed'] }] } }] };
+    snapshot.units.push(createUnit('guard', 'neutral', 'ogreWarrior', 1100, 1000));
+    const completed = { ...memory, methods: { method: assembly }, voyages: {},
+      leases: { 'unit:landed': memory.leases['unit:landed']! }, assignments: { 'assignment:landed': memory.assignments['assignment:landed']! },
+      objectives: { goal: { ...memory.objectives.goal!, actionIds: ['delivery'] } },
+      executions: { delivery: { ...memory.executions.delivery!, intent: assembly.actions[0]!.intent,
+        executor: 'strategy.assemble-force', status: 'complete' as const, phase: 'ready-for-departure' } } };
+    const held = advanceAllocationLeases(settleAllocationState(completed, snapshot), snapshot);
+    expect(held.objectives.goal!.status).toBe('active');
+    expect(held.leases['unit:landed']).toEqual(completed.leases['unit:landed']);
+    expect(held.assignments['assignment:landed']).toBeDefined();
+    expect(allocationGrants(held)).toEqual([]);
+    expect(advanceAllocationLeases(settleAllocationState(JSON.parse(JSON.stringify(completed)), snapshot), snapshot)).toEqual(held);
+    const moved = structuredClone(snapshot); moved.units.find(unit => unit.id === 'landed')!.x += 500;
+    expect(settleAllocationState(held, moved).executions.delivery!.status).toBe('ready');
+    const executionMethod: ExecutableMethod = { ...assembly, stage: 'execution', actions: [...assembly.actions, {
+      ...original.actions[1]!, unitIds: ['landed'], dependsOn: ['delivery'] }] };
+    const expanded = advanceAllocationLeases({ ...held, methods: { method: executionMethod }, executions: {
+      ...held.executions, clear: { ...memory.executions.clear!, dependsOn: ['delivery'] } } }, snapshot);
+    expect(expanded.leases['unit:landed']!.action).toEqual(expanded.executions.clear!.token);
+    expect(settleAllocationState({ ...expanded, objectives: { goal: { ...expanded.objectives.goal!, actionIds: ['delivery', 'clear'] } } }, moved)
+      .executions.delivery!.status).toBe('complete');
+  });
+
   it('keeps optional voyages owned while transferring only the troops actually unloaded', () => {
     const { memory, snapshot, feedback } = fixture();
     const partial = advanceAllocationLeases(applyExecutorFeedback(memory, snapshot, feedback(['optional'])), snapshot);
