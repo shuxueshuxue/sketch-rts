@@ -9,6 +9,7 @@ export type GoalGarrisonInput = GoalLandCombatGrounding & Readonly<{
   /** Logical mine/hall binding; target is the exact shared guard post. */
   at: Target;
   throughTick: number;
+  requestedThroughTick?: number;
 }>;
 /** Maps the common hold-position atom to a mining garrison obligation. Its
  * exact force-at prerequisite owns arrival; the holding effect starts only
@@ -20,8 +21,10 @@ export function declareGoalGarrison(input: GoalGarrisonInput, context: GoalPlann
   const hall = goalFact({ kind: 'hall-complete', mineId: input.mineId, at: input.at });
   const base = declareGoalHoldPosition({ ...input, preconditions: [...(input.preconditions ?? []), hall] }, context);
   if (!base) return null;
-  const ready = goalFact({ kind: 'garrison-ready', mineId: input.mineId, at: input.at });
-  const parameters = { ...base.executor.parameters, garrisonMineId: input.mineId, garrisonAt: input.at };
+  const ready = goalFact({ kind: 'garrison-ready', mineId: input.mineId, at: input.at,
+    ...(input.requestedThroughTick === undefined ? {} : { throughTick: input.requestedThroughTick }) });
+  const parameters = { ...base.executor.parameters, garrisonMineId: input.mineId, garrisonAt: input.at,
+    protectionWindowTicks: context.situation.horizonTicks };
   return { ...base, id: `action:hold-position:${goalValueKey([ready.id, base.id])}`,
     effects: [...base.effects, { fact: ready, operation: 'establish', at: 'start' }],
     executor: { ...base.executor, parameters }, reasons: [...base.reasons, {

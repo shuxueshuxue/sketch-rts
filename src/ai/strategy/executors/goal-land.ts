@@ -27,16 +27,34 @@ function executor(kind: 'destroy-target' | 'hold-position' | 'engage-units'): St
     if (kind === 'hold-position') {
       if (typeof through !== 'number' || !Number.isFinite(through)) return blockedExecutor(input, 'goal-hold-window-invalid');
       const since = input.execution.state.goalHoldingSince;
-      if (through < input.snapshot.tick && typeof since !== 'number') return blockedExecutor(input, 'goal-hold-window-already-expired');
+      if (through <= input.snapshot.tick && typeof since !== 'number') return blockedExecutor(input, 'goal-hold-window-already-expired');
       if (units.some(unit => Math.hypot(unit.x - at.point.x, unit.y - at.point.y) > ASSEMBLY_RANGE))
         return blockedExecutor(input, 'goal-hold-cohort-not-on-post');
+      const horizon = intent.parameters.protectionWindowTicks;
+      let protection = {};
+      if (typeof horizon === 'number') {
+        if (!Number.isFinite(horizon) || horizon <= 0) return blockedExecutor(input, 'goal-hold-protection-window-invalid');
+        const checkedThrough = Math.max(input.snapshot.tick, Math.min(through, input.snapshot.tick + horizon));
+        const fact = goalFact({ kind: 'site-safe', site: at, throughTick: checkedThrough });
+        const observed = input.goalFacts?.(fact);
+        if (!observed || observed.fact.id !== fact.id || observed.observedTick !== input.snapshot.tick
+          || observed.state !== 'met' || (observed.availableTick ?? input.snapshot.tick) > input.snapshot.tick)
+          return blockedExecutor(input, observed?.state === 'unmet' ? 'goal-hold-protection-unmet' : 'goal-hold-protection-pending');
+        const leaseThrough = Math.min(...ids.map(id => input.grant.leases.find(lease => lease.resourceKey === `unit:${id}`)?.minimumStayUntilTick ?? -1));
+        if (leaseThrough < through) return blockedExecutor(input, 'goal-hold-protection-lease-too-short');
+        if (units.every(unit => unit.order.type === 'hold')) protection = {
+          goalProtectionCheckedTick: input.snapshot.tick, goalProtectionCheckedThrough: checkedThrough,
+          goalProtectionLeaseThrough: leaseThrough, goalProtectionMemberIds: ids };
+      }
       // The declaration requires actual force-at. Do not add an implicit move
       // and publish start control before this cohort is on its declared post.
       for (const unit of units) if (unit.order.type !== 'hold' && unit.order.type !== 'cast' && unit.order.type !== 'charge')
         commands.push({ command: { type: 'holdPosition', unitIds: [unit.id] }, purpose: 'task' });
       const interrupted = units.some(unit => unit.order.type === 'cast' || unit.order.type === 'charge');
-      return { ...base, commands, state: { ...input.execution.state, goalHoldingSince: typeof since === 'number' ? since : input.snapshot.tick },
-        status: input.snapshot.tick >= through && !interrupted ? 'complete' : 'active', phase: 'holding-position' };
+      const holding = units.every(unit => unit.order.type === 'hold');
+      return { ...base, commands, state: { ...input.execution.state, ...protection,
+        ...(holding ? { goalHoldingSince: typeof since === 'number' ? since : input.snapshot.tick } : {}) },
+        status: input.snapshot.tick >= through && holding && !interrupted ? 'complete' : 'active', phase: 'holding-position' };
     }
     let targets: readonly (Unit | ExecutorInput['snapshot']['buildings'][number])[];
     if (kind === 'destroy-target') {

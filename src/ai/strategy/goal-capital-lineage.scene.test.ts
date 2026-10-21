@@ -5,7 +5,7 @@ import type { GameSnapshot } from '../../shared/types';
 import type { AiPolicyMemory } from '../memory';
 import { planAiOwnerCommandEntries } from '../planner-context';
 import { reconcileGoalCapitalReceipts } from './goal-capital-receipts';
-import { refreshAllocationCapital, reserveAllocationSpends, releaseEndedGoalCapital } from './allocation-ledger';
+import { applyAllocationPayments, refreshAllocationCapital, reserveAllocationSpends, releaseEndedGoalCapital } from './allocation-ledger';
 import type { ExecutableMethod } from './allocation-types';
 
 function original(name: string) {
@@ -73,4 +73,11 @@ it('does not infer payment or an output from cash loss, an old foundation or a d
   const old = { ...prior, issuedCommands: Object.fromEntries(Object.entries(prior.issuedCommands).map(([id, command]) => [id,
     command.command.type === 'build' ? { ...command, worldBefore: { kind: 'construction' as const, buildingIds: [building.id] } } : command])) };
   expect(Object.values(reconcileGoalCapitalReceipts(old, frame.snapshot).budgets).every(budget => budget.paidGold === 0)).toBe(true);
+  const future = { ...prior, issuedCommands: Object.fromEntries(Object.entries(prior.issuedCommands).map(([id, command]) => [id,
+    command.command.type === 'build' ? { ...command, acceptedTick: frame.snapshot.tick + 1 } : command])) };
+  expect(Object.values(reconcileGoalCapitalReceipts(future, frame.snapshot).budgets).every(budget => budget.paidGold === 0)).toBe(true);
+  const command = Object.values(future.issuedCommands).find(command => command.command.type === 'build')!;
+  const budget = Object.values(future.budgets).find(budget => budget.plannedGold === 400)!;
+  expect(() => applyAllocationPayments(future, frame.snapshot, command.action, [{ budgetId: budget.id, amountGold: 400,
+    proof: { kind: 'foundation', buildingId: building.id, acceptedCommandId: command.id } }])).toThrow('no admitted parent');
 });

@@ -38,6 +38,7 @@ import { continuedIncumbentScripts, isIncumbentStrategyScript } from './incumben
 import { settleCommittedGoals } from './goal-commitment-objectives';
 import { readGoalObjective, restoreGoalAuthorityReferences } from './goal-authority-references';
 import { reconcileGoalCapitalReceipts } from './goal-capital-receipts';
+import { reconcileGoalWorldExecutions } from './goal-world-receipts';
 const goalExecutors = [...goalEconomyExecutors, ...goalLandExecutors, ...goalNavalExecutors];
 
 export type AllocationCandidateRequest = Readonly<{ objectiveId: string; methodId: string; phase: 'skeleton' | 'gross' | 'net';
@@ -93,6 +94,7 @@ function controlledAllocation(snapshot: GameSnapshot, owner: PlayerId, options: 
   const policy = options.memory, evaluation = frame.decision;
   let imported = importExecutedIncumbents(snapshot, policy, evaluation.situation,
     observeGoalTraining(policy.strategyAllocation ?? createStrategyAllocationMemory(owner, snapshot.tick), snapshot));
+  imported = reconcileGoalWorldExecutions(imported, planning.context);
   policy.strategyAllocation = imported;
   const situation = withFormalCommitments(evaluation.situation, imported);
   const goalPlanner = planGoals(planning); policy.goalPlanning!.cache = goalPlanner.cache;

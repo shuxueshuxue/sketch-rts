@@ -25,6 +25,27 @@ export function readGoalGuardFact(fact: GoalFact, context: GoalPlanningContext, 
   if (p.kind !== 'garrison-ready' || !authority || authority.owner !== context.owner || authority.evaluatedTick > context.tick) return null;
   const target = p.at;
   if (!target.landId || context.snapshot.tick !== context.tick || context.situation.tick !== context.tick) return null;
+  // A completed absolute obligation remains an observed historical receipt;
+  // releasing its finished leases does not erase the period actually held.
+  for (const execution of Object.values(authority.executions)) {
+    if (execution.status !== 'complete' || execution.intent.kind !== 'goal-action' || execution.intent.actionKind !== 'hold-position') continue;
+    const params = readGoalIntent(authority, execution.intent).parameters, at = goalTarget(params.garrisonAt);
+    const through = params.throughTick, state = execution.state;
+    if (!at || !sameSite(at, target) || params.garrisonMineId !== p.mineId || typeof through !== 'number'
+      || context.tick < through || p.throughTick !== undefined && through < p.throughTick
+      || typeof state.goalHoldingSince !== 'number' || state.goalHoldingSince > through
+      || typeof state.goalProtectionCheckedTick !== 'number' || state.goalProtectionCheckedTick < through
+      || typeof state.goalProtectionCheckedThrough !== 'number' || state.goalProtectionCheckedThrough < through
+      || typeof state.goalProtectionLeaseThrough !== 'number' || state.goalProtectionLeaseThrough < through) continue;
+    const ids = goalEntityIds(params.cohort);
+    if (!ids?.length || goalValueKey(state.goalProtectionMemberIds) !== goalValueKey(ids)) continue;
+    if (!authority.events.some(event => event.kind === 'action-finished' && event.outcome === 'complete'
+      && sameAction(event.action, execution.token) && event.tick >= through)) continue;
+    return { fact, state: 'met', observedTick: context.tick, availableTick: state.goalProtectionCheckedTick,
+      revision: goalValueKey([fact.id, execution.token, state]), entityIds: ids, evidence: [],
+      reason: { code: 'observed-formal-guard-obligation', factIds: [fact.id, execution.token.actionId],
+        values: { completedThroughTick: through, historicalReceipt: true } } };
+  }
   const allowed = allowedUnitIds === undefined ? null : new Set(allowedUnitIds), interrupted = new Set(interruptedUnitIds);
   let uncovered: GoalFactObservation | null = null;
   const outside = (code: string, post: Target, ids: readonly string[] = []): GoalFactObservation => ({
@@ -38,7 +59,8 @@ export function readGoalGuardFact(fact: GoalFact, context: GoalPlanningContext, 
       || authority.methods[execution.methodId]?.kind !== 'goal-plan') continue;
     const params = readGoalIntent(authority, intent).parameters, post = goalTarget(params.target), protectedSite = goalTarget(params.garrisonAt);
     const through = params.throughTick, since = execution.state.goalHoldingSince;
-    if (!post?.landId || !protectedSite || typeof through !== 'number' || !Number.isFinite(through) || through <= context.tick
+    if (!post?.landId || !protectedSite || typeof through !== 'number' || !Number.isFinite(through)
+      || p.throughTick !== undefined && through < p.throughTick
       || typeof since !== 'number' || !Number.isFinite(since) || since > context.tick || since < execution.sinceTick) continue;
     if (params.garrisonMineId !== p.mineId || !sameSite(protectedSite, target)) continue;
     if (post.landId !== target.landId || !withinExpansionGarrisonCoverage(post.point, target.point)) {
@@ -58,6 +80,12 @@ export function readGoalGuardFact(fact: GoalFact, context: GoalPlanningContext, 
       return !lease || lease.origin !== 'allocator' || lease.objectiveId !== grant.objectiveId || !sameAction(lease.action, grant.action)
         || lease.minimumStayUntilTick < through || !assignment || !sameAction(assignment.action, grant.action) || assignment.interruption;
     })) continue;
+    const protectionThrough = Math.max(context.tick, Math.min(through, context.tick + context.situation.horizonTicks));
+    const protection = context.readFact(goalFact({ kind: 'site-safe', site: post, throughTick: protectionThrough }));
+    if (protection.state !== 'met' || protection.observedTick !== context.tick
+      || (protection.availableTick ?? context.tick) > context.tick) {
+      uncovered = outside('garrison-protection-window-unavailable', post, ids); continue;
+    }
     const observed = ids.map(id => context.situation.units.find(unit => unit.id === id));
     if (observed.some(unit => !unit || !unit.roles.some(role => role === 'frontline' || role === 'ranged')
       || unit.roles.some(role => role === 'worker' || role === 'caster' || role === 'healer'))) continue;
@@ -79,11 +107,15 @@ export function readGoalGuardFact(fact: GoalFact, context: GoalPlanningContext, 
       && gap(building, target.point) <= building.attackRange).reduce((sum, building) => sum + structureRating(building), 0);
     const power = observed.reduce((sum, unit) => sum + unit!.strength, 0) + staticPower;
     if (power <= 0 || power < required) continue;
-    return { fact, state: 'met', observedTick: context.tick, availableTick: context.tick, quantity: power, entityIds: ids,
+    const fulfilled = p.throughTick === undefined || context.tick >= p.throughTick;
+    return { fact, state: fulfilled ? 'met' : 'unmet', observedTick: context.tick, availableTick: fulfilled ? context.tick : p.throughTick,
+      quantity: power, entityIds: ids,
       revision: goalValueKey([fact.id, grant.action, since, through, members.map(unit => [unit!.id, unit!.hp, unit!.x, unit!.y]),
         power, required, hall.revision, ids.map(id => authority.leases[`unit:${id}`])]), evidence: [],
-      reason: { code: 'observed-formal-guard-obligation', factIds: [fact.id, grant.action.actionId, hall.fact.id],
-        values: { supportedThroughTick: through, assumesObservedMembership: true, assumesNoNewOrdersOrThreats: true,
+      reason: { code: fulfilled ? 'observed-formal-guard-obligation' : 'formal-garrison-obligation-in-progress', factIds: [fact.id, grant.action.actionId, hall.fact.id],
+        values: { supportedThroughTick: through, protectionWindowThroughTick: protectionThrough,
+          nativeHoldingNow: true, obligationFulfilled: fulfilled,
+          assumesObservedMembership: true, assumesNoNewOrdersOrThreats: true,
           nativePostObserved: true, retainedLease: true, fieldStrength: power, requiredFieldStrength: required } } };
   }
   return uncovered;

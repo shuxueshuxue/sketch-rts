@@ -8,6 +8,7 @@ import { copyNativeOrder, INCUMBENT_RECEIPT_WAIT_TICKS } from './incumbent-evide
 import { assessForceAssemblyPosts } from './assembly-posts';
 import { validateGoalOutputFeedback } from './goal-output-validation';
 import { observeGoalTraining } from './goal-training-ledger';
+import { validateGoalGuardFeedback } from './goal-guard-feedback';
 import { retainAllocationExecutions } from './allocation-execution-retention';
 
 /** Acceptance is not movement. Refresh lineage from the current native world
@@ -231,6 +232,7 @@ export function applyExecutorFeedback(memory: StrategyAllocationMemory, snapshot
   let next = applyAllocationPayments(memory, snapshot, execution.token, feedback.payments ?? []);
   next = observeGoalTraining(next, snapshot);
   feedback = validateGoalOutputFeedback(next, snapshot, feedback);
+  feedback = validateGoalGuardFeedback(next, snapshot, feedback);
   const pending = Array.isArray(feedback.state.pendingVoyageIds) ? feedback.state.pendingVoyageIds : [];
   const continuing = feedback.status === 'complete' && pending.length > 0;
   if (continuing && (!['deliver-force', 'deliver-workers'].includes(execution.intent.kind)

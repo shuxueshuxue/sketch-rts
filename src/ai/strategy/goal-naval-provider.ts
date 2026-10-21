@@ -63,7 +63,8 @@ export const goalNavalActionProvider: GoalActionProvider = {
       else if (predicate.kind === 'gold' && option.campId) action = declareGoalCampClearing({ ...base, campId: option.campId,
         at: option.target, routes: option.preconditions });
       else if (predicate.kind === 'garrison-ready') action = declareGoalGarrison({ ...option, mineId: predicate.mineId,
-        at: predicate.at, throughTick: option.byTick }, context);
+        at: predicate.at, throughTick: option.byTick,
+        ...(predicate.throughTick === undefined ? {} : { requestedThroughTick: predicate.throughTick }) }, context);
       else if (predicate.kind === 'site-safe') action = declareGoalDefense({ ...base, site: predicate.site,
         post: option.target,
         ...(option.effectDelayTicks ? { effectDelayTicks: option.effectDelayTicks } : {}),
@@ -123,6 +124,8 @@ export const goalNavalActionProvider: GoalActionProvider = {
       if (augmented) actions.push(augmented);
     }
     return [...new Map(actions.map(action => [action.id, action])).values()]
+      .map(action => action.kind === 'hold-position' || action.kind === 'defend' ? { ...action,
+        executor: { ...action.executor, parameters: { ...action.executor.parameters, protectionWindowTicks: context.situation.horizonTicks } } } : action)
       .map(action => withGoalSafetyPreconditionWindows(action, context.tick)).map(action => context.precision === 'coarse'
       ? { ...action, precision: 'coarse' as const, reasons: [...action.reasons, {
         code: 'coarse-naval-conditional-quotation', factIds: action.preconditions.map(fact => fact.id),

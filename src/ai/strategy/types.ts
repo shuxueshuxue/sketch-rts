@@ -167,7 +167,7 @@ export type ObjectiveKind = 'DefendSite' | 'RecoverSite' | 'ExpandLand' | 'Conqu
   | 'ReinforceFront' | 'AttackSite' | 'ContestRoute' | 'CounterHarass' | 'Evacuate';
 export type Effect =
   | Readonly<{ kind: 'site-safe'; siteId: string; throughTick: number }>
-  | Readonly<{ kind: 'mining-established'; mineId: string; completeHall: true; garrisonHandoff: true }>
+  | Readonly<{ kind: 'mining-established'; mineId: string; completeHall: true; garrisonHandoff: true; garrisonThroughTick?: number }>
   | Readonly<{ kind: 'force-present'; landId: LandId; minimumStrength: number; throughTick: number }>
   | Readonly<{ kind: 'entity-destroyed'; entityId: string }>
   | Readonly<{ kind: 'route-controlled'; target: Target }>

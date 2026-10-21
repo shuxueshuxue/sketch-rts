@@ -275,6 +275,9 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
           const guard = readGoalGuardFact(fact, context, memory.strategyAllocation, allowedUnitIds, interruptedUnitIds);
           if (guard?.state === 'met') return guard;
           const p = fact.predicate;
+          if (p.kind === 'garrison-ready') return guard ?? { fact, state: 'unmet', observedTick: snapshot.tick,
+            revision: goalValueKey([fact.id, 'formal-garrison-hold-required']), evidence: [], entityIds: [],
+            reason: { code: 'formal-garrison-hold-required', factIds: [fact.id], values: {} } };
           // The proposal carries the full requested protection window. Its
           // threat set is relaxed to the cached observation support only;
           // exact refinement must prove the original full-window predicate.

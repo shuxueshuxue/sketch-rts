@@ -169,6 +169,7 @@ export function applyAllocationPayments(memory: StrategyAllocationMemory, snapsh
   for (const receipt of payments) {
     const budget = budgets[receipt.budgetId], proof = receipt.proof;
     const purchase = memory.issuedCommands[proof.acceptedCommandId];
+    if (purchase && purchase.acceptedTick > snapshot.tick) throw new Error('Allocation payment has no admitted parent');
     if (!budget || !sameAction(budget.action, action)
       && (!purchase || !admittedCommandSpendIds(memory, purchase).includes(budget.spendId)))
       throw new Error('Allocation payment has no admitted parent');
@@ -185,7 +186,7 @@ export function applyAllocationPayments(memory: StrategyAllocationMemory, snapsh
       continue;
     }
     const command = memory.issuedCommands[proof.acceptedCommandId];
-    if (!command || !sameAction(command.action, action)
+    if (!command || command.acceptedTick > snapshot.tick || !sameAction(command.action, action)
       || command.executor !== memory.executions[action.actionId]?.executor) throw new Error('Allocation payment has no admitted parent');
     if (declarative && (entityId === null || Object.values(budgets).some(other => other.nativePayments
       ?.some(payment => payment.commandId === command.id)))) throw new Error('Native command payment identity reused');

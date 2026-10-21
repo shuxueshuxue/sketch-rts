@@ -219,7 +219,9 @@ describe('declarative economy and land executors at the existing command boundar
     let input = request(game, goalHoldPositionExecutor, 'hold-position', { target: { landId: landIdAt(game.map, fighter)!,
       point: { x: fighter.x, y: fighter.y } }, cohort: [ref('fighter')], throughTick: 30 }, ['unit:fighter']);
     const first = execute(goalHoldPositionExecutor, input); expect(first.status).toBe('active'); expect(first.commands).toHaveLength(1);
-    input = apply(game, input, first); expect(execute(goalHoldPositionExecutor, input).commands).toEqual([]);
+    input = apply(game, input, first);
+    const observed = execute(goalHoldPositionExecutor, input); expect(observed.commands).toEqual([]);
+    input = apply(game, input, observed);
     for (let tick = 0; tick < 30; tick++) stepGame(game);
     input = { ...input, snapshot: snapshotGame(game) }; expect(execute(goalHoldPositionExecutor, input).status).toBe('complete');
     expect(execute(goalHoldPositionExecutor, { ...input, grant: { ...input.grant, leases: [] } }).status).toBe('blocked');

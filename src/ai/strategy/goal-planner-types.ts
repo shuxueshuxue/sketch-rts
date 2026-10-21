@@ -50,7 +50,7 @@ export type GoalFactPredicate =
    * expose its occupants. Route/battle risk is priced separately. */
   | Readonly<{ kind: 'assembly-post'; at: Target; cohort?: readonly GoalEntityReference[] }>
   | Readonly<{ kind: 'hall-complete'; mineId: string; at: Target }>
-  | Readonly<{ kind: 'garrison-ready'; mineId: string; at: Target }>
+  | Readonly<{ kind: 'garrison-ready'; mineId: string; at: Target; throughTick?: number }>
   | Readonly<{ kind: 'site-safe'; site: Target; throughTick: number }>
   // Capacity unlocks a production tier; free room pays the new unit's slots.
   | Readonly<{ kind: 'supply-cap'; minimum: number }>

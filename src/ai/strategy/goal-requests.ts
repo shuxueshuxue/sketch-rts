@@ -3,6 +3,7 @@ import { goalFact } from './goal-facts';
 import type { GoalFact, GoalPlanningContext, GoalRequest } from './goal-planner-types';
 import { siteCollapseAfter } from './naval-objectives';
 import type { Objective, Target } from './types';
+import { goalGarrisonThroughTick } from './goal-guard-window';
 
 type ObservedObjective = DecisionFacts<Objective>;
 const order = (a: { id: string }, b: { id: string }) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
@@ -48,7 +49,8 @@ export function goalRequestFromObjective(objective: ObservedObjective, context: 
     } else if (effect.kind === 'mining-established') {
       const at = targetOf(effect.mineId);
       effects.push(goalFact({ kind: 'hall-complete', mineId: effect.mineId, at }));
-      if (effect.garrisonHandoff) effects.push(goalFact({ kind: 'garrison-ready', mineId: effect.mineId, at }));
+      if (effect.garrisonHandoff) effects.push(goalFact({ kind: 'garrison-ready', mineId: effect.mineId, at,
+        throughTick: goalGarrisonThroughTick(objective, effect) }));
     } else if (effect.kind === 'force-present') {
       effects.push(goalFact({ kind: 'force-at', at: { ...objective.target, landId: effect.landId },
         metric: 'field-strength', minimum: effect.minimumStrength, byTick: effect.throughTick }));

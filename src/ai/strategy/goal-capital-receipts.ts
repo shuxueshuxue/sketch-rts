@@ -13,7 +13,7 @@ export function reconcileGoalCapitalReceipts(memory: StrategyAllocationMemory, s
   for (const original of Object.values(memory.issuedCommands)) {
     const build = original.command, before = original.worldBefore;
     const execution = memory.executions[original.action.actionId];
-    if (build.type !== 'build' || before?.kind !== 'construction' || !execution
+    if (build.type !== 'build' || before?.kind !== 'construction' || original.acceptedTick > snapshot.tick || !execution
       || !sameAction(execution.token, original.action) || execution.intent.kind !== 'goal-action'
       || execution.intent.actionKind !== 'build' || execution.executor !== original.executor) continue;
     const spendIds = admittedCommandSpendIds(memory, original);

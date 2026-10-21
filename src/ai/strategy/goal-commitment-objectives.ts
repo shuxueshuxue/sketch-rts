@@ -4,6 +4,7 @@ import type { StrategyAllocationMemory } from './allocation-types';
 import type { GoalPlan } from './goal-planner-types';
 import { readGoalObjective } from './goal-authority-references';
 import { appendAllocationEvent } from './allocation-lifecycle';
+import { retainGoalGuardWindows } from './goal-guard-window';
 
 /** Discovery proposes new goals. Once granted, its original world effects
  * remain a planning request even after the opportunity leaves the collector. */
@@ -13,11 +14,13 @@ export function retainCommittedGoalObjectives(memory: StrategyAllocationMemory |
   const current = new Map(collected.map(objective => [objective.id, objective]));
   const retained = Object.keys(memory.objectives).sort().flatMap(id => {
     const discovered = current.get(id);
-    if (discovered && discovered.status !== 'complete') return [];
     const definition = readGoalObjective(memory, id);
     if (!definition) return [];
+    if (discovered && discovered.status !== 'complete') {
+      current.set(id, retainGoalGuardWindows(discovered, definition)); return [];
+    }
     current.delete(id);
-    return [{ ...definition, status: 'active' as const,
+    return [{ ...retainGoalGuardWindows(definition), status: 'active' as const,
       reasons: [...definition.reasons.filter(reason => reason.code !== 'admitted-goal-retained-after-discovery'),
         { code: 'admitted-goal-retained-after-discovery', factIds: [id],
           values: { sinceTick: memory.objectives[id]!.sinceTick } }] }];
@@ -37,7 +40,9 @@ export function settleCommittedGoals(memory: StrategyAllocationMemory, plans: re
     const actions = prior.actionIds.map(id => memory.executions[id]).filter(action => !!action);
     const finished = plan?.status === 'complete' && plan.goal.effects.length > 0
       && plan.goal.effects.every(fact => plan.facts.some(node => node.id === fact.id && node.observation.state === 'met'
-        && node.observation.observedTick === tick && (node.observation.availableTick ?? tick) <= tick))
+        && node.observation.observedTick === tick && (node.observation.availableTick ?? tick) <= tick
+        && (fact.predicate.kind !== 'garrison-ready' || node.observation.reason.code === 'observed-formal-guard-obligation'
+          && (fact.predicate.throughTick === undefined || tick >= fact.predicate.throughTick))))
       && actions.length > 0 && actions.every(action => action.status === 'complete');
     if (!explicit && !finished) continue;
     const status = explicit ? explicit.status as 'failed' | 'abandoned' : 'complete' as const;

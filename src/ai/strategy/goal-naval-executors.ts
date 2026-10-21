@@ -11,7 +11,7 @@ import { currentAllocationLandRouteReader } from './allocation-arrival-query';
 import type { ExecutorFeedback, ExecutorInput, StrategyExecutor } from './allocation-types';
 import { blockedExecutor, executorFeedback, sameAction } from './executor-grants';
 import { goalActionIntent, goalEntityId, goalEntityIds, goalGrantedCohort, goalHasLease, goalPoint, goalRecord, goalTarget } from './goal-executor-parameters';
-import { goalCampMemberIds, resolveGoalCamp } from './goal-facts';
+import { goalCampMemberIds, resolveGoalCamp, goalFact } from './goal-facts';
 import type { GoalActionKind } from './goal-planner-types';
 import { landIdAt } from './regions';
 import { strategyIsOpponent } from './ownership';
@@ -78,6 +78,17 @@ function defend(input: ExecutorInput, parameters: Readonly<Record<string, unknow
   if (granted.missingIds.length) return blockedExecutor(input, 'goal-cohort-not-granted', [...granted.missingIds]);
   const units = granted.units.filter(unit => unitMover(unit.kind) === 'land' && unit.kind !== 'worker' && !unit.deck && !unit.cabin);
   if (units.length !== cohort.length) return blockedExecutor(input, 'goal-defenders-not-on-land');
+  const horizon = parameters.protectionWindowTicks;
+  if (typeof horizon === 'number') {
+    if (!Number.isFinite(horizon) || horizon <= 0) return blockedExecutor(input, 'goal-defense-protection-window-invalid');
+    const protectedSite = goalTarget(parameters.protectedSite) ?? at;
+    const fact = goalFact({ kind: 'site-safe', site: protectedSite,
+      throughTick: Math.max(input.snapshot.tick, Math.min(through, input.snapshot.tick + horizon)) });
+    const observed = input.goalFacts?.(fact);
+    if (!observed || observed.fact.id !== fact.id || observed.observedTick !== input.snapshot.tick
+      || observed.state !== 'met' || (observed.availableTick ?? input.snapshot.tick) > input.snapshot.tick)
+      return blockedExecutor(input, observed?.state === 'unmet' ? 'goal-defense-protection-unmet' : 'goal-defense-protection-pending');
+  }
   const routeRows = units.map(unit => ({ unit, route: read(unit, at.point) }));
   const pending = routeRows.filter(row => row.route.status === 'unknown'), unreachable = routeRows.filter(row => row.route.status === 'unreachable');
   if (pending.length || unreachable.length) return blockedExecutor(input, pending.length ? 'goal-defense-route-pending' : 'goal-defense-route-unreachable',
