@@ -12,13 +12,13 @@ const WEAK_GUARD = ['murlocPeon', 'murlocPeon'] as const;
 const TARGET_GUARD = { x: TARGET_MINE.x + 160, y: TARGET_MINE.y + 64 };
 
 export function shipAwayScene(near = false) {
-  const b = puzzleBuilder(`ship-${near ? 'near' : 'far'}`, BUILDING_DEFS.townHall.cost);
+  const b = puzzleBuilder(BUILDING_DEFS.townHall.cost);
   homeEconomy(b); targetMine(b); soldiers(b, 'footman', 4, { x: 1184, y: 704 }); camp(b, WEAK_GUARD, TARGET_GUARD);
   return finishWorld(terrainWorld(b, [MAINLAND, ISLAND]), TARGET_MINE, TARGET_GUARD,
     { x: 1664, y: near ? 768 : 2432 });
 }
 export function supplyTierScene(footmen = false) {
-  const b = puzzleBuilder(`supply-${footmen ? 'footmen' : 'knight'}`, BUILDING_DEFS.farm.cost + UNIT_DEFS.knight.cost);
+  const b = puzzleBuilder(BUILDING_DEFS.farm.cost + UNIT_DEFS.knight.cost);
   homeEconomy(b, Math.floor((TIER_SUPPLY_CAP[3] - BUILDING_DEFS.townHall.supplyProvided) / BUILDING_DEFS.farm.supplyProvided));
   b.building(PUZZLE_OWNER, 'stables', 1056, 704);
   // The one-number variant adds an already available basic production lane.
@@ -29,14 +29,14 @@ export function supplyTierScene(footmen = false) {
 }
 export function navyZeroScene() {
   const gold = BUILDING_DEFS.shipyard.cost + UNIT_DEFS.transport.cost + BUILDING_DEFS.townHall.cost;
-  const b = puzzleBuilder('navy-zero', gold);
+  const b = puzzleBuilder(gold);
   homeEconomy(b); targetMine(b); soldiers(b, 'footman', 4, { x: 1184, y: 704 }); camp(b, WEAK_GUARD, TARGET_GUARD);
   return finishWorld(terrainWorld(b, [MAINLAND, ISLAND]), TARGET_MINE, TARGET_GUARD);
 }
 export function defenseWindowScene(later = false) {
   const arrivalSeconds = later ? 360 : 90;
   const mine = { x: 2304, y: 2240 }, guard = { x: 2464, y: 2304 };
-  const b = puzzleBuilder(`defense-${arrivalSeconds}`, BUILDING_DEFS.townHall.cost);
+  const b = puzzleBuilder(BUILDING_DEFS.townHall.cost);
   homeEconomy(b); targetMine(b, mine); soldiers(b, 'footman', 6, { x: 800, y: 704 }); camp(b, WEAK_GUARD, guard);
   soldiers(b, 'footman', 4, { x: HOME.x + arrivalSeconds * UNIT_DEFS.footman.speed, y: HOME.y }, PUZZLE_OPPONENT);
   const width = Math.ceil((HOME.x + arrivalSeconds * UNIT_DEFS.footman.speed + 1024) / 32) * 32;
@@ -48,7 +48,7 @@ export function defenseWindowScene(later = false) {
   return world;
 }
 export function guardedShoreScene(strong = true) {
-  const b = puzzleBuilder(`shore-${strong ? 'strong' : 'weak'}`, BUILDING_DEFS.townHall.cost);
+  const b = puzzleBuilder(BUILDING_DEFS.townHall.cost);
   homeEconomy(b); const mine = { x: 3104, y: 1824 }, guard = { x: 3264, y: 1888 };
   targetMine(b, mine); camp(b, WEAK_GUARD, guard);
   const beach = { x: 2448, y: 768 };
@@ -62,7 +62,7 @@ export function guardedShoreScene(strong = true) {
   return world;
 }
 export function negativeReturnScene() {
-  const b = puzzleBuilder('negative-return', BUILDING_DEFS.townHall.cost);
+  const b = puzzleBuilder(BUILDING_DEFS.townHall.cost);
   homeEconomy(b); targetMine(b, TARGET_MINE, UNIT_DEFS.footman.cost);
   camp(b, ['ogreLord', 'ogreMage', 'ogreWarrior', 'ogreWarrior'], TARGET_GUARD);
   soldiers(b, 'footman', 6, { x: 960, y: 1728 });
@@ -74,7 +74,7 @@ export function negativeReturnScene() {
   return world;
 }
 export function evacuateScene() {
-  const b = puzzleBuilder('evacuate', 0); homeEconomy(b); targetMine(b);
+  const b = puzzleBuilder(0); homeEconomy(b); targetMine(b);
   b.townHall(PUZZLE_OWNER, TARGET_MINE.x, TARGET_MINE.y - 224);
   soldiers(b, 'worker', 4, { x: 2624, y: 704 }); soldiers(b, 'footman', 2, { x: 1184, y: 704 });
   soldiers(b, 'knight', 10, { x: 3392, y: 704 }, PUZZLE_OPPONENT);
