@@ -1,0 +1,9 @@
+{
+  "sha256": "a8fa9c4c4f1790bb7ed3d556e6ad9b2a737a65b5ffc2932bfdb7b2c0930da0ac",
+  "bytes": 234977,
+  "name": "public-planner-puzzles-20261021",
+  "kind": "dir",
+  "machine": "a100",
+  "pushed": "2cec86d907b4b1057f753c858401dd9c68eab883",
+  "pr": 585
+}
