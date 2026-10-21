@@ -1,0 +1,289 @@
+{
+  "source": "2f82c4ec6e316bb61f55a963d671f392ec6e59ca",
+  "sharedBase": "0531bd3c9d847a7606535d14d0c136af22e20b36",
+  "mode": "normal-collector-controlled-owner-public-execution",
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "testStatus": "failed",
+      "accepted": false,
+      "physicalPassed": false,
+      "goalTracesObserved": 560,
+      "formalCommandCount": 0,
+      "firstReadyTick": 60,
+      "firstFormalCommandTick": null,
+      "plannedThinks": 560,
+      "maxWork": 6144,
+      "firstGoal": {
+        "tick": 15,
+        "goals": [
+          "ConquerIsland:planner:resource-1"
+        ]
+      },
+      "formalExecutors": {},
+      "incumbentExecutors": {
+        "economy": 10,
+        "miningWorkforce": 3,
+        "naval": 10,
+        "v6Economy": 15,
+        "v6General": 4
+      },
+      "planStatusOccurrences": [
+        {
+          "goalKind": "ConquerIsland",
+          "status": "ready",
+          "count": 92
+        },
+        {
+          "goalKind": "ConquerIsland",
+          "status": "search-pending",
+          "count": 78
+        },
+        {
+          "goalKind": "ConquerIsland",
+          "status": "waiting-facts",
+          "count": 390
+        },
+        {
+          "goalKind": "ExpandLand",
+          "status": "waiting-facts",
+          "count": 1
+        }
+      ],
+      "pendingEstimateOccurrences": [],
+      "execution": {
+        "passed": false,
+        "checks": {
+          "islandHallComplete": false,
+          "campCleared": true,
+          "armyTransported": true,
+          "safeWorkerSequence": false
+        },
+        "tick": 8400,
+        "first": {
+          "army-boarded": 553,
+          "farm-complete": 1486,
+          "shipyard-complete": 3879,
+          "transport-at-embark": 4083,
+          "army-on-island": 4773,
+          "worker-on-island": 4773,
+          "landing-near": 4773,
+          "target-attacked": 4944,
+          "camp-cleared": 5000
+        },
+        "losses": [
+          {
+            "tick": 4972,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 5000,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 579,
+          "homeAlive": true,
+          "armyAlive": 4,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 1,
+            "farm": 4,
+            "barracks": 1,
+            "shipyard": 1,
+            "stables": 1
+          }
+        }
+      },
+      "commandCount": 42,
+      "elapsedMs": 1260149.199,
+      "cpuMs": 1304771.903,
+      "finalGoals": [
+        {
+          "goalId": "ConquerIsland:planner:resource-1",
+          "status": "search-pending",
+          "actions": [],
+          "reasons": [
+            {
+              "code": "goal-geometry-pinned-capacity",
+              "factIds": [
+                "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":2960,\\\"y\\\":240}}\",\"world-geometry:v323\"]",
+                "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":2960,\\\"y\\\":304}}\",\"world-geometry:v323\"]",
+                "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v324\\\",15,\\\"shore:v325\\\"]\",\"world-geometry:v323\"]",
+                "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v324\\\",15,\\\"shore:v326\\\"]\",\"world-geometry:v323\"]",
+                "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v327\\\",15,\\\"shore:v325\\\"]\",\"world-geometry:v323\"]",
+                "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v328\\\",15,\\\"shore:v325\\\"]\",\"world-geometry:v323\"]",
+                "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v329\\\",15,\\\"shore:v325\\\"]\",\"world-geometry:v323\"]",
+                "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v330\\\",15,\\\"shore:v325\\\"]\",\"world-geometry:v323\"]",
+                "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v331\\\",15,\\\"shore:v325\\\"]\",\"world-geometry:v323\"]",
+                "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v332\\\",15,\\\"shore:v325\\\"]\",\"world-geometry:v323\"]",
+                "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v333\\\",15,\\\"shore:v325\\\"]\",\"world-geometry:v323\"]",
+                "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v334\\\",15,\\\"shore:v325\\\"]\",\"world-geometry:v323\"]",
+                "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v335\\\",15,\\\"shore:v325\\\"]\",\"world-geometry:v323\"]",
+                "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v336\\\",15,\\\"shore:v325\\\"]\",\"world-geometry:v323\"]",
+                "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v336\\\",15,\\\"shore:v326\\\"]\",\"world-geometry:v323\"]",
+                "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v337\\\",15,\\\"shore:v325\\\"]\",\"world-geometry:v323\"]",
+                "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v338\\\",15,\\\"shore:v325\\\"]\",\"world-geometry:v323\"]",
+                "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v339\\\",15,\\\"shore:v325\\\"]\",\"world-geometry:v323\"]",
+                "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v340\\\",15,\\\"shore:v325\\\"]\",\"world-geometry:v323\"]",
+                "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v341\\\",15,\\\"shore:v325\\\"]\",\"world-geometry:v323\"]",
+                "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v342\\\",15,\\\"shore:v325\\\"]\",\"world-geometry:v323\"]",
+                "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v343\\\",15,\\\"shore:v325\\\"]\",\"world-geometry:v323\"]",
+                "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v344\\\",15,\\\"shore:v325\\\"]\",\"world-geometry:v323\"]",
+                "goal-geometry:[\"geometry:build:[\\\"planner\\\",\\\"townHall\\\",{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}}]\",\"world-geometry:v323\"]"
+              ],
+              "values": {
+                "bytes": 34297,
+                "limitBytes": 33776
+              }
+            }
+          ],
+          "capacityPressure": [
+            {
+              "kind": "geometry",
+              "thinkSequence": 560,
+              "bytes": 34297,
+              "limitBytes": 33776,
+              "planIds": [
+                "ConquerIsland:planner:resource-1"
+              ],
+              "overflowCount": 79,
+              "requestCount": 24
+            }
+          ]
+        }
+      ],
+      "error": {
+        "name": "AssertionError",
+        "message": "{\"passed\":false,\"checks\":{\"islandHallComplete\":false,\"campCleared\":true,\"armyTransported\":true,\"safeWorkerSequence\":false},\"tick\":8400,\"first\":{\"army-boarded\":553,\"farm-complete\":1486,\"shipyard-complete\":3879,\"transport-at-embark\":4083,\"army-on-islan"
+      }
+    },
+    {
+      "puzzle": "ship-away/near",
+      "testStatus": "failed",
+      "accepted": false,
+      "physicalPassed": true,
+      "goalTracesObserved": 374,
+      "formalCommandCount": 0,
+      "firstReadyTick": 60,
+      "firstFormalCommandTick": null,
+      "plannedThinks": 560,
+      "maxWork": 6144,
+      "firstGoal": {
+        "tick": 15,
+        "goals": [
+          "ConquerIsland:planner:resource-1"
+        ]
+      },
+      "formalExecutors": {},
+      "incumbentExecutors": {
+        "economy": 25,
+        "miningWorkforce": 10,
+        "naval": 21,
+        "v6Economy": 19,
+        "v6General": 27,
+        "expansionGarrison": 1
+      },
+      "planStatusOccurrences": [
+        {
+          "goalKind": "ConquerIsland",
+          "status": "ready",
+          "count": 108
+        },
+        {
+          "goalKind": "ConquerIsland",
+          "status": "search-pending",
+          "count": 176
+        },
+        {
+          "goalKind": "ConquerIsland",
+          "status": "waiting-facts",
+          "count": 90
+        }
+      ],
+      "pendingEstimateOccurrences": [],
+      "execution": {
+        "passed": true,
+        "checks": {
+          "islandHallComplete": true,
+          "campCleared": true,
+          "armyTransported": true,
+          "safeWorkerSequence": true
+        },
+        "tick": 8400,
+        "first": {
+          "transport-at-embark": 1,
+          "army-boarded": 123,
+          "army-on-island": 843,
+          "landing-near": 843,
+          "target-attacked": 1024,
+          "camp-cleared": 1107,
+          "shipyard-complete": 1448,
+          "farm-complete": 3403,
+          "worker-on-island": 4921,
+          "hall-complete": 5612
+        },
+        "losses": [
+          {
+            "tick": 1076,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 1107,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 18,
+          "homeAlive": true,
+          "armyAlive": 4,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 2,
+            "farm": 5,
+            "barracks": 2,
+            "shipyard": 1,
+            "defenseTower": 2,
+            "sanctum": 1,
+            "stables": 1
+          }
+        }
+      },
+      "commandCount": 103,
+      "elapsedMs": 218524.068,
+      "cpuMs": 230404.911,
+      "finalGoals": [],
+      "error": {
+        "name": "AssertionError",
+        "message": "physical success also requires an actual goal executor command accepted by the gateway: expected 0 to be greater than 0"
+      }
+    }
+  ],
+  "totals": {
+    "caseCount": 2,
+    "executionsAccepted": 0,
+    "physicalPassed": 1,
+    "withFormalCommands": 0,
+    "observedNativeThinks": 1120,
+    "formalCommandCount": 0
+  },
+  "testCounts": {
+    "numTotalTestSuites": 3,
+    "numPassedTestSuites": 0,
+    "numFailedTestSuites": 3,
+    "numPendingTestSuites": 0,
+    "numTotalTests": 12,
+    "numPassedTests": 7,
+    "numFailedTests": 3,
+    "numPendingTests": 2,
+    "numTodoTests": 0
+  }
+}
