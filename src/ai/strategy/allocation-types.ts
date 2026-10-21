@@ -173,6 +173,9 @@ export type PlannedVoyage = Readonly<{
   crossing: CrossingEta;
   required: boolean;
 }>;
+export type AllocationValuationBasis = Readonly<{ kind: 'proven-lower-bound';
+  probabilityLower: number; probabilityUpper: number; unresolvedProbability: number }>;
+export type AllocationDecisionCounts = Readonly<{ lowerBoundSelections: number; lowerBoundInitialSelections: number }>;
 export type ObjectiveAllocation = Readonly<{
   objectiveId: ObjectiveId;
   methodId: MethodId;
@@ -188,6 +191,7 @@ export type ObjectiveAllocation = Readonly<{
   challengerThinks: number;
   /** Future value only; completed benefits and blocked potential scores cannot be displaced loss. */
   committedUtilityGold: number | null;
+  valuationBasis?: AllocationValuationBasis;
   force: ForceQuotation | null;
 }>;
 export type ExecutionAction = Readonly<{
@@ -294,6 +298,7 @@ export type PreemptionQuotation = Readonly<{
 type EventHeader = Readonly<{ id: AllocationEventId; tick: number; revision: number; objectiveId: ObjectiveId;
   methodId: MethodId; action: ActionToken; reason: AllocationReason }>;
 export type AllocationEvent = EventHeader & (
+  | Readonly<{ kind: 'valuation-bound-selected'; basis: AllocationValuationBasis; scoreGold: number; renewal: boolean }>
   | Readonly<{ kind: 'incumbent-adopted'; leaseIds: readonly AllocationLeaseId[] }>
   | Readonly<{ kind: 'preempted'; quotation: PreemptionQuotation; handoff: 'pending' | 'shrink' | 'pause' | 'fail' }>
   | Readonly<{ kind: 'candidate-reassigned'; fromTask: Readonly<{ source: string; taskId: string }>;
@@ -320,6 +325,7 @@ export type StrategyAllocationMemory = Readonly<{
   revision: number;
   nextActionGeneration: number;
   nextEventSequence: number;
+  decisionCounts?: AllocationDecisionCounts;
   objectives: Readonly<Record<ObjectiveId, ObjectiveAllocation>>;
   /** Concrete, numerical plans survive forks and hull birth. An active voyage
    * must not lose its manifest because a later query starts aboard the ship. */
@@ -397,6 +403,7 @@ export type ExecutableMethod = DecisionFacts<Method> & Readonly<{
     unitIds?: readonly string[] }>[];
 }>;
 type MethodQuoteFacts = Readonly<{
+  valuationBasis?: AllocationValuationBasis;
   methodId: MethodId;
   force: ForceQuotation | null;
   reason: AllocationReason;
@@ -506,6 +513,7 @@ export type CommandAdmission = Readonly<{
 );
 export type StrategyAllocationTrace = Readonly<{
   revision: number;
+  decisionCounts?: AllocationDecisionCounts;
   objectives: readonly ObjectiveAllocation[];
   assignments: readonly FormalAssignment[];
   executions: readonly ExecutionAction[];
