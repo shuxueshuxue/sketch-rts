@@ -61,15 +61,15 @@ export function registerPublicPuzzleTests(key: PuzzleKey) {
       }
     });
     const required = process.env.SKETCH_REQUIRE_GOAL_PLANNER === '1';
-    const coldReady = publicPuzzlePlanner.planGoals && publicPuzzlePlanner.createInput
+    const coldReady = publicPuzzlePlanner.createInput
       && (key !== 'navy-zero' || publicPuzzlePlanner.allocation);
-    const executionReady = publicPuzzlePlanner.planGoals && publicPuzzlePlanner.createInput && publicPuzzlePlanner.createExecution;
+    const executionReady = publicPuzzlePlanner.createInput && publicPuzzlePlanner.createExecution;
     const missing = publicPuzzlePlanner.unavailable.join('; ');
     it.skipIf(!coldReady && !required)(`cold-frame dependency graph: real planGoals entry [${coldReady ? 'ready' : missing}]`, () => {
       expect(coldReady, missing).toBeTruthy();
       const world = puzzle.create(), snapshot = snapshotGame(world.game), before = JSON.stringify(snapshot);
       const input = publicPuzzlePlanner.createInput!(snapshot, world.owner);
-      const output = publicPuzzlePlanner.planGoals!(input);
+      const output = publicPuzzlePlanner.planGoals(input);
       checkPuzzlePlan(puzzle, world, { input, output, allocation: publicPuzzlePlanner.allocation?.(input, output) ?? null });
       expect(JSON.stringify(snapshot), 'real planning cannot change the cold frame').toBe(before);
     });
