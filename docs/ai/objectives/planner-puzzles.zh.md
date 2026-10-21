@@ -89,4 +89,4 @@
 ## 实现场景与基线
 
 7 道题、11 个变体的可复用真实场景、执行方法、现役 main AI 行为与证据见
-[公开残局场景与 main 基线](public-puzzles-baseline/report.zh.md)。目标规划器尚未接线的判法明确跳过，不计作验收通过。
+[公开残局场景与 main 基线](public-puzzles-baseline/report.zh.md)。11个计划判法已接正式入口，冻结世界、沿用memory，最多20次think；[a0db首末与首次可执行指标](public-puzzles-baseline/frozen-thinks-a0db.zh.md)保留真实失败。11个执行判法仍等正式bridge，人工解和构造器通过不计作规划器验收通过。
