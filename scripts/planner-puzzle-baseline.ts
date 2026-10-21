@@ -18,8 +18,12 @@ const actualAiTree = execFileSync('git', ['rev-parse', 'HEAD:src/ai/bootstrap_1'
 if (mode !== 'witness') {
   const aiTree = execFileSync('git', ['rev-parse', 'd4ca2668:src/ai/bootstrap_1'], { encoding: 'utf8' }).trim();
   if (actualAiTree !== aiTree) throw new Error('Main baseline bootstrap policy changed; use archive/public-puzzles-main-baseline-20261021');
-  execFileSync('git', ['diff', '--exit-code', 'd4ca2668', '--', 'src/ai', 'src/shared', 'src/sdk',
-    ':(exclude)src/ai/strategy/puzzles'], { stdio: 'pipe' });
+  try {
+    execFileSync('git', ['diff', '--quiet', 'd4ca2668', '--', 'src/ai', 'src/shared', 'src/sdk',
+      ':(exclude)src/ai/strategy/puzzles'], { stdio: 'pipe' });
+  } catch {
+    throw new Error('Main baseline AI/SDK/sim sources changed; use archive/public-puzzles-main-baseline-20261021');
+  }
 }
 const summary: unknown[] = [];
 for (const puzzle of selected) {
