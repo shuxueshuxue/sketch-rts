@@ -50,6 +50,21 @@ export function terrainWorld(builder: SceneBuilder, lands: readonly LandRectangl
   game.scriptedVictory = true;
   return game;
 }
+/** Native impassable cliffs leave only the authored physical beach openings.
+ * Without this ring an open rectangular island has many cheap unguarded
+ * landings, so choosing a third beach would be a valid answer to the puzzle. */
+export function cliffCoast(game: Game, land: LandRectangle, openings: readonly LandRectangle[]) {
+  const terrain = game.map.terrain!;
+  const cells = [...terrain.cells];
+  for (let row = 0; row < terrain.rows; row++) for (let col = 0; col < terrain.cols; col++) {
+    const x = (col + .5) * terrain.cell, y = (row + .5) * terrain.cell;
+    const inside = (r: LandRectangle) => x >= r.left && x < r.right && y >= r.top && y < r.bottom;
+    const outer = { left: land.left - 64, right: land.right + 64, top: land.top - 64, bottom: land.bottom + 64 };
+    const inner = { left: land.left + 96, right: land.right - 96, top: land.top + 96, bottom: land.bottom - 96 };
+    if (inside(outer) && !inside(inner) && !openings.some(inside)) cells[row * terrain.cols + col] = '#';
+  }
+  game.map = { ...game.map, terrain: { ...terrain, cells: cells.join('') } };
+}
 export const MAINLAND: LandRectangle = { left: 128, top: 128, right: 1536, bottom: 2816 };
 export const ISLAND: LandRectangle = { left: 2304, top: 256, right: 3712, bottom: 1792 };
 export const HOME = { x: 640, y: 768 }, TARGET_MINE = { x: 2976, y: 896 };
