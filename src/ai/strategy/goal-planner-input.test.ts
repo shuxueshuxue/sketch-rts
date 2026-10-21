@@ -151,3 +151,29 @@ it('publishes a physical local march and its observed no-exposure proof without 
   }
   expect(known).toBe(true); expect(JSON.stringify(snapshot)).toBe(before);
 });
+
+it('requotes a producer delay on the same native Situation and work ledger without escaping its scope', () => {
+  const game = scene(), snapshot = snapshotGame(game), goal = request(game), before = JSON.stringify(snapshot);
+  let memory = createAiPolicyMemory(), known = false;
+  let escaped: import('./goal-planner-input').GoalPlannerNativeFrame | undefined;
+  for (let sequence = 1; sequence <= 20 && !known; sequence++) {
+    const count = situationConstructionCount();
+    strict(() => withGoalPlannerInput({ snapshot, owner: 'us', version: 'v9_summoner', memory, goals: [goal] }, (input, frame) => {
+      escaped = frame;
+      const gross = planGoals(input); memory.goalPlanning!.cache = gross.cache;
+      if (!gross.readyActions.length) return;
+      const plan = gross.plans[0]!, requoted = frame.requote({ unitIds: [], valuation: { phase: 'gross',
+        unavailableProduction: [{ buildingId: 'producer', lane: 'training', fromTicks: 0, throughTicks: 100 }] } }, plan);
+      if (requoted.state !== 'known') return;
+      expect(requoted.plan.actions.find(action => action.declaration.kind === 'train')!.startTick).toBeGreaterThanOrEqual(100);
+      expect(requoted.plan.costGold).toBe(plan.costGold);
+      expect(requoted.plan.valueGold).toBeLessThan(plan.valueGold!);
+      known = true;
+    }));
+    expect(situationConstructionCount() - count).toBe(1);
+    expect(memory.strategy!.observation.factWork!.used).toBeLessThanOrEqual(6144);
+    memory = JSON.parse(JSON.stringify(memory));
+  }
+  expect(known).toBe(true); expect(JSON.stringify(snapshot)).toBe(before);
+  expect(() => escaped!.resolveReference({ kind: 'existing', entityId: 'producer' })).toThrow('outside its owner-think scope');
+});

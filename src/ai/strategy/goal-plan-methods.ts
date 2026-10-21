@@ -113,7 +113,8 @@ export function createGoalPlanMethods(input: GoalPlanMethodInput): Readonly<{
       }));
       const excluded = expected.some(id => !actual.has(id) || request.valuation?.unavailableUnitIds?.includes(id))
         || productionUsesOverlap(planProduction, request.valuation?.unavailableProduction ?? []);
-      const replacement = excluded ? input.requote?.(request, original) : undefined;
+      const replacement = excluded ? input.requote?.({ ...request, valuation: { ...(request.valuation ?? { phase: 'gross' as const }),
+        unavailableUnitIds: [...new Set([...(request.valuation?.unavailableUnitIds ?? []), ...expected.filter(id => !actual.has(id))])].sort() } }, original) : undefined;
       if (excluded && (!replacement || replacement.state !== 'known'))
         return unavailable(request, replacement?.reason.code ?? 'goal-counterfactual-facts-pending', replacement?.state !== 'unmet');
       const plan = replacement?.state === 'known' ? replacement.plan : original;

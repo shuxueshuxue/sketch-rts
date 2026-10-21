@@ -290,6 +290,8 @@ export type GoalPlannerInput = Readonly<{
   context: GoalPlanningContext; goals: readonly GoalRequest[]; providers: readonly GoalActionProvider[];
   initialBalances: readonly GoalResourceBalance[]; limits: GoalSearchLimits;
   declarationRevision: string; previous?: GoalPlannerCache;
+  /** Same ledger, distinct finite continuation for physical resource exclusions. */
+  searchScope?: string;
   /** The owner-think queue, not a second planning allowance. Search expansion
    * registers finite work here and returns search-pending when deferred. */
   work: FactWorkQueue;

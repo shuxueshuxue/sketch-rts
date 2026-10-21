@@ -90,7 +90,7 @@ export function planGoals(input: GoalPlannerInput): GoalPlannerOutput {
         for (const step of path.steps) { step.startTick += delta; step.finishTick += delta; }
     }
     const beforeWork = state.expansions;
-    work.withConsumer(goal.id, previous?.plan.valueGold ?? null, () => work.register({ key: `goal-search:${goal.id}`,
+    work.withConsumer(goal.id, previous?.plan.valueGold ?? null, () => work.register({ key: `${input.searchScope ?? 'goal-search'}:${goal.id}`,
       kind: 'search', tier: 'critical-route', minimum: 1, run: allowance => {
       if (hasCapacityPressure(input, goal.id)) return { work: 0, done: false };
       let used = 0;

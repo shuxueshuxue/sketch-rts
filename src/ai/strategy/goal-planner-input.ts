@@ -3,6 +3,9 @@ import { standingBodies } from '../../shared/structure-bodies';
 import { shareShipProfile } from '../../shared/ship-geometry';
 import type { BootstrapAiVersion, GameSnapshot, PlayerId } from '../../shared/types';
 import type { AiPolicyMemory } from '../memory';
+import { withAllocationLandRoutes, type AllocationLandRouteReader } from './allocation-arrival-query';
+import type { AllocationMethodQuoteInput } from './allocation-types';
+import type { GoalPlanRequotation } from './goal-plan-methods';
 import { reservedAllocationGold } from './allocation-ledger';
 import { createArrivalPlanningPhysics } from './arrival-planning-physics';
 import { createArrivalQuery } from './arrivals';
@@ -25,10 +28,11 @@ import { goalNavalActionProvider } from './goal-naval-provider';
 import { collectGoalRequests } from './goal-requests';
 import { planGoals } from './goal-planner';
 import type { GoalCandidates, GoalCohortMember, GoalFactObservation, GoalGroundingReader, GoalPlannerInput,
-  GoalPlannerCache, GoalPlanningContext, GoalRequest, GoalResourceBalance, GoalSearchLimits } from './goal-planner-types';
+  GoalPlannerCache, GoalPlanningContext, GoalRequest, GoalResourceBalance, GoalSearchLimits, GoalPlan, GoalEntityReference } from './goal-planner-types';
 import { groundGoalTransportOptions } from './goal-transport-grounding';
 import { createGoalTransportFactPorts } from './goal-transport-physical-ports';
 import { createGoalFactReader, createGoalWorldFactMemory, type GoalWorldFactMemory } from './goal-world-facts';
+import { observationJsonBytes } from './observation-json-bytes';
 import { beginObservationThink, boundObservationMemory, observationHistory, observationMemory } from './observation-memory';
 import { generateStrategyObjectives } from './plan';
 import { pointRoute } from './point-routes';
@@ -40,6 +44,7 @@ export type GoalPlannerRuntimeMemory = {
   version: 1; owner: PlayerId; world: GoalWorldFactMemory; cache?: GoalPlannerCache;
   /** Separate from the observation segment: its trimmer must never evict active plan evidence. */
   geometry?: GoalGeometryMemory;
+  requotes?: Readonly<{ key: string; cache: GoalPlannerCache }>[];
 };
 export type GoalPlannerOwnerInput = Readonly<{
   snapshot: GameSnapshot; owner: PlayerId; version: BootstrapAiVersion; memory: AiPolicyMemory;
@@ -54,6 +59,13 @@ export type GoalPlannerOwnerInput = Readonly<{
   allowedUnitIds?: readonly string[]; interruptedUnitIds?: readonly string[];
 }>;
 
+/** Same-think services for allocation and execution; never persist this frame. */
+export type GoalPlannerNativeFrame = Readonly<{
+  objectives: readonly DecisionFacts<Objective>[]; landRoute: AllocationLandRouteReader;
+  resolveReference: (reference: GoalEntityReference) => Extract<GoalEntityReference, { kind: 'existing' }> | null;
+  requote: (request: Pick<AllocationMethodQuoteInput, 'unitIds' | 'valuation'>, plan: GoalPlan) => GoalPlanRequotation;
+}>;
+
 export function planOwnerGoals(input: GoalPlannerOwnerInput) {
   return withGoalPlannerInput(input, planning => {
     const output = planGoals(planning);
@@ -64,7 +76,7 @@ export function planOwnerGoals(input: GoalPlannerOwnerInput) {
 
 /** Native tooling and owner-think entry. The callback covers assembly AND
  * search in one terrain/query/work scope. It does not grant or issue commands. */
-export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (input: GoalPlannerInput) => T): T {
+export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (input: GoalPlannerInput, frame: GoalPlannerNativeFrame) => T): T {
   const { snapshot, owner, memory } = input;
   return withGoalDistanceFieldLease(snapshot.map, owner, snapshot.tick, () => withStrategyFrame(() => {
     setBuildingBodies(snapshot.map, standingBodies(snapshot));
@@ -111,73 +123,88 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
       const regionAt = (point: { x: number; y: number }, mover: 'land' | 'sea') => mover === 'land'
         ? landIdAt(snapshot.map, point) : seaIdAt(snapshot.map, point);
       const reservedGold = memory.strategyAllocation?.owner === owner ? reservedAllocationGold(memory.strategyAllocation) : 0;
-      const context: GoalPlanningContext = { snapshot, owner, tick: snapshot.tick, version: input.version, situation,
-        readFact: fact => read(fact) };
-      const read = createGoalFactReader({ ...context, memory: retained.world,
-        ...(input.allowedUnitIds === undefined ? {} : { allowedUnitIds: input.allowedUnitIds }),
-        ...(input.interruptedUnitIds === undefined ? {} : { interruptedUnitIds: input.interruptedUnitIds }),
-        ports: { geometry, geometryRevision, regionAt, reservedGold,
-          landRoute,
-          seaRoute: (predicate, actor) => {
-            const fact = goalFact(predicate), ship = { ...actor, sailing: { ...actor.sailing!,
-              heading: predicate.fromHeading ?? actor.sailing?.heading ?? 0 } };
-            shareShipProfile(actor, ship);
-            const future = actor.x !== predicate.from.point.x || actor.y !== predicate.from.point.y
-              || predicate.fromHeading !== undefined && predicate.fromHeading !== actor.sailing?.heading;
-            if (future) { delete ship.sailing.route; delete ship.sailing.planningJob; }
-            const result = pointRoute(snapshot, preparation, ship, predicate.from.point, predicate.to.point, future);
-            const revision = goalValueKey([fact.id, geometryRevision, result]);
-            if (result.status === 'complete') {
-              const points = [predicate.from.point, ...result.route.points];
-              const distance = points.slice(1).reduce((sum, point, index) => sum + Math.hypot(point.x - points[index]!.x, point.y - points[index]!.y), 0);
-              return { fact, state: 'met', observedTick: snapshot.tick, revision, evidence: [], availableTick: snapshot.tick,
-                reason: { code: 'native-sea-route-published', factIds: [fact.id], values: {} }, route: { distance, ticks: result.ticks, points } };
-            }
-            const common = { fact, observedTick: snapshot.tick, revision, evidence: [],
-              reason: { code: result.reasonCode, factIds: [fact.id], values: {} } };
-            return result.status === 'static-infeasible' ? { ...common, state: 'unmet' }
-              : { ...common, state: 'pending', requestId: `point:${fact.id}`, requestedTick: snapshot.tick };
-          },
-          resolvers: [(fact, factsContext) => readGoalLandCapabilityFact(fact, factsContext, {
-            regionAt: point => landIdAt(snapshot.map, point) ?? null,
-          }), (fact, factsContext) => readGoalSiteSafetyFact(fact, factsContext, { regionAt,
-            readThreatArrival: (unit, target) => arrivals.arrival(unit, target, landIdAt(snapshot.map, unit)),
-          })],
-        } });
-      const economy = createGoalEconomicGrounding(context, { geometry, geometryRevision, regionAt });
-      const resolveCohort: NonNullable<GoalGroundingReader['resolveCohort']> = references => {
-        const members: GoalCohortMember[] = [];
-        for (const reference of references) {
-          if (reference.kind !== 'existing') return { state: 'pending', requestIds: [`output-shape:${goalValueKey(reference)}`],
-            reason: { code: 'goal-output-assessment-binding-required', factIds: [], values: {} } };
-          const assessment = snapshot.units.find(unit => unit.id === reference.entityId && unit.owner === owner && unit.hp > 0);
-          if (!assessment) return { state: 'unmet', reason: { code: 'goal-cohort-member-unavailable', factIds: [reference.entityId], values: {} } };
-          members.push({ reference, assessment });
-        }
-        return { state: 'met', candidates: members, factIds: members.map(member => member.assessment.id) };
-      };
-      const physical = createGoalTransportFactPorts({ snapshot, owner, tick: snapshot.tick, byTick: snapshot.tick + situation.horizonTicks,
-        regions, geometry, geometryRevision, shoreGeometryRevision: preparation.terrain,
-        readFact: read, resolveCohort, productionOptions: economy.productionOptions, readGroundPoint: arrivalPhysics.ground,
-        readPointRoute: (ship, from, to, future) => {
-          const pose = { ...ship, sailing: { ...ship.sailing!, heading: from.heading } };
-          shareShipProfile(ship, pose);
-          return { id: `point:${goalValueKey([ship.kind, from, to, future])}`, fact: pointRoute(snapshot, preparation, pose, from, to, future) };
-        } });
-      const transportOptions: GoalGroundingReader['transportOptions'] = (from, to, _mass, request) => {
-        if (!request) return { state: 'pending', requestIds: ['transport-exact-cohort'],
-          reason: { code: 'transport-exact-cohort-required', factIds: [], values: {} } };
-        const members = resolveCohort(request.cohort);
-        return groundGoalTransportOptions({ snapshot, owner, tick: snapshot.tick, byTick: snapshot.tick + situation.horizonTicks,
-          from, to, request, members: members.state === 'met' ? { state: 'met', value: members.candidates, factIds: members.factIds } : members,
-          ports: physical, readFact: read });
-      };
-      const combat = createGoalNavalCombatGrounding(context, { landRoute, resolveCohort,
-        movementRisk: request => assessGoalCombatMovementRisk({ snapshot, situation, request }),
-        arrival: (unit, target) => arrivals.arrival(unit, target, landIdAt(snapshot.map, unit)),
-        ...(input.allowedUnitIds === undefined ? {} : { allowedUnitIds: input.allowedUnitIds }),
-        ...(input.interruptedUnitIds === undefined ? {} : { interruptedUnitIds: input.interruptedUnitIds }) });
-      const grounded: GoalPlanningContext = { ...context, grounding: { ...economy, ...combat, resolveCohort, transportOptions } };
+      function makeContext(allowedUnitIds?: readonly string[], interruptedUnitIds?: readonly string[],
+        unavailableProduction: readonly import('./types').ProductionUse[] = []): GoalPlanningContext {
+        const context: GoalPlanningContext = { snapshot, owner, tick: snapshot.tick, version: input.version, situation,
+          readFact: fact => read(fact) };
+        const baseRead = createGoalFactReader({ ...context, memory: retained!.world,
+          ...(allowedUnitIds === undefined ? {} : { allowedUnitIds: allowedUnitIds }),
+          ...(interruptedUnitIds === undefined ? {} : { interruptedUnitIds: interruptedUnitIds }),
+          ports: { geometry, geometryRevision, regionAt, reservedGold,
+            landRoute,
+            seaRoute: (predicate, actor) => {
+              const fact = goalFact(predicate), ship = { ...actor, sailing: { ...actor.sailing!,
+                heading: predicate.fromHeading ?? actor.sailing?.heading ?? 0 } };
+              shareShipProfile(actor, ship);
+              const future = actor.x !== predicate.from.point.x || actor.y !== predicate.from.point.y
+                || predicate.fromHeading !== undefined && predicate.fromHeading !== actor.sailing?.heading;
+              if (future) { delete ship.sailing.route; delete ship.sailing.planningJob; }
+              const result = pointRoute(snapshot, preparation, ship, predicate.from.point, predicate.to.point, future);
+              const revision = goalValueKey([fact.id, geometryRevision, result]);
+              if (result.status === 'complete') {
+                const points = [predicate.from.point, ...result.route.points];
+                const distance = points.slice(1).reduce((sum, point, index) => sum + Math.hypot(point.x - points[index]!.x, point.y - points[index]!.y), 0);
+                return { fact, state: 'met', observedTick: snapshot.tick, revision, evidence: [], availableTick: snapshot.tick,
+                  reason: { code: 'native-sea-route-published', factIds: [fact.id], values: {} }, route: { distance, ticks: result.ticks, points } };
+              }
+              const common = { fact, observedTick: snapshot.tick, revision, evidence: [],
+                reason: { code: result.reasonCode, factIds: [fact.id], values: {} } };
+              return result.status === 'static-infeasible' ? { ...common, state: 'unmet' }
+                : { ...common, state: 'pending', requestId: `point:${fact.id}`, requestedTick: snapshot.tick };
+            },
+            resolvers: [(fact, factsContext) => readGoalLandCapabilityFact(fact, factsContext, {
+              regionAt: point => landIdAt(snapshot.map, point) ?? null,
+            }), (fact, factsContext) => readGoalSiteSafetyFact(fact, factsContext, { regionAt,
+              readThreatArrival: (unit, target) => arrivals.arrival(unit, target, landIdAt(snapshot.map, unit)),
+            })],
+          } });
+        const read: GoalPlanningContext['readFact'] = fact => {
+          const value = baseRead(fact), p = fact.predicate;
+          if (p.kind !== 'production' || p.producer?.kind !== 'existing' || value.state !== 'met') return value;
+          const producerId = p.producer.entityId;
+          const occupied = unavailableProduction.filter(use => use.buildingId === producerId && use.lane === 'training');
+          if (!occupied.length) return value;
+          const availableTick = Math.max(value.availableTick ?? snapshot.tick, ...occupied.map(use => snapshot.tick + use.throughTicks));
+          return { ...value, availableTick, revision: goalValueKey([value.revision, occupied]),
+            reason: { code: 'counterfactual-production-occupied-until', factIds: [fact.id], values: { availableTick } } };
+        };
+        const economy = createGoalEconomicGrounding(context, { geometry, geometryRevision, regionAt });
+        const resolveCohort: NonNullable<GoalGroundingReader['resolveCohort']> = references => {
+          const members: GoalCohortMember[] = [];
+          for (const reference of references) {
+            if (reference.kind !== 'existing') return { state: 'pending', requestIds: [`output-shape:${goalValueKey(reference)}`],
+              reason: { code: 'goal-output-assessment-binding-required', factIds: [], values: {} } };
+            const assessment = snapshot.units.find(unit => unit.id === reference.entityId && unit.owner === owner && unit.hp > 0);
+            if (!assessment) return { state: 'unmet', reason: { code: 'goal-cohort-member-unavailable', factIds: [reference.entityId], values: {} } };
+            members.push({ reference, assessment });
+          }
+          return { state: 'met', candidates: members, factIds: members.map(member => member.assessment.id) };
+        };
+        const physical = createGoalTransportFactPorts({ snapshot, owner, tick: snapshot.tick, byTick: snapshot.tick + situation.horizonTicks,
+          regions, geometry, geometryRevision, shoreGeometryRevision: preparation.terrain,
+          readFact: read, resolveCohort, productionOptions: economy.productionOptions, readGroundPoint: arrivalPhysics.ground,
+          readPointRoute: (ship, from, to, future) => {
+            const pose = { ...ship, sailing: { ...ship.sailing!, heading: from.heading } };
+            shareShipProfile(ship, pose);
+            return { id: `point:${goalValueKey([ship.kind, from, to, future])}`, fact: pointRoute(snapshot, preparation, pose, from, to, future) };
+          } });
+        const transportOptions: GoalGroundingReader['transportOptions'] = (from, to, _mass, request) => {
+          if (!request) return { state: 'pending', requestIds: ['transport-exact-cohort'],
+            reason: { code: 'transport-exact-cohort-required', factIds: [], values: {} } };
+          const members = resolveCohort(request.cohort);
+          return groundGoalTransportOptions({ snapshot, owner, tick: snapshot.tick, byTick: snapshot.tick + situation.horizonTicks,
+            from, to, request, members: members.state === 'met' ? { state: 'met', value: members.candidates, factIds: members.factIds } : members,
+            ports: physical, readFact: read });
+        };
+        const combat = createGoalNavalCombatGrounding(context, { landRoute, resolveCohort,
+          movementRisk: request => assessGoalCombatMovementRisk({ snapshot, situation, request }),
+          arrival: (unit, target) => arrivals.arrival(unit, target, landIdAt(snapshot.map, unit)),
+          ...(allowedUnitIds === undefined ? {} : { allowedUnitIds: allowedUnitIds }),
+          ...(interruptedUnitIds === undefined ? {} : { interruptedUnitIds: interruptedUnitIds }) });
+        const grounded: GoalPlanningContext = { ...context, grounding: { ...economy, ...combat, resolveCohort, transportOptions } };
+        return grounded;
+      }
+      const grounded = makeContext(input.allowedUnitIds, input.interruptedUnitIds);
       const initialBalances = initialGoalBalances(grounded, input.allowedUnitIds, input.interruptedUnitIds);
       const goals = input.goals ?? collectGoalRequests(observed.objectives, grounded);
       retainGoalGeometryPlans(retained.geometry, goals.map(goal => goal.id));
@@ -186,8 +213,47 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
         providers: [goalEconomyActionProvider, goalLandActionProvider, goalNavalActionProvider], initialBalances,
         limits: input.limits ?? { maxDepth: 12, maxExpansions: 2048, maxPlans: 8 }, declarationRevision: 'goal-domain-v1',
         ...(retained.cache ? { previous: retained.cache } : {}), work };
-      try { return run(plannerInput); }
-      finally { work.flush(); preparation.factWork = structuredClone(work.receipt); boundObservationMemory(preparation); }
+      let active = true;
+      const assertActive = () => { if (!active || currentFactWork() !== work) throw Error('Goal native frame is outside its owner-think scope'); };
+      const frame: GoalPlannerNativeFrame = { objectives: observed.objectives, landRoute,
+        resolveReference(reference) {
+          assertActive();
+          if (reference.kind === 'existing') return [...snapshot.units, ...snapshot.buildings].some(entity =>
+            entity.id === reference.entityId && entity.owner === owner && entity.hp > 0) ? reference : null;
+          if (reference.kind !== 'output') return null;
+          const action = Object.values(memory.strategyAllocation?.executions ?? {}).find(action => action.intent.kind === 'goal-action'
+            && action.intent.declarationId === reference.actionId);
+          const bindings = action?.state.goalOutputBindings;
+          const entityId = bindings && typeof bindings === 'object' && !Array.isArray(bindings) ? (bindings as Readonly<Record<string, unknown>>)[reference.output] : undefined;
+          return typeof entityId === 'string' && snapshot.buildings.some(building => building.id === entityId && building.owner === owner && building.hp > 0)
+            ? { kind: 'existing', entityId } : null;
+        },
+        requote(request, plan) {
+          assertActive();
+          if (plan.goal.owner !== owner) throw Error('Goal requote owner mismatch');
+          const unavailable = [...new Set(request.valuation?.unavailableUnitIds ?? [])].sort();
+          const production = request.valuation?.unavailableProduction ?? [];
+          const allowed = (input.allowedUnitIds ?? snapshot.units.filter(unit => unit.owner === owner && unit.hp > 0).map(unit => unit.id))
+            .filter(id => !unavailable.includes(id));
+          const key = goalValueKey([plan.goal.id, allowed, input.interruptedUnitIds ?? [], production]);
+          const context = makeContext(allowed, input.interruptedUnitIds, production);
+          const previous = retained!.requotes?.find(entry => entry.key === key)?.cache;
+          const { previous: _grossPrevious, ...base } = plannerInput;
+          const result = planGoals({ ...base, context, goals: [plan.goal],
+            initialBalances: initialGoalBalances(context, allowed, input.interruptedUnitIds),
+            searchScope: `goal-requote:${key}`, ...(previous ? { previous } : {}) });
+          const saved = [...(retained!.requotes ?? []).filter(entry => entry.key !== key), { key, cache: result.cache }];
+          // Counterfactual continuations have their own finite evidence segment.
+          // Eviction loses proof and resumes pending; it never creates zero loss.
+          while (saved.length > 8 || observationJsonBytes(saved) > 256 * 1024) saved.shift();
+          retained!.requotes = saved;
+          const updated = result.plans[0];
+          return updated?.status === 'ready' || updated?.status === 'complete' ? { state: 'known', plan: updated }
+            : { state: updated?.status === 'blocked' ? 'unmet' : 'pending',
+              reason: { code: updated?.reasons[0]?.code ?? 'goal-counterfactual-facts-pending', factIds: [plan.id], values: {} } };
+        } };
+      try { return withAllocationLandRoutes(landRoute, () => run(plannerInput, frame)); }
+      finally { try { work.flush(); preparation.factWork = structuredClone(work.receipt); boundObservationMemory(preparation); } finally { active = false; } }
     });
   }));
 }
