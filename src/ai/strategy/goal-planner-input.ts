@@ -116,8 +116,9 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
         ...(input.geometryMeasurement ? { measurement: true } : {}) });
       const readVoyageRisk = createGoalVoyageRiskReader({ snapshot, owner, work, observation: preparation,
         memory: retained.voyageRisk ??= { model: { version: 1, owner, tick: -1, routeIds: [], entries: [] }, publications: [] } });
-      const geometryRevision = rawGeometry.reference!('world-geometry', [preparation.terrain, preparation.landBodies,
-        snapshot.buildings.map(building => [building.id, building.owner, building.kind, building.hp > 0, building.complete])]);
+      const worldGeometry = [preparation.terrain, preparation.landBodies,
+        snapshot.buildings.map(building => [building.id, building.owner, building.kind, building.hp > 0, building.complete])];
+      const geometryRevision = rawGeometry.reference!('world-geometry', worldGeometry);
       const geometry: GoalGeometryReader = Object.assign(<State, Value>(request: import('./goal-grounding-ports').GoalGeometryRequest<State, Value>) =>
         rawGeometry({ ...request, references: [...new Set([geometryRevision, ...(request.references ?? [])])] }),
       { reference: rawGeometry.reference! });
@@ -328,7 +329,10 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
       retainGoalGeometryPlans(retained.geometry, goals.map(goal => goal.id));
       const refinements = retained.refinements ??= { revision: 0, entries: [] };
       const baseProviders = [goalEconomyActionProvider, goalLandActionProvider, goalNavalActionProvider];
-      const sourceRevision = createGoalRefinementRevision(snapshot, owner, geometryRevision);
+      // A resident reference handle may be collected when no geometry task
+      // uses it. Quote validity follows the native geometry bytes, not that
+      // handle's allocation/lifetime in the bounded publication cache.
+      const sourceRevision = createGoalRefinementRevision(snapshot, owner, goalValueKey(worldGeometry));
       const refiner = createGoalPlanRefiner({ memory: refinements, providers: baseProviders, sourceRevision,
         exactContext: selected => makeContext(input.allowedUnitIds, input.interruptedUnitIds, [], reservedGold, 'exact', selected) });
       const prefixContexts = new WeakMap<object, GoalPlanningContext>();

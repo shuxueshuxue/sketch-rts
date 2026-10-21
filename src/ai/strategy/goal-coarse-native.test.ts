@@ -89,3 +89,17 @@ it('uses the original opening balances for every prefix of the selected far-ship
   });
   expect(JSON.stringify(snapshot)).toBe(before);
 });
+
+it('retains a selected exact loading assembly through frozen thinks even when no geometry entries were resident', () => {
+  const snapshot = original(), before = JSON.stringify(snapshot);
+  let memory = createAiPolicyMemory(), ready = false;
+  for (let sequence = 1; sequence <= 8 && !ready; sequence++) {
+    const output = withGoalPlannerInput({ snapshot, owner: 'planner', version: 'v9_knight', memory }, input => {
+      const result = planGoals(input); memory.goalPlanning!.cache = result.cache; return result;
+    });
+    ready = output.readyActions.some(row => row.action.declaration.kind === 'assemble' && row.action.declaration.precision === 'exact');
+    expect(memory.strategy!.observation.factWork!.used).toBeLessThanOrEqual(6144);
+    memory = JSON.parse(JSON.stringify(memory));
+  }
+  expect(ready).toBe(true); expect(JSON.stringify(snapshot)).toBe(before);
+}, 60_000);
