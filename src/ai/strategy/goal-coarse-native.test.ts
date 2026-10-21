@@ -90,16 +90,36 @@ it('uses the original opening balances for every prefix of the selected far-ship
   expect(JSON.stringify(snapshot)).toBe(before);
 });
 
-it('retains a selected exact loading assembly through frozen thinks even when no geometry entries were resident', () => {
+it('rebinds the selected native pickup pair together and retains its exact loading assembly across frozen thinks', () => {
   const snapshot = original(), before = JSON.stringify(snapshot);
-  let memory = createAiPolicyMemory(), ready = false;
-  for (let sequence = 1; sequence <= 8 && !ready; sequence++) {
-    const output = withGoalPlannerInput({ snapshot, owner: 'planner', version: 'v9_knight', memory }, input => {
-      const result = planGoals(input); memory.goalPlanning!.cache = result.cache; return result;
-    });
-    ready = output.readyActions.some(row => row.action.declaration.kind === 'assemble' && row.action.declaration.precision === 'exact');
+  let memory = createAiPolicyMemory(), readyThinks = 0;
+  let last: ReturnType<typeof planGoals> | undefined;
+  for (let sequence = 1; sequence <= 20; sequence++) {
+    last = withNavigationAudit(event => { if (event.phase === 'strategy-planning' && !event.authorization) throw Error(event.operation); },
+      () => withNavigationPhase('strategy-planning', () => withGoalPlannerInput({ snapshot, owner: 'planner', version: 'v9_knight', memory }, input => {
+        const result = planGoals(input); memory.goalPlanning!.cache = result.cache;
+        for (const plan of result.plans) {
+          const scheduled = plan.actions.map(node => ({ action: node.declaration, startTick: node.startTick!, finishTick: node.finishTick! }));
+          expect(projectGoalResources({ epoch: snapshot.tick, initial: input.initialBalances, actions: scheduled }).state).toBe('met');
+        }
+        return result;
+      })));
+    if (last.readyActions.some(row => row.action.declaration.kind === 'assemble' && row.action.declaration.precision === 'exact')) readyThinks++;
     expect(memory.strategy!.observation.factWork!.used).toBeLessThanOrEqual(6144);
+    expect(memory.goalPlanning!.geometry!.capacity?.pressure).toBeUndefined();
     memory = JSON.parse(JSON.stringify(memory));
   }
-  expect(ready).toBe(true); expect(JSON.stringify(snapshot)).toBe(before);
+  expect(readyThinks).toBeGreaterThanOrEqual(3);
+  const bindings = memory.goalPlanning!.selectedBerths!;
+  expect(bindings.entries).toHaveLength(2); expect(bindings.sources).toHaveLength(1);
+  expect(bindings.entries.map(entry => entry.answer.state === 'met' && entry.answer.value.water))
+    .toEqual([{ x: 112, y: 816 }, { x: 1552, y: 688 }]);
+  const fighters = last!.plans[0]!.actions.find(node => node.declaration.kind === 'transport-force')!.declaration;
+  expect(fighters.executor.parameters.departure).toEqual({ ground: { x: 1552, y: 688 }, water: { x: 1552, y: 688 }, heading: Math.PI / 2 });
+  expect(fighters.executor.parameters.loadingPost).toEqual({ landId: 'land:1', point: { x: 1552, y: 688 } });
+  expect(last!.plans[0]!.actions.filter(node => node.declaration.kind === 'position-transport')
+    .map(node => node.declaration.executor.parameters.at)).toEqual([
+    { seaId: 'sea:1', point: { x: 112, y: 816 } }, { seaId: 'sea:1', point: { x: 1552, y: 688 } },
+  ]);
+  expect(JSON.stringify(snapshot)).toBe(before);
 }, 60_000);

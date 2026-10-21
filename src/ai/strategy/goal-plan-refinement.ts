@@ -72,7 +72,8 @@ const sameChoice = (a: GoalActionDeclaration, b: GoalActionDeclaration) => {
  * next think, so changed preconditions/times/resources are scheduled again. */
 export function createGoalPlanRefiner(input: Readonly<{
   memory: GoalRefinementMemory; providers: readonly GoalActionProvider[];
-  exactContext: (selected: readonly GoalActionDeclaration[]) => GoalPlanningContext;
+  exactContext: (selected: readonly GoalActionDeclaration[], plan: GoalPlan) => GoalPlanningContext;
+  prepareExact?: (plan: GoalPlan, selected: GoalPlan['actions'], context: GoalPlanningContext) => GoalPlan | undefined;
   sourceRevision?: (action: GoalActionDeclaration) => string;
 }>) {
   const { memory } = input;
@@ -97,7 +98,9 @@ export function createGoalPlanRefiner(input: Readonly<{
     const selected = plan.actions.filter(node => first.has(node.id)
       || node.dependsOnActionIds.length && node.dependsOnActionIds.every(id => first.has(id)));
     if (!selected.length) return plan;
-    const context = input.exactContext(selected.map(node => node.declaration));
+    const context = input.exactContext(selected.map(node => node.declaration), plan);
+    const prepared = input.prepareExact?.(plan, selected, context);
+    if (prepared) return prepared;
     const deferred = [...(plan.deferredCandidates ?? [])];
     const annotations = new Map<string, NonNullable<GoalPlan['actions'][number]['refinement']>>();
     let changed = invalidated.size > 0;
@@ -116,19 +119,20 @@ export function createGoalPlanRefiner(input: Readonly<{
       if (entry.state !== 'pending') continue;
       const discovered = discoverGoalActions(provider, request.effect, context);
       const compatible = discovered.actions.filter(exact => sameChoice(action, exact));
-      const known = compatible.filter(exact => {
+      const feasible = compatible.filter(exact => ![exact.duration, exact.cost, exact.successProbability].some(estimate => estimate.state === 'unmet'));
+      const known = feasible.filter(exact => {
         const quote = value(exact); return quote.duration !== null && quote.cost !== null && quote.probability !== null;
       });
-      const pendingEstimates = compatible.flatMap(exact => [exact.duration, exact.cost, exact.successProbability].filter(estimate => estimate.state === 'pending'));
+      const pendingEstimates = feasible.flatMap(exact => [exact.duration, exact.cost, exact.successProbability].filter(estimate => estimate.state === 'pending'));
       const identical = known.find(exact => sameExecutionProof(action, exact));
-      const reason = { code: identical ? 'selected-exact-action-confirmed' : known.length ? 'selected-exact-action-requires-regression' : discovered.deferred.length || compatible.length
+      const reason = { code: identical ? 'selected-exact-action-confirmed' : known.length ? 'selected-exact-action-requires-regression' : discovered.deferred.length || feasible.length
         ? 'selected-exact-facts-pending' : 'selected-coarse-action-invalid', factIds: [...new Set([...discovered.deferred.flatMap(item => item.requestIds),
           ...pendingEstimates.flatMap(estimate => estimate.state === 'pending' ? estimate.requestIds : [])])],
         values: { pendingReasons: pendingEstimates.flatMap(estimate => estimate.state === 'pending' ? [estimate.reason.code] : []).join(',') } };
       if (known.length) {
         entry.exact = known.map(exact => ({ ...exact, precision: 'exact', refinementFor: request }));
         entry.state = 'known'; entry.reason = reason; memory.revision++; changed ||= !identical;
-      } else if (!discovered.deferred.length && !compatible.length) {
+      } else if (!discovered.deferred.length && !feasible.length) {
         entry.state = 'invalid'; entry.reason = reason; memory.revision++; changed = true;
       } else entry.reason = reason;
       annotations.set(node.id, { state: entry.state, coarse: action, ...(entry.exact[0] ? { exact: entry.exact[0] } : {}), reason });

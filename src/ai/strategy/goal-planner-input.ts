@@ -40,6 +40,7 @@ import { createGoalTransportCohorts } from './goal-transport-cohorts';
 import { createGoalRefinementRevision } from './goal-refinement-revision';
 import { goalPostCohorts } from './goal-post-cohorts';
 import { STRATEGY_PARAMETERS } from './utility';
+import { chooseGoalCoarseShore, createGoalSelectedBerths, type GoalSelectedBerthMemory } from './goal-selected-berths';
 import { createGoalCoarseTransport } from './goal-coarse-transport';
 import { applyGoalRefinements, createGoalPlanRefiner, type GoalRefinementMemory } from './goal-plan-refinement';
 import { createGoalTransportFactPorts } from './goal-transport-physical-ports';
@@ -59,6 +60,7 @@ export type GoalPlannerRuntimeMemory = {
   geometry?: GoalGeometryMemory;
   voyageRisk?: GoalVoyageRiskMemory;
   refinements?: GoalRefinementMemory;
+  selectedBerths?: GoalSelectedBerthMemory;
   requotes?: Readonly<{ key: string; cache: GoalPlannerCache }>[];
 };
 export type GoalPlannerOwnerInput = Readonly<{
@@ -119,6 +121,9 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
       const worldGeometry = [preparation.terrain, preparation.landBodies,
         snapshot.buildings.map(building => [building.id, building.owner, building.kind, building.hp > 0, building.complete])];
       const geometryRevision = rawGeometry.reference!('world-geometry', worldGeometry);
+      const berthBindings = createGoalSelectedBerths({ memory: retained.selectedBerths ??= { revision: 0, nextId: 1, sources: [], entries: [] },
+        geometryRevision: goalValueKey(worldGeometry), regions, units: snapshot.units });
+      const contactPreparation = new WeakMap<GoalPlanningContext, (plan: GoalPlan, selected: GoalPlan['actions']) => GoalPlan | undefined>();
       const geometry: GoalGeometryReader = Object.assign(<State, Value>(request: import('./goal-grounding-ports').GoalGeometryRequest<State, Value>) =>
         rawGeometry({ ...request, references: [...new Set([geometryRevision, ...(request.references ?? [])])] }),
       { reference: rawGeometry.reference! });
@@ -269,22 +274,27 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
           } });
         const physical = { ...rawPhysical, shores: (from: import('./types').Target, to: import('./types').Target): ReturnType<typeof rawPhysical.shores> => {
           if (!selected.length) return rawPhysical.shores(from, to);
-          const action = selected.find(action => ['transport-force', 'transport-worker'].includes(action.kind)
+          const choices = selected.filter(action => ['transport-force', 'transport-worker'].includes(action.kind)
             && (action.executor.parameters.at as import('./types').Target | undefined)?.landId === to.landId);
+          const action = choices.find(action => goalValueKey(action.executor.parameters.from) === goalValueKey(from)) ?? choices[0];
           if (!action) return { state: 'pending', requestIds: ['selected-shore-not-yet-needed'],
             reason: { code: 'selected-shore-not-yet-needed', factIds: [], values: {} } };
           const p = action.executor.parameters, departure = p.departure as { ground?: import('./types').Point; water: import('./types').Point };
           const landing = p.landing as { ground: import('./types').Point; water: import('./types').Point };
           const seaId = from.seaId ?? seaIdAt(snapshot.map, departure.water);
-          const closest = (landId: import('./types').LandId, point: import('./types').Point) => [...(regions.shoresByLand.get(landId)?.get(seaId!) ?? [])]
-            .sort((a, b) => Math.hypot(a.ground.x - point.x, a.ground.y - point.y) - Math.hypot(b.ground.x - point.x, b.ground.y - point.y)
-              || goalValueKey(a).localeCompare(goalValueKey(b)))[0];
-          const end = to.landId && closest(to.landId, landing.ground), start = from.landId && departure.ground ? closest(from.landId, departure.ground) : undefined;
+          const reference = p.transport as GoalEntityReference | undefined;
+          const ship = reference?.kind === 'existing' ? snapshot.units.find(unit => unit.id === reference.entityId) : undefined;
+          const members = resolveCohort(p.cohort as readonly GoalEntityReference[]);
+          const contact = (landId: import('./types').LandId, near: import('./types').Point) => ship && members.state === 'met'
+            ? chooseGoalCoarseShore(regions.shoresByLand.get(landId)?.get(seaId!) ?? [], near, ship, members.candidates, berthBindings.published)?.shore
+            : undefined;
+          const logicalFrom = p.from as import('./types').Target;
+          const end = to.landId && contact(to.landId, to.point), start = from.landId && departure.ground ? contact(from.landId, logicalFrom.point) : undefined;
           return seaId && end && (!from.landId || start) ? { state: 'met', candidates: [{ id: `selected-shore:${action.id}`, seaId,
             ...(start ? { departure: start } : {}), landing: end }], factIds: [] } : { state: 'unmet',
             reason: { code: 'selected-shore-contact-invalid', factIds: [], values: {} } };
         } };
-        const transportOptions: GoalGroundingReader['transportOptions'] = mode === 'coarse' ? createGoalCoarseTransport(context, regions, resolveCohort) : (from, to, _mass, request) => {
+        const transportOptions: GoalGroundingReader['transportOptions'] = mode === 'coarse' ? createGoalCoarseTransport(context, regions, resolveCohort, berthBindings.published) : (from, to, _mass, request) => {
           if (!request) return { state: 'pending', requestIds: ['transport-exact-cohort'],
             reason: { code: 'transport-exact-cohort-required', factIds: [], values: {} } };
           const members = resolveCohort(request.cohort);
@@ -321,12 +331,14 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
         };
         const grounded: GoalPlanningContext = { ...context, readProjectedFact: createGoalMovementProjection(context, worldReader),
           grounding: { ...economy, combatOptions, resolveCohort, transportOptions, cohortOptions } };
+        if (mode === 'exact') contactPreparation.set(grounded, (plan, selected) => berthBindings.prepare(plan, selected, rawPhysical, resolveCohort));
         return grounded;
       }
       const grounded = makeContext(input.allowedUnitIds, input.interruptedUnitIds);
       const initialBalances = initialGoalBalances(grounded, input.allowedUnitIds, input.interruptedUnitIds);
       const goals = input.goals ?? collectGoalRequests(observed.objectives, grounded);
       retainGoalGeometryPlans(retained.geometry, goals.map(goal => goal.id));
+      berthBindings.retain(goals.map(goal => `goal-plan:${goal.id}`));
       const refinements = retained.refinements ??= { revision: 0, entries: [] };
       const baseProviders = [goalEconomyActionProvider, goalLandActionProvider, goalNavalActionProvider];
       // A resident reference handle may be collected when no geometry task
@@ -334,7 +346,8 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
       // handle's allocation/lifetime in the bounded publication cache.
       const sourceRevision = createGoalRefinementRevision(snapshot, owner, goalValueKey(worldGeometry));
       const refiner = createGoalPlanRefiner({ memory: refinements, providers: baseProviders, sourceRevision,
-        exactContext: selected => makeContext(input.allowedUnitIds, input.interruptedUnitIds, [], reservedGold, 'exact', selected) });
+        exactContext: (_selected, plan) => makeContext(input.allowedUnitIds, input.interruptedUnitIds, [], reservedGold, 'exact', plan.actions.map(node => node.declaration)),
+        prepareExact: (plan, selected, context) => contactPreparation.get(context)?.(plan, selected) });
       const prefixContexts = new WeakMap<object, GoalPlanningContext>();
       const plannerInput: GoalPlannerInput = { context: grounded, goals,
         capacityPressure: () => retained.geometry?.capacity?.pressure ? [retained.geometry.capacity.pressure] : [],
@@ -344,7 +357,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
           if (!context) { context = makeContext(input.allowedUnitIds, input.interruptedUnitIds, [], reservedGold, 'coarse', [], prefix); prefixContexts.set(prefix, context); }
           return context;
         } } : {}),
-        limits: input.limits ?? { maxDepth: 12, maxExpansions: 2048, maxPlans: 8 }, declarationRevision: `goal-domain-v2:${precision}:${refinements.revision}`,
+        limits: input.limits ?? { maxDepth: 12, maxExpansions: 2048, maxPlans: 8 }, declarationRevision: `goal-domain-v2:${precision}:${refinements.revision}:berths:${retained.selectedBerths!.revision}`,
         ...(retained.cache ? { previous: retained.cache } : {}), work };
       let active = true;
       const assertActive = () => { if (!active || currentFactWork() !== work) throw Error('Goal native frame is outside its owner-think scope'); };

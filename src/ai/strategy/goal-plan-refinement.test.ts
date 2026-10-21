@@ -66,6 +66,16 @@ it('refines only the selected ready layer and its next layer, re-regresses exact
       exactContext: () => ({ ...context, precision: 'exact' }), sourceRevision: () => 'changed-native-world' })(second.plans[0]!);
     expect(stale.readyActionIds).toEqual([]);
     expect(stale.actions.find(node => node.id === ready.id)?.refinement?.reason.code).toBe('selected-exact-source-changed');
+    const rejected: GoalRefinementMemory = { revision: 0, entries: [] };
+    const impossible: GoalActionProvider = { ...provider, actionsFor: (effect, ctx) => provider.actionsFor(effect, ctx).map(action => ({
+      ...action, duration: { state: 'unmet', reason: { code: 'native-endpoint-unreachable', factIds: [], values: {} } },
+    })) };
+    const invalid = createGoalPlanRefiner({ memory: rejected, providers: [impossible],
+      exactContext: () => ({ ...context, precision: 'exact' }) })(first.plans[0]!);
+    expect(invalid.readyActionIds).toEqual([]);
+    expect(rejected.entries).toHaveLength(2);
+    expect(rejected.entries.every(entry => entry.state === 'invalid')).toBe(true);
+
   });
 });
 
