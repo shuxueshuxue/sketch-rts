@@ -36,7 +36,13 @@ export function terrainWorld(builder: SceneBuilder, lands: readonly LandRectangl
   let cells = '';
   for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
     const px = (x + .5) * cell, py = (y + .5) * cell;
-    cells += lands.some(r => px >= r.left && px < r.right && py >= r.top && py < r.bottom) ? '.' : '~';
+    const land = lands.some(r => px >= r.left && px < r.right && py >= r.top && py < r.bottom);
+    // Native shallow ground is shared by walkers and hulls. A dry cliff all the
+    // way to deep water has no physical boarding rendezvous for a transport.
+    const coast = lands.some(r => px >= r.left - cell * 2 && px < r.right + cell * 2
+      && py >= r.top - cell * 2 && py < r.bottom + cell * 2
+      && (px < r.left + cell * 2 || px >= r.right - cell * 2 || py < r.top + cell * 2 || py >= r.bottom - cell * 2));
+    cells += coast ? ',' : land ? '.' : '~';
   }
   game.map = { ...game.map, width: cols * cell, height: rows * cell, landmarks: [], terrain: { cell, cols, rows, cells } };
   game.shops = []; game.obstacles = [];
