@@ -55,10 +55,10 @@ export function registerPublicPuzzleTests(key: PuzzleKey) {
     });
     it.skipIf(!publicPuzzlePlanner)('cold-frame dependency graph: required actions, causal order and forbidden choices', () => {
       const world = puzzle.create();
-      checkPuzzlePlan(puzzle, world, publicPuzzlePlanner!.cold(world));
+      checkPuzzlePlan(puzzle, world, publicPuzzlePlanner!.cold(snapshotGame(world.game), world.owner));
     });
     it.skipIf(!publicPuzzlePlanner)('goal-planner execution reaches the objective under real simulation rules', () => {
-      const result = runPublicPuzzle(puzzle, 'v9_knight', { planner: publicPuzzlePlanner!.commands });
+      const result = runPublicPuzzle(puzzle, 'v9_knight', { planner: publicPuzzlePlanner!.commands() });
       expect(result.execution.checks).not.toEqual({});
       expect(result.execution.passed, JSON.stringify(result.execution)).toBe(true);
     }, 180_000);
