@@ -6,6 +6,7 @@ import { assertStrategyAllocationBounds, sameAction, STRATEGY_ALLOCATION_LIMITS 
 import { copyNativeOrder, INCUMBENT_RECEIPT_WAIT_TICKS } from './incumbent-evidence';
 import { assessForceAssemblyPosts } from './assembly-posts';
 import { validateGoalOutputFeedback } from './goal-output-validation';
+import { observeGoalTraining } from './goal-training-ledger';
 
 /** Acceptance is not movement. Refresh lineage from the current native world
  * before safety services or assignment-stage accounting consume it. */
@@ -222,6 +223,7 @@ export function applyExecutorFeedback(memory: StrategyAllocationMemory, snapshot
     throw new Error('Stale allocation executor feedback');
   if (terminal(execution.status)) throw new Error('Feedback attempted to restart a terminal allocation action');
   let next = applyAllocationPayments(memory, snapshot, execution.token, feedback.payments ?? []);
+  next = observeGoalTraining(next, snapshot);
   feedback = validateGoalOutputFeedback(next, snapshot, feedback);
   const pending = Array.isArray(feedback.state.pendingVoyageIds) ? feedback.state.pendingVoyageIds : [];
   const continuing = feedback.status === 'complete' && pending.length > 0;

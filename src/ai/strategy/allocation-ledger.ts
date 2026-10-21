@@ -4,6 +4,7 @@ import { purchaseCost } from '../policy/script-runner';
 import type { ActionToken, AllocationBudget, AllocationPayment, AllocationUnmetDemand, CommandAdmission,
   ExecutableMethod, ExecutionAction, IssuedActionCommand, StrategyAllocationMemory } from './allocation-types';
 import { sameAction } from './control';
+import { recordGoalTrainingAdmissions } from './goal-training-ledger';
 
 /** The old runner and formal admission share the catalog prices. Building
  * upgrades also spend capital although the old economy does not track them. */
@@ -61,13 +62,11 @@ export function reserveAllocationSpends(input: Readonly<{ memory: StrategyAlloca
 
 /** Capture a narrow real-world baseline once, when the common gateway admits
  * the command. Neither a predicted queue nor an accepted proposal is a receipt. */
-export function issuedCommandBaseline(snapshot: GameSnapshot, command: GameCommand, goalTraining = false): IssuedActionCommand['worldBefore'] {
+export function issuedCommandBaseline(snapshot: GameSnapshot, command: GameCommand): IssuedActionCommand['worldBefore'] {
   if (command.type === 'train') {
     const yard = snapshot.buildings.find(building => building.id === command.buildingId);
     return { kind: 'production', buildingId: command.buildingId,
-      jobs: (yard?.queue ?? []).map(job => ({ id: job.id ?? null, unitKind: 'unitKind' in job ? job.unitKind : null })),
-      ...(goalTraining ? { unitIds: snapshot.units.filter(unit => unit.owner === yard?.owner && unit.kind === command.unitKind && unit.hp > 0)
-        .map(unit => unit.id).sort() } : {}) };
+      jobs: (yard?.queue ?? []).map(job => ({ id: job.id ?? null, unitKind: 'unitKind' in job ? job.unitKind : null })) };
   }
   if (command.type === 'build') return { kind: 'construction', buildingIds: snapshot.buildings.filter(building =>
     Math.hypot(building.x - command.x, building.y - command.y) <= building.radius + 64).map(building => building.id).sort() };
@@ -85,7 +84,7 @@ export function recordAllocationCommands(memory: StrategyAllocationMemory, snaps
         throw new Error('Allocation command id reused for different intent');
       continue;
     }
-    const baseline = issuedCommandBaseline(snapshot, admission.command, admission.executor === 'goal.train');
+    const baseline = issuedCommandBaseline(snapshot, admission.command);
     const command: IssuedActionCommand = { id: admission.commandId, action: admission.action, executor: admission.executor,
       purpose: admission.purpose, acceptedTick: snapshot.tick, command: structuredClone(admission.command), ...(baseline ? { worldBefore: baseline } : {}) };
     issuedCommands[command.id] = command;
@@ -94,7 +93,7 @@ export function recordAllocationCommands(memory: StrategyAllocationMemory, snaps
     for (const unitId of unitIds) issuedOrders[unitId] = { commandId: command.id, action: command.action, executor: command.executor,
       purpose: command.purpose, unitId, acceptedTick: snapshot.tick, observedTick: null, observedOrder: null };
   }
-  return { ...memory, issuedCommands, issuedOrders };
+  return recordGoalTrainingAdmissions({ ...memory, issuedCommands, issuedOrders }, snapshot, admissions);
 }
 
 /** A receipt is idempotent and tied to the real parent command and native

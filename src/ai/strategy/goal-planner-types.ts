@@ -14,6 +14,8 @@ export type GoalForceMeasure = Readonly<{ metric: 'combat-rating' }>
   | Readonly<{ metric: 'field-strength' }>
   | Readonly<{ metric: 'camp-force'; campId: string }>;
 export type GoalEntityReference = Readonly<{ kind: 'existing'; entityId: string }>
+  /** Exact building/foundation output. Trained troops and hulls enter a
+   * regional quantity pool and are selected as actual units by allocation. */
   | Readonly<{ kind: 'output'; actionId: string; output: string }>
   /** Template-local variable unified with an achiever's existing/output ref. */
   | Readonly<{ kind: 'binding'; name: string }>;

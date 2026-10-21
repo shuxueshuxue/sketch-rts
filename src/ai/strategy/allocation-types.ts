@@ -239,8 +239,8 @@ export type IssuedActionCommand = Readonly<{
   /** Minimal admission-time baseline for proving a later world payment. */
   worldBefore?: Readonly<{ kind: 'production'; buildingId: string;
     jobs: readonly Readonly<{ id: string | null; unitKind: TrainableUnitKind | null }>[];
-    /** Only goal training captures this actual admission-time birth baseline. */
-    unitIds?: readonly string[] }>
+    /** Actual mover-region quantity baseline; never individual birth IDs. */
+    pool?: Readonly<{ key: string; at: Target; quantity: number; creditFloor: number }> }>
     | Readonly<{ kind: 'construction'; buildingIds: readonly string[] }>;
 }>;
 /** An accepted command from a real old producer branch, before adoption. This
@@ -335,6 +335,7 @@ export type StrategyAllocationMemory = Readonly<{
   nextActionGeneration: number;
   nextEventSequence: number;
   decisionCounts?: AllocationDecisionCounts;
+  goalTraining?: import('./goal-training-ledger').GoalTrainingMemory;
   objectives: Readonly<Record<ObjectiveId, ObjectiveAllocation>>;
   /** Concrete, numerical plans survive forks and hull birth. An active voyage
    * must not lose its manifest because a later query starts aboard the ship. */

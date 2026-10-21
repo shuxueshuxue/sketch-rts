@@ -12,13 +12,16 @@ import { createStrategyAllocationMemory } from './control';
 import { goalBuildExecutor, goalTrainExecutor } from './executors/goal-economy';
 import { withAllocationLandRoutes } from './allocation-arrival-query';
 import type { GoalExecutableIntent } from './goal-execution-types';
+import { observeGoalTraining, goalTrainingReader } from './goal-training-ledger';
+import { landIdAt, regionIndex } from './regions';
 
 function fixture(executor: StrategyExecutor, kind: 'train' | 'build', parameters: GoalExecutableIntent['parameters'], outputs: string[], gold: number) {
   const game = sketchScene('central-goal-output-validation').map('bareDuel').replaceDefaults()
     .player('us', { race: 'grove' }).player('foe', { race: 'ember' }).playerState('us', { gold: 3000 })
     .townHall('us', 400, 400).townHall('foe', 4000, 4000)
-    .building('us', 'barracks', 400, 700, { id: 'producer' }).worker('us', 700, 400, { id: 'worker' }).build().createGame();
-  game.scriptedVictory = true;
+    .building('us', 'barracks', 400, 700, { id: 'producer' }).building('us', 'barracks', 800, 700, { id: 'other-producer' }).worker('us', 700, 400, { id: 'worker' }).build().createGame();
+  game.scriptedVictory = true; regionIndex(game.map);
+  if (kind === 'train') parameters = { ...parameters, at: { point: { x: 400, y: 700 }, landId: landIdAt(game.map, { x: 400, y: 700 })! } };
   const token = { actionId: 'atom', generation: 1 }, target = { point: { x: 900, y: 900 } };
   const execution: ExecutionAction = { token, objectiveId: 'goal', methodId: 'plan', executor: executor.id,
     intent: { kind: 'goal-action', actionKind: kind, goalId: 'goal', declarationId: 'declaration', parameters, outputs },
@@ -37,30 +40,43 @@ function fixture(executor: StrategyExecutor, kind: 'train' | 'build', parameters
       amountGold: gold, paidGold: 0, state: 'reserved', sinceTick: 0, releasedTick: null,
       includedUtilityTermCodes: [], externalReservationIds: [] } } };
   let sequence = 0;
-  const input = (): ExecutorInput => ({ snapshot: snapshotGame(game), owner: 'us', objective, method,
-    execution: memory.executions.atom!, grant: allocationGrants(memory)[0]!, events: memory.events });
+  const input = (actionId = 'atom'): ExecutorInput => {
+    const snapshot = snapshotGame(game); memory = observeGoalTraining(memory, snapshot);
+    return { snapshot, owner: 'us', objective, method, execution: memory.executions[actionId]!,
+      grant: allocationGrants(memory).find(grant => grant.action.actionId === actionId)!, events: memory.events, goalTraining: goalTrainingReader(memory, snapshot) };
+  };
   const apply = (feedback: ExecutorFeedback) => {
     const snapshot = snapshotGame(game);
     memory = applyExecutorFeedback(memory, snapshot, feedback);
     const gateway = createStrategyCommandGateway({ snapshot, owner: 'us', memory, grants: allocationGrants(memory), queuedTick: null });
     const admitted = gateway.admit(feedback.commands.map(entry => ({ id: `command:${sequence++}`, source: 'executor', executor: executor.id,
-      action: token, allocationRevision: memory.revision, purpose: entry.purpose, command: entry.command })));
+      action: feedback.action, allocationRevision: memory.revision, purpose: entry.purpose, command: entry.command })));
     expect(admitted.admissions.every(admission => admission.status === 'accepted')).toBe(true);
     memory = recordAllocationCommands(memory, snapshot, admitted.admissions);
     issueCommandFrame(game, admitted.accepted.map(entry => ({ playerId: 'us', scriptId: entry.executor, command: entry.command })));
   };
-  const think = () => {
-    const request = input();
+  const think = (actionId = 'atom') => {
+    const request = input(actionId);
     const feedback = withAllocationLandRoutes((from, to) => ({ status: 'known', distance: Math.hypot(to.x - from.x, to.y - from.y), points: [to] }),
       () => executor.execute(request));
     apply(feedback); return feedback;
   };
-  return { game, input, apply, think, get memory() { return memory; }, restore() { memory = JSON.parse(JSON.stringify(memory)); } };
+  const addTraining = () => {
+    const action = { actionId: 'other-atom', generation: 2 }, original = memory.executions.atom!;
+    if (original.intent.kind !== 'goal-action') throw Error('Missing goal intent');
+    const next: ExecutionAction = { ...original, token: action, status: 'ready', state: {}, intent: { ...original.intent,
+      parameters: { ...original.intent.parameters, count: 1, producer: { kind: 'existing', entityId: 'other-producer' } } } };
+    memory = { ...memory, executions: { ...memory.executions, 'other-atom': next },
+      leases: { ...memory.leases, 'queue:other-producer': { ...memory.leases['queue:producer']!, id: 'lease:other', resourceKey: 'queue:other-producer', action } },
+      budgets: { ...memory.budgets, 'other-capital': { ...memory.budgets.capital!, id: 'other-capital', spendId: 'other-capital', action,
+        amountGold: UNIT_DEFS.footman.cost, paidGold: 0, state: 'reserved' } } };
+  };
+  return { game, input, apply, think, addTraining, get memory() { return memory; }, restore() { memory = JSON.parse(JSON.stringify(memory)); } };
 }
 
-it('validates two actual native births, publishes ACKs centrally, and pays distinct equal jobs exactly once', () => {
+it('settles two native jobs into quantities without entity output slots and pays equal jobs exactly once', () => {
   const cost = UNIT_DEFS.footman.cost;
-  const f = fixture(goalTrainExecutor, 'train', { producer: { kind: 'existing', entityId: 'producer' }, unitKind: 'footman', count: 2 }, ['unit-0', 'unit-1'], cost * 2);
+  const f = fixture(goalTrainExecutor, 'train', { producer: { kind: 'existing', entityId: 'producer' }, unitKind: 'footman', count: 2 }, [], cost * 2);
   const payments: NonNullable<ExecutorFeedback['payments']>[number][] = [];
   for (let frame = 0; frame < 100 && f.memory.executions.atom!.status !== 'complete'; frame++) {
     const previous = f.memory, saved = JSON.stringify(previous);
@@ -70,9 +86,9 @@ it('validates two actual native births, publishes ACKs centrally, and pays disti
     for (let tick = 0; tick < 15; tick++) stepGame(f.game);
   }
   expect(f.memory.executions.atom!.status).toBe('complete');
-  const bindings = f.memory.executions.atom!.state.goalOutputBindings as Record<string, string>;
-  expect(Object.keys(bindings)).toEqual(['unit-0', 'unit-1']); expect(new Set(Object.values(bindings)).size).toBe(2);
-  for (const id of Object.values(bindings)) expect(f.game.units.find(unit => unit.id === id)).toMatchObject({ owner: 'us', kind: 'footman' });
+  expect(f.memory.executions.atom!.state.goalOutputBindings).toBeUndefined();
+  expect(f.memory.goalTraining!.jobs.map(job => job.state)).toEqual(['fulfilled', 'fulfilled']);
+  expect(f.game.units.filter(unit => unit.owner === 'us' && unit.kind === 'footman')).toHaveLength(2);
   expect(payments).toHaveLength(2);
   expect(f.memory.budgets.capital).toMatchObject({ paidGold: 2 * cost, state: 'spent' });
   expect(f.memory.budgets.capital!.nativePayments).toHaveLength(2);
@@ -83,26 +99,51 @@ it('validates two actual native births, publishes ACKs centrally, and pays disti
     [{ ...payments[0]!, amountGold: cost + 1 }])).toThrow('changed after acknowledgement');
 });
 
-it('does not bind one of two observed births even when the adapter nominates a valid-kind real entity', () => {
-  const f = fixture(goalTrainExecutor, 'train', { producer: { kind: 'existing', entityId: 'producer' }, unitKind: 'footman', count: 1 }, ['unit-0'], UNIT_DEFS.footman.cost);
+it('permanently withdraws a cancelled job when another producer supplies the only new unit', () => {
+  const f = fixture(goalTrainExecutor, 'train', { producer: { kind: 'existing', entityId: 'producer' }, unitKind: 'footman', count: 1 }, [], UNIT_DEFS.footman.cost);
   f.think(); f.think();
-  const job = f.game.buildings.find(building => building.id === 'producer')!.queue[0]!;
+  const ownJob = f.game.buildings.find(building => building.id === 'producer')!.queue[0]!;
   const command = Object.values(f.memory.issuedCommands)[0]!;
-  for (let tick = 0; tick < UNIT_DEFS.footman.trainTime + 1; tick++) stepGame(f.game);
-  const other = f.game.spawnUnit('us', 'footman', 900, 900);
-  const feedback = goalTrainExecutor.execute(f.input());
-  f.apply({ ...feedback, status: 'complete', commands: [], goalOutputs: [{ output: 'unit-0', entityId: other.id,
-    observedTick: f.game.tick, proof: { kind: 'birth', acceptedCommandId: command.id, producerId: 'producer', jobId: job.id! } }] });
-  expect(f.memory.executions.atom).toMatchObject({ status: 'active', phase: 'await-output-validation', state: { goalOutputBindings: {} } });
+  issueCommandFrame(f.game, [
+    { playerId: 'us', scriptId: 'cancel-native', command: { type: 'cancelTraining', buildingId: 'producer', jobId: ownJob.id! } },
+    { playerId: 'us', scriptId: 'other-native', command: { type: 'train', buildingId: 'other-producer', unitKind: 'footman' } },
+  ]);
+  for (let tick = 0; tick < 15; tick++) stepGame(f.game);
+  f.think();
+  expect(f.memory.executions.atom!.status).toBe('failed');
+  for (let frame = 0; frame < 25; frame++) {
+    for (let tick = 0; tick < 15; tick++) stepGame(f.game);
+    const observation = f.input().goalTraining!({ acceptedCommandId: command.id, producerId: 'producer', jobId: ownJob.id!, unitKind: 'footman' });
+    expect(observation).toMatchObject({ state: 'cancelled', creditedQuantity: 0 });
+    f.restore();
+  }
+  expect(f.game.units.filter(unit => unit.owner === 'us' && unit.kind === 'footman')).toHaveLength(1);
+  expect(f.memory.executions.atom!.state.goalOutputBindings).toBeUndefined();
 });
 
-it('rejects adapter-supplied bindings and completion without an admitted native job/birth', () => {
-  const f = fixture(goalTrainExecutor, 'train', { producer: { kind: 'existing', entityId: 'producer' }, unitKind: 'footman', count: 1 }, ['unit-0'], UNIT_DEFS.footman.cost);
+it('credits two simultaneous same-kind producers against the shared pool exactly once', () => {
+  const f = fixture(goalTrainExecutor, 'train', { producer: { kind: 'existing', entityId: 'producer' }, unitKind: 'footman', count: 1 }, [], UNIT_DEFS.footman.cost);
+  f.addTraining(); f.think(); f.think('other-atom'); f.think(); f.think('other-atom');
+  for (let frame = 0; frame < 40 && Object.values(f.memory.executions).some(action => action.status !== 'complete'); frame++) {
+    for (let tick = 0; tick < 15; tick++) stepGame(f.game);
+    if (f.memory.executions.atom!.status !== 'complete') f.think();
+    if (f.memory.executions['other-atom']!.status !== 'complete') f.think('other-atom');
+    f.restore();
+  }
+  expect(Object.values(f.memory.executions).map(action => action.status)).toEqual(['complete', 'complete']);
+  expect(f.memory.goalTraining!.jobs.filter(job => job.state === 'fulfilled')).toHaveLength(2);
+  expect(f.memory.goalTraining!.pools[0]).toMatchObject({ credited: 2, count: 2 });
+  expect(f.game.players.us!.gold).toBe(3000 - 2 * UNIT_DEFS.footman.cost);
+});
+
+it('rejects adapter-supplied unit bindings and completion without central quantity credits', () => {
+  const f = fixture(goalTrainExecutor, 'train', { producer: { kind: 'existing', entityId: 'producer' }, unitKind: 'footman', count: 1 }, [], UNIT_DEFS.footman.cost);
   const legitimate = goalTrainExecutor.execute(f.input());
   f.apply({ ...legitimate, commands: [], status: 'complete', state: { goalOutputBindings: { 'unit-0': 'worker' } },
     goalOutputs: [{ output: 'unit-0', entityId: 'worker', observedTick: f.game.tick,
-      proof: { kind: 'birth', acceptedCommandId: 'fake', jobId: 'fake', producerId: 'producer' } }] });
-  expect(f.memory.executions.atom).toMatchObject({ status: 'active', phase: 'await-output-validation', state: { goalOutputBindings: {} } });
+      proof: { kind: 'foundation', acceptedCommandId: 'fake' } }] });
+  expect(f.memory.executions.atom).toMatchObject({ status: 'active', phase: 'await-pool-quantity' });
+  expect(f.memory.executions.atom!.state.goalOutputBindings).toBeUndefined();
   expect(f.game.players.us!.gold).toBe(3000);
 });
 

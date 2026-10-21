@@ -19,11 +19,9 @@ export type GoalExecutableIntent = Readonly<{
   parameters: GoalExecutorBinding['parameters']; outputs: readonly string[];
 }>;
 
-/** Proposals, validated centrally against the native queue/foundation,
- * accepted-command baseline and unique observed real entity. A paid command
- * or an elapsed estimate alone cannot bind an output to a world ID. */
+/** Only buildings have individual outputs. Training uses the quantity/job
+ * reader above and never proposes or binds the identity of a born unit. */
 export type GoalOutputReceipt = Readonly<{
   output: string; entityId: string; observedTick: number;
-  proof: Readonly<{ kind: 'foundation'; acceptedCommandId: string }>
-    | Readonly<{ kind: 'birth'; acceptedCommandId: string; producerId: string; jobId: string }>;
+  proof: Readonly<{ kind: 'foundation'; acceptedCommandId: string }>;
 }>;
