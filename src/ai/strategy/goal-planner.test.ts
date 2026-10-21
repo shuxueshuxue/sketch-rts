@@ -200,3 +200,17 @@ it('preserves deferred grounding as waiting evidence and retries its published a
   expect(next.plans[0]!.status).toBe('ready'); expect(next.readyActions).toHaveLength(1);
   expect(next.plans[0]!.deferredCandidates).toMatchObject([{ id: 'other-site', requestIds: ['shared-geometry:other-site'] }]);
 });
+
+it('never turns an unsatisfied empty cached graph into a profitable ready plan', () => {
+  const { input } = example();
+  let previous: GoalPlannerInput['previous'];
+  for (let sequence = 1; sequence <= 10; sequence++) {
+    const result = planGoals({ ...input(), providers: [], work: new FactWorkQueue(0, 6144, undefined, sequence),
+      ...(previous ? { previous } : {}) });
+    expect(result.plans[0]!.status).toBe('blocked');
+    expect(result.plans[0]!.actions).toEqual([]); expect(result.readyActions).toEqual([]);
+    expect(result.plans[0]!.valueGold).toBeNull();
+    expect(result.plans[0]!.reasons[0]!.code).toBe('goal-no-feasible-plan');
+    previous = JSON.parse(JSON.stringify(result.cache));
+  }
+});

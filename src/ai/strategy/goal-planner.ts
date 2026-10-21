@@ -39,7 +39,7 @@ export function planGoals(input: GoalPlannerInput): GoalPlannerOutput {
       const current = context.readFact(prior.fact);
       return current.revision === dependency.revision && current.state === dependency.state;
     });
-    if (unchanged && previous.continuation?.phase === 'done' && previous.plan.status !== 'search-pending') {
+    if (unchanged && previous.continuation?.phase === 'done' && (previous.plan.status === 'ready' || previous.plan.status === 'complete')) {
       const deadline = goal.deadlineTick;
       const refreshed = { ...previous.continuation, observed: previous.continuation.observed.map(observation => context.readFact(observation.fact)) };
       const replay = emptyPath();
