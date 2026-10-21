@@ -13,6 +13,9 @@ import type { DecisionFacts } from './decision';
 import type { Arrival, Target } from './types';
 
 export type AllocationArrivalReader = (unit: Unit, target: Target) => DecisionFacts<Arrival>;
+export type AllocationLandRouteReader = (from: Target['point'], goal: Target['point']) =>
+  Readonly<{ status: 'known'; points: readonly Target['point'][]; distance: number }>
+  | Readonly<{ status: 'unknown' | 'unreachable'; reasonCode: string }>;
 
 /** One query and deterministic work allowance for every materialization and
  * gross/net counterfactual in this transaction. The callback never escapes
@@ -20,16 +23,23 @@ export type AllocationArrivalReader = (unit: Unit, target: Target) => DecisionFa
 export function withAllocationArrivalQuery<T>(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory,
   run: (fixedArrival: NonNullable<AllocationMethodQuoteInput['fixedVoyageArrival']>,
     loading: NonNullable<StrategyAllocationInput['fixedVoyageLoading']>,
-    arrival: AllocationArrivalReader) => T, fieldBudget = 1): T {
+    arrival: AllocationArrivalReader, landRoute: AllocationLandRouteReader) => T, fieldBudget = 1): T {
   return withGoalDistanceFieldLease(snapshot.map, owner, snapshot.tick, () => withStrategyFrame(() => {
     setBuildingBodies(snapshot.map, standingBodies(snapshot));
     const preparation = observationMemory(snapshot, owner, memory);
-    const query = createArrivalQuery(snapshot, owner, memory,
-      createPlanningDistanceQuery(snapshot, fieldBudget, 'land', preparation), fieldBudget, regionIndex(snapshot.map), preparation);
+    const fields = createPlanningDistanceQuery(snapshot, fieldBudget, 'land', preparation);
+    const query = createArrivalQuery(snapshot, owner, memory, fields, fieldBudget, regionIndex(snapshot.map), preparation);
     try {
       return run((unit, target, voyage) => decisionProjection(() => query.fixedVoyageArrival(unit, target, voyage), false).facts,
         (unit, voyage) => query.fixedVoyageLoading(unit, voyage),
-        (unit, target) => decisionProjection(() => query.arrival(unit, target, landIdAt(snapshot.map, unit)), false).facts);
+        (unit, target) => decisionProjection(() => query.arrival(unit, target, landIdAt(snapshot.map, unit)), false).facts,
+        (from, goal) => {
+          const published = fields.field(goal);
+          if (!published) return { status: 'unknown', reasonCode: 'assembly-rally-route-pending' };
+          const distance = published.field.cost(from), points = published.field.road(from, goal);
+          return distance === undefined || !points ? { status: 'unreachable', reasonCode: 'assembly-rally-route-unreachable' }
+            : { status: 'known', distance, points };
+        });
     } finally { boundObservationMemory(preparation); }
   }));
 }
