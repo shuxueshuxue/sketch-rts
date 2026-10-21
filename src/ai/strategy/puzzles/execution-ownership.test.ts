@@ -6,6 +6,7 @@ import type { GameCommand } from '../../../shared/types';
 import type { Observed } from '../../../shared/sim/observation';
 import type { StrategyAllocationTrace } from '../allocation-types';
 import { landIdAt } from '../regions';
+import type { GoalExecutableIntent } from '../goal-execution-types';
 import { createExecutionOwnership } from './execution-ownership';
 import { legalBuildingSite } from './world';
 
@@ -23,14 +24,14 @@ function fixture() {
   const command: GameCommand = { type: 'build', unitId: worker.id, buildingKind: 'townHall', ...at };
   return { game, at, worker, tracker, commands, start, stop, command };
 }
-function observe(f: ReturnType<typeof fixture>, command?: GameCommand, scriptId = 'goal.build') {
+function observe(f: ReturnType<typeof fixture>, command?: GameCommand, scriptId = 'goal.build', parameters?: GoalExecutableIntent['parameters']) {
   const token = { actionId: 'receipt', generation: 1 };
   const allocation: StrategyAllocationTrace = { revision: 1, objectives: [], assignments: [], budget: [], voyages: [], vacancies: [], blocked: [], unmet: [], events: [], budgetProjection: [],
-    executions: command && scriptId === 'goal.build' ? [{ token, objectiveId: 'goal', methodId: 'method', executor: scriptId,
-      intent: { kind: 'goal-action', goalId: 'goal', declarationId: 'decl', actionKind: 'build',
-        parameters: { buildingKind: 'townHall', at: { point: f.at }, worker: { kind: 'existing', entityId: f.worker.id }, foundationId: null }, outputs: [] },
+    executions: command && scriptId.startsWith('goal.') ? [{ token, objectiveId: 'goal', methodId: 'method', executor: scriptId,
+      intent: { kind: 'goal-action', goalId: 'goal', declarationId: 'decl', actionKind: scriptId === 'goal.clear-camp' ? 'clear-camp' : 'build',
+        parameters: parameters ?? { buildingKind: 'townHall', at: { point: f.at }, worker: { kind: 'existing', entityId: f.worker.id }, foundationId: null }, outputs: [] },
       target: { point: f.at }, dependsOn: [], completionEffects: [], status: 'active', phase: 'build', sinceTick: f.game.tick, lastProgressTick: f.game.tick, state: {} }] : [],
-    commandAdmissions: command && scriptId === 'goal.build' ? [{ commandId: 'sdk-receipt', source: 'executor', executor: scriptId, action: token,
+    commandAdmissions: command && scriptId.startsWith('goal.') ? [{ commandId: 'sdk-receipt', source: 'executor', executor: scriptId, action: token,
       allocationRevision: 1, purpose: 'task', command, status: 'accepted', admittedTick: f.game.tick, queuedTick: null }] : [] };
   f.tracker.observe(snapshotGame(f.game), { owner: 'us', allocation, commands: command ? [{ playerId: 'us', scriptId, command }] : [] });
 }
@@ -75,5 +76,21 @@ describe('per-step native SDK ownership', () => {
       expect(f.tracker.finish(f.start, f.commands, ['build'])).toMatchObject({ passed: false,
         steps: [{ status: 'older-code-completed', goalCommandCount: 1, sdkAppliedCount: 0 }] });
     } finally { f.stop(); }
+  });
+  it('requires the specified native corpse after a clear command, not merely a missing live unit', () => {
+    const f=fixture(); try {
+      const guard=f.game.spawnUnit('neutral','murlocPeon',f.at.x+20,f.at.y);
+      const crew=Array.from({length:4},(_,i)=>f.game.spawnUnit('us','footman',f.at.x-30,f.at.y+i*10));
+      f.tracker=createExecutionOwnership({targetMine:f.at,targetLandId:landIdAt(f.game.map,f.at)!,campMemberIds:[guard.id]});
+      const command:GameCommand={type:'attack',unitIds:crew.map(u=>u.id),targetId:guard.id};
+      observe(f,command,'goal.clear-camp',{memberIds:[guard.id],cohort:crew.map(u=>({kind:'existing',entityId:u.id}))});
+      issueCommandFrame(f.game,[{playerId:'us',scriptId:'goal.clear-camp',command}]);
+      const without= snapshotGame(f.game);without.units=without.units.filter(u=>u.id!==guard.id);
+      f.tracker.observe(without,{owner:'us',allocation:{revision:1,objectives:[],assignments:[],executions:[],budget:[],voyages:[],vacancies:[],blocked:[],unmet:[],events:[],budgetProjection:[]},commands:[]});
+      expect(f.tracker.finish(f.start,f.commands,['clear-camp']).passed).toBe(false);
+      for(let i=0;i<1000&&f.game.units.includes(guard);i++){stepGame(f.game);observe(f);}
+      expect(f.game.corpses?.some(c=>c.unitId===guard.id)).toBe(true);
+      expect(f.tracker.finish(f.start,f.commands,['clear-camp'])).toMatchObject({passed:true,steps:[{status:'goal-confirmed',entityIds:[guard.id]}]});
+    } finally {f.stop();}
   });
 });
