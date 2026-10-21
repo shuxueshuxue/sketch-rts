@@ -69,6 +69,23 @@ A100，Node 24.22.0。正式合同接线代码提交 `9ac0276da24b3867a78c42a61e
 没有给搜索器手填 Situation 或事实，也没有用它自带的小声明域算法测试冒充真实题库通过。未运行全量 src。
 原始日志与源码哈希见 [search-entry.evidence.json](search-entry.evidence.json)。
 
+## rebase main 后的验证（8ada3fbe）
+
+共同栈已以 main `d36d0543` 为祖先，题库基于其 `71b13eca` 初测，再接入 `8ada3fbe` 的共享修复。
+A100 / Node 24.22.0，最终代码 `370e24be82b50d3a45bb4f4e2b5e993acc2ae5d1`：
+
+| 检查 | 结果 |
+| --- | --- |
+| 题库、全部 goal 合同测试、SDK 边界 | 初测 21 文件，112 通过、22 明确跳过，exit 0；人工合法解 11/11 |
+| 根 tsc | 初测发现共享搜索展示节点的 nullable 时刻类型错误，exit 2；32 的 `8ada3fbe` 修复后复跑 exit 0 |
+| tools/ai tsc | 初测及修复后均 exit 0 |
+| 修复后的搜索与陆地动作复测 | 2 文件、12 项通过，exit 0 |
+| 真实入口严格 smoke | 预期 exit 1，事实源/原生接线仍缺失，不计作规划器验收 |
+
+初测源码为 `f7f01c8a`；共享修复前后，题库、SDK、sim 和 bootstrap 源码逐字节相同。
+本轮没有改动相对共享基底的生产代码，也未运行全量 src。22 项仍等待真实 source 和 owner-think 装配。
+原始日志、退出码、源码哈希与初测源码 bundle 见 [main-rebase.evidence.json](main-rebase.evidence.json)。
+
 重跑可行性与合同检查：
 
 ```sh
