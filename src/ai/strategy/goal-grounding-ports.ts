@@ -1,7 +1,7 @@
 import type { Unit } from '../../shared/types';
 import type { Point, SeaId, Target } from './types';
 import type { Shore } from './regions';
-import type { GoalCandidates, GoalEntityReference, GoalEstimate, GoalFact, GoalParameter, GoalTransportRequest } from './goal-planner-types';
+import type { GoalCandidates, GoalCapacityPressure, GoalEntityReference, GoalEstimate, GoalFact, GoalParameter, GoalTransportRequest } from './goal-planner-types';
 
 export type GoalPublishedValue<T> = Readonly<{ state: 'met'; value: T; factIds: readonly string[] }>
   | Exclude<GoalCandidates<never>, { state: 'met' }>;
@@ -40,6 +40,9 @@ export type GoalTransportFactPorts = Readonly<{
  * step callbacks and assessment snapshots must never be stored here. */
 export type GoalGeometryMemory = {
   version: 1;
+  capacity?: { mode: 'bounded' | 'measurement'; maxBytes: number; maxEntries: number; thinkSequence: number;
+    pinnedBytes: number; pinnedEntries: number; peakPinnedBytes: number; peakResidentBytes: number; overflowCount: number;
+    pressure?: GoalCapacityPressure };
   entries: { key: string; revision: string; state: GoalParameter; work: number;
-    requestedTick: number; readyTick: number | null; readyThink?: number; value: GoalParameter | null; errorCode?: string }[];
+    requestedTick: number; lastUsedThink?: number; planIds?: string[]; readyTick: number | null; readyThink?: number; value: GoalParameter | null; errorCode?: string }[];
 };

@@ -32,14 +32,15 @@ export function planGoals(input: GoalPlannerInput): GoalPlannerOutput {
     const goalKey = goalValueKey([goal, input.initialBalances.map(({ asOfTick: _epoch, ...balance }) => balance)]);
     const previous = input.previous?.owner === context.owner ? input.previous.entries.find(entry => entry.goalKey === goalKey
       && entry.declarationRevision === input.declarationRevision) : undefined;
-    const unchanged = previous && !previous.continuation?.deferred?.length && previous.dependencies.every(dependency => {
+    const unchanged = previous && !previous.continuation?.deferred?.length && work.withConsumer(goal.id, previous.plan.valueGold, () => previous.dependencies.every(dependency => {
       const prior = previous.plan.facts.find(node => node.id === dependency.factId)?.observation
         ?? previous.continuation?.observed.find(observed => observed.fact.id === dependency.factId);
       if (!prior) return false;
       const current = context.readFact(prior.fact);
       return current.revision === dependency.revision && current.state === dependency.state;
-    });
-    if (unchanged && previous.continuation?.phase === 'done' && (previous.plan.status === 'ready' || previous.plan.status === 'complete')) {
+    }));
+    if (unchanged && previous.continuation?.phase === 'done' && !hasCapacityPressure(input, goal.id)
+      && (previous.plan.status === 'ready' || previous.plan.status === 'complete')) {
       const deadline = goal.deadlineTick;
       const refreshed = { ...previous.continuation, observed: previous.continuation.observed.map(observation => context.readFact(observation.fact)) };
       const replay = emptyPath();
@@ -87,6 +88,7 @@ export function planGoals(input: GoalPlannerInput): GoalPlannerOutput {
     const beforeWork = state.expansions;
     work.withConsumer(goal.id, previous?.plan.valueGold ?? null, () => work.register({ key: `goal-search:${goal.id}`,
       kind: 'search', tier: 'critical-route', minimum: 1, run: allowance => {
+      if (hasCapacityPressure(input, goal.id)) return { work: 0, done: false };
       let used = 0;
       while (used < Math.min(allowance, 64) && state.phase !== 'done') {
         if (state.expansions >= input.limits.maxExpansions) { state.limitReason = 'expansion-limit'; state.phase = 'done'; break; }
@@ -102,11 +104,23 @@ export function planGoals(input: GoalPlannerInput): GoalPlannerOutput {
   // entire think before equally important goals enter the shared round robin.
   work.flush();
   for (const { goal, goalKey, state, beforeWork } of runs) {
-    const plan = projectPlan(state, input, goal, state.expansions - beforeWork);
+    const plan = work.withConsumer(goal.id, null, () => projectPlan(state, input, goal, state.expansions - beforeWork));
     plans.push(plan);
     entries.push({ goalKey, declarationRevision: input.declarationRevision,
       dependencies: state.observed.map(observed => ({ factId: observed.fact.id, revision: observed.revision, state: observed.state })),
       plan, continuation: state });
+  }
+  // A capacity gap is explicit and cannot turn an incomplete graph into a
+  // ready bundle. Preserve the pinned evidence and continuation for resumption.
+  for (let index = 0; index < plans.length; index++) {
+    const plan = plans[index]!, pressure = input.capacityPressure?.().filter(item => item.planIds.includes(plan.goal.id)) ?? [];
+    if (!pressure.length) continue;
+    const paused: GoalPlan = { ...plan, status: 'search-pending', readyActionIds: [], capacityPressure: structuredClone(pressure),
+      reasons: [reason('goal-geometry-pinned-capacity', pressure.flatMap(item => item.requestIds), {
+        bytes: Math.max(...pressure.map(item => item.bytes)), limitBytes: Math.min(...pressure.map(item => item.limitBytes)) })] };
+    plans[index] = paused;
+    const indexInCache = entries.findIndex(entry => entry.plan.goal.id === plan.goal.id);
+    if (indexInCache >= 0) entries[indexInCache] = { ...entries[indexInCache]!, plan: paused };
   }
   plans.sort((a, b) => order(a.goal.id, b.goal.id));
   const retained = [...entries].sort((a, b) => order(a.plan.goal.id, b.plan.goal.id));
@@ -115,6 +129,7 @@ export function planGoals(input: GoalPlannerInput): GoalPlannerOutput {
     ...(retained.length < entries.length ? { truncated: true as const } : {}) }, readyActions: plans.flatMap(plan => plan.actions
     .filter(action => plan.readyActionIds.includes(action.id)).map(action => ({ goalId: plan.goal.id, planId: plan.id, action }))) };
 }
+const hasCapacityPressure = (input: GoalPlannerInput, planId: string) => input.capacityPressure?.().some(item => item.planIds.includes(planId)) ?? false;
 const emptyPath = (): Path => ({ steps: [], bindings: {}, cost: 0, probability: 1 });
 
 function observe(state: GoalSearchMemory, input: GoalPlannerInput, fact: GoalFact) {

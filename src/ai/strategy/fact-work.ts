@@ -36,6 +36,7 @@ export class FactWorkQueue {
     this.consumers = new Map(previous); this.consumers.set(planId, netValueGold);
     try { return run(); } finally { this.consumers = previous; }
   }
+  consumerPlanIds() { return [...this.consumers.keys()].sort(); }
   consume(key: string) {
     let consumers = this.requestedConsumers.get(key);
     if (!consumers) this.requestedConsumers.set(key, consumers = new Map());

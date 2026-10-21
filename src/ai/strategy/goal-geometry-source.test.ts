@@ -92,3 +92,60 @@ it('publishes on the next owner think at a frozen game tick without borrowing tw
     .toMatchObject({ state: 'met', value: [0, 1, 2, 3, 4] });
   expect(next.flush().used).toBe(0);
 });
+
+it('pins active plan geometry through JSON retention and evicts only unpinned entries in LRU order', () => {
+  let retained = memory();
+  const limits = { maxBytes: 16 * 1024, maxEntries: 3 }, root = scan('root-build', 2);
+  const first = new FactWorkQueue(100, 20, undefined, 1);
+  const read = createGoalGeometryReader({ tick: 100, work: first, memory: retained, limits });
+  first.withConsumer('mining-goal', null, () => read(root)); read(scan('older', 1)); read(scan('recent', 1)); first.flush();
+  for (let sequence = 2; sequence <= 10; sequence++) {
+    retained = JSON.parse(JSON.stringify(retained));
+    const work = new FactWorkQueue(100, 20, undefined, sequence);
+    const current = createGoalGeometryReader({ tick: 100, work, memory: retained, limits });
+    expect(work.withConsumer('mining-goal', null, () => current(root))).toMatchObject({ state: 'met', value: [0, 1] });
+    current(scan(`new-${sequence}`, 1)); work.flush();
+    expect(retained.entries.find(entry => entry.key === 'root-build')).toMatchObject({ readyThink: 1, planIds: ['mining-goal'] });
+    expect(retained.entries).toHaveLength(3);
+  }
+  expect(retained.entries.some(entry => entry.key === 'older')).toBe(false);
+  expect(retained.capacity!.overflowCount).toBe(0);
+});
+
+it('retains oversized pins and pauses their plans instead of evicting or restarting finite work', () => {
+  let retained = memory(), advances = 0;
+  const request = (key: string) => ({ ...scan(key, 3), advance: (...args: Parameters<ReturnType<typeof scan>['advance']>) => {
+    advances++; return scan(key, 3).advance(...args);
+  } });
+  const limits = { maxBytes: 16 * 1024, maxEntries: 1 };
+  for (let sequence = 1; sequence <= 4; sequence++) {
+    const work = new FactWorkQueue(0, 100, undefined, sequence);
+    const read = createGoalGeometryReader({ tick: 0, work, memory: retained, limits });
+    work.withConsumer('goal-a', null, () => read(request('first-root')));
+    work.withConsumer('goal-b', null, () => read(request('second-root')));
+    work.flush();
+    expect(retained.entries).toHaveLength(2);
+    expect(retained.capacity!.pressure).toMatchObject({ planIds: ['goal-a', 'goal-b'], overflowCount: sequence });
+    expect(retained.capacity!.pressure!.requestIds).toHaveLength(2);
+    expect(advances).toBe(0); expect(work.receipt.used).toBe(0);
+    retained = JSON.parse(JSON.stringify(retained));
+  }
+  const work = new FactWorkQueue(0, 100, undefined, 5);
+  const read = createGoalGeometryReader({ tick: 0, work, memory: retained, measurement: true });
+  work.withConsumer('goal-a', null, () => read(request('first-root')));
+  work.withConsumer('goal-b', null, () => read(request('second-root'))); work.flush();
+  expect(advances).toBe(2); expect(work.receipt.used).toBe(6);
+  expect(retained.capacity!.pressure).toBeUndefined(); expect(retained.capacity!.mode).toBe('measurement');
+});
+
+it('measures the full pinned payload without changing finite work or publication', () => {
+  const retained = memory(), work = new FactWorkQueue(0, 4, undefined, 1);
+  const read = createGoalGeometryReader({ tick: 0, work, memory: retained, measurement: true });
+  const request: GoalGeometryRequest<number, string> = { key: 'large-native-result', revision: 'one', initialState: 0,
+    advance: () => ({ work: 1, state: 1, done: true, value: 'x'.repeat(GOAL_GEOMETRY_BYTES * 2) }) };
+  work.withConsumer('large-plan', null, () => read(request)); work.flush();
+  expect(work.receipt.used).toBe(1);
+  expect(retained.capacity!.peakPinnedBytes).toBeGreaterThan(GOAL_GEOMETRY_BYTES * 2);
+  expect(retained.entries[0]!.value).toBe('x'.repeat(GOAL_GEOMETRY_BYTES * 2));
+  expect(read(request).state).toBe('pending');
+});

@@ -10,30 +10,59 @@ export const GOAL_GEOMETRY_ENTRIES = 32;
 export const GOAL_GEOMETRY_BYTES = 16 * 1024;
 const SLICE = 128;
 type Entry = GoalGeometryMemory['entries'][number];
+const entryRequestId = (entry: Pick<Entry, 'key' | 'revision'>) => `goal-geometry:${goalValueKey([entry.key, entry.revision])}`;
 
 /** A publication cursor, not a second pathfinder or work allowance. Domains
  * supply finite native checks; only this queue may advance their cursors. */
 export function createGoalGeometryReader(input: Readonly<{
   tick: number; work: FactWorkQueue; memory: GoalGeometryMemory;
+  /** Diagnostic measurement does not change work limits or publication. */
+  measurement?: boolean;
+  limits?: Readonly<{ maxBytes: number; maxEntries: number }>;
 }>): GoalGeometryReader {
   const { tick, work, memory } = input;
+  const sequence = work.receipt.thinkSequence ?? tick;
+  const maxBytes = input.measurement ? Number.MAX_SAFE_INTEGER : input.limits?.maxBytes ?? GOAL_GEOMETRY_BYTES;
+  const maxEntries = input.measurement ? Number.MAX_SAFE_INTEGER : input.limits?.maxEntries ?? GOAL_GEOMETRY_ENTRIES;
+  if (!Number.isSafeInteger(maxBytes) || maxBytes < 1 || !Number.isSafeInteger(maxEntries) || maxEntries < 1)
+    throw Error('Invalid goal geometry capacity');
+  const prior = memory.capacity;
+  memory.capacity = { mode: input.measurement ? 'measurement' : 'bounded', maxBytes, maxEntries, thinkSequence: sequence,
+    pinnedBytes: prior?.pinnedBytes ?? 0, pinnedEntries: prior?.pinnedEntries ?? 0,
+    peakPinnedBytes: prior?.peakPinnedBytes ?? 0, peakResidentBytes: prior?.peakResidentBytes ?? 0, overflowCount: prior?.overflowCount ?? 0 };
   boundGoalGeometryMemory(memory);
+  const pressured = (planIds: readonly string[], requestId: string) => {
+    const capacity = memory.capacity!;
+    if (!capacity.pressure) return false;
+    capacity.pressure = { ...capacity.pressure, planIds: [...new Set([...capacity.pressure.planIds, ...planIds])].sort(),
+      requestIds: [...new Set([...capacity.pressure.requestIds, requestId])].sort() };
+    return true;
+  };
   return request => {
-    const requestId = `goal-geometry:${goalValueKey([request.key, request.revision])}`;
+    const requestId = entryRequestId(request);
     work.consume(requestId);
+    const plans = work.consumerPlanIds();
     const pending = (code: string, requestedTick = tick): GoalPublishedValue<never> => ({
       state: 'pending', requestIds: [requestId],
       reason: { code, factIds: [requestId], values: { requestedTick, tick } },
     });
     let entry = memory.entries.find(item => item.key === request.key && item.revision === request.revision);
+    if (entry) {
+      entry.lastUsedThink = sequence;
+      if (plans.length) entry.planIds = [...new Set([...(entry.planIds ?? []), ...plans])].sort();
+      boundGoalGeometryMemory(memory, entry);
+    }
+    if ((!entry || entry.readyTick === null) && pressured(plans, requestId))
+      return pending('goal-geometry-pinned-capacity');
     if (!entry) {
       const state = jsonValue(request.initialState);
       if (state === undefined) return pending('goal-geometry-cursor-invalid');
-      entry = { key: request.key, revision: request.revision, state, work: 0, requestedTick: tick, readyTick: null, value: null };
-      if (observationJsonBytes(entry) > GOAL_GEOMETRY_BYTES / 2) return pending('goal-geometry-cursor-limit');
+      entry = { key: request.key, revision: request.revision, state, work: 0, requestedTick: tick, lastUsedThink: sequence, ...(plans.length ? { planIds: [...plans] } : {}), readyTick: null, value: null };
+      if (!plans.length && observationJsonBytes(entry) > maxBytes / 2) return pending('goal-geometry-cursor-limit');
       memory.entries = memory.entries.filter(item => item.key !== request.key);
       memory.entries.push(entry);
       boundGoalGeometryMemory(memory, entry);
+      if (pressured(plans, requestId)) return pending('goal-geometry-pinned-capacity');
     }
     const record = entry;
     if (record.errorCode) return pending(record.errorCode, record.requestedTick);
@@ -47,6 +76,7 @@ export function createGoalGeometryReader(input: Readonly<{
     // diagnostic summary, as for native point-route work.
     work.register({ key: requestId, reportKey: `goal-geometry:${fnv1a(requestId)}`, tier: 'background-field', minimum: 1, run: allowance => {
       if (!memory.entries.includes(record)) return { work: 0, done: true };
+      if (pressured(record.planIds ?? [], requestId)) return { work: 0, done: true };
       const slice = Math.min(SLICE, allowance);
       let result: ReturnType<typeof request.advance>;
       try { result = request.advance(structuredClone(record.state) as never, slice); }
@@ -67,7 +97,7 @@ export function createGoalGeometryReader(input: Readonly<{
       else {
         record.state = state;
         if (result.done) { record.value = value; record.readyTick = tick; if (work.receipt.thinkSequence !== undefined) record.readyThink = work.receipt.thinkSequence; else delete record.readyThink; }
-        if (observationJsonBytes(record) > GOAL_GEOMETRY_BYTES / 2) {
+        if (!record.planIds?.length && observationJsonBytes(record) > maxBytes / 2) {
           record.errorCode = 'goal-geometry-cursor-limit'; record.state = null; record.value = null;
         }
       }
@@ -81,14 +111,40 @@ export function createGoalGeometryReader(input: Readonly<{
 /** Eviction only discards evidence. Re-reading an evicted request is pending,
  * never known-unreachable. Active callbacks verify their entry still exists. */
 export function boundGoalGeometryMemory(memory: GoalGeometryMemory, retain?: Entry) {
-  const compare = (a: Entry, b: Entry) => Number(a === retain) - Number(b === retain)
-    || Number(a.readyTick === null) - Number(b.readyTick === null)
-    || a.requestedTick - b.requestedTick || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
-  while (memory.entries.length > GOAL_GEOMETRY_ENTRIES || observationJsonBytes(memory) > GOAL_GEOMETRY_BYTES) {
-    const oldest = [...memory.entries].sort(compare)[0];
+  const capacity = memory.capacity;
+  const maxBytes = capacity?.maxBytes ?? GOAL_GEOMETRY_BYTES, maxEntries = capacity?.maxEntries ?? GOAL_GEOMETRY_ENTRIES;
+  const size = () => observationJsonBytes({ version: memory.version, entries: memory.entries });
+  const pinned = () => memory.entries.filter(entry => entry.planIds?.length);
+  const compare = (a: Entry, b: Entry) => (a.lastUsedThink ?? a.requestedTick) - (b.lastUsedThink ?? b.requestedTick)
+    || (entryRequestId(a) < entryRequestId(b) ? -1 : entryRequestId(a) > entryRequestId(b) ? 1 : 0);
+  while (memory.entries.length > maxEntries || size() > maxBytes) {
+    const oldest = memory.entries.filter(entry => !entry.planIds?.length && entry !== retain).sort(compare)[0];
     if (!oldest) break;
     memory.entries.splice(memory.entries.indexOf(oldest), 1);
   }
+  if (!capacity) return;
+  const pins = pinned(), bytes = observationJsonBytes(pins);
+  capacity.pinnedBytes = bytes; capacity.pinnedEntries = pins.length;
+  capacity.peakPinnedBytes = Math.max(capacity.peakPinnedBytes, bytes);
+  capacity.peakResidentBytes = Math.max(capacity.peakResidentBytes, size());
+  if (pins.length > maxEntries || bytes > maxBytes) {
+    if (!capacity.pressure) capacity.overflowCount++;
+    capacity.pressure = { kind: 'geometry', thinkSequence: capacity.thinkSequence, bytes, limitBytes: maxBytes,
+      planIds: [...new Set(pins.flatMap(entry => entry.planIds ?? []))].sort(),
+      requestIds: pins.map(entryRequestId).sort(),
+      overflowCount: capacity.overflowCount };
+  } else delete capacity.pressure;
+}
+
+/** Remove pins only when their owning goal is no longer part of the current
+ * planning request. A changed key/revision separately invalidates its entry. */
+export function retainGoalGeometryPlans(memory: GoalGeometryMemory, planIds: readonly string[]) {
+  const active = new Set(planIds);
+  for (const entry of memory.entries) if (entry.planIds) {
+    entry.planIds = entry.planIds.filter(id => active.has(id));
+    if (!entry.planIds.length) delete entry.planIds;
+  }
+  boundGoalGeometryMemory(memory);
 }
 
 /** Reject non-JSON/cyclic/non-finite cursors before serialization can turn

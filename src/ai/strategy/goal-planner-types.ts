@@ -251,6 +251,7 @@ export type GoalSearchLimits = Readonly<{ maxDepth: number; maxExpansions: numbe
 export type GoalPlan = Readonly<{
   id: string; goal: GoalRequest; status: GoalPlanStatus; observedTick: number;
   facts: readonly GoalPlanFactNode[]; actions: readonly GoalActionNode[]; edges: readonly GoalPlanEdge[];
+  capacityPressure?: readonly GoalCapacityPressure[];
   deferredCandidates?: readonly (GoalDeferredCandidate & Readonly<{ factId: string }>)[];
   subgoals: readonly GoalSubgoal[]; alternatives: readonly GoalAlternative[]; readyActionIds: readonly string[];
   resourceTimeline: readonly GoalResourceEvent[];
@@ -266,6 +267,8 @@ export type GoalPlanCacheEntry = Readonly<{
   continuation?: import('./goal-search-state').GoalSearchMemory;
 }>;
 export type GoalPlannerCache = Readonly<{ version: 1; owner: PlayerId; entries: readonly GoalPlanCacheEntry[]; truncated?: true }>;
+export type GoalCapacityPressure = Readonly<{ kind: 'geometry'; thinkSequence: number; bytes: number; limitBytes: number;
+  planIds: readonly string[]; requestIds: readonly string[]; overflowCount: number }>;
 export type GoalPlannerInput = Readonly<{
   context: GoalPlanningContext; goals: readonly GoalRequest[]; providers: readonly GoalActionProvider[];
   initialBalances: readonly GoalResourceBalance[]; limits: GoalSearchLimits;
@@ -273,6 +276,7 @@ export type GoalPlannerInput = Readonly<{
   /** The owner-think queue, not a second planning allowance. Search expansion
    * registers finite work here and returns search-pending when deferred. */
   work: FactWorkQueue;
+  capacityPressure?: () => readonly GoalCapacityPressure[];
 }>;
 export type GoalPlannerOutput = Readonly<{
   plans: readonly GoalPlan[]; cache: GoalPlannerCache;

@@ -214,3 +214,15 @@ it('never turns an unsatisfied empty cached graph into a profitable ready plan',
     previous = JSON.parse(JSON.stringify(result.cache));
   }
 });
+
+it('reports pinned-capacity pressure on the owning plan and keeps its ready bundle out of allocation', () => {
+  const { input } = example(), pressure = { kind: 'geometry' as const, thinkSequence: 1, bytes: 17000, limitBytes: 16000,
+    planIds: [input().goals[0]!.id], requestIds: ['geometry-root'], overflowCount: 1 };
+  const paused = planGoals({ ...input(), capacityPressure: () => [pressure] });
+  expect(paused.plans[0]!.status).toBe('search-pending'); expect(paused.readyActions).toEqual([]);
+  expect(paused.plans[0]!.capacityPressure).toEqual([pressure]);
+  expect(paused.plans[0]!.reasons[0]!.code).toBe('goal-geometry-pinned-capacity');
+  expect(paused.plans[0]!.search.work).toBe(0);
+  const resumed = planGoals({ ...input(), previous: JSON.parse(JSON.stringify(paused.cache)), capacityPressure: () => [] });
+  expect(resumed.plans[0]!.status).toBe('ready'); expect(resumed.readyActions.length).toBeGreaterThan(0);
+});

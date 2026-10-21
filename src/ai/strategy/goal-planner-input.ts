@@ -14,7 +14,8 @@ import { withStrategyFrame } from './frame-reuse';
 import { createGoalEconomicGrounding } from './goal-economy-grounding';
 import { goalEconomyActionProvider } from './goal-economy-provider';
 import { goalFact, goalResourceKey, goalValueKey } from './goal-facts';
-import { createGoalGeometryReader } from './goal-geometry-source';
+import type { GoalGeometryMemory } from './goal-grounding-ports';
+import { createGoalGeometryReader, retainGoalGeometryPlans } from './goal-geometry-source';
 import { goalLandActionProvider } from './goal-land-actions';
 import { readGoalLandCapabilityFact } from './goal-land-facts';
 import { goalNavalActionProvider } from './goal-naval-provider';
@@ -34,6 +35,8 @@ import type { Objective, SituationObservation } from './types';
 
 export type GoalPlannerRuntimeMemory = {
   version: 1; owner: PlayerId; world: GoalWorldFactMemory; cache?: GoalPlannerCache;
+  /** Separate from the observation segment: its trimmer must never evict active plan evidence. */
+  geometry?: GoalGeometryMemory;
 };
 export type GoalPlannerOwnerInput = Readonly<{
   snapshot: GameSnapshot; owner: PlayerId; version: BootstrapAiVersion; memory: AiPolicyMemory;
@@ -42,6 +45,8 @@ export type GoalPlannerOwnerInput = Readonly<{
   goals?: readonly GoalRequest[];
   objectives?: readonly DecisionFacts<Objective>[];
   work?: FactWorkQueue; limits?: GoalSearchLimits;
+  /** Diagnostic capacity measurement only; publication and the 6144 work allowance remain unchanged. */
+  geometryMeasurement?: boolean;
   observation?: SituationObservation;
   allowedUnitIds?: readonly string[]; interruptedUnitIds?: readonly string[];
 }>;
@@ -64,8 +69,15 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
     const work = input.work ?? currentFactWork() ?? new FactWorkQueue(snapshot.tick, 6144, preparation.factWork, beginObservationThink(preparation));
     return withFactWork(work, () => {
       const regions = regionIndex(snapshot.map), distances = createPlanningDistanceQuery(snapshot, 1, 'land', preparation);
-      const geometry = createGoalGeometryReader({ tick: snapshot.tick, work,
-        memory: preparation.goalGeometry ??= { version: 1, entries: [] } });
+      let retained = memory.goalPlanning;
+      if (!retained || retained.version !== 1 || retained.owner !== owner) {
+        retained = { version: 1, owner, world: createGoalWorldFactMemory(owner) };
+        memory.goalPlanning = retained;
+      }
+      retained.geometry ??= preparation.goalGeometry ?? { version: 1, entries: [] };
+      delete preparation.goalGeometry; // migrate older memories before observation trimming
+      const geometry = createGoalGeometryReader({ tick: snapshot.tick, work, memory: retained.geometry,
+        ...(input.geometryMeasurement ? { measurement: true } : {}) });
       const geometryRevision = goalValueKey([preparation.terrain, preparation.landBodies,
         snapshot.buildings.map(building => [building.id, building.owner, building.kind, building.hp > 0, building.complete])]);
       const landRoute: import('./allocation-arrival-query').AllocationLandRouteReader = (from, goal) => {
@@ -93,11 +105,6 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
         return { situation, objectives };
       }, false).facts;
       const { situation } = observed;
-      let retained = memory.goalPlanning;
-      if (!retained || retained.version !== 1 || retained.owner !== owner) {
-        retained = { version: 1, owner, world: createGoalWorldFactMemory(owner) };
-        memory.goalPlanning = retained;
-      }
       const regionAt = (point: { x: number; y: number }, mover: 'land' | 'sea') => mover === 'land'
         ? landIdAt(snapshot.map, point) : seaIdAt(snapshot.map, point);
       const reservedGold = memory.strategyAllocation?.owner === owner ? reservedAllocationGold(memory.strategyAllocation) : 0;
@@ -162,7 +169,10 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
       };
       const grounded: GoalPlanningContext = { ...context, grounding: { ...economy, resolveCohort, transportOptions } };
       const initialBalances = initialGoalBalances(grounded, input.allowedUnitIds, input.interruptedUnitIds);
-      const plannerInput: GoalPlannerInput = { context: grounded, goals: input.goals ?? collectGoalRequests(observed.objectives, grounded),
+      const goals = input.goals ?? collectGoalRequests(observed.objectives, grounded);
+      retainGoalGeometryPlans(retained.geometry, goals.map(goal => goal.id));
+      const plannerInput: GoalPlannerInput = { context: grounded, goals,
+        capacityPressure: () => retained.geometry?.capacity?.pressure ? [retained.geometry.capacity.pressure] : [],
         providers: [goalEconomyActionProvider, goalLandActionProvider, goalNavalActionProvider], initialBalances,
         limits: input.limits ?? { maxDepth: 12, maxExpansions: 2048, maxPlans: 8 }, declarationRevision: 'goal-domain-v1',
         ...(retained.cache ? { previous: retained.cache } : {}), work };
