@@ -8,6 +8,18 @@ import { withFactNavigation } from '../../shared/navigation-audit';
 
 export const planningFieldKey = (mover: Mover, goal: Point) => `field:${mover}:${goal.x}:${goal.y}`;
 
+/** Refresh local count pressure after the selected graph changes its pins,
+ * even when no field is requested or advanced in this publication epoch. */
+export function boundPlanningDistanceMemory(observation: StrategyObservationMemory, mover: Mover, sequence: number) {
+  const key = `field-${mover}`;
+  const bounded = boundCache({ kind: key, entries: observation.fields[mover], id: value => planningFieldKey(mover, value.goal),
+    lastUsed: value => value.lastUsedThink ?? -1, plans: value => value.planIds ?? [],
+    maxEntries: OBSERVATION_FIELD_LIMIT, thinkSequence: sequence, capacity: observation.cacheCapacities?.[key] });
+  observation.fields[mover] = bounded.entries;
+  (observation.cacheCapacities ??= {})[key] = bounded.capacity;
+  return bounded;
+}
+
 export function createPlanningDistanceQuery(snapshot: GameSnapshot, buildBudget = Infinity, mover: Mover = 'land', observation?: StrategyObservationMemory) {
   let built = 0, deferred = 0, work = 0;
   const queries = new Map<number, Map<number, { field: GroundDistanceField; builtTick: number } | null>>();
@@ -31,12 +43,7 @@ export function createPlanningDistanceQuery(snapshot: GameSnapshot, buildBudget 
       if (entry && entries && observation && requestWork) {
         const queue = currentFactWork(), sequence = queue?.receipt.thinkSequence ?? snapshot.tick;
         touchCache(entry, sequence, queue?.consumerPlanIds() ?? []);
-        const key = `field-${mover}`;
-        const bounded = boundCache({ kind: key, entries, id: value => planningFieldKey(mover, value.goal),
-          lastUsed: value => value.lastUsedThink ?? -1, plans: value => value.planIds ?? [],
-          maxEntries: OBSERVATION_FIELD_LIMIT, thinkSequence: sequence, capacity: observation.cacheCapacities?.[key] });
-        observation.fields[mover] = bounded.entries;
-        (observation.cacheCapacities ??= {})[key] = bounded.capacity;
+        const bounded = boundPlanningDistanceMemory(observation, mover, sequence);
         if (!bounded.entries.includes(entry) || bounded.capacity.pressure) { deferred++; return null; }
       }
       let field: GroundDistanceField | undefined;

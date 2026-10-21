@@ -12,7 +12,7 @@ import type { GoalPlanRequotation } from './goal-plan-methods';
 import { reservedAllocationGold } from './allocation-ledger';
 import { createArrivalPlanningPhysics } from './arrival-planning-physics';
 import { createArrivalQuery } from './arrivals';
-import { createPlanningDistanceQuery } from './distance-fields';
+import { boundPlanningDistanceMemory, createPlanningDistanceQuery } from './distance-fields';
 import { decisionProjection } from './explanations';
 import type { DecisionFacts, StrategyDecision } from './decision';
 import { currentFactWork, FactWorkQueue, withFactWork } from './fact-work';
@@ -463,8 +463,10 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
           }
           retainGoalWorldFactMemory(retained.world, references, sequence);
           if (retained.voyageRisk) retainGoalVoyageRiskPublications(retained.voyageRisk, references, sequence);
-          for (const mover of ['land', 'sea'] as const) retainCachePins(preparation.fields[mover], references,
-            entry => `field:${mover}:${entry.goal.x}:${entry.goal.y}`, sequence);
+          for (const mover of ['land', 'sea'] as const) {
+            retainCachePins(preparation.fields[mover], references, entry => `field:${mover}:${entry.goal.x}:${entry.goal.y}`, sequence);
+            boundPlanningDistanceMemory(preparation, mover, sequence);
+          }
           if (preparation.pointRoutes) {
             retainCachePins(preparation.pointRoutes.entries, references, entry => `point:${entry.key}`, sequence);
             boundPointRouteMemory(preparation.pointRoutes, sequence);
