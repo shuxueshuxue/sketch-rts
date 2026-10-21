@@ -29,12 +29,16 @@ import { createDefaultGoalCampBattleModel, type GoalCampModelObserver } from './
 import { goalAssemblyPostSource } from './goal-naval-actions';
 import { ASSEMBLY_RANGE } from './assembly-posts';
 import { goalStartedCohortGroups, type GoalStartedCohortReader } from './goal-started-cohort';
+import { goalCampStagingOutsideAlert } from './goal-camp-staging-geometry';
 import type { Point, Target } from './types';
 
 type Deferred = NonNullable<Extract<GoalCandidates<never>, { state: 'met' }>['deferred']>[number];
 export type GoalCombatMovementRequest = Readonly<{
   effect: GoalFact; cohort: readonly GoalCohortMember[]; from: Target; target: Target;
   routes: readonly GoalFactObservation[]; arrivalTicks: GoalEstimate<number>; throughTick: number;
+  /** Camps priced by this selected plan's clearing actions. Their battle loss
+   * includes contact during gathering; unrelated camps remain march risks. */
+  plannedCampIds?: readonly string[];
   /** Only the named camp's contact exposure belongs to the camp battle model.
    * The exact on-post prerequisite remains a condition, never current arrival. */
   campContact?: Readonly<{ campId: string; stagingFact: GoalFact }>;
@@ -377,7 +381,8 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
       const projected = ports.readGroundPoint?.({ kind: 'project-goal', point, mover: 'land' });
       if (projected?.state === 'met') {
         facts.push(...projected.factIds);
-        return landIdAt(context.snapshot.map, projected.value) === landId ? { status: 'known', point: projected.value }
+        return landIdAt(context.snapshot.map, projected.value) === landId
+          && goalCampStagingOutsideAlert(resolved.exposure, projected.value, group.map(member => member.assessment)) ? { status: 'known', point: projected.value }
           : { status: 'unreachable', reasonCode: 'combat-staging-region-mismatch' };
       }
       if (projected?.state === 'unmet') return { status: 'unreachable', reasonCode: projected.reason.code };
