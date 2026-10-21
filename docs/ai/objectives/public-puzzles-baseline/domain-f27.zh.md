@@ -47,6 +47,18 @@ W=`waiting-facts`，S=`search-pending`，B=`blocked`；候选计alternatives，�
 完整事实包含predicate、state、reason及其参数，候选包含kind、status、价格/完成时刻、reason和原声明。它们保存在独立证据；仓库中的[逐题首末](domain-f27.summary.json)和[候选/事实/容量精简诊断](domain-f27.details.json)便于对照。
 其中守家S图仍可能带`goal-no-feasible-plan`原因码；报告按实际S和pending事实保留，不把该码翻译成物理上无解。
 
+### 当前编组估价与未来绑定分开看
+
+下面直接读取同一f27原片中的候选声明，不补跑物理查询。它区分“现有部队尚缺成本/风险报价”和“未来产物尚缺形状/位置”，不能只补未来池就宣称前者闭合。
+
+| 原片位置 | 原声明的实际估计 | 所属缺口 |
+| --- | --- | --- |
+| 急迫守家，think20的28个destroy-target | duration已met；cost和successProbability仍pending，均为`movement-observed-exposure-unquoted` | **当前编组移动暴露的成本/P未报价**，不是未来单位缺失 |
+| 晚到守家，think20的28个destroy-target | 21个duration/cost/P均pending，原因`land-combat-response-window-uncovered`；另7个为`land-combat-route-pending` | 当前编组的响应窗口/路线证明尚未闭合 |
+| 急迫守家，think20的7个assemble | 5个duration/cost/P全部met；另2个均`combat-route-pending` | 已有可估价的现组动作，仍须回归其真实前置并选出整链 |
+| 两守家，think20各8个build | cost/P为met，duration为`build-worker-binding-pending` | 未来工人绑定/走路时间，与现组暴露估价分开 |
+| 穷矿，think1的7个hold-position | duration/cost/P全部met；另7个assemble为route pending | native hold声明已存在，后续受39项容量压力停止；不能写成“完全没有hold能力” |
+
 ## 穷矿题的容量压力
 
 这是领域候选新增后观察到的工作集变化，原5ca缓存回归继续保留自己的来源和结论。本轮没有改默认33776字节/38项，也未启用measurement。
