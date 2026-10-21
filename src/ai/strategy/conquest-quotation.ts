@@ -7,8 +7,8 @@ import type { AllocationMethodQuoteInput, AllocationPrecondition, AllocationReas
 import { arrivalWeightedForce } from './arrival-force';
 import { conquestFacts } from './conquest-facts';
 import type { ProductionUse } from './types';
-import { discountedValue, resolveValuation, reusableAssetCost } from './utility';
-import { casualtyUnitValues, sumUnitValues } from './allocated-unit-values';
+import { resolveValuation } from './utility';
+import { valueConquestContinuation } from './conquest-value';
 import { assertUnitValueSides } from './unit-value-ledger';
 
 export function quoteConquestMethod(input: AllocationMethodQuoteInput): MethodAllocationQuote {
@@ -68,36 +68,15 @@ export function quoteConquestMethod(input: AllocationMethodQuoteInput): MethodAl
   if (valuation.phase === 'net' && valuation.opportunity?.status !== 'known') add('committed-opportunity-cost-unknown', input.unitIds);
   const voyages = allocatedVoyageValue(input);
   voyages.unknown.forEach(value => add(value.code, value.ids));
-  const forceWaves = [...voyages.actions.values()].filter(value => method.actions.find(action => action.id === value.actionId)?.intent.kind === 'deliver-force');
-  const workerWaves = [...voyages.actions.values()].filter(value => method.actions.find(action => action.id === value.actionId)?.intent.kind === 'deliver-workers');
-  const forceSurvival = forceWaves.reduce((value, wave) => value * wave.survivalProbability, 1);
-  const workerSurvival = workerWaves.reduce((value, wave) => value * wave.survivalProbability, 1);
-  const battleProbability = facts.cleared ? 1 : facts.battle.successProbability;
-  const postSurvival = facts.siteRisk.survivalProbability;
-  const hallCost = postSurvival === null ? null : reusableAssetCost({ priceGold: facts.hallCapital,
-    survivalProbability: postSurvival, atTicks: facts.hallReadyTicks, window: facts.window });
-  const probability = forceSurvival * (battleProbability ?? 0) * workerSurvival;
-  const benefit = [
-    { code: 'staffed-island-income', value: (facts.forecast.incomeGold ?? 0) * (postSurvival ?? 0) },
-    { code: 'hall-after-clearing-net-loss', value: -(hallCost?.presentCostGold ?? 0) },
-    { code: 'mining-worker-recruitment', value: -facts.forecast.presentTrainingGold },
-  ];
+  const continuation = valueConquestContinuation({ method, facts, voyages,
+    remainingOre: snapshot.resources.find(mine => mine.id === objective.target.entityId)?.amount ?? 0,
+    persistenceBonus: objective.utility.persistenceBonus, realUnitIds: snapshot.units.map(unit => unit.id) });
+  const { benefit, successProbability: probability, persistenceBonus } = continuation.utility;
+  const { forceSurvival, workerSurvival, battleProbability, postSurvival } = continuation;
   const cost = [
-    { code: 'force-voyage-hull-and-passengers', value: discountedValue(forceWaves.reduce((sum, wave) => sum + wave.expectedLossGold, 0), facts.latestArrivalTicks, facts.window),
-      catalogUnitValues: sumUnitValues(forceWaves.map(wave => wave.catalogUnitValues.map(entry => ({ ...entry,
-        valueGold: discountedValue(entry.valueGold, facts.latestArrivalTicks, facts.window) })))) },
-    { code: 'clearing-attrition-after-force-arrival', value: forceSurvival * discountedValue(facts.cleared ? 0 : facts.battle.attrition.expectedLossGold,
-      facts.clearingUntilTicks, facts.window), catalogUnitValues: facts.cleared ? []
-        : casualtyUnitValues(facts.fighters, facts.battle.attrition.permanentDeadUnitIds).map(entry => ({ ...entry,
-          valueGold: forceSurvival * discountedValue(entry.valueGold, facts.clearingUntilTicks, facts.window) })) },
-    { code: 'worker-voyage-after-clearing', value: forceSurvival * (battleProbability ?? 0) * discountedValue(
-      workerWaves.reduce((sum, wave) => sum + wave.expectedLossGold, 0), Math.max(facts.clearingUntilTicks, facts.engineerArrivalTicks), facts.window),
-      catalogUnitValues: sumUnitValues(workerWaves.map(wave => wave.catalogUnitValues.map(entry => ({ ...entry,
-        valueGold: forceSurvival * (battleProbability ?? 0) * discountedValue(entry.valueGold,
-          Math.max(facts.clearingUntilTicks, facts.engineerArrivalTicks), facts.window) })))) },
+    ...continuation.utility.cost,
     ...(valuation.opportunity?.status === 'known' ? [{ code: 'bundle-opportunity', value: valuation.opportunity.gold }] : []),
   ];
-  const persistenceBonus = objective.utility.persistenceBonus;
   const utility: AllocationUtility = { horizonTicks: facts.window.horizonTicks, benefit, cost, successProbability: probability,
     persistenceBonus, score: probability * benefit.reduce((sum, term) => sum + term.value, 0)
       - cost.reduce((sum, term) => sum + term.value, 0) + persistenceBonus };
