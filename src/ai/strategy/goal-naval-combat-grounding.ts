@@ -433,25 +433,33 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
   function options(effect: GoalFact): GoalCandidates<GoalCombatOption> {
     const p = effect.predicate;
     if (p.kind === 'transport-at') {
-      if (p.transport.kind !== 'existing') return pending('combat-actual-transport-binding-pending', [effect.id]);
-      const actor = actors.get(p.transport.entityId);
+      const future = p.transport.kind !== 'existing';
+      if (future && context.precision !== 'coarse') return pending('combat-actual-transport-binding-pending', [effect.id]);
+      const assessment = future ? ports.resolveCohort([p.transport]) : undefined;
+      if (assessment && assessment.state !== 'met') return assessment;
+      const member = assessment?.state === 'met' && assessment.candidates.length === 1 ? assessment.candidates[0] : undefined;
+      const actor = p.transport.kind === 'existing' ? actors.get(p.transport.entityId)
+        : member && goalValueKey(member.reference) === goalValueKey(p.transport) ? member.assessment : undefined;
+      if (future && (!actor || actors.has(actor.id))) return pending('combat-future-transport-shape-pending', [effect.id]);
       if (!actor || actor.owner !== context.owner || actor.hp <= 0 || !isTransportKind(actor.kind)
-        || allowed && !allowed.has(actor.id) || interrupted.has(actor.id)) return unmet('combat-transport-not-available', [effect.id]);
+        || !future && (allowed && !allowed.has(actor.id) || interrupted.has(actor.id))) return unmet('combat-transport-not-available', [effect.id]);
       const sea = seaIdAt(context.snapshot.map, actor), profile = shipProfile(actor);
       if (!sea || !p.at.seaId || !profile) return pending('combat-transport-region-pending', [effect.id]);
       if (sea !== p.at.seaId) return unmet('combat-transport-other-basin', [effect.id]);
       const cargo = context.snapshot.units.filter(unit => unit.hp > 0 && (unit.deck?.shipId ?? unit.cabin?.shipId) === actor.id);
       const from: Target = { seaId: sea, point: { x: actor.x, y: actor.y } };
       if (context.precision === 'coarse') {
+        const availability = future ? [goalFact({ kind: 'transport-in', seaId: sea, capacity: profile.loadCapacity, byTick: p.byTick })] : [];
         const route = goalFact({ kind: 'route', mover: 'sea', actor: p.transport, from, to: p.at,
           ...(actor.sailing?.heading === undefined ? {} : { fromHeading: actor.sailing.heading }) });
         const duration = gap(actor, p.at.point) <= p.tolerance ? known(0, [effect.id])
-          : ports.coarseSeaTicks?.(actor, from.point, p.at.point, false)
+          : ports.coarseSeaTicks?.(actor, from.point, p.at.point, future)
             ?? known(Math.ceil(gap(actor, p.at.point) / Math.max(1, actor.speed) * SIM_TICKS_PER_SECOND), [effect.id]);
         return { state: 'met', factIds: [effect.id], candidates: [{ id: `coarse-hull:${effect.id}`, target: p.at, from,
           cohort: [p.transport], requiredForce: 0, byTick: p.byTick,
           duration,
-          cost: known([], [effect.id]), successProbability: known(1, [effect.id]), preconditions: [route], factIds: [effect.id, route.id] }] };
+          cost: known([], [effect.id]), successProbability: known(1, [effect.id]), preconditions: [...availability, route],
+          factIds: [effect.id, ...availability.map(fact => fact.id), route.id] }] };
       }
       const hull: GoalHullCandidate = { id: actor.id, reference: p.transport, assessment: actor, seaId: sea, availableTick: context.tick,
         capacity: profile.loadCapacity - cargo.reduce((mass, unit) => mass + bodyMass(unit), 0),

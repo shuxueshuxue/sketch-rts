@@ -1,0 +1,9 @@
+{
+  "production": "59792793b2eb723d4e4403e59a3bbb28a33e0208",
+  "source": "eed282ae39fc937130cf857c3771f30afa06422d",
+  "sourcePath": "/tmp/navy-zero-597-original-cold/frames/navy-zero-default.json.gz",
+  "sourceGzipSha256": "ef6840709369677406aec48e8b3a06d3cff71db58c31b3af8315d81f013f2965",
+  "snapshotJsonSha256": "8d29faf796809089ee8856f34f49a2c613ed7f04eeaed2c7c549a4a65bf38103",
+  "fixtureGzipSha256": "19362687f6011a9ffd026436c89d3515afcdb6d3aeed22cc1766148e6fb240c3",
+  "projection": "Exact original .snapshot serialized with JSON.stringify; no fields changed; original cold think1..20 retained externally."
+}
