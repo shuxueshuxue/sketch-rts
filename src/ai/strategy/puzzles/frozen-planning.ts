@@ -76,6 +76,11 @@ export function runFrozenPuzzlePlan(puzzle: PublicPuzzleCase, world: PuzzleWorld
       expect(currentFactWork(), 'each think releases its native work scope').toBe(previousWork);
       expect(record.snapshotUntouched, `think ${think} cannot change the frozen world`).toBe(true);
       expect(record.work?.limit, 'each native think has the ordinary work ceiling').toBe(STRATEGY_FACT_WORK_PER_THINK);
+      expect(record.work!.tick, 'publication thinks cannot advance physical time').toBe(snapshot.tick);
+      expect(record.work!.thinkSequence, 'each iteration is a new native owner think, not a repeated same-think allowance').toBe(think);
+      expect(memory.strategy!.observation.thinkSequence).toBe(think);
+      expect(Number.isSafeInteger(record.work!.used)).toBe(true);
+      expect(record.work!.used).toBeGreaterThanOrEqual(0);
       expect(record.work!.used).toBeLessThanOrEqual(STRATEGY_FACT_WORK_PER_THINK);
       record.passed = failure === undefined;
       finalFailure = failure;
