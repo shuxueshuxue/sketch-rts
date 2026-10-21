@@ -33,7 +33,7 @@ export function goalFactSummary(observation: GoalFactObservation): string {
   const p = observation.fact.predicate;
   if (observation.state === 'pending') return p.kind === 'route' ? '等路线算完' : '等条件核实';
   if (p.kind === 'gold') return observation.quantity == null ? `需要 ${p.minimum} 金`
-    : observation.quantity < p.minimum ? `还差 ${goalNumber(p.minimum - observation.quantity)} 金` : `已有 ${goalNumber(observation.quantity)} 金`;
+    : observation.quantity < p.minimum ? `还差 ${goalNumber(p.minimum - observation.quantity)} 金` : `已备齐 ${p.minimum} 金`;
   if (p.kind === 'site-safe' && observation.state === 'unmet' && observation.reason.code === 'fixture-await-route'
     && typeof observation.reason.values.required === 'number')
     return `还差 ${goalNumber(observation.reason.values.required)} 战力`;

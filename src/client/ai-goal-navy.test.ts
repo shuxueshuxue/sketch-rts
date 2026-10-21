@@ -27,6 +27,8 @@ it('shows spending before income and the protected hall reserve using recorded b
   for(const word of ['已预留 400 金','可支配 410 金','清营赏金','矿工收入','建大厅预留 400 金'])expect(band).toContain(word);
   const next={...plan,actions:plan.actions.map(row=>row.id!==buildHall.id?row:{...row,allocation:{...row.allocation!,generation:2}})};
   expect(goalResourceBand(next,trace)).not.toContain('建大厅预留 400 金');
+  const done=goalNavyFixture(3600);
+  expect(goalResourceBand(done.plan,done.trace)).toContain('当前 140 金 · 已预留 0 金 · 可支配 140 金');
 });
 
 it('keeps cyclic records bounded and inspectable as forward reference leaves',()=>{

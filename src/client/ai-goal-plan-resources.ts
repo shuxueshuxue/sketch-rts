@@ -25,7 +25,8 @@ export function goalResourceBand(plan: GoalPlan, trace: AiPlanTrace): string {
         through: row.releasedTick ?? action.startTick, label: goalDeclarationLabel(action.declaration) }];
     }));
   const reserved = reservations.reduce((sum, row) => sum + row.amount, 0);
-  const header = `<header><b>预计金币余额</b><span>当前 ${n(trace.bank.gold)} 金 · 已预留 ${reservations.length ? n(reserved) : '—'} 金${reservations.length ? ` · 可支配 ${n(trace.bank.gold - reserved)} 金` : ''}</span></header>`;
+  const budgetRecorded = trace.strategy?.allocation?.budget !== undefined && plan.actions.some(row=>row.allocation);
+  const header = `<header><b>预计金币余额</b><span>当前 ${n(trace.bank.gold)} 金 · 已预留 ${budgetRecorded ? n(reserved) : '—'} 金${budgetRecorded ? ` · 可支配 ${n(trace.bank.gold - reserved)} 金` : ''}</span></header>`;
   if (!events.length) return `<section class="goal-resource-band">${header}<p>—</p></section>`;
   const from = Math.min(plan.observedTick, events[0]!.tick, ...reservations.map(row => row.since));
   const through = Math.max(from + 1, ...events.map(row => row.tick), ...plan.actions.map(row => row.finishTick ?? from));
@@ -37,13 +38,14 @@ export function goalResourceBand(plan: GoalPlan, trace: AiPlanTrace): string {
   path += ` H${x(through)}`;
   const reserveBars = reservations.map(row => {
     const start = Math.max(from, row.since), end = Math.max(start, Math.min(through, row.through ?? through));
-    return `<g><rect class="goal-reserve" x="${x(start)}" y="78" width="${x(end)-x(start)}" height="13"/><text x="${x(start)+4}" y="88">${h(row.label)}预留 ${n(row.amount)} 金${row.through == null ? '' : ` · 预计 ${clock(row.through)} 支付`}</text></g>`;
+    return `<rect class="goal-reserve" x="${x(start)}" y="78" width="${x(end)-x(start)}" height="13"/>`;
   }).join('');
   return `<section class="goal-resource-band" data-reserved-gold="${reserved}">${header}
-    <svg viewBox="0 0 800 100" preserveAspectRatio="none" role="img" aria-label="预计金币先支出后收入及当前预留"><defs><pattern id="goal-reserve-hatch" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M0 5L5 0"/></pattern></defs>
+    <div class="goal-money-chart"><svg viewBox="0 0 800 100" preserveAspectRatio="none" role="img" aria-label="预计金币先支出后收入及当前预留"><defs><pattern id="goal-reserve-hatch" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M0 5L5 0"/></pattern></defs>
     <path class="goal-money-zero" d="M34 ${y(0)}H764"/><path class="goal-money-line" d="${path}"/>
-    <text x="2" y="${y(events[0]!.before)+4}">${n(events[0]!.before)}</text><text x="768" y="${y(events.at(-1)!.after)+4}">${n(events.at(-1)!.after)}</text>
     ${events.map(row=>`<circle class="${row.delta<0?'spend':'income'}" cx="${x(row.tick)}" cy="${y(row.after)}" r="3"><title>${clock(row.tick)} ${h(row.label)} ${row.delta>0?'+':''}${n(row.delta)} 金 · 余额 ${n(row.after)}</title></circle>`).join('')}
-    ${[from, (from+through)/2, through].map(tick=>`<text x="${x(tick)}" y="72" text-anchor="middle">${clock(tick)}</text>`).join('')}${reserveBars}</svg>
+    ${reserveBars}</svg><span class="goal-money-first" style="top:${y(events[0]!.before)*.88-5}px">${n(events[0]!.before)}</span><span class="goal-money-last" style="top:${y(events.at(-1)!.after)*.88-5}px">${n(events.at(-1)!.after)}</span>
+    <div class="goal-money-axis">${[from,(from+through)/2,through].map(tick=>`<time>${clock(tick)}</time>`).join('')}</div>
+    ${reservations.map(row=>`<span class="goal-reserve-label">${h(row.label)}预留 ${n(row.amount)} 金${row.through==null?'':` · 预计 ${clock(row.through)} 支付`}</span>`).join('')}</div>
     <ol>${events.map(row=>`<li class="${row.delta<0?'spend':'income'}"><time>${clock(row.tick)}</time> ${h(row.label)} <b>${row.delta>0?'+':''}${n(row.delta)}</b></li>`).join('')}</ol>${all.length>48?`<small>另 ${all.length-48} 笔见结构化字段</small>`:''}</section>`;
 }
