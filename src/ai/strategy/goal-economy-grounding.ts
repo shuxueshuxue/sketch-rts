@@ -4,8 +4,9 @@ import { footprintCells, snapToFootprint } from '../../shared/terrain';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import type { BuildingKind } from '../../shared/types';
 import { goalFact, goalValueKey } from './goal-facts';
+import type { AllocationReason } from './allocation-types';
 import type { GoalGeometryReader, GoalGeometryRequest } from './goal-grounding-ports';
-import type { GoalBuildSite, GoalEntityReference, GoalEstimate, GoalGroundingReader,
+import type { GoalBuildSite, GoalDeferredCandidate, GoalEntityReference, GoalEstimate, GoalFact, GoalGroundingReader,
   GoalPlanningContext, GoalProductionOption } from './goal-planner-types';
 import type { LandId, Point, SeaId, Target } from './types';
 
@@ -18,6 +19,9 @@ export type GoalEconomicGroundingPorts = Readonly<{
   /** A view of the already prepared native mover-region index, never a route
    * solver or a request to finish an entire shoreline scan. */
   regionAt: (point: Point, mover: 'land' | 'sea') => LandId | SeaId | undefined;
+  /** Actual members at published conditional origins, supplied by the common
+   * source. This domain never invents a worker or a landing position. */
+  cohortOptions?: GoalGroundingReader['cohortOptions'];
 }>;
 const order = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;
 const why = (code: string, factIds: readonly string[] = []) => ({ code, factIds, values: {} });
@@ -113,25 +117,59 @@ export function createGoalEconomicGrounding(context: GoalPlanningContext, ports:
     const result = points(kind, near);
     if (result.state !== 'met') return result;
     const candidates: GoalBuildSite[] = [];
+    const deferred = new Map<string, GoalDeferredCandidate>();
+    let unavailable: AllocationReason | undefined;
     for (const point of result.value) {
       const workers = snapshot.units.filter(unit => unit.owner === owner && unit.kind === 'worker' && unit.hp > 0
         && !unit.deck && !unit.cabin && ports.regionAt(unit, 'land') === point.at.landId).sort((a, b) => order(a.id, b.id));
-      const actors: { ref: GoalEntityReference; from: Target }[] = workers.map(unit => ({ ref: { kind: 'existing', entityId: unit.id },
-        from: { landId: point.at.landId!, point: { x: unit.x, y: unit.y } } }));
-      if (!actors.length) actors.push({ ref: { kind: 'binding', name: `worker:${point.at.landId}` },
-        from: { landId: point.at.landId!, point: near.point } });
-      for (const actor of actors) {
+      const actors: { ref: GoalEntityReference; from: Target; preconditions: readonly GoalFact[]; factIds: readonly string[] }[] = workers.map(unit => ({
+        ref: { kind: 'existing', entityId: unit.id }, from: { landId: point.at.landId!, point: { x: unit.x, y: unit.y } },
+        preconditions: [], factIds: [unit.id] }));
+      const pool = goalFact({ kind: 'worker-at', at: point.at, count: 1, byTick });
+      const options = ports.cohortOptions?.(pool);
+      if (options?.state === 'met') {
+        for (const item of options.deferred ?? []) deferred.set(item.id, item);
+        for (const option of options.candidates) {
+          if (option.from.landId !== point.at.landId) continue;
+          for (const member of option.members) {
+            const ref = member.reference;
+            if (ref.kind !== 'existing' || member.assessment.id !== ref.entityId || member.assessment.kind !== 'worker'
+              || member.assessment.owner !== owner || member.assessment.hp <= 0) continue;
+            const actual = snapshot.units.find(unit => unit.id === ref.entityId && unit.owner === owner && unit.kind === 'worker' && unit.hp > 0);
+            if (!actual) continue;
+            const conditionalPool = option.preconditions.some(fact => fact.predicate.kind === 'worker-at'
+              && fact.predicate.at.landId === point.at.landId && fact.predicate.count >= 1
+              && fact.predicate.worker?.kind === 'existing' && fact.predicate.worker.entityId === ref.entityId);
+            if (!conditionalPool) continue;
+            actors.push({ ref, from: option.from, preconditions: option.preconditions, factIds: [...options.factIds, ...option.factIds] });
+          }
+        }
+      } else if (options?.state === 'pending') {
+        deferred.set(`worker-pool:${pool.id}`, { id: `worker-pool:${pool.id}`, requestIds: options.requestIds, reason: options.reason });
+      } else if (options?.state === 'unmet') {
+        unavailable ??= options.reason;
+      }
+      if (!actors.length && options?.state !== 'pending' && options?.state !== 'unmet') deferred.set(`worker-pool:${pool.id}`, {
+        id: `worker-pool:${pool.id}`, requestIds: [`worker-pool:${pool.id}`], reason: why('build-worker-pool-pending', [pool.id]),
+      });
+      const uniqueActors = new Map(actors.map(actor => [goalValueKey([actor.ref, actor.from, actor.preconditions.map(fact => fact.id).sort(order)]), actor]));
+      for (const [actorId, actor] of uniqueActors) {
         const route = goalFact({ kind: 'route', mover: 'land', from: actor.from, to: point.approach, actor: actor.ref });
         const site = goalFact({ kind: 'build-site', buildingKind: kind, at: point.at });
         const worker = goalFact({ kind: 'worker-at', at: point.at, count: 1, byTick, worker: actor.ref });
-        candidates.push({ id: `build-site:${goalValueKey([site.id, actor.ref])}`, buildingKind: kind, logicalTarget: near,
+        candidates.push({ id: `build-site:${goalValueKey([site.id, actorId])}`, buildingKind: kind, logicalTarget: near,
           at: point.at, worker: actor.ref, route,
-          walkTicks: actor.ref.kind === 'binding' ? { state: 'pending', requestIds: [`worker-route:${route.id}`],
-            reason: why('build-worker-binding-pending', [worker.id, route.id]) } : walkEstimate(context.readFact(route)),
-          preconditions: point.at.entityId ? [worker] : [site, worker], factIds: [...result.factIds, site.id, worker.id, route.id] });
+          walkTicks: walkEstimate(context.readFact(route)),
+          preconditions: [...new Map([...(point.at.entityId ? [worker] : [site, worker]), ...actor.preconditions]
+            .map(fact => [fact.id, fact])).values()].sort((a, b) => order(a.id, b.id)),
+          factIds: [...new Set([...result.factIds, ...actor.factIds, site.id, worker.id, route.id])].sort(order) });
       }
     }
-    return { state: 'met', candidates, factIds: result.factIds };
+    const missing = [...deferred.values()].sort((a, b) => order(a.id, b.id));
+    if (!candidates.length && missing.length) return { state: 'pending', requestIds: [...new Set(missing.flatMap(item => item.requestIds))].sort(order),
+      reason: missing[0]!.reason };
+    if (!candidates.length && unavailable) return { state: 'unmet', reason: unavailable };
+    return { state: 'met', candidates, factIds: result.factIds, ...(missing.length ? { deferred: missing } : {}) };
   };
   const productionOptions: GoalGroundingReader['productionOptions'] = (unitKind, near) => {
     const race = snapshot.players[owner]?.race, kind = race && trainingBuildingFor(race, unitKind);

@@ -96,8 +96,11 @@ export function declareGoalBuilding(input: Readonly<{
     || foundation.hp <= 0 || foundation.complete || Math.hypot(foundation.x - at.point.x, foundation.y - at.point.y) > 1e-6)) return null;
   const ref = worker.ref;
   const builder = ref.kind === 'existing' ? context.snapshot.units.find(unit => unit.id === ref.entityId) : undefined;
+  const conditionalWorker = ref.kind === 'existing' && binding?.preconditions.some(fact => fact.predicate.kind === 'worker-at'
+    && fact.predicate.at.landId === at.landId && fact.predicate.count >= 1
+    && fact.predicate.worker?.kind === 'existing' && fact.predicate.worker.entityId === ref.entityId);
   if (worker.ref.kind === 'existing' && (!builder || builder.owner !== context.owner || builder.kind !== 'worker'
-    || builder.hp <= 0 || builder.deck || builder.cabin)) return null;
+    || builder.hp <= 0 || (builder.deck || builder.cabin) && !conditionalWorker)) return null;
   const rules = BUILDING_DEFS[buildingKind], amountGold = foundation ? 0 : rules.cost;
   const workTicks = foundation ? Math.max(0, Math.ceil(foundation.buildTime - foundation.buildProgress)) : rules.buildTime;
   const site = goalFact({ kind: 'build-site', buildingKind, at });
