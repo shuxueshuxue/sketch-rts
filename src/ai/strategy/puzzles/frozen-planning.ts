@@ -11,7 +11,7 @@ import { puzzleFailure, serializeScopedPlan, writePuzzlePlanEvidence, type Puzzl
 import type { PublicPuzzleCase } from './scenes';
 import type { PuzzleWorld } from './world';
 
-export const PUBLIC_PUZZLE_MAX_THINKS = 10;
+export const PUBLIC_PUZZLE_MAX_THINKS = 20;
 
 /** Compare actual goals, selected graphs, alternatives, facts and schedules.
  * Search counters, cache cursors and explanatory publication metadata are not
@@ -42,7 +42,8 @@ export function runFrozenPuzzlePlan(puzzle: PublicPuzzleCase, world: PuzzleWorld
     for (let think = 1; think <= PUBLIC_PUZZLE_MAX_THINKS; think++) {
       let calls = 0, scoped: string | undefined, hash: string | null = null, failure: unknown;
       const record: PuzzleThinkEvidence = { think, calls: 0, snapshotUntouched: true,
-        passed: false, error: null, planHash: null, work: null, memoryThinkSequence: null };
+        passed: false, executable: false, readyActionCount: 0,
+        error: null, planHash: null, work: null, memoryThinkSequence: null };
       thinks.push(record);
       try {
         publicPuzzlePlanner.withInput(snapshot, world.owner, memory, input => {
@@ -56,6 +57,7 @@ export function runFrozenPuzzlePlan(puzzle: PublicPuzzleCase, world: PuzzleWorld
             expect(memory.goalPlanning, 'native owner memory must retain the search continuation').toBeDefined();
             memory.goalPlanning!.cache = output.cache;
             hash = planHash(output);
+            record.readyActionCount = output.readyActions.length;
             try {
               checkPuzzlePlan(puzzle, world, { input, output,
                 allocation: publicPuzzlePlanner.allocation?.(input, output) ?? null });
@@ -87,13 +89,18 @@ export function runFrozenPuzzlePlan(puzzle: PublicPuzzleCase, world: PuzzleWorld
       expect(record.work!.used).toBeGreaterThanOrEqual(0);
       expect(record.work!.used).toBeLessThanOrEqual(STRATEGY_FACT_WORK_PER_THINK);
       record.passed = failure === undefined;
+      record.executable = record.passed && record.readyActionCount > 0;
       finalFailure = failure;
       const prior = thinks.at(-2);
       stable = hash !== null && prior?.planHash === hash;
       // Repeated blocked/pending graphs must not stop publication early.
       if (stable && record.passed && prior?.passed) break;
     }
-    return { thinks, stable, finalFailure, passed: stable && !!thinks.at(-1)?.passed && !!thinks.at(-2)?.passed };
+    return { thinks, stable, finalFailure,
+      firstReadyActionThink: thinks.find(think => think.readyActionCount > 0)?.think ?? null,
+      firstPassingThink: thinks.find(think => think.passed)?.think ?? null,
+      firstExecutablePlanThink: thinks.find(think => think.executable)?.think ?? null,
+      passed: stable && !!thinks.at(-1)?.passed && !!thinks.at(-2)?.passed };
   } catch (error) { fatal = error; throw error; }
-  finally { writePuzzlePlanEvidence(puzzle, snapshot, thinks, stable, fatal); }
+  finally { writePuzzlePlanEvidence(puzzle, snapshot, thinks, PUBLIC_PUZZLE_MAX_THINKS, stable, fatal); }
 }

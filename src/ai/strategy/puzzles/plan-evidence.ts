@@ -8,6 +8,7 @@ import type { PublicPuzzleCase } from './scenes';
 
 export type PuzzleThinkEvidence = {
   think: number; calls: number; snapshotUntouched: boolean; passed: boolean;
+  readyActionCount: number; executable: boolean;
   error: ReturnType<typeof puzzleFailure>; planHash: string | null;
   work: FactWorkReceipt | null; memoryThinkSequence: number | null; scoped?: string; memoryAfter?: string;
 };
@@ -33,13 +34,16 @@ export function serializeScopedPlan(input: GoalPlannerInput, output: GoalPlanner
 }
 
 export function writePuzzlePlanEvidence(puzzle: PublicPuzzleCase, snapshot: GameSnapshot,
-  thinks: readonly PuzzleThinkEvidence[], stable: boolean, error: unknown) {
+  thinks: readonly PuzzleThinkEvidence[], maxThinks: number, stable: boolean, error: unknown) {
   const directory = process.env.SKETCH_PUZZLE_PLAN_EVIDENCE;
   if (!directory) return;
   mkdirSync(directory, { recursive: true });
   const failure = puzzleFailure(error), final = thinks.at(-1);
   const record = { puzzle: `${puzzle.key}/${puzzle.variant}`, snapshot,
-    maxThinks: 10, firstThink: thinks[0]?.think ?? null, finalThink: final?.think ?? null,
+    maxThinks, firstThink: thinks[0]?.think ?? null, finalThink: final?.think ?? null,
+    firstReadyActionThink: thinks.find(think => think.readyActionCount > 0)?.think ?? null,
+    firstPassingThink: thinks.find(think => think.passed)?.think ?? null,
+    firstExecutablePlanThink: thinks.find(think => think.executable)?.think ?? null,
     stable, passed: !failure && !!final?.passed && !!thinks.at(-2)?.passed && stable, error: failure,
     thinks: thinks.map(({ scoped, memoryAfter, ...think }) => ({ ...think,
       phase: !scoped ? 'assembly' : 'plan-verdict',
