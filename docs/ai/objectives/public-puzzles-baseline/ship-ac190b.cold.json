@@ -1,0 +1,2947 @@
+{
+  "source": "9fa9bbb475f226c8e048757f3688e3d6ae7e1ba4",
+  "sharedBase": "ac190b30ca2234029aed66e453ad92932a780c97",
+  "mode": "same original frozen snapshot, persistent native memory, K20, normal collector",
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "inputSha256": "16071c51b302939d7ec86354d2fb91902683265a58ad1928911dd718fc913be1",
+      "passed": false,
+      "stable": false,
+      "error": null,
+      "maxThinks": 20,
+      "thinkCount": 20,
+      "firstReadyActionThink": null,
+      "firstPassingThink": null,
+      "firstExecutablePlanThink": null,
+      "firstCandidateThinkByKind": {},
+      "progress": [
+        {
+          "think": 1,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 1,
+            "limit": 6144,
+            "used": 5782,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:03bbfdb1",
+                "tier": "background-field",
+                "work": 135
+              },
+              {
+                "key": "goal-geometry:9dd3f5c2",
+                "tier": "background-field",
+                "work": 2488
+              },
+              {
+                "key": "field:land:2976:896",
+                "tier": "background-field",
+                "work": 3154
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "goal-geometry-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 2,
+            "limit": 6144,
+            "used": 2753,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:26ee147d",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:a85c7306",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:1e221ead",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:3ff27ea8",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:9170dec7",
+                "tier": "background-field",
+                "work": 252
+              },
+              {
+                "key": "goal-geometry:6a1ae5b5",
+                "tier": "background-field",
+                "work": 2488
+              },
+              {
+                "key": "goal-geometry:10070be9",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:2e3926b0",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:b1a4bffd",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:4f79e1da",
+                "tier": "background-field",
+                "work": 1
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 3,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 3,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:7af26e47",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:520e74e0",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:30c2ae54",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:6df71595",
+                "tier": "background-field",
+                "work": 1025
+              },
+              {
+                "key": "field:land:176:784",
+                "tier": "background-field",
+                "work": 4641
+              },
+              {
+                "key": "goal-geometry:fcf061ac",
+                "tier": "background-field",
+                "work": 470
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 4,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 4,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:c6b54618",
+                "tier": "background-field",
+                "work": 1025
+              },
+              {
+                "key": "field:land:176:816",
+                "tier": "background-field",
+                "work": 4649
+              },
+              {
+                "key": "goal-geometry:338768e3",
+                "tier": "background-field",
+                "work": 465
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 5,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 5,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:c6b54618",
+                "tier": "background-field",
+                "work": 1205
+              },
+              {
+                "key": "field:land:112:816",
+                "tier": "background-field",
+                "work": 4641
+              },
+              {
+                "key": "goal-geometry:338768e3",
+                "tier": "background-field",
+                "work": 293
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 6,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 6,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:c6b54618",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-geometry:b17015e5",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:338768e3",
+                "tier": "background-field",
+                "work": 267
+              },
+              {
+                "key": "field:land:176:848",
+                "tier": "background-field",
+                "work": 4661
+              },
+              {
+                "key": "goal-geometry:ae11907e",
+                "tier": "background-field",
+                "work": 1025
+              },
+              {
+                "key": "field:land:176:880",
+                "tier": "background-field",
+                "work": 183
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 7,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 7,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:c6b54618",
+                "tier": "background-field",
+                "work": 1027
+              },
+              {
+                "key": "goal-geometry:338768e3",
+                "tier": "background-field",
+                "work": 1205
+              },
+              {
+                "key": "field:land:112:848",
+                "tier": "background-field",
+                "work": 3907
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 8,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 8,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "field:land:112:848",
+                "tier": "existing-field",
+                "work": 746
+              },
+              {
+                "key": "field:land:176:880",
+                "tier": "existing-field",
+                "work": 4486
+              },
+              {
+                "key": "goal-geometry:af0632e9",
+                "tier": "background-field",
+                "work": 907
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 9,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 9,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:338768e3",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-geometry:9576edba",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:ae11907e",
+                "tier": "background-field",
+                "work": 1205
+              },
+              {
+                "key": "field:land:112:880",
+                "tier": "background-field",
+                "work": 4661
+              },
+              {
+                "key": "goal-geometry:af0632e9",
+                "tier": "background-field",
+                "work": 123
+              },
+              {
+                "key": "goal-geometry:6df71595",
+                "tier": "background-field",
+                "work": 147
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 10,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 10,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:338768e3",
+                "tier": "background-field",
+                "work": 1027
+              },
+              {
+                "key": "goal-geometry:ae11907e",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-geometry:a9899c96",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:6df71595",
+                "tier": "background-field",
+                "work": 1058
+              },
+              {
+                "key": "field:land:112:784",
+                "tier": "background-field",
+                "work": 4051
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 11,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 11,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:ae11907e",
+                "tier": "background-field",
+                "work": 1027
+              },
+              {
+                "key": "goal-geometry:ab57335c",
+                "tier": "background-field",
+                "work": 1030
+              },
+              {
+                "key": "field:land:112:784",
+                "tier": "existing-field",
+                "work": 582
+              },
+              {
+                "key": "goal-geometry:fcf061ac",
+                "tier": "background-field",
+                "work": 555
+              },
+              {
+                "key": "field:land:1488:752",
+                "tier": "background-field",
+                "work": 2945
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 12,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 12,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:01bb3407",
+                "tier": "background-field",
+                "work": 1030
+              },
+              {
+                "key": "goal-geometry:6df71595",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-geometry:90d56eb7",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "field:land:1488:752",
+                "tier": "existing-field",
+                "work": 1698
+              },
+              {
+                "key": "goal-geometry:ca86b7a2",
+                "tier": "background-field",
+                "work": 1025
+              },
+              {
+                "key": "field:land:1488:656",
+                "tier": "background-field",
+                "work": 2383
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 13,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 13,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:6df71595",
+                "tier": "background-field",
+                "work": 1027
+              },
+              {
+                "key": "goal-geometry:fcf061ac",
+                "tier": "background-field",
+                "work": 1205
+              },
+              {
+                "key": "field:land:1552:752",
+                "tier": "background-field",
+                "work": 3907
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 14,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 14,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:f9e8d952",
+                "tier": "background-field",
+                "work": 1030
+              },
+              {
+                "key": "field:land:1552:752",
+                "tier": "existing-field",
+                "work": 728
+              },
+              {
+                "key": "field:land:1488:656",
+                "tier": "existing-field",
+                "work": 2240
+              },
+              {
+                "key": "goal-geometry:9909529d",
+                "tier": "background-field",
+                "work": 1025
+              },
+              {
+                "key": "field:land:1488:688",
+                "tier": "background-field",
+                "work": 1116
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 15,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 15,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:fcf061ac",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-geometry:7f189b49",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:ca86b7a2",
+                "tier": "background-field",
+                "work": 1205
+              },
+              {
+                "key": "field:land:1552:656",
+                "tier": "background-field",
+                "work": 4615
+              },
+              {
+                "key": "field:land:1488:688",
+                "tier": "existing-field",
+                "work": 316
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 16,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 16,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:fcf061ac",
+                "tier": "background-field",
+                "work": 1027
+              },
+              {
+                "key": "goal-geometry:ca86b7a2",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-geometry:85961c8a",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "field:land:1488:688",
+                "tier": "existing-field",
+                "work": 3199
+              },
+              {
+                "key": "goal-geometry:59fc8b70",
+                "tier": "background-field",
+                "work": 1025
+              },
+              {
+                "key": "field:land:1488:720",
+                "tier": "background-field",
+                "work": 885
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 17,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 17,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:3e730e94",
+                "tier": "background-field",
+                "work": 1030
+              },
+              {
+                "key": "goal-geometry:ca86b7a2",
+                "tier": "background-field",
+                "work": 1027
+              },
+              {
+                "key": "goal-geometry:9909529d",
+                "tier": "background-field",
+                "work": 1205
+              },
+              {
+                "key": "field:land:1552:688",
+                "tier": "background-field",
+                "work": 2877
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 18,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 18,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:a625b081",
+                "tier": "background-field",
+                "work": 1030
+              },
+              {
+                "key": "field:land:1552:688",
+                "tier": "existing-field",
+                "work": 1746
+              },
+              {
+                "key": "field:land:1488:720",
+                "tier": "existing-field",
+                "work": 3363
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 19,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 19,
+            "limit": 6144,
+            "used": 5018,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:9909529d",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-geometry:27821201",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "field:land:1488:720",
+                "tier": "existing-field",
+                "work": 391
+              },
+              {
+                "key": "goal-geometry:40e9f016",
+                "tier": "background-field",
+                "work": 517
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:784:817c4d9b",
+                "tier": "background-field",
+                "work": 4100
+              },
+              {
+                "key": "goal-geometry:b1a4bffd",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:4f79e1da",
+                "tier": "background-field",
+                "work": 1
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 20,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 20,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:9909529d",
+                "tier": "background-field",
+                "work": 1027
+              },
+              {
+                "key": "goal-geometry:59fc8b70",
+                "tier": "background-field",
+                "work": 1205
+              },
+              {
+                "key": "field:land:1552:720",
+                "tier": "background-field",
+                "work": 3907
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "puzzle": "ship-away/near",
+      "inputSha256": "51ed7405a038a735b0b0af6b18ed815463443aef5aa45236b705630c4f6c7391",
+      "passed": false,
+      "stable": false,
+      "error": null,
+      "maxThinks": 20,
+      "thinkCount": 20,
+      "firstReadyActionThink": null,
+      "firstPassingThink": null,
+      "firstExecutablePlanThink": null,
+      "firstCandidateThinkByKind": {},
+      "progress": [
+        {
+          "think": 1,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 1,
+            "limit": 6144,
+            "used": 5782,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:03bbfdb1",
+                "tier": "background-field",
+                "work": 135
+              },
+              {
+                "key": "goal-geometry:9dd3f5c2",
+                "tier": "background-field",
+                "work": 2488
+              },
+              {
+                "key": "field:land:2976:896",
+                "tier": "background-field",
+                "work": 3154
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "goal-geometry-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 2,
+            "limit": 6144,
+            "used": 2753,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:26ee147d",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:a85c7306",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:1e221ead",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:3ff27ea8",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:9170dec7",
+                "tier": "background-field",
+                "work": 252
+              },
+              {
+                "key": "goal-geometry:6a1ae5b5",
+                "tier": "background-field",
+                "work": 2488
+              },
+              {
+                "key": "goal-geometry:10070be9",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:2e3926b0",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:b1a4bffd",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:4f79e1da",
+                "tier": "background-field",
+                "work": 1
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 3,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 3,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:7af26e47",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:520e74e0",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:30c2ae54",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:6df71595",
+                "tier": "background-field",
+                "work": 1025
+              },
+              {
+                "key": "field:land:176:784",
+                "tier": "background-field",
+                "work": 4641
+              },
+              {
+                "key": "goal-geometry:fcf061ac",
+                "tier": "background-field",
+                "work": 470
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 4,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 4,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:c6b54618",
+                "tier": "background-field",
+                "work": 1025
+              },
+              {
+                "key": "field:land:176:816",
+                "tier": "background-field",
+                "work": 4649
+              },
+              {
+                "key": "goal-geometry:338768e3",
+                "tier": "background-field",
+                "work": 465
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 5,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 5,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:c6b54618",
+                "tier": "background-field",
+                "work": 1205
+              },
+              {
+                "key": "field:land:112:816",
+                "tier": "background-field",
+                "work": 4641
+              },
+              {
+                "key": "goal-geometry:338768e3",
+                "tier": "background-field",
+                "work": 293
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 6,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 6,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:c6b54618",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-geometry:b17015e5",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:338768e3",
+                "tier": "background-field",
+                "work": 267
+              },
+              {
+                "key": "field:land:176:848",
+                "tier": "background-field",
+                "work": 4661
+              },
+              {
+                "key": "goal-geometry:ae11907e",
+                "tier": "background-field",
+                "work": 1025
+              },
+              {
+                "key": "field:land:176:880",
+                "tier": "background-field",
+                "work": 183
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 7,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 7,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:c6b54618",
+                "tier": "background-field",
+                "work": 1027
+              },
+              {
+                "key": "goal-geometry:338768e3",
+                "tier": "background-field",
+                "work": 1205
+              },
+              {
+                "key": "field:land:112:848",
+                "tier": "background-field",
+                "work": 3907
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 8,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 8,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "field:land:112:848",
+                "tier": "existing-field",
+                "work": 746
+              },
+              {
+                "key": "field:land:176:880",
+                "tier": "existing-field",
+                "work": 4486
+              },
+              {
+                "key": "goal-geometry:af0632e9",
+                "tier": "background-field",
+                "work": 907
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 9,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 9,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:338768e3",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-geometry:9576edba",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:ae11907e",
+                "tier": "background-field",
+                "work": 1205
+              },
+              {
+                "key": "field:land:112:880",
+                "tier": "background-field",
+                "work": 4661
+              },
+              {
+                "key": "goal-geometry:af0632e9",
+                "tier": "background-field",
+                "work": 123
+              },
+              {
+                "key": "goal-geometry:6df71595",
+                "tier": "background-field",
+                "work": 147
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 10,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 10,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:338768e3",
+                "tier": "background-field",
+                "work": 1027
+              },
+              {
+                "key": "goal-geometry:ae11907e",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-geometry:a9899c96",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:6df71595",
+                "tier": "background-field",
+                "work": 1058
+              },
+              {
+                "key": "field:land:112:784",
+                "tier": "background-field",
+                "work": 4051
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 11,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 11,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:ae11907e",
+                "tier": "background-field",
+                "work": 1027
+              },
+              {
+                "key": "goal-geometry:ab57335c",
+                "tier": "background-field",
+                "work": 1030
+              },
+              {
+                "key": "field:land:112:784",
+                "tier": "existing-field",
+                "work": 582
+              },
+              {
+                "key": "goal-geometry:fcf061ac",
+                "tier": "background-field",
+                "work": 555
+              },
+              {
+                "key": "field:land:1488:752",
+                "tier": "background-field",
+                "work": 2945
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 12,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 12,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:01bb3407",
+                "tier": "background-field",
+                "work": 1030
+              },
+              {
+                "key": "goal-geometry:6df71595",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-geometry:90d56eb7",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "field:land:1488:752",
+                "tier": "existing-field",
+                "work": 1698
+              },
+              {
+                "key": "goal-geometry:ca86b7a2",
+                "tier": "background-field",
+                "work": 1025
+              },
+              {
+                "key": "field:land:1488:656",
+                "tier": "background-field",
+                "work": 2383
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 13,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 13,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:6df71595",
+                "tier": "background-field",
+                "work": 1027
+              },
+              {
+                "key": "goal-geometry:fcf061ac",
+                "tier": "background-field",
+                "work": 1205
+              },
+              {
+                "key": "field:land:1552:752",
+                "tier": "background-field",
+                "work": 3907
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 14,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 14,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:f9e8d952",
+                "tier": "background-field",
+                "work": 1030
+              },
+              {
+                "key": "field:land:1552:752",
+                "tier": "existing-field",
+                "work": 728
+              },
+              {
+                "key": "field:land:1488:656",
+                "tier": "existing-field",
+                "work": 2240
+              },
+              {
+                "key": "goal-geometry:9909529d",
+                "tier": "background-field",
+                "work": 1025
+              },
+              {
+                "key": "field:land:1488:688",
+                "tier": "background-field",
+                "work": 1116
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 15,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 15,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:fcf061ac",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-geometry:7f189b49",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:ca86b7a2",
+                "tier": "background-field",
+                "work": 1205
+              },
+              {
+                "key": "field:land:1552:656",
+                "tier": "background-field",
+                "work": 4615
+              },
+              {
+                "key": "field:land:1488:688",
+                "tier": "existing-field",
+                "work": 316
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 16,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 16,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:fcf061ac",
+                "tier": "background-field",
+                "work": 1027
+              },
+              {
+                "key": "goal-geometry:ca86b7a2",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-geometry:85961c8a",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "field:land:1488:688",
+                "tier": "existing-field",
+                "work": 3199
+              },
+              {
+                "key": "goal-geometry:59fc8b70",
+                "tier": "background-field",
+                "work": 1025
+              },
+              {
+                "key": "field:land:1488:720",
+                "tier": "background-field",
+                "work": 885
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 17,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 17,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:3e730e94",
+                "tier": "background-field",
+                "work": 1030
+              },
+              {
+                "key": "goal-geometry:ca86b7a2",
+                "tier": "background-field",
+                "work": 1027
+              },
+              {
+                "key": "goal-geometry:9909529d",
+                "tier": "background-field",
+                "work": 1205
+              },
+              {
+                "key": "field:land:1552:688",
+                "tier": "background-field",
+                "work": 2877
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 18,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 18,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:a625b081",
+                "tier": "background-field",
+                "work": 1030
+              },
+              {
+                "key": "field:land:1552:688",
+                "tier": "existing-field",
+                "work": 1746
+              },
+              {
+                "key": "field:land:1488:720",
+                "tier": "existing-field",
+                "work": 3363
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 19,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 19,
+            "limit": 6144,
+            "used": 5018,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:9909529d",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-geometry:27821201",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "field:land:1488:720",
+                "tier": "existing-field",
+                "work": 391
+              },
+              {
+                "key": "goal-geometry:40e9f016",
+                "tier": "background-field",
+                "work": 517
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:784:18ee8b8d",
+                "tier": "background-field",
+                "work": 4100
+              },
+              {
+                "key": "goal-geometry:b1a4bffd",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-geometry:4f79e1da",
+                "tier": "background-field",
+                "work": 1
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 20,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 20,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 5
+              },
+              {
+                "key": "goal-geometry:9909529d",
+                "tier": "background-field",
+                "work": 1027
+              },
+              {
+                "key": "goal-geometry:59fc8b70",
+                "tier": "background-field",
+                "work": 1205
+              },
+              {
+                "key": "field:land:1552:720",
+                "tier": "background-field",
+                "work": 3907
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+            "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:62\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:308:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:96:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 5,
+                "depth": 0,
+                "work": 5,
+                "limitReason": null
+              },
+              "selectedActionCount": 0,
+              "readyActionIds": [],
+              "candidateKinds": {},
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 2
+              },
+              "capacityPressure": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
