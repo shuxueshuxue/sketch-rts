@@ -5,6 +5,7 @@ import { planViewNodes } from './ai-plan-strategy';
 import { AiPlanHistory } from './ai-plan-history';
 import { applyAiPlanDelta, diffAiPlan, filterAiPlanPacket } from '../ai/plan-stream';
 import type { GoalPlan } from '../ai/strategy/goal-planner-types';
+import { goalFact } from '../ai/strategy/goal-facts';
 
 it('shows every recorded dependency layer, pending requests, rejected alternatives and unknown estimates without inventing execution', () => {
   const { plan, trace, action, safe } = goalDependencyFixture(), before = JSON.stringify(trace);
@@ -45,6 +46,29 @@ it('keeps future availability explicit and does not make a future met condition 
   const detail = goalPlanDetail(next, trace, route.id);
   expect(detail).toContain('当前尚不可用'); expect(detail).toContain('&quot;distance&quot;: 90');
   expect(next.readyActionIds).toEqual([]);
+});
+
+it('preserves cargo output references, native evidence and income source intervals without making them assignees', () => {
+  const { plan, trace } = goalDependencyFixture();
+  const cargo = goalFact({ kind: 'cargo-aboard', transport: { kind: 'output', actionId: 'train-hull', output: 'hull' },
+    units: [{ kind: 'existing', entityId: 'passenger' }] });
+  const gold = goalFact({ kind: 'gold', minimum: 200, byTick: 300 });
+  const observation = plan.facts[0]!.observation;
+  const next: GoalPlan = { ...plan, facts: [
+    { id: cargo.id, producerActionIds: [], observation: { ...observation, fact: cargo,
+      evidence: [{ source: 'native-cargo', tick: 50, certainty: 'recorded', detail: '<cargo-evidence>' }] } },
+    { id: gold.id, producerActionIds: [], observation: { ...observation, fact: gold, goldForecast: {
+      epoch: 50, currentFreeGold: 10, goldAtDeadline: 200, earliestTick: 240, incomeGoldPerTick: 1, factIds: [],
+      source: { kind: 'income', id: 'mine-income', segments: [{ fromTick: 50, throughTick: 300, ratePerTick: 1 }] },
+    } } },
+  ] };
+  const detail = goalPlanDetail(next, trace, cargo.id);
+  expect(detail).toContain('货物已登船');
+  for (const value of ['train-hull', 'native-cargo', '&lt;cargo-evidence&gt;']) expect(detail).toContain(value);
+  expect(goalPlanDetail(next, trace, gold.id)).toContain('mine-income');
+  expect(goalPlanDetail(next, trace, gold.id)).toContain('&quot;throughTick&quot;: 300');
+  expect(planViewNodes({ ...trace, goalPlanner: { ...trace.goalPlanner, plans: [next] } })
+    .find(row => row.goalPlan)?.resources.unitIds).toEqual([]);
 });
 
 it('carries graph deltas through private transport, JSON recording and history without mutating past frames or crossing a gap', () => {

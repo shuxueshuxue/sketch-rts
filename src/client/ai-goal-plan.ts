@@ -14,10 +14,10 @@ const actionNames: Record<string, string> = { assemble: '集结', 'transport-for
   'destroy-target': '摧毁目标', 'hold-position': '驻守', 'engage-units': '交战' };
 const factNames: Record<GoalFactPredicate['kind'], string> = {
   'force-at': '兵力到岗', 'force-available': '可调用兵力', 'transport-in': '海域运力', 'transport-at': '运输船到位',
-  'shipyard-for': '可下水船厂', production: '生产条件', gold: '可用金币', 'worker-at': '工人到岗',
+  'shipyard-for': '可下水船厂', production: '生产条件', gold: '可用金币', 'worker-at': '工人到岗', 'cargo-aboard': '货物已登船',
   'shore-safe': '滩头安全', 'camp-cleared': '营地清空', 'hall-complete': '矿厅完工', 'site-safe': '据点安全',
   'supply-cap': '人口档位', 'population-room': '空余人口', 'build-site': '可建位置', 'spawn-exit': '生产出口',
-  route: '可达路线', 'unit-available': '同陆块可调用单位', 'building-complete': '建筑完工',
+  route: '可达路线', 'unit-available': '同移动区域可调用单位', 'building-complete': '建筑完工',
   'enemy-site-destroyed': '敌方据点摧毁', 'route-controlled': '通路控制', 'harassment-ended': '骚扰结束',
   'interception-capability': '拦截能力', 'assets-safe': '资产安全',
 };
@@ -109,9 +109,7 @@ export function goalPlanDetail(plan: GoalPlan, trace: AiPlanTrace, selected = '$
       ${observation.state === 'pending' ? `<p class="plan-blocked">等事实 · ${h(observation.requestId)}<br>请求于 ${clock(observation.requestedTick)}，不视作失败。</p>` : ''}
       ${observation.availableTick != null ? `<p>可用时刻 ${clock(observation.availableTick)}${observation.availableTick > trace.tick ? ' · 当前尚不可用' : ''}</p>` : ''}
       ${reasonList([observation.reason])}<h4>满足它的候选方案</h4>${alternatives.map(row => `<div class="plan-child"><b>${row.status === 'chosen' ? '选中' : row.status === 'rejected' ? '落选' : '等待评估'} · ${h(row.actionId)}</b><br>成本 ${number(row.costGold)} 金 · 预计完成 ${row.finishTick == null ? '—' : clock(row.finishTick)}${reasonList([row.reason])}</div>`).join('') || '<p>候选未记录，不补推方案。</p>'}
-      <h4>世界事实与证据</h4><details><summary>查看结构化字段</summary><pre>${h(JSON.stringify({ predicate: observation.fact.predicate,
-        quantity: observation.quantity, entityIds: observation.entityIds, route: observation.route,
-        goldForecast: observation.goldForecast, site: observation.site, interception: observation.interception }, null, 2))}</pre></details>`;
+      <h4>世界事实与证据</h4><details><summary>查看结构化字段</summary><pre>${h(JSON.stringify(observation, null, 2))}</pre></details>`;
   }
   if (action) {
     const execution = recordedGoalExecution(trace, action), assignments = recordedGoalAssignments(trace, action);
