@@ -70,4 +70,8 @@
 
 ## 验证范围
 
+`goalEconomyExecutors` 与 `goalLandExecutors` 独立导出注册表，沿用 `StrategyExecutor`、`ActionGrant`、feedback 和公共命令闸口。`goal-action` 的参数须由中心解析成 existing 引用；共用解码器拒绝 output/binding 和裸字符串冒充实体。训练只用指定 queue 和资金，逐真实 job 串行跟踪；出生只提议携带 command/producer/job 的 `goalOutputs`，中心验证之前不发布绑定。多成员训练须收到 `goalOutputBindings[output]` 的真实 ID 确认才发下一 job。未提交新命令的既有已付地基沿 existing 效果，不再声明新产物。
+
+建造只用精确 site、approach 与获配工人；同共享路线未发布时 pending，施工/付款/完工依据原生地基与接纳前 baseline。等收入只读本 think 注入的 `goalFacts(gold)`，不以 gross cash、预测收入或其他目标的预算代替 free gold。陆地三个 executor 只命令声明中的真实 grant cohort；守点要求已在 post，持续到 throughTick，首次到期后才启动不能补造过去控制；进攻不改目标，驱赶只攻击能力事实里具名的威胁。它们不创建策略入口、导航队列或新 grant，也不把独立命令链测试称为完整 owner-think 执行验收。
+
 构造器和 grounding 测试包括真实原生训练付款/出生、真实农场完成后解锁骑士、同一共享 6144/Arrival 的水中船厂中心建址及公开 move→build 完工，以及 route/income 结构端口、JSON 续行、零预算和无账外原生导航调用。两份 actionsFor 的测试验证单原子候选、生产者 output 连接、数量部分贡献和精确战斗组绑定。它们不替代公开题的完整规划和执行检查；规划器分配接线及执行绑定仍需在同一共享事实源上继续验收。
