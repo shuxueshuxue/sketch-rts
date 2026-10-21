@@ -2,6 +2,8 @@ import { BUILDING_DEFS, unitMover } from '../../shared/catalog';
 import { createUnit } from '../../shared/map';
 import { landSpawnPoint } from '../../shared/production-spawn';
 import { trainingRecruitPrototype } from '../../shared/sim';
+import { fnv1a } from '../../shared/sim/checksum';
+import { standingBodies } from '../../shared/structure-bodies';
 import { sameGround } from '../../shared/terrain';
 import type { BootstrapAiVersion, GameSnapshot, TrainableUnitKind, Unit } from '../../shared/types';
 import type { AllocationArrivalReader } from './allocation-arrival-query';
@@ -17,6 +19,19 @@ import type { DecisionFacts } from './decision';
 import type { Arrival, Situation, Target } from './types';
 
 type Missing = Readonly<{ code: string; status: 'unknown' | 'unmet'; factIds: readonly string[] }>;
+export type AssemblySpawnRequest = Readonly<{ id: string; buildingId: string; unitKind: TrainableUnitKind;
+  geometryVersion: string; status: 'pending' | 'known'; from: { x: number; y: number }; goal: { x: number; y: number } }>;
+const geometryKeys = new WeakMap<GameSnapshot, string>();
+function spawnGeometry(snapshot: GameSnapshot) {
+  let key = geometryKeys.get(snapshot);
+  if (!key) {
+    const terrain = snapshot.map.terrain;
+    key = fnv1a(JSON.stringify([snapshot.map.width, snapshot.map.height, terrain?.cols, terrain?.rows, terrain?.cell, terrain?.cells,
+      standingBodies(snapshot).map(body => [body.id, body.x, body.y, body.radius]).sort((a, b) => String(a[0]) < String(b[0]) ? -1 : String(a[0]) > String(b[0]) ? 1 : 0)]));
+    geometryKeys.set(snapshot, key);
+  }
+  return key;
+}
 export type AssemblyAssessmentCohort = Readonly<{ pathId: string; readyTick: number; units: readonly Unit[];
   realUnitIds: readonly string[]; sourceFactIds: readonly string[]; missing: readonly Missing[] }>;
 
@@ -39,6 +54,7 @@ export function readAssemblySupply(input: Readonly<{ snapshot: GameSnapshot; sit
   const posts = new Map(request.posts.map(post => [post.id, post]));
   const postAt = (unit: { x: number; y: number }) => request.posts.find(post => post.target.landId === landIdAt(snapshot.map, unit));
   const routes: AssemblyJobRoute[] = [], producerRoutes: AssemblyProducerRoute[] = [];
+  const spawnRequests = new Map<string, AssemblySpawnRequest>();
   const combatant = (unit: Unit) => unit.kind !== 'worker' && unitMover(unit.kind) === 'land'
     && unit.hp > 0 && unit.attackDamage > 0 && unit.expiresTick === undefined;
   const routeCache = new Map<string, DecisionFacts<Arrival> | null>();
@@ -47,9 +63,24 @@ export function readAssemblySupply(input: Readonly<{ snapshot: GameSnapshot; sit
     if (routeCache.has(key)) return routeCache.get(key)!;
     const post = postAt(building);
     const recruit = trainingRecruitPrototype(snapshot, building, { unitKind: kind, remaining: 0 });
-    const spawn = landSpawnPoint(snapshot, building, recruit);
+    let pendingExit = false;
+    const geometryVersion = spawnGeometry(snapshot);
+    const rallyIdentity = building.rallyTarget ? JSON.stringify(building.rallyTarget) : `${building.rallyX},${building.rallyY}`;
+    const requestId = `assembly-spawn:${building.id}:${kind}:${rallyIdentity}:${geometryVersion}`;
+    const spawn = landSpawnPoint(snapshot, building, recruit, (from, goal) => {
+      const origin = landIdAt(snapshot.map, from), targetLand = landIdAt(snapshot.map, goal);
+      const fact = origin && targetLand && origin !== targetLand ? null
+        : assessmentArrival(arrival, { ...recruit, x: from.x, y: from.y },
+          { point: goal, ...(targetLand ? { landId: targetLand } : {}) });
+      const pending = fact?.status === 'unknown';
+      spawnRequests.set(requestId, { id: requestId, buildingId: building.id, unitKind: kind, geometryVersion,
+        status: pending ? 'pending' : 'known', from: { ...from }, goal: { ...goal } });
+      if (pending) { pendingExit = true; return undefined; }
+      return fact !== null && fact.status === 'reachable' && !fact.crossings.length;
+    });
     let result: DecisionFacts<Arrival> | null = null;
-    if (!post || !spawn) missing.push({ code: post ? 'assembly-recruit-native-exit-blocked' : 'assembly-producer-post-unknown',
+    if (!post || !spawn) missing.push({ code: !post ? 'assembly-producer-post-unknown' : pendingExit
+      ? 'assembly-recruit-native-exit-route-pending' : 'assembly-recruit-native-exit-blocked',
       status: 'unknown', factIds: [building.id, kind] });
     else result = assessmentArrival(arrival, { ...recruit, x: spawn.x, y: spawn.y }, post.target);
     routeCache.set(key, result); return result;
@@ -140,5 +171,5 @@ export function readAssemblySupply(input: Readonly<{ snapshot: GameSnapshot; sit
     return [{ pathId: path.id, readyTick: path.readyTick, units, realUnitIds, sourceFactIds: [...new Set(sourceFactIds)], missing: pathMissing }];
   });
   if (!camp) missing.push({ code: 'assembly-target-camp-unobserved', status: 'unknown', factIds: [request.objective.id] });
-  return { forecast, forecastInput, calibration, cohorts, missing };
+  return { forecast, forecastInput, calibration, cohorts, missing, spawnRequests: [...spawnRequests.values()] };
 }

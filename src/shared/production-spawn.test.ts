@@ -8,7 +8,12 @@ import { shipLaunchPose, shipLaunchPrototype } from './ship-launch';
 import { hullFits } from './ship-navigation';
 import { createGame, issuePlayerCommand, restoreSnapshotIntoGame, snapshotGame, stepGame } from './sim';
 import { checksumGame } from './sim/checksum';
-import { footprintHalf, setBuildingBodies } from './terrain';
+import { footprintHalf, setBuildingBodies, walkDestination } from './terrain';
+import { createAiPolicyMemory } from '../ai/memory';
+import { withAllocationArrivalQuery } from '../ai/strategy/allocation-arrival-query';
+import { assessmentArrival } from '../ai/strategy/assembly-supply-reader';
+import { FactWorkQueue, withFactWork } from '../ai/strategy/fact-work';
+import { landIdAt } from '../ai/strategy/regions';
 import type { GameMap, Obstacle, UnitKind } from './types';
 
 function scene(terrain = true) {
@@ -38,6 +43,54 @@ function waterMap(): GameMap {
 }
 
 describe('rally-directed production exits', () => {
+  it('leaves pending planning reachability explicit without adopting or contaminating a warm native result', () => {
+    const context = scene(), { game, building } = context, unit = probe(context);
+    building.rallyX = 1100; building.rallyY = building.y;
+    const native = landSpawnPoint(game, building, unit), before = JSON.stringify(snapshotGame(game));
+    let calls = 0;
+    expect(landSpawnPoint(game, building, unit, () => { calls++; return undefined; })).toBeUndefined();
+    expect(calls).toBe(1);
+    expect(landSpawnPoint(game, building, unit, (from, goal) => {
+      const destination = walkDestination(game.map, from, goal);
+      return Math.hypot(destination.x - goal.x, destination.y - goal.y) <= 1e-6;
+    })).toEqual(native);
+    expect(landSpawnPoint(game, building, unit)).toEqual(native);
+    expect(JSON.stringify(snapshotGame(game))).toBe(before);
+  });
+
+  it('advances a pending exit-to-rally proof through subsequent shared-budget thinks', () => {
+    const context = scene(), { game, building } = context;
+    setCells(context, (col, row) => col === 24 && row !== 20 ? '#' : '.');
+    game.obstacles = [gate('closed-rally-gate', 24 * 32 + 16, 20 * 32 + 16)];
+    setBuildingBodies(game.map, [...game.buildings, ...game.obstacles]);
+    building.rallyX = 1100; building.rallyY = building.y;
+    let memory = createAiPolicyMemory();
+    const receipts: { tick: number; used: number; pending: boolean }[] = [];
+    let point: ReturnType<typeof landSpawnPoint>;
+    for (let think = 0; think < 12; think++) {
+      game.tick = think * 15;
+      const snapshot = snapshotGame(game), current = snapshot.buildings[0]!, unit = landSpawnPrototype(current, 'footman');
+      const queue = new FactWorkQueue(snapshot.tick, think === 0 ? 0 : 6144);
+      let pending = false;
+      point = withFactWork(queue, () => withAllocationArrivalQuery(snapshot, 'player', memory, (_fixed, _loading, read) =>
+        landSpawnPoint(snapshot, current, unit, (from, goal) => {
+          queue.prioritizePoints([goal]);
+          const landId = landIdAt(snapshot.map, goal);
+          const arrival = assessmentArrival(read, { ...unit, x: from.x, y: from.y }, { point: goal, ...(landId ? { landId } : {}) });
+          if (arrival.status === 'unknown') { pending = true; return undefined; }
+          return arrival.status === 'reachable' && !arrival.crossings.length;
+        })));
+      const work = queue.flush(); receipts.push({ tick: snapshot.tick, used: work.used, pending });
+      memory = JSON.parse(JSON.stringify(memory));
+      expect(work.used).toBeLessThanOrEqual(think === 0 ? 0 : 6144);
+      if (point && !pending) break;
+    }
+    expect(receipts[0]).toMatchObject({ used: 0, pending: true });
+    expect(receipts.some(receipt => receipt.used > 0)).toBe(true);
+    expect(point).toEqual(landSpawnPoint(game, building, probe(context)));
+    expect(receipts.at(-1)?.pending).toBe(false);
+    expect(receipts.at(-1)!.tick).toBeLessThanOrEqual(165);
+  });
   it.each([true, false])('exits from the rally side with complete body clearance (terrain %s)', terrain => {
     const context = scene(terrain), { game, building } = context, unit = probe(context);
     building.rallyX = 1100; building.rallyY = building.y;

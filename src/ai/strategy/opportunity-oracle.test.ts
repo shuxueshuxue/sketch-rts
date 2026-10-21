@@ -139,6 +139,11 @@ it('uses a formal delay-loss upper bound for a committed assembly without treati
   const oracle = createOpportunityOracle([source], { effectKeysFor: () => [] });
   expect(oracle({ objectiveId: 'defend', methodId: 'defend', unitIds: ['one'], window })).toMatchObject({ status: 'known', gold: 30,
     displacements: [{ objectiveId: 'island', marginalGold: 30, basis: 'assembly-delay-upper-bound', assemblyDelayUpperBound: bound }] });
+  let payoffCalls = 0;
+  const exactFill = createOpportunityOracle([{ ...source, quote: ids => { payoffCalls++;
+    return { status: 'feasible', score: ids.length === 2 ? 100 : 90, coverage: 'complete' }; } }], { effectKeysFor: () => [] });
+  expect(exactFill({ objectiveId: 'defend', methodId: 'defend', unitIds: ['one'], window })).toMatchObject({ status: 'known', gold: 30 });
+  expect(payoffCalls).toBe(0); // Supply P=1 still does not authorize replacing the proved loss upper bound with 100−90.
   expect(createOpportunityOracle([{ ...source, assemblyDisplacement: () => ({ status: 'unknown', reasonCode: 'assembly-continuation-value-unknown' }) }],
     { effectKeysFor: () => [] })({ objectiveId: 'defend', methodId: 'defend', unitIds: ['one'], window })).toMatchObject({ status: 'unknown' });
 });
