@@ -45,8 +45,12 @@ function planGoalPass(input: GoalPlannerInput, refinementPass: number): GoalPlan
     && (input.previous.declarationRevision === undefined || input.previous.declarationRevision === input.declarationRevision)
     ? readCachePayload(input.previous) : [];
   const providers = [...input.providers].sort((a, b) => order(a.id, b.id));
-  const runs: { goal: GoalRequest; goalKey: string; state: GoalSearchMemory; beforeWork: number }[] = [];
+  const sharedInput = input;
+  const runs: { goal: GoalRequest; goalKey: string; state: GoalSearchMemory; beforeWork: number; input: GoalPlannerInput }[] = [];
   for (const goal of [...input.goals].sort((a, b) => order(a.id, b.id))) {
+    const view = sharedInput.contextForGoal?.(goal);
+    const input = view ? { ...sharedInput, ...view } : sharedInput;
+    const context = input.context;
     const goalKey = goalValueKey(['discounted-action-costs-v1', goal, input.initialBalances.map(({ asOfTick: _epoch, ...balance }) => balance)]);
     const previous = previousEntries.find(entry => entry.goalKey === goalKey
       && entry.declarationRevision === input.declarationRevision);
@@ -123,12 +127,12 @@ function planGoalPass(input: GoalPlannerInput, refinementPass: number): GoalPlan
       }
       return { work: used, done: state.phase === 'done' };
     } }));
-    runs.push({ goal, goalKey, state, beforeWork });
+    runs.push({ goal, goalKey, state, beforeWork, input });
   }
   // Register every goal before flushing, so an earlier goal cannot spend the
   // entire think before equally important goals enter the shared round robin.
   work.flush();
-  for (const { goal, goalKey, state, beforeWork } of runs) {
+  for (const { goal, goalKey, state, beforeWork, input } of runs) {
     const plan = work.withConsumer(goal.id, null, () => projectPlan(state, input, goal, state.expansions - beforeWork));
     plans.push(plan);
     entries.push({ goalKey, declarationRevision: input.declarationRevision,

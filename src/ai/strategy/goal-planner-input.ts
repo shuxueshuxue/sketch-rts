@@ -89,7 +89,7 @@ export type GoalPlannerOwnerInput = Readonly<{
 /** Same-think services for allocation and execution; never persist this frame. */
 export type GoalPlannerNativeFrame = Readonly<{
   decision: StrategyDecision; project?: () => StrategyPlanTrace;
-  executionFacts: (authority: StrategyAllocationMemory) => GoalPlanningContext['readFact'];
+  executionFacts: (authority: StrategyAllocationMemory, objectiveId?: string) => GoalPlanningContext['readFact'];
   objectives: readonly DecisionFacts<Objective>[]; landRoute: AllocationLandRouteReader;
   resolveReference: import('./goal-planner-types').GoalEntityResolver;
   requote: (request: Pick<AllocationMethodQuoteInput, 'unitIds' | 'valuation'>, plan: GoalPlan) => GoalPlanRequotation;
@@ -415,11 +415,12 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
           entry.id.startsWith(`${transport.entityId}:`) && entry.readyTick !== null).map(entry => [entry.id, entry.readyTick, entry.readyThink]) : [];
         const fields = transport ? preparation.fields.sea.filter(entry => entry.readyTick !== null)
           .map(entry => [entry.goal, entry.readyTick, entry.readyThink]) : [];
-        return goalValueKey([actorRevision(action), cohortRevision(), times, fields, ...(transport ? [snapshot.map.wind] : [])]);
+        return goalValueKey(['action-finish-safety-capital-v1', actorRevision(action), cohortRevision(), times, fields, ...(transport ? [snapshot.map.wind] : [])]);
       };
       const refiner = createGoalPlanRefiner({ memory: refinements, providers: baseProviders, sourceRevision,
         maxAlternativeQuotes: input.limits?.maxPlans ?? 8, thinkSequence: () => work.receipt.thinkSequence ?? snapshot.tick,
-        exactContext: (_selected, plan) => makeContext(input.allowedUnitIds, input.interruptedUnitIds, [], reservedGold, 'exact', plan.actions.map(node => node.declaration)),
+        exactContext: (_selected, plan) => makeContext(input.allowedUnitIds, input.interruptedUnitIds, [],
+          memory.strategyAllocation ? reservedAllocationGold(memory.strategyAllocation, plan.goal.id) : 0, 'exact', plan.actions.map(node => node.declaration)),
         prepareExact: (plan, selected, context) => {
           for (const node of selected) {
             const parameters = node.declaration.executor.parameters;
@@ -434,8 +435,19 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
           return contactPreparation.get(context)?.(plan, selected);
         } });
       const prefixContexts = new WeakMap<object, GoalPlanningContext>();
-      const quoteRevision = () => `goal-domain-v4:${goalValueKey(cohortRevision())}:${precision}:${refinements.revision}:berths:${retained.selectedBerths!.revision}:sea:${goalValueKey(preparation.fields.sea.filter(entry => entry.readyTick !== null).map(entry => [entry.goal, entry.readyTick, entry.readyThink]))}`;
+      const quoteRevision = () => `goal-domain-v5:${goalValueKey(cohortRevision())}:${precision}:${refinements.revision}:berths:${retained.selectedBerths!.revision}:sea:${goalValueKey(preparation.fields.sea.filter(entry => entry.readyTick !== null).map(entry => [entry.goal, entry.readyTick, entry.readyThink]))}`;
       const plannerInput: GoalPlannerInput = { context: grounded, goals,
+        contextForGoal(goal) {
+          const reserved = memory.strategyAllocation ? reservedAllocationGold(memory.strategyAllocation, goal.id) : 0;
+          const context = makeContext(input.allowedUnitIds, input.interruptedUnitIds, [], reserved);
+          const prefixes = new WeakMap<object, GoalPlanningContext>();
+          return { context, initialBalances: initialGoalBalances(context, input.allowedUnitIds, input.interruptedUnitIds),
+            contextForPrefix(prefix) {
+              let view = prefixes.get(prefix);
+              if (!view) { view = makeContext(input.allowedUnitIds, input.interruptedUnitIds, [], reserved, 'coarse', [], prefix); prefixes.set(prefix, view); }
+              return view;
+            } };
+        },
         campModelUsage: () => ({ ...campModelUsage.counts }),
         ...(precision === 'coarse' ? { refinementRevision: quoteRevision } : {}),
         retainFactRequests: plans => {
@@ -496,10 +508,10 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
           return { ...result, objectives: result.objectives as readonly Objective[] };
         } } : {}),
         objectives: observed.objectives, landRoute: exactLandRoute,
-        executionFacts(authority) {
+        executionFacts(authority, objectiveId) {
           assertActive();
           if (authority.owner !== owner || authority.evaluatedTick !== snapshot.tick) throw Error('Goal execution authority epoch mismatch');
-          return makeContext(input.allowedUnitIds, input.interruptedUnitIds, [], reservedAllocationGold(authority), 'exact').readFact;
+          return makeContext(input.allowedUnitIds, input.interruptedUnitIds, [], reservedAllocationGold(authority, objectiveId), 'exact').readFact;
         },
         resolveReference(reference, selection) {
           assertActive();
@@ -526,11 +538,14 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
           const allowed = (input.allowedUnitIds ?? snapshot.units.filter(unit => unit.owner === owner && unit.hp > 0).map(unit => unit.id))
             .filter(id => !unavailable.includes(id));
           const key = goalValueKey([plan.goal.id, allowed, input.interruptedUnitIds ?? [], production]);
-          const context = makeContext(allowed, input.interruptedUnitIds, production);
+          const context = makeContext(allowed, input.interruptedUnitIds, production,
+            memory.strategyAllocation ? reservedAllocationGold(memory.strategyAllocation, plan.goal.id) : 0);
           const previous = retained!.requotes?.find(entry => entry.key === key)?.cache;
-          const { previous: _grossPrevious, ...base } = plannerInput;
+          const { previous: _grossPrevious, contextForGoal: _grossGoalContext, ...base } = plannerInput;
           const result = planGoals({ ...base, context, goals: [plan.goal],
             initialBalances: initialGoalBalances(context, allowed, input.interruptedUnitIds),
+            contextForPrefix: prefix => makeContext(allowed, input.interruptedUnitIds, production,
+              memory.strategyAllocation ? reservedAllocationGold(memory.strategyAllocation, plan.goal.id) : 0, 'coarse', [], prefix),
             searchScope: `goal-requote:${key}`, ...(previous ? { previous } : {}) });
           const saved = [...(retained!.requotes ?? []).filter(entry => entry.key !== key), { key, cache: result.cache }];
           const current = saved[saved.length - 1]!;

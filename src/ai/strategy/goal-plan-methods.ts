@@ -7,6 +7,7 @@ import type { GoalActionNode, GoalEntityReference, GoalEntityResolver, GoalParam
 import type { DecisionFacts } from './decision';
 import type { Objective, ProductionUse, Target } from './types';
 import { discountedValue, resolveValuation, valuationWindow } from './utility';
+import { goalPlanCapital } from './goal-plan-capital';
 
 const ID = 'goal:ready-plan-bundles';
 const terminal = (state: string) => ['complete', 'failed', 'abandoned'].includes(state);
@@ -35,7 +36,7 @@ export type GoalPlanMethodInput = Readonly<{
 }>;
 
 /** All ready atoms of one plan share one remaining-chain price. Future costs
- * are included even though only current capital is reserved at admission. */
+ * share one quote; capital is saved from actual cash after admission. */
 export function createGoalPlanMethods(input: GoalPlanMethodInput): Readonly<{
   methods: readonly ExecutableMethod[]; provider: AllocationMethodProvider;
   deferred: readonly Readonly<{ planId: string; reason: AllocationReason }>[];
@@ -65,7 +66,11 @@ export function createGoalPlanMethods(input: GoalPlanMethodInput): Readonly<{
       }
       return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, resolve(item as GoalParameter)]));
     };
-    const actions: ExecutableMethod['actions'][number][] = [], spends: ExecutableMethod['spends'][number][] = [];
+    const capital = goalPlanCapital(plan);
+    const pendingCapital = capital.pending.filter(item => !ready.some(action => action.id === item.actionId && action.declaration.kind === 'train'));
+    if (pendingCapital.length) { deferred.push(...pendingCapital.map(item => ({ planId: plan.id, reason: item.reason }))); continue; }
+    const actions: ExecutableMethod['actions'][number][] = [], spends: ExecutableMethod['spends'][number][] = capital.spends
+      .map(({ paymentSchedule: _evidence, ...spend }) => spend);
     let blocked = false; const exclusive = new Set<string>();
     for (const node of ready) {
       if (node.state !== 'ready' || node.startTick === null || node.finishTick === null) { blocked = true; break; }
@@ -83,8 +88,8 @@ export function createGoalPlanMethods(input: GoalPlanMethodInput): Readonly<{
       if (blocked) break;
       const amount = declaration.flows.filter(flow => flow.resource.kind === 'gold' && flow.at === 'start' && flow.delta < 0)
         .reduce((sum, flow) => sum - flow.delta, 0);
-      const actionId = `goal:${plan.goal.id}:${node.id}`, spendId = `goal-capital:${actionId}`;
-      if (amount) spends.push({ spendId, amountGold: amount, includedUtilityTermCodes: ['remaining-plan-actions'], externalReservationIds: [] });
+      const actionId = `goal:${plan.goal.id}:${node.id}`, spendId = capital.byAction.get(node.id) ?? `goal-capital:${actionId}`;
+      if (amount && !spends.some(spend => spend.spendId === spendId)) spends.push({ spendId, amountGold: amount, includedUtilityTermCodes: ['remaining-plan-actions'], externalReservationIds: [] });
       const producerId = declaration.kind === 'train' ? refId(parameters.producer) : null;
       const keys = [...new Set(unitIds)].map(id => `unit:${id}`); if (producerId) keys.push(`queue:${producerId}`);
       if (keys.some(key => exclusive.has(key))) { blocked = true; break; }

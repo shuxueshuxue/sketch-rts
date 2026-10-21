@@ -108,6 +108,13 @@ export type NavalWant = {
 };
 /** Keep a colony's hall and, near mine depletion, a replacement ferry funded. */
 export function navalBudgetReserve(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): number {
+    const authority = options.memory.strategyAllocation;
+    const formal = authority?.owner === owner ? Object.values(authority.budgets).reduce((total, budget) => total
+        + (budget.state === 'reserved' && budget.externalReservationIds.some(navalReservePurchase)
+            ? Math.max(0, budget.amountGold - budget.paidGold) : 0), 0) : 0;
+    return Math.max(formal, nativeNavalBudgetReserve(snapshot, owner, options));
+}
+function nativeNavalBudgetReserve(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext): number {
     if (!snapshot.map.terrain || groundWholes(snapshot.map) <= 1)
         return 0;
     const halls = buildings(snapshot, owner).filter(building => building.kind === "townHall");

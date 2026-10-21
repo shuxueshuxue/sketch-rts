@@ -334,6 +334,12 @@ export type GoalPlannerInput = Readonly<{
    * The view shares this think's readers and never creates a Situation/query. */
   contextForPrefix?: (actions: readonly Readonly<{ action: GoalActionDeclaration; startTick: number; finishTick: number }>[]) => GoalPlanningContext;
   initialBalances: readonly GoalResourceBalance[]; limits: GoalSearchLimits;
+  /** Ownership changes the free-capital view, never the underlying world.
+   * Each goal can use its own earmark; other goals still see it reserved. */
+  contextForGoal?: (goal: GoalRequest) => Readonly<{
+    context: GoalPlanningContext; initialBalances: readonly GoalResourceBalance[];
+    contextForPrefix?: NonNullable<GoalPlannerInput['contextForPrefix']>;
+  }>;
   declarationRevision: string; previous?: GoalPlannerCache;
   /** Same ledger, distinct finite continuation for physical resource exclusions. */
   searchScope?: string;

@@ -53,13 +53,24 @@ export function continueGoalMethod(method: ExecutableMethod, memory: StrategyAll
     aliases.set(action.id, prior.id);
     for (const spendId of prior.spendIds) {
       const spend = previous.spends.find(spend => spend.spendId === spendId);
-      if (spend) spends.set(spendId, spend);
+      if (!spend) continue;
+      // A restored native task keeps its paid spend even when today's plan
+      // starts naming capital by world asset. Equal current-task charges are
+      // one purchase; future unrelated assets are never matched here.
+      const replacements = action.spendIds.map(id => spends.get(id)).filter(candidate => candidate
+        && candidate.amountGold === spend.amountGold);
+      if (replacements.length === 1) {
+        const replacement = replacements[0]!;
+        spends.delete(replacement.spendId);
+        spends.set(spendId, { ...spend, ...replacement, spendId });
+      } else spends.set(spendId, spend);
     }
     return { ...action, id: prior.id, intent: execution.intent, target: execution.target,
       spendIds: prior.spendIds, demands: prior.demands,
       ...(execution.production ? { production: execution.production } : {}) };
   });
-  const used = new Set(actions.flatMap(action => action.spendIds));
+  const used = new Set([...actions.flatMap(action => action.spendIds), ...[...spends.values()]
+    .filter(spend => spend.expectedPaymentTick !== undefined).map(spend => spend.spendId)]);
   return { ...method, actions: actions.map(action => ({ ...action,
     dependsOn: action.dependsOn.map(id => aliases.get(id) ?? id) })),
   spends: [...spends.values()].filter(spend => used.has(spend.spendId)) };

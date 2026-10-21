@@ -99,6 +99,10 @@ export type AllocationBudget = Readonly<{
   action: ActionToken;
   amountGold: number;
   paidGold: number;
+  /** An admitted goal chain earmarks actual cash toward this later payment.
+   * The target is not cash; amountGold remains the funded/paid amount. */
+  plannedGold?: number;
+  expectedPaymentTick?: number;
   /** Goal batches can pay several distinct native jobs from one reservation.
    * Identity makes equal-sized payments idempotent without losing later jobs. */
   nativePayments?: readonly Readonly<{ kind: 'production' | 'foundation'; commandId: string;
@@ -115,6 +119,7 @@ export type AllocationBudget = Readonly<{
 export type PlannedAllocationSpend = Readonly<{
   spendId: string;
   amountGold: number;
+  expectedPaymentTick?: number;
   includedUtilityTermCodes: readonly string[];
   externalReservationIds: readonly string[];
 }>;

@@ -11,7 +11,7 @@ import type { VoyageRiskStages } from './voyage-risk';
 import type { StrategyPlanTrace, Target } from './types';
 import { allocateStrategy } from './allocator';
 import { allocationGrants, applyExecutorFeedback, pruneAllocationProvenance, settleAllocationState, advanceAllocationLeases } from './allocation-lifecycle';
-import { recordAllocationCommands } from './allocation-ledger';
+import { recordAllocationCommands, refreshAllocationCapital, releaseEndedGoalCapital } from './allocation-ledger';
 import { projectStrategyAllocation } from './allocation-trace';
 import { withAllocationLandRoutes } from './allocation-arrival-query';
 import { observeWorkerSafetyInterruption } from './executors/worker-safety';
@@ -28,6 +28,7 @@ import { withNavigationPhase } from '../../shared/navigation-audit';
 import { withGoalPlannerInput, type GoalPlannerNativeFrame } from './goal-planner-input';
 import { planGoals } from './goal-planner';
 import type { GoalPlannerInput, GoalPlannerOutput } from './goal-planner-types';
+import { reserveAdmittedGoalCapital } from './goal-capital-commitment';
 import { createGoalPlanMethods } from './goal-plan-methods';
 import { goalEconomyExecutors } from './executors/goal-economy';
 import { goalLandExecutors } from './executors/goal-land';
@@ -75,6 +76,8 @@ function nativeSwitchCost(snapshot: GameSnapshot, resources: readonly string[]):
 export function planControlledBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion,
   scripts: AiScript[], options: AiPolicyContext, observation: 'none' | 'facts' | 'trace' = 'none') {
   if (options.memory.strategyAllocation) options.memory.strategyAllocation = restoreGoalAuthorityReferences(options.memory.strategyAllocation);
+  if (options.memory.strategyAllocation) options.memory.strategyAllocation = refreshAllocationCapital(options.memory.strategyAllocation,
+    snapshot.players[owner]?.gold ?? 0, snapshot.tick);
   const preparation = observationMemory(snapshot, owner, options.memory);
   const work = new FactWorkQueue(snapshot.tick, undefined, preparation.factWork, beginObservationThink(preparation));
   return withFactWork(work, () => {
@@ -85,11 +88,14 @@ export function planControlledBootstrapCommands(snapshot: GameSnapshot, owner: P
 function controlledAllocation(snapshot: GameSnapshot, owner: PlayerId, options: AiPolicyContext,
   observation: 'none' | 'facts' | 'trace', planning: GoalPlannerInput, frame: GoalPlannerNativeFrame) {
   const policy = options.memory, evaluation = frame.decision;
-  const imported = importExecutedIncumbents(snapshot, policy, evaluation.situation,
+  let imported = importExecutedIncumbents(snapshot, policy, evaluation.situation,
     observeGoalTraining(policy.strategyAllocation ?? createStrategyAllocationMemory(owner, snapshot.tick), snapshot));
   policy.strategyAllocation = imported;
   const situation = withFormalCommitments(evaluation.situation, imported);
   const goalPlanner = planGoals(planning); policy.goalPlanning!.cache = goalPlanner.cache;
+  imported = releaseEndedGoalCapital(imported, goalPlanner.plans, snapshot.tick);
+  imported = reserveAdmittedGoalCapital(imported, goalPlanner.plans, snapshot.players[owner]?.gold ?? 0, snapshot.tick);
+  policy.strategyAllocation = imported;
   const bundle = createGoalPlanMethods({ snapshot, objectives: evaluation.objectives, output: goalPlanner,
     resolve: frame.resolveReference, requote: frame.requote });
   const candidateRequests = observation === 'none' ? undefined : new Map<string, AllocationCandidateRequest>();
@@ -174,10 +180,11 @@ function executeControlledBootstrapCommands(snapshot: GameSnapshot, owner: Playe
   const authority = policy.strategyAllocation!, grants = allocationGrants(authority);
   const incumbentScripts = continuedIncumbentScripts(scripts, authority);
   const incumbentOnlyScripts = new Set(incumbentScripts.filter(isIncumbentStrategyScript).map(script => script.id));
-  const goalFacts = frame.executionFacts(authority);
+  const managedExpansionSites = evaluation.objectives.filter(objective => ['ExpandLand', 'ConquerIsland'].includes(objective.kind)
+    && !['complete', 'failed', 'abandoned'].includes(objective.status)).map(objective => objective.target);
   let sequence = 0;
   const nextId = () => `${owner}:strategy-command:${snapshot.tick}:${authority.revision}:${sequence++}`;
-  const preflight = createStrategyCommandGateway({ snapshot, owner, memory: authority, grants, queuedTick: null, incumbentOnlyScripts });
+  const preflight = createStrategyCommandGateway({ snapshot, owner, memory: authority, grants, queuedTick: null, incumbentOnlyScripts, managedExpansionSites });
   const rejected: CommandAdmission[] = [];
   const oldEntries = withNavigationPhase('incumbent', () => planAiCommandEntriesFromScripts(snapshot, owner, incumbentScripts, context, {
     admitCommands(script, commands) {
@@ -195,7 +202,7 @@ function executeControlledBootstrapCommands(snapshot: GameSnapshot, owner: Playe
     if (!executor || !objective || !method) continue;
     const input: ExecutorInput = { snapshot, owner, objective, method, execution, grant, events: authority.events,
       ...(authority.goalReferences ? { goalReferences: authority.goalReferences } : {}),
-      goalFacts, goalTraining: goalTrainingReader(authority, snapshot) };
+      goalFacts: frame.executionFacts(authority, grant.objectiveId), goalTraining: goalTrainingReader(authority, snapshot) };
     const { task, safety } = withNavigationPhase('strategy-planning', () => withAllocationLandRoutes(landRouteReader,
       () => ({ task: executor.execute(input), safety: observeWorkerSafetyInterruption(input) })));
     const feedback = safety ? { ...task, status: safety.status, blocked: safety.blocked,
@@ -215,7 +222,7 @@ function executeControlledBootstrapCommands(snapshot: GameSnapshot, owner: Playe
   // orders or spends money; only the final admitted subset becomes provenance.
   let memory = authority;
   for (const feedback of feedbacks) memory = applyExecutorFeedback(memory, snapshot, feedback);
-  const gateway = createStrategyCommandGateway({ snapshot, owner, memory, grants: allocationGrants(memory), queuedTick: null, incumbentOnlyScripts });
+  const gateway = createStrategyCommandGateway({ snapshot, owner, memory, grants: allocationGrants(memory), queuedTick: null, incumbentOnlyScripts, managedExpansionSites });
   const result = gateway.admit([...formal.filter(item => item.purpose === 'life-saving'), ...scriptFinal,
     ...formal.filter(item => item.purpose !== 'life-saving')]);
   memory = recordAllocationCommands(memory, snapshot, result.admissions);

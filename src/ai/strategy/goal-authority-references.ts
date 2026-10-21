@@ -82,9 +82,11 @@ export function storeGoalMethod(memory: StrategyAllocationMemory, method: Execut
     const next = storedAction(table, action); aliases.set(action.id, next.id); return next;
   });
   for (const spend of method.spends) if (!isReference(table, spend.spendId))
-    aliases.set(spend.spendId, internGoalReference(table, 'spend', { method: method.id, priorId: spend.spendId }));
+    aliases.set(spend.spendId, internGoalReference(table, 'spend', { priorId: spend.spendId }));
+  const stored = rewrite({ ...method, actions }, aliases);
+  const spends = [...new Map(stored.spends.map(spend => [spend.spendId, spend])).values()];
   return { memory: { ...memory, goalReferences: table, goalIdentityVersion: 1 as const },
-    method: rewrite({ ...method, actions }, aliases) };
+    method: { ...stored, spends } };
 }
 
 /** One priorId-load conversion rewrites every internal reference together.
@@ -116,7 +118,7 @@ export function restoreGoalAuthorityReferences(memory: StrategyAllocationMemory)
   for (const [key, budget] of Object.entries(memory.budgets)) {
     let spendId = aliases.get(budget.spendId);
     if (!spendId && (aliases.has(budget.action.actionId) || budget.spendId.length > 256)) {
-      spendId = internGoalReference(next.goalReferences, 'spend', { method: budget.methodId, priorId: budget.spendId });
+      spendId = internGoalReference(next.goalReferences, 'spend', { priorId: budget.spendId });
       aliases.set(budget.spendId, spendId);
     }
     if (spendId) {

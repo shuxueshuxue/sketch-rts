@@ -71,6 +71,16 @@ function reprice(input: StrategyAllocationInput, memory: StrategyAllocationMemor
   if (method.id !== offer.method.id || method.objectiveId !== offer.objective.id || method.providerId !== provider.id)
     throw new Error('Materialized method changed its identity');
   const permitted = new Set(offer.unitIds);
+  // A ready goal atom is an explicit actor bundle. A subset is an unknown
+  // alternative, never a materialized action allowed to recruit the missing
+  // actors (or a zero-cost empty version of that same action).
+  if (method.kind === 'goal-plan' && !provider.materialize
+    && method.actions.some(action => action.unitIds?.some(id => !permitted.has(id)))) {
+    const reason = { code: 'goal-ready-bundle-not-wholly-available', factIds: [method.id], values: {} };
+    return { method, unitIds: offer.unitIds, quote: { methodId: method.id, status: 'blocked', utility: null,
+      potentialUtility: null, force: null, reason, missingPreconditions: [{ id: `${method.id}/current-actors`,
+        kind: 'force', status: 'unknown', reason, demand: null, subgoalIds: [] }] } };
+  }
   for (const action of method.actions) for (const id of action.unitIds ?? []) if (!permitted.has(id))
     throw new Error(`Materialized action ${action.id} recruited an ungranted unit ${id}`);
   for (const voyage of method.voyagePlans ?? []) {

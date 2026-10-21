@@ -12,12 +12,44 @@ export function allocationCommandCost(snapshot: GameSnapshot, owner: string, com
   return command.type === 'upgradeBuilding' ? BUILDING_DEFS[command.to].cost : purchaseCost(snapshot, owner, command);
 }
 const outstanding = (budget: AllocationBudget) => budget.state === 'reserved' ? budget.amountGold - budget.paidGold : 0;
-export function reservedAllocationGold(memory: StrategyAllocationMemory): number {
-  return Object.values(memory.budgets).reduce((sum, budget) => sum + outstanding(budget), 0);
+export function reservedAllocationGold(memory: StrategyAllocationMemory, forObjectiveId?: string): number {
+  return Object.values(memory.budgets).reduce((sum, budget) => sum + (budget.plannedGold !== undefined
+    && budget.objectiveId === forObjectiveId ? 0 : outstanding(budget)), 0);
 }
 
-/** Only runnable stages reserve cash. Later capital remains a prerequisite, not
- * a reason to refuse the affordable first step of an otherwise quoted chain. */
+/** An admitted chain saves real incoming cash, including thinks where new
+ * geometry is pending. Future income never becomes an actual cash balance. */
+export function refreshAllocationCapital(memory: StrategyAllocationMemory, cashGold: number, tick: number): StrategyAllocationMemory {
+  if (!Number.isFinite(cashGold) || cashGold < 0) throw Error('Invalid allocation cash');
+  const budgets = { ...memory.budgets };
+  for (const budget of Object.values(budgets)) if (budget.plannedGold !== undefined && budget.state === 'reserved'
+    && ['complete', 'failed', 'abandoned'].includes(memory.objectives[budget.objectiveId]?.status ?? 'abandoned'))
+    budgets[budget.id] = { ...budget, state: 'released', releasedTick: tick };
+  let free = Math.max(0, cashGold - reservedAllocationGold({ ...memory, budgets }));
+  for (const budget of Object.values(budgets).sort((a, b) => (a.expectedPaymentTick ?? Infinity) - (b.expectedPaymentTick ?? Infinity)
+    || a.id.localeCompare(b.id))) {
+    if (budget.plannedGold === undefined || budget.state !== 'reserved') continue;
+    const added = Math.min(free, Math.max(0, budget.plannedGold - budget.amountGold));
+    budgets[budget.id] = { ...budget, amountGold: budget.amountGold + added }; free -= added;
+  }
+  return { ...memory, budgets };
+}
+
+/** A selected plan that ended cannot retain a saving claim. Real issued
+ * purchases keep their receipt lineage until payment acknowledgement. */
+export function releaseEndedGoalCapital(memory: StrategyAllocationMemory,
+  plans: readonly Readonly<{ goal: { id: string }; status: string }>[], tick: number): StrategyAllocationMemory {
+  const ended = new Set(plans.filter(plan => ['blocked', 'complete'].includes(plan.status)).map(plan => plan.goal.id));
+  const budgets = Object.fromEntries(Object.entries(memory.budgets).map(([id, budget]) => [id,
+    budget.plannedGold !== undefined && budget.state === 'reserved' && ended.has(budget.objectiveId)
+      && !Object.values(memory.issuedCommands).some(command => sameAction(command.action, budget.action)
+        && ['build', 'train'].includes(command.command.type))
+      ? { ...budget, state: 'released' as const, releasedTick: tick } : budget]));
+  return { ...memory, budgets };
+}
+
+/** Runnable purchases reserve first. An admitted plan also saves later capital
+ * from remaining actual cash without gating affordable earlier actions. */
 export function reserveAllocationSpends(input: Readonly<{ memory: StrategyAllocationMemory; method: ExecutableMethod;
   actions: readonly ExecutionAction[]; cashGold: number; tick: number }>) {
   const { memory, method, actions, cashGold, tick } = input;
@@ -25,23 +57,23 @@ export function reserveAllocationSpends(input: Readonly<{ memory: StrategyAlloca
   const registry = new Map(method.spends.map(spend => [spend.spendId, spend]));
   if (registry.size !== method.spends.length) throw new Error('Duplicate allocation spend id');
   const budgets = { ...memory.budgets }, unmet: AllocationUnmetDemand[] = [];
-  let free = Math.max(0, cashGold - reservedAllocationGold(memory));
+  if (method.kind === 'goal-plan') for (const budget of Object.values(budgets))
+    if (budget.objectiveId === method.objectiveId && budget.plannedGold !== undefined && budget.state === 'reserved'
+      && !registry.has(budget.spendId) && !budget.nativePayments?.length)
+      budgets[budget.id] = { ...budget, state: 'released', releasedTick: tick };
+  let free = Math.max(0, cashGold - reservedAllocationGold({ ...memory, budgets }));
   const referred = new Set<string>();
-  for (const plan of method.actions) {
-    const action = actions.find(action => action.token.actionId === plan.id);
-    for (const spendId of plan.spendIds) {
-      const spend = registry.get(spendId);
-      if (!spend) throw new Error(`Unregistered allocation spend ${spendId}`);
-      if (!Number.isFinite(spend.amountGold) || spend.amountGold < 0) throw new Error('Invalid allocation spend');
-      if (referred.has(spendId)) continue;
-      if (!action || !['ready', 'active', 'blocked'].includes(action.status)) continue;
-      referred.add(spendId);
+  const reserve = (spendId: string, action: ExecutionAction, future: boolean) => {
+      const spend = registry.get(spendId)!;
       const id = `budget:${spendId}`, old = budgets[id];
-      if (old && old.state !== 'released' && old.objectiveId !== method.objectiveId) {
-        unmet.push({ id: `${action.token.actionId}/spend-owner:${spendId}`, objectiveId: method.objectiveId,
+      if (old && old.state !== 'released' && old.objectiveId !== method.objectiveId
+        && !(old.plannedGold !== undefined && spend.expectedPaymentTick !== undefined && !future && old.paidGold === 0
+          && !Object.values(memory.issuedCommands).some(command => sameAction(command.action, old.action)
+            && ['build', 'train'].includes(command.command.type)))) {
+        if (!future) unmet.push({ id: `${action.token.actionId}/spend-owner:${spendId}`, objectiveId: method.objectiveId,
           methodId: method.id, action: action.token, demand: { kind: 'gold', amount: spend.amountGold },
           reason: { code: 'capital-already-owned-by-an-alternative', factIds: [id], values: {} } });
-        continue;
+        return;
       }
       const paid = old?.paidGold ?? 0;
       if (paid > spend.amountGold) throw new Error('Allocation spend decreased below its real payment');
@@ -51,10 +83,30 @@ export function reserveAllocationSpends(input: Readonly<{ memory: StrategyAlloca
       budgets[id] = { id, spendId, objectiveId: method.objectiveId, methodId: method.id, action: action.token,
         amountGold, paidGold: paid, state: paid >= spend.amountGold ? 'spent' : 'reserved', sinceTick: old?.sinceTick ?? tick,
         ...(old?.nativePayments ? { nativePayments: old.nativePayments } : {}),
+        ...(spend.expectedPaymentTick === undefined ? {} : { plannedGold: spend.amountGold, expectedPaymentTick: spend.expectedPaymentTick }),
         releasedTick: null, includedUtilityTermCodes: [...spend.includedUtilityTermCodes], externalReservationIds: [...spend.externalReservationIds] };
-      if (amountGold < spend.amountGold) unmet.push({ id: `${action.token.actionId}/capital:${spendId}`, objectiveId: method.objectiveId,
+      if (!future && amountGold < spend.amountGold) unmet.push({ id: `${action.token.actionId}/capital:${spendId}`, objectiveId: method.objectiveId,
         methodId: method.id, action: action.token, demand: { kind: 'gold', amount: spend.amountGold - amountGold },
         reason: { code: 'current-stage-awaits-income', factIds: [spendId], values: { heldGold: amountGold, requiredGold: spend.amountGold } } });
+  };
+  for (const plan of method.actions) {
+    const action = actions.find(action => action.token.actionId === plan.id);
+    for (const spendId of plan.spendIds) {
+      const spend = registry.get(spendId);
+      if (!spend) throw new Error(`Unregistered allocation spend ${spendId}`);
+      if (!Number.isFinite(spend.amountGold) || spend.amountGold < 0) throw new Error('Invalid allocation spend');
+      if (referred.has(spendId)) continue;
+      if (!action || !['ready', 'active', 'blocked'].includes(action.status)) continue;
+      referred.add(spendId);
+      reserve(spendId, action, false);
+    }
+  }
+  if (method.kind === 'goal-plan') {
+    const parent = method.actions.map(plan => actions.find(action => action.token.actionId === plan.id))
+      .find(action => action && ['ready', 'active', 'blocked', 'complete'].includes(action.status));
+    if (parent) for (const spend of method.spends) if (spend.expectedPaymentTick !== undefined && !referred.has(spend.spendId)) {
+      if (!Number.isFinite(spend.amountGold) || spend.amountGold < 0 || !Number.isFinite(spend.expectedPaymentTick)) throw Error('Invalid planned capital');
+      reserve(spend.spendId, parent, true);
     }
   }
   return { memory: { ...memory, budgets }, unmet };

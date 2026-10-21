@@ -4,6 +4,8 @@ import { sameAction } from './control';
 import { incumbentCommandActor, inheritIncumbentCommand } from './incumbent-command-source';
 import { allocationCommandCost, reservedAllocationGold } from './allocation-ledger';
 import { isLifeSavingScript, safetyCommandReplacesOrder } from './script-safety';
+import { GOLD_MINE_RULES } from '../../shared/mining';
+import type { Target } from './types';
 
 export type StrategyCommandProposal = Readonly<{
   id: string;
@@ -49,6 +51,7 @@ function operands(snapshot: GameSnapshot, command: GameCommand): Operands {
  * interrupt either without changing the parent. Native legality is not copied. */
 type StrategyGatewayInput = Readonly<{ snapshot: GameSnapshot; owner: PlayerId;
   memory: StrategyAllocationMemory; grants: readonly ActionGrant[]; queuedTick: number | null;
+  managedExpansionSites?: readonly Target[];
   /** Controlled strategic producers may continue their actual task, but may
    * not recruit an unleased unit or start another ungranted mission. */
   incumbentOnlyScripts?: ReadonlySet<string> }>;
@@ -122,6 +125,13 @@ export function createStrategyCommandGateway(input: StrategyGatewayInput) {
   };
   for (const proposal of proposals) {
     const command = proposal.command, used = operands(snapshot, command);
+    if (proposal.source === 'script' && command.type === 'build' && command.buildingKind === 'townHall'
+      && input.managedExpansionSites?.some(site => Math.hypot(site.point.x - command.x, site.point.y - command.y) <= GOLD_MINE_RULES.baseRange)) {
+      const order = units.get(command.unitId)?.order;
+      if (!(order?.type === 'build' && order.buildingKind === command.buildingKind && order.x === command.x && order.y === command.y)) {
+        record(proposal, command, 'goal-managed-expansion-requires-formal-builder'); continue;
+      }
+    }
     if (proposal.source === 'executor' && !grantFor(proposal)) { record(proposal, command, 'allocation-grant-stale'); continue; }
     const deniedUnit = (id: string) => {
       if (!allows(`unit:${id}`, proposal)) return 'resource-leased-to-another-action';

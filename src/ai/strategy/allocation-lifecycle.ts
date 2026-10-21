@@ -206,7 +206,9 @@ export function allocationGrants(memory: StrategyAllocationMemory): ActionGrant[
       const leases = orderIds(Object.values(memory.leases).filter(lease => sameAction(lease.action, token)));
       return { revision: memory.revision, action: token, objectiveId: execution.objectiveId, methodId: execution.methodId,
         leases, assignments: orderIds(Object.values(memory.assignments).filter(assignment => sameAction(assignment.action, token))),
-        budgets: orderIds(Object.values(memory.budgets).filter(budget => sameAction(budget.action, token) && budget.state !== 'released')),
+        budgets: orderIds(Object.values(memory.budgets).filter(budget => sameAction(budget.action, token) && budget.state !== 'released'
+          && (budget.plannedGold === undefined || memory.methods[execution.methodId]?.actions
+            .find(action => action.id === token.actionId)?.spendIds.includes(budget.spendId)))),
         voyages: orderIds(Object.values(memory.voyages).filter(voyage => sameAction(voyage.action, token))),
         orders: Object.values(memory.issuedOrders).filter(order => sameAction(order.action, token)).sort((a, b) => a.unitId < b.unitId ? -1 : a.unitId > b.unitId ? 1 : 0),
         commands: orderIds(Object.values(memory.issuedCommands).filter(command => sameAction(command.action, token))),
