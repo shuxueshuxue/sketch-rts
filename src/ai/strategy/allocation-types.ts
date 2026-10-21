@@ -1,3 +1,4 @@
+import type { AssemblyDelayLossUpperBound, AssemblyDisplacementQuote } from './types';
 import type { GameCommand, GameSnapshot, PlayerId, TrainableUnitKind, Unit, UnitOrder } from '../../shared/types';
 import type { FixedVoyage, FixedVoyageLoading } from './arrivals';
 import type { AssemblyFactsReader } from './assembly-facts';
@@ -6,7 +7,7 @@ import type { ExecutorReason } from '../executor-reasons';
 import type { DecisionFacts } from './decision';
 import type { AssignmentId, AssignmentStage, BudgetEntry, Effect, LandId, Location, Method, MethodId, Objective,
   ObjectiveId, Precondition, ResourceDemand, Situation, Subgoal, Target, UnitRole, Utility, CrossingEta, ValuationContext,
-  ValuationQuotation, ValuationWindow, ImportedLossUpperBound, Arrival } from './types';
+  ValuationQuotation, ValuationWindow, ImportedLossUpperBound, Arrival, ProductionUse } from './types';
 
 /** Formal control contracts. No executor registration or behavior is enabled by these types. */
 export type ActionId = string;
@@ -175,7 +176,7 @@ export type PlannedVoyage = Readonly<{
 }>;
 export type AllocationValuationBasis = Readonly<{ kind: 'proven-lower-bound';
   probabilityLower: number; probabilityUpper: number; unresolvedProbability: number }>;
-export type AllocationDecisionCounts = Readonly<{ lowerBoundSelections: number; lowerBoundInitialSelections: number }>;
+export type AllocationDecisionCounts = Readonly<{ lowerBoundSelections: number; lowerBoundInitialSelections: number; assemblyValueUnknownComparisons?: number }>;
 export type ObjectiveAllocation = Readonly<{
   objectiveId: ObjectiveId;
   methodId: MethodId;
@@ -291,7 +292,8 @@ export type PreemptionQuotation = Readonly<{
   /** null blocks stealing; an unpriced incumbent does not cost zero. */
   marginalBenefitGold: number | null;
   displacedLossGold: number | null;
-  displacedLoss?: Readonly<{ kind: 'remaining-utility' } | { kind: 'upper-bound'; bound: ImportedLossUpperBound }>;
+  displacedLoss?: Readonly<{ kind: 'remaining-utility' } | { kind: 'upper-bound'; bound: ImportedLossUpperBound }
+    | { kind: 'assembly-delay-upper-bound'; bound: AssemblyDelayLossUpperBound }>;
   switchingCostGold: number | null;
   reason: AllocationReason;
 }>;
@@ -463,6 +465,12 @@ export type StrategyAllocationInput = Readonly<{
   methods: readonly ExecutableMethod[];
   providers: readonly AllocationMethodProvider[];
   previous: StrategyAllocationMemory | null;
+  /** Same-think before/after supply and cash-flow proof for a committed
+   * assembly. A finite whole-value cap is explicit, never a fake exact zero. */
+  assemblyDelayLossUpperBound?: (request: Readonly<{ objectiveId: string; methodId: string;
+    unitIds: readonly string[]; remainingUnitIds: readonly string[]; window: ValuationWindow;
+    unavailableProduction: readonly ProductionUse[] }>) => AssemblyDisplacementQuote;
+
   /** Already published once for this think; provider quotes are read-only. */
   voyageRisks?: ReadonlyMap<string, VoyageRiskStages>;
   /** Framework batch after candidate materialization, before final gross/net

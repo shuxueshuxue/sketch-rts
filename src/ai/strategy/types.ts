@@ -200,10 +200,19 @@ export type ProductionUse = Readonly<{ buildingId: string; lane: 'training' | 'r
 /** Migration-only bound on an executed old task, not its invented exact value. */
 export type ImportedLossUpperBound = Readonly<{ targetId: string; gold: number; window: ValuationWindow;
   components: readonly Readonly<{ code: string; valueGold: number; factIds: readonly string[] }>[] }>;
+/** Formal gathering displacement. Progress survives removal; loss prices only
+ * the separately proved delay, never the migration envelope or a payoff lower bound. */
+export type AssemblyDelayLossUpperBound = Readonly<{
+  targetId: string; gold: number; window: ValuationWindow; continuationUpperGold: number;
+  mode: 'scenario-delay' | 'whole-value-cap';
+  components: readonly Readonly<{ code: string; valueGold: number; factIds: readonly string[] }>[];
+}>;
+export type AssemblyDisplacementQuote = Readonly<{ status: 'known'; bound: AssemblyDelayLossUpperBound }>
+  | Readonly<{ status: 'unknown'; reasonCode: string }>;
 export type PricedOpportunityAlternative = Readonly<{ objectiveId: ObjectiveId; unitIds: readonly string[];
   production?: readonly ProductionUse[]; marginalGold: number; withResourcesGold: number;
-  withoutResourcesGold: number | null; basis: 'exact' | 'conservative-bound' | 'upper-bound';
-  upperBound?: ImportedLossUpperBound }>;
+  withoutResourcesGold: number | null; basis: 'exact' | 'conservative-bound' | 'upper-bound' | 'assembly-delay-upper-bound';
+  upperBound?: ImportedLossUpperBound; assemblyDelayUpperBound?: AssemblyDelayLossUpperBound }>;
 export type OpportunityAlternative = Readonly<{
   objectiveId: ObjectiveId;
   unitIds: readonly string[];
@@ -213,6 +222,7 @@ export type OpportunityAlternative = Readonly<{
   withoutResourcesStatus: 'feasible' | 'not-runnable' | 'unknown';
   committed: boolean;
   upperBound?: ImportedLossUpperBound;
+  assemblyDelayUpperBound?: AssemblyDelayLossUpperBound;
 }>;
 export type OpportunityCostQuote = Readonly<{ window: ValuationWindow }> & (
   | Readonly<{ status: 'known'; gold: number; basis: 'feasible-bundle-quotes' | 'no-positive-feasible-alternative';

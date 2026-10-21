@@ -1,3 +1,4 @@
+import type { AssemblyDisplacementQuote } from './types';
 import type { ImportedLossUpperBound, OpportunityAlternative, OpportunityRequest, OpportunityCostQuote, ValuationWindow, ProductionUse } from './types';
 import { quoteOpportunityCost } from './utility';
 import { canonicalProductionUses, productionUsesOverlap } from './production-use';
@@ -16,6 +17,8 @@ export type BundleValuationSource = Readonly<{
   production?: readonly ProductionUse[];
   effectKeys: readonly string[];
   committed: boolean;
+  assemblyDisplacement?: (remainingUnitIds: readonly string[], window: ValuationWindow,
+    unavailableProduction: readonly ProductionUse[], requestingObjectiveId: string) => AssemblyDisplacementQuote;
   quote: (unitIds: readonly string[], window: ValuationWindow, unavailableProduction?: readonly ProductionUse[]) => BundleValuation;
 }>;
 
@@ -50,6 +53,9 @@ export function createOpportunityOracle(sources: readonly BundleValuationSource[
     const unknown = new Set(options.unpricedCommitmentsFor?.(request.unitIds));
     const production = canonicalProductionUses(request.production);
     for (const id of options.unpricedProductionFor?.(production) ?? []) unknown.add(id);
+    // Retaining or growing this same objective does not displace itself. A
+    // partial commitment with no standalone quote must not block replacement supply.
+    unknown.delete(request.objectiveId);
     const alternatives: OpportunityAlternative[] = [];
     const effects = new Map<string, { alternative: OpportunityAlternative; marginal: number }>();
     for (const source of ordered) {
@@ -58,15 +64,22 @@ export function createOpportunityOracle(sources: readonly BundleValuationSource[
         || source.effectKeys.some(key => requestEffects.has(key))) continue;
       const ids = [...new Set(source.unitIds)].sort();
       const before = quote(source, ids, request.window);
-      if (before.status !== 'feasible' || source.committed && before.coverage !== 'complete') {
-        if (source.committed) unknown.add(source.objectiveId);
-        continue;
+      const remaining = ids.filter(id => !requested.has(id));
+      const after = before.status === 'feasible' ? quote(source, remaining, request.window, sharedProduction ? production : []) : null;
+      if (source.committed && (before.status !== 'feasible' || before.coverage !== 'complete'
+        || after?.status === 'unknown' || after?.status === 'feasible' && after.coverage !== 'complete')) {
+        const displacement = source.assemblyDisplacement?.(remaining, request.window, sharedProduction ? production : [], request.objectiveId);
+        if (displacement?.status === 'known') {
+          const bound = displacement.bound;
+          alternatives.push({ objectiveId: source.objectiveId, unitIds: ids,
+            ...(source.production?.length ? { production: canonicalProductionUses(source.production) } : {}),
+            committed: true, withResourcesGold: bound.gold, withoutResourcesGold: null,
+            withoutResourcesStatus: 'unknown', assemblyDelayUpperBound: bound });
+          continue;
+        }
+        unknown.add(source.objectiveId); continue;
       }
-      const after = quote(source, ids.filter(id => !requested.has(id)), request.window, sharedProduction ? production : []);
-      if (source.committed && (after.status === 'unknown' || after.status === 'feasible' && after.coverage !== 'complete')) {
-        unknown.add(source.objectiveId);
-        continue;
-      }
+      if (before.status !== 'feasible' || !after) continue;
       const alternative: OpportunityAlternative = { objectiveId: source.objectiveId, unitIds: ids,
         ...(source.production?.length ? { production: canonicalProductionUses(source.production) } : {}),
         withResourcesGold: before.score, withoutResourcesGold: after.status === 'feasible' ? after.score : null,

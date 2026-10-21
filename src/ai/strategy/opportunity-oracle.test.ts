@@ -128,3 +128,17 @@ describe('whole-bundle opportunity oracle', () => {
     expect(createOpportunityOracle([...sources].reverse(), options)(request)).toEqual(value);
   });
 });
+
+it('uses a formal delay-loss upper bound for a committed assembly without treating its payoff lower bound as exact loss', () => {
+  const window = valuationWindow(100);
+  const bound = { targetId: 'island', gold: 30, continuationUpperGold: 100, window, mode: 'scenario-delay' as const,
+    components: [{ code: 'known-path-delay', valueGold: 30, factIds: ['path'] }] };
+  const source: BundleValuationSource = { id: 'assembly', objectiveId: 'island', unitIds: ['one', 'two'], effectKeys: ['island'],
+    committed: true, quote: () => ({ status: 'feasible', score: 20, coverage: 'known-effects' }),
+    assemblyDisplacement: remaining => { expect(remaining).toEqual(['two']); return { status: 'known', bound }; } };
+  const oracle = createOpportunityOracle([source], { effectKeysFor: () => [] });
+  expect(oracle({ objectiveId: 'defend', methodId: 'defend', unitIds: ['one'], window })).toMatchObject({ status: 'known', gold: 30,
+    displacements: [{ objectiveId: 'island', marginalGold: 30, basis: 'assembly-delay-upper-bound', assemblyDelayUpperBound: bound }] });
+  expect(createOpportunityOracle([{ ...source, assemblyDisplacement: () => ({ status: 'unknown', reasonCode: 'assembly-continuation-value-unknown' }) }],
+    { effectKeysFor: () => [] })({ objectiveId: 'defend', methodId: 'defend', unitIds: ['one'], window })).toMatchObject({ status: 'unknown' });
+});

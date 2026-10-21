@@ -11,7 +11,7 @@ import { productionUsesOverlap } from './production-use';
 import { STRATEGY_PARAMETERS } from './utility';
 import { plannedVoyageArrival, plannedVoyageContext } from './planned-voyage-arrival';
 import type { DecisionFacts } from './decision';
-import type { Effect, Objective, SituationUnit, ValuationContext } from './types';
+import type { Effect, Objective, SituationUnit, ValuationContext, ValuationWindow, ProductionUse } from './types';
 import { assertUnitValueSides } from './unit-value-ledger';
 import { allocationResponseCandidates } from './allocation-eligibility';
 import { currentSiteThreatIsClear } from './protection-activation';
@@ -402,12 +402,23 @@ export function allocateStrategy(input: StrategyAllocationInput): StrategyAlloca
       offer.method = result.method; offer.gross = result.quote; offer.unitIds = result.unitIds;
     }
   }
+  const assemblyValueUnknown = new Set<string>();
+  const displacementFor = (objectiveId: string, methodId: string, unitIds: readonly string[]) =>
+    (remainingUnitIds: readonly string[], window: ValuationWindow, unavailableProduction: readonly ProductionUse[], requestingObjectiveId: string) => {
+      const result = input.assemblyDelayLossUpperBound!({ objectiveId, methodId, unitIds, remainingUnitIds, window, unavailableProduction });
+      if (result.status === 'unknown' && result.reasonCode === 'assembly-continuation-value-unknown')
+        assemblyValueUnknown.add(`${objectiveId}\0${requestingObjectiveId}`);
+      return result;
+    };
+
   const sources: BundleValuationSource[] = offers.filter(offer => offer.gross.status === 'feasible').map((offer, index) => ({
     id: `${offer.method.id}/bundle:${index}`, objectiveId: offer.objective.id, unitIds: offer.unitIds,
     ...(offer.gross.valuation?.production ? { production: offer.gross.valuation.production } : {}),
     effectKeys: offer.objective.effects.map(allocationEffectKey), committed: memory.objectives[offer.objective.id]?.methodId === offer.method.id
       && Object.values(memory.assignments).filter(assignment => assignment.objectiveId === offer.objective.id).map(assignment => assignment.unitId)
         .sort().join('\0') === [...offer.unitIds].sort().join('\0'),
+    ...(offer.method.stage === 'assembly' && input.assemblyDelayLossUpperBound ? {
+      assemblyDisplacement: displacementFor(offer.objective.id, offer.method.id, offer.unitIds) } : {}),
     quote: (ids, window, unavailableProduction) => {
       const result = reprice(input, memory, offer.provider, { ...offer, unitIds: ids }, { phase: 'gross', window,
         allowedUnitIds: offer.unitIds, unavailableUnitIds: offer.unitIds.filter(id => !ids.includes(id)),
@@ -418,6 +429,28 @@ export function allocateStrategy(input: StrategyAllocationInput): StrategyAlloca
         : { status: result.quote.missingPreconditions.some(condition => condition.status === 'unknown') ? 'unknown' : 'not-runnable', reasonCode: result.quote.reason.code };
     },
   }));
+  // A gathering cohort can temporarily have no runnable smaller quote. Its
+  // independently proved finite delay/cap is still a valid displacement fact;
+  // it must not disappear merely because feasible-offer filtering removed it.
+  if (input.assemblyDelayLossUpperBound) for (const objective of Object.values(memory.objectives)) {
+    const method = memory.methods[objective.methodId];
+    if (terminal(objective.status) || method?.stage !== 'assembly' || sources.some(source => source.objectiveId === objective.objectiveId && source.committed)) continue;
+    const provider = input.providers.find(provider => provider.id === method.providerId);
+    const goal = input.objectives.find(goal => goal.id === objective.objectiveId);
+    const unitIds = Object.values(memory.assignments).filter(assignment => assignment.objectiveId === objective.objectiveId)
+      .map(assignment => assignment.unitId).sort();
+    if (!provider || !goal || !unitIds.length) continue;
+    sources.push({ id: `${method.id}/committed-assembly`, objectiveId: objective.objectiveId, unitIds,
+      effectKeys: objective.effectKeys, committed: true, assemblyDisplacement: displacementFor(objective.objectiveId, method.id, unitIds),
+      quote(ids, window, unavailableProduction) {
+        const result = reprice(input, memory, provider, { objective: goal, method, unitIds: ids }, { phase: 'gross', window,
+          allowedUnitIds: unitIds, unavailableUnitIds: unitIds.filter(id => !ids.includes(id)),
+          ...(unavailableProduction ? { unavailableProduction } : {}) });
+        return result.quote.status === 'feasible' ? { status: 'feasible', score: result.quote.utility.score,
+          coverage: result.quote.valuationBasis ? 'known-effects' : 'complete' }
+          : { status: result.quote.missingPreconditions.some(condition => condition.status === 'unknown') ? 'unknown' : 'not-runnable', reasonCode: result.quote.reason.code };
+      } });
+  }
   const oracle = createOpportunityOracle(sources, {
     effectKeysFor: id => input.objectives.find(objective => objective.id === id)?.effects.map(allocationEffectKey) ?? memory.objectives[id]?.effectKeys ?? [],
     unpricedCommitmentsFor: ids => [...new Set(ids.flatMap(id => {
@@ -505,8 +538,9 @@ export function allocateStrategy(input: StrategyAllocationInput): StrategyAlloca
         memory = { ...memory, objectives: { ...memory.objectives, [fromId]: { ...old, challengerId: offer.objective.id, challengerThinks } } };
         if (tick < old.minimumStayUntilTick || challengerThinks < STRATEGY_PARAMETERS.challengerThinks) { failed = true; break; }
       }
-      const displacedLoss: NonNullable<PreemptionQuotation['displacedLoss']> = priced?.upperBound
-        ? { kind: 'upper-bound', bound: priced.upperBound } : { kind: 'remaining-utility' };
+      const displacedLoss: NonNullable<PreemptionQuotation['displacedLoss']> = priced?.assemblyDelayUpperBound
+        ? { kind: 'assembly-delay-upper-bound', bound: priced.assemblyDelayUpperBound } : priced?.upperBound
+          ? { kind: 'upper-bound', bound: priced.upperBound } : { kind: 'remaining-utility' };
       if (displacedLoss.kind === 'upper-bound' && taken.some(lease => lease.origin !== 'imported-task')) {
         failed = true; break;
       }
@@ -529,7 +563,8 @@ export function allocateStrategy(input: StrategyAllocationInput): StrategyAlloca
       memory = appendAllocationEvent(memory, { objectiveId: fromId, methodId: taken[0]!.methodId, action: token, kind: 'preempted', handoff,
         quotation: { fromObjectiveId: fromId, toObjectiveId: offer.objective.id, resourceKeys,
           marginalBenefitGold: quote.utility.score + loss, displacedLossGold: loss, displacedLoss, switchingCostGold: cost,
-          reason: { code: displacedLoss.kind === 'upper-bound' ? 'same-window-imported-loss-upper-bound' : 'same-window-marginal-reallocation',
+          reason: { code: displacedLoss.kind === 'assembly-delay-upper-bound' ? 'same-window-assembly-delay-loss-upper-bound'
+            : displacedLoss.kind === 'upper-bound' ? 'same-window-imported-loss-upper-bound' : 'same-window-marginal-reallocation',
             factIds: resourceKeys, values: {} } },
         reason: { code: 'higher-marginal-utility-after-switching', factIds: resourceKeys, values: {} } }, tick);
       const leases = { ...memory.leases }, assignments = { ...memory.assignments };
@@ -559,7 +594,7 @@ export function allocateStrategy(input: StrategyAllocationInput): StrategyAlloca
     if (quote.valuationBasis) {
       const basis = quote.valuationBasis, action = offer.method.actions[0] && memory.executions[offer.method.actions[0].id]?.token;
       const counts = memory.decisionCounts;
-      memory = { ...memory, decisionCounts: { lowerBoundSelections: (counts?.lowerBoundSelections ?? 0) + 1,
+      memory = { ...memory, decisionCounts: { ...counts, lowerBoundSelections: (counts?.lowerBoundSelections ?? 0) + 1,
         lowerBoundInitialSelections: (counts?.lowerBoundInitialSelections ?? 0) + Number(!renewal) } };
       if (action) memory = appendAllocationEvent(memory, { objectiveId: offer.objective.id, methodId: offer.method.id, action,
         kind: 'valuation-bound-selected', basis, scoreGold: quote.utility.score, renewal,
@@ -577,6 +612,10 @@ export function allocateStrategy(input: StrategyAllocationInput): StrategyAlloca
       memory = { ...memory, unmet: [...memory.unmet, { id: condition.id, objectiveId: offer.objective.id, methodId: offer.method.id,
         action: null, demand: condition.demand, reason: condition.reason }] };
   }
+  if (assemblyValueUnknown.size) memory = { ...memory, decisionCounts: {
+    lowerBoundSelections: memory.decisionCounts?.lowerBoundSelections ?? 0,
+    lowerBoundInitialSelections: memory.decisionCounts?.lowerBoundInitialSelections ?? 0,
+    assemblyValueUnknownComparisons: (memory.decisionCounts?.assemblyValueUnknownComparisons ?? 0) + assemblyValueUnknown.size } };
   memory = pruneAllocationProvenance(memory);
   assertStrategyAllocationBounds(memory);
   return { memory, grants: allocationGrants(memory), events: memory.events.filter(event =>
