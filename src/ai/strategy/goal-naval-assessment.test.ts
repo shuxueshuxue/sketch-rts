@@ -35,7 +35,7 @@ function campFixture(): GoalCampCombatInput {
  return { snapshot,situation,cohort,from,target,staging,campId,effect:goalFact({kind:'camp-cleared',campId}),byTick:1000,
   arrivalTicks:known(20),movementRisk:known({expectedLossGold:7,survivalProbability:.8}),
   routes:[observed(goalFact({kind:'route',mover:'land',from:staging,to:target}))],
-  stagingFacts:[observed(goalFact({kind:'site-safe',site:staging,throughTick:1000}))] };
+  stagingFacts:[observed(goalFact({kind:'camp-staging',campId,at:staging,cohort:cohort.map(member=>member.reference)}))] };
 }
 function defenseFixture(): GoalDefenseCombatInput {
  const game=sketchScene('shared-defense-option-assessment').map('bareDuel').replaceDefaults()
@@ -83,7 +83,7 @@ describe('pure shared naval combat assessment',()=>{
  });
  it('assesses symbolic members without world IDs, rejects foreign bindings, and does not borrow an unselected neighbor',()=>{
   const f=campFixture(),symbolic={reference:{kind:'output' as const,actionId:'paid-training',output:'unit-0'},assessment:{...f.cohort[0]!.assessment,id:'private-native-copy'}};
-  const result=only(strict(()=>assessGoalCampCombatOption({...f,cohort:[symbolic]})));
+  const result=only(strict(()=>assessGoalCampCombatOption({...f,cohort:[symbolic],stagingFacts:[observed(goalFact({kind:'camp-staging',campId:f.campId,at:f.staging,cohort:[symbolic.reference]}))]})));
   expect(result.cohort).toEqual([symbolic.reference]);expect(JSON.stringify(result)).not.toContain('private-native-copy');
   expect(result.cohort).not.toContainEqual(f.cohort[1]!.reference);
   expect(assessGoalCampCombatOption({...f,cohort:[]})).toMatchObject({state:'unmet',reason:{code:'clearing-force-empty'}});

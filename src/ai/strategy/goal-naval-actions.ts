@@ -135,7 +135,8 @@ export function declareGoalAssembly(input: GoalNavalCohort & Readonly<{
     effects.push(establish(goalFact({ kind: 'force-at', at: input.at, minimum: measured.force,
       metric: 'camp-force', campId: input.campId, cohort, byTick: input.byTick })));
   }
-  const preconditions = [...poolFacts(units, input.from, input.byTick), forceAvailable, input.safePost, ...input.routes];
+  const post = input.campId ? goalFact({ kind: 'camp-staging', campId: input.campId, at: input.at, cohort }) : input.safePost;
+  const preconditions = [...poolFacts(units, input.from, input.byTick), forceAvailable, post, ...input.routes];
   return declaration('assemble', 'strategy.assemble', { cohort, from: input.from,
     at: input.at, byTick: input.byTick, ...(input.campId ? { campId: input.campId } : {}) }, input, preconditions, effects,
   demands(input, units), movementFlows(units, input.from, input.at, force, preconditions.map(fact => fact.id), 'pool'));
@@ -154,7 +155,8 @@ export function declareGoalCampClearing(input: GoalNavalCohort & Readonly<{
   const flows = bounties(input.snapshot, camp.originalMemberIds, [cleared.id]);
   return declaration('clear-camp', 'strategy.clear-camp', { campId: input.campId,
     memberIds: [...camp.originalMemberIds], cohort: units.map(unit => reference(input, unit)), at: input.at, byTick: input.byTick },
-  input, [clearingForce, ...input.routes], [establish(cleared)], demands(input, units), flows);
+  input, [clearingForce, goalFact({ kind: 'camp-staging', campId: input.campId, at: input.at,
+    cohort: units.map(unit => reference(input, unit)) }), ...input.routes], [establish(cleared)], demands(input, units), flows);
 }
 
 /** A shore choice is a binding on a transport alternative. Only actually

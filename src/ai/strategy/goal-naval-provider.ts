@@ -75,7 +75,8 @@ export const goalNavalActionProvider: GoalActionProvider = {
       } else if (predicate.kind === 'force-at' && option.from?.landId && option.from.landId === predicate.at.landId) {
         action = declareGoalAssembly({ ...base, from: option.from, at: predicate.at,
           ...(predicate.metric === 'camp-force' ? { campId: predicate.campId } : {}),
-          safePost: goalFact({ kind: 'site-safe', site: predicate.at, throughTick: option.byTick }), routes: option.preconditions });
+          safePost: predicate.metric === 'camp-force' ? goalFact({ kind: 'camp-staging', campId: predicate.campId, at: predicate.at, cohort: option.cohort })
+            : goalFact({ kind: 'assembly-post', at: predicate.at, cohort: option.cohort }), routes: option.preconditions });
       } else if ((predicate.kind === 'force-available' || predicate.kind === 'worker-at') && option.from
         && (option.from.seaId || option.from.landId !== predicate.at.landId)) {
         const mass = cohort.filter(member => !member.assessment.deck && !member.assessment.cabin)

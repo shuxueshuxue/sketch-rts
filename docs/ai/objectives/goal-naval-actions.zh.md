@@ -82,3 +82,9 @@ provider 测试用真实场景快照和真实 Situation，加固定的已发布�
 `assessGoalCombatMovementRisk` 只接受当前真实组和逐成员已发布路线。它在完整行军时窗内检查观察到的移动敌军及技能/物品、敌船载兵、营地 home/return/leash、未完工塔、投射物和持续伤害场；仅无暴露证明返回零损失/P1。有暴露或缺事实时，保留 pending，或消费同 epoch、同请求精确绑定的已发布既有模型结果，不生成另一套风险概率。未来评估组不冒充当前真实成员。
 
 `goalCombatMovementRiskId` 的完整语义键仅供运行时模型绑定，不写入 decision memory 或诊断 request ID。纯 helper 不创建 Situation、查询、风险 batch 或工作额度。其定向测试核原生快照、严格导航闸、整窗接敌、营地/塔、陈旧或替换的路线/组、物品射程及 JSON 不变；不代表 owner-think 6144 或公开题已通过。
+
+`camp-staging(campId, at, cohort)` 独立证明指定营地的集合点、退路与其他营地避让，既不建立持续 `site-safe`，也不免除目标营地的接战损失。清营与 camp-force 集结均消费该事实，避免以自身 `camp-cleared` 的派生安全作为清营前置。`readGoalCampStagingFact` 只读同次共享 ground/landRoute/resolveCohort；未公布的物理请求继续 pending，真实空组、敌方组或敌营中心不能充作集合事实。其 revision 只含相关几何，路线谓词的 point 只保留坐标。
+
+清营候选复用原生集合点顺序和同组 battle/赏金模型，`option.target` 是 staging，实际营地由 campId 绑定。集合负责当前来源到 staging；清营本体只计 staging 后的接战段。跨海和未来池仍 deferred，未发布条件行军风险时即使战斗时长可算，成本/P 也保持 pending；固定风险端口的构造器回归不证明真实 owner-scope 已有该风险事实。
+
+未建厅矿点的 garrison 不再要求已有 SiteThreat 才能枚举：仍是同一个 hold-position，以真实 hall-complete 和精确 force-at(post) 为前置，守到完整 throughTick。只有对应 post 的当前、完整、无威胁安全窗事实才能证明零守点损失；安全靠作战维持、缺时窗或缺保护评估时，候选的成本/P 明确保留 pending。没有把未知保护能力或命令 ACK 填成 P1。

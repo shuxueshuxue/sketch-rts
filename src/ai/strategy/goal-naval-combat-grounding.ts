@@ -2,13 +2,16 @@ import { unitMover } from '../../shared/catalog';
 import { isOpenGround } from '../../shared/terrain';
 import type { Unit } from '../../shared/types';
 import { MINING_RALLY_RADIUS } from '../bootstrap_1/mining-rally';
+import { bootstrapCampApproach, type CampApproachPointReader } from '../bootstrap_1/camp-geometry';
 import { effectiveCombatRating, structureRating, TOWER_STRENGTH } from '../policy/v6/strength';
-import { targetCoveringTowers } from './allocated-force';
+import { neutralCampExposure } from '../situation/neutral-camp-exposure';
+import { assessAllocatedForce, targetCoveringTowers } from './allocated-force';
 import type { AllocationArrivalReader, AllocationLandRouteReader } from './allocation-arrival-query';
 import { defenseThreatScenarios, type DefenseResponse } from './defense-risk';
 import { defenseGatherPost } from './executors/defend-site';
-import { goalFact, goalValueKey } from './goal-facts';
-import { assessGoalDefenseCombatOption, type GoalMovementRisk } from './goal-naval-assessment';
+import type { GoalNativeGroundReader } from './goal-boarding-geometry';
+import { goalCampId, goalFact, goalValueKey, resolveGoalCamp } from './goal-facts';
+import { assessGoalCampCombatOption, assessGoalDefenseCombatOption, type GoalMovementRisk } from './goal-naval-assessment';
 import type { GoalCandidates, GoalCohortMember, GoalCombatOption, GoalEntityReference, GoalEstimate,
   GoalFact, GoalFactObservation, GoalGroundingReader, GoalPlanningContext } from './goal-planner-types';
 import { strategyIsOpponent } from './ownership';
@@ -24,6 +27,7 @@ export type GoalNavalCombatGroundingPorts = Readonly<{
   arrival: AllocationArrivalReader; landRoute: AllocationLandRouteReader;
   resolveCohort: NonNullable<GoalGroundingReader['resolveCohort']>;
   movementRisk?: (request: GoalCombatMovementRequest) => GoalEstimate<GoalMovementRisk>;
+  readGroundPoint?: GoalNativeGroundReader;
   /** Only potential redirect scenarios need a counterfactual response. The
    * source owns its eligible/excluded pool and published route facts. */
   response?: (request: GoalCombatMovementRequest) => DefenseResponse;
@@ -47,6 +51,7 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
   const interrupted = new Set(ports.interruptedUnitIds ?? []);
   const actors = new Map(context.snapshot.units.map(unit => [unit.id, unit]));
   const locations = new Map(context.situation.units.map(unit => [unit.id, unit.location]));
+  const roles = new Map(context.situation.units.map(unit => [unit.id, unit.roles]));
   const eligible = (unit: Unit) => unit.owner === context.owner && unit.hp > 0 && unit.expiresTick === undefined
     && unitMover(unit.kind) === 'land' && (!allowed || allowed.has(unit.id)) && !interrupted.has(unit.id);
   const units = context.snapshot.units.filter(eligible).sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
@@ -54,6 +59,9 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
   function cohorts(effect: GoalFact): GoalCandidates<readonly GoalCohortMember[]> {
     const p = effect.predicate;
     const workers = p.kind === 'assets-safe' || p.kind === 'worker-at';
+    const suitable = (unit: Unit) => workers ? unit.kind === 'worker' : unit.kind !== 'worker' && unit.attackDamage > 0
+      && (p.kind !== 'garrison-ready' || !!roles.get(unit.id)?.some(role => role === 'frontline' || role === 'ranged')
+        && !roles.get(unit.id)?.some(role => role === 'caster' || role === 'healer' || role === 'worker'));
     const refs = p.kind === 'assets-safe' ? sorted(p.unitIds).map(entityId => ({ kind: 'existing' as const, entityId }))
       : p.kind === 'worker-at' && p.worker ? [p.worker]
       : p.kind === 'force-at' || p.kind === 'force-available' ? p.cohort : undefined;
@@ -61,7 +69,7 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
     if (refs) groups.push([...refs]);
     else {
       const lands = new Map<string, Unit[]>();
-      for (const unit of units.filter(unit => workers ? unit.kind === 'worker' : unit.kind !== 'worker' && unit.attackDamage > 0)) {
+      for (const unit of units.filter(suitable)) {
         const location = locations.get(unit.id);
         const region = location?.kind === 'land' ? location.landId : location?.kind === 'aboard' ? `aboard:${location.shipId}` : undefined;
         if (!region) continue;
@@ -84,7 +92,7 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
       const exact = members.flatMap(member => {
         const actor = member.reference.kind === 'existing' ? actors.get(member.reference.entityId) : undefined;
         return actor && eligible(actor)
-          && (workers ? actor.kind === 'worker' : actor.kind !== 'worker' && actor.attackDamage > 0)
+          && suitable(actor)
           ? [{ reference: member.reference, assessment: actor }] : [];
       });
       if (exact.length !== members.length) {
@@ -184,9 +192,107 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
       }, [effect.id, ...opponents.map(row => row.unit.id)]) });
     return assessed;
   }
+  function garrison(effect: GoalFact, group: readonly GoalCohortMember[], from: Target, site: Target, throughTick: number): GoalCandidates<GoalCombatOption> {
+    // A future hall need not have a present SiteThreat. Its garrison is the
+    // same hold atom with an exact on-post force prerequisite, not a defense
+    // macro which waits for a hall to exist before it can be declared.
+    if (!site.landId) return pending('combat-guard-post-region-pending', [effect.id]);
+    const post: Target = { landId: site.landId, point: defenseGatherPost(site.point, from.point) };
+    if (!isOpenGround(context.snapshot.map, post.point.x, post.point.y) || landIdAt(context.snapshot.map, post.point) !== site.landId)
+      return unmet('combat-guard-post-ground-blocked', [effect.id]);
+    const safetyFact = goalFact({ kind: 'site-safe', site: post, throughTick }), safety = context.readFact(safetyFact);
+    const requiredForce = group.reduce((sum, member) => sum + effectiveCombatRating(context.snapshot, member.assessment), 0);
+    const ids = sorted([effect.id, safety.fact.id, ...safety.reason.factIds]);
+    const unquoted = pending('garrison-post-protection-unpublished', ids, safety.state === 'pending' ? [safety.requestId] : ids);
+    // A published safe full window proves that holding at this post has no
+    // observed combat loss. Marching there belongs to force-at's achiever.
+    const quiet = safety.state === 'met' && safety.fact.id === safetyFact.id && safety.observedTick === context.tick
+      && (safety.availableTick ?? context.tick) <= context.tick && safety.threats !== undefined
+      && !safety.threats.unitIds.length && !safety.threats.campIds.length && safety.threats.requiredForce === 0
+      && !safety.derived?.allOf.length;
+    const cost: GoalCombatOption['cost'] = quiet ? known([], ids) : unquoted;
+    const successProbability = quiet ? known(1, ids) : unquoted;
+    return { state: 'met', candidates: [{ id: `combat-garrison:${goalValueKey([effect.id, post, group.map(m => m.reference)])}`,
+      target: post, from, cohort: group.map(m => m.reference), requiredForce, byTick: throughTick,
+      duration: known(Math.max(0, throughTick - context.tick), ids), cost, successProbability,
+      preconditions: [safety.fact], factIds: ids }], factIds: ids };
+  }
+  function clearCamp(effect: GoalFact, group: readonly GoalCohortMember[], from: Target, campId: string, throughTick: number): GoalCandidates<GoalCombatOption> {
+    const resolved = resolveGoalCamp(context.snapshot, campId);
+    if (resolved.status !== 'present') return unmet(resolved.status === 'cleared' ? 'combat-camp-already-cleared' : 'combat-camp-binding-invalid', [campId]);
+    const camp = resolved.exposure.camp, landId = landIdAt(context.snapshot.map, camp.center);
+    if (!landId) return pending('combat-camp-region-pending', [effect.id, campId]);
+    if (from.landId !== landId) return pending('combat-camp-source-transport-pending', [effect.id, campId]);
+    const center = { x: group.reduce((sum, member) => sum + member.assessment.x, 0) / group.length,
+      y: group.reduce((sum, member) => sum + member.assessment.y, 0) / group.length };
+    const hall = context.snapshot.buildings.filter(building => building.owner === context.owner && building.hp > 0 && building.complete
+      && building.kind === 'townHall' && landIdAt(context.snapshot.map, building) === landId)
+      .sort((a, b) => gap(a, center) - gap(b, center) || (a.id < b.id ? -1 : 1))[0];
+    const home = hall ? { x: hall.x, y: hall.y } : center;
+    const unresolved: string[] = [], facts: string[] = [effect.id, campId];
+    const project: CampApproachPointReader = point => {
+      const projected = ports.readGroundPoint?.({ kind: 'project-goal', point, mover: 'land' });
+      if (projected?.state === 'met') {
+        facts.push(...projected.factIds);
+        return landIdAt(context.snapshot.map, projected.value) === landId ? { status: 'known', point: projected.value }
+          : { status: 'unreachable', reasonCode: 'combat-staging-region-mismatch' };
+      }
+      if (projected?.state === 'unmet') return { status: 'unreachable', reasonCode: projected.reason.code };
+      const key = `combat-camp-staging:${goalValueKey([campId, point])}`;
+      unresolved.push(...(projected?.state === 'pending' ? projected.requestIds : [key]));
+      return { status: 'unknown', reasonCode: 'combat-staging-projection-pending' };
+    };
+    const approach = bootstrapCampApproach(context.snapshot, home, group.map(member => member.assessment), camp, from.point,
+      neutralCampExposure(context.snapshot).camps.map(camp => camp.camp), (start, goal) => {
+        const road = ports.landRoute(start, goal);
+        if (road.status === 'unknown') unresolved.push(goalFact({ kind: 'route', mover: 'land',
+          from: { landId, point: { x: start.x, y: start.y } }, to: { landId, point: { x: goal.x, y: goal.y } } }).id);
+        return road;
+      }, project);
+    if (!approach) return unresolved.length ? pending('combat-camp-staging-pending', facts, unresolved)
+      : unmet('combat-camp-staging-unreachable', facts);
+    const staging: Target = { landId, point: approach.staging }, target: Target = { landId, point: camp.center };
+    // Only this atom's post-to-contact leg is assessed. Gathering from the
+    // actual origin is a separate force-at prerequisite, never billed twice.
+    const staged = group.map(member => ({ ...member, assessment: { ...member.assessment, x: staging.point.x, y: staging.point.y } }));
+    const routes = staged.map(member => context.readFact(goalFact({ kind: 'route', mover: 'land', actor: member.reference,
+      from: staging, to: target })));
+    const missing = routes.filter(row => row.state === 'pending'), failed = routes.find(row => row.state === 'unmet');
+    const valid = routes.every(row => row.route?.ticks !== null && row.route?.ticks !== undefined && Number.isFinite(row.route.ticks) && row.route.ticks >= 0);
+    const arrivalTicks: GoalEstimate<number> = failed ? { state: 'unmet', reason: failed.reason }
+      : missing.length ? pending('combat-camp-contact-route-pending', routes.map(row => row.fact.id), missing.flatMap(row => row.state === 'pending' ? [row.requestId] : []))
+      : valid ? known(Math.max(0, ...routes.map(row => row.route!.ticks!)), routes.map(row => row.fact.id))
+      : pending('combat-camp-contact-clock-pending', routes.map(row => row.fact.id));
+    const request: GoalCombatMovementRequest = { effect, cohort: staged, from: staging, target, routes, arrivalTicks, throughTick };
+    const result = assessGoalCampCombatOption({ snapshot: context.snapshot, situation: context.situation, effect, cohort: group,
+      from, target, staging, campId, byTick: throughTick, routes, arrivalTicks, movementRisk: movement(request),
+      stagingFacts: [context.readFact(goalFact({ kind: 'camp-staging', campId, at: staging, cohort: group.map(member => member.reference) }))] });
+    return result.state === 'met' ? { ...result, candidates: result.candidates.map(option => ({ ...option,
+      factIds: sorted([...option.factIds, ...facts]) })), factIds: sorted([...result.factIds, ...facts]),
+      ...(unresolved.length ? { deferred: [{ id: `combat-camp-staging-alternatives:${campId}`, requestIds: sorted(unresolved),
+        reason: reason('combat-camp-staging-alternatives-pending', facts) }] } : {}) } : result;
+  }
   function options(effect: GoalFact): GoalCandidates<GoalCombatOption> {
     const p = effect.predicate;
-    if (!['site-safe', 'assets-safe', 'force-at', 'force-available', 'worker-at', 'garrison-ready'].includes(p.kind)) return unmet('not-naval-combat-effect', [effect.id]);
+    if (!['site-safe', 'assets-safe', 'force-at', 'force-available', 'worker-at', 'garrison-ready', 'camp-cleared', 'gold'].includes(p.kind)) return unmet('not-naval-combat-effect', [effect.id]);
+    if (p.kind === 'camp-cleared' || p.kind === 'gold') {
+      const camps = p.kind === 'camp-cleared' ? [p.campId] : neutralCampExposure(context.snapshot).camps.map(camp => goalCampId(camp.memberIds)).sort();
+      const groups = cohorts(effect); if (groups.state !== 'met') return groups;
+      const result: GoalCombatOption[] = [], deferred: Deferred[] = [...(groups.deferred ?? [])];
+      for (const campId of camps) for (const group of groups.candidates) {
+        const location = locations.get(group[0]!.assessment.id), id = `combat-camp:${goalValueKey([campId, group.map(m => m.reference)])}`;
+        if (location?.kind !== 'land' || group.some(member => {
+          const other = locations.get(member.assessment.id); return other?.kind !== 'land' || other.landId !== location.landId;
+        })) {
+          deferred.push({ id, requestIds: [id], reason: reason('combat-camp-land-origin-pending', [effect.id, campId]) }); continue;
+        }
+        const from: Target = { landId: location.landId, point: location.point };
+        const answer = clearCamp(effect, group, from, campId, 'byTick' in p ? p.byTick : context.tick + context.situation.horizonTicks);
+        if (answer.state === 'met') { result.push(...answer.candidates); deferred.push(...(answer.deferred ?? [])); }
+        else if (answer.state === 'pending') deferred.push({ id, requestIds: answer.requestIds, reason: answer.reason });
+      }
+      return choices(result, deferred, [effect.id, ...camps]);
+    }
     const target = p.kind === 'site-safe' ? p.site : 'at' in p ? p.at : undefined;
     if (!target?.landId) return pending('combat-target-region-pending', [effect.id]);
     const throughTick = 'throughTick' in p ? p.throughTick : 'byTick' in p ? p.byTick : context.tick + context.situation.horizonTicks;
@@ -215,11 +321,18 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
         deferred.push({ id: `${id}:crossing`, requestIds: [`${id}:crossing`], reason: reason('combat-transport-arrival-pending', [effect.id]) }); continue;
       }
       if (p.kind === 'site-safe' || p.kind === 'garrison-ready') {
-        const assessed = defense(effect, group, from, target, throughTick);
+        const assessed = p.kind === 'garrison-ready' ? garrison(effect, group, from, target, throughTick) : defense(effect, group, from, target, throughTick);
         if (assessed.state === 'met') { result.push(...assessed.candidates); deferred.push(...(assessed.deferred ?? [])); }
         else if (assessed.state === 'pending') deferred.push({ id, requestIds: assessed.requestIds, reason: assessed.reason });
         else rejected ??= assessed;
-      } else result.push(movingOption(travel(effect, group, from, target, throughTick)));
+      } else {
+        const option = movingOption(travel(effect, group, from, target, throughTick));
+        if ((p.kind === 'force-at' || p.kind === 'force-available') && p.metric === 'camp-force') {
+          const camp = resolveGoalCamp(context.snapshot, p.campId);
+          if (camp.status !== 'present') { rejected ??= unmet('combat-camp-binding-invalid', [p.campId]); continue; }
+          result.push({ ...option, campId: p.campId, requiredForce: assessAllocatedForce(context.owner, [], { metric: 'camp-force', camp: camp.exposure.camp }).requiredForce });
+        } else result.push(option);
+      }
     }
     return !result.length && !deferred.length && rejected ? rejected : choices(result, deferred, [effect.id]);
   }
