@@ -42,7 +42,7 @@ export type VoyageRiskRequest = Readonly<{
 }>;
 type Progress = { id: string; key: string; cursor: number; total: number; damage: number; boundarySeconds: number; computedTick: number };
 type NativeRouteProgress = { id: string; inputs: string; job: string; ready: boolean };
-export type VoyageRiskMemory = { version: 1; owner: PlayerId; tick: number; routeIds: string[]; entries: Progress[];
+export type VoyageRiskMemory = { version: 1; owner: PlayerId; tick: number; thinkSequence?: number; routeIds: string[]; entries: Progress[];
   nativeRoutes?: NativeRouteProgress[] };
 export type VoyageRisk = Readonly<
   { status: 'known'; survivalProbability: number; expectedDamage: number; expectedHpLoss: number;
@@ -172,8 +172,9 @@ function known(progress: Progress | undefined, ship: Unit, threats: readonly Thr
 export function assessVoyageRisks(snapshot: GameSnapshot, owner: PlayerId, requests: readonly VoyageRiskRequest[], memory: VoyageRiskMemory,
   observation?: StrategyObservationMemory) {
   if (memory.version !== 1 || memory.owner !== owner) throw new Error('Voyage risk memory owner/version mismatch');
-  const advance = memory.tick !== snapshot.tick;
-  if (advance) { memory.tick = snapshot.tick; memory.routeIds = []; }
+  const sequence = currentFactWork()?.receipt.thinkSequence;
+  const advance = sequence === undefined ? memory.tick !== snapshot.tick : memory.thinkSequence !== sequence;
+  if (advance) { memory.tick = snapshot.tick; if (sequence !== undefined) memory.thinkSequence = sequence; else delete memory.thinkSequence; memory.routeIds = []; }
   memory.nativeRoutes ??= [];
   const bodies = standingBodies(snapshot);
   setBuildingBodies(snapshot.map, bodies);

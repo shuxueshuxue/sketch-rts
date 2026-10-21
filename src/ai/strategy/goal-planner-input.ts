@@ -24,7 +24,7 @@ import type { GoalCandidates, GoalCohortMember, GoalFactObservation, GoalGroundi
 import { groundGoalTransportOptions } from './goal-transport-grounding';
 import { createGoalTransportFactPorts } from './goal-transport-physical-ports';
 import { createGoalFactReader, createGoalWorldFactMemory, type GoalWorldFactMemory } from './goal-world-facts';
-import { boundObservationMemory, observationHistory, observationMemory } from './observation-memory';
+import { beginObservationThink, boundObservationMemory, observationHistory, observationMemory } from './observation-memory';
 import { generateStrategyObjectives } from './plan';
 import { pointRoute } from './point-routes';
 import { landIdAt, regionIndex, seaIdAt } from './regions';
@@ -60,7 +60,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
   return withGoalDistanceFieldLease(snapshot.map, owner, snapshot.tick, () => withStrategyFrame(() => {
     setBuildingBodies(snapshot.map, standingBodies(snapshot));
     const preparation = observationMemory(snapshot, owner, memory);
-    const work = input.work ?? currentFactWork() ?? new FactWorkQueue(snapshot.tick, 6144, preparation.factWork);
+    const work = input.work ?? currentFactWork() ?? new FactWorkQueue(snapshot.tick, 6144, preparation.factWork, beginObservationThink(preparation));
     return withFactWork(work, () => {
       const regions = regionIndex(snapshot.map), distances = createPlanningDistanceQuery(snapshot, 1, 'land', preparation);
       const arrivals = createArrivalQuery(snapshot, owner, memory, distances, 1, regions, preparation, false);

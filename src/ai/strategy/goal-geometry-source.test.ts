@@ -73,3 +73,22 @@ it('isolates a failed domain cursor while keeping diagnostic audit failures visi
   diagnostics({ ...scan('audit-failure', 1), advance: () => { recordNativeRouting('diagnostic-native-route'); return { state: 1, work: 1, done: true, value: [] }; } });
   expect(() => withNavigationAudit(() => { throw new Error('audit rejection'); }, () => diagnostic.flush())).toThrow('audit rejection');
 });
+
+it('publishes on the next owner think at a frozen game tick without borrowing twice in one think', () => {
+  let retained = memory(); const request = scan('frozen-world', 5);
+  for (const sequence of [1, 2, 3]) {
+    const work = new FactWorkQueue(100, 2, undefined, sequence);
+    const read = createGoalGeometryReader({ tick: 100, work, memory: retained });
+    expect(read(request).state).toBe('pending'); work.flush();
+    expect(read(request).state).toBe('pending');
+    const same = new FactWorkQueue(100, 2, JSON.parse(JSON.stringify(work.receipt)), sequence);
+    createGoalGeometryReader({ tick: 100, work: same, memory: retained })(request); same.flush();
+    expect(same.receipt).toEqual(work.receipt);
+    expect(work.receipt.used).toBe(sequence === 3 ? 1 : 2);
+    retained = JSON.parse(JSON.stringify(retained));
+  }
+  const next = new FactWorkQueue(100, 2, undefined, 4);
+  expect(createGoalGeometryReader({ tick: 100, work: next, memory: retained })(request))
+    .toMatchObject({ state: 'met', value: [0, 1, 2, 3, 4] });
+  expect(next.flush().used).toBe(0);
+});

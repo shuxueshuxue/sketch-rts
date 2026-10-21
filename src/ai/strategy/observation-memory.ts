@@ -13,7 +13,7 @@ import { explanationForMemory } from './explanations';
 
 export type PreviousObjective = Pick<Objective, 'id' | 'sinceTick' | 'stability'> & { utility: Pick<Objective['utility'], 'score'> };
 export type SituationHistory = Pick<Situation, 'tick' | 'owner' | 'assets' | 'opportunities'>;
-export type FieldProgress = { goal: Point; work: number; readyTick: number | null };
+export type FieldProgress = { goal: Point; work: number; readyTick: number | null; readyThink?: number };
 export type StrategyObservationMemory = {
   version: 1;
   owner: PlayerId;
@@ -24,6 +24,8 @@ export type StrategyObservationMemory = {
   /** Bounded native planning cursor and exposure publication; no distance-field arrays. */
   voyageRisks?: VoyageRiskMemory;
   pointRoutes?: PointRouteMemory;
+  /** Monotone owner-think clock, independent of simulation time. */
+  thinkSequence?: number;
   factWork?: FactWorkReceipt;
   goalGeometry?: GoalGeometryMemory;
   truncated?: true;
@@ -107,4 +109,12 @@ export function boundObservationMemory(state: StrategyObservationMemory) {
     else if (state.fields.sea.length) discard(state.fields.sea);
     else throw new Error('Strategy observation identity exceeds its serialization budget');
   }
+}
+
+/** Called once by the owner-think boundary, never by nested fact readers. */
+export function beginObservationThink(state: StrategyObservationMemory) {
+  const next = (state.thinkSequence ?? state.factWork?.thinkSequence ?? 0) + 1;
+  if (!Number.isSafeInteger(next)) throw new Error('Owner think sequence exhausted');
+  state.thinkSequence = next;
+  return next;
 }

@@ -99,3 +99,22 @@ it('publishes numeric exposure for the real legal launch leg without waiting for
   }
   expect(published).toBe(true);
 });
+
+it('publishes native sea routes on a frozen snapshot after the owner-think boundary', () => {
+  const frame = scene(), before = JSON.stringify(frame.snapshot);
+  let memory: AiPolicyMemory = { jobs: [], unitClaims: {} }, known = false, impossible = false;
+  for (let sequence = 1; sequence <= 32 && !(known && impossible); sequence++) {
+    const preparation = observationMemory(frame.snapshot, frame.owner, memory);
+    const work = new FactWorkQueue(frame.snapshot.tick, 6144, preparation.factWork, sequence);
+    withFactWork(work, () => {
+      const a = pointRoute(frame.snapshot, preparation, frame.ship, frame.ship, { x: 1584, y: 2448 }, true);
+      const b = pointRoute(frame.snapshot, preparation, frame.ship, frame.ship, { x: 1648, y: 2480 }, true);
+      known ||= a.status === 'complete'; impossible ||= b.status === 'static-infeasible';
+      preparation.factWork = structuredClone(work.flush());
+      expect(work.receipt.used).toBeLessThanOrEqual(6144);
+    });
+    memory = JSON.parse(JSON.stringify(memory));
+  }
+  expect({ known, impossible }).toEqual({ known: true, impossible: true });
+  expect(JSON.stringify(frame.snapshot)).toBe(before);
+});

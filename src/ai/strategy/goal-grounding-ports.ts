@@ -41,5 +41,5 @@ export type GoalTransportFactPorts = Readonly<{
 export type GoalGeometryMemory = {
   version: 1;
   entries: { key: string; revision: string; state: GoalParameter; work: number;
-    requestedTick: number; readyTick: number | null; value: GoalParameter | null; errorCode?: string }[];
+    requestedTick: number; readyTick: number | null; readyThink?: number; value: GoalParameter | null; errorCode?: string }[];
 };

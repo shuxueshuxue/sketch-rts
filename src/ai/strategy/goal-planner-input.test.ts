@@ -62,3 +62,20 @@ it('produces a real training-ready declaration after shared route publication, i
   expect(ready).toBe(true);
   expect(game.units.filter(unit => unit.owner === 'us' && unit.kind === 'footman')).toHaveLength(0);
 });
+
+it('advances owner publication through JSON thinks while the complete native snapshot stays frozen', () => {
+  const game = scene(), snapshot = snapshotGame(game), before = JSON.stringify(snapshot), goal = request(game);
+  let memory = createAiPolicyMemory(), ready = false;
+  for (let sequence = 1; sequence <= 10 && !ready; sequence++) {
+    const output = strict(() => planOwnerGoals({ snapshot, owner: 'us', version: 'v9_summoner', memory, goals: [goal] }));
+    const receipt = memory.strategy!.observation.factWork!;
+    expect(receipt).toMatchObject({ tick: snapshot.tick, thinkSequence: sequence });
+    expect(receipt.used).toBeLessThanOrEqual(6144);
+    expect(receipt.services.reduce((sum, item) => sum + item.work, 0)).toBe(receipt.used);
+    ready = output.readyActions.some(item => item.action.declaration.kind === 'train');
+    memory = JSON.parse(JSON.stringify(memory));
+  }
+  expect(ready).toBe(true);
+  expect(JSON.stringify(snapshot)).toBe(before);
+  expect(memory.strategyAllocation).toBeUndefined();
+});

@@ -2,7 +2,7 @@ import { moverDistanceField, prepareMoverDistanceField, retainGoalDistanceField,
 import type { GameSnapshot } from '../../shared/types';
 import type { Point } from './types';
 import { OBSERVATION_FIELD_LIMIT, type StrategyObservationMemory } from './observation-memory';
-import { currentFactWork } from './fact-work';
+import { currentFactWork, factPublicationPending } from './fact-work';
 import { withFactNavigation } from '../../shared/navigation-audit';
 
 export function createPlanningDistanceQuery(snapshot: GameSnapshot, buildBudget = Infinity, mover: Mover = 'land', observation?: StrategyObservationMemory) {
@@ -23,7 +23,7 @@ export function createPlanningDistanceQuery(snapshot: GameSnapshot, buildBudget 
         // Stateless diagnostic evaluation is complete and cache-independent.
         field = moverDistanceField(snapshot.map, goal, mover);
       } else if (entry.readyTick !== null) {
-        if (currentFactWork() && entry.readyTick >= snapshot.tick) {
+        if (currentFactWork() && factPublicationPending(entry.readyTick, entry.readyThink, snapshot.tick)) {
           deferred++; row.set(goal.x, null); return null;
         }
         field = withFactNavigation({ kind: 'published-fact', throughWork: entry.work },
@@ -38,7 +38,7 @@ export function createPlanningDistanceQuery(snapshot: GameSnapshot, buildBudget 
               const before = progress.work;
               const result = prepareMoverDistanceField(snapshot.map, goal, mover, before + Math.min(2048, allowance));
               progress.work = result.work;
-              if (result.complete) progress.readyTick = snapshot.tick;
+              if (result.complete) { progress.readyTick = snapshot.tick; if (queue.receipt.thinkSequence !== undefined) progress.readyThink = queue.receipt.thinkSequence; else delete progress.readyThink; }
               return { work: result.work - before, done: result.complete };
             } });
           deferred++; row.set(goal.x, null); return null;

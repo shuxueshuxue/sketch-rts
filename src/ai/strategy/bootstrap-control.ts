@@ -26,7 +26,7 @@ import { incumbentDisposition, recordCandidateReassignment, recordIncumbentComma
 import { importedMiningLossUpperBound } from './imported-loss-bound';
 import { createStrategyCommandGateway, type StrategyCommandProposal } from './command-gateway';
 import { FactWorkQueue, withFactWork } from './fact-work';
-import { boundObservationMemory, observationMemory } from './observation-memory';
+import { beginObservationThink, boundObservationMemory, observationMemory } from './observation-memory';
 import { isLifeSavingScript, recordScriptSafetyInterruptions } from './script-safety';
 import { createAssemblyFactsTransaction } from './assembly-facts-transaction';
 import { prepareAssemblyConquestContinuation, settlePreparedAssemblyConquestContinuation,
@@ -74,7 +74,7 @@ function nativeSwitchCost(snapshot: GameSnapshot, resources: readonly string[]):
 export function planControlledBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion,
   scripts: AiScript[], options: AiPolicyContext, observation: 'none' | 'facts' | 'trace' = 'none') {
   const preparation = observationMemory(snapshot, owner, options.memory);
-  const work = new FactWorkQueue(snapshot.tick, undefined, preparation.factWork);
+  const work = new FactWorkQueue(snapshot.tick, undefined, preparation.factWork, beginObservationThink(preparation));
   return withFactWork(work, () => {
     try { return controlledBootstrapCommands(snapshot, owner, version, scripts, options, observation); }
     finally { preparation.factWork = work.flush(); boundObservationMemory(preparation); }

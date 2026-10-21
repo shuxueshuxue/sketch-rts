@@ -5,7 +5,7 @@ import { withFactNavigation, withNavigationPhase } from '../../shared/navigation
 export const STRATEGY_FACT_WORK_PER_THINK = 6144;
 export const CRITICAL_FACT_CANDIDATES = 4;
 export type FactWorkTier = 'critical-route' | 'existing-field' | 'background-field';
-export type FactWorkReceipt = { tick: number; limit: number; used: number;
+export type FactWorkReceipt = { tick: number; thinkSequence?: number; limit: number; used: number;
   services: { key: string; tier: FactWorkTier; work: number }[] };
 type Task = { key: string; reportKey?: string; goal?: { x: number; y: number }; tier: FactWorkTier; minimum: number;
   run: (allowance: number) => { work: number; done: boolean } };
@@ -18,10 +18,11 @@ export class FactWorkQueue {
   private readonly completed = new Set<string>();
   private readonly criticalPoints = new Set<string>();
   private readonly frozen: boolean;
-  constructor(tick: number, limit = STRATEGY_FACT_WORK_PER_THINK, previous?: FactWorkReceipt) {
+  constructor(tick: number, limit = STRATEGY_FACT_WORK_PER_THINK, previous?: FactWorkReceipt, thinkSequence?: number) {
     if (!Number.isSafeInteger(limit) || limit < 0) throw new Error('Invalid fact work allowance');
-    this.frozen = previous?.tick === tick;
-    this.receipt = this.frozen ? structuredClone(previous!) : { tick, limit, used: 0, services: [] };
+    if (thinkSequence !== undefined && (!Number.isSafeInteger(thinkSequence) || thinkSequence < 1)) throw new Error('Invalid think sequence');
+    this.frozen = thinkSequence === undefined ? previous?.tick === tick : previous?.thinkSequence === thinkSequence;
+    this.receipt = this.frozen ? structuredClone(previous!) : { tick, ...(thinkSequence === undefined ? {} : { thinkSequence }), limit, used: 0, services: [] };
   }
   register(task: Task) {
     const old = this.tasks.get(task.key);
@@ -71,4 +72,11 @@ export class FactWorkQueue {
 export function withFactWork<T>(queue: FactWorkQueue, run: () => T): T {
   const previous = current; current = queue;
   try { return run(); } finally { current = previous; }
+}
+
+/** Tick is physical time; publication follows the owner-think boundary. Old
+ * receipts without a sequence remain usable by stateless diagnostic callers. */
+export function factPublicationPending(readyTick: number, readyThink: number | undefined, tick: number, queue = currentFactWork()) {
+  const sequence = queue?.receipt.thinkSequence;
+  return sequence === undefined ? readyTick >= tick : readyThink !== undefined && readyThink >= sequence;
 }

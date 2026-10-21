@@ -7,13 +7,13 @@ import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { GameSnapshot, Unit } from '../../shared/types';
 import { fnv1a } from '../../shared/sim/checksum';
 import { observationJsonBytes } from './observation-json-bytes';
-import { currentFactWork } from './fact-work';
+import { currentFactWork, factPublicationPending } from './fact-work';
 import type { StrategyObservationMemory } from './observation-memory';
 import type { Point } from './types';
 
 type Route = { points: ShipPose[]; partial: boolean };
 type Entry = { id: string; key: string; firstRequestedTick: number; lastRequestedTick: number;
-  geometryVersion: string; readyTick: number | null; publishedTick?: number;
+  lastRequestedThink?: number; readyThink?: number; geometryVersion: string; readyTick: number | null; publishedTick?: number;
   work: number; state: ShipRouteSearchState; failure?: 'memory-budget' };
 export type PointRouteMemory = { entries: Entry[] };
 export const POINT_ROUTE_MEMORY_BYTES = 32 * 1024;
@@ -62,7 +62,8 @@ export function pointRoute(snapshot: GameSnapshot, observation: StrategyObservat
     const previous = memory.entries.find(entry => entry.id === id);
     if (memory.entries.length >= POINT_ROUTE_LIMIT) {
       memory.entries.sort((a, b) => a.lastRequestedTick - b.lastRequestedTick || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
-      if (memory.entries[0]!.lastRequestedTick === snapshot.tick)
+      if ((queue.receipt.thinkSequence === undefined ? memory.entries[0]!.lastRequestedTick === snapshot.tick
+        : memory.entries[0]!.lastRequestedThink === queue.receipt.thinkSequence))
         return { status: 'pending', reasonCode: 'native-point-route-entry-budget', work: 0 };
       memory.entries.shift();
     }
@@ -71,7 +72,7 @@ export function pointRoute(snapshot: GameSnapshot, observation: StrategyObservat
       lastRequestedTick: snapshot.tick, readyTick: null, work: 0, state: { phase: 'prepare' } };
     memory.entries.push(entry);
   }
-  entry.lastRequestedTick = snapshot.tick;
+  entry.lastRequestedTick = snapshot.tick; if (queue.receipt.thinkSequence !== undefined) entry.lastRequestedThink = queue.receipt.thinkSequence; else delete entry.lastRequestedThink;
   const progress = entry;
   const taskKey = `point:${key}`;
   if (progress.readyTick === null) queue.register({ key: taskKey, goal, reportKey: `point:${id}:${fnv1a(key)}`,
@@ -87,7 +88,7 @@ export function pointRoute(snapshot: GameSnapshot, observation: StrategyObservat
       if (meter.logicalWork > SHIP_STATIC_ROUTE_SLICE_MAX_WORK) throw new Error('Native static slice reservation was exceeded');
       progress.work += meter.logicalWork;
       if (route) {
-        progress.readyTick = snapshot.tick;
+        progress.readyTick = snapshot.tick; if (queue.receipt.thinkSequence !== undefined) progress.readyThink = queue.receipt.thinkSequence; else delete progress.readyThink;
         progress.state = { phase: 'done', result: route };
       }
       if (observationJsonBytes(memory) > POINT_ROUTE_MEMORY_BYTES) {
@@ -95,13 +96,13 @@ export function pointRoute(snapshot: GameSnapshot, observation: StrategyObservat
         // bounded failure, rather than treating a truncated graph as a road.
         progress.state = { phase: 'done', result: { points: [], partial: true } };
         progress.failure = 'memory-budget';
-        progress.readyTick = snapshot.tick;
+        progress.readyTick = snapshot.tick; if (queue.receipt.thinkSequence !== undefined) progress.readyThink = queue.receipt.thinkSequence; else delete progress.readyThink;
       }
       return { work: meter.logicalWork, done: progress.readyTick !== null };
     } });
   const route = progress.state.result;
   if (progress.failure) return { status: 'pending', reasonCode: 'native-point-route-memory-budget', work: progress.work };
-  if (progress.readyTick === null || progress.readyTick >= snapshot.tick || !route)
+  if (progress.readyTick === null || factPublicationPending(progress.readyTick, progress.readyThink, snapshot.tick, queue) || !route)
     return { status: 'pending', reasonCode: 'native-point-route-pending', work: progress.work };
   const end = route.points.at(-1) ?? pose;
   if (route.partial || Math.hypot(end.x - goal.x, end.y - goal.y) > 1e-5)

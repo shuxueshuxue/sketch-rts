@@ -1,4 +1,4 @@
-import type { FactWorkQueue } from './fact-work';
+import { factPublicationPending, type FactWorkQueue } from './fact-work';
 import { goalValueKey } from './goal-facts';
 import type { GoalGeometryMemory, GoalGeometryReader, GoalPublishedValue } from './goal-grounding-ports';
 import type { GoalParameter } from './goal-planner-types';
@@ -36,7 +36,7 @@ export function createGoalGeometryReader(input: Readonly<{
     const record = entry;
     if (record.errorCode) return pending(record.errorCode, record.requestedTick);
     if (record.readyTick !== null) {
-      if (record.readyTick >= tick) return pending('goal-geometry-publication-pending', record.requestedTick);
+      if (factPublicationPending(record.readyTick, record.readyThink, tick, work)) return pending('goal-geometry-publication-pending', record.requestedTick);
       // The validated, detached value is returned as a copy: a domain cannot
       // alter a published fact or another counterfactual's cursor through it.
       return { state: 'met', value: structuredClone(record.value) as never, factIds: [requestId] };
@@ -62,7 +62,7 @@ export function createGoalGeometryReader(input: Readonly<{
       if (state === undefined || value === undefined) record.errorCode = 'goal-geometry-cursor-invalid';
       else {
         record.state = state;
-        if (result.done) { record.value = value; record.readyTick = tick; }
+        if (result.done) { record.value = value; record.readyTick = tick; if (work.receipt.thinkSequence !== undefined) record.readyThink = work.receipt.thinkSequence; else delete record.readyThink; }
         if (observationJsonBytes(record) > GOAL_GEOMETRY_BYTES / 2) {
           record.errorCode = 'goal-geometry-cursor-limit'; record.state = null; record.value = null;
         }
