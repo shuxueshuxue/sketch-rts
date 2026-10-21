@@ -42,7 +42,8 @@ export function adaptAssemblyDelayLoss(targetId: string, value: AssemblyDelayLos
   if (conservative > cap) return aggregate(cap, 'assembly-delay-adapter-capped-proof', 'whole-value-cap');
   const mode = !value.paths.length || value.paths.some(path => path.probability > 0
     && (path.basis === 'full-cap' || path.rawLossUpperGold > path.lossUpperGold))
-    || value.uncappedLossUpperGold > cap ? 'whole-value-cap' : 'scenario-delay';
+    || value.uncappedLossUpperGold > cap ? 'whole-value-cap'
+      : value.paths.some(path => path.basis === 'continuation-difference') ? 'scenario-continuation' : 'scenario-delay';
   if (conservative === sum) return known(sum, mode, components);
   return aggregate(conservative, 'assembly-delay-adapter-rounded-proof', mode);
 }
