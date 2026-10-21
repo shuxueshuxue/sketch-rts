@@ -1,3 +1,4 @@
+import { goalGanttGraph } from './ai-goal-plan-gantt';
 import type { AiPlanTrace } from '../ai/plan-trace';
 import type { GoalActionNode, GoalPlan } from '../ai/strategy/goal-planner-types';
 import { planHtml as h, planClock as clock } from './ai-plan-strategy-panel';
@@ -15,7 +16,8 @@ const stage = (value: string) => ({ assigned: '待出发', 'en-route': '在途',
   blocked: '受阻', complete: '已完成', failed: '失败', abandoned: '已放弃', reserved: '已预留', spent: '已支付', released: '已释放' } as Record<string,string>)[value] ?? '—';
 
 export function goalPlanGraph(plan: GoalPlan, trace: AiPlanTrace, selected = '$goal', order: GoalGraphOrder = 'time'): string {
-  const graph = goalGraphLayout(plan, order), index = new Map(graph.nodes.map(node => [node.id, node]));
+  if(order==='time')return goalGanttGraph(plan,trace,selected);
+  const graph = goalGraphLayout(plan, 'regression'), index = new Map(graph.nodes.map(node => [node.id, node]));
   const facts = new Map(plan.facts.map(row => [row.id, row])), actions = new Map(plan.actions.map(row => [row.id, row]));
   const edges = graph.edges.map(edge => {
     const from = index.get(edge.from)!, to = index.get(edge.to)!;

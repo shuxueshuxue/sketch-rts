@@ -10,7 +10,7 @@ import { goalFact } from '../ai/strategy/goal-facts';
 it('shows every recorded dependency layer, pending requests, rejected alternatives and unknown estimates without inventing execution', () => {
   const { plan, trace, action, safe } = goalDependencyFixture(), before = JSON.stringify(trace);
   const graph = goalPlanGraph(plan, trace), fact = goalPlanDetail(plan, trace, safe.id), detail = goalPlanDetail(plan, trace, action.id);
-  for (const word of ['目标', '条件', '动作', '等路线算完', '还差 6 战力', 'requires', 'establishes']) expect(graph).toContain(word);
+  for (const word of ['目标', '条件', '动作', '等路线算完', '还差 6 战力', '执行甘特']) expect(graph).toContain(word);
   for (const internal of ['fixture-await-route','required=6','planned-defense','route-request']) expect(graph).not.toContain(internal);
   for (const word of ['选中', '落选', 'recall-distant', '成本 —', '&lt;img']) expect(fact).toContain(word);
   expect(fact).not.toContain('<img');

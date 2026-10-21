@@ -5,9 +5,9 @@ export async function proveGoalTimeAlignment(s: Scene) {
   const measure = (): Promise<{order:string|undefined;rows:{tick:number;nodeX:number;goldX:number;error:number}[]}> => s.page.evaluate(() => {
     const sheet=document.querySelector<HTMLElement>('.plan-dependency-sheet')!;
     return {order:sheet.dataset.graphOrder,rows:[200,500,3000].map(tick=>{
-      const card=sheet.querySelector<HTMLElement>(`.goal-graph-node.action[data-plan-time="${tick}"]`)!.getBoundingClientRect();
+      const card=sheet.querySelector<HTMLElement>(`.goal-gantt-action[data-plan-time="${tick}"]`)!.getBoundingClientRect();
       const dot=sheet.querySelector<SVGCircleElement>(`[data-gold-tick="${tick}"]`)!.getBoundingClientRect();
-      return {tick,nodeX:card.x+card.width/2,goldX:dot.x+dot.width/2,error:Math.abs(card.x+card.width/2-dot.x-dot.width/2)};
+      return {tick,nodeX:card.x,goldX:dot.x+dot.width/2,error:Math.abs(card.x-dot.x-dot.width/2)};
     })};
   });
   const fitted=await measure();

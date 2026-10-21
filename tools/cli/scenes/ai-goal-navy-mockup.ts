@@ -17,19 +17,21 @@ export default async function(s: Scene) {
   });
   s.must(!/SwiftShader|llvmpipe/i.test(gpu), `Software GPU: ${gpu}`);
   await s.page.goto(pathToFileURL(file).href,{waitUntil:'load'});
-  await s.page.waitForSelector('.goal-graph-node');
-  s.must(await s.page.locator('.goal-graph-node').count()>=17,'Missing branched graph');
+  await s.page.waitForSelector('.goal-gantt-action');
+  s.must(await s.page.locator('.goal-gantt-action').count()===7,'Missing branched graph');
   s.must((await s.page.locator('.goal-resource-band').innerText()).includes('已预留 400 金'),'Missing reserve');
+  s.must(await s.page.locator('[data-executor-lane]').count()===4,'Missing executor lanes');
+  s.must(await s.page.locator('.goal-graph-node.fact').count()===0,'Condition boxes leaked into the time view');
   const alignment=await proveGoalTimeAlignment(s);
   await s.shot('goal-navy-layout');
-  await s.page.locator('.goal-graph-node.fact').filter({hasText:'兵力到岗'}).click();
+  await s.page.locator('.goal-gantt-condition').filter({hasText:'兵力到岗'}).click();
   s.must((await s.page.locator('.plan-panel').innerText()).includes('近滩头有敌人'),'Missing rejected explanation');
   await s.page.locator('.plan-panel h4').filter({hasText:'满足它的候选方案'}).evaluate((node:HTMLElement)=>node.scrollIntoView({block:'start'}));
   await s.shot('goal-navy-options');
   await s.page.locator('[data-tick="3600"]').click();
   s.must((await s.page.locator('.goal-resource-band').innerText()).includes('当前 140 金'),'Final cash missing');
   await s.page.goto(pathToFileURL(file).href,{waitUntil:'load'});
-  await s.page.waitForSelector('.goal-graph-node');
+  await s.page.waitForSelector('.goal-gantt-action');
   s.record('goal-navy-mockup',{evidence:'artificial-public-puzzle-3',gpu,file,sha256,alignment,
     checked:['file-open','branched-layout','human-options','reserved-gold','recorded-result','reopen']});
 }

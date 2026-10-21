@@ -1,8 +1,9 @@
 import { expect, it } from 'vitest';
 import { goalNavyFixture } from './ai-goal-navy.test-fixture';
-import { GOAL_CARD, goalGraphLayout } from './ai-goal-plan-layout';
+import { goalGraphLayout } from './ai-goal-plan-layout';
 import { goalGoldEvents, goalResourceBand } from './ai-goal-plan-resources';
 import { goalPlanGraph } from './ai-goal-plan';
+import { goalGanttLayout, goalGanttLinks } from './ai-goal-plan-gantt';
 import { goalFactTime, goalTimeAxis, goalTimeX } from './ai-goal-plan-time';
 
 it('reads the branched navy plan left to right, merging shared ship and money prerequisites without changing native edges', () => {
@@ -45,29 +46,48 @@ it('keeps cyclic records bounded and inspectable as forward reference leaves',()
   expect(graph.nodes.length).toBeLessThanOrEqual(201);
 });
 
-it('defaults to execution time, anchors action centers and gold events to the same clock, and keeps the goal at completion',()=>{
-  const {plan,trace}=goalNavyFixture(),before=JSON.stringify(plan),graph=goalGraphLayout(plan),axis=goalTimeAxis(plan);
+it('defaults to executor lanes and duration bars sharing start/end coordinates with the money band',()=>{
+  const {plan,trace}=goalNavyFixture(),before=JSON.stringify(plan),graph=goalGanttLayout(plan),axis=goalTimeAxis(plan);
   expect(graph.axis).toEqual(axis);
-  const nodes=new Map(graph.nodes.map(row=>[row.id,row]));
-  for(const action of plan.actions)expect(nodes.get(action.id)!.x+GOAL_CARD.width/2).toBeCloseTo(goalTimeX(axis,action.startTick!));
-  expect(nodes.get('navy-yard')!.x).toBeLessThan(nodes.get('navy-hall')!.x);
-  expect(nodes.get('$goal')!.x).toBeGreaterThan(nodes.get('navy-hall')!.x);
+  expect(graph.lanes.map(row=>row.id)).toEqual(['worker','ship','army','economy']);
+  for(const bar of graph.bars){
+    expect(bar.x).toBeCloseTo(goalTimeX(axis,bar.action.startTick!));
+    expect(bar.end).toBeCloseTo(goalTimeX(axis,bar.action.finishTick!));
+  }
+  expect(graph.bars.filter(row=>row.actor==='ship').map(row=>row.action.id)).toEqual(['navy-force','navy-worker']);
+  expect(graph.complete).toBe(3560);
   for(const event of goalGoldEvents(plan))expect(goalResourceBand(plan,trace,axis))
     .toContain(`data-gold-tick="${event.tick}" class="${event.delta<0?'spend':'income'}" cx="${goalTimeX(axis,event.tick)}"`);
   const html=goalPlanGraph(plan,trace);
-  expect(html).toContain('data-graph-order="time"');expect(html).toContain('横线为预计耗时');
-  expect(goalPlanGraph(plan,trace,'$goal','regression')).toContain('data-graph-order="regression"');
+  expect(html).toContain('data-graph-order="time"');expect(html).toContain('执行甘特');
+  expect(html).not.toContain('goal-graph-node');expect(html).toContain('✓400 金');
+  expect(html).toContain('兵力到岗 10');expect(html).toContain('等路线算完');
+  expect(goalPlanGraph(plan,trace,'$goal','regression')).toContain('goal-graph-node fact');
   expect(goalTimeAxis(goalNavyFixture(3600).plan)).toEqual(axis);
   expect(JSON.stringify(plan)).toBe(before);
 });
 
-it('separates unscheduled actions and pending facts instead of assigning a zero or deadline ETA',()=>{
-  const {plan,trace,route}=goalNavyFixture();
+it('reduces indirect dependency wires, omits same-lane arrows and never draws a backwards-time wire',()=>{
+  const {plan,trace}=goalNavyFixture(),links=goalGanttLinks(plan),html=goalPlanGraph(plan,trace);
+  expect(links.some(row=>row.from==='navy-hull'&&row.to==='navy-worker')).toBe(false);
+  expect(links.some(row=>row.from==='navy-clear'&&row.to==='navy-hall')).toBe(false);
+  expect(html).not.toMatch(/goal-gantt-dependency[^>]+d="[^"]*[CQ]/);
+  const sameLane={...plan,actions:plan.actions.map(action=>action.id==='navy-hull'?{...action,declaration:{...action.declaration,kind:'build' as const}}:action)};
+  expect(goalPlanGraph(sameLane,trace)).not.toContain('data-from="navy-yard" data-to="navy-hull"');
+  const invalid={...plan,actions:plan.actions.map(action=>action.id==='navy-hull'?{...action,startTick:300}:action)};
+  expect(goalPlanGraph(invalid,trace)).not.toContain('data-from="navy-yard" data-to="navy-hull"');
+});
+
+it('keeps unscheduled actions out of the clock and pending conditions on labels, without creating condition boxes',()=>{
+  const {plan,trace}=goalNavyFixture();
   const unknown={...plan,actions:plan.actions.map(row=>row.id==='navy-hall'?{...row,startTick:null,finishTick:null}:row)};
-  const layout=goalGraphLayout(unknown),action=layout.nodes.find(row=>row.id==='navy-hall')!,fact=layout.nodes.find(row=>row.id===route.id)!;
-  for(const node of [action,fact]){expect(node.time).toBeNull();expect(node.y).toBeGreaterThan(layout.untimedY!);}
-  expect(goalPlanGraph(unknown,trace)).toContain('时间未记录 · 不放入预计时序');
-  expect(layout.nodes.find(row=>row.id==='$goal')!.time).toBeNull();
+  const layout=goalGanttLayout(unknown);
+  expect(layout.bars.some(row=>row.action.id==='navy-hall')).toBe(false);
+  expect(layout.unknown.map(row=>row.id)).toEqual(['navy-hall']);
+  expect(layout.complete).toBeNull();
+  const html=goalPlanGraph(unknown,trace);
+  expect(html).toContain('时间未记录 · 不放入预计时序');
+  expect(html).not.toContain('goal-graph-node fact');
 });
 
 it('places projected effects at start, finish or offset, and waits for every quantitative contributor ETA',()=>{
