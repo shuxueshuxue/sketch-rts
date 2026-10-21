@@ -156,6 +156,8 @@ export type GoalTransportOption = Readonly<{
   /** Entire actual deck/cabin dependency, including passengers outside the
    * selected cohort. They require authority checks, never contribute its force. */
   loadedUnitIds: readonly string[];
+  /** Preserve the chosen hull's producer/exit/availability prerequisites. */
+  preconditions?: readonly GoalFact[];
   landing: Readonly<{ water: Target['point']; ground: Target['point']; heading: number | null }>;
   crossing: GoalFact; shoreSafe: GoalFact;
   duration: GoalEstimate<number>; factIds: readonly string[];
