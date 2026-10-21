@@ -132,3 +132,31 @@ it('releases a cached future availability at its fixed absolute tick instead of 
   expect(cached.plans[0]!.actions).toEqual(cold.plans[0]!.actions);
   expect(cached.plans[0]!.readyActionIds).toEqual(['train']); expect(cached.plans[0]!.search.work).toBe(0);
 });
+
+
+it('consumes an arrival-offset effect while its producer still holds its actor, equally after JSON cache reuse', () => {
+  const { input, actions, context } = example(), at = { landId: 'land:1' as const, point: { x: 2000, y: 2000 } };
+  const safe = goalFact({ kind: 'site-safe', site: at, throughTick: 1000 });
+  const hall = goalFact({ kind: 'hall-complete', mineId: 'ore', at });
+  const cleared = goalFact({ kind: 'camp-cleared', campId: goalCampId(['guard-a']) });
+  const actor = (unitId: string) => ({ resource: { kind: 'unit' as const, unitId }, quantity: 1, from: 'start' as const, until: 'finish' as const });
+  const base = (id: string, preconditions: readonly GoalFact[], fact: GoalFact, duration: number, unit: string): GoalActionDeclaration => ({
+    ...actions[0]!, id, preconditions, effects: [{ fact, operation: 'establish', at: 'finish' }], flows: [], demands: [actor(unit)],
+    cost: { state: 'met', value: [], factIds: [] }, duration: { state: 'met', value: duration, factIds: [] },
+  });
+  const defend = base('guard-window', [], safe, 200, 'guard');
+  const operators = [{ ...defend, effects: [{ fact: safe, operation: 'establish' as const, at: { offsetTicks: 20 } }] },
+    base('construction', [safe], hall, 10, 'worker'), base('redeploy-guard', [hall], cleared, 10, 'guard')];
+  const request = input(), configured = { ...request, goals: [{ ...request.goals[0]!, effects: [cleared] }],
+    providers: [{ id: 'window-operators', actionsFor: () => operators }] };
+  const first = planGoals(configured), schedule = first.plans[0]!.actions;
+  expect(schedule.find(action => action.id === 'construction')).toMatchObject({ startTick: 20, finishTick: 30, state: 'waiting-actions' });
+  expect(schedule.find(action => action.id === 'redeploy-guard')).toMatchObject({ startTick: 200, finishTick: 210 });
+  const next = { ...configured, context: { ...context, tick: 15, snapshot: { ...context.snapshot, tick: 15 } },
+    initialBalances: configured.initialBalances.map(balance => ({ ...balance, asOfTick: 15 })), work: new FactWorkQueue(15) };
+  const reused = planGoals({ ...next, previous: JSON.parse(JSON.stringify(first.cache)) });
+  const cold = planGoals({ ...next, work: new FactWorkQueue(15) });
+  expect(reused.plans[0]!.actions).toEqual(cold.plans[0]!.actions);
+  expect(reused.plans[0]!.actions.find(action => action.id === 'construction')).toMatchObject({ startTick: 35, finishTick: 45 });
+  expect(reused.plans[0]!.search.work).toBe(0);
+});

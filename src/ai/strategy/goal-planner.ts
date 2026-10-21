@@ -38,21 +38,21 @@ export function planGoals(input: GoalPlannerInput): GoalPlannerOutput {
     });
     if (unchanged && previous.continuation?.phase === 'done' && previous.plan.status !== 'search-pending') {
       const deadline = goal.deadlineTick;
-      const finishById = new Map<string, number>();
-      const shifted = previous.plan.actions.map(action => {
-        const availability = action.declaration.preconditions.map(fact => context.readFact(fact).availableTick ?? context.tick);
-        const startTick = Math.max(context.tick, ...availability, ...action.dependsOnActionIds.map(id => finishById.get(id) ?? context.tick));
-        const finishTick = action.declaration.duration.state === 'met' ? startTick + action.declaration.duration.value : null;
-        if (finishTick !== null) finishById.set(action.id, finishTick);
-        return { ...action, startTick, finishTick,
-          state: action.dependsOnActionIds.length ? 'waiting-actions' as const : startTick > context.tick ? 'waiting-time' as const : 'ready' as const };
-      });
+      const refreshed = { ...previous.continuation, observed: previous.continuation.observed.map(observation => context.readFact(observation.fact)) };
+      const replay = emptyPath();
+      let scheduleValid = true;
+      for (const action of previous.plan.actions) {
+        const next = scheduleAction(replay, action.declaration, refreshed, input, goal);
+        if (!next) { scheduleValid = false; break; }
+        replay.steps.push(next.step); replay.bindings = next.bindings;
+      }
+      const shifted = replay.steps.map(step => actionNode(step, input));
       const projected = projectGoalResources({ epoch: context.tick, initial: balances(previous.continuation, input),
         actions: shifted.flatMap(action => action.finishTick === null ? [] : [{ action: action.declaration, startTick: action.startTick, finishTick: action.finishTick }]) });
-      if (projected.state === 'met' && (deadline === null || shifted.every(action => action.finishTick === null || action.finishTick <= deadline))) {
+      if (scheduleValid && projected.state === 'met' && (deadline === null || shifted.every(action => action.finishTick === null || action.finishTick <= deadline))) {
         const plan: GoalPlan = { ...previous.plan, observedTick: context.tick, actions: shifted,
           readyActionIds: shifted.filter(action => action.state === 'ready').map(action => action.id),
-          completedTick: previous.plan.completedTick === null ? null : Math.max(context.tick, ...finishById.values()),
+          completedTick: previous.plan.completedTick === null ? null : finish(replay, context.tick),
           resourceTimeline: projected.timeline,
           search: { ...previous.plan.search, work: 0 }, facts: previous.plan.facts.map(node => ({ ...node, observation: context.readFact(node.observation.fact) })) };
         plans.push(plan); entries.push({ ...previous, plan }); continue;
@@ -217,31 +217,10 @@ function composeOne(state: GoalSearchMemory, input: GoalPlannerInput, goal: Goal
   const active = state.active, action = state.candidates[active.next++];
   if (!action) { state.active = null; return; }
   if (active.path.steps.some(step => step.action.id === action.id) || !validEstimate(action)) return;
-  let bindings = active.path.bindings, startTick = input.context.tick;
-  const dependencies = new Set<string>();
-  for (const fact of action.preconditions) {
-    const result = satisfies(fact, { ...active.path, bindings }, state, input);
-    if (!result.met) return;
-    bindings = result.bindings; startTick = Math.max(startTick, result.tick);
-    result.producers.forEach(id => dependencies.add(id));
-  }
-  const bound = bindGoalAction(action, bindings);
-  if (bound.duration.state !== 'met' || bound.cost.state !== 'met' || bound.successProbability.state !== 'met') return;
-  // Exclusive demands are interval constraints, distinct from consumable flows.
-  for (const prior of active.path.steps) if (bound.demands.some(demand => prior.action.demands.some(other =>
-    goalValueKey(demand.resource) === goalValueKey(other.resource)))) {
-    startTick = Math.max(startTick, prior.finishTick); dependencies.add(prior.action.id);
-  }
-  const finishTick = startTick + bound.duration.value;
-  if (!Number.isFinite(finishTick) || goal.deadlineTick !== null && finishTick > goal.deadlineTick) return;
-  const step: Step = { action: bound, startTick, finishTick, dependsOn: [...dependencies].sort() };
-  let projection = projectGoalResources({ epoch: input.context.tick, initial: balances(state, input), actions: [...active.path.steps, step] });
-  if (projection.state === 'unmet' && startTick < finish(active.path, input.context.tick)) {
-    step.startTick = finish(active.path, input.context.tick); step.finishTick = step.startTick + bound.duration.value;
-    step.dependsOn = active.path.steps.map(prior => prior.action.id).sort();
-    projection = projectGoalResources({ epoch: input.context.tick, initial: balances(state, input), actions: [...active.path.steps, step] });
-  }
-  if (projection.state !== 'met' || goal.deadlineTick !== null && step.finishTick > goal.deadlineTick) return;
+  const scheduled = scheduleAction(active.path, action, state, input, goal);
+  if (!scheduled) return;
+  const { step, bindings } = scheduled, bound = step.action;
+  if (bound.cost.state !== 'met' || bound.successProbability.state !== 'met') return;
   const path: Path = { steps: [...active.path.steps, step], bindings,
     cost: active.path.cost + bound.cost.value.reduce((sum, term) => sum + term.gold, 0),
     probability: active.path.probability * bound.successProbability.value };
@@ -254,6 +233,48 @@ function composeOne(state: GoalSearchMemory, input: GoalPlannerInput, goal: Goal
     state.frontier.splice(input.limits.maxExpansions); state.limitReason ??= 'frontier-limit'; }
 }
 
+/** Replay uses the same scheduler as composition: effect availability and
+ * release of an exclusive actor are separate temporal constraints. */
+function scheduleAction(path: Path, action: GoalActionDeclaration, state: GoalSearchMemory,
+  input: GoalPlannerInput, goal: GoalRequest): { step: Step; bindings: GoalBindings } | null {
+  let bindings = path.bindings, startTick = input.context.tick;
+  const dependencies = new Set<string>();
+  for (const fact of action.preconditions) {
+    const result = satisfies(fact, { ...path, bindings }, state, input);
+    if (!result.met) return null;
+    bindings = result.bindings; startTick = Math.max(startTick, result.tick);
+    result.producers.forEach(id => dependencies.add(id));
+  }
+  const bound = bindGoalAction(action, bindings);
+  if (bound.duration.state !== 'met' || bound.cost.state !== 'met' || bound.successProbability.state !== 'met') return null;
+  // Exclusive demands are interval constraints, distinct from consumable flows.
+  for (const prior of path.steps) if (bound.demands.some(demand => prior.action.demands.some(other =>
+    goalValueKey(demand.resource) === goalValueKey(other.resource)))) {
+    startTick = Math.max(startTick, prior.finishTick); dependencies.add(prior.action.id);
+  }
+  const finishTick = startTick + bound.duration.value;
+  if (!Number.isFinite(finishTick) || goal.deadlineTick !== null && finishTick > goal.deadlineTick) return null;
+  const step: Step = { action: bound, startTick, finishTick, dependsOn: [...dependencies].sort() };
+  let projection = projectGoalResources({ epoch: input.context.tick, initial: balances(state, input), actions: [...path.steps, step] });
+  if (projection.state === 'unmet' && startTick < finish(path, input.context.tick)) {
+    step.startTick = finish(path, input.context.tick); step.finishTick = step.startTick + bound.duration.value;
+    step.dependsOn = path.steps.map(prior => prior.action.id).sort();
+    projection = projectGoalResources({ epoch: input.context.tick, initial: balances(state, input), actions: [...path.steps, step] });
+  }
+  if (projection.state !== 'met' || goal.deadlineTick !== null && step.finishTick > goal.deadlineTick) return null;
+  return { step, bindings };
+}
+function actionNode(step: Step, input: GoalPlannerInput): GoalActionNode {
+  const currentReady = step.action.preconditions.every(fact => {
+    const current = input.context.readFact(fact);
+    return current.state === 'met';
+  });
+  return { id: step.action.id, declaration: step.action,
+    prerequisiteFactIds: step.action.preconditions.map(fact => fact.id), dependsOnActionIds: step.dependsOn,
+    startTick: step.startTick, finishTick: step.finishTick,
+    state: currentReady ? step.startTick > input.context.tick ? 'waiting-time' : 'ready' : 'waiting-actions', reasons: [] };
+}
+
 function projectPlan(state: GoalSearchMemory, input: GoalPlannerInput, goal: GoalRequest, work: number): GoalPlan {
   const valueOrder = (a: Path, b: Path) => (b.probability * goal.rewardGold - b.cost) - (a.probability * goal.rewardGold - a.cost)
     || pathOrder(input.context.tick)(a, b);
@@ -261,10 +282,7 @@ function projectPlan(state: GoalSearchMemory, input: GoalPlannerInput, goal: Goa
   const steps = path?.steps ?? [], chosen = new Set(steps.map(step => step.action.id));
   const unresolved = state.observed.some(observation => observation.state === 'pending')
     || state.candidates.some(action => [action.duration, action.cost, action.successProbability].some(estimate => estimate.state === 'pending'));
-  const actions: GoalActionNode[] = steps.map(step => ({ id: step.action.id, declaration: step.action,
-    prerequisiteFactIds: step.action.preconditions.map(fact => fact.id), dependsOnActionIds: step.dependsOn,
-    startTick: step.startTick, finishTick: step.finishTick,
-    state: step.dependsOn.length ? 'waiting-actions' : step.startTick > input.context.tick ? 'waiting-time' : 'ready', reasons: [] }));
+  const actions = steps.map(step => actionNode(step, input));
   const projection = projectGoalResources({ epoch: input.context.tick, initial: balances(state, input), actions: steps });
   const currentMet = goal.effects.every(fact => observe(state, input, fact).state === 'met');
   const alternatives = state.alternatives.map(alternative => ({ ...alternative,
