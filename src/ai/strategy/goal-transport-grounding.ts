@@ -104,8 +104,8 @@ export function groundGoalTransportOptions(input: GoalTransportGroundingInput): 
     for (const member of cohort) {
       // Fighters first satisfy the separate force-at pickup-post prerequisite.
       // Workers are a callable region pool and walk from their own known pose.
-      const from = { landId: shore.landId, point: member.assessment.kind === 'worker'
-        ? { x: member.assessment.x, y: member.assessment.y } : input.from.point };
+      if (member.assessment.kind !== 'worker') continue;
+      const from = { landId: shore.landId, point: { x: member.assessment.x, y: member.assessment.y } };
       const fact = goalFact({ kind: 'route', mover: 'land', from,
         to: { landId: shore.landId, point: shore.ground }, actor: member.reference });
       const observed = input.readFact(fact); proofs.add(fact.id); pathProofs.add(fact.id); facts.push(fact);

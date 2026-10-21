@@ -291,11 +291,17 @@ function transport(input: GoalTransportInput, workers: boolean): GoalActionDecla
     || !option.loadedUnitIds.includes(unit.id)) || option.origin === 'aboard' && waiting.length) return null;
   const cohort = units.map(unit => reference(input, unit));
   const loadedRefs = loaded.map(unit => reference(input, unit));
+  if (option.origin === 'land' && !option.from.landId) return null;
+  const loadingPost: Target | null = option.origin === 'land'
+    ? { landId: option.from.landId!, point: option.departure.ground } : null;
   const waitingMass = waiting.reduce((sum, unit) => sum + bodyMass(unit), 0);
   const loadedMass = dependents.reduce((sum, unit) => sum + bodyMass(unit), 0);
   const preconditions: GoalFact[] = [goalFact({ kind: 'transport-in', seaId: option.seaId,
     capacity: waitingMass, transport: option.transport, byTick: input.byTick }), ...(option.preconditions ?? []), option.crossing, option.shoreSafe];
   if (loaded.length) preconditions.push(goalFact({ kind: 'cargo-aboard', transport: option.transport, units: loadedRefs }));
+  // An unprotected delivery must be safe at its actual shore and at the
+  // requested handoff. A remote safe beach does not make a guarded mine safe.
+  if (engineers.length) preconditions.push(goalFact({ kind: 'site-safe', site: option.to, throughTick: input.byTick }));
   if (waiting.length) {
     preconditions.push(...poolFacts(waiting, option.from, input.byTick), ...input.pickupRoutes,
       goalFact({ kind: 'transport-at', transport: option.transport,
@@ -303,7 +309,7 @@ function transport(input: GoalTransportInput, workers: boolean): GoalActionDecla
     const waitingWorkers = waiting.filter(unit => unit.kind === 'worker'), waitingFighters = waiting.filter(unit => unit.kind !== 'worker');
     preconditions.push(...waitingWorkers.map(unit => goalFact({ kind: 'worker-at', at: option.from,
       count: 1, worker: reference(input, unit), byTick: input.byTick })));
-    if (waitingFighters.length) preconditions.push(goalFact({ kind: 'force-at', at: option.from,
+    if (waitingFighters.length && loadingPost) preconditions.push(goalFact({ kind: 'force-at', at: loadingPost,
       minimum: rating(input.snapshot, waitingFighters), metric: 'combat-rating',
       cohort: waitingFighters.map(unit => reference(input, unit)), byTick: input.byTick }));
   }
@@ -323,7 +329,8 @@ function transport(input: GoalTransportInput, workers: boolean): GoalActionDecla
     { resource: { kind: 'entity-control', entity: option.transport }, quantity: 1, from: 'start', until: 'finish' },
     ...(waitingMass > 0 ? [{ resource: { kind: 'transport-capacity' as const, transport: option.transport, seaId: option.seaId },
       quantity: waitingMass, from: 'start' as const, until: 'finish' as const }] : [])];
-  const flows = movementFlows(waiting, option.from, option.to, rating(input.snapshot, waiting), option.factIds, 'post', 'pool');
+  const sourceFacts = [...new Set([...option.factIds, ...preconditions.map(fact => fact.id)])].sort();
+  const flows = movementFlows(waiting, loadingPost ?? option.from, option.to, rating(input.snapshot, waiting), sourceFacts, 'post', 'pool');
   // Already loaded soldiers have no invented original land pool. Their actual
   // unload is a destination contribution, and frees their occupied payload.
   for (const unitKind of [...new Set(loaded.map(unit => unit.kind))].sort()) flows.push({
@@ -336,6 +343,7 @@ function transport(input: GoalTransportInput, workers: boolean): GoalActionDecla
     delta: loadedMass, at: 'finish', factIds: option.factIds });
   return declaration(workers ? 'transport-worker' : 'transport-force', 'strategy.transport', {
     optionId: option.id, transport: option.transport, cohort, origin: option.origin,
+    ...(loadingPost && waiting.some(unit => unit.kind !== 'worker') ? { loadingPost } : {}),
     from: option.from, at: option.to, departure: { water: option.departure.water, heading: option.departure.heading,
       ...(option.origin === 'land' ? { ground: option.departure.ground } : {}) }, landing: option.landing,
     loadedUnitIds: loaded.map(unit => unit.id), payloadMass: waitingMass + loadedMass,

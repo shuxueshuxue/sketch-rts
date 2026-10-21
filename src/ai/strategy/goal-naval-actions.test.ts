@@ -268,6 +268,42 @@ describe('grounded naval world-effect declarations', () => {
     expect(action.flows.filter(flow => flow.resource.kind === 'unit-pool').map(flow => flow.delta)).toEqual([-1, 1]);
   });
 
+  it('boards fighters from the actual shore post and requires safe handoff for unprotected cargo', () => {
+    const input = frame(), post = { ...input.from, point: { x: 1400, y: 1100 } },
+      to = { ...input.at, landId: 'land:2' as const };
+    const transport = { kind: 'output' as const, actionId: 'native-hull-production', output: 'hull' };
+    const crossing = goalFact({ kind: 'route', mover: 'sea', from: input.from, to, actor: transport });
+    const shoreSafe = goalFact({ kind: 'shore-safe', landId: to.landId,
+      landing: { landId: to.landId, point: { x: 1700, y: 1500 } }, throughTick: input.byTick });
+    const option: GoalTransportOption = { id: 'precise-shore-post', seaId: 'sea:1', from: input.from, to,
+      transport, capacity: 10000, origin: 'land', loadedUnitIds: [],
+      departure: { water: { x: 1450, y: 1100 }, ground: post.point, heading: null },
+      landing: { water: { x: 1700, y: 1480 }, ground: { x: 1700, y: 1500 }, heading: null },
+      crossing, approach: crossing, shoreSafe, duration: known(100), factIds: ['published-coast'] };
+    const carried = strict(() => declareGoalForceTransport({ ...input, option, berthTolerance: 36, pickupRoutes: [] }))!;
+    const origin = carried.preconditions.find(fact => fact.predicate.kind === 'force-at')!;
+    expect(origin.predicate).toMatchObject({ at: post, metric: 'combat-rating' });
+    const forceFlow = carried.flows.find(flow => flow.resource.kind === 'force' && flow.delta < 0)!;
+    expect(forceFlow.resource).toEqual({ kind: 'force', at: post, scope: 'post', metric: 'combat-rating' });
+    const initial = [
+      { resource: { kind: 'force' as const, at: input.from, scope: 'pool' as const, metric: 'combat-rating' as const }, quantity: -forceFlow.delta, asOfTick: 0, factIds: [] },
+      ...input.unitIds.map(id => ({ resource: { kind: 'unit-pool' as const, at: input.from,
+        unitKind: input.snapshot.units.find(unit => unit.id === id)!.kind }, quantity: 1, asOfTick: 0, factIds: [] })),
+    ];
+    const assemble = declareGoalAssembly({ ...input, at: post, routes: [], safePost: goalFact({ kind: 'assembly-post', at: post }) })!;
+    const without = projectGoalResources({ epoch: 0, initial, actions: [{ action: carried, startTick: 100, finishTick: 200 }] });
+    expect(without).toMatchObject({ state: 'unmet', deficits: [expect.objectContaining({ resource: forceFlow.resource, available: 0 })] });
+    const withAssembly = projectGoalResources({ epoch: 0, initial, actions: [
+      { action: assemble, startTick: 0, finishTick: 100 }, { action: carried, startTick: 100, finishTick: 200 },
+    ] });
+    expect(withAssembly.state).toBe('met');
+    const worker = strict(() => declareGoalWorkerTransport({ ...input, unitIds: ['worker'], option, berthTolerance: 36, pickupRoutes: [] }))!;
+    expect(worker.preconditions).toContainEqual(shoreSafe);
+    expect(worker.preconditions).toContainEqual(goalFact({ kind: 'site-safe', site: to, throughTick: input.byTick }));
+    expect(worker.preconditions.some(fact => fact.predicate.kind === 'camp-cleared')).toBe(false);
+    expect(carried.preconditions.some(fact => fact.predicate.kind === 'site-safe')).toBe(false);
+  });
+
   it('keeps future troops symbolic through assembly, camp checks and transport without deduplicating identical prototypes', () => {
     const input = frame(), prototype = { ...input.snapshot.units.find(unit => unit.id === 'fighter-a')!, id: 'must-not-be-a-world-identity' };
     const cohort = [0, 1].map(index => ({ reference: { kind: 'output' as const, actionId: 'train-pair', output: `unit-${index}` }, assessment: prototype }));
