@@ -1,6 +1,6 @@
 import { createAiGameCommandPlanner, runAiGameLoop, type AiGameAgent } from '../../game-runner';
 import type { AiScriptVersion } from '../../policy';
-import type { SdkGameCommandPlanner } from '../../../sdk/game-runner';
+import type { SdkGameCommandPlanner, SdkGameLoopHooks } from '../../../sdk/game-runner';
 import { snapshotGame } from '../../../shared/sim';
 import { trackPuzzle } from './execution';
 import type { PublicPuzzleCase } from './scenes';
@@ -8,7 +8,7 @@ import { createPuzzleWitness } from './witness';
 
 /** Same SDK scheduling and command delay as live rooms; no future spawn or teleport. */
 export function runPublicPuzzle(puzzle: PublicPuzzleCase, mode: 'witness' | AiScriptVersion,
-  options: { maxTicks?: number; planner?: SdkGameCommandPlanner<AiGameAgent> } = {}) {
+  options: { maxTicks?: number; planner?: SdkGameCommandPlanner<AiGameAgent>; onCommand?: SdkGameLoopHooks['onCommand'] } = {}) {
   const world = puzzle.create(), initial = snapshotGame(world.game), tracker = trackPuzzle(puzzle, world);
   const planner = options.planner ?? (mode === 'witness' ? createPuzzleWitness(puzzle, world) : createAiGameCommandPlanner());
   const invasionShips = world.game.units.filter(unit => unit.owner === world.opponent && unit.kind === 'transport');
@@ -34,7 +34,7 @@ export function runPublicPuzzle(puzzle: PublicPuzzleCase, mode: 'witness' | AiSc
         });
         return entries;
       },
-    }, { onStep() { tracker.sample(); } });
+    }, { ...(options.onCommand ? { onCommand: options.onCommand } : {}), onStep() { tracker.sample(); } });
     return { puzzle: `${puzzle.key}/${puzzle.variant}`, mode, initial, final: result.snapshot,
       elapsedMs: result.elapsedMs, cpuMs: result.cpuMs, execution: tracker.finish() };
   } finally { tracker.dispose(); }

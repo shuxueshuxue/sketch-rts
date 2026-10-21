@@ -8,14 +8,15 @@ import type { PuzzleExecutionObservation } from './planner-binding';
 export const SHIP_GOAL_STEPS = ['position-transport', 'transport-force', 'clear-camp', 'transport-worker', 'build'] as const;
 type Step = typeof SHIP_GOAL_STEPS[number];
 type RecordValue = Readonly<Record<string, unknown>>;
-type Returned = { tick: number; scriptId: string; command: CommandFrameEntry['command']; group?: string };
+type Returned = { tick: number; owner: string; scriptId: string; command: CommandFrameEntry['command']; group?: string };
 type Group = { key: string; step: Step; goal: string; parameters: RecordValue; commands: Returned[];
   loaded: Set<string>; dead: Set<string>; proofTicks: number[]; proofEntities: string[]; initiallyComplete: boolean };
 export type ShipOwnershipScope = { targetLandId: string; targetMine: { x: number; y: number }; campMemberIds: readonly string[] };
-export type PuzzleStepOwnership = { passed: boolean; steps: { step: Step;
+export type PuzzleStepOwnership = { passed: boolean; nativeApplications: readonly AppliedPuzzleCommand[]; steps: { step: Step;
   status: 'goal-confirmed' | 'older-code-completed' | 'unconfirmed';
   goalCommandCount: number; sdkAppliedCount: number; effectTick: number | null;
   scriptIds: string[]; entityIds: string[] }[] };
+export type AppliedPuzzleCommand = { tick: number; owner: string; scriptId: string; command: GameCommand };
 const record = (v: unknown): RecordValue | undefined => v && typeof v === 'object' && !Array.isArray(v) ? v as RecordValue : undefined;
 const point = (v: unknown) => { const p = record(v); return typeof p?.x === 'number' && typeof p.y === 'number' ? { x: p.x, y: p.y } : undefined; };
 const ref = (v: unknown) => { const p = record(v); return p?.kind === 'existing' && typeof p.entityId === 'string' ? p.entityId : undefined; };
@@ -28,11 +29,12 @@ const canonical = (v: unknown): string => JSON.stringify(v, (_, item: unknown) =
  * it cannot select a goal, supply a fact, grant a unit or issue a command. */
 export function createExecutionOwnership(scope: ShipOwnershipScope) {
   const returned: Returned[] = [], groups = new Map<string, Group>();
+  const sdkApplications: AppliedPuzzleCommand[] = [];
   const otherBuilds: { row: Returned; proofTicks: number[]; entityIds: string[]; initiallyComplete: boolean }[] = [];
   function observe(snapshot: GameSnapshot, observation: Pick<PuzzleExecutionObservation, 'owner' | 'allocation' | 'commands'>) {
     const { allocation } = observation;
     for (const entry of observation.commands) {
-      const row: Returned = { tick: snapshot.tick, scriptId: entry.scriptId, command: structuredClone(entry.command) };
+      const row: Returned = { tick: snapshot.tick, owner: entry.playerId, scriptId: entry.scriptId, command: structuredClone(entry.command) };
       returned.push(row);
       const admission = allocation.commandAdmissions?.find(a => a.status === 'accepted' && a.source === 'executor'
         && a.executor === entry.scriptId && a.action && canonical(a.command) === canonical(entry.command));
@@ -106,10 +108,14 @@ export function createExecutionOwnership(scope: ShipOwnershipScope) {
     // Match each actual native application once, to its literal returned SDK
     // entry. A queued/accepted command alone cannot satisfy this condition.
     const unused = new Set(returned), applied = new Map<Returned, number>();
-    for (const native of nativeCommands) {
-      const absoluteTick = native.tick + initialTick;
-      const row = returned.find(r => unused.has(r) && r.tick <= absoluteTick && canonical(r.command) === canonical(native.command));
-      if (row) { unused.delete(row); applied.set(row, absoluteTick); }
+    for (const native of sdkApplications) {
+      // The SDK hook carries the executor label after frame application. A
+      // later identical command from an old producer cannot credit a goal.
+      const row = returned.find(r => unused.has(r) && r.owner === native.owner && r.scriptId === native.scriptId && r.tick <= native.tick
+        && canonical(r.command) === canonical(native.command));
+      if (row && nativeCommands.some(c => c.tick+initialTick >= row.tick && canonical(c.command) === canonical(native.command))) {
+        unused.delete(row); applied.set(row, native.tick);
+      }
     }
     const steps = required.map(step => {
       const candidates = [...groups.values()].filter(g => g.step === step);
@@ -127,7 +133,7 @@ export function createExecutionOwnership(scope: ShipOwnershipScope) {
         scriptIds: confirmed ? [...new Set(confirmed.commands.map(r => r.scriptId))] : [...new Set(others.map(b => b.row.scriptId))],
         entityIds: confirmed?.proofEntities ?? others[0]?.entityIds ?? [] };
     });
-    return { passed: steps.every(s => s.status === 'goal-confirmed'), steps };
+    return { passed: steps.every(s => s.status === 'goal-confirmed'), nativeApplications: structuredClone(sdkApplications), steps };
   }
-  return { observe, finish };
+  return { observe, applied(event: AppliedPuzzleCommand) { sdkApplications.push(structuredClone(event)); }, finish };
 }
