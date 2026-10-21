@@ -2,9 +2,9 @@ import { BUILDING_DEFS, UNIT_DEFS } from '../../shared/catalog';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import { bodyMass } from '../../shared/physical-body';
 import { constructionWorkers } from '../../shared/construction';
-import { resolveUnitDamage, unitAttackDamageProfile } from '../../shared/damage';
 import type { Unit } from '../../shared/types';
 import { strategyIsOpponent } from './ownership';
+import { canLandIntercept, landInterceptionShotDamage } from './land-interception';
 import { creepForce, forceFor, neutralCamps, EXPANSION_GUARD_RANGE, type Camp } from '../policy/v7/creep';
 import { combatRating, structureRating } from '../policy/v6/strength';
 import type {
@@ -261,8 +261,7 @@ class LandModel {
     const targets = camp?.creeps ?? (harasser ? [harasser] : this.context.snapshot.buildings.filter(building => building.id === candidate.key));
     let pool = potential.filter(fighter => !fighter.interrupted
       && (!mining || frontRole(fighter.unit)));
-    const canIntercept = (fighter: Pick<Fighter, 'raw'>) => !harasser || fighter.raw.attackRange > harasser.attackRange
-      || fighter.raw.speed >= harasser.speed;
+    const canIntercept = (fighter: Pick<Fighter, 'raw'>) => !harasser || canLandIntercept(fighter.raw, harasser);
     pool.sort((a, b) => Number(canIntercept(b)) - Number(canIntercept(a))
       || Number(a.borrowed) - Number(b.borrowed) || a.eta - b.eta || a.unit.id.localeCompare(b.unit.id));
     const measure = (fighters: Fighter[]) => {
@@ -275,8 +274,7 @@ class LandModel {
     };
     const shotDamage = new Map<string, number>();
     const volley = (fighters: Fighter[]) => harasser ? fighters.filter(canIntercept).reduce((sum, fighter) => {
-      if (!shotDamage.has(fighter.unit.id)) shotDamage.set(fighter.unit.id, resolveUnitDamage(this.context.snapshot, harasser,
-        fighter.raw.attackDamage, unitAttackDamageProfile(this.context.snapshot, fighter.raw)).damage);
+      if (!shotDamage.has(fighter.unit.id)) shotDamage.set(fighter.unit.id, landInterceptionShotDamage(this.context.snapshot, fighter.raw, harasser));
       return sum + shotDamage.get(fighter.unit.id)!;
     }, 0) : 0;
     // Combat work is a stated estimate. ETA and response reachability remain shared Situation facts.
