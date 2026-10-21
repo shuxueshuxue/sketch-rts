@@ -1,0 +1,194 @@
+import { BUILDING_DEFS, RACE_DEFS, UNIT_DEFS, canTrainAt, requiredSupplyCap, trainingBuildingFor, unitMover } from '../../shared/catalog';
+import { createBuilding } from '../../shared/map';
+import { trainingRecruitPrototype } from '../../shared/sim';
+import { shipProfile } from '../../shared/ship-geometry';
+import { isTransportKind } from '../../shared/transport-role';
+import type { BuildingKind, TrainableUnitKind } from '../../shared/types';
+import { combatRating } from '../policy/v6/strength';
+import { goalFact } from './goal-facts';
+import type { AllocationReason } from './allocation-types';
+import type { GoalActionDeclaration, GoalBuildSite, GoalEntityReference, GoalEstimate, GoalFact, GoalPlanningContext } from './goal-planner-types';
+import type { Target } from './types';
+
+const reason = (code: string, factIds: readonly string[] = []): AllocationReason => ({ code, factIds, values: {} });
+const known = <T>(value: T, factIds: readonly string[] = []): GoalEstimate<T> => ({ state: 'met', value, factIds });
+const failed = (code: string, factIds: readonly string[] = []): GoalEstimate<never> => ({ state: 'unmet', reason: reason(code, factIds) });
+const unique = (facts: readonly GoalFact[]) => [...new Map(facts.map(fact => [fact.id, fact])).values()].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+const validCount = (count: number) => Number.isSafeInteger(count) && count > 0;
+
+/** Grounding is supplied by the shared world-fact source. These functions do
+ * not choose sites, run navigation, reserve money or connect action chains. */
+export function declareGoalTraining(input: Readonly<{
+  unitKind: TrainableUnitKind; count: number; producer: GoalEntityReference; at: Target; byTick: number;
+}>, context: GoalPlanningContext): GoalActionDeclaration | null {
+  const { unitKind, count, producer, at, byTick } = input;
+  if (!validCount(count) || !Number.isFinite(byTick)) return null;
+  const race = context.snapshot.players[context.owner]?.race;
+  if (!race || !trainingBuildingFor(race, unitKind)) return null;
+  const existing = producer.kind === 'existing' ? context.snapshot.buildings.find(building => building.id === producer.entityId) : undefined;
+  if (producer.kind === 'existing' && (!existing || existing.owner !== context.owner || existing.hp <= 0
+    || !canTrainAt(race, existing.kind, unitKind))) return null;
+  const rules = UNIT_DEFS[unitKind], amountGold = count * rules.cost;
+  const production = goalFact({ kind: 'production', unitKind, producer, at, byTick });
+  const exit = goalFact({ kind: 'spawn-exit', producer, unitKind, toward: at });
+  const gold = goalFact({ kind: 'gold', minimum: amountGold, byTick });
+  const room = goalFact({ kind: 'population-room', minimum: count * rules.supplyUsed, byTick });
+  const cap = goalFact({ kind: 'supply-cap', minimum: requiredSupplyCap(unitKind) });
+  const effect = goalFact({ kind: 'unit-available', unitKind, count, at, byTick });
+  const id = `action:train:${goalFact({ kind: 'production', unitKind, producer, at, byTick }).id}:${count}`;
+  // Native derived stats include this owner's current upgrades. Assessment
+  // copies never enter outputs/entityIds, leases or the world snapshot.
+  const source = existing ?? createBuilding('goal-training-assessment', context.owner, trainingBuildingFor(race, unitKind)!, at.point.x, at.point.y, true);
+  const recruit = trainingRecruitPrototype(context.snapshot, source, { unitKind, remaining: 0 });
+  const recruitForce = unitMover(unitKind) === 'land' ? count * combatRating(recruit) : 0;
+  const hullCapacity = isTransportKind(unitKind) ? shipProfile(recruit)?.loadCapacity ?? 0 : 0;
+  const hulls = hullCapacity > 0 && at.seaId ? Array.from({ length: count }, (_, index) => ({
+    transport: { kind: 'output' as const, actionId: id, output: `unit-${index}` }, capacity: hullCapacity })) : [];
+  const workerEffects = unitKind === 'worker' && at.landId ? Array.from({ length: count }, (_, index) => goalFact({
+    kind: 'worker-at', at, count: 1, byTick, worker: { kind: 'output', actionId: id, output: `unit-${index}` } })) : [];
+  return {
+    id, kind: 'train', preconditions: unique([production, exit, gold, room, cap]),
+    effects: [{ fact: effect, operation: 'establish', at: 'finish' }, ...hulls.map(hull => ({
+      fact: goalFact({ kind: 'transport-in', seaId: at.seaId!, capacity: hull.capacity, byTick, transport: hull.transport }),
+      operation: 'establish' as const, at: 'finish' as const })),
+      ...workerEffects.map(fact => ({ fact, operation: 'establish' as const, at: 'finish' as const }))],
+    demands: [{ resource: { kind: 'production-lane', producer, lane: 'training' }, quantity: 1, from: 'start', until: 'finish' }],
+    flows: [
+      { resource: { kind: 'gold' }, delta: -amountGold, at: 'start', factIds: [gold.id] },
+      { resource: { kind: 'population-room' }, delta: -count * rules.supplyUsed, at: 'start', factIds: [room.id] },
+      { resource: { kind: 'unit-pool', unitKind, at }, delta: count, at: 'finish', factIds: [effect.id] },
+      ...(recruitForce > 0 ? [{ resource: { kind: 'force' as const, scope: 'pool' as const, at, metric: 'combat-rating' as const },
+        delta: recruitForce, at: 'finish' as const, factIds: [effect.id] }] : []),
+      ...hulls.map(hull => ({ resource: { kind: 'transport-capacity' as const, transport: hull.transport },
+        delta: hull.capacity, at: 'finish' as const, factIds: [exit.id] })),
+      ...Array.from({ length: count }, (_, index) => ({ resource: { kind: 'entity-control' as const,
+        entity: { kind: 'output' as const, actionId: id, output: `unit-${index}` } }, delta: 1, at: 'finish' as const, factIds: [effect.id] })),
+    ],
+    // production is the available lane, not an unpriced queue wait; spawn-exit
+    // is independently required. Native training advances one work/tick.
+    duration: known(count * rules.trainTime, [production.id, exit.id]),
+    cost: known([{ code: 'training-capital', gold: amountGold, factIds: [gold.id] }]),
+    successProbability: known(1, [production.id, exit.id]),
+    executor: { executor: 'goal.train', parameters: { unitKind, count, producer, at } },
+    outputs: Array.from({ length: count }, (_, index) => `unit-${index}`), reasons: [],
+  };
+}
+
+/** One worker does the remaining native construction work. A worker-at fact
+ * is only a same-land pool: the separate, same-think route pays the walk. */
+export function declareGoalBuilding(input: Readonly<{
+  buildingKind: BuildingKind; at: Target; byTick: number;
+  worker: Readonly<{ ref: GoalEntityReference; from: Target }>;
+  foundationId?: string; additionalPreconditions?: readonly GoalFact[]; siteBinding?: GoalBuildSite;
+}>, context: GoalPlanningContext): GoalActionDeclaration | null {
+  const { buildingKind, at, byTick, worker } = input, race = context.snapshot.players[context.owner]?.race;
+  if (!race || !at.landId || !worker.from.landId || worker.from.landId !== at.landId || !Number.isFinite(byTick)
+    || !RACE_DEFS[race].buildableBuildings.includes(buildingKind)) return null;
+  const binding = input.siteBinding;
+  if (binding && (binding.buildingKind !== buildingKind || goalFact({ kind: 'build-site', buildingKind, at: binding.at }).id
+    !== goalFact({ kind: 'build-site', buildingKind, at }).id)) return null;
+  const foundation = input.foundationId ? context.snapshot.buildings.find(building => building.id === input.foundationId) : undefined;
+  if (input.foundationId && (!foundation || foundation.owner !== context.owner || foundation.kind !== buildingKind
+    || foundation.hp <= 0 || foundation.complete || Math.hypot(foundation.x - at.point.x, foundation.y - at.point.y) > 1e-6)) return null;
+  const ref = worker.ref;
+  const builder = ref.kind === 'existing' ? context.snapshot.units.find(unit => unit.id === ref.entityId) : undefined;
+  if (worker.ref.kind === 'existing' && (!builder || builder.owner !== context.owner || builder.kind !== 'worker'
+    || builder.hp <= 0 || builder.deck || builder.cabin)) return null;
+  const rules = BUILDING_DEFS[buildingKind], amountGold = foundation ? 0 : rules.cost;
+  const workTicks = foundation ? Math.max(0, Math.ceil(foundation.buildTime - foundation.buildProgress)) : rules.buildTime;
+  const site = goalFact({ kind: 'build-site', buildingKind, at });
+  const workers = goalFact({ kind: 'worker-at', at, count: 1, byTick, worker: worker.ref });
+  const route = binding?.route ?? goalFact({ kind: 'route', mover: 'land', from: worker.from, to: at, actor: worker.ref });
+  const gold = goalFact({ kind: 'gold', minimum: amountGold, byTick });
+  const routeFact = binding ? null : context.readFact(route);
+  let duration: GoalEstimate<number>;
+  if (binding) duration = binding.walkTicks.state === 'met'
+    ? Number.isFinite(binding.walkTicks.value) && binding.walkTicks.value >= 0
+      ? known(binding.walkTicks.value + workTicks, [...binding.factIds, ...binding.walkTicks.factIds])
+      : failed('construction-route-time-unavailable', [route.id]) : binding.walkTicks;
+  else if (routeFact!.state === 'pending') duration = { state: 'pending', requestIds: [routeFact!.requestId], reason: routeFact!.reason };
+  else if (routeFact!.state === 'unmet') duration = { state: 'unmet', reason: routeFact!.reason };
+  else if (routeFact!.route?.ticks === null || routeFact!.route?.ticks === undefined || !Number.isFinite(routeFact!.route.ticks)
+    || routeFact!.route.ticks < 0) duration = failed('construction-route-time-unavailable', [route.id]);
+  else duration = known(routeFact!.route.ticks + workTicks, [route.id, site.id]);
+  const baseEffect = goalFact({ kind: 'building-complete', buildingKind, at,
+    ...(foundation ? { building: { kind: 'existing' as const, entityId: foundation.id } } : {}) });
+  const mineId = binding?.logicalTarget.entityId;
+  const mine = mineId ? context.snapshot.resources.find(resource => resource.id === mineId && resource.amount > 0) : undefined;
+  const effects = unique([baseEffect,
+    ...(buildingKind === 'townHall' && mine && binding
+      ? [goalFact({ kind: 'hall-complete', mineId: mine.id, at: binding.logicalTarget })] : []),
+    ...(buildingKind === 'shipyard' && (binding?.logicalTarget.seaId ?? at.seaId)
+      ? [goalFact({ kind: 'shipyard-for', seaId: (binding?.logicalTarget.seaId ?? at.seaId)! })] : [])]);
+  const additionalPreconditions = unique([...(input.additionalPreconditions ?? []), ...(binding?.preconditions ?? [])]);
+  const id = `action:build:${JSON.stringify([baseEffect.id, route.id,
+    effects.map(fact => fact.id), additionalPreconditions.map(fact => fact.id)])}`;
+  const building: GoalEntityReference = foundation ? { kind: 'existing', entityId: foundation.id }
+    : { kind: 'output', actionId: id, output: 'building' };
+  const completed = unique([...effects, goalFact({ kind: 'building-complete', buildingKind, at, building })]);
+  return {
+    id, kind: 'build', preconditions: unique([workers, route, ...(foundation ? [] : [site, gold]), ...additionalPreconditions]),
+    effects: [
+      ...(foundation ? [] : [{ fact: site, operation: 'invalidate' as const, at: 'start' as const }]),
+      ...completed.map(fact => ({ fact, operation: 'establish' as const, at: 'finish' as const })),
+    ],
+    demands: [{ resource: { kind: 'entity-control', entity: worker.ref }, quantity: 1, from: 'start', until: 'finish' }],
+    flows: [
+      { resource: { kind: 'gold' }, delta: amountGold ? -amountGold : 0, at: 'start', factIds: foundation ? [foundation.id] : [gold.id] },
+      ...(rules.supplyProvided ? [
+        { resource: { kind: 'supply-cap' as const }, delta: rules.supplyProvided, at: 'finish' as const, factIds: [baseEffect.id] },
+        { resource: { kind: 'population-room' as const }, delta: rules.supplyProvided, at: 'finish' as const, factIds: [baseEffect.id] },
+      ] : []),
+      ...(!foundation ? [{ resource: { kind: 'entity-control' as const, entity: building }, delta: 1,
+        at: 'finish' as const, factIds: [baseEffect.id] }] : []),
+      ...(rules.trains.length ? [{ resource: { kind: 'production-lane' as const, producer: building, lane: 'training' },
+        delta: 1, at: 'finish' as const, factIds: [baseEffect.id] }] : []),
+    ],
+    duration, cost: known([{ code: foundation ? 'construction-capital-already-paid' : 'construction-capital', gold: amountGold,
+      factIds: foundation ? [foundation.id] : [gold.id] }]),
+    successProbability: known(1, [site.id, route.id]),
+    executor: { executor: 'goal.build', parameters: { buildingKind, at, worker: worker.ref, foundationId: foundation?.id ?? null } },
+    outputs: ['building'], reasons: [],
+  };
+}
+
+/** Waiting realizes only the shared income forecast's incremental money.
+ * Existing free gold is not credited again as an action output. */
+export function declareGoalWaitIncome(effect: GoalFact, context: GoalPlanningContext): GoalActionDeclaration | null {
+  if (effect.predicate.kind !== 'gold') return null;
+  const observed = context.readFact(effect), forecast = observed.goldForecast;
+  if (!forecast?.source?.id || forecast.epoch !== context.tick || !Number.isFinite(effect.predicate.minimum) || effect.predicate.minimum < 0
+    || !Number.isFinite(effect.predicate.byTick) || effect.predicate.byTick < context.tick
+    || !Number.isFinite(forecast.currentFreeGold) || forecast.currentFreeGold < 0
+    || !Number.isFinite(forecast.goldAtDeadline) || forecast.currentFreeGold >= effect.predicate.minimum) return null;
+  const wanted = Math.min(effect.predicate.minimum, forecast.goldAtDeadline) - forecast.currentFreeGold;
+  if (wanted <= 0) return null;
+  const segments: { fromTick: number; throughTick: number; ratePerTick: number }[] = [];
+  let remaining = wanted, credited = 0, previousThrough = -Infinity;
+  for (const segment of [...forecast.source.segments].sort((a, b) => a.fromTick - b.fromTick || a.throughTick - b.throughTick)) {
+    if (![segment.fromTick, segment.throughTick, segment.ratePerTick].every(Number.isFinite)
+      || segment.ratePerTick < 0 || segment.throughTick < segment.fromTick || segment.fromTick < previousThrough) return null;
+    previousThrough = segment.throughTick;
+    const fromTick = Math.max(context.tick, segment.fromTick), throughTick = Math.min(Math.floor(effect.predicate.byTick), segment.throughTick);
+    if (throughTick <= fromTick || segment.ratePerTick === 0 || remaining <= 0) continue;
+    const delta = Math.min(remaining, (throughTick - fromTick) * segment.ratePerTick);
+    segments.push({ fromTick, throughTick: fromTick + delta / segment.ratePerTick, ratePerTick: segment.ratePerTick });
+    credited += delta; remaining -= delta;
+  }
+  if (credited <= 0) return null;
+  const minimum = forecast.currentFreeGold + credited;
+  const partial = minimum < effect.predicate.minimum;
+  const creditedFact = partial ? goalFact({ ...effect.predicate, minimum }) : effect;
+  const duration = observed.state === 'pending'
+    ? { state: 'pending' as const, requestIds: [observed.requestId], reason: observed.reason }
+    : known(Math.ceil(segments.at(-1)!.throughTick - context.tick), forecast.factIds);
+  return {
+    id: `action:wait-income:${creditedFact.id}`, kind: 'wait-income', preconditions: [],
+    effects: [{ fact: creditedFact, operation: 'establish', at: 'finish' }], demands: [],
+    flows: [{ resource: { kind: 'gold' }, delta: credited, at: 'finish',
+      factIds: forecast.factIds, source: { ...forecast.source, segments } }], duration,
+    cost: known([]), successProbability: known(1, forecast.factIds),
+    executor: { executor: 'goal.wait-income', parameters: { minimumGold: minimum, byTick: effect.predicate.byTick } },
+    outputs: [], reasons: partial ? [reason('income-partial-contribution', forecast.factIds)] : [],
+  };
+}

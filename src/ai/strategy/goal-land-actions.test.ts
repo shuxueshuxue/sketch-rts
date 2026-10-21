@@ -1,0 +1,83 @@
+import { describe, expect, it } from 'vitest';
+import { sketchScene } from '../../sdk/scene';
+import { snapshotGame } from '../../shared/sim';
+import { declareGoalDestroyTarget, declareGoalEngageUnits, declareGoalHoldPosition, type GoalLandCombatGrounding } from './goal-land-actions';
+import type { GoalEntityReference, GoalPlanningContext } from './goal-planner-types';
+import type { Situation, Target } from './types';
+
+function scene() {
+  const snapshot = snapshotGame(sketchScene('atomic-land-action-bindings').map('bareDuel').replaceDefaults()
+    .player('us', { team: 'blue' }).player('ally', { team: 'blue' }).player('foe', { team: 'red' })
+    .townHall('us', 300, 300).townHall('ally', 1800, 600, { id: 'allied-hall' })
+    .townHall('foe', 2400, 600, { id: 'enemy-hall' }).unit('us', 'footman', 800, 600, { id: 'weak' })
+    .unit('us', 'horseArcher', 300, 900, { id: 'counter' }).unit('foe', 'horseArcher', 950, 600, { id: 'harasser' })
+    .unit('neutral', 'ogreWarrior', 1500, 1500, { id: 'neutral-guard' }).build().createGame());
+  const situation: Situation = { tick: snapshot.tick, owner: 'us', horizonTicks: 2400, lands: [], seas: [], assets: [], units: [], opportunities: [],
+    economy: { cashGold: snapshot.players.us!.gold, predictedIncomeGold: 0, horizonTicks: 2400, ledger: [] }, limitations: [] };
+  const context: GoalPlanningContext = { snapshot, situation, owner: 'us', tick: snapshot.tick, version: 'v9_summoner',
+    readFact: () => { throw Error('A declaration cannot rerun the fact/battle source'); } };
+  return context;
+}
+const ref = (entityId: string): GoalEntityReference => ({ kind: 'existing', entityId });
+const target: Target = { entityId: 'enemy-hall', landId: 'land:1', point: { x: 2400, y: 600 } };
+function grounding(): GoalLandCombatGrounding {
+  // Fixed typed assessment ports test declaration binding only, not combat
+  // prediction or a public puzzle. No substitute world fact table is used.
+  return { target, cohort: [ref('weak')], requiredForce: 1, byTick: 500,
+    duration: { state: 'met', value: 500, factIds: ['shared-battle-duration'] },
+    cost: { state: 'met', value: [{ code: 'permanent-casualties', gold: 10, factIds: ['shared-battle-casualties'] }], factIds: ['shared-battle-casualties'] },
+    successProbability: { state: 'met', value: .9, factIds: ['shared-battle-probability'] } };
+}
+
+describe('atomic land action declarations', () => {
+  it('destroys only an actual hostile target and gives expansion no bundled action', () => {
+    const context = scene(), before = JSON.stringify(context.snapshot), input = grounding();
+    const action = declareGoalDestroyTarget(input, context)!;
+    expect(action.kind).toBe('destroy-target');
+    expect(action.effects.map(effect => effect.fact.predicate)).toEqual([{ kind: 'enemy-site-destroyed', site: target }]);
+    expect(action.preconditions.every(fact => fact.predicate.kind !== 'production' && fact.predicate.kind !== 'gold')).toBe(true);
+    expect(declareGoalDestroyTarget({ ...input, target: { ...target, entityId: 'allied-hall' } }, context)).toBeNull();
+    expect(declareGoalDestroyTarget({ ...input, target: { ...target, entityId: 'neutral-guard' } }, context)).toBeNull();
+    expect(JSON.stringify(context.snapshot)).toBe(before);
+  });
+
+  it('binds counter capability to the granted cohort instead of another counter in the global pool', () => {
+    const context = scene(), action = declareGoalEngageUnits({ ...grounding(), throughTick: 1000 }, context)!;
+    const capability = action.preconditions.find(fact => fact.predicate.kind === 'interception-capability')!;
+    expect(capability.predicate).toMatchObject({ cohort: [ref('weak')] });
+    expect(JSON.stringify(capability)).not.toContain('counter');
+    const selectedCounter = declareGoalEngageUnits({ ...grounding(), cohort: [ref('counter')], throughTick: 1000 }, context)!;
+    expect(selectedCounter.id).not.toBe(action.id);
+    expect(selectedCounter.preconditions.find(fact => fact.predicate.kind === 'force-at')!.predicate).toMatchObject({ cohort: [ref('counter')] });
+  });
+
+  it('holds the selected units for the control window and rejects a zero-time future promise', () => {
+    const context = scene(), input = { ...grounding(), throughTick: 500 };
+    const action = declareGoalHoldPosition(input, context)!;
+    expect(action.effects[0]!.fact.predicate).toEqual({ kind: 'route-controlled', at: target, throughTick: 500 });
+    expect(action.demands).toEqual([{ resource: { kind: 'entity-control', entity: ref('weak') }, quantity: 1, from: 'start', until: 'finish' }]);
+    expect(declareGoalHoldPosition({ ...input, duration: { state: 'met', value: 0, factIds: [] } }, context)).toBeNull();
+  });
+
+  it('retains pending assessments and symbolic future members without inventing world identities', () => {
+    const context = scene(), future = { kind: 'output', actionId: 'training-action', output: 'unit-0' } as const;
+    const input = { ...grounding(), cohort: [future], duration: { state: 'pending', requestIds: ['battle-request'],
+      reason: { code: 'shared-battle-pending', factIds: [], values: {} } } as const };
+    const action = declareGoalDestroyTarget(input, context)!;
+    expect(action.duration.state).toBe('pending');
+    expect(action.demands[0]!.resource).toEqual({ kind: 'entity-control', entity: future });
+    expect(action.executor.parameters.cohort).toEqual([future]);
+    expect(context.snapshot.units.some(unit => unit.id === future.output)).toBe(false);
+    expect(declareGoalDestroyTarget({ ...grounding(), cohort: [ref('harasser')] }, context)).toBeNull();
+    expect(declareGoalDestroyTarget({ ...grounding(), cohort: [ref('missing')] }, context)).toBeNull();
+  });
+
+  it('is stable across order, duplicate members and JSON forks; changing the selected group changes the identity', () => {
+    const context = scene(), input = { ...grounding(), cohort: [ref('counter'), ref('weak')] };
+    const first = declareGoalDestroyTarget(input, context)!;
+    const second = declareGoalDestroyTarget({ ...input, cohort: [ref('weak'), ref('counter'), ref('weak')] }, context)!;
+    expect(second).toEqual(first);
+    expect(declareGoalDestroyTarget(JSON.parse(JSON.stringify(input)), { ...context, snapshot: JSON.parse(JSON.stringify(context.snapshot)) })).toEqual(first);
+    expect(declareGoalDestroyTarget(grounding(), context)!.id).not.toBe(first.id);
+  });
+});
