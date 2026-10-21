@@ -1,6 +1,7 @@
 import type { GameSnapshot } from '../../shared/types';
+import { unitMover } from '../../shared/catalog';
 import { neutralCampExposure, type NeutralCampExposure } from '../situation/neutral-camp-exposure';
-import type { GoalFact, GoalFactPredicate } from './goal-planner-types';
+import type { GoalFact, GoalFactPredicate, GoalResource } from './goal-planner-types';
 
 /** Full semantic keys avoid shortened-hash collisions. Task IDs, caller order
  * and process state never participate in fact identity. */
@@ -12,10 +13,23 @@ function canonical(value: unknown): unknown {
   if (typeof value === 'number' && !Number.isFinite(value)) return { invalidNumber: String(value) };
   return value;
 }
+export function goalValueKey(value: unknown): string { return JSON.stringify(canonical(value)); }
+const region = (at: import('./types').Target, mover: 'land' | 'sea') => mover === 'sea'
+  ? at.seaId ? { seaId: at.seaId } : at : at.landId ? { landId: at.landId } : at;
+export function goalResourceKey(resource: GoalResource): string {
+  const normalized = resource.kind === 'unit-pool' ? { ...resource, at: region(resource.at, unitMover(resource.unitKind)) }
+    : resource.kind === 'force' && resource.scope === 'pool' ? { ...resource, at: region(resource.at, 'land') } : resource;
+  return goalValueKey(normalized);
+}
 export function goalFact(predicate: GoalFactPredicate): GoalFact {
-  const normalized = predicate.kind === 'assets-safe'
-    ? { ...predicate, unitIds: [...new Set(predicate.unitIds)].sort() } : predicate;
-  return { id: `fact:${JSON.stringify(canonical(normalized))}`, predicate: normalized };
+  const refs = (values: readonly import('./goal-planner-types').GoalEntityReference[]) => [...new Map(values
+    .map(value => [goalValueKey(value), value] as const)).entries()].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([, value]) => value);
+  const normalized = predicate.kind === 'assets-safe' ? { ...predicate, unitIds: [...new Set(predicate.unitIds)].sort() }
+    : predicate.kind === 'cargo-aboard' ? { ...predicate, units: refs(predicate.units) }
+    : 'cohort' in predicate && predicate.cohort ? { ...predicate, cohort: refs(predicate.cohort) } : predicate;
+  const semantic = normalized.kind === 'unit-available' ? { ...normalized, at: region(normalized.at, unitMover(normalized.unitKind)) }
+    : normalized.kind === 'worker-at' || normalized.kind === 'force-available' ? { ...normalized, at: region(normalized.at, 'land') } : normalized;
+  return { id: `fact:${goalValueKey(semantic)}`, predicate: normalized };
 }
 
 /** A camp is the shared native home group, identified by its recorded member

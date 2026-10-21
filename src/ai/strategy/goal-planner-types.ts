@@ -14,14 +14,16 @@ export type GoalEntityReference = Readonly<{ kind: 'existing'; entityId: string 
   /** Template-local variable unified with an achiever's existing/output ref. */
   | Readonly<{ kind: 'binding'; name: string }>;
 export type GoalFactPredicate =
-  | Readonly<{ kind: 'force-at'; at: Target; minimum: number; byTick: number } & GoalForceMeasure>
-  | Readonly<{ kind: 'force-available'; at: Target; minimum: number; byTick: number } & GoalForceMeasure>
+  | Readonly<{ kind: 'force-at'; at: Target; minimum: number; byTick: number; cohort?: readonly GoalEntityReference[] } & GoalForceMeasure>
+  | Readonly<{ kind: 'force-available'; at: Target; minimum: number; byTick: number; cohort?: readonly GoalEntityReference[] } & GoalForceMeasure>
+  /** Capacity is native payload mass, never a passenger head count. */
   | Readonly<{ kind: 'transport-in'; seaId: SeaId; capacity: number; byTick: number; transport?: GoalEntityReference }>
   | Readonly<{ kind: 'transport-at'; transport: GoalEntityReference; at: Target; tolerance: number; byTick: number }>
   | Readonly<{ kind: 'shipyard-for'; seaId: SeaId }>
   | Readonly<{ kind: 'production'; unitKind: UnitKind; at?: Target; producer?: GoalEntityReference; byTick: number }>
   | Readonly<{ kind: 'gold'; minimum: number; byTick: number }>
-  | Readonly<{ kind: 'worker-at'; at: Target; count: number; byTick: number }>
+  | Readonly<{ kind: 'worker-at'; at: Target; count: number; byTick: number; worker?: GoalEntityReference }>
+  | Readonly<{ kind: 'cargo-aboard'; transport: GoalEntityReference; units: readonly GoalEntityReference[] }>
   | Readonly<{ kind: 'shore-safe'; landId: LandId; landing: Target; throughTick: number }>
   | Readonly<{ kind: 'camp-cleared'; campId: string }>
   | Readonly<{ kind: 'hall-complete'; mineId: string; at: Target }>
@@ -32,13 +34,13 @@ export type GoalFactPredicate =
   | Readonly<{ kind: 'build-site'; buildingKind: BuildingKind; at: Target }>
   | Readonly<{ kind: 'spawn-exit'; producer: GoalEntityReference; unitKind: UnitKind; toward: Target }>
   | Readonly<{ kind: 'route'; mover: 'land' | 'sea'; from: Target; to: Target; actor?: GoalEntityReference }>
-  // This is a callable same-land pool, not exact arrival at a rally point.
+  // Callable mover-region pool (land troops / sea ships), not exact arrival.
   | Readonly<{ kind: 'unit-available'; unitKind: UnitKind; count: number; at: Target; byTick: number }>
   | Readonly<{ kind: 'building-complete'; buildingKind: BuildingKind; at: Target; building?: GoalEntityReference }>
   | Readonly<{ kind: 'enemy-site-destroyed'; site: Target }>
   | Readonly<{ kind: 'route-controlled'; at: Target; throughTick: number }>
   | Readonly<{ kind: 'harassment-ended'; site: Target; throughTick: number }>
-  | Readonly<{ kind: 'interception-capability'; site: Target; throughTick: number }>
+  | Readonly<{ kind: 'interception-capability'; site: Target; throughTick: number; cohort?: readonly GoalEntityReference[] }>
   | Readonly<{ kind: 'assets-safe'; unitIds: readonly string[]; at: Target; throughTick: number }>;
 
 export type GoalFact = Readonly<{ id: string; predicate: GoalFactPredicate }>;
@@ -55,7 +57,8 @@ export type GoalFactObservation = Readonly<{
   availableTick?: number;
   route?: Readonly<{ distance: number; ticks: number | null; points: readonly Target['point'][] }>;
   goldForecast?: Readonly<{ epoch: number; currentFreeGold: number; goldAtDeadline: number;
-    earliestTick: number | null; incomeGoldPerTick: number; factIds: readonly string[] }>;
+    earliestTick: number | null; incomeGoldPerTick: number; factIds: readonly string[];
+    source?: Extract<GoalFlowSource, { kind: 'income' }> }>;
   site?: Readonly<{ logicalTarget: Target; buildPoint: Target['point']; buildingId?: string }>;
   interception?: Readonly<{ threatIds: readonly string[]; capableUnitIds: readonly string[]; counterKinds: readonly UnitKind[] }>;
 }> & (Readonly<{ state: 'pending'; requestId: string; requestedTick: number }>
@@ -81,13 +84,22 @@ export type GoalResource =
   | Readonly<{ kind: 'supply-cap' }>
   // Only additive combat-rating is a numeric balance. Camp-force is always
   // the shared whole-group predicate, including its non-linear interactions.
-  | Readonly<{ kind: 'force'; at: Target; metric: 'combat-rating' }>
+  | Readonly<{ kind: 'force'; at: Target; metric: 'combat-rating'; scope: 'pool' | 'post' }>
   | Readonly<{ kind: 'unit-pool'; unitKind: UnitKind; at: Target }>
-  | Readonly<{ kind: 'transport-capacity'; transport: GoalEntityReference }>
+  | Readonly<{ kind: 'transport-capacity'; transport: GoalEntityReference; seaId?: SeaId }>
+  | Readonly<{ kind: 'transport-capacity'; seaId: SeaId; transport?: GoalEntityReference }>
+  /** Payload never conveys command authority. Every moving hull also needs
+   * one exclusive entity-control demand, resolved to a real lease when ready. */
+  | Readonly<{ kind: 'entity-control'; entity: GoalEntityReference }>
   | Readonly<{ kind: 'production-lane'; producer: GoalEntityReference; lane: string }>;
 export type GoalResourceBalance = Readonly<{ resource: GoalResource; quantity: number; asOfTick: number; factIds: readonly string[] }>;
+export type GoalFlowSource = Readonly<{ kind: 'event'; id: string }>
+  | Readonly<{ kind: 'income'; id: string; segments: readonly Readonly<{ fromTick: number; throughTick: number; ratePerTick: number }>[] }>;
 export type GoalResourceFlow = Readonly<{
   resource: GoalResource; delta: number; at: GoalEventTime; factIds: readonly string[];
+  /** Positive recurring income is credited once per source/time interval;
+   * one-shot rewards once per source event, across differing goal thresholds. */
+  source?: GoalFlowSource;
 }>;
 export type GoalResourceDemand = Readonly<{
   resource: GoalResource | Readonly<{ kind: 'unit'; unitId: string }>;
@@ -141,6 +153,7 @@ export type GoalProductionOption = Readonly<{
 }>;
 export type GoalTransportOption = Readonly<{
   id: string; seaId: SeaId; from: Target; to: Target; transport: GoalEntityReference; capacity: number;
+  origin: 'land' | 'aboard'; loadedUnitIds: readonly string[];
   departure: Readonly<{ water: Target['point']; ground: Target['point']; heading: number | null }>;
   landing: Readonly<{ water: Target['point']; ground: Target['point']; heading: number | null }>;
   approach: GoalFact; crossing: GoalFact; shoreSafe: GoalFact;
