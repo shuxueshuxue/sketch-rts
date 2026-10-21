@@ -25,6 +25,7 @@ import { seaIdAt } from './regions';
 import type { GoalHullCandidate, GoalTransportFactPorts } from './goal-grounding-ports';
 import { valueGoalSeaLeg } from './goal-sea-leg-value';
 import { coarseGoalCampOptions, type GoalCampBattleModel } from './goal-camp-quotation';
+import { createDefaultGoalCampBattleModel, type GoalCampModelObserver } from './goal-camp-default-model';
 import { goalAssemblyPostSource } from './goal-naval-actions';
 import type { Target } from './types';
 
@@ -46,6 +47,7 @@ export type GoalNavalCombatGroundingPorts = Readonly<{
   movementRisk?: (request: GoalCombatMovementRequest) => GoalEstimate<GoalMovementRisk>;
   /** Same replaceable camp model for coarse discovery and exact refinement. */
   campBattleModel?: GoalCampBattleModel;
+  onCampModelSelection?: GoalCampModelObserver;
   readGroundPoint?: GoalNativeGroundReader;
   /** Only potential redirect scenarios need a counterfactual response. The
    * source owns its eligible/excluded pool and published route facts. */
@@ -66,6 +68,7 @@ const gap = (a: Target['point'], b: Target['point']) => Math.hypot(a.x - b.x, a.
  * and their singleton contributors are alternatives, not an authored chain. */
 export function createGoalNavalCombatGrounding(context: GoalPlanningContext, ports: GoalNavalCombatGroundingPorts):
   Pick<GoalGroundingReader, 'combatOptions'> {
+  const campBattleModel = ports.campBattleModel ?? createDefaultGoalCampBattleModel(ports.onCampModelSelection);
   const allowed = ports.allowedUnitIds === undefined ? null : new Set(ports.allowedUnitIds);
   const interrupted = new Set(ports.interruptedUnitIds ?? []);
   const actors = new Map(context.snapshot.units.map(unit => [unit.id, unit]));
@@ -394,7 +397,7 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
       campContact: { campId, stagingFact } };
     const result = assessGoalCampCombatOption({ snapshot: context.snapshot, situation: context.situation, effect, cohort: group,
       from, target, staging, campId, byTick: throughTick, routes, arrivalTicks, movementRisk: movement(request),
-      stagingFacts: [context.readFact(stagingFact)], ...(ports.campBattleModel ? { battleModel: ports.campBattleModel } : {}) });
+      stagingFacts: [context.readFact(stagingFact)], battleModel: campBattleModel });
     return result.state === 'met' ? { ...result, candidates: result.candidates.map(option => ({ ...option,
       factIds: sorted([...option.factIds, ...facts]) })), factIds: sorted([...result.factIds, ...facts]),
       ...(unresolved.length ? { deferred: [{ id: `combat-camp-staging-alternatives:${campId}`, requestIds: sorted(unresolved),
@@ -444,7 +447,7 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
         for (const campId of camps) for (const group of groups.candidates) {
           const answer = coarseGoalCampOptions({ snapshot: context.snapshot, situation: context.situation, effect,
             campId, cohort: group, byTick: 'byTick' in p ? p.byTick : (context.planThroughTick ?? context.tick + context.situation.horizonTicks),
-            ...(ports.campBattleModel ? { model: ports.campBattleModel } : {}) });
+            model: campBattleModel });
           if (answer.state === 'met') candidates.push(...answer.candidates);
           else if (answer.state === 'pending') deferred.push({ id: `coarse-camp:${campId}:${goalValueKey(group.map(member => member.reference))}`,
             requestIds: answer.requestIds, reason: answer.reason });
