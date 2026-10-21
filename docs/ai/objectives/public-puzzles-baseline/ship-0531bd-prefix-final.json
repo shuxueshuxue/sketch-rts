@@ -1,0 +1,20 @@
+[
+  {
+    "puzzle": "ship-away/far",
+    "originalSource": "2f82c4ec6e316bb61f55a963d671f392ec6e59ca",
+    "supplementSource": "fcfc0bb5ab449a3f12dfca5aeda6d6c7602c3fc3",
+    "originalThinkCount": 4,
+    "supplementThinkCount": 20,
+    "compared": 4,
+    "differences": []
+  },
+  {
+    "puzzle": "ship-away/near",
+    "originalSource": "2f82c4ec6e316bb61f55a963d671f392ec6e59ca",
+    "supplementSource": "fcfc0bb5ab449a3f12dfca5aeda6d6c7602c3fc3",
+    "originalThinkCount": 20,
+    "supplementThinkCount": 20,
+    "compared": 20,
+    "differences": []
+  }
+]
