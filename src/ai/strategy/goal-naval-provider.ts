@@ -46,6 +46,7 @@ export const goalNavalActionProvider: GoalActionProvider = {
       else if (predicate.kind === 'garrison-ready') action = declareGoalGarrison({ ...option, mineId: predicate.mineId,
         at: predicate.at, throughTick: option.byTick }, context);
       else if (predicate.kind === 'site-safe') action = declareGoalDefense({ ...base, site: predicate.site,
+        post: option.target,
         ...(option.effectDelayTicks ? { effectDelayTicks: option.effectDelayTicks } : {}),
         throughTick: predicate.throughTick, requiredForce: option.requiredForce, routes: option.preconditions });
       else if (predicate.kind === 'shore-safe') {
