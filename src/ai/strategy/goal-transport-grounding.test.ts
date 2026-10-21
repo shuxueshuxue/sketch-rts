@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { describe, expect, it, vi } from 'vitest';
 import { withNavigationAudit, withNavigationPhase } from '../../shared/navigation-audit';
+import { unitMover } from '../../shared/catalog';
 import { bodyMass } from '../../shared/physical-body';
 import { GANGWAY_SETUP_TICKS } from '../../shared/ship-gangway';
 import type { GameSnapshot } from '../../shared/types';
@@ -77,6 +78,25 @@ describe('transport alternatives from shared published ports', () => {
     expect(input.ports.berth).toHaveBeenCalledWith(soldier.assessment, expect.anything(), expect.anything());
     expect(JSON.stringify(result)).not.toContain('private-evaluation-only');
     expect(result.candidates.some(option => option.transport.kind === 'output')).toBe(true);
+  });
+
+  it('does not charge the fighter assembly walk again, while preserving mixed cargo worker walking', () => {
+    const { input, member } = frame();
+    const actual = input.snapshot.units.find(unit => unit.owner === input.owner && unit.kind !== 'worker'
+      && unitMover(unit.kind) === 'land' && !unit.deck && !unit.cabin && unit.attackDamage > 0)!;
+    const fighter: GoalNavalMember = { reference: { kind: 'existing', entityId: actual.id },
+      assessment: { ...actual, x: input.from.point.x, y: input.from.point.y, deck: undefined, cabin: undefined } };
+    const readFact = vi.fn(input.readFact);
+    const onlyFighter = strict({ ...input, members: met([fighter]), request: { cohort: [fighter.reference] }, readFact });
+    expect(onlyFighter.state).toBe('met');
+    if (onlyFighter.state !== 'met') throw Error('no fighter option');
+    expect(onlyFighter.candidates[0]!.duration).toMatchObject({ state: 'met', value: 100 + 2 * GANGWAY_SETUP_TICKS });
+    expect(readFact).not.toHaveBeenCalled();
+    const mixed = strict({ ...input, members: met([fighter, member]), request: { cohort: [fighter.reference, member.reference] }, readFact });
+    expect(mixed.state).toBe('met'); if (mixed.state !== 'met') throw Error('no mixed option');
+    expect(mixed.candidates[0]!.duration).toMatchObject({ state: 'met', value: 13 + 100 + 2 * GANGWAY_SETUP_TICKS });
+    expect(readFact.mock.calls.map(([fact]) => fact.predicate.kind === 'route' ? fact.predicate.actor : null))
+      .toEqual([member.reference]);
   });
 
   it('starts aboard at the real hull pose, requires no invented shore, and retains all native cargo dependencies', () => {
