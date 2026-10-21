@@ -65,6 +65,8 @@ export function registerPublicPuzzleTests(key: PuzzleKey) {
         expect(isWalkable(world.game.map, 2368, 768)).toBe(true);
         expect(isWalkable(world.game.map, 2368, 2944)).toBe(true);
       }
+      if (key === 'defense-window') for (const attacker of world.attackers)
+        expect(attacker.order).toMatchObject({ type: 'attackMove', x: world.home.x, y: world.home.y });
     });
     it('native owner-think scope diagnostic only (not puzzle acceptance)', () => {
       const world = puzzle.create(), snapshot = snapshotGame(world.game), before = JSON.stringify(snapshot);
