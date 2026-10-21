@@ -329,6 +329,7 @@ export function segmentWalkable(map: Pick<GameMap, "terrain">, a: Point, b: Poin
 // the flow tiles toward it (see @@@flow-tiles, @@@terrain-steering). `goal` should be walkable (see walkableGoal); a goal
 // the unit's ground does not reach is walked to as near as that ground comes (see reachableTarget).
 export function steerPoint(map: Pick<GameMap, "terrain">, from: Point, goal: Point, mover: Mover = "land"): Point {
+  recordNativeRouting('steerPoint');
   const terrain = map.terrain;
   if (!terrain) return goal;
   const ground = runtime(terrain, mover);
@@ -1039,6 +1040,7 @@ function openGround(width: number, height: number): Terrain {
 }
 
 export function guardedField(map: Pick<GameMap, "terrain" | "width" | "height">, from: Point, disks: readonly GuardDisk[]): GuardedField | undefined {
+  recordNativeRouting('guardedField');
   const terrain = map.terrain ?? openGround(map.width, map.height);
   const state = routing(map, terrain, "land");
   const { walk, weight, offsets } = state;

@@ -4,6 +4,7 @@ import type { GameMap } from './types';
 import { SIM_TICKS_PER_SECOND } from './time';
 import { pointSegmentDistanceSquared } from './navigation-math';
 import { MOVE_ORDER_ARRIVAL_RANGE } from './movement-rules';
+import { recordNativeRouting } from './navigation-audit';
 
 /** A distance-limited prefix along the supplied road, including its exact endpoint. */
 export function routePrefix(from: Point, route: readonly Point[], length: number): [Point, ...Point[]] {
@@ -60,12 +61,14 @@ export function routeLeavesDisks(points: readonly [Point, ...Point[]], disks: re
 /** Terrain approach geometry uses a visible straight segment before terrain roads.
  * Building detours, body clearance and flow-field corner smoothing remain movement work. */
 export function groundApproachRoute(map: Pick<GameMap, 'terrain'>, from: Point, goal: Point): Point[] | undefined {
+  recordNativeRouting('groundApproachRoute');
   const ground = { ...map };
   return segmentWalkable(ground, from, goal, 'land') ? [goal] : walkRoute(ground, from, goal);
 }
 
 /** Native steering waypoints include building occupancy; downhill flow fields finish at their reachable endpoint. */
 export function groundSteeringRoute(map: Pick<GameMap, 'terrain'>, from: Point, goal: Point, mover: Mover = 'land'): [Point, ...Point[]] {
+  recordNativeRouting('groundSteeringRoute');
   const route: [Point, ...Point[]] = [from];
   let point = from, next = steerPoint(map, point, goal, mover);
   while (next.x !== point.x || next.y !== point.y) {
