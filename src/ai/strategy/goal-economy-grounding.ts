@@ -8,6 +8,7 @@ import type { GoalGeometryReader, GoalGeometryRequest } from './goal-grounding-p
 import type { GoalBuildSite, GoalDeferredCandidate, GoalEntityReference, GoalEstimate, GoalFact, GoalGroundingReader, GoalPoolMemberReference,
   GoalPlanningContext, GoalProductionOption } from './goal-planner-types';
 import type { LandId, Point, SeaId, Target } from './types';
+import type { RegionIndex, Shore } from './regions';
 
 export const GOAL_BUILD_SITE_LIMIT = 8;
 type BuildPoint = Readonly<{ at: Target; approach: Target }>;
@@ -21,6 +22,9 @@ export type GoalEconomicGroundingPorts = Readonly<{
   /** Actual members at published conditional origins, supplied by the common
    * source. This domain never invents a worker or a landing position. */
   cohortOptions?: GoalGroundingReader['cohortOptions'];
+  /** Already prepared coast contacts, supplied by the same owner-think source.
+   * Coarse shore construction reads landmarks only; it never completes a scan. */
+  regions?: Pick<RegionIndex, 'shores' | 'scannedRows' | 'totalRows'>;
 }>;
 const order = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;
 const why = (code: string, factIds: readonly string[] = []) => ({ code, factIds, values: {} });
@@ -111,11 +115,34 @@ function walkEstimate(observation: ReturnType<GoalPlanningContext['readFact']>):
 export function createGoalEconomicGrounding(context: GoalPlanningContext, ports: GoalEconomicGroundingPorts):
   Pick<GoalGroundingReader, 'buildSites' | 'productionOptions'> {
   const { snapshot, owner } = context, byTick = (context.planThroughTick ?? context.tick + context.situation.horizonTicks);
-  function points(kind: BuildingKind, near: Target) {
+  function points(kind: BuildingKind, near: Target): GoalEstimate<readonly BuildPoint[]> {
     if (context.precision === 'coarse') {
       const landId = near.landId ?? ports.regionAt(near.point, 'land');
+      if (BUILDING_DEFS[kind].shore && near.seaId && !landId && !near.entityId) {
+        const regions = ports.regions;
+        if (!regions || regions.scannedRows !== regions.totalRows) {
+          const id = `coarse-build-coast:${goalValueKey([kind, near])}`;
+          return { state: 'pending', requestIds: [id], reason: why('coarse-build-coast-metadata-pending', [id]) };
+        }
+        // One landmark per adjacent land keeps every worker-pool alternative.
+        // Exact placement still searches that land/sea via the existing geometry
+        // port; a contact does not prove a legal footprint or free approach.
+        const nearest = new Map<LandId, Shore>();
+        const distance = (shore: Shore) => Math.hypot(shore.ground.x - near.point.x, shore.ground.y - near.point.y);
+        for (const shore of regions.shores) {
+          if (shore.seaId !== near.seaId) continue;
+          const prior = nearest.get(shore.landId);
+          if (!prior || distance(shore) < distance(prior) || distance(shore) === distance(prior)
+            && (shore.ground.y < prior.ground.y || shore.ground.y === prior.ground.y && shore.ground.x < prior.ground.x))
+            nearest.set(shore.landId, shore);
+        }
+        return { state: 'met', factIds: [], value: [...nearest].sort(([a], [b]) => order(a, b)).map(([landId, shore]) => {
+          const at: Target = { landId, seaId: near.seaId!, point: { ...shore.ground } };
+          return { at, approach: at };
+        }) };
+      }
       const at: Target = { ...near, ...(landId?.startsWith('land:') ? { landId: landId as LandId } : {}) };
-      return { state: 'met' as const, value: [{ at, approach: at }], factIds: [] };
+      return { state: 'met', value: [{ at, approach: at }], factIds: [] };
     }
     return ports.geometry(goalBuildPointRequest(context, kind, near, ports));
   }
