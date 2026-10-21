@@ -1,7 +1,8 @@
 # 公开残局场景与 main 基线
 
 7 道题的 11 个变体已搭成真实场景，复用入口在 [scenes.ts](../../../../src/ai/strategy/puzzles/scenes.ts)。
-每个变体有冷帧依赖图判法与真实执行判法；本分支已绑定真实搜索、current-world reader 与原生 owner-think scope。正常目标收集/收益估值、未来投影、完整物理能力及执行 bridge 尚未齐备，这 22 项检查明确跳过，不算规划器验收通过。
+每个变体有冷帧依赖图判法与真实执行判法；真实搜索、事实源、scope 与正常 Objective collector 已接入，11个冷帧检查已全部开启。
+首轮结果为通过0、错误动作链0、缺能力11，逐题缺口见 [cold-plans-40e.zh.md](cold-plans-40e.zh.md)。11个执行检查仍等正式 bridge 而跳过。
 另有独立的人工合法命令解，用来证明局面本身能完成，不能拿它当 AI 成绩。
 
 历史 main 实测结果、可行解时间与证据地址见本页下方。机器可读逐题数据见 [summary.json](summary.json)。共同栈接线与新验证见 [shared-stack.zh.md](shared-stack.zh.md)，不能把下方的旧 AI 成绩当作共同栈成绩。
@@ -60,6 +61,7 @@ npx tsx scripts/planner-puzzle-baseline.ts --mode v9_summoner --out work/public-
 ```
 
 重模拟放在 A100/mac1。单题可加 `--case defense-window/later`；`--ticks` 只用于诊断截帧，不用于缩短正式题目的时限。
+当前共同栈上的全题库命令会因11个真实冷帧缺口返回非零；它们已开启，不能将历史的22项skip数字用于当前版本。
 非 witness 模式固定比较 `d4ca2668` 的 AI/SDK/sim 源码，除本题库外出现改动就拒绝把结果标成这份 main 基线。共同栈已有生产代码变化，不能在此 checkout 重跑并沿用该标签。witness 模式只证明当前规则下可行，输出的 `mainBaseline` 为 null。
 后续 AI 有变化时，要用证据记录的提交复跑旧基线，或明确选择新的基线；不能沿用旧标签。
 
