@@ -62,6 +62,7 @@ export type GoalFactObservation = Readonly<{
     source?: Extract<GoalFlowSource, { kind: 'income' }> }>;
   site?: Readonly<{ logicalTarget: Target; buildPoint: Target['point']; buildingId?: string }>;
   interception?: Readonly<{ threatIds: readonly string[]; capableUnitIds: readonly string[]; counterKinds: readonly UnitKind[] }>;
+  threats?: Readonly<{ unitIds: readonly string[]; campIds: readonly string[]; requiredForce: number }>;
 }> & (Readonly<{ state: 'pending'; requestId: string; requestedTick: number }>
   | Readonly<{ state: 'met' | 'unmet' }>);
 export type GoalFactReader = (fact: GoalFact) => GoalFactObservation;
@@ -186,6 +187,12 @@ export type GoalGroundingReader = Readonly<{
   /** Missing exact cohort cannot authorize boarding estimates from a stand-in
    * unit. Mass alone does not identify radius, existing cargo or hull binding. */
   transportOptions: (from: Target, to: Target, capacity: number, request?: GoalTransportRequest) => GoalCandidates<GoalTransportOption>;
+  combatOptions?: (effect: GoalFact) => GoalCandidates<GoalCombatOption>;
+}>;
+export type GoalCombatOption = Readonly<{
+  id: string; target: Target; cohort: readonly GoalEntityReference[]; requiredForce: number; byTick: number;
+  duration: GoalEstimate<number>; cost: GoalEstimate<readonly GoalActionCost[]>; successProbability: GoalEstimate<number>;
+  preconditions: readonly GoalFact[]; factIds: readonly string[];
 }>;
 export type GoalRequest = Readonly<{
   id: string; owner: PlayerId; effects: readonly GoalFact[]; rewardGold: number;
@@ -234,9 +241,9 @@ export type GoalPlanCacheEntry = Readonly<{
   dependencies: readonly Readonly<{ factId: string; revision: string; state: GoalFactState }>[];
   plan: GoalPlan;
   /** Finite declarative frontier only; no callbacks, snapshots or task state. */
-  continuation?: import('./goal-planner').GoalSearchMemory;
+  continuation?: import('./goal-search-state').GoalSearchMemory;
 }>;
-export type GoalPlannerCache = Readonly<{ version: 1; owner: PlayerId; entries: readonly GoalPlanCacheEntry[] }>;
+export type GoalPlannerCache = Readonly<{ version: 1; owner: PlayerId; entries: readonly GoalPlanCacheEntry[]; truncated?: true }>;
 export type GoalPlannerInput = Readonly<{
   context: GoalPlanningContext; goals: readonly GoalRequest[]; providers: readonly GoalActionProvider[];
   initialBalances: readonly GoalResourceBalance[]; limits: GoalSearchLimits;
