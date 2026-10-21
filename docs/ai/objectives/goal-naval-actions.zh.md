@@ -50,3 +50,9 @@ provider 测试用真实场景快照和真实 Situation，加固定的已发布�
 船上出发的岸对枚举只按 sea 与目标岸点排序，稳定请求键不含当前船位；同海域内行进不会重启未公布的岸点扫描。船位和 heading 仍进入真实 seaLeg 的物理请求，陆地出发的距离排序仍保留其起点。
 
 工厂接受独立 `shoreGeometryRevision`（省略时兼容 `geometryRevision`），由总 source 绑定已备地形岸点索引版本。动态船位、交通或施工体变化可失效泊位与航段，不重启与其无关的岸点枚举。
+
+`goal-naval-assessment.ts` 提供共享 source 使用的纯 `assessGoalCampCombatOption` / `assessGoalDefenseCombatOption`。调用方明确给出 effect、所选真实/符号组、来源、目标、已发布路线/ETA/行军风险与阶段事实。清营的 target 是实际营地，staging 是另一个合法集合 post；返回 option.target 为 staging，campId 独立绑定，clear-camp 的 force-at 不要求先站到敌营中心。stagingFacts 原样成为前置。
+
+伤亡金额与 P 复用现有整组 camp / defense battle 和保护模型，不加入目标收入、生产费用或第二份 bundle 机会费用。defense 的旧 field-strength 战斗模型与新的 combat-rating 到岗门槛分开，后者必须显式提供 `requiredCombatRating`；缺标量时返回共享 pending 候选，而非填 0。行军风险缺失时成本/P 保持 pending。敌方 aboard-unload 尚无预算化归属端口时，清营 helper 在旧 assessor 触发原生卸载投影前保留 pending。
+
+评估副本只用于条件战斗，不产生世界实体、lease 或输出回执。测试核实际原生快照、同组原 battle 金额/P、集合点绑定、符号引用、持续防守 offset、严格原生导航闸和 JSON/输入不变；固定已发布路线与风险端口不构成完整 source 或题库执行验收。
