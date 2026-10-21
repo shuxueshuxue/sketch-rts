@@ -57,17 +57,22 @@ export function alongside(unit: Unit, transport: Unit) {
 }
 
 /** One reachable shore for the whole boat, rather than chasing each passenger in turn. */
+export function boardingBerthCandidateAt(map: GameMap, passenger: Unit, transport: Unit, index: number) {
+  const terrain = map.terrain;
+  if (!terrain || terrain.cells[index] !== ',') return undefined;
+  const point = { x: (index % terrain.cols + 0.5) * terrain.cell, y: (Math.floor(index / terrain.cols) + 0.5) * terrain.cell };
+  if (!isOpenGround(map, point.x, point.y) || !isOpenGround(map, point.x, point.y, 'sea')) return undefined;
+  if (!sameGround(map, passenger, point) || !sameGround(map, transport, point, 'sea')) return undefined;
+  return { ...point, score: Math.hypot(point.x - transport.x, point.y - transport.y) * 2
+    + Math.hypot(point.x - passenger.x, point.y - passenger.y) * 0.15 };
+}
 export function boardingBerth(map: GameMap, passenger: Unit, transport: Unit) {
   if (!map.terrain) return { x: transport.x, y: transport.y };
   const terrain = map.terrain;
   const candidates: { x: number; y: number; score: number }[] = [];
   for (let index = 0; index < terrain.cells.length; index++) {
-    if (terrain.cells[index] !== ",") continue;
-    const point = { x: (index % terrain.cols + 0.5) * terrain.cell, y: (Math.floor(index / terrain.cols) + 0.5) * terrain.cell };
-    if (!isOpenGround(map, point.x, point.y) || !isOpenGround(map, point.x, point.y, "sea")) continue;
-    if (!sameGround(map, passenger, point) || !sameGround(map, transport, point, "sea")) continue;
-    const score = Math.hypot(point.x - transport.x, point.y - transport.y) * 2 + Math.hypot(point.x - passenger.x, point.y - passenger.y) * 0.15;
-    candidates.push({ ...point, score });
+    const candidate = boardingBerthCandidateAt(map, passenger, transport, index);
+    if (candidate) candidates.push(candidate);
   }
   for (const point of candidates.sort((a,b) => a.score-b.score)) {
     const land = walkDestination(map, passenger, point);

@@ -36,3 +36,7 @@ duration、cost、successProbability 来自同次共享估计。构造器完整�
 provider 测试用真实场景快照和真实 Situation，加固定的已发布领域选组/物理估计，覆盖符号组、部分贡献、独立航次价、精确救援、纯船位和持续防守窗口。它验证领域端口和声明构造，不代表统一 source、规划器就绪动作、执行适配器或公开题已完成。现有 strategy executor 名称仍需要统一入口根据解析后的引用和真实 grant 适配执行意图。
 
 持续防守的安全效果在共享 `effectDelayTicks` 指定的实际到岗时刻建立（0 为 start，其余为 offset），实体占用仍持续至 finish。duration 必须覆盖到岗以及保护窗口；缺少到岗时钟或时钟 pending/unmet 会使动作时长同步保留该状态，不能把“当前可调用”当作“已经到岗”。这样建造可以在守军到岗后、保护尚在持续时消费安全事实，而不必等整段保护结束。
+
+`createGoalBoardingGeometry` 将原生登船浅水候选的排序、逐候选合法性及最多四次稳定投影转换为小 JSON 游标。浅水格逐个计工作，最近船位复用 shared 的有限 pose 游标；原生 `boardingBerth` 也复用同一个单格候选规则。未知的地面投影或部分步行终点会暂停当前原生优先候选，不跳到另一个点，也不把 exact-route 的 unmet 当作 native fallback 失败。
+
+`GoalNativeGroundReader` 是同次共享服务注入的端点事实：`project-goal` 对应原生 `walkableGoal`，`walk-destination` 对应原生到达点。没有专用端口时，只接受已发布 exact route 对其终点的证明，其他情况保持 pending。4180 回归将 native 端点作为测量范围外的固定事实逐次发布，几何本身在同一 6144 队列内续算并经 JSON 恢复，得到与原生 helper 相同的 water/ground；该回归不证明端点服务或完整控制入口的总工作量。
