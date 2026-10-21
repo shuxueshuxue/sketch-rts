@@ -129,7 +129,8 @@ export function settleAllocationState(memory: StrategyAllocationMemory, snapshot
     if (['complete', 'failed', 'abandoned'].includes(objectives[id]!.status)) {
       for (const lease of Object.values(leases)) if (lease.objectiveId === id) delete leases[lease.resourceKey];
       for (const assignment of Object.values(assignments)) if (assignment.objectiveId === id) delete assignments[assignment.id];
-      for (const budget of Object.values(budgets)) if (budget.objectiveId === id && budget.state !== 'released')
+      for (const budget of Object.values(budgets)) if (budget.objectiveId === id && budget.state !== 'released'
+        && (budget.plannedGold === undefined || objectives[id]!.status !== 'complete'))
         budgets[budget.id] = { ...budget, state: 'released', releasedTick: snapshot.tick };
     }
   }

@@ -615,7 +615,7 @@ export function allocateStrategy(input: StrategyAllocationInput): StrategyAlloca
       const leases = { ...memory.leases }, assignments = { ...memory.assignments }, budgets = { ...memory.budgets };
       const oldLeaseIds = replacing.resources.map(key => leases[key]!.id);
       for (const key of replacing.resources) { delete leases[key]; if (key.startsWith('unit:')) delete assignments[`assignment:${key.slice(5)}`]; }
-      for (const budget of Object.values(budgets)) if (budget.methodId === replacing.methodId)
+      for (const budget of Object.values(budgets)) if (budget.methodId === replacing.methodId && budget.plannedGold === undefined)
         budgets[budget.id] = { ...budget, state: 'released', releasedTick: tick };
       memory = appendAllocationEvent(memory, { objectiveId: offer.objective.id, methodId: replacing.methodId,
         action: oldActions[0]!.token, kind: 'parent-invalidated', releasedLeaseIds: oldLeaseIds,

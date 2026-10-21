@@ -37,6 +37,7 @@ import { goalTrainingReader, observeGoalTraining } from './goal-training-ledger'
 import { continuedIncumbentScripts, isIncumbentStrategyScript } from './incumbent-scripts';
 import { settleCommittedGoals } from './goal-commitment-objectives';
 import { readGoalObjective, restoreGoalAuthorityReferences } from './goal-authority-references';
+import { reconcileGoalCapitalReceipts } from './goal-capital-receipts';
 const goalExecutors = [...goalEconomyExecutors, ...goalLandExecutors, ...goalNavalExecutors];
 
 export type AllocationCandidateRequest = Readonly<{ objectiveId: string; methodId: string; phase: 'skeleton' | 'gross' | 'net';
@@ -77,6 +78,7 @@ function nativeSwitchCost(snapshot: GameSnapshot, resources: readonly string[]):
 export function planControlledBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion,
   scripts: AiScript[], options: AiPolicyContext, observation: 'none' | 'facts' | 'trace' = 'none') {
   if (options.memory.strategyAllocation) options.memory.strategyAllocation = restoreGoalAuthorityReferences(options.memory.strategyAllocation);
+  if (options.memory.strategyAllocation) options.memory.strategyAllocation = reconcileGoalCapitalReceipts(options.memory.strategyAllocation, snapshot);
   if (options.memory.strategyAllocation) options.memory.strategyAllocation = refreshAllocationCapital(options.memory.strategyAllocation,
     snapshot.players[owner]?.gold ?? 0, snapshot.tick);
   const preparation = observationMemory(snapshot, owner, options.memory);

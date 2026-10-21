@@ -243,6 +243,9 @@ export type IssuedActionCommand = Readonly<{
   purpose: IssuedActionOrder['purpose'];
   acceptedTick: number;
   command: GameCommand;
+  /** Cash identities actually admitted for this purchase, independent of a
+   * later method revision or saving action. This is not another reservation. */
+  spendIds?: readonly string[];
   /** Minimal admission-time baseline for proving a later world payment. */
   worldBefore?: Readonly<{ kind: 'production'; buildingId: string;
     jobs: readonly Readonly<{ id: string | null; unitKind: TrainableUnitKind | null }>[];

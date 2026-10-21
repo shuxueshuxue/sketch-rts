@@ -26,8 +26,7 @@ export function validateGoalOutputFeedback(memory: StrategyAllocationMemory, sna
   const bindings: Record<string, string> = {};
   const previous = goalRecord(execution.state.goalOutputBindings);
   for (const output of intent.outputs) if (typeof previous?.[output] === 'string') bindings[output] = previous[output] as string;
-  const paid = Object.values(memory.budgets).filter(budget => sameAction(budget.action, execution.token))
-    .flatMap(budget => budget.nativePayments ?? []);
+  const paid = Object.values(memory.budgets).flatMap(budget => budget.nativePayments ?? []);
   const used = new Map<string, string>();
   for (const action of Object.values(memory.executions)) {
     const known = goalRecord(action.state.goalOutputBindings);

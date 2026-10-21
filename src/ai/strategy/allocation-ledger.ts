@@ -5,6 +5,7 @@ import type { ActionToken, AllocationBudget, AllocationPayment, AllocationUnmetD
   ExecutableMethod, ExecutionAction, IssuedActionCommand, StrategyAllocationMemory } from './allocation-types';
 import { sameAction } from './control';
 import { recordGoalTrainingAdmissions } from './goal-training-ledger';
+import { admittedCommandSpendIds, issuedCapitalPurchase } from './goal-capital-lineage';
 
 /** The old runner and formal admission share the catalog prices. Building
  * upgrades also spend capital although the old economy does not track them. */
@@ -23,17 +24,11 @@ export function refreshAllocationCapital(memory: StrategyAllocationMemory, cashG
   if (!Number.isFinite(cashGold) || cashGold < 0) throw Error('Invalid allocation cash');
   const budgets = { ...memory.budgets };
   for (const budget of Object.values(budgets)) if (budget.plannedGold !== undefined && budget.state === 'reserved'
-    && ['complete', 'failed', 'abandoned'].includes(memory.objectives[budget.objectiveId]?.status ?? 'abandoned'))
+    && ['failed', 'abandoned'].includes(memory.objectives[budget.objectiveId]?.status ?? 'abandoned'))
     budgets[budget.id] = { ...budget, state: 'released', releasedTick: tick };
   const adjustable = Object.values(budgets).filter(budget => {
     if (budget.plannedGold === undefined || budget.state !== 'reserved') return false;
-    const purchase = memory.methods[budget.methodId]?.actions.find(action => action.id === budget.action.actionId);
-    // A future hall can be attached to an earlier training action for saving;
-    // that action's unrelated purchase does not issue the hall's own spend.
-    const issued = (!purchase || purchase.spendIds.includes(budget.spendId))
-      && Object.values(memory.issuedCommands).some(command => sameAction(command.action, budget.action)
-        && ['build', 'train'].includes(command.command.type));
-    return !issued;
+    return !issuedCapitalPurchase(memory, budget);
   })
     .sort((a, b) => (a.expectedPaymentTick ?? Infinity) - (b.expectedPaymentTick ?? Infinity) || a.id.localeCompare(b.id));
   const adjustableIds = new Set(adjustable.map(budget => budget.id));
@@ -59,11 +54,10 @@ export function refreshAllocationCapital(memory: StrategyAllocationMemory, cashG
  * purchases keep their receipt lineage until payment acknowledgement. */
 export function releaseEndedGoalCapital(memory: StrategyAllocationMemory,
   plans: readonly Readonly<{ goal: { id: string }; status: string }>[], tick: number): StrategyAllocationMemory {
-  const ended = new Set(plans.filter(plan => plan.status === 'complete').map(plan => plan.goal.id));
+  const ended = new Set(plans.filter(plan => ['failed', 'abandoned'].includes(plan.status)).map(plan => plan.goal.id));
   const budgets = Object.fromEntries(Object.entries(memory.budgets).map(([id, budget]) => [id,
     budget.plannedGold !== undefined && budget.state === 'reserved' && ended.has(budget.objectiveId)
-      && !Object.values(memory.issuedCommands).some(command => sameAction(command.action, budget.action)
-        && ['build', 'train'].includes(command.command.type))
+      && !issuedCapitalPurchase(memory, budget)
       ? { ...budget, state: 'released' as const, releasedTick: tick } : budget]));
   return { ...memory, budgets };
 }
@@ -77,19 +71,15 @@ export function reserveAllocationSpends(input: Readonly<{ memory: StrategyAlloca
   const registry = new Map(method.spends.map(spend => [spend.spendId, spend]));
   if (registry.size !== method.spends.length) throw new Error('Duplicate allocation spend id');
   const budgets = { ...memory.budgets }, unmet: AllocationUnmetDemand[] = [];
-  if (method.kind === 'goal-plan') for (const budget of Object.values(budgets))
-    if (budget.objectiveId === method.objectiveId && budget.plannedGold !== undefined && budget.state === 'reserved'
-      && !registry.has(budget.spendId) && !budget.nativePayments?.length)
-      budgets[budget.id] = { ...budget, state: 'released', releasedTick: tick };
   let free = Math.max(0, cashGold - reservedAllocationGold({ ...memory, budgets }));
   const referred = new Set<string>();
   const reserve = (spendId: string, action: ExecutionAction, future: boolean) => {
       const spend = registry.get(spendId)!;
       const id = `budget:${spendId}`, old = budgets[id];
+      const purchase = old && issuedCapitalPurchase(memory, old);
       if (old && old.state !== 'released' && old.objectiveId !== method.objectiveId
         && !(old.plannedGold !== undefined && spend.expectedPaymentTick !== undefined && !future && old.paidGold === 0
-          && !Object.values(memory.issuedCommands).some(command => sameAction(command.action, old.action)
-            && ['build', 'train'].includes(command.command.type)))) {
+          && !purchase)) {
         if (!future) unmet.push({ id: `${action.token.actionId}/spend-owner:${spendId}`, objectiveId: method.objectiveId,
           methodId: method.id, action: action.token, demand: { kind: 'gold', amount: spend.amountGold },
           reason: { code: 'capital-already-owned-by-an-alternative', factIds: [id], values: {} } });
@@ -100,7 +90,9 @@ export function reserveAllocationSpends(input: Readonly<{ memory: StrategyAlloca
       const held = old?.state === 'reserved' ? old.amountGold - paid : 0;
       const added = Math.min(free, Math.max(0, spend.amountGold - paid - held)); free -= added;
       const amountGold = paid + held + added;
-      budgets[id] = { id, spendId, objectiveId: method.objectiveId, methodId: method.id, action: action.token,
+      budgets[id] = { id, spendId, objectiveId: method.objectiveId,
+        methodId: purchase || old?.nativePayments?.length ? old!.methodId : method.id,
+        action: purchase?.action ?? (old?.nativePayments?.length ? old.action : action.token),
         amountGold, paidGold: paid, state: paid >= spend.amountGold ? 'spent' : 'reserved', sinceTick: old?.sinceTick ?? tick,
         ...(old?.nativePayments ? { nativePayments: old.nativePayments } : {}),
         ...(spend.expectedPaymentTick === undefined ? {} : { plannedGold: spend.amountGold, expectedPaymentTick: spend.expectedPaymentTick }),
@@ -159,7 +151,8 @@ export function recordAllocationCommands(memory: StrategyAllocationMemory, snaps
     const baseline = issuedCommandBaseline(snapshot, admission.command);
     const command: IssuedActionCommand = { id: admission.commandId, action: admission.action, executor: admission.executor,
       purpose: admission.purpose, acceptedTick: snapshot.tick, command: structuredClone(admission.command), ...(baseline ? { worldBefore: baseline } : {}) };
-    issuedCommands[command.id] = command;
+    const spendIds = admittedCommandSpendIds(memory, command);
+    issuedCommands[command.id] = spendIds.length ? { ...command, spendIds } : command;
     const unitIds = commandSetsNativeOrder(admission.command)
       ? 'unitIds' in admission.command ? admission.command.unitIds : 'unitId' in admission.command ? [admission.command.unitId] : [] : [];
     for (const unitId of unitIds) issuedOrders[unitId] = { commandId: command.id, action: command.action, executor: command.executor,
@@ -175,7 +168,10 @@ export function applyAllocationPayments(memory: StrategyAllocationMemory, snapsh
   const budgets = { ...memory.budgets };
   for (const receipt of payments) {
     const budget = budgets[receipt.budgetId], proof = receipt.proof;
-    if (!budget || !sameAction(budget.action, action)) throw new Error('Allocation payment has no admitted parent');
+    const purchase = memory.issuedCommands[proof.acceptedCommandId];
+    if (!budget || !sameAction(budget.action, action)
+      && (!purchase || !admittedCommandSpendIds(memory, purchase).includes(budget.spendId)))
+      throw new Error('Allocation payment has no admitted parent');
     const declarative = memory.executions[action.actionId]?.intent.kind === 'goal-action';
     const entityId = proof.kind === 'production' ? proof.jobId : proof.buildingId;
     const recorded = declarative && budget.nativePayments?.find(payment => payment.commandId === proof.acceptedCommandId
