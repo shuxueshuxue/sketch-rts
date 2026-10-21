@@ -401,6 +401,7 @@ type MethodQuoteFacts = Readonly<{
   force: ForceQuotation | null;
   reason: AllocationReason;
   valuation?: ValuationQuotation;
+  assumptions?: readonly AllocationReason[];
 }>;
 export type MethodAllocationQuote = MethodQuoteFacts & (
   | Readonly<{ status: 'feasible'; utility: AllocationUtility; potentialUtility: null; missingPreconditions: readonly [] }>
