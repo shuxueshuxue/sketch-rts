@@ -2,10 +2,11 @@ import { existsSync } from 'node:fs';
 import type { SdkGameCommandPlanner } from '../../../sdk/game-runner';
 import type { GameSnapshot, PlayerId } from '../../../shared/types';
 import type { GoalPlannerInput, GoalPlannerOutput } from '../goal-planner-types';
+import { planGoals } from '../goal-planner';
 import type { StrategyAllocationTrace } from '../allocation-types';
 import type { PuzzlePlanObservation } from './planner-checks';
 
-export type PlanGoals = (input: GoalPlannerInput) => GoalPlannerOutput;
+export type PlanGoals = typeof planGoals;
 /** Only a native owner-think assembly may implement this port. It must use
  * createGoalFactReader and the ordinary collectors/providers/FactWorkQueue,
  * never a scene key, expected landing, authored observation or witness. */
@@ -33,21 +34,20 @@ export async function optionalFunction<T extends (...args: never[]) => unknown>(
   return { value: module[name] as T };
 }
 
-/** The search/source filenames are the shared, agreed entry points. The small
- * native adapter belongs here once their signatures and runtime assembly are
- * implemented; its absence cannot fall back to the incumbent AI or witness. */
-const [search, source, input, allocation, execution] = await Promise.all([
-  optionalFunction<PlanGoals>('../goal-planner.ts', 'planGoals'),
+/** Search is the real shared export. The native adapter belongs here once
+ * the fact source and owner-think assembly exist; its absence cannot fall
+ * back to the incumbent AI or witness. */
+const [source, input, allocation, execution] = await Promise.all([
   optionalFunction<(...args: never[]) => unknown>('../goal-world-facts.ts', 'createGoalFactReader'),
   optionalFunction<NativePuzzleModule['createInput']>('./goal-planner-native.ts', 'createInput'),
   optionalFunction<NativePuzzleModule['allocation']>('./goal-planner-native.ts', 'allocation'),
   optionalFunction<NativePuzzleModule['createExecution']>('./goal-planner-native.ts', 'createExecution'),
 ]);
 export const publicPuzzlePlanner = {
-  planGoals: search.value,
+  planGoals,
   createInput: source.value ? input.value : undefined,
   allocation: allocation.value,
   createExecution: source.value ? execution.value : undefined,
-  unavailable: [search.unavailable, source.unavailable, input.unavailable, allocation.unavailable, execution.unavailable]
+  unavailable: [source.unavailable, input.unavailable, allocation.unavailable, execution.unavailable]
     .filter((reason): reason is string => reason !== undefined),
 };
