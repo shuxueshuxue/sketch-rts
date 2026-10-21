@@ -121,6 +121,15 @@ describe('grounded economic declarations against native rules', () => {
     expect(action.preconditions.some(fact => fact.predicate.kind === 'build-site')).toBe(true);
   });
 
+  it('declares the new producer capability on the same symbolic building output', () => {
+    const snapshot = snapshotGame(nativeScene()), action = declareGoalBuilding({ buildingKind: 'barracks', at: site, worker, byTick: 5000 }, context(snapshot, road))!;
+    const producer = { kind: 'output', actionId: action.id, output: 'building' } as const;
+    expect(action.effects.map(effect => effect.fact.predicate)).toContainEqual({ kind: 'production', unitKind: 'footman', producer, at: site, byTick: 5000 });
+    expect(action.flows).toContainEqual(expect.objectContaining({ resource: { kind: 'production-lane', producer, lane: 'training' }, delta: 1, at: 'finish' }));
+    expect(action.effects.map(effect => effect.fact.predicate).some(predicate => predicate.kind === 'supply-cap')).toBe(false);
+    expect(action.preconditions.map(fact => fact.predicate.kind)).not.toContain('production');
+  });
+
   it('credits only incremental, supported income and never substitutes current cash for forecast epoch', () => {
     const snapshot = snapshotGame(nativeScene()), effect = goalFact({ kind: 'gold', minimum: 400, byTick: 500 });
     const read = (fact: GoalFact): GoalFactObservation => ({ ...road(fact), availableTick: 300,
