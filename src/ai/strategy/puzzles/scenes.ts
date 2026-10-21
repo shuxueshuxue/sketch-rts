@@ -51,7 +51,8 @@ export function guardedShoreScene(strong = true) {
   targetMine(b, mine); camp(b, WEAK_GUARD, guard);
   const beach = { x: 2448, y: 768 };
   camp(b, ['ogreLord', 'ogreMage', 'ogreWarrior'], beach);
-  soldiers(b, strong ? 'knight' : 'footman', strong ? 4 : 3, { x: 1184, y: 704 });
+  // One-number variant: only the count changes, not weapon, upgrades or camp.
+  soldiers(b, 'footman', strong ? 8 : 3, { x: 1184, y: 704 });
   const world = finishWorld(terrainWorld(b, [MAINLAND, { ...ISLAND, bottom: 3264 }], 4096, 3584), mine, guard,
     { x: 1664, y: 768 });
   world.beachGuards = neutralGroup(world.game, beach);
