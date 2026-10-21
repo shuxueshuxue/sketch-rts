@@ -27,6 +27,7 @@ import { valueGoalSeaLeg } from './goal-sea-leg-value';
 import { coarseGoalCampOptions, type GoalCampBattleModel } from './goal-camp-quotation';
 import { createDefaultGoalCampBattleModel, type GoalCampModelObserver } from './goal-camp-default-model';
 import { goalAssemblyPostSource } from './goal-naval-actions';
+import { goalStartedCohortGroups, type GoalStartedCohortReader } from './goal-started-cohort';
 import type { Point, Target } from './types';
 
 type Deferred = NonNullable<Extract<GoalCandidates<never>, { state: 'met' }>['deferred']>[number];
@@ -43,6 +44,7 @@ export type GoalNavalCombatGroundingPorts = Readonly<{
   /** Same-source conditional landing origins. Existing actors retain their
    * actual HP/weapons; these locations become usable only via their pool facts. */
   cohortOptions?: GoalGroundingReader['cohortOptions'];
+  startedCohort?: GoalStartedCohortReader;
   transportFacts?: Pick<GoalTransportFactPorts, 'seaLeg'>;
   /** Read-only coarse travel time from the same owner's published sea field;
    * this port must not request geometry or start a route query. */
@@ -81,6 +83,7 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
     && unitMover(unit.kind) === 'land' && (!allowed || allowed.has(unit.id)) && !interrupted.has(unit.id);
   const units = context.snapshot.units.filter(eligible).sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
   const memo = new Map<string, GoalCandidates<GoalCombatOption>>();
+  const committedEffects = new Set<string>();
   function cohorts(effect: GoalFact): GoalCandidates<readonly GoalCohortMember[]> {
     const p = effect.predicate;
     const workers = p.kind === 'assets-safe' || p.kind === 'worker-at';
@@ -91,7 +94,10 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
       : p.kind === 'worker-at' && p.worker ? [p.worker]
       : p.kind === 'force-at' || p.kind === 'force-available' ? p.cohort : undefined;
     const groups: GoalEntityReference[][] = [];
+    const preferred = goalStartedCohortGroups(context, effect, units.filter(suitable), ports.startedCohort);
+    if (preferred !== undefined) committedEffects.add(effect.id);
     if (refs) groups.push([...refs]);
+    else if (preferred) groups.push(...preferred.map(group => group.map(unit => ({ kind: 'existing' as const, entityId: unit.id }))));
     else {
       const lands = new Map<string, Unit[]>();
       for (const unit of units.filter(suitable)) {
@@ -166,6 +172,10 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
           : p.kind === 'worker-at' && p.worker ? [p.worker]
           : p.kind === 'force-at' || p.kind === 'force-available' ? p.cohort : undefined;
         if (requested && goalValueKey(sorted(requested.map(goalValueKey))) !== refsKey) continue;
+        // The landing enumerator shares the same commitment. A cached broad
+        // pool option must not grow this group again after current discovery.
+        if (!requested && committedEffects.has(effect.id) && actual.state === 'met'
+          && !actual.candidates.some(group => goalValueKey(sorted(group.map(member => goalValueKey(member.reference)))) === refsKey)) continue;
         const poolFact = option.preconditions.find(fact => {
           const p = fact.predicate;
           return p.kind === 'force-available' && p.at.landId === option.from.landId

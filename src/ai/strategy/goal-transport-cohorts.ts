@@ -3,12 +3,14 @@ import { goalFact, goalValueKey, resolveGoalCamp } from './goal-facts';
 import type { GoalCandidates, GoalCohortOption, GoalFact, GoalGroundingReader, GoalPlanningContext } from './goal-planner-types';
 import type { Target } from './types';
 import { landIdAt } from './regions';
+import { goalStartedCohortGroups, type GoalStartedCohortReader } from './goal-started-cohort';
 
 /** Conditional landing shapes for existing members. These are alternatives
  * for regression, never observations or allocation bindings. Every position
  * comes from the same published physical transport options as its achiever. */
 export function createGoalTransportCohorts(context: GoalPlanningContext, ports: Pick<GoalGroundingReader, 'transportOptions'> & Readonly<{
   allowedUnitIds?: readonly string[]; interruptedUnitIds?: readonly string[];
+  startedCohort?: GoalStartedCohortReader;
 }>):
   NonNullable<GoalGroundingReader['cohortOptions']> {
   const memo = new Map<string, GoalCandidates<GoalCohortOption>>();
@@ -45,12 +47,19 @@ export function createGoalTransportCohorts(context: GoalPlanningContext, ports: 
       const group = pools.get(key) ?? { from, ids: [] }; group.ids.push(unit.id); pools.set(key, group);
     }
     const candidates: GoalCohortOption[] = [], deferred: NonNullable<Extract<GoalCandidates<never>, { state: 'met' }>['deferred']>[number][] = [];
+    const preferred = !worker ? goalStartedCohortGroups(context, effect, [...current.values()], ports.startedCohort) : undefined;
     for (const [, pool] of [...pools].sort(([a], [b]) => a.localeCompare(b))) {
-      const groups = worker ? pool.ids.map(id => [id]) : [pool.ids, ...(pool.ids.length > 1 ? pool.ids.map(id => [id]) : [])];
+      const groups = preferred ? preferred.filter(group => group.every(unit => pool.ids.includes(unit.id))).map(group => group.map(unit => unit.id))
+        : worker ? pool.ids.map(id => [id]) : [pool.ids, ...(pool.ids.length > 1 ? pool.ids.map(id => [id]) : [])];
       for (const ids of groups) {
         if (requested && (ids.length !== requested.length || requested.some(id => !ids.includes(id)))) continue;
         const cohort = ids.map(entityId => ({ kind: 'existing' as const, entityId }));
-        const result = ports.transportOptions(pool.from, target, 0, { cohort });
+        // A newly spawned, unselected pool member must not move the chosen
+        // group's pickup anchor merely by sorting before its members.
+        const first = current.get(ids[0]!);
+        const origin = preferred && pool.from.landId && first
+          ? { ...pool.from, point: { x: first.x, y: first.y } } : pool.from;
+        const result = ports.transportOptions(origin, target, 0, { cohort });
         const id = `landing-cohort:${goalValueKey([effect.id, cohort])}`;
         if (result.state === 'pending') { deferred.push({ id, requestIds: result.requestIds, reason: result.reason }); continue; }
         if (result.state !== 'met') continue;
