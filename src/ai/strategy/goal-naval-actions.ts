@@ -177,10 +177,13 @@ export function declareGoalShoreClearing(input: GoalNavalCohort & Readonly<{
 
 export function declareGoalDefense(input: GoalNavalCohort & Readonly<{
   site: Target; requiredForce: number; throughTick: number; routes: readonly GoalFact[];
+  /** Movement and command post; site remains the protected logical asset. */
+  post?: Target;
   effectDelayTicks?: GoalNavalEstimates['duration'];
 }>): GoalActionDeclaration | null {
   const units = crew(input, false);
-  if (!units || !Number.isFinite(input.requiredForce) || input.requiredForce < 0
+  const post = input.post ?? input.site;
+  if (!units || post.landId !== input.site.landId || !Number.isFinite(input.requiredForce) || input.requiredForce < 0
     || !Number.isFinite(input.throughTick) || input.throughTick < input.snapshot.tick
     || input.estimates.duration.state === 'met' && input.estimates.duration.value < input.throughTick - input.snapshot.tick) return null;
   const delay = input.effectDelayTicks ?? { state: 'pending' as const, requestIds: [goalFact({ kind: 'site-safe',
@@ -192,7 +195,8 @@ export function declareGoalDefense(input: GoalNavalCohort & Readonly<{
   const force = goalFact({ kind: 'force-available', at: input.site, minimum: input.requiredForce, metric: 'combat-rating',
     cohort: units.map(unit => reference(input, unit)), byTick: input.byTick });
   const safe = goalFact({ kind: 'site-safe', site: input.site, throughTick: input.throughTick });
-  return declaration('defend', 'strategy.defend-site', { cohort: units.map(unit => reference(input, unit)), at: input.site,
+  return declaration('defend', 'strategy.defend-site', { cohort: units.map(unit => reference(input, unit)), at: post,
+    ...(input.post ? { protectedSite: input.site } : {}),
     throughTick: input.throughTick }, { ...input, estimates: { ...input.estimates,
     duration: delay.state === 'met' ? input.estimates.duration : delay } }, [force, ...input.routes],
   [{ fact: safe, operation: 'establish', at: delay.state === 'met'

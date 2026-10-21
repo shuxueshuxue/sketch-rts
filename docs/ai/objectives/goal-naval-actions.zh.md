@@ -74,3 +74,7 @@ provider 测试用真实场景快照和真实 Situation，加固定的已发布�
 `createArrivalQuery` 的可选第九参 `ArrivalPlanningPhysics` 将同一个 Situation 查询器的 berth、ground 与 launch 交给已发布物理事实。传入该对象后，船厂海点、已有 ferry 起终岸和敌船 unload 归属都经过 ground 端口；未发布的泊位不会退回粗岸点，未来 launch 未知也不会把真实现有船一起丢掉。unknown Arrival 保留原物理 request IDs，查询内重复调用仍保留依赖。不传该对象时维持原只读/native 路径。
 
 `createArrivalPlanningPhysics` 可在 Situation 构造之前绑定同一 geometry 与 landRoute。boarding 复用有限原生泊位游标；精确可行地面点的单点检查计入同一队列并在下一 think 发布。非精确的最近地面投影、部分 walkDestination 终点和 harbor launch 排名必须由注入的预算化服务提供，缺失保持 pending，不执行整套 native 扫描。当前定向回归只关闭 Arrival 端口的账外回退；公开 owner scope 的冻结世界 K10、Situation 自身投影及完整题库由共同接线另验。
+
+`createGoalNavalCombatGrounding` 枚举真实当前陆块组及单成员贡献者、具名救援工人、实际在船 manifest。它消费同次 Arrival、landRoute、resolveCohort 与已发布行军风险，不创建查询或扩大可用池；allowed/interrupted 边界在候选组处生效。防守沿 SiteThreat 的整支互斥敌军情景重用同一保护 P 与原生战损，combat-rating 门槛由实际武器/HP 单独评估，不能改名复用 field-strength。估算的 guard post 原样成为执行参数，site-safe 的逻辑据点独立保留。
+
+本地增援建立所选组真实的 field-strength 效果，资源账仍只记 combat-rating。未知 route/risk/响应保持原请求与 pending 估计。跨海 force-available/worker-at 只提供真实源 land 或 aboard sea 的 manifest，实际航次费用/P/时长必须另读 transportOptions；不生成跨水陆路。跨海直接到 post、尚无实际池绑定、未覆盖的保护窗仍保留 deferred/pending，不能把当前候选构造器的测试称作这些依赖或完整公开题已通过。
