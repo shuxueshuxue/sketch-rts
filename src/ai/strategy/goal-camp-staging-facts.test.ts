@@ -130,4 +130,62 @@ describe('camp staging and unbuilt mining garrisons', () => {
     expect(action.effects.find(effect => effect.fact.predicate.kind === 'garrison-ready')?.at).toBe('start');
     expect(action.demands.every(demand => demand.until === 'finish')).toBe(true);
   });
+  it('prices a conditional landing cohort only after its exact pool prerequisite and preserves actual HP/weapons', () => {
+    const f = fixture(), snapshot = f.context.snapshot, before = JSON.stringify(snapshot);
+    const group = snapshot.units.filter(unit => unit.owner === 'us');
+    const refs = group.map(unit => ({ kind: 'existing' as const, entityId: unit.id }));
+    const from: Target = { landId: landIdAt(snapshot.map, { x: 2400, y: 1500 })!, point: { x: 2400, y: 1500 } };
+    const pool = goalFact({ kind: 'force-available', at: from, cohort: refs, metric: 'combat-rating', minimum: 1, byTick: 2000 });
+    const cohortOptions = vi.fn(() => ({ state: 'met' as const, factIds: ['published-landing'], candidates: [{
+      id: 'conditional-actual-landing', from, preconditions: [pool], factIds: ['published-landing'], availableTick: null,
+      // A source cannot replace an existing member's real injury or weapon.
+      members: group.map(unit => ({ reference: { kind: 'existing' as const, entityId: unit.id }, assessment: {
+        ...unit, x: from.point.x, y: from.point.y, hp: 999, attackDamage: 999 } })),
+    }] }));
+    const factory = createGoalNavalCombatGrounding(f.context, { ...f.ports, cohortOptions });
+    const effect = goalFact({ kind: 'camp-cleared', campId: f.campId });
+    const options = rows(strict(() => factory.combatOptions!(effect)));
+    const actual = rows(strict(() => f.read(effect)));
+    expect(options.filter(option => !option.preconditions.some(fact => fact.id === pool.id))).toEqual(actual);
+    const option = options.find(option => option.preconditions.some(fact => fact.id === pool.id))!;
+    expect(option).toBeDefined(); expect(option.from).toEqual(from); expect(option.cohort).toEqual(refs);
+    expect(option.factIds).toContain('published-landing'); expect(option.cost.state).toBe('met');
+    const native = assessAllocatedCampBattle({ snapshot, situation: f.context.situation,
+      target: { landId: from.landId!, point: f.camp.camp.center }, unitIds: group.map(unit => unit.id),
+      battleStartTicks: option.preconditions.filter(fact => fact.predicate.kind === 'route')
+        .reduce((max, fact) => Math.max(max, f.context.readFact(fact).route!.ticks!), 0) });
+    if (option.cost.state === 'met') expect(option.cost.value.map(term => term.gold)).toEqual([.9 * native.attrition.expectedLossGold, 3]);
+    const context = { ...f.context, grounding: { ...f.context.grounding!, ...factory } };
+    const action = strict(() => goalNavalActionProvider.actionsFor(effect, context)).find(action => action.preconditions.some(fact => fact.id === pool.id))!;
+    expect(action.kind).toBe('clear-camp'); expect(action.executor.parameters.cohort).toEqual(refs);
+    expect(action.preconditions.some(fact => fact.predicate.kind === 'force-at' && fact.predicate.metric === 'camp-force')).toBe(true);
+    expect(f.context.readFact(pool).state).toBe('unmet');
+    expect(JSON.stringify(snapshot)).toBe(before);
+    const mine = snapshot.resources.find(resource => resource.id === 'future-mine')!;
+    const at = { entityId: mine.id, landId: landIdAt(snapshot.map, mine)!, point: { x: mine.x, y: mine.y } };
+    const guard = rows(strict(() => factory.combatOptions!(goalFact({ kind: 'garrison-ready', mineId: mine.id, at }))))
+      .find(option => option.preconditions.some(fact => fact.id === pool.id))!;
+    expect(guard).toBeDefined(); expect(guard.from).toEqual(from);
+    expect(guard.cost.state).toBe('pending'); expect(guard.successProbability.state).toBe('pending');
+  });
+  it('retains unresolved landing alternatives and refuses conditional positions without the exact pool or granted cohort', () => {
+    const f = fixture(), effect = goalFact({ kind: 'camp-cleared', campId: f.campId });
+    const from: Target = { landId: landIdAt(f.context.snapshot.map, { x: 2400, y: 1500 })!, point: { x: 2400, y: 1500 } };
+    const members = f.context.snapshot.units.filter(unit => unit.owner === 'us').map(unit => ({
+      reference: { kind: 'existing' as const, entityId: unit.id }, assessment: { ...unit, x: from.point.x, y: from.point.y } }));
+    const bad = createGoalNavalCombatGrounding(f.context, { ...f.ports, cohortOptions: () => ({ state: 'met', factIds: [], candidates: [{
+      id: 'unproved-landing', from, members, preconditions: [], availableTick: null, factIds: [] }] }) });
+    const rejected = strict(() => bad.combatOptions!(effect));
+    expect(rejected.state).toBe('met');
+    if (rejected.state === 'met') {
+      expect(rejected.deferred).toContainEqual({ id: 'unproved-landing', requestIds: ['unproved-landing'],
+        reason: { code: 'combat-conditional-origin-pool-unproved', factIds: [effect.id], values: {} } });
+      expect(rejected.candidates).toEqual(rows(f.read(effect)));
+    }
+    const pool = goalFact({ kind: 'force-available', at: from, cohort: members.map(member => member.reference), metric: 'combat-rating', minimum: 1, byTick: 2000 });
+    const excluded = createGoalNavalCombatGrounding(f.context, { ...f.ports, allowedUnitIds: ['fighter-a'], cohortOptions: () => ({ state: 'met',
+      factIds: [], candidates: [{ id: 'excluded-landing', from, members, preconditions: [pool], availableTick: null, factIds: [] }] }) });
+    expect(rows(strict(() => excluded.combatOptions!(effect))).every(option => option.cohort.length === 1
+      && option.cohort[0]?.kind === 'existing' && option.cohort[0].entityId === 'fighter-a')).toBe(true);
+  });
 });
