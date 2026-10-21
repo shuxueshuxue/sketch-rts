@@ -23,8 +23,13 @@ export function runPublicPuzzle(puzzle: PublicPuzzleCase, mode: 'witness' | AiSc
       if (pressureSent || !world.attackers.length) return [];
       pressureSent = true;
       const target = world.islandHall ?? world.home;
-      return [{ playerId: world.opponent, source: context.source, scriptId: 'native-incoming-army',
-        command: { type: 'attackMove', unitIds: world.attackers.map(u => u.id), x: target.x, y: target.y } }];
+      const entries: ReturnType<SdkGameCommandPlanner> = [{ playerId: world.opponent, source: context.source, scriptId: 'native-incoming-army',
+        command: { type: 'attackMove', unitIds: world.attackers.filter(u => !u.deck).map(u => u.id), x: target.x, y: target.y } }];
+      for (const ship of world.game.units.filter(u => u.owner === world.opponent && u.kind === 'transport')) entries.push({
+        playerId: world.opponent, source: context.source, scriptId: 'native-incoming-landing',
+        command: { type: 'unload', unitIds: [ship.id], x: target.x, y: target.y },
+      });
+      return entries;
     },
   }, { onStep() { if (world.game.tick % 20 === 0) tracker.sample(); } });
   return { puzzle: `${puzzle.key}/${puzzle.variant}`, mode, initial, final: result.snapshot,
