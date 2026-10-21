@@ -12,7 +12,8 @@ export function runPublicPuzzle(puzzle: PublicPuzzleCase, mode: 'witness' | AiSc
   const world = puzzle.create(), initial = snapshotGame(world.game), tracker = trackPuzzle(puzzle, world);
   const planner = options.planner ?? (mode === 'witness' ? createPuzzleWitness(puzzle, world) : createAiGameCommandPlanner());
   let pressureSent = false;
-  const result = runAiGameLoop({ name: `public-puzzle:${puzzle.key}:${puzzle.variant}:${mode}`, game: world.game,
+  try {
+    const result = runAiGameLoop({ name: `public-puzzle:${puzzle.key}:${puzzle.variant}:${mode}`, game: world.game,
     maxTicks: world.game.tick + (options.maxTicks ?? puzzle.maxTicks), thinkInterval: 15,
     agents: {
       [world.owner]: { controller: 'internal-ai', team: world.owner, race: 'grove', version: mode === 'witness' ? 'v9_knight' : mode },
@@ -32,6 +33,7 @@ export function runPublicPuzzle(puzzle: PublicPuzzleCase, mode: 'witness' | AiSc
       return entries;
     },
   }, { onStep() { tracker.sample(); } });
-  return { puzzle: `${puzzle.key}/${puzzle.variant}`, mode, initial, final: result.snapshot,
-    elapsedMs: result.elapsedMs, cpuMs: result.cpuMs, execution: tracker.finish() };
+    return { puzzle: `${puzzle.key}/${puzzle.variant}`, mode, initial, final: result.snapshot,
+      elapsedMs: result.elapsedMs, cpuMs: result.cpuMs, execution: tracker.finish() };
+  } finally { tracker.dispose(); }
 }
