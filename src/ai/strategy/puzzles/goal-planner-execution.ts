@@ -5,11 +5,13 @@ import { createAiMemoryProvider, planAiOwnerCommandEntries } from '../../planner
 import { withNavigationAudit } from '../../../shared/navigation-audit';
 import { snapshotGame } from '../../../shared/sim';
 import type { PuzzleExecutionObservation, PuzzlePlannerExecution } from './planner-binding';
+import { createExecutionOwnership, type ShipOwnershipScope } from './execution-ownership';
 
 /** The ordinary owner entry selects goals, plans, allocates and executes in
  * its native scope. The adapter supplies no goals, facts, rewards or grants. */
-export function createExecution(options: { evidenceFile?: string } = {}): PuzzlePlannerExecution {
+export function createExecution(options: { evidenceFile?: string; ownershipScope?: ShipOwnershipScope } = {}): PuzzlePlannerExecution {
   const memoryProvider = createAiMemoryProvider();
+  const ownership = options.ownershipScope && createExecutionOwnership(options.ownershipScope);
   let first: PuzzleExecutionObservation | undefined, latest: PuzzleExecutionObservation | undefined;
   let plannedThinks = 0, observedThinks = 0, formalCommandCount = 0;
   let firstReadyTick: number | null = null, firstFormalCommandTick: number | null = null;
@@ -50,6 +52,7 @@ export function createExecution(options: { evidenceFile?: string } = {}): Puzzle
           if (formal.length && firstFormalCommandTick === null) firstFormalCommandTick = snapshot.tick;
           const observation: PuzzleExecutionObservation = structuredClone({ tick: snapshot.tick, owner,
             output, allocation, commands });
+          ownership?.observe(snapshot, observation);
           observedThinks++;
           latest = observation;
           if (!first && output.plans.length) first = observation;
@@ -66,5 +69,6 @@ export function createExecution(options: { evidenceFile?: string } = {}): Puzzle
     },
     observations() { return first && latest && first !== latest ? [first, latest] : latest ? [latest] : []; },
     statistics() { return { plannedThinks, observedThinks, firstReadyTick, firstFormalCommandTick, formalCommandCount }; },
+    ownership(initialTick, commands) { return ownership?.finish(initialTick, commands); },
   };
 }
