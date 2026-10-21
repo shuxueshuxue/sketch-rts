@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
 import { sketchScene } from '../../sdk/scene';
 import { snapshotGame } from '../../shared/sim';
 import { withNavigationAudit, withNavigationPhase } from '../../shared/navigation-audit';
@@ -8,6 +10,8 @@ import { neutralCampExposure } from '../situation/neutral-camp-exposure';
 import { goalCampId, goalFact, goalValueKey } from './goal-facts';
 import { goalNavalActionProvider } from './goal-naval-provider';
 import { evaluateSituation } from './situation';
+import { landIdAt } from './regions';
+import type { GameSnapshot } from '../../shared/types';
 import type { GoalNavalMember } from './goal-naval-actions';
 import type { GoalCandidates, GoalCombatOption, GoalEntityReference, GoalEstimate, GoalFact, GoalPlanningContext, GoalTransportOption } from './goal-planner-types';
 
@@ -49,6 +53,40 @@ function strict(effect: GoalFact, context: GoalPlanningContext) {
 }
 
 describe('naval provider consumes shared physical alternatives', () => {
+  it('keeps an actual aboard member conditional on its exact landing pool without declaring current arrival', () => {
+    const { snapshot, owner }: { snapshot: GameSnapshot; owner: string } = JSON.parse(gunzipSync(readFileSync(
+      new URL('./fixtures/sapphire-control-p4-4180.json.gz', import.meta.url))).toString());
+    const situation = evaluateSituation(snapshot, owner, createAiPolicyMemory()), before = JSON.stringify(snapshot);
+    const unit = snapshot.units.find(unit => unit.owner === owner && unit.kind !== 'worker' && (unit.deck || unit.cabin))!;
+    expect(unit).toBeDefined();
+    const reference: GoalEntityReference = { kind: 'existing', entityId: unit.id };
+    const mine = snapshot.resources.find(resource => resource.id === 'gold-satellite-4')!;
+    const from = { landId: landIdAt(snapshot.map, mine)!, point: { x: mine.x, y: mine.y } };
+    const camp = neutralCampExposure(snapshot).camps.find(camp => camp.memberIds.includes('satellite-guard-4-0'))!;
+    const campId = goalCampId(camp.memberIds), pool = goalFact({ kind: 'force-available', at: from, cohort: [reference],
+      metric: 'combat-rating', minimum: 1, byTick: 9000 });
+    const option: GoalCombatOption = { id: 'published-conditional-camp', target: from, from, cohort: [reference],
+      requiredForce: 2, byTick: 9000, duration: known(50), cost: known([{ code: 'native-camp-loss', gold: 9, factIds: [campId] }]),
+      successProbability: known(.8), preconditions: [pool], factIds: ['published-landing'] };
+    const context: GoalPlanningContext = { snapshot, owner, situation, tick: snapshot.tick, version: 'v9_knight',
+      readFact: fact => ({ fact, state: 'unmet', observedTick: snapshot.tick, revision: 'still-aboard', evidence: [],
+        reason: { code: 'current-pool-missing', factIds: [fact.id], values: {} } }),
+      grounding: { buildSites: () => choices([]), productionOptions: () => choices([]), transportOptions: () => choices([]),
+        combatOptions: () => choices([option]), resolveCohort: () => choices([{ reference, assessment: unit }]) } };
+    const effect = goalFact({ kind: 'camp-cleared', campId });
+    const actions = strict(effect, context);
+    expect(actions).toHaveLength(1); expect(actions[0]!.kind).toBe('clear-camp');
+    expect(actions[0]!.preconditions).toContainEqual(pool);
+    expect(actions[0]!.executor.parameters.cohort).toEqual([reference]);
+    expect(actions[0]!.cost).toEqual(option.cost); expect(actions[0]!.successProbability).toEqual(option.successProbability);
+    expect(context.readFact(pool).state).toBe('unmet');
+    const plain = { ...context, grounding: { ...context.grounding!, combatOptions: () => choices([{ ...option, preconditions: [] }]) } };
+    expect(strict(effect, plain)).toEqual([]);
+    const mismatched = goalFact({ kind: 'force-available', at: from, cohort: [{ kind: 'existing', entityId: 'someone-else' }],
+      metric: 'combat-rating', minimum: 1, byTick: 9000 });
+    expect(strict(effect, { ...context, grounding: { ...context.grounding!, combatOptions: () => choices([{ ...option, preconditions: [mismatched] }]) } })).toEqual([]);
+    expect(JSON.stringify(snapshot)).toBe(before);
+  });
   it('exposes clearing and native bounty contributors without writing an action chain', () => {
     const { context, campId, option } = fixture(), effect = goalFact({ kind: 'camp-cleared', campId });
     const before = JSON.stringify(context.snapshot), actions = strict(effect, context);

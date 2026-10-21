@@ -14,6 +14,21 @@ function resolved(option: GoalCombatOption, context: GoalPlanningContext): reado
   const selected = [...new Map(candidates.candidates.map(member => [goalValueKey(member.reference), member])).values()]
     .sort((a, b) => order(goalValueKey(a.reference), goalValueKey(b.reference)));
   if (goalValueKey(selected.map(member => goalValueKey(member.reference))) !== goalValueKey([...new Set(option.cohort.map(goalValueKey))].sort())) return null;
+  const from = option.from;
+  const conditional = from?.landId && option.preconditions.some(fact => {
+    const p = fact.predicate;
+    return p.kind === 'force-available' && p.at.landId === from.landId && p.cohort
+      && goalValueKey([...new Set(p.cohort.map(goalValueKey))].sort()) === goalValueKey(selected.map(member => goalValueKey(member.reference)))
+      || p.kind === 'worker-at' && p.at.landId === from.landId && selected.length === 1 && p.worker
+        && goalValueKey(p.worker) === goalValueKey(selected[0]!.reference);
+  });
+  if (conditional && selected.every(member => member.reference.kind === 'existing')) {
+    return selected.flatMap(member => {
+      const actual = context.snapshot.units.find(unit => member.reference.kind === 'existing' && unit.id === member.reference.entityId);
+      return actual && actual.owner === context.owner && actual.hp > 0 ? [{ reference: member.reference,
+        assessment: { ...actual, x: from.point.x, y: from.point.y, deck: undefined, cabin: undefined } }] : [];
+    });
+  }
   return selected;
 }
 function withFacts(action: GoalActionDeclaration | null, preconditions: readonly GoalFact[]): GoalActionDeclaration | null {
