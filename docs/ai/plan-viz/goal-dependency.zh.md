@@ -1,6 +1,8 @@
-# 目标依赖图版式样稿
+# 第一版目标依赖图（历史样稿）
 
-[双击打开样稿](goal-dependency.html)。HTML、CSS、JS 随目录提供，无联网、服务端或游戏依赖；正文采用系统中文字体。
+当前样稿已换成[从零造海军](goal-navy.html)，分叉、汇合、左向右反推和金币余额见[当前说明](goal-consumer.zh.md)。
+
+以下保留第一版来源。[打开历史样稿](goal-dependency.html)。HTML、CSS、JS 随目录提供，无联网、服务端或游戏依赖；正文采用系统中文字体。
 
 依据 #584 的 `docs/ai/objectives/goal-planner.zh.md` §5（main `d4ca2668`）：目标 → 未成立的条件 → 推导动作与落选方案 → 执行者与进度 → 结果。
 

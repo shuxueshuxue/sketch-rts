@@ -1,66 +1,139 @@
 {
-  "schemaVersion": 1,
-  "evidence": "artificial-contract-only",
-  "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Ultra, Unspecified Version)",
-  "packets": 3,
-  "drags": [
-    {
-      "requested": 68,
-      "actual": 68
-    },
-    {
-      "requested": 95,
-      "actual": 95
-    }
-  ],
-  "checked": [
-    "recorded-edges",
-    "rejected-alternatives",
-    "pending-request",
-    "generation-binding",
-    "pointer-seek",
-    "incremental-replay",
-    "unrecorded-gap"
-  ],
-  "source": "dca0b4c4776b36f22623de0398118627c19ac229",
+  "schemaVersion": 2,
+  "evidence": "artificial-public-puzzle-3",
+  "source": "a23acc53df1c0517445afd49cfd86f77f4f191bf",
   "contractSource": "8afe8a35b3474855ac4352752cd1ffe0b6c999c9",
-  "rawDirectory": "/root/.cache/sketch-cli/runs/mvhlramk-4bb3c5/dca0b4c",
-  "browserOk": true,
-  "browserErrors": [],
-  "shots": [
+  "page": {
+    "path": "goal-navy.html",
+    "sha256": "ef514007b939383bf8989e57a6fc15b2d99bde09142e4e9b6968c2b5209cde6f"
+  },
+  "checks": [
     {
-      "path": "goal-contract-alternatives.png",
-      "sha256": "eafe470b040b23a8c85b18f11846863a88f906aa2f1f3c4c87e5a64e25c55b65",
-      "bytes": 196105,
-      "width": 1600,
-      "height": 900
+      "source": "a23acc53df1c0517445afd49cfd86f77f4f191bf",
+      "rawDirectory": "/root/.cache/sketch-cli/runs/mvhmk67x-a2daf2/a23acc5",
+      "evidence": "artificial-public-puzzle-3",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Ultra, Unspecified Version)",
+      "packets": 4,
+      "drags": [
+        {
+          "requested": 2160,
+          "actual": 2160
+        },
+        {
+          "requested": 3650,
+          "actual": 3650
+        },
+        {
+          "requested": 4000,
+          "actual": 4000
+        }
+      ],
+      "checked": [
+        "branched-dependencies",
+        "left-to-right-regression",
+        "gold-prefixes",
+        "hall-reservation",
+        "human-readable-labels",
+        "rejected-alternatives",
+        "pending-request",
+        "pointer-seek",
+        "incremental-replay",
+        "unrecorded-gap"
+      ],
+      "browserOk": true,
+      "browserErrors": [],
+      "inspectedIndividually": true,
+      "shots": [
+        {
+          "path": "goal-contract-overview.png",
+          "sha256": "394e1d4bf52cdf892c6a0606d95d407185266ddc75b8b5bde573b045549926a1",
+          "bytes": 217199,
+          "width": 1600,
+          "height": 900
+        },
+        {
+          "path": "goal-contract-alternatives.png",
+          "sha256": "d0f6cb2e98c3d07f2743221b969cbdf449bbda83a2b18014f727abfc0abe6e06",
+          "bytes": 255447,
+          "width": 1600,
+          "height": 900
+        },
+        {
+          "path": "goal-contract-execution.png",
+          "sha256": "4beee14da12a9ec01196b989618104b67622b3cff29a067bda20c1fda3759473",
+          "bytes": 241736,
+          "width": 1600,
+          "height": 900
+        },
+        {
+          "path": "goal-contract-progress.png",
+          "sha256": "1543ead9abc4504aa76d65b2347de10bce63470404ec04d67af1791906cc89a1",
+          "bytes": 247664,
+          "width": 1600,
+          "height": 900
+        },
+        {
+          "path": "goal-contract-result.png",
+          "sha256": "4a9a85cd8b33880072b1e5afb1185ae47251845673283357ce157ee98b9b96e0",
+          "bytes": 229603,
+          "width": 1600,
+          "height": 900
+        },
+        {
+          "path": "goal-contract-unrecorded.png",
+          "sha256": "aa01084fa3d70d3f88020ae9ffbd2e45948eb944c9dec2e98d9edc7ce40ad601",
+          "bytes": 494804,
+          "width": 1600,
+          "height": 900
+        }
+      ]
     },
     {
-      "path": "goal-contract-execution.png",
-      "sha256": "ccb7149a90344dab624c9734bb103ce7626ddc96f7e489fa50ef52eb8a500db7",
-      "bytes": 196511,
-      "width": 1600,
-      "height": 900
-    },
-    {
-      "path": "goal-contract-unrecorded.png",
-      "sha256": "fbd8ee8753759d6fcada812e012b9c470c32b604f3916eb38e5deb2c8a32d8bf",
-      "bytes": 233357,
-      "width": 1600,
-      "height": 900
+      "source": "a23acc53df1c0517445afd49cfd86f77f4f191bf",
+      "rawDirectory": "/root/.cache/sketch-cli/runs/mvhml3fp-813fe8/a23acc5",
+      "evidence": "artificial-public-puzzle-3",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Ultra, Unspecified Version)",
+      "file": "/Users/mac1/work/sketch-cli/runs/camps-navy-preview-a23acc53/goal-navy.html",
+      "sha256": "ef514007b939383bf8989e57a6fc15b2d99bde09142e4e9b6968c2b5209cde6f",
+      "checked": [
+        "file-open",
+        "branched-layout",
+        "human-options",
+        "reserved-gold",
+        "recorded-result",
+        "reopen"
+      ],
+      "browserOk": true,
+      "browserErrors": [],
+      "inspectedIndividually": true,
+      "shots": [
+        {
+          "path": "goal-navy-layout.png",
+          "sha256": "530295b6f277c8ba71ec8bb60c1480f60d142ab9c6342edc73acf3b524482a63",
+          "bytes": 139462,
+          "width": 1600,
+          "height": 900
+        },
+        {
+          "path": "goal-navy-options.png",
+          "sha256": "3c7bbc67fc5796acab70931011f0ebc9c594c57f2bd837d561ed8af7ddb39e2d",
+          "bytes": 163876,
+          "width": 1600,
+          "height": 900
+        }
+      ]
     }
   ],
   "validation": {
     "rootTscExit": 0,
     "cliTscExit": 0,
-    "testFiles": 9,
-    "testsPassed": 48,
-    "codeSource": "dca0b4c4776b36f22623de0398118627c19ac229"
+    "testFiles": 10,
+    "testsPassed": 51
   },
   "notEvidenceOf": [
     "real planner decisions",
-    "AI execution",
-    "planner search performance",
-    "full match render performance"
+    "public puzzle solved by the planner",
+    "real AI execution",
+    "planner or full-match render performance"
   ]
 }
