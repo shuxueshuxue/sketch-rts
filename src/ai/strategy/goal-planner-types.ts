@@ -10,11 +10,13 @@ export type GoalForceMetric = 'combat-rating' | 'camp-force';
 export type GoalForceMeasure = Readonly<{ metric: 'combat-rating' }>
   | Readonly<{ metric: 'camp-force'; campId: string }>;
 export type GoalEntityReference = Readonly<{ kind: 'existing'; entityId: string }>
-  | Readonly<{ kind: 'output'; actionId: string; output: string }>;
+  | Readonly<{ kind: 'output'; actionId: string; output: string }>
+  /** Template-local variable unified with an achiever's existing/output ref. */
+  | Readonly<{ kind: 'binding'; name: string }>;
 export type GoalFactPredicate =
   | Readonly<{ kind: 'force-at'; at: Target; minimum: number; byTick: number } & GoalForceMeasure>
   | Readonly<{ kind: 'force-available'; at: Target; minimum: number; byTick: number } & GoalForceMeasure>
-  | Readonly<{ kind: 'transport-in'; seaId: SeaId; capacity: number; byTick: number }>
+  | Readonly<{ kind: 'transport-in'; seaId: SeaId; capacity: number; byTick: number; transport?: GoalEntityReference }>
   | Readonly<{ kind: 'transport-at'; transport: GoalEntityReference; at: Target; tolerance: number; byTick: number }>
   | Readonly<{ kind: 'shipyard-for'; seaId: SeaId }>
   | Readonly<{ kind: 'production'; unitKind: UnitKind; at?: Target; producer?: GoalEntityReference; byTick: number }>
@@ -30,6 +32,7 @@ export type GoalFactPredicate =
   | Readonly<{ kind: 'build-site'; buildingKind: BuildingKind; at: Target }>
   | Readonly<{ kind: 'spawn-exit'; producer: GoalEntityReference; unitKind: UnitKind; toward: Target }>
   | Readonly<{ kind: 'route'; mover: 'land' | 'sea'; from: Target; to: Target; actor?: GoalEntityReference }>
+  // This is a callable same-land pool, not exact arrival at a rally point.
   | Readonly<{ kind: 'unit-available'; unitKind: UnitKind; count: number; at: Target; byTick: number }>
   | Readonly<{ kind: 'building-complete'; buildingKind: BuildingKind; at: Target; building?: GoalEntityReference }>
   | Readonly<{ kind: 'enemy-site-destroyed'; site: Target }>
@@ -42,7 +45,17 @@ export type GoalFactObservation = Readonly<{
   fact: GoalFact; state: GoalFactState; observedTick: number;
   /** Changes only when this world's answer/evidence changes, not each think. */
   revision: string; reason: AllocationReason; evidence: readonly Evidence[];
-  quantity?: number; entityIds?: readonly string[];
+  /** Measured amount in the predicate's own units, never route distance/time. */
+  quantity?: number;
+  /** Only currently observed eligible world entities; never output variables. */
+  entityIds?: readonly string[];
+  /** Earliest absolute availability. A future met fact cannot make an action
+   * ready now; the planner waits or adds an explicit timed achiever. */
+  availableTick?: number;
+  route?: Readonly<{ distance: number; ticks: number | null; points: readonly Target['point'][] }>;
+  goldForecast?: Readonly<{ epoch: number; currentFreeGold: number; goldAtDeadline: number;
+    earliestTick: number | null; incomeGoldPerTick: number; factIds: readonly string[] }>;
+  site?: Readonly<{ logicalTarget: Target; buildPoint: Target['point']; buildingId?: string }>;
 }> & (Readonly<{ state: 'pending'; requestId: string; requestedTick: number }>
   | Readonly<{ state: 'met' | 'unmet' }>);
 export type GoalFactReader = (fact: GoalFact) => GoalFactObservation;
@@ -113,7 +126,7 @@ export type GoalPlanFactNode = Readonly<{
 export type GoalActionNode = Readonly<{
   id: string; declaration: GoalActionDeclaration; prerequisiteFactIds: readonly string[];
   dependsOnActionIds: readonly string[]; startTick: number | null; finishTick: number | null;
-  state: 'ready' | 'waiting-facts' | 'waiting-actions' | 'blocked' | 'world-effects-met';
+  state: 'ready' | 'waiting-facts' | 'waiting-actions' | 'waiting-time' | 'blocked' | 'world-effects-met';
   /** Optional binding to the existing allocator/command authority. */
   allocation?: Readonly<{ objectiveId: string; methodId: string; actionId: string; generation: number }>;
   reasons: readonly AllocationReason[];
