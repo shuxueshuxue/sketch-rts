@@ -5,7 +5,7 @@ import { isTransportKind } from '../../shared/transport-role';
 import { effectiveCombatRating } from '../policy/v6/strength';
 import { forceFor } from '../policy/v7/creep';
 import { assessAllocatedForce } from './allocated-force';
-import { goalFact, resolveGoalCamp } from './goal-facts';
+import { goalFact, goalValueKey, resolveGoalCamp } from './goal-facts';
 import type { GoalActionDeclaration, GoalEntityReference, GoalFact,
   GoalFactEffect, GoalParameter, GoalResourceFlow, GoalTransportOption } from './goal-planner-types';
 import type { Target } from './types';
@@ -16,8 +16,12 @@ export type GoalNavalEstimates = Readonly<{
   cost: GoalActionDeclaration['cost'];
   successProbability: GoalActionDeclaration['successProbability'];
 }>;
+export type GoalNavalMember = Readonly<{ reference: GoalEntityReference; assessment: Unit }>;
 export type GoalNavalCohort = Readonly<{
-  snapshot: GameSnapshot; owner: PlayerId; unitIds: readonly string[];
+  snapshot: GameSnapshot; owner: PlayerId; unitIds?: readonly string[];
+  /** Evaluation shapes retain their symbolic reference. Their private ID is
+   * never emitted as a world identity, effect, resource or execution binding. */
+  cohort?: readonly GoalNavalMember[];
   byTick: number; estimates: GoalNavalEstimates;
 }>;
 
@@ -32,22 +36,41 @@ function identity(kind: GoalActionDeclaration['kind'], parameters: Record<string
   return `goal-action:${kind}:${JSON.stringify(canonical(parameters))}`;
 }
 const existing = (entityId: string): GoalEntityReference => ({ kind: 'existing', entityId });
+function assessmentId(input: GoalNavalCohort, reference: GoalEntityReference): string {
+  if (reference.kind === 'existing') return reference.entityId;
+  let id = `assessment:${goalValueKey(reference)}`;
+  while (input.snapshot.units.some(unit => unit.id === id)) id += ':';
+  return id;
+}
+function reference(input: GoalNavalCohort, unit: Unit): GoalEntityReference {
+  return input.cohort?.find(member => assessmentId(input, member.reference) === unit.id)?.reference ?? existing(unit.id);
+}
 const establish = (fact: GoalFact): GoalFactEffect => ({ fact, operation: 'establish', at: 'finish' });
 const facts = (items: readonly GoalFact[]) => [...new Map(items.map(fact => [fact.id, fact])).values()]
   .sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
 /** Grounding identities are checked against the current world. A missing or
  * foreign identity is invalid, not a pending route, and never becomes a lease. */
-function crew(input: GoalNavalCohort, workers: boolean): readonly Unit[] | null {
-  const ids = [...new Set(input.unitIds)].sort(), byId = new Map(input.snapshot.units.map(unit => [unit.id, unit]));
-  const units = ids.map(id => byId.get(id));
-  if (!ids.length || units.some(unit => !unit || unit.owner !== input.owner || unit.hp <= 0
+function crew(input: GoalNavalCohort, workers: boolean | 'cargo'): readonly Unit[] | null {
+  const byId = new Map(input.snapshot.units.map(unit => [unit.id, unit]));
+  const selected = input.cohort ?? [...new Set(input.unitIds ?? [])].sort().flatMap(id => {
+    const unit = byId.get(id); return unit ? [{ reference: existing(id), assessment: unit }] : [];
+  });
+  if (!input.cohort && selected.length !== new Set(input.unitIds ?? []).size) return null;
+  const unique = [...new Map(selected.map(member => [goalValueKey(member.reference), member])).entries()]
+    .sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([, member]) => member);
+  if (unique.some(member => member.reference.kind === 'existing'
+    && (!byId.get(member.reference.entityId) || byId.get(member.reference.entityId)!.owner !== input.owner
+      || byId.get(member.reference.entityId)!.hp <= 0 || byId.get(member.reference.entityId)!.kind !== member.assessment.kind))) return null;
+  if (unique.some(member => member.reference.kind !== 'existing' && (member.assessment.deck || member.assessment.cabin))) return null;
+  const units = unique.map(member => ({ ...member.assessment, id: assessmentId(input, member.reference) }));
+  if (!units.length || units.some(unit => unit.owner !== input.owner || unit.hp <= 0
     || unit.expiresTick !== undefined || unitMover(unit.kind) !== 'land'
-    || (workers ? unit.kind !== 'worker' : unit.kind === 'worker' || unit.attackDamage <= 0))) return null;
-  return units as Unit[];
+    || (workers === 'cargo' ? false : workers ? unit.kind !== 'worker' : unit.kind === 'worker' || unit.attackDamage <= 0))) return null;
+  return units;
 }
-function demands(units: readonly Unit[]): GoalActionDeclaration['demands'] {
-  return units.map(unit => ({ resource: { kind: 'entity-control', entity: existing(unit.id) }, quantity: 1, from: 'start', until: 'finish' }));
+function demands(input: GoalNavalCohort, units: readonly Unit[]): GoalActionDeclaration['demands'] {
+  return units.map(unit => ({ resource: { kind: 'entity-control', entity: reference(input, unit) }, quantity: 1, from: 'start', until: 'finish' }));
 }
 function poolFacts(units: readonly Unit[], at: Target, byTick: number): GoalFact[] {
   return [...new Set(units.map(unit => unit.kind))].sort().map(unitKind => goalFact({
@@ -58,8 +81,8 @@ function rating(snapshot: GameSnapshot, units: readonly Unit[]) {
   return units.reduce((sum, unit) => sum + effectiveCombatRating(snapshot, unit), 0);
 }
 function movementFlows(units: readonly Unit[], from: Target, to: Target, force: number,
-  factIds: readonly string[], fromScope: 'pool' | 'post' = 'post'): GoalResourceFlow[] {
-  if (JSON.stringify(canonical(from)) === JSON.stringify(canonical(to)) && fromScope === 'post') return [];
+  factIds: readonly string[], fromScope: 'pool' | 'post' = 'post', toScope: 'pool' | 'post' = 'post'): GoalResourceFlow[] {
+  if (JSON.stringify(canonical(from)) === JSON.stringify(canonical(to)) && fromScope === toScope) return [];
   const flows: GoalResourceFlow[] = [];
   // Callable unit pools are region inventories, not copies at each point.
   const sameRegion = from.landId !== undefined && from.landId === to.landId
@@ -70,7 +93,7 @@ function movementFlows(units: readonly Unit[], from: Target, to: Target, force: 
       { resource: { kind: 'unit-pool', unitKind, at: to }, delta: count, at: 'finish', factIds });
   }
   if (force > 0) flows.push({ resource: { kind: 'force', at: from, scope: fromScope, metric: 'combat-rating' }, delta: -force, at: 'start', factIds },
-    { resource: { kind: 'force', at: to, scope: 'post', metric: 'combat-rating' }, delta: force, at: 'finish', factIds });
+    { resource: { kind: 'force', at: to, scope: toScope, metric: 'combat-rating' }, delta: force, at: 'finish', factIds });
   return flows;
 }
 function declaration(kind: GoalActionDeclaration['kind'], executor: string, parameters: Record<string, GoalParameter>,
@@ -97,7 +120,7 @@ export function declareGoalAssembly(input: GoalNavalCohort & Readonly<{
   const units = crew(input, false);
   if (!units || input.from.landId && input.at.landId && input.from.landId !== input.at.landId
     || units.some(unit => unit.deck || unit.cabin)) return null;
-  const cohort = units.map(unit => existing(unit.id)), force = rating(input.snapshot, units);
+  const cohort = units.map(unit => reference(input, unit)), force = rating(input.snapshot, units);
   const forceAvailable = goalFact({ kind: 'force-available', at: input.from, minimum: force,
     metric: 'combat-rating', cohort, byTick: input.byTick });
   const effects = [establish(goalFact({ kind: 'force-at', at: input.at, minimum: force,
@@ -110,9 +133,9 @@ export function declareGoalAssembly(input: GoalNavalCohort & Readonly<{
       metric: 'camp-force', campId: input.campId, cohort, byTick: input.byTick })));
   }
   const preconditions = [...poolFacts(units, input.from, input.byTick), forceAvailable, input.safePost, ...input.routes];
-  return declaration('assemble', 'strategy.assemble', { unitIds: units.map(unit => unit.id), from: input.from,
+  return declaration('assemble', 'strategy.assemble', { cohort, from: input.from,
     at: input.at, byTick: input.byTick, ...(input.campId ? { campId: input.campId } : {}) }, input, preconditions, effects,
-  demands(units), movementFlows(units, input.from, input.at, force, preconditions.map(fact => fact.id), 'pool'));
+  demands(input, units), movementFlows(units, input.from, input.at, force, preconditions.map(fact => fact.id), 'pool'));
 }
 
 /** Clearing earns only the remaining guards' native bounties. Each guard is
@@ -123,12 +146,12 @@ export function declareGoalCampClearing(input: GoalNavalCohort & Readonly<{
   const units = crew(input, false), camp = resolveGoalCamp(input.snapshot, input.campId);
   if (!units || camp.status !== 'present' || units.some(unit => unit.deck || unit.cabin)) return null;
   const clearingForce = goalFact({ kind: 'force-at', at: input.at, minimum: forceFor(camp.exposure.camp),
-    metric: 'camp-force', campId: input.campId, cohort: units.map(unit => existing(unit.id)), byTick: input.byTick });
+    metric: 'camp-force', campId: input.campId, cohort: units.map(unit => reference(input, unit)), byTick: input.byTick });
   const cleared = goalFact({ kind: 'camp-cleared', campId: input.campId });
   const flows = bounties(input.snapshot, camp.originalMemberIds, [cleared.id]);
   return declaration('clear-camp', 'strategy.clear-camp', { campId: input.campId,
-    memberIds: [...camp.originalMemberIds], unitIds: units.map(unit => unit.id), at: input.at, byTick: input.byTick },
-  input, [clearingForce, ...input.routes], [establish(cleared)], demands(units), flows);
+    memberIds: [...camp.originalMemberIds], cohort: units.map(unit => reference(input, unit)), at: input.at, byTick: input.byTick },
+  input, [clearingForce, ...input.routes], [establish(cleared)], demands(input, units), flows);
 }
 
 /** A shore choice is a binding on a transport alternative. Only actually
@@ -141,12 +164,12 @@ export function declareGoalShoreClearing(input: GoalNavalCohort & Readonly<{
     || ids.some(id => !input.snapshot.units.some(unit => unit.id === id && unit.hp > 0
       && (unit.owner === 'neutral' || strategyIsOpponent(input.snapshot, input.owner, unit.owner))))) return null;
   const force = goalFact({ kind: 'force-at', at: input.landing, minimum: input.requiredForce, metric: 'combat-rating',
-    cohort: units.map(unit => existing(unit.id)), byTick: input.byTick });
+    cohort: units.map(unit => reference(input, unit)), byTick: input.byTick });
   const safe = goalFact({ kind: 'shore-safe', landId: input.landing.landId, landing: input.landing, throughTick: input.throughTick });
-  return declaration('clear-shore', 'strategy.clear-camp', { unitIds: units.map(unit => unit.id),
+  return declaration('clear-shore', 'strategy.clear-camp', { cohort: units.map(unit => reference(input, unit)),
     memberIds: ids.filter(id => input.snapshot.units.find(unit => unit.id === id)!.owner === 'neutral'),
     threatIds: ids, at: input.landing, throughTick: input.throughTick }, input,
-  [force, ...input.routes], [establish(safe)], demands(units), bounties(input.snapshot, ids, [safe.id]));
+  [force, ...input.routes], [establish(safe)], demands(input, units), bounties(input.snapshot, ids, [safe.id]));
 }
 
 export function declareGoalDefense(input: GoalNavalCohort & Readonly<{
@@ -155,10 +178,10 @@ export function declareGoalDefense(input: GoalNavalCohort & Readonly<{
   const units = crew(input, false);
   if (!units || !Number.isFinite(input.requiredForce) || input.requiredForce < 0) return null;
   const force = goalFact({ kind: 'force-available', at: input.site, minimum: input.requiredForce, metric: 'combat-rating',
-    cohort: units.map(unit => existing(unit.id)), byTick: input.byTick });
-  return declaration('defend', 'strategy.defend-site', { unitIds: units.map(unit => unit.id), at: input.site,
+    cohort: units.map(unit => reference(input, unit)), byTick: input.byTick });
+  return declaration('defend', 'strategy.defend-site', { cohort: units.map(unit => reference(input, unit)), at: input.site,
     throughTick: input.throughTick }, input, [force, ...input.routes],
-  [establish(goalFact({ kind: 'site-safe', site: input.site, throughTick: input.throughTick }))], demands(units), []);
+  [establish(goalFact({ kind: 'site-safe', site: input.site, throughTick: input.throughTick }))], demands(input, units), []);
 }
 
 export function declareGoalEvacuation(input: GoalNavalCohort & Readonly<{
@@ -166,13 +189,16 @@ export function declareGoalEvacuation(input: GoalNavalCohort & Readonly<{
 }>): GoalActionDeclaration | null {
   const units = crew(input, true);
   if (!units) return null;
+  // assets-safe names observed entities. A future worker first regresses to a
+  // concrete availability fact; do not emit an invented rescue identity.
+  if (units.some(unit => reference(input, unit).kind !== 'existing')) return null;
   const safe = goalFact({ kind: 'site-safe', site: input.shelter, throughTick: input.throughTick });
   const preconditions = [...poolFacts(units, input.from, input.byTick), safe, ...input.routes];
   return declaration('evacuate', 'strategy.evacuate', { unitIds: units.map(unit => unit.id), from: input.from,
     at: input.shelter, throughTick: input.throughTick }, input, preconditions,
   [establish(goalFact({ kind: 'assets-safe', unitIds: units.map(unit => unit.id), at: input.shelter,
     throughTick: input.throughTick })), establish(goalFact({ kind: 'worker-at', at: input.shelter,
-    count: units.length, byTick: input.byTick }))], demands(units), movementFlows(units, input.from, input.shelter, 0,
+    count: units.length, byTick: input.byTick }))], demands(input, units), movementFlows(units, input.from, input.shelter, 0,
     preconditions.map(fact => fact.id)));
 }
 
@@ -182,7 +208,7 @@ export function declareGoalTransportPosition(input: Readonly<{
   if (!Number.isFinite(input.tolerance) || input.tolerance < 0) return null;
   const option = input.option, at = { seaId: option.seaId, point: option.departure.water };
   const preconditions = [goalFact({ kind: 'transport-in', seaId: option.seaId, capacity: 0,
-    transport: option.transport, byTick: input.byTick }), ...(option.approach ? [option.approach] : [])];
+    transport: option.transport, byTick: input.byTick }), ...(option.preconditions ?? []), ...(option.approach ? [option.approach] : [])];
   const parameters = { transport: option.transport, at, tolerance: input.tolerance, byTick: input.byTick,
     dependentUnitIds: [...new Set(option.loadedUnitIds)].sort() };
   return { id: identity('position-transport', parameters), kind: 'position-transport', preconditions: facts(preconditions),
@@ -200,8 +226,10 @@ type GoalTransportInput = GoalNavalCohort & Readonly<{
   option: GoalTransportOption; berthTolerance: number; pickupRoutes: readonly GoalFact[];
 }>;
 function transport(input: GoalTransportInput, workers: boolean): GoalActionDeclaration | null {
-  const units = crew(input, workers), option = input.option;
+  const units = crew(input, 'cargo'), option = input.option;
   if (!units || !Number.isFinite(input.berthTolerance) || input.berthTolerance < 0) return null;
+  const engineers = units.filter(unit => unit.kind === 'worker'), fighters = units.filter(unit => unit.kind !== 'worker');
+  if (workers ? !engineers.length : !fighters.length) return null;
   const hull = option.transport.kind === 'existing'
     ? input.snapshot.units.find(unit => option.transport.kind === 'existing' && unit.id === option.transport.entityId) : undefined;
   if (option.transport.kind === 'existing' && (!hull || hull.hp <= 0 || hull.owner !== input.owner || !isTransportKind(hull.kind))) return null;
@@ -211,47 +239,50 @@ function transport(input: GoalTransportInput, workers: boolean): GoalActionDecla
   if (loaded.some(unit => option.transport.kind !== 'existing'
     || (unit.deck?.shipId ?? unit.cabin?.shipId) !== option.transport.entityId
     || !option.loadedUnitIds.includes(unit.id)) || option.origin === 'aboard' && waiting.length) return null;
-  const cohort = units.map(unit => existing(unit.id));
-  const loadedRefs = loaded.map(unit => existing(unit.id));
+  const cohort = units.map(unit => reference(input, unit));
+  const loadedRefs = loaded.map(unit => reference(input, unit));
   const waitingMass = waiting.reduce((sum, unit) => sum + bodyMass(unit), 0);
-  const loadedMass = loaded.reduce((sum, unit) => sum + bodyMass(unit), 0);
+  const loadedMass = dependents.reduce((sum, unit) => sum + bodyMass(unit), 0);
   const preconditions: GoalFact[] = [goalFact({ kind: 'transport-in', seaId: option.seaId,
-    capacity: waitingMass, transport: option.transport, byTick: input.byTick }), option.crossing, option.shoreSafe];
+    capacity: waitingMass, transport: option.transport, byTick: input.byTick }), ...(option.preconditions ?? []), option.crossing, option.shoreSafe];
   if (loaded.length) preconditions.push(goalFact({ kind: 'cargo-aboard', transport: option.transport, units: loadedRefs }));
   if (waiting.length) {
     preconditions.push(...poolFacts(waiting, option.from, input.byTick), ...input.pickupRoutes,
       goalFact({ kind: 'transport-at', transport: option.transport,
         at: { seaId: option.seaId, point: option.departure.water }, tolerance: input.berthTolerance, byTick: input.byTick }));
-    if (workers) preconditions.push(...waiting.map(unit => goalFact({ kind: 'worker-at', at: option.from,
-      count: 1, worker: existing(unit.id), byTick: input.byTick })));
-    else preconditions.push(goalFact({ kind: 'force-at', at: option.from, minimum: rating(input.snapshot, waiting),
-      metric: 'combat-rating', cohort: waiting.map(unit => existing(unit.id)), byTick: input.byTick }));
+    const waitingWorkers = waiting.filter(unit => unit.kind === 'worker'), waitingFighters = waiting.filter(unit => unit.kind !== 'worker');
+    preconditions.push(...waitingWorkers.map(unit => goalFact({ kind: 'worker-at', at: option.from,
+      count: 1, worker: reference(input, unit), byTick: input.byTick })));
+    if (waitingFighters.length) preconditions.push(goalFact({ kind: 'force-at', at: option.from,
+      minimum: rating(input.snapshot, waitingFighters), metric: 'combat-rating',
+      cohort: waitingFighters.map(unit => reference(input, unit)), byTick: input.byTick }));
   }
   const effects: GoalFactEffect[] = [
-    { fact: goalFact({ kind: 'cargo-aboard', transport: option.transport, units: cohort }), operation: 'invalidate', at: 'finish' },
+    { fact: goalFact({ kind: 'cargo-aboard', transport: option.transport,
+      units: [...cohort, ...dependents.map(unit => existing(unit.id))] }), operation: 'invalidate', at: 'finish' },
   ];
-  if (workers) effects.push(...units.map(unit => establish(goalFact({ kind: 'worker-at', at: option.to, count: 1,
-    worker: existing(unit.id), byTick: input.byTick }))));
-  else effects.push(establish(goalFact({ kind: 'force-at', at: option.to, minimum: rating(input.snapshot, units),
-    metric: 'combat-rating', cohort, byTick: input.byTick })));
-  const resources: GoalActionDeclaration['demands'] = [...demands([...new Map([...units, ...dependents].map(unit => [unit.id, unit])).values()]
+  effects.push(...engineers.map(unit => establish(goalFact({ kind: 'worker-at', at: option.to, count: 1,
+    worker: reference(input, unit), byTick: input.byTick }))));
+  if (fighters.length) effects.push(establish(goalFact({ kind: 'force-available', at: option.to, minimum: rating(input.snapshot, fighters),
+    metric: 'combat-rating', cohort: fighters.map(unit => reference(input, unit)), byTick: input.byTick })));
+  const resources: GoalActionDeclaration['demands'] = [...demands(input, [...new Map([...units, ...dependents].map(unit => [unit.id, unit])).values()]
     .sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0)),
     { resource: { kind: 'entity-control', entity: option.transport }, quantity: 1, from: 'start', until: 'finish' },
     ...(waitingMass > 0 ? [{ resource: { kind: 'transport-capacity' as const, transport: option.transport, seaId: option.seaId },
       quantity: waitingMass, from: 'start' as const, until: 'finish' as const }] : [])];
-  const flows = movementFlows(waiting, option.from, option.to, workers ? 0 : rating(input.snapshot, waiting), option.factIds);
+  const flows = movementFlows(waiting, option.from, option.to, rating(input.snapshot, waiting), option.factIds, 'post', 'pool');
   // Already loaded soldiers have no invented original land pool. Their actual
   // unload is a destination contribution, and frees their occupied payload.
   for (const unitKind of [...new Set(loaded.map(unit => unit.kind))].sort()) flows.push({
     resource: { kind: 'unit-pool', unitKind, at: option.to }, delta: loaded.filter(unit => unit.kind === unitKind).length,
     at: 'finish', factIds: option.factIds,
   });
-  if (!workers && loaded.length) flows.push({ resource: { kind: 'force', at: option.to,
-    metric: 'combat-rating', scope: 'post' }, delta: rating(input.snapshot, loaded), at: 'finish', factIds: option.factIds });
+  if (loaded.some(unit => unit.kind !== 'worker')) flows.push({ resource: { kind: 'force', at: option.to,
+    metric: 'combat-rating', scope: 'pool' }, delta: rating(input.snapshot, loaded), at: 'finish', factIds: option.factIds });
   if (loadedMass > 0) flows.push({ resource: { kind: 'transport-capacity', transport: option.transport, seaId: option.seaId },
     delta: loadedMass, at: 'finish', factIds: option.factIds });
   return declaration(workers ? 'transport-worker' : 'transport-force', 'strategy.transport', {
-    optionId: option.id, transport: option.transport, unitIds: units.map(unit => unit.id), origin: option.origin,
+    optionId: option.id, transport: option.transport, cohort, origin: option.origin,
     from: option.from, at: option.to, departure: { water: option.departure.water, heading: option.departure.heading,
       ...(option.origin === 'land' ? { ground: option.departure.ground } : {}) }, landing: option.landing,
     loadedUnitIds: loaded.map(unit => unit.id), payloadMass: waitingMass + loadedMass,
