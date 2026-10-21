@@ -35,7 +35,7 @@ it('guards routing entry points before open-ground, direct-road or warm-cache sh
   };
   for (const [name, run] of Object.entries(cases)) {
     for (let pass = 0; pass < 2; pass++) {
-      expect(() => withNavigationAudit(guard, () => withNavigationPhase('strategy-planning', run))).toThrow(`Unmetered ${name}`);
+      expect(() => withNavigationAudit(guard, () => withNavigationPhase('strategy-planning', () => { run(); }))).toThrow(`Unmetered ${name}`);
       expect(() => run()).not.toThrow();
     }
   }
