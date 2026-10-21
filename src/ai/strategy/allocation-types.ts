@@ -380,6 +380,8 @@ export type ExecutorInput = Readonly<{
   /** The same owner-think source, including actual free cash after reserved
    * budgets. This callback never enters serialized execution state. */
   goalFacts?: import('./goal-planner-types').GoalFactReader;
+  /** Same-epoch central job / aggregate-pool accounting, without birth IDs. */
+  goalTraining?: import('./goal-execution-types').GoalTrainingReader;
 }>;
 export type ExecutorFeedback = Readonly<{
   action: ActionToken;
