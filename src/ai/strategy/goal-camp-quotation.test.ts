@@ -7,6 +7,7 @@ import { neutralCampExposure } from '../situation/neutral-camp-exposure';
 import { assessAllocatedCampBattle } from './allocated-force';
 import { coarseGoalCampOptions, calibratedAlphaGoalCampBattleModel, type GoalCampBattleModel } from './goal-camp-quotation';
 import { FactWorkQueue } from './fact-work';
+import { GOAL_CAMP_DEFAULT_MODEL_ID } from './goal-camp-default-model';
 import { goalCampId, goalFact } from './goal-facts';
 import { createGoalNavalCombatGrounding, type GoalNavalCombatGroundingPorts } from './goal-naval-combat-grounding';
 import { goalNavalActionProvider } from './goal-naval-provider';
@@ -61,7 +62,7 @@ describe('conditional camp quotation before exact transport refinement', () => {
     expect(landIdAt(f.snapshot.map, f.cohort[0]!.assessment)).not.toBe(landIdAt(f.snapshot.map, f.snapshot.units.find(unit => unit.id === 'guard-a')!));
     const option = full(strict(() => f.factory.combatOptions!(f.effect)));
     expect(option.cost.state).toBe('met'); expect(option.successProbability.state).toBe('met');
-    if (option.successProbability.state === 'met') expect(option.successProbability.value).toBeLessThan(1);
+    expect(option.cost.state === 'met' && option.cost.value[0]?.code).toBe(`camp-loss:${GOAL_CAMP_DEFAULT_MODEL_ID}`);
     const action = strict(() => goalNavalActionProvider.actionsFor(f.effect, f.context)).find(action =>
       Array.isArray(action.executor.parameters.cohort) && action.executor.parameters.cohort.length === 4)!;
     expect(action).toBeDefined(); expect(action.precision).toBe('coarse');

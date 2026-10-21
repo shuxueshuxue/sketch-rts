@@ -54,6 +54,22 @@ describe('supported empirical default with explicit alpha fallback', () => {
       .toMatchObject({ state: 'pending', reason: { code: 'opponent-arrival-unpublished' } });
     expect(selected.counts).toEqual({ quotes: 4, empirical: 0, alpha: 0, outsideSupport: 1, pending: 4 });
   });
+  it('quotes the native four-footmen/two-murloc controlled start inside support without alpha', () => {
+    const record = JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/goal-camp-four-footmen-native.json.gz', import.meta.url))).toString());
+    const { snapshot, owner, unitIds, battleStartTicks } = record;
+    regionIndex(snapshot.map);
+    const camp = neutralCamps(snapshot)[0]!, input = { snapshot, situation: evaluateSituation(snapshot, owner, createAiPolicyMemory()),
+      target: { landId: landIdAt(snapshot.map, camp.center)!, point: camp.center }, unitIds, battleStartTicks };
+    const usage = createGoalCampModelUsage(), before = JSON.stringify(snapshot);
+    const result = withNavigationAudit(event => { if (event.phase === 'strategy-planning' && !event.authorization) throw Error(event.operation); },
+      () => withNavigationPhase('strategy-planning', () => createDefaultGoalCampBattleModel(usage.observe)(input)));
+    expect(result.state).toBe('met');
+    expect(usage.counts).toEqual({ quotes: 1, empirical: 1, alpha: 0, outsideSupport: 0, pending: 0 });
+    expect(result.state === 'met' && result.value.lossDistribution).not.toBeNull();
+    expect(JSON.stringify(snapshot)).toBe(before);
+    expect(record.rawOutcome).toMatchObject({ win: true, lossGold: 0 });
+  });
+
   it('reads the frozen lossless model in browser form and keeps real unsupported quotation identical to native alpha', () => {
     const carrier = JSON.parse(readFileSync(new URL('./data/goal-camp-model.gzip.json', import.meta.url), 'utf8'));
     const payload = gunzipSync(Buffer.from(carrier.gzipBase64, 'base64'));
