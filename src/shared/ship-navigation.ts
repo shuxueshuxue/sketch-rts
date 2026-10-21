@@ -267,6 +267,94 @@ export function nearestShipPose(map: SeaMap, ship: Unit, point: Point, seaOrigin
   }
   return undefined;
 }
+
+/** JSON continuation of nearestShipPose's native heading/ring order. Sea
+ * origins are published legal points; projecting an invalid origin is a
+ * separate fact and must not hide a synchronous walkableGoal scan here. */
+export type NearestShipPoseCursor = {
+  phase: 'direct' | 'rings' | 'bare' | 'done'; heading: number; ring: number;
+  x: number; y: number; cellChecked: boolean;
+  best: ShipPose | null; score: number | null;
+};
+export const beginNearestShipPose = (): NearestShipPoseCursor => ({ phase: 'direct', heading: 0,
+  ring: 0, x: -1, y: -1, cellChecked: false, best: null, score: null });
+export function advanceNearestShipPose(map: SeaMap, ship: Unit, point: Point, cursor: NearestShipPoseCursor,
+  allowance: number, seaOrigin: Point = ship): { cursor: NearestShipPoseCursor; work: number; done: boolean;
+    value?: ShipPose | null; pendingReason?: string } {
+  let work = 0;
+  allowance = Math.max(0, Math.floor(allowance));
+  if (allowance <= 0) return { cursor, work, done: false };
+  if (!shipProfile(ship)) return { cursor, work, done: false, pendingReason: 'ship-profile-unpublished' };
+  if (map.terrain && !isWalkable(map, seaOrigin.x, seaOrigin.y, 'sea'))
+    return { cursor, work, done: false, pendingReason: 'ship-origin-projection-pending' };
+  const preferred = ship.sailing?.heading ?? 0, headings = [preferred, ...Array.from({ length: DIRECTIONS }, (_, i) => i * ANGLE)];
+  const result = (value: ShipPose | null) => {
+    cursor.phase = 'done'; cursor.best = value;
+    return { cursor, work, done: true, value };
+  };
+  if (cursor.phase === 'done') return result(cursor.best);
+  const terrain = map.terrain;
+  if (!terrain) {
+    const hull = outline(shipProfile(ship)!.hull, { x: 0, y: 0, heading: preferred });
+    const x = Math.max(-Math.min(...hull.map(p => p.x)), Math.min(map.width - Math.max(...hull.map(p => p.x)), point.x));
+    const y = Math.max(-Math.min(...hull.map(p => p.y)), Math.min(map.height - Math.max(...hull.map(p => p.y)), point.y));
+    while (work < allowance) {
+      if (cursor.phase === 'direct') {
+        work++; cursor.phase = 'bare'; cursor.ring = 16; cursor.heading = 0;
+        if (hullFits(map, ship, { x, y, heading: preferred })) return result({ x, y, heading: preferred });
+      } else {
+        if (cursor.ring > shipProfile(ship)!.length * 4) return result(null);
+        const angle = cursor.heading * Math.PI / 8;
+        const at = { x: x + cursor.ring * detCos(angle), y: y + cursor.ring * detSin(angle), heading: preferred };
+        work++; cursor.heading++;
+        if (cursor.heading === 16) { cursor.heading = 0; cursor.ring += 16; }
+        if (hullFits(map, ship, at)) return result(at);
+      }
+    }
+    return { cursor, work, done: false };
+  }
+  const col = Math.max(0, Math.min(terrain.cols - 1, Math.floor(point.x / terrain.cell)));
+  const row = Math.max(0, Math.min(terrain.rows - 1, Math.floor(point.y / terrain.cell)));
+  while (work < allowance) {
+    if (cursor.phase === 'direct') {
+      const heading = headings[cursor.heading]!;
+      work++; cursor.heading++;
+      if (hullFits(map, ship, { ...point, heading }) && sameGround(map, seaOrigin, point, 'sea')) return result({ ...point, heading });
+      if (cursor.heading === headings.length) { cursor.phase = 'rings'; cursor.heading = 0; cursor.x = col; cursor.y = row; }
+      continue;
+    }
+    if (cursor.ring > Math.max(terrain.cols, terrain.rows)) return result(null);
+    const left = Math.max(0, col - cursor.ring), right = Math.min(terrain.cols - 1, col + cursor.ring);
+    const top = Math.max(0, row - cursor.ring), bottom = Math.min(terrain.rows - 1, row + cursor.ring);
+    const nextCell = () => {
+      cursor.cellChecked = false; cursor.heading = 0; cursor.x++;
+      if (cursor.x > right) { cursor.x = left; cursor.y++; }
+    };
+    if (cursor.y > bottom) {
+      if (cursor.best) return result(cursor.best);
+      cursor.ring++; cursor.x = Math.max(0, col - cursor.ring); cursor.y = Math.max(0, row - cursor.ring);
+      cursor.heading = 0; cursor.cellChecked = false; cursor.score = null; continue;
+    }
+    const at = { x: (cursor.x + .5) * terrain.cell, y: (cursor.y + .5) * terrain.cell };
+    if (!cursor.cellChecked) {
+      work++;
+      if (cursor.ring && Math.max(Math.abs(cursor.x - col), Math.abs(cursor.y - row)) !== cursor.ring
+        || !CELL_GROUND[terrain.cells[cursor.y * terrain.cols + cursor.x] ?? '.']?.sea
+        || !sameGround(map, seaOrigin, at, 'sea')) { nextCell(); continue; }
+      cursor.cellChecked = true;
+      if (work >= allowance) break;
+    }
+    const heading = headings[cursor.heading]!;
+    const value = Math.hypot(at.x - point.x, at.y - point.y) + Math.abs(headingDifference(preferred, heading)) * .001;
+    work++; cursor.heading++;
+    if ((cursor.score === null || value < cursor.score) && hullFits(map, ship, { ...at, heading })) {
+      cursor.best = { ...at, heading }; cursor.score = value;
+    }
+    if (cursor.heading === headings.length) nextCell();
+  }
+  return { cursor, work, done: false };
+}
+
 // All caches are geometry-only and recomputable. The active route is serialized with the ship, preserving replay order.
 type NavGrid = {
   cells: string;
