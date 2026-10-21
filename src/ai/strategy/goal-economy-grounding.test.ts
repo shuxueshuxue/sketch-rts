@@ -46,6 +46,52 @@ const forbidRouting = <T>(run: () => T) => withNavigationAudit(event => { throw 
   () => withNavigationPhase('strategy-planning', run));
 
 describe('shared-budget economic grounding with native placements', () => {
+  it('retains an unpublished build request across a frozen world and returns the real pending-walk candidates after publication', () => {
+    const snapshot = snapshotGame(scene()), before = JSON.stringify(snapshot), near = anchor(snapshot);
+    const readFact: GoalPlanningContext['readFact'] = fact => ({ fact, state: 'pending', observedTick: snapshot.tick,
+      revision: 'unpublished-worker-route', requestId: `route:${fact.id}`, requestedTick: snapshot.tick,
+      reason: { code: 'route-pending', factIds: [fact.id], values: {} }, evidence: [] });
+    let retained = memory();
+    const zero = new FactWorkQueue(0, 0), coldGeometry = createGoalGeometryReader({ tick: 0, work: zero, memory: retained });
+    const cold = forbidRouting(() => createGoalEconomicGrounding(context(snapshot, readFact), ports(snapshot, coldGeometry)).buildSites('farm', near));
+    expect(cold.state).toBe('pending');
+    if (cold.state !== 'pending') throw Error('Unpublished sites were presented as a known empty collection');
+    zero.flush(); retained = JSON.parse(JSON.stringify(retained));
+    const work = new FactWorkQueue(15, 6144), geometry = createGoalGeometryReader({ tick: 15, work, memory: retained });
+    const grounding = createGoalEconomicGrounding(context(snapshot, readFact), ports(snapshot, geometry));
+    const scanning = forbidRouting(() => grounding.buildSites('farm', near));
+    expect(scanning).toMatchObject({ state: 'pending', requestIds: cold.requestIds });
+    forbidRouting(() => work.flush());
+    expect(forbidRouting(() => grounding.buildSites('farm', near))).toMatchObject({ state: 'pending', requestIds: cold.requestIds });
+    expect(work.receipt.used).toBeLessThanOrEqual(6144);
+    retained = JSON.parse(JSON.stringify(retained));
+    // The publisher advances; the world snapshot and all physical facts stay
+    // frozen. This is a domain port test, not an owner-think clock fixture.
+    const published = createGoalGeometryReader({ tick: 30, work: new FactWorkQueue(30, 0), memory: retained });
+    const ready = forbidRouting(() => createGoalEconomicGrounding(context(snapshot, readFact), ports(snapshot, published)).buildSites('farm', near));
+    expect(ready.state).toBe('met');
+    if (ready.state !== 'met') throw Error('Published native sites were lost');
+    expect(ready.factIds).toEqual(cold.requestIds);
+    expect(ready.candidates).toHaveLength(8);
+    for (const candidate of ready.candidates) {
+      expect(candidate.walkTicks).toMatchObject({ state: 'pending', requestIds: [`route:${candidate.route.id}`] });
+      expect(candidate.worker).toEqual({ kind: 'existing', entityId: 'worker' });
+      expect(isBuildPlacementClear(snapshot, 'farm', candidate.at.point)).toBe(true);
+    }
+    expect(JSON.stringify(snapshot)).toBe(before);
+  });
+
+  it('distinguishes an exhausted known-empty site scan from a pending geometric alternative', () => {
+    const snapshot = snapshotGame(scene()), near = anchor(snapshot);
+    const pending: GoalGeometryReader = () => ({ state: 'pending', requestIds: ['unpublished-sites'],
+      reason: { code: 'goal-geometry-publication-pending', factIds: ['unpublished-sites'], values: {} } });
+    const exhausted: GoalGeometryReader = () => ({ state: 'met', value: [] as never, factIds: ['exhausted-site-scan'] });
+    expect(forbidRouting(() => createGoalEconomicGrounding(context(snapshot), ports(snapshot, pending)).buildSites('farm', near)))
+      .toMatchObject({ state: 'pending', requestIds: ['unpublished-sites'] });
+    expect(forbidRouting(() => createGoalEconomicGrounding(context(snapshot), ports(snapshot, exhausted)).buildSites('farm', near)))
+      .toEqual({ state: 'met', candidates: [], factIds: ['exhausted-site-scan'] });
+  });
+
   it('does no zero-budget geometry, resumes a bounded native scan after JSON, and publishes on the next think', () => {
     const snapshot = snapshotGame(scene()), original = JSON.stringify(snapshot), near = anchor(snapshot);
     let retained = memory(), at = 0, lastWork = 0;
