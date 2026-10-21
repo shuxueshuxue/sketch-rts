@@ -40,3 +40,9 @@ provider 测试用真实场景快照和真实 Situation，加固定的已发布�
 `createGoalBoardingGeometry` 将原生登船浅水候选的排序、逐候选合法性及最多四次稳定投影转换为小 JSON 游标。浅水格逐个计工作，最近船位复用 shared 的有限 pose 游标；原生 `boardingBerth` 也复用同一个单格候选规则。未知的地面投影或部分步行终点会暂停当前原生优先候选，不跳到另一个点，也不把 exact-route 的 unmet 当作 native fallback 失败。
 
 `GoalNativeGroundReader` 是同次共享服务注入的端点事实：`project-goal` 对应原生 `walkableGoal`，`walk-destination` 对应原生到达点。没有专用端口时，只接受已发布 exact route 对其终点的证明，其他情况保持 pending。4180 回归将 native 端点作为测量范围外的固定事实逐次发布，几何本身在同一 6144 队列内续算并经 JSON 恢复，得到与原生 helper 相同的 water/ground；该回归不证明端点服务或完整控制入口的总工作量。
+
+`createGoalTransportFactPorts` 是领域物理工厂，只接同次共享 geometry、已备 region index、readFact/resolveCohort、productionOptions 和 pointRoute 回读。它输出上述四个端口，不创建 Situation、查询器或工作额度。当前船按真实 deck/cabin 载荷算可用公斤数；未来船只能消费显式 `resolveProducedHull` 元数据，缺失时保留 deferred，不能由生产建筑名称猜实体或原型。逐航次风险价格由总 source 后续附到 option，本工厂不估战斗 P。
+
+岸点枚举默认发布 16 个距离排序的几何候选，并明确保留其余候选的 prefix-limit 叶；该排序是候选工作顺序，不是航行 ETA 或效用。对于可加的两端距离排序，先逐岸点保留两端各 K，再检查 K² 组合，与全组合排序前缀完全一致。4180 原始输入的逐组合初稿需要 413851 工作，因子化后至多 1556；测试用独立全组合顺序逐 ID 核对，没有缩小源岸点集合来降低账本。候选前缀和通用 geometry 存储上限仍是覆盖边界，未展开候选不被称作不可达。
+
+工厂保留 pointRoute 的 source ID、pending/transient/static 状态和精确起始 heading。生产或地面端点服务缺失不会触发原生求路回退。当前测试核原始快照、共享字段注入、有限 work/JSON、独立前缀 oracle 和未来元数据边界；统一总 reader、端点服务、真实调度与执行题库仍由共同接线验收。
