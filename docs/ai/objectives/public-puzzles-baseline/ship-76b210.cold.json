@@ -1,0 +1,2717 @@
+{
+  "source": "9005a1ab638d22dd94d3013ae245223d7094c20e",
+  "sharedBase": "76b21070eeb2291fbfa15728695cc93c60afba4c",
+  "mode": "same original frozen snapshot, persistent native memory, K20, normal collector",
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "inputSha256": "c43b25924340af47548720d118372f88747e714660b2f44658b19870be48ddda",
+      "passed": true,
+      "stable": true,
+      "error": null,
+      "maxThinks": 20,
+      "thinkCount": 20,
+      "firstReadyActionThink": 7,
+      "firstPassingThink": 1,
+      "firstExecutablePlanThink": 7,
+      "firstCandidateThinkByKind": {
+        "hold-position": 1,
+        "build": 1,
+        "assemble": 1,
+        "transport-force": 1,
+        "transport-worker": 1,
+        "clear-camp": 1,
+        "train": 1,
+        "position-transport": 1
+      },
+      "progress": [
+        {
+          "think": 1,
+          "passed": true,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 1,
+            "limit": 6144,
+            "used": 411,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "goal-geometry:57f1d028",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-geometry:951ae578",
+                "tier": "background-field",
+                "work": 2
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "passed": true,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 2,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "goal-geometry:21a7e9c6",
+                "tier": "background-field",
+                "work": 184
+              },
+              {
+                "key": "field:land:112:816",
+                "tier": "background-field",
+                "work": 4641
+              },
+              {
+                "key": "goal-geometry:55956fea",
+                "tier": "background-field",
+                "work": 184
+              },
+              {
+                "key": "field:land:1552:688",
+                "tier": "background-field",
+                "work": 728
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 3,
+          "passed": true,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 3,
+            "limit": 6144,
+            "used": 4306,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "goal-geometry:21a7e9c6",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-geometry:f046dbba",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "field:land:1552:688",
+                "tier": "existing-field",
+                "work": 3895
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 4,
+          "passed": true,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 4,
+            "limit": 6144,
+            "used": 415,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "goal-geometry:21a7e9c6",
+                "tier": "background-field",
+                "work": 4
+              },
+              {
+                "key": "goal-geometry:55956fea",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-geometry:4fb7b87c",
+                "tier": "background-field",
+                "work": 2
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 5,
+          "passed": true,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 5,
+            "limit": 6144,
+            "used": 418,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "goal-geometry:bd857fa4",
+                "tier": "background-field",
+                "work": 7
+              },
+              {
+                "key": "goal-geometry:55956fea",
+                "tier": "background-field",
+                "work": 4
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 6,
+          "passed": true,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 6,
+            "limit": 6144,
+            "used": 821,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "goal-geometry:07b493f4",
+                "tier": "background-field",
+                "work": 7
+              },
+              {
+                "key": "goal-search:refine:1:goal-domain-v2:coarse:0:berths:1:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 814,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 7,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 1,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 7,
+            "limit": 6144,
+            "used": 5729,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "goal-search:refine:1:goal-domain-v2:coarse:0:berths:2:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "goal-search:refine:1:goal-domain-v2:coarse:0:berths:2:refine:2:goal-domain-v2:coarse:3:berths:2:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:e6c8aaa5",
+                "tier": "background-field",
+                "work": 4100
+              },
+              {
+                "key": "goal-geometry:1d5e1703",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-search:refine:1:goal-domain-v2:coarse:0:berths:2:refine:2:goal-domain-v2:coarse:3:berths:2:refine:3:goal-domain-v2:coarse:5:berths:2:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 1628,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 8,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 8,
+            "limit": 6144,
+            "used": 5016,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:e6c8aaa5",
+                "tier": "background-field",
+                "work": 4609
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 9,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 9,
+            "limit": 6144,
+            "used": 5021,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:e6c8aaa5",
+                "tier": "background-field",
+                "work": 4614
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 10,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 10,
+            "limit": 6144,
+            "used": 5120,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:e6c8aaa5",
+                "tier": "background-field",
+                "work": 4713
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 11,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 11,
+            "limit": 6144,
+            "used": 5120,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:e6c8aaa5",
+                "tier": "background-field",
+                "work": 4713
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 12,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 12,
+            "limit": 6144,
+            "used": 5021,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:e6c8aaa5",
+                "tier": "background-field",
+                "work": 4614
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 13,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 13,
+            "limit": 6144,
+            "used": 4916,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:e6c8aaa5",
+                "tier": "background-field",
+                "work": 4509
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 14,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 14,
+            "limit": 6144,
+            "used": 5307,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:e6c8aaa5",
+                "tier": "background-field",
+                "work": 4900
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 15,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 15,
+            "limit": 6144,
+            "used": 5307,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:e6c8aaa5",
+                "tier": "background-field",
+                "work": 4900
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 16,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 16,
+            "limit": 6144,
+            "used": 5307,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:e6c8aaa5",
+                "tier": "background-field",
+                "work": 4900
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 17,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 17,
+            "limit": 6144,
+            "used": 5307,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:e6c8aaa5",
+                "tier": "background-field",
+                "work": 4900
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 18,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 18,
+            "limit": 6144,
+            "used": 5307,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:e6c8aaa5",
+                "tier": "background-field",
+                "work": 4900
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 19,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 19,
+            "limit": 6144,
+            "used": 5307,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:e6c8aaa5",
+                "tier": "background-field",
+                "work": 4900
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 20,
+          "passed": true,
+          "executable": true,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 20,
+            "limit": 6144,
+            "used": 5307,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:e6c8aaa5",
+                "tier": "background-field",
+                "work": 4900
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": null,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "puzzle": "ship-away/near",
+      "inputSha256": "d998070c86fc8bc48d58ba72bae1a5d3b1939d7be80d76e7f131d095bb5385e9",
+      "passed": false,
+      "stable": true,
+      "error": null,
+      "maxThinks": 20,
+      "thinkCount": 20,
+      "firstReadyActionThink": 7,
+      "firstPassingThink": null,
+      "firstExecutablePlanThink": null,
+      "firstCandidateThinkByKind": {
+        "hold-position": 1,
+        "build": 1,
+        "assemble": 1,
+        "transport-force": 1,
+        "transport-worker": 1,
+        "clear-camp": 1,
+        "train": 1,
+        "position-transport": 1
+      },
+      "progress": [
+        {
+          "think": 1,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 1,
+            "limit": 6144,
+            "used": 411,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "goal-geometry:57f1d028",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-geometry:951ae578",
+                "tier": "background-field",
+                "work": 2
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(8) }, { …(8) } ] to have a length of +0 but got 2",
+            "stack": "AssertionError: already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(8) }, { …(8) } ] to have a length of +0 but got 2\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:1339:22)\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file:///codegeex/jeffry/sketch-rts-codex/node_modules/chai/index.js:1686:25)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:83:107)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:109:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 2,
+            "limit": 6144,
+            "used": 6144,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "goal-geometry:21a7e9c6",
+                "tier": "background-field",
+                "work": 184
+              },
+              {
+                "key": "field:land:112:816",
+                "tier": "background-field",
+                "work": 4641
+              },
+              {
+                "key": "goal-geometry:55956fea",
+                "tier": "background-field",
+                "work": 184
+              },
+              {
+                "key": "field:land:1552:688",
+                "tier": "background-field",
+                "work": 728
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(8) }, { …(8) } ] to have a length of +0 but got 2",
+            "stack": "AssertionError: already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(8) }, { …(8) } ] to have a length of +0 but got 2\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:1339:22)\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file:///codegeex/jeffry/sketch-rts-codex/node_modules/chai/index.js:1686:25)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:83:107)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:109:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 3,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 3,
+            "limit": 6144,
+            "used": 4306,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "goal-geometry:21a7e9c6",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-geometry:f046dbba",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "field:land:1552:688",
+                "tier": "existing-field",
+                "work": 3895
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(8) }, { …(8) } ] to have a length of +0 but got 2",
+            "stack": "AssertionError: already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(8) }, { …(8) } ] to have a length of +0 but got 2\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:1339:22)\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file:///codegeex/jeffry/sketch-rts-codex/node_modules/chai/index.js:1686:25)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:83:107)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:109:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 4,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 4,
+            "limit": 6144,
+            "used": 415,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "goal-geometry:21a7e9c6",
+                "tier": "background-field",
+                "work": 4
+              },
+              {
+                "key": "goal-geometry:55956fea",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-geometry:4fb7b87c",
+                "tier": "background-field",
+                "work": 2
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(8) }, { …(8) } ] to have a length of +0 but got 2",
+            "stack": "AssertionError: already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(8) }, { …(8) } ] to have a length of +0 but got 2\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:1339:22)\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file:///codegeex/jeffry/sketch-rts-codex/node_modules/chai/index.js:1686:25)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:83:107)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:109:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 5,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 5,
+            "limit": 6144,
+            "used": 418,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "goal-geometry:bd857fa4",
+                "tier": "background-field",
+                "work": 7
+              },
+              {
+                "key": "goal-geometry:55956fea",
+                "tier": "background-field",
+                "work": 4
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(8) }, { …(8) } ] to have a length of +0 but got 2",
+            "stack": "AssertionError: already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(8) }, { …(8) } ] to have a length of +0 but got 2\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:1339:22)\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file:///codegeex/jeffry/sketch-rts-codex/node_modules/chai/index.js:1686:25)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:83:107)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:109:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 6,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 6,
+            "limit": 6144,
+            "used": 821,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "goal-geometry:07b493f4",
+                "tier": "background-field",
+                "work": 7
+              },
+              {
+                "key": "goal-search:refine:1:goal-domain-v2:coarse:0:berths:1:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(8) }, { …(8) } ] to have a length of +0 but got 2",
+            "stack": "AssertionError: already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(8) }, { …(8) } ] to have a length of +0 but got 2\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:1339:22)\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file:///codegeex/jeffry/sketch-rts-codex/node_modules/chai/index.js:1686:25)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:83:107)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:109:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 814,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 7,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 1,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 7,
+            "limit": 6144,
+            "used": 5729,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "goal-search:refine:1:goal-domain-v2:coarse:0:berths:2:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "goal-search:refine:1:goal-domain-v2:coarse:0:berths:2:refine:2:goal-domain-v2:coarse:3:berths:2:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:0add10e7",
+                "tier": "background-field",
+                "work": 4100
+              },
+              {
+                "key": "goal-geometry:1d5e1703",
+                "tier": "background-field",
+                "work": 1
+              },
+              {
+                "key": "goal-search:refine:1:goal-domain-v2:coarse:0:berths:2:refine:2:goal-domain-v2:coarse:3:berths:2:refine:3:goal-domain-v2:coarse:5:berths:2:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+            "stack": "AssertionError: already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:1339:22)\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file:///codegeex/jeffry/sketch-rts-codex/node_modules/chai/index.js:1686:25)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:83:107)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:109:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 1628,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 8,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 8,
+            "limit": 6144,
+            "used": 5016,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:0add10e7",
+                "tier": "background-field",
+                "work": 4609
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+            "stack": "AssertionError: already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:1339:22)\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file:///codegeex/jeffry/sketch-rts-codex/node_modules/chai/index.js:1686:25)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:83:107)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:109:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 9,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 9,
+            "limit": 6144,
+            "used": 5021,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:0add10e7",
+                "tier": "background-field",
+                "work": 4614
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+            "stack": "AssertionError: already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:1339:22)\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file:///codegeex/jeffry/sketch-rts-codex/node_modules/chai/index.js:1686:25)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:83:107)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:109:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 10,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 10,
+            "limit": 6144,
+            "used": 5120,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:0add10e7",
+                "tier": "background-field",
+                "work": 4713
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+            "stack": "AssertionError: already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:1339:22)\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file:///codegeex/jeffry/sketch-rts-codex/node_modules/chai/index.js:1686:25)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:83:107)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:109:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 11,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 11,
+            "limit": 6144,
+            "used": 5120,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:0add10e7",
+                "tier": "background-field",
+                "work": 4713
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+            "stack": "AssertionError: already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:1339:22)\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file:///codegeex/jeffry/sketch-rts-codex/node_modules/chai/index.js:1686:25)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:83:107)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:109:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 12,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 12,
+            "limit": 6144,
+            "used": 5021,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:0add10e7",
+                "tier": "background-field",
+                "work": 4614
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+            "stack": "AssertionError: already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:1339:22)\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file:///codegeex/jeffry/sketch-rts-codex/node_modules/chai/index.js:1686:25)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:83:107)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:109:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 13,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 13,
+            "limit": 6144,
+            "used": 4916,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:0add10e7",
+                "tier": "background-field",
+                "work": 4509
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+            "stack": "AssertionError: already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:1339:22)\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file:///codegeex/jeffry/sketch-rts-codex/node_modules/chai/index.js:1686:25)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:83:107)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:109:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 14,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 14,
+            "limit": 6144,
+            "used": 5307,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:0add10e7",
+                "tier": "background-field",
+                "work": 4900
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+            "stack": "AssertionError: already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:1339:22)\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file:///codegeex/jeffry/sketch-rts-codex/node_modules/chai/index.js:1686:25)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:83:107)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:109:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 15,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 15,
+            "limit": 6144,
+            "used": 5307,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:0add10e7",
+                "tier": "background-field",
+                "work": 4900
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+            "stack": "AssertionError: already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:1339:22)\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file:///codegeex/jeffry/sketch-rts-codex/node_modules/chai/index.js:1686:25)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:83:107)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:109:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 16,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 16,
+            "limit": 6144,
+            "used": 5307,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:0add10e7",
+                "tier": "background-field",
+                "work": 4900
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+            "stack": "AssertionError: already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:1339:22)\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file:///codegeex/jeffry/sketch-rts-codex/node_modules/chai/index.js:1686:25)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:83:107)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:109:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 17,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 17,
+            "limit": 6144,
+            "used": 5307,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:0add10e7",
+                "tier": "background-field",
+                "work": 4900
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+            "stack": "AssertionError: already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:1339:22)\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file:///codegeex/jeffry/sketch-rts-codex/node_modules/chai/index.js:1686:25)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:83:107)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:109:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 18,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 18,
+            "limit": 6144,
+            "used": 5307,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:0add10e7",
+                "tier": "background-field",
+                "work": 4900
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+            "stack": "AssertionError: already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:1339:22)\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file:///codegeex/jeffry/sketch-rts-codex/node_modules/chai/index.js:1686:25)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:83:107)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:109:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 19,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 19,
+            "limit": 6144,
+            "used": 5307,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:0add10e7",
+                "tier": "background-field",
+                "work": 4900
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+            "stack": "AssertionError: already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:1339:22)\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file:///codegeex/jeffry/sketch-rts-codex/node_modules/chai/index.js:1686:25)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:83:107)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:109:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 20,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 2,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 20,
+            "limit": 6144,
+            "used": 5307,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 407
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:0add10e7",
+                "tier": "background-field",
+                "work": 4900
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2",
+            "stack": "AssertionError: already positioned hull needs no initial positioning; later worker pickup may still reposition: expected [ { …(9) }, { …(9) } ] to have a length of +0 but got 2\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:1339:22)\n    at Proxy.<anonymous> (file:///codegeex/jeffry/sketch-rts-codex/node_modules/@vitest/expect/dist/index.js:972:17)\n    at Proxy.methodWrapper (file:///codegeex/jeffry/sketch-rts-codex/node_modules/chai/index.js:1686:25)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:83:107)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:449:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:109:12"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "ready",
+              "search": {
+                "expansions": 407,
+                "depth": 6,
+                "work": 407,
+                "limitReason": null
+              },
+              "selectedActionCount": 10,
+              "readyActionIds": [
+                "goal-action:position-transport:{\"at\":{\"point\":{\"x\":112,\"y\":816},\"seaId\":\"sea:1\"},\"byTick\":12001,\"dependentUnitIds\":[],\"tolerance\":36,\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+                "goal-action:assemble:{\"at\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":688}},\"byTick\":12001,\"cohort\":[{\"entityId\":\"scene-public-planner-frame-planner-footman-1\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-2\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-3\",\"kind\":\"existing\"},{\"entityId\":\"scene-public-planner-frame-planner-footman-4\",\"kind\":\"existing\"}],\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1184,\"y\":704}},\"fromScope\":\"pool\"}"
+              ],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1
+              },
+              "factStates": {
+                "unmet": 42,
+                "met": 110
+              },
+              "capacityPressure": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
