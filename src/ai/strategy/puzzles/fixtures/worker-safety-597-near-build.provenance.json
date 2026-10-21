@@ -1,0 +1,10 @@
+{
+  "source": "eed282ae39fc937130cf857c3771f30afa06422d",
+  "production": "59792793b2eb723d4e4403e59a3bbb28a33e0208",
+  "canonical": "28b91161bc22acec97699d6d074a4777519d07d39174060e2dea03c705269f87",
+  "path": "live-build-markers/near/first-returned-townhall-build-command/actual-frame.jsonl.gz",
+  "tick": 6150,
+  "gzipSha256": "7efce41d2424d2d3179d795602f149ddb114b09edf3ffd8b2b1e9daae4b036e8",
+  "plainSha256": "c7839454a0e171e0297bf5a4ff0bed7866391fdbb73d54342faeaa411f8796a9",
+  "scope": "Exact complete original observer bytes. Pure checker regression only; no planner/source/simulation."
+}

@@ -8,8 +8,8 @@ import { createPuzzleWitness } from './witness';
 
 /** Same SDK scheduling and command delay as live rooms; no future spawn or teleport. */
 export function runPublicPuzzle(puzzle: PublicPuzzleCase, mode: 'witness' | AiScriptVersion,
-  options: { maxTicks?: number; planner?: SdkGameCommandPlanner<AiGameAgent>; onCommand?: SdkGameLoopHooks['onCommand'] } = {}) {
-  const world = puzzle.create(), initial = snapshotGame(world.game), tracker = trackPuzzle(puzzle, world);
+  options: { maxTicks?: number; planner?: SdkGameCommandPlanner<AiGameAgent>; onCommand?: SdkGameLoopHooks['onCommand']; workerSafety?: boolean } = {}) {
+  const world = puzzle.create(), initial = snapshotGame(world.game), tracker = trackPuzzle(puzzle, world, options);
   const planner = options.planner ?? (mode === 'witness' ? createPuzzleWitness(puzzle, world) : createAiGameCommandPlanner());
   const invasionShips = world.game.units.filter(unit => unit.owner === world.opponent && unit.kind === 'transport');
   let pressureSent = world.attackers.every(unit => unit.deck || unit.cabin || unit.order.type === 'attackMove')
@@ -34,7 +34,8 @@ export function runPublicPuzzle(puzzle: PublicPuzzleCase, mode: 'witness' | AiSc
         });
         return entries;
       },
-    }, { ...(options.onCommand ? { onCommand: options.onCommand } : {}), onStep() { tracker.sample(); } });
+    }, { ...(options.onCommand ? { onCommand: options.onCommand } : {}),
+      ...(options.workerSafety ? { beforeStep() { tracker.sampleWorkerSafety(); } } : {}), onStep() { tracker.sample(); } });
     return { puzzle: `${puzzle.key}/${puzzle.variant}`, mode, initial, final: result.snapshot,
       elapsedMs: result.elapsedMs, cpuMs: result.cpuMs, execution: tracker.finish() };
   } finally { tracker.dispose(); }

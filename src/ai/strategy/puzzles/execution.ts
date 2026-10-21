@@ -6,6 +6,7 @@ import type { GameCommand, Unit } from '../../../shared/types';
 import type { Observed } from '../../../shared/sim/observation';
 import type { PublicPuzzleCase } from './scenes';
 import { physicallyOnLand, type PuzzleWorld } from './world';
+import { observePuzzleWorkerSafety } from './worker-safety';
 
 export type PuzzleExecution = {
   passed: boolean; checks: Record<string, boolean>; tick: number;
@@ -13,16 +14,19 @@ export type PuzzleExecution = {
   losses: { tick: number; kind: string; owner: string }[];
   final: { gold: number; homeAlive: boolean; armyAlive: number; workersRescued: number;
     guardsAlive: number; localGuardsAlive: number; buildings: Record<string, number> };
+  originalChecks?: Record<string, boolean>;
+  workerSafety?: ReturnType<ReturnType<typeof observePuzzleWorkerSafety>['finish']>;
 };
 
 /** Reads actual simulation transitions, including automatic attacks; issuing an order is not success. */
-export function trackPuzzle(puzzle: PublicPuzzleCase, world: PuzzleWorld) {
+export function trackPuzzle(puzzle: PublicPuzzleCase, world: PuzzleWorld, options: { workerSafety?: boolean } = {}) {
   const { game, owner } = world, start = game.tick;
   const armyIds = new Set(world.army.map(u => u.id)), workerIds = new Set(world.workers.map(u => u.id));
   const guardIds = new Set(world.guards.map(u => u.id)), beachIds = new Set(world.beachGuards.map(u => u.id));
   const initialBuildings = new Set(game.buildings.map(b => b.id)), initialUnits = new Set(game.units.map(u => u.id));
   const mainlandForce = new Set(world.army.map(u => u.id)), visitedIsland = new Set<string>();
   const first: Record<string, number> = {}, commands: PuzzleExecution['commands'] = [], losses: PuzzleExecution['losses'] = [];
+  const workerSafety = options.workerSafety ? observePuzzleWorkerSafety(game, owner) : undefined;
   const mark = (key: string, condition: boolean, tick = game.tick) => { if (condition && first[key] === undefined) first[key] = tick - start; };
   const alive = (units: readonly Unit[]) => units.filter(u => u.hp > 0 && game.units.includes(u));
   const hallAt = (mine: { x: number; y: number }) => game.buildings.some(b => b.owner === owner && b.kind === 'townHall'
@@ -39,6 +43,7 @@ export function trackPuzzle(puzzle: PublicPuzzleCase, world: PuzzleWorld) {
     command(e) { if (e.owner === owner) commands.push({ tick: e.tick - start, command: structuredClone(e.command) }); },
   });
   function sample() {
+    workerSafety?.sample();
     const units = game.units.filter(u => u.owner === owner && u.hp > 0);
     for (const unit of units) if (unit.kind !== 'worker' && !UNIT_DEFS[unit.kind].naval && unit.attackDamage > 0
       && physicallyOnLand(world, unit, world.home)) mainlandForce.add(unit.id);
@@ -78,7 +83,7 @@ export function trackPuzzle(puzzle: PublicPuzzleCase, world: PuzzleWorld) {
     }
   }
   function finish(): PuzzleExecution {
-    sample(); stop();
+    sample(); stop(); workerSafety?.dispose();
     const seen = (name: string) => first[name] !== undefined;
     const before = (a: string, b: string) => seen(a) && seen(b) && first[a]! <= first[b]!;
     const homeAlive = game.buildings.includes(world.home) && world.home.hp > 0;
@@ -100,12 +105,20 @@ export function trackPuzzle(puzzle: PublicPuzzleCase, world: PuzzleWorld) {
         safeWorkerSequence: before('camp-cleared', 'worker-on-island') && before('worker-on-island', 'hall-complete') };
         if (puzzle.key === 'navy-zero') checks.hallFundingPreserved = !seen('hall-funding-spent-elsewhere');
     }
+    const safety = workerSafety?.finish(), originalChecks = { ...checks };
+    if (safety && 'safeWorkerSequence' in checks) {
+      const { safeWorkerSequence: _sequence, ...remaining } = checks;
+      checks = { ...remaining, noWorkerCampExposure: safety.exposedSamples === 0,
+        noWorkerCampDamage: safety.campDamage.length === 0, workersSurvived: safety.workerDeaths.length === 0 };
+    }
     const buildings: Record<string, number> = {};
     for (const b of game.buildings.filter(b => b.owner === owner && b.hp > 0)) buildings[b.kind] = (buildings[b.kind] ?? 0) + 1;
     return { passed: Object.values(checks).every(Boolean), checks, tick: game.tick - start, first, commands, losses,
+      ...(safety ? { workerSafety: safety, originalChecks } : {}),
       final: { gold: game.players[owner]!.gold, homeAlive, armyAlive: alive(world.army).filter(u => armyIds.has(u.id)).length,
         workersRescued: alive(world.islandWorkers).filter(u => physicallyOnLand(world, u, world.home)).length,
         guardsAlive: alive(world.guards).length, localGuardsAlive: alive(world.localGuards).length, buildings } };
   }
-  return { sample, finish, dispose: stop };
+  return { sample, sampleWorkerSafety() { workerSafety?.sample(); }, finish,
+    dispose() { stop(); workerSafety?.dispose(); } };
 }

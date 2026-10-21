@@ -11,6 +11,7 @@ import { withGoalPlannerInput } from '../goal-planner-input';
 import type { StrategyAllocationTrace } from '../allocation-types';
 import { withInput } from './goal-planner-native';
 import type { ShipOwnershipScope, PuzzleStepOwnership, AppliedPuzzleCommand } from './execution-ownership';
+import type { readAcceptedHallSafety } from './worker-safety';
 
 export type PlanGoals = typeof planGoals;
 /** Only a native owner-think assembly may implement this port. It must use
@@ -30,6 +31,7 @@ export type PuzzlePlannerExecution = {
   statistics(): Readonly<{
     plannedThinks: number; observedThinks: number; firstReadyTick: number | null;
     firstFormalCommandTick: number | null; formalCommandCount: number;
+    hallSafety?: ReturnType<typeof readAcceptedHallSafety>;
   }>;
   ownership?(initialTick: number, commands: readonly { tick: number; command: import('../../../shared/sim/observation').Observed<import('../../../shared/types').GameCommand> }[]): PuzzleStepOwnership | undefined;
   applied?(event: AppliedPuzzleCommand): void;

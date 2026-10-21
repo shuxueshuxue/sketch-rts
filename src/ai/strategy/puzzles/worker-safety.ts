@@ -8,6 +8,7 @@ import type { SimulationDamageEvent, SimulationRemovalEvent } from '../../../sha
 import type { GameSnapshot } from '../../../shared/types';
 import { readGoalIntent } from '../goal-authority-references';
 import type { PuzzleExecutionObservation } from './planner-binding';
+import type { StrategyAllocationMemory } from '../allocation-types';
 
 type Exposure = { tick: number; workerId: string; campMemberId: string;
   mode: 'idle-alert' | 'active-pursuit'; gap: number; radius: number; worker: { x: number; y: number } };
@@ -17,7 +18,8 @@ const canonical = (value: unknown): string => JSON.stringify(value, (_, item: un
 /** Consume only the original same-think trace. The logical mine and exact
  * construction site are distinct obligations; neither a safe beach nor a
  * future met observation proves them. A missing proof remains a failure. */
-export function readAcceptedHallSafety(snapshot: GameSnapshot, observation: PuzzleExecutionObservation) {
+export function readAcceptedHallSafety(snapshot: GameSnapshot, observation: PuzzleExecutionObservation,
+  authority: Pick<StrategyAllocationMemory, 'leases'>) {
   const rows = [];
   for (const admission of observation.allocation.commandAdmissions ?? []) {
     if (admission.status !== 'accepted' || admission.executor !== 'goal.build' || !admission.action) continue;
@@ -27,10 +29,17 @@ export function readAcceptedHallSafety(snapshot: GameSnapshot, observation: Puzz
     const intent = readGoalIntent(observation.allocation, execution.intent);
     if (intent.parameters.buildingKind !== 'townHall') continue;
     const candidates = observation.output.plans.filter(p => p.goal.id === intent.goalId);
-    const plan = candidates.find(p => p.actions.some(a => a.declaration.kind === 'build'
-      && canonical(a.declaration.executor.parameters) === canonical(intent.parameters)));
-    const node = plan?.actions.find(a => a.declaration.kind === 'build'
-      && canonical(a.declaration.executor.parameters) === canonical(intent.parameters));
+    const matches = (a: typeof candidates[number]['actions'][number]) => a.declaration.kind === 'build'
+      && a.declaration.id === intent.declarationId;
+    const plan = candidates.find(p => p.actions.some(matches));
+    const node = plan?.actions.find(matches);
+    const worker = intent.parameters.worker;
+    const workerId = worker && typeof worker === 'object' && 'kind' in worker && 'entityId' in worker
+      && worker.kind === 'existing' && typeof worker.entityId === 'string' ? worker.entityId : undefined;
+    const assignment = observation.allocation.assignments.find(a => a.unitId === workerId
+      && a.authority === 'committed' && canonical(a.action) === canonical(execution.token) && !a.interruption);
+    const lease = assignment && Object.values(authority.leases).find(l => l.id === assignment.leaseId
+      && l.origin === 'allocator' && l.resourceKey === `unit:${workerId}` && canonical(l.action) === canonical(execution.token));
     const logical = plan?.goal.effects.find(f => f.predicate.kind === 'hall-complete')?.predicate;
     const targets = [logical?.kind === 'hall-complete' ? logical.at : undefined, intent.parameters.at];
     const proofs = targets.map((target, index) => {
@@ -45,8 +54,9 @@ export function readAcceptedHallSafety(snapshot: GameSnapshot, observation: Puzz
           && observed.observedTick === snapshot.tick && typeof observed.availableTick === 'number'
           && observed.availableTick <= snapshot.tick };
     });
-    rows.push({ tick: snapshot.tick, token: execution.token, command: admission.command,
-      passed: proofs.every(p => p.passed), proofs });
+    rows.push({ tick: snapshot.tick, token: execution.token, command: admission.command, workerId, assignment, lease,
+      passed: !!assignment && !!lease && canonical(node?.declaration.executor.parameters.at) === canonical(intent.parameters.at)
+        && proofs.every(p => p.passed), proofs });
   }
   return rows;
 }
@@ -80,7 +90,14 @@ export function observePuzzleWorkerSafety(game: Game, owner: string) {
       const home = { x: guard.homeX ?? guard.x, y: guard.homeY ?? guard.y }, order = guard.order;
       const returning = order.type === 'move' && Math.hypot(order.x - home.x, order.y - home.y) <= NEUTRAL_RETURN_STOP_RANGE;
       if (returning || order.type !== 'idle' && order.type !== 'attack') continue;
-      const origin = order.type === 'attack' ? { x: order.leashX ?? home.x, y: order.leashY ?? home.y } : guard;
+      const origin = order.type === 'attack' ? order.leashX !== undefined && order.leashY !== undefined
+        ? { x: order.leashX, y: order.leashY } : home : guard;
+      if (order.type === 'attack') {
+        const target = game.entityById?.get(order.targetId) ?? game.units.find(u => u.id === order.targetId)
+          ?? game.buildings.find(b => b.id === order.targetId);
+        if (!target || target.hp <= 0 || target.owner === 'neutral' || 'order' in target && isInCabin(target)
+          || Math.hypot(target.x - origin.x, target.y - origin.y) > NEUTRAL_DAMAGE_RESPONSE_RANGE) continue;
+      }
       for (const worker of workers) {
         if (isInCabin(worker) || !automaticTargetAllowed(game.units, guard.owner, worker)) continue;
         const active = order.type === 'attack';

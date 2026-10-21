@@ -25,7 +25,7 @@ export async function replayWorkerSafety(runtimePath: string, sdkPath: string, r
   for await (const line of stream) {
     const row = JSON.parse(line);
     expected.push({ tick: row.snapshot.tick, bytes: JSON.stringify(row.snapshot) });
-    builds.push(...readAcceptedHallSafety(row.snapshot, row.observation as PuzzleExecutionObservation));
+    builds.push(...readAcceptedHallSafety(row.snapshot, row.observation as PuzzleExecutionObservation, row.memoryAfter.strategyAllocation));
   }
   assert.equal(expected.length, 560);
   const events: AppliedPuzzleCommand[] = gunzipSync(readFileSync(sdkPath)).toString().trim().split('\n').filter(Boolean).map(s => JSON.parse(s));
