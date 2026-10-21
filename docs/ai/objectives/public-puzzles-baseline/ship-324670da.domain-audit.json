@@ -1,0 +1,4734 @@
+{
+  "production": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+  "source": "13b28abb793a956f37e49203095033a04ea22f85",
+  "semantics": "Independent original native command/camp/worker audits; no AI/simulation. Building attribution is separate.",
+  "audits": [
+    {
+      "originalPath": "/tmp/goal-324-camp-outcomes/37-native-camp-completion.json",
+      "artifactFile": "0-37-native-camp-completion.json",
+      "sha256": "04e52bfa4cfe253e1584008ce8f36adc31a310f8f0a87c6f190b14a880ed8abe",
+      "bytes": 70899,
+      "report": {
+        "productionHead": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+        "testSource": "13b28abb793a956f37e49203095033a04ea22f85",
+        "scope": "Read-only original frame admission/SDK/corpse/kill/xp/completion evidence. No AI, fact source, route query or simulation.",
+        "results": [
+          {
+            "variant": "near",
+            "firstCommandSource": {
+              "path": "/tmp/goal-324-first-clear-near/actual-frame.jsonl.gz",
+              "bytes": 201712,
+              "compressedSha256": "904cbbfb69762a246453592a0ad5cff3d922fdef0f3adc4a7bc94c4b2dfcf1b3",
+              "plainSha256": "36391decdc91e496f7bf6260c35b0918095e2671adf6ba019dec9edb1362b83d",
+              "plainSha256ComparedWithProvenance": false,
+              "gzipCrcValidated": true,
+              "provenance": {
+                "source": "13b28abb793a956f37e49203095033a04ea22f85",
+                "sharedBase": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+                "variant": "near",
+                "kind": "goal.clear-camp",
+                "think": 105,
+                "tick": 1575,
+                "compressedOffset": 17076507,
+                "compressedBytes": 201712,
+                "compressedSha256": "904cbbfb69762a246453592a0ad5cff3d922fdef0f3adc4a7bc94c4b2dfcf1b3",
+                "accepted": [
+                  {
+                    "commandId": "planner:strategy-command:1575:105:0",
+                    "source": "executor",
+                    "executor": "goal.clear-camp",
+                    "action": {
+                      "actionId": "goal-ref:action:v22",
+                      "generation": 7
+                    },
+                    "allocationRevision": 105,
+                    "purpose": "task",
+                    "command": {
+                      "type": "attack",
+                      "unitIds": [
+                        "scene-public-planner-frame-planner-footman-1"
+                      ],
+                      "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+                    },
+                    "status": "accepted",
+                    "admittedTick": 1575,
+                    "queuedTick": null
+                  },
+                  {
+                    "commandId": "planner:strategy-command:1575:105:1",
+                    "source": "executor",
+                    "executor": "goal.clear-camp",
+                    "action": {
+                      "actionId": "goal-ref:action:v22",
+                      "generation": 7
+                    },
+                    "allocationRevision": 105,
+                    "purpose": "task",
+                    "command": {
+                      "type": "attack",
+                      "unitIds": [
+                        "scene-public-planner-frame-planner-footman-2"
+                      ],
+                      "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+                    },
+                    "status": "accepted",
+                    "admittedTick": 1575,
+                    "queuedTick": null
+                  },
+                  {
+                    "commandId": "planner:strategy-command:1575:105:2",
+                    "source": "executor",
+                    "executor": "goal.clear-camp",
+                    "action": {
+                      "actionId": "goal-ref:action:v22",
+                      "generation": 7
+                    },
+                    "allocationRevision": 105,
+                    "purpose": "task",
+                    "command": {
+                      "type": "attack",
+                      "unitIds": [
+                        "scene-public-planner-frame-planner-footman-3"
+                      ],
+                      "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+                    },
+                    "status": "accepted",
+                    "admittedTick": 1575,
+                    "queuedTick": null
+                  },
+                  {
+                    "commandId": "planner:strategy-command:1575:105:3",
+                    "source": "executor",
+                    "executor": "goal.clear-camp",
+                    "action": {
+                      "actionId": "goal-ref:action:v22",
+                      "generation": 7
+                    },
+                    "allocationRevision": 105,
+                    "purpose": "task",
+                    "command": {
+                      "type": "attack",
+                      "unitIds": [
+                        "scene-public-planner-frame-planner-footman-4"
+                      ],
+                      "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+                    },
+                    "status": "accepted",
+                    "admittedTick": 1575,
+                    "queuedTick": null
+                  }
+                ],
+                "semantics": "First accepted command of this executor in a validated complete original member. Byte-for-byte copy; no planner/source/sim calls. Accepted command is not stage completion."
+              }
+            },
+            "token": {
+              "actionId": "goal-ref:action:v22",
+              "generation": 7
+            },
+            "startTick": 1575,
+            "parameters": {
+              "campId": "camp:[\"scene-public-planner-frame-neutral-murlocPeon-1\",\"scene-public-planner-frame-neutral-murlocPeon-2\"]",
+              "memberIds": [
+                "scene-public-planner-frame-neutral-murlocPeon-1",
+                "scene-public-planner-frame-neutral-murlocPeon-2"
+              ],
+              "cohort": [
+                {
+                  "kind": "existing",
+                  "entityId": "scene-public-planner-frame-planner-footman-1"
+                },
+                {
+                  "kind": "existing",
+                  "entityId": "scene-public-planner-frame-planner-footman-2"
+                },
+                {
+                  "kind": "existing",
+                  "entityId": "scene-public-planner-frame-planner-footman-3"
+                },
+                {
+                  "kind": "existing",
+                  "entityId": "scene-public-planner-frame-planner-footman-4"
+                }
+              ],
+              "at": {
+                "landId": "land:2",
+                "point": {
+                  "x": 2792.106300328512,
+                  "y": 871.8970867322965
+                }
+              },
+              "byTick": 13575
+            },
+            "sameTokenLeasesAndSdkMatched": true,
+            "matchedAttackCount": 4,
+            "rows": [
+              {
+                "name": "first-camp-member-damage-or-absence",
+                "tick": 1650,
+                "source": {
+                  "path": "/tmp/goal-324-camp-outcomes/near/first-camp-member-damage-or-absence/actual-frame.jsonl.gz",
+                  "bytes": 81289,
+                  "compressedSha256": "899fa6b7e743f2fb59de95d4be2d3c785c35aac61fb975be4a377ac412cd8f1f",
+                  "plainSha256": "5d6cb888a3c7347877f8475da5373af18d4fda0520a4b2109812ca49b5e5fe2d",
+                  "plainSha256ComparedWithProvenance": true,
+                  "gzipCrcValidated": true,
+                  "provenance": {
+                    "source": "13b28abb793a956f37e49203095033a04ea22f85",
+                    "sharedBase": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+                    "variant": "near",
+                    "event": "first-camp-member-damage-or-absence",
+                    "think": 110,
+                    "tick": 1650,
+                    "compressedOffset": 17773265,
+                    "compressedBytes": 81289,
+                    "compressedSha256": "899fa6b7e743f2fb59de95d4be2d3c785c35aac61fb975be4a377ac412cd8f1f",
+                    "plainSha256": "5d6cb888a3c7347877f8475da5373af18d4fda0520a4b2109812ca49b5e5fe2d",
+                    "campMemberIds": [
+                      "scene-public-planner-frame-neutral-murlocPeon-1",
+                      "scene-public-planner-frame-neutral-murlocPeon-2"
+                    ],
+                    "startedClearCohort": [
+                      "scene-public-planner-frame-planner-footman-1",
+                      "scene-public-planner-frame-planner-footman-2",
+                      "scene-public-planner-frame-planner-footman-3",
+                      "scene-public-planner-frame-planner-footman-4"
+                    ],
+                    "actors": [
+                      {
+                        "id": "scene-public-planner-frame-neutral-murlocPeon-1",
+                        "present": true,
+                        "kind": "murlocPeon",
+                        "owner": "neutral",
+                        "hp": 80,
+                        "x": 3162.2065603039105,
+                        "y": 959.6130436585273,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "attack",
+                          "targetId": "scene-public-planner-frame-planner-footman-1",
+                          "leashX": 3081,
+                          "leashY": 960
+                        }
+                      },
+                      {
+                        "id": "scene-public-planner-frame-neutral-murlocPeon-2",
+                        "present": true,
+                        "kind": "murlocPeon",
+                        "owner": "neutral",
+                        "hp": 48,
+                        "x": 3000.761746610339,
+                        "y": 941.0986607533744,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "attack",
+                          "targetId": "scene-public-planner-frame-planner-footman-3",
+                          "leashX": 3081,
+                          "leashY": 960
+                        }
+                      },
+                      {
+                        "id": "scene-public-planner-frame-planner-footman-1",
+                        "present": true,
+                        "kind": "footman",
+                        "owner": "planner",
+                        "hp": 145,
+                        "x": 2978.1289161265386,
+                        "y": 963.7206629700561,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "attack",
+                          "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+                        }
+                      },
+                      {
+                        "id": "scene-public-planner-frame-planner-footman-2",
+                        "present": true,
+                        "kind": "footman",
+                        "owner": "planner",
+                        "hp": 145,
+                        "x": 2937.527283850749,
+                        "y": 951.617819629406,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "attack",
+                          "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+                        }
+                      },
+                      {
+                        "id": "scene-public-planner-frame-planner-footman-3",
+                        "present": true,
+                        "kind": "footman",
+                        "owner": "planner",
+                        "hp": 145,
+                        "x": 2966.3927994139017,
+                        "y": 929.3398686407749,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "attack",
+                          "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+                        }
+                      },
+                      {
+                        "id": "scene-public-planner-frame-planner-footman-4",
+                        "present": true,
+                        "kind": "footman",
+                        "owner": "planner",
+                        "hp": 145,
+                        "x": 2940.926743582466,
+                        "y": 904.7520178429127,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "attack",
+                          "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+                        }
+                      }
+                    ],
+                    "clearExecutions": [
+                      {
+                        "token": {
+                          "actionId": "goal-ref:action:v22",
+                          "generation": 7
+                        },
+                        "objectiveId": "ConquerIsland:planner:resource-1",
+                        "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+                        "executor": "goal.clear-camp",
+                        "intent": {
+                          "kind": "goal-action",
+                          "goalId": "ConquerIsland:planner:resource-1",
+                          "declarationId": "goal-ref:declaration:v21",
+                          "actionKind": "clear-camp",
+                          "parameters": {},
+                          "outputs": [],
+                          "parametersRef": "goal-ref:parameters:v20"
+                        },
+                        "target": {
+                          "landId": "land:2",
+                          "point": {
+                            "x": 2792.106300328512,
+                            "y": 871.8970867322965
+                          }
+                        },
+                        "dependsOn": [],
+                        "completionEffects": [],
+                        "status": "active",
+                        "phase": "engage",
+                        "sinceTick": 1575,
+                        "lastProgressTick": 1575,
+                        "state": {
+                          "goalCampObserved": true,
+                          "staging": {
+                            "x": 2792.106300328512,
+                            "y": 871.8970867322965
+                          },
+                          "refuge": {
+                            "x": 2792.106300328512,
+                            "y": 871.8970867322965
+                          },
+                          "remainingPlayerThreatIds": []
+                        }
+                      }
+                    ],
+                    "authorityBytesUtf8Python": 41608,
+                    "semantics": "Byte copy of complete CRC-validated original member; snapshot HP/absence and execution status only. Native outcome requires independent verification. No AI/source/navigation/simulation calls."
+                  }
+                },
+                "guards": [
+                  {
+                    "id": "scene-public-planner-frame-neutral-murlocPeon-1",
+                    "present": true,
+                    "hp": 80
+                  },
+                  {
+                    "id": "scene-public-planner-frame-neutral-murlocPeon-2",
+                    "present": true,
+                    "hp": 48
+                  }
+                ],
+                "nativeTargetCorpses": [],
+                "clearExecutionsAtThisFrame": [
+                  {
+                    "token": {
+                      "actionId": "goal-ref:action:v22",
+                      "generation": 7
+                    },
+                    "status": "active",
+                    "phase": "engage"
+                  }
+                ],
+                "sameInitialClearTokenLeaseCount": 4,
+                "cohort": [
+                  {
+                    "id": "scene-public-planner-frame-planner-footman-1",
+                    "hp": 145,
+                    "maxHp": 145,
+                    "kills": 0,
+                    "xp": 0,
+                    "effects": [],
+                    "order": {
+                      "type": "attack",
+                      "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+                    },
+                    "deck": null,
+                    "cabin": null
+                  },
+                  {
+                    "id": "scene-public-planner-frame-planner-footman-2",
+                    "hp": 145,
+                    "maxHp": 145,
+                    "kills": 0,
+                    "xp": 0,
+                    "effects": [],
+                    "order": {
+                      "type": "attack",
+                      "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+                    },
+                    "deck": null,
+                    "cabin": null
+                  },
+                  {
+                    "id": "scene-public-planner-frame-planner-footman-3",
+                    "hp": 145,
+                    "maxHp": 145,
+                    "kills": 0,
+                    "xp": 0,
+                    "effects": [],
+                    "order": {
+                      "type": "attack",
+                      "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+                    },
+                    "deck": null,
+                    "cabin": null
+                  },
+                  {
+                    "id": "scene-public-planner-frame-planner-footman-4",
+                    "hp": 145,
+                    "maxHp": 145,
+                    "kills": 0,
+                    "xp": 0,
+                    "effects": [],
+                    "order": {
+                      "type": "attack",
+                      "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+                    },
+                    "deck": null,
+                    "cabin": null
+                  }
+                ]
+              },
+              {
+                "name": "first-camp-member-nonpositive-or-absent",
+                "tick": 1680,
+                "source": {
+                  "path": "/tmp/goal-324-camp-outcomes/near/first-camp-member-nonpositive-or-absent/actual-frame.jsonl.gz",
+                  "bytes": 41716,
+                  "compressedSha256": "2a0f12e3606fd4bb358ef49b5cb5d8599d34dbba76aadf234cb9376899aa3b33",
+                  "plainSha256": "6f51e84bcc24059dd1706f672ce20309ff52409f79d261f720840072a938ca5e",
+                  "plainSha256ComparedWithProvenance": true,
+                  "gzipCrcValidated": true,
+                  "provenance": {
+                    "source": "13b28abb793a956f37e49203095033a04ea22f85",
+                    "sharedBase": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+                    "variant": "near",
+                    "event": "first-camp-member-nonpositive-or-absent",
+                    "think": 112,
+                    "tick": 1680,
+                    "compressedOffset": 17896705,
+                    "compressedBytes": 41716,
+                    "compressedSha256": "2a0f12e3606fd4bb358ef49b5cb5d8599d34dbba76aadf234cb9376899aa3b33",
+                    "plainSha256": "6f51e84bcc24059dd1706f672ce20309ff52409f79d261f720840072a938ca5e",
+                    "campMemberIds": [
+                      "scene-public-planner-frame-neutral-murlocPeon-1",
+                      "scene-public-planner-frame-neutral-murlocPeon-2"
+                    ],
+                    "startedClearCohort": [
+                      "scene-public-planner-frame-planner-footman-1",
+                      "scene-public-planner-frame-planner-footman-2",
+                      "scene-public-planner-frame-planner-footman-3",
+                      "scene-public-planner-frame-planner-footman-4"
+                    ],
+                    "actors": [
+                      {
+                        "id": "scene-public-planner-frame-neutral-murlocPeon-1",
+                        "present": true,
+                        "kind": "murlocPeon",
+                        "owner": "neutral",
+                        "hp": 80,
+                        "x": 3055.981750292749,
+                        "y": 954.1523252261916,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "attack",
+                          "targetId": "scene-public-planner-frame-planner-footman-3",
+                          "leashX": 3081,
+                          "leashY": 960
+                        }
+                      },
+                      {
+                        "id": "scene-public-planner-frame-neutral-murlocPeon-2",
+                        "present": false
+                      },
+                      {
+                        "id": "scene-public-planner-frame-planner-footman-1",
+                        "present": true,
+                        "kind": "footman",
+                        "owner": "planner",
+                        "hp": 145,
+                        "x": 3014.2086846350653,
+                        "y": 970.7666931351092,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "attack",
+                          "targetId": "scene-public-planner-frame-neutral-murlocPeon-1",
+                          "leashX": 2996.5753725025925,
+                          "leashY": 973.6069402488242
+                        }
+                      },
+                      {
+                        "id": "scene-public-planner-frame-planner-footman-2",
+                        "present": true,
+                        "kind": "footman",
+                        "owner": "planner",
+                        "hp": 145,
+                        "x": 2979.562114097338,
+                        "y": 962.3418348370324,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "attack",
+                          "targetId": "scene-public-planner-frame-neutral-murlocPeon-1",
+                          "leashX": 2964.7842919352247,
+                          "leashY": 959.7486218398296
+                        }
+                      },
+                      {
+                        "id": "scene-public-planner-frame-planner-footman-3",
+                        "present": true,
+                        "kind": "footman",
+                        "owner": "planner",
+                        "hp": 134,
+                        "x": 3004.720025629734,
+                        "y": 936.0396813102984,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "attack",
+                          "targetId": "scene-public-planner-frame-neutral-murlocPeon-1"
+                        }
+                      },
+                      {
+                        "id": "scene-public-planner-frame-planner-footman-4",
+                        "present": true,
+                        "kind": "footman",
+                        "owner": "planner",
+                        "hp": 145,
+                        "x": 2964.04654898676,
+                        "y": 929.8569577509263,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "attack",
+                          "targetId": "scene-public-planner-frame-neutral-murlocPeon-1"
+                        }
+                      }
+                    ],
+                    "clearExecutions": [
+                      {
+                        "token": {
+                          "actionId": "goal-ref:action:v22",
+                          "generation": 7
+                        },
+                        "objectiveId": "ConquerIsland:planner:resource-1",
+                        "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+                        "executor": "goal.clear-camp",
+                        "intent": {
+                          "kind": "goal-action",
+                          "goalId": "ConquerIsland:planner:resource-1",
+                          "declarationId": "goal-ref:declaration:v21",
+                          "actionKind": "clear-camp",
+                          "parameters": {},
+                          "outputs": [],
+                          "parametersRef": "goal-ref:parameters:v20"
+                        },
+                        "target": {
+                          "landId": "land:2",
+                          "point": {
+                            "x": 2792.106300328512,
+                            "y": 871.8970867322965
+                          }
+                        },
+                        "dependsOn": [],
+                        "completionEffects": [],
+                        "status": "blocked",
+                        "phase": "engage",
+                        "sinceTick": 1575,
+                        "lastProgressTick": 1575,
+                        "state": {
+                          "goalCampObserved": true,
+                          "staging": {
+                            "x": 2792.106300328512,
+                            "y": 871.8970867322965
+                          },
+                          "refuge": {
+                            "x": 2792.106300328512,
+                            "y": 871.8970867322965
+                          },
+                          "remainingPlayerThreatIds": []
+                        }
+                      }
+                    ],
+                    "authorityBytesUtf8Python": 38962,
+                    "semantics": "Byte copy of complete CRC-validated original member; snapshot HP/absence and execution status only. Native outcome requires independent verification. No AI/source/navigation/simulation calls."
+                  }
+                },
+                "guards": [
+                  {
+                    "id": "scene-public-planner-frame-neutral-murlocPeon-1",
+                    "present": true,
+                    "hp": 80
+                  },
+                  {
+                    "id": "scene-public-planner-frame-neutral-murlocPeon-2",
+                    "present": false,
+                    "hp": null
+                  }
+                ],
+                "nativeTargetCorpses": [
+                  {
+                    "id": "corpse-scene-public-planner-frame-neutral-murlocPeon-2-1673",
+                    "unitId": "scene-public-planner-frame-neutral-murlocPeon-2",
+                    "kind": "murlocPeon",
+                    "owner": "neutral",
+                    "x": 3011.2398646695056,
+                    "y": 945.1873657301313,
+                    "radius": 14,
+                    "diedAtTick": 1673,
+                    "equipmentCaptured": true
+                  }
+                ],
+                "clearExecutionsAtThisFrame": [
+                  {
+                    "token": {
+                      "actionId": "goal-ref:action:v22",
+                      "generation": 7
+                    },
+                    "status": "blocked",
+                    "phase": "engage"
+                  }
+                ],
+                "sameInitialClearTokenLeaseCount": 4,
+                "cohort": [
+                  {
+                    "id": "scene-public-planner-frame-planner-footman-1",
+                    "hp": 145,
+                    "maxHp": 145,
+                    "kills": 0,
+                    "xp": 0,
+                    "effects": [],
+                    "order": {
+                      "type": "attack",
+                      "targetId": "scene-public-planner-frame-neutral-murlocPeon-1",
+                      "leashX": 2996.5753725025925,
+                      "leashY": 973.6069402488242
+                    },
+                    "deck": null,
+                    "cabin": null
+                  },
+                  {
+                    "id": "scene-public-planner-frame-planner-footman-2",
+                    "hp": 145,
+                    "maxHp": 145,
+                    "kills": 1,
+                    "xp": 12,
+                    "effects": [],
+                    "order": {
+                      "type": "attack",
+                      "targetId": "scene-public-planner-frame-neutral-murlocPeon-1",
+                      "leashX": 2964.7842919352247,
+                      "leashY": 959.7486218398296
+                    },
+                    "deck": null,
+                    "cabin": null
+                  },
+                  {
+                    "id": "scene-public-planner-frame-planner-footman-3",
+                    "hp": 134,
+                    "maxHp": 145,
+                    "kills": 0,
+                    "xp": 0,
+                    "effects": [],
+                    "order": {
+                      "type": "attack",
+                      "targetId": "scene-public-planner-frame-neutral-murlocPeon-1"
+                    },
+                    "deck": null,
+                    "cabin": null
+                  },
+                  {
+                    "id": "scene-public-planner-frame-planner-footman-4",
+                    "hp": 145,
+                    "maxHp": 145,
+                    "kills": 0,
+                    "xp": 0,
+                    "effects": [],
+                    "order": {
+                      "type": "attack",
+                      "targetId": "scene-public-planner-frame-neutral-murlocPeon-1"
+                    },
+                    "deck": null,
+                    "cabin": null
+                  }
+                ]
+              },
+              {
+                "name": "all-target-camp-members-nonpositive-or-absent",
+                "tick": 1725,
+                "source": {
+                  "path": "/tmp/goal-324-camp-outcomes/near/all-target-camp-members-nonpositive-or-absent/actual-frame.jsonl.gz",
+                  "bytes": 145637,
+                  "compressedSha256": "de15257ac240866179a432cb63891255cf56cc57ba213f50b04555aa2557692b",
+                  "plainSha256": "d9a88a5c2e3b3784e1713912ce6c9f0114545c86fada7ae585fc6900231d47ec",
+                  "plainSha256ComparedWithProvenance": true,
+                  "gzipCrcValidated": true,
+                  "provenance": {
+                    "source": "13b28abb793a956f37e49203095033a04ea22f85",
+                    "sharedBase": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+                    "variant": "near",
+                    "event": "all-target-camp-members-nonpositive-or-absent",
+                    "think": 115,
+                    "tick": 1725,
+                    "compressedOffset": 18023266,
+                    "compressedBytes": 145637,
+                    "compressedSha256": "de15257ac240866179a432cb63891255cf56cc57ba213f50b04555aa2557692b",
+                    "plainSha256": "d9a88a5c2e3b3784e1713912ce6c9f0114545c86fada7ae585fc6900231d47ec",
+                    "campMemberIds": [
+                      "scene-public-planner-frame-neutral-murlocPeon-1",
+                      "scene-public-planner-frame-neutral-murlocPeon-2"
+                    ],
+                    "startedClearCohort": [
+                      "scene-public-planner-frame-planner-footman-1",
+                      "scene-public-planner-frame-planner-footman-2",
+                      "scene-public-planner-frame-planner-footman-3",
+                      "scene-public-planner-frame-planner-footman-4"
+                    ],
+                    "actors": [
+                      {
+                        "id": "scene-public-planner-frame-neutral-murlocPeon-1",
+                        "present": false
+                      },
+                      {
+                        "id": "scene-public-planner-frame-neutral-murlocPeon-2",
+                        "present": false
+                      },
+                      {
+                        "id": "scene-public-planner-frame-planner-footman-1",
+                        "present": true,
+                        "kind": "footman",
+                        "owner": "planner",
+                        "hp": 145,
+                        "x": 3039.5441474563686,
+                        "y": 984.1553306124151,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "idle"
+                        }
+                      },
+                      {
+                        "id": "scene-public-planner-frame-planner-footman-2",
+                        "present": true,
+                        "kind": "footman",
+                        "owner": "planner",
+                        "hp": 145,
+                        "x": 3005.902606855859,
+                        "y": 971.3394519447523,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "idle"
+                        }
+                      },
+                      {
+                        "id": "scene-public-planner-frame-planner-footman-3",
+                        "present": true,
+                        "kind": "footman",
+                        "owner": "planner",
+                        "hp": 123,
+                        "x": 3040.8569924208477,
+                        "y": 923.6297986878513,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "idle"
+                        }
+                      },
+                      {
+                        "id": "scene-public-planner-frame-planner-footman-4",
+                        "present": true,
+                        "kind": "footman",
+                        "owner": "planner",
+                        "hp": 145,
+                        "x": 3006.8186182591357,
+                        "y": 935.35110767735,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "idle"
+                        }
+                      }
+                    ],
+                    "clearExecutions": [],
+                    "authorityBytesUtf8Python": 33285,
+                    "semantics": "Byte copy of complete CRC-validated original member; snapshot HP/absence and execution status only. Native outcome requires independent verification. No AI/source/navigation/simulation calls."
+                  }
+                },
+                "guards": [
+                  {
+                    "id": "scene-public-planner-frame-neutral-murlocPeon-1",
+                    "present": false,
+                    "hp": null
+                  },
+                  {
+                    "id": "scene-public-planner-frame-neutral-murlocPeon-2",
+                    "present": false,
+                    "hp": null
+                  }
+                ],
+                "nativeTargetCorpses": [
+                  {
+                    "id": "corpse-scene-public-planner-frame-neutral-murlocPeon-2-1673",
+                    "unitId": "scene-public-planner-frame-neutral-murlocPeon-2",
+                    "kind": "murlocPeon",
+                    "owner": "neutral",
+                    "x": 3011.2398646695056,
+                    "y": 945.1873657301313,
+                    "radius": 14,
+                    "diedAtTick": 1673,
+                    "equipmentCaptured": true
+                  },
+                  {
+                    "id": "corpse-scene-public-planner-frame-neutral-murlocPeon-1-1711",
+                    "unitId": "scene-public-planner-frame-neutral-murlocPeon-1",
+                    "kind": "murlocPeon",
+                    "owner": "neutral",
+                    "x": 3050.6103836435773,
+                    "y": 954.1280334274967,
+                    "radius": 14,
+                    "diedAtTick": 1711,
+                    "equipmentCaptured": true
+                  }
+                ],
+                "clearExecutionsAtThisFrame": [],
+                "sameInitialClearTokenLeaseCount": 0,
+                "cohort": [
+                  {
+                    "id": "scene-public-planner-frame-planner-footman-1",
+                    "hp": 145,
+                    "maxHp": 145,
+                    "kills": 0,
+                    "xp": 0,
+                    "effects": [],
+                    "order": {
+                      "type": "idle"
+                    },
+                    "deck": null,
+                    "cabin": null
+                  },
+                  {
+                    "id": "scene-public-planner-frame-planner-footman-2",
+                    "hp": 145,
+                    "maxHp": 145,
+                    "kills": 1,
+                    "xp": 12,
+                    "effects": [],
+                    "order": {
+                      "type": "idle"
+                    },
+                    "deck": null,
+                    "cabin": null
+                  },
+                  {
+                    "id": "scene-public-planner-frame-planner-footman-3",
+                    "hp": 123,
+                    "maxHp": 145,
+                    "kills": 0,
+                    "xp": 0,
+                    "effects": [],
+                    "order": {
+                      "type": "idle"
+                    },
+                    "deck": null,
+                    "cabin": null
+                  },
+                  {
+                    "id": "scene-public-planner-frame-planner-footman-4",
+                    "hp": 145,
+                    "maxHp": 145,
+                    "kills": 1,
+                    "xp": 12,
+                    "effects": [],
+                    "order": {
+                      "type": "idle"
+                    },
+                    "deck": null,
+                    "cabin": null
+                  }
+                ]
+              }
+            ],
+            "observedNativeClearTick": 1725,
+            "nativeDeathTicks": {
+              "scene-public-planner-frame-neutral-murlocPeon-2": 1673,
+              "scene-public-planner-frame-neutral-murlocPeon-1": 1711
+            },
+            "nativeCohortKillDelta": 2,
+            "nativeCohortXpDelta": 24,
+            "observedOriginalCohortDeaths": 0,
+            "observedRemainingHp": [
+              145,
+              145,
+              123,
+              145
+            ],
+            "observedNetHpDeficit": 22,
+            "currentPendingProjectiles": 0,
+            "currentCohortEffectsEmpty": true,
+            "sameTokenClearProgress": {
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "action": {
+                "actionId": "goal-ref:action:v22",
+                "generation": 7
+              },
+              "kind": "progress",
+              "progress": "camp-cleared",
+              "unitIds": [
+                "scene-public-planner-frame-planner-footman-1",
+                "scene-public-planner-frame-planner-footman-2",
+                "scene-public-planner-frame-planner-footman-3",
+                "scene-public-planner-frame-planner-footman-4"
+              ],
+              "entityIds": [
+                "scene-public-planner-frame-neutral-murlocPeon-1",
+                "scene-public-planner-frame-neutral-murlocPeon-2"
+              ],
+              "reason": {
+                "code": "observed-world-progress",
+                "factIds": [
+                  "scene-public-planner-frame-planner-footman-1",
+                  "scene-public-planner-frame-planner-footman-2",
+                  "scene-public-planner-frame-planner-footman-3",
+                  "scene-public-planner-frame-planner-footman-4",
+                  "scene-public-planner-frame-neutral-murlocPeon-1",
+                  "scene-public-planner-frame-neutral-murlocPeon-2"
+                ],
+                "values": {}
+              },
+              "id": "planner:allocation:26",
+              "tick": 1725,
+              "revision": 115
+            },
+            "sameTokenActionCompletion": {
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "action": {
+                "actionId": "goal-ref:action:v22",
+                "generation": 7
+              },
+              "kind": "action-finished",
+              "outcome": "complete",
+              "reason": {
+                "code": "action-complete",
+                "factIds": [],
+                "values": {}
+              },
+              "id": "planner:allocation:27",
+              "tick": 1725,
+              "revision": 115
+            }
+          },
+          {
+            "variant": "far",
+            "firstCommandSource": {
+              "path": "/tmp/goal-324-first-clear-far/actual-frame.jsonl.gz",
+              "bytes": 170306,
+              "compressedSha256": "0df5a69b25194dfeb3cd03b77cf953a6f733b14a0af538e798967fa71372670d",
+              "plainSha256": "23034c6e3ac21cca590b93f276a14957b74297dfc4d9e8db0562ff925902f7e6",
+              "plainSha256ComparedWithProvenance": false,
+              "gzipCrcValidated": true,
+              "provenance": {
+                "source": "13b28abb793a956f37e49203095033a04ea22f85",
+                "sharedBase": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+                "variant": "far",
+                "kind": "goal.clear-camp",
+                "think": 220,
+                "tick": 3300,
+                "compressedOffset": 47128046,
+                "compressedBytes": 170306,
+                "compressedSha256": "0df5a69b25194dfeb3cd03b77cf953a6f733b14a0af538e798967fa71372670d",
+                "accepted": [
+                  {
+                    "commandId": "planner:strategy-command:3300:220:0",
+                    "source": "executor",
+                    "executor": "goal.clear-camp",
+                    "action": {
+                      "actionId": "goal-ref:action:v37",
+                      "generation": 12
+                    },
+                    "allocationRevision": 220,
+                    "purpose": "task",
+                    "command": {
+                      "type": "attack",
+                      "unitIds": [
+                        "scene-public-planner-frame-planner-footman-1"
+                      ],
+                      "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+                    },
+                    "status": "accepted",
+                    "admittedTick": 3300,
+                    "queuedTick": null
+                  },
+                  {
+                    "commandId": "planner:strategy-command:3300:220:1",
+                    "source": "executor",
+                    "executor": "goal.clear-camp",
+                    "action": {
+                      "actionId": "goal-ref:action:v37",
+                      "generation": 12
+                    },
+                    "allocationRevision": 220,
+                    "purpose": "task",
+                    "command": {
+                      "type": "attack",
+                      "unitIds": [
+                        "scene-public-planner-frame-planner-footman-2"
+                      ],
+                      "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+                    },
+                    "status": "accepted",
+                    "admittedTick": 3300,
+                    "queuedTick": null
+                  },
+                  {
+                    "commandId": "planner:strategy-command:3300:220:2",
+                    "source": "executor",
+                    "executor": "goal.clear-camp",
+                    "action": {
+                      "actionId": "goal-ref:action:v37",
+                      "generation": 12
+                    },
+                    "allocationRevision": 220,
+                    "purpose": "task",
+                    "command": {
+                      "type": "attack",
+                      "unitIds": [
+                        "scene-public-planner-frame-planner-footman-3"
+                      ],
+                      "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+                    },
+                    "status": "accepted",
+                    "admittedTick": 3300,
+                    "queuedTick": null
+                  },
+                  {
+                    "commandId": "planner:strategy-command:3300:220:3",
+                    "source": "executor",
+                    "executor": "goal.clear-camp",
+                    "action": {
+                      "actionId": "goal-ref:action:v37",
+                      "generation": 12
+                    },
+                    "allocationRevision": 220,
+                    "purpose": "task",
+                    "command": {
+                      "type": "attack",
+                      "unitIds": [
+                        "scene-public-planner-frame-planner-footman-4"
+                      ],
+                      "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+                    },
+                    "status": "accepted",
+                    "admittedTick": 3300,
+                    "queuedTick": null
+                  }
+                ],
+                "semantics": "First accepted command of this executor in a validated complete original member. Byte-for-byte copy; no planner/source/sim calls. Accepted command is not stage completion."
+              }
+            },
+            "token": {
+              "actionId": "goal-ref:action:v37",
+              "generation": 12
+            },
+            "startTick": 3300,
+            "parameters": {
+              "campId": "camp:[\"scene-public-planner-frame-neutral-murlocPeon-1\",\"scene-public-planner-frame-neutral-murlocPeon-2\"]",
+              "memberIds": [
+                "scene-public-planner-frame-neutral-murlocPeon-1",
+                "scene-public-planner-frame-neutral-murlocPeon-2"
+              ],
+              "cohort": [
+                {
+                  "kind": "existing",
+                  "entityId": "scene-public-planner-frame-planner-footman-1"
+                },
+                {
+                  "kind": "existing",
+                  "entityId": "scene-public-planner-frame-planner-footman-2"
+                },
+                {
+                  "kind": "existing",
+                  "entityId": "scene-public-planner-frame-planner-footman-3"
+                },
+                {
+                  "kind": "existing",
+                  "entityId": "scene-public-planner-frame-planner-footman-4"
+                }
+              ],
+              "at": {
+                "landId": "land:2",
+                "point": {
+                  "x": 2792.432452537461,
+                  "y": 870.6336733966539
+                }
+              },
+              "byTick": 15300
+            },
+            "sameTokenLeasesAndSdkMatched": true,
+            "matchedAttackCount": 4,
+            "rows": [
+              {
+                "name": "first-camp-member-damage-or-absence",
+                "tick": 3360,
+                "source": {
+                  "path": "/tmp/goal-324-camp-outcomes/far/first-camp-member-damage-or-absence/actual-frame.jsonl.gz",
+                  "bytes": 41028,
+                  "compressedSha256": "daa89bbb058387b05790971c7ef0e8dd7dbba74de3e446a533f26f857340651b",
+                  "plainSha256": "a54678cbe1da485235e6fb00bb0a776379662dc0b9f7577c014ea3e01ca7a9ff",
+                  "plainSha256ComparedWithProvenance": true,
+                  "gzipCrcValidated": true,
+                  "provenance": {
+                    "source": "13b28abb793a956f37e49203095033a04ea22f85",
+                    "sharedBase": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+                    "variant": "far",
+                    "event": "first-camp-member-damage-or-absence",
+                    "think": 224,
+                    "tick": 3360,
+                    "compressedOffset": 47789374,
+                    "compressedBytes": 41028,
+                    "compressedSha256": "daa89bbb058387b05790971c7ef0e8dd7dbba74de3e446a533f26f857340651b",
+                    "plainSha256": "a54678cbe1da485235e6fb00bb0a776379662dc0b9f7577c014ea3e01ca7a9ff",
+                    "campMemberIds": [
+                      "scene-public-planner-frame-neutral-murlocPeon-1",
+                      "scene-public-planner-frame-neutral-murlocPeon-2"
+                    ],
+                    "startedClearCohort": [
+                      "scene-public-planner-frame-planner-footman-1",
+                      "scene-public-planner-frame-planner-footman-2",
+                      "scene-public-planner-frame-planner-footman-3",
+                      "scene-public-planner-frame-planner-footman-4"
+                    ],
+                    "actors": [
+                      {
+                        "id": "scene-public-planner-frame-neutral-murlocPeon-1",
+                        "present": true,
+                        "kind": "murlocPeon",
+                        "owner": "neutral",
+                        "hp": 80,
+                        "x": 3181.2054728901385,
+                        "y": 955.4497197226008,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "attack",
+                          "targetId": "scene-public-planner-frame-planner-footman-2",
+                          "leashX": 3081,
+                          "leashY": 960
+                        }
+                      },
+                      {
+                        "id": "scene-public-planner-frame-neutral-murlocPeon-2",
+                        "present": true,
+                        "kind": "murlocPeon",
+                        "owner": "neutral",
+                        "hp": 64,
+                        "x": 3047.166345308586,
+                        "y": 909.5215259708696,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "attack",
+                          "targetId": "scene-public-planner-frame-planner-footman-2",
+                          "leashX": 3081,
+                          "leashY": 960
+                        }
+                      },
+                      {
+                        "id": "scene-public-planner-frame-planner-footman-1",
+                        "present": true,
+                        "kind": "footman",
+                        "owner": "planner",
+                        "hp": 145,
+                        "x": 2957.3066757265383,
+                        "y": 930.1184778660105,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "attack",
+                          "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+                        }
+                      },
+                      {
+                        "id": "scene-public-planner-frame-planner-footman-2",
+                        "present": true,
+                        "kind": "footman",
+                        "owner": "planner",
+                        "hp": 134,
+                        "x": 3024.129564042278,
+                        "y": 884.5752502419233,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "attack",
+                          "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+                        }
+                      },
+                      {
+                        "id": "scene-public-planner-frame-planner-footman-3",
+                        "present": true,
+                        "kind": "footman",
+                        "owner": "planner",
+                        "hp": 145,
+                        "x": 2927.4382705554203,
+                        "y": 910.0217524478248,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "attack",
+                          "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+                        }
+                      },
+                      {
+                        "id": "scene-public-planner-frame-planner-footman-4",
+                        "present": true,
+                        "kind": "footman",
+                        "owner": "planner",
+                        "hp": 145,
+                        "x": 3008.581046504171,
+                        "y": 852.1061325704009,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "attack",
+                          "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+                        }
+                      }
+                    ],
+                    "clearExecutions": [
+                      {
+                        "token": {
+                          "actionId": "goal-ref:action:v37",
+                          "generation": 12
+                        },
+                        "objectiveId": "ConquerIsland:planner:resource-1",
+                        "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+                        "executor": "goal.clear-camp",
+                        "intent": {
+                          "kind": "goal-action",
+                          "goalId": "ConquerIsland:planner:resource-1",
+                          "declarationId": "goal-ref:declaration:v36",
+                          "actionKind": "clear-camp",
+                          "parameters": {},
+                          "outputs": [],
+                          "parametersRef": "goal-ref:parameters:v35"
+                        },
+                        "target": {
+                          "landId": "land:2",
+                          "point": {
+                            "x": 2792.432452537461,
+                            "y": 870.6336733966539
+                          }
+                        },
+                        "dependsOn": [],
+                        "completionEffects": [],
+                        "status": "active",
+                        "phase": "engage",
+                        "sinceTick": 3300,
+                        "lastProgressTick": 3300,
+                        "state": {
+                          "goalCampObserved": true,
+                          "staging": {
+                            "x": 2792.432452537461,
+                            "y": 870.6336733966539
+                          },
+                          "refuge": {
+                            "x": 2792.432452537461,
+                            "y": 870.6336733966539
+                          },
+                          "remainingPlayerThreatIds": []
+                        }
+                      }
+                    ],
+                    "authorityBytesUtf8Python": 54053,
+                    "semantics": "Byte copy of complete CRC-validated original member; snapshot HP/absence and execution status only. Native outcome requires independent verification. No AI/source/navigation/simulation calls."
+                  }
+                },
+                "guards": [
+                  {
+                    "id": "scene-public-planner-frame-neutral-murlocPeon-1",
+                    "present": true,
+                    "hp": 80
+                  },
+                  {
+                    "id": "scene-public-planner-frame-neutral-murlocPeon-2",
+                    "present": true,
+                    "hp": 64
+                  }
+                ],
+                "nativeTargetCorpses": [],
+                "clearExecutionsAtThisFrame": [
+                  {
+                    "token": {
+                      "actionId": "goal-ref:action:v37",
+                      "generation": 12
+                    },
+                    "status": "active",
+                    "phase": "engage"
+                  }
+                ],
+                "sameInitialClearTokenLeaseCount": 4,
+                "cohort": [
+                  {
+                    "id": "scene-public-planner-frame-planner-footman-1",
+                    "hp": 145,
+                    "maxHp": 145,
+                    "kills": 0,
+                    "xp": 0,
+                    "effects": [],
+                    "order": {
+                      "type": "attack",
+                      "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+                    },
+                    "deck": null,
+                    "cabin": null
+                  },
+                  {
+                    "id": "scene-public-planner-frame-planner-footman-2",
+                    "hp": 134,
+                    "maxHp": 145,
+                    "kills": 0,
+                    "xp": 0,
+                    "effects": [],
+                    "order": {
+                      "type": "attack",
+                      "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+                    },
+                    "deck": null,
+                    "cabin": null
+                  },
+                  {
+                    "id": "scene-public-planner-frame-planner-footman-3",
+                    "hp": 145,
+                    "maxHp": 145,
+                    "kills": 0,
+                    "xp": 0,
+                    "effects": [],
+                    "order": {
+                      "type": "attack",
+                      "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+                    },
+                    "deck": null,
+                    "cabin": null
+                  },
+                  {
+                    "id": "scene-public-planner-frame-planner-footman-4",
+                    "hp": 145,
+                    "maxHp": 145,
+                    "kills": 0,
+                    "xp": 0,
+                    "effects": [],
+                    "order": {
+                      "type": "attack",
+                      "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+                    },
+                    "deck": null,
+                    "cabin": null
+                  }
+                ]
+              },
+              {
+                "name": "first-camp-member-nonpositive-or-absent",
+                "tick": 3405,
+                "source": {
+                  "path": "/tmp/goal-324-camp-outcomes/far/first-camp-member-nonpositive-or-absent/actual-frame.jsonl.gz",
+                  "bytes": 44014,
+                  "compressedSha256": "2b935662217cdac50535de1a0fb4aa383cc493ca8c375aa6aaeacff8aec62123",
+                  "plainSha256": "4e4985a28aa1496bfb6805e52b8b27379c9063ba076db350a38510c1ad0bbba9",
+                  "plainSha256ComparedWithProvenance": true,
+                  "gzipCrcValidated": true,
+                  "provenance": {
+                    "source": "13b28abb793a956f37e49203095033a04ea22f85",
+                    "sharedBase": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+                    "variant": "far",
+                    "event": "first-camp-member-nonpositive-or-absent",
+                    "think": 227,
+                    "tick": 3405,
+                    "compressedOffset": 47913190,
+                    "compressedBytes": 44014,
+                    "compressedSha256": "2b935662217cdac50535de1a0fb4aa383cc493ca8c375aa6aaeacff8aec62123",
+                    "plainSha256": "4e4985a28aa1496bfb6805e52b8b27379c9063ba076db350a38510c1ad0bbba9",
+                    "campMemberIds": [
+                      "scene-public-planner-frame-neutral-murlocPeon-1",
+                      "scene-public-planner-frame-neutral-murlocPeon-2"
+                    ],
+                    "startedClearCohort": [
+                      "scene-public-planner-frame-planner-footman-1",
+                      "scene-public-planner-frame-planner-footman-2",
+                      "scene-public-planner-frame-planner-footman-3",
+                      "scene-public-planner-frame-planner-footman-4"
+                    ],
+                    "actors": [
+                      {
+                        "id": "scene-public-planner-frame-neutral-murlocPeon-1",
+                        "present": true,
+                        "kind": "murlocPeon",
+                        "owner": "neutral",
+                        "hp": 32,
+                        "x": 3063.3754303635915,
+                        "y": 902.7510368052357,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "attack",
+                          "targetId": "scene-public-planner-frame-planner-footman-4",
+                          "leashX": 3081,
+                          "leashY": 960
+                        }
+                      },
+                      {
+                        "id": "scene-public-planner-frame-neutral-murlocPeon-2",
+                        "present": false
+                      },
+                      {
+                        "id": "scene-public-planner-frame-planner-footman-1",
+                        "present": true,
+                        "kind": "footman",
+                        "owner": "planner",
+                        "hp": 145,
+                        "x": 3037.753955939534,
+                        "y": 941.4499678036324,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "attack",
+                          "targetId": "scene-public-planner-frame-neutral-murlocPeon-1",
+                          "leashX": 3030.0572224470684,
+                          "leashY": 944.7376369066976
+                        }
+                      },
+                      {
+                        "id": "scene-public-planner-frame-planner-footman-2",
+                        "present": true,
+                        "kind": "footman",
+                        "owner": "planner",
+                        "hp": 123,
+                        "x": 3020.5631517752386,
+                        "y": 897.9777475163593,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "attack",
+                          "targetId": "scene-public-planner-frame-neutral-murlocPeon-1",
+                          "leashX": 3017.4060489772983,
+                          "leashY": 898.4807863848554
+                        }
+                      },
+                      {
+                        "id": "scene-public-planner-frame-planner-footman-3",
+                        "present": true,
+                        "kind": "footman",
+                        "owner": "planner",
+                        "hp": 145,
+                        "x": 3003.8826900065355,
+                        "y": 929.2183960412572,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "attack",
+                          "targetId": "scene-public-planner-frame-neutral-murlocPeon-1",
+                          "leashX": 2997.7987970881236,
+                          "leashY": 928.671787576526
+                        }
+                      },
+                      {
+                        "id": "scene-public-planner-frame-planner-footman-4",
+                        "present": true,
+                        "kind": "footman",
+                        "owner": "planner",
+                        "hp": 134,
+                        "x": 3043.8390767093347,
+                        "y": 870.5144753431035,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "attack",
+                          "targetId": "scene-public-planner-frame-neutral-murlocPeon-1"
+                        }
+                      }
+                    ],
+                    "clearExecutions": [
+                      {
+                        "token": {
+                          "actionId": "goal-ref:action:v37",
+                          "generation": 12
+                        },
+                        "objectiveId": "ConquerIsland:planner:resource-1",
+                        "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+                        "executor": "goal.clear-camp",
+                        "intent": {
+                          "kind": "goal-action",
+                          "goalId": "ConquerIsland:planner:resource-1",
+                          "declarationId": "goal-ref:declaration:v36",
+                          "actionKind": "clear-camp",
+                          "parameters": {},
+                          "outputs": [],
+                          "parametersRef": "goal-ref:parameters:v35"
+                        },
+                        "target": {
+                          "landId": "land:2",
+                          "point": {
+                            "x": 2792.432452537461,
+                            "y": 870.6336733966539
+                          }
+                        },
+                        "dependsOn": [],
+                        "completionEffects": [],
+                        "status": "blocked",
+                        "phase": "engage",
+                        "sinceTick": 3300,
+                        "lastProgressTick": 3300,
+                        "state": {
+                          "goalCampObserved": true,
+                          "staging": {
+                            "x": 2792.432452537461,
+                            "y": 870.6336733966539
+                          },
+                          "refuge": {
+                            "x": 2792.432452537461,
+                            "y": 870.6336733966539
+                          },
+                          "remainingPlayerThreatIds": []
+                        }
+                      }
+                    ],
+                    "authorityBytesUtf8Python": 51399,
+                    "semantics": "Byte copy of complete CRC-validated original member; snapshot HP/absence and execution status only. Native outcome requires independent verification. No AI/source/navigation/simulation calls."
+                  }
+                },
+                "guards": [
+                  {
+                    "id": "scene-public-planner-frame-neutral-murlocPeon-1",
+                    "present": true,
+                    "hp": 32
+                  },
+                  {
+                    "id": "scene-public-planner-frame-neutral-murlocPeon-2",
+                    "present": false,
+                    "hp": null
+                  }
+                ],
+                "nativeTargetCorpses": [
+                  {
+                    "id": "corpse-scene-public-planner-frame-neutral-murlocPeon-2-3399",
+                    "unitId": "scene-public-planner-frame-neutral-murlocPeon-2",
+                    "kind": "murlocPeon",
+                    "owner": "neutral",
+                    "x": 3041.9784739683405,
+                    "y": 916.4972930552909,
+                    "radius": 14,
+                    "diedAtTick": 3399,
+                    "equipmentCaptured": true
+                  }
+                ],
+                "clearExecutionsAtThisFrame": [
+                  {
+                    "token": {
+                      "actionId": "goal-ref:action:v37",
+                      "generation": 12
+                    },
+                    "status": "blocked",
+                    "phase": "engage"
+                  }
+                ],
+                "sameInitialClearTokenLeaseCount": 4,
+                "cohort": [
+                  {
+                    "id": "scene-public-planner-frame-planner-footman-1",
+                    "hp": 145,
+                    "maxHp": 145,
+                    "kills": 0,
+                    "xp": 0,
+                    "effects": [],
+                    "order": {
+                      "type": "attack",
+                      "targetId": "scene-public-planner-frame-neutral-murlocPeon-1",
+                      "leashX": 3030.0572224470684,
+                      "leashY": 944.7376369066976
+                    },
+                    "deck": null,
+                    "cabin": null
+                  },
+                  {
+                    "id": "scene-public-planner-frame-planner-footman-2",
+                    "hp": 123,
+                    "maxHp": 145,
+                    "kills": 0,
+                    "xp": 0,
+                    "effects": [],
+                    "order": {
+                      "type": "attack",
+                      "targetId": "scene-public-planner-frame-neutral-murlocPeon-1",
+                      "leashX": 3017.4060489772983,
+                      "leashY": 898.4807863848554
+                    },
+                    "deck": null,
+                    "cabin": null
+                  },
+                  {
+                    "id": "scene-public-planner-frame-planner-footman-3",
+                    "hp": 145,
+                    "maxHp": 145,
+                    "kills": 1,
+                    "xp": 12,
+                    "effects": [],
+                    "order": {
+                      "type": "attack",
+                      "targetId": "scene-public-planner-frame-neutral-murlocPeon-1",
+                      "leashX": 2997.7987970881236,
+                      "leashY": 928.671787576526
+                    },
+                    "deck": null,
+                    "cabin": null
+                  },
+                  {
+                    "id": "scene-public-planner-frame-planner-footman-4",
+                    "hp": 134,
+                    "maxHp": 145,
+                    "kills": 0,
+                    "xp": 0,
+                    "effects": [],
+                    "order": {
+                      "type": "attack",
+                      "targetId": "scene-public-planner-frame-neutral-murlocPeon-1"
+                    },
+                    "deck": null,
+                    "cabin": null
+                  }
+                ]
+              },
+              {
+                "name": "all-target-camp-members-nonpositive-or-absent",
+                "tick": 3435,
+                "source": {
+                  "path": "/tmp/goal-324-camp-outcomes/far/all-target-camp-members-nonpositive-or-absent/actual-frame.jsonl.gz",
+                  "bytes": 142929,
+                  "compressedSha256": "f9bfb6de6b41ef8777b09acdf43b851f22ec23e2bd041ae033d3ac091d1f0529",
+                  "plainSha256": "a57ba8972b650de7570c477a14d5a2feb43980eec75093d3dc18af162eb89e5d",
+                  "plainSha256ComparedWithProvenance": true,
+                  "gzipCrcValidated": true,
+                  "provenance": {
+                    "source": "13b28abb793a956f37e49203095033a04ea22f85",
+                    "sharedBase": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+                    "variant": "far",
+                    "event": "all-target-camp-members-nonpositive-or-absent",
+                    "think": 229,
+                    "tick": 3435,
+                    "compressedOffset": 47998721,
+                    "compressedBytes": 142929,
+                    "compressedSha256": "f9bfb6de6b41ef8777b09acdf43b851f22ec23e2bd041ae033d3ac091d1f0529",
+                    "plainSha256": "a57ba8972b650de7570c477a14d5a2feb43980eec75093d3dc18af162eb89e5d",
+                    "campMemberIds": [
+                      "scene-public-planner-frame-neutral-murlocPeon-1",
+                      "scene-public-planner-frame-neutral-murlocPeon-2"
+                    ],
+                    "startedClearCohort": [
+                      "scene-public-planner-frame-planner-footman-1",
+                      "scene-public-planner-frame-planner-footman-2",
+                      "scene-public-planner-frame-planner-footman-3",
+                      "scene-public-planner-frame-planner-footman-4"
+                    ],
+                    "actors": [
+                      {
+                        "id": "scene-public-planner-frame-neutral-murlocPeon-1",
+                        "present": false
+                      },
+                      {
+                        "id": "scene-public-planner-frame-neutral-murlocPeon-2",
+                        "present": false
+                      },
+                      {
+                        "id": "scene-public-planner-frame-planner-footman-1",
+                        "present": true,
+                        "kind": "footman",
+                        "owner": "planner",
+                        "hp": 145,
+                        "x": 3048.4494344245127,
+                        "y": 947.4845721925244,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "idle"
+                        }
+                      },
+                      {
+                        "id": "scene-public-planner-frame-planner-footman-2",
+                        "present": true,
+                        "kind": "footman",
+                        "owner": "planner",
+                        "hp": 123,
+                        "x": 3019.3320141592308,
+                        "y": 888.1735467116172,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "idle"
+                        }
+                      },
+                      {
+                        "id": "scene-public-planner-frame-planner-footman-3",
+                        "present": true,
+                        "kind": "footman",
+                        "owner": "planner",
+                        "hp": 145,
+                        "x": 3021.050891293653,
+                        "y": 924.1324880391471,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "idle"
+                        }
+                      },
+                      {
+                        "id": "scene-public-planner-frame-planner-footman-4",
+                        "present": true,
+                        "kind": "footman",
+                        "owner": "planner",
+                        "hp": 134,
+                        "x": 3047.9972663332496,
+                        "y": 866.3950408445954,
+                        "deck": null,
+                        "cabin": null,
+                        "order": {
+                          "type": "idle"
+                        }
+                      }
+                    ],
+                    "clearExecutions": [],
+                    "authorityBytesUtf8Python": 46215,
+                    "semantics": "Byte copy of complete CRC-validated original member; snapshot HP/absence and execution status only. Native outcome requires independent verification. No AI/source/navigation/simulation calls."
+                  }
+                },
+                "guards": [
+                  {
+                    "id": "scene-public-planner-frame-neutral-murlocPeon-1",
+                    "present": false,
+                    "hp": null
+                  },
+                  {
+                    "id": "scene-public-planner-frame-neutral-murlocPeon-2",
+                    "present": false,
+                    "hp": null
+                  }
+                ],
+                "nativeTargetCorpses": [
+                  {
+                    "id": "corpse-scene-public-planner-frame-neutral-murlocPeon-2-3399",
+                    "unitId": "scene-public-planner-frame-neutral-murlocPeon-2",
+                    "kind": "murlocPeon",
+                    "owner": "neutral",
+                    "x": 3041.9784739683405,
+                    "y": 916.4972930552909,
+                    "radius": 14,
+                    "diedAtTick": 3399,
+                    "equipmentCaptured": true
+                  },
+                  {
+                    "id": "corpse-scene-public-planner-frame-neutral-murlocPeon-1-3425",
+                    "unitId": "scene-public-planner-frame-neutral-murlocPeon-1",
+                    "kind": "murlocPeon",
+                    "owner": "neutral",
+                    "x": 3063.3754303635915,
+                    "y": 902.7510368052357,
+                    "radius": 14,
+                    "diedAtTick": 3425,
+                    "equipmentCaptured": true
+                  }
+                ],
+                "clearExecutionsAtThisFrame": [],
+                "sameInitialClearTokenLeaseCount": 0,
+                "cohort": [
+                  {
+                    "id": "scene-public-planner-frame-planner-footman-1",
+                    "hp": 145,
+                    "maxHp": 145,
+                    "kills": 0,
+                    "xp": 0,
+                    "effects": [],
+                    "order": {
+                      "type": "idle"
+                    },
+                    "deck": null,
+                    "cabin": null
+                  },
+                  {
+                    "id": "scene-public-planner-frame-planner-footman-2",
+                    "hp": 123,
+                    "maxHp": 145,
+                    "kills": 1,
+                    "xp": 12,
+                    "effects": [],
+                    "order": {
+                      "type": "idle"
+                    },
+                    "deck": null,
+                    "cabin": null
+                  },
+                  {
+                    "id": "scene-public-planner-frame-planner-footman-3",
+                    "hp": 145,
+                    "maxHp": 145,
+                    "kills": 1,
+                    "xp": 12,
+                    "effects": [],
+                    "order": {
+                      "type": "idle"
+                    },
+                    "deck": null,
+                    "cabin": null
+                  },
+                  {
+                    "id": "scene-public-planner-frame-planner-footman-4",
+                    "hp": 134,
+                    "maxHp": 145,
+                    "kills": 0,
+                    "xp": 0,
+                    "effects": [],
+                    "order": {
+                      "type": "idle"
+                    },
+                    "deck": null,
+                    "cabin": null
+                  }
+                ]
+              }
+            ],
+            "observedNativeClearTick": 3435,
+            "nativeDeathTicks": {
+              "scene-public-planner-frame-neutral-murlocPeon-2": 3399,
+              "scene-public-planner-frame-neutral-murlocPeon-1": 3425
+            },
+            "nativeCohortKillDelta": 2,
+            "nativeCohortXpDelta": 24,
+            "observedOriginalCohortDeaths": 0,
+            "observedRemainingHp": [
+              145,
+              123,
+              145,
+              134
+            ],
+            "observedNetHpDeficit": 33,
+            "currentPendingProjectiles": 0,
+            "currentCohortEffectsEmpty": true,
+            "sameTokenClearProgress": {
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "action": {
+                "actionId": "goal-ref:action:v37",
+                "generation": 12
+              },
+              "kind": "progress",
+              "progress": "camp-cleared",
+              "unitIds": [
+                "scene-public-planner-frame-planner-footman-1",
+                "scene-public-planner-frame-planner-footman-2",
+                "scene-public-planner-frame-planner-footman-3",
+                "scene-public-planner-frame-planner-footman-4"
+              ],
+              "entityIds": [
+                "scene-public-planner-frame-neutral-murlocPeon-1",
+                "scene-public-planner-frame-neutral-murlocPeon-2"
+              ],
+              "reason": {
+                "code": "observed-world-progress",
+                "factIds": [
+                  "scene-public-planner-frame-planner-footman-1",
+                  "scene-public-planner-frame-planner-footman-2",
+                  "scene-public-planner-frame-planner-footman-3",
+                  "scene-public-planner-frame-planner-footman-4",
+                  "scene-public-planner-frame-neutral-murlocPeon-1",
+                  "scene-public-planner-frame-neutral-murlocPeon-2"
+                ],
+                "values": {}
+              },
+              "id": "planner:allocation:44",
+              "tick": 3435,
+              "revision": 229
+            },
+            "sameTokenActionCompletion": {
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "action": {
+                "actionId": "goal-ref:action:v37",
+                "generation": 12
+              },
+              "kind": "action-finished",
+              "outcome": "complete",
+              "reason": {
+                "code": "action-complete",
+                "factIds": [],
+                "values": {}
+              },
+              "id": "planner:allocation:45",
+              "tick": 3435,
+              "revision": 229
+            }
+          }
+        ],
+        "conclusion": "Both intended camps have explicit native death records for both originally named guards, credited cohort kills, and matching same-generation camp-cleared/action-complete ledger events. This establishes the camp step, not the remaining expansion chain.",
+        "limitations": [
+          "HP deficit is net observed missing health, not cumulative damage. No zero-health-loss claim.",
+          "Continuous authority coverage between the sampled frames is not asserted; intermediate blocked execution states and actual same-token lease counts are retained in the rows.",
+          "No extended post-clear casualty settlement or clean scientific-model sample is inferred.",
+          "Worker handoff, hall completion, garrison handoff and overall puzzle success remain separate checks."
+        ],
+        "aiCalls": 0,
+        "situationConstructions": 0,
+        "factRequests": 0,
+        "navigationQueries": 0,
+        "simulationSteps": 0
+      }
+    },
+    {
+      "originalPath": "/tmp/goal-324-first-clear-near/37-readonly-clear-admission.json",
+      "artifactFile": "1-37-readonly-clear-admission.json",
+      "sha256": "f5f16ee497c59ba0152047349edeb85e1493bd232d8ecf3169ccc03e558d7d2c",
+      "bytes": 20646,
+      "report": {
+        "productionHead": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+        "testSource": "13b28abb793a956f37e49203095033a04ea22f85",
+        "variant": "near",
+        "think": 105,
+        "tick": 1575,
+        "source": {
+          "path": "/tmp/goal-324-first-clear-near/actual-frame.jsonl.gz",
+          "compressedBytes": 201712,
+          "compressedSha256": "904cbbfb69762a246453592a0ad5cff3d922fdef0f3adc4a7bc94c4b2dfcf1b3",
+          "plainSha256": "36391decdc91e496f7bf6260c35b0918095e2671adf6ba019dec9edb1362b83d",
+          "provenance": {
+            "source": "13b28abb793a956f37e49203095033a04ea22f85",
+            "sharedBase": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+            "variant": "near",
+            "kind": "goal.clear-camp",
+            "think": 105,
+            "tick": 1575,
+            "compressedOffset": 17076507,
+            "compressedBytes": 201712,
+            "compressedSha256": "904cbbfb69762a246453592a0ad5cff3d922fdef0f3adc4a7bc94c4b2dfcf1b3",
+            "accepted": [
+              {
+                "commandId": "planner:strategy-command:1575:105:0",
+                "source": "executor",
+                "executor": "goal.clear-camp",
+                "action": {
+                  "actionId": "goal-ref:action:v22",
+                  "generation": 7
+                },
+                "allocationRevision": 105,
+                "purpose": "task",
+                "command": {
+                  "type": "attack",
+                  "unitIds": [
+                    "scene-public-planner-frame-planner-footman-1"
+                  ],
+                  "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+                },
+                "status": "accepted",
+                "admittedTick": 1575,
+                "queuedTick": null
+              },
+              {
+                "commandId": "planner:strategy-command:1575:105:1",
+                "source": "executor",
+                "executor": "goal.clear-camp",
+                "action": {
+                  "actionId": "goal-ref:action:v22",
+                  "generation": 7
+                },
+                "allocationRevision": 105,
+                "purpose": "task",
+                "command": {
+                  "type": "attack",
+                  "unitIds": [
+                    "scene-public-planner-frame-planner-footman-2"
+                  ],
+                  "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+                },
+                "status": "accepted",
+                "admittedTick": 1575,
+                "queuedTick": null
+              },
+              {
+                "commandId": "planner:strategy-command:1575:105:2",
+                "source": "executor",
+                "executor": "goal.clear-camp",
+                "action": {
+                  "actionId": "goal-ref:action:v22",
+                  "generation": 7
+                },
+                "allocationRevision": 105,
+                "purpose": "task",
+                "command": {
+                  "type": "attack",
+                  "unitIds": [
+                    "scene-public-planner-frame-planner-footman-3"
+                  ],
+                  "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+                },
+                "status": "accepted",
+                "admittedTick": 1575,
+                "queuedTick": null
+              },
+              {
+                "commandId": "planner:strategy-command:1575:105:3",
+                "source": "executor",
+                "executor": "goal.clear-camp",
+                "action": {
+                  "actionId": "goal-ref:action:v22",
+                  "generation": 7
+                },
+                "allocationRevision": 105,
+                "purpose": "task",
+                "command": {
+                  "type": "attack",
+                  "unitIds": [
+                    "scene-public-planner-frame-planner-footman-4"
+                  ],
+                  "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+                },
+                "status": "accepted",
+                "admittedTick": 1575,
+                "queuedTick": null
+              }
+            ],
+            "semantics": "First accepted command of this executor in a validated complete original member. Byte-for-byte copy; no planner/source/sim calls. Accepted command is not stage completion."
+          }
+        },
+        "execution": {
+          "token": {
+            "actionId": "goal-ref:action:v22",
+            "generation": 7
+          },
+          "status": "active",
+          "phase": "engage",
+          "state": {
+            "goalCampObserved": true,
+            "staging": {
+              "x": 2792.106300328512,
+              "y": 871.8970867322965
+            },
+            "refuge": {
+              "x": 2792.106300328512,
+              "y": 871.8970867322965
+            },
+            "remainingPlayerThreatIds": []
+          },
+          "objectiveId": "ConquerIsland:planner:resource-1",
+          "methodId": "goal-bundle:ConquerIsland:planner:resource-1"
+        },
+        "referenceDecoding": {
+          "parametersRef": "goal-ref:parameters:v20",
+          "declarationId": "goal-ref:declaration:v21",
+          "parameters": {
+            "campId": "camp:[\"scene-public-planner-frame-neutral-murlocPeon-1\",\"scene-public-planner-frame-neutral-murlocPeon-2\"]",
+            "memberIds": [
+              "scene-public-planner-frame-neutral-murlocPeon-1",
+              "scene-public-planner-frame-neutral-murlocPeon-2"
+            ],
+            "cohort": [
+              {
+                "kind": "existing",
+                "entityId": "scene-public-planner-frame-planner-footman-1"
+              },
+              {
+                "kind": "existing",
+                "entityId": "scene-public-planner-frame-planner-footman-2"
+              },
+              {
+                "kind": "existing",
+                "entityId": "scene-public-planner-frame-planner-footman-3"
+              },
+              {
+                "kind": "existing",
+                "entityId": "scene-public-planner-frame-planner-footman-4"
+              }
+            ],
+            "at": {
+              "landId": "land:2",
+              "point": {
+                "x": 2792.106300328512,
+                "y": 871.8970867322965
+              }
+            },
+            "byTick": 13575
+          },
+          "authorityAndProjectionTablesEqual": true
+        },
+        "sameTokenCommittedAssignments": [
+          {
+            "authority": "committed",
+            "id": "assignment:scene-public-planner-frame-planner-footman-1",
+            "leaseId": "lease:scene-public-planner-frame-planner-footman-1",
+            "unitId": "scene-public-planner-frame-planner-footman-1",
+            "role": "frontline",
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v22",
+              "generation": 7
+            },
+            "target": {
+              "landId": "land:2",
+              "point": {
+                "x": 2792.106300328512,
+                "y": 871.8970867322965
+              }
+            },
+            "stage": "on-station",
+            "lastLocation": {
+              "kind": "land",
+              "landId": "land:2",
+              "point": {
+                "x": 2793.080369937972,
+                "y": 872.146635852856
+              }
+            },
+            "interruption": null
+          },
+          {
+            "authority": "committed",
+            "id": "assignment:scene-public-planner-frame-planner-footman-2",
+            "leaseId": "lease:scene-public-planner-frame-planner-footman-2",
+            "unitId": "scene-public-planner-frame-planner-footman-2",
+            "role": "frontline",
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v22",
+              "generation": 7
+            },
+            "target": {
+              "landId": "land:2",
+              "point": {
+                "x": 2792.106300328512,
+                "y": 871.8970867322965
+              }
+            },
+            "stage": "on-station",
+            "lastLocation": {
+              "kind": "land",
+              "landId": "land:2",
+              "point": {
+                "x": 2811.7385185818634,
+                "y": 812.1995263622251
+              }
+            },
+            "interruption": null
+          },
+          {
+            "authority": "committed",
+            "id": "assignment:scene-public-planner-frame-planner-footman-3",
+            "leaseId": "lease:scene-public-planner-frame-planner-footman-3",
+            "unitId": "scene-public-planner-frame-planner-footman-3",
+            "role": "frontline",
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v22",
+              "generation": 7
+            },
+            "target": {
+              "landId": "land:2",
+              "point": {
+                "x": 2792.106300328512,
+                "y": 871.8970867322965
+              }
+            },
+            "stage": "on-station",
+            "lastLocation": {
+              "kind": "land",
+              "landId": "land:2",
+              "point": {
+                "x": 2848.780925557202,
+                "y": 799.8395689611767
+              }
+            },
+            "interruption": null
+          },
+          {
+            "authority": "committed",
+            "id": "assignment:scene-public-planner-frame-planner-footman-4",
+            "leaseId": "lease:scene-public-planner-frame-planner-footman-4",
+            "unitId": "scene-public-planner-frame-planner-footman-4",
+            "role": "frontline",
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v22",
+              "generation": 7
+            },
+            "target": {
+              "landId": "land:2",
+              "point": {
+                "x": 2792.106300328512,
+                "y": 871.8970867322965
+              }
+            },
+            "stage": "on-station",
+            "lastLocation": {
+              "kind": "land",
+              "landId": "land:2",
+              "point": {
+                "x": 2820.0515183524144,
+                "y": 777.1724791727341
+              }
+            },
+            "interruption": null
+          }
+        ],
+        "sameTokenAllocatorLeases": [
+          {
+            "id": "lease:scene-public-planner-frame-planner-footman-1",
+            "resourceKey": "unit:scene-public-planner-frame-planner-footman-1",
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v22",
+              "generation": 7
+            },
+            "sinceTick": 1575,
+            "minimumStayUntilTick": 1875,
+            "origin": "allocator",
+            "incumbentTask": null
+          },
+          {
+            "id": "lease:scene-public-planner-frame-planner-footman-2",
+            "resourceKey": "unit:scene-public-planner-frame-planner-footman-2",
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v22",
+              "generation": 7
+            },
+            "sinceTick": 1575,
+            "minimumStayUntilTick": 1875,
+            "origin": "allocator",
+            "incumbentTask": null
+          },
+          {
+            "id": "lease:scene-public-planner-frame-planner-footman-3",
+            "resourceKey": "unit:scene-public-planner-frame-planner-footman-3",
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v22",
+              "generation": 7
+            },
+            "sinceTick": 1575,
+            "minimumStayUntilTick": 1875,
+            "origin": "allocator",
+            "incumbentTask": null
+          },
+          {
+            "id": "lease:scene-public-planner-frame-planner-footman-4",
+            "resourceKey": "unit:scene-public-planner-frame-planner-footman-4",
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v22",
+              "generation": 7
+            },
+            "sinceTick": 1575,
+            "minimumStayUntilTick": 1875,
+            "origin": "allocator",
+            "incumbentTask": null
+          }
+        ],
+        "acceptedToActualSdk": [
+          {
+            "admission": {
+              "commandId": "planner:strategy-command:1575:105:0",
+              "source": "executor",
+              "executor": "goal.clear-camp",
+              "action": {
+                "actionId": "goal-ref:action:v22",
+                "generation": 7
+              },
+              "allocationRevision": 105,
+              "purpose": "task",
+              "command": {
+                "type": "attack",
+                "unitIds": [
+                  "scene-public-planner-frame-planner-footman-1"
+                ],
+                "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+              },
+              "status": "accepted",
+              "admittedTick": 1575,
+              "queuedTick": null
+            },
+            "returnedSdk": {
+              "playerId": "planner",
+              "source": "internal-ai",
+              "scriptId": "goal.clear-camp",
+              "command": {
+                "type": "attack",
+                "unitIds": [
+                  "scene-public-planner-frame-planner-footman-1"
+                ],
+                "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+              }
+            }
+          },
+          {
+            "admission": {
+              "commandId": "planner:strategy-command:1575:105:1",
+              "source": "executor",
+              "executor": "goal.clear-camp",
+              "action": {
+                "actionId": "goal-ref:action:v22",
+                "generation": 7
+              },
+              "allocationRevision": 105,
+              "purpose": "task",
+              "command": {
+                "type": "attack",
+                "unitIds": [
+                  "scene-public-planner-frame-planner-footman-2"
+                ],
+                "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+              },
+              "status": "accepted",
+              "admittedTick": 1575,
+              "queuedTick": null
+            },
+            "returnedSdk": {
+              "playerId": "planner",
+              "source": "internal-ai",
+              "scriptId": "goal.clear-camp",
+              "command": {
+                "type": "attack",
+                "unitIds": [
+                  "scene-public-planner-frame-planner-footman-2"
+                ],
+                "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+              }
+            }
+          },
+          {
+            "admission": {
+              "commandId": "planner:strategy-command:1575:105:2",
+              "source": "executor",
+              "executor": "goal.clear-camp",
+              "action": {
+                "actionId": "goal-ref:action:v22",
+                "generation": 7
+              },
+              "allocationRevision": 105,
+              "purpose": "task",
+              "command": {
+                "type": "attack",
+                "unitIds": [
+                  "scene-public-planner-frame-planner-footman-3"
+                ],
+                "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+              },
+              "status": "accepted",
+              "admittedTick": 1575,
+              "queuedTick": null
+            },
+            "returnedSdk": {
+              "playerId": "planner",
+              "source": "internal-ai",
+              "scriptId": "goal.clear-camp",
+              "command": {
+                "type": "attack",
+                "unitIds": [
+                  "scene-public-planner-frame-planner-footman-3"
+                ],
+                "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+              }
+            }
+          },
+          {
+            "admission": {
+              "commandId": "planner:strategy-command:1575:105:3",
+              "source": "executor",
+              "executor": "goal.clear-camp",
+              "action": {
+                "actionId": "goal-ref:action:v22",
+                "generation": 7
+              },
+              "allocationRevision": 105,
+              "purpose": "task",
+              "command": {
+                "type": "attack",
+                "unitIds": [
+                  "scene-public-planner-frame-planner-footman-4"
+                ],
+                "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+              },
+              "status": "accepted",
+              "admittedTick": 1575,
+              "queuedTick": null
+            },
+            "returnedSdk": {
+              "playerId": "planner",
+              "source": "internal-ai",
+              "scriptId": "goal.clear-camp",
+              "command": {
+                "type": "attack",
+                "unitIds": [
+                  "scene-public-planner-frame-planner-footman-4"
+                ],
+                "targetId": "scene-public-planner-frame-neutral-murlocPeon-2"
+              }
+            }
+          }
+        ],
+        "nativeObservedTarget": {
+          "sourceHead": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+          "tick": 1575,
+          "scope": "Pure native component/camp identity/staging geometry reads from the original pre-command snapshot. No AI, Situation, fact request, route or simulation.",
+          "members": [
+            {
+              "id": "scene-public-planner-frame-planner-footman-1",
+              "kind": "footman",
+              "hp": 145,
+              "maxHp": 145,
+              "x": 2793.080369937972,
+              "y": 872.146635852856,
+              "carrier": null,
+              "landId": "land:2",
+              "distanceToStaging": 1.0055279049561725
+            },
+            {
+              "id": "scene-public-planner-frame-planner-footman-2",
+              "kind": "footman",
+              "hp": 145,
+              "maxHp": 145,
+              "x": 2811.7385185818634,
+              "y": 812.1995263622251,
+              "carrier": null,
+              "landId": "land:2",
+              "distanceToStaging": 62.842841340008974
+            },
+            {
+              "id": "scene-public-planner-frame-planner-footman-3",
+              "kind": "footman",
+              "hp": 145,
+              "maxHp": 145,
+              "x": 2848.780925557202,
+              "y": 799.8395689611767,
+              "carrier": null,
+              "landId": "land:2",
+              "distanceToStaging": 91.67496393316821
+            },
+            {
+              "id": "scene-public-planner-frame-planner-footman-4",
+              "kind": "footman",
+              "hp": 145,
+              "maxHp": 145,
+              "x": 2820.0515183524144,
+              "y": 777.1724791727341,
+              "carrier": null,
+              "landId": "land:2",
+              "distanceToStaging": 98.76075378264657
+            },
+            {
+              "id": "scene-public-planner-frame-neutral-murlocPeon-1",
+              "kind": "murlocPeon",
+              "hp": 80,
+              "maxHp": 80,
+              "x": 3191,
+              "y": 960,
+              "carrier": null,
+              "landId": "land:2",
+              "distanceToStaging": 408.5074135971875
+            },
+            {
+              "id": "scene-public-planner-frame-neutral-murlocPeon-2",
+              "kind": "murlocPeon",
+              "hp": 80,
+              "maxHp": 80,
+              "x": 3081,
+              "y": 960,
+              "carrier": null,
+              "landId": "land:2",
+              "distanceToStaging": 302.0292916856514
+            }
+          ],
+          "nativeCampMemberIds": [
+            "scene-public-planner-frame-neutral-murlocPeon-1",
+            "scene-public-planner-frame-neutral-murlocPeon-2"
+          ],
+          "nativeCampLandId": "land:2",
+          "nativeStagingLandId": "land:2",
+          "nativeStagingOutsideTargetAlert": true,
+          "snapshotUnchanged": true
+        },
+        "nativeObservedActors": [
+          {
+            "id": "scene-public-planner-frame-planner-footman-1",
+            "owner": "planner",
+            "kind": "footman",
+            "hp": 145,
+            "maxHp": 145,
+            "x": 2793.080369937972,
+            "y": 872.146635852856,
+            "order": {
+              "type": "idle"
+            },
+            "deck": null,
+            "cabin": null
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-2",
+            "owner": "planner",
+            "kind": "footman",
+            "hp": 145,
+            "maxHp": 145,
+            "x": 2811.7385185818634,
+            "y": 812.1995263622251,
+            "order": {
+              "type": "idle"
+            },
+            "deck": null,
+            "cabin": null
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-3",
+            "owner": "planner",
+            "kind": "footman",
+            "hp": 145,
+            "maxHp": 145,
+            "x": 2848.780925557202,
+            "y": 799.8395689611767,
+            "order": {
+              "type": "idle"
+            },
+            "deck": null,
+            "cabin": null
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-4",
+            "owner": "planner",
+            "kind": "footman",
+            "hp": 145,
+            "maxHp": 145,
+            "x": 2820.0515183524144,
+            "y": 777.1724791727341,
+            "order": {
+              "type": "idle"
+            },
+            "deck": null,
+            "cabin": null
+          },
+          {
+            "id": "scene-public-planner-frame-neutral-murlocPeon-1",
+            "owner": "neutral",
+            "kind": "murlocPeon",
+            "hp": 80,
+            "maxHp": 80,
+            "x": 3191,
+            "y": 960,
+            "order": {
+              "type": "idle"
+            },
+            "deck": null,
+            "cabin": null
+          },
+          {
+            "id": "scene-public-planner-frame-neutral-murlocPeon-2",
+            "owner": "neutral",
+            "kind": "murlocPeon",
+            "hp": 80,
+            "maxHp": 80,
+            "x": 3081,
+            "y": 960,
+            "order": {
+              "type": "idle"
+            },
+            "deck": null,
+            "cabin": null
+          }
+        ],
+        "work": {
+          "used": 363,
+          "limit": 6144,
+          "servicesReconcile": true
+        },
+        "findings": [
+          "Four same-generation committed leases for the original four footmen support exactly four accepted attacks, each matching the returned public SDK command against a named member of the intended camp.",
+          "Independent component and camp grouping reads of the fixed production source bind all six units and the safe staging point to target land:2.",
+          "This pre-command snapshot has all four footmen alive at HP145 and both guards alive at HP80. Snapshot idle orders are not interpreted as post-command native state."
+        ],
+        "notEstablished": [
+          "Boarding this step, subsequent damage or death, zero-loss outcome, camp clearance, worker transport, hall completion or whole puzzle success."
+        ],
+        "auditSources": [
+          {
+            "path": "/tmp/goal-324-first-clear-near/native-target-37.mts",
+            "sha256": "ff37a684f5bdba3befbf8b238ba3149805f8ddf2e05ed9f517a5becceebaa312"
+          },
+          {
+            "path": "/tmp/goal-324-first-clear-near/37-native-target.json",
+            "sha256": "ec67a52d7fefe8024604460d817963569c24c103e5271b8c124cbae34359ce25"
+          }
+        ],
+        "aiCalls": 0,
+        "situationConstructions": 0,
+        "factRequests": 0,
+        "navigationQueries": 0,
+        "simulationSteps": 0
+      }
+    },
+    {
+      "originalPath": "/tmp/goal-324-first-worker-near/37-readonly-worker-admission.json",
+      "artifactFile": "2-37-readonly-worker-admission.json",
+      "sha256": "500747ea5dc5164dc37c99faa85f2170f8a0671ee16685ba61ec17d9fd0d843c",
+      "bytes": 14818,
+      "report": {
+        "productionHead": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+        "testSource": "13b28abb793a956f37e49203095033a04ea22f85",
+        "variant": "near",
+        "think": 281,
+        "tick": 4215,
+        "source": {
+          "path": "/tmp/goal-324-first-worker-near/actual-frame.jsonl.gz",
+          "compressedBytes": 329519,
+          "compressedSha256": "59bdf08027b4938f97b816c5554ea0572cb114fb46d7eba01fbb49774479faae",
+          "plainSha256": "97fc164e47dba64c2ee3d1cb3f4f232d8c9c881ab72788514fa08299d919329f"
+        },
+        "execution": {
+          "token": {
+            "actionId": "goal-ref:action:v38",
+            "generation": 12
+          },
+          "status": "active",
+          "phase": "loading",
+          "state": {
+            "goalLoadedIds": [],
+            "goalLandedIds": [],
+            "goalRendezvousEstablished": true
+          }
+        },
+        "decodedParameters": {
+          "optionId": "goal-ref:option:v35",
+          "transport": {
+            "kind": "existing",
+            "entityId": "unit-planner-transport-1000"
+          },
+          "cohort": [
+            {
+              "kind": "existing",
+              "entityId": "scene-public-planner-frame-planner-worker-1"
+            }
+          ],
+          "origin": "land",
+          "from": {
+            "landId": "land:1",
+            "point": {
+              "x": 832.9848921026463,
+              "y": 920.3574885360416
+            }
+          },
+          "at": {
+            "point": {
+              "x": 2800,
+              "y": 720
+            },
+            "landId": "land:2"
+          },
+          "departure": {
+            "water": {
+              "x": 1703.5819532381076,
+              "y": 135.6362372549752
+            },
+            "heading": 3.1714432790459317,
+            "ground": {
+              "x": 1584,
+              "y": 176
+            }
+          },
+          "landing": {
+            "water": {
+              "x": 2960,
+              "y": 240
+            },
+            "ground": {
+              "x": 2960,
+              "y": 304
+            },
+            "heading": 0
+          },
+          "loadedUnitIds": [],
+          "payloadMass": 75,
+          "dependentUnitIds": [],
+          "byTick": 16215,
+          "berthTolerance": 36
+        },
+        "sameTokenCommittedAssignments": [
+          {
+            "authority": "committed",
+            "id": "assignment:scene-public-planner-frame-planner-worker-1",
+            "leaseId": "lease:scene-public-planner-frame-planner-worker-1",
+            "unitId": "scene-public-planner-frame-planner-worker-1",
+            "role": "worker",
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v38",
+              "generation": 12
+            },
+            "target": {
+              "point": {
+                "x": 2800,
+                "y": 720
+              },
+              "landId": "land:2"
+            },
+            "stage": "assigned",
+            "lastLocation": {
+              "kind": "land",
+              "landId": "land:1",
+              "point": {
+                "x": 832.9848921026463,
+                "y": 920.3574885360416
+              }
+            },
+            "interruption": null
+          },
+          {
+            "authority": "committed",
+            "id": "assignment:unit-planner-transport-1000",
+            "leaseId": "lease:unit-planner-transport-1000",
+            "unitId": "unit-planner-transport-1000",
+            "role": "transport",
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v38",
+              "generation": 12
+            },
+            "target": {
+              "point": {
+                "x": 2800,
+                "y": 720
+              },
+              "landId": "land:2"
+            },
+            "stage": "assigned",
+            "lastLocation": {
+              "kind": "sea",
+              "seaId": "sea:1",
+              "point": {
+                "x": 1703.5819532381076,
+                "y": 135.6362372549752
+              }
+            },
+            "interruption": null
+          }
+        ],
+        "sameTokenAllocatorLeases": [
+          {
+            "id": "lease:scene-public-planner-frame-planner-worker-1",
+            "resourceKey": "unit:scene-public-planner-frame-planner-worker-1",
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v38",
+              "generation": 12
+            },
+            "sinceTick": 4215,
+            "minimumStayUntilTick": 4515,
+            "origin": "allocator",
+            "incumbentTask": null
+          },
+          {
+            "id": "lease:unit-planner-transport-1000",
+            "resourceKey": "unit:unit-planner-transport-1000",
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v38",
+              "generation": 12
+            },
+            "sinceTick": 4215,
+            "minimumStayUntilTick": 4515,
+            "origin": "allocator",
+            "incumbentTask": null
+          }
+        ],
+        "acceptedBoard": {
+          "commandId": "planner:strategy-command:4215:281:0",
+          "source": "executor",
+          "executor": "goal.transport-worker",
+          "action": {
+            "actionId": "goal-ref:action:v38",
+            "generation": 12
+          },
+          "allocationRevision": 281,
+          "purpose": "task",
+          "command": {
+            "type": "board",
+            "unitIds": [
+              "scene-public-planner-frame-planner-worker-1"
+            ],
+            "transportId": "unit-planner-transport-1000"
+          },
+          "status": "accepted",
+          "admittedTick": 4215,
+          "queuedTick": null
+        },
+        "returnedSdk": {
+          "playerId": "planner",
+          "source": "internal-ai",
+          "scriptId": "goal.transport-worker",
+          "command": {
+            "type": "board",
+            "unitIds": [
+              "scene-public-planner-frame-planner-worker-1"
+            ],
+            "transportId": "unit-planner-transport-1000"
+          }
+        },
+        "safetyThroughActualScheduledFinish": {
+          "startTick": 4215,
+          "finishTick": 5147,
+          "duration": {
+            "state": "met",
+            "value": 932,
+            "factIds": [
+              "fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-1\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":832.9848921026463,\"y\":920.3574885360416}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":1584,\"y\":176}}}",
+              "fact:{\"actor\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"},\"from\":{\"point\":{\"x\":1703.5819532381076,\"y\":135.6362372549752},\"seaId\":\"sea:1\"},\"fromHeading\":3.1714432790459317,\"kind\":\"route\",\"mover\":\"sea\",\"to\":{\"point\":{\"x\":1703.5819532381076,\"y\":135.6362372549752},\"seaId\":\"sea:1\"}}",
+              "fact:{\"actor\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"},\"from\":{\"point\":{\"x\":1703.5819532381076,\"y\":135.6362372549752},\"seaId\":\"sea:1\"},\"fromHeading\":3.1714432790459317,\"kind\":\"route\",\"mover\":\"sea\",\"to\":{\"point\":{\"x\":2960,\"y\":240},\"seaId\":\"sea:1\"}}",
+              "fact:{\"byTick\":16215,\"capacity\":75,\"kind\":\"transport-in\",\"seaId\":\"sea:1\",\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+              "fact:{\"from\":{\"landId\":\"land:2\",\"point\":{\"x\":2960,\"y\":304}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:2\",\"point\":{\"x\":2960,\"y\":240}}}",
+              "field:sea:2960:240",
+              "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":2960,\\\"y\\\":240}}\",\"world-geometry:v87\"]",
+              "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":2960,\\\"y\\\":304}}\",\"world-geometry:v87\"]",
+              "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v68\\\",15,\\\"shore:v71\\\"]\",\"world-geometry:v87\"]",
+              "goal-geometry:[\"preferred-boarding-pose:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"heading\\\":0,\\\"x\\\":2960,\\\"y\\\":240},15,\\\"preferred-boarding-hull:transport:v2\\\",\\\"preferred-boarding-shore:v70\\\"]\",\"world-geometry:v87\"]",
+              "goal-geometry:[\"preferred-boarding-pose:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"heading\\\":3.1714432790459477,\\\"x\\\":1703.5819532381076,\\\"y\\\":135.6362372549752},15,\\\"preferred-boarding-hull:transport:v2\\\",\\\"preferred-boarding-shore:v88\\\"]\",\"world-geometry:v87\"]",
+              "goal-geometry:[\"preferred-boarding-pose:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"heading\\\":3.1714432790459477,\\\"x\\\":1703.5819532381076,\\\"y\\\":135.6362372549752},15,\\\"preferred-boarding-hull:transport:v2\\\",\\\"preferred-boarding-shore:v89\\\"]\",\"world-geometry:v87\"]",
+              "goal-sea-estimate:unit-planner-transport-1000:cbc5df6d",
+              "goal-sea-leg:unit-planner-transport-1000:cda3b0b0",
+              "point:[\"transport\",{\"heading\":3.1714432790459317,\"x\":1703.5819532381076,\"y\":135.6362372549752},{\"x\":1703.5819532381076,\"y\":135.6362372549752},false]",
+              "point:[\"transport\",{\"heading\":3.1714432790459317,\"x\":1703.5819532381076,\"y\":135.6362372549752},{\"x\":2960,\"y\":240},true]",
+              "scene-public-planner-frame-planner-worker-1"
+            ]
+          },
+          "facts": [
+            {
+              "fact": {
+                "id": "fact:{\"kind\":\"shore-safe\",\"landId\":\"land:2\",\"landing\":{\"landId\":\"land:2\",\"point\":{\"x\":2960,\"y\":304},\"seaId\":\"sea:1\"},\"throughTick\":5147}",
+                "predicate": {
+                  "kind": "shore-safe",
+                  "landId": "land:2",
+                  "landing": {
+                    "landId": "land:2",
+                    "seaId": "sea:1",
+                    "point": {
+                      "x": 2960,
+                      "y": 304
+                    }
+                  },
+                  "throughTick": 5147
+                }
+              },
+              "observation": {
+                "fact": {
+                  "id": "fact:{\"kind\":\"shore-safe\",\"landId\":\"land:2\",\"landing\":{\"landId\":\"land:2\",\"point\":{\"x\":2960,\"y\":304},\"seaId\":\"sea:1\"},\"throughTick\":5147}",
+                  "predicate": {
+                    "kind": "shore-safe",
+                    "landId": "land:2",
+                    "landing": {
+                      "landId": "land:2",
+                      "seaId": "sea:1",
+                      "point": {
+                        "x": 2960,
+                        "y": 304
+                      }
+                    },
+                    "throughTick": 5147
+                  }
+                },
+                "state": "met",
+                "observedTick": 4215,
+                "revision": "[\"fact:{\\\"kind\\\":\\\"shore-safe\\\",\\\"landId\\\":\\\"land:2\\\",\\\"landing\\\":{\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2960,\\\"y\\\":304},\\\"seaId\\\":\\\"sea:1\\\"},\\\"throughTick\\\":5147}\",\"observed-safety-window-clear\",[{\"landId\":\"land:2\",\"point\":{\"x\":2960,\"y\":304},\"seaId\":\"sea:1\"},932,{\"planner\":\"planner\",\"pressure\":\"pressure\"},[]]]",
+                "evidence": [],
+                "reason": {
+                  "code": "observed-safety-window-clear",
+                  "factIds": [
+                    "fact:{\"kind\":\"shore-safe\",\"landId\":\"land:2\",\"landing\":{\"landId\":\"land:2\",\"point\":{\"x\":2960,\"y\":304},\"seaId\":\"sea:1\"},\"throughTick\":5147}"
+                  ],
+                  "values": {
+                    "throughTick": 5147,
+                    "observedForecast": true,
+                    "assumesObservedMembership": true,
+                    "assumesNoNewOrdersOrThreats": true,
+                    "supportedThroughTick": 6615
+                  }
+                },
+                "threats": {
+                  "unitIds": [],
+                  "campIds": [],
+                  "requiredForce": 0
+                },
+                "availableTick": 4215
+              }
+            },
+            {
+              "fact": {
+                "id": "fact:{\"kind\":\"site-safe\",\"site\":{\"landId\":\"land:2\",\"point\":{\"x\":2800,\"y\":720}},\"throughTick\":5147}",
+                "predicate": {
+                  "kind": "site-safe",
+                  "site": {
+                    "point": {
+                      "x": 2800,
+                      "y": 720
+                    },
+                    "landId": "land:2"
+                  },
+                  "throughTick": 5147
+                }
+              },
+              "observation": {
+                "fact": {
+                  "id": "fact:{\"kind\":\"site-safe\",\"site\":{\"landId\":\"land:2\",\"point\":{\"x\":2800,\"y\":720}},\"throughTick\":5147}",
+                  "predicate": {
+                    "kind": "site-safe",
+                    "site": {
+                      "point": {
+                        "x": 2800,
+                        "y": 720
+                      },
+                      "landId": "land:2"
+                    },
+                    "throughTick": 5147
+                  }
+                },
+                "state": "met",
+                "observedTick": 4215,
+                "revision": "[\"fact:{\\\"kind\\\":\\\"site-safe\\\",\\\"site\\\":{\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2800,\\\"y\\\":720}},\\\"throughTick\\\":5147}\",\"observed-safety-window-clear\",[{\"landId\":\"land:2\",\"point\":{\"x\":2800,\"y\":720}},932,{\"planner\":\"planner\",\"pressure\":\"pressure\"},[]]]",
+                "evidence": [],
+                "reason": {
+                  "code": "observed-safety-window-clear",
+                  "factIds": [
+                    "fact:{\"kind\":\"site-safe\",\"site\":{\"landId\":\"land:2\",\"point\":{\"x\":2800,\"y\":720}},\"throughTick\":5147}"
+                  ],
+                  "values": {
+                    "throughTick": 5147,
+                    "observedForecast": true,
+                    "assumesObservedMembership": true,
+                    "assumesNoNewOrdersOrThreats": true,
+                    "supportedThroughTick": 6615
+                  }
+                },
+                "threats": {
+                  "unitIds": [],
+                  "campIds": [],
+                  "requiredForce": 0
+                },
+                "availableTick": 4215
+              }
+            }
+          ]
+        },
+        "preCommandNativeActors": [
+          {
+            "id": "scene-public-planner-frame-planner-worker-1",
+            "owner": "planner",
+            "kind": "worker",
+            "hp": 70,
+            "x": 832.9848921026463,
+            "y": 920.3574885360416,
+            "order": {
+              "type": "repair",
+              "buildingId": "building-planner-stables-1089"
+            },
+            "deck": null,
+            "cabin": null
+          },
+          {
+            "id": "unit-planner-transport-1000",
+            "owner": "planner",
+            "kind": "transport",
+            "hp": 338,
+            "x": 1703.5819532381076,
+            "y": 135.6362372549752,
+            "order": {
+              "type": "idle"
+            },
+            "deck": null,
+            "cabin": null
+          }
+        ],
+        "actualSnapshotCargoIds": [],
+        "nativeSnapshotLoad": 0,
+        "work": 5576,
+        "findings": [
+          "The exact worker and hull have two same-generation committed leases. The single accepted board command matches the returned goal.transport-worker SDK command.",
+          "Both shore safety and logical handoff safety are met through scheduled finish5147, not the overall deadline16215.",
+          "The original pre-command worker is not aboard and the hull has load0. Existing repair orders in this snapshot are not interpreted as post-command native behavior."
+        ],
+        "notEstablished": [
+          "Actual boarding, departure, worker landing, delivery, subsequent building payment or whole puzzle success."
+        ],
+        "aiCalls": 0,
+        "factRequests": 0,
+        "navigationQueries": 0,
+        "simulationSteps": 0
+      }
+    },
+    {
+      "originalPath": "/tmp/goal-324-first-worker-far/37-readonly-worker-admission.json",
+      "artifactFile": "3-37-readonly-worker-admission.json",
+      "sha256": "0b7400657b7d3a98dd95e40b8f2c5dd9320eb897629d8ac6a98f349bea1ae6b7",
+      "bytes": 15132,
+      "report": {
+        "productionHead": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+        "testSource": "13b28abb793a956f37e49203095033a04ea22f85",
+        "variant": "far",
+        "think": 419,
+        "tick": 6285,
+        "source": {
+          "path": "/tmp/goal-324-first-worker-far/actual-frame.jsonl.gz",
+          "compressedBytes": 247320,
+          "compressedSha256": "fb7e40bf7f8885018db2dbeb422eae41c4769d74649e80a6698b20569ce6db8f",
+          "plainSha256": "154e0ee941f64e0974c389f5aa71dcb07958a001ff2c60381208086611bca898"
+        },
+        "execution": {
+          "token": {
+            "actionId": "goal-ref:action:v47",
+            "generation": 15
+          },
+          "status": "active",
+          "phase": "loading",
+          "state": {
+            "goalLoadedIds": [],
+            "goalLandedIds": [],
+            "goalRendezvousEstablished": true
+          }
+        },
+        "decodedParameters": {
+          "optionId": "goal-ref:option:v44",
+          "transport": {
+            "kind": "existing",
+            "entityId": "unit-planner-transport-1000"
+          },
+          "cohort": [
+            {
+              "kind": "existing",
+              "entityId": "scene-public-planner-frame-planner-worker-1"
+            }
+          ],
+          "origin": "land",
+          "from": {
+            "landId": "land:1",
+            "point": {
+              "x": 656,
+              "y": 921.8205411396875
+            }
+          },
+          "at": {
+            "point": {
+              "x": 2800,
+              "y": 720
+            },
+            "landId": "land:2"
+          },
+          "departure": {
+            "water": {
+              "x": 1552.0000000000005,
+              "y": 911.9999999999991
+            },
+            "heading": -4.71238898038469,
+            "ground": {
+              "x": 1488,
+              "y": 912
+            }
+          },
+          "landing": {
+            "water": {
+              "x": 2960,
+              "y": 240
+            },
+            "ground": {
+              "x": 2960,
+              "y": 304
+            },
+            "heading": 0
+          },
+          "loadedUnitIds": [],
+          "payloadMass": 75,
+          "dependentUnitIds": [],
+          "byTick": 18285,
+          "berthTolerance": 36
+        },
+        "sameTokenCommittedAssignments": [
+          {
+            "authority": "committed",
+            "id": "assignment:scene-public-planner-frame-planner-worker-1",
+            "leaseId": "lease:scene-public-planner-frame-planner-worker-1",
+            "unitId": "scene-public-planner-frame-planner-worker-1",
+            "role": "worker",
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v47",
+              "generation": 15
+            },
+            "target": {
+              "point": {
+                "x": 2800,
+                "y": 720
+              },
+              "landId": "land:2"
+            },
+            "stage": "assigned",
+            "lastLocation": {
+              "kind": "land",
+              "landId": "land:1",
+              "point": {
+                "x": 656,
+                "y": 921.8205411396875
+              }
+            },
+            "interruption": null
+          },
+          {
+            "authority": "committed",
+            "id": "assignment:unit-planner-transport-1000",
+            "leaseId": "lease:unit-planner-transport-1000",
+            "unitId": "unit-planner-transport-1000",
+            "role": "transport",
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v47",
+              "generation": 15
+            },
+            "target": {
+              "point": {
+                "x": 2800,
+                "y": 720
+              },
+              "landId": "land:2"
+            },
+            "stage": "assigned",
+            "lastLocation": {
+              "kind": "sea",
+              "seaId": "sea:1",
+              "point": {
+                "x": 1552.0000000000005,
+                "y": 911.9999999999991
+              }
+            },
+            "interruption": null
+          }
+        ],
+        "sameTokenAllocatorLeases": [
+          {
+            "id": "lease:scene-public-planner-frame-planner-worker-1",
+            "resourceKey": "unit:scene-public-planner-frame-planner-worker-1",
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v47",
+              "generation": 15
+            },
+            "sinceTick": 6285,
+            "minimumStayUntilTick": 6585,
+            "origin": "allocator",
+            "incumbentTask": null
+          },
+          {
+            "id": "lease:unit-planner-transport-1000",
+            "resourceKey": "unit:unit-planner-transport-1000",
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v47",
+              "generation": 15
+            },
+            "sinceTick": 6285,
+            "minimumStayUntilTick": 6585,
+            "origin": "allocator",
+            "incumbentTask": null
+          }
+        ],
+        "acceptedBoard": {
+          "commandId": "planner:strategy-command:6285:419:0",
+          "source": "executor",
+          "executor": "goal.transport-worker",
+          "action": {
+            "actionId": "goal-ref:action:v47",
+            "generation": 15
+          },
+          "allocationRevision": 419,
+          "purpose": "task",
+          "command": {
+            "type": "board",
+            "unitIds": [
+              "scene-public-planner-frame-planner-worker-1"
+            ],
+            "transportId": "unit-planner-transport-1000"
+          },
+          "status": "accepted",
+          "admittedTick": 6285,
+          "queuedTick": null
+        },
+        "returnedSdk": {
+          "playerId": "planner",
+          "source": "internal-ai",
+          "scriptId": "goal.transport-worker",
+          "command": {
+            "type": "board",
+            "unitIds": [
+              "scene-public-planner-frame-planner-worker-1"
+            ],
+            "transportId": "unit-planner-transport-1000"
+          }
+        },
+        "safetyThroughActualScheduledFinish": {
+          "startTick": 6285,
+          "finishTick": 7296,
+          "duration": {
+            "state": "met",
+            "value": 1011,
+            "factIds": [
+              "fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-1\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":656,\"y\":921.8205411396875}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":912}}}",
+              "fact:{\"actor\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"},\"from\":{\"point\":{\"x\":1552.0000000000005,\"y\":911.9999999999991},\"seaId\":\"sea:1\"},\"fromHeading\":-4.71238898038469,\"kind\":\"route\",\"mover\":\"sea\",\"to\":{\"point\":{\"x\":1552.0000000000005,\"y\":911.9999999999991},\"seaId\":\"sea:1\"}}",
+              "fact:{\"actor\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"},\"from\":{\"point\":{\"x\":1552.0000000000005,\"y\":911.9999999999991},\"seaId\":\"sea:1\"},\"fromHeading\":-4.71238898038469,\"kind\":\"route\",\"mover\":\"sea\",\"to\":{\"point\":{\"x\":2960,\"y\":240},\"seaId\":\"sea:1\"}}",
+              "fact:{\"byTick\":18285,\"capacity\":75,\"kind\":\"transport-in\",\"seaId\":\"sea:1\",\"transport\":{\"entityId\":\"unit-planner-transport-1000\",\"kind\":\"existing\"}}",
+              "fact:{\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":1488,\"y\":912}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":1552,\"y\":912}}}",
+              "fact:{\"from\":{\"landId\":\"land:2\",\"point\":{\"x\":2960,\"y\":304}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:2\",\"point\":{\"x\":2960,\"y\":240}}}",
+              "field:sea:2960:240",
+              "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":1488,\\\"y\\\":912}}\",\"world-geometry:v61\"]",
+              "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":1552,\\\"y\\\":912}}\",\"world-geometry:v61\"]",
+              "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":2960,\\\"y\\\":240}}\",\"world-geometry:v61\"]",
+              "goal-geometry:[\"arrival-ground-v2:{\\\"kind\\\":\\\"project-goal\\\",\\\"mover\\\":\\\"land\\\",\\\"point\\\":{\\\"x\\\":2960,\\\"y\\\":304}}\",\"world-geometry:v61\"]",
+              "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v13\\\",15,\\\"shore:v14\\\"]\",\"world-geometry:v61\"]",
+              "goal-geometry:[\"boarding-near:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},\\\"hull:transport:v2\\\",15,\\\"shore:v60\\\"]\",\"world-geometry:v61\"]",
+              "goal-geometry:[\"preferred-boarding-pose:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"heading\\\":0,\\\"x\\\":2960,\\\"y\\\":240},15,\\\"preferred-boarding-hull:transport:v7\\\",\\\"preferred-boarding-shore:v12\\\"]\",\"world-geometry:v61\"]",
+              "goal-geometry:[\"preferred-boarding-pose:[{\\\"entityId\\\":\\\"unit-planner-transport-1000\\\",\\\"kind\\\":\\\"existing\\\"},{\\\"heading\\\":1.5707963267948966,\\\"x\\\":1552,\\\"y\\\":912},15,\\\"preferred-boarding-hull:transport:v7\\\",\\\"preferred-boarding-shore:v58\\\"]\",\"world-geometry:v61\"]",
+              "goal-sea-estimate:unit-planner-transport-1000:1b735997",
+              "goal-sea-leg:unit-planner-transport-1000:ec23476e",
+              "point:[\"transport\",{\"heading\":-4.71238898038469,\"x\":1552.0000000000005,\"y\":911.9999999999991},{\"x\":1552,\"y\":912},false]",
+              "point:[\"transport\",{\"heading\":-4.71238898038469,\"x\":1552.0000000000005,\"y\":911.9999999999991},{\"x\":2960,\"y\":240},true]",
+              "scene-public-planner-frame-planner-worker-1"
+            ]
+          },
+          "facts": [
+            {
+              "fact": {
+                "id": "fact:{\"kind\":\"shore-safe\",\"landId\":\"land:2\",\"landing\":{\"landId\":\"land:2\",\"point\":{\"x\":2960,\"y\":304},\"seaId\":\"sea:1\"},\"throughTick\":7296}",
+                "predicate": {
+                  "kind": "shore-safe",
+                  "landId": "land:2",
+                  "landing": {
+                    "landId": "land:2",
+                    "seaId": "sea:1",
+                    "point": {
+                      "x": 2960,
+                      "y": 304
+                    }
+                  },
+                  "throughTick": 7296
+                }
+              },
+              "observation": {
+                "fact": {
+                  "id": "fact:{\"kind\":\"shore-safe\",\"landId\":\"land:2\",\"landing\":{\"landId\":\"land:2\",\"point\":{\"x\":2960,\"y\":304},\"seaId\":\"sea:1\"},\"throughTick\":7296}",
+                  "predicate": {
+                    "kind": "shore-safe",
+                    "landId": "land:2",
+                    "landing": {
+                      "landId": "land:2",
+                      "seaId": "sea:1",
+                      "point": {
+                        "x": 2960,
+                        "y": 304
+                      }
+                    },
+                    "throughTick": 7296
+                  }
+                },
+                "state": "met",
+                "observedTick": 6285,
+                "revision": "[\"fact:{\\\"kind\\\":\\\"shore-safe\\\",\\\"landId\\\":\\\"land:2\\\",\\\"landing\\\":{\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2960,\\\"y\\\":304},\\\"seaId\\\":\\\"sea:1\\\"},\\\"throughTick\\\":7296}\",\"observed-safety-window-clear\",[{\"landId\":\"land:2\",\"point\":{\"x\":2960,\"y\":304},\"seaId\":\"sea:1\"},1011,{\"planner\":\"planner\",\"pressure\":\"pressure\"},[]]]",
+                "evidence": [],
+                "reason": {
+                  "code": "observed-safety-window-clear",
+                  "factIds": [
+                    "fact:{\"kind\":\"shore-safe\",\"landId\":\"land:2\",\"landing\":{\"landId\":\"land:2\",\"point\":{\"x\":2960,\"y\":304},\"seaId\":\"sea:1\"},\"throughTick\":7296}"
+                  ],
+                  "values": {
+                    "throughTick": 7296,
+                    "observedForecast": true,
+                    "assumesObservedMembership": true,
+                    "assumesNoNewOrdersOrThreats": true,
+                    "supportedThroughTick": 8685
+                  }
+                },
+                "threats": {
+                  "unitIds": [],
+                  "campIds": [],
+                  "requiredForce": 0
+                },
+                "availableTick": 6285
+              }
+            },
+            {
+              "fact": {
+                "id": "fact:{\"kind\":\"site-safe\",\"site\":{\"landId\":\"land:2\",\"point\":{\"x\":2800,\"y\":720}},\"throughTick\":7296}",
+                "predicate": {
+                  "kind": "site-safe",
+                  "site": {
+                    "point": {
+                      "x": 2800,
+                      "y": 720
+                    },
+                    "landId": "land:2"
+                  },
+                  "throughTick": 7296
+                }
+              },
+              "observation": {
+                "fact": {
+                  "id": "fact:{\"kind\":\"site-safe\",\"site\":{\"landId\":\"land:2\",\"point\":{\"x\":2800,\"y\":720}},\"throughTick\":7296}",
+                  "predicate": {
+                    "kind": "site-safe",
+                    "site": {
+                      "point": {
+                        "x": 2800,
+                        "y": 720
+                      },
+                      "landId": "land:2"
+                    },
+                    "throughTick": 7296
+                  }
+                },
+                "state": "met",
+                "observedTick": 6285,
+                "revision": "[\"fact:{\\\"kind\\\":\\\"site-safe\\\",\\\"site\\\":{\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2800,\\\"y\\\":720}},\\\"throughTick\\\":7296}\",\"observed-safety-window-clear\",[{\"landId\":\"land:2\",\"point\":{\"x\":2800,\"y\":720}},1011,{\"planner\":\"planner\",\"pressure\":\"pressure\"},[]]]",
+                "evidence": [],
+                "reason": {
+                  "code": "observed-safety-window-clear",
+                  "factIds": [
+                    "fact:{\"kind\":\"site-safe\",\"site\":{\"landId\":\"land:2\",\"point\":{\"x\":2800,\"y\":720}},\"throughTick\":7296}"
+                  ],
+                  "values": {
+                    "throughTick": 7296,
+                    "observedForecast": true,
+                    "assumesObservedMembership": true,
+                    "assumesNoNewOrdersOrThreats": true,
+                    "supportedThroughTick": 8685
+                  }
+                },
+                "threats": {
+                  "unitIds": [],
+                  "campIds": [],
+                  "requiredForce": 0
+                },
+                "availableTick": 6285
+              }
+            }
+          ]
+        },
+        "preCommandNativeActors": [
+          {
+            "id": "scene-public-planner-frame-planner-worker-1",
+            "owner": "planner",
+            "kind": "worker",
+            "hp": 70,
+            "x": 656,
+            "y": 921.8205411396875,
+            "order": {
+              "type": "mine",
+              "resourceId": "resource-0",
+              "phase": "toMine",
+              "timer": 0
+            },
+            "deck": null,
+            "cabin": null
+          },
+          {
+            "id": "unit-planner-transport-1000",
+            "owner": "planner",
+            "kind": "transport",
+            "hp": 338,
+            "x": 1552.0000000000005,
+            "y": 911.9999999999991,
+            "order": {
+              "type": "idle"
+            },
+            "deck": null,
+            "cabin": null
+          }
+        ],
+        "actualSnapshotCargoIds": [],
+        "nativeSnapshotLoad": 0,
+        "work": 5919,
+        "findings": [
+          "The exact worker and hull have two same-generation committed leases. The single accepted board command matches the returned goal.transport-worker SDK command.",
+          "Both shore safety and logical handoff safety are met through scheduled finish7296, not the overall deadline18285.",
+          "The original pre-command worker is not aboard and the hull has load0. Existing repair orders in this snapshot are not interpreted as post-command native behavior."
+        ],
+        "notEstablished": [
+          "Actual boarding, departure, worker landing, delivery, subsequent building payment or whole puzzle success."
+        ],
+        "aiCalls": 0,
+        "factRequests": 0,
+        "navigationQueries": 0,
+        "simulationSteps": 0
+      }
+    },
+    {
+      "originalPath": "/tmp/goal-324-worker-cargo-near/37-near-worker-delivery.json",
+      "artifactFile": "4-37-near-worker-delivery.json",
+      "sha256": "bf928fc4a1094d9db78e9bfe7a1a02dbb0d4f5987ec71ad670f90a7cbd486788",
+      "bytes": 20450,
+      "report": {
+        "productionHead": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+        "testSource": "13b28abb793a956f37e49203095033a04ea22f85",
+        "variant": "near",
+        "loadedSource": {
+          "path": "/tmp/goal-324-worker-cargo-near/first-snapshot-cargo/actual-frame.jsonl.gz",
+          "bytes": 315135,
+          "compressedSha256": "e9b6eb5f2994db53bb8e1e3fdaee6312505bbf60001ac8dcd929038f015bacc6",
+          "plainSha256": "7726189059994b97cfe0da76ee2478dd9ef32c3134c70cec04298d732f4c8e43",
+          "provenance": {
+            "source": "13b28abb793a956f37e49203095033a04ea22f85",
+            "sharedBase": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+            "variant": "near",
+            "event": "first-snapshot-cargo",
+            "think": 305,
+            "tick": 4575,
+            "compressedOffset": 55425382,
+            "compressedBytes": 315135,
+            "compressedSha256": "e9b6eb5f2994db53bb8e1e3fdaee6312505bbf60001ac8dcd929038f015bacc6",
+            "plainSha256": "7726189059994b97cfe0da76ee2478dd9ef32c3134c70cec04298d732f4c8e43",
+            "startedCohort": [
+              "scene-public-planner-frame-planner-worker-1"
+            ],
+            "aboardIds": [
+              "scene-public-planner-frame-planner-worker-1"
+            ],
+            "offshipIds": [],
+            "actors": [
+              {
+                "id": "scene-public-planner-frame-planner-worker-1",
+                "kind": "worker",
+                "owner": "planner",
+                "hp": 70,
+                "x": 1628.5601862785759,
+                "y": 174.1433806799874,
+                "deck": {
+                  "shipId": "unit-planner-transport-1000",
+                  "x": -45.44000000000001,
+                  "y": -28.800000000000004
+                },
+                "cabin": null,
+                "order": {
+                  "type": "idle"
+                }
+              }
+            ],
+            "semantics": "Byte copy of one complete CRC-validated original member. Snapshot deck/cabin only; offship does not prove island arrival or transport completion. No AI/source/navigation/simulation calls."
+          }
+        },
+        "landedSource": {
+          "path": "/tmp/goal-324-worker-cargo-near/previously-loaded-now-offship/actual-frame.jsonl.gz",
+          "bytes": 350332,
+          "compressedSha256": "f7d05b27e67fb2f52963016a25bea4499a37cf7131475aed542975d7f619f5f4",
+          "plainSha256": "cf1f9cc12b9a9cebf2cd5602040f895857419ecdf97150d81dc42ec69f219ae4",
+          "provenance": {
+            "source": "13b28abb793a956f37e49203095033a04ea22f85",
+            "sharedBase": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+            "variant": "near",
+            "event": "previously-loaded-now-offship",
+            "think": 350,
+            "tick": 5250,
+            "compressedOffset": 68299747,
+            "compressedBytes": 350332,
+            "compressedSha256": "f7d05b27e67fb2f52963016a25bea4499a37cf7131475aed542975d7f619f5f4",
+            "plainSha256": "cf1f9cc12b9a9cebf2cd5602040f895857419ecdf97150d81dc42ec69f219ae4",
+            "startedCohort": [
+              "scene-public-planner-frame-planner-worker-1"
+            ],
+            "aboardIds": [],
+            "offshipIds": [
+              "scene-public-planner-frame-planner-worker-1"
+            ],
+            "actors": [
+              {
+                "id": "scene-public-planner-frame-planner-worker-1",
+                "kind": "worker",
+                "owner": "planner",
+                "hp": 70,
+                "x": 2940,
+                "y": 308,
+                "deck": null,
+                "cabin": null,
+                "order": {
+                  "type": "idle"
+                }
+              }
+            ],
+            "semantics": "Byte copy of one complete CRC-validated original member. Snapshot deck/cabin only; offship does not prove island arrival or transport completion. No AI/source/navigation/simulation calls."
+          }
+        },
+        "continuation": {
+          "token": {
+            "actionId": "goal-ref:action:v49",
+            "generation": 15
+          },
+          "parameters": {
+            "optionId": "goal-ref:option:v46",
+            "transport": {
+              "kind": "existing",
+              "entityId": "unit-planner-transport-1000"
+            },
+            "cohort": [
+              {
+                "kind": "existing",
+                "entityId": "scene-public-planner-frame-planner-worker-1"
+              }
+            ],
+            "origin": "aboard",
+            "from": {
+              "seaId": "sea:1",
+              "point": {
+                "x": 1584.0000000000007,
+                "y": 143.99999999999923
+              }
+            },
+            "at": {
+              "point": {
+                "x": 2800,
+                "y": 720
+              },
+              "landId": "land:2"
+            },
+            "departure": {
+              "water": {
+                "x": 1584.0000000000007,
+                "y": 143.99999999999923
+              },
+              "heading": 3.1714432790459317
+            },
+            "landing": {
+              "water": {
+                "x": 2960,
+                "y": 240
+              },
+              "ground": {
+                "x": 2960,
+                "y": 304
+              },
+              "heading": 0
+            },
+            "loadedUnitIds": [
+              "scene-public-planner-frame-planner-worker-1"
+            ],
+            "payloadMass": 75,
+            "dependentUnitIds": [
+              "scene-public-planner-frame-planner-worker-1"
+            ],
+            "byTick": 16575,
+            "berthTolerance": 36
+          },
+          "sameTokenCommittedAssignments": [
+            {
+              "authority": "committed",
+              "id": "assignment:scene-public-planner-frame-planner-worker-1",
+              "leaseId": "lease:scene-public-planner-frame-planner-worker-1",
+              "unitId": "scene-public-planner-frame-planner-worker-1",
+              "role": "worker",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "action": {
+                "actionId": "goal-ref:action:v49",
+                "generation": 15
+              },
+              "target": {
+                "point": {
+                  "x": 2800,
+                  "y": 720
+                },
+                "landId": "land:2"
+              },
+              "stage": "en-route",
+              "lastLocation": {
+                "kind": "aboard",
+                "shipId": "unit-planner-transport-1000",
+                "seaId": "sea:1",
+                "compartment": "deck",
+                "point": {
+                  "x": 1584.0000000000007,
+                  "y": 143.99999999999923
+                }
+              },
+              "interruption": null
+            },
+            {
+              "authority": "committed",
+              "id": "assignment:unit-planner-transport-1000",
+              "leaseId": "lease:unit-planner-transport-1000",
+              "unitId": "unit-planner-transport-1000",
+              "role": "transport",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "action": {
+                "actionId": "goal-ref:action:v49",
+                "generation": 15
+              },
+              "target": {
+                "point": {
+                  "x": 2800,
+                  "y": 720
+                },
+                "landId": "land:2"
+              },
+              "stage": "assigned",
+              "lastLocation": {
+                "kind": "sea",
+                "seaId": "sea:1",
+                "point": {
+                  "x": 1584.0000000000007,
+                  "y": 143.99999999999923
+                }
+              },
+              "interruption": null
+            }
+          ],
+          "sameTokenLeases": [
+            {
+              "id": "lease:scene-public-planner-frame-planner-worker-1",
+              "resourceKey": "unit:scene-public-planner-frame-planner-worker-1",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "action": {
+                "actionId": "goal-ref:action:v49",
+                "generation": 15
+              },
+              "sinceTick": 4215,
+              "minimumStayUntilTick": 4575,
+              "origin": "allocator",
+              "incumbentTask": null
+            },
+            {
+              "id": "lease:unit-planner-transport-1000",
+              "resourceKey": "unit:unit-planner-transport-1000",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "action": {
+                "actionId": "goal-ref:action:v49",
+                "generation": 15
+              },
+              "sinceTick": 4215,
+              "minimumStayUntilTick": 4575,
+              "origin": "allocator",
+              "incumbentTask": null
+            }
+          ],
+          "admissions": [
+            {
+              "commandId": "planner:strategy-command:4575:305:0",
+              "source": "executor",
+              "executor": "goal.transport-worker",
+              "action": {
+                "actionId": "goal-ref:action:v49",
+                "generation": 15
+              },
+              "allocationRevision": 305,
+              "purpose": "task",
+              "command": {
+                "type": "holdPosition",
+                "unitIds": [
+                  "scene-public-planner-frame-planner-worker-1"
+                ]
+              },
+              "status": "accepted",
+              "admittedTick": 4575,
+              "queuedTick": null
+            },
+            {
+              "commandId": "planner:strategy-command:4575:305:1",
+              "source": "executor",
+              "executor": "goal.transport-worker",
+              "action": {
+                "actionId": "goal-ref:action:v49",
+                "generation": 15
+              },
+              "allocationRevision": 305,
+              "purpose": "task",
+              "command": {
+                "type": "unload",
+                "unitIds": [
+                  "unit-planner-transport-1000"
+                ],
+                "x": 2960,
+                "y": 240
+              },
+              "status": "accepted",
+              "admittedTick": 4575,
+              "queuedTick": null
+            }
+          ],
+          "returnedSdk": [
+            {
+              "playerId": "planner",
+              "source": "internal-ai",
+              "scriptId": "goal.transport-worker",
+              "command": {
+                "type": "holdPosition",
+                "unitIds": [
+                  "scene-public-planner-frame-planner-worker-1"
+                ]
+              }
+            },
+            {
+              "playerId": "planner",
+              "source": "internal-ai",
+              "scriptId": "goal.transport-worker",
+              "command": {
+                "type": "unload",
+                "unitIds": [
+                  "unit-planner-transport-1000"
+                ],
+                "x": 2960,
+                "y": 240
+              }
+            }
+          ],
+          "originalBoardGeneration": 12,
+          "explanation": "The original generation12 boarding and generation15 actual-aboard continuation refer to the same native worker/hull and same objective. This is not asserted to be one unchanged execution token."
+        },
+        "nativeRegionProof": {
+          "sourceHead": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+          "scope": "Pure prepared native component lookups; no AI, route, fact source or simulation.",
+          "rows": [
+            {
+              "name": "first-snapshot-cargo",
+              "tick": 4575,
+              "worker": {
+                "id": "scene-public-planner-frame-planner-worker-1",
+                "hp": 70,
+                "x": 1628.5601862785759,
+                "y": 174.1433806799874,
+                "carrier": "unit-planner-transport-1000",
+                "landId": null
+              },
+              "expectedLandingLandId": "land:2",
+              "targetMineLandId": "land:2",
+              "handoffLandId": "land:2",
+              "seaId": "sea:1"
+            },
+            {
+              "name": "previously-loaded-now-offship",
+              "tick": 5250,
+              "worker": {
+                "id": "scene-public-planner-frame-planner-worker-1",
+                "hp": 70,
+                "x": 2940,
+                "y": 308,
+                "carrier": null,
+                "landId": "land:2"
+              },
+              "expectedLandingLandId": "land:2",
+              "targetMineLandId": "land:2",
+              "handoffLandId": "land:2",
+              "seaId": "sea:1"
+            }
+          ]
+        },
+        "continuationLedger": [
+          {
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v49",
+              "generation": 15
+            },
+            "kind": "lease-transferred",
+            "fromObjectiveId": "ConquerIsland:planner:resource-1",
+            "toObjectiveId": "ConquerIsland:planner:resource-1",
+            "leaseIds": [
+              "lease:scene-public-planner-frame-planner-worker-1"
+            ],
+            "assignmentIds": [
+              "assignment:scene-public-planner-frame-planner-worker-1"
+            ],
+            "reason": {
+              "code": "dependency-action-handoff",
+              "factIds": [
+                "scene-public-planner-frame-planner-worker-1"
+              ],
+              "values": {}
+            },
+            "id": "planner:allocation:39",
+            "tick": 4575,
+            "revision": 305
+          },
+          {
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v49",
+              "generation": 15
+            },
+            "kind": "assignment-stage",
+            "assignmentId": "assignment:scene-public-planner-frame-planner-worker-1",
+            "from": "assigned",
+            "to": "en-route",
+            "reason": {
+              "code": "current-world-arrival-stage",
+              "factIds": [
+                "scene-public-planner-frame-planner-worker-1"
+              ],
+              "values": {}
+            },
+            "id": "planner:allocation:40",
+            "tick": 4575,
+            "revision": 305
+          },
+          {
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v49",
+              "generation": 15
+            },
+            "kind": "lease-transferred",
+            "fromObjectiveId": "ConquerIsland:planner:resource-1",
+            "toObjectiveId": "ConquerIsland:planner:resource-1",
+            "leaseIds": [
+              "lease:unit-planner-transport-1000"
+            ],
+            "assignmentIds": [
+              "assignment:unit-planner-transport-1000"
+            ],
+            "reason": {
+              "code": "dependency-action-handoff",
+              "factIds": [
+                "unit-planner-transport-1000"
+              ],
+              "values": {}
+            },
+            "id": "planner:allocation:41",
+            "tick": 4575,
+            "revision": 305
+          },
+          {
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v49",
+              "generation": 15
+            },
+            "kind": "progress",
+            "progress": "loaded",
+            "unitIds": [
+              "scene-public-planner-frame-planner-worker-1"
+            ],
+            "entityIds": [
+              "unit-planner-transport-1000"
+            ],
+            "reason": {
+              "code": "observed-world-progress",
+              "factIds": [
+                "scene-public-planner-frame-planner-worker-1",
+                "unit-planner-transport-1000"
+              ],
+              "values": {}
+            },
+            "id": "planner:allocation:42",
+            "tick": 4575,
+            "revision": 305
+          },
+          {
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v49",
+              "generation": 15
+            },
+            "kind": "assignment-stage",
+            "assignmentId": "assignment:unit-planner-transport-1000",
+            "from": "assigned",
+            "to": "en-route",
+            "reason": {
+              "code": "current-world-arrival-stage",
+              "factIds": [
+                "unit-planner-transport-1000"
+              ],
+              "values": {}
+            },
+            "id": "planner:allocation:43",
+            "tick": 4590,
+            "revision": 306
+          },
+          {
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v49",
+              "generation": 15
+            },
+            "kind": "progress",
+            "progress": "sailed",
+            "unitIds": [
+              "scene-public-planner-frame-planner-worker-1"
+            ],
+            "entityIds": [
+              "unit-planner-transport-1000"
+            ],
+            "reason": {
+              "code": "observed-world-progress",
+              "factIds": [
+                "scene-public-planner-frame-planner-worker-1",
+                "unit-planner-transport-1000"
+              ],
+              "values": {}
+            },
+            "id": "planner:allocation:44",
+            "tick": 4785,
+            "revision": 319
+          },
+          {
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v49",
+              "generation": 15
+            },
+            "kind": "progress",
+            "progress": "unloaded",
+            "unitIds": [
+              "scene-public-planner-frame-planner-worker-1"
+            ],
+            "entityIds": [
+              "unit-planner-transport-1000"
+            ],
+            "reason": {
+              "code": "observed-world-progress",
+              "factIds": [
+                "scene-public-planner-frame-planner-worker-1",
+                "unit-planner-transport-1000"
+              ],
+              "values": {}
+            },
+            "id": "planner:allocation:45",
+            "tick": 5250,
+            "revision": 350
+          },
+          {
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v49",
+              "generation": 15
+            },
+            "kind": "action-finished",
+            "outcome": "complete",
+            "reason": {
+              "code": "action-complete",
+              "factIds": [],
+              "values": {}
+            },
+            "id": "planner:allocation:46",
+            "tick": 5250,
+            "revision": 350
+          }
+        ],
+        "retainedOldLoadingExecutions": [
+          {
+            "token": {
+              "actionId": "goal-ref:action:v38",
+              "generation": 12
+            },
+            "status": "blocked",
+            "phase": "loading",
+            "state": {
+              "goalLoadedIds": [],
+              "goalLandedIds": [],
+              "goalRendezvousEstablished": true
+            }
+          },
+          {
+            "token": {
+              "actionId": "goal-ref:action:v45",
+              "generation": 14
+            },
+            "status": "blocked",
+            "phase": "loading",
+            "state": {
+              "goalLoadedIds": [],
+              "goalLandedIds": [],
+              "goalRendezvousEstablished": true
+            }
+          }
+        ],
+        "observedWorkerPool": {
+          "fact": {
+            "id": "fact:{\"at\":{\"landId\":\"land:2\"},\"byTick\":17250,\"count\":1,\"kind\":\"worker-at\"}",
+            "predicate": {
+              "kind": "worker-at",
+              "at": {
+                "entityId": "resource-1",
+                "point": {
+                  "x": 2976,
+                  "y": 896
+                },
+                "landId": "land:2"
+              },
+              "count": 1,
+              "byTick": 17250
+            }
+          },
+          "state": "met",
+          "observedTick": 5250,
+          "revision": "[\"fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:2\\\"},\\\"byTick\\\":17250,\\\"count\\\":1,\\\"kind\\\":\\\"worker-at\\\"}\",\"native-callable-region-pool\",[[[\"scene-public-planner-frame-planner-worker-1\",\"planner\",\"worker\",70,70,2940,308,10,34,36,60,0,null,null,null,null]],null,[]]]",
+          "evidence": [],
+          "reason": {
+            "code": "native-callable-region-pool",
+            "factIds": [
+              "fact:{\"at\":{\"landId\":\"land:2\"},\"byTick\":17250,\"count\":1,\"kind\":\"worker-at\"}"
+            ],
+            "values": {}
+          },
+          "quantity": 1,
+          "entityIds": [
+            "scene-public-planner-frame-planner-worker-1"
+          ],
+          "availableTick": 5250
+        },
+        "nextObservedGoldRequirement": {
+          "fact": {
+            "id": "fact:{\"byTick\":17250,\"kind\":\"gold\",\"minimum\":400}",
+            "predicate": {
+              "kind": "gold",
+              "minimum": 400,
+              "byTick": 17250
+            }
+          },
+          "state": "unmet",
+          "observedTick": 5250,
+          "revision": "[\"fact:{\\\"byTick\\\":17250,\\\"kind\\\":\\\"gold\\\",\\\"minimum\\\":400}\",[129,0,{\"currentFreeGold\":129,\"earliestTick\":6063,\"epoch\":5250,\"factIds\":[\"resource-0\"],\"goldAtDeadline\":929.0000000000001,\"incomeGoldPerTick\":0.33333333333333337,\"source\":{\"id\":\"observed-staffed-income:planner\",\"kind\":\"income\",\"segments\":[{\"fromTick\":5250,\"ratePerTick\":0.33333333333333337,\"throughTick\":7650}]}}]]",
+          "evidence": [],
+          "reason": {
+            "code": "gold-needs-positive-flow",
+            "factIds": [
+              "fact:{\"byTick\":17250,\"kind\":\"gold\",\"minimum\":400}"
+            ],
+            "values": {}
+          },
+          "quantity": 129,
+          "goldForecast": {
+            "epoch": 5250,
+            "currentFreeGold": 129,
+            "goldAtDeadline": 929.0000000000001,
+            "earliestTick": 6063,
+            "incomeGoldPerTick": 0.33333333333333337,
+            "factIds": [
+              "resource-0"
+            ],
+            "source": {
+              "kind": "income",
+              "id": "observed-staffed-income:planner",
+              "segments": [
+                {
+                  "fromTick": 5250,
+                  "throughTick": 7650,
+                  "ratePerTick": 0.33333333333333337
+                }
+              ]
+            }
+          },
+          "availableTick": 6063
+        },
+        "conclusion": "Worker1 is alive on native target land:2 at tick5250, with generation15 actual-aboard SDK unload and same-token loaded/sailed/unloaded/complete evidence. This establishes worker delivery.",
+        "limitations": [
+          "Generation12/14 old loading entries remain blocked; they are not relabeled complete.",
+          "The two cargo event names contain the same original gzip frame; they are not independent observations.",
+          "The next snapshot has gold129 against gold400 and no goal.build command. Actual building admission/payment/completion and overall puzzle attribution require separate evidence."
+        ],
+        "aiCalls": 0,
+        "factRequests": 0,
+        "navigationQueries": 0,
+        "simulationSteps": 0
+      }
+    },
+    {
+      "originalPath": "/tmp/goal-324-worker-cargo-far/37-far-worker-delivery.json",
+      "artifactFile": "5-37-far-worker-delivery.json",
+      "sha256": "94b8b526c830c5d92bc7cf2097484e2861d6d4d7e303f0a88daf059280ac859a",
+      "bytes": 18918,
+      "report": {
+        "productionHead": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+        "testSource": "13b28abb793a956f37e49203095033a04ea22f85",
+        "variant": "far",
+        "firstBoardAudit": {
+          "path": "/tmp/goal-324-first-worker-far/37-readonly-worker-admission.json",
+          "sha256": "0b7400657b7d3a98dd95e40b8f2c5dd9320eb897629d8ac6a98f349bea1ae6b7",
+          "tick": 6285
+        },
+        "loadedSource": {
+          "path": "/tmp/goal-324-worker-cargo-far/first-snapshot-cargo/actual-frame.jsonl.gz",
+          "bytes": 312178,
+          "compressedSha256": "c41098d05b40a25fb1fa27a98a6431dd1b98fe973c185a5778ce75d576fc9d49",
+          "plainSha256": "9cdd5299738c1d7cc8cc7adde8322b09b5b3b02f64fa757cb9d2558c15798756",
+          "provenance": {
+            "source": "13b28abb793a956f37e49203095033a04ea22f85",
+            "sharedBase": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+            "variant": "far",
+            "event": "first-snapshot-cargo",
+            "think": 439,
+            "tick": 6585,
+            "compressedOffset": 93272491,
+            "compressedBytes": 312178,
+            "compressedSha256": "c41098d05b40a25fb1fa27a98a6431dd1b98fe973c185a5778ce75d576fc9d49",
+            "plainSha256": "9cdd5299738c1d7cc8cc7adde8322b09b5b3b02f64fa757cb9d2558c15798756",
+            "startedCohort": [
+              "scene-public-planner-frame-planner-worker-1"
+            ],
+            "aboardIds": [
+              "scene-public-planner-frame-planner-worker-1"
+            ],
+            "offshipIds": [],
+            "actors": [
+              {
+                "id": "scene-public-planner-frame-planner-worker-1",
+                "kind": "worker",
+                "owner": "planner",
+                "hp": 70,
+                "x": 1580.8000000000004,
+                "y": 866.559999999999,
+                "deck": {
+                  "shipId": "unit-planner-transport-1000",
+                  "x": -45.44000000000001,
+                  "y": -28.800000000000004
+                },
+                "cabin": null,
+                "order": {
+                  "type": "idle"
+                }
+              }
+            ],
+            "semantics": "Byte copy of one complete CRC-validated original member. Snapshot deck/cabin only; offship does not prove island arrival or transport completion. No AI/source/navigation/simulation calls."
+          }
+        },
+        "landedSource": {
+          "path": "/tmp/goal-324-worker-cargo-far/previously-loaded-now-offship/actual-frame.jsonl.gz",
+          "bytes": 345252,
+          "compressedSha256": "f7a7be73754d3a2159794bb447902af822733599d8fc75cbe21c1003f4eea0de",
+          "plainSha256": "ffbcb2132af5a5ba2105d4dd474a4e4c902c604743fc43bb0602fe53fd55e0f6",
+          "provenance": {
+            "source": "13b28abb793a956f37e49203095033a04ea22f85",
+            "sharedBase": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+            "variant": "far",
+            "event": "previously-loaded-now-offship",
+            "think": 498,
+            "tick": 7470,
+            "compressedOffset": 110054194,
+            "compressedBytes": 345252,
+            "compressedSha256": "f7a7be73754d3a2159794bb447902af822733599d8fc75cbe21c1003f4eea0de",
+            "plainSha256": "ffbcb2132af5a5ba2105d4dd474a4e4c902c604743fc43bb0602fe53fd55e0f6",
+            "startedCohort": [
+              "scene-public-planner-frame-planner-worker-1"
+            ],
+            "aboardIds": [],
+            "offshipIds": [
+              "scene-public-planner-frame-planner-worker-1"
+            ],
+            "actors": [
+              {
+                "id": "scene-public-planner-frame-planner-worker-1",
+                "kind": "worker",
+                "owner": "planner",
+                "hp": 70,
+                "x": 2948,
+                "y": 308,
+                "deck": null,
+                "cabin": null,
+                "order": {
+                  "type": "idle"
+                }
+              }
+            ],
+            "semantics": "Byte copy of one complete CRC-validated original member. Snapshot deck/cabin only; offship does not prove island arrival or transport completion. No AI/source/navigation/simulation calls."
+          }
+        },
+        "executionToken": {
+          "actionId": "goal-ref:action:v47",
+          "generation": 15
+        },
+        "parameters": {
+          "optionId": "goal-ref:option:v44",
+          "transport": {
+            "kind": "existing",
+            "entityId": "unit-planner-transport-1000"
+          },
+          "cohort": [
+            {
+              "kind": "existing",
+              "entityId": "scene-public-planner-frame-planner-worker-1"
+            }
+          ],
+          "origin": "land",
+          "from": {
+            "landId": "land:1",
+            "point": {
+              "x": 656,
+              "y": 921.8205411396875
+            }
+          },
+          "at": {
+            "point": {
+              "x": 2800,
+              "y": 720
+            },
+            "landId": "land:2"
+          },
+          "departure": {
+            "water": {
+              "x": 1552.0000000000005,
+              "y": 911.9999999999991
+            },
+            "heading": -4.71238898038469,
+            "ground": {
+              "x": 1488,
+              "y": 912
+            }
+          },
+          "landing": {
+            "water": {
+              "x": 2960,
+              "y": 240
+            },
+            "ground": {
+              "x": 2960,
+              "y": 304
+            },
+            "heading": 0
+          },
+          "loadedUnitIds": [],
+          "payloadMass": 75,
+          "dependentUnitIds": [],
+          "byTick": 18285,
+          "berthTolerance": 36
+        },
+        "sameTokenLoadedAssignments": [
+          {
+            "authority": "committed",
+            "id": "assignment:scene-public-planner-frame-planner-worker-1",
+            "leaseId": "lease:scene-public-planner-frame-planner-worker-1",
+            "unitId": "scene-public-planner-frame-planner-worker-1",
+            "role": "worker",
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v47",
+              "generation": 15
+            },
+            "target": {
+              "point": {
+                "x": 2800,
+                "y": 720
+              },
+              "landId": "land:2"
+            },
+            "stage": "en-route",
+            "lastLocation": {
+              "kind": "aboard",
+              "shipId": "unit-planner-transport-1000",
+              "seaId": "sea:1",
+              "compartment": "deck",
+              "point": {
+                "x": 1552.0000000000005,
+                "y": 911.9999999999991
+              }
+            },
+            "interruption": null
+          },
+          {
+            "authority": "committed",
+            "id": "assignment:unit-planner-transport-1000",
+            "leaseId": "lease:unit-planner-transport-1000",
+            "unitId": "unit-planner-transport-1000",
+            "role": "transport",
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v47",
+              "generation": 15
+            },
+            "target": {
+              "point": {
+                "x": 2800,
+                "y": 720
+              },
+              "landId": "land:2"
+            },
+            "stage": "assigned",
+            "lastLocation": {
+              "kind": "sea",
+              "seaId": "sea:1",
+              "point": {
+                "x": 1552.0000000000005,
+                "y": 911.9999999999991
+              }
+            },
+            "interruption": null
+          }
+        ],
+        "sameTokenLoadedLeases": [
+          {
+            "id": "lease:scene-public-planner-frame-planner-worker-1",
+            "resourceKey": "unit:scene-public-planner-frame-planner-worker-1",
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v47",
+              "generation": 15
+            },
+            "sinceTick": 6285,
+            "minimumStayUntilTick": 6585,
+            "origin": "allocator",
+            "incumbentTask": null
+          },
+          {
+            "id": "lease:unit-planner-transport-1000",
+            "resourceKey": "unit:unit-planner-transport-1000",
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v47",
+              "generation": 15
+            },
+            "sinceTick": 6285,
+            "minimumStayUntilTick": 6585,
+            "origin": "allocator",
+            "incumbentTask": null
+          }
+        ],
+        "acceptedToSdk": {
+          "admissions": [
+            {
+              "commandId": "planner:strategy-command:6585:439:0",
+              "source": "executor",
+              "executor": "goal.transport-worker",
+              "action": {
+                "actionId": "goal-ref:action:v47",
+                "generation": 15
+              },
+              "allocationRevision": 439,
+              "purpose": "task",
+              "command": {
+                "type": "holdPosition",
+                "unitIds": [
+                  "scene-public-planner-frame-planner-worker-1"
+                ]
+              },
+              "status": "accepted",
+              "admittedTick": 6585,
+              "queuedTick": null
+            },
+            {
+              "commandId": "planner:strategy-command:6585:439:1",
+              "source": "executor",
+              "executor": "goal.transport-worker",
+              "action": {
+                "actionId": "goal-ref:action:v47",
+                "generation": 15
+              },
+              "allocationRevision": 439,
+              "purpose": "task",
+              "command": {
+                "type": "unload",
+                "unitIds": [
+                  "unit-planner-transport-1000"
+                ],
+                "x": 2960,
+                "y": 240
+              },
+              "status": "accepted",
+              "admittedTick": 6585,
+              "queuedTick": null
+            }
+          ],
+          "returnedSdk": [
+            {
+              "playerId": "planner",
+              "source": "internal-ai",
+              "scriptId": "goal.transport-worker",
+              "command": {
+                "type": "holdPosition",
+                "unitIds": [
+                  "scene-public-planner-frame-planner-worker-1"
+                ]
+              }
+            },
+            {
+              "playerId": "planner",
+              "source": "internal-ai",
+              "scriptId": "goal.transport-worker",
+              "command": {
+                "type": "unload",
+                "unitIds": [
+                  "unit-planner-transport-1000"
+                ],
+                "x": 2960,
+                "y": 240
+              }
+            }
+          ]
+        },
+        "nativeRegionProof": {
+          "sourceHead": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+          "scope": "Pure prepared native component lookups; no AI, route, fact source or simulation.",
+          "rows": [
+            {
+              "name": "first-snapshot-cargo",
+              "tick": 6585,
+              "worker": {
+                "id": "scene-public-planner-frame-planner-worker-1",
+                "hp": 70,
+                "x": 1580.8000000000004,
+                "y": 866.559999999999,
+                "carrier": "unit-planner-transport-1000",
+                "landId": null
+              },
+              "expectedLandingLandId": "land:2",
+              "targetMineLandId": "land:2",
+              "handoffLandId": "land:2",
+              "seaId": "sea:1"
+            },
+            {
+              "name": "previously-loaded-now-offship",
+              "tick": 7470,
+              "worker": {
+                "id": "scene-public-planner-frame-planner-worker-1",
+                "hp": 70,
+                "x": 2948,
+                "y": 308,
+                "carrier": null,
+                "landId": "land:2"
+              },
+              "expectedLandingLandId": "land:2",
+              "targetMineLandId": "land:2",
+              "handoffLandId": "land:2",
+              "seaId": "sea:1"
+            }
+          ]
+        },
+        "completionExecution": {
+          "token": {
+            "actionId": "goal-ref:action:v47",
+            "generation": 15
+          },
+          "objectiveId": "ConquerIsland:planner:resource-1",
+          "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+          "executor": "goal.transport-worker",
+          "intent": {
+            "kind": "goal-action",
+            "goalId": "ConquerIsland:planner:resource-1",
+            "declarationId": "goal-ref:declaration:v46",
+            "actionKind": "transport-worker",
+            "parameters": {},
+            "outputs": [],
+            "parametersRef": "goal-ref:parameters:v45"
+          },
+          "target": {
+            "point": {
+              "x": 2800,
+              "y": 720
+            },
+            "landId": "land:2"
+          },
+          "dependsOn": [],
+          "completionEffects": [],
+          "status": "complete",
+          "phase": "delivered",
+          "sinceTick": 6285,
+          "lastProgressTick": 7470,
+          "state": {
+            "goalLoadedIds": [
+              "scene-public-planner-frame-planner-worker-1"
+            ],
+            "goalLandedIds": [
+              "scene-public-planner-frame-planner-worker-1"
+            ],
+            "goalRendezvousEstablished": true,
+            "goalDeparturePose": {
+              "x": 1552.0000000000005,
+              "y": 911.9999999999991
+            },
+            "goalSailingObserved": true
+          }
+        },
+        "loadedSailedUnloadedCompletionEvents": [
+          {
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v47",
+              "generation": 15
+            },
+            "kind": "assignment-stage",
+            "assignmentId": "assignment:scene-public-planner-frame-planner-worker-1",
+            "from": "assigned",
+            "to": "en-route",
+            "reason": {
+              "code": "current-world-arrival-stage",
+              "factIds": [
+                "scene-public-planner-frame-planner-worker-1"
+              ],
+              "values": {}
+            },
+            "id": "planner:allocation:53",
+            "tick": 6300,
+            "revision": 420
+          },
+          {
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v47",
+              "generation": 15
+            },
+            "kind": "progress",
+            "progress": "loaded",
+            "unitIds": [
+              "scene-public-planner-frame-planner-worker-1"
+            ],
+            "entityIds": [
+              "unit-planner-transport-1000"
+            ],
+            "reason": {
+              "code": "observed-world-progress",
+              "factIds": [
+                "scene-public-planner-frame-planner-worker-1",
+                "unit-planner-transport-1000"
+              ],
+              "values": {}
+            },
+            "id": "planner:allocation:54",
+            "tick": 6585,
+            "revision": 439
+          },
+          {
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v47",
+              "generation": 15
+            },
+            "kind": "assignment-stage",
+            "assignmentId": "assignment:unit-planner-transport-1000",
+            "from": "assigned",
+            "to": "en-route",
+            "reason": {
+              "code": "current-world-arrival-stage",
+              "factIds": [
+                "unit-planner-transport-1000"
+              ],
+              "values": {}
+            },
+            "id": "planner:allocation:55",
+            "tick": 6600,
+            "revision": 440
+          },
+          {
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v47",
+              "generation": 15
+            },
+            "kind": "progress",
+            "progress": "sailed",
+            "unitIds": [
+              "scene-public-planner-frame-planner-worker-1"
+            ],
+            "entityIds": [
+              "unit-planner-transport-1000"
+            ],
+            "reason": {
+              "code": "observed-world-progress",
+              "factIds": [
+                "scene-public-planner-frame-planner-worker-1",
+                "unit-planner-transport-1000"
+              ],
+              "values": {}
+            },
+            "id": "planner:allocation:56",
+            "tick": 6645,
+            "revision": 443
+          },
+          {
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v47",
+              "generation": 15
+            },
+            "kind": "progress",
+            "progress": "unloaded",
+            "unitIds": [
+              "scene-public-planner-frame-planner-worker-1"
+            ],
+            "entityIds": [
+              "unit-planner-transport-1000"
+            ],
+            "reason": {
+              "code": "observed-world-progress",
+              "factIds": [
+                "scene-public-planner-frame-planner-worker-1",
+                "unit-planner-transport-1000"
+              ],
+              "values": {}
+            },
+            "id": "planner:allocation:58",
+            "tick": 7470,
+            "revision": 498
+          },
+          {
+            "objectiveId": "ConquerIsland:planner:resource-1",
+            "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+            "action": {
+              "actionId": "goal-ref:action:v47",
+              "generation": 15
+            },
+            "kind": "action-finished",
+            "outcome": "complete",
+            "reason": {
+              "code": "action-complete",
+              "factIds": [],
+              "values": {}
+            },
+            "id": "planner:allocation:59",
+            "tick": 7470,
+            "revision": 498
+          }
+        ],
+        "observedTargetWorkerPool": {
+          "fact": {
+            "id": "fact:{\"at\":{\"landId\":\"land:2\"},\"byTick\":19470,\"count\":1,\"kind\":\"worker-at\"}",
+            "predicate": {
+              "kind": "worker-at",
+              "at": {
+                "entityId": "resource-1",
+                "point": {
+                  "x": 2976,
+                  "y": 896
+                },
+                "landId": "land:2"
+              },
+              "count": 1,
+              "byTick": 19470
+            }
+          },
+          "state": "met",
+          "observedTick": 7470,
+          "revision": "[\"fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:2\\\"},\\\"byTick\\\":19470,\\\"count\\\":1,\\\"kind\\\":\\\"worker-at\\\"}\",\"native-callable-region-pool\",[[[\"scene-public-planner-frame-planner-worker-1\",\"planner\",\"worker\",70,70,2948,308,10,34,36,60,0,null,null,null,null]],null,[]]]",
+          "evidence": [],
+          "reason": {
+            "code": "native-callable-region-pool",
+            "factIds": [
+              "fact:{\"at\":{\"landId\":\"land:2\"},\"byTick\":19470,\"count\":1,\"kind\":\"worker-at\"}"
+            ],
+            "values": {}
+          },
+          "quantity": 1,
+          "entityIds": [
+            "scene-public-planner-frame-planner-worker-1"
+          ],
+          "availableTick": 7470
+        },
+        "observedGoldRequirement": {
+          "fact": {
+            "id": "fact:{\"byTick\":19470,\"kind\":\"gold\",\"minimum\":400}",
+            "predicate": {
+              "kind": "gold",
+              "minimum": 400,
+              "byTick": 19470
+            }
+          },
+          "state": "met",
+          "observedTick": 7470,
+          "revision": "[\"fact:{\\\"byTick\\\":19470,\\\"kind\\\":\\\"gold\\\",\\\"minimum\\\":400}\",[619,0,{\"currentFreeGold\":619,\"earliestTick\":7470,\"epoch\":7470,\"factIds\":[\"resource-0\"],\"goldAtDeadline\":1419,\"incomeGoldPerTick\":0.33333333333333337,\"source\":{\"id\":\"observed-staffed-income:planner\",\"kind\":\"income\",\"segments\":[{\"fromTick\":7470,\"ratePerTick\":0.33333333333333337,\"throughTick\":9870}]}}]]",
+          "evidence": [],
+          "reason": {
+            "code": "gold-free-now",
+            "factIds": [
+              "fact:{\"byTick\":19470,\"kind\":\"gold\",\"minimum\":400}"
+            ],
+            "values": {}
+          },
+          "quantity": 619,
+          "goldForecast": {
+            "epoch": 7470,
+            "currentFreeGold": 619,
+            "goldAtDeadline": 1419,
+            "earliestTick": 7470,
+            "incomeGoldPerTick": 0.33333333333333337,
+            "factIds": [
+              "resource-0"
+            ],
+            "source": {
+              "kind": "income",
+              "id": "observed-staffed-income:planner",
+              "segments": [
+                {
+                  "fromTick": 7470,
+                  "throughTick": 9870,
+                  "ratePerTick": 0.33333333333333337
+                }
+              ]
+            }
+          },
+          "availableTick": 7470
+        },
+        "conclusion": "Far worker1 is alive on native target land:2 at absolute observer tick7470. Generation15 supports board6285, actual cargo6585 plus same-token unload SDK, sailed6645 and delivered/complete7470. This sampled far chain stays in one generation.",
+        "limitations": [
+          "Observer tick7470 is not relabeled as tracker relative tick7465.",
+          "This does not establish planner building admission, payment, garrison or whole-chain ownership. Reported v6Economy hall attribution remains a separate failed planner-step check."
+        ],
+        "aiCalls": 0,
+        "factRequests": 0,
+        "navigationQueries": 0,
+        "simulationSteps": 0
+      }
+    }
+  ]
+}

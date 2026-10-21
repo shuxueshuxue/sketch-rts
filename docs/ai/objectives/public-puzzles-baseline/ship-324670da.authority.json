@@ -1,0 +1,85 @@
+{
+  "source": "13b28abb793a956f37e49203095033a04ea22f85",
+  "sharedBase": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+  "semantics": "Actual retained runtime memory only. Bytes use native UTF-8 JSON.stringify, matching the fixed262144B bound; missing failed attempts are not reconstructed. No imports/calls into planner or simulation.",
+  "reporterSha256": "91a4586b217ba751906614945c7b5307b3c068c010150594796c8845ba0a95a5",
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "thinkCount": 560,
+      "availableMemoryCount": 560,
+      "attemptedThinks": 560,
+      "aboveNativeLimit": 0,
+      "peak": {
+        "think": 446,
+        "tick": 6690,
+        "available": true,
+        "authorityBytes": 60635,
+        "executionCount": 7,
+        "terminalCount": 0,
+        "executionStatuses": {
+          "goal.assemble:blocked": 1,
+          "goal.position-transport:blocked": 4,
+          "goal.transport-worker:active": 1,
+          "goal.wait-income:active": 1
+        },
+        "eventCount": 56,
+        "currentMethodActionCount": 2,
+        "fieldBytes": {
+          "executions": 4638,
+          "events": 27410,
+          "methods": 1453,
+          "objectives": 647,
+          "leases": 811,
+          "assignments": 1689,
+          "budgets": 2,
+          "issuedOrders": 651,
+          "issuedCommands": 2850
+        },
+        "nativeByteLimit": 262144,
+        "withinNativeLimit": true
+      },
+      "peakExecutions": 7,
+      "inputSha256": "80df47ea553111247845ad5a2457aef3fd3ca8b5713a25c7088d166855b5b4d5"
+    },
+    {
+      "puzzle": "ship-away/near",
+      "thinkCount": 560,
+      "availableMemoryCount": 560,
+      "attemptedThinks": 560,
+      "aboveNativeLimit": 0,
+      "peak": {
+        "think": 320,
+        "tick": 4800,
+        "available": true,
+        "authorityBytes": 62185,
+        "executionCount": 10,
+        "terminalCount": 0,
+        "executionStatuses": {
+          "goal.assemble:blocked": 1,
+          "goal.position-transport:blocked": 5,
+          "goal.transport-worker:active": 1,
+          "goal.transport-worker:blocked": 2,
+          "goal.wait-income:active": 1
+        },
+        "eventCount": 44,
+        "currentMethodActionCount": 2,
+        "fieldBytes": {
+          "executions": 6698,
+          "events": 22799,
+          "methods": 1453,
+          "objectives": 647,
+          "leases": 811,
+          "assignments": 1691,
+          "budgets": 2,
+          "issuedOrders": 651,
+          "issuedCommands": 2877
+        },
+        "nativeByteLimit": 262144,
+        "withinNativeLimit": true
+      },
+      "peakExecutions": 10,
+      "inputSha256": "8ce547228ae259e8d5619d9cab96975ed6bb037e57416ac5c363d53f9a65d601"
+    }
+  ]
+}
