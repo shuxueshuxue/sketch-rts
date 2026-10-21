@@ -111,6 +111,44 @@ describe('declarative economy and land executors at the existing command boundar
     expect(cancelled.reasons[0]!.reason).toBe('goal-training-job-ended-early');
   });
 
+  it('proposes separate same-price payments for two real jobs in one batch, advancing only after an output ACK', () => {
+    const game = nativeGame(); let input = request(game, goalTrainExecutor, 'train', { unitKind: 'footman', count: 2,
+      producer: ref('producer') }, ['queue:producer'], UNIT_DEFS.footman.cost * 2, ['unit-0', 'unit-1']);
+    const payments: NonNullable<ExecutorFeedback['payments']>[number][] = [];
+    const bindings: Record<string, string> = {};
+    let result = execute(goalTrainExecutor, input), pausedForAck = false;
+    for (let turn = 0; turn < 200; turn++) {
+      payments.push(...(result.payments ?? []));
+      input = apply(game, input, result);
+      for (const output of result.goalOutputs ?? []) {
+        expect(game.units.find(unit => unit.id === output.entityId)).toMatchObject({ owner: 'us', kind: 'footman' });
+        expect(input.grant.commands.some(command => command.id === output.proof.acceptedCommandId && command.command.type === 'train')).toBe(true);
+        if (output.output === 'unit-0' && !bindings[output.output]) {
+          const waiting = execute(goalTrainExecutor, input);
+          expect(waiting).toMatchObject({ status: 'active', phase: 'await-output-validation', commands: [] });
+          pausedForAck = true;
+        }
+        // Explicit consumer ACK models the shared interface only. The central
+        // proof validator must independently derive this from native evidence;
+        // this test does not accept feedback state as its own proof.
+        bindings[output.output] = output.entityId;
+      }
+      input = { ...input, execution: { ...input.execution, state: { ...input.execution.state, goalOutputBindings: { ...bindings } } } };
+      if (result.status === 'complete') break;
+      for (let tick = 0; tick < 15; tick++) stepGame(game);
+      input = { ...input, snapshot: snapshotGame(game) }; result = execute(goalTrainExecutor, input);
+    }
+    expect(result.status).toBe('complete'); expect(pausedForAck).toBe(true);
+    expect(input.grant.commands).toHaveLength(2);
+    expect(payments.map(payment => payment.amountGold)).toEqual([UNIT_DEFS.footman.cost, UNIT_DEFS.footman.cost]);
+    expect(new Set(payments.map(payment => payment.proof.acceptedCommandId)).size).toBe(2);
+    expect(new Set(payments.map(payment => payment.proof.kind === 'production' ? payment.proof.jobId : null)).size).toBe(2);
+    expect(Object.keys(bindings).sort()).toEqual(['unit-0', 'unit-1']);
+    expect(new Set(Object.values(bindings)).size).toBe(2);
+    expect(input.grant.budgets[0]!.paidGold).toBe(2 * UNIT_DEFS.footman.cost);
+    expect(game.players.us!.gold).toBe(3000 - 2 * UNIT_DEFS.footman.cost);
+  });
+
   it('builds one exact native site, pays at the observed foundation and proposes only that actual output', () => {
     const game = nativeGame(), point = snapToFootprint(game.map, BUILDING_DEFS.farm.radius, { x: 900, y: 900 });
     const at = { point, landId: landIdAt(game.map, point)! };
