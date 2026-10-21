@@ -1,8 +1,9 @@
 # 共同规划器栈上的题库接线
 
-计划判法使用冻结世界下最多20次原生think，沿用同一快照和memory，记录首次可执行计划的think序号。[当前5ca默认容量对拍](geometry-capacity.zh.md)：11帧完整220次，11个根建址ready后持续保留，无pressure/overflow；完整输出与a576测量轮220/220字节一致。公开题仍0通过、11缺能力，首次可执行全部未出现。[a0db/K20旧结果](frozen-thinks-a0db.zh.md)保留缓存活锁的原片；82b/K10和40e单次冷帧表独立保留。
+计划判法使用冻结世界下最多20次原生think，沿用同一快照和memory，记录首次可执行计划序号。[当前f27领域装配结果](domain-f27.zh.md)：11帧完整220次，0通过、无选中动作/ready，首次可执行全未出现；安全事实已给met/unmet，守家等题已有新战斗候选。穷矿题39项pin超过38项，显式pressure，其余10帧无overflow。
+[此前a576/5ca缓存对拍](geometry-capacity.zh.md)保持自己的来源和通过结论，不改标为本次领域验收；更早a0/82b/40e原片同样独立保留。
 
-#585 的共同栈以 main `d36d0543b04077b44690bf4dae9dabb92f5a34a5` 为祖先，当前为缓存窄对拍固定在 `feat/goal-geometry-calibration` 的 `5ca744cf`，不混入随后共同头的安全/战斗/执行装配。真实搜索、事实源、物理scope、正常Objective collector、think序号发布与集中续算已接入。
+#585 的共同栈以 main `d36d0543b04077b44690bf4dae9dabb92f5a34a5` 为祖先，本次固定 `feat/strategy-goal-planner` 的 `f27d1cb1`。真实搜索、事实源、scope、正常Objective collector、think序号发布与集中续算已接，安全/战斗/land factory装配实际受测；后续生产桥接将另在准确固定头接入，未混入本轮。
 11个计划验收已全部开启，最多20think。此前40e单次冷帧为通过0、错误动作链0、缺能力11；[旧逐题表与补能力表](cold-plans-40e.zh.md)保留历史来源。下方各固定SHA的skip数字也仅作历史验证记录。
 本页记录正式合同接线和共同栈验证；[历史 main 报告](report.zh.md)中的 8/33 只属于原来的 `d4ca2668` 生产代码，不是共同栈的成绩。
 
