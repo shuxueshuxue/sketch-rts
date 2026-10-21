@@ -1,0 +1,1424 @@
+{
+  "semantics": "Intermediate original funding/worker-pool audit; not a goal.build payment proof.",
+  "audits": [
+    {
+      "originalPath": "/tmp/sketch-allocator-defense/goal-worker-funding-324-audit-23/receipt.json",
+      "artifactFile": "6-receipt.json",
+      "sha256": "3b81281f489362aa7c184340bf1c500c3d43f02e55d884ed813c4bec2bfdcdb3",
+      "bytes": 12196,
+      "report": {
+        "version": 1,
+        "head": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+        "scope": "Read-only existing original members; pure table decoding/JSON arithmetic only, no AI, facts, navigation or simulation calls",
+        "inputs": [
+          {
+            "root": "/tmp/goal-324-first-worker-near",
+            "tick": 4215,
+            "gzipSHA256": "59bdf08027b4938f97b816c5554ea0572cb114fb46d7eba01fbb49774479faae",
+            "plainSHA256": "97fc164e47dba64c2ee3d1cb3f4f232d8c9c881ab72788514fa08299d919329f",
+            "provenanceSHA256": "c0b4f46179a5d7bbc6c33f03e942f484d63e5b47759858e680d4a55db8d23978"
+          },
+          {
+            "root": "/tmp/goal-324-worker-cargo-near/first-snapshot-cargo",
+            "tick": 4575,
+            "gzipSHA256": "e9b6eb5f2994db53bb8e1e3fdaee6312505bbf60001ac8dcd929038f015bacc6",
+            "plainSHA256": "7726189059994b97cfe0da76ee2478dd9ef32c3134c70cec04298d732f4c8e43",
+            "provenanceSHA256": "a931ac823ed32dc353bbbdae67a801bf2f78b6ff8a026f8b72ebd8f1c00c430a"
+          },
+          {
+            "root": "/tmp/goal-324-worker-cargo-near/previously-loaded-now-offship",
+            "tick": 5250,
+            "gzipSHA256": "f7d05b27e67fb2f52963016a25bea4499a37cf7131475aed542975d7f619f5f4",
+            "plainSHA256": "cf1f9cc12b9a9cebf2cd5602040f895857419ecdf97150d81dc42ec69f219ae4",
+            "provenanceSHA256": "7ad94668f34cfe9ed3051ec23f115124cc02e9336a2f0734c3e93ac93f752f2a"
+          },
+          {
+            "root": "/tmp/goal-324-first-worker-far",
+            "tick": 6285,
+            "gzipSHA256": "fb7e40bf7f8885018db2dbeb422eae41c4769d74649e80a6698b20569ce6db8f",
+            "plainSHA256": "154e0ee941f64e0974c389f5aa71dcb07958a001ff2c60381208086611bca898",
+            "provenanceSHA256": "6f60ebbfc70bfd8c3dbe0186036b1c314844f96ff57527db03f51b870e638d4a"
+          }
+        ],
+        "conclusion": "At near5250 the actual named worker satisfies target land2 worker-at; current gold129/400 remains unmet. No formal build budget/execution/paid foundation in any of these four frames.",
+        "financialSnapshots": [
+          {
+            "variant": "near",
+            "tick": 4215,
+            "currentGold": 80,
+            "budgetCount": 0,
+            "buildExecutionCount": 0,
+            "plans": [
+              {
+                "goalId": "ConquerIsland:planner:resource-1",
+                "estimatedBuildStartTick": 5175,
+                "workerPool": {
+                  "kind": "pool-member",
+                  "unitKind": "worker",
+                  "at": {
+                    "point": {
+                      "x": 2832,
+                      "y": 720
+                    },
+                    "landId": "land:2"
+                  },
+                  "slot": "[\"build\",\"townHall\",\"land:2\",{\"x\":2832,\"y\":720}]",
+                  "routeProfile": {
+                    "from": {
+                      "x": 2960,
+                      "y": 304
+                    },
+                    "speed": 60
+                  }
+                },
+                "goldTimeline": [
+                  {
+                    "tick": 5175,
+                    "before": 80,
+                    "delta": 320.00000000000006,
+                    "after": 400.00000000000006
+                  },
+                  {
+                    "tick": 5175,
+                    "before": 400.00000000000006,
+                    "delta": -400,
+                    "after": 0
+                  }
+                ],
+                "facts": [
+                  {
+                    "kind": "worker-at",
+                    "state": "unmet",
+                    "quantity": 0,
+                    "availableTick": 4215,
+                    "observedTick": 4215,
+                    "entityIds": []
+                  },
+                  {
+                    "kind": "gold",
+                    "state": "unmet",
+                    "quantity": 80,
+                    "availableTick": 5175,
+                    "observedTick": 4215,
+                    "entityIds": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "variant": "near",
+            "tick": 4575,
+            "currentGold": 19,
+            "budgetCount": 0,
+            "buildExecutionCount": 0,
+            "plans": [
+              {
+                "goalId": "ConquerIsland:planner:resource-1",
+                "estimatedBuildStartTick": 5718,
+                "workerPool": {
+                  "kind": "pool-member",
+                  "unitKind": "worker",
+                  "at": {
+                    "point": {
+                      "x": 2832,
+                      "y": 720
+                    },
+                    "landId": "land:2"
+                  },
+                  "slot": "[\"build\",\"townHall\",\"land:2\",{\"x\":2832,\"y\":720}]",
+                  "routeProfile": {
+                    "from": {
+                      "x": 2960,
+                      "y": 304
+                    },
+                    "speed": 60
+                  }
+                },
+                "goldTimeline": [
+                  {
+                    "tick": 5718,
+                    "before": 19,
+                    "delta": 381.00000000000006,
+                    "after": 400.00000000000006
+                  },
+                  {
+                    "tick": 5718,
+                    "before": 400.00000000000006,
+                    "delta": -400,
+                    "after": 0
+                  }
+                ],
+                "facts": [
+                  {
+                    "kind": "worker-at",
+                    "state": "unmet",
+                    "quantity": 0,
+                    "availableTick": 4575,
+                    "observedTick": 4575,
+                    "entityIds": []
+                  },
+                  {
+                    "kind": "gold",
+                    "state": "unmet",
+                    "quantity": 19,
+                    "availableTick": 5718,
+                    "observedTick": 4575,
+                    "entityIds": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "variant": "near",
+            "tick": 5250,
+            "currentGold": 129,
+            "budgetCount": 0,
+            "buildExecutionCount": 0,
+            "plans": [
+              {
+                "goalId": "ConquerIsland:planner:resource-1",
+                "estimatedBuildStartTick": 6063,
+                "workerPool": {
+                  "kind": "pool-member",
+                  "unitKind": "worker",
+                  "at": {
+                    "point": {
+                      "x": 2832,
+                      "y": 720
+                    },
+                    "landId": "land:2"
+                  },
+                  "slot": "[\"build\",\"townHall\",\"land:2\",{\"x\":2832,\"y\":720}]",
+                  "routeProfile": {
+                    "from": {
+                      "x": 2940,
+                      "y": 308
+                    },
+                    "speed": 60
+                  }
+                },
+                "goldTimeline": [
+                  {
+                    "tick": 6063,
+                    "before": 129,
+                    "delta": 271.00000000000006,
+                    "after": 400.00000000000006
+                  },
+                  {
+                    "tick": 6063,
+                    "before": 400.00000000000006,
+                    "delta": -400,
+                    "after": 0
+                  }
+                ],
+                "facts": [
+                  {
+                    "kind": "worker-at",
+                    "state": "met",
+                    "quantity": 1,
+                    "availableTick": 5250,
+                    "observedTick": 5250,
+                    "entityIds": [
+                      "scene-public-planner-frame-planner-worker-1"
+                    ]
+                  },
+                  {
+                    "kind": "gold",
+                    "state": "unmet",
+                    "quantity": 129,
+                    "availableTick": 6063,
+                    "observedTick": 5250,
+                    "entityIds": []
+                  },
+                  {
+                    "kind": "worker-at",
+                    "state": "met",
+                    "quantity": 1,
+                    "availableTick": 5250,
+                    "observedTick": 5250,
+                    "entityIds": [
+                      "scene-public-planner-frame-planner-worker-1"
+                    ]
+                  }
+                ]
+              },
+              {
+                "goalId": "ExpandLand:planner:resource-1",
+                "estimatedBuildStartTick": 6063,
+                "workerPool": {
+                  "kind": "pool-member",
+                  "unitKind": "worker",
+                  "at": {
+                    "point": {
+                      "x": 2832,
+                      "y": 720
+                    },
+                    "landId": "land:2"
+                  },
+                  "slot": "[\"build\",\"townHall\",\"land:2\",{\"x\":2832,\"y\":720}]",
+                  "routeProfile": {
+                    "from": {
+                      "x": 2940,
+                      "y": 308
+                    },
+                    "speed": 60
+                  }
+                },
+                "goldTimeline": [
+                  {
+                    "tick": 6063,
+                    "before": 129,
+                    "delta": 271.00000000000006,
+                    "after": 400.00000000000006
+                  },
+                  {
+                    "tick": 6063,
+                    "before": 400.00000000000006,
+                    "delta": -400,
+                    "after": 0
+                  }
+                ],
+                "facts": [
+                  {
+                    "kind": "worker-at",
+                    "state": "met",
+                    "quantity": 1,
+                    "availableTick": 5250,
+                    "observedTick": 5250,
+                    "entityIds": [
+                      "scene-public-planner-frame-planner-worker-1"
+                    ]
+                  },
+                  {
+                    "kind": "gold",
+                    "state": "unmet",
+                    "quantity": 129,
+                    "availableTick": 6063,
+                    "observedTick": 5250,
+                    "entityIds": []
+                  },
+                  {
+                    "kind": "worker-at",
+                    "state": "met",
+                    "quantity": 1,
+                    "availableTick": 5250,
+                    "observedTick": 5250,
+                    "entityIds": [
+                      "scene-public-planner-frame-planner-worker-1"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "variant": "far",
+            "tick": 6285,
+            "currentGold": 219,
+            "budgetCount": 0,
+            "buildExecutionCount": 0,
+            "plans": [
+              {
+                "goalId": "ConquerIsland:planner:resource-1",
+                "estimatedBuildStartTick": 7296,
+                "workerPool": {
+                  "kind": "pool-member",
+                  "unitKind": "worker",
+                  "at": {
+                    "point": {
+                      "x": 2832,
+                      "y": 720
+                    },
+                    "landId": "land:2"
+                  },
+                  "slot": "[\"build\",\"townHall\",\"land:2\",{\"x\":2832,\"y\":720}]",
+                  "routeProfile": {
+                    "from": {
+                      "x": 2960,
+                      "y": 304
+                    },
+                    "speed": 60
+                  }
+                },
+                "goldTimeline": [
+                  {
+                    "tick": 6828,
+                    "before": 219,
+                    "delta": 181.00000000000003,
+                    "after": 400
+                  },
+                  {
+                    "tick": 7296,
+                    "before": 400,
+                    "delta": -400,
+                    "after": 0
+                  }
+                ],
+                "facts": [
+                  {
+                    "kind": "worker-at",
+                    "state": "unmet",
+                    "quantity": 0,
+                    "availableTick": 6285,
+                    "observedTick": 6285,
+                    "entityIds": []
+                  },
+                  {
+                    "kind": "gold",
+                    "state": "unmet",
+                    "quantity": 219,
+                    "availableTick": 6828,
+                    "observedTick": 6285,
+                    "entityIds": []
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "limitations": [
+          "No AI/planner/fact-reader/navigation or simulation calls",
+          "No post5250 near or post6285 far funding facts supplied in this receipt",
+          "Snapshot/receipt milestones do not imply physical completion; native cargo terminal is37 independent audit",
+          "No claim yet about eventual hall payer or command source"
+        ],
+        "productionEdited": false,
+        "payloads": [
+          {
+            "path": "probe.log",
+            "bytes": 2302,
+            "sha256": "1147c4e28f0cf9b317cdc3ccd1873a76620b54201da3bfe140135adb98d2c3b1"
+          },
+          {
+            "path": "probe.mts",
+            "bytes": 7969,
+            "sha256": "88f90813dce8a3c9f4b576353283b72c6a7bd8e0809c99616d242b496d4f2225"
+          },
+          {
+            "path": "provenance/0-near-4215.json",
+            "bytes": 1138,
+            "sha256": "c0b4f46179a5d7bbc6c33f03e942f484d63e5b47759858e680d4a55db8d23978"
+          },
+          {
+            "path": "provenance/1-near-4575.json",
+            "bytes": 1243,
+            "sha256": "a931ac823ed32dc353bbbdae67a801bf2f78b6ff8a026f8b72ebd8f1c00c430a"
+          },
+          {
+            "path": "provenance/2-near-5250.json",
+            "bytes": 1104,
+            "sha256": "7ad94668f34cfe9ed3051ec23f115124cc02e9336a2f0734c3e93ac93f752f2a"
+          },
+          {
+            "path": "provenance/3-far-6285.json",
+            "bytes": 1137,
+            "sha256": "6f60ebbfc70bfd8c3dbe0186036b1c314844f96ff57527db03f51b870e638d4a"
+          },
+          {
+            "path": "result.json",
+            "bytes": 17673,
+            "sha256": "7a94f8fd01af90e67cead9355336f61691d0f6c682f6d712e772fd84db9a8452"
+          }
+        ]
+      }
+    },
+    {
+      "originalPath": "/tmp/sketch-allocator-defense/goal-worker-funding-324-audit-23/result.json",
+      "artifactFile": "7-result.json",
+      "sha256": "7a94f8fd01af90e67cead9355336f61691d0f6c682f6d712e772fd84db9a8452",
+      "bytes": 17673,
+      "report": {
+        "scope": "Read-only existing original members; pure table decoding/JSON arithmetic only, no AI, facts, navigation or simulation calls",
+        "shared": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+        "results": [
+          {
+            "root": "/tmp/goal-324-first-worker-near",
+            "gzipSHA256": "59bdf08027b4938f97b816c5554ea0572cb114fb46d7eba01fbb49774479faae",
+            "plainSHA256": "97fc164e47dba64c2ee3d1cb3f4f232d8c9c881ab72788514fa08299d919329f",
+            "variant": "near",
+            "think": 281,
+            "tick": 4215,
+            "currentGold": 80,
+            "formalBudgetCount": 0,
+            "formalBuildExecutionCount": 0,
+            "admissions": [
+              {
+                "token": {
+                  "actionId": "goal-ref:action:v38",
+                  "generation": 12
+                },
+                "commandId": "planner:strategy-command:4215:281:0",
+                "command": {
+                  "type": "board",
+                  "unitIds": [
+                    "scene-public-planner-frame-planner-worker-1"
+                  ],
+                  "transportId": "unit-planner-transport-1000"
+                },
+                "sameGenerationLeaseAndReceipt": true
+              }
+            ],
+            "workerNative": {
+              "hp": 70,
+              "point": {
+                "x": 832.9848921026463,
+                "y": 920.3574885360416
+              },
+              "deck": null,
+              "cabin": null,
+              "order": {
+                "type": "repair",
+                "buildingId": "building-planner-stables-1089"
+              }
+            },
+            "plans": [
+              {
+                "goalId": "ConquerIsland:planner:resource-1",
+                "build": {
+                  "state": "waiting-actions",
+                  "startTick": 5175,
+                  "finishTick": 5894,
+                  "site": {
+                    "point": {
+                      "x": 2832,
+                      "y": 720
+                    },
+                    "landId": "land:2"
+                  },
+                  "workerReference": {
+                    "kind": "pool-member",
+                    "unitKind": "worker",
+                    "at": {
+                      "point": {
+                        "x": 2832,
+                        "y": 720
+                      },
+                      "landId": "land:2"
+                    },
+                    "slot": "[\"build\",\"townHall\",\"land:2\",{\"x\":2832,\"y\":720}]",
+                    "routeProfile": {
+                      "from": {
+                        "x": 2960,
+                        "y": 304
+                      },
+                      "speed": 60
+                    }
+                  },
+                  "costGold": 400
+                },
+                "wait": {
+                  "startTick": 4215,
+                  "finishTick": 5175,
+                  "state": "ready",
+                  "flows": [
+                    {
+                      "delta": 320,
+                      "source": {
+                        "kind": "income",
+                        "id": "observed-staffed-income:planner",
+                        "segments": [
+                          {
+                            "fromTick": 4215,
+                            "throughTick": 5175,
+                            "ratePerTick": 0.33333333333333337
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                "transportFinishTick": 5147,
+                "goldTimeline": [
+                  {
+                    "tick": 5175,
+                    "before": 80,
+                    "delta": 320.00000000000006,
+                    "after": 400.00000000000006
+                  },
+                  {
+                    "tick": 5175,
+                    "before": 400.00000000000006,
+                    "delta": -400,
+                    "after": 0
+                  }
+                ],
+                "facts": [
+                  {
+                    "kind": "worker-at",
+                    "state": "unmet",
+                    "quantity": 0,
+                    "availableTick": 4215,
+                    "observedTick": 4215,
+                    "entityIds": []
+                  },
+                  {
+                    "kind": "gold",
+                    "state": "unmet",
+                    "quantity": 80,
+                    "availableTick": 5175,
+                    "observedTick": 4215,
+                    "entityIds": []
+                  }
+                ]
+              }
+            ],
+            "workUsed": 5576,
+            "inputBytesUnchanged": true
+          },
+          {
+            "root": "/tmp/goal-324-worker-cargo-near/first-snapshot-cargo",
+            "gzipSHA256": "e9b6eb5f2994db53bb8e1e3fdaee6312505bbf60001ac8dcd929038f015bacc6",
+            "plainSHA256": "7726189059994b97cfe0da76ee2478dd9ef32c3134c70cec04298d732f4c8e43",
+            "variant": "near",
+            "think": 305,
+            "tick": 4575,
+            "currentGold": 19,
+            "formalBudgetCount": 0,
+            "formalBuildExecutionCount": 0,
+            "admissions": [],
+            "workerNative": {
+              "hp": 70,
+              "point": {
+                "x": 1628.5601862785759,
+                "y": 174.1433806799874
+              },
+              "deck": {
+                "shipId": "unit-planner-transport-1000",
+                "x": -45.44000000000001,
+                "y": -28.800000000000004
+              },
+              "cabin": null,
+              "order": {
+                "type": "idle"
+              }
+            },
+            "plans": [
+              {
+                "goalId": "ConquerIsland:planner:resource-1",
+                "build": {
+                  "state": "waiting-actions",
+                  "startTick": 5718,
+                  "finishTick": 6437,
+                  "site": {
+                    "point": {
+                      "x": 2832,
+                      "y": 720
+                    },
+                    "landId": "land:2"
+                  },
+                  "workerReference": {
+                    "kind": "pool-member",
+                    "unitKind": "worker",
+                    "at": {
+                      "point": {
+                        "x": 2832,
+                        "y": 720
+                      },
+                      "landId": "land:2"
+                    },
+                    "slot": "[\"build\",\"townHall\",\"land:2\",{\"x\":2832,\"y\":720}]",
+                    "routeProfile": {
+                      "from": {
+                        "x": 2960,
+                        "y": 304
+                      },
+                      "speed": 60
+                    }
+                  },
+                  "costGold": 400
+                },
+                "wait": {
+                  "startTick": 4575,
+                  "finishTick": 5718,
+                  "state": "ready",
+                  "flows": [
+                    {
+                      "delta": 381,
+                      "source": {
+                        "kind": "income",
+                        "id": "observed-staffed-income:planner",
+                        "segments": [
+                          {
+                            "fromTick": 4575,
+                            "throughTick": 5718,
+                            "ratePerTick": 0.33333333333333337
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                "transportFinishTick": 5119,
+                "goldTimeline": [
+                  {
+                    "tick": 5718,
+                    "before": 19,
+                    "delta": 381.00000000000006,
+                    "after": 400.00000000000006
+                  },
+                  {
+                    "tick": 5718,
+                    "before": 400.00000000000006,
+                    "delta": -400,
+                    "after": 0
+                  }
+                ],
+                "facts": [
+                  {
+                    "kind": "worker-at",
+                    "state": "unmet",
+                    "quantity": 0,
+                    "availableTick": 4575,
+                    "observedTick": 4575,
+                    "entityIds": []
+                  },
+                  {
+                    "kind": "gold",
+                    "state": "unmet",
+                    "quantity": 19,
+                    "availableTick": 5718,
+                    "observedTick": 4575,
+                    "entityIds": []
+                  }
+                ]
+              }
+            ],
+            "workUsed": 880,
+            "inputBytesUnchanged": true
+          },
+          {
+            "root": "/tmp/goal-324-worker-cargo-near/previously-loaded-now-offship",
+            "gzipSHA256": "f7d05b27e67fb2f52963016a25bea4499a37cf7131475aed542975d7f619f5f4",
+            "plainSHA256": "cf1f9cc12b9a9cebf2cd5602040f895857419ecdf97150d81dc42ec69f219ae4",
+            "variant": "near",
+            "think": 350,
+            "tick": 5250,
+            "currentGold": 129,
+            "formalBudgetCount": 0,
+            "formalBuildExecutionCount": 0,
+            "admissions": [],
+            "workerNative": {
+              "hp": 70,
+              "point": {
+                "x": 2940,
+                "y": 308
+              },
+              "deck": null,
+              "cabin": null,
+              "order": {
+                "type": "idle"
+              }
+            },
+            "plans": [
+              {
+                "goalId": "ConquerIsland:planner:resource-1",
+                "build": {
+                  "state": "waiting-actions",
+                  "startTick": 6063,
+                  "finishTick": 6778,
+                  "site": {
+                    "point": {
+                      "x": 2832,
+                      "y": 720
+                    },
+                    "landId": "land:2"
+                  },
+                  "workerReference": {
+                    "kind": "pool-member",
+                    "unitKind": "worker",
+                    "at": {
+                      "point": {
+                        "x": 2832,
+                        "y": 720
+                      },
+                      "landId": "land:2"
+                    },
+                    "slot": "[\"build\",\"townHall\",\"land:2\",{\"x\":2832,\"y\":720}]",
+                    "routeProfile": {
+                      "from": {
+                        "x": 2940,
+                        "y": 308
+                      },
+                      "speed": 60
+                    }
+                  },
+                  "costGold": 400
+                },
+                "wait": {
+                  "startTick": 5250,
+                  "finishTick": 6063,
+                  "state": "ready",
+                  "flows": [
+                    {
+                      "delta": 271,
+                      "source": {
+                        "kind": "income",
+                        "id": "observed-staffed-income:planner",
+                        "segments": [
+                          {
+                            "fromTick": 5250,
+                            "throughTick": 6063,
+                            "ratePerTick": 0.33333333333333337
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                "transportFinishTick": null,
+                "goldTimeline": [
+                  {
+                    "tick": 6063,
+                    "before": 129,
+                    "delta": 271.00000000000006,
+                    "after": 400.00000000000006
+                  },
+                  {
+                    "tick": 6063,
+                    "before": 400.00000000000006,
+                    "delta": -400,
+                    "after": 0
+                  }
+                ],
+                "facts": [
+                  {
+                    "kind": "worker-at",
+                    "state": "met",
+                    "quantity": 1,
+                    "availableTick": 5250,
+                    "observedTick": 5250,
+                    "entityIds": [
+                      "scene-public-planner-frame-planner-worker-1"
+                    ]
+                  },
+                  {
+                    "kind": "gold",
+                    "state": "unmet",
+                    "quantity": 129,
+                    "availableTick": 6063,
+                    "observedTick": 5250,
+                    "entityIds": []
+                  },
+                  {
+                    "kind": "worker-at",
+                    "state": "met",
+                    "quantity": 1,
+                    "availableTick": 5250,
+                    "observedTick": 5250,
+                    "entityIds": [
+                      "scene-public-planner-frame-planner-worker-1"
+                    ]
+                  }
+                ]
+              },
+              {
+                "goalId": "ExpandLand:planner:resource-1",
+                "build": {
+                  "state": "waiting-actions",
+                  "startTick": 6063,
+                  "finishTick": 6778,
+                  "site": {
+                    "point": {
+                      "x": 2832,
+                      "y": 720
+                    },
+                    "landId": "land:2"
+                  },
+                  "workerReference": {
+                    "kind": "pool-member",
+                    "unitKind": "worker",
+                    "at": {
+                      "point": {
+                        "x": 2832,
+                        "y": 720
+                      },
+                      "landId": "land:2"
+                    },
+                    "slot": "[\"build\",\"townHall\",\"land:2\",{\"x\":2832,\"y\":720}]",
+                    "routeProfile": {
+                      "from": {
+                        "x": 2940,
+                        "y": 308
+                      },
+                      "speed": 60
+                    }
+                  },
+                  "costGold": 400
+                },
+                "wait": {
+                  "startTick": 5250,
+                  "finishTick": 6063,
+                  "state": "ready",
+                  "flows": [
+                    {
+                      "delta": 271,
+                      "source": {
+                        "kind": "income",
+                        "id": "observed-staffed-income:planner",
+                        "segments": [
+                          {
+                            "fromTick": 5250,
+                            "throughTick": 6063,
+                            "ratePerTick": 0.33333333333333337
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                "transportFinishTick": null,
+                "goldTimeline": [
+                  {
+                    "tick": 6063,
+                    "before": 129,
+                    "delta": 271.00000000000006,
+                    "after": 400.00000000000006
+                  },
+                  {
+                    "tick": 6063,
+                    "before": 400.00000000000006,
+                    "delta": -400,
+                    "after": 0
+                  }
+                ],
+                "facts": [
+                  {
+                    "kind": "worker-at",
+                    "state": "met",
+                    "quantity": 1,
+                    "availableTick": 5250,
+                    "observedTick": 5250,
+                    "entityIds": [
+                      "scene-public-planner-frame-planner-worker-1"
+                    ]
+                  },
+                  {
+                    "kind": "gold",
+                    "state": "unmet",
+                    "quantity": 129,
+                    "availableTick": 6063,
+                    "observedTick": 5250,
+                    "entityIds": []
+                  },
+                  {
+                    "kind": "worker-at",
+                    "state": "met",
+                    "quantity": 1,
+                    "availableTick": 5250,
+                    "observedTick": 5250,
+                    "entityIds": [
+                      "scene-public-planner-frame-planner-worker-1"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "workUsed": 756,
+            "inputBytesUnchanged": true
+          },
+          {
+            "root": "/tmp/goal-324-first-worker-far",
+            "gzipSHA256": "fb7e40bf7f8885018db2dbeb422eae41c4769d74649e80a6698b20569ce6db8f",
+            "plainSHA256": "154e0ee941f64e0974c389f5aa71dcb07958a001ff2c60381208086611bca898",
+            "variant": "far",
+            "think": 419,
+            "tick": 6285,
+            "currentGold": 219,
+            "formalBudgetCount": 0,
+            "formalBuildExecutionCount": 0,
+            "admissions": [
+              {
+                "token": {
+                  "actionId": "goal-ref:action:v47",
+                  "generation": 15
+                },
+                "commandId": "planner:strategy-command:6285:419:0",
+                "command": {
+                  "type": "board",
+                  "unitIds": [
+                    "scene-public-planner-frame-planner-worker-1"
+                  ],
+                  "transportId": "unit-planner-transport-1000"
+                },
+                "sameGenerationLeaseAndReceipt": true
+              }
+            ],
+            "workerNative": {
+              "hp": 70,
+              "point": {
+                "x": 656,
+                "y": 921.8205411396875
+              },
+              "deck": null,
+              "cabin": null,
+              "order": {
+                "type": "mine",
+                "resourceId": "resource-0",
+                "phase": "toMine",
+                "timer": 0
+              }
+            },
+            "plans": [
+              {
+                "goalId": "ConquerIsland:planner:resource-1",
+                "build": {
+                  "state": "waiting-actions",
+                  "startTick": 7296,
+                  "finishTick": 8015,
+                  "site": {
+                    "point": {
+                      "x": 2832,
+                      "y": 720
+                    },
+                    "landId": "land:2"
+                  },
+                  "workerReference": {
+                    "kind": "pool-member",
+                    "unitKind": "worker",
+                    "at": {
+                      "point": {
+                        "x": 2832,
+                        "y": 720
+                      },
+                      "landId": "land:2"
+                    },
+                    "slot": "[\"build\",\"townHall\",\"land:2\",{\"x\":2832,\"y\":720}]",
+                    "routeProfile": {
+                      "from": {
+                        "x": 2960,
+                        "y": 304
+                      },
+                      "speed": 60
+                    }
+                  },
+                  "costGold": 400
+                },
+                "wait": {
+                  "startTick": 6285,
+                  "finishTick": 6828,
+                  "state": "ready",
+                  "flows": [
+                    {
+                      "delta": 181,
+                      "source": {
+                        "kind": "income",
+                        "id": "observed-staffed-income:planner",
+                        "segments": [
+                          {
+                            "fromTick": 6285,
+                            "throughTick": 6828,
+                            "ratePerTick": 0.33333333333333337
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                "transportFinishTick": 7296,
+                "goldTimeline": [
+                  {
+                    "tick": 6828,
+                    "before": 219,
+                    "delta": 181.00000000000003,
+                    "after": 400
+                  },
+                  {
+                    "tick": 7296,
+                    "before": 400,
+                    "delta": -400,
+                    "after": 0
+                  }
+                ],
+                "facts": [
+                  {
+                    "kind": "worker-at",
+                    "state": "unmet",
+                    "quantity": 0,
+                    "availableTick": 6285,
+                    "observedTick": 6285,
+                    "entityIds": []
+                  },
+                  {
+                    "kind": "gold",
+                    "state": "unmet",
+                    "quantity": 219,
+                    "availableTick": 6828,
+                    "observedTick": 6285,
+                    "entityIds": []
+                  }
+                ]
+              }
+            ],
+            "workUsed": 5919,
+            "inputBytesUnchanged": true
+          }
+        ],
+        "limitation": "Projected income/start/finish are plan estimates. No selected-frame goal.build command, reservation, foundation or payment; no future build success claim. Native region/transport terminal audited separately by37."
+      }
+    }
+  ],
+  "nativeHallPayment": {
+    "artifactFile": "independent-audits/hall-payment-audit-23/result.json",
+    "sha256": "1f15cecdf6ba0a2669510b29a7fe29978f2024c9ad4a32ed33757498bfbfec8c",
+    "report": {
+      "scope": "Read-only ten complete original build markers; no AI/fact/navigation/simulation calls",
+      "shared": "324670daa1f71b3bdb5cef123baa49bcf7834cfe",
+      "results": [
+        {
+          "variant": "near",
+          "returnedBuildTick": 6075,
+          "returnedBuildSource": "v6Economy",
+          "nativeBuildOrderTick": 6090,
+          "firstFoundationSnapshotTick": 6195,
+          "hallId": "building-planner-townHall-1100",
+          "nativeCashCost": 400,
+          "goldSpentBeforeAfter": [
+            1971,
+            2371
+          ],
+          "cashBeforeAfter": [
+            409,
+            49
+          ],
+          "netOtherIncomeAcrossPaymentWindow": 40,
+          "firstCompleteSnapshotTick": 6750,
+          "finalTick": 8400,
+          "rows": [
+            {
+              "event": "first-returned-townhall-build-command",
+              "path": "/tmp/goal-324-build-markers/near/first-returned-townhall-build-command/actual-frame.jsonl.gz",
+              "gzipSHA256": "1de72579750c22ae1e43ac7825f62338676dc1fe39614fb5413eabc283b65081",
+              "plainSHA256": "d28a3c37e7db0e1d6cd4ddc21b459d18ef156385f07e5703bf82362df94244f9",
+              "tick": 6075,
+              "gold": 409,
+              "nativeGoldSpent": 1971,
+              "commands": [
+                {
+                  "playerId": "planner",
+                  "source": "internal-ai",
+                  "scriptId": "v6Economy",
+                  "command": {
+                    "type": "build",
+                    "unitId": "scene-public-planner-frame-planner-worker-1",
+                    "buildingKind": "townHall",
+                    "x": 2928,
+                    "y": 688
+                  }
+                }
+              ],
+              "workerOrder": {
+                "type": "idle"
+              },
+              "hall": [],
+              "formalBuildExecutions": 0,
+              "formalBudgets": 0
+            },
+            {
+              "event": "next-observed-snapshot-after-townhall-build",
+              "path": "/tmp/goal-324-build-markers/near/next-observed-snapshot-after-townhall-build/actual-frame.jsonl.gz",
+              "gzipSHA256": "5ae5df100be594968500da9891036a4a5fee71a897379a3140fccb6b08b7d1f1",
+              "plainSHA256": "9278515f1cc2926ef658426b8189a3e6530500a85b7dc6af920c7d053967f500",
+              "tick": 6090,
+              "gold": 409,
+              "nativeGoldSpent": 1971,
+              "commands": [],
+              "workerOrder": {
+                "type": "build",
+                "buildingKind": "townHall",
+                "x": 2928,
+                "y": 688,
+                "progressTick": 6089,
+                "progressX": 2939.1951380583077,
+                "progressY": 333.4872948202592
+              },
+              "hall": [],
+              "formalBuildExecutions": 0,
+              "formalBudgets": 0
+            },
+            {
+              "event": "first-new-townhall-snapshot",
+              "path": "/tmp/goal-324-build-markers/near/first-new-townhall-snapshot/actual-frame.jsonl.gz",
+              "gzipSHA256": "8ab45acd881513a9339e34ef115f730bc504439348c59122068d3478a89dcdee",
+              "plainSHA256": "08596ef8b87029c6841e54c910f08c9610f1513a7e152db1c1f2576641840f02",
+              "tick": 6195,
+              "gold": 49,
+              "nativeGoldSpent": 2371,
+              "commands": [],
+              "workerOrder": {
+                "type": "repair",
+                "buildingId": "building-planner-townHall-1100"
+              },
+              "hall": [
+                {
+                  "id": "building-planner-townHall-1100",
+                  "owner": "planner",
+                  "kind": "townHall",
+                  "x": 2928,
+                  "y": 688,
+                  "complete": false,
+                  "buildProgress": 14
+                }
+              ],
+              "formalBuildExecutions": 0,
+              "formalBudgets": 0
+            },
+            {
+              "event": "first-new-townhall-complete-snapshot",
+              "path": "/tmp/goal-324-build-markers/near/first-new-townhall-complete-snapshot/actual-frame.jsonl.gz",
+              "gzipSHA256": "569f2a5a8d6fe9986722f06c51b1f63302206e97a5ffb7dd2103f4b6af938019",
+              "plainSHA256": "2b8179a6046cccd56e4c405369fe9fb38067fba365f179eec95dd1bf9d9e5725",
+              "tick": 6750,
+              "gold": 3,
+              "nativeGoldSpent": 2597,
+              "commands": [
+                {
+                  "playerId": "planner",
+                  "source": "internal-ai",
+                  "scriptId": "economy",
+                  "command": {
+                    "type": "mine",
+                    "unitIds": [
+                      "scene-public-planner-frame-planner-worker-1"
+                    ],
+                    "resourceId": "resource-1"
+                  }
+                }
+              ],
+              "workerOrder": {
+                "type": "idle"
+              },
+              "hall": [
+                {
+                  "id": "building-planner-townHall-1100",
+                  "owner": "planner",
+                  "kind": "townHall",
+                  "x": 2928,
+                  "y": 688,
+                  "complete": true,
+                  "buildProgress": 560
+                }
+              ],
+              "formalBuildExecutions": 0,
+              "formalBudgets": 0
+            },
+            {
+              "event": "last-original-member",
+              "path": "/tmp/goal-324-build-markers/near/last-original-member/actual-frame.jsonl.gz",
+              "gzipSHA256": "2e9bd6b17f53e4451d163f462df11311434bb99849aaf919b63ec82513c053ad",
+              "plainSHA256": "0b3dc44f3d6212718493627c66149db18ad94006b68d42f71a8b90e95cba9d1c",
+              "tick": 8400,
+              "gold": 98,
+              "nativeGoldSpent": 3392,
+              "commands": [],
+              "workerOrder": {
+                "type": "mine",
+                "resourceId": "resource-1",
+                "phase": "gather",
+                "timer": 61
+              },
+              "hall": [
+                {
+                  "id": "building-planner-townHall-1100",
+                  "owner": "planner",
+                  "kind": "townHall",
+                  "x": 2928,
+                  "y": 688,
+                  "complete": true,
+                  "buildProgress": 560
+                }
+              ],
+              "formalBuildExecutions": 0,
+              "formalBudgets": 0
+            }
+          ]
+        },
+        {
+          "variant": "far",
+          "returnedBuildTick": 7485,
+          "returnedBuildSource": "v6Economy",
+          "nativeBuildOrderTick": 7500,
+          "firstFoundationSnapshotTick": 7605,
+          "hallId": "building-planner-townHall-1107",
+          "nativeCashCost": 400,
+          "goldSpentBeforeAfter": [
+            2231,
+            2631
+          ],
+          "cashBeforeAfter": [
+            629,
+            259
+          ],
+          "netOtherIncomeAcrossPaymentWindow": 30,
+          "firstCompleteSnapshotTick": 8160,
+          "finalTick": 8400,
+          "rows": [
+            {
+              "event": "first-returned-townhall-build-command",
+              "path": "/tmp/goal-324-build-markers/far/first-returned-townhall-build-command/actual-frame.jsonl.gz",
+              "gzipSHA256": "589a837d30d804747f63d813480bc242e62724eecf3755edd0c240ec1bafd2b1",
+              "plainSHA256": "d65af90f5c92e22a5a526ccd27fc8711e1a1951f286e0dc55273a643a0c0371f",
+              "tick": 7485,
+              "gold": 619,
+              "nativeGoldSpent": 2231,
+              "commands": [
+                {
+                  "playerId": "planner",
+                  "source": "internal-ai",
+                  "scriptId": "v6Economy",
+                  "command": {
+                    "type": "build",
+                    "unitId": "scene-public-planner-frame-planner-worker-1",
+                    "buildingKind": "townHall",
+                    "x": 2928,
+                    "y": 688
+                  }
+                }
+              ],
+              "workerOrder": {
+                "type": "idle"
+              },
+              "hall": [],
+              "formalBuildExecutions": 0,
+              "formalBudgets": 0
+            },
+            {
+              "event": "next-observed-snapshot-after-townhall-build",
+              "path": "/tmp/goal-324-build-markers/far/next-observed-snapshot-after-townhall-build/actual-frame.jsonl.gz",
+              "gzipSHA256": "7b69409babd4f0725b4eca3ac527e904038a4c4aa7ef91ddacb4b716dd6c19ad",
+              "plainSHA256": "bc558ad112108b40b90810f695069e00f7edb804a158955f70811337c576b934",
+              "tick": 7500,
+              "gold": 629,
+              "nativeGoldSpent": 2231,
+              "commands": [],
+              "workerOrder": {
+                "type": "build",
+                "buildingKind": "townHall",
+                "x": 2928,
+                "y": 688,
+                "progressTick": 7499,
+                "progressX": 2946.6597497553685,
+                "progressY": 333.464754647979
+              },
+              "hall": [],
+              "formalBuildExecutions": 0,
+              "formalBudgets": 0
+            },
+            {
+              "event": "first-new-townhall-snapshot",
+              "path": "/tmp/goal-324-build-markers/far/first-new-townhall-snapshot/actual-frame.jsonl.gz",
+              "gzipSHA256": "d477cb635655328fd4c1b6a014817d02774a07621ff3d6ae549b79ac5b44b532",
+              "plainSHA256": "3654089154cf6bc700b86a9c3d5f214d7f0cbc879125bfb4c91a66fc05fb7753",
+              "tick": 7605,
+              "gold": 259,
+              "nativeGoldSpent": 2631,
+              "commands": [
+                {
+                  "playerId": "planner",
+                  "source": "internal-ai",
+                  "scriptId": "miningWorkforce",
+                  "command": {
+                    "type": "train",
+                    "buildingId": "scene-public-planner-frame-planner-townHall-1",
+                    "unitKind": "worker"
+                  }
+                }
+              ],
+              "workerOrder": {
+                "type": "repair",
+                "buildingId": "building-planner-townHall-1107"
+              },
+              "hall": [
+                {
+                  "id": "building-planner-townHall-1107",
+                  "owner": "planner",
+                  "kind": "townHall",
+                  "x": 2928,
+                  "y": 688,
+                  "complete": false,
+                  "buildProgress": 14
+                }
+              ],
+              "formalBuildExecutions": 0,
+              "formalBudgets": 0
+            },
+            {
+              "event": "first-new-townhall-complete-snapshot",
+              "path": "/tmp/goal-324-build-markers/far/first-new-townhall-complete-snapshot/actual-frame.jsonl.gz",
+              "gzipSHA256": "04b05d9e4fc9fd28d4cb928533d1a048158c36d9fa4c33109f8c06b95e6ddfa6",
+              "plainSHA256": "9a41119b1ca3529b5645c317b9800e417ccfe292d0136799a6990c8b1382d209",
+              "tick": 8160,
+              "gold": 28,
+              "nativeGoldSpent": 3052,
+              "commands": [
+                {
+                  "playerId": "planner",
+                  "source": "internal-ai",
+                  "scriptId": "economy",
+                  "command": {
+                    "type": "mine",
+                    "unitIds": [
+                      "scene-public-planner-frame-planner-worker-1"
+                    ],
+                    "resourceId": "resource-1"
+                  }
+                }
+              ],
+              "workerOrder": {
+                "type": "idle"
+              },
+              "hall": [
+                {
+                  "id": "building-planner-townHall-1107",
+                  "owner": "planner",
+                  "kind": "townHall",
+                  "x": 2928,
+                  "y": 688,
+                  "complete": true,
+                  "buildProgress": 560
+                }
+              ],
+              "formalBuildExecutions": 0,
+              "formalBudgets": 0
+            },
+            {
+              "event": "last-original-member",
+              "path": "/tmp/goal-324-build-markers/far/last-original-member/actual-frame.jsonl.gz",
+              "gzipSHA256": "545f1b633ceac7c47173a646026be7344635c5e430402ce725b3cb00de8355eb",
+              "plainSHA256": "94ed813be8a5b03ab806b0200a73f0135a86a05d3ac34872ff72be38270496d0",
+              "tick": 8400,
+              "gold": 43,
+              "nativeGoldSpent": 3127,
+              "commands": [],
+              "workerOrder": {
+                "type": "mine",
+                "resourceId": "resource-1",
+                "phase": "gather",
+                "timer": 63
+              },
+              "hall": [
+                {
+                  "id": "building-planner-townHall-1107",
+                  "owner": "planner",
+                  "kind": "townHall",
+                  "x": 2928,
+                  "y": 688,
+                  "complete": true,
+                  "buildProgress": 560
+                }
+              ],
+              "formalBuildExecutions": 0,
+              "formalBudgets": 0
+            }
+          ]
+        }
+      ],
+      "conclusion": "Both halls were ordered by v6Economy and paid natively400 at breaking ground. No formal goal.build capital or output proof exists in these markers.",
+      "limits": [
+        "Old puzzle physical assertions remain unchanged; this does not certify a goal.build/guard execution chain.",
+        "Full-run absence of goal.build is reported by26; independent scan here covers these ten original selected markers."
+      ]
+    }
+  }
+}
