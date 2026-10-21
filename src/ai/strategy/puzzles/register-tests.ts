@@ -1,4 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { gzipSync } from 'node:zlib';
 import { snapshotGame } from '../../../shared/sim';
 import { isFootprintBuildable, isWalkable, sameGround } from '../../../shared/terrain';
 import { BUILDING_DEFS, UNIT_DEFS } from '../../../shared/catalog';
@@ -112,11 +115,25 @@ export function registerPublicPuzzleTests(key: PuzzleKey) {
     }, 180_000);
     it.skipIf(!executionReady && !required)(`goal-planner execution through the real runtime [${executionReady ? 'ready' : missing}]`, () => {
       expect(executionReady, missing).toBeTruthy();
-      const session = publicPuzzlePlanner.createExecution!();
-      const result = runPublicPuzzle(puzzle, 'v9_knight', { planner: session.commandPlanner });
-      expect(session.observations().some(frame => frame.output.plans.length > 0), 'real goal-planner traces, never incumbent fallback').toBe(true);
-      expect(result.execution.checks).not.toEqual({});
-      expect(result.execution.passed, JSON.stringify(result.execution)).toBe(true);
+      const directory = process.env.SKETCH_PUZZLE_EXECUTION_EVIDENCE;
+      const path = directory && resolve(directory, `${puzzle.key}-${puzzle.variant}`);
+      const session = publicPuzzlePlanner.createExecution!(path ? { evidenceFile: `${path}.jsonl.gz` } : undefined);
+      let result: ReturnType<typeof runPublicPuzzle> | undefined, error: unknown;
+      try {
+        result = runPublicPuzzle(puzzle, 'v9_knight', { planner: session.commandPlanner });
+        expect(session.observations().some(frame => frame.output.plans.length > 0), 'real goal-planner traces, never incumbent fallback').toBe(true);
+        expect(result.execution.checks).not.toEqual({});
+        expect(result.execution.passed, JSON.stringify(result.execution)).toBe(true);
+        expect(session.statistics().formalCommandCount, 'physical success also requires an actual goal executor command accepted by the gateway').toBeGreaterThan(0);
+      } catch (failure) { error = failure; throw failure; }
+      finally {
+        if (directory && path) {
+          mkdirSync(directory, { recursive: true });
+          writeFileSync(`${path}.result.json.gz`, gzipSync(JSON.stringify({ puzzle: `${puzzle.key}/${puzzle.variant}`,
+            result, statistics: session.statistics(), observations: session.observations(),
+            error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error ?? null })));
+        }
+      }
     }, 180_000);
     it.skipIf(process.env.SKETCH_PUZZLE_WITNESS !== '1')('authored legal witness proves the physical scene is solvable (not an AI verdict)', () => {
       const result = runPublicPuzzle(puzzle, 'witness');
