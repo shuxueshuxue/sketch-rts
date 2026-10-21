@@ -11,7 +11,9 @@ export function runPublicPuzzle(puzzle: PublicPuzzleCase, mode: 'witness' | AiSc
   options: { maxTicks?: number; planner?: SdkGameCommandPlanner<AiGameAgent> } = {}) {
   const world = puzzle.create(), initial = snapshotGame(world.game), tracker = trackPuzzle(puzzle, world);
   const planner = options.planner ?? (mode === 'witness' ? createPuzzleWitness(puzzle, world) : createAiGameCommandPlanner());
-  let pressureSent = false;
+  const invasionShips = world.game.units.filter(unit => unit.owner === world.opponent && unit.kind === 'transport');
+  let pressureSent = world.attackers.every(unit => unit.deck || unit.cabin || unit.order.type === 'attackMove')
+    && invasionShips.every(unit => unit.order.type === 'unload');
   try {
     const result = runAiGameLoop({ name: `public-puzzle:${puzzle.key}:${puzzle.variant}:${mode}`, game: world.game,
       maxTicks: world.game.tick + (options.maxTicks ?? puzzle.maxTicks), thinkInterval: 15,
