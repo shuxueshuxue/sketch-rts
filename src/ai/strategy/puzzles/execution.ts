@@ -1,5 +1,6 @@
 import { observeSimulation } from '../../../shared/sim';
-import { BUILDING_DEFS } from '../../../shared/catalog';
+import { BUILDING_DEFS, UNIT_DEFS } from '../../../shared/catalog';
+import { shipShorePoints } from '../../../shared/connected-decks';
 import { sameGround } from '../../../shared/terrain';
 import type { GameCommand, Unit } from '../../../shared/types';
 import type { Observed } from '../../../shared/sim/observation';
@@ -20,6 +21,7 @@ export function trackPuzzle(puzzle: PublicPuzzleCase, world: PuzzleWorld) {
   const armyIds = new Set(world.army.map(u => u.id)), workerIds = new Set(world.workers.map(u => u.id));
   const guardIds = new Set(world.guards.map(u => u.id)), beachIds = new Set(world.beachGuards.map(u => u.id));
   const initialBuildings = new Set(game.buildings.map(b => b.id)), initialUnits = new Set(game.units.map(u => u.id));
+  const mainlandForce = new Set(world.army.map(u => u.id)), visitedIsland = new Set<string>();
   const first: Record<string, number> = {}, commands: PuzzleExecution['commands'] = [], losses: PuzzleExecution['losses'] = [];
   const mark = (key: string, condition: boolean, tick = game.tick) => { if (condition && first[key] === undefined) first[key] = tick - start; };
   const alive = (units: readonly Unit[]) => units.filter(u => u.hp > 0 && game.units.includes(u));
@@ -37,7 +39,11 @@ export function trackPuzzle(puzzle: PublicPuzzleCase, world: PuzzleWorld) {
     command(e) { if (e.owner === owner) commands.push({ tick: e.tick - start, command: structuredClone(e.command) }); },
   });
   function sample() {
-    const army = alive(world.army), units = game.units.filter(u => u.owner === owner && u.hp > 0);
+    const units = game.units.filter(u => u.owner === owner && u.hp > 0);
+    for (const unit of units) if (unit.kind !== 'worker' && !UNIT_DEFS[unit.kind].naval && unit.attackDamage > 0
+      && physicallyOnLand(world, unit, world.home)) mainlandForce.add(unit.id);
+    const army = units.filter(u => mainlandForce.has(u.id));
+    for (const unit of army) if (physicallyOnLand(world, unit, world.mine)) visitedIsland.add(unit.id);
     mark('transport-at-embark', !!world.transport && Math.hypot(world.transport.x - world.departure.x, world.transport.y - world.departure.y) < 256);
     mark('army-boarded', army.some(u => !!u.deck || !!u.cabin));
     mark('army-on-island', army.some(u => physicallyOnLand(world, u, world.mine)));
@@ -46,7 +52,7 @@ export function trackPuzzle(puzzle: PublicPuzzleCase, world: PuzzleWorld) {
     mark('hall-complete', hallAt(world.mine));
     mark('beach-cleared', !!world.beachGuards.length && !alive(world.beachGuards).length);
     mark('defended', !!world.attackers.length && !alive(world.attackers).length);
-    mark('army-returned', first['army-on-island'] !== undefined && army.length > 0 && army.every(u => physicallyOnLand(world, u, world.home)));
+    mark('army-returned', army.some(u => visitedIsland.has(u.id) && physicallyOnLand(world, u, world.home)));
     mark('local-cleared', !!world.localGuards.length && !alive(world.localGuards).length);
     mark('local-hall-complete', !!world.localMine && hallAt(world.localMine));
     mark('farm-complete', game.buildings.some(b => !initialBuildings.has(b.id) && b.owner === owner && b.kind === 'farm' && b.complete));
@@ -56,7 +62,11 @@ export function trackPuzzle(puzzle: PublicPuzzleCase, world: PuzzleWorld) {
     mark('transport-trained', units.some(u => !initialUnits.has(u.id) && u.kind === 'transport'));
     const newHall = game.buildings.some(b => b.owner === owner && b.kind === 'townHall' && !initialBuildings.has(b.id));
     mark('hall-funding-spent-elsewhere', puzzle.key === 'navy-zero' && !newHall && game.players[owner]!.gold < BUILDING_DEFS.townHall.cost);
-    mark('mainland-army-sent-to-island', puzzle.key === 'evacuate' && army.some(u => physicallyOnLand(world, u, world.mine)));
+    mark('mainland-army-sent-to-island', puzzle.key === 'evacuate' && army.some(u => {
+      if (physicallyOnLand(world, u, world.mine)) return true;
+      const ship = u.deck && game.units.find(s => s.id === u.deck!.shipId);
+      return !!ship && shipShorePoints(ship, game.map).some(p => sameGround(game.map, p, world.mine));
+    }));
     mark('workers-rescued', world.islandWorkers.length > 0 && alive(world.islandWorkers).length === world.islandWorkers.length
       && world.islandWorkers.every(u => physicallyOnLand(world, u, world.home)));
     if (first['army-on-island'] !== undefined && first['landing-near'] === undefined && first['landing-far'] === undefined) {
@@ -72,7 +82,8 @@ export function trackPuzzle(puzzle: PublicPuzzleCase, world: PuzzleWorld) {
     let checks: Record<string, boolean>;
     switch (puzzle.key) {
       case 'supply-tier': checks = { campCleared: seen('camp-cleared'), appropriateForce: puzzle.variant === 'knight'
-        ? before('farm-complete', 'knight-trained') : seen('footmen-trained') && !seen('knight-trained') }; break;
+        ? before('farm-complete', 'knight-trained') && before('knight-trained', 'camp-cleared')
+        : before('footmen-trained', 'camp-cleared') && !seen('knight-trained') }; break;
       case 'defense-window': checks = { homeSurvived: homeAlive, defended: seen('defended'), islandHallComplete: seen('hall-complete'),
         priority: puzzle.variant === 'urgent' ? before('defended', 'army-boarded')
           : before('hall-complete', 'defended') && seen('army-returned') && first['army-returned']! < 360 * 20 }; break;
