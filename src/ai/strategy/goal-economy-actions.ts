@@ -128,7 +128,12 @@ export function declareGoalBuilding(input: Readonly<{
     effects.map(fact => fact.id), additionalPreconditions.map(fact => fact.id)])}`;
   const building: GoalEntityReference = foundation ? { kind: 'existing', entityId: foundation.id }
     : { kind: 'output', actionId: id, output: 'building' };
-  const completed = unique([...effects, goalFact({ kind: 'building-complete', buildingKind, at, building })]);
+  // A native new producer completes with an empty training lane. Declare the
+  // production capability explicitly so regression can discover the build;
+  // population tier and free room remain independent training preconditions.
+  const production = (!foundation?.queue.length ? rules.trains.filter(unitKind => canTrainAt(race, buildingKind, unitKind)) : [])
+    .map(unitKind => goalFact({ kind: 'production', unitKind, producer: building, at, byTick }));
+  const completed = unique([...effects, goalFact({ kind: 'building-complete', buildingKind, at, building }), ...production]);
   return {
     id, kind: 'build', preconditions: unique([workers, route, ...(foundation ? [] : [site, gold]), ...additionalPreconditions]),
     effects: [
@@ -144,7 +149,7 @@ export function declareGoalBuilding(input: Readonly<{
       ] : []),
       ...(!foundation ? [{ resource: { kind: 'entity-control' as const, entity: building }, delta: 1,
         at: 'finish' as const, factIds: [baseEffect.id] }] : []),
-      ...(rules.trains.length ? [{ resource: { kind: 'production-lane' as const, producer: building, lane: 'training' },
+      ...(production.length ? [{ resource: { kind: 'production-lane' as const, producer: building, lane: 'training' },
         delta: 1, at: 'finish' as const, factIds: [baseEffect.id] }] : []),
     ],
     duration, cost: known([{ code: foundation ? 'construction-capital-already-paid' : 'construction-capital', gold: amountGold,
