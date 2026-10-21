@@ -28,3 +28,9 @@ duration、cost、successProbability 来自同次共享估计。构造器完整�
 候选时长只覆盖船到位之后的串行接人步行、登船设置、载人航行与卸载设置。生产和调船各自是独立前置动作，目标陆块内走到精确 post 也由后续动作负责。未知航段、无效来源结果和未公布的替代方案保留 pending 请求；一条候选可用时仍保留其他候选的 deferred 证据。真正已知不相容的多船乘员组由调用方拆成多个数量贡献者，不合成一趟虚构航次。
 
 整理器测试使用原 4180 身份和固定已发布物理端口，覆盖当前/未来船及成员、整船依赖、原生质量、逐成员泊位核查和混合 known/pending 候选；严格导航诊断闸确认整理器不回退原生求路。这些测试不验证注入航段的物理 ETA，也不代表真实 source 或完整题库已通过。
+
+`goalNavalActionProvider.actionsFor` 消费共享 `combatOptions` 的精确组、来源与估计，再经 `resolveCohort` 取得当前/未来评估形状。它枚举清营、赏金贡献、清岸、防守、撤离、本地集结、跨海到 pool 和调船的单独声明，不选兵、不串动作。跨海候选只使用自己那条 hull/landing 的 cost/P；没有这两项时声明保留 pending，不能借用另一种战斗候选的价格。金币请求可选择显式 campId 的部分赏金贡献。
+
+纯调船声明 `declareGoalTransportReposition` 不需要乘员或陆岸。持续 defend 的已知 duration 必须覆盖承诺的 throughTick 窗口，成员独占也覆盖同一窗口；移除当帧营地障碍仍由 clear-camp 和共享 derived 事实证明，不能当作未来驻防。读取到尚未解析的组或来源时，由共享 source 保留请求，本 provider 不拿邻兵或目录默认原型补齐。
+
+provider 测试用真实场景快照和真实 Situation，加固定的已发布领域选组/物理估计，覆盖符号组、部分贡献、独立航次价、精确救援、纯船位和持续防守窗口。它验证领域端口和声明构造，不代表统一 source、规划器就绪动作、执行适配器或公开题已完成。现有 strategy executor 名称仍需要统一入口根据解析后的引用和真实 grant 适配执行意图。

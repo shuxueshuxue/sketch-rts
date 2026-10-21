@@ -176,7 +176,9 @@ export function declareGoalDefense(input: GoalNavalCohort & Readonly<{
   site: Target; requiredForce: number; throughTick: number; routes: readonly GoalFact[];
 }>): GoalActionDeclaration | null {
   const units = crew(input, false);
-  if (!units || !Number.isFinite(input.requiredForce) || input.requiredForce < 0) return null;
+  if (!units || !Number.isFinite(input.requiredForce) || input.requiredForce < 0
+    || !Number.isFinite(input.throughTick) || input.throughTick < input.snapshot.tick
+    || input.estimates.duration.state === 'met' && input.estimates.duration.value < input.throughTick - input.snapshot.tick) return null;
   const force = goalFact({ kind: 'force-available', at: input.site, minimum: input.requiredForce, metric: 'combat-rating',
     cohort: units.map(unit => reference(input, unit)), byTick: input.byTick });
   return declaration('defend', 'strategy.defend-site', { cohort: units.map(unit => reference(input, unit)), at: input.site,
@@ -205,17 +207,31 @@ export function declareGoalEvacuation(input: GoalNavalCohort & Readonly<{
 export function declareGoalTransportPosition(input: Readonly<{
   option: GoalTransportOption; tolerance: number; byTick: number; estimates: GoalNavalEstimates;
 }>): GoalActionDeclaration | null {
+  const option = input.option;
+  return declareGoalTransportReposition({ transport: option.transport,
+    at: { seaId: option.seaId, point: option.departure.water }, dependentUnitIds: option.loadedUnitIds,
+    tolerance: input.tolerance, byTick: input.byTick, estimates: input.estimates,
+    preconditions: [...(option.preconditions ?? []), ...(option.approach ? [option.approach] : [])] });
+}
+
+/** Repositioning a hull is a sea move, including when no passengers or land
+ * destination exist. It needs no invented boarding shore or landing pair. */
+export function declareGoalTransportReposition(input: Readonly<{
+  transport: GoalEntityReference; at: Target; dependentUnitIds: readonly string[];
+  tolerance: number; byTick: number; estimates: GoalNavalEstimates; preconditions: readonly GoalFact[];
+}>): GoalActionDeclaration | null {
   if (!Number.isFinite(input.tolerance) || input.tolerance < 0) return null;
-  const option = input.option, at = { seaId: option.seaId, point: option.departure.water };
-  const preconditions = [goalFact({ kind: 'transport-in', seaId: option.seaId, capacity: 0,
-    transport: option.transport, byTick: input.byTick }), ...(option.preconditions ?? []), ...(option.approach ? [option.approach] : [])];
-  const parameters = { transport: option.transport, at, tolerance: input.tolerance, byTick: input.byTick,
-    dependentUnitIds: [...new Set(option.loadedUnitIds)].sort() };
+  const { transport, at } = input;
+  if (!at.seaId) return null;
+  const preconditions = [goalFact({ kind: 'transport-in', seaId: at.seaId, capacity: 0,
+    transport, byTick: input.byTick }), ...input.preconditions];
+  const parameters = { transport, at, tolerance: input.tolerance, byTick: input.byTick,
+    dependentUnitIds: [...new Set(input.dependentUnitIds)].sort() };
   return { id: identity('position-transport', parameters), kind: 'position-transport', preconditions: facts(preconditions),
-    effects: [establish(goalFact({ kind: 'transport-at', transport: option.transport, at,
+    effects: [establish(goalFact({ kind: 'transport-at', transport, at,
       tolerance: input.tolerance, byTick: input.byTick }))],
-    demands: [{ resource: { kind: 'entity-control', entity: option.transport }, quantity: 1,
-      from: 'start', until: 'finish' }, ...[...new Set(option.loadedUnitIds)].sort().map(id => ({
+    demands: [{ resource: { kind: 'entity-control', entity: transport }, quantity: 1,
+      from: 'start', until: 'finish' }, ...[...new Set(input.dependentUnitIds)].sort().map(id => ({
         resource: { kind: 'entity-control' as const, entity: existing(id) }, quantity: 1,
         from: 'start' as const, until: 'finish' as const,
       }))], flows: [], ...input.estimates,
