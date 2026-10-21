@@ -103,6 +103,9 @@ export type GoalPlanningContext = Readonly<{
    * Exact native geometry is requested after a plan has been selected. An
    * omitted value retains the existing exact declaration contract. */
   precision?: 'coarse' | 'exact';
+  /** Absolute search horizon, independent of the observation support window.
+   * Explicit fact deadlines and threat windows still take precedence. */
+  planThroughTick?: number;
   /** Same shared fact sources; no provider may invent a build/shore point or
    * call native route selection when this port is absent/pending. */
   grounding?: GoalGroundingReader;
@@ -162,6 +165,9 @@ export type GoalActionDeclaration = Readonly<{
   /** Coarse declarations are search proposals, never execution authority. */
   precision?: 'coarse' | 'exact';
   effects: readonly GoalFactEffect[]; demands: readonly GoalResourceDemand[];
+  /** The original effect/provider, retained across JSON continuation so only
+   * a selected proposal needs to rediscover its exact native alternatives. */
+  refinementFor?: Readonly<{ providerId: string; effect: GoalFact }>;
   flows: readonly GoalResourceFlow[]; duration: GoalEstimate<number>;
   cost: GoalEstimate<readonly GoalActionCost[]>; successProbability: GoalEstimate<number>;
   executor: GoalExecutorBinding; outputs: readonly string[]; reasons: readonly AllocationReason[];
@@ -313,6 +319,9 @@ export type GoalCapacityPressure = Readonly<{ kind: 'geometry'; thinkSequence: n
   planIds: readonly string[]; requestIds: readonly string[]; overflowCount: number }>;
 export type GoalPlannerInput = Readonly<{
   context: GoalPlanningContext; goals: readonly GoalRequest[]; providers: readonly GoalActionProvider[];
+  /** Regress a coarse prerequisite from the selected existing-member moves.
+   * The view shares this think's readers and never creates a Situation/query. */
+  contextForPrefix?: (actions: readonly Readonly<{ action: GoalActionDeclaration; startTick: number; finishTick: number }>[]) => GoalPlanningContext;
   initialBalances: readonly GoalResourceBalance[]; limits: GoalSearchLimits;
   declarationRevision: string; previous?: GoalPlannerCache;
   /** Same ledger, distinct finite continuation for physical resource exclusions. */

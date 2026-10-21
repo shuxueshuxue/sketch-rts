@@ -81,6 +81,7 @@ export function planGoals(input: GoalPlannerInput): GoalPlannerOutput {
       // can release a published fact without a second provider expansion.
       state = { ...structuredClone(previous.continuation), phase: 'compose', frontier: [emptyPath()], active: null,
         solutions: [], visited: [], expansions: 0, limitReason: null };
+      delete state.coarse;
     } else state = { version: 1, phase: 'regress', requests: goal.effects.map(fact => ({ fact, depth: 0 })),
       regressed: [], observed: [], candidates: [], alternatives: [], frontier: [], active: null, solutions: [], visited: [],
       expansions: 0, depth: 0, limitReason: null };
@@ -125,6 +126,16 @@ export function planGoals(input: GoalPlannerInput): GoalPlannerOutput {
     plans[index] = paused;
     const indexInCache = entries.findIndex(entry => entry.plan.goal.id === plan.goal.id);
     if (indexInCache >= 0) entries[indexInCache] = { ...entries[indexInCache]!, plan: paused };
+  }
+  for (let index = 0; index < plans.length; index++) {
+    const coarse = plans[index]!;
+    const refined = work.withConsumer(coarse.goal.id, coarse.valueGold, () => input.refineSelected?.(coarse) ?? coarse);
+    const ready = refined.actions.filter(action => refined.readyActionIds.includes(action.id) && action.declaration.precision !== 'coarse');
+    const gated = refined.readyActionIds.length !== ready.length ? { ...refined, status: 'waiting-facts' as const,
+      readyActionIds: ready.map(action => action.id), reasons: [...refined.reasons, reason('goal-selected-actions-require-exact-facts')] } : refined;
+    plans[index] = gated;
+    const cached = entries.findIndex(entry => entry.plan.goal.id === gated.goal.id);
+    if (cached >= 0) entries[cached] = { ...entries[cached]!, plan: gated };
   }
   plans.sort((a, b) => order(a.goal.id, b.goal.id));
   const retained = [...entries].sort((a, b) => order(a.plan.goal.id, b.plan.goal.id));
@@ -189,7 +200,22 @@ function balances(state: GoalSearchMemory, input: GoalPlannerInput): GoalResourc
   return result;
 }
 type Satisfaction = { met: boolean; pending: boolean; bindings: GoalBindings; tick: number; producers: string[] };
+const satisfactionCaches = new WeakMap<GoalPlannerInput, WeakMap<GoalSearchMemory,
+  WeakMap<object, Map<string, { revision: number; result: Satisfaction }>>>>();
 function satisfies(factInput: GoalFact, path: Path, state: GoalSearchMemory, input: GoalPlannerInput, parents: readonly string[] = []): Satisfaction {
+  // One immutable prefix is checked repeatedly while choosing and scheduling
+  // its next atom. New observed balances invalidate this local cache. Recursive
+  // derived proofs retain their own cycle guard and are never memoized here.
+  if (parents.length) return satisfiesUncached(factInput, path, state, input, parents);
+  let goals = satisfactionCaches.get(input); if (!goals) satisfactionCaches.set(input, goals = new WeakMap());
+  let paths = goals.get(state); if (!paths) goals.set(state, paths = new WeakMap());
+  let facts = paths.get(path.steps); if (!facts) paths.set(path.steps, facts = new Map());
+  const key = goalValueKey([factInput.id, path.bindings]), previous = facts.get(key);
+  if (previous?.revision === state.observed.length) return previous.result;
+  const result = satisfiesUncached(factInput, path, state, input, parents);
+  facts.set(key, { revision: state.observed.length, result }); return result;
+}
+function satisfiesUncached(factInput: GoalFact, path: Path, state: GoalSearchMemory, input: GoalPlannerInput, parents: readonly string[]): Satisfaction {
   const fact = bindGoalFact(factInput, path.bindings), now = input.context.tick;
   const bounded = (result: Satisfaction): Satisfaction => 'byTick' in fact.predicate && result.tick > fact.predicate.byTick
     ? { ...result, met: false } : result;
@@ -241,6 +267,7 @@ function satisfies(factInput: GoalFact, path: Path, state: GoalSearchMemory, inp
 }
 
 function composeOne(state: GoalSearchMemory, input: GoalPlannerInput, goal: GoalRequest) {
+  if (input.context.precision === 'coarse') { composeCoarseOne(state, input, goal); return; }
   if (!state.active) {
     state.frontier.sort(pathOrder(input.context.tick));
     const path = state.frontier.shift();
@@ -253,7 +280,8 @@ function composeOne(state: GoalSearchMemory, input: GoalPlannerInput, goal: Goal
     }
     state.active = { path, next: 0 };
   }
-  const active = state.active, action = state.candidates[active.next++];
+  const active = state.active, candidateId = active.candidateIds?.[active.next++];
+  const action = active.candidateIds ? state.candidates.find(candidate => candidate.id === candidateId) : state.candidates[active.next++];
   if (!action) { state.active = null; return; }
   if (active.path.steps.some(step => step.action.id === action.id) || !validEstimate(action)) return;
   const scheduled = scheduleAction(active.path, action, state, input, goal);
@@ -270,6 +298,94 @@ function composeOne(state: GoalSearchMemory, input: GoalPlannerInput, goal: Goal
   state.visited.push(key); state.frontier.push(path);
   if (state.frontier.length > input.limits.maxExpansions) { state.frontier.sort(pathOrder(input.context.tick));
     state.frontier.splice(input.limits.maxExpansions); state.limitReason ??= 'frontier-limit'; }
+}
+
+/** Coarse search builds one dependency proposal instead of enumerating action
+ * permutations. One frame transition is one charged search step. Checkpoints
+ * backtrack failed achievers; exact rejection reopens alternatives next think.
+ * Exhausting this heuristic is search-pending, never proof of infeasibility. */
+function composeCoarseOne(state: GoalSearchMemory, input: GoalPlannerInput, goal: GoalRequest) {
+  const search = state.coarse ??= { path: emptyPath(), root: 0, stack: [] };
+  const push = (fact: GoalFact) => search.stack.push({ fact, next: 0, checkpoint: search.path, prerequisite: 0 });
+  const fail = () => {
+    const frame = search.stack.pop()!; search.path = frame.checkpoint;
+    const parent = search.stack.at(-1);
+    if (parent) { search.path = parent.checkpoint; delete parent.selected; delete parent.required; parent.prerequisite = 0; }
+    else { state.limitReason ??= 'coarse-proposal-needs-alternative'; state.phase = 'done'; }
+  };
+  if (!search.stack.length) {
+    while (search.root < goal.effects.length && satisfies(goal.effects[search.root]!, search.path, state, input).met) search.root++;
+    if (search.root >= goal.effects.length) { state.solutions = [search.path]; state.phase = 'done'; state.frontier = []; return; }
+    push(goal.effects[search.root]!); return;
+  }
+  const frame = search.stack.at(-1)!;
+  if (satisfies(frame.fact, search.path, state, input).met) { search.stack.pop(); return; }
+  if (!frame.options) {
+    if (input.contextForPrefix && frame.fact.predicate.kind === 'force-at'
+      && search.path.steps.some(step => step.action.kind === 'assemble')) {
+      const context = input.contextForPrefix(search.path.steps);
+      for (const provider of input.providers) {
+        const discovered = discoverGoalActions(provider, frame.fact, context);
+        for (const item of discovered.deferred) {
+          state.deferred ??= [];
+          if (!state.deferred.some(candidate => candidate.id === item.id && candidate.factId === frame.fact.id))
+            state.deferred.push({ ...item, factId: frame.fact.id });
+        }
+        for (const action of discovered.actions.filter(action => goalActionContributes(action, frame.fact))) {
+          if (!state.candidates.some(candidate => candidate.id === action.id)) state.candidates.push(action);
+          if (!state.alternatives.some(candidate => candidate.actionId === action.id && candidate.factId === frame.fact.id))
+            state.alternatives.push({ id: `alternative:${goalValueKey([frame.fact.id, action.id])}`, factId: frame.fact.id,
+              actionId: action.id, declaration: action, status: 'pending', costGold: action.cost.state === 'met'
+                ? action.cost.value.reduce((sum, term) => sum + term.gold, 0) : null, finishTick: null,
+              reason: reason('goal-selected-prefix-achiever', [frame.fact.id]) });
+        }
+      }
+    }
+    const cost = (action: GoalActionDeclaration) => action.cost.state === 'met' ? action.cost.value.reduce((sum, term) => sum + term.gold, 0) : Infinity;
+    const probability = (action: GoalActionDeclaration) => action.successProbability.state === 'met' ? action.successProbability.value : 0;
+    const complete = (action: GoalActionDeclaration) => action.effects.some(effect => effect.operation === 'establish' && matchGoalFacts(effect.fact, frame.fact)) ? 1 : 0;
+    frame.options = state.candidates.filter(action => validEstimate(action) && goalActionContributes(action, frame.fact))
+      .map(action => ({ action, unmet: action.preconditions.filter(fact => !satisfies(fact, search.path, state, input).met).length }))
+      .sort(({ action: a, unmet: first }, { action: b, unmet: second }) => complete(b) - complete(a) || first - second
+        || cost(a) - cost(b) || probability(b) - probability(a)
+        || (a.duration.state === 'met' ? a.duration.value : Infinity) - (b.duration.state === 'met' ? b.duration.value : Infinity)
+        || order(a.id, b.id)).map(({ action }) => action.id);
+    if (observe(state, input, frame.fact).derived?.allOf.length) frame.options.unshift('@derived');
+    return;
+  }
+  if (!frame.selected) {
+    const id = frame.options[frame.next++];
+    if (!id) { fail(); return; }
+    if (search.path.steps.some(step => step.action.id === id)) return;
+    frame.selected = id; frame.checkpoint = search.path; frame.prerequisite = 0;
+    frame.required = id === '@derived' ? [...observe(state, input, frame.fact).derived!.allOf]
+      : [...state.candidates.find(action => action.id === id)!.preconditions];
+    return;
+  }
+  while (frame.prerequisite < frame.required!.length && satisfies(frame.required![frame.prerequisite]!, search.path, state, input).met)
+    frame.prerequisite++;
+  const required = frame.required![frame.prerequisite];
+  if (required) {
+    if (search.stack.length >= input.limits.maxDepth || search.stack.some(parent => parent.fact.id === required.id)) {
+      search.path = frame.checkpoint; delete frame.selected; delete frame.required; frame.prerequisite = 0; return;
+    }
+    push(required); return;
+  }
+  if (frame.selected === '@derived') {
+    search.path = frame.checkpoint; delete frame.selected; delete frame.required; frame.prerequisite = 0; return;
+  }
+  const action = state.candidates.find(action => action.id === frame.selected)!;
+  const next = scheduleAction(search.path, action, state, input, goal);
+  if (!next || action.cost.state !== 'met' || action.successProbability.state !== 'met') {
+    search.path = frame.checkpoint; delete frame.selected; delete frame.required; frame.prerequisite = 0; return;
+  }
+  search.path = { steps: [...search.path.steps, next.step], bindings: next.bindings,
+    cost: search.path.cost + action.cost.value.reduce((sum, term) => sum + term.gold, 0),
+    probability: search.path.probability * action.successProbability.value };
+  if (satisfies(frame.fact, search.path, state, input).met) { search.stack.pop(); return; }
+  // A positive numeric contributor can leave a remaining deficit. Its paid
+  // prefix stays in place while another distinct contributor is considered.
+  frame.checkpoint = search.path; delete frame.selected; delete frame.required; frame.prerequisite = 0;
 }
 
 /** Replay uses the same scheduler as composition: effect availability and

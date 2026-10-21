@@ -22,9 +22,13 @@ const ids = (value: unknown) => Array.isArray(value) ? value.flatMap(item => ent
  * is retained, so this evidence can never make a move ready in the live world. */
 export function createGoalMovementProjection(context: GoalPlanningContext,
   worldReader: (snapshot: GameSnapshot) => GoalFactReader): NonNullable<GoalPlanningContext['readProjectedFact']> {
+  type Entry = { unit: Unit; tick: number; actionId: string };
+  const prefixes = new WeakMap<object, { moved: Map<string, Entry>; read: GoalFactReader; snapshot: GameSnapshot }>();
   return (input, projection) => {
     const fact = bindGoalFact(input, projection.bindings), p = fact.predicate;
-    const moved = new Map<string, { unit: Unit; tick: number; actionId: string }>();
+    let prefix = prefixes.get(projection.actions);
+    if (!prefix) {
+    const moved = new Map<string, Entry>();
     const actual = new Map(context.snapshot.units.filter(unit => unit.owner === context.owner && unit.hp > 0).map(unit => [unit.id, unit]));
     const move = (id: string, to: { x: number; y: number }, tick: number, actionId: string, heading?: unknown) => {
       const before = moved.get(id)?.unit ?? actual.get(id); if (!before) return;
@@ -56,6 +60,10 @@ export function createGoalMovementProjection(context: GoalPlanningContext,
       }
     }
     const snapshot = { ...context.snapshot, units: context.snapshot.units.map(unit => moved.get(unit.id)?.unit ?? unit) };
+    prefix = { moved, read: worldReader(snapshot), snapshot };
+    prefixes.set(projection.actions, prefix);
+    }
+    const { moved, snapshot } = prefix;
     let relevant: string[];
     if (p.kind === 'route') relevant = p.actor?.kind === 'pool-member'
       ? goalPoolMemberCandidates({ snapshot, owner: context.owner, reference: p.actor }).map(unit => unit.id)
@@ -75,13 +83,13 @@ export function createGoalMovementProjection(context: GoalPlanningContext,
       const actor = moved.get(p.actor.entityId)!.unit;
       // A route from one landing cannot price an action after another landing.
       // Geometry alone proves no ownership of its hypothetical start pose.
-      if (Math.hypot(actor.x - p.from.point.x, actor.y - p.from.point.y) > 1e-6) return {
+      if (context.precision !== 'coarse' && Math.hypot(actor.x - p.from.point.x, actor.y - p.from.point.y) > 1e-6) return {
         fact, state: 'unmet', observedTick: context.tick, revision: goalValueKey([fact.id, actor.x, actor.y, availableTick]),
         entityIds: [actor.id], availableTick, evidence: [],
         reason: { code: 'projected-route-origin-mismatch', factIds: [fact.id, ...changes.map(row => row.actionId)], values: {} },
       };
     }
-    const observed = worldReader(snapshot)(fact);
+    const observed = prefix.read(fact);
     return { ...observed, availableTick: Math.max(availableTick, observed.availableTick ?? context.tick),
       revision: goalValueKey([observed.revision, changes.map(row => [row.actionId, row.tick, row.unit.id, row.unit.x, row.unit.y])]),
       reason: { ...observed.reason, factIds: [...new Set([...observed.reason.factIds, ...changes.map(row => row.actionId)])].sort(),

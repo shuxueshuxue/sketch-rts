@@ -1,0 +1,162 @@
+import { discoverGoalActions } from './goal-provider-candidates';
+import { goalFact, goalValueKey } from './goal-facts';
+import type { GoalActionDeclaration, GoalActionProvider, GoalPlan, GoalPlanningContext } from './goal-planner-types';
+
+type Entry = { coarse: GoalActionDeclaration; sourceRevision?: string; state: 'pending' | 'known' | 'invalid';
+  exact: GoalActionDeclaration[]; reason: GoalPlan['reasons'][number] };
+export type GoalRefinementMemory = { revision: number; entries: Entry[] };
+/** Clock deadlines do not create a new physical proposal. Actual geometry,
+ * actors and quoted bounds still participate, so a moved/changed choice cannot
+ * borrow another proposal's exact validation. */
+function proposalKey(action: GoalActionDeclaration): string {
+  const semantic = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(semantic);
+    if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value)
+      .filter(([key]) => !['id', 'byTick', 'throughTick', 'factIds', 'reasons', 'precision', 'refinementFor'].includes(key))
+      .map(([key, item]) => [key, semantic(item)]));
+    return value;
+  };
+  return goalValueKey(semantic({ kind: action.kind, preconditions: action.preconditions, effects: action.effects,
+    executor: action.executor, demands: action.demands, flows: action.flows,
+    duration: action.duration, cost: action.cost, successProbability: action.successProbability }));
+}
+function refreshClock(exact: GoalActionDeclaration, before: GoalActionDeclaration, current: GoalActionDeclaration): GoalActionDeclaration {
+  const clocks = new Map<number, number>();
+  const pair = (old: unknown, next: unknown) => {
+    if (!old || !next || typeof old !== 'object' || typeof next !== 'object') return;
+    for (const [key, value] of Object.entries(old)) {
+      const following = (next as Record<string, unknown>)[key];
+      if (['byTick', 'throughTick'].includes(key) && typeof value === 'number' && typeof following === 'number') clocks.set(value, following);
+      else pair(value, following);
+    }
+  };
+  pair(before.executor.parameters, current.executor.parameters);
+  pair(before.preconditions, current.preconditions);
+  const facts = new Map<string, string>();
+  const visit = (value: unknown, key = ''): unknown => {
+    if (['byTick', 'throughTick'].includes(key) && typeof value === 'number') return clocks.get(value) ?? value;
+    if (Array.isArray(value)) return value.map(item => visit(item));
+    if (value && typeof value === 'object') {
+      const row = Object.fromEntries(Object.entries(value).map(([name, item]) => [name, visit(item, name)]));
+      if ('predicate' in row && typeof row.id === 'string') {
+        const fact = goalFact(row.predicate as import('./goal-planner-types').GoalFactPredicate); facts.set(row.id, fact.id); return fact;
+      }
+      return row;
+    }
+    return value;
+  };
+  const result = visit(exact);
+  const references = (value: unknown): unknown => typeof value === 'string' ? facts.get(value) ?? value
+    : Array.isArray(value) ? value.map(references) : value && typeof value === 'object'
+      ? Object.fromEntries(Object.entries(value).map(([key, item]) => [key, references(item)])) : value;
+  return references(result) as GoalActionDeclaration;
+}
+const value = (action: GoalActionDeclaration) => ({ duration: action.duration.state === 'met' ? action.duration.value : null,
+  cost: action.cost.state === 'met' ? action.cost.value.reduce((sum, term) => sum + term.gold, 0) : null,
+  probability: action.successProbability.state === 'met' ? action.successProbability.value : null });
+const sameExecutionProof = (coarse: GoalActionDeclaration, exact: GoalActionDeclaration) => {
+  const proof = (action: GoalActionDeclaration) => ({ id: action.id, kind: action.kind, preconditions: action.preconditions,
+    effects: action.effects, demands: action.demands, flows: action.flows, duration: action.duration, cost: action.cost,
+    successProbability: action.successProbability, executor: action.executor, outputs: action.outputs });
+  return goalValueKey(proof(coarse)) === goalValueKey(proof(exact));
+};
+const sameChoice = (a: GoalActionDeclaration, b: GoalActionDeclaration) => {
+  if (a.kind !== b.kind) return false;
+  const first = a.executor.parameters, second = b.executor.parameters;
+  return ['cohort', 'transport', 'unitKind', 'buildingKind', 'campId', 'garrisonMineId'].every(key =>
+    first[key] === undefined || second[key] === undefined || goalValueKey(first[key]) === goalValueKey(second[key]));
+};
+
+/** Refinement is demand-driven by the chosen graph, never its rejected
+ * alternatives. Newly found exact declarations re-enter ordinary regression
+ * next think, so changed preconditions/times/resources are scheduled again. */
+export function createGoalPlanRefiner(input: Readonly<{
+  memory: GoalRefinementMemory; providers: readonly GoalActionProvider[];
+  exactContext: (selected: readonly GoalActionDeclaration[]) => GoalPlanningContext;
+  sourceRevision?: (action: GoalActionDeclaration) => string;
+}>) {
+  const { memory } = input;
+  return (plan: GoalPlan): GoalPlan => {
+    const first = new Set(plan.actions.filter(node => !node.dependsOnActionIds.length).map(node => node.id));
+    const selected = plan.actions.filter(node => first.has(node.id)
+      || node.dependsOnActionIds.length && node.dependsOnActionIds.every(id => first.has(id)));
+    if (!selected.length) return plan;
+    const context = input.exactContext(selected.map(node => node.declaration));
+    const deferred = [...(plan.deferredCandidates ?? [])];
+    const annotations = new Map<string, NonNullable<GoalPlan['actions'][number]['refinement']>>();
+    let changed = false;
+    for (const node of selected) {
+      const action = node.declaration;
+      if (action.precision !== 'coarse') continue;
+      const request = action.refinementFor;
+      const provider = request && input.providers.find(provider => provider.id === request.providerId);
+      if (!provider || !request) continue;
+      const sourceRevision = input.sourceRevision?.(action);
+      let entry = memory.entries.find(entry => proposalKey(entry.coarse) === proposalKey(action) && entry.sourceRevision === sourceRevision);
+      if (!entry) {
+        entry = { coarse: action, ...(sourceRevision === undefined ? {} : { sourceRevision }), state: 'pending', exact: [], reason: { code: 'selected-exact-facts-pending', factIds: [], values: {} } };
+        memory.entries.push(entry);
+      }
+      if (entry.state !== 'pending') continue;
+      const discovered = discoverGoalActions(provider, request.effect, context);
+      const compatible = discovered.actions.filter(exact => sameChoice(action, exact));
+      const known = compatible.filter(exact => {
+        const quote = value(exact); return quote.duration !== null && quote.cost !== null && quote.probability !== null;
+      });
+      const pendingEstimates = compatible.flatMap(exact => [exact.duration, exact.cost, exact.successProbability].filter(estimate => estimate.state === 'pending'));
+      const identical = known.find(exact => sameExecutionProof(action, exact));
+      const reason = { code: identical ? 'selected-exact-action-confirmed' : known.length ? 'selected-exact-action-requires-regression' : discovered.deferred.length || compatible.length
+        ? 'selected-exact-facts-pending' : 'selected-coarse-action-invalid', factIds: [...new Set([...discovered.deferred.flatMap(item => item.requestIds),
+          ...pendingEstimates.flatMap(estimate => estimate.state === 'pending' ? estimate.requestIds : [])])],
+        values: { pendingReasons: pendingEstimates.flatMap(estimate => estimate.state === 'pending' ? [estimate.reason.code] : []).join(',') } };
+      if (known.length) {
+        entry.exact = known.map(exact => ({ ...exact, precision: 'exact', refinementFor: request }));
+        entry.state = 'known'; entry.reason = reason; memory.revision++; changed ||= !identical;
+      } else if (!discovered.deferred.length && !compatible.length) {
+        entry.state = 'invalid'; entry.reason = reason; memory.revision++; changed = true;
+      } else entry.reason = reason;
+      annotations.set(node.id, { state: entry.state, coarse: action, ...(entry.exact[0] ? { exact: entry.exact[0] } : {}), reason });
+      deferred.push(...discovered.deferred.map(item => ({ ...item, factId: request.effect.id })));
+    }
+    const actions = plan.actions.map(node => {
+      const entry = memory.entries.find(entry => entry.sourceRevision === input.sourceRevision?.(node.declaration) && entry.exact.some(exact => exact.id === node.declaration.id));
+      const annotation = annotations.get(node.id);
+      if (annotation) {
+        const exact = annotation.exact;
+        if (exact && sameExecutionProof(node.declaration, exact)) {
+          const proof = exact.preconditions.map(context.readFact);
+          const ready = node.state === 'ready' && proof.every(fact => fact.state === 'met' && (fact.availableTick ?? context.tick) <= context.tick);
+          return { ...node, declaration: exact, refinement: annotation, state: ready ? 'ready' as const : node.state === 'ready'
+            ? proof.some(fact => fact.state === 'pending') ? 'waiting-facts' as const : 'waiting-actions' as const : node.state };
+        }
+        return { ...node, refinement: annotation, state: 'waiting-facts' as const };
+      }
+      if (!entry) return node;
+      const coarse = value(entry.coarse), exact = value(node.declaration);
+      const proof = selected.some(candidate => candidate.id === node.id) ? node.declaration.preconditions.map(context.readFact) : [];
+      const ready = node.state === 'ready' && proof.every(fact => fact.state === 'met' && (fact.availableTick ?? context.tick) <= context.tick);
+      return { ...node, ...(node.state === 'ready' && !ready ? { state: proof.some(fact => fact.state === 'pending')
+        ? 'waiting-facts' as const : 'waiting-actions' as const } : {}), refinement: { state: 'known' as const, coarse: entry.coarse,
+        exact: node.declaration, reason: entry.reason,
+        ...(coarse.duration !== null && coarse.cost !== null && coarse.probability !== null && exact.duration !== null && exact.cost !== null && exact.probability !== null
+          ? { delta: { durationTicks: exact.duration - coarse.duration, costGold: exact.cost - coarse.cost,
+            successProbability: exact.probability - coarse.probability } } : {}) } };
+    });
+    const ready = actions.filter(node => plan.readyActionIds.includes(node.id) && node.declaration.precision !== 'coarse' && node.state === 'ready');
+    return { ...plan, actions, readyActionIds: changed ? [] : ready.map(node => node.id),
+      status: plan.status === 'complete' ? 'complete' : changed || !ready.length ? 'waiting-facts' : plan.status,
+      ...(deferred.length ? { deferredCandidates: deferred } : {}),
+      reasons: changed ? [...plan.reasons, { code: 'selected-exact-actions-reenter-search', factIds: [], values: {} }] : plan.reasons };
+  };
+}
+
+export function applyGoalRefinements(provider: GoalActionProvider, memory: GoalRefinementMemory,
+  sourceRevision?: (action: GoalActionDeclaration) => string): GoalActionProvider {
+  return { id: provider.id, actionsFor(effect, context) {
+    const coarse = provider.actionsFor(effect, context);
+    return coarse.flatMap(action => {
+      const entry = memory.entries.find(entry => proposalKey(entry.coarse) === proposalKey(action) && entry.sourceRevision === sourceRevision?.(action));
+      return !entry || entry.state === 'pending' ? [action] : entry.state === 'invalid' ? [] : entry.exact.map(exact => refreshClock(exact, entry.coarse, action));
+    });
+  } };
+}

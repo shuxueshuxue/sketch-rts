@@ -97,7 +97,7 @@ provider 测试用真实场景快照和真实 Situation，加固定的已发布�
 建立这些世界事实，也不发 Arrival、路线、地面投影或风险工作请求。
 声明显式标为 `precision='coarse'`，必须由中心精确 refinement 后才可授予执行。
 
-临时默认模型明确标记 `legacy-casualty-alpha-0.19`，损失分布返回 null，
+临时默认模型明确标记 `casualty-alpha-0.19`，损失分布返回 null，
 不冒充清营专模。后续专模可通过同一个 `campBattleModel` 注入口替换，
 粗/精确两档均消费期望金币损失、独立胜率与战斗时长，不附加损失余量。
 精确档仍使用已公布行军风险和路线；未知敌军卸载归属保留 pending。

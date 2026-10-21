@@ -16,6 +16,7 @@ import type { AllocationLandRouteReader } from './allocation-arrival-query';
 import { ASSEMBLY_RANGE } from './assembly-posts';
 import { readGoalEconomicFact, type GoalEconomicFactPorts } from './goal-economy-facts';
 import { goalPoolMemberCandidates } from './goal-pool-members';
+import { readGoalCoarseGeometryFact } from './goal-coarse-facts';
 import { goalCampId, goalCampMemberIds, goalValueKey, resolveGoalCamp } from './goal-facts';
 import { observationJsonBytes } from './observation-json-bytes';
 import type { GoalFact, GoalFactObservation, GoalFactReader, GoalPlanningContext } from './goal-planner-types';
@@ -203,11 +204,11 @@ export function createGoalFactReader(input: GoalWorldFactInput): GoalFactReader 
     return null;
   }
   function read(fact: GoalFact): GoalFactObservation {
-    if (fact.predicate.kind === 'route' && fact.predicate.mover === 'land')
+    if (input.precision !== 'coarse' && fact.predicate.kind === 'route' && fact.predicate.mover === 'land')
       currentFactWork()?.consume(planningFieldKey('land', fact.predicate.to.point));
     const previous = memo.get(fact.id);
     if (previous) return previous;
-    const value = readGoalEconomicFact(fact, context, ports) ?? measure(fact)
+    const value = readGoalCoarseGeometryFact(fact, context) ?? readGoalEconomicFact(fact, context, ports) ?? measure(fact)
       ?? ports.resolvers?.map(resolve => resolve(fact, context)).find((value): value is GoalFactObservation => !!value)
       ?? pending(fact, 'goal-world-domain-port-required', fact.predicate);
     memo.set(fact.id, value); return value;

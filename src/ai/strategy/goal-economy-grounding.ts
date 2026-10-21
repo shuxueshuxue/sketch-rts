@@ -110,7 +110,7 @@ function walkEstimate(observation: ReturnType<GoalPlanningContext['readFact']>):
  * private budget, evaluator world or persistent memory. */
 export function createGoalEconomicGrounding(context: GoalPlanningContext, ports: GoalEconomicGroundingPorts):
   Pick<GoalGroundingReader, 'buildSites' | 'productionOptions'> {
-  const { snapshot, owner } = context, byTick = context.tick + context.situation.horizonTicks;
+  const { snapshot, owner } = context, byTick = (context.planThroughTick ?? context.tick + context.situation.horizonTicks);
   function points(kind: BuildingKind, near: Target) {
     if (context.precision === 'coarse') {
       const landId = near.landId ?? ports.regionAt(near.point, 'land');

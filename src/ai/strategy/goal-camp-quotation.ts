@@ -14,7 +14,7 @@ import type { Situation, Target } from './types';
 
 /** One replaceable camp-only model boundary. Search and exact assessment use
  * the same output currency; neither adds a conservative loss margin. The
- * legacy model has no fitted loss distribution, so it explicitly returns null
+ * existing model has no fitted loss distribution, so it explicitly returns null
  * until the separate camp calibration supplies one. */
 export type GoalCampBattleQuote = Readonly<{
   modelId: string; expectedLossGold: number; successProbability: number;
@@ -32,7 +32,7 @@ const known = <T>(value: T, factIds: readonly string[]): GoalEstimate<T> => ({ s
 
 /** Existing calibrated model, retained as an explicitly named interim model.
  * No alpha, micro assumption or probability is recalibrated here. */
-export const legacyGoalCampBattleModel: GoalCampBattleModel = input => {
+export const calibratedAlphaGoalCampBattleModel: GoalCampBattleModel = input => {
   // The shared assessor's old enemy-unload projection is a native path query.
   // Its affiliation must be provided by the owner source before invoking it.
   const unloading = input.snapshot.units.filter(unit => unit.hp > 0
@@ -44,7 +44,7 @@ export const legacyGoalCampBattleModel: GoalCampBattleModel = input => {
   const ids = sorted([...input.unitIds, ...battle.engagement.memberIds, ...battle.coveringTowerIds]);
   if (battle.status !== 'known') return { state: 'pending', requestIds: sorted(battle.engagement.unknownEnemyIds.length
     ? battle.engagement.unknownEnemyIds : ids), reason: { code: battle.reasonCode, factIds: ids, values: {} } };
-  return known({ modelId: 'legacy-casualty-alpha-0.19', expectedLossGold: battle.attrition.expectedLossGold,
+  return known({ modelId: 'casualty-alpha-0.19', expectedLossGold: battle.attrition.expectedLossGold,
     successProbability: battle.successProbability!, battleTicks: battle.durationTicks,
     requiredForce: battle.requiredForce!, lossDistribution: null, factIds: ids }, ids);
 };
@@ -93,7 +93,7 @@ export function coarseGoalCampOptions(input: Readonly<{
   const copies = group.map(unit => ({ ...unit, x: point.x, y: point.y, deck: undefined, cabin: undefined }));
   const ids = new Set(group.map(unit => unit.id));
   const assessed = { ...snapshot, units: [...snapshot.units.filter(unit => !ids.has(unit.id)), ...copies] };
-  const quote = (input.model ?? legacyGoalCampBattleModel)({ snapshot: assessed, situation, target,
+  const quote = (input.model ?? calibratedAlphaGoalCampBattleModel)({ snapshot: assessed, situation, target,
     unitIds: group.map(unit => unit.id), battleStartTicks: contactTicks });
   const pool = goalFact({ kind: 'force-available', at: staging, metric: 'combat-rating', minimum: 0,
     cohort: refs, byTick: input.byTick });

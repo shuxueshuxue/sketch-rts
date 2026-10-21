@@ -21,6 +21,8 @@ export function discoverGoalActions(provider: GoalActionProvider, fact: GoalFact
     ...(source.cohortOptions ? { cohortOptions: (...args: Parameters<NonNullable<GoalGroundingReader['cohortOptions']>>) => track(source.cohortOptions!(...args)) } : {}),
     ...(source.resolveCohort ? { resolveCohort: (...args: Parameters<NonNullable<GoalGroundingReader['resolveCohort']>>) => track(source.resolveCohort!(...args)) } : {}),
   };
-  const actions = provider.actionsFor(fact, grounding ? { ...context, grounding } : context);
+  const declarations = provider.actionsFor(fact, grounding ? { ...context, grounding } : context);
+  const actions = context.precision === 'coarse' ? declarations.map(action => action.precision === 'exact' ? action : ({ ...action,
+    precision: 'coarse' as const, refinementFor: { providerId: provider.id, effect: fact } })) : declarations;
   return { actions, deferred: [...deferred.values()].sort((a, b) => a.id.localeCompare(b.id)) };
 }

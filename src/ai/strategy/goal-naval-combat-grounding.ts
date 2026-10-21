@@ -443,7 +443,7 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
         const candidates: GoalCombatOption[] = [], deferred: Deferred[] = [...(groups.deferred ?? [])];
         for (const campId of camps) for (const group of groups.candidates) {
           const answer = coarseGoalCampOptions({ snapshot: context.snapshot, situation: context.situation, effect,
-            campId, cohort: group, byTick: 'byTick' in p ? p.byTick : context.tick + context.situation.horizonTicks,
+            campId, cohort: group, byTick: 'byTick' in p ? p.byTick : (context.planThroughTick ?? context.tick + context.situation.horizonTicks),
             ...(ports.campBattleModel ? { model: ports.campBattleModel } : {}) });
           if (answer.state === 'met') candidates.push(...answer.candidates);
           else if (answer.state === 'pending') deferred.push({ id: `coarse-camp:${campId}:${goalValueKey(group.map(member => member.reference))}`,
@@ -459,7 +459,7 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
           deferred.push({ id, requestIds: [id], reason: reason('combat-camp-land-origin-pending', [effect.id, campId]) }); continue;
         }
         const from = origin.from;
-        const answer = clearCamp(effect, group, from, campId, 'byTick' in p ? p.byTick : context.tick + context.situation.horizonTicks);
+        const answer = clearCamp(effect, group, from, campId, 'byTick' in p ? p.byTick : (context.planThroughTick ?? context.tick + context.situation.horizonTicks));
         if (answer.state === 'met') { result.push(...answer.candidates.map(option => atOrigin(option, origin))); deferred.push(...(answer.deferred ?? [])); }
         else if (answer.state === 'pending') deferred.push({ id, requestIds: answer.requestIds, reason: answer.reason });
       }
@@ -467,7 +467,7 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
     }
     const target = p.kind === 'site-safe' ? p.site : 'at' in p ? p.at : undefined;
     if (!target?.landId) return pending('combat-target-region-pending', [effect.id]);
-    const throughTick = 'throughTick' in p ? p.throughTick : 'byTick' in p ? p.byTick : context.tick + context.situation.horizonTicks;
+    const throughTick = 'throughTick' in p ? p.throughTick : 'byTick' in p ? p.byTick : (context.planThroughTick ?? context.tick + context.situation.horizonTicks);
     const groups = origins(effect); if (groups.state !== 'met') return groups;
     const result: GoalCombatOption[] = [], deferred: Deferred[] = [...(groups.deferred ?? [])];
     let rejected: Extract<GoalCandidates<never>, { state: 'unmet' }> | undefined;

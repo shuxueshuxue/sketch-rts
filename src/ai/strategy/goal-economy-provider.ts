@@ -54,7 +54,7 @@ export const goalEconomyActionProvider: GoalActionProvider = {
   actionsFor(effect: GoalFact, context: GoalPlanningContext) {
     const predicate = effect.predicate, race = context.snapshot.players[context.owner]?.race;
     if (!race) return [];
-    const byTick = 'byTick' in predicate ? predicate.byTick : context.tick + context.situation.horizonTicks;
+    const byTick = 'byTick' in predicate ? predicate.byTick : (context.planThroughTick ?? context.tick + context.situation.horizonTicks);
     if (predicate.kind === 'gold') return uniqueActions([declareGoalWaitIncome(effect, context)]);
     if (predicate.kind === 'hall-complete') {
       const mine = context.snapshot.resources.find(resource => resource.id === predicate.mineId && resource.amount > 0);

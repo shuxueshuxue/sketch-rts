@@ -27,6 +27,8 @@ export type GoalTransportPhysicalInput = Readonly<{
   readVoyageRisk?: (request: VoyageRiskRequest) => VoyageRisk;
   /** A bounded alternative prefix, never proof of exhaustive infeasibility. */
   shorePairLimit?: number;
+  /** Selected proposal refinement limits hull checks to these identities. */
+  hullReferences?: readonly import('./goal-planner-types').GoalEntityReference[];
 }>;
 const order = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;
 const unique = (ids: readonly string[]) => [...new Set(ids)].sort();
@@ -127,6 +129,7 @@ export function createGoalTransportFactPorts(input: GoalTransportPhysicalInput):
       const known: GoalHullCandidate[] = [], deferred: Deferred[] = [...(resolved.deferred ?? [])], proofs = new Set(resolved.factIds);
       for (const ship of input.snapshot.units) {
         if (ship.owner !== input.owner || ship.hp <= 0 || !isTransportKind(ship.kind) || seaIdAt(input.snapshot.map, ship) !== seaId) continue;
+        if (input.hullReferences && !input.hullReferences.some(ref => ref.kind === 'existing' && ref.entityId === ship.id)) continue;
         const profile = shipProfile(ship); if (!profile) continue;
         const cargo = input.snapshot.units.filter(unit => unit.hp > 0 && (unit.deck?.shipId ?? unit.cabin?.shipId) === ship.id);
         const capacity = Math.max(0, profile.loadCapacity - cargo.reduce((sum, unit) => sum + bodyMass(unit), 0));
@@ -137,7 +140,7 @@ export function createGoalTransportFactPorts(input: GoalTransportPhysicalInput):
           capacity, cargoUnitIds: cargo.map(unit => unit.id).sort(), preconditions: [availability], factIds: [availability.id] });
         proofs.add(availability.id);
       }
-      for (const kind of ['transport', 'carrier'] as const) {
+      for (const kind of input.hullReferences?.every(ref => ref.kind === 'existing') ? [] : ['transport', 'carrier'] as const) {
         const production = input.productionOptions(kind, { ...from, seaId });
         if (production.state === 'pending') { deferred.push({ id: `produce:${kind}:${seaId}`, requestIds: production.requestIds, reason: production.reason }); continue; }
         if (production.state !== 'met') continue;

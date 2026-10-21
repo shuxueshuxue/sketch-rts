@@ -24,7 +24,7 @@ export function createGoalTransportCohorts(context: GoalPlanningContext, ports: 
       }
     } else if ('at' in p) target = p.at;
     if (!target?.landId) return { state: 'unmet', reason: { code: 'cohort-landing-target-required', factIds: [effect.id], values: {} } };
-    const byTick = 'byTick' in p ? p.byTick : context.tick + context.situation.horizonTicks;
+    const byTick = 'byTick' in p ? p.byTick : (context.planThroughTick ?? context.tick + context.situation.horizonTicks);
     const worker = p.kind === 'worker-at';
     const requested = p.kind === 'worker-at' && p.worker?.kind === 'existing' ? [p.worker.entityId]
       : (p.kind === 'force-at' || p.kind === 'force-available') && p.cohort?.every(ref => ref.kind === 'existing')

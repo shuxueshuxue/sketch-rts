@@ -5,7 +5,7 @@ import { withNavigationAudit, withNavigationPhase } from '../../shared/navigatio
 import { createAiPolicyMemory } from '../memory';
 import { neutralCampExposure } from '../situation/neutral-camp-exposure';
 import { assessAllocatedCampBattle } from './allocated-force';
-import { coarseGoalCampOptions, legacyGoalCampBattleModel, type GoalCampBattleModel } from './goal-camp-quotation';
+import { coarseGoalCampOptions, calibratedAlphaGoalCampBattleModel, type GoalCampBattleModel } from './goal-camp-quotation';
 import { FactWorkQueue } from './fact-work';
 import { goalCampId, goalFact } from './goal-facts';
 import { createGoalNavalCombatGrounding, type GoalNavalCombatGroundingPorts } from './goal-naval-combat-grounding';
@@ -102,10 +102,10 @@ describe('conditional camp quotation before exact transport refinement', () => {
       reason: { code: 'opposition-eta-pending', factIds: ['opposition'], values: {} } }) }));
     expect(unresolved.cost).toMatchObject({ state: 'pending', requestIds: ['opposition-eta'] });
     expect(unresolved.successProbability.state).toBe('pending');
-    // The legacy pure boundary also avoids the native enemy-unload projection.
+    // The existing pure boundary also avoids the native enemy-unload projection.
     const enemy = { ...f.cohort[0]!.assessment, id: 'passenger', owner: 'foe', deck: { shipId: 'boat', x: 0, y: 0 } };
     const boat = { ...enemy, id: 'boat', deck: undefined, order: { type: 'unload' as const, x: 3000, y: 1000 } };
-    expect(strict(() => legacyGoalCampBattleModel({ snapshot: { ...f.snapshot, units: [...f.snapshot.units, enemy, boat] },
+    expect(strict(() => calibratedAlphaGoalCampBattleModel({ snapshot: { ...f.snapshot, units: [...f.snapshot.units, enemy, boat] },
       situation: f.situation, target: option.target, unitIds: f.cohort.map(member => member.assessment.id), battleStartTicks: 0 })))
       .toMatchObject({ state: 'pending', reason: { code: 'combat-enemy-unload-binding-pending' } });
   });

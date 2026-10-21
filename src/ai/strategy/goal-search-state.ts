@@ -9,6 +9,10 @@ export type GoalSearchMemory = {
   requests: { fact: GoalFact; depth: number }[]; regressed: string[]; observed: GoalFactObservation[];
   candidates: GoalActionDeclaration[]; alternatives: GoalAlternative[];
   deferred?: (GoalDeferredCandidate & { factId: string })[];
-  frontier: GoalSearchPath[]; active: { path: GoalSearchPath; next: number } | null; solutions: GoalSearchPath[];
+  frontier: GoalSearchPath[]; active: { path: GoalSearchPath; next: number; candidateIds?: string[] } | null; solutions: GoalSearchPath[];
   visited: string[]; expansions: number; depth: number; limitReason: string | null;
+  coarse?: { path: GoalSearchPath; root: number; stack: {
+    fact: GoalFact; options?: string[]; next: number; selected?: string;
+    checkpoint: GoalSearchPath; required?: GoalFact[]; prerequisite: number;
+  }[] };
 };

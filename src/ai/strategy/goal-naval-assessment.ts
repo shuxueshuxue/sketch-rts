@@ -1,7 +1,7 @@
 import { unitMover } from '../../shared/catalog';
 import type { Building, GameSnapshot, Unit } from '../../shared/types';
 import { assessAllocatedDefenseBattle, assessAllocatedForce } from './allocated-force';
-import { legacyGoalCampBattleModel, type GoalCampBattleModel } from './goal-camp-quotation';
+import { calibratedAlphaGoalCampBattleModel, type GoalCampBattleModel } from './goal-camp-quotation';
 import { arrivalWeightedForce } from './arrival-force';
 import type { DecisionFacts } from './decision';
 import { defenseProtectionValue, type defenseThreatScenarios } from './defense-risk';
@@ -145,7 +145,7 @@ export function assessGoalCampCombatOption(input: GoalCampCombatInput): GoalCand
   }
   if (timing.state !== 'met') return timing;
   const assessed = assessment(input, init.members, input.staging);
-  const battle = (input.battleModel ?? legacyGoalCampBattleModel)({ snapshot: assessed.snapshot, situation: input.situation, target: input.target,
+  const battle = (input.battleModel ?? calibratedAlphaGoalCampBattleModel)({ snapshot: assessed.snapshot, situation: input.situation, target: input.target,
     unitIds: assessed.units.map(unit => unit.id), battleStartTicks: timing.value });
   const ids = unique([...init.factIds, input.campId, ...(battle.state === 'met' ? battle.factIds : battle.reason.factIds),
     ...timing.factIds, ...(movement.state === 'met' ? movement.factIds : movement.reason.factIds)]);

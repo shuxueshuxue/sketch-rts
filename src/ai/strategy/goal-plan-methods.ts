@@ -70,6 +70,7 @@ export function createGoalPlanMethods(input: GoalPlanMethodInput): Readonly<{
     for (const node of ready) {
       if (node.state !== 'ready' || node.startTick === null || node.finishTick === null) { blocked = true; break; }
       const declaration = node.declaration, parameters = resolve(declaration.executor.parameters);
+      if (declaration.precision === 'coarse') { blocked = true; break; }
       const demands = resolve(declaration.demands as unknown as GoalParameter) as unknown as typeof declaration.demands;
       if (!record(parameters) || unresolved(parameters) || unresolved(demands)) { blocked = true; break; }
       const unitIds: string[] = [];
