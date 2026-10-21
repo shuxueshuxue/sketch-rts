@@ -6,8 +6,11 @@ import type { Evidence, LandId, SeaId, Situation, Target } from './types';
 /** Shared contract for goal regression. These are world predicates, never
  * task states. IDs are canonical value keys of the entire predicate. */
 export type GoalFactState = 'met' | 'unmet' | 'pending';
-export type GoalForceMetric = 'combat-rating' | 'camp-force';
+export type GoalForceMetric = 'combat-rating' | 'field-strength' | 'camp-force';
 export type GoalForceMeasure = Readonly<{ metric: 'combat-rating' }>
+  /** Existing observer field strength is a separate currency. It must never
+   * be relabelled as additive native combat-rating. */
+  | Readonly<{ metric: 'field-strength' }>
   | Readonly<{ metric: 'camp-force'; campId: string }>;
 export type GoalEntityReference = Readonly<{ kind: 'existing'; entityId: string }>
   | Readonly<{ kind: 'output'; actionId: string; output: string }>
@@ -27,6 +30,7 @@ export type GoalFactPredicate =
   | Readonly<{ kind: 'shore-safe'; landId: LandId; landing: Target; throughTick: number }>
   | Readonly<{ kind: 'camp-cleared'; campId: string }>
   | Readonly<{ kind: 'hall-complete'; mineId: string; at: Target }>
+  | Readonly<{ kind: 'garrison-ready'; mineId: string; at: Target }>
   | Readonly<{ kind: 'site-safe'; site: Target; throughTick: number }>
   // Capacity unlocks a production tier; free room pays the new unit's slots.
   | Readonly<{ kind: 'supply-cap'; minimum: number }>
@@ -40,7 +44,7 @@ export type GoalFactPredicate =
   | Readonly<{ kind: 'building-complete'; buildingKind: BuildingKind; at: Target; building?: GoalEntityReference }>
   | Readonly<{ kind: 'enemy-site-destroyed'; site: Target }>
   | Readonly<{ kind: 'route-controlled'; at: Target; throughTick: number }>
-  | Readonly<{ kind: 'harassment-ended'; site: Target; throughTick: number }>
+  | Readonly<{ kind: 'harassment-ended'; site: Target; throughTick: number; unitIds?: readonly string[] }>
   | Readonly<{ kind: 'interception-capability'; site: Target; throughTick: number; cohort?: readonly GoalEntityReference[] }>
   | Readonly<{ kind: 'assets-safe'; unitIds: readonly string[]; at: Target; throughTick: number }>;
 

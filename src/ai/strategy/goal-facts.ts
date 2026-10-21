@@ -24,7 +24,8 @@ export function goalResourceKey(resource: GoalResource): string {
 export function goalFact(predicate: GoalFactPredicate): GoalFact {
   const refs = (values: readonly import('./goal-planner-types').GoalEntityReference[]) => [...new Map(values
     .map(value => [goalValueKey(value), value] as const)).entries()].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([, value]) => value);
-  const normalized = predicate.kind === 'assets-safe' ? { ...predicate, unitIds: [...new Set(predicate.unitIds)].sort() }
+  const normalized = predicate.kind === 'assets-safe' || predicate.kind === 'harassment-ended' && predicate.unitIds
+    ? { ...predicate, unitIds: [...new Set(predicate.unitIds)].sort() }
     : predicate.kind === 'cargo-aboard' ? { ...predicate, units: refs(predicate.units) }
     : 'cohort' in predicate && predicate.cohort ? { ...predicate, cohort: refs(predicate.cohort) } : predicate;
   const semantic = normalized.kind === 'unit-available' ? { ...normalized, at: region(normalized.at, unitMover(normalized.unitKind)) }
