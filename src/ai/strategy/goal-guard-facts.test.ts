@@ -1,0 +1,90 @@
+import { expect, it } from 'vitest';
+import { sketchScene } from '../../sdk/scene';
+import { issueCommandFrame } from '../../sdk/commands/frame';
+import { snapshotGame } from '../../shared/sim';
+import { createAiPolicyMemory } from '../memory';
+import { allocateStrategy } from './allocator';
+import { allocationGrants, applyExecutorFeedback } from './allocation-lifecycle';
+import type { AllocationMethodProvider, ExecutableMethod, StrategyAllocationMemory } from './allocation-types';
+import { createStrategyCommandGateway } from './command-gateway';
+import { goalHoldPositionExecutor } from './executors/goal-land';
+import { goalFact } from './goal-facts';
+import { readGoalGuardFact } from './goal-guard-facts';
+import { withGoalPlannerInput } from './goal-planner-input';
+import type { DecisionFacts } from './decision';
+import type { Objective } from './types';
+import { landIdAt } from './regions';
+
+/** An allocation/execution contract, not a supplied solution to a public
+ * puzzle. Authority is obtained from the actual allocator and gateway. */
+function fixture() {
+  const game = sketchScene('native-formal-garrison-proof').map('bareDuel').replaceDefaults().player('us')
+    .townHall('us', 1150, 1000, { id: 'hall' }).goldMine('mine', 1000, 1000, 10000)
+    .unit('us', 'footman', 1000, 1000, { id: 'guard' }).build().createGame();
+  const snapshot = snapshotGame(game), policy = createAiPolicyMemory();
+  let authority!: StrategyAllocationMemory;
+  withGoalPlannerInput({ snapshot, owner: 'us', version: 'v9_knight', memory: policy, goals: [] }, planning => {
+    const at = { point: { x: 1000, y: 1000 }, landId: landIdAt(snapshot.map, { x: 1000, y: 1000 })! };
+    const objective: DecisionFacts<Objective> = { id: 'guard-contract', owner: 'us', kind: 'ExpandLand', target: at, effects: [],
+      sinceTick: snapshot.tick, status: 'candidate', rank: null, reasons: [], methodIds: [],
+      stability: { minimumStayUntilTick: 0, challengerId: null, challengerThinks: 0 },
+      utility: { horizonTicks: 1200, benefit: [], cost: [], successProbability: 1, persistenceBonus: 0, score: 1000 } };
+    const method: ExecutableMethod = { id: 'guard-bundle', objectiveId: objective.id, kind: 'goal-plan', stage: 'goal-plan',
+      goalBundle: { planId: 'guard-plan', unitIds: ['guard'] }, providerId: 'guard-contract', preference: 0, status: 'candidate',
+      demands: [], spends: [], preconditions: [], subgoals: [], reasons: [], estimatedTicks: 1200,
+      actions: [{ id: 'hold', executor: 'goal.hold-position', target: at, unitIds: ['guard'], demands: [], spendIds: [], dependsOn: [], completionEffects: [],
+        intent: { kind: 'goal-action', goalId: objective.id, declarationId: 'hold-contract', actionKind: 'hold-position', outputs: [],
+          parameters: { target: at, throughTick: 1200, cohort: [{ kind: 'existing', entityId: 'guard' }],
+            garrisonMineId: 'mine', garrisonAt: { ...at, entityId: 'mine' } } } }] };
+    const provider: AllocationMethodProvider = { id: 'guard-contract', buildMethods: () => [method], quote: () => ({
+      methodId: method.id, status: 'feasible', force: null, missingPreconditions: [], potentialUtility: null,
+      reason: { code: 'contract-price', factIds: [], values: {} }, utility: { horizonTicks: 1200,
+        benefit: [{ code: 'contract', value: 1000 }], cost: [], successProbability: 1, persistenceBonus: 0, score: 1000 } }) };
+    const result = allocateStrategy({ snapshot, situation: planning.context.situation, objectives: [objective], methods: [method], providers: [provider], previous: null });
+    authority = result.memory;
+    const grant = result.grants[0]!, execution = authority.executions.hold!;
+    expect(authority.leases['unit:guard']!.minimumStayUntilTick).toBe(1200);
+    const feedback = goalHoldPositionExecutor.execute({ snapshot, owner: 'us', objective, method, execution, grant, events: authority.events });
+    authority = applyExecutorFeedback(authority, snapshot, feedback);
+    const admitted = createStrategyCommandGateway({ snapshot, owner: 'us', memory: authority, grants: allocationGrants(authority), queuedTick: null })
+      .admit(feedback.commands.map((entry, index) => ({ id: `guard-command-${index}`, source: 'executor', executor: execution.executor,
+        action: execution.token, allocationRevision: authority.revision, purpose: entry.purpose, command: entry.command })));
+    expect(admitted.accepted).toHaveLength(1);
+    issueCommandFrame(game, admitted.accepted.map(entry => ({ playerId: 'us', scriptId: entry.executor, command: entry.command })));
+  });
+  return { game, policy, authority };
+}
+
+function read(f: ReturnType<typeof fixture>, authority = f.authority) {
+  const snapshot = snapshotGame(f.game), policy = createAiPolicyMemory();
+  return withGoalPlannerInput({ snapshot, owner: 'us', version: 'v9_knight', memory: policy, goals: [] }, input => {
+    const fact = goalFact({ kind: 'garrison-ready', mineId: 'mine', at: { entityId: 'mine', point: { x: 1000, y: 1000 },
+      landId: landIdAt(snapshot.map, { x: 1000, y: 1000 })! } });
+    return readGoalGuardFact(fact, input.context, authority);
+  });
+}
+
+it('observes a completed native hall, actual hold cohort and retained whole-window authority together', () => {
+  const f = fixture();
+  expect(read(f)).toMatchObject({ state: 'met', entityIds: ['guard'], reason: { code: 'observed-formal-guard-obligation',
+    values: { retainedLease: true, supportedThroughTick: 1200 } } });
+  expect(read(f, JSON.parse(JSON.stringify(f.authority)))).toEqual(read(f));
+});
+
+it('rejects a hall or state ACK without the real post, action generation, lease window and uninterrupted cohort', () => {
+  const f = fixture(), lease = f.authority.leases['unit:guard']!;
+  expect(read(f, { ...f.authority, leases: {} })).toBeNull();
+  expect(read(f, { ...f.authority, leases: { ...f.authority.leases, 'unit:guard': { ...lease, minimumStayUntilTick: 1199 } } })).toBeNull();
+  expect(read(f, { ...f.authority, leases: { ...f.authority.leases, 'unit:guard': { ...lease, action: { ...lease.action, generation: lease.action.generation + 1 } } } })).toBeNull();
+  f.game.units.find(unit => unit.id === 'guard')!.x += 1000;
+  expect(read(f)).toBeNull();
+});
+
+it('does not promote a foundation or a mere accepted hold command to garrison readiness', () => {
+  const f = fixture();
+  f.game.buildings.find(building => building.id === 'hall')!.complete = false;
+  expect(read(f)).toBeNull();
+  f.game.buildings.find(building => building.id === 'hall')!.complete = true;
+  f.game.units.find(unit => unit.id === 'guard')!.order = { type: 'idle' };
+  expect(read(f)).toBeNull();
+});

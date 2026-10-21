@@ -19,6 +19,7 @@ import { goalEconomyActionProvider } from './goal-economy-provider';
 import { assessGoalCombatMovementRisk } from './goal-combat-movement-risk';
 import { readGoalCampStagingFact } from './goal-camp-staging-facts';
 import { goalFact, goalResourceKey, goalValueKey } from './goal-facts';
+import { readGoalGuardFact } from './goal-guard-facts';
 import type { GoalGeometryMemory } from './goal-grounding-ports';
 import { createGoalGeometryReader, retainGoalGeometryPlans } from './goal-geometry-source';
 import { goalLandActionProvider } from './goal-land-actions';
@@ -171,6 +172,8 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
             })],
           } });
         const read: GoalPlanningContext['readFact'] = fact => {
+          const guard = readGoalGuardFact(fact, context, memory.strategyAllocation, allowedUnitIds, interruptedUnitIds);
+          if (guard) return guard;
           const value = baseRead(fact), p = fact.predicate;
           if (p.kind !== 'production' || p.producer?.kind !== 'existing' || value.state !== 'met') return value;
           const producerId = p.producer.entityId;
