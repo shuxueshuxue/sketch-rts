@@ -1,5 +1,6 @@
 import type { GameCommand, GameSnapshot, PlayerId, TrainableUnitKind, Unit, UnitOrder } from '../../shared/types';
 import type { FixedVoyage, FixedVoyageLoading } from './arrivals';
+import type { AssemblyFactsReader } from './assembly-facts';
 import type { VoyageRiskStages } from './voyage-risk';
 import type { ExecutorReason } from '../executor-reasons';
 import type { DecisionFacts } from './decision';
@@ -425,6 +426,7 @@ export type AllocationMethodQuoteInput = Readonly<{
   /** Same transaction's shared query, bound to the physical hull and original
    * shores. Providers never construct an independent route evaluator. */
   fixedVoyageArrival?: (unit: Unit, target: Target, voyage: FixedVoyage) => DecisionFacts<Arrival>;
+  assemblyFacts?: AssemblyFactsReader;
   valuation?: ValuationContext;
 }>;
 export interface AllocationMethodProvider {
@@ -451,6 +453,7 @@ export type StrategyAllocationInput = Readonly<{
    * pricing. Called once; providers cannot advance sampling themselves. */
   prepareVoyageRisks?: (methods: readonly ExecutableMethod[], quotes: readonly MethodAllocationQuote[]) => ReadonlyMap<string, VoyageRiskStages>;
   fixedVoyageArrival?: AllocationMethodQuoteInput['fixedVoyageArrival'];
+  assemblyFacts?: AssemblyFactsReader;
   /** Same query's loading stage, independent of unpublished later legs. */
   fixedVoyageLoading?: (unit: Unit, voyage: FixedVoyage) => FixedVoyageLoading;
   /** Verified optimistic target envelope only for imported-task leases. */

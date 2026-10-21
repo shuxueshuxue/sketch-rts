@@ -51,6 +51,9 @@ function quoteInput(input: StrategyAllocationInput, memory: StrategyAllocationMe
     responseEligibleUnitIds: allocationResponseCandidates(input.snapshot, input.situation, memory),
     executions: Object.values(memory.executions).filter(action => action.methodId === offer.method.id), valuation,
     ...(input.voyageRisks ? { voyageRisks: input.voyageRisks } : {}),
+    ...(input.assemblyFacts ? { assemblyFacts: request => input.assemblyFacts!({ ...request,
+      objective: offer.objective, methodId: offer.method.id, unitIds: offer.unitIds, valuation,
+      responseEligibleUnitIds: allocationResponseCandidates(input.snapshot, input.situation, memory) }) } : {}),
     ...(input.fixedVoyageArrival ? { fixedVoyageArrival: input.fixedVoyageArrival } : {}) };
 }
 function reprice(input: StrategyAllocationInput, memory: StrategyAllocationMemory, provider: AllocationMethodProvider,
