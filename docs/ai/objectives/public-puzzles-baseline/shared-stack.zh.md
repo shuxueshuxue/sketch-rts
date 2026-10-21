@@ -1,8 +1,8 @@
 # 共同规划器栈上的题库接线
 
-计划判法已按新约定改为[冻结世界下最多20次原生think](frozen-thinks.zh.md)，沿用同一快照和memory，记录首次可执行计划的think序号。已归档的82b/K10：2帧完成K10、9帧第2次装配中断；新K20等共同头后统一复测。下述40e单次冷帧表保持原片，不重标成连续think成绩。
+计划判法已按新约定改为冻结世界下最多20次原生think，沿用同一快照和memory，记录首次可执行计划的think序号。[当前a0db/K20结果](frozen-thinks-a0db.zh.md)：11帧完整220次回调，0题通过，首次可执行全部未出现；缺口与几何缓存活锁已单列。82b/K10和40e单次冷帧表保持原片，不混算。
 
-#585 已随共享规划器栈 rebase 到 main `d36d0543b04077b44690bf4dae9dabb92f5a34a5`，当前共享基底为 `feat/strategy-goal-planner` 的 `82b22a5d`，已接真实搜索、事实源、物理 scope、正常 Objective collector 与think序号发布。
+#585 已随共享规划器栈 rebase 到 main `d36d0543b04077b44690bf4dae9dabb92f5a34a5`，当前共享基底为 `feat/strategy-goal-planner` 的 `a0dbb105`，已接真实搜索、事实源、物理 scope、正常 Objective collector、think序号发布与集中续算。
 11个计划验收已全部开启，最多20think。此前40e单次冷帧为通过0、错误动作链0、缺能力11；[旧逐题表与补能力表](cold-plans-40e.zh.md)保留历史来源。下方各固定SHA的skip数字也仅作历史验证记录。
 本页记录正式合同接线和共同栈验证；[历史 main 报告](report.zh.md)中的 8/33 只属于原来的 `d4ca2668` 生产代码，不是共同栈的成绩。
 
