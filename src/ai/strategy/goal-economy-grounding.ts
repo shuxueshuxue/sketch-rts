@@ -4,9 +4,8 @@ import { footprintCells, snapToFootprint } from '../../shared/terrain';
 import { GOLD_MINE_RULES } from '../../shared/mining';
 import type { BuildingKind } from '../../shared/types';
 import { goalFact, goalValueKey } from './goal-facts';
-import type { AllocationReason } from './allocation-types';
 import type { GoalGeometryReader, GoalGeometryRequest } from './goal-grounding-ports';
-import type { GoalBuildSite, GoalDeferredCandidate, GoalEntityReference, GoalEstimate, GoalFact, GoalGroundingReader,
+import type { GoalBuildSite, GoalDeferredCandidate, GoalEntityReference, GoalEstimate, GoalFact, GoalGroundingReader, GoalPoolMemberReference,
   GoalPlanningContext, GoalProductionOption } from './goal-planner-types';
 import type { LandId, Point, SeaId, Target } from './types';
 
@@ -112,20 +111,37 @@ function walkEstimate(observation: ReturnType<GoalPlanningContext['readFact']>):
 export function createGoalEconomicGrounding(context: GoalPlanningContext, ports: GoalEconomicGroundingPorts):
   Pick<GoalGroundingReader, 'buildSites' | 'productionOptions'> {
   const { snapshot, owner } = context, byTick = context.tick + context.situation.horizonTicks;
-  function points(kind: BuildingKind, near: Target) { return ports.geometry(goalBuildPointRequest(context, kind, near, ports)); }
+  function points(kind: BuildingKind, near: Target) {
+    if (context.precision === 'coarse') {
+      const landId = near.landId ?? ports.regionAt(near.point, 'land');
+      const at: Target = { ...near, ...(landId?.startsWith('land:') ? { landId: landId as LandId } : {}) };
+      return { state: 'met' as const, value: [{ at, approach: at }], factIds: [] };
+    }
+    return ports.geometry(goalBuildPointRequest(context, kind, near, ports));
+  }
   const buildSites: GoalGroundingReader['buildSites'] = (kind, near) => {
     const result = points(kind, near);
     if (result.state !== 'met') return result;
-    const candidates: GoalBuildSite[] = [];
-    const deferred = new Map<string, GoalDeferredCandidate>();
-    let unavailable: AllocationReason | undefined;
+    if (context.precision === 'coarse') return { state: 'met', factIds: result.factIds,
+      candidates: result.value.filter(point => !!point.at.landId).map(point => {
+        const pool = goalFact({ kind: 'worker-at', at: point.at, count: 1, byTick });
+        const site = goalFact({ kind: 'build-site', buildingKind: kind, at: point.at });
+        const worker: GoalPoolMemberReference = { kind: 'pool-member', unitKind: 'worker', at: point.at,
+          slot: goalValueKey(['build', kind, point.at.landId, point.at.point]) };
+        return { id: `coarse-build-site:${goalValueKey([site.id, worker])}`, buildingKind: kind, logicalTarget: near, at: point.at,
+          worker, route: null, walkTicks: { state: 'met' as const, value: 0, factIds: [pool.id] },
+          preconditions: [pool, site], factIds: [pool.id, site.id] };
+      }) };
+    const candidates: GoalBuildSite[] = [], deferred = new Map<string, GoalDeferredCandidate>();
     for (const point of result.value) {
-      const workers = snapshot.units.filter(unit => unit.owner === owner && unit.kind === 'worker' && unit.hp > 0
-        && !unit.deck && !unit.cabin && ports.regionAt(unit, 'land') === point.at.landId).sort((a, b) => order(a.id, b.id));
-      const actors: { ref: GoalEntityReference; from: Target; preconditions: readonly GoalFact[]; factIds: readonly string[] }[] = workers.map(unit => ({
-        ref: { kind: 'existing', entityId: unit.id }, from: { landId: point.at.landId!, point: { x: unit.x, y: unit.y } },
-        preconditions: [], factIds: [unit.id] }));
       const pool = goalFact({ kind: 'worker-at', at: point.at, count: 1, byTick });
+      const current = context.readFact(pool);
+      const workers = snapshot.units.filter(unit => unit.owner === owner && unit.kind === 'worker' && unit.hp > 0
+        && !unit.deck && !unit.cabin && current.entityIds?.includes(unit.id)
+        && ports.regionAt(unit, 'land') === point.at.landId).sort((a, b) => order(a.id, b.id));
+      type Actor = { pricing: GoalEntityReference; from: Target; speed: number; preconditions: readonly GoalFact[]; factIds: readonly string[] };
+      const actors: Actor[] = workers.map(unit => ({ pricing: { kind: 'existing', entityId: unit.id },
+        from: { landId: point.at.landId!, point: { x: unit.x, y: unit.y } }, speed: unit.speed, preconditions: [], factIds: [unit.id] }));
       const options = ports.cohortOptions?.(pool);
       if (options?.state === 'met') {
         for (const item of options.deferred ?? []) deferred.set(item.id, item);
@@ -137,38 +153,43 @@ export function createGoalEconomicGrounding(context: GoalPlanningContext, ports:
               || member.assessment.owner !== owner || member.assessment.hp <= 0) continue;
             const actual = snapshot.units.find(unit => unit.id === ref.entityId && unit.owner === owner && unit.kind === 'worker' && unit.hp > 0);
             if (!actual) continue;
-            const conditionalPool = option.preconditions.some(fact => fact.predicate.kind === 'worker-at'
-              && fact.predicate.at.landId === point.at.landId && fact.predicate.count >= 1
-              && fact.predicate.worker?.kind === 'existing' && fact.predicate.worker.entityId === ref.entityId);
-            if (!conditionalPool) continue;
-            actors.push({ ref, from: option.from, preconditions: option.preconditions, factIds: [...options.factIds, ...option.factIds] });
+            // The transport contributes a regional quantity. Its particular
+            // passenger is a price witness, never the builder's identity.
+            const other = option.preconditions.filter(fact => !(fact.predicate.kind === 'worker-at'
+              && fact.predicate.at.landId === point.at.landId && fact.predicate.count === 1));
+            actors.push({ pricing: ref, from: option.from, speed: member.assessment.speed,
+              preconditions: other, factIds: [...options.factIds, ...option.factIds] });
           }
         }
-      } else if (options?.state === 'pending') {
-        deferred.set(`worker-pool:${pool.id}`, { id: `worker-pool:${pool.id}`, requestIds: options.requestIds, reason: options.reason });
-      } else if (options?.state === 'unmet') {
-        unavailable ??= options.reason;
-      }
-      if (!actors.length && options?.state !== 'pending' && options?.state !== 'unmet') deferred.set(`worker-pool:${pool.id}`, {
-        id: `worker-pool:${pool.id}`, requestIds: [`worker-pool:${pool.id}`], reason: why('build-worker-pool-pending', [pool.id]),
+      } else if (options?.state === 'pending') deferred.set(`worker-pool:${pool.id}`, {
+        id: `worker-pool:${pool.id}`, requestIds: options.requestIds, reason: options.reason,
       });
-      const uniqueActors = new Map(actors.map(actor => [goalValueKey([actor.ref, actor.from, actor.preconditions.map(fact => fact.id).sort(order)]), actor]));
-      for (const [actorId, actor] of uniqueActors) {
-        const route = goalFact({ kind: 'route', mover: 'land', from: actor.from, to: point.approach, actor: actor.ref });
-        const site = goalFact({ kind: 'build-site', buildingKind: kind, at: point.at });
-        const worker = goalFact({ kind: 'worker-at', at: point.at, count: 1, byTick, worker: actor.ref });
-        candidates.push({ id: `build-site:${goalValueKey([site.id, actorId])}`, buildingKind: kind, logicalTarget: near,
-          at: point.at, worker: actor.ref, route,
-          walkTicks: walkEstimate(context.readFact(route)),
-          preconditions: [...new Map([...(point.at.entityId ? [worker] : [site, worker]), ...actor.preconditions]
+      const site = goalFact({ kind: 'build-site', buildingKind: kind, at: point.at });
+      const slot = goalValueKey(['build', kind, point.at.landId, point.at.point]);
+      const poolRef: GoalPoolMemberReference = { kind: 'pool-member', unitKind: 'worker', at: point.at, slot };
+      if (!actors.length) {
+        const missing = options?.state === 'pending' ? options : { state: 'pending' as const,
+          requestIds: [`worker-pool-route:${pool.id}`], reason: why('build-worker-pool-route-pending', [pool.id]) };
+        // Keep the quantity prerequisite visible to regression even before a
+        // landing is published. There is deliberately no invented route.from.
+        candidates.push({ id: `build-site:${goalValueKey([site.id, poolRef])}`, buildingKind: kind, logicalTarget: near,
+          at: point.at, worker: poolRef, route: null, walkTicks: missing,
+          preconditions: point.at.entityId ? [pool] : [site, pool], factIds: [...result.factIds, site.id, pool.id] });
+        continue;
+      }
+      const unique = new Map(actors.map(actor => [goalValueKey([actor.from, actor.speed, actor.preconditions.map(fact => fact.id).sort(order)]), actor]));
+      for (const actor of unique.values()) {
+        const worker: GoalPoolMemberReference = { ...poolRef, routeProfile: { from: actor.from.point, speed: actor.speed } };
+        const route = goalFact({ kind: 'route', mover: 'land', from: actor.from, to: point.approach, actor: worker });
+        const pricingRoute = goalFact({ kind: 'route', mover: 'land', from: actor.from, to: point.approach, actor: actor.pricing });
+        candidates.push({ id: `build-site:${goalValueKey([site.id, worker])}`, buildingKind: kind, logicalTarget: near,
+          at: point.at, worker, route, walkTicks: walkEstimate(context.readFact(pricingRoute)),
+          preconditions: [...new Map([...(point.at.entityId ? [pool] : [site, pool]), ...actor.preconditions]
             .map(fact => [fact.id, fact])).values()].sort((a, b) => order(a.id, b.id)),
-          factIds: [...new Set([...result.factIds, ...actor.factIds, site.id, worker.id, route.id])].sort(order) });
+          factIds: [...new Set([...result.factIds, ...actor.factIds, site.id, pool.id, route.id, pricingRoute.id])].sort(order) });
       }
     }
     const missing = [...deferred.values()].sort((a, b) => order(a.id, b.id));
-    if (!candidates.length && missing.length) return { state: 'pending', requestIds: [...new Set(missing.flatMap(item => item.requestIds))].sort(order),
-      reason: missing[0]!.reason };
-    if (!candidates.length && unavailable) return { state: 'unmet', reason: unavailable };
     return { state: 'met', candidates, factIds: result.factIds, ...(missing.length ? { deferred: missing } : {}) };
   };
   const productionOptions: GoalGroundingReader['productionOptions'] = (unitKind, near) => {

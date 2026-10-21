@@ -13,12 +13,23 @@ export type GoalForceMeasure = Readonly<{ metric: 'combat-rating' }>
    * be relabelled as additive native combat-rating. */
   | Readonly<{ metric: 'field-strength' }>
   | Readonly<{ metric: 'camp-force'; campId: string }>;
+/** A fungible regional pool slot, not a prospective entity or a training-job
+ * identity. The optional movement profile constrains an already priced route;
+ * it never asserts that a member has arrived. Allocation resolves the slot to
+ * one live eligible entity before issuing its normal unit lease. */
+export type GoalPoolMemberReference = Readonly<{
+  kind: 'pool-member'; unitKind: UnitKind; at: Target; slot: string;
+  routeProfile?: Readonly<{ from: Target['point']; speed: number }>;
+}>;
 export type GoalEntityReference = Readonly<{ kind: 'existing'; entityId: string }>
   /** Exact building/foundation output. Trained troops and hulls enter a
    * regional quantity pool and are selected as actual units by allocation. */
   | Readonly<{ kind: 'output'; actionId: string; output: string }>
   /** Template-local variable unified with an achiever's existing/output ref. */
-  | Readonly<{ kind: 'binding'; name: string }>;
+  | Readonly<{ kind: 'binding'; name: string }>
+  | GoalPoolMemberReference;
+export type GoalEntityResolver = (reference: GoalEntityReference,
+  selection?: Readonly<{ excludedUnitIds: readonly string[] }>) => Extract<GoalEntityReference, { kind: 'existing' }> | null;
 export type GoalFactPredicate =
   | Readonly<{ kind: 'force-at'; at: Target; minimum: number; byTick: number; cohort?: readonly GoalEntityReference[] } & GoalForceMeasure>
   | Readonly<{ kind: 'force-available'; at: Target; minimum: number; byTick: number; cohort?: readonly GoalEntityReference[] } & GoalForceMeasure>
@@ -174,7 +185,10 @@ export type GoalCandidates<T> = Readonly<{ state: 'met'; candidates: readonly T[
   | Readonly<{ state: 'unmet'; reason: AllocationReason }>;
 export type GoalBuildSite = Readonly<{
   id: string; buildingKind: BuildingKind; logicalTarget: Target; at: Target;
-  worker: GoalEntityReference; route: GoalFact; walkTicks: GoalEstimate<number>;
+  worker: GoalEntityReference;
+  /** No physical origin is invented while transport geometry is unpublished.
+   * The pending declaration still exposes its regional worker prerequisite. */
+  route: GoalFact | null; walkTicks: GoalEstimate<number>;
   /** Includes native footprint, occupancy and owner/race constraints. */
   preconditions: readonly GoalFact[]; factIds: readonly string[];
 }>;

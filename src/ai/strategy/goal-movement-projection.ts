@@ -1,6 +1,7 @@
 import type { GameSnapshot, Unit } from '../../shared/types';
 import { bindGoalFact } from './goal-fact-matching';
 import { goalValueKey } from './goal-facts';
+import { goalPoolMemberCandidates } from './goal-pool-members';
 import type { GoalFactReader, GoalPlanningContext } from './goal-planner-types';
 
 type RecordValue = Record<string, unknown>;
@@ -54,8 +55,11 @@ export function createGoalMovementProjection(context: GoalPlanningContext,
         if (to && id) move(id, to, step.finishTick, step.action.id);
       }
     }
+    const snapshot = { ...context.snapshot, units: context.snapshot.units.map(unit => moved.get(unit.id)?.unit ?? unit) };
     let relevant: string[];
-    if (p.kind === 'route') relevant = p.actor?.kind === 'existing' ? [p.actor.entityId] : [];
+    if (p.kind === 'route') relevant = p.actor?.kind === 'pool-member'
+      ? goalPoolMemberCandidates({ snapshot, owner: context.owner, reference: p.actor }).map(unit => unit.id)
+      : p.actor?.kind === 'existing' ? [p.actor.entityId] : [];
     else if (p.kind === 'worker-at') relevant = p.worker?.kind === 'existing' ? [p.worker.entityId]
       : [...moved].filter(([, entry]) => entry.unit.kind === 'worker').map(([id]) => id);
     else if (p.kind === 'force-at' || p.kind === 'force-available' || p.kind === 'camp-staging' || p.kind === 'interception-capability')
@@ -77,7 +81,6 @@ export function createGoalMovementProjection(context: GoalPlanningContext,
         reason: { code: 'projected-route-origin-mismatch', factIds: [fact.id, ...changes.map(row => row.actionId)], values: {} },
       };
     }
-    const snapshot = { ...context.snapshot, units: context.snapshot.units.map(unit => moved.get(unit.id)?.unit ?? unit) };
     const observed = worldReader(snapshot)(fact);
     return { ...observed, availableTick: Math.max(availableTick, observed.availableTick ?? context.tick),
       revision: goalValueKey([observed.revision, changes.map(row => [row.actionId, row.tick, row.unit.id, row.unit.x, row.unit.y])]),

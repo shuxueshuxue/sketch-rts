@@ -15,6 +15,7 @@ import { assessAllocatedForce } from './allocated-force';
 import type { AllocationLandRouteReader } from './allocation-arrival-query';
 import { ASSEMBLY_RANGE } from './assembly-posts';
 import { readGoalEconomicFact, type GoalEconomicFactPorts } from './goal-economy-facts';
+import { goalPoolMemberCandidates } from './goal-pool-members';
 import { goalCampId, goalCampMemberIds, goalValueKey, resolveGoalCamp } from './goal-facts';
 import { observationJsonBytes } from './observation-json-bytes';
 import type { GoalFact, GoalFactObservation, GoalFactReader, GoalPlanningContext } from './goal-planner-types';
@@ -87,8 +88,17 @@ export function createGoalFactReader(input: GoalWorldFactInput): GoalFactReader 
   function measure(fact: GoalFact): GoalFactObservation | null {
     const p = fact.predicate;
     if (p.kind === 'route') {
+      if (p.actor?.kind === 'pool-member') {
+        const profile = p.actor.routeProfile;
+        if (!profile) return pending(fact, 'pool-route-profile-pending', p.actor);
+        if (p.mover !== 'land' || p.actor.at.landId !== p.from.landId
+          || Math.hypot(profile.from.x - p.from.point.x, profile.from.y - p.from.point.y) > 1e-6)
+          return answer(fact, false, 'pool-route-origin-mismatch', [p, profile]);
+      }
       // Physical routes may describe an opponent; commanding remains restricted to owned leases.
-      const actor = p.actor?.kind === 'existing' ? snapshot.units.find(unit => unit.hp > 0 && p.actor?.kind === 'existing' && unit.id === p.actor.entityId) : undefined;
+      const actor = p.actor?.kind === 'pool-member' ? goalPoolMemberCandidates({ snapshot, owner, reference: p.actor,
+        allowedUnitIds: input.allowedUnitIds, interruptedUnitIds: input.interruptedUnitIds })[0]
+        : p.actor?.kind === 'existing' ? snapshot.units.find(unit => unit.hp > 0 && p.actor?.kind === 'existing' && unit.id === p.actor.entityId) : undefined;
       if (p.actor && !actor) return answer(fact, false, 'route-actor-not-available', p.actor);
       if (actor && unitMover(actor.kind) !== p.mover) return answer(fact, false, 'route-actor-mover-mismatch', unitRevision(actor));
       if (p.mover === 'sea') return actor && ports.seaRoute ? ports.seaRoute(p, actor)

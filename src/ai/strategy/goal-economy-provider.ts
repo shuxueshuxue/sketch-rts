@@ -22,9 +22,9 @@ function builds(kind: BuildingKind, near: Target, byTick: number, context: GoalP
   const sites = context.grounding.buildSites(kind, near);
   if (sites.state !== 'met') return [];
   return uniqueActions(sites.candidates.filter(site => !filter || filter(site.at)).map(site => {
-    const from = site.route.predicate.kind === 'route' ? site.route.predicate.from : null;
-    return from ? declareGoalBuilding({ buildingKind: kind, at: site.at, worker: { ref: site.worker, from }, byTick,
-      siteBinding: site }, context) : null;
+    const from = site.route?.predicate.kind === 'route' ? site.route.predicate.from : undefined;
+    return from || site.worker.kind === 'pool-member' ? declareGoalBuilding({ buildingKind: kind, at: site.at,
+      worker: { ref: site.worker, ...(from ? { from } : {}) }, byTick, siteBinding: site }, context) : null;
   }));
 }
 

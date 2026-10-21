@@ -3,7 +3,7 @@ import { UNIT_DEFS } from '../../shared/catalog';
 import type { AllocationMethodProvider, AllocationMethodQuoteInput, AllocationReason, ExecutableMethod, MethodAllocationQuote } from './allocation-types';
 import { goalValueKey } from './goal-facts';
 import { productionUsesOverlap } from './production-use';
-import type { GoalActionNode, GoalEntityReference, GoalParameter, GoalPlan, GoalPlannerOutput } from './goal-planner-types';
+import type { GoalActionNode, GoalEntityReference, GoalEntityResolver, GoalParameter, GoalPlan, GoalPlannerOutput } from './goal-planner-types';
 import type { DecisionFacts } from './decision';
 import type { Objective, ProductionUse, Target } from './types';
 import { discountedValue, resolveValuation, valuationWindow } from './utility';
@@ -15,7 +15,7 @@ const reason = (code: string, factIds: readonly string[] = []): AllocationReason
 const refId = (ref: unknown) => record(ref) && ref.kind === 'existing' && typeof ref.entityId === 'string' ? ref.entityId : null;
 function unresolved(value: unknown): boolean {
   if (Array.isArray(value)) return value.some(unresolved);
-  return record(value) && (value.kind === 'output' || value.kind === 'binding' || Object.values(value).some(unresolved));
+  return record(value) && (value.kind === 'output' || value.kind === 'binding' || value.kind === 'pool-member' || Object.values(value).some(unresolved));
 }
 function target(value: unknown): Target | null {
   if (!record(value) || !record(value.point) || typeof value.point.x !== 'number' || typeof value.point.y !== 'number'
@@ -28,7 +28,7 @@ export type GoalPlanMethodInput = Readonly<{
   snapshot: GameSnapshot; objectives: readonly DecisionFacts<Objective>[]; output: GoalPlannerOutput;
   /** The common owner scope resolves buildings and fungible pool selections.
    * No domain executor or method materializer chooses an ungranted entity. */
-  resolve?: (reference: GoalEntityReference) => Extract<GoalEntityReference, { kind: 'existing' }> | null;
+  resolve?: GoalEntityResolver;
   /** Regresses on the same Situation/query/work scope after actual exclusions;
    * missing computation remains pending, never zero displacement. */
   requote?: (request: AllocationMethodQuoteInput, plan: GoalPlan) => GoalPlanRequotation;
@@ -45,19 +45,26 @@ export function createGoalPlanMethods(input: GoalPlanMethodInput): Readonly<{
     if (plan.status !== 'ready' || plan.valueGold === null || plan.valueGold <= 0 || !plan.readyActionIds.length) continue;
     const objective = input.objectives.find(objective => objective.id === plan.goal.id && objective.owner === plan.goal.owner);
     if (!objective || terminal(objective.status)) continue;
+    const ready = plan.actions.filter(action => plan.readyActionIds.includes(action.id));
+    if (ready.some(node => node.declaration.precision === 'coarse')) {
+      deferred.push({ planId: plan.id, reason: reason('goal-selected-exact-refinement-pending', ready.map(node => node.id)) });
+      continue;
+    }
+    const fixed = ready.flatMap(node => node.declaration.demands.flatMap(demand => demand.resource.kind === 'entity-control'
+      && demand.resource.entity.kind === 'existing' ? [demand.resource.entity.entityId] : demand.resource.kind === 'unit' ? [demand.resource.unitId] : []));
     const resolved = new Map<string, Extract<GoalEntityReference, { kind: 'existing' }>>();
     const resolve = (value: GoalParameter): GoalParameter => {
       if (Array.isArray(value)) return value.map(resolve);
       if (!record(value)) return value;
-      if (['existing', 'output', 'binding'].includes(String(value.kind))) {
+      if (['existing', 'output', 'binding', 'pool-member'].includes(String(value.kind))) {
         const ref = value as GoalEntityReference;
         if (ref.kind === 'existing') return ref;
-        const key = goalValueKey(ref), actual = resolved.get(key) ?? input.resolve?.(ref);
+        const key = goalValueKey(ref), actual = resolved.get(key) ?? input.resolve?.(ref,
+          { excludedUnitIds: [...new Set([...fixed, ...[...resolved.values()].map(value => value.entityId)])].sort() });
         if (!actual) return value; resolved.set(key, actual); return actual;
       }
       return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, resolve(item as GoalParameter)]));
     };
-    const ready = plan.actions.filter(action => plan.readyActionIds.includes(action.id));
     const actions: ExecutableMethod['actions'][number][] = [], spends: ExecutableMethod['spends'][number][] = [];
     let blocked = false; const exclusive = new Set<string>();
     for (const node of ready) {

@@ -6,7 +6,8 @@ const object = (value: unknown): value is Record<string, unknown> => !!value && 
 const reference = (value: unknown): value is GoalEntityReference => object(value)
   && (value.kind === 'existing' && typeof value.entityId === 'string'
     || value.kind === 'output' && typeof value.actionId === 'string' && typeof value.output === 'string'
-    || value.kind === 'binding' && typeof value.name === 'string');
+    || value.kind === 'binding' && typeof value.name === 'string'
+    || value.kind === 'pool-member' && typeof value.unitKind === 'string' && typeof value.slot === 'string' && object(value.at));
 
 /** Bindings remain references to real entities or planned output slots. This
  * substitution never invents an entity ID or mutates a domain declaration. */
@@ -58,6 +59,7 @@ export function goalQuantity(fact: GoalFact): Readonly<{ resource: GoalResource;
     case 'population-room': return { resource: { kind: 'population-room' }, minimum: p.minimum };
     case 'supply-cap': return { resource: { kind: 'supply-cap' }, minimum: p.minimum };
     case 'unit-available': return { resource: { kind: 'unit-pool', at: p.at, unitKind: p.unitKind }, minimum: p.count };
+    case 'worker-at': return !p.worker ? { resource: { kind: 'unit-pool', at: p.at, unitKind: 'worker' }, minimum: p.count } : null;
     case 'force-at': case 'force-available': return p.metric === 'combat-rating'
       ? { resource: { kind: 'force', at: p.at, metric: p.metric, scope: p.kind === 'force-at' ? 'post' : 'pool' }, minimum: p.minimum } : null;
     case 'transport-in': return { resource: { kind: 'transport-capacity', seaId: p.seaId, ...(p.transport ? { transport: p.transport } : {}) }, minimum: p.capacity };

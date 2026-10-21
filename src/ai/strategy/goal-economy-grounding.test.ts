@@ -32,7 +32,14 @@ function scene(coast = false) {
 function context(snapshot: GameSnapshot, readFact: GoalPlanningContext['readFact'] = () => { throw Error('Unexpected route read'); }): GoalPlanningContext {
   const situation: Situation = { tick: snapshot.tick, owner: 'us', horizonTicks: 2400, lands: [], seas: [], assets: [], units: [],
     opportunities: [], economy: { cashGold: snapshot.players.us!.gold, predictedIncomeGold: 0, horizonTicks: 2400, ledger: [] }, limitations: [] };
-  return { snapshot, situation, owner: 'us', tick: snapshot.tick, version: 'v9_summoner', readFact };
+  return { snapshot, situation, owner: 'us', tick: snapshot.tick, version: 'v9_summoner', readFact: fact => {
+    if (fact.predicate.kind !== 'worker-at') return readFact(fact);
+    const p = fact.predicate, units = snapshot.units.filter(unit => unit.owner === 'us' && unit.kind === 'worker' && unit.hp > 0
+      && !unit.deck && !unit.cabin && landIdAt(snapshot.map, unit) === p.at.landId);
+    return { fact, state: units.length >= p.count ? 'met' : 'unmet', observedTick: snapshot.tick, revision: fact.id,
+      evidence: [], entityIds: units.map(unit => unit.id), quantity: units.length,
+      reason: { code: 'native-worker-pool-fixture', factIds: [fact.id], values: {} } };
+  } };
 }
 function ports(snapshot: GameSnapshot, geometry: GoalGeometryReader, revision = 'bodies-1') {
   return { geometry, geometryRevision: revision,
@@ -96,7 +103,9 @@ describe('shared-budget economic grounding with native placements', () => {
       const result = forbidRouting(() => createGoalEconomicGrounding(context(snapshot), ports(snapshot, geometry)).buildSites('farm', near));
       forbidRouting(() => work.flush());
       if (tick === 15) {
-        expect(result).toMatchObject({ state: 'pending', reason: { code: 'build-worker-pool-pending' } });
+        expect(result.state).toBe('met');
+        if (result.state !== 'met') throw Error('No pending build alternatives');
+        expect(result.candidates[0]).toMatchObject({ worker: { kind: 'pool-member' }, route: null, walkTicks: { state: 'pending' } });
         expect(JSON.stringify(result)).not.toContain('worker:land:');
       }
     }
@@ -159,6 +168,7 @@ describe('shared-budget economic grounding with native placements', () => {
     }
     expect(found).toBeDefined();
     const site = found!.candidates.find(site => site.walkTicks.state === 'met' && !landIdAt(snapshot.map, site.at.point))!;
+    if (!site.route) throw Error('Known native site lost its route');
     expect(site.route.predicate.kind).toBe('route');
     if (site.route.predicate.kind !== 'route') throw Error('Not a route');
     const approach = site.route.predicate.to;
