@@ -116,7 +116,8 @@ export const goalNavalActionProvider: GoalActionProvider = {
         }
       }
       const augmented = withFacts(action, option.preconditions);
-      if (augmented) actions.push(augmented);
+      if (augmented) actions.push(context.precision === 'coarse' ? { ...augmented, precision: 'coarse',
+        reasons: [...augmented.reasons, { code: 'coarse-naval-conditional-quotation', factIds: option.factIds, values: {} }] } : augmented);
     }
     return [...new Map(actions.map(action => [action.id, action])).values()].sort((a, b) => order(a.id, b.id));
   },

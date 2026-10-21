@@ -23,6 +23,7 @@ import { landIdAt } from './regions';
 import { seaIdAt } from './regions';
 import type { GoalHullCandidate, GoalTransportFactPorts } from './goal-grounding-ports';
 import { valueGoalSeaLeg } from './goal-sea-leg-value';
+import { coarseGoalCampOptions, type GoalCampBattleModel } from './goal-camp-quotation';
 import type { Target } from './types';
 
 type Deferred = NonNullable<Extract<GoalCandidates<never>, { state: 'met' }>['deferred']>[number];
@@ -41,6 +42,8 @@ export type GoalNavalCombatGroundingPorts = Readonly<{
   cohortOptions?: GoalGroundingReader['cohortOptions'];
   transportFacts?: Pick<GoalTransportFactPorts, 'seaLeg'>;
   movementRisk?: (request: GoalCombatMovementRequest) => GoalEstimate<GoalMovementRisk>;
+  /** Same replaceable camp model for coarse discovery and exact refinement. */
+  campBattleModel?: GoalCampBattleModel;
   readGroundPoint?: GoalNativeGroundReader;
   /** Only potential redirect scenarios need a counterfactual response. The
    * source owns its eligible/excluded pool and published route facts. */
@@ -96,7 +99,11 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
     }
     const candidates: (readonly GoalCohortMember[])[] = [], deferred: Deferred[] = [];
     for (const group of groups) {
-      const id = `combat-cohort:${goalValueKey(group)}`, bound = ports.resolveCohort(group);
+      const id = `combat-cohort:${goalValueKey(group)}`, bound = context.precision === 'coarse'
+        ? { state: 'met' as const, candidates: group.flatMap(reference => {
+          const actor = reference.kind === 'existing' ? actors.get(reference.entityId) : undefined;
+          return actor ? [{ reference, assessment: actor }] : [];
+        }), factIds: [effect.id] } : ports.resolveCohort(group);
       if (bound.state === 'pending') { deferred.push({ id, requestIds: bound.requestIds, reason: bound.reason }); continue; }
       if (bound.state !== 'met') continue;
       const members = [...new Map(bound.candidates.map(member => [goalValueKey(member.reference), member])).values()];
@@ -354,7 +361,7 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
       campContact: { campId, stagingFact } };
     const result = assessGoalCampCombatOption({ snapshot: context.snapshot, situation: context.situation, effect, cohort: group,
       from, target, staging, campId, byTick: throughTick, routes, arrivalTicks, movementRisk: movement(request),
-      stagingFacts: [context.readFact(stagingFact)] });
+      stagingFacts: [context.readFact(stagingFact)], ...(ports.campBattleModel ? { battleModel: ports.campBattleModel } : {}) });
     return result.state === 'met' ? { ...result, candidates: result.candidates.map(option => ({ ...option,
       factIds: sorted([...option.factIds, ...facts]) })), factIds: sorted([...result.factIds, ...facts]),
       ...(unresolved.length ? { deferred: [{ id: `combat-camp-staging-alternatives:${campId}`, requestIds: sorted(unresolved),
@@ -389,6 +396,19 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
     if (!['site-safe', 'assets-safe', 'force-at', 'force-available', 'worker-at', 'garrison-ready', 'camp-cleared', 'gold'].includes(p.kind)) return unmet('not-naval-combat-effect', [effect.id]);
     if (p.kind === 'camp-cleared' || p.kind === 'gold') {
       const camps = p.kind === 'camp-cleared' ? [p.campId] : neutralCampExposure(context.snapshot).camps.map(camp => goalCampId(camp.memberIds)).sort();
+      if (context.precision === 'coarse') {
+        const groups = cohorts(effect); if (groups.state !== 'met') return groups;
+        const candidates: GoalCombatOption[] = [], deferred: Deferred[] = [...(groups.deferred ?? [])];
+        for (const campId of camps) for (const group of groups.candidates) {
+          const answer = coarseGoalCampOptions({ snapshot: context.snapshot, situation: context.situation, effect,
+            campId, cohort: group, byTick: 'byTick' in p ? p.byTick : context.tick + context.situation.horizonTicks,
+            ...(ports.campBattleModel ? { model: ports.campBattleModel } : {}) });
+          if (answer.state === 'met') candidates.push(...answer.candidates);
+          else if (answer.state === 'pending') deferred.push({ id: `coarse-camp:${campId}:${goalValueKey(group.map(member => member.reference))}`,
+            requestIds: answer.requestIds, reason: answer.reason });
+        }
+        return choices(candidates, deferred, [effect.id, ...camps]);
+      }
       const groups = origins(effect); if (groups.state !== 'met') return groups;
       const result: GoalCombatOption[] = [], deferred: Deferred[] = [...(groups.deferred ?? [])];
       for (const campId of camps) for (const origin of groups.candidates) {
