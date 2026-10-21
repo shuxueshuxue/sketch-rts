@@ -95,7 +95,7 @@ it('keeps continued native cross-sea observations inside the shared physical fac
   }
 });
 
-it('retains diagnostic geometry outside the legacy observation trimmer and migrates older memories', () => {
+it('retains diagnostic geometry outside the older observation trimmer and migrates older memories', () => {
   const game = scene(), snapshot = snapshotGame(game), memory = createAiPolicyMemory();
   const entry = { key: 'previous-geometry', revision: 'old', state: 0, work: 1, requestedTick: 0,
     readyTick: 0, value: [], planIds: ['retired-plan'] };
@@ -107,4 +107,25 @@ it('retains diagnostic geometry outside the legacy observation trimmer and migra
   expect(memory.goalPlanning!.geometry!.capacity!.mode).toBe('measurement');
   expect(memory.goalPlanning!.geometry!.entries.find(item => item.key === entry.key)).toMatchObject({ readyTick: 0 });
   expect(memory.goalPlanning!.geometry!.entries.find(item => item.key === entry.key)!.planIds).toBeUndefined();
+});
+
+it('composes actual safety and combat candidates in the same native owner scope without pricing unobserved risk', () => {
+  const game = scene(), snapshot = snapshotGame(game), memory = createAiPolicyMemory();
+  const at = { point: { x: 350, y: 350 }, entityId: snapshot.buildings.find(building => building.owner === 'us' && building.kind === 'townHall')!.id,
+    landId: landIdAt(snapshot.map, { x: 350, y: 350 })! };
+  const quiet = goalFact({ kind: 'site-safe', site: at, throughTick: 100 });
+  const before = JSON.stringify(snapshot), count = situationConstructionCount();
+  strict(() => withGoalPlannerInput({ snapshot, owner: 'us', version: 'v9_summoner', memory, goals: [], geometryMeasurement: true }, input => {
+    expect(input.context.readFact(quiet)).toMatchObject({ state: 'met', reason: { code: 'observed-safety-window-clear' } });
+    const move = goalFact({ kind: 'worker-at', at, count: 1, byTick: 100 });
+    const candidates = input.context.grounding!.combatOptions!(move);
+    expect(candidates.state).toBe('met');
+    if (candidates.state === 'met') {
+      expect(candidates.candidates.length).toBeGreaterThan(0);
+      expect(candidates.candidates.every(candidate => candidate.cost.state === 'pending')).toBe(true);
+      expect(candidates.candidates[0]!.cohort).toEqual([{ kind: 'existing', entityId: snapshot.units.find(unit => unit.kind === 'worker')!.id }]);
+    }
+  }));
+  expect(situationConstructionCount() - count).toBe(1); expect(JSON.stringify(snapshot)).toBe(before);
+  expect(memory.strategy!.observation.factWork!.used).toBeLessThanOrEqual(6144);
 });

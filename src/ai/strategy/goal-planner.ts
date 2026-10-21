@@ -145,7 +145,8 @@ function regressOne(state: GoalSearchMemory, input: GoalPlannerInput, providers:
   state.regressed.push(request.fact.id);
   const observation = observe(state, input, request.fact);
   state.depth = Math.max(state.depth, request.depth);
-  if (observation.state === 'pending') return;
+  // An unobserved present state can still have a known future achiever. The
+  // pending observation stays in the graph; only explicit effects may satisfy it.
   if (observation.derived) state.requests.push(...observation.derived.allOf.map(fact => ({ fact, depth: request.depth + 1 })));
   // A currently met numeric balance can be consumed by another action. Its
   // positive-flow alternatives must remain available to repair that prefix.

@@ -18,6 +18,8 @@ import type { GoalGeometryMemory } from './goal-grounding-ports';
 import { createGoalGeometryReader, retainGoalGeometryPlans } from './goal-geometry-source';
 import { goalLandActionProvider } from './goal-land-actions';
 import { readGoalLandCapabilityFact } from './goal-land-facts';
+import { createGoalNavalCombatGrounding } from './goal-naval-combat-grounding';
+import { readGoalSiteSafetyFact } from './goal-site-safety-facts';
 import { goalNavalActionProvider } from './goal-naval-provider';
 import { collectGoalRequests } from './goal-requests';
 import { planGoals } from './goal-planner';
@@ -137,6 +139,8 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
           },
           resolvers: [(fact, factsContext) => readGoalLandCapabilityFact(fact, factsContext, {
             regionAt: point => landIdAt(snapshot.map, point) ?? null,
+          }), (fact, factsContext) => readGoalSiteSafetyFact(fact, factsContext, { regionAt,
+            readThreatArrival: (unit, target) => arrivals.arrival(unit, target, landIdAt(snapshot.map, unit)),
           })],
         } });
       const economy = createGoalEconomicGrounding(context, { geometry, geometryRevision, regionAt });
@@ -167,7 +171,11 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
           from, to, request, members: members.state === 'met' ? { state: 'met', value: members.candidates, factIds: members.factIds } : members,
           ports: physical, readFact: read });
       };
-      const grounded: GoalPlanningContext = { ...context, grounding: { ...economy, resolveCohort, transportOptions } };
+      const combat = createGoalNavalCombatGrounding(context, { landRoute, resolveCohort,
+        arrival: (unit, target) => arrivals.arrival(unit, target, landIdAt(snapshot.map, unit)),
+        ...(input.allowedUnitIds === undefined ? {} : { allowedUnitIds: input.allowedUnitIds }),
+        ...(input.interruptedUnitIds === undefined ? {} : { interruptedUnitIds: input.interruptedUnitIds }) });
+      const grounded: GoalPlanningContext = { ...context, grounding: { ...economy, ...combat, resolveCohort, transportOptions } };
       const initialBalances = initialGoalBalances(grounded, input.allowedUnitIds, input.interruptedUnitIds);
       const goals = input.goals ?? collectGoalRequests(observed.objectives, grounded);
       retainGoalGeometryPlans(retained.geometry, goals.map(goal => goal.id));

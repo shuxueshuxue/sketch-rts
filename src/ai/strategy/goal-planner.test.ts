@@ -105,7 +105,7 @@ it('reuses an unchanged declarative graph and invalidates it when a relevant wor
 
 it('preserves pending facts, bounded search and output-reference unification without fake entity IDs', () => {
   const { input, context } = example();
-  const pending = planGoals({ ...input(), context: { ...context, readFact: fact => ({ fact, state: 'pending', observedTick: 0,
+  const pending = planGoals({ ...input(), providers: [], context: { ...context, readFact: fact => ({ fact, state: 'pending', observedTick: 0,
     revision: 'queued', requestId: 'shared-field', requestedTick: 0, reason: { code: 'queued', factIds: [], values: {} }, evidence: [] }) } });
   expect(pending.plans[0]!.status).toBe('waiting-facts'); expect(pending.readyActions).toEqual([]);
   const bounded = planGoals({ ...input(), limits: { maxDepth: 1, maxExpansions: 2, maxPlans: 1 } });
@@ -225,4 +225,17 @@ it('reports pinned-capacity pressure on the owning plan and keeps its ready bund
   expect(paused.plans[0]!.search.work).toBe(0);
   const resumed = planGoals({ ...input(), previous: JSON.parse(JSON.stringify(paused.cache)), capacityPressure: () => [] });
   expect(resumed.plans[0]!.status).toBe('ready'); expect(resumed.readyActions.length).toBeGreaterThan(0);
+});
+
+it('discovers explicit future achievers for a pending world fact while retaining its unobserved current state', () => {
+  const { input, context, actions } = example(), request = input(), hall = request.goals[0]!.effects[0]!;
+  const future = { ...actions.find(action => action.id === 'build')!, preconditions: [], flows: [] };
+  const native = context.readFact;
+  const output = planGoals({ ...request, context: { ...context, readFact: fact => fact.id === hall.id ? {
+    fact, state: 'pending', observedTick: context.tick, revision: 'world-window-not-published', requestId: 'window', requestedTick: context.tick,
+    reason: { code: 'world-window-pending', factIds: [], values: {} }, evidence: [],
+  } : native(fact) }, providers: [{ id: 'future-achiever', actionsFor: () => [future] }] });
+  expect(output.plans[0]!.status).toBe('ready'); expect(output.readyActions.map(row => row.action.id)).toEqual(['build']);
+  expect(output.plans[0]!.facts.find(node => node.id === hall.id)!.observation.state).toBe('pending');
+  expect(output.plans[0]!.facts.find(node => node.id === hall.id)!.producerActionIds).toEqual(['build']);
 });
