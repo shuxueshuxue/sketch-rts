@@ -1,0 +1,9 @@
+{
+  "sha256": "61f7a2e3cc04c887da13b617373cd2fc3a7533149403a506c234333ae9dd2262",
+  "bytes": 2639070,
+  "name": "public-planner-puzzles-geometry-default-5ca-20261021",
+  "kind": "dir",
+  "machine": "a100",
+  "pushed": "e10e1317a64bdaa1a392624644c73e5aebae03d5",
+  "pr": 585
+}
