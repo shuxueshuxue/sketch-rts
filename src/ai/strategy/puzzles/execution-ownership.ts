@@ -135,5 +135,9 @@ export function createExecutionOwnership(scope: ShipOwnershipScope) {
     });
     return { passed: steps.every(s => s.status === 'goal-confirmed'), nativeApplications: structuredClone(sdkApplications), steps };
   }
-  return { observe, applied(event: AppliedPuzzleCommand) { sdkApplications.push(structuredClone(event)); }, finish };
+  return { observe, applied(event: AppliedPuzzleCommand) {
+    // The real SDK event also contains the live Game and its methods. Retain
+    // only the receipt fields; never clone or save the SDK context object.
+    sdkApplications.push({ tick:event.tick, owner:event.owner, scriptId:event.scriptId, command:structuredClone(event.command) });
+  }, finish };
 }
