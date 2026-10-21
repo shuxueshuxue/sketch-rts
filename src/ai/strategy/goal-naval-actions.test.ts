@@ -112,7 +112,8 @@ describe('grounded naval world-effect declarations', () => {
     ]);
     expect(declareGoalShoreClearing({ ...input, landing, threatIds: ['ally'], requiredForce: 1,
       throughTick: 1200, routes: [input.route] })).toBeNull();
-    const defend = declareGoalDefense({ ...input, site: input.at, requiredForce: 1, throughTick: 1200, routes: [input.route] })!;
+    const defend = declareGoalDefense({ ...input, estimates: { ...input.estimates, duration: known(1200) },
+      site: input.at, requiredForce: 1, throughTick: 1200, routes: [input.route] })!;
     expect(defend.effects[0]!.fact.predicate.kind).toBe('site-safe');
     expect(defend.preconditions.some(fact => fact.predicate.kind === 'force-available')).toBe(true);
     const escape = declareGoalEvacuation({ ...input, unitIds: ['worker'], shelter: input.at, throughTick: 1200, routes: [input.route] })!;
