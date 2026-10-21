@@ -60,6 +60,7 @@ describe('atomic land action declarations', () => {
     expect(action.preconditions.find(fact => fact.predicate.kind === 'force-at')!.predicate).toMatchObject({ at: target, cohort: [ref('weak')] });
     expect(action.demands).toEqual([{ resource: { kind: 'entity-control', entity: ref('weak') }, quantity: 1, from: 'start', until: 'finish' }]);
     expect(declareGoalHoldPosition({ ...input, duration: { state: 'met', value: 0, factIds: [] } }, context)).toBeNull();
+    expect(declareGoalHoldPosition({ ...input, post: { ...target, point: { x: 100, y: 100 } } }, context)).toBeNull();
   });
 
   it('retains pending assessments and symbolic future members without inventing world identities', () => {

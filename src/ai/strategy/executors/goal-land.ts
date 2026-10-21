@@ -51,7 +51,12 @@ function executor(kind: 'destroy-target' | 'hold-position' | 'engage-units'): St
       targets = [target];
     } else {
       if (typeof through !== 'number' || !Number.isFinite(through)) return blockedExecutor(input, 'goal-engage-window-invalid');
-      const ended = goalFact({ kind: 'harassment-ended', site: at, throughTick: through }), actual = input.goalFacts?.(ended);
+      const named = intent.parameters.threatUnitIds;
+      if (named !== undefined && (!Array.isArray(named) || named.some(id => typeof id !== 'string')))
+        return blockedExecutor(input, 'goal-engage-threats-unresolved');
+      const threatIds = named as readonly string[] | undefined;
+      const ended = goalFact({ kind: 'harassment-ended', site: at, throughTick: through,
+        ...(threatIds ? { unitIds: threatIds } : {}) }), actual = input.goalFacts?.(ended);
       if (actual?.state === 'met' && actual.observedTick === input.snapshot.tick && actual.fact.id === ended.id)
         return { ...base, status: 'complete', phase: 'harassment-ended-observed' };
       const capability = goalFact({ kind: 'interception-capability', site: at, throughTick: through,
@@ -61,7 +66,7 @@ function executor(kind: 'destroy-target' | 'hold-position' | 'engage-units'): St
         return blockedExecutor(input, 'goal-interception-capability-pending');
       if (observed.state !== 'met') return blockedExecutor(input, 'goal-interception-capability-unmet');
       targets = input.snapshot.units.filter(unit => observed.interception?.threatIds.includes(unit.id) && unit.hp > 0
-        && strategyIsOpponent(input.snapshot, input.owner, unit.owner));
+        && (!threatIds || threatIds.includes(unit.id)) && strategyIsOpponent(input.snapshot, input.owner, unit.owner));
       if (!targets.length) return { ...base, status: 'active', phase: 'await-harassment-world-proof' };
     }
     const read = currentAllocationLandRouteReader();

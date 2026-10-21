@@ -92,6 +92,24 @@ function nativePoolPort(game: Game): GoalTrainingReader {
 }
 
 describe('declarative economy and land executors at the existing command boundary', () => {
+  it('does not accept a different broad harassment proof for a named-threat obligation', () => {
+    const game = nativeGame(), target = game.units.find(unit => unit.id === 'target')!;
+    const base = request(game, goalEngageUnitsExecutor, 'engage-units', { target: { entityId: target.id,
+      landId: landIdAt(game.map, target)!, point: { x: target.x, y: target.y } }, cohort: [ref('fighter')],
+      throughTick: 500, threatUnitIds: ['target'] }, ['unit:fighter']);
+    const seen: string[] = [];
+    const input: ExecutorInput = { ...base, goalFacts: fact => {
+      seen.push(fact.id);
+      const common = { fact, observedTick: game.tick, revision: 'published-window-proof', evidence: [],
+        reason: { code: 'exact-proof-binding-test', factIds: [fact.id], values: {} } };
+      return fact.predicate.kind === 'harassment-ended' && !fact.predicate.unitIds ? { ...common, state: 'met' }
+        : { ...common, state: 'pending', requestedTick: game.tick, requestId: 'exact-threat-proof-pending' };
+    } };
+    expect(execute(goalEngageUnitsExecutor, input).status).not.toBe('complete');
+    expect(seen[0]).toContain('target');
+    expect(seen[0]).toContain('unitIds');
+  });
+
   it('requires the exact queue/capital and settles a native job into quantity without any entity output', () => {
     const game = nativeGame(), reader = nativePoolPort(game);
     let input = { ...request(game, goalTrainExecutor, 'train', { unitKind: 'footman', count: 1,

@@ -19,8 +19,10 @@ function validEstimates(input: GoalLandCombatGrounding): boolean {
 function declare(input: GoalLandCombatGrounding, context: GoalPlanningContext,
   kind: Extract<GoalActionKind, 'destroy-target' | 'hold-position' | 'engage-units'>,
   effect: GoalFact, extra: readonly GoalFact[] = []): GoalActionDeclaration | null {
-  if (!input.target.landId || !validEstimates(input)) return null;
-  const force = goalFact({ kind: 'force-at', at: input.target, minimum: input.requiredForce,
+  const post = input.post ?? input.target;
+  if (!input.target.landId || !post.landId || post.landId !== input.target.landId || !validEstimates(input)) return null;
+  if (kind === 'hold-position' && (post.point.x !== input.target.point.x || post.point.y !== input.target.point.y)) return null;
+  const force = goalFact({ kind: 'force-at', at: post, minimum: input.requiredForce,
     byTick: input.byTick, metric: 'combat-rating', cohort: input.cohort });
   if (force.predicate.kind !== 'force-at') return null;
   const cohort = force.predicate.cohort ?? [];
@@ -40,7 +42,9 @@ function declare(input: GoalLandCombatGrounding, context: GoalPlanningContext,
     flows: [], duration: input.duration, cost: input.cost, successProbability: input.successProbability,
     executor: { executor: `goal.${kind}`, parameters: { cohort, target: input.target,
       ...(effect.predicate.kind === 'route-controlled' || effect.predicate.kind === 'harassment-ended'
-        ? { throughTick: effect.predicate.throughTick } : {}) } },
+        ? { throughTick: effect.predicate.throughTick } : {}),
+      ...(effect.predicate.kind === 'harassment-ended' && effect.predicate.unitIds
+        ? { threatUnitIds: effect.predicate.unitIds } : {}) } },
     outputs: [], reasons: [],
   };
 }
@@ -65,10 +69,11 @@ export function declareGoalHoldPosition(input: GoalLandCombatGrounding & Readonl
 
 /** A pool containing a counter elsewhere cannot satisfy this selected group's
  * capability. The reader checks the same bound cohort's speed/range/firepower. */
-export function declareGoalEngageUnits(input: GoalLandCombatGrounding & Readonly<{ throughTick: number }>,
+export function declareGoalEngageUnits(input: GoalLandCombatGrounding & Readonly<{ throughTick: number; unitIds?: readonly string[] }>,
   context: GoalPlanningContext): GoalActionDeclaration | null {
   if (!Number.isFinite(input.throughTick) || input.throughTick < context.tick) return null;
-  return declare(input, context, 'engage-units', goalFact({ kind: 'harassment-ended', site: input.target, throughTick: input.throughTick }),
+  return declare(input, context, 'engage-units', goalFact({ kind: 'harassment-ended', site: input.target, throughTick: input.throughTick,
+    ...(input.unitIds ? { unitIds: [...new Set(input.unitIds)].sort() } : {}) }),
     [goalFact({ kind: 'interception-capability', site: input.target, throughTick: input.throughTick, cohort: input.cohort })]);
 }
 
@@ -85,7 +90,7 @@ export const goalLandActionProvider: GoalActionProvider = {
     const actions = candidates.candidates.map(option => predicate.kind === 'enemy-site-destroyed'
       ? declareGoalDestroyTarget(option, context)
       : predicate.kind === 'route-controlled' ? declareGoalHoldPosition({ ...option, throughTick: predicate.throughTick }, context)
-      : declareGoalEngageUnits({ ...option, throughTick: predicate.throughTick }, context));
+      : declareGoalEngageUnits({ ...option, throughTick: predicate.throughTick, ...(predicate.unitIds ? { unitIds: predicate.unitIds } : {}) }, context));
     return [...new Map(actions.filter((action): action is GoalActionDeclaration => !!action
       && action.effects.some(result => result.fact.id === effect.id)).map(action => [action.id, action])).values()]
       .sort((a, b) => order(a.id, b.id));
