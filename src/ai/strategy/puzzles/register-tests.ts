@@ -11,8 +11,10 @@ import { publicPuzzlePlanner } from './planner-binding';
 import { PUBLIC_PUZZLES, type PuzzleKey } from './scenes';
 import { runPublicPuzzle } from './run';
 
+const mainPassingRegressions = new Set(['ship-away/near', 'supply-tier/footmen', 'guarded-shore/weak']);
+
 export function registerPublicPuzzleTests(key: PuzzleKey) {
-  for (const puzzle of PUBLIC_PUZZLES.filter(p => p.key === key)) describe(`public planner puzzle: ${puzzle.key}/${puzzle.variant}`, () => {
+  for (const puzzle of PUBLIC_PUZZLES.filter(p => p.key === key)) describe(`public planner puzzle: ${puzzle.key}/${puzzle.variant}${mainPassingRegressions.has(`${puzzle.key}/${puzzle.variant}`) ? " [main-passing overaction regression]" : ""}`, () => {
     it('constructs a deterministic cold frame using native entities, catalogue prices and connected terrain', () => {
       const a = puzzle.create(), b = puzzle.create(), frame = snapshotGame(a.game);
       expect(frame).toEqual(snapshotGame(b.game));
@@ -58,12 +60,24 @@ export function registerPublicPuzzleTests(key: PuzzleKey) {
         expect(isWalkable(world.game.map, 2368, 2944)).toBe(true);
       }
     });
-    it.skipIf(!publicPuzzlePlanner)('cold-frame dependency graph: required actions, causal order and forbidden choices', () => {
-      const world = puzzle.create();
-      checkPuzzlePlan(puzzle, world, publicPuzzlePlanner!.cold(snapshotGame(world.game), world.owner));
+    const required = process.env.SKETCH_REQUIRE_GOAL_PLANNER === '1';
+    const coldReady = publicPuzzlePlanner.planGoals && publicPuzzlePlanner.createInput
+      && (key !== 'navy-zero' || publicPuzzlePlanner.allocation);
+    const executionReady = publicPuzzlePlanner.planGoals && publicPuzzlePlanner.createInput && publicPuzzlePlanner.createExecution;
+    const missing = publicPuzzlePlanner.unavailable.join('; ');
+    it.skipIf(!coldReady && !required)(`cold-frame dependency graph: real planGoals entry [${coldReady ? 'ready' : missing}]`, () => {
+      expect(coldReady, missing).toBeTruthy();
+      const world = puzzle.create(), snapshot = snapshotGame(world.game), before = JSON.stringify(snapshot);
+      const input = publicPuzzlePlanner.createInput!(snapshot, world.owner);
+      const output = publicPuzzlePlanner.planGoals!(input);
+      checkPuzzlePlan(puzzle, world, { input, output, allocation: publicPuzzlePlanner.allocation?.(input, output) ?? null });
+      expect(JSON.stringify(snapshot), 'real planning cannot change the cold frame').toBe(before);
     });
-    it.skipIf(!publicPuzzlePlanner)('goal-planner execution reaches the objective under real simulation rules', () => {
-      const result = runPublicPuzzle(puzzle, 'v9_knight', { planner: publicPuzzlePlanner!.commands() });
+    it.skipIf(!executionReady && !required)(`goal-planner execution through the real runtime [${executionReady ? 'ready' : missing}]`, () => {
+      expect(executionReady, missing).toBeTruthy();
+      const session = publicPuzzlePlanner.createExecution!();
+      const result = runPublicPuzzle(puzzle, 'v9_knight', { planner: session.commandPlanner });
+      expect(session.observations().some(frame => frame.output.plans.length > 0), 'real goal-planner traces, never incumbent fallback').toBe(true);
       expect(result.execution.checks).not.toEqual({});
       expect(result.execution.passed, JSON.stringify(result.execution)).toBe(true);
     }, 180_000);
