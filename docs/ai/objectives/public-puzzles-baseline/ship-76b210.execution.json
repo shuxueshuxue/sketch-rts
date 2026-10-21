@@ -1,0 +1,248 @@
+{
+  "source": "9005a1ab638d22dd94d3013ae245223d7094c20e",
+  "sharedBase": "76b21070eeb2291fbfa15728695cc93c60afba4c",
+  "mode": "normal-collector-controlled-owner-public-execution",
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "testStatus": "failed",
+      "accepted": false,
+      "physicalPassed": false,
+      "goalTracesObserved": 560,
+      "formalCommandCount": 0,
+      "firstReadyTick": 5010,
+      "firstFormalCommandTick": null,
+      "plannedThinks": 560,
+      "maxWork": 6144,
+      "firstGoal": {
+        "tick": 15,
+        "goals": [
+          "ConquerIsland:planner:resource-1"
+        ]
+      },
+      "formalExecutors": {},
+      "incumbentExecutors": {
+        "economy": 10,
+        "miningWorkforce": 3,
+        "naval": 10,
+        "v6Economy": 15,
+        "v6General": 4
+      },
+      "planStatusOccurrences": [
+        {
+          "goalKind": "ConquerIsland",
+          "status": "ready",
+          "count": 37
+        },
+        {
+          "goalKind": "ConquerIsland",
+          "status": "search-pending",
+          "count": 22
+        },
+        {
+          "goalKind": "ConquerIsland",
+          "status": "waiting-facts",
+          "count": 501
+        },
+        {
+          "goalKind": "ExpandLand",
+          "status": "search-pending",
+          "count": 1
+        }
+      ],
+      "pendingEstimateOccurrences": [],
+      "execution": {
+        "passed": false,
+        "checks": {
+          "islandHallComplete": false,
+          "campCleared": true,
+          "armyTransported": true,
+          "safeWorkerSequence": false
+        },
+        "tick": 8400,
+        "first": {
+          "army-boarded": 553,
+          "farm-complete": 1486,
+          "shipyard-complete": 3879,
+          "transport-at-embark": 4083,
+          "army-on-island": 4773,
+          "worker-on-island": 4773,
+          "landing-near": 4773,
+          "target-attacked": 4944,
+          "camp-cleared": 5000
+        },
+        "losses": [
+          {
+            "tick": 4972,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 5000,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 579,
+          "homeAlive": true,
+          "armyAlive": 4,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 1,
+            "farm": 4,
+            "barracks": 1,
+            "shipyard": 1,
+            "stables": 1
+          }
+        }
+      },
+      "commandCount": 42,
+      "elapsedMs": 1581571.019,
+      "cpuMs": 1639295.005,
+      "finalGoals": [
+        {
+          "goalId": "ConquerIsland:planner:resource-1",
+          "status": "waiting-facts",
+          "actions": [
+            "transport-worker",
+            "build",
+            "assemble",
+            "hold-position"
+          ],
+          "reasons": [],
+          "capacityPressure": []
+        }
+      ],
+      "error": {
+        "name": "AssertionError",
+        "message": "{\"passed\":false,\"checks\":{\"islandHallComplete\":false,\"campCleared\":true,\"armyTransported\":true,\"safeWorkerSequence\":false},\"tick\":8400,\"first\":{\"army-boarded\":553,\"farm-complete\":1486,\"shipyard-complete\":3879,\"transport-at-embark\":4083,\"army-on-islan"
+      }
+    },
+    {
+      "puzzle": "ship-away/near",
+      "testStatus": "failed",
+      "accepted": false,
+      "physicalPassed": true,
+      "goalTracesObserved": 374,
+      "formalCommandCount": 0,
+      "firstReadyTick": 1365,
+      "firstFormalCommandTick": null,
+      "plannedThinks": 560,
+      "maxWork": 6144,
+      "firstGoal": {
+        "tick": 15,
+        "goals": [
+          "ConquerIsland:planner:resource-1"
+        ]
+      },
+      "formalExecutors": {},
+      "incumbentExecutors": {
+        "economy": 25,
+        "miningWorkforce": 10,
+        "naval": 21,
+        "v6Economy": 19,
+        "v6General": 27,
+        "expansionGarrison": 1
+      },
+      "planStatusOccurrences": [
+        {
+          "goalKind": "ConquerIsland",
+          "status": "ready",
+          "count": 108
+        },
+        {
+          "goalKind": "ConquerIsland",
+          "status": "search-pending",
+          "count": 15
+        },
+        {
+          "goalKind": "ConquerIsland",
+          "status": "waiting-facts",
+          "count": 251
+        }
+      ],
+      "pendingEstimateOccurrences": [],
+      "execution": {
+        "passed": true,
+        "checks": {
+          "islandHallComplete": true,
+          "campCleared": true,
+          "armyTransported": true,
+          "safeWorkerSequence": true
+        },
+        "tick": 8400,
+        "first": {
+          "transport-at-embark": 1,
+          "army-boarded": 123,
+          "army-on-island": 843,
+          "landing-near": 843,
+          "target-attacked": 1024,
+          "camp-cleared": 1107,
+          "shipyard-complete": 1448,
+          "farm-complete": 3403,
+          "worker-on-island": 4921,
+          "hall-complete": 5612
+        },
+        "losses": [
+          {
+            "tick": 1076,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          },
+          {
+            "tick": 1107,
+            "kind": "murlocPeon",
+            "owner": "neutral"
+          }
+        ],
+        "final": {
+          "gold": 18,
+          "homeAlive": true,
+          "armyAlive": 4,
+          "workersRescued": 0,
+          "guardsAlive": 0,
+          "localGuardsAlive": 0,
+          "buildings": {
+            "townHall": 2,
+            "farm": 5,
+            "barracks": 2,
+            "shipyard": 1,
+            "defenseTower": 2,
+            "sanctum": 1,
+            "stables": 1
+          }
+        }
+      },
+      "commandCount": 103,
+      "elapsedMs": 508473.304,
+      "cpuMs": 531124.689,
+      "finalGoals": [],
+      "error": {
+        "name": "AssertionError",
+        "message": "physical success also requires an actual goal executor command accepted by the gateway: expected 0 to be greater than 0"
+      }
+    }
+  ],
+  "totals": {
+    "caseCount": 2,
+    "executionsAccepted": 0,
+    "physicalPassed": 1,
+    "withFormalCommands": 0,
+    "observedNativeThinks": 1120,
+    "formalCommandCount": 0
+  },
+  "testCounts": {
+    "numTotalTestSuites": 3,
+    "numPassedTestSuites": 0,
+    "numFailedTestSuites": 3,
+    "numPendingTestSuites": 0,
+    "numTotalTests": 12,
+    "numPassedTests": 7,
+    "numFailedTests": 3,
+    "numPendingTests": 2,
+    "numTodoTests": 0
+  }
+}
