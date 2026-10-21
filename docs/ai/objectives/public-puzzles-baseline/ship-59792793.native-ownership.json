@@ -1,0 +1,177 @@
+{
+  "source": "eed282ae39fc937130cf857c3771f30afa06422d",
+  "sharedBase": "59792793b2eb723d4e4403e59a3bbb28a33e0208",
+  "scope": "Read actual runtime verdicts, not regrading. SDK application streams equal original saved receipts; no AI/source/simulation.",
+  "oldPassed": 2,
+  "strictStepPassed": 2,
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "observedThinks": 560,
+      "oldPhysicalAndAnyGoalPassed": true,
+      "actualStepOwnershipPassed": true,
+      "criterion": "per-required-step-goal-and-native-sdk-effect",
+      "steps": [
+        {
+          "step": "position-transport",
+          "status": "goal-confirmed",
+          "goalCommandCount": 7,
+          "sdkAppliedCount": 7,
+          "effectTick": 2205,
+          "scriptIds": [
+            "goal.position-transport"
+          ],
+          "entityIds": [
+            "unit-planner-transport-1000"
+          ]
+        },
+        {
+          "step": "transport-force",
+          "status": "goal-confirmed",
+          "goalCommandCount": 9,
+          "sdkAppliedCount": 9,
+          "effectTick": 3090,
+          "scriptIds": [
+            "goal.transport-force"
+          ],
+          "entityIds": [
+            "scene-public-planner-frame-planner-footman-1",
+            "scene-public-planner-frame-planner-footman-2",
+            "scene-public-planner-frame-planner-footman-3",
+            "scene-public-planner-frame-planner-footman-4"
+          ]
+        },
+        {
+          "step": "clear-camp",
+          "status": "goal-confirmed",
+          "goalCommandCount": 6,
+          "sdkAppliedCount": 6,
+          "effectTick": 3660,
+          "scriptIds": [
+            "goal.clear-camp"
+          ],
+          "entityIds": [
+            "scene-public-planner-frame-neutral-murlocPeon-1",
+            "scene-public-planner-frame-neutral-murlocPeon-2"
+          ]
+        },
+        {
+          "step": "transport-worker",
+          "status": "goal-confirmed",
+          "goalCommandCount": 38,
+          "sdkAppliedCount": 2,
+          "effectTick": 7680,
+          "scriptIds": [
+            "goal.transport-worker"
+          ],
+          "entityIds": [
+            "scene-public-planner-frame-planner-worker-1"
+          ]
+        },
+        {
+          "step": "build",
+          "status": "goal-confirmed",
+          "goalCommandCount": 1,
+          "sdkAppliedCount": 1,
+          "effectTick": 8370,
+          "scriptIds": [
+            "goal.build"
+          ],
+          "entityIds": [
+            "building-planner-townHall-1106"
+          ]
+        }
+      ],
+      "sdkApplicationCount": 113,
+      "sdkStreamSha256": "062851eaf6a36e61e3f64f94b155718455f27a6396911681661943351d6807f0",
+      "sdkStreamPath": "runtime/sdk/ship-away-far.jsonl.gz",
+      "sdkStreamEqualsRuntimeReceipt": true,
+      "nativeResultError": null,
+      "nativeResultSha256": "82479b634f336883b64a0f3619fdee9a3959457b0da3aac1d4ea45f2c7d54ef4"
+    },
+    {
+      "puzzle": "ship-away/near",
+      "observedThinks": 560,
+      "oldPhysicalAndAnyGoalPassed": true,
+      "actualStepOwnershipPassed": true,
+      "criterion": "per-required-step-goal-and-native-sdk-effect",
+      "steps": [
+        {
+          "step": "position-transport",
+          "status": "goal-confirmed",
+          "goalCommandCount": 4,
+          "sdkAppliedCount": 4,
+          "effectTick": 4485,
+          "scriptIds": [
+            "goal.position-transport"
+          ],
+          "entityIds": [
+            "unit-planner-transport-1000"
+          ]
+        },
+        {
+          "step": "transport-force",
+          "status": "goal-confirmed",
+          "goalCommandCount": 9,
+          "sdkAppliedCount": 9,
+          "effectTick": 975,
+          "scriptIds": [
+            "goal.transport-force"
+          ],
+          "entityIds": [
+            "scene-public-planner-frame-planner-footman-1",
+            "scene-public-planner-frame-planner-footman-2",
+            "scene-public-planner-frame-planner-footman-3",
+            "scene-public-planner-frame-planner-footman-4"
+          ]
+        },
+        {
+          "step": "clear-camp",
+          "status": "goal-confirmed",
+          "goalCommandCount": 8,
+          "sdkAppliedCount": 7,
+          "effectTick": 1710,
+          "scriptIds": [
+            "goal.clear-camp"
+          ],
+          "entityIds": [
+            "scene-public-planner-frame-neutral-murlocPeon-1",
+            "scene-public-planner-frame-neutral-murlocPeon-2"
+          ]
+        },
+        {
+          "step": "transport-worker",
+          "status": "goal-confirmed",
+          "goalCommandCount": 77,
+          "sdkAppliedCount": 2,
+          "effectTick": 6150,
+          "scriptIds": [
+            "goal.transport-worker"
+          ],
+          "entityIds": [
+            "scene-public-planner-frame-planner-worker-1"
+          ]
+        },
+        {
+          "step": "build",
+          "status": "goal-confirmed",
+          "goalCommandCount": 1,
+          "sdkAppliedCount": 1,
+          "effectTick": 6840,
+          "scriptIds": [
+            "goal.build"
+          ],
+          "entityIds": [
+            "building-planner-townHall-1103"
+          ]
+        }
+      ],
+      "sdkApplicationCount": 159,
+      "sdkStreamSha256": "2031d9299183afc894feb325ddbf1c39471a2e81fd6663c3e9c47acf8cbf4681",
+      "sdkStreamPath": "runtime/sdk/ship-away-near.jsonl.gz",
+      "sdkStreamEqualsRuntimeReceipt": true,
+      "nativeResultError": null,
+      "nativeResultSha256": "0ae222dcf7cc6c0419d0b108635162a408ace5f3530259c6b0b23bb78af2bf59"
+    }
+  ]
+}
