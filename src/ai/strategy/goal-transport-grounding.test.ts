@@ -5,12 +5,16 @@ import { withNavigationAudit, withNavigationPhase } from '../../shared/navigatio
 import { unitMover } from '../../shared/catalog';
 import { bodyMass } from '../../shared/physical-body';
 import { GANGWAY_SETUP_TICKS } from '../../shared/ship-gangway';
-import type { GameSnapshot } from '../../shared/types';
+import { boardingBerth, BOARDING_GAP } from '../../shared/naval';
+import { distanceToHull, shareShipProfile } from '../../shared/ship-geometry';
+import { hullFits } from '../../shared/ship-navigation';
+import type { GameSnapshot, Unit } from '../../shared/types';
 import { goalFact } from './goal-facts';
 import type { GoalHullCandidate, GoalPublishedValue, GoalShorePair, GoalTransportFactPorts } from './goal-grounding-ports';
 import type { GoalNavalMember } from './goal-naval-actions';
 import type { GoalCandidates, GoalFactReader } from './goal-planner-types';
 import { groundGoalTransportOptions, type GoalTransportGroundingInput } from './goal-transport-grounding';
+import { regionIndex, seaIdAt } from './regions';
 
 const met = <T>(value: T): GoalPublishedValue<T> => ({ state: 'met', value, factIds: ['published-physical-fact'] });
 const choices = <T>(candidates: readonly T[]): GoalCandidates<T> => ({ state: 'met', candidates, factIds: ['published-domain'] });
@@ -23,9 +27,19 @@ function frame() {
   const cargo = snapshot.units.filter(unit => (unit.deck?.shipId ?? unit.cabin?.shipId) === hull.id);
   const from = { landId: 'land:2' as const, point: { x: 1584, y: 2448 } }, to = { landId: 'land:3' as const, point: { x: 2864, y: 4208 } };
   const member: GoalNavalMember = { reference: { kind: 'existing', entityId: worker.id }, assessment: worker };
-  const pair: GoalShorePair = { id: 'coast-a', seaId: 'sea:1',
-    departure: { landId: from.landId, seaId: 'sea:1', water: from.point, ground: from.point },
-    landing: { landId: to.landId, seaId: 'sea:1', water: { x: 2800, y: 4208 }, ground: to.point } };
+  const regions = regionIndex(snapshot.map);
+  // Native placement is an independent fixture oracle, outside the guarded
+  // domain invocation. The injected ports contain only its published poses.
+  const nativeBerth = (landId: typeof from.landId | typeof to.landId, near: typeof from.point) => {
+    const shore = [...regions.shoresByLand.get(landId)!.get('sea:1')!].sort((a, b) =>
+      Math.hypot(a.ground.x - near.x, a.ground.y - near.y) - Math.hypot(b.ground.x - near.x, b.ground.y - near.y))[0]!;
+    const ship = { ...hull, ...shore.water }; shareShipProfile(hull, ship);
+    const native = boardingBerth(snapshot.map, { ...worker, ...shore.ground }, ship)!;
+    if (!native.shore || native.heading === undefined) throw Error('fixture requires native shore pose');
+    return { landId, seaId: 'sea:1' as const, water: { x: native.x, y: native.y }, ground: native.shore, heading: native.heading };
+  };
+  const departure = nativeBerth(from.landId, from.point), landing = nativeBerth(to.landId, to.point);
+  const pair: GoalShorePair = { id: 'coast-a', seaId: 'sea:1', departure, landing };
   const producerFact = goalFact({ kind: 'transport-in', seaId: 'sea:1', capacity: 1000, byTick: 9000 });
   const candidate: GoalHullCandidate = { id: hull.id, reference: { kind: 'existing', entityId: hull.id }, seaId: 'sea:1',
     assessment: hull, capacity: 1000, cargoUnitIds: cargo.map(unit => unit.id), availableTick: snapshot.tick,
@@ -34,12 +48,26 @@ function frame() {
     reason: { code: 'published-route', factIds: [fact.id], values: {} }, evidence: [], route: { distance: 10, ticks: 13, points: [] } });
   const ports: GoalTransportFactPorts = {
     shores: vi.fn(() => choices([pair])), hulls: vi.fn(() => choices([candidate])),
-    berth: vi.fn((_member, _hull, shore) => met({ water: shore.water, ground: shore.ground, heading: 1 })),
-    seaLeg: vi.fn((_hull, _from, point) => met({ endpoint: point, heading: 2, ticks: 100 })),
+    berth: vi.fn((_member, _hull, shore) => met({ water: shore.water, ground: shore.ground,
+      heading: shore.landId === from.landId ? departure.heading : landing.heading })),
+    seaLeg: vi.fn((_hull, _from, point) => met({ endpoint: point,
+      heading: point.x === departure.water.x && point.y === departure.water.y ? departure.heading : landing.heading, ticks: 100 })),
   };
   const input: GoalTransportGroundingInput = { snapshot, owner, tick: snapshot.tick, byTick: 9000, from, to,
     request: { cohort: [member.reference] }, members: met([member]), ports, readFact };
-  return { input, member, candidate, pair, hull, worker, cargo, producerFact };
+  return { input, member, candidate, pair, hull, worker, cargo, producerFact, departure, landing };
+}
+function changedPose(snapshot: GameSnapshot, hull: Unit, berth: { water: { x: number; y: number }; ground: { x: number; y: number }; heading: number },
+  accept: (distance: number) => boolean) {
+  for (const turn of [Math.PI / 2, Math.PI, 0]) for (let step = 1; step <= 128; step++) for (let direction = 0; direction < 8; direction++) {
+    const pose = { x: berth.water.x + Math.cos(direction * Math.PI / 4) * step,
+      y: berth.water.y + Math.sin(direction * Math.PI / 4) * step, heading: berth.heading + turn };
+    const dock = { ...hull, x: pose.x, y: pose.y, sailing: { ...hull.sailing!, heading: pose.heading } };
+    shareShipProfile(hull, dock);
+    if (seaIdAt(snapshot.map, pose) === 'sea:1' && hullFits(snapshot.map, dock, pose) && accept(distanceToHull(dock, berth.ground)))
+      return { endpoint: { x: pose.x, y: pose.y }, heading: pose.heading, ticks: 100 };
+  }
+  throw Error('native fixture has no requested terminal-pose variation');
 }
 function strict(input: GoalTransportGroundingInput) {
   return withNavigationAudit(event => {
@@ -48,8 +76,48 @@ function strict(input: GoalTransportGroundingInput) {
 }
 
 describe('transport alternatives from shared published ports', () => {
+  it.each(['approach', 'landing'] as const)('does not publish %s when its actual native terminal pose cannot board every member', phase => {
+    const { input, member, hull, worker, departure, landing } = frame();
+    const larger = input.snapshot.units.find(unit => unit.owner === input.owner && unit.hp > 0 && unit.radius > worker.radius
+      && unitMover(unit.kind) === 'land' && !unit.deck && !unit.cabin && unit.expiresTick === undefined)!;
+    expect(larger).toBeDefined();
+    const extra: GoalNavalMember = { reference: { kind: 'existing', entityId: larger.id }, assessment: larger };
+    const members = [extra, member], berth = phase === 'approach' ? departure : landing;
+    const bad = changedPose(input.snapshot, hull, berth,
+      distance => distance > worker.radius + BOARDING_GAP && distance <= larger.radius + BOARDING_GAP);
+    let retry = false;
+    const ports: GoalTransportFactPorts = { ...input.ports,
+      berth: vi.fn((unit, ship, shore) => retry ? pending(`actual-${phase}-berth-rebind`) : input.ports.berth(unit, ship, shore)),
+      seaLeg: vi.fn((ship, from, to, future) => {
+        if (to.x === berth.water.x && to.y === berth.water.y) { retry = true; return met(bad); }
+        return input.ports.seaLeg(ship, from, to, future);
+      }) };
+    const before = JSON.stringify(input.snapshot);
+    expect(strict({ ...input, ports, members: met(members), request: { cohort: members.map(m => m.reference) } }))
+      .toMatchObject({ state: 'pending', requestIds: [`actual-${phase}-berth-rebind`] });
+    expect(ports.berth).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ assessment: expect.objectContaining({
+      x: bad.endpoint.x, y: bad.endpoint.y, sailing: expect.objectContaining({ heading: bad.heading }) }) }), expect.anything());
+    expect(JSON.stringify(input.snapshot)).toBe(before);
+  });
+
+  it('retains actual successful native endpoint/heading for both pickup and landing', () => {
+    const { input, hull, worker, departure, landing } = frame();
+    const pickup = changedPose(input.snapshot, hull, departure, distance => distance <= worker.radius + BOARDING_GAP);
+    const delivered = changedPose(input.snapshot, hull, landing, distance => distance <= worker.radius + BOARDING_GAP);
+    const ports: GoalTransportFactPorts = { ...input.ports,
+      seaLeg: vi.fn((_hull, _from, to) => met(to.x === departure.water.x && to.y === departure.water.y ? pickup : delivered)) };
+    const result = strict({ ...input, ports });
+    expect(result.state).toBe('met'); if (result.state !== 'met') throw Error('no actual dock');
+    const option = result.candidates[0]!;
+    expect(option.departure).toMatchObject({ water: pickup.endpoint, heading: pickup.heading, ground: departure.ground });
+    expect(option.landing).toEqual({ water: delivered.endpoint, heading: delivered.heading, ground: landing.ground });
+    expect(option.crossing.predicate).toMatchObject({ from: { point: pickup.endpoint }, fromHeading: pickup.heading,
+      to: { point: delivered.endpoint } });
+    expect(ports.seaLeg).toHaveBeenLastCalledWith(expect.anything(), { ...pickup.endpoint, heading: pickup.heading }, landing.water, true);
+  });
+
   it('keeps precise pickup routes and pose, separates approach duration, and never calls native routing', () => {
-    const { input, candidate, producerFact } = frame(), before = JSON.stringify(input.snapshot);
+    const { input, candidate, producerFact, pair } = frame(), before = JSON.stringify(input.snapshot);
     const result = strict(input);
     expect(result.state).toBe('met'); if (result.state !== 'met') throw new Error('no option');
     const option = result.candidates[0]!;
@@ -57,7 +125,8 @@ describe('transport alternatives from shared published ports', () => {
     expect(option.duration).toMatchObject({ state: 'met', value: 13 + 100 + 2 * GANGWAY_SETUP_TICKS });
     expect(option.preconditions).toContainEqual(producerFact);
     expect(option.preconditions?.find(fact => fact.predicate.kind === 'route')?.predicate).toMatchObject({ actor: input.request.cohort[0] });
-    expect(option.crossing.predicate).toMatchObject({ fromHeading: 2, from: { point: input.from.point }, to: { point: { x: 2800, y: 4208 } } });
+    expect(option.crossing.predicate).toMatchObject({ fromHeading: 'heading' in pair.departure! ? pair.departure.heading : undefined,
+      from: { point: pair.departure!.water }, to: { point: pair.landing.water } });
     expect(JSON.stringify(input.snapshot)).toBe(before);
     expect(strict({ ...input, snapshot: JSON.parse(before) })).toEqual(result);
   });
@@ -135,7 +204,12 @@ describe('transport alternatives from shared published ports', () => {
       ground: shore.ground, heading: 0 }));
     const unmatched = strict({ ...input, request: { cohort: [member.reference, another.reference] }, members: met([member, another]), ports: { ...input.ports, berth } });
     expect(unmatched).toMatchObject({ state: 'unmet', reason: { code: 'transport-cohort-has-no-common-berth' } });
-    const result = strict({ ...input, ports: { ...input.ports, shores: () => choices([pair, { ...pair, id: 'alternative', landing: { ...pair.landing, ground: { x: 2800, y: 4250 } } }]) } });
+    const towardWater = { x: pair.landing.water.x - pair.landing.ground.x, y: pair.landing.water.y - pair.landing.ground.y };
+    const length = Math.hypot(towardWater.x, towardWater.y) || 1;
+    const alternateGround = { x: pair.landing.ground.x + (towardWater.x || 1) / length * .01,
+      y: pair.landing.ground.y + towardWater.y / length * .01 };
+    const result = strict({ ...input, ports: { ...input.ports, shores: () => choices([pair,
+      { ...pair, id: 'alternative', landing: { ...pair.landing, ground: alternateGround } }]) } });
     expect(result.state).toBe('met'); if (result.state !== 'met') throw new Error('no option');
     expect(result.candidates).toHaveLength(2);
     expect(result.candidates.every(option => option.shoreSafe.predicate.kind === 'shore-safe')).toBe(true);

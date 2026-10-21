@@ -2,6 +2,8 @@ import { unitMover } from '../../shared/catalog';
 import { bodyMass } from '../../shared/physical-body';
 import { isTransportKind } from '../../shared/transport-role';
 import { GANGWAY_SETUP_TICKS } from '../../shared/ship-gangway';
+import { BOARDING_GAP } from '../../shared/naval';
+import { distanceToHull, shareShipProfile, shipProfile } from '../../shared/ship-geometry';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { GameSnapshot, PlayerId } from '../../shared/types';
 import type { AllocationReason } from './allocation-types';
@@ -9,7 +11,7 @@ import { goalFact, goalValueKey } from './goal-facts';
 import type { GoalBerth, GoalHullCandidate, GoalPublishedValue, GoalSeaLeg, GoalTransportFactPorts } from './goal-grounding-ports';
 import type { GoalNavalMember } from './goal-naval-actions';
 import type { GoalCandidates, GoalFact, GoalFactReader, GoalTransportOption, GoalTransportRequest } from './goal-planner-types';
-import type { Shore } from './regions';
+import { landIdAt, seaIdAt, type Shore } from './regions';
 import type { Point, Target } from './types';
 import { valueGoalSeaLeg } from './goal-sea-leg-value';
 
@@ -98,6 +100,48 @@ export function groundGoalTransportOptions(input: GoalTransportGroundingInput): 
     }
     return found;
   }
+  function dockAt(hull: GoalHullCandidate, value: GoalSeaLeg) {
+    const dock = { ...hull.assessment, x: value.endpoint.x, y: value.endpoint.y,
+      sailing: { ...hull.assessment.sailing!, heading: value.heading } };
+    shareShipProfile(hull.assessment, dock);
+    return dock;
+  }
+  /** A road ending near the requested water point does not prove boarding at
+   * that road's actual final heading. Only cheap native geometry/region reads
+   * occur here; a changed berth still goes through the injected shared ports. */
+  function arrivedBerth(id: string, cohort: readonly GoalNavalMember[], hull: GoalHullCandidate,
+    shore: Shore, requested: GoalBerth, value: GoalSeaLeg): GoalBerth | AllocationReason | undefined {
+    const dock = dockAt(hull, value), factIds = sorted(pathProofs);
+    const land = landIdAt(input.snapshot.map, requested.ground), sea = seaIdAt(input.snapshot.map, value.endpoint);
+    if (!shipProfile(dock) || !land || !sea || cohort.some(member => !Number.isFinite(member.assessment.radius) || member.assessment.radius < 0)) {
+      addDeferred(id, factIds.length ? factIds : [id], reason('transport-terminal-geometry-unpublished', factIds)); return;
+    }
+    if (land !== shore.landId || sea !== shore.seaId) return reason('transport-terminal-on-wrong-region', factIds,
+      { expectedLand: shore.landId, actualLand: land, expectedSea: shore.seaId, actualSea: sea });
+    const distance = distanceToHull(dock, requested.ground);
+    const missing = cohort.find(member => distance > member.assessment.radius + BOARDING_GAP);
+    if (missing) return reason('transport-terminal-cannot-board-cohort', factIds,
+      { distance, radius: missing.assessment.radius, x: value.endpoint.x, y: value.endpoint.y, heading: value.heading });
+    return { water: { ...value.endpoint }, ground: requested.ground, heading: value.heading };
+  }
+  function berthedLeg(id: string, cohort: readonly GoalNavalMember[], hull: GoalHullCandidate,
+    shore: Shore, from: Point & { heading: number }, future: boolean) {
+    let seed = shore, physicalHull = hull;
+    // One finite rebind handles a native projected endpoint. No loop performs
+    // private routing work or invents a new FactWork allowance.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const requested = commonBerth(`${id}/berth-${attempt}`, cohort, physicalHull, seed);
+      if (!requested) return;
+      const sailed = leg(`${id}/leg-${attempt}`, input.ports.seaLeg(hull, from, requested.water, future));
+      if (!sailed) return;
+      const actual = arrivedBerth(`${id}/terminal-${attempt}`, cohort, hull, seed, requested, sailed);
+      if (!actual) return;
+      if ('water' in actual) return { berth: actual, leg: sailed };
+      if (attempt === 1) { blocked.push(actual); return; }
+      seed = { ...shore, water: { ...sailed.endpoint }, ground: requested.ground };
+      physicalHull = { ...hull, assessment: dockAt(hull, sailed) };
+    }
+  }
   function pickupTicks(id: string, shore: Shore, cohort: readonly GoalNavalMember[]): { ticks: number; facts: GoalFact[] } | undefined {
     let longest = 0;
     const facts: GoalFact[] = [];
@@ -158,21 +202,19 @@ export function groundGoalTransportOptions(input: GoalTransportGroundingInput): 
       if (origin === 'land') {
         const shore = pair.departure!;
         if (input.from.landId && shore.landId !== input.from.landId) { blocked.push(reason('transport-departure-on-wrong-region')); continue; }
-        departure = commonBerth(`${key}/pickup-berth`, waiting, hull, shore);
-        if (!departure) continue;
-        const approaching = leg(`${key}/approach`, input.ports.seaLeg(hull, from, departure.water, hull.availableTick > input.tick));
-        if (!approaching) continue;
+        const pickup = berthedLeg(`${key}/pickup`, waiting, hull, shore, from, hull.availableTick > input.tick);
+        if (!pickup) continue;
+        departure = pickup.berth;
         approach = goalFact({ kind: 'route', mover: 'sea', from: { seaId: pair.seaId, point: { x: from.x, y: from.y } },
           to: { seaId: pair.seaId, point: departure.water }, actor: hull.reference, fromHeading: from.heading });
-        from = { ...approaching.endpoint, heading: approaching.heading };
+        from = { ...pickup.leg.endpoint, heading: pickup.leg.heading };
         const walking = pickupTicks(`${key}/pickup-walk`, { ...shore, water: departure.water, ground: departure.ground }, waiting);
         if (walking === undefined) continue;
         walk = walking.ticks; pickupFacts = walking.facts;
       }
-      const landing = commonBerth(`${key}/landing-berth`, members, hull, pair.landing);
-      if (!landing) continue;
-      const sailing = leg(`${key}/crossing`, input.ports.seaLeg(hull, from, landing.water, true));
-      if (!sailing) continue;
+      const delivered = berthedLeg(`${key}/landing`, members, hull, pair.landing, from, true);
+      if (!delivered) continue;
+      const landing = delivered.berth, sailing = delivered.leg;
       const crossing = goalFact({ kind: 'route', mover: 'sea', from: { seaId: pair.seaId, point: { x: from.x, y: from.y } },
         to: { seaId: pair.seaId, point: landing.water }, actor: hull.reference, fromHeading: from.heading });
       const shoreSafe = goalFact({ kind: 'shore-safe', landId: pair.landing.landId,
