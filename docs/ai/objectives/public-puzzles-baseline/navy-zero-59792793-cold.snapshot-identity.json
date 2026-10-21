@@ -1,0 +1,147 @@
+{
+  "source": "eed282ae39fc937130cf857c3771f30afa06422d",
+  "production": "59792793b2eb723d4e4403e59a3bbb28a33e0208",
+  "puzzle": "navy-zero/default",
+  "allIdentical": true,
+  "snapshotJsonStringifySha256": "8d29faf796809089ee8856f34f49a2c613ed7f04eeaed2c7c549a4a65bf38103",
+  "snapshotJsonBytes": 19535,
+  "originalCompactCarrier": {
+    "puzzle": "navy-zero/default",
+    "carrierPath": "/codegeex/jeffry/sketch-public-puzzles/evidence/default-e10e1317/frames/navy-zero-default.json.gz",
+    "carrierBytes": 208192,
+    "carrierSha256": "56167a1ef0e1b1266b41c475849adaed56b49919a2501dce5959b0542ed8a8ca",
+    "snapshotPath": "navy-zero-default.snapshot.json.gz",
+    "snapshotCompressedBytes": 1428,
+    "snapshotCompressedSha256": "19362687f6011a9ffd026436c89d3515afcdb6d3aeed22cc1766148e6fb240c3",
+    "snapshotJsonBytes": 19535,
+    "snapshotJsonStringifySha256": "8d29faf796809089ee8856f34f49a2c613ed7f04eeaed2c7c549a4a65bf38103",
+    "tick": 1
+  },
+  "originalCarrierManifestSha256": "8204f270baf8b418a9eb44f7f856aa1cbc8b9b9aceeda94b861cb27b57683b50",
+  "tick": 1,
+  "all20SameSnapshot": true,
+  "mutationChecks": [
+    {
+      "think": 1,
+      "snapshotUntouched": true,
+      "tick": 1,
+      "sequence": 1
+    },
+    {
+      "think": 2,
+      "snapshotUntouched": true,
+      "tick": 1,
+      "sequence": 2
+    },
+    {
+      "think": 3,
+      "snapshotUntouched": true,
+      "tick": 1,
+      "sequence": 3
+    },
+    {
+      "think": 4,
+      "snapshotUntouched": true,
+      "tick": 1,
+      "sequence": 4
+    },
+    {
+      "think": 5,
+      "snapshotUntouched": true,
+      "tick": 1,
+      "sequence": 5
+    },
+    {
+      "think": 6,
+      "snapshotUntouched": true,
+      "tick": 1,
+      "sequence": 6
+    },
+    {
+      "think": 7,
+      "snapshotUntouched": true,
+      "tick": 1,
+      "sequence": 7
+    },
+    {
+      "think": 8,
+      "snapshotUntouched": true,
+      "tick": 1,
+      "sequence": 8
+    },
+    {
+      "think": 9,
+      "snapshotUntouched": true,
+      "tick": 1,
+      "sequence": 9
+    },
+    {
+      "think": 10,
+      "snapshotUntouched": true,
+      "tick": 1,
+      "sequence": 10
+    },
+    {
+      "think": 11,
+      "snapshotUntouched": true,
+      "tick": 1,
+      "sequence": 11
+    },
+    {
+      "think": 12,
+      "snapshotUntouched": true,
+      "tick": 1,
+      "sequence": 12
+    },
+    {
+      "think": 13,
+      "snapshotUntouched": true,
+      "tick": 1,
+      "sequence": 13
+    },
+    {
+      "think": 14,
+      "snapshotUntouched": true,
+      "tick": 1,
+      "sequence": 14
+    },
+    {
+      "think": 15,
+      "snapshotUntouched": true,
+      "tick": 1,
+      "sequence": 15
+    },
+    {
+      "think": 16,
+      "snapshotUntouched": true,
+      "tick": 1,
+      "sequence": 16
+    },
+    {
+      "think": 17,
+      "snapshotUntouched": true,
+      "tick": 1,
+      "sequence": 17
+    },
+    {
+      "think": 18,
+      "snapshotUntouched": true,
+      "tick": 1,
+      "sequence": 18
+    },
+    {
+      "think": 19,
+      "snapshotUntouched": true,
+      "tick": 1,
+      "sequence": 19
+    },
+    {
+      "think": 20,
+      "snapshotUntouched": true,
+      "tick": 1,
+      "sequence": 20
+    }
+  ],
+  "nativeInitialGold": 810,
+  "semantics": "Pure original snapshot parsing and JSON.stringify equality; no AI, source/fact/route query or simulation. No cold tick changes."
+}
