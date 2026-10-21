@@ -104,8 +104,13 @@ export function createPuzzleWitness(puzzle: PublicPuzzleCase, world: PuzzleWorld
           && game.buildings.some(b => b.owner === owner && b.kind === 'townHall' && Math.hypot(b.x - world.mine.x, b.y - world.mine.y) < 300)) stage = 'return-load';
       }
       if (stage === 'return-load' && load(army, { x: world.landing.x, y: world.landing.y - 192 }, 'return')) stage = 'return-cross';
-      if (stage === 'return-cross' && unload(army, world.departure, 'return-unload')) stage = 'defend';
-      if (stage === 'defend') attack(army, world.attackers, 'late-defend');
+      if (stage === 'return-cross' && unload(army, world.departure, 'return-unload')) stage = 'return-to-mine';
+      if (stage === 'return-to-mine') {
+        if (army.every(u => Math.hypot(u.x - world.home.x, u.y - world.home.y) <= 350)) stage = 'defend';
+        else send('return-to-mine', { type: 'move', unitIds: army.map(u => u.id), x: world.home.x, y: world.home.y });
+      }
+      if (stage === 'defend' && live(world.attackers).some(u => Math.hypot(u.x - world.home.x, u.y - world.home.y) < 450))
+        attack(army, world.attackers, 'late-defend');
     }
     return commands.map(command => ({ playerId: owner, source: context.source, scriptId: `puzzle-witness:${stage}`, command }));
   };
