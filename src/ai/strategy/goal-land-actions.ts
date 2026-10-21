@@ -1,17 +1,13 @@
 import { unitMover } from '../../shared/catalog';
 import { goalFact } from './goal-facts';
 import { strategyIsOpponent } from './ownership';
-import type { GoalActionCost, GoalActionDeclaration, GoalActionKind, GoalActionProvider, GoalEntityReference, GoalEstimate, GoalFact, GoalPlanningContext } from './goal-planner-types';
-import type { Target } from './types';
+import type { GoalActionDeclaration, GoalActionKind, GoalActionProvider, GoalCombatOption, GoalFact, GoalPlanningContext } from './goal-planner-types';
 
 /** Physical estimates and routes come from the shared fact/assessment ports.
  * No action here selects an army, evaluates a second battle or chooses the
  * preceding train/assemble/transport actions. */
-export type GoalLandCombatGrounding = Readonly<{
-  target: Target; cohort: readonly GoalEntityReference[]; requiredForce: number; byTick: number;
-  duration: GoalEstimate<number>; cost: GoalEstimate<readonly GoalActionCost[]>; successProbability: GoalEstimate<number>;
-  preconditions?: readonly GoalFact[];
-}>;
+export type GoalLandCombatGrounding = Omit<GoalCombatOption, 'id' | 'factIds' | 'preconditions'>
+  & Readonly<{ preconditions?: readonly GoalFact[] }>;
 const order = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;
 function validEstimates(input: GoalLandCombatGrounding): boolean {
   return Number.isFinite(input.requiredForce) && input.requiredForce >= 0 && Number.isFinite(input.byTick)
