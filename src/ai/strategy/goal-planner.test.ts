@@ -160,3 +160,18 @@ it('consumes an arrival-offset effect while its producer still holds its actor, 
   expect(reused.plans[0]!.actions.find(action => action.id === 'construction')).toMatchObject({ startTick: 35, finishTick: 45 });
   expect(reused.plans[0]!.search.work).toBe(0);
 });
+
+
+it('prices the whole remaining chain and withholds its ready bundle when later losses make it unprofitable', () => {
+  const { input, actions } = example(), request = input();
+  const costly = actions.filter(action => action.id !== 'expensive-bounty').map(action => ({ ...action,
+    cost: { state: 'met' as const, value: [{ code: 'remaining-native-cost', gold: action.id === 'train' ? 1 : 1000, factIds: [] }], factIds: [] } }));
+  const output = planGoals({ ...request, goals: [{ ...request.goals[0]!, rewardGold: 500 }],
+    providers: [{ id: 'whole-chain-cost', actionsFor: () => costly }] });
+  const plan = output.plans[0]!;
+  expect(plan.status).toBe('blocked'); expect(plan.costGold).toBe(3001);
+  expect(plan.valueGold).toBeLessThan(0); expect(plan.completedTick).toBeGreaterThan(0);
+  expect(plan.actions.find(action => action.id === 'train')!.declaration.cost).toMatchObject({ value: [{ gold: 1 }] });
+  expect(plan.readyActionIds).toEqual([]); expect(output.readyActions).toEqual([]);
+  expect(plan.reasons[0]!.code).toBe('goal-plan-net-nonpositive');
+});

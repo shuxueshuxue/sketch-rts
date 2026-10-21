@@ -3,6 +3,7 @@ import { bindGoalAction, bindGoalFact, goalActionContributes, goalBindingsKey, g
 import { goalResourceKey, goalValueKey } from './goal-facts';
 import { projectGoalResources, type GoalScheduledAction } from './goal-resource-ledger';
 import { observationJsonBytes } from './observation-json-bytes';
+import { discountGold } from './utility';
 import type { GoalSearchMemory, GoalSearchPath as Path, GoalSearchStep as Step } from './goal-search-state';
 export type { GoalSearchMemory } from './goal-search-state';
 import type { GoalActionDeclaration, GoalActionNode, GoalAlternative, GoalFact, GoalFactObservation, GoalPlan,
@@ -12,6 +13,7 @@ const order = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;
 const reason = (code: string, factIds: readonly string[] = [], values: AllocationReason['values'] = {}): AllocationReason => ({ code, factIds, values });
 const finish = (path: Path, epoch: number) => Math.max(epoch, ...path.steps.map(step => step.finishTick));
 const pathKey = (path: Path) => goalValueKey([path.steps.map(step => [step.action.id, step.startTick, step.finishTick]), path.bindings]);
+const pathValue = (path: Path, goal: GoalRequest, epoch: number) => discountGold(path.probability * goal.rewardGold, finish(path, epoch) - epoch) - path.cost;
 const pathOrder = (epoch: number) => (a: Path, b: Path) => a.cost - b.cost || finish(a, epoch) - finish(b, epoch) || order(pathKey(a), pathKey(b));
 const validEstimate = (action: GoalActionDeclaration) => action.duration.state === 'met'
   && Number.isFinite(action.duration.value) && action.duration.value >= 0 && action.cost.state === 'met'
@@ -45,13 +47,18 @@ export function planGoals(input: GoalPlannerInput): GoalPlannerOutput {
         const next = scheduleAction(replay, action.declaration, refreshed, input, goal);
         if (!next) { scheduleValid = false; break; }
         replay.steps.push(next.step); replay.bindings = next.bindings;
+        if (next.step.action.cost.state === 'met') replay.cost += next.step.action.cost.value.reduce((sum, term) => sum + term.gold, 0);
+        if (next.step.action.successProbability.state === 'met') replay.probability *= next.step.action.successProbability.value;
       }
       const shifted = replay.steps.map(step => actionNode(step, input));
       const projected = projectGoalResources({ epoch: context.tick, initial: balances(previous.continuation, input),
         actions: replay.steps });
       if (scheduleValid && projected.state === 'met' && (deadline === null || shifted.every(action => action.finishTick === null || action.finishTick <= deadline))) {
-        const plan: GoalPlan = { ...previous.plan, observedTick: context.tick, actions: shifted,
-          readyActionIds: shifted.filter(action => action.state === 'ready').map(action => action.id),
+        const valueGold = pathValue(replay, goal, context.tick), profitable = valueGold > 0;
+        const plan: GoalPlan = { ...previous.plan, observedTick: context.tick, actions: shifted, valueGold,
+          status: previous.plan.status === 'complete' ? 'complete' : profitable ? 'ready' : 'blocked',
+          reasons: profitable ? [] : [reason('goal-plan-net-nonpositive', [], { valueGold })],
+          readyActionIds: profitable ? shifted.filter(action => action.state === 'ready').map(action => action.id) : [],
           completedTick: previous.plan.completedTick === null ? null : finish(replay, context.tick),
           resourceTimeline: projected.timeline,
           search: { ...previous.plan.search, work: 0 }, facts: previous.plan.facts.map(node => ({ ...node, observation: context.readFact(node.observation.fact) })) };
@@ -276,9 +283,11 @@ function actionNode(step: Step, input: GoalPlannerInput): GoalActionNode {
 }
 
 function projectPlan(state: GoalSearchMemory, input: GoalPlannerInput, goal: GoalRequest, work: number): GoalPlan {
-  const valueOrder = (a: Path, b: Path) => (b.probability * goal.rewardGold - b.cost) - (a.probability * goal.rewardGold - a.cost)
+  const valueOrder = (a: Path, b: Path) => pathValue(b, goal, input.context.tick) - pathValue(a, goal, input.context.tick)
     || pathOrder(input.context.tick)(a, b);
   const path = [...state.solutions].sort(valueOrder)[0];
+  const valueGold = path ? pathValue(path, goal, input.context.tick) : null;
+  const profitable = valueGold !== null && valueGold > 0;
   const steps = path?.steps ?? [], chosen = new Set(steps.map(step => step.action.id));
   const unresolved = state.observed.some(observation => observation.state === 'pending')
     || state.candidates.some(action => [action.duration, action.cost, action.successProbability].some(estimate => estimate.state === 'pending'));
@@ -292,7 +301,7 @@ function projectPlan(state: GoalSearchMemory, input: GoalPlannerInput, goal: Goa
       ? alternative.costGold !== null && alternative.costGold > path.cost ? 'goal-alternative-cost-above-plan' : 'goal-alternative-not-in-selected-plan'
       : 'goal-alternative-search-unresolved', [alternative.factId], { selectedCostGold: path?.cost ?? null }) }));
   return { id: `goal-plan:${goal.id}`, goal, observedTick: input.context.tick,
-    status: currentMet ? 'complete' : path ? 'ready' : state.phase !== 'done' || state.limitReason ? 'search-pending' : unresolved ? 'waiting-facts' : 'blocked',
+    status: currentMet ? 'complete' : path ? profitable ? 'ready' : 'blocked' : state.phase !== 'done' || state.limitReason ? 'search-pending' : unresolved ? 'waiting-facts' : 'blocked',
     facts: state.observed.map(observation => ({ id: observation.fact.id, observation,
       producerActionIds: path ? satisfies(observation.fact, path, state, input).producers : [] })),
     actions, edges: actions.flatMap(action => [
@@ -305,10 +314,10 @@ function projectPlan(state: GoalSearchMemory, input: GoalPlannerInput, goal: Goa
       state: observation.state, chosenActionId: alternatives.find(alternative => alternative.factId === observation.fact.id && alternative.status === 'chosen')?.actionId ?? null,
       chosenActionIds: alternatives.filter(alternative => alternative.factId === observation.fact.id && alternative.status === 'chosen').map(alternative => alternative.actionId),
       alternativeIds: alternatives.filter(alternative => alternative.factId === observation.fact.id).map(alternative => alternative.id) })),
-    alternatives, readyActionIds: actions.filter(action => action.state === 'ready').map(action => action.id),
+    alternatives, readyActionIds: profitable ? actions.filter(action => action.state === 'ready').map(action => action.id) : [],
     resourceTimeline: projection.state === 'pending' ? [] : projection.timeline,
     costGold: path?.cost ?? null, successProbability: path?.probability ?? null,
-    valueGold: path ? path.probability * goal.rewardGold - path.cost : null, completedTick: path ? finish(path, input.context.tick) : null,
+    valueGold, completedTick: path ? finish(path, input.context.tick) : null,
     search: { expansions: state.expansions, depth: state.depth, work, limitReason: state.limitReason },
-    reasons: path ? [] : [reason(state.limitReason ?? (unresolved ? 'goal-required-facts-pending' : 'goal-no-feasible-plan'))] };
+    reasons: path ? profitable ? [] : [reason('goal-plan-net-nonpositive', [], { valueGold })] : [reason(state.limitReason ?? (unresolved ? 'goal-required-facts-pending' : 'goal-no-feasible-plan'))] };
 }
