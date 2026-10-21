@@ -1,5 +1,5 @@
 import type { SdkGameCommandPlanner } from '../../../sdk/game-runner';
-import { BUILDING_DEFS } from '../../../shared/catalog';
+import { requiredSupplyCap } from '../../../shared/catalog';
 import { trainingJobs } from '../../../shared/building-jobs';
 import { miningHallSite } from '../../../shared/mining-site';
 import { checkCommandLegality } from '../../../shared/sim/command-validation';
@@ -62,7 +62,7 @@ export function createPuzzleWitness(puzzle: PublicPuzzleCase, world: PuzzleWorld
     if (puzzle.key === 'supply-tier') {
       const kind = puzzle.variant === 'knight' ? 'knight' : 'footman', count = kind === 'knight' ? 1 : 2;
       const producer = game.buildings.find(b => b.owner === owner && b.kind === (kind === 'knight' ? 'stables' : 'barracks'))!;
-      if (kind === 'knight' && game.players[owner]!.supplyCap < 60 && !game.buildings.some(b => b.owner === owner && b.kind === 'farm' && !b.complete)) {
+      if (kind === 'knight' && game.players[owner]!.supplyCap < requiredSupplyCap(kind) && !game.buildings.some(b => b.owner === owner && b.kind === 'farm' && !b.complete)) {
         const at = legalBuildingSite(game, 'farm', { x: 1024, y: 1376 });
         send('farm', { type: 'build', unitId: workers[0]!.id, buildingKind: 'farm', ...at });
       }
