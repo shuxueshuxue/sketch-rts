@@ -5,6 +5,7 @@ import { setBuildingBodies } from '../../../shared/terrain';
 import { standingBodies } from '../../../shared/structure-bodies';
 import type { GameSnapshot } from '../../../shared/types';
 import { assessAllocatedForce } from '../allocated-force';
+import { assessForceAssemblyPosts } from '../assembly-posts';
 import type { ExecutorInput } from '../allocation-types';
 import { landIdAt } from '../regions';
 import { strategicTargetCamp } from '../target-camp';
@@ -38,6 +39,22 @@ function request(granted = ['a']): ExecutorInput {
 }
 
 describe('persistent clearing-force assembly', () => {
+  it('exposes the same present-world threshold before a grant can be recreated', () => {
+    const input = request(['a', 'b']);
+    if (input.execution.intent.kind !== 'assemble-force') throw new Error('Missing assembly intent');
+    const facts = { snapshot: input.snapshot, owner: input.owner, intent: input.execution.intent, unitIds: ['a', 'b'] };
+    const before = JSON.stringify(facts);
+    expect(assessForceAssemblyPosts(facts)).toMatchObject({ status: 'known', sufficient: true, onStationUnitIds: ['a', 'b'] });
+    expect(assessForceAssemblyPosts({ ...facts, unitIds: ['a'] })).toMatchObject({ status: 'known', sufficient: false });
+    expect(assessForceAssemblyPosts({ ...facts, interruptedUnitIds: ['b'] })).toMatchObject({ status: 'known', sufficient: false });
+    expect(assessForceAssemblyPosts({ ...facts, unitIds: [] })).toMatchObject({ status: 'known', sufficient: false, assembledForce: 0 });
+    expect(JSON.stringify(facts)).toBe(before);
+    const moved = structuredClone(facts);
+    moved.snapshot.units.find(unit => unit.id === 'b')!.x += 500;
+    setBuildingBodies(moved.snapshot.map, standingBodies(moved.snapshot));
+    expect(assessForceAssemblyPosts(moved)).toMatchObject({ status: 'known', sufficient: false, onStationUnitIds: ['a'] });
+  });
+
   it('keeps an arrived partial cohort active, then completes with a newly granted real member', () => {
     const partial = request();
     expect(assembleExecutor.execute(partial).status).toBe('complete');

@@ -3,8 +3,7 @@ import { distance } from '../../policy/spatial';
 import { sameGround, walkingDistance } from '../../../shared/terrain';
 import type { ExecutorFeedback, StrategyExecutor } from '../allocation-types';
 import { blockedExecutor, executorFeedback, grantedUnits, validExecutorGrant } from '../executor-grants';
-
-export const ASSEMBLY_RANGE = 180;
+import { ASSEMBLY_RANGE } from '../assembly-posts';
 
 /** Explicitly moves this granted manifest while another action obtains its
  * transport. Completion means actual arrival, not a remembered move order. */
