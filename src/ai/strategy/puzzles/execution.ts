@@ -53,6 +53,8 @@ export function trackPuzzle(puzzle: PublicPuzzleCase, world: PuzzleWorld) {
     mark('beach-cleared', !!world.beachGuards.length && !alive(world.beachGuards).length);
     mark('defended', !!world.attackers.length && !alive(world.attackers).length);
     mark('army-returned', army.some(u => visitedIsland.has(u.id) && physicallyOnLand(world, u, world.home)));
+    const deployed = alive(world.army).filter(u => visitedIsland.has(u.id));
+    mark('army-all-returned', deployed.length > 0 && deployed.every(u => physicallyOnLand(world, u, world.home)));
     mark('local-cleared', !!world.localGuards.length && !alive(world.localGuards).length);
     mark('local-hall-complete', !!world.localMine && hallAt(world.localMine));
     mark('farm-complete', game.buildings.some(b => !initialBuildings.has(b.id) && b.owner === owner && b.kind === 'farm' && b.complete));
