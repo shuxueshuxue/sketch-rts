@@ -251,6 +251,7 @@ export type GoalSearchLimits = Readonly<{ maxDepth: number; maxExpansions: numbe
 export type GoalPlan = Readonly<{
   id: string; goal: GoalRequest; status: GoalPlanStatus; observedTick: number;
   facts: readonly GoalPlanFactNode[]; actions: readonly GoalActionNode[]; edges: readonly GoalPlanEdge[];
+  deferredCandidates?: readonly (GoalDeferredCandidate & Readonly<{ factId: string }>)[];
   subgoals: readonly GoalSubgoal[]; alternatives: readonly GoalAlternative[]; readyActionIds: readonly string[];
   resourceTimeline: readonly GoalResourceEvent[];
   costGold: number | null; successProbability: number | null; valueGold: number | null; completedTick: number | null;

@@ -89,7 +89,7 @@ describe('pure shared naval combat assessment',()=>{
   expect(assessGoalCampCombatOption({...f,cohort:[]})).toMatchObject({state:'unmet',reason:{code:'clearing-force-empty'}});
   expect(assessGoalCampCombatOption({...f,cohort:[{reference:{kind:'existing',entityId:'guard-a'},assessment:f.cohort[0]!.assessment}]}).state).toBe('unmet');
  });
- it('leaves enemy aboard unload affiliation pending before the legacy camp assessor can project a native ground goal',()=>{
+ it('leaves enemy aboard unload affiliation pending before the shared camp assessor can project a native ground goal',()=>{
   const f=campFixture(),enemy={...f.cohort[0]!.assessment,id:'enemy-passenger',owner:'foe',deck:{shipId:'enemy-hull',x:0,y:0}};
   const ship={...enemy,id:'enemy-hull',deck:undefined,order:{type:'unload' as const,x:2000,y:2000}};
   const result=only(strict(()=>assessGoalCampCombatOption({...f,snapshot:{...f.snapshot,units:[...f.snapshot.units,enemy,ship]}})));

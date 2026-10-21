@@ -193,7 +193,7 @@ function transport(input: ExecutorInput, parameters: Readonly<Record<string, unk
 }
 const kinds = ['assemble', 'clear-camp', 'clear-shore', 'defend', 'evacuate', 'position-transport', 'transport-force', 'transport-worker'] as const;
 /** Separate registrations are selected by the single ready-action bridge. No
- * legacy provider, alternate grant or direct native-command entry is added. */
+ * recipe provider, alternate grant or direct native-command entry is added. */
 export const goalNavalExecutors: readonly StrategyExecutor[] = kinds.map(kind => ({
   id: `goal.${kind}`,
   execute(input) {

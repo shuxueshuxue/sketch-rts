@@ -4,6 +4,7 @@ import { goalResourceKey, goalValueKey } from './goal-facts';
 import { projectGoalResources, type GoalScheduledAction } from './goal-resource-ledger';
 import { observationJsonBytes } from './observation-json-bytes';
 import { discountGold } from './utility';
+import { discoverGoalActions } from './goal-provider-candidates';
 import type { GoalSearchMemory, GoalSearchPath as Path, GoalSearchStep as Step } from './goal-search-state';
 export type { GoalSearchMemory } from './goal-search-state';
 import type { GoalActionDeclaration, GoalActionNode, GoalAlternative, GoalFact, GoalFactObservation, GoalPlan,
@@ -31,7 +32,7 @@ export function planGoals(input: GoalPlannerInput): GoalPlannerOutput {
     const goalKey = goalValueKey([goal, input.initialBalances.map(({ asOfTick: _epoch, ...balance }) => balance)]);
     const previous = input.previous?.owner === context.owner ? input.previous.entries.find(entry => entry.goalKey === goalKey
       && entry.declarationRevision === input.declarationRevision) : undefined;
-    const unchanged = previous && previous.dependencies.every(dependency => {
+    const unchanged = previous && !previous.continuation?.deferred?.length && previous.dependencies.every(dependency => {
       const prior = previous.plan.facts.find(node => node.id === dependency.factId)?.observation
         ?? previous.continuation?.observed.find(observed => observed.fact.id === dependency.factId);
       if (!prior) return false;
@@ -134,7 +135,13 @@ function regressOne(state: GoalSearchMemory, input: GoalPlannerInput, providers:
   // positive-flow alternatives must remain available to repair that prefix.
   if (observation.state === 'met' && !goalQuantity(request.fact)) return;
   if (request.depth >= input.limits.maxDepth) { state.limitReason ??= 'depth-limit'; return; }
-  const all = providers.flatMap(provider => provider.actionsFor(request.fact, input.context)).filter(action => goalActionContributes(action, request.fact))
+  const discovered = providers.map(provider => discoverGoalActions(provider, request.fact, input.context));
+  for (const { deferred } of discovered) for (const item of deferred) {
+    state.deferred ??= [];
+    if (!state.deferred.some(candidate => candidate.id === item.id && candidate.factId === request.fact.id))
+      state.deferred.push({ ...item, factId: request.fact.id });
+  }
+  const all = discovered.flatMap(result => result.actions).filter(action => goalActionContributes(action, request.fact))
     .sort((a, b) => order(a.id, b.id));
   for (const action of all) {
     if (!state.alternatives.some(item => item.factId === request.fact.id && item.actionId === action.id)) {
@@ -290,6 +297,7 @@ function projectPlan(state: GoalSearchMemory, input: GoalPlannerInput, goal: Goa
   const profitable = valueGold !== null && valueGold > 0;
   const steps = path?.steps ?? [], chosen = new Set(steps.map(step => step.action.id));
   const unresolved = state.observed.some(observation => observation.state === 'pending')
+    || !!state.deferred?.length
     || state.candidates.some(action => [action.duration, action.cost, action.successProbability].some(estimate => estimate.state === 'pending'));
   const actions = steps.map(step => actionNode(step, input));
   const projection = projectGoalResources({ epoch: input.context.tick, initial: balances(state, input), actions: steps });
@@ -304,6 +312,7 @@ function projectPlan(state: GoalSearchMemory, input: GoalPlannerInput, goal: Goa
     status: currentMet ? 'complete' : path ? profitable ? 'ready' : 'blocked' : state.phase !== 'done' || state.limitReason ? 'search-pending' : unresolved ? 'waiting-facts' : 'blocked',
     facts: state.observed.map(observation => ({ id: observation.fact.id, observation,
       producerActionIds: path ? satisfies(observation.fact, path, state, input).producers : [] })),
+    ...(state.deferred?.length ? { deferredCandidates: state.deferred } : {}),
     actions, edges: actions.flatMap(action => [
       ...action.prerequisiteFactIds.map(from => ({ from, to: action.id, kind: 'requires' as const })),
       ...action.declaration.effects.filter(effect => effect.operation === 'establish').map(effect => ({ from: action.id, to: effect.fact.id, kind: 'establishes' as const })),

@@ -110,11 +110,11 @@ it('preserves pending facts, bounded search and output-reference unification wit
   expect(pending.plans[0]!.status).toBe('waiting-facts'); expect(pending.readyActions).toEqual([]);
   const bounded = planGoals({ ...input(), limits: { maxDepth: 1, maxExpansions: 2, maxPlans: 1 } });
   expect(bounded.plans[0]!.status).toBe('search-pending'); expect(bounded.plans[0]!.search.limitReason).not.toBeNull();
-  const output = { kind: 'output' as const, actionId: 'train-hull', output: 'unit-0' };
-  const required = goalFact({ kind: 'transport-in', seaId: 'sea:1', capacity: 10, byTick: 1000, transport: { kind: 'binding', name: 'hull' } });
-  const produced = goalFact({ ...required.predicate as Extract<GoalFact['predicate'], { kind: 'transport-in' }>, transport: output });
+  const output = { kind: 'output' as const, actionId: 'build-yard', output: 'building' };
+  const required = goalFact({ kind: 'building-complete', buildingKind: 'shipyard', at: { point: { x: 2000, y: 2000 } }, building: { kind: 'binding', name: 'hull' } });
+  const produced = goalFact({ ...required.predicate as Extract<GoalFact['predicate'], { kind: 'building-complete' }>, building: output });
   const bindings = matchGoalFacts(produced, required)!;
-  expect(bindings).toEqual({ hull: output }); expect(bindGoalFact(required, bindings).predicate).toMatchObject({ transport: output });
+  expect(bindings).toEqual({ hull: output }); expect(bindGoalFact(required, bindings).predicate).toMatchObject({ building: output });
 });
 
 it('releases a cached future availability at its fixed absolute tick instead of shifting it away', () => {
@@ -174,4 +174,29 @@ it('prices the whole remaining chain and withholds its ready bundle when later l
   expect(plan.actions.find(action => action.id === 'train')!.declaration.cost).toMatchObject({ value: [{ gold: 1 }] });
   expect(plan.readyActionIds).toEqual([]); expect(output.readyActions).toEqual([]);
   expect(plan.reasons[0]!.code).toBe('goal-plan-net-nonpositive');
+});
+
+it('preserves deferred grounding as waiting evidence and retries its published alternatives after JSON continuation', () => {
+  const { input, actions, context } = example(), action = { ...actions.find(action => action.id === 'build')!, preconditions: [], flows: [] };
+  let published = false, withDeferred = false;
+  const unavailable = { state: 'unmet' as const, reason: { code: 'contract-unused-port', factIds: [], values: {} } };
+  const grounding: NonNullable<GoalPlanningContext['grounding']> = {
+    buildSites: () => published ? { state: 'met', candidates: [], factIds: [], ...(withDeferred ? { deferred: [{ id: 'other-site',
+      requestIds: ['shared-geometry:other-site'], reason: { code: 'geometry-publication-pending', factIds: [], values: {} } }] } : {}) }
+      : { state: 'pending', requestIds: ['shared-geometry:site'], reason: { code: 'geometry-publication-pending', factIds: [], values: {} } },
+    productionOptions: () => unavailable, transportOptions: () => unavailable,
+  };
+  const provider = { id: 'pending-domain-contract', actionsFor: (fact: GoalFact, ctx: GoalPlanningContext) => {
+    if (fact.predicate.kind !== 'hall-complete') return [];
+    return ctx.grounding!.buildSites('townHall', fact.predicate.at).state === 'met' ? [action] : [];
+  } };
+  const configured = { ...input(), context: { ...context, grounding }, providers: [provider] };
+  const first = planGoals(configured);
+  expect(first.plans[0]!.status).toBe('waiting-facts'); expect(first.readyActions).toEqual([]);
+  expect(first.plans[0]!.facts[0]!.observation.state).toBe('unmet'); // world truth was not changed
+  expect(first.plans[0]!.deferredCandidates).toMatchObject([{ requestIds: ['shared-geometry:site'] }]);
+  published = true; withDeferred = true;
+  const next = planGoals({ ...configured, work: new FactWorkQueue(0), previous: JSON.parse(JSON.stringify(first.cache)) });
+  expect(next.plans[0]!.status).toBe('ready'); expect(next.readyActions).toHaveLength(1);
+  expect(next.plans[0]!.deferredCandidates).toMatchObject([{ id: 'other-site', requestIds: ['shared-geometry:other-site'] }]);
 });
