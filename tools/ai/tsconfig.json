@@ -6,7 +6,7 @@
     "../../scripts/ai-room-ab.ts",
     "./room-ab-run.ts",
     "../../scripts/verify-room-ab-isolation.ts",
-    "../../scripts/verify-room-ab-position.ts"
-    ,"../../scripts/planner-puzzle-baseline.ts"
+    "../../scripts/verify-room-ab-position.ts",
+    "../../scripts/planner-puzzle-baseline.ts"
   ]
 }
