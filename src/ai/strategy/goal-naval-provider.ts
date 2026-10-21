@@ -43,6 +43,7 @@ export const goalNavalActionProvider: GoalActionProvider = {
       else if (predicate.kind === 'gold' && option.campId) action = declareGoalCampClearing({ ...base, campId: option.campId,
         at: option.target, routes: option.preconditions });
       else if (predicate.kind === 'site-safe') action = declareGoalDefense({ ...base, site: predicate.site,
+        ...(option.effectDelayTicks ? { effectDelayTicks: option.effectDelayTicks } : {}),
         throughTick: predicate.throughTick, requiredForce: option.requiredForce, routes: option.preconditions });
       else if (predicate.kind === 'shore-safe') {
         const observation = context.readFact(effect);
