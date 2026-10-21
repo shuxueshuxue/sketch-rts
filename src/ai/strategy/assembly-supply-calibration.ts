@@ -4,7 +4,8 @@ import type { DecisionFacts } from './decision';
 import type { ConditionalAssemblyProduction } from './force-assembly-forecast';
 import type { Arrival, Target } from './types';
 import { landIdAt } from './regions';
-import raw from './data/assembly-supply-model.json';
+import { gunzipSync } from 'three/examples/jsm/libs/fflate.module.js';
+import compressed from './data/assembly-supply-model.gzip.json';
 import validation from './data/assembly-supply-validation.json';
 
 export type HistoricalAssemblyMember = Readonly<{ evidenceUnitId: string; kind: UnitKind; hp: number; maxHp: number;
@@ -17,9 +18,10 @@ type Cell = Readonly<{ priority: number; features: Readonly<Record<string, strin
 type Table = Readonly<{ calibrationId: string; payloadSha256: string; sampleIntervalTicks: number;
   phaseBoundaries: readonly number[]; featurePriority: readonly (readonly string[])[];
   cells: readonly Cell[]; samples: readonly Sample[]; memberProfiles: readonly HistoricalAssemblyMember[] }>;
-// Generated lossless tuples are checked against every source point by the
-// packer. JSON imports infer arrays rather than their declared tuple schema.
-const table = raw as unknown as Table;
+// Keep the lossless compact table synchronous in both Node and browser workers.
+// The JSON carrier contains gzip bytes, not a second schema or calibration.
+const bytes = Uint8Array.from(atob(compressed.gzipBase64), character => character.charCodeAt(0));
+const table = JSON.parse(new TextDecoder().decode(gunzipSync(bytes))) as Table;
 const samples = new Map(table.samples.map(sample => [sample.id, sample]));
 export const ASSEMBLY_SUPPLY_CALIBRATION_ID = table.calibrationId;
 export type AssemblyProducerRoute = Readonly<{ buildingId: string; unitKind: TrainableUnitKind; arrival: DecisionFacts<Arrival> | null }>;

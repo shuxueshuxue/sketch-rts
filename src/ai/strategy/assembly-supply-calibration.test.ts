@@ -1,11 +1,28 @@
 import { expect, it } from 'vitest';
+import { createHash } from 'node:crypto';
+import { gunzipSync as nodeGunzipSync } from 'node:zlib';
+import { gunzipSync as browserGunzipSync } from 'three/examples/jsm/libs/fflate.module.js';
 import { BUILDING_DEFS } from '../../shared/catalog';
 import { createBuilding, createUnit } from '../../shared/map';
 import { combatRating } from '../policy/v6/strength';
-import raw from './data/assembly-supply-model.json';
+import compressed from './data/assembly-supply-model.gzip.json';
 import { createGame, snapshotGame } from '../../shared/sim';
-import { calibratedAssemblySupply, type AssemblyProducerRoute } from './assembly-supply-calibration';
+import { calibratedAssemblySupply, type AssemblyProducerRoute, type HistoricalAssemblyMember } from './assembly-supply-calibration';
 import { landIdAt } from './regions';
+
+const compressedBytes = Buffer.from(compressed.gzipBase64, 'base64');
+const decoded = nodeGunzipSync(compressedBytes);
+const raw = JSON.parse(decoded.toString('utf8')) as { calibrationId: string; memberProfiles: HistoricalAssemblyMember[];
+  samples: { producers: { points: [number, number, number[]][] }[] }[] };
+
+it('decompresses byte-for-byte to the frozen compact JSON in Node and browser readers', () => {
+  const originalSha256 = 'b84dd053b2dc53df8d27cd66968b8da99fe8832f07c5ce1260e4213997f73d2b';
+  expect(createHash('sha256').update(decoded).digest('hex')).toBe(originalSha256);
+  expect(compressed.uncompressedSha256).toBe(originalSha256);
+  const portable = browserGunzipSync(compressedBytes);
+  expect(createHash('sha256').update(portable).digest('hex')).toBe(originalSha256);
+  expect(Buffer.compare(Buffer.from(portable), decoded)).toBe(0);
+});
 
 function fixture() {
   const snapshot = snapshotGame(createGame('bareDuel', { aiPlayers: [] }));
