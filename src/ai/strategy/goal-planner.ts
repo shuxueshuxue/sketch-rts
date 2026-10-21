@@ -48,7 +48,7 @@ export function planGoals(input: GoalPlannerInput): GoalPlannerOutput {
       }
       const shifted = replay.steps.map(step => actionNode(step, input));
       const projected = projectGoalResources({ epoch: context.tick, initial: balances(previous.continuation, input),
-        actions: shifted.flatMap(action => action.finishTick === null ? [] : [{ action: action.declaration, startTick: action.startTick, finishTick: action.finishTick }]) });
+        actions: replay.steps });
       if (scheduleValid && projected.state === 'met' && (deadline === null || shifted.every(action => action.finishTick === null || action.finishTick <= deadline))) {
         const plan: GoalPlan = { ...previous.plan, observedTick: context.tick, actions: shifted,
           readyActionIds: shifted.filter(action => action.state === 'ready').map(action => action.id),
