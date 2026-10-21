@@ -1,0 +1,9 @@
+{
+  "sha256": "85ee8d8429a772732e6b97ee97dbf8c759fc09e1b0c77b6bd43f210eee0e691e",
+  "bytes": 2409456,
+  "name": "public-planner-puzzles-main-rebase-20261021",
+  "kind": "dir",
+  "machine": "a100",
+  "pushed": "370e24be82b50d3a45bb4f4e2b5e993acc2ae5d1",
+  "pr": 585
+}
