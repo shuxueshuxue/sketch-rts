@@ -1,6 +1,6 @@
 # 共同规划器栈上的题库接线
 
-#585 已 rebase 到 `feat/strategy-goal-planner` 的 `acb138251d943097fe55d9d48d059710b1bb4d81`，绑定首个真实搜索导出。
+#585 已随共享规划器栈 rebase 到 main `d36d0543b04077b44690bf4dae9dabb92f5a34a5`，当前共享基底为 `feat/strategy-goal-planner` 的 `8ada3fbe94f3beeec3e7a288ea8758133c53722b`，保留真实搜索导出绑定。
 本页记录正式合同接线和共同栈验证；[历史 main 报告](report.zh.md)中的 8/33 只属于原来的 `d4ca2668` 生产代码，不是共同栈的成绩。
 
 ## 判法使用的正式合同
@@ -10,6 +10,7 @@
 - `projectGoalResources` 从真实输入的 `initialBalances`、当前 epoch 和所选动作的开始/结束时刻重算每个数量资源前缀。已在世界中完成的动作不再重复收支；共享动作只算一次，声明或时刻冲突就报 pending。未知时刻和 pending 都不能算可支付。
 - 海军题另外读取真实 `StrategyAllocationTrace`，按矿厅动作的 objective/method/action/generation 对上至少目录价 400 金的未花预留。预测资源时间线不代替实际预留。
 - 清滩动作只建立 `shore-safe`，不要求它凭空建立 `camp-cleared`。选中安全远口时检查运输动作的真实 `shore-safe` 前置，不强迫多做一次清滩。
+- 晚到敌军题读取真实矿厅的 `site-safe` 效果在 start/offset/finish 中的生效时刻；保护须在敌军到达前激活且覆盖该窗口，不能把发令开始或独占兵力的 lease 结束误当到岗时刻。
 - 近船、已有兵营、三步兵三个变体完整保留，并标记为 `main-passing overaction regression`。它们仍检查不必要的初始调船、农场/骑士和危险近口清滩都不出现。
 
 ## 尚未实现的能力与开启方法
@@ -55,6 +56,7 @@ A100，Node 24.22.0。正式合同接线代码提交 `9ac0276da24b3867a78c42a61e
 ## 首个真实搜索导出的验证（acb13825）
 
 接线代码 `b24f54945667bdf8a988517ec4b717559b1a47d2`，A100 / Node 24.22.0：
+这一版源码保留在 `archive/public-puzzles-search-entry-20261021`，本段只记录 rebase main 之前的验证。
 
 | 检查 | 结果 |
 | --- | --- |
