@@ -4,6 +4,7 @@ import type { GameSnapshot, PlayerId } from '../../../shared/types';
 import type { GoalPlannerInput, GoalPlannerOutput } from '../goal-planner-types';
 import { planGoals } from '../goal-planner';
 import { createGoalFactReader } from '../goal-world-facts';
+import { withGoalPlannerInput } from '../goal-planner-input';
 import type { StrategyAllocationTrace } from '../allocation-types';
 import type { PuzzlePlanObservation } from './planner-checks';
 
@@ -11,14 +12,14 @@ export type PlanGoals = typeof planGoals;
 /** Only a native owner-think assembly may implement this port. It must use
  * createGoalFactReader and the ordinary collectors/providers/FactWorkQueue,
  * never a scene key, expected landing, authored observation or witness. */
-export type NativePuzzleInput = (snapshot: GameSnapshot, owner: PlayerId) => GoalPlannerInput;
+export type NativePuzzleInputScope = <T>(snapshot: GameSnapshot, owner: PlayerId, run: (input: GoalPlannerInput) => T) => T;
 export type PuzzlePlannerExecution = {
   commandPlanner: SdkGameCommandPlanner;
   /** Actual same-think records from the goal-planner/allocator boundary. */
   observations(): readonly PuzzlePlanObservation[];
 };
 export type NativePuzzleModule = {
-  createInput: NativePuzzleInput;
+  withInput: NativePuzzleInputScope;
   allocation(input: GoalPlannerInput, output: GoalPlannerOutput): StrategyAllocationTrace | null;
   createExecution(): PuzzlePlannerExecution;
 };
@@ -35,20 +36,22 @@ export async function optionalFunction<T extends (...args: never[]) => unknown>(
   return { value: module[name] as T };
 }
 
-/** Search and current-world reader are the real shared exports. The native
- * adapter awaits the owner-think assembly; its absence cannot fall back to
- * the incumbent AI or witness. */
+/** The shared scope exists. Its normal goal collector/value adapter and the
+ * execution bridge remain separate capabilities; no authored goal prices or
+ * incumbent/witness fallback may fill either gap. */
 const [input, allocation, execution] = await Promise.all([
-  optionalFunction<NativePuzzleModule['createInput']>('./goal-planner-native.ts', 'createInput'),
+  optionalFunction<NativePuzzleModule['withInput']>('./goal-planner-native.ts', 'withInput'),
   optionalFunction<NativePuzzleModule['allocation']>('./goal-planner-native.ts', 'allocation'),
   optionalFunction<NativePuzzleModule['createExecution']>('./goal-planner-native.ts', 'createExecution'),
 ]);
 export const publicPuzzlePlanner = {
   planGoals,
   createGoalFactReader,
-  createInput: input.value,
+  withGoalPlannerInput,
+  withInput: input.value,
   allocation: allocation.value,
   createExecution: execution.value,
-  unavailable: [input.unavailable, allocation.unavailable, execution.unavailable]
+  unavailable: [input.value ? undefined : 'shared GoalRequest collector/valuation not wired',
+    input.unavailable, allocation.unavailable, execution.unavailable]
     .filter((reason): reason is string => reason !== undefined),
 };
