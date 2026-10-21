@@ -91,10 +91,15 @@ export function evacuateScene() {
   world.islandHall = world.game.buildings.find(h => h.owner === PUZZLE_OWNER && h.kind === 'townHall' && h !== world.home)!;
   world.islandWorkers = world.workers.filter(u => u.x > 2304); world.attackers = world.game.units.filter(u => u.owner === PUZZLE_OPPONENT);
   // A real invasion already has a first wave ashore; the last rider is still on
-  // its incoming hull. The runner orders an ordinary unload, never a timed spawn.
+  // its incoming hull. The cold frame includes actual attack/unload orders.
   const invasion = world.game.spawnUnit(PUZZLE_OPPONENT, 'transport', 3840, 896);
   if (!boardUnit(invasion, world.attackers.at(-1)!, world.game.units)) throw new Error('Invasion rider does not fit its real deck');
   stepGame(world.game);
+  issuePlayerCommand(world.game, world.opponent, { type: 'attackMove',
+    unitIds: world.attackers.filter(unit => !unit.deck && !unit.cabin).map(unit => unit.id),
+    x: world.islandHall.x, y: world.islandHall.y });
+  issuePlayerCommand(world.game, world.opponent, { type: 'unload', unitIds: [invasion.id],
+    x: world.islandHall.x, y: world.islandHall.y });
   return world;
 }
 export const PUBLIC_PUZZLES: readonly PublicPuzzleCase[] = [
