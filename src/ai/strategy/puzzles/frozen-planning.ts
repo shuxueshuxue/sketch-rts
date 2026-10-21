@@ -93,9 +93,8 @@ export function runFrozenPuzzlePlan(puzzle: PublicPuzzleCase, world: PuzzleWorld
       finalFailure = failure;
       const prior = thinks.at(-2);
       stable = hash !== null && prior?.planHash === hash;
-      // A complete coarse graph can still await exact facts. Keep observing
-      // ready=0 through K, so publication is measured after graph acceptance.
-      if (stable && record.executable && prior?.executable) break;
+      // Retain all K observations: an independent ready atom (for example,
+      // waiting for income) does not finish the requested chain's refinement.
     }
     return { thinks, stable, finalFailure,
       firstReadyActionThink: thinks.find(think => think.readyActionCount > 0)?.think ?? null,
