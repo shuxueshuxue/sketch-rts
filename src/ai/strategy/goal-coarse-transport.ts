@@ -43,7 +43,8 @@ export function createGoalCoarseTransport(context: GoalPlanningContext, regions:
       // Acceleration, turning, obstacles and combat are absent from this lower
       // time/cost bound. The exact replacement retains each of those terms.
       const sailing = Math.floor(distance(start, landing.water) / Math.max(1, ship.speed) * 20);
-      const walk = waiting.reduce((longest, member) => Math.max(longest,
+      // Fighters reach the departure post through their separate assembly.
+      const walk = waiting.filter(member => member.assessment.kind === 'worker').reduce((longest, member) => Math.max(longest,
         Math.floor(distance(member.assessment, departure!.ground) / Math.max(1, member.assessment.speed) * 20)), 0);
       const common = { id: `${id}:${ship.id}`, seaId, transport, from, to, capacity, loadedUnitIds: cargo.map(unit => unit.id).sort(),
         landing: { water: landing.water, ground: landing.ground, heading }, crossing,

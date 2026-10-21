@@ -190,14 +190,10 @@ function regressOne(state: GoalSearchMemory, input: GoalPlannerInput, providers:
 }
 
 function balances(state: GoalSearchMemory, input: GoalPlannerInput): GoalResourceBalance[] {
-  const result = [...input.initialBalances], known = new Set(result.map(balance => goalResourceKey(balance.resource)));
-  for (const observation of state.observed) {
-    const quantity = goalQuantity(observation.fact);
-    if (!quantity || observation.quantity === undefined || known.has(goalResourceKey(quantity.resource))) continue;
-    result.push({ resource: quantity.resource, quantity: observation.quantity, asOfTick: input.context.tick, factIds: [observation.fact.id] });
-    known.add(goalResourceKey(quantity.resource));
-  }
-  return result;
+  // Physical presence at a post is not a second inventory beside its region
+  // pool. Every caller replays these same opening balances and declared flows;
+  // observation quantities never mint an extra account during regression.
+  return [...input.initialBalances];
 }
 type Satisfaction = { met: boolean; pending: boolean; bindings: GoalBindings; tick: number; producers: string[] };
 const satisfactionCaches = new WeakMap<GoalPlannerInput, WeakMap<GoalSearchMemory,
@@ -228,10 +224,11 @@ function satisfiesUncached(factInput: GoalFact, path: Path, state: GoalSearchMem
       tick: Math.max(now, ...results.map(result => result.tick)), producers: [...new Set(results.flatMap(result => result.producers))].sort() });
   }
   const quantity = goalQuantity(fact);
+  let physical: GoalFactObservation | null = null;
   if (input.context.readProjectedFact && path.steps.length && ['force-at', 'force-available', 'worker-at', 'cargo-aboard',
     'unit-available', 'interception-capability', 'camp-staging', 'route'].includes(fact.predicate.kind)) {
-    const projected = input.context.readProjectedFact(fact, { actions: path.steps, bindings: path.bindings });
-    if (projected) return bounded({ met: projected.state === 'met', pending: projected.state === 'pending', bindings: binding,
+    const projected = physical = input.context.readProjectedFact(fact, { actions: path.steps, bindings: path.bindings });
+    if (projected && !quantity) return bounded({ met: projected.state === 'met', pending: projected.state === 'pending', bindings: binding,
       tick: projected.availableTick ?? now, producers: path.steps.filter(step => step.action.effects
         .some(effect => effect.operation === 'establish' && matchGoalFacts(effect.fact, fact, binding, true))
         || step.action.demands.some(demand => demand.resource.kind === 'entity-control'
@@ -240,16 +237,24 @@ function satisfiesUncached(factInput: GoalFact, path: Path, state: GoalSearchMem
   }
   if (quantity) {
     const projected = projectGoalResources({ epoch: now, initial: balances(state, input), actions: path.steps });
-    if (projected.state !== 'pending') {
+    if (projected.state === 'met') {
       const amount = projected.balances.find(balance => goalResourceKey(balance.resource) === goalResourceKey(quantity.resource))?.quantity ?? 0;
-      if (amount + 1e-9 >= quantity.minimum && (!('cohort' in fact.predicate) || !fact.predicate.cohort?.length
-        || current.state === 'met' && !path.steps.some(step => step.action.flows.some(flow => flow.delta < 0
-          && goalResourceKey(flow.resource) === goalResourceKey(quantity.resource))))) {
-        for (const step of path.steps) if (step.action.flows.some(flow => flow.delta > 0
-          && goalResourceKey(flow.resource) === goalResourceKey(quantity.resource))) { producers.push(step.action.id); available = Math.max(available, step.finishTick); }
-        return bounded({ met: true, pending: false, bindings: binding, tick: Math.max(available, current.availableTick ?? now), producers });
+      let groupAt = (physical ?? current).state === 'met';
+      if (!physical) for (const step of path.steps) for (const effect of step.action.effects) {
+        const matched = matchGoalFacts(bindGoalFact(effect.fact, binding), fact, binding);
+        if (matched) { groupAt = effect.operation === 'establish'; binding = matched; }
+      }
+      if (amount + 1e-9 >= quantity.minimum && (!('cohort' in fact.predicate) || !fact.predicate.cohort?.length || groupAt)) {
+        for (const step of path.steps) for (const flow of step.action.flows) if (flow.delta > 0
+          && goalResourceKey(flow.resource) === goalResourceKey(quantity.resource)) {
+          producers.push(step.action.id); available = Math.max(available, flow.at === 'start' ? step.startTick
+            : flow.at === 'finish' ? step.finishTick : step.startTick + flow.at.offsetTicks);
+        }
+        return bounded({ met: true, pending: false, bindings: binding, tick: Math.max(available, (physical ?? current).availableTick ?? now), producers });
       }
     }
+    return bounded({ met: false, pending: projected.state === 'pending' || (physical ?? current).state === 'pending',
+      bindings: binding, tick: now, producers: [] });
   }
   let established = current.state === 'met';
   for (const step of path.steps) for (const effect of step.action.effects) {
@@ -259,9 +264,6 @@ function satisfiesUncached(factInput: GoalFact, path: Path, state: GoalSearchMem
     if (established) { producers.push(step.action.id); available = Math.max(available, effect.at === 'start' ? step.startTick
       : effect.at === 'finish' ? step.finishTick : step.startTick + effect.at.offsetTicks); }
   }
-  // A numeric fact's original truth cannot survive spending its balance.
-  if (quantity && !producers.length && path.steps.some(step => step.action.flows.some(flow => flow.delta < 0
-    && goalResourceKey(flow.resource) === goalResourceKey(quantity.resource)))) established = false;
   return bounded({ met: established, pending: !established && current.state === 'pending', bindings: binding,
     tick: Math.max(available, current.availableTick ?? now), producers });
 }
@@ -433,7 +435,8 @@ function actionNode(step: Step, input: GoalPlannerInput): GoalActionNode {
 function projectPlan(state: GoalSearchMemory, input: GoalPlannerInput, goal: GoalRequest, work: number): GoalPlan {
   const valueOrder = (a: Path, b: Path) => pathValue(b, goal, state, input) - pathValue(a, goal, state, input)
     || pathOrder(input.context.tick)(a, b);
-  const path = [...state.solutions].sort(valueOrder)[0];
+  const path = state.solutions.filter(path => projectGoalResources({ epoch: input.context.tick,
+    initial: input.initialBalances, actions: path.steps }).state === 'met').sort(valueOrder)[0];
   const valueGold = path ? pathValue(path, goal, state, input) : null;
   const profitable = valueGold !== null && valueGold > 0;
   const steps = path?.steps ?? [], chosen = new Set(steps.map(step => step.action.id));

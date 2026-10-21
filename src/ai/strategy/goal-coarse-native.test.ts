@@ -9,6 +9,8 @@ import { discoverGoalActions } from './goal-provider-candidates';
 import { withGoalPlannerInput } from './goal-planner-input';
 import { goalFact } from './goal-facts';
 import { goalPostCohorts } from './goal-post-cohorts';
+import { planGoals } from './goal-planner';
+import { projectGoalResources } from './goal-resource-ledger';
 import type { GoalActionDeclaration } from './goal-planner-types';
 
 // Original public puzzle 1 far snapshot, matching the archived f27/ac190
@@ -62,6 +64,23 @@ it('uses only a selected assembly post as a conditional origin and drops it afte
         return [reference, unit.hp, unit.attackDamage]; }));
     expect(goalPostCohorts(effect, input.context, [...prefix, { action: { ...action, id: 'later-transport', kind: 'transport-force', effects: [] },
       startTick: 100, finishTick: 200 }])).toEqual([]);
+  });
+  expect(JSON.stringify(snapshot)).toBe(before);
+});
+
+it('uses the original opening balances for every prefix of the selected far-ship coarse chain', () => {
+  const snapshot = original(), before = JSON.stringify(snapshot), memory = createAiPolicyMemory();
+  withGoalPlannerInput({ snapshot, owner: 'planner', version: 'v9_knight', memory }, input => {
+    const { refineSelected: _refine, ...search } = input;
+    const output = planGoals(search), plan = output.plans[0]!;
+    expect(plan.actions.length).toBeGreaterThan(0);
+    const actions = plan.actions.map(node => ({ action: node.declaration, startTick: node.startTick!, finishTick: node.finishTick! }));
+    for (let length = 1; length <= actions.length; length++) {
+      const projection = projectGoalResources({ epoch: snapshot.tick, initial: input.initialBalances, actions: actions.slice(0, length) });
+      expect(projection.state).toBe('met');
+      if (projection.state !== 'pending') expect(projection.deficits).toEqual([]);
+    }
+    expect(input.work.receipt.used).toBeLessThanOrEqual(6144);
   });
   expect(JSON.stringify(snapshot)).toBe(before);
 });

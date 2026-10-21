@@ -1,6 +1,7 @@
 import { setBuildingBodies, withGoalDistanceFieldLease } from '../../shared/terrain';
 import { standingBodies } from '../../shared/structure-bodies';
 import { shareShipProfile } from '../../shared/ship-geometry';
+import { isTransportKind } from '../../shared/transport-role';
 import type { BootstrapAiVersion, GameSnapshot, PlayerId } from '../../shared/types';
 import type { AiPolicyMemory } from '../memory';
 import { withAllocationLandRoutes, type AllocationLandRouteReader } from './allocation-arrival-query';
@@ -422,6 +423,11 @@ function initialGoalBalances(context: GoalPlanningContext, allowed?: readonly st
     const at = { point: location.point, ...(location.kind === 'land' ? { landId: location.landId } : { seaId: location.seaId }) };
     const pool = goalFact({ kind: 'unit-available', unitKind: unit.kind, count: 0, at, byTick: horizon });
     record(context.readFact(pool), { kind: 'unit-pool', unitKind: unit.kind, at });
+    if (location.kind === 'sea' && isTransportKind(unit.kind)) {
+      const transport = { kind: 'existing' as const, entityId: unit.id };
+      record(context.readFact(goalFact({ kind: 'transport-in', seaId: location.seaId, transport, capacity: 0, byTick: horizon })),
+        { kind: 'transport-capacity', seaId: location.seaId, transport });
+    }
     if (location.kind === 'land') record(context.readFact(goalFact({ kind: 'force-available', at, minimum: 0, metric: 'combat-rating', byTick: horizon })),
       { kind: 'force', at, metric: 'combat-rating', scope: 'pool' });
   }
