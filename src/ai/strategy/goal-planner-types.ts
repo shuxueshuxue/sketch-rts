@@ -38,6 +38,7 @@ export type GoalFactPredicate =
   | Readonly<{ kind: 'enemy-site-destroyed'; site: Target }>
   | Readonly<{ kind: 'route-controlled'; at: Target; throughTick: number }>
   | Readonly<{ kind: 'harassment-ended'; site: Target; throughTick: number }>
+  | Readonly<{ kind: 'interception-capability'; site: Target; throughTick: number }>
   | Readonly<{ kind: 'assets-safe'; unitIds: readonly string[]; at: Target; throughTick: number }>;
 
 export type GoalFact = Readonly<{ id: string; predicate: GoalFactPredicate }>;
@@ -56,6 +57,7 @@ export type GoalFactObservation = Readonly<{
   goldForecast?: Readonly<{ epoch: number; currentFreeGold: number; goldAtDeadline: number;
     earliestTick: number | null; incomeGoldPerTick: number; factIds: readonly string[] }>;
   site?: Readonly<{ logicalTarget: Target; buildPoint: Target['point']; buildingId?: string }>;
+  interception?: Readonly<{ threatIds: readonly string[]; capableUnitIds: readonly string[]; counterKinds: readonly UnitKind[] }>;
 }> & (Readonly<{ state: 'pending'; requestId: string; requestedTick: number }>
   | Readonly<{ state: 'met' | 'unmet' }>);
 export type GoalFactReader = (fact: GoalFact) => GoalFactObservation;
@@ -65,6 +67,9 @@ export type GoalFactReader = (fact: GoalFact) => GoalFactObservation;
 export type GoalPlanningContext = Readonly<{
   snapshot: GameSnapshot; situation: Situation; owner: PlayerId; tick: number;
   version: BootstrapAiVersion; readFact: GoalFactReader;
+  /** Same shared fact sources; no provider may invent a build/shore point or
+   * call native route selection when this port is absent/pending. */
+  grounding?: GoalGroundingReader;
 }>;
 export type GoalEstimate<T> = Readonly<{ state: 'met'; value: T; factIds: readonly string[] }>
   | Readonly<{ state: 'pending'; requestIds: readonly string[]; reason: AllocationReason }>
@@ -90,8 +95,8 @@ export type GoalResourceDemand = Readonly<{
 }>;
 export type GoalFactEffect = Readonly<{ fact: GoalFact; operation: 'establish' | 'invalidate'; at: GoalEventTime }>;
 export type GoalActionKind = 'assemble' | 'transport-force' | 'transport-worker' | 'position-transport'
-  | 'clear-camp' | 'clear-shore' | 'choose-landing' | 'defend' | 'evacuate'
-  | 'train' | 'build' | 'wait-income' | 'expand-land' | 'attack-site' | 'contest-route' | 'end-harassment';
+  | 'clear-camp' | 'clear-shore' | 'defend' | 'evacuate'
+  | 'train' | 'build' | 'wait-income' | 'destroy-target' | 'hold-position' | 'engage-units';
 export type GoalParameter = null | boolean | number | string | readonly GoalParameter[]
   | Readonly<{ [key: string]: GoalParameter }>;
 export type GoalExecutorBinding = Readonly<{ executor: string; parameters: Readonly<Record<string, GoalParameter>> }>;
@@ -109,10 +114,42 @@ export type GoalActionDeclaration = Readonly<{
   executor: GoalExecutorBinding; outputs: readonly string[]; reasons: readonly AllocationReason[];
 }>;
 /** Providers enumerate grounded achievers for one requested world effect.
- * The planner alone regresses their preconditions and decides their order. */
+ * The planner alone regresses their preconditions and decides their order.
+ * For a quantitative predicate, enumerate every matching positive-flow action,
+ * including partial contributors. Regression may select several actions to
+ * fill one deficit; no individual achiever must cover the entire quantity.
+ * Camp-force regresses via additive combat-rating recruitment, then validates
+ * the actual whole cohort with the shared camp evaluator after each change. */
 export type GoalActionProvider = Readonly<{
   id: string;
   actionsFor: (effect: GoalFact, context: GoalPlanningContext) => readonly GoalActionDeclaration[];
+}>;
+export type GoalCandidates<T> = Readonly<{ state: 'met'; candidates: readonly T[]; factIds: readonly string[] }>
+  | Readonly<{ state: 'pending'; requestIds: readonly string[]; reason: AllocationReason }>
+  | Readonly<{ state: 'unmet'; reason: AllocationReason }>;
+export type GoalBuildSite = Readonly<{
+  id: string; buildingKind: BuildingKind; logicalTarget: Target; at: Target;
+  worker: GoalEntityReference; route: GoalFact; walkTicks: GoalEstimate<number>;
+  /** Includes native footprint, occupancy and owner/race constraints. */
+  preconditions: readonly GoalFact[]; factIds: readonly string[];
+}>;
+export type GoalProductionOption = Readonly<{
+  id: string; buildingKind: BuildingKind; producer: GoalEntityReference; at: Target;
+  /** A missing producer is a binding whose building-complete prerequisite
+   * regresses through the generic build action, not a fake world entity. */
+  preconditions: readonly GoalFact[]; availableTick: number | null; factIds: readonly string[];
+}>;
+export type GoalTransportOption = Readonly<{
+  id: string; seaId: SeaId; from: Target; to: Target; transport: GoalEntityReference; capacity: number;
+  departure: Readonly<{ water: Target['point']; ground: Target['point']; heading: number | null }>;
+  landing: Readonly<{ water: Target['point']; ground: Target['point']; heading: number | null }>;
+  approach: GoalFact; crossing: GoalFact; shoreSafe: GoalFact;
+  duration: GoalEstimate<number>; factIds: readonly string[];
+}>;
+export type GoalGroundingReader = Readonly<{
+  buildSites: (buildingKind: BuildingKind, near: Target) => GoalCandidates<GoalBuildSite>;
+  productionOptions: (unitKind: UnitKind, near: Target) => GoalCandidates<GoalProductionOption>;
+  transportOptions: (from: Target, to: Target, capacity: number) => GoalCandidates<GoalTransportOption>;
 }>;
 export type GoalRequest = Readonly<{
   id: string; owner: PlayerId; effects: readonly GoalFact[]; rewardGold: number;
