@@ -14,6 +14,8 @@ import { checkPuzzlePlan } from './planner-checks';
 import { publicPuzzlePlanner } from './planner-binding';
 import { PUBLIC_PUZZLES, type PuzzleKey } from './scenes';
 import { runPublicPuzzle } from './run';
+import { serializeScopedPlan, writePuzzlePlanEvidence } from './plan-evidence';
+import type { GoalPlannerOutput } from '../goal-planner-types';
 
 const mainPassingRegressions = new Set(['ship-away/near', 'supply-tier/footmen', 'guarded-shore/weak']);
 
@@ -72,8 +74,8 @@ export function registerPublicPuzzleTests(key: PuzzleKey) {
         if (event.phase === 'strategy-planning' && !event.authorization) throw new Error(event.operation);
       }, () => withNavigationPhase('strategy-planning', () => publicPuzzlePlanner.withGoalPlannerInput({
         snapshot, owner: world.owner, version: 'v9_knight', memory,
-        // No collector or task valuation exists yet. An empty request list
-        // exercises assembly/search scope only, never a public-puzzle verdict.
+        // Explicit empty requests exercise scope only. The separate cold
+        // verdict below omits goals and uses the normal shared collector.
         goals: [],
       }, input => {
         calls++;
@@ -93,21 +95,27 @@ export function registerPublicPuzzleTests(key: PuzzleKey) {
       expect(JSON.stringify(snapshot), 'diagnostics cannot change the real cold frame').toBe(before);
     });
     const required = process.env.SKETCH_REQUIRE_GOAL_PLANNER === '1';
-    const coldReady = publicPuzzlePlanner.withInput
-      && (key !== 'navy-zero' || publicPuzzlePlanner.allocation);
     const executionReady = publicPuzzlePlanner.createExecution;
     const missing = publicPuzzlePlanner.unavailable.join('; ');
-    it.skipIf(!coldReady && !required)(`cold-frame dependency graph: real planGoals entry [${coldReady ? 'ready' : missing}]`, () => {
-      expect(coldReady, missing).toBeTruthy();
+    it('cold-frame dependency graph: real planGoals entry with the shared Objective collector', () => {
       const world = puzzle.create(), snapshot = snapshotGame(world.game), before = JSON.stringify(snapshot);
-      let calls = 0;
-      publicPuzzlePlanner.withInput!(snapshot, world.owner, input => {
-        calls++;
-        const output = publicPuzzlePlanner.planGoals(input);
-        checkPuzzlePlan(puzzle, world, { input, output, allocation: publicPuzzlePlanner.allocation?.(input, output) ?? null });
-      });
-      expect(calls, 'search and verdict must execute inside the native physical scope').toBe(1);
-      expect(JSON.stringify(snapshot), 'real planning cannot change the cold frame').toBe(before);
+      let calls = 0, scoped: string | undefined, failure: unknown;
+      try {
+        publicPuzzlePlanner.withInput(snapshot, world.owner, input => {
+          calls++;
+          let output: GoalPlannerOutput | undefined;
+          try {
+            output = publicPuzzlePlanner.planGoals(input);
+            checkPuzzlePlan(puzzle, world, { input, output, allocation: publicPuzzlePlanner.allocation?.(input, output) ?? null });
+          } finally { scoped = serializeScopedPlan(input, output); }
+        });
+        expect(calls, 'search and verdict must execute inside the native physical scope').toBe(1);
+      } catch (error) { failure = error; throw error; }
+      finally {
+        const untouched = JSON.stringify(snapshot) === before;
+        writePuzzlePlanEvidence(puzzle, snapshot, scoped, calls, untouched, failure);
+        expect(untouched, 'real planning cannot change the cold frame').toBe(true);
+      }
     });
     it.skipIf(!executionReady && !required)(`goal-planner execution through the real runtime [${executionReady ? 'ready' : missing}]`, () => {
       expect(executionReady, missing).toBeTruthy();
