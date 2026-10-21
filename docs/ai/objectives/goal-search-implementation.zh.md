@@ -11,3 +11,12 @@
 `readProjectedFact` 由共同世界事实源负责，用显式 output 引用、移动后的真实成员和原生整组评估检查未来事实。规划器不把 camp-force 线性相加，也不把 pool/post 当两份兵；没有这些共同物理事实时，不能把纯算法契约测试说成海军或陆地验收。
 
 当前通用契约测试覆盖：无序动作的依赖回归，两笔部分赏金共同填缺口，先花后挣且不透支，费用替代比较，零预算及 JSON 前沿续行，revision 缓存失效、pending 保留、future output 绑定。它们没有替代公开题的真实 source/完整动作 grounding、命令适配器或执行检查。
+
+当前世界事实入口为 `goal-world-facts.ts:createGoalFactReader(input)`。它只消费同次
+`snapshot/situation`、共享 `ports.geometry/landRoute/regionAt` 和可选域 resolver，
+不创建查询、队列、Situation，也不 flush 工作。`memory` 只保留有限营地身份和
+首次请求 tick；`allowedUnitIds` 缺省与空数组严格区分。实际兵池、post 到岗、精确
+成员、在船身份、载荷质量各自读取；未见过的营地 ID 不能证明已经清营。
+此提交是 composing reader 的当前世界部分；未来 output 投影、完整安全证明、海上
+出生出口及原生 walk-destination fallback 尚待接入。它们的缺口保留结构化 pending，
+不把此阶段的端口测试或 export 存在当作公开题的输入装配/执行通过。

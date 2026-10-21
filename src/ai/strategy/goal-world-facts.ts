@@ -1,0 +1,164 @@
+import { unitMover } from '../../shared/catalog';
+import { bodyMass } from '../../shared/physical-body';
+import { shipProfile } from '../../shared/ship-geometry';
+import { SIM_TICKS_PER_SECOND } from '../../shared/time';
+import { isTransportKind } from '../../shared/transport-role';
+import type { Unit } from '../../shared/types';
+import { effectiveCombatRating } from '../policy/v6/strength';
+import { neutralCampExposure } from '../situation/neutral-camp-exposure';
+import { assessAllocatedForce } from './allocated-force';
+import type { AllocationLandRouteReader } from './allocation-arrival-query';
+import { ASSEMBLY_RANGE } from './assembly-posts';
+import { readGoalEconomicFact, type GoalEconomicFactPorts } from './goal-economy-facts';
+import { goalCampId, goalCampMemberIds, goalValueKey, resolveGoalCamp } from './goal-facts';
+import { observationJsonBytes } from './observation-json-bytes';
+import type { GoalFact, GoalFactObservation, GoalFactReader, GoalPlanningContext } from './goal-planner-types';
+import type { Point } from './types';
+
+/** Evidence identities only. No snapshots, entities, query functions or
+ * simulated outputs are retained. Losing an entry loses proof, never invents it. */
+export type GoalWorldFactMemory = {
+  version: 1; owner: string;
+  camps: string[];
+  requests: { id: string; requestedTick: number }[];
+};
+export type GoalWorldFactPorts = GoalEconomicFactPorts & Readonly<{
+  landRoute: AllocationLandRouteReader;
+  seaRoute?: (fact: Extract<GoalFact['predicate'], { kind: 'route' }>, actor: Unit) => GoalFactObservation;
+  /** Domain resolvers consume these same published readers. They do not
+   * construct another Situation, navigation query or work allowance. */
+  resolvers?: readonly ((fact: GoalFact, context: GoalPlanningContext) => GoalFactObservation | null)[];
+}>;
+export type GoalWorldFactInput = Omit<GoalPlanningContext, 'readFact' | 'readProjectedFact'> & Readonly<{
+  ports: GoalWorldFactPorts; memory: GoalWorldFactMemory;
+  allowedUnitIds?: readonly string[]; interruptedUnitIds?: readonly string[];
+}>;
+
+export function createGoalWorldFactMemory(owner: string): GoalWorldFactMemory {
+  return { version: 1, owner, camps: [], requests: [] };
+}
+const order = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;
+const gap = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y);
+const unitRevision = (unit: Unit) => [unit.id, unit.owner, unit.kind, unit.hp, unit.maxHp, unit.x, unit.y,
+  unit.attackDamage, unit.attackCooldown, unit.attackRange, unit.speed, unit.level, unit.expiresTick,
+  unit.deck, unit.cabin, unit.sailing?.heading];
+
+/** The composing reader for one immutable owner-think snapshot. Geometry and
+ * routing are injected from that think's existing query/6144 queue; reading a
+ * fact never flushes work or falls back to native route selection. */
+export function createGoalFactReader(input: GoalWorldFactInput): GoalFactReader {
+  const { snapshot, owner, tick, ports, memory } = input;
+  if (memory.version !== 1 || memory.owner !== owner) throw Error('Goal fact memory owner mismatch');
+  const available = input.allowedUnitIds === undefined ? null : new Set(input.allowedUnitIds);
+  const interrupted = new Set(input.interruptedUnitIds ?? []);
+  const own = snapshot.units.filter(unit => unit.owner === owner && unit.hp > 0 && unit.expiresTick === undefined
+    && (!available || available.has(unit.id)) && !interrupted.has(unit.id)).sort((a, b) => order(a.id, b.id));
+  const camps = neutralCampExposure(snapshot);
+  for (const camp of camps.camps) {
+    const id = goalCampId(camp.memberIds);
+    if (!memory.camps.includes(id)) memory.camps.push(id);
+  }
+  while (memory.camps.length > 64 || observationJsonBytes(memory) > 16 * 1024 && memory.camps.length) memory.camps.shift();
+  const context: GoalPlanningContext = { ...input, readFact: fact => read(fact) };
+  const memo = new Map<string, GoalFactObservation>();
+  const answer = (fact: GoalFact, met: boolean, code: string, dependencies: unknown,
+    extra: Partial<GoalFactObservation> = {}): GoalFactObservation => ({ fact, state: met ? 'met' : 'unmet',
+    observedTick: tick, revision: goalValueKey([fact.id, code, dependencies]), evidence: [],
+    reason: { code, factIds: [fact.id], values: {} }, ...extra } as GoalFactObservation);
+  const pending = (fact: GoalFact, code: string, dependencies: unknown): GoalFactObservation => {
+    let request = memory.requests.find(request => request.id === fact.id);
+    if (!request) { request = { id: fact.id, requestedTick: tick }; memory.requests.push(request); }
+    while (memory.requests.length > 64 || observationJsonBytes(memory) > 16 * 1024) {
+      if (memory.requests.length) memory.requests.shift(); else if (memory.camps.length) memory.camps.shift(); else break;
+    }
+    return { fact, state: 'pending', observedTick: tick, requestId: `world:${fact.id}`, requestedTick: request.requestedTick,
+      revision: goalValueKey([fact.id, code, dependencies]), reason: { code, factIds: [fact.id], values: {} }, evidence: [] };
+  };
+  const atRegion = (unit: Unit, at: Extract<GoalFact['predicate'], { kind: 'unit-available' }>['at'], mover: 'land' | 'sea') => {
+    const actual = ports.regionAt(unit, mover), target = mover === 'land' ? at.landId : at.seaId;
+    return !!actual && actual === (target ?? ports.regionAt(at.point, mover));
+  };
+  const passenger = (unit: Unit) => unit.deck?.shipId ?? unit.cabin?.shipId;
+  function measure(fact: GoalFact): GoalFactObservation | null {
+    const p = fact.predicate;
+    if (p.kind === 'route') {
+      const actor = p.actor?.kind === 'existing' ? own.find(unit => p.actor?.kind === 'existing' && unit.id === p.actor.entityId) : undefined;
+      if (p.actor && !actor) return answer(fact, false, 'route-actor-not-available', p.actor);
+      if (p.mover === 'sea') return actor && ports.seaRoute ? ports.seaRoute(p, actor)
+        : pending(fact, 'goal-sea-route-port-required', [p, actor && unitRevision(actor)]);
+      const a = p.from.landId ?? ports.regionAt(p.from.point, 'land'), b = p.to.landId ?? ports.regionAt(p.to.point, 'land');
+      if (!a || !b || a !== b) return answer(fact, false, 'route-land-components-differ', [a, b]);
+      const route = ports.landRoute(p.from.point, p.to.point);
+      if (route.status !== 'known') return route.status === 'unknown'
+        ? pending(fact, route.reasonCode, [p, ports.geometryRevision])
+        : answer(fact, false, route.reasonCode, [p, ports.geometryRevision]);
+      return answer(fact, true, 'shared-land-route-published', [p, ports.geometryRevision, route.distance, actor?.speed], {
+        route: { distance: route.distance, ticks: actor ? actor.speed > 0 ? Math.ceil(route.distance / actor.speed * SIM_TICKS_PER_SECOND) : null : null,
+          points: route.points }, availableTick: tick,
+      });
+    }
+    if (p.kind === 'camp-cleared') {
+      if (!memory.camps.includes(p.campId)) return answer(fact, false, 'camp-identity-unobserved', p.campId);
+      const members = goalCampMemberIds(p.campId)!;
+      const live = snapshot.units.filter(unit => members.includes(unit.id) && unit.owner === 'neutral' && unit.hp > 0);
+      return answer(fact, live.length === 0, live.length ? 'native-camp-present' : 'recorded-camp-members-cleared', live.map(unitRevision),
+        { entityIds: live.map(unit => unit.id), ...(live.length ? {} : { availableTick: tick }) });
+    }
+    if (p.kind === 'force-at' || p.kind === 'force-available') {
+      const refs = p.cohort, requested = new Set(refs?.flatMap(ref => ref.kind === 'existing' ? [ref.entityId] : []) ?? []);
+      const eligible = own.filter(unit => !passenger(unit) && unit.kind !== 'worker' && unit.attackDamage > 0 && unitMover(unit.kind) === 'land');
+      const units = eligible.filter(unit => (!refs || requested.has(unit.id)) && atRegion(unit, p.at, 'land')
+        && (p.kind === 'force-available' || gap(unit, p.at.point) <= ASSEMBLY_RANGE));
+      const exact = !refs || refs.every(ref => ref.kind === 'existing' && units.some(unit => unit.id === ref.entityId));
+      let quantity: number;
+      if (p.metric === 'combat-rating') quantity = units.reduce((sum, unit) => sum + effectiveCombatRating(snapshot, unit), 0);
+      else {
+        if (!memory.camps.includes(p.campId)) return answer(fact, false, 'camp-identity-unobserved', p.campId);
+        const target = resolveGoalCamp(snapshot, p.campId);
+        if (target.status !== 'present') return answer(fact, false, 'camp-force-target-not-present', target.status);
+        quantity = assessAllocatedForce(owner, units, { metric: 'camp-force', camp: target.exposure.camp }).force;
+      }
+      return answer(fact, exact && quantity + 1e-9 >= p.minimum && p.byTick >= tick, exact ? 'native-selected-force' : 'selected-cohort-not-at-location',
+        [units.map(unitRevision), p.metric === 'camp-force' ? camps.camps.map(camp => camp.camp.creeps.map(unitRevision)) : null,
+          input.allowedUnitIds, input.interruptedUnitIds], { quantity, entityIds: units.map(unit => unit.id), availableTick: tick });
+    }
+    if (p.kind === 'unit-available' || p.kind === 'worker-at') {
+      const mover = p.kind === 'unit-available' ? unitMover(p.unitKind) : 'land';
+      const units = own.filter(unit => !passenger(unit) && unit.kind === (p.kind === 'worker-at' ? 'worker' : p.unitKind)
+        && atRegion(unit, p.at, mover) && (p.kind !== 'worker-at' || !p.worker || p.worker.kind === 'existing' && unit.id === p.worker.entityId));
+      return answer(fact, units.length >= p.count && p.byTick >= tick, 'native-callable-region-pool',
+        [units.map(unitRevision), input.allowedUnitIds, input.interruptedUnitIds], { quantity: units.length, entityIds: units.map(unit => unit.id), availableTick: tick });
+    }
+    if (p.kind === 'cargo-aboard') {
+      const hull = p.transport.kind === 'existing' ? own.find(unit => p.transport.kind === 'existing' && unit.id === p.transport.entityId && isTransportKind(unit.kind)) : undefined;
+      const units = p.units.flatMap(ref => ref.kind === 'existing' ? own.filter(unit => unit.id === ref.entityId && passenger(unit) === hull?.id) : []);
+      return answer(fact, !!hull && units.length === p.units.length, 'native-exact-cargo-binding', [hull && unitRevision(hull), units.map(unitRevision)],
+        { entityIds: units.map(unit => unit.id), availableTick: tick });
+    }
+    if (p.kind === 'transport-at') {
+      const hull = p.transport.kind === 'existing' ? own.find(unit => p.transport.kind === 'existing' && unit.id === p.transport.entityId && isTransportKind(unit.kind)) : undefined;
+      return answer(fact, !!hull && gap(hull, p.at.point) <= p.tolerance && atRegion(hull, p.at, 'sea') && p.byTick >= tick,
+        'native-transport-pose', hull && unitRevision(hull), { entityIds: hull ? [hull.id] : [], availableTick: tick });
+    }
+    if (p.kind === 'transport-in') {
+      const hulls = own.filter(unit => isTransportKind(unit.kind) && ports.regionAt(unit, 'sea') === p.seaId
+        && (!p.transport || p.transport.kind === 'existing' && unit.id === p.transport.entityId));
+      const amounts = hulls.map(hull => Math.max(0, (shipProfile(hull)?.loadCapacity ?? 0) - snapshot.units
+        .filter(unit => unit.hp > 0 && passenger(unit) === hull.id).reduce((sum, unit) => sum + bodyMass(unit), 0)));
+      const quantity = amounts.reduce((sum, mass) => sum + mass, 0);
+      return answer(fact, quantity >= p.capacity && p.byTick >= tick, 'native-free-payload-mass',
+        [hulls.map(unitRevision), snapshot.units.filter(passenger).map(unitRevision), amounts],
+        { quantity, entityIds: hulls.map(unit => unit.id), availableTick: tick });
+    }
+    return null;
+  }
+  function read(fact: GoalFact): GoalFactObservation {
+    const previous = memo.get(fact.id);
+    if (previous) return previous;
+    const value = readGoalEconomicFact(fact, context, ports) ?? measure(fact)
+      ?? ports.resolvers?.map(resolve => resolve(fact, context)).find((value): value is GoalFactObservation => !!value)
+      ?? pending(fact, 'goal-world-domain-port-required', fact.predicate);
+    memo.set(fact.id, value); return value;
+  }
+  return read;
+}
