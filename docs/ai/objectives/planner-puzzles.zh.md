@@ -111,3 +111,7 @@
 
 7 道题、11 个变体的可复用真实场景、执行方法、现役 main AI 行为与证据见
 [公开残局场景与 main 基线](public-puzzles-baseline/report.zh.md)。11个计划判法已接正式入口，冻结世界、沿用memory，最多20次think；[f27领域装配首末与缺口](public-puzzles-baseline/domain-f27.zh.md)记录新的真实候选、安全事实及仍0/11通过的结果；[5ca缓存对拍](public-puzzles-baseline/geometry-capacity.zh.md)与[a0原片](public-puzzles-baseline/frozen-thinks-a0db.zh.md)保留各自来源。11个执行判法已在[8934正式owner入口](public-puzzles-baseline/execution-8934.zh.md)开启并跑完，0/11通过；物理达标、正式发令、人工解和构造器分别报告。
+
+[324题1两变体完整记录](public-puzzles-baseline/ship-324670da.zh.md)保留1120次原think：新结构K20均通过，
+旧执行判法2/2，但两座厅均由v6Economy建造，因此19:34逐步骤归属判法为0/2。清营和运工的原生证明、旧经济400付款、
+每次6144服务账本及新判法代码检查分开保存；没有重写旧轮或把合同测试当公开题通过。
