@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs';
 import type { SdkGameCommandPlanner } from '../../../sdk/game-runner';
 import type { GameSnapshot, PlayerId } from '../../../shared/types';
+import type { AiPolicyMemory } from '../../memory';
 import type { GoalPlannerInput, GoalPlannerOutput } from '../goal-planner-types';
 import { planGoals } from '../goal-planner';
 import { createGoalFactReader } from '../goal-world-facts';
@@ -13,7 +14,8 @@ export type PlanGoals = typeof planGoals;
 /** Only a native owner-think assembly may implement this port. It must use
  * createGoalFactReader and the ordinary collectors/providers/FactWorkQueue,
  * never a scene key, expected landing, authored observation or witness. */
-export type NativePuzzleInputScope = <T>(snapshot: GameSnapshot, owner: PlayerId, run: (input: GoalPlannerInput) => T) => T;
+export type NativePuzzleInputScope = <T>(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory,
+  run: (input: GoalPlannerInput) => T) => T;
 export type PuzzlePlannerExecution = {
   commandPlanner: SdkGameCommandPlanner;
   /** Actual same-think records from the goal-planner/allocator boundary. */
