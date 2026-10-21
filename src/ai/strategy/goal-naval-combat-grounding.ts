@@ -13,7 +13,7 @@ import { defenseGatherPost } from './executors/defend-site';
 import type { GoalNativeGroundReader } from './goal-boarding-geometry';
 import { goalCampId, goalFact, goalValueKey, resolveGoalCamp } from './goal-facts';
 import { assessGoalCampCombatOption, assessGoalDefenseCombatOption, type GoalMovementRisk } from './goal-naval-assessment';
-import type { GoalCandidates, GoalCohortMember, GoalCombatOption, GoalEntityReference, GoalEstimate,
+import type { GoalCandidates, GoalCohortMember, GoalCohortOption, GoalCombatOption, GoalEntityReference, GoalEstimate,
   GoalFact, GoalFactObservation, GoalGroundingReader, GoalPlanningContext } from './goal-planner-types';
 import { strategyIsOpponent } from './ownership';
 import { landIdAt } from './regions';
@@ -27,6 +27,9 @@ export type GoalCombatMovementRequest = Readonly<{
 export type GoalNavalCombatGroundingPorts = Readonly<{
   arrival: AllocationArrivalReader; landRoute: AllocationLandRouteReader;
   resolveCohort: NonNullable<GoalGroundingReader['resolveCohort']>;
+  /** Same-source conditional landing origins. Existing actors retain their
+   * actual HP/weapons; these locations become usable only via their pool facts. */
+  cohortOptions?: GoalGroundingReader['cohortOptions'];
   movementRisk?: (request: GoalCombatMovementRequest) => GoalEstimate<GoalMovementRisk>;
   readGroundPoint?: GoalNativeGroundReader;
   /** Only potential redirect scenarios need a counterfactual response. The
@@ -109,6 +112,69 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
     return candidates.length ? { state: 'met', candidates, factIds: sorted(ids), ...(deferred.length ? { deferred } : {}) }
       : deferred.length ? pending('combat-candidate-facts-pending', deferred.flatMap(item => item.reason.factIds), deferred.flatMap(item => item.requestIds))
       : unmet('no-eligible-combat-cohort', ids);
+  }
+  function origins(effect: GoalFact): GoalCandidates<GoalCohortOption> {
+    const actual = cohorts(effect), candidates: GoalCohortOption[] = [], deferred: Deferred[] = [];
+    if (actual.state === 'met') {
+      deferred.push(...(actual.deferred ?? []));
+      for (const group of actual.candidates) {
+        const location = locations.get(group[0]!.assessment.id), id = `combat-origin:${goalValueKey(group.map(m => m.reference))}`;
+        if (location?.kind !== 'land' && location?.kind !== 'aboard' || group.some(member => {
+          const other = locations.get(member.assessment.id);
+          return location?.kind === 'land' ? other?.kind !== 'land' || other.landId !== location.landId
+            : location?.kind === 'aboard' ? other?.kind !== 'aboard' || other.shipId !== location.shipId : true;
+        })) { deferred.push({ id, requestIds: [id], reason: reason('combat-cohort-region-pending', [effect.id]) }); continue; }
+        const from: Target = location.kind === 'land' ? { landId: location.landId, point: { ...location.point } }
+          : { seaId: location.seaId, point: { ...location.point } };
+        candidates.push({ id, members: group, from, preconditions: [], availableTick: context.tick, factIds: [] });
+      }
+    } else if (actual.state === 'pending') deferred.push({ id: `combat-actual:${effect.id}`, requestIds: actual.requestIds, reason: actual.reason });
+    const projected = ports.cohortOptions?.(effect);
+    if (projected?.state === 'pending') deferred.push({ id: `combat-projected:${effect.id}`, requestIds: projected.requestIds, reason: projected.reason });
+    if (projected?.state === 'met') {
+      deferred.push(...(projected.deferred ?? []));
+      for (const option of projected.candidates) {
+        const refs = option.members.map(member => member.reference);
+        const refsKey = goalValueKey(sorted(refs.map(goalValueKey)));
+        const p = effect.predicate;
+        const requested = p.kind === 'assets-safe' ? sorted(p.unitIds).map(entityId => ({ kind: 'existing' as const, entityId }))
+          : p.kind === 'worker-at' && p.worker ? [p.worker]
+          : p.kind === 'force-at' || p.kind === 'force-available' ? p.cohort : undefined;
+        if (requested && goalValueKey(sorted(requested.map(goalValueKey))) !== refsKey) continue;
+        const poolFact = option.preconditions.find(fact => {
+          const p = fact.predicate;
+          return p.kind === 'force-available' && p.at.landId === option.from.landId
+            && p.cohort && goalValueKey(sorted(p.cohort.map(goalValueKey))) === refsKey
+            || p.kind === 'worker-at' && refs.length === 1 && p.at.landId === option.from.landId
+              && p.worker && goalValueKey(p.worker) === goalValueKey(refs[0]);
+        });
+        if (!option.from.landId || !poolFact) {
+          deferred.push({ id: option.id, requestIds: [option.id], reason: reason('combat-conditional-origin-pool-unproved', [effect.id, ...option.factIds]) }); continue;
+        }
+        const members = option.members.flatMap(member => {
+          const actor = member.reference.kind === 'existing' ? actors.get(member.reference.entityId) : undefined;
+          if (!actor || !eligible(actor) || member.assessment.kind !== actor.kind || !Number.isFinite(member.assessment.x)
+            || !Number.isFinite(member.assessment.y) || landIdAt(context.snapshot.map, member.assessment) !== option.from.landId) return [];
+          const p = effect.predicate;
+          const suitable = p.kind === 'worker-at' || p.kind === 'assets-safe' ? actor.kind === 'worker'
+            : actor.kind !== 'worker' && actor.attackDamage > 0 && (p.kind !== 'garrison-ready'
+              || !!roles.get(actor.id)?.some(role => role === 'frontline' || role === 'ranged')
+                && !roles.get(actor.id)?.some(role => role === 'caster' || role === 'healer' || role === 'worker'));
+          return suitable ? [{ reference: member.reference, assessment: { ...actor,
+            x: member.assessment.x, y: member.assessment.y, deck: undefined, cabin: undefined } }] : [];
+        });
+        if (!members.length || members.length !== option.members.length
+          || new Set(refs.map(goalValueKey)).size !== refs.length) continue;
+        candidates.push({ ...option, members });
+      }
+    }
+    return !candidates.length && !deferred.length && actual.state === 'unmet' ? actual : choices(candidates, deferred, [effect.id]);
+  }
+  function atOrigin(option: GoalCombatOption, origin: GoalCohortOption): GoalCombatOption {
+    if (!origin.preconditions.length && !origin.factIds.length) return option;
+    return { ...option, id: `${option.id}:origin:${origin.id}`,
+      preconditions: [...new Map([...option.preconditions, ...origin.preconditions].map(fact => [fact.id, fact])).values()],
+      factIds: sorted([...option.factIds, ...origin.factIds]) };
   }
   function travel(effect: GoalFact, cohort: readonly GoalCohortMember[], from: Target, target: Target, throughTick: number): GoalCombatMovementRequest {
     const routes = cohort.map(member => {
@@ -279,18 +345,16 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
     if (!['site-safe', 'assets-safe', 'force-at', 'force-available', 'worker-at', 'garrison-ready', 'camp-cleared', 'gold'].includes(p.kind)) return unmet('not-naval-combat-effect', [effect.id]);
     if (p.kind === 'camp-cleared' || p.kind === 'gold') {
       const camps = p.kind === 'camp-cleared' ? [p.campId] : neutralCampExposure(context.snapshot).camps.map(camp => goalCampId(camp.memberIds)).sort();
-      const groups = cohorts(effect); if (groups.state !== 'met') return groups;
+      const groups = origins(effect); if (groups.state !== 'met') return groups;
       const result: GoalCombatOption[] = [], deferred: Deferred[] = [...(groups.deferred ?? [])];
-      for (const campId of camps) for (const group of groups.candidates) {
-        const location = locations.get(group[0]!.assessment.id), id = `combat-camp:${goalValueKey([campId, group.map(m => m.reference)])}`;
-        if (location?.kind !== 'land' || group.some(member => {
-          const other = locations.get(member.assessment.id); return other?.kind !== 'land' || other.landId !== location.landId;
-        })) {
+      for (const campId of camps) for (const origin of groups.candidates) {
+        const group = origin.members, id = `combat-camp:${goalValueKey([campId, group.map(m => m.reference)])}${origin.preconditions.length ? `:${origin.id}` : ''}`;
+        if (!origin.from.landId) {
           deferred.push({ id, requestIds: [id], reason: reason('combat-camp-land-origin-pending', [effect.id, campId]) }); continue;
         }
-        const from: Target = { landId: location.landId, point: location.point };
+        const from = origin.from;
         const answer = clearCamp(effect, group, from, campId, 'byTick' in p ? p.byTick : context.tick + context.situation.horizonTicks);
-        if (answer.state === 'met') { result.push(...answer.candidates); deferred.push(...(answer.deferred ?? [])); }
+        if (answer.state === 'met') { result.push(...answer.candidates.map(option => atOrigin(option, origin))); deferred.push(...(answer.deferred ?? [])); }
         else if (answer.state === 'pending') deferred.push({ id, requestIds: answer.requestIds, reason: answer.reason });
       }
       return choices(result, deferred, [effect.id, ...camps]);
@@ -298,18 +362,11 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
     const target = p.kind === 'site-safe' ? p.site : 'at' in p ? p.at : undefined;
     if (!target?.landId) return pending('combat-target-region-pending', [effect.id]);
     const throughTick = 'throughTick' in p ? p.throughTick : 'byTick' in p ? p.byTick : context.tick + context.situation.horizonTicks;
-    const groups = cohorts(effect); if (groups.state !== 'met') return groups;
+    const groups = origins(effect); if (groups.state !== 'met') return groups;
     const result: GoalCombatOption[] = [], deferred: Deferred[] = [...(groups.deferred ?? [])];
     let rejected: Extract<GoalCandidates<never>, { state: 'unmet' }> | undefined;
-    for (const group of groups.candidates) {
-      const location = locations.get(group[0]!.assessment.id), id = `combat-location:${goalValueKey(group.map(m => m.reference))}`;
-      if (location?.kind !== 'land' && location?.kind !== 'aboard' || group.some(member => {
-        const other = locations.get(member.assessment.id);
-        return location?.kind === 'land' ? other?.kind !== 'land' || other.landId !== location.landId
-          : location?.kind === 'aboard' ? other?.kind !== 'aboard' || other.shipId !== location.shipId : true;
-      })) { deferred.push({ id, requestIds: [id], reason: reason('combat-cohort-region-pending', [effect.id]) }); continue; }
-      const from: Target = location.kind === 'land' ? { landId: location.landId, point: { ...location.point } }
-        : { seaId: location.seaId, point: { ...location.point } };
+    for (const origin of groups.candidates) {
+      const group = origin.members, id = `combat-location:${goalValueKey(group.map(m => m.reference))}${origin.preconditions.length ? `:${origin.id}` : ''}`, from = origin.from;
       if (from.landId !== target.landId) {
         if (p.kind === 'force-available' || p.kind === 'worker-at') {
           // A manifest is an input to transport grounding, not a priced land
@@ -324,11 +381,11 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
       }
       if (p.kind === 'site-safe' || p.kind === 'garrison-ready') {
         const assessed = p.kind === 'garrison-ready' ? garrison(effect, group, from, target, throughTick) : defense(effect, group, from, target, throughTick);
-        if (assessed.state === 'met') { result.push(...assessed.candidates); deferred.push(...(assessed.deferred ?? [])); }
+        if (assessed.state === 'met') { result.push(...assessed.candidates.map(option => atOrigin(option, origin))); deferred.push(...(assessed.deferred ?? [])); }
         else if (assessed.state === 'pending') deferred.push({ id, requestIds: assessed.requestIds, reason: assessed.reason });
         else rejected ??= assessed;
       } else {
-        const option = movingOption(travel(effect, group, from, target, throughTick));
+        const option = atOrigin(movingOption(travel(effect, group, from, target, throughTick)), origin);
         if ((p.kind === 'force-at' || p.kind === 'force-available') && p.metric === 'camp-force') {
           const camp = resolveGoalCamp(context.snapshot, p.campId);
           if (camp.status !== 'present') { rejected ??= unmet('combat-camp-binding-invalid', [p.campId]); continue; }
