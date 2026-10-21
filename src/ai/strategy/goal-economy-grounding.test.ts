@@ -96,9 +96,8 @@ describe('shared-budget economic grounding with native placements', () => {
       const result = forbidRouting(() => createGoalEconomicGrounding(context(snapshot), ports(snapshot, geometry)).buildSites('farm', near));
       forbidRouting(() => work.flush());
       if (tick === 15) {
-        expect(result.state).toBe('met');
-        if (result.state !== 'met') throw Error('No sites');
-        expect(result.candidates[0]).toMatchObject({ worker: { kind: 'binding' }, walkTicks: { state: 'pending', reason: { code: 'build-worker-binding-pending' } } });
+        expect(result).toMatchObject({ state: 'pending', reason: { code: 'build-worker-pool-pending' } });
+        expect(JSON.stringify(result)).not.toContain('worker:land:');
       }
     }
   });
