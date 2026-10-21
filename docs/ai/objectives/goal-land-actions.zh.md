@@ -8,11 +8,11 @@
 
 | 动作 | 前置 | 数量流与时长 |
 | --- | --- | --- |
-| 训练(兵种、数量、生产者) | 本种族原生生产边、可用生产通道、金币、人口档位、空余人口、合法出生出口 | start 扣目录金币并预占人口；finish 加真实兵种池及 native combatRating。船的载荷质量由 native shipProfile 给出，属于同一 symbolic hull output。工时用原生 trainTime。 |
+| 训练(兵种、数量、生产者) | 本种族原生生产边、可用生产通道、金币、人口档位、空余人口、合法出生出口 | start 扣目录金币并预占人口；finish 加真实兵种池及 native combatRating。船的载荷质量由 native shipProfile 给出，贡献海域聚合容量；不声明具名 hull output。工时用原生 trainTime。 |
 | 建造(建筑种类、精确地点、工人) | 本种族原生建造许可、共享精确建址、目标陆块工人池、所选工人到工地的独立路线、金币 | start 预留本金并使建址不再空闲；finish 建筑完工并产生容量、同一生产者的原生 production 能力。时长是共享 walk ETA 加剩余工时。已存在的未完基础只续建，不重复付款。 |
 | 等收入(金额、期限) | 同一次思考的结构化收入预测 | 只产生当前未预留现金之外的增量。窗内收入不足整个缺口时仍可贡献已知部分，由规划器与赏金等其他正流合算；不建立尚未凑够的金币事实。 |
 
-训练只产出符号槽位（例如 `unit-0`），未来生产者引用也是 output/binding；评估副本的 ID 不进入真实 entityIds、lease 或出生证据。船的载荷以原生质量计，不能把容量数当作乘客人数。
+训练只产出区域兵种池的数量流，不产生 unit 实体 output、出生 ID 证明或实体控制额度。后续动作由分配器从实际池子中选成员并租用。未来生产者建筑仍可用 output/binding；评估副本的 ID 不进入真实 entityIds、lease 或执行参数。船的载荷以原生质量计，不能把容量数当作乘客人数。
 
 `worker-at` 表示同陆块可调用池；它不能证明工人已经站到工地。共享 route 尚未公布时，建造 duration 保留 pending。跨岛工人要由运工人动作建立目标陆块工人池。
 
@@ -70,7 +70,7 @@
 
 ## 验证范围
 
-`goalEconomyExecutors` 与 `goalLandExecutors` 独立导出注册表，沿用 `StrategyExecutor`、`ActionGrant`、feedback 和公共命令闸口。`goal-action` 的参数须由中心解析成 existing 引用；共用解码器拒绝 output/binding 和裸字符串冒充实体。训练只用指定 queue 和资金，逐真实 job 串行跟踪；出生只提议携带 command/producer/job 的 `goalOutputs`，中心验证之前不发布绑定。多成员训练须收到 `goalOutputBindings[output]` 的真实 ID 确认才发下一 job。未提交新命令的既有已付地基沿 existing 效果，不再声明新产物。
+`goalEconomyExecutors` 与 `goalLandExecutors` 独立导出注册表，沿用 `StrategyExecutor`、`ActionGrant`、feedback 和公共命令闸口。`goal-action` 的参数须由中心解析成 existing 引用；共用解码器拒绝 output/binding 和裸字符串冒充实体。训练只用指定 queue 和资金，逐真实 job 串行跟踪；通过本 think 的 `goalTraining` 核同 command/producer/job/兵种的数量状态，fulfilled 且 creditedQuantity=1 才计完成。cancelled 明确失败并撤掉这笔预期，pending 不借当前池中现兵猜兑付。没有训练 `goalOutputs` 或实体 ACK，建筑仍保留精确地基绑定。中心自行核自然完成候选、取消连续性和实际同区域池增量，本 adapter 不实现第二份数量账本。未提交新命令的既有已付地基沿 existing 效果，不再声明新产物。
 
 建造只用精确 site、approach 与获配工人；同共享路线未发布时 pending，施工/付款/完工依据原生地基与接纳前 baseline。等收入只读本 think 注入的 `goalFacts(gold)`，不以 gross cash、预测收入或其他目标的预算代替 free gold。陆地三个 executor 只命令声明中的真实 grant cohort；守点要求已在 post，持续到 throughTick，首次到期后才启动不能补造过去控制；进攻不改目标，驱赶只攻击能力事实里具名的威胁。它们不创建策略入口、导航队列或新 grant，也不把独立命令链测试称为完整 owner-think 执行验收。
 

@@ -11,90 +11,76 @@ import type { GoalOutputReceipt } from '../goal-execution-types';
 const capital = (input: ExecutorInput, amount: number) => input.grant.budgets.find(budget => budget.objectiveId === input.objective.id
   && budget.methodId === input.method.id && sameAction(budget.action, input.execution.token) && budget.state === 'reserved'
   && budget.amountGold - budget.paidGold >= amount);
-type TrainingSlot = { output: string; commandId: string; jobId: string; observedTick: number; remaining: number; entityId: string | null };
-function trainingSlots(input: ExecutorInput): TrainingSlot[] | null {
-  const value = input.execution.state.goalTrainingSlots;
+type TrainingJob = { commandId: string; jobId: string };
+function trainingJobs(input: ExecutorInput): TrainingJob[] | null {
+  const value = input.execution.state.goalTrainingJobs;
   if (value === undefined) return [];
-  if (!Array.isArray(value)) return null;
-  const slots: TrainingSlot[] = [];
+  if (!Array.isArray(value) || value.length > 64) return null;
+  const jobs: TrainingJob[] = [];
   for (const item of value) {
-    const slot = goalRecord(item);
-    if (!slot || typeof slot.output !== 'string' || typeof slot.commandId !== 'string' || typeof slot.jobId !== 'string'
-      || typeof slot.observedTick !== 'number' || !Number.isFinite(slot.observedTick) || typeof slot.remaining !== 'number'
-      || !Number.isFinite(slot.remaining) || slot.remaining < 0 || slot.entityId !== null && typeof slot.entityId !== 'string') return null;
-    slots.push({ output: slot.output, commandId: slot.commandId, jobId: slot.jobId, observedTick: slot.observedTick,
-      remaining: slot.remaining, entityId: slot.entityId });
+    const job = goalRecord(item);
+    if (!job || typeof job.commandId !== 'string' || typeof job.jobId !== 'string') return null;
+    jobs.push({ commandId: job.commandId, jobId: job.jobId });
   }
-  return slots;
+  return new Set(jobs.map(job => job.commandId)).size === jobs.length
+    && new Set(jobs.map(job => job.jobId)).size === jobs.length ? jobs : null;
 }
 
-/** One queue, native job and observed output at a time. Births are proposals;
- * the central lifecycle must validate them before publishing bindings. */
+/** Training settles quantities through the central job/pool reader. It never
+ * chooses a born entity, publishes an output binding or waits for unit ACKs. */
 export const goalTrainExecutor: StrategyExecutor = {
   id: 'goal.train',
   execute(input) {
     const intent = goalActionIntent(input, 'train');
     if (!intent) return blockedExecutor(input, 'invalid-goal-training-grant');
     const p = intent.parameters, producerId = goalEntityId(p.producer), count = p.count;
-    if (!producerId || typeof p.unitKind !== 'string' || !(p.unitKind in UNIT_DEFS) || typeof count !== 'number'
-      || !Number.isSafeInteger(count) || count < 1 || count > 64 || intent.outputs.length !== count
-      || new Set(intent.outputs).size !== count) return blockedExecutor(input, 'goal-training-parameters-unresolved');
+    if (!producerId || typeof p.unitKind !== 'string' || !Object.hasOwn(UNIT_DEFS, p.unitKind) || typeof count !== 'number'
+      || !Number.isSafeInteger(count) || count < 1 || count > 64 || intent.outputs.length)
+      return blockedExecutor(input, 'goal-training-parameters-unresolved');
     const kind = p.unitKind as TrainableUnitKind, rules = UNIT_DEFS[kind];
+    if (!input.goalTraining) return blockedExecutor(input, 'goal-training-pool-reader-pending');
     if (!goalHasLease(input, `queue:${producerId}`)) return blockedExecutor(input, 'goal-training-queue-not-granted');
     const producer = input.snapshot.buildings.find(building => building.id === producerId && building.owner === input.owner && building.hp > 0 && building.complete);
     const player = input.snapshot.players[input.owner];
     if (!producer || !player || !canTrainAt(player.race, producer.kind, kind)) return blockedExecutor(input, 'goal-training-producer-unavailable');
-    const slots = trainingSlots(input);
-    if (!slots || slots.some((slot, index) => slot.output !== intent.outputs[index]) || slots.length > count)
-      return blockedExecutor(input, 'goal-training-state-invalid');
-    const base = executorFeedback(input), own = input.snapshot.units.filter(unit => unit.owner === input.owner && unit.kind === kind && unit.hp > 0);
-    const saved = input.execution.state.goalTrainingKnownIds;
-    const knownIds = Array.isArray(saved) && saved.every(id => typeof id === 'string') ? saved as string[] : own.map(unit => unit.id);
-    const outputs = (): GoalOutputReceipt[] => slots.flatMap(slot => slot.entityId ? [{ output: slot.output, entityId: slot.entityId,
-      observedTick: input.snapshot.tick, proof: { kind: 'birth', acceptedCommandId: slot.commandId, producerId, jobId: slot.jobId } }] : []);
-    const state = () => ({ ...input.execution.state, goalTrainingSlots: slots, goalTrainingKnownIds: knownIds });
-    const current = slots.at(-1);
-    if (current && !current.entityId) {
-      const job = producer.queue.find(job => 'unitKind' in job && job.id === current.jobId && job.unitKind === kind);
-      if (job) {
-        if (job.remaining > current.remaining || job.remaining < Math.max(0, current.remaining - (input.snapshot.tick - current.observedTick)))
-          return blockedExecutor(input, 'goal-training-job-continuity-mismatch');
-        current.remaining = job.remaining; current.observedTick = input.snapshot.tick;
-        return { ...base, state: state(), status: 'active', phase: 'training', goalOutputs: outputs() };
-      }
-      if (input.snapshot.tick - current.observedTick < current.remaining)
-        return blockedExecutor(input, 'goal-training-job-ended-early');
-      const born = own.filter(unit => !knownIds.includes(unit.id) && !slots.some(slot => slot.entityId === unit.id));
-      if (born.length !== 1) return blockedExecutor(input, born.length ? 'goal-training-birth-ambiguous' : 'goal-training-birth-not-observed');
-      current.entityId = born[0]!.id;
-    }
-    const bindings = goalRecord(input.execution.state.goalOutputBindings);
-    if (slots.length === count && slots.every(slot => slot.entityId)) return { ...base, state: state(), status: 'complete',
-      phase: 'native-birth-proposed', goalOutputs: outputs() };
-    if (current?.entityId && bindings?.[current.output] !== current.entityId)
-      return { ...base, state: state(), status: 'active', phase: 'await-output-validation', goalOutputs: outputs() };
-    const accepted = goalAcceptedCommands(input).filter(command => command.command.type === 'train'
-      && command.command.buildingId === producerId && command.command.unitKind === kind && !slots.some(slot => slot.commandId === command.id));
-    if (accepted.length > 1) return blockedExecutor(input, 'goal-training-command-ambiguous');
-    const command = accepted[0];
-    if (command) {
+    const jobs = trainingJobs(input);
+    if (!jobs || jobs.length > count) return blockedExecutor(input, 'goal-training-state-invalid');
+    const base = executorFeedback(input), commands = goalAcceptedCommands(input).filter(command => command.command.type === 'train'
+      && command.command.buildingId === producerId && command.command.unitKind === kind);
+    if (commands.length > count || jobs.some(job => !commands.some(command => command.id === job.commandId)))
+      return blockedExecutor(input, 'goal-training-command-binding-invalid');
+    const payments: NonNullable<ExecutorFeedback['payments']>[number][] = [];
+    for (const command of commands.filter(command => !jobs.some(job => job.commandId === command.id))) {
       const before = command.worldBefore;
       if (before?.kind !== 'production' || before.buildingId !== producerId)
         return blockedExecutor(input, 'goal-training-command-baseline-required');
-      const jobs = producer.queue.filter(job => 'unitKind' in job && job.unitKind === kind && job.id && !before.jobs.some(old => old.id === job.id));
-      if (jobs.length !== 1) return blockedExecutor(input, 'goal-training-job-not-uniquely-observed');
-      const job = jobs[0]!, budget = capital(input, rules.cost);
-      slots.push({ output: intent.outputs[slots.length]!, commandId: command.id, jobId: job.id!, observedTick: input.snapshot.tick,
-        remaining: job.remaining, entityId: null });
-      return { ...base, state: state(), status: 'active', phase: 'training', goalOutputs: outputs(),
-        payments: budget ? [{ budgetId: budget.id, amountGold: rules.cost, proof: { kind: 'production', buildingId: producerId,
-          jobId: job.id!, acceptedCommandId: command.id, unitKind: kind, queueIndex: producer.queue.indexOf(job) } }] : [] };
+      const native = producer.queue.filter(job => 'unitKind' in job && job.unitKind === kind && job.id
+        && !before.jobs.some(old => old.id === job.id) && !jobs.some(old => old.jobId === job.id));
+      if (native.length !== 1) return blockedExecutor(input, 'goal-training-job-not-uniquely-observed');
+      const job = native[0]!, budget = capital(input, rules.cost);
+      jobs.push({ commandId: command.id, jobId: job.id! });
+      if (budget) payments.push({ budgetId: budget.id, amountGold: rules.cost, proof: { kind: 'production', buildingId: producerId,
+        jobId: job.id!, acceptedCommandId: command.id, unitKind: kind, queueIndex: producer.queue.indexOf(job) } });
     }
-    if (producer.queue.length) return blockedExecutor(input, 'goal-training-queue-occupied');
-    if (!capital(input, rules.cost)) return blockedExecutor(input, 'goal-training-capital-not-granted');
+    const state = { ...input.execution.state, goalTrainingJobs: jobs };
+    let fulfilled = 0, waiting = false;
+    for (const job of jobs) {
+      const query = { acceptedCommandId: job.commandId, producerId, jobId: job.jobId, unitKind: kind };
+      const actual = input.goalTraining(query);
+      if (actual.observedTick !== input.snapshot.tick || actual.acceptedCommandId !== query.acceptedCommandId
+        || actual.producerId !== producerId || actual.jobId !== job.jobId || actual.unitKind !== kind)
+        return { ...blockedExecutor(input, 'goal-training-pool-observation-pending'), state, payments };
+      if (actual.state === 'cancelled') return { ...blockedExecutor(input, 'goal-training-job-cancelled'), state, payments, status: 'failed' };
+      if (actual.state === 'fulfilled' && actual.creditedQuantity === 1) fulfilled++;
+      else waiting = true;
+    }
+    if (fulfilled === count) return { ...base, state, payments, status: 'complete', phase: 'training-pool-quantity-fulfilled' };
+    if (waiting) return { ...base, state, payments, status: 'active', phase: 'await-training-pool-credit' };
+    if (producer.queue.length) return { ...blockedExecutor(input, 'goal-training-queue-occupied'), state, payments };
+    if (!capital(input, rules.cost)) return { ...blockedExecutor(input, 'goal-training-capital-not-granted'), state, payments };
     if (player.gold < rules.cost || player.supplyCap < requiredSupplyCap(kind) || player.supplyCap - player.supplyUsed < rules.supplyUsed)
-      return blockedExecutor(input, 'goal-training-native-resources-insufficient');
-    return { ...base, state: state(), status: 'active', phase: 'await-native-training', goalOutputs: outputs(),
+      return { ...blockedExecutor(input, 'goal-training-native-resources-insufficient'), state, payments };
+    return { ...base, state, payments, status: 'active', phase: 'await-native-training',
       commands: [{ command: { type: 'train', buildingId: producerId, unitKind: kind }, purpose: 'task' }] };
   },
 };

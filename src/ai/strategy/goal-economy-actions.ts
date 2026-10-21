@@ -45,15 +45,15 @@ export function declareGoalTraining(input: Readonly<{
   const recruit = trainingRecruitPrototype(context.snapshot, source, { unitKind, remaining: 0 });
   const recruitForce = unitMover(unitKind) === 'land' ? count * combatRating(recruit) : 0;
   const hullCapacity = isTransportKind(unitKind) ? shipProfile(recruit)?.loadCapacity ?? 0 : 0;
-  const hulls = hullCapacity > 0 && at.seaId ? Array.from({ length: count }, (_, index) => ({
-    transport: { kind: 'output' as const, actionId: id, output: `unit-${index}` }, capacity: hullCapacity })) : [];
-  const workerEffects = unitKind === 'worker' && at.landId ? Array.from({ length: count }, (_, index) => goalFact({
-    kind: 'worker-at', at, count: 1, byTick, worker: { kind: 'output', actionId: id, output: `unit-${index}` } })) : [];
+  // Training replenishes a fungible region pool. A later ready action leases
+  // actual members; it never depends on this job producing a named entity.
+  const transportEffect = hullCapacity > 0 && at.seaId ? goalFact({ kind: 'transport-in', seaId: at.seaId,
+    capacity: count * hullCapacity, byTick }) : null;
+  const workerEffects = unitKind === 'worker' && at.landId ? [goalFact({ kind: 'worker-at', at, count, byTick })] : [];
   return {
     id, kind: 'train', preconditions: unique([production, exit, gold, room, cap]),
-    effects: [{ fact: effect, operation: 'establish', at: 'finish' }, ...hulls.map(hull => ({
-      fact: goalFact({ kind: 'transport-in', seaId: at.seaId!, capacity: hull.capacity, byTick, transport: hull.transport }),
-      operation: 'establish' as const, at: 'finish' as const })),
+    effects: [{ fact: effect, operation: 'establish', at: 'finish' }, ...(transportEffect ? [{
+      fact: transportEffect, operation: 'establish' as const, at: 'finish' as const }] : []),
       ...workerEffects.map(fact => ({ fact, operation: 'establish' as const, at: 'finish' as const }))],
     demands: [{ resource: { kind: 'production-lane', producer, lane: 'training' }, quantity: 1, from: 'start', until: 'finish' }],
     flows: [
@@ -62,10 +62,8 @@ export function declareGoalTraining(input: Readonly<{
       { resource: { kind: 'unit-pool', unitKind, at }, delta: count, at: 'finish', factIds: [effect.id] },
       ...(recruitForce > 0 ? [{ resource: { kind: 'force' as const, scope: 'pool' as const, at, metric: 'combat-rating' as const },
         delta: recruitForce, at: 'finish' as const, factIds: [effect.id] }] : []),
-      ...hulls.map(hull => ({ resource: { kind: 'transport-capacity' as const, transport: hull.transport },
-        delta: hull.capacity, at: 'finish' as const, factIds: [exit.id] })),
-      ...Array.from({ length: count }, (_, index) => ({ resource: { kind: 'entity-control' as const,
-        entity: { kind: 'output' as const, actionId: id, output: `unit-${index}` } }, delta: 1, at: 'finish' as const, factIds: [effect.id] })),
+      ...(transportEffect && at.seaId ? [{ resource: { kind: 'transport-capacity' as const, seaId: at.seaId },
+        delta: count * hullCapacity, at: 'finish' as const, factIds: [exit.id] }] : []),
     ],
     // production is the available lane, not an unpriced queue wait; spawn-exit
     // is independently required. Native training advances one work/tick.
@@ -73,7 +71,7 @@ export function declareGoalTraining(input: Readonly<{
     cost: known([{ code: 'training-capital', gold: amountGold, factIds: [gold.id] }]),
     successProbability: known(1, [production.id, exit.id]),
     executor: { executor: 'goal.train', parameters: { unitKind, count, producer, at } },
-    outputs: Array.from({ length: count }, (_, index) => `unit-${index}`), reasons: [],
+    outputs: [], reasons: [],
   };
 }
 
