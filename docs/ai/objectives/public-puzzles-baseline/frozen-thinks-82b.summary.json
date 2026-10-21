@@ -1,0 +1,2554 @@
+{
+  "sharedBase": "82b22a5d",
+  "source": "8f028867",
+  "policyVersion": "v9_knight",
+  "maxThinks": 10,
+  "world": "same snapshot object and tick; persistent native owner memory",
+  "cases": [
+    {
+      "puzzle": "defense-window/later",
+      "passed": false,
+      "stable": false,
+      "thinkCount": 2,
+      "first": {
+        "think": 1,
+        "calls": 1,
+        "passed": false,
+        "error": {
+          "name": "AssertionError",
+          "message": "defense target must be present: expected 0 to be greater than 0",
+          "stack": "AssertionError: defense target must be present: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:113:22)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:60:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:162:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:74:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:64:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:60:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)\n    at Module.withGoalPlannerInput (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:60:10)"
+        },
+        "snapshotUntouched": true,
+        "planHash": "5cd559c2adf963d750c2758e60e8ef8c71be5942a352defe66a54a7939ac36c2",
+        "work": {
+          "tick": 1,
+          "thinkSequence": 1,
+          "limit": 6144,
+          "used": 1937
+        },
+        "phase": "plan-verdict",
+        "memoryThinkSequence": 1,
+        "ports": {
+          "combatOptions": false,
+          "futureProjection": false
+        },
+        "goals": [
+          {
+            "id": "ConquerIsland:planner:resource-1",
+            "effects": [
+              "hall-complete",
+              "garrison-ready"
+            ],
+            "rewardGold": 1200,
+            "deadlineTick": null
+          }
+        ],
+        "plans": [
+          {
+            "goalId": "ConquerIsland:planner:resource-1",
+            "status": "waiting-facts",
+            "actions": [],
+            "alternativeCount": 0,
+            "search": {
+              "expansions": 5,
+              "depth": 0,
+              "work": 5,
+              "limitReason": null
+            },
+            "facts": [
+              {
+                "kind": "garrison-ready",
+                "state": "unmet",
+                "reason": "observed-garrison-handoff",
+                "requestId": null
+              },
+              {
+                "kind": "hall-complete",
+                "state": "unmet",
+                "reason": "native-mine-hall-missing",
+                "requestId": null
+              }
+            ]
+          }
+        ],
+        "threats": []
+      },
+      "final": {
+        "think": 2,
+        "calls": 0,
+        "passed": false,
+        "error": {
+          "name": "Error",
+          "message": "walkDestination",
+          "stack": "Error: walkDestination\n    at __vite_ssr_import_0__.withNavigationAudit.__vite_ssr_import_0__.withNavigationPhase.__vite_ssr_import_1__.withGoalPlannerInput.snapshot.snapshot (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/goal-planner-native.ts:14:76)\n    at Module.recordNativeRouting (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/navigation-audit.ts:22:3)\n    at Module.walkDestination (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:355:3)\n    at Module.boardingBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/naval.ts:78:18)\n    at Module.nativeVoyageBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/voyage-berth.ts:25:19)\n    at berth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:115:49)\n    at crossingTable (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:329:52)\n    at compute (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:471:26)\n    at calculate (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:584:9)\n    at Object.arrival (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:621:23)"
+        },
+        "snapshotUntouched": true,
+        "planHash": null,
+        "work": null,
+        "phase": "assembly",
+        "memoryThinkSequence": 2,
+        "ports": null,
+        "goals": [],
+        "plans": [],
+        "threats": []
+      },
+      "fatal": {
+        "name": "Error",
+        "message": "walkDestination",
+        "stack": "Error: walkDestination\n    at __vite_ssr_import_0__.withNavigationAudit.__vite_ssr_import_0__.withNavigationPhase.__vite_ssr_import_1__.withGoalPlannerInput.snapshot.snapshot (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/goal-planner-native.ts:14:76)\n    at Module.recordNativeRouting (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/navigation-audit.ts:22:3)\n    at Module.walkDestination (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:355:3)\n    at Module.boardingBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/naval.ts:78:18)\n    at Module.nativeVoyageBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/voyage-berth.ts:25:19)\n    at berth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:115:49)\n    at crossingTable (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:329:52)\n    at compute (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:471:26)\n    at calculate (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:584:9)\n    at Object.arrival (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:621:23)"
+      },
+      "lastPlanThink": 1,
+      "progress": [
+        {
+          "think": 1,
+          "passed": false,
+          "planHash": "5cd559c2adf963d750c2758e60e8ef8c71be5942a352defe66a54a7939ac36c2",
+          "work": {
+            "tick": 1,
+            "thinkSequence": 1,
+            "limit": 6144,
+            "used": 1937
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 1,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 0
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "passed": false,
+          "planHash": null,
+          "work": null,
+          "phase": "assembly",
+          "memoryThinkSequence": 2,
+          "plans": []
+        }
+      ],
+      "classification": {
+        "category": "missing-capability",
+        "subtype": "native-arrival-assembly",
+        "review": "manual: every observed selected action graph is empty; no wrong selected chain asserted"
+      }
+    },
+    {
+      "puzzle": "defense-window/urgent",
+      "passed": false,
+      "stable": false,
+      "thinkCount": 2,
+      "first": {
+        "think": 1,
+        "calls": 1,
+        "passed": false,
+        "error": {
+          "name": "AssertionError",
+          "message": "defense target must be present: expected 0 to be greater than 0",
+          "stack": "AssertionError: defense target must be present: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:113:22)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:60:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:162:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:74:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:64:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:60:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)\n    at Module.withGoalPlannerInput (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:60:10)"
+        },
+        "snapshotUntouched": true,
+        "planHash": "2dcb2049cd7c9daa43996a94f79668e750a5f6d210c95822b446ef3932162fdd",
+        "work": {
+          "tick": 1,
+          "thinkSequence": 1,
+          "limit": 6144,
+          "used": 1937
+        },
+        "phase": "plan-verdict",
+        "memoryThinkSequence": 1,
+        "ports": {
+          "combatOptions": false,
+          "futureProjection": false
+        },
+        "goals": [
+          {
+            "id": "ConquerIsland:planner:resource-1",
+            "effects": [
+              "hall-complete",
+              "garrison-ready"
+            ],
+            "rewardGold": 1200,
+            "deadlineTick": null
+          }
+        ],
+        "plans": [
+          {
+            "goalId": "ConquerIsland:planner:resource-1",
+            "status": "waiting-facts",
+            "actions": [],
+            "alternativeCount": 0,
+            "search": {
+              "expansions": 5,
+              "depth": 0,
+              "work": 5,
+              "limitReason": null
+            },
+            "facts": [
+              {
+                "kind": "garrison-ready",
+                "state": "unmet",
+                "reason": "observed-garrison-handoff",
+                "requestId": null
+              },
+              {
+                "kind": "hall-complete",
+                "state": "unmet",
+                "reason": "native-mine-hall-missing",
+                "requestId": null
+              }
+            ]
+          }
+        ],
+        "threats": []
+      },
+      "final": {
+        "think": 2,
+        "calls": 0,
+        "passed": false,
+        "error": {
+          "name": "Error",
+          "message": "walkDestination",
+          "stack": "Error: walkDestination\n    at __vite_ssr_import_0__.withNavigationAudit.__vite_ssr_import_0__.withNavigationPhase.__vite_ssr_import_1__.withGoalPlannerInput.snapshot.snapshot (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/goal-planner-native.ts:14:76)\n    at Module.recordNativeRouting (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/navigation-audit.ts:22:3)\n    at Module.walkDestination (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:355:3)\n    at Module.boardingBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/naval.ts:78:18)\n    at Module.nativeVoyageBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/voyage-berth.ts:25:19)\n    at berth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:115:49)\n    at crossingTable (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:329:52)\n    at compute (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:471:26)\n    at calculate (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:584:9)\n    at Object.arrival (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:621:23)"
+        },
+        "snapshotUntouched": true,
+        "planHash": null,
+        "work": null,
+        "phase": "assembly",
+        "memoryThinkSequence": 2,
+        "ports": null,
+        "goals": [],
+        "plans": [],
+        "threats": []
+      },
+      "fatal": {
+        "name": "Error",
+        "message": "walkDestination",
+        "stack": "Error: walkDestination\n    at __vite_ssr_import_0__.withNavigationAudit.__vite_ssr_import_0__.withNavigationPhase.__vite_ssr_import_1__.withGoalPlannerInput.snapshot.snapshot (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/goal-planner-native.ts:14:76)\n    at Module.recordNativeRouting (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/navigation-audit.ts:22:3)\n    at Module.walkDestination (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:355:3)\n    at Module.boardingBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/naval.ts:78:18)\n    at Module.nativeVoyageBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/voyage-berth.ts:25:19)\n    at berth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:115:49)\n    at crossingTable (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:329:52)\n    at compute (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:471:26)\n    at calculate (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:584:9)\n    at Object.arrival (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:621:23)"
+      },
+      "lastPlanThink": 1,
+      "progress": [
+        {
+          "think": 1,
+          "passed": false,
+          "planHash": "2dcb2049cd7c9daa43996a94f79668e750a5f6d210c95822b446ef3932162fdd",
+          "work": {
+            "tick": 1,
+            "thinkSequence": 1,
+            "limit": 6144,
+            "used": 1937
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 1,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 0
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "passed": false,
+          "planHash": null,
+          "work": null,
+          "phase": "assembly",
+          "memoryThinkSequence": 2,
+          "plans": []
+        }
+      ],
+      "classification": {
+        "category": "missing-capability",
+        "subtype": "native-arrival-assembly",
+        "review": "manual: every observed selected action graph is empty; no wrong selected chain asserted"
+      }
+    },
+    {
+      "puzzle": "evacuate/default",
+      "passed": false,
+      "stable": false,
+      "thinkCount": 2,
+      "first": {
+        "think": 1,
+        "calls": 1,
+        "passed": false,
+        "error": {
+          "name": "AssertionError",
+          "message": "evacuation is an action: expected 0 to be greater than 0",
+          "stack": "AssertionError: evacuation is an action: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:154:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:60:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:162:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:74:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:64:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:60:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)\n    at Module.withGoalPlannerInput (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:60:10)"
+        },
+        "snapshotUntouched": true,
+        "planHash": "74563016084a8e5647b171f00d826579f696a161b566b97cc53cc4747d064ca8",
+        "work": {
+          "tick": 2,
+          "thinkSequence": 1,
+          "limit": 6144,
+          "used": 6144
+        },
+        "phase": "plan-verdict",
+        "memoryThinkSequence": 1,
+        "ports": {
+          "combatOptions": false,
+          "futureProjection": false
+        },
+        "goals": [
+          {
+            "id": "DefendSite:planner:scene-public-planner-frame-planner-townHall-2",
+            "effects": [
+              "site-safe"
+            ],
+            "rewardGold": 0,
+            "deadlineTick": 902
+          },
+          {
+            "id": "Evacuate:planner:scene-public-planner-frame-planner-townHall-2",
+            "effects": [
+              "assets-safe"
+            ],
+            "rewardGold": 300,
+            "deadlineTick": 2402
+          },
+          {
+            "id": "ReinforceFront:planner:land:2",
+            "effects": [
+              "force-at"
+            ],
+            "rewardGold": 0,
+            "deadlineTick": 2402
+          }
+        ],
+        "plans": [
+          {
+            "goalId": "DefendSite:planner:scene-public-planner-frame-planner-townHall-2",
+            "status": "waiting-facts",
+            "actions": [],
+            "alternativeCount": 0,
+            "search": {
+              "expansions": 4,
+              "depth": 0,
+              "work": 4,
+              "limitReason": null
+            },
+            "facts": [
+              {
+                "kind": "site-safe",
+                "state": "pending",
+                "reason": "goal-world-domain-port-required",
+                "requestId": "world:fact:{\"kind\":\"site-safe\",\"site\":{\"entityId\":\"scene-public-planner-frame-planner-townHall-2\",\"landId\":\"land:2\",\"point\":{\"x\":2992,\"y\":688}},\"throughTick\":902}"
+              }
+            ]
+          },
+          {
+            "goalId": "Evacuate:planner:scene-public-planner-frame-planner-townHall-2",
+            "status": "waiting-facts",
+            "actions": [],
+            "alternativeCount": 0,
+            "search": {
+              "expansions": 4,
+              "depth": 0,
+              "work": 4,
+              "limitReason": null
+            },
+            "facts": [
+              {
+                "kind": "assets-safe",
+                "state": "pending",
+                "reason": "goal-world-domain-port-required",
+                "requestId": "world:fact:{\"at\":{\"entityId\":\"scene-public-planner-frame-planner-townHall-1\",\"landId\":\"land:1\",\"point\":{\"x\":656,\"y\":784}},\"kind\":\"assets-safe\",\"throughTick\":2402,\"unitIds\":[\"scene-public-planner-frame-planner-worker-4\",\"scene-public-planner-frame-planner-worker-5\",\"scene-public-planner-frame-planner-worker-6\",\"scene-public-planner-frame-planner-worker-7\"]}"
+              }
+            ]
+          },
+          {
+            "goalId": "ReinforceFront:planner:land:2",
+            "status": "blocked",
+            "actions": [],
+            "alternativeCount": 0,
+            "search": {
+              "expansions": 4,
+              "depth": 0,
+              "work": 4,
+              "limitReason": null
+            },
+            "facts": [
+              {
+                "kind": "force-at",
+                "state": "unmet",
+                "reason": "native-selected-force",
+                "requestId": null
+              }
+            ]
+          }
+        ],
+        "threats": []
+      },
+      "final": {
+        "think": 2,
+        "calls": 0,
+        "passed": false,
+        "error": {
+          "name": "Error",
+          "message": "walkDestination",
+          "stack": "Error: walkDestination\n    at __vite_ssr_import_0__.withNavigationAudit.__vite_ssr_import_0__.withNavigationPhase.__vite_ssr_import_1__.withGoalPlannerInput.snapshot.snapshot (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/goal-planner-native.ts:14:76)\n    at Module.recordNativeRouting (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/navigation-audit.ts:22:3)\n    at Module.walkDestination (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:355:3)\n    at Module.boardingBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/naval.ts:78:18)\n    at Module.nativeVoyageBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/voyage-berth.ts:25:19)\n    at berth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:115:49)\n    at crossingTable (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:329:52)\n    at compute (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:471:26)\n    at calculate (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:584:9)\n    at Object.arrival (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:621:23)"
+        },
+        "snapshotUntouched": true,
+        "planHash": null,
+        "work": null,
+        "phase": "assembly",
+        "memoryThinkSequence": 2,
+        "ports": null,
+        "goals": [],
+        "plans": [],
+        "threats": []
+      },
+      "fatal": {
+        "name": "Error",
+        "message": "walkDestination",
+        "stack": "Error: walkDestination\n    at __vite_ssr_import_0__.withNavigationAudit.__vite_ssr_import_0__.withNavigationPhase.__vite_ssr_import_1__.withGoalPlannerInput.snapshot.snapshot (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/goal-planner-native.ts:14:76)\n    at Module.recordNativeRouting (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/navigation-audit.ts:22:3)\n    at Module.walkDestination (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:355:3)\n    at Module.boardingBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/naval.ts:78:18)\n    at Module.nativeVoyageBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/voyage-berth.ts:25:19)\n    at berth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:115:49)\n    at crossingTable (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:329:52)\n    at compute (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:471:26)\n    at calculate (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:584:9)\n    at Object.arrival (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:621:23)"
+      },
+      "lastPlanThink": 1,
+      "progress": [
+        {
+          "think": 1,
+          "passed": false,
+          "planHash": "74563016084a8e5647b171f00d826579f696a161b566b97cc53cc4747d064ca8",
+          "work": {
+            "tick": 2,
+            "thinkSequence": 1,
+            "limit": 6144,
+            "used": 6144
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 1,
+          "plans": [
+            {
+              "goalId": "DefendSite:planner:scene-public-planner-frame-planner-townHall-2",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 0
+            },
+            {
+              "goalId": "Evacuate:planner:scene-public-planner-frame-planner-townHall-2",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 0
+            },
+            {
+              "goalId": "ReinforceFront:planner:land:2",
+              "status": "blocked",
+              "actions": [],
+              "alternativeCount": 0
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "passed": false,
+          "planHash": null,
+          "work": null,
+          "phase": "assembly",
+          "memoryThinkSequence": 2,
+          "plans": []
+        }
+      ],
+      "classification": {
+        "category": "missing-capability",
+        "subtype": "native-arrival-assembly",
+        "review": "manual: every observed selected action graph is empty; no wrong selected chain asserted"
+      }
+    },
+    {
+      "puzzle": "guarded-shore/strong",
+      "passed": false,
+      "stable": false,
+      "thinkCount": 2,
+      "first": {
+        "think": 1,
+        "calls": 1,
+        "passed": false,
+        "error": {
+          "name": "AssertionError",
+          "message": "army crosses water: expected 0 to be greater than 0",
+          "stack": "AssertionError: army crosses water: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:135:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:60:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:162:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:74:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:64:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:60:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)\n    at Module.withGoalPlannerInput (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:60:10)"
+        },
+        "snapshotUntouched": true,
+        "planHash": "f8b588dd6aac52218a89528c8f01eec6461cb30354196328503001d1e1b2add7",
+        "work": {
+          "tick": 1,
+          "thinkSequence": 1,
+          "limit": 6144,
+          "used": 3664
+        },
+        "phase": "plan-verdict",
+        "memoryThinkSequence": 1,
+        "ports": {
+          "combatOptions": false,
+          "futureProjection": false
+        },
+        "goals": [
+          {
+            "id": "ConquerIsland:planner:resource-1",
+            "effects": [
+              "hall-complete",
+              "garrison-ready"
+            ],
+            "rewardGold": 1200,
+            "deadlineTick": null
+          }
+        ],
+        "plans": [
+          {
+            "goalId": "ConquerIsland:planner:resource-1",
+            "status": "waiting-facts",
+            "actions": [],
+            "alternativeCount": 0,
+            "search": {
+              "expansions": 5,
+              "depth": 0,
+              "work": 5,
+              "limitReason": null
+            },
+            "facts": [
+              {
+                "kind": "garrison-ready",
+                "state": "unmet",
+                "reason": "observed-garrison-handoff",
+                "requestId": null
+              },
+              {
+                "kind": "hall-complete",
+                "state": "unmet",
+                "reason": "native-mine-hall-missing",
+                "requestId": null
+              }
+            ]
+          }
+        ],
+        "threats": []
+      },
+      "final": {
+        "think": 2,
+        "calls": 0,
+        "passed": false,
+        "error": {
+          "name": "Error",
+          "message": "walkDestination",
+          "stack": "Error: walkDestination\n    at __vite_ssr_import_0__.withNavigationAudit.__vite_ssr_import_0__.withNavigationPhase.__vite_ssr_import_1__.withGoalPlannerInput.snapshot.snapshot (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/goal-planner-native.ts:14:76)\n    at Module.recordNativeRouting (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/navigation-audit.ts:22:3)\n    at Module.walkDestination (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:355:3)\n    at Module.boardingBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/naval.ts:78:18)\n    at Module.nativeVoyageBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/voyage-berth.ts:25:19)\n    at berth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:115:49)\n    at crossingTable (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:329:52)\n    at compute (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:471:26)\n    at calculate (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:584:9)\n    at Object.arrival (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:621:23)"
+        },
+        "snapshotUntouched": true,
+        "planHash": null,
+        "work": null,
+        "phase": "assembly",
+        "memoryThinkSequence": 2,
+        "ports": null,
+        "goals": [],
+        "plans": [],
+        "threats": []
+      },
+      "fatal": {
+        "name": "Error",
+        "message": "walkDestination",
+        "stack": "Error: walkDestination\n    at __vite_ssr_import_0__.withNavigationAudit.__vite_ssr_import_0__.withNavigationPhase.__vite_ssr_import_1__.withGoalPlannerInput.snapshot.snapshot (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/goal-planner-native.ts:14:76)\n    at Module.recordNativeRouting (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/navigation-audit.ts:22:3)\n    at Module.walkDestination (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:355:3)\n    at Module.boardingBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/naval.ts:78:18)\n    at Module.nativeVoyageBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/voyage-berth.ts:25:19)\n    at berth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:115:49)\n    at crossingTable (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:329:52)\n    at compute (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:471:26)\n    at calculate (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:584:9)\n    at Object.arrival (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:621:23)"
+      },
+      "lastPlanThink": 1,
+      "progress": [
+        {
+          "think": 1,
+          "passed": false,
+          "planHash": "f8b588dd6aac52218a89528c8f01eec6461cb30354196328503001d1e1b2add7",
+          "work": {
+            "tick": 1,
+            "thinkSequence": 1,
+            "limit": 6144,
+            "used": 3664
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 1,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 0
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "passed": false,
+          "planHash": null,
+          "work": null,
+          "phase": "assembly",
+          "memoryThinkSequence": 2,
+          "plans": []
+        }
+      ],
+      "classification": {
+        "category": "missing-capability",
+        "subtype": "native-arrival-assembly",
+        "review": "manual: every observed selected action graph is empty; no wrong selected chain asserted"
+      }
+    },
+    {
+      "puzzle": "guarded-shore/weak",
+      "passed": false,
+      "stable": false,
+      "thinkCount": 2,
+      "first": {
+        "think": 1,
+        "calls": 1,
+        "passed": false,
+        "error": {
+          "name": "AssertionError",
+          "message": "army crosses water: expected 0 to be greater than 0",
+          "stack": "AssertionError: army crosses water: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:135:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:60:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:162:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:74:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:64:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:60:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)\n    at Module.withGoalPlannerInput (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:60:10)"
+        },
+        "snapshotUntouched": true,
+        "planHash": "f8b588dd6aac52218a89528c8f01eec6461cb30354196328503001d1e1b2add7",
+        "work": {
+          "tick": 1,
+          "thinkSequence": 1,
+          "limit": 6144,
+          "used": 3664
+        },
+        "phase": "plan-verdict",
+        "memoryThinkSequence": 1,
+        "ports": {
+          "combatOptions": false,
+          "futureProjection": false
+        },
+        "goals": [
+          {
+            "id": "ConquerIsland:planner:resource-1",
+            "effects": [
+              "hall-complete",
+              "garrison-ready"
+            ],
+            "rewardGold": 1200,
+            "deadlineTick": null
+          }
+        ],
+        "plans": [
+          {
+            "goalId": "ConquerIsland:planner:resource-1",
+            "status": "waiting-facts",
+            "actions": [],
+            "alternativeCount": 0,
+            "search": {
+              "expansions": 5,
+              "depth": 0,
+              "work": 5,
+              "limitReason": null
+            },
+            "facts": [
+              {
+                "kind": "garrison-ready",
+                "state": "unmet",
+                "reason": "observed-garrison-handoff",
+                "requestId": null
+              },
+              {
+                "kind": "hall-complete",
+                "state": "unmet",
+                "reason": "native-mine-hall-missing",
+                "requestId": null
+              }
+            ]
+          }
+        ],
+        "threats": []
+      },
+      "final": {
+        "think": 2,
+        "calls": 0,
+        "passed": false,
+        "error": {
+          "name": "Error",
+          "message": "walkDestination",
+          "stack": "Error: walkDestination\n    at __vite_ssr_import_0__.withNavigationAudit.__vite_ssr_import_0__.withNavigationPhase.__vite_ssr_import_1__.withGoalPlannerInput.snapshot.snapshot (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/goal-planner-native.ts:14:76)\n    at Module.recordNativeRouting (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/navigation-audit.ts:22:3)\n    at Module.walkDestination (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:355:3)\n    at Module.boardingBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/naval.ts:78:18)\n    at Module.nativeVoyageBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/voyage-berth.ts:25:19)\n    at berth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:115:49)\n    at crossingTable (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:329:52)\n    at compute (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:471:26)\n    at calculate (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:584:9)\n    at Object.arrival (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:621:23)"
+        },
+        "snapshotUntouched": true,
+        "planHash": null,
+        "work": null,
+        "phase": "assembly",
+        "memoryThinkSequence": 2,
+        "ports": null,
+        "goals": [],
+        "plans": [],
+        "threats": []
+      },
+      "fatal": {
+        "name": "Error",
+        "message": "walkDestination",
+        "stack": "Error: walkDestination\n    at __vite_ssr_import_0__.withNavigationAudit.__vite_ssr_import_0__.withNavigationPhase.__vite_ssr_import_1__.withGoalPlannerInput.snapshot.snapshot (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/goal-planner-native.ts:14:76)\n    at Module.recordNativeRouting (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/navigation-audit.ts:22:3)\n    at Module.walkDestination (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:355:3)\n    at Module.boardingBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/naval.ts:78:18)\n    at Module.nativeVoyageBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/voyage-berth.ts:25:19)\n    at berth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:115:49)\n    at crossingTable (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:329:52)\n    at compute (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:471:26)\n    at calculate (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:584:9)\n    at Object.arrival (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:621:23)"
+      },
+      "lastPlanThink": 1,
+      "progress": [
+        {
+          "think": 1,
+          "passed": false,
+          "planHash": "f8b588dd6aac52218a89528c8f01eec6461cb30354196328503001d1e1b2add7",
+          "work": {
+            "tick": 1,
+            "thinkSequence": 1,
+            "limit": 6144,
+            "used": 3664
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 1,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 0
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "passed": false,
+          "planHash": null,
+          "work": null,
+          "phase": "assembly",
+          "memoryThinkSequence": 2,
+          "plans": []
+        }
+      ],
+      "classification": {
+        "category": "missing-capability",
+        "subtype": "native-arrival-assembly",
+        "review": "manual: every observed selected action graph is empty; no wrong selected chain asserted"
+      }
+    },
+    {
+      "puzzle": "navy-zero/default",
+      "passed": false,
+      "stable": false,
+      "thinkCount": 2,
+      "first": {
+        "think": 1,
+        "calls": 1,
+        "passed": false,
+        "error": {
+          "name": "AssertionError",
+          "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+          "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:96:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:60:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:162:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:74:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:64:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:60:79"
+        },
+        "snapshotUntouched": true,
+        "planHash": "6138b11692363906c3faeb1a73baff8e9a6a19c986accf180ae9abee94622525",
+        "work": {
+          "tick": 1,
+          "thinkSequence": 1,
+          "limit": 6144,
+          "used": 3294
+        },
+        "phase": "plan-verdict",
+        "memoryThinkSequence": 1,
+        "ports": {
+          "combatOptions": false,
+          "futureProjection": false
+        },
+        "goals": [
+          {
+            "id": "ConquerIsland:planner:resource-1",
+            "effects": [
+              "hall-complete",
+              "garrison-ready"
+            ],
+            "rewardGold": 1200,
+            "deadlineTick": null
+          }
+        ],
+        "plans": [
+          {
+            "goalId": "ConquerIsland:planner:resource-1",
+            "status": "waiting-facts",
+            "actions": [],
+            "alternativeCount": 0,
+            "search": {
+              "expansions": 5,
+              "depth": 0,
+              "work": 5,
+              "limitReason": null
+            },
+            "facts": [
+              {
+                "kind": "garrison-ready",
+                "state": "unmet",
+                "reason": "observed-garrison-handoff",
+                "requestId": null
+              },
+              {
+                "kind": "hall-complete",
+                "state": "unmet",
+                "reason": "native-mine-hall-missing",
+                "requestId": null
+              }
+            ]
+          }
+        ],
+        "threats": []
+      },
+      "final": {
+        "think": 2,
+        "calls": 0,
+        "passed": false,
+        "error": {
+          "name": "Error",
+          "message": "walkDestination",
+          "stack": "Error: walkDestination\n    at __vite_ssr_import_0__.withNavigationAudit.__vite_ssr_import_0__.withNavigationPhase.__vite_ssr_import_1__.withGoalPlannerInput.snapshot.snapshot (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/goal-planner-native.ts:14:76)\n    at Module.recordNativeRouting (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/navigation-audit.ts:22:3)\n    at Module.walkDestination (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:355:3)\n    at Module.boardingBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/naval.ts:78:18)\n    at Module.nativeVoyageBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/voyage-berth.ts:25:19)\n    at berth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:115:49)\n    at crossingTable (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:329:52)\n    at compute (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:471:26)\n    at calculate (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:584:9)\n    at Object.arrival (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:621:23)"
+        },
+        "snapshotUntouched": true,
+        "planHash": null,
+        "work": null,
+        "phase": "assembly",
+        "memoryThinkSequence": 2,
+        "ports": null,
+        "goals": [],
+        "plans": [],
+        "threats": []
+      },
+      "fatal": {
+        "name": "Error",
+        "message": "walkDestination",
+        "stack": "Error: walkDestination\n    at __vite_ssr_import_0__.withNavigationAudit.__vite_ssr_import_0__.withNavigationPhase.__vite_ssr_import_1__.withGoalPlannerInput.snapshot.snapshot (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/goal-planner-native.ts:14:76)\n    at Module.recordNativeRouting (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/navigation-audit.ts:22:3)\n    at Module.walkDestination (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:355:3)\n    at Module.boardingBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/naval.ts:78:18)\n    at Module.nativeVoyageBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/voyage-berth.ts:25:19)\n    at berth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:115:49)\n    at crossingTable (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:329:52)\n    at compute (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:471:26)\n    at calculate (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:584:9)\n    at Object.arrival (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:621:23)"
+      },
+      "lastPlanThink": 1,
+      "progress": [
+        {
+          "think": 1,
+          "passed": false,
+          "planHash": "6138b11692363906c3faeb1a73baff8e9a6a19c986accf180ae9abee94622525",
+          "work": {
+            "tick": 1,
+            "thinkSequence": 1,
+            "limit": 6144,
+            "used": 3294
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 1,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 0
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "passed": false,
+          "planHash": null,
+          "work": null,
+          "phase": "assembly",
+          "memoryThinkSequence": 2,
+          "plans": []
+        }
+      ],
+      "classification": {
+        "category": "missing-capability",
+        "subtype": "native-arrival-assembly",
+        "review": "manual: every observed selected action graph is empty; no wrong selected chain asserted"
+      }
+    },
+    {
+      "puzzle": "negative-return/default",
+      "passed": false,
+      "stable": false,
+      "thinkCount": 2,
+      "first": {
+        "think": 1,
+        "calls": 1,
+        "passed": false,
+        "error": {
+          "name": "AssertionError",
+          "message": "use army on mainland opportunity: expected 0 to be greater than 0",
+          "stack": "AssertionError: use army on mainland opportunity: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:150:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:60:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:162:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:74:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:64:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:60:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)\n    at Module.withGoalPlannerInput (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:60:10)"
+        },
+        "snapshotUntouched": true,
+        "planHash": "a606b9223c3967ec963b69ba5e5214c957bbb3e5582886e73ba2833126e375d2",
+        "work": {
+          "tick": 1,
+          "thinkSequence": 1,
+          "limit": 6144,
+          "used": 6144
+        },
+        "phase": "plan-verdict",
+        "memoryThinkSequence": 1,
+        "ports": {
+          "combatOptions": false,
+          "futureProjection": false
+        },
+        "goals": [
+          {
+            "id": "ConquerIsland:planner:resource-1",
+            "effects": [
+              "hall-complete",
+              "garrison-ready"
+            ],
+            "rewardGold": 500,
+            "deadlineTick": null
+          },
+          {
+            "id": "ExpandLand:planner:resource-2",
+            "effects": [
+              "hall-complete",
+              "garrison-ready"
+            ],
+            "rewardGold": 0.011999598013466551,
+            "deadlineTick": null
+          }
+        ],
+        "plans": [
+          {
+            "goalId": "ConquerIsland:planner:resource-1",
+            "status": "waiting-facts",
+            "actions": [],
+            "alternativeCount": 0,
+            "search": {
+              "expansions": 5,
+              "depth": 0,
+              "work": 5,
+              "limitReason": null
+            },
+            "facts": [
+              {
+                "kind": "garrison-ready",
+                "state": "unmet",
+                "reason": "observed-garrison-handoff",
+                "requestId": null
+              },
+              {
+                "kind": "hall-complete",
+                "state": "unmet",
+                "reason": "native-mine-hall-missing",
+                "requestId": null
+              }
+            ]
+          },
+          {
+            "goalId": "ExpandLand:planner:resource-2",
+            "status": "waiting-facts",
+            "actions": [],
+            "alternativeCount": 0,
+            "search": {
+              "expansions": 5,
+              "depth": 0,
+              "work": 5,
+              "limitReason": null
+            },
+            "facts": [
+              {
+                "kind": "garrison-ready",
+                "state": "unmet",
+                "reason": "observed-garrison-handoff",
+                "requestId": null
+              },
+              {
+                "kind": "hall-complete",
+                "state": "unmet",
+                "reason": "native-mine-hall-missing",
+                "requestId": null
+              }
+            ]
+          }
+        ],
+        "threats": []
+      },
+      "final": {
+        "think": 2,
+        "calls": 0,
+        "passed": false,
+        "error": {
+          "name": "Error",
+          "message": "walkDestination",
+          "stack": "Error: walkDestination\n    at __vite_ssr_import_0__.withNavigationAudit.__vite_ssr_import_0__.withNavigationPhase.__vite_ssr_import_1__.withGoalPlannerInput.snapshot.snapshot (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/goal-planner-native.ts:14:76)\n    at Module.recordNativeRouting (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/navigation-audit.ts:22:3)\n    at Module.walkDestination (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:355:3)\n    at Module.boardingBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/naval.ts:78:18)\n    at Module.nativeVoyageBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/voyage-berth.ts:25:19)\n    at berth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:115:49)\n    at crossingTable (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:329:52)\n    at compute (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:471:26)\n    at calculate (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:584:9)\n    at Object.arrival (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:621:23)"
+        },
+        "snapshotUntouched": true,
+        "planHash": null,
+        "work": null,
+        "phase": "assembly",
+        "memoryThinkSequence": 2,
+        "ports": null,
+        "goals": [],
+        "plans": [],
+        "threats": []
+      },
+      "fatal": {
+        "name": "Error",
+        "message": "walkDestination",
+        "stack": "Error: walkDestination\n    at __vite_ssr_import_0__.withNavigationAudit.__vite_ssr_import_0__.withNavigationPhase.__vite_ssr_import_1__.withGoalPlannerInput.snapshot.snapshot (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/goal-planner-native.ts:14:76)\n    at Module.recordNativeRouting (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/navigation-audit.ts:22:3)\n    at Module.walkDestination (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:355:3)\n    at Module.boardingBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/naval.ts:78:18)\n    at Module.nativeVoyageBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/voyage-berth.ts:25:19)\n    at berth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:115:49)\n    at crossingTable (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:329:52)\n    at compute (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:471:26)\n    at calculate (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:584:9)\n    at Object.arrival (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:621:23)"
+      },
+      "lastPlanThink": 1,
+      "progress": [
+        {
+          "think": 1,
+          "passed": false,
+          "planHash": "a606b9223c3967ec963b69ba5e5214c957bbb3e5582886e73ba2833126e375d2",
+          "work": {
+            "tick": 1,
+            "thinkSequence": 1,
+            "limit": 6144,
+            "used": 6144
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 1,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 0
+            },
+            {
+              "goalId": "ExpandLand:planner:resource-2",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 0
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "passed": false,
+          "planHash": null,
+          "work": null,
+          "phase": "assembly",
+          "memoryThinkSequence": 2,
+          "plans": []
+        }
+      ],
+      "classification": {
+        "category": "missing-capability",
+        "subtype": "native-arrival-assembly",
+        "review": "manual: every observed selected action graph is empty; no wrong selected chain asserted"
+      }
+    },
+    {
+      "puzzle": "ship-away/far",
+      "passed": false,
+      "stable": false,
+      "thinkCount": 2,
+      "first": {
+        "think": 1,
+        "calls": 1,
+        "passed": false,
+        "error": {
+          "name": "AssertionError",
+          "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+          "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:60:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:162:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:74:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:64:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:60:79"
+        },
+        "snapshotUntouched": true,
+        "planHash": "6138b11692363906c3faeb1a73baff8e9a6a19c986accf180ae9abee94622525",
+        "work": {
+          "tick": 1,
+          "thinkSequence": 1,
+          "limit": 6144,
+          "used": 3294
+        },
+        "phase": "plan-verdict",
+        "memoryThinkSequence": 1,
+        "ports": {
+          "combatOptions": false,
+          "futureProjection": false
+        },
+        "goals": [
+          {
+            "id": "ConquerIsland:planner:resource-1",
+            "effects": [
+              "hall-complete",
+              "garrison-ready"
+            ],
+            "rewardGold": 1200,
+            "deadlineTick": null
+          }
+        ],
+        "plans": [
+          {
+            "goalId": "ConquerIsland:planner:resource-1",
+            "status": "waiting-facts",
+            "actions": [],
+            "alternativeCount": 0,
+            "search": {
+              "expansions": 5,
+              "depth": 0,
+              "work": 5,
+              "limitReason": null
+            },
+            "facts": [
+              {
+                "kind": "garrison-ready",
+                "state": "unmet",
+                "reason": "observed-garrison-handoff",
+                "requestId": null
+              },
+              {
+                "kind": "hall-complete",
+                "state": "unmet",
+                "reason": "native-mine-hall-missing",
+                "requestId": null
+              }
+            ]
+          }
+        ],
+        "threats": []
+      },
+      "final": {
+        "think": 2,
+        "calls": 0,
+        "passed": false,
+        "error": {
+          "name": "Error",
+          "message": "walkDestination",
+          "stack": "Error: walkDestination\n    at __vite_ssr_import_0__.withNavigationAudit.__vite_ssr_import_0__.withNavigationPhase.__vite_ssr_import_1__.withGoalPlannerInput.snapshot.snapshot (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/goal-planner-native.ts:14:76)\n    at Module.recordNativeRouting (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/navigation-audit.ts:22:3)\n    at Module.walkDestination (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:355:3)\n    at Module.boardingBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/naval.ts:78:18)\n    at Module.nativeVoyageBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/voyage-berth.ts:25:19)\n    at berth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:115:49)\n    at crossingTable (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:329:52)\n    at compute (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:471:26)\n    at calculate (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:584:9)\n    at Object.arrival (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:621:23)"
+        },
+        "snapshotUntouched": true,
+        "planHash": null,
+        "work": null,
+        "phase": "assembly",
+        "memoryThinkSequence": 2,
+        "ports": null,
+        "goals": [],
+        "plans": [],
+        "threats": []
+      },
+      "fatal": {
+        "name": "Error",
+        "message": "walkDestination",
+        "stack": "Error: walkDestination\n    at __vite_ssr_import_0__.withNavigationAudit.__vite_ssr_import_0__.withNavigationPhase.__vite_ssr_import_1__.withGoalPlannerInput.snapshot.snapshot (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/goal-planner-native.ts:14:76)\n    at Module.recordNativeRouting (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/navigation-audit.ts:22:3)\n    at Module.walkDestination (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:355:3)\n    at Module.boardingBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/naval.ts:78:18)\n    at Module.nativeVoyageBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/voyage-berth.ts:25:19)\n    at berth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:115:49)\n    at crossingTable (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:329:52)\n    at compute (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:471:26)\n    at calculate (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:584:9)\n    at Object.arrival (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:621:23)"
+      },
+      "lastPlanThink": 1,
+      "progress": [
+        {
+          "think": 1,
+          "passed": false,
+          "planHash": "6138b11692363906c3faeb1a73baff8e9a6a19c986accf180ae9abee94622525",
+          "work": {
+            "tick": 1,
+            "thinkSequence": 1,
+            "limit": 6144,
+            "used": 3294
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 1,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 0
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "passed": false,
+          "planHash": null,
+          "work": null,
+          "phase": "assembly",
+          "memoryThinkSequence": 2,
+          "plans": []
+        }
+      ],
+      "classification": {
+        "category": "missing-capability",
+        "subtype": "native-arrival-assembly",
+        "review": "manual: every observed selected action graph is empty; no wrong selected chain asserted"
+      }
+    },
+    {
+      "puzzle": "ship-away/near",
+      "passed": false,
+      "stable": false,
+      "thinkCount": 2,
+      "first": {
+        "think": 1,
+        "calls": 1,
+        "passed": false,
+        "error": {
+          "name": "AssertionError",
+          "message": "army transport before camp: predecessor: expected 0 to be greater than 0",
+          "stack": "AssertionError: army transport before camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at ferryChain (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:74:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:80:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:60:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:162:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:74:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:64:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:60:79"
+        },
+        "snapshotUntouched": true,
+        "planHash": "6138b11692363906c3faeb1a73baff8e9a6a19c986accf180ae9abee94622525",
+        "work": {
+          "tick": 1,
+          "thinkSequence": 1,
+          "limit": 6144,
+          "used": 3294
+        },
+        "phase": "plan-verdict",
+        "memoryThinkSequence": 1,
+        "ports": {
+          "combatOptions": false,
+          "futureProjection": false
+        },
+        "goals": [
+          {
+            "id": "ConquerIsland:planner:resource-1",
+            "effects": [
+              "hall-complete",
+              "garrison-ready"
+            ],
+            "rewardGold": 1200,
+            "deadlineTick": null
+          }
+        ],
+        "plans": [
+          {
+            "goalId": "ConquerIsland:planner:resource-1",
+            "status": "waiting-facts",
+            "actions": [],
+            "alternativeCount": 0,
+            "search": {
+              "expansions": 5,
+              "depth": 0,
+              "work": 5,
+              "limitReason": null
+            },
+            "facts": [
+              {
+                "kind": "garrison-ready",
+                "state": "unmet",
+                "reason": "observed-garrison-handoff",
+                "requestId": null
+              },
+              {
+                "kind": "hall-complete",
+                "state": "unmet",
+                "reason": "native-mine-hall-missing",
+                "requestId": null
+              }
+            ]
+          }
+        ],
+        "threats": []
+      },
+      "final": {
+        "think": 2,
+        "calls": 0,
+        "passed": false,
+        "error": {
+          "name": "Error",
+          "message": "walkDestination",
+          "stack": "Error: walkDestination\n    at __vite_ssr_import_0__.withNavigationAudit.__vite_ssr_import_0__.withNavigationPhase.__vite_ssr_import_1__.withGoalPlannerInput.snapshot.snapshot (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/goal-planner-native.ts:14:76)\n    at Module.recordNativeRouting (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/navigation-audit.ts:22:3)\n    at Module.walkDestination (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:355:3)\n    at Module.boardingBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/naval.ts:78:18)\n    at Module.nativeVoyageBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/voyage-berth.ts:25:19)\n    at berth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:115:49)\n    at crossingTable (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:329:52)\n    at compute (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:471:26)\n    at calculate (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:584:9)\n    at Object.arrival (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:621:23)"
+        },
+        "snapshotUntouched": true,
+        "planHash": null,
+        "work": null,
+        "phase": "assembly",
+        "memoryThinkSequence": 2,
+        "ports": null,
+        "goals": [],
+        "plans": [],
+        "threats": []
+      },
+      "fatal": {
+        "name": "Error",
+        "message": "walkDestination",
+        "stack": "Error: walkDestination\n    at __vite_ssr_import_0__.withNavigationAudit.__vite_ssr_import_0__.withNavigationPhase.__vite_ssr_import_1__.withGoalPlannerInput.snapshot.snapshot (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/goal-planner-native.ts:14:76)\n    at Module.recordNativeRouting (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/navigation-audit.ts:22:3)\n    at Module.walkDestination (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:355:3)\n    at Module.boardingBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/naval.ts:78:18)\n    at Module.nativeVoyageBerth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/voyage-berth.ts:25:19)\n    at berth (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:115:49)\n    at crossingTable (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:329:52)\n    at compute (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:471:26)\n    at calculate (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:584:9)\n    at Object.arrival (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/arrivals.ts:621:23)"
+      },
+      "lastPlanThink": 1,
+      "progress": [
+        {
+          "think": 1,
+          "passed": false,
+          "planHash": "6138b11692363906c3faeb1a73baff8e9a6a19c986accf180ae9abee94622525",
+          "work": {
+            "tick": 1,
+            "thinkSequence": 1,
+            "limit": 6144,
+            "used": 3294
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 1,
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 0
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "passed": false,
+          "planHash": null,
+          "work": null,
+          "phase": "assembly",
+          "memoryThinkSequence": 2,
+          "plans": []
+        }
+      ],
+      "classification": {
+        "category": "missing-capability",
+        "subtype": "native-arrival-assembly",
+        "review": "manual: every observed selected action graph is empty; no wrong selected chain asserted"
+      }
+    },
+    {
+      "puzzle": "supply-tier/footmen",
+      "passed": false,
+      "stable": true,
+      "thinkCount": 10,
+      "first": {
+        "think": 1,
+        "calls": 1,
+        "passed": false,
+        "error": {
+          "name": "AssertionError",
+          "message": "faster basic force clears camp: predecessor: expected 0 to be greater than 0",
+          "stack": "AssertionError: faster basic force clears camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:90:9)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:60:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:162:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:74:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:64:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:60:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+        },
+        "snapshotUntouched": true,
+        "planHash": "0079a7cf7842544211c0a4c16187889472ceaf40538a5d26759e9e6fe1e6341d",
+        "work": {
+          "tick": 1,
+          "thinkSequence": 1,
+          "limit": 6144,
+          "used": 148
+        },
+        "phase": "plan-verdict",
+        "memoryThinkSequence": 1,
+        "ports": {
+          "combatOptions": false,
+          "futureProjection": false
+        },
+        "goals": [
+          {
+            "id": "ExpandLand:planner:resource-1",
+            "effects": [
+              "hall-complete",
+              "garrison-ready"
+            ],
+            "rewardGold": 0.009795650486292827,
+            "deadlineTick": null
+          }
+        ],
+        "plans": [
+          {
+            "goalId": "ExpandLand:planner:resource-1",
+            "status": "waiting-facts",
+            "actions": [],
+            "alternativeCount": 0,
+            "search": {
+              "expansions": 5,
+              "depth": 0,
+              "work": 5,
+              "limitReason": null
+            },
+            "facts": [
+              {
+                "kind": "garrison-ready",
+                "state": "unmet",
+                "reason": "observed-garrison-handoff",
+                "requestId": null
+              },
+              {
+                "kind": "hall-complete",
+                "state": "unmet",
+                "reason": "native-mine-hall-missing",
+                "requestId": null
+              }
+            ]
+          }
+        ],
+        "threats": []
+      },
+      "final": {
+        "think": 10,
+        "calls": 1,
+        "passed": false,
+        "error": {
+          "name": "AssertionError",
+          "message": "faster basic force clears camp: predecessor: expected 0 to be greater than 0",
+          "stack": "AssertionError: faster basic force clears camp: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:90:9)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:60:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:162:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:74:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:64:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:60:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+        },
+        "snapshotUntouched": true,
+        "planHash": "9cdfb85b5e0fa1c315e66c132d407df72bf1753921b2c8df4b2d641a37c41657",
+        "work": {
+          "tick": 1,
+          "thinkSequence": 10,
+          "limit": 6144,
+          "used": 6144
+        },
+        "phase": "plan-verdict",
+        "memoryThinkSequence": 10,
+        "ports": {
+          "combatOptions": false,
+          "futureProjection": false
+        },
+        "goals": [
+          {
+            "id": "ExpandLand:planner:resource-1",
+            "effects": [
+              "hall-complete",
+              "garrison-ready"
+            ],
+            "rewardGold": 0.009795650486292827,
+            "deadlineTick": null
+          }
+        ],
+        "plans": [
+          {
+            "goalId": "ExpandLand:planner:resource-1",
+            "status": "waiting-facts",
+            "actions": [],
+            "alternativeCount": 24,
+            "search": {
+              "expansions": 173,
+              "depth": 1,
+              "work": 173,
+              "limitReason": null
+            },
+            "facts": [
+              {
+                "kind": "garrison-ready",
+                "state": "unmet",
+                "reason": "observed-garrison-handoff",
+                "requestId": null
+              },
+              {
+                "kind": "hall-complete",
+                "state": "unmet",
+                "reason": "native-mine-hall-missing",
+                "requestId": null
+              },
+              {
+                "kind": "route",
+                "state": "met",
+                "reason": "shared-land-route-published",
+                "requestId": null
+              },
+              {
+                "kind": "route",
+                "state": "met",
+                "reason": "shared-land-route-published",
+                "requestId": null
+              },
+              {
+                "kind": "route",
+                "state": "met",
+                "reason": "shared-land-route-published",
+                "requestId": null
+              },
+              {
+                "kind": "route",
+                "state": "pending",
+                "reason": "goal-land-route-pending",
+                "requestId": "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-1\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":544,\"y\":832}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":2128,\"y\":1008}}}"
+              },
+              {
+                "kind": "route",
+                "state": "pending",
+                "reason": "goal-land-route-pending",
+                "requestId": "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-1\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":544,\"y\":832}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":2128,\"y\":656}}}"
+              },
+              {
+                "kind": "route",
+                "state": "pending",
+                "reason": "goal-land-route-pending",
+                "requestId": "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-1\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":544,\"y\":832}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":2160,\"y\":1008}}}"
+              },
+              {
+                "kind": "route",
+                "state": "pending",
+                "reason": "goal-land-route-pending",
+                "requestId": "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-1\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":544,\"y\":832}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":2160,\"y\":688}}}"
+              },
+              {
+                "kind": "route",
+                "state": "pending",
+                "reason": "goal-land-route-pending",
+                "requestId": "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-1\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":544,\"y\":832}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":2160,\"y\":976}}}"
+              },
+              {
+                "kind": "route",
+                "state": "met",
+                "reason": "shared-land-route-published",
+                "requestId": null
+              },
+              {
+                "kind": "route",
+                "state": "met",
+                "reason": "shared-land-route-published",
+                "requestId": null
+              },
+              {
+                "kind": "route",
+                "state": "met",
+                "reason": "shared-land-route-published",
+                "requestId": null
+              },
+              {
+                "kind": "route",
+                "state": "pending",
+                "reason": "goal-land-route-pending",
+                "requestId": "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-2\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":592,\"y\":832}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":2128,\"y\":1008}}}"
+              },
+              {
+                "kind": "route",
+                "state": "pending",
+                "reason": "goal-land-route-pending",
+                "requestId": "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-2\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":592,\"y\":832}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":2128,\"y\":656}}}"
+              },
+              {
+                "kind": "route",
+                "state": "pending",
+                "reason": "goal-land-route-pending",
+                "requestId": "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-2\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":592,\"y\":832}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":2160,\"y\":1008}}}"
+              },
+              {
+                "kind": "route",
+                "state": "pending",
+                "reason": "goal-land-route-pending",
+                "requestId": "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-2\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":592,\"y\":832}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":2160,\"y\":688}}}"
+              },
+              {
+                "kind": "route",
+                "state": "pending",
+                "reason": "goal-land-route-pending",
+                "requestId": "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-2\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":592,\"y\":832}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":2160,\"y\":976}}}"
+              },
+              {
+                "kind": "route",
+                "state": "met",
+                "reason": "shared-land-route-published",
+                "requestId": null
+              },
+              {
+                "kind": "route",
+                "state": "met",
+                "reason": "shared-land-route-published",
+                "requestId": null
+              },
+              {
+                "kind": "route",
+                "state": "met",
+                "reason": "shared-land-route-published",
+                "requestId": null
+              },
+              {
+                "kind": "route",
+                "state": "pending",
+                "reason": "goal-land-route-pending",
+                "requestId": "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-3\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":640,\"y\":832}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":2128,\"y\":1008}}}"
+              },
+              {
+                "kind": "route",
+                "state": "pending",
+                "reason": "goal-land-route-pending",
+                "requestId": "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-3\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":640,\"y\":832}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":2128,\"y\":656}}}"
+              },
+              {
+                "kind": "route",
+                "state": "pending",
+                "reason": "goal-land-route-pending",
+                "requestId": "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-3\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":640,\"y\":832}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":2160,\"y\":1008}}}"
+              },
+              {
+                "kind": "route",
+                "state": "pending",
+                "reason": "goal-land-route-pending",
+                "requestId": "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-3\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":640,\"y\":832}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":2160,\"y\":688}}}"
+              },
+              {
+                "kind": "route",
+                "state": "pending",
+                "reason": "goal-land-route-pending",
+                "requestId": "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-3\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":640,\"y\":832}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":2160,\"y\":976}}}"
+              },
+              {
+                "kind": "build-site",
+                "state": "pending",
+                "reason": "goal-geometry-pending",
+                "requestId": "economic:[\"fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1808,\\\"y\\\":656}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"build-site\\\"}\",[\"goal-geometry:[\\\"exact-build-site:fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":1808,\\\\\\\"y\\\\\\\":656}},\\\\\\\"buildingKind\\\\\\\":\\\\\\\"townHall\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"build-site\\\\\\\"}\\\",\\\"[\\\\\\\"128:96:32:699c9d45\\\\\\\",\\\\\\\"13:1d86b289\\\\\\\",[[\\\\\\\"scene-public-planner-frame-planner-townHall-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"townHall\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-2\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-3\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-4\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-5\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-6\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-7\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-8\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-stables-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"stables\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-barracks-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"barracks\\\\\\\",true,true]]]\\\"]\"]]"
+              },
+              {
+                "kind": "build-site",
+                "state": "pending",
+                "reason": "goal-geometry-pending",
+                "requestId": "economic:[\"fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1840,\\\"y\\\":1008}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"build-site\\\"}\",[\"goal-geometry:[\\\"exact-build-site:fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":1840,\\\\\\\"y\\\\\\\":1008}},\\\\\\\"buildingKind\\\\\\\":\\\\\\\"townHall\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"build-site\\\\\\\"}\\\",\\\"[\\\\\\\"128:96:32:699c9d45\\\\\\\",\\\\\\\"13:1d86b289\\\\\\\",[[\\\\\\\"scene-public-planner-frame-planner-townHall-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"townHall\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-2\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-3\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-4\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-5\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-6\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-7\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-8\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-stables-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"stables\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-barracks-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"barracks\\\\\\\",true,true]]]\\\"]\"]]"
+              },
+              {
+                "kind": "build-site",
+                "state": "pending",
+                "reason": "goal-geometry-pending",
+                "requestId": "economic:[\"fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1840,\\\"y\\\":656}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"build-site\\\"}\",[\"goal-geometry:[\\\"exact-build-site:fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":1840,\\\\\\\"y\\\\\\\":656}},\\\\\\\"buildingKind\\\\\\\":\\\\\\\"townHall\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"build-site\\\\\\\"}\\\",\\\"[\\\\\\\"128:96:32:699c9d45\\\\\\\",\\\\\\\"13:1d86b289\\\\\\\",[[\\\\\\\"scene-public-planner-frame-planner-townHall-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"townHall\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-2\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-3\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-4\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-5\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-6\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-7\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-8\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-stables-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"stables\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-barracks-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"barracks\\\\\\\",true,true]]]\\\"]\"]]"
+              },
+              {
+                "kind": "build-site",
+                "state": "pending",
+                "reason": "goal-geometry-pending",
+                "requestId": "economic:[\"fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":2128,\\\"y\\\":1008}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"build-site\\\"}\",[\"goal-geometry:[\\\"exact-build-site:fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2128,\\\\\\\"y\\\\\\\":1008}},\\\\\\\"buildingKind\\\\\\\":\\\\\\\"townHall\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"build-site\\\\\\\"}\\\",\\\"[\\\\\\\"128:96:32:699c9d45\\\\\\\",\\\\\\\"13:1d86b289\\\\\\\",[[\\\\\\\"scene-public-planner-frame-planner-townHall-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"townHall\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-2\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-3\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-4\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-5\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-6\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-7\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-8\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-stables-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"stables\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-barracks-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"barracks\\\\\\\",true,true]]]\\\"]\"]]"
+              },
+              {
+                "kind": "build-site",
+                "state": "pending",
+                "reason": "goal-geometry-pending",
+                "requestId": "economic:[\"fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":2128,\\\"y\\\":656}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"build-site\\\"}\",[\"goal-geometry:[\\\"exact-build-site:fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2128,\\\\\\\"y\\\\\\\":656}},\\\\\\\"buildingKind\\\\\\\":\\\\\\\"townHall\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"build-site\\\\\\\"}\\\",\\\"[\\\\\\\"128:96:32:699c9d45\\\\\\\",\\\\\\\"13:1d86b289\\\\\\\",[[\\\\\\\"scene-public-planner-frame-planner-townHall-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"townHall\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-2\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-3\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-4\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-5\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-6\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-7\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-8\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-stables-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"stables\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-barracks-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"barracks\\\\\\\",true,true]]]\\\"]\"]]"
+              },
+              {
+                "kind": "build-site",
+                "state": "pending",
+                "reason": "goal-geometry-pending",
+                "requestId": "economic:[\"fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":2160,\\\"y\\\":1008}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"build-site\\\"}\",[\"goal-geometry:[\\\"exact-build-site:fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2160,\\\\\\\"y\\\\\\\":1008}},\\\\\\\"buildingKind\\\\\\\":\\\\\\\"townHall\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"build-site\\\\\\\"}\\\",\\\"[\\\\\\\"128:96:32:699c9d45\\\\\\\",\\\\\\\"13:1d86b289\\\\\\\",[[\\\\\\\"scene-public-planner-frame-planner-townHall-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"townHall\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-2\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-3\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-4\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-5\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-6\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-7\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-8\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-stables-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"stables\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-barracks-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"barracks\\\\\\\",true,true]]]\\\"]\"]]"
+              },
+              {
+                "kind": "build-site",
+                "state": "pending",
+                "reason": "goal-geometry-pending",
+                "requestId": "economic:[\"fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":2160,\\\"y\\\":688}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"build-site\\\"}\",[\"goal-geometry:[\\\"exact-build-site:fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2160,\\\\\\\"y\\\\\\\":688}},\\\\\\\"buildingKind\\\\\\\":\\\\\\\"townHall\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"build-site\\\\\\\"}\\\",\\\"[\\\\\\\"128:96:32:699c9d45\\\\\\\",\\\\\\\"13:1d86b289\\\\\\\",[[\\\\\\\"scene-public-planner-frame-planner-townHall-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"townHall\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-2\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-3\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-4\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-5\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-6\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-7\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-8\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-stables-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"stables\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-barracks-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"barracks\\\\\\\",true,true]]]\\\"]\"]]"
+              },
+              {
+                "kind": "build-site",
+                "state": "pending",
+                "reason": "goal-geometry-pending",
+                "requestId": "economic:[\"fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":2160,\\\"y\\\":976}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"build-site\\\"}\",[\"goal-geometry:[\\\"exact-build-site:fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2160,\\\\\\\"y\\\\\\\":976}},\\\\\\\"buildingKind\\\\\\\":\\\\\\\"townHall\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"build-site\\\\\\\"}\\\",\\\"[\\\\\\\"128:96:32:699c9d45\\\\\\\",\\\\\\\"13:1d86b289\\\\\\\",[[\\\\\\\"scene-public-planner-frame-planner-townHall-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"townHall\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-2\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-3\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-4\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-5\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-6\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-7\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-8\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-stables-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"stables\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-barracks-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"barracks\\\\\\\",true,true]]]\\\"]\"]]"
+              },
+              {
+                "kind": "worker-at",
+                "state": "met",
+                "reason": "native-callable-region-pool",
+                "requestId": null
+              },
+              {
+                "kind": "worker-at",
+                "state": "met",
+                "reason": "native-callable-region-pool",
+                "requestId": null
+              },
+              {
+                "kind": "worker-at",
+                "state": "met",
+                "reason": "native-callable-region-pool",
+                "requestId": null
+              },
+              {
+                "kind": "gold",
+                "state": "unmet",
+                "reason": "gold-needs-positive-flow",
+                "requestId": null
+              },
+              {
+                "kind": "site-safe",
+                "state": "pending",
+                "reason": "goal-world-domain-port-required",
+                "requestId": "world:fact:{\"kind\":\"site-safe\",\"site\":{\"entityId\":\"resource-1\",\"landId\":\"land:1\",\"point\":{\"x\":1984,\"y\":832}},\"throughTick\":2401}"
+              },
+              {
+                "kind": "site-safe",
+                "state": "pending",
+                "reason": "goal-world-domain-port-required",
+                "requestId": "world:fact:{\"kind\":\"site-safe\",\"site\":{\"landId\":\"land:1\",\"point\":{\"x\":1808,\"y\":656}},\"throughTick\":2401}"
+              },
+              {
+                "kind": "site-safe",
+                "state": "pending",
+                "reason": "goal-world-domain-port-required",
+                "requestId": "world:fact:{\"kind\":\"site-safe\",\"site\":{\"landId\":\"land:1\",\"point\":{\"x\":1840,\"y\":1008}},\"throughTick\":2401}"
+              },
+              {
+                "kind": "site-safe",
+                "state": "pending",
+                "reason": "goal-world-domain-port-required",
+                "requestId": "world:fact:{\"kind\":\"site-safe\",\"site\":{\"landId\":\"land:1\",\"point\":{\"x\":1840,\"y\":656}},\"throughTick\":2401}"
+              },
+              {
+                "kind": "site-safe",
+                "state": "pending",
+                "reason": "goal-world-domain-port-required",
+                "requestId": "world:fact:{\"kind\":\"site-safe\",\"site\":{\"landId\":\"land:1\",\"point\":{\"x\":2128,\"y\":1008}},\"throughTick\":2401}"
+              },
+              {
+                "kind": "site-safe",
+                "state": "pending",
+                "reason": "goal-world-domain-port-required",
+                "requestId": "world:fact:{\"kind\":\"site-safe\",\"site\":{\"landId\":\"land:1\",\"point\":{\"x\":2128,\"y\":656}},\"throughTick\":2401}"
+              },
+              {
+                "kind": "site-safe",
+                "state": "pending",
+                "reason": "goal-world-domain-port-required",
+                "requestId": "world:fact:{\"kind\":\"site-safe\",\"site\":{\"landId\":\"land:1\",\"point\":{\"x\":2160,\"y\":1008}},\"throughTick\":2401}"
+              },
+              {
+                "kind": "site-safe",
+                "state": "pending",
+                "reason": "goal-world-domain-port-required",
+                "requestId": "world:fact:{\"kind\":\"site-safe\",\"site\":{\"landId\":\"land:1\",\"point\":{\"x\":2160,\"y\":688}},\"throughTick\":2401}"
+              },
+              {
+                "kind": "site-safe",
+                "state": "pending",
+                "reason": "goal-world-domain-port-required",
+                "requestId": "world:fact:{\"kind\":\"site-safe\",\"site\":{\"landId\":\"land:1\",\"point\":{\"x\":2160,\"y\":976}},\"throughTick\":2401}"
+              }
+            ]
+          }
+        ],
+        "threats": []
+      },
+      "fatal": null,
+      "lastPlanThink": 10,
+      "progress": [
+        {
+          "think": 1,
+          "passed": false,
+          "planHash": "0079a7cf7842544211c0a4c16187889472ceaf40538a5d26759e9e6fe1e6341d",
+          "work": {
+            "tick": 1,
+            "thinkSequence": 1,
+            "limit": 6144,
+            "used": 148
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 1,
+          "plans": [
+            {
+              "goalId": "ExpandLand:planner:resource-1",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 0
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "passed": false,
+          "planHash": "2aac056cb0259da614ad2abf78144c38507ef4540e9354434812084062ef37c0",
+          "work": {
+            "tick": 1,
+            "thinkSequence": 2,
+            "limit": 6144,
+            "used": 6144
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 2,
+          "plans": [
+            {
+              "goalId": "ExpandLand:planner:resource-1",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 24
+            }
+          ]
+        },
+        {
+          "think": 3,
+          "passed": false,
+          "planHash": "2aac056cb0259da614ad2abf78144c38507ef4540e9354434812084062ef37c0",
+          "work": {
+            "tick": 1,
+            "thinkSequence": 3,
+            "limit": 6144,
+            "used": 6144
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 3,
+          "plans": [
+            {
+              "goalId": "ExpandLand:planner:resource-1",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 24
+            }
+          ]
+        },
+        {
+          "think": 4,
+          "passed": false,
+          "planHash": "2aac056cb0259da614ad2abf78144c38507ef4540e9354434812084062ef37c0",
+          "work": {
+            "tick": 1,
+            "thinkSequence": 4,
+            "limit": 6144,
+            "used": 6144
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 4,
+          "plans": [
+            {
+              "goalId": "ExpandLand:planner:resource-1",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 24
+            }
+          ]
+        },
+        {
+          "think": 5,
+          "passed": false,
+          "planHash": "2aac056cb0259da614ad2abf78144c38507ef4540e9354434812084062ef37c0",
+          "work": {
+            "tick": 1,
+            "thinkSequence": 5,
+            "limit": 6144,
+            "used": 6144
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 5,
+          "plans": [
+            {
+              "goalId": "ExpandLand:planner:resource-1",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 24
+            }
+          ]
+        },
+        {
+          "think": 6,
+          "passed": false,
+          "planHash": "2aac056cb0259da614ad2abf78144c38507ef4540e9354434812084062ef37c0",
+          "work": {
+            "tick": 1,
+            "thinkSequence": 6,
+            "limit": 6144,
+            "used": 6144
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 6,
+          "plans": [
+            {
+              "goalId": "ExpandLand:planner:resource-1",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 24
+            }
+          ]
+        },
+        {
+          "think": 7,
+          "passed": false,
+          "planHash": "2aac056cb0259da614ad2abf78144c38507ef4540e9354434812084062ef37c0",
+          "work": {
+            "tick": 1,
+            "thinkSequence": 7,
+            "limit": 6144,
+            "used": 6144
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 7,
+          "plans": [
+            {
+              "goalId": "ExpandLand:planner:resource-1",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 24
+            }
+          ]
+        },
+        {
+          "think": 8,
+          "passed": false,
+          "planHash": "9cdfb85b5e0fa1c315e66c132d407df72bf1753921b2c8df4b2d641a37c41657",
+          "work": {
+            "tick": 1,
+            "thinkSequence": 8,
+            "limit": 6144,
+            "used": 6144
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 8,
+          "plans": [
+            {
+              "goalId": "ExpandLand:planner:resource-1",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 24
+            }
+          ]
+        },
+        {
+          "think": 9,
+          "passed": false,
+          "planHash": "9cdfb85b5e0fa1c315e66c132d407df72bf1753921b2c8df4b2d641a37c41657",
+          "work": {
+            "tick": 1,
+            "thinkSequence": 9,
+            "limit": 6144,
+            "used": 6144
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 9,
+          "plans": [
+            {
+              "goalId": "ExpandLand:planner:resource-1",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 24
+            }
+          ]
+        },
+        {
+          "think": 10,
+          "passed": false,
+          "planHash": "9cdfb85b5e0fa1c315e66c132d407df72bf1753921b2c8df4b2d641a37c41657",
+          "work": {
+            "tick": 1,
+            "thinkSequence": 10,
+            "limit": 6144,
+            "used": 6144
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 10,
+          "plans": [
+            {
+              "goalId": "ExpandLand:planner:resource-1",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 24
+            }
+          ]
+        }
+      ],
+      "classification": {
+        "category": "missing-capability",
+        "subtype": "waiting-real-facts",
+        "review": "manual: every observed selected action graph is empty; no wrong selected chain asserted"
+      }
+    },
+    {
+      "puzzle": "supply-tier/knight",
+      "passed": false,
+      "stable": false,
+      "thinkCount": 10,
+      "first": {
+        "think": 1,
+        "calls": 1,
+        "passed": false,
+        "error": {
+          "name": "AssertionError",
+          "message": "farm unlocks knight tier: predecessor: expected 0 to be greater than 0",
+          "stack": "AssertionError: farm unlocks knight tier: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:87:9)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:60:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:162:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:74:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:64:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:60:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+        },
+        "snapshotUntouched": true,
+        "planHash": "dcc1ee4f53cf24a57599de864affca4749635eafacf7c035d3280105ac152ed1",
+        "work": {
+          "tick": 1,
+          "thinkSequence": 1,
+          "limit": 6144,
+          "used": 147
+        },
+        "phase": "plan-verdict",
+        "memoryThinkSequence": 1,
+        "ports": {
+          "combatOptions": false,
+          "futureProjection": false
+        },
+        "goals": [
+          {
+            "id": "ExpandLand:planner:resource-1",
+            "effects": [
+              "hall-complete",
+              "garrison-ready"
+            ],
+            "rewardGold": 0.009795650486292827,
+            "deadlineTick": null
+          }
+        ],
+        "plans": [
+          {
+            "goalId": "ExpandLand:planner:resource-1",
+            "status": "waiting-facts",
+            "actions": [],
+            "alternativeCount": 0,
+            "search": {
+              "expansions": 5,
+              "depth": 0,
+              "work": 5,
+              "limitReason": null
+            },
+            "facts": [
+              {
+                "kind": "garrison-ready",
+                "state": "unmet",
+                "reason": "observed-garrison-handoff",
+                "requestId": null
+              },
+              {
+                "kind": "hall-complete",
+                "state": "unmet",
+                "reason": "native-mine-hall-missing",
+                "requestId": null
+              }
+            ]
+          }
+        ],
+        "threats": []
+      },
+      "final": {
+        "think": 10,
+        "calls": 1,
+        "passed": false,
+        "error": {
+          "name": "AssertionError",
+          "message": "farm unlocks knight tier: predecessor: expected 0 to be greater than 0",
+          "stack": "AssertionError: farm unlocks knight tier: predecessor: expected 0 to be greater than 0\n    at required (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:55:105)\n    at before (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:70:5)\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:87:9)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:60:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:162:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:74:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:64:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:60:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+        },
+        "snapshotUntouched": true,
+        "planHash": "105b27a17932d81524b652b2996fa055d93e317f34fb0cb8671fb179d3a1ac4b",
+        "work": {
+          "tick": 1,
+          "thinkSequence": 10,
+          "limit": 6144,
+          "used": 6144
+        },
+        "phase": "plan-verdict",
+        "memoryThinkSequence": 10,
+        "ports": {
+          "combatOptions": false,
+          "futureProjection": false
+        },
+        "goals": [
+          {
+            "id": "ExpandLand:planner:resource-1",
+            "effects": [
+              "hall-complete",
+              "garrison-ready"
+            ],
+            "rewardGold": 0.009795650486292827,
+            "deadlineTick": null
+          }
+        ],
+        "plans": [
+          {
+            "goalId": "ExpandLand:planner:resource-1",
+            "status": "waiting-facts",
+            "actions": [],
+            "alternativeCount": 24,
+            "search": {
+              "expansions": 173,
+              "depth": 1,
+              "work": 173,
+              "limitReason": null
+            },
+            "facts": [
+              {
+                "kind": "garrison-ready",
+                "state": "unmet",
+                "reason": "observed-garrison-handoff",
+                "requestId": null
+              },
+              {
+                "kind": "hall-complete",
+                "state": "unmet",
+                "reason": "native-mine-hall-missing",
+                "requestId": null
+              },
+              {
+                "kind": "route",
+                "state": "met",
+                "reason": "shared-land-route-published",
+                "requestId": null
+              },
+              {
+                "kind": "route",
+                "state": "met",
+                "reason": "shared-land-route-published",
+                "requestId": null
+              },
+              {
+                "kind": "route",
+                "state": "met",
+                "reason": "shared-land-route-published",
+                "requestId": null
+              },
+              {
+                "kind": "route",
+                "state": "met",
+                "reason": "shared-land-route-published",
+                "requestId": null
+              },
+              {
+                "kind": "route",
+                "state": "pending",
+                "reason": "goal-land-route-pending",
+                "requestId": "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-1\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":544,\"y\":832}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":2128,\"y\":656}}}"
+              },
+              {
+                "kind": "route",
+                "state": "pending",
+                "reason": "goal-land-route-pending",
+                "requestId": "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-1\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":544,\"y\":832}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":2160,\"y\":1008}}}"
+              },
+              {
+                "kind": "route",
+                "state": "pending",
+                "reason": "goal-land-route-pending",
+                "requestId": "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-1\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":544,\"y\":832}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":2160,\"y\":688}}}"
+              },
+              {
+                "kind": "route",
+                "state": "pending",
+                "reason": "goal-land-route-pending",
+                "requestId": "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-1\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":544,\"y\":832}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":2160,\"y\":976}}}"
+              },
+              {
+                "kind": "route",
+                "state": "met",
+                "reason": "shared-land-route-published",
+                "requestId": null
+              },
+              {
+                "kind": "route",
+                "state": "met",
+                "reason": "shared-land-route-published",
+                "requestId": null
+              },
+              {
+                "kind": "route",
+                "state": "met",
+                "reason": "shared-land-route-published",
+                "requestId": null
+              },
+              {
+                "kind": "route",
+                "state": "met",
+                "reason": "shared-land-route-published",
+                "requestId": null
+              },
+              {
+                "kind": "route",
+                "state": "pending",
+                "reason": "goal-land-route-pending",
+                "requestId": "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-2\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":592,\"y\":832}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":2128,\"y\":656}}}"
+              },
+              {
+                "kind": "route",
+                "state": "pending",
+                "reason": "goal-land-route-pending",
+                "requestId": "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-2\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":592,\"y\":832}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":2160,\"y\":1008}}}"
+              },
+              {
+                "kind": "route",
+                "state": "pending",
+                "reason": "goal-land-route-pending",
+                "requestId": "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-2\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":592,\"y\":832}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":2160,\"y\":688}}}"
+              },
+              {
+                "kind": "route",
+                "state": "pending",
+                "reason": "goal-land-route-pending",
+                "requestId": "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-2\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":592,\"y\":832}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":2160,\"y\":976}}}"
+              },
+              {
+                "kind": "route",
+                "state": "met",
+                "reason": "shared-land-route-published",
+                "requestId": null
+              },
+              {
+                "kind": "route",
+                "state": "met",
+                "reason": "shared-land-route-published",
+                "requestId": null
+              },
+              {
+                "kind": "route",
+                "state": "met",
+                "reason": "shared-land-route-published",
+                "requestId": null
+              },
+              {
+                "kind": "route",
+                "state": "met",
+                "reason": "shared-land-route-published",
+                "requestId": null
+              },
+              {
+                "kind": "route",
+                "state": "pending",
+                "reason": "goal-land-route-pending",
+                "requestId": "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-3\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":640,\"y\":832}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":2128,\"y\":656}}}"
+              },
+              {
+                "kind": "route",
+                "state": "pending",
+                "reason": "goal-land-route-pending",
+                "requestId": "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-3\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":640,\"y\":832}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":2160,\"y\":1008}}}"
+              },
+              {
+                "kind": "route",
+                "state": "pending",
+                "reason": "goal-land-route-pending",
+                "requestId": "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-3\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":640,\"y\":832}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":2160,\"y\":688}}}"
+              },
+              {
+                "kind": "route",
+                "state": "pending",
+                "reason": "goal-land-route-pending",
+                "requestId": "world:fact:{\"actor\":{\"entityId\":\"scene-public-planner-frame-planner-worker-3\",\"kind\":\"existing\"},\"from\":{\"landId\":\"land:1\",\"point\":{\"x\":640,\"y\":832}},\"kind\":\"route\",\"mover\":\"land\",\"to\":{\"landId\":\"land:1\",\"point\":{\"x\":2160,\"y\":976}}}"
+              },
+              {
+                "kind": "build-site",
+                "state": "pending",
+                "reason": "goal-geometry-pending",
+                "requestId": "economic:[\"fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1808,\\\"y\\\":656}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"build-site\\\"}\",[\"goal-geometry:[\\\"exact-build-site:fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":1808,\\\\\\\"y\\\\\\\":656}},\\\\\\\"buildingKind\\\\\\\":\\\\\\\"townHall\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"build-site\\\\\\\"}\\\",\\\"[\\\\\\\"128:96:32:699c9d45\\\\\\\",\\\\\\\"12:565f713f\\\\\\\",[[\\\\\\\"scene-public-planner-frame-planner-townHall-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"townHall\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-2\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-3\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-4\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-5\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-6\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-7\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-8\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-stables-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"stables\\\\\\\",true,true]]]\\\"]\"]]"
+              },
+              {
+                "kind": "build-site",
+                "state": "pending",
+                "reason": "goal-geometry-pending",
+                "requestId": "economic:[\"fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1840,\\\"y\\\":1008}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"build-site\\\"}\",[\"goal-geometry:[\\\"exact-build-site:fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":1840,\\\\\\\"y\\\\\\\":1008}},\\\\\\\"buildingKind\\\\\\\":\\\\\\\"townHall\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"build-site\\\\\\\"}\\\",\\\"[\\\\\\\"128:96:32:699c9d45\\\\\\\",\\\\\\\"12:565f713f\\\\\\\",[[\\\\\\\"scene-public-planner-frame-planner-townHall-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"townHall\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-2\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-3\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-4\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-5\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-6\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-7\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-8\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-stables-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"stables\\\\\\\",true,true]]]\\\"]\"]]"
+              },
+              {
+                "kind": "build-site",
+                "state": "pending",
+                "reason": "goal-geometry-pending",
+                "requestId": "economic:[\"fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":1840,\\\"y\\\":656}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"build-site\\\"}\",[\"goal-geometry:[\\\"exact-build-site:fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":1840,\\\\\\\"y\\\\\\\":656}},\\\\\\\"buildingKind\\\\\\\":\\\\\\\"townHall\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"build-site\\\\\\\"}\\\",\\\"[\\\\\\\"128:96:32:699c9d45\\\\\\\",\\\\\\\"12:565f713f\\\\\\\",[[\\\\\\\"scene-public-planner-frame-planner-townHall-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"townHall\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-2\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-3\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-4\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-5\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-6\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-7\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-8\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-stables-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"stables\\\\\\\",true,true]]]\\\"]\"]]"
+              },
+              {
+                "kind": "build-site",
+                "state": "pending",
+                "reason": "goal-geometry-pending",
+                "requestId": "economic:[\"fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":2128,\\\"y\\\":1008}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"build-site\\\"}\",[\"goal-geometry:[\\\"exact-build-site:fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2128,\\\\\\\"y\\\\\\\":1008}},\\\\\\\"buildingKind\\\\\\\":\\\\\\\"townHall\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"build-site\\\\\\\"}\\\",\\\"[\\\\\\\"128:96:32:699c9d45\\\\\\\",\\\\\\\"12:565f713f\\\\\\\",[[\\\\\\\"scene-public-planner-frame-planner-townHall-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"townHall\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-2\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-3\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-4\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-5\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-6\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-7\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-8\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-stables-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"stables\\\\\\\",true,true]]]\\\"]\"]]"
+              },
+              {
+                "kind": "build-site",
+                "state": "pending",
+                "reason": "goal-geometry-pending",
+                "requestId": "economic:[\"fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":2128,\\\"y\\\":656}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"build-site\\\"}\",[\"goal-geometry:[\\\"exact-build-site:fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2128,\\\\\\\"y\\\\\\\":656}},\\\\\\\"buildingKind\\\\\\\":\\\\\\\"townHall\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"build-site\\\\\\\"}\\\",\\\"[\\\\\\\"128:96:32:699c9d45\\\\\\\",\\\\\\\"12:565f713f\\\\\\\",[[\\\\\\\"scene-public-planner-frame-planner-townHall-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"townHall\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-2\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-3\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-4\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-5\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-6\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-7\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-8\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-stables-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"stables\\\\\\\",true,true]]]\\\"]\"]]"
+              },
+              {
+                "kind": "build-site",
+                "state": "pending",
+                "reason": "goal-geometry-pending",
+                "requestId": "economic:[\"fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":2160,\\\"y\\\":1008}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"build-site\\\"}\",[\"goal-geometry:[\\\"exact-build-site:fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2160,\\\\\\\"y\\\\\\\":1008}},\\\\\\\"buildingKind\\\\\\\":\\\\\\\"townHall\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"build-site\\\\\\\"}\\\",\\\"[\\\\\\\"128:96:32:699c9d45\\\\\\\",\\\\\\\"12:565f713f\\\\\\\",[[\\\\\\\"scene-public-planner-frame-planner-townHall-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"townHall\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-2\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-3\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-4\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-5\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-6\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-7\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-8\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-stables-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"stables\\\\\\\",true,true]]]\\\"]\"]]"
+              },
+              {
+                "kind": "build-site",
+                "state": "pending",
+                "reason": "goal-geometry-pending",
+                "requestId": "economic:[\"fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":2160,\\\"y\\\":688}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"build-site\\\"}\",[\"goal-geometry:[\\\"exact-build-site:fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2160,\\\\\\\"y\\\\\\\":688}},\\\\\\\"buildingKind\\\\\\\":\\\\\\\"townHall\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"build-site\\\\\\\"}\\\",\\\"[\\\\\\\"128:96:32:699c9d45\\\\\\\",\\\\\\\"12:565f713f\\\\\\\",[[\\\\\\\"scene-public-planner-frame-planner-townHall-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"townHall\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-2\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-3\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-4\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-5\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-6\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-7\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-8\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-stables-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"stables\\\\\\\",true,true]]]\\\"]\"]]"
+              },
+              {
+                "kind": "build-site",
+                "state": "pending",
+                "reason": "goal-geometry-pending",
+                "requestId": "economic:[\"fact:{\\\"at\\\":{\\\"landId\\\":\\\"land:1\\\",\\\"point\\\":{\\\"x\\\":2160,\\\"y\\\":976}},\\\"buildingKind\\\":\\\"townHall\\\",\\\"kind\\\":\\\"build-site\\\"}\",[\"goal-geometry:[\\\"exact-build-site:fact:{\\\\\\\"at\\\\\\\":{\\\\\\\"landId\\\\\\\":\\\\\\\"land:1\\\\\\\",\\\\\\\"point\\\\\\\":{\\\\\\\"x\\\\\\\":2160,\\\\\\\"y\\\\\\\":976}},\\\\\\\"buildingKind\\\\\\\":\\\\\\\"townHall\\\\\\\",\\\\\\\"kind\\\\\\\":\\\\\\\"build-site\\\\\\\"}\\\",\\\"[\\\\\\\"128:96:32:699c9d45\\\\\\\",\\\\\\\"12:565f713f\\\\\\\",[[\\\\\\\"scene-public-planner-frame-planner-townHall-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"townHall\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-2\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-3\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-4\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-5\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-6\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-7\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-farm-8\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"farm\\\\\\\",true,true],[\\\\\\\"scene-public-planner-frame-planner-stables-1\\\\\\\",\\\\\\\"planner\\\\\\\",\\\\\\\"stables\\\\\\\",true,true]]]\\\"]\"]]"
+              },
+              {
+                "kind": "worker-at",
+                "state": "met",
+                "reason": "native-callable-region-pool",
+                "requestId": null
+              },
+              {
+                "kind": "worker-at",
+                "state": "met",
+                "reason": "native-callable-region-pool",
+                "requestId": null
+              },
+              {
+                "kind": "worker-at",
+                "state": "met",
+                "reason": "native-callable-region-pool",
+                "requestId": null
+              },
+              {
+                "kind": "gold",
+                "state": "unmet",
+                "reason": "gold-needs-positive-flow",
+                "requestId": null
+              },
+              {
+                "kind": "site-safe",
+                "state": "pending",
+                "reason": "goal-world-domain-port-required",
+                "requestId": "world:fact:{\"kind\":\"site-safe\",\"site\":{\"entityId\":\"resource-1\",\"landId\":\"land:1\",\"point\":{\"x\":1984,\"y\":832}},\"throughTick\":2401}"
+              },
+              {
+                "kind": "site-safe",
+                "state": "pending",
+                "reason": "goal-world-domain-port-required",
+                "requestId": "world:fact:{\"kind\":\"site-safe\",\"site\":{\"landId\":\"land:1\",\"point\":{\"x\":1808,\"y\":656}},\"throughTick\":2401}"
+              },
+              {
+                "kind": "site-safe",
+                "state": "pending",
+                "reason": "goal-world-domain-port-required",
+                "requestId": "world:fact:{\"kind\":\"site-safe\",\"site\":{\"landId\":\"land:1\",\"point\":{\"x\":1840,\"y\":1008}},\"throughTick\":2401}"
+              },
+              {
+                "kind": "site-safe",
+                "state": "pending",
+                "reason": "goal-world-domain-port-required",
+                "requestId": "world:fact:{\"kind\":\"site-safe\",\"site\":{\"landId\":\"land:1\",\"point\":{\"x\":1840,\"y\":656}},\"throughTick\":2401}"
+              },
+              {
+                "kind": "site-safe",
+                "state": "pending",
+                "reason": "goal-world-domain-port-required",
+                "requestId": "world:fact:{\"kind\":\"site-safe\",\"site\":{\"landId\":\"land:1\",\"point\":{\"x\":2128,\"y\":1008}},\"throughTick\":2401}"
+              },
+              {
+                "kind": "site-safe",
+                "state": "pending",
+                "reason": "goal-world-domain-port-required",
+                "requestId": "world:fact:{\"kind\":\"site-safe\",\"site\":{\"landId\":\"land:1\",\"point\":{\"x\":2128,\"y\":656}},\"throughTick\":2401}"
+              },
+              {
+                "kind": "site-safe",
+                "state": "pending",
+                "reason": "goal-world-domain-port-required",
+                "requestId": "world:fact:{\"kind\":\"site-safe\",\"site\":{\"landId\":\"land:1\",\"point\":{\"x\":2160,\"y\":1008}},\"throughTick\":2401}"
+              },
+              {
+                "kind": "site-safe",
+                "state": "pending",
+                "reason": "goal-world-domain-port-required",
+                "requestId": "world:fact:{\"kind\":\"site-safe\",\"site\":{\"landId\":\"land:1\",\"point\":{\"x\":2160,\"y\":688}},\"throughTick\":2401}"
+              },
+              {
+                "kind": "site-safe",
+                "state": "pending",
+                "reason": "goal-world-domain-port-required",
+                "requestId": "world:fact:{\"kind\":\"site-safe\",\"site\":{\"landId\":\"land:1\",\"point\":{\"x\":2160,\"y\":976}},\"throughTick\":2401}"
+              }
+            ]
+          }
+        ],
+        "threats": []
+      },
+      "fatal": null,
+      "lastPlanThink": 10,
+      "progress": [
+        {
+          "think": 1,
+          "passed": false,
+          "planHash": "dcc1ee4f53cf24a57599de864affca4749635eafacf7c035d3280105ac152ed1",
+          "work": {
+            "tick": 1,
+            "thinkSequence": 1,
+            "limit": 6144,
+            "used": 147
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 1,
+          "plans": [
+            {
+              "goalId": "ExpandLand:planner:resource-1",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 0
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "passed": false,
+          "planHash": "61df54db410c2a28994e18c5b7ee31fbf2aa77539c9de4d9858a1d4c0137d1e7",
+          "work": {
+            "tick": 1,
+            "thinkSequence": 2,
+            "limit": 6144,
+            "used": 6144
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 2,
+          "plans": [
+            {
+              "goalId": "ExpandLand:planner:resource-1",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 24
+            }
+          ]
+        },
+        {
+          "think": 3,
+          "passed": false,
+          "planHash": "61df54db410c2a28994e18c5b7ee31fbf2aa77539c9de4d9858a1d4c0137d1e7",
+          "work": {
+            "tick": 1,
+            "thinkSequence": 3,
+            "limit": 6144,
+            "used": 6144
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 3,
+          "plans": [
+            {
+              "goalId": "ExpandLand:planner:resource-1",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 24
+            }
+          ]
+        },
+        {
+          "think": 4,
+          "passed": false,
+          "planHash": "61df54db410c2a28994e18c5b7ee31fbf2aa77539c9de4d9858a1d4c0137d1e7",
+          "work": {
+            "tick": 1,
+            "thinkSequence": 4,
+            "limit": 6144,
+            "used": 6144
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 4,
+          "plans": [
+            {
+              "goalId": "ExpandLand:planner:resource-1",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 24
+            }
+          ]
+        },
+        {
+          "think": 5,
+          "passed": false,
+          "planHash": "61df54db410c2a28994e18c5b7ee31fbf2aa77539c9de4d9858a1d4c0137d1e7",
+          "work": {
+            "tick": 1,
+            "thinkSequence": 5,
+            "limit": 6144,
+            "used": 6144
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 5,
+          "plans": [
+            {
+              "goalId": "ExpandLand:planner:resource-1",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 24
+            }
+          ]
+        },
+        {
+          "think": 6,
+          "passed": false,
+          "planHash": "61df54db410c2a28994e18c5b7ee31fbf2aa77539c9de4d9858a1d4c0137d1e7",
+          "work": {
+            "tick": 1,
+            "thinkSequence": 6,
+            "limit": 6144,
+            "used": 6144
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 6,
+          "plans": [
+            {
+              "goalId": "ExpandLand:planner:resource-1",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 24
+            }
+          ]
+        },
+        {
+          "think": 7,
+          "passed": false,
+          "planHash": "61df54db410c2a28994e18c5b7ee31fbf2aa77539c9de4d9858a1d4c0137d1e7",
+          "work": {
+            "tick": 1,
+            "thinkSequence": 7,
+            "limit": 6144,
+            "used": 6144
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 7,
+          "plans": [
+            {
+              "goalId": "ExpandLand:planner:resource-1",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 24
+            }
+          ]
+        },
+        {
+          "think": 8,
+          "passed": false,
+          "planHash": "c0ece197a2a3d1a5a9b71b15ee02bbdd391e32bbf6115b0c552690664a1687c7",
+          "work": {
+            "tick": 1,
+            "thinkSequence": 8,
+            "limit": 6144,
+            "used": 6144
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 8,
+          "plans": [
+            {
+              "goalId": "ExpandLand:planner:resource-1",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 24
+            }
+          ]
+        },
+        {
+          "think": 9,
+          "passed": false,
+          "planHash": "c0ece197a2a3d1a5a9b71b15ee02bbdd391e32bbf6115b0c552690664a1687c7",
+          "work": {
+            "tick": 1,
+            "thinkSequence": 9,
+            "limit": 6144,
+            "used": 6144
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 9,
+          "plans": [
+            {
+              "goalId": "ExpandLand:planner:resource-1",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 24
+            }
+          ]
+        },
+        {
+          "think": 10,
+          "passed": false,
+          "planHash": "105b27a17932d81524b652b2996fa055d93e317f34fb0cb8671fb179d3a1ac4b",
+          "work": {
+            "tick": 1,
+            "thinkSequence": 10,
+            "limit": 6144,
+            "used": 6144
+          },
+          "phase": "plan-verdict",
+          "memoryThinkSequence": 10,
+          "plans": [
+            {
+              "goalId": "ExpandLand:planner:resource-1",
+              "status": "waiting-facts",
+              "actions": [],
+              "alternativeCount": 24
+            }
+          ]
+        }
+      ],
+      "classification": {
+        "category": "missing-capability",
+        "subtype": "waiting-real-facts",
+        "review": "manual: every observed selected action graph is empty; no wrong selected chain asserted"
+      }
+    }
+  ],
+  "counts": {
+    "passed": 0,
+    "wrongSelectedChain": 0,
+    "missingCapability": 11,
+    "completedK10": 2,
+    "interruptedAtSecondThink": 9,
+    "completedThinks": 29,
+    "attemptedThinks": 38
+  }
+}
