@@ -470,6 +470,11 @@ function projectPlan(state: GoalSearchMemory, input: GoalPlannerInput, goal: Goa
     || !!state.deferred?.length
     || state.candidates.some(action => [action.duration, action.cost, action.successProbability].some(estimate => estimate.state === 'pending'));
   const actions = steps.map(step => actionNode(step, input));
+  // These nodes describe the observed world now. A later action can restore
+  // the same predicate after a move, but cannot have produced today's proof.
+  // Its real consumers already depend on that action through the scheduled
+  // prefix; joining it back into the current fact would invent an ancestor.
+  const currentFacts = new Set(state.observed.filter(observation => observation.state === 'met').map(observation => observation.fact.id));
   const projection = projectGoalResources({ epoch: input.context.tick, initial: balances(state, input), actions: steps });
   const currentMet = goal.effects.every(fact => observe(state, input, fact).state === 'met');
   const alternatives = state.alternatives.map(alternative => ({ ...alternative,
@@ -480,12 +485,16 @@ function projectPlan(state: GoalSearchMemory, input: GoalPlannerInput, goal: Goa
       : 'goal-alternative-search-unresolved', [alternative.factId], { selectedCostGold: path?.cost ?? null }) }));
   return { id: `goal-plan:${goal.id}`, goal, observedTick: input.context.tick,
     status: currentMet ? 'complete' : path ? profitable ? 'ready' : 'blocked' : unresolved ? 'waiting-facts' : state.phase !== 'done' || state.limitReason ? 'search-pending' : 'blocked',
-    facts: state.observed.map(observation => ({ id: observation.fact.id, observation,
-      producerActionIds: path ? satisfies(observation.fact, path, state, input).producers : [] })),
+    facts: state.observed.map(observation => {
+      const producers = path ? satisfies(observation.fact, path, state, input).producers : [];
+      return { id: observation.fact.id, observation,
+        producerActionIds: currentFacts.has(observation.fact.id) ? [] : producers };
+    }),
     ...(state.deferred?.length ? { deferredCandidates: state.deferred } : {}),
     actions, edges: actions.flatMap(action => [
       ...action.prerequisiteFactIds.map(from => ({ from, to: action.id, kind: 'requires' as const })),
-      ...action.declaration.effects.filter(effect => effect.operation === 'establish').map(effect => ({ from: action.id, to: effect.fact.id, kind: 'establishes' as const })),
+      ...action.declaration.effects.filter(effect => effect.operation === 'establish' && !currentFacts.has(effect.fact.id))
+        .map(effect => ({ from: action.id, to: effect.fact.id, kind: 'establishes' as const })),
       ...action.dependsOnActionIds.map(from => ({ from, to: action.id, kind: 'resource-before' as const })),
     ]).concat(state.observed.flatMap(observation => observation.derived?.allOf.map(fact => ({ from: fact.id, to: observation.fact.id, kind: 'requires' as const })) ?? [])),
     subgoals: state.observed.map(observation => ({ id: `subgoal:${observation.fact.id}`, factId: observation.fact.id,
