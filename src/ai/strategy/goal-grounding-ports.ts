@@ -1,0 +1,43 @@
+import type { Unit } from '../../shared/types';
+import type { Point, SeaId, Target } from './types';
+import type { Shore } from './regions';
+import type { GoalCandidates, GoalEntityReference, GoalEstimate, GoalFact, GoalParameter, GoalTransportRequest } from './goal-planner-types';
+
+export type GoalPublishedValue<T> = Readonly<{ state: 'met'; value: T; factIds: readonly string[] }>
+  | Exclude<GoalCandidates<never>, { state: 'met' }>;
+/** Initialization is a cheap serializable cursor, not geometry computation.
+ * advance performs finite checks and reports their logical work. The common
+ * source owns scheduling/publication on the existing FactWorkQueue. */
+export type GoalGeometryRequest<State, Value> = Readonly<{
+  key: string; revision: string; initialState: State;
+  advance: (state: State, allowance: number) => Readonly<{
+    state: State; work: number; done: boolean; value?: Value;
+  }>;
+}>;
+export type GoalGeometryReader = <State, Value>(request: GoalGeometryRequest<State, Value>) => GoalPublishedValue<Value>;
+export type GoalShorePair = Readonly<{ id: string; seaId: SeaId; departure: Shore; landing: Shore }>;
+export type GoalHullCandidate = Readonly<{
+  id: string; reference: GoalEntityReference; seaId: SeaId;
+  /** Evaluation-only native shape/stats. Its ID never names an allocation
+   * resource, world entity, receipt or output binding. */
+  assessment: Unit; availableTick: number; preconditions: readonly GoalFact[];
+  capacity: number; cargoUnitIds: readonly string[]; factIds: readonly string[];
+}>;
+export type GoalBerth = Readonly<{ water: Point; ground: Point; heading: number }>;
+export type GoalSeaLeg = Readonly<{ ticks: number; endpoint: Point; heading: number }>;
+/** All implementations are injected by the one owner-think source. Candidate
+ * domains consume them; they cannot construct another query/work allowance. */
+export type GoalTransportFactPorts = Readonly<{
+  shores: (from: Target, to: Target) => GoalCandidates<GoalShorePair>;
+  hulls: (seaId: SeaId, from: Target, mass: number, request: GoalTransportRequest) => GoalCandidates<GoalHullCandidate>;
+  berth: (passenger: Unit, hull: GoalHullCandidate, shore: Shore) => GoalPublishedValue<GoalBerth>;
+  seaLeg: (hull: GoalHullCandidate, from: Point & { heading: number }, to: Point, future: boolean) => GoalEstimate<GoalSeaLeg>;
+}>;
+
+/** Only this finite JSON representation is retained across thinks. Runtime
+ * step callbacks and assessment snapshots must never be stored here. */
+export type GoalGeometryMemory = {
+  version: 1;
+  entries: { key: string; revision: string; state: GoalParameter; work: number;
+    requestedTick: number; readyTick: number | null; value: GoalParameter | null }[];
+};
