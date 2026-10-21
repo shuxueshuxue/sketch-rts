@@ -63,7 +63,7 @@ export function createPuzzleWitness(puzzle: PublicPuzzleCase, world: PuzzleWorld
       const kind = puzzle.variant === 'knight' ? 'knight' : 'footman', count = kind === 'knight' ? 1 : 2;
       const producer = game.buildings.find(b => b.owner === owner && b.kind === (kind === 'knight' ? 'stables' : 'barracks'))!;
       if (kind === 'knight' && game.players[owner]!.supplyCap < requiredSupplyCap(kind) && !game.buildings.some(b => b.owner === owner && b.kind === 'farm' && !b.complete)) {
-        const at = legalBuildingSite(game, 'farm', { x: 1024, y: 1376 });
+        const at = legalBuildingSite(game, 'farm', { x: 416, y: 832 });
         send('farm', { type: 'build', unitId: workers[0]!.id, buildingKind: 'farm', ...at });
       }
       const troops = game.units.filter(u => u.owner === owner && u.kind === kind && u.hp > 0);
