@@ -3,6 +3,7 @@ import type { ActionGrant, ActionToken, AllocationEvent, AllocationReason, Execu
   ExecutorFeedback, StrategyAllocationMemory } from './allocation-types';
 import { advancesAllocationCommand, applyAllocationPayments } from './allocation-ledger';
 import { assertStrategyAllocationBounds, sameAction, STRATEGY_ALLOCATION_LIMITS } from './control';
+import { retainGoalAuthorityReferences } from './goal-authority-references';
 import { copyNativeOrder, INCUMBENT_RECEIPT_WAIT_TICKS } from './incumbent-evidence';
 import { assessForceAssemblyPosts } from './assembly-posts';
 import { validateGoalOutputFeedback } from './goal-output-validation';
@@ -306,8 +307,8 @@ export function pruneAllocationProvenance(memory: StrategyAllocationMemory): Str
     ));
   const budgets = Object.fromEntries(Object.entries(memory.budgets).filter(([, budget]) => budget.state !== 'released'
     || memory.methods[budget.methodId] || live(budget.action)));
-  const next = retainAllocationExecutions({ ...memory, budgets, blocked, issuedOrders, issuedCommands,
-    events: retainAllocationEvents(memory.events) });
+  const next = retainGoalAuthorityReferences(retainAllocationExecutions({ ...memory, budgets, blocked, issuedOrders, issuedCommands,
+    events: retainAllocationEvents(memory.events) }));
   assertStrategyAllocationBounds(next);
   return next;
 }

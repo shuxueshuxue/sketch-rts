@@ -53,7 +53,7 @@ it.each([{ x: 150, y: 100 }, { x: 700, y: 500 }])('retains one build task and pa
       for (const grant of grants) {
         const execution = authority.executions[grant.action.actionId]!, method = authority.methods[grant.methodId]!;
         const feedback = goalBuildExecutor.execute({ snapshot, owner: 'us', objective, method, execution, grant, events: authority.events,
-          goalFacts: frame.executionFacts(authority) });
+          goalFacts: frame.executionFacts(authority), goalReferences: authority.goalReferences! });
         for (const entry of feedback.commands) proposals.push({ id: `native-paid:build:${game.tick}:${proposals.length}`, source: 'executor',
           executor: execution.executor, action: execution.token, allocationRevision: authority.revision, ...entry });
         authority = applyExecutorFeedback(authority, snapshot, feedback);

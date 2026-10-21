@@ -62,7 +62,7 @@ it('passes a real ready training atom through one plan bundle, the existing allo
     expect(grant.leases.map(lease => lease.resourceKey)).toEqual(['queue:producer']);
     expect(grant.budgets.reduce((sum, budget) => sum + budget.amountGold, 0)).toBe(UNIT_DEFS.footman.cost);
     const feedback = goalTrainExecutor.execute({ snapshot: input.context.snapshot, owner: 'us', objective, method,
-      execution, grant, events: allocated.events, goalTraining: goalTrainingReader(allocated.memory, input.context.snapshot) });
+      execution, grant, events: allocated.events, goalReferences: allocated.memory.goalReferences!, goalTraining: goalTrainingReader(allocated.memory, input.context.snapshot) });
     expect(feedback.commands).toHaveLength(1);
     const proposals = feedback.commands.map((entry, index) => ({ id: `bridge-command-${index}`, source: 'executor' as const,
       executor: execution.executor, action: execution.token, allocationRevision: allocated.memory.revision, purpose: entry.purpose, command: entry.command }));

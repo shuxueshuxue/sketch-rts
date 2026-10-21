@@ -18,6 +18,7 @@ import { currentSiteThreatIsClear } from './protection-activation';
 import { assemblyPostArrivalId, assemblyPostForUnit } from './assembly-facts';
 import { assessForceAssemblyPosts } from './assembly-posts';
 import { continueGoalMethod } from './goal-execution-continuation';
+import { readGoalIntent, restoreGoalAuthorityReferences, storeGoalMethod } from './goal-authority-references';
 
 /** A fixed prefix bound limits speculative group quotes, not committed forces.
  * Every prefix is repriced as a whole group, including camp-force interactions. */
@@ -50,10 +51,13 @@ function clean<T>(value: T): T {
 function quoteInput(input: StrategyAllocationInput, memory: StrategyAllocationMemory, offer: Pick<Offer, 'objective' | 'method' | 'unitIds'>,
   valuation: ValuationContext): AllocationMethodQuoteInput {
   const interruptedUnitIds = [...new Set(Object.values(memory.assignments).filter(assignment => assignment.interruption).map(assignment => assignment.unitId))].sort();
-  return { snapshot: input.snapshot, situation: input.situation, objective: offer.objective, method: offer.method,
+  const method = offer.method.kind === 'goal-plan' ? { ...offer.method, actions: offer.method.actions.map(action => ({ ...action,
+    intent: action.intent.kind === 'goal-action' ? readGoalIntent(memory, action.intent) : action.intent })) } : offer.method;
+  return { snapshot: input.snapshot, situation: input.situation, objective: offer.objective, method,
     unitIds: offer.unitIds, budgets: Object.values(memory.budgets).filter(budget => budget.methodId === offer.method.id),
     responseEligibleUnitIds: allocationResponseCandidates(input.snapshot, input.situation, memory), interruptedUnitIds,
-    executions: Object.values(memory.executions).filter(action => action.methodId === offer.method.id), valuation,
+    executions: Object.values(memory.executions).filter(action => action.methodId === offer.method.id).map(action => ({ ...action,
+      intent: action.intent.kind === 'goal-action' ? readGoalIntent(memory, action.intent) : action.intent })), valuation,
     ...(input.voyageRisks ? { voyageRisks: input.voyageRisks } : {}),
     ...(input.assemblyFacts ? { assemblyFacts: request => input.assemblyFacts!({ ...request,
       objective: offer.objective, methodId: offer.method.id, unitIds: offer.unitIds, valuation, interruptedUnitIds,
@@ -181,8 +185,10 @@ function currentEta(unit: DecisionFacts<SituationUnit>, method: ExecutableMethod
     reason: { code: 'reason' in arrival ? arrival.reason.code : arrival.unmet[0]?.code ?? 'arrival-prerequisite', factIds: [unit.id, actionId], values: {} } };
 }
 function assignMethod(input: StrategyAllocationInput, memory: StrategyAllocationMemory, offer: Offer): StrategyAllocationMemory {
-  const { snapshot, situation } = input, tick = snapshot.tick,
-    method = continueGoalMethod(clean(offer.method), memory), objective = offer.objective;
+  const { snapshot, situation } = input, tick = snapshot.tick, objective = offer.objective;
+  const stored = storeGoalMethod(memory, continueGoalMethod(clean(offer.method), memory));
+  memory = stored.memory;
+  const method = stored.method;
   const executions = { ...memory.executions };
   let generation = memory.nextActionGeneration;
   const restart = !!memory.objectives[objective.id] && terminal(memory.objectives[objective.id]!.status);
@@ -234,7 +240,8 @@ function assignMethod(input: StrategyAllocationInput, memory: StrategyAllocation
       action: token, sinceTick: before?.sinceTick ?? tick,
       minimumStayUntilTick: Math.max(before?.minimumStayUntilTick ?? tick + STRATEGY_PARAMETERS.minimumStayTicks,
         action.intent.kind === 'goal-action' && ['hold-position', 'defend'].includes(action.intent.actionKind)
-          && typeof action.intent.parameters.throughTick === 'number' ? action.intent.parameters.throughTick : tick),
+          && typeof readGoalIntent(memory, action.intent).parameters.throughTick === 'number'
+          ? readGoalIntent(memory, action.intent).parameters.throughTick as number : tick),
       origin: 'allocator', incumbentTask: null };
     assignments[assignmentId] = { authority: 'committed', id: assignmentId, leaseId: leases[key]!.id, unitId: id,
       role: unit.roles[0] ?? 'frontline', objectiveId: objective.id, methodId: method.id, action: token, target,
@@ -356,7 +363,7 @@ function handoffCompletedGarrisons(input: StrategyAllocationInput, memory: Strat
 export function allocateStrategy(input: StrategyAllocationInput): StrategyAllocationDecision {
   const tick = input.snapshot.tick, owner = input.situation.owner;
   if (input.previous && input.previous.owner !== owner) throw new Error('Wrong allocation owner');
-  let memory = clean(input.previous ? structuredClone(input.previous) : createStrategyAllocationMemory(owner, tick));
+  let memory = restoreGoalAuthorityReferences(clean(input.previous ? structuredClone(input.previous) : createStrategyAllocationMemory(owner, tick)));
   if (memory.evaluatedTick === tick) return { memory, grants: allocationGrants(memory), events: [], unmet: memory.unmet };
   if (memory.evaluatedTick > tick) throw new Error('Allocation cannot move backwards in simulation time');
   const firstEventSequence = memory.nextEventSequence;

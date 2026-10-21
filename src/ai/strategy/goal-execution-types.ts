@@ -17,6 +17,9 @@ export type GoalTrainingReader = (query: GoalTrainingQuery) => GoalTrainingObser
 export type GoalExecutableIntent = Readonly<{
   kind: 'goal-action'; goalId: string; declarationId: string; actionKind: GoalActionKind;
   parameters: GoalExecutorBinding['parameters']; outputs: readonly string[];
+  /** Persisted intents keep an empty parameter record plus this exact
+   * definition version. Only the execution boundary expands it. */
+  parametersRef?: string;
 }>;
 
 /** Only buildings have individual outputs. Training uses the quantity/job

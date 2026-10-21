@@ -1,6 +1,7 @@
 import type { GameSnapshot } from '../../shared/types';
 import type { StrategyAllocationMemory } from './allocation-types';
 import type { GoalEntityReference } from './goal-planner-types';
+import { readGoalActionReference, readGoalIntent } from './goal-authority-references';
 
 export type GoalCohortCommitments = Record<string, { cohort: GoalEntityReference[]; generation: number; sinceTick: number }>;
 
@@ -23,6 +24,8 @@ export function retainGoalCohortCommitments(memory: GoalCohortCommitments, autho
   for (const event of authority.events) {
     if (event.kind !== 'assignment-stage' && !(event.kind === 'action-finished' && event.outcome === 'complete')) continue;
     if (event.methodId !== `goal-bundle:${event.objectiveId}`) continue;
+    const reference = readGoalActionReference(authority, event.action.actionId);
+    if (reference) { add(event.objectiveId, reference.kind, reference.parameters, event.action.generation, event.tick); continue; }
     for (const kind of ['assemble', 'transport-force', 'clear-camp']) {
       const marker = `goal-action:${kind}:`, start = event.action.actionId.indexOf(marker);
       if (start < 0) continue;
@@ -36,7 +39,7 @@ export function retainGoalCohortCommitments(memory: GoalCohortCommitments, autho
     const accepted = Object.values(authority.issuedCommands).some(command => command.action.actionId === execution.token.actionId
       && command.action.generation === execution.token.generation);
     if (!accepted && execution.status !== 'complete') continue;
-    add(intent.goalId, intent.actionKind, intent.parameters, execution.token.generation, execution.sinceTick);
+    add(intent.goalId, intent.actionKind, readGoalIntent(authority, intent).parameters, execution.token.generation, execution.sinceTick);
   }
   for (const goal of new Set(rows.map(row => row.goal))) {
     const candidates = rows.filter(row => row.goal === goal).sort((a, b) => a.tick - b.tick || a.generation - b.generation);

@@ -44,9 +44,9 @@ function fixture(post = { x: 1000, y: 1000 }) {
         benefit: [{ code: 'contract', value: 1000 }], cost: [], successProbability: 1, persistenceBonus: 0, score: 1000 } }) };
     const result = allocateStrategy({ snapshot, situation: planning.context.situation, objectives: [objective], methods: [method], providers: [provider], previous: null });
     authority = result.memory;
-    const grant = result.grants[0]!, execution = authority.executions.hold!;
+    const grant = result.grants[0]!, execution = authority.executions[grant.action.actionId]!;
     expect(authority.leases['unit:guard']!.minimumStayUntilTick).toBe(1200);
-    const feedback = goalHoldPositionExecutor.execute({ snapshot, owner: 'us', objective, method, execution, grant, events: authority.events });
+    const feedback = goalHoldPositionExecutor.execute({ snapshot, owner: 'us', objective, method, execution, grant, events: authority.events, goalReferences: authority.goalReferences! });
     authority = applyExecutorFeedback(authority, snapshot, feedback);
     const admitted = createStrategyCommandGateway({ snapshot, owner: 'us', memory: authority, grants: allocationGrants(authority), queuedTick: null })
       .admit(feedback.commands.map((entry, index) => ({ id: `guard-command-${index}`, source: 'executor', executor: execution.executor,

@@ -334,6 +334,10 @@ export type StrategyAllocationMemory = Readonly<{
   revision: number;
   nextActionGeneration: number;
   nextEventSequence: number;
+  /** Immutable goal definitions live once here; control records use short
+   * version references. This data counts toward the same authority byte cap. */
+  goalReferences?: import('./goal-versioned-references').GoalReferenceMemory;
+  goalIdentityVersion?: 1;
   decisionCounts?: AllocationDecisionCounts;
   goalTraining?: import('./goal-training-ledger').GoalTrainingMemory;
   objectives: Readonly<Record<ObjectiveId, ObjectiveAllocation>>;
@@ -371,6 +375,7 @@ export type ActionGrant = Readonly<{
   orderOverrides: readonly Readonly<{ unitId: string; preemptionEventId: AllocationEventId; previousCommandId: string | null }>[];
 }>;
 export type ExecutorInput = Readonly<{
+  goalReferences?: import('./goal-versioned-references').GoalReferenceMemory;
   snapshot: GameSnapshot;
   owner: PlayerId;
   objective: DecisionFacts<Objective>;
@@ -542,6 +547,7 @@ export type CommandAdmission = Readonly<{
   | Readonly<{ status: 'rejected'; reason: ExecutorReason }>
 );
 export type StrategyAllocationTrace = Readonly<{
+  goalReferences?: import('./goal-versioned-references').GoalReferenceMemory;
   revision: number;
   decisionCounts?: AllocationDecisionCounts;
   objectives: readonly ObjectiveAllocation[];

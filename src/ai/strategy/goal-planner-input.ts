@@ -1,4 +1,5 @@
 import { retainGoalCohortCommitments, type GoalCohortCommitments } from './goal-cohort-commitments';
+import { readGoalIntent } from './goal-authority-references';
 import { boundCache, touchCache, retainCachePins, type CacheCapacity, type CacheUse } from './bounded-cache';
 import { setBuildingBodies, withGoalDistanceFieldLease } from '../../shared/terrain';
 import { standingBodies } from '../../shared/structure-bodies';
@@ -20,6 +21,7 @@ import { withStrategyFrame } from './frame-reuse';
 import { createGoalEconomicGrounding } from './goal-economy-grounding';
 import { goalEconomyActionProvider } from './goal-economy-provider';
 import { assessGoalCombatMovementRisk } from './goal-combat-movement-risk';
+import { selectedGoalCampBattles } from './goal-selected-camp-battles';
 import { readGoalCampStagingFact } from './goal-camp-staging-facts';
 import { createGoalCampModelUsage } from './goal-camp-default-model';
 import { goalFact, goalResourceKey, goalValueKey } from './goal-facts';
@@ -368,9 +370,10 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
             factIds: posts.flatMap(post => post.factIds), ...(landings.state === 'met' && landings.deferred ? { deferred: landings.deferred }
               : landings.state === 'pending' ? { deferred: [{ id: `post-alternative:${effect.id}`, requestIds: landings.requestIds, reason: landings.reason }] } : {}) };
         };
+        const plannedCampIds = selectedGoalCampBattles(selected);
         const combatPorts = { landRoute, resolveCohort, coarseSeaTicks, startedCohort,
           movementRisk: request => mode === 'coarse' ? { state: 'met', value: { expectedLossGold: 0, survivalProbability: 1 }, factIds: ['coarse-movement-bound'] }
-            : assessGoalCombatMovementRisk({ snapshot, situation, request }),
+            : assessGoalCombatMovementRisk({ snapshot, situation, request: { ...request, plannedCampIds } }),
           arrival: (unit, target) => mode === 'coarse' ? { status: 'unknown', lowerBoundTicks: 0,
             reason: { code: 'coarse-arrival-not-refined', detail: 'Exact arrival follows selected-plan refinement', evidence: [] } }
             : arrivals.arrival(unit, target, landIdAt(snapshot.map, unit)),
@@ -509,7 +512,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
             entity.id === reference.entityId && entity.owner === owner && entity.hp > 0) ? reference : null;
           if (reference.kind !== 'output') return null;
           const action = Object.values(memory.strategyAllocation?.executions ?? {}).find(action => action.intent.kind === 'goal-action'
-            && action.intent.declarationId === reference.actionId);
+            && readGoalIntent(memory.strategyAllocation!, action.intent).declarationId === reference.actionId);
           const bindings = action?.state.goalOutputBindings;
           const entityId = bindings && typeof bindings === 'object' && !Array.isArray(bindings) ? (bindings as Readonly<Record<string, unknown>>)[reference.output] : undefined;
           return typeof entityId === 'string' && snapshot.buildings.some(building => building.id === entityId && building.owner === owner && building.hp > 0)

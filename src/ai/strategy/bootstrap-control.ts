@@ -34,6 +34,7 @@ import { goalLandExecutors } from './executors/goal-land';
 import { goalNavalExecutors } from './goal-naval-executors';
 import { goalTrainingReader, observeGoalTraining } from './goal-training-ledger';
 import { continuedIncumbentScripts, isIncumbentStrategyScript } from './incumbent-scripts';
+import { restoreGoalAuthorityReferences } from './goal-authority-references';
 const goalExecutors = [...goalEconomyExecutors, ...goalLandExecutors, ...goalNavalExecutors];
 
 export type AllocationCandidateRequest = Readonly<{ objectiveId: string; methodId: string; phase: 'skeleton' | 'gross' | 'net';
@@ -73,6 +74,7 @@ function nativeSwitchCost(snapshot: GameSnapshot, resources: readonly string[]):
  * order through the same authority. Observations project this exact evaluation. */
 export function planControlledBootstrapCommands(snapshot: GameSnapshot, owner: PlayerId, version: BootstrapAiVersion,
   scripts: AiScript[], options: AiPolicyContext, observation: 'none' | 'facts' | 'trace' = 'none') {
+  if (options.memory.strategyAllocation) options.memory.strategyAllocation = restoreGoalAuthorityReferences(options.memory.strategyAllocation);
   const preparation = observationMemory(snapshot, owner, options.memory);
   const work = new FactWorkQueue(snapshot.tick, undefined, preparation.factWork, beginObservationThink(preparation));
   return withFactWork(work, () => {
@@ -192,6 +194,7 @@ function executeControlledBootstrapCommands(snapshot: GameSnapshot, owner: Playe
     // execution of their old module with a reconstructed target.
     if (!executor || !objective || !method) continue;
     const input: ExecutorInput = { snapshot, owner, objective, method, execution, grant, events: authority.events,
+      ...(authority.goalReferences ? { goalReferences: authority.goalReferences } : {}),
       goalFacts, goalTraining: goalTrainingReader(authority, snapshot) };
     const { task, safety } = withNavigationPhase('strategy-planning', () => withAllocationLandRoutes(landRouteReader,
       () => ({ task: executor.execute(input), safety: observeWorkerSafetyInterruption(input) })));

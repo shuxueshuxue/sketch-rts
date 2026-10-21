@@ -3,6 +3,7 @@ import { grantedUnits, sameAction, validExecutorGrant } from './executor-grants'
 import type { GoalExecutableIntent } from './goal-execution-types';
 import type { GoalActionKind } from './goal-planner-types';
 import type { Point, Target } from './types';
+import { readGoalIntent } from './goal-authority-references';
 
 /** Shared decoding only. No output resolution, authority or world entity is
  * invented from a parameter string, action name or predicted factory ID. */
@@ -35,7 +36,7 @@ export function goalEntityIds(value: unknown): readonly string[] | null {
 }
 export function goalActionIntent(input: ExecutorInput, kind: GoalActionKind): GoalExecutableIntent | null {
   return validExecutorGrant(input) && input.execution.intent.kind === 'goal-action' && input.execution.intent.actionKind === kind
-    && input.execution.intent.goalId === input.objective.id ? input.execution.intent : null;
+    && input.execution.intent.goalId === input.objective.id ? readGoalIntent(input, input.execution.intent) : null;
 }
 export function goalHasLease(input: ExecutorInput, resourceKey: string): boolean {
   return validExecutorGrant(input) && input.grant.leases.some(lease => lease.resourceKey === resourceKey

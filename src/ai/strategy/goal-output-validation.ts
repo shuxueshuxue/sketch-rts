@@ -2,6 +2,7 @@ import type { GameSnapshot } from '../../shared/types';
 import type { ExecutorFeedback, StrategyAllocationMemory } from './allocation-types';
 import { sameAction } from './control';
 import { goalRecord } from './goal-executor-parameters';
+import { readGoalIntent } from './goal-authority-references';
 
 /** Building outputs retain exact native foundation identity. Training settles
  * quantities in the shared job ledger and never publishes a unit binding. */
@@ -9,7 +10,7 @@ export function validateGoalOutputFeedback(memory: StrategyAllocationMemory, sna
   feedback: ExecutorFeedback): ExecutorFeedback {
   const execution = memory.executions[feedback.action.actionId];
   if (!execution || execution.intent.kind !== 'goal-action') return feedback;
-  const intent = execution.intent;
+  const intent = readGoalIntent(memory, execution.intent);
   const { goalOutputBindings: _untrustedBindings, goalNativeJobs: _obsoleteBirths, ...domain } = feedback.state;
   if (intent.actionKind === 'train') {
     const jobs = memory.goalTraining?.jobs.filter(job => sameAction(job.action, execution.token)) ?? [];

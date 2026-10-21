@@ -7,6 +7,7 @@ import { goalTarget } from './goal-executor-parameters';
 import { goalValueKey } from './goal-facts';
 import { landIdAt, seaIdAt } from './regions';
 import type { Target } from './types';
+import { readGoalIntent } from './goal-authority-references';
 
 type Pool = { key: string; unitKind: TrainableUnitKind; at: Target; count: number; baseCount: number;
   credited: number; increases: number; assignedThrough: number; observedTick: number };
@@ -46,7 +47,7 @@ export function recordGoalTrainingAdmissions(memory: StrategyAllocationMemory, s
     const issued = issuedCommands[admission.commandId], execution = admission.action && memory.executions[admission.action.actionId];
     if (!issued || issued.command.type !== 'train' || issued.worldBefore?.kind !== 'production' || issued.worldBefore.pool
       || execution?.intent.kind !== 'goal-action' || execution.intent.actionKind !== 'train') continue;
-    const at = goalTarget(execution.intent.parameters.at), kind = issued.command.unitKind;
+    const at = goalTarget(readGoalIntent(memory, execution.intent).parameters.at), kind = issued.command.unitKind;
     if (!at || !(unitMover(kind) === 'land' ? at.landId : at.seaId)) continue;
     const key = goalValueKey([kind, unitMover(kind) === 'land' ? at.landId : at.seaId]);
     let pool = state.pools.find(pool => pool.key === key);

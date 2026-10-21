@@ -10,6 +10,7 @@ import { goalFact, goalValueKey } from './goal-facts';
 import type { GoalFact, GoalFactObservation, GoalPlanningContext } from './goal-planner-types';
 import { landIdAt } from './regions';
 import type { Target } from './types';
+import { readGoalIntent } from './goal-authority-references';
 
 const gap = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y);
 const sameSite = (a: Target, b: Target) => a.entityId === b.entityId && a.landId === b.landId
@@ -35,7 +36,7 @@ export function readGoalGuardFact(fact: GoalFact, context: GoalPlanningContext, 
     if (!execution || execution.status !== 'active' || intent?.kind !== 'goal-action'
       || intent.actionKind !== 'hold-position' || !sameAction(execution.token, grant.action)
       || authority.methods[execution.methodId]?.kind !== 'goal-plan') continue;
-    const params = intent.parameters, post = goalTarget(params.target), protectedSite = goalTarget(params.garrisonAt);
+    const params = readGoalIntent(authority, intent).parameters, post = goalTarget(params.target), protectedSite = goalTarget(params.garrisonAt);
     const through = params.throughTick, since = execution.state.goalHoldingSince;
     if (!post?.landId || !protectedSite || typeof through !== 'number' || !Number.isFinite(through) || through <= context.tick
       || typeof since !== 'number' || !Number.isFinite(since) || since > context.tick || since < execution.sinceTick) continue;

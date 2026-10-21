@@ -5,6 +5,7 @@ import { snapshotGame, stepGame } from '../../shared/sim';
 import { BUILDING_DEFS } from '../../shared/catalog';
 import { createAiPolicyMemory } from '../memory';
 import { goalFact } from './goal-facts';
+import { readGoalIntent } from './goal-authority-references';
 import { goalActionContributes, goalQuantity } from './goal-fact-matching';
 import { goalPoolMemberCandidates } from './goal-pool-members';
 import { createGoalEconomicGrounding } from './goal-economy-grounding';
@@ -82,7 +83,8 @@ it('declares a coarse hall and its worker quantity without requesting exact geom
     const action = actions[0]!;
     expect(action.precision).toBe('coarse');
     expect(action.duration).toMatchObject({ state: 'met', value: BUILDING_DEFS.townHall.buildTime });
-    expect(action.cost).toMatchObject({ state: 'met', value: [{ gold: BUILDING_DEFS.townHall.cost }] });
+    expect(action.cost).toMatchObject({ state: 'met', value: [{ gold: 0 }] });
+    expect(action.flows).toContainEqual(expect.objectContaining({ resource: { kind: 'gold' }, delta: -BUILDING_DEFS.townHall.cost, at: 'start' }));
     expect(action.preconditions.some(fact => fact.predicate.kind === 'worker-at' && fact.predicate.count === 1 && !fact.predicate.worker)).toBe(true);
     expect(action.preconditions.some(fact => fact.predicate.kind === 'route')).toBe(false);
     expect(action.executor.parameters.worker).toMatchObject({ kind: 'pool-member', unitKind: 'worker' });
@@ -131,9 +133,9 @@ it('selects an actual worker at the real owner scope, leases it and issues the e
         methods: bridge.methods, providers: [bridge.provider], previous: null });
       expect(allocated.grants).toHaveLength(1);
       const grant = allocated.grants[0]!, execution = allocated.memory.executions[grant.action.actionId]!;
-      expect(execution.intent.kind === 'goal-action' && execution.intent.parameters.worker).toMatchObject({ kind: 'existing' });
+      expect(execution.intent.kind === 'goal-action' && readGoalIntent(allocated.memory, execution.intent).parameters.worker).toMatchObject({ kind: 'existing' });
       expect(grant.leases.filter(lease => lease.resourceKey.startsWith('unit:'))).toHaveLength(1);
-      const feedback = goalBuildExecutor.execute({ snapshot, owner: 'us', objective, method, execution, grant, events: allocated.events });
+      const feedback = goalBuildExecutor.execute({ snapshot, owner: 'us', objective, method, execution, grant, events: allocated.events, goalReferences: allocated.memory.goalReferences! });
       expect(feedback.commands).toHaveLength(1); expect(feedback.commands[0]!.command.type).toBe('build');
       const admitted = createStrategyCommandGateway({ snapshot, owner: 'us', memory: allocated.memory, grants: allocated.grants, queuedTick: null })
         .admit(feedback.commands.map((entry, index) => ({ id: `pool-build-${index}`, source: 'executor', executor: execution.executor,
