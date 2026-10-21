@@ -43,13 +43,13 @@ it('assembles native inputs and search inside one Situation/query/work scope wit
   expect(memory.strategyAllocation).toBeUndefined(); expect(JSON.stringify(snapshot)).toBe(before);
 });
 
-it('produces a real training-ready declaration after shared publication in diagnostic geometry measurement', () => {
+it('produces a real training-ready declaration after shared publication within the calibrated default geometry capacity', () => {
   const game = scene(), goal = request(game);
   let memory: AiPolicyMemory = createAiPolicyMemory(), ready = false;
   for (let think = 0; think < 60 && !ready; think++) {
     if (think) for (let step = 0; step < 15; step++) stepGame(game);
     const snapshot = snapshotGame(game), before = JSON.stringify(snapshot);
-    const output = strict(() => planOwnerGoals({ snapshot, owner: 'us', version: 'v9_summoner', memory, goals: [goal], geometryMeasurement: true }));
+    const output = strict(() => planOwnerGoals({ snapshot, owner: 'us', version: 'v9_summoner', memory, goals: [goal] }));
     expect(JSON.stringify(snapshot)).toBe(before);
     expect(memory.strategy!.observation.factWork!.used).toBeLessThanOrEqual(6144);
     expect(memory.strategyAllocation).toBeUndefined();
@@ -65,11 +65,11 @@ it('produces a real training-ready declaration after shared publication in diagn
   expect(game.units.filter(unit => unit.owner === 'us' && unit.kind === 'footman')).toHaveLength(0);
 });
 
-it('advances diagnostic owner publication through JSON thinks while the complete native snapshot stays frozen', () => {
+it('advances owner publication through JSON thinks while the complete native snapshot stays frozen', () => {
   const game = scene(), snapshot = snapshotGame(game), before = JSON.stringify(snapshot), goal = request(game);
   let memory = createAiPolicyMemory(), ready = false;
   for (let sequence = 1; sequence <= 10 && !ready; sequence++) {
-    const output = strict(() => planOwnerGoals({ snapshot, owner: 'us', version: 'v9_summoner', memory, goals: [goal], geometryMeasurement: true }));
+    const output = strict(() => planOwnerGoals({ snapshot, owner: 'us', version: 'v9_summoner', memory, goals: [goal] }));
     const receipt = memory.strategy!.observation.factWork!;
     expect(receipt).toMatchObject({ tick: snapshot.tick, thinkSequence: sequence });
     expect(receipt.used).toBeLessThanOrEqual(6144);
@@ -95,7 +95,7 @@ it('keeps continued native cross-sea observations inside the shared physical fac
   }
 });
 
-it('retains diagnostic geometry outside the legacy observation trimmer and migrates older memories', () => {
+it('retains diagnostic geometry outside the older observation trimmer and migrates older memories', () => {
   const game = scene(), snapshot = snapshotGame(game), memory = createAiPolicyMemory();
   const entry = { key: 'previous-geometry', revision: 'old', state: 0, work: 1, requestedTick: 0,
     readyTick: 0, value: [], planIds: ['retired-plan'] };
