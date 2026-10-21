@@ -204,7 +204,7 @@ export type ImportedLossUpperBound = Readonly<{ targetId: string; gold: number; 
  * the separately proved delay, never the migration envelope or a payoff lower bound. */
 export type AssemblyDelayLossUpperBound = Readonly<{
   targetId: string; gold: number; window: ValuationWindow; continuationUpperGold: number;
-  mode: 'scenario-delay' | 'whole-value-cap';
+  mode: 'scenario-delay' | 'scenario-continuation' | 'whole-value-cap';
   components: readonly Readonly<{ code: string; valueGold: number; factIds: readonly string[] }>[];
 }>;
 export type AssemblyDisplacementQuote = Readonly<{ status: 'known'; bound: AssemblyDelayLossUpperBound }>
