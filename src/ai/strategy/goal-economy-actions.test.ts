@@ -88,6 +88,15 @@ describe('grounded economic declarations against native rules', () => {
     expect(declareGoalTraining({ unitKind: 'knight', count: 1, producer, at, byTick: 5000 }, context(snapshot))).toBeNull();
   });
 
+  it('uses the native rally input for exit proof instead of the same-region pool anchor', () => {
+    const snapshot = snapshotGame(nativeScene()), producer = snapshot.buildings.find(building => building.id === 'barracks')!;
+    producer.rallyTarget = { type: 'unit', unitId: 'worker' };
+    const action = declareGoalTraining({ unitKind: 'footman', count: 1, producer: { kind: 'existing', entityId: producer.id }, at, byTick: 5000 }, context(snapshot))!;
+    expect(action.preconditions.find(fact => fact.predicate.kind === 'spawn-exit')!.predicate).toMatchObject({ toward: { point: worker.from.point } });
+    expect(action.preconditions.find(fact => fact.predicate.kind === 'unit-available')).toBeUndefined();
+    expect(action.effects.find(effect => effect.fact.predicate.kind === 'unit-available')!.fact.predicate).toMatchObject({ at });
+  });
+
   it('charges a new foundation once, includes the shared walk, and emits capacity only on completion', () => {
     const snapshot = snapshotGame(nativeScene()), action = declareGoalBuilding({ buildingKind: 'farm', at: site, worker, byTick: 5000 }, context(snapshot, road))!;
     expect(action.duration).toMatchObject({ state: 'met', value: 15 + BUILDING_DEFS.farm.buildTime });

@@ -1,6 +1,7 @@
 import { BUILDING_DEFS, RACE_DEFS, UNIT_DEFS, canTrainAt, requiredSupplyCap, trainingBuildingFor, unitMover } from '../../shared/catalog';
 import { createBuilding } from '../../shared/map';
 import { trainingRecruitPrototype } from '../../shared/sim';
+import { productionRallyPoint } from '../../shared/production-spawn';
 import { shipProfile } from '../../shared/ship-geometry';
 import { isTransportKind } from '../../shared/transport-role';
 import type { BuildingKind, TrainableUnitKind } from '../../shared/types';
@@ -29,8 +30,11 @@ export function declareGoalTraining(input: Readonly<{
   if (producer.kind === 'existing' && (!existing || existing.owner !== context.owner || existing.hp <= 0
     || !canTrainAt(race, existing.kind, unitKind))) return null;
   const rules = UNIT_DEFS[unitKind], amountGold = count * rules.cost;
+  const source = existing ?? createBuilding('goal-training-assessment', context.owner, trainingBuildingFor(race, unitKind)!, at.point.x, at.point.y, true);
   const production = goalFact({ kind: 'production', unitKind, producer, at, byTick });
-  const exit = goalFact({ kind: 'spawn-exit', producer, unitKind, toward: at });
+  // A pool anchor is not the native rally input. Reuse the same live unit /
+  // resource rally target (or native new-building default) used at birth.
+  const exit = goalFact({ kind: 'spawn-exit', producer, unitKind, toward: { point: productionRallyPoint(context.snapshot, source) } });
   const gold = goalFact({ kind: 'gold', minimum: amountGold, byTick });
   const room = goalFact({ kind: 'population-room', minimum: count * rules.supplyUsed, byTick });
   const cap = goalFact({ kind: 'supply-cap', minimum: requiredSupplyCap(unitKind) });
@@ -38,7 +42,6 @@ export function declareGoalTraining(input: Readonly<{
   const id = `action:train:${goalFact({ kind: 'production', unitKind, producer, at, byTick }).id}:${count}`;
   // Native derived stats include this owner's current upgrades. Assessment
   // copies never enter outputs/entityIds, leases or the world snapshot.
-  const source = existing ?? createBuilding('goal-training-assessment', context.owner, trainingBuildingFor(race, unitKind)!, at.point.x, at.point.y, true);
   const recruit = trainingRecruitPrototype(context.snapshot, source, { unitKind, remaining: 0 });
   const recruitForce = unitMover(unitKind) === 'land' ? count * combatRating(recruit) : 0;
   const hullCapacity = isTransportKind(unitKind) ? shipProfile(recruit)?.loadCapacity ?? 0 : 0;
