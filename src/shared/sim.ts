@@ -3927,7 +3927,7 @@ function applyXpLevel(game: Game, unit: Unit) {
   applyDerivedUnitStats(game, unit);
 }
 
-function applyDerivedUnitStats(game: Game, unit: Unit) {
+function applyDerivedUnitStats(game: GameSnapshot & Pick<Partial<Game>, 'veteranFrame'>, unit: Unit) {
   const previousMaxHp = unit.maxHp;
   const base = nonStarUnitStats(game, unit);
   const multiplier = 1 + Math.min(MAX_UPGRADE_LEVEL, Math.max(0, unit.level)) * VETERANCY_GAIN_PER_STAR;
@@ -3941,7 +3941,7 @@ function applyDerivedUnitStats(game: Game, unit: Unit) {
   unit.hp = Math.min(unit.maxHp, Math.max(1, unit.hp + unit.maxHp - previousMaxHp));
 }
 
-function nonStarUnitStats(game: Game, unit: Unit) {
+function nonStarUnitStats(game: GameSnapshot, unit: Unit) {
   const stats = weaponRules(game, unit);
   unit.attackClass = weaponClass(stats);
   unit.attackCooldown=stats.attackCooldown;
@@ -4020,7 +4020,7 @@ function spend(player: PlayerState, amount: number) {
   player.gold = addGold(player.gold, -amount);
 }
 
-function playerState(game: Game, owner: PlayerId) {
+function playerState(game: Pick<GameSnapshot, 'players'>, owner: PlayerId) {
   const player = game.players[owner];
   if (!player) throw new Error(`Unknown player ${owner}`);
   return player;
@@ -4308,6 +4308,16 @@ export function refreshUnitStats(game: Game, unit: Unit) {
   if (unit.variant !== undefined) takeVariantFrame(unit, rules);
   if (isPlayerId(unit.owner)) applyDerivedUnitStats(game, unit);
   unit.hp = Math.max(1, Math.min(unit.maxHp, Math.round(unit.maxHp * share)));
+}
+
+/** Read-only assessment of an existing paid job under the current native
+ * upgrades. This is not a birth: no world, nextId, queue or supply is changed. */
+export function trainingRecruitPrototype(snapshot: GameSnapshot, building: Building,
+  job: Extract<Building['queue'][number], { unitKind: TrainableUnitKind }>): Unit {
+  const unit = createUnit(`training-projection:${building.id}:${job.id ?? job.unitKind}`, building.owner,
+    job.unitKind, building.x, building.y);
+  applyDerivedUnitStats(snapshot, unit);
+  return unit;
 }
 
 // A variant's body and weapon, which upgrades and stars do not touch; hit points, damage, speed and range are then
