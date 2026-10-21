@@ -5,6 +5,7 @@ import type { GameSnapshot } from '../../../shared/types';
 import type { GoalPlannerInput, GoalPlannerOutput } from '../goal-planner-types';
 import type { FactWorkReceipt } from '../fact-work';
 import type { PublicPuzzleCase } from './scenes';
+import { puzzleGeometryMeasurement } from './goal-planner-native';
 
 export type PuzzleThinkEvidence = {
   think: number; calls: number; snapshotUntouched: boolean; passed: boolean;
@@ -39,12 +40,14 @@ export function writePuzzlePlanEvidence(puzzle: PublicPuzzleCase, snapshot: Game
   if (!directory) return;
   mkdirSync(directory, { recursive: true });
   const failure = puzzleFailure(error), final = thinks.at(-1);
+  const passed = !failure && !!final?.passed && !!thinks.at(-2)?.passed && stable;
   const record = { puzzle: `${puzzle.key}/${puzzle.variant}`, snapshot,
+    geometryMeasurement: puzzleGeometryMeasurement, defaultAcceptancePassed: !puzzleGeometryMeasurement && passed,
     maxThinks, firstThink: thinks[0]?.think ?? null, finalThink: final?.think ?? null,
     firstReadyActionThink: thinks.find(think => think.readyActionCount > 0)?.think ?? null,
     firstPassingThink: thinks.find(think => think.passed)?.think ?? null,
     firstExecutablePlanThink: thinks.find(think => think.executable)?.think ?? null,
-    stable, passed: !failure && !!final?.passed && !!thinks.at(-2)?.passed && stable, error: failure,
+    stable, passed, error: failure,
     thinks: thinks.map(({ scoped, memoryAfter, ...think }) => ({ ...think,
       phase: !scoped ? 'assembly' : 'plan-verdict',
       observed: scoped ? JSON.parse(scoped) as unknown : null,
