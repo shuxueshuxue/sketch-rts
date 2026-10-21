@@ -134,6 +134,11 @@ export function groundGoalTransportOptions(input: GoalTransportGroundingInput): 
       if (!requested) return;
       const sailed = leg(`${id}/leg-${attempt}`, input.ports.seaLeg(hull, from, requested.water, future));
       if (!sailed) return;
+      // Connectivity establishes that this published berth can be requested;
+      // it does not observe a native terminal pose. Keep its expected heading
+      // for the next leg and leave actual boarding checks to execution.
+      if (sailed.timeBasis === 'sea-connectivity-estimate') return { berth: requested,
+        leg: { ...sailed, endpoint: requested.water, heading: requested.heading } };
       const actual = arrivedBerth(`${id}/terminal-${attempt}`, cohort, hull, seed, requested, sailed);
       if (!actual) return;
       if ('water' in actual) return { berth: actual, leg: sailed };

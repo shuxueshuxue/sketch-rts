@@ -19,11 +19,12 @@ import { createGoalEconomicGrounding } from './goal-economy-grounding';
 import { goalEconomyActionProvider } from './goal-economy-provider';
 import { assessGoalCombatMovementRisk } from './goal-combat-movement-risk';
 import { readGoalCampStagingFact } from './goal-camp-staging-facts';
+import { createGoalCampModelUsage } from './goal-camp-default-model';
 import { goalFact, goalResourceKey, goalValueKey } from './goal-facts';
 import { readGoalGuardFact } from './goal-guard-facts';
 import { goalPoolMemberCandidates } from './goal-pool-members';
 import type { GoalGeometryMemory, GoalGeometryReader } from './goal-grounding-ports';
-import { createGoalGeometryReader, retainGoalGeometryPlans } from './goal-geometry-source';
+import { createGoalGeometryReader, retainGoalGeometryPlans, retainGoalGeometryRequests } from './goal-geometry-source';
 import { goalLandActionProvider } from './goal-land-actions';
 import { createGoalMovementProjection } from './goal-movement-projection';
 import { createGoalLandCombatGrounding } from './goal-land-combat-grounding';
@@ -166,6 +167,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
       }, input.captureTrace === true);
       const observed = projection.facts;
       const { situation } = observed;
+      const campModelUsage = createGoalCampModelUsage();
       const regionAt = (point: { x: number; y: number }, mover: 'land' | 'sea') => mover === 'land'
         ? landIdAt(snapshot.map, point) : seaIdAt(snapshot.map, point);
       const reservedGold = memory.strategyAllocation?.owner === owner ? reservedAllocationGold(memory.strategyAllocation) : 0;
@@ -196,13 +198,23 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
               const future = actor.x !== predicate.from.point.x || actor.y !== predicate.from.point.y
                 || predicate.fromHeading !== undefined && predicate.fromHeading !== actor.sailing?.heading;
               if (future) { delete ship.sailing.route; delete ship.sailing.planningJob; }
-              const result = pointRoute(snapshot, preparation, ship, predicate.from.point, predicate.to.point, future);
+              const result = pointRoute(snapshot, preparation, ship, predicate.from.point, predicate.to.point, future, precision === 'coarse');
               const revision = goalValueKey([fact.id, geometryRevision, result]);
               if (result.status === 'complete') {
                 const points = [predicate.from.point, ...result.route.points];
                 const distance = points.slice(1).reduce((sum, point, index) => sum + Math.hypot(point.x - points[index]!.x, point.y - points[index]!.y), 0);
                 return { fact, state: 'met', observedTick: snapshot.tick, revision, evidence: [], availableTick: snapshot.tick,
                   reason: { code: 'native-sea-route-published', factIds: [fact.id], values: {} }, route: { distance, ticks: result.ticks, points } };
+              }
+              if (precision === 'coarse' && mode === 'exact') {
+                const sea = seaIdAt(snapshot.map, predicate.from.point);
+                if (sea && sea === seaIdAt(snapshot.map, predicate.to.point)) {
+                  const distance = Math.hypot(predicate.to.point.x - predicate.from.point.x, predicate.to.point.y - predicate.from.point.y);
+                  return { fact, state: 'met', observedTick: snapshot.tick, revision, evidence: [], availableTick: snapshot.tick,
+                    reason: { code: 'sea-component-connected-native-time-background', factIds: [fact.id],
+                      values: { timing: 'optimistic-estimate', nativeStatus: result.status } },
+                    route: { distance, ticks: Math.floor(distance / Math.max(1, actor.speed) * 20), points: [] } };
+                }
               }
               const common = { fact, observedTick: snapshot.tick, revision, evidence: [],
                 reason: { code: result.reasonCode, factIds: [fact.id], values: {} } };
@@ -266,11 +278,12 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
         const rawPhysical = createGoalTransportFactPorts({ snapshot, owner, tick: snapshot.tick, byTick: context.planThroughTick ?? snapshot.tick + situation.horizonTicks,
           regions, geometry, geometryRevision, shoreGeometryRevision: preparation.terrain,
           ...(selected.length ? { hullReferences } : {}),
+          ...(precision === 'coarse' && mode === 'exact' ? { travelTimePolicy: 'connectivity-estimate' as const } : {}),
           readFact: read, resolveCohort, productionOptions: economy.productionOptions, readGroundPoint: arrivalPhysics.ground, readVoyageRisk,
           readPointRoute: (ship, from, to, future) => {
             const pose = { ...ship, sailing: { ...ship.sailing!, heading: from.heading } };
             shareShipProfile(ship, pose);
-            return { id: `point:${goalValueKey([ship.kind, from, to, future])}`, fact: pointRoute(snapshot, preparation, pose, from, to, future) };
+            return { id: `point:${goalValueKey([ship.kind, from, to, future])}`, fact: pointRoute(snapshot, preparation, pose, from, to, future, precision === 'coarse') };
           } });
         const physical = { ...rawPhysical, shores: (from: import('./types').Target, to: import('./types').Target): ReturnType<typeof rawPhysical.shores> => {
           if (!selected.length) return rawPhysical.shores(from, to);
@@ -322,7 +335,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
           ...(interruptedUnitIds === undefined ? {} : { interruptedUnitIds: interruptedUnitIds })
         } satisfies import('./goal-naval-combat-grounding').GoalNavalCombatGroundingPorts;
         const naval = createGoalNavalCombatGrounding(context, { ...combatPorts, readGroundPoint: arrivalPhysics.ground,
-          cohortOptions, transportFacts: physical });
+          cohortOptions, transportFacts: physical, onCampModelSelection: campModelUsage.observe });
         const land = createGoalLandCombatGrounding(context, combatPorts);
         const combatOptions: NonNullable<GoalGroundingReader['combatOptions']> = effect => {
           const kind = effect.predicate.kind;
@@ -344,12 +357,32 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
       // A resident reference handle may be collected when no geometry task
       // uses it. Quote validity follows the native geometry bytes, not that
       // handle's allocation/lifetime in the bounded publication cache.
-      const sourceRevision = createGoalRefinementRevision(snapshot, owner, goalValueKey(worldGeometry));
+      const actorRevision = createGoalRefinementRevision(snapshot, owner, goalValueKey(worldGeometry));
+      const sourceRevision = (action: import('./goal-planner-types').GoalActionDeclaration) => {
+        const transport = action.executor.parameters.transport as GoalEntityReference | undefined;
+        const times = transport?.kind === 'existing' ? preparation.pointRoutes?.entries.filter(entry =>
+          entry.id.startsWith(`${transport.entityId}:`) && entry.readyTick !== null).map(entry => [entry.id, entry.readyTick, entry.readyThink]) : [];
+        return goalValueKey([actorRevision(action), times]);
+      };
       const refiner = createGoalPlanRefiner({ memory: refinements, providers: baseProviders, sourceRevision,
         exactContext: (_selected, plan) => makeContext(input.allowedUnitIds, input.interruptedUnitIds, [], reservedGold, 'exact', plan.actions.map(node => node.declaration)),
         prepareExact: (plan, selected, context) => contactPreparation.get(context)?.(plan, selected) });
       const prefixContexts = new WeakMap<object, GoalPlanningContext>();
+      const quoteRevision = () => `goal-domain-v2:${precision}:${refinements.revision}:berths:${retained.selectedBerths!.revision}`;
       const plannerInput: GoalPlannerInput = { context: grounded, goals,
+        campModelUsage: () => ({ ...campModelUsage.counts }),
+        ...(precision === 'coarse' ? { refinementRevision: quoteRevision } : {}),
+        retainFactRequests: plans => {
+          if (precision !== 'coarse') return;
+          const ids = (value: unknown, found = new Set<string>()): Set<string> => {
+            if (typeof value === 'string' && value.startsWith('goal-geometry:')) found.add(value);
+            else if (Array.isArray(value)) value.forEach(item => ids(item, found));
+            else if (value && typeof value === 'object') Object.values(value).forEach(item => ids(item, found));
+            return found;
+          };
+          retainGoalGeometryRequests(retained.geometry!, plans.map(plan => ({ planId: plan.goal.id,
+            requestIds: [...ids([plan.actions, plan.deferredCandidates ?? []])] })), work.receipt.thinkSequence ?? snapshot.tick);
+        },
         capacityPressure: () => retained.geometry?.capacity?.pressure ? [retained.geometry.capacity.pressure] : [],
         providers: precision === 'coarse' ? baseProviders.map(provider => applyGoalRefinements(provider, refinements, sourceRevision)) : baseProviders, initialBalances,
         ...(precision === 'coarse' ? { refineSelected: refiner, contextForPrefix: prefix => {
@@ -357,7 +390,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
           if (!context) { context = makeContext(input.allowedUnitIds, input.interruptedUnitIds, [], reservedGold, 'coarse', [], prefix); prefixContexts.set(prefix, context); }
           return context;
         } } : {}),
-        limits: input.limits ?? { maxDepth: 12, maxExpansions: 2048, maxPlans: 8 }, declarationRevision: `goal-domain-v2:${precision}:${refinements.revision}:berths:${retained.selectedBerths!.revision}`,
+        limits: input.limits ?? { maxDepth: 12, maxExpansions: 2048, maxPlans: 8 }, declarationRevision: quoteRevision(),
         ...(retained.cache ? { previous: retained.cache } : {}), work };
       let active = true;
       const assertActive = () => { if (!active || currentFactWork() !== work) throw Error('Goal native frame is outside its owner-think scope'); };

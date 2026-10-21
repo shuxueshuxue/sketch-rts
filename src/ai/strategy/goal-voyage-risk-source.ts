@@ -22,8 +22,17 @@ export function createGoalVoyageRiskReader(input: Readonly<{
   return (request: VoyageRiskRequest): VoyageRisk => {
     // A future producer without a budgeted launch port may not invoke native
     // shipLaunchPose through hullFor. Existing exact native routes suffice.
-    if (!request.shipId || !request.route || request.route.partial || request.previousLegId)
+    if (!request.shipId || request.route?.partial || request.previousLegId)
       return pending('goal-voyage-exact-native-leg-required');
+    if (!request.route) {
+      // No-capable-basin-enemy is a current-world observation independent of
+      // any proposed course. The existing model proves it before route work;
+      // with advance:false a capable hazard stays unknown, never starts a
+      // private path search and never turns an optimistic ETA into safe travel.
+      const observed = assessVoyageRisks(snapshot, owner, [request], structuredClone(memory.model), observation, { advance: false })
+        .results.get(request.id);
+      if (observed?.status === 'known' && observed.basis === 'no-capable-basin-enemy') return observed;
+    }
     const old = requests.get(request.id);
     if (old && goalValueKey(old) !== goalValueKey(request)) return pending('goal-voyage-identity-conflict');
     requests.set(request.id, request);

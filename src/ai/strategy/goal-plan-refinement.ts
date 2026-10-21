@@ -125,10 +125,14 @@ export function createGoalPlanRefiner(input: Readonly<{
       });
       const pendingEstimates = feasible.flatMap(exact => [exact.duration, exact.cost, exact.successProbability].filter(estimate => estimate.state === 'pending'));
       const identical = known.find(exact => sameExecutionProof(action, exact));
+      const coarseTime = value(action).duration, exactTime = known[0] ? value(known[0]).duration : null;
+      const durationRatio = coarseTime !== null && coarseTime > 0 && exactTime !== null ? exactTime / coarseTime : null;
       const reason = { code: identical ? 'selected-exact-action-confirmed' : known.length ? 'selected-exact-action-requires-regression' : discovered.deferred.length || feasible.length
         ? 'selected-exact-facts-pending' : 'selected-coarse-action-invalid', factIds: [...new Set([...discovered.deferred.flatMap(item => item.requestIds),
           ...pendingEstimates.flatMap(estimate => estimate.state === 'pending' ? estimate.requestIds : [])])],
-        values: { pendingReasons: pendingEstimates.flatMap(estimate => estimate.state === 'pending' ? [estimate.reason.code] : []).join(',') } };
+        values: { pendingReasons: pendingEstimates.flatMap(estimate => estimate.state === 'pending' ? [estimate.reason.code] : []).join(','),
+          durationRatio, durationChangedOverHalf: coarseTime !== null && exactTime !== null
+            && Math.abs(exactTime - coarseTime) > coarseTime * .5 } };
       if (known.length) {
         entry.exact = known.map(exact => ({ ...exact, precision: 'exact', refinementFor: request }));
         entry.state = 'known'; entry.reason = reason; memory.revision++; changed ||= !identical;

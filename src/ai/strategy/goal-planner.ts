@@ -28,6 +28,9 @@ const validEstimate = (action: GoalActionDeclaration) => action.duration.state =
 /** No domain action ordering appears here. Providers are queried only for
  * achievers of a requested fact, including partial numeric contributors. */
 export function planGoals(input: GoalPlannerInput): GoalPlannerOutput {
+  return planGoalPass(input, 0);
+}
+function planGoalPass(input: GoalPlannerInput, refinementPass: number): GoalPlannerOutput {
   const { context, work } = input, plans: GoalPlan[] = [], entries: GoalPlannerOutput['cache']['entries'][number][] = [];
   const providers = [...input.providers].sort((a, b) => order(a.id, b.id));
   const runs: { goal: GoalRequest; goalKey: string; state: GoalSearchMemory; beforeWork: number }[] = [];
@@ -137,12 +140,28 @@ export function planGoals(input: GoalPlannerInput): GoalPlannerOutput {
     const cached = entries.findIndex(entry => entry.plan.goal.id === gated.goal.id);
     if (cached >= 0) entries[cached] = { ...entries[cached]!, plan: gated };
   }
+  input.retainFactRequests?.(plans);
   plans.sort((a, b) => order(a.goal.id, b.goal.id));
   const retained = [...entries].sort((a, b) => order(a.plan.goal.id, b.plan.goal.id));
   while (observationJsonBytes(retained) > 256 * 1024) retained.pop();
-  return { plans, cache: { version: 1, owner: context.owner, entries: retained,
+  const output: GoalPlannerOutput = { plans, ...(input.campModelUsage ? { campModelUsage: input.campModelUsage() } : {}), cache: { version: 1, owner: context.owner, entries: retained,
     ...(retained.length < entries.length ? { truncated: true as const } : {}) }, readyActions: plans.flatMap(plan => plan.actions
     .filter(action => plan.readyActionIds.includes(action.id)).map(action => ({ goalId: plan.goal.id, planId: plan.id, action }))) };
+  const revision = input.refinementRevision?.();
+  // Regress changed quotes while their actor/world inputs are still the same
+  // native frame. Waiting an extra simulation think would invalidate a quote
+  // for a moving actor before it ever reached the allocator. Geometry itself
+  // still crosses its normal publication boundary, and all passes share 6144.
+  if (revision !== undefined && revision !== input.declarationRevision && refinementPass < 8
+    && work.receipt.used < work.receipt.limit) {
+    const next = planGoalPass({ ...input, previous: output.cache, declarationRevision: revision,
+      searchScope: `${input.searchScope ?? 'goal-search'}:refine:${refinementPass + 1}:${revision}` }, refinementPass + 1);
+    const combined = next.plans.map(plan => ({ ...plan, search: { ...plan.search,
+      work: plan.search.work + (plans.find(prior => prior.id === plan.id)?.search.work ?? 0) } }));
+    return { ...next, plans: combined, cache: { ...next.cache, entries: next.cache.entries.map(entry => ({ ...entry,
+      plan: combined.find(plan => plan.id === entry.plan.id) ?? entry.plan })) } };
+  }
+  return output;
 }
 const hasCapacityPressure = (input: GoalPlannerInput, planId: string) => input.capacityPressure?.().some(item => item.planIds.includes(planId)) ?? false;
 const emptyPath = (): Path => ({ steps: [], bindings: {}, cost: 0, probability: 1 });

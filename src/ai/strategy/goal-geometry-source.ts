@@ -198,6 +198,22 @@ export function retainGoalGeometryPlans(memory: GoalGeometryMemory, planIds: rea
   boundGoalGeometryMemory(memory);
 }
 
+/** A goal can survive many changed actor poses. Pins belong to its current
+ * graph and this think's requests, rather than every version it ever queried.
+ * A retained declaration/deferred proof can keep a published entry without
+ * querying it again; obsolete versions become ordinary LRU candidates. */
+export function retainGoalGeometryRequests(memory: GoalGeometryMemory,
+  plans: readonly Readonly<{ planId: string; requestIds: readonly string[] }>[], sequence: number) {
+  const active = new Map(plans.map(plan => [plan.planId, new Set(plan.requestIds)]));
+  for (const entry of memory.entries) if (entry.planIds?.length) {
+    const id = entryRequestId(entry);
+    entry.planIds = entry.planIds.filter(plan => active.has(plan)
+      && (entry.lastUsedThink === sequence || active.get(plan)!.has(id)));
+    if (!entry.planIds.length) delete entry.planIds;
+  }
+  boundGoalGeometryMemory(memory);
+}
+
 /** Reject non-JSON/cyclic/non-finite cursors before serialization can turn
  * unknown values into null or silently discard executable state. */
 function jsonValue(input: unknown): GoalParameter | undefined {

@@ -318,7 +318,12 @@ export type GoalPlannerCache = Readonly<{ version: 1; owner: PlayerId; entries: 
 export type GoalCapacityPressure = Readonly<{ kind: 'geometry'; thinkSequence: number; bytes: number; limitBytes: number;
   planIds: readonly string[]; requestIds: readonly string[]; overflowCount: number }>;
 export type GoalPlannerInput = Readonly<{
+  campModelUsage?: () => Readonly<import('./goal-camp-default-model').GoalCampModelUsage>;
   context: GoalPlanningContext; goals: readonly GoalRequest[]; providers: readonly GoalActionProvider[];
+  /** Finish publication leases against this chosen graph, not historical alternatives. */
+  retainFactRequests?: (plans: readonly GoalPlan[]) => void;
+  /** Exact quotes from already-published facts may re-enter this same work ledger. */
+  refinementRevision?: () => string;
   /** Regress a coarse prerequisite from the selected existing-member moves.
    * The view shares this think's readers and never creates a Situation/query. */
   contextForPrefix?: (actions: readonly Readonly<{ action: GoalActionDeclaration; startTick: number; finishTick: number }>[]) => GoalPlanningContext;
@@ -336,5 +341,6 @@ export type GoalPlannerInput = Readonly<{
 }>;
 export type GoalPlannerOutput = Readonly<{
   plans: readonly GoalPlan[]; cache: GoalPlannerCache;
+  campModelUsage?: Readonly<import('./goal-camp-default-model').GoalCampModelUsage>;
   readyActions: readonly Readonly<{ goalId: string; planId: string; action: GoalActionNode }>[];
 }>;

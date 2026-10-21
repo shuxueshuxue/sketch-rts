@@ -76,6 +76,20 @@ function strict(input: GoalTransportGroundingInput) {
 }
 
 describe('transport alternatives from shared published ports', () => {
+  it('keeps a published berth as the execution target when connectivity supplies only estimated sailing time', () => {
+    const { input, departure, landing } = frame();
+    const ports: GoalTransportFactPorts = { ...input.ports, seaLeg: vi.fn((_hull, from, to) => met({
+      endpoint: to, heading: from.heading + Math.PI, ticks: 100, timeBasis: 'sea-connectivity-estimate' as const,
+    })) };
+    const result = strict({ ...input, ports });
+    expect(result.state).toBe('met'); if (result.state !== 'met') throw Error('no connected transport');
+    const option = result.candidates[0]!;
+    expect(option.departure).toMatchObject({ water: departure.water, ground: departure.ground, heading: departure.heading });
+    expect(option.landing).toEqual({ water: landing.water, ground: landing.ground, heading: landing.heading });
+    expect(option.crossing.predicate).toMatchObject({ from: { point: departure.water }, fromHeading: departure.heading });
+    expect(ports.seaLeg).toHaveBeenCalledTimes(2); // no terminal-pose retry for an ETA estimate
+  });
+
   it.each(['approach', 'landing'] as const)('does not publish %s when its actual native terminal pose cannot board every member', phase => {
     const { input, member, hull, worker, departure, landing } = frame();
     const larger = input.snapshot.units.find(unit => unit.owner === input.owner && unit.hp > 0 && unit.radius > worker.radius

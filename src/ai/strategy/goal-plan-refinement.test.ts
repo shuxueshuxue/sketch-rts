@@ -53,7 +53,15 @@ it('refines only the selected ready layer and its next layer, re-regresses exact
     expect(second.readyActions.map(row => row.action.declaration.id)).toEqual(['exact-0']);
     const ready = second.readyActions[0]!.action;
     expect(ready.refinement?.delta).toEqual({ durationTicks: 2, costGold: 20, successProbability: -.09999999999999998 });
+    expect(ready.refinement?.reason.values).toMatchObject({ durationRatio: 3, durationChangedOverHalf: true });
     expect(calls).not.toContain(facts[2]!.id);
+    const live: GoalRefinementMemory = { revision: 0, entries: [] }, liveWork = new FactWorkQueue(snapshot.tick);
+    const immediate = planGoals({ ...base, work: liveWork,
+      providers: [applyGoalRefinements(provider, live)], declarationRevision: 'live-0', refinementRevision: () => `live-${live.revision}`,
+      refineSelected: createGoalPlanRefiner({ memory: live, providers: [provider], exactContext: () => ({ ...context, precision: 'exact' }) }) });
+    expect(immediate.readyActions.map(row => row.action.declaration.id)).toEqual(['exact-0']);
+    expect(immediate.plans[0]!.search.work).toBe(liveWork.receipt.services.filter(service => service.key.startsWith('goal-search')).reduce((sum, service) => sum + service.work, 0));
+    expect(liveWork.receipt.used).toBeLessThanOrEqual(6144);
     const retained = JSON.parse(JSON.stringify(refinement.entries[0]!)) as typeof refinement.entries[number];
     const obsolete = { ...retained, coarse: { ...retained.coarse, executor: { ...retained.coarse.executor,
       parameters: { campId: 'obsolete-choice' } } }, exact: [] };

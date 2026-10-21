@@ -8,7 +8,7 @@ export type FactWorkTier = 'critical-route' | 'existing-field' | 'background-fie
 export type FactWorkReceipt = { tick: number; thinkSequence?: number; limit: number; used: number;
   services: { key: string; tier: FactWorkTier; work: number }[] };
 type Task = { key: string; reportKey?: string; goal?: { x: number; y: number }; tier: FactWorkTier; minimum: number;
-  kind?: 'fact' | 'search';
+  kind?: 'fact' | 'search' | 'timing';
   run: (allowance: number) => { work: number; done: boolean } };
 type Consumers = Map<string, number | null>;
 type RegisteredTask = Task & { consumers: Consumers };
@@ -69,7 +69,7 @@ export class FactWorkQueue {
     const suspended = new Set<string>();
     const priority = (task: RegisteredTask) => {
       const consumers = task.kind === 'search' ? [] : [...task.consumers.values()];
-      return { count: consumers.length, value: consumers.reduce<number>((sum, value) => sum + (value ?? 0), 0) };
+      return { count: task.kind === 'timing' ? -1 : consumers.length, value: consumers.reduce<number>((sum, value) => sum + (value ?? 0), 0) };
     };
     for (;;) {
       const tasks = [...this.tasks.values()].filter(task => !this.completed.has(task.key) && !suspended.has(task.key)

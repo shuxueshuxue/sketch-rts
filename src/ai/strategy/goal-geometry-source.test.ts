@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { FactWorkQueue } from './fact-work';
-import { createGoalGeometryReader, GOAL_GEOMETRY_BYTES, GOAL_GEOMETRY_ENTRIES } from './goal-geometry-source';
+import { createGoalGeometryReader, GOAL_GEOMETRY_BYTES, GOAL_GEOMETRY_ENTRIES, retainGoalGeometryRequests } from './goal-geometry-source';
 import type { GoalGeometryMemory, GoalGeometryRequest } from './goal-grounding-ports';
 import { recordNativeRouting, withNavigationAudit } from '../../shared/navigation-audit';
 
@@ -160,4 +160,27 @@ it('includes the serialization envelope when the pinned payload crosses its byte
   expect(retained.capacity!.pinnedBytes).toBe(payload);
   expect(retained.capacity!.pressure).toMatchObject({ bytes: payload, limitBytes: 1024, planIds: ['boundary-plan'] });
   expect(retained.entries[0]!.value).toBe('x'.repeat(1000));
+});
+
+it('releases obsolete versions of a continuing goal while retaining its graph proof and current requests', () => {
+  const retained = memory(), initial = new FactWorkQueue(0, 20, undefined, 1);
+  const reader = createGoalGeometryReader({ tick: 0, work: initial, memory: retained,
+    limits: { maxBytes: 16384, maxEntries: 3 } });
+  const results = ['retained-proof', 'old-pose', 'current-pose'].map(key =>
+    initial.withConsumer('same-goal', 100, () => reader(scan(key, 1))));
+  initial.flush();
+  const proof = results[0]!; if (proof.state !== 'pending') throw Error('cold result must be pending');
+  retained.entries.find(entry => entry.key === 'current-pose')!.lastUsedThink = 2;
+  retainGoalGeometryRequests(retained, [{ planId: 'same-goal', requestIds: proof.requestIds }], 2);
+  expect(retained.entries.find(entry => entry.key === 'old-pose')!.planIds).toBeUndefined();
+  expect(retained.entries.filter(entry => entry.planIds?.includes('same-goal')).map(entry => entry.key).sort())
+    .toEqual(['current-pose', 'retained-proof']);
+  const next = new FactWorkQueue(0, 20, undefined, 3);
+  const continued = createGoalGeometryReader({ tick: 0, work: next, memory: retained,
+    limits: { maxBytes: 16384, maxEntries: 3 } });
+  next.withConsumer('same-goal', 100, () => continued(scan('new-pose', 1))); next.flush();
+  expect(retained.entries.some(entry => entry.key === 'old-pose')).toBe(false);
+  expect(continued(scan('retained-proof', 1))).toMatchObject({ state: 'met', value: [0] });
+  expect(retained.entries.find(entry => entry.key === 'retained-proof')).toMatchObject({ readyThink: 1, work: 1 });
+  expect(retained.capacity).toMatchObject({ maxBytes: 16384, maxEntries: 3, overflowCount: 0 });
 });

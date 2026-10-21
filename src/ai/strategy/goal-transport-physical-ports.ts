@@ -29,6 +29,8 @@ export type GoalTransportPhysicalInput = Readonly<{
   shorePairLimit?: number;
   /** Selected proposal refinement limits hull checks to these identities. */
   hullReferences?: readonly import('./goal-planner-types').GoalEntityReference[];
+  /** Normal planner commands need connectivity; native timing refines in the background. */
+  travelTimePolicy?: 'connectivity-estimate';
 }>;
 const order = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;
 const unique = (ids: readonly string[]) => [...new Set(ids)].sort();
@@ -169,6 +171,16 @@ export function createGoalTransportFactPorts(input: GoalTransportPhysicalInput):
       if (hull.reference.kind !== 'existing') ship.id = `goal-hull:${goalValueKey(hull.reference)}`;
       shareShipProfile(hull.assessment, ship);
       const answer = input.readPointRoute(ship, from, to, future), fact = answer.fact;
+      if (fact.status !== 'complete' && input.travelTimePolicy === 'connectivity-estimate'
+        && seaIdAt(input.snapshot.map, from) === hull.seaId && seaIdAt(input.snapshot.map, to) === hull.seaId) {
+        const request = hull.reference.kind === 'existing' ? { id: `goal-sea-estimate:${hull.reference.entityId}:${fnv1a(goalValueKey([hull.seaId, from, to]))}`,
+          seaId: hull.seaId, shipId: hull.reference.entityId, start: { ...from }, destination: { ...to } } : null;
+        const risk = request && input.readVoyageRisk ? input.readVoyageRisk(request) : { status: 'unknown' as const,
+          reasonCode: 'goal-voyage-basin-risk-unpublished', samples: 0, totalSamples: 0, threatIds: [] };
+        return { state: 'met', value: { ticks: Math.floor(Math.hypot(to.x - from.x, to.y - from.y) / Math.max(1, ship.speed) * 20),
+          endpoint: { ...to }, heading: from.heading, timeBasis: 'sea-connectivity-estimate', risk },
+          factIds: [answer.id, ...(request ? [request.id] : [])] };
+      }
       if (fact.status !== 'complete') return fact.status === 'static-infeasible'
         ? { state: 'unmet', reason: reason(fact.reasonCode, [answer.id]) }
         : { state: 'pending', requestIds: [answer.id], reason: reason(fact.reasonCode, [answer.id]) };
@@ -185,7 +197,7 @@ export function createGoalTransportFactPorts(input: GoalTransportPhysicalInput):
         status: 'unknown' as const, reasonCode: request ? 'goal-voyage-risk-port-unpublished' : 'goal-voyage-hull-not-yet-actual',
         samples: 0, totalSamples: 0, threatIds: [],
       };
-      return { state: 'met', value: { ticks: fact.ticks, endpoint: { x: end.x, y: end.y }, heading: end.heading, risk },
+      return { state: 'met', value: { ticks: fact.ticks, endpoint: { x: end.x, y: end.y }, heading: end.heading, timeBasis: 'native-point-route', risk },
         factIds: [answer.id, ...(request ? [request.id] : [])] };
     },
   };

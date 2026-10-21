@@ -8,6 +8,25 @@ import { createGoalVoyageRiskReader, type GoalVoyageRiskMemory } from './goal-vo
 import type { StrategyObservationMemory } from './observation-memory';
 import { assessVoyageRisks, type VoyageRisk, type VoyageRiskRequest } from './voyage-risk';
 
+it('proves a basin without capable enemies independently of native timing and keeps a capable hazard unknown', () => {
+  const game = createGame('bareDuel', { aiPlayers: [] });
+  game.units = [createUnit('ferry', 'player', 'transport', 1000, 2000)];
+  game.buildings = []; game.items = []; game.obstacles = []; game.resources = [];
+  game.map = { ...game.map, width: 20000, height: 10000, terrain: { cols: 200, rows: 100, cell: 100, cells: '~'.repeat(20000) } };
+  const request: VoyageRiskRequest = { id: 'connected-sea-time-only', shipId: 'ferry', seaId: 'sea:1', destination: { x: 1256, y: 2000 } };
+  const read = () => {
+    const snapshot = snapshotGame(game), work = new FactWorkQueue(snapshot.tick, 0, undefined, 1);
+    const memory: GoalVoyageRiskMemory = { model: { version: 1, owner: 'player', tick: -1, routeIds: [], entries: [] }, publications: [] };
+    const risk = withNavigationAudit(event => { if (event.phase === 'strategy-planning' && !event.authorization) throw Error(event.operation); },
+      () => withNavigationPhase('strategy-planning', () => createGoalVoyageRiskReader({ snapshot, owner: 'player', work,
+        observation: {} as StrategyObservationMemory, memory })(request)));
+    expect(work.receipt.used).toBe(0); return risk;
+  };
+  expect(read()).toMatchObject({ status: 'known', basis: 'no-capable-basin-enemy', survivalProbability: 1, expectedHpLoss: 0 });
+  game.buildings = [createBuilding('tower', 'enemy', 'defenseTower', 1128, 2100, true)];
+  expect(read().status).toBe('unknown');
+});
+
 it('publishes the unchanged native voyage model through one charged sampling batch and JSON owner-think boundaries', () => {
   const game = createGame('bareDuel', { aiPlayers: [] });
   game.units = [createUnit('ferry', 'player', 'transport', 1000, 2000)];

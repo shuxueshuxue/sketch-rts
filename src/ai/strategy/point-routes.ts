@@ -31,7 +31,7 @@ const clearStatic = Object.assign(() => true, { hasTraffic: false });
  * mobile traffic at their eventual launch time. Real traffic remains an
  * explicitly temporary execution constraint, rather than static infeasibility. */
 export function pointRoute(snapshot: GameSnapshot, observation: StrategyObservationMemory, ship: Unit,
-  from: Point, goal: Point, future = false): PointRouteFact {
+  from: Point, goal: Point, future = false, timingOnly = false): PointRouteFact {
   const queue = currentFactWork();
   if (!queue) throw new Error('Point routes require the shared think work ledger');
   const liveOrigin = from.x === ship.x && from.y === ship.y;
@@ -77,7 +77,8 @@ export function pointRoute(snapshot: GameSnapshot, observation: StrategyObservat
   const progress = entry;
   const taskKey = `point:${key}`;
   if (progress.readyTick === null) queue.register({ key: taskKey, goal, reportKey: `point:${id}:${fnv1a(key)}`,
-    tier: queue.isCritical(goal) ? 'critical-route' : 'background-field',
+    ...(timingOnly ? { kind: 'timing' as const } : {}),
+    tier: !timingOnly && queue.isCritical(goal) ? 'critical-route' : 'background-field',
     minimum: SHIP_STATIC_ROUTE_SLICE_MAX_WORK,
     run() {
       const meter = { logicalWork: 0, expandedStates: 0 };

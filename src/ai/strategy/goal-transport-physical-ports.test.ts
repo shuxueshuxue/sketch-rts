@@ -128,3 +128,17 @@ it('requests existing voyage risk only for a published exact native sea leg and 
  expect(strict(()=>endpoint.ports.seaLeg(actual,from,to,false)).state).toBe('met');
  expect(readVoyageRisk.mock.calls[1]![0].destination).toEqual({x:nearby.x,y:nearby.y});
 });
+
+it('uses known sea connectivity for estimated travel while retaining the native timing request and independent risk',()=>{
+ const f=frame(), actual:GoalHullCandidate={id:f.hull.id,reference:{kind:'existing',entityId:f.hull.id},assessment:f.hull,seaId:'sea:1',availableTick:f.snapshot.tick,capacity:1000,cargoUnitIds:[],preconditions:[],factIds:[]};
+ const from={x:f.hull.x,y:f.hull.y,heading:2.5},to=f.regions.shores.find(shore=>shore.seaId==='sea:1')!.water;
+ const readPointRoute=vi.fn<GoalTransportPhysicalInput['readPointRoute']>(()=>({id:'native-background-time',fact:{status:'pending',reasonCode:'search-in-progress',work:13}}));
+ const readVoyageRisk=vi.fn<NonNullable<GoalTransportPhysicalInput['readVoyageRisk']>>(()=>({status:'unknown',reasonCode:'capable-hazard-unquoted',samples:0,totalSamples:0,threatIds:['hostile']}));
+ const t=f.think(0,0,{travelTimePolicy:'connectivity-estimate',readPointRoute,readVoyageRisk});
+ const result=strict(()=>t.ports.seaLeg(actual,from,to,false));
+ expect(result).toMatchObject({state:'met',value:{endpoint:to,timeBasis:'sea-connectivity-estimate',risk:{status:'unknown'}}});
+ if(result.state!=='met')throw Error('known connected sea must give a time estimate');
+ expect(result.value.ticks).toBe(Math.floor(Math.hypot(to.x-from.x,to.y-from.y)/Math.max(1,f.hull.speed)*20));
+ expect(readPointRoute).toHaveBeenCalledTimes(1);expect(readVoyageRisk.mock.calls[0]![0]).not.toHaveProperty('route');
+ t.finish();expect(t.work.receipt.used).toBe(0);
+});

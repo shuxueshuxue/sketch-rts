@@ -32,6 +32,8 @@ export type GoalHullCandidate = Readonly<{
 }>;
 export type GoalBerth = Readonly<{ water: Point; ground: Point; heading: number }>;
 export type GoalSeaLeg = Readonly<{ ticks: number; endpoint: Point; heading: number;
+  /** Estimated time/target is never an observed native arrival pose. */
+  timeBasis?: 'sea-connectivity-estimate' | 'native-point-route';
   /** Published existing voyage model for this exact hull/start/native route. */
   risk?: VoyageRisk;
 }>;
