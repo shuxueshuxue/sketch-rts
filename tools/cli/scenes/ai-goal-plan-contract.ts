@@ -1,9 +1,9 @@
 import { pathToFileURL } from 'node:url';
 import type { Scene } from '../drivers/browser';
-import { proveGoalTimeAlignment } from '../drivers/goal-plan-proof';
 
 /** Actual game/replay UI, artificial GoalPlan input. Never evidence of real planner behavior. */
 export default async function(s: Scene) {
+  const {proveGoalTimeAlignment}=await import(pathToFileURL(`${process.cwd()}/tools/cli/drivers/goal-plan-proof.ts`).href);
   const load=(path:string)=>import(pathToFileURL(`${process.cwd()}/${path}`).href);
   const {goalNavyFixture}=await load('src/client/ai-goal-navy.test-fixture.ts');
   const {createRoomLifecycleHost}=await load('src/shared/room-lifecycle.ts');

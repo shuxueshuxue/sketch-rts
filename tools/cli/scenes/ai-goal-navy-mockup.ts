@@ -2,9 +2,9 @@ import { existsSync, readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import type { Scene } from '../drivers/browser';
-import { proveGoalTimeAlignment } from '../drivers/goal-plan-proof';
 
 export default async function(s: Scene) {
+  const {proveGoalTimeAlignment}=await import(pathToFileURL(`${process.cwd()}/tools/cli/drivers/goal-plan-proof.ts`).href);
   const sha = JSON.parse(process.argv[2]!).sha as string;
   const local = `${process.cwd()}/docs/ai/plan-viz/goal-navy.html`;
   // Incremental CLI copies may exclude docs. This separate source directory
