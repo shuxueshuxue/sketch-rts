@@ -4,6 +4,7 @@ import { withGoalDistanceFieldLease } from '../../shared/terrain';
 import type { GameSnapshot } from '../../shared/types';
 import type { AiPolicyMemory } from '../memory';
 import { distance } from '../policy/spatial';
+import { assemblyPostArrivalId } from './assembly-facts';
 import { strategyIsOpponent } from './ownership';
 import type { ExecutableMethod } from './allocation-types';
 import { createArrivalQuery, crossingCandidateId, EXACT_CROSSING_CANDIDATES } from './arrivals';
@@ -29,7 +30,11 @@ export function withAllocationMethodArrivals(snapshot: GameSnapshot, owner: stri
     const query = createArrivalQuery(snapshot, owner, memory, distances, fieldBudget, regions, preparation);
     const live = new Map(snapshot.units.filter(unit => unit.hp > 0).map(unit => [unit.id, unit]));
     const units = new Map(situation.units.map(unit => [unit.id, unit]));
-    const actionObjective = new Map(methods.flatMap(method => method.actions.map(action => [action.id, method.objectiveId] as const)));
+    const postGoals = methods.flatMap(method => method.actions.flatMap(action => action.intent.kind === 'assemble-force'
+      ? action.intent.posts.map(post => ({ id: assemblyPostArrivalId(action.id, post.id), target: post.target, objectiveId: method.objectiveId })) : []));
+    const postIds = new Set(postGoals.map(post => post.id));
+    const actionObjective = new Map([...methods.flatMap(method => method.actions.map(action => [action.id, method.objectiveId] as const)),
+      ...postGoals.map(post => [post.id, post.objectiveId] as const)]);
     const threatened = new Set(situation.lands.flatMap(land => land.threats.filter(threat => threat.arrivedStrength > 0).map(threat => threat.siteId)));
     const retained = new Set([memory.landExpansion?.mineId, ...Object.values(memory.naval?.conquests ?? {})
       .filter(task => task.abandonedTick === undefined).map(task => task.mineId)]);
@@ -39,7 +44,7 @@ export function withAllocationMethodArrivals(snapshot: GameSnapshot, owner: stri
     // Entity aliases are separate goals at their exact asset point; an offset
     // defense post must never overwrite the hall-centre row.
     const entities = new Set(actions.flatMap(action => action.target.entityId ? [action.target.entityId] : []));
-    const goals = [...actions, ...situation.assets.filter(asset => asset.target.landId && entities.has(asset.id))
+    const goals = [...postGoals, ...actions, ...situation.assets.filter(asset => asset.target.landId && entities.has(asset.id))
       .map(asset => ({ id: asset.id, target: asset.target }))]
       .sort((a, b) => Number(Boolean(memory.strategyAllocation?.executions[b.id])) - Number(Boolean(memory.strategyAllocation?.executions[a.id]))
         || Number(threatened.has(b.target.entityId ?? '')) - Number(threatened.has(a.target.entityId ?? ''))
@@ -59,6 +64,11 @@ export function withAllocationMethodArrivals(snapshot: GameSnapshot, owner: stri
     for (const action of targets) {
       const pool = [...live.values()].filter(unit => {
         if (unitMover(unit.kind) !== 'land') return false;
+        if (postIds.has(action.id)) {
+          const location = units.get(unit.id)?.location;
+          return unit.owner === owner && unit.kind !== 'worker' && !unit.deck && !unit.cabin
+            && location?.kind === 'land' && location.landId === action.target.landId;
+        }
         if (unit.owner === owner) return true;
         const location = units.get(unit.id)?.location;
         return unit.kind !== 'worker' && strategyIsOpponent(snapshot, owner, unit.owner)

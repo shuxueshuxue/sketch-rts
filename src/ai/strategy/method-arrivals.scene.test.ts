@@ -9,6 +9,8 @@ import { buildStrategyDecision } from './decision';
 import { defenseMethodProvider } from './defense-methods';
 import { conquestMethodProvider } from './conquest-methods';
 import { assessAllocatedForce } from './allocated-force';
+import { assemblyPostArrivalId } from './assembly-facts';
+import type { ExecutableMethod } from './allocation-types';
 import { withAllocationMethodArrivals } from './method-arrivals';
 import { unitArrival, unitArrivalFacts } from './unit-arrivals';
 import { OBSERVATION_BYTE_LIMIT } from './observation-memory';
@@ -46,6 +48,26 @@ describe('actual action-post ETA in the E01 home raid', () => {
     expect(quote.force?.effectiveForce).toBeGreaterThan(0);
     expect(quote.force!.effectiveForce).toBeLessThan(assessAllocatedForce(input.owner,
       input.snapshot.units.filter(unit => crew.includes(unit.id)), { metric: 'field-strength', requiredForce: 0 }).force);
+  });
+
+  it('publishes exact source posts without querying foreign or cross-water assembly members', () => {
+    const input = frame(), original = input.methods.find(method => method.kind === 'main-army-recall')!;
+    const actor = input.snapshot.units.find(unit => unit.id === crew[0])!;
+    const location = input.situation.units.find(unit => unit.id === actor.id)!.location;
+    expect(location.kind).toBe('land');
+    if (location.kind !== 'land') throw new Error('Expected an actual source land');
+    const target = { landId: location.landId, point: { x: actor.x, y: actor.y } };
+    const action = original.actions.at(-1)!;
+    const method: ExecutableMethod = { ...original, stage: 'assembly', actions: [{ ...action,
+      executor: 'strategy.assemble-force', intent: { kind: 'assemble-force', campTarget: action.target, requiredForce: 10,
+        posts: [{ id: 'source', target, unitIds: [actor.id] },
+          { id: 'other-land', target: { ...target, landId: 'land:999' }, unitIds: [] }] } }] };
+    const situation = withAllocationMethodArrivals(input.snapshot, input.owner, input.memory, input.situation, [method], Infinity);
+    const row = situation.units.find(unit => unit.id === actor.id)!;
+    expect(unitArrival(row, assemblyPostArrivalId(action.id, 'source'))).toMatchObject({ status: 'reachable', ticks: 0, crossings: [] });
+    expect(unitArrival(row, assemblyPostArrivalId(action.id, 'other-land'))).toBeUndefined();
+    for (const enemy of situation.units.filter(unit => unit.owner !== input.owner))
+      expect(unitArrival(enemy, assemblyPostArrivalId(action.id, 'source'))).toBeUndefined();
   });
 
   it('keeps an unfinished post unknown even when a process cache already contains its complete field', () => {
