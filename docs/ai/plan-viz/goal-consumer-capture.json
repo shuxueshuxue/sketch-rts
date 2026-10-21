@@ -403,5 +403,16 @@
       "browserErrors": [],
       "resolution": "Same-source isolated rerun passed; pointer ticks 2160 / 3650 / 4000 verified."
     }
-  ]
+  ],
+  "rebaseValidation": {
+    "main": "d36d0543b04077b44690bf4dae9dabb92f5a34a5",
+    "plannerPrerequisite": "8ada3fbe94f3beeec3e7a288ea8758133c53722b",
+    "codeSource": "e5939e9f1139287b4799fc1c11da0946832c62d9",
+    "rootTscExit": 0,
+    "cliTscExit": 0,
+    "testFiles": 10,
+    "testsPassed": 56,
+    "consumerAndGeneratedPageUnchanged": true,
+    "capturesReusedWithOriginalSource": true
+  }
 }
