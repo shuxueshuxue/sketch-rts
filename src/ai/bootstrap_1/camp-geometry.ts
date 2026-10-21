@@ -7,6 +7,13 @@ import { withinRangeOf, type Point } from '../policy/spatial';
 import { assessCreepCamp, creepForce, CREEP_ASSEMBLED_RANGE, CREEP_ROUTE_CLEARANCE, CREEP_STAGING_TURNS, stagingClear, stagingPoint, type Camp, type CreepAssessment, type chooseV7Camp, type startV7Creep } from '../policy/v7/creep';
 import { recordExecutorReason } from '../executor-reasons';
 
+/** Planning callers supply their current budgeted route facts. Undefined keeps
+ * the existing native execution geometry; an unknown answer never falls back
+ * to a synchronous native field. */
+export type CampApproachRouteReader = (from: Point, goal: Point) =>
+  Readonly<{ status: 'known'; points: readonly Point[]; distance: number }>
+  | Readonly<{ status: 'unknown' | 'unreachable'; reasonCode: string }>;
+
 /** Every fighter's approach and the camp's return road must clear other camps. */
 export const chooseBootstrapCamp = (home: Point, ...args: Parameters<typeof chooseV7Camp>) => {
   return assessBootstrapCamp(home, ...args).choice;
@@ -25,19 +32,29 @@ export const assessBootstrapCamp = (home: Point, ...args: Parameters<typeof choo
 };
 
 /** The expansion assembles on this same safe approach while its remaining recruits are training. */
-export function bootstrapCampApproach(snapshot: GameSnapshot, home: Point, group: Unit[], camp: Camp, from: Point, all: Camp[]) {
+export function bootstrapCampApproach(snapshot: GameSnapshot, home: Point, group: Unit[], camp: Camp, from: Point, all: Camp[], planningRoute?: CampApproachRouteReader) {
   const disks = all.filter(other => other !== camp).flatMap(other => other.creeps.map(creep =>
     ({ x: creep.x, y: creep.y, radius: CREEP_ROUTE_CLEARANCE })));
-  const retreat = groundApproachRoute(snapshot.map, camp.center, home);
+  const road = (start: Point, goal: Point) => {
+    if (!planningRoute) return groundApproachRoute(snapshot.map, start, goal);
+    const answer = planningRoute(start, goal);
+    return answer.status === 'known' ? answer.points : undefined;
+  };
+  const retreat = road(camp.center, home);
   if (retreat === undefined || !routeClearsDisks([camp.center, ...retreat], disks)) return undefined;
   for (const turn of CREEP_STAGING_TURNS) {
     const raw = stagingPoint(camp, from, turn);
     const staging = walkableGoal(snapshot.map, raw.x, raw.y);
     if (!stagingClear(staging, all, camp)) continue;
-    const returning = groundApproachRoute(snapshot.map, staging, home);
+    const returning = road(staging, home);
     if (returning === undefined || !routeClearsDisks([staging, ...returning], disks)) continue;
-    const roads = group.map(unit => ({ unit, points: groundApproachRoute(snapshot.map, unit, staging),
-      distance: walkingDistance(snapshot.map, unit, staging, 'land') }));
+    const roads = group.map(unit => {
+      if (!planningRoute) return { unit, points: groundApproachRoute(snapshot.map, unit, staging),
+        distance: walkingDistance(snapshot.map, unit, staging, 'land') };
+      const answer = planningRoute(unit, staging);
+      return { unit, points: answer.status === 'known' ? answer.points : undefined,
+        distance: answer.status === 'known' ? answer.distance : undefined };
+    });
     if (roads.some(road => road.points === undefined || road.distance === undefined
       || !routeClearsDisks([road.unit, ...road.points], disks))) continue;
     return { staging, travelDistance: roads.reduce((sum, road) => sum + road.distance!, 0) / roads.length };

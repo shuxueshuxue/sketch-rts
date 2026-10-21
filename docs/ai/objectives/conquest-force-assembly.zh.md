@@ -4,6 +4,8 @@
 
 每个陆块有一个稳定 post。目标岛复用现有清营 staging；来源岛优先使用已发布装船陆点的陆侧安全集结点，未发布时可留在当前己方基地附近。选点复用原生可走点、营地接触和现有威胁范围判定，不能放在实际船体甲板范围内。上一个仍合法安全的 post 优先保留。各 post 只接收本陆块实际成员；已在船但尚无此集结方法原点契约的成员保留 `assembly-aboard-origin-unquoted`，不捏造一个陆块让它跨水步行。
 
+受控规划通过 `withConquestAssemblyPlanning` 使用同一事务的 `AllocationLandRouteReader`。营地 approach 的退路、到 staging 的道路和距离都只读该端口；未知保持 pending，并在没有其他安全 post 时保留具体路线缺项。近敌候选保守拒绝，不调用原生 `canReach` 偷算路线。同步 scope 支持嵌套和异常恢复；不在 scope 内的原执行仍走既有原生几何。此端口测试只证明没有绕过共享入口，完整 6144 工作上限仍需共同入口的统一诊断闸验证。
+
 协调动作和框架共用 `assessForceAssemblyPosts`：全部 posts 的实际到岗、未中断成员并集只评一次整组 camp-force。预测供给不参与这个实际出发门槛。真实到岗足额后，同一方法 ID 扩成原来的运输、清营、建厅和驻防图；此时才恢复工程兵、航次和真实支出前置。已经执行的运输链不因离开旧 post 而重新进入集结。
 
 中断名单由当次正式 assignment 注入。即使治疗中的兵还在 post 范围内，也不能计入当前够兵、提前切换 execution，或在报价中伪装成正常到岗；真实恢复回归由共享供给 reader 另行报价。情景上限只使该项预测 unknown，报价保留 scenario 计数和原始缺失叶，不中止整个 think。
