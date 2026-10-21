@@ -1,5 +1,5 @@
 import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { createAiMemoryProvider, planAiOwnerCommandEntries } from '../../planner-context';
 import { withNavigationAudit } from '../../../shared/navigation-audit';
@@ -12,10 +12,12 @@ import { createExecutionOwnership, type ShipOwnershipScope } from './execution-o
 export function createExecution(options: { evidenceFile?: string; ownershipScope?: ShipOwnershipScope } = {}): PuzzlePlannerExecution {
   const memoryProvider = createAiMemoryProvider();
   const ownership = options.ownershipScope && createExecutionOwnership(options.ownershipScope);
+  const sdkEvidence = ownership && options.evidenceFile ? join(dirname(options.evidenceFile), 'sdk', basename(options.evidenceFile)) : undefined;
   let first: PuzzleExecutionObservation | undefined, latest: PuzzleExecutionObservation | undefined;
   let plannedThinks = 0, observedThinks = 0, formalCommandCount = 0;
   let firstReadyTick: number | null = null, firstFormalCommandTick: number | null = null;
   if (options.evidenceFile) { mkdirSync(dirname(options.evidenceFile), { recursive: true }); writeFileSync(options.evidenceFile, ''); }
+  if (sdkEvidence) { mkdirSync(dirname(sdkEvidence), { recursive: true }); writeFileSync(sdkEvidence, ''); }
   return {
     commandPlanner({ game, snapshot, owner, agent, source, teams }) {
       const before = JSON.stringify(snapshot), worldBefore = JSON.stringify(snapshotGame(game));
@@ -70,6 +72,9 @@ export function createExecution(options: { evidenceFile?: string; ownershipScope
     observations() { return first && latest && first !== latest ? [first, latest] : latest ? [latest] : []; },
     statistics() { return { plannedThinks, observedThinks, firstReadyTick, firstFormalCommandTick, formalCommandCount }; },
     ownership(initialTick, commands) { return ownership?.finish(initialTick, commands); },
-    applied(event) { ownership?.applied(event); },
+    applied(event) {
+      ownership?.applied(event);
+      if (sdkEvidence) appendFileSync(sdkEvidence, gzipSync(JSON.stringify({tick:event.tick,owner:event.owner,scriptId:event.scriptId,command:event.command})+'\n'));
+    },
   };
 }

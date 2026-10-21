@@ -139,6 +139,9 @@ export function registerPublicPuzzleTests(key: PuzzleKey) {
         }
       } catch (failure) { error = failure; throw failure; }
       finally {
+        // A physical failure must still retain every step's ownership and
+        // actual SDK receipts; it does not become a successful test.
+        if (ownershipScope && result && !stepOwnership) stepOwnership=session.ownership?.(result.initial.tick,result.execution.commands);
         if (directory && path) {
           mkdirSync(directory, { recursive: true });
           writeFileSync(`${path}.result.json.gz`, gzipSync(JSON.stringify({ puzzle: `${puzzle.key}/${puzzle.variant}`,
