@@ -1,5 +1,5 @@
 import type { AiPlanTrace } from '../ai/plan-trace';
-import type { GoalActionNode, GoalFactPredicate, GoalPlan } from '../ai/strategy/goal-planner-types';
+import type { GoalActionDeclaration, GoalActionNode, GoalFactPredicate, GoalPlan } from '../ai/strategy/goal-planner-types';
 import { allocationReason, stageLabel } from './ai-plan-strategy';
 import { planHtml as h, planClock as clock } from './ai-plan-strategy-panel';
 
@@ -22,7 +22,8 @@ const factNames: Record<GoalFactPredicate['kind'], string> = {
   'interception-capability': '拦截能力', 'assets-safe': '资产安全',
 };
 export const goalFactLabel = (predicate: GoalFactPredicate) => factNames[predicate.kind];
-export const goalActionLabel = (action: GoalActionNode) => actionNames[action.declaration.kind] ?? action.declaration.kind;
+const declarationLabel = (action: GoalActionDeclaration) => actionNames[action.kind] ?? action.kind;
+export const goalActionLabel = (action: GoalActionNode) => declarationLabel(action.declaration);
 const reasonList = (rows: GoalPlan['reasons']) => rows.map(reason => `<p>${h(allocationReason({...reason,factIds:[]}))}</p>${reason.factIds.length?`<details><summary>${reason.factIds.length} 项事实依据</summary><pre>${h(reason.factIds.join('\n'))}</pre></details>`:''}`).join('') || '<p class="plan-muted">原因未记录。</p>';
 
 /** Only a recorded binding to this exact generation grants execution authority. */
@@ -105,17 +106,24 @@ export function goalPlanDetail(plan: GoalPlan, trace: AiPlanTrace, selected = '$
   if (fact) {
     const observation = fact.observation;
     const alternatives = plan.alternatives.filter(row => row.factId === fact.id || row.factId === observation.fact.id);
+    const alternativeCards = alternatives.map(row => {
+      const declaration = row.declaration ?? plan.actions.find(action => action.id === row.actionId
+        || action.declaration.id === row.actionId)?.declaration;
+      return `<div class="plan-child plan-alternative"><b>${row.status === 'chosen' ? '选中' : row.status === 'rejected' ? '落选' : '等待评估'} · ${h(declaration ? declarationLabel(declaration) : '动作声明未记录')}</b>
+        <small>${h(row.actionId)}</small><br>成本 ${number(row.costGold)} 金 · 预计完成 ${row.finishTick == null ? '—' : clock(row.finishTick)}
+        ${reasonList([row.reason])}${declaration ? `<details><summary>动作声明与前置 · ${h(declaration.executor.executor)}</summary><pre>${h(JSON.stringify(declaration, null, 2))}</pre></details>` : '<p class="plan-muted">缺少动作声明，不从 ID 猜测方案。</p>'}</div>`;
+    }).join('');
     return `${head}<h4>条件：${h(goalFactLabel(observation.fact.predicate))}</h4><p>${h(states[observation.state])}</p>
       ${observation.state === 'pending' ? `<p class="plan-blocked">等事实 · ${h(observation.requestId)}<br>请求于 ${clock(observation.requestedTick)}，不视作失败。</p>` : ''}
       ${observation.availableTick != null ? `<p>可用时刻 ${clock(observation.availableTick)}${observation.availableTick > trace.tick ? ' · 当前尚不可用' : ''}</p>` : ''}
-      ${reasonList([observation.reason])}<h4>满足它的候选方案</h4>${alternatives.map(row => `<div class="plan-child"><b>${row.status === 'chosen' ? '选中' : row.status === 'rejected' ? '落选' : '等待评估'} · ${h(row.actionId)}</b><br>成本 ${number(row.costGold)} 金 · 预计完成 ${row.finishTick == null ? '—' : clock(row.finishTick)}${reasonList([row.reason])}</div>`).join('') || '<p>候选未记录，不补推方案。</p>'}
+      ${reasonList([observation.reason])}<h4>满足它的候选方案</h4>${alternativeCards || '<p>候选未记录，不补推方案。</p>'}
       <h4>世界事实与证据</h4><details><summary>查看结构化字段</summary><pre>${h(JSON.stringify(observation, null, 2))}</pre></details>`;
   }
   if (action) {
     const execution = recordedGoalExecution(trace, action), assignments = recordedGoalAssignments(trace, action);
-    const budgets=action.allocation?trace.strategy?.allocation?.budget.filter(row=>row.objectiveId===action.allocation!.objectiveId
-      &&row.methodId===action.allocation!.methodId&&row.action.actionId===action.allocation!.actionId
-      &&row.action.generation===action.allocation!.generation)??[]:[];
+    const budgets = action.allocation ? trace.strategy?.allocation?.budget.filter(row => row.objectiveId === action.allocation!.objectiveId
+      && row.methodId === action.allocation!.methodId && row.action.actionId === action.allocation!.actionId
+      && row.action.generation === action.allocation!.generation) ?? [] : [];
     const receipts = action.allocation ? trace.strategy?.allocation?.commandAdmissions?.filter(row =>
       row.action?.actionId === action.allocation!.actionId && row.action.generation === action.allocation!.generation) ?? [] : [];
     return `${head}<h4>动作：${h(goalActionLabel(action))}</h4><p>${h(states[action.state])}</p>

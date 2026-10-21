@@ -22,6 +22,21 @@ it('shows every recorded dependency layer, pending requests, rejected alternativ
   expect(JSON.stringify(trace)).toBe(before);
 });
 
+it('uses an alternative declaration before selected actions, and labels missing old declarations instead of parsing IDs', () => {
+  const { plan, trace, safe, action } = goalDependencyFixture();
+  const fact = goalPlanDetail(plan, trace, safe.id);
+  expect(fact).toContain('选中 · 回防');
+  expect(fact).toContain('落选 · 集结');
+  expect(fact).toContain('distant-assembly');
+  const explicit: GoalPlan = { ...plan, alternatives: [{ ...plan.alternatives[0]!,
+    declaration: { ...action.declaration, kind: 'build' } }] };
+  expect(goalPlanDetail(explicit, trace, safe.id)).toContain('选中 · 建造');
+  const { declaration: _removed, ...old } = plan.alternatives[1]!;
+  const missing: GoalPlan = { ...plan, alternatives: [old] };
+  expect(goalPlanDetail(missing, trace, safe.id)).toContain('动作声明未记录');
+  expect(goalPlanDetail(missing, trace, safe.id)).toContain('不从 ID 猜测方案');
+});
+
 it('joins only the recorded objective, method, action and generation, and labels predicted balances separately', () => {
   const { plan, trace, action, first } = goalDependencyFixture();
   const current = { ...action, allocation: { ...action.allocation!, generation: 1 } };

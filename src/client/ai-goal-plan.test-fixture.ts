@@ -25,6 +25,8 @@ export function goalDependencyFixture() {
       state: 'pending', chosenActionId: null, alternativeIds: [] }],
     alternatives: [{ id: 'candidate-recall', factId: safe.id, actionId: action.id, status: 'chosen', costGold: 20, finishTick: 160, reason },
       { id: 'candidate-far', factId: safe.id, actionId: 'recall-distant', status: 'rejected', costGold: null, finishTick: null,
+        declaration: { ...action.declaration, id: 'far-assembly-declaration', kind: 'assemble',
+          executor: { executor: 'distant-assembly', parameters: { origin: 'far-shore' } } },
         reason: { code: '<img src=x onerror=1>', factIds: [], values: { reason: 'route-missing' } } }], readyActionIds: [],
     resourceTimeline: [{ actionId: action.id, tick: 80, resource: { kind: 'gold' }, before: 10, delta: -5, after: 5 }],
     costGold: 20, successProbability: null, valueGold: null, completedTick: null,

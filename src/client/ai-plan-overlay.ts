@@ -194,9 +194,9 @@ export class AiPlanOverlay {
     }).join('');
     const band=this.history.bands.filter(b=>b.owner===trace.owner&&b.id===node.id&&b.from<=trace.tick).at(-1);
     const deaths=this.history.deaths.filter(d=>d.tick<=tick&&planDeathMatches(trace.owner,node,d,node.sinceTick??band?.from??trace.tick));
-    if(node.goalPlan)return goalPlanDetail(node.goalPlan,trace,this.graphNode);
-    if (node.strategy) return plannerNote+strategyPlanPanel(trace,node,this.history.eventsAt(tick))
-      + `<section><h4>本目标的阵亡</h4><p>账本目标关联 ${deaths.length} 次 · 保留原归因标识</p>${deaths.slice(-6).map(d=>`<button class="plan-list" data-event="${escape(d.id)}" data-tick="${d.tick}">${deathStyle(d).icon} ${clock(d.tick)} · ${escape(d.unit.kind)} · ${deathStyle(d).label} · ${escape(d.attributionContext.provenance)}</button>`).join('')}</section>`;
+    const deathSection = `<section><h4>本目标的阵亡</h4><p>账本目标关联 ${deaths.length} 次 · 保留原归因标识</p>${deaths.slice(-6).map(d=>`<button class="plan-list" data-event="${escape(d.id)}" data-tick="${d.tick}">${deathStyle(d).icon} ${clock(d.tick)} · ${escape(d.unit.kind)} · ${deathStyle(d).label} · ${escape(d.attributionContext.provenance)}</button>`).join('')}</section>`;
+    if(node.goalPlan)return goalPlanDetail(node.goalPlan,trace,this.graphNode)+deathSection;
+    if (node.strategy) return plannerNote+strategyPlanPanel(trace,node,this.history.eventsAt(tick))+deathSection;
     const progress=(this.history.frames.get(trace.owner)??[]).filter(frame=>frame.tick<=tick&&frame.tick>=(node.sinceTick??band?.from??trace.tick))
       .flatMap(frame=>frame.changes.filter(change=>change.nodeId===node.id||change.nodeId.startsWith(`${node.id}/`))
         .map(change=>({tick:frame.tick,detail:change.detail,kind:change.kind,id:change.nodeId})));

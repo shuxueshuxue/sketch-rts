@@ -36,6 +36,20 @@ export default async function(s: Scene) {
     await s.page.waitForFunction((value:number)=>(window as any).__sketchRtsView?.tick===value,tick);
     await s.wait(500);
   };
+  const drags: { requested: number; actual: number }[] = [];
+  const dragTo = async(requested: number) => {
+    const slider = s.page.locator('[data-plan-seek]'), box = await slider.boundingBox();
+    s.must(box, 'Replay slider has no box');
+    const from = Number(await slider.getAttribute('min')), through = Number(await slider.getAttribute('max'));
+    const current = Number(await slider.inputValue()), y = box.y + box.height / 2;
+    const x = (tick: number) => box.x + 8 + (box.width - 16) * (tick - from) / (through - from);
+    await s.page.mouse.move(x(current), y); await s.page.mouse.down();
+    await s.page.mouse.move(x(requested), y, { steps: 12 }); await s.page.mouse.up();
+    const actual = Number(await slider.inputValue());
+    await s.page.waitForFunction((tick:number)=>(window as any).__sketchRtsView?.tick===tick, actual);
+    await s.wait(500); drags.push({ requested, actual });
+    return actual;
+  };
   await seek(50);await s.page.waitForSelector('.plan-dependency-sheet');
   await s.page.evaluate(()=>{
     const watermark=document.createElement('div');watermark.textContent='人工契约样例 · 非真实 AI 决策';
@@ -47,17 +61,22 @@ export default async function(s: Scene) {
   const details=()=>s.page.locator('.plan-panel').innerText();
   s.must((await details()).includes('落选'),'No recorded rejected option');
   s.must(await s.page.locator('.plan-panel img').count()===0,'Unescaped alternative created an image');
-  await s.page.locator('.plan-panel h4').filter({hasText:'满足它的候选方案'}).evaluate(node=>node.scrollIntoView({block:'start'}));
+  await s.page.locator('.plan-panel h4').filter({hasText:'满足它的候选方案'}).evaluate((node:HTMLElement)=>node.scrollIntoView({block:'start'}));
   await s.shot('goal-contract-alternatives');
   await s.page.locator('.goal-graph-node.action').first().click();await s.wait(300);
   s.must((await details()).includes('未记录执行回执'),'A different generation was displayed as execution');
   s.must((await details()).includes('0 名正式分配'),'A planned action invented a grant');
-  await s.page.locator('.plan-panel h4').filter({hasText:'正式执行记录'}).evaluate(node=>node.scrollIntoView({block:'start'}));
+  await s.page.locator('.plan-panel h4').filter({hasText:'正式执行记录'}).evaluate((node:HTMLElement)=>node.scrollIntoView({block:'start'}));
   await s.shot('goal-contract-execution');
   await s.page.locator('.goal-graph-node.fact').filter({hasText:'可达路线'}).click();await s.wait(300);
   s.must((await details()).includes('route-request'),'Missing pending request');
-  await seek(65);s.must(await s.page.locator('.plan-dependency-sheet').count()===1,'Incremental goal graph disappeared');
-  await seek(95);s.must(await s.page.locator('.plan-dependency-sheet').count()===0,'Graph leaked across an unrecorded gap');
-  s.record('goal-plan-contract',{evidence:'artificial-contract-only',gpu,packets:replay.aiPlans.packets.length,
-    checked:['recorded-edges','rejected-alternatives','pending-request','generation-binding','incremental-replay','unrecorded-gap']});
+  const recordedTick = await dragTo(68);
+  s.must(recordedTick>=65&&recordedTick<=80,'Pointer did not reach the incremental recorded interval');
+  s.must(await s.page.locator('.plan-dependency-sheet').count()===1,'Incremental goal graph disappeared');
+  const gapTick = await dragTo(95);
+  s.must(gapTick>80,'Pointer did not reach the unrecorded interval');
+  s.must(await s.page.locator('.plan-dependency-sheet').count()===0,'Graph leaked across an unrecorded gap');
+  await s.shot('goal-contract-unrecorded');
+  s.record('goal-plan-contract',{evidence:'artificial-contract-only',gpu,packets:replay.aiPlans.packets.length,drags,
+    checked:['recorded-edges','rejected-alternatives','pending-request','generation-binding','pointer-seek','incremental-replay','unrecorded-gap']});
 }
