@@ -1,6 +1,6 @@
 # 0531题1：ready为0时补满K20
 
-**原图/资源判法far通过、near失败；两变体可执行计划仍为0，ready始终0。** 两帧各完成20次原生think，position-transport与transport-worker均未有known精化、exact声明或ready。正式执行使用原源码独立运行，本报告只记冷帧，不冒充岛厅完成。
+**原图/资源判法far通过、near失败；两变体可执行计划仍为0，ready始终0。** 两帧各完成20次原生think，position-transport与transport-worker均未有known精化、exact声明或ready。[原源码正式执行](ship-0531bd-execution.zh.md)另已完成，0/2；本报告只记冷帧。
 
 生产固定`0531bd3c9d847a7606535d14d0c136af22e20b36`。原完整运行源码`2f82c4ec6e316bb61f55a963d671f392ec6e59ca`的far图在第1次已通过，图稳定后第4次提前结束，但ready仍0。
 补录源码`fcfc0bb5ab449a3f12dfca5aeda6d6c7602c3fc3`只收紧测试生命周期的早退条件：须图稳定且连续两次原判法通过并有ready动作，才能提前结束；ready=0须满K。32已确认该改动。
@@ -53,11 +53,11 @@ far原判法从think1到20都通过，稳定图成立。near原判法从1到20�
 两快照与原a0帧逐JSON字节相同；始终同一snapshot对象/tick1，memory延续，thinkSequence1…20。far快照SHA`4f1552e780c76a2d1966646470b744de73436eeb452368df74e1ae4ee28e8a78`；near为`e457c849ed51985dcfc184fc02101edc09fd274788b782f26a563fe455a39cea`。
 
 补录far的前4次与原2f82早停片的observed（含output/cache）、memoryAfter、work、planHash、ready及原判法结果逐值相同；[对照](ship-0531bd-k20.prefix.json)标明原near当时尚未写完，没有伪造它的对照。
-原完整运行的近船冷帧与真实执行应在其完成后按原source另封存，不能拿本段补录重标该轮。
+原完整运行另已封存；其far4次与near20次和补录的[完整前缀对照](ship-0531bd-prefix-final.json)均无差异。本段原封存文件保持不变。
 
 [K20独立证据](ship-0531bd-k20.evidence.json)：SHA`2a9a33ff7e65c75bb974615adcd17990825ce02fd8a9d7bed4363162d0011b46`，4609556B，存储端SHA已复核。
 含40次原输入/输出/cache/memory/精化/6144收据、完整首末图、纯资源重放、源码文件哈希、精确生命周期diff、复跑与只读分析脚本。
 A100原目录`/codegeex/jeffry/sketch-public-puzzles/evidence/ship-fcfc0bb5`；独立封存`public-planner-puzzles-ship-0531bd-k20-20261021`。
 源码归档`archive/public-puzzles-ship-0531bd-k20-source-20261021`。
 
-本报告只确认冷帧原判法1/2与可执行0/2。正式执行仍由原0531/2f82进程按原时限推进，完成后单独报告；不混入后续sourceRevision/路线修复。
+本报告只确认冷帧原判法1/2与可执行0/2。正式执行已按原0531/2f82和原时限[另报0/2](ship-0531bd-execution.zh.md)，不混入后续sourceRevision/路线修复。
