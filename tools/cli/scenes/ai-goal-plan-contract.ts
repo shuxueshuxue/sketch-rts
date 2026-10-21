@@ -4,20 +4,20 @@ import type { Scene } from '../drivers/browser';
 /** Actual game/replay UI, artificial GoalPlan input. Never evidence of real planner behavior. */
 export default async function(s: Scene) {
   const load=(path:string)=>import(pathToFileURL(`${process.cwd()}/${path}`).href);
-  const {goalDependencyFixture}=await load('src/client/ai-goal-plan.test-fixture.ts');
+  const {goalNavyFixture}=await load('src/client/ai-goal-navy.test-fixture.ts');
   const {createRoomLifecycleHost}=await load('src/shared/room-lifecycle.ts');
   const {createSaveGameRecord}=await load('src/shared/savegame.ts');
   const {createDebugReplayTrace}=await load('src/shared/replay.ts');
   const {diffAiPlan}=await load('src/ai/plan-stream.ts');
-  const fixture=goalDependencyFixture(),lifecycle=createRoomLifecycleHost();
-  lifecycle.createRoom({id:'goal-contract',host:{id:'host',name:'Contract sample'},mapId:'bareDuel'});
+  const fixture=goalNavyFixture(),lifecycle=createRoomLifecycleHost();
+  lifecycle.createRoom({id:'goal-contract',host:{id:'host',name:'Contract sample'},mapId:'twoShores'});
   const {room}=lifecycle.startRoom('goal-contract');
   const replay=createDebugReplayTrace({id:'goal-contract',label:'人工 GoalPlan 契约样例 · 非真实 AI 决策',
     initialSave:createSaveGameRecord(fixture.game,room,{id:'goal-contract'})});
-  replay.throughTick=120;
-  const next={...fixture.trace,tick:65,goalPlanner:{...fixture.output,plans:[{...fixture.plan,observedTick:65}]}};
-  replay.aiPlans={throughTick:120,packets:[{type:'coverage',session:1,from:50,to:80},
-    diffAiPlan(undefined,fixture.trace,1),diffAiPlan(fixture.trace,next,1)]};
+  replay.throughTick=4200;
+  const next=goalNavyFixture(2100).trace,last=goalNavyFixture(3600).trace;
+  replay.aiPlans={throughTick:4200,packets:[{type:'coverage',session:1,from:50,to:3700},
+    diffAiPlan(undefined,fixture.trace,1),diffAiPlan(fixture.trace,next,1),diffAiPlan(next,last,1)]};
   const gpu=await s.page.evaluate(()=>{
     const gl=document.createElement('canvas').getContext('webgl2')!;
     const ext=gl.getExtension('WEBGL_debug_renderer_info');return ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);
@@ -57,26 +57,36 @@ export default async function(s: Scene) {
       background:'#f3eddf',padding:'4px 12px',font:'600 14px serif',pointerEvents:'none'});
     document.body.append(watermark);
   });
-  await s.page.locator('.goal-graph-node.fact').first().click();await s.wait(300);
+  s.must(await s.page.locator('.goal-graph-node').count()>=17,'Missing branched navy dependencies');
+  await s.shot('goal-contract-overview');
+  await s.page.locator('.goal-graph-node.fact').filter({hasText:'兵力到岗'}).click();await s.wait(300);
   const details=()=>s.page.locator('.plan-panel').innerText();
-  s.must((await details()).includes('落选'),'No recorded rejected option');
-  s.must(await s.page.locator('.plan-panel img').count()===0,'Unescaped alternative created an image');
+  s.must((await details()).includes('落选'),'No rejected option');
+  s.must((await details()).includes('近滩头有敌人'),'Missing human-readable rejected reason');
   await s.page.locator('.plan-panel h4').filter({hasText:'满足它的候选方案'}).evaluate((node:HTMLElement)=>node.scrollIntoView({block:'start'}));
   await s.shot('goal-contract-alternatives');
-  await s.page.locator('.goal-graph-node.action').first().click();await s.wait(300);
-  s.must((await details()).includes('未记录执行回执'),'A different generation was displayed as execution');
-  s.must((await details()).includes('0 名正式分配'),'A planned action invented a grant');
-  await s.page.locator('.plan-panel h4').filter({hasText:'正式执行记录'}).evaluate((node:HTMLElement)=>node.scrollIntoView({block:'start'}));
+  await s.page.locator('.goal-graph-node.action').filter({hasText:'建大厅'}).click();await s.wait(300);
+  s.must((await details()).includes('额度 400 金'),'Missing protected hall budget');
+  s.must(!(await details()).includes('sample-'),'Internal ID leaked into visible sidebar');
+  await s.page.locator('.plan-panel h4').filter({hasText:'谁在执行'}).evaluate((node:HTMLElement)=>node.scrollIntoView({block:'start'}));
   await s.shot('goal-contract-execution');
-  await s.page.locator('.goal-graph-node.fact').filter({hasText:'可达路线'}).click();await s.wait(300);
-  s.must((await details()).includes('route-request'),'Missing pending request');
-  const recordedTick = await dragTo(68);
-  s.must(recordedTick>=65&&recordedTick<=80,'Pointer did not reach the incremental recorded interval');
+  await s.page.locator('.goal-graph-node.fact').filter({hasText:'路线可通行'}).click();await s.wait(300);
+  s.must((await details()).includes('等路线算完'),'Missing pending explanation');
+  s.must(!(await details()).includes('sample-sea-route'),'Request ID leaked into visible sidebar');
+  const recordedTick = await dragTo(2160);
+  s.must(recordedTick>=2100&&recordedTick<3000,'Pointer missed the incremental recorded interval');
   s.must(await s.page.locator('.plan-dependency-sheet').count()===1,'Incremental goal graph disappeared');
-  const gapTick = await dragTo(95);
-  s.must(gapTick>80,'Pointer did not reach the unrecorded interval');
+  s.must((await s.page.locator('.goal-resource-band').innerText()).includes('当前 480 金'),'Incremental cash did not update');
+  await s.shot('goal-contract-progress');
+  const completeTick=await dragTo(3650);
+  s.must(completeTick>=3600&&completeTick<=3700,'Pointer missed the completed interval');
+  s.must((await s.page.locator('.goal-resource-band').innerText()).includes('当前 140 金'),'Final cash did not update');
+  await s.page.locator('.goal-graph-node.goal').click();await s.wait(200);
+  await s.shot('goal-contract-result');
+  const gapTick = await dragTo(4000);
+  s.must(gapTick>3700,'Pointer missed the unrecorded interval');
   s.must(await s.page.locator('.plan-dependency-sheet').count()===0,'Graph leaked across an unrecorded gap');
   await s.shot('goal-contract-unrecorded');
-  s.record('goal-plan-contract',{evidence:'artificial-contract-only',gpu,packets:replay.aiPlans.packets.length,drags,
-    checked:['recorded-edges','rejected-alternatives','pending-request','generation-binding','pointer-seek','incremental-replay','unrecorded-gap']});
+  s.record('goal-plan-contract',{evidence:'artificial-public-puzzle-3',gpu,packets:replay.aiPlans.packets.length,drags,
+    checked:['branched-dependencies','left-to-right-regression','gold-prefixes','hall-reservation','human-readable-labels','rejected-alternatives','pending-request','pointer-seek','incremental-replay','unrecorded-gap']});
 }

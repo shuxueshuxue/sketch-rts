@@ -25,6 +25,8 @@ export class AiPlanOverlay {
   private showTasks=false;
   private showGraph=true;
   private graphNode='$goal';
+  private graphZoom:number|undefined;
+  private graphWide=true;
   private graphScroll={plan:'',left:0,top:0};
   private selected:{owner:string;id:string}|undefined;
   private death:AiUnitDeathRecord|undefined;
@@ -211,8 +213,14 @@ export class AiPlanOverlay {
   private async click(event:Event){
     const element=(event.target as Element).closest<HTMLElement>('button');if(!element)return;
     const action=element.dataset.action;
-    if(element.dataset.planNode){this.graphNode=element.dataset.planNode;if(this.root.clientWidth<=800)this.showGraph=false;this.scrollPanelTop();this.paintedRevision=-1;return;}
+    if(element.dataset.planNode){this.graphNode=element.dataset.planNode;this.graphWide=false;if(this.root.clientWidth<=800)this.showGraph=false;this.scrollPanelTop();this.paintedRevision=-1;return;}
     if(action==='goal-graph'){this.showGraph=!this.showGraph;this.paintedRevision=-1;}
+    if(action==='goal-wide'){this.graphWide=!this.graphWide;this.paintedRevision=-1;}
+    if(action==='goal-fit'||action==='goal-zoom-in'||action==='goal-zoom-out'){
+      const zoom=Number(this.root.querySelector<HTMLElement>('.goal-graph-stage')?.dataset.zoom??1);
+      this.graphZoom=action==='goal-fit'?undefined:Math.max(.3,Math.min(2,zoom*(action==='goal-zoom-in'?1.25:.8)));
+      this.paintedRevision=-1;
+    }
     if(action==='close')this.setOpen(false);
     if(action==='fold')this.root.classList.toggle('plan-folded');
     if(action==='record'){try{if(this.recording)await this.adapter?.stopRecording?.();else await this.adapter?.startRecording?.();this.recording=!this.recording;this.paintedRevision=-1;}catch(e){this.error(e);}}
@@ -241,13 +249,25 @@ export class AiPlanOverlay {
   private scrollPanelTop(){const panel=this.root.querySelector('.plan-panel');if(panel)panel.scrollTop=0;}
   private refreshGraph(){
     this.saveGraphScroll();
+    const timeline=this.root.querySelector('.plan-timeline');
+    if(timeline)this.root.style.setProperty('--plan-bottom',`${timeline.getBoundingClientRect().height+30}px`);
     const old=this.root.querySelector('.plan-dependency-sheet');
     const chosen=this.lastNodes.find(entry=>entry.trace.owner===this.selected?.owner&&entry.node.id===this.selected?.id);
     const markup=this.showGraph&&!this.death&&chosen?.node.goalPlan?goalPlanGraph(chosen.node.goalPlan,chosen.trace,this.graphNode):'';
+    this.root.classList.toggle('plan-graph-wide',!!markup&&this.graphWide);
     if(old){if(markup)old.outerHTML=markup;else old.remove();}
     else if(markup)this.root.insertAdjacentHTML('beforeend',markup);
     const sheet=this.root.querySelector<HTMLElement>('.plan-dependency-sheet');
+    const wideButton=sheet?.querySelector('[data-action=goal-wide]');if(wideButton)wideButton.textContent=this.graphWide?'显示详情':'展开图';
     const view=sheet?.querySelector('.goal-graph-viewport');
+    const stage=sheet?.querySelector<HTMLElement>('.goal-graph-stage');
+    const canvas=sheet?.querySelector<HTMLElement>('.goal-graph-canvas');
+    if(view&&stage&&canvas){
+      const width=Number(stage.dataset.width),height=Number(stage.dataset.height);
+      const zoom=this.graphZoom??Math.max(.3,Math.min(1,(view.clientWidth-4)/width,(view.clientHeight-4)/height));
+      stage.style.width=`${width*zoom}px`;stage.style.height=`${height*zoom}px`;stage.dataset.zoom=String(zoom);
+      canvas.style.transform=`scale(${zoom})`;
+    }
     if(view&&sheet?.dataset.graphPlan===this.graphScroll.plan){view.scrollLeft=this.graphScroll.left;view.scrollTop=this.graphScroll.top;}
   }
   private saveGraphScroll(){

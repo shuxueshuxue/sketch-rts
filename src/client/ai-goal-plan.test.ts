@@ -10,11 +10,12 @@ import { goalFact } from '../ai/strategy/goal-facts';
 it('shows every recorded dependency layer, pending requests, rejected alternatives and unknown estimates without inventing execution', () => {
   const { plan, trace, action, safe } = goalDependencyFixture(), before = JSON.stringify(trace);
   const graph = goalPlanGraph(plan, trace), fact = goalPlanDetail(plan, trace, safe.id), detail = goalPlanDetail(plan, trace, action.id);
-  for (const word of ['目标', '世界条件', '推导动作', 'route-request', 'requires', 'establishes', '计划 planned-defense', '执行未记录']) expect(graph).toContain(word);
+  for (const word of ['目标', '条件', '动作', '等路线算完', '还差 6 战力', 'requires', 'establishes']) expect(graph).toContain(word);
+  for (const internal of ['fixture-await-route','required=6','planned-defense','route-request']) expect(graph).not.toContain(internal);
   for (const word of ['选中', '落选', 'recall-distant', '成本 —', '&lt;img']) expect(fact).toContain(word);
   expect(fact).not.toContain('<img');
-  expect(detail).toContain('未记录执行回执'); expect(detail).toContain('0 名正式分配');
-  expect(detail).toContain('效果尚未证实'); expect(detail).toContain('计划执行器');
+  expect(detail).toContain('<h4>谁在执行</h4><p>—</p>');
+  expect(detail).toContain('实际完成 —');
   expect(recordedGoalExecution(trace, action)).toBeUndefined(); expect(recordedGoalAssignments(trace, action)).toEqual([]);
   const node = planViewNodes(trace).find(row => row.goalPlan)!;
   expect(node.resources.unitIds).toEqual([]); expect(node.status).toBe('waiting-facts');
@@ -33,8 +34,7 @@ it('uses an alternative declaration before selected actions, and labels missing 
   expect(goalPlanDetail(explicit, trace, safe.id)).toContain('选中 · 建造');
   const { declaration: _removed, ...old } = plan.alternatives[1]!;
   const missing: GoalPlan = { ...plan, alternatives: [old] };
-  expect(goalPlanDetail(missing, trace, safe.id)).toContain('动作声明未记录');
-  expect(goalPlanDetail(missing, trace, safe.id)).toContain('不从 ID 猜测方案');
+  expect(goalPlanDetail(missing, trace, safe.id)).toContain('落选 · —');
 });
 
 it('joins only the recorded objective, method, action and generation, and labels predicted balances separately', () => {
@@ -44,11 +44,11 @@ it('joins only the recorded objective, method, action and generation, and labels
   expect(recordedGoalAssignments(trace, current).map(row => row.unitId)).toEqual([first.id]);
   expect(recordedGoalAssignments(trace, { ...current, allocation: { ...current.allocation, methodId: 'another' } })).toEqual([]);
   const text = goalPlanDetail({ ...plan, actions: [current] }, trace, current.id);
-  expect(text).toContain('正式执行记录'); expect(text).toContain('fixture-defense');
-  expect(text).toContain('命令接纳与排队不证明已生效');
+  expect(text).toContain('当前进度'); expect(text).toContain('集结 · 受阻');
+  expect(text).not.toContain('命令接纳与排队不证明已生效');
   expect(text).toContain('额度 200 金 · 已支付 50 金');
   const goal = goalPlanDetail(plan, trace);
-  expect(goal).toContain('规划数量与时间账本'); expect(goal).toContain('实际支出由原生回执证明');
+  expect(goal).toContain('查看结构化字段'); expect(goal).toContain('resourceTimeline');
   expect(goal).not.toContain('目标效果于');
 });
 
@@ -57,7 +57,7 @@ it('keeps future availability explicit and does not make a future met condition 
   const next = { ...plan, facts: plan.facts.map(row => row.id !== route.id ? row : { ...row,
     observation: { ...row.observation, state: 'met' as const, availableTick: 400,
       route: { distance: 90, ticks: 350, points: [{ x: 0, y: 0 }] } } }) };
-  expect(goalPlanGraph(next, trace)).toContain('当前未到时刻');
+  expect(goalPlanGraph(next, trace)).toContain('0:20 才可用');
   const detail = goalPlanDetail(next, trace, route.id);
   expect(detail).toContain('当前尚不可用'); expect(detail).toContain('&quot;distance&quot;: 90');
   expect(next.readyActionIds).toEqual([]);
@@ -78,7 +78,7 @@ it('preserves cargo output references, native evidence and income source interva
     } } },
   ] };
   const detail = goalPlanDetail(next, trace, cargo.id);
-  expect(detail).toContain('货物已登船');
+  expect(detail).toContain('乘员登船');
   for (const value of ['train-hull', 'native-cargo', '&lt;cargo-evidence&gt;']) expect(detail).toContain(value);
   expect(goalPlanDetail(next, trace, gold.id)).toContain('mine-income');
   expect(goalPlanDetail(next, trace, gold.id)).toContain('&quot;throughTick&quot;: 300');
