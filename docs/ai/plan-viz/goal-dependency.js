@@ -79,18 +79,18 @@
     return `<button class="graph-node ${kind} ${state} ${selected===id?'selected':''}" data-node="${id}" style="left:${x}px;top:${y}px;width:${width}px" aria-pressed="${selected===id}"><span class="node-label">${icon} ${label||html(kind)}<b>${html(names[state]||state)}</b></span><span class="node-title">${html(title)}</span><span class="node-note">${note}</span>${foot?`<span class="node-foot">${foot}</span>`:''}</button>`;
   }
   function renderGraph(i) {
-    let nodes=node('goal','goal',16,196,174,i===3?'done':'active','建立东岛矿厅',`目标效果<br><b>hall-complete</b><br>矿点可开始采矿`,i===3?'✓ 08:10 效果已证明':'需要右侧 3 项同时成立','目标');
+    let nodes=node('goal','goal',16,168,174,i===3?'done':'active','建立东岛矿厅',`目标效果<br><b>hall-complete</b><br>矿点可开始采矿`,i===3?'✓ 08:10 效果已证明':'需要右侧 3 项同时成立','目标');
     const paths=[];
     rows.forEach((row,index)=>{
-      const y=45+index*151, cy=y+60, st=row.states[i];
+      const y=38+index*130, cy=y+60, st=row.states[i];
       nodes+=node(`${row.id}-fact`,'fact',230,y,184,st,row.title,html(row.values[i]),'全部前置 / AND','事实');
       nodes+=node(`${row.id}-action`,'action',452,y,188,row.actionStates[i],row.action,html(row.notes[i]),'选中 1 · 落选 1 → 查看理由','推导动作');
       nodes+=node(`${row.id}-executor`,'executor',675,y,190,row.actionStates[i],row.id==='worker'?'工人运输':row.id==='camp'?'岛上兵力与清营':'本土筹资',html(row.who[i]),html(row.phase[i]),'实际分配 / 阶段');
       nodes+=node(`${row.id}-result`,'result',905,y,178,st==='met'?'met':'unmet',st==='met'?'效果已被观测':'结果尚未成立',html(row.proof[i]),st==='met'?'✓ 证据可核对':'不拿命令接受当结果','结果证据');
-      paths.push(`<path class="dependency-edge" d="M190 267 C210 267 209 ${cy} 230 ${cy}"/><path class="dependency-edge" d="M414 ${cy} H452"/><path class="dependency-edge execution" d="M640 ${cy} H675"/><path class="dependency-edge ${st==='met'?'proved':''}" d="M865 ${cy} H905"/>`);
+      paths.push(`<path class="dependency-edge" d="M190 239 C210 239 209 ${cy} 230 ${cy}"/><path class="dependency-edge" d="M414 ${cy} H452"/><path class="dependency-edge execution" d="M640 ${cy} H675"/><path class="dependency-edge ${st==='met'?'proved':''}" d="M865 ${cy} H905"/>`);
     });
     $('#graph-nodes').innerHTML=nodes;
-    $('#graph-links').innerHTML=`<defs><marker id="dep-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto-start-reverse"><path d="M0 0 L6 3 L0 6" fill="none" stroke="currentColor"/></marker></defs><g style="marker-end:url(#dep-arrow)">${paths.join('')}</g><text x="201" y="256" class="edge-label">需要</text>`;
+    $('#graph-links').innerHTML=`<defs><marker id="dep-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto-start-reverse"><path d="M0 0 L6 3 L0 6" fill="none" stroke="currentColor"/></marker></defs><g style="marker-end:url(#dep-arrow)">${paths.join('')}</g><text x="201" y="228" class="edge-label">需要</text>`;
     $('#graph-summary').textContent=i===3?'目标完成：最后由矿厅完工事实确认。':i===1?'2 兵让位回防 → 缺口重推，父目标保留。':i===2?'2 / 3 前置已成立，尚未把卸载当作到岗。':'缺条件会推出动作；等事实不会被当作失败。';
     renderDetail(i);
   }
@@ -101,12 +101,12 @@
   }
   function fit() {
     const viewport=$('#graph-viewport');
-    zoom=Math.min(1,(viewport.clientWidth-16)/1100,(viewport.clientHeight-2)/510);
+    zoom=Math.min(1,(viewport.clientWidth-16)/1100,(viewport.clientHeight-2)/460);
     zoom=Math.max(.55,zoom);applyZoom();
   }
   function applyZoom() {
     $('#graph-canvas').style.transform=`scale(${zoom})`;
-    $('#graph-size').style.width=`${1100*zoom}px`;$('#graph-size').style.height=`${510*zoom}px`;
+    $('#graph-size').style.width=`${1100*zoom}px`;$('#graph-size').style.height=`${460*zoom}px`;
     $('#zoom-label').textContent=`${Math.round(zoom*100)}%`;
   }
   function render() {

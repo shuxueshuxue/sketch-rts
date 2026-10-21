@@ -18,6 +18,9 @@ export default async function (s: Scene) {
   for (const text of ['force-at', '运兵', '集结', '等事实', '落选', '200 金']) s.must(detail.includes(text), `Missing dependency detail: ${text}`);
   s.must((await s.page.locator('.sample-label').innerText()).includes('人工样稿'), 'Missing synthetic-data label');
   await s.wait(300); await s.shot('goal-dependency-plan');
+  await s.page.locator('.option.rejected').first().scrollIntoViewIfNeeded();
+  await s.shot('goal-dependency-options');
+  await s.page.locator('#node-detail').evaluate((element: HTMLElement) => { element.scrollTop = 0; });
   await s.page.click('[data-moment="310"]');
   s.must((await s.page.locator('#node-detail').innerText()).includes('2 名兵被矿区回防抢占'), 'Missing interruption and retained parent');
   await s.shot('goal-dependency-interruption');
