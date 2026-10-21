@@ -17,6 +17,8 @@ export function createExecution(options: { evidenceFile?: string } = {}): Puzzle
   return {
     commandPlanner({ game, snapshot, owner, agent, source, teams }) {
       const before = JSON.stringify(snapshot), worldBefore = JSON.stringify(snapshotGame(game));
+      const retainedBefore = options.evidenceFile ? memoryProvider.get(owner) : undefined;
+      const memoryBefore = options.evidenceFile ? JSON.stringify(retainedBefore ?? null) : undefined;
       plannedThinks++;
       let calls = 0;
       const entries = withNavigationAudit(event => {
@@ -53,7 +55,7 @@ export function createExecution(options: { evidenceFile?: string } = {}): Puzzle
           if (!first && output.plans.length) first = observation;
           // Concatenated gzip members keep synchronous SDK loops bounded.
           // Each member is one real snapshot and its actual same-think trace.
-          if (options.evidenceFile) appendFileSync(options.evidenceFile, gzipSync(`{"snapshot":${before},"observation":${JSON.stringify(observation)},"work":${JSON.stringify(work)}}\n`));
+          if (options.evidenceFile) appendFileSync(options.evidenceFile, gzipSync(`{"snapshot":${before},"memoryBeforeAvailable":${retainedBefore !== undefined},"memoryBefore":${memoryBefore},"memoryAfter":${JSON.stringify(context.memory)},"observation":${JSON.stringify(observation)},"work":${JSON.stringify(work)}}\n`));
         },
       }));
       if (calls !== 1) throw new Error('Expected one controlled owner observation per SDK think');
