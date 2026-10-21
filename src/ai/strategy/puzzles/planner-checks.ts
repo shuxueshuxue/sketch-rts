@@ -1,5 +1,6 @@
 import { expect } from 'vitest';
 import { BUILDING_DEFS } from '../../../shared/catalog';
+import { seconds } from '../../../shared/time';
 import type { PublicPuzzleCase } from './scenes';
 import type { PuzzleWorld } from './world';
 
@@ -115,7 +116,18 @@ export function checkPuzzlePlan(puzzle: PublicPuzzleCase, world: PuzzleWorld, ob
       else {
         required(kind('transport-force'), 'island first');
         expect(hall.some(h => defend.some(d => h.finishTick !== null && d.startTick !== null && h.finishTick <= d.startTick)), 'island before defense').toBe(true);
-        expect(defend.some(d => d.startTick !== null && d.startTick <= world.game.tick + 360 * 20), 'on defense by enemy arrival; winning the battle may finish later').toBe(true);
+        const arrival = world.game.tick + seconds(360);
+        expect(defend.some(d => d.declaration.effects.some(effect => {
+          const p = effect.fact.predicate;
+          if (effect.operation !== 'establish' || p.kind !== 'site-safe' || p.throughTick < arrival
+            || p.site.entityId !== world.home.id && Math.hypot(p.site.point.x - world.home.x, p.site.point.y - world.home.y) > 450) return false;
+          // A sustained defense starts before arrival and retains its lease
+          // afterward. Its protection effect, not command start or lease end,
+          // must activate at the real home before the incoming army arrives.
+          const active = effect.at === 'start' ? d.startTick : effect.at === 'finish' ? d.finishTick
+            : d.startTick === null ? null : d.startTick + effect.at.offsetTicks;
+          return active !== null && active <= arrival;
+        })), 'home protection active by enemy arrival; winning the battle may finish later').toBe(true);
       }
       break;
     }
