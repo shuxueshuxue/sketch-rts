@@ -32,7 +32,7 @@ export function createSeaTravelQuery(snapshot: GameSnapshot, buildBudget = Infin
   if (terrain && !shared) facts.set(terrain, shared = { roads: new Map(), prices: new Map() });
   const local = new Map<string, Estimate>(), poses = new WeakMap<Unit, Unit>();
   const stats = { requests: 0, localHits: 0, priceHits: 0, geometryBuilds: 0, pricings: 0 };
-  function travel(ship: Unit, from: Point, to: Point, future = false): Estimate {
+  function travel(ship: Unit, from: Point, to: Point, future = false, requestWork = true): Estimate {
     stats.requests++;
     if (gap(from, to) <= 1e-7) return { status: 'known', ticks: 0, computedTick: snapshot.tick, geometryTick: null };
     const limits = shipMotionLimits(ship);
@@ -42,7 +42,7 @@ export function createSeaTravelQuery(snapshot: GameSnapshot, buildBudget = Infin
     const windKey = windAt(snapshot.map, from).key;
     const key = `${roadKey}:${ship.kind}:${limits.speed}:${limits.acceleration}:${limits.turnRate}:${windKey}:${fixed ? 'aligned' : ship.sailing?.heading ?? 0}`;
     // Publication depends on this owner's serialized work, before either cache.
-    const field = fields.field(to);
+    const field = fields.field(to, requestWork);
     if (!field) return pending;
     const localHit = cache === 'reuse' && local.get(key);
     if (localHit) { stats.localHits++; return localHit; }
@@ -97,5 +97,6 @@ export function createSeaTravelQuery(snapshot: GameSnapshot, buildBudget = Infin
     }
     return result;
   }
-  return { travel, stats, get deferredFields() { return fields.deferred; } };
+  return { travel, prepareField: (goal: Point) => { fields.field(goal); }, stats,
+    get deferredFields() { return fields.deferred; } };
 }

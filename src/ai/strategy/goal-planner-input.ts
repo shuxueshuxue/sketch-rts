@@ -143,6 +143,19 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
       const arrivalPhysics = createArrivalPlanningPhysics({ snapshot, geometry, geometryRevision, landRoute: exactLandRoute, regions });
       const observationDistances = precision === 'coarse' ? { ...distances, field: (goal: import('./types').Point) => distances.field(goal, false) } : distances;
       const arrivals = createArrivalQuery(snapshot, owner, memory, distances, 1, regions, preparation, false, arrivalPhysics);
+      const coarseSeaTicks: NonNullable<import('./goal-naval-combat-grounding').GoalNavalCombatGroundingPorts['coarseSeaTicks']> = (ship, from, to, future) => {
+        const factIds = [`field:sea:${to.x}:${to.y}`], sea = seaIdAt(snapshot.map, from);
+        if (!sea || sea !== seaIdAt(snapshot.map, to)) return { state: 'unmet', reason: {
+          code: 'coarse-sea-components-differ', factIds, values: {} } };
+        const quote = arrivals.coarseSeaTravel(ship, from, to, future);
+        if (quote.status === 'known') return { state: 'met', value: quote.ticks, factIds };
+        if (quote.status === 'unreachable') return { state: 'unmet', reason: {
+          code: 'coarse-published-sea-field-unreachable', factIds, values: {} } };
+        // An unbuilt field supplies no forecast. Zero is only the admissible
+        // search lower bound while the chosen frontier publishes that field;
+        // it never proves arrival, a dock pose, risk or a native route.
+        return { state: 'met', value: 0, factIds: [...factIds, 'coarse-unpublished-sea-time-lower-bound'] };
+      };
       const observationArrivals = precision === 'coarse' ? { ...arrivals,
         arrival: (_unit: import('../../shared/types').Unit, _target: import('./types').Target): import('./types').Arrival => ({
           status: 'unknown', lowerBoundTicks: 0, reason: { code: 'coarse-arrival-not-refined',
@@ -213,10 +226,14 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
                 const sea = seaIdAt(snapshot.map, predicate.from.point);
                 if (sea && sea === seaIdAt(snapshot.map, predicate.to.point)) {
                   const distance = Math.hypot(predicate.to.point.x - predicate.from.point.x, predicate.to.point.y - predicate.from.point.y);
+                  const time = coarseSeaTicks(ship, predicate.from.point, predicate.to.point, future);
+                  if (time.state !== 'met') return { fact, observedTick: snapshot.tick, revision, evidence: [], reason: time.reason,
+                    ...(time.state === 'pending' ? { state: 'pending' as const, requestId: time.requestIds[0] ?? fact.id, requestedTick: snapshot.tick }
+                      : { state: 'unmet' as const }) };
                   return { fact, state: 'met', observedTick: snapshot.tick, revision, evidence: [], availableTick: snapshot.tick,
                     reason: { code: 'sea-component-connected-native-time-background', factIds: [fact.id],
-                      values: { timing: 'optimistic-estimate', nativeStatus: result.status } },
-                    route: { distance, ticks: Math.floor(distance / Math.max(1, actor.speed) * 20), points: [] } };
+                      values: { timing: time.factIds.includes('coarse-unpublished-sea-time-lower-bound') ? 'unpublished-field-lower-bound' : 'published-sea-field-wind-estimate', nativeStatus: result.status } },
+                    route: { distance, ticks: time.value, points: [] } };
                 }
               }
               const common = { fact, observedTick: snapshot.tick, revision, evidence: [],
@@ -283,7 +300,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
           ...(selected.length ? { hullReferences } : {}),
           ...(precision === 'coarse' && mode === 'exact' ? { travelTimePolicy: 'connectivity-estimate' as const } : {}),
           ...(precision === 'coarse' ? { berthOrientation: 'shore' as const } : {}),
-          readFact: read, resolveCohort, productionOptions: economy.productionOptions, readGroundPoint: arrivalPhysics.ground, readVoyageRisk,
+          readFact: read, resolveCohort, productionOptions: economy.productionOptions, readGroundPoint: arrivalPhysics.ground, readVoyageRisk, coarseSeaTicks,
           readPointRoute: (ship, from, to, future) => {
             const pose = { ...ship, sailing: { ...ship.sailing!, heading: from.heading } };
             shareShipProfile(ship, pose);
@@ -322,7 +339,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
             ...(start ? { departure: start } : {}), landing: end }], factIds: [] } : { state: 'unmet',
             reason: { code: 'selected-shore-contact-invalid', factIds: [], values: {} } };
         } };
-        const transportOptions: GoalGroundingReader['transportOptions'] = mode === 'coarse' ? createGoalCoarseTransport(context, regions, resolveCohort, berthBindings.published) : (from, to, _mass, request) => {
+        const transportOptions: GoalGroundingReader['transportOptions'] = mode === 'coarse' ? createGoalCoarseTransport(context, regions, resolveCohort, berthBindings.published, coarseSeaTicks) : (from, to, _mass, request) => {
           if (!request) return { state: 'pending', requestIds: ['transport-exact-cohort'],
             reason: { code: 'transport-exact-cohort-required', factIds: [], values: {} } };
           const members = resolveCohort(request.cohort);
@@ -340,7 +357,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
             factIds: posts.flatMap(post => post.factIds), ...(landings.state === 'met' && landings.deferred ? { deferred: landings.deferred }
               : landings.state === 'pending' ? { deferred: [{ id: `post-alternative:${effect.id}`, requestIds: landings.requestIds, reason: landings.reason }] } : {}) };
         };
-        const combatPorts = { landRoute, resolveCohort,
+        const combatPorts = { landRoute, resolveCohort, coarseSeaTicks,
           movementRisk: request => mode === 'coarse' ? { state: 'met', value: { expectedLossGold: 0, survivalProbability: 1 }, factIds: ['coarse-movement-bound'] }
             : assessGoalCombatMovementRisk({ snapshot, situation, request }),
           arrival: (unit, target) => mode === 'coarse' ? { status: 'unknown', lowerBoundTicks: 0,
@@ -377,14 +394,28 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
         const transport = action.executor.parameters.transport as GoalEntityReference | undefined;
         const times = transport?.kind === 'existing' ? preparation.pointRoutes?.entries.filter(entry =>
           entry.id.startsWith(`${transport.entityId}:`) && entry.readyTick !== null).map(entry => [entry.id, entry.readyTick, entry.readyThink]) : [];
-        return goalValueKey([actorRevision(action), times]);
+        const fields = transport ? preparation.fields.sea.filter(entry => entry.readyTick !== null)
+          .map(entry => [entry.goal, entry.readyTick, entry.readyThink]) : [];
+        return goalValueKey([actorRevision(action), times, fields, ...(transport ? [snapshot.map.wind] : [])]);
       };
       const refiner = createGoalPlanRefiner({ memory: refinements, providers: baseProviders, sourceRevision,
         maxAlternativeQuotes: input.limits?.maxPlans ?? 8,
         exactContext: (_selected, plan) => makeContext(input.allowedUnitIds, input.interruptedUnitIds, [], reservedGold, 'exact', plan.actions.map(node => node.declaration)),
-        prepareExact: (plan, selected, context) => contactPreparation.get(context)?.(plan, selected) });
+        prepareExact: (plan, selected, context) => {
+          for (const node of selected) {
+            const parameters = node.declaration.executor.parameters;
+            if (node.declaration.kind === 'position-transport') {
+              const at = parameters.at as import('./types').Target;
+              if (at?.seaId) arrivals.prepareSeaField(at.point);
+            } else if (['transport-force', 'transport-worker'].includes(node.declaration.kind)) {
+              const landing = parameters.landing as { water?: import('./types').Point } | undefined;
+              if (landing?.water) arrivals.prepareSeaField(landing.water);
+            }
+          }
+          return contactPreparation.get(context)?.(plan, selected);
+        } });
       const prefixContexts = new WeakMap<object, GoalPlanningContext>();
-      const quoteRevision = () => `goal-domain-v2:${precision}:${refinements.revision}:berths:${retained.selectedBerths!.revision}`;
+      const quoteRevision = () => `goal-domain-v3:${precision}:${refinements.revision}:berths:${retained.selectedBerths!.revision}:sea:${goalValueKey(preparation.fields.sea.filter(entry => entry.readyTick !== null).map(entry => [entry.goal, entry.readyTick, entry.readyThink]))}`;
       const plannerInput: GoalPlannerInput = { context: grounded, goals,
         campModelUsage: () => ({ ...campModelUsage.counts }),
         ...(precision === 'coarse' ? { refinementRevision: quoteRevision } : {}),

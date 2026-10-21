@@ -4,6 +4,9 @@ import { GANGWAY_SETUP_TICKS } from '../../shared/ship-gangway';
 import { isTransportKind } from '../../shared/transport-role';
 import { goalFact, goalValueKey } from './goal-facts';
 import type { GoalGroundingReader, GoalPlanningContext, GoalTransportOption } from './goal-planner-types';
+import type { GoalEstimate } from './goal-planner-types';
+import type { Unit } from '../../shared/types';
+import type { Point } from './types';
 import { seaIdAt, type RegionIndex } from './regions';
 import { chooseGoalCoarseDeparture, chooseGoalCoarseShore, type GoalPublishedBerthReader } from './goal-selected-berths';
 
@@ -12,7 +15,8 @@ import { chooseGoalCoarseDeparture, chooseGoalCoarseShore, type GoalPublishedBer
  * berth; roads and risk still require selected-action refinement before any
  * command authority exists. */
 export function createGoalCoarseTransport(context: GoalPlanningContext, regions: RegionIndex,
-  resolveCohort: NonNullable<GoalGroundingReader['resolveCohort']>, publishedBerth?: GoalPublishedBerthReader): GoalGroundingReader['transportOptions'] {
+  resolveCohort: NonNullable<GoalGroundingReader['resolveCohort']>, publishedBerth?: GoalPublishedBerthReader,
+  seaTicks?: (ship: Unit, from: Point, to: Point, future: boolean) => GoalEstimate<number>): GoalGroundingReader['transportOptions'] {
   const distance = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y);
   return (from, to, _capacity, request) => {
     const id = `coarse-transport:${goalValueKey([from, to, request])}`;
@@ -42,16 +46,19 @@ export function createGoalCoarseTransport(context: GoalPlanningContext, regions:
       const approach = goalFact({ kind: 'transport-at', transport, at: { seaId, point: start }, tolerance: ship.radius, byTick });
       const crossing = goalFact({ kind: 'route', mover: 'sea', actor: transport, from: { seaId, point: start },
         to: { seaId, point: landing.water }, fromHeading: heading });
-      // Acceleration, turning, obstacles and combat are absent from this lower
-      // time/cost bound. The exact replacement retains each of those terms.
-      const sailing = Math.floor(distance(start, landing.water) / Math.max(1, ship.speed) * 20);
+      // Read a published basin/wind forecast when available. The compatibility
+      // fallback is only a straight-line time bound; combat is priced later.
+      const sailing = seaTicks?.(ship, start, landing.water, true) ?? { state: 'met' as const,
+        value: Math.floor(distance(start, landing.water) / Math.max(1, ship.speed) * 20), factIds: [id] };
       // Fighters reach the departure post through their separate assembly.
       const walk = waiting.filter(member => member.assessment.kind === 'worker').reduce((longest, member) => Math.max(longest,
         Math.floor(distance(member.assessment, departure!.ground) / Math.max(1, member.assessment.speed) * 20)), 0);
       const common = { id: `${id}:${ship.id}`, seaId, transport, from, to, capacity, loadedUnitIds: cargo.map(unit => unit.id).sort(),
         landing: { water: landing.water, ground: landing.ground, heading: landing.heading }, crossing,
         shoreSafe: goalFact({ kind: 'shore-safe', landId: to.landId, landing: { landId: to.landId, point: landing.ground }, throughTick: byTick }),
-        duration: { state: 'met' as const, value: sailing + walk + (waiting.length ? GANGWAY_SETUP_TICKS : 0) + GANGWAY_SETUP_TICKS, factIds: [id] },
+        duration: sailing.state === 'met' ? { state: 'met' as const,
+          value: sailing.value + walk + (waiting.length ? GANGWAY_SETUP_TICKS : 0) + GANGWAY_SETUP_TICKS,
+          factIds: [id, ...sailing.factIds] } : sailing,
         cost: { state: 'met' as const, value: [], factIds: [id] }, successProbability: { state: 'met' as const, value: 1, factIds: [id] },
         preconditions: [goalFact({ kind: 'transport-in', transport, seaId, capacity: mass, byTick })], factIds: [id] };
       candidates.push(waiting.length && departure ? { ...common, origin: 'land', approach,

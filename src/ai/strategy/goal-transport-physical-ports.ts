@@ -34,6 +34,7 @@ export type GoalTransportPhysicalInput = Readonly<{
   hullReferences?: readonly import('./goal-planner-types').GoalEntityReference[];
   /** Normal planner commands need connectivity; native timing refines in the background. */
   travelTimePolicy?: 'connectivity-estimate';
+  coarseSeaTicks?: (ship: Unit, from: Point, to: Point, future: boolean) => import('./goal-planner-types').GoalEstimate<number>;
   /** A future dock is a target pose, independent of a hull currently turning. */
   berthOrientation?: 'shore';
 }>;
@@ -233,13 +234,15 @@ export function createGoalTransportFactPorts(input: GoalTransportPhysicalInput):
       const answer = input.readPointRoute(ship, from, to, future), fact = answer.fact;
       if (fact.status !== 'complete' && input.travelTimePolicy === 'connectivity-estimate'
         && seaIdAt(input.snapshot.map, from) === hull.seaId && seaIdAt(input.snapshot.map, to) === hull.seaId) {
+        const estimate = input.coarseSeaTicks?.(ship, from, to, future);
+        if (estimate && estimate.state !== 'met') return estimate;
         const request = hull.reference.kind === 'existing' ? { id: `goal-sea-estimate:${hull.reference.entityId}:${fnv1a(goalValueKey([hull.seaId, from, to]))}`,
           seaId: hull.seaId, shipId: hull.reference.entityId, start: { ...from }, destination: { ...to } } : null;
         const risk = request && input.readVoyageRisk ? input.readVoyageRisk(request) : { status: 'unknown' as const,
           reasonCode: 'goal-voyage-basin-risk-unpublished', samples: 0, totalSamples: 0, threatIds: [] };
-        return { state: 'met', value: { ticks: Math.floor(Math.hypot(to.x - from.x, to.y - from.y) / Math.max(1, ship.speed) * 20),
+        return { state: 'met', value: { ticks: estimate?.value ?? Math.floor(Math.hypot(to.x - from.x, to.y - from.y) / Math.max(1, ship.speed) * 20),
           endpoint: { ...to }, heading: from.heading, timeBasis: 'sea-connectivity-estimate', risk },
-          factIds: [answer.id, ...(request ? [request.id] : [])] };
+          factIds: [answer.id, ...(estimate?.factIds ?? []), ...(request ? [request.id] : [])] };
       }
       if (fact.status !== 'complete') return fact.status === 'static-infeasible'
         ? { state: 'unmet', reason: reason(fact.reasonCode, [answer.id]) }

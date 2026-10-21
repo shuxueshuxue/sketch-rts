@@ -240,6 +240,26 @@ it('uses known sea connectivity for estimated travel while retaining the native 
  t.finish();expect(t.work.receipt.used).toBe(0);
 });
 
+it('uses the shared basin time quote only while native timing is unpublished, preserving independent risk and pending reasons',()=>{
+ const f=frame(), actual:GoalHullCandidate={id:f.hull.id,reference:{kind:'existing',entityId:f.hull.id},assessment:f.hull,seaId:'sea:1',availableTick:f.snapshot.tick,capacity:1000,cargoUnitIds:[],preconditions:[],factIds:[]};
+ const from={x:f.hull.x,y:f.hull.y,heading:2.5},to=f.regions.shores.find(shore=>shore.seaId==='sea:1')!.water;
+ const readPointRoute:GoalTransportPhysicalInput['readPointRoute']=()=>({id:'native-background-time',fact:{status:'pending',reasonCode:'search-in-progress',work:13}});
+ const coarseSeaTicks=vi.fn<NonNullable<GoalTransportPhysicalInput['coarseSeaTicks']>>(()=>({state:'met',value:321,factIds:['published-basin-wind-time']}));
+ const t=f.think(0,0,{travelTimePolicy:'connectivity-estimate',readPointRoute,coarseSeaTicks});
+ expect(strict(()=>t.ports.seaLeg(actual,from,to,false))).toMatchObject({state:'met',value:{ticks:321,timeBasis:'sea-connectivity-estimate',risk:{status:'unknown'}},factIds:expect.arrayContaining(['native-background-time','published-basin-wind-time'])});
+ expect(coarseSeaTicks).toHaveBeenCalledWith(expect.objectContaining({id:f.hull.id}),from,to,false);
+ for(const state of ['pending','unmet'] as const){
+  const reason={code:'shared-field-'+state,factIds:['field-id'],values:{}};
+  const estimate=state==='pending'?{state,requestIds:['same-field-request'],reason}:{state,reason};
+  const waiting=f.think(0,0,{travelTimePolicy:'connectivity-estimate',readPointRoute,coarseSeaTicks:()=>estimate});
+  expect(strict(()=>waiting.ports.seaLeg(actual,from,to,false))).toEqual(estimate);
+ }
+ coarseSeaTicks.mockClear();
+ const native=f.think(0,0,{travelTimePolicy:'connectivity-estimate',coarseSeaTicks});
+ expect(strict(()=>native.ports.seaLeg(actual,from,to,false))).toMatchObject({state:'met',value:{ticks:20}});
+ expect(coarseSeaTicks).not.toHaveBeenCalled();t.finish();expect(t.work.receipt.used).toBe(0);
+});
+
 it('keeps a future shore-pose scan stable while the actual ship turns, without changing default native hints',()=>{
  const f=frame(), shore=f.regions.shoresByLand.get(f.from.landId)!.get('sea:1')![0]!;
  const hull:GoalHullCandidate={id:f.hull.id,reference:{kind:'existing',entityId:f.hull.id},assessment:f.hull,seaId:'sea:1',availableTick:f.snapshot.tick,capacity:1000,cargoUnitIds:[],preconditions:[],factIds:[]};

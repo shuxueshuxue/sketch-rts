@@ -2,6 +2,10 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { GameSnapshot, Unit } from '../../shared/types';
 import { createSeaTravelQuery } from './sea-travel';
+import { createAiPolicyMemory } from '../memory';
+import { observationMemory } from './observation-memory';
+import { FactWorkQueue, withFactWork } from './fact-work';
+import { withNavigationAudit, withNavigationPhase } from '../../shared/navigation-audit';
 
 function frame() {
   const fixture = JSON.parse(readFileSync(new URL('../bootstrap_1/fixtures/naval-reinforcements-sapphire-25m.json', import.meta.url), 'utf8'));
@@ -16,6 +20,32 @@ const ticks = (quote: ReturnType<ReturnType<typeof createSeaTravelQuery>['travel
   expect(quote.status).toBe('known'); if (quote.status !== 'known') throw new Error('Quote not ready'); return quote.ticks;
 };
 describe('sea leg pricing keyed by its complete computational inputs', () => {
+  it('reads only published fields in coarse discovery and lets the selected layer enqueue the shared field', () => {
+    const { snapshot, ship, from, to } = frame(), observation = observationMemory(snapshot, ship.owner, createAiPolicyMemory());
+    const firstWork = new FactWorkQueue(snapshot.tick, 6144, undefined, 1);
+    withNavigationAudit(event => { if (event.phase === 'strategy-planning' && !event.authorization) throw Error(event.operation); },
+      () => withNavigationPhase('strategy-planning', () => withFactWork(firstWork, () => {
+        const query = createSeaTravelQuery(snapshot, 1, 'reuse', observation);
+        expect(query.travel(ship, from, to, true, false)).toEqual({ status: 'pending' });
+        expect(observation.fields.sea).toEqual([]); expect(firstWork.receipt.used).toBe(0);
+        query.prepareField(to); firstWork.flush();
+        expect(observation.fields.sea[0]!.readyThink).toBe(1);
+        expect(query.travel(ship, from, to, true, false)).toEqual({ status: 'pending' });
+      })));
+    // The stateless native comparison is an oracle outside owner planning.
+    const nativeQuote = createSeaTravelQuery(snapshot, Infinity, 'refresh').travel(ship, from, to, true);
+    const restored = JSON.parse(JSON.stringify(observation)), secondWork = new FactWorkQueue(snapshot.tick, 6144, undefined, 2);
+    const before = JSON.stringify(restored);
+    withNavigationAudit(event => { if (event.phase === 'strategy-planning' && !event.authorization) throw Error(event.operation); },
+      () => withNavigationPhase('strategy-planning', () => withFactWork(secondWork, () => {
+        const readOnly = createSeaTravelQuery(snapshot, 1, 'reuse', restored);
+        const quote = readOnly.travel(ship, from, to, true, false);
+        expect(quote.status).toBe('known');
+        expect(quote).toEqual(nativeQuote);
+        expect(secondWork.flush().used).toBe(0);
+      })));
+    expect(JSON.stringify(restored)).toBe(before);
+  });
   it('gives exactly the same quote on local/shared hits and forced recalculation, independent of hull identity', () => {
     const { snapshot, ship, from, to } = frame(), query = createSeaTravelQuery(snapshot);
     const first = query.travel(ship, from, to, true), twin = { ...ship, id: 'another-hull-with-the-same-motion' };

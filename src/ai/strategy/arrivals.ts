@@ -662,6 +662,10 @@ export function createArrivalQuery(snapshot: GameSnapshot, owner: PlayerId, memo
   return {
     crossingChoices: crossingTable,
     stats,
+    /** Coarse discovery consumes only already published basin geometry. Only
+     * the selected ready frontier may enqueue a field through prepareSeaField. */
+    coarseSeaTravel: (ship: Unit, from: Point, to: Point, future = false) => seaTravel.travel(ship, from, to, future, false),
+    prepareSeaField: seaTravel.prepareField,
     /** Stage-only projection of the same query; never substitute final arrival
      * or a fabricated historic loading time for an unavailable forecast. */
     fixedVoyageLoading(unit: Unit, voyage: FixedVoyage) { resetGeometry(); return fixedLoading(unit, voyage); },

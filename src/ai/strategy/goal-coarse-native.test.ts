@@ -38,6 +38,7 @@ it('discovers coarse native dependencies from the original frame without request
       expect(declarations.some(action => action.kind === 'build')).toBe(true);
       expect(declarations.every(action => action.precision === 'coarse')).toBe(true);
       expect(memory.goalPlanning!.geometry!.entries).toEqual([]);
+      expect(memory.strategy!.observation.fields.sea).toEqual([]);
       expect(input.work.receipt.used).toBe(0);
     })));
   expect(JSON.stringify(snapshot)).toBe(before);
@@ -112,14 +113,19 @@ it('rebinds the selected native pickup pair together and retains its exact loadi
   expect(readyThinks).toBeGreaterThanOrEqual(3);
   const bindings = memory.goalPlanning!.selectedBerths!;
   expect(bindings.entries).toHaveLength(2); expect(bindings.sources).toHaveLength(1);
-  expect(bindings.entries.map(entry => entry.answer.state === 'met' && entry.answer.value.water))
-    .toEqual([{ x: 112, y: 816 }, { x: 1552, y: 688 }]);
+  expect(bindings.entries.every(entry => entry.answer.state === 'met')).toBe(true);
   const fighters = last!.plans[0]!.actions.find(node => node.declaration.kind === 'transport-force')!.declaration;
-  expect(fighters.executor.parameters.departure).toEqual({ ground: { x: 1552, y: 688 }, water: { x: 1552, y: 688 }, heading: Math.PI / 2 });
-  expect(fighters.executor.parameters.loadingPost).toEqual({ landId: 'land:1', point: { x: 1552, y: 688 } });
+  const workers = last!.plans[0]!.actions.find(node => node.declaration.kind === 'transport-worker')!.declaration;
+  const pickup = fighters.executor.parameters.departure as { water: { x: number; y: number }; ground: { x: number; y: number } };
+  const workerPickup = workers.executor.parameters.departure as { water: { x: number; y: number } };
+  // A new published sea-time quote can choose another dock. The loading
+  // balance, physical pickup and both positioning targets must change together.
+  expect(fighters.executor.parameters.loadingPost).toEqual({ landId: 'land:1', point: pickup.ground });
+  expect(fighters.preconditions.some(fact => fact.predicate.kind === 'force-at'
+    && JSON.stringify(fact.predicate.at.point) === JSON.stringify(pickup.ground))).toBe(true);
   expect(last!.plans[0]!.actions.filter(node => node.declaration.kind === 'position-transport')
     .map(node => node.declaration.executor.parameters.at)).toEqual([
-    { seaId: 'sea:1', point: { x: 112, y: 816 } }, { seaId: 'sea:1', point: { x: 1552, y: 688 } },
+    { seaId: 'sea:1', point: pickup.water }, { seaId: 'sea:1', point: workerPickup.water },
   ]);
   expect(JSON.stringify(snapshot)).toBe(before);
 }, 60_000);
