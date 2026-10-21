@@ -36,6 +36,16 @@
 
 精确现存 cohort 不因训练额外单位就变强；这种绑定不会生成训练 achiever。`camp-force` 的非线性充分性仍由共享整组评估决定，provider 只枚举 native combatRating 的正贡献，不把营力除以单兵评分来承诺人数。此 provider 还未注册到默认命令入口。
 
+## 只读经济事实
+
+`readGoalEconomicFact(fact, context, ports)` 供统一 `GoalFactReader` 调用，ports 是同一几何 source、几何 revision、已准备的 region 视图及显式 `reservedGold`。非经济谓词返回 `null`。它不创建总 reader、Situation、Arrival query、工作预算或世界实体。
+
+金币 quantity 是当前原生现金减去本次显式预留，预留不从旧 ledger 重扣。未来收入沿用同次 Situation 中逐矿当前 staffed rate、剩余矿量和原观察窗；源是有限绝对时间段，不能从总 `predictedIncomeGold` 倒推平均率，也不延长窗尾。它保留观察层原有“维持当前采矿条件”的预测假设，不声明收入保证。
+
+人口读取原生快照的 supplyCap / supplyUsed，后者已含已付训练队列。生产通道非空是已知 occupied，单凭剩余工时不能承诺一个准确释放时间；新建筑 output/binding 尚未出生是 unmet，可回归建造，不写进当前 entityIds。生产者队列、研究队列、完工、升级和实际动态 rally 进入 revision。建址单点校验也通过中心几何工作与下一 think 公布。
+
+陆地出生出口复用 native `landSpawnPoint` 的规划 reachability 回调，回调只读同次 route 事实；不采用暖原生求路缓存。出口路线尚未公布保持 pending。海出生原生 `shipLaunchPose` 尚无规划回调，内部有 steerPoint；当前明确返回 `native-sea-spawn-port-required`，不绕过预算调用。完工大厅按原生矿距/陆块关联绑定逻辑矿，船厂按实际 footprint 邻接海盆读取。
+
 ## 陆地动作的共同边界
 
 | 原子动作 | 前置与效果 |
