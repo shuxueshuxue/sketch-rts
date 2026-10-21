@@ -152,7 +152,8 @@ export function quoteOpportunityCost(window: ValuationWindow, alternatives: read
     } else if (alternative.withoutResourcesGold !== null) {
       throw new Error('Unavailable strategy alternative has a numeric utility');
     }
-    const bound = alternative.upperBound;
+    const bound = alternative.upperBound, assemblyBound = alternative.assemblyDelayUpperBound;
+    if (bound && assemblyBound) throw new Error('Two displacement bounds on one alternative');
     if (bound) {
       if (!alternative.committed || !sameValuationWindow(bound.window, window)
         || bound.gold !== before || bound.gold !== bound.components.reduce((sum, term) => sum + finite(term.valueGold, 'loss bound component', 0), 0)
@@ -160,17 +161,26 @@ export function quoteOpportunityCost(window: ValuationWindow, alternatives: read
         throw new Error('Invalid imported task loss upper bound');
       finite(bound.gold, 'imported loss upper bound', 0);
     }
-    if (alternative.committed && alternative.withoutResourcesStatus === 'unknown' && !bound) {
+    if (assemblyBound) {
+      if (!alternative.committed || !sameValuationWindow(assemblyBound.window, window) || assemblyBound.gold !== before
+        || !assemblyBound.targetId || alternative.withoutResourcesGold !== null
+        || assemblyBound.gold > assemblyBound.continuationUpperGold
+        || assemblyBound.gold !== assemblyBound.components.reduce((sum, term) => sum + finite(term.valueGold, 'assembly loss component', 0), 0))
+        throw new Error('Invalid formal assembly delay loss upper bound');
+      finite(assemblyBound.gold, 'assembly delay loss upper bound', 0);
+      finite(assemblyBound.continuationUpperGold, 'assembly continuation upper value', 0);
+    }
+    if (alternative.committed && alternative.withoutResourcesStatus === 'unknown' && !bound && !assemblyBound) {
       unknown.add(alternative.objectiveId);
       continue;
     }
     const after = alternative.withoutResourcesStatus === 'feasible' ? Math.max(0, alternative.withoutResourcesGold!) : 0;
-    const marginalGold = bound ? bound.gold : Math.max(0, before - after);
+    const marginalGold = assemblyBound?.gold ?? bound?.gold ?? Math.max(0, before - after);
     const priced = { objectiveId: alternative.objectiveId, unitIds: ids,
       ...(production.length ? { production } : {}),
       marginalGold, withResourcesGold: before, withoutResourcesGold: alternative.withoutResourcesGold,
-      basis: bound ? 'upper-bound' as const : alternative.withoutResourcesStatus === 'unknown' ? 'conservative-bound' as const : 'exact' as const,
-      ...(bound ? { upperBound: bound } : {}) };
+      basis: assemblyBound ? 'assembly-delay-upper-bound' as const : bound ? 'upper-bound' as const : alternative.withoutResourcesStatus === 'unknown' ? 'conservative-bound' as const : 'exact' as const,
+      ...(bound ? { upperBound: bound } : {}), ...(assemblyBound ? { assemblyDelayUpperBound: assemblyBound } : {}) };
     if (marginalGold > 0) candidates.push(priced);
     if (alternative.committed) {
       const previous = displacements.findIndex(value => value.objectiveId === priced.objectiveId);

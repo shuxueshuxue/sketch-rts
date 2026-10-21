@@ -3,6 +3,7 @@ import { createGame, snapshotGame } from '../../shared/sim';
 import { createBuilding, createUnit } from '../../shared/map';
 import type { AllocationMethodProvider, ExecutableMethod, MethodAllocationQuote, PlannedVoyage, StrategyAllocationInput, StrategyAllocationMemory } from './allocation-types';
 import { allocateStrategy } from './allocator';
+import { assembleForceExecutor } from './executors/assemble-force';
 import { allocationResponseCandidates } from './allocation-eligibility';
 import { createStrategyAllocationMemory } from './control';
 import { recordAllocationCommands } from './allocation-ledger';
@@ -160,6 +161,75 @@ describe('deterministic whole-bundle allocation', () => {
     expect(later.events.filter(event => event.kind === 'valuation-bound-selected')).toMatchObject([{ basis, renewal: true }]);
     expect(allocateStrategy({ ...request, previous: JSON.parse(JSON.stringify(result.memory)), snapshot: { ...request.snapshot, tick: 15 },
       situation: { ...request.situation, tick: 15 } })).toEqual(later);
+  });
+
+  it('lets valuable defense displace two assembly members by a formal delay bound and keeps progress for replacement supply', () => {
+    const { input } = fixture(), ids = ['one', 'two', 'three', 'four'];
+    const snapshot = { ...input.snapshot, units: [...ids.map(id => createUnit(id, 'player', 'footman', 1000, 1000)),
+      createUnit('guard', 'neutral', 'ogreWarrior', 1100, 1000)] };
+    const situation = { ...input.situation, units: ids.map(id => ({ ...input.situation.units[0]!, id })) };
+    const objective = { ...input.objectives[0]!, kind: 'ConquerIsland' as const };
+    const original = input.methods[0]!, campTarget = { ...objective.target, point: { x: 1100, y: 1000 } };
+    const assembly: ExecutableMethod = { ...original, kind: 'staged-beachhead', stage: 'assembly', actions: [{ ...original.actions[0]!,
+      executor: 'strategy.assemble-force', intent: { kind: 'assemble-force', campTarget, requiredForce: 5,
+        posts: [{ id: 'home', target: objective.target, unitIds: ids }] } }] };
+    const defense = { ...input.methods[1]!, demands: [{ ...input.methods[1]!.demands[0]!, strength: 2 }] };
+    const basis = { kind: 'proven-lower-bound' as const, probabilityLower: .5, probabilityUpper: 1, unresolvedProbability: .5 };
+    const provider: AllocationMethodProvider = { id: 'test-provider', buildMethods: () => [],
+      materialize: request => ({ ...request.method, actions: request.method.actions.map(action => ({ ...action, unitIds: request.unitIds,
+        ...(action.intent.kind === 'assemble-force' ? { intent: { ...action.intent,
+          posts: action.intent.posts.map(post => ({ ...post, unitIds: request.unitIds })) } } : {}) })) }),
+      quote(request) {
+        const feasible = request.objective.id === 'pair' ? request.unitIds.length >= 4 : request.unitIds.length === 2;
+        const reason = { code: 'explicit-contract-fixture', factIds: request.unitIds, values: {} };
+        if (!feasible) return { methodId: request.method.id, status: 'blocked', utility: null, potentialUtility: null, force: null, reason,
+          missingPreconditions: [{ id: `${request.method.id}/force`, kind: 'force', status: 'unmet', demand: request.method.demands[0]!, subgoalIds: [], reason }] };
+        const valuation = resolveValuation({ objectiveId: request.objective.id, methodId: request.method.id, unitIds: request.unitIds,
+          window: valuationWindow(0, request.valuation) }, request.valuation);
+        if (valuation.phase === 'net' && valuation.opportunity?.status !== 'known') return { methodId: request.method.id, status: 'blocked',
+          utility: null, potentialUtility: null, force: null, reason, missingPreconditions: [], valuation };
+        const benefit = request.objective.id === 'pair' ? 100 : 1000;
+        const cost = valuation.opportunity?.status === 'known' ? valuation.opportunity.gold : 0;
+        return { methodId: request.method.id, status: 'feasible', force: null, potentialUtility: null, reason, missingPreconditions: [], valuation,
+          ...(request.objective.id === 'pair' ? { valuationBasis: basis } : {}),
+          utility: { horizonTicks: valuation.window.horizonTicks, successProbability: 1, persistenceBonus: 0,
+            benefit: [{ code: 'conditional-value', value: benefit }], cost: [{ code: 'opportunity', value: cost }], score: benefit - cost } };
+      } };
+    const first = allocateStrategy({ ...input, snapshot, situation, objectives: [objective], methods: [assembly], providers: [provider] });
+    const actionId = assembly.actions[0]!.id;
+    const previous = { ...first.memory, executions: { ...first.memory.executions, [actionId]: { ...first.memory.executions[actionId]!,
+      status: 'active' as const, phase: 'waiting-for-force', state: { checkpoint: 'preserved', arrivedUnitIds: ids } } },
+      objectives: { ...first.memory.objectives, pair: { ...first.memory.objectives.pair!, minimumStayUntilTick: 0,
+        challengerId: 'single', challengerThinks: 2 } } };
+    const later: StrategyAllocationInput = { ...input, snapshot: { ...snapshot, tick: 500 }, situation: { ...situation, tick: 500 },
+      previous, objectives: [objective, input.objectives[1]!], methods: [assembly, defense], providers: [provider], switchingCost: () => 10,
+      assemblyDelayLossUpperBound: request => ({ status: 'known', bound: { targetId: 'post', gold: 300,
+        continuationUpperGold: 300, window: request.window, mode: 'whole-value-cap',
+        components: [{ code: 'finite-continuation-cap', valueGold: 300, factIds: ['post'] }] } }) };
+    const displaced = allocateStrategy(later);
+    expect(displaced.memory.objectives.pair!.assignmentIds).toHaveLength(2);
+    expect(displaced.memory.objectives.single!.assignmentIds).toHaveLength(2);
+    expect(displaced.memory.executions[actionId]!.token).toEqual(previous.executions[actionId]!.token);
+    expect(displaced.memory.executions[actionId]!.state).toEqual(previous.executions[actionId]!.state);
+    expect(displaced.events.find(event => event.kind === 'preempted')).toMatchObject({ handoff: 'shrink',
+      quotation: { displacedLossGold: 300, switchingCostGold: 10, displacedLoss: { kind: 'assembly-delay-upper-bound' } } });
+    const blocked = allocateStrategy({ ...later, assemblyDelayLossUpperBound: () => ({ status: 'unknown', reasonCode: 'assembly-continuation-value-unknown' }) });
+    expect(blocked.memory.objectives.pair!.assignmentIds).toHaveLength(4);
+    expect(blocked.events.some(event => event.kind === 'preempted')).toBe(false);
+    expect(blocked.memory.decisionCounts!.assemblyValueUnknownComparisons).toBeGreaterThan(0);
+    const newIds = ['replacement-a', 'replacement-b'];
+    const refillSnapshot = { ...later.snapshot, tick: 515,
+      units: [...later.snapshot.units, ...newIds.map(id => createUnit(id, 'player', 'footman', 1000, 1000))] };
+    const refilled = allocateStrategy({ ...later, previous: displaced.memory, snapshot: refillSnapshot,
+      situation: { ...later.situation, tick: 515, units: [...situation.units, ...newIds.map(id => ({ ...situation.units[0]!, id }))] } });
+    expect(refilled.memory.objectives.pair!.assignmentIds).toHaveLength(4);
+    expect(refilled.memory.executions[actionId]!.token).toEqual(previous.executions[actionId]!.token);
+    expect(refilled.memory.executions[actionId]!.state.checkpoint).toBe('preserved');
+    const grant = refilled.grants.find(grant => grant.methodId === assembly.id)!;
+    const continued = assembleForceExecutor.execute({ snapshot: refillSnapshot, owner: 'player', objective,
+      method: refilled.memory.methods[assembly.id]!, execution: refilled.memory.executions[actionId]!, grant, events: refilled.events });
+    expect(continued.status).toBe('active'); expect(continued.state.checkpoint).toBe('preserved');
+    expect(continued.state.arrivedUnitIds).toHaveLength(4);
   });
 
   it('publishes loading-stage epochs without requiring later legs and preserves them after actual boarding', () => {
