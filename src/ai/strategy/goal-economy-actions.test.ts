@@ -11,6 +11,8 @@ import type { GoalFact, GoalFactObservation, GoalPlanningContext } from './goal-
 import type { Situation, Target } from './types';
 import { combatRating } from '../policy/v6/strength';
 import { projectGoalResources } from './goal-resource-ledger';
+import { FactWorkQueue } from './fact-work';
+import { planGoals } from './goal-planner';
 
 function nativeScene() {
   const game = sketchScene('economic-action-native-rules').map('bareDuel').replaceDefaults()
@@ -40,6 +42,25 @@ function road(fact: GoalFact, ticks = 15): GoalFactObservation {
 }
 
 describe('grounded economic declarations against native rules', () => {
+  it('keeps retained building capital in the cash prefix rather than making a profitable asset goal negative', () => {
+    const snapshot = snapshotGame(nativeScene()), planning = context(snapshot, fact => fact.predicate.kind === 'route' ? road(fact) : {
+      fact, state: fact.predicate.kind === 'building-complete' ? 'unmet' : 'met', observedTick: snapshot.tick,
+      revision: 'native-capital-contract', reason: { code: 'native-capital-contract', factIds: [fact.id], values: {} }, evidence: [],
+      ...(fact.predicate.kind === 'gold' ? { quantity: snapshot.players.us!.gold } : {}),
+    });
+    const action = declareGoalBuilding({ buildingKind: 'farm', at: site, worker, byTick: 5000 }, planning)!;
+    const effect = goalFact({ kind: 'building-complete', buildingKind: 'farm', at: site });
+    const run = (cash: number) => planGoals({ context: planning,
+      goals: [{ id: 'retained-capital', owner: 'us', effects: [effect], rewardGold: 10, deadlineTick: 5000, reasons: [] }],
+      providers: [{ id: 'native-building-only', actionsFor: () => [action] }],
+      initialBalances: [{ resource: { kind: 'gold' }, quantity: cash, asOfTick: snapshot.tick, factIds: [] }],
+      declarationRevision: 'retained-capital', limits: { maxDepth: 8, maxExpansions: 64, maxPlans: 2 }, work: new FactWorkQueue(snapshot.tick) });
+    const plan = run(BUILDING_DEFS.farm.cost).plans[0]!;
+    expect(plan.status).toBe('ready'); expect(plan.costGold).toBe(0); expect(plan.valueGold).toBeGreaterThan(0);
+    expect(plan.resourceTimeline.find(event => event.resource.kind === 'gold')).toMatchObject({ before: 120, delta: -120, after: 0 });
+    expect(run(BUILDING_DEFS.farm.cost - 1).plans[0]!.readyActionIds).toEqual([]);
+  });
+
   it('pays the exact native batch and replenishes the region pool without entity output slots', () => {
     const game = nativeScene(), snapshot = snapshotGame(game), before = JSON.stringify(snapshot);
     const action = declareGoalTraining({ unitKind: 'footman', count: 2, producer: { kind: 'existing', entityId: 'barracks' },
@@ -48,6 +69,7 @@ describe('grounded economic declarations against native rules', () => {
     expect(action.flows).toContainEqual(expect.objectContaining({ resource: { kind: 'gold' }, delta: -200, at: 'start' }));
     expect(action.flows).toContainEqual(expect.objectContaining({ resource: { kind: 'population-room' }, delta: -4, at: 'start' }));
     expect(action.outputs).toEqual([]);
+    expect(action.cost).toMatchObject({ state: 'met', value: [{ code: 'training-asset-exchange', gold: 0 }] });
     expect(action.flows).toContainEqual(expect.objectContaining({ resource: { kind: 'unit-pool', unitKind: 'footman', at }, delta: 2 }));
     expect(action.flows.some(flow => flow.resource.kind === 'entity-control')).toBe(false);
     const goldBefore = game.players.us!.gold;

@@ -154,7 +154,10 @@ export type GoalActionKind = 'assemble' | 'transport-force' | 'transport-worker'
 export type GoalParameter = null | boolean | number | string | readonly GoalParameter[]
   | Readonly<{ [key: string]: GoalParameter }>;
 export type GoalExecutorBinding = Readonly<{ executor: string; parameters: Readonly<Record<string, GoalParameter>> }>;
-export type GoalActionCost = Readonly<{ code: string; gold: number; factIds: readonly string[] }>;
+/** Nominal utility loss, separate from cash flows. Losses are realized on
+ * completion unless the domain supplies their start/offset occurrence. */
+export type GoalActionCost = Readonly<{ code: string; gold: number; factIds: readonly string[];
+  at?: GoalResourceFlow['at'] }>;
 
 /** A grounded declaration contains no predecessors, successors or recipe.
  * Gold flows govern solvency; cost terms price it once. A bounty is a positive

@@ -67,7 +67,8 @@ it('regresses an unordered domain and combines two partial bounties without over
   expect(plan.readyActionIds).toEqual(['train']);
   expect(plan.actions.find(action => action.id === 'build')!.dependsOnActionIds).toEqual(expect.arrayContaining(['clear-0', 'clear-1']));
   expect(plan.resourceTimeline.every(event => event.after >= 0)).toBe(true);
-  expect(plan.costGold).toBe(UNIT_DEFS.footman.cost + 10 + BUILDING_DEFS.townHall.cost);
+  expect(plan.costGold).toBeCloseTo(UNIT_DEFS.footman.cost / (1 + 10 / 2400) + 10 / (1 + 20 / 2400)
+    + BUILDING_DEFS.townHall.cost / (1 + 30 / 2400), 10);
   expect(plan.alternatives.find(alternative => alternative.actionId === 'expensive-bounty')).toMatchObject({ status: 'rejected', declaration: { id: 'expensive-bounty' } });
   expect(request.work.receipt.used).toBe(plan.search.work); expect(request.work.receipt.used).toBeLessThanOrEqual(6144);
   expect(JSON.stringify(snapshot)).toBe(before);
@@ -169,7 +170,8 @@ it('prices the whole remaining chain and withholds its ready bundle when later l
   const output = planGoals({ ...request, goals: [{ ...request.goals[0]!, rewardGold: 500 }],
     providers: [{ id: 'whole-chain-cost', actionsFor: () => costly }] });
   const plan = output.plans[0]!;
-  expect(plan.status).toBe('blocked'); expect(plan.costGold).toBe(3001);
+  expect(plan.status).toBe('blocked'); expect(plan.costGold).toBeCloseTo(1 / (1 + 10 / 2400)
+    + 2000 / (1 + 20 / 2400) + 1000 / (1 + 30 / 2400), 10);
   expect(plan.valueGold).toBeLessThan(0); expect(plan.completedTick).toBeGreaterThan(0);
   expect(plan.actions.find(action => action.id === 'train')!.declaration.cost).toMatchObject({ value: [{ gold: 1 }] });
   expect(plan.readyActionIds).toEqual([]); expect(output.readyActions).toEqual([]);
@@ -250,7 +252,8 @@ it('meets a protection deadline at effect activation while retaining its actor t
   const configured = { ...request, goals: [{ ...request.goals[0]!, effects: [safe], deadlineTick: 20 }],
     providers: [{ id: 'guard-window', actionsFor: () => [guard] }] };
   const output = planGoals(configured), plan = output.plans[0]!;
-  expect(plan.status).toBe('ready'); expect(plan.completedTick).toBe(20); expect(plan.costGold).toBe(10);
+  expect(plan.status).toBe('ready'); expect(plan.completedTick).toBe(20);
+  expect(plan.costGold).toBeCloseTo(10 / (1 + 200 / 2400), 12);
   expect(plan.actions[0]).toMatchObject({ startTick: 0, finishTick: 200 });
   expect(plan.actions[0]!.declaration.demands[0]!.until).toBe('finish');
   const cached = planGoals({ ...configured, work: new FactWorkQueue(0), previous: JSON.parse(JSON.stringify(output.cache)) });

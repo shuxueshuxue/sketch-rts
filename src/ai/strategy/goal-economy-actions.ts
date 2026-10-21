@@ -68,7 +68,9 @@ export function declareGoalTraining(input: Readonly<{
     // production is the available lane, not an unpriced queue wait; spawn-exit
     // is independently required. Native training advances one work/tick.
     duration: known(count * rules.trainTime, [production.id, exit.id]),
-    cost: known([{ code: 'training-capital', gold: amountGold, factIds: [gold.id] }]),
+    // Capital buys retained pool assets. Battle/voyage/other consumption is
+    // priced by those actions; charging purchase again would count it twice.
+    cost: known([{ code: 'training-asset-exchange', gold: 0, factIds: [gold.id, effect.id] }]),
     successProbability: known(1, [production.id, exit.id]),
     executor: { executor: 'goal.train', parameters: { unitKind, count, producer, at } },
     outputs: [], reasons: [],
@@ -169,8 +171,11 @@ export function declareGoalBuilding(input: Readonly<{
       ...(production.length ? [{ resource: { kind: 'production-lane' as const, producer: building, lane: 'training' },
         delta: 1, at: 'finish' as const, factIds: [baseEffect.id] }] : []),
     ],
-    duration, cost: known([{ code: foundation ? 'construction-capital-already-paid' : 'construction-capital', gold: amountGold,
-      factIds: foundation ? [foundation.id] : [gold.id] }]),
+    // The hall/yard remains as an effect under the explicit safety obligation.
+    // Full native capital still leaves gold at start; occupancy is quoted by
+    // the shared allocator, rather than consumed again as a utility loss.
+    duration, cost: known([{ code: 'construction-asset-exchange', gold: 0,
+      factIds: [...(foundation ? [foundation.id] : [gold.id]), ...safety.map(fact => fact.id), baseEffect.id] }]),
     successProbability: known(1, [site.id, ...(route ? [route.id] : [])]),
     executor: { executor: 'goal.build', parameters: { buildingKind, at, worker: worker.ref,
       approach: route?.predicate.kind === 'route' ? route.predicate.to : at, foundationId: foundation?.id ?? null } },

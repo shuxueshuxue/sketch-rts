@@ -5,6 +5,7 @@ import { projectGoalResources, type GoalScheduledAction } from './goal-resource-
 import { observationJsonBytes } from './observation-json-bytes';
 import { discountGold } from './utility';
 import { discoverGoalActions } from './goal-provider-candidates';
+import { goalActionPresentCost } from './goal-action-value';
 import type { GoalSearchMemory, GoalSearchPath as Path, GoalSearchStep as Step } from './goal-search-state';
 export type { GoalSearchMemory } from './goal-search-state';
 import type { GoalActionDeclaration, GoalActionNode, GoalAlternative, GoalFact, GoalFactObservation, GoalPlan,
@@ -19,11 +20,16 @@ const achievementTick = (path: Path, goal: GoalRequest, state: GoalSearchMemory,
 const pathValue = (path: Path, goal: GoalRequest, state: GoalSearchMemory, input: GoalPlannerInput) =>
   discountGold(path.probability * goal.rewardGold, achievementTick(path, goal, state, input) - input.context.tick) - path.cost;
 const pathOrder = (epoch: number) => (a: Path, b: Path) => a.cost - b.cost || finish(a, epoch) - finish(b, epoch) || order(pathKey(a), pathKey(b));
-const validEstimate = (action: GoalActionDeclaration) => action.duration.state === 'met'
-  && Number.isFinite(action.duration.value) && action.duration.value >= 0 && action.cost.state === 'met'
-  && action.cost.value.every(term => Number.isFinite(term.gold) && term.gold >= 0)
-  && action.successProbability.state === 'met' && Number.isFinite(action.successProbability.value)
-  && action.successProbability.value >= 0 && action.successProbability.value <= 1;
+const validEstimate = (action: GoalActionDeclaration) => {
+  const { duration, cost, successProbability } = action;
+  return duration.state === 'met'
+  && Number.isFinite(duration.value) && duration.value >= 0 && cost.state === 'met'
+  && cost.value.every(term => Number.isFinite(term.gold) && term.gold >= 0
+    && (typeof term.at !== 'object' || Number.isFinite(term.at.offsetTicks) && term.at.offsetTicks >= 0
+      && term.at.offsetTicks <= duration.value))
+  && successProbability.state === 'met' && Number.isFinite(successProbability.value)
+  && successProbability.value >= 0 && successProbability.value <= 1;
+};
 
 /** No domain action ordering appears here. Providers are queried only for
  * achievers of a requested fact, including partial numeric contributors. */
@@ -35,7 +41,7 @@ function planGoalPass(input: GoalPlannerInput, refinementPass: number): GoalPlan
   const providers = [...input.providers].sort((a, b) => order(a.id, b.id));
   const runs: { goal: GoalRequest; goalKey: string; state: GoalSearchMemory; beforeWork: number }[] = [];
   for (const goal of [...input.goals].sort((a, b) => order(a.id, b.id))) {
-    const goalKey = goalValueKey([goal, input.initialBalances.map(({ asOfTick: _epoch, ...balance }) => balance)]);
+    const goalKey = goalValueKey(['discounted-action-costs-v1', goal, input.initialBalances.map(({ asOfTick: _epoch, ...balance }) => balance)]);
     const previous = input.previous?.owner === context.owner ? input.previous.entries.find(entry => entry.goalKey === goalKey
       && entry.declarationRevision === input.declarationRevision) : undefined;
     const unchanged = previous && !previous.continuation?.deferred?.length && work.withConsumer(goal.id, previous.plan.valueGold, () => previous.dependencies.every(dependency => {
@@ -55,7 +61,7 @@ function planGoalPass(input: GoalPlannerInput, refinementPass: number): GoalPlan
         const next = scheduleAction(replay, action.declaration, refreshed, input, goal);
         if (!next) { scheduleValid = false; break; }
         replay.steps.push(next.step); replay.bindings = next.bindings;
-        if (next.step.action.cost.state === 'met') replay.cost += next.step.action.cost.value.reduce((sum, term) => sum + term.gold, 0);
+        replay.cost += goalActionPresentCost(next.step, context.tick);
         if (next.step.action.successProbability.state === 'met') replay.probability *= next.step.action.successProbability.value;
       }
       const shifted = replay.steps.map(step => actionNode(step, input));
@@ -310,7 +316,7 @@ function composeOne(state: GoalSearchMemory, input: GoalPlannerInput, goal: Goal
   const { step, bindings } = scheduled, bound = step.action;
   if (bound.cost.state !== 'met' || bound.successProbability.state !== 'met') return;
   const path: Path = { steps: [...active.path.steps, step], bindings,
-    cost: active.path.cost + bound.cost.value.reduce((sum, term) => sum + term.gold, 0),
+    cost: active.path.cost + goalActionPresentCost(step, input.context.tick),
     probability: active.path.probability * bound.successProbability.value };
   // Equal selected sets can have different invalidations, availability and
   // prefix timing. Do not erase an ordering solely because its IDs match.
@@ -401,7 +407,7 @@ function composeCoarseOne(state: GoalSearchMemory, input: GoalPlannerInput, goal
     search.path = frame.checkpoint; delete frame.selected; delete frame.required; frame.prerequisite = 0; return;
   }
   search.path = { steps: [...search.path.steps, next.step], bindings: next.bindings,
-    cost: search.path.cost + action.cost.value.reduce((sum, term) => sum + term.gold, 0),
+    cost: search.path.cost + goalActionPresentCost(next.step, input.context.tick),
     probability: search.path.probability * action.successProbability.value };
   if (satisfies(frame.fact, search.path, state, input).met) { search.stack.pop(); return; }
   // A positive numeric contributor can leave a remaining deficit. Its paid
@@ -422,7 +428,7 @@ function scheduleAction(path: Path, action: GoalActionDeclaration, state: GoalSe
     result.producers.forEach(id => dependencies.add(id));
   }
   const bound = bindGoalAction(action, bindings);
-  if (bound.duration.state !== 'met' || bound.cost.state !== 'met' || bound.successProbability.state !== 'met') return null;
+  if (!validEstimate(bound) || bound.duration.state !== 'met') return null;
   // Exclusive demands are interval constraints, distinct from consumable flows.
   for (const prior of path.steps) if (bound.demands.some(demand => prior.action.demands.some(other =>
     goalValueKey(demand.resource) === goalValueKey(other.resource)))) {
