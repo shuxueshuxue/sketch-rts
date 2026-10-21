@@ -4,6 +4,9 @@ import type { AiPolicyMemory } from '../../memory';
 import { withGoalPlannerInput } from '../goal-planner-input';
 import type { GoalPlannerInput } from '../goal-planner-types';
 
+/** Explicit diagnostic run, never the default-capacity acceptance result. */
+export const puzzleGeometryMeasurement = process.env.SKETCH_PUZZLE_GEOMETRY_MEASUREMENT === '1';
+
 /** One native room-policy think. The caller retains memory across thinks on
  * the same frozen snapshot. Omitted goals select the shared
  * Objective collector and its existing benefit terms. No puzzle identity,
@@ -14,5 +17,6 @@ export function withInput<T>(snapshot: GameSnapshot, owner: PlayerId, memory: Ai
     if (event.phase === 'strategy-planning' && !event.authorization) throw new Error(event.operation);
   }, () => withNavigationPhase('strategy-planning', () => withGoalPlannerInput({
     snapshot, owner, version: 'v9_knight', memory,
+    ...(puzzleGeometryMeasurement ? { geometryMeasurement: true } : {}),
   }, run)));
 }
