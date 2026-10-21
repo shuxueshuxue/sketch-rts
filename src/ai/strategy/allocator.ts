@@ -15,6 +15,7 @@ import type { Effect, Objective, SituationUnit, ValuationContext } from './types
 import { assertUnitValueSides } from './unit-value-ledger';
 import { allocationResponseCandidates } from './allocation-eligibility';
 import { currentSiteThreatIsClear } from './protection-activation';
+import { assemblyPostArrivalId, assemblyPostForUnit } from './assembly-facts';
 import { assessForceAssemblyPosts } from './assembly-posts';
 
 /** A fixed prefix bound limits speculative group quotes, not committed forces.
@@ -47,13 +48,14 @@ function clean<T>(value: T): T {
 }
 function quoteInput(input: StrategyAllocationInput, memory: StrategyAllocationMemory, offer: Pick<Offer, 'objective' | 'method' | 'unitIds'>,
   valuation: ValuationContext): AllocationMethodQuoteInput {
+  const interruptedUnitIds = [...new Set(Object.values(memory.assignments).filter(assignment => assignment.interruption).map(assignment => assignment.unitId))].sort();
   return { snapshot: input.snapshot, situation: input.situation, objective: offer.objective, method: offer.method,
     unitIds: offer.unitIds, budgets: Object.values(memory.budgets).filter(budget => budget.methodId === offer.method.id),
-    responseEligibleUnitIds: allocationResponseCandidates(input.snapshot, input.situation, memory),
+    responseEligibleUnitIds: allocationResponseCandidates(input.snapshot, input.situation, memory), interruptedUnitIds,
     executions: Object.values(memory.executions).filter(action => action.methodId === offer.method.id), valuation,
     ...(input.voyageRisks ? { voyageRisks: input.voyageRisks } : {}),
     ...(input.assemblyFacts ? { assemblyFacts: request => input.assemblyFacts!({ ...request,
-      objective: offer.objective, methodId: offer.method.id, unitIds: offer.unitIds, valuation,
+      objective: offer.objective, methodId: offer.method.id, unitIds: offer.unitIds, valuation, interruptedUnitIds,
       responseEligibleUnitIds: allocationResponseCandidates(input.snapshot, input.situation, memory) }) } : {}),
     ...(input.fixedVoyageArrival ? { fixedVoyageArrival: input.fixedVoyageArrival } : {}) };
 }
@@ -93,7 +95,10 @@ function candidateBundles(input: StrategyAllocationInput, memory: StrategyAlloca
   const namedWorkers = new Set(objective.effects.flatMap(effect => effect.kind === 'assets-evacuated' ? effect.unitIds : []));
   const localDefense = objective.kind === 'DefendSite' && ['local-squad', 'main-army-recall', 'wait-in-cover'].includes(method.kind);
   const eta = (unit: DecisionFacts<SituationUnit>) => {
-    const arrival = unitArrival(unit, targetId) ?? unitArrival(unit, objective.target.entityId ?? '');
+    const assembly = method.actions.find(action => action.intent.kind === 'assemble-force');
+    const post = assembly?.intent.kind === 'assemble-force' ? assemblyPostForUnit(assembly.intent, unit) : null;
+    const arrival = assembly ? post && unitArrival(unit, assemblyPostArrivalId(assembly.id, post.id))
+      : unitArrival(unit, targetId) ?? unitArrival(unit, objective.target.entityId ?? '');
     return arrival && 'ticks' in arrival ? arrival.ticks : null;
   };
   const eligible = owned.filter(unit => {
@@ -159,7 +164,10 @@ function candidateBundles(input: StrategyAllocationInput, memory: StrategyAlloca
 }
 function currentEta(unit: DecisionFacts<SituationUnit>, method: ExecutableMethod, actionId: string, tick: number): AllocationEta {
   const action = method.actions.find(action => action.id === actionId)!;
-  const arrival = unitArrival(unit, actionId) ?? (action.target.entityId && action.target.point.x === method.actions.at(-1)?.target.point.x
+  const post = action.intent.kind === 'assemble-force' ? assemblyPostForUnit(action.intent, unit) : null;
+  const arrival = action.intent.kind === 'assemble-force'
+    ? post && unitArrival(unit, assemblyPostArrivalId(action.id, post.id))
+    : unitArrival(unit, actionId) ?? (action.target.entityId && action.target.point.x === method.actions.at(-1)?.target.point.x
     && action.target.point.y === method.actions.at(-1)?.target.point.y ? unitArrival(unit, action.target.entityId) : undefined);
   if (!arrival) return { status: 'unknown', forecastTick: tick, arrivalTick: null,
     reason: { code: 'current-action-arrival-unquoted', factIds: [unit.id, actionId], values: {} } };
@@ -209,8 +217,9 @@ function assignMethod(input: StrategyAllocationInput, memory: StrategyAllocation
     if (before && before.objectiveId !== objective.id) throw new Error('Allocation assigned a resource before handoff');
     const token = next.executions[action.id]!.token, assignmentId = `assignment:${id}`;
     const eta = currentEta(unit, method, action.id, tick), old = assignments[assignmentId];
-    const onStation = unit.location.kind === 'land' && unit.location.landId === action.target.landId
-      && Math.hypot(unit.location.point.x - action.target.point.x, unit.location.point.y - action.target.point.y) <= 240;
+    const target = action.intent.kind === 'assemble-force' ? assemblyPostForUnit(action.intent, unit)?.target ?? action.target : action.target;
+    const onStation = unit.location.kind === 'land' && unit.location.landId === target.landId
+      && Math.hypot(unit.location.point.x - target.point.x, unit.location.point.y - target.point.y) <= (action.intent.kind === 'assemble-force' ? 180 : 240);
     const order = memory.issuedOrders[id];
     const moving = order?.observedTick === tick && sameAction(order.action, token);
     const stage = old?.interruption ? 'assigned' : onStation ? 'on-station'
@@ -220,7 +229,7 @@ function assignMethod(input: StrategyAllocationInput, memory: StrategyAllocation
       minimumStayUntilTick: before?.minimumStayUntilTick ?? tick + STRATEGY_PARAMETERS.minimumStayTicks,
       origin: 'allocator', incumbentTask: null };
     assignments[assignmentId] = { authority: 'committed', id: assignmentId, leaseId: leases[key]!.id, unitId: id,
-      role: unit.roles[0] ?? 'frontline', objectiveId: objective.id, methodId: method.id, action: token, target: action.target,
+      role: unit.roles[0] ?? 'frontline', objectiveId: objective.id, methodId: method.id, action: token, target,
       stage, eta, lastLocation: unit.location.kind === 'unknown' ? { ...unit.location,
         reason: { code: unit.location.reason.code, factIds: [id], values: {} } } : clean(unit.location),
       interruption: old?.interruption ?? null } satisfies FormalAssignment;

@@ -9,6 +9,7 @@ import { recordAllocationCommands } from './allocation-ledger';
 import type { DecisionFacts } from './decision';
 import type { Objective, Situation } from './types';
 import { resolveValuation, valuationWindow } from './utility';
+import { assemblyPostArrivalId } from './assembly-facts';
 import type { AssemblyFactsRequest } from './assembly-facts';
 import { forecastForceAssembly } from './force-assembly-forecast';
 
@@ -60,11 +61,11 @@ describe('deterministic whole-bundle allocation', () => {
     const expected: AssemblyFactsRequest[] = [], seen: AssemblyFactsRequest[] = [];
     const wrapped: AllocationMethodProvider = { ...provider, quote(request) {
       expected.push({ objective: request.objective, methodId: request.method.id, campTarget: request.objective.target,
-        requiredForce: 3, posts: [], unitIds: request.unitIds,
+        requiredForce: 3, posts: [], unitIds: request.unitIds, interruptedUnitIds: request.interruptedUnitIds ?? [],
         ...(request.valuation ? { valuation: request.valuation } : {}),
         ...(request.responseEligibleUnitIds ? { responseEligibleUnitIds: request.responseEligibleUnitIds } : {}) });
       request.assemblyFacts!({ objective: input.objectives[0]!, methodId: 'stale-method', campTarget: request.objective.target,
-        requiredForce: 3, posts: [], unitIds: ['ungranted-member'] });
+        requiredForce: 3, posts: [], unitIds: ['ungranted-member'], interruptedUnitIds: ['fake-patient'] });
       return provider.quote(request);
     } };
     allocateStrategy({ ...input, providers: [wrapped], assemblyFacts: request => {
@@ -112,6 +113,30 @@ describe('deterministic whole-bundle allocation', () => {
     expect(result.memory.leases['unit:engineer']).toEqual(oldLease);
     expect(observed.every(ids => !ids.includes('engineer'))).toBe(true);
     expect(conflicts.every(keys => !keys.includes('unit:engineer'))).toBe(true);
+  });
+
+  it('selects and assigns members by their own land post ETA rather than the final mine', () => {
+    const { input } = fixture(), original = input.methods[1]!, action = original.actions[0]!;
+    const posts = [{ id: 'home', target: { point: { x: 3000, y: 1000 }, landId: 'land:1' as const }, unitIds: [] },
+      { id: 'island', target: { point: { x: 5000, y: 1000 }, landId: 'land:2' as const }, unitIds: [] }];
+    const method: ExecutableMethod = { ...original, kind: 'staged-beachhead', stage: 'assembly', actions: [{ ...action, executor: 'strategy.assemble-force',
+      intent: { kind: 'assemble-force', campTarget: action.target, requiredForce: 1, posts } }] };
+    const situation = { ...input.situation, units: input.situation.units.map((unit, index) => ({ ...unit,
+      location: { ...unit.location, kind: 'land' as const, landId: index ? 'land:2' as const : 'land:1' as const },
+      arrivals: [{ targetId: action.id, arrival: { status: 'reachable' as const, ticks: index ? 1000 : 1, landTicks: 1, crossings: [] } },
+        { targetId: assemblyPostArrivalId(action.id, posts[index]!.id),
+          arrival: { status: 'reachable' as const, ticks: index ? 5 : 100, landTicks: index ? 5 : 100, crossings: [] } }] })) };
+    const result = allocateStrategy({ ...input, situation, methods: [method], objectives: [{ ...input.objectives[1]!, kind: 'ConquerIsland' }],
+      providers: input.providers.map(provider => ({ ...provider, materialize: request => ({ ...request.method,
+        actions: request.method.actions.map(action => ({ ...action, unitIds: request.unitIds })) }), quote(request) {
+          const quote = provider.quote(request);
+          if (quote.status !== 'feasible') return quote;
+          const occupation = request.unitIds.length * 10;
+          return { ...quote, utility: { ...quote.utility, cost: [...quote.utility.cost, { code: 'occupation', value: occupation }],
+            score: quote.utility.score - occupation } };
+        } })) });
+    expect(Object.values(result.memory.assignments)).toMatchObject([{ unitId: 'two', target: posts[1]!.target,
+      stage: 'assigned', eta: { status: 'known', arrivalTick: 5 } }]);
   });
 
   it('publishes loading-stage epochs without requiring later legs and preserves them after actual boarding', () => {

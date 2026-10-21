@@ -422,6 +422,9 @@ export type AllocationMethodQuoteInput = Readonly<{
   /** Explicit counterfactual pool from current authority and native orders.
    * Idle proposed reservations remain visible commitments, but are not leases. */
   responseEligibleUnitIds?: readonly string[];
+  /** Current authority interruptions. A patient at the post cannot satisfy
+   * departure readiness while its recovery still owns the unit's movement. */
+  interruptedUnitIds?: readonly string[];
   /** Real current action records, including observed production results. The
    * caller supplies these on each transaction; providers keep no hidden history. */
   executions: readonly ExecutionAction[];
