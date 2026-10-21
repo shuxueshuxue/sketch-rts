@@ -33,5 +33,5 @@ export default async function(s: Scene) {
   await s.page.goto(pathToFileURL(file).href,{waitUntil:'load'});
   await s.page.waitForSelector('.goal-gantt-action');
   s.record('goal-navy-mockup',{evidence:'artificial-public-puzzle-3',gpu,file,sha256,alignment,
-    checked:['file-open','branched-layout','human-options','reserved-gold','recorded-result','reopen']});
+    checked:['file-open','executor-gantt-default','no-condition-boxes','bar-start-and-finish-clock','human-options','reserved-gold','recorded-result','reopen']});
 }

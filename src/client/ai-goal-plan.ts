@@ -7,7 +7,6 @@ import { goalFactLabel, goalFactSummary, goalDeclarationLabel, goalStates as sta
 import { recordedGoalExecution, recordedGoalAssignments, recordedGoalBudgets } from './ai-goal-plan-records';
 import { goalGraphLayout, GOAL_CARD, type GoalGraphOrder } from './ai-goal-plan-layout';
 import { goalResourceBand } from './ai-goal-plan-resources';
-import { goalTimeTicks, goalTimeX } from './ai-goal-plan-time';
 export { goalFactLabel, recordedGoalExecution, recordedGoalAssignments };
 export const goalActionLabel = (action: GoalActionNode) => goalDeclarationLabel(action.declaration);
 const raw = (value: unknown) => `<details class="goal-raw"><summary>查看结构化字段</summary><pre>${h(JSON.stringify(value, null, 2))}</pre></details>`;
@@ -17,11 +16,11 @@ const stage = (value: string) => ({ assigned: '待出发', 'en-route': '在途',
 
 export function goalPlanGraph(plan: GoalPlan, trace: AiPlanTrace, selected = '$goal', order: GoalGraphOrder = 'time'): string {
   if(order==='time')return goalGanttGraph(plan,trace,selected);
-  const graph = goalGraphLayout(plan, 'regression'), index = new Map(graph.nodes.map(node => [node.id, node]));
+  const graph = goalGraphLayout(plan), index = new Map(graph.nodes.map(node => [node.id, node]));
   const facts = new Map(plan.facts.map(row => [row.id, row])), actions = new Map(plan.actions.map(row => [row.id, row]));
   const edges = graph.edges.map(edge => {
     const from = index.get(edge.from)!, to = index.get(edge.to)!;
-    const height = graph.cardHeight ?? GOAL_CARD.height;
+    const height = GOAL_CARD.height;
     const horizontal = to.x >= from.x + GOAL_CARD.width;
     const sx = horizontal ? from.x + GOAL_CARD.width : from.x + GOAL_CARD.width/2;
     const tx = horizontal ? to.x : to.x + GOAL_CARD.width/2;
@@ -45,20 +44,11 @@ export function goalPlanGraph(plan: GoalPlan, trace: AiPlanTrace, selected = '$g
       title = goalActionLabel(action); state = action.state;
       detail = execution ? goalPhaseText(execution.phase) : action.startTick == null ? '—' : `预计 ${clock(action.startTick)} 开始`;
     }
-    return `<button class="goal-graph-node ${node.kind} ${h(state)}" data-layout-id="${h(node.id)}" data-plan-node="${h(node.recordId)}" ${node.time==null?'':`data-plan-time="${node.time}"`} aria-pressed="${selected === node.recordId}" style="left:${node.x}px;top:${node.y}px"><small>${node.reference?'循环引用':node.kind==='goal'?'目标':node.kind==='fact'?'条件':'动作'} · ${h(states[state] ?? '—')}</small><strong>${h(title)}</strong><span>${h(detail)}</span></button>`;
+    return `<button class="goal-graph-node ${node.kind} ${h(state)}" data-layout-id="${h(node.id)}" data-plan-node="${h(node.recordId)}"  aria-pressed="${selected === node.recordId}" style="left:${node.x}px;top:${node.y}px"><small>${node.reference?'循环引用':node.kind==='goal'?'目标':node.kind==='fact'?'条件':'动作'} · ${h(states[state] ?? '—')}</small><strong>${h(title)}</strong><span>${h(detail)}</span></button>`;
   }).join('');
-  const axis = graph.axis;
-  const ruler = axis ? goalTimeTicks(axis).map(tick => `<div class="goal-time-guide" style="left:${goalTimeX(axis,tick)}px;height:${graph.untimedY??graph.height}px"><time>${clock(tick)}</time></div>`).join('') : '';
-  const eventGuides = axis ? [...new Set([...plan.actions.flatMap(row=>row.startTick==null?[]:[row.startTick]),...plan.resourceTimeline.map(row=>row.tick)])].map(tick=>`<div class="goal-time-guide event" style="left:${goalTimeX(axis,tick)}px;height:${graph.untimedY??graph.height}px"></div>`).join('') : '';
-  const durations = axis ? plan.actions.filter(row=>row.startTick!=null&&row.finishTick!=null).map(action=>{
-    const node=index.get(action.id); if(!node)return '';
-    const x=goalTimeX(axis,action.startTick!), finish=goalTimeX(axis,action.finishTick!);
-    return `<div class="goal-action-duration" title="${h(goalActionLabel(action))} · ${clock(action.startTick!)} → ${clock(action.finishTick!)}" style="left:${x}px;top:${node.y+graph.cardHeight!+4}px;width:${Math.max(0,finish-x)}px"></div>`;
-  }).join('') : '';
-  const untimed = graph.untimedY==null?'':`<div class="goal-untimed-label" style="top:${graph.untimedY}px">时间未记录 · 不放入预计时序</div>`;
-  return `<section class="plan-dependency-sheet" data-graph-plan="${h(plan.id)}" data-graph-order="${order}"><header><div><small>${order==='time'?'动作与金币共用时间刻度 · 横线为预计耗时':'目标 → 缺的条件 → 满足它的动作 → 前置条件'}</small><h3>${order==='time'?'按时间推进':'从目标反推'} · ${h(plan.goal.effects.map(row=>goalFactLabel(row.predicate)).join('、'))}</h3></div><nav><button data-action="goal-time" aria-pressed="${order==='time'}">按时间</button><button data-action="goal-regression" aria-pressed="${order==='regression'}">从目标反推</button><button data-action="goal-wide">展开图</button><button data-action="goal-zoom-out" aria-label="缩小依赖图">−</button><button data-action="goal-fit">全图</button><button data-action="goal-zoom-in" aria-label="放大依赖图">＋</button><button data-action="goal-graph">收起</button></nav></header>
-    <div class="goal-graph-viewport" tabindex="0" aria-label="滚动查看计划依赖图"><div class="goal-graph-stage" data-width="${graph.width}" data-height="${graph.height}"><div class="goal-graph-canvas" style="width:${graph.width}px;height:${graph.height}px"><svg width="${graph.width}" height="${graph.height}" aria-hidden="true"><defs><marker id="goal-dependency-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6"/></marker></defs>${edges}</svg>${ruler}${eventGuides}${durations}${untimed}${cards}</div></div></div>
-    <footer>实线：满足条件 · 虚线：需要条件 · 点线：先后约束${graph.omitted>0?` · 另 ${graph.omitted} 项未展开`:''}</footer>${goalResourceBand(plan,trace,axis)}</section>`;
+  return `<section class="plan-dependency-sheet" data-graph-plan="${h(plan.id)}" data-graph-order="${order}"><header><div><small>目标 → 缺的条件 → 满足它的动作 → 前置条件</small><h3>从目标反推 · ${h(plan.goal.effects.map(row=>goalFactLabel(row.predicate)).join('、'))}</h3></div><nav><button data-action="goal-time" aria-pressed="false">按时间</button><button data-action="goal-regression" aria-pressed="true">从目标反推</button><button data-action="goal-wide">展开图</button><button data-action="goal-zoom-out" aria-label="缩小依赖图">−</button><button data-action="goal-fit">全图</button><button data-action="goal-zoom-in" aria-label="放大依赖图">＋</button><button data-action="goal-graph">收起</button></nav></header>
+    <div class="goal-graph-viewport" tabindex="0" aria-label="滚动查看计划依赖图"><div class="goal-graph-stage" data-width="${graph.width}" data-height="${graph.height}"><div class="goal-graph-canvas" style="width:${graph.width}px;height:${graph.height}px"><svg width="${graph.width}" height="${graph.height}" aria-hidden="true"><defs><marker id="goal-dependency-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6"/></marker></defs>${edges}</svg>${cards}</div></div></div>
+    <footer>实线：满足条件 · 虚线：需要条件 · 点线：先后约束${graph.omitted>0?` · 另 ${graph.omitted} 项未展开`:''}</footer>${goalResourceBand(plan,trace)}</section>`;
 
 }
 

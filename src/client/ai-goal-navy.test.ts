@@ -7,7 +7,7 @@ import { goalGanttLayout, goalGanttLinks } from './ai-goal-plan-gantt';
 import { goalFactTime, goalTimeAxis, goalTimeX } from './ai-goal-plan-time';
 
 it('reads the branched navy plan left to right, merging shared ship and money prerequisites without changing native edges', () => {
-  const {plan,trace}=goalNavyFixture(), before=JSON.stringify(plan), graph=goalGraphLayout(plan,'regression');
+  const {plan,trace}=goalNavyFixture(), before=JSON.stringify(plan), graph=goalGraphLayout(plan);
   const nodes=new Map(graph.nodes.map(row=>[row.id,row]));
   for(const edge of graph.edges) expect(nodes.get(edge.to)!.x).toBeGreaterThan(nodes.get(edge.from)!.x);
   expect(graph.edges.some(edge=>graph.edges.filter(other=>other.from===edge.from).length>=3)).toBe(true);
@@ -39,7 +39,7 @@ it('shows spending before income and the protected hall reserve using recorded b
 it('keeps cyclic records bounded and inspectable as forward reference leaves',()=>{
   const {plan}=goalNavyFixture(),action=plan.actions[0]!,fact=plan.facts[0]!;
   const graph=goalGraphLayout({...plan,actions:[action],facts:[fact],edges:[
-    {from:action.id,to:fact.id,kind:'requires'},{from:action.id,to:fact.id,kind:'establishes'}]},'regression');
+    {from:action.id,to:fact.id,kind:'requires'},{from:action.id,to:fact.id,kind:'establishes'}]});
   expect(graph.nodes.some(row=>row.reference)).toBe(true);
   const nodes=new Map(graph.nodes.map(row=>[row.id,row]));
   for(const edge of graph.edges)expect(nodes.get(edge.to)!.x).toBeGreaterThan(nodes.get(edge.from)!.x);
@@ -98,4 +98,12 @@ it('places projected effects at start, finish or offset, and waits for every qua
   }
   const pending={...buildYard,id:'pending',finishTick:null};
   expect(goalFactTime({...plan,actions:[buildYard,pending]}, {...fact,producerActionIds:[buildYard.id,pending.id]})).toBeNull();
+});
+
+it('keeps concurrent actions distinct inside their executor lane without shifting either schedule',()=>{
+  const {plan,buildYard}=goalNavyFixture();
+  const next={...plan,actions:[...plan.actions,{...buildYard,id:'other-worker'}]};
+  const graph=goalGanttLayout(next),first=graph.bars.find(row=>row.action.id===buildYard.id)!,other=graph.bars.find(row=>row.action.id==='other-worker')!;
+  expect(graph.lanes).toHaveLength(4);expect(first.actor).toBe('worker');expect(other.actor).toBe('worker');
+  expect(first.y).not.toBe(other.y);expect(first.x).toBe(other.x);expect(first.end).toBe(other.end);
 });

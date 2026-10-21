@@ -10,6 +10,7 @@ type Actor = typeof actors[number]['id'];
 export type GanttBar = { action:GoalActionNode; actor:Actor; x:number; end:number; y:number; track:number };
 type Link = { from:string; to:string; facts:GoalPlanFactNode[]; resource:boolean };
 const cache = new WeakMap<GoalPlan,ReturnType<typeof layout>>();
+const linkCache = new WeakMap<GoalPlan,Link[]>();
 export function goalActor(action:GoalActionNode):Actor {
   switch(action.declaration.kind){
     case 'build':return 'worker';
@@ -25,14 +26,17 @@ function layout(plan:GoalPlan){
   let top=42;
   const bars:GanttBar[]=[];
   const lanes=actors.map(actor=>{
-    const ends:number[]=[];
+    const ends:number[]=[],sizes:number[]=[];
     const rows=known.filter(action=>goalActor(action)===actor.id);
     for(const action of rows){
       let track=ends.findIndex(end=>end<=action.startTick!);if(track<0)track=ends.length;
       ends[track]=action.finishTick!;
+      const externalCount=action.prerequisiteFactIds.map(id=>factFor(plan,id)).filter(fact=>fact&&!producers(plan,fact).length).length;
+      sizes[track]=Math.max(sizes[track]??76,76+Math.max(0,externalCount-1)*17);
       bars.push({action,actor:actor.id,track,x:goalTimeX(axis,action.startTick!),end:goalTimeX(axis,action.finishTick!),y:top+15+track*76});
     }
-    const lane={...actor,y:top,height:Math.max(1,ends.length)*76+20};top+=lane.height;return lane;
+    for(const bar of bars)if(bar.actor===actor.id)bar.y=top+15+sizes.slice(0,bar.track).reduce((sum,size)=>sum+size,0);
+    const lane={...actor,y:top,height:(sizes.reduce((sum,size)=>sum+size,0)||76)+20};top+=lane.height;return lane;
   });
   const goalTimes=plan.facts.filter(row=>plan.goal.effects.some(effect=>effect.id===row.observation.fact.id)).map(row=>goalFactTime(plan,row));
   const complete=plan.completedTick??(goalTimes.length===plan.goal.effects.length&&goalTimes.length&&goalTimes.every((tick):tick is number=>tick!=null)?Math.max(...goalTimes):null);
@@ -63,8 +67,9 @@ function dependencies(plan:GoalPlan):Link[]{
 /** Remove only redundant presentation links. Same-row steps still participate
  * in reachability, but their time order replaces a drawn arrow. */
 export function goalGanttLinks(plan:GoalPlan):Link[]{
+  const cached=linkCache.get(plan);if(cached)return cached;
   const all=dependencies(plan);
-  return all.filter(link=>{
+  const result=all.filter(link=>{
     const todo=[link.from],seen=new Set(todo);
     for(let i=0;i<todo.length&&i<201;i++)for(const other of all){
       if(other===link||other.from!==todo[i])continue;
@@ -73,6 +78,7 @@ export function goalGanttLinks(plan:GoalPlan):Link[]{
     }
     return true;
   });
+  linkCache.set(plan,result);return result;
 }
 const available=(fact:GoalPlanFactNode,tick:number)=>fact.observation.state==='met'&&(fact.observation.availableTick==null||fact.observation.availableTick<=tick);
 function conditionText(row:GoalPlanFactNode,tick:number):string {
@@ -108,7 +114,7 @@ export function goalGanttGraph(plan:GoalPlan,trace:AiPlanTrace,selected:string):
     const external=missing.filter(fact=>!producers(plan,fact).some(producer=>bars.has(producer.id)));
     const width=Math.max(1,bar.end-bar.x),label=goalDeclarationLabel(action.declaration);
     const tags=met.map(fact=>`<span title="${h(metText(fact))}">✓${h(metText(fact))}</span>`).join('');
-    return `<button class="goal-gantt-action ${h(action.state)}" data-plan-node="${h(action.id)}" data-plan-time="${action.startTick}" data-plan-finish="${action.finishTick}" data-actor="${bar.actor}" aria-pressed="${selected===action.id}" title="${h(label)} · ${clock(action.startTick!)} → ${clock(action.finishTick!)} · ${h(goalStates[action.state]??'—')}" style="left:${bar.x}px;top:${bar.y}px;width:${width}px"><strong>${h(label)}</strong><small>${clock(action.startTick!)} → ${clock(action.finishTick!)}</small><span class="goal-gantt-tags">${tags}</span></button>${external.map((fact,index)=>`<button class="goal-gantt-condition external" data-plan-node="${h(fact.id)}" data-plan-condition="${h(fact.id)}" style="left:${bar.x}px;top:${bar.y+49+index*17}px">↳ ${h(conditionText(fact,trace.tick))}</button>`).join('')}`;
+    return `<button class="goal-gantt-action ${h(action.state)}" data-plan-node="${h(action.id)}" data-plan-time="${action.startTick}" data-plan-finish="${action.finishTick}" data-actor="${bar.actor}" aria-pressed="${selected===action.id}" title="${h(label)} · ${clock(action.startTick!)} → ${clock(action.finishTick!)} · ${h(goalStates[action.state]??'—')}${met.length?` · ${h(met.map(metText).join('、'))}`:''}" style="left:${bar.x}px;top:${bar.y}px;width:${width}px"><strong>${h(label)}</strong><small>${clock(action.startTick!)} → ${clock(action.finishTick!)}</small><span class="goal-gantt-tags">${tags}</span></button>${external.map((fact,index)=>`<button class="goal-gantt-condition external" data-plan-node="${h(fact.id)}" data-plan-condition="${h(fact.id)}" style="left:${bar.x}px;top:${bar.y+49+index*17}px">↳ ${h(conditionText(fact,trace.tick))}</button>`).join('')}`;
   }).join('');
   const lanes=graph.lanes.map(lane=>`<div class="goal-gantt-lane ${lane.id}" data-executor-lane="${lane.id}" style="top:${lane.y}px;height:${lane.height}px;width:${axis.width}px"><b>${h(lane.label)}</b></div>`).join('');
   const ruler=goalTimeTicks(axis).map(tick=>`<div class="goal-time-guide" style="left:${goalTimeX(axis,tick)}px;height:${graph.height}px"><time>${clock(tick)}</time></div>`).join('');

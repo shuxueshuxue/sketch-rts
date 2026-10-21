@@ -92,5 +92,5 @@ export default async function(s: Scene) {
   s.must(await s.page.locator('.plan-dependency-sheet').count()===0,'Graph leaked across an unrecorded gap');
   await s.shot('goal-contract-unrecorded');
   s.record('goal-plan-contract',{evidence:'artificial-public-puzzle-3',gpu,alignment,packets:replay.aiPlans.packets.length,drags,
-    checked:['branched-dependencies','execution-time-default','shared-gold-clock','regression-toggle','zoom-and-scroll-alignment','gold-prefixes','hall-reservation','human-readable-labels','rejected-alternatives','pending-request','pointer-seek','incremental-replay','unrecorded-gap']});
+    checked:['branched-dependencies','executor-gantt-default','no-condition-boxes','no-same-lane-arrows','bar-start-and-finish-clock','shared-gold-clock','regression-toggle','zoom-and-scroll-alignment','gold-prefixes','hall-reservation','human-readable-labels','rejected-alternatives','pending-request','pointer-seek','incremental-replay','unrecorded-gap']});
 }

@@ -2,12 +2,13 @@ import type { Scene } from './browser';
 
 /** Measure rendered pixels, including scale and scroll; pure x arithmetic is insufficient. */
 export async function proveGoalTimeAlignment(s: Scene) {
-  const measure = (): Promise<{order:string|undefined;rows:{tick:number;nodeX:number;goldX:number;error:number}[]}> => s.page.evaluate(() => {
+  const measure = (): Promise<{order:string|undefined;rows:{tick:number;edge:string;nodeX:number;goldX:number;error:number}[]}> => s.page.evaluate(() => {
     const sheet=document.querySelector<HTMLElement>('.plan-dependency-sheet')!;
-    return {order:sheet.dataset.graphOrder,rows:[200,500,3000].map(tick=>{
-      const card=sheet.querySelector<HTMLElement>(`.goal-gantt-action[data-plan-time="${tick}"]`)!.getBoundingClientRect();
+    return {order:sheet.dataset.graphOrder,rows:[{tick:200,edge:'start'},{tick:500,edge:'start'},{tick:3000,edge:'start'},{tick:2000,edge:'finish'},{tick:2400,edge:'finish'}].map(({tick,edge})=>{
+      const card=sheet.querySelector<HTMLElement>(`.goal-gantt-action[data-plan-${edge==='start'?'time':'finish'}="${tick}"]`)!.getBoundingClientRect();
       const dot=sheet.querySelector<SVGCircleElement>(`[data-gold-tick="${tick}"]`)!.getBoundingClientRect();
-      return {tick,nodeX:card.x,goldX:dot.x+dot.width/2,error:Math.abs(card.x-dot.x-dot.width/2)};
+      const nodeX=edge==='start'?card.x:card.x+card.width;
+      return {tick,edge,nodeX,goldX:dot.x+dot.width/2,error:Math.abs(nodeX-dot.x-dot.width/2)};
     })};
   });
   const fitted=await measure();
