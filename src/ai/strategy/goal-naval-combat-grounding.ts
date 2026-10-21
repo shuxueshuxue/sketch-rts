@@ -280,8 +280,12 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
         point: conditionalPost ? target.point : { x: member.assessment.x, y: member.assessment.y } }, to: target }));
     const clocks = conditionalPost || crossing ? [0] : group.map(member => Math.ceil(gap(member.assessment, target.point)
       / Math.max(1, member.assessment.speed) * SIM_TICKS_PER_SECOND));
-    const facts = sorted([effect.id, ...preconditions.map(fact => fact.id), ...pool.map(fact => fact.id), ...routes.map(fact => fact.id)]);
-    const safety = p.kind === 'garrison-ready' ? [goalFact({ kind: 'site-safe', site: target, throughTick })] : [];
+    // The quote's published safety evidence is limited to the current
+    // Situation horizon. This does not shorten the retained hold obligation.
+    const safety = p.kind === 'garrison-ready' ? [goalFact({ kind: 'site-safe', site: target,
+      throughTick: Math.min(throughTick, context.tick + context.situation.horizonTicks) })] : [];
+    const facts = sorted([effect.id, ...preconditions.map(fact => fact.id), ...pool.map(fact => fact.id),
+      ...routes.map(fact => fact.id), ...safety.map(fact => fact.id)]);
     return { id: `coarse-location:${goalValueKey([effect.id, refs, origin, target])}`, target, from: origin, cohort: refs,
       requiredForce: p.kind === 'garrison-ready'
         ? group.reduce((sum, member) => sum + effectiveCombatRating(context.snapshot, member.assessment), 0) : 0,
@@ -339,12 +343,15 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
     if (!withinExpansionGarrisonCoverage(post.point, site.point)) return unmet('combat-guard-post-outside-mine-coverage', [effect.id]);
     if (!isOpenGround(context.snapshot.map, post.point.x, post.point.y) || landIdAt(context.snapshot.map, post.point) !== site.landId)
       return unmet('combat-guard-post-ground-blocked', [effect.id]);
-    const safetyFact = goalFact({ kind: 'site-safe', site: post, throughTick }), safety = context.readFact(safetyFact);
+    const safetyFact = goalFact({ kind: 'site-safe', site: post,
+      throughTick: Math.min(throughTick, context.tick + context.situation.horizonTicks) }), safety = context.readFact(safetyFact);
     const requiredForce = group.reduce((sum, member) => sum + effectiveCombatRating(context.snapshot, member.assessment), 0);
     const ids = sorted([effect.id, safety.fact.id, ...safety.reason.factIds]);
     const unquoted = pending('garrison-post-protection-unpublished', ids, safety.state === 'pending' ? [safety.requestId] : ids);
-    // A published safe full window proves that holding at this post has no
-    // observed combat loss. Marching there belongs to force-at's achiever.
+    // Only this published observation window is quoted as quiet. The full
+    // holding interval remains below and must be re-evaluated on later thinks;
+    // no site-safe proof for the unobserved remainder is manufactured here.
+    // Marching there belongs to force-at's achiever.
     const quiet = safety.state === 'met' && safety.fact.id === safetyFact.id && safety.observedTick === context.tick
       && (safety.availableTick ?? context.tick) <= context.tick && safety.threats !== undefined
       && !safety.threats.unitIds.length && !safety.threats.campIds.length && safety.threats.requiredForce === 0
@@ -491,7 +498,8 @@ export function createGoalNavalCombatGrounding(context: GoalPlanningContext, por
     }
     const target = p.kind === 'site-safe' ? p.site : 'at' in p ? p.at : undefined;
     if (!target?.landId) return pending('combat-target-region-pending', [effect.id]);
-    const throughTick = 'throughTick' in p ? p.throughTick : 'byTick' in p ? p.byTick : (context.planThroughTick ?? context.tick + context.situation.horizonTicks);
+    const throughTick = 'throughTick' in p && typeof p.throughTick === 'number' ? p.throughTick
+      : 'byTick' in p ? p.byTick : (context.planThroughTick ?? context.tick + context.situation.horizonTicks);
     const groups = origins(effect); if (groups.state !== 'met') return groups;
     const result: GoalCombatOption[] = [], deferred: Deferred[] = [...(groups.deferred ?? [])];
     let rejected: Extract<GoalCandidates<never>, { state: 'unmet' }> | undefined;

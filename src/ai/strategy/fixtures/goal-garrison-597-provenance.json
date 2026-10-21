@@ -1,0 +1,90 @@
+[
+  {
+    "file": "goal-garrison-597-near-t6840.json.gz",
+    "original": "/tmp/goal-597-build-worker-full-originals-verified/live-build-markers/near/first-new-townhall-complete-snapshot/actual-frame.jsonl.gz",
+    "provenance": {
+      "source": "eed282ae39fc937130cf857c3771f30afa06422d",
+      "sharedBase": "59792793b2eb723d4e4403e59a3bbb28a33e0208",
+      "variant": "near",
+      "event": "first-new-townhall-complete-snapshot",
+      "think": 456,
+      "tick": 6840,
+      "compressedOffset": 112034198,
+      "compressedBytes": 227856,
+      "compressedSha256": "4923d93a9f226523b16bc77f850276cc3f84426263ec055324f9538b5eaef83b",
+      "plainSha256": "4e4abf732062d5d89095b3ea0688ee32693f621687dc4d2b35e31d4515ddf723",
+      "owner": "planner",
+      "gold": 68,
+      "newTownHalls": [
+        {
+          "id": "building-planner-townHall-1103",
+          "owner": "planner",
+          "kind": "townHall",
+          "x": 2832,
+          "y": 720,
+          "hp": 900,
+          "maxHp": 900,
+          "radius": 48,
+          "complete": true,
+          "buildProgress": 560,
+          "buildTime": 560,
+          "attackDamage": 0,
+          "attackRange": 0,
+          "attackCooldown": 1,
+          "cooldown": 0,
+          "rallyX": 2922,
+          "rallyY": 780,
+          "queue": [],
+          "researchQueue": []
+        }
+      ],
+      "returnedTownHallCommands": [],
+      "townHallAdmissions": [],
+      "semantics": "Original complete CRC member, SDK commands and actual snapshot only. No AI/source/navigation/sim. A returned build command does not by itself prove payment or goal.build attribution."
+    }
+  },
+  {
+    "file": "goal-garrison-597-far-t8400.json.gz",
+    "original": "/tmp/goal-597-build-worker-full-originals-verified/live-build-markers/far/last-original-member/actual-frame.jsonl.gz",
+    "provenance": {
+      "source": "eed282ae39fc937130cf857c3771f30afa06422d",
+      "sharedBase": "59792793b2eb723d4e4403e59a3bbb28a33e0208",
+      "variant": "far",
+      "event": "last-original-member",
+      "think": 560,
+      "tick": 8400,
+      "compressedOffset": 129493562,
+      "compressedBytes": 210913,
+      "compressedSha256": "d45847c55fc94cf455caa8bc5b281fc82306fba4ef8de775d5d417649441ad2f",
+      "plainSha256": "ee553413701f15df64954e2c8a19ad25bd035ca1102b6e835bb69a0df2fa03f8",
+      "owner": "planner",
+      "gold": 58,
+      "newTownHalls": [
+        {
+          "id": "building-planner-townHall-1106",
+          "owner": "planner",
+          "kind": "townHall",
+          "x": 2832,
+          "y": 720,
+          "hp": 900,
+          "maxHp": 900,
+          "radius": 48,
+          "complete": true,
+          "buildProgress": 560,
+          "buildTime": 560,
+          "attackDamage": 0,
+          "attackRange": 0,
+          "attackCooldown": 1,
+          "cooldown": 0,
+          "rallyX": 2922,
+          "rallyY": 780,
+          "queue": [],
+          "researchQueue": []
+        }
+      ],
+      "returnedTownHallCommands": [],
+      "townHallAdmissions": [],
+      "semantics": "Original complete CRC member, SDK commands and actual snapshot only. No AI/source/navigation/sim. A returned build command does not by itself prove payment or goal.build attribution."
+    }
+  }
+]
