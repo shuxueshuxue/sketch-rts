@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { sketchScene } from '../../sdk/scene';
 import { withNavigationAudit, withNavigationPhase } from '../../shared/navigation-audit';
 import { snapshotGame } from '../../shared/sim';
+import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import type { GameSnapshot } from '../../shared/types';
 import { createAiPolicyMemory } from '../memory';
 import { effectiveCombatRating } from '../policy/v6/strength';
@@ -62,6 +63,82 @@ function fixture(overrides: Partial<GoalNavalCombatGroundingPorts> = {}) {
 function options(result: ReturnType<NonNullable<ReturnType<typeof createGoalNavalCombatGrounding>['combatOptions']>>): readonly GoalCombatOption[] {
   expect(result.state).toBe('met'); if (result.state !== 'met') throw Error(JSON.stringify(result)); return result.candidates;
 }
+
+function hullFixture() {
+  const { snapshot, owner }: { snapshot: GameSnapshot; owner: string } = JSON.parse(gunzipSync(readFileSync(
+    new URL('./fixtures/sapphire-control-p4-4180.json.gz', import.meta.url))).toString());
+  const ship = snapshot.units.find(unit => unit.id === 'unit-p4-transport-1151')!;
+  const regions = regionIndex(snapshot.map), seaId = seaIdAt(snapshot.map, ship)!;
+  const shore = regions.shores.find(shore => shore.seaId === seaId
+    && Math.hypot(shore.water.x - ship.x, shore.water.y - ship.y) > ship.radius)!;
+  const context: GoalPlanningContext = { snapshot, owner, situation: evaluateSituation(snapshot, owner, createAiPolicyMemory()),
+    tick: snapshot.tick, version: 'v9_knight', precision: 'coarse',
+    readFact: () => { throw Error('coarse hull requested a fact'); } };
+  const effect = goalFact({ kind: 'transport-at', transport: ref(ship.id), at: { seaId, point: shore.water },
+    tolerance: ship.radius, byTick: snapshot.tick + 2000 });
+  const forbidden = vi.fn(() => { throw Error('coarse hull requested private exact work'); });
+  const ports: GoalNavalCombatGroundingPorts = { arrival: forbidden, landRoute: forbidden, resolveCohort: forbidden,
+    transportFacts: { seaLeg: forbidden }, movementRisk: forbidden, readGroundPoint: forbidden };
+  return { snapshot, ship, context, effect, ports, forbidden };
+}
+
+describe('coarse transport time from the published sea field', () => {
+  it('retains the supplied sailing estimate and its dependencies without exact work', () => {
+    const f = hullFixture(), before = JSON.stringify(f.snapshot);
+    const estimate: GoalEstimate<number> = { state: 'met', value: 2843, factIds: ['published-sea-field', 'native-sailing-profile'] };
+    const coarseSeaTicks = vi.fn(() => estimate);
+    const factory = createGoalNavalCombatGrounding(f.context, { ...f.ports, coarseSeaTicks });
+    const row = strict(() => options(factory.combatOptions!(f.effect)))[0]!;
+    expect(row.duration).toEqual(estimate);
+    expect(coarseSeaTicks).toHaveBeenCalledTimes(1);
+    expect(coarseSeaTicks).toHaveBeenCalledWith(f.ship, { x: f.ship.x, y: f.ship.y },
+      f.effect.predicate.kind === 'transport-at' ? f.effect.predicate.at.point : undefined, false);
+    expect(row.preconditions).toHaveLength(1);
+    expect(row.preconditions[0]!.predicate).toMatchObject({ kind: 'route', mover: 'sea', actor: ref(f.ship.id) });
+    expect(f.forbidden).not.toHaveBeenCalled(); expect(JSON.stringify(f.snapshot)).toBe(before);
+  });
+
+  it.each(['pending', 'unmet'] as const)('preserves a %s field estimate instead of substituting straight-line time', state => {
+    const f = hullFixture();
+    const reason = { code: 'published-sea-time-unavailable', factIds: ['sea-field-version'], values: {} };
+    const estimate: GoalEstimate<number> = state === 'pending'
+      ? { state, requestIds: ['existing-sea-field-request'], reason } : { state, reason };
+    const factory = createGoalNavalCombatGrounding(f.context, { ...f.ports, coarseSeaTicks: () => estimate });
+    expect(strict(() => options(factory.combatOptions!(f.effect)))[0]!.duration).toEqual(estimate);
+    expect(f.forbidden).not.toHaveBeenCalled();
+  });
+
+  it('keeps the inclusive arrival tolerance at zero without consulting an unavailable field', () => {
+    const f = hullFixture();
+    if (f.effect.predicate.kind !== 'transport-at') throw Error('transport fixture');
+    const coarseSeaTicks = vi.fn(() => { throw Error('an arrived hull must not wait for a sea field'); });
+    const factory = createGoalNavalCombatGrounding(f.context, { ...f.ports, coarseSeaTicks });
+    for (const tolerance of [0, f.ship.radius]) {
+      const effect = goalFact({ ...f.effect.predicate,
+        at: { ...f.effect.predicate.at, point: { x: f.ship.x + tolerance, y: f.ship.y } }, tolerance });
+      expect(strict(() => options(factory.combatOptions!(effect)))[0]!.duration)
+        .toEqual({ state: 'met', value: 0, factIds: [effect.id] });
+    }
+    expect(coarseSeaTicks).not.toHaveBeenCalled(); expect(f.forbidden).not.toHaveBeenCalled();
+  });
+
+  it('keeps the no-port estimate compatible and leaves the exact sea-leg contract untouched', () => {
+    const f = hullFixture();
+    if (f.effect.predicate.kind !== 'transport-at') throw Error('transport fixture');
+    const point = f.effect.predicate.at.point;
+    const fallback = createGoalNavalCombatGrounding(f.context, f.ports);
+    expect(strict(() => options(fallback.combatOptions!(f.effect)))[0]!.duration).toEqual({ state: 'met', factIds: [f.effect.id],
+      value: Math.ceil(Math.hypot(point.x - f.ship.x, point.y - f.ship.y) / Math.max(1, f.ship.speed) * SIM_TICKS_PER_SECOND) });
+    const coarseSeaTicks = vi.fn(() => { throw Error('exact hull consulted the coarse field'); });
+    const exact = createGoalNavalCombatGrounding({ ...f.context, precision: 'exact' }, { ...f.ports, coarseSeaTicks,
+      transportFacts: { seaLeg: () => ({ state: 'met', factIds: ['exact-native-route'], value: {
+        ticks: 321, endpoint: point, heading: f.ship.sailing!.heading,
+      } }) } });
+    expect(strict(() => options(exact.combatOptions!(f.effect)))[0]!.duration)
+      .toEqual({ state: 'met', value: 321, factIds: ['exact-native-route'] });
+    expect(coarseSeaTicks).not.toHaveBeenCalled(); expect(f.forbidden).not.toHaveBeenCalled();
+  });
+});
 
 describe('naval combat grounding on actual observation cohorts', () => {
   it('offers local defense with a native combat-rating requirement and the same physical post in declaration/execution', () => {
