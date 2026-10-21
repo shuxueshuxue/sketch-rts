@@ -34,7 +34,7 @@ export function createPuzzleWitness(puzzle: PublicPuzzleCase, world: PuzzleWorld
     };
     const load = (troops: Unit[], at: { x: number; y: number }, tag: string) => {
       if (!ship) return false;
-      moveShip(`${tag}-position`, at);
+      if (Math.hypot(ship.x - at.x, ship.y - at.y) > 300) moveShip(`${tag}-position`, at);
       if (Math.hypot(ship.x - at.x, ship.y - at.y) > 240) return false;
       const waiting = troops.filter(u => !aboard(u));
       if (waiting.length) {
@@ -47,7 +47,9 @@ export function createPuzzleWitness(puzzle: PublicPuzzleCase, world: PuzzleWorld
     };
     const unload = (troops: Unit[], at: { x: number; y: number }, tag: string) => {
       if (!ship) return false;
-      if (troops.some(aboard)) send(tag, { type: 'unload', unitIds: [ship.id], ...at }, seconds(30));
+      const cabin = troops.filter(u => u.cabin);
+      if (cabin.length) send(`${tag}-leave-cabin`, { type: 'leaveCabin', unitIds: cabin.map(u => u.id) }, seconds(2));
+      if (troops.some(aboard)) send(tag, { type: 'unload', unitIds: [ship.id], ...at }, seconds(10));
       return troops.length > 0 && troops.every(u => physicallyOnLand(world, u, at));
     };
     const buildHall = (mine: { x: number; y: number }, worker: Unit | undefined) => {
