@@ -5,6 +5,7 @@ import { advancesAllocationCommand, applyAllocationPayments } from './allocation
 import { assertStrategyAllocationBounds, sameAction, STRATEGY_ALLOCATION_LIMITS } from './control';
 import { copyNativeOrder, INCUMBENT_RECEIPT_WAIT_TICKS } from './incumbent-evidence';
 import { assessForceAssemblyPosts } from './assembly-posts';
+import { validateGoalOutputFeedback } from './goal-output-validation';
 
 /** Acceptance is not movement. Refresh lineage from the current native world
  * before safety services or assignment-stage accounting consume it. */
@@ -220,6 +221,8 @@ export function applyExecutorFeedback(memory: StrategyAllocationMemory, snapshot
   if (!execution || !sameAction(execution.token, feedback.action) || feedback.allocationRevision !== memory.revision)
     throw new Error('Stale allocation executor feedback');
   if (terminal(execution.status)) throw new Error('Feedback attempted to restart a terminal allocation action');
+  let next = applyAllocationPayments(memory, snapshot, execution.token, feedback.payments ?? []);
+  feedback = validateGoalOutputFeedback(next, snapshot, feedback);
   const pending = Array.isArray(feedback.state.pendingVoyageIds) ? feedback.state.pendingVoyageIds : [];
   const continuing = feedback.status === 'complete' && pending.length > 0;
   if (continuing && (!['deliver-force', 'deliver-workers'].includes(execution.intent.kind)
@@ -227,7 +230,6 @@ export function applyExecutorFeedback(memory: StrategyAllocationMemory, snapshot
     throw new Error('Allocation continuation has an ungranted voyage');
   const nextStatus = continuing ? 'active' as const : feedback.status;
   const state = continuing ? { ...feedback.state, requiredWaveComplete: true } : feedback.state;
-  let next = applyAllocationPayments(memory, snapshot, execution.token, feedback.payments ?? []);
   const previousProgress = feedback.progress.length ? snapshot.tick : execution.lastProgressTick;
   next = { ...next, executions: { ...next.executions, [execution.token.actionId]: { ...execution,
     status: nextStatus, phase: continuing ? 'continuing-voyages' : feedback.phase, state: structuredClone(state), lastProgressTick: previousProgress } } };

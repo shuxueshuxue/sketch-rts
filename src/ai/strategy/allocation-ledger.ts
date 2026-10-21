@@ -49,6 +49,7 @@ export function reserveAllocationSpends(input: Readonly<{ memory: StrategyAlloca
       const amountGold = paid + held + added;
       budgets[id] = { id, spendId, objectiveId: method.objectiveId, methodId: method.id, action: action.token,
         amountGold, paidGold: paid, state: paid >= spend.amountGold ? 'spent' : 'reserved', sinceTick: old?.sinceTick ?? tick,
+        ...(old?.nativePayments ? { nativePayments: old.nativePayments } : {}),
         releasedTick: null, includedUtilityTermCodes: [...spend.includedUtilityTermCodes], externalReservationIds: [...spend.externalReservationIds] };
       if (amountGold < spend.amountGold) unmet.push({ id: `${action.token.actionId}/capital:${spendId}`, objectiveId: method.objectiveId,
         methodId: method.id, action: action.token, demand: { kind: 'gold', amount: spend.amountGold - amountGold },
@@ -60,11 +61,13 @@ export function reserveAllocationSpends(input: Readonly<{ memory: StrategyAlloca
 
 /** Capture a narrow real-world baseline once, when the common gateway admits
  * the command. Neither a predicted queue nor an accepted proposal is a receipt. */
-export function issuedCommandBaseline(snapshot: GameSnapshot, command: GameCommand): IssuedActionCommand['worldBefore'] {
+export function issuedCommandBaseline(snapshot: GameSnapshot, command: GameCommand, goalTraining = false): IssuedActionCommand['worldBefore'] {
   if (command.type === 'train') {
     const yard = snapshot.buildings.find(building => building.id === command.buildingId);
     return { kind: 'production', buildingId: command.buildingId,
-      jobs: (yard?.queue ?? []).map(job => ({ id: job.id ?? null, unitKind: 'unitKind' in job ? job.unitKind : null })) };
+      jobs: (yard?.queue ?? []).map(job => ({ id: job.id ?? null, unitKind: 'unitKind' in job ? job.unitKind : null })),
+      ...(goalTraining ? { unitIds: snapshot.units.filter(unit => unit.owner === yard?.owner && unit.kind === command.unitKind && unit.hp > 0)
+        .map(unit => unit.id).sort() } : {}) };
   }
   if (command.type === 'build') return { kind: 'construction', buildingIds: snapshot.buildings.filter(building =>
     Math.hypot(building.x - command.x, building.y - command.y) <= building.radius + 64).map(building => building.id).sort() };
@@ -82,7 +85,7 @@ export function recordAllocationCommands(memory: StrategyAllocationMemory, snaps
         throw new Error('Allocation command id reused for different intent');
       continue;
     }
-    const baseline = issuedCommandBaseline(snapshot, admission.command);
+    const baseline = issuedCommandBaseline(snapshot, admission.command, admission.executor === 'goal.train');
     const command: IssuedActionCommand = { id: admission.commandId, action: admission.action, executor: admission.executor,
       purpose: admission.purpose, acceptedTick: snapshot.tick, command: structuredClone(admission.command), ...(baseline ? { worldBefore: baseline } : {}) };
     issuedCommands[command.id] = command;
@@ -102,13 +105,23 @@ export function applyAllocationPayments(memory: StrategyAllocationMemory, snapsh
   for (const receipt of payments) {
     const budget = budgets[receipt.budgetId], proof = receipt.proof;
     if (!budget || !sameAction(budget.action, action)) throw new Error('Allocation payment has no admitted parent');
-    if (budget.paidGold > 0) {
+    const declarative = memory.executions[action.actionId]?.intent.kind === 'goal-action';
+    const entityId = proof.kind === 'production' ? proof.jobId : proof.buildingId;
+    const recorded = declarative && budget.nativePayments?.find(payment => payment.commandId === proof.acceptedCommandId
+      && payment.kind === proof.kind && payment.entityId === entityId);
+    if (recorded) {
+      if (recorded.amountGold !== receipt.amountGold) throw new Error('Allocation payment changed after acknowledgement');
+      continue;
+    }
+    if (!declarative && budget.paidGold > 0) {
       if (budget.paidGold !== receipt.amountGold) throw new Error('Allocation payment changed after acknowledgement');
       continue;
     }
     const command = memory.issuedCommands[proof.acceptedCommandId];
     if (!command || !sameAction(command.action, action)
       || command.executor !== memory.executions[action.actionId]?.executor) throw new Error('Allocation payment has no admitted parent');
+    if (declarative && (entityId === null || Object.values(budgets).some(other => other.nativePayments
+      ?.some(payment => payment.commandId === command.id)))) throw new Error('Native command payment identity reused');
     let price: number | undefined;
     if (proof.kind === 'production' && command.command.type === 'train' && command.worldBefore?.kind === 'production') {
       const queue = snapshot.buildings.find(building => building.id === proof.buildingId && building.owner === memory.owner)?.queue;
@@ -123,9 +136,12 @@ export function applyAllocationPayments(memory: StrategyAllocationMemory, snapsh
       if (building && building.kind === command.command.buildingKind && !command.worldBefore.buildingIds.includes(building.id)
         && Math.hypot(building.x - command.command.x, building.y - command.command.y) < 1) price = BUILDING_DEFS[building.kind].cost;
     }
+    const paidGold = (declarative ? budget.paidGold : 0) + receipt.amountGold;
     if (price === undefined || !Number.isFinite(receipt.amountGold) || receipt.amountGold !== price
-      || receipt.amountGold > budget.amountGold) throw new Error('Allocation payment is not proven by the native world');
-    budgets[budget.id] = { ...budget, paidGold: receipt.amountGold, state: 'spent' };
+      || paidGold > budget.amountGold) throw new Error('Allocation payment is not proven by the native world');
+    budgets[budget.id] = { ...budget, paidGold, state: !declarative || paidGold >= budget.amountGold ? 'spent' : 'reserved',
+      ...(declarative ? { nativePayments: [...(budget.nativePayments ?? []), { kind: proof.kind,
+        commandId: command.id, entityId: entityId!, amountGold: receipt.amountGold, observedTick: snapshot.tick }] } : {}) };
   }
   return { ...memory, budgets };
 }

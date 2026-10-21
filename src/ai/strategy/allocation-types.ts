@@ -99,6 +99,10 @@ export type AllocationBudget = Readonly<{
   action: ActionToken;
   amountGold: number;
   paidGold: number;
+  /** Goal batches can pay several distinct native jobs from one reservation.
+   * Identity makes equal-sized payments idempotent without losing later jobs. */
+  nativePayments?: readonly Readonly<{ kind: 'production' | 'foundation'; commandId: string;
+    entityId: string; amountGold: number; observedTick: number }>[];
   state: 'reserved' | 'spent' | 'released';
   sinceTick: number;
   releasedTick: number | null;
@@ -234,7 +238,9 @@ export type IssuedActionCommand = Readonly<{
   command: GameCommand;
   /** Minimal admission-time baseline for proving a later world payment. */
   worldBefore?: Readonly<{ kind: 'production'; buildingId: string;
-    jobs: readonly Readonly<{ id: string | null; unitKind: TrainableUnitKind | null }>[] }>
+    jobs: readonly Readonly<{ id: string | null; unitKind: TrainableUnitKind | null }>[];
+    /** Only goal training captures this actual admission-time birth baseline. */
+    unitIds?: readonly string[] }>
     | Readonly<{ kind: 'construction'; buildingIds: readonly string[] }>;
 }>;
 /** An accepted command from a real old producer branch, before adoption. This
