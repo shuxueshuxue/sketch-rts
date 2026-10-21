@@ -12,7 +12,9 @@ import { FactWorkQueue, withFactWork } from './fact-work';
 import { goalCampId, goalFact } from './goal-facts';
 import { createGoalGeometryReader } from './goal-geometry-source';
 import type { GoalGeometryMemory } from './goal-grounding-ports';
-import { createGoalFactReader, createGoalWorldFactMemory, type GoalWorldFactMemory } from './goal-world-facts';
+import { boundGoalWorldFactMemory, createGoalFactReader, createGoalWorldFactMemory, retainGoalWorldFactMemory,
+  worldCampCacheId, type GoalWorldFactInput, type GoalWorldFactMemory } from './goal-world-facts';
+import { observationJsonBytes } from './observation-json-bytes';
 import { landIdAt, regionIndex, seaIdAt } from './regions';
 
 function scene() {
@@ -29,9 +31,10 @@ function frame(snapshot: GameSnapshot) {
   return { snapshot, owner: 'us', tick: snapshot.tick, version: 'v9_summoner' as const,
     situation: buildStrategyDecision(snapshot, 'us', { memory: createAiPolicyMemory() }, undefined, undefined, Infinity).situation };
 }
-function source(snapshot: GameSnapshot, memory = createGoalWorldFactMemory('us'), allowedUnitIds?: readonly string[], interruptedUnitIds?: readonly string[]) {
+function source(snapshot: GameSnapshot, memory = createGoalWorldFactMemory('us'), allowedUnitIds?: readonly string[], interruptedUnitIds?: readonly string[],
+  cacheUse?: GoalWorldFactInput['cacheUse']) {
   const context = frame(snapshot), work = new FactWorkQueue(snapshot.tick, 0);
-  return createGoalFactReader({ ...context, memory, ...(allowedUnitIds === undefined ? {} : { allowedUnitIds }),
+  return createGoalFactReader({ ...context, memory, ...(cacheUse ? { cacheUse } : {}), ...(allowedUnitIds === undefined ? {} : { allowedUnitIds }),
     ...(interruptedUnitIds === undefined ? {} : { interruptedUnitIds }), ports: {
     reservedGold: 0, geometryRevision: 'native-test-bodies',
     geometry: createGoalGeometryReader({ tick: snapshot.tick, work, memory: { version: 1, entries: [] } }),
@@ -116,4 +119,81 @@ it('publishes legal assembly geometry separately from the presence of a hostile 
   expect(answer!.derived).toBeUndefined(); expect(answer!.threats).toBeUndefined();
   expect(snapshot.units.some(unit => unit.id === 'guard' && unit.hp > 0)).toBe(true);
   expect(JSON.stringify(snapshot)).toBe(before);
+});
+
+it('keeps a shared pending proof and its original request time pinned across readers, JSON and count pressure', () => {
+  const snapshot = snapshotGame(scene()), memory = createGoalWorldFactMemory('us');
+  let plans = ['first'];
+  const read = source(snapshot, memory, undefined, undefined, { thinkSequence: 1, planIds: () => plans });
+  const fact = goalFact({ kind: 'site-safe', site: { point: { x: 1000, y: 1000 } }, throughTick: 1000 });
+  expect(read(fact)).toMatchObject({ state: 'pending', requestedTick: snapshot.tick });
+  plans = ['second'];
+  expect(read(fact).state).toBe('pending'); // memoized facts still record every consumer.
+  expect(memory.requests.find(entry => entry.id === fact.id)?.planIds).toEqual(['first', 'second']);
+  memory.requests.push(...Array.from({ length: 65 }, (_, i) => ({ id: `other-${i}`, requestedTick: 1, lastUsedThink: 2 })));
+  boundGoalWorldFactMemory(memory, 2);
+  expect(memory.requests).toHaveLength(64);
+  const restored: GoalWorldFactMemory = JSON.parse(JSON.stringify(memory));
+  retainGoalWorldFactMemory(restored, new Map([['second', new Set([`world:${fact.id}`])]]), 2);
+  expect(restored.requests.find(entry => entry.id === fact.id)?.planIds).toEqual(['second']);
+  expect(source(snapshot, restored, undefined, undefined, { thinkSequence: 3, planIds: () => ['second'] })(fact))
+    .toMatchObject({ state: 'pending', requestId: `world:${fact.id}`, requestedTick: snapshot.tick });
+});
+
+it('preserves recorded cleared-camp evidence while referenced and loses only proof after its pin is released', () => {
+  const game = scene(), snapshot = snapshotGame(game), memory = createGoalWorldFactMemory('us');
+  const campId = goalCampId(neutralCampExposure(snapshot).camps[0]!.memberIds), fact = goalFact({ kind: 'camp-cleared', campId });
+  expect(source(snapshot, memory, undefined, undefined, { thinkSequence: 1, planIds: () => ['mine-plan'] })(fact).state).toBe('unmet');
+  const guard = game.units.find(unit => unit.id === 'guard')!;
+  game.units = game.units.filter(unit => unit !== guard); // Absent group requires the previously observed identity.
+  memory.camps.push(...Array.from({ length: 65 }, (_, i) => goalCampId([`absent-${i}`])));
+  boundGoalWorldFactMemory(memory, 2);
+  expect(memory.camps).toHaveLength(64);
+  const restored: GoalWorldFactMemory = JSON.parse(JSON.stringify(memory));
+  retainGoalWorldFactMemory(restored, new Map([['mine-plan', new Set([worldCampCacheId(campId)])]]), 2);
+  expect(source(snapshotGame(game), restored, undefined, undefined, { thinkSequence: 3, planIds: () => ['mine-plan'] })(fact).state).toBe('met');
+  retainGoalWorldFactMemory(restored, new Map(), 4);
+  restored.camps.push(goalCampId(['newer-identity']));
+  restored.campUses!.push({ id: restored.camps.at(-1)!, lastUsedThink: 5 });
+  // Make the formerly pinned proof the least recently used item.
+  for (const id of restored.camps) if (id !== campId && !restored.campUses!.some(use => use.id === id))
+    restored.campUses!.push({ id, lastUsedThink: 5 });
+  boundGoalWorldFactMemory(restored, 5);
+  expect(restored.camps).not.toContain(campId);
+  expect(source(snapshotGame(game), restored)(fact)).toMatchObject({ state: 'unmet', reason: { code: 'camp-identity-unobserved' } });
+});
+
+it('reports pinned count and byte overflow without discarding proof, then recovers on release', () => {
+  const memory = createGoalWorldFactMemory('us');
+  memory.camps = Array.from({ length: 65 }, (_, i) => goalCampId([`guard-${i}`]));
+  memory.campUses = memory.camps.map(id => ({ id, lastUsedThink: 1, planIds: ['camp-plan'] }));
+  memory.requests = [{ id: 'large-fact'.repeat(2000), requestedTick: 0, lastUsedThink: 1, planIds: ['route-plan'] }];
+  const overflow = boundGoalWorldFactMemory(memory, 1);
+  expect(memory.camps).toHaveLength(65);
+  expect(memory.requests).toHaveLength(1);
+  expect(overflow.capacity.camps.pressure).toMatchObject({ kind: 'goal-world-camps', entries: 65, limitEntries: 64, planIds: ['camp-plan'] });
+  expect(overflow.capacity.payload.pressure).toMatchObject({ kind: 'goal-world-payload', limitBytes: 16384, planIds: ['camp-plan', 'route-plan'] });
+  const restored: GoalWorldFactMemory = JSON.parse(JSON.stringify(memory));
+  boundGoalWorldFactMemory(restored, 2);
+  expect(restored.capacity?.payload.overflowCount).toBe(1);
+  retainGoalWorldFactMemory(restored, new Map(), 3);
+  expect(restored.capacity?.payload.pressure).toBeUndefined();
+  expect(restored.capacity?.camps.pressure).toBeUndefined();
+  const { capacity: _diagnostics, ...payload } = restored;
+  expect(observationJsonBytes(payload)).toBeLessThanOrEqual(16384);
+  expect(restored.camps.length).toBeLessThanOrEqual(64);
+});
+
+it('uses deterministic LRU ties and counts the complete world payload including cache-use metadata', () => {
+  const memory = createGoalWorldFactMemory('us');
+  memory.requests = Array.from({ length: 65 }, (_, i) => ({ id: `fact-${String(i).padStart(2, '0')}`, requestedTick: 1 }));
+  const first = structuredClone(memory), second = structuredClone(memory);
+  second.requests.reverse();
+  expect(boundGoalWorldFactMemory(first, 1).evicted.map(entry => entry.id)).toEqual(['fact-00']);
+  expect(boundGoalWorldFactMemory(second, 1).evicted.map(entry => entry.id)).toEqual(['fact-00']);
+  memory.requests = Array.from({ length: 40 }, (_, i) => ({ id: `${i}-${'x'.repeat(450)}`, requestedTick: 1, lastUsedThink: 1 }));
+  const result = boundGoalWorldFactMemory(memory, 1), { capacity: _diagnostics, ...payload } = memory;
+  expect(result.bytes).toBe(observationJsonBytes(payload));
+  expect(result.bytes).toBeLessThanOrEqual(16384);
+  expect(result.evicted.length).toBeGreaterThan(0);
 });
