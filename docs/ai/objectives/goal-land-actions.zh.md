@@ -58,6 +58,8 @@
 
 `goalLandActionProvider` 只消费统一 `grounding.combatOptions(effect)`。端口缺失或候选 pending 时不私选军、不另跑战斗；可用候选声明精确 cohort 的能力前置，符号成员仍保留 output/binding，路线和战斗时间 pending 继续透传。测试使用明确的结构化评估端口验证这一绑定，没有将它当作完整战斗预测或题库结果。
 
+`hold-position` 的前置是精确 cohort 已在 post 的 `force-at`。前置成立后，在 start 建立 `route-controlled`，成员继续占用到 finish；它不等守点结束才交出控制事实，也不把同陆块可调用池当作到岗。移动到 post 由对应到岗前置和其 producer 的效果时刻证明，不能在 hold 本身再叠一次行军时间。
+
 ## 验证范围
 
 构造器和 grounding 测试包括真实原生训练付款/出生、真实农场完成后解锁骑士、同一共享 6144/Arrival 的水中船厂中心建址及公开 move→build 完工，以及 route/income 结构端口、JSON 续行、零预算和无账外原生导航调用。两份 actionsFor 的测试验证单原子候选、生产者 output 连接、数量部分贡献和精确战斗组绑定。它们不替代公开题的完整规划和执行检查；规划器分配接线及执行绑定仍需在同一共享事实源上继续验收。
