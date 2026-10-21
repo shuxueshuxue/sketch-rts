@@ -107,7 +107,7 @@ export function forecastForceAssembly(input: ForceAssemblyInput): ForceAssemblyF
     routes.set(key, route);
   }
   const excluded = canonicalProductionUses(input.unavailableProduction);
-  let paidPipelineUntil = now;
+  const paidPipelineUntil = new Map<string, number>();
   for (const building of [...snapshot.buildings].sort((a, b) => compare(a.id, b.id))) {
     if (building.owner !== owner || building.hp <= 0) continue;
     let next = 0;
@@ -115,6 +115,9 @@ export function forecastForceAssembly(input: ForceAssemblyInput): ForceAssemblyF
       const fromTicks = next;
       // Native updateTraining completes at most one job per building per tick.
       next += Math.max(1, Math.ceil(finite(job.remaining, 'job remaining')));
+      // Queue work occupies this producer even if its output has no known
+      // route, is a worker/upgrade, or belongs to another candidate.
+      paidPipelineUntil.set(building.id, Math.max(paidPipelineUntil.get(building.id) ?? now, now + next));
       if (!('unitKind' in job)) continue;
       const recruit = trainingRecruitPrototype(snapshot, building, job);
       if (!combatant(recruit)) continue;
@@ -129,7 +132,7 @@ export function forecastForceAssembly(input: ForceAssemblyInput): ForceAssemblyF
       const travelTicks = travel(route?.arrival ?? null, 'assembly-recruit-arrival-unknown', [building.id, job.id]);
       if (!route || travelTicks === null) continue;
       const readyTick = now + next + travelTicks;
-      paidPipelineUntil = Math.max(paidPipelineUntil, readyTick);
+      paidPipelineUntil.set(building.id, Math.max(paidPipelineUntil.get(building.id) ?? now, readyTick));
       paidUses.set(`${building.id}\0${job.id}`, use);
       add({ source: 'paid-job', unitId: null, buildingId: building.id, jobId: job.id, postId: route.postId, readyTick }, recruit);
     }
@@ -158,7 +161,7 @@ export function forecastForceAssembly(input: ForceAssemblyInput): ForceAssemblyF
   }
   // The historical rate includes ordinary queue births. Start its residual
   // after the explicit paid pipeline so those births cannot be counted twice.
-  const startsAt = Math.max(now, paidPipelineUntil, conditional?.startsAtTick ?? now);
+  const startsAt = Math.max(now, conditional?.startsAtTick ?? now);
   let readyTick = certainReadyTick, conditionalForce = 0;
   const producerIds = new Set<string>();
   const rates = (conditional?.producerRates ?? []).filter(rate => {
@@ -171,13 +174,14 @@ export function forecastForceAssembly(input: ForceAssemblyInput): ForceAssemblyF
   });
   const conditionalSegments: { fromTick: number; throughTick: number; forcePerTick: number; producerIds: string[] }[] = [];
   if (conditional && rates.length) {
-    const boundaries = [...new Set([startsAt, input.throughTick, ...forceCurve.map(point => point.tick),
+    const boundaries = [...new Set([startsAt, input.throughTick, ...paidPipelineUntil.values(), ...forceCurve.map(point => point.tick),
       ...excluded.filter(use => use.lane === 'training').flatMap(use => [now + use.fromTicks, now + use.throughTicks])])]
       .filter(tick => tick >= startsAt && tick <= input.throughTick).sort((a, b) => a - b);
     let accumulated = 0;
     for (let index = 0; index + 1 < boundaries.length; index++) {
       const fromTick = boundaries[index]!, throughTick = boundaries[index + 1]!;
-      const available = rates.filter(rate => !productionUsesOverlap([{ buildingId: rate.buildingId, lane: 'training',
+      const available = rates.filter(rate => fromTick >= (paidPipelineUntil.get(rate.buildingId) ?? now)
+        && !productionUsesOverlap([{ buildingId: rate.buildingId, lane: 'training',
         fromTicks: fromTick - now, throughTicks: throughTick - now }], excluded));
       const forcePerTick = available.reduce((sum, rate) => sum + rate.forcePerTick, 0);
       conditionalSegments.push({ fromTick, throughTick, forcePerTick, producerIds: available.map(rate => rate.buildingId).sort() });
@@ -189,6 +193,10 @@ export function forecastForceAssembly(input: ForceAssemblyInput): ForceAssemblyF
       for (const rate of available) if (rate.forcePerTick > 0) conditionalUses.push({ buildingId: rate.buildingId,
         lane: 'training', fromTicks: fromTick - now, throughTicks: throughTick - now });
     }
+    // The final certain jump is inclusive even though occupancy intervals are
+    // half-open. There is no following segment to check the horizon boundary.
+    if (certainForce + accumulated >= requiredForce && (readyTick === null || input.throughTick < readyTick))
+      readyTick = input.throughTick;
     if (readyTick !== null) {
       const predictedTick = readyTick;
       conditionalForce = Math.max(0, requiredForce - (forceCurve.filter(point => point.tick <= predictedTick).at(-1)?.force ?? 0));
