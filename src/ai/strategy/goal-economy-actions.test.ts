@@ -1,0 +1,154 @@
+import { describe, expect, it } from 'vitest';
+import { sketchScene } from '../../sdk/scene';
+import { BUILDING_DEFS, UNIT_DEFS, requiredSupplyCap } from '../../shared/catalog';
+import { snapshotGame, stepGame, tryPlayerCommand } from '../../shared/sim';
+import { createBuilding } from '../../shared/map';
+import { withNavigationAudit, withNavigationPhase } from '../../shared/navigation-audit';
+import type { GameSnapshot } from '../../shared/types';
+import { goalFact } from './goal-facts';
+import { declareGoalBuilding, declareGoalTraining, declareGoalWaitIncome } from './goal-economy-actions';
+import type { GoalFact, GoalFactObservation, GoalPlanningContext } from './goal-planner-types';
+import type { Situation, Target } from './types';
+import { combatRating } from '../policy/v6/strength';
+import { projectGoalResources } from './goal-resource-ledger';
+
+function nativeScene() {
+  const game = sketchScene('economic-action-native-rules').map('bareDuel').replaceDefaults()
+    .player('us', { race: 'grove' }).player('foe', { race: 'ember' }).playerState('us', { gold: 3000 })
+    .townHall('us', 350, 350, { id: 'hall' }).townHall('foe', 4000, 4000)
+    .building('us', 'barracks', 650, 350, { id: 'barracks' })
+    .building('us', 'stables', 650, 650, { id: 'stables' })
+    .worker('us', 950, 800, { id: 'worker' })
+    .farms('us', 8, 250, 1100).build().createGame();
+  game.scriptedVictory = true;
+  return game;
+}
+const at: Target = { landId: 'land:1', point: { x: 650, y: 350 } };
+const site: Target = { landId: 'land:1', point: { x: 950, y: 950 } };
+const worker = { ref: { kind: 'existing', entityId: 'worker' } as const,
+  from: { landId: 'land:1' as const, point: { x: 950, y: 800 } } };
+function context(snapshot: GameSnapshot, readFact: GoalPlanningContext['readFact'] = () => { throw Error('Unexpected fact query'); }): GoalPlanningContext {
+  // The declaration unit tests do not replace the shared fact source or test
+  // regression. Route/income tests below explicitly exercise its typed port.
+  const situation: Situation = { tick: snapshot.tick, owner: 'us', horizonTicks: 2400, lands: [], seas: [], assets: [], units: [],
+    opportunities: [], economy: { cashGold: snapshot.players.us!.gold, predictedIncomeGold: 0, horizonTicks: 2400, ledger: [] }, limitations: [] };
+  return { snapshot, situation, owner: 'us', tick: snapshot.tick, version: 'v9_summoner', readFact };
+}
+function road(fact: GoalFact, ticks = 15): GoalFactObservation {
+  return { fact, state: 'met', observedTick: 0, revision: 'road-1', reason: { code: 'shared-route', factIds: [fact.id], values: {} },
+    evidence: [], route: { distance: 150, ticks, points: [worker.from.point, site.point] } };
+}
+
+describe('grounded economic declarations against native rules', () => {
+  it('pays the exact native batch at submission and produces only symbolic output slots', () => {
+    const game = nativeScene(), snapshot = snapshotGame(game), before = JSON.stringify(snapshot);
+    const action = declareGoalTraining({ unitKind: 'footman', count: 2, producer: { kind: 'existing', entityId: 'barracks' },
+      at, byTick: 2000 }, context(snapshot))!;
+    expect(action.duration).toMatchObject({ state: 'met', value: UNIT_DEFS.footman.trainTime * 2 });
+    expect(action.flows).toContainEqual(expect.objectContaining({ resource: { kind: 'gold' }, delta: -200, at: 'start' }));
+    expect(action.flows).toContainEqual(expect.objectContaining({ resource: { kind: 'population-room' }, delta: -4, at: 'start' }));
+    expect(action.outputs).toEqual(['unit-0', 'unit-1']);
+    const goldBefore = game.players.us!.gold;
+    for (let i = 0; i < 2; i++) expect(tryPlayerCommand(game, 'us', { type: 'train', buildingId: 'barracks', unitKind: 'footman' }).ok).toBe(true);
+    expect(game.players.us!.gold).toBe(goldBefore - 200);
+    for (let tick = 0; tick < UNIT_DEFS.footman.trainTime * 2; tick++) stepGame(game);
+    expect(game.units.filter(unit => unit.owner === 'us' && unit.kind === 'footman')).toHaveLength(2);
+    expect(action.flows.find(flow => flow.resource.kind === 'force')!.delta).toBeCloseTo(
+      game.units.filter(unit => unit.owner === 'us' && unit.kind === 'footman').reduce((sum, unit) => sum + combatRating(unit), 0), 12);
+    expect(game.buildings.find(building => building.id === 'barracks')!.queue).toEqual([]);
+    expect(JSON.stringify(snapshot)).toBe(before);
+    expect(declareGoalTraining({ unitKind: 'footman', count: 2, producer: { kind: 'existing', entityId: 'barracks' }, at,
+      byTick: 2000 }, context(JSON.parse(before)))).toEqual(action);
+  });
+
+  it('keeps native tier capacity separate from free population; a real completed farm unlocks the knight', () => {
+    const game = nativeScene(), snapshot = snapshotGame(game);
+    const action = declareGoalTraining({ unitKind: 'knight', count: 1, producer: { kind: 'existing', entityId: 'stables' },
+      at: { ...at, point: { x: 650, y: 650 } }, byTick: 2400 }, context(snapshot))!;
+    expect(action.preconditions.map(fact => fact.predicate)).toContainEqual({ kind: 'supply-cap', minimum: requiredSupplyCap('knight') });
+    expect(action.preconditions.map(fact => fact.predicate)).toContainEqual({ kind: 'population-room', minimum: UNIT_DEFS.knight.supplyUsed, byTick: 2400 });
+    expect(game.players.us!.supplyCap).toBe(56);
+    expect(tryPlayerCommand(game, 'us', { type: 'train', buildingId: 'stables', unitKind: 'knight' }).ok).toBe(false);
+    expect(tryPlayerCommand(game, 'us', { type: 'build', unitId: 'worker', buildingKind: 'farm', ...site.point }).ok).toBe(true);
+    for (let ticks = 0; ticks < 400 && game.players.us!.supplyCap < requiredSupplyCap('knight'); ticks++) stepGame(game);
+    expect(game.players.us!.supplyCap).toBe(62);
+    expect(tryPlayerCommand(game, 'us', { type: 'train', buildingId: 'stables', unitKind: 'knight' }).ok).toBe(true);
+  });
+
+  it('uses the same train declaration for a transport and keeps a future producer symbolic', () => {
+    const snapshot = snapshotGame(nativeScene()), producer = { kind: 'output', actionId: 'a-build-yard', output: 'building' } as const;
+    const ship = declareGoalTraining({ unitKind: 'transport', count: 1, producer,
+      at: { seaId: 'sea:1', point: { x: 1000, y: 1000 } }, byTick: 5000 }, context(snapshot))!;
+    expect(ship.kind).toBe('train');
+    expect(ship.demands[0]!.resource).toEqual({ kind: 'production-lane', producer, lane: 'training' });
+    expect(ship.flows.find(flow => flow.resource.kind === 'gold')!.delta).toBe(-UNIT_DEFS.transport.cost);
+    expect(ship.preconditions.find(fact => fact.predicate.kind === 'spawn-exit')!.predicate).toMatchObject({ producer });
+    expect(declareGoalTraining({ unitKind: 'knight', count: 1, producer: { kind: 'existing', entityId: 'barracks' }, at, byTick: 5000 }, context(snapshot))).toBeNull();
+    snapshot.players.us!.race = 'ember';
+    expect(declareGoalTraining({ unitKind: 'knight', count: 1, producer, at, byTick: 5000 }, context(snapshot))).toBeNull();
+  });
+
+  it('charges a new foundation once, includes the shared walk, and emits capacity only on completion', () => {
+    const snapshot = snapshotGame(nativeScene()), action = declareGoalBuilding({ buildingKind: 'farm', at: site, worker, byTick: 5000 }, context(snapshot, road))!;
+    expect(action.duration).toMatchObject({ state: 'met', value: 15 + BUILDING_DEFS.farm.buildTime });
+    expect(action.flows).toContainEqual(expect.objectContaining({ resource: { kind: 'gold' }, delta: -120, at: 'start' }));
+    expect(action.flows).toContainEqual(expect.objectContaining({ resource: { kind: 'supply-cap' }, delta: 6, at: 'finish' }));
+    expect(action.effects).toContainEqual({ fact: goalFact({ kind: 'build-site', buildingKind: 'farm', at: site }), operation: 'invalidate', at: 'start' });
+    const foundation = createBuilding('started', 'us', 'farm', site.point.x, site.point.y, false);
+    foundation.buildProgress = 40; snapshot.buildings.push(foundation);
+    const resume = declareGoalBuilding({ buildingKind: 'farm', at: site, worker, byTick: 5000, foundationId: 'started' }, context(snapshot, road))!;
+    expect(resume.flows.find(flow => flow.resource.kind === 'gold')!.delta).toBe(0);
+    expect(resume.duration).toMatchObject({ state: 'met', value: 15 + foundation.buildTime - 40 });
+    expect(resume.preconditions.some(fact => fact.predicate.kind === 'gold' || fact.predicate.kind === 'build-site')).toBe(false);
+    expect(declareGoalBuilding({ buildingKind: 'farm', at: { ...site, landId: 'land:2' }, worker, byTick: 5000 }, context(snapshot, road))).toBeNull();
+    expect(declareGoalBuilding({ buildingKind: 'fortifiedTower', at: site, worker, byTick: 5000 }, context(snapshot, road))).toBeNull();
+  });
+
+  it('retains a pending construction route instead of zero walk or an impossible site', () => {
+    const ctx = context(snapshotGame(nativeScene()), fact => ({ ...road(fact), state: 'pending', requestId: 'route-request', requestedTick: 0 }));
+    const action = declareGoalBuilding({ buildingKind: 'shipyard', at: site, worker, byTick: 5000 }, ctx)!;
+    expect(action.duration).toMatchObject({ state: 'pending', requestIds: ['route-request'] });
+    expect(action.preconditions.some(fact => fact.predicate.kind === 'route')).toBe(true);
+    expect(action.preconditions.some(fact => fact.predicate.kind === 'build-site')).toBe(true);
+  });
+
+  it('credits only incremental, supported income and never substitutes current cash for forecast epoch', () => {
+    const snapshot = snapshotGame(nativeScene()), effect = goalFact({ kind: 'gold', minimum: 400, byTick: 500 });
+    const read = (fact: GoalFact): GoalFactObservation => ({ ...road(fact), availableTick: 300,
+      goldForecast: { epoch: snapshot.tick, currentFreeGold: 325, goldAtDeadline: 450, earliestTick: 300, incomeGoldPerTick: .25,
+        factIds: ['income'], source: { kind: 'income', id: 'shared-income-us', segments: [{ fromTick: 0, throughTick: 500, ratePerTick: .25 }] } } });
+    const action = declareGoalWaitIncome(effect, context(snapshot, read))!;
+    expect(action.duration).toMatchObject({ state: 'met', value: 300 });
+    expect(action.flows).toEqual([{ resource: { kind: 'gold' }, delta: 75, at: 'finish', factIds: ['income'],
+      source: { kind: 'income', id: 'shared-income-us', segments: [{ fromTick: 0, throughTick: 300, ratePerTick: .25 }] } }]);
+    expect(declareGoalWaitIncome(effect, context({ ...snapshot, tick: 1 }, read))).toBeNull();
+    const noIncome = (fact: GoalFact): GoalFactObservation => ({ ...read(fact), goldForecast: { ...read(fact).goldForecast!, goldAtDeadline: 350, earliestTick: null,
+      source: { kind: 'income', id: 'shared-income-us', segments: [{ fromTick: 0, throughTick: 100, ratePerTick: .25 }] } } });
+    const partial = declareGoalWaitIncome(effect, context(snapshot, noIncome))!;
+    expect(partial.duration).toMatchObject({ state: 'met', value: 100 });
+    expect(partial.flows[0]!.delta).toBe(25);
+    expect(partial.effects[0]!.fact.predicate).toEqual({ kind: 'gold', minimum: 350, byTick: 500 });
+    const stopped = (fact: GoalFact): GoalFactObservation => ({ ...read(fact), goldForecast: { ...read(fact).goldForecast!, goldAtDeadline: 325, earliestTick: null } });
+    expect(declareGoalWaitIncome(effect, context(snapshot, stopped))).toBeNull();
+    const lower = declareGoalWaitIncome(goalFact({ kind: 'gold', minimum: 350, byTick: 500 }), context(snapshot, read))!;
+    const projection = projectGoalResources({ epoch: 0, initial: [{ resource: { kind: 'gold' }, quantity: 325, asOfTick: 0, factIds: [] }],
+      actions: [{ action: lower, startTick: 0, finishTick: 100 }, { action, startTick: 0, finishTick: 300 }] });
+    expect(projection.state).toBe('met');
+    if (projection.state !== 'pending') expect(projection.balances.find(balance => balance.resource.kind === 'gold')!.quantity).toBe(400);
+  });
+
+  it('uses typed facts without native routing or mutating the scene', () => {
+    const snapshot = snapshotGame(nativeScene()), before = JSON.stringify(snapshot), events: string[] = [];
+    const ctx = context(snapshot, road);
+    withNavigationAudit(event => { events.push(event.operation); throw Error('Unmetered declaration navigation'); },
+      () => withNavigationPhase('strategy-planning', () => {
+        const build = declareGoalBuilding({ buildingKind: 'townHall', at: site, worker, byTick: 5000 }, ctx)!;
+        const extra = goalFact({ kind: 'camp-cleared', campId: 'camp-binding' });
+        const alias = declareGoalBuilding({ buildingKind: 'townHall', at: site, worker, byTick: 5000, additionalPreconditions: [extra] }, ctx)!;
+        expect(alias.id).not.toBe(build.id);
+        expect(declareGoalTraining({ unitKind: 'worker', count: 1, producer: { kind: 'existing', entityId: 'hall' }, at, byTick: 5000 }, ctx)).not.toBeNull();
+      }));
+    expect(events).toEqual([]);
+    expect(JSON.stringify(snapshot)).toBe(before);
+  });
+});
