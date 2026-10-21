@@ -1,6 +1,7 @@
 import { bodyMass } from '../../shared/physical-body';
 import { isTransportKind } from '../../shared/transport-role';
 import { goalFact, goalValueKey } from './goal-facts';
+import { declareGoalGarrison } from './goal-garrison-action';
 import { declareGoalAssembly, declareGoalCampClearing, declareGoalDefense, declareGoalEvacuation,
   declareGoalForceTransport, declareGoalShoreClearing, declareGoalTransportReposition,
   declareGoalWorkerTransport, type GoalNavalEstimates, type GoalNavalMember } from './goal-naval-actions';
@@ -28,7 +29,7 @@ export const goalNavalActionProvider: GoalActionProvider = {
   id: 'goal:naval-and-defense',
   actionsFor(effect, context) {
     const predicate = effect.predicate;
-    if (!['gold', 'camp-cleared', 'shore-safe', 'site-safe', 'assets-safe', 'force-at', 'force-available', 'worker-at', 'transport-at'].includes(predicate.kind)) return [];
+    if (!['gold', 'camp-cleared', 'shore-safe', 'site-safe', 'garrison-ready', 'assets-safe', 'force-at', 'force-available', 'worker-at', 'transport-at'].includes(predicate.kind)) return [];
     const candidates = context.grounding?.combatOptions?.(effect);
     if (!candidates || candidates.state !== 'met') return [];
     const actions: GoalActionDeclaration[] = [];
@@ -42,6 +43,9 @@ export const goalNavalActionProvider: GoalActionProvider = {
         at: option.target, routes: option.preconditions });
       else if (predicate.kind === 'gold' && option.campId) action = declareGoalCampClearing({ ...base, campId: option.campId,
         at: option.target, routes: option.preconditions });
+      else if (predicate.kind === 'garrison-ready') action = declareGoalGarrison({ ...base, mineId: predicate.mineId,
+        at: predicate.at, post: option.target, throughTick: option.byTick, requiredForce: option.requiredForce,
+        routes: option.preconditions, ...(option.effectDelayTicks ? { effectDelayTicks: option.effectDelayTicks } : {}) });
       else if (predicate.kind === 'site-safe') action = declareGoalDefense({ ...base, site: predicate.site,
         ...(option.effectDelayTicks ? { effectDelayTicks: option.effectDelayTicks } : {}),
         throughTick: predicate.throughTick, requiredForce: option.requiredForce, routes: option.preconditions });

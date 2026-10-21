@@ -124,7 +124,10 @@ export function declareGoalAssembly(input: GoalNavalCohort & Readonly<{
   const forceAvailable = goalFact({ kind: 'force-available', at: input.from, minimum: force,
     metric: 'combat-rating', cohort, byTick: input.byTick });
   const effects = [establish(goalFact({ kind: 'force-at', at: input.at, minimum: force,
-    metric: 'combat-rating', cohort, byTick: input.byTick }))];
+    metric: 'combat-rating', cohort, byTick: input.byTick })),
+  establish(goalFact({ kind: 'force-at', at: input.at,
+    minimum: assessAllocatedForce(input.owner, units, { metric: 'field-strength', requiredForce: 0 }).force,
+    metric: 'field-strength', cohort, byTick: input.byTick }))];
   if (input.campId) {
     const camp = resolveGoalCamp(input.snapshot, input.campId);
     if (camp.status !== 'present') return null;
@@ -290,7 +293,10 @@ function transport(input: GoalTransportInput, workers: boolean): GoalActionDecla
   effects.push(...engineers.map(unit => establish(goalFact({ kind: 'worker-at', at: option.to, count: 1,
     worker: reference(input, unit), byTick: input.byTick }))));
   if (fighters.length) effects.push(establish(goalFact({ kind: 'force-available', at: option.to, minimum: rating(input.snapshot, fighters),
-    metric: 'combat-rating', cohort: fighters.map(unit => reference(input, unit)), byTick: input.byTick })));
+    metric: 'combat-rating', cohort: fighters.map(unit => reference(input, unit)), byTick: input.byTick })),
+  establish(goalFact({ kind: 'force-available', at: option.to,
+    minimum: assessAllocatedForce(input.owner, fighters, { metric: 'field-strength', requiredForce: 0 }).force,
+    metric: 'field-strength', cohort: fighters.map(unit => reference(input, unit)), byTick: input.byTick })));
   const resources: GoalActionDeclaration['demands'] = [...demands(input, [...new Map([...units, ...dependents].map(unit => [unit.id, unit])).values()]
     .sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0)),
     { resource: { kind: 'entity-control', entity: option.transport }, quantity: 1, from: 'start', until: 'finish' },

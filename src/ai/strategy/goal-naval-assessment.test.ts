@@ -39,7 +39,7 @@ function campFixture(): GoalCampCombatInput {
 }
 function defenseFixture(): GoalDefenseCombatInput {
  const game=sketchScene('shared-defense-option-assessment').map('bareDuel').replaceDefaults()
-  .player('us',{team:'us'}).player('foe',{team:'foe'}).townHall('us',1400,1400,{id:'hall'})
+  .player('us',{team:'us'}).player('foe',{team:'foe'}).townHall('us',1400,1400,{id:'hall'}).goldMine('mine',1680,1400,10000)
   .unit('us','footman',1100,1400,{id:'fighter-a',hp:35}).unit('us','archer',1100,1420,{id:'fighter-b',hp:30})
   .unit('foe','footman',1500,1400,{id:'foe',order:{type:'attack',targetId:'hall'}}).build().createGame();
  const snapshot=snapshotGame(game),situation=evaluateSituation(snapshot,'us',createAiPolicyMemory());
@@ -111,6 +111,13 @@ describe('pure shared naval combat assessment',()=>{
    routes:result.preconditions,...(result.effectDelayTicks?{effectDelayTicks:result.effectDelayTicks}:{}),estimates:result})!;
   expect(action.effects[0]!.at).toEqual({offsetTicks:20});expect(action.demands.every(d=>d.until==='finish')).toBe(true);
   expect(JSON.stringify(f)).toBe(before);
+ });
+ it('assesses a garrison at its explicit safe post while keeping the logical mine and protection deadline separate',()=>{
+  const f=defenseFixture(),target={...f.target,entityId:'mine',point:{x:1680,y:1400}},post={...f.from,point:{x:1200,y:1300}};
+  const result=only(strict(()=>assessGoalDefenseCombatOption({...f,target,post,effect:goalFact({kind:'garrison-ready',mineId:'mine',at:target})})));
+  expect(result.target).toEqual(post);expect(result.target).not.toEqual(target);expect(result.effectDelayTicks).toEqual(f.arrivalTicks);
+  expect(result.duration).toMatchObject({state:'met',value:f.byTick-f.snapshot.tick});expect(result.requiredForce).toBe(1.75);
+  expect(result.successProbability.state).toBe('met');expect(result.cost.state).toBe('met');
  });
  it('keeps unknown defense requirements and threat shapes pending instead of relabeling field-strength or omitting an enemy',()=>{
   const f=defenseFixture();expect(assessGoalDefenseCombatOption({...f,requiredCombatRating:pending})).toEqual(pending);

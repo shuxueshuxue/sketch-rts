@@ -64,3 +64,9 @@ provider 测试用真实场景快照和真实 Situation，加固定的已发布�
 运输直接使用已解析的船、组、水陆点执行串行 move → board → unload，不为 aboard origin 填假原岸或自建 VoyageAllocation。首条 move 保留，未观察到船进入容差前不下 board；已确认的泊位漂移成为顶层 failed。所有装载、航行、卸载进度来自实际快照，全部目标成员实际上岸且实际 cargo 已卸空后才完成。抢占反馈使用现有 handoff ACK，保留状态，由唯一框架决定后续资源和进度。
 
 执行回归使用真实原生快照和显式现有 grant，覆盖严格导航闸、pending/unreachable、extra lease 不扩选组、空地点保护、原 4180 公开登船链、真实 aboard 卸载、清岸与抢占。它们验证领域 adapter/native 协议；统一 source → 规划器 → 分配器 → gateway 的公开题计划/执行检查仍须在共同接线后单独验收。
+
+集结和运输同时声明同一所选组的 `field-strength` 世界效果，数值使用既有 `assessAllocatedForce(..., {metric:'field-strength'})` 整组字段。集结是精确 post 的 force-at，运输是目标陆块 pool 的 force-available；符号成员仍保持原引用。该度量不进入可加 combat-rating 库存，不借用其他同陆块单位，也不把运输到岸当作已经走到任意 post。
+
+`declareGoalGarrison` 是独立 garrison-ready 的 defend achiever。它要求逻辑矿对应的 hall-complete 作为世界前置，同时保留精确守军、实际安全 post、路线、到岗 offset 和 throughTick。garrison-ready 在实际到岗 offset 激活，守军占用维持至保护窗终点；不同矿的义务进入不同 action ID。执行参数的 `at` 是守点，`garrisonMineId` / `garrisonAt` 是逻辑矿绑定，`cohort` 与 `throughTick` 是同一个持续义务。
+
+该声明不把厅完工或命令 ACK 当作守军证明。中央 world reader 必须另外核实厅真实完成、精确组实际到岗、有效 defend grant 和实体 lease 覆盖 throughTick、当前整组保护能力；缺证明保持 pending/unmet，并保留活动守军义务。声明/provider 测试只验证这些前置、效果、单位和时钟合同，未宣称中央正式证明或完整扩张执行已通过。
