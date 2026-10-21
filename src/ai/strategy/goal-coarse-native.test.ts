@@ -80,6 +80,11 @@ it('uses the original opening balances for every prefix of the selected far-ship
       expect(projection.state).toBe('met');
       if (projection.state !== 'pending') expect(projection.deficits).toEqual([]);
     }
+    const camp = plan.actions.find(node => node.declaration.kind === 'clear-camp');
+    const worker = plan.actions.find(node => node.declaration.kind === 'transport-worker');
+    expect(camp).toBeDefined(); expect(worker).toBeDefined();
+    expect(worker!.startTick).toBeGreaterThanOrEqual(camp!.finishTick!);
+    expect(worker!.declaration.preconditions.some(fact => fact.predicate.kind === 'site-safe')).toBe(true);
     expect(input.work.receipt.used).toBeLessThanOrEqual(6144);
   });
   expect(JSON.stringify(snapshot)).toBe(before);

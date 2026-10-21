@@ -17,6 +17,7 @@ import { allocationResponseCandidates } from './allocation-eligibility';
 import { currentSiteThreatIsClear } from './protection-activation';
 import { assemblyPostArrivalId, assemblyPostForUnit } from './assembly-facts';
 import { assessForceAssemblyPosts } from './assembly-posts';
+import { continueGoalMethod } from './goal-execution-continuation';
 
 /** A fixed prefix bound limits speculative group quotes, not committed forces.
  * Every prefix is repriced as a whole group, including camp-force interactions. */
@@ -180,7 +181,8 @@ function currentEta(unit: DecisionFacts<SituationUnit>, method: ExecutableMethod
     reason: { code: 'reason' in arrival ? arrival.reason.code : arrival.unmet[0]?.code ?? 'arrival-prerequisite', factIds: [unit.id, actionId], values: {} } };
 }
 function assignMethod(input: StrategyAllocationInput, memory: StrategyAllocationMemory, offer: Offer): StrategyAllocationMemory {
-  const { snapshot, situation } = input, tick = snapshot.tick, method = clean(offer.method), objective = offer.objective;
+  const { snapshot, situation } = input, tick = snapshot.tick,
+    method = continueGoalMethod(clean(offer.method), memory), objective = offer.objective;
   const executions = { ...memory.executions };
   let generation = memory.nextActionGeneration;
   const restart = !!memory.objectives[objective.id] && terminal(memory.objectives[objective.id]!.status);
