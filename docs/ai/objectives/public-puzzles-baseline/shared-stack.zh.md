@@ -1,6 +1,6 @@
 # 共同规划器栈上的题库接线
 
-#585 已随共享规划器栈 rebase 到 main `d36d0543b04077b44690bf4dae9dabb92f5a34a5`，当前共享基底为 `feat/strategy-goal-planner` 的 `8ada3fbe94f3beeec3e7a288ea8758133c53722b`，保留真实搜索导出绑定。
+#585 已随共享规划器栈 rebase 到 main `d36d0543b04077b44690bf4dae9dabb92f5a34a5`，当前共享基底为 `feat/strategy-goal-planner` 的 `026799d7`，绑定真实搜索与 current-world reader 导出。
 本页记录正式合同接线和共同栈验证；[历史 main 报告](report.zh.md)中的 8/33 只属于原来的 `d4ca2668` 生产代码，不是共同栈的成绩。
 
 ## 判法使用的正式合同
@@ -16,7 +16,7 @@
 ## 尚未实现的能力与开启方法
 
 `goal-planner.ts/planGoals(input)` 已由 32 在 `acb13825` 导出。[planner-binding.ts](../../../../src/ai/strategy/puzzles/planner-binding.ts) 静态导入这个真实函数，绑定测试检查函数引用相同，不再把搜索本身当作可缺省能力。
-`goal-world-facts.ts/createGoalFactReader(...)` 尚不存在；其能力仍按实际模块和导出检测，缺失原因写入测试名称。文件存在但导出不是函数会直接报错。
+`goal-world-facts.ts/createGoalFactReader(input: GoalWorldFactInput): GoalFactReader` 已在 `026799d7` 导出，题库同样静态绑定，并检查函数引用相同。输入需要同次 owner-think 的 Situation、ports、memory 等，不能用人工事实替代；未来投影、完整安全和海上出生能力尚未闭合。
 
 原生接线文件 `puzzles/goal-planner-native.ts` 也尚未建立，需要真实 source/owner-think 接口确定后实现以下三个口：
 
@@ -86,6 +86,16 @@ A100 / Node 24.22.0，最终代码 `370e24be82b50d3a45bb4f4e2b5e993acc2ae5d1`：
 本轮没有改动相对共享基底的生产代码，也未运行全量 src。22 项仍等待真实 source 和 owner-think 装配。
 原始日志、退出码、源码哈希与初测源码 bundle 见 [main-rebase.evidence.json](main-rebase.evidence.json)。
 
+## current-world reader 绑定（026799d7）
+
+接线代码 `d1c92dc5de454d302225a775f24b06f6d0da1999`，A100 / Node 24.22.0：
+根与 tools/ai tsc 均 exit 0；reader、共享导出绑定与 SDK 边界 3 文件、12 项通过，exit 0。
+严格冷帧 smoke 仍预期 exit 1，两项只报原生接线缺失，真实 reader 不再作为缺省能力。
+
+本轮不重跑人工解，也不把 reader 自带的原生营地/路由合同测试计作公开题库通过。22 项计划/执行验收仍未开启。
+同 Situation、同 query、同 FactWorkQueue 的 owner-think 装配，以及未来投影、完整安全/海上出生能力仍等共享栈完成。
+原始日志与绑定哈希见 [world-reader.evidence.json](world-reader.evidence.json)。此前 main rebase 源码保留在 `archive/public-puzzles-main-rebase-20261021`。
+
 重跑可行性与合同检查：
 
 ```sh
@@ -93,4 +103,4 @@ SKETCH_PUZZLE_WITNESS=1 npx vitest run src/ai/strategy/puzzles src/ai/strategy/g
 ```
 
 重模拟继续放 A100/mac1。共同栈上的 witness 脚本输出 `mainBaseline: null`；历史三个房间流派要在已归档分支 `archive/public-puzzles-main-baseline-20261021` 或原始证据的源码提交上重跑。
-本 PR 继续保持 draft，等真实事实源与运行接线齐备后再作为第一道验收。只有搜索函数已导出，不代表真实题库已经通过。
+本 PR 继续保持 draft，等原生 owner-think 装配与完整事实能力齐备后再作为第一道验收。搜索和 reader 函数已导出，不代表真实题库已经通过。
