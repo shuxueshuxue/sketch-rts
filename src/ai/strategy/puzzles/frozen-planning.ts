@@ -42,7 +42,7 @@ export function runFrozenPuzzlePlan(puzzle: PublicPuzzleCase, world: PuzzleWorld
     for (let think = 1; think <= PUBLIC_PUZZLE_MAX_THINKS; think++) {
       let calls = 0, scoped: string | undefined, hash: string | null = null, failure: unknown;
       const record: PuzzleThinkEvidence = { think, calls: 0, snapshotUntouched: true,
-        passed: false, error: null, planHash: null, work: null };
+        passed: false, error: null, planHash: null, work: null, memoryThinkSequence: null };
       thinks.push(record);
       try {
         publicPuzzlePlanner.withInput(snapshot, world.owner, memory, input => {
@@ -69,7 +69,11 @@ export function runFrozenPuzzlePlan(puzzle: PublicPuzzleCase, world: PuzzleWorld
       } finally {
         record.calls = calls; record.planHash = hash; record.error = puzzleFailure(failure);
         record.snapshotUntouched = JSON.stringify(snapshot) === before;
-        record.work = memory.strategy?.observation.factWork ? structuredClone(memory.strategy.observation.factWork) : null;
+        const observation = memory.strategy?.observation;
+        record.memoryThinkSequence = observation?.thinkSequence ?? null;
+        // An assembly failure can leave the previous think's receipt in
+        // memory. It is not a completed receipt for this attempted think.
+        record.work = observation?.factWork?.thinkSequence === think ? structuredClone(observation.factWork) : null;
         if (scoped !== undefined) record.scoped = scoped;
         if (process.env.SKETCH_PUZZLE_PLAN_EVIDENCE) record.memoryAfter = JSON.stringify(memory);
       }
