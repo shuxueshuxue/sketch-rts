@@ -5,6 +5,10 @@ import { BUILDING_DEFS, UNIT_DEFS } from '../../../shared/catalog';
 import { boardingBerth } from '../../../shared/naval';
 import { neutralCampExposure } from '../../situation/neutral-camp-exposure';
 import { checkCommandLegality } from '../../../shared/sim/command-validation';
+import { withNavigationAudit, withNavigationPhase } from '../../../shared/navigation-audit';
+import { createAiPolicyMemory } from '../../memory';
+import { currentFactWork, STRATEGY_FACT_WORK_PER_THINK } from '../fact-work';
+import { situationConstructionCount } from '../situation';
 import { legalBuildingSite } from './world';
 import { checkPuzzlePlan } from './planner-checks';
 import { publicPuzzlePlanner } from './planner-binding';
@@ -60,17 +64,49 @@ export function registerPublicPuzzleTests(key: PuzzleKey) {
         expect(isWalkable(world.game.map, 2368, 2944)).toBe(true);
       }
     });
+    it('native owner-think scope diagnostic only (not puzzle acceptance)', () => {
+      const world = puzzle.create(), snapshot = snapshotGame(world.game), before = JSON.stringify(snapshot);
+      const memory = createAiPolicyMemory(), previous = currentFactWork(), count = situationConstructionCount();
+      let calls = 0;
+      withNavigationAudit(event => {
+        if (event.phase === 'strategy-planning' && !event.authorization) throw new Error(event.operation);
+      }, () => withNavigationPhase('strategy-planning', () => publicPuzzlePlanner.withGoalPlannerInput({
+        snapshot, owner: world.owner, version: 'v9_knight', memory,
+        // No collector or task valuation exists yet. An empty request list
+        // exercises assembly/search scope only, never a public-puzzle verdict.
+        goals: [],
+      }, input => {
+        calls++;
+        expect(input.context.snapshot).toBe(snapshot);
+        expect(input.context.owner).toBe(world.owner);
+        expect(input.context.situation.tick).toBe(snapshot.tick);
+        expect(currentFactWork()).toBe(input.work);
+        expect(input.work.receipt.limit).toBe(STRATEGY_FACT_WORK_PER_THINK);
+        const output = publicPuzzlePlanner.planGoals(input);
+        expect(output.readyActions, 'empty requests cannot grant or issue commands').toEqual([]);
+      })));
+      expect(calls).toBe(1);
+      expect(situationConstructionCount() - count).toBe(1);
+      expect(currentFactWork()).toBe(previous);
+      expect(memory.strategy!.observation.factWork!.used).toBeLessThanOrEqual(STRATEGY_FACT_WORK_PER_THINK);
+      expect(memory.strategyAllocation).toBeUndefined();
+      expect(JSON.stringify(snapshot), 'diagnostics cannot change the real cold frame').toBe(before);
+    });
     const required = process.env.SKETCH_REQUIRE_GOAL_PLANNER === '1';
-    const coldReady = publicPuzzlePlanner.createInput
+    const coldReady = publicPuzzlePlanner.withInput
       && (key !== 'navy-zero' || publicPuzzlePlanner.allocation);
-    const executionReady = publicPuzzlePlanner.createInput && publicPuzzlePlanner.createExecution;
+    const executionReady = publicPuzzlePlanner.createExecution;
     const missing = publicPuzzlePlanner.unavailable.join('; ');
     it.skipIf(!coldReady && !required)(`cold-frame dependency graph: real planGoals entry [${coldReady ? 'ready' : missing}]`, () => {
       expect(coldReady, missing).toBeTruthy();
       const world = puzzle.create(), snapshot = snapshotGame(world.game), before = JSON.stringify(snapshot);
-      const input = publicPuzzlePlanner.createInput!(snapshot, world.owner);
-      const output = publicPuzzlePlanner.planGoals(input);
-      checkPuzzlePlan(puzzle, world, { input, output, allocation: publicPuzzlePlanner.allocation?.(input, output) ?? null });
+      let calls = 0;
+      publicPuzzlePlanner.withInput!(snapshot, world.owner, input => {
+        calls++;
+        const output = publicPuzzlePlanner.planGoals(input);
+        checkPuzzlePlan(puzzle, world, { input, output, allocation: publicPuzzlePlanner.allocation?.(input, output) ?? null });
+      });
+      expect(calls, 'search and verdict must execute inside the native physical scope').toBe(1);
       expect(JSON.stringify(snapshot), 'real planning cannot change the cold frame').toBe(before);
     });
     it.skipIf(!executionReady && !required)(`goal-planner execution through the real runtime [${executionReady ? 'ready' : missing}]`, () => {
