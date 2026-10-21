@@ -10,7 +10,7 @@ import { createAiPolicyMemory } from '../../memory';
 import { currentFactWork, STRATEGY_FACT_WORK_PER_THINK } from '../fact-work';
 import { situationConstructionCount } from '../situation';
 import { legalBuildingSite } from './world';
-import { runFrozenPuzzlePlan } from './frozen-planning';
+import { PUBLIC_PUZZLE_MAX_THINKS, runFrozenPuzzlePlan } from './frozen-planning';
 import { publicPuzzlePlanner } from './planner-binding';
 import { PUBLIC_PUZZLES, type PuzzleKey } from './scenes';
 import { runPublicPuzzle } from './run';
@@ -103,7 +103,7 @@ export function registerPublicPuzzleTests(key: PuzzleKey) {
     const required = process.env.SKETCH_REQUIRE_GOAL_PLANNER === '1';
     const executionReady = publicPuzzlePlanner.createExecution;
     const missing = publicPuzzlePlanner.unavailable.join('; ');
-    it('frozen-world dependency graph: persistent memory and at most ten native thinks', () => {
+    it(`frozen-world dependency graph: persistent memory and at most ${PUBLIC_PUZZLE_MAX_THINKS} native thinks`, () => {
       const result = runFrozenPuzzlePlan(puzzle, puzzle.create());
       if (result.finalFailure !== undefined) throw result.finalFailure;
       expect(result.stable, 'the final two actual plan graphs must agree, in addition to passing the original verdict').toBe(true);
