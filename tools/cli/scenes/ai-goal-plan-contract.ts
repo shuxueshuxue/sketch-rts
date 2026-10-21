@@ -10,7 +10,7 @@ export default async function(s: Scene) {
   const {createDebugReplayTrace}=await load('src/shared/replay.ts');
   const {diffAiPlan}=await load('src/ai/plan-stream.ts');
   const fixture=goalNavyFixture(),lifecycle=createRoomLifecycleHost();
-  lifecycle.createRoom({id:'goal-contract',host:{id:'host',name:'Contract sample'},mapId:'twoShores'});
+  lifecycle.createRoom({id:'goal-contract',host:{id:'host',name:'Contract sample'},mapId:'twoShores',humanCount:1,aiCount:3});
   const {room}=lifecycle.startRoom('goal-contract');
   const replay=createDebugReplayTrace({id:'goal-contract',label:'人工 GoalPlan 契约样例 · 非真实 AI 决策',
     initialSave:createSaveGameRecord(fixture.game,room,{id:'goal-contract'})});
