@@ -33,7 +33,8 @@ export type GoalFactPredicate =
   | Readonly<{ kind: 'population-room'; minimum: number; byTick: number }>
   | Readonly<{ kind: 'build-site'; buildingKind: BuildingKind; at: Target }>
   | Readonly<{ kind: 'spawn-exit'; producer: GoalEntityReference; unitKind: UnitKind; toward: Target }>
-  | Readonly<{ kind: 'route'; mover: 'land' | 'sea'; from: Target; to: Target; actor?: GoalEntityReference }>
+  | Readonly<{ kind: 'route'; mover: 'land' | 'sea'; from: Target; to: Target; actor?: GoalEntityReference;
+      fromHeading?: number; toHeading?: number }>
   // Callable mover-region pool (land troops / sea ships), not exact arrival.
   | Readonly<{ kind: 'unit-available'; unitKind: UnitKind; count: number; at: Target; byTick: number }>
   | Readonly<{ kind: 'building-complete'; buildingKind: BuildingKind; at: Target; building?: GoalEntityReference }>
@@ -73,6 +74,12 @@ export type GoalPlanningContext = Readonly<{
   /** Same shared fact sources; no provider may invent a build/shore point or
    * call native route selection when this port is absent/pending. */
   grounding?: GoalGroundingReader;
+  /** The same fact source evaluates explicit planned output references and
+   * moved cohorts. It never treats a projected entity as currently available. */
+  readProjectedFact?: (fact: GoalFact, projection: Readonly<{
+    actions: readonly Readonly<{ action: GoalActionDeclaration; startTick: number; finishTick: number }>[];
+    bindings: Readonly<Record<string, GoalEntityReference>>;
+  }>) => GoalFactObservation;
 }>;
 export type GoalEstimate<T> = Readonly<{ state: 'met'; value: T; factIds: readonly string[] }>
   | Readonly<{ state: 'pending'; requestIds: readonly string[]; reason: AllocationReason }>
@@ -226,6 +233,8 @@ export type GoalPlanCacheEntry = Readonly<{
   goalKey: string; declarationRevision: string;
   dependencies: readonly Readonly<{ factId: string; revision: string; state: GoalFactState }>[];
   plan: GoalPlan;
+  /** Finite declarative frontier only; no callbacks, snapshots or task state. */
+  continuation?: import('./goal-planner').GoalSearchMemory;
 }>;
 export type GoalPlannerCache = Readonly<{ version: 1; owner: PlayerId; entries: readonly GoalPlanCacheEntry[] }>;
 export type GoalPlannerInput = Readonly<{
