@@ -35,6 +35,9 @@ export type GoalFactPredicate =
   /** Native gathering/retreat geometry for this camp. This predicate does not
    * assert that the camp's combat exposure is absent during the attack. */
   | Readonly<{ kind: 'camp-staging'; campId: string; at: Target; cohort?: readonly GoalEntityReference[] }>
+  /** A legal gathering point, distinct from a promise that no hostile can
+   * expose its occupants. Route/battle risk is priced separately. */
+  | Readonly<{ kind: 'assembly-post'; at: Target; cohort?: readonly GoalEntityReference[] }>
   | Readonly<{ kind: 'hall-complete'; mineId: string; at: Target }>
   | Readonly<{ kind: 'garrison-ready'; mineId: string; at: Target }>
   | Readonly<{ kind: 'site-safe'; site: Target; throughTick: number }>
@@ -219,6 +222,9 @@ export type GoalCombatOption = Readonly<{
   campId?: string;
   /** Actual source pose/region, distinct from the requested destination post. */
   from?: Target;
+  /** On-post prerequisite for a land atom; target retains the actual enemy or
+   * world-effect location. March to this point belongs to assemble. */
+  post?: Target;
   duration: GoalEstimate<number>; cost: GoalEstimate<readonly GoalActionCost[]>; successProbability: GoalEstimate<number>;
   /** Arrival/activation delay inside a sustained action. Its world effect can
    * become available before its continuing protection lease is released. */
