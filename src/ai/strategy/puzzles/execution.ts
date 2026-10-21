@@ -52,9 +52,10 @@ export function trackPuzzle(puzzle: PublicPuzzleCase, world: PuzzleWorld) {
     mark('hall-complete', hallAt(world.mine));
     mark('beach-cleared', !!world.beachGuards.length && !alive(world.beachGuards).length);
     mark('defended', !!world.attackers.length && !alive(world.attackers).length);
-    mark('army-returned', army.some(u => visitedIsland.has(u.id) && physicallyOnLand(world, u, world.home)));
+    const backAtMine = (u: Unit) => physicallyOnLand(world, u, world.home) && Math.hypot(u.x - world.home.x, u.y - world.home.y) <= 450;
+    mark('army-returned', puzzle.key === 'defense-window' && army.some(u => visitedIsland.has(u.id) && backAtMine(u)));
     const deployed = alive(world.army).filter(u => visitedIsland.has(u.id));
-    mark('army-all-returned', deployed.length > 0 && deployed.every(u => physicallyOnLand(world, u, world.home)));
+    mark('army-all-returned', puzzle.key === 'defense-window' && deployed.length > 0 && deployed.every(backAtMine));
     mark('local-cleared', !!world.localGuards.length && !alive(world.localGuards).length);
     mark('local-hall-complete', !!world.localMine && hallAt(world.localMine));
     mark('farm-complete', game.buildings.some(b => !initialBuildings.has(b.id) && b.owner === owner && b.kind === 'farm' && b.complete));
