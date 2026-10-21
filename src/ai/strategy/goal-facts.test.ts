@@ -2,7 +2,7 @@ import { expect, it } from 'vitest';
 import { sketchScene } from '../../sdk/scene';
 import { snapshotGame } from '../../shared/sim';
 import { neutralCampExposure } from '../situation/neutral-camp-exposure';
-import { goalCampId, goalCampMemberIds, goalFact, resolveGoalCamp } from './goal-facts';
+import { goalCampId, goalCampMemberIds, goalFact, goalResourceKey, resolveGoalCamp } from './goal-facts';
 
 it('keys facts by values, not field order, and keeps native camp and location semantics distinct', () => {
   const at = { landId: 'land:1' as const, point: { x: 100, y: 200 } };
@@ -14,6 +14,16 @@ it('keys facts by values, not field order, and keeps native camp and location se
   const safe = { kind: 'assets-safe' as const, unitIds: ['b', 'a', 'a'], at, throughTick: 100 };
   expect(goalFact(safe)).toEqual(goalFact({ ...safe, unitIds: ['a', 'b'] }));
   expect(JSON.stringify(original)).toBe(before);
+  const elsewhere = { ...at, point: { x: 900, y: 1000 } };
+  expect(goalFact({ kind: 'unit-available', unitKind: 'footman', count: 2, at, byTick: 900 }).id)
+    .toBe(goalFact({ kind: 'unit-available', unitKind: 'footman', count: 2, at: elsewhere, byTick: 900 }).id);
+  expect(goalFact({ ...original, at: elsewhere }).id).not.toBe(goalFact(original).id);
+  expect(goalResourceKey({ kind: 'force', at, scope: 'pool', metric: 'combat-rating' }))
+    .not.toBe(goalResourceKey({ kind: 'force', at, scope: 'post', metric: 'combat-rating' }));
+  expect(goalFact({ ...original, cohort: [{ kind: 'existing', entityId: 'a' }, { kind: 'existing', entityId: 'b' }] }).id)
+    .toBe(goalFact({ ...original, cohort: [{ kind: 'existing', entityId: 'b' }, { kind: 'existing', entityId: 'a' }] }).id);
+  expect(goalFact({ ...original, cohort: [{ kind: 'existing', entityId: 'a' }] }).id)
+    .not.toBe(goalFact({ ...original, cohort: [{ kind: 'existing', entityId: 'b' }] }).id);
 });
 
 it('resolves the original native camp after a member dies and observes clearing without task memory', () => {
