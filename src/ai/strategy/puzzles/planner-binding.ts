@@ -3,6 +3,7 @@ import type { SdkGameCommandPlanner } from '../../../sdk/game-runner';
 import type { GameSnapshot, PlayerId } from '../../../shared/types';
 import type { GoalPlannerInput, GoalPlannerOutput } from '../goal-planner-types';
 import { planGoals } from '../goal-planner';
+import { createGoalFactReader } from '../goal-world-facts';
 import type { StrategyAllocationTrace } from '../allocation-types';
 import type { PuzzlePlanObservation } from './planner-checks';
 
@@ -34,20 +35,20 @@ export async function optionalFunction<T extends (...args: never[]) => unknown>(
   return { value: module[name] as T };
 }
 
-/** Search is the real shared export. The native adapter belongs here once
- * the fact source and owner-think assembly exist; its absence cannot fall
- * back to the incumbent AI or witness. */
-const [source, input, allocation, execution] = await Promise.all([
-  optionalFunction<(...args: never[]) => unknown>('../goal-world-facts.ts', 'createGoalFactReader'),
+/** Search and current-world reader are the real shared exports. The native
+ * adapter awaits the owner-think assembly; its absence cannot fall back to
+ * the incumbent AI or witness. */
+const [input, allocation, execution] = await Promise.all([
   optionalFunction<NativePuzzleModule['createInput']>('./goal-planner-native.ts', 'createInput'),
   optionalFunction<NativePuzzleModule['allocation']>('./goal-planner-native.ts', 'allocation'),
   optionalFunction<NativePuzzleModule['createExecution']>('./goal-planner-native.ts', 'createExecution'),
 ]);
 export const publicPuzzlePlanner = {
   planGoals,
-  createInput: source.value ? input.value : undefined,
+  createGoalFactReader,
+  createInput: input.value,
   allocation: allocation.value,
-  createExecution: source.value ? execution.value : undefined,
-  unavailable: [source.unavailable, input.unavailable, allocation.unavailable, execution.unavailable]
+  createExecution: execution.value,
+  unavailable: [input.unavailable, allocation.unavailable, execution.unavailable]
     .filter((reason): reason is string => reason !== undefined),
 };
