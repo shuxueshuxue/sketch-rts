@@ -201,8 +201,16 @@ export type GoalGroundingReader = Readonly<{
   transportOptions: (from: Target, to: Target, capacity: number, request?: GoalTransportRequest) => GoalCandidates<GoalTransportOption>;
   combatOptions?: (effect: GoalFact) => GoalCandidates<GoalCombatOption>;
   resolveCohort?: (references: readonly GoalEntityReference[]) => GoalCandidates<GoalCohortMember>;
+  /** Common physical origin alternatives, including published native shapes
+   * for fungible future pool slots. Domains never infer them from ref names. */
+  cohortOptions?: (effect: GoalFact) => GoalCandidates<GoalCohortOption>;
 }>;
 export type GoalCohortMember = Readonly<{ reference: GoalEntityReference; assessment: Unit }>;
+export type GoalCohortOption = Readonly<{
+  id: string; members: readonly GoalCohortMember[]; from: Target;
+  /** Pool replenishment / transport prerequisites, not an ordering recipe. */
+  preconditions: readonly GoalFact[]; availableTick: number | null; factIds: readonly string[];
+}>;
 export type GoalCombatOption = Readonly<{
   id: string; target: Target; cohort: readonly GoalEntityReference[]; requiredForce: number; byTick: number;
   campId?: string;
