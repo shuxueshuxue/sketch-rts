@@ -1,0 +1,15 @@
+{
+  "operation": "Initial complete-run reporters rejected the mismatch; originals and failed partial report retained. Interrupted-prefix reporters validate observed=156 and attempted=157, require original thrown error/result=null, never infer the missing think.",
+  "failures": [
+    {
+      "script": "analyze-ship-execution.py",
+      "exitCode": 1,
+      "error": "AssertionError: n==observedThinks==plannedThinks"
+    },
+    {
+      "script": "report-ship-search.py",
+      "exitCode": 1,
+      "error": "ValueError: ship-away/far: runtime result and trace think counts differ"
+    }
+  ]
+}
