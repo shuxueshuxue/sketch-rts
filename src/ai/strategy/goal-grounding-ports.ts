@@ -15,7 +15,9 @@ export type GoalGeometryRequest<State, Value> = Readonly<{
   }>;
 }>;
 export type GoalGeometryReader = <State, Value>(request: GoalGeometryRequest<State, Value>) => GoalPublishedValue<Value>;
-export type GoalShorePair = Readonly<{ id: string; seaId: SeaId; departure: Shore; landing: Shore }>;
+/** Sea-origin cargo needs only a destination shore. Land-origin grounding
+ * must require departure before producing a pickup option. */
+export type GoalShorePair = Readonly<{ id: string; seaId: SeaId; departure?: Shore; landing: Shore }>;
 export type GoalHullCandidate = Readonly<{
   id: string; reference: GoalEntityReference; seaId: SeaId;
   /** Evaluation-only native shape/stats. Its ID never names an allocation
@@ -39,5 +41,5 @@ export type GoalTransportFactPorts = Readonly<{
 export type GoalGeometryMemory = {
   version: 1;
   entries: { key: string; revision: string; state: GoalParameter; work: number;
-    requestedTick: number; readyTick: number | null; value: GoalParameter | null }[];
+    requestedTick: number; readyTick: number | null; value: GoalParameter | null; errorCode?: string }[];
 };
