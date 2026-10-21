@@ -1,6 +1,7 @@
 import type { VoyageRiskMemory } from './voyage-risk';
 import type { PointRouteMemory } from './point-routes';
 import type { FactWorkReceipt } from './fact-work';
+import type { GoalGeometryMemory } from './goal-grounding-ports';
 import { standingBodies } from '../../shared/structure-bodies';
 import { fnv1a } from '../../shared/sim/checksum';
 import type { Terrain } from '../../shared/terrain';
@@ -24,6 +25,7 @@ export type StrategyObservationMemory = {
   voyageRisks?: VoyageRiskMemory;
   pointRoutes?: PointRouteMemory;
   factWork?: FactWorkReceipt;
+  goalGeometry?: GoalGeometryMemory;
   truncated?: true;
   history?: { tick: number; assets: Asset[]; lostSites: Opportunity[]; objectives: PreviousObjective[] };
 };
@@ -100,6 +102,7 @@ export function boundObservationMemory(state: StrategyObservationMemory) {
     else if (state.history?.assets.length) discard(state.history.assets);
     else if (state.crossings.length) discard(state.crossings, true);
     else if (state.pointRoutes?.entries.length) discard(state.pointRoutes.entries, true);
+    else if (state.goalGeometry?.entries.length) discard(state.goalGeometry.entries, true);
     else if (state.fields.land.length) discard(state.fields.land);
     else if (state.fields.sea.length) discard(state.fields.sea);
     else throw new Error('Strategy observation identity exceeds its serialization budget');
