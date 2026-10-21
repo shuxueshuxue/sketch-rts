@@ -11,6 +11,8 @@ import { quoteConquestMethod } from './conquest-quotation';
 import { strategicTargetCamp } from './target-camp';
 import type { ResourceDemand, Target } from './types';
 import { defenseMethodProvider } from './defense-methods';
+import { forceAssemblyActionId, materializeConquestAssembly, quoteConquestAssembly } from './conquest-assembly';
+import { conquestAssemblyPosts } from './conquest-rallies';
 
 const reason = (code: string, factIds: readonly string[] = [], values: AllocationReason['values'] = {}): AllocationReason => ({ code, factIds, values });
 const ids = (units: readonly Unit[]) => units.map(unit => unit.id).sort();
@@ -59,6 +61,12 @@ export const conquestMethodProvider: AllocationMethodProvider = {
     actions.push({ ...terminal, completionEffects: conquest ? [] : objective.effects });
     if (conquest) actions.push({ ...action(`${id}/start-mining`, 'strategy.start-mining', { kind: 'start-mining' },
       objective.target, [worker], [terminal.id, needsBuild ? build : engineer]), completionEffects: objective.effects });
+    if (conquest && camp) {
+      const posts = conquestAssemblyPosts({ ...input, methodId: id });
+      actions.unshift(action(forceAssemblyActionId(id), 'strategy.assemble-force', { kind: 'assemble-force',
+        campTarget: objective.target, requiredForce: demand.kind === 'force' ? demand.strength : 0, posts },
+      posts[0]?.target ?? objective.target, [demand]));
+    }
     return [{ id, objectiveId: objective.id, providerId: this.id, preference: 0, kind: conquest ? 'staged-beachhead' : 'cross-sea-reinforcement',
       demands: [demand, ...(conquest ? [worker] : [])], actions,
       spends: needsBuild && hallCapital ? [{ spendId, amountGold: BUILDING_DEFS.townHall.cost,
@@ -66,6 +74,14 @@ export const conquestMethodProvider: AllocationMethodProvider = {
       preconditions: [], subgoals: [], estimatedTicks: null, status: 'candidate', reasons: [] }];
   },
   materialize(input) {
+    const assembly = materializeConquestAssembly(input);
+    if (assembly) return assembly;
+    if (input.method.stage === 'assembly') {
+      const rebuilt = this.buildMethods({ snapshot: input.snapshot, situation: input.situation, objective: input.objective,
+        previous: null, executions: input.executions, blocked: [] }).find(method => method.id === input.method.id);
+      if (!rebuilt) throw new Error('Missing conquest continuation skeleton');
+      input = { ...input, method: rebuilt };
+    }
     const { snapshot, situation, method } = input, selected = new Set(input.unitIds);
     const units = snapshot.units.filter(unit => selected.has(unit.id) && unit.owner === situation.owner && unit.hp > 0);
     const fighters = units.filter(unit => unitMover(unit.kind) === 'land' && unit.kind !== 'worker' && unit.attackDamage > 0 && unit.expiresTick === undefined);
@@ -76,7 +92,7 @@ export const conquestMethodProvider: AllocationMethodProvider = {
     const stepKinds = new Map(method.actions.map(step => [step.id, step.executor]));
     const replaced = new Map<string, readonly string[]>();
     const miningTerminal = `${method.id}/start-mining`;
-    for (const step of method.actions.filter(step => step.executor !== 'strategy.train-transport' && step.executor !== 'strategy.assemble'
+    for (const step of method.actions.filter(step => step.executor !== 'strategy.train-transport' && step.executor !== 'strategy.assemble' && step.executor !== 'strategy.assemble-force'
       && step.executor !== 'strategy.train-worker' && (step.executor !== 'strategy.start-mining' || step.id === miningTerminal))) {
       if (step.executor === 'strategy.transport') {
         const members = step.intent.kind === 'deliver-workers' ? workers : fighters;
@@ -102,7 +118,7 @@ export const conquestMethodProvider: AllocationMethodProvider = {
     }
     const dependencies = (id: string): readonly string[] => replaced.has(id) ? replaced.get(id)!.flatMap(dependencies) : [id];
     const final = [...new Map(actions.map(step => [step.id, { ...step, dependsOn: [...new Set(step.dependsOn.flatMap(dependencies))] }])).values()];
-    const planned = { ...method, actions: final, voyagePlans: voyages, estimatedTicks: missing.length ? null : latestArrival,
+    const planned = { ...method, stage: 'execution' as const, actions: final, voyagePlans: voyages, estimatedTicks: missing.length ? null : latestArrival,
       spends: [...new Map(spends.map(spend => [spend.spendId, spend])).values()],
       preconditions: [...method.preconditions.filter(condition => !condition.id.includes('/materialized:') && !condition.id.includes('/workforce:')), ...missing.map(condition => ({ ...condition,
         id: `${method.id}/materialized:${condition.id}` }))] };
@@ -116,6 +132,7 @@ export const conquestMethodProvider: AllocationMethodProvider = {
       preconditions: [...planned.preconditions, ...workforce.missing.map(condition => ({ ...condition, id: `${method.id}/workforce:${condition.id}` }))] };
   },
   quote(input) {
+    if (input.method.stage === 'assembly') return quoteConquestAssembly(input);
     if (input.objective.kind === 'ConquerIsland') return quoteConquestMethod(input);
     const site = input.situation.assets.find(asset => asset.id === input.objective.target.entityId);
     // Owned front reinforcement uses the same site protection counterfactual.

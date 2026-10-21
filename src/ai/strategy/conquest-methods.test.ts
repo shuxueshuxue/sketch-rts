@@ -98,7 +98,10 @@ describe('executable conquest methods from the real sapphire shortfall', () => {
     expect(quoted.status).toBe('blocked');
     expect(quoted.reason.code).toBe('insufficient-assembled-clearing-force');
     expect(method.voyagePlans).toEqual([]);
-    expect(method.spends.filter(spend => !spend.includedUtilityTermCodes.includes('mining-worker-recruitment')).map(spend => spend.amountGold)).toEqual([400]);
+    expect(method.stage).toBe('assembly');
+    expect(method.spends).toEqual([]);
+    expect(method.actions).toHaveLength(1);
+    expect(method.actions[0]!.unitIds).toEqual(['unit-player-4-emberRavager-3661']);
   });
 
   it('quotes a nearby safe full mine positively with real spare workers and reprices a competing commitment in the same window', () => {
