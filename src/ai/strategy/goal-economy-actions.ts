@@ -10,6 +10,7 @@ import { goalFact, goalValueKey } from './goal-facts';
 import type { AllocationReason } from './allocation-types';
 import type { GoalActionDeclaration, GoalBuildSite, GoalEntityReference, GoalEstimate, GoalFact, GoalPlanningContext } from './goal-planner-types';
 import type { Target } from './types';
+import { withGoalSafetyPreconditionWindows } from './goal-safety-preconditions';
 
 const reason = (code: string, factIds: readonly string[] = []): AllocationReason => ({ code, factIds, values: {} });
 const known = <T>(value: T, factIds: readonly string[] = []): GoalEstimate<T> => ({ state: 'met', value, factIds });
@@ -149,7 +150,7 @@ export function declareGoalBuilding(input: Readonly<{
   const production = (!foundation?.queue.length ? rules.trains.filter(unitKind => canTrainAt(race, buildingKind, unitKind)) : [])
     .map(unitKind => goalFact({ kind: 'production', unitKind, producer: building, at, byTick }));
   const completed = unique([...effects, goalFact({ kind: 'building-complete', buildingKind, at, building }), ...production]);
-  return {
+  return withGoalSafetyPreconditionWindows({
     id, kind: 'build', precision: context.precision ?? 'exact', preconditions,
     effects: [
       ...(foundation ? [] : [{ fact: site, operation: 'invalidate' as const, at: 'start' as const }]),
@@ -181,7 +182,7 @@ export function declareGoalBuilding(input: Readonly<{
       approach: route?.predicate.kind === 'route' ? route.predicate.to : at, foundationId: foundation?.id ?? null } },
     outputs: foundation ? [] : ['building'], reasons: context.precision === 'coarse'
       ? [reason('coarse-construction-walk-lower-bound', [workers.id])] : [],
-  };
+  }, context.tick);
 }
 
 /** Waiting realizes only the shared income forecast's incremental money.

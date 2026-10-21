@@ -13,6 +13,7 @@ import { combatRating } from '../policy/v6/strength';
 import { projectGoalResources } from './goal-resource-ledger';
 import { FactWorkQueue } from './fact-work';
 import { planGoals } from './goal-planner';
+import { retimeGoalActionPreconditions } from './goal-action-facts';
 
 function nativeScene() {
   const game = sketchScene('economic-action-native-rules').map('bareDuel').replaceDefaults()
@@ -131,7 +132,9 @@ describe('grounded economic declarations against native rules', () => {
     expect(action.flows).toContainEqual(expect.objectContaining({ resource: { kind: 'gold' }, delta: -120, at: 'start' }));
     expect(action.flows).toContainEqual(expect.objectContaining({ resource: { kind: 'supply-cap' }, delta: 6, at: 'finish' }));
     expect(action.effects).toContainEqual({ fact: goalFact({ kind: 'build-site', buildingKind: 'farm', at: site }), operation: 'invalidate', at: 'start' });
-    expect(action.preconditions.map(fact => fact.predicate)).toContainEqual({ kind: 'site-safe', site, throughTick: 5000 });
+    const safety = goalFact({ kind: 'site-safe', site, throughTick: snapshot.tick + 15 + BUILDING_DEFS.farm.buildTime });
+    expect(action.preconditions).toContainEqual(safety);
+    expect(action.preconditionWindows).toContainEqual({ factId: safety.id, through: 'finish' });
     const foundation = createBuilding('started', 'us', 'farm', site.point.x, site.point.y, false);
     foundation.buildProgress = 40; snapshot.buildings.push(foundation);
     const resume = declareGoalBuilding({ buildingKind: 'farm', at: site, worker, byTick: 5000, foundationId: 'started' }, context(snapshot, road))!;
@@ -149,6 +152,30 @@ describe('grounded economic declarations against native rules', () => {
     expect(action.duration).toMatchObject({ state: 'pending', requestIds: ['route-request'] });
     expect(action.preconditions.some(fact => fact.predicate.kind === 'route')).toBe(true);
     expect(action.preconditions.some(fact => fact.predicate.kind === 'build-site')).toBe(true);
+    const safety = action.preconditions.find(fact => fact.predicate.kind === 'site-safe')!;
+    expect(safety.predicate).toMatchObject({ throughTick: ctx.tick });
+    expect(action.preconditionWindows).toContainEqual({ factId: safety.id, through: 'finish' });
+  });
+
+  it('binds every supplied safety proof to construction finish and retimes all ID references after a delayed start', () => {
+    const snapshot = snapshotGame(nativeScene()), old = [goalFact({ kind: 'site-safe', site, throughTick: 5000 }),
+      goalFact({ kind: 'shore-safe', landId: 'land:1', landing: site, throughTick: 6000 }),
+      goalFact({ kind: 'assets-safe', unitIds: ['worker'], at: site, throughTick: 7000 })];
+    const action = declareGoalBuilding({ buildingKind: 'farm', at: site, worker, byTick: 5000,
+      additionalPreconditions: old }, context(snapshot, road))!;
+    const finish = snapshot.tick + 15 + BUILDING_DEFS.farm.buildTime;
+    const safety = action.preconditions.filter(fact => 'throughTick' in fact.predicate);
+    expect(safety).toHaveLength(3);
+    expect(safety.every(fact => 'throughTick' in fact.predicate && fact.predicate.throughTick === finish)).toBe(true);
+    expect(action.preconditionWindows).toHaveLength(3);
+    expect(action.cost.state === 'met' && action.cost.value[0]!.factIds).toContain(safety.find(fact => fact.predicate.kind === 'site-safe')!.id);
+    const delayed = retimeGoalActionPreconditions(JSON.parse(JSON.stringify(action)), finish + 100)!;
+    expect(delayed.preconditions.filter(fact => 'throughTick' in fact.predicate)
+      .every(fact => 'throughTick' in fact.predicate && fact.predicate.throughTick === finish + 100)).toBe(true);
+    for (const fact of old) expect(JSON.stringify(delayed)).not.toContain(JSON.stringify(fact.id).slice(1, -1));
+    expect(delayed.id).toBe(action.id);
+    expect(delayed.effects).toEqual(action.effects);
+    expect(delayed.flows.find(flow => flow.resource.kind === 'gold')!.delta).toBe(-BUILDING_DEFS.farm.cost);
   });
 
   it('declares the new producer capability on the same symbolic building output', () => {
