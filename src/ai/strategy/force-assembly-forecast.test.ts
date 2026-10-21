@@ -226,17 +226,20 @@ it('limits only the affected forecast without throwing from a think or hiding th
   expect(forecastForceAssembly({ ...input, conditionalProduction: conditional(.01) }).status).toBe('gathering');
 });
 
-it('keeps exhausted unfilled scenario mass unknown instead of pricing a lower bound as exact fill probability', () => {
+it('prices proven filled mass as a labelled lower bound while retaining unknown tail mass', () => {
   const { input } = example();
   const request = { ...input, conditionalProduction: { ...conditional(.01), scenarios: [
     { id: 'known-fill', probability: .5, producers: conditional(.01).scenarios[0]!.producers },
     { id: 'short-support', probability: .5, producers: [{ kind: 'stock-curve' as const, buildingId: 'barracks', postId: 'home',
       startsAtTick: 0, throughTick: 100, points: [{ tick: 0, force: 0 }, { tick: 100, force: 0 }] }] }] } };
   const before = JSON.stringify(request), forecast = forecastForceAssembly(request);
-  expect(forecast).toMatchObject({ status: 'unknown', completionProbability: .5,
+  expect(forecast).toMatchObject({ status: 'gathering', completionProbability: .5, probabilityBasis: 'proven-lower-bound',
     completionProbabilityBounds: { lower: .5, upper: 1 }, diagnostics: { unresolvedProbability: .5 } });
   expect(forecast.missing.some(fact => fact.code === 'assembly-conditional-support-exhausted')).toBe(true);
   expect(JSON.stringify(request)).toBe(before);
+  const zeroLower = forecastForceAssembly({ ...request, conditionalProduction: { ...request.conditionalProduction, scenarios: [
+    { ...request.conditionalProduction.scenarios[1]!, probability: 1 }] } });
+  expect(zeroLower).toMatchObject({ status: 'unknown', completionProbability: 0, completionProbabilityBounds: { lower: 0, upper: 1 } });
   const ready = forecastForceAssembly({ ...request, target: { ...request.target, requiredForce: .5 } });
   expect(ready).toMatchObject({ status: 'ready', completionProbability: 1, completionProbabilityBounds: { lower: 1, upper: 1 } });
 });
