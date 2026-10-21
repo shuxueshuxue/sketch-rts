@@ -57,7 +57,10 @@ export function createGoalTransportFactPorts(input: GoalTransportPhysicalInput):
       const keep = <T extends { rank: number; id: string }>(list: T[], item: T) => {
         list.push(item); list.sort((a, b) => a.rank - b.rank || order(a.id, b.id)); if (list.length > limit) list.pop();
       };
-      const key = `shore-pairs:${goalValueKey([from, to, limit])}`;
+      // An aboard request ranks only destination shores. Its hull's moving
+      // pose is consumed by seaLeg, not by this finite coast enumeration.
+      const originKey = from.landId ? from : { seaId: from.seaId };
+      const key = `shore-pairs:${goalValueKey([originKey, to, limit])}`;
       const read = input.geometry<State, { pairs: GoalShorePair[]; count: number; considered: number }>({ key, revision: input.geometryRevision,
         initialState: { sea: 0, scan: 0, phase: 'departures', departure: 0, landing: 0, count: 0, considered: 0, starts: [], ends: [], best: [] },
         advance(state, allowance) {
