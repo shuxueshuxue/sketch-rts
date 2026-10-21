@@ -153,16 +153,27 @@ export type GoalProductionOption = Readonly<{
 }>;
 export type GoalTransportOption = Readonly<{
   id: string; seaId: SeaId; from: Target; to: Target; transport: GoalEntityReference; capacity: number;
-  origin: 'land' | 'aboard'; loadedUnitIds: readonly string[];
-  departure: Readonly<{ water: Target['point']; ground: Target['point']; heading: number | null }>;
+  /** Entire actual deck/cabin dependency, including passengers outside the
+   * selected cohort. They require authority checks, never contribute its force. */
+  loadedUnitIds: readonly string[];
   landing: Readonly<{ water: Target['point']; ground: Target['point']; heading: number | null }>;
-  approach: GoalFact; crossing: GoalFact; shoreSafe: GoalFact;
+  crossing: GoalFact; shoreSafe: GoalFact;
   duration: GoalEstimate<number>; factIds: readonly string[];
-}>;
+} & (Readonly<{ origin: 'land';
+  departure: Readonly<{ water: Target['point']; ground: Target['point']; heading: number | null }>;
+  approach: GoalFact;
+}> | Readonly<{ origin: 'aboard';
+  /** An at-sea origin has no invented pickup shore or land point. */
+  departure: Readonly<{ water: Target['point']; heading: number | null; ground?: never }>;
+  approach?: GoalFact;
+}>)>;
+export type GoalTransportRequest = Readonly<{ cohort: readonly GoalEntityReference[] }>;
 export type GoalGroundingReader = Readonly<{
   buildSites: (buildingKind: BuildingKind, near: Target) => GoalCandidates<GoalBuildSite>;
   productionOptions: (unitKind: UnitKind, near: Target) => GoalCandidates<GoalProductionOption>;
-  transportOptions: (from: Target, to: Target, capacity: number) => GoalCandidates<GoalTransportOption>;
+  /** Missing exact cohort cannot authorize boarding estimates from a stand-in
+   * unit. Mass alone does not identify radius, existing cargo or hull binding. */
+  transportOptions: (from: Target, to: Target, capacity: number, request?: GoalTransportRequest) => GoalCandidates<GoalTransportOption>;
 }>;
 export type GoalRequest = Readonly<{
   id: string; owner: PlayerId; effects: readonly GoalFact[]; rewardGold: number;
@@ -188,6 +199,9 @@ export type GoalSubgoal = Readonly<{
 }>;
 export type GoalAlternative = Readonly<{
   id: string; factId: string; actionId: string; status: 'chosen' | 'rejected' | 'pending';
+  /** New planner traces always include this, even when the rejected action
+   * is outside the selected graph. Optional for older trace readers only. */
+  declaration?: GoalActionDeclaration;
   costGold: number | null; finishTick: number | null; reason: AllocationReason;
 }>;
 export type GoalResourceEvent = Readonly<{
