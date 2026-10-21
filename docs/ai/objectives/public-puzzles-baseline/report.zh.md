@@ -3,6 +3,7 @@
 7 道题的 11 个变体已搭成真实场景，复用入口在 [scenes.ts](../../../../src/ai/strategy/puzzles/scenes.ts)。
 每个变体有冷帧依赖图判法与真实执行判法；真实搜索、事实源、scope 与正常 Objective collector 已接入，11个冷帧检查已全部开启。
 首轮结果为通过0、错误动作链0、缺能力11，逐题缺口见 [cold-plans-40e.zh.md](cold-plans-40e.zh.md)。11个执行检查仍等正式 bridge 而跳过。
+计划判法现已改为[冻结世界下最多10次think](frozen-thinks.zh.md)，保留首次与最终结果；正式复测待共享原生think序号提交，40e单次冷帧成绩不改标签。
 另有独立的人工合法命令解，用来证明局面本身能完成，不能拿它当 AI 成绩。
 
 历史 main 实测结果、可行解时间与证据地址见本页下方。机器可读逐题数据见 [summary.json](summary.json)。共同栈接线与新验证见 [shared-stack.zh.md](shared-stack.zh.md)，不能把下方的旧 AI 成绩当作共同栈成绩。
