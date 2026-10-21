@@ -43,9 +43,8 @@ export const goalNavalActionProvider: GoalActionProvider = {
         at: option.target, routes: option.preconditions });
       else if (predicate.kind === 'gold' && option.campId) action = declareGoalCampClearing({ ...base, campId: option.campId,
         at: option.target, routes: option.preconditions });
-      else if (predicate.kind === 'garrison-ready') action = declareGoalGarrison({ ...base, mineId: predicate.mineId,
-        at: predicate.at, post: option.target, throughTick: option.byTick, requiredForce: option.requiredForce,
-        routes: option.preconditions, ...(option.effectDelayTicks ? { effectDelayTicks: option.effectDelayTicks } : {}) });
+      else if (predicate.kind === 'garrison-ready') action = declareGoalGarrison({ ...option, mineId: predicate.mineId,
+        at: predicate.at, throughTick: option.byTick }, context);
       else if (predicate.kind === 'site-safe') action = declareGoalDefense({ ...base, site: predicate.site,
         ...(option.effectDelayTicks ? { effectDelayTicks: option.effectDelayTicks } : {}),
         throughTick: predicate.throughTick, requiredForce: option.requiredForce, routes: option.preconditions });

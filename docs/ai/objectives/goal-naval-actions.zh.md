@@ -67,6 +67,6 @@ provider 测试用真实场景快照和真实 Situation，加固定的已发布�
 
 集结和运输同时声明同一所选组的 `field-strength` 世界效果，数值使用既有 `assessAllocatedForce(..., {metric:'field-strength'})` 整组字段。集结是精确 post 的 force-at，运输是目标陆块 pool 的 force-available；符号成员仍保持原引用。该度量不进入可加 combat-rating 库存，不借用其他同陆块单位，也不把运输到岸当作已经走到任意 post。
 
-`declareGoalGarrison` 是独立 garrison-ready 的 defend achiever。它要求逻辑矿对应的 hall-complete 作为世界前置，同时保留精确守军、实际安全 post、路线、到岗 offset 和 throughTick。garrison-ready 在实际到岗 offset 激活，守军占用维持至保护窗终点；不同矿的义务进入不同 action ID。执行参数的 `at` 是守点，`garrisonMineId` / `garrisonAt` 是逻辑矿绑定，`cohort` 与 `throughTick` 是同一个持续义务。
+`declareGoalGarrison` 复用唯一的 `declareGoalHoldPosition`，只补 garrison-ready 效果与 hall-complete 前置。动作仍是 hold-position，执行器仍是 goal.hold-position；精确组的 force-at(post) 前置负责实际到岗，之后在 start 建立 garrison-ready，守军占用维持至保护窗终点。它不在留守内部再走一次集结或回防。不同矿的义务进入不同 action ID。执行参数的 `target` 是守点，`garrisonMineId` / `garrisonAt` 是逻辑矿绑定，`cohort` 与 `throughTick` 是同一个持续义务。
 
 该声明不把厅完工或命令 ACK 当作守军证明。中央 world reader 必须另外核实厅真实完成、精确组实际到岗、有效 defend grant 和实体 lease 覆盖 throughTick、当前整组保护能力；缺证明保持 pending/unmet，并保留活动守军义务。声明/provider 测试只验证这些前置、效果、单位和时钟合同，未宣称中央正式证明或完整扩张执行已通过。

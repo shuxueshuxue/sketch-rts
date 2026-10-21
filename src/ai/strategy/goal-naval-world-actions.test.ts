@@ -55,17 +55,21 @@ describe('naval achievers preserve independent world predicates',()=>{
   expect(field.fact.predicate.kind).toBe('force-available');expect(action.effects.some(e=>e.fact.predicate.kind==='force-at'&&e.fact.predicate.metric==='field-strength')).toBe(false);
   expect(action.flows.every(flow=>flow.resource.kind!=='force'||flow.resource.metric==='combat-rating')).toBe(true);
  });
- it('activates a distinct garrison effect at actual arrival, requires the real hall, and retains exact guards through the protection window',()=>{
-  const f=frame(),action=strict(()=>declareGoalGarrison({...f,mineId:'mine',throughTick:1000,requiredForce:1,effectDelayTicks:known(40),routes:[]}))!;
-  expect(action.kind).toBe('defend');expect(action.preconditions).toContainEqual(goalFact({kind:'hall-complete',mineId:'mine',at:f.at}));
-  expect(action.effects.find(e=>e.fact.predicate.kind==='garrison-ready')).toEqual({fact:goalFact({kind:'garrison-ready',mineId:'mine',at:f.at}),operation:'establish',at:{offsetTicks:40}});
+ it('maps the common hold-position atom to garrison readiness after exact arrival and the real hall prerequisite',()=>{
+  const f=frame(),situation=evaluateSituation(f.snapshot,f.owner,createAiPolicyMemory());
+  const context:GoalPlanningContext={snapshot:f.snapshot,situation,owner:f.owner,tick:0,version:'v9_summoner',readFact:fact=>({fact,state:'unmet',observedTick:0,revision:'actual-world',evidence:[],reason:{code:'actual-world',factIds:[],values:{}}})};
+  const input={...estimates,mineId:'mine',at:f.at,target:f.post,cohort:f.cohort.map(m=>m.reference),requiredForce:1,byTick:1000,throughTick:1000};
+  const action=strict(()=>declareGoalGarrison(input,context))!;
+  expect(action.kind).toBe('hold-position');expect(action.executor.executor).toBe('goal.hold-position');
+  expect(action.preconditions).toContainEqual(goalFact({kind:'hall-complete',mineId:'mine',at:f.at}));
+  expect(action.preconditions).toContainEqual(goalFact({kind:'force-at',metric:'combat-rating',minimum:1,at:f.post,cohort:input.cohort,byTick:1000}));
+  expect(action.effects.find(e=>e.fact.predicate.kind==='garrison-ready')).toEqual({fact:goalFact({kind:'garrison-ready',mineId:'mine',at:f.at}),operation:'establish',at:'start'});
   expect(action.demands).toHaveLength(2);expect(action.demands.every(d=>d.resource.kind==='entity-control'&&d.until==='finish')).toBe(true);
-  expect(action.executor.parameters).toMatchObject({garrisonMineId:'mine',garrisonAt:f.at,at:f.post,throughTick:1000,cohort:f.cohort.map(m=>m.reference)});
+  expect(action.executor.parameters).toMatchObject({garrisonMineId:'mine',garrisonAt:f.at,target:f.post,throughTick:1000,cohort:input.cohort});
   expect(action.outputs).toEqual([]);expect(action.flows).toEqual([]);
-  const waiting=declareGoalGarrison({...f,mineId:'mine',throughTick:1000,requiredForce:1,effectDelayTicks:pending,routes:[]})!;
-  expect(waiting.duration).toEqual(pending);expect(waiting.preconditions).toContainEqual(goalFact({kind:'hall-complete',mineId:'mine',at:f.at}));
-  expect(declareGoalGarrison({...f,mineId:'different-mine',throughTick:1000,requiredForce:1,effectDelayTicks:known(0),routes:[]})).toBeNull();
-  expect(declareGoalGarrison({...f,mineId:'mine',throughTick:1000,requiredForce:1,effectDelayTicks:known(1001),routes:[]})).toBeNull();
+  expect(declareGoalGarrison({...input,duration:pending},context)!.duration).toEqual(pending);
+  expect(declareGoalGarrison({...input,mineId:'different-mine'},context)).toBeNull();
+  expect(declareGoalGarrison({...input,duration:known(999)},context)).toBeNull();
  });
  it('exposes field-strength and garrison alternatives through the same provider and preserves distinct mine identities',()=>{
   const f=frame(),situation=evaluateSituation(f.snapshot,f.owner,createAiPolicyMemory());

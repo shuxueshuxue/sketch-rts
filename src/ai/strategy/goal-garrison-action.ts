@@ -1,30 +1,27 @@
-import { declareGoalDefense } from './goal-naval-actions';
+import { declareGoalHoldPosition, type GoalLandCombatGrounding } from './goal-land-actions';
 import { goalFact, goalValueKey } from './goal-facts';
-import type { GoalActionDeclaration } from './goal-planner-types';
+import type { GoalActionDeclaration, GoalPlanningContext } from './goal-planner-types';
 import type { Target } from './types';
 
-export type GoalGarrisonInput = Omit<Parameters<typeof declareGoalDefense>[0], 'site'> & Readonly<{
+export type GoalGarrisonInput = GoalLandCombatGrounding & Readonly<{
   mineId: string;
-  /** Logical mine/hall binding, separate from the exact safe guard post. */
+  /** Logical mine/hall binding; target is the exact shared guard post. */
   at: Target;
-  post: Target;
+  throughTick: number;
 }>;
-/** One sustained defend obligation, not a hall-completion alias. The central
- * world reader validates the actual hall, present exact cohort and formal
- * lease through throughTick before accepting this independent world effect. */
-export function declareGoalGarrison(input: GoalGarrisonInput): GoalActionDeclaration | null {
-  if (!input.mineId || !input.at.landId || input.post.landId !== input.at.landId
+/** Maps the common hold-position atom to a mining garrison obligation. Its
+ * exact force-at prerequisite owns arrival; the holding effect starts only
+ * after that prerequisite and the real hall have been satisfied. */
+export function declareGoalGarrison(input: GoalGarrisonInput, context: GoalPlanningContext): GoalActionDeclaration | null {
+  if (!input.mineId || !input.at.landId || input.target.landId !== input.at.landId
     || input.at.entityId !== undefined && input.at.entityId !== input.mineId) return null;
-  const base = declareGoalDefense({ ...input, site: input.post });
-  if (!base) return null;
   const hall = goalFact({ kind: 'hall-complete', mineId: input.mineId, at: input.at });
+  const base = declareGoalHoldPosition({ ...input, preconditions: [...(input.preconditions ?? []), hall] }, context);
+  if (!base) return null;
   const ready = goalFact({ kind: 'garrison-ready', mineId: input.mineId, at: input.at });
-  const activation = base.effects.find(effect => effect.fact.predicate.kind === 'site-safe')!.at;
   const parameters = { ...base.executor.parameters, garrisonMineId: input.mineId, garrisonAt: input.at };
-  return { ...base, id: `goal-action:defend:${goalValueKey(parameters)}`,
-    preconditions: [...new Map([...base.preconditions, hall].map(fact => [fact.id, fact])).values()]
-      .sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
-    effects: [...base.effects, { fact: ready, operation: 'establish', at: activation }],
+  return { ...base, id: `action:hold-position:${goalValueKey([ready.id, base.id])}`,
+    effects: [...base.effects, { fact: ready, operation: 'establish', at: 'start' }],
     executor: { ...base.executor, parameters }, reasons: [...base.reasons, {
       code: 'formal-garrison-obligation-required', factIds: [hall.id, ready.id],
       values: { throughTick: input.throughTick, commandAcknowledgementIsProof: false },
