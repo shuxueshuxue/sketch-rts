@@ -67,6 +67,12 @@ export function registerPublicPuzzleTests(key: PuzzleKey) {
       }
       if (key === 'defense-window') for (const attacker of world.attackers)
         expect(attacker.order).toMatchObject({ type: 'attackMove', x: world.home.x, y: world.home.y });
+      if (key === 'evacuate') {
+        for (const attacker of world.attackers.filter(unit => !unit.deck && !unit.cabin))
+          expect(attacker.order).toMatchObject({ type: 'attackMove', x: world.islandHall!.x, y: world.islandHall!.y });
+        for (const ship of world.game.units.filter(unit => unit.owner === world.opponent && unit.kind === 'transport'))
+          expect(ship.order).toMatchObject({ type: 'unload', x: world.islandHall!.x, y: world.islandHall!.y });
+      }
     });
     it('native owner-think scope diagnostic only (not puzzle acceptance)', () => {
       const world = puzzle.create(), snapshot = snapshotGame(world.game), before = JSON.stringify(snapshot);
