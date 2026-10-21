@@ -1,5 +1,7 @@
 import { existsSync } from 'node:fs';
 import type { SdkGameCommandPlanner } from '../../../sdk/game-runner';
+import type { CommandFrameEntry } from '../../../sdk/commands/frame';
+import type { AiGameAgent } from '../../game-runner';
 import type { GameSnapshot, PlayerId } from '../../../shared/types';
 import type { AiPolicyMemory } from '../../memory';
 import type { GoalPlannerInput, GoalPlannerOutput } from '../goal-planner-types';
@@ -7,7 +9,6 @@ import { planGoals } from '../goal-planner';
 import { createGoalFactReader } from '../goal-world-facts';
 import { withGoalPlannerInput } from '../goal-planner-input';
 import type { StrategyAllocationTrace } from '../allocation-types';
-import type { PuzzlePlanObservation } from './planner-checks';
 import { withInput } from './goal-planner-native';
 
 export type PlanGoals = typeof planGoals;
@@ -16,15 +17,24 @@ export type PlanGoals = typeof planGoals;
  * never a scene key, expected landing, authored observation or witness. */
 export type NativePuzzleInputScope = <T>(snapshot: GameSnapshot, owner: PlayerId, memory: AiPolicyMemory,
   run: (input: GoalPlannerInput) => T) => T;
+export type PuzzleExecutionObservation = Readonly<{
+  tick: number; owner: PlayerId; output: GoalPlannerOutput;
+  allocation: StrategyAllocationTrace; commands: readonly CommandFrameEntry[];
+}>;
 export type PuzzlePlannerExecution = {
-  commandPlanner: SdkGameCommandPlanner;
-  /** Actual same-think records from the goal-planner/allocator boundary. */
-  observations(): readonly PuzzlePlanObservation[];
+  commandPlanner: SdkGameCommandPlanner<AiGameAgent>;
+  /** First nonempty and latest actual traces; complete configured evidence is
+   * streamed to disk rather than retaining a simulation's entire plan history. */
+  observations(): readonly PuzzleExecutionObservation[];
+  statistics(): Readonly<{
+    plannedThinks: number; observedThinks: number; firstReadyTick: number | null;
+    firstFormalCommandTick: number | null; formalCommandCount: number;
+  }>;
 };
 export type NativePuzzleModule = {
   withInput: NativePuzzleInputScope;
   allocation(input: GoalPlannerInput, output: GoalPlannerOutput): StrategyAllocationTrace | null;
-  createExecution(): PuzzlePlannerExecution;
+  createExecution(options?: { evidenceFile?: string }): PuzzlePlannerExecution;
 };
 
 type Available<T> = { value: T; unavailable?: never } | { value?: never; unavailable: string };
