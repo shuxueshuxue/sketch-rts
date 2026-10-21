@@ -1,0 +1,2665 @@
+{
+  "source": "69355c23a12b0376151de4e2a0a45d4c5f32e2c6",
+  "sharedBase": "abfab46059323ec56ec0df75d9f01ba8b6ca7ee5",
+  "mode": "same original frozen snapshot, persistent native memory, K20, normal collector",
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "inputSha256": "94f5d89a915b8c45283051a66bd41744ad306a93688416164235013e91386241",
+      "passed": false,
+      "stable": true,
+      "error": null,
+      "maxThinks": 20,
+      "thinkCount": 20,
+      "firstReadyActionThink": null,
+      "firstPassingThink": null,
+      "firstExecutablePlanThink": null,
+      "firstCandidateThinkByKind": {
+        "hold-position": 1,
+        "build": 1,
+        "assemble": 1,
+        "transport-force": 1,
+        "transport-worker": 1,
+        "clear-camp": 1,
+        "train": 1,
+        "position-transport": 1
+      },
+      "progress": [
+        {
+          "think": 1,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 1,
+            "limit": 6144,
+            "used": 5303,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              },
+              {
+                "key": "goal-geometry:57f1d028",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "point:unit-planner-transport-1000:176:816:464124e3",
+                "tier": "background-field",
+                "work": 4900
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 2,
+            "limit": 6144,
+            "used": 5226,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              },
+              {
+                "key": "goal-geometry:21a7e9c6",
+                "tier": "background-field",
+                "work": 184
+              },
+              {
+                "key": "field:land:112:816",
+                "tier": "background-field",
+                "work": 4641
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 3,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 3,
+            "limit": 6144,
+            "used": 5117,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              },
+              {
+                "key": "goal-geometry:21a7e9c6",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-geometry:f046dbba",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "point:unit-planner-transport-1000:176:816:464124e3",
+                "tier": "background-field",
+                "work": 4712
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 4,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 4,
+            "limit": 6144,
+            "used": 5118,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              },
+              {
+                "key": "goal-geometry:21a7e9c6",
+                "tier": "background-field",
+                "work": 4
+              },
+              {
+                "key": "point:unit-planner-transport-1000:176:816:464124e3",
+                "tier": "background-field",
+                "work": 4713
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 5,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 5,
+            "limit": 6144,
+            "used": 5022,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              },
+              {
+                "key": "goal-geometry:3ea3d411",
+                "tier": "background-field",
+                "work": 7
+              },
+              {
+                "key": "point:unit-planner-transport-1000:176:816:464124e3",
+                "tier": "background-field",
+                "work": 4614
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 6,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 6,
+            "limit": 6144,
+            "used": 5301,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:e6c8aaa5",
+                "tier": "background-field",
+                "work": 4900
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 7,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 7,
+            "limit": 6144,
+            "used": 5113,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:e6c8aaa5",
+                "tier": "background-field",
+                "work": 4712
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 8,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 8,
+            "limit": 6144,
+            "used": 5114,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:e6c8aaa5",
+                "tier": "background-field",
+                "work": 4713
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 9,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 9,
+            "limit": 6144,
+            "used": 5015,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:e6c8aaa5",
+                "tier": "background-field",
+                "work": 4614
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 10,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 10,
+            "limit": 6144,
+            "used": 5114,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:e6c8aaa5",
+                "tier": "background-field",
+                "work": 4713
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 11,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 11,
+            "limit": 6144,
+            "used": 5114,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:e6c8aaa5",
+                "tier": "background-field",
+                "work": 3711
+              },
+              {
+                "key": "point:unit-planner-transport-1000:176:816:464124e3",
+                "tier": "background-field",
+                "work": 1002
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 12,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 12,
+            "limit": 6144,
+            "used": 5015,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              },
+              {
+                "key": "point:unit-planner-transport-1000:176:816:464124e3",
+                "tier": "background-field",
+                "work": 4614
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 13,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 13,
+            "limit": 6144,
+            "used": 5114,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              },
+              {
+                "key": "point:unit-planner-transport-1000:176:816:464124e3",
+                "tier": "background-field",
+                "work": 4713
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 14,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 14,
+            "limit": 6144,
+            "used": 2305,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              },
+              {
+                "key": "point:unit-planner-transport-1000:176:816:464124e3",
+                "tier": "background-field",
+                "work": 1904
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 15,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 15,
+            "limit": 6144,
+            "used": 401,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 16,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 16,
+            "limit": 6144,
+            "used": 401,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 17,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 17,
+            "limit": 6144,
+            "used": 401,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 18,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 18,
+            "limit": 6144,
+            "used": 401,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 19,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 19,
+            "limit": 6144,
+            "used": 401,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 20,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 20,
+            "limit": 6144,
+            "used": 401,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "puzzle": "ship-away/near",
+      "inputSha256": "0fd430a01471fe8515c6e0e437f0092591300b9311f48515c6367038c436a814",
+      "passed": false,
+      "stable": true,
+      "error": null,
+      "maxThinks": 20,
+      "thinkCount": 20,
+      "firstReadyActionThink": null,
+      "firstPassingThink": null,
+      "firstExecutablePlanThink": null,
+      "firstCandidateThinkByKind": {
+        "hold-position": 1,
+        "build": 1,
+        "assemble": 1,
+        "transport-force": 1,
+        "transport-worker": 1,
+        "clear-camp": 1,
+        "train": 1,
+        "position-transport": 1
+      },
+      "progress": [
+        {
+          "think": 1,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 1,
+            "limit": 6144,
+            "used": 5303,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              },
+              {
+                "key": "goal-geometry:57f1d028",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "point:unit-planner-transport-1000:176:816:21294151",
+                "tier": "background-field",
+                "work": 4900
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 2,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 2,
+            "limit": 6144,
+            "used": 5226,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              },
+              {
+                "key": "goal-geometry:21a7e9c6",
+                "tier": "background-field",
+                "work": 184
+              },
+              {
+                "key": "field:land:112:816",
+                "tier": "background-field",
+                "work": 4641
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 3,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 3,
+            "limit": 6144,
+            "used": 5117,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              },
+              {
+                "key": "goal-geometry:21a7e9c6",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "goal-geometry:f046dbba",
+                "tier": "background-field",
+                "work": 2
+              },
+              {
+                "key": "point:unit-planner-transport-1000:176:816:21294151",
+                "tier": "background-field",
+                "work": 4712
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 4,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 4,
+            "limit": 6144,
+            "used": 5118,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              },
+              {
+                "key": "goal-geometry:21a7e9c6",
+                "tier": "background-field",
+                "work": 4
+              },
+              {
+                "key": "point:unit-planner-transport-1000:176:816:21294151",
+                "tier": "background-field",
+                "work": 4713
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 5,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 5,
+            "limit": 6144,
+            "used": 5022,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              },
+              {
+                "key": "goal-geometry:3ea3d411",
+                "tier": "background-field",
+                "work": 7
+              },
+              {
+                "key": "point:unit-planner-transport-1000:176:816:21294151",
+                "tier": "background-field",
+                "work": 4614
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 6,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 6,
+            "limit": 6144,
+            "used": 5301,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:0add10e7",
+                "tier": "background-field",
+                "work": 4900
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 7,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 7,
+            "limit": 6144,
+            "used": 5113,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:0add10e7",
+                "tier": "background-field",
+                "work": 4712
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 8,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 8,
+            "limit": 6144,
+            "used": 5114,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:0add10e7",
+                "tier": "background-field",
+                "work": 4713
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 9,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 9,
+            "limit": 6144,
+            "used": 5015,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:0add10e7",
+                "tier": "background-field",
+                "work": 4614
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 10,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 10,
+            "limit": 6144,
+            "used": 5114,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:0add10e7",
+                "tier": "background-field",
+                "work": 4713
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 11,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 11,
+            "limit": 6144,
+            "used": 5114,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              },
+              {
+                "key": "point:unit-planner-transport-1000:112:816:0add10e7",
+                "tier": "background-field",
+                "work": 3711
+              },
+              {
+                "key": "point:unit-planner-transport-1000:176:816:21294151",
+                "tier": "background-field",
+                "work": 1002
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 12,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 12,
+            "limit": 6144,
+            "used": 5015,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              },
+              {
+                "key": "point:unit-planner-transport-1000:176:816:21294151",
+                "tier": "background-field",
+                "work": 4614
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 13,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 13,
+            "limit": 6144,
+            "used": 5114,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              },
+              {
+                "key": "point:unit-planner-transport-1000:176:816:21294151",
+                "tier": "background-field",
+                "work": 4713
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 14,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 14,
+            "limit": 6144,
+            "used": 2305,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              },
+              {
+                "key": "point:unit-planner-transport-1000:176:816:21294151",
+                "tier": "background-field",
+                "work": 1904
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 15,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 15,
+            "limit": 6144,
+            "used": 401,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 16,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 16,
+            "limit": 6144,
+            "used": 401,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 17,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 17,
+            "limit": 6144,
+            "used": 401,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 18,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 18,
+            "limit": 6144,
+            "used": 401,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 19,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 19,
+            "limit": 6144,
+            "used": 401,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        },
+        {
+          "think": 20,
+          "passed": false,
+          "executable": false,
+          "snapshotUntouched": true,
+          "readyActionCount": 0,
+          "work": {
+            "tick": 1,
+            "thinkSequence": 20,
+            "limit": 6144,
+            "used": 401,
+            "services": [
+              {
+                "key": "goal-search:ConquerIsland:planner:resource-1",
+                "tier": "critical-route",
+                "work": 401
+              }
+            ]
+          },
+          "phase": "plan-verdict",
+          "error": {
+            "name": "AssertionError",
+            "message": "shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality",
+            "stack": "AssertionError: shared resource ledger must prove every prefix; pending is not solvent: expected 'unmet' to be 'met' // Object.is equality\n    at Module.checkPuzzlePlan (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/planner-checks.ts:57:102)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/puzzles/frozen-planning.ts:62:15\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:398:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:105:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:101:79\n    at Module.withGoalDistanceFieldLease (/codegeex/jeffry/sketch-public-puzzles/source/src/shared/terrain.ts:1360:16)"
+          },
+          "plans": [
+            {
+              "goalId": "ConquerIsland:planner:resource-1",
+              "status": "waiting-facts",
+              "search": {
+                "expansions": 401,
+                "depth": 6,
+                "work": 401,
+                "limitReason": null
+              },
+              "selectedActionCount": 9,
+              "readyActionIds": [],
+              "candidateKinds": {
+                "hold-position": 10,
+                "build": 27,
+                "assemble": 26,
+                "transport-force": 10,
+                "transport-worker": 4,
+                "clear-camp": 35,
+                "train": 11,
+                "position-transport": 3
+              },
+              "deferredReasons": {
+                "combat-candidate-facts-pending": 1,
+                "cohort-landing-facts-pending": 1,
+                "transport-alternatives-pending": 1
+              },
+              "factStates": {
+                "unmet": 37,
+                "met": 117
+              },
+              "capacityPressure": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
