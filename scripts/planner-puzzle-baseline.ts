@@ -17,6 +17,8 @@ const source = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).
 const aiTree = execFileSync('git', ['rev-parse', 'd4ca2668:src/ai/bootstrap_1'], { encoding: 'utf8' }).trim();
 const actualAiTree = execFileSync('git', ['rev-parse', 'HEAD:src/ai/bootstrap_1'], { encoding: 'utf8' }).trim();
 if (actualAiTree !== aiTree) throw new Error('Main baseline bootstrap policy changed; choose and document a new baseline');
+execFileSync('git', ['diff', '--exit-code', 'd4ca2668', '--', 'src/ai', 'src/shared', 'src/sdk',
+  ':(exclude)src/ai/strategy/puzzles'], { stdio: 'pipe' });
 const summary: unknown[] = [];
 for (const puzzle of selected) {
   const ticks = option('--ticks');
