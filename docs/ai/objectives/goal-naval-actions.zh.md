@@ -78,3 +78,7 @@ provider 测试用真实场景快照和真实 Situation，加固定的已发布�
 `createGoalNavalCombatGrounding` 枚举真实当前陆块组及单成员贡献者、具名救援工人、实际在船 manifest。它消费同次 Arrival、landRoute、resolveCohort 与已发布行军风险，不创建查询或扩大可用池；allowed/interrupted 边界在候选组处生效。防守沿 SiteThreat 的整支互斥敌军情景重用同一保护 P 与原生战损，combat-rating 门槛由实际武器/HP 单独评估，不能改名复用 field-strength。估算的 guard post 原样成为执行参数，site-safe 的逻辑据点独立保留。
 
 本地增援建立所选组真实的 field-strength 效果，资源账仍只记 combat-rating。未知 route/risk/响应保持原请求与 pending 估计。跨海 force-available/worker-at 只提供真实源 land 或 aboard sea 的 manifest，实际航次费用/P/时长必须另读 transportOptions；不生成跨水陆路。跨海直接到 post、尚无实际池绑定、未覆盖的保护窗仍保留 deferred/pending，不能把当前候选构造器的测试称作这些依赖或完整公开题已通过。
+
+`assessGoalCombatMovementRisk` 只接受当前真实组和逐成员已发布路线。它在完整行军时窗内检查观察到的移动敌军及技能/物品、敌船载兵、营地 home/return/leash、未完工塔、投射物和持续伤害场；仅无暴露证明返回零损失/P1。有暴露或缺事实时，保留 pending，或消费同 epoch、同请求精确绑定的已发布既有模型结果，不生成另一套风险概率。未来评估组不冒充当前真实成员。
+
+`goalCombatMovementRiskId` 的完整语义键仅供运行时模型绑定，不写入 decision memory 或诊断 request ID。纯 helper 不创建 Situation、查询、风险 batch 或工作额度。其定向测试核原生快照、严格导航闸、整窗接敌、营地/塔、陈旧或替换的路线/组、物品射程及 JSON 不变；不代表 owner-think 6144 或公开题已通过。
