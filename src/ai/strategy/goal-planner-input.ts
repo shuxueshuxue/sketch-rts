@@ -7,6 +7,7 @@ import { reservedAllocationGold } from './allocation-ledger';
 import { createArrivalQuery } from './arrivals';
 import { createPlanningDistanceQuery } from './distance-fields';
 import { decisionProjection } from './explanations';
+import type { DecisionFacts } from './decision';
 import { currentFactWork, FactWorkQueue, withFactWork } from './fact-work';
 import { withStrategyFrame } from './frame-reuse';
 import { createGoalEconomicGrounding } from './goal-economy-grounding';
@@ -16,25 +17,29 @@ import { createGoalGeometryReader } from './goal-geometry-source';
 import { goalLandActionProvider } from './goal-land-actions';
 import { readGoalLandCapabilityFact } from './goal-land-facts';
 import { goalNavalActionProvider } from './goal-naval-provider';
+import { collectGoalRequests } from './goal-requests';
 import { planGoals } from './goal-planner';
 import type { GoalCandidates, GoalCohortMember, GoalFactObservation, GoalGroundingReader, GoalPlannerInput,
   GoalPlannerCache, GoalPlanningContext, GoalRequest, GoalResourceBalance, GoalSearchLimits } from './goal-planner-types';
 import { groundGoalTransportOptions } from './goal-transport-grounding';
 import { createGoalTransportFactPorts } from './goal-transport-physical-ports';
 import { createGoalFactReader, createGoalWorldFactMemory, type GoalWorldFactMemory } from './goal-world-facts';
-import { boundObservationMemory, observationMemory } from './observation-memory';
+import { boundObservationMemory, observationHistory, observationMemory } from './observation-memory';
+import { generateStrategyObjectives } from './plan';
 import { pointRoute } from './point-routes';
 import { landIdAt, regionIndex, seaIdAt } from './regions';
 import { evaluateSituation } from './situation';
-import type { SituationObservation } from './types';
+import type { Objective, SituationObservation } from './types';
 
 export type GoalPlannerRuntimeMemory = {
   version: 1; owner: PlayerId; world: GoalWorldFactMemory; cache?: GoalPlannerCache;
 };
 export type GoalPlannerOwnerInput = Readonly<{
   snapshot: GameSnapshot; owner: PlayerId; version: BootstrapAiVersion; memory: AiPolicyMemory;
-  /** Callers state desired world effects, never observations or action chains. */
-  goals: readonly GoalRequest[];
+  /** Omit to consume the ordinary observer's Objective list. Explicit goals
+   * are for callers that already have requests, never fabricated observations. */
+  goals?: readonly GoalRequest[];
+  objectives?: readonly DecisionFacts<Objective>[];
   work?: FactWorkQueue; limits?: GoalSearchLimits;
   observation?: SituationObservation;
   allowedUnitIds?: readonly string[]; interruptedUnitIds?: readonly string[];
@@ -62,8 +67,15 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
       // This is the sole Situation evaluation. In an actual owner think the
       // caller supplies the ordinary planner's accepted healing observations;
       // an isolated cold frame has none, and never previews old selectors.
-      const situation = decisionProjection(() => evaluateSituation(snapshot, owner, memory, undefined,
-        snapshot.teams, 1, input.observation ?? { healing: [] }, preparation, { regions, distances, arrivals }), false).facts;
+      const observed = decisionProjection(() => {
+        const situation = evaluateSituation(snapshot, owner, memory, observationHistory(preparation),
+          snapshot.teams, 1, input.observation ?? { healing: [] }, preparation, { regions, distances, arrivals });
+        const objectives = input.objectives ?? (input.goals === undefined
+          ? generateStrategyObjectives(situation, { snapshot, owner, memory, ...(snapshot.teams ? { teams: snapshot.teams } : {}) }, preparation.history?.objectives)
+            .map(entry => entry.objective) : []);
+        return { situation, objectives };
+      }, false).facts;
+      const { situation } = observed;
       let retained = memory.goalPlanning;
       if (!retained || retained.version !== 1 || retained.owner !== owner) {
         retained = { version: 1, owner, world: createGoalWorldFactMemory(owner) };
@@ -126,7 +138,8 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
         return { state: 'met', candidates: members, factIds: members.map(member => member.assessment.id) };
       };
       const physical = createGoalTransportFactPorts({ snapshot, owner, tick: snapshot.tick, byTick: snapshot.tick + situation.horizonTicks,
-        regions, geometry, geometryRevision, readFact: read, resolveCohort, productionOptions: economy.productionOptions,
+        regions, geometry, geometryRevision, shoreGeometryRevision: preparation.terrain,
+        readFact: read, resolveCohort, productionOptions: economy.productionOptions,
         readPointRoute: (ship, from, to, future) => {
           const pose = { ...ship, sailing: { ...ship.sailing!, heading: from.heading } };
           shareShipProfile(ship, pose);
@@ -142,7 +155,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
       };
       const grounded: GoalPlanningContext = { ...context, grounding: { ...economy, resolveCohort, transportOptions } };
       const initialBalances = initialGoalBalances(grounded, input.allowedUnitIds, input.interruptedUnitIds);
-      const plannerInput: GoalPlannerInput = { context: grounded, goals: input.goals,
+      const plannerInput: GoalPlannerInput = { context: grounded, goals: input.goals ?? collectGoalRequests(observed.objectives, grounded),
         providers: [goalEconomyActionProvider, goalLandActionProvider, goalNavalActionProvider], initialBalances,
         limits: input.limits ?? { maxDepth: 12, maxExpansions: 2048, maxPlans: 8 }, declarationRevision: 'goal-domain-v1',
         ...(retained.cache ? { previous: retained.cache } : {}), work };

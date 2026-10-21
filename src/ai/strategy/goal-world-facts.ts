@@ -1,10 +1,11 @@
 import { unitMover } from '../../shared/catalog';
 import { bodyMass } from '../../shared/physical-body';
+import { GOLD_MINE_RULES } from '../../shared/mining';
 import { shipProfile } from '../../shared/ship-geometry';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { isTransportKind } from '../../shared/transport-role';
 import type { Unit } from '../../shared/types';
-import { effectiveCombatRating } from '../policy/v6/strength';
+import { effectiveCombatRating, structureRating } from '../policy/v6/strength';
 import { neutralCampExposure } from '../situation/neutral-camp-exposure';
 import { assessAllocatedForce } from './allocated-force';
 import type { AllocationLandRouteReader } from './allocation-arrival-query';
@@ -105,6 +106,26 @@ export function createGoalFactReader(input: GoalWorldFactInput): GoalFactReader 
       return answer(fact, live.length === 0, live.length ? 'native-camp-present' : 'recorded-camp-members-cleared', live.map(unitRevision),
         { entityIds: live.map(unit => unit.id), ...(live.length ? {} : { availableTick: tick }) });
     }
+    if (p.kind === 'garrison-ready') {
+      const hall = snapshot.buildings.find(building => building.owner === owner && building.kind === 'townHall'
+        && building.hp > 0 && building.complete && gap(building, p.at.point) <= GOLD_MINE_RULES.baseRange
+        && ports.regionAt(building, 'land') === p.at.landId);
+      const stationed = input.situation.units.filter(unit => own.some(actor => actor.id === unit.id)
+        && unit.expiresTick === null && !unit.roles.some(role => ['worker', 'caster', 'healer'].includes(role))
+        && unit.location.kind === 'land' && unit.location.landId === p.at.landId && gap(unit.location.point, p.at.point) <= 650
+        && unit.commitments.some(claim => claim.objectiveId === `DefendSite:${owner}:${hall?.id ?? ''}`));
+      const staticPower = hall ? snapshot.buildings.filter(building => building.owner === owner && building.hp > 0 && building.complete
+        && building.attackDamage > 0 && gap(building, hall) <= building.attackRange + hall.radius
+        && gap(building, p.at.point) <= building.attackRange).reduce((sum, building) => sum + structureRating(building), 0) : 0;
+      const threat = hall && input.situation.lands.flatMap(land => land.threats).find(threat => threat.siteId === hall.id);
+      const raid = threat ? [...threat.attackers].filter(attacker => 'ticks' in attacker.arrival)
+        .sort((a, b) => ('ticks' in a.arrival ? a.arrival.ticks : 0) - ('ticks' in b.arrival ? b.arrival.ticks : 0)
+          || order(a.unitId, b.unitId)).slice(0, 2).reduce((sum, attacker) => sum + attacker.strength, 0) : 0;
+      const power = stationed.reduce((sum, unit) => sum + unit.strength, 0) + staticPower;
+      return answer(fact, !!hall && power > 0 && power >= raid, 'observed-garrison-handoff',
+        [hall?.id, stationed.map(unit => [unit.id, unit.strength, unit.commitments]), staticPower, raid],
+        { quantity: power, entityIds: stationed.map(unit => unit.id), availableTick: tick });
+    }
     if (p.kind === 'force-at' || p.kind === 'force-available') {
       const refs = p.cohort, requested = new Set(refs?.flatMap(ref => ref.kind === 'existing' ? [ref.entityId] : []) ?? []);
       const eligible = own.filter(unit => !passenger(unit) && unit.kind !== 'worker' && unit.attackDamage > 0 && unitMover(unit.kind) === 'land');
@@ -113,6 +134,8 @@ export function createGoalFactReader(input: GoalWorldFactInput): GoalFactReader 
       const exact = !refs || refs.every(ref => ref.kind === 'existing' && units.some(unit => unit.id === ref.entityId));
       let quantity: number;
       if (p.metric === 'combat-rating') quantity = units.reduce((sum, unit) => sum + effectiveCombatRating(snapshot, unit), 0);
+      else if (p.metric === 'field-strength') quantity = units.reduce((sum, unit) => sum
+        + (input.situation.units.find(observed => observed.id === unit.id)?.strength ?? 0), 0);
       else {
         if (!memory.camps.includes(p.campId)) return answer(fact, false, 'camp-identity-unobserved', p.campId);
         const target = resolveGoalCamp(snapshot, p.campId);
