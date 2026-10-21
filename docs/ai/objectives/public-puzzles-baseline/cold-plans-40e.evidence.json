@@ -1,0 +1,9 @@
+{
+  "sha256": "a90f7338532a6fc04623e2eb556a9781162ab08c57a50fc7fe293b6571187808",
+  "bytes": 66803,
+  "name": "public-planner-puzzles-cold-40e-20261021",
+  "kind": "dir",
+  "machine": "a100",
+  "pushed": "475dd5e81d6789f0bda8341ba64a335c24c0b0a4",
+  "pr": 585
+}
