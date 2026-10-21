@@ -88,6 +88,10 @@ export type GoalFactReader = (fact: GoalFact) => GoalFactObservation;
 export type GoalPlanningContext = Readonly<{
   snapshot: GameSnapshot; situation: DecisionFacts<Situation>; owner: PlayerId; tick: number;
   version: BootstrapAiVersion; readFact: GoalFactReader;
+  /** Coarse discovery reads cached observations and optimistic bounds only.
+   * Exact native geometry is requested after a plan has been selected. An
+   * omitted value retains the existing exact declaration contract. */
+  precision?: 'coarse' | 'exact';
   /** Same shared fact sources; no provider may invent a build/shore point or
    * call native route selection when this port is absent/pending. */
   grounding?: GoalGroundingReader;
@@ -144,6 +148,8 @@ export type GoalActionCost = Readonly<{ code: string; gold: number; factIds: rea
  * planned producer slots, never invented world IDs or allocation leases. */
 export type GoalActionDeclaration = Readonly<{
   id: string; kind: GoalActionKind; preconditions: readonly GoalFact[];
+  /** Coarse declarations are search proposals, never execution authority. */
+  precision?: 'coarse' | 'exact';
   effects: readonly GoalFactEffect[]; demands: readonly GoalResourceDemand[];
   flows: readonly GoalResourceFlow[]; duration: GoalEstimate<number>;
   cost: GoalEstimate<readonly GoalActionCost[]>; successProbability: GoalEstimate<number>;
@@ -246,6 +252,11 @@ export type GoalActionNode = Readonly<{
   state: 'ready' | 'waiting-facts' | 'waiting-actions' | 'waiting-time' | 'blocked' | 'world-effects-met';
   /** Optional binding to the existing allocator/command authority. */
   allocation?: Readonly<{ objectiveId: string; methodId: string; actionId: string; generation: number }>;
+  refinement?: Readonly<{
+    state: 'pending' | 'known' | 'invalid'; coarse: GoalActionDeclaration; exact?: GoalActionDeclaration;
+    delta?: Readonly<{ durationTicks: number; costGold: number; successProbability: number }>;
+    reason: AllocationReason;
+  }>;
   reasons: readonly AllocationReason[];
 }>;
 export type GoalPlanEdge = Readonly<{ from: string; to: string; kind: 'requires' | 'establishes' | 'resource-before' }>;
@@ -296,6 +307,9 @@ export type GoalPlannerInput = Readonly<{
    * registers finite work here and returns search-pending when deferred. */
   work: FactWorkQueue;
   capacityPressure?: () => readonly GoalCapacityPressure[];
+  /** Refine only a selected plan's ready atoms and their next prerequisites.
+   * The returned graph retains coarse/exact evidence and grants no coarse atom. */
+  refineSelected?: (plan: GoalPlan) => GoalPlan;
 }>;
 export type GoalPlannerOutput = Readonly<{
   plans: readonly GoalPlan[]; cache: GoalPlannerCache;
