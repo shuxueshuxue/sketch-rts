@@ -40,14 +40,16 @@ function road(fact: GoalFact, ticks = 15): GoalFactObservation {
 }
 
 describe('grounded economic declarations against native rules', () => {
-  it('pays the exact native batch at submission and produces only symbolic output slots', () => {
+  it('pays the exact native batch and replenishes the region pool without entity output slots', () => {
     const game = nativeScene(), snapshot = snapshotGame(game), before = JSON.stringify(snapshot);
     const action = declareGoalTraining({ unitKind: 'footman', count: 2, producer: { kind: 'existing', entityId: 'barracks' },
       at, byTick: 2000 }, context(snapshot))!;
     expect(action.duration).toMatchObject({ state: 'met', value: UNIT_DEFS.footman.trainTime * 2 });
     expect(action.flows).toContainEqual(expect.objectContaining({ resource: { kind: 'gold' }, delta: -200, at: 'start' }));
     expect(action.flows).toContainEqual(expect.objectContaining({ resource: { kind: 'population-room' }, delta: -4, at: 'start' }));
-    expect(action.outputs).toEqual(['unit-0', 'unit-1']);
+    expect(action.outputs).toEqual([]);
+    expect(action.flows).toContainEqual(expect.objectContaining({ resource: { kind: 'unit-pool', unitKind: 'footman', at }, delta: 2 }));
+    expect(action.flows.some(flow => flow.resource.kind === 'entity-control')).toBe(false);
     const goldBefore = game.players.us!.gold;
     for (let i = 0; i < 2; i++) expect(tryPlayerCommand(game, 'us', { type: 'train', buildingId: 'barracks', unitKind: 'footman' }).ok).toBe(true);
     expect(game.players.us!.gold).toBe(goldBefore - 200);
@@ -83,6 +85,10 @@ describe('grounded economic declarations against native rules', () => {
     expect(ship.demands[0]!.resource).toEqual({ kind: 'production-lane', producer, lane: 'training' });
     expect(ship.flows.find(flow => flow.resource.kind === 'gold')!.delta).toBe(-UNIT_DEFS.transport.cost);
     expect(ship.preconditions.find(fact => fact.predicate.kind === 'spawn-exit')!.predicate).toMatchObject({ producer });
+    expect(ship.outputs).toEqual([]);
+    expect(ship.effects.find(effect => effect.fact.predicate.kind === 'transport-in')!.fact.predicate)
+      .toMatchObject({ kind: 'transport-in', seaId: 'sea:1' });
+    expect(ship.effects.find(effect => effect.fact.predicate.kind === 'transport-in')!.fact.predicate).not.toHaveProperty('transport');
     expect(declareGoalTraining({ unitKind: 'knight', count: 1, producer: { kind: 'existing', entityId: 'barracks' }, at, byTick: 5000 }, context(snapshot))).toBeNull();
     snapshot.players.us!.race = 'ember';
     expect(declareGoalTraining({ unitKind: 'knight', count: 1, producer, at, byTick: 5000 }, context(snapshot))).toBeNull();
