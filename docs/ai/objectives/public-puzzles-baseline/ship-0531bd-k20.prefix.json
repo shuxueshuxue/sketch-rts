@@ -1,0 +1,24 @@
+[
+  {
+    "puzzle": "ship-away/far",
+    "originalThinkCount": 4,
+    "newThinkCount": 20,
+    "comparedPrefix": 4,
+    "fields": [
+      "observed",
+      "memoryAfter",
+      "work",
+      "planHash",
+      "readyActionCount",
+      "passed",
+      "executable",
+      "snapshotUntouched",
+      "memoryThinkSequence"
+    ],
+    "identical": true
+  },
+  {
+    "puzzle": "ship-away/near",
+    "originalNotYetWritten": true
+  }
+]
