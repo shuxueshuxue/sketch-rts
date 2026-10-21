@@ -122,6 +122,11 @@ describe('shared-budget economic grounding with native placements', () => {
     expect(action.flows.find(flow => flow.resource.kind === 'gold')!.delta).toBe(0);
     expect(action.executor.parameters).toMatchObject({ foundationId: 'paid-farm' });
     expect(action.preconditions.some(fact => fact.predicate.kind === 'build-site')).toBe(false);
+    const noClock: GoalPlanningContext['readFact'] = fact => ({ fact, state: 'met', observedTick: 15, revision: 'route-without-clock',
+      reason: { code: 'distance-only', factIds: [fact.id], values: {} }, evidence: [], route: { distance: 100, ticks: null, points: [] } });
+    const geometry = createGoalGeometryReader({ tick: 30, work: new FactWorkQueue(30, 0), memory: retained });
+    const missingTime = createGoalEconomicGrounding(context(snapshot, noClock), ports(snapshot, geometry)).buildSites('farm', near);
+    expect(missingTime.state === 'met' && missingTime.candidates[0]!.walkTicks.state).toBe('pending');
   });
 
   it('uses the same budgeted native Arrival for a water-centred yard approach and completes the public move/build chain', () => {

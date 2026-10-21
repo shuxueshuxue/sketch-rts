@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { sketchScene } from '../../sdk/scene';
 import { snapshotGame } from '../../shared/sim';
-import { declareGoalDestroyTarget, declareGoalEngageUnits, declareGoalHoldPosition, type GoalLandCombatGrounding } from './goal-land-actions';
+import { declareGoalDestroyTarget, declareGoalEngageUnits, declareGoalHoldPosition, goalLandActionProvider, type GoalLandCombatGrounding } from './goal-land-actions';
+import { goalFact } from './goal-facts';
 import type { GoalEntityReference, GoalPlanningContext } from './goal-planner-types';
 import type { Situation, Target } from './types';
 
@@ -79,5 +80,27 @@ describe('atomic land action declarations', () => {
     expect(second).toEqual(first);
     expect(declareGoalDestroyTarget(JSON.parse(JSON.stringify(input)), { ...context, snapshot: JSON.parse(JSON.stringify(context.snapshot)) })).toEqual(first);
     expect(declareGoalDestroyTarget(grounding(), context)!.id).not.toBe(first.id);
+  });
+
+  it('enumerates only shared combat candidates and retains bound capability and pending time', () => {
+    const base = scene(), future = { kind: 'binding', name: 'future-counter' } as const;
+    const weak = { ...grounding(), id: 'weak', preconditions: [], factIds: ['shared-weak'] };
+    const counter = { ...weak, id: 'future', cohort: [future], duration: { state: 'pending' as const,
+      requestIds: ['future-route'], reason: { code: 'future-route-pending', factIds: ['future-route'], values: {} } } };
+    const context: GoalPlanningContext = { ...base, grounding: {
+      buildSites: () => { throw Error('Combat selected a construction recipe'); },
+      productionOptions: () => { throw Error('Combat selected a training recipe'); },
+      transportOptions: () => { throw Error('Combat ran transport grounding'); },
+      combatOptions: () => ({ state: 'met', candidates: [weak, counter], factIds: ['shared-options'] }),
+    } };
+    const effect = goalFact({ kind: 'harassment-ended', site: target, throughTick: 1000 });
+    const actions = goalLandActionProvider.actionsFor(effect, context);
+    expect(actions).toHaveLength(2); expect(actions.every(action => action.kind === 'engage-units')).toBe(true);
+    expect(actions.some(action => action.duration.state === 'pending')).toBe(true);
+    for (const action of actions) expect(action.preconditions.find(fact => fact.predicate.kind === 'interception-capability')!.predicate)
+      .toMatchObject({ cohort: action.executor.parameters.cohort });
+    expect(goalLandActionProvider.actionsFor(effect, { ...context, grounding: { ...context.grounding!,
+      combatOptions: () => ({ state: 'pending', requestIds: ['assessment'], reason: { code: 'assessment-pending', factIds: ['assessment'], values: {} } }) } })).toEqual([]);
+    expect(goalLandActionProvider.actionsFor(goalFact({ kind: 'enemy-site-destroyed', site: { ...target, entityId: 'allied-hall' } }), context)).toEqual([]);
   });
 });

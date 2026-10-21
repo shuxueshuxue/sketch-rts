@@ -99,7 +99,7 @@ function walkEstimate(observation: ReturnType<GoalPlanningContext['readFact']>):
   const ticks = observation.route?.ticks;
   return ticks !== null && ticks !== undefined && Number.isFinite(ticks) && ticks >= 0
     ? { state: 'met', value: ticks, factIds: [observation.fact.id] }
-    : { state: 'unmet', reason: why('build-route-time-unavailable', [observation.fact.id]) };
+    : { state: 'pending', requestIds: [`route-time:${observation.fact.id}`], reason: why('build-route-time-pending', [observation.fact.id]) };
 }
 
 /** Economics owns the domain rules; the one owner-think source owns all

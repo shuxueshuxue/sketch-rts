@@ -103,6 +103,7 @@ describe('grounded economic declarations against native rules', () => {
     expect(action.flows).toContainEqual(expect.objectContaining({ resource: { kind: 'gold' }, delta: -120, at: 'start' }));
     expect(action.flows).toContainEqual(expect.objectContaining({ resource: { kind: 'supply-cap' }, delta: 6, at: 'finish' }));
     expect(action.effects).toContainEqual({ fact: goalFact({ kind: 'build-site', buildingKind: 'farm', at: site }), operation: 'invalidate', at: 'start' });
+    expect(action.preconditions.map(fact => fact.predicate)).toContainEqual({ kind: 'site-safe', site, throughTick: 5000 });
     const foundation = createBuilding('started', 'us', 'farm', site.point.x, site.point.y, false);
     foundation.buildProgress = 40; snapshot.buildings.push(foundation);
     const resume = declareGoalBuilding({ buildingKind: 'farm', at: site, worker, byTick: 5000, foundationId: 'started' }, context(snapshot, road))!;
