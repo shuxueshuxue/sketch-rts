@@ -1,0 +1,291 @@
+{
+  "productionHead": "488cfd832cd4fd0452506ca134c7ae4a7591ac85",
+  "testSource": "2478e44dd55f7a5896db17b235613a12358c7c84",
+  "variant": "near",
+  "think": 14,
+  "tick": 210,
+  "source": {
+    "path": "/tmp/goal-488-first-transport-near/actual-frame.jsonl.gz",
+    "compressedBytes": 263041,
+    "compressedSha256": "0ea0443512e177dcc75eb699cb4ed0c04a98087d393614d09c9c46e9cc1b82ab",
+    "plainSha256": "f904d8c4b6e97ae29e5dd630fcac368cef7c5b070356506189588b96a71d8903"
+  },
+  "execution": {
+    "executor": "goal.transport-force",
+    "generation": 3,
+    "actionIdSha256": "e2fb6e4035fa864bba149b1288e66269e24c760e269c01b31c3b1e4a51012db2",
+    "objectiveId": "ConquerIsland:planner:resource-1",
+    "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+    "status": "active",
+    "phase": "loading",
+    "state": {
+      "goalLoadedIds": [],
+      "goalLandedIds": [],
+      "goalRendezvousEstablished": true
+    },
+    "intentKind": "goal-action"
+  },
+  "selectedCohort": [
+    {
+      "kind": "existing",
+      "entityId": "scene-public-planner-frame-planner-footman-1"
+    },
+    {
+      "kind": "existing",
+      "entityId": "scene-public-planner-frame-planner-footman-2"
+    },
+    {
+      "kind": "existing",
+      "entityId": "scene-public-planner-frame-planner-footman-3"
+    },
+    {
+      "kind": "existing",
+      "entityId": "scene-public-planner-frame-planner-footman-4"
+    }
+  ],
+  "transport": {
+    "kind": "existing",
+    "entityId": "unit-planner-transport-1000"
+  },
+  "assignments": [
+    {
+      "unitId": "scene-public-planner-frame-planner-footman-1",
+      "authority": "committed",
+      "leaseId": "lease:scene-public-planner-frame-planner-footman-1",
+      "stage": "assigned",
+      "interruption": null
+    },
+    {
+      "unitId": "scene-public-planner-frame-planner-footman-2",
+      "authority": "committed",
+      "leaseId": "lease:scene-public-planner-frame-planner-footman-2",
+      "stage": "assigned",
+      "interruption": null
+    },
+    {
+      "unitId": "scene-public-planner-frame-planner-footman-3",
+      "authority": "committed",
+      "leaseId": "lease:scene-public-planner-frame-planner-footman-3",
+      "stage": "assigned",
+      "interruption": null
+    },
+    {
+      "unitId": "scene-public-planner-frame-planner-footman-4",
+      "authority": "committed",
+      "leaseId": "lease:scene-public-planner-frame-planner-footman-4",
+      "stage": "assigned",
+      "interruption": null
+    },
+    {
+      "unitId": "unit-planner-transport-1000",
+      "authority": "committed",
+      "leaseId": "lease:unit-planner-transport-1000",
+      "stage": "assigned",
+      "interruption": null
+    }
+  ],
+  "sameTokenActualLeases": [
+    {
+      "id": "lease:scene-public-planner-frame-planner-footman-1",
+      "resourceKey": "unit:scene-public-planner-frame-planner-footman-1",
+      "sinceTick": 210,
+      "minimumStayUntilTick": 510,
+      "origin": "allocator"
+    },
+    {
+      "id": "lease:scene-public-planner-frame-planner-footman-2",
+      "resourceKey": "unit:scene-public-planner-frame-planner-footman-2",
+      "sinceTick": 210,
+      "minimumStayUntilTick": 510,
+      "origin": "allocator"
+    },
+    {
+      "id": "lease:scene-public-planner-frame-planner-footman-3",
+      "resourceKey": "unit:scene-public-planner-frame-planner-footman-3",
+      "sinceTick": 210,
+      "minimumStayUntilTick": 510,
+      "origin": "allocator"
+    },
+    {
+      "id": "lease:scene-public-planner-frame-planner-footman-4",
+      "resourceKey": "unit:scene-public-planner-frame-planner-footman-4",
+      "sinceTick": 210,
+      "minimumStayUntilTick": 510,
+      "origin": "allocator"
+    },
+    {
+      "id": "lease:unit-planner-transport-1000",
+      "resourceKey": "unit:unit-planner-transport-1000",
+      "sinceTick": 210,
+      "minimumStayUntilTick": 510,
+      "origin": "allocator"
+    }
+  ],
+  "acceptedToSdk": [
+    {
+      "commandId": "planner:strategy-command:210:14:0",
+      "status": "accepted",
+      "admittedTick": 210,
+      "sameExecutionToken": true,
+      "sdk": {
+        "playerId": "planner",
+        "source": "internal-ai",
+        "scriptId": "goal.transport-force",
+        "command": {
+          "type": "board",
+          "unitIds": [
+            "scene-public-planner-frame-planner-footman-1"
+          ],
+          "transportId": "unit-planner-transport-1000"
+        }
+      }
+    },
+    {
+      "commandId": "planner:strategy-command:210:14:1",
+      "status": "accepted",
+      "admittedTick": 210,
+      "sameExecutionToken": true,
+      "sdk": {
+        "playerId": "planner",
+        "source": "internal-ai",
+        "scriptId": "goal.transport-force",
+        "command": {
+          "type": "board",
+          "unitIds": [
+            "scene-public-planner-frame-planner-footman-2"
+          ],
+          "transportId": "unit-planner-transport-1000"
+        }
+      }
+    },
+    {
+      "commandId": "planner:strategy-command:210:14:2",
+      "status": "accepted",
+      "admittedTick": 210,
+      "sameExecutionToken": true,
+      "sdk": {
+        "playerId": "planner",
+        "source": "internal-ai",
+        "scriptId": "goal.transport-force",
+        "command": {
+          "type": "board",
+          "unitIds": [
+            "scene-public-planner-frame-planner-footman-3"
+          ],
+          "transportId": "unit-planner-transport-1000"
+        }
+      }
+    },
+    {
+      "commandId": "planner:strategy-command:210:14:3",
+      "status": "accepted",
+      "admittedTick": 210,
+      "sameExecutionToken": true,
+      "sdk": {
+        "playerId": "planner",
+        "source": "internal-ai",
+        "scriptId": "goal.transport-force",
+        "command": {
+          "type": "board",
+          "unitIds": [
+            "scene-public-planner-frame-planner-footman-4"
+          ],
+          "transportId": "unit-planner-transport-1000"
+        }
+      }
+    }
+  ],
+  "snapshotActors": [
+    {
+      "id": "scene-public-planner-frame-planner-footman-1",
+      "kind": "footman",
+      "owner": "planner",
+      "hp": 145,
+      "x": 1390.9656789909875,
+      "y": 693.7580998969099,
+      "order": {
+        "type": "move",
+        "x": 1520,
+        "y": 720,
+        "avoidCombat": true
+      },
+      "deck": null,
+      "cabin": null
+    },
+    {
+      "id": "scene-public-planner-frame-planner-footman-2",
+      "kind": "footman",
+      "owner": "planner",
+      "hp": 145,
+      "x": 1389.67178884442,
+      "y": 729.7306342784676,
+      "order": {
+        "type": "hold",
+        "x": 1355.0462293366713,
+        "y": 712.4302602086955
+      },
+      "deck": null,
+      "cabin": null
+    },
+    {
+      "id": "scene-public-planner-frame-planner-footman-3",
+      "kind": "footman",
+      "owner": "planner",
+      "hp": 145,
+      "x": 1424.4573469352147,
+      "y": 706.9813062850357,
+      "order": {
+        "type": "hold",
+        "x": 1372.794019680664,
+        "y": 710.18626797871
+      },
+      "deck": null,
+      "cabin": null
+    },
+    {
+      "id": "scene-public-planner-frame-planner-footman-4",
+      "kind": "footman",
+      "owner": "planner",
+      "hp": 145,
+      "x": 1360.3243064375354,
+      "y": 750.5807008581595,
+      "order": {
+        "type": "hold",
+        "x": 1362.811967655601,
+        "y": 747.043451786648
+      },
+      "deck": null,
+      "cabin": null
+    },
+    {
+      "id": "unit-planner-transport-1000",
+      "kind": "transport",
+      "owner": "planner",
+      "hp": 338,
+      "x": 1664,
+      "y": 768,
+      "order": {
+        "type": "idle"
+      },
+      "deck": null,
+      "cabin": null
+    }
+  ],
+  "actualSnapshotCargoIds": [],
+  "nativeSnapshotLoad": 0,
+  "work": {
+    "used": 5955,
+    "limit": 6144,
+    "servicesReconcile": true
+  },
+  "findings": [
+    "Five actual committed leases and assignments belong to the same generation-3 transport execution, with no interruption.",
+    "Exactly four board admissions for the four original footmen match exactly four returned goal.transport-force SDK commands to the same hull.",
+    "Execution remains active/loading with empty loaded and landed state; the saved snapshot has no deck/cabin cargo and load=0.",
+    "This member confirms command dispatch only. It does not establish subsequent boarding, departure, landing, combat, or overall puzzle success. Snapshot orders are not reinterpreted as post-command native state."
+  ],
+  "aiCalls": 0,
+  "factQueries": 0,
+  "navigationQueries": 0,
+  "simulationSteps": 0
+}

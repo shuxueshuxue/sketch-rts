@@ -1,0 +1,316 @@
+{
+  "productionHead": "488cfd832cd4fd0452506ca134c7ae4a7591ac85",
+  "testSource": "2478e44dd55f7a5896db17b235613a12358c7c84",
+  "scope": "Read-only original SDK admissions and subsequent native snapshots. No AI, fact reader, movement query or simulation.",
+  "rows": [
+    {
+      "name": "first-snapshot-cargo",
+      "tick": 255,
+      "think": 17,
+      "compressedSha256": "1c6e0a385c64aecd8f2926014d193152431f22e62dcda35556529e8a94d54312",
+      "plainSha256": "46f2b425de59aac825b685ae02469fb0f15fc4c8718c7c923a4513f1c26c2ba1",
+      "generation": 3,
+      "status": "active",
+      "phase": "loading",
+      "aboardIds": [
+        "scene-public-planner-frame-planner-footman-3"
+      ],
+      "goalLoadedIds": [
+        "scene-public-planner-frame-planner-footman-3"
+      ],
+      "goalLandedIds": [],
+      "allFourAliveFullObservedHp": true,
+      "retainedSameTokenLeaseCount": 5,
+      "matchedAcceptedGoalSdkCommands": [],
+      "nativeRegionProof": {
+        "name": "first-snapshot-cargo",
+        "tick": 255,
+        "generation": 3,
+        "declaredTarget": {
+          "entityId": "resource-1",
+          "point": {
+            "x": 2976,
+            "y": 896
+          },
+          "landId": "land:2"
+        },
+        "nativeTargetLandId": "land:2",
+        "nativeLandingGroundLandId": "land:2",
+        "actors": [
+          {
+            "id": "scene-public-planner-frame-planner-footman-1",
+            "hp": 145,
+            "x": 1497.596928149883,
+            "y": 715.1582030725452,
+            "carrier": null,
+            "landId": "land:1",
+            "seaId": "sea:1",
+            "distanceToLandingGround": 1519.10296310372,
+            "distanceToLogicalTarget": 1489.4225049903782
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-2",
+            "hp": 145,
+            "x": 1504.6188559645425,
+            "y": 750.661740870735,
+            "carrier": null,
+            "landId": "land:1",
+            "seaId": "sea:1",
+            "distanceToLandingGround": 1522.3800396654026,
+            "distanceToLogicalTarget": 1478.5417412402724
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-3",
+            "hp": 145,
+            "x": 1652.509434452439,
+            "y": 720.0054117280166,
+            "carrier": "unit-planner-transport-1000",
+            "landId": null,
+            "seaId": null,
+            "distanceToLandingGround": 1372.0758293851245,
+            "distanceToLogicalTarget": 1335.1409559272863
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-4",
+            "hp": 145,
+            "x": 1468.7862484854463,
+            "y": 754.1293396435217,
+            "carrier": null,
+            "landId": "land:1",
+            "seaId": null,
+            "distanceToLandingGround": 1557.6696938420616,
+            "distanceToLogicalTarget": 1513.8760111133795
+          }
+        ],
+        "allAliveOffshipOnNativeTarget": false
+      },
+      "work": 176
+    },
+    {
+      "name": "all-started-cohort-snapshot-cargo",
+      "tick": 300,
+      "think": 20,
+      "compressedSha256": "5a6397f792567d9a5f76eb71f18961104ac75d46bee27e82c4800791c4aad697",
+      "plainSha256": "54ea7777f7efd7157d3d9cea8014f9fb7a8e9cb817173eab6a3f9de8a29a9c82",
+      "generation": 3,
+      "status": "active",
+      "phase": "departing",
+      "aboardIds": [
+        "scene-public-planner-frame-planner-footman-1",
+        "scene-public-planner-frame-planner-footman-2",
+        "scene-public-planner-frame-planner-footman-3",
+        "scene-public-planner-frame-planner-footman-4"
+      ],
+      "goalLoadedIds": [
+        "scene-public-planner-frame-planner-footman-1",
+        "scene-public-planner-frame-planner-footman-2",
+        "scene-public-planner-frame-planner-footman-3",
+        "scene-public-planner-frame-planner-footman-4"
+      ],
+      "goalLandedIds": [],
+      "allFourAliveFullObservedHp": true,
+      "retainedSameTokenLeaseCount": 5,
+      "matchedAcceptedGoalSdkCommands": [
+        {
+          "type": "holdPosition",
+          "unitIds": [
+            "scene-public-planner-frame-planner-footman-1"
+          ]
+        },
+        {
+          "type": "holdPosition",
+          "unitIds": [
+            "scene-public-planner-frame-planner-footman-2"
+          ]
+        },
+        {
+          "type": "holdPosition",
+          "unitIds": [
+            "scene-public-planner-frame-planner-footman-3"
+          ]
+        },
+        {
+          "type": "holdPosition",
+          "unitIds": [
+            "scene-public-planner-frame-planner-footman-4"
+          ]
+        },
+        {
+          "type": "unload",
+          "unitIds": [
+            "unit-planner-transport-1000"
+          ],
+          "x": 2960,
+          "y": 240
+        }
+      ],
+      "nativeRegionProof": {
+        "name": "all-started-cohort-snapshot-cargo",
+        "tick": 300,
+        "generation": 3,
+        "declaredTarget": {
+          "entityId": "resource-1",
+          "point": {
+            "x": 2976,
+            "y": 896
+          },
+          "landId": "land:2"
+        },
+        "nativeTargetLandId": "land:2",
+        "nativeLandingGroundLandId": "land:2",
+        "actors": [
+          {
+            "id": "scene-public-planner-frame-planner-footman-1",
+            "hp": 145,
+            "x": 1690.2391675229499,
+            "y": 761.5517686376357,
+            "carrier": "unit-planner-transport-1000",
+            "landId": null,
+            "seaId": null,
+            "distanceToLandingGround": 1349.6837380202223,
+            "distanceToLogicalTarget": 1292.7711496040374
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-2",
+            "hp": 145,
+            "x": 1646.8774299180006,
+            "y": 734.2798102943204,
+            "carrier": "unit-planner-transport-1000",
+            "landId": null,
+            "seaId": null,
+            "distanceToLandingGround": 1381.8218406168255,
+            "distanceToLogicalTarget": 1338.9250263027502
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-3",
+            "hp": 145,
+            "x": 1685.9424845024548,
+            "y": 723.79546432933,
+            "carrier": "unit-planner-transport-1000",
+            "landId": null,
+            "seaId": null,
+            "distanceToLandingGround": 1341.4360904147672,
+            "distanceToLogicalTarget": 1301.5002095263949
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-4",
+            "hp": 145,
+            "x": 1653.161286849459,
+            "y": 771.8099733910212,
+            "carrier": "unit-planner-transport-1000",
+            "landId": null,
+            "seaId": null,
+            "distanceToLandingGround": 1388.0466827139028,
+            "distanceToLogicalTarget": 1328.6554947460677
+          }
+        ],
+        "allAliveOffshipOnNativeTarget": false
+      },
+      "work": 292
+    },
+    {
+      "name": "previously-loaded-now-offship",
+      "tick": 975,
+      "think": 65,
+      "compressedSha256": "707679f7dfa1ac77e8c8616890f8feba18c8f5092de4575b30e334d883efd1b6",
+      "plainSha256": "b552301b2ded0b078f6325f99c035ec563b6cf68f0f14d78d319611714c7d961",
+      "generation": 3,
+      "status": "complete",
+      "phase": "delivered",
+      "aboardIds": [],
+      "goalLoadedIds": [
+        "scene-public-planner-frame-planner-footman-1",
+        "scene-public-planner-frame-planner-footman-2",
+        "scene-public-planner-frame-planner-footman-3",
+        "scene-public-planner-frame-planner-footman-4"
+      ],
+      "goalLandedIds": [
+        "scene-public-planner-frame-planner-footman-1",
+        "scene-public-planner-frame-planner-footman-2",
+        "scene-public-planner-frame-planner-footman-3",
+        "scene-public-planner-frame-planner-footman-4"
+      ],
+      "allFourAliveFullObservedHp": true,
+      "retainedSameTokenLeaseCount": 0,
+      "matchedAcceptedGoalSdkCommands": [],
+      "nativeRegionProof": {
+        "name": "previously-loaded-now-offship",
+        "tick": 975,
+        "generation": 3,
+        "declaredTarget": {
+          "entityId": "resource-1",
+          "point": {
+            "x": 2976,
+            "y": 896
+          },
+          "landId": "land:2"
+        },
+        "nativeTargetLandId": "land:2",
+        "nativeLandingGroundLandId": "land:2",
+        "actors": [
+          {
+            "id": "scene-public-planner-frame-planner-footman-1",
+            "hp": 145,
+            "x": 2956,
+            "y": 316,
+            "carrier": null,
+            "landId": "land:2",
+            "seaId": "sea:1",
+            "distanceToLandingGround": 12.649110640673518,
+            "distanceToLogicalTarget": 580.3447251418763
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-2",
+            "hp": 145,
+            "x": 2916,
+            "y": 308,
+            "carrier": null,
+            "landId": "land:2",
+            "seaId": "sea:1",
+            "distanceToLandingGround": 44.181444068749045,
+            "distanceToLogicalTarget": 591.053297089188
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-3",
+            "hp": 145,
+            "x": 2996,
+            "y": 316,
+            "carrier": null,
+            "landId": "land:2",
+            "seaId": "sea:1",
+            "distanceToLandingGround": 37.94733192202055,
+            "distanceToLogicalTarget": 580.3447251418763
+          },
+          {
+            "id": "scene-public-planner-frame-planner-footman-4",
+            "hp": 145,
+            "x": 3052,
+            "y": 196,
+            "carrier": null,
+            "landId": "land:2",
+            "seaId": "sea:1",
+            "distanceToLandingGround": 141.8731828077456,
+            "distanceToLogicalTarget": 704.1136271937933
+          }
+        ],
+        "allAliveOffshipOnNativeTarget": true
+      },
+      "work": 6144
+    }
+  ],
+  "nativeRegionsSource": {
+    "worktree": "/tmp/sketch-goal-region-audit-488",
+    "regionsBlob": "076eea4a97f2107a3020baf8aac2793ac10fb2fd",
+    "scriptSha256": "c9ddbb35f3dab9d45c73d6e2e10bf1e9eeca679b635e6e7ccabd3ae7b78c7958",
+    "resultSha256": "ebd53d51a323fb61173661fdaadc2cf9201b22ae1d2fe355dad1c64826467be5"
+  },
+  "conclusion": "The same generation-3 transport took the original four footmen onto native target land:2 alive; its completion is supported by actual post-unload positions, not only command acknowledgement. Released leases after completion are not treated as failures.",
+  "limitations": [
+    "This does not establish camp clearance, worker handoff, hall completion, K20 stability or overall puzzle success.",
+    "The t975 empty/search-pending graph is a single frame; subsequent blocking facts are audited separately."
+  ],
+  "aiCalls": 0,
+  "factQueries": 0,
+  "navigationQueries": 0,
+  "simulationSteps": 0
+}
