@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "identical": true,
+      "baselineSha256": "4f1552e780c76a2d1966646470b744de73436eeb452368df74e1ae4ee28e8a78",
+      "currentSha256": "4f1552e780c76a2d1966646470b744de73436eeb452368df74e1ae4ee28e8a78",
+      "bytes": 20181
+    },
+    {
+      "puzzle": "ship-away/near",
+      "identical": true,
+      "baselineSha256": "e457c849ed51985dcfc184fc02101edc09fd274788b782f26a563fe455a39cea",
+      "currentSha256": "e457c849ed51985dcfc184fc02101edc09fd274788b782f26a563fe455a39cea",
+      "bytes": 20178
+    }
+  ],
+  "allIdentical": true
+}
