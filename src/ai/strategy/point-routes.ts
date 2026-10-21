@@ -1,4 +1,5 @@
-import { advanceShipRouteSearch, SHIP_STATIC_ROUTE_SLICE_MAX_WORK, type ShipPose, type ShipRouteSearchState } from '../../shared/ship-navigation';
+import { advanceShipRouteSearch, SHIP_STATIC_ROUTE_SLICE_MAX_WORK, type ShipPose } from '../../shared/ship-navigation';
+import { restoreShipRouteSearchState, storeShipRouteSearchState, type StoredShipRouteSearchState } from './point-route-state';
 import { shareShipProfile, shipProfile } from '../../shared/ship-geometry';
 import { shipMotionLimits } from '../../shared/ship-handling';
 import { coursePerformance, windAt } from '../../shared/ship-wind';
@@ -14,7 +15,7 @@ import type { Point } from './types';
 type Route = { points: ShipPose[]; partial: boolean };
 type Entry = { id: string; key: string; firstRequestedTick: number; lastRequestedTick: number;
   lastRequestedThink?: number; readyThink?: number; geometryVersion: string; readyTick: number | null; publishedTick?: number;
-  work: number; state: ShipRouteSearchState; failure?: 'memory-budget' };
+  work: number; state: StoredShipRouteSearchState; failure?: 'memory-budget' };
 export type PointRouteMemory = { entries: Entry[] };
 export const POINT_ROUTE_MEMORY_BYTES = 32 * 1024;
 export const POINT_ROUTE_LIMIT = 16;
@@ -80,17 +81,18 @@ export function pointRoute(snapshot: GameSnapshot, observation: StrategyObservat
     minimum: SHIP_STATIC_ROUTE_SLICE_MAX_WORK,
     run() {
       const meter = { logicalWork: 0, expandedStates: 0 };
+      const state = restoreShipRouteSearchState(progress.state);
       // A finite expansion cap avoids the native Infinity-only whole-map
       // potential prepass; the existing continued native search still owns
       // trial order, collision tests and its normal logical slice boundary.
       const route = advanceShipRouteSearch(snapshot.map, pose, goal, clearStatic,
-        Number.MAX_SAFE_INTEGER, true, progress.state, meter);
+        Number.MAX_SAFE_INTEGER, true, state, meter);
       if (meter.logicalWork > SHIP_STATIC_ROUTE_SLICE_MAX_WORK) throw new Error('Native static slice reservation was exceeded');
       progress.work += meter.logicalWork;
       if (route) {
         progress.readyTick = snapshot.tick; if (queue.receipt.thinkSequence !== undefined) progress.readyThink = queue.receipt.thinkSequence; else delete progress.readyThink;
         progress.state = { phase: 'done', result: route };
-      }
+      } else progress.state = storeShipRouteSearchState(state);
       if (observationJsonBytes(memory) > POINT_ROUTE_MEMORY_BYTES) {
         // Never let search graphs evict the complete policy memory. Report a
         // bounded failure, rather than treating a truncated graph as a road.
@@ -100,7 +102,7 @@ export function pointRoute(snapshot: GameSnapshot, observation: StrategyObservat
       }
       return { work: meter.logicalWork, done: progress.readyTick !== null };
     } });
-  const route = progress.state.result;
+  const route = 'phase' in progress.state ? progress.state.result : undefined;
   if (progress.failure) return { status: 'pending', reasonCode: 'native-point-route-memory-budget', work: progress.work };
   if (progress.readyTick === null || factPublicationPending(progress.readyTick, progress.readyThink, snapshot.tick, queue) || !route)
     return { status: 'pending', reasonCode: 'native-point-route-pending', work: progress.work };

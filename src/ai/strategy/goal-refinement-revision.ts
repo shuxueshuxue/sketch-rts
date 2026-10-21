@@ -11,17 +11,23 @@ export function createGoalRefinementRevision(snapshot: GameSnapshot, owner: Play
     && (entity.owner === 'neutral' || strategyIsOpponent(snapshot, owner, entity.owner)));
   const shared = [geometryRevision, snapshot.teams, snapshot.variants, opposition, snapshot.projectiles, snapshot.effects, snapshot.obstacles];
   return (action: GoalActionDeclaration): string => {
-    const ids = new Set<string>();
+    const ids = new Set<string>(), poolKinds = new Set<string>();
     const references = (value: unknown, key = '') => {
       if (Array.isArray(value)) { value.forEach(item => references(item, key)); return; }
       if (typeof value === 'string' && ['unitIds', 'dependentUnitIds', 'loadedUnitIds'].includes(key)) ids.add(value);
       if (!value || typeof value !== 'object') return;
+      const row = value as Record<string, unknown>;
+      if (row.kind === 'pool-member' && typeof row.unitKind === 'string') poolKinds.add(row.unitKind);
       for (const [name, item] of Object.entries(value)) {
         if (name === 'entityId' && typeof item === 'string') ids.add(item);
         references(item, name);
       }
     };
     references(action.executor.parameters); references(action.demands);
-    return goalValueKey([shared, [...snapshot.units, ...snapshot.buildings].filter(entity => ids.has(entity.id))]);
+    // A fungible builder has no identity until ready selection. Its price can
+    // still depend on any actual member that can enter/leave the quoted pool;
+    // include those native member states before a route profile is bound.
+    return goalValueKey([shared, [...snapshot.units, ...snapshot.buildings].filter(entity => ids.has(entity.id)
+      || entity.owner === owner && poolKinds.has(entity.kind))]);
   };
 }

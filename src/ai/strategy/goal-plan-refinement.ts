@@ -2,7 +2,7 @@ import { discoverGoalActions } from './goal-provider-candidates';
 import { goalFact, goalValueKey } from './goal-facts';
 import type { GoalActionDeclaration, GoalActionProvider, GoalPlan, GoalPlanningContext } from './goal-planner-types';
 
-type Entry = { coarse: GoalActionDeclaration; sourceRevision?: string; state: 'pending' | 'known' | 'invalid';
+type Entry = { planId?: string; coarse: GoalActionDeclaration; sourceRevision?: string; state: 'pending' | 'known' | 'invalid';
   exact: GoalActionDeclaration[]; reason: GoalPlan['reasons'][number] };
 export type GoalRefinementMemory = { revision: number; entries: Entry[] };
 /** Clock deadlines do not create a new physical proposal. Actual geometry,
@@ -77,6 +77,22 @@ export function createGoalPlanRefiner(input: Readonly<{
 }>) {
   const { memory } = input;
   return (plan: GoalPlan): GoalPlan => {
+    // A moving world can generate a new physical choice every think. Retain
+    // quotations used by this graph, not the historical choices it replaced.
+    // Empty unresolved graphs retain their continuation until search resumes.
+    const invalidated = new Set<string>();
+    if (plan.actions.length) memory.entries = memory.entries.filter(entry => {
+      if (entry.planId !== undefined && entry.planId !== plan.id) return true;
+      const node = plan.actions.find(node => entry.exact.some(exact => exact.id === node.declaration.id)
+        || proposalKey(entry.coarse) === proposalKey(node.declaration));
+      const retain = !!node && entry.sourceRevision === input.sourceRevision?.(node.declaration);
+      if (retain) entry.planId = plan.id;
+      else if (entry.state !== 'pending') {
+        memory.revision++;
+        if (node) invalidated.add(node.id);
+      }
+      return retain;
+    });
     const first = new Set(plan.actions.filter(node => !node.dependsOnActionIds.length).map(node => node.id));
     const selected = plan.actions.filter(node => first.has(node.id)
       || node.dependsOnActionIds.length && node.dependsOnActionIds.every(id => first.has(id)));
@@ -84,7 +100,7 @@ export function createGoalPlanRefiner(input: Readonly<{
     const context = input.exactContext(selected.map(node => node.declaration));
     const deferred = [...(plan.deferredCandidates ?? [])];
     const annotations = new Map<string, NonNullable<GoalPlan['actions'][number]['refinement']>>();
-    let changed = false;
+    let changed = invalidated.size > 0;
     for (const node of selected) {
       const action = node.declaration;
       if (action.precision !== 'coarse') continue;
@@ -92,9 +108,9 @@ export function createGoalPlanRefiner(input: Readonly<{
       const provider = request && input.providers.find(provider => provider.id === request.providerId);
       if (!provider || !request) continue;
       const sourceRevision = input.sourceRevision?.(action);
-      let entry = memory.entries.find(entry => proposalKey(entry.coarse) === proposalKey(action) && entry.sourceRevision === sourceRevision);
+      let entry = memory.entries.find(entry => entry.planId === plan.id && proposalKey(entry.coarse) === proposalKey(action) && entry.sourceRevision === sourceRevision);
       if (!entry) {
-        entry = { coarse: action, ...(sourceRevision === undefined ? {} : { sourceRevision }), state: 'pending', exact: [], reason: { code: 'selected-exact-facts-pending', factIds: [], values: {} } };
+        entry = { planId: plan.id, coarse: action, ...(sourceRevision === undefined ? {} : { sourceRevision }), state: 'pending', exact: [], reason: { code: 'selected-exact-facts-pending', factIds: [], values: {} } };
         memory.entries.push(entry);
       }
       if (entry.state !== 'pending') continue;
@@ -119,6 +135,9 @@ export function createGoalPlanRefiner(input: Readonly<{
       deferred.push(...discovered.deferred.map(item => ({ ...item, factId: request.effect.id })));
     }
     const actions = plan.actions.map(node => {
+      if (invalidated.has(node.id)) return { ...node, state: 'waiting-facts' as const, refinement: {
+        state: 'pending' as const, coarse: node.refinement?.coarse ?? node.declaration,
+        reason: { code: 'selected-exact-source-changed', factIds: [], values: {} } } };
       const entry = memory.entries.find(entry => entry.sourceRevision === input.sourceRevision?.(node.declaration) && entry.exact.some(exact => exact.id === node.declaration.id));
       const annotation = annotations.get(node.id);
       if (annotation) {

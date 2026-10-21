@@ -54,6 +54,18 @@ it('refines only the selected ready layer and its next layer, re-regresses exact
     const ready = second.readyActions[0]!.action;
     expect(ready.refinement?.delta).toEqual({ durationTicks: 2, costGold: 20, successProbability: -.09999999999999998 });
     expect(calls).not.toContain(facts[2]!.id);
+    const retained = JSON.parse(JSON.stringify(refinement.entries[0]!)) as typeof refinement.entries[number];
+    const obsolete = { ...retained, coarse: { ...retained.coarse, executor: { ...retained.coarse.executor,
+      parameters: { campId: 'obsolete-choice' } } }, exact: [] };
+    refinement.entries.push(obsolete, { ...obsolete, planId: 'another-plan' });
+    const count = refinement.entries.length;
+    refineSelected(second.plans[0]!);
+    expect(refinement.entries).toHaveLength(count - 1);
+    expect(refinement.entries.some(entry => entry.planId === 'another-plan')).toBe(true);
+    const stale = createGoalPlanRefiner({ memory: refinement, providers: [provider],
+      exactContext: () => ({ ...context, precision: 'exact' }), sourceRevision: () => 'changed-native-world' })(second.plans[0]!);
+    expect(stale.readyActionIds).toEqual([]);
+    expect(stale.actions.find(node => node.id === ready.id)?.refinement?.reason.code).toBe('selected-exact-source-changed');
   });
 });
 
