@@ -1,0 +1,508 @@
+{
+  "source": "eed282ae39fc937130cf857c3771f30afa06422d",
+  "production": "59792793b2eb723d4e4403e59a3bbb28a33e0208",
+  "scope": "Original JSON and native-provenance hashes only. No planner, world reader, navigation, SDK or simulation calls.",
+  "findings": [
+    "Goal effects already include garrison-ready and a hold-position node exists.",
+    "near6840/far8400 exact hold refinement remains pending: garrison-post-protection-unpublished with requested through now+12000, beyond observed horizon now+2400.",
+    "near8025 has no formal hold and garrison-ready is unmet, quantity0. near8040 also has no formal hold but ordinary world fallback reports met from staticPower .9065534073951573 with no stationed entityIds; defenseTower1127 changed incomplete to complete.",
+    "At8040 current world fallback therefore lets plan become complete and settleCommittedGoals emits committed-goal-world-effects-complete. This is not a formal hold/lease proof.",
+    "Earlier possible ordinary DefendSite member-claim explanation was a hypothesis; this exact transition is static tower completion, not four idle soldiers becoming formal guards."
+  ],
+  "cases": {
+    "near6840": {
+      "path": "/tmp/goal-597-build-near-prefix-originals-verified/live-build-prefix/near/first-new-townhall-complete-snapshot/actual-frame.jsonl.gz",
+      "compressedSha256": "4923d93a9f226523b16bc77f850276cc3f84426263ec055324f9538b5eaef83b",
+      "plainSha256": "4e4abf732062d5d89095b3ea0688ee32693f621687dc4d2b35e31d4515ddf723",
+      "tick": 6840,
+      "plans": [
+        {
+          "goalId": "ConquerIsland:planner:resource-1",
+          "status": "waiting-facts",
+          "effects": [
+            {
+              "kind": "hall-complete",
+              "mineId": "resource-1",
+              "at": {
+                "entityId": "resource-1",
+                "point": {
+                  "x": 2976,
+                  "y": 896
+                },
+                "landId": "land:2"
+              }
+            },
+            {
+              "kind": "garrison-ready",
+              "mineId": "resource-1",
+              "at": {
+                "entityId": "resource-1",
+                "point": {
+                  "x": 2976,
+                  "y": 896
+                },
+                "landId": "land:2"
+              }
+            }
+          ],
+          "holdNodes": [
+            {
+              "precision": "coarse",
+              "state": "waiting-facts",
+              "startTick": 6840,
+              "finishTick": 18840,
+              "duration": {
+                "state": "met",
+                "value": 12000,
+                "factIds": [
+                  "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}"
+                ]
+              }
+            }
+          ],
+          "garrisonObservations": [
+            {
+              "fact": {
+                "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                "predicate": {
+                  "kind": "garrison-ready",
+                  "mineId": "resource-1",
+                  "at": {
+                    "entityId": "resource-1",
+                    "point": {
+                      "x": 2976,
+                      "y": 896
+                    },
+                    "landId": "land:2"
+                  }
+                }
+              },
+              "state": "unmet",
+              "observedTick": 6840,
+              "revision": "[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",\"observed-garrison-handoff\",[\"building-planner-townHall-1103\",[],0,0]]",
+              "evidence": [],
+              "reason": {
+                "code": "observed-garrison-handoff",
+                "factIds": [
+                  "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}"
+                ],
+                "values": {}
+              },
+              "quantity": 0,
+              "entityIds": [],
+              "availableTick": 6840
+            }
+          ]
+        }
+      ],
+      "holdExecutions": [],
+      "objectiveBefore": [
+        {
+          "id": "ConquerIsland:planner:resource-1",
+          "status": "active"
+        }
+      ],
+      "objectiveAfter": [
+        {
+          "id": "ConquerIsland:planner:resource-1",
+          "status": "active"
+        }
+      ],
+      "holdPendingReasons": [
+        {
+          "code": "selected-exact-facts-pending",
+          "factIds": [
+            "safety:[\"fact:{\\\"kind\\\":\\\"site-safe\\\",\\\"site\\\":{\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":3081.146028667046,\\\"y\\\":862.7505529002635}},\\\"throughTick\\\":18840}\",[\"fact:{\\\"kind\\\":\\\"site-safe\\\",\\\"site\\\":{\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":3081.146028667046,\\\"y\\\":862.7505529002635}},\\\"throughTick\\\":18840}\"]]"
+          ],
+          "values": {
+            "pendingReasons": "garrison-post-protection-unpublished,garrison-post-protection-unpublished",
+            "durationRatio": null,
+            "durationChangedOverHalf": false
+          }
+        }
+      ],
+      "attackingOwnStructures": [],
+      "settleEvents": []
+    },
+    "near8025": {
+      "path": "/tmp/goal-597-near-settle-originals/commitment-settle-near/8025/actual-frame.jsonl.gz",
+      "compressedSha256": "95c681a7c6e21041d84d3e1f7777e39b89e4edb1a00e10f359a0c11284733526",
+      "plainSha256": "cf9130ee0363387bbb91b7ac02d732dc9e07273d643196c071ec54a2859edb3c",
+      "tick": 8025,
+      "plans": [
+        {
+          "goalId": "ConquerIsland:planner:resource-1",
+          "status": "waiting-facts",
+          "effects": [
+            {
+              "kind": "hall-complete",
+              "mineId": "resource-1",
+              "at": {
+                "entityId": "resource-1",
+                "point": {
+                  "x": 2976,
+                  "y": 896
+                },
+                "landId": "land:2"
+              }
+            },
+            {
+              "kind": "garrison-ready",
+              "mineId": "resource-1",
+              "at": {
+                "entityId": "resource-1",
+                "point": {
+                  "x": 2976,
+                  "y": 896
+                },
+                "landId": "land:2"
+              }
+            }
+          ],
+          "holdNodes": [
+            {
+              "precision": "coarse",
+              "state": "waiting-facts",
+              "startTick": 8084,
+              "finishTick": 20084,
+              "duration": {
+                "state": "met",
+                "value": 12000,
+                "factIds": [
+                  "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}"
+                ]
+              }
+            }
+          ],
+          "garrisonObservations": [
+            {
+              "fact": {
+                "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                "predicate": {
+                  "kind": "garrison-ready",
+                  "mineId": "resource-1",
+                  "at": {
+                    "entityId": "resource-1",
+                    "point": {
+                      "x": 2976,
+                      "y": 896
+                    },
+                    "landId": "land:2"
+                  }
+                }
+              },
+              "state": "unmet",
+              "observedTick": 8025,
+              "revision": "[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",\"observed-garrison-handoff\",[\"building-planner-townHall-1103\",[],0,0]]",
+              "evidence": [],
+              "reason": {
+                "code": "observed-garrison-handoff",
+                "factIds": [
+                  "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}"
+                ],
+                "values": {}
+              },
+              "quantity": 0,
+              "entityIds": [],
+              "availableTick": 8025
+            }
+          ]
+        }
+      ],
+      "holdExecutions": [],
+      "objectiveBefore": [
+        {
+          "id": "ConquerIsland:planner:resource-1",
+          "status": "active"
+        }
+      ],
+      "objectiveAfter": [
+        {
+          "id": "ConquerIsland:planner:resource-1",
+          "status": "active"
+        }
+      ],
+      "holdPendingReasons": [
+        {
+          "code": "selected-exact-facts-pending",
+          "factIds": [
+            "safety:[\"fact:{\\\"kind\\\":\\\"site-safe\\\",\\\"site\\\":{\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":3088.575988176995,\\\"y\\\":871.1899740930479}},\\\"throughTick\\\":20025}\",[\"fact:{\\\"kind\\\":\\\"site-safe\\\",\\\"site\\\":{\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":3088.575988176995,\\\"y\\\":871.1899740930479}},\\\"throughTick\\\":20025}\"]]"
+          ],
+          "values": {
+            "pendingReasons": "garrison-post-protection-unpublished,garrison-post-protection-unpublished",
+            "durationRatio": null,
+            "durationChangedOverHalf": false
+          }
+        }
+      ],
+      "attackingOwnStructures": [
+        {
+          "id": "building-planner-defenseTower-1127",
+          "kind": "defenseTower",
+          "complete": false,
+          "point": {
+            "x": 2688,
+            "y": 832
+          },
+          "damage": 13,
+          "range": 480
+        }
+      ],
+      "settleEvents": []
+    },
+    "near8040": {
+      "path": "/tmp/goal-597-near-settle-originals/commitment-settle-near/8040/actual-frame.jsonl.gz",
+      "compressedSha256": "9a97ebf24edffb927c8168d403ac0ebdd0cf2edc4543b8cb072a9e8e73d6a857",
+      "plainSha256": "c8f84f974f820037f95a58580b697ee6b85356900711c5eff800c4767951cd32",
+      "tick": 8040,
+      "plans": [
+        {
+          "goalId": "ConquerIsland:planner:resource-1",
+          "status": "complete",
+          "effects": [
+            {
+              "kind": "hall-complete",
+              "mineId": "resource-1",
+              "at": {
+                "entityId": "resource-1",
+                "point": {
+                  "x": 2976,
+                  "y": 896
+                },
+                "landId": "land:2"
+              }
+            },
+            {
+              "kind": "garrison-ready",
+              "mineId": "resource-1",
+              "at": {
+                "entityId": "resource-1",
+                "point": {
+                  "x": 2976,
+                  "y": 896
+                },
+                "landId": "land:2"
+              }
+            }
+          ],
+          "holdNodes": [],
+          "garrisonObservations": [
+            {
+              "fact": {
+                "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                "predicate": {
+                  "kind": "garrison-ready",
+                  "mineId": "resource-1",
+                  "at": {
+                    "entityId": "resource-1",
+                    "point": {
+                      "x": 2976,
+                      "y": 896
+                    },
+                    "landId": "land:2"
+                  }
+                }
+              },
+              "state": "met",
+              "observedTick": 8040,
+              "revision": "[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",\"observed-garrison-handoff\",[\"building-planner-townHall-1103\",[],0.9065534073951573,0]]",
+              "evidence": [],
+              "reason": {
+                "code": "observed-garrison-handoff",
+                "factIds": [
+                  "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}"
+                ],
+                "values": {}
+              },
+              "quantity": 0.9065534073951573,
+              "entityIds": [],
+              "availableTick": 8040
+            }
+          ]
+        }
+      ],
+      "holdExecutions": [],
+      "objectiveBefore": [
+        {
+          "id": "ConquerIsland:planner:resource-1",
+          "status": "active"
+        }
+      ],
+      "objectiveAfter": [
+        {
+          "id": "ConquerIsland:planner:resource-1",
+          "status": "complete"
+        }
+      ],
+      "holdPendingReasons": [
+        {
+          "code": "selected-exact-facts-pending",
+          "factIds": [
+            "safety:[\"fact:{\\\"kind\\\":\\\"site-safe\\\",\\\"site\\\":{\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":3088.575988176995,\\\"y\\\":871.1899740930479}},\\\"throughTick\\\":20025}\",[\"fact:{\\\"kind\\\":\\\"site-safe\\\",\\\"site\\\":{\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":3088.575988176995,\\\"y\\\":871.1899740930479}},\\\"throughTick\\\":20025}\"]]"
+          ],
+          "values": {
+            "pendingReasons": "garrison-post-protection-unpublished,garrison-post-protection-unpublished",
+            "durationRatio": null,
+            "durationChangedOverHalf": false
+          }
+        }
+      ],
+      "attackingOwnStructures": [
+        {
+          "id": "building-planner-defenseTower-1127",
+          "kind": "defenseTower",
+          "complete": true,
+          "point": {
+            "x": 2688,
+            "y": 832
+          },
+          "damage": 13,
+          "range": 480
+        }
+      ],
+      "settleEvents": [
+        {
+          "kind": "parent-invalidated",
+          "objectiveId": "ConquerIsland:planner:resource-1",
+          "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+          "action": {
+            "actionId": "goal-ref:action:v65",
+            "generation": 18
+          },
+          "releasedLeaseIds": [
+            "lease:unit-planner-transport-1000"
+          ],
+          "releasedBudgetIds": [],
+          "reason": {
+            "code": "committed-goal-world-effects-complete",
+            "factIds": [
+              "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"hall-complete\",\"mineId\":\"resource-1\"}",
+              "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}"
+            ],
+            "values": {
+              "status": "complete"
+            }
+          },
+          "id": "planner:allocation:59",
+          "tick": 8040,
+          "revision": 536
+        }
+      ]
+    },
+    "far8400": {
+      "path": "/tmp/goal-597-far-last-original-member/actual-frame.jsonl.gz",
+      "compressedSha256": "d45847c55fc94cf455caa8bc5b281fc82306fba4ef8de775d5d417649441ad2f",
+      "plainSha256": "ee553413701f15df64954e2c8a19ad25bd035ca1102b6e835bb69a0df2fa03f8",
+      "tick": 8400,
+      "plans": [
+        {
+          "goalId": "ConquerIsland:planner:resource-1",
+          "status": "waiting-facts",
+          "effects": [
+            {
+              "kind": "hall-complete",
+              "mineId": "resource-1",
+              "at": {
+                "entityId": "resource-1",
+                "point": {
+                  "x": 2976,
+                  "y": 896
+                },
+                "landId": "land:2"
+              }
+            },
+            {
+              "kind": "garrison-ready",
+              "mineId": "resource-1",
+              "at": {
+                "entityId": "resource-1",
+                "point": {
+                  "x": 2976,
+                  "y": 896
+                },
+                "landId": "land:2"
+              }
+            }
+          ],
+          "holdNodes": [
+            {
+              "precision": "coarse",
+              "state": "waiting-facts",
+              "startTick": 8400,
+              "finishTick": 20400,
+              "duration": {
+                "state": "met",
+                "value": 12000,
+                "factIds": [
+                  "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}"
+                ]
+              }
+            }
+          ],
+          "garrisonObservations": [
+            {
+              "fact": {
+                "id": "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}",
+                "predicate": {
+                  "kind": "garrison-ready",
+                  "mineId": "resource-1",
+                  "at": {
+                    "entityId": "resource-1",
+                    "point": {
+                      "x": 2976,
+                      "y": 896
+                    },
+                    "landId": "land:2"
+                  }
+                }
+              },
+              "state": "unmet",
+              "observedTick": 8400,
+              "revision": "[\"fact:{\\\"at\\\":{\\\"entityId\\\":\\\"resource-1\\\",\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":2976,\\\"y\\\":896}},\\\"kind\\\":\\\"garrison-ready\\\",\\\"mineId\\\":\\\"resource-1\\\"}\",\"observed-garrison-handoff\",[\"building-planner-townHall-1106\",[],0,0]]",
+              "evidence": [],
+              "reason": {
+                "code": "observed-garrison-handoff",
+                "factIds": [
+                  "fact:{\"at\":{\"entityId\":\"resource-1\",\"landId\":\"land:2\",\"point\":{\"x\":2976,\"y\":896}},\"kind\":\"garrison-ready\",\"mineId\":\"resource-1\"}"
+                ],
+                "values": {}
+              },
+              "quantity": 0,
+              "entityIds": [],
+              "availableTick": 8400
+            }
+          ]
+        }
+      ],
+      "holdExecutions": [],
+      "objectiveBefore": [
+        {
+          "id": "ConquerIsland:planner:resource-1",
+          "status": "active"
+        }
+      ],
+      "objectiveAfter": [
+        {
+          "id": "ConquerIsland:planner:resource-1",
+          "status": "active"
+        }
+      ],
+      "holdPendingReasons": [
+        {
+          "code": "selected-exact-facts-pending",
+          "factIds": [
+            "safety:[\"fact:{\\\"kind\\\":\\\"site-safe\\\",\\\"site\\\":{\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":3078.3455278279284,\\\"y\\\":887.109705836409}},\\\"throughTick\\\":20400}\",[\"fact:{\\\"kind\\\":\\\"site-safe\\\",\\\"site\\\":{\\\"landId\\\":\\\"land:2\\\",\\\"point\\\":{\\\"x\\\":3078.3455278279284,\\\"y\\\":887.109705836409}},\\\"throughTick\\\":20400}\"]]"
+          ],
+          "values": {
+            "pendingReasons": "garrison-post-protection-unpublished,garrison-post-protection-unpublished",
+            "durationRatio": null,
+            "durationChangedOverHalf": false
+          }
+        }
+      ],
+      "attackingOwnStructures": [],
+      "settleEvents": []
+    }
+  },
+  "notClaimed": "No fix or new acceptance result. Original strict-five-step2/2 is unchanged; full formal garrison remains unproved."
+}
