@@ -27,6 +27,8 @@ export type GoalCampCombatInput = GoalNavalCombatInput & Readonly<{
   stagingFacts: readonly GoalFactObservation[];
 }>;
 export type GoalDefenseCombatInput = GoalNavalCombatInput & Readonly<{
+  /** Exact source-selected guard post; target remains the protected site. */
+  post?: Target;
   requiredCombatRating: GoalEstimate<number>;
   defense: GoalEstimate<Readonly<{
     threat: ReturnType<typeof defenseThreatScenarios>;
@@ -165,21 +167,25 @@ export function assessGoalCampCombatOption(input: GoalCampCombatInput): GoalCand
  * protected asset as an action cost or charging bundle opportunity twice. */
 export function assessGoalDefenseCombatOption(input: GoalDefenseCombatInput): GoalCandidates<GoalCombatOption> {
   const init = initial(input); if ('state' in init) return init;
-  if (input.effect.predicate.kind !== 'site-safe' || goalValueKey(input.effect.predicate.site) !== goalValueKey(input.target))
+  const requested = input.effect.predicate;
+  const protectedSite = requested.kind === 'site-safe' ? requested.site : requested.kind === 'garrison-ready' ? requested.at : null;
+  const post = input.post ?? input.target;
+  if (!protectedSite || goalValueKey(protectedSite) !== goalValueKey(input.target)
+    || input.target.landId !== post.landId)
     return unmet('combat-defense-effect-mismatch', [input.effect.id]);
   if (input.requiredCombatRating.state !== 'met') return input.requiredCombatRating;
   if (!Number.isFinite(input.requiredCombatRating.value) || input.requiredCombatRating.value < 0) return unmet('combat-defense-threshold-invalid', input.requiredCombatRating.factIds);
   const timing = routeTiming(input), movement = risk(input);
-  const through = input.effect.predicate.throughTick, durationTicks = through - input.snapshot.tick;
+  const through = requested.kind === 'site-safe' ? requested.throughTick : input.byTick, durationTicks = through - input.snapshot.tick;
   if (!Number.isFinite(durationTicks) || durationTicks < 0) return unmet('combat-defense-window-expired', [input.effect.id]);
   const unavailable = timing.state !== 'met' ? timing : input.defense.state !== 'met' ? input.defense : null;
-  if (unavailable) return option(input, init.members, input.target, input.requiredCombatRating.value,
+  if (unavailable) return option(input, init.members, post, input.requiredCombatRating.value,
     { duration: unavailable, cost: unavailable, successProbability: unavailable, effectDelayTicks: timing }, init.factIds);
   if (input.defense.state !== 'met' || timing.state !== 'met') return pending('combat-defense-facts-pending', init.factIds);
   const data = input.defense.value;
   if (data.threat.status === 'unknown') {
     const missing = pending(data.threat.reasonCode, data.threat.unknownIds);
-    return option(input, init.members, input.target, input.requiredCombatRating.value,
+    return option(input, init.members, post, input.requiredCombatRating.value,
       { duration: known(Math.max(timing.value, durationTicks), init.factIds), effectDelayTicks: timing, cost: missing, successProbability: missing }, init.factIds);
   }
   if (new Set(data.opponents.map(entry => entry.unit.id)).size !== data.opponents.length
@@ -189,7 +195,7 @@ export function assessGoalDefenseCombatOption(input: GoalDefenseCombatInput): Go
     || timing.value > durationTicks || data.opponents.some(entry => !Number.isFinite(entry.share) || entry.share < 0 || entry.share > 1)) return unmet('combat-defense-model-input-invalid', init.factIds);
   if (data.threat.scenarios.some(scenario => scenario.probability > 0 && scenario.unitIds.some(id => !data.opponents.some(entry => entry.unit.id === id))))
     return pending('combat-defense-opponent-shape-pending', data.threat.oppositionIds);
-  const assessed = assessment(input, init.members, input.target), station = new Set(data.onStation.map(goalValueKey));
+  const assessed = assessment(input, init.members, post), station = new Set(data.onStation.map(goalValueKey));
   if ([...station].some(ref => !init.members.some(member => goalValueKey(member.reference) === ref))) return unmet('combat-defense-on-station-binding-invalid', init.factIds);
   const stationed = assessed.units.filter((_, index) => station.has(goalValueKey(init.members[index]!.reference)));
   const incoming = assessed.units.filter((_, index) => !station.has(goalValueKey(init.members[index]!.reference)));
@@ -202,7 +208,7 @@ export function assessGoalDefenseCombatOption(input: GoalDefenseCombatInput): Go
     towers: data.hostileTowers, windowTicks: data.windowTicks }).casualties.expectedLossGold, 0);
   const ids = unique([...init.factIds, ...input.defense.factIds, ...input.requiredCombatRating.factIds, ...timing.factIds,
     ...(movement.state === 'met' ? movement.factIds : movement.reason.factIds)]);
-  return option(input, init.members, input.target, input.requiredCombatRating.value, {
+  return option(input, init.members, post, input.requiredCombatRating.value, {
     duration: known(Math.max(timing.value, durationTicks), ids), effectDelayTicks: timing,
     cost: movement.state !== 'met' ? movement : known(costs(movement.value.survivalProbability * battleCost(assessed.units)
       + (1 - movement.value.survivalProbability) * battleCost(stationed), movement.value, ids), ids),
