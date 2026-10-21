@@ -10,12 +10,10 @@ import { createAiPolicyMemory } from '../../memory';
 import { currentFactWork, STRATEGY_FACT_WORK_PER_THINK } from '../fact-work';
 import { situationConstructionCount } from '../situation';
 import { legalBuildingSite } from './world';
-import { checkPuzzlePlan } from './planner-checks';
+import { runFrozenPuzzlePlan } from './frozen-planning';
 import { publicPuzzlePlanner } from './planner-binding';
 import { PUBLIC_PUZZLES, type PuzzleKey } from './scenes';
 import { runPublicPuzzle } from './run';
-import { serializeScopedPlan, writePuzzlePlanEvidence } from './plan-evidence';
-import type { GoalPlannerOutput } from '../goal-planner-types';
 
 const mainPassingRegressions = new Set(['ship-away/near', 'supply-tier/footmen', 'guarded-shore/weak']);
 
@@ -105,26 +103,12 @@ export function registerPublicPuzzleTests(key: PuzzleKey) {
     const required = process.env.SKETCH_REQUIRE_GOAL_PLANNER === '1';
     const executionReady = publicPuzzlePlanner.createExecution;
     const missing = publicPuzzlePlanner.unavailable.join('; ');
-    it('cold-frame dependency graph: real planGoals entry with the shared Objective collector', () => {
-      const world = puzzle.create(), snapshot = snapshotGame(world.game), before = JSON.stringify(snapshot);
-      let calls = 0, scoped: string | undefined, failure: unknown;
-      try {
-        publicPuzzlePlanner.withInput(snapshot, world.owner, input => {
-          calls++;
-          let output: GoalPlannerOutput | undefined;
-          try {
-            output = publicPuzzlePlanner.planGoals(input);
-            checkPuzzlePlan(puzzle, world, { input, output, allocation: publicPuzzlePlanner.allocation?.(input, output) ?? null });
-          } finally { scoped = serializeScopedPlan(input, output); }
-        });
-        expect(calls, 'search and verdict must execute inside the native physical scope').toBe(1);
-      } catch (error) { failure = error; throw error; }
-      finally {
-        const untouched = JSON.stringify(snapshot) === before;
-        writePuzzlePlanEvidence(puzzle, snapshot, scoped, calls, untouched, failure);
-        expect(untouched, 'real planning cannot change the cold frame').toBe(true);
-      }
-    });
+    it('frozen-world dependency graph: persistent memory and at most ten native thinks', () => {
+      const result = runFrozenPuzzlePlan(puzzle, puzzle.create());
+      if (result.finalFailure !== undefined) throw result.finalFailure;
+      expect(result.stable, 'the final two actual plan graphs must agree, in addition to passing the original verdict').toBe(true);
+      expect(result.passed, 'both final consecutive thinks must pass the original verdict').toBe(true);
+    }, 180_000);
     it.skipIf(!executionReady && !required)(`goal-planner execution through the real runtime [${executionReady ? 'ready' : missing}]`, () => {
       expect(executionReady, missing).toBeTruthy();
       const session = publicPuzzlePlanner.createExecution!();
