@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { createUnit } from '../../shared/map';
 import { createGame, snapshotGame } from '../../shared/sim';
 import type { ExecutionAction, ExecutorFeedback, StrategyAllocationMemory, ExecutableMethod } from './allocation-types';
-import { createStrategyAllocationMemory } from './control';
-import { advanceAllocationLeases, allocationGrants, applyExecutorFeedback, settleAllocationState } from './allocation-lifecycle';
+import { assertStrategyAllocationBounds, createStrategyAllocationMemory } from './control';
+import { advanceAllocationLeases, allocationGrants, applyExecutorFeedback, pruneAllocationProvenance, settleAllocationState } from './allocation-lifecycle';
+import { retainAllocationExecutions } from './allocation-execution-retention';
 
 function fixture() {
   const snapshot = snapshotGame(createGame('bareDuel', { aiPlayers: [] }));
@@ -41,6 +42,53 @@ function fixture() {
 }
 
 describe('authority along observed execution dependencies', () => {
+  const retired = (memory: StrategyAllocationMemory, id: string): ExecutionAction => ({ ...memory.executions.delivery!,
+    token: { actionId: id, generation: 3 }, dependsOn: [], executor: 'goal.assemble', status: 'complete', state: {},
+    intent: { kind: 'goal-action', goalId: 'goal', actionKind: 'assemble', declarationId: id, parameters: {}, outputs: [] } });
+
+  it('reclaims replaced ready frontiers inside a still-active goal without growing the authority archive', () => {
+    const { memory } = fixture();
+    // Long declaration identities reproduce the real retained-assembly byte
+    // pressure; the current graph and all its authority remain byte-identical.
+    const archived = Object.fromEntries(Array.from({ length: 100 }, (_, index) => {
+      const id = `retired:${index}:${'native-cohort-and-post:'.repeat(70)}`;
+      return [id, retired(memory, id)];
+    }));
+    const input = { ...memory, executions: { ...memory.executions, ...archived } }, before = JSON.stringify(input);
+    expect(() => assertStrategyAllocationBounds(input)).toThrow('byte limit');
+    const next = pruneAllocationProvenance(input);
+    expect(next.executions).toEqual(memory.executions);
+    expect(next.methods).toEqual(memory.methods); expect(next.leases).toEqual(memory.leases);
+    expect(next.assignments).toEqual(memory.assignments); expect(next.voyages).toEqual(memory.voyages);
+    expect(assertStrategyAllocationBounds(next)).toBeLessThan(256 * 1024);
+    expect(pruneAllocationProvenance(JSON.parse(JSON.stringify(input)))).toEqual(next);
+    expect(JSON.stringify(input)).toBe(before);
+  });
+
+  it('keeps terminal graph ancestors, resource owners, output proofs, jobs and pending handoffs reachable', () => {
+    const { memory } = fixture();
+    const ids = ['ancestor', 'lease', 'budget', 'output', 'training', 'handoff', 'orphan'];
+    const actions = Object.fromEntries(ids.map(id => [id, retired(memory, id)]));
+    actions.output = { ...actions.output!, intent: { kind: 'goal-action', goalId: 'goal', actionKind: 'build',
+      declarationId: 'output', parameters: {}, outputs: ['hall'] }, state: { goalOutputBindings: { hall: 'real-hall' } } };
+    const input: StrategyAllocationMemory = { ...memory,
+      executions: { ...memory.executions, ...actions, clear: { ...memory.executions.clear!, dependsOn: ['ancestor'] } },
+      leases: { ...memory.leases, 'unit:proof': { ...memory.leases['unit:landed']!, action: actions.lease!.token } },
+      budgets: { paid: { id: 'paid', spendId: 'paid', objectiveId: 'goal', methodId: 'method', action: actions.budget!.token,
+        amountGold: 400, paidGold: 400, state: 'spent', sinceTick: 0, releasedTick: null, includedUtilityTermCodes: [], externalReservationIds: [] } },
+      goalTraining: { version: 1, owner: 'player', pools: [], jobs: [{ action: actions.training!.token,
+        query: { acceptedCommandId: 'paid-train', jobId: 'native-job', producerId: 'producer', unitKind: 'footman' },
+        poolKey: 'pool', creditFloor: 0, acceptedTick: 0, observedTick: 0, remaining: 60, state: 'training', reasonCode: 'observed' }] },
+      events: [{ id: 'pending', tick: 0, revision: 1, objectiveId: 'goal', methodId: 'method', action: actions.handoff!.token,
+        kind: 'preempted', handoff: 'pending', quotation: { fromObjectiveId: 'goal', toObjectiveId: 'next', resourceKeys: [],
+          marginalBenefitGold: 10, displacedLossGold: 1, switchingCostGold: 0, reason: { code: 'handoff', factIds: [], values: {} } },
+        reason: { code: 'handoff', factIds: [], values: {} } }] };
+    const next = retainAllocationExecutions(input);
+    expect(Object.keys(next.executions).sort()).toEqual(['delivery', 'clear', ...ids.filter(id => id !== 'orphan')].sort());
+    expect(next.budgets).toBe(input.budgets); expect(next.goalTraining).toBe(input.goalTraining);
+    expect(next.events).toBe(input.events); expect(next.executions.output).toBe(input.executions.output);
+  });
+
   it('retains a completed assembly coordinator and cohort until the same method expands to execution', () => {
     const { memory, snapshot } = fixture(), original = memory.methods.method!, action = original.actions[0]!;
     const assembly: ExecutableMethod = { ...original, stage: 'assembly', actions: [{ ...action,

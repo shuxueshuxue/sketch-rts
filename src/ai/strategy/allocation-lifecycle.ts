@@ -7,6 +7,7 @@ import { copyNativeOrder, INCUMBENT_RECEIPT_WAIT_TICKS } from './incumbent-evide
 import { assessForceAssemblyPosts } from './assembly-posts';
 import { validateGoalOutputFeedback } from './goal-output-validation';
 import { observeGoalTraining } from './goal-training-ledger';
+import { retainAllocationExecutions } from './allocation-execution-retention';
 
 /** Acceptance is not movement. Refresh lineage from the current native world
  * before safety services or assignment-stage accounting consume it. */
@@ -273,8 +274,7 @@ export function applyExecutorFeedback(memory: StrategyAllocationMemory, snapshot
   if (terminal(nextStatus)) next = appendAllocationEvent(next, { objectiveId: execution.objectiveId,
     methodId: execution.methodId, action: execution.token, kind: 'action-finished', outcome: feedback.status as 'complete' | 'failed' | 'abandoned',
     reason: { code: feedback.reasons[0]?.reason ?? `action-${feedback.status}`, factIds: [], values: {} } }, snapshot.tick);
-  assertStrategyAllocationBounds(next);
-  return next;
+  return pruneAllocationProvenance(next);
 }
 
 /** Drop acknowledged provenance only after its last active reference ends.
@@ -306,7 +306,8 @@ export function pruneAllocationProvenance(memory: StrategyAllocationMemory): Str
     ));
   const budgets = Object.fromEntries(Object.entries(memory.budgets).filter(([, budget]) => budget.state !== 'released'
     || memory.methods[budget.methodId] || live(budget.action)));
-  const next = { ...memory, budgets, blocked, issuedOrders, issuedCommands, events: retainAllocationEvents(memory.events) };
+  const next = retainAllocationExecutions({ ...memory, budgets, blocked, issuedOrders, issuedCommands,
+    events: retainAllocationEvents(memory.events) });
   assertStrategyAllocationBounds(next);
   return next;
 }
