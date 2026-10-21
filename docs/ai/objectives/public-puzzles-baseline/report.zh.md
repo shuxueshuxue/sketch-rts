@@ -1,7 +1,7 @@
 # 公开残局场景与 main 基线
 
 7 道题的 11 个变体已搭成真实场景，复用入口在 [scenes.ts](../../../../src/ai/strategy/puzzles/scenes.ts)。
-每个变体有冷帧依赖图判法与真实执行判法；本分支已对齐共同规划器栈的正式类型并绑定真实搜索与初版 current-world reader。原生 owner-think 装配、未来投影和完整物理能力尚未齐备，这 22 项检查明确跳过，不算规划器验收通过。
+每个变体有冷帧依赖图判法与真实执行判法；本分支已绑定真实搜索、current-world reader 与原生 owner-think scope。正常目标收集/收益估值、未来投影、完整物理能力及执行 bridge 尚未齐备，这 22 项检查明确跳过，不算规划器验收通过。
 另有独立的人工合法命令解，用来证明局面本身能完成，不能拿它当 AI 成绩。
 
 历史 main 实测结果、可行解时间与证据地址见本页下方。机器可读逐题数据见 [summary.json](summary.json)。共同栈接线与新验证见 [shared-stack.zh.md](shared-stack.zh.md)，不能把下方的旧 AI 成绩当作共同栈成绩。
