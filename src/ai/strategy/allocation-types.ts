@@ -188,6 +188,8 @@ export type AllocationValuationBasis = Readonly<{ kind: 'proven-lower-bound';
   probabilityLower: number; probabilityUpper: number; unresolvedProbability: number }>;
 export type AllocationDecisionCounts = Readonly<{ lowerBoundSelections: number; lowerBoundInitialSelections: number; assemblyValueUnknownComparisons?: number }>;
 export type ObjectiveAllocation = Readonly<{
+  /** Original admitted collector definition, retained once for execution receipts after discovery ends. */
+  goalDefinitionRef?: string;
   objectiveId: ObjectiveId;
   methodId: MethodId;
   target: Target;

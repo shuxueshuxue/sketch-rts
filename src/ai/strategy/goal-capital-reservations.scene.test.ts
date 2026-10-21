@@ -66,7 +66,9 @@ it('funds only observed later cash while unrelated training preserves the earmar
   const run = (memory: StrategyAllocationMemory) => createStrategyCommandGateway({ snapshot: later.snapshot, owner, memory,
     grants: allocationGrants(memory), queuedTick: null }).admit([proposal]);
   expect(run(memory).admissions[0]).toMatchObject({ status: 'rejected', reason: { reason: 'command-cash-owned-by-another-action' } });
-  const ended = releaseEndedGoalCapital(memory, [{ goal: { id: saved.plan.goal.id }, status: 'blocked' }], later.snapshot.tick);
+  const pending = releaseEndedGoalCapital(memory, [{ goal: { id: saved.plan.goal.id }, status: 'blocked' }], later.snapshot.tick);
+  expect(reservedAllocationGold(pending)).toBe(129);
+  const ended = releaseEndedGoalCapital(memory, [{ goal: { id: saved.plan.goal.id }, status: 'complete' }], later.snapshot.tick);
   expect(reservedAllocationGold(ended)).toBe(0);
   expect(run(ended).admissions[0]!.status).toBe('accepted');
   const failed = refreshAllocationCapital({ ...memory, objectives: { ...memory.objectives, [saved.plan.goal.id]: {

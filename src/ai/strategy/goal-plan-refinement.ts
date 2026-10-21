@@ -111,7 +111,10 @@ export function createGoalPlanRefiner(input: Readonly<{
     if (plan.actions.length) memory.entries = memory.entries.filter(entry => {
       if (entry.planId !== undefined && entry.planId !== plan.id) return true;
       const node = matchingNode(entry);
-      const valid = entry.sourceRevision === input.sourceRevision?.(node?.declaration ?? entry.coarse);
+      // The saved dependency contract belongs to the coarse proposal. An
+      // exact declaration can additionally name the observed foundation or
+      // resolved actors; that representation change is not a world change.
+      const valid = entry.sourceRevision === input.sourceRevision?.(entry.coarse);
       const relevant = !!node || entry.state === 'known' && entry.exact.length > 0
         && plan.actions.some(node => entry.coarse.refinementFor && node.declaration.refinementFor
           && entry.coarse.refinementFor.providerId === node.declaration.refinementFor.providerId

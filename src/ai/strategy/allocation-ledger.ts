@@ -59,7 +59,7 @@ export function refreshAllocationCapital(memory: StrategyAllocationMemory, cashG
  * purchases keep their receipt lineage until payment acknowledgement. */
 export function releaseEndedGoalCapital(memory: StrategyAllocationMemory,
   plans: readonly Readonly<{ goal: { id: string }; status: string }>[], tick: number): StrategyAllocationMemory {
-  const ended = new Set(plans.filter(plan => ['blocked', 'complete'].includes(plan.status)).map(plan => plan.goal.id));
+  const ended = new Set(plans.filter(plan => plan.status === 'complete').map(plan => plan.goal.id));
   const budgets = Object.fromEntries(Object.entries(memory.budgets).map(([id, budget]) => [id,
     budget.plannedGold !== undefined && budget.state === 'reserved' && ended.has(budget.objectiveId)
       && !Object.values(memory.issuedCommands).some(command => sameAction(command.action, budget.action)

@@ -36,6 +36,7 @@ import { readGoalLandCapabilityFact } from './goal-land-facts';
 import { createGoalNavalCombatGrounding } from './goal-naval-combat-grounding';
 import { readGoalSiteSafetyFact } from './goal-site-safety-facts';
 import { goalNavalActionProvider } from './goal-naval-provider';
+import { retainCommittedGoalObjectives } from './goal-commitment-objectives';
 import { collectGoalRequests } from './goal-requests';
 import { planGoals } from './goal-planner';
 import type { GoalCandidates, GoalCohortMember, GoalFactObservation, GoalGroundingReader, GoalPlannerInput,
@@ -185,9 +186,11 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
       const projection = decisionProjection(() => {
         const situation = evaluateSituation(snapshot, owner, memory, observationHistory(preparation),
           snapshot.teams, 1, input.observation ?? { healing: [] }, preparation, { regions, distances: observationDistances, arrivals: observationArrivals, projectGround });
-        const objectives = input.objectives ?? (input.goals === undefined
+        const collected = input.objectives ?? (input.goals === undefined
           ? generateStrategyObjectives(situation, { snapshot, owner, memory, ...(snapshot.teams ? { teams: snapshot.teams } : {}) }, preparation.history?.objectives)
             .map(entry => entry.objective) : []);
+        const objectives = input.goals === undefined && input.objectives === undefined
+          ? retainCommittedGoalObjectives(memory.strategyAllocation, collected) : collected;
         retainObservationHistory(preparation, situation, objectives as readonly Objective[]);
         return { schemaVersion: 1 as const, tick: snapshot.tick, owner, mode: 'control' as const, situation, objectives,
           feasibleObjectiveIds: [], blockedObjectives: [], methods: [], assignments: [], preemptions: [], budget: [], idleForces: [],
@@ -437,17 +440,17 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
       const prefixContexts = new WeakMap<object, GoalPlanningContext>();
       const quoteRevision = () => `goal-domain-v5:${goalValueKey(cohortRevision())}:${precision}:${refinements.revision}:berths:${retained.selectedBerths!.revision}:sea:${goalValueKey(preparation.fields.sea.filter(entry => entry.readyTick !== null).map(entry => [entry.goal, entry.readyTick, entry.readyThink]))}`;
       const plannerInput: GoalPlannerInput = { context: grounded, goals,
-        contextForGoal(goal) {
+        ...(reservedGold > 0 ? { contextForGoal(goal: GoalRequest) {
           const reserved = memory.strategyAllocation ? reservedAllocationGold(memory.strategyAllocation, goal.id) : 0;
           const context = makeContext(input.allowedUnitIds, input.interruptedUnitIds, [], reserved);
           const prefixes = new WeakMap<object, GoalPlanningContext>();
           return { context, initialBalances: initialGoalBalances(context, input.allowedUnitIds, input.interruptedUnitIds),
-            contextForPrefix(prefix) {
+            contextForPrefix(prefix: Parameters<NonNullable<GoalPlannerInput['contextForPrefix']>>[0]) {
               let view = prefixes.get(prefix);
               if (!view) { view = makeContext(input.allowedUnitIds, input.interruptedUnitIds, [], reserved, 'coarse', [], prefix); prefixes.set(prefix, view); }
               return view;
             } };
-        },
+        } } : {}),
         campModelUsage: () => ({ ...campModelUsage.counts }),
         ...(precision === 'coarse' ? { refinementRevision: quoteRevision } : {}),
         retainFactRequests: plans => {

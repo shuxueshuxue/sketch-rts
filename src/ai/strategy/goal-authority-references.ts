@@ -1,5 +1,7 @@
 import type { ActionIntent, ExecutableMethod, StrategyAllocationMemory } from './allocation-types';
 import type { GoalExecutableIntent } from './goal-execution-types';
+import type { DecisionFacts } from './decision';
+import type { Objective } from './types';
 import type { GoalParameter } from './goal-planner-types';
 import { internGoalReference, readGoalReference, retainGoalReferences, type GoalReferenceMemory } from './goal-versioned-references';
 
@@ -156,4 +158,23 @@ export function retainGoalAuthorityReferences(memory: StrategyAllocationMemory):
   visit(records);
   const retained = structuredClone(table); retainGoalReferences(retained, roots);
   return { ...memory, goalReferences: retained };
+}
+
+
+/** Collector discovery may stop at a real foundation. An already admitted
+ * native task still needs its original objective to settle payment/output
+ * receipts. This retained declaration is not a new candidate or valuation. */
+export function storeGoalObjective(memory: StrategyAllocationMemory, objective: DecisionFacts<Objective>) {
+  const table = structuredClone(memory.goalReferences ?? emptyTable());
+  const ref = internGoalReference(table, 'objective', objective as unknown as GoalParameter);
+  return { memory: { ...memory, goalReferences: table }, ref };
+}
+
+export function readGoalObjective(memory: StrategyAllocationMemory, objectiveId: string): DecisionFacts<Objective> | undefined {
+  const allocation = memory.objectives[objectiveId], ref = allocation?.goalDefinitionRef;
+  if (!ref || !memory.goalReferences || ['complete', 'failed', 'abandoned'].includes(allocation.status)) return undefined;
+  const value = readGoalReference(memory.goalReferences, ref);
+  if (!record(value) || value.id !== objectiveId || value.owner !== memory.owner || typeof value.kind !== 'string')
+    throw Error('Invalid admitted goal objective definition');
+  return value as unknown as DecisionFacts<Objective>;
 }

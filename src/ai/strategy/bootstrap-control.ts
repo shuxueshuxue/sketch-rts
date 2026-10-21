@@ -35,7 +35,8 @@ import { goalLandExecutors } from './executors/goal-land';
 import { goalNavalExecutors } from './goal-naval-executors';
 import { goalTrainingReader, observeGoalTraining } from './goal-training-ledger';
 import { continuedIncumbentScripts, isIncumbentStrategyScript } from './incumbent-scripts';
-import { restoreGoalAuthorityReferences } from './goal-authority-references';
+import { settleCommittedGoals } from './goal-commitment-objectives';
+import { readGoalObjective, restoreGoalAuthorityReferences } from './goal-authority-references';
 const goalExecutors = [...goalEconomyExecutors, ...goalLandExecutors, ...goalNavalExecutors];
 
 export type AllocationCandidateRequest = Readonly<{ objectiveId: string; methodId: string; phase: 'skeleton' | 'gross' | 'net';
@@ -93,6 +94,7 @@ function controlledAllocation(snapshot: GameSnapshot, owner: PlayerId, options: 
   policy.strategyAllocation = imported;
   const situation = withFormalCommitments(evaluation.situation, imported);
   const goalPlanner = planGoals(planning); policy.goalPlanning!.cache = goalPlanner.cache;
+  imported = settleCommittedGoals(imported, [], evaluation.objectives, snapshot.tick);
   imported = releaseEndedGoalCapital(imported, goalPlanner.plans, snapshot.tick);
   imported = reserveAdmittedGoalCapital(imported, goalPlanner.plans, snapshot.players[owner]?.gold ?? 0, snapshot.tick);
   policy.strategyAllocation = imported;
@@ -196,7 +198,9 @@ function executeControlledBootstrapCommands(snapshot: GameSnapshot, owner: Playe
   const feedbacks: ExecutorFeedback[] = [], formal: StrategyCommandProposal[] = [];
   for (const grant of grants) {
     const execution = authority.executions[grant.action.actionId]!, executor = goalExecutors.find(executor => executor.id === execution.executor);
-    const objective = evaluation.objectives.find(objective => objective.id === grant.objectiveId), method = authority.methods[grant.methodId];
+    const objective = evaluation.objectives.find(objective => objective.id === grant.objectiveId)
+      ?? (execution.intent.kind === 'goal-action' ? readGoalObjective(authority, grant.objectiveId) : undefined);
+    const method = authority.methods[grant.methodId];
     // Imported producers run through the script adapter above, not a second
     // execution of their old module with a reconstructed target.
     if (!executor || !objective || !method) continue;
@@ -229,6 +233,7 @@ function executeControlledBootstrapCommands(snapshot: GameSnapshot, owner: Playe
   memory = recordScriptSafetyInterruptions(memory, snapshot, situation, result.admissions);
   for (const scriptId of [...new Set(result.accepted.map(item => item.executor))].sort(compare))
     memory = recordIncumbentCommands(memory, snapshot, scriptId, result.accepted.filter(item => item.executor === scriptId).map(item => item.command), nextId);
+  memory = settleCommittedGoals(memory, goalPlanner.plans, evaluation.objectives, snapshot.tick);
   memory = pruneAllocationProvenance(advanceAllocationLeases(settleAllocationState(memory, snapshot), snapshot)); policy.strategyAllocation = memory;
   const admissions = [...rejected, ...result.admissions];
   const entries: AiCommandEntry[] = result.accepted.map(item => ({ scriptId: item.executor, command: item.command }));

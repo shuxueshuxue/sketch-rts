@@ -18,7 +18,7 @@ import { currentSiteThreatIsClear } from './protection-activation';
 import { assemblyPostArrivalId, assemblyPostForUnit } from './assembly-facts';
 import { assessForceAssemblyPosts } from './assembly-posts';
 import { continueGoalMethod } from './goal-execution-continuation';
-import { readGoalIntent, restoreGoalAuthorityReferences, storeGoalMethod } from './goal-authority-references';
+import { readGoalIntent, restoreGoalAuthorityReferences, storeGoalMethod, storeGoalObjective } from './goal-authority-references';
 
 /** A fixed prefix bound limits speculative group quotes, not committed forces.
  * Every prefix is repriced as a whole group, including camp-force interactions. */
@@ -199,6 +199,8 @@ function assignMethod(input: StrategyAllocationInput, memory: StrategyAllocation
   const stored = storeGoalMethod(memory, continueGoalMethod(clean(offer.method), memory));
   memory = stored.memory;
   const method = stored.method;
+  const definition = method.kind === 'goal-plan' ? storeGoalObjective(memory, clean(objective)) : undefined;
+  if (definition) memory = definition.memory;
   const executions = { ...memory.executions };
   let generation = memory.nextActionGeneration;
   const restart = !!memory.objectives[objective.id] && terminal(memory.objectives[objective.id]!.status);
@@ -315,6 +317,7 @@ function assignMethod(input: StrategyAllocationInput, memory: StrategyAllocation
   }
   const own = Object.values(assignments).filter(assignment => assignment.objectiveId === objective.id);
   next = { ...next, leases, assignments, voyages, objectives: { ...next.objectives, [objective.id]: {
+    ...(definition ? { goalDefinitionRef: definition.ref } : {}),
     objectiveId: objective.id, methodId: method.id, target: objective.target, effectKeys: objective.effects.map(allocationEffectKey), status: 'active',
     actionIds: method.actions.map(action => action.id), assignmentIds: own.map(assignment => assignment.id).sort(),
     budgetIds: [], sinceTick: memory.objectives[objective.id]?.sinceTick ?? tick,
