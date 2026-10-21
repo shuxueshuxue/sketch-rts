@@ -1,0 +1,34 @@
+{
+  "source": "2478e44dd55f7a5896db17b235613a12358c7c84",
+  "sharedBase": "488cfd832cd4fd0452506ca134c7ae4a7591ac85",
+  "mode": "explicit mixed-coverage audit after original full guard refusal",
+  "completedOriginalThinks": 666,
+  "attemptedThinks": 667,
+  "missingObserverMember": {
+    "variant": "far",
+    "attempt": 107,
+    "error": {
+      "name": "Error",
+      "message": "Strategy allocation byte limit exceeded: 280600",
+      "stack": "Error: Strategy allocation byte limit exceeded: 280600\n    at Module.assertStrategyAllocationBounds (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/control.ts:83:55)\n    at Module.pruneAllocationProvenance (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-lifecycle.ts:311:3)\n    at Module.allocateStrategy (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocator.ts:635:12)\n    at controlledAllocation (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/bootstrap-control.ts:99:22)\n    at executeControlledBootstrapCommands (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/bootstrap-control.ts:140:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/bootstrap-control.ts:134:26\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:546:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:546:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)"
+    }
+  },
+  "farLastComplete": {
+    "think": 106,
+    "tick": 1590
+  },
+  "nearComplete": {
+    "think": 560,
+    "tick": 8400
+  },
+  "originalReadOnlyGuardExits": {
+    "source": "2478e44dd55f7a5896db17b235613a12358c7c84",
+    "sharedBase": "488cfd832cd4fd0452506ca134c7ae4a7591ac85",
+    "readers": {
+      "standard": 1,
+      "authority": 0,
+      "chain": 1
+    }
+  },
+  "semantics": "Original raw streams/results/failed guard logs are unchanged. Far107 snapshot,afterMemory andwork are unavailable and are not reconstructed. All metrics cover only the666 real observer members plus40 frozen observations."
+}
