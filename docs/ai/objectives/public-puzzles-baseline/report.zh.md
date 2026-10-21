@@ -1,10 +1,10 @@
 # 公开残局场景与 main 基线
 
 7 道题的 11 个变体已搭成真实场景，复用入口在 [scenes.ts](../../../../src/ai/strategy/puzzles/scenes.ts)。
-每个变体有冷帧依赖图判法与真实执行判法；目标规划器尚未接入 main，这 22 项检查明确跳过，不算规划器验收通过。
+每个变体有冷帧依赖图判法与真实执行判法；本分支已对齐共同规划器栈的正式类型。搜索入口、真实事实源与运行接线尚未齐备，这 22 项检查明确跳过，不算规划器验收通过。
 另有独立的人工合法命令解，用来证明局面本身能完成，不能拿它当 AI 成绩。
 
-最终实测结果、可行解时间与证据地址见本页下方。机器可读逐题数据见 [summary.json](summary.json)。
+历史 main 实测结果、可行解时间与证据地址见本页下方。机器可读逐题数据见 [summary.json](summary.json)。共同栈接线与新验证见 [shared-stack.zh.md](shared-stack.zh.md)，不能把下方的旧 AI 成绩当作共同栈成绩。
 
 ## 规则与复用边界
 
@@ -13,7 +13,7 @@
 - 冷帧以后只提交普通命令，通过 SDK 的原生 think 分相与三 tick 延迟执行；敌军步行和登陆也是真实命令，没有延迟生成援军、瞬移或直接改血量。
 - 初始局面没有侦察迷雾限制。双方不靠摧毁全部建筑结束沙箱，题目的独立执行判法负责计分；战斗、伤亡、采矿和开销仍使用真实模拟。
 - 执行检查读取每个原生 step 的真实位置、登船/登陆、清营、建筑完成与伤亡。命令日志不是成功证据，发出建造/卸船命令不算建好/登陆。
-- 规划器入口只收冷帧和属方，不收题号、参考登陆点或人工解法。预留口在 [planner-binding.ts](../../../../src/ai/strategy/puzzles/planner-binding.ts)。接入后只读正式的 `AiPlanTrace.goalPlanner` 和实际分配器预算；营地标识使用共享 `goalCampId`，不另造事实表。
+- 原生输入适配器只收冷帧和属方，组装正式 `GoalPlannerInput`，不收题号、参考登陆点或人工解法。能力检测在 [planner-binding.ts](../../../../src/ai/strategy/puzzles/planner-binding.ts)，测试直接调用正式的 `planGoals(input)`；执行收据只读真实规划器输出和实际分配器预算。营地标识使用共享 `goalCampId`，不另造事实表。
 
 ## 变体的实际变化
 
@@ -39,7 +39,8 @@
 “近船不调船”只约束第一次运兵的前置；清营之后返航接工人仍可调船。
 防守动作必须在来敌前开始，消灭来敌的完成时间可以更晚。
 海军题的预测资源时间线必须没有负余额，但它不能代替矿厅的实际 400 金预留；缺少预算记录时不能填零或冒充已验收。
-共享类型/运行入口随规划器栈接入后，应把只读输出投影换成正式类型并开启这 22 项；pending 也不能冒充执行已通过。
+判法使用正式的 `GoalPlannerOutput`、`goalFact`、`goalCampId` 与 `projectGoalResources`。资源预测从真实输入库存和所选动作的时刻重新计算，不信任输出自报的余额；pending 不能冒充可支付或执行已通过。海军题的预留另按实际 objective/method/action/generation 与分配器收据关联。
+安全远口的 `shore-safe` 可以已由真实世界满足，不要求多造一个清滩动作；清滩动作本身只承诺 `shore-safe`，不虚构 `camp-cleared`。
 
 ## 重跑
 
@@ -48,16 +49,21 @@ npx tsc --noEmit -p .
 npx tsc --noEmit -p tools/ai/tsconfig.json
 SKETCH_PUZZLE_WITNESS=1 npx vitest run src/ai/strategy/puzzles src/sdk/package-boundaries.test.ts --maxWorkers 1 --minWorkers 1
 npx tsx scripts/planner-puzzle-baseline.ts --mode witness --out work/public-puzzles/witness
+```
+
+历史三个流派的基线请在独立 checkout 中使用已归档分支 `archive/public-puzzles-main-baseline-20261021`（或下方证据的源码提交），再执行：
+
+```sh
 npx tsx scripts/planner-puzzle-baseline.ts --mode v9_knight --out work/public-puzzles/v9_knight
 npx tsx scripts/planner-puzzle-baseline.ts --mode v9_archer --out work/public-puzzles/v9_archer
 npx tsx scripts/planner-puzzle-baseline.ts --mode v9_summoner --out work/public-puzzles/v9_summoner
 ```
 
 重模拟放在 A100/mac1。单题可加 `--case defense-window/later`；`--ticks` 只用于诊断截帧，不用于缩短正式题目的时限。
-基线脚本固定比较 `d4ca2668` 的 AI/SDK/sim 源码，除本题库外出现改动就拒绝把结果标成这份 main 基线。
+非 witness 模式固定比较 `d4ca2668` 的 AI/SDK/sim 源码，除本题库外出现改动就拒绝把结果标成这份 main 基线。共同栈已有生产代码变化，不能在此 checkout 重跑并沿用该标签。witness 模式只证明当前规则下可行，输出的 `mainBaseline` 为 null。
 后续 AI 有变化时，要用证据记录的提交复跑旧基线，或明确选择新的基线；不能沿用旧标签。
 
-## 实测结果
+## 历史 main 实测结果
 
 A100，Node 24.22.0，执行提交 `2cec86d907b4b1057f753c858401dd9c68eab883`。主人一侧固定 grove，来敌固定 ember；房间三个 v9 流派各跑 11 题，共 33 次。
 AI、SDK、shared/sim 代码与 main `d4ca2668` 完全相同，脚本已校验；只新增了场景/判法/跑题工具。
@@ -101,7 +107,7 @@ AI、SDK、shared/sim 代码与 main `d4ca2668` 完全相同，脚本已校验�
 - 穷矿：对**同一份冷帧**强走夺岛链，实际清营并建厅，但损失4步兵。目录金币口径：余矿100 + 营地赏金410 − 矿厅400 − 兵损400 = **−290**，还未扣运输时间与维护费。原局面选择本土扩张则无兵损，56.15秒建好大厅。
 - 两份反事实都验证初始帧 SHA 与对应正式场景一致；只替换人工命令解，不改兵、地形、钱或营地。原始脚本、初末帧与伤亡记录均在证据包内。
 
-### 验证收据
+### 历史验证收据
 
 根 tsc、tools/ai tsc、场景与 SDK 边界测试的退出码全部为0。8个测试文件，40项通过，22项等待目标规划器接线而跳过。
 40项包括11个真实模拟人工解；除此之外，另跑33次现役房间AI与2次反事实。
