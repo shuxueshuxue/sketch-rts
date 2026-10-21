@@ -113,13 +113,25 @@ describe('grounded naval world-effect declarations', () => {
     expect(declareGoalShoreClearing({ ...input, landing, threatIds: ['ally'], requiredForce: 1,
       throughTick: 1200, routes: [input.route] })).toBeNull();
     const defend = declareGoalDefense({ ...input, estimates: { ...input.estimates, duration: known(1200) },
-      site: input.at, requiredForce: 1, throughTick: 1200, routes: [input.route] })!;
+      effectDelayTicks: known(13), site: input.at, requiredForce: 1, throughTick: 1200, routes: [input.route] })!;
     expect(defend.effects[0]!.fact.predicate.kind).toBe('site-safe');
+    expect(defend.effects[0]!.at).toEqual({ offsetTicks: 13 });
+    expect(defend.demands.every(demand => demand.until === 'finish')).toBe(true);
     expect(defend.preconditions.some(fact => fact.predicate.kind === 'force-available')).toBe(true);
     const escape = declareGoalEvacuation({ ...input, unitIds: ['worker'], shelter: input.at, throughTick: 1200, routes: [input.route] })!;
     expect(escape.effects[0]!.fact.predicate).toMatchObject({ kind: 'assets-safe', unitIds: ['worker'], at: input.at });
     expect(escape.preconditions).toContainEqual(goalFact({ kind: 'site-safe', site: input.at, throughTick: 1200 }));
     expect(escape.flows.filter(flow => flow.resource.kind === 'unit-pool')).toEqual([]);
+  });
+
+  it('keeps defense arrival uncertainty and the protection activation separate from its control window', () => {
+    const input = frame(), base = { ...input, site: input.at, requiredForce: 1, throughTick: 1200, routes: [input.route],
+      estimates: { ...input.estimates, duration: known(1200) } };
+    expect(declareGoalDefense({ ...base, effectDelayTicks: known(0) })!.effects[0]!.at).toBe('start');
+    expect(declareGoalDefense({ ...base, effectDelayTicks: known(1201) })).toBeNull();
+    const unknown = { state: 'pending' as const, requestIds: ['arrival'], reason: { code: 'arrival-pending', factIds: [], values: {} } };
+    expect(declareGoalDefense({ ...base, effectDelayTicks: unknown })!.duration).toEqual(unknown);
+    expect(declareGoalDefense(base)!.duration).toMatchObject({ state: 'pending', reason: { code: 'defense-arrival-time-unquoted' } });
   });
 
   it('keeps a future hull as an output reference without manufacturing an available world entity', () => {

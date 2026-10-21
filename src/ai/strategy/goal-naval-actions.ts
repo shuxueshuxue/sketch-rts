@@ -174,16 +174,26 @@ export function declareGoalShoreClearing(input: GoalNavalCohort & Readonly<{
 
 export function declareGoalDefense(input: GoalNavalCohort & Readonly<{
   site: Target; requiredForce: number; throughTick: number; routes: readonly GoalFact[];
+  effectDelayTicks?: GoalNavalEstimates['duration'];
 }>): GoalActionDeclaration | null {
   const units = crew(input, false);
   if (!units || !Number.isFinite(input.requiredForce) || input.requiredForce < 0
     || !Number.isFinite(input.throughTick) || input.throughTick < input.snapshot.tick
     || input.estimates.duration.state === 'met' && input.estimates.duration.value < input.throughTick - input.snapshot.tick) return null;
+  const delay = input.effectDelayTicks ?? { state: 'pending' as const, requestIds: [goalFact({ kind: 'site-safe',
+    site: input.site, throughTick: input.throughTick }).id],
+  reason: { code: 'defense-arrival-time-unquoted', factIds: input.routes.map(fact => fact.id), values: {} } };
+  if (delay.state === 'met' && (!Number.isFinite(delay.value) || delay.value < 0
+    || delay.value > input.throughTick - input.snapshot.tick
+    || input.estimates.duration.state === 'met' && delay.value > input.estimates.duration.value)) return null;
   const force = goalFact({ kind: 'force-available', at: input.site, minimum: input.requiredForce, metric: 'combat-rating',
     cohort: units.map(unit => reference(input, unit)), byTick: input.byTick });
+  const safe = goalFact({ kind: 'site-safe', site: input.site, throughTick: input.throughTick });
   return declaration('defend', 'strategy.defend-site', { cohort: units.map(unit => reference(input, unit)), at: input.site,
-    throughTick: input.throughTick }, input, [force, ...input.routes],
-  [establish(goalFact({ kind: 'site-safe', site: input.site, throughTick: input.throughTick }))], demands(input, units), []);
+    throughTick: input.throughTick }, { ...input, estimates: { ...input.estimates,
+    duration: delay.state === 'met' ? input.estimates.duration : delay } }, [force, ...input.routes],
+  [{ fact: safe, operation: 'establish', at: delay.state === 'met'
+    ? delay.value === 0 ? 'start' : { offsetTicks: delay.value } : 'finish' }], demands(input, units), []);
 }
 
 export function declareGoalEvacuation(input: GoalNavalCohort & Readonly<{

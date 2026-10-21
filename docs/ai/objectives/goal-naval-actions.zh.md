@@ -34,3 +34,5 @@ duration、cost、successProbability 来自同次共享估计。构造器完整�
 纯调船声明 `declareGoalTransportReposition` 不需要乘员或陆岸。持续 defend 的已知 duration 必须覆盖承诺的 throughTick 窗口，成员独占也覆盖同一窗口；移除当帧营地障碍仍由 clear-camp 和共享 derived 事实证明，不能当作未来驻防。读取到尚未解析的组或来源时，由共享 source 保留请求，本 provider 不拿邻兵或目录默认原型补齐。
 
 provider 测试用真实场景快照和真实 Situation，加固定的已发布领域选组/物理估计，覆盖符号组、部分贡献、独立航次价、精确救援、纯船位和持续防守窗口。它验证领域端口和声明构造，不代表统一 source、规划器就绪动作、执行适配器或公开题已完成。现有 strategy executor 名称仍需要统一入口根据解析后的引用和真实 grant 适配执行意图。
+
+持续防守的安全效果在共享 `effectDelayTicks` 指定的实际到岗时刻建立（0 为 start，其余为 offset），实体占用仍持续至 finish。duration 必须覆盖到岗以及保护窗口；缺少到岗时钟或时钟 pending/unmet 会使动作时长同步保留该状态，不能把“当前可调用”当作“已经到岗”。这样建造可以在守军到岗后、保护尚在持续时消费安全事实，而不必等整段保护结束。
