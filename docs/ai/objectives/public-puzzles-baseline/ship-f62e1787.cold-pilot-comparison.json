@@ -1,0 +1,42 @@
+{
+  "source": "75f71b73f2822d510b023addb9061ac3f7126146",
+  "semantics": "Read-only comparison of separately recorded pilot/full cold thinks. Missing later case remains missing, no AI or simulation rerun.",
+  "cases": [
+    {
+      "variant": "far",
+      "compared": true,
+      "thinkCount": 20,
+      "snapshotIdentical": true,
+      "fields": [
+        "observed",
+        "memoryAfter",
+        "work",
+        "planHash",
+        "readyActionCount",
+        "passed",
+        "executable",
+        "snapshotUntouched"
+      ],
+      "allIdentical": true,
+      "differences": []
+    },
+    {
+      "variant": "near",
+      "compared": true,
+      "thinkCount": 20,
+      "snapshotIdentical": true,
+      "fields": [
+        "observed",
+        "memoryAfter",
+        "work",
+        "planHash",
+        "readyActionCount",
+        "passed",
+        "executable",
+        "snapshotUntouched"
+      ],
+      "allIdentical": true,
+      "differences": []
+    }
+  ]
+}
