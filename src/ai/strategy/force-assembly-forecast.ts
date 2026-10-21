@@ -271,6 +271,11 @@ export function forecastForceAssembly(input: ForceAssemblyInput): ForceAssemblyF
         unresolved.add(scenario.id);
         missing.push({ code: 'assembly-conditional-support-exhausted', status: 'unknown', factIds: [scenario.id, producer.buildingId] });
       }
+    // An unpriced certain recruit/member can also fill a currently unfilled
+    // empirical path. Its absent route is unresolved mass, not proof of zero
+    // supply; already proved filled paths remain actionable lower mass.
+    if (readyTick === null && scenario.probability > 0 && missing.some(fact => fact.status === 'unknown'
+      && fact.code !== 'assembly-conditional-support-exhausted')) unresolved.add(scenario.id);
     const cutoff = readyTick ?? input.throughTick;
     for (const producer of curves) if (readyTick !== null && stockForProducer(producer, readyTick) > 0 && start(producer) < cutoff)
       uses.push({ buildingId: producer.buildingId, lane: 'training', fromTicks: start(producer) - now,

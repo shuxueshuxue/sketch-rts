@@ -89,6 +89,16 @@ it('keeps paid recruit walking separate from the producer lane clock', () => {
   expect(forecast.supplies.find(supply => supply.jobId === 'long-walk')?.readyTick).toBe(800);
 });
 
+it('keeps missing certain-supply routes as unknown probability above the proven conditional fill mass', () => {
+  const { input } = example(), building = input.snapshot.buildings.find(building => building.id === 'barracks')!;
+  building.queue.push({ id: 'paid-unrouted', unitKind: 'footman', remaining: 50 });
+  const forecast = forecastForceAssembly({ ...input, conditionalProduction: conditional(.01) });
+  expect(forecast).toMatchObject({ status: 'gathering', completionProbability: .8,
+    probabilityBasis: 'proven-lower-bound', completionProbabilityBounds: { lower: .8, upper: 1 },
+    diagnostics: { unresolvedProbability: .2 } });
+  expect(forecast.missing.some(fact => fact.code === 'assembly-recruit-arrival-unknown')).toBe(true);
+});
+
 it('re-prices conditional production against the actual allowed lanes and half-open occupancy', () => {
   const { input } = example(), model = { ...input, conditionalProduction: conditional(.01) };
   expect(forecastForceAssembly(model).readyTick).toBe(200);

@@ -14,6 +14,7 @@ import type { Situation, ValuationWindow } from './types';
 import { sameValuationWindow, valuationWindow } from './utility';
 import type { VoyageRiskStages } from './voyage-risk';
 import { CRITICAL_FACT_CANDIDATES, currentFactWork } from './fact-work';
+import { canonicalProductionUses } from './production-use';
 
 /** Assessment graphs live only in this think, never in allocation memory. */
 export type AssemblyPathPreparation = Readonly<{
@@ -25,7 +26,7 @@ export type AssemblyPathPreparation = Readonly<{
 }>;
 type Supply = ReturnType<typeof readAssemblySupply>;
 type AssemblyRecord<Prepared extends AssemblyPathPreparation> = { request: AssemblyFactsRequest; supply: Supply; window: ValuationWindow;
-  prepared: readonly Prepared[]; facts?: AssemblyFacts };
+  prepared: readonly Prepared[]; settled?: readonly Prepared[]; facts?: AssemblyFacts };
 const sorted = (values: readonly string[] | undefined) => [...new Set(values ?? [])].sort();
 const keyFor = (request: AssemblyFactsRequest) => JSON.stringify({ objective: request.objective.id, method: request.methodId,
   required: request.requiredForce, target: request.campTarget, posts: request.posts.map(post => ({ ...post, unitIds: sorted(post.unitIds) }))
@@ -33,7 +34,9 @@ const keyFor = (request: AssemblyFactsRequest) => JSON.stringify({ objective: re
   response: sorted(request.responseEligibleUnitIds), interrupted: sorted(request.interruptedUnitIds),
   window: request.valuation?.window ?? null, allowed: sorted(request.valuation?.allowedUnitIds),
   unavailable: sorted(request.valuation?.unavailableUnitIds),
-  allowedProduction: request.valuation?.allowedProduction ?? null, unavailableProduction: request.valuation?.unavailableProduction ?? null });
+  allowedProduction: request.valuation?.allowedProduction ? [...request.valuation.allowedProduction]
+    .sort((a, b) => a.buildingId.localeCompare(b.buildingId) || a.lane.localeCompare(b.lane)) : null,
+  unavailableProduction: canonicalProductionUses(request.valuation?.unavailableProduction) });
 
 /** One shared supply/physical batch boundary for gross/net and displacement.
  * prepare may only consume this think's shared Arrival reader. settle only
@@ -81,6 +84,7 @@ export function createAssemblyFactsTransaction<Prepared extends AssemblyPathPrep
       || forecast.completionProbability === 0);
     missing.push(...requiredSupplyMissing.map(fact => precondition(request, fact.code, fact.status, fact.factIds)));
     const paths = record.prepared.map(path => input.settle(path, risks));
+    record.settled = paths;
     for (const path of paths) if (!path.settlement) missing.push(...path.missing);
     for (const cohort of record.supply.cohorts) missing.push(...cohort.missing.map(fact => precondition(request, fact.code, fact.status, fact.factIds)));
     const combined = combineAssemblyContinuations({ forecast, window: record.window, paths: paths.map(path => ({
@@ -100,24 +104,26 @@ export function createAssemblyFactsTransaction<Prepared extends AssemblyPathPrep
     const path = forecast.fillScenarios.find(path => path.id === pathId);
     if (path?.readyTick !== null && path?.readyTick !== undefined) return { status: 'ready', tick: path.readyTick };
     if (!path || forecast.missing.some(fact => fact.status === 'unknown'
-      && (fact.factIds.includes(pathId) || forecast.fillScenarios.length === 1))) return { status: 'unknown' };
+      && (fact.code !== 'assembly-conditional-support-exhausted' || fact.factIds.includes(pathId)))) return { status: 'unknown' };
     return { status: 'not-filled' };
   };
   const delayUpperBound: NonNullable<StrategyAllocationInput['assemblyDelayLossUpperBound']> = request => {
     const base = input.committedRequest(request.objectiveId, request.methodId, request.unitIds);
     if (!base) return { status: 'unknown', reasonCode: 'assembly-continuation-value-unknown' };
     const beforeRequest: AssemblyFactsRequest = { ...base, unitIds: request.unitIds,
-      valuation: { phase: 'gross', window: request.window, allowedUnitIds: request.unitIds } };
+      valuation: { ...base.valuation, phase: 'gross', window: request.window,
+        allowedUnitIds: base.valuation?.allowedUnitIds
+          ? request.unitIds.filter(id => base.valuation!.allowedUnitIds!.includes(id)) : request.unitIds } };
     const beforeSupply = supply(beforeRequest);
-    const before = [...records.values()].find(record => record.request.objective.id === request.objectiveId
-      && record.request.methodId === request.methodId && sorted(record.request.unitIds).join('\0') === sorted(request.unitIds).join('\0')
-      && sameValuationWindow(record.window, request.window) && !record.request.valuation?.unavailableProduction?.length
-      && !record.request.valuation?.unavailableUnitIds?.length);
+    const before = [...records.values()].find(record => keyFor(record.request) === keyFor(beforeRequest)
+      && sameValuationWindow(record.window, request.window));
     // Only the supply counterfactual is needed here. Reuse an already prepared
     // before cash schedule when available; an absent schedule uses the proved
     // whole cap and never launches another physical-plan batch from the oracle.
     const afterSupply = supply({ ...beforeRequest, unitIds: request.remainingUnitIds, valuation: { ...beforeRequest.valuation!,
-      unavailableUnitIds: request.unitIds.filter(id => !request.remainingUnitIds.includes(id)), unavailableProduction: request.unavailableProduction } });
+      unavailableUnitIds: sorted([...(base.valuation?.unavailableUnitIds ?? []),
+        ...request.unitIds.filter(id => !request.remainingUnitIds.includes(id))]),
+      unavailableProduction: canonicalProductionUses([...(base.valuation?.unavailableProduction ?? []), ...request.unavailableProduction]) } });
     const cap = assemblyContinuationValueCap(snapshot, base.objective, request.window);
     const paired = beforeSupply.forecast.fillScenarios.map(path => {
       const prepared = before?.prepared.find(value => value.pathId === path.id);
@@ -151,7 +157,7 @@ export function createAssemblyFactsTransaction<Prepared extends AssemblyPathPrep
         ? [[path.method.id, path.method] as const] : []))).values()],
     publishRisks(published: ReadonlyMap<string, VoyageRiskStages>) {
       risks = published;
-      for (const record of records.values()) delete record.facts;
+      for (const record of records.values()) { delete record.facts; delete record.settled; }
     },
     /** Finite, numeric provenance only; never serialize projected snapshots,
      * callback functions or complete source/member-stock graphs into trace. */
@@ -168,7 +174,7 @@ export function createAssemblyFactsTransaction<Prepared extends AssemblyPathPrep
           timeP90ErrorTicks: record.supply.forecast.conditionalProduction.timeP90ErrorTicks,
         } : null },
       limitations: record.supply.calibration.limitations,
-      paths: record.prepared.map(path => ({ pathId: path.pathId, readyTick: path.readyTick, methodId: path.method?.id ?? null,
+      paths: (record.settled ?? record.prepared).map(path => ({ pathId: path.pathId, readyTick: path.readyTick, methodId: path.method?.id ?? null,
         voyageIds: path.method?.voyagePlans?.map(voyage => voyage.id) ?? [], coverage: path.coverage,
         missing: path.missing, assumptions: path.assumptions })) })),
       delayProofs: [...proofs.values()] }),
