@@ -1,0 +1,431 @@
+{
+  "source": "229e82d0ac91372b51280929b9e60ee675fa7939",
+  "sharedBase": "73d777cda3af5fbc01c7c9fcc103a5967b107080",
+  "semantics": "Independent23 pure JSON audit of actual funding, SDK provenance and native goldSpent. No AI/source/simulation or hypothetical replay. Native400 payment does not mean central ACK.",
+  "records": [
+    {
+      "originalLocalPath": "/tmp/sketch-allocator-defense/goal-worker-funding-73d-near4665-23/result.json",
+      "sha256": "a768ed6d863a696bc01c526bb235ec6a04c390f626433de8f0dac9afd55593bb",
+      "audit": {
+        "scope": "Read-only original73d member plus real post-application SDK member; no planner/fact/navigation/simulation calls",
+        "shared": "73d777cda3af5fbc01c7c9fcc103a5967b107080",
+        "tick": 4665,
+        "think": 311,
+        "inputSHA256": {
+          "gzip": "d5756d0a19f54c131dc384be3b49d686dd9a0ecbcde4ddbb9fa16435fe390149",
+          "plain": "638e694f6e3b6ccdbf1676e741b32428cd7652b8f5f51d1f0e3ea4a210adafbb",
+          "sdkGzip": "da6f42f754d617a89b161455145d3408ee669fed6be877dcddce592829140fc6",
+          "sdkPlain": "13482c051a8b70ce96f1aa6b227979860fc29b32bfbd4d4e0830828bbf127575"
+        },
+        "token": {
+          "actionId": "goal-ref:action:v39",
+          "generation": 12
+        },
+        "acceptedCommandId": "planner:strategy-command:4665:311:0",
+        "sdkAppliedTick": 4668,
+        "sdkCommand": {
+          "type": "board",
+          "unitIds": [
+            "scene-public-planner-frame-planner-worker-1"
+          ],
+          "transportId": "unit-planner-transport-1000"
+        },
+        "currentGold": 425,
+        "reservedHallGold": 400,
+        "paidHallGold": 0,
+        "cashAfterFormalReservations": 25,
+        "transportPurchasingBudgetCount": 0,
+        "ownHallGoldFact": {
+          "state": "met",
+          "quantity": 425,
+          "observedTick": 4665,
+          "availableTick": 4665
+        },
+        "capitalSinceTick": 105,
+        "expectedPaymentTick": 5644,
+        "buildState": "waiting-actions",
+        "estimatedBuildFinishTick": 6363,
+        "workerBeforeSdk": {
+          "point": {
+            "x": 656,
+            "y": 859
+          },
+          "deck": null,
+          "cabin": null,
+          "order": {
+            "type": "mine",
+            "resourceId": "resource-0",
+            "phase": "toMine",
+            "timer": 0
+          }
+        },
+        "work": 5563,
+        "limits": "Applied board is not native cargo arrival/landing or hall payment; future start/finish remain plan estimates. Fixed73d is unchanged; cash-refresh87a is not injected."
+      }
+    },
+    {
+      "originalLocalPath": "/tmp/sketch-allocator-defense/goal-native-hall-payment-73d-near-23/result.json",
+      "sha256": "0e19a38ca4c79a1935ef2b5762f348a7752b30617ae245510b4334a25d9f36cf",
+      "audit": {
+        "source": "229e82d0ac91372b51280929b9e60ee675fa7939",
+        "productionHead": "73d777cda3af5fbc01c7c9fcc103a5967b107080",
+        "scope": "Read-only five original complete near markers plus actual SDK application member; no planner/facts/navigation/SDK/sim execution",
+        "variant": "near",
+        "formalCommandTick": 6165,
+        "sdkApplicationTick": 6168,
+        "firstFoundationSnapshotTick": 6300,
+        "nativeCashCost": 400,
+        "goldSpentBeforeAfter": [
+          1971,
+          2371
+        ],
+        "cashBeforeAfter": [
+          409,
+          49
+        ],
+        "netOtherIncomeAcrossPaymentWindow": 40,
+        "completeSnapshotTick": 6855,
+        "lastObservedTick": 8400,
+        "centralAckObserved": false,
+        "centralPaidGold": 0,
+        "centralBudgetState": "reserved",
+        "firstIssued": {
+          "token": {
+            "actionId": "goal-ref:action:v46",
+            "generation": 14
+          },
+          "params": {
+            "buildingKind": "townHall",
+            "at": {
+              "point": {
+                "x": 2832,
+                "y": 720
+              },
+              "landId": "land:2"
+            },
+            "worker": {
+              "kind": "existing",
+              "entityId": "scene-public-planner-frame-planner-worker-1"
+            },
+            "approach": {
+              "landId": "land:2",
+              "point": {
+                "x": 2832,
+                "y": 720
+              }
+            },
+            "foundationId": null
+          },
+          "issued": {
+            "id": "planner:strategy-command:6165:411:2",
+            "action": {
+              "actionId": "goal-ref:action:v46",
+              "generation": 14
+            },
+            "executor": "goal.build",
+            "purpose": "task",
+            "acceptedTick": 6165,
+            "command": {
+              "type": "build",
+              "unitId": "scene-public-planner-frame-planner-worker-1",
+              "buildingKind": "townHall",
+              "x": 2832,
+              "y": 720
+            },
+            "worldBefore": {
+              "kind": "construction",
+              "buildingIds": []
+            }
+          }
+        },
+        "sdk": [
+          {
+            "event": {
+              "tick": 6168,
+              "owner": "planner",
+              "scriptId": "goal.build",
+              "command": {
+                "type": "build",
+                "unitId": "scene-public-planner-frame-planner-worker-1",
+                "buildingKind": "townHall",
+                "x": 2832,
+                "y": 720
+              }
+            },
+            "compressedSha256": "ec03a7875de5ffc4cdcf31804081c1d3ff65bf9bfb2cb47cd814916077033405",
+            "plainSha256": "d486d8d0cd4ca178913a552571db5b94f54479de198dd9be5f59c83b3ae64429",
+            "compressedOffset": 20875
+          }
+        ],
+        "rows": [
+          {
+            "event": "first-returned-townhall-build-command",
+            "tick": 6165,
+            "path": "/tmp/goal-73d-build-markers/near/first-returned-townhall-build-command/actual-frame.jsonl.gz",
+            "compressedBytes": 491735,
+            "compressedSha256": "dcbf5c9e3d72bc575cded0c20037b457a153452b3e208ad5da5a0de0247d4470",
+            "plainSha256": "38c20cd677dd902c658072672c08bacddfc25e4d5f74b6f0ea248a7c14b7f74b",
+            "gold": 589,
+            "nativeGoldSpent": 1791,
+            "token": {
+              "actionId": "goal-ref:action:v46",
+              "generation": 14
+            },
+            "budget": {
+              "id": "budget:goal-ref:spend:v4",
+              "spendId": "goal-ref:spend:v4",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "action": {
+                "actionId": "goal-ref:action:v46",
+                "generation": 14
+              },
+              "amountGold": 400,
+              "paidGold": 0,
+              "state": "reserved",
+              "sinceTick": 105,
+              "plannedGold": 400,
+              "expectedPaymentTick": 6165,
+              "releasedTick": null,
+              "includedUtilityTermCodes": [
+                "remaining-plan-actions"
+              ],
+              "externalReservationIds": [
+                "naval:islandHall"
+              ]
+            },
+            "executionStatus": "active",
+            "phase": "await-foundation",
+            "outputBindings": {},
+            "planCount": 2,
+            "workerOrder": {
+              "type": "idle"
+            },
+            "halls": []
+          },
+          {
+            "event": "next-observed-snapshot-after-townhall-build",
+            "tick": 6180,
+            "path": "/tmp/goal-73d-build-markers/near/next-observed-snapshot-after-townhall-build/actual-frame.jsonl.gz",
+            "compressedBytes": 556405,
+            "compressedSha256": "47b6bcaf68dca95ff5cd240c93a681deacd7859f44333d0c105c2d80b189fcab",
+            "plainSha256": "e4390d30f25531473bc2aabb02e45b09eb26253c3ae61fb782343537d89d1310",
+            "gold": 409,
+            "nativeGoldSpent": 1971,
+            "token": {
+              "actionId": "goal-ref:action:v46",
+              "generation": 14
+            },
+            "budget": {
+              "id": "budget:goal-ref:spend:v4",
+              "spendId": "goal-ref:spend:v4",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "action": {
+                "actionId": "goal-ref:action:v46",
+                "generation": 14
+              },
+              "amountGold": 400,
+              "paidGold": 0,
+              "state": "reserved",
+              "sinceTick": 105,
+              "plannedGold": 400,
+              "expectedPaymentTick": 6180,
+              "releasedTick": null,
+              "includedUtilityTermCodes": [
+                "remaining-plan-actions"
+              ],
+              "externalReservationIds": [
+                "naval:islandHall"
+              ]
+            },
+            "executionStatus": "active",
+            "phase": "await-foundation",
+            "outputBindings": {},
+            "planCount": 2,
+            "workerOrder": {
+              "type": "build",
+              "buildingKind": "townHall",
+              "x": 2832,
+              "y": 720,
+              "progressTick": 6179,
+              "progressX": 2941.089086853098,
+              "progressY": 332.5456570389954
+            },
+            "halls": []
+          },
+          {
+            "event": "first-new-townhall-snapshot",
+            "tick": 6300,
+            "path": "/tmp/goal-73d-build-markers/near/first-new-townhall-snapshot/actual-frame.jsonl.gz",
+            "compressedBytes": 158422,
+            "compressedSha256": "7074a5f2cebe44f498c16069ba0a4c16fc7712fa7706bbee2074dfb24f9f84bb",
+            "plainSha256": "8897e2ee6812041b7c1fc92523456cc3e8d8e097f865e8552178b9b6c1c12a3b",
+            "gold": 49,
+            "nativeGoldSpent": 2371,
+            "token": {
+              "actionId": "goal-ref:action:v46",
+              "generation": 14
+            },
+            "budget": {
+              "id": "budget:goal-ref:spend:v4",
+              "spendId": "goal-ref:spend:v4",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "action": {
+                "actionId": "goal-ref:action:v46",
+                "generation": 14
+              },
+              "amountGold": 400,
+              "paidGold": 0,
+              "state": "reserved",
+              "sinceTick": 105,
+              "plannedGold": 400,
+              "expectedPaymentTick": 6285,
+              "releasedTick": null,
+              "includedUtilityTermCodes": [
+                "remaining-plan-actions"
+              ],
+              "externalReservationIds": [
+                "naval:islandHall"
+              ]
+            },
+            "executionStatus": "active",
+            "phase": "await-foundation",
+            "outputBindings": {},
+            "planCount": 0,
+            "workerOrder": {
+              "type": "repair",
+              "buildingId": "building-planner-townHall-1100"
+            },
+            "halls": [
+              {
+                "id": "building-planner-townHall-1100",
+                "x": 2832,
+                "y": 720,
+                "complete": false,
+                "buildProgress": 14,
+                "buildTime": 560
+              }
+            ]
+          },
+          {
+            "event": "first-new-townhall-complete-snapshot",
+            "tick": 6855,
+            "path": "/tmp/goal-73d-build-markers/near/first-new-townhall-complete-snapshot/actual-frame.jsonl.gz",
+            "compressedBytes": 32003,
+            "compressedSha256": "3ada990ab0eefe093144a2bf58b23bcf6423b13c3ef27d859ce59c967535dc7f",
+            "plainSha256": "5d400a0c04c344ecfeb91cd9612e48679d395e196006298000e45cef1595877c",
+            "gold": 238,
+            "nativeGoldSpent": 2372,
+            "token": {
+              "actionId": "goal-ref:action:v46",
+              "generation": 14
+            },
+            "budget": {
+              "id": "budget:goal-ref:spend:v4",
+              "spendId": "goal-ref:spend:v4",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "action": {
+                "actionId": "goal-ref:action:v46",
+                "generation": 14
+              },
+              "amountGold": 400,
+              "paidGold": 0,
+              "state": "reserved",
+              "sinceTick": 105,
+              "plannedGold": 400,
+              "expectedPaymentTick": 6285,
+              "releasedTick": null,
+              "includedUtilityTermCodes": [
+                "remaining-plan-actions"
+              ],
+              "externalReservationIds": [
+                "naval:islandHall"
+              ]
+            },
+            "executionStatus": "active",
+            "phase": "await-foundation",
+            "outputBindings": {},
+            "planCount": 0,
+            "workerOrder": {
+              "type": "idle"
+            },
+            "halls": [
+              {
+                "id": "building-planner-townHall-1100",
+                "x": 2832,
+                "y": 720,
+                "complete": true,
+                "buildProgress": 560,
+                "buildTime": 560
+              }
+            ]
+          },
+          {
+            "event": "last-original-member",
+            "tick": 8400,
+            "path": "/tmp/goal-73d-build-markers/near/last-original-member/actual-frame.jsonl.gz",
+            "compressedBytes": 32206,
+            "compressedSha256": "7c1fa4a34640d07bc5b72216f129321c28a126b51537dc10a6bb1b2a4ef9cfc8",
+            "plainSha256": "91023e2d4e3b6a68a93d8af7b03a43d2a79b45b67b606de6571a460f427401e3",
+            "gold": 433,
+            "nativeGoldSpent": 2747,
+            "token": {
+              "actionId": "goal-ref:action:v46",
+              "generation": 14
+            },
+            "budget": {
+              "id": "budget:goal-ref:spend:v4",
+              "spendId": "goal-ref:spend:v4",
+              "objectiveId": "ConquerIsland:planner:resource-1",
+              "methodId": "goal-bundle:ConquerIsland:planner:resource-1",
+              "action": {
+                "actionId": "goal-ref:action:v46",
+                "generation": 14
+              },
+              "amountGold": 400,
+              "paidGold": 0,
+              "state": "reserved",
+              "sinceTick": 105,
+              "plannedGold": 400,
+              "expectedPaymentTick": 6285,
+              "releasedTick": null,
+              "includedUtilityTermCodes": [
+                "remaining-plan-actions"
+              ],
+              "externalReservationIds": [
+                "naval:islandHall"
+              ]
+            },
+            "executionStatus": "active",
+            "phase": "await-foundation",
+            "outputBindings": {},
+            "planCount": 0,
+            "workerOrder": {
+              "type": "idle"
+            },
+            "halls": [
+              {
+                "id": "building-planner-townHall-1100",
+                "x": 2832,
+                "y": 720,
+                "complete": true,
+                "buildProgress": 560,
+                "buildTime": 560
+              }
+            ]
+          }
+        ],
+        "conclusion": "Formal goal.build alone accepted at6165 and actually applied at6168; matching worker native construction paid400 and completed the same hall. Central v46/gen14 remained active/await-foundation with reserved400/paid0 and no binding through8400 after current plans disappeared.",
+        "limitations": [
+          "Strict five-step success reported by26 is retained; this audit does not relabel it.",
+          "No sustained guard certification; no hold inferred from building completion.",
+          "Only original markers inspected; no reconstruction of intermediate native ticks or new execution.",
+          "bbee commitment fix is a separate source and audit; never injected into this73d evidence."
+        ]
+      }
+    }
+  ]
+}

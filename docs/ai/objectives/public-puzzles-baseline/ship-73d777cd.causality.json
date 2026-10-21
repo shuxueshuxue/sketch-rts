@@ -1,0 +1,124 @@
+{
+  "source": "229e82d0ac91372b51280929b9e60ee675fa7939",
+  "sharedBase": "73d777cda3af5fbc01c7c9fcc103a5967b107080",
+  "semantics": "Independent pure reads of original native records; no replay or new AI/source/simulation. Strict five-step verdict and central ACK/garrison limitations stay separate.",
+  "records": [
+    {
+      "originalLocalPath": "/tmp/sketch-allocator-defense/goal-73d-near-postfoundation-central-readonly.json",
+      "sha256": "5ea12bcc8d40396aa69c2e01114acae7483680db54881e3a0b68ffc302be054f",
+      "audit": {
+        "scope": "Pure read of 73d original marker members; no planner/source/AI/SDK/sim calls",
+        "frames": [
+          {
+            "event": "first-new-townhall-snapshot",
+            "tick": 6300,
+            "gzipSha256": "7074a5f2cebe44f498c16069ba0a4c16fc7712fa7706bbee2074dfb24f9f84bb",
+            "plans": [],
+            "executions": [
+              {
+                "key": "goal-ref:action:v46",
+                "executor": "goal.build",
+                "status": "active",
+                "phase": "await-foundation",
+                "intent": {
+                  "kind": "goal-action",
+                  "goalId": "ConquerIsland:planner:resource-1",
+                  "declarationId": "goal-ref:declaration:v45",
+                  "actionKind": "build",
+                  "parameters": {},
+                  "outputs": [
+                    "building"
+                  ],
+                  "parametersRef": "goal-ref:parameters:v44"
+                },
+                "state": {
+                  "goalOutputBindings": {}
+                }
+              }
+            ],
+            "budgets": [
+              {
+                "id": "budget:goal-ref:spend:v4",
+                "paidGold": 0,
+                "amountGold": 400,
+                "state": "reserved"
+              }
+            ]
+          },
+          {
+            "event": "first-new-townhall-complete-snapshot",
+            "tick": 6855,
+            "gzipSha256": "3ada990ab0eefe093144a2bf58b23bcf6423b13c3ef27d859ce59c967535dc7f",
+            "plans": [],
+            "executions": [
+              {
+                "key": "goal-ref:action:v46",
+                "executor": "goal.build",
+                "status": "active",
+                "phase": "await-foundation",
+                "intent": {
+                  "kind": "goal-action",
+                  "goalId": "ConquerIsland:planner:resource-1",
+                  "declarationId": "goal-ref:declaration:v45",
+                  "actionKind": "build",
+                  "parameters": {},
+                  "outputs": [
+                    "building"
+                  ],
+                  "parametersRef": "goal-ref:parameters:v44"
+                },
+                "state": {
+                  "goalOutputBindings": {}
+                }
+              }
+            ],
+            "budgets": [
+              {
+                "id": "budget:goal-ref:spend:v4",
+                "paidGold": 0,
+                "amountGold": 400,
+                "state": "reserved"
+              }
+            ]
+          },
+          {
+            "event": "last-original-member",
+            "tick": 8400,
+            "gzipSha256": "7c1fa4a34640d07bc5b72216f129321c28a126b51537dc10a6bb1b2a4ef9cfc8",
+            "plans": [],
+            "executions": [
+              {
+                "key": "goal-ref:action:v46",
+                "executor": "goal.build",
+                "status": "active",
+                "phase": "await-foundation",
+                "intent": {
+                  "kind": "goal-action",
+                  "goalId": "ConquerIsland:planner:resource-1",
+                  "declarationId": "goal-ref:declaration:v45",
+                  "actionKind": "build",
+                  "parameters": {},
+                  "outputs": [
+                    "building"
+                  ],
+                  "parametersRef": "goal-ref:parameters:v44"
+                },
+                "state": {
+                  "goalOutputBindings": {}
+                }
+              }
+            ],
+            "budgets": [
+              {
+                "id": "budget:goal-ref:spend:v4",
+                "paidGold": 0,
+                "amountGold": 400,
+                "state": "reserved"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
