@@ -1,6 +1,7 @@
 import { abilityCooldown } from '../../shared/ability-cooldowns';
 import { ABILITY_DEFS, BUILDING_DEFS, UNIT_DEFS } from '../../shared/catalog';
 import { combatCapability, combatWeapons } from '../../shared/combat-capabilities';
+import { strikeReach } from '../../shared/combat-geometry';
 import { itemsFor } from '../../shared/equipment';
 import { FLAME_CLOAK, LIGHTNING_ROD, STORM_STAFF } from '../../shared/item-rules';
 import { pointSegmentDistanceSquared, segmentDistanceSquared } from '../../shared/navigation-math';
@@ -8,10 +9,10 @@ import { shipProfile } from '../../shared/ship-geometry';
 import { SIM_TICKS_PER_SECOND } from '../../shared/time';
 import { unitAbilities } from '../../shared/unit-abilities';
 import type { GameSnapshot, Unit } from '../../shared/types';
-import { mountedThreatReach } from '../policy/threat-reach';
+import { castThreatReach, mountedThreatReach } from '../policy/threat-reach';
 import { neutralCampExposure } from '../situation/neutral-camp-exposure';
 import type { DecisionFacts } from './decision';
-import { goalValueKey, resolveGoalCamp } from './goal-facts';
+import { goalCampId, goalValueKey, resolveGoalCamp } from './goal-facts';
 import type { GoalCombatMovementRequest } from './goal-naval-combat-grounding';
 import type { GoalMovementRisk } from './goal-naval-assessment';
 import type { GoalEstimate } from './goal-planner-types';
@@ -24,6 +25,7 @@ export type GoalPublishedMovementRisk = Readonly<{
 /** A runtime binding key, not a decision-memory payload or a new query ID. */
 export function goalCombatMovementRiskId(request: GoalCombatMovementRequest): string {
   return goalValueKey([request.effect.id, request.from, request.target, request.throughTick, request.arrivalTicks, request.campContact,
+    [...new Set(request.plannedCampIds ?? [])].sort(),
     request.cohort.map(member => [member.reference, member.assessment.id, member.assessment.kind, member.assessment.owner,
       member.assessment.x, member.assessment.y, member.assessment.hp, member.assessment.maxHp, member.assessment.radius,
       member.assessment.speed, member.assessment.attackDamage, member.assessment.attackRange, member.assessment.attackCooldown,
@@ -52,7 +54,7 @@ const bodyRadius = (unit: Unit) => {
  * The proof covers observed threats during this published march window;
  * future unobserved production/orders are not asserted to be known. */
 export function assessGoalCombatMovementRisk(input: Readonly<{
-  snapshot: GameSnapshot; situation: DecisionFacts<Situation>; request: GoalCombatMovementRequest;
+  snapshot: GameSnapshot; situation: Pick<DecisionFacts<Situation>, 'tick' | 'owner' | 'horizonTicks'>; request: GoalCombatMovementRequest;
   publishedRisk?: GoalPublishedMovementRisk;
 }>): GoalEstimate<GoalMovementRisk> {
   const { snapshot, situation, request } = input;
@@ -106,6 +108,7 @@ export function assessGoalCombatMovementRisk(input: Readonly<{
   // remains the next action's battle assessment, rather than a second charge.
   if (ticks === 0 && roads.every(road => road.points.every(point => squared(point, road.unit) < 1e-8))) return zero();
   const contacts = new Set<string>(), examined: string[] = [], campFacts = neutralCampExposure(snapshot);
+  const plannedCamps = new Set(request.plannedCampIds ?? []);
   const opponent = (owner: string) => owner === 'neutral' || strategyIsOpponent(snapshot, situation.owner, owner);
   const mobile = snapshot.units.filter(unit => unit.hp > 0 && strategyIsOpponent(snapshot, situation.owner, unit.owner));
   const hullSpeed = Math.max(0, ...mobile.filter(unit => shipProfile(unit)).map(unit => Math.max(unit.speed,
@@ -140,13 +143,39 @@ export function assessGoalCombatMovementRisk(input: Readonly<{
       const radius = reach + speed * ticks / SIM_TICKS_PER_SECOND + (carrier ? bodyRadius(carrier) : 0);
       if (!Number.isFinite(radius) || intersects(points, carrier ?? foe, radius)) contacts.add(foe.id);
     }
-    for (const camp of campFacts.camps) for (let index = 0; index < camp.members.length; index++) {
-      const member = camp.members[index]!, guard = camp.camp.creeps[index]!; examined.push(member.id);
-      const reach = Math.max(mountedThreatReach(snapshot, guard, unit, ticks), combatCapability(snapshot, guard).range) + guard.radius + unit.radius;
-      // Current/home/leash remain relevant even while every guard is returning.
-      const radius = member.pursuitRadius + reach;
-      if (intersects(points, member.home, radius) || intersects(points, member.responseOrigin, member.responseRadius + reach)
-        || corridor(points, member.point, member.home, reach + member.alertRadius)) contacts.add(member.id);
+    for (const camp of campFacts.camps) {
+      const campId = goalCampId(camp.memberIds);
+      if (plannedCamps.has(campId)) { examined.push(campId); continue; }
+      const memberIds = new Set(camp.memberIds);
+      // Damage already in flight or an observed attack order can wake an idle
+      // camp during this march. Its response is not restricted to alert range.
+      const triggered = camp.members.some((member, index) => member.active || member.returning
+        || camp.camp.creeps[index]!.order.type !== 'idle' || !!camp.camp.creeps[index]!.orderQueue?.length
+        || !!camp.camp.creeps[index]!.aim?.tracking
+        || camp.camp.creeps[index]!.effects.some(effect => effect.type === 'poison' && effect.remaining > 0))
+        || snapshot.units.some(actor => actor.hp > 0 && actor.owner !== 'neutral'
+          && 'targetId' in actor.order && actor.order.targetId !== undefined && memberIds.has(actor.order.targetId))
+        || snapshot.projectiles.some(shot => shot.remaining > 0 && shot.remaining <= ticks
+          && (memberIds.has(shot.targetId) || camp.members.some((member, index) => squared(member.point, { x: shot.toX, y: shot.toY })
+            <= ((shot.weapon?.radius ?? 0) + camp.camp.creeps[index]!.radius) ** 2)))
+        || snapshot.effects.some(effect => (effect.type === 'storm' || effect.type === 'burningGround') && effect.remaining > 0
+          && camp.members.some((member, index) => squared(member.point, effect) <= ((effect.radius ?? 0) + camp.camp.creeps[index]!.radius) ** 2));
+      for (let index = 0; index < camp.members.length; index++) {
+        const member = camp.members[index]!, guard = camp.camp.creeps[index]!; examined.push(member.id);
+        const reach = Math.max(mountedThreatReach(snapshot, guard, unit, ticks), combatCapability(snapshot, guard).range) + guard.radius + unit.radius;
+        if (triggered) {
+          // Current/home/leash remain relevant even while every guard returns.
+          if (intersects(points, member.home, member.pursuitRadius + reach)
+            || intersects(points, member.responseOrigin, member.responseRadius + reach)
+            || corridor(points, member.point, member.home, reach + member.alertRadius)) contacts.add(member.id);
+        } else {
+          // Native idle acquisition does not chase everything within its leash.
+          // Ready spells and carried attacks still retain their own native reach.
+          const alert = Math.max(strikeReach(guard, unit, member.alertRadius),
+            castThreatReach(snapshot, guard, unit, ticks) + guard.radius + unit.radius);
+          if (intersects(points, member.point, alert)) contacts.add(member.id);
+        }
+      }
     }
     for (const tower of snapshot.buildings.filter(building => building.hp > 0 && opponent(building.owner))) {
       const rules = BUILDING_DEFS[tower.kind];

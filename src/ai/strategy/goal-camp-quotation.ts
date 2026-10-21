@@ -10,6 +10,7 @@ import { goalFact, goalValueKey, resolveGoalCamp } from './goal-facts';
 import type { GoalCandidates, GoalCohortMember, GoalCombatOption, GoalEstimate, GoalFact } from './goal-planner-types';
 import { strategyIsOpponent } from './ownership';
 import { landIdAt } from './regions';
+import { goalCampStagingOutsideAlert } from './goal-camp-staging-geometry';
 import type { Situation, Target } from './types';
 
 /** One replaceable camp-only model boundary. Search and exact assessment use
@@ -81,7 +82,8 @@ export function coarseGoalCampOptions(input: Readonly<{
     y: group.reduce((sum, unit) => sum + unit.y, 0) / group.length };
   const all = neutralCampExposure(snapshot).camps.map(row => row.camp);
   const point = CREEP_STAGING_TURNS.map(turn => stagingPoint(camp, from, turn)).find(point =>
-    isOpenGround(snapshot.map, point.x, point.y) && landIdAt(snapshot.map, point) === landId && stagingClear(point, all, camp));
+    isOpenGround(snapshot.map, point.x, point.y) && landIdAt(snapshot.map, point) === landId && stagingClear(point, all, camp)
+      && goalCampStagingOutsideAlert(resolved.exposure, point, group));
   if (!point) return { state: 'pending', requestIds: [`coarse-camp-staging:${campId}`],
     reason: { code: 'combat-coarse-staging-refinement-required', factIds: [effect.id, campId], values: {} } };
   const staging: Target = { landId, point }, target: Target = { landId, point: camp.center };

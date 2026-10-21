@@ -8,6 +8,7 @@ import type { GoalNativeGroundReader } from './goal-boarding-geometry';
 import { goalFact, goalValueKey, resolveGoalCamp } from './goal-facts';
 import type { GoalFact, GoalFactObservation, GoalGroundingReader, GoalPlanningContext } from './goal-planner-types';
 import { landIdAt } from './regions';
+import { goalCampStagingOutsideAlert } from './goal-camp-staging-geometry';
 export type GoalCampStagingPorts = Readonly<{
   landRoute: AllocationLandRouteReader; readGroundPoint?: GoalNativeGroundReader;
   resolveCohort: NonNullable<GoalGroundingReader['resolveCohort']>;
@@ -50,6 +51,7 @@ export function readGoalCampStagingFact(fact: GoalFact, context: GoalPlanningCon
     if (landIdAt(context.snapshot.map, actual) !== landId) return answer(false, 'staging-cohort-on-another-land');
     group.push(actual);
   }
+  if (!goalCampStagingOutsideAlert(camp.exposure, p.at.point, group)) return answer(false, 'staging-inside-target-alert');
   // Route/point geometry changes matter here; attack clocks, cosmetics and
   // other unit state do not repeatedly invalidate a geometric world fact.
   dependencies.push(group.map(unit => [unit.id, unit.kind, unit.owner, unit.x, unit.y, unit.radius, unit.deck, unit.cabin]),

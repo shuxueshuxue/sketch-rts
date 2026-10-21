@@ -10,6 +10,7 @@ import { assessAllocatedCampBattle } from './allocated-force';
 import type { AllocationLandRouteReader } from './allocation-arrival-query';
 import type { GoalNativeGroundReader } from './goal-boarding-geometry';
 import { readGoalCampStagingFact } from './goal-camp-staging-facts';
+import { goalCampStagingOutsideAlert } from './goal-camp-staging-geometry';
 import { readGoalSiteSafetyFact } from './goal-site-safety-facts';
 import { goalCampId, goalFact } from './goal-facts';
 import { createGoalNavalCombatGrounding, type GoalNavalCombatGroundingPorts } from './goal-naval-combat-grounding';
@@ -66,6 +67,20 @@ function rows(result: ReturnType<NonNullable<ReturnType<typeof createGoalNavalCo
   expect(result.state).toBe('met'); if (result.state !== 'met') throw Error(JSON.stringify(result)); return result.candidates;
 }
 describe('camp staging and unbuilt mining garrisons', () => {
+  it('rejects a target-alert staging point before either geometry publication or camp exposure exemptions', () => {
+    const f = fixture(), camp = f.camp, group = f.context.snapshot.units.filter(unit => unit.owner === 'us');
+    const guard = camp.members[0]!, radius = guard.alertRadius + Math.max(...group.map(unit => unit.radius)) + camp.camp.creeps[0]!.radius;
+    const point = { x: guard.point.x - radius, y: guard.point.y };
+    expect(goalCampStagingOutsideAlert(camp, point, group)).toBe(false);
+    const fact = goalFact({ kind: 'camp-staging', campId: f.campId, at: { landId: landIdAt(f.context.snapshot.map, point)!, point },
+      cohort: group.map(unit => ({ kind: 'existing', entityId: unit.id })) });
+    expect(strict(() => readGoalCampStagingFact(fact, f.context, { landRoute: f.ports.landRoute, readGroundPoint: f.ports.readGroundPoint!,
+      resolveCohort: f.ports.resolveCohort }))).toMatchObject({ state: 'unmet', reason: { code: 'staging-inside-target-alert' } });
+    const inside = { x: guard.point.x - 100, y: guard.point.y };
+    const projectedInside = createGoalNavalCombatGrounding(f.context, { ...f.ports,
+      readGroundPoint: () => ({ state: 'met', value: inside, factIds: ['published-but-inside-alert'] }) });
+    expect(strict(() => projectedInside.combatOptions!(goalFact({ kind: 'camp-cleared', campId: f.campId }))).state).toBe('unmet');
+  });
   it('grounds real camp clearing and each native bounty at staging, not inside the enemy camp or behind a site-safe cycle', () => {
     const f = fixture(), snapshot = f.context.snapshot, before = JSON.stringify(snapshot), count = situationConstructionCount();
     const effect = goalFact({ kind: 'camp-cleared', campId: f.campId }), full = strict(() => rows(f.read(effect))).find(option => option.cohort.length === 2)!;
