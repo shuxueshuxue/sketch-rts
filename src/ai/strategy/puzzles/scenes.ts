@@ -69,7 +69,7 @@ export function guardedShoreScene(strong = true) {
 export function negativeReturnScene() {
   const b = puzzleBuilder(BUILDING_DEFS.townHall.cost);
   homeEconomy(b); targetMine(b, TARGET_MINE, UNIT_DEFS.footman.cost);
-  camp(b, ['ogreLord', 'ogreMage', 'ogreWarrior', 'ogreWarrior'], TARGET_GUARD);
+  camp(b, ['ogreLord', 'ogreMage', 'ogreWarrior'], TARGET_GUARD);
   soldiers(b, 'footman', 6, { x: 960, y: 1728 });
   const localMine = { x: 960, y: 2112 }, localGuard = { x: 1120, y: 2176 };
   b.goldMine(`resource-${2}`, localMine.x, localMine.y, 100 * BUILDING_DEFS.townHall.cost);
