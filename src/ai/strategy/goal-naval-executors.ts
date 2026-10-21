@@ -85,7 +85,7 @@ function defend(input: ExecutorInput, parameters: Readonly<Record<string, unknow
     const fact = goalFact({ kind: 'site-safe', site: protectedSite,
       throughTick: Math.max(input.snapshot.tick, Math.min(through, input.snapshot.tick + horizon)) });
     const protection = input.goalProtection?.('defend', protectedSite, cohort,
-      Math.max(input.snapshot.tick, Math.min(through, input.snapshot.tick + horizon)));
+      Math.max(input.snapshot.tick, Math.min(through, input.snapshot.tick + horizon)), at);
     const observed = input.goalFacts?.(fact);
     if (protection ? protection.state !== 'met' : !observed || observed.fact.id !== fact.id || observed.observedTick !== input.snapshot.tick
       || observed.state !== 'met' || (observed.availableTick ?? input.snapshot.tick) > input.snapshot.tick)

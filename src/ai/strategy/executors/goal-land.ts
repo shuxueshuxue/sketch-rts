@@ -36,7 +36,7 @@ function executor(kind: 'destroy-target' | 'hold-position' | 'engage-units'): St
         if (!Number.isFinite(horizon) || horizon <= 0) return blockedExecutor(input, 'goal-hold-protection-window-invalid');
         const checkedThrough = Math.max(input.snapshot.tick, Math.min(through, input.snapshot.tick + horizon));
         const fact = goalFact({ kind: 'site-safe', site: at, throughTick: checkedThrough });
-        const quote = typeof intent.parameters.garrisonMineId !== 'string' ? input.goalProtection?.('hold-position', at, ids, checkedThrough) : undefined;
+        const quote = typeof intent.parameters.garrisonMineId !== 'string' ? input.goalProtection?.('hold-position', at, ids, checkedThrough, at) : undefined;
         const observed = input.goalFacts?.(fact);
         if (quote ? quote.state !== 'met' : !observed || observed.fact.id !== fact.id || observed.observedTick !== input.snapshot.tick
           || observed.state !== 'met' || (observed.availableTick ?? input.snapshot.tick) > input.snapshot.tick)

@@ -4,13 +4,13 @@ import type { GoalEstimate, GoalPlanningContext } from './goal-planner-types';
 import type { Target } from './types';
 
 export type GoalProtectionReader = (kind: 'hold-position' | 'defend', site: Target,
-  cohortIds: readonly string[], throughTick: number) => GoalEstimate<true>;
+  cohortIds: readonly string[], throughTick: number, post?: Target) => GoalEstimate<true>;
 
 /** An observed enemy does not by itself make a priced defense impossible.
  * Reuse the same current-window model with the exact admitted cohort and all
  * its real prerequisites. No alternate army or hypothetical origin qualifies. */
 export function readGoalCurrentProtection(context: GoalPlanningContext, kind: 'hold-position' | 'defend', site: Target,
-  cohortIds: readonly string[], throughTick: number): GoalEstimate<true> {
+  cohortIds: readonly string[], throughTick: number, post: Target = site): GoalEstimate<true> {
   const safe = goalFact({ kind: 'site-safe', site, throughTick }), observed = context.readFact(safe);
   const pending = (code: string, ids: readonly string[]): GoalEstimate<true> => ({ state: 'pending', requestIds: ids.length ? ids : [safe.id],
     reason: { code, factIds: ids, values: {} } });
@@ -28,7 +28,9 @@ export function readGoalCurrentProtection(context: GoalPlanningContext, kind: 'h
   if (!quote) return pending('current-protection-quotation-missing', [effect.id]);
   if (quote.state === 'pending') return pending(quote.reason.code, quote.requestIds);
   if (quote.state === 'unmet') return quote;
-  const matching = quote.candidates.filter(option => goalValueKey([...option.cohort].sort((a, b) => goalValueKey(a).localeCompare(goalValueKey(b)))) === goalValueKey(refs));
+  const cohortQuotes = quote.candidates.filter(option => goalValueKey([...option.cohort].sort((a, b) => goalValueKey(a).localeCompare(goalValueKey(b)))) === goalValueKey(refs));
+  const matching = cohortQuotes.filter(option => goalValueKey(option.target) === goalValueKey(post));
+  if (cohortQuotes.length && !matching.length) return pending('current-protection-post-unquoted', [effect.id]);
   const strength = units.reduce((sum, unit) => sum + effectiveCombatRating(context.snapshot, unit!), 0);
   for (const option of matching) {
     if (option.requiredForce > strength || option.duration.state !== 'met' || option.cost.state !== 'met'

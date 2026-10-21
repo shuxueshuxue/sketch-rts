@@ -118,7 +118,12 @@ export function createGoalPlanRefiner(input: Readonly<{
       || proposalKey(entry.coarse) === proposalKey(node.declaration));
     const bound = () => {
       const owned = memory.entries.filter(entry => entry.planId === undefined || entry.planId === plan.id);
+      // A rejected/compared alternative remains a reference in the current
+      // search graph. Evicting its price makes its optimistic coarse proposal
+      // win another comparison and republishes the same proof forever.
+      const alternativeIds = new Set(plan.alternatives.map(alternative => alternative.actionId));
       const referenced = owned.filter(entry => !!matchingNode(entry)
+        || alternativeIds.has(entry.coarse.id) || entry.exact.some(exact => alternativeIds.has(exact.id))
         || entry.preferredExactIndex !== undefined && entry.preferredExactIndex >= 0
           && plan.actions.some(node => choiceFamily(node.declaration) === choiceFamily(entry.coarse)));
       for (const entry of referenced) { entry.planId = plan.id; touchCache(entry, sequence, [plan.goal.id]); }

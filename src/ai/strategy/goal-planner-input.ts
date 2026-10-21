@@ -534,10 +534,10 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
         executionProtection(authority, objectiveId) {
           assertActive();
           if (authority.owner !== owner || authority.evaluatedTick !== snapshot.tick) throw Error('Goal execution authority epoch mismatch');
-          return (kind, site, ids, through) => {
+          return (kind, site, ids, through, post) => {
             assertActive();
             const context = makeContext(ids, input.interruptedUnitIds, [], reservedAllocationGold(authority, objectiveId), 'exact');
-            return readGoalCurrentProtection(context, kind, site, ids, through);
+            return readGoalCurrentProtection(context, kind, site, ids, through, post);
           };
         },
         resolveReference(reference, selection) {

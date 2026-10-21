@@ -61,3 +61,12 @@ it('does not borrow a larger quoted cohort or waive unpublished conditional prot
     grounding: { ...context.grounding!, combatOptions: () => ({ state: 'met', candidates: [conditional], factIds: [] }) } };
   expect(readGoalCurrentProtection(pendingContext, 'defend', site, ids, 2400).state).toBe('pending');
 }));
+
+it('does not use the price of a newly selected post to protect the old execution post', () => fixture((context, quote, ids) => {
+  const site = { entityId: 'hall', landId: 'land:1', point: { x: 1000, y: 1000 } } as const;
+  const previousPost = { ...site, point: { x: 990, y: 1000 } };
+  expect(quote.target).toEqual(site);
+  expect(readGoalCurrentProtection(context, 'defend', site, ids, 2400, previousPost)).toMatchObject({ state: 'pending',
+    reason: { code: 'current-protection-post-unquoted' } });
+  expect(readGoalCurrentProtection(context, 'defend', site, ids, 2400, site).state).toBe('met');
+}));
