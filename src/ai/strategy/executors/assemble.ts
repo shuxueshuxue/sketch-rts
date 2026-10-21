@@ -4,6 +4,8 @@ import { sameGround, walkingDistance } from '../../../shared/terrain';
 import type { ExecutorFeedback, StrategyExecutor } from '../allocation-types';
 import { blockedExecutor, executorFeedback, grantedUnits, validExecutorGrant } from '../executor-grants';
 
+export const ASSEMBLY_RANGE = 180;
+
 /** Explicitly moves this granted manifest while another action obtains its
  * transport. Completion means actual arrival, not a remembered move order. */
 export const assembleExecutor: StrategyExecutor = {
@@ -16,7 +18,7 @@ export const assembleExecutor: StrategyExecutor = {
     if (!cohort.length) return blockedExecutor(input, 'no-granted-assembly-members');
     if (cohort.some(unit => !sameGround(snapshot.map, unit, destination) || walkingDistance(snapshot.map, unit, destination) === undefined))
       return blockedExecutor(input, 'assembly-route-unreachable', cohort.map(unit => unit.id));
-    const arrived = cohort.filter(unit => distance(unit, destination) <= 180);
+    const arrived = cohort.filter(unit => distance(unit, destination) <= ASSEMBLY_RANGE);
     const complete = arrived.length === cohort.length;
     return { ...base, status: complete ? 'complete' : 'active', phase: complete ? 'assembled' : 'assembling',
       commands: cohort.flatMap<ExecutorFeedback['commands'][number]>(unit => {

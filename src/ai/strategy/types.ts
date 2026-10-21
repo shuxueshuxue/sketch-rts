@@ -285,7 +285,7 @@ export type Precondition = Readonly<{
 export type Subgoal = Readonly<{
   id: string;
   parentMethodId: MethodId;
-  kind: 'borrow-force' | 'train-force' | 'train-worker' | 'obtain-transport' | 'build-shipyard' | 'train-transport'
+  kind: 'borrow-force' | 'assemble-force' | 'train-force' | 'train-worker' | 'obtain-transport' | 'build-shipyard' | 'train-transport'
     | 'clear-beachhead' | 'change-landing' | 'deliver-force' | 'clear-camp' | 'deliver-workers'
     | 'build-hall' | 'start-mining' | 'establish-garrison' | 'build-production' | 'provide-supply' | 'wait-income' | 'recover' | 'evacuate';
   target: Target;
