@@ -298,10 +298,74 @@ describe('grounded naval world-effect declarations', () => {
     ] });
     expect(withAssembly.state).toBe('met');
     const worker = strict(() => declareGoalWorkerTransport({ ...input, unitIds: ['worker'], option, berthTolerance: 36, pickupRoutes: [] }))!;
-    expect(worker.preconditions).toContainEqual(shoreSafe);
-    expect(worker.preconditions).toContainEqual(goalFact({ kind: 'site-safe', site: to, throughTick: input.byTick }));
+    expect(worker.preconditions).toContainEqual(goalFact({ ...shoreSafe.predicate,
+      kind: 'shore-safe', landId: to.landId, landing: { landId: to.landId, point: { x: 1700, y: 1500 } },
+      throughTick: input.snapshot.tick + 100 }));
+    expect(worker.preconditions).toContainEqual(goalFact({ kind: 'site-safe', site: to, throughTick: input.snapshot.tick + 100 }));
     expect(worker.preconditions.some(fact => fact.predicate.kind === 'camp-cleared')).toBe(false);
     expect(carried.preconditions.some(fact => fact.predicate.kind === 'site-safe')).toBe(false);
+  });
+
+  it.each(['fighters', 'worker', 'mixed'] as const)('binds the %s landing safety obligation to transport completion rather than the goal deadline', cargo => {
+    const input = frame(), to = { ...input.at, landId: 'land:2' as const }, byTick = input.snapshot.tick + 12000;
+    const transport = { kind: 'binding' as const, name: 'native-transport' };
+    const crossing = goalFact({ kind: 'route', mover: 'sea', from: input.from, to, actor: transport });
+    const shoreSafe = goalFact({ kind: 'shore-safe', landId: to.landId, landing: to, throughTick: byTick });
+    const oldHandoff = goalFact({ kind: 'site-safe', site: to, throughTick: byTick });
+    const hasWorker = cargo !== 'fighters', originalIds = hasWorker ? [shoreSafe.id, oldHandoff.id] : [shoreSafe.id];
+    const option: GoalTransportOption = { id: `finish-window:${cargo}`, seaId: 'sea:1', transport, from: input.from, to,
+      capacity: 10000, origin: 'land', loadedUnitIds: [],
+      departure: { water: input.from.point, ground: input.from.point, heading: null },
+      landing: { water: to.point, ground: to.point, heading: null }, crossing, approach: crossing, shoreSafe,
+      preconditions: hasWorker ? [shoreSafe, oldHandoff] : [shoreSafe],
+      duration: { state: 'met', value: 1063, factIds: originalIds }, factIds: originalIds };
+    const estimates: GoalNavalEstimates = { duration: known(1),
+      cost: { state: 'met', value: [{ code: 'voyage-risk', gold: 7, factIds: originalIds }], factIds: originalIds },
+      successProbability: { state: 'met', value: .8, factIds: originalIds } };
+    const before = JSON.stringify({ snapshot: input.snapshot, option, estimates });
+    const unitIds = cargo === 'worker' ? ['worker'] : cargo === 'mixed' ? [...input.unitIds, 'worker'] : input.unitIds;
+    const action = strict(() => (cargo === 'worker' ? declareGoalWorkerTransport : declareGoalForceTransport)({
+      ...input, unitIds, option, estimates, byTick, berthTolerance: 36, pickupRoutes: [] }))!;
+    const safety = action.preconditions.filter(fact => fact.predicate.kind === 'shore-safe' || fact.predicate.kind === 'site-safe');
+    expect(safety).toHaveLength(hasWorker ? 2 : 1);
+    expect(safety.every(fact => (fact.predicate as { throughTick: number }).throughTick === input.snapshot.tick + 1063)).toBe(true);
+    expect(action.duration).toMatchObject({ state: 'met', value: 1063 });
+    expect(action.preconditionWindows).toEqual(expect.arrayContaining(safety.map(fact => ({ factId: fact.id, through: 'finish' }))));
+    expect(action.preconditionWindows).toHaveLength(safety.length);
+    expect(action.executor.parameters.byTick).toBe(byTick);
+    // Old IDs in proofs, price terms and pool-flow dependencies must not keep
+    // the entire goal window alive beside the replacement safety facts.
+    for (const old of originalIds) expect(JSON.stringify(action)).not.toContain(old.replaceAll('"', '\\"'));
+    const safetyIds = safety.map(fact => fact.id).sort();
+    expect(action.duration.state === 'met' && action.duration.factIds).toEqual(safetyIds);
+    expect(action.cost.state === 'met' && action.cost.value[0]!.factIds).toEqual(safetyIds);
+    expect(action.successProbability.state === 'met' && action.successProbability.factIds).toEqual(safetyIds);
+    expect(JSON.stringify({ snapshot: input.snapshot, option, estimates })).toBe(before);
+    expect(JSON.parse(JSON.stringify(action))).toEqual(action);
+  });
+
+  it('keeps unknown voyage duration pending with unbound current-time window prototypes', () => {
+    const input = frame(), to = { ...input.at, landId: 'land:2' as const }, byTick = input.snapshot.tick + 12000;
+    const transport = { kind: 'binding' as const, name: 'native-transport' };
+    const crossing = goalFact({ kind: 'route', mover: 'sea', from: input.from, to, actor: transport });
+    const option: GoalTransportOption = { id: 'unquoted-voyage-window', seaId: 'sea:1', transport, from: input.from, to,
+      capacity: 10000, origin: 'land', loadedUnitIds: [],
+      departure: { water: input.from.point, ground: input.from.point, heading: null },
+      landing: { water: to.point, ground: to.point, heading: null }, crossing, approach: crossing,
+      shoreSafe: goalFact({ kind: 'shore-safe', landId: to.landId, landing: to, throughTick: byTick }),
+      duration: { state: 'pending', requestIds: ['actual-sea-time'],
+        reason: { code: 'actual-sea-time-pending', factIds: ['actual-sea-time'], values: {} } }, factIds: [] };
+    const args = { ...input, unitIds: ['worker'], option, byTick, berthTolerance: 36, pickupRoutes: [] };
+    const action = strict(() => declareGoalWorkerTransport(args))!;
+    expect(action.duration).toEqual(option.duration);
+    const prototypes = action.preconditions.filter(fact => fact.predicate.kind === 'shore-safe' || fact.predicate.kind === 'site-safe');
+    expect(prototypes.every(fact => (fact.predicate as { throughTick: number }).throughTick === input.snapshot.tick)).toBe(true);
+    expect(action.preconditionWindows).toHaveLength(2);
+    const quoted = strict(() => declareGoalWorkerTransport({ ...args, option: { ...option, duration: known(719) } }))!;
+    const windows = quoted.preconditions.filter(fact => fact.predicate.kind === 'shore-safe' || fact.predicate.kind === 'site-safe');
+    expect(windows.every(fact => (fact.predicate as { throughTick: number }).throughTick === input.snapshot.tick + 719)).toBe(true);
+    expect(quoted.preconditionWindows?.every(window => windows.some(fact => fact.id === window.factId))).toBe(true);
+    expect(quoted.preconditionWindows?.some(window => prototypes.some(fact => fact.id === window.factId))).toBe(false);
   });
 
   it('keeps future troops symbolic through assembly, camp checks and transport without deduplicating identical prototypes', () => {
@@ -324,7 +388,8 @@ describe('grounded naval world-effect declarations', () => {
       to: { ...input.at, landId: 'land:2' }, capacity: 1000, origin: 'land', loadedUnitIds: [],
       departure: { water: input.from.point, ground: input.from.point, heading: null },
       landing: { water: input.at.point, ground: input.at.point, heading: null }, approach: input.route, crossing: input.route,
-      shoreSafe: safePost, duration: known(300), factIds: ['future-shape'], preconditions: [prerequisite] };
+      shoreSafe: goalFact({ kind: 'shore-safe', landId: input.at.landId, landing: input.at, throughTick: 2000 }),
+      duration: known(300), factIds: ['future-shape'], preconditions: [prerequisite] };
     const carried = strict(() => declareGoalForceTransport({ ...base, option, berthTolerance: 36, pickupRoutes: [] }))!;
     expect(carried.preconditions).toContainEqual(prerequisite);
     expect(carried.effects.find(effect => effect.fact.predicate.kind === 'force-available')?.fact.predicate).toMatchObject({ cohort: refs });
