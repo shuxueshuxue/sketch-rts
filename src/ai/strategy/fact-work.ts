@@ -1,6 +1,7 @@
 /** One logical-work ledger for an entire controlled think. Queries register
  * continuations; they never borrow a second allowance when another phase asks
  * for the same fact. Publication is visible on the following think. */
+import { withFactNavigation, withNavigationPhase } from '../../shared/navigation-audit';
 export const STRATEGY_FACT_WORK_PER_THINK = 6144;
 export const CRITICAL_FACT_CANDIDATES = 4;
 export type FactWorkTier = 'critical-route' | 'existing-field' | 'background-field';
@@ -53,7 +54,8 @@ export class FactWorkQueue {
       for (const task of tasks.filter(task => task.tier === tier)) {
         const available = this.receipt.limit - this.receipt.used;
         if (available < task.minimum) continue;
-        const result = task.run(available);
+        const result = withNavigationPhase('strategy-planning', () => withFactNavigation({ kind: 'fact-work', throughWork: available },
+          () => task.run(available)));
         if (!Number.isSafeInteger(result.work) || result.work < 0 || result.work > available)
           throw new Error(`Fact work exceeded its allowance: ${task.key}`);
         this.receipt.used += result.work;

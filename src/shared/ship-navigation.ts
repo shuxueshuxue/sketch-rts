@@ -1,3 +1,4 @@
+import { recordNativeRouting } from './navigation-audit';
 import { shipMotionLimits } from './ship-handling';
 import { coursePerformance } from './ship-wind';
 import { windAt } from './wind-field';
@@ -542,6 +543,7 @@ function keelConnector(map:SeaMap,ship:Unit,from:ShipPose,goal:Point & {heading?
 /** A passage plan beats to the destination's layline, not back to the direct
  * track every few hull lengths. Shorter pairs are only coastal fallbacks. */
 export function shipTackRoute(map:SeaMap,ship:Unit,goal:ShipPose,traffic:(a:ShipPose,b:ShipPose)=>boolean,preferredHeading?:number):ShipPose[]|undefined {
+  recordNativeRouting('shipTackRoute');
   const start={x:ship.x,y:ship.y,heading:ship.sailing?.heading ?? 0};
   const dx=goal.x-start.x,dy=goal.y-start.y,gap=Math.hypot(dx,dy),length=shipProfile(ship)!.length;
   const performance=coursePerformance(ship,map,Math.atan2(dy,dx),{assumeTrimmed:true});
@@ -705,6 +707,7 @@ function arrivalConnector(map:SeaMap,ship:Unit,arcs:readonly ArrivalArc[],traffi
 }
 /** Heading-aware water routing. A long, narrow hull can pass a channel that it cannot turn inside. */
 export function shipRoute(map: SeaMap, ship: Unit, goal: Point, trafficClear: (from:ShipPose,to:ShipPose)=>boolean = emptyTraffic): ShipPose[] {
+  recordNativeRouting('shipRoute');
   return planShipRoute(map,ship,goal,trafficClear).points;
 }
 /** Nominal cruising radius. A shorter, low-speed arc may use the hull-length
@@ -901,6 +904,7 @@ export function beginVoyageRefinement(from:ShipPose,points:ShipPose[]):VoyageRef
 /** A fixed number of complete connector trials; every accepted curve retains
  * the original centre and both tracking-margin sweeps. */
 export function advanceVoyageRefinement(map:SeaMap,ship:Unit,state:VoyageRefinementState,traffic:(a:ShipPose,b:ShipPose)=>boolean,budget=Infinity):boolean {
+  recordNativeRouting('advanceVoyageRefinement');
   let spent=0;
   while(state.index<state.corners.length){
     if(state.candidate<state.index){
@@ -927,6 +931,7 @@ function simplifyVoyageReference(map:SeaMap,ship:Unit,from:ShipPose,points:ShipP
 /** Cruise planning is separate from exact docking. Start with a continuous
  * forward curve; use the heading lattice only as a safe coastal reference. */
 export function planVoyageRoute(map:SeaMap,ship:Unit,goal:Point & {heading?:number},trafficClear:(from:ShipPose,to:ShipPose)=>boolean=emptyTraffic,budget=Infinity):{points:ShipPose[];partial:boolean} {
+  recordNativeRouting('planVoyageRoute');
   const from={x:ship.x,y:ship.y,heading:ship.sailing?.heading ?? 0};
   if(goal.heading!==undefined || Math.hypot(goal.x-from.x,goal.y-from.y)<=shipProfile(ship)!.length*.5)
     return planShipRoute(map,ship,goal,trafficClear,budget);
@@ -956,6 +961,7 @@ export function planDirectVoyage(map:SeaMap,ship:Unit,goal:Point,traffic:(a:Ship
  * routes remain journeys, never arrivals at the requested destination. */
 let routeSearchDepth = 0;
 export function planShipRoute(map: SeaMap, ship: Unit, goal: Point & {heading?:number}, trafficClear: (from:ShipPose,to:ShipPose)=>boolean = emptyTraffic, budget=Infinity, voyage=false): {points:ShipPose[];partial:boolean} {
+  recordNativeRouting('planShipRoute');
   routeSearchDepth++;
   try { return planShipRouteImpl(map,ship,goal,trafficClear,budget,voyage,routeSearchDepth>1)!; }
   finally { routeSearchDepth--; }
@@ -1001,10 +1007,12 @@ export function beginLiveShipRouteSearch():ShipRouteSearchState {
 /** Internal planner-only call. General callers keep the original construction. */
 export function advanceLiveShipRouteSearch(map:SeaMap,ship:Unit,goal:Point & {heading?:number},trafficClear:(from:ShipPose,to:ShipPose)=>boolean,
   budget:number,voyage:boolean,state:ShipRouteSearchState,workReceipt?:ShipRouteWorkReceipt):RouteResult|undefined {
+  recordNativeRouting('advanceLiveShipRouteSearch');
   return advanceShipRouteSearchImpl(map,ship,goal,trafficClear,budget,voyage,state,livePlanningSearches.has(state),workReceipt);
 }
 export function advanceShipRouteSearch(map:SeaMap,ship:Unit,goal:Point & {heading?:number},trafficClear:(from:ShipPose,to:ShipPose)=>boolean,
   budget:number,voyage:boolean,state:ShipRouteSearchState,workReceipt?:ShipRouteWorkReceipt):RouteResult|undefined {
+  recordNativeRouting('advanceShipRouteSearch');
   return advanceShipRouteSearchImpl(map,ship,goal,trafficClear,budget,voyage,state,false,workReceipt);
 }
 function advanceShipRouteSearchImpl(map:SeaMap,ship:Unit,goal:Point & {heading?:number},trafficClear:(from:ShipPose,to:ShipPose)=>boolean,

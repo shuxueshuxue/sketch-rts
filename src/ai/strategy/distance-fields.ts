@@ -3,6 +3,7 @@ import type { GameSnapshot } from '../../shared/types';
 import type { Point } from './types';
 import { OBSERVATION_FIELD_LIMIT, type StrategyObservationMemory } from './observation-memory';
 import { currentFactWork } from './fact-work';
+import { withFactNavigation } from '../../shared/navigation-audit';
 
 export function createPlanningDistanceQuery(snapshot: GameSnapshot, buildBudget = Infinity, mover: Mover = 'land', observation?: StrategyObservationMemory) {
   let built = 0, deferred = 0, work = 0;
@@ -25,7 +26,8 @@ export function createPlanningDistanceQuery(snapshot: GameSnapshot, buildBudget 
         if (currentFactWork() && entry.readyTick >= snapshot.tick) {
           deferred++; row.set(goal.x, null); return null;
         }
-        field = prepareMoverDistanceField(snapshot.map, goal, mover, entry.work).field;
+        field = withFactNavigation({ kind: 'published-fact', throughWork: entry.work },
+          () => prepareMoverDistanceField(snapshot.map, goal, mover, entry!.work)).field;
       } else if (built < buildBudget) {
         const queue = currentFactWork();
         if (queue) {

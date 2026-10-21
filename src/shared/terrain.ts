@@ -1,3 +1,4 @@
+import { recordNativeRouting } from './navigation-audit';
 import type { GameMap } from "./types";
 
 // @@@terrain - Ground that a unit cannot cross, or crosses slowly, as on a Warcraft III map: forest, rock (cliffs and
@@ -350,6 +351,7 @@ export function steerPoint(map: Pick<GameMap, "terrain">, from: Point, goal: Poi
 // it, else the point nearest it that they do (see reachableTarget); for a goal in a building's cells, the bottom of the
 // goal's field the walker comes down to, by the building (see goalSeeds). `goal` should be walkable (see walkableGoal).
 export function walkDestination(map: Pick<GameMap, "terrain">, from: Point, goal: Point, mover: Mover = "land"): Point {
+  recordNativeRouting('walkDestination');
   const terrain = map.terrain;
   if (!terrain) return goal;
   const ground = runtime(terrain, mover);
@@ -675,6 +677,7 @@ function beginBoxFlow(state: TerrainRuntime, box: Box, seeds: number[], costs: n
     cost: costs && order.length ? costs[order[0]!]! : 0 };
 }
 function growBoxInto(state: TerrainRuntime, box: Box, seeds: number[], costs: number[] | undefined, arrays: Pick<Field, 'dist' | 'next'>, resume?: BoxFlow, workBudget = Infinity): BoxField {
+  recordNativeRouting('growBoxInto');
   const { walk, offsets, width, weight } = state;
   const columns = box.width;
   const rows = box.height;
@@ -1001,6 +1004,7 @@ function before(a: [number, number], b: [number, number]) {
 // The walking distance (in world units, along the flow) from a point to a goal, or undefined when no walk joins them. A
 // map without terrain measures the straight line. It reads the terrain alone (see @@@building-pathing).
 export function walkingDistance(map: Pick<GameMap, "terrain">, from: Point, goal: Point, mover: Mover = "land"): number | undefined {
+  recordNativeRouting('walkingDistance');
   const terrain = map.terrain;
   if (!terrain) return Math.sqrt((from.x - goal.x) ** 2 + (from.y - goal.y) ** 2);
   const state = runtime(terrain, mover);
@@ -1150,6 +1154,7 @@ export function guardedField(map: Pick<GameMap, "terrain" | "width" | "height">,
 const NEAREST_FIELD_CACHE = 16;
 
 export function nearestByWalk(map: Pick<GameMap, "terrain">, candidates: readonly Point[], goal: Point, mover: Mover = "land"): number | undefined {
+  recordNativeRouting('nearestByWalk');
   const terrain = map.terrain!;
   const state = runtime(terrain, mover);
   const target = padAt(state, goal.x, goal.y);
@@ -1262,6 +1267,7 @@ function groundSegmentProgress(map: Pick<GameMap, 'terrain'>, from: Point, goal:
  * uses actual terrain pace; a detour uses the steering grid's quantized weights.
  * Excludes body detours and status effects. */
 export function groundTravelCost(map: Pick<GameMap, 'terrain'>, from: Point, goal: Point): number | undefined {
+  recordNativeRouting('groundTravelCost');
   const terrain = map.terrain;
   if (!terrain) return Math.hypot(from.x - goal.x, from.y - goal.y);
   const state = runtime(terrain, 'land'), start = padAt(state, from.x, from.y), target = padAt(state, goal.x, goal.y);
@@ -1416,6 +1422,7 @@ export function groundDistanceField(map: Pick<GameMap, 'terrain'>, goal: Point, 
   return moverDistanceField(map, goal, 'land', peek);
 }
 export function moverDistanceField(map: Pick<GameMap, 'terrain'>, goal: Point, mover: Mover, peek = false): GroundDistanceField | undefined {
+  recordNativeRouting('moverDistanceField');
   const terrain = map.terrain;
   if (!terrain) return { cost: from => Math.hypot(from.x - goal.x, from.y - goal.y), road: (from, goal) => [from, goal] };
   const state = routing(map, terrain, mover), ground = runtime(terrain, mover);
@@ -1500,6 +1507,7 @@ function distanceFieldAnswer(state: TerrainRuntime, ground: TerrainRuntime, sour
  * allowance completes the native search. A cold fork rebuilds the same prefix. */
 export function prepareMoverDistanceField(map: Pick<GameMap, 'terrain'>, goal: Point, mover: Mover, throughWork: number):
   { field: GroundDistanceField | undefined; work: number; complete: boolean } {
+  recordNativeRouting('prepareMoverDistanceField');
   const known = moverDistanceField(map, goal, mover, true);
   if (known) {
     const required = distanceFieldWork.get(known) ?? 0;
@@ -1686,6 +1694,7 @@ function wholesOf(state: TerrainRuntime) {
 // center, the goal last), or undefined when no walk joins them. A map without terrain walks the straight line. It reads
 // the terrain alone (see @@@building-pathing).
 export function walkRoute(map: Pick<GameMap, "terrain">, from: Point, goal: Point, every = 2): Point[] | undefined {
+  recordNativeRouting('walkRoute');
   const terrain = map.terrain;
   if (!terrain) return [goal];
   const state = runtime(terrain, "land");
@@ -2079,6 +2088,7 @@ function nextStep(state: TerrainRuntime, field: Field, at: number) {
 }
 
 function exactField(state: TerrainRuntime, target: number): Field {
+  recordNativeRouting('exactField');
   return cached(state, target, () => grow(state, [target]));
 }
 
@@ -2111,6 +2121,7 @@ function cached(state: TerrainRuntime, key: number, build: () => Field): Field {
 // The walking cost over the whole map from every cell to the nearest source, on the terrain alone (Dial's algorithm over
 // eight neighbours, no corner cut): the AIs' walking distances and routes (see walkingDistance, walkRoute).
 function grow(state: TerrainRuntime, sources: number[]): Field {
+  recordNativeRouting('grow');
   const { walk, offsets, tops } = state;
   const buckets = state.buckets ??= Array.from({ length: 8 }, () => new Int32Array(walk.length));
   const field = state.spare.pop() ?? { dist: new Int32Array(walk.length), next: new Int32Array(walk.length), used: 0 };
