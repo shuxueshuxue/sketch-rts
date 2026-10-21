@@ -50,7 +50,8 @@ export function createPuzzleWitness(puzzle: PublicPuzzleCase, world: PuzzleWorld
       if (!ship) return false;
       const cabin = troops.filter(u => u.cabin);
       if (cabin.length) send(`${tag}-leave-cabin`, { type: 'leaveCabin', unitIds: cabin.map(u => u.id) }, seconds(2));
-      if (troops.some(aboard)) send(tag, { type: 'unload', unitIds: [ship.id], ...at }, seconds(10));
+      if (troops.some(aboard) && (ship.order.type !== 'unload' || ship.order.x !== at.x || ship.order.y !== at.y))
+        send(tag, { type: 'unload', unitIds: [ship.id], ...at }, seconds(2));
       return troops.length > 0 && troops.every(u => physicallyOnLand(world, u, at));
     };
     const buildHall = (mine: { x: number; y: number }, worker: Unit | undefined) => {
