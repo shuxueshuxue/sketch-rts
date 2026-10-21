@@ -10,6 +10,7 @@ import { assessAllocatedCampBattle } from './allocated-force';
 import type { AllocationLandRouteReader } from './allocation-arrival-query';
 import type { GoalNativeGroundReader } from './goal-boarding-geometry';
 import { readGoalCampStagingFact } from './goal-camp-staging-facts';
+import { readGoalSiteSafetyFact } from './goal-site-safety-facts';
 import { goalCampId, goalFact } from './goal-facts';
 import { createGoalNavalCombatGrounding, type GoalNavalCombatGroundingPorts } from './goal-naval-combat-grounding';
 import { goalNavalActionProvider } from './goal-naval-provider';
@@ -22,10 +23,10 @@ const strict = <T>(run: () => T) => withNavigationAudit(event => {
   if (event.phase === 'strategy-planning' && !event.authorization) throw Error(event.operation);
 }, () => withNavigationPhase('strategy-planning', run));
 const known = <T>(value: T): GoalEstimate<T> => ({ state: 'met', value, factIds: ['published-model'] });
-function fixture(options: { pendingGround?: boolean; pendingRoute?: boolean; pendingRisk?: boolean; extraCasters?: boolean } = {}) {
+function fixture(options: { pendingGround?: boolean; pendingRoute?: boolean; pendingRisk?: boolean; extraCasters?: boolean; minePoint?: { x: number; y: number } } = {}) {
   const scene = sketchScene('real-camp-garrison-domain').map('bareDuel').replaceDefaults()
     .player('us', { team: 'us' }).player('foe', { team: 'foe' })
-    .townHall('us', 700, 1000, { id: 'home' }).goldMine('future-mine', 2500, 2100, 10000)
+    .townHall('us', 700, 1000, { id: 'home' }).goldMine('future-mine', options.minePoint?.x ?? 2500, options.minePoint?.y ?? 2100, 10000)
     .unit('us', 'footman', 1000, 1000, { id: 'fighter-a', hp: 70 })
     .unit('us', 'archer', 1020, 1000, { id: 'fighter-b', hp: 50 })
     .unit('neutral', 'ogreWarrior', 2000, 2000, { id: 'guard-a' })
@@ -187,5 +188,30 @@ describe('camp staging and unbuilt mining garrisons', () => {
       factIds: [], candidates: [{ id: 'excluded-landing', from, members, preconditions: [pool], availableTick: null, factIds: [] }] }) });
     expect(rows(strict(() => excluded.combatOptions!(effect))).every(option => option.cohort.length === 1
       && option.cohort[0]?.kind === 'existing' && option.cohort[0].entityId === 'fighter-a')).toBe(true);
+  });
+  it('quotes holding conditional on the actual complete camp-clearing safety rule without turning that rule into current safety', () => {
+    const f = fixture({ minePoint: { x: 2050, y: 2120 } }), snapshot = f.context.snapshot, before = JSON.stringify(snapshot);
+    const mine = snapshot.resources.find(resource => resource.id === 'future-mine')!;
+    const at: Target = { entityId: mine.id, landId: landIdAt(snapshot.map, mine)!, point: { x: mine.x, y: mine.y } };
+    let context = f.context;
+    context = { ...context, readFact: fact => readGoalSiteSafetyFact(fact, context, {
+      regionAt: (point, mover) => mover === 'land' ? landIdAt(snapshot.map, point) : seaIdAt(snapshot.map, point),
+    }) ?? f.context.readFact(fact) };
+    const read = createGoalNavalCombatGrounding(context, f.ports).combatOptions!;
+    const options = rows(strict(() => read(goalFact({ kind: 'garrison-ready', mineId: mine.id, at }))));
+    const option = options.find(option => option.cohort.length === 2)!;
+    const safetyFact = option.preconditions.find(fact => fact.predicate.kind === 'site-safe')!;
+    const safety = strict(() => context.readFact(safetyFact));
+    expect(safety.state).toBe('unmet'); expect(safety.derived?.allOf).toContainEqual(goalFact({ kind: 'camp-cleared', campId: f.campId }));
+    expect(option.cost).toMatchObject({ state: 'met', value: [] });
+    expect(option.successProbability).toMatchObject({ state: 'met', value: 1 });
+    expect(option.factIds).toContain(goalFact({ kind: 'camp-cleared', campId: f.campId }).id);
+    const incomplete = { ...context, readFact: (fact: Parameters<typeof context.readFact>[0]) => {
+      const row = context.readFact(fact); if (fact.id !== safetyFact.id) return row;
+      const { derived: _derived, ...withoutProof } = row; return withoutProof;
+    } };
+    const missing = rows(createGoalNavalCombatGrounding(incomplete, f.ports).combatOptions!(goalFact({ kind: 'garrison-ready', mineId: mine.id, at })));
+    expect(missing.find(row => row.cohort.length === 2)!.cost.state).toBe('pending');
+    expect(JSON.stringify(snapshot)).toBe(before);
   });
 });

@@ -5,7 +5,8 @@ import { snapshotGame } from '../../shared/sim';
 import type { GameSnapshot } from '../../shared/types';
 import { createAiPolicyMemory } from '../memory';
 import { assessGoalCombatMovementRisk, goalCombatMovementRiskId } from './goal-combat-movement-risk';
-import { goalFact } from './goal-facts';
+import { goalCampId, goalFact } from './goal-facts';
+import { neutralCampExposure } from '../situation/neutral-camp-exposure';
 import type { GoalCombatMovementRequest } from './goal-naval-combat-grounding';
 import type { GoalEstimate } from './goal-planner-types';
 import { evaluateSituation } from './situation';
@@ -28,6 +29,33 @@ function input(snapshot: GameSnapshot, ticks = 40, to = { x: 1100, y: 1000 }) {
   return { snapshot, situation, request };
 }
 describe('published march no-exposure proof', () => {
+  it('leaves named camp contact to the calibrated battle but retains every third-party exposure and exact staging condition', () => {
+    const prepare = (enemy: boolean) => {
+      let builder = scene().unit('neutral', 'ogreWarrior', 1600, 1000, { id: 'target-guard' });
+      if (enemy) builder = builder.unit('foe', 'footman', 1250, 1000, { id: 'third-party' });
+      const f = input(snapshotGame(builder.build().createGame()), 40, { x: 1600, y: 1000 });
+      const camp = neutralCampExposure(f.snapshot).camps[0]!, campId = goalCampId(camp.memberIds);
+      const from = { landId: 'land:1' as const, point: { x: 1100, y: 1000 } };
+      const cohort = f.request.cohort.map(member => ({ ...member, assessment: { ...member.assessment,
+        x: from.point.x, y: from.point.y, deck: undefined, cabin: undefined } }));
+      const stagingFact = goalFact({ kind: 'camp-staging', campId, at: from, cohort: cohort.map(member => member.reference) });
+      const route = goalFact({ kind: 'route', mover: 'land', actor: cohort[0]!.reference, from, to: f.request.target });
+      const request: GoalCombatMovementRequest = { ...f.request, effect: goalFact({ kind: 'camp-cleared', campId }), from, cohort,
+        routes: [{ ...f.request.routes[0]!, fact: route, route: { points: [f.request.target.point], distance: 500, ticks: 40 } }],
+        campContact: { campId, stagingFact } };
+      return { ...f, request };
+    };
+    const f = prepare(false), before = JSON.stringify(f), { campContact: _contact, ...ordinary } = f.request;
+    expect(strict(() => assessGoalCombatMovementRisk({ ...f, request: ordinary }))).toMatchObject({ state: 'pending', reason: { code: 'movement-current-cohort-binding-pending' } });
+    expect(strict(() => assessGoalCombatMovementRisk(f))).toMatchObject({ state: 'met', value: { expectedLossGold: 0, survivalProbability: 1 },
+      factIds: expect.arrayContaining([f.request.campContact!.campId, f.request.campContact!.stagingFact.id]) });
+    expect(goalCombatMovementRiskId(f.request)).not.toBe(goalCombatMovementRiskId(ordinary));
+    const injured = { ...f, request: { ...f.request, cohort: f.request.cohort.map(member => ({ ...member, assessment: { ...member.assessment, hp: 999 } })) } };
+    expect(strict(() => assessGoalCombatMovementRisk(injured))).toMatchObject({ state: 'pending', reason: { code: 'movement-camp-contact-cohort-pending' } });
+    expect(strict(() => assessGoalCombatMovementRisk(prepare(true)))).toMatchObject({ state: 'pending', reason: {
+      code: 'movement-observed-exposure-unquoted', factIds: expect.arrayContaining(['third-party']) } });
+    expect(JSON.stringify(f)).toBe(before);
+  });
   it('proves an observed clear route without navigation, mutation, a new Situation or probabilistic defaults', () => {
     const f = input(snapshotGame(scene().unit('foe', 'footman', 3500, 3500, { id: 'far' }).build().createGame())), before = JSON.stringify(f);
     expect(strict(() => assessGoalCombatMovementRisk(f))).toMatchObject({ state: 'met', value: { expectedLossGold: 0, survivalProbability: 1 } });

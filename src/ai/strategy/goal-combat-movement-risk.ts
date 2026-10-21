@@ -11,7 +11,7 @@ import type { GameSnapshot, Unit } from '../../shared/types';
 import { mountedThreatReach } from '../policy/threat-reach';
 import { neutralCampExposure } from '../situation/neutral-camp-exposure';
 import type { DecisionFacts } from './decision';
-import { goalValueKey } from './goal-facts';
+import { goalValueKey, resolveGoalCamp } from './goal-facts';
 import type { GoalCombatMovementRequest } from './goal-naval-combat-grounding';
 import type { GoalMovementRisk } from './goal-naval-assessment';
 import type { GoalEstimate } from './goal-planner-types';
@@ -23,7 +23,7 @@ export type GoalPublishedMovementRisk = Readonly<{
 }>;
 /** A runtime binding key, not a decision-memory payload or a new query ID. */
 export function goalCombatMovementRiskId(request: GoalCombatMovementRequest): string {
-  return goalValueKey([request.effect.id, request.from, request.target, request.throughTick, request.arrivalTicks,
+  return goalValueKey([request.effect.id, request.from, request.target, request.throughTick, request.arrivalTicks, request.campContact,
     request.cohort.map(member => [member.reference, member.assessment.id, member.assessment.kind, member.assessment.owner,
       member.assessment.x, member.assessment.y, member.assessment.hp, member.assessment.maxHp, member.assessment.radius,
       member.assessment.speed, member.assessment.attackDamage, member.assessment.attackRange, member.assessment.attackCooldown,
@@ -56,6 +56,7 @@ export function assessGoalCombatMovementRisk(input: Readonly<{
   publishedRisk?: GoalPublishedMovementRisk;
 }>): GoalEstimate<GoalMovementRisk> {
   const { snapshot, situation, request } = input;
+  if (request.campContact) return campContactRisk(input);
   const ids = unique([request.effect.id, ...request.routes.map(row => row.fact.id)]);
   const pending = (code: string, facts: readonly string[] = ids, requests: readonly string[] = ids): GoalEstimate<GoalMovementRisk> => ({
     state: 'pending', requestIds: unique(requests.length ? requests : [request.effect.id]),
@@ -163,4 +164,40 @@ export function assessGoalCombatMovementRisk(input: Readonly<{
   }
   if (contacts.size) return published?.risk ?? pending('movement-observed-exposure-unquoted', [...ids, ...contacts]);
   return zero(examined);
+}
+
+/** Conditional post-to-contact accounting. The original camp battle owns the
+ * named guards; all other threats still pass through the unchanged assessor. */
+function campContactRisk(input: Parameters<typeof assessGoalCombatMovementRisk>[0]): GoalEstimate<GoalMovementRisk> {
+  const { snapshot, situation, request } = input, contact = request.campContact!;
+  const pending = (code: string): GoalEstimate<GoalMovementRisk> => ({ state: 'pending', requestIds: [contact.stagingFact.id],
+    reason: { code, factIds: [contact.campId, contact.stagingFact.id], values: {} } });
+  const p = contact.stagingFact.predicate, camp = resolveGoalCamp(snapshot, contact.campId);
+  const refs = request.cohort.map(member => goalValueKey(member.reference)).sort();
+  if (camp.status !== 'present' || p.kind !== 'camp-staging' || p.campId !== contact.campId
+    || goalValueKey(p.at) !== goalValueKey(request.from) || goalValueKey(p.cohort?.map(goalValueKey).sort()) !== goalValueKey(refs)
+    || !request.from.landId || request.from.landId !== request.target.landId
+    || squared(request.target.point, camp.exposure.camp.center) > 1e-8
+    || !['camp-cleared', 'gold'].includes(request.effect.predicate.kind)
+    || request.effect.predicate.kind === 'camp-cleared' && request.effect.predicate.campId !== contact.campId)
+    return pending('movement-camp-contact-binding-pending');
+  const projected = new Map<string, Unit>();
+  for (const member of request.cohort) {
+    const actual = member.reference.kind === 'existing' ? snapshot.units.find(unit => member.reference.kind === 'existing' && unit.id === member.reference.entityId) : undefined;
+    if (!actual || actual.owner !== situation.owner || actual.hp <= 0 || projected.has(actual.id)
+      || squared(member.assessment, request.from.point) > 1e-8) return pending('movement-camp-contact-cohort-pending');
+    const atPost = { ...actual, x: request.from.point.x, y: request.from.point.y, deck: undefined, cabin: undefined };
+    if (goalValueKey(member.assessment) !== goalValueKey(atPost)) return pending('movement-camp-contact-cohort-pending');
+    projected.set(actual.id, atPost);
+  }
+  const guards = new Set(camp.exposure.memberIds);
+  const conditionalSnapshot = { ...snapshot, units: snapshot.units.filter(unit => !guards.has(unit.id))
+    .map(unit => projected.get(unit.id) ?? unit) };
+  const { campContact: _contact, ...ordinaryRequest } = request;
+  const published = input.publishedRisk;
+  if (published && (published.epoch !== snapshot.tick || published.requestId !== goalCombatMovementRiskId(request)))
+    return pending('movement-published-model-binding-mismatch');
+  const result = assessGoalCombatMovementRisk({ snapshot: conditionalSnapshot, situation, request: ordinaryRequest,
+    ...(published ? { publishedRisk: { ...published, requestId: goalCombatMovementRiskId(ordinaryRequest) } } : {}) });
+  return result.state === 'met' ? { ...result, factIds: unique([...result.factIds, contact.campId, contact.stagingFact.id]) } : result;
 }
