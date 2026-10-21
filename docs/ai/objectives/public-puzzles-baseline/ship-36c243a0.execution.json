@@ -1,0 +1,193 @@
+{
+  "source": "d819a3f896977bcd15382b93da75c7b44d138490",
+  "sharedBase": "36c243a03bb33692491d9a2b307776e46881c1e3",
+  "mode": "normal-collector-controlled-owner-interrupted-prefix",
+  "warning": "Both owner calls threw before observer publication. Missing attempt snapshot/memory/work are unavailable; not inferred. Original result errors and failed test status retained.",
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "coverage": {
+        "interrupted": true,
+        "completedThinks": 156,
+        "attemptedThinks": 157,
+        "lastCompletedTick": 2340,
+        "fullTimeLimitReached": false
+      },
+      "testStatus": "failed",
+      "accepted": false,
+      "physicalPassed": null,
+      "goalTracesObserved": 156,
+      "formalCommandCount": 23,
+      "firstReadyTick": 90,
+      "firstFormalCommandTick": 135,
+      "plannedThinks": 156,
+      "maxWork": 6144,
+      "firstGoal": {
+        "tick": 15,
+        "goals": [
+          "ConquerIsland:planner:resource-1"
+        ]
+      },
+      "formalExecutors": {
+        "goal.assemble": 21,
+        "goal.position-transport": 2
+      },
+      "incumbentExecutors": {
+        "economy": 7,
+        "miningWorkforce": 3,
+        "v6Economy": 6
+      },
+      "planStatusOccurrences": [
+        {
+          "goalKind": "ConquerIsland",
+          "status": "ready",
+          "count": 150
+        },
+        {
+          "goalKind": "ConquerIsland",
+          "status": "search-pending",
+          "count": 2
+        },
+        {
+          "goalKind": "ConquerIsland",
+          "status": "waiting-facts",
+          "count": 4
+        }
+      ],
+      "pendingEstimateOccurrences": [],
+      "execution": null,
+      "commandCount": 0,
+      "elapsedMs": null,
+      "cpuMs": null,
+      "finalGoals": [
+        {
+          "goalId": "ConquerIsland:planner:resource-1",
+          "status": "ready",
+          "actions": [
+            "position-transport",
+            "assemble",
+            "position-transport",
+            "transport-force",
+            "assemble",
+            "clear-camp",
+            "transport-worker",
+            "wait-income",
+            "build",
+            "assemble",
+            "hold-position"
+          ],
+          "reasons": [],
+          "capacityPressure": []
+        }
+      ],
+      "error": {
+        "name": "Error",
+        "message": "Strategy allocation byte limit exceeded: 262763",
+        "stack": "Error: Strategy allocation byte limit exceeded: 262763\n    at Module.assertStrategyAllocationBounds (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/control.ts:83:55)\n    at Module.pruneAllocationProvenance (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-lifecycle.ts:310:3)\n    at Module.allocateStrategy (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocator.ts:627:12)\n    at controlledAllocation (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/bootstrap-control.ts:94:22)\n    at executeControlledBootstrapCommands (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/bootstrap-control.ts:134:7)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/bootstrap-control.ts:128:26\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:453:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:453:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)"
+      }
+    },
+    {
+      "puzzle": "ship-away/near",
+      "coverage": {
+        "interrupted": true,
+        "completedThinks": 156,
+        "attemptedThinks": 157,
+        "lastCompletedTick": 2340,
+        "fullTimeLimitReached": false
+      },
+      "testStatus": "failed",
+      "accepted": false,
+      "physicalPassed": null,
+      "goalTracesObserved": 156,
+      "formalCommandCount": 23,
+      "firstReadyTick": 90,
+      "firstFormalCommandTick": 135,
+      "plannedThinks": 156,
+      "maxWork": 6144,
+      "firstGoal": {
+        "tick": 15,
+        "goals": [
+          "ConquerIsland:planner:resource-1"
+        ]
+      },
+      "formalExecutors": {
+        "goal.assemble": 21,
+        "goal.position-transport": 2
+      },
+      "incumbentExecutors": {
+        "economy": 7,
+        "miningWorkforce": 3,
+        "v6Economy": 6
+      },
+      "planStatusOccurrences": [
+        {
+          "goalKind": "ConquerIsland",
+          "status": "ready",
+          "count": 149
+        },
+        {
+          "goalKind": "ConquerIsland",
+          "status": "search-pending",
+          "count": 2
+        },
+        {
+          "goalKind": "ConquerIsland",
+          "status": "waiting-facts",
+          "count": 5
+        }
+      ],
+      "pendingEstimateOccurrences": [],
+      "execution": null,
+      "commandCount": 0,
+      "elapsedMs": null,
+      "cpuMs": null,
+      "finalGoals": [
+        {
+          "goalId": "ConquerIsland:planner:resource-1",
+          "status": "ready",
+          "actions": [
+            "position-transport",
+            "assemble",
+            "position-transport",
+            "transport-force",
+            "assemble",
+            "clear-camp",
+            "transport-worker",
+            "wait-income",
+            "build",
+            "assemble",
+            "hold-position"
+          ],
+          "reasons": [],
+          "capacityPressure": []
+        }
+      ],
+      "error": {
+        "name": "Error",
+        "message": "Strategy allocation byte limit exceeded: 263265",
+        "stack": "Error: Strategy allocation byte limit exceeded: 263265\n    at Module.assertStrategyAllocationBounds (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/control.ts:83:55)\n    at Module.applyExecutorFeedback (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-lifecycle.ts:276:3)\n    at executeControlledBootstrapCommands (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/bootstrap-control.ts:208:46)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/bootstrap-control.ts:128:26\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:453:67\n    at Module.withAllocationLandRoutes (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/allocation-arrival-query.ts:23:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:453:20\n    at Module.withFactWork (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/fact-work.ts:107:16)\n    at /codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/goal-planner-input.ts:109:12\n    at Module.withStrategyFrame (/codegeex/jeffry/sketch-public-puzzles/source/src/ai/strategy/frame-reuse.ts:8:16)"
+      }
+    }
+  ],
+  "totals": {
+    "caseCount": 2,
+    "interruptedCases": 2,
+    "attemptedNativeThinks": 314,
+    "executionsAccepted": 0,
+    "physicalPassed": 0,
+    "withFormalCommands": 2,
+    "observedNativeThinks": 312,
+    "formalCommandCount": 46
+  },
+  "testCounts": {
+    "numTotalTestSuites": 3,
+    "numPassedTestSuites": 0,
+    "numFailedTestSuites": 3,
+    "numPendingTestSuites": 0,
+    "numTotalTests": 12,
+    "numPassedTests": 7,
+    "numFailedTests": 3,
+    "numPendingTests": 2,
+    "numTodoTests": 0
+  }
+}
