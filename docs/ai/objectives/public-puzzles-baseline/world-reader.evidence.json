@@ -1,0 +1,9 @@
+{
+  "sha256": "4fbe944324c20243f8e067121ab9b4acafe747cc8d1c47ba4a21db791937c7f0",
+  "bytes": 1700,
+  "name": "public-planner-puzzles-world-reader-20261021",
+  "kind": "dir",
+  "machine": "a100",
+  "pushed": "d1c92dc5de454d302225a775f24b06f6d0da1999",
+  "pr": 585
+}
