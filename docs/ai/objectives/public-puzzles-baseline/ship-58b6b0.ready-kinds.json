@@ -1,0 +1,16 @@
+{
+  "source": "ce20233dd1bd53a64a3598c1e7652583ebac4df7",
+  "sharedBase": "58b6b0ac5bebe6437c9746b7cfb01ac074a63065",
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "readyNodeOccurrencesByKind": {},
+      "firstReadyByKind": {}
+    },
+    {
+      "puzzle": "ship-away/near",
+      "readyNodeOccurrencesByKind": {},
+      "firstReadyByKind": {}
+    }
+  ]
+}
