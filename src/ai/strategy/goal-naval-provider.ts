@@ -116,9 +116,12 @@ export const goalNavalActionProvider: GoalActionProvider = {
         }
       }
       const augmented = withFacts(action, option.preconditions);
-      if (augmented) actions.push(context.precision === 'coarse' ? { ...augmented, precision: 'coarse',
-        reasons: [...augmented.reasons, { code: 'coarse-naval-conditional-quotation', factIds: option.factIds, values: {} }] } : augmented);
+      if (augmented) actions.push(augmented);
     }
-    return [...new Map(actions.map(action => [action.id, action])).values()].sort((a, b) => order(a.id, b.id));
+    return [...new Map(actions.map(action => [action.id, action])).values()].map(action => context.precision === 'coarse'
+      ? { ...action, precision: 'coarse' as const, reasons: [...action.reasons, {
+        code: 'coarse-naval-conditional-quotation', factIds: action.preconditions.map(fact => fact.id),
+        values: { optimisticSearchOnly: true, exactRefinementRequired: true },
+      }] } : action).sort((a, b) => order(a.id, b.id));
   },
 };
