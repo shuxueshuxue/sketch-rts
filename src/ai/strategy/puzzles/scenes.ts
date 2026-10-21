@@ -35,15 +35,15 @@ export function navyZeroScene() {
 }
 export function defenseWindowScene(later = false) {
   const arrivalSeconds = later ? 360 : 90;
-  const mine = { x: TARGET_MINE.x, y: 2496 }, guard = { x: TARGET_GUARD.x, y: 2560 };
+  const mine = { x: 2304, y: 2240 }, guard = { x: 2464, y: 2304 };
   const b = puzzleBuilder(`defense-${arrivalSeconds}`, BUILDING_DEFS.townHall.cost);
   homeEconomy(b); targetMine(b, mine); soldiers(b, 'footman', 6, { x: 800, y: 704 }); camp(b, WEAK_GUARD, guard);
   soldiers(b, 'footman', 4, { x: HOME.x + arrivalSeconds * UNIT_DEFS.footman.speed, y: HOME.y }, PUZZLE_OPPONENT);
   const width = Math.ceil((HOME.x + arrivalSeconds * UNIT_DEFS.footman.speed + 1024) / 32) * 32;
   const world = finishWorld(terrainWorld(b, [{ left: 128, top: 128, right: width - 128, bottom: 1536 },
-    { left: 2304, top: 2112, right: 3712, bottom: 2944 }], width, 3328),
+    { left: 1792, top: 1984, right: 3200, bottom: 2816 }], width, 3328),
     mine, guard, { x: 1664, y: 1800 });
-  world.departure = { x: 1408, y: 1472 }; world.landing = { x: 2432, y: 2176 };
+  world.departure = { x: 1408, y: 1472 }; world.landing = { x: 1856, y: 2048 };
   world.attackers = world.game.units.filter(u => u.owner === PUZZLE_OPPONENT);
   return world;
 }
