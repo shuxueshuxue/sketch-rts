@@ -1,0 +1,50 @@
+{
+  "source": "f563cd5fff2273dfb8ff4b42c0b4a3d7bf2481bb",
+  "sharedBase": "fd4ee40d9ae5c9c087532e9438490ea3efb37b47",
+  "cases": [
+    {
+      "puzzle": "ship-away/far",
+      "readyNodeOccurrencesByKind": {
+        "wait-income": 358,
+        "assemble": 337,
+        "position-transport": 29
+      },
+      "firstReadyByKind": {
+        "wait-income": {
+          "think": 6,
+          "tick": 90
+        },
+        "assemble": {
+          "think": 9,
+          "tick": 135
+        },
+        "position-transport": {
+          "think": 11,
+          "tick": 165
+        }
+      }
+    },
+    {
+      "puzzle": "ship-away/near",
+      "readyNodeOccurrencesByKind": {
+        "wait-income": 404,
+        "assemble": 381,
+        "position-transport": 117
+      },
+      "firstReadyByKind": {
+        "wait-income": {
+          "think": 6,
+          "tick": 90
+        },
+        "assemble": {
+          "think": 9,
+          "tick": 135
+        },
+        "position-transport": {
+          "think": 11,
+          "tick": 165
+        }
+      }
+    }
+  ]
+}
