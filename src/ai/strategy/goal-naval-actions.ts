@@ -10,6 +10,7 @@ import type { GoalActionDeclaration, GoalEntityReference, GoalEstimate, GoalFact
   GoalFactEffect, GoalParameter, GoalResourceFlow, GoalTransportOption } from './goal-planner-types';
 import type { Target } from './types';
 import { strategyIsOpponent } from './ownership';
+import { withGoalSafetyPreconditionWindows } from './goal-safety-preconditions';
 
 export type GoalNavalEstimates = Readonly<{
   duration: GoalActionDeclaration['duration'];
@@ -112,8 +113,8 @@ function movementFlows(units: readonly Unit[], from: Target, to: Target, force: 
 function declaration(kind: GoalActionDeclaration['kind'], executor: string, parameters: Record<string, GoalParameter>,
   input: GoalNavalCohort, preconditions: readonly GoalFact[], effects: readonly GoalFactEffect[],
   resources: GoalActionDeclaration['demands'], flows: readonly GoalResourceFlow[]): GoalActionDeclaration {
-  return { id: identity(kind, parameters), kind, preconditions: facts(preconditions), effects, demands: resources, flows,
-    ...input.estimates, executor: { executor, parameters }, outputs: [], reasons: [] };
+  return withGoalSafetyPreconditionWindows({ id: identity(kind, parameters), kind, preconditions: facts(preconditions), effects, demands: resources, flows,
+    ...input.estimates, executor: { executor, parameters }, outputs: [], reasons: [] }, input.snapshot.tick);
 }
 function bounties(snapshot: GameSnapshot, unitIds: readonly string[], factIds: readonly string[]): GoalResourceFlow[] {
   const ids = new Set(unitIds);
@@ -239,12 +240,12 @@ export function declareGoalEvacuation(input: GoalNavalCohort & Readonly<{
 }
 
 export function declareGoalTransportPosition(input: Readonly<{
-  option: GoalTransportOption; tolerance: number; byTick: number; estimates: GoalNavalEstimates;
+  option: GoalTransportOption; tolerance: number; tick: number; byTick: number; estimates: GoalNavalEstimates;
 }>): GoalActionDeclaration | null {
   const option = input.option;
   return declareGoalTransportReposition({ transport: option.transport,
     at: { seaId: option.seaId, point: option.departure.water }, dependentUnitIds: option.loadedUnitIds,
-    tolerance: input.tolerance, byTick: input.byTick, estimates: input.estimates,
+    tolerance: input.tolerance, tick: input.tick, byTick: input.byTick, estimates: input.estimates,
     preconditions: [...(option.preconditions ?? []), ...(option.approach ? [option.approach] : [])] });
 }
 
@@ -252,7 +253,7 @@ export function declareGoalTransportPosition(input: Readonly<{
  * destination exist. It needs no invented boarding shore or landing pair. */
 export function declareGoalTransportReposition(input: Readonly<{
   transport: GoalEntityReference; at: Target; dependentUnitIds: readonly string[];
-  tolerance: number; byTick: number; estimates: GoalNavalEstimates; preconditions: readonly GoalFact[];
+  tolerance: number; tick: number; byTick: number; estimates: GoalNavalEstimates; preconditions: readonly GoalFact[];
 }>): GoalActionDeclaration | null {
   if (!Number.isFinite(input.tolerance) || input.tolerance < 0) return null;
   const { transport, at } = input;
@@ -261,7 +262,7 @@ export function declareGoalTransportReposition(input: Readonly<{
     transport, byTick: input.byTick }), ...input.preconditions];
   const parameters = { transport, at, tolerance: input.tolerance, byTick: input.byTick,
     dependentUnitIds: [...new Set(input.dependentUnitIds)].sort() };
-  return { id: identity('position-transport', parameters), kind: 'position-transport', preconditions: facts(preconditions),
+  return withGoalSafetyPreconditionWindows({ id: identity('position-transport', parameters), kind: 'position-transport', preconditions: facts(preconditions),
     effects: [establish(goalFact({ kind: 'transport-at', transport, at,
       tolerance: input.tolerance, byTick: input.byTick }))],
     demands: [{ resource: { kind: 'entity-control', entity: transport }, quantity: 1,
@@ -269,7 +270,7 @@ export function declareGoalTransportReposition(input: Readonly<{
         resource: { kind: 'entity-control' as const, entity: existing(id) }, quantity: 1,
         from: 'start' as const, until: 'finish' as const,
       }))], flows: [], ...input.estimates,
-    executor: { executor: 'strategy.transport', parameters }, outputs: [], reasons: [] };
+    executor: { executor: 'strategy.transport', parameters }, outputs: [], reasons: [] }, input.tick);
 }
 
 type GoalTransportInput = GoalNavalCohort & Readonly<{
@@ -372,8 +373,7 @@ function transport(input: GoalTransportInput, workers: boolean): GoalActionDecla
     dependentUnitIds: dependents.map(unit => unit.id).sort(),
     byTick: input.byTick, berthTolerance: input.berthTolerance,
   }, { ...input, estimates }, declaredPreconditions, effects, resources, flows);
-  return { ...action, preconditionWindows: [shoreSafe, ...(handoffSafe ? [handoffSafe] : [])]
-    .map(fact => ({ factId: fact.id, through: 'finish' as const })) };
+  return action;
 }
 
 export function declareGoalForceTransport(input: GoalTransportInput): GoalActionDeclaration | null {

@@ -63,6 +63,26 @@ describe('atomic land action declarations', () => {
     expect(declareGoalHoldPosition({ ...input, post: { ...target, point: { x: 100, y: 100 } } }, context)).toBeNull();
   });
 
+  it('bounds attack admission safety by finish while preserving holding obligations and world effects', () => {
+    const context = scene(), safety = [goalFact({ kind: 'site-safe', site: target, throughTick: 5000 }),
+      goalFact({ kind: 'shore-safe', landId: 'land:1', landing: target, throughTick: 5000 }),
+      goalFact({ kind: 'assets-safe', unitIds: ['weak'], at: target, throughTick: 5000 })];
+    const input = { ...grounding(), preconditions: safety };
+    for (const action of [declareGoalDestroyTarget(input, context)!,
+      declareGoalEngageUnits({ ...input, throughTick: 1000 }, context)!]) {
+      for (const proof of action.preconditions.filter(fact => 'throughTick' in fact.predicate
+        && fact.predicate.kind !== 'interception-capability')) {
+        expect(proof.predicate).toMatchObject({ throughTick: context.tick + 500 });
+        expect(action.preconditionWindows).toContainEqual({ factId: proof.id, through: 'finish' });
+      }
+      expect(action.demands.every(demand => demand.until === 'finish')).toBe(true);
+    }
+    const hold = declareGoalHoldPosition({ ...input, throughTick: 500 }, context)!;
+    expect(safety.every(fact => hold.preconditions.includes(fact))).toBe(true);
+    expect(hold.preconditionWindows).toBeUndefined();
+    expect(hold.effects[0]!.fact.predicate).toMatchObject({ throughTick: 500 });
+  });
+
   it('retains pending assessments and symbolic future members without inventing world identities', () => {
     const context = scene(), future = { kind: 'output', actionId: 'training-action', output: 'unit-0' } as const;
     const input = { ...grounding(), cohort: [future], duration: { state: 'pending', requestIds: ['battle-request'],
