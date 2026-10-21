@@ -19,14 +19,19 @@ describe('formal resource authority', () => {
     expect(strategyLeaseAllows(memory(), 'guard', { action: { ...action, actionId: 'conquer/island' } })).toBe(false);
   });
 
-  it('keeps an imported incumbent visible without opening its units to every old script', () => {
+  it('keeps imported bookkeeping transparent until a formal takeover exists', () => {
     const imported = memory({ ...lease, origin: 'imported-task', incumbentTask: { source: 'mineGuard', taskId: 'mine-a' } });
-    expect(strategyLeaseAllows(imported, 'guard')).toBe(false);
-    expect(strategyLeaseAllows(imported, 'guard', { source: 'naval' })).toBe(false);
-    expect(strategyLeaseAllows(imported, 'guard', { source: 'mineGuard', taskId: 'mine-b' })).toBe(false);
+    expect(strategyLeaseAllows(imported, 'guard')).toBe(true);
+    expect(strategyLeaseAllows(imported, 'guard', { source: 'naval' })).toBe(true);
+    expect(strategyLeaseAllows(imported, 'guard', { source: 'mineGuard', taskId: 'mine-b' })).toBe(true);
     expect(strategyLeaseAllows(imported, 'guard', { source: 'mineGuard', taskId: 'mine-a' })).toBe(true);
     expect(strategyLeaseAllows(imported, 'guard', { source: 'mineGuard' })).toBe(true);
     expect(strategyLeaseAllows(JSON.parse(JSON.stringify(imported)), 'guard', { source: 'mineGuard' })).toBe(true);
+    expect(strategyLeaseAllows(imported, 'guard', { action: { ...action, generation: 2 } })).toBe(false);
+    const withFormal = { strategyAllocation: { ...imported.strategyAllocation,
+      leases: { ...imported.strategyAllocation.leases, 'unit:other': { ...lease, resourceKey: 'unit:other' as const } } } };
+    expect(strategyLeaseAllows(withFormal, 'guard', { source: 'naval' })).toBe(false);
+    expect(strategyLeaseAllows(withFormal, 'guard', { source: 'mineGuard', taskId: 'mine-a' })).toBe(true);
   });
 });
 

@@ -10,6 +10,7 @@ import { admitStrategyCommands } from './command-gateway';
 import { isLifeSavingScript } from './script-safety';
 import { recordScriptSafetyInterruptions } from './script-safety';
 import { buildStrategyDecision } from './decision';
+import { assertStrategyAllocationBounds } from './control';
 
 type Frame = { snapshot: GameSnapshot; owner: string; memory: AiPolicyMemory; version: BootstrapAiVersion;
   commandAdmissions: readonly CommandAdmission[] };
@@ -29,7 +30,8 @@ it.each(['gull-control-p1-2977', 'sapphire-control-p1-2327'])
     for (const admission of frame.commandAdmissions.filter(admission => admission.status === 'rejected')) {
       const memory = frame.memory.strategyAllocation!;
       const result = admitStrategyCommands({ snapshot: frame.snapshot, owner: frame.owner, memory, grants: allocationGrants(memory),
-        queuedTick: null, proposals: [{ ...admission, purpose: isLifeSavingScript(admission.executor) ? 'life-saving' : 'task' }] });
+        queuedTick: null, proposals: [{ ...admission, id: admission.commandId,
+          purpose: isLifeSavingScript(admission.executor) ? 'life-saving' : 'task' }] });
       expect(result.accepted.map(value => value.command)).toEqual([admission.command]);
     }
     expect(JSON.stringify(frame.snapshot)).toBe(before);
@@ -41,8 +43,8 @@ it('keeps a formal takeover exclusive while accepting the original local rescue 
   const leases = Object.fromEntries(Object.entries(authority.leases).map(([key, lease]) => [key,
     { ...lease, origin: 'allocator' as const, incumbentTask: null }]));
   const memory = { ...authority, leases }, snapshot = frame.snapshot;
-  const original = { ...raw, purpose: 'task' as const, executor: 'v6General' };
-  const rescue = { ...raw, purpose: 'life-saving' as const };
+  const original = { ...raw, id: `${raw.commandId}:ordinary`, purpose: 'task' as const, executor: 'v6General' };
+  const rescue = { ...raw, id: raw.commandId, purpose: 'life-saving' as const };
   const run = (proposals: readonly typeof original[]) => admitStrategyCommands({ snapshot, owner: frame.owner, memory,
     grants: allocationGrants(memory), queuedTick: null, proposals });
   expect(run([original]).accepted).toEqual([]);
@@ -63,5 +65,6 @@ it('keeps a formal takeover exclusive while accepting the original local rescue 
     expect(interrupted.leases[`unit:${unitId}`]).toEqual(memory.leases[`unit:${unitId}`]);
   }
   expect(interrupted.events.filter(event => event.kind === 'interrupted')).toHaveLength(raw.command.unitIds.length);
+  expect(assertStrategyAllocationBounds(interrupted)).toBeGreaterThan(0);
   expect(recordScriptSafetyInterruptions(interrupted, snapshot, situation, result.admissions)).toEqual(interrupted);
 });

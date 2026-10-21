@@ -174,6 +174,6 @@ A-B-A、响应到岗时间、异地执行时丢据点、完成数、进攻占比
 #564 的只读性能收尾继续独立进行，任何正式控制变化都不能混入其对照源码。
 ### 导入任务与局部救命的连续退化边界
 
-`imported-task` 只记旧任务实际执行与潜在被替换损失，不把原脚本转换成正式执行器，也不按导入 token 拆分旧批量命令。闸口以实际 producer 回执的 executor 或同一 incumbent actor 识别原拥有者；该拥有者的后续装载、开船、卸载及同航次的自由／导入依赖保持原生指挥权。只有真正转给 allocator action 的资源才排斥普通旧令，原脚本的现金仍走旧现金规则，不凭空要求正式预算。
+`imported-task` 只记旧任务实际执行与潜在被替换损失，不把原脚本转换成正式执行器，也不按导入 token 拆分旧批量命令。完全没有 allocator 租用时，选择与命令两层均对旧策略透明，由原策略自身仲裁 claim／招兵；不能先在选兵时改变旧决策，再声称最终闸口已放行。有正式接管时，闸口以实际 producer 回执的 executor 或同一 incumbent actor 识别原拥有者；该拥有者的后续装载、开船、卸载及同航次的自由／导入依赖保持原生指挥权。只有真正转给 allocator action 的资源才排斥普通旧令，原脚本的现金仍走旧现金规则，不凭空要求正式预算。
 
 `skirmishPreservation`、`campRecovery`、`frontRecovery`、`mobileCare`、`medicalRecovery` 的 purpose 来自实际来源脚本，不能从 move／attack 形状推断。其实际接纳的救命命令可中断正式租用，保留父 assignment、lease 及带真实命令 ID 的 vacancy；普通命令仍受正式权威限制，伪装为救命来源的正式 executor 不获得额外权限。真实蓝宝 p1/2327 的 unload 与鸥岛 p1/2977 的四兵撤退回归保留原始拒令，连续诊断仍须逐席位把没有正式 grant 时的命令流与冻结 main 对齐，单帧恢复不等于 191/278 条连续门槛已通过。

@@ -54,6 +54,7 @@ export function createStrategyCommandGateway(input: StrategyGatewayInput) {
   const units = new Map(snapshot.units.flatMap(unit => [unit, ...(unit.cargo ?? [])]).map(unit => [unit.id, unit]));
   const buildings = new Map(snapshot.buildings.map(building => [building.id, building]));
   const events = new Map(memory.events.map(event => [event.id, event]));
+  const formalTakeover = Object.values(memory.leases).some(lease => lease.origin === 'allocator');
   const grantFor = (proposal: StrategyCommandProposal) => proposal.source === 'executor' && proposal.action
     && proposal.allocationRevision === memory.revision
     ? grants.find(grant => grant.revision === memory.revision && sameAction(grant.action, proposal.action!)) : undefined;
@@ -63,7 +64,7 @@ export function createStrategyCommandGateway(input: StrategyGatewayInput) {
     const actor = incumbentCommandActor(proposal.command);
     const importedOwner = lease?.origin === 'imported-task' && (memory.executions[lease.action.actionId]?.executor === proposal.executor
       || actor && lease.incumbentTask?.source === actor.source && lease.incumbentTask.taskId === actor.taskId);
-    if (proposal.source === 'script') return !lease || !!importedOwner;
+    if (proposal.source === 'script') return !lease || !!importedOwner || !formalTakeover && lease.origin === 'imported-task';
     const grant = grantFor(proposal), action = proposal.action && memory.executions[proposal.action.actionId];
     const order = key.startsWith('unit:') ? memory.issuedOrders[key.slice(5)] : undefined;
     const service = proposal.purpose === 'life-saving' && order?.observedTick === snapshot.tick

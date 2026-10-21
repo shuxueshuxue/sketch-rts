@@ -21,6 +21,10 @@ export function strategyLeaseAllows(memory: Pick<AiPolicyMemory, 'strategyAlloca
   actor?: StrategyLeaseActor): boolean {
   const lease = memory.strategyAllocation?.leases[`unit:${unitId}`];
   if (!lease) return true;
+  // With no formal takeover, imported receipts must not change the old
+  // policy's own recruitment/claim decisions before commands reach the gate.
+  if (lease.origin === 'imported-task' && (!actor || !('action' in actor))
+    && !Object.values(memory.strategyAllocation!.leases).some(lease => lease.origin === 'allocator')) return true;
   if (!actor) return false;
   if ('action' in actor) return sameAction(lease.action, actor.action);
   return lease.origin === 'imported-task' && lease.incumbentTask !== null
