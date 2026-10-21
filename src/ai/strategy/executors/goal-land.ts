@@ -36,10 +36,11 @@ function executor(kind: 'destroy-target' | 'hold-position' | 'engage-units'): St
         if (!Number.isFinite(horizon) || horizon <= 0) return blockedExecutor(input, 'goal-hold-protection-window-invalid');
         const checkedThrough = Math.max(input.snapshot.tick, Math.min(through, input.snapshot.tick + horizon));
         const fact = goalFact({ kind: 'site-safe', site: at, throughTick: checkedThrough });
+        const quote = typeof intent.parameters.garrisonMineId !== 'string' ? input.goalProtection?.('hold-position', at, ids, checkedThrough) : undefined;
         const observed = input.goalFacts?.(fact);
-        if (!observed || observed.fact.id !== fact.id || observed.observedTick !== input.snapshot.tick
+        if (quote ? quote.state !== 'met' : !observed || observed.fact.id !== fact.id || observed.observedTick !== input.snapshot.tick
           || observed.state !== 'met' || (observed.availableTick ?? input.snapshot.tick) > input.snapshot.tick)
-          return blockedExecutor(input, observed?.state === 'unmet' ? 'goal-hold-protection-unmet' : 'goal-hold-protection-pending');
+          return blockedExecutor(input, (quote?.state ?? observed?.state) === 'unmet' ? 'goal-hold-protection-unmet' : 'goal-hold-protection-pending');
         const leaseThrough = Math.min(...ids.map(id => input.grant.leases.find(lease => lease.resourceKey === `unit:${id}`)?.minimumStayUntilTick ?? -1));
         if (leaseThrough < through) return blockedExecutor(input, 'goal-hold-protection-lease-too-short');
         if (units.every(unit => unit.order.type === 'hold')) protection = {

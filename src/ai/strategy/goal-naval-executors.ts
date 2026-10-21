@@ -84,10 +84,12 @@ function defend(input: ExecutorInput, parameters: Readonly<Record<string, unknow
     const protectedSite = goalTarget(parameters.protectedSite) ?? at;
     const fact = goalFact({ kind: 'site-safe', site: protectedSite,
       throughTick: Math.max(input.snapshot.tick, Math.min(through, input.snapshot.tick + horizon)) });
+    const protection = input.goalProtection?.('defend', protectedSite, cohort,
+      Math.max(input.snapshot.tick, Math.min(through, input.snapshot.tick + horizon)));
     const observed = input.goalFacts?.(fact);
-    if (!observed || observed.fact.id !== fact.id || observed.observedTick !== input.snapshot.tick
+    if (protection ? protection.state !== 'met' : !observed || observed.fact.id !== fact.id || observed.observedTick !== input.snapshot.tick
       || observed.state !== 'met' || (observed.availableTick ?? input.snapshot.tick) > input.snapshot.tick)
-      return blockedExecutor(input, observed?.state === 'unmet' ? 'goal-defense-protection-unmet' : 'goal-defense-protection-pending');
+      return blockedExecutor(input, (protection?.state ?? observed?.state) === 'unmet' ? 'goal-defense-protection-unmet' : 'goal-defense-protection-pending');
   }
   const routeRows = units.map(unit => ({ unit, route: read(unit, at.point) }));
   const pending = routeRows.filter(row => row.route.status === 'unknown'), unreachable = routeRows.filter(row => row.route.status === 'unreachable');

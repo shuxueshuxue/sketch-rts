@@ -210,7 +210,8 @@ function executeControlledBootstrapCommands(snapshot: GameSnapshot, owner: Playe
     if (!executor || !objective || !method) continue;
     const input: ExecutorInput = { snapshot, owner, objective, method, execution, grant, events: authority.events,
       ...(authority.goalReferences ? { goalReferences: authority.goalReferences } : {}),
-      goalFacts: frame.executionFacts(authority, grant.objectiveId), goalTraining: goalTrainingReader(authority, snapshot) };
+      goalFacts: frame.executionFacts(authority, grant.objectiveId), goalProtection: frame.executionProtection(authority, grant.objectiveId),
+      goalTraining: goalTrainingReader(authority, snapshot) };
     const { task, safety } = withNavigationPhase('strategy-planning', () => withAllocationLandRoutes(landRouteReader,
       () => ({ task: executor.execute(input), safety: observeWorkerSafetyInterruption(input) })));
     const feedback = safety ? { ...task, status: safety.status, blocked: safety.blocked,

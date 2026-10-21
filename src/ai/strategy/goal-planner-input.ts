@@ -26,6 +26,7 @@ import { readGoalCampStagingFact } from './goal-camp-staging-facts';
 import { createGoalCampModelUsage } from './goal-camp-default-model';
 import { goalFact, goalResourceKey, goalValueKey } from './goal-facts';
 import { readGoalGuardFact } from './goal-guard-facts';
+import { readGoalCurrentProtection, type GoalProtectionReader } from './goal-current-protection';
 import { goalPoolMemberCandidates } from './goal-pool-members';
 import type { GoalGeometryMemory, GoalGeometryReader } from './goal-grounding-ports';
 import { createGoalGeometryReader, retainGoalGeometryPlans, retainGoalGeometryRequests } from './goal-geometry-source';
@@ -94,6 +95,7 @@ export type GoalPlannerOwnerInput = Readonly<{
 export type GoalPlannerNativeFrame = Readonly<{
   decision: StrategyDecision; project?: () => StrategyPlanTrace;
   executionFacts: (authority: StrategyAllocationMemory, objectiveId?: string) => GoalPlanningContext['readFact'];
+  executionProtection: (authority: StrategyAllocationMemory, objectiveId?: string) => GoalProtectionReader;
   objectives: readonly DecisionFacts<Objective>[]; landRoute: AllocationLandRouteReader;
   resolveReference: import('./goal-planner-types').GoalEntityResolver;
   requote: (request: Pick<AllocationMethodQuoteInput, 'unitIds' | 'valuation'>, plan: GoalPlan) => GoalPlanRequotation;
@@ -528,6 +530,15 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
           assertActive();
           if (authority.owner !== owner || authority.evaluatedTick !== snapshot.tick) throw Error('Goal execution authority epoch mismatch');
           return makeContext(input.allowedUnitIds, input.interruptedUnitIds, [], reservedAllocationGold(authority, objectiveId), 'exact').readFact;
+        },
+        executionProtection(authority, objectiveId) {
+          assertActive();
+          if (authority.owner !== owner || authority.evaluatedTick !== snapshot.tick) throw Error('Goal execution authority epoch mismatch');
+          return (kind, site, ids, through) => {
+            assertActive();
+            const context = makeContext(ids, input.interruptedUnitIds, [], reservedAllocationGold(authority, objectiveId), 'exact');
+            return readGoalCurrentProtection(context, kind, site, ids, through);
+          };
         },
         resolveReference(reference, selection) {
           assertActive();

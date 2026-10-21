@@ -396,6 +396,9 @@ export type ExecutorInput = Readonly<{
   /** The same owner-think source, including actual free cash after reserved
    * budgets. This callback never enters serialized execution state. */
   goalFacts?: import('./goal-planner-types').GoalFactReader;
+  /** Current-window protection of this exact admitted cohort, using the
+   * shared domain quotation rather than treating every enemy as a defeat. */
+  goalProtection?: import('./goal-current-protection').GoalProtectionReader;
   /** Same-epoch central job / aggregate-pool accounting, without birth IDs. */
   goalTraining?: import('./goal-execution-types').GoalTrainingReader;
 }>;

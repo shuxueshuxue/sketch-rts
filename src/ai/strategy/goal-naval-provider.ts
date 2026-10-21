@@ -126,7 +126,7 @@ export const goalNavalActionProvider: GoalActionProvider = {
     return [...new Map(actions.map(action => [action.id, action])).values()]
       .map(action => action.kind === 'hold-position' || action.kind === 'defend' ? { ...action,
         executor: { ...action.executor, parameters: { ...action.executor.parameters, protectionWindowTicks: context.situation.horizonTicks } } } : action)
-      .map(action => withGoalSafetyPreconditionWindows(action, context.tick)).map(action => context.precision === 'coarse'
+      .map(action => withGoalSafetyPreconditionWindows(action, context.tick, context.situation.horizonTicks)).map(action => context.precision === 'coarse'
       ? { ...action, precision: 'coarse' as const, reasons: [...action.reasons, {
         code: 'coarse-naval-conditional-quotation', factIds: action.preconditions.map(fact => fact.id),
         values: { optimisticSearchOnly: true, exactRefinementRequired: true },
