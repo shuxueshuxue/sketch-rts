@@ -49,6 +49,7 @@ import { goalPostCohorts } from './goal-post-cohorts';
 import { STRATEGY_PARAMETERS } from './utility';
 import { chooseGoalCoarseShore, createGoalSelectedBerths, type GoalSelectedBerthMemory } from './goal-selected-berths';
 import { createGoalCoarseTransport } from './goal-coarse-transport';
+import { createGoalFutureHullSource } from './goal-future-hull-source';
 import { applyGoalRefinements, createGoalPlanRefiner, type GoalRefinementMemory } from './goal-plan-refinement';
 import { createGoalTransportFactPorts } from './goal-transport-physical-ports';
 import { retainGoalVoyageRiskPublications, createGoalVoyageRiskReader, type GoalVoyageRiskMemory } from './goal-voyage-risk-source';
@@ -307,6 +308,8 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
         const resolveSnapshotCohort = (worldSnapshot: GameSnapshot, references: Parameters<NonNullable<GoalGroundingReader['resolveCohort']>>[0]): ReturnType<NonNullable<GoalGroundingReader['resolveCohort']>> => {
           const members: GoalCohortMember[] = [];
           for (const reference of references) {
+            const future = mode === 'coarse' && worldSnapshot === snapshot ? futureHulls.member(reference) : undefined;
+            if (future) { members.push(future); continue; }
             if (reference.kind !== 'existing') return { state: 'pending', requestIds: [`output-shape:${goalValueKey(reference)}`],
               reason: { code: 'goal-output-assessment-binding-required', factIds: [], values: {} } };
             const assessment = worldSnapshot.units.find(unit => unit.id === reference.entityId && unit.owner === owner && unit.hp > 0
@@ -317,8 +320,9 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
           return { state: 'met', candidates: members, factIds: members.map(member => member.assessment.id) };
         };
         const resolveCohort: NonNullable<GoalGroundingReader['resolveCohort']> = references => resolveSnapshotCohort(snapshot, references);
-        const economy = createGoalEconomicGrounding(context, { geometry, geometryRevision, regionAt,
+        const economy = createGoalEconomicGrounding(context, { geometry, geometryRevision, regionAt, regions,
           cohortOptions: effect => cohortOptions(effect) });
+        const futureHulls = createGoalFutureHullSource(context, regions, economy.productionOptions);
         const hullReferences = selected.flatMap(action => {
           const ref = action.executor.parameters.transport;
           return ref && typeof ref === 'object' && !Array.isArray(ref) && 'kind' in ref
@@ -368,7 +372,7 @@ export function withGoalPlannerInput<T>(input: GoalPlannerOwnerInput, run: (inpu
             ...(start ? { departure: start } : {}), landing: end }], factIds: [] } : { state: 'unmet',
             reason: { code: 'selected-shore-contact-invalid', factIds: [], values: {} } };
         } };
-        const transportOptions: GoalGroundingReader['transportOptions'] = mode === 'coarse' ? createGoalCoarseTransport(context, regions, resolveCohort, berthBindings.published, coarseSeaTicks) : (from, to, _mass, request) => {
+        const transportOptions: GoalGroundingReader['transportOptions'] = mode === 'coarse' ? createGoalCoarseTransport(context, regions, resolveCohort, berthBindings.published, coarseSeaTicks, futureHulls.hulls) : (from, to, _mass, request) => {
           if (!request) return { state: 'pending', requestIds: ['transport-exact-cohort'],
             reason: { code: 'transport-exact-cohort-required', factIds: [], values: {} } };
           const members = resolveCohort(request.cohort);
