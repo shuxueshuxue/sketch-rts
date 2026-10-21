@@ -32,7 +32,10 @@ function declare(input: GoalLandCombatGrounding, context: GoalPlanningContext,
     .sort((a, b) => order(a.id, b.id));
   return {
     id: `action:${kind}:${JSON.stringify([effect.id, preconditions.map(fact => fact.id)])}`,
-    kind, preconditions, effects: [{ fact: effect, operation: 'establish', at: 'finish' }],
+    // Holding has an exact on-post force precondition. Control begins when
+    // that precondition is satisfied, while the cohort stays leased through
+    // the full holding interval. Destruction and interception finish later.
+    kind, preconditions, effects: [{ fact: effect, operation: 'establish', at: kind === 'hold-position' ? 'start' : 'finish' }],
     demands: cohort.map(entity => ({ resource: { kind: 'entity-control', entity }, quantity: 1, from: 'start', until: 'finish' })),
     flows: [], duration: input.duration, cost: input.cost, successProbability: input.successProbability,
     executor: { executor: `goal.${kind}`, parameters: { cohort, target: input.target,

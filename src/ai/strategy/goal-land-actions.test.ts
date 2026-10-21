@@ -56,6 +56,8 @@ describe('atomic land action declarations', () => {
     const context = scene(), input = { ...grounding(), throughTick: 500 };
     const action = declareGoalHoldPosition(input, context)!;
     expect(action.effects[0]!.fact.predicate).toEqual({ kind: 'route-controlled', at: target, throughTick: 500 });
+    expect(action.effects[0]!.at).toBe('start');
+    expect(action.preconditions.find(fact => fact.predicate.kind === 'force-at')!.predicate).toMatchObject({ at: target, cohort: [ref('weak')] });
     expect(action.demands).toEqual([{ resource: { kind: 'entity-control', entity: ref('weak') }, quantity: 1, from: 'start', until: 'finish' }]);
     expect(declareGoalHoldPosition({ ...input, duration: { state: 'met', value: 0, factIds: [] } }, context)).toBeNull();
   });
