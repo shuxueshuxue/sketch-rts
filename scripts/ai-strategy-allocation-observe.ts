@@ -73,7 +73,8 @@ const loop = runAiGameLoop({ ...config, commandPlanner({ game, snapshot, owner, 
     log('worlds', { tick: snapshot.tick, players: snapshot.players, units: snapshot.units.map(unit => ({
       id: unit.id, owner: unit.owner, kind: unit.kind, x: unit.x, y: unit.y, hp: unit.hp, maxHp: unit.maxHp,
       order: unit.order, deck: unit.deck, cabin: unit.cabin, garrison: unit.garrison, expiresTick: unit.expiresTick,
-      attackRange: unit.attackRange, attackDamage: unit.attackDamage })),
+      attackRange: unit.attackRange, attackDamage: unit.attackDamage, attackCooldown: unit.attackCooldown,
+      speed: unit.speed, radius: unit.radius, level: unit.level, homeX: unit.homeX, homeY: unit.homeY })),
       buildings: snapshot.buildings.map(building => ({ id: building.id, owner: building.owner, kind: building.kind,
         x: building.x, y: building.y, hp: building.hp, maxHp: building.maxHp, complete: building.complete })),
       resources: snapshot.resources.map(mine => ({ id: mine.id, x: mine.x, y: mine.y, amount: mine.amount })), match: snapshot.match });
